@@ -8,6 +8,7 @@ import software.wings.beans.AppDynamicsConfig;
 import software.wings.security.encryption.EncryptedDataDetail;
 
 import java.util.List;
+import java.util.Set;
 
 /**
  * Created by rsingh on 5/18/17.
@@ -28,5 +29,6 @@ public class AppdynamicsDataCollectionInfo {
   private long tierId;
   private int collectionTime;
   private int dataCollectionMinute;
+  private Set<String> hosts;
   private List<EncryptedDataDetail> encryptedDataDetails;
 }

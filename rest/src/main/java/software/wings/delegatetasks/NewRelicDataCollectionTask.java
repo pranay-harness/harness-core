@@ -52,7 +52,7 @@ public class NewRelicDataCollectionTask extends AbstractDelegateDataCollectionTa
   private static final int PERIOD_MINS = 1;
   private static final int METRIC_DATA_QUERY_BATCH_SIZE = 50;
   private static final int APM_COLLECTION_BUFFER = 2;
-  private static final int COLLECTION_PERIOD_MINS = 5;
+  public static final int COLLECTION_PERIOD_MINS = 5;
 
   @Inject private NewRelicDelegateService newRelicDelegateService;
   @Inject private MetricDataStoreService metricStoreService;

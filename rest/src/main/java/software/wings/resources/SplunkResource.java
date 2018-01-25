@@ -9,7 +9,7 @@ import software.wings.beans.RestResponse;
 import software.wings.security.PermissionAttribute.ResourceType;
 import software.wings.security.annotations.AuthRule;
 import software.wings.security.annotations.DelegateAuth;
-import software.wings.security.annotations.ExternalServiceAuth;
+import software.wings.security.annotations.LearningEngineAuth;
 import software.wings.service.impl.analysis.LogDataRecord;
 import software.wings.service.impl.analysis.LogElement;
 import software.wings.service.impl.analysis.LogMLAnalysisRecord;
@@ -23,6 +23,7 @@ import software.wings.sm.StateType;
 
 import java.io.IOException;
 import java.util.List;
+import java.util.Optional;
 import javax.ws.rs.GET;
 import javax.ws.rs.POST;
 import javax.ws.rs.Path;
@@ -60,7 +61,7 @@ public class SplunkResource implements LogAnalysisResource {
   @Path(LogAnalysisResource.ANALYSIS_STATE_GET_LOG_URL)
   @Timed
   @ExceptionMetered
-  @ExternalServiceAuth
+  @LearningEngineAuth
   public RestResponse<List<LogDataRecord>> getRawLogData(@QueryParam("accountId") String accountId,
       @QueryParam("workflowExecutionId") String workflowExecutionId,
       @QueryParam("clusterLevel") ClusterLevel clusterLevel, @QueryParam("compareCurrent") boolean compareCurrent,
@@ -74,17 +75,18 @@ public class SplunkResource implements LogAnalysisResource {
   @Path(LogAnalysisResource.ANALYSIS_STATE_SAVE_ANALYSIS_RECORDS_URL)
   @Timed
   @ExceptionMetered
-  @ExternalServiceAuth
+  @LearningEngineAuth
   public RestResponse<Boolean> saveLogAnalysisMLRecords(@QueryParam("accountId") String accountId,
       @QueryParam("applicationId") String applicationId, @QueryParam("stateExecutionId") String stateExecutionId,
       @QueryParam("logCollectionMinute") Integer logCollectionMinute,
-      @QueryParam("isBaselineCreated") boolean isBaselineCreated, LogMLAnalysisRecord mlAnalysisResponse)
-      throws IOException {
+      @QueryParam("isBaselineCreated") boolean isBaselineCreated, @QueryParam("taskId") String taskId,
+      LogMLAnalysisRecord mlAnalysisResponse) throws IOException {
     mlAnalysisResponse.setApplicationId(applicationId);
     mlAnalysisResponse.setStateExecutionId(stateExecutionId);
     mlAnalysisResponse.setLogCollectionMinute(logCollectionMinute);
     mlAnalysisResponse.setBaseLineCreated(isBaselineCreated);
-    return new RestResponse<>(analysisService.saveLogAnalysisRecords(mlAnalysisResponse, StateType.SPLUNKV2));
+    return new RestResponse<>(
+        analysisService.saveLogAnalysisRecords(mlAnalysisResponse, StateType.SPLUNKV2, Optional.of(taskId)));
   }
 
   @Produces({"application/json", "application/v1+json"})
@@ -92,7 +94,7 @@ public class SplunkResource implements LogAnalysisResource {
   @Path(LogAnalysisResource.ANALYSIS_STATE_GET_ANALYSIS_RECORDS_URL)
   @Timed
   @ExceptionMetered
-  @ExternalServiceAuth
+  @LearningEngineAuth
   public RestResponse<LogMLAnalysisRecord> getLogMLAnalysisRecords(
       @QueryParam("accountId") String accountId, LogMLAnalysisRequest mlAnalysisRequest) throws IOException {
     return new RestResponse<>(analysisService.getLogAnalysisRecords(mlAnalysisRequest.getApplicationId(),

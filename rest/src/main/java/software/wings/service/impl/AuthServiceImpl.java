@@ -26,6 +26,7 @@ import com.nimbusds.jose.crypto.DirectDecrypter;
 import com.nimbusds.jwt.EncryptedJWT;
 import org.apache.commons.codec.DecoderException;
 import org.apache.commons.codec.binary.Hex;
+import org.apache.commons.lang3.StringUtils;
 import org.mongodb.morphia.Key;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -37,6 +38,7 @@ import software.wings.beans.Environment;
 import software.wings.beans.Environment.EnvironmentType;
 import software.wings.beans.Permission;
 import software.wings.beans.Role;
+import software.wings.beans.ServiceSecretKey.ServiceType;
 import software.wings.beans.User;
 import software.wings.dl.GenericDbCache;
 import software.wings.dl.WingsPersistence;
@@ -48,6 +50,7 @@ import software.wings.security.PermissionAttribute.ResourceType;
 import software.wings.security.UserRequestInfo;
 import software.wings.service.intfc.AccountService;
 import software.wings.service.intfc.AuthService;
+import software.wings.service.intfc.LearningEngineService;
 import software.wings.service.intfc.UserService;
 import software.wings.utils.CacheHelper;
 
@@ -67,6 +70,7 @@ public class AuthServiceImpl implements AuthService {
   private UserService userService;
   private CacheHelper cacheHelper;
   private MainConfiguration configuration;
+  @Inject private LearningEngineService learningEngineService;
 
   private static final Logger logger = LoggerFactory.getLogger(AuthServiceImpl.class);
 
@@ -227,6 +231,27 @@ public class AuthServiceImpl implements AuthService {
       JWTVerifier verifier = JWT.require(algorithm).withIssuer("Harness Inc").build();
       verifier.verify(externalServiceToken);
       JWT decode = JWT.decode(externalServiceToken);
+      if (decode.getExpiresAt().getTime() < System.currentTimeMillis()) {
+        throw new WingsException(aResponseMessage().code(EXPIRED_TOKEN).acuteness(ALERTING).build());
+      }
+    } catch (Exception ex) {
+      logger.warn("Error in verifying JWT token ", ex);
+      throw ex instanceof JWTVerificationException ? new WingsException(INVALID_TOKEN) : new WingsException(ex);
+    }
+  }
+
+  @Override
+  public void validateLearningEngineServiceToken(String learningEngineServiceToken) {
+    String jwtLearningEngineServiceSecret = learningEngineService.getServiceSecretKey(ServiceType.LEARNING_ENGINE);
+    if (StringUtils.isBlank(jwtLearningEngineServiceSecret)) {
+      throw new WingsException(INVALID_REQUEST)
+          .addParam("message", "no secret key for service found for " + ServiceType.LEARNING_ENGINE);
+    }
+    try {
+      Algorithm algorithm = Algorithm.HMAC256(jwtLearningEngineServiceSecret);
+      JWTVerifier verifier = JWT.require(algorithm).withIssuer("Harness Inc").build();
+      verifier.verify(learningEngineServiceToken);
+      JWT decode = JWT.decode(learningEngineServiceToken);
       if (decode.getExpiresAt().getTime() < System.currentTimeMillis()) {
         throw new WingsException(aResponseMessage().code(EXPIRED_TOKEN).acuteness(ALERTING).build());
       }

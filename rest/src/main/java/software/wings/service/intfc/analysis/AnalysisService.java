@@ -34,7 +34,7 @@ public interface AnalysisService {
   boolean isLogDataCollected(
       String applicationId, String stateExecutionId, String query, int logCollectionMinute, StateType splunkv2);
 
-  Boolean saveLogAnalysisRecords(LogMLAnalysisRecord mlAnalysisResponse, StateType stateType);
+  Boolean saveLogAnalysisRecords(LogMLAnalysisRecord mlAnalysisResponse, StateType stateType, Optional<String> taskId);
 
   LogMLAnalysisRecord getLogAnalysisRecords(
       String applicationId, String stateExecutionId, String query, StateType stateType, Integer logCollectionMinute);
@@ -60,10 +60,10 @@ public interface AnalysisService {
 
   boolean isStateValid(String appdId, String stateExecutionID);
 
-  int getCollectionMinuteForL1(
-      String query, String appdId, String stateExecutionId, StateType type, Set<String> testNodes);
+  int getCollectionMinuteForLevel(String query, String appdId, String stateExecutionId, StateType type,
+      ClusterLevel clusterLevel, Set<String> testNodes);
 
-  Optional<LogDataRecord> getLogDataRecordForL0(String appId, String stateExecutionId, StateType type);
+  Optional<LogDataRecord> getHearbeatRecordForL0(String appId, String stateExecutionId, StateType type, String host);
 
   boolean isProcessingComplete(
       String query, String appId, String stateExecutionId, StateType type, int timeDurationMins);

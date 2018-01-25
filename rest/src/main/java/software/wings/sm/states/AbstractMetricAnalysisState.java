@@ -45,7 +45,7 @@ public abstract class AbstractMetricAnalysisState extends AbstractAnalysisState 
   protected static final int SMOOTH_WINDOW = 3;
   protected static final int TOLERANCE = 1;
   protected static final int MIN_REQUESTS_PER_MINUTE = 10;
-  protected static final int COMPARISON_WINDOW = 3;
+  protected static final int COMPARISON_WINDOW = 1;
   protected static final int PARALLEL_PROCESSES = 7;
 
   @Inject @Named("VerificationJobScheduler") private QuartzScheduler jobScheduler;
@@ -217,6 +217,9 @@ public abstract class AbstractMetricAnalysisState extends AbstractAnalysisState 
 
   private AnalysisContext getAnalysisContext(ExecutionContext context, String correlationId) {
     try {
+      Set<String> controlNodes = getLastExecutionNodes(context);
+      Set<String> testNodes = getCanaryNewHostNames(context);
+      controlNodes.removeAll(testNodes);
       return AnalysisContext.builder()
           .accountId(this.appService.get(context.getAppId()).getAccountId())
           .appId(context.getAppId())
@@ -224,8 +227,8 @@ public abstract class AbstractMetricAnalysisState extends AbstractAnalysisState 
           .workflowExecutionId(context.getWorkflowExecutionId())
           .stateExecutionId(context.getStateExecutionInstanceId())
           .serviceId(getPhaseServiceId(context))
-          .controlNodes(getLastExecutionNodes(context))
-          .testNodes(getCanaryNewHostNames(context))
+          .controlNodes(controlNodes)
+          .testNodes(testNodes)
           .isSSL(this.configuration.isSslEnabled())
           .appPort(this.configuration.getApplicationPort())
           .comparisonStrategy(getComparisonStrategy())

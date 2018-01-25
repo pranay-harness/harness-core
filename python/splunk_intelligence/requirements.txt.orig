@@ -15,3 +15,7 @@ gensim
 pymongo; sys_platform == 'darwin'
 ipython==5.0; sys_platform == 'darwin'
 jupyter; sys_platform == 'darwin'
+logdna
+newrelic
+mock
+pyJWT

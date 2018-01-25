@@ -137,8 +137,12 @@ public class AppdynamicsDataCollectionTask extends AbstractDelegateDataCollectio
        */
       for (AppdynamicsMetricData metricData : metricsData) {
         String[] appdynamicsPathPieces = metricData.getMetricPath().split(Pattern.quote("|"));
+        String nodeName = appdynamicsPathPieces[5];
+        if (!dataCollectionInfo.getHosts().contains(nodeName)) {
+          logger.info("skipping: {}", nodeName);
+          continue;
+        }
         String btName = parseAppdynamicsInternalName(appdynamicsPathPieces, 3);
-        String nodeName = parseAppdynamicsInternalName(appdynamicsPathPieces, 5);
         String metricName = parseAppdynamicsInternalName(appdynamicsPathPieces, 6);
 
         for (AppdynamicsMetricDataValue metricDataValue : metricData.getMetricValues()) {

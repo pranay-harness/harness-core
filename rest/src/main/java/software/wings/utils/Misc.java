@@ -3,6 +3,8 @@ package software.wings.utils;
 import static io.harness.data.structure.EmptyPredicate.isEmpty;
 import static org.apache.commons.lang3.StringUtils.isNotBlank;
 
+import org.apache.commons.codec.binary.Hex;
+import software.wings.beans.ErrorCode;
 import software.wings.beans.Log.LogLevel;
 import software.wings.beans.command.CommandExecutionResult.CommandExecutionStatus;
 import software.wings.beans.command.ExecutionLogCallback;
@@ -10,8 +12,11 @@ import software.wings.common.Constants;
 import software.wings.exception.WingsException;
 import software.wings.sm.states.ManagerExecutionLogCallback;
 
+import java.security.NoSuchAlgorithmException;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
+import javax.crypto.KeyGenerator;
+import javax.crypto.SecretKey;
 
 /**
  * Miscellaneous utility class.
@@ -211,5 +216,18 @@ public class Misc {
    */
   public static String replaceUnicodeWithDot(String str) {
     return str.replace("\u2024", ".");
+  }
+
+  public static String generateSecretKey() {
+    KeyGenerator keyGen = null;
+    try {
+      keyGen = KeyGenerator.getInstance("AES");
+    } catch (NoSuchAlgorithmException e) {
+      throw new WingsException(ErrorCode.DEFAULT_ERROR_CODE, e);
+    }
+    keyGen.init(128);
+    SecretKey secretKey = keyGen.generateKey();
+    byte[] encoded = secretKey.getEncoded();
+    return Hex.encodeHexString(encoded);
   }
 }

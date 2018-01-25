@@ -91,19 +91,19 @@ public abstract class AbstractLogAnalysisState extends AbstractAnalysisState {
       if (getComparisonStrategy() == AnalysisComparisonStrategy.COMPARE_WITH_CURRENT) {
         getLogger().error("No nodes with older version found to compare the logs. Skipping analysis");
         return generateAnalysisResponse(context, ExecutionStatus.SUCCESS,
-            "Skipping analysis due to lack of baseline hosts. Rerun workflow after this succeeds.");
+            "Skipping analysis due to lack of baseline hosts. Make sure you have at least two phases defined.");
       }
 
       getLogger().warn("It seems that there is no successful run for this workflow yet. "
           + "Log data will be collected to be analyzed for next deployment run");
     }
 
-    if (getComparisonStrategy() == AnalysisComparisonStrategy.COMPARE_WITH_CURRENT
-        && lastExecutionNodes.equals(canaryNewHostNames)) {
-      getLogger().error("Control and test nodes are same. Will not be running Log analysis");
-      return generateAnalysisResponse(context, ExecutionStatus.FAILED,
-          "Skipping analysis. Baseline and new hosts are the same. (Minimum two phases are required).");
-    }
+    //    if (getComparisonStrategy() == AnalysisComparisonStrategy.COMPARE_WITH_CURRENT
+    //        && lastExecutionNodes.equals(canaryNewHostNames)) {
+    //      getLogger().error("Control and test nodes are same. Will not be running Log analysis");
+    //      return generateAnalysisResponse(context, ExecutionStatus.FAILED,
+    //          "Skipping analysis. Baseline and new hosts are the same. (Minimum two phases are required).");
+    //    }
 
     final LogAnalysisExecutionData executionData =
         LogAnalysisExecutionData.Builder.anLogAnanlysisExecutionData()
@@ -206,7 +206,7 @@ public abstract class AbstractLogAnalysisState extends AbstractAnalysisState {
     Trigger trigger = TriggerBuilder.newTrigger()
                           .withIdentity(context.getStateExecutionId(), "LOG_VERIFY_CRON_GROUP")
                           .withSchedule(SimpleScheduleBuilder.simpleSchedule()
-                                            .withIntervalInSeconds(60)
+                                            .withIntervalInSeconds(10)
                                             .repeatForever()
                                             .withMisfireHandlingInstructionNowWithExistingCount())
                           .startAt(startDate)
@@ -229,7 +229,7 @@ public abstract class AbstractLogAnalysisState extends AbstractAnalysisState {
     Trigger trigger = TriggerBuilder.newTrigger()
                           .withIdentity(context.getStateExecutionId(), "LOG_CLUSTER_CRON_GROUP")
                           .withSchedule(SimpleScheduleBuilder.simpleSchedule()
-                                            .withIntervalInSeconds(60)
+                                            .withIntervalInSeconds(10)
                                             .repeatForever()
                                             .withMisfireHandlingInstructionNowWithExistingCount())
                           .startAt(startDate)
@@ -279,6 +279,9 @@ public abstract class AbstractLogAnalysisState extends AbstractAnalysisState {
 
   private AnalysisContext getLogAnalysisContext(ExecutionContext context, String correlationId) {
     try {
+      Set<String> controlNodes = getLastExecutionNodes(context);
+      Set<String> testNodes = getCanaryNewHostNames(context);
+      controlNodes.removeAll(testNodes);
       return AnalysisContext.builder()
           .accountId(this.appService.get(context.getAppId()).getAccountId())
           .appId(context.getAppId())
@@ -286,8 +289,8 @@ public abstract class AbstractLogAnalysisState extends AbstractAnalysisState {
           .workflowExecutionId(context.getWorkflowExecutionId())
           .stateExecutionId(context.getStateExecutionInstanceId())
           .serviceId(getPhaseServiceId(context))
-          .controlNodes(getLastExecutionNodes(context))
-          .testNodes(getCanaryNewHostNames(context))
+          .controlNodes(controlNodes)
+          .testNodes(testNodes)
           .queries(Sets.newHashSet(query.split(",")))
           .isSSL(this.configuration.isSslEnabled())
           .appPort(this.configuration.getApplicationPort())

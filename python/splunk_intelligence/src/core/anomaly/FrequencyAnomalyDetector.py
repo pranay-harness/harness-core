@@ -1,11 +1,10 @@
-import logging
-
 import numpy as np
 
 from core.classifier.ThreeSigmaClassifier import ThreeSigmaClassifier
 from core.classifier.ZeroDeviationClassifier import ZeroDeviationClassifier
+from core.util.lelogging import get_log
 
-logger = logging.getLogger(__name__)
+logger = get_log(__name__)
 
 class FrequencyAnomalyDetector(object):
 

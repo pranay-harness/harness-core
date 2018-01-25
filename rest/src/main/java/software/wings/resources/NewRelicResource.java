@@ -10,7 +10,7 @@ import software.wings.metrics.TimeSeriesMetricDefinition;
 import software.wings.security.PermissionAttribute.ResourceType;
 import software.wings.security.annotations.AuthRule;
 import software.wings.security.annotations.DelegateAuth;
-import software.wings.security.annotations.ExternalServiceAuth;
+import software.wings.security.annotations.LearningEngineAuth;
 import software.wings.service.impl.analysis.TSRequest;
 import software.wings.service.impl.analysis.TimeSeriesMLAnalysisRecord;
 import software.wings.service.impl.analysis.TimeSeriesMLHostSummary;
@@ -24,6 +24,7 @@ import software.wings.service.impl.newrelic.NewRelicMetricAnalysisRecord;
 import software.wings.service.impl.newrelic.NewRelicMetricAnalysisRecord.NewRelicMetricHostAnalysisValue;
 import software.wings.service.impl.newrelic.NewRelicMetricDataRecord;
 import software.wings.service.impl.newrelic.NewRelicMetricNames;
+import software.wings.service.intfc.LearningEngineService;
 import software.wings.service.intfc.MetricDataAnalysisService;
 import software.wings.service.intfc.analysis.MetricAnalysisResource;
 import software.wings.service.intfc.newrelic.NewRelicService;
@@ -76,6 +77,8 @@ public class NewRelicResource implements MetricAnalysisResource {
   @Inject private NewRelicService newRelicService;
 
   @Inject private MetricDataAnalysisService metricDataAnalysisService;
+
+  @Inject private LearningEngineService learningEngineService;
 
   @Produces({"application/json", "application/v2+json"})
   @GET
@@ -144,7 +147,7 @@ public class NewRelicResource implements MetricAnalysisResource {
   @POST
   @Path("/get-metrics")
   @Timed
-  @ExternalServiceAuth
+  @LearningEngineAuth
   @ExceptionMetered
   public RestResponse<List<NewRelicMetricDataRecord>> getMetricData(@QueryParam("accountId") String accountId,
       @QueryParam("workflowExecutionId") String workFlowExecutionId,
@@ -181,11 +184,12 @@ public class NewRelicResource implements MetricAnalysisResource {
   @Path("/save-analysis")
   @Timed
   @ExceptionMetered
-  @ExternalServiceAuth
+  @LearningEngineAuth
   public RestResponse<Boolean> saveMLAnalysisRecords(@QueryParam("accountId") String accountId,
       @QueryParam("applicationId") String applicationId, @QueryParam("stateExecutionId") String stateExecutionId,
       @QueryParam("workflowExecutionId") final String workflowExecutionId,
-      @QueryParam("workflowId") final String workflowId, @QueryParam("analysisMinute") Integer analysisMinute,
+      @QueryParam("workflowId") final String workflowId, @QueryParam("serviceId") final String serviceId,
+      @QueryParam("analysisMinute") Integer analysisMinute, @QueryParam("taskId") String taskId,
       TimeSeriesMLAnalysisRecord mlAnalysisResponse) throws IOException {
     mlAnalysisResponse.setStateType(StateType.NEW_RELIC);
     mlAnalysisResponse.setApplicationId(applicationId);
@@ -234,6 +238,9 @@ public class NewRelicResource implements MetricAnalysisResource {
     }
 
     metricDataAnalysisService.saveTimeSeriesMLScores(timeSeriesMLScores);
+    metricDataAnalysisService.bumpCollectionMinuteToProcess(
+        StateType.NEW_RELIC, stateExecutionId, workflowExecutionId, serviceId, analysisMinute);
+    learningEngineService.markCompleted(taskId);
 
     return new RestResponse<>(metricDataAnalysisService.saveAnalysisRecordsML(mlAnalysisResponse));
   }
@@ -243,7 +250,7 @@ public class NewRelicResource implements MetricAnalysisResource {
   @Path("/get-scores")
   @Timed
   @ExceptionMetered
-  @ExternalServiceAuth
+  @LearningEngineAuth
   public RestResponse<List<TimeSeriesMLScores>> getScores(@QueryParam("accountId") String accountId,
       @QueryParam("applicationId") String applicationId, @QueryParam("workFlowId") String workflowId,
       @QueryParam("analysisMinute") Integer analysisMinute, @QueryParam("limit") Integer limit) throws IOException {
@@ -255,7 +262,7 @@ public class NewRelicResource implements MetricAnalysisResource {
   @Path("/get-tooltip")
   @Timed
   @ExceptionMetered
-  @ExternalServiceAuth
+  @LearningEngineAuth
   public RestResponse<List<NewRelicMetricHostAnalysisValue>> getTooltip(@QueryParam("accountId") String accountId,
       @QueryParam("stateExecutionId") String stateExecutionId,
       @QueryParam("workFlowExecutionId") String workFlowExecutionId,
@@ -270,7 +277,7 @@ public class NewRelicResource implements MetricAnalysisResource {
   @Path("/get-metric-template")
   @Timed
   @ExceptionMetered
-  @ExternalServiceAuth
+  @LearningEngineAuth
   public RestResponse<Map<String, TimeSeriesMetricDefinition>> getMetricTemplate(
       @QueryParam("accountId") String accountId) {
     return new RestResponse<>(metricDataAnalysisService.getMetricTemplate(StateType.NEW_RELIC));

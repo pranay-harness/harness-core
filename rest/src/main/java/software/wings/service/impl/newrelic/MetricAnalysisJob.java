@@ -1,6 +1,5 @@
 package software.wings.service.impl.newrelic;
 
-import static io.harness.threading.Morpheus.sleep;
 import static org.apache.commons.lang3.StringUtils.isNotBlank;
 
 import com.google.common.base.Preconditions;
@@ -14,21 +13,22 @@ import org.quartz.PersistJobDataAfterExecution;
 import org.quartz.SchedulerException;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-import org.zeroturnaround.exec.ProcessExecutor;
-import org.zeroturnaround.exec.ProcessResult;
-import org.zeroturnaround.exec.stream.slf4j.Slf4jStream;
 import software.wings.api.MetricDataAnalysisResponse;
+import software.wings.common.UUIDGenerator;
 import software.wings.delegatetasks.NewRelicDataCollectionTask;
 import software.wings.dl.WingsPersistence;
+import software.wings.exception.WingsException;
 import software.wings.metrics.RiskLevel;
 import software.wings.metrics.Threshold;
 import software.wings.metrics.TimeSeriesMetricDefinition;
 import software.wings.service.impl.analysis.AnalysisComparisonStrategy;
 import software.wings.service.impl.analysis.AnalysisContext;
+import software.wings.service.impl.analysis.MLAnalysisType;
 import software.wings.service.impl.newrelic.NewRelicMetricAnalysisRecord.NewRelicMetricAnalysis;
 import software.wings.service.impl.newrelic.NewRelicMetricAnalysisRecord.NewRelicMetricAnalysisValue;
 import software.wings.service.intfc.DelegateService;
 import software.wings.service.intfc.FeatureFlagService;
+import software.wings.service.intfc.LearningEngineService;
 import software.wings.service.intfc.MetricDataAnalysisService;
 import software.wings.service.intfc.analysis.ClusterLevel;
 import software.wings.sm.ExecutionStatus;
@@ -36,7 +36,6 @@ import software.wings.utils.JsonUtils;
 import software.wings.waitnotify.WaitNotifyEngine;
 
 import java.io.IOException;
-import java.time.Duration;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.HashSet;
@@ -53,6 +52,8 @@ import java.util.concurrent.TimeoutException;
 @DisallowConcurrentExecution
 public class MetricAnalysisJob implements Job {
   @Inject private MetricDataAnalysisService analysisService;
+
+  @Inject private LearningEngineService learningEngineService;
 
   @Inject private WingsPersistence wingsPersistence;
 
@@ -71,8 +72,8 @@ public class MetricAnalysisJob implements Job {
       String delegateTaskId = jobExecutionContext.getMergedJobDataMap().getString("delegateTaskId");
 
       AnalysisContext context = JsonUtils.asObject(params, AnalysisContext.class);
-      new MetricAnalysisGenerator(
-          analysisService, waitNotifyEngine, delegateService, context, jobExecutionContext, delegateTaskId)
+      new MetricAnalysisGenerator(analysisService, learningEngineService, waitNotifyEngine, delegateService, context,
+          jobExecutionContext, delegateTaskId)
           .run();
 
     } catch (Exception ex) {
@@ -86,7 +87,7 @@ public class MetricAnalysisJob implements Job {
   }
 
   public static class MetricAnalysisGenerator implements Runnable {
-    public static final int PYTHON_JOB_RETRIES = 3;
+    //    public static final int PYTHON_JOB_RETRIES = 3;
     public static final int ANALYSIS_DURATION = 30;
     public static final String LOG_ML_ROOT = "SPLUNKML_ROOT";
     protected static final String TS_ML_SHELL_FILE_NAME = "run_time_series_ml.sh";
@@ -98,15 +99,17 @@ public class MetricAnalysisJob implements Job {
     private final String delegateTaskId;
     private final Set<String> testNodes;
     private final Set<String> controlNodes;
-    private MetricDataAnalysisService analysisService;
+    private final MetricDataAnalysisService analysisService;
+    private final LearningEngineService learningEngineService;
     private final WaitNotifyEngine waitNotifyEngine;
     private final DelegateService delegateService;
     private final int analysisDuration;
 
-    public MetricAnalysisGenerator(MetricDataAnalysisService service, WaitNotifyEngine waitNotifyEngine,
-        DelegateService delegateService, AnalysisContext context, JobExecutionContext jobExecutionContext,
-        String delegateTaskId) {
+    public MetricAnalysisGenerator(MetricDataAnalysisService service, LearningEngineService learningEngineService,
+        WaitNotifyEngine waitNotifyEngine, DelegateService delegateService, AnalysisContext context,
+        JobExecutionContext jobExecutionContext, String delegateTaskId) {
       this.analysisService = service;
+      this.learningEngineService = learningEngineService;
       this.waitNotifyEngine = waitNotifyEngine;
       this.delegateService = delegateService;
       this.pythonScriptRoot = System.getenv(LOG_ML_ROOT);
@@ -207,96 +210,61 @@ public class MetricAnalysisJob implements Job {
       return analysisRecord;
     }
 
-    private void timeSeriesML(int analysisMinute) throws InterruptedException, TimeoutException, IOException {
+    private boolean timeSeriesML(int analysisMinute) throws InterruptedException, TimeoutException, IOException {
+      if (learningEngineService.hasAnalysisTimedOut(context.getWorkflowExecutionId(), context.getStateExecutionId())) {
+        learningEngineService.markStatus(
+            context.getWorkflowExecutionId(), context.getStateExecutionId(), analysisMinute, ExecutionStatus.FAILED);
+        throw new WingsException("Error running time series analysis. Finished all retries. stateExecutionId: "
+            + context.getStateExecutionId());
+      }
       int analysisStartMin = analysisMinute > ANALYSIS_DURATION ? analysisMinute - ANALYSIS_DURATION : 0;
-      String protocol = context.isSSL() ? "https" : "http";
-      String serverUrl = protocol + "://localhost:" + context.getAppPort();
 
-      String testInputUrl = serverUrl + "/api/" + context.getStateBaseUrl()
-          + "/get-metrics?accountId=" + context.getAccountId()
+      String testInputUrl = "/api/" + context.getStateBaseUrl() + "/get-metrics?accountId=" + context.getAccountId()
           + "&workflowExecutionId=" + context.getWorkflowExecutionId() + "&compareCurrent=true";
-      String controlInputUrl = serverUrl + "/api/" + context.getStateBaseUrl()
-          + "/get-metrics?accountId=" + context.getAccountId() + "&compareCurrent=";
+      String controlInputUrl =
+          "/api/" + context.getStateBaseUrl() + "/get-metrics?accountId=" + context.getAccountId() + "&compareCurrent=";
       if (context.getComparisonStrategy() == AnalysisComparisonStrategy.COMPARE_WITH_CURRENT) {
         controlInputUrl = controlInputUrl + true + "&workflowExecutionId=" + context.getWorkflowExecutionId();
       } else {
         controlInputUrl = controlInputUrl + false + "&workflowExecutionId=" + context.getPrevWorkflowExecutionId();
       }
 
-      final String logAnalysisSaveUrl = serverUrl + "/api/" + context.getStateBaseUrl()
+      String uuid = UUIDGenerator.getUuid();
+
+      final String logAnalysisSaveUrl = "/api/" + context.getStateBaseUrl()
           + "/save-analysis?accountId=" + context.getAccountId() + "&applicationId=" + context.getAppId() + "&"
-          + "workflowExecutionId=" + context.getWorkflowExecutionId()
-          + "&stateExecutionId=" + context.getStateExecutionId() + "&analysisMinute=" + analysisMinute;
+          + "workflowExecutionId=" + context.getWorkflowExecutionId() + "&stateExecutionId="
+          + context.getStateExecutionId() + "&analysisMinute=" + analysisMinute + "&taskId=" + uuid;
 
-      final List<String> command = new ArrayList<>();
-      command.add(this.pythonScriptRoot + "/" + TS_ML_SHELL_FILE_NAME);
-
-      command.add("--control_input_url");
-      command.add(controlInputUrl);
-      command.add("--test_input_url");
-      command.add(testInputUrl);
-      command.add("--control_nodes");
-      command.addAll(controlNodes);
-      command.add("--test_nodes");
-      command.addAll(testNodes);
-      command.add("--auth_token=" + context.getAuthToken());
-      command.add("--application_id=" + context.getAppId());
-      command.add("--workflow_id=" + context.getWorkflowId());
-      command.add("--workflow_execution_id=" + context.getWorkflowExecutionId());
-      command.add("--service_id=" + context.getServiceId());
-      command.add("--analysis_start_minute");
-      command.add(String.valueOf(analysisStartMin));
-      command.add("--analysis_minute");
-      command.add(String.valueOf(analysisMinute));
-      command.add("--state_execution_id=" + context.getStateExecutionId());
-      command.add("--analysis_save_url");
-      command.add(logAnalysisSaveUrl);
-      command.add("--smooth_window");
-      command.add(String.valueOf(context.getSmooth_window()));
-      command.add("--tolerance");
-      command.add(String.valueOf(context.getTolerance()));
-      command.add("--min_rpm");
-      command.add(String.valueOf(context.getMinimumRequestsPerMinute()));
-      command.add("--comparison_unit_window");
-      command.add(String.valueOf(context.getComparisonWindow()));
-      command.add("--parallel_processes");
-      command.add(String.valueOf(context.getParallelProcesses()));
-      //      command.add("--metric_names");
-      //      command.addAll(Lists.newArrayList("callCount", "averageResponseTime", "requestsPerMinute", "error",
-      //      "apdexScore"));
-      command.add("--metric_template_url");
-      command.add(
-          serverUrl + "/api/" + context.getStateBaseUrl() + "/get-metric-template?accountId=" + context.getAccountId());
-
-      int attempt = 0;
-      for (; attempt < PYTHON_JOB_RETRIES; attempt++) {
-        final ProcessResult result =
-            new ProcessExecutor(command)
-                .redirectOutput(
-                    Slf4jStream.of(LoggerFactory.getLogger(getClass().getName() + "." + context.getStateExecutionId()))
-                        .asInfo())
-                .execute();
-
-        switch (result.getExitValue()) {
-          case 0:
-            logger.info("Metric analysis done for " + context.getStateExecutionId() + " for minute " + analysisMinute);
-            attempt += PYTHON_JOB_RETRIES;
-            break;
-          case 200:
-            logger.warn("No test data from the deployed nodes " + context.getStateExecutionId() + " for minute "
-                + analysisMinute);
-            attempt += PYTHON_JOB_RETRIES;
-            break;
-          default:
-            logger.warn("time series analysis failed for " + context.getStateExecutionId() + " for minute "
-                + analysisMinute + " trial: " + (attempt + 1));
-            sleep(Duration.ofSeconds(2));
-        }
-      }
-
-      if (attempt == PYTHON_JOB_RETRIES) {
-        throw new RuntimeException("Error running time series analysis. Finished all retries.");
-      }
+      LearningEngineAnalysisTask learningEngineAnalysisTask =
+          LearningEngineAnalysisTask.builder()
+              .ml_shell_file_name(TS_ML_SHELL_FILE_NAME)
+              .workflow_id(context.getWorkflowId())
+              .workflow_execution_id(context.getWorkflowExecutionId())
+              .state_execution_id(context.getStateExecutionId())
+              .service_id(context.getServiceId())
+              .auth_token(context.getAuthToken())
+              .analysis_start_min(analysisStartMin)
+              .analysis_minute(analysisMinute)
+              .smooth_window(context.getSmooth_window())
+              .tolerance(context.getTolerance())
+              .min_rpm(context.getMinimumRequestsPerMinute())
+              .comparison_unit_window(context.getComparisonWindow())
+              .parallel_processes(context.getParallelProcesses())
+              .test_input_url(testInputUrl)
+              .control_input_url(controlInputUrl)
+              .analysis_save_url(logAnalysisSaveUrl)
+              .metric_template_url(
+                  "/api/" + context.getStateBaseUrl() + "/get-metric-template?accountId=" + context.getAccountId())
+              .control_nodes(controlNodes)
+              .test_nodes(testNodes)
+              .stateType(context.getStateType())
+              .ml_analysis_type(MLAnalysisType.TIME_SERIES)
+              .build();
+      learningEngineAnalysisTask.setAppId(context.getAppId());
+      learningEngineAnalysisTask.setUuid(uuid);
+      logger.info("Queueing for analysis {}", learningEngineAnalysisTask);
+      return learningEngineService.addLearningEngineAnalysisTask(learningEngineAnalysisTask);
     }
 
     @Override
@@ -344,6 +312,7 @@ public class MetricAnalysisJob implements Job {
 
         boolean runTimeSeriesML = true;
 
+        boolean taskQueued = false;
         if (runTimeSeriesML) {
           switch (context.getComparisonStrategy()) {
             case COMPARE_WITH_PREVIOUS:
@@ -369,17 +338,18 @@ public class MetricAnalysisJob implements Job {
                 logger.warn("Not enough control data. analysis minute = " + analysisMinute
                     + " , max control minute = " + maxControlMinute);
                 // Do nothing. Don't run any analysis.
+                taskQueued = true;
                 break;
               }
-              timeSeriesML(analysisMinute);
+              taskQueued = timeSeriesML(analysisMinute);
               break;
               // Note that control flows through to COMPARE_WITH_CURRENT where the ml analysis is run.
             case COMPARE_WITH_CURRENT:
               logger.info("running time series ml analysis for minute " + analysisMinute);
-              timeSeriesML(analysisMinute);
+              taskQueued = timeSeriesML(analysisMinute);
               break;
             default:
-              runTimeSeriesML = false;
+              throw new IllegalStateException("Invalid type " + context.getComparisonStrategy());
           }
         }
 
@@ -387,10 +357,17 @@ public class MetricAnalysisJob implements Job {
           logger.info("running local time series analysis");
           NewRelicMetricAnalysisRecord analysisRecord = analyzeLocal(analysisMinute);
           analysisService.saveAnalysisRecords(analysisRecord);
-        }
+          analysisService.bumpCollectionMinuteToProcess(context.getStateType(), context.getStateExecutionId(),
+              context.getWorkflowExecutionId(), context.getServiceId(), analysisMinute);
 
-        analysisService.bumpCollectionMinuteToProcess(context.getStateType(), context.getStateExecutionId(),
-            context.getWorkflowExecutionId(), context.getServiceId(), analysisMinute);
+          NewRelicMetricDataRecord nextHeartBeatRecord = analysisService.getLastHeartBeat(context.getStateType(),
+              context.getStateExecutionId(), context.getWorkflowExecutionId(), context.getServiceId());
+
+          logger.info("Finish analysis for " + context.getStateExecutionId() + " for minute" + analysisMinute
+              + ". Next minute is " + nextHeartBeatRecord.getDataCollectionMinute());
+        } else if (!taskQueued) {
+          return;
+        }
 
         if (analysisMinute >= analysisDuration) {
           logger.info("time series analysis finished after running for {} minutes", analysisMinute);
@@ -398,11 +375,6 @@ public class MetricAnalysisJob implements Job {
           return;
         }
 
-        NewRelicMetricDataRecord nextHeartBeatRecord = analysisService.getLastHeartBeat(context.getStateType(),
-            context.getStateExecutionId(), context.getWorkflowExecutionId(), context.getServiceId());
-
-        logger.info("Finish analysis for " + context.getStateExecutionId() + " for minute" + analysisMinute
-            + ". Next minute is " + nextHeartBeatRecord.getDataCollectionMinute());
       } catch (Exception ex) {
         completeCron = true;
         error = true;
@@ -448,25 +420,27 @@ public class MetricAnalysisJob implements Job {
     }
 
     private void sendStateNotification(AnalysisContext context, boolean error, String errMsg) {
-      final ExecutionStatus status = error ? ExecutionStatus.FAILED : ExecutionStatus.SUCCESS;
-      final MetricAnalysisExecutionData executionData =
-          MetricAnalysisExecutionData.builder()
-              .workflowExecutionId(context.getWorkflowExecutionId())
-              .stateExecutionInstanceId(context.getStateExecutionId())
-              .serverConfigId(context.getAnalysisServerConfigId())
-              .timeDuration(context.getTimeDuration())
-              .canaryNewHostNames(context.getTestNodes())
-              .lastExecutionNodes(context.getControlNodes() == null ? new HashSet<>() : context.getControlNodes())
-              .correlationId(context.getCorrelationId())
-              .build();
-      executionData.setStatus(status);
-      if (error) {
-        executionData.setErrorMsg(errMsg);
+      if (analysisService.isStateValid(context.getAppId(), context.getStateExecutionId())) {
+        final ExecutionStatus status = error ? ExecutionStatus.FAILED : ExecutionStatus.SUCCESS;
+        final MetricAnalysisExecutionData executionData =
+            MetricAnalysisExecutionData.builder()
+                .workflowExecutionId(context.getWorkflowExecutionId())
+                .stateExecutionInstanceId(context.getStateExecutionId())
+                .serverConfigId(context.getAnalysisServerConfigId())
+                .timeDuration(context.getTimeDuration())
+                .canaryNewHostNames(context.getTestNodes())
+                .lastExecutionNodes(context.getControlNodes() == null ? new HashSet<>() : context.getControlNodes())
+                .correlationId(context.getCorrelationId())
+                .build();
+        executionData.setStatus(status);
+        if (error) {
+          executionData.setErrorMsg(errMsg);
+        }
+        final MetricDataAnalysisResponse response =
+            MetricDataAnalysisResponse.builder().stateExecutionData(executionData).build();
+        response.setExecutionStatus(status);
+        waitNotifyEngine.notify(context.getCorrelationId(), response);
       }
-      final MetricDataAnalysisResponse response =
-          MetricDataAnalysisResponse.builder().stateExecutionData(executionData).build();
-      response.setExecutionStatus(status);
-      waitNotifyEngine.notify(context.getCorrelationId(), response);
     }
   }
 }

@@ -28,6 +28,7 @@ import java.io.IOException;
 import java.nio.charset.StandardCharsets;
 import java.security.cert.CertificateException;
 import java.security.cert.X509Certificate;
+import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
@@ -105,7 +106,12 @@ public class ElkDelegateServiceImpl implements ElkDelegateService {
           JSONObject outerObject = jsonObject.getJSONObject(key);
           if (outerObject.get("properties") != null) {
             ElkIndexTemplate indexTemplate = new ElkIndexTemplate();
-            indexTemplate.setName((String) indexEntry.getValue().get("template"));
+            if (indexEntry.getValue().containsKey("index_patterns")) {
+              // TODO picking only the first pattern. should pick all patterns
+              indexTemplate.setName(((ArrayList<String>) indexEntry.getValue().get("index_patterns")).get(0));
+            } else {
+              indexTemplate.setName((String) indexEntry.getValue().get("template"));
+            }
             JSONObject propertiesObject = outerObject.getJSONObject("properties");
             final Map<String, Object> propertiesMap = new HashMap<>();
             for (String property : propertiesObject.keySet()) {

@@ -48,4 +48,6 @@ public interface AuthService {
   void invalidateAllTokensForUser(String userId);
 
   void validateExternalServiceToken(String accountId, String tokenString);
+
+  void validateLearningEngineServiceToken(String learningEngineServiceToken);
 }

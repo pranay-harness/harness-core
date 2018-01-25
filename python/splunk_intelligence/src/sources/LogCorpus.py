@@ -7,8 +7,9 @@ from sklearn.metrics.pairwise import cosine_similarity
 
 from FileLoader import FileLoader
 from HarnessLoader import HarnessLoader
+from core.util.lelogging import get_log
 
-logger = logging.getLogger(__name__)
+logger = get_log(__name__)
 
 
 class LogCorpus(object):
@@ -82,40 +83,43 @@ class LogCorpus(object):
                 dict(cluster_label=event['cluster_label'], text=event.get('text'),
                      message_frequencies=event.get('message_frequencies')))
 
-    def save_to_harness(self, url, auth_token, payload):
-        HarnessLoader.post_to_wings_server(url, auth_token, payload)
+    def save_to_harness(self, url, payload, version_file_path, service_secret):
+        HarnessLoader.post_to_wings_server(url, payload, version_file_path, service_secret)
 
     # Called with the production workflow
     def load_from_harness(self, options):
 
         control_events = HarnessLoader.load_from_wings_server(options.control_input_url,
-                                                                    options.auth_token,
-                                                                    options.application_id,
-                                                                    options.workflow_id,
-                                                                    options.state_execution_id,
-                                                                    options.service_id,
-                                                                    options.log_collection_minute,
-                                                                    options.control_nodes,
-                                                                    options.query)
+                                                              options.application_id,
+                                                              options.workflow_id,
+                                                              options.state_execution_id,
+                                                              options.service_id,
+                                                              options.log_collection_minute,
+                                                              options.control_nodes,
+                                                              options.query,
+                                                              options.version_file_path,
+                                                              options.service_secret)
 
         test_events = None
         if options.test_nodes and options.test_input_url:
             test_events = HarnessLoader.load_from_wings_server(options.test_input_url,
-                                                                     options.auth_token,
-                                                                     options.application_id,
-                                                                     options.workflow_id,
-                                                                     options.state_execution_id,
-                                                                     options.service_id,
-                                                                     options.log_collection_minute,
-                                                                     options.test_nodes,
-                                                                     options.query)
+                                                               options.application_id,
+                                                               options.workflow_id,
+                                                               options.state_execution_id,
+                                                               options.service_id,
+                                                               options.log_collection_minute,
+                                                               options.test_nodes,
+                                                               options.query,
+                                                               options.version_file_path,
+                                                               options.service_secret
+                                                               )
         else:
             logger.info("No test url or nodes provided. This is a baseline run")
 
         if (control_events is None or len(control_events) == 0) \
                 and (test_events is None or len(test_events) == 0):
-            logger.error("No new control events or test events")
-            sys.exit(200)
+            logger.warn("No new control events or test events")
+            return
 
         self.new_data = True
         for event in control_events:
@@ -126,11 +130,13 @@ class LogCorpus(object):
                 self.add_event(event, 'test')
 
         prev_state = HarnessLoader.load_prev_output_from_harness(options.log_analysis_get_url,
-                                                                       options.auth_token,
-                                                                       options.application_id,
-                                                                       options.state_execution_id,
-                                                                       options.query,
-                                                                       options.log_collection_minute)
+                                                                 options.application_id,
+                                                                 options.state_execution_id,
+                                                                 options.query,
+                                                                 options.log_collection_minute,
+                                                                 options.version_file_path,
+                                                                 options.service_secret
+                                                                 )
         if prev_state is not None:
 
             if prev_state.get('control_events') is not None:

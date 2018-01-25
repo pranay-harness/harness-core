@@ -167,7 +167,7 @@ public class SplunkV2StateTest extends WingsBaseTest {
 
     ExecutionResponse response = spyState.execute(executionContext);
     assertEquals(ExecutionStatus.SUCCESS, response.getExecutionStatus());
-    assertEquals("Skipping analysis due to lack of baseline hosts. Rerun workflow after this succeeds.",
+    assertEquals("Skipping analysis due to lack of baseline hosts. Make sure you have at least two phases defined.",
         response.getErrorMessage());
 
     LogMLAnalysisSummary analysisSummary =
@@ -184,14 +184,14 @@ public class SplunkV2StateTest extends WingsBaseTest {
   public void compareWithCurrentSameTestAndControlNodes() {
     splunkState.setComparisonStrategy(AnalysisComparisonStrategy.COMPARE_WITH_CURRENT.name());
     SplunkV2State spyState = spy(splunkState);
-    doReturn(Collections.singleton("some-host")).when(spyState).getCanaryNewHostNames(executionContext);
-    doReturn(Collections.singleton("some-host")).when(spyState).getLastExecutionNodes(executionContext);
+    doReturn(Sets.newHashSet("some-host")).when(spyState).getCanaryNewHostNames(executionContext);
+    doReturn(Sets.newHashSet("some-host")).when(spyState).getLastExecutionNodes(executionContext);
     doReturn(workflowId).when(spyState).getWorkflowId(executionContext);
     doReturn(serviceId).when(spyState).getPhaseServiceId(executionContext);
 
     ExecutionResponse response = spyState.execute(executionContext);
-    assertEquals(ExecutionStatus.FAILED, response.getExecutionStatus());
-    assertEquals("Skipping analysis. Baseline and new hosts are the same. (Minimum two phases are required).",
+    assertEquals(ExecutionStatus.SUCCESS, response.getExecutionStatus());
+    assertEquals("Skipping analysis due to lack of baseline hosts. Make sure you have at least two phases defined.",
         response.getErrorMessage());
 
     LogMLAnalysisSummary analysisSummary =

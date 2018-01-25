@@ -280,6 +280,12 @@ public class WingsMongoPersistence implements WingsPersistence, Managed {
     return primaryDatastore.findAndModify(query, updateOperations, new FindAndModifyOptions().upsert(true));
   }
 
+  @Override
+  public <T extends Base> T findAndModify(
+      Query<T> query, UpdateOperations<T> updateOperations, FindAndModifyOptions findAndModifyOptions) {
+    return primaryDatastore.findAndModify(query, updateOperations, findAndModifyOptions);
+  }
+
   /**
    * {@inheritDoc}
    */

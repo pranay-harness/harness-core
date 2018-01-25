@@ -33,8 +33,8 @@ public interface MetricAnalysisResource {
   RestResponse<Boolean> saveMLAnalysisRecords(@QueryParam("accountId") String accountId,
       @QueryParam("applicationId") String applicationId, @QueryParam("stateExecutionId") String stateExecutionId,
       @QueryParam("workflowExecutionId") String workflowExecutionId, @QueryParam("workflowId") String workflowId,
-      @QueryParam("analysisMinute") Integer analysisMinute, TimeSeriesMLAnalysisRecord mlAnalysisResponse)
-      throws IOException;
+      @QueryParam("serviceId") String serviceId, @QueryParam("analysisMinute") Integer analysisMinute,
+      @QueryParam("taskId") String taskId, TimeSeriesMLAnalysisRecord mlAnalysisResponse) throws IOException;
 
   RestResponse<List<NewRelicMetricHostAnalysisValue>> getTooltip(@QueryParam("accountId") String accountId,
       @QueryParam("stateExecutionId") String stateExecutionId,

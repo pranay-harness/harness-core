@@ -121,6 +121,7 @@ import software.wings.service.impl.WebHookServiceImpl;
 import software.wings.service.impl.WorkflowExecutionServiceImpl;
 import software.wings.service.impl.WorkflowServiceImpl;
 import software.wings.service.impl.analysis.AnalysisServiceImpl;
+import software.wings.service.impl.analysis.LearningEngineAnalysisServiceImpl;
 import software.wings.service.impl.analysis.MetricDataAnalysisServiceImpl;
 import software.wings.service.impl.appdynamics.AppdynamicsServiceImpl;
 import software.wings.service.impl.elk.ElkAnalysisServiceImpl;
@@ -179,6 +180,7 @@ import software.wings.service.intfc.HostService;
 import software.wings.service.intfc.InfrastructureMappingService;
 import software.wings.service.intfc.InfrastructureProvider;
 import software.wings.service.intfc.JenkinsBuildService;
+import software.wings.service.intfc.LearningEngineService;
 import software.wings.service.intfc.LogService;
 import software.wings.service.intfc.MetricDataAnalysisService;
 import software.wings.service.intfc.MigrationService;
@@ -351,6 +353,7 @@ public class WingsModule extends AbstractModule {
     bind(SecretManager.class).to(SecretManagerImpl.class);
     bind(TriggerService.class).to(TriggerServiceImpl.class);
     bind(VaultService.class).to(VaultServiceImpl.class);
+    bind(LearningEngineService.class).to(LearningEngineAnalysisServiceImpl.class);
     bind(Clock.class).toInstance(Clock.systemUTC());
     bind(MigrationService.class).to(MigrationServiceImpl.class).in(Singleton.class);
 

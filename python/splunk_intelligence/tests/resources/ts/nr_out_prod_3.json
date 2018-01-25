@@ -1,0 +1,578 @@
+{
+  "transactions": {
+    "0": {
+      "metrics": {
+        "0": {
+          "metric_name": "requestsPerMinute",
+          "control": {
+            "data": [
+              [
+                2,
+                11,
+                19,
+                22,
+                20,
+                -1
+              ],
+              [
+                3,
+                13,
+                16,
+                15,
+                15,
+                28
+              ]
+            ],
+            "data_type": "THROUGHPUT",
+            "host_names": [
+              "harness-verification.continuous-verification-docker-servicfc6f4",
+              "harness-verification.continuous-verification-docker-serviccdxsg"
+            ]
+          },
+          "test": {
+            "data": [
+              [
+                4,
+                12,
+                15,
+                19,
+                19,
+                -1
+              ],
+              [
+                2,
+                12,
+                19,
+                19,
+                17,
+                -1
+              ],
+              [
+                3,
+                6,
+                14,
+                17,
+                15,
+                15
+              ]
+            ],
+            "data_type": "THROUGHPUT",
+            "host_names": [
+              "harness-verification.continuous-verification-docker-servicr85xn",
+              "harness-verification.continuous-verification-docker-servic5x79r",
+              "harness-verification.continuous-verification-docker-servicqb5jr"
+            ]
+          },
+          "results": {
+            "harness-verification-continuous-verification-docker-servic5x79r": {
+              "distance": [
+                0,
+                0
+              ],
+              "control_data": [
+                10.6666666666667,
+                21
+              ],
+              "test_data": [
+                11,
+                18
+              ],
+              "control_cuts": [
+                "c",
+                "g"
+              ],
+              "test_cuts": [
+                "c",
+                "f"
+              ],
+              "optimal_cuts": "",
+              "control_index": 0,
+              "test_index": 1,
+              "nn": "harness-verification.continuous-verification-docker-servicfc6f4",
+              "risk": 0,
+              "score": 0
+            },
+            "harness-verification-continuous-verification-docker-servicqb5jr": {
+              "distance": [
+                0,
+                0
+              ],
+              "control_data": [
+                10.6666666666667,
+                21
+              ],
+              "test_data": [
+                7.66666666666667,
+                15.6666666666667
+              ],
+              "control_cuts": [
+                "c",
+                "g"
+              ],
+              "test_cuts": [
+                "b",
+                "e"
+              ],
+              "optimal_cuts": "",
+              "control_index": 0,
+              "test_index": 2,
+              "nn": "harness-verification.continuous-verification-docker-servicfc6f4",
+              "risk": 0,
+              "score": 0
+            },
+            "harness-verification-continuous-verification-docker-servicr85xn": {
+              "distance": [
+                0,
+                0
+              ],
+              "control_data": [
+                10.6666666666667,
+                21
+              ],
+              "test_data": [
+                10.3333333333333,
+                19
+              ],
+              "control_cuts": [
+                "c",
+                "g"
+              ],
+              "test_cuts": [
+                "c",
+                "f"
+              ],
+              "optimal_cuts": "",
+              "control_index": 0,
+              "test_index": 0,
+              "nn": "harness-verification.continuous-verification-docker-servicfc6f4",
+              "risk": 0,
+              "score": 0
+            }
+          },
+          "control_avg": 14.9090909090909,
+          "test_avg": 13,
+          "max_risk": 0
+        },
+        "1": {
+          "metric_name": "averageResponseTime",
+          "control": {
+            "data": [
+              [
+                283,
+                204,
+                213,
+                199,
+                209,
+                -1
+              ],
+              [
+                268,
+                206,
+                214,
+                258,
+                208,
+                201
+              ]
+            ],
+            "weights": [
+              [
+                2,
+                11,
+                19,
+                22,
+                20,
+                -1
+              ],
+              [
+                3,
+                13,
+                16,
+                15,
+                15,
+                28
+              ]
+            ],
+            "weights_type": "COUNT",
+            "data_type": "RESP_TIME",
+            "host_names": [
+              "harness-verification.continuous-verification-docker-servicfc6f4",
+              "harness-verification.continuous-verification-docker-serviccdxsg"
+            ]
+          },
+          "test": {
+            "data": [
+              [
+                343,
+                229,
+                227,
+                223,
+                208,
+                -1
+              ],
+              [
+                405,
+                342,
+                223,
+                208,
+                214,
+                -1
+              ],
+              [
+                735,
+                225,
+                228,
+                221,
+                218,
+                211
+              ]
+            ],
+            "weights": [
+              [
+                4,
+                12,
+                15,
+                19,
+                19,
+                -1
+              ],
+              [
+                2,
+                12,
+                19,
+                19,
+                17,
+                -1
+              ],
+              [
+                3,
+                6,
+                14,
+                17,
+                15,
+                15
+              ]
+            ],
+            "weights_type": "COUNT",
+            "data_type": "RESP_TIME",
+            "host_names": [
+              "harness-verification.continuous-verification-docker-servicr85xn",
+              "harness-verification.continuous-verification-docker-servic5x79r",
+              "harness-verification.continuous-verification-docker-servicqb5jr"
+            ]
+          },
+          "results": {
+            "harness-verification-continuous-verification-docker-servic5x79r": {
+              "distance": [
+                0,
+                0
+              ],
+              "control_data": [
+                229.333333333333,
+                222.333333333333
+              ],
+              "test_data": [
+                323.333333333333,
+                211
+              ],
+              "control_cuts": [
+                "c",
+                "c"
+              ],
+              "test_cuts": [
+                "f",
+                "c"
+              ],
+              "optimal_cuts": "",
+              "control_index": 1,
+              "test_index": 1,
+              "nn": "harness-verification.continuous-verification-docker-servicfc6f4",
+              "risk": 0,
+              "score": 0
+            },
+            "harness-verification-continuous-verification-docker-servicqb5jr": {
+              "distance": [
+                1.25,
+                0
+              ],
+              "control_data": [
+                233.333333333333,
+                204
+              ],
+              "test_data": [
+                396,
+                216.666666666667
+              ],
+              "control_cuts": [
+                "c",
+                "c"
+              ],
+              "test_cuts": [
+                "g",
+                "c"
+              ],
+              "optimal_cuts": "gc",
+              "optimal_data": [
+                396,
+                216.666666666667
+              ],
+              "control_index": 0,
+              "test_index": 2,
+              "nn": "harness-verification.continuous-verification-docker-servicfc6f4",
+              "risk": 1,
+              "score": 0.4166666666666667
+            },
+            "harness-verification-continuous-verification-docker-servicr85xn": {
+              "distance": [
+                0,
+                0
+              ],
+              "control_data": [
+                233.333333333333,
+                204
+              ],
+              "test_data": [
+                266.333333333333,
+                215.5
+              ],
+              "control_cuts": [
+                "c",
+                "c"
+              ],
+              "test_cuts": [
+                "d",
+                "c"
+              ],
+              "optimal_cuts": "",
+              "control_index": 0,
+              "test_index": 0,
+              "nn": "harness-verification.continuous-verification-docker-servicfc6f4",
+              "risk": 0,
+              "score": 0
+            }
+          },
+          "control_avg": 223.909090909091,
+          "test_avg": 278.75,
+          "max_risk": 1
+        },
+        "2": {
+          "metric_name": "apdexScore",
+          "control": {
+            "data": [
+              [
+                1,
+                1,
+                1,
+                1,
+                1,
+                -1
+              ],
+              [
+                1,
+                1,
+                1,
+                0.97,
+                1,
+                1
+              ]
+            ],
+            "data_type": "VALUE",
+            "host_names": [
+              "harness-verification.continuous-verification-docker-servicfc6f4",
+              "harness-verification.continuous-verification-docker-serviccdxsg"
+            ]
+          },
+          "test": {
+            "data": [
+              [
+                0.88,
+                1,
+                1,
+                1,
+                1,
+                -1
+              ],
+              [
+                1,
+                0.96,
+                1,
+                1,
+                1,
+                -1
+              ],
+              [
+                0.67,
+                1,
+                1,
+                1,
+                1,
+                1
+              ]
+            ],
+            "data_type": "VALUE",
+            "host_names": [
+              "harness-verification.continuous-verification-docker-servicr85xn",
+              "harness-verification.continuous-verification-docker-servic5x79r",
+              "harness-verification.continuous-verification-docker-servicqb5jr"
+            ]
+          },
+          "results": {
+            "harness-verification-continuous-verification-docker-servic5x79r": {
+              "distance": [
+                0,
+                0
+              ],
+              "control_data": [
+                1,
+                1
+              ],
+              "test_data": [
+                0.986666666666667,
+                1
+              ],
+              "control_cuts": [
+                "e",
+                "e"
+              ],
+              "test_cuts": [
+                "d",
+                "e"
+              ],
+              "optimal_cuts": "",
+              "control_index": 0,
+              "test_index": 1,
+              "nn": "harness-verification.continuous-verification-docker-servicfc6f4",
+              "risk": 0,
+              "score": 0
+            },
+            "harness-verification-continuous-verification-docker-servicqb5jr": {
+              "distance": [
+                0,
+                0
+              ],
+              "control_data": [
+                1,
+                1
+              ],
+              "test_data": [
+                0.89,
+                1
+              ],
+              "control_cuts": [
+                "e",
+                "e"
+              ],
+              "test_cuts": [
+                "a",
+                "e"
+              ],
+              "optimal_cuts": "",
+              "control_index": 0,
+              "test_index": 2,
+              "nn": "harness-verification.continuous-verification-docker-servicfc6f4",
+              "risk": 0,
+              "score": 0
+            },
+            "harness-verification-continuous-verification-docker-servicr85xn": {
+              "distance": [
+                0,
+                0
+              ],
+              "control_data": [
+                1,
+                1
+              ],
+              "test_data": [
+                0.96,
+                1
+              ],
+              "control_cuts": [
+                "e",
+                "e"
+              ],
+              "test_cuts": [
+                "c",
+                "e"
+              ],
+              "optimal_cuts": "",
+              "control_index": 0,
+              "test_index": 0,
+              "nn": "harness-verification.continuous-verification-docker-servicfc6f4",
+              "risk": 0,
+              "score": 0
+            }
+          },
+          "control_avg": 0.997272727272727,
+          "test_avg": 0.969375,
+          "max_risk": 0
+        },
+        "3": {
+          "metric_name": "error",
+          "control": {
+            "data": [
+              [
+                -1,
+                -1,
+                -1,
+                -1,
+                -1,
+                -1
+              ],
+              [
+                -1,
+                -1,
+                -1,
+                -1,
+                -1,
+                -1
+              ]
+            ],
+            "data_type": "ERROR",
+            "host_names": [
+              "harness-verification.continuous-verification-docker-servicfc6f4",
+              "harness-verification.continuous-verification-docker-serviccdxsg"
+            ]
+          },
+          "test": {
+            "data": [
+              [
+                -1,
+                -1,
+                -1,
+                -1,
+                -1,
+                -1
+              ],
+              [
+                -1,
+                -1,
+                -1,
+                -1,
+                -1,
+                -1
+              ],
+              [
+                -1,
+                -1,
+                -1,
+                -1,
+                -1,
+                -1
+              ]
+            ],
+            "data_type": "ERROR",
+            "host_names": [
+              "harness-verification.continuous-verification-docker-servicr85xn",
+              "harness-verification.continuous-verification-docker-servic5x79r",
+              "harness-verification.continuous-verification-docker-servicqb5jr"
+            ]
+          },
+          "control_avg": -1,
+          "test_avg": -1,
+          "max_risk": -1
+        }
+      },
+      "txn_name": "XYZ_1"
+
+    }
+  }
+}

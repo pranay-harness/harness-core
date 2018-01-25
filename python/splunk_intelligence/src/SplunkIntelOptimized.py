@@ -1,7 +1,8 @@
 import argparse
-import logging
+import json
 import sys
 import time
+import newrelic
 
 import numpy as np
 from sklearn.metrics.pairwise import euclidean_distances
@@ -13,10 +14,9 @@ from core.distance.JaccardDistance import jaccard_difference, jaccard_text_simil
 from core.feature.TFIDFVectorizer import TFIDFVectorizer
 from core.feature.Tokenizer import Tokenizer
 from sources.LogCorpus import LogCorpus
+from core.util.lelogging import get_log
 
-format = "%(asctime)-15s %(levelname)s %(message)s"
-logging.basicConfig(level=logging.INFO, format=format)
-logger = logging.getLogger(__name__)
+logger = get_log(__name__)
 
 
 class SplunkIntelOptimized(object):
@@ -32,7 +32,7 @@ class SplunkIntelOptimized(object):
                 combined_tfidf_matrix = combined_vectorizer.fit_transform(texts)
                 if combined_tfidf_matrix[np.diff(combined_tfidf_matrix.indptr) == 0].shape[0] > 0:
                     raise ValueError('Unable to featurize text with max_df = ' + str(max_df))
-                logging.info("Finish create combined dist")
+                logger.info("Finish create combined dist")
                 processed = True
             except ValueError:
                 if max_df == 1.0:
@@ -45,20 +45,20 @@ class SplunkIntelOptimized(object):
 
     # TODO run in parallel
     def set_xy(self):
-        logging.info("Create combined dist")
+        logger.info("Create combined dist")
         min_df = 1
         max_df = 0.99 if len(self.corpus.get_events_for_xy()) > 1 else 1.0
         combined_vectorizer, combined_tfidf_matrix = self.create_feature_vector(
             self.corpus.get_events_for_xy(), min_df, max_df)
 
-        logging.info("Finish create combined dist")
+        logger.info("Finish create combined dist")
 
         dist_matrix = combined_vectorizer.get_cosine_dist_matrix(combined_tfidf_matrix)
         self.corpus.set_xy(dist_matrix)
 
     def create_anom_clusters(self):
 
-        logging.info("Create anomalous clusters")
+        logger.info("Create anomalous clusters")
 
         unknown_anomalies_text = self.corpus.get_unknown_anomalies_text()
 
@@ -87,21 +87,21 @@ class SplunkIntelOptimized(object):
                             jaccard_difference(control_clusters[anomaly['cluster_label']].values()[0]['text'],
                                                anomaly['text']))
 
-        logging.info("Finish create anomolous clusters")
+        logger.info("Finish create anomolous clusters")
 
     def cluster_input(self):
         # TODO Can min_df be set higher or max_df set lower
         min_df = 1
         max_df = 0.99 if len(self.corpus.get_control_events_text_as_np()) > 1 else 1.0
         logger.info("setting min_df = " + str(min_df) + " and max_df = " + str(max_df))
-        logging.info("Start vectorization....")
+        logger.info("Start vectorization....")
         vectorizer, tfidf_feature_matrix = self.create_feature_vector(
             self.corpus.get_control_events_text_as_np(), min_df, max_df)
 
         kmeans = KmeansCluster(tfidf_feature_matrix, self._options.sim_threshold)
         kmeans.cluster_cosine_threshold()
 
-        logging.info("Finish kemans....")
+        logger.info("Finish kemans....")
 
         return vectorizer, kmeans
 
@@ -169,7 +169,7 @@ class SplunkIntelOptimized(object):
 
 
     def detect_unknown_events(self, vectorizer, kmeans):
-        logging.info("Detect unknown events")
+        logger.info("Detect unknown events")
         predictions = []
         if bool(self.corpus.test_events):
             tfidf_matrix_test = vectorizer.transform(np.array(self.corpus.get_test_events_text_as_np()))
@@ -177,9 +177,10 @@ class SplunkIntelOptimized(object):
             predictions = np.array(
                 new_anom_detector.detect_kmeans_anomaly_cosine_dist(tfidf_matrix_test,
                                                                   kmeans, self._options.sim_threshold))
-        logging.info("Finish detect unknown events")
+        logger.info("Finish detect unknown events")
         return predictions
 
+    @newrelic.agent.background_task()
     def run(self):
 
         start_time = time.time()
@@ -299,26 +300,43 @@ def run_debug_prev_run(options):
         test_start = test_start + 1
 
 
-def main(args):
-    logger.info(args)
-    options = parse(args[1:])
-    options.query = ' '.join(options.query)
-    logger.info(options)
+def main(options):
+    try:
+        logger.info(options)
+        if options.debug:
+            run_debug_live_traffic(options)
+            return
 
-    if options.debug:
-        run_debug_live_traffic(options)
-        return
+        corpus = LogCorpus()
 
-    corpus = LogCorpus()
+        corpus.load_from_harness(options)
 
-    corpus.load_from_harness(options)
+        if corpus.new_data == True:
 
-    splunk_intel = SplunkIntelOptimized(corpus, options)
-    corpus = splunk_intel.run()
+            splunk_intel = SplunkIntelOptimized(corpus, options)
+            corpus = splunk_intel.run()
 
-    logger.info(corpus.save_to_harness(options.log_analysis_save_url, options.auth_token,
-                                               corpus.get_output_as_json(options)))
+            logger.info(corpus.save_to_harness(options.log_analysis_save_url,
+                                               corpus.get_output_as_json(options), options.version_file_path,
+                                               options.service_secret))
+        else:
+            corpus.save_to_harness(options.log_analysis_save_url,
+                                   {}, options.version_file_path,
+                                   options.service_secret)
+
+    except Exception as e:
+        payload = dict(applicationId=options.appId,
+                       workflowId=options.workflow_id,
+                       workflowExecutionId=options.workflow_execution_id,
+                       stateExecutionId=options.state_execution_id,
+                       serviceId=options.service_id,
+                       analysisMinute=options.log_collection_minute)
+        raise Exception(str(e) + ' for ' + json.dumps(payload))
 
 
 if __name__ == "__main__":
-    main(sys.argv)
+    args = sys.argv
+    logger.info(args)
+    options = parse(args[1:])
+    options.query = ' '.join(options.query)
+    main(options)

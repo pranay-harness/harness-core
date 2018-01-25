@@ -11,7 +11,7 @@ import software.wings.beans.RestResponse;
 import software.wings.security.PermissionAttribute.ResourceType;
 import software.wings.security.annotations.AuthRule;
 import software.wings.security.annotations.DelegateAuth;
-import software.wings.security.annotations.ExternalServiceAuth;
+import software.wings.security.annotations.LearningEngineAuth;
 import software.wings.service.impl.analysis.AnalysisServiceImpl;
 import software.wings.service.impl.analysis.LogDataRecord;
 import software.wings.service.impl.analysis.LogElement;
@@ -30,6 +30,7 @@ import java.util.ArrayList;
 import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.Optional;
 import javax.ws.rs.GET;
 import javax.ws.rs.POST;
 import javax.ws.rs.Path;
@@ -50,11 +51,12 @@ public class ElkResource implements LogAnalysisResource {
 
   @Inject private ElkAnalysisService analysisService;
 
+  @Produces({"application/json", "application/v1+json"})
   @POST
   @Path(LogAnalysisResource.ANALYSIS_STATE_SAVE_LOG_URL)
   @Timed
   @DelegateAuth
-  @ExternalServiceAuth
+  @LearningEngineAuth
   @ExceptionMetered
   public RestResponse<Boolean> saveRawLogData(@QueryParam("accountId") String accountId,
       @QueryParam("stateExecutionId") String stateExecutionId, @QueryParam("workflowId") String workflowId,
@@ -70,7 +72,7 @@ public class ElkResource implements LogAnalysisResource {
   @Path(LogAnalysisResource.ANALYSIS_STATE_GET_LOG_URL)
   @Timed
   @ExceptionMetered
-  @ExternalServiceAuth
+  @LearningEngineAuth
   public RestResponse<List<LogDataRecord>> getRawLogData(@QueryParam("accountId") String accountId,
       @QueryParam("workflowExecutionId") String workflowExecutionId,
       @QueryParam("clusterLevel") ClusterLevel clusterLevel, @QueryParam("compareCurrent") boolean compareCurrent,
@@ -84,17 +86,18 @@ public class ElkResource implements LogAnalysisResource {
   @Path(LogAnalysisResource.ANALYSIS_STATE_SAVE_ANALYSIS_RECORDS_URL)
   @Timed
   @ExceptionMetered
-  @ExternalServiceAuth
+  @LearningEngineAuth
   public RestResponse<Boolean> saveLogAnalysisMLRecords(@QueryParam("accountId") String accountId,
       @QueryParam("applicationId") String applicationId, @QueryParam("stateExecutionId") String stateExecutionId,
       @QueryParam("logCollectionMinute") Integer logCollectionMinute,
-      @QueryParam("isBaselineCreated") boolean isBaselineCreated, LogMLAnalysisRecord mlAnalysisResponse)
-      throws IOException {
+      @QueryParam("isBaselineCreated") boolean isBaselineCreated, @QueryParam("taskId") String taskId,
+      LogMLAnalysisRecord mlAnalysisResponse) throws IOException {
     mlAnalysisResponse.setApplicationId(applicationId);
     mlAnalysisResponse.setStateExecutionId(stateExecutionId);
     mlAnalysisResponse.setLogCollectionMinute(logCollectionMinute);
     mlAnalysisResponse.setBaseLineCreated(isBaselineCreated);
-    return new RestResponse<>(analysisService.saveLogAnalysisRecords(mlAnalysisResponse, StateType.ELK));
+    return new RestResponse<>(
+        analysisService.saveLogAnalysisRecords(mlAnalysisResponse, StateType.ELK, Optional.of(taskId)));
   }
 
   @Produces({"application/json", "application/v1+json"})
@@ -102,7 +105,7 @@ public class ElkResource implements LogAnalysisResource {
   @Path(LogAnalysisResource.ANALYSIS_STATE_GET_ANALYSIS_RECORDS_URL)
   @Timed
   @ExceptionMetered
-  @ExternalServiceAuth
+  @LearningEngineAuth
   public RestResponse<LogMLAnalysisRecord> getLogMLAnalysisRecords(
       @QueryParam("accountId") String accountId, LogMLAnalysisRequest mlAnalysisRequest) throws IOException {
     return new RestResponse<>(analysisService.getLogAnalysisRecords(mlAnalysisRequest.getApplicationId(),
