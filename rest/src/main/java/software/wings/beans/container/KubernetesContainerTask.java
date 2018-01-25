@@ -5,12 +5,10 @@ import static org.apache.commons.lang3.StringUtils.isNotBlank;
 import static org.apache.commons.lang3.StringUtils.strip;
 import static software.wings.beans.container.ContainerTask.AdvancedType.JSON;
 import static software.wings.beans.container.ContainerTask.AdvancedType.YAML;
+import static software.wings.service.impl.KubernetesHelperService.toYaml;
 
 import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
 import com.fasterxml.jackson.annotation.JsonTypeName;
-import com.fasterxml.jackson.databind.ObjectMapper;
-import com.fasterxml.jackson.dataformat.yaml.YAMLFactory;
-import com.fasterxml.jackson.dataformat.yaml.YAMLGenerator.Feature;
 import com.github.reinert.jjschema.Attributes;
 import com.github.reinert.jjschema.SchemaIgnore;
 import io.fabric8.kubernetes.api.KubernetesHelper;
@@ -21,11 +19,11 @@ import io.fabric8.kubernetes.api.model.HostPathVolumeSource;
 import io.fabric8.kubernetes.api.model.PodTemplateSpec;
 import io.fabric8.kubernetes.api.model.Quantity;
 import io.fabric8.kubernetes.api.model.ReplicationController;
-import io.fabric8.kubernetes.api.model.ReplicationControllerBuilder;
 import io.fabric8.kubernetes.api.model.Volume;
 import io.fabric8.kubernetes.api.model.VolumeBuilder;
 import io.fabric8.kubernetes.api.model.extensions.DaemonSet;
 import io.fabric8.kubernetes.api.model.extensions.Deployment;
+import io.fabric8.kubernetes.api.model.extensions.DeploymentBuilder;
 import io.fabric8.kubernetes.api.model.extensions.ReplicaSet;
 import io.fabric8.kubernetes.api.model.extensions.StatefulSet;
 import lombok.Builder;
@@ -211,9 +209,7 @@ public class KubernetesContainerTask extends ContainerTask {
 
   private String fetchYamlConfig() {
     try {
-      YAMLFactory yamlFactory = new YAMLFactory().configure(Feature.WRITE_DOC_START_MARKER, false);
-      ObjectMapper objectMapper = new ObjectMapper(yamlFactory);
-      return objectMapper.writeValueAsString(createReplicationController())
+      return toYaml(createDeployment())
           .replaceAll(DUMMY_DOCKER_IMAGE_NAME, DOCKER_IMAGE_NAME_PLACEHOLDER_REGEX)
           .replaceAll(DUMMY_CONTAINER_NAME, CONTAINER_NAME_PLACEHOLDER_REGEX)
           .replaceAll(DUMMY_SECRET_NAME, SECRET_NAME_PLACEHOLDER_REGEX);
@@ -222,7 +218,7 @@ public class KubernetesContainerTask extends ContainerTask {
     }
   }
 
-  private ReplicationController createReplicationController() {
+  private Deployment createDeployment() {
     Map<String, Volume> volumeMap = new HashMap<>();
     for (ContainerDefinition containerDefinition : getContainerDefinitions()) {
       if (containerDefinition.getStorageConfigurations() != null) {
@@ -239,7 +235,7 @@ public class KubernetesContainerTask extends ContainerTask {
       }
     }
 
-    return new ReplicationControllerBuilder()
+    return new DeploymentBuilder()
         .withNewMetadata()
         .endMetadata()
         .withNewSpec()
