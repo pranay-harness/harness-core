@@ -85,7 +85,7 @@ import java.util.concurrent.atomic.AtomicInteger;
 public class WatcherServiceImpl implements WatcherService {
   private static final Logger logger = LoggerFactory.getLogger(WatcherServiceImpl.class);
 
-  private static final long DELEGATE_HEARTBEAT_TIMEOUT = TimeUnit.MINUTES.toMillis(5);
+  private static final long DELEGATE_HEARTBEAT_TIMEOUT = TimeUnit.MINUTES.toMillis(3);
   private static final long DELEGATE_STARTUP_TIMEOUT = TimeUnit.MINUTES.toMillis(1);
   private static final long DELEGATE_SHUTDOWN_TIMEOUT = TimeUnit.HOURS.toMillis(2);
 
