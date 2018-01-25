@@ -147,14 +147,17 @@ public class DelegateModule extends AbstractModule {
             new ThreadFactoryBuilder().setNameFormat("InputCheck-Thread").setPriority(Thread.NORM_PRIORITY).build()));
     bind(ScheduledExecutorService.class)
         .annotatedWith(Names.named("verificationExecutor"))
-        .toInstance(new ScheduledThreadPoolExecutor(
-            2, new ThreadFactoryBuilder().setNameFormat("Verification-Thread-%d").setPriority(7).build()));
+        .toInstance(new ScheduledThreadPoolExecutor(2,
+            new ThreadFactoryBuilder()
+                .setNameFormat("Verification-Thread-%d")
+                .setPriority(Thread.NORM_PRIORITY)
+                .build()));
     bind(ExecutorService.class)
         .annotatedWith(Names.named("verificationDataCollector"))
         .toInstance(Executors.newFixedThreadPool(10,
             new ThreadFactoryBuilder()
                 .setNameFormat("Verification-Data-Collector-%d")
-                .setPriority(Thread.MAX_PRIORITY)
+                .setPriority(Thread.MIN_PRIORITY)
                 .build()));
 
     int cores = Runtime.getRuntime().availableProcessors();

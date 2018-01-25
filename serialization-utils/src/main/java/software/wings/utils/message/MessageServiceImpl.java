@@ -400,7 +400,7 @@ public class MessageServiceImpl implements MessageService {
       try {
         return JsonUtils.asObject(FileUtils.readFileToString(file, UTF_8), HashMap.class);
       } catch (Exception e) {
-        logger.error("Couldn't read map from {}. Returning empty data map", file.getName());
+        logger.error("Couldn't read map from {}. Returning empty data map", file.getName(), e);
       }
     }
     return new HashMap<>();

@@ -127,11 +127,11 @@ import javax.validation.constraints.NotNull;
 public class DelegateServiceImpl implements DelegateService {
   private static final int MAX_CONNECT_ATTEMPTS = 50;
   private static final int RECONNECT_INTERVAL_SECONDS = 10;
+  private static final int POLL_INTERVAL_SECONDS = 3;
   private static final long UPGRADE_TIMEOUT = TimeUnit.HOURS.toMillis(2);
   private static final long HEARTBEAT_TIMEOUT = TimeUnit.MINUTES.toMillis(15);
-  private static final long WATCHER_HEARTBEAT_TIMEOUT = TimeUnit.MINUTES.toMillis(1);
+  private static final long WATCHER_HEARTBEAT_TIMEOUT = TimeUnit.MINUTES.toMillis(10);
   private static final long WATCHER_VERSION_MATCH_TIMEOUT = TimeUnit.MINUTES.toMillis(2);
-  public static final int POLL_INTERVAL = 3;
 
   private static String hostName;
 
@@ -532,7 +532,7 @@ public class DelegateServiceImpl implements DelegateService {
   }
 
   private void startTaskPolling() {
-    taskPollExecutor.scheduleAtFixedRate(this ::pollForTask, 0, POLL_INTERVAL, TimeUnit.SECONDS);
+    taskPollExecutor.scheduleAtFixedRate(this ::pollForTask, 0, POLL_INTERVAL_SECONDS, TimeUnit.SECONDS);
   }
 
   private void pollForTask() {
@@ -776,7 +776,7 @@ public class DelegateServiceImpl implements DelegateService {
           if (validated) {
             logger.info("Task {} validated but was not assigned", taskId);
           } else {
-            int delay = POLL_INTERVAL + 2;
+            int delay = POLL_INTERVAL_SECONDS + 2;
             logger.info(
                 "Waiting {} to give other delegates a chance to register as validators for task {}", delay, taskId);
             sleep(ofSeconds(delay));
