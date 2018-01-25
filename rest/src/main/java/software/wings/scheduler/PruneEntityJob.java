@@ -23,7 +23,6 @@ import software.wings.beans.Application;
 import software.wings.beans.Environment;
 import software.wings.beans.InfrastructureMapping;
 import software.wings.beans.Pipeline;
-import software.wings.beans.ResponseMessage;
 import software.wings.beans.Service;
 import software.wings.beans.Workflow;
 import software.wings.beans.artifact.ArtifactStream;
@@ -41,7 +40,6 @@ import software.wings.service.intfc.ServiceResourceService;
 import software.wings.service.intfc.WorkflowService;
 
 import java.time.Duration;
-import java.util.ArrayList;
 import java.util.Calendar;
 import java.util.List;
 
@@ -103,23 +101,21 @@ public class PruneEntityJob implements Job {
 
   public static <T> void pruneDescendingEntities(
       List<T> descendingServices, String appId, String entityId, PruneService<T> lambda) {
-    List<ResponseMessage> messages = new ArrayList<>();
     CauseCollection causeCollection = new CauseCollection();
-
+    boolean succeeded = true;
     for (T descending : descendingServices) {
       try {
         lambda.prune(descending);
-      } catch (WingsException e) {
-        messages.addAll(e.getResponseMessageList());
-        causeCollection.addCause(e);
+      } catch (WingsException exception) {
+        succeeded = false;
+        exception.logProcessedMessages(BACKGROUND_JOB);
       } catch (Throwable e) {
+        succeeded = false;
         causeCollection.addCause(e);
       }
     }
-
-    if (!messages.isEmpty()) {
-      throw new WingsException(messages,
-          "Fail to prune some of the entities for app: " + appId + ", entity: " + entityId, causeCollection.getCause());
+    if (!succeeded) {
+      throw new WingsException(causeCollection.getCause());
     }
   }
 

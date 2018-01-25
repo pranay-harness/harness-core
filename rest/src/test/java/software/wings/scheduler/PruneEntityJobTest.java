@@ -169,9 +169,7 @@ public class PruneEntityJobTest extends WingsBaseTest {
 
     job.execute(context);
 
-    verify(mockLogger, times(1))
-        .error(matches(".*Fail to prune some of the entities for app: app_id, entity: entityId.*"),
-            any(WingsException.class));
+    verify(mockLogger, times(1)).error(matches("Exception occurred: DEFAULT_ERROR_CODE"), any(WingsException.class));
 
     verify(logService, times(1)).pruneByActivity(APP_ID, ENTITY_ID);
     verify(jobScheduler, times(0)).deleteJob(ENTITY_ID, PruneEntityJob.GROUP);
