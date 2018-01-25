@@ -24,6 +24,9 @@ import io.fabric8.kubernetes.api.model.Container;
 import io.fabric8.kubernetes.api.model.EnvVar;
 import io.fabric8.kubernetes.api.model.EnvVarBuilder;
 import io.fabric8.kubernetes.api.model.HasMetadata;
+import io.fabric8.kubernetes.api.model.HorizontalPodAutoscaler;
+import io.fabric8.kubernetes.api.model.HorizontalPodAutoscalerBuilder;
+import io.fabric8.kubernetes.api.model.HorizontalPodAutoscalerSpecBuilder;
 import io.fabric8.kubernetes.api.model.LabelSelectorBuilder;
 import io.fabric8.kubernetes.api.model.LoadBalancerIngress;
 import io.fabric8.kubernetes.api.model.LoadBalancerStatus;
@@ -123,8 +126,18 @@ public class KubernetesSetupCommandUnit extends ContainerSetupCommandUnit {
 
     String kubernetesServiceName = getKubernetesServiceName(setupParams.getControllerNamePrefix());
 
-    if (setupParams.isRollbackDaemonSet()) {
-      return performDaemonSetRollback(encryptedDataDetails, executionLogCallback, setupParams, kubernetesConfig);
+    if (setupParams.isRollback()) {
+      executionLogCallback.saveExecutionLog("Rolling back setup", LogLevel.INFO);
+      if (isNotBlank(setupParams.getPreviousDaemonSetYaml())) {
+        performDaemonSetRollback(encryptedDataDetails, executionLogCallback, setupParams, kubernetesConfig);
+      }
+      if (isNotEmpty(setupParams.getActiveAutoscalers())) {
+        performAutoscalerRollback(encryptedDataDetails, executionLogCallback, setupParams, kubernetesConfig);
+      }
+      executionLogCallback.saveExecutionLog("Rollback complete", LogLevel.INFO);
+      return ContainerSetupCommandUnitExecutionData.builder()
+          .containerServiceName(setupParams.getControllerNamePrefix())
+          .build();
     }
 
     kubernetesContainerService.createNamespaceIfNotExist(kubernetesConfig, encryptedDataDetails);
@@ -197,6 +210,27 @@ public class KubernetesSetupCommandUnit extends ContainerSetupCommandUnit {
       kubernetesContainerService.deleteService(kubernetesConfig, encryptedDataDetails, kubernetesServiceName);
     }
 
+    // Disable previous autoscalers
+    if (isNotEmpty(setupParams.getActiveAutoscalers())) {
+      setupParams.getActiveAutoscalers().forEach(autoscaler -> {
+        executionLogCallback.saveExecutionLog("Disabling autoscaler " + autoscaler, LogLevel.INFO);
+        kubernetesContainerService.disableAutoscaler(kubernetesConfig, encryptedDataDetails, autoscaler);
+      });
+    }
+
+    // Create new autoscaler
+    if (setupParams.isUseAutoscaler()) {
+      HorizontalPodAutoscaler autoscalerDefinition =
+          createAutoscaler(containerServiceName, kubernetesConfig.getNamespace(), controllerLabels, setupParams);
+      if (autoscalerDefinition != null) {
+        executionLogCallback.saveExecutionLog("Creating autoscaler " + containerServiceName + " with min instances: "
+                + setupParams.getMinAutoscaleInstances() + ", max instances: " + setupParams.getMaxAutoscaleInstances()
+                + ", target CPU utilization: " + setupParams.getTargetCpuUtilizationPercentage() + "%",
+            LogLevel.INFO);
+        kubernetesContainerService.createAutoscaler(kubernetesConfig, encryptedDataDetails, autoscalerDefinition);
+      }
+    }
+
     String dockerImageName = setupParams.getImageDetails().getName() + ":" + setupParams.getImageDetails().getTag();
 
     executionLogCallback.saveExecutionLog("Cluster Name: " + setupParams.getClusterName(), LogLevel.INFO);
@@ -254,9 +288,8 @@ public class KubernetesSetupCommandUnit extends ContainerSetupCommandUnit {
         -> executionLogCallback.saveExecutionLog("DaemonSet container ID: " + info.getContainerId(), LogLevel.INFO));
   }
 
-  private ContainerSetupCommandUnitExecutionData performDaemonSetRollback(
-      List<EncryptedDataDetail> encryptedDataDetails, ExecutionLogCallback executionLogCallback,
-      KubernetesSetupParams setupParams, KubernetesConfig kubernetesConfig) {
+  private void performDaemonSetRollback(List<EncryptedDataDetail> encryptedDataDetails,
+      ExecutionLogCallback executionLogCallback, KubernetesSetupParams setupParams, KubernetesConfig kubernetesConfig) {
     String daemonSetName = setupParams.getControllerNamePrefix();
     String daemonSetYaml = setupParams.getPreviousDaemonSetYaml();
     if (isNotBlank(daemonSetYaml)) {
@@ -288,7 +321,17 @@ public class KubernetesSetupCommandUnit extends ContainerSetupCommandUnit {
       kubernetesContainerService.waitForPodsToStop(kubernetesConfig, encryptedDataDetails, labels,
           setupParams.getServiceSteadyStateTimeout(), executionLogCallback);
     }
-    return ContainerSetupCommandUnitExecutionData.builder().containerServiceName(daemonSetName).build();
+  }
+
+  private void performAutoscalerRollback(List<EncryptedDataDetail> encryptedDataDetails,
+      ExecutionLogCallback executionLogCallback, KubernetesSetupParams setupParams, KubernetesConfig kubernetesConfig) {
+    List<String> autoscalerNames = setupParams.getActiveAutoscalers();
+    if (isNotEmpty(autoscalerNames)) {
+      for (String autoscalerName : autoscalerNames) {
+        executionLogCallback.saveExecutionLog("Enabling autoscaler " + autoscalerName, LogLevel.INFO);
+        kubernetesContainerService.enableAutoscaler(kubernetesConfig, encryptedDataDetails, autoscalerName);
+      }
+    }
   }
 
   private Secret createRegistrySecret(
@@ -366,9 +409,6 @@ public class KubernetesSetupCommandUnit extends ContainerSetupCommandUnit {
     return lastReplicationController[0] != null ? lastReplicationController[0].getMetadata().getName() : null;
   }
 
-  /**
-   * Creates controller definition
-   */
   private HasMetadata createKubernetesControllerDefinition(KubernetesContainerTask kubernetesContainerTask,
       String replicationControllerName, Map<String, String> controllerLabels, String namespace,
       ImageDetails imageDetails, String secretName, Map<String, String> serviceVariables,
@@ -456,9 +496,6 @@ public class KubernetesSetupCommandUnit extends ContainerSetupCommandUnit {
     }
   }
 
-  /**
-   * Creates service definition
-   */
   private io.fabric8.kubernetes.api.model.Service createServiceDefinition(
       String serviceName, String namespace, Map<String, String> serviceLabels, KubernetesSetupParams setupParams) {
     ServiceSpecBuilder spec =
@@ -502,6 +539,27 @@ public class KubernetesSetupCommandUnit extends ContainerSetupCommandUnit {
         .build();
   }
 
+  private HorizontalPodAutoscaler createAutoscaler(
+      String autoscalerName, String namespace, Map<String, String> serviceLabels, KubernetesSetupParams setupParams) {
+    HorizontalPodAutoscalerSpecBuilder spec =
+        new HorizontalPodAutoscalerSpecBuilder()
+            .withMinReplicas(setupParams.getMinAutoscaleInstances())
+            .withMaxReplicas(setupParams.getMaxAutoscaleInstances())
+            .withTargetCPUUtilizationPercentage(setupParams.getTargetCpuUtilizationPercentage())
+            .withNewScaleTargetRef()
+            .withKind("none")
+            .withName("none")
+            .endScaleTargetRef();
+    return new HorizontalPodAutoscalerBuilder()
+        .withNewMetadata()
+        .withName(autoscalerName)
+        .withNamespace(namespace)
+        .addToLabels(serviceLabels)
+        .endMetadata()
+        .withSpec(spec.build())
+        .build();
+  }
+
   private void cleanup(
       KubernetesConfig kubernetesConfig, List<EncryptedDataDetail> encryptedDataDetails, String containerServiceName) {
     Optional<Integer> revision = getRevisionFromControllerName(containerServiceName);
@@ -518,6 +576,7 @@ public class KubernetesSetupCommandUnit extends ContainerSetupCommandUnit {
             if (ctrlRevision.isPresent() && ctrlRevision.get() < minRevisionToKeep) {
               logger.info("Deleting old version: " + controllerName);
               kubernetesContainerService.deleteController(kubernetesConfig, encryptedDataDetails, controllerName);
+              kubernetesContainerService.deleteAutoscaler(kubernetesConfig, encryptedDataDetails, controllerName);
             }
           });
     }

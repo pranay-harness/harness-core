@@ -30,6 +30,10 @@ public class ContainerServiceElement implements ContextElement {
   private String namespace;
   private DeploymentType deploymentType;
   private String infraMappingId;
+  private boolean useAutoscaler;
+  private int minAutoscaleInstances;
+  private int maxAutoscaleInstances;
+  private int targetCpuUtilizationPercentage;
 
   @Override
   public ContextElementType getElementType() {

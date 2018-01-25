@@ -19,6 +19,9 @@ public interface ContainerService {
   @DelegateTaskType(TaskType.CONTAINER_DAEMON_SET_YAML)
   String getDaemonSetYaml(ContainerServiceParams containerServiceParams);
 
+  @DelegateTaskType(TaskType.CONTAINER_ACTIVE_AUTOSCALERS)
+  List<String> getActiveAutoscalers(ContainerServiceParams containerServiceParams);
+
   @DelegateTaskType(TaskType.CONTAINER_INFO)
   List<ContainerInfo> getContainerInfos(ContainerServiceParams containerServiceParams);
 

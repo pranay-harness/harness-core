@@ -1,10 +1,12 @@
 package software.wings.beans.command;
 
 import static java.util.Collections.emptyList;
+import static software.wings.cloudprovider.ContainerInfo.Status.SUCCESS;
 
 import com.google.inject.Inject;
 
 import com.fasterxml.jackson.annotation.JsonTypeName;
+import io.fabric8.kubernetes.api.model.HorizontalPodAutoscaler;
 import lombok.Builder;
 import lombok.Data;
 import lombok.EqualsAndHashCode;
@@ -12,6 +14,7 @@ import org.mongodb.morphia.annotations.Transient;
 import software.wings.api.ContainerServiceData;
 import software.wings.api.DeploymentType;
 import software.wings.beans.KubernetesConfig;
+import software.wings.beans.Log.LogLevel;
 import software.wings.beans.SettingAttribute;
 import software.wings.cloudprovider.ContainerInfo;
 import software.wings.cloudprovider.gke.GkeClusterService;
@@ -49,9 +52,34 @@ public class KubernetesResizeCommandUnit extends ContainerResizeCommandUnit {
       kubernetesConfig.setDecrypted(true);
       encryptedDataDetails = emptyList();
     }
-    return kubernetesContainerService.setControllerPodCount(kubernetesConfig, encryptedDataDetails,
-        resizeParams.getClusterName(), containerServiceData.getName(), containerServiceData.getPreviousCount(),
-        containerServiceData.getDesiredCount(), resizeParams.getServiceSteadyStateTimeout(), executionLogCallback);
+
+    if (resizeParams.isRollbackAutoscaler() && resizeParams.isUseAutoscaler()) {
+      HorizontalPodAutoscaler autoscaler = kubernetesContainerService.getAutoscaler(
+          kubernetesConfig, encryptedDataDetails, containerServiceData.getName());
+      if (containerServiceData.getName().equals(autoscaler.getSpec().getScaleTargetRef().getName())) {
+        executionLogCallback.saveExecutionLog("Disabling autoscaler " + containerServiceData.getName(), LogLevel.INFO);
+        kubernetesContainerService.disableAutoscaler(
+            kubernetesConfig, encryptedDataDetails, containerServiceData.getName());
+      }
+    }
+
+    List<ContainerInfo> containerInfos =
+        kubernetesContainerService.setControllerPodCount(kubernetesConfig, encryptedDataDetails,
+            resizeParams.getClusterName(), containerServiceData.getName(), containerServiceData.getPreviousCount(),
+            containerServiceData.getDesiredCount(), resizeParams.getServiceSteadyStateTimeout(), executionLogCallback);
+
+    boolean allContainersSuccess = containerInfos.stream().allMatch(info -> info.getStatus() == SUCCESS);
+    int totalDesiredCount = params.getDesiredCounts().stream().mapToInt(ContainerServiceData::getDesiredCount).sum();
+    if (totalDesiredCount > 0 && containerInfos.size() == totalDesiredCount && allContainersSuccess
+        && resizeParams.isDeployingToHundredPercent()) {
+      if (resizeParams.isUseAutoscaler()) {
+        executionLogCallback.saveExecutionLog("Enabling autoscaler " + containerServiceData.getName(), LogLevel.INFO);
+        kubernetesContainerService.enableAutoscaler(
+            kubernetesConfig, encryptedDataDetails, containerServiceData.getName());
+      }
+    }
+
+    return containerInfos;
   }
 
   @Data

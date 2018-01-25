@@ -1,7 +1,3 @@
-/**
- *
- */
-
 package software.wings.service.impl;
 
 import static io.harness.data.structure.EmptyPredicate.isEmpty;
@@ -71,10 +67,10 @@ import static software.wings.sm.StateType.ECS_SERVICE_ROLLBACK;
 import static software.wings.sm.StateType.ECS_SERVICE_SETUP;
 import static software.wings.sm.StateType.ELASTIC_LOAD_BALANCER;
 import static software.wings.sm.StateType.GCP_CLUSTER_SETUP;
-import static software.wings.sm.StateType.KUBERNETES_DAEMON_SET_ROLLBACK;
 import static software.wings.sm.StateType.KUBERNETES_REPLICATION_CONTROLLER_DEPLOY;
 import static software.wings.sm.StateType.KUBERNETES_REPLICATION_CONTROLLER_ROLLBACK;
 import static software.wings.sm.StateType.KUBERNETES_REPLICATION_CONTROLLER_SETUP;
+import static software.wings.sm.StateType.KUBERNETES_SETUP_ROLLBACK;
 import static software.wings.utils.Switch.unhandled;
 import static software.wings.utils.Validator.notNullCheck;
 
@@ -127,6 +123,7 @@ import software.wings.beans.Variable;
 import software.wings.beans.Workflow;
 import software.wings.beans.WorkflowExecution;
 import software.wings.beans.WorkflowPhase;
+import software.wings.beans.WorkflowPhase.WorkflowPhaseBuilder;
 import software.wings.beans.WorkflowType;
 import software.wings.beans.artifact.ArtifactStream;
 import software.wings.beans.artifact.ArtifactStreamType;
@@ -1539,14 +1536,15 @@ public class WorkflowServiceImpl implements WorkflowService, DataProvider {
       generateNewWorkflowPhaseSteps(workflow.getAppId(), workflow.getEnvId(), workflowPhase, serviceRepeat);
       canaryOrchestrationWorkflow.getWorkflowPhases().add(workflowPhase);
 
-      WorkflowPhase rollbackWorkflowPhase = generateRollbackWorkflowPhase(workflow.getAppId(), workflowPhase);
+      WorkflowPhase rollbackWorkflowPhase =
+          generateRollbackWorkflowPhase(workflow.getAppId(), workflowPhase, !serviceRepeat);
       canaryOrchestrationWorkflow.getRollbackWorkflowPhaseIdMap().put(workflowPhase.getUuid(), rollbackWorkflowPhase);
     } else if (orchestrationWorkflow.getOrchestrationWorkflowType().equals(BASIC)) {
       BasicOrchestrationWorkflow basicOrchestrationWorkflow = (BasicOrchestrationWorkflow) orchestrationWorkflow;
       generateNewWorkflowPhaseSteps(workflow.getAppId(), workflow.getEnvId(), workflowPhase, false);
       basicOrchestrationWorkflow.getWorkflowPhases().add(workflowPhase);
 
-      WorkflowPhase rollbackWorkflowPhase = generateRollbackWorkflowPhase(workflow.getAppId(), workflowPhase);
+      WorkflowPhase rollbackWorkflowPhase = generateRollbackWorkflowPhase(workflow.getAppId(), workflowPhase, true);
       basicOrchestrationWorkflow.getRollbackWorkflowPhaseIdMap().put(workflowPhase.getUuid(), rollbackWorkflowPhase);
     } else if (orchestrationWorkflow.getOrchestrationWorkflowType().equals(MULTI_SERVICE)) {
       MultiServiceOrchestrationWorkflow multiServiceOrchestrationWorkflow =
@@ -1555,7 +1553,8 @@ public class WorkflowServiceImpl implements WorkflowService, DataProvider {
       generateNewWorkflowPhaseSteps(workflow.getAppId(), workflow.getEnvId(), workflowPhase, serviceRepeat);
       multiServiceOrchestrationWorkflow.getWorkflowPhases().add(workflowPhase);
 
-      WorkflowPhase rollbackWorkflowPhase = generateRollbackWorkflowPhase(workflow.getAppId(), workflowPhase);
+      WorkflowPhase rollbackWorkflowPhase =
+          generateRollbackWorkflowPhase(workflow.getAppId(), workflowPhase, !serviceRepeat);
       multiServiceOrchestrationWorkflow.getRollbackWorkflowPhaseIdMap().put(
           workflowPhase.getUuid(), rollbackWorkflowPhase);
     } else if (orchestrationWorkflow.getOrchestrationWorkflowType().equals(BUILD)) {
@@ -2242,33 +2241,25 @@ public class WorkflowServiceImpl implements WorkflowService, DataProvider {
                && isNotBlank(((AwsInfrastructureMapping) infrastructureMapping).getLoadBalancerId()));
   }
 
-  private WorkflowPhase generateRollbackWorkflowPhase(String appId, WorkflowPhase workflowPhase) {
+  private WorkflowPhase generateRollbackWorkflowPhase(
+      String appId, WorkflowPhase workflowPhase, boolean serviceSetupRequired) {
     DeploymentType deploymentType = workflowPhase.getDeploymentType();
     if (deploymentType == DeploymentType.ECS) {
-      return generateRollbackWorkflowPhaseForContainerService(workflowPhase, ECS_SERVICE_ROLLBACK.name());
+      return generateRollbackWorkflowPhaseForEcs(workflowPhase);
     } else if (deploymentType == DeploymentType.KUBERNETES) {
-      KubernetesContainerTask containerTask =
-          (KubernetesContainerTask) serviceResourceService.getContainerTaskByDeploymentType(
-              appId, workflowPhase.getServiceId(), DeploymentType.KUBERNETES.name());
-      if (containerTask != null && containerTask.kubernetesType() == DaemonSet.class) {
-        return generateRollbackWorkflowPhaseForDaemonSets(workflowPhase);
-      } else {
-        return generateRollbackWorkflowPhaseForContainerService(
-            workflowPhase, KUBERNETES_REPLICATION_CONTROLLER_ROLLBACK.name());
-      }
+      return generateRollbackWorkflowPhaseForKubernetes(workflowPhase, appId, serviceSetupRequired);
     } else if (deploymentType == DeploymentType.AWS_CODEDEPLOY) {
-      return generateRollbackWorkflowPhaseForAwsCodeDeploy(workflowPhase, AWS_CODEDEPLOY_ROLLBACK.name());
+      return generateRollbackWorkflowPhaseForAwsCodeDeploy(workflowPhase);
     } else if (deploymentType == DeploymentType.AWS_LAMBDA) {
-      return generateRollbackWorkflowPhaseForAwsLambda(workflowPhase, AWS_LAMBDA_ROLLBACK.name());
+      return generateRollbackWorkflowPhaseForAwsLambda(workflowPhase);
     } else if (deploymentType == DeploymentType.AMI) {
-      return generateRollbackWorkflowPhaseForAwsAmi(workflowPhase, AWS_AMI_SERVICE_ROLLBACK.name());
+      return generateRollbackWorkflowPhaseForAwsAmi(workflowPhase);
     } else {
       return generateRollbackWorkflowPhaseForSSH(appId, workflowPhase);
     }
   }
 
-  private WorkflowPhase generateRollbackWorkflowPhaseForAwsAmi(
-      WorkflowPhase workflowPhase, String containerServiceType) {
+  private WorkflowPhase generateRollbackWorkflowPhaseForAwsAmi(WorkflowPhase workflowPhase) {
     return aWorkflowPhase()
         .withName(Constants.ROLLBACK_PREFIX + workflowPhase.getName())
         .withRollback(true)
@@ -2281,7 +2272,7 @@ public class WorkflowServiceImpl implements WorkflowService, DataProvider {
         .addPhaseStep(aPhaseStep(AMI_DEPLOY_AUTOSCALING_GROUP, Constants.ROLLBACK_SERVICE)
                           .addStep(aNode()
                                        .withId(getUuid())
-                                       .withType(containerServiceType)
+                                       .withType(AWS_AMI_SERVICE_ROLLBACK.name())
                                        .withName(Constants.ROLLBACK_AWS_AMI_CLUSTER)
                                        .addProperty("rollback", true)
                                        .build())
@@ -2293,8 +2284,7 @@ public class WorkflowServiceImpl implements WorkflowService, DataProvider {
         .build();
   }
 
-  private WorkflowPhase generateRollbackWorkflowPhaseForAwsLambda(
-      WorkflowPhase workflowPhase, String containerServiceType) {
+  private WorkflowPhase generateRollbackWorkflowPhaseForAwsLambda(WorkflowPhase workflowPhase) {
     return aWorkflowPhase()
         .withName(Constants.ROLLBACK_PREFIX + workflowPhase.getName())
         .withRollback(true)
@@ -2307,7 +2297,7 @@ public class WorkflowServiceImpl implements WorkflowService, DataProvider {
         .addPhaseStep(aPhaseStep(DEPLOY_AWS_LAMBDA, Constants.DEPLOY_SERVICE)
                           .addStep(aNode()
                                        .withId(getUuid())
-                                       .withType(containerServiceType)
+                                       .withType(AWS_LAMBDA_ROLLBACK.name())
                                        .withName(Constants.ROLLBACK_AWS_LAMBDA)
                                        .addProperty("rollback", true)
                                        .build())
@@ -2319,8 +2309,7 @@ public class WorkflowServiceImpl implements WorkflowService, DataProvider {
         .build();
   }
 
-  private WorkflowPhase generateRollbackWorkflowPhaseForContainerService(
-      WorkflowPhase workflowPhase, String containerServiceType) {
+  private WorkflowPhase generateRollbackWorkflowPhaseForEcs(WorkflowPhase workflowPhase) {
     return aWorkflowPhase()
         .withName(Constants.ROLLBACK_PREFIX + workflowPhase.getName())
         .withRollback(true)
@@ -2333,7 +2322,7 @@ public class WorkflowServiceImpl implements WorkflowService, DataProvider {
         .addPhaseStep(aPhaseStep(CONTAINER_DEPLOY, Constants.DEPLOY_CONTAINERS)
                           .addStep(aNode()
                                        .withId(getUuid())
-                                       .withType(containerServiceType)
+                                       .withType(ECS_SERVICE_ROLLBACK.name())
                                        .withName(Constants.ROLLBACK_CONTAINERS)
                                        .addProperty("rollback", true)
                                        .build())
@@ -2345,8 +2334,7 @@ public class WorkflowServiceImpl implements WorkflowService, DataProvider {
         .build();
   }
 
-  private WorkflowPhase generateRollbackWorkflowPhaseForAwsCodeDeploy(
-      WorkflowPhase workflowPhase, String containerServiceType) {
+  private WorkflowPhase generateRollbackWorkflowPhaseForAwsCodeDeploy(WorkflowPhase workflowPhase) {
     return aWorkflowPhase()
         .withName(Constants.ROLLBACK_PREFIX + workflowPhase.getName())
         .withRollback(true)
@@ -2359,7 +2347,7 @@ public class WorkflowServiceImpl implements WorkflowService, DataProvider {
         .addPhaseStep(aPhaseStep(DEPLOY_AWSCODEDEPLOY, Constants.DEPLOY_SERVICE)
                           .addStep(aNode()
                                        .withId(getUuid())
-                                       .withType(containerServiceType)
+                                       .withType(AWS_CODEDEPLOY_ROLLBACK.name())
                                        .withName(Constants.ROLLBACK_AWS_CODE_DEPLOY)
                                        .addProperty("rollback", true)
                                        .build())
@@ -2459,6 +2447,53 @@ public class WorkflowServiceImpl implements WorkflowService, DataProvider {
     return rollbackWorkflowPhase;
   }
 
+  private WorkflowPhase generateRollbackWorkflowPhaseForKubernetes(
+      WorkflowPhase workflowPhase, String appId, boolean serviceSetupRequired) {
+    KubernetesContainerTask containerTask =
+        (KubernetesContainerTask) serviceResourceService.getContainerTaskByDeploymentType(
+            appId, workflowPhase.getServiceId(), DeploymentType.KUBERNETES.name());
+    if (containerTask != null && containerTask.kubernetesType() == DaemonSet.class) {
+      return generateRollbackWorkflowPhaseForDaemonSets(workflowPhase);
+    } else {
+      WorkflowPhaseBuilder workflowPhaseBuilder =
+          aWorkflowPhase()
+              .withName(Constants.ROLLBACK_PREFIX + workflowPhase.getName())
+              .withRollback(true)
+              .withServiceId(workflowPhase.getServiceId())
+              .withComputeProviderId(workflowPhase.getComputeProviderId())
+              .withInfraMappingName(workflowPhase.getInfraMappingName())
+              .withPhaseNameForRollback(workflowPhase.getName())
+              .withDeploymentType(workflowPhase.getDeploymentType())
+              .withInfraMappingId(workflowPhase.getInfraMappingId())
+              .addPhaseStep(aPhaseStep(CONTAINER_DEPLOY, Constants.DEPLOY_CONTAINERS)
+                                .addStep(aNode()
+                                             .withId(getUuid())
+                                             .withType(KUBERNETES_REPLICATION_CONTROLLER_ROLLBACK.name())
+                                             .withName(Constants.ROLLBACK_CONTAINERS)
+                                             .addProperty("rollback", true)
+                                             .build())
+                                .withPhaseStepNameForRollback(Constants.DEPLOY_CONTAINERS)
+                                .withStatusForRollback(ExecutionStatus.SUCCESS)
+                                .withRollback(true)
+                                .build());
+      if (serviceSetupRequired) {
+        workflowPhaseBuilder.addPhaseStep(aPhaseStep(CONTAINER_SETUP, Constants.SETUP_CONTAINER)
+                                              .addStep(aNode()
+                                                           .withId(getUuid())
+                                                           .withType(KUBERNETES_SETUP_ROLLBACK.name())
+                                                           .withName(Constants.ROLLBACK_CONTAINERS)
+                                                           .addProperty("rollback", true)
+                                                           .build())
+                                              .withPhaseStepNameForRollback(Constants.SETUP_CONTAINER)
+                                              .withStatusForRollback(ExecutionStatus.SUCCESS)
+                                              .withRollback(true)
+                                              .build());
+      }
+      workflowPhaseBuilder.addPhaseStep(aPhaseStep(WRAP_UP, Constants.WRAP_UP).build());
+      return workflowPhaseBuilder.build();
+    }
+  }
+
   private WorkflowPhase generateRollbackWorkflowPhaseForDaemonSets(WorkflowPhase workflowPhase) {
     return aWorkflowPhase()
         .withName(Constants.ROLLBACK_PREFIX + workflowPhase.getName())
@@ -2472,7 +2507,7 @@ public class WorkflowServiceImpl implements WorkflowService, DataProvider {
         .addPhaseStep(aPhaseStep(CONTAINER_SETUP, Constants.SETUP_CONTAINER)
                           .addStep(aNode()
                                        .withId(getUuid())
-                                       .withType(KUBERNETES_DAEMON_SET_ROLLBACK.name())
+                                       .withType(KUBERNETES_SETUP_ROLLBACK.name())
                                        .withName(Constants.ROLLBACK_CONTAINERS)
                                        .addProperty("rollback", true)
                                        .build())

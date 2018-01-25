@@ -1,6 +1,7 @@
 package software.wings.sm.states;
 
 import static java.util.Arrays.asList;
+import static java.util.Collections.emptyList;
 import static java.util.Collections.emptyMap;
 import static java.util.Collections.singletonList;
 import static org.assertj.core.api.Assertions.assertThat;
@@ -8,6 +9,7 @@ import static org.joor.Reflect.on;
 import static org.mockito.Matchers.any;
 import static org.mockito.Matchers.anyObject;
 import static org.mockito.Matchers.anyString;
+import static org.mockito.Matchers.eq;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 import static org.mockito.internal.util.reflection.Whitebox.setInternalState;
@@ -79,11 +81,14 @@ import software.wings.beans.command.ServiceCommand;
 import software.wings.beans.container.ContainerDefinition;
 import software.wings.beans.container.KubernetesContainerTask;
 import software.wings.common.VariableProcessor;
+import software.wings.delegatetasks.DelegateProxyFactory;
 import software.wings.expression.ExpressionEvaluator;
+import software.wings.service.impl.ContainerServiceParams;
 import software.wings.service.intfc.ActivityService;
 import software.wings.service.intfc.AppService;
 import software.wings.service.intfc.ArtifactService;
 import software.wings.service.intfc.ArtifactStreamService;
+import software.wings.service.intfc.ContainerService;
 import software.wings.service.intfc.DelegateService;
 import software.wings.service.intfc.EnvironmentService;
 import software.wings.service.intfc.InfrastructureMappingService;
@@ -120,10 +125,13 @@ public class KubernetesReplicationControllerSetupTest extends WingsBaseTest {
   @Mock private EncryptionService encryptionService;
   @Mock private VariableProcessor variableProcessor;
   @Mock private ExpressionEvaluator evaluator;
+  @Mock private DelegateProxyFactory delegateProxyFactory;
 
   @InjectMocks
   private KubernetesReplicationControllerSetup kubernetesReplicationControllerSetup =
       new KubernetesReplicationControllerSetup("name");
+
+  @Mock private ContainerService containerService;
 
   private ExecutionContextImpl context;
 
@@ -239,6 +247,9 @@ public class KubernetesReplicationControllerSetupTest extends WingsBaseTest {
     on(context).set("evaluator", evaluator);
     when(variableProcessor.getVariables(any(), any())).thenReturn(emptyMap());
     when(evaluator.substitute(any(), any(), any())).thenReturn("");
+    when(delegateProxyFactory.get(eq(ContainerService.class), any(DelegateTask.SyncTaskContext.class)))
+        .thenReturn(containerService);
+    when(containerService.getActiveAutoscalers(any(ContainerServiceParams.class))).thenReturn(emptyList());
   }
 
   @Test

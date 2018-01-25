@@ -8,6 +8,8 @@ import software.wings.beans.container.ImageDetails;
 import software.wings.beans.container.KubernetesPortProtocol;
 import software.wings.beans.container.KubernetesServiceType;
 
+import java.util.List;
+
 @JsonIgnoreProperties(ignoreUnknown = true)
 @Data
 @EqualsAndHashCode(callSuper = true)
@@ -23,9 +25,14 @@ public class KubernetesSetupParams extends ContainerSetupParams {
   private String externalName;
   private String namespace;
   private String controllerNamePrefix;
-  private boolean rollbackDaemonSet;
   private String previousDaemonSetYaml;
+  private List<String> activeAutoscalers;
+  private boolean rollback;
   private int serviceSteadyStateTimeout;
+  private boolean useAutoscaler;
+  private int minAutoscaleInstances;
+  private int maxAutoscaleInstances;
+  private int targetCpuUtilizationPercentage;
 
   public static final class KubernetesSetupParamsBuilder {
     private String serviceName;
@@ -46,9 +53,14 @@ public class KubernetesSetupParams extends ContainerSetupParams {
     private String externalName;
     private String namespace;
     private String controllerNamePrefix;
-    private boolean rollbackDaemonSet;
     private String previousDaemonSetYaml;
+    private List<String> activeAutoscalers;
+    private boolean rollback;
     private int serviceSteadyStateTimeout;
+    private boolean useAutoscaler;
+    private int minAutoscaleInstances;
+    private int maxAutoscaleInstances;
+    private int targetCpuUtilizationPercentage;
 
     private KubernetesSetupParamsBuilder() {}
 
@@ -146,18 +158,43 @@ public class KubernetesSetupParams extends ContainerSetupParams {
       return this;
     }
 
-    public KubernetesSetupParamsBuilder withRollbackDaemonSet(boolean rollbackDaemonSet) {
-      this.rollbackDaemonSet = rollbackDaemonSet;
-      return this;
-    }
-
     public KubernetesSetupParamsBuilder withPreviousDaemonSetYaml(String previousDaemonSetYaml) {
       this.previousDaemonSetYaml = previousDaemonSetYaml;
       return this;
     }
 
+    public KubernetesSetupParamsBuilder withActiveAutoscalers(List<String> activeAutoscalers) {
+      this.activeAutoscalers = activeAutoscalers;
+      return this;
+    }
+
+    public KubernetesSetupParamsBuilder withRollback(boolean rollback) {
+      this.rollback = rollback;
+      return this;
+    }
+
     public KubernetesSetupParamsBuilder withServiceSteadyStateTimeout(int serviceSteadyStateTimeout) {
       this.serviceSteadyStateTimeout = serviceSteadyStateTimeout;
+      return this;
+    }
+
+    public KubernetesSetupParamsBuilder withUseAutoscaler(boolean useAutoscaler) {
+      this.useAutoscaler = useAutoscaler;
+      return this;
+    }
+
+    public KubernetesSetupParamsBuilder withMinAutoscaleInstances(int minAutoscaleInstances) {
+      this.minAutoscaleInstances = minAutoscaleInstances;
+      return this;
+    }
+
+    public KubernetesSetupParamsBuilder withMaxAutoscaleInstances(int maxAutoscaleInstances) {
+      this.maxAutoscaleInstances = maxAutoscaleInstances;
+      return this;
+    }
+
+    public KubernetesSetupParamsBuilder withTargetCpuUtilizationPercentage(int targetCpuUtilizationPercentage) {
+      this.targetCpuUtilizationPercentage = targetCpuUtilizationPercentage;
       return this;
     }
 
@@ -181,9 +218,14 @@ public class KubernetesSetupParams extends ContainerSetupParams {
           .withExternalName(externalName)
           .withNamespace(namespace)
           .withControllerNamePrefix(controllerNamePrefix)
-          .withRollbackDaemonSet(rollbackDaemonSet)
           .withPreviousDaemonSetYaml(previousDaemonSetYaml)
-          .withServiceSteadyStateTimeout(serviceSteadyStateTimeout);
+          .withActiveAutoscalers(activeAutoscalers)
+          .withRollback(rollback)
+          .withServiceSteadyStateTimeout(serviceSteadyStateTimeout)
+          .withUseAutoscaler(useAutoscaler)
+          .withMinAutoscaleInstances(minAutoscaleInstances)
+          .withMaxAutoscaleInstances(maxAutoscaleInstances)
+          .withTargetCpuUtilizationPercentage(targetCpuUtilizationPercentage);
     }
 
     public KubernetesSetupParams build() {
@@ -206,9 +248,14 @@ public class KubernetesSetupParams extends ContainerSetupParams {
       kubernetesSetupParams.setExternalName(externalName);
       kubernetesSetupParams.setNamespace(namespace);
       kubernetesSetupParams.setControllerNamePrefix(controllerNamePrefix);
-      kubernetesSetupParams.setRollbackDaemonSet(rollbackDaemonSet);
       kubernetesSetupParams.setPreviousDaemonSetYaml(previousDaemonSetYaml);
+      kubernetesSetupParams.setActiveAutoscalers(activeAutoscalers);
+      kubernetesSetupParams.setRollback(rollback);
       kubernetesSetupParams.setServiceSteadyStateTimeout(serviceSteadyStateTimeout);
+      kubernetesSetupParams.setUseAutoscaler(useAutoscaler);
+      kubernetesSetupParams.setMinAutoscaleInstances(minAutoscaleInstances);
+      kubernetesSetupParams.setMaxAutoscaleInstances(maxAutoscaleInstances);
+      kubernetesSetupParams.setTargetCpuUtilizationPercentage(targetCpuUtilizationPercentage);
       return kubernetesSetupParams;
     }
   }

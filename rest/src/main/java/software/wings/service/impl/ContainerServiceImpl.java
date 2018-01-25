@@ -110,22 +110,40 @@ public class ContainerServiceImpl implements ContainerService {
 
   @Override
   public String getDaemonSetYaml(ContainerServiceParams containerServiceParams) {
-    String previousDaemonSetYaml = null;
     SettingValue value = containerServiceParams.getSettingAttribute().getValue();
-    if (value instanceof GcpConfig || value instanceof KubernetesConfig) {
-      KubernetesConfig kubernetesConfig = getKubernetesConfig(containerServiceParams);
-      String containerServiceName = containerServiceParams.getContainerServiceName();
-      HasMetadata daemonSet = kubernetesContainerService.getController(
-          kubernetesConfig, containerServiceParams.getEncryptionDetails(), containerServiceName);
-      if (daemonSet != null) {
-        try {
-          previousDaemonSetYaml = KubernetesHelper.toYaml(daemonSet);
-        } catch (IOException e) {
-          logger.error("Error converting DaemonSet to yaml: {}", containerServiceName);
-        }
+    if (!(value instanceof GcpConfig) && !(value instanceof KubernetesConfig)) {
+      throw new WingsException(ErrorCode.INVALID_ARGUMENT).addParam("args", "DaemonSets apply to kubernetes only");
+    }
+    KubernetesConfig kubernetesConfig = getKubernetesConfig(containerServiceParams);
+    String containerServiceName = containerServiceParams.getContainerServiceName();
+    HasMetadata daemonSet = kubernetesContainerService.getController(
+        kubernetesConfig, containerServiceParams.getEncryptionDetails(), containerServiceName);
+    if (daemonSet != null) {
+      try {
+        return KubernetesHelper.toYaml(daemonSet);
+      } catch (IOException e) {
+        logger.error("Error converting DaemonSet to yaml: {}", containerServiceName);
       }
     }
-    return previousDaemonSetYaml;
+    return null;
+  }
+
+  @Override
+  public List<String> getActiveAutoscalers(ContainerServiceParams containerServiceParams) {
+    SettingValue value = containerServiceParams.getSettingAttribute().getValue();
+    if (!(value instanceof GcpConfig) && !(value instanceof KubernetesConfig)) {
+      throw new WingsException(ErrorCode.INVALID_ARGUMENT)
+          .addParam("args", "Horizontal Pod Autoscalers apply to kubernetes only");
+    }
+    KubernetesConfig kubernetesConfig = getKubernetesConfig(containerServiceParams);
+    String autoscalerNamePrefix = containerServiceParams.getContainerServiceName();
+
+    return kubernetesContainerService.listAutoscalers(kubernetesConfig, containerServiceParams.getEncryptionDetails())
+        .stream()
+        .filter(autoscaler -> autoscaler.getMetadata().getName().startsWith(autoscalerNamePrefix))
+        .filter(autoscaler -> !"none".equals(autoscaler.getSpec().getScaleTargetRef().getName()))
+        .map(autoscaler -> autoscaler.getMetadata().getName())
+        .collect(toList());
   }
 
   private KubernetesConfig getKubernetesConfig(ContainerServiceParams containerServiceParams) {

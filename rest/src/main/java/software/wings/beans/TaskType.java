@@ -152,6 +152,7 @@ public enum TaskType {
   CONTAINER_INFO(TaskGroup.CONTAINER, ServiceImplDelegateTask.class, ContainerValidation.class),
   AMI_GET_BUILDS(TaskGroup.AMI, ServiceImplDelegateTask.class, AlwaysTrueValidation.class),
   CONTAINER_DAEMON_SET_YAML(TaskGroup.CONTAINER, ServiceImplDelegateTask.class, ContainerValidation.class),
+  CONTAINER_ACTIVE_AUTOSCALERS(TaskGroup.CONTAINER, ServiceImplDelegateTask.class, ContainerValidation.class),
   CONTAINER_CONNECTION_VALIDATION(TaskGroup.CONTAINER, ServiceImplDelegateTask.class, ContainerValidation.class);
 
   private final TaskGroup taskGroup;

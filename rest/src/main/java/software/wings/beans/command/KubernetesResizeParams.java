@@ -13,12 +13,18 @@ import java.util.List;
 @EqualsAndHashCode(callSuper = true)
 public class KubernetesResizeParams extends ContainerResizeParams {
   private String namespace;
+  private boolean deployingToHundredPercent;
+  private boolean useAutoscaler;
+  private boolean rollbackAutoscaler;
 
   public static final class KubernetesResizeParamsBuilder {
     private String clusterName;
     private List<ContainerServiceData> desiredCounts = new ArrayList<>();
     private int serviceSteadyStateTimeout;
     private String namespace;
+    private boolean deployingToHundredPercent;
+    private boolean useAutoscaler;
+    private boolean rollbackAutoscaler;
 
     private KubernetesResizeParamsBuilder() {}
 
@@ -46,12 +52,30 @@ public class KubernetesResizeParams extends ContainerResizeParams {
       return this;
     }
 
+    public KubernetesResizeParamsBuilder withDeployingToHundredPercent(boolean deployingToHundredPercent) {
+      this.deployingToHundredPercent = deployingToHundredPercent;
+      return this;
+    }
+
+    public KubernetesResizeParamsBuilder withUseAutoscaler(boolean useAutoscaler) {
+      this.useAutoscaler = useAutoscaler;
+      return this;
+    }
+
+    public KubernetesResizeParamsBuilder withRollbackAutoscaler(boolean rollbackAutoscaler) {
+      this.rollbackAutoscaler = rollbackAutoscaler;
+      return this;
+    }
+
     public KubernetesResizeParamsBuilder but() {
       return aKubernetesResizeParams()
           .withClusterName(clusterName)
           .withDesiredCounts(desiredCounts)
           .withServiceSteadyStateTimeout(serviceSteadyStateTimeout)
-          .withNamespace(namespace);
+          .withNamespace(namespace)
+          .withDeployingToHundredPercent(deployingToHundredPercent)
+          .withUseAutoscaler(useAutoscaler)
+          .withRollbackAutoscaler(rollbackAutoscaler);
     }
 
     public KubernetesResizeParams build() {
@@ -60,6 +84,9 @@ public class KubernetesResizeParams extends ContainerResizeParams {
       kubernetesResizeParams.setDesiredCounts(desiredCounts);
       kubernetesResizeParams.setServiceSteadyStateTimeout(serviceSteadyStateTimeout);
       kubernetesResizeParams.setNamespace(namespace);
+      kubernetesResizeParams.setDeployingToHundredPercent(deployingToHundredPercent);
+      kubernetesResizeParams.setUseAutoscaler(useAutoscaler);
+      kubernetesResizeParams.setRollbackAutoscaler(rollbackAutoscaler);
       return kubernetesResizeParams;
     }
   }
