@@ -223,9 +223,13 @@ public class KubernetesSetupCommandUnit extends ContainerSetupCommandUnit {
       HorizontalPodAutoscaler autoscalerDefinition =
           createAutoscaler(containerServiceName, kubernetesConfig.getNamespace(), controllerLabels, setupParams);
       if (autoscalerDefinition != null) {
-        executionLogCallback.saveExecutionLog("Creating autoscaler " + containerServiceName + " with min instances: "
-                + setupParams.getMinAutoscaleInstances() + ", max instances: " + setupParams.getMaxAutoscaleInstances()
-                + ", target CPU utilization: " + setupParams.getTargetCpuUtilizationPercentage() + "%",
+        executionLogCallback.saveExecutionLog(
+            String.format("Creating autoscaler %s. Disabled until deployed to 100%%", containerServiceName),
+            LogLevel.INFO);
+        executionLogCallback.saveExecutionLog(
+            String.format("Setting autoscaler min instances %d, max instances %d, with target CPU utilization %d%%",
+                setupParams.getMinAutoscaleInstances(), setupParams.getMaxAutoscaleInstances(),
+                setupParams.getTargetCpuUtilizationPercentage()),
             LogLevel.INFO);
         kubernetesContainerService.createAutoscaler(kubernetesConfig, encryptedDataDetails, autoscalerDefinition);
       }

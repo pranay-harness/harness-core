@@ -1,10 +1,15 @@
 package software.wings.service.impl;
 
+import static com.fasterxml.jackson.annotation.JsonInclude.Include.NON_EMPTY;
+import static com.fasterxml.jackson.dataformat.yaml.YAMLGenerator.Feature.WRITE_DOC_START_MARKER;
 import static org.apache.commons.lang3.StringUtils.isNotBlank;
 
 import com.google.inject.Inject;
 import com.google.inject.Singleton;
 
+import com.fasterxml.jackson.core.JsonProcessingException;
+import com.fasterxml.jackson.databind.ObjectMapper;
+import com.fasterxml.jackson.dataformat.yaml.YAMLFactory;
 import io.fabric8.kubernetes.client.ConfigBuilder;
 import io.fabric8.kubernetes.client.DefaultKubernetesClient;
 import io.fabric8.kubernetes.client.KubernetesClient;
@@ -65,5 +70,12 @@ public class KubernetesHelperService {
   private String encode(char[] value) {
     return new String(value).trim();
     //    return new String(Base64.getEncoder().encode(new String(value).trim().getBytes()));
+  }
+
+  public static String toYaml(Object entity) throws JsonProcessingException {
+    YAMLFactory yamlFactory = new YAMLFactory().configure(WRITE_DOC_START_MARKER, false);
+    ObjectMapper objectMapper = new ObjectMapper(yamlFactory);
+    objectMapper.setSerializationInclusion(NON_EMPTY);
+    return objectMapper.writeValueAsString(entity);
   }
 }
