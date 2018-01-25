@@ -254,10 +254,14 @@ public class PipelineServiceImpl implements PipelineService {
       yamlChangeSetService.saveChangeSet(ygs, changeSet);
     }
 
+    return prunePipeline(appId, pipelineId);
+  }
+
+  private boolean prunePipeline(String appId, String pipelineId) {
     // First lets make sure that we have persisted a job that will prone the descendant objects
     PruneEntityJob.addDefaultJob(jobScheduler, Pipeline.class, appId, pipelineId, Duration.ofSeconds(5));
 
-    return wingsPersistence.delete(pipeline);
+    return wingsPersistence.delete(Pipeline.class, appId, pipelineId);
   }
 
   @Override
@@ -273,17 +277,17 @@ public class PipelineServiceImpl implements PipelineService {
     List<Key<Pipeline>> pipelineKeys =
         wingsPersistence.createQuery(Pipeline.class).field(Pipeline.APP_ID_KEY).equal(appId).asKeyList();
     for (Key key : pipelineKeys) {
-      deletePipeline(appId, (String) key.getId(), true);
+      prunePipeline(appId, (String) key.getId());
     }
   }
 
   @Override
   public Pipeline clonePipeline(String originalPipelineId, Pipeline pipeline) {
     Pipeline originalPipeline = readPipeline(pipeline.getAppId(), originalPipelineId, false);
-    Pipeline clonedPipleline = originalPipeline.clone();
-    clonedPipleline.setName(pipeline.getName());
-    clonedPipleline.setDescription(pipeline.getDescription());
-    return createPipeline(clonedPipleline);
+    Pipeline clonedPipeline = originalPipeline.clone();
+    clonedPipeline.setName(pipeline.getName());
+    clonedPipeline.setDescription(pipeline.getDescription());
+    return createPipeline(clonedPipeline);
   }
 
   @Override
