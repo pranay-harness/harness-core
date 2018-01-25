@@ -1,5 +1,7 @@
 package software.wings.scheduler;
 
+import static software.wings.exception.WingsException.Scenario.BACKGROUND_JOB;
+
 import com.google.inject.Inject;
 
 import com.mongodb.BasicDBObject;
@@ -15,8 +17,11 @@ import org.quartz.TriggerBuilder;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import software.wings.dl.WingsPersistence;
+import software.wings.exception.WingsException;
+import software.wings.lock.AcquiredLock;
 import software.wings.lock.PersistentLocker;
 
+import java.time.Duration;
 import java.util.Calendar;
 
 /**
@@ -31,10 +36,6 @@ public class PersistentLockCleanupJob implements Job {
 
   @Inject private WingsPersistence wingsPersistence;
   @Inject private PersistentLocker persistentLocker;
-
-  public static void remove(QuartzScheduler jobScheduler) {
-    jobScheduler.deleteJob(NAME, GROUP);
-  }
 
   public static void add(QuartzScheduler jobScheduler) {
     jobScheduler.deleteJob(NAME, GROUP);
@@ -64,35 +65,32 @@ public class PersistentLockCleanupJob implements Job {
 
   @Override
   public void execute(JobExecutionContext jobExecutionContext) throws JobExecutionException {
-    return;
-    /*
-        try (AcquiredLock lock = persistentLocker.acquireLock(PersistentLocker.class, NAME, Duration.ofMinutes(1))) {
-          Calendar date = Calendar.getInstance();
-          date.add(Calendar.HOUR, -7 * 24);
+    try (AcquiredLock lock = persistentLocker.acquireLock(PersistentLocker.class, NAME, Duration.ofMinutes(1))) {
+      Calendar date = Calendar.getInstance();
+      date.add(Calendar.HOUR, -7 * 24);
 
-          final DBCursor locks = queryOldLocks(date);
+      final DBCursor locks = queryOldLocks(date);
 
-          while (locks.hasNext()) {
-            final Object object = locks.next().get("_id");
+      while (locks.hasNext()) {
+        final Object object = locks.next().get("_id");
 
-            // Do not delete the lock willy-nilly. We are in race between the query for unlocked state, the deleting
-            // and some other process attempting to lock the same locks.
-            //
-            // The lock needs to be deleted only if successfully acquired
+        // Do not delete the lock willy-nilly. We are in race between the query for unlocked state, the deleting
+        // and some other process attempting to lock the same locks.
+        //
+        // The lock needs to be deleted only if successfully acquired
 
-            try (AcquiredLock lk = persistentLocker.acquireLock(object.toString(), Duration.ofSeconds(10))) {
-              logger.info("Destroy outdated lock " + object.toString());
-              persistentLocker.destroy(lk);
-            } catch (WingsException exception) {
-              // Nothing to do. If we did not get the lock or we succeeded to destroy it - either way move to the
-              // next one.
-            }
-          }
+        try (AcquiredLock lk = persistentLocker.acquireLock(object.toString(), Duration.ofSeconds(10))) {
+          logger.info("Destroy outdated lock " + object.toString());
+          persistentLocker.destroy(lk);
         } catch (WingsException exception) {
-          exception.logProcessedMessages(BACKGROUND_JOB);
-        } catch (Exception exception) {
-          logger.error("Error seen in the PersistentLockCleanupJob execute call", exception);
+          // Nothing to do. If we did not get the lock or we succeeded to destroy it - either way move to the
+          // next one.
         }
-    */
+      }
+    } catch (WingsException exception) {
+      exception.logProcessedMessages(BACKGROUND_JOB);
+    } catch (Exception exception) {
+      logger.error("Error seen in the PersistentLockCleanupJob execute call", exception);
+    }
   }
 }
