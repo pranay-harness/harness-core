@@ -10,10 +10,9 @@ init:
 	source .pyenv/bin/activate ; pip install --upgrade pip; pip install -r requirements.txt;
 
 init-docker:
-	if [ ! -d ".pyenv" ]; then echo "Setting up virtualenv"; virtualenv --python=/usr/local/bin/python2.7 .pyenv; fi
-	source .pyenv/bin/activate ; pip install --upgrade pip; pip install -r requirements.txt;
+	pip install --upgrade pip; pip install -r requirements.txt;
 test:
-	source .pyenv/bin/activate ; cd tests; nosetests -vv --nocapture .; deactivate
+	source .pyenv/bin/activate ; cd tests; nosetests -vv --nocapture .
 
 jupyter:
 	source .pyenv/bin/activate ; jupyter nbextension enable --py --sys-prefix widgetsnbextension; jupyter notebook --NotebookApp.iopub_data_rate_limit=100000000
