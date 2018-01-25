@@ -764,6 +764,7 @@ public class WorkflowExecutionServiceImplTest extends WingsBaseTest {
    * @throws InterruptedException the interrupted exception
    */
   @Test
+  @Repeat(times = 3, successes = 1)
   public void shouldGetNodeDetails() throws InterruptedException {
     String appId = app.getUuid();
 
