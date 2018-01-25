@@ -381,16 +381,29 @@ public abstract class ContainerServiceSetup extends State {
       encryptionService.decrypt(artifactoryConfig,
           secretManager.getEncryptionDetails(artifactoryConfig, context.getAppId(), context.getWorkflowExecutionId()));
       String url = artifactoryConfig.getArtifactoryUrl();
-      int firstDotIndex = url.indexOf('.');
-      int slashAfterDomain = url.indexOf('/', firstDotIndex);
-      String registryUrl = url.substring(0, firstDotIndex) + "-" + artifactoryArtifactStream.getJobname()
-          + url.substring(firstDotIndex, slashAfterDomain > 0 ? slashAfterDomain : url.length());
-      String namePrefix = registryUrl.substring(registryUrl.indexOf("://") + 3);
-      imageDetails.name(namePrefix + "/" + artifactoryArtifactStream.getImageName())
-          .sourceName(artifactoryArtifactStream.getSourceName())
-          .registryUrl(registryUrl)
-          .username(artifactoryConfig.getUsername())
-          .password(new String(artifactoryConfig.getPassword()));
+      if (artifactoryArtifactStream.getDockerRepositoryServer() != null) {
+        String registryUrl = String.format(
+            "http%s://%s", url.startsWith("https") ? "s" : "", artifactoryArtifactStream.getDockerRepositoryServer());
+
+        imageDetails
+            .name(
+                artifactoryArtifactStream.getDockerRepositoryServer() + "/" + artifactoryArtifactStream.getImageName())
+            .sourceName(artifactoryArtifactStream.getSourceName())
+            .registryUrl(registryUrl)
+            .username(artifactoryConfig.getUsername())
+            .password(new String(artifactoryConfig.getPassword()));
+      } else {
+        int firstDotIndex = url.indexOf('.');
+        int slashAfterDomain = url.indexOf('/', firstDotIndex);
+        String registryUrl = url.substring(0, firstDotIndex) + "-" + artifactoryArtifactStream.getJobname()
+            + url.substring(firstDotIndex, slashAfterDomain > 0 ? slashAfterDomain : url.length());
+        String namePrefix = registryUrl.substring(registryUrl.indexOf("://") + 3);
+        imageDetails.name(namePrefix + "/" + artifactoryArtifactStream.getImageName())
+            .sourceName(artifactoryArtifactStream.getSourceName())
+            .registryUrl(registryUrl)
+            .username(artifactoryConfig.getUsername())
+            .password(new String(artifactoryConfig.getPassword()));
+      }
     } else if (artifactStream.getArtifactStreamType().equals(NEXUS.name())) {
       NexusArtifactStream nexusArtifactStream = (NexusArtifactStream) artifactStream;
       NexusConfig nexusConfig = (NexusConfig) settingsService.get(settingId).getValue();

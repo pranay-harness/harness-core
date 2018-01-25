@@ -24,6 +24,8 @@ public class ArtifactoryArtifactStreamYamlHandler extends ArtifactStreamYamlHand
     yaml.setGroupId(bean.getGroupId());
     yaml.setImageName(bean.getImageName());
     yaml.setRepositoryName(bean.getJobname());
+    yaml.setRepositoryType(bean.getRepositoryType());
+    yaml.setDockerRepositoryServer(bean.getDockerRepositoryServer());
     return yaml;
   }
 
@@ -35,6 +37,8 @@ public class ArtifactoryArtifactStreamYamlHandler extends ArtifactStreamYamlHand
     artifactStream.setGroupId(yaml.getGroupId());
     artifactStream.setImageName(yaml.getImageName());
     artifactStream.setJobname(yaml.getRepositoryName());
+    artifactStream.setRepositoryType(yaml.getRepositoryType());
+    artifactStream.setDockerRepositoryServer(yaml.getDockerRepositoryServer());
   }
 
   @Override
