@@ -126,12 +126,13 @@ public class ArtifactCollectionJob implements Job {
       artifacts = collectNewArtifactsFromArtifactStream(appId, artifactStream);
     } catch (WingsException exception) {
       // TODO: temporary suppress the errors coming from here - they are too many:
-      logger.warn("Failed to collect artifact for appId {}, artifact stream {}", appId, artifactStream, exception);
+      logger.warn(
+          "Failed to collect artifact for appId {}, artifact stream {}", appId, artifactStream.getUuid(), exception);
 
       // This is the way we should print this after most of the cases are resolved
       // exception.logProcessedMessages(BACKGROUND_JOB);
     } catch (Exception e) {
-      logger.warn("Failed to collect artifact for appId {}, artifact stream {}", appId, artifactStream, e);
+      logger.warn("Failed to collect artifact for appId {}, artifact stream {}", appId, artifactStream.getUuid(), e);
     }
     if (isNotEmpty(artifacts)) {
       logger.info("[{}] new artifacts collected", artifacts.size());
