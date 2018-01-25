@@ -5,6 +5,7 @@ then
   echo "PROXY_HOST=" > proxy.config
   echo "PROXY_PORT=" >> proxy.config
   echo "PROXY_SCHEME=" >> proxy.config
+  echo "NO_PROXY=" >> proxy.config
 fi
 
 source proxy.config
@@ -15,6 +16,14 @@ then
   export http_proxy=$PROXY_HOST:$PROXY_PORT
   export https_proxy=$PROXY_HOST:$PROXY_PORT
   PROXY_SYS_PROPS="-DproxyScheme=$PROXY_SCHEME -Dhttp.proxyHost=$PROXY_HOST -Dhttp.proxyPort=$PROXY_PORT -Dhttps.proxyHost=$PROXY_HOST -Dhttps.proxyPort=$PROXY_PORT"
+fi
+if [[ $NO_PROXY != "" ]]
+then
+  echo "No proxy for domain suffixes $NO_PROXY"
+  export no_proxy=$NO_PROXY
+  SYSTEM_PROPERTY_NO_PROXY=`echo $NO_PROXY | sed "s/\,/|*/g"`
+  PROXY_SYS_PROPS=$PROXY_SYS_PROPS" -Dhttp.nonProxyHosts=*$SYSTEM_PROPERTY_NO_PROXY"
+  echo $PROXY_SYS_PROPS
 fi
 
 if [ ! -d $JRE_DIR  -o ! -d jre -o ! -e $JRE_BINARY ]

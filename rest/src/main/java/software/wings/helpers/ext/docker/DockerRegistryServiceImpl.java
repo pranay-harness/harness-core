@@ -48,7 +48,7 @@ public class DockerRegistryServiceImpl implements DockerRegistryService {
   private DockerRegistryRestClient getDockerRegistryRestClient(
       DockerConfig dockerConfig, List<EncryptedDataDetail> encryptionDetails) {
     encryptionService.decrypt(dockerConfig, encryptionDetails);
-    OkHttpClient okHttpClient = HttpUtil.getUnsafeOkHttpClient();
+    OkHttpClient okHttpClient = HttpUtil.getUnsafeOkHttpClient(dockerConfig.getDockerRegistryUrl());
     Retrofit retrofit = new Retrofit.Builder()
                             .client(okHttpClient)
                             .baseUrl(dockerConfig.getDockerRegistryUrl())

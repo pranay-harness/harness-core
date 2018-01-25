@@ -54,7 +54,7 @@ public class SumoDelegateServiceImpl implements SumoDelegateService {
     final Credentials credentials =
         new Credentials(new String(sumoConfig.getAccessId()), new String(sumoConfig.getAccessKey()));
     SumoLogicClient sumoLogicClient = new SumoLogicClient(credentials);
-    HttpHost httpProxyHost = HttpUtil.getHttpProxyHost();
+    HttpHost httpProxyHost = HttpUtil.getHttpProxyHost(sumoConfig.getSumoUrl());
     if (httpProxyHost != null) {
       sumoLogicClient.setProxyHost(httpProxyHost.getHostName());
       sumoLogicClient.setProxyPort(httpProxyHost.getPort());

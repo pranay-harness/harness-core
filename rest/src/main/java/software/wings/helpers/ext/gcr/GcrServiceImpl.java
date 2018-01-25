@@ -22,8 +22,10 @@ import software.wings.exception.WingsException;
 import software.wings.helpers.ext.jenkins.BuildDetails;
 import software.wings.security.encryption.EncryptedDataDetail;
 import software.wings.service.impl.GcpHelperService;
+import software.wings.utils.HttpUtil;
 
 import java.io.IOException;
+import java.net.Proxy;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
@@ -47,11 +49,15 @@ public class GcrServiceImpl implements GcrService {
   }
 
   private GcrRestClient getGcrRestClient(String registryHostName) {
-    OkHttpClient okHttpClient =
-        new OkHttpClient().newBuilder().connectTimeout(CONNECT_TIMEOUT, TimeUnit.SECONDS).build();
+    String url = getUrl(registryHostName);
+    OkHttpClient okHttpClient = new OkHttpClient()
+                                    .newBuilder()
+                                    .connectTimeout(CONNECT_TIMEOUT, TimeUnit.SECONDS)
+                                    .proxy(HttpUtil.shouldUseNonProxy(url) ? Proxy.NO_PROXY : null)
+                                    .build();
     Retrofit retrofit = new Retrofit.Builder()
                             .client(okHttpClient)
-                            .baseUrl(getUrl(registryHostName))
+                            .baseUrl(url)
                             .addConverterFactory(JacksonConverterFactory.create())
                             .build();
     return retrofit.create(GcrRestClient.class);

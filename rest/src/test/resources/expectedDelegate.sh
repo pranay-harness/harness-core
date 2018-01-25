@@ -57,6 +57,14 @@ then
     export https_proxy=$PROXY_HOST:$PROXY_PORT
     PROXY_SYS_PROPS="-DproxyScheme=$PROXY_SCHEME -Dhttp.proxyHost=$PROXY_HOST -Dhttp.proxyPort=$PROXY_PORT -Dhttps.proxyHost=$PROXY_HOST -Dhttps.proxyPort=$PROXY_PORT"
   fi
+  if [[ $NO_PROXY != "" ]]
+  then
+    echo "No proxy for domain suffixes $NO_PROXY"
+    export no_proxy=$NO_PROXY
+    SYSTEM_PROPERTY_NO_PROXY=`echo $NO_PROXY | sed "s/\,/|*/g"`
+    PROXY_SYS_PROPS=$PROXY_SYS_PROPS" -Dhttp.nonProxyHosts=*$SYSTEM_PROPERTY_NO_PROXY"
+    echo $PROXY_SYS_PROPS
+  fi
 fi
 
 if [ ! -d $JRE_DIR  -o ! -d jre -o ! -e $JRE_BINARY ]

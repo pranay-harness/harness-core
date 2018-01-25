@@ -1,5 +1,6 @@
 package software.wings.utils;
 
+import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertFalse;
 import static org.junit.Assert.assertTrue;
 
@@ -26,5 +27,23 @@ public class HttpUtilTest {
     assertFalse(HttpUtil.validUrl("invalidUrl"));
     assertFalse(HttpUtil.validUrl("abc://invalid.com"));
     assertFalse(HttpUtil.validUrl("abc://invalid.com"));
+  }
+
+  @Test
+  public void testShouldUseNonProxy() {
+    assertTrue(HttpUtil.shouldUseNonProxy("http://wings.jenkins.com", "*.jenkins.com|*.localhost|*.sumologic.com"));
+    assertTrue(
+        HttpUtil.shouldUseNonProxy("http://wings.jenkins.com", "*wings.jenkins.com|*.localhost|*wings.sumologic.com"));
+    assertTrue(
+        HttpUtil.shouldUseNonProxy("http://wings.jenkins.com:80", "*.jenkins.com|*localhost.com|*.sumologic.com"));
+    assertFalse(HttpUtil.shouldUseNonProxy("http://wings.jenkins.com", "*localhost.com|*.sumologic.com"));
+  }
+
+  @Test
+  public void testGetDomain() {
+    assertEquals("localhost.com", HttpUtil.getDomain("http://localhost.com/temp"));
+    assertEquals("localhost.com", HttpUtil.getDomain("https://localhost.com/temp"));
+    assertEquals("localhost.com", HttpUtil.getDomain("localhost.com:8080/temp"));
+    assertEquals("localhost.com", HttpUtil.getDomain("localhost.com:8080"));
   }
 }
