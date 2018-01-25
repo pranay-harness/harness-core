@@ -4,6 +4,8 @@ import static io.harness.threading.Morpheus.sleep;
 import static java.time.Duration.ofMillis;
 import static org.apache.commons.lang3.StringUtils.isNotBlank;
 
+import com.google.common.base.Preconditions;
+
 import com.amazonaws.auth.AWSStaticCredentialsProvider;
 import com.amazonaws.auth.BasicAWSCredentials;
 import com.amazonaws.regions.Regions;
@@ -50,6 +52,7 @@ public class SecretManagementDelegateServiceImpl implements SecretManagementDele
 
   @Override
   public EncryptedData encrypt(String accountId, char[] value, KmsConfig kmsConfig) throws IOException {
+    Preconditions.checkNotNull(kmsConfig, "null for " + accountId);
     for (int retry = 1; retry <= NUM_OF_RETRIES; retry++) {
       try {
         final AWSKMS kmsClient = AWSKMSClientBuilder.standard()
@@ -96,6 +99,8 @@ public class SecretManagementDelegateServiceImpl implements SecretManagementDele
     if (data.getEncryptedValue() == null) {
       return null;
     }
+
+    Preconditions.checkNotNull(kmsConfig, "null for " + data);
 
     for (int retry = 1; retry <= NUM_OF_RETRIES; retry++) {
       try {
