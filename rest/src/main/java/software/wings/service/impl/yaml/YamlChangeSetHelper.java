@@ -21,6 +21,7 @@ import software.wings.beans.NotificationGroup;
 import software.wings.beans.Service;
 import software.wings.beans.SettingAttribute;
 import software.wings.beans.artifact.ArtifactStream;
+import software.wings.beans.command.ServiceCommand;
 import software.wings.beans.container.ContainerTask;
 import software.wings.beans.container.UserDataSpecification;
 import software.wings.beans.yaml.Change.ChangeType;
@@ -162,6 +163,21 @@ public class YamlChangeSetHelper {
       return outputStream.toString();
     }
     return null;
+  }
+
+  public void commandFileChangeAsync(
+      String accountId, Service service, ServiceCommand serviceCommand, ChangeType changeType) {
+    executorService.submit(() -> { commandFileChange(accountId, service, serviceCommand, changeType); });
+  }
+
+  public void commandFileChange(
+      String accountId, Service service, ServiceCommand serviceCommand, ChangeType changeType) {
+    YamlGitConfig ygs = yamlDirectoryService.weNeedToPushChanges(accountId);
+    if (ygs != null) {
+      List<GitFileChange> changeSet = new ArrayList<>();
+      changeSet.add(entityUpdateService.getCommandGitSyncFile(accountId, service, serviceCommand, changeType));
+      yamlChangeSetService.saveChangeSet(ygs, changeSet);
+    }
   }
 
   private void queueYamlChangeSet(String accountId, List<GitFileChange> gitFileChangeList) {
@@ -374,7 +390,7 @@ public class YamlChangeSetHelper {
     if (ygs != null) {
       List<GitFileChange> changeSet = new ArrayList<>();
       changeSet.add(entityUpdateService.getServiceGitSyncFile(accountId, service, crudType));
-      if (crudType.equals(ChangeType.ADD) && service.getArtifactType().shouldPushCommandsToYaml()) {
+      if (crudType.equals(ChangeType.ADD) && !serviceResourceService.hasInternalCommands(service)) {
         serviceResourceService.getServiceCommands(service.getAppId(), service.getUuid())
             .forEach(serviceCommand
                 -> changeSet.add(

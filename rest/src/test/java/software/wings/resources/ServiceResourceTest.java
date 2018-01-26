@@ -139,7 +139,7 @@ public class ServiceResourceTest {
    */
   @Test
   public void shouldAddCommand() {
-    when(RESOURCE_SERVICE.addCommand(eq(APP_ID), eq(SERVICE_ID), any(ServiceCommand.class), eq(true), eq(false)))
+    when(RESOURCE_SERVICE.addCommand(eq(APP_ID), eq(SERVICE_ID), any(ServiceCommand.class), eq(true)))
         .thenReturn(aSERVICE);
 
     RestResponse<Service> restResponse =
@@ -148,7 +148,7 @@ public class ServiceResourceTest {
             .request()
             .post(entity(aServiceCommand().build(), APPLICATION_JSON), new GenericType<RestResponse<Service>>() {});
     assertThat(restResponse.getResource()).isInstanceOf(Service.class);
-    verify(RESOURCE_SERVICE).addCommand(eq(APP_ID), eq(SERVICE_ID), any(ServiceCommand.class), eq(true), eq(false));
+    verify(RESOURCE_SERVICE).addCommand(eq(APP_ID), eq(SERVICE_ID), any(ServiceCommand.class), eq(true));
   }
 
   /**

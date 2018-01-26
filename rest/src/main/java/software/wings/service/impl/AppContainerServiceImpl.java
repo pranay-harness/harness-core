@@ -77,6 +77,19 @@ public class AppContainerServiceImpl implements AppContainerService {
    * {@inheritDoc}
    */
   @Override
+  public AppContainer getByName(String accountId, String appContainerName) {
+    return wingsPersistence.createQuery(AppContainer.class)
+        .field("accountId")
+        .equal(accountId)
+        .field("name")
+        .equal(appContainerName)
+        .get();
+  }
+
+  /**
+   * {@inheritDoc}
+   */
+  @Override
   public AppContainer save(AppContainer appContainer, InputStream in, FileBucket fileBucket) {
     uploadAppContainerFile(appContainer, in, fileBucket);
     return wingsPersistence.saveAndGet(AppContainer.class, appContainer);

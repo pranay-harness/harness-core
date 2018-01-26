@@ -72,6 +72,16 @@ public interface AppContainerService {
   AppContainer get(@NotEmpty String accountId, @NotEmpty String appContainerId);
 
   /**
+   * Gets the app container by name.
+   *
+   *
+   * @param accountId
+   * @param appContainerName the app container name
+   * @return the app container
+   */
+  AppContainer getByName(@NotEmpty String accountId, @NotEmpty String appContainerName);
+
+  /**
    * Delete.
    *
    * @param accountId

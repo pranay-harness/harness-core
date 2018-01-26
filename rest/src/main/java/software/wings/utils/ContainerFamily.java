@@ -38,8 +38,8 @@ public enum ContainerFamily {
     private static final long serialVersionUID = 2932493038229748527L;
 
     @Override
-    public boolean shouldPushCommandsToYaml() {
-      return true;
+    public boolean isInternal() {
+      return false;
     }
 
     @Override
@@ -257,8 +257,8 @@ public enum ContainerFamily {
     private static final long serialVersionUID = 2932493038229748527L;
 
     @Override
-    public boolean shouldPushCommandsToYaml() {
-      return true;
+    public boolean isInternal() {
+      return false;
     }
 
     @Override
@@ -517,5 +517,5 @@ public enum ContainerFamily {
    */
   protected abstract Command getInstallCommand(ArtifactType artifactType, AppContainer appContainer);
 
-  public abstract boolean shouldPushCommandsToYaml();
+  public abstract boolean isInternal();
 }
