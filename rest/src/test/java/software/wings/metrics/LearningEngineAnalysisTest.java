@@ -139,7 +139,7 @@ public class LearningEngineAnalysisTest extends WingsBaseTest {
                                                                   .build();
       learningEngineService.addLearningEngineAnalysisTask(learningEngineAnalysisTask);
     }
-    Thread.sleep(TimeUnit.SECONDS.toMillis(5));
+    Thread.sleep(TimeUnit.SECONDS.toMillis(10));
 
     assertEquals(numOfTasks, wingsPersistence.createQuery(LearningEngineAnalysisTask.class).asList().size());
 
