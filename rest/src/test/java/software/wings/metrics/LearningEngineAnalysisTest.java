@@ -48,6 +48,7 @@ public class LearningEngineAnalysisTest extends WingsBaseTest {
   }
 
   @Test
+  @Ignore
   public void testQueueWithStatus() {
     int numOfTasks = 100;
     for (int i = 0; i < numOfTasks; i++) {
@@ -126,6 +127,7 @@ public class LearningEngineAnalysisTest extends WingsBaseTest {
   }
 
   @Test
+  @Ignore
   public void testQueueWithTimeOut() throws InterruptedException {
     long startTime = System.currentTimeMillis();
     int numOfTasks = 100;
