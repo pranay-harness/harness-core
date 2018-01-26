@@ -24,7 +24,7 @@ public interface YamlConstants {
   String ARTIFACT_SERVERS_FOLDER = "Artifact Servers";
   String COLLABORATION_PROVIDERS_FOLDER = "Collaboration Providers";
   String VERIFICATION_PROVIDERS_FOLDER = "Verification Providers";
-  String HOST_CONNECTION_ATTRIBUTES_FOLDER = "Verification Providers";
+  String NOTIFICATION_GROUPS_FOLDER = "Notification Groups";
 
   String ARTIFACT_SOURCES_FOLDER = "Artifact Servers";
   String DEPLOYMENT_SPECIFICATION_FOLDER = "Deployment Specifications";

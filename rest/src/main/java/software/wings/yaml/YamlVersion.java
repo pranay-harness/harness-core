@@ -145,7 +145,8 @@ public class YamlVersion extends Base implements YamlHistory {
     INFRA_MAPPING,
     DEPLOYMENT_SPEC,
     APPLICATION_DEFAULTS,
-    ACCOUNT_DEFAULTS
+    ACCOUNT_DEFAULTS,
+    NOTIFICATION_GROUP
   }
 
   public YamlVersion clone() {

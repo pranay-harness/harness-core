@@ -44,6 +44,8 @@ public class DirectoryNode {
       this.restName = "container-tasks";
     } else if (this.shortClassName.equals("Defaults")) {
       this.restName = "defaults";
+    } else if (this.shortClassName.equals("NotificationGroup")) {
+      this.restName = "notification-groups";
     } else if (this.shortClassName.equals("LambdaSpecification")) {
       this.restName = "lambda-specs";
     } else if (this.shortClassName.equals("UserDataSpecification")) {

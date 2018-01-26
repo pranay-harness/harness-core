@@ -5,6 +5,7 @@ import software.wings.beans.Application;
 import software.wings.beans.Environment;
 import software.wings.beans.InfrastructureMapping;
 import software.wings.beans.LambdaSpecification;
+import software.wings.beans.NotificationGroup;
 import software.wings.beans.Pipeline;
 import software.wings.beans.Service;
 import software.wings.beans.SettingAttribute;
@@ -83,6 +84,8 @@ public interface YamlDirectoryService {
   String getRootPathByArtifactStream(ArtifactStream artifactStream);
 
   String getRootPathBySettingAttribute(SettingAttribute settingAttribute, SettingVariableTypes settingVariableType);
+
+  String getRootPathByNotificationGroup(NotificationGroup notificationGroup);
 
   String getRootPathBySettingAttribute(SettingAttribute settingAttribute);
 }

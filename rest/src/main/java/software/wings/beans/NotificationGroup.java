@@ -1,5 +1,6 @@
 package software.wings.beans;
 
+import lombok.Builder;
 import lombok.Data;
 import lombok.EqualsAndHashCode;
 import lombok.NoArgsConstructor;
@@ -10,6 +11,7 @@ import org.mongodb.morphia.annotations.Index;
 import org.mongodb.morphia.annotations.IndexOptions;
 import org.mongodb.morphia.annotations.Indexes;
 import org.mongodb.morphia.annotations.Reference;
+import software.wings.yaml.BaseEntityYaml;
 import software.wings.yaml.BaseYaml;
 
 import java.util.ArrayList;
@@ -31,105 +33,6 @@ public class NotificationGroup extends Base {
   @Reference(idOnly = true, ignoreMissing = true) private List<Role> roles = new ArrayList<>();
 
   @NotNull private Map<NotificationChannelType, List<String>> addressesByChannelType = new HashMap<>();
-
-  @Data
-  @EqualsAndHashCode(callSuper = true)
-  @NoArgsConstructor
-  public static final class Yaml extends BaseYaml {
-    @NotEmpty private String accountId;
-    @NotNull private String name;
-    private boolean editable = true;
-    private List<AddressYaml> addresses;
-
-    public static final class Builder {
-      private String accountId;
-      private String name;
-      private boolean editable = true;
-      private List<AddressYaml> addresses;
-
-      private Builder() {}
-
-      public static Builder anYaml() {
-        return new Builder();
-      }
-
-      public Builder withAccountId(String accountId) {
-        this.accountId = accountId;
-        return this;
-      }
-
-      public Builder withName(String name) {
-        this.name = name;
-        return this;
-      }
-
-      public Builder withEditable(boolean editable) {
-        this.editable = editable;
-        return this;
-      }
-
-      public Builder withAddresses(List<AddressYaml> addresses) {
-        this.addresses = addresses;
-        return this;
-      }
-
-      public Builder but() {
-        return anYaml().withAccountId(accountId).withName(name).withEditable(editable).withAddresses(addresses);
-      }
-
-      public Yaml build() {
-        Yaml yaml = new Yaml();
-        yaml.setAccountId(accountId);
-        yaml.setName(name);
-        yaml.setEditable(editable);
-        yaml.setAddresses(addresses);
-        return yaml;
-      }
-    }
-  }
-
-  /**
-   * Yaml representation of addressesByChannelType in NotificationGroup.
-   */
-  @Data
-  @EqualsAndHashCode(callSuper = true)
-  @NoArgsConstructor
-  public static final class AddressYaml extends BaseYaml {
-    private String channelType;
-    private List<String> addresses;
-
-    public static final class Builder {
-      private String channelType;
-      private List<String> addresses;
-
-      private Builder() {}
-
-      public static Builder anAddressYaml() {
-        return new Builder();
-      }
-
-      public Builder withChannelType(String channelType) {
-        this.channelType = channelType;
-        return this;
-      }
-
-      public Builder withAddresses(List<String> addresses) {
-        this.addresses = addresses;
-        return this;
-      }
-
-      public Builder but() {
-        return anAddressYaml().withChannelType(channelType).withAddresses(addresses);
-      }
-
-      public AddressYaml build() {
-        AddressYaml addressYaml = new AddressYaml();
-        addressYaml.setChannelType(channelType);
-        addressYaml.setAddresses(addresses);
-        return addressYaml;
-      }
-    }
-  }
 
   /**
    * Gets name.
@@ -434,6 +337,36 @@ public class NotificationGroup extends Base {
       notificationGroup.setLastUpdatedAt(lastUpdatedAt);
       notificationGroup.setEditable(editable);
       return notificationGroup;
+    }
+  }
+
+  @Data
+  @EqualsAndHashCode(callSuper = true)
+  @NoArgsConstructor
+  public static final class Yaml extends BaseEntityYaml {
+    private List<AddressYaml> addresses;
+
+    @Builder
+    public Yaml(String type, String harnessApiVersion, List<AddressYaml> addresses) {
+      super(type, harnessApiVersion);
+      this.addresses = addresses;
+    }
+  }
+
+  /**
+   * Yaml representation of addressesByChannelType in NotificationGroup.
+   */
+  @Data
+  @EqualsAndHashCode(callSuper = true)
+  @NoArgsConstructor
+  public static final class AddressYaml extends BaseYaml {
+    private String channelType;
+    private List<String> addresses;
+
+    @Builder
+    public AddressYaml(String channelType, List<String> addresses) {
+      this.channelType = channelType;
+      this.addresses = addresses;
     }
   }
 }

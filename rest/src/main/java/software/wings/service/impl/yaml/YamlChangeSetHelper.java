@@ -17,6 +17,7 @@ import software.wings.beans.EntityType;
 import software.wings.beans.Environment;
 import software.wings.beans.InfrastructureMapping;
 import software.wings.beans.LambdaSpecification;
+import software.wings.beans.NotificationGroup;
 import software.wings.beans.Service;
 import software.wings.beans.SettingAttribute;
 import software.wings.beans.artifact.ArtifactStream;
@@ -280,6 +281,21 @@ public class YamlChangeSetHelper {
                         .build());
       changeSet.add(entityUpdateService.getServiceGitSyncFile(accountId, newService, ChangeType.MODIFY));
       changeSet.addAll(yamlGitService.performFullSyncDryRun(accountId));
+      yamlChangeSetService.saveChangeSet(ygs, changeSet);
+    }
+  }
+
+  public void notificationGroupYamlChangeAsync(NotificationGroup notificationGroup, ChangeType change) {
+    executorService.submit(() -> notificationGroupYamlChangeSet(notificationGroup, change));
+  }
+
+  public void notificationGroupYamlChangeSet(NotificationGroup notificationGroup, ChangeType crudType) {
+    // check whether we need to push changes (through git sync)
+    String accountId = notificationGroup.getAccountId();
+    YamlGitConfig ygs = yamlDirectoryService.weNeedToPushChanges(accountId);
+    if (ygs != null) {
+      List<GitFileChange> changeSet = new ArrayList<>();
+      changeSet.add(entityUpdateService.getNotificationGroupGitSyncFile(accountId, notificationGroup, crudType));
       yamlChangeSetService.saveChangeSet(ygs, changeSet);
     }
   }

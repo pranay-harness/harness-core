@@ -18,6 +18,7 @@ import software.wings.beans.Environment;
 import software.wings.beans.ErrorCode;
 import software.wings.beans.InfrastructureMapping;
 import software.wings.beans.LambdaSpecification;
+import software.wings.beans.NotificationGroup;
 import software.wings.beans.Pipeline;
 import software.wings.beans.ResponseMessage.Level;
 import software.wings.beans.RestResponse;
@@ -40,6 +41,7 @@ import software.wings.service.intfc.CommandService;
 import software.wings.service.intfc.ConfigService;
 import software.wings.service.intfc.EnvironmentService;
 import software.wings.service.intfc.InfrastructureMappingService;
+import software.wings.service.intfc.NotificationSetupService;
 import software.wings.service.intfc.PipelineService;
 import software.wings.service.intfc.ServiceResourceService;
 import software.wings.service.intfc.SettingsService;
@@ -47,7 +49,6 @@ import software.wings.service.intfc.WorkflowService;
 import software.wings.service.intfc.yaml.YamlArtifactStreamService;
 import software.wings.service.intfc.yaml.YamlGitService;
 import software.wings.service.intfc.yaml.YamlResourceService;
-import software.wings.service.intfc.yaml.sync.YamlService;
 import software.wings.settings.SettingValue;
 import software.wings.settings.SettingValue.SettingVariableTypes;
 import software.wings.utils.Validator;
@@ -74,7 +75,7 @@ public class YamlResourceServiceImpl implements YamlResourceService {
   @Inject private SettingsService settingsService;
   @Inject private YamlGitService yamlGitSyncService;
   @Inject private YamlHandlerFactory yamlHandlerFactory;
-  @Inject private YamlService yamlService;
+  @Inject private NotificationSetupService notificationSetupService;
 
   private static final Logger logger = LoggerFactory.getLogger(YamlResourceServiceImpl.class);
 
@@ -126,6 +127,19 @@ public class YamlResourceServiceImpl implements YamlResourceService {
         (Pipeline.Yaml) yamlHandlerFactory.getYamlHandler(YamlType.PIPELINE).toYaml(pipeline, appId);
     return YamlHelper.getYamlRestResponse(
         yamlGitSyncService, pipeline.getUuid(), accountId, pipelineYaml, pipeline.getName() + YAML_EXTENSION);
+  }
+
+  @Override
+  public RestResponse<YamlPayload> getNotificationGroup(String accountId, String notificationGroupId) {
+    NotificationGroup notificationGroup =
+        notificationSetupService.readNotificationGroup(accountId, notificationGroupId);
+    Validator.notNullCheck("No notification group exists with the given id:" + notificationGroupId, notificationGroup);
+
+    NotificationGroup.Yaml notificationGroupYaml =
+        (NotificationGroup.Yaml) yamlHandlerFactory.getYamlHandler(YamlType.NOTIFICATION_GROUP)
+            .toYaml(notificationGroup, GLOBAL_APP_ID);
+    return YamlHelper.getYamlRestResponse(yamlGitSyncService, notificationGroup.getUuid(), accountId,
+        notificationGroupYaml, notificationGroup.getName() + YAML_EXTENSION);
   }
 
   /**

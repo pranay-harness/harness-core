@@ -14,6 +14,7 @@ import software.wings.beans.ConfigFile;
 import software.wings.beans.Environment;
 import software.wings.beans.InfrastructureMapping;
 import software.wings.beans.LambdaSpecification;
+import software.wings.beans.NotificationGroup;
 import software.wings.beans.Pipeline;
 import software.wings.beans.Service;
 import software.wings.beans.SettingAttribute;
@@ -81,6 +82,17 @@ public class EntityUpdateServiceImpl implements EntityUpdateService {
     }
     return createGitFileChange(
         app.getAccountId(), yamlDirectoryService.getRootPathByApp(app), YamlConstants.INDEX, yaml, changeType, true);
+  }
+
+  @Override
+  public GitFileChange getNotificationGroupGitSyncFile(
+      String accountId, NotificationGroup notificationGroup, ChangeType changeType) {
+    String yaml = null;
+    if (!changeType.equals(ChangeType.DELETE)) {
+      yaml = yamlResourceService.getNotificationGroup(accountId, notificationGroup.getUuid()).getResource().getYaml();
+    }
+    return createGitFileChange(accountId, yamlDirectoryService.getRootPathByNotificationGroup(notificationGroup),
+        notificationGroup.getName(), yaml, changeType, false);
   }
 
   @Override

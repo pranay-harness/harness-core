@@ -3,6 +3,7 @@ package software.wings.yaml.handler.workflow;
 import static org.junit.Assert.assertTrue;
 import static org.mockito.Matchers.anyString;
 import static org.mockito.Mockito.when;
+import static software.wings.beans.NotificationGroup.NotificationGroupBuilder.aNotificationGroup;
 import static software.wings.beans.yaml.YamlConstants.PATH_DELIMITER;
 import static software.wings.utils.WingsTestConstants.ACCOUNT_ID;
 import static software.wings.utils.WingsTestConstants.APP_ID;
@@ -11,6 +12,7 @@ import static software.wings.utils.WingsTestConstants.COMPUTE_PROVIDER_ID;
 import static software.wings.utils.WingsTestConstants.ENV_ID;
 import static software.wings.utils.WingsTestConstants.ENV_NAME;
 import static software.wings.utils.WingsTestConstants.INFRA_MAPPING_ID;
+import static software.wings.utils.WingsTestConstants.NOTIFICATION_GROUP_ID;
 import static software.wings.utils.WingsTestConstants.SERVICE_ID;
 import static software.wings.utils.WingsTestConstants.SERVICE_NAME;
 
@@ -24,6 +26,7 @@ import software.wings.beans.Application;
 import software.wings.beans.Environment;
 import software.wings.beans.GcpKubernetesInfrastructureMapping;
 import software.wings.beans.InfrastructureMapping;
+import software.wings.beans.NotificationGroup;
 import software.wings.beans.Service;
 import software.wings.beans.artifact.ArtifactStream;
 import software.wings.beans.artifact.GcrArtifactStream;
@@ -33,7 +36,6 @@ import software.wings.beans.yaml.YamlType;
 import software.wings.exception.HarnessException;
 import software.wings.service.impl.yaml.handler.BaseYamlHandler;
 import software.wings.service.impl.yaml.handler.YamlHandlerFactory;
-import software.wings.service.impl.yaml.handler.notification.NotificationGroupYamlHandler;
 import software.wings.service.impl.yaml.handler.notification.NotificationRulesYamlHandler;
 import software.wings.service.impl.yaml.handler.template.TemplateExpressionYamlHandler;
 import software.wings.service.impl.yaml.handler.variable.VariableYamlHandler;
@@ -47,6 +49,7 @@ import software.wings.service.intfc.AppService;
 import software.wings.service.intfc.ArtifactStreamService;
 import software.wings.service.intfc.EnvironmentService;
 import software.wings.service.intfc.InfrastructureMappingService;
+import software.wings.service.intfc.NotificationSetupService;
 import software.wings.service.intfc.ServiceResourceService;
 import software.wings.service.intfc.SettingsService;
 import software.wings.service.intfc.WorkflowService;
@@ -66,6 +69,7 @@ public abstract class BaseWorkflowYamlHandlerTest extends BaseYamlHandlerTest {
   protected Service service = getService();
   protected Environment environment = getEnvironment();
   protected ArtifactStream artifactStream = getArtifactStream();
+  protected NotificationGroup notificationGroup = getNotificationGroup();
 
   @Mock protected YamlHelper yamlHelper;
   @Mock protected YamlHandlerFactory yamlHandlerFactory;
@@ -76,6 +80,7 @@ public abstract class BaseWorkflowYamlHandlerTest extends BaseYamlHandlerTest {
   @Mock protected ServiceResourceService serviceResourceService;
   @Mock protected ArtifactStreamService artifactStreamService;
   @Mock protected SettingsService settingsService;
+  @Mock protected NotificationSetupService notificationSetupService;
 
   //  @InjectMocks @Inject YamlHelper yamlHelper;
   @InjectMocks @Inject protected WorkflowService workflowService;
@@ -84,7 +89,6 @@ public abstract class BaseWorkflowYamlHandlerTest extends BaseYamlHandlerTest {
   @InjectMocks @Inject protected StepYamlHandler stepYamlHandler;
   @InjectMocks @Inject protected FailureStrategyYamlHandler failureStrategyYamlHandler;
   @InjectMocks @Inject protected NotificationRulesYamlHandler notificationRulesYamlHandler;
-  @InjectMocks @Inject protected NotificationGroupYamlHandler notificationGroupYamlHandler;
   @InjectMocks @Inject protected TemplateExpressionYamlHandler templateExpressionYamlHandler;
   @InjectMocks @Inject protected VariableYamlHandler variableYamlHandler;
 
@@ -107,6 +111,9 @@ public abstract class BaseWorkflowYamlHandlerTest extends BaseYamlHandlerTest {
     when(serviceResourceService.getServiceByName(anyString(), anyString())).thenReturn(service);
     when(serviceResourceService.get(APP_ID, SERVICE_ID)).thenReturn(service);
 
+    when(notificationSetupService.readNotificationGroupByName(anyString(), anyString())).thenReturn(notificationGroup);
+    when(notificationSetupService.readNotificationGroup(anyString(), anyString())).thenReturn(notificationGroup);
+
     when(infrastructureMappingService.getInfraMappingByName(anyString(), anyString(), anyString()))
         .thenReturn(infrastructureMapping);
     when(infrastructureMappingService.get(APP_ID, INFRA_MAPPING_ID)).thenReturn(infrastructureMapping);
@@ -117,7 +124,6 @@ public abstract class BaseWorkflowYamlHandlerTest extends BaseYamlHandlerTest {
     when(yamlHandlerFactory.getYamlHandler(YamlType.STEP)).thenReturn(stepYamlHandler);
     when(yamlHandlerFactory.getYamlHandler(YamlType.FAILURE_STRATEGY)).thenReturn(failureStrategyYamlHandler);
     when(yamlHandlerFactory.getYamlHandler(YamlType.NOTIFICATION_RULE)).thenReturn(notificationRulesYamlHandler);
-    when(yamlHandlerFactory.getYamlHandler(YamlType.NOTIFICATION_GROUP)).thenReturn(notificationGroupYamlHandler);
 
     when(yamlHandlerFactory.getYamlHandler(YamlType.VARIABLE)).thenReturn(variableYamlHandler);
   }
@@ -157,6 +163,14 @@ public abstract class BaseWorkflowYamlHandlerTest extends BaseYamlHandlerTest {
         .withDockerImageName("testDockerImageName")
         .withSourceName("gcr.io_exploration-161417_todolist")
         .withName("gcr.io_exploration-161417_todolist")
+        .build();
+  }
+
+  private NotificationGroup getNotificationGroup() {
+    return aNotificationGroup()
+        .withUuid(NOTIFICATION_GROUP_ID)
+        .withName("Account Administrator")
+        .withAccountId(ACCOUNT_ID)
         .build();
   }
 
