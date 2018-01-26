@@ -8,7 +8,6 @@ import static software.wings.beans.SearchFilter.Operator.EQ;
 import static software.wings.common.UUIDGenerator.getUuid;
 import static software.wings.dl.PageRequest.Builder.aPageRequest;
 import static software.wings.dl.PageRequest.UNLIMITED;
-import static software.wings.sm.StateType.KUBERNETES_REPLICATION_CONTROLLER_SETUP;
 import static software.wings.sm.StateType.KUBERNETES_SETUP_ROLLBACK;
 
 import com.google.inject.Inject;
@@ -28,6 +27,7 @@ import software.wings.dl.PageResponse;
 import software.wings.dl.WingsPersistence;
 import software.wings.service.intfc.WorkflowService;
 import software.wings.sm.ExecutionStatus;
+import software.wings.sm.StateType;
 
 import java.util.List;
 
@@ -66,7 +66,7 @@ public class AddK8sSetupRollbackToAllK8sWorkflows implements Migration {
               for (PhaseStep phaseStep : workflowPhase.getPhaseSteps()) {
                 if (CONTAINER_SETUP == phaseStep.getPhaseStepType()) {
                   for (Graph.Node node : phaseStep.getSteps()) {
-                    if (KUBERNETES_REPLICATION_CONTROLLER_SETUP.name().equals(node.getType())) {
+                    if (StateType.KUBERNETES_SETUP.name().equals(node.getType())) {
                       candidateFound = true;
                       WorkflowPhase rollbackPhase =
                           coWorkflow.getRollbackWorkflowPhaseIdMap().get(workflowPhase.getUuid());

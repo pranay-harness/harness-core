@@ -72,7 +72,7 @@ public class ContainerSetupStateMigrationUtil extends WingsBaseTest {
                     Map<String, Object> properties = node.getProperties();
                     properties.put("commandName", "Setup Service Cluster");
                   }
-                  if (StateType.KUBERNETES_REPLICATION_CONTROLLER_SETUP.name().equals(node.getType())) {
+                  if (StateType.KUBERNETES_SETUP.name().equals(node.getType())) {
                     workflowModified = true;
                     Map<String, Object> properties = node.getProperties();
                     properties.put("commandName", "Setup Replication Controller");

@@ -160,7 +160,7 @@ public abstract class ExpressionBuilder {
       case AWS_LAMBDA_STATE:
       case ECS_SERVICE_SETUP:
       case JENKINS:
-      case KUBERNETES_REPLICATION_CONTROLLER_SETUP:
+      case KUBERNETES_SETUP:
       case NEW_RELIC_DEPLOYMENT_MARKER:
         noop();
         break;

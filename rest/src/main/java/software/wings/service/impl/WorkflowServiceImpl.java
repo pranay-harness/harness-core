@@ -67,9 +67,8 @@ import static software.wings.sm.StateType.ECS_SERVICE_ROLLBACK;
 import static software.wings.sm.StateType.ECS_SERVICE_SETUP;
 import static software.wings.sm.StateType.ELASTIC_LOAD_BALANCER;
 import static software.wings.sm.StateType.GCP_CLUSTER_SETUP;
-import static software.wings.sm.StateType.KUBERNETES_REPLICATION_CONTROLLER_DEPLOY;
-import static software.wings.sm.StateType.KUBERNETES_REPLICATION_CONTROLLER_ROLLBACK;
-import static software.wings.sm.StateType.KUBERNETES_REPLICATION_CONTROLLER_SETUP;
+import static software.wings.sm.StateType.KUBERNETES_DEPLOY;
+import static software.wings.sm.StateType.KUBERNETES_SETUP;
 import static software.wings.sm.StateType.KUBERNETES_SETUP_ROLLBACK;
 import static software.wings.utils.Switch.unhandled;
 import static software.wings.utils.Validator.notNullCheck;
@@ -2147,7 +2146,7 @@ public class WorkflowServiceImpl implements WorkflowService, DataProvider {
       workflowPhase.addPhaseStep(aPhaseStep(CONTAINER_SETUP, Constants.SETUP_CONTAINER)
                                      .addStep(aNode()
                                                   .withId(getUuid())
-                                                  .withType(KUBERNETES_REPLICATION_CONTROLLER_SETUP.name())
+                                                  .withType(KUBERNETES_SETUP.name())
                                                   .withName("Kubernetes Service Setup")
                                                   .build())
                                      .build());
@@ -2157,13 +2156,11 @@ public class WorkflowServiceImpl implements WorkflowService, DataProvider {
         (KubernetesContainerTask) serviceResourceService.getContainerTaskByDeploymentType(
             appId, workflowPhase.getServiceId(), DeploymentType.KUBERNETES.name());
     if (containerTask == null || containerTask.kubernetesType() != DaemonSet.class) {
-      workflowPhase.addPhaseStep(aPhaseStep(CONTAINER_DEPLOY, Constants.DEPLOY_CONTAINERS)
-                                     .addStep(aNode()
-                                                  .withId(getUuid())
-                                                  .withType(KUBERNETES_REPLICATION_CONTROLLER_DEPLOY.name())
-                                                  .withName("Upgrade Containers")
-                                                  .build())
-                                     .build());
+      workflowPhase.addPhaseStep(
+          aPhaseStep(CONTAINER_DEPLOY, Constants.DEPLOY_CONTAINERS)
+              .addStep(
+                  aNode().withId(getUuid()).withType(KUBERNETES_DEPLOY.name()).withName("Upgrade Containers").build())
+              .build());
     }
     workflowPhase.addPhaseStep(aPhaseStep(VERIFY_SERVICE, Constants.VERIFY_SERVICE)
                                    .addAllSteps(commandNodes(commandMap, CommandType.VERIFY))
@@ -2468,7 +2465,7 @@ public class WorkflowServiceImpl implements WorkflowService, DataProvider {
               .addPhaseStep(aPhaseStep(CONTAINER_DEPLOY, Constants.DEPLOY_CONTAINERS)
                                 .addStep(aNode()
                                              .withId(getUuid())
-                                             .withType(KUBERNETES_REPLICATION_CONTROLLER_ROLLBACK.name())
+                                             .withType(StateType.KUBERNETES_DEPLOY_ROLLBACK.name())
                                              .withName(Constants.ROLLBACK_CONTAINERS)
                                              .addProperty("rollback", true)
                                              .build())

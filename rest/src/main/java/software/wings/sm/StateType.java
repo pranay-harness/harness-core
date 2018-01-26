@@ -74,9 +74,6 @@ import software.wings.sm.states.HttpState;
 import software.wings.sm.states.JenkinsState;
 import software.wings.sm.states.KubernetesDeploy;
 import software.wings.sm.states.KubernetesDeployRollback;
-import software.wings.sm.states.KubernetesReplicationControllerDeploy;
-import software.wings.sm.states.KubernetesReplicationControllerRollback;
-import software.wings.sm.states.KubernetesReplicationControllerSetup;
 import software.wings.sm.states.KubernetesSetup;
 import software.wings.sm.states.KubernetesSetupRollback;
 import software.wings.sm.states.LogzAnalysisState;
@@ -297,21 +294,6 @@ public enum StateType implements StateTypeDescriptor {
       asList(CONTAINER_DEPLOY), ORCHESTRATION_STENCILS),
 
   ECS_SERVICE_ROLLBACK(EcsServiceRollback.class, COMMANDS, Lists.newArrayList(InfrastructureMappingType.AWS_ECS),
-      asList(CONTAINER_DEPLOY), ORCHESTRATION_STENCILS),
-
-  // Deprecated
-  KUBERNETES_REPLICATION_CONTROLLER_SETUP(KubernetesReplicationControllerSetup.class, CLOUD,
-      Lists.newArrayList(InfrastructureMappingType.DIRECT_KUBERNETES, InfrastructureMappingType.GCP_KUBERNETES),
-      asList(CONTAINER_SETUP), ORCHESTRATION_STENCILS),
-
-  // Deprecated
-  KUBERNETES_REPLICATION_CONTROLLER_DEPLOY(KubernetesReplicationControllerDeploy.class, COMMANDS,
-      Lists.newArrayList(InfrastructureMappingType.DIRECT_KUBERNETES, InfrastructureMappingType.GCP_KUBERNETES),
-      asList(CONTAINER_DEPLOY), ORCHESTRATION_STENCILS),
-
-  // Deprecated
-  KUBERNETES_REPLICATION_CONTROLLER_ROLLBACK(KubernetesReplicationControllerRollback.class, COMMANDS,
-      Lists.newArrayList(InfrastructureMappingType.DIRECT_KUBERNETES, InfrastructureMappingType.GCP_KUBERNETES),
       asList(CONTAINER_DEPLOY), ORCHESTRATION_STENCILS),
 
   KUBERNETES_SETUP(KubernetesSetup.class, CLOUD,

@@ -51,10 +51,10 @@ public class ContainerMaxInstancesMigrationUtil extends WingsBaseTest {
       for (StateMachine sm : childStateMachines.values()) {
         for (State state : sm.getStates()) {
           switch (StateType.valueOf(state.getStateType())) {
-            case KUBERNETES_REPLICATION_CONTROLLER_SETUP:
+            case KUBERNETES_SETUP:
               kubeSetup.add(state);
               break;
-            case KUBERNETES_REPLICATION_CONTROLLER_DEPLOY:
+            case KUBERNETES_DEPLOY:
               kubeDeploy.add(state);
               break;
             case ECS_SERVICE_SETUP:
