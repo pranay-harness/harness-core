@@ -696,6 +696,8 @@ public class DelegateServiceImpl implements DelegateService {
     logger.info("Aborting task {}", delegateTaskEvent);
     Optional.ofNullable(currentlyExecutingFutures.get(delegateTaskEvent.getDelegateTaskId()))
         .ifPresent(future -> future.cancel(true));
+    currentlyExecutingTasks.remove(delegateTaskEvent.getDelegateTaskId());
+    currentlyExecutingFutures.remove(delegateTaskEvent.getDelegateTaskId());
   }
 
   private void dispatchDelegateTask(DelegateTaskEvent delegateTaskEvent) {
@@ -735,7 +737,7 @@ public class DelegateServiceImpl implements DelegateService {
             delegateTaskEvent.getAccountId());
         logger.info("Currently validating tasks: {}", currentlyValidatingTasks.keySet());
         logger.info("Currently executing tasks: {}", currentlyExecutingTasks.keySet());
-        logger.info("Currently executing async tasks: {}", currentlyExecutingFutures.keySet());
+        logger.info("Currently executing futures: {}", currentlyExecutingFutures.keySet());
         return;
       }
 
@@ -762,6 +764,7 @@ public class DelegateServiceImpl implements DelegateService {
     return delegateConnectionResults -> {
       String taskId = delegateTask.getUuid();
       currentlyValidatingTasks.remove(taskId);
+      currentlyExecutingFutures.remove(taskId);
       List<DelegateConnectionResult> results = Optional.ofNullable(delegateConnectionResults).orElse(emptyList());
       boolean validated = results.stream().anyMatch(DelegateConnectionResult::isValidated);
       logger.info("Validation {} for task {}", validated ? "succeeded" : "failed", taskId);
@@ -851,6 +854,7 @@ public class DelegateServiceImpl implements DelegateService {
         logger.error("Unable to send response to manager", e);
       } finally {
         currentlyExecutingTasks.remove(delegateTask.getUuid());
+        currentlyExecutingFutures.remove(delegateTask.getUuid());
         if (response != null && response.errorBody() != null && !response.isSuccessful()) {
           response.errorBody().close();
         }
@@ -874,6 +878,8 @@ public class DelegateServiceImpl implements DelegateService {
       logger.error("Task {} timed out after {} milliseconds", delegateTask.getUuid(), timeout);
       Optional.ofNullable(currentlyExecutingFutures.get(delegateTask.getUuid()))
           .ifPresent(future -> future.cancel(true));
+      currentlyExecutingTasks.remove(delegateTask.getUuid());
+      currentlyExecutingFutures.remove(delegateTask.getUuid());
     }
   }
 

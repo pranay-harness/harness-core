@@ -224,7 +224,7 @@ public class KubernetesSetupCommandUnit extends ContainerSetupCommandUnit {
           createAutoscaler(containerServiceName, kubernetesConfig.getNamespace(), controllerLabels, setupParams);
       if (autoscalerDefinition != null) {
         executionLogCallback.saveExecutionLog(
-            String.format("Creating autoscaler %s. Disabled until deployed to 100%%", containerServiceName),
+            String.format("Creating autoscaler %s - disabled until 100%% deployed", containerServiceName),
             LogLevel.INFO);
         executionLogCallback.saveExecutionLog(
             String.format("Setting autoscaler min instances %d, max instances %d, with target CPU utilization %d%%",
