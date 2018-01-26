@@ -1,14 +1,11 @@
- 
- w            w                                                    sssssss
- w            w   0                                               ss
- w            w        nn     nnn       ggga      ssssss          sss            ooo        fff    t        w            w       a a          r   r   eee
- w     w      w   1   n  n  n     n   gg    gg   ss                   sss       o    o     f   f  -t-       w            w     a     a        r r    e   e
-  w    ww    w    1        n      n   gg    gg    sssss                  sss   o      o   ---      t         w    ww    w     a      a        r      eeee
-   w  w  w  w     1        n      n   gg    gg         ss                 ss    o    o     f       t    t     w  w  w  w       a    a  g  a   r      e    
-    ww    ww      1        n      n     gggggg    ssssss          ssssssss       oooo      f        tttt       ww    ww          a      aa    r       eeee 
-____________________________________________gg_____________________________________________________________________________________________________________
-                                      ggggg gg
-                                     g     gg
-                                      ggggg
 
-                                      
+
+  888  888       888                                                               d8b
+  888  888       888                                                               Y8P
+888888888888     888
+  888  888       88888b.   8888b.  888d888 88888b.   .d88b.  .d8888b  .d8888b      888  .d88b.
+  888  888       888 "88b     "88b 888P"   888 "88b d8P  Y8b 88K      88K          888 d88""88b
+888888888888     888  888 .d888888 888     888  888 88888888 "Y8888b. "Y8888b.     888 888  888
+  888  888       888  888 888  888 888     888  888 Y8b.          X88      X88 d8b 888 Y88..88P
+  888  888       888  888 "Y888888 888     888  888  "Y8888   88888P'  88888P' Y8P 888  "Y88P"
+
