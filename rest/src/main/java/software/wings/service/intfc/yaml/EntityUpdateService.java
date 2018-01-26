@@ -5,6 +5,7 @@ import software.wings.beans.ConfigFile;
 import software.wings.beans.Environment;
 import software.wings.beans.InfrastructureMapping;
 import software.wings.beans.LambdaSpecification;
+import software.wings.beans.NotificationGroup;
 import software.wings.beans.Pipeline;
 import software.wings.beans.Service;
 import software.wings.beans.SettingAttribute;
@@ -25,6 +26,9 @@ import java.util.List;
  */
 public interface EntityUpdateService {
   GitFileChange getAppGitSyncFile(Application app, ChangeType changeType);
+
+  GitFileChange getNotificationGroupGitSyncFile(
+      String accountId, NotificationGroup notificationGroup, ChangeType changeType);
 
   GitFileChange getServiceGitSyncFile(String accountId, Service service, ChangeType changeType);
 

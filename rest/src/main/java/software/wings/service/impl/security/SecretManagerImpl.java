@@ -335,11 +335,6 @@ public class SecretManagerImpl implements SecretManager {
 
     encryptedField.setAccessible(true);
 
-    // locally encrypted
-    if (encryptedField.get(object) != null) {
-      throw new IllegalAccessException("trying to get a yaml reference which wasn't encrypted using secret management");
-    }
-
     Field encryptedFieldRef = getEncryptedRefField(encryptedField, object);
     encryptedFieldRef.setAccessible(true);
     String encryptedFieldRefId = (String) encryptedFieldRef.get(object);

@@ -203,7 +203,7 @@ public class YamlGitServiceImpl implements YamlGitService {
       logger.info("Performed full-sync dry-run for account {}" + accountId);
       return gitFileChanges;
     } catch (Exception ex) {
-      logger.error("Failed to perform full-sync dry-run for account {}" + accountId, ex);
+      logger.error("Failed to perform full-sync dry-run for account {}", accountId, ex);
     }
     return new ArrayList<>();
   }
@@ -365,13 +365,15 @@ public class YamlGitServiceImpl implements YamlGitService {
                                           .equal(failedChange.getFilePath());
     GitFileChange failedGitFileChange = (GitFileChange) failedChange;
     String failedCommitId = failedGitFileChange.getCommitId() != null ? failedGitFileChange.getCommitId() : "";
-    UpdateOperations<GitSyncError> failedUpdateOperations = wingsPersistence.createUpdateOperations(GitSyncError.class)
-                                                                .set("accountId", failedChange.getAccountId())
-                                                                .set("yamlFilePath", failedChange.getFilePath())
-                                                                .set("yamlContent", failedChange.getFileContent())
-                                                                .set("gitCommitId", failedCommitId)
-                                                                .set("changeType", failedChange.getChangeType().name())
-                                                                .set("failureReason", errorMessage);
+    UpdateOperations<GitSyncError> failedUpdateOperations =
+        wingsPersistence.createUpdateOperations(GitSyncError.class)
+            .set("accountId", failedChange.getAccountId())
+            .set("yamlFilePath", failedChange.getFilePath())
+            .set("yamlContent", failedChange.getFileContent())
+            .set("gitCommitId", failedCommitId)
+            .set("changeType", failedChange.getChangeType().name())
+            .set("failureReason",
+                errorMessage != null ? errorMessage : "Reason could not be captured. Logs might have some info");
     wingsPersistence.upsert(failedQuery, failedUpdateOperations);
 
     pendingChanges.stream().forEach(change -> {

@@ -15,6 +15,7 @@ import static software.wings.beans.yaml.YamlConstants.ENVIRONMENTS_FOLDER;
 import static software.wings.beans.yaml.YamlConstants.INDEX_YAML;
 import static software.wings.beans.yaml.YamlConstants.INFRA_MAPPING_FOLDER;
 import static software.wings.beans.yaml.YamlConstants.LOAD_BALANCERS_FOLDER;
+import static software.wings.beans.yaml.YamlConstants.NOTIFICATION_GROUPS_FOLDER;
 import static software.wings.beans.yaml.YamlConstants.PATH_DELIMITER;
 import static software.wings.beans.yaml.YamlConstants.PIPELINES_FOLDER;
 import static software.wings.beans.yaml.YamlConstants.SERVICES_FOLDER;
@@ -153,8 +154,9 @@ public enum YamlType {
   FAILURE_STRATEGY(ObjectType.FAILURE_STRATEGY, "", "", FailureStrategy.class),
   NOTIFICATION_RULE(ObjectType.NOTIFICATION_RULE, "", "", NotificationRule.class),
   PIPELINE_STAGE(ObjectType.PIPELINE_STAGE, "", "", PipelineStage.class),
-  // TODO this should have a path, when this yaml is migrated to the new model, make sure this is taken care of
-  NOTIFICATION_GROUP(ObjectType.NOTIFICATION_GROUP, "", "", NotificationGroup.class),
+  NOTIFICATION_GROUP(ObjectType.NOTIFICATION_GROUP,
+      generatePath(PATH_DELIMITER, false, SETUP_FOLDER, NOTIFICATION_GROUPS_FOLDER, YAML_EXPRESSION),
+      generatePath(PATH_DELIMITER, true, SETUP_FOLDER, NOTIFICATION_GROUPS_FOLDER, ANY), NotificationGroup.class),
   COMMAND_UNIT(ObjectType.COMMAND_UNIT, "", "", AbstractCommandUnit.class),
   CONTAINER_DEFINITION(ObjectType.CONTAINER_DEFINITION, "", "", ContainerDefinition.class),
   LOG_CONFIGURATION(ObjectType.LOG_CONFIGURATION, "", "", LogConfiguration.class),

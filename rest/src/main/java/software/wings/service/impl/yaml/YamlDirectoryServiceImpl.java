@@ -16,6 +16,7 @@ import static software.wings.beans.yaml.YamlConstants.ENVIRONMENTS_FOLDER;
 import static software.wings.beans.yaml.YamlConstants.INDEX_YAML;
 import static software.wings.beans.yaml.YamlConstants.INFRA_MAPPING_FOLDER;
 import static software.wings.beans.yaml.YamlConstants.LOAD_BALANCERS_FOLDER;
+import static software.wings.beans.yaml.YamlConstants.NOTIFICATION_GROUPS_FOLDER;
 import static software.wings.beans.yaml.YamlConstants.PATH_DELIMITER;
 import static software.wings.beans.yaml.YamlConstants.PIPELINES_FOLDER;
 import static software.wings.beans.yaml.YamlConstants.SERVICES_FOLDER;
@@ -28,6 +29,7 @@ import static software.wings.dl.PageRequest.Builder.aPageRequest;
 import com.google.inject.Inject;
 import com.google.inject.Singleton;
 
+import org.apache.commons.collections.CollectionUtils;
 import org.hibernate.validator.constraints.NotEmpty;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -38,6 +40,7 @@ import software.wings.beans.ConfigFile;
 import software.wings.beans.Environment;
 import software.wings.beans.InfrastructureMapping;
 import software.wings.beans.LambdaSpecification;
+import software.wings.beans.NotificationGroup;
 import software.wings.beans.Pipeline;
 import software.wings.beans.SearchFilter.Operator;
 import software.wings.beans.Service;
@@ -60,6 +63,7 @@ import software.wings.service.intfc.ConfigService;
 import software.wings.service.intfc.EnvironmentService;
 import software.wings.service.intfc.FeatureFlagService;
 import software.wings.service.intfc.InfrastructureMappingService;
+import software.wings.service.intfc.NotificationSetupService;
 import software.wings.service.intfc.PipelineService;
 import software.wings.service.intfc.ServiceResourceService;
 import software.wings.service.intfc.SettingsService;
@@ -74,6 +78,7 @@ import software.wings.utils.ArtifactType;
 import software.wings.utils.Util;
 import software.wings.utils.Validator;
 import software.wings.yaml.YamlVersion.Type;
+import software.wings.yaml.directory.AccountLevelYamlNode;
 import software.wings.yaml.directory.AppLevelYamlNode;
 import software.wings.yaml.directory.DirectoryNode;
 import software.wings.yaml.directory.DirectoryPath;
@@ -114,6 +119,7 @@ public class YamlDirectoryServiceImpl implements YamlDirectoryService {
   @Inject private YamlResourceService yamlResourceService;
   @Inject private FeatureFlagService featureFlagService;
   @Inject private ConfigService configService;
+  @Inject private NotificationSetupService notificationSetupService;
 
   @Override
   public YamlGitConfig weNeedToPushChanges(String accountId) {
@@ -167,8 +173,15 @@ public class YamlDirectoryServiceImpl implements YamlDirectoryService {
             appId = ((AppLevelYamlNode) dn).getAppId();
             yaml = yamlArtifactStreamService.getArtifactStreamYamlString(appId, entityId);
             break;
+          case "Defaults":
+            if (dn instanceof AppLevelYamlNode) {
+              appId = ((AppLevelYamlNode) dn).getAppId();
+            } else {
+              appId = GLOBAL_APP_ID;
+            }
+            yaml = yamlResourceService.getDefaultVariables(accountId, appId).getResource().getYaml();
+            break;
           case "ConfigFile":
-
             if (dn instanceof ServiceLevelYamlNode) {
               appId = ((ServiceLevelYamlNode) dn).getAppId();
             } else if (dn instanceof EnvLevelYamlNode) {
@@ -184,6 +197,9 @@ public class YamlDirectoryServiceImpl implements YamlDirectoryService {
           case "Pipeline":
             appId = ((AppLevelYamlNode) dn).getAppId();
             yaml = yamlResourceService.getPipeline(appId, entityId).getResource().getYaml();
+            break;
+          case "NotificationGroup":
+            yaml = yamlResourceService.getNotificationGroup(accountId, entityId).getResource().getYaml();
             break;
           case "SettingAttribute":
             yaml = yamlResourceService.getSettingAttribute(accountId, entityId).getResource().getYaml();
@@ -239,7 +255,7 @@ public class YamlDirectoryServiceImpl implements YamlDirectoryService {
 
     //--------------------------------------
     // parallelization using CompletionService
-    final ExecutorService pool = Executors.newFixedThreadPool(6);
+    final ExecutorService pool = Executors.newFixedThreadPool(7);
     final ExecutorCompletionService<FolderNode> completionService = new ExecutorCompletionService<>(pool);
 
     completionService.submit(() -> doApplications(accountId, directoryPath.clone()));
@@ -254,10 +270,12 @@ public class YamlDirectoryServiceImpl implements YamlDirectoryService {
 
     completionService.submit(() -> doVerificationProviders(accountId, directoryPath.clone()));
 
+    completionService.submit(() -> doNotificationGroups(accountId, directoryPath.clone()));
+
     // collect results to this map so we can rebuild the correct order
     Map<String, FolderNode> map = new HashMap<String, FolderNode>();
     // the number of items submitted to the completionService
-    int count = 6;
+    int count = 7;
 
     for (int i = 0; i < count; ++i) {
       try {
@@ -288,6 +306,7 @@ public class YamlDirectoryServiceImpl implements YamlDirectoryService {
     configFolder.addChild(map.get(COLLABORATION_PROVIDERS_FOLDER));
     configFolder.addChild(map.get(LOAD_BALANCERS_FOLDER));
     configFolder.addChild(map.get(VERIFICATION_PROVIDERS_FOLDER));
+    configFolder.addChild(map.get(NOTIFICATION_GROUPS_FOLDER));
     //--------------------------------------
 
     long endTime = System.nanoTime();
@@ -321,8 +340,8 @@ public class YamlDirectoryServiceImpl implements YamlDirectoryService {
           appPath.clone().add(yamlFileName), yamlGitSyncService, Type.APP));
 
       String defaultVarsYamlFileName = DEFAULTS_YAML;
-      appFolder.addChild(new YamlNode(accountId, app.getUuid(), defaultVarsYamlFileName, Defaults.class,
-          appPath.clone().add(defaultVarsYamlFileName), yamlGitSyncService, Type.APPLICATION_DEFAULTS));
+      appFolder.addChild(new AppLevelYamlNode(accountId, app.getUuid(), app.getUuid(), defaultVarsYamlFileName,
+          Defaults.class, appPath.clone().add(defaultVarsYamlFileName), yamlGitSyncService, Type.APPLICATION_DEFAULTS));
 
       //--------------------------------------
       // parallelization using CompletionService (part 2)
@@ -738,6 +757,27 @@ public class YamlDirectoryServiceImpl implements YamlDirectoryService {
     }
   }
 
+  private FolderNode doNotificationGroups(String accountId, DirectoryPath directoryPath) {
+    // create notification groups
+    FolderNode notificationGroupsFolder = new FolderNode(accountId, NOTIFICATION_GROUPS_FOLDER, NotificationGroup.class,
+        directoryPath.add(NOTIFICATION_GROUPS_FOLDER), yamlGitSyncService);
+
+    List<NotificationGroup> notificationGroups = notificationSetupService.listNotificationGroups(accountId);
+
+    if (CollectionUtils.isNotEmpty(notificationGroups)) {
+      // iterate over notification groups
+      notificationGroups.stream().forEach(notificationGroup -> {
+        DirectoryPath notificationGroupPath = directoryPath.clone();
+        String notificationGroupYamlFileName = notificationGroup.getName() + YAML_EXTENSION;
+        notificationGroupsFolder.addChild(new AccountLevelYamlNode(accountId, notificationGroup.getUuid(),
+            notificationGroupYamlFileName, NotificationGroup.class,
+            notificationGroupPath.add(notificationGroupYamlFileName), yamlGitSyncService, Type.NOTIFICATION_GROUP));
+      });
+    }
+
+    return notificationGroupsFolder;
+  }
+
   private FolderNode doVerificationProviders(String accountId, DirectoryPath directoryPath) {
     // create verification providers
     FolderNode verificationProvidersFolder = new FolderNode(accountId, VERIFICATION_PROVIDERS_FOLDER,
@@ -934,6 +974,11 @@ public class YamlDirectoryServiceImpl implements YamlDirectoryService {
         logger.warn("Unknown SettingVariable type:" + settingVariableType);
     }
     return sb.toString();
+  }
+
+  @Override
+  public String getRootPathByNotificationGroup(NotificationGroup notificationGroup) {
+    return getRootPath() + PATH_DELIMITER + NOTIFICATION_GROUPS_FOLDER;
   }
 
   @Override

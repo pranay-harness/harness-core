@@ -1,10 +1,13 @@
 package software.wings.service.impl.yaml.handler.notification;
 
+import static software.wings.beans.Base.GLOBAL_APP_ID;
+import static software.wings.beans.ObjectType.NOTIFICATION_GROUP;
+
+import com.google.common.collect.Lists;
 import com.google.common.collect.Maps;
 import com.google.inject.Inject;
 import com.google.inject.Singleton;
 
-import software.wings.beans.ErrorCode;
 import software.wings.beans.NotificationChannelType;
 import software.wings.beans.NotificationGroup;
 import software.wings.beans.NotificationGroup.AddressYaml;
@@ -12,11 +15,11 @@ import software.wings.beans.NotificationGroup.NotificationGroupBuilder;
 import software.wings.beans.NotificationGroup.Yaml;
 import software.wings.beans.yaml.ChangeContext;
 import software.wings.exception.HarnessException;
-import software.wings.exception.WingsException;
 import software.wings.service.impl.yaml.handler.BaseYamlHandler;
 import software.wings.service.impl.yaml.service.YamlHelper;
 import software.wings.service.intfc.NotificationSetupService;
 import software.wings.utils.Util;
+import software.wings.utils.Validator;
 
 import java.util.List;
 import java.util.Map;
@@ -34,37 +37,47 @@ public class NotificationGroupYamlHandler extends BaseYamlHandler<Yaml, Notifica
   private NotificationGroup toBean(ChangeContext<Yaml> changeContext) throws HarnessException {
     Yaml yaml = changeContext.getYaml();
     String accountId = changeContext.getChange().getAccountId();
-    String appId = yamlHelper.getAppId(accountId, changeContext.getChange().getFilePath());
 
     Map<NotificationChannelType, List<String>> addressByChannelTypeMap = Maps.newHashMap();
     if (yaml.getAddresses() != null) {
       addressByChannelTypeMap = toAddressByChannelTypeMap(yaml.getAddresses());
     }
+    String notificationGroupName = yamlHelper.getNameFromYamlFilePath(changeContext.getChange().getFilePath());
     return NotificationGroupBuilder.aNotificationGroup()
-        .withAppId(appId)
+        .withAppId(GLOBAL_APP_ID)
         .withAccountId(accountId)
         .withAddressesByChannelType(addressByChannelTypeMap)
-        .withEditable(yaml.isEditable())
-        .withName(yaml.getName())
+        .withEditable(true)
+        .withName(notificationGroupName)
         .build();
     //        .withRoles()
   }
 
   @Override
   public Yaml toYaml(NotificationGroup bean, String appId) {
+    bean = notificationSetupService.readNotificationGroup(bean.getAccountId(), bean.getUuid());
     List<AddressYaml> addressYamlList = toAddressYamlList(bean.getAddressesByChannelType());
-    return Yaml.Builder.anYaml()
-        .withAccountId(bean.getAccountId())
-        .withAddresses(addressYamlList)
-        .withEditable(bean.isEditable())
-        .withName(bean.getName())
+    return Yaml.builder()
+        .harnessApiVersion(getHarnessApiVersion())
+        .addresses(addressYamlList)
+        .type(NOTIFICATION_GROUP)
         .build();
   }
 
   @Override
   public NotificationGroup upsertFromYaml(ChangeContext<Yaml> changeContext, List<ChangeContext> changeSetContext)
       throws HarnessException {
-    return toBean(changeContext);
+    String accountId = changeContext.getChange().getAccountId();
+    NotificationGroup previous = get(accountId, changeContext.getChange().getFilePath());
+
+    NotificationGroup notificationGroup = toBean(changeContext);
+
+    if (previous != null) {
+      notificationGroup.setUuid(previous.getUuid());
+      return notificationSetupService.updateNotificationGroup(notificationGroup);
+    } else {
+      return notificationSetupService.createNotificationGroup(notificationGroup);
+    }
   }
 
   private List<AddressYaml> toAddressYamlList(Map<NotificationChannelType, List<String>> addressesByChannelType) {
@@ -72,16 +85,16 @@ public class NotificationGroupYamlHandler extends BaseYamlHandler<Yaml, Notifica
   }
 
   private AddressYaml toAddressYaml(Entry<NotificationChannelType, List<String>> entry) {
-    return AddressYaml.Builder.anAddressYaml()
-        .withAddresses(entry.getValue())
-        .withChannelType(entry.getKey().name())
-        .build();
+    return AddressYaml.builder().addresses(entry.getValue()).channelType(entry.getKey().name()).build();
   }
 
   private Map<NotificationChannelType, List<String>> toAddressByChannelTypeMap(List<AddressYaml> addressYamlList) {
     return addressYamlList.stream().collect(Collectors.toMap(addressYaml
         -> Util.getEnumFromString(NotificationChannelType.class, addressYaml.getChannelType()),
-        addressYaml -> addressYaml.getAddresses()));
+        addressYaml -> {
+          List<String> addressList = addressYaml.getAddresses();
+          return addressList == null ? Lists.newArrayList() : addressList;
+        }));
   }
 
   @Override
@@ -91,16 +104,23 @@ public class NotificationGroupYamlHandler extends BaseYamlHandler<Yaml, Notifica
 
   @Override
   public Class getYamlClass() {
-    return NotificationGroup.Yaml.class;
+    return Yaml.class;
   }
 
   @Override
   public NotificationGroup get(String accountId, String yamlFilePath) {
-    throw new WingsException(ErrorCode.UNSUPPORTED_OPERATION_EXCEPTION);
+    String notificationGroupName = yamlHelper.getNameFromYamlFilePath(yamlFilePath);
+    return notificationSetupService.readNotificationGroupByName(accountId, notificationGroupName);
   }
 
   @Override
   public void delete(ChangeContext<Yaml> changeContext) throws HarnessException {
-    // Do nothing
+    String accountId = changeContext.getChange().getAccountId();
+    String notificationGroupName = yamlHelper.getNameFromYamlFilePath(changeContext.getChange().getFilePath());
+    NotificationGroup notificationGroup =
+        notificationSetupService.readNotificationGroupByName(accountId, notificationGroupName);
+    Validator.notNullCheck(
+        "No Notification Group exists with the given name: " + notificationGroupName, notificationGroup);
+    notificationSetupService.deleteNotificationGroups(accountId, notificationGroup.getUuid());
   }
 }

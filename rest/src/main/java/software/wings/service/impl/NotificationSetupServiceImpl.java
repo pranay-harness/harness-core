@@ -17,10 +17,12 @@ import software.wings.beans.SearchFilter.Operator;
 import software.wings.beans.SettingAttribute;
 import software.wings.beans.Workflow;
 import software.wings.beans.WorkflowType;
+import software.wings.beans.yaml.Change.ChangeType;
 import software.wings.dl.PageRequest;
 import software.wings.dl.PageResponse;
 import software.wings.dl.WingsPersistence;
 import software.wings.exception.WingsException;
+import software.wings.service.impl.yaml.YamlChangeSetHelper;
 import software.wings.service.intfc.NotificationSetupService;
 import software.wings.service.intfc.SettingsService;
 import software.wings.service.intfc.WorkflowService;
@@ -43,6 +45,7 @@ public class NotificationSetupServiceImpl implements NotificationSetupService {
   @Inject private SettingsService settingsService;
 
   @Inject private WorkflowService workflowService;
+  @Inject private YamlChangeSetHelper yamlChangeSetHelper;
 
   /**
    * Gets supported channel type details.
@@ -101,9 +104,13 @@ public class NotificationSetupServiceImpl implements NotificationSetupService {
 
   @Override
   public NotificationGroup createNotificationGroup(NotificationGroup notificationGroup) {
-    return Validator.duplicateCheck(()
-                                        -> wingsPersistence.saveAndGet(NotificationGroup.class, notificationGroup),
-        "name", notificationGroup.getName());
+    NotificationGroup savedNotificationGroup =
+        Validator.duplicateCheck(()
+                                     -> wingsPersistence.saveAndGet(NotificationGroup.class, notificationGroup),
+            "name", notificationGroup.getName());
+
+    yamlChangeSetHelper.notificationGroupYamlChangeAsync(savedNotificationGroup, ChangeType.ADD);
+    return savedNotificationGroup;
   }
 
   @Override
@@ -113,7 +120,11 @@ public class NotificationSetupServiceImpl implements NotificationSetupService {
     if (!existingGroup.isEditable()) {
       throw new WingsException(INVALID_REQUEST).addParam("message", "Default Notification Group can not be updated");
     }
-    return wingsPersistence.saveAndGet(NotificationGroup.class, notificationGroup); // TODO:: selective update
+    NotificationGroup updatedGroup =
+        wingsPersistence.saveAndGet(NotificationGroup.class, notificationGroup); // TODO:: selective update
+
+    yamlChangeSetHelper.updateYamlChangeAsync(updatedGroup, existingGroup, updatedGroup.getAccountId());
+    return updatedGroup;
   }
 
   @Override
@@ -148,6 +159,8 @@ public class NotificationSetupServiceImpl implements NotificationSetupService {
               String.format("'%s' is in use by %s workflow%s: '%s'", notificationGroup.getName(), inUse.size(),
                   inUse.size() == 1 ? "" : "s", Joiner.on("', '").join(inUse)));
     }
+
+    yamlChangeSetHelper.notificationGroupYamlChangeSet(notificationGroup, ChangeType.DELETE);
     return wingsPersistence.delete(NotificationGroup.class, Base.GLOBAL_APP_ID, notificationGroupId);
   }
 

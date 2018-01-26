@@ -52,7 +52,7 @@ public class GitCommandCallback implements NotifyCallback {
 
   @Override
   public void notify(Map<String, NotifyResponseData> response) {
-    logger.info("Git command response [{}]", response);
+    logger.info("Git command response [{}] for changeSetId [{}] for account {}", response, changeSetId, accountId);
     NotifyResponseData notifyResponseData = response.values().iterator().next();
     if (notifyResponseData instanceof GitCommandExecutionResponse) {
       GitCommandExecutionResponse gitCommandExecutionResponse = (GitCommandExecutionResponse) notifyResponseData;
@@ -60,15 +60,15 @@ public class GitCommandCallback implements NotifyCallback {
 
       if (gitCommandExecutionResponse.getGitCommandStatus().equals(GitCommandStatus.FAILURE)) {
         if (changeSetId != null) {
-          logger.error("Git Command failed [{}] for changeSetId [{}]", gitCommandExecutionResponse.getErrorMessage(),
-              changeSetId);
+          logger.error("Git Command failed [{}] for changeSetId [{}] for account {}",
+              gitCommandExecutionResponse.getErrorMessage(), changeSetId, accountId);
           yamlChangeSetService.updateStatus(accountId, changeSetId, Status.FAILED);
         }
         return;
       }
 
-      logger.info("Git command [type: {}] request completed with status [{}]", gitCommandResult.getGitCommandType(),
-          gitCommandExecutionResponse.getGitCommandStatus());
+      logger.info("Git command [type: {}] request completed with status [{}] for account {}",
+          gitCommandResult.getGitCommandType(), gitCommandExecutionResponse.getGitCommandStatus(), accountId);
 
       if (gitCommandResult.getGitCommandType().equals(GitCommandType.COMMIT_AND_PUSH)) {
         GitCommitAndPushResult gitCommitAndPushResult = (GitCommitAndPushResult) gitCommandResult;
@@ -96,12 +96,12 @@ public class GitCommandCallback implements NotifyCallback {
               yamlGitService.isCommitAlreadyProcessed(accountId, gitDiffResult.getCommitId());
           if (commitAlreadyProcessed) {
             // do nothing
-            logger.warn("Commit already processed [{}]", gitDiffResult.getCommitId());
+            logger.warn("Commit [{}] already processed for account {}", gitDiffResult.getCommitId(), accountId);
             return;
           }
 
           List<ChangeContext> fileChangeContexts = yamlService.processChangeSet(gitFileChangeList);
-          logger.info("Processed ChangeSet: [{}]", fileChangeContexts);
+          logger.info("Processed ChangeSet [{}] for account {}", fileChangeContexts, accountId);
           yamlGitService.saveCommit(GitCommit.builder()
                                         .accountId(accountId)
                                         .yamlChangeSet(YamlChangeSet.builder()
@@ -118,23 +118,25 @@ public class GitCommandCallback implements NotifyCallback {
                                         .build());
           yamlGitService.removeGitSyncErrors(accountId, gitFileChangeList);
         } catch (YamlProcessingException ex) {
-          logger.error("Unable to process git changeSet. Failed at {}", ex.getChange().getFilePath(), ex);
+          logger.error("Unable to process git changeSet for account {}. Failed at {}", ex.getChange().getAccountId(),
+              ex.getChange().getFilePath(), ex);
           yamlGitService.processFailedOrUnprocessedChanges(gitFileChangeList, ex.getChange(), ex.getMessage());
         }
       } else {
-        logger.error("Unexpected commandType result: [{}] for changeSetId [{}]",
-            gitCommandExecutionResponse.getErrorMessage(), changeSetId);
+        logger.error("Unexpected commandType result: [{}] for changeSetId [{}] for account {}",
+            gitCommandExecutionResponse.getErrorMessage(), changeSetId, accountId);
         yamlChangeSetService.updateStatus(accountId, changeSetId, Status.FAILED);
       }
     } else {
-      logger.error("Unexpected notify response data: [{}]", notifyResponseData);
+      logger.error("Unexpected notify response data: [{}] for changeSetId [{}] for account {}", notifyResponseData,
+          changeSetId, accountId);
       yamlChangeSetService.updateStatus(accountId, changeSetId, Status.FAILED);
     }
   }
 
   @Override
   public void notifyError(Map<String, NotifyResponseData> response) {
-    logger.error("Git request failed [{}]", response);
+    logger.error("Git request failed [{}] for changeSetId [{}] for account {}", response, changeSetId, accountId);
     yamlChangeSetService.updateStatus(accountId, changeSetId, Status.FAILED);
   }
 }

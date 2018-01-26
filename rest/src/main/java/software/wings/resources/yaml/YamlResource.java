@@ -179,6 +179,22 @@ public class YamlResource {
   }
 
   /**
+   * Gets the yaml version of a notification group by id
+   *
+   * @param accountId            the account id
+   * @param notificationGroupId  the notification group id
+   * @return the rest response
+   */
+  @GET
+  @Path("/notification-groups/{notificationGroupId}")
+  @Timed
+  @ExceptionMetered
+  public RestResponse<YamlPayload> getNotificationGroup(
+      @QueryParam("accountId") String accountId, @PathParam("notificationGroupId") String notificationGroupId) {
+    return yamlResourceService.getNotificationGroup(accountId, notificationGroupId);
+  }
+
+  /**
    * Gets the yaml version of a service command by serviceCommandId
    *
    * @param appId            the app id

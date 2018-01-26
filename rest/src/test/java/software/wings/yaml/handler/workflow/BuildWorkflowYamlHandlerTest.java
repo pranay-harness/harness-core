@@ -54,11 +54,7 @@ public class BuildWorkflowYamlHandlerTest extends BaseWorkflowYamlHandlerTest {
       + "      - FAILED\n"
       + "    executionScope: WORKFLOW\n"
       + "    notificationGroups:\n"
-      + "      - accountId: ACCOUNT_ID\n"
-      + "        name: Account Administrator\n"
-      + "        editable: false\n"
-      + "    batchNotifications: false\n"
-      + "    active: true\n"
+      + "      - Account Administrator\n"
       + "harnessApiVersion: '1.0'\n"
       + "type: BUILD";
   private String validYamlFilePath = "Setup/Applications/APP_NAME/Workflows/build.yaml";
