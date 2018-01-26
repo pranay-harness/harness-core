@@ -1,5 +1,6 @@
 package software.wings.sm.states;
 
+import static java.util.Arrays.asList;
 import static software.wings.beans.DelegateTask.Builder.aDelegateTask;
 import static software.wings.sm.ExecutionResponse.Builder.anExecutionResponse;
 import static software.wings.sm.StateType.NEW_RELIC_DEPLOYMENT_MARKER;
@@ -37,6 +38,7 @@ import software.wings.waitnotify.NotifyResponseData;
 import software.wings.waitnotify.WaitNotifyEngine;
 
 import java.util.Collections;
+import java.util.List;
 import java.util.Map;
 import java.util.UUID;
 
@@ -68,6 +70,12 @@ public class NewRelicDeploymentMarkerState extends State {
    */
   public NewRelicDeploymentMarkerState(String name) {
     super(name, NEW_RELIC_DEPLOYMENT_MARKER.name());
+  }
+
+  @Override
+  @SchemaIgnore
+  public List<String> getPatternsForRequiredContextElementType() {
+    return asList(body);
   }
 
   @Override
