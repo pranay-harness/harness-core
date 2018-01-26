@@ -16,8 +16,8 @@ import software.wings.sm.StateMachine;
 import software.wings.sm.StateType;
 import software.wings.sm.states.EcsServiceDeploy;
 import software.wings.sm.states.EcsServiceSetup;
-import software.wings.sm.states.KubernetesReplicationControllerDeploy;
-import software.wings.sm.states.KubernetesReplicationControllerSetup;
+import software.wings.sm.states.KubernetesDeploy;
+import software.wings.sm.states.KubernetesSetup;
 
 import java.util.ArrayList;
 import java.util.Comparator;
@@ -76,14 +76,13 @@ public class ContainerMaxInstancesMigrationUtil extends WingsBaseTest {
           System.out.println("\nKubernetes Setups: " + kubeSetup.size());
           System.out.println("Kubernetes Deploys: " + kubeDeploy.size());
           assertThat(kubeSetup.size() == 1);
-          KubernetesReplicationControllerSetup setup = (KubernetesReplicationControllerSetup) kubeSetup.get(0);
+          KubernetesSetup setup = (KubernetesSetup) kubeSetup.get(0);
           if (setup.getMaxInstances() < 10) {
             affected = true;
             int totalInstances = 0;
-            kubeDeploy.sort(
-                Comparator.comparingInt(state -> ((KubernetesReplicationControllerDeploy) state).getInstanceCount()));
+            kubeDeploy.sort(Comparator.comparingInt(state -> ((KubernetesDeploy) state).getInstanceCount()));
             for (State state : kubeDeploy) {
-              KubernetesReplicationControllerDeploy deploy = (KubernetesReplicationControllerDeploy) state;
+              KubernetesDeploy deploy = (KubernetesDeploy) state;
               System.out.println("Kubernetes deploy incremental instances: " + deploy.getInstanceCount());
               totalInstances += deploy.getInstanceCount();
               if (deploy.getInstanceCount() < totalInstances) {

@@ -1,12 +1,12 @@
 package software.wings.sm.states;
 
 import static software.wings.beans.command.KubernetesResizeParams.KubernetesResizeParamsBuilder.aKubernetesResizeParams;
+import static software.wings.sm.StateType.KUBERNETES_DEPLOY_ROLLBACK;
 
 import com.github.reinert.jjschema.Attributes;
 import software.wings.api.ContainerServiceData;
 import software.wings.beans.InstanceUnitType;
 import software.wings.beans.command.ContainerResizeParams;
-import software.wings.sm.StateType;
 import software.wings.stencils.DefaultValue;
 import software.wings.stencils.EnumData;
 
@@ -15,15 +15,14 @@ import java.util.List;
 /**
  * Created by brett on 4/24/17
  */
-@Deprecated
-public class KubernetesReplicationControllerRollback extends ContainerServiceDeploy {
+public class KubernetesDeployRollback extends ContainerServiceDeploy {
   @Attributes(title = "Command")
   @EnumData(enumDataProvider = CommandStateEnumDataProvider.class)
   @DefaultValue("Resize Replication Controller")
   private String commandName = "Resize Replication Controller";
 
-  public KubernetesReplicationControllerRollback(String name) {
-    super(name, StateType.KUBERNETES_REPLICATION_CONTROLLER_ROLLBACK.name());
+  public KubernetesDeployRollback(String name) {
+    super(name, KUBERNETES_DEPLOY_ROLLBACK.name());
   }
 
   @Override

@@ -32,7 +32,7 @@ import software.wings.sm.WorkflowStandardParams;
 import software.wings.sm.states.AwsNodeSelectState;
 import software.wings.sm.states.DcNodeSelectState;
 import software.wings.sm.states.EcsServiceDeploy;
-import software.wings.sm.states.KubernetesReplicationControllerDeploy;
+import software.wings.sm.states.KubernetesDeploy;
 import software.wings.sm.states.PhaseStepSubWorkflow;
 import software.wings.sm.states.PhaseSubWorkflow;
 import software.wings.utils.Validator;
@@ -116,8 +116,7 @@ public class CanaryWorkflowStandardParams extends WorkflowStandardParams {
         State infraState = getInfraState(
             rootStateMachine, phaseStateMachine, CONTAINER_DEPLOY, KUBERNETES_REPLICATION_CONTROLLER_DEPLOY.name());
         if (infraState != null) {
-          KubernetesReplicationControllerDeploy replicationControllerDeploy =
-              (KubernetesReplicationControllerDeploy) infraState;
+          KubernetesDeploy replicationControllerDeploy = (KubernetesDeploy) infraState;
           return anInfraNodeRequest()
               .withDeploymentType(DeploymentType.KUBERNETES)
               .withInstanceCount(replicationControllerDeploy.getInstanceCount())
