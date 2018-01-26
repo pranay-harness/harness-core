@@ -14,6 +14,7 @@ import software.wings.service.impl.analysis.MLAnalysisType;
 import software.wings.sm.ExecutionStatus;
 import software.wings.sm.StateType;
 
+import java.util.List;
 import java.util.Set;
 import java.util.concurrent.TimeUnit;
 
@@ -54,7 +55,7 @@ public class LearningEngineAnalysisTask extends Base {
   private String log_analysis_get_url;
   private double sim_threshold;
   private Integer cluster_level;
-  private Set<String> query;
+  private List<String> query;
   private Set<String> control_nodes;
   private Set<String> test_nodes;
   private StateType stateType;

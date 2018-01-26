@@ -3,7 +3,7 @@ package software.wings.service.impl.analysis;
 import static org.apache.commons.lang3.StringUtils.isNotBlank;
 
 import com.google.common.base.Preconditions;
-import com.google.common.collect.Sets;
+import com.google.common.collect.Lists;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -64,7 +64,7 @@ public class LogMLClusterGenerator implements Runnable {
                                                     .cluster_level(toLevel.getLevel())
                                                     .ml_analysis_type(MLAnalysisType.LOG_CLUSTER)
                                                     .stateType(context.getStateType())
-                                                    .query(Sets.newHashSet(logRequest.getQuery().split(" ")))
+                                                    .query(Lists.newArrayList(logRequest.getQuery().split(" ")))
                                                     .build();
       analysisTask.setAppId(context.getAppId());
 
