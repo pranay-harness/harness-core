@@ -144,6 +144,7 @@ public class KryoUtils {
             kryo.register(java.lang.IllegalStateException.class, 66);
             kryo.register(java.io.IOException.class, 67);
             kryo.register(java.lang.IllegalArgumentException.class, 68);
+            kryo.register(java.net.SocketTimeoutException.class, 69);
 
             // External Serializers
             UnmodifiableCollectionsSerializer.registerSerializers(kryo);
