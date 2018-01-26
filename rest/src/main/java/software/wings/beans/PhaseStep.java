@@ -311,7 +311,7 @@ public class PhaseStep {
       for (Node step : steps) {
         /* if (clonedPhaseStep.getPhaseStepType() != null && clonedPhaseStep.getPhaseStepType().equals(CONTAINER_SETUP))
          { if (step.getType().equals(ECS_SERVICE_SETUP.name()) ||
-         step.getType().equals(KUBERNETES_REPLICATION_CONTROLLER_SETUP.name())) {
+         step.getType().equals(KUBERNETES_SETUP.name())) {
              //Do not clone Kubernetes replication controller  or ECS service setup
              continue;
            }

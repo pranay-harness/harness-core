@@ -26,6 +26,15 @@ import java.util.Map;
 public class MigrationUtil {
   private static final Logger logger = LoggerFactory.getLogger(MigrationUtil.class);
 
+  /*
+   * Be sure to make corresponding changes in UI that reference the old state type.
+   *
+   * Check:
+   *   StencilConfig.js
+   *   StencilModal.js
+   *
+   * StateTypes with StencilType CLOUD will continue to show in the list of commands available in workflows
+   */
   public static void renameStateTypeAndStateClass(StateType oldStateType, StateType newStateType,
       WingsPersistence wingsPersistence, WorkflowService workflowService) {
     logger.info("Renaming {} to {} in all CanaryOrchestrationWorkflows", oldStateType.name(), newStateType.name());
