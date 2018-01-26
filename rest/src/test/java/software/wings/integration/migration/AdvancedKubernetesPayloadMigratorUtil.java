@@ -20,7 +20,7 @@ import java.util.List;
 
 /**
  * Migration script to remove line separator (---\n) characters from the advanced yaml payload
- * @author rktummala on 11/30/17
+ * @author rktummala on 1/24/18
  */
 @Integration
 @Ignore
@@ -43,10 +43,10 @@ public class AdvancedKubernetesPayloadMigratorUtil extends WingsBaseTest {
       return;
     }
 
-    updateArtifactStreams(pageResponse.getResponse());
+    updateAdvancedKubernetesConfig(pageResponse.getResponse());
   }
 
-  private void updateArtifactStreams(List<ContainerTask> containerTaskList) {
+  private void updateAdvancedKubernetesConfig(List<ContainerTask> containerTaskList) {
     for (ContainerTask containerTask : containerTaskList) {
       String transformedAdvConfig = containerTask.getAdvancedConfig().replaceAll("\n---\n", "\n");
       wingsPersistence.updateField(
