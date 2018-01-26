@@ -3,7 +3,7 @@ package software.wings.service.impl.analysis;
 import static org.apache.commons.lang3.StringUtils.isNotBlank;
 
 import com.google.common.base.Preconditions;
-import com.google.common.collect.Sets;
+import com.google.common.collect.Lists;
 
 import com.github.reinert.jjschema.SchemaIgnore;
 import org.mongodb.morphia.annotations.Transient;
@@ -116,7 +116,7 @@ public class LogMLAnalysisGenerator implements Runnable {
         LearningEngineAnalysisTaskBuilder analysisTaskBuilder =
             LearningEngineAnalysisTask.builder()
                 .ml_shell_file_name(LOG_ML_SHELL_FILE_NAME)
-                .query(Sets.newHashSet(query.split(" ")))
+                .query(Lists.newArrayList(query.split(" ")))
                 .workflow_id(context.getWorkflowId())
                 .workflow_execution_id(context.getWorkflowExecutionId())
                 .state_execution_id(context.getStateExecutionId())
