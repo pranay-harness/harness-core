@@ -25,7 +25,6 @@ import software.wings.service.impl.GcpHelperService;
 import software.wings.utils.HttpUtil;
 
 import java.io.IOException;
-import java.net.Proxy;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
@@ -53,7 +52,7 @@ public class GcrServiceImpl implements GcrService {
     OkHttpClient okHttpClient = new OkHttpClient()
                                     .newBuilder()
                                     .connectTimeout(CONNECT_TIMEOUT, TimeUnit.SECONDS)
-                                    .proxy(HttpUtil.shouldUseNonProxy(url) ? Proxy.NO_PROXY : null)
+                                    .proxy(HttpUtil.checkAndGetNonProxyIfApplicable(url))
                                     .build();
     Retrofit retrofit = new Retrofit.Builder()
                             .client(okHttpClient)

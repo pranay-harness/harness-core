@@ -23,6 +23,7 @@ import software.wings.security.encryption.EncryptedDataDetail;
 import software.wings.service.impl.analysis.ElkConnector;
 import software.wings.service.intfc.elk.ElkDelegateService;
 import software.wings.service.intfc.security.EncryptionService;
+import software.wings.utils.HttpUtil;
 
 import java.io.IOException;
 import java.nio.charset.StandardCharsets;
@@ -206,7 +207,8 @@ public class ElkDelegateServiceImpl implements ElkDelegateService {
           return chain.proceed(request);
         })
         .connectTimeout(30, TimeUnit.SECONDS)
-        .readTimeout(30, TimeUnit.SECONDS);
+        .readTimeout(30, TimeUnit.SECONDS)
+        .proxy(HttpUtil.checkAndGetNonProxyIfApplicable(elkConfig.getElkUrl()));
 
     String baseUrl = elkConfig.getElkUrl();
     if (baseUrl.charAt(baseUrl.length() - 1) != '/') {

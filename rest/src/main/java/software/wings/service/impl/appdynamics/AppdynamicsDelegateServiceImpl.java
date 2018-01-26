@@ -21,6 +21,7 @@ import software.wings.service.impl.appdynamics.AppdynamicsMetric.AppdynamicsMetr
 import software.wings.service.impl.newrelic.NewRelicApplication;
 import software.wings.service.intfc.appdynamics.AppdynamicsDelegateService;
 import software.wings.service.intfc.security.EncryptionService;
+import software.wings.utils.HttpUtil;
 
 import java.io.IOException;
 import java.nio.charset.StandardCharsets;
@@ -228,10 +229,12 @@ public class AppdynamicsDelegateServiceImpl implements AppdynamicsDelegateServic
   }
 
   private AppdynamicsRestClient getAppdynamicsRestClient(final AppDynamicsConfig appDynamicsConfig) {
-    final Retrofit retrofit = new Retrofit.Builder()
-                                  .baseUrl(appDynamicsConfig.getControllerUrl() + "/")
-                                  .addConverterFactory(JacksonConverterFactory.create())
-                                  .build();
+    final Retrofit retrofit =
+        new Retrofit.Builder()
+            .baseUrl(appDynamicsConfig.getControllerUrl() + "/")
+            .addConverterFactory(JacksonConverterFactory.create())
+            .client(HttpUtil.getOkHttpClientWithNoProxyValueSet(appDynamicsConfig.getControllerUrl()).build())
+            .build();
     return retrofit.create(AppdynamicsRestClient.class);
   }
 

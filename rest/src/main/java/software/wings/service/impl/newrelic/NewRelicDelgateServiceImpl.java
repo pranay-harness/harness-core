@@ -21,6 +21,7 @@ import software.wings.helpers.ext.newrelic.NewRelicRestClient;
 import software.wings.security.encryption.EncryptedDataDetail;
 import software.wings.service.intfc.newrelic.NewRelicDelegateService;
 import software.wings.service.intfc.security.EncryptionService;
+import software.wings.utils.HttpUtil;
 
 import java.io.IOException;
 import java.text.SimpleDateFormat;
@@ -170,7 +171,7 @@ public class NewRelicDelgateServiceImpl implements NewRelicDelegateService {
   private NewRelicRestClient getNewRelicRestClient(
       final NewRelicConfig newRelicConfig, List<EncryptedDataDetail> encryptedDataDetails) {
     encryptionService.decrypt(newRelicConfig, encryptedDataDetails);
-    OkHttpClient.Builder httpClient = new OkHttpClient.Builder();
+    OkHttpClient.Builder httpClient = HttpUtil.getOkHttpClientWithNoProxyValueSet(newRelicConfig.getNewRelicUrl());
     httpClient.addInterceptor(chain -> {
       Request original = chain.request();
 

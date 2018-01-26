@@ -116,7 +116,7 @@ public class HttpUtil {
           .sslSocketFactory(HttpUtil.getSslContext().getSocketFactory())
           .hostnameVerifier((s, sslSession) -> true)
           .connectTimeout(15000, TimeUnit.SECONDS)
-          .proxy(shouldUseNonProxy(url) ? Proxy.NO_PROXY : null)
+          .proxy(checkAndGetNonProxyIfApplicable(url))
           .readTimeout(15000, TimeUnit.SECONDS)
           .build();
 
@@ -195,6 +195,17 @@ public class HttpUtil {
   public static boolean shouldUseNonProxy(String url) {
     return shouldUseNonProxy(url, System.getProperty("http.nonProxyHosts"));
   }
+
+  /**
+   * Sets the HTTP proxy that will be used by connections created by this client. This takes precedence over
+   * proxySelector, which is only honored when this proxy is null (which it is by default). To disable proxy use
+   * completely, call setProxy(Proxy.NO_PROXY)
+   * @param url
+   * @return
+   */
+  public static Proxy checkAndGetNonProxyIfApplicable(String url) {
+    return shouldUseNonProxy(url) ? Proxy.NO_PROXY : null;
+  }
   /**
    * as per Oracle doc,
    * http.nonProxyHosts:a list of hosts that should be reached directly, bypassing the proxy. This is a list of patterns
@@ -256,5 +267,9 @@ public class HttpUtil {
     }
 
     return domain.toLowerCase().endsWith(pattern.toLowerCase());
+  }
+
+  public static OkHttpClient.Builder getOkHttpClientWithNoProxyValueSet(String url) {
+    return new OkHttpClient.Builder().proxy(checkAndGetNonProxyIfApplicable(url));
   }
 }
