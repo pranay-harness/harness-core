@@ -1,5 +1,7 @@
 package software.wings.filter;
 
+import static io.harness.data.network.NetworkUtil.getLocalHostAddress;
+import static io.harness.data.network.NetworkUtil.getLocalHostName;
 import static io.harness.data.structure.EmptyPredicate.isEmpty;
 import static java.util.Arrays.asList;
 import static software.wings.common.Constants.FILE_CONTENT_NOT_STORED;
@@ -22,7 +24,6 @@ import software.wings.service.intfc.FileService.FileBucket;
 import software.wings.utils.BoundedInputStream;
 
 import java.io.IOException;
-import java.net.InetAddress;
 import java.nio.charset.Charset;
 import javax.annotation.Priority;
 import javax.servlet.http.HttpServletRequest;
@@ -81,8 +82,8 @@ public class AuditRequestFilter implements ContainerRequestFilter {
     header.setRemoteHostName(request.getRemoteHost());
     header.setRemoteIpAddress(request.getRemoteAddr());
     header.setRemoteHostPort(request.getRemotePort());
-    header.setLocalHostName(InetAddress.getLocalHost().getHostName());
-    header.setLocalIpAddress(InetAddress.getLocalHost().getHostAddress());
+    header.setLocalHostName(getLocalHostName());
+    header.setLocalIpAddress(getLocalHostAddress());
 
     header = auditHelper.create(header);
 
