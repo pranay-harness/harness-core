@@ -1,5 +1,6 @@
 package software.wings.logging;
 
+import static io.harness.data.network.NetworkUtil.getLocalHostName;
 import static java.lang.String.format;
 import static org.apache.commons.codec.binary.Base64.encodeBase64String;
 
@@ -15,8 +16,6 @@ import retrofit2.Response;
 import retrofit2.Retrofit;
 import retrofit2.converter.jackson.JacksonConverterFactory;
 
-import java.io.IOException;
-import java.net.InetAddress;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.concurrent.ConcurrentLinkedQueue;
@@ -112,11 +111,7 @@ public class RestLogAppender<E> extends AppenderBase<E> {
     super.start();
 
     synchronized (this) {
-      try {
-        this.localhostName = InetAddress.getLocalHost().getHostName();
-      } catch (IOException e) {
-        e.printStackTrace();
-      }
+      localhostName = getLocalHostName();
       logQueue = Queues.newConcurrentLinkedQueue();
       Executors.newSingleThreadScheduledExecutor().scheduleAtFixedRate(
           this ::submitLogs, 1000, 1000, TimeUnit.MILLISECONDS);

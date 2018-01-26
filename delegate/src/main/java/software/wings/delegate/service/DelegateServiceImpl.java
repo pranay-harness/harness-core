@@ -1,5 +1,7 @@
 package software.wings.delegate.service;
 
+import static io.harness.data.network.NetworkUtil.getLocalHostAddress;
+import static io.harness.data.network.NetworkUtil.getLocalHostName;
 import static io.harness.data.structure.EmptyPredicate.isEmpty;
 import static io.harness.data.structure.EmptyPredicate.isNotEmpty;
 import static io.harness.threading.Morpheus.sleep;
@@ -93,9 +95,7 @@ import java.io.IOException;
 import java.io.Reader;
 import java.io.StringReader;
 import java.net.ConnectException;
-import java.net.InetAddress;
 import java.net.URI;
-import java.net.UnknownHostException;
 import java.nio.file.Files;
 import java.nio.file.Paths;
 import java.nio.file.attribute.PosixFilePermission;
@@ -181,12 +181,7 @@ public class DelegateServiceImpl implements DelegateService {
   @SuppressWarnings("unchecked")
   public void run(boolean watched) {
     try {
-      String ip = InetAddress.getLocalHost().getHostAddress();
-      try {
-        hostName = InetAddress.getLocalHost().getHostName();
-      } catch (UnknownHostException e) {
-        hostName = "ip-" + ip.replaceAll("\\.", "-");
-      }
+      hostName = getLocalHostName();
 
       accountId = delegateConfiguration.getAccountId();
 
@@ -215,7 +210,7 @@ public class DelegateServiceImpl implements DelegateService {
 
       long start = clock.millis();
       Delegate.Builder builder = aDelegate()
-                                     .withIp(ip)
+                                     .withIp(getLocalHostAddress())
                                      .withAccountId(accountId)
                                      .withHostName(hostName)
                                      .withVersion(getVersion())

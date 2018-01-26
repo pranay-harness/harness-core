@@ -1,6 +1,7 @@
 package software.wings.integration;
 
 import static com.fasterxml.jackson.databind.DeserializationFeature.FAIL_ON_UNKNOWN_PROPERTIES;
+import static io.harness.data.network.NetworkUtil.getLocalHostName;
 import static java.lang.String.format;
 import static javax.ws.rs.client.Entity.entity;
 import static javax.ws.rs.core.MediaType.APPLICATION_JSON;
@@ -71,7 +72,6 @@ import software.wings.service.intfc.SettingsService;
 import software.wings.utils.JsonSubtypeResolver;
 
 import java.io.IOException;
-import java.net.InetAddress;
 import java.net.UnknownHostException;
 import java.security.KeyManagementException;
 import java.security.NoSuchAlgorithmException;
@@ -348,9 +348,9 @@ protected String randomText(int length) { // TODO: choose words start to word en
   return randomSeedString.substring(low, high);
 }
 
-public String getDelegateToken() throws UnknownHostException {
+public String getDelegateToken() {
   JWTClaimsSet jwtClaims = new JWTClaimsSet.Builder()
-                               .issuer(InetAddress.getLocalHost().getHostName())
+                               .issuer(getLocalHostName())
                                .subject(accountId)
                                .audience("https://localhost:9090")
                                .expirationTime(new Date(System.currentTimeMillis() + TimeUnit.MINUTES.toMillis(5)))
