@@ -1,11 +1,12 @@
 FROM toli/harness-learning-engine:latest
 
-COPY requirements-test.txt /home/harness/
-COPY tests /home/harness/tests
+COPY . dist/splunk_pyml/service_version.properties requirements-test.txt /home/harness/
 WORKDIR /home/harness/
 
-RUN make clean && pip install -r requirements-test.txt && \
-    sed -i s/"; deactivate"// Makefile
+# remove all *.pyc files to use the python code copied
+RUN find /home/harness -name "*.pyc" -exec rm {} \;
+
+RUN make clean && pip install -r requirements-test.txt
 
 # can run the image from Mac  and then run 'make tests' in a container and develop locally
 # to build: docker build -t toli/harness-learning-engine:dev .
