@@ -110,7 +110,7 @@ public class NotificationDispatcherServiceImpl implements NotificationDispatcher
   }
 
   private void dispatch(List<Notification> notifications, List<NotificationGroup> notificationGroups) {
-    if (notificationGroups == null || notifications == null || notifications.isEmpty()) {
+    if (notificationGroups == null || isEmpty(notifications)) {
       return;
     }
     String appId = notifications.get(0).getAppId();

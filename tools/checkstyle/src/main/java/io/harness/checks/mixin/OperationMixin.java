@@ -3,8 +3,25 @@ package io.harness.checks.mixin;
 import com.puppycrawl.tools.checkstyle.api.DetailAST;
 import com.puppycrawl.tools.checkstyle.api.TokenTypes;
 
+import java.util.ArrayList;
+import java.util.List;
+
 public class OperationMixin {
   public interface AstPredicate { boolean check(DetailAST ast); }
+
+  public static List<DetailAST> list(DetailAST ast, int operation) {
+    List<DetailAST> result = new ArrayList<>();
+    if (ast.getType() != operation) {
+      result.add(ast);
+      return result;
+    }
+    final DetailAST left = ast.getFirstChild();
+    result.addAll(list(left, operation));
+    final DetailAST right = left.getNextSibling();
+    result.addAll(list(right, operation));
+
+    return result;
+  }
 
   public static DetailAST transitive(DetailAST ast, int operation, AstPredicate object, AstPredicate something) {
     if (ast.getType() != operation) {

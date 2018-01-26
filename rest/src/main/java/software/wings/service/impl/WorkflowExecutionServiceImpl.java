@@ -855,8 +855,7 @@ public class WorkflowExecutionServiceImpl implements WorkflowExecutionService {
       }
 
       // no input from user
-      if (executionArgs == null || executionArgs.getWorkflowVariables() == null
-          || executionArgs.getWorkflowVariables().isEmpty()
+      if (executionArgs == null || isEmpty(executionArgs.getWorkflowVariables())
           || isBlank(executionArgs.getWorkflowVariables().get(variable.getName()))) {
         if (variable.isMandatory() && variable.getValue() == null) {
           throw new WingsException(ErrorCode.INVALID_REQUEST)

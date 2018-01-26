@@ -49,8 +49,7 @@ public class CanaryUtils {
       }
       for (PhaseStepExecutionSummary phaseStepExecutionSummary :
           phaseExecutionSummary.getPhaseStepExecutionSummaryMap().values()) {
-        if (phaseStepExecutionSummary == null || phaseStepExecutionSummary.getStepExecutionSummaryList() == null
-            || phaseStepExecutionSummary.getStepExecutionSummaryList().isEmpty()) {
+        if (phaseStepExecutionSummary == null || isEmpty(phaseStepExecutionSummary.getStepExecutionSummaryList())) {
           continue;
         }
         for (StepExecutionSummary stepExecutionSummary : phaseStepExecutionSummary.getStepExecutionSummaryList()) {

@@ -208,8 +208,7 @@ public class StateMachine extends Base {
 
   private State convertToState(
       PipelineStage pipelineStage, Pipeline pipeline, Map<String, StateTypeDescriptor> stencilMap) {
-    if (pipelineStage == null || pipelineStage.getPipelineStageElements() == null
-        || pipelineStage.getPipelineStageElements().isEmpty()) {
+    if (pipelineStage == null || isEmpty(pipelineStage.getPipelineStageElements())) {
       throw new WingsException(ErrorCode.INVALID_ARGUMENT).addParam("args", "Pipeline Stage: pipelineStage");
     }
     if (pipelineStage.getPipelineStageElements().size() == 1) {
@@ -265,7 +264,7 @@ public class StateMachine extends Base {
     if (subworkflows != null) {
       for (Map.Entry<String, Graph> entry : subworkflows.entrySet()) {
         Graph childGraph = entry.getValue();
-        if (childGraph == null || childGraph.getNodes() == null || childGraph.getNodes().isEmpty()) {
+        if (childGraph == null || isEmpty(childGraph.getNodes())) {
           continue;
         }
         childStateMachines.put(entry.getKey(), new StateMachine(childGraph, stencilMap, orchestrationWorkflow));

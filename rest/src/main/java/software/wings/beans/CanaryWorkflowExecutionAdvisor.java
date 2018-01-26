@@ -149,8 +149,7 @@ public class CanaryWorkflowExecutionAdvisor implements ExecutionEventAdvisor {
           }
         }
       }
-      if (phaseStep != null && phaseStep.getFailureStrategies() != null
-          && !phaseStep.getFailureStrategies().isEmpty()) {
+      if (phaseStep != null && isNotEmpty(phaseStep.getFailureStrategies())) {
         FailureStrategy failureStrategy = rollbackStrategy(phaseStep.getFailureStrategies(), state);
         return getExecutionEventAdvice(orchestrationWorkflow, failureStrategy, executionEvent, null, state);
       }

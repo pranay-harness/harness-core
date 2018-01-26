@@ -1,5 +1,7 @@
 package software.wings.helpers.ext.ecr;
 
+import static io.harness.data.structure.EmptyPredicate.isNotEmpty;
+
 import com.google.inject.Inject;
 import com.google.inject.Singleton;
 
@@ -38,9 +40,7 @@ public class EcrClassicServiceImpl implements EcrClassicService {
       listImagesResult = awsHelperService.listEcrImages(ecrConfig, encryptionDetails, listImagesRequest);
       listImagesResult.getImageIds()
           .stream()
-          .filter(imageIdentifier
-              -> imageIdentifier != null && imageIdentifier.getImageTag() != null
-                  && !imageIdentifier.getImageTag().isEmpty())
+          .filter(imageIdentifier -> imageIdentifier != null && isNotEmpty(imageIdentifier.getImageTag()))
           .forEach(imageIdentifier
               -> buildDetails.add(
                   BuildDetails.Builder.aBuildDetails().withNumber(imageIdentifier.getImageTag()).build()));

@@ -4,6 +4,8 @@
 
 package software.wings.service.impl;
 
+import static io.harness.data.structure.EmptyPredicate.isEmpty;
+import static io.harness.data.structure.EmptyPredicate.isNotEmpty;
 import static software.wings.beans.Graph.Node.Builder.aNode;
 
 import com.google.inject.Inject;
@@ -134,8 +136,7 @@ public class GraphRenderer {
     if (node.getNext() != null) {
       Node next = node.getNext();
       if (StateType.PHASE_STEP.name().equals(next.getType()) && next.getName().equals(Constants.PROVISION_NODE_NAME)
-          && next.getGroup() != null && next.getGroup().getElements() != null
-          && !next.getGroup().getElements().isEmpty()) {
+          && next.getGroup() != null && isNotEmpty(next.getGroup().getElements())) {
         Node nextToNext = next.getNext();
         Node provisionStep = next.getGroup().getElements().get(0);
         node.setNext(provisionStep);
@@ -146,14 +147,13 @@ public class GraphRenderer {
   }
 
   private void adjustProvisionNode(Group group) {
-    if (group == null || group.getElements() == null || group.getElements().isEmpty()) {
+    if (group == null || isEmpty(group.getElements())) {
       return;
     }
 
     Node first = group.getElements().get(0);
     if (StateType.PHASE_STEP.name().equals(first.getType()) && first.getName().equals(Constants.PROVISION_NODE_NAME)
-        && first.getGroup() != null && first.getGroup().getElements() != null
-        && !first.getGroup().getElements().isEmpty()) {
+        && first.getGroup() != null && isNotEmpty(first.getGroup().getElements())) {
       Node nextToNext = first.getNext();
       Node provisionStep = first.getGroup().getElements().get(0);
       provisionStep.setNext(nextToNext);
