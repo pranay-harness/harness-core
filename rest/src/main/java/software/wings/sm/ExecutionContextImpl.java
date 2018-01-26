@@ -431,8 +431,7 @@ public class ExecutionContextImpl implements DeploymentExecutionContext {
     }
 
     PhaseElement phaseElement = getContextElement(ContextElementType.PARAM, Constants.PHASE_PARAM);
-    if (phaseElement != null && phaseElement.getVariableOverrides() != null
-        && !phaseElement.getVariableOverrides().isEmpty()) {
+    if (phaseElement != null && isNotEmpty(phaseElement.getVariableOverrides())) {
       Map<String, String> map = (Map<String, String>) context.get(ContextElement.SERVICE_VARIABLE);
       if (map == null) {
         map = new HashMap<>();

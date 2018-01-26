@@ -1,5 +1,6 @@
 package software.wings.api;
 
+import static io.harness.data.structure.EmptyPredicate.isEmpty;
 import static java.util.Arrays.asList;
 import static software.wings.api.InfraNodeRequest.InfraNodeRequestBuilder.anInfraNodeRequest;
 import static software.wings.beans.PhaseStepType.CONTAINER_DEPLOY;
@@ -86,7 +87,7 @@ public class CanaryWorkflowStandardParams extends WorkflowStandardParams {
 
   private InfraNodeRequest getInfraNodeRequestForPhase(String appId, PhaseElement phaseElement,
       PhaseSubWorkflow phaseState, StateMachine phaseStateMachine, StateMachine rootStateMachine) {
-    if (phaseStateMachine == null || phaseStateMachine.getStates() == null || phaseStateMachine.getStates().isEmpty()) {
+    if (phaseStateMachine == null || isEmpty(phaseStateMachine.getStates())) {
       return null;
     }
 
@@ -193,8 +194,7 @@ public class CanaryWorkflowStandardParams extends WorkflowStandardParams {
     }
     PhaseStepSubWorkflow phaseStepState = (PhaseStepSubWorkflow) infraPhaseStep.get();
     StateMachine phaseStepStateMachine = rootStateMachine.getChildStateMachines().get(phaseStepState.getId());
-    if (phaseStepStateMachine == null || phaseStepStateMachine.getStates() == null
-        || phaseStepStateMachine.getStates().isEmpty()) {
+    if (phaseStepStateMachine == null || isEmpty(phaseStepStateMachine.getStates())) {
       return null;
     }
 

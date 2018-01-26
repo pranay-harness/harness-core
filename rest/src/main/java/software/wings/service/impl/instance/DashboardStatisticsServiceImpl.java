@@ -465,7 +465,7 @@ public class DashboardStatisticsServiceImpl implements DashboardStatisticsServic
     PageResponse<WorkflowExecution> pageResponse = workflowExecutionService.listExecutions(pageRequest, false);
 
     List<PipelineExecutionHistory> pipelineExecutionHistoryList = new ArrayList<>();
-    if (pageResponse == null || pageResponse.getResponse() == null || pageResponse.getResponse().isEmpty()) {
+    if (pageResponse == null || isEmpty(pageResponse.getResponse())) {
       return pipelineExecutionHistoryList;
     }
 
