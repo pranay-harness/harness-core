@@ -10,6 +10,6 @@ public interface CommandService {
   Command getCommand(String appId, String originEntityId, int version);
   ServiceCommand getServiceCommand(String appId, String serviceCommandId);
   ServiceCommand getServiceCommandByName(String appId, String serviceId, String serviceCommandName);
-  Command save(Command command, boolean isDefaultCommand, boolean pushToYaml);
+  Command save(Command command, boolean pushToYaml);
   Command update(Command command);
 }

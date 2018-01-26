@@ -8,8 +8,10 @@ import com.google.common.collect.Lists;
 import com.google.inject.Inject;
 import com.google.inject.Singleton;
 
+import org.apache.commons.lang3.StringUtils;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import software.wings.beans.AppContainer;
 import software.wings.beans.EntityType;
 import software.wings.beans.NameValuePair;
 import software.wings.beans.Service;
@@ -22,6 +24,7 @@ import software.wings.exception.HarnessException;
 import software.wings.exception.WingsException;
 import software.wings.service.impl.yaml.handler.BaseYamlHandler;
 import software.wings.service.impl.yaml.service.YamlHelper;
+import software.wings.service.intfc.AppContainerService;
 import software.wings.service.intfc.ServiceResourceService;
 import software.wings.service.intfc.ServiceVariableService;
 import software.wings.service.intfc.security.SecretManager;
@@ -44,16 +47,20 @@ public class ServiceYamlHandler extends BaseYamlHandler<Yaml, Service> {
   @Inject ServiceResourceService serviceResourceService;
   @Inject ServiceVariableService serviceVariableService;
   @Inject SecretManager secretManager;
+  @Inject AppContainerService appContainerService;
 
   @Override
   public Yaml toYaml(Service service, String appId) {
     List<NameValuePair.Yaml> nameValuePairList = convertToNameValuePair(service.getServiceVariables());
+    AppContainer appContainer = service.getAppContainer();
+    String applicationStack = appContainer != null ? appContainer.getName() : null;
     return Yaml.builder()
         .type(SERVICE.name())
         .harnessApiVersion(getHarnessApiVersion())
         .description(service.getDescription())
         .artifactType(service.getArtifactType().name())
         .configVariables(nameValuePairList)
+        .applicationStack(applicationStack)
         .build();
   }
 
@@ -98,8 +105,19 @@ public class ServiceYamlHandler extends BaseYamlHandler<Yaml, Service> {
     Validator.notNullCheck("appId null for given yaml file:" + yamlFilePath, appId);
 
     String serviceName = yamlHelper.getServiceName(yamlFilePath);
+
     Yaml yaml = changeContext.getYaml();
-    Service current = aService().withAppId(appId).withName(serviceName).withDescription(yaml.getDescription()).build();
+    Service.Builder currentBuilder =
+        aService().withAppId(appId).withName(serviceName).withDescription(yaml.getDescription());
+
+    String applicationStack = yaml.getApplicationStack();
+    if (StringUtils.isNotBlank(applicationStack)) {
+      AppContainer appContainer = appContainerService.getByName(accountId, applicationStack);
+      Validator.notNullCheck("No application stack found with the given name: " + applicationStack, appContainer);
+      currentBuilder.withAppContainer(appContainer);
+    }
+
+    Service current = currentBuilder.build();
 
     Service previous = get(accountId, yamlFilePath);
 

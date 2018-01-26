@@ -414,7 +414,7 @@ public class YamlDirectoryServiceImpl implements YamlDirectoryService {
 
         // ------------------- SERVICE COMMANDS SECTION -----------------------
 
-        if (service.getArtifactType().shouldPushCommandsToYaml()) {
+        if (!serviceResourceService.hasInternalCommands(service)) {
           DirectoryPath serviceCommandPath = servicePath.clone().add(COMMANDS_FOLDER);
           FolderNode serviceCommandsFolder = new FolderNode(accountId, COMMANDS_FOLDER, ServiceCommand.class,
               serviceCommandPath, service.getAppId(), yamlGitSyncService);

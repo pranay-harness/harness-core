@@ -46,10 +46,10 @@ public interface ServiceResourceService extends OwnedByApplication {
    * Save service.
    *
    * @param service  the service
-   * @param serviceCreatedFromYaml flag indicating if the service was created from yaml
+   * @param pushToYaml flag indicating if the entity needs to be pushed to yaml
    * @return the service
    */
-  @ValidationGroups(Create.class) Service save(@Valid Service service, boolean serviceCreatedFromYaml);
+  @ValidationGroups(Create.class) Service save(@Valid Service service, boolean pushToYaml);
 
   /**
    * Clone service.
@@ -60,6 +60,8 @@ public interface ServiceResourceService extends OwnedByApplication {
    * @return the service
    */
   Service clone(String appId, String originalServiceId, Service clonedService);
+
+  boolean hasInternalCommands(Service service);
 
   /**
    * Update.
@@ -137,11 +139,11 @@ public interface ServiceResourceService extends OwnedByApplication {
    * @param appId            the app id
    * @param serviceId        the service id
    * @param serviceCommand   the command graph
-   * @param defaultCommand
+   * @param pushToYaml       flag indicating if command needs to be pushed to yaml
    * @return the service
    */
-  Service addCommand(@NotEmpty String appId, @NotEmpty String serviceId, ServiceCommand serviceCommand,
-      boolean defaultCommand, boolean pushToYaml);
+  Service addCommand(
+      @NotEmpty String appId, @NotEmpty String serviceId, ServiceCommand serviceCommand, boolean pushToYaml);
 
   /**
    * Update command service.

@@ -612,14 +612,16 @@ public class Service extends Base {
   public static final class Yaml extends BaseEntityYaml {
     private String description;
     private String artifactType;
+    private String applicationStack;
     private List<NameValuePair.Yaml> configVariables = new ArrayList<>();
 
     @lombok.Builder
-    public Yaml(String type, String harnessApiVersion, String description, String artifactType,
+    public Yaml(String type, String harnessApiVersion, String description, String artifactType, String applicationStack,
         List<NameValuePair.Yaml> configVariables) {
       super(type, harnessApiVersion);
       this.description = description;
       this.artifactType = artifactType;
+      this.applicationStack = applicationStack;
       this.configVariables = configVariables;
     }
   }

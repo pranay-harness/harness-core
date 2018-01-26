@@ -41,8 +41,8 @@ public enum ArtifactType {
     private static final long serialVersionUID = 2932493038229748527L;
 
     @Override
-    public boolean shouldPushCommandsToYaml() {
-      return true;
+    public boolean isInternal() {
+      return false;
     }
 
     @Override
@@ -211,8 +211,8 @@ public enum ArtifactType {
     public static final long serialVersionUID = 2932493038229748527L;
 
     @Override
-    public boolean shouldPushCommandsToYaml() {
-      return true;
+    public boolean isInternal() {
+      return false;
     }
 
     @Override
@@ -259,8 +259,8 @@ public enum ArtifactType {
     private static final long serialVersionUID = 2932493038229748527L;
 
     @Override
-    public boolean shouldPushCommandsToYaml() {
-      return true;
+    public boolean isInternal() {
+      return false;
     }
 
     @Override
@@ -389,8 +389,8 @@ public enum ArtifactType {
     private static final long serialVersionUID = 2932493038229748527L;
 
     @Override
-    public boolean shouldPushCommandsToYaml() {
-      return true;
+    public boolean isInternal() {
+      return false;
     }
 
     @Override
@@ -519,8 +519,8 @@ public enum ArtifactType {
     private static final long serialVersionUID = 2932493038229748527L;
 
     @Override
-    public boolean shouldPushCommandsToYaml() {
-      return false;
+    public boolean isInternal() {
+      return true;
     }
 
     @Override
@@ -590,8 +590,8 @@ public enum ArtifactType {
     private static final long serialVersionUID = 2932493038229748527L;
 
     @Override
-    public boolean shouldPushCommandsToYaml() {
-      return true;
+    public boolean isInternal() {
+      return false;
     }
 
     @Override
@@ -717,8 +717,8 @@ public enum ArtifactType {
     private static final long serialVersionUID = 2932493038229748527L;
 
     @Override
-    public boolean shouldPushCommandsToYaml() {
-      return false;
+    public boolean isInternal() {
+      return true;
     }
 
     @Override
@@ -751,8 +751,8 @@ public enum ArtifactType {
     private static final long serialVersionUID = 2932493038229748527L;
 
     @Override
-    public boolean shouldPushCommandsToYaml() {
-      return false;
+    public boolean isInternal() {
+      return true;
     }
 
     @Override
@@ -789,8 +789,8 @@ public enum ArtifactType {
     private static final long serialVersionUID = 2932493038229748527L;
 
     @Override
-    public boolean shouldPushCommandsToYaml() {
-      return false;
+    public boolean isInternal() {
+      return true;
     }
 
     @Override
@@ -844,8 +844,8 @@ public enum ArtifactType {
     private static final long serialVersionUID = 2932493038229748527L;
 
     @Override
-    public boolean shouldPushCommandsToYaml() {
-      return true;
+    public boolean isInternal() {
+      return false;
     }
 
     @Override
@@ -861,5 +861,5 @@ public enum ArtifactType {
    */
   public abstract List<Command> getDefaultCommands();
 
-  public abstract boolean shouldPushCommandsToYaml();
+  public abstract boolean isInternal();
 }

@@ -132,7 +132,7 @@ public class CommandYamlHandler extends BaseYamlHandler<CommandYaml, ServiceComm
                          .build();
 
     if (isCreate) {
-      serviceResourceService.addCommand(appId, serviceId, serviceCommand, true, false);
+      serviceResourceService.addCommand(appId, serviceId, serviceCommand, true);
     } else {
       serviceResourceService.updateCommand(appId, serviceId, serviceCommand);
     }

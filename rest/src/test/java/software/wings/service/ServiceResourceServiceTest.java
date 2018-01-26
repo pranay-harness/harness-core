@@ -240,14 +240,14 @@ public class ServiceResourceServiceTest extends WingsBaseTest {
   @Test
   public void shouldSaveService() {
     Service service = serviceBuilder.but().build();
-    doReturn(service).when(spyServiceResourceService).addCommand(any(), any(), any(), eq(true), eq(true));
+    doReturn(service).when(spyServiceResourceService).addCommand(any(), any(), any(), eq(true));
     Service savedService = spyServiceResourceService.save(service);
 
     assertThat(savedService.getUuid()).isEqualTo(SERVICE_ID);
     verify(wingsPersistence).saveAndGet(Service.class, service);
     verify(serviceTemplateService).createDefaultTemplatesByService(savedService);
     verify(spyServiceResourceService, times(3))
-        .addCommand(eq(APP_ID), eq(SERVICE_ID), serviceCommandArgumentCaptor.capture(), eq(true), eq(true));
+        .addCommand(eq(APP_ID), eq(SERVICE_ID), serviceCommandArgumentCaptor.capture(), eq(true));
     verify(notificationService).sendNotificationAsync(any(Notification.class));
     List<ServiceCommand> allValues = serviceCommandArgumentCaptor.getAllValues();
     assertThat(
@@ -409,7 +409,7 @@ public class ServiceResourceServiceTest extends WingsBaseTest {
 
     doReturn(savedClonedService)
         .when(spyServiceResourceService)
-        .addCommand(eq(APP_ID), eq("CLONED_SERVICE_ID"), any(ServiceCommand.class), eq(true), eq(false));
+        .addCommand(eq(APP_ID), eq("CLONED_SERVICE_ID"), any(ServiceCommand.class), eq(true));
 
     ConfigFile configFile = ConfigFile.builder().build();
     configFile.setAppId(APP_ID);
@@ -503,7 +503,7 @@ public class ServiceResourceServiceTest extends WingsBaseTest {
 
     srs.addCommand(APP_ID, SERVICE_ID,
         aServiceCommand().withTargetToAllEnv(true).withCommand(aCommand().withGraph(commandGraph).build()).build(),
-        true, false);
+        true);
 
     verify(wingsPersistence, times(2)).get(Service.class, APP_ID, SERVICE_ID);
     verify(wingsPersistence)
@@ -782,7 +782,7 @@ public class ServiceResourceServiceTest extends WingsBaseTest {
 
     verify(wingsPersistence).createQuery(ServiceCommand.class);
 
-    verify(commandService, never()).save(any(Command.class), eq(false), eq(true));
+    verify(commandService, never()).save(any(Command.class), eq(true));
 
     verify(configService).getConfigFilesForEntity(APP_ID, DEFAULT_TEMPLATE_ID, SERVICE_ID);
   }

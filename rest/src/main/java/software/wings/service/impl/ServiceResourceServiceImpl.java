@@ -66,7 +66,6 @@ import software.wings.beans.container.ContainerTask;
 import software.wings.beans.container.ContainerTaskType;
 import software.wings.beans.container.UserDataSpecification;
 import software.wings.beans.yaml.Change.ChangeType;
-import software.wings.beans.yaml.GitFileChange;
 import software.wings.common.NotificationMessageResolver.NotificationMessageType;
 import software.wings.dl.PageRequest;
 import software.wings.dl.PageResponse;
@@ -98,7 +97,6 @@ import software.wings.stencils.StencilPostProcessor;
 import software.wings.utils.ArtifactType;
 import software.wings.utils.BoundedInputStream;
 import software.wings.utils.Validator;
-import software.wings.yaml.gitSync.YamlGitConfig;
 
 import java.io.File;
 import java.io.FileInputStream;
@@ -217,14 +215,14 @@ public class ServiceResourceServiceImpl implements ServiceResourceService, DataP
    */
   @Override
   public Service save(Service service) {
-    return save(service, false);
+    return save(service, true);
   }
 
   @Override
-  public Service save(Service service, boolean serviceCreatedFromYaml) {
+  public Service save(Service service, boolean pushToYaml) {
     Service savedService =
         Validator.duplicateCheck(() -> wingsPersistence.saveAndGet(Service.class, service), "name", service.getName());
-    savedService = addDefaultCommands(savedService, serviceCreatedFromYaml);
+    savedService = addDefaultCommands(savedService, pushToYaml);
     serviceTemplateService.createDefaultTemplatesByService(savedService);
     notificationService.sendNotificationAsync(
         anInformationNotification()
@@ -234,7 +232,7 @@ public class ServiceResourceServiceImpl implements ServiceResourceService, DataP
                 ImmutableMap.of("ENTITY_TYPE", "Service", "ENTITY_NAME", savedService.getName()))
             .build());
 
-    if (!serviceCreatedFromYaml) {
+    if (pushToYaml) {
       yamlChangeSetHelper.serviceYamlChangeAsync(savedService, ChangeType.ADD);
     }
 
@@ -253,7 +251,7 @@ public class ServiceResourceServiceImpl implements ServiceResourceService, DataP
 
     originalService.getServiceCommands().forEach(serviceCommand -> {
       ServiceCommand clonedServiceCommand = serviceCommand.clone();
-      addCommand(savedCloneService.getAppId(), savedCloneService.getUuid(), clonedServiceCommand, true, false);
+      addCommand(savedCloneService.getAppId(), savedCloneService.getUuid(), clonedServiceCommand, true);
     });
 
     List<ServiceTemplate> serviceTemplates =
@@ -309,7 +307,7 @@ public class ServiceResourceServiceImpl implements ServiceResourceService, DataP
                                            .orElse(null);
     ServiceCommand clonedServiceCommand = oldServiceCommand.clone();
     clonedServiceCommand.getCommand().getGraph().setGraphName(command.getName());
-    return addCommand(appId, serviceId, clonedServiceCommand, true, false);
+    return addCommand(appId, serviceId, clonedServiceCommand, true);
   }
 
   @Override
@@ -347,28 +345,38 @@ public class ServiceResourceServiceImpl implements ServiceResourceService, DataP
         .collect(toList());
   }
 
-  private Service addDefaultCommands(Service service, boolean serviceCreatedFromYaml) {
-    boolean pushToYaml = true;
+  @Override
+  public boolean hasInternalCommands(Service service) {
+    boolean isInternal = false;
+    ArtifactType artifactType = service.getArtifactType();
+    AppContainer appContainer = service.getAppContainer();
+    if (appContainer != null && appContainer.getFamily() != null) {
+      isInternal = appContainer.getFamily().isInternal();
+    } else if (artifactType != null) {
+      isInternal = artifactType.isInternal();
+    }
+    return isInternal;
+  }
+
+  private Service addDefaultCommands(Service service, boolean pushToYaml) {
     List<Command> commands = emptyList();
     ArtifactType artifactType = service.getArtifactType();
     AppContainer appContainer = service.getAppContainer();
     if (appContainer != null && appContainer.getFamily() != null) {
       commands = appContainer.getFamily().getDefaultCommands(artifactType, appContainer);
-      pushToYaml = appContainer.getFamily().shouldPushCommandsToYaml();
     } else if (artifactType != null) {
       commands = artifactType.getDefaultCommands();
-      pushToYaml = artifactType.shouldPushCommandsToYaml();
     }
 
     // This makes sure we only push commands to git when the service is not created from yaml and if the artifact type
-    // has configurable / exposed commands. For services like docker, the commands are internal. For War, user could
+    // has commands that could be edited. For services like docker, the commands are internal. For War, user could
     // configure it.
-    boolean shouldPushCommandsToYaml = pushToYaml && !serviceCreatedFromYaml;
+    boolean shouldPushCommandsToYaml = pushToYaml && !hasInternalCommands(service);
 
     Service serviceToReturn = service;
     for (Command command : commands) {
       serviceToReturn = addCommand(service.getAppId(), service.getUuid(),
-          aServiceCommand().withTargetToAllEnv(true).withCommand(command).build(), true, shouldPushCommandsToYaml);
+          aServiceCommand().withTargetToAllEnv(true).withCommand(command).build(), shouldPushCommandsToYaml);
     }
 
     return serviceToReturn;
@@ -548,22 +556,15 @@ public class ServiceResourceServiceImpl implements ServiceResourceService, DataP
   private void deleteServiceCommand(Service service, ServiceCommand serviceCommand) {
     boolean serviceCommandDeleted = wingsPersistence.delete(serviceCommand);
     if (serviceCommandDeleted) {
-      wingsPersistence.delete(wingsPersistence.createQuery(Command.class)
-                                  .field("appId")
-                                  .equal(service.getAppId())
-                                  .field("originEntityId")
-                                  .equal(serviceCommand.getUuid()));
-
-      executorService.submit(() -> {
+      boolean deleted = wingsPersistence.delete(wingsPersistence.createQuery(Command.class)
+                                                    .field("appId")
+                                                    .equal(service.getAppId())
+                                                    .field("originEntityId")
+                                                    .equal(serviceCommand.getUuid()));
+      if (deleted) {
         String accountId = appService.getAccountIdByAppId(service.getAppId());
-        YamlGitConfig ygs = yamlDirectoryService.weNeedToPushChanges(accountId);
-        if (ygs != null) {
-          List<GitFileChange> changeSet = new ArrayList<>();
-          changeSet.add(
-              entityUpdateService.getCommandGitSyncFile(accountId, service, serviceCommand, ChangeType.DELETE));
-          yamlChangeSetService.saveChangeSet(ygs, changeSet);
-        }
-      });
+        yamlChangeSetHelper.commandFileChange(accountId, service, serviceCommand, ChangeType.DELETE);
+      }
     }
   }
 
@@ -707,8 +708,7 @@ public class ServiceResourceServiceImpl implements ServiceResourceService, DataP
    * {@inheritDoc}
    */
   @Override
-  public Service addCommand(
-      String appId, String serviceId, ServiceCommand serviceCommand, boolean defaultCommand, boolean pushToYaml) {
+  public Service addCommand(String appId, String serviceId, ServiceCommand serviceCommand, boolean pushToYaml) {
     Service service = wingsPersistence.get(Service.class, appId, serviceId);
     Validator.notNullCheck("service", service);
 
@@ -739,7 +739,7 @@ public class ServiceResourceServiceImpl implements ServiceResourceService, DataP
       command.setDeploymentType(command.getCommandUnits().get(0).getDeploymentType());
     }
 
-    commandService.save(command, defaultCommand, pushToYaml);
+    commandService.save(command, pushToYaml);
     service.getServiceCommands().add(serviceCommand);
 
     wingsPersistence.save(service);
@@ -798,7 +798,7 @@ public class ServiceResourceServiceImpl implements ServiceResourceService, DataP
         command.setDeploymentType(oldCommand.getDeploymentType());
         command.setCommandType(oldCommand.getCommandType());
         command.setArtifactType(oldCommand.getArtifactType());
-        commandService.save(command, false, true);
+        commandService.save(command, true);
 
         if (serviceCommand.getSetAsDefault()) {
           serviceCommand.setDefaultVersion(entityVersion.getVersion());

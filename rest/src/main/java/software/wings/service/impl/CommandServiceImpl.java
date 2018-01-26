@@ -9,6 +9,7 @@ import software.wings.beans.command.ServiceCommand;
 import software.wings.beans.yaml.Change.ChangeType;
 import software.wings.beans.yaml.GitFileChange;
 import software.wings.dl.WingsPersistence;
+import software.wings.service.impl.yaml.YamlChangeSetHelper;
 import software.wings.service.intfc.AppService;
 import software.wings.service.intfc.CommandService;
 import software.wings.service.intfc.ServiceResourceService;
@@ -32,6 +33,7 @@ public class CommandServiceImpl implements CommandService {
   @Inject private AppService appService;
   @Inject private YamlDirectoryService yamlDirectoryService;
   @Inject private YamlChangeSetService yamlChangeSetService;
+  @Inject private YamlChangeSetHelper yamlChangeSetHelper;
   @Inject private ExecutorService executorService;
 
   @Override
@@ -62,28 +64,15 @@ public class CommandServiceImpl implements CommandService {
   }
 
   @Override
-  public Command save(Command command, boolean isDefaultCommand, boolean pushToYaml) {
+  public Command save(Command command, boolean pushToYaml) {
     Command savedCommand = wingsPersistence.saveAndGet(Command.class, command);
 
-    if (savedCommand != null) {
-      if ((isDefaultCommand && pushToYaml) || (!isDefaultCommand)) {
-        String accountId = appService.getAccountIdByAppId(command.getAppId());
-        String serviceCommandId = command.getOriginEntityId();
-        ServiceCommand serviceCommand = getServiceCommand(command.getAppId(), serviceCommandId);
-        Service service = serviceResourceService.get(serviceCommand.getAppId(), serviceCommand.getServiceId());
-
-        executorService.submit(() -> {
-          if (!isDefaultCommand) { // Don't do yaml generation for default commands. We group them with service
-            YamlGitConfig ygs = yamlDirectoryService.weNeedToPushChanges(accountId);
-            if (ygs != null) {
-              List<GitFileChange> changeSet = new ArrayList<>();
-              changeSet.add(
-                  entityUpdateService.getCommandGitSyncFile(accountId, service, serviceCommand, ChangeType.ADD));
-              yamlChangeSetService.saveChangeSet(ygs, changeSet);
-            }
-          }
-        });
-      }
+    if (savedCommand != null && pushToYaml) {
+      String accountId = appService.getAccountIdByAppId(command.getAppId());
+      String serviceCommandId = command.getOriginEntityId();
+      ServiceCommand serviceCommand = getServiceCommand(command.getAppId(), serviceCommandId);
+      Service service = serviceResourceService.get(serviceCommand.getAppId(), serviceCommand.getServiceId());
+      yamlChangeSetHelper.commandFileChangeAsync(accountId, service, serviceCommand, ChangeType.ADD);
     }
     return savedCommand;
   }

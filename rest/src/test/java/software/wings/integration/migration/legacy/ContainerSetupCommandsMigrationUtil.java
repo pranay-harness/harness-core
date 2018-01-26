@@ -96,7 +96,7 @@ public class ContainerSetupCommandsMigrationUtil extends WingsBaseTest {
                     .withCommand(command)
                     .withName("Setup Service Cluster")
                     .build(),
-                true, true));
+                true));
           }
           if (!containsKubeSetup && "Resize Replication Controller".equals(serviceCommand.getName())) {
             Command command = aCommand()
@@ -120,7 +120,7 @@ public class ContainerSetupCommandsMigrationUtil extends WingsBaseTest {
                     .withCommand(command)
                     .withName("Setup Replication Controller")
                     .build(),
-                true, true));
+                true));
           }
         }
       }
