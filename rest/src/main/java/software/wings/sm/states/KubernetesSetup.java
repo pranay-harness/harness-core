@@ -7,7 +7,7 @@ import static software.wings.beans.DelegateTask.SyncTaskContext.Builder.aContext
 import static software.wings.beans.ResizeStrategy.RESIZE_NEW_FIRST;
 import static software.wings.beans.SettingAttribute.Builder.aSettingAttribute;
 import static software.wings.beans.command.KubernetesSetupParams.KubernetesSetupParamsBuilder.aKubernetesSetupParams;
-import static software.wings.sm.StateType.KUBERNETES_REPLICATION_CONTROLLER_SETUP;
+import static software.wings.sm.StateType.KUBERNETES_SETUP;
 
 import com.google.inject.Inject;
 
@@ -49,9 +49,8 @@ import java.util.List;
 /**
  * Created by brett on 3/1/17
  */
-@Deprecated
 @JsonIgnoreProperties(ignoreUnknown = true)
-public class KubernetesReplicationControllerSetup extends ContainerServiceSetup {
+public class KubernetesSetup extends ContainerServiceSetup {
   // *** Note: UI Schema specified in wingsui/src/containers/WorkflowEditor/custom/KubernetesRepCtrlSetup.js
 
   static final int DEFAULT_STEADY_STATE_TIMEOUT = 10;
@@ -73,8 +72,8 @@ public class KubernetesReplicationControllerSetup extends ContainerServiceSetup 
 
   private String commandName = "Setup Replication Controller";
 
-  public KubernetesReplicationControllerSetup(String name) {
-    super(name, KUBERNETES_REPLICATION_CONTROLLER_SETUP.name());
+  public KubernetesSetup(String name) {
+    super(name, KUBERNETES_SETUP.name());
   }
 
   @Inject @Transient private transient DelegateProxyFactory delegateProxyFactory;
@@ -345,7 +344,7 @@ public class KubernetesReplicationControllerSetup extends ContainerServiceSetup 
     final ContainerServiceParams containerServiceParams;
 
     ContextData(ExecutionContext context, Application app, InfrastructureMapping infrastructureMapping,
-        String controllerNamePrefix, String clusterName, KubernetesReplicationControllerSetup setup) {
+        String controllerNamePrefix, String clusterName, KubernetesSetup setup) {
       this.app = app;
       SettingAttribute settingAttribute = infrastructureMapping instanceof DirectKubernetesInfrastructureMapping
           ? aSettingAttribute()

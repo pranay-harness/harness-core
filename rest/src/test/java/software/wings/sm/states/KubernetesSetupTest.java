@@ -106,7 +106,7 @@ import java.util.Collections;
 import java.util.List;
 import java.util.Map;
 
-public class KubernetesReplicationControllerSetupTest extends WingsBaseTest {
+public class KubernetesSetupTest extends WingsBaseTest {
   private static final String KUBERNETES_REPLICATION_CONTROLLER_NAME = "kubernetes-rc-name.1";
   private static final String KUBERNETES_REPLICATION_CONTROLLER_OLD_NAME = "kubernetes-rc-name.0";
 
@@ -127,9 +127,7 @@ public class KubernetesReplicationControllerSetupTest extends WingsBaseTest {
   @Mock private ExpressionEvaluator evaluator;
   @Mock private DelegateProxyFactory delegateProxyFactory;
 
-  @InjectMocks
-  private KubernetesReplicationControllerSetup kubernetesReplicationControllerSetup =
-      new KubernetesReplicationControllerSetup("name");
+  @InjectMocks private KubernetesSetup kubernetesSetup = new KubernetesSetup("name");
 
   @Mock private ContainerService containerService;
 
@@ -239,7 +237,7 @@ public class KubernetesReplicationControllerSetupTest extends WingsBaseTest {
     when(serviceTemplateService.computeServiceVariables(APP_ID, ENV_ID, TEMPLATE_ID, null, true))
         .thenReturn(safeDisplayServiceVariableList);
     when(secretManager.getEncryptionDetails(anyObject(), anyString(), anyString())).thenReturn(Collections.emptyList());
-    setInternalState(kubernetesReplicationControllerSetup, "secretManager", secretManager);
+    setInternalState(kubernetesSetup, "secretManager", secretManager);
     when(workflowExecutionService.getExecutionDetails(anyString(), anyString()))
         .thenReturn(aWorkflowExecution().build());
     context = new ExecutionContextImpl(stateExecutionInstance);
@@ -256,7 +254,7 @@ public class KubernetesReplicationControllerSetupTest extends WingsBaseTest {
   public void shouldExecute() {
     on(context).set("serviceTemplateService", serviceTemplateService);
 
-    kubernetesReplicationControllerSetup.execute(context);
+    kubernetesSetup.execute(context);
 
     ArgumentCaptor<DelegateTask> captor = ArgumentCaptor.forClass(DelegateTask.class);
     verify(delegateService).queueTask(captor.capture());

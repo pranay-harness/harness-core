@@ -31,7 +31,7 @@ import static software.wings.beans.command.ServiceCommand.Builder.aServiceComman
 import static software.wings.common.UUIDGenerator.getUuid;
 import static software.wings.sm.StateExecutionInstance.Builder.aStateExecutionInstance;
 import static software.wings.sm.WorkflowStandardParams.Builder.aWorkflowStandardParams;
-import static software.wings.sm.states.KubernetesReplicationControllerDeploy.KubernetesReplicationControllerDeployBuilder.aKubernetesReplicationControllerDeploy;
+import static software.wings.sm.states.KubernetesDeploy.KubernetesDeployBuilder.aKubernetesDeploy;
 import static software.wings.utils.WingsTestConstants.ACTIVITY_ID;
 import static software.wings.utils.WingsTestConstants.APP_ID;
 import static software.wings.utils.WingsTestConstants.APP_NAME;
@@ -109,7 +109,7 @@ import java.util.Optional;
 /**
  * Created by brett on 3/10/17
  */
-public class KubernetesReplicationControllerDeployTest extends WingsBaseTest {
+public class KubernetesDeployTest extends WingsBaseTest {
   private static final String KUBERNETES_REPLICATION_CONTROLLER_NAME = "kubernetes-rc-name.1";
   private static final String KUBERNETES_REPLICATION_CONTROLLER_OLD_NAME = "kubernetes-rc-name.0";
 
@@ -126,12 +126,11 @@ public class KubernetesReplicationControllerDeployTest extends WingsBaseTest {
   @Mock private DelegateProxyFactory delegateProxyFactory;
 
   @InjectMocks
-  private KubernetesReplicationControllerDeploy kubernetesReplicationControllerDeploy =
-      aKubernetesReplicationControllerDeploy(STATE_NAME)
-          .withCommandName(COMMAND_NAME)
-          .withInstanceCount(1)
-          .withInstanceUnitType(COUNT)
-          .build();
+  private KubernetesDeploy kubernetesReplicationControllerDeploy = aKubernetesDeploy(STATE_NAME)
+                                                                       .withCommandName(COMMAND_NAME)
+                                                                       .withInstanceCount(1)
+                                                                       .withInstanceUnitType(COUNT)
+                                                                       .build();
 
   @Mock private ContainerService containerService;
 
