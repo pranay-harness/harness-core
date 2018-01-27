@@ -88,6 +88,7 @@ public class WatcherServiceImpl implements WatcherService {
   private static final long DELEGATE_HEARTBEAT_TIMEOUT = TimeUnit.MINUTES.toMillis(3);
   private static final long DELEGATE_STARTUP_TIMEOUT = TimeUnit.MINUTES.toMillis(1);
   private static final long DELEGATE_SHUTDOWN_TIMEOUT = TimeUnit.HOURS.toMillis(2);
+  private static final String WATCHER_BUCKET = "wingswatchers";
 
   @Inject @Named("inputExecutor") private ScheduledExecutorService inputExecutor;
   @Inject @Named("watchExecutor") private ScheduledExecutorService watchExecutor;
@@ -465,10 +466,8 @@ public class WatcherServiceImpl implements WatcherService {
     }
     try {
       String watcherMetadataUrl = watcherConfiguration.getUpgradeCheckLocation();
-      String bucketName =
-          watcherMetadataUrl.substring(watcherMetadataUrl.indexOf("://") + 3, watcherMetadataUrl.indexOf(".s3"));
       String metaDataFileName = watcherMetadataUrl.substring(watcherMetadataUrl.lastIndexOf('/') + 1);
-      S3Object obj = amazonS3Client.getObject(bucketName, metaDataFileName);
+      S3Object obj = amazonS3Client.getObject(WATCHER_BUCKET, metaDataFileName);
       BufferedReader reader = new BufferedReader(new InputStreamReader(obj.getObjectContent()));
       String watcherMetadata = reader.readLine();
       reader.close();
@@ -479,7 +478,7 @@ public class WatcherServiceImpl implements WatcherService {
       if (upgrade) {
         logger.info("[Old] Upgrading watcher");
         working.set(true);
-        upgradeWatcher(bucketName, watcherJarRelativePath, getVersion(), latestVersion);
+        upgradeWatcher(WATCHER_BUCKET, watcherJarRelativePath, getVersion(), latestVersion);
       } else {
         logger.info("Watcher up to date");
       }
@@ -492,10 +491,8 @@ public class WatcherServiceImpl implements WatcherService {
   private void checkForCommands() {
     try {
       String watcherMetadataUrl = watcherConfiguration.getUpgradeCheckLocation();
-      String bucketName =
-          watcherMetadataUrl.substring(watcherMetadataUrl.indexOf("://") + 3, watcherMetadataUrl.indexOf(".s3"));
       String env = watcherMetadataUrl.substring(watcherMetadataUrl.lastIndexOf('/') + 8);
-      S3Object commandsObj = amazonS3Client.getObject(bucketName, "commands/" + env);
+      S3Object commandsObj = amazonS3Client.getObject(WATCHER_BUCKET, "commands/" + env);
       if (commandsObj != null) {
         BufferedReader reader = new BufferedReader(new InputStreamReader(commandsObj.getObjectContent()));
         String line;
