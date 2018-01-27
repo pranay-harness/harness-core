@@ -17,6 +17,7 @@ import software.wings.beans.KubernetesConfig;
 import software.wings.security.encryption.EncryptedDataDetail;
 import software.wings.service.intfc.security.EncryptionService;
 
+import java.util.Base64;
 import java.util.List;
 
 /**
@@ -68,8 +69,11 @@ public class KubernetesHelperService {
   }
 
   private String encode(char[] value) {
-    return new String(value).trim();
-    //    return new String(Base64.getEncoder().encode(new String(value).trim().getBytes()));
+    String encodedValue = new String(value).trim();
+    if (isNotBlank(encodedValue) && encodedValue.startsWith("-----BEGIN ")) {
+      encodedValue = new String(Base64.getEncoder().encode(encodedValue.getBytes()));
+    }
+    return encodedValue;
   }
 
   public static String toYaml(Object entity) throws JsonProcessingException {
