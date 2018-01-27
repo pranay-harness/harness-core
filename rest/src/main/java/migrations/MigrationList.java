@@ -19,6 +19,7 @@ public class MigrationList {
         .add(Pair.of(101, BaseMigration.class))
         .add(Pair.of(102, AddK8sSetupRollbackToAllK8sWorkflows.class))
         .add(Pair.of(103, RenameReplicationControllerStates.class))
+        .add(Pair.of(104, RenameReplicationControllerStates.class))
         .build();
   }
 }

@@ -35,9 +35,9 @@ public class MigrationUtil {
    *
    * StateTypes with StencilType CLOUD will continue to show in the list of commands available in workflows
    */
-  public static void renameStateTypeAndStateClass(StateType oldStateType, StateType newStateType,
-      WingsPersistence wingsPersistence, WorkflowService workflowService) {
-    logger.info("Renaming {} to {} in all CanaryOrchestrationWorkflows", oldStateType.name(), newStateType.name());
+  public static void renameStateTypeAndStateClass(
+      String oldStateName, StateType newStateType, WingsPersistence wingsPersistence, WorkflowService workflowService) {
+    logger.info("Renaming {} to {} in all CanaryOrchestrationWorkflows", oldStateName, newStateType.name());
     PageRequest<Application> pageRequest = aPageRequest().withLimit(UNLIMITED).build();
     logger.info("Retrieving applications");
     PageResponse<Application> pageResponse = wingsPersistence.query(Application.class, pageRequest);
@@ -68,7 +68,7 @@ public class MigrationUtil {
             for (WorkflowPhase phase : both) {
               for (PhaseStep phaseStep : phase.getPhaseSteps()) {
                 for (Graph.Node node : phaseStep.getSteps()) {
-                  if (oldStateType.name().equals(node.getType())) {
+                  if (oldStateName.equals(node.getType())) {
                     workflowModified = true;
                     node.setType(newStateType.name());
                     Map<String, Object> properties = node.getProperties();
