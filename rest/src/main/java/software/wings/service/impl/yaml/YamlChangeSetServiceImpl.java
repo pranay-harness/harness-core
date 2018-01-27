@@ -1,7 +1,5 @@
 package software.wings.service.impl.yaml;
 
-import static software.wings.exception.WingsException.Scenario.BACKGROUND_JOB;
-
 import com.google.inject.Inject;
 import com.google.inject.Singleton;
 
@@ -77,7 +75,7 @@ public class YamlChangeSetServiceImpl implements YamlChangeSetService {
       }
       return modifiedChangeSet;
     } catch (WingsException exception) {
-      exception.logProcessedMessages(BACKGROUND_JOB);
+      exception.logProcessedMessages();
     } catch (Exception exception) {
       logger.error("Error seen in fetching changeSet", exception);
     }

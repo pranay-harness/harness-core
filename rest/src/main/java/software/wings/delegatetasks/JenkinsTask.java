@@ -2,7 +2,6 @@ package software.wings.delegatetasks;
 
 import static io.harness.data.structure.EmptyPredicate.isNotEmpty;
 import static io.harness.threading.Morpheus.sleep;
-import static java.util.stream.Collectors.toList;
 import static software.wings.beans.Log.Builder.aLog;
 import static software.wings.service.impl.LogServiceImpl.NUM_OF_LOGS_TO_KEEP;
 
@@ -20,8 +19,8 @@ import software.wings.beans.JenkinsConfig;
 import software.wings.beans.Log;
 import software.wings.beans.Log.LogLevel;
 import software.wings.beans.command.CommandExecutionResult.CommandExecutionStatus;
-import software.wings.common.cache.ResponseCodeCache;
 import software.wings.exception.WingsException;
+import software.wings.exception.WingsException.ReportTarget;
 import software.wings.helpers.ext.jenkins.Jenkins;
 import software.wings.helpers.ext.jenkins.JenkinsFactory;
 import software.wings.security.encryption.EncryptedDataDetail;
@@ -124,11 +123,7 @@ public class JenkinsTask extends AbstractDelegateRunnableTask {
       logger.warn("Exception: " + e.getMessage(), e);
       if (e instanceof WingsException) {
         WingsException ex = (WingsException) e;
-        errorMessage = Joiner.on(",").join(
-            ex.getResponseMessageList()
-                .stream()
-                .map(responseMessage -> ResponseCodeCache.getInstance().rebuildMessage(responseMessage, ex.getParams()))
-                .collect(toList()));
+        errorMessage = Joiner.on(",").join(ex.getResponseMessageList(ReportTarget.USER));
       } else {
         errorMessage = e.getMessage();
       }

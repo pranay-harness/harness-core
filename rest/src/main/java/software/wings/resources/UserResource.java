@@ -23,6 +23,7 @@ import software.wings.beans.ZendeskSsoLoginResponse;
 import software.wings.dl.PageRequest;
 import software.wings.dl.PageResponse;
 import software.wings.exception.WingsException;
+import software.wings.exception.WingsException.ReportTarget;
 import software.wings.security.PermissionAttribute.PermissionScope;
 import software.wings.security.PermissionAttribute.ResourceType;
 import software.wings.security.UserThreadLocal;
@@ -335,7 +336,7 @@ public class UserResource {
     } catch (WingsException e) {
       return RestResponse.Builder.aRestResponse()
           .withResource(false)
-          .withResponseMessages(e.getResponseMessageList())
+          .withResponseMessages(e.getResponseMessageList(ReportTarget.USER))
           .build();
     }
     return new RestResponse<>(true);

@@ -6,16 +6,17 @@ import static software.wings.beans.ResponseMessage.Level.ERROR;
 import static software.wings.beans.ResponseMessage.Level.INFO;
 import static software.wings.beans.ResponseMessage.Level.WARN;
 import static software.wings.beans.ResponseMessage.aResponseMessage;
-import static software.wings.exception.WingsException.Scenario.API_CALL;
-import static software.wings.utils.Switch.unhandled;
+import static software.wings.exception.WingsException.ReportTarget.HARNESS_ENGINEER;
+import static software.wings.exception.WingsException.ReportTarget.USER;
+import static software.wings.exception.WingsException.ReportTarget.USER_ADMIN;
 
+import lombok.Builder;
 import lombok.Getter;
+import org.apache.commons.lang3.ArrayUtils;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import software.wings.beans.ErrorCode;
 import software.wings.beans.ResponseMessage;
-import software.wings.beans.ResponseMessage.Acuteness;
-import software.wings.beans.ResponseMessage.Level;
 import software.wings.common.cache.ResponseCodeCache;
 
 import java.util.ArrayList;
@@ -35,6 +36,24 @@ public class WingsException extends WingsApiException {
 
   private static final long serialVersionUID = -3266129015976960503L;
 
+  public enum ReportTarget {
+    // When exception targets harness engineer it will be logged.
+    HARNESS_ENGINEER,
+
+    // When exception targets user it will be serialized in the rest APIs
+    USER,
+
+    // When exception targets user admin it will trigger an alert in the harness app.
+    USER_ADMIN,
+  }
+
+  public static final ReportTarget[] SERIOUS = {HARNESS_ENGINEER, USER};
+  public static final ReportTarget[] ALERTING = {USER_ADMIN, USER};
+  public static final ReportTarget[] HARMLESS = {USER};
+  public static final ReportTarget[] IGNORABLE = {};
+
+  @Builder.Default private ReportTarget[] reportTargets = SERIOUS;
+
   /**
    * The Response message list.
    */
@@ -42,69 +61,45 @@ public class WingsException extends WingsApiException {
 
   private Map<String, Object> params = new HashMap<>();
 
-  /**
-   * Instantiates a new Wings exception.
-   *
-   * @param message the message
-   */
   public WingsException(String message) {
     this(ErrorCode.UNKNOWN_ERROR, message);
   }
 
-  /**
-   * Instantiates a new Wings exception.
-   *
-   * @param message the message
-   * @param cause   the cause
-   */
+  public WingsException(String message, ReportTarget... reportTargets) {
+    this(ErrorCode.UNKNOWN_ERROR, message);
+    this.reportTargets = reportTargets;
+  }
+
   public WingsException(String message, Throwable cause) {
     this(ErrorCode.UNKNOWN_ERROR, message, cause);
   }
 
-  /**
-   * Instantiates a new wings exception.
-   *
-   * @param cause the cause
-   */
   public WingsException(Throwable cause) {
     this(ErrorCode.UNKNOWN_ERROR, cause);
   }
 
-  /**
-   * Instantiates a new Wings exception.
-   *
-   * @param message the message
-   */
   public WingsException(ErrorCode errorCode, String message) {
     this(errorCode, message, (Throwable) null);
   }
 
-  /**
-   * Instantiates a new wings exception.
-   *
-   * @param errorCode the error code
-   */
+  public WingsException(ErrorCode errorCode, String message, ReportTarget... reportTargets) {
+    this(errorCode, message, (Throwable) null);
+    this.reportTargets = reportTargets;
+  }
+
   public WingsException(ErrorCode errorCode) {
     this(errorCode, (Throwable) null);
   }
 
-  /**
-   * Instantiates a new wings exception.
-   *
-   * @param errorCode the error code
-   * @param cause     the cause
-   */
+  public WingsException(ErrorCode errorCode, ReportTarget... reportTargets) {
+    this(errorCode, (Throwable) null);
+    this.reportTargets = reportTargets;
+  }
+
   public WingsException(ErrorCode errorCode, Throwable cause) {
     this(errorCode, null, cause);
   }
 
-  /**
-   * Instantiates a new wings exception.
-   *
-   * @param errorCode the error code
-   * @param message   the message
-   * @param cause     the cause
-   */
   public WingsException(ErrorCode errorCode, String message, Throwable cause) {
     super(message == null ? errorCode.getCode() : message, cause);
     responseMessage = aResponseMessage().code(errorCode).message(message).build();
@@ -141,143 +136,50 @@ public class WingsException extends WingsApiException {
     this.responseMessage = responseMessage;
   }
 
-  public List<ResponseMessage> getResponseMessageList() {
+  public List<ResponseMessage> getResponseMessageList(ReportTarget reportTarget) {
     List<ResponseMessage> list = new ArrayList<>();
-    Throwable ex = this;
-    while (ex != null) {
-      if (ex instanceof WingsException) {
-        ResponseMessage responseMessage = ((WingsException) ex).getResponseMessage();
-        if (responseMessage != null) {
-          list.add(responseMessage);
-        }
+    for (Throwable ex = this; ex != null; ex = ex.getCause()) {
+      if (!(ex instanceof WingsException)) {
+        continue;
       }
-      ex = ex.getCause();
+      final WingsException exception = (WingsException) ex;
+      if (!ArrayUtils.contains(exception.getReportTargets(), reportTarget)) {
+        continue;
+      }
+
+      ResponseMessage responseMessage =
+          ResponseCodeCache.getInstance().rebuildMessage(exception.getResponseMessage(), exception.getParams());
+      list.add(responseMessage);
     }
 
     return list;
   }
 
-  /**
-   * Adds the param.
-   *
-   * @param key   the key
-   * @param value the value
-   */
   public WingsException addParam(String key, Object value) {
     params.put(key, value);
     return this;
   }
 
-  public enum Scenario {
-    // API call scenarios is when the execution was made in the context of API call.
-    API_CALL,
+  public void logProcessedMessages() {
+    final List<ResponseMessage> responseMessages = getResponseMessageList(HARNESS_ENGINEER);
 
-    // Scenarios when the execution was in a context of background job.
-    BACKGROUND_JOB,
-  }
-
-  public static boolean shouldLog(Scenario scenario, Acuteness acuteness) {
-    switch (acuteness) {
-      case SERIOUS:
-        return true;
-      case ALERTING:
-      case HARMLESS:
-        switch (scenario) {
-          case API_CALL:
-            return false;
-          case BACKGROUND_JOB:
-            return true;
-          default:
-            unhandled(scenario);
-        }
-        break;
-      case IGNORABLE:
-        switch (scenario) {
-          case API_CALL:
-            return true;
-          case BACKGROUND_JOB:
-            return false;
-          default:
-            unhandled(scenario);
-        }
-        break;
-      default:
-        unhandled(acuteness);
+    String msg = "Exception occurred: " + getMessage();
+    if (responseMessages.stream().anyMatch(responseMessage -> responseMessage.getLevel() == ERROR)) {
+      logger.error(msg, this);
+    } else if (responseMessages.stream().anyMatch(responseMessage -> responseMessage.getLevel() == WARN)) {
+      logger.warn(msg, this);
+    } else if (responseMessages.stream().anyMatch(responseMessage -> responseMessage.getLevel() == INFO)) {
+      logger.info(msg, this);
+    } else {
+      logger.debug(msg, this);
     }
-    return true;
-  }
-
-  public static boolean shouldPropagate(Scenario scenario, Acuteness acuteness) {
-    if (scenario != API_CALL) {
-      return false;
-    }
-
-    switch (acuteness) {
-      case SERIOUS:
-        return true;
-      case ALERTING:
-      case HARMLESS:
-        return true;
-      case IGNORABLE:
-        return false;
-      default:
-        unhandled(acuteness);
-    }
-    return true;
-  }
-
-  public List<ResponseMessage> logProcessedMessages(Scenario scenario) {
-    final List<ResponseMessage> responseMessages =
-        getResponseMessageList()
-            .stream()
-            .map(responseMessage -> ResponseCodeCache.getInstance().rebuildMessage(responseMessage, params))
-            .collect(toList());
-
-    if (responseMessages.stream().anyMatch(responseMessage -> shouldLog(scenario, responseMessage.getAcuteness()))) {
-      String msg = "Exception occurred: " + getMessage();
-      if (responseMessages.stream().anyMatch(responseMessage -> responseMessage.getLevel() == ERROR)) {
-        logger.error(msg, this);
-      } else if (responseMessages.stream().anyMatch(responseMessage -> responseMessage.getLevel() == WARN)) {
-        logger.warn(msg, this);
-      } else if (responseMessages.stream().anyMatch(responseMessage -> responseMessage.getLevel() == INFO)) {
-        logger.info(msg, this);
-      } else {
-        logger.debug(msg, this);
-      }
-    }
-
-    responseMessages.stream()
-        .filter(responseMessage -> shouldLog(scenario, responseMessage.getAcuteness()))
-        .forEach(responseMessage -> {
-          final Level errorType = responseMessage.getLevel();
-          switch (errorType) {
-            case DEBUG:
-              logger.debug(responseMessage.toString());
-              break;
-            case INFO:
-              logger.info(responseMessage.toString());
-              break;
-            case WARN:
-              logger.warn(responseMessage.toString());
-              break;
-            case ERROR:
-              logger.error(responseMessage.toString());
-              break;
-            default:
-              unhandled(errorType);
-          }
-        });
-
-    return responseMessages.stream()
-        .filter(responseMessage -> shouldPropagate(scenario, responseMessage.getAcuteness()))
-        .collect(toList());
   }
 
   // There is only one use of this method. We should reconsider the need of it.
   @Deprecated
   public String getMessagesAsString() {
     final List<ResponseMessage> responseMessages =
-        getResponseMessageList()
+        getResponseMessageList(USER)
             .stream()
             .map(responseMessage -> ResponseCodeCache.getInstance().rebuildMessage(responseMessage, params))
             .collect(toList());

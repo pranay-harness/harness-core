@@ -2,14 +2,13 @@ package software.wings.exception;
 
 import static org.mockito.Matchers.any;
 import static org.mockito.Matchers.anyObject;
-import static org.mockito.Matchers.matches;
 import static org.mockito.Mockito.inOrder;
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.never;
 import static software.wings.beans.ErrorCode.DEFAULT_ERROR_CODE;
 import static software.wings.beans.ErrorCode.INVALID_ARTIFACT_SOURCE;
-import static software.wings.beans.ResponseMessage.Acuteness.HARMLESS;
 import static software.wings.beans.ResponseMessage.aResponseMessage;
+import static software.wings.exception.WingsException.HARMLESS;
 
 import io.harness.CategoryTest;
 import org.junit.Test;
@@ -35,7 +34,6 @@ public class WingsExceptionMapperTest extends CategoryTest {
 
     InOrder inOrder = inOrder(mockLogger);
     inOrder.verify(mockLogger).error("Exception occurred: DEFAULT_ERROR_CODE", exception);
-    inOrder.verify(mockLogger).error(matches(".*An error has occurred. Please contact the Harness support team.*"));
   }
 
   @Test
@@ -77,9 +75,7 @@ public class WingsExceptionMapperTest extends CategoryTest {
 
   @Test
   public void shouldNotLogHarmless() {
-    final ResponseMessage message = aResponseMessage().code(DEFAULT_ERROR_CODE).acuteness(HARMLESS).build();
-
-    final WingsException exception = new WingsException(message);
+    final WingsException exception = new WingsException(DEFAULT_ERROR_CODE, HARMLESS);
     final WingsExceptionMapper mapper = new WingsExceptionMapper();
 
     Logger mockLogger = mock(Logger.class);

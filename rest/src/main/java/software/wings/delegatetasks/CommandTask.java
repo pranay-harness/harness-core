@@ -1,6 +1,5 @@
 package software.wings.delegatetasks;
 
-import static java.util.stream.Collectors.toList;
 import static software.wings.beans.command.CommandExecutionResult.Builder.aCommandExecutionResult;
 
 import com.google.common.base.Joiner;
@@ -13,8 +12,8 @@ import software.wings.beans.command.Command;
 import software.wings.beans.command.CommandExecutionContext;
 import software.wings.beans.command.CommandExecutionResult;
 import software.wings.beans.command.CommandExecutionResult.CommandExecutionStatus;
-import software.wings.common.cache.ResponseCodeCache;
 import software.wings.exception.WingsException;
+import software.wings.exception.WingsException.ReportTarget;
 import software.wings.service.intfc.ServiceCommandExecutorService;
 import software.wings.waitnotify.NotifyResponseData;
 
@@ -48,11 +47,7 @@ public class CommandTask extends AbstractDelegateRunnableTask {
       logger.warn("Exception while executing task {}: {}", getTaskId(), e.getMessage(), e);
       if (e instanceof WingsException) {
         WingsException ex = (WingsException) e;
-        errorMessage = Joiner.on(",").join(
-            ex.getResponseMessageList()
-                .stream()
-                .map(responseMessage -> ResponseCodeCache.getInstance().rebuildMessage(responseMessage, ex.getParams()))
-                .collect(toList()));
+        errorMessage = Joiner.on(",").join(ex.getResponseMessageList(ReportTarget.USER));
       } else {
         errorMessage = e.getMessage();
       }

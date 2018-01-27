@@ -43,6 +43,7 @@ import software.wings.beans.Service;
 import software.wings.beans.artifact.Artifact;
 import software.wings.beans.artifact.ArtifactStream;
 import software.wings.exception.WingsException;
+import software.wings.exception.WingsException.ReportTarget;
 import software.wings.helpers.ext.jenkins.BuildDetails;
 import software.wings.lock.AcquiredLock;
 import software.wings.lock.PersistentLocker;
@@ -126,11 +127,13 @@ public class ArtifactCollectionJob implements Job {
       artifacts = collectNewArtifactsFromArtifactStream(appId, artifactStream);
     } catch (WingsException exception) {
       // TODO: temporary suppress the errors coming from here - they are too many:
-      logger.warn(
-          "Failed to collect artifact for appId {}, artifact stream {}", appId, artifactStream.getUuid(), exception);
+      if (!exception.getResponseMessageList(ReportTarget.HARNESS_ENGINEER).isEmpty()) {
+        logger.warn(
+            "Failed to collect artifact for appId {}, artifact stream {}", appId, artifactStream.getUuid(), exception);
+      }
 
       // This is the way we should print this after most of the cases are resolved
-      // exception.logProcessedMessages(BACKGROUND_JOB);
+      // exception.logProcessedMessages();
     } catch (Exception e) {
       logger.warn("Failed to collect artifact for appId {}, artifact stream {}", appId, artifactStream.getUuid(), e);
     }

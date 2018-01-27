@@ -8,7 +8,6 @@ import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.times;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
-import static software.wings.exception.WingsException.Scenario.BACKGROUND_JOB;
 
 import com.google.inject.Inject;
 
@@ -133,7 +132,7 @@ public class PersistentLockerTest extends MockTest {
 
     try (AcquiredLock lock = persistentLocker.acquireLock(AcquiredLock.class, "cba", Duration.ofMinutes(1))) {
     } catch (WingsException exception) {
-      exception.logProcessedMessages(BACKGROUND_JOB);
+      exception.logProcessedMessages();
     }
 
     verify(logger, times(0)).error(any());
@@ -160,7 +159,7 @@ public class PersistentLockerTest extends MockTest {
     try (AcquiredLock lock = persistentLocker.acquireLock(AcquiredLock.class, "cba", timeout)) {
       Thread.sleep(10);
     } catch (WingsException exception) {
-      exception.logProcessedMessages(BACKGROUND_JOB);
+      exception.logProcessedMessages();
     }
 
     verify(logger).error(matches(

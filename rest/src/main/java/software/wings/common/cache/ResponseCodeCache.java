@@ -56,7 +56,6 @@ public class ResponseCodeCache {
         .code(inputMessage.getCode())
         .message(prepareMessage(inputMessage.getCode(), params))
         .level(inputMessage.getLevel())
-        .acuteness(inputMessage.getAcuteness())
         .build();
   }
 

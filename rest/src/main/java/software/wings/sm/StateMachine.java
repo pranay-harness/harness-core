@@ -33,8 +33,8 @@ import software.wings.beans.PipelineStage.PipelineStageElement;
 import software.wings.beans.Workflow;
 import software.wings.common.Constants;
 import software.wings.common.WingsExpressionProcessorFactory;
-import software.wings.common.cache.ResponseCodeCache;
 import software.wings.exception.WingsException;
+import software.wings.exception.WingsException.ReportTarget;
 import software.wings.sm.states.ForkState;
 import software.wings.sm.states.RepeatState;
 import software.wings.sm.states.SubWorkflowState;
@@ -113,9 +113,7 @@ public class StateMachine extends Base {
       valid = true;
     } catch (WingsException wingsException) {
       logger.error("Error in State Machine transform", wingsException);
-      wingsException.getResponseMessageList().forEach(responseMessage -> {
-        sb.append(ResponseCodeCache.getInstance().rebuildMessage(responseMessage, wingsException.getParams()));
-      });
+      wingsException.getResponseMessageList(ReportTarget.USER).forEach(responseMessage -> sb.append(responseMessage));
     }
     orchestrationWorkflow.validate();
     if (orchestrationWorkflow.isValid() && !valid) {
