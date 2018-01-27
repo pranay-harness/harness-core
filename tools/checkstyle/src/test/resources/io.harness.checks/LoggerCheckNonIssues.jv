@@ -1,6 +1,7 @@
 package io.harness.checks;
 
 public class LoggerCheckNonCheckIssues {
+  public void foo(Logger logger) {}
   private static final Logger logger = LoggerFactory.getLogger(LoggerCheckNonCheckIssues.class);
   public abstract Logger getLogger();
   Logger mockLogger = mock(Logger.class);

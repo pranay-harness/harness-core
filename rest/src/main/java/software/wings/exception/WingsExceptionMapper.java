@@ -26,7 +26,7 @@ public class WingsExceptionMapper implements ExceptionMapper<WingsException> {
    */
   @Override
   public Response toResponse(WingsException ex) {
-    ex.logProcessedMessages();
+    ex.logProcessedMessages(logger);
     List<ResponseMessage> responseMessages = ex.getResponseMessageList(ReportTarget.USER);
 
     return Response.status(resolveHttpStatus(responseMessages))

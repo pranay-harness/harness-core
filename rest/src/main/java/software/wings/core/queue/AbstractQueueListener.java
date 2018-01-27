@@ -73,7 +73,7 @@ public abstract class AbstractQueueListener<T extends Queuable> implements Runna
           onMessage(message);
           queue.ack(message);
         } catch (WingsException exception) {
-          exception.logProcessedMessages();
+          exception.logProcessedMessages(logger);
         } catch (Exception exception) {
           onException(exception, message);
         } finally {

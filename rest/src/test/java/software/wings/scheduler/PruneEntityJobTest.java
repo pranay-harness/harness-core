@@ -165,7 +165,7 @@ public class PruneEntityJobTest extends WingsBaseTest {
     when(context.getJobDetail()).thenReturn(details(Activity.class, APP_ID, ENTITY_ID));
 
     Logger mockLogger = mock(Logger.class);
-    Whitebox.setInternalState(exception, "logger", mockLogger);
+    Whitebox.setInternalState(job, "logger", mockLogger);
 
     job.execute(context);
 

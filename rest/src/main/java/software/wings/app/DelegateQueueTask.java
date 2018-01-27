@@ -232,7 +232,7 @@ public class DelegateQueueTask implements Runnable {
       }
 
     } catch (WingsException exception) {
-      exception.logProcessedMessages();
+      exception.logProcessedMessages(logger);
     } catch (Exception exception) {
       logger.error("Error seen in the Notifier call", exception);
     }

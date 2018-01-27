@@ -75,7 +75,7 @@ public class YamlChangeSetServiceImpl implements YamlChangeSetService {
       }
       return modifiedChangeSet;
     } catch (WingsException exception) {
-      exception.logProcessedMessages();
+      exception.logProcessedMessages(logger);
     } catch (Exception exception) {
       logger.error("Error seen in fetching changeSet", exception);
     }

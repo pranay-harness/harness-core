@@ -106,7 +106,7 @@ public class PruneEntityJob implements Job {
         lambda.prune(descending);
       } catch (WingsException exception) {
         succeeded = false;
-        exception.logProcessedMessages();
+        exception.logProcessedMessages(logger);
       } catch (Throwable e) {
         succeeded = false;
         causeCollection.addCause(e);
@@ -148,7 +148,7 @@ public class PruneEntityJob implements Job {
         logger.error("Unsupported class [{}] was scheduled for pruning.", className);
       }
     } catch (WingsException exception) {
-      exception.logProcessedMessages();
+      exception.logProcessedMessages(logger);
       return false;
     } catch (Exception e) {
       logger.error("", e);
