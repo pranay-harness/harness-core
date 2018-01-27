@@ -1,6 +1,7 @@
 package software.wings.exception;
 
 import static org.assertj.core.api.Assertions.assertThat;
+import static software.wings.beans.ErrorCode.DEFAULT_ERROR_CODE;
 import static software.wings.beans.ResponseMessage.Acuteness.ALERTING;
 import static software.wings.beans.ResponseMessage.Acuteness.HARMLESS;
 import static software.wings.beans.ResponseMessage.Acuteness.IGNORABLE;
@@ -53,5 +54,12 @@ public class WingsExceptionTest extends CategoryTest {
     assertThat(WingsException.shouldPropagate(BACKGROUND_JOB, ALERTING)).isFalse();
     assertThat(WingsException.shouldPropagate(BACKGROUND_JOB, HARMLESS)).isFalse();
     assertThat(WingsException.shouldPropagate(BACKGROUND_JOB, IGNORABLE)).isFalse();
+  }
+
+  @Test
+  public void collectResponseMessages() {
+    final WingsException exception =
+        new WingsException(DEFAULT_ERROR_CODE, new Exception(new WingsException(DEFAULT_ERROR_CODE)));
+    assertThat(exception.getResponseMessageList().size()).isEqualTo(2);
   }
 }
