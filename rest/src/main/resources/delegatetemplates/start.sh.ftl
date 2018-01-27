@@ -52,16 +52,13 @@ then
   echo "Downloading Watcher..."
   curl -#k $REMOTE_WATCHER_URL -o watcher.jar
 else
-  if [[ $1 != "upgrade" ]]
+  WATCHER_CURRENT_VERSION=$(unzip -c watcher.jar META-INF/MANIFEST.MF | grep Application-Version | cut -d "=" -f2 | tr -d " " | tr -d "\r" | tr -d "\n")
+  if [[ $REMOTE_WATCHER_VERSION != $WATCHER_CURRENT_VERSION ]]
   then
-    WATCHER_CURRENT_VERSION=$(unzip -c watcher.jar META-INF/MANIFEST.MF | grep Application-Version | cut -d "=" -f2 | tr -d " " | tr -d "\r" | tr -d "\n")
-    if [[ $REMOTE_WATCHER_VERSION != $WATCHER_CURRENT_VERSION ]]
-    then
-      echo "Downloading Watcher..."
-      mkdir -p watcherBackup.$WATCHER_CURRENT_VERSION
-      cp watcher.jar watcherBackup.$WATCHER_CURRENT_VERSION
-      curl -#k $REMOTE_WATCHER_URL -o watcher.jar
-    fi
+    echo "Downloading Watcher..."
+    mkdir -p watcherBackup.$WATCHER_CURRENT_VERSION
+    cp watcher.jar watcherBackup.$WATCHER_CURRENT_VERSION
+    curl -#k $REMOTE_WATCHER_URL -o watcher.jar
   fi
 fi
 
