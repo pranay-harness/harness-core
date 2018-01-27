@@ -82,7 +82,7 @@ public class Notifier implements Runnable {
               -> notifyQueue.send(
                   aNotifyEvent().withWaitInstanceId(waitInstanceId).withCorrelationIds(correlationIds).build()));
     } catch (WingsException exception) {
-      exception.logProcessedMessages();
+      exception.logProcessedMessages(logger);
     } catch (Exception exception) {
       logger.error("Error seen in the Notifier call", exception);
     }

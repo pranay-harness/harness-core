@@ -14,7 +14,6 @@ import lombok.Builder;
 import lombok.Getter;
 import org.apache.commons.lang3.ArrayUtils;
 import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
 import software.wings.beans.ErrorCode;
 import software.wings.beans.ResponseMessage;
 import software.wings.common.cache.ResponseCodeCache;
@@ -32,8 +31,6 @@ import javax.validation.constraints.NotNull;
  */
 @Getter
 public class WingsException extends WingsApiException {
-  protected static Logger logger = LoggerFactory.getLogger(WingsException.class);
-
   private static final long serialVersionUID = -3266129015976960503L;
 
   public enum ReportTarget {
@@ -160,7 +157,7 @@ public class WingsException extends WingsApiException {
     return this;
   }
 
-  public void logProcessedMessages() {
+  public void logProcessedMessages(Logger logger) {
     final List<ResponseMessage> responseMessages = getResponseMessageList(HARNESS_ENGINEER);
 
     String msg = "Exception occurred: " + getMessage();

@@ -128,11 +128,10 @@ public class PersistentLockerTest extends MockTest {
     Logger logger = mock(Logger.class);
 
     Whitebox.setInternalState(ResponseCodeCache.getInstance(), "logger", logger);
-    Whitebox.setInternalState(new WingsException(""), "logger", logger);
 
     try (AcquiredLock lock = persistentLocker.acquireLock(AcquiredLock.class, "cba", Duration.ofMinutes(1))) {
     } catch (WingsException exception) {
-      exception.logProcessedMessages();
+      exception.logProcessedMessages(logger);
     }
 
     verify(logger, times(0)).error(any());
@@ -154,12 +153,10 @@ public class PersistentLockerTest extends MockTest {
 
     Logger logger = mock(Logger.class);
 
-    Whitebox.setInternalState(new AcquiredLock(null, 0L), "logger", logger);
-
     try (AcquiredLock lock = persistentLocker.acquireLock(AcquiredLock.class, "cba", timeout)) {
       Thread.sleep(10);
     } catch (WingsException exception) {
-      exception.logProcessedMessages();
+      exception.logProcessedMessages(logger);
     }
 
     verify(logger).error(matches(

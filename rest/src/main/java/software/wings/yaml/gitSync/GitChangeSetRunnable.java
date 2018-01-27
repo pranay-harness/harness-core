@@ -74,7 +74,7 @@ public class GitChangeSetRunnable implements Runnable {
         }
       });
     } catch (WingsException exception) {
-      exception.logProcessedMessages();
+      exception.logProcessedMessages(logger);
     } catch (Exception exception) {
       logger.error("Unexpected error", exception);
     }

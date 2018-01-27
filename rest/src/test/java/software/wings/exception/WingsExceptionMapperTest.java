@@ -27,7 +27,6 @@ public class WingsExceptionMapperTest extends CategoryTest {
     final WingsExceptionMapper mapper = new WingsExceptionMapper();
 
     Logger mockLogger = mock(Logger.class);
-    Whitebox.setInternalState(exception, "logger", mockLogger);
     Whitebox.setInternalState(mapper, "logger", mockLogger);
 
     final Response response = mapper.toResponse(exception);
@@ -42,7 +41,6 @@ public class WingsExceptionMapperTest extends CategoryTest {
     final WingsExceptionMapper mapper = new WingsExceptionMapper();
 
     Logger mockLogger = mock(Logger.class);
-    Whitebox.setInternalState(exception, "logger", mockLogger);
     Whitebox.setInternalState(mapper, "logger", mockLogger);
     Whitebox.setInternalState(ResponseCodeCache.getInstance(), "logger", mockLogger);
 
@@ -62,7 +60,6 @@ public class WingsExceptionMapperTest extends CategoryTest {
     final WingsExceptionMapper mapper = new WingsExceptionMapper();
 
     Logger mockLogger = mock(Logger.class);
-    Whitebox.setInternalState(exception, "logger", mockLogger);
     Whitebox.setInternalState(mapper, "logger", mockLogger);
     Whitebox.setInternalState(ResponseCodeCache.getInstance(), "logger", mockLogger);
 

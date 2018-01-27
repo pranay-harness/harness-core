@@ -86,7 +86,7 @@ public class PersistentLockCleanupJob implements Job {
         }
       }
     } catch (WingsException exception) {
-      exception.logProcessedMessages();
+      exception.logProcessedMessages(logger);
     } catch (Exception exception) {
       logger.error("Error seen in the PersistentLockCleanupJob execute call", exception);
     }

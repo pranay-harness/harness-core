@@ -40,7 +40,7 @@ public class LoggerCheck extends AbstractCheck {
     }
 
     DetailAST assign = loggerIdentifier.getNextSibling();
-    if (assign.getType() != TokenTypes.ASSIGN) {
+    if (assign == null || assign.getType() != TokenTypes.ASSIGN) {
       return;
     }
 
