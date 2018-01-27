@@ -1,7 +1,5 @@
 package software.wings.scheduler;
 
-import static software.wings.exception.WingsException.Scenario.BACKGROUND_JOB;
-
 import com.google.inject.Inject;
 
 import com.mongodb.BasicDBObject;
@@ -88,7 +86,7 @@ public class PersistentLockCleanupJob implements Job {
         }
       }
     } catch (WingsException exception) {
-      exception.logProcessedMessages(BACKGROUND_JOB);
+      exception.logProcessedMessages();
     } catch (Exception exception) {
       logger.error("Error seen in the PersistentLockCleanupJob execute call", exception);
     }

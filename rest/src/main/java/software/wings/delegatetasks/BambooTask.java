@@ -3,7 +3,6 @@ package software.wings.delegatetasks;
 import static io.harness.data.structure.EmptyPredicate.isNotEmpty;
 import static io.harness.threading.Morpheus.sleep;
 import static java.time.Duration.ofSeconds;
-import static java.util.stream.Collectors.toList;
 import static software.wings.sm.states.BambooState.BambooExecutionResponse;
 
 import com.google.common.base.Joiner;
@@ -14,8 +13,8 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import software.wings.beans.BambooConfig;
 import software.wings.beans.DelegateTask;
-import software.wings.common.cache.ResponseCodeCache;
 import software.wings.exception.WingsException;
+import software.wings.exception.WingsException.ReportTarget;
 import software.wings.helpers.ext.bamboo.BambooService;
 import software.wings.helpers.ext.bamboo.Result;
 import software.wings.security.encryption.EncryptedDataDetail;
@@ -95,11 +94,7 @@ public class BambooTask extends AbstractDelegateRunnableTask {
       logger.warn("Failed to execute Bamboo verification task: " + e.getMessage(), e);
       if (e instanceof WingsException) {
         WingsException ex = (WingsException) e;
-        errorMessage = Joiner.on(",").join(
-            ex.getResponseMessageList()
-                .stream()
-                .map(responseMessage -> ResponseCodeCache.getInstance().rebuildMessage(responseMessage, ex.getParams()))
-                .collect(toList()));
+        errorMessage = Joiner.on(",").join(ex.getResponseMessageList(ReportTarget.USER));
       } else {
         errorMessage = e.getMessage();
       }

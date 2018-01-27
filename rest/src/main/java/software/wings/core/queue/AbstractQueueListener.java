@@ -2,7 +2,6 @@ package software.wings.core.queue;
 
 import static io.harness.threading.Morpheus.sleep;
 import static software.wings.core.maintenance.MaintenanceController.isMaintenance;
-import static software.wings.exception.WingsException.Scenario.BACKGROUND_JOB;
 
 import com.google.inject.Inject;
 import com.google.inject.name.Named;
@@ -74,7 +73,7 @@ public abstract class AbstractQueueListener<T extends Queuable> implements Runna
           onMessage(message);
           queue.ack(message);
         } catch (WingsException exception) {
-          exception.logProcessedMessages(BACKGROUND_JOB);
+          exception.logProcessedMessages();
         } catch (Exception exception) {
           onException(exception, message);
         } finally {

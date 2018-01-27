@@ -4,8 +4,7 @@ import static io.harness.threading.Morpheus.sleep;
 import static java.lang.String.format;
 import static java.time.Duration.ofMillis;
 import static software.wings.beans.ErrorCode.GENERAL_ERROR;
-import static software.wings.beans.ResponseMessage.Acuteness.IGNORABLE;
-import static software.wings.beans.ResponseMessage.aResponseMessage;
+import static software.wings.exception.WingsException.IGNORABLE;
 
 import com.google.common.util.concurrent.TimeLimiter;
 import com.google.inject.Inject;
@@ -43,7 +42,7 @@ public class PersistentLocker implements Locker {
       return AcquiredLock.builder().lock(lock).startTimestamp(start).build();
     }
 
-    throw new WingsException(aResponseMessage().code(GENERAL_ERROR).acuteness(IGNORABLE).build())
+    throw new WingsException(GENERAL_ERROR, IGNORABLE)
         .addParam("args", format("Failed to acquire distributed lock for %s", name));
   }
 
@@ -76,7 +75,7 @@ public class PersistentLocker implements Locker {
         }
       }, timeoutDuration, timeoutUnit, true);
     } catch (Exception e) {
-      throw new WingsException(aResponseMessage().code(GENERAL_ERROR).acuteness(IGNORABLE).build())
+      throw new WingsException(GENERAL_ERROR, IGNORABLE)
           .addParam("args",
               format("Failed to acquire distributed lock for %s within %s %s", name, timeoutDuration,
                   timeoutUnit.name().toLowerCase()));
@@ -91,7 +90,7 @@ public class PersistentLocker implements Locker {
     final BasicDBObject filter = new BasicDBObject().append("_id", name);
     wingsPersistence.getCollection("locks").remove(filter);
     acquiredLock.release();
-    throw new WingsException(aResponseMessage().code(GENERAL_ERROR).acuteness(IGNORABLE).build())
+    throw new WingsException(GENERAL_ERROR, IGNORABLE)
         .addParam("args", format("Acquired distributed lock %s was destroyed and the lock was broken.", name));
   }
 }

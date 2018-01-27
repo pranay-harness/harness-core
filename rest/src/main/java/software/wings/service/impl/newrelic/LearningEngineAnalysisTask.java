@@ -2,6 +2,7 @@ package software.wings.service.impl.newrelic;
 
 import lombok.Builder;
 import lombok.Data;
+import lombok.EqualsAndHashCode;
 import org.mongodb.morphia.annotations.Entity;
 import org.mongodb.morphia.annotations.Field;
 import org.mongodb.morphia.annotations.Index;
@@ -31,6 +32,7 @@ import java.util.concurrent.TimeUnit;
 })
 @Data
 @Builder
+@EqualsAndHashCode(callSuper = false)
 public class LearningEngineAnalysisTask extends Base {
   public static long TIME_SERIES_ANALYSIS_TASK_TIME_OUT = TimeUnit.MINUTES.toMillis(2);
   public static final int RETRIES = 3;

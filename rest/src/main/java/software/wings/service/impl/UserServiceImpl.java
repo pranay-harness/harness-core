@@ -18,10 +18,9 @@ import static software.wings.beans.ErrorCode.ROLE_DOES_NOT_EXIST;
 import static software.wings.beans.ErrorCode.UNKNOWN_ERROR;
 import static software.wings.beans.ErrorCode.USER_DOES_NOT_EXIST;
 import static software.wings.beans.ErrorCode.USER_INVITATION_DOES_NOT_EXIST;
-import static software.wings.beans.ResponseMessage.Acuteness.HARMLESS;
-import static software.wings.beans.ResponseMessage.aResponseMessage;
 import static software.wings.beans.User.Builder.anUser;
 import static software.wings.dl.PageRequest.Builder.aPageRequest;
+import static software.wings.exception.WingsException.HARMLESS;
 import static software.wings.security.PermissionAttribute.ResourceType.APPLICATION;
 import static software.wings.security.PermissionAttribute.ResourceType.ARTIFACT;
 import static software.wings.security.PermissionAttribute.ResourceType.DEPLOYMENT;
@@ -506,7 +505,7 @@ public class UserServiceImpl implements UserService {
     } catch (UnsupportedEncodingException exception) {
       throw new WingsException(UNKNOWN_ERROR).addParam("message", "Invalid reset password link");
     } catch (JWTVerificationException exception) {
-      throw new WingsException(aResponseMessage().code(EXPIRED_TOKEN).acuteness(HARMLESS).build());
+      throw new WingsException(EXPIRED_TOKEN, HARMLESS);
     }
     return true;
   }
@@ -522,7 +521,7 @@ public class UserServiceImpl implements UserService {
     if (user == null) {
       throw new WingsException(INVALID_REQUEST).addParam("message", "Email doesn't exist");
     } else if (user.getPasswordChangedAt() > tokenIssuedAt) {
-      throw new WingsException(aResponseMessage().code(EXPIRED_TOKEN).acuteness(HARMLESS).build());
+      throw new WingsException(EXPIRED_TOKEN, HARMLESS);
     }
 
     String hashed = hashpw(new String(password), BCrypt.gensalt());

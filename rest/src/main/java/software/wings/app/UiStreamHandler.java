@@ -81,7 +81,7 @@ public class UiStreamHandler extends AtmosphereHandlerAdapter {
         logger.info("Authorization successful");
 
       } catch (WingsException e) {
-        sendError(resource, e.getResponseMessageList().get(0).getCode());
+        sendError(resource, e.getResponseMessage().getCode());
         return;
       } catch (Exception e) {
         sendError(resource, UNKNOWN_ERROR);

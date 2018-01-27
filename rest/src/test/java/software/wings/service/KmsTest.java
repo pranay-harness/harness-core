@@ -182,7 +182,7 @@ public class KmsTest extends WingsBaseTest {
       kmsService.saveKmsConfig(kmsConfig.getAccountId(), kmsConfig);
       fail("Saved invalid kms config");
     } catch (WingsException e) {
-      assertEquals(ErrorCode.KMS_OPERATION_ERROR, e.getResponseMessageList().get(0).getCode());
+      assertEquals(ErrorCode.KMS_OPERATION_ERROR, e.getResponseMessage().getCode());
     }
   }
 

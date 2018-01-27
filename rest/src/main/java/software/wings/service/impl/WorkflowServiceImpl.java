@@ -38,8 +38,6 @@ import static software.wings.beans.PhaseStepType.PROVISION_NODE;
 import static software.wings.beans.PhaseStepType.STOP_SERVICE;
 import static software.wings.beans.PhaseStepType.VERIFY_SERVICE;
 import static software.wings.beans.PhaseStepType.WRAP_UP;
-import static software.wings.beans.ResponseMessage.Acuteness.HARMLESS;
-import static software.wings.beans.ResponseMessage.aResponseMessage;
 import static software.wings.beans.SearchFilter.Operator.EQ;
 import static software.wings.beans.SearchFilter.Operator.IN;
 import static software.wings.beans.WorkflowPhase.WorkflowPhaseBuilder.aWorkflowPhase;
@@ -49,6 +47,7 @@ import static software.wings.common.Constants.WORKFLOW_INFRAMAPPING_VALIDATION_M
 import static software.wings.common.UUIDGenerator.getUuid;
 import static software.wings.dl.MongoHelper.setUnset;
 import static software.wings.dl.PageRequest.Builder.aPageRequest;
+import static software.wings.exception.WingsException.HARMLESS;
 import static software.wings.sm.StateMachineExecutionSimulator.populateRequiredEntityTypesByAccessType;
 import static software.wings.sm.StateType.ARTIFACT_COLLECTION;
 import static software.wings.sm.StateType.AWS_AMI_SERVICE_DEPLOY;
@@ -1179,13 +1178,12 @@ public class WorkflowServiceImpl implements WorkflowService, DataProvider {
       List<String> pipelineNames = pipelines.stream().map(Pipeline::getName).collect(Collectors.toList());
       String message = String.format("Workflow is referenced by %s pipeline%s [%s].", pipelines.size(),
           pipelines.size() == 1 ? "" : "s", Joiner.on(", ").join(pipelineNames));
-      throw new WingsException(aResponseMessage().code(INVALID_REQUEST).acuteness(HARMLESS).build())
-          .addParam("message", message);
+      throw new WingsException(INVALID_REQUEST, HARMLESS).addParam("message", message);
     }
 
     if (workflowExecutionService.workflowExecutionsRunning(
             workflow.getWorkflowType(), workflow.getAppId(), workflow.getUuid())) {
-      throw new WingsException(aResponseMessage().code(WORKFLOW_EXECUTION_IN_PROGRESS).acuteness(HARMLESS).build())
+      throw new WingsException(WORKFLOW_EXECUTION_IN_PROGRESS, HARMLESS)
           .addParam("message", String.format("Workflow: [%s] couldn't be deleted", workflow.getName()));
     }
 
@@ -1195,7 +1193,7 @@ public class WorkflowServiceImpl implements WorkflowService, DataProvider {
     }
     List<String> triggerNames = triggers.stream().map(Trigger::getName).collect(Collectors.toList());
 
-    throw new WingsException(aResponseMessage().code(INVALID_REQUEST).acuteness(HARMLESS).build())
+    throw new WingsException(INVALID_REQUEST, HARMLESS)
         .addParam("message",
             String.format(
                 "Workflow associated as a trigger action to triggers [%s]", Joiner.on(", ").join(triggerNames)));

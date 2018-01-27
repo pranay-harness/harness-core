@@ -1,7 +1,6 @@
 package software.wings.service.impl;
 
 import static java.lang.String.format;
-import static java.util.stream.Collectors.toList;
 import static software.wings.beans.Log.Builder.aLog;
 import static software.wings.beans.Log.LogLevel.ERROR;
 import static software.wings.beans.Log.LogLevel.INFO;
@@ -19,21 +18,23 @@ import com.google.inject.Singleton;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import software.wings.beans.ErrorCode;
+import software.wings.beans.ResponseMessage;
 import software.wings.beans.command.CommandExecutionContext;
 import software.wings.beans.command.CommandExecutionResult.CommandExecutionStatus;
 import software.wings.beans.command.CommandUnit;
 import software.wings.beans.command.SshCommandExecutionContext;
 import software.wings.beans.infrastructure.Host;
-import software.wings.common.cache.ResponseCodeCache;
 import software.wings.core.ssh.executors.AbstractSshExecutor;
 import software.wings.core.ssh.executors.SshExecutor;
 import software.wings.core.ssh.executors.SshExecutorFactory;
 import software.wings.core.ssh.executors.SshSessionConfig;
 import software.wings.delegatetasks.DelegateLogService;
 import software.wings.exception.WingsException;
+import software.wings.exception.WingsException.ReportTarget;
 import software.wings.service.intfc.CommandUnitExecutorService;
 import software.wings.utils.SshHelperUtil;
 
+import java.util.List;
 import java.util.concurrent.ExecutionException;
 import java.util.concurrent.TimeUnit;
 import java.util.concurrent.TimeoutException;
@@ -110,11 +111,7 @@ public class SshCommandUnitExecutorServiceImpl implements CommandUnitExecutorSer
     } catch (ExecutionException e) {
       if (e.getCause() instanceof WingsException) {
         WingsException ex = (WingsException) e.getCause();
-        String errorMessage = Joiner.on(",").join(
-            ex.getResponseMessageList()
-                .stream()
-                .map(responseMessage -> ResponseCodeCache.getInstance().rebuildMessage(responseMessage, ex.getParams()))
-                .collect(toList()));
+        String errorMessage = Joiner.on(",").join(ex.getResponseMessageList(ReportTarget.USER));
         logService.save(context.getAccountId(),
             aLog()
                 .withAppId(context.getAppId())
@@ -141,9 +138,10 @@ public class SshCommandUnitExecutorServiceImpl implements CommandUnitExecutorSer
         throw new WingsException(ErrorCode.UNKNOWN_ERROR, "", e);
       }
     } catch (WingsException e) {
-      if (!e.getResponseMessageList().isEmpty()) {
-        if (e.getResponseMessageList().get(0).getCode() == ErrorCode.INVALID_KEY
-            || e.getResponseMessageList().get(0).getCode() == ErrorCode.INVALID_CREDENTIAL) {
+      final List<ResponseMessage> messageList = e.getResponseMessageList(ReportTarget.USER);
+      if (!messageList.isEmpty()) {
+        if (messageList.get(0).getCode() == ErrorCode.INVALID_KEY
+            || messageList.get(0).getCode() == ErrorCode.INVALID_CREDENTIAL) {
           logService.save(context.getAccountId(),
               aLog()
                   .withAppId(context.getAppId())

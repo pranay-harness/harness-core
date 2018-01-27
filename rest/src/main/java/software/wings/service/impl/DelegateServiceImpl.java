@@ -19,8 +19,6 @@ import static software.wings.beans.DelegateTaskAbortEvent.Builder.aDelegateTaskA
 import static software.wings.beans.DelegateTaskEvent.DelegateTaskEventBuilder.aDelegateTaskEvent;
 import static software.wings.beans.ErrorCode.UNAVAILABLE_DELEGATES;
 import static software.wings.beans.Event.Builder.anEvent;
-import static software.wings.beans.ResponseMessage.Acuteness.ALERTING;
-import static software.wings.beans.ResponseMessage.aResponseMessage;
 import static software.wings.beans.SearchFilter.Operator.EQ;
 import static software.wings.beans.SearchFilter.Operator.IN;
 import static software.wings.beans.alert.AlertType.NoEligibleDelegates;
@@ -28,6 +26,7 @@ import static software.wings.beans.alert.NoEligibleDelegatesAlert.NoEligibleDele
 import static software.wings.common.Constants.DELEGATE_SYNC_CACHE;
 import static software.wings.dl.MongoHelper.setUnset;
 import static software.wings.dl.PageRequest.Builder.aPageRequest;
+import static software.wings.exception.WingsException.ALERTING;
 
 import com.google.common.base.Joiner;
 import com.google.common.collect.ImmutableMap;
@@ -493,7 +492,7 @@ public class DelegateServiceImpl implements DelegateService {
   public <T extends NotifyResponseData> T executeTask(DelegateTask task) throws InterruptedException {
     List<String> eligibleDelegateIds = ensureDelegateAvailableToExecuteTask(task);
     if (isEmpty(eligibleDelegateIds)) {
-      throw new WingsException(aResponseMessage().code(UNAVAILABLE_DELEGATES).acuteness(ALERTING).build());
+      throw new WingsException(UNAVAILABLE_DELEGATES, ALERTING);
     }
     String taskId = UUIDGenerator.getUuid();
     task.setQueueName(taskId);

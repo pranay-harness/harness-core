@@ -11,9 +11,8 @@ import static software.wings.beans.ErrorCode.ACCESS_DENIED;
 import static software.wings.beans.ErrorCode.INVALID_ARGUMENT;
 import static software.wings.beans.ErrorCode.INVALID_REQUEST;
 import static software.wings.beans.ErrorCode.INVALID_TOKEN;
-import static software.wings.beans.ResponseMessage.Acuteness.ALERTING;
-import static software.wings.beans.ResponseMessage.Acuteness.HARMLESS;
-import static software.wings.beans.ResponseMessage.aResponseMessage;
+import static software.wings.exception.WingsException.ALERTING;
+import static software.wings.exception.WingsException.HARMLESS;
 import static software.wings.security.UserRequestInfo.UserRequestInfoBuilder.anUserRequestInfo;
 
 import com.google.common.collect.ImmutableList;
@@ -27,7 +26,6 @@ import software.wings.beans.AccountRole;
 import software.wings.beans.ApplicationRole;
 import software.wings.beans.AuthToken;
 import software.wings.beans.EnvironmentRole;
-import software.wings.beans.ResponseMessage;
 import software.wings.beans.User;
 import software.wings.common.AuditHelper;
 import software.wings.exception.WingsException;
@@ -166,7 +164,7 @@ public class AuthRuleFilter implements ContainerRequestFilter {
     if (user != null) {
       final String accountIdFinal = accountId;
       if (user.getAccounts().stream().filter(account -> account.getUuid().equals(accountIdFinal)).count() != 1) {
-        throw new WingsException(ResponseMessage.aResponseMessage().code(INVALID_REQUEST).acuteness(HARMLESS).build())
+        throw new WingsException(INVALID_REQUEST, HARMLESS)
             .addParam("message", "User not authorized to access the given account");
       }
     }
@@ -365,7 +363,7 @@ public class AuthRuleFilter implements ContainerRequestFilter {
   private String extractToken(ContainerRequestContext requestContext) {
     String authorizationHeader = requestContext.getHeaderString(HttpHeaders.AUTHORIZATION);
     if (authorizationHeader == null || !authorizationHeader.startsWith("Bearer ")) {
-      throw new WingsException(aResponseMessage().code(INVALID_TOKEN).acuteness(ALERTING).build());
+      throw new WingsException(INVALID_TOKEN, ALERTING);
     }
     return authorizationHeader.substring("Bearer".length()).trim();
   }

@@ -4,7 +4,6 @@ import static io.harness.data.structure.EmptyPredicate.isEmpty;
 import static io.harness.data.structure.EmptyPredicate.isNotEmpty;
 import static io.harness.threading.Morpheus.quietSleep;
 import static java.util.Arrays.asList;
-import static java.util.stream.Collectors.toList;
 import static org.apache.commons.lang3.StringUtils.isNotBlank;
 import static org.mongodb.morphia.mapping.Mapper.ID_KEY;
 import static software.wings.beans.ErrorCode.INVALID_ARGUMENT;
@@ -55,12 +54,12 @@ import software.wings.beans.WorkflowExecution;
 import software.wings.beans.alert.ManualInterventionNeededAlert;
 import software.wings.common.Constants;
 import software.wings.common.UUIDGenerator;
-import software.wings.common.cache.ResponseCodeCache;
 import software.wings.dl.PageRequest;
 import software.wings.dl.PageResponse;
 import software.wings.dl.WingsDeque;
 import software.wings.dl.WingsPersistence;
 import software.wings.exception.WingsException;
+import software.wings.exception.WingsException.ReportTarget;
 import software.wings.scheduler.NotifyJob;
 import software.wings.scheduler.QuartzScheduler;
 import software.wings.service.intfc.AlertService;
@@ -650,11 +649,7 @@ public class StateMachineExecutor {
     String errorMessage;
     if (e instanceof WingsException) {
       WingsException ex = (WingsException) e;
-      errorMessage = Joiner.on(",").join(
-          ex.getResponseMessageList()
-              .stream()
-              .map(responseMessage -> ResponseCodeCache.getInstance().rebuildMessage(responseMessage, ex.getParams()))
-              .collect(toList()));
+      errorMessage = Joiner.on(",").join(ex.getResponseMessageList(ReportTarget.USER));
     } else {
       errorMessage = e.getMessage();
     }

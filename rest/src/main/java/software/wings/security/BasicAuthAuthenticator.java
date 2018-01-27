@@ -4,8 +4,7 @@ import static org.mindrot.jbcrypt.BCrypt.checkpw;
 import static software.wings.beans.ErrorCode.EMAIL_NOT_VERIFIED;
 import static software.wings.beans.ErrorCode.INVALID_CREDENTIAL;
 import static software.wings.beans.ErrorCode.USER_DOES_NOT_EXIST;
-import static software.wings.beans.ResponseMessage.Acuteness.HARMLESS;
-import static software.wings.beans.ResponseMessage.aResponseMessage;
+import static software.wings.exception.WingsException.HARMLESS;
 
 import com.google.inject.Inject;
 import com.google.inject.Singleton;
@@ -41,10 +40,10 @@ public class BasicAuthAuthenticator implements Authenticator<BasicCredentials, U
                     .equal(basicCredentials.getUsername().trim().toLowerCase())
                     .get();
     if (user == null) {
-      throw new WingsException(aResponseMessage().code(USER_DOES_NOT_EXIST).acuteness(HARMLESS).build());
+      throw new WingsException(USER_DOES_NOT_EXIST, HARMLESS);
     }
     if (!user.isEmailVerified()) {
-      throw new WingsException(aResponseMessage().code(EMAIL_NOT_VERIFIED).acuteness(HARMLESS).build());
+      throw new WingsException(EMAIL_NOT_VERIFIED, HARMLESS);
     }
     if (checkpw(basicCredentials.getPassword(), user.getPasswordHash())) {
       AuthToken authToken = new AuthToken(user.getUuid(), configuration.getPortal().getAuthTokenExpiryInMillis());
@@ -54,6 +53,6 @@ public class BasicAuthAuthenticator implements Authenticator<BasicCredentials, U
       user.setToken(authToken.getUuid());
       return Optional.of(user);
     }
-    throw new WingsException(aResponseMessage().code(INVALID_CREDENTIAL).acuteness(HARMLESS).build());
+    throw new WingsException(INVALID_CREDENTIAL, HARMLESS);
   }
 }

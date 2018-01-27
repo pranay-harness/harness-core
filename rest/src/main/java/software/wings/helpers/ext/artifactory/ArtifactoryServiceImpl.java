@@ -18,12 +18,11 @@ import static org.jfrog.artifactory.client.model.PackageType.rpm;
 import static org.jfrog.artifactory.client.model.PackageType.yum;
 import static software.wings.beans.ErrorCode.ARTIFACT_SERVER_ERROR;
 import static software.wings.beans.ErrorCode.INVALID_ARTIFACT_SERVER;
-import static software.wings.beans.ResponseMessage.Acuteness.ALERTING;
-import static software.wings.beans.ResponseMessage.Acuteness.HARMLESS;
-import static software.wings.beans.ResponseMessage.aResponseMessage;
 import static software.wings.common.Constants.ARTIFACT_FILE_NAME;
 import static software.wings.common.Constants.ARTIFACT_PATH;
 import static software.wings.common.Constants.BUILD_NO;
+import static software.wings.exception.WingsException.ALERTING;
+import static software.wings.exception.WingsException.HARMLESS;
 import static software.wings.helpers.ext.jenkins.BuildDetails.Builder.aBuildDetails;
 
 import com.google.common.util.concurrent.TimeLimiter;
@@ -47,11 +46,11 @@ import org.jfrog.artifactory.client.model.repository.settings.RepositorySettings
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import software.wings.beans.ErrorCode;
-import software.wings.beans.ResponseMessage.Acuteness;
 import software.wings.beans.config.ArtifactoryConfig;
 import software.wings.common.AlphanumComparator;
 import software.wings.delegatetasks.collect.artifacts.ArtifactCollectionTaskHelper;
 import software.wings.exception.WingsException;
+import software.wings.exception.WingsException.ReportTarget;
 import software.wings.helpers.ext.jenkins.BuildDetails;
 import software.wings.security.encryption.EncryptedDataDetail;
 import software.wings.service.intfc.security.EncryptionService;
@@ -800,7 +799,7 @@ public class ArtifactoryServiceImpl implements ArtifactoryService {
       if (artifactPaths.length < 4) {
         prepareAndThrowException(
             "Not in maven style format. Sample format: com/mycompany/myservice/*/myservice*.war", HARMLESS);
-        throw new WingsException(aResponseMessage().code(ErrorCode.INVALID_ARTIFACT_SERVER).acuteness(HARMLESS).build())
+        throw new WingsException(INVALID_ARTIFACT_SERVER, HARMLESS)
             .addParam("message", "Not in maven style format. Sample format: com/mycompany/myservice/*/myservice*.war");
       }
       String groupId =
@@ -830,9 +829,8 @@ public class ArtifactoryServiceImpl implements ArtifactoryService {
     prepareAndThrowException(message, HARMLESS);
   }
 
-  private void prepareAndThrowException(String message, Acuteness acuteness) {
-    throw new WingsException(aResponseMessage().code(ErrorCode.INVALID_ARTIFACT_SERVER).acuteness(acuteness).build())
-        .addParam("message", message);
+  private void prepareAndThrowException(String message, ReportTarget[] reportTargets) {
+    throw new WingsException(ErrorCode.INVALID_ARTIFACT_SERVER, reportTargets).addParam("message", message);
   }
 
   private ListNotifyResponseData downloadArtifacts(ArtifactoryConfig artifactoryConfig,

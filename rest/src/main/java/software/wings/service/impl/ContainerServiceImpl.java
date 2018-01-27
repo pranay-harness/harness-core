@@ -214,19 +214,15 @@ public class ContainerServiceImpl implements ContainerService {
               containerServiceParams.getEncryptionDetails(), listTasksRequest);
         } catch (WingsException ex) {
           // if the cluster / service has been deleted, we need to continue and check the rest of the service names
-          List<ResponseMessage> responseMessageList = ex.getResponseMessageList();
-          if (!responseMessageList.isEmpty()) {
-            ErrorCode errorCode = responseMessageList.get(0).getCode();
-            if (errorCode != null) {
-              if (ErrorCode.AWS_CLUSTER_NOT_FOUND.getCode().equals(errorCode.getCode())) {
-                logger.info(
-                    "ECS Cluster not found for service name:" + containerServiceParams.getContainerServiceName());
-                continue;
-              } else if (ErrorCode.AWS_SERVICE_NOT_FOUND.getCode().equals(errorCode.getCode())) {
-                logger.info(
-                    "ECS Service not found for service name:" + containerServiceParams.getContainerServiceName());
-                continue;
-              }
+          ResponseMessage responseMessage = ex.getResponseMessage();
+          ErrorCode errorCode = responseMessage.getCode();
+          if (errorCode != null) {
+            if (ErrorCode.AWS_CLUSTER_NOT_FOUND.getCode().equals(errorCode.getCode())) {
+              logger.info("ECS Cluster not found for service name:" + containerServiceParams.getContainerServiceName());
+              continue;
+            } else if (ErrorCode.AWS_SERVICE_NOT_FOUND.getCode().equals(errorCode.getCode())) {
+              logger.info("ECS Service not found for service name:" + containerServiceParams.getContainerServiceName());
+              continue;
             }
           }
           throw ex;

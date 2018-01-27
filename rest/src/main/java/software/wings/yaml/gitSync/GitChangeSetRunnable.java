@@ -1,7 +1,6 @@
 package software.wings.yaml.gitSync;
 
 import static software.wings.core.maintenance.MaintenanceController.isMaintenance;
-import static software.wings.exception.WingsException.Scenario.BACKGROUND_JOB;
 
 import com.google.inject.Inject;
 
@@ -75,7 +74,7 @@ public class GitChangeSetRunnable implements Runnable {
         }
       });
     } catch (WingsException exception) {
-      exception.logProcessedMessages(BACKGROUND_JOB);
+      exception.logProcessedMessages();
     } catch (Exception exception) {
       logger.error("Unexpected error", exception);
     }
