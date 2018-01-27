@@ -34,6 +34,8 @@ public interface DelegateService {
   DelegateScripts checkForUpgrade(String accountId, String delegateId, String version, String managerHost)
       throws IOException, TemplateException;
 
+  String getLatestDelegateVersion();
+
   File download(String managerHost, String accountId) throws IOException, TemplateException;
 
   Delegate add(Delegate delegate);
