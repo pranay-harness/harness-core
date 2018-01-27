@@ -25,7 +25,6 @@ import org.sonatype.nexus.rest.model.RepositoryListResourceResponse;
 import retrofit2.Call;
 import retrofit2.Response;
 import retrofit2.converter.simplexml.SimpleXmlConverterFactory;
-import software.wings.beans.ResponseMessage;
 import software.wings.beans.config.NexusConfig;
 import software.wings.exception.WingsException;
 import software.wings.helpers.ext.jenkins.BuildDetails;
@@ -93,9 +92,8 @@ public class NexusTwoServiceImpl {
       logger.error("Error occurred while retrieving Repository Group Ids from Nexus server " + nexusConfig.getNexusUrl()
               + " for repository " + repoId + " under path " + path,
           e);
-      List<ResponseMessage> responseMessages = new ArrayList<>();
-      responseMessages.add(aResponseMessage().code(INVALID_REQUEST).level(ERROR).message(e.getMessage()).build());
-      throw new WingsException(responseMessages, e.getMessage(), e);
+      throw new WingsException(
+          aResponseMessage().code(INVALID_REQUEST).level(ERROR).message(e.getMessage()).build(), e);
     }
     logger.info("Retrieving groupId paths success");
   }

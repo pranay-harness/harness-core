@@ -1,6 +1,5 @@
 package software.wings.exception;
 
-import static java.util.Arrays.asList;
 import static org.mockito.Matchers.any;
 import static org.mockito.Matchers.anyObject;
 import static org.mockito.Matchers.matches;
@@ -61,7 +60,7 @@ public class WingsExceptionMapperTest extends CategoryTest {
   public void overrideMessage() {
     final ResponseMessage message = aResponseMessage().code(DEFAULT_ERROR_CODE).message("Override message").build();
 
-    final WingsException exception = new WingsException(asList(message), "Dummy message", (Throwable) null);
+    final WingsException exception = new WingsException(message);
     final WingsExceptionMapper mapper = new WingsExceptionMapper();
 
     Logger mockLogger = mock(Logger.class);
@@ -73,14 +72,14 @@ public class WingsExceptionMapperTest extends CategoryTest {
 
     InOrder inOrder = inOrder(mockLogger);
     inOrder.verify(mockLogger).error("The provided response message \"Override message\" will be overridden!");
-    inOrder.verify(mockLogger).error("Exception occurred: Dummy message", exception);
+    inOrder.verify(mockLogger).error("Exception occurred: Override message", exception);
   }
 
   @Test
   public void shouldNotLogHarmless() {
     final ResponseMessage message = aResponseMessage().code(DEFAULT_ERROR_CODE).acuteness(HARMLESS).build();
 
-    final WingsException exception = new WingsException(asList(message), "Dummy message", (Throwable) null);
+    final WingsException exception = new WingsException(message);
     final WingsExceptionMapper mapper = new WingsExceptionMapper();
 
     Logger mockLogger = mock(Logger.class);

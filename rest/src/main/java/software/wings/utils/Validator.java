@@ -13,10 +13,6 @@ import software.wings.beans.ResponseMessage.Level;
 import software.wings.beans.UuidAware;
 import software.wings.exception.WingsException;
 
-import java.util.ArrayList;
-import java.util.HashMap;
-import java.util.List;
-import java.util.Map;
 import java.util.Objects;
 import java.util.concurrent.Callable;
 
@@ -105,11 +101,7 @@ public class Validator {
    */
   public static WingsException prepareWingsException(
       ErrorCode errorCode, Level responseType, String param, String message) {
-    List<ResponseMessage> responseMessages = new ArrayList<>();
-    responseMessages.add(prepareResponseMessage(errorCode, responseType, message));
-    Map<String, Object> params = new HashMap();
-    params.put(param, message);
-    return new WingsException(responseMessages, message, params);
+    return new WingsException(prepareResponseMessage(errorCode, responseType, message)).addParam(param, message);
   }
   /**
    * Prepares and throw exception with WARN error type.

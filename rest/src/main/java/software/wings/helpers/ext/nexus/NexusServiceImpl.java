@@ -18,7 +18,6 @@ import org.slf4j.LoggerFactory;
 import retrofit2.Converter;
 import retrofit2.Response;
 import retrofit2.Retrofit;
-import software.wings.beans.ResponseMessage;
 import software.wings.beans.config.NexusConfig;
 import software.wings.exception.WingsException;
 import software.wings.helpers.ext.jenkins.BuildDetails;
@@ -48,9 +47,8 @@ public class NexusServiceImpl implements NexusService {
   @Inject private TimeLimiter timeLimiter;
 
   public static void handleException(IOException e) {
-    List<ResponseMessage> responseMessages = new ArrayList<>();
-    responseMessages.add(aResponseMessage().code(INVALID_ARTIFACT_SERVER).level(ERROR).message(e.getMessage()).build());
-    throw new WingsException(responseMessages, e.getMessage(), e);
+    throw new WingsException(
+        aResponseMessage().code(INVALID_ARTIFACT_SERVER).level(ERROR).message(e.getMessage()).build(), e);
   }
 
   public static boolean isSuccessful(Response<?> response) {

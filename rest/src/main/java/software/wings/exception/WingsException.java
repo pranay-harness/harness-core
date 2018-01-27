@@ -10,7 +10,6 @@ import static software.wings.exception.WingsException.Scenario.API_CALL;
 import static software.wings.utils.Switch.unhandled;
 
 import lombok.Getter;
-import org.hibernate.validator.constraints.NotEmpty;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import software.wings.beans.ErrorCode;
@@ -39,7 +38,7 @@ public class WingsException extends WingsApiException {
   /**
    * The Response message list.
    */
-  private List<ResponseMessage> responseMessageList = new ArrayList<>();
+  private ResponseMessage responseMessage;
 
   private Map<String, Object> params = new HashMap<>();
 
@@ -108,7 +107,7 @@ public class WingsException extends WingsApiException {
    */
   public WingsException(ErrorCode errorCode, String message, Throwable cause) {
     super(message == null ? errorCode.getCode() : message, cause);
-    responseMessageList.add(aResponseMessage().code(errorCode).message(message).build());
+    responseMessage = aResponseMessage().code(errorCode).message(message).build();
   }
 
   /**
@@ -128,30 +127,34 @@ public class WingsException extends WingsApiException {
    * @param responseMessage     the message
    */
   public WingsException(@NotNull ResponseMessage responseMessage) {
-    super(responseMessage.getMessage() == null ? responseMessage.getCode().name() : responseMessage.getMessage(), null);
-    responseMessageList.add(responseMessage);
+    this(responseMessage, null);
   }
 
   /**
    * Instantiates a new wings exception.
    *
-   * @param messageList the message list
-   * @param message     the message
-   * @param cause       the cause
+   * @param responseMessage     the message
    */
-  public WingsException(@NotEmpty List<ResponseMessage> messageList, String message, Throwable cause) {
-    super(message, cause);
-    responseMessageList = messageList;
+  public WingsException(@NotNull ResponseMessage responseMessage, Throwable cause) {
+    super(
+        responseMessage.getMessage() == null ? responseMessage.getCode().name() : responseMessage.getMessage(), cause);
+    this.responseMessage = responseMessage;
   }
 
-  /**
-   * @param messageList
-   * @param params
-   */
-  public WingsException(@NotEmpty List<ResponseMessage> messageList, String message, Map<String, Object> params) {
-    super(message, null);
-    responseMessageList = messageList;
-    this.params = params;
+  public List<ResponseMessage> getResponseMessageList() {
+    List<ResponseMessage> list = new ArrayList<>();
+    Throwable ex = this;
+    while (ex != null) {
+      if (ex instanceof WingsException) {
+        ResponseMessage responseMessage = ((WingsException) ex).getResponseMessage();
+        if (responseMessage != null) {
+          list.add(responseMessage);
+        }
+      }
+      ex = ex.getCause();
+    }
+
+    return list;
   }
 
   /**
@@ -225,7 +228,8 @@ public class WingsException extends WingsApiException {
 
   public List<ResponseMessage> logProcessedMessages(Scenario scenario) {
     final List<ResponseMessage> responseMessages =
-        responseMessageList.stream()
+        getResponseMessageList()
+            .stream()
             .map(responseMessage -> ResponseCodeCache.getInstance().rebuildMessage(responseMessage, params))
             .collect(toList());
 
@@ -273,7 +277,8 @@ public class WingsException extends WingsApiException {
   @Deprecated
   public String getMessagesAsString() {
     final List<ResponseMessage> responseMessages =
-        responseMessageList.stream()
+        getResponseMessageList()
+            .stream()
             .map(responseMessage -> ResponseCodeCache.getInstance().rebuildMessage(responseMessage, params))
             .collect(toList());
 
