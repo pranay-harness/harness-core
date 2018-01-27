@@ -254,6 +254,22 @@ public class DelegateServiceImpl implements DelegateService {
     return delegateScripts;
   }
 
+  public String getLatestDelegateVersion() {
+    try {
+      String delegateMetadataUrl = mainConfiguration.getDelegateMetadataUrl().trim();
+      String delegateMatadata = Request.Get(delegateMetadataUrl)
+                                    .connectTimeout(10000)
+                                    .socketTimeout(10000)
+                                    .execute()
+                                    .returnContent()
+                                    .asString()
+                                    .trim();
+      return substringBefore(delegateMatadata, " ").trim();
+    } catch (IOException e) {
+      return null;
+    }
+  }
+
   private ImmutableMap<Object, Object> getJarAndScriptRunTimeParamMap(
       String accountId, String version, String managerHost) {
     String latestVersion = null;

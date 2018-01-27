@@ -93,6 +93,14 @@ public class DelegateResource {
     return new RestResponse<>(delegateService.get(accountId, delegateId));
   }
 
+  @GET
+  @Path("latest")
+  @Timed
+  @ExceptionMetered
+  public RestResponse<String> get(@QueryParam("accountId") @NotEmpty String accountId) {
+    return new RestResponse<>(delegateService.getLatestDelegateVersion());
+  }
+
   @DelegateAuth
   @PUT
   @Path("{delegateId}")

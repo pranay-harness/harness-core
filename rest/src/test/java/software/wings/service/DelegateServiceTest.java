@@ -386,4 +386,9 @@ public class DelegateServiceTest extends WingsBaseTest {
     wingsPersistence.save(delegateTask);
     assertThat(delegateService.filter(DELEGATE_ID, delegateTask)).isFalse();
   }
+
+  @Test
+  public void shouldGetLatestVersion() {
+    assertThat(delegateService.getLatestDelegateVersion()).isEqualTo("9.9.9");
+  }
 }
