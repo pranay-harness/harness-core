@@ -251,36 +251,33 @@ public class YamlGitServiceImpl implements YamlGitService {
         return;
       }
 
-      String headCommit = yamlWebHookPayload.getHeadCommit().getId();
+      GitCommit gitCommit = wingsPersistence.createQuery(GitCommit.class)
+                                .field("accountId")
+                                .equal(accountId)
+                                .field("yamlGitConfigId")
+                                .equal(yamlGitConfig.getUuid())
+                                .field("status")
+                                .equal(Status.COMPLETED)
+                                .order("-lastUpdatedAt")
+                                .get();
 
-      if (!isCommitAlreadyProcessed(accountId, headCommit)) {
-        GitCommit gitCommit = wingsPersistence.createQuery(GitCommit.class)
-                                  .field("accountId")
-                                  .equal(accountId)
-                                  .field("yamlGitConfigId")
-                                  .equal(yamlGitConfig.getUuid())
-                                  .field("status")
-                                  .equal(Status.COMPLETED)
-                                  .order("-lastUpdatedAt")
-                                  .get();
+      String processedCommit = gitCommit == null ? null : gitCommit.getCommitId();
 
-        String processedCommit = gitCommit == null ? null : gitCommit.getCommitId();
+      String waitId = UUIDGenerator.getUuid();
+      DelegateTask delegateTask =
+          aDelegateTask()
+              .withTaskType(TaskType.GIT_COMMAND)
+              .withAccountId(accountId)
+              .withAppId(GLOBAL_APP_ID)
+              .withWaitId(waitId)
+              .withParameters(new Object[] {GitCommandType.DIFF, yamlGitConfig.getGitConfig(),
+                  secretManager.getEncryptionDetails(yamlGitConfig.getGitConfig(), GLOBAL_APP_ID, null),
+                  GitDiffRequest.builder().lastProcessedCommitId(processedCommit).build()})
+              .build();
 
-        String waitId = UUIDGenerator.getUuid();
-        DelegateTask delegateTask =
-            aDelegateTask()
-                .withTaskType(TaskType.GIT_COMMAND)
-                .withAccountId(accountId)
-                .withAppId(GLOBAL_APP_ID)
-                .withWaitId(waitId)
-                .withParameters(new Object[] {GitCommandType.DIFF, yamlGitConfig.getGitConfig(),
-                    secretManager.getEncryptionDetails(yamlGitConfig.getGitConfig(), GLOBAL_APP_ID, null),
-                    GitDiffRequest.builder().lastProcessedCommitId(processedCommit).build()})
-                .build();
+      waitNotifyEngine.waitForAll(new GitCommandCallback(accountId, null, yamlGitConfig.getUuid()), waitId);
+      delegateService.queueTask(delegateTask);
 
-        waitNotifyEngine.waitForAll(new GitCommandCallback(accountId, null, yamlGitConfig.getUuid()), waitId);
-        delegateService.queueTask(delegateTask);
-      }
     } catch (Exception ex) {
       logger.error("Error while processing git webhook post", ex);
     }
