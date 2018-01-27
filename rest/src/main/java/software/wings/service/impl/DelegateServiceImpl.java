@@ -279,7 +279,8 @@ public class DelegateServiceImpl implements DelegateService {
 
       latestVersion = substringBefore(delegateMatadata, " ").trim();
       jarRelativePath = substringAfter(delegateMatadata, " ").trim();
-      delegateJarDownloadUrl = "http://" + (delegateMetadataUrl.split("/")[2]).trim() + "/" + jarRelativePath;
+      delegateJarDownloadUrl =
+          delegateMetadataUrl.substring(0, delegateMetadataUrl.lastIndexOf('/')) + "/" + jarRelativePath;
       jarFileExists = Request.Head(delegateJarDownloadUrl)
                           .connectTimeout(10000)
                           .socketTimeout(10000)
@@ -310,7 +311,8 @@ public class DelegateServiceImpl implements DelegateService {
 
       watcherLatestVersion = substringBefore(watcherMetadata, " ").trim();
       watcherJarRelativePath = substringAfter(watcherMetadata, " ").trim();
-      watcherJarDownloadUrl = "http://" + (watcherMetadataUrl.split("/")[2]).trim() + "/" + watcherJarRelativePath;
+      watcherJarDownloadUrl =
+          watcherMetadataUrl.substring(0, watcherMetadataUrl.lastIndexOf('/')) + "/" + watcherJarRelativePath;
     } catch (IOException e) {
       logger.warn("Unable to fetch watcher version information", e);
       logger.warn("LatestVersion=[{}], watcherJarDownloadUrl=[{}]", watcherLatestVersion, watcherJarDownloadUrl);
