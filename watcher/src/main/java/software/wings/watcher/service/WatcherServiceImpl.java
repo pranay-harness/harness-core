@@ -43,12 +43,11 @@ import com.google.inject.Inject;
 import com.google.inject.Singleton;
 import com.google.inject.name.Named;
 
-import com.amazonaws.services.s3.AmazonS3Client;
-import com.amazonaws.services.s3.model.S3Object;
 import org.apache.commons.collections.MapUtils;
 import org.apache.commons.io.FileUtils;
 import org.apache.commons.io.filefilter.FileFilterUtils;
 import org.apache.commons.lang3.StringUtils;
+import org.apache.http.client.fluent.Request;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.zeroturnaround.exec.ProcessExecutor;
@@ -61,9 +60,7 @@ import software.wings.watcher.app.WatcherConfiguration;
 
 import java.io.BufferedReader;
 import java.io.File;
-import java.io.IOException;
-import java.io.InputStream;
-import java.io.InputStreamReader;
+import java.io.StringReader;
 import java.nio.file.Files;
 import java.nio.file.attribute.PosixFilePermission;
 import java.time.Clock;
@@ -88,7 +85,6 @@ public class WatcherServiceImpl implements WatcherService {
   private static final long DELEGATE_HEARTBEAT_TIMEOUT = TimeUnit.MINUTES.toMillis(3);
   private static final long DELEGATE_STARTUP_TIMEOUT = TimeUnit.MINUTES.toMillis(1);
   private static final long DELEGATE_SHUTDOWN_TIMEOUT = TimeUnit.HOURS.toMillis(2);
-  private static final String WATCHER_BUCKET = "wingswatchers";
 
   @Inject @Named("inputExecutor") private ScheduledExecutorService inputExecutor;
   @Inject @Named("watchExecutor") private ScheduledExecutorService watchExecutor;
@@ -98,7 +94,6 @@ public class WatcherServiceImpl implements WatcherService {
   @Inject private Clock clock;
   @Inject private WatcherConfiguration watcherConfiguration;
   @Inject private MessageService messageService;
-  @Inject private AmazonS3Client amazonS3Client;
 
   private final Object waiter = new Object();
   private final AtomicBoolean working = new AtomicBoolean(false);
@@ -466,19 +461,23 @@ public class WatcherServiceImpl implements WatcherService {
     }
     try {
       String watcherMetadataUrl = watcherConfiguration.getUpgradeCheckLocation();
-      String metaDataFileName = watcherMetadataUrl.substring(watcherMetadataUrl.lastIndexOf('/') + 1);
-      S3Object obj = amazonS3Client.getObject(WATCHER_BUCKET, metaDataFileName);
-      BufferedReader reader = new BufferedReader(new InputStreamReader(obj.getObjectContent()));
-      String watcherMetadata = reader.readLine();
-      reader.close();
+      String watcherMetadata = Request.Get(watcherMetadataUrl)
+                                   .connectTimeout(10000)
+                                   .socketTimeout(10000)
+                                   .execute()
+                                   .returnContent()
+                                   .asString()
+                                   .trim();
       String latestVersion = substringBefore(watcherMetadata, " ").trim();
       String watcherJarRelativePath = substringAfter(watcherMetadata, " ").trim();
-      String version = getVersion();
-      boolean upgrade = !StringUtils.equals(version, latestVersion);
+      String watcherJarDownloadUrl =
+          watcherMetadataUrl.substring(0, watcherMetadataUrl.lastIndexOf('/')) + "/" + watcherJarRelativePath;
+      boolean upgrade = !StringUtils.equals(getVersion(), latestVersion);
       if (upgrade) {
         logger.info("[Old] Upgrading watcher");
         working.set(true);
-        upgradeWatcher(WATCHER_BUCKET, watcherJarRelativePath, getVersion(), latestVersion);
+        updateStartScript(latestVersion, watcherJarDownloadUrl);
+        upgradeWatcher(getVersion(), latestVersion);
       } else {
         logger.info("Watcher up to date");
       }
@@ -492,9 +491,17 @@ public class WatcherServiceImpl implements WatcherService {
     try {
       String watcherMetadataUrl = watcherConfiguration.getUpgradeCheckLocation();
       String env = watcherMetadataUrl.substring(watcherMetadataUrl.lastIndexOf('/') + 8);
-      S3Object commandsObj = amazonS3Client.getObject(WATCHER_BUCKET, "commands/" + env);
-      if (commandsObj != null) {
-        BufferedReader reader = new BufferedReader(new InputStreamReader(commandsObj.getObjectContent()));
+      String watcherCommandsUrl =
+          watcherMetadataUrl.substring(0, watcherMetadataUrl.lastIndexOf('/')) + "/commands/" + env;
+      String watcherCommands = Request.Get(watcherCommandsUrl)
+                                   .connectTimeout(10000)
+                                   .socketTimeout(10000)
+                                   .execute()
+                                   .returnContent()
+                                   .asString()
+                                   .trim();
+      if (isNotBlank(watcherCommands)) {
+        BufferedReader reader = new BufferedReader(new StringReader(watcherCommands));
         String line;
         while ((line = reader.readLine()) != null) {
           String cmd = substringBefore(line, " ").trim();
@@ -513,14 +520,33 @@ public class WatcherServiceImpl implements WatcherService {
     }
   }
 
-  private void upgradeWatcher(String bucketName, String watcherJarRelativePath, String version, String newVersion)
-      throws IOException {
-    S3Object newVersionJarObj = amazonS3Client.getObject(bucketName, watcherJarRelativePath);
-    InputStream newVersionJarStream = newVersionJarObj.getObjectContent();
-    File watcherJarFile = new File("watcher.jar");
-    FileUtils.copyInputStreamToFile(newVersionJarStream, watcherJarFile);
-    updateStartScript(newVersion, watcherJarRelativePath);
+  private void updateStartScript(String newVersion, String watcherJarUrl) {
+    String remoteWatcherVersionPrefix = "REMOTE_WATCHER_VERSION=";
+    String remoteWatcherUrlPrefix = "REMOTE_WATCHER_URL=";
+    try {
+      File start = new File("start.sh");
+      List<String> outLines = new ArrayList<>();
+      for (String line : FileUtils.readLines(start, UTF_8)) {
+        if (StringUtils.startsWith(line, remoteWatcherVersionPrefix)) {
+          outLines.add(remoteWatcherVersionPrefix + newVersion);
+        } else if (StringUtils.startsWith(line, remoteWatcherUrlPrefix)) {
+          outLines.add(remoteWatcherUrlPrefix + watcherJarUrl);
+        } else {
+          outLines.add(line);
+        }
+      }
+      FileUtils.forceDelete(start);
+      FileUtils.touch(start);
+      FileUtils.writeLines(start, outLines);
+      Files.setPosixFilePermissions(start.toPath(),
+          Sets.newHashSet(PosixFilePermission.OWNER_READ, PosixFilePermission.OWNER_EXECUTE,
+              PosixFilePermission.OWNER_WRITE, PosixFilePermission.GROUP_READ, PosixFilePermission.OTHERS_READ));
+    } catch (Exception e) {
+      logger.error("Error modifying start script.", e);
+    }
+  }
 
+  private void upgradeWatcher(String version, String newVersion) {
     StartedProcess process = null;
     try {
       logger.info("[Old] Starting new watcher");
@@ -582,32 +608,6 @@ public class WatcherServiceImpl implements WatcherService {
       }
     } finally {
       working.set(false);
-    }
-  }
-
-  private void updateStartScript(String newVersion, String watcherJarRelativePath) {
-    String remoteWatcherVersionPrefix = "REMOTE_WATCHER_VERSION=";
-    String remoteWatcherUrlPrefix = "REMOTE_WATCHER_URL=http://wingswatchers.s3-website-us-east-1.amazonaws.com/";
-    try {
-      File start = new File("start.sh");
-      List<String> outLines = new ArrayList<>();
-      for (String line : FileUtils.readLines(start, UTF_8)) {
-        if (StringUtils.startsWith(line, remoteWatcherVersionPrefix)) {
-          outLines.add(remoteWatcherVersionPrefix + newVersion);
-        } else if (StringUtils.startsWith(line, remoteWatcherUrlPrefix)) {
-          outLines.add(remoteWatcherUrlPrefix + watcherJarRelativePath);
-        } else {
-          outLines.add(line);
-        }
-      }
-      FileUtils.forceDelete(start);
-      FileUtils.touch(start);
-      FileUtils.writeLines(start, outLines);
-      Files.setPosixFilePermissions(start.toPath(),
-          Sets.newHashSet(PosixFilePermission.OWNER_READ, PosixFilePermission.OWNER_EXECUTE,
-              PosixFilePermission.OWNER_WRITE, PosixFilePermission.GROUP_READ, PosixFilePermission.OTHERS_READ));
-    } catch (Exception e) {
-      logger.error("Error modifying start script.", e);
     }
   }
 

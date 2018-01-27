@@ -6,10 +6,6 @@ import com.google.common.util.concurrent.TimeLimiter;
 import com.google.inject.AbstractModule;
 import com.google.inject.name.Names;
 
-import com.amazonaws.auth.AWSStaticCredentialsProvider;
-import com.amazonaws.auth.AnonymousAWSCredentials;
-import com.amazonaws.services.s3.AmazonS3Client;
-import com.amazonaws.services.s3.AmazonS3ClientBuilder;
 import software.wings.utils.message.MessageService;
 import software.wings.utils.message.MessageServiceImpl;
 import software.wings.utils.message.MessengerType;
@@ -57,10 +53,5 @@ public class WatcherModule extends AbstractModule {
             new MessageServiceImpl(Clock.systemUTC(), MessengerType.WATCHER, WatcherApplication.getProcessId()));
     bind(TimeLimiter.class).toInstance(new SimpleTimeLimiter());
     bind(Clock.class).toInstance(Clock.systemUTC());
-    bind(AmazonS3Client.class)
-        .toInstance((AmazonS3Client) AmazonS3ClientBuilder.standard()
-                        .withRegion("us-east-1")
-                        .withCredentials(new AWSStaticCredentialsProvider(new AnonymousAWSCredentials()))
-                        .build());
   }
 }
