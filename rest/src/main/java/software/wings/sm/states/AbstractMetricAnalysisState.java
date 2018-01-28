@@ -178,7 +178,7 @@ public abstract class AbstractMetricAnalysisState extends AbstractAnalysisState 
     }
 
     executionResponse.getStateExecutionData().setStatus(executionStatus);
-    getLogger().info("State done with status {}", executionStatus);
+    getLogger().info("State done with status {}, id: {}", executionStatus, context.getStateExecutionInstanceId());
     return anExecutionResponse()
         .withExecutionStatus(executionStatus)
         .withStateExecutionData(executionResponse.getStateExecutionData())

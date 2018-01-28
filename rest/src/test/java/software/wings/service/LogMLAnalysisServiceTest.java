@@ -682,7 +682,6 @@ public class LogMLAnalysisServiceTest extends WingsBaseTest {
         numOfUnexpectedFreq++;
       }
     }
-
     LogMLAnalysisSummary analysisSummary =
         analysisService.getAnalysisSummary(stateExecutionId, appId, StateType.SPLUNKV2);
     assertNotNull(analysisSummary);
@@ -692,7 +691,7 @@ public class LogMLAnalysisServiceTest extends WingsBaseTest {
     assertTrue(analysisSummary.getControlClusters().isEmpty());
     String message;
     if (numOfUnexpectedFreq == 0) {
-      message = "No new data for the given queries";
+      message = "No baseline data for the given queries. This will be baseline for the next run.";
     } else if (numOfUnexpectedFreq == 1) {
       message = numOfUnexpectedFreq + " anomalous cluster found";
     } else {

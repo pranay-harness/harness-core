@@ -439,6 +439,7 @@ public class MetricAnalysisJob implements Job {
         final MetricDataAnalysisResponse response =
             MetricDataAnalysisResponse.builder().stateExecutionData(executionData).build();
         response.setExecutionStatus(status);
+        logger.info("Notifying state id:  {} , corr id: {}", context.getStateExecutionId(), context.getCorrelationId());
         waitNotifyEngine.notify(context.getCorrelationId(), response);
       }
     }
