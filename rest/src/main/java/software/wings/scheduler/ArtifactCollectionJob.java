@@ -74,6 +74,8 @@ public class ArtifactCollectionJob implements Job {
   public static final String APP_ID_KEY = "appId";
   public static final String ARTIFACT_STREAM_ID_KEY = "artifactStreamId";
 
+  public static final Duration timeout = Duration.ofMinutes(6);
+
   @Inject private ArtifactService artifactService;
   @Inject private ArtifactStreamService artifactStreamService;
   @Inject private BuildSourceService buildSourceService;
@@ -172,8 +174,7 @@ public class ArtifactCollectionJob implements Job {
 
   private void collectAmiImages(String appId, ArtifactStream artifactStream, List<Artifact> newArtifacts) {
     String artifactStreamId = artifactStream.getUuid();
-    try (AcquiredLock lock =
-             persistentLocker.acquireLock(ArtifactStream.class, artifactStreamId, Duration.ofMinutes(3))) {
+    try (AcquiredLock lock = persistentLocker.acquireLock(ArtifactStream.class, artifactStreamId, timeout)) {
       logger.info("Collecting images for artifact stream id {} type {} and source name {} ", artifactStreamId,
           artifactStream.getArtifactStreamType(), artifactStream.getSourceName());
       List<BuildDetails> builds = buildSourceService.getBuilds(appId, artifactStreamId, artifactStream.getSettingId());
@@ -209,8 +210,7 @@ public class ArtifactCollectionJob implements Job {
 
   private void collectJenkinsBambooArtifacts(String appId, ArtifactStream artifactStream, List<Artifact> newArtifacts) {
     String artifactStreamId = artifactStream.getUuid();
-    try (AcquiredLock lock =
-             persistentLocker.acquireLock(ArtifactStream.class, artifactStreamId, Duration.ofMinutes(3))) {
+    try (AcquiredLock lock = persistentLocker.acquireLock(ArtifactStream.class, artifactStreamId, timeout)) {
       logger.info("Collecting Artifact for artifact stream id {} type {} and source name {} ", artifactStreamId,
           artifactStream.getArtifactStreamType(), artifactStream.getSourceName());
       BuildDetails lastSuccessfulBuild =
@@ -252,8 +252,7 @@ public class ArtifactCollectionJob implements Job {
 
   private void collectDockerArtifacts(String appId, ArtifactStream artifactStream, List<Artifact> newArtifacts) {
     String artifactStreamId = artifactStream.getUuid();
-    try (AcquiredLock lock =
-             persistentLocker.acquireLock(ArtifactStream.class, artifactStreamId, Duration.ofMinutes(3))) {
+    try (AcquiredLock lock = persistentLocker.acquireLock(ArtifactStream.class, artifactStreamId, timeout)) {
       logger.info("Collecting tags for artifact stream id {} type {} and source name {} ", artifactStreamId,
           artifactStream.getArtifactStreamType(), artifactStream.getSourceName());
       List<BuildDetails> builds = buildSourceService.getBuilds(appId, artifactStreamId, artifactStream.getSettingId());
@@ -288,8 +287,7 @@ public class ArtifactCollectionJob implements Job {
 
   private void collectS3Artifacts(
       String appId, ArtifactStream artifactStream, List<Artifact> newArtifacts, String artifactStreamId) {
-    try (AcquiredLock lock =
-             persistentLocker.acquireLock(ArtifactStream.class, artifactStreamId, Duration.ofMinutes(3))) {
+    try (AcquiredLock lock = persistentLocker.acquireLock(ArtifactStream.class, artifactStreamId, timeout)) {
       logger.info("Collecting Artifact for artifact stream {} ", AMAZON_S3.name());
       List<BuildDetails> builds = buildSourceService.getBuilds(appId, artifactStreamId, artifactStream.getSettingId());
       List<Artifact> artifacts = artifactService
@@ -342,8 +340,7 @@ public class ArtifactCollectionJob implements Job {
   private void collectArtifactoryGenericArtifacts(
       String appId, ArtifactStream artifactStream, List<Artifact> newArtifacts, ArtifactType artifactType) {
     String artifactStreamId = artifactStream.getUuid();
-    try (AcquiredLock lock =
-             persistentLocker.acquireLock(ArtifactStream.class, artifactStreamId, Duration.ofMinutes(3))) {
+    try (AcquiredLock lock = persistentLocker.acquireLock(ArtifactStream.class, artifactStreamId, timeout)) {
       logger.info("Collecting Artifact for artifact stream id {} type {} and source name {} ", artifactStreamId,
           artifactStream.getArtifactStreamType(), artifactStream.getSourceName());
       BuildDetails latestVersion =
@@ -379,8 +376,7 @@ public class ArtifactCollectionJob implements Job {
   private void collectMavenArtifactoryArtifacts(
       String appId, ArtifactStream artifactStream, List<Artifact> newArtifacts) {
     String artifactStreamId = artifactStream.getUuid();
-    try (AcquiredLock lock =
-             persistentLocker.acquireLock(ArtifactStream.class, artifactStreamId, Duration.ofMinutes(3))) {
+    try (AcquiredLock lock = persistentLocker.acquireLock(ArtifactStream.class, artifactStreamId, timeout)) {
       logger.info("Collecting Artifact for artifact stream id {} type {} and source name {} ", artifactStreamId,
           artifactStream.getArtifactStreamType(), artifactStream.getSourceName());
       List<BuildDetails> builds = buildSourceService.getBuilds(appId, artifactStreamId, artifactStream.getSettingId());
@@ -413,8 +409,7 @@ public class ArtifactCollectionJob implements Job {
   private void collectArtifactoryDockerArtifacts(
       String appId, ArtifactStream artifactStream, List<Artifact> newArtifacts) {
     String artifactStreamId = artifactStream.getUuid();
-    try (AcquiredLock lock =
-             persistentLocker.acquireLock(ArtifactStream.class, artifactStreamId, Duration.ofMinutes(3))) {
+    try (AcquiredLock lock = persistentLocker.acquireLock(ArtifactStream.class, artifactStreamId, timeout)) {
       logger.info("Collecting Artifact for artifact stream id {} type {} and source name {} ", artifactStreamId,
           artifactStream.getArtifactStreamType(), artifactStream.getSourceName());
       List<BuildDetails> builds = buildSourceService.getBuilds(appId, artifactStreamId, artifactStream.getSettingId());
@@ -459,8 +454,7 @@ public class ArtifactCollectionJob implements Job {
 
   private void collectNexusGenericArtifacts(String appId, ArtifactStream artifactStream, List<Artifact> newArtifacts) {
     String artifactStreamId = artifactStream.getUuid();
-    try (AcquiredLock lock =
-             persistentLocker.acquireLock(ArtifactStream.class, artifactStreamId, Duration.ofMinutes(3))) {
+    try (AcquiredLock lock = persistentLocker.acquireLock(ArtifactStream.class, artifactStreamId, timeout)) {
       logger.info("Collecting artifact for artifact stream id {} type {} and source name {} ", artifactStreamId,
           artifactStream.getArtifactStreamType(), artifactStream.getSourceName());
 
@@ -495,8 +489,7 @@ public class ArtifactCollectionJob implements Job {
 
   private void collectNexusMavenArtifacts(String appId, ArtifactStream artifactStream, List<Artifact> newArtifacts) {
     String artifactStreamId = artifactStream.getUuid();
-    try (AcquiredLock lock =
-             persistentLocker.acquireLock(ArtifactStream.class, artifactStreamId, Duration.ofMinutes(3))) {
+    try (AcquiredLock lock = persistentLocker.acquireLock(ArtifactStream.class, artifactStreamId, timeout)) {
       logger.info("Collecting tags for artifact stream id {} type {} and source name {} ", artifactStreamId,
           artifactStream.getArtifactStreamType(), artifactStream.getSourceName());
       List<BuildDetails> builds = buildSourceService.getBuilds(appId, artifactStreamId, artifactStream.getSettingId());
