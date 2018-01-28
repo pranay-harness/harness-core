@@ -9,12 +9,15 @@ import static software.wings.beans.Application.Builder.anApplication;
 import static software.wings.beans.CanaryOrchestrationWorkflow.CanaryOrchestrationWorkflowBuilder.aCanaryOrchestrationWorkflow;
 import static software.wings.beans.Environment.Builder.anEnvironment;
 import static software.wings.beans.NotificationRule.NotificationRuleBuilder.aNotificationRule;
+import static software.wings.beans.artifact.Artifact.Builder.anArtifact;
+import static software.wings.common.Constants.BUILD_NO;
 import static software.wings.utils.WingsTestConstants.APP_ID;
 import static software.wings.utils.WingsTestConstants.ENV_ID;
 import static software.wings.utils.WingsTestConstants.ENV_NAME;
 import static software.wings.utils.WingsTestConstants.WORKFLOW_EXECUTION_ID;
 import static software.wings.utils.WingsTestConstants.WORKFLOW_NAME;
 
+import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
 import com.google.inject.Inject;
 
@@ -54,6 +57,11 @@ public class WorkflowNotificationHelperTest extends WingsBaseTest {
   @Before
   public void setUp() throws Exception {
     when(executionContext.getApp()).thenReturn(anApplication().withUuid(APP_ID).build());
+    when(executionContext.getArtifacts())
+        .thenReturn(ImmutableList.of(anArtifact()
+                                         .withArtifactSourceName("artifact-1")
+                                         .withMetadata(ImmutableMap.of(BUILD_NO, "build-1"))
+                                         .build()));
     when(executionContext.getEnv())
         .thenReturn(anEnvironment().withUuid(ENV_ID).withName(ENV_NAME).withAppId(APP_ID).build());
     when(executionContext.getWorkflowExecutionId()).thenReturn(WORKFLOW_EXECUTION_ID);
@@ -69,8 +77,7 @@ public class WorkflowNotificationHelperTest extends WingsBaseTest {
     CanaryOrchestrationWorkflow canaryOrchestrationWorkflow =
         aCanaryOrchestrationWorkflow().withNotificationRules(asList(notificationRule)).build();
 
-    when(((ExecutionContextImpl) executionContext).getStateMachine().getOrchestrationWorkflow())
-        .thenReturn(canaryOrchestrationWorkflow);
+    when(executionContext.getStateMachine().getOrchestrationWorkflow()).thenReturn(canaryOrchestrationWorkflow);
     when(workflowExecutionService.getExecutionDetails(APP_ID, WORKFLOW_EXECUTION_ID))
         .thenReturn(WorkflowExecutionBuilder.aWorkflowExecution().withStartTs(System.currentTimeMillis()).build());
 
@@ -85,7 +92,8 @@ public class WorkflowNotificationHelperTest extends WingsBaseTest {
     assertThat(notification).isInstanceOf(FailureNotification.class);
     assertThat(notification.getNotificationTemplateId())
         .isEqualTo(NotificationMessageType.WORKFLOW_FAILED_NOTIFICATION.name());
-    ImmutableMap<String, String> placeholders = ImmutableMap.of("WORKFLOW_NAME", WORKFLOW_NAME, "ENV_NAME", ENV_NAME);
+    ImmutableMap<String, String> placeholders =
+        ImmutableMap.of("WORKFLOW_NAME", WORKFLOW_NAME, "ARTIFACTS", "artifact-1(build-1)", "ENV_NAME", ENV_NAME);
     assertThat(notification.getNotificationTemplateVariables()).containsAllEntriesOf(placeholders);
   }
 
@@ -98,8 +106,7 @@ public class WorkflowNotificationHelperTest extends WingsBaseTest {
     CanaryOrchestrationWorkflow canaryOrchestrationWorkflow =
         aCanaryOrchestrationWorkflow().withNotificationRules(asList(notificationRule)).build();
 
-    when(((ExecutionContextImpl) executionContext).getStateMachine().getOrchestrationWorkflow())
-        .thenReturn(canaryOrchestrationWorkflow);
+    when(executionContext.getStateMachine().getOrchestrationWorkflow()).thenReturn(canaryOrchestrationWorkflow);
     when(workflowExecutionService.getExecutionDetails(APP_ID, WORKFLOW_EXECUTION_ID))
         .thenReturn(WorkflowExecutionBuilder.aWorkflowExecution().withStartTs(System.currentTimeMillis()).build());
 
@@ -118,8 +125,8 @@ public class WorkflowNotificationHelperTest extends WingsBaseTest {
     assertThat(notification).isInstanceOf(FailureNotification.class);
     assertThat(notification.getNotificationTemplateId())
         .isEqualTo(NotificationMessageType.WORKFLOW_PHASE_FAILED_NOTIFICATION.name());
-    ImmutableMap<String, String> placeholders =
-        ImmutableMap.of("WORKFLOW_NAME", WORKFLOW_NAME, "PHASE_NAME", "Phase1", "ENV_NAME", ENV_NAME);
+    ImmutableMap<String, String> placeholders = ImmutableMap.of("WORKFLOW_NAME", WORKFLOW_NAME, "PHASE_NAME", "Phase1",
+        "ARTIFACTS", "artifact-1(build-1)", "ENV_NAME", ENV_NAME);
     assertThat(notification.getNotificationTemplateVariables()).containsAllEntriesOf(placeholders);
   }
 }

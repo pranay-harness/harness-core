@@ -1,6 +1,7 @@
 package software.wings.service.impl;
 
 import static io.harness.data.structure.EmptyPredicate.isEmpty;
+import static java.util.stream.Collectors.toList;
 import static software.wings.beans.FailureNotification.Builder.aFailureNotification;
 import static software.wings.beans.InformationNotification.Builder.anInformationNotification;
 import static software.wings.beans.OrchestrationWorkflowType.BUILD;
@@ -17,6 +18,7 @@ import static software.wings.sm.ExecutionStatus.RESUMED;
 import static software.wings.sm.ExecutionStatus.SUCCESS;
 import static software.wings.utils.Switch.unhandled;
 
+import com.google.common.base.Joiner;
 import com.google.inject.Inject;
 import com.google.inject.Singleton;
 
@@ -32,6 +34,7 @@ import software.wings.beans.InformationNotification;
 import software.wings.beans.NotificationRule;
 import software.wings.beans.OrchestrationWorkflow;
 import software.wings.beans.WorkflowExecution;
+import software.wings.beans.artifact.Artifact;
 import software.wings.common.NotificationMessageResolver.NotificationMessageType;
 import software.wings.service.intfc.NotificationService;
 import software.wings.service.intfc.WorkflowExecutionService;
@@ -48,6 +51,7 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Optional;
+
 /**
  * Created by anubhaw on 4/7/17.
  */
@@ -71,12 +75,13 @@ public class WorkflowNotificationHelper {
 
     WorkflowExecution executionDetails =
         workflowExecutionService.getExecutionDetails(app.getUuid(), context.getWorkflowExecutionId());
-    Map<String, String> placeHolders = new HashMap<>();
-    placeHolders.put("WORKFLOW_NAME", context.getWorkflowExecutionName());
+    Map<String, String> placeHolderValues = new HashMap<>();
+    placeHolderValues.put("WORKFLOW_NAME", context.getWorkflowExecutionName());
+    placeHolderValues.put("ARTIFACTS", getArtifactsMessage(context));
     if (!BUILD.equals(context.getOrchestrationWorkflowType())) {
-      placeHolders.put("ENV_NAME", env.getName());
+      placeHolderValues.put("ENV_NAME", env.getName());
     }
-    placeHolders.put("DATE", getDateString(executionDetails.getStartTs()));
+    placeHolderValues.put("DATE", getDateString(executionDetails.getStartTs()));
 
     String messageTemplate = null;
 
@@ -110,10 +115,10 @@ public class WorkflowNotificationHelper {
                                                  .withEntityId(context.getWorkflowExecutionId())
                                                  .withEntityType(EntityType.ORCHESTRATED_DEPLOYMENT)
                                                  .withNotificationTemplateId(messageTemplate)
-                                                 .withNotificationTemplateVariables(placeHolders)
+                                                 .withNotificationTemplateVariables(placeHolderValues)
                                                  .build();
       notificationService.sendNotificationAsync(notification, notificationRules);
-    } else if (status == FAILED || status == ABORTED) {
+    } else {
       FailureNotification notification = aFailureNotification()
                                              .withAccountId(app.getAccountId())
                                              .withAppId(app.getUuid())
@@ -122,12 +127,10 @@ public class WorkflowNotificationHelper {
                                              .withEntityType(EntityType.ORCHESTRATED_DEPLOYMENT)
                                              .withEntityName("Deployment")
                                              .withNotificationTemplateId(messageTemplate)
-                                             .withNotificationTemplateVariables(placeHolders)
+                                             .withNotificationTemplateVariables(placeHolderValues)
                                              .withExecutionId(context.getWorkflowExecutionId())
                                              .build();
       notificationService.sendNotificationAsync(notification, notificationRules);
-    } else {
-      logger.info("No template found for workflow status " + status);
     }
   }
 
@@ -140,8 +143,7 @@ public class WorkflowNotificationHelper {
     List<NotificationRule> filteredNotificationRules = new ArrayList<>();
     OrchestrationWorkflow orchestrationWorkflow = context.getStateMachine().getOrchestrationWorkflow();
     if (orchestrationWorkflow instanceof CanaryOrchestrationWorkflow) {
-      List<NotificationRule> notificationRules =
-          ((CanaryOrchestrationWorkflow) orchestrationWorkflow).getNotificationRules();
+      List<NotificationRule> notificationRules = orchestrationWorkflow.getNotificationRules();
       for (NotificationRule notificationRule : notificationRules) {
         if (executionScope.equals(notificationRule.getExecutionScope()) && notificationRule.getConditions() != null
             && notificationRule.getConditions().contains(status)) {
@@ -170,11 +172,12 @@ public class WorkflowNotificationHelper {
     Environment env = ((ExecutionContextImpl) context).getEnv();
     Application app = ((ExecutionContextImpl) context).getApp();
 
-    Map<String, String> placeHolders = new HashMap<>();
-    placeHolders.put("WORKFLOW_NAME", context.getWorkflowExecutionName());
-    placeHolders.put("PHASE_NAME", phaseSubWorkflow.getName());
-    placeHolders.put("ENV_NAME", env.getName());
-    placeHolders.put("DATE", getDateString(executionDetails.getStartTs()));
+    Map<String, String> placeHolderValues = new HashMap<>();
+    placeHolderValues.put("WORKFLOW_NAME", context.getWorkflowExecutionName());
+    placeHolderValues.put("PHASE_NAME", phaseSubWorkflow.getName());
+    placeHolderValues.put("ARTIFACTS", getArtifactsMessage(context));
+    placeHolderValues.put("ENV_NAME", env.getName());
+    placeHolderValues.put("DATE", getDateString(executionDetails.getStartTs()));
 
     if (status.equals(SUCCESS) || status.equals(PAUSED)) {
       String messageTemplate = status.equals(SUCCESS)
@@ -186,7 +189,7 @@ public class WorkflowNotificationHelper {
                                                  .withEntityId(context.getWorkflowExecutionId())
                                                  .withEntityType(EntityType.ORCHESTRATED_DEPLOYMENT)
                                                  .withNotificationTemplateId(messageTemplate)
-                                                 .withNotificationTemplateVariables(placeHolders)
+                                                 .withNotificationTemplateVariables(placeHolderValues)
                                                  .build();
       notificationService.sendNotificationAsync(notification, notificationRules);
     } else if (status.equals(FAILED)) {
@@ -199,12 +202,20 @@ public class WorkflowNotificationHelper {
               .withEntityType(EntityType.ORCHESTRATED_DEPLOYMENT)
               .withEntityName("Deployment")
               .withNotificationTemplateId(NotificationMessageType.WORKFLOW_PHASE_FAILED_NOTIFICATION.name())
-              .withNotificationTemplateVariables(placeHolders)
+              .withNotificationTemplateVariables(placeHolderValues)
               .withExecutionId(context.getWorkflowExecutionId())
               .build();
       notificationService.sendNotificationAsync(notification, notificationRules);
     } else {
       logger.info("No template found for workflow status " + status);
     }
+  }
+
+  private String getArtifactsMessage(ExecutionContext context) {
+    List<Artifact> artifacts = ((ExecutionContextImpl) context).getArtifacts();
+    return Joiner.on(", ").join(
+        artifacts.stream()
+            .map(artifact -> artifact.getArtifactSourceName() + "(" + artifact.getBuildNo() + ")")
+            .collect(toList()));
   }
 }
