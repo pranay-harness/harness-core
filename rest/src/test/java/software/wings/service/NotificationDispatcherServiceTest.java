@@ -18,6 +18,7 @@ import static software.wings.common.NotificationMessageResolver.NotificationMess
 import static software.wings.common.NotificationMessageResolver.NotificationMessageType.WORKFLOW_PHASE_SUCCESSFUL_NOTIFICATION;
 import static software.wings.utils.WingsTestConstants.ACCOUNT_ID;
 import static software.wings.utils.WingsTestConstants.APP_ID;
+import static software.wings.utils.WingsTestConstants.ARTIFACTS;
 import static software.wings.utils.WingsTestConstants.ENV_NAME;
 import static software.wings.utils.WingsTestConstants.NOTIFICATION_BATCH_ID;
 import static software.wings.utils.WingsTestConstants.NOTIFICATION_GROUP_ID;
@@ -256,15 +257,16 @@ public class NotificationDispatcherServiceTest extends WingsBaseTest {
     NotificationRule notificationRule = aNotificationRule().addNotificationGroup(notificationGroup).build();
     when(notificationSetupService.readNotificationGroup(APP_ID, NOTIFICATION_GROUP_ID)).thenReturn(notificationGroup);
 
-    InformationNotification notification = anInformationNotification()
-                                               .withAccountId(ACCOUNT_ID)
-                                               .withAppId(APP_ID)
-                                               .withEntityId(WORKFLOW_EXECUTION_ID)
-                                               .withEntityType(ORCHESTRATED_DEPLOYMENT)
-                                               .withNotificationTemplateId(ENTITY_CREATE_NOTIFICATION.name())
-                                               .withNotificationTemplateVariables(ImmutableMap.of("WORKFLOW_NAME",
-                                                   WORKFLOW_NAME, "ENV_NAME", ENV_NAME, "DATE", "DATE"))
-                                               .build();
+    InformationNotification notification =
+        anInformationNotification()
+            .withAccountId(ACCOUNT_ID)
+            .withAppId(APP_ID)
+            .withEntityId(WORKFLOW_EXECUTION_ID)
+            .withEntityType(ORCHESTRATED_DEPLOYMENT)
+            .withNotificationTemplateId(ENTITY_CREATE_NOTIFICATION.name())
+            .withNotificationTemplateVariables(ImmutableMap.of(
+                "WORKFLOW_NAME", WORKFLOW_NAME, "ENV_NAME", ENV_NAME, "ARTIFACTS", ARTIFACTS, "DATE", "DATE"))
+            .build();
 
     SlackConfig slackConfig = aSlackConfig().withOutgoingWebhookUrl(WingsTestConstants.PORTAL_URL).build();
     when(settingsService.getGlobalSettingAttributesByType(ACCOUNT_ID, SettingVariableTypes.SLACK.name()))

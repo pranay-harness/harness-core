@@ -238,6 +238,8 @@ public class WingsTestConstants {
    */
   public static final String ARTIFACT_PATH = "ARTIFACT_PATH";
 
+  public static final String ARTIFACTS = "ARTIFACTS";
+
   /**
    * The constant USER_NAME.
    */
