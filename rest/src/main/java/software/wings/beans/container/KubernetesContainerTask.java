@@ -185,7 +185,17 @@ public class KubernetesContainerTask extends ContainerTask {
     return createController(DUMMY_CONTAINER_NAME, DUMMY_DOCKER_IMAGE_NAME, DUMMY_SECRET_NAME).getClass();
   }
 
+  public Class<? extends HasMetadata> kubernetesType(boolean ignoreServiceVariables) {
+    return createController(DUMMY_CONTAINER_NAME, DUMMY_DOCKER_IMAGE_NAME, DUMMY_SECRET_NAME, ignoreServiceVariables)
+        .getClass();
+  }
+
   public HasMetadata createController(String containerName, String imageNameTag, String secretName) {
+    return createController(containerName, imageNameTag, secretName, false);
+  }
+
+  public HasMetadata createController(
+      String containerName, String imageNameTag, String secretName, boolean ignoreServiceVariables) {
     String configTemplate;
     AdvancedType type;
     if (isNotEmpty(getAdvancedConfig())) {
@@ -199,6 +209,14 @@ public class KubernetesContainerTask extends ContainerTask {
     String config = configTemplate.replaceAll(DOCKER_IMAGE_NAME_PLACEHOLDER_REGEX, imageNameTag)
                         .replaceAll(CONTAINER_NAME_PLACEHOLDER_REGEX, containerName)
                         .replaceAll(SECRET_NAME_PLACEHOLDER_REGEX, secretName);
+
+    if (ignoreServiceVariables) {
+      // TODO: Do it right way later
+      // extra step to replace with the dummy service vars
+
+      config = config.replaceAll(SERVICE_VAR_PLACEHOLDER_REGEX, DUMMY_SERVICE_VAR)
+                   .replaceAll(WORKFLOW_VAR_PLACEHOLDER_REGEX, DUMMY_WORKFLOW_VAR);
+    }
 
     try {
       return type == JSON ? (HasMetadata) KubernetesHelper.loadJson(config) : KubernetesHelper.loadYaml(config);
