@@ -88,8 +88,7 @@ public class WorkflowResource {
                       searchFilter -> searchFilter.getFieldName().equals("workflowType")))) {
       pageRequest.addFilter("workflowType", WorkflowType.ORCHESTRATION, Operator.EQ);
     }
-    PageResponse<Workflow> workflows = workflowService.listWorkflows(pageRequest, previousExecutionsCount);
-    return new RestResponse<>(workflows);
+    return new RestResponse<>(workflowService.listWorkflows(pageRequest, previousExecutionsCount));
   }
 
   /**
@@ -431,5 +430,13 @@ public class WorkflowResource {
   public RestResponse<Map<String, String>> stateDefaults(@QueryParam("appId") String appId,
       @QueryParam("serviceId") String serviceId, @QueryParam("stateType") String strStateType) {
     return new RestResponse<>(workflowService.getStateDefaults(appId, serviceId, StateType.valueOf(strStateType)));
+  }
+
+  @GET
+  @Path("{workflowId}/infra-types")
+  @Timed
+  public RestResponse<Boolean> workflowHasAwsAsgInfraMapping(
+      @QueryParam("appId") String appId, @PathParam("workflowId") String workflowId) {
+    return new RestResponse(workflowService.workflowHasAwsInfraMapping(appId, workflowId));
   }
 }

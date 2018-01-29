@@ -344,6 +344,11 @@ public class InstanceServiceImpl implements InstanceService {
     wingsPersistence.delete(query);
   }
 
+  @Override
+  public PageResponse<Instance> list(PageRequest<Instance> pageRequest) {
+    return wingsPersistence.query(Instance.class, pageRequest);
+  }
+
   /**
    * returns if the instance in db needs to be updated or not.
    * This method returns true only if the task

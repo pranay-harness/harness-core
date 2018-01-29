@@ -838,6 +838,8 @@ public class WorkflowExecutionServiceImpl implements WorkflowExecutionService {
 
     stdParams.setExecutionCredential(executionArgs.getExecutionCredential());
 
+    stdParams.setExcludeHostsWithSameArtifact(executionArgs.isExcludeHostsWithSameArtifact());
+
     return triggerExecution(
         workflowExecution, stateMachine, new CanaryWorkflowExecutionAdvisor(), workflowExecutionUpdate, stdParams);
   }

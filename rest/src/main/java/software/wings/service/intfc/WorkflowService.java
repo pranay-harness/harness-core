@@ -205,4 +205,6 @@ public interface WorkflowService extends OwnedByApplication, OwnedByEnvironment 
    */
   void pruneDescendingEntities(@org.hibernate.validator.constraints.NotEmpty String appId,
       @org.hibernate.validator.constraints.NotEmpty String workflowId);
+
+  boolean workflowHasAwsInfraMapping(String appId, String workflowId);
 }

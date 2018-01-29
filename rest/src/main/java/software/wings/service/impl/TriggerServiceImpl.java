@@ -10,6 +10,7 @@ import static software.wings.beans.ErrorCode.INVALID_ARGUMENT;
 import static software.wings.beans.ErrorCode.INVALID_REQUEST;
 import static software.wings.beans.ExecutionCredential.ExecutionType.SSH;
 import static software.wings.beans.OrchestrationWorkflowType.BUILD;
+import static software.wings.beans.ResponseMessage.aResponseMessage;
 import static software.wings.beans.SSHExecutionCredential.Builder.aSSHExecutionCredential;
 import static software.wings.beans.SearchFilter.Operator.EQ;
 import static software.wings.beans.SortOrder.Builder.aSortOrder;
@@ -41,11 +42,14 @@ import net.redhogs.cronparser.I18nMessages;
 import net.redhogs.cronparser.Options;
 import org.apache.commons.collections.MapUtils;
 import org.apache.commons.lang3.StringUtils;
+import org.mongodb.morphia.query.Sort;
 import org.quartz.CronScheduleBuilder;
 import org.quartz.TriggerKey;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import software.wings.beans.Base;
 import software.wings.beans.ExecutionArgs;
+import software.wings.beans.InfrastructureMapping;
 import software.wings.beans.Pipeline;
 import software.wings.beans.PipelineStage;
 import software.wings.beans.PipelineStage.PipelineStageElement;
@@ -60,9 +64,12 @@ import software.wings.beans.artifact.ArtifactFile;
 import software.wings.beans.artifact.ArtifactStream;
 import software.wings.beans.trigger.ArtifactSelection;
 import software.wings.beans.trigger.ArtifactTriggerCondition;
+import software.wings.beans.trigger.NewInstanceTriggerCondition;
 import software.wings.beans.trigger.PipelineTriggerCondition;
 import software.wings.beans.trigger.ScheduledTriggerCondition;
+import software.wings.beans.trigger.ServiceInfraWorkflow;
 import software.wings.beans.trigger.Trigger;
+import software.wings.beans.trigger.TriggerConditionType;
 import software.wings.beans.trigger.WebHookTriggerCondition;
 import software.wings.beans.trigger.WebhookParameters;
 import software.wings.dl.PageRequest;
@@ -73,6 +80,7 @@ import software.wings.scheduler.QuartzScheduler;
 import software.wings.scheduler.ScheduledTriggerJob;
 import software.wings.service.intfc.ArtifactService;
 import software.wings.service.intfc.ArtifactStreamService;
+import software.wings.service.intfc.InfrastructureMappingService;
 import software.wings.service.intfc.PipelineService;
 import software.wings.service.intfc.ServiceResourceService;
 import software.wings.service.intfc.TriggerService;
@@ -82,10 +90,10 @@ import software.wings.utils.CryptoUtil;
 import software.wings.utils.Validator;
 
 import java.util.ArrayList;
+import java.util.Collections;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
-import java.util.Objects;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.ExecutorService;
 import java.util.function.Function;
@@ -111,6 +119,7 @@ public class TriggerServiceImpl implements TriggerService {
   @Inject private PipelineService pipelineService;
   @Inject private ServiceResourceService serviceResourceService;
   @Inject private WorkflowService workflowService;
+  @Inject private InfrastructureMappingService infrastructureMappingService;
 
   @Inject @Named("JobScheduler") private QuartzScheduler jobScheduler;
 
@@ -196,7 +205,6 @@ public class TriggerServiceImpl implements TriggerService {
         .filter(trigger
             -> trigger.getCondition().getConditionType().equals(PIPELINE_COMPLETION)
                 && ((PipelineTriggerCondition) trigger.getCondition()).getPipelineId().equals(pipelineId))
-        .filter(Objects::nonNull)
         .collect(toList())
         .forEach(trigger -> delete(appId, trigger.getUuid()));
   }
@@ -220,7 +228,6 @@ public class TriggerServiceImpl implements TriggerService {
         .filter(trigger
             -> trigger.getCondition().getConditionType().equals(NEW_ARTIFACT)
                 && ((ArtifactTriggerCondition) trigger.getCondition()).getArtifactStreamId().equals(artifactStreamId))
-        .filter(Objects::nonNull)
         .collect(toList())
         .forEach(trigger -> deleteTrigger(trigger.getUuid()));
   }
@@ -411,7 +418,7 @@ public class TriggerServiceImpl implements TriggerService {
         }
       }
       if (workflowServices != null) {
-        services = workflowServices.stream().collect(Collectors.toMap(o -> o.getUuid(), o -> o.getName()));
+        services = workflowServices.stream().collect(Collectors.toMap(Base::getUuid, Service::getName));
       }
     } else {
       Pipeline pipeline = null;
@@ -423,7 +430,7 @@ public class TriggerServiceImpl implements TriggerService {
       if (pipeline == null) {
         throw new WingsException("Pipeline " + trigger.getWorkflowName() + " does not exist.");
       }
-      services = pipeline.getServices().stream().collect(Collectors.toMap(o -> o.getUuid(), o -> o.getName()));
+      services = pipeline.getServices().stream().collect(Collectors.toMap(Base::getUuid, Service::getName));
     }
     Map<String, String> finalServices = services;
     trigger.getArtifactSelections()
@@ -463,7 +470,6 @@ public class TriggerServiceImpl implements TriggerService {
                                         && ((ArtifactTriggerCondition) trigger.getCondition())
                                                .getArtifactStreamId()
                                                .equals(artifact.getArtifactStreamId()))
-                                .filter(Objects::nonNull)
                                 .collect(toList())) {
       logger.info("Trigger found for artifact streamId {}", artifact.getArtifactStreamId());
       ArtifactTriggerCondition artifactTriggerCondition = (ArtifactTriggerCondition) trigger1.getCondition();
@@ -507,8 +513,7 @@ public class TriggerServiceImpl implements TriggerService {
         .filter(trigger
             -> trigger.getCondition().getConditionType().equals(PIPELINE_COMPLETION)
                 && ((PipelineTriggerCondition) trigger.getCondition()).getPipelineId().equals(sourcePipelineId))
-        .filter(Objects::nonNull)
-        .filter(distinctByKey(trigger -> trigger.getWorkflowId()))
+        .filter(distinctByKey(Trigger::getWorkflowId))
         .collect(toList())
         .forEach(trigger -> {
 
@@ -681,8 +686,7 @@ public class TriggerServiceImpl implements TriggerService {
     WorkflowExecution workflowExecution;
     ExecutionArgs executionArgs = new ExecutionArgs();
     if (artifacts != null) {
-      executionArgs.setArtifacts(
-          artifacts.stream().filter(distinctByKey(artifact -> artifact.getUuid())).collect(toList()));
+      executionArgs.setArtifacts(artifacts.stream().filter(distinctByKey(Base::getUuid)).collect(toList()));
     }
     executionArgs.setOrchestrationId(trigger.getWorkflowId());
     executionArgs.setExecutionCredential(aSSHExecutionCredential().withExecutionType(SSH).build());
@@ -716,11 +720,11 @@ public class TriggerServiceImpl implements TriggerService {
 
     } else {
       logger.info(
-          "Triggering  execution of appId {} with stream pipeline id {}", trigger.getAppId(), trigger.getWorkflowId());
+          "Triggering  execution of appId {} with  pipeline id {}", trigger.getAppId(), trigger.getWorkflowId());
       workflowExecution =
           workflowExecutionService.triggerPipelineExecution(trigger.getAppId(), trigger.getWorkflowId(), executionArgs);
-      logger.info("Pipeline execution of appId {} with stream pipeline id {} triggered", trigger.getAppId(),
-          trigger.getWorkflowId());
+      logger.info(
+          "Pipeline execution of appId {} with  pipeline id {} triggered", trigger.getAppId(), trigger.getWorkflowId());
     }
     return workflowExecution;
   }
@@ -824,13 +828,75 @@ public class TriggerServiceImpl implements TriggerService {
     return webhookParameters;
   }
 
+  @Override
+  public boolean triggerExecutionByServiceInfra(String appId, String infraMappingId) {
+    logger.info("Received the trigger execution for appId {} and infraMappingId {}");
+    InfrastructureMapping infrastructureMapping = infrastructureMappingService.get(appId, infraMappingId);
+    if (infrastructureMapping == null) {
+      throw new WingsException(INVALID_REQUEST)
+          .addParam("message", "Infrastructure Mapping" + infraMappingId + " does not exist");
+    }
+    List<Trigger> triggers =
+        getTriggersByApp(appId)
+            .stream()
+            .filter(trigger -> trigger.getCondition().getConditionType().equals(TriggerConditionType.NEW_INSTANCE))
+            .collect(toList());
+    String serviceId = infrastructureMapping.getServiceId();
+    String envId = infrastructureMapping.getEnvId();
+    List<ServiceInfraWorkflow> serviceInfraWorkflows =
+        triggers.stream()
+            .filter(trigger -> trigger.getServiceInfraWorkflows() != null)
+            .flatMap(trigger -> trigger.getServiceInfraWorkflows().stream())
+            .filter(serviceInfraWorkflow
+                -> serviceInfraWorkflow.getInfraMappingId() != null
+                    && serviceInfraWorkflow.getInfraMappingId().equals(infraMappingId))
+            .filter(distinctByKey(ServiceInfraWorkflow::getWorkflowId))
+            .collect(Collectors.toList());
+
+    List<String> serviceIds = Collections.singletonList(serviceId);
+    List<String> envIds = Collections.singletonList(envId);
+    serviceInfraWorkflows.forEach(serviceInfraWorkflow -> {
+      if (serviceInfraWorkflow.getWorkflowType() == null
+          || serviceInfraWorkflow.getWorkflowType().equals(ORCHESTRATION)) {
+        logger.info("Retrieving the last workflow execution for workflowId {} and infraMappingId {}",
+            serviceInfraWorkflow.getWorkflowId(), infraMappingId);
+        WorkflowExecution workflowExecution = wingsPersistence.createQuery(WorkflowExecution.class)
+                                                  .field("workflowType")
+                                                  .equal(ORCHESTRATION)
+                                                  .field("workflowId")
+                                                  .equal(serviceInfraWorkflow.getWorkflowId())
+                                                  .field("appId")
+                                                  .equal(appId)
+                                                  .field("status")
+                                                  .equal(SUCCESS)
+                                                  .field("serviceIds")
+                                                  .in(serviceIds)
+                                                  .field("envIds")
+                                                  .in(envIds)
+                                                  .offset(1)
+                                                  .order(Sort.descending("createdAt"))
+                                                  .get();
+        if (workflowExecution == null) {
+          logger.warn("No Last workflow execution found for workflowId {} and infraMappingId {}",
+              serviceInfraWorkflow.getWorkflowId(), serviceInfraWorkflow.getInfraMappingId());
+        } else {
+          logger.info("Triggering workflow execution {}  for appId {} and infraMappingId {}",
+              workflowExecution.getUuid(), workflowExecution.getWorkflowId(), infraMappingId);
+          workflowExecutionService.triggerEnvExecution(
+              appId, workflowExecution.getEnvId(), workflowExecution.getExecutionArgs());
+        }
+      }
+    });
+    return true;
+  }
+
   private ArtifactStream validateArtifactStream(String appId, String artifactStreamId) {
     ArtifactStream artifactStream = artifactStreamService.get(appId, artifactStreamId);
     notNullCheck("ArtifactStream", artifactStream);
     return artifactStream;
   }
 
-  private void validateAndSetTriggerCondition(Trigger trigger, List<Service> services) {
+  private void validateAndSetTriggerCondition(Trigger trigger) {
     switch (trigger.getCondition().getConditionType()) {
       case NEW_ARTIFACT:
         ArtifactTriggerCondition artifactTriggerCondition = (ArtifactTriggerCondition) trigger.getCondition();
@@ -857,6 +923,11 @@ public class TriggerServiceImpl implements TriggerService {
       case SCHEDULED:
         ScheduledTriggerCondition scheduledTriggerCondition = (ScheduledTriggerCondition) trigger.getCondition();
         notNullCheck("CronExpression", scheduledTriggerCondition.getCronExpression());
+        break;
+      case NEW_INSTANCE:
+        NewInstanceTriggerCondition newInstanceTriggerCondition = (NewInstanceTriggerCondition) trigger.getCondition();
+        notNullCheck("NewInstanceTriggerCondition", newInstanceTriggerCondition);
+        validateAndSetServiceInfraWorkflows(trigger);
         break;
       default:
         throw new WingsException(INVALID_REQUEST).addParam("message", "Invalid trigger condition type");
@@ -919,7 +990,8 @@ public class TriggerServiceImpl implements TriggerService {
         case PIPELINE_SOURCE:
           break;
         default:
-          throw new WingsException(INVALID_REQUEST).addParam("message", "Invalid artifact selection type");
+          throw new WingsException(aResponseMessage().code(INVALID_REQUEST).build())
+              .addParam("message", "Invalid artifact selection type");
       }
       if (serviceIdNames.get(artifactSelection.getServiceId()) == null) {
         service = serviceResourceService.get(trigger.getAppId(), artifactSelection.getServiceId(), false);
@@ -929,6 +1001,27 @@ public class TriggerServiceImpl implements TriggerService {
         artifactSelection.setServiceName(serviceIdNames.get(artifactSelection.getServiceId()));
       }
     });
+  }
+
+  private void validateAndSetServiceInfraWorkflows(Trigger trigger) {
+    List<ServiceInfraWorkflow> serviceInfraWorkflows = trigger.getServiceInfraWorkflows();
+    if (serviceInfraWorkflows != null) {
+      serviceInfraWorkflows.forEach(serviceInfraWorkflow -> {
+        InfrastructureMapping infrastructureMapping =
+            infrastructureMappingService.get(trigger.getAppId(), serviceInfraWorkflow.getInfraMappingId());
+        notNullCheck("ServiceInfraStructure", infrastructureMapping);
+        serviceInfraWorkflow.setInfraMappingName(infrastructureMapping.getName());
+        Workflow workflow = workflowService.readWorkflow(trigger.getAppId(), serviceInfraWorkflow.getWorkflowId());
+        notNullCheck("Workflow", workflow);
+        if (workflow.isTemplatized()) {
+          serviceInfraWorkflow.setWorkflowName(workflow.getName() + " (TEMPLATE)");
+        } else {
+          serviceInfraWorkflow.setWorkflowName(workflow.getName());
+        }
+      });
+    } else {
+      throw new WingsException("ServiceInfra and Workflow Mapping can not be empty");
+    }
   }
 
   private void validateInput(Trigger trigger) {
@@ -947,11 +1040,8 @@ public class TriggerServiceImpl implements TriggerService {
       }
       services = workflow.getServices();
       validateAndSetArtifactSelections(trigger, services);
-    } else {
-      throw new WingsException(INVALID_ARGUMENT)
-          .addParam("args", "Workflow Type" + trigger.getWorkflowType() + "not yet supported");
     }
-    validateAndSetTriggerCondition(trigger, services);
+    validateAndSetTriggerCondition(trigger);
     validateAndSetCronExpression(trigger);
   }
 

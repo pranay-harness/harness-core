@@ -38,8 +38,9 @@ public class Trigger extends Base {
   private String workflowName;
   private List<ArtifactSelection> artifactSelections = new ArrayList<>();
   @JsonIgnore @Indexed private String webHookToken;
-  private WorkflowType workflowType = PIPELINE;
+  private WorkflowType workflowType;
   private Map<String, String> workflowVariables;
+  private List<ServiceInfraWorkflow> serviceInfraWorkflows;
 
   public void setPipelineId(String pipelineId) {
     this.pipelineId = pipelineId;
@@ -89,6 +90,8 @@ public class Trigger extends Base {
     private String workflowId;
     private List<ArtifactSelection> artifactSelections = new ArrayList<>();
     private WorkflowType workflowType = PIPELINE;
+    private Map<String, String> workflowVariables;
+    List<ServiceInfraWorkflow> serviceInfraWorkflows;
 
     private Builder() {}
 
@@ -142,6 +145,16 @@ public class Trigger extends Base {
       return this;
     }
 
+    public Builder withWorkflowVariables(Map<String, String> workflowVariables) {
+      this.workflowVariables = workflowVariables;
+      return this;
+    }
+
+    public Builder withServiceInfraWorkflows(List<ServiceInfraWorkflow> serviceInfraWorkflows) {
+      this.serviceInfraWorkflows = serviceInfraWorkflows;
+      return this;
+    }
+
     public Trigger build() {
       Trigger trigger = new Trigger();
       trigger.setName(name);
@@ -153,6 +166,8 @@ public class Trigger extends Base {
       trigger.setUuid(uuid);
       trigger.setWorkflowId(workflowId);
       trigger.setWorkflowType(workflowType);
+      trigger.setWorkflowVariables(workflowVariables);
+      trigger.setServiceInfraWorkflows(serviceInfraWorkflows);
       return trigger;
     }
   }

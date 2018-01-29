@@ -14,7 +14,8 @@ import javax.validation.constraints.NotNull;
   @JsonSubTypes.Type(value = ArtifactTriggerCondition.class, name = "NEW_ARTIFACT")
   , @JsonSubTypes.Type(value = PipelineTriggerCondition.class, name = "PIPELINE_COMPLETION"),
       @JsonSubTypes.Type(value = ScheduledTriggerCondition.class, name = "SCHEDULED"),
-      @JsonSubTypes.Type(value = WebHookTriggerCondition.class, name = "WEBHOOK")
+      @JsonSubTypes.Type(value = WebHookTriggerCondition.class, name = "WEBHOOK"),
+      @JsonSubTypes.Type(value = NewInstanceTriggerCondition.class, name = "NEW_INSTANCE")
 })
 @Data
 public abstract class TriggerCondition {
