@@ -317,9 +317,6 @@ public class InfrastructureMappingServiceTest extends WingsBaseTest {
 
     verify(wingsPersistence, times(2)).get(InfrastructureMapping.class, APP_ID, INFRA_MAPPING_ID);
     verify(staticInfrastructureProvider).updateHostConnAttrs(updatedInfra, updatedInfra.getHostConnectionAttrs());
-
-    verify(wingsPersistence).update(any(InfrastructureMapping.class), any(UpdateOperations.class));
-    verify(updateOperations).set("hostConnectionAttrs", "HOST_CONN_ATTR_ID_1");
   }
 
   @Test

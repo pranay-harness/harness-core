@@ -119,6 +119,7 @@ import java.time.Duration;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.HashMap;
+import java.util.HashSet;
 import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
@@ -373,28 +374,30 @@ public class InfrastructureMappingServiceImpl implements InfrastructureMappingSe
     InfrastructureMapping savedInfraMapping = get(infrastructureMapping.getAppId(), infrastructureMapping.getUuid());
     SettingAttribute computeProviderSetting = settingsService.get(infrastructureMapping.getComputeProviderSettingId());
 
+    Map<String, Object> keyValuePairs = new HashMap<>();
+    Set<String> fieldsToRemove = new HashSet<>();
     UpdateOperations<InfrastructureMapping> updateOperations =
         wingsPersistence.createUpdateOperations(InfrastructureMapping.class);
-    updateOperations.set("computeProviderSettingId", infrastructureMapping.getComputeProviderSettingId());
+    keyValuePairs.put("computeProviderSettingId", infrastructureMapping.getComputeProviderSettingId());
 
     if (savedInfraMapping.getHostConnectionAttrs() != null
         && !savedInfraMapping.getHostConnectionAttrs().equals(infrastructureMapping.getHostConnectionAttrs())) {
       getInfrastructureProviderByComputeProviderType(infrastructureMapping.getComputeProviderType())
           .updateHostConnAttrs(infrastructureMapping, infrastructureMapping.getHostConnectionAttrs());
-      updateOperations.set("hostConnectionAttrs", infrastructureMapping.getHostConnectionAttrs());
+      keyValuePairs.put("hostConnectionAttrs", infrastructureMapping.getHostConnectionAttrs());
     }
 
     if (isNotEmpty(infrastructureMapping.getName())) {
-      updateOperations.set("name", infrastructureMapping.getName());
+      keyValuePairs.put("name", infrastructureMapping.getName());
     } else {
-      updateOperations.unset("name");
+      fieldsToRemove.add("name");
     }
 
     if (infrastructureMapping instanceof EcsInfrastructureMapping) {
       EcsInfrastructureMapping ecsInfrastructureMapping = (EcsInfrastructureMapping) infrastructureMapping;
       validateEcsInfraMapping(ecsInfrastructureMapping, computeProviderSetting);
-      updateOperations.set("clusterName", ecsInfrastructureMapping.getClusterName());
-      updateOperations.set("region", ecsInfrastructureMapping.getRegion());
+      keyValuePairs.put("clusterName", ecsInfrastructureMapping.getClusterName());
+      keyValuePairs.put("region", ecsInfrastructureMapping.getRegion());
     } else if (infrastructureMapping instanceof DirectKubernetesInfrastructureMapping) {
       DirectKubernetesInfrastructureMapping directKubernetesInfrastructureMapping =
           (DirectKubernetesInfrastructureMapping) infrastructureMapping;
@@ -403,119 +406,118 @@ public class InfrastructureMappingServiceImpl implements InfrastructureMappingSe
       //      directKubernetesInfrastructureMapping.setEncryptedClientCert(null);
       //      directKubernetesInfrastructureMapping.setEncryptedClientKey(null);
       //      directKubernetesInfrastructureMapping.setEncryptedClientKeyPassphrase(null);
-      updateOperations.set("masterUrl", directKubernetesInfrastructureMapping.getMasterUrl());
+      keyValuePairs.put("masterUrl", directKubernetesInfrastructureMapping.getMasterUrl());
       if (directKubernetesInfrastructureMapping.getUsername() != null) {
-        updateOperations.set("username", directKubernetesInfrastructureMapping.getUsername());
+        keyValuePairs.put("username", directKubernetesInfrastructureMapping.getUsername());
       } else {
-        updateOperations.unset("username");
+        fieldsToRemove.add("username");
       }
       if (directKubernetesInfrastructureMapping.getPassword() != null) {
-        updateOperations.set("password", directKubernetesInfrastructureMapping.getPassword());
+        keyValuePairs.put("password", directKubernetesInfrastructureMapping.getPassword());
       } else {
-        updateOperations.unset("password");
+        fieldsToRemove.add("password");
       }
       if (directKubernetesInfrastructureMapping.getCaCert() != null) {
-        updateOperations.set("caCert", directKubernetesInfrastructureMapping.getCaCert());
+        keyValuePairs.put("caCert", directKubernetesInfrastructureMapping.getCaCert());
       } else {
-        updateOperations.unset("caCert");
+        fieldsToRemove.add("caCert");
       }
       if (directKubernetesInfrastructureMapping.getClientCert() != null) {
-        updateOperations.set("clientCert", directKubernetesInfrastructureMapping.getClientCert());
+        keyValuePairs.put("clientCert", directKubernetesInfrastructureMapping.getClientCert());
       } else {
-        updateOperations.unset("clientCert");
+        fieldsToRemove.add("clientCert");
       }
       if (directKubernetesInfrastructureMapping.getClientKey() != null) {
-        updateOperations.set("clientKey", directKubernetesInfrastructureMapping.getClientKey());
+        keyValuePairs.put("clientKey", directKubernetesInfrastructureMapping.getClientKey());
       } else {
-        updateOperations.unset("clientKey");
+        fieldsToRemove.add("clientKey");
       }
       if (directKubernetesInfrastructureMapping.getClientKeyPassphrase() != null) {
-        updateOperations.set("clientKeyPassphrase", directKubernetesInfrastructureMapping.getClientKeyPassphrase());
+        keyValuePairs.put("clientKeyPassphrase", directKubernetesInfrastructureMapping.getClientKeyPassphrase());
       } else {
-        updateOperations.unset("clientKeyPassphrase");
+        fieldsToRemove.add("clientKeyPassphrase");
       }
       if (directKubernetesInfrastructureMapping.getClientKeyAlgo() != null) {
-        updateOperations.set("clientKeyAlgo", directKubernetesInfrastructureMapping.getClientKeyAlgo());
+        keyValuePairs.put("clientKeyAlgo", directKubernetesInfrastructureMapping.getClientKeyAlgo());
       } else {
-        updateOperations.unset("clientKeyAlgo");
+        fieldsToRemove.add("clientKeyAlgo");
       }
       if (isNotBlank(directKubernetesInfrastructureMapping.getNamespace())) {
-        updateOperations.set("namespace", directKubernetesInfrastructureMapping.getNamespace());
+        keyValuePairs.put("namespace", directKubernetesInfrastructureMapping.getNamespace());
       } else {
         directKubernetesInfrastructureMapping.setNamespace("default");
-        updateOperations.set("namespace", "default");
+        keyValuePairs.put("namespace", "default");
       }
-      updateOperations.set("clusterName", directKubernetesInfrastructureMapping.getClusterName());
+      keyValuePairs.put("clusterName", directKubernetesInfrastructureMapping.getClusterName());
       validateDirectKubernetesInfraMapping(directKubernetesInfrastructureMapping);
     } else if (infrastructureMapping instanceof GcpKubernetesInfrastructureMapping) {
       GcpKubernetesInfrastructureMapping gcpKubernetesInfrastructureMapping =
           (GcpKubernetesInfrastructureMapping) infrastructureMapping;
       validateGcpInfraMapping(gcpKubernetesInfrastructureMapping, computeProviderSetting);
-      updateOperations.set("clusterName", gcpKubernetesInfrastructureMapping.getClusterName());
-      updateOperations.set("namespace",
+      keyValuePairs.put("clusterName", gcpKubernetesInfrastructureMapping.getClusterName());
+      keyValuePairs.put("namespace",
           isNotBlank(gcpKubernetesInfrastructureMapping.getNamespace())
               ? gcpKubernetesInfrastructureMapping.getNamespace()
               : "default");
     } else if (infrastructureMapping instanceof AwsInfrastructureMapping) {
       AwsInfrastructureMapping awsInfrastructureMapping = (AwsInfrastructureMapping) infrastructureMapping;
       awsInfrastructureMapping.validate();
-      updateOperations.set("region", awsInfrastructureMapping.getRegion());
+      keyValuePairs.put("region", awsInfrastructureMapping.getRegion());
       if (isNotEmpty(awsInfrastructureMapping.getLoadBalancerId())) {
-        updateOperations.set("loadBalancerId", awsInfrastructureMapping.getLoadBalancerId());
+        keyValuePairs.put("loadBalancerId", awsInfrastructureMapping.getLoadBalancerId());
       } else {
-        updateOperations.unset("loadBalancerId");
+        fieldsToRemove.add("loadBalancerId");
       }
-      updateOperations.set("usePublicDns", awsInfrastructureMapping.isUsePublicDns());
-      updateOperations.set("setDesiredCapacity", awsInfrastructureMapping.isSetDesiredCapacity());
-      updateOperations.set("desiredCapacity", awsInfrastructureMapping.getDesiredCapacity());
-      updateOperations.set("provisionInstances", awsInfrastructureMapping.isProvisionInstances());
+      keyValuePairs.put("usePublicDns", awsInfrastructureMapping.isUsePublicDns());
+      keyValuePairs.put("setDesiredCapacity", awsInfrastructureMapping.isSetDesiredCapacity());
+      keyValuePairs.put("desiredCapacity", awsInfrastructureMapping.getDesiredCapacity());
+      keyValuePairs.put("provisionInstances", awsInfrastructureMapping.isProvisionInstances());
       if (awsInfrastructureMapping.getAwsInstanceFilter() != null) {
-        updateOperations.set("awsInstanceFilter", awsInfrastructureMapping.getAwsInstanceFilter());
+        keyValuePairs.put("awsInstanceFilter", awsInfrastructureMapping.getAwsInstanceFilter());
       } else {
-        updateOperations.unset("awsInstanceFilter");
+        fieldsToRemove.add("awsInstanceFilter");
       }
       if (isNotEmpty(awsInfrastructureMapping.getAutoScalingGroupName())) {
-        updateOperations.set("autoScalingGroupName", awsInfrastructureMapping.getAutoScalingGroupName());
+        keyValuePairs.put("autoScalingGroupName", awsInfrastructureMapping.getAutoScalingGroupName());
       } else {
-        updateOperations.unset("autoScalingGroupName");
+        fieldsToRemove.add("autoScalingGroupName");
       }
     } else if (infrastructureMapping instanceof AwsLambdaInfraStructureMapping) {
       AwsLambdaInfraStructureMapping lambdaInfraStructureMapping =
           (AwsLambdaInfraStructureMapping) infrastructureMapping;
       validateAwsLambdaInfrastructureMapping(lambdaInfraStructureMapping);
-      updateOperations.set("region", lambdaInfraStructureMapping.getRegion());
+      keyValuePairs.put("region", lambdaInfraStructureMapping.getRegion());
       if (lambdaInfraStructureMapping.getVpcId() != null) {
-        updateOperations.set("vpcId", lambdaInfraStructureMapping.getVpcId());
-        updateOperations.set("subnetIds", lambdaInfraStructureMapping.getSubnetIds());
-        updateOperations.set("securityGroupIds", lambdaInfraStructureMapping.getSecurityGroupIds());
+        keyValuePairs.put("vpcId", lambdaInfraStructureMapping.getVpcId());
+        keyValuePairs.put("subnetIds", lambdaInfraStructureMapping.getSubnetIds());
+        keyValuePairs.put("securityGroupIds", lambdaInfraStructureMapping.getSecurityGroupIds());
       }
-      updateOperations.set("role", lambdaInfraStructureMapping.getRole());
+      keyValuePairs.put("role", lambdaInfraStructureMapping.getRole());
     } else if (infrastructureMapping instanceof PhysicalInfrastructureMapping) {
       validatePyInfraMapping((PhysicalInfrastructureMapping) infrastructureMapping);
-      updateOperations.set(
-          "loadBalancerId", ((PhysicalInfrastructureMapping) infrastructureMapping).getLoadBalancerId());
-      updateOperations.set("hostNames", ((PhysicalInfrastructureMapping) infrastructureMapping).getHostNames());
+      keyValuePairs.put("loadBalancerId", ((PhysicalInfrastructureMapping) infrastructureMapping).getLoadBalancerId());
+      keyValuePairs.put("hostNames", ((PhysicalInfrastructureMapping) infrastructureMapping).getHostNames());
     } else if (infrastructureMapping instanceof CodeDeployInfrastructureMapping) {
       CodeDeployInfrastructureMapping codeDeployInfrastructureMapping =
           (CodeDeployInfrastructureMapping) infrastructureMapping;
-      updateOperations.set("region", codeDeployInfrastructureMapping.getRegion());
-      updateOperations.set("applicationName", codeDeployInfrastructureMapping.getApplicationName());
-      updateOperations.set("deploymentGroup", codeDeployInfrastructureMapping.getDeploymentGroup());
-      updateOperations.set("deploymentConfig", codeDeployInfrastructureMapping.getDeploymentConfig());
+      keyValuePairs.put("region", codeDeployInfrastructureMapping.getRegion());
+      keyValuePairs.put("applicationName", codeDeployInfrastructureMapping.getApplicationName());
+      keyValuePairs.put("deploymentGroup", codeDeployInfrastructureMapping.getDeploymentGroup());
+      keyValuePairs.put("deploymentConfig", codeDeployInfrastructureMapping.getDeploymentConfig());
     } else if (infrastructureMapping instanceof AwsAmiInfrastructureMapping) {
       AwsAmiInfrastructureMapping awsAmiInfrastructureMapping = (AwsAmiInfrastructureMapping) infrastructureMapping;
-      updateOperations.set("region", awsAmiInfrastructureMapping.getRegion());
-      updateOperations.set("autoScalingGroupName", awsAmiInfrastructureMapping.getAutoScalingGroupName());
+      keyValuePairs.put("region", awsAmiInfrastructureMapping.getRegion());
+      keyValuePairs.put("autoScalingGroupName", awsAmiInfrastructureMapping.getAutoScalingGroupName());
       if (awsAmiInfrastructureMapping.getClassicLoadBalancers() != null) {
-        updateOperations.set("classicLoadBalancers", awsAmiInfrastructureMapping.getClassicLoadBalancers());
+        keyValuePairs.put("classicLoadBalancers", awsAmiInfrastructureMapping.getClassicLoadBalancers());
       }
       if (awsAmiInfrastructureMapping.getTargetGroupArns() != null) {
-        updateOperations.set("targetGroupArns", awsAmiInfrastructureMapping.getTargetGroupArns());
+        keyValuePairs.put("targetGroupArns", awsAmiInfrastructureMapping.getTargetGroupArns());
       }
     }
 
-    wingsPersistence.update(savedInfraMapping, updateOperations);
-
+    wingsPersistence.updateFields(
+        infrastructureMapping.getClass(), infrastructureMapping.getUuid(), keyValuePairs, fieldsToRemove);
     InfrastructureMapping updatedInfraMapping = get(infrastructureMapping.getAppId(), infrastructureMapping.getUuid());
     yamlChangeSetHelper.updateYamlChangeAsync(updatedInfraMapping, savedInfraMapping, savedInfraMapping.getAccountId());
     return updatedInfraMapping;
