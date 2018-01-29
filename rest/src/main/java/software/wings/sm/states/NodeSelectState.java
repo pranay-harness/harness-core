@@ -125,8 +125,10 @@ public abstract class NodeSelectState extends State {
       boolean excludeHostsWithSameArtifact = false;
       if (workflowStandardParams != null) {
         excludeHostsWithSameArtifact = workflowStandardParams.isExcludeHostsWithSameArtifact();
-        serviceInstances =
-            excludeHostsWithTheSameArtifactDeployed(context, appId, serviceId, infraMappingId, serviceInstances);
+        if (excludeHostsWithSameArtifact) {
+          serviceInstances =
+              excludeHostsWithTheSameArtifactDeployed(context, appId, serviceId, infraMappingId, serviceInstances);
+        }
       }
       SelectedNodeExecutionData selectedNodeExecutionData = new SelectedNodeExecutionData();
       selectedNodeExecutionData.setServiceInstanceList(serviceInstances.stream()
