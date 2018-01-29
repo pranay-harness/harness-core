@@ -1,7 +1,10 @@
 package software.wings.service.impl;
 
 import static io.harness.data.structure.EmptyPredicate.isEmpty;
+import static java.util.Collections.singletonList;
 import static java.util.stream.Collectors.toList;
+import static software.wings.beans.ExecutionScope.WORKFLOW;
+import static software.wings.beans.ExecutionScope.WORKFLOW_PHASE;
 import static software.wings.beans.FailureNotification.Builder.aFailureNotification;
 import static software.wings.beans.InformationNotification.Builder.anInformationNotification;
 import static software.wings.beans.OrchestrationWorkflowType.BUILD;
@@ -25,6 +28,7 @@ import com.google.inject.Singleton;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import software.wings.beans.Application;
+import software.wings.beans.Base;
 import software.wings.beans.CanaryOrchestrationWorkflow;
 import software.wings.beans.EntityType;
 import software.wings.beans.Environment;
@@ -38,6 +42,7 @@ import software.wings.beans.artifact.Artifact;
 import software.wings.common.NotificationMessageResolver.NotificationMessageType;
 import software.wings.service.intfc.NotificationService;
 import software.wings.service.intfc.WorkflowExecutionService;
+import software.wings.service.intfc.WorkflowService;
 import software.wings.sm.ExecutionContext;
 import software.wings.sm.ExecutionContextImpl;
 import software.wings.sm.ExecutionStatus;
@@ -59,13 +64,14 @@ import java.util.Optional;
 public class WorkflowNotificationHelper {
   @Inject private NotificationService notificationService;
   @Inject private WorkflowExecutionService workflowExecutionService;
+  @Inject private WorkflowService workflowService;
 
   private static final Logger logger = LoggerFactory.getLogger(WorkflowNotificationHelper.class);
   private final DateFormat dateFormat = new SimpleDateFormat("EEE, d MMM yyyy HH:mm:ss Z");
 
   public void sendWorkflowStatusChangeNotification(ExecutionContext context, ExecutionStatus status) {
     List<NotificationRule> notificationRules =
-        getNotificationApplicableToScope((ExecutionContextImpl) context, ExecutionScope.WORKFLOW, status);
+        getNotificationApplicableToScope((ExecutionContextImpl) context, WORKFLOW, status);
     if (isEmpty(notificationRules)) {
       return;
     }
@@ -77,7 +83,7 @@ public class WorkflowNotificationHelper {
         workflowExecutionService.getExecutionDetails(app.getUuid(), context.getWorkflowExecutionId());
     Map<String, String> placeHolderValues = new HashMap<>();
     placeHolderValues.put("WORKFLOW_NAME", context.getWorkflowExecutionName());
-    placeHolderValues.put("ARTIFACTS", getArtifactsMessage(context));
+    placeHolderValues.put("ARTIFACTS", getArtifactsMessage(context, WORKFLOW, null));
     if (!BUILD.equals(context.getOrchestrationWorkflowType())) {
       placeHolderValues.put("ENV_NAME", env.getName());
     }
@@ -164,7 +170,7 @@ public class WorkflowNotificationHelper {
     // TODO:: use phaseSubworkflow to send rollback notifications
 
     List<NotificationRule> notificationRules =
-        getNotificationApplicableToScope((ExecutionContextImpl) context, ExecutionScope.WORKFLOW_PHASE, status);
+        getNotificationApplicableToScope((ExecutionContextImpl) context, WORKFLOW_PHASE, status);
     if (isEmpty(notificationRules)) {
       return;
     }
@@ -175,7 +181,7 @@ public class WorkflowNotificationHelper {
     Map<String, String> placeHolderValues = new HashMap<>();
     placeHolderValues.put("WORKFLOW_NAME", context.getWorkflowExecutionName());
     placeHolderValues.put("PHASE_NAME", phaseSubWorkflow.getName());
-    placeHolderValues.put("ARTIFACTS", getArtifactsMessage(context));
+    placeHolderValues.put("ARTIFACTS", getArtifactsMessage(context, WORKFLOW_PHASE, phaseSubWorkflow));
     placeHolderValues.put("ENV_NAME", env.getName());
     placeHolderValues.put("DATE", getDateString(executionDetails.getStartTs()));
 
@@ -211,8 +217,20 @@ public class WorkflowNotificationHelper {
     }
   }
 
-  private String getArtifactsMessage(ExecutionContext context) {
-    List<Artifact> artifacts = ((ExecutionContextImpl) context).getArtifacts();
+  private String getArtifactsMessage(
+      ExecutionContext context, ExecutionScope scope, PhaseSubWorkflow phaseSubWorkflow) {
+    List<String> serviceIds = scope == WORKFLOW_PHASE
+        ? singletonList(phaseSubWorkflow.getServiceId())
+        : workflowService.readWorkflow(context.getAppId(), context.getWorkflowId())
+              .getServices()
+              .stream()
+              .map(Base::getUuid)
+              .collect(toList());
+    List<Artifact> artifacts = ((ExecutionContextImpl) context)
+                                   .getArtifacts()
+                                   .stream()
+                                   .filter(artifact -> artifact.getServiceIds().stream().anyMatch(serviceIds::contains))
+                                   .collect(toList());
     return Joiner.on(", ").join(
         artifacts.stream()
             .map(artifact -> artifact.getArtifactSourceName() + " (build# " + artifact.getBuildNo() + ")")

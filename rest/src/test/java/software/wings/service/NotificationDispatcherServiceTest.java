@@ -30,8 +30,6 @@ import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.Lists;
 import com.google.inject.Inject;
 
-import freemarker.template.TemplateException;
-import org.apache.commons.mail.EmailException;
 import org.junit.Before;
 import org.junit.Test;
 import org.mockito.InjectMocks;
@@ -60,7 +58,6 @@ import software.wings.service.intfc.SlackNotificationService;
 import software.wings.settings.SettingValue.SettingVariableTypes;
 import software.wings.utils.WingsTestConstants;
 
-import java.io.IOException;
 import java.util.Collections;
 import java.util.List;
 
@@ -93,7 +90,7 @@ public class NotificationDispatcherServiceTest extends WingsBaseTest {
   }
 
   @Test
-  public void shouldDispatchEmailNotification() throws EmailException, TemplateException, IOException {
+  public void shouldDispatchEmailNotification() {
     List<String> toAddresses = Lists.newArrayList("a@b.com, c@d.com");
 
     NotificationGroup notificationGroup = aNotificationGroup()
@@ -182,8 +179,7 @@ public class NotificationDispatcherServiceTest extends WingsBaseTest {
   }
 
   @Test
-  public void shouldSendBatchedNotificationsOnLastBatchNotification()
-      throws EmailException, TemplateException, IOException {
+  public void shouldSendBatchedNotificationsOnLastBatchNotification() {
     List<String> toAddresses = Lists.newArrayList("a@b.com, c@d.com");
 
     NotificationGroup notificationGroup = aNotificationGroup()
