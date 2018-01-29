@@ -32,7 +32,7 @@ public class ExecutionArgs {
   private Map<String, String> workflowVariables;
   private String notes;
   private EmbeddedUser triggeredBy;
-  private boolean excludeHostsWithSameArtifact = true;
+  private boolean excludeHostsWithSameArtifact;
 
   /**
    * Gets service id.
