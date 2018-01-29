@@ -12,6 +12,7 @@ import org.slf4j.LoggerFactory;
 import software.wings.beans.Log.LogLevel;
 import software.wings.beans.SettingAttribute;
 import software.wings.beans.command.ExecutionLogCallback;
+import software.wings.beans.command.LogCallback;
 import software.wings.cloudprovider.ClusterConfiguration;
 import software.wings.cloudprovider.ContainerInfo;
 import software.wings.security.encryption.EncryptedDataDetail;
@@ -31,7 +32,8 @@ public class AwsClusterServiceImpl implements AwsClusterService {
 
   @Override
   public void createCluster(String region, SettingAttribute cloudProviderSetting,
-      List<EncryptedDataDetail> encryptedDataDetails, ClusterConfiguration clusterConfiguration) {
+      List<EncryptedDataDetail> encryptedDataDetails, ClusterConfiguration clusterConfiguration,
+      LogCallback logCallback) {
     AwsClusterConfiguration awsClusterConfiguration = (AwsClusterConfiguration) clusterConfiguration;
 
     // Provision cloud infra nodes
@@ -42,7 +44,7 @@ public class AwsClusterServiceImpl implements AwsClusterService {
     params.put("autoScalingGroupName", ((AwsClusterConfiguration) clusterConfiguration).getAutoScalingGroupName());
 
     ecsContainerService.provisionNodes(region, cloudProviderSetting, encryptedDataDetails,
-        awsClusterConfiguration.getSize(), awsClusterConfiguration.getLauncherConfiguration(), params);
+        awsClusterConfiguration.getSize(), awsClusterConfiguration.getLauncherConfiguration(), params, logCallback);
 
     logger.info("Successfully created cluster and provisioned desired number of nodes");
   }

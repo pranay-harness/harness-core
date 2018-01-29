@@ -28,6 +28,7 @@ import com.amazonaws.auth.BasicAWSCredentials;
 import com.amazonaws.regions.Regions;
 import com.amazonaws.services.autoscaling.AmazonAutoScalingClient;
 import com.amazonaws.services.autoscaling.AmazonAutoScalingClientBuilder;
+import com.amazonaws.services.autoscaling.model.Activity;
 import com.amazonaws.services.autoscaling.model.AmazonAutoScalingException;
 import com.amazonaws.services.autoscaling.model.AttachLoadBalancerTargetGroupsRequest;
 import com.amazonaws.services.autoscaling.model.AttachLoadBalancerTargetGroupsResult;
@@ -43,6 +44,8 @@ import com.amazonaws.services.autoscaling.model.DeleteLaunchConfigurationRequest
 import com.amazonaws.services.autoscaling.model.DescribeAutoScalingGroupsRequest;
 import com.amazonaws.services.autoscaling.model.DescribeAutoScalingGroupsResult;
 import com.amazonaws.services.autoscaling.model.DescribeLaunchConfigurationsRequest;
+import com.amazonaws.services.autoscaling.model.DescribeScalingActivitiesRequest;
+import com.amazonaws.services.autoscaling.model.DescribeScalingActivitiesResult;
 import com.amazonaws.services.autoscaling.model.LaunchConfiguration;
 import com.amazonaws.services.autoscaling.model.SetDesiredCapacityRequest;
 import com.amazonaws.services.cloudformation.AmazonCloudFormationClient;
@@ -197,9 +200,9 @@ import software.wings.annotation.Encryptable;
 import software.wings.beans.AwsConfig;
 import software.wings.beans.EcrConfig;
 import software.wings.beans.ErrorCode;
-import software.wings.beans.Log.LogLevel;
 import software.wings.beans.SettingAttribute;
 import software.wings.beans.command.CommandExecutionResult.CommandExecutionStatus;
+import software.wings.beans.command.LogCallback;
 import software.wings.exception.WingsException;
 import software.wings.security.encryption.EncryptedDataDetail;
 import software.wings.service.intfc.security.EncryptionService;
@@ -211,6 +214,7 @@ import java.net.Socket;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.Comparator;
+import java.util.HashSet;
 import java.util.LinkedHashSet;
 import java.util.List;
 import java.util.Map;
@@ -227,6 +231,8 @@ public class AwsHelperService {
       "http://169.254.169.254/latest/meta-data/placement/availability-zone";
   @Inject private EncryptionService encryptionService;
   @Inject private TimeLimiter timeLimiter;
+
+  private static final long AUTOSCALING_REQUEST_STATUS_CHECK_INTERVAL = TimeUnit.SECONDS.toSeconds(15);
 
   private static final Logger logger = LoggerFactory.getLogger(AwsHelperService.class);
 
@@ -1162,11 +1168,10 @@ public class AwsHelperService {
   public void setAutoScalingGroupCapacityAndWaitForInstancesReadyState(AwsConfig awsConfig,
       List<EncryptedDataDetail> encryptionDetails, String region, String autoScalingGroupName, Integer desiredCapacity,
       ManagerExecutionLogCallback executionLogCallback, Integer autoScalingSteadyStateTimeout) {
+    AmazonAutoScalingClient amazonAutoScalingClient =
+        getAmazonAutoScalingClient(Regions.fromName(region), awsConfig.getAccessKey(), awsConfig.getSecretKey());
     try {
       encryptionService.decrypt(awsConfig, encryptionDetails);
-      AmazonAutoScalingClient amazonAutoScalingClient =
-          getAmazonAutoScalingClient(Regions.fromName(region), awsConfig.getAccessKey(), awsConfig.getSecretKey());
-
       executionLogCallback.saveExecutionLog(
           String.format("Set AutoScaling Group: [%s] desired capacity to [%s]", autoScalingGroupName, desiredCapacity));
       amazonAutoScalingClient.setDesiredCapacity(new SetDesiredCapacityRequest()
@@ -1176,6 +1181,8 @@ public class AwsHelperService {
       waitForAllInstancesToBeReady(awsConfig, encryptionDetails, region, autoScalingGroupName, desiredCapacity,
           executionLogCallback, autoScalingSteadyStateTimeout);
     } catch (AmazonServiceException amazonServiceException) {
+      describeAutoScalingGroupActivities(
+          amazonAutoScalingClient, autoScalingGroupName, new HashSet<>(), executionLogCallback, true);
       handleAmazonServiceException(amazonServiceException);
     }
   }
@@ -1235,19 +1242,20 @@ public class AwsHelperService {
       ManagerExecutionLogCallback executionLogCallback, Integer autoScalingSteadyStateTimeout) {
     try {
       timeLimiter.callWithTimeout(() -> {
+        AmazonAutoScalingClient amazonAutoScalingClient =
+            getAmazonAutoScalingClient(Regions.fromName(region), awsConfig.getAccessKey(), awsConfig.getSecretKey());
+        Set<String> completedActivities = new HashSet<>();
         while (true) {
           List<String> instanceIds =
               listInstanceIdsFromAutoScalingGroup(awsConfig, encryptionDetails, region, autoScalingGroupName);
-          String msg =
-              String.format("Waiting for AutoScaling group to meet desired count. %s/%s instances registered ...",
-                  instanceIds.size(), desiredCount);
-          logger.info(msg);
-          executionLogCallback.saveExecutionLog(msg, LogLevel.INFO);
+          describeAutoScalingGroupActivities(
+              amazonAutoScalingClient, autoScalingGroupName, completedActivities, executionLogCallback, false);
+
           if (instanceIds.size() == desiredCount
               && allInstanceInReadyState(awsConfig, encryptionDetails, region, instanceIds, executionLogCallback)) {
             return true;
           }
-          sleep(ofSeconds(30));
+          sleep(ofSeconds(AUTOSCALING_REQUEST_STATUS_CHECK_INTERVAL));
         }
       }, autoScalingSteadyStateTimeout, TimeUnit.MINUTES, true);
     } catch (UncheckedTimeoutException e) {
@@ -1390,13 +1398,18 @@ public class AwsHelperService {
 
   public CreateAutoScalingGroupResult createAutoScalingGroup(AwsConfig awsConfig,
       List<EncryptedDataDetail> encryptionDetails, String region,
-      CreateAutoScalingGroupRequest createAutoScalingGroupRequest) {
+      CreateAutoScalingGroupRequest createAutoScalingGroupRequest, LogCallback logCallback) {
+    AmazonAutoScalingClient amazonAutoScalingClient = null;
     try {
       encryptionService.decrypt(awsConfig, encryptionDetails);
-      AmazonAutoScalingClient amazonAutoScalingClient =
+      amazonAutoScalingClient =
           getAmazonAutoScalingClient(Regions.fromName(region), awsConfig.getAccessKey(), awsConfig.getSecretKey());
       return amazonAutoScalingClient.createAutoScalingGroup(createAutoScalingGroupRequest);
     } catch (AmazonServiceException amazonServiceException) {
+      if (amazonAutoScalingClient != null && logCallback != null) {
+        describeAutoScalingGroupActivities(amazonAutoScalingClient,
+            createAutoScalingGroupRequest.getAutoScalingGroupName(), new HashSet<>(), logCallback, true);
+      }
       handleAmazonServiceException(amazonServiceException);
     }
     return new CreateAutoScalingGroupResult();
@@ -1445,17 +1458,19 @@ public class AwsHelperService {
   }
 
   public void deleteAutoScalingGroups(AwsConfig awsConfig, List<EncryptedDataDetail> encryptionDetails, String region,
-      List<AutoScalingGroup> autoScalingGroups) {
+      List<AutoScalingGroup> autoScalingGroups, LogCallback callback) {
+    AmazonAutoScalingClient amazonAutoScalingClient =
+        getAmazonAutoScalingClient(Regions.fromName(region), awsConfig.getAccessKey(), awsConfig.getSecretKey());
     try {
       encryptionService.decrypt(awsConfig, encryptionDetails);
-      AmazonAutoScalingClient amazonAutoScalingClient =
-          getAmazonAutoScalingClient(Regions.fromName(region), awsConfig.getAccessKey(), awsConfig.getSecretKey());
       autoScalingGroups.forEach(autoScalingGroup -> {
         try {
           amazonAutoScalingClient.deleteAutoScalingGroup(
               new DeleteAutoScalingGroupRequest().withAutoScalingGroupName(autoScalingGroup.getAutoScalingGroupName()));
-          waitForAutoScalingGroupToBeDeleted(amazonAutoScalingClient, autoScalingGroup);
+          waitForAutoScalingGroupToBeDeleted(amazonAutoScalingClient, autoScalingGroup, callback);
         } catch (Exception ignored) {
+          describeAutoScalingGroupActivities(
+              amazonAutoScalingClient, autoScalingGroup.getAutoScalingGroupName(), new HashSet<>(), callback, true);
           logger.warn("Failed to delete ASG: [{}] [{}]", autoScalingGroup.getAutoScalingGroupName(), ignored);
         }
         try {
@@ -1463,6 +1478,8 @@ public class AwsHelperService {
               new DeleteLaunchConfigurationRequest().withLaunchConfigurationName(
                   autoScalingGroup.getLaunchConfigurationName()));
         } catch (Exception ignored) {
+          describeAutoScalingGroupActivities(
+              amazonAutoScalingClient, autoScalingGroup.getAutoScalingGroupName(), new HashSet<>(), callback, true);
           logger.warn("Failed to delete ASG: [{}] [{}]", autoScalingGroup.getAutoScalingGroupName(), ignored);
         }
 
@@ -1473,18 +1490,20 @@ public class AwsHelperService {
   }
 
   private void waitForAutoScalingGroupToBeDeleted(
-      AmazonAutoScalingClient amazonAutoScalingClient, AutoScalingGroup autoScalingGroup) {
+      AmazonAutoScalingClient amazonAutoScalingClient, AutoScalingGroup autoScalingGroup, LogCallback callback) {
     try {
       timeLimiter.callWithTimeout(() -> {
+        Set<String> completedActivities = new HashSet<>();
         while (true) {
-          if (amazonAutoScalingClient
-                  .describeAutoScalingGroups(new DescribeAutoScalingGroupsRequest().withAutoScalingGroupNames(
-                      autoScalingGroup.getAutoScalingGroupName()))
-                  .getAutoScalingGroups()
-                  .isEmpty()) {
+          DescribeAutoScalingGroupsResult result = amazonAutoScalingClient.describeAutoScalingGroups(
+              new DescribeAutoScalingGroupsRequest().withAutoScalingGroupNames(
+                  autoScalingGroup.getAutoScalingGroupName()));
+          if (result.getAutoScalingGroups().isEmpty()) {
             return true;
           }
-          sleep(ofSeconds(5));
+          describeAutoScalingGroupActivities(amazonAutoScalingClient, autoScalingGroup.getAutoScalingGroupName(),
+              completedActivities, callback, false);
+          sleep(ofSeconds(AUTOSCALING_REQUEST_STATUS_CHECK_INTERVAL));
         }
       }, 1L, TimeUnit.MINUTES, true);
     } catch (UncheckedTimeoutException e) {
@@ -1495,6 +1514,45 @@ public class AwsHelperService {
     } catch (Exception e) {
       throw new WingsException(INVALID_REQUEST, e)
           .addParam("message", "Error while waiting for autoscaling group to be deleted");
+    }
+  }
+
+  protected void describeAutoScalingGroupActivities(AmazonAutoScalingClient amazonAutoScalingClient,
+      String autoScalingGroupName, Set<String> completedActivities, LogCallback callback, boolean withCause) {
+    if (callback == null) {
+      logger.info("Not describing autoScalingGroupActivities for [%s] since logCallback is null");
+      return;
+    }
+    try {
+      DescribeScalingActivitiesResult activitiesResult = amazonAutoScalingClient.describeScalingActivities(
+          new DescribeScalingActivitiesRequest().withAutoScalingGroupName(autoScalingGroupName));
+      List<Activity> activities = activitiesResult.getActivities();
+      if (activities != null && activities.size() > 0) {
+        activities.stream()
+            .filter(activity -> !completedActivities.contains(activity.getActivityId()))
+            .forEach(activity -> {
+              String activityId = activity.getActivityId();
+              String details = activity.getDetails();
+              Integer progress = activity.getProgress();
+              String activityDescription = activity.getDescription();
+              String statuscode = activity.getStatusCode();
+              String statusMessage = activity.getStatusMessage();
+              String logStatement = String.format(
+                  "AutoScalingGroup [%s] activity [%s] progress [%d percent] , statuscode [%s]  details [%s]",
+                  autoScalingGroupName, activityDescription, progress, statuscode, details);
+              if (withCause) {
+                String cause = activity.getCause();
+                logStatement = String.format(logStatement + " cause [%s]", cause);
+              }
+
+              callback.saveExecutionLog(logStatement);
+              if (progress == 100) {
+                completedActivities.add(activityId);
+              }
+            });
+      }
+    } catch (Exception e) {
+      logger.warn("Failed to describe autoScalingGroup for [%s]", autoScalingGroupName, e);
     }
   }
 

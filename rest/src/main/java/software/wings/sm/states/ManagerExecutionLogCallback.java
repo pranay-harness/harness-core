@@ -8,9 +8,10 @@ import software.wings.beans.Log;
 import software.wings.beans.Log.Builder;
 import software.wings.beans.Log.LogLevel;
 import software.wings.beans.command.CommandExecutionResult.CommandExecutionStatus;
+import software.wings.beans.command.LogCallback;
 import software.wings.service.intfc.LogService;
 
-public class ManagerExecutionLogCallback {
+public class ManagerExecutionLogCallback implements LogCallback {
   private transient LogService logService;
   private Builder logBuilder;
   private String activityId;
@@ -46,8 +47,8 @@ public class ManagerExecutionLogCallback {
     }
   }
 
-  public void setLogService(LogService logService) {
-    this.logService = logService;
+  public LogService getLogService() {
+    return logService;
   }
 
   @Override

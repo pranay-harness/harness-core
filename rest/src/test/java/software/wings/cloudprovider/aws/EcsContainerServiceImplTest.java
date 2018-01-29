@@ -92,7 +92,7 @@ public class EcsContainerServiceImplTest extends WingsBaseTest {
              new DescribeClustersRequest().withClusters(CLUSTER_NAME)))
         .thenReturn(describeClustersResult);
     ecsContainerService.provisionNodes(Regions.US_EAST_1.getName(), connectorConfig, Collections.emptyList(),
-        DESIRED_COUNT, LAUNCHER_TEMPLATE_NAME, params);
+        DESIRED_COUNT, LAUNCHER_TEMPLATE_NAME, params, null);
 
     verify(awsHelperService)
         .createAutoScalingGroup(awsConfig, Collections.emptyList(), Regions.US_EAST_1.getName(),
@@ -103,7 +103,8 @@ public class EcsContainerServiceImplTest extends WingsBaseTest {
                 .withMinSize(DESIRED_COUNT / 2)
                 .withAutoScalingGroupName(AUTO_SCALING_GROUP_NAME)
                 .withAvailabilityZones(asList("AZ1", "AZ2"))
-                .withVPCZoneIdentifier("VPC_ZONE_1, VPC_ZONE_2"));
+                .withVPCZoneIdentifier("VPC_ZONE_1, VPC_ZONE_2"),
+            null);
     verify(awsHelperService)
         .describeAutoScalingGroups(awsConfig, Collections.emptyList(), Regions.US_EAST_1.getName(),
             new DescribeAutoScalingGroupsRequest().withAutoScalingGroupNames(asList(AUTO_SCALING_GROUP_NAME)));

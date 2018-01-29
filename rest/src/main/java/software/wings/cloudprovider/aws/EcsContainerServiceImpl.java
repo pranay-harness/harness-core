@@ -54,6 +54,7 @@ import software.wings.beans.AwsConfig;
 import software.wings.beans.Log.LogLevel;
 import software.wings.beans.SettingAttribute;
 import software.wings.beans.command.ExecutionLogCallback;
+import software.wings.beans.command.LogCallback;
 import software.wings.cloudprovider.ContainerInfo;
 import software.wings.cloudprovider.ContainerInfo.Status;
 import software.wings.exception.WingsException;
@@ -774,7 +775,7 @@ public class EcsContainerServiceImpl implements EcsContainerService {
   @Override
   public void provisionNodes(String region, SettingAttribute connectorConfig,
       List<EncryptedDataDetail> encryptedDataDetails, Integer clusterSize, String launchConfigName,
-      Map<String, Object> params) {
+      Map<String, Object> params, LogCallback logCallback) {
     AwsConfig awsConfig = awsHelperService.validateAndGetAwsConfig(connectorConfig, encryptedDataDetails);
 
     String clusterName = (String) params.get("clusterName");
@@ -799,7 +800,8 @@ public class EcsContainerServiceImpl implements EcsContainerService {
             .withMinSize(minSize)
             .withAutoScalingGroupName(autoScalingGroupName)
             .withAvailabilityZones(availabilityZones)
-            .withVPCZoneIdentifier(vpcZoneIdentifiers));
+            .withVPCZoneIdentifier(vpcZoneIdentifiers),
+        logCallback);
 
     logger.info("Successfully created autoScalingGroup: {}", autoScalingGroupName);
 

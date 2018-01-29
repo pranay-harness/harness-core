@@ -80,7 +80,7 @@ public class AwsClusterServiceIntegrationTest extends WingsBaseTest {
 
     AwsClusterConfiguration awsClusterConfiguration = getAwsClusterConfiguration(params);
     awsClusterService.createCluster(
-        Regions.US_EAST_1.getName(), awsConnectorSetting, Collections.emptyList(), awsClusterConfiguration);
+        Regions.US_EAST_1.getName(), awsConnectorSetting, Collections.emptyList(), awsClusterConfiguration, null);
     // awsClusterService.destroyCluster(awsConnectorSetting, (String) params.get("CLUSTER_NAME"), (String)
     // params.get("SERVICE_NAME" + "_" + "SERVICE_VERSION"));
   }
@@ -113,7 +113,7 @@ public class AwsClusterServiceIntegrationTest extends WingsBaseTest {
     params.put("autoScalingGroupName", ((AwsClusterConfiguration) clusterConfiguration).getAutoScalingGroupName());
 
     ecsContainerService.provisionNodes(Regions.US_EAST_1.getName(), awsConnectorSetting, Collections.emptyList(), 5,
-        "wins_demo_launchconfig_v1", params);
+        "wins_demo_launchconfig_v1", params, null);
   }
 
   @Test

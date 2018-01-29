@@ -11,7 +11,7 @@ import software.wings.delegatetasks.DelegateLogService;
 /**
  * Created by anubhaw on 2/14/17.
  */
-public class ExecutionLogCallback {
+public class ExecutionLogCallback implements LogCallback {
   private transient DelegateLogService logService;
   private CommandExecutionContext commandExecutionContext;
   private String commandName;
@@ -22,6 +22,10 @@ public class ExecutionLogCallback {
   public ExecutionLogCallback(CommandExecutionContext commandExecutionContext, String commandName) {
     this.commandExecutionContext = commandExecutionContext;
     this.commandName = commandName;
+  }
+
+  public void saveExecutionLog(String line) {
+    saveExecutionLog(line, LogLevel.INFO);
   }
 
   public void saveExecutionLog(String line, LogLevel logLevel) {

@@ -50,7 +50,7 @@ public class AwsClusterServiceImplTest extends WingsBaseTest {
   @Test
   public void shouldCreateCluster() {
     awsClusterService.createCluster(
-        Regions.US_EAST_1.getName(), cloudProviderSetting, Collections.emptyList(), clusterConfiguration);
+        Regions.US_EAST_1.getName(), cloudProviderSetting, Collections.emptyList(), clusterConfiguration, null);
 
     ImmutableMap<String, Object> params =
         ImmutableMap.of("autoScalingGroupName", AUTO_SCALING_GROUP_NAME, "clusterName", CLUSTER_NAME,
@@ -58,7 +58,7 @@ public class AwsClusterServiceImplTest extends WingsBaseTest {
 
     verify(ecsContainerService)
         .provisionNodes(Regions.US_EAST_1.getName(), cloudProviderSetting, Collections.emptyList(), 5,
-            LAUNCHER_TEMPLATE_NAME, params);
+            LAUNCHER_TEMPLATE_NAME, params, null);
   }
 
   @Test

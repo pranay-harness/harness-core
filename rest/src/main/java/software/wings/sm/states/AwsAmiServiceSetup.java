@@ -246,11 +246,12 @@ public class AwsAmiServiceSetup extends State {
           "Creating new launch configuration [%s]", baseLaunchConfiguration.getLaunchConfigurationName()));
       awsHelperService.createAutoScalingGroup(awsConfig, encryptionDetails, region,
           createNewAutoScalingGroupRequest(
-              infrastructureMapping, newAutoScalingGroupName, baseAutoScalingGroup, harnessRevision));
+              infrastructureMapping, newAutoScalingGroupName, baseAutoScalingGroup, harnessRevision),
+          executionLogCallback);
       executionLogCallback.saveExecutionLog(
           String.format("Creating new AutoScalingGroup [%s]", newAutoScalingGroupName));
       deleteOldHarnessManagedAutoScalingGroups(encryptionDetails, region, awsConfig, harnessManagedAutoScalingGroups,
-          amiServiceElement.getOldAutoScalingGroupName());
+          amiServiceElement.getOldAutoScalingGroupName(), executionLogCallback);
 
       executionLogCallback.saveExecutionLog(
           String.format("Deleting old AutoScalingGroup [%s]", amiServiceElement.getOldAutoScalingGroupName()));
@@ -458,7 +459,8 @@ public class AwsAmiServiceSetup extends State {
   }
 
   private void deleteOldHarnessManagedAutoScalingGroups(List<EncryptedDataDetail> encryptionDetails, String region,
-      AwsConfig awsConfig, List<AutoScalingGroup> harnessAutoScalingGroups, String oldAutoScalingGroupName) {
+      AwsConfig awsConfig, List<AutoScalingGroup> harnessAutoScalingGroups, String oldAutoScalingGroupName,
+      ManagerExecutionLogCallback logCallback) {
     try {
       List<AutoScalingGroup> emptyHarnessAsgToBeDeleted =
           harnessAutoScalingGroups.stream()
@@ -474,8 +476,8 @@ public class AwsAmiServiceSetup extends State {
         logger.info("ASG Cleanup. Deleting following ASG [{}]", Joiner.on(",").join(emptyHarnessAsgToBeDeleted));
         List<AutoScalingGroup> finalEmptyHarnessAsgToBeDeleted = emptyHarnessAsgToBeDeleted;
         executorService.submit(()
-                                   -> awsHelperService.deleteAutoScalingGroups(
-                                       awsConfig, encryptionDetails, region, finalEmptyHarnessAsgToBeDeleted));
+                                   -> awsHelperService.deleteAutoScalingGroups(awsConfig, encryptionDetails, region,
+                                       finalEmptyHarnessAsgToBeDeleted, logCallback));
       }
     } catch (Exception ex) {
       logger.error(
