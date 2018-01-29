@@ -51,6 +51,8 @@ import java.util.regex.Pattern;
 public class KubernetesContainerTask extends ContainerTask {
   private static final Logger logger = LoggerFactory.getLogger(KubernetesContainerTask.class);
 
+  private static final Pattern DAEMON_SET_PATTERN = Pattern.compile("kind:\\s*\"?DaemonSet");
+
   @Attributes(title = "LABELS") private List<Label> labels;
   @EnumData(enumDataProvider = ArtifactEnumDataProvider.class) private String artifactName;
 
@@ -173,9 +175,7 @@ public class KubernetesContainerTask extends ContainerTask {
   }
 
   public boolean checkDaemonSet() {
-    return isNotBlank(getAdvancedConfig())
-        && (Pattern.compile("kind:\\s*DaemonSet").matcher(getAdvancedConfig()).find()
-               || Pattern.compile("kind:\\s*\"DaemonSet\"").matcher(getAdvancedConfig()).find());
+    return isNotBlank(getAdvancedConfig()) && DAEMON_SET_PATTERN.matcher(getAdvancedConfig()).find();
   }
 
   public HasMetadata createController(String containerName, String imageNameTag, String secretName) {
