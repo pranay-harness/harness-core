@@ -65,6 +65,7 @@ import software.wings.resources.AppResource;
 import software.wings.scheduler.ArchivalManager;
 import software.wings.scheduler.PersistentLockCleanupJob;
 import software.wings.scheduler.QuartzScheduler;
+import software.wings.scheduler.ZombieHunterJob;
 import software.wings.security.AuthResponseFilter;
 import software.wings.security.AuthRuleFilter;
 import software.wings.security.BasicAuthAuthenticator;
@@ -336,6 +337,7 @@ public class WingsApplication extends Application<MainConfiguration> {
         injector.getInstance(Key.get(QuartzScheduler.class, Names.named("JobScheduler")));
 
     PersistentLockCleanupJob.add(jobScheduler);
+    ZombieHunterJob.scheduleJobs(jobScheduler);
   }
 
   private void registerJerseyProviders(Environment environment) {
