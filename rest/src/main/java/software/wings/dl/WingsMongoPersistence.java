@@ -10,8 +10,10 @@ import static software.wings.beans.SearchFilter.Builder.aSearchFilter;
 import static software.wings.utils.WingsReflectionUtils.getDeclaredAndInheritedFields;
 import static software.wings.utils.WingsReflectionUtils.getDecryptedField;
 import static software.wings.utils.WingsReflectionUtils.getEncryptedRefField;
+import static software.wings.utils.WingsReflectionUtils.getFieldByName;
 import static software.wings.utils.WingsReflectionUtils.isSetByYaml;
 
+import com.google.common.base.Preconditions;
 import com.google.common.collect.Sets;
 import com.google.inject.Inject;
 import com.google.inject.Singleton;
@@ -315,23 +317,29 @@ public class WingsMongoPersistence implements WingsPersistence, Managed {
     updateFields(cls, entityId, keyValuePairs);
   }
 
+  @Override
+  public <T> void updateFields(Class<T> cls, String entityId, Map<String, Object> keyValuePairs) {
+    updateFields(cls, entityId, keyValuePairs, Collections.EMPTY_SET);
+  }
+
   /**
    * {@inheritDoc}
    */
   @Override
-  public <T> void updateFields(Class<T> cls, String entityId, Map<String, Object> keyValuePairs) {
+  public <T> void updateFields(
+      Class<T> cls, String entityId, Map<String, Object> keyValuePairs, Set<String> fieldsToRemove) {
     Query<T> query = primaryDatastore.createQuery(cls).field(ID_KEY).equal(entityId);
     UpdateOperations<T> operations = primaryDatastore.createUpdateOperations(cls);
     boolean encryptable = Encryptable.class.isAssignableFrom(cls);
+    Object savedObject = datastoreMap.get(ReadPref.NORMAL).get(cls, entityId);
     List<Field> declaredAndInheritedFields = getDeclaredAndInheritedFields(cls);
     for (Entry<String, Object> entry : keyValuePairs.entrySet()) {
       Object value = entry.getValue();
       if (cls == SettingAttribute.class && entry.getKey().equalsIgnoreCase("value")
           && Encryptable.class.isInstance(value)) {
         Encryptable e = (Encryptable) value;
-        Object o = datastoreMap.get(ReadPref.NORMAL).get(cls, entityId);
-        encrypt(e, (Encryptable) ((SettingAttribute) o).getValue());
-        updateParentIfNecessary(o, entityId);
+        encrypt(e, (Encryptable) ((SettingAttribute) savedObject).getValue());
+        updateParentIfNecessary(savedObject, entityId);
         value = e;
       } else if (encryptable) {
         Field f = declaredAndInheritedFields.stream()
@@ -341,10 +349,9 @@ public class WingsMongoPersistence implements WingsPersistence, Managed {
         if (f == null) {
           throw new WingsException("Field " + entry.getKey() + " not found for update on class " + cls.getName());
         }
-        Encrypted a = f.getAnnotation(Encrypted.class);
-        if (null != a) {
+        if (f.getAnnotation(Encrypted.class) != null) {
           try {
-            Encryptable object = (Encryptable) datastoreMap.get(ReadPref.NORMAL).get(cls, entityId);
+            Encryptable object = (Encryptable) savedObject;
 
             if (shouldEncryptWhileUpdating(f, object, keyValuePairs, entityId)) {
               String accountId = object.getAccountId();
@@ -363,6 +370,28 @@ public class WingsMongoPersistence implements WingsPersistence, Managed {
       }
       operations.set(entry.getKey(), value);
     }
+
+    fieldsToRemove.forEach(fieldToRemove -> {
+      if (encryptable) {
+        Encryptable object = (Encryptable) savedObject;
+        String accountId = object.getAccountId();
+        Field f = getFieldByName(savedObject.getClass(), fieldToRemove);
+        Preconditions.checkNotNull(f, "Can't find " + fieldToRemove + " in class " + cls);
+        if (f.getAnnotation(Encrypted.class) != null) {
+          try {
+            Field encryptedField = getEncryptedRefField(f, object);
+            String encryptedId =
+                encrypt(object, null, encryptedField, object, secretManager.getEncryptionType(accountId));
+            updateParentIfNecessary(object, entityId);
+            operations.set(encryptedField.getName(), encryptedId);
+          } catch (IllegalAccessException e) {
+            throw new WingsException(
+                "Failed to update record for " + fieldToRemove + " in " + cls + " id: " + entityId, e);
+          }
+        }
+      }
+      operations.unset(fieldToRemove);
+    });
 
     update(query, operations);
   }
@@ -706,7 +735,7 @@ public class WingsMongoPersistence implements WingsPersistence, Managed {
     } else {
       encryptedData.setEncryptionKey(encryptedPair.getEncryptionKey());
       encryptedData.setEncryptedValue(encryptedPair.getEncryptedValue());
-      encryptedData.setEncryptionType(encryptionType);
+      encryptedData.setEncryptionType(encryptedPair.getEncryptionType());
       encryptedData.setKmsId(encryptedPair.getKmsId());
       changeLogDescription = "Changed " + decryptedField.getName();
     }

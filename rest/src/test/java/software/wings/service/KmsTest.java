@@ -37,10 +37,12 @@ import software.wings.beans.Base;
 import software.wings.beans.ConfigFile;
 import software.wings.beans.ConfigFile.ConfigOverrideType;
 import software.wings.beans.DelegateTask.SyncTaskContext;
+import software.wings.beans.DirectKubernetesInfrastructureMapping;
 import software.wings.beans.EntityType;
 import software.wings.beans.ErrorCode;
 import software.wings.beans.FeatureFlag;
 import software.wings.beans.FeatureName;
+import software.wings.beans.InfrastructureMapping;
 import software.wings.beans.KmsConfig;
 import software.wings.beans.Service;
 import software.wings.beans.ServiceTemplate;
@@ -70,6 +72,7 @@ import software.wings.service.impl.security.KmsServiceImpl;
 import software.wings.service.impl.security.KmsTransitionEventListener;
 import software.wings.service.impl.security.SecretManagementDelegateServiceImpl;
 import software.wings.service.intfc.ConfigService;
+import software.wings.service.intfc.InfrastructureMappingService;
 import software.wings.service.intfc.SettingsService;
 import software.wings.service.intfc.newrelic.NewRelicService;
 import software.wings.service.intfc.security.EncryptionService;
@@ -111,6 +114,7 @@ public class KmsTest extends WingsBaseTest {
   @Inject private EncryptionService encryptionService;
   @Inject private SettingsService settingsService;
   @Inject private SettingValidationService settingValidationService;
+  @Inject private InfrastructureMappingService infrastructureMappingService;
   @Mock private SecretManagementDelegateService secretManagementDelegateService;
   @Mock private NewRelicService newRelicService;
   @Mock private DelegateProxyFactory delegateProxyFactory;
@@ -2854,6 +2858,178 @@ public class KmsTest extends WingsBaseTest {
         assertEquals("Changed password", secretChangeLog.getDescription());
       }
     }
+  }
+
+  @Test
+  public void testDirectKubernetsUpdate() throws IOException, IllegalAccessException {
+    final String accountId = UUID.randomUUID().toString();
+    final KmsConfig kmsConfig = getKmsConfig();
+    kmsService.saveKmsConfig(accountId, kmsConfig);
+    enableKmsFeatureFlag();
+
+    String appId = UUID.randomUUID().toString();
+
+    String serviceId = wingsPersistence.save(
+        Service.Builder.aService().withAppId(appId).withName(UUID.randomUUID().toString()).build());
+    String serviceTemplateId = wingsPersistence.save(
+        ServiceTemplate.Builder.aServiceTemplate().withAppId(appId).withServiceId(serviceId).build());
+
+    String password = UUID.randomUUID().toString();
+    String caCert = UUID.randomUUID().toString();
+    String clientCert = UUID.randomUUID().toString();
+    String clientKey = UUID.randomUUID().toString();
+    String clientKeyPassphrase = UUID.randomUUID().toString();
+    DirectKubernetesInfrastructureMapping infrastructureMapping =
+        DirectKubernetesInfrastructureMapping.Builder.aDirectKubernetesInfrastructureMapping()
+            .withMasterUrl(UUID.randomUUID().toString())
+            .withUsername(UUID.randomUUID().toString())
+            .withClientCert(clientCert.toCharArray())
+            .withClientKey(clientKey.toCharArray())
+            .withClientKeyAlgo(UUID.randomUUID().toString())
+            .withNamespace(UUID.randomUUID().toString())
+            .withClusterName(UUID.randomUUID().toString())
+            .withComputeProviderSettingId(UUID.randomUUID().toString())
+            .withEnvId(UUID.randomUUID().toString())
+            .withServiceTemplateId(serviceTemplateId)
+            .withServiceId(serviceId)
+            .withComputeProviderType(UUID.randomUUID().toString())
+            .withInfraMappingType(UUID.randomUUID().toString())
+            .withDeploymentType(UUID.randomUUID().toString())
+            .withAccountId(accountId)
+            .withAppId(appId)
+            .build();
+
+    InfrastructureMapping savedInfraMapping = infrastructureMappingService.save(infrastructureMapping);
+    String infraMapingId = savedInfraMapping.getUuid();
+
+    DirectKubernetesInfrastructureMapping directInfraMapping =
+        wingsPersistence.get(DirectKubernetesInfrastructureMapping.class, infraMapingId);
+    assertEquals(infrastructureMapping.getMasterUrl(), directInfraMapping.getMasterUrl());
+    assertEquals(infrastructureMapping.getUsername(), directInfraMapping.getUsername());
+    assertEquals(infrastructureMapping.getNamespace(), directInfraMapping.getNamespace());
+
+    assertNull(directInfraMapping.getPassword());
+    assertNotNull(directInfraMapping.getEncryptedPassword());
+
+    assertNull(directInfraMapping.getCaCert());
+    assertNotNull(directInfraMapping.getEncryptedCaCert());
+
+    assertNull(directInfraMapping.getClientCert());
+    assertNotNull(directInfraMapping.getEncryptedClientCert());
+
+    assertNull(directInfraMapping.getClientKey());
+    assertNotNull(directInfraMapping.getEncryptedClientKey());
+
+    assertNull(directInfraMapping.getClientKeyPassphrase());
+    assertNotNull(directInfraMapping.getEncryptedClientKeyPassphrase());
+
+    encryptionService.decrypt(directInfraMapping, secretManager.getEncryptionDetails(directInfraMapping, null, null));
+    assertNull(directInfraMapping.getPassword());
+    assertNull(directInfraMapping.getCaCert());
+    assertEquals(clientCert, String.valueOf(directInfraMapping.getClientCert()));
+    assertEquals(clientKey, String.valueOf(directInfraMapping.getClientKey()));
+    assertNull(directInfraMapping.getClientKeyPassphrase());
+
+    Query<EncryptedData> query =
+        wingsPersistence.createQuery(EncryptedData.class).field("type").equal(SettingVariableTypes.DIRECT);
+    assertEquals(5, query.asList().size());
+
+    query = wingsPersistence.createQuery(EncryptedData.class)
+                .field("type")
+                .equal(SettingVariableTypes.DIRECT)
+                .field("encryptionType")
+                .equal(EncryptionType.KMS);
+    assertEquals(2, query.asList().size());
+
+    directInfraMapping.setPassword(password.toCharArray());
+    directInfraMapping.setCaCert(caCert.toCharArray());
+    directInfraMapping.setClientKeyPassphrase(clientKeyPassphrase.toCharArray());
+
+    infrastructureMappingService.update(directInfraMapping);
+
+    directInfraMapping = wingsPersistence.get(DirectKubernetesInfrastructureMapping.class, infraMapingId);
+    assertEquals(infrastructureMapping.getMasterUrl(), directInfraMapping.getMasterUrl());
+    assertEquals(infrastructureMapping.getUsername(), directInfraMapping.getUsername());
+    assertEquals(infrastructureMapping.getNamespace(), directInfraMapping.getNamespace());
+
+    assertNull(directInfraMapping.getPassword());
+    assertNotNull(directInfraMapping.getEncryptedPassword());
+
+    assertNull(directInfraMapping.getCaCert());
+    assertNotNull(directInfraMapping.getEncryptedCaCert());
+
+    assertNull(directInfraMapping.getClientCert());
+    assertNotNull(directInfraMapping.getEncryptedClientCert());
+
+    assertNull(directInfraMapping.getClientKey());
+    assertNotNull(directInfraMapping.getEncryptedClientKey());
+
+    assertNull(directInfraMapping.getClientKeyPassphrase());
+    assertNotNull(directInfraMapping.getEncryptedClientKeyPassphrase());
+
+    encryptionService.decrypt(directInfraMapping, secretManager.getEncryptionDetails(directInfraMapping, null, null));
+    assertEquals(password, String.valueOf(directInfraMapping.getPassword()));
+    assertEquals(caCert, String.valueOf(directInfraMapping.getCaCert()));
+    assertEquals(clientCert, String.valueOf(directInfraMapping.getClientCert()));
+    assertEquals(clientKey, String.valueOf(directInfraMapping.getClientKey()));
+    assertEquals(clientKeyPassphrase, String.valueOf(directInfraMapping.getClientKeyPassphrase()));
+
+    query = wingsPersistence.createQuery(EncryptedData.class).field("type").equal(SettingVariableTypes.DIRECT);
+    assertEquals(5, query.asList().size());
+
+    assertEquals(5, query.asList().size());
+
+    query = wingsPersistence.createQuery(EncryptedData.class)
+                .field("type")
+                .equal(SettingVariableTypes.DIRECT)
+                .field("encryptionType")
+                .equal(EncryptionType.KMS);
+    assertEquals(5, query.asList().size());
+
+    directInfraMapping.setPassword(null);
+    directInfraMapping.setCaCert(null);
+    directInfraMapping.setClientKeyPassphrase(null);
+
+    infrastructureMappingService.update(directInfraMapping);
+
+    directInfraMapping = wingsPersistence.get(DirectKubernetesInfrastructureMapping.class, infraMapingId);
+    assertEquals(infrastructureMapping.getMasterUrl(), directInfraMapping.getMasterUrl());
+    assertEquals(infrastructureMapping.getUsername(), directInfraMapping.getUsername());
+    assertEquals(infrastructureMapping.getNamespace(), directInfraMapping.getNamespace());
+
+    assertNull(directInfraMapping.getPassword());
+    assertNotNull(directInfraMapping.getEncryptedPassword());
+
+    assertNull(directInfraMapping.getCaCert());
+    assertNotNull(directInfraMapping.getEncryptedCaCert());
+
+    assertNull(directInfraMapping.getClientCert());
+    assertNotNull(directInfraMapping.getEncryptedClientCert());
+
+    assertNull(directInfraMapping.getClientKey());
+    assertNotNull(directInfraMapping.getEncryptedClientKey());
+
+    assertNull(directInfraMapping.getClientKeyPassphrase());
+    assertNotNull(directInfraMapping.getEncryptedClientKeyPassphrase());
+
+    encryptionService.decrypt(directInfraMapping, secretManager.getEncryptionDetails(directInfraMapping, null, null));
+    assertNull(directInfraMapping.getPassword());
+    assertNull(directInfraMapping.getCaCert());
+    assertEquals(clientCert, String.valueOf(directInfraMapping.getClientCert()));
+    assertEquals(clientKey, String.valueOf(directInfraMapping.getClientKey()));
+    assertNull(directInfraMapping.getClientKeyPassphrase());
+
+    query = wingsPersistence.createQuery(EncryptedData.class).field("type").equal(SettingVariableTypes.DIRECT);
+    assertEquals(5, query.asList().size());
+
+    assertEquals(5, query.asList().size());
+
+    query = wingsPersistence.createQuery(EncryptedData.class)
+                .field("type")
+                .equal(SettingVariableTypes.DIRECT)
+                .field("encryptionType")
+                .equal(EncryptionType.KMS);
+    assertEquals(2, query.asList().size());
   }
 
   public static KmsConfig getKmsConfig() {

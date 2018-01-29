@@ -12,6 +12,7 @@ import software.wings.beans.ReadPref;
 
 import java.util.List;
 import java.util.Map;
+import java.util.Set;
 
 /**
  * The Interface WingsPersistence.
@@ -205,6 +206,16 @@ public interface WingsPersistence {
    * @param keyValuePairs the key value pairs
    */
   <T> void updateFields(Class<T> cls, String entityId, Map<String, Object> keyValuePairs);
+
+  /**
+   * Update fields
+   * @param cls
+   * @param entityId
+   * @param keyValuePairs
+   * @param fieldsToRemove
+   * @param <T>
+   */
+  <T> void updateFields(Class<T> cls, String entityId, Map<String, Object> keyValuePairs, Set<String> fieldsToRemove);
 
   /**
    * Delete.
