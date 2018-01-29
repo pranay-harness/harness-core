@@ -9,12 +9,15 @@ import static software.wings.beans.Application.Builder.anApplication;
 import static software.wings.beans.CanaryOrchestrationWorkflow.CanaryOrchestrationWorkflowBuilder.aCanaryOrchestrationWorkflow;
 import static software.wings.beans.Environment.Builder.anEnvironment;
 import static software.wings.beans.NotificationRule.NotificationRuleBuilder.aNotificationRule;
+import static software.wings.beans.Service.Builder.aService;
+import static software.wings.beans.Workflow.WorkflowBuilder.aWorkflow;
 import static software.wings.beans.artifact.Artifact.Builder.anArtifact;
 import static software.wings.common.Constants.BUILD_NO;
 import static software.wings.utils.WingsTestConstants.APP_ID;
 import static software.wings.utils.WingsTestConstants.ENV_ID;
 import static software.wings.utils.WingsTestConstants.ENV_NAME;
 import static software.wings.utils.WingsTestConstants.WORKFLOW_EXECUTION_ID;
+import static software.wings.utils.WingsTestConstants.WORKFLOW_ID;
 import static software.wings.utils.WingsTestConstants.WORKFLOW_NAME;
 
 import com.google.common.collect.ImmutableList;
@@ -40,6 +43,7 @@ import software.wings.common.NotificationMessageResolver.NotificationMessageType
 import software.wings.service.impl.WorkflowNotificationHelper;
 import software.wings.service.intfc.NotificationService;
 import software.wings.service.intfc.WorkflowExecutionService;
+import software.wings.service.intfc.WorkflowService;
 import software.wings.sm.ExecutionContextImpl;
 import software.wings.sm.ExecutionStatus;
 import software.wings.sm.states.PhaseSubWorkflow;
@@ -50,6 +54,7 @@ import software.wings.sm.states.PhaseSubWorkflow;
 public class WorkflowNotificationHelperTest extends WingsBaseTest {
   @Mock private NotificationService notificationService;
   @Mock private WorkflowExecutionService workflowExecutionService;
+  @Mock private WorkflowService workflowService;
   @Inject @InjectMocks private WorkflowNotificationHelper workflowNotificationHelper;
 
   @Mock(answer = Answers.RETURNS_DEEP_STUBS) private ExecutionContextImpl executionContext;
@@ -61,11 +66,30 @@ public class WorkflowNotificationHelperTest extends WingsBaseTest {
         .thenReturn(ImmutableList.of(anArtifact()
                                          .withArtifactSourceName("artifact-1")
                                          .withMetadata(ImmutableMap.of(BUILD_NO, "build-1"))
-                                         .build()));
+                                         .withServiceIds(ImmutableList.of("service-1"))
+                                         .build(),
+            anArtifact()
+                .withArtifactSourceName("artifact-2")
+                .withMetadata(ImmutableMap.of(BUILD_NO, "build-2"))
+                .withServiceIds(ImmutableList.of("service-2"))
+                .build(),
+            anArtifact()
+                .withArtifactSourceName("artifact-3")
+                .withMetadata(ImmutableMap.of(BUILD_NO, "build-3"))
+                .withServiceIds(ImmutableList.of("service-3"))
+                .build()));
     when(executionContext.getEnv())
         .thenReturn(anEnvironment().withUuid(ENV_ID).withName(ENV_NAME).withAppId(APP_ID).build());
     when(executionContext.getWorkflowExecutionId()).thenReturn(WORKFLOW_EXECUTION_ID);
     when(executionContext.getWorkflowExecutionName()).thenReturn(WORKFLOW_NAME);
+    when(executionContext.getAppId()).thenReturn(APP_ID);
+    when(executionContext.getWorkflowId()).thenReturn(WORKFLOW_ID);
+    when(workflowService.readWorkflow(APP_ID, WORKFLOW_ID))
+        .thenReturn(aWorkflow()
+                        .withOrchestrationWorkflow(aCanaryOrchestrationWorkflow().build())
+                        .withServices(ImmutableList.of(
+                            aService().withUuid("service-1").build(), aService().withUuid("service-2").build()))
+                        .build());
   }
 
   @Test
@@ -92,8 +116,8 @@ public class WorkflowNotificationHelperTest extends WingsBaseTest {
     assertThat(notification).isInstanceOf(FailureNotification.class);
     assertThat(notification.getNotificationTemplateId())
         .isEqualTo(NotificationMessageType.WORKFLOW_FAILED_NOTIFICATION.name());
-    ImmutableMap<String, String> placeholders = ImmutableMap.of(
-        "WORKFLOW_NAME", WORKFLOW_NAME, "ARTIFACTS", "artifact-1 (build# build-1)", "ENV_NAME", ENV_NAME);
+    ImmutableMap<String, String> placeholders = ImmutableMap.of("WORKFLOW_NAME", WORKFLOW_NAME, "ARTIFACTS",
+        "artifact-1 (build# build-1), artifact-2 (build# build-2)", "ENV_NAME", ENV_NAME);
     assertThat(notification.getNotificationTemplateVariables()).containsAllEntriesOf(placeholders);
   }
 
@@ -112,6 +136,7 @@ public class WorkflowNotificationHelperTest extends WingsBaseTest {
 
     PhaseSubWorkflow phaseSubWorkflow = Mockito.mock(PhaseSubWorkflow.class);
     when(phaseSubWorkflow.getName()).thenReturn("Phase1");
+    when(phaseSubWorkflow.getServiceId()).thenReturn("service-2");
     WorkflowExecution executionDetails = workflowExecutionService.getExecutionDetails(APP_ID, WORKFLOW_EXECUTION_ID);
     workflowNotificationHelper.sendWorkflowPhaseStatusChangeNotification(
         executionContext, ExecutionStatus.FAILED, phaseSubWorkflow, executionDetails);
@@ -126,7 +151,7 @@ public class WorkflowNotificationHelperTest extends WingsBaseTest {
     assertThat(notification.getNotificationTemplateId())
         .isEqualTo(NotificationMessageType.WORKFLOW_PHASE_FAILED_NOTIFICATION.name());
     ImmutableMap<String, String> placeholders = ImmutableMap.of("WORKFLOW_NAME", WORKFLOW_NAME, "PHASE_NAME", "Phase1",
-        "ARTIFACTS", "artifact-1 (build# build-1)", "ENV_NAME", ENV_NAME);
+        "ARTIFACTS", "artifact-2 (build# build-2)", "ENV_NAME", ENV_NAME);
     assertThat(notification.getNotificationTemplateVariables()).containsAllEntriesOf(placeholders);
   }
 }
