@@ -234,31 +234,38 @@ public class ExecutionInterruptManager {
   }
 
   private void sendNotification(ExecutionInterrupt executionInterrupt, ExecutionStatus status) {
-    WorkflowExecution workflowExecution = wingsPersistence.get(
-        WorkflowExecution.class, executionInterrupt.getAppId(), executionInterrupt.getExecutionUuid());
-    PageRequest<StateExecutionInstance> pageRequest =
-        aPageRequest()
-            .withLimit("1")
-            .addFilter("appId", EQ, executionInterrupt.getAppId())
-            .addFilter("executionUuid", EQ, executionInterrupt.getExecutionUuid())
-            .addFilter("createdAt", GT, workflowExecution.getCreatedAt())
-            .addOrder("createdAt", OrderType.DESC)
-            .withReadPref(ReadPref.CRITICAL)
-            .build();
+    try {
+      WorkflowExecution workflowExecution = wingsPersistence.get(
+          WorkflowExecution.class, executionInterrupt.getAppId(), executionInterrupt.getExecutionUuid());
+      PageRequest<StateExecutionInstance> pageRequest =
+          aPageRequest()
+              .withLimit("1")
+              .addFilter("appId", EQ, executionInterrupt.getAppId())
+              .addFilter("executionUuid", EQ, executionInterrupt.getExecutionUuid())
+              .addFilter("createdAt", GT, workflowExecution.getCreatedAt())
+              .addOrder("createdAt", OrderType.DESC)
+              .withReadPref(ReadPref.CRITICAL)
+              .build();
 
-    PageResponse<StateExecutionInstance> pageResponse =
-        wingsPersistence.query(StateExecutionInstance.class, pageRequest);
-    if (isEmpty(pageResponse)) {
-      logger.error("No StateExecutionInstance found for sendNotification");
-      return;
+      PageResponse<StateExecutionInstance> pageResponse =
+          wingsPersistence.query(StateExecutionInstance.class, pageRequest);
+      if (isEmpty(pageResponse)) {
+        logger.error("No StateExecutionInstance found for sendNotification");
+        return;
+      }
+      StateMachine sm = wingsPersistence.get(
+          StateMachine.class, executionInterrupt.getAppId(), pageResponse.get(0).getStateMachineId());
+      ExecutionContextImpl context = new ExecutionContextImpl(pageResponse.get(0), sm, injector);
+      injector.injectMembers(context);
+
+      workflowNotificationHelper.sendWorkflowStatusChangeNotification(context, status);
+    } catch (WingsException exception) {
+      exception.logProcessedMessages(logger);
+    } catch (RuntimeException exception) {
+      logger.error("Unknown runtime exception: ", exception);
     }
-    StateMachine sm = wingsPersistence.get(
-        StateMachine.class, executionInterrupt.getAppId(), pageResponse.get(0).getStateMachineId());
-    ExecutionContextImpl context = new ExecutionContextImpl(pageResponse.get(0), sm, injector);
-    injector.injectMembers(context);
-
-    workflowNotificationHelper.sendWorkflowStatusChangeNotification(context, status);
   }
+
   private void makeInactive(ExecutionInterrupt executionInterrupt) {
     wingsPersistence.delete(executionInterrupt);
   }
