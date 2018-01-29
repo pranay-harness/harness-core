@@ -41,6 +41,7 @@ import java.io.IOException;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.regex.Pattern;
 
 /**
  * Created by brett on 3/8/17
@@ -173,7 +174,8 @@ public class KubernetesContainerTask extends ContainerTask {
 
   public boolean checkDaemonSet() {
     return isNotBlank(getAdvancedConfig())
-        && (getAdvancedConfig().contains("kind: DaemonSet") || getAdvancedConfig().contains("kind: \"DaemonSet\""));
+        && (Pattern.compile("kind:\\s*DaemonSet").matcher(getAdvancedConfig()).find()
+               || Pattern.compile("kind:\\s*\"DaemonSet\"").matcher(getAdvancedConfig()).find());
   }
 
   public HasMetadata createController(String containerName, String imageNameTag, String secretName) {
