@@ -171,7 +171,7 @@ public class KubernetesContainerTask extends ContainerTask {
     }
   }
 
-  public boolean isDaemonSet() {
+  public boolean checkDaemonSet() {
     return isNotBlank(getAdvancedConfig())
         && (getAdvancedConfig().contains("kind: DaemonSet") || getAdvancedConfig().contains("kind: \"DaemonSet\""));
   }
