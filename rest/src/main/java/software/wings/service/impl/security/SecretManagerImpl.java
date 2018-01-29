@@ -317,6 +317,12 @@ public class SecretManagerImpl implements SecretManager {
 
   @Override
   public String getEncryptedYamlRef(Encryptable object, String... fieldNames) throws IllegalAccessException {
+    if (object.getSettingType() == SettingVariableTypes.CONFIG_FILE) {
+      String encryptedFieldRefId = ((ConfigFile) object).getEncryptedFileId();
+      EncryptedData encryptedData = wingsPersistence.get(EncryptedData.class, encryptedFieldRefId);
+      Preconditions.checkNotNull(encryptedData, "no encrypted record found for " + object);
+      return encryptedData.getEncryptionType().getYamlName() + ":" + encryptedFieldRefId;
+    }
     Preconditions.checkState(fieldNames.length <= 1, "can't give more than one field in the call");
     Field encryptedField = null;
     if (fieldNames.length == 0) {
