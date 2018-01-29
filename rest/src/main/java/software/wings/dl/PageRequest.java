@@ -55,8 +55,7 @@ public class PageRequest<T> {
   @JsonIgnore Class<T> persistentClass;
   @DefaultValue("0") @QueryParam("offset") private String offset;
   private int start;
-  @DefaultValue("50") @QueryParam("limit") private String limit;
-  private int pageSize = DEFAULT_PAGE_SIZE;
+  @QueryParam("limit") private String limit;
   private List<SearchFilter> filters = new ArrayList<>();
   private List<SortOrder> orders = new ArrayList<>();
 
@@ -85,7 +84,6 @@ public class PageRequest<T> {
    */
   public PageRequest(PageRequest<T> req) {
     this.offset = req.offset;
-    this.pageSize = req.pageSize;
     this.start = req.start;
     this.limit = req.limit;
     this.filters = req.filters;
@@ -156,6 +154,10 @@ public class PageRequest<T> {
    */
   public int getPageSize() {
     return Misc.asInt(limit, DEFAULT_UNLIMITED);
+  }
+
+  public void setPageSize(int pageSize) {
+    // nothing to do
   }
 
   /**
@@ -423,7 +425,7 @@ public class PageRequest<T> {
       return false;
     }
     PageRequest<?> that = (PageRequest<?>) obj;
-    return start == that.start && pageSize == that.pageSize && isOr == that.isOr && Objects.equal(offset, that.offset)
+    return start == that.start && isOr == that.isOr && Objects.equal(offset, that.offset)
         && Objects.equal(limit, that.limit) && Objects.equal(filters, that.filters)
         && Objects.equal(orders, that.orders) && Objects.equal(fieldsIncluded, that.fieldsIncluded)
         && Objects.equal(fieldsExcluded, that.fieldsExcluded);
@@ -435,7 +437,7 @@ public class PageRequest<T> {
   @Override
   @lombok.Generated
   public int hashCode() {
-    return Objects.hashCode(offset, start, limit, pageSize, filters, orders, fieldsIncluded, fieldsExcluded, isOr);
+    return Objects.hashCode(offset, start, limit, filters, orders, fieldsIncluded, fieldsExcluded, isOr);
   }
 
   /* (non-Javadoc)
@@ -451,7 +453,6 @@ public class PageRequest<T> {
         .add("fieldsIncluded", fieldsIncluded)
         .add("orders", orders)
         .add("filters", filters)
-        .add("pageSize", pageSize)
         .add("limit", limit)
         .add("start", start)
         .add("offset", offset)

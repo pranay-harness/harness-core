@@ -83,7 +83,6 @@ public class DelegateResourceTest {
             .get(new GenericType<RestResponse<PageResponse<Delegate>>>() {});
     PageRequest<Delegate> pageRequest = new PageRequest<>();
     pageRequest.setOffset("0");
-    pageRequest.setLimit("50");
     verify(DELEGATE_SERVICE).list(pageRequest);
     assertThat(restResponse.getResource().getResponse().size()).isEqualTo(1);
     assertThat(restResponse.getResource().getResponse().get(0)).isNotNull();
