@@ -1,5 +1,6 @@
 package software.wings.service.impl;
 
+import static software.wings.exception.WingsException.ALERTING;
 import static software.wings.utils.HttpUtil.connectableHttpUrl;
 import static software.wings.utils.HttpUtil.validUrl;
 import static software.wings.utils.Validator.equalCheck;
@@ -159,12 +160,12 @@ public class JenkinsBuildServiceImpl implements JenkinsBuildService {
   @Override
   public boolean validateArtifactServer(JenkinsConfig jenkinsConfig) {
     if (!validUrl(jenkinsConfig.getJenkinsUrl())) {
-      throw new WingsException(ErrorCode.INVALID_ARTIFACT_SERVER)
+      throw new WingsException(ErrorCode.INVALID_ARTIFACT_SERVER, ALERTING)
           .addParam("message", "Jenkins URL must be a valid URL");
     }
 
     if (!connectableHttpUrl(jenkinsConfig.getJenkinsUrl())) {
-      throw new WingsException(ErrorCode.INVALID_ARTIFACT_SERVER)
+      throw new WingsException(ErrorCode.INVALID_ARTIFACT_SERVER, ALERTING)
           .addParam("message", "Could not reach Jenkins Server at : " + jenkinsConfig.getJenkinsUrl());
     }
     encryptionService.decrypt(jenkinsConfig, Collections.emptyList());
