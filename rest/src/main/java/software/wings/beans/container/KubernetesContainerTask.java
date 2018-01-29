@@ -83,7 +83,7 @@ public class KubernetesContainerTask extends ContainerTask {
 
   @Override
   public ContainerTask convertToAdvanced() {
-    String preamble = "# Enter your Controller spec below.\n"
+    String preamble = "# Enter your Controller YAML spec below.\n"
         + "#\n"
         + "# Supported Controllers:\n"
         + "#   ReplicationController\n"
@@ -110,7 +110,8 @@ public class KubernetesContainerTask extends ContainerTask {
         + "# Service variables will be merged into environment\n"
         + "# variables for all containers, overriding values if\n"
         + "# the name is the same.\n"
-        + "#\n";
+        + "#\n"
+        + "# ---\n";
     setAdvancedConfig(preamble + fetchYamlConfig());
     return this;
   }
