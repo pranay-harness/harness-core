@@ -134,7 +134,7 @@ public class AwsClusterSetup extends State {
     clusterConfiguration.setName(clusterName);
     clusterConfiguration.setSize(nodeCount);
 
-    awsClusterService.createCluster(region, computeProviderSetting, encryptionDetails, clusterConfiguration);
+    awsClusterService.createCluster(region, computeProviderSetting, encryptionDetails, clusterConfiguration, null);
 
     ClusterElement clusterElement = aClusterElement()
                                         .withUuid(serviceId)

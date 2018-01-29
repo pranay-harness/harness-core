@@ -6,6 +6,7 @@ import com.amazonaws.services.ecs.model.Service;
 import com.amazonaws.services.ecs.model.TaskDefinition;
 import software.wings.beans.SettingAttribute;
 import software.wings.beans.command.ExecutionLogCallback;
+import software.wings.beans.command.LogCallback;
 import software.wings.cloudprovider.ContainerInfo;
 import software.wings.security.encryption.EncryptedDataDetail;
 
@@ -20,7 +21,7 @@ public interface EcsContainerService {
    * Provision nodes.
    */
   void provisionNodes(String region, SettingAttribute connectorConfig, List<EncryptedDataDetail> encryptedDataDetails,
-      Integer clusterSize, String launchConfigName, Map<String, Object> params);
+      Integer clusterSize, String launchConfigName, Map<String, Object> params, LogCallback logCallback);
 
   /**
    * Deploy service string.
