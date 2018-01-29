@@ -3,8 +3,6 @@ package software.wings.beans.container;
 import static io.harness.data.structure.EmptyPredicate.isNotEmpty;
 import static org.apache.commons.lang3.StringUtils.isNotBlank;
 import static org.apache.commons.lang3.StringUtils.strip;
-import static software.wings.beans.container.ContainerTask.AdvancedType.JSON;
-import static software.wings.beans.container.ContainerTask.AdvancedType.YAML;
 import static software.wings.service.impl.KubernetesHelperService.toYaml;
 
 import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
@@ -110,8 +108,6 @@ public class KubernetesContainerTask extends ContainerTask {
         + "# variables for all containers, overriding values if\n"
         + "# the name is the same.\n"
         + "#\n";
-
-    setAdvancedType(YAML);
     setAdvancedConfig(preamble + fetchYamlConfig());
     return this;
   }
@@ -119,7 +115,6 @@ public class KubernetesContainerTask extends ContainerTask {
   @Override
   public ContainerTask convertFromAdvanced() {
     setAdvancedConfig(null);
-    setAdvancedType(null);
     return this;
   }
 
@@ -127,16 +122,11 @@ public class KubernetesContainerTask extends ContainerTask {
   public void validateAdvanced() {
     if (isNotEmpty(getAdvancedConfig())) {
       try {
-        String advancedConfig = getAdvancedConfig()
-                                    .replaceAll(DOCKER_IMAGE_NAME_PLACEHOLDER_REGEX, DUMMY_DOCKER_IMAGE_NAME)
-                                    .replaceAll(CONTAINER_NAME_PLACEHOLDER_REGEX, DUMMY_CONTAINER_NAME)
-                                    .replaceAll(SECRET_NAME_PLACEHOLDER_REGEX, DUMMY_SECRET_NAME);
-        HasMetadata controller;
-        if (getAdvancedType() == YAML) {
-          controller = KubernetesHelper.loadYaml(advancedConfig);
-        } else {
-          controller = (HasMetadata) KubernetesHelper.loadJson(advancedConfig);
-        }
+        HasMetadata controller =
+            KubernetesHelper.loadYaml(getAdvancedConfig()
+                                          .replaceAll(DOCKER_IMAGE_NAME_PLACEHOLDER_REGEX, DUMMY_DOCKER_IMAGE_NAME)
+                                          .replaceAll(CONTAINER_NAME_PLACEHOLDER_REGEX, DUMMY_CONTAINER_NAME)
+                                          .replaceAll(SECRET_NAME_PLACEHOLDER_REGEX, DUMMY_SECRET_NAME));
 
         PodTemplateSpec podTemplateSpec = null;
 
@@ -174,52 +164,24 @@ public class KubernetesContainerTask extends ContainerTask {
           throw(WingsException) e;
         }
         throw new WingsException(ErrorCode.INVALID_ARGUMENT, e)
-            .addParam("args", "Cannot create controller from " + getAdvancedType().name() + ": " + e.getMessage());
+            .addParam("args", "Cannot create controller: " + e.getMessage());
       }
     } else {
       throw new WingsException(ErrorCode.INVALID_ARGUMENT).addParam("args", "Configuration is empty.");
     }
   }
 
-  public Class<? extends HasMetadata> kubernetesType() {
-    return createController(DUMMY_CONTAINER_NAME, DUMMY_DOCKER_IMAGE_NAME, DUMMY_SECRET_NAME).getClass();
-  }
-
-  public Class<? extends HasMetadata> kubernetesType(boolean ignoreServiceVariables) {
-    return createController(DUMMY_CONTAINER_NAME, DUMMY_DOCKER_IMAGE_NAME, DUMMY_SECRET_NAME, ignoreServiceVariables)
-        .getClass();
+  public boolean isDaemonSet() {
+    return isNotBlank(getAdvancedConfig())
+        && (getAdvancedConfig().contains("kind: DaemonSet") || getAdvancedConfig().contains("kind: \"DaemonSet\""));
   }
 
   public HasMetadata createController(String containerName, String imageNameTag, String secretName) {
-    return createController(containerName, imageNameTag, secretName, false);
-  }
-
-  public HasMetadata createController(
-      String containerName, String imageNameTag, String secretName, boolean ignoreServiceVariables) {
-    String configTemplate;
-    AdvancedType type;
-    if (isNotEmpty(getAdvancedConfig())) {
-      configTemplate = getAdvancedConfig();
-      type = getAdvancedType();
-    } else {
-      configTemplate = fetchYamlConfig();
-      type = YAML;
-    }
-
-    String config = configTemplate.replaceAll(DOCKER_IMAGE_NAME_PLACEHOLDER_REGEX, imageNameTag)
-                        .replaceAll(CONTAINER_NAME_PLACEHOLDER_REGEX, containerName)
-                        .replaceAll(SECRET_NAME_PLACEHOLDER_REGEX, secretName);
-
-    if (ignoreServiceVariables) {
-      // TODO: Do it right way later
-      // extra step to replace with the dummy service vars
-
-      config = config.replaceAll(SERVICE_VAR_PLACEHOLDER_REGEX, DUMMY_SERVICE_VAR)
-                   .replaceAll(WORKFLOW_VAR_PLACEHOLDER_REGEX, DUMMY_WORKFLOW_VAR);
-    }
-
     try {
-      return type == JSON ? (HasMetadata) KubernetesHelper.loadJson(config) : KubernetesHelper.loadYaml(config);
+      String configTemplate = isNotBlank(getAdvancedConfig()) ? getAdvancedConfig() : fetchYamlConfig();
+      return KubernetesHelper.loadYaml(configTemplate.replaceAll(DOCKER_IMAGE_NAME_PLACEHOLDER_REGEX, imageNameTag)
+                                           .replaceAll(CONTAINER_NAME_PLACEHOLDER_REGEX, containerName)
+                                           .replaceAll(SECRET_NAME_PLACEHOLDER_REGEX, secretName));
     } catch (Exception e) {
       throw new WingsException(ErrorCode.INVALID_ARGUMENT, e).addParam("args", e.getMessage());
     }
@@ -336,9 +298,9 @@ public class KubernetesContainerTask extends ContainerTask {
   @NoArgsConstructor
   public static class Yaml extends ContainerTask.Yaml {
     @Builder
-    public Yaml(String type, String harnessApiVersion, String advancedType, String advancedConfig,
-        ContainerDefinition.Yaml containerDefinition) {
-      super(type, harnessApiVersion, advancedType, advancedConfig, containerDefinition);
+    public Yaml(
+        String type, String harnessApiVersion, String advancedConfig, ContainerDefinition.Yaml containerDefinition) {
+      super(type, harnessApiVersion, advancedConfig, containerDefinition);
     }
   }
 }
