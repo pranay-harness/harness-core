@@ -280,9 +280,6 @@ public class AppServiceImpl implements AppService {
     return updatedApp;
   }
 
-  /* (non-Javadoc)
-   * @see software.wings.service.intfc.AppService#delete(java.lang.String)
-   */
   @Override
   public void delete(String appId) {
     Application application = wingsPersistence.get(Application.class, appId);
@@ -320,6 +317,11 @@ public class AppServiceImpl implements AppService {
     // will not reconsider and start using the object as they never intended to delete it, but
     // probably they will retry. This is why there is no reason for us to regenerate it at this
     // point. We should have the necessary APIs elsewhere, if we find the users want it.
+  }
+
+  @Override
+  public void delete(String appId, String entityId) {
+    delete(entityId);
   }
 
   @Override

@@ -14,7 +14,7 @@ import java.util.List;
  *
  * @author Rishi
  */
-public interface AppService extends OwnedByAccount {
+public interface AppService extends OwnedByAccount, Exterminator {
   /**
    * Save.
    *
