@@ -63,7 +63,7 @@ public class EcsContainerTask extends ContainerTask {
 
   @Override
   public ContainerTask convertToAdvanced() {
-    String preamble = "# Enter your Task Definition spec below.\n"
+    String preamble = "# Enter your Task Definition JSON spec below.\n"
         + "#\n"
         + "# Placeholders:\n"
         + "#\n"
