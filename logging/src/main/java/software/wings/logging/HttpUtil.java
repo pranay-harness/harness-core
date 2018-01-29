@@ -5,7 +5,9 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import java.io.IOException;
+import java.lang.reflect.Method;
 import java.net.InetSocketAddress;
+import java.net.Proxy;
 import java.net.Socket;
 import java.security.KeyManagementException;
 import java.security.NoSuchAlgorithmException;
@@ -53,9 +55,9 @@ public class HttpUtil {
     return new TrustManager[] {new SslTrustManager()};
   }
 
-  public static OkHttpClient getUnsafeOkHttpClient() {
+  public static OkHttpClient getUnsafeOkHttpClient(String url) {
     try {
-      return new OkHttpClient.Builder()
+      return getOkHttpClientWithNonProxySetting(url)
           .sslSocketFactory(HttpUtil.getSslContext().getSocketFactory())
           .hostnameVerifier((s, sslSession) -> true)
           .connectTimeout(15, TimeUnit.SECONDS)
@@ -64,5 +66,22 @@ public class HttpUtil {
     } catch (Exception e) {
       throw new RuntimeException(e);
     }
+  }
+
+  public static OkHttpClient.Builder getOkHttpClientWithNonProxySetting(String url) {
+    OkHttpClient.Builder builder = new OkHttpClient.Builder();
+    try {
+      Class clazz = Class.forName("software.wings.utils.HttpUtil");
+      Method method = clazz.getMethod("shouldUseNonProxy", String.class);
+      Boolean useNonProxy = (Boolean) method.invoke(null, url);
+
+      if (useNonProxy) {
+        builder.proxy(Proxy.NO_PROXY);
+      }
+
+    } catch (Exception e) {
+    }
+
+    return builder;
   }
 }
