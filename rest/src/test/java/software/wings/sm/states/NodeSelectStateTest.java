@@ -119,6 +119,18 @@ public class NodeSelectStateTest extends WingsBaseTest {
   @Test
   public void shouldTestDonotExcludeHostsWithSameArtifact() {
     nodeSelectState.setInstanceCount(3);
+    when(context.getAppId()).thenReturn(APP_ID);
+    when(contextElement.getUuid()).thenReturn(instance1.getUuid());
+    when(serviceInstanceArtifactParam.getInstanceArtifactMap())
+        .thenReturn(ImmutableMap.of(instance1.getUuid(), ARTIFACT_ID));
+    when(artifactService.get(APP_ID, ARTIFACT_ID)).thenReturn(artifact);
+    when(workflowStandardParams.isExcludeHostsWithSameArtifact()).thenReturn(false);
+
+    PageResponse<Instance> pageResponse =
+        PageResponse.Builder.aPageResponse().withResponse(Arrays.asList(instance)).build();
+
+    when(instanceService.list(any(PageRequest.class))).thenReturn(pageResponse);
+
     ExecutionResponse executionResponse = nodeSelectState.execute(context);
     assertThat(executionResponse.getExecutionStatus().equals(ExecutionStatus.SUCCESS));
     assertThat(executionResponse.getStateExecutionData()).isNotNull();
