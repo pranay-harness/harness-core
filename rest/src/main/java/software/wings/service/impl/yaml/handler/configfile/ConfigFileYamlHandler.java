@@ -19,6 +19,8 @@ import software.wings.beans.Environment;
 import software.wings.beans.ServiceVariable;
 import software.wings.beans.yaml.ChangeContext;
 import software.wings.exception.HarnessException;
+import software.wings.exception.WingsException;
+import software.wings.security.encryption.EncryptedData;
 import software.wings.service.impl.yaml.handler.BaseYamlHandler;
 import software.wings.service.impl.yaml.service.YamlHelper;
 import software.wings.service.intfc.ConfigService;
@@ -149,6 +151,9 @@ public class ConfigFileYamlHandler extends BaseYamlHandler<Yaml, ConfigFile> {
           ChangeContext fileContext = contentChangeContext.get();
           String fileContent = fileContext.getChange().getFileContent();
           inputStream = new BoundedInputStream(new ByteArrayInputStream(fileContent.getBytes()));
+        } else {
+          logger.error("Could not locate file: " + yaml.getFileName());
+          throw new WingsException("Could not locate file: " + yaml.getFileName());
         }
       }
     }
@@ -159,7 +164,12 @@ public class ConfigFileYamlHandler extends BaseYamlHandler<Yaml, ConfigFile> {
     configFile.setName(configFileName);
     configFile.setFileName(configFileName);
     if (yaml.isEncrypted()) {
-      configFile.setEncryptedFileId(yaml.getFileName());
+      try {
+        EncryptedData encryptedDataFromYamlRef = secretManager.getEncryptedDataFromYamlRef(yaml.getFileName());
+        configFile.setEncryptedFileId(encryptedDataFromYamlRef.getUuid());
+      } catch (IllegalAccessException e) {
+        throw new WingsException("Error while decrypting config file url:" + yaml.getFileName(), e);
+      }
     } else {
       configFile.setEncryptedFileId("");
       ChecksumType checksumType = Util.getEnumFromString(ChecksumType.class, yaml.getChecksumType());
