@@ -154,4 +154,34 @@ public class WorkflowNotificationHelperTest extends WingsBaseTest {
         "ARTIFACTS", "artifact-2 (build# build-2)", "ENV_NAME", ENV_NAME);
     assertThat(notification.getNotificationTemplateVariables()).containsAllEntriesOf(placeholders);
   }
+
+  @Test
+  public void shouldSendWorkflowStatusChangeNotificationNoArtifacts() {
+    when(executionContext.getArtifacts()).thenReturn(null);
+    NotificationRule notificationRule = aNotificationRule()
+                                            .withExecutionScope(ExecutionScope.WORKFLOW)
+                                            .withConditions(asList(ExecutionStatus.FAILED, ExecutionStatus.SUCCESS))
+                                            .build();
+    CanaryOrchestrationWorkflow canaryOrchestrationWorkflow =
+        aCanaryOrchestrationWorkflow().withNotificationRules(asList(notificationRule)).build();
+
+    when(executionContext.getStateMachine().getOrchestrationWorkflow()).thenReturn(canaryOrchestrationWorkflow);
+    when(workflowExecutionService.getExecutionDetails(APP_ID, WORKFLOW_EXECUTION_ID))
+        .thenReturn(WorkflowExecutionBuilder.aWorkflowExecution().withStartTs(System.currentTimeMillis()).build());
+
+    workflowNotificationHelper.sendWorkflowStatusChangeNotification(executionContext, ExecutionStatus.FAILED);
+
+    verify(workflowExecutionService).getExecutionDetails(APP_ID, WORKFLOW_EXECUTION_ID);
+    ArgumentCaptor<Notification> notificationArgumentCaptor = ArgumentCaptor.forClass(Notification.class);
+
+    verify(notificationService)
+        .sendNotificationAsync(notificationArgumentCaptor.capture(), eq(asList(notificationRule)));
+    Notification notification = notificationArgumentCaptor.getAllValues().get(0);
+    assertThat(notification).isInstanceOf(FailureNotification.class);
+    assertThat(notification.getNotificationTemplateId())
+        .isEqualTo(NotificationMessageType.WORKFLOW_FAILED_NOTIFICATION.name());
+    ImmutableMap<String, String> placeholders =
+        ImmutableMap.of("WORKFLOW_NAME", WORKFLOW_NAME, "ARTIFACTS", "no artifacts", "ENV_NAME", ENV_NAME);
+    assertThat(notification.getNotificationTemplateVariables()).containsAllEntriesOf(placeholders);
+  }
 }

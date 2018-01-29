@@ -1,6 +1,7 @@
 package software.wings.service.impl;
 
 import static io.harness.data.structure.EmptyPredicate.isEmpty;
+import static io.harness.data.structure.EmptyPredicate.isNotEmpty;
 import static java.util.Collections.singletonList;
 import static java.util.stream.Collectors.toList;
 import static software.wings.beans.ExecutionScope.WORKFLOW;
@@ -226,14 +227,18 @@ public class WorkflowNotificationHelper {
               .stream()
               .map(Base::getUuid)
               .collect(toList());
-    List<Artifact> artifacts = ((ExecutionContextImpl) context)
-                                   .getArtifacts()
-                                   .stream()
-                                   .filter(artifact -> artifact.getServiceIds().stream().anyMatch(serviceIds::contains))
-                                   .collect(toList());
-    return Joiner.on(", ").join(
-        artifacts.stream()
-            .map(artifact -> artifact.getArtifactSourceName() + " (build# " + artifact.getBuildNo() + ")")
-            .collect(toList()));
+    List<Artifact> artifacts = ((ExecutionContextImpl) context).getArtifacts();
+    String artifactsMsg = "no artifacts";
+    if (isNotEmpty(artifacts)) {
+      List<Artifact> relatedArtifacts =
+          artifacts.stream()
+              .filter(artifact -> artifact.getServiceIds().stream().anyMatch(serviceIds::contains))
+              .collect(toList());
+      artifactsMsg = Joiner.on(", ").join(
+          relatedArtifacts.stream()
+              .map(artifact -> artifact.getArtifactSourceName() + " (build# " + artifact.getBuildNo() + ")")
+              .collect(toList()));
+    }
+    return artifactsMsg;
   }
 }
