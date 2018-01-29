@@ -2152,7 +2152,7 @@ public class WorkflowServiceImpl implements WorkflowService, DataProvider {
     KubernetesContainerTask containerTask =
         (KubernetesContainerTask) serviceResourceService.getContainerTaskByDeploymentType(
             appId, workflowPhase.getServiceId(), DeploymentType.KUBERNETES.name());
-    if (containerTask == null || !containerTask.isDaemonSet()) {
+    if (containerTask == null || !containerTask.checkDaemonSet()) {
       workflowPhase.addPhaseStep(
           aPhaseStep(CONTAINER_DEPLOY, Constants.DEPLOY_CONTAINERS)
               .addStep(
@@ -2446,7 +2446,7 @@ public class WorkflowServiceImpl implements WorkflowService, DataProvider {
     KubernetesContainerTask containerTask =
         (KubernetesContainerTask) serviceResourceService.getContainerTaskByDeploymentType(
             appId, workflowPhase.getServiceId(), DeploymentType.KUBERNETES.name());
-    if (containerTask != null && containerTask.isDaemonSet()) {
+    if (containerTask != null && containerTask.checkDaemonSet()) {
       return generateRollbackWorkflowPhaseForDaemonSets(workflowPhase);
     } else {
       WorkflowPhaseBuilder workflowPhaseBuilder =

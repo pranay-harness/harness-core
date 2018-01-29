@@ -98,7 +98,7 @@ public class KubernetesSetup extends ContainerServiceSetup {
         kubernetesContainerTask.setAdvancedConfig(
             context.renderExpression(kubernetesContainerTask.getAdvancedConfig()));
       }
-      isDaemonSet = kubernetesContainerTask.isDaemonSet();
+      isDaemonSet = kubernetesContainerTask.checkDaemonSet();
     }
 
     int serviceSteadyStateTimeout =
