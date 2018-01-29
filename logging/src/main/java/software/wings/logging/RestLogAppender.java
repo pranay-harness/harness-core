@@ -75,7 +75,7 @@ public class RestLogAppender<E> extends AppenderBase<E> {
       Retrofit retrofit = new Retrofit.Builder()
                               .baseUrl(LOGDNA_HOST)
                               .addConverterFactory(JacksonConverterFactory.create())
-                              .client(HttpUtil.getUnsafeOkHttpClient())
+                              .client(HttpUtil.getUnsafeOkHttpClient(LOGDNA_HOST))
                               .build();
       Response<JsonNode> execute =
           retrofit.create(LogdnaRestClient.class).postLogs(getAuthHeader(), localhostName, logLines).execute();
