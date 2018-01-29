@@ -4,6 +4,8 @@ import ru.vyarus.guice.validator.group.annotation.ValidationGroups;
 import software.wings.beans.infrastructure.instance.ContainerDeploymentInfo;
 import software.wings.beans.infrastructure.instance.Instance;
 import software.wings.beans.infrastructure.instance.InstanceType;
+import software.wings.dl.PageRequest;
+import software.wings.dl.PageResponse;
 import software.wings.service.intfc.ownership.OwnedByApplication;
 import software.wings.utils.validation.Create;
 import software.wings.utils.validation.Update;
@@ -135,4 +137,12 @@ public interface InstanceService extends OwnedByApplication {
       Set<String> containerSvcNameSetToBeDeleted, InstanceType instanceType, String appId);
 
   void deleteInstancesOfAutoScalingGroups(List<String> autoScalingGroupList, String appId);
+
+  /**
+   * List.
+   *
+   * @param pageRequest the req
+   * @return the page response
+   */
+  PageResponse<Instance> list(PageRequest<Instance> pageRequest);
 }

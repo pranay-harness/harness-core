@@ -8,5 +8,6 @@ public enum TriggerConditionType {
   NEW_ARTIFACT,
   PIPELINE_COMPLETION,
   SCHEDULED,
-  WEBHOOK
+  WEBHOOK,
+  NEW_INSTANCE
 }

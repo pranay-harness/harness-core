@@ -2,6 +2,7 @@ package software.wings.beans.trigger;
 
 import static software.wings.beans.trigger.TriggerConditionType.WEBHOOK;
 
+import com.fasterxml.jackson.annotation.JsonTypeName;
 import lombok.Builder;
 import lombok.Data;
 import lombok.EqualsAndHashCode;
@@ -14,6 +15,8 @@ import java.util.Map;
 /**
  * Created by sgurubelli on 10/25/17.
  */
+
+@JsonTypeName("WEBHOOK")
 @Data
 @EqualsAndHashCode(callSuper = false)
 @Builder

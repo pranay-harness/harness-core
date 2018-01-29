@@ -104,6 +104,7 @@ import software.wings.beans.Graph;
 import software.wings.beans.Graph.Node;
 import software.wings.beans.HostConnectionAttributes;
 import software.wings.beans.InfrastructureMapping;
+import software.wings.beans.InfrastructureMappingType;
 import software.wings.beans.MultiServiceOrchestrationWorkflow;
 import software.wings.beans.NotificationGroup;
 import software.wings.beans.NotificationRule;
@@ -1512,6 +1513,38 @@ public class WorkflowServiceImpl implements WorkflowService, DataProvider {
         ServiceClassLocator.descendingServices(this, WorkflowServiceImpl.class, OwnedByWorkflow.class);
     PruneEntityJob.pruneDescendingEntities(
         services, appId, workflowId, descending -> descending.pruneByWorkflow(appId, workflowId));
+  }
+
+  @Override
+  public boolean workflowHasAwsInfraMapping(String appId, String workflowId) {
+    Workflow workflow = readWorkflow(appId, workflowId);
+    Validator.notNullCheck("Workflow", workflow);
+    OrchestrationWorkflow orchestrationWorkflow = workflow.getOrchestrationWorkflow();
+    Validator.notNullCheck("OrchestrationWorkflow", orchestrationWorkflow);
+    List<String> infraMappingIds = new ArrayList<>();
+    if (orchestrationWorkflow instanceof CanaryOrchestrationWorkflow) {
+      CanaryOrchestrationWorkflow canaryOrchestrationWorkflow = (CanaryOrchestrationWorkflow) orchestrationWorkflow;
+      List<WorkflowPhase> workflowPhases = canaryOrchestrationWorkflow.getWorkflowPhases();
+      if (workflowPhases != null) {
+        infraMappingIds =
+            workflowPhases.stream()
+                .filter(workflowPhase
+                    -> workflowPhase.getInfraMappingId() != null && !workflowPhase.checkInfraTemplatized())
+                .map(WorkflowPhase::getInfraMappingId)
+                .collect(Collectors.toList());
+        if (infraMappingIds.size() != 0) {
+          List<InfrastructureMapping> infrastructureMappings = wingsPersistence.createQuery(InfrastructureMapping.class)
+                                                                   .field("appId")
+                                                                   .equal(workflow.getAppId())
+                                                                   .field("uuid")
+                                                                   .in(infraMappingIds)
+                                                                   .asList();
+          return infrastructureMappings.stream().anyMatch(infrastructureMapping
+              -> infrastructureMapping.getInfraMappingType().equals(InfrastructureMappingType.AWS_SSH.name()));
+        }
+      }
+    }
+    return false;
   }
 
   private void attachWorkflowPhase(Workflow workflow, WorkflowPhase workflowPhase) {

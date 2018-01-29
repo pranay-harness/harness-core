@@ -32,6 +32,7 @@ public class ExecutionArgs {
   private Map<String, String> workflowVariables;
   private String notes;
   private EmbeddedUser triggeredBy;
+  private boolean excludeHostsWithSameArtifact = true;
 
   /**
    * Gets service id.
@@ -281,5 +282,17 @@ public class ExecutionArgs {
 
   public void setTriggeredBy(EmbeddedUser triggeredBy) {
     this.triggeredBy = triggeredBy;
+  }
+
+  /**
+   * It excludes hosts that have already same artifact installed
+   * @return
+   */
+  public boolean isExcludeHostsWithSameArtifact() {
+    return excludeHostsWithSameArtifact;
+  }
+
+  public void setExcludeHostsWithSameArtifact(boolean excludeHostsWithSameArtifact) {
+    this.excludeHostsWithSameArtifact = excludeHostsWithSameArtifact;
   }
 }

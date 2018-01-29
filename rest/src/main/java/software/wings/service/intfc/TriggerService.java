@@ -185,4 +185,11 @@ public interface TriggerService extends OwnedByApplication, OwnedByPipeline, Own
    * @return
    */
   WebhookParameters listWebhookParameters(String appId, String workflowId, WorkflowType workflowType);
+
+  /**
+   * Trigger execution by service infra
+   * @param appId
+   * @param infraMappingId
+   */
+  boolean triggerExecutionByServiceInfra(String appId, String infraMappingId);
 }

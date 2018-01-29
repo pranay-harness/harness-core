@@ -41,10 +41,10 @@ public class Instance extends Base {
 
   private String lastArtifactStreamId;
 
-  private String lastArtifactId;
+  @Indexed private String lastArtifactId;
   private String lastArtifactName;
   @Indexed private String lastArtifactSourceName;
-  private String lastArtifactBuildNum;
+  @Indexed private String lastArtifactBuildNum;
 
   private String lastDeployedById;
   private String lastDeployedByName;

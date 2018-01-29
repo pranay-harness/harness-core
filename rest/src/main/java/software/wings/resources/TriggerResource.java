@@ -170,4 +170,13 @@ public class TriggerResource {
       @QueryParam("workflowId") String workflowId, @QueryParam("workflowType") WorkflowType workflowType) {
     return new RestResponse<>(triggerService.listWebhookParameters(appId, workflowId, workflowType));
   }
+
+  @GET
+  @Path("execution")
+  @Timed
+  @ExceptionMetered
+  public RestResponse triggerExecution(
+      @QueryParam("appId") String appId, @QueryParam("infraMappingId") String infraMappingId) {
+    return new RestResponse(triggerService.triggerExecutionByServiceInfra(appId, infraMappingId));
+  }
 }

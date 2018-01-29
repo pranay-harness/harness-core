@@ -80,6 +80,8 @@ public class WorkflowStandardParams implements ExecutionContextAware, ContextEle
 
   private Map<String, String> workflowVariables;
 
+  private boolean excludeHostsWithSameArtifact;
+
   @JsonIgnore private EmbeddedUser currentUser;
 
   @Override
@@ -454,6 +456,14 @@ public class WorkflowStandardParams implements ExecutionContextAware, ContextEle
     this.context = executionContext;
   }
 
+  public boolean isExcludeHostsWithSameArtifact() {
+    return excludeHostsWithSameArtifact;
+  }
+
+  public void setExcludeHostsWithSameArtifact(boolean excludeHostsWithSameArtifact) {
+    this.excludeHostsWithSameArtifact = excludeHostsWithSameArtifact;
+  }
+
   /**
    * The type Builder.
    */
@@ -468,6 +478,7 @@ public class WorkflowStandardParams implements ExecutionContextAware, ContextEle
     private Long endTs;
     private String timestampId = System.currentTimeMillis() + "-" + nextInt(0, 1000);
     private EmbeddedUser currentUser;
+    private boolean excludeHostsWithSameArtifact;
 
     private Builder() {}
 
@@ -579,6 +590,16 @@ public class WorkflowStandardParams implements ExecutionContextAware, ContextEle
     }
 
     /**
+     * With ExcludeHostsWithSameArtifact
+     * @param excludeHostsWithSameArtifact
+     * @return
+     */
+    public Builder withExcludeHostsWithSameArtifact(boolean excludeHostsWithSameArtifact) {
+      this.excludeHostsWithSameArtifact = excludeHostsWithSameArtifact;
+      return this;
+    }
+
+    /**
      * Build workflow standard params.
      *
      * @return the workflow standard params
@@ -594,6 +615,7 @@ public class WorkflowStandardParams implements ExecutionContextAware, ContextEle
       workflowStandardParams.setEndTs(endTs);
       workflowStandardParams.setTimestampId(timestampId);
       workflowStandardParams.setCurrentUser(currentUser);
+      workflowStandardParams.setExcludeHostsWithSameArtifact(excludeHostsWithSameArtifact);
       return workflowStandardParams;
     }
   }

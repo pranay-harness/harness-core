@@ -6,6 +6,7 @@ import static java.util.stream.Collectors.toList;
 import static software.wings.api.ServiceInstanceIdsParam.ServiceInstanceIdsParamBuilder.aServiceInstanceIdsParam;
 import static software.wings.beans.InstanceUnitType.COUNT;
 import static software.wings.beans.InstanceUnitType.PERCENTAGE;
+import static software.wings.beans.SearchFilter.Operator.EQ;
 import static software.wings.beans.ServiceInstance.Builder.aServiceInstance;
 import static software.wings.beans.ServiceInstanceSelectionParams.Builder.aServiceInstanceSelectionParams;
 import static software.wings.sm.ExecutionResponse.Builder.anExecutionResponse;
@@ -17,17 +18,24 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import software.wings.api.PhaseElement;
 import software.wings.api.SelectedNodeExecutionData;
+import software.wings.api.ServiceInstanceArtifactParam;
 import software.wings.beans.Account;
 import software.wings.beans.AwsInfrastructureMapping;
+import software.wings.beans.DeploymentExecutionContext;
 import software.wings.beans.ErrorCode;
 import software.wings.beans.InfrastructureMapping;
 import software.wings.beans.InstanceUnitType;
 import software.wings.beans.ServiceInstance;
 import software.wings.beans.ServiceInstanceSelectionParams;
+import software.wings.beans.artifact.Artifact;
+import software.wings.beans.infrastructure.instance.Instance;
 import software.wings.common.Constants;
+import software.wings.dl.PageRequest;
 import software.wings.exception.WingsException;
 import software.wings.service.intfc.AccountService;
+import software.wings.service.intfc.ArtifactService;
 import software.wings.service.intfc.InfrastructureMappingService;
+import software.wings.service.intfc.instance.InstanceService;
 import software.wings.sm.ContextElement;
 import software.wings.sm.ContextElementType;
 import software.wings.sm.ExecutionContext;
@@ -35,6 +43,7 @@ import software.wings.sm.ExecutionContextImpl;
 import software.wings.sm.ExecutionResponse;
 import software.wings.sm.ExecutionStatus;
 import software.wings.sm.State;
+import software.wings.sm.WorkflowStandardParams;
 
 import java.util.HashMap;
 import java.util.List;
@@ -55,6 +64,10 @@ public abstract class NodeSelectState extends State {
   @Inject @Transient private InfrastructureMappingService infrastructureMappingService;
 
   @Inject @Transient private AccountService accountService;
+
+  @Inject @Transient private InstanceService instanceService;
+
+  @Inject @Transient private ArtifactService artifactService;
 
   NodeSelectState(String name, String stateType) {
     super(name, stateType);
@@ -108,6 +121,13 @@ public abstract class NodeSelectState extends State {
         return anExecutionResponse().withExecutionStatus(ExecutionStatus.FAILED).withErrorMessage(errorMessage).build();
       }
 
+      WorkflowStandardParams workflowStandardParams = context.getContextElement(ContextElementType.STANDARD);
+      boolean excludeHostsWithSameArtifact = false;
+      if (workflowStandardParams != null) {
+        excludeHostsWithSameArtifact = workflowStandardParams.isExcludeHostsWithSameArtifact();
+        serviceInstances =
+            excludeHostsWithTheSameArtifactDeployed(context, appId, serviceId, infraMappingId, serviceInstances);
+      }
       SelectedNodeExecutionData selectedNodeExecutionData = new SelectedNodeExecutionData();
       selectedNodeExecutionData.setServiceInstanceList(serviceInstances.stream()
                                                            .map(serviceInstance
@@ -127,7 +147,11 @@ public abstract class NodeSelectState extends State {
                                                         .addNotifyElement(serviceIdParamElement)
                                                         .withStateExecutionData(selectedNodeExecutionData);
       if (isEmpty(serviceInstances)) {
-        executionResponse.withErrorMessage("No nodes selected");
+        if (!excludeHostsWithSameArtifact) {
+          executionResponse.withErrorMessage("No nodes selected");
+        } else {
+          executionResponse.withErrorMessage("No nodes selected (Nodes already deployed with the same artifact)");
+        }
       }
       return executionResponse.build();
     } catch (WingsException e) {
@@ -211,6 +235,32 @@ public abstract class NodeSelectState extends State {
     return errorMessage;
   }
 
+  private List<ServiceInstance> excludeHostsWithTheSameArtifactDeployed(ExecutionContext context, String appId,
+      String serviceId, String inframappingId, List<ServiceInstance> serviceInstances) {
+    if (isEmpty(serviceInstances)) {
+      return serviceInstances;
+    }
+    Artifact artifact = findArtifact(context, serviceId);
+    if (artifact == null) {
+      return serviceInstances;
+    }
+    PageRequest<Instance> pageRequest = PageRequest.Builder.aPageRequest()
+                                            .withLimit(PageRequest.UNLIMITED)
+                                            .addFilter("appId", EQ, appId)
+                                            .addFilter("serviceId", EQ, serviceId)
+                                            .addFilter("infraMappingId", EQ, inframappingId)
+                                            .addFilter("lastArtifactStreamId", EQ, artifact.getArtifactStreamId())
+                                            .addFilter("lastArtifactSourceName", EQ, artifact.getArtifactSourceName())
+                                            .addFilter("lastArtifactBuildNum", EQ, artifact.getBuildNo())
+                                            .build();
+    List<Instance> instances = instanceService.list(pageRequest).getResponse();
+    List<String> hostNames =
+        instances.stream().map(instance -> instance.getHostInstanceKey().getHostName()).collect(toList());
+    return serviceInstances.stream()
+        .filter(serviceInstance -> !hostNames.contains(serviceInstance.getHostName()))
+        .collect(toList());
+  }
+
   @Override
   public Map<String, String> validateFields() {
     Map<String, String> invalidFieldMessages = new HashMap<>();
@@ -230,6 +280,22 @@ public abstract class NodeSelectState extends State {
 
   @Override
   public void handleAbortEvent(ExecutionContext context) {}
+
+  private Artifact findArtifact(ExecutionContext context, String serviceId) {
+    ContextElement instanceElement = context.getContextElement(ContextElementType.INSTANCE);
+    if (instanceElement != null) {
+      ServiceInstanceArtifactParam serviceArtifactElement =
+          context.getContextElement(ContextElementType.PARAM, Constants.SERVICE_INSTANCE_ARTIFACT_PARAMS);
+      if (serviceArtifactElement != null) {
+        String artifactId = serviceArtifactElement.getInstanceArtifactMap().get(instanceElement.getUuid());
+        if (artifactId != null) {
+          return artifactService.get(context.getAppId(), artifactId);
+        }
+      }
+    }
+
+    return ((DeploymentExecutionContext) context).getArtifactForService(serviceId);
+  }
 
   public List<String> getHostNames() {
     return hostNames;
