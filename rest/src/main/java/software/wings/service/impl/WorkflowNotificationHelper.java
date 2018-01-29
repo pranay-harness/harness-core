@@ -215,7 +215,7 @@ public class WorkflowNotificationHelper {
     List<Artifact> artifacts = ((ExecutionContextImpl) context).getArtifacts();
     return Joiner.on(", ").join(
         artifacts.stream()
-            .map(artifact -> artifact.getArtifactSourceName() + "(" + artifact.getBuildNo() + ")")
+            .map(artifact -> artifact.getArtifactSourceName() + " (build# " + artifact.getBuildNo() + ")")
             .collect(toList()));
   }
 }

@@ -92,8 +92,8 @@ public class WorkflowNotificationHelperTest extends WingsBaseTest {
     assertThat(notification).isInstanceOf(FailureNotification.class);
     assertThat(notification.getNotificationTemplateId())
         .isEqualTo(NotificationMessageType.WORKFLOW_FAILED_NOTIFICATION.name());
-    ImmutableMap<String, String> placeholders =
-        ImmutableMap.of("WORKFLOW_NAME", WORKFLOW_NAME, "ARTIFACTS", "artifact-1(build-1)", "ENV_NAME", ENV_NAME);
+    ImmutableMap<String, String> placeholders = ImmutableMap.of(
+        "WORKFLOW_NAME", WORKFLOW_NAME, "ARTIFACTS", "artifact-1 (build# build-1)", "ENV_NAME", ENV_NAME);
     assertThat(notification.getNotificationTemplateVariables()).containsAllEntriesOf(placeholders);
   }
 
@@ -126,7 +126,7 @@ public class WorkflowNotificationHelperTest extends WingsBaseTest {
     assertThat(notification.getNotificationTemplateId())
         .isEqualTo(NotificationMessageType.WORKFLOW_PHASE_FAILED_NOTIFICATION.name());
     ImmutableMap<String, String> placeholders = ImmutableMap.of("WORKFLOW_NAME", WORKFLOW_NAME, "PHASE_NAME", "Phase1",
-        "ARTIFACTS", "artifact-1(build-1)", "ENV_NAME", ENV_NAME);
+        "ARTIFACTS", "artifact-1 (build# build-1)", "ENV_NAME", ENV_NAME);
     assertThat(notification.getNotificationTemplateVariables()).containsAllEntriesOf(placeholders);
   }
 }
