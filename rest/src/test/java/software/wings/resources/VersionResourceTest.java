@@ -47,7 +47,6 @@ public class VersionResourceTest {
             .get(new GenericType<RestResponse<PageResponse<EntityVersion>>>() {});
     PageRequest<EntityVersionCollection> pageRequest = new PageRequest<>();
     pageRequest.setOffset("0");
-    pageRequest.setLimit("50");
     verify(ENTITY_VERSION_SERVICE).listEntityVersions(pageRequest);
     assertThat(restResponse.getResource().getResponse().size()).isEqualTo(1);
     assertThat(restResponse.getResource().getResponse().get(0)).isNotNull();

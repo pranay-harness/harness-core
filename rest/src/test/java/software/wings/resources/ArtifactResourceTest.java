@@ -185,7 +185,6 @@ public class ArtifactResourceTest {
     PageRequest<Artifact> expectedPageRequest = new PageRequest<>();
     expectedPageRequest.addFilter("appId", APP_ID, Operator.EQ);
     expectedPageRequest.setOffset("0");
-    expectedPageRequest.setLimit("50");
     verify(ARTIFACT_SERVICE).list(expectedPageRequest, false);
   }
 

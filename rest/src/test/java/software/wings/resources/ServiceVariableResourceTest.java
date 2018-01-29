@@ -91,7 +91,6 @@ public class ServiceVariableResourceTest {
             .get(new GenericType<RestResponse<PageResponse<ServiceVariable>>>() {});
     PageRequest<ServiceVariable> pageRequest = new PageRequest<>();
     pageRequest.setOffset("0");
-    pageRequest.setLimit("50");
     verify(VARIABLE_SERVICE).list(pageRequest, true);
     assertThat(restResponse.getResource().getResponse().size()).isEqualTo(1);
     assertThat(restResponse.getResource().getResponse().get(0)).isNotNull();
