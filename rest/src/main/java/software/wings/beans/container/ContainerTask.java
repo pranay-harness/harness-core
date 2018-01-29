@@ -30,18 +30,13 @@ public abstract class ContainerTask extends DeploymentSpecification {
   static final String CONTAINER_NAME_PLACEHOLDER_REGEX = "\\$\\{CONTAINER_NAME}";
   static final String SECRET_NAME_PLACEHOLDER_REGEX = "\\$\\{SECRET_NAME}";
 
-  static final String SERVICE_VAR_PLACEHOLDER_REGEX = "\\$\\{serviceVariable\\.[^.}]*}";
-  static final String WORKFLOW_VAR_PLACEHOLDER_REGEX = "\\$\\{workflow\\.variables\\.[^.}]*}";
   static final String DUMMY_DOCKER_IMAGE_NAME = "hv--docker-image-name--hv";
   static final String DUMMY_CONTAINER_NAME = "hv--container-name--hv";
   static final String DUMMY_SECRET_NAME = "hv--secret-name--hv";
-  static final String DUMMY_SERVICE_VAR = "\"hv--service--var--hv\"";
-  static final String DUMMY_WORKFLOW_VAR = "\"hv--workflow--var--hv\"";
 
   @NotEmpty private String deploymentType;
   @SchemaIgnore @NotEmpty private String serviceId;
 
-  private AdvancedType advancedType;
   private String advancedConfig;
 
   private List<ContainerDefinition> containerDefinitions;
@@ -68,14 +63,6 @@ public abstract class ContainerTask extends DeploymentSpecification {
 
   public void setServiceId(String serviceId) {
     this.serviceId = serviceId;
-  }
-
-  public AdvancedType getAdvancedType() {
-    return advancedType;
-  }
-
-  public void setAdvancedType(AdvancedType advancedType) {
-    this.advancedType = advancedType;
   }
 
   public String getAdvancedConfig() {
@@ -128,20 +115,16 @@ public abstract class ContainerTask extends DeploymentSpecification {
 
   public abstract void validateAdvanced();
 
-  public enum AdvancedType { JSON, YAML }
-
   @Data
   @EqualsAndHashCode(callSuper = true)
   @NoArgsConstructor
   public abstract static class Yaml extends DeploymentSpecification.Yaml {
-    private String advancedType;
     private String advancedConfig;
     private ContainerDefinition.Yaml containerDefinition;
 
-    protected Yaml(String type, String harnessApiVersion, String advancedType, String advancedConfig,
-        ContainerDefinition.Yaml containerDefinition) {
+    protected Yaml(
+        String type, String harnessApiVersion, String advancedConfig, ContainerDefinition.Yaml containerDefinition) {
       super(type, harnessApiVersion);
-      this.advancedType = advancedType;
       this.advancedConfig = advancedConfig;
       this.containerDefinition = containerDefinition;
     }

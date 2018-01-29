@@ -5,7 +5,6 @@ import static java.util.Collections.emptyList;
 import static java.util.stream.Collectors.toList;
 import static org.apache.commons.lang3.StringUtils.isNotBlank;
 import static org.apache.commons.lang3.StringUtils.strip;
-import static software.wings.beans.container.ContainerTask.AdvancedType.JSON;
 
 import com.amazonaws.services.ecs.model.HostVolumeProperties;
 import com.amazonaws.services.ecs.model.MountPoint;
@@ -81,8 +80,6 @@ public class EcsContainerTask extends ContainerTask {
         + "# the name is the same.\n"
         + "#\n"
         + "# ---\n";
-
-    setAdvancedType(JSON);
     setAdvancedConfig(preamble + fetchJsonConfig());
     return this;
   }
@@ -90,7 +87,6 @@ public class EcsContainerTask extends ContainerTask {
   @Override
   public ContainerTask convertFromAdvanced() {
     setAdvancedConfig(null);
-    setAdvancedType(null);
     return this;
   }
 
@@ -257,9 +253,9 @@ public class EcsContainerTask extends ContainerTask {
   @NoArgsConstructor
   public static class Yaml extends ContainerTask.Yaml {
     @Builder
-    public Yaml(String type, String harnessApiVersion, String advancedType, String advancedConfig,
-        ContainerDefinition.Yaml containerDefinition) {
-      super(type, harnessApiVersion, advancedType, advancedConfig, containerDefinition);
+    public Yaml(
+        String type, String harnessApiVersion, String advancedConfig, ContainerDefinition.Yaml containerDefinition) {
+      super(type, harnessApiVersion, advancedConfig, containerDefinition);
     }
   }
 }

@@ -74,7 +74,6 @@ import software.wings.exception.WingsException;
 import software.wings.scheduler.PruneEntityJob;
 import software.wings.scheduler.QuartzScheduler;
 import software.wings.service.impl.yaml.YamlChangeSetHelper;
-import software.wings.service.intfc.ActivityService;
 import software.wings.service.intfc.AppService;
 import software.wings.service.intfc.ArtifactStreamService;
 import software.wings.service.intfc.CommandService;
@@ -88,9 +87,6 @@ import software.wings.service.intfc.SetupService;
 import software.wings.service.intfc.TriggerService;
 import software.wings.service.intfc.WorkflowService;
 import software.wings.service.intfc.ownership.OwnedByService;
-import software.wings.service.intfc.yaml.EntityUpdateService;
-import software.wings.service.intfc.yaml.YamlChangeSetService;
-import software.wings.service.intfc.yaml.YamlDirectoryService;
 import software.wings.stencils.DataProvider;
 import software.wings.stencils.Stencil;
 import software.wings.stencils.StencilPostProcessor;
@@ -123,13 +119,10 @@ public class ServiceResourceServiceImpl implements ServiceResourceService, DataP
   private static final Logger logger = LoggerFactory.getLogger(ServiceResourceServiceImpl.class);
 
   @Inject private WingsPersistence wingsPersistence;
-
-  @Inject private ActivityService activityService;
   @Inject private AppService appService;
   @Inject private ArtifactStreamService artifactStreamService;
   @Inject private CommandService commandService;
   @Inject private ConfigService configService;
-  @Inject private EntityUpdateService entityUpdateService;
   @Inject private EntityVersionService entityVersionService;
   @Inject private ExecutorService executorService;
   @Inject private NotificationService notificationService;
@@ -138,13 +131,8 @@ public class ServiceResourceServiceImpl implements ServiceResourceService, DataP
   @Inject private SetupService setupService;
   @Inject private TriggerService triggerService;
   @Inject private WorkflowService workflowService;
-  @Inject private YamlChangeSetService yamlChangeSetService;
-  @Inject private YamlDirectoryService yamlDirectoryService;
-
   @Inject private YamlChangeSetHelper yamlChangeSetHelper;
-
   @Inject private StencilPostProcessor stencilPostProcessor;
-
   @Inject @Named("JobScheduler") private QuartzScheduler jobScheduler;
 
   /**
@@ -691,7 +679,6 @@ public class ServiceResourceServiceImpl implements ServiceResourceService, DataP
     if (reset) {
       containerTask.convertFromAdvanced();
     } else {
-      containerTask.setAdvancedType(advancedPayload.getAdvancedType());
       containerTask.setAdvancedConfig(advancedPayload.getAdvancedConfig());
       // Disabling advanced validation since it doesn't work when service variable expressions are used.
       // containerTask.validateAdvanced();

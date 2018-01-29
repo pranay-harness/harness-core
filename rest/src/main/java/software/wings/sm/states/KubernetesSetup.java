@@ -12,7 +12,6 @@ import static software.wings.sm.StateType.KUBERNETES_SETUP;
 import com.google.inject.Inject;
 
 import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
-import io.fabric8.kubernetes.api.model.extensions.DaemonSet;
 import org.mongodb.morphia.annotations.Transient;
 import software.wings.annotation.Encryptable;
 import software.wings.api.CommandStateExecutionData;
@@ -99,7 +98,7 @@ public class KubernetesSetup extends ContainerServiceSetup {
         kubernetesContainerTask.setAdvancedConfig(
             context.renderExpression(kubernetesContainerTask.getAdvancedConfig()));
       }
-      isDaemonSet = kubernetesContainerTask.kubernetesType() == DaemonSet.class;
+      isDaemonSet = kubernetesContainerTask.isDaemonSet();
     }
 
     int serviceSteadyStateTimeout =

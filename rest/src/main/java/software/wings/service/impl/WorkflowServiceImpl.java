@@ -77,7 +77,6 @@ import com.google.inject.Inject;
 import com.google.inject.Singleton;
 import com.google.inject.name.Named;
 
-import io.fabric8.kubernetes.api.model.extensions.DaemonSet;
 import org.apache.commons.collections.MapUtils;
 import org.mongodb.morphia.Key;
 import org.mongodb.morphia.query.UpdateOperations;
@@ -2153,7 +2152,7 @@ public class WorkflowServiceImpl implements WorkflowService, DataProvider {
     KubernetesContainerTask containerTask =
         (KubernetesContainerTask) serviceResourceService.getContainerTaskByDeploymentType(
             appId, workflowPhase.getServiceId(), DeploymentType.KUBERNETES.name());
-    if (containerTask == null || containerTask.kubernetesType(true) != DaemonSet.class) {
+    if (containerTask == null || !containerTask.isDaemonSet()) {
       workflowPhase.addPhaseStep(
           aPhaseStep(CONTAINER_DEPLOY, Constants.DEPLOY_CONTAINERS)
               .addStep(
@@ -2447,7 +2446,7 @@ public class WorkflowServiceImpl implements WorkflowService, DataProvider {
     KubernetesContainerTask containerTask =
         (KubernetesContainerTask) serviceResourceService.getContainerTaskByDeploymentType(
             appId, workflowPhase.getServiceId(), DeploymentType.KUBERNETES.name());
-    if (containerTask != null && containerTask.kubernetesType(true) == DaemonSet.class) {
+    if (containerTask != null && containerTask.isDaemonSet()) {
       return generateRollbackWorkflowPhaseForDaemonSets(workflowPhase);
     } else {
       WorkflowPhaseBuilder workflowPhaseBuilder =

@@ -154,8 +154,7 @@ public class KubernetesSetupCommandUnit extends ContainerSetupCommandUnit {
       kubernetesContainerTask.setContainerDefinitions(Lists.newArrayList(containerDefinition));
     }
 
-    boolean isDaemonSet = kubernetesContainerTask.kubernetesType() == DaemonSet.class;
-    String containerServiceName = isDaemonSet
+    String containerServiceName = kubernetesContainerTask.isDaemonSet()
         ? setupParams.getControllerNamePrefix()
         : KubernetesConvention.getControllerName(setupParams.getControllerNamePrefix(), revision);
 
@@ -166,10 +165,11 @@ public class KubernetesSetupCommandUnit extends ContainerSetupCommandUnit {
             .put("env", KubernetesConvention.getLabelValue(setupParams.getEnvName()))
             .build();
 
-    Map<String, String> controllerLabels = ImmutableMap.<String, String>builder()
-                                               .putAll(serviceLabels)
-                                               .put("revision", isDaemonSet ? "ds" : Integer.toString(revision))
-                                               .build();
+    Map<String, String> controllerLabels =
+        ImmutableMap.<String, String>builder()
+            .putAll(serviceLabels)
+            .put("revision", kubernetesContainerTask.isDaemonSet() ? "ds" : Integer.toString(revision))
+            .build();
 
     HasMetadata controllerDefinition = createKubernetesControllerDefinition(kubernetesContainerTask,
         containerServiceName, controllerLabels, kubernetesConfig.getNamespace(), setupParams.getImageDetails(),
@@ -248,7 +248,7 @@ public class KubernetesSetupCommandUnit extends ContainerSetupCommandUnit {
     }
     executionLogCallback.saveExecutionLog("Docker Image Name: " + dockerImageName, LogLevel.INFO);
 
-    if (isDaemonSet) {
+    if (kubernetesContainerTask.isDaemonSet()) {
       listContainerInfosWhenReady(encryptedDataDetails, setupParams.getServiceSteadyStateTimeout(),
           executionLogCallback, kubernetesConfig, containerServiceName);
     } else {

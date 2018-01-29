@@ -192,7 +192,7 @@ software.wings.api.ContainerServiceData, 5157
 software.wings.beans.command.EcsSetupCommandUnit, 5158
 software.wings.beans.command.EcsSetupParams, 5159
 software.wings.beans.container.EcsContainerTask, 5160
-software.wings.beans.container.ContainerTask$AdvancedType, 5161
+#software.wings.beans.container.ContainerTask$AdvancedType, 5161
 software.wings.beans.container.ContainerDefinition, 5162
 software.wings.beans.container.LogConfiguration, 5163
 software.wings.beans.container.StorageConfiguration, 5164

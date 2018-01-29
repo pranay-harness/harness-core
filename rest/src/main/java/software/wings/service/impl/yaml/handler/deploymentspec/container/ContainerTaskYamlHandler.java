@@ -7,7 +7,6 @@ import com.google.inject.Inject;
 
 import software.wings.beans.container.ContainerDefinition;
 import software.wings.beans.container.ContainerTask;
-import software.wings.beans.container.ContainerTask.AdvancedType;
 import software.wings.beans.yaml.Change;
 import software.wings.beans.yaml.ChangeContext;
 import software.wings.beans.yaml.YamlType;
@@ -17,7 +16,6 @@ import software.wings.service.impl.yaml.handler.YamlHandlerFactory;
 import software.wings.service.impl.yaml.handler.deploymentspec.DeploymentSpecificationYamlHandler;
 import software.wings.service.impl.yaml.service.YamlHelper;
 import software.wings.service.intfc.ServiceResourceService;
-import software.wings.utils.Util;
 import software.wings.utils.Validator;
 
 import java.util.List;
@@ -44,11 +42,9 @@ public abstract class ContainerTaskYamlHandler<Y extends ContainerTask.Yaml, C e
 
     C containerTask = createNewContainerTask();
 
-    AdvancedType advancedType = Util.getEnumFromString(AdvancedType.class, yaml.getAdvancedType());
     containerTask.setServiceId(serviceId);
     containerTask.setAppId(appId);
     containerTask.setAdvancedConfig(yaml.getAdvancedConfig());
-    containerTask.setAdvancedType(advancedType);
 
     // container definition
     if (yaml.getAdvancedConfig() == null && yaml.getContainerDefinition() != null) {
@@ -71,11 +67,8 @@ public abstract class ContainerTaskYamlHandler<Y extends ContainerTask.Yaml, C e
   }
 
   protected void toYaml(Y yaml, C bean) {
-    String advancedType = Util.getStringFromEnum(bean.getAdvancedType());
-
     yaml.setHarnessApiVersion(getHarnessApiVersion());
     yaml.setAdvancedConfig(bean.getAdvancedConfig());
-    yaml.setAdvancedType(advancedType);
     yaml.setType(bean.getDeploymentType());
 
     if (bean.getAdvancedConfig() == null) {
