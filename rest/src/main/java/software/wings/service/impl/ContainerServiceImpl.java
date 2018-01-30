@@ -163,12 +163,12 @@ public class ContainerServiceImpl implements ContainerService {
   public List<ContainerInfo> getContainerInfos(ContainerServiceParams containerServiceParams) {
     List<ContainerInfo> result = new ArrayList<>();
     SettingValue value = containerServiceParams.getSettingAttribute().getValue();
+    String containerServiceName = containerServiceParams.getContainerServiceName();
     if (value instanceof GcpConfig || value instanceof KubernetesConfig) {
       KubernetesConfig kubernetesConfig = getKubernetesConfig(containerServiceParams);
       Validator.notNullCheck("KubernetesConfig", kubernetesConfig);
-
       HasMetadata controller = kubernetesContainerService.getController(kubernetesConfig,
-          containerServiceParams.getEncryptionDetails(), containerServiceParams.getContainerServiceName());
+          containerServiceParams.getEncryptionDetails(), containerServiceName);
 
       if (controller != null) {
         Map<String, String> labels = controller.getMetadata().getLabels();
@@ -181,13 +181,10 @@ public class ContainerServiceImpl implements ContainerService {
             kubernetesContainerService.getPods(kubernetesConfig, containerServiceParams.getEncryptionDetails(), labels)
                 .getItems()) {
           if (pod.getStatus().getPhase().equals("Running")) {
-            List<? extends HasMetadata> controllers = kubernetesContainerService.getControllers(
-                kubernetesConfig, containerServiceParams.getEncryptionDetails(), pod.getMetadata().getLabels());
-            String controllerName = controllers.isEmpty() ? "None" : controllers.get(0).getMetadata().getName();
             result.add(aKubernetesContainerInfo()
                            .withClusterName(containerServiceParams.getClusterName())
                            .withPodName(pod.getMetadata().getName())
-                           .withControllerName(controllerName)
+                           .withControllerName(containerServiceName)
                            .withServiceName(serviceName)
                            .build());
           }
@@ -204,7 +201,7 @@ public class ContainerServiceImpl implements ContainerService {
       do {
         ListTasksRequest listTasksRequest = new ListTasksRequest()
                                                 .withCluster(containerServiceParams.getClusterName())
-                                                .withServiceName(containerServiceParams.getContainerServiceName())
+                                                .withServiceName(containerServiceName)
                                                 .withMaxResults(100)
                                                 .withNextToken(nextToken)
                                                 .withDesiredStatus("RUNNING");
@@ -218,10 +215,10 @@ public class ContainerServiceImpl implements ContainerService {
           ErrorCode errorCode = responseMessage.getCode();
           if (errorCode != null) {
             if (ErrorCode.AWS_CLUSTER_NOT_FOUND.getCode().equals(errorCode.getCode())) {
-              logger.info("ECS Cluster not found for service name:" + containerServiceParams.getContainerServiceName());
+              logger.info("ECS Cluster not found for service name:" + containerServiceName);
               continue;
             } else if (ErrorCode.AWS_SERVICE_NOT_FOUND.getCode().equals(errorCode.getCode())) {
-              logger.info("ECS Service not found for service name:" + containerServiceParams.getContainerServiceName());
+              logger.info("ECS Service not found for service name:" + containerServiceName);
               continue;
             }
           }
@@ -244,7 +241,7 @@ public class ContainerServiceImpl implements ContainerService {
                              .withVersion(task.getVersion())
                              .withStartedAt(task.getStartedAt() == null ? 0L : task.getStartedAt().getTime())
                              .withStartedBy(task.getStartedBy())
-                             .withServiceName(containerServiceParams.getContainerServiceName())
+                             .withServiceName(containerServiceName)
                              .build());
             }
           }
