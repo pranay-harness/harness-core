@@ -2,6 +2,8 @@ package software.wings.service.impl.instance;
 
 import static java.util.stream.Collectors.toMap;
 import static java.util.stream.Collectors.toSet;
+import static software.wings.beans.infrastructure.instance.InstanceType.ECS_CONTAINER_INSTANCE;
+import static software.wings.beans.infrastructure.instance.InstanceType.KUBERNETES_CONTAINER_INSTANCE;
 
 import com.google.common.collect.Lists;
 import com.google.common.collect.Sets;
@@ -199,10 +201,11 @@ public class InstanceServiceImpl implements InstanceService {
 
   @Override
   public void saveOrUpdateContainerInstances(
-      InstanceType instanceType, String containerSvcNameNoRevision, List<Instance> instanceList) {
+      InstanceType instanceType, String containerSvcNameNoRevision, List<Instance> instanceList, String appId) {
     Validator.notNullCheck("InstanceList", instanceList);
 
-    Map<InstanceKey, Instance> currentInstanceMap = getCurrentInstancesInDB(instanceType, containerSvcNameNoRevision);
+    Map<InstanceKey, Instance> currentInstanceMap =
+        getCurrentInstancesInDB(instanceType, containerSvcNameNoRevision, appId);
 
     List<Instance> newInstanceList = Lists.newArrayList();
     List<Instance> updateInstanceList = Lists.newArrayList();
@@ -319,9 +322,9 @@ public class InstanceServiceImpl implements InstanceService {
     wingsPersistence.delete(query);
 
     String fieldName;
-    if (InstanceType.KUBERNETES_CONTAINER_INSTANCE.equals(instanceType)) {
+    if (KUBERNETES_CONTAINER_INSTANCE.equals(instanceType)) {
       fieldName = "instanceInfo.controllerName";
-    } else if (InstanceType.ECS_CONTAINER_INSTANCE.equals(instanceType)) {
+    } else if (ECS_CONTAINER_INSTANCE.equals(instanceType)) {
       fieldName = "instanceInfo.serviceName";
     } else {
       String msg = "Unsupported container instanceType:" + instanceType;
@@ -384,12 +387,15 @@ public class InstanceServiceImpl implements InstanceService {
   }
 
   private Map<InstanceKey, Instance> getCurrentInstancesInDB(
-      InstanceType instanceType, String containerSvcNameNoRevision) {
+      InstanceType instanceType, String containerSvcNameNoRevision, String appId) {
     Query<Instance> query = wingsPersistence.createAuthorizedQuery(Instance.class).disableValidation();
     Map<InstanceKey, Instance> instanceMap;
-    if (instanceType == InstanceType.KUBERNETES_CONTAINER_INSTANCE) {
+    query.field("appId").equal(appId);
+    if (instanceType == KUBERNETES_CONTAINER_INSTANCE) {
+      query.field("instanceType").equal(KUBERNETES_CONTAINER_INSTANCE);
       query.field("instanceInfo.controllerName").startsWith(containerSvcNameNoRevision);
-    } else if (instanceType == InstanceType.ECS_CONTAINER_INSTANCE) {
+    } else if (instanceType == ECS_CONTAINER_INSTANCE) {
+      query.field("instanceType").equal(ECS_CONTAINER_INSTANCE);
       query.field("instanceInfo.serviceName").startsWith(containerSvcNameNoRevision);
     } else {
       String msg = "Unsupported container instanceType:" + instanceType;

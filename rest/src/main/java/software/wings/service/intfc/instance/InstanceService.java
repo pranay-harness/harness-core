@@ -80,9 +80,10 @@ public interface InstanceService extends OwnedByApplication {
    * @param instanceType
    * @param containerSvcNameNoRevision
    * @param instanceList
+   * @param appId
    */
   void saveOrUpdateContainerInstances(
-      InstanceType instanceType, String containerSvcNameNoRevision, List<Instance> instanceList);
+      InstanceType instanceType, String containerSvcNameNoRevision, List<Instance> instanceList, String appId);
 
   /**
    * @param containerSvcNameNoRevision
