@@ -64,7 +64,7 @@ public abstract class AbstractMetricAnalysisState extends AbstractAnalysisState 
     Set<String> canaryNewHostNames = analysisContext.getTestNodes();
     if (isEmpty(canaryNewHostNames)) {
       getLogger().error("Could not find test nodes to compare the data");
-      return generateAnalysisResponse(context, ExecutionStatus.FAILED, "Could not find test nodes to compare the data");
+      return generateAnalysisResponse(context, ExecutionStatus.SUCCESS, "Could not find nodes to analyze!");
     }
 
     Set<String> lastExecutionNodes = analysisContext.getControlNodes();

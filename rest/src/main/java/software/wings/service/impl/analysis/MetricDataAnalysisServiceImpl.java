@@ -566,14 +566,41 @@ public class MetricDataAnalysisServiceImpl implements MetricDataAnalysisService 
                                                             .field("serviceId")
                                                             .equal(serviceId)
                                                             .field("level")
-                                                            .in(Lists.newArrayList(ClusterLevel.HF, ClusterLevel.H0))
+                                                            .in(Lists.newArrayList(ClusterLevel.HF))
                                                             .order("-dataCollectionMinute")
                                                             .get(new FindOptions().limit(1));
 
     if (newRelicMetricDataRecord == null) {
       logger.info(
-          "No metric record with heartbeat level {} found for stateExecutionId: {}, workflowExecutionId: {}, serviceId: {}. Will be running analysis for minute 0",
+          "No heartbeat record with heartbeat level {} found for stateExecutionId: {}, workflowExecutionId: {}, serviceId: {}",
           ClusterLevel.HF, stateExecutionId, workflowExecutionId, serviceId);
+      return null;
+    }
+
+    return newRelicMetricDataRecord;
+  }
+
+  @Override
+  public NewRelicMetricDataRecord getAnalysisMinute(
+      StateType stateType, String stateExecutionId, String workflowExecutionId, String serviceId) {
+    NewRelicMetricDataRecord newRelicMetricDataRecord = wingsPersistence.createQuery(NewRelicMetricDataRecord.class)
+                                                            .field("stateType")
+                                                            .equal(stateType)
+                                                            .field("workflowExecutionId")
+                                                            .equal(workflowExecutionId)
+                                                            .field("stateExecutionId")
+                                                            .equal(stateExecutionId)
+                                                            .field("serviceId")
+                                                            .equal(serviceId)
+                                                            .field("level")
+                                                            .in(Lists.newArrayList(ClusterLevel.H0))
+                                                            .order("-dataCollectionMinute")
+                                                            .get(new FindOptions().limit(1));
+
+    if (newRelicMetricDataRecord == null) {
+      logger.info(
+          "No metric record with heartbeat level {} found for stateExecutionId: {}, workflowExecutionId: {}, serviceId: {}.",
+          ClusterLevel.H0, stateExecutionId, workflowExecutionId, serviceId);
       return null;
     }
 
