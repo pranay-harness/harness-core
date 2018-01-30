@@ -6,6 +6,7 @@ package software.wings.service.impl;
 
 import static io.harness.data.structure.EmptyPredicate.isEmpty;
 import static io.harness.data.structure.EmptyPredicate.isNotEmpty;
+import static java.lang.String.format;
 import static java.util.Arrays.asList;
 import static org.apache.commons.lang3.StringUtils.isBlank;
 import static org.apache.commons.lang3.StringUtils.isNotBlank;
@@ -25,6 +26,7 @@ import static software.wings.beans.PipelineExecution.Builder.aPipelineExecution;
 import static software.wings.beans.PipelineStageExecution.Builder.aPipelineStageExecution;
 import static software.wings.beans.ReadPref.CRITICAL;
 import static software.wings.beans.SearchFilter.Operator.EQ;
+import static software.wings.beans.SearchFilter.Operator.GE;
 import static software.wings.beans.SearchFilter.Operator.GT;
 import static software.wings.beans.SearchFilter.Operator.IN;
 import static software.wings.beans.WorkflowType.ORCHESTRATION;
@@ -1023,7 +1025,7 @@ public class WorkflowExecutionServiceImpl implements WorkflowExecutionService {
 
     stdParams.setErrorStrategy(workflowExecution.getErrorStrategy());
     String workflowUrl = mainConfiguration.getPortal().getUrl() + "/"
-        + String.format(mainConfiguration.getPortal().getExecutionUrlPattern(), workflowExecution.getAppId(),
+        + format(mainConfiguration.getPortal().getExecutionUrlPattern(), workflowExecution.getAppId(),
               workflowExecution.getEnvId(), workflowExecution.getUuid());
     if (stdParams.getWorkflowElement() == null) {
       stdParams.setWorkflowElement(aWorkflowElement()
@@ -1757,7 +1759,7 @@ public class WorkflowExecutionServiceImpl implements WorkflowExecutionService {
             .withLimit(PageRequest.UNLIMITED)
             .addFilter("appId", EQ, workflowExecution.getAppId())
             .addFilter("executionUuid", EQ, workflowExecution.getUuid())
-            .addFilter("createdAt", GT, workflowExecution.getCreatedAt())
+            .addFilter("createdAt", GE, workflowExecution.getCreatedAt())
             .addFieldsIncluded("uuid", "stateName", "contextElement", "parentInstanceId", "status")
             .build();
 

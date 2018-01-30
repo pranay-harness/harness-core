@@ -141,6 +141,10 @@ public class SearchFilter {
      */
     LT,
     /**
+     * Ge operator.
+     */
+    GE,
+    /**
      * Gt operator.
      */
     GT,
