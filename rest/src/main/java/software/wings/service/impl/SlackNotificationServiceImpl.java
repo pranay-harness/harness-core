@@ -29,7 +29,7 @@ public class SlackNotificationServiceImpl implements SlackNotificationService {
       payload.setChannel(slackChannel);
     }
     payload.setUsername(senderName);
-    payload.setIcon_url("https://s3.amazonaws.com/wings-assets/logoslack.png");
+    payload.setIcon_url("https://s3.amazonaws.com/wings-assets/logo-slack.png");
 
     SlackWebhookClient webhookClient = getWebhookClient(webhookUrl);
     webhookClient.post(payload);
