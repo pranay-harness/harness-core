@@ -343,7 +343,7 @@ public class ContainerInstanceHelper {
     }
 
     // Save or update the container instances
-    instanceService.saveOrUpdateContainerInstances(instanceType, containerSvcNameNoRevision, instanceList);
+    instanceService.saveOrUpdateContainerInstances(instanceType, containerSvcNameNoRevision, instanceList, appId);
 
     //  Cleans up container services that were either deleted or have a zero count.
     if (!containerSvcNamesWithZeroInstances.isEmpty()) {
