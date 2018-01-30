@@ -167,8 +167,8 @@ public class ContainerServiceImpl implements ContainerService {
     if (value instanceof GcpConfig || value instanceof KubernetesConfig) {
       KubernetesConfig kubernetesConfig = getKubernetesConfig(containerServiceParams);
       Validator.notNullCheck("KubernetesConfig", kubernetesConfig);
-      HasMetadata controller = kubernetesContainerService.getController(kubernetesConfig,
-          containerServiceParams.getEncryptionDetails(), containerServiceName);
+      HasMetadata controller = kubernetesContainerService.getController(
+          kubernetesConfig, containerServiceParams.getEncryptionDetails(), containerServiceName);
 
       if (controller != null) {
         Map<String, String> labels = controller.getMetadata().getLabels();
