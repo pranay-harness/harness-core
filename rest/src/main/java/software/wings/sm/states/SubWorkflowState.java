@@ -81,6 +81,8 @@ public class SubWorkflowState extends State {
     childStateExecutionInstance.setContextElement(null);
     childStateExecutionInstance.setStartTs(null);
     childStateExecutionInstance.setEndTs(null);
+    childStateExecutionInstance.setCreatedAt(0);
+    childStateExecutionInstance.setLastUpdatedAt(0);
     return childStateExecutionInstance;
   }
 

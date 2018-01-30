@@ -836,6 +836,8 @@ public class StateMachineExecutor {
     cloned.setStatus(NEW);
     cloned.setStartTs(null);
     cloned.setEndTs(null);
+    cloned.setCreatedAt(0);
+    cloned.setLastUpdatedAt(0);
     return cloned;
   }
 

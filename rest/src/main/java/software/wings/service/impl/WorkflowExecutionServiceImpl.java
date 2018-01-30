@@ -636,12 +636,30 @@ public class WorkflowExecutionServiceImpl implements WorkflowExecutionService {
         }
       }
       if (includeGraph) {
-        StateMachine sm = wingsPersistence.get(
-            StateMachine.class, workflowExecution.getAppId(), workflowExecution.getStateMachineId());
+        String initialStateName;
+        if (workflowExecution.getStatus() == NEW || workflowExecution.getStatus() == QUEUED) {
+          initialStateName = allInstances.get(0).getStateName();
+        } else {
+          StateExecutionInstance stateExecutionInstance = getEarliestInstance(allInstances);
+          initialStateName = stateExecutionInstance.getStateName();
+        }
         workflowExecution.setExecutionNode(
-            graphRenderer.generateHierarchyNode(allInstancesIdMap, sm.getInitialStateName(), null, true, true));
+            graphRenderer.generateHierarchyNode(allInstancesIdMap, initialStateName, null, true, true));
       }
     }
+  }
+
+  private StateExecutionInstance getEarliestInstance(List<StateExecutionInstance> allInstances) {
+    StateExecutionInstance earliest = allInstances.get(0);
+    for (StateExecutionInstance stateExecutionInstance : allInstances) {
+      if (stateExecutionInstance.getStartTs() == null || stateExecutionInstance.getStartTs() == 0) {
+        continue;
+      }
+      if (earliest.getStartTs() == null || earliest.getStartTs() > stateExecutionInstance.getStartTs()) {
+        earliest = stateExecutionInstance;
+      }
+    }
+    return earliest;
   }
 
   private void populateNodeHierarchyWithGraph(WorkflowExecution workflowExecution) {
