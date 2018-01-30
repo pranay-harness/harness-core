@@ -28,56 +28,56 @@ ARTIFACT_APPROVAL_NOTIFICATION_STATUS:
 
 WORKFLOW_SUCCESSFUL_NOTIFICATION:
       web: ${WORKFLOW_NAME} completed successfully for ${ARTIFACTS} in ${ENV_NAME} at ${DATE}
-      slack: ${WORKFLOW_NAME} completed successfully for ${ARTIFACTS} in ${ENV_NAME} at ${DATE}
+      slack: \*${WORKFLOW_NAME}\* completed successfully for \*${ARTIFACTS}\* in ${ENV_NAME}  _-${DATE}_
       email:
           subject: ${WORKFLOW_NAME} completed successfully
           body: ${WORKFLOW_NAME} completed successfully for ${ARTIFACTS} in ${ENV_NAME} at ${DATE}
 
 WORKFLOW_FAILED_NOTIFICATION:
       web: ${WORKFLOW_NAME} failed for ${ARTIFACTS} in ${ENV_NAME} at ${DATE}
-      slack: ${WORKFLOW_NAME} failed for ${ARTIFACTS} in ${ENV_NAME} at ${DATE}
+      slack: \*${WORKFLOW_NAME}\* failed for \*${ARTIFACTS}\* in ${ENV_NAME}  _-${DATE}_
       email:
           subject: ${WORKFLOW_NAME} failed
           body: ${WORKFLOW_NAME} failed for ${ARTIFACTS} in ${ENV_NAME} at ${DATE}
 
 WORKFLOW_PAUSED_NOTIFICATION:
       web: ${WORKFLOW_NAME} paused for ${ARTIFACTS} in ${ENV_NAME} at ${DATE}
-      slack: ${WORKFLOW_NAME} paused for ${ARTIFACTS} in ${ENV_NAME} at ${DATE}
+      slack: \*${WORKFLOW_NAME}\* paused for \*${ARTIFACTS}\* in ${ENV_NAME}  _-${DATE}_
       email:
           subject: ${WORKFLOW_NAME} paused
           body: ${WORKFLOW_NAME} paused for ${ARTIFACTS} in ${ENV_NAME} at ${DATE}
 
 WORKFLOW_RESUMED_NOTIFICATION:
       web: ${WORKFLOW_NAME} execution resumed for ${ARTIFACTS} in ${ENV_NAME} at ${DATE}
-      slack: ${WORKFLOW_NAME} execution resumed for ${ARTIFACTS} in ${ENV_NAME} at ${DATE}
+      slack: \*${WORKFLOW_NAME}\* execution resumed for \*${ARTIFACTS}\* in ${ENV_NAME}  _-${DATE}_
       email:
           subject: ${WORKFLOW_NAME} resumed
           body: ${WORKFLOW_NAME} resumed for ${ARTIFACTS} in ${ENV_NAME} at ${DATE}
 
 WORKFLOW_ABORTED_NOTIFICATION:
       web: ${WORKFLOW_NAME} aborted for ${ARTIFACTS} in ${ENV_NAME} at ${DATE}
-      slack: ${WORKFLOW_NAME} aborted for ${ARTIFACTS} in ${ENV_NAME} at ${DATE}
+      slack: \*${WORKFLOW_NAME}\* aborted for \*${ARTIFACTS}\* in ${ENV_NAME} at _-${DATE}_
       email:
           subject: ${WORKFLOW_NAME} aborted
           body: ${WORKFLOW_NAME} aborted for ${ARTIFACTS} in ${ENV_NAME} at ${DATE}
 
 WORKFLOW_PHASE_SUCCESSFUL_NOTIFICATION:
       web: ${PHASE_NAME} of ${WORKFLOW_NAME} completed successfully for ${ARTIFACTS} at ${DATE}
-      slack: ${PHASE_NAME} of ${WORKFLOW_NAME} completed successfully for ${ARTIFACTS} at ${DATE}
+      slack: ${PHASE_NAME} of \*${WORKFLOW_NAME}\* completed successfully for \*${ARTIFACTS}\*  _-${DATE}_
       email:
           subject: ${PHASE_NAME} of ${WORKFLOW_NAME} completed
           body: ${PHASE_NAME} of ${WORKFLOW_NAME} completed successfully for ${ARTIFACTS} at ${DATE}
 
 WORKFLOW_PHASE_FAILED_NOTIFICATION:
       web: ${PHASE_NAME} of ${WORKFLOW_NAME} failed for ${ARTIFACTS} at ${DATE}
-      slack: ${PHASE_NAME} of ${WORKFLOW_NAME} failed for ${ARTIFACTS} at ${DATE}
+      slack: ${PHASE_NAME} of \*${WORKFLOW_NAME}\* failed for \*${ARTIFACTS}\*  _-${DATE}_
       email:
           subject: ${PHASE_NAME} of ${WORKFLOW_NAME} failed
           body: ${PHASE_NAME} of ${WORKFLOW_NAME} failed for ${ARTIFACTS} at ${DATE}
 
 WORKFLOW_PHASE_PAUSED_NOTIFICATION:
       web: ${PHASE_NAME} of ${WORKFLOW_NAME} paused for ${ARTIFACTS} at ${DATE}
-      slack: ${PHASE_NAME} of ${WORKFLOW_NAME} paused for ${ARTIFACTS} at ${DATE}
+      slack: ${PHASE_NAME} of \*${WORKFLOW_NAME}\* paused for \*${ARTIFACTS}\*  _-${DATE}_
       email:
           subject: ${PHASE_NAME} of ${WORKFLOW_NAME} paused
           body: ${PHASE_NAME} of ${WORKFLOW_NAME} paused for ${ARTIFACTS} at ${DATE}
