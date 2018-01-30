@@ -68,7 +68,9 @@ def run_learning_engine(parameters): #
             learning_api_url = complete_url(parameters.server_url, '/api/learning/get-next-task')
             try:
                 text, status_code = HarnessLoader.get_request(learning_api_url, VERSIONFILEPATH, parameters.service_secret)
+                version =  HarnessLoader.get_accept_header(VERSIONFILEPATH)
                 logger.info(str(status_code))
+                logger.info('url is ' + str(learning_api_url) + ' and header is ' + str(version))
                 if (status_code == 200) and text.get('resource'):
                     # get task
                     logger.info('A new task is pulled')
