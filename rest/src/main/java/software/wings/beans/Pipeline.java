@@ -35,6 +35,7 @@ public class Pipeline extends Base {
   @NotNull private List<PipelineStage> pipelineStages = new ArrayList<>();
   private Map<String, Long> stateEtaMap = new HashMap<>();
   @Transient private List<Service> services = new ArrayList<>();
+  @Transient private List<WorkflowExecution> workflowExecutions = new ArrayList<>();
   @Transient private boolean valid = true;
   @Transient private String validationMessage;
   @Transient private boolean templatized;
@@ -176,22 +177,20 @@ public class Pipeline extends Base {
         .toString();
   }
 
-  /**
-   * Gets services.
-   *
-   * @return the services
-   */
   public List<Service> getServices() {
     return services;
   }
 
-  /**
-   * Sets services.
-   *
-   * @param services the services
-   */
   public void setServices(List<Service> services) {
     this.services = services;
+  }
+
+  public List<WorkflowExecution> getWorkflowExecutions() {
+    return workflowExecutions;
+  }
+
+  public void setWorkflowExecutions(List<WorkflowExecution> workflowExecutions) {
+    this.workflowExecutions = workflowExecutions;
   }
 
   public Pipeline clone() {
