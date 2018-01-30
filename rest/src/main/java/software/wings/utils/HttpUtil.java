@@ -200,8 +200,6 @@ public class HttpUtil {
    * Sets the HTTP proxy that will be used by connections created by this client. This takes precedence over
    * proxySelector, which is only honored when this proxy is null (which it is by default). To disable proxy use
    * completely, call setProxy(Proxy.NO_PROXY)
-   * @param url
-   * @return
    */
   public static Proxy checkAndGetNonProxyIfApplicable(String url) {
     return shouldUseNonProxy(url) ? Proxy.NO_PROXY : null;
@@ -214,9 +212,6 @@ public class HttpUtil {
    *
    * Currently, we only support suffix format (and not prefix). e.g. localhost, *localhost
    * e.g. *localhost
-   * @param url
-   * @param nonProxyConfigString
-   * @return
    */
   public static boolean shouldUseNonProxy(String url, String nonProxyConfigString) {
     if (!StringUtils.isEmpty(url) && !StringUtils.isEmpty(nonProxyConfigString)) {
@@ -227,16 +222,11 @@ public class HttpUtil {
               .splitToList(nonProxyConfigString)
               .stream()
               .anyMatch(suffix -> checkPattern(suffix, domain))) {
-        logger.info(new StringBuilder()
-                        .append("DELEGATE_NO_PROXY Found matching nonProxy suffix for domain: ")
-                        .append(domain)
-                        .append(", using nonProxy setting")
-                        .toString());
+        logger.info("DELEGATE_NO_PROXY Found matching nonProxy suffix for domain: {}, using nonProxy setting", domain);
         return true;
       }
+      logger.info("noproxy does not apply, getting proxy");
     }
-
-    logger.info("noproxy does not apply, getting proxy");
     return false;
   }
 
@@ -263,7 +253,7 @@ public class HttpUtil {
 
   private static boolean checkPattern(String pattern, String domain) {
     if (pattern.startsWith("*")) { // remove *, *.jenkins.com to .jenkins.com
-      pattern = new StringBuilder().append(pattern.substring(1)).toString();
+      pattern = pattern.substring(1);
     }
 
     return domain.toLowerCase().endsWith(pattern.toLowerCase());
