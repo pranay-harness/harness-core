@@ -24,7 +24,7 @@ public class SlackNotificationServiceImpl implements SlackNotificationService {
     String webhookUrl = slackConfig.getOutgoingWebhookUrl();
 
     Payload payload = new Payload();
-    payload.setText(message);
+    payload.setText(message.replaceAll("\\\\\\*", "*"));
     if (isNotEmpty(slackChannel)) {
       payload.setChannel(slackChannel);
     }
