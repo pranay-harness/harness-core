@@ -23,12 +23,10 @@ public class RenameReplicationControllerStates implements Migration {
   public void migrate() {
     logger.info("Renaming Kubernetes state types and classes");
 
+    renameStateTypeAndStateClass(KUBERNETES_SETUP, KUBERNETES_SETUP, wingsPersistence, workflowService);
+    renameStateTypeAndStateClass(KUBERNETES_DEPLOY, KUBERNETES_DEPLOY, wingsPersistence, workflowService);
     renameStateTypeAndStateClass(
-        "KUBERNETES_REPLICATION_CONTROLLER_SETUP", KUBERNETES_SETUP, wingsPersistence, workflowService);
-    renameStateTypeAndStateClass(
-        "KUBERNETES_REPLICATION_CONTROLLER_DEPLOY", KUBERNETES_DEPLOY, wingsPersistence, workflowService);
-    renameStateTypeAndStateClass(
-        "KUBERNETES_REPLICATION_CONTROLLER_ROLLBACK", KUBERNETES_DEPLOY_ROLLBACK, wingsPersistence, workflowService);
+        KUBERNETES_DEPLOY_ROLLBACK, KUBERNETES_DEPLOY_ROLLBACK, wingsPersistence, workflowService);
 
     logger.info("Finished renaming Kubernetes state types and classes");
   }
