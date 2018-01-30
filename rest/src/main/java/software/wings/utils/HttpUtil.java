@@ -1,6 +1,7 @@
 package software.wings.utils;
 
 import static io.harness.data.structure.EmptyPredicate.isNotEmpty;
+import static org.apache.commons.lang3.StringUtils.isNotBlank;
 
 import com.google.common.base.Splitter;
 
@@ -214,7 +215,7 @@ public class HttpUtil {
    * e.g. *localhost
    */
   public static boolean shouldUseNonProxy(String url, String nonProxyConfigString) {
-    if (!StringUtils.isEmpty(url) && !StringUtils.isEmpty(nonProxyConfigString)) {
+    if (isNotBlank(url) && isNotBlank(nonProxyConfigString)) {
       String domain = getDomain(url);
       logger.info("checking if nonproxy setting applies for domain: " + domain);
 

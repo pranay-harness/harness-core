@@ -62,7 +62,7 @@ public class ArtifactCollectEventListener extends AbstractQueueListener<CollectE
    * @see software.wings.core.queue.AbstractQueueListener#onMessage(software.wings.core.queue.Queuable)
    */
   @Override
-  protected void onMessage(CollectEvent message) throws Exception {
+  protected void onMessage(CollectEvent message) {
     Artifact artifact = message.getArtifact();
     try {
       artifactService.updateStatus(artifact.getUuid(), artifact.getAppId(), Status.RUNNING);
