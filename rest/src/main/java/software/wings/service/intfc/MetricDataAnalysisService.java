@@ -79,4 +79,7 @@ public interface MetricDataAnalysisService {
       int analysisMinute, String transactionName, String metricName);
 
   Map<String, TimeSeriesMetricDefinition> getMetricTemplate(StateType stateType);
+
+  NewRelicMetricDataRecord getAnalysisMinute(
+      StateType stateType, String stateExecutionId, String workflowExecutionId, String serviceId);
 }

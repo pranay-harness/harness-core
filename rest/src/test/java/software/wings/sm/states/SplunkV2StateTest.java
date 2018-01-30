@@ -143,7 +143,7 @@ public class SplunkV2StateTest extends WingsBaseTest {
     doReturn(serviceId).when(spyState).getPhaseServiceId(executionContext);
 
     ExecutionResponse response = spyState.execute(executionContext);
-    assertEquals(ExecutionStatus.FAILED, response.getExecutionStatus());
+    assertEquals(ExecutionStatus.SUCCESS, response.getExecutionStatus());
     assertEquals("Could not find hosts to analyze!", response.getErrorMessage());
 
     LogMLAnalysisSummary analysisSummary =

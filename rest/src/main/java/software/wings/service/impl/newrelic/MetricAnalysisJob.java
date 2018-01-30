@@ -30,7 +30,6 @@ import software.wings.service.intfc.DelegateService;
 import software.wings.service.intfc.FeatureFlagService;
 import software.wings.service.intfc.LearningEngineService;
 import software.wings.service.intfc.MetricDataAnalysisService;
-import software.wings.service.intfc.analysis.ClusterLevel;
 import software.wings.sm.ExecutionStatus;
 import software.wings.utils.JsonUtils;
 import software.wings.waitnotify.WaitNotifyEngine;
@@ -233,8 +232,9 @@ public class MetricAnalysisJob implements Job {
 
       final String logAnalysisSaveUrl = "/api/" + context.getStateBaseUrl()
           + "/save-analysis?accountId=" + context.getAccountId() + "&applicationId=" + context.getAppId() + "&"
-          + "workflowExecutionId=" + context.getWorkflowExecutionId() + "&stateExecutionId="
-          + context.getStateExecutionId() + "&analysisMinute=" + analysisMinute + "&taskId=" + uuid;
+          + "workflowExecutionId=" + context.getWorkflowExecutionId()
+          + "&stateExecutionId=" + context.getStateExecutionId() + "&analysisMinute=" + analysisMinute
+          + "&taskId=" + uuid + "&serviceId=" + context.getServiceId() + "&workflowId=" + context.getWorkflowId();
 
       LearningEngineAnalysisTask learningEngineAnalysisTask =
           LearningEngineAnalysisTask.builder()
@@ -288,25 +288,20 @@ public class MetricAnalysisJob implements Job {
         final NewRelicMetricDataRecord heartBeatRecord = analysisService.getLastHeartBeat(context.getStateType(),
             context.getStateExecutionId(), context.getWorkflowExecutionId(), context.getServiceId());
 
-        if (heartBeatRecord == null) {
-          logger.info("skipping time series analysis for " + context.getStateExecutionId() + ". analysisMinute is -1 ");
-          return;
-        }
-
-        if (heartBeatRecord.getLevel() == ClusterLevel.HF
-            && heartBeatRecord.getDataCollectionMinute() >= analysisDuration) {
+        if (heartBeatRecord != null && heartBeatRecord.getDataCollectionMinute() >= analysisDuration) {
           logger.info(
               "time series analysis finished after running for {} minutes", heartBeatRecord.getDataCollectionMinute());
           completeCron = true;
           return;
         }
 
-        if (heartBeatRecord.getLevel() == ClusterLevel.HF) {
+        final NewRelicMetricDataRecord analysisDataRecord = analysisService.getAnalysisMinute(context.getStateType(),
+            context.getStateExecutionId(), context.getWorkflowExecutionId(), context.getServiceId());
+        if (analysisDataRecord == null) {
           logger.info("Skipping time series analysis. No new data.");
           return;
         }
-
-        int analysisMinute = heartBeatRecord.getDataCollectionMinute();
+        int analysisMinute = analysisDataRecord.getDataCollectionMinute();
 
         logger.info("running analysis for " + context.getStateExecutionId() + " for minute" + analysisMinute);
 
@@ -339,6 +334,8 @@ public class MetricAnalysisJob implements Job {
                     + " , max control minute = " + maxControlMinute);
                 // Do nothing. Don't run any analysis.
                 taskQueued = true;
+                analysisService.bumpCollectionMinuteToProcess(context.getStateType(), context.getStateExecutionId(),
+                    context.getWorkflowExecutionId(), context.getServiceId(), analysisMinute);
                 break;
               }
               taskQueued = timeSeriesML(analysisMinute);
@@ -354,27 +351,14 @@ public class MetricAnalysisJob implements Job {
         }
 
         if (!runTimeSeriesML) {
-          logger.info("running local time series analysis");
+          logger.info("running local time series analysis for {}", context.getStateExecutionId());
           NewRelicMetricAnalysisRecord analysisRecord = analyzeLocal(analysisMinute);
           analysisService.saveAnalysisRecords(analysisRecord);
           analysisService.bumpCollectionMinuteToProcess(context.getStateType(), context.getStateExecutionId(),
               context.getWorkflowExecutionId(), context.getServiceId(), analysisMinute);
-
-          NewRelicMetricDataRecord nextHeartBeatRecord = analysisService.getLastHeartBeat(context.getStateType(),
-              context.getStateExecutionId(), context.getWorkflowExecutionId(), context.getServiceId());
-
-          logger.info("Finish analysis for " + context.getStateExecutionId() + " for minute" + analysisMinute
-              + ". Next minute is " + nextHeartBeatRecord.getDataCollectionMinute());
         } else if (!taskQueued) {
           return;
         }
-
-        if (analysisMinute >= analysisDuration) {
-          logger.info("time series analysis finished after running for {} minutes", analysisMinute);
-          completeCron = true;
-          return;
-        }
-
       } catch (Exception ex) {
         completeCron = true;
         error = true;
