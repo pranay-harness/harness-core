@@ -114,6 +114,14 @@ helper shell scripts:
 4) Install Lombok Plugin: https://projectlombok.org/setup/intellij
 5) Change settings to mark injected fields as assigned. (Settings->Editor ->Inspections ->Java ->Declaration Redundancy->Unused Declarations->Entry Points->
 Annotations->Mark field as implicitly written if annotated by) Click add, then search for "Inject". Add both google and javax annotations.
+6) Setup your imports settings. From Preferences | Editor > Code Style > Java | Imports make sure that your limits are big enough to not take affect
+
+![config image](img/imports_limits.png)
+
+Also make sure that the layout looks like this:
+
+![config image](img/imports_layout.png).
+
 
 ### Run from IntelliJ
 1) Create the API Server application - "WingsApplication":  
