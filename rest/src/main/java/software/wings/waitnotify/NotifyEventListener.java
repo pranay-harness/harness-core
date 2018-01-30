@@ -48,7 +48,7 @@ public final class NotifyEventListener extends AbstractQueueListener<NotifyEvent
    * {@inheritDoc}
    */
   @Override
-  protected void onMessage(NotifyEvent message) throws Exception {
+  protected void onMessage(NotifyEvent message) {
     logger.trace("Processing message {}", message);
     String waitInstanceId = message.getWaitInstanceId();
 

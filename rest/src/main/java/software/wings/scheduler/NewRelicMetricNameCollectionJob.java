@@ -7,7 +7,6 @@ import com.google.inject.Inject;
 import org.quartz.DisallowConcurrentExecution;
 import org.quartz.Job;
 import org.quartz.JobExecutionContext;
-import org.quartz.JobExecutionException;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import software.wings.beans.DelegateTask;
@@ -39,7 +38,7 @@ public class NewRelicMetricNameCollectionJob implements Job {
   @Inject private MetricDataAnalysisService metricDataAnalysisService;
 
   @Override
-  public void execute(JobExecutionContext context) throws JobExecutionException {
+  public void execute(JobExecutionContext context) {
     List<NewRelicMetricNames> newRelicMetricNamesList = metricDataAnalysisService.listMetricNamesWithWorkflows();
     if (newRelicMetricNamesList == null) {
       logger.info("Skipping batch new relic collection. Nothing to collect");
@@ -84,7 +83,7 @@ public class NewRelicMetricNameCollectionJob implements Job {
               delegateService.queueTask(delegateTask);
             }
           } catch (Exception ex) {
-            logger.error("Unable to schedule new relic task ");
+            logger.error("Unable to schedule new relic task", ex);
           }
         });
   }

@@ -1,7 +1,8 @@
 package software.wings.app;
 
 import static io.harness.data.structure.EmptyPredicate.isNotEmpty;
-import static org.apache.commons.lang3.StringUtils.isNotBlank;
+import static java.util.stream.Collectors.toList;
+import static org.apache.commons.lang3.StringUtils.isBlank;
 import static software.wings.common.Constants.DELEGATE_SYNC_CACHE;
 import static software.wings.core.maintenance.MaintenanceController.isMaintenance;
 import static software.wings.waitnotify.ErrorNotifyResponseData.Builder.anErrorNotifyResponseData;
@@ -29,7 +30,6 @@ import java.time.Duration;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.concurrent.TimeUnit;
-import java.util.stream.Collectors;
 import javax.cache.Cache;
 import javax.cache.Caching;
 
@@ -80,7 +80,7 @@ public class DelegateQueueTask implements Runnable {
                                        .asList()
                                        .stream()
                                        .filter(DelegateTask::isTimedOut)
-                                       .collect(Collectors.toList());
+                                       .collect(toList());
       } catch (com.esotericsoftware.kryo.KryoException kryo) {
         logger.warn("Delegate task schema backwards incompatibility", kryo);
         for (Key<DelegateTask> key :
@@ -107,15 +107,16 @@ public class DelegateQueueTask implements Runnable {
           DelegateTask updatedDelegateTask =
               wingsPersistence.getDatastore().findAndModify(updateQuery, updateOperations);
 
-          if (updatedDelegateTask != null && isNotBlank(updatedDelegateTask.getWaitId())) {
-            logger.info("Long running delegate task [{}] is terminated", updatedDelegateTask.getUuid());
+          if (updatedDelegateTask == null) {
+            logger.error("Long running delegate task {} could not be updated to ERROR status", delegateTask.getUuid());
+          } else if (isBlank(updatedDelegateTask.getWaitId())) {
+            logger.error("Long running delegate task {} has no wait ID. Nothing to notify", delegateTask.getUuid());
+          } else {
+            logger.info("Long running delegate task {} is terminated", updatedDelegateTask.getUuid());
             waitNotifyEngine.notify(updatedDelegateTask.getWaitId(),
                 anErrorNotifyResponseData()
                     .withErrorMessage("Delegate timeout. Delegate ID: " + updatedDelegateTask.getDelegateId())
                     .build());
-          } else {
-            logger.error("Delegate task [{}] could not be updated", delegateTask.getUuid());
-            // more error handling here.
           }
         });
       }
@@ -130,7 +131,7 @@ public class DelegateQueueTask implements Runnable {
                 .asList()
                 .stream()
                 .filter(delegateTask -> clock.millis() - delegateTask.getLastUpdatedAt() > TimeUnit.HOURS.toMillis(1))
-                .collect(Collectors.toList());
+                .collect(toList());
       } catch (com.esotericsoftware.kryo.KryoException kryo) {
         logger.warn("Delegate task schema backwards incompatibility", kryo);
         for (Key<DelegateTask> key :
@@ -157,13 +158,14 @@ public class DelegateQueueTask implements Runnable {
           DelegateTask updatedDelegateTask =
               wingsPersistence.getDatastore().findAndModify(updateQuery, updateOperations);
 
-          if (updatedDelegateTask != null) {
-            logger.info("Long queued delegate task [{}] is terminated", updatedDelegateTask.getUuid());
-            waitNotifyEngine.notify(
-                updatedDelegateTask.getWaitId(), anErrorNotifyResponseData().withErrorMessage("Task timeout.").build());
+          if (updatedDelegateTask == null) {
+            logger.error("Queued delegate task {} could not be updated to ERROR status", delegateTask.getUuid());
+          } else if (isBlank(updatedDelegateTask.getWaitId())) {
+            logger.error("Queued delegate task {} has no wait ID. Nothing to notify", delegateTask.getUuid());
           } else {
-            logger.error("Delegate task [{}] could not be updated", delegateTask.getUuid());
-            // more error handling here.
+            logger.info("Queued delegate task {} is terminated", updatedDelegateTask.getUuid());
+            waitNotifyEngine.notify(updatedDelegateTask.getWaitId(),
+                anErrorNotifyResponseData().withErrorMessage("Task queued too log").build());
           }
         });
       }
