@@ -176,7 +176,7 @@ public class AmazonS3ServiceImpl implements AmazonS3Service {
       result = awsHelperService.listObjectsInS3(awsConfig, encryptionDetails, listObjectsV2Request);
       List<S3ObjectSummary> objectSummaryList = result.getObjectSummaries();
       // in descending order. The most recent one comes first
-      Collections.sort(objectSummaryList, (o1, o2) -> o2.getLastModified().compareTo(o1.getLastModified()));
+      objectSummaryList.sort((o1, o2) -> o2.getLastModified().compareTo(o1.getLastModified()));
 
       List<String> objectKeyListForCurrentBatch =
           objectSummaryList.stream()
@@ -186,7 +186,7 @@ public class AmazonS3ServiceImpl implements AmazonS3Service {
               .collect(Collectors.toList());
       objectKeyList.addAll(objectKeyListForCurrentBatch);
       listObjectsV2Request.setContinuationToken(result.getNextContinuationToken());
-    } while (result.isTruncated() == true);
+    } while (result.isTruncated());
 
     // We are not using stream here since addDataToResponse throws a bunch of exceptions and we want to throw them back
     // to the caller.
@@ -210,10 +210,7 @@ public class AmazonS3ServiceImpl implements AmazonS3Service {
   @Override
   public BuildDetails getArtifactBuildDetails(AwsConfig awsConfig, List<EncryptedDataDetail> encryptionDetails,
       String bucketName, String key, boolean versioningEnabledForBucket) {
-    Map<String, String> map = new HashMap<>();
     String versionId = null;
-    String resourceUrl =
-        new StringBuilder("https://s3.amazonaws.com/").append(bucketName).append("/").append(key).toString();
     if (versioningEnabledForBucket) {
       ObjectMetadata objectMetadata =
           awsHelperService.getObjectMetadataFromS3(awsConfig, encryptionDetails, bucketName, key);
@@ -225,7 +222,8 @@ public class AmazonS3ServiceImpl implements AmazonS3Service {
     if (versionId == null) {
       versionId = key;
     }
-    map.put(Constants.URL, resourceUrl);
+    Map<String, String> map = new HashMap<>();
+    map.put(Constants.URL, "https://s3.amazonaws.com/" + bucketName + "/" + key);
     map.put(Constants.BUILD_NO, versionId);
     map.put(Constants.BUCKET_NAME, bucketName);
     map.put(Constants.ARTIFACT_PATH, key);

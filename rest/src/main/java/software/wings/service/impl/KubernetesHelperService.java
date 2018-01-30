@@ -271,9 +271,8 @@ public class KubernetesHelperService {
   }
 
   public static String toYaml(Object entity) throws JsonProcessingException {
-    YAMLFactory yamlFactory = new YAMLFactory().configure(WRITE_DOC_START_MARKER, false);
-    ObjectMapper objectMapper = new ObjectMapper(yamlFactory);
-    objectMapper.setSerializationInclusion(NON_EMPTY);
-    return objectMapper.writeValueAsString(entity);
+    return new ObjectMapper(new YAMLFactory().configure(WRITE_DOC_START_MARKER, false))
+        .setSerializationInclusion(NON_EMPTY)
+        .writeValueAsString(entity);
   }
 }

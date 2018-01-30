@@ -873,9 +873,9 @@ public class DelegateServiceImpl implements DelegateService {
       logger.error("Task {} timed out after {} milliseconds", delegateTask.getUuid(), timeout);
       Optional.ofNullable(currentlyExecutingFutures.get(delegateTask.getUuid()))
           .ifPresent(future -> future.cancel(true));
-      currentlyExecutingTasks.remove(delegateTask.getUuid());
-      currentlyExecutingFutures.remove(delegateTask.getUuid());
     }
+    currentlyExecutingTasks.remove(delegateTask.getUuid());
+    currentlyExecutingFutures.remove(delegateTask.getUuid());
   }
 
   private void replaceRunScripts(DelegateScripts delegateScripts) throws IOException {
