@@ -187,6 +187,9 @@ public class MongoHelper {
       case GT:
         return fieldEnd.greaterThan(filter.getFieldValues()[0]);
 
+      case GE:
+        return fieldEnd.greaterThanOrEq(filter.getFieldValues()[0]);
+
       case EQ:
         return fieldEnd.equal(filter.getFieldValues()[0]);
 
