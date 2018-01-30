@@ -70,9 +70,10 @@ public class PipelineResource {
   @Timed
   @ExceptionMetered
   @AuthRule(value = PIPELINE)
-  public RestResponse<PageResponse<Pipeline>> list(
-      @QueryParam("appId") List<String> appIds, @BeanParam PageRequest<Pipeline> pageRequest) {
-    return new RestResponse<>(pipelineService.listPipelines(pageRequest, true));
+  public RestResponse<PageResponse<Pipeline>> list(@QueryParam("appId") List<String> appIds,
+      @BeanParam PageRequest<Pipeline> pageRequest,
+      @QueryParam("previousExecutionsCount") Integer previousExecutionsCount) {
+    return new RestResponse<>(pipelineService.listPipelines(pageRequest, true, previousExecutionsCount));
   }
 
   /**

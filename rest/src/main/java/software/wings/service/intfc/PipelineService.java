@@ -33,7 +33,8 @@ public interface PipelineService extends OwnedByApplication {
    * @param withDetails with details
    * @return the page response
    */
-  PageResponse<Pipeline> listPipelines(PageRequest<Pipeline> pageRequest, boolean withDetails);
+  PageResponse<Pipeline> listPipelines(
+      PageRequest<Pipeline> pageRequest, boolean withDetails, Integer previousExecutionsCount);
 
   /**
    * Read pipeline pipeline.

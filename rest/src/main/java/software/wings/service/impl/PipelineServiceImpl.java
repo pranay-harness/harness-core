@@ -41,6 +41,7 @@ import software.wings.beans.PipelineStage.PipelineStageElement;
 import software.wings.beans.Service;
 import software.wings.beans.Variable;
 import software.wings.beans.Workflow;
+import software.wings.beans.WorkflowExecution;
 import software.wings.beans.trigger.Trigger;
 import software.wings.beans.yaml.Change.ChangeType;
 import software.wings.beans.yaml.GitFileChange;
@@ -55,6 +56,7 @@ import software.wings.service.intfc.AppService;
 import software.wings.service.intfc.PipelineService;
 import software.wings.service.intfc.ServiceResourceService;
 import software.wings.service.intfc.TriggerService;
+import software.wings.service.intfc.WorkflowExecutionService;
 import software.wings.service.intfc.WorkflowService;
 import software.wings.service.intfc.ownership.OwnedByPipeline;
 import software.wings.service.intfc.yaml.EntityUpdateService;
@@ -90,6 +92,7 @@ public class PipelineServiceImpl implements PipelineService {
   @Inject private TriggerService triggerService;
   @Inject private WingsPersistence wingsPersistence;
   @Inject private WorkflowService workflowService;
+  @Inject private WorkflowExecutionService workflowExecutionService;
   @Inject private YamlChangeSetService yamlChangeSetService;
   @Inject private YamlDirectoryService yamlDirectoryService;
 
@@ -107,7 +110,8 @@ public class PipelineServiceImpl implements PipelineService {
    * {@inheritDoc}
    */
   @Override
-  public PageResponse<Pipeline> listPipelines(PageRequest<Pipeline> pageRequest, boolean withDetails) {
+  public PageResponse<Pipeline> listPipelines(
+      PageRequest<Pipeline> pageRequest, boolean withDetails, Integer previousExecutionsCount) {
     PageResponse<Pipeline> res = wingsPersistence.query(Pipeline.class, pageRequest);
     if (res == null || res.getResponse() == null) {
       return res;
@@ -145,6 +149,25 @@ public class PipelineServiceImpl implements PipelineService {
             String.format(Constants.PIPELINE_ENV_STATE_VALIDATION_MESSAGE, invalidWorkflows.toString()));
       }
     }
+
+    if (previousExecutionsCount != null && previousExecutionsCount > 0) {
+      for (Pipeline pipeline : pipelines) {
+        try {
+          PageRequest<WorkflowExecution> workflowExecutionPageRequest =
+              aPageRequest()
+                  .withLimit(previousExecutionsCount.toString())
+                  .addFilter("workflowId", EQ, pipeline.getUuid())
+                  .build();
+
+          pipeline.setWorkflowExecutions(
+              workflowExecutionService.listExecutions(workflowExecutionPageRequest, false, false, false, false)
+                  .getResponse());
+        } catch (Exception e) {
+          logger.error("Failed to fetch recent executions for pipeline {}", pipeline, e);
+        }
+      }
+    }
+
     return res;
   }
 
