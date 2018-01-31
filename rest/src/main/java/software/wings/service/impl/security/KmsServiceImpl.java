@@ -255,8 +255,11 @@ public class KmsServiceImpl extends AbstractSecretServiceImpl implements KmsServ
     boolean defaultSet = false;
     while (query.hasNext()) {
       KmsConfig kmsConfig = query.next();
-      Query<EncryptedData> encryptedDataQuery =
-          wingsPersistence.createQuery(EncryptedData.class).field("kmsId").equal(kmsConfig.getUuid());
+      Query<EncryptedData> encryptedDataQuery = wingsPersistence.createQuery(EncryptedData.class)
+                                                    .field("accountId")
+                                                    .equal(accountId)
+                                                    .field("kmsId")
+                                                    .equal(kmsConfig.getUuid());
       kmsConfig.setNumOfEncryptedValue(encryptedDataQuery.asKeyList().size());
       if (kmsConfig.isDefault()) {
         defaultSet = true;
