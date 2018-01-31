@@ -1,5 +1,7 @@
 package software.wings.service.impl.yaml;
 
+import static software.wings.beans.Base.GLOBAL_APP_ID;
+
 import com.google.inject.Inject;
 
 import org.mongodb.morphia.annotations.Transient;
@@ -7,6 +9,8 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import software.wings.beans.Base;
 import software.wings.beans.GitCommit;
+import software.wings.beans.alert.AlertType;
+import software.wings.beans.alert.GitConnectionErrorAlert;
 import software.wings.beans.yaml.ChangeContext;
 import software.wings.beans.yaml.GitCommand.GitCommandType;
 import software.wings.beans.yaml.GitCommandExecutionResponse;
@@ -63,9 +67,16 @@ public class GitCommandCallback implements NotifyCallback {
           logger.error("Git Command failed [{}] for changeSetId [{}] for account {}",
               gitCommandExecutionResponse.getErrorMessage(), changeSetId, accountId);
           yamlChangeSetService.updateStatus(accountId, changeSetId, Status.FAILED);
+          // raise alert if GitConnectionErrorAlert is not already open
+          yamlGitService.raiseAlertForGitFailure(accountId, GLOBAL_APP_ID, gitCommandExecutionResponse.getErrorCode(),
+              gitCommandExecutionResponse.getErrorMessage());
         }
         return;
       }
+
+      // close alert if GitConnectionErrorAlert is open as now connection was successful
+      yamlGitService.closeAlertForGitFailureIfOpen(accountId, GLOBAL_APP_ID, AlertType.GitConnectionError,
+          GitConnectionErrorAlert.builder().accountId(accountId).build());
 
       logger.info("Git command [type: {}] request completed with status [{}] for account {}",
           gitCommandResult.getGitCommandType(), gitCommandExecutionResponse.getGitCommandStatus(), accountId);

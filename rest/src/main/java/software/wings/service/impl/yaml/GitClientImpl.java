@@ -406,7 +406,7 @@ public class GitClientImpl implements GitClient {
   }
 
   /**
-   * Ensure repo locally cloned.
+   * Ensure repo locally cloned. This is called before performing any git operation with remote
    *
    * @param gitConfig the git config
    */
@@ -427,6 +427,7 @@ public class GitClientImpl implements GitClient {
     } catch (GitAPIException ex) {
       logger.info("Hard reset failed for branch [{}]", gitConfig.getBranch());
       logger.error("Exception: ", ex);
+      throw new WingsException("Error in connection to git: " + ex.getMessage());
     }
 
     logger.info("Repo doesn't exist. Do a fresh clone");

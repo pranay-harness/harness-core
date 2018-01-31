@@ -19,7 +19,9 @@ import software.wings.beans.RestResponse;
 import software.wings.beans.SearchFilter.Operator;
 import software.wings.beans.SortOrder.OrderType;
 import software.wings.beans.TaskType;
+import software.wings.beans.alert.AlertData;
 import software.wings.beans.alert.AlertType;
+import software.wings.beans.alert.GitConnectionErrorAlert;
 import software.wings.beans.alert.GitSyncErrorAlert;
 import software.wings.beans.yaml.Change;
 import software.wings.beans.yaml.Change.ChangeType;
@@ -349,8 +351,25 @@ public class YamlGitServiceImpl implements YamlGitService {
         getGitSyncErrorAlert(failedChange.getAccountId()));
   }
 
+  @Override
+  public void raiseAlertForGitFailure(String accountId, String appId, ErrorCode errorCode, String errorMessage) {
+    if (ErrorCode.GIT_CONNECTION_ERROR.equals(errorCode)) {
+      alertService.openAlert(
+          accountId, appId, AlertType.GitConnectionError, getGitConnectionErrorAlert(accountId, errorMessage));
+    }
+  }
+
+  @Override
+  public void closeAlertForGitFailureIfOpen(String accountId, String appId, AlertType alertType, AlertData alertData) {
+    alertService.closeAlert(accountId, appId, alertType, alertData);
+  }
+
   private GitSyncErrorAlert getGitSyncErrorAlert(String accountId) {
     return GitSyncErrorAlert.builder().accountId(accountId).message("Unable to process changes from Git").build();
+  }
+
+  private GitConnectionErrorAlert getGitConnectionErrorAlert(String accountId, String message) {
+    return GitConnectionErrorAlert.builder().accountId(accountId).message(message).build();
   }
 
   private <T extends Change> void upsertGitSyncErrors(
