@@ -75,6 +75,7 @@ import software.wings.service.intfc.ConfigService;
 import software.wings.service.intfc.InfrastructureMappingService;
 import software.wings.service.intfc.SettingsService;
 import software.wings.service.intfc.newrelic.NewRelicService;
+import software.wings.service.intfc.security.EncryptionConfig;
 import software.wings.service.intfc.security.EncryptionService;
 import software.wings.service.intfc.security.KmsService;
 import software.wings.service.intfc.security.SecretManagementDelegateService;
@@ -572,6 +573,74 @@ public class KmsTest extends WingsBaseTest {
     Collection<KmsConfig> kmsConfigs = kmsService.listKmsConfigs(accountId, true);
     assertEquals(1, kmsConfigs.size());
     assertEquals(numOfSettingAttributes, kmsConfigs.iterator().next().getNumOfEncryptedValue());
+  }
+
+  @Test
+  public void testNumOfEncryptedValue() throws IOException {
+    final String accountId1 = UUID.randomUUID().toString();
+    final KmsConfig kmsConfig = getKmsConfig();
+    kmsService.saveGlobalKmsConfig(accountId1, kmsConfig);
+    enableKmsFeatureFlag();
+
+    int numOfSettingAttributes1 = 5;
+    List<SettingAttribute> settingAttributes = new ArrayList<>();
+    for (int i = 0; i < numOfSettingAttributes1; i++) {
+      String password = "password" + i;
+      final AppDynamicsConfig appDynamicsConfig = AppDynamicsConfig.builder()
+                                                      .accountId(accountId1)
+                                                      .controllerUrl(UUID.randomUUID().toString())
+                                                      .username(UUID.randomUUID().toString())
+                                                      .password(password.toCharArray())
+                                                      .accountname(UUID.randomUUID().toString())
+                                                      .build();
+
+      SettingAttribute settingAttribute = SettingAttribute.Builder.aSettingAttribute()
+                                              .withAccountId(accountId1)
+                                              .withValue(appDynamicsConfig)
+                                              .withAppId(UUID.randomUUID().toString())
+                                              .withCategory(Category.CONNECTOR)
+                                              .withEnvId(UUID.randomUUID().toString())
+                                              .withName(UUID.randomUUID().toString())
+                                              .build();
+
+      settingAttributes.add(settingAttribute);
+    }
+    wingsPersistence.save(settingAttributes);
+
+    final String accountId2 = UUID.randomUUID().toString();
+
+    int numOfSettingAttributes2 = 7;
+    settingAttributes.clear();
+    for (int i = 0; i < numOfSettingAttributes2; i++) {
+      String password = "password" + i;
+      final AppDynamicsConfig appDynamicsConfig = AppDynamicsConfig.builder()
+                                                      .accountId(accountId2)
+                                                      .controllerUrl(UUID.randomUUID().toString())
+                                                      .username(UUID.randomUUID().toString())
+                                                      .password(password.toCharArray())
+                                                      .accountname(UUID.randomUUID().toString())
+                                                      .build();
+
+      SettingAttribute settingAttribute = SettingAttribute.Builder.aSettingAttribute()
+                                              .withAccountId(accountId2)
+                                              .withValue(appDynamicsConfig)
+                                              .withAppId(UUID.randomUUID().toString())
+                                              .withCategory(Category.CONNECTOR)
+                                              .withEnvId(UUID.randomUUID().toString())
+                                              .withName(UUID.randomUUID().toString())
+                                              .build();
+
+      settingAttributes.add(settingAttribute);
+    }
+    wingsPersistence.save(settingAttributes);
+
+    List<EncryptionConfig> encryptionConfigs = secretManager.listEncryptionConfig(accountId1);
+    assertEquals(1, encryptionConfigs.size());
+    assertEquals(numOfSettingAttributes1, ((KmsConfig) encryptionConfigs.get(0)).getNumOfEncryptedValue());
+
+    encryptionConfigs = secretManager.listEncryptionConfig(accountId2);
+    assertEquals(1, encryptionConfigs.size());
+    assertEquals(numOfSettingAttributes2, ((KmsConfig) encryptionConfigs.get(0)).getNumOfEncryptedValue());
   }
 
   @Test
