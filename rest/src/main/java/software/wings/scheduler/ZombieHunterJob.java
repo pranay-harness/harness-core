@@ -73,6 +73,7 @@ import java.util.Calendar;
 import java.util.Date;
 import java.util.List;
 import java.util.Random;
+import java.util.concurrent.ExecutorService;
 
 public class ZombieHunterJob implements Job {
   protected static Logger logger = LoggerFactory.getLogger(ZombieHunterJob.class);
@@ -90,6 +91,7 @@ public class ZombieHunterJob implements Job {
 
   @Inject private WingsPersistence wingsPersistence;
   @Inject private PersistentLocker persistentLocker;
+  @Inject private ExecutorService executorService;
 
   @Inject private AppService appService;
 
@@ -99,8 +101,8 @@ public class ZombieHunterJob implements Job {
   @Value
   static class ZombieType {
     private String collection;
-    private String field;
-    private String owner;
+    private String ownerFieldName;
+    private String ownerCollection;
     private Exterminator exterminator;
   }
 
@@ -160,6 +162,10 @@ public class ZombieHunterJob implements Job {
       return;
     }
 
+    executorService.submit(() -> executeAsync(index));
+  }
+
+  public void executeAsync(int index) {
     try (AcquiredLock lock = persistentLocker.acquireLock(ZombieHunterJob.class, "expedition", Duration.ofMinutes(2))) {
       final ZombieType zombieType = zombieTypes.get(index);
 
@@ -173,20 +179,20 @@ public class ZombieHunterJob implements Job {
   }
 
   int huntingExpedition(ZombieType zombieType) {
-    final DBCollection owner = wingsPersistence.getCollection(zombieType.owner);
+    final DBCollection owner = wingsPersistence.getCollection(zombieType.ownerCollection);
 
     LRUMap map = new LRUMap(5000);
 
     BasicDBObject select = new BasicDBObject();
     select.put(ID_KEY, 1);
     select.put(APP_ID_KEY, 1);
-    select.put(zombieType.field, 1);
+    select.put(zombieType.ownerFieldName, 1);
 
     int count = 0;
     final DBCursor dbCursor = wingsPersistence.getCollection(zombieType.collection).find(null, select);
     while (dbCursor.hasNext()) {
       final DBObject object = dbCursor.next();
-      final Object ownerId = object.get(zombieType.field);
+      final Object ownerId = object.get(zombieType.ownerFieldName);
 
       DBObject ownerObject = null;
       if (map.containsKey(ownerId)) {
@@ -204,11 +210,11 @@ public class ZombieHunterJob implements Job {
           zombieType.exterminator.delete(appId.toString(), entityId.toString());
 
           logger.warn(format("Zombie %s from %s.%s=%s was discovered. It was %s by %s.", entityId,
-              zombieType.collection, zombieType.field, ownerId, KILL_METHOD[random.nextInt(KILL_METHOD.length)],
-              SQUAD_MEMBER[random.nextInt(SQUAD_MEMBER.length)]));
+              zombieType.collection, zombieType.ownerFieldName, ownerId,
+              KILL_METHOD[random.nextInt(KILL_METHOD.length)], SQUAD_MEMBER[random.nextInt(SQUAD_MEMBER.length)]));
         } else {
           logger.warn(format("Zombie %s from %s.%s=%s will be spreading the deadly virus.", entityId,
-              zombieType.collection, zombieType.field, ownerId));
+              zombieType.collection, zombieType.ownerFieldName, ownerId));
         }
       }
     }
