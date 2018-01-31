@@ -217,16 +217,13 @@ public class HttpUtil {
   public static boolean shouldUseNonProxy(String url, String nonProxyConfigString) {
     if (isNotBlank(url) && isNotBlank(nonProxyConfigString)) {
       String domain = getDomain(url);
-      logger.info("checking if nonproxy setting applies for domain: " + domain);
 
       if (Splitter.on("|")
               .splitToList(nonProxyConfigString)
               .stream()
               .anyMatch(suffix -> checkPattern(suffix, domain))) {
-        logger.info("DELEGATE_NO_PROXY Found matching nonProxy suffix for domain: {}, using nonProxy setting", domain);
         return true;
       }
-      logger.info("noproxy does not apply, getting proxy");
     }
     return false;
   }
