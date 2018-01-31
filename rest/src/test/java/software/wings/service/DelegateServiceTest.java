@@ -27,6 +27,8 @@ import com.google.common.io.CharStreams;
 import com.google.inject.Inject;
 
 import com.github.tomakehurst.wiremock.junit.WireMockRule;
+import com.hazelcast.core.HazelcastInstance;
+import com.hazelcast.core.IQueue;
 import freemarker.template.TemplateException;
 import org.apache.commons.compress.archivers.zip.AsiExtraField;
 import org.apache.commons.compress.archivers.zip.ZipArchiveEntry;
@@ -90,10 +92,13 @@ public class DelegateServiceTest extends WingsBaseTest {
   @Mock private CacheHelper cacheHelper;
   @Mock private javax.cache.Cache<String, DelegateTask> cache;
   @Mock private AssignDelegateService assignDelegateService;
+  @Mock private HazelcastInstance hazelcastInstance;
 
   @Rule public WireMockRule wireMockRule = new WireMockRule(8888);
 
   @InjectMocks @Inject private DelegateService delegateService;
+
+  @Mock private IQueue topic;
 
   @Inject private WingsPersistence wingsPersistence;
 
@@ -117,6 +122,7 @@ public class DelegateServiceTest extends WingsBaseTest {
 
     when(broadcasterFactory.lookup(anyString(), anyBoolean())).thenReturn(broadcaster);
     when(cacheHelper.getCache(DELEGATE_SYNC_CACHE, String.class, DelegateTask.class)).thenReturn(cache);
+    when(hazelcastInstance.getQueue(anyString())).thenReturn(topic);
   }
 
   @Test
@@ -219,6 +225,44 @@ public class DelegateServiceTest extends WingsBaseTest {
     assertThat(delegateService.getDelegateTasks(ACCOUNT_ID, UUIDGenerator.getUuid())).isEmpty();
     verify(waitNotifyEngine)
         .notify(delegateTask.getWaitId(), anExecutionStatusData().withExecutionStatus(ExecutionStatus.SUCCESS).build());
+  }
+
+  @Test
+  public void shouldProcessDelegateTaskResponseWithoutWaitId() {
+    DelegateTask delegateTask = aDelegateTask()
+                                    .withAccountId(ACCOUNT_ID)
+                                    .withTaskType(TaskType.HTTP)
+                                    .withAppId(APP_ID)
+                                    .withParameters(new Object[] {})
+                                    .build();
+    wingsPersistence.save(delegateTask);
+    delegateService.processDelegateResponse(
+        aDelegateTaskResponse()
+            .withAccountId(ACCOUNT_ID)
+            .withTask(delegateTask)
+            .withResponse(anExecutionStatusData().withExecutionStatus(ExecutionStatus.SUCCESS).build())
+            .build());
+    assertThat(delegateService.getDelegateTasks(ACCOUNT_ID, UUIDGenerator.getUuid())).isEmpty();
+  }
+
+  @Test
+  public void shouldProcessSyncDelegateTaskResponse() {
+    when(topic.offer(any())).thenReturn(true);
+    DelegateTask delegateTask = aDelegateTask()
+                                    .withAccountId(ACCOUNT_ID)
+                                    .withTaskType(TaskType.HTTP)
+                                    .withAppId(APP_ID)
+                                    .withParameters(new Object[] {})
+                                    .withAsync(false)
+                                    .withQueueName("queue")
+                                    .build();
+    delegateService.processDelegateResponse(
+        aDelegateTaskResponse()
+            .withAccountId(ACCOUNT_ID)
+            .withTask(delegateTask)
+            .withResponse(anExecutionStatusData().withExecutionStatus(ExecutionStatus.SUCCESS).build())
+            .build());
+    verify(hazelcastInstance).getQueue("queue");
   }
 
   @Test

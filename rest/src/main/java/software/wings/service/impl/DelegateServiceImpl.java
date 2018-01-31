@@ -803,18 +803,21 @@ public class DelegateServiceImpl implements DelegateService {
 
   @Override
   public void processDelegateResponse(DelegateTaskResponse response) {
-    logger.info("Delegate [{}], response received for task [{}, {}, {}]", response.getTask().getDelegateId(),
-        response.getTask().getUuid(), response.getTask().getStatus(), response.getTask().getTaskType());
-    if (isNotBlank(response.getTask().getWaitId())) {
+    DelegateTask task = response.getTask();
+    logger.info("Delegate [{}], response received for task [{}, {}, {}]", task.getDelegateId(), task.getUuid(),
+        task.getStatus(), task.getTaskType());
+    if (task.isAsync()) {
       DelegateTask delegateTask = wingsPersistence.get(DelegateTask.class,
           aPageRequest()
               .addFilter("accountId", EQ, response.getAccountId())
-              .addFilter(ID_KEY, EQ, response.getTask().getUuid())
+              .addFilter(ID_KEY, EQ, task.getUuid())
               .build());
       if (delegateTask != null) {
         String waitId = delegateTask.getWaitId();
         if (waitId != null) {
           waitNotifyEngine.notify(waitId, response.getResponse());
+        } else {
+          logger.error("Async task {} with type {} has no wait ID", task.getUuid(), task.getTaskType().name());
         }
         wingsPersistence.delete(wingsPersistence.createQuery(DelegateTask.class)
                                     .field("accountId")
@@ -823,12 +826,15 @@ public class DelegateServiceImpl implements DelegateService {
                                     .equal(delegateTask.getUuid()));
       }
     } else {
-      String topicName = response.getTask().getQueueName();
-      // do the haze
-      IQueue<NotifyResponseData> topic = hazelcastInstance.getQueue(topicName);
-      boolean queued = topic.offer(response.getResponse());
-      logger.info(
-          "Sync call response added to queue [name: {}, object: {}] with status [{}]", topicName, topic, queued);
+      String topicName = task.getQueueName();
+      if (isNotBlank(topicName)) {
+        IQueue<NotifyResponseData> topic = hazelcastInstance.getQueue(topicName);
+        boolean queued = topic.offer(response.getResponse());
+        logger.info(
+            "Sync call response added to queue [name: {}, object: {}] with status [{}]", topicName, topic, queued);
+      } else {
+        logger.error("Sync task {} with type {} has no queue name", task.getUuid(), task.getTaskType().name());
+      }
     }
   }
 

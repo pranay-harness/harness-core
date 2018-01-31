@@ -110,7 +110,8 @@ public class DelegateQueueTask implements Runnable {
           if (updatedDelegateTask == null) {
             logger.error("Long running delegate task {} could not be updated to ERROR status", delegateTask.getUuid());
           } else if (isBlank(updatedDelegateTask.getWaitId())) {
-            logger.error("Long running delegate task {} has no wait ID. Nothing to notify", delegateTask.getUuid());
+            logger.error("Long running delegate task {} with type {} has no wait ID. Nothing to notify",
+                delegateTask.getUuid(), delegateTask.getTaskType().name());
           } else {
             logger.info("Long running delegate task {} is terminated", updatedDelegateTask.getUuid());
             waitNotifyEngine.notify(updatedDelegateTask.getWaitId(),
@@ -161,7 +162,8 @@ public class DelegateQueueTask implements Runnable {
           if (updatedDelegateTask == null) {
             logger.error("Queued delegate task {} could not be updated to ERROR status", delegateTask.getUuid());
           } else if (isBlank(updatedDelegateTask.getWaitId())) {
-            logger.error("Queued delegate task {} has no wait ID. Nothing to notify", delegateTask.getUuid());
+            logger.error("Queued delegate task {} with type {} has no wait ID. Nothing to notify",
+                delegateTask.getUuid(), delegateTask.getTaskType().name());
           } else {
             logger.info("Queued delegate task {} is terminated", updatedDelegateTask.getUuid());
             waitNotifyEngine.notify(updatedDelegateTask.getWaitId(),
