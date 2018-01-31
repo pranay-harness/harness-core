@@ -1,12 +1,12 @@
 package software.wings.service.impl.yaml;
 
 import static org.junit.Assert.assertEquals;
-import static org.junit.Assert.assertTrue;
 import static org.mockito.Matchers.any;
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.spy;
 import static org.mockito.Mockito.when;
 
+import org.apache.commons.lang3.reflect.MethodUtils;
 import org.eclipse.jgit.diff.DiffEntry;
 import org.eclipse.jgit.diff.DiffEntry.ChangeType;
 import org.eclipse.jgit.lib.AbbreviatedObjectId;
@@ -21,7 +21,6 @@ import software.wings.beans.yaml.GitFileChange;
 import java.nio.charset.Charset;
 import java.util.ArrayList;
 import java.util.Collections;
-import java.util.List;
 
 public class GitClientImplTest {
   public static final String oldObjectIdString = "0000000000000000000000000000000000000000";
@@ -58,8 +57,8 @@ public class GitClientImplTest {
                                    .gitFileChanges(new ArrayList<>())
                                    .build();
 
-    invokePrivateMethod(Collections.singletonList(entry), diffResult, headCommitId, gitConfig, repository,
-        "addToGitDiffResult", gitClient);
+    MethodUtils.invokeMethod(gitClient, true, "addToGitDiffResult",
+        new Object[] {Collections.singletonList(entry), diffResult, headCommitId, gitConfig, repository});
     assertEquals(1, diffResult.getGitFileChanges().size());
     GitFileChange gitFileChange = diffResult.getGitFileChanges().iterator().next();
     assertEquals(oldObjectIdString, gitFileChange.getObjectId());
@@ -68,30 +67,12 @@ public class GitClientImplTest {
 
     diffResult.getGitFileChanges().clear();
 
-    invokePrivateMethod(Collections.singletonList(entry), diffResult, headCommitId, gitConfig, repository,
-        "addToGitDiffResult", gitClient);
+    MethodUtils.invokeMethod(gitClient, true, "addToGitDiffResult",
+        new Object[] {Collections.singletonList(entry), diffResult, headCommitId, gitConfig, repository});
     assertEquals(1, diffResult.getGitFileChanges().size());
     gitFileChange = diffResult.getGitFileChanges().iterator().next();
     assertEquals(newObjectIdString, gitFileChange.getObjectId());
     assertEquals(newPath, gitFileChange.getFilePath());
     assertEquals(content, gitFileChange.getFileContent());
-  }
-
-  private void invokePrivateMethod(List<DiffEntry> diffs, GitDiffResult diffResult, ObjectId headCommitId,
-      GitConfig gitConfig, Repository repository, String methodName, GitClientImpl gitClient) {
-    java.lang.reflect.Method method = null;
-    try {
-      method = GitClientImpl.class.getDeclaredMethod(
-          methodName, new Class[] {List.class, GitDiffResult.class, ObjectId.class, GitConfig.class, Repository.class});
-      method.setAccessible(true);
-    } catch (Exception e) {
-      assertTrue(false);
-    }
-
-    try {
-      method.invoke(gitClient, new Object[] {diffs, diffResult, headCommitId, gitConfig, repository});
-      method.setAccessible(false);
-    } catch (Exception e) {
-    }
   }
 }
