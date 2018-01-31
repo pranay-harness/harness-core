@@ -38,9 +38,8 @@ class SplunkIntelOptimized(object):
                 if max_df == 1.0:
                     raise
                 max_df = 1.0
-        if combined_tfidf_matrix is None or combined_tfidf_matrix is None:
-            logger.error("Unable to vectorize texts for min_df = " + str(min_df) + " max_df = " + str(max_df))
-            sys.exit(-1)
+        if combined_tfidf_matrix is None or combined_vectorizer is None:
+            raise Exception("Unable to vectorize texts for min_df = " + str(min_df) + " max_df = " + str(max_df))
         return combined_vectorizer, combined_tfidf_matrix
 
     # TODO run in parallel
