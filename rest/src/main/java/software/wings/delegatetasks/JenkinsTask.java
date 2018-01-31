@@ -2,6 +2,7 @@ package software.wings.delegatetasks;
 
 import static io.harness.data.structure.EmptyPredicate.isNotEmpty;
 import static io.harness.threading.Morpheus.sleep;
+import static org.apache.commons.lang3.StringUtils.isNotBlank;
 import static software.wings.beans.Log.Builder.aLog;
 import static software.wings.service.impl.LogServiceImpl.NUM_OF_LOGS_TO_KEEP;
 
@@ -90,7 +91,7 @@ public class JenkinsTask extends AbstractDelegateRunnableTask {
             jenkinsBuildWithDetails.getNumber(), e.getMessage());
       }
 
-      if (buildResult == BuildResult.SUCCESS || buildResult == BuildResult.UNSTABLE) {
+      if (buildResult == BuildResult.SUCCESS) {
         if (isNotEmpty(evaluatedFilePathsForAssertion)) {
           //          for (Entry<String, String> entry : evaluatedFilePathsForAssertion.entrySet()) {
           //            String filePathForAssertion = entry.getKey();
@@ -134,8 +135,7 @@ public class JenkinsTask extends AbstractDelegateRunnableTask {
     return jenkinsExecutionResponse;
   }
 
-  private BuildWithDetails waitForJobExecutionToFinish(Build jenkinsBuild, String activityId, String unitName)
-      throws IOException {
+  private BuildWithDetails waitForJobExecutionToFinish(Build jenkinsBuild, String activityId, String unitName) {
     BuildWithDetails jenkinsBuildWithDetails = null;
     AtomicInteger consoleLogsSent = new AtomicInteger();
     do {
@@ -156,9 +156,8 @@ public class JenkinsTask extends AbstractDelegateRunnableTask {
   private void saveConsoleLogs(BuildWithDetails jenkinsBuildWithDetails, AtomicInteger consoleLogsAlreadySent,
       String activityId, String stateName) throws IOException {
     String consoleOutputText = jenkinsBuildWithDetails.getConsoleOutputText();
-    String[] consoleLines = consoleOutputText.split("\r\n");
-
-    if (consoleLines != null) {
+    if (isNotBlank(consoleOutputText)) {
+      String[] consoleLines = consoleOutputText.split("\r\n");
       if (consoleLines.length > NUM_OF_LOGS_TO_KEEP) {
         Log log = aLog()
                       .withActivityId(activityId)
@@ -188,7 +187,7 @@ public class JenkinsTask extends AbstractDelegateRunnableTask {
     }
   }
 
-  private Build waitForJobToStartExecution(Jenkins jenkins, QueueReference queueItem) throws IOException {
+  private Build waitForJobToStartExecution(Jenkins jenkins, QueueReference queueItem) {
     Build jenkinsBuild = null;
     do {
       sleep(Duration.ofSeconds(1));

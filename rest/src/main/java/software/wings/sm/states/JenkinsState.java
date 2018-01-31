@@ -36,11 +36,9 @@ import software.wings.beans.TemplateExpression;
 import software.wings.beans.command.CommandUnitDetails.CommandUnitType;
 import software.wings.common.Constants;
 import software.wings.common.TemplateExpressionProcessor;
-import software.wings.helpers.ext.jenkins.JenkinsFactory;
 import software.wings.service.impl.JenkinsSettingProvider;
 import software.wings.service.intfc.ActivityService;
 import software.wings.service.intfc.DelegateService;
-import software.wings.service.intfc.SettingsService;
 import software.wings.service.intfc.security.SecretManager;
 import software.wings.sm.ContextElementType;
 import software.wings.sm.ExecutionContext;
@@ -54,13 +52,11 @@ import software.wings.stencils.DefaultValue;
 import software.wings.stencils.EnumData;
 import software.wings.utils.Validator;
 import software.wings.waitnotify.NotifyResponseData;
-import software.wings.waitnotify.WaitNotifyEngine;
 
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
 import java.util.Map;
-import java.util.concurrent.ExecutorService;
 /**
  * Created by peeyushaggarwal on 10/21/16.
  */
@@ -82,11 +78,7 @@ public class JenkinsState extends State {
   @Attributes(title = "Artifacts/Files Paths")
   private List<FilePathAssertionEntry> filePathsForAssertion = Lists.newArrayList();
 
-  @Transient @Inject private JenkinsFactory jenkinsFactory;
-  @Transient @Inject private SettingsService settingsService;
-  @Transient @Inject private ExecutorService executorService;
   @Transient @Inject private ActivityService activityService;
-  @Transient @Inject private WaitNotifyEngine waitNotifyEngine;
   @Transient @Inject private SecretManager secretManager;
 
   @Transient @Inject private TemplateExpressionProcessor templateExpressionProcessor;

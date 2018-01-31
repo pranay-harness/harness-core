@@ -1,7 +1,6 @@
 package software.wings.sm.states;
 
 import static org.assertj.core.api.Assertions.assertThat;
-import static org.joor.Reflect.on;
 import static org.mockito.Matchers.any;
 import static org.mockito.Matchers.anyString;
 import static org.mockito.Mockito.verify;
@@ -26,7 +25,6 @@ import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.junit.MockitoJUnit;
 import org.mockito.junit.MockitoRule;
-import software.wings.CurrentThreadExecutor;
 import software.wings.api.JenkinsExecutionData;
 import software.wings.beans.Activity;
 import software.wings.beans.DelegateTask;
@@ -38,10 +36,8 @@ import software.wings.settings.SettingValue.SettingVariableTypes;
 import software.wings.sm.ExecutionContextImpl;
 import software.wings.sm.ExecutionResponse;
 import software.wings.sm.ExecutionStatus;
-import software.wings.waitnotify.WaitNotifyEngine;
 
 import java.util.Collections;
-import java.util.concurrent.ExecutorService;
 
 /**
  * Created by peeyushaggarwal on 10/25/16.
@@ -54,9 +50,7 @@ public class JenkinsStateTest {
   }
   @Rule public MockitoRule mockitoRule = MockitoJUnit.rule();
 
-  @Mock private ExecutorService executorService;
   @Mock private ActivityService activityService;
-  @Mock private WaitNotifyEngine waitNotifyEngine;
   @Mock private ExecutionContextImpl executionContext;
   @Mock private DelegateService delegateService;
   @Mock private SecretManager secretManager;
@@ -65,7 +59,6 @@ public class JenkinsStateTest {
 
   @Before
   public void setUp() throws Exception {
-    on(jenkinsState).set("executorService", new CurrentThreadExecutor());
     jenkinsState.setJenkinsConfigId(SETTING_ID);
     jenkinsState.setJobName("testjob");
     when(executionContext.getApp()).thenReturn(anApplication().withAccountId(ACCOUNT_ID).withUuid(APP_ID).build());
