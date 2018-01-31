@@ -1009,15 +1009,16 @@ public class StateMachineExecutor {
 
     while (stateExecutionInstance.getStatus() == NEW || stateExecutionInstance.getStatus() == QUEUED
         || stateExecutionInstance.getStatus() == STARTING) {
-      logger.warn("stateExecutionInstance: {} status is not in RUNNING state yet", stateExecutionInstance.getUuid());
+      logger.warn("stateExecutionInstance: {} status {} is not in RUNNING state yet", stateExecutionInstance.getUuid(),
+          stateExecutionInstance.getStatus());
       // TODO - more elegant way
       quietSleep(Duration.ofMillis(500));
       stateExecutionInstance = getStateExecutionInstance(appId, executionUuid, stateExecutionInstanceId);
     }
     if (stateExecutionInstance.getStatus() != RUNNING && stateExecutionInstance.getStatus() != PAUSED
         && stateExecutionInstance.getStatus() != ABORTING) {
-      logger.warn("stateExecutionInstance: " + stateExecutionInstance.getUuid()
-          + " status is no longer in RUNNING/PAUSED/ABORTING state");
+      logger.warn("stateExecutionInstance: {} status {} is no longer in RUNNING/PAUSED/ABORTING state",
+          stateExecutionInstance.getUuid(), stateExecutionInstance.getStatus());
       return;
     }
     ExecutionContextImpl context = new ExecutionContextImpl(stateExecutionInstance, sm, injector);
