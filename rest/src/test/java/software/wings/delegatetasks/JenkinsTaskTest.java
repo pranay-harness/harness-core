@@ -1,5 +1,6 @@
 package software.wings.delegatetasks;
 
+import static org.assertj.core.api.Assertions.assertThat;
 import static org.mockito.Matchers.any;
 import static org.mockito.Matchers.anyString;
 import static org.mockito.Mockito.verify;
@@ -22,6 +23,8 @@ import software.wings.beans.TaskType;
 import software.wings.helpers.ext.jenkins.Jenkins;
 import software.wings.helpers.ext.jenkins.JenkinsFactory;
 import software.wings.service.intfc.security.EncryptionService;
+import software.wings.sm.ExecutionStatus;
+import software.wings.sm.states.JenkinsState;
 
 import java.util.Collections;
 import java.util.HashMap;
@@ -37,14 +40,16 @@ public class JenkinsTaskTest {
   @Mock private Build build;
   @Mock private BuildWithDetails buildWithDetails;
   @Mock private EncryptionService encryptionService;
+  @Mock private DelegateLogService logService;
 
-  private JenkinsConfig jenkinsConfig;
   private String jenkinsUrl = "http://jenkins";
   private String userName = "user1";
   private char[] password = "pass1".toCharArray();
   private String jobName = "job1";
   private String activityId = "activityId";
   private String stateName = "jenkins_state";
+  private JenkinsConfig jenkinsConfig =
+      JenkinsConfig.builder().jenkinsUrl(jenkinsUrl).username(userName).password(password).build();
   private Map<String, String> parameters = new HashMap<>();
   private Map<String, String> assertions = new HashMap<>();
 
@@ -58,33 +63,39 @@ public class JenkinsTaskTest {
     when(jenkins.getBuild(any(QueueReference.class))).thenReturn(build);
     when(build.details()).thenReturn(buildWithDetails);
     when(buildWithDetails.isBuilding()).thenReturn(false);
-    jenkinsConfig = JenkinsConfig.builder().jenkinsUrl(jenkinsUrl).username(userName).password(password).build();
+    when(buildWithDetails.getConsoleOutputText()).thenReturn("console output");
   }
 
   @Test
   public void shouldExecuteSuccessfullyWhenBuildPasses() throws Exception {
     when(buildWithDetails.getResult()).thenReturn(BuildResult.SUCCESS);
-    jenkinsTask.run(jenkinsConfig, Collections.emptyList(), jobName, parameters, assertions, activityId, stateName);
+    JenkinsState.JenkinsExecutionResponse response =
+        jenkinsTask.run(jenkinsConfig, Collections.emptyList(), jobName, parameters, assertions, activityId, stateName);
     verify(jenkinsFactory).create(jenkinsUrl, userName, password);
     verify(jenkins).trigger(jobName, Collections.emptyMap());
     verify(jenkins).getBuild(any(QueueReference.class));
+    assertThat(response.getExecutionStatus()).isEqualTo(ExecutionStatus.SUCCESS);
   }
 
   @Test
   public void shouldFailWhenBuildFails() throws Exception {
     when(buildWithDetails.getResult()).thenReturn(BuildResult.FAILURE);
-    jenkinsTask.run(jenkinsConfig, Collections.emptyList(), jobName, parameters, assertions, activityId, stateName);
+    JenkinsState.JenkinsExecutionResponse response =
+        jenkinsTask.run(jenkinsConfig, Collections.emptyList(), jobName, parameters, assertions, activityId, stateName);
     verify(jenkinsFactory).create(jenkinsUrl, userName, password);
     verify(jenkins).trigger(jobName, Collections.emptyMap());
     verify(jenkins).getBuild(any(QueueReference.class));
+    assertThat(response.getExecutionStatus()).isEqualTo(ExecutionStatus.FAILED);
   }
 
   @Test
-  public void shouldAssertArtifacts() throws Exception {
-    when(buildWithDetails.getResult()).thenReturn(BuildResult.SUCCESS);
-    jenkinsTask.run(jenkinsConfig, Collections.emptyList(), jobName, parameters, assertions, activityId, stateName);
+  public void shouldFailWhenBuildUnstable() throws Exception {
+    when(buildWithDetails.getResult()).thenReturn(BuildResult.UNSTABLE);
+    JenkinsState.JenkinsExecutionResponse response =
+        jenkinsTask.run(jenkinsConfig, Collections.emptyList(), jobName, parameters, assertions, activityId, stateName);
     verify(jenkinsFactory).create(jenkinsUrl, userName, password);
     verify(jenkins).trigger(jobName, Collections.emptyMap());
     verify(jenkins).getBuild(any(QueueReference.class));
+    assertThat(response.getExecutionStatus()).isEqualTo(ExecutionStatus.FAILED);
   }
 }
