@@ -76,7 +76,7 @@ public class JenkinsStateTest {
   }
 
   @Test
-  public void shouldExecute() throws Exception {
+  public void shouldExecute() {
     ExecutionResponse executionResponse = jenkinsState.execute(executionContext);
     assertThat(executionResponse).isNotNull().hasFieldOrPropertyWithValue("async", true);
     ArgumentCaptor<DelegateTask> delegateTaskArgumentCaptor = ArgumentCaptor.forClass(DelegateTask.class);
@@ -88,7 +88,7 @@ public class JenkinsStateTest {
   }
 
   @Test
-  public void shouldHandleAsyncResponse() throws Exception {
+  public void shouldHandleAsyncResponse() {
     when(executionContext.getStateExecutionData()).thenReturn(JenkinsExecutionData.builder().build());
     jenkinsState.handleAsyncResponse(executionContext,
         ImmutableMap.of(ACTIVITY_ID,

@@ -34,6 +34,7 @@ import software.wings.beans.SettingAttribute;
 import software.wings.beans.TaskType;
 import software.wings.beans.TemplateExpression;
 import software.wings.beans.command.CommandUnitDetails.CommandUnitType;
+import software.wings.beans.command.JenkinsTaskParams;
 import software.wings.common.Constants;
 import software.wings.common.TemplateExpressionProcessor;
 import software.wings.service.impl.JenkinsSettingProvider;
@@ -74,6 +75,8 @@ public class JenkinsState extends State {
   @Attributes(title = "Job Name") private String jobName;
 
   @Attributes(title = "Job Parameters") private List<ParameterEntry> jobParameters = Lists.newArrayList();
+
+  @Attributes(title = "Treat unstable Jenkins status as success") private boolean unstableSuccess;
 
   @Attributes(title = "Artifacts/Files Paths")
   private List<FilePathAssertionEntry> filePathsForAssertion = Lists.newArrayList();
@@ -157,6 +160,14 @@ public class JenkinsState extends State {
    */
   public void setFilePathsForAssertion(List<FilePathAssertionEntry> filePathsForAssertion) {
     this.filePathsForAssertion = filePathsForAssertion;
+  }
+
+  public boolean isUnstableSuccess() {
+    return unstableSuccess;
+  }
+
+  public void setUnstableSuccess(boolean unstableSuccess) {
+    this.unstableSuccess = unstableSuccess;
   }
 
   @Override
@@ -259,18 +270,26 @@ public class JenkinsState extends State {
 
     PhaseElement phaseElement = context.getContextElement(ContextElementType.PARAM, Constants.PHASE_PARAM);
     String infrastructureMappingId = phaseElement == null ? null : phaseElement.getInfraMappingId();
-    DelegateTask delegateTask =
-        aDelegateTask()
-            .withTaskType(getTaskType())
-            .withAccountId(((ExecutionContextImpl) context).getApp().getAccountId())
-            .withWaitId(activityId)
-            .withAppId(((ExecutionContextImpl) context).getApp().getAppId())
-            .withParameters(new Object[] {jenkinsConfig,
-                secretManager.getEncryptionDetails(jenkinsConfig, context.getAppId(), context.getWorkflowExecutionId()),
-                finalJobName, evaluatedParameters, evaluatedFilePathsForAssertion, activityId, COMMAND_UNIT_NAME})
-            .withEnvId(envId)
-            .withInfrastructureMappingId(infrastructureMappingId)
-            .build();
+    JenkinsTaskParams jenkinsTaskParams = JenkinsTaskParams.builder()
+                                              .jenkinsConfig(jenkinsConfig)
+                                              .encryptedDataDetails(secretManager.getEncryptionDetails(
+                                                  jenkinsConfig, context.getAppId(), context.getWorkflowExecutionId()))
+                                              .jobName(finalJobName)
+                                              .parameters(evaluatedParameters)
+                                              .filePathsForAssertion(evaluatedFilePathsForAssertion)
+                                              .activityId(activityId)
+                                              .unitName(COMMAND_UNIT_NAME)
+                                              .unstableSuccess(unstableSuccess)
+                                              .build();
+    DelegateTask delegateTask = aDelegateTask()
+                                    .withTaskType(getTaskType())
+                                    .withAccountId(((ExecutionContextImpl) context).getApp().getAccountId())
+                                    .withWaitId(activityId)
+                                    .withAppId(((ExecutionContextImpl) context).getApp().getAppId())
+                                    .withParameters(new Object[] {jenkinsTaskParams})
+                                    .withEnvId(envId)
+                                    .withInfrastructureMappingId(infrastructureMappingId)
+                                    .build();
 
     if (getTimeoutMillis() != null) {
       delegateTask.setTimeout(getTimeoutMillis());
