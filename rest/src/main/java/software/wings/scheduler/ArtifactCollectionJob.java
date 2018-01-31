@@ -29,6 +29,7 @@ import com.google.common.collect.Maps;
 import com.google.inject.Inject;
 import com.google.inject.name.Named;
 
+import org.quartz.DisallowConcurrentExecution;
 import org.quartz.Job;
 import org.quartz.JobBuilder;
 import org.quartz.JobDetail;
@@ -65,6 +66,7 @@ import java.util.stream.Collectors;
 /**
  * Created by anubhaw on 11/8/16.
  */
+@DisallowConcurrentExecution
 public class ArtifactCollectionJob implements Job {
   private static final Logger logger = LoggerFactory.getLogger(ArtifactCollectionJob.class);
 

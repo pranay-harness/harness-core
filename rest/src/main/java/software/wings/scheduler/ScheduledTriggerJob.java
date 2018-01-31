@@ -6,6 +6,7 @@ import com.google.inject.Inject;
 import com.google.inject.name.Named;
 
 import org.quartz.CronScheduleBuilder;
+import org.quartz.DisallowConcurrentExecution;
 import org.quartz.Job;
 import org.quartz.JobBuilder;
 import org.quartz.JobDetail;
@@ -22,6 +23,7 @@ import software.wings.service.intfc.TriggerService;
 /**
  * Created by sgurubelli on 10/26/17.
  */
+@DisallowConcurrentExecution
 public class ScheduledTriggerJob implements Job {
   private static final Logger logger = LoggerFactory.getLogger(ScheduledTriggerJob.class);
 
