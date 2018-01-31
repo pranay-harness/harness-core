@@ -38,11 +38,9 @@ import software.wings.beans.FailureNotification;
 import software.wings.beans.InformationNotification;
 import software.wings.beans.NotificationRule;
 import software.wings.beans.OrchestrationWorkflow;
-import software.wings.beans.WorkflowExecution;
 import software.wings.beans.artifact.Artifact;
 import software.wings.common.NotificationMessageResolver.NotificationMessageType;
 import software.wings.service.intfc.NotificationService;
-import software.wings.service.intfc.WorkflowExecutionService;
 import software.wings.service.intfc.WorkflowService;
 import software.wings.sm.ExecutionContext;
 import software.wings.sm.ExecutionContextImpl;
@@ -51,24 +49,25 @@ import software.wings.sm.states.PhaseSubWorkflow;
 
 import java.text.DateFormat;
 import java.text.SimpleDateFormat;
+import java.time.Clock;
 import java.util.ArrayList;
 import java.util.Date;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
-import java.util.Optional;
 
 /**
  * Created by anubhaw on 4/7/17.
  */
 @Singleton
 public class WorkflowNotificationHelper {
-  @Inject private NotificationService notificationService;
-  @Inject private WorkflowExecutionService workflowExecutionService;
-  @Inject private WorkflowService workflowService;
-
   private static final Logger logger = LoggerFactory.getLogger(WorkflowNotificationHelper.class);
-  private final DateFormat dateFormat = new SimpleDateFormat("EEE, d MMM yyyy HH:mm:ss Z");
+
+  @Inject private NotificationService notificationService;
+  @Inject private WorkflowService workflowService;
+  @Inject private Clock clock;
+
+  private final DateFormat dateFormat = new SimpleDateFormat("MMM d HH:mm z");
 
   public void sendWorkflowStatusChangeNotification(ExecutionContext context, ExecutionStatus status) {
     List<NotificationRule> notificationRules =
@@ -80,15 +79,13 @@ public class WorkflowNotificationHelper {
     Environment env = ((ExecutionContextImpl) context).getEnv();
     Application app = ((ExecutionContextImpl) context).getApp();
 
-    WorkflowExecution executionDetails =
-        workflowExecutionService.getExecutionDetails(app.getUuid(), context.getWorkflowExecutionId());
     Map<String, String> placeHolderValues = new HashMap<>();
     placeHolderValues.put("WORKFLOW_NAME", context.getWorkflowExecutionName());
     placeHolderValues.put("ARTIFACTS", getArtifactsMessage(context, WORKFLOW, null));
     if (!BUILD.equals(context.getOrchestrationWorkflowType())) {
       placeHolderValues.put("ENV_NAME", env.getName());
     }
-    placeHolderValues.put("DATE", getDateString(executionDetails.getStartTs()));
+    placeHolderValues.put("DATE", getDateString());
 
     String messageTemplate = null;
 
@@ -161,13 +158,12 @@ public class WorkflowNotificationHelper {
     return filteredNotificationRules;
   }
 
-  private String getDateString(Long startTs) {
-    Date date = new Date(Optional.ofNullable(startTs).orElse(System.currentTimeMillis()));
-    return dateFormat.format(date); // TODO:: format
+  private String getDateString() {
+    return dateFormat.format(Date.from(clock.instant()));
   }
 
-  public void sendWorkflowPhaseStatusChangeNotification(ExecutionContext context, ExecutionStatus status,
-      PhaseSubWorkflow phaseSubWorkflow, WorkflowExecution executionDetails) {
+  public void sendWorkflowPhaseStatusChangeNotification(
+      ExecutionContext context, ExecutionStatus status, PhaseSubWorkflow phaseSubWorkflow) {
     // TODO:: use phaseSubworkflow to send rollback notifications
 
     List<NotificationRule> notificationRules =
@@ -184,7 +180,7 @@ public class WorkflowNotificationHelper {
     placeHolderValues.put("PHASE_NAME", phaseSubWorkflow.getName());
     placeHolderValues.put("ARTIFACTS", getArtifactsMessage(context, WORKFLOW_PHASE, phaseSubWorkflow));
     placeHolderValues.put("ENV_NAME", env.getName());
-    placeHolderValues.put("DATE", getDateString(executionDetails.getStartTs()));
+    placeHolderValues.put("DATE", getDateString());
 
     if (status.equals(SUCCESS) || status.equals(PAUSED)) {
       String messageTemplate = status.equals(SUCCESS)

@@ -82,7 +82,7 @@ public class CanaryWorkflowExecutionAdvisor implements ExecutionEventAdvisor {
       phaseSubWorkflow = (PhaseSubWorkflow) state;
 
       workflowNotificationHelper.sendWorkflowPhaseStatusChangeNotification(
-          context, executionEvent.getExecutionStatus(), phaseSubWorkflow, workflowExecution);
+          context, executionEvent.getExecutionStatus(), phaseSubWorkflow);
 
       if (executionEvent.getExecutionStatus().isFinalStatus()) {
         WorkflowStandardParams workflowStandardParams = context.getContextElement(ContextElementType.STANDARD);
