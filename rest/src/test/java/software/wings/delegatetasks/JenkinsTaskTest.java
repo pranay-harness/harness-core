@@ -1,5 +1,6 @@
 package software.wings.delegatetasks;
 
+import static java.util.Collections.emptyList;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.mockito.Matchers.any;
 import static org.mockito.Matchers.anyString;
@@ -20,6 +21,7 @@ import org.mockito.junit.MockitoJUnit;
 import org.mockito.junit.MockitoRule;
 import software.wings.beans.JenkinsConfig;
 import software.wings.beans.TaskType;
+import software.wings.beans.command.JenkinsTaskParams;
 import software.wings.helpers.ext.jenkins.Jenkins;
 import software.wings.helpers.ext.jenkins.JenkinsFactory;
 import software.wings.service.intfc.security.EncryptionService;
@@ -69,8 +71,16 @@ public class JenkinsTaskTest {
   @Test
   public void shouldExecuteSuccessfullyWhenBuildPasses() throws Exception {
     when(buildWithDetails.getResult()).thenReturn(BuildResult.SUCCESS);
-    JenkinsState.JenkinsExecutionResponse response =
-        jenkinsTask.run(jenkinsConfig, Collections.emptyList(), jobName, parameters, assertions, activityId, stateName);
+    JenkinsTaskParams params = JenkinsTaskParams.builder()
+                                   .jenkinsConfig(jenkinsConfig)
+                                   .encryptedDataDetails(emptyList())
+                                   .jobName(jobName)
+                                   .parameters(parameters)
+                                   .filePathsForAssertion(assertions)
+                                   .activityId(activityId)
+                                   .unitName(stateName)
+                                   .build();
+    JenkinsState.JenkinsExecutionResponse response = jenkinsTask.run(params);
     verify(jenkinsFactory).create(jenkinsUrl, userName, password);
     verify(jenkins).trigger(jobName, Collections.emptyMap());
     verify(jenkins).getBuild(any(QueueReference.class));
@@ -80,8 +90,16 @@ public class JenkinsTaskTest {
   @Test
   public void shouldFailWhenBuildFails() throws Exception {
     when(buildWithDetails.getResult()).thenReturn(BuildResult.FAILURE);
-    JenkinsState.JenkinsExecutionResponse response =
-        jenkinsTask.run(jenkinsConfig, Collections.emptyList(), jobName, parameters, assertions, activityId, stateName);
+    JenkinsTaskParams params = JenkinsTaskParams.builder()
+                                   .jenkinsConfig(jenkinsConfig)
+                                   .encryptedDataDetails(emptyList())
+                                   .jobName(jobName)
+                                   .parameters(parameters)
+                                   .filePathsForAssertion(assertions)
+                                   .activityId(activityId)
+                                   .unitName(stateName)
+                                   .build();
+    JenkinsState.JenkinsExecutionResponse response = jenkinsTask.run(params);
     verify(jenkinsFactory).create(jenkinsUrl, userName, password);
     verify(jenkins).trigger(jobName, Collections.emptyMap());
     verify(jenkins).getBuild(any(QueueReference.class));
@@ -91,11 +109,39 @@ public class JenkinsTaskTest {
   @Test
   public void shouldFailWhenBuildUnstable() throws Exception {
     when(buildWithDetails.getResult()).thenReturn(BuildResult.UNSTABLE);
-    JenkinsState.JenkinsExecutionResponse response =
-        jenkinsTask.run(jenkinsConfig, Collections.emptyList(), jobName, parameters, assertions, activityId, stateName);
+    JenkinsTaskParams params = JenkinsTaskParams.builder()
+                                   .jenkinsConfig(jenkinsConfig)
+                                   .encryptedDataDetails(emptyList())
+                                   .jobName(jobName)
+                                   .parameters(parameters)
+                                   .filePathsForAssertion(assertions)
+                                   .activityId(activityId)
+                                   .unitName(stateName)
+                                   .build();
+    JenkinsState.JenkinsExecutionResponse response = jenkinsTask.run(params);
     verify(jenkinsFactory).create(jenkinsUrl, userName, password);
     verify(jenkins).trigger(jobName, Collections.emptyMap());
     verify(jenkins).getBuild(any(QueueReference.class));
     assertThat(response.getExecutionStatus()).isEqualTo(ExecutionStatus.FAILED);
+  }
+
+  @Test
+  public void shouldPassWhenBuildUnstableAndUnstableSuccessSet() throws Exception {
+    when(buildWithDetails.getResult()).thenReturn(BuildResult.UNSTABLE);
+    JenkinsTaskParams params = JenkinsTaskParams.builder()
+                                   .jenkinsConfig(jenkinsConfig)
+                                   .encryptedDataDetails(emptyList())
+                                   .jobName(jobName)
+                                   .parameters(parameters)
+                                   .filePathsForAssertion(assertions)
+                                   .activityId(activityId)
+                                   .unitName(stateName)
+                                   .unstableSuccess(true)
+                                   .build();
+    JenkinsState.JenkinsExecutionResponse response = jenkinsTask.run(params);
+    verify(jenkinsFactory).create(jenkinsUrl, userName, password);
+    verify(jenkins).trigger(jobName, Collections.emptyMap());
+    verify(jenkins).getBuild(any(QueueReference.class));
+    assertThat(response.getExecutionStatus()).isEqualTo(ExecutionStatus.SUCCESS);
   }
 }

@@ -20,11 +20,11 @@ import software.wings.beans.JenkinsConfig;
 import software.wings.beans.Log;
 import software.wings.beans.Log.LogLevel;
 import software.wings.beans.command.CommandExecutionResult.CommandExecutionStatus;
+import software.wings.beans.command.JenkinsTaskParams;
 import software.wings.exception.WingsException;
 import software.wings.exception.WingsException.ReportTarget;
 import software.wings.helpers.ext.jenkins.Jenkins;
 import software.wings.helpers.ext.jenkins.JenkinsFactory;
-import software.wings.security.encryption.EncryptedDataDetail;
 import software.wings.service.intfc.security.EncryptionService;
 import software.wings.sm.ExecutionStatus;
 import software.wings.sm.states.JenkinsState.JenkinsExecutionResponse;
@@ -32,8 +32,6 @@ import software.wings.waitnotify.NotifyResponseData;
 
 import java.io.IOException;
 import java.time.Duration;
-import java.util.List;
-import java.util.Map;
 import java.util.concurrent.atomic.AtomicInteger;
 import java.util.function.Consumer;
 import java.util.function.Supplier;
@@ -55,26 +53,24 @@ public class JenkinsTask extends AbstractDelegateRunnableTask {
 
   @Override
   public JenkinsExecutionResponse run(Object[] parameters) {
-    return run((JenkinsConfig) parameters[0], (List<EncryptedDataDetail>) parameters[1], (String) parameters[2],
-        (Map<String, String>) parameters[3], (Map<String, String>) parameters[4], (String) parameters[5],
-        (String) parameters[6]);
+    return run((JenkinsTaskParams) parameters[0]);
   }
 
-  public JenkinsExecutionResponse run(JenkinsConfig jenkinsConfig, List<EncryptedDataDetail> encryptedDataDetails,
-      String finalJobName, Map<String, String> evaluatedParameters, Map<String, String> evaluatedFilePathsForAssertion,
-      String activityId, String unitName) {
+  public JenkinsExecutionResponse run(JenkinsTaskParams jenkinsTaskParams) {
     JenkinsExecutionResponse jenkinsExecutionResponse = new JenkinsExecutionResponse();
     ExecutionStatus executionStatus = ExecutionStatus.SUCCESS;
     String errorMessage;
     try {
-      encryptionService.decrypt(jenkinsConfig, encryptedDataDetails);
+      JenkinsConfig jenkinsConfig = jenkinsTaskParams.getJenkinsConfig();
+      encryptionService.decrypt(jenkinsConfig, jenkinsTaskParams.getEncryptedDataDetails());
       Jenkins jenkins = jenkinsFactory.create(
           jenkinsConfig.getJenkinsUrl(), jenkinsConfig.getUsername(), jenkinsConfig.getPassword());
 
-      QueueReference queueItem = jenkins.trigger(finalJobName, evaluatedParameters);
+      QueueReference queueItem = jenkins.trigger(jenkinsTaskParams.getJobName(), jenkinsTaskParams.getParameters());
 
       Build jenkinsBuild = waitForJobToStartExecution(jenkins, queueItem);
-      BuildWithDetails jenkinsBuildWithDetails = waitForJobExecutionToFinish(jenkinsBuild, activityId, unitName);
+      BuildWithDetails jenkinsBuildWithDetails =
+          waitForJobExecutionToFinish(jenkinsBuild, jenkinsTaskParams.getActivityId(), jenkinsTaskParams.getUnitName());
 
       jenkinsExecutionResponse.setJobUrl(jenkinsBuildWithDetails.getUrl());
 
@@ -91,8 +87,9 @@ public class JenkinsTask extends AbstractDelegateRunnableTask {
             jenkinsBuildWithDetails.getNumber(), e.getMessage());
       }
 
-      if (buildResult == BuildResult.SUCCESS) {
-        if (isNotEmpty(evaluatedFilePathsForAssertion)) {
+      if (buildResult == BuildResult.SUCCESS
+          || (buildResult == BuildResult.UNSTABLE && jenkinsTaskParams.isUnstableSuccess())) {
+        if (isNotEmpty(jenkinsTaskParams.getFilePathsForAssertion())) {
           //          for (Entry<String, String> entry : evaluatedFilePathsForAssertion.entrySet()) {
           //            String filePathForAssertion = entry.getKey();
           //            String assertion = entry.getValue();

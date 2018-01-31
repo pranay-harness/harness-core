@@ -4,6 +4,7 @@ import static java.util.Collections.singletonList;
 
 import software.wings.beans.DelegateTask;
 import software.wings.beans.JenkinsConfig;
+import software.wings.beans.command.JenkinsTaskParams;
 
 import java.util.Arrays;
 import java.util.List;
@@ -20,10 +21,13 @@ public class JenkinsValidation extends AbstractDelegateValidateTask {
 
   @Override
   public List<String> getCriteria() {
-    return singletonList(Arrays.stream(getParameters())
-                             .filter(o -> o instanceof JenkinsConfig)
-                             .map(config -> ((JenkinsConfig) config).getJenkinsUrl())
-                             .findFirst()
-                             .orElse(null));
+    return singletonList(
+        Arrays.stream(getParameters())
+            .filter(o -> o instanceof JenkinsTaskParams || o instanceof JenkinsConfig)
+            .map(obj
+                -> (obj instanceof JenkinsConfig ? (JenkinsConfig) obj : ((JenkinsTaskParams) obj).getJenkinsConfig())
+                       .getJenkinsUrl())
+            .findFirst()
+            .orElse(null));
   }
 }
