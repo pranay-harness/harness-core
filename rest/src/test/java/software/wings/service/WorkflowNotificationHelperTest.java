@@ -37,12 +37,9 @@ import software.wings.beans.ExecutionScope;
 import software.wings.beans.FailureNotification;
 import software.wings.beans.Notification;
 import software.wings.beans.NotificationRule;
-import software.wings.beans.WorkflowExecution;
-import software.wings.beans.WorkflowExecution.WorkflowExecutionBuilder;
 import software.wings.common.NotificationMessageResolver.NotificationMessageType;
 import software.wings.service.impl.WorkflowNotificationHelper;
 import software.wings.service.intfc.NotificationService;
-import software.wings.service.intfc.WorkflowExecutionService;
 import software.wings.service.intfc.WorkflowService;
 import software.wings.sm.ExecutionContextImpl;
 import software.wings.sm.ExecutionStatus;
@@ -53,7 +50,6 @@ import software.wings.sm.states.PhaseSubWorkflow;
  */
 public class WorkflowNotificationHelperTest extends WingsBaseTest {
   @Mock private NotificationService notificationService;
-  @Mock private WorkflowExecutionService workflowExecutionService;
   @Mock private WorkflowService workflowService;
   @Inject @InjectMocks private WorkflowNotificationHelper workflowNotificationHelper;
 
@@ -102,12 +98,8 @@ public class WorkflowNotificationHelperTest extends WingsBaseTest {
         aCanaryOrchestrationWorkflow().withNotificationRules(asList(notificationRule)).build();
 
     when(executionContext.getStateMachine().getOrchestrationWorkflow()).thenReturn(canaryOrchestrationWorkflow);
-    when(workflowExecutionService.getExecutionDetails(APP_ID, WORKFLOW_EXECUTION_ID))
-        .thenReturn(WorkflowExecutionBuilder.aWorkflowExecution().withStartTs(System.currentTimeMillis()).build());
-
     workflowNotificationHelper.sendWorkflowStatusChangeNotification(executionContext, ExecutionStatus.FAILED);
 
-    verify(workflowExecutionService).getExecutionDetails(APP_ID, WORKFLOW_EXECUTION_ID);
     ArgumentCaptor<Notification> notificationArgumentCaptor = ArgumentCaptor.forClass(Notification.class);
 
     verify(notificationService)
@@ -131,17 +123,13 @@ public class WorkflowNotificationHelperTest extends WingsBaseTest {
         aCanaryOrchestrationWorkflow().withNotificationRules(asList(notificationRule)).build();
 
     when(executionContext.getStateMachine().getOrchestrationWorkflow()).thenReturn(canaryOrchestrationWorkflow);
-    when(workflowExecutionService.getExecutionDetails(APP_ID, WORKFLOW_EXECUTION_ID))
-        .thenReturn(WorkflowExecutionBuilder.aWorkflowExecution().withStartTs(System.currentTimeMillis()).build());
 
     PhaseSubWorkflow phaseSubWorkflow = Mockito.mock(PhaseSubWorkflow.class);
     when(phaseSubWorkflow.getName()).thenReturn("Phase1");
     when(phaseSubWorkflow.getServiceId()).thenReturn("service-2");
-    WorkflowExecution executionDetails = workflowExecutionService.getExecutionDetails(APP_ID, WORKFLOW_EXECUTION_ID);
     workflowNotificationHelper.sendWorkflowPhaseStatusChangeNotification(
-        executionContext, ExecutionStatus.FAILED, phaseSubWorkflow, executionDetails);
+        executionContext, ExecutionStatus.FAILED, phaseSubWorkflow);
 
-    verify(workflowExecutionService).getExecutionDetails(APP_ID, WORKFLOW_EXECUTION_ID);
     ArgumentCaptor<Notification> notificationArgumentCaptor = ArgumentCaptor.forClass(Notification.class);
 
     verify(notificationService)
@@ -166,12 +154,9 @@ public class WorkflowNotificationHelperTest extends WingsBaseTest {
         aCanaryOrchestrationWorkflow().withNotificationRules(asList(notificationRule)).build();
 
     when(executionContext.getStateMachine().getOrchestrationWorkflow()).thenReturn(canaryOrchestrationWorkflow);
-    when(workflowExecutionService.getExecutionDetails(APP_ID, WORKFLOW_EXECUTION_ID))
-        .thenReturn(WorkflowExecutionBuilder.aWorkflowExecution().withStartTs(System.currentTimeMillis()).build());
 
     workflowNotificationHelper.sendWorkflowStatusChangeNotification(executionContext, ExecutionStatus.FAILED);
 
-    verify(workflowExecutionService).getExecutionDetails(APP_ID, WORKFLOW_EXECUTION_ID);
     ArgumentCaptor<Notification> notificationArgumentCaptor = ArgumentCaptor.forClass(Notification.class);
 
     verify(notificationService)
