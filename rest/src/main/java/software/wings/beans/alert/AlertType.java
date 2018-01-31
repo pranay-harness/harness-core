@@ -15,7 +15,8 @@ public enum AlertType {
   NoActiveDelegates(Setup, Error, NoActiveDelegatesAlert.class),
   NoEligibleDelegates(Setup, Error, NoEligibleDelegatesAlert.class),
   InvalidKMS(Setup, Error, KmsSetupAlert.class),
-  GitSyncError(Setup, Error, GitSyncErrorAlert.class);
+  GitSyncError(Setup, Error, GitSyncErrorAlert.class),
+  GitConnectionError(Setup, Error, GitConnectionErrorAlert.class);
 
   private AlertCategory category;
   private AlertSeverity severity;

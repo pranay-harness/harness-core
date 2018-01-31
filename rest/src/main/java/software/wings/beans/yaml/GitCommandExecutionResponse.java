@@ -2,6 +2,7 @@ package software.wings.beans.yaml;
 
 import lombok.Builder;
 import lombok.Data;
+import software.wings.beans.ErrorCode;
 import software.wings.waitnotify.NotifyResponseData;
 
 /**
@@ -14,6 +15,7 @@ public class GitCommandExecutionResponse implements NotifyResponseData {
   private GitCommandRequest gitCommandRequest;
   private GitCommandStatus gitCommandStatus;
   private String errorMessage;
+  private ErrorCode errorCode;
 
   public enum GitCommandStatus { SUCCESS, FAILURE }
 }

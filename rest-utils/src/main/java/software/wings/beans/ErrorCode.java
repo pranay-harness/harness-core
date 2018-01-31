@@ -476,6 +476,11 @@ public enum ErrorCode {
    * Yaml Git Sync related error
    */
   YAML_GIT_SYNC_ERROR("YAML_GIT_SYNC_ERROR"),
+
+  /**
+   * Git Connection error
+   */
+  GIT_CONNECTION_ERROR("GIT_CONNECTION_ERROR"),
   /**
    * Artifact server
    */

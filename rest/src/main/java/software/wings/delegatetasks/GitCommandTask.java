@@ -5,6 +5,7 @@ import com.google.inject.Inject;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import software.wings.beans.DelegateTask;
+import software.wings.beans.ErrorCode;
 import software.wings.beans.GitConfig;
 import software.wings.beans.yaml.GitCommand.GitCommandType;
 import software.wings.beans.yaml.GitCommandExecutionResponse;
@@ -13,6 +14,7 @@ import software.wings.beans.yaml.GitCommitAndPushResult;
 import software.wings.beans.yaml.GitCommitRequest;
 import software.wings.beans.yaml.GitDiffRequest;
 import software.wings.beans.yaml.GitDiffResult;
+import software.wings.exception.WingsException;
 import software.wings.security.encryption.EncryptedDataDetail;
 import software.wings.service.intfc.security.EncryptionService;
 import software.wings.service.intfc.yaml.GitClient;
@@ -79,6 +81,13 @@ public class GitCommandTask extends AbstractDelegateRunnableTask {
               .errorMessage("Git Operation not supported")
               .build();
       }
+    } catch (WingsException ex) {
+      logger.error("Exception in processing GitTask", ex);
+      return GitCommandExecutionResponse.builder()
+          .gitCommandStatus(GitCommandStatus.FAILURE)
+          .errorCode(ErrorCode.GIT_CONNECTION_ERROR)
+          .errorMessage(ex.getMessage())
+          .build();
     } catch (Exception ex) {
       logger.error("Exception in processing GitTask", ex);
       return GitCommandExecutionResponse.builder()

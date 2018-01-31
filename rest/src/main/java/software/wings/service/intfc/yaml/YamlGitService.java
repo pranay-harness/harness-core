@@ -2,8 +2,11 @@ package software.wings.service.intfc.yaml;
 
 import org.hibernate.validator.constraints.NotEmpty;
 import ru.vyarus.guice.validator.group.annotation.ValidationGroups;
+import software.wings.beans.ErrorCode;
 import software.wings.beans.GitCommit;
 import software.wings.beans.RestResponse;
+import software.wings.beans.alert.AlertData;
+import software.wings.beans.alert.AlertType;
 import software.wings.beans.yaml.Change;
 import software.wings.beans.yaml.GitFileChange;
 import software.wings.service.impl.yaml.YamlWebHookPayload;
@@ -164,4 +167,8 @@ public interface YamlGitService {
    * @return the rest response
    */
   RestResponse fixGitSyncErrors(String accountId, String yamlFilePath, String newYamlContent);
+
+  void raiseAlertForGitFailure(String accountId, String appId, ErrorCode errorCode, String message);
+
+  void closeAlertForGitFailureIfOpen(String accountId, String appId, AlertType alertType, AlertData alertData);
 }
