@@ -64,6 +64,7 @@ public class GitChangeSetRunnable implements Runnable {
             logger.info("No change set queued to process for accountId [{}]", accountId);
           }
         } catch (Exception ex) {
+          yamlChangeSetService.updateStatus(queuedChangeSet.getAccountId(), queuedChangeSet.getUuid(), Status.FAILED);
           StringBuilder stringBuilder =
               new StringBuilder().append("Unexpected error while processing commit for accountId: ").append(accountId);
           if (queuedChangeSet != null) {

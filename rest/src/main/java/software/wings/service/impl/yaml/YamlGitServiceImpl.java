@@ -7,6 +7,7 @@ import static software.wings.beans.DelegateTask.Builder.aDelegateTask;
 import com.google.common.collect.Lists;
 import com.google.inject.Inject;
 
+import org.apache.commons.lang3.StringUtils;
 import org.mongodb.morphia.query.Query;
 import org.mongodb.morphia.query.UpdateOperations;
 import org.slf4j.Logger;
@@ -33,6 +34,8 @@ import software.wings.beans.yaml.GitCommitRequest;
 import software.wings.beans.yaml.GitDiffRequest;
 import software.wings.beans.yaml.GitFileChange;
 import software.wings.beans.yaml.GitFileChange.Builder;
+import software.wings.beans.yaml.YamlConstants;
+import software.wings.beans.yaml.YamlType;
 import software.wings.common.UUIDGenerator;
 import software.wings.dl.PageRequest;
 import software.wings.dl.PageResponse;
@@ -57,12 +60,14 @@ import software.wings.yaml.gitSync.YamlChangeSet.Status;
 import software.wings.yaml.gitSync.YamlGitConfig;
 
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.Collections;
 import java.util.List;
 import java.util.Optional;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.TimeUnit;
 import java.util.concurrent.atomic.AtomicInteger;
+import java.util.regex.Pattern;
 import java.util.stream.Collectors;
 import javax.validation.executable.ValidateOnExecution;
 /**
@@ -214,10 +219,10 @@ public class YamlGitServiceImpl implements YamlGitService {
   public boolean handleChangeSet(YamlChangeSet yamlChangeSet) {
     YamlGitConfig yamlGitConfig = get(yamlChangeSet.getAccountId(), yamlChangeSet.getAccountId());
     List<GitFileChange> gitFileChanges = yamlChangeSet.getGitFileChanges();
-
     if (yamlGitConfig == null) {
       throw new WingsException(ErrorCode.YAML_GIT_SYNC_ERROR);
     }
+    checkForValidNameSyntax(gitFileChanges);
 
     logger.info("Change set [{}] files", yamlChangeSet.getUuid());
 
@@ -231,12 +236,45 @@ public class YamlGitServiceImpl implements YamlGitService {
             .withParameters(new Object[] {GitCommandType.COMMIT_AND_PUSH, yamlGitConfig.getGitConfig(),
                 secretManager.getEncryptionDetails(yamlGitConfig.getGitConfig(), GLOBAL_APP_ID, null),
                 GitCommitRequest.builder().gitFileChanges(gitFileChanges).build()})
+            .withTimeout(TimeUnit.MINUTES.toMillis(10))
             .build();
 
     waitNotifyEngine.waitForAll(
         new GitCommandCallback(yamlChangeSet.getAccountId(), yamlChangeSet.getUuid(), yamlGitConfig.getUuid()), waitId);
     delegateService.queueTask(delegateTask);
     return true;
+  }
+
+  /**
+   * Check filePath is valid.
+   * @param gitFileChanges
+   */
+  private void checkForValidNameSyntax(List<GitFileChange> gitFileChanges) {
+    // Get all yamlTypes having non-empty filepath prefixes (these yaml types represent different file paths)
+    List<YamlType> folderYamlTypes = Arrays.stream(YamlType.values())
+                                         .filter(yamlType -> StringUtils.isNotEmpty(yamlType.getPathExpression()))
+                                         .collect(Collectors.toList());
+
+    // make sure, all filepaths to be synced with git are in proper format
+    // e.g. Setup/Application/app_name/index.yaml is valid one, but
+    // Setup/Application/app/name/index.yaml is invalid. (this case is happening id app was names as "app/name")
+    // we do not want to allow this scenario.
+    gitFileChanges.stream().forEach(gitFileChange
+        -> matchPathPrefix(gitFileChange.getFilePath().startsWith("/") ? gitFileChange.getFilePath().substring(1)
+                                                                       : gitFileChange.getFilePath(),
+            folderYamlTypes));
+  }
+
+  private void matchPathPrefix(String filePath, List<YamlType> folderYamlTypes) {
+    // only check for file sand not directories
+    if (filePath.endsWith(YamlConstants.YAML_EXTENSION)) {
+      if (!folderYamlTypes.stream().anyMatch(
+              yamlType -> Pattern.compile(yamlType.getPathExpression()).matcher(filePath).matches())) {
+        throw new WingsException(
+            "Invalid entity name, entity can not contain / in the name. Caused invalid file path: " + filePath,
+            WingsException.SERIOUS);
+      }
+    }
   }
 
   @Override
