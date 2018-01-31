@@ -427,6 +427,8 @@ public class GitClientImpl implements GitClient {
     } catch (GitAPIException ex) {
       logger.info("Hard reset failed for branch [{}]", gitConfig.getBranch());
       logger.error("Exception: ", ex);
+      // there is no point in continuing to clone() here, as in that case it would fail with error "local repo already
+      // exists", that would hide actual exception, "error in connection". So throwing exception from here
       throw new WingsException("Error in connection to git: " + ex.getMessage());
     }
 
