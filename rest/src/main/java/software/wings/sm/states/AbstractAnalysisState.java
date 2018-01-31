@@ -3,7 +3,6 @@ package software.wings.sm.states;
 import static org.apache.commons.lang3.StringUtils.isBlank;
 import static software.wings.beans.ErrorCode.INVALID_REQUEST;
 
-import com.google.common.base.Preconditions;
 import com.google.common.collect.Lists;
 import com.google.inject.Inject;
 
@@ -46,6 +45,7 @@ import software.wings.stencils.DefaultValue;
 import software.wings.waitnotify.WaitNotifyEngine;
 
 import java.io.UnsupportedEncodingException;
+import java.util.Collections;
 import java.util.Date;
 import java.util.HashSet;
 import java.util.List;
@@ -129,6 +129,7 @@ public abstract class AbstractAnalysisState extends State {
           })
           .collect(Collectors.toSet());
     }
+    int offSet = 0;
     final PageRequest<WorkflowExecution> pageRequest =
         PageRequest.Builder.aPageRequest()
             .addFilter("appId", Operator.EQ, context.getAppId())
@@ -136,41 +137,44 @@ public abstract class AbstractAnalysisState extends State {
             .addFilter("_id", Operator.NOT_EQ, context.getWorkflowExecutionId())
             .addFilter("status", Operator.EQ, ExecutionStatus.SUCCESS)
             .addOrder("createdAt", OrderType.DESC)
-            .withLimit("1")
+            .withOffset(String.valueOf(offSet))
+            .withLimit(String.valueOf(PageRequest.DEFAULT_PAGE_SIZE))
             .build();
+    PageResponse<WorkflowExecution> workflowExecutions;
+    do {
+      workflowExecutions = workflowExecutionService.listExecutions(pageRequest, false);
 
-    final PageResponse<WorkflowExecution> workflowExecutions =
-        workflowExecutionService.listExecutions(pageRequest, false);
-    if (workflowExecutions.isEmpty()) {
-      getLogger().info("Could not get a successful workflow to find control nodes");
-      return new HashSet<>();
-    }
+      for (WorkflowExecution workflowExecution : workflowExecutions) {
+        ElementExecutionSummary executionSummary = null;
+        for (ElementExecutionSummary summary : workflowExecution.getServiceExecutionSummaries()) {
+          if (summary.getContextElement().getUuid().equals(serviceId)) {
+            executionSummary = summary;
+            break;
+          }
+        }
 
-    Preconditions.checkState(workflowExecutions.size() == 1, "Multiple workflows found for give query");
-    final WorkflowExecution workflowExecution = workflowExecutions.get(0);
+        if (executionSummary != null) {
+          Set<String> hosts = new HashSet<>();
+          for (InstanceStatusSummary instanceStatusSummary : executionSummary.getInstanceStatusSummaries()) {
+            hosts.add(instanceStatusSummary.getInstanceElement().getHostName());
+          }
 
-    ElementExecutionSummary executionSummary = null;
-    for (ElementExecutionSummary summary : workflowExecution.getServiceExecutionSummaries()) {
-      if (summary.getContextElement().getUuid().equals(serviceId)) {
-        executionSummary = summary;
-        break;
+          hosts = hosts.stream()
+                      .flatMap(hostname
+                          -> hostname.contains(".") ? Lists.newArrayList(hostname.split("\\.")[0], hostname).stream()
+                                                    : Stream.of(hostname))
+                      .collect(Collectors.toSet());
+
+          return hosts;
+        }
       }
-    }
 
-    Preconditions.checkNotNull(executionSummary, "could not find the execution summary for current execution");
+      offSet = offSet + PageRequest.DEFAULT_PAGE_SIZE;
+      pageRequest.setOffset(String.valueOf(offSet));
+    } while (workflowExecutions.size() >= PageRequest.DEFAULT_PAGE_SIZE);
 
-    Set<String> hosts = new HashSet<>();
-    for (InstanceStatusSummary instanceStatusSummary : executionSummary.getInstanceStatusSummaries()) {
-      hosts.add(instanceStatusSummary.getInstanceElement().getHostName());
-    }
-
-    hosts = hosts.stream()
-                .flatMap(hostname
-                    -> hostname.contains(".") ? Lists.newArrayList(hostname.split("\\.")[0], hostname).stream()
-                                              : Stream.of(hostname))
-                .collect(Collectors.toSet());
-
-    return hosts;
+    getLogger().info("Did not find a successful workflow with service {}. It will be a baseline run", serviceId);
+    return Collections.emptySet();
   }
 
   protected Set<String> getCanaryNewHostNames(ExecutionContext context) {
