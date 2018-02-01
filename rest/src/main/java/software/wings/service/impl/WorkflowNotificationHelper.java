@@ -87,6 +87,9 @@ public class WorkflowNotificationHelper {
         workflowExecutionService.getExecutionDetails(app.getUuid(), context.getWorkflowExecutionId());
     EmbeddedUser triggeredBy = workflowExecution.getTriggeredBy();
     String userName = triggeredBy != null ? triggeredBy.getName() : "deployment trigger";
+    if (userName.equalsIgnoreCase("Deployment trigger")) {
+      userName = userName.toLowerCase();
+    }
 
     Map<String, String> placeHolderValues = new HashMap<>();
     placeHolderValues.put("WORKFLOW_NAME", context.getWorkflowExecutionName());
@@ -189,6 +192,9 @@ public class WorkflowNotificationHelper {
         workflowExecutionService.getExecutionDetails(app.getUuid(), context.getWorkflowExecutionId());
     EmbeddedUser triggeredBy = workflowExecution.getTriggeredBy();
     String userName = triggeredBy != null ? triggeredBy.getName() : "deployment trigger";
+    if (userName.equalsIgnoreCase("Deployment trigger")) {
+      userName = userName.toLowerCase();
+    }
 
     Map<String, String> placeHolderValues = new HashMap<>();
     placeHolderValues.put("WORKFLOW_NAME", context.getWorkflowExecutionName());
