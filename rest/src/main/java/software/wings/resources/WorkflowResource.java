@@ -429,6 +429,9 @@ public class WorkflowResource {
   @ExceptionMetered
   public RestResponse<Map<String, String>> stateDefaults(@QueryParam("appId") String appId,
       @QueryParam("serviceId") String serviceId, @QueryParam("stateType") String strStateType) {
+    if (isEmpty(strStateType)) {
+      return new RestResponse<>();
+    }
     return new RestResponse<>(workflowService.getStateDefaults(appId, serviceId, StateType.valueOf(strStateType)));
   }
 
