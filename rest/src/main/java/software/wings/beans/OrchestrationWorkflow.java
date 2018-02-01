@@ -231,7 +231,7 @@ public abstract class OrchestrationWorkflow {
   }
 
   /**
-   * Set template descripton
+   * Set template description
    * @param variable
    * @param stateName
    */
@@ -248,9 +248,9 @@ public abstract class OrchestrationWorkflow {
         }
       } else if (entityType.equals(INFRASTRUCTURE_MAPPING)) {
         if (getOrchestrationWorkflowType().equals(BASIC)) {
-          variable.setDescription("Variable for Service Infra-strucuture entity");
+          variable.setDescription("Variable for Service Infra-structure entity");
         } else {
-          variable.setDescription("Variable for Service Infra-strucuture entity " + stateName);
+          variable.setDescription("Variable for Service Infra-structure entity " + stateName);
         }
       }
     }

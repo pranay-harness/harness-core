@@ -26,6 +26,7 @@ import java.io.IOException;
 import java.time.Clock;
 import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
 import java.util.UUID;
 
 public class MessageServiceTest {
@@ -161,13 +162,13 @@ public class MessageServiceTest {
     messageService.putData(data2, "xyz", asList("423", "567"));
 
     String dataContent1 = FileUtils.readFileToString(dataFile1, UTF_8);
-    HashMap<String, Object> map1 = JsonUtils.asObject(dataContent1, HashMap.class);
+    Map<String, Object> map1 = JsonUtils.asObject(dataContent1, HashMap.class);
     assertThat(map1.size()).isEqualTo(2);
     assertThat(map1.get("foo")).isEqualTo("bar");
     assertThat(map1.get("baz")).isEqualTo("qux");
 
     String dataContent2 = FileUtils.readFileToString(dataFile2, UTF_8);
-    HashMap<String, Object> map2 = JsonUtils.asObject(dataContent2, HashMap.class);
+    Map<String, Object> map2 = JsonUtils.asObject(dataContent2, HashMap.class);
     assertThat(map2.size()).isEqualTo(2);
     assertThat(map2.get("abc")).isEqualTo("123");
     assertThat(map2.get("xyz")).isEqualTo(ImmutableList.of("423", "567"));
@@ -176,12 +177,12 @@ public class MessageServiceTest {
   @Test
   @SuppressWarnings({"unchecked"})
   public void shouldReadData() throws IOException {
-    HashMap<String, Object> map1 = new HashMap<>();
+    Map<String, Object> map1 = new HashMap<>();
     map1.put("foo", "bar");
     map1.put("baz", "qux");
     FileUtils.write(dataFile1, JsonUtils.asPrettyJson(map1), UTF_8);
 
-    HashMap<String, Object> map2 = new HashMap<>();
+    Map<String, Object> map2 = new HashMap<>();
     map2.put("abc", "123");
     map2.put("xyz", asList("423", "567"));
     FileUtils.write(dataFile2, JsonUtils.asPrettyJson(map2), UTF_8);
@@ -196,7 +197,7 @@ public class MessageServiceTest {
   @Test
   @SuppressWarnings({"unchecked"})
   public void shouldRemoveData() throws IOException {
-    HashMap<String, Object> map1 = new HashMap<>();
+    Map<String, Object> map1 = new HashMap<>();
     map1.put("foo", "bar");
     map1.put("baz", "qux");
     FileUtils.write(dataFile1, JsonUtils.asPrettyJson(map1), UTF_8);
@@ -204,19 +205,19 @@ public class MessageServiceTest {
     messageService.removeData(data1, "baz");
 
     String dataContent1 = FileUtils.readFileToString(dataFile1, UTF_8);
-    HashMap<String, Object> resultMap = JsonUtils.asObject(dataContent1, HashMap.class);
+    Map<String, Object> resultMap = JsonUtils.asObject(dataContent1, HashMap.class);
     assertThat(resultMap.size()).isEqualTo(1);
     assertThat(resultMap.get("foo")).isEqualTo("bar");
   }
 
   @Test
   public void shouldCloseData() throws IOException {
-    HashMap<String, Object> map1 = new HashMap<>();
+    Map<String, Object> map1 = new HashMap<>();
     map1.put("foo", "bar");
     map1.put("baz", "qux");
     FileUtils.write(dataFile1, JsonUtils.asPrettyJson(map1), UTF_8);
 
-    HashMap<String, Object> map2 = new HashMap<>();
+    Map<String, Object> map2 = new HashMap<>();
     map2.put("abc", "123");
     map2.put("xyz", asList("423", "567"));
     FileUtils.write(dataFile2, JsonUtils.asPrettyJson(map2), UTF_8);

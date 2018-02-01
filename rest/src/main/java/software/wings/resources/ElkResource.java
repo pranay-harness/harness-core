@@ -26,8 +26,6 @@ import software.wings.service.intfc.elk.ElkAnalysisService;
 import software.wings.sm.StateType;
 
 import java.io.IOException;
-import java.util.ArrayList;
-import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Optional;
@@ -130,9 +128,9 @@ public class ElkResource implements LogAnalysisResource {
   public RestResponse<Object> getSampleLogRecord(@QueryParam("accountId") String accountId,
       @QueryParam("serverConfigId") String analysisServerConfigId, @QueryParam("index") String index)
       throws IOException {
-    LinkedHashMap<String, LinkedHashMap<String, ArrayList<LinkedHashMap>>> result = null;
+    Map<String, Map<String, List<Map>>> result = null;
     try {
-      result = (LinkedHashMap<String, LinkedHashMap<String, ArrayList<LinkedHashMap>>>) analysisService.getLogSample(
+      result = (Map<String, Map<String, List<Map>>>) analysisService.getLogSample(
           accountId, analysisServerConfigId, index, StateType.ELK);
       return new RestResponse<>(result.get("hits").get("hits").get(0).get("_source"));
     } catch (Exception ex) {
