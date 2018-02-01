@@ -653,10 +653,16 @@ public class StateMachineExecutor {
     } else {
       errorMessage = e.getMessage();
     }
+
     updateStateExecutionData(stateExecutionInstance, null, FAILED, errorMessage, null, null);
 
     try {
-      return failedTransition(context, e);
+      ExecutionEventAdvice executionEventAdvice = invokeAdvisors(context, currentState);
+      if (executionEventAdvice != null) {
+        return handleExecutionEventAdvice(context, stateExecutionInstance, FAILED, executionEventAdvice);
+      } else {
+        return failedTransition(context, e);
+      }
     } catch (Exception e2) {
       logger.error("Error in transitioning to failure state", e2);
     }
