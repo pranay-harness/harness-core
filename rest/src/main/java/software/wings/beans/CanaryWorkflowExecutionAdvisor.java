@@ -2,6 +2,7 @@ package software.wings.beans;
 
 import static io.harness.data.structure.EmptyPredicate.isEmpty;
 import static io.harness.data.structure.EmptyPredicate.isNotEmpty;
+import static java.util.stream.Collectors.toList;
 import static software.wings.beans.FailureStrategy.FailureStrategyBuilder.aFailureStrategy;
 import static software.wings.sm.ExecutionEventAdvice.ExecutionEventAdviceBuilder.anExecutionEventAdvice;
 import static software.wings.sm.ExecutionInterruptType.ABORT_ALL;
@@ -46,7 +47,6 @@ import software.wings.sm.states.PhaseSubWorkflow;
 import java.util.List;
 import java.util.Map;
 import java.util.Optional;
-import java.util.stream.Collectors;
 
 /**
  * Created by rishi on 1/24/17.
@@ -166,6 +166,10 @@ public class CanaryWorkflowExecutionAdvisor implements ExecutionEventAdvisor {
     }
 
     RepairActionCode repairActionCode = failureStrategy.getRepairActionCode();
+    if (repairActionCode == null) {
+      return null;
+    }
+
     switch (repairActionCode) {
       case IGNORE: {
         return anExecutionEventAdvice().withExecutionInterruptType(ExecutionInterruptType.IGNORE).build();
@@ -282,7 +286,7 @@ public class CanaryWorkflowExecutionAdvisor implements ExecutionEventAdvisor {
     }
 
     List<String> phaseNames =
-        orchestrationWorkflow.getWorkflowPhases().stream().map(WorkflowPhase::getName).collect(Collectors.toList());
+        orchestrationWorkflow.getWorkflowPhases().stream().map(WorkflowPhase::getName).collect(toList());
     int index = phaseNames.indexOf(phaseSubWorkflow.getPhaseNameForRollback());
     if (index == 0) {
       // All Done
@@ -308,11 +312,14 @@ public class CanaryWorkflowExecutionAdvisor implements ExecutionEventAdvisor {
     List<FailureStrategy> filteredFailureStrategies =
         failureStrategies.stream()
             .filter(f -> isNotEmpty(f.getSpecificSteps()) && f.getSpecificSteps().contains(state.getName()))
-            .collect(Collectors.toList());
+            .collect(toList());
 
     if (filteredFailureStrategies.isEmpty()) {
       filteredFailureStrategies =
-          failureStrategies.stream().filter(f -> isEmpty(f.getSpecificSteps())).collect(Collectors.toList());
+          failureStrategies.stream().filter(f -> isEmpty(f.getSpecificSteps())).collect(toList());
+      if (filteredFailureStrategies.isEmpty()) {
+        return null;
+      }
     }
 
     Optional<FailureStrategy> rollbackStrategy =
