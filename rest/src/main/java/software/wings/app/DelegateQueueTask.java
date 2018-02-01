@@ -28,6 +28,7 @@ import software.wings.waitnotify.WaitNotifyEngine;
 import java.time.Clock;
 import java.time.Duration;
 import java.util.ArrayList;
+import java.util.Iterator;
 import java.util.List;
 import java.util.concurrent.TimeUnit;
 import javax.cache.Cache;
@@ -175,30 +176,34 @@ public class DelegateQueueTask implements Runnable {
       // Re-broadcast queued sync tasks not picked up by any Delegate
       Cache<String, DelegateTask> delegateSyncCache =
           cacheHelper.getCache(DELEGATE_SYNC_CACHE, String.class, DelegateTask.class);
+      Iterator<Cache.Entry<String, DelegateTask>> iterator = delegateSyncCache.iterator();
       try {
-        delegateSyncCache.forEach(stringDelegateTaskEntry -> {
-          try {
-            DelegateTask syncDelegateTask = stringDelegateTaskEntry.getValue();
-            if (syncDelegateTask.getStatus().equals(Status.QUEUED) && syncDelegateTask.getDelegateId() == null) {
-              // If it's been more than a minute, remove it
-              if (clock.millis() - syncDelegateTask.getCreatedAt() > TimeUnit.MINUTES.toMillis(10)) {
-                logger.warn("Evicting old delegate sync task {}", syncDelegateTask.getUuid());
-                Caching.getCache(DELEGATE_SYNC_CACHE, String.class, DelegateTask.class)
-                    .remove(syncDelegateTask.getUuid());
-              } else {
-                logger.info("Re-broadcast queued sync task [{}] {} Account: {}", syncDelegateTask.getUuid(),
-                    syncDelegateTask.getTaskType().name(), syncDelegateTask.getAccountId());
-                broadcasterFactory.lookup("/stream/delegate/" + syncDelegateTask.getAccountId(), true)
-                    .broadcast(syncDelegateTask);
+        while (iterator.hasNext()) {
+          Cache.Entry<String, DelegateTask> stringDelegateTaskEntry = iterator.next();
+          if (stringDelegateTaskEntry != null) {
+            try {
+              DelegateTask syncDelegateTask = stringDelegateTaskEntry.getValue();
+              if (syncDelegateTask.getStatus().equals(Status.QUEUED) && syncDelegateTask.getDelegateId() == null) {
+                // If it's been more than ten minutes, remove it
+                if (clock.millis() - syncDelegateTask.getCreatedAt() > TimeUnit.MINUTES.toMillis(10)) {
+                  logger.warn("Evicting old delegate sync task {}", syncDelegateTask.getUuid());
+                  Caching.getCache(DELEGATE_SYNC_CACHE, String.class, DelegateTask.class)
+                      .remove(syncDelegateTask.getUuid());
+                } else {
+                  logger.info("Re-broadcast queued sync task [{}] {} Account: {}", syncDelegateTask.getUuid(),
+                      syncDelegateTask.getTaskType().name(), syncDelegateTask.getAccountId());
+                  broadcasterFactory.lookup("/stream/delegate/" + syncDelegateTask.getAccountId(), true)
+                      .broadcast(syncDelegateTask);
+                }
               }
+            } catch (Exception ex) {
+              logger.error("Could not fetch delegate task from queue", ex);
+              logger.warn("Remove Delegate task {} from cache", stringDelegateTaskEntry.getKey());
+              Caching.getCache(DELEGATE_SYNC_CACHE, String.class, DelegateTask.class)
+                  .remove(stringDelegateTaskEntry.getKey());
             }
-          } catch (Exception ex) {
-            logger.error("Could not fetch delegate task from queue ", ex);
-            logger.warn("Remove Delegate task [{}] from cache", stringDelegateTaskEntry.getKey());
-            Caching.getCache(DELEGATE_SYNC_CACHE, String.class, DelegateTask.class)
-                .remove(stringDelegateTaskEntry.getKey());
           }
-        });
+        }
       } catch (Exception e) {
         delegateSyncCache.clear();
       }
