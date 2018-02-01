@@ -26,7 +26,6 @@ import software.wings.helpers.ext.jenkins.BuildDetails;
 import software.wings.helpers.ext.jenkins.BuildDetails.Builder;
 import software.wings.service.intfc.AmazonS3BuildService;
 
-import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
 
@@ -55,7 +54,7 @@ public class AmazonS3BuildServiceTest extends WingsBaseTest {
 
   @Test
   public void shouldGetBuilds() {
-    ArrayList<BuildDetails> buildDetails = Lists.newArrayList(
+    List<BuildDetails> buildDetails = Lists.newArrayList(
         Builder.aBuildDetails().withNumber("10").withRevision("10").withArtifactPath("artifact1").build());
     when(amazonS3Service.getArtifactsBuildDetails(any(), any(), any(), any(), anyBoolean())).thenReturn(buildDetails);
     List<BuildDetails> builds =

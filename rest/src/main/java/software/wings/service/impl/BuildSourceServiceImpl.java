@@ -34,7 +34,6 @@ import java.util.List;
 import java.util.Map;
 import java.util.Optional;
 import java.util.Set;
-import java.util.TreeSet;
 import javax.validation.executable.ValidateOnExecution;
 
 /**
@@ -61,7 +60,7 @@ public class BuildSourceServiceImpl implements BuildSourceService {
     List<JobDetails> jobs = getBuildService(settingAttribute, appId)
                                 .getJobs(value, encryptedDataDetails, Optional.ofNullable(parentJobName));
     // Sorting the job details by name before returning
-    TreeSet<JobDetails> jobDetailsSet =
+    Set<JobDetails> jobDetailsSet =
         Sets.newTreeSet(Comparator.comparing(JobDetails::getJobName, String::compareToIgnoreCase));
     jobDetailsSet.addAll(jobs);
     return jobDetailsSet;

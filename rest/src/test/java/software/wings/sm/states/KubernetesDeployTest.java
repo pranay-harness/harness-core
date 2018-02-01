@@ -376,7 +376,7 @@ public class KubernetesDeployTest extends WingsBaseTest {
   @Test
   public void shouldResizeAndDownsize() {
     when(containerService.getServiceDesiredCount(any(ContainerServiceParams.class))).thenReturn(Optional.of(1));
-    LinkedHashMap<String, Integer> activeServiceCounts = new LinkedHashMap<>();
+    Map<String, Integer> activeServiceCounts = new LinkedHashMap<>();
     activeServiceCounts.put("rc-name.0", 1);
     when(containerService.getActiveServiceCounts(any(ContainerServiceParams.class))).thenReturn(activeServiceCounts);
     kubernetesReplicationControllerDeploy.setInstanceCount(2);
@@ -411,7 +411,7 @@ public class KubernetesDeployTest extends WingsBaseTest {
   @Test
   public void shouldDownsizeMultiple() {
     when(containerService.getServiceDesiredCount(any(ContainerServiceParams.class))).thenReturn(Optional.of(0));
-    LinkedHashMap<String, Integer> activeServiceCounts = new LinkedHashMap<>();
+    Map<String, Integer> activeServiceCounts = new LinkedHashMap<>();
     activeServiceCounts.put("rc-name.0", 1);
     activeServiceCounts.put("rc-name.1", 2);
     when(containerService.getActiveServiceCounts(any(ContainerServiceParams.class))).thenReturn(activeServiceCounts);
@@ -442,7 +442,7 @@ public class KubernetesDeployTest extends WingsBaseTest {
   @Test
   public void shouldUseFixedInstancesWithCount() {
     when(containerService.getServiceDesiredCount(any(ContainerServiceParams.class))).thenReturn(Optional.of(0));
-    LinkedHashMap<String, Integer> activeServiceCounts = new LinkedHashMap<>();
+    Map<String, Integer> activeServiceCounts = new LinkedHashMap<>();
     activeServiceCounts.put("rc-name.0", 2);
     activeServiceCounts.put("rc-name.1", 2);
     when(containerService.getActiveServiceCounts(any(ContainerServiceParams.class))).thenReturn(activeServiceCounts);
@@ -473,7 +473,7 @@ public class KubernetesDeployTest extends WingsBaseTest {
   @Test
   public void shouldCapCountAtFixed() {
     when(containerService.getServiceDesiredCount(any(ContainerServiceParams.class))).thenReturn(Optional.of(0));
-    LinkedHashMap<String, Integer> activeServiceCounts = new LinkedHashMap<>();
+    Map<String, Integer> activeServiceCounts = new LinkedHashMap<>();
     activeServiceCounts.put("rc-name.0", 3);
     when(containerService.getActiveServiceCounts(any(ContainerServiceParams.class))).thenReturn(activeServiceCounts);
     kubernetesReplicationControllerDeploy.setInstanceCount(5);
@@ -499,7 +499,7 @@ public class KubernetesDeployTest extends WingsBaseTest {
   @Test
   public void shouldUseFixedInstancesWithPercentage() {
     when(containerService.getServiceDesiredCount(any(ContainerServiceParams.class))).thenReturn(Optional.of(0));
-    LinkedHashMap<String, Integer> activeServiceCounts = new LinkedHashMap<>();
+    Map<String, Integer> activeServiceCounts = new LinkedHashMap<>();
     activeServiceCounts.put("rc-name.0", 2);
     activeServiceCounts.put("rc-name.1", 2);
     when(containerService.getActiveServiceCounts(any(ContainerServiceParams.class))).thenReturn(activeServiceCounts);
@@ -530,7 +530,7 @@ public class KubernetesDeployTest extends WingsBaseTest {
   @Test
   public void shouldUseMaxInstancesWithPercentage() {
     when(containerService.getServiceDesiredCount(any(ContainerServiceParams.class))).thenReturn(Optional.of(0));
-    LinkedHashMap<String, Integer> activeServiceCounts = new LinkedHashMap<>();
+    Map<String, Integer> activeServiceCounts = new LinkedHashMap<>();
     when(containerService.getActiveServiceCounts(any(ContainerServiceParams.class))).thenReturn(activeServiceCounts);
     kubernetesReplicationControllerDeploy.setInstanceCount(100);
     kubernetesReplicationControllerDeploy.setInstanceUnitType(PERCENTAGE);
@@ -551,7 +551,7 @@ public class KubernetesDeployTest extends WingsBaseTest {
   @Test
   public void shouldNotUseMaxInstancesWhenAlreadyRunningWithPercentage() {
     when(containerService.getServiceDesiredCount(any(ContainerServiceParams.class))).thenReturn(Optional.of(0));
-    LinkedHashMap<String, Integer> activeServiceCounts = new LinkedHashMap<>();
+    Map<String, Integer> activeServiceCounts = new LinkedHashMap<>();
     activeServiceCounts.put("rc-name.0", 10);
     when(containerService.getActiveServiceCounts(any(ContainerServiceParams.class))).thenReturn(activeServiceCounts);
     kubernetesReplicationControllerDeploy.setInstanceCount(100);
@@ -577,7 +577,7 @@ public class KubernetesDeployTest extends WingsBaseTest {
   @Test
   public void shouldNotUseMaxInstancesWhenAlreadyRunningLessThanMaxWithPercentage() {
     when(containerService.getServiceDesiredCount(any(ContainerServiceParams.class))).thenReturn(Optional.of(0));
-    LinkedHashMap<String, Integer> activeServiceCounts = new LinkedHashMap<>();
+    Map<String, Integer> activeServiceCounts = new LinkedHashMap<>();
     activeServiceCounts.put("rc-name.0", 3);
     when(containerService.getActiveServiceCounts(any(ContainerServiceParams.class))).thenReturn(activeServiceCounts);
     kubernetesReplicationControllerDeploy.setInstanceCount(100);

@@ -12,6 +12,8 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import software.wings.security.encryption.EncryptionUtils;
 
+import java.util.Map;
+
 /**
  * Created by anubhaw on 2/8/16.
  */
@@ -97,7 +99,7 @@ public class SshSessionFactory {
     /**
      * The Name.
      */
-    static java.util.Hashtable name = new java.util.Hashtable();
+    static Map name = new java.util.Hashtable();
 
     static {
       name.put(DEBUG, "DEBUG: ");

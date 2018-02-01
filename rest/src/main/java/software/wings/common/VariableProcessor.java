@@ -15,7 +15,7 @@ import software.wings.sm.ContextElement;
 import software.wings.sm.ContextElementType;
 import software.wings.sm.WorkflowStandardParams;
 
-import java.util.ArrayDeque;
+import java.util.Deque;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
@@ -35,7 +35,7 @@ public class VariableProcessor {
    * @param workflowExecutionId
    * @return the variables
    */
-  public Map<String, String> getVariables(ArrayDeque<ContextElement> contextElements, String workflowExecutionId) {
+  public Map<String, String> getVariables(Deque<ContextElement> contextElements, String workflowExecutionId) {
     Map<String, String> variables = new HashMap<>();
     Optional<ContextElement> instanceElement =
         contextElements.stream()
