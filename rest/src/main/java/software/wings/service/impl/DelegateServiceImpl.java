@@ -94,6 +94,7 @@ import java.io.StringWriter;
 import java.time.Clock;
 import java.util.ArrayList;
 import java.util.HashSet;
+import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
 import java.util.Optional;
@@ -903,21 +904,30 @@ public class DelegateServiceImpl implements DelegateService {
     List<DelegateTaskEvent> syncTaskEvents = new ArrayList<>();
     Cache<String, DelegateTask> delegateSyncCache =
         cacheHelper.getCache(DELEGATE_SYNC_CACHE, String.class, DelegateTask.class);
-    for (Cache.Entry<String, DelegateTask> stringDelegateTaskEntry : delegateSyncCache) {
-      if (stringDelegateTaskEntry != null && stringDelegateTaskEntry.getValue() != null) {
-        try {
-          DelegateTask syncDelegateTask = stringDelegateTaskEntry.getValue();
-          if (syncDelegateTask.getStatus().equals(QUEUED) && syncDelegateTask.getDelegateId() == null) {
-            syncTaskEvents.add(aDelegateTaskEvent()
-                                   .withAccountId(syncDelegateTask.getAccountId())
-                                   .withDelegateTaskId(syncDelegateTask.getUuid())
-                                   .withSync(!syncDelegateTask.isAsync())
-                                   .build());
+    Iterator<Cache.Entry<String, DelegateTask>> iterator = delegateSyncCache.iterator();
+    try {
+      while (iterator.hasNext()) {
+        Cache.Entry<String, DelegateTask> stringDelegateTaskEntry = iterator.next();
+        if (stringDelegateTaskEntry != null) {
+          try {
+            DelegateTask syncDelegateTask = stringDelegateTaskEntry.getValue();
+            if (syncDelegateTask.getStatus().equals(QUEUED) && syncDelegateTask.getDelegateId() == null) {
+              syncTaskEvents.add(aDelegateTaskEvent()
+                                     .withAccountId(syncDelegateTask.getAccountId())
+                                     .withDelegateTaskId(syncDelegateTask.getUuid())
+                                     .withSync(!syncDelegateTask.isAsync())
+                                     .build());
+            }
+          } catch (Exception ex) {
+            logger.error("Could not fetch delegate task from queue", ex);
+            logger.warn("Remove Delegate task {} from cache", stringDelegateTaskEntry.getKey());
+            Caching.getCache(DELEGATE_SYNC_CACHE, String.class, DelegateTask.class)
+                .remove(stringDelegateTaskEntry.getKey());
           }
-        } catch (Exception ex) {
-          logger.error("Error in reading sync task from DELEGATE_SYNC_CACHE", ex);
         }
       }
+    } catch (Exception e) {
+      delegateSyncCache.clear();
     }
     return syncTaskEvents;
   }
