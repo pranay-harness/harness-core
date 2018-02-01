@@ -645,8 +645,7 @@ public class WorkflowExecutionServiceImpl implements WorkflowExecutionService {
           StateExecutionInstance stateExecutionInstance = getEarliestInstance(allInstances);
           initialStateName = stateExecutionInstance.getStateName();
         }
-        workflowExecution.setExecutionNode(
-            graphRenderer.generateHierarchyNode(allInstancesIdMap, initialStateName, null, true, true));
+        workflowExecution.setExecutionNode(graphRenderer.generateHierarchyNode(allInstancesIdMap, initialStateName));
       }
     }
   }
