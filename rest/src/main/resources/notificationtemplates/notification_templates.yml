@@ -1,83 +1,83 @@
 ENTITY_CREATE_NOTIFICATION:
-      web: A new ${ENTITY_TYPE} ${ENTITY_NAME} is created.
-      slack: A new ${ENTITY_TYPE} ${ENTITY_NAME} is created.
+      web: A new ${ENTITY_TYPE} <b>${ENTITY_NAME}</b> is created.
+      slack: A new ${ENTITY_TYPE} \*${ENTITY_NAME}\* is created.
       email:
-          subject: ${ENTITY_TYPE} is created
-          body: A new ${ENTITY_TYPE} ${ENTITY_NAME} is created.
+          subject: ${ENTITY_TYPE} ${ENTITY_NAME} is created
+          body: A new ${ENTITY_TYPE} <b>${ENTITY_NAME}</b> is created.
 
 ENTITY_DELETE_NOTIFICATION:
-      web: ${ENTITY_TYPE} ${ENTITY_NAME} is deleted.
-      slack: ${ENTITY_TYPE} ${ENTITY_NAME} is deleted.
+      web: ${ENTITY_TYPE} <b>${ENTITY_NAME}</b> is deleted.
+      slack: ${ENTITY_TYPE} \*${ENTITY_NAME}\* is deleted.
       email:
-          subject: ${ENTITY_TYPE} is deleted
-          body: ${ENTITY_TYPE} ${ENTITY_NAME} is deleted.
+          subject: ${ENTITY_TYPE} ${ENTITY_NAME} is deleted
+          body: ${ENTITY_TYPE} <b>${ENTITY_NAME}</b> is deleted.
 
 ARTIFACT_APPROVAL_NOTIFICATION:
-      web: ${ENTITY_TYPE} ${ENTITY_NAME} is waiting for <${ACTION_URL}|approval>
-      slack: ${ENTITY_TYPE} ${ENTITY_NAME} is waiting for <${ACTION_URL}|approval>
+      web: ${ENTITY_TYPE} <b>${ENTITY_NAME}</b> is waiting for <a href="${ACTION_URL}" target="_blank">approval</a>
+      slack: ${ENTITY_TYPE} \*${ENTITY_NAME}\* is waiting for <${ACTION_URL}|approval>
       email:
-          subject: Artifact approval required
-          body: ${ENTITY_TYPE} ${ENTITY_NAME} is waiting for <${ACTION_URL}|approval>
+          subject: Artifact approval required for ${ENTITY_TYPE} ${ENTITY_NAME}
+          body: ${ENTITY_TYPE} <b>${ENTITY_NAME}</b> is waiting for <a href="${ACTION_URL}" target="_blank">approval</a>
 
 ARTIFACT_APPROVAL_NOTIFICATION_STATUS:
-      web: ${ENTITY_TYPE} ${ENTITY_NAME} is <${ACTION_URL}|${NOTIFICATION_STATUS}> by ${USER_NAME}
-      slack: ${ENTITY_TYPE} ${ENTITY_NAME} is <${ACTION_URL}|${NOTIFICATION_STATUS}> by ${USER_NAME}
+      web: ${ENTITY_TYPE} <b>${ENTITY_NAME}</b> is <a href="${ACTION_URL}" target="_blank">${NOTIFICATION_STATUS}</a> by <b>${USER_NAME}</b>
+      slack: ${ENTITY_TYPE} \*${ENTITY_NAME}\* is <${ACTION_URL}|${NOTIFICATION_STATUS}> by <b>${USER_NAME}</b>
       email:
-          subject: Artifact status changed
-          body: ${ENTITY_TYPE} ${ENTITY_NAME} is <${ACTION_URL}|${NOTIFICATION_STATUS}> by ${USER_NAME}
+          subject: Artifact status changed for ${ENTITY_TYPE} ${ENTITY_NAME}
+          body: ${ENTITY_TYPE} <b>${ENTITY_NAME}</b> is <${ACTION_URL}|${NOTIFICATION_STATUS}> by <b>${USER_NAME}</b>
 
 WORKFLOW_SUCCESSFUL_NOTIFICATION:
-      web: <a href="${WORKFLOW_URL}" target="_blank">${WORKFLOW_NAME}</a> completed successfully for ${ARTIFACTS} in ${ENV_NAME}, triggered by ${USER_NAME} at ${DATE}
+      web: <b><a href="${WORKFLOW_URL}" target="_blank">${WORKFLOW_NAME}</a></b> completed successfully for <b>${ARTIFACTS}</b> in ${ENV_NAME}, triggered by <b>${USER_NAME}</b>  <i>- ${DATE}</i>
       slack: \*<${WORKFLOW_URL}|${WORKFLOW_NAME}>\* completed successfully for \*${ARTIFACTS}\* in ${ENV_NAME}, triggered by \*${USER_NAME}\*  _- ${DATE}_
       email:
           subject: ${WORKFLOW_NAME} completed successfully
-          body: <a href="${WORKFLOW_URL}" target="_blank">${WORKFLOW_NAME}</a> completed successfully for ${ARTIFACTS} in ${ENV_NAME}, triggered by ${USER_NAME} at ${DATE}
+          body: <b><a href="${WORKFLOW_URL}" target="_blank">${WORKFLOW_NAME}</a></b> completed successfully for <b>${ARTIFACTS}</b> in ${ENV_NAME}, triggered by <b>${USER_NAME}</b>  <i>- ${DATE}</i>
 
 WORKFLOW_FAILED_NOTIFICATION:
-      web: <a href="${WORKFLOW_URL}" target="_blank">${WORKFLOW_NAME}</a> failed for ${ARTIFACTS} in ${ENV_NAME}, triggered by ${USER_NAME} at ${DATE}
+      web: <b><a href="${WORKFLOW_URL}" target="_blank">${WORKFLOW_NAME}</a></b> failed for <b>${ARTIFACTS}</b> in ${ENV_NAME}, triggered by <b>${USER_NAME}</b>  <i>- ${DATE}</i>
       slack: \*<${WORKFLOW_URL}|${WORKFLOW_NAME}>\* failed for \*${ARTIFACTS}\* in ${ENV_NAME}, triggered by \*${USER_NAME}\*  _- ${DATE}_
       email:
           subject: ${WORKFLOW_NAME} failed
-          body: <a href="${WORKFLOW_URL}" target="_blank">${WORKFLOW_NAME}</a> failed for ${ARTIFACTS} in ${ENV_NAME}, triggered by ${USER_NAME} at ${DATE}
+          body: <b><a href="${WORKFLOW_URL}" target="_blank">${WORKFLOW_NAME}</a></b> failed for <b>${ARTIFACTS}</b> in ${ENV_NAME}, triggered by <b>${USER_NAME}</b>  <i>- ${DATE}</i>
 
 WORKFLOW_PAUSED_NOTIFICATION:
-      web: <a href="${WORKFLOW_URL}" target="_blank">${WORKFLOW_NAME}</a> paused for ${ARTIFACTS} in ${ENV_NAME}, triggered by ${USER_NAME} at ${DATE}
+      web: <b><a href="${WORKFLOW_URL}" target="_blank">${WORKFLOW_NAME}</a></b> paused for <b>${ARTIFACTS}</b> in ${ENV_NAME}, triggered by <b>${USER_NAME}</b>  <i>- ${DATE}</i>
       slack: \*<${WORKFLOW_URL}|${WORKFLOW_NAME}>\* paused for \*${ARTIFACTS}\* in ${ENV_NAME}, triggered by \*${USER_NAME}\*  _- ${DATE}_
       email:
           subject: ${WORKFLOW_NAME} paused
-          body: <a href="${WORKFLOW_URL}" target="_blank">${WORKFLOW_NAME}</a> paused for ${ARTIFACTS} in ${ENV_NAME}, triggered by ${USER_NAME} at ${DATE}
+          body: <b><a href="${WORKFLOW_URL}" target="_blank">${WORKFLOW_NAME}</a></b> paused for <b>${ARTIFACTS}</b> in ${ENV_NAME}, triggered by <b>${USER_NAME}</b>  <i>- ${DATE}</i>
 
 WORKFLOW_RESUMED_NOTIFICATION:
-      web: <a href="${WORKFLOW_URL}" target="_blank">${WORKFLOW_NAME}</a> execution resumed for ${ARTIFACTS} in ${ENV_NAME}, triggered by ${USER_NAME} at ${DATE}
+      web: <b><a href="${WORKFLOW_URL}" target="_blank">${WORKFLOW_NAME}</a></b> execution resumed for <b>${ARTIFACTS}</b> in ${ENV_NAME}, triggered by <b>${USER_NAME}</b>  <i>- ${DATE}</i>
       slack: \*<${WORKFLOW_URL}|${WORKFLOW_NAME}>\* execution resumed for \*${ARTIFACTS}\* in ${ENV_NAME}, triggered by \*${USER_NAME}\*  _- ${DATE}_
       email:
           subject: ${WORKFLOW_NAME} resumed
-          body: <a href="${WORKFLOW_URL}" target="_blank">${WORKFLOW_NAME}</a> resumed for ${ARTIFACTS} in ${ENV_NAME}, triggered by ${USER_NAME} at ${DATE}
+          body: <b><a href="${WORKFLOW_URL}" target="_blank">${WORKFLOW_NAME}</a></b> resumed for <b>${ARTIFACTS}</b> in ${ENV_NAME}, triggered by <b>${USER_NAME}</b>  <i>- ${DATE}</i>
 
 WORKFLOW_ABORTED_NOTIFICATION:
-      web: <a href="${WORKFLOW_URL}" target="_blank">${WORKFLOW_NAME}</a> aborted for ${ARTIFACTS} in ${ENV_NAME}, triggered by ${USER_NAME} at ${DATE}
+      web: <b><a href="${WORKFLOW_URL}" target="_blank">${WORKFLOW_NAME}</a></b> aborted for <b>${ARTIFACTS}</b> in ${ENV_NAME}, triggered by <b>${USER_NAME}</b>  <i>- ${DATE}</i>
       slack: \*<${WORKFLOW_URL}|${WORKFLOW_NAME}>\* aborted for \*${ARTIFACTS}\* in ${ENV_NAME}, triggered by \*${USER_NAME}\*  _- ${DATE}_
       email:
           subject: ${WORKFLOW_NAME} aborted
-          body: <a href="${WORKFLOW_URL}" target="_blank">${WORKFLOW_NAME}</a> aborted for ${ARTIFACTS} in ${ENV_NAME}, triggered by ${USER_NAME} at ${DATE}
+          body: <b><a href="${WORKFLOW_URL}" target="_blank">${WORKFLOW_NAME}</a></b> aborted for <b>${ARTIFACTS}</b> in ${ENV_NAME}, triggered by <b>${USER_NAME}</b>  <i>- ${DATE}</i>
 
 WORKFLOW_PHASE_SUCCESSFUL_NOTIFICATION:
-      web: ${PHASE_NAME} of <a href="${WORKFLOW_URL}" target="_blank">${WORKFLOW_NAME}</a> completed successfully for ${ARTIFACTS}, triggered by ${USER_NAME} at ${DATE}
+      web: ${PHASE_NAME} of <b><a href="${WORKFLOW_URL}" target="_blank">${WORKFLOW_NAME}</a></b> completed successfully for <b>${ARTIFACTS}</b>, triggered by <b>${USER_NAME}</b>  <i>- ${DATE}</i>
       slack: ${PHASE_NAME} of \*${WORKFLOW_NAME}\* completed successfully for \*${ARTIFACTS}\*, triggered by \*${USER_NAME}\*  _- ${DATE}_
       email:
           subject: ${PHASE_NAME} of ${WORKFLOW_NAME} completed
-          body: ${PHASE_NAME} of <a href="${WORKFLOW_URL}" target="_blank">${WORKFLOW_NAME}</a> completed successfully for ${ARTIFACTS}, triggered by ${USER_NAME} at ${DATE}
+          body: ${PHASE_NAME} of <b><a href="${WORKFLOW_URL}" target="_blank">${WORKFLOW_NAME}</a></b> completed successfully for <b>${ARTIFACTS}</b>, triggered by <b>${USER_NAME}</b>  <i>- ${DATE}</i>
 
 WORKFLOW_PHASE_FAILED_NOTIFICATION:
-      web: ${PHASE_NAME} of <a href="${WORKFLOW_URL}" target="_blank">${WORKFLOW_NAME}</a> failed for ${ARTIFACTS}, triggered by ${USER_NAME} at ${DATE}
+      web: ${PHASE_NAME} of <b><a href="${WORKFLOW_URL}" target="_blank">${WORKFLOW_NAME}</a></b> failed for <b>${ARTIFACTS}</b>, triggered by <b>${USER_NAME}</b>  <i>- ${DATE}</i>
       slack: ${PHASE_NAME} of \*${WORKFLOW_NAME}\* failed for \*${ARTIFACTS}\*, triggered by \*${USER_NAME}\*  _- ${DATE}_
       email:
           subject: ${PHASE_NAME} of ${WORKFLOW_NAME} failed
-          body: ${PHASE_NAME} of <a href="${WORKFLOW_URL}" target="_blank">${WORKFLOW_NAME}</a> failed for ${ARTIFACTS}, triggered by ${USER_NAME} at ${DATE}
+          body: ${PHASE_NAME} of <b><a href="${WORKFLOW_URL}" target="_blank">${WORKFLOW_NAME}</a></b> failed for <b>${ARTIFACTS}</b>, triggered by <b>${USER_NAME}</b>  <i>- ${DATE}</i>
 
 WORKFLOW_PHASE_PAUSED_NOTIFICATION:
-      web: ${PHASE_NAME} of <a href="${WORKFLOW_URL}" target="_blank">${WORKFLOW_NAME}</a> paused for ${ARTIFACTS}, triggered by ${USER_NAME} at ${DATE}
+      web: ${PHASE_NAME} of <b><a href="${WORKFLOW_URL}" target="_blank">${WORKFLOW_NAME}</a></b> paused for <b>${ARTIFACTS}</b>, triggered by <b>${USER_NAME}</b>  <i>- ${DATE}</i>
       slack: ${PHASE_NAME} of \*${WORKFLOW_NAME}\* paused for \*${ARTIFACTS}\*, triggered by \*${USER_NAME}\*  _- ${DATE}_
       email:
           subject: ${PHASE_NAME} of ${WORKFLOW_NAME} paused
-          body: ${PHASE_NAME} of <a href="${WORKFLOW_URL}" target="_blank">${WORKFLOW_NAME}</a> paused for ${ARTIFACTS}, triggered by ${USER_NAME} at ${DATE}
+          body: ${PHASE_NAME} of <b><a href="${WORKFLOW_URL}" target="_blank">${WORKFLOW_NAME}</a></b> paused for <b>${ARTIFACTS}</b>, triggered by <b>${USER_NAME}</b>  <i>- ${DATE}</i>
