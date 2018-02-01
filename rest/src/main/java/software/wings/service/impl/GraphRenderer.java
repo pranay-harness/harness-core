@@ -115,34 +115,39 @@ public class GraphRenderer {
     return originNode;
   }
 
-  private void adjustProvisionNode(Node node) {
+  static boolean isProvisionNode(Node node) {
+    return PHASE_STEP.name().equals(node.getType()) && node.getName().equals(Constants.PROVISION_NODE_NAME)
+        && node.getGroup() != null && isNotEmpty(node.getGroup().getElements());
+  }
+
+  static void adjustProvisionNode(Node node) {
     if (node == null) {
       return;
     }
 
     adjustProvisionNode(node.getGroup());
 
-    if (node.getNext() != null) {
-      Node next = node.getNext();
-      if (PHASE_STEP.name().equals(next.getType()) && next.getName().equals(Constants.PROVISION_NODE_NAME)
-          && next.getGroup() != null && isNotEmpty(next.getGroup().getElements())) {
-        Node nextToNext = next.getNext();
-        Node provisionStep = next.getGroup().getElements().get(0);
-        node.setNext(provisionStep);
-        provisionStep.setNext(nextToNext);
-      }
+    if (node.getNext() == null) {
+      return;
+    }
+
+    Node next = node.getNext();
+    if (isProvisionNode(next)) {
+      Node nextToNext = next.getNext();
+      Node provisionStep = next.getGroup().getElements().get(0);
+      node.setNext(provisionStep);
+      provisionStep.setNext(nextToNext);
     }
     adjustProvisionNode(node.getNext());
   }
 
-  private void adjustProvisionNode(Group group) {
+  static void adjustProvisionNode(Group group) {
     if (group == null || isEmpty(group.getElements())) {
       return;
     }
 
     Node first = group.getElements().get(0);
-    if (PHASE_STEP.name().equals(first.getType()) && first.getName().equals(Constants.PROVISION_NODE_NAME)
-        && first.getGroup() != null && isNotEmpty(first.getGroup().getElements())) {
+    if (isProvisionNode(first)) {
       Node nextToNext = first.getNext();
       Node provisionStep = first.getGroup().getElements().get(0);
       provisionStep.setNext(nextToNext);
