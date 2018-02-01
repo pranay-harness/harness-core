@@ -7,6 +7,9 @@ package software.wings.service.impl;
 import static io.harness.data.structure.EmptyPredicate.isEmpty;
 import static io.harness.data.structure.EmptyPredicate.isNotEmpty;
 import static software.wings.beans.Graph.Node.Builder.aNode;
+import static software.wings.sm.StateType.PHASE;
+import static software.wings.sm.StateType.PHASE_STEP;
+import static software.wings.sm.StateType.SUB_WORKFLOW;
 
 import com.google.inject.Inject;
 import com.google.inject.Injector;
@@ -43,14 +46,25 @@ public class GraphRenderer {
   private static final Logger logger = LoggerFactory.getLogger(GraphRenderer.class);
   @Inject private Injector injector;
 
+  static boolean isSubWorkflow(StateExecutionInstance stateExecutionInstance) {
+    if (stateExecutionInstance == null) {
+      return false;
+    }
+
+    final String stateTypeName = stateExecutionInstance.getStateType();
+    if (stateTypeName == null) {
+      return false;
+    }
+
+    final StateType stateType = StateType.valueOf(stateTypeName);
+    return stateType == SUB_WORKFLOW || stateType == PHASE_STEP || stateType == PHASE;
+  }
+
   /**
    * Generate hierarchy node node.
    *
    * @param instanceIdMap    the instance id map
    * @param initialStateName the initial state name
-   * @param expandedGroupIds the expanded group ids
-   * @param expandLastOnly   the expand last only
-   * @param allExpanded      the all expanded
    * @return the node
    */
   public Node generateHierarchyNode(Map<String, StateExecutionInstance> instanceIdMap, String initialStateName) {
@@ -68,21 +82,11 @@ public class GraphRenderer {
         originNode = node;
       }
 
-      if (instance.getParentInstanceId() != null && instance.isContextTransition()) {
-        Map<String, Node> elementsMap = parentIdElementsMap.get(instance.getParentInstanceId());
-        if (elementsMap == null) {
-          elementsMap = new HashMap<>();
-          parentIdElementsMap.put(instance.getParentInstanceId(), elementsMap);
-        }
-        if (instanceIdMap.get(instance.getParentInstanceId()) != null
-            && instanceIdMap.get(instance.getParentInstanceId()).getStateType() != null
-            && (instanceIdMap.get(instance.getParentInstanceId()).getStateType().equals(StateType.SUB_WORKFLOW.name())
-                   || instanceIdMap.get(instance.getParentInstanceId())
-                          .getStateType()
-                          .equals(StateType.PHASE_STEP.name())
-                   || instanceIdMap.get(instance.getParentInstanceId())
-                          .getStateType()
-                          .equals(StateType.PHASE.name()))) {
+      final String parentInstanceId = instance.getParentInstanceId();
+      if (parentInstanceId != null && instance.isContextTransition()) {
+        Map<String, Node> elementsMap = parentIdElementsMap.computeIfAbsent(parentInstanceId, key -> new HashMap<>());
+
+        if (isSubWorkflow(instanceIdMap.get(parentInstanceId))) {
           elementsMap.put(Constants.SUB_WORKFLOW, node);
           continue;
         }
@@ -120,7 +124,7 @@ public class GraphRenderer {
 
     if (node.getNext() != null) {
       Node next = node.getNext();
-      if (StateType.PHASE_STEP.name().equals(next.getType()) && next.getName().equals(Constants.PROVISION_NODE_NAME)
+      if (PHASE_STEP.name().equals(next.getType()) && next.getName().equals(Constants.PROVISION_NODE_NAME)
           && next.getGroup() != null && isNotEmpty(next.getGroup().getElements())) {
         Node nextToNext = next.getNext();
         Node provisionStep = next.getGroup().getElements().get(0);
@@ -137,7 +141,7 @@ public class GraphRenderer {
     }
 
     Node first = group.getElements().get(0);
-    if (StateType.PHASE_STEP.name().equals(first.getType()) && first.getName().equals(Constants.PROVISION_NODE_NAME)
+    if (PHASE_STEP.name().equals(first.getType()) && first.getName().equals(Constants.PROVISION_NODE_NAME)
         && first.getGroup() != null && isNotEmpty(first.getGroup().getElements())) {
       Node nextToNext = first.getNext();
       Node provisionStep = first.getGroup().getElements().get(0);
