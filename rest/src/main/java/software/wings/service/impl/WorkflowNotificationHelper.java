@@ -26,8 +26,10 @@ import com.google.common.base.Joiner;
 import com.google.inject.Inject;
 import com.google.inject.Singleton;
 
+import org.apache.http.client.utils.URIBuilder;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import software.wings.app.MainConfiguration;
 import software.wings.beans.Application;
 import software.wings.beans.Base;
 import software.wings.beans.CanaryOrchestrationWorkflow;
@@ -50,6 +52,7 @@ import software.wings.sm.ExecutionContextImpl;
 import software.wings.sm.ExecutionStatus;
 import software.wings.sm.states.PhaseSubWorkflow;
 
+import java.net.URISyntaxException;
 import java.text.DateFormat;
 import java.text.SimpleDateFormat;
 import java.time.Clock;
@@ -69,6 +72,7 @@ public class WorkflowNotificationHelper {
   @Inject private NotificationService notificationService;
   @Inject private WorkflowService workflowService;
   @Inject private WorkflowExecutionService workflowExecutionService;
+  @Inject private MainConfiguration configuration;
   @Inject private Clock clock;
 
   private final DateFormat dateFormat = new SimpleDateFormat("MMM d HH:mm z");
@@ -91,8 +95,12 @@ public class WorkflowNotificationHelper {
       userName = userName.toLowerCase();
     }
 
+    String workflowUrl = buildAbsoluteUrl(String.format("/account/%s/app/%s/env/%s/executions/%s/details",
+        app.getAccountId(), app.getUuid(), env.getUuid(), context.getWorkflowExecutionId()));
+
     Map<String, String> placeHolderValues = new HashMap<>();
     placeHolderValues.put("WORKFLOW_NAME", context.getWorkflowExecutionName());
+    placeHolderValues.put("WORKFLOW_URL", workflowUrl);
     placeHolderValues.put("ARTIFACTS", getArtifactsMessage(context, WORKFLOW, null));
     if (!BUILD.equals(context.getOrchestrationWorkflowType())) {
       placeHolderValues.put("ENV_NAME", env.getName());
@@ -139,7 +147,7 @@ public class WorkflowNotificationHelper {
       FailureNotification notification = aFailureNotification()
                                              .withAccountId(app.getAccountId())
                                              .withAppId(app.getUuid())
-                                             .withEnvironmentId(env == null ? null : env.getUuid())
+                                             .withEnvironmentId(env.getUuid())
                                              .withEntityId(context.getWorkflowExecutionId())
                                              .withEntityType(EntityType.ORCHESTRATED_DEPLOYMENT)
                                              .withEntityName("Deployment")
@@ -196,8 +204,12 @@ public class WorkflowNotificationHelper {
       userName = userName.toLowerCase();
     }
 
+    String workflowUrl = buildAbsoluteUrl(String.format("/account/%s/app/%s/env/%s/executions/%s/details",
+        app.getAccountId(), app.getUuid(), env.getUuid(), context.getWorkflowExecutionId()));
+
     Map<String, String> placeHolderValues = new HashMap<>();
     placeHolderValues.put("WORKFLOW_NAME", context.getWorkflowExecutionName());
+    placeHolderValues.put("WORKFLOW_URL", workflowUrl);
     placeHolderValues.put("PHASE_NAME", phaseSubWorkflow.getName());
     placeHolderValues.put("ARTIFACTS", getArtifactsMessage(context, WORKFLOW_PHASE, phaseSubWorkflow));
     placeHolderValues.put("ENV_NAME", env.getName());
@@ -258,5 +270,17 @@ public class WorkflowNotificationHelper {
               .collect(toList()));
     }
     return artifactsMsg;
+  }
+
+  private String buildAbsoluteUrl(String fragment) {
+    String baseUrl = configuration.getPortal().getUrl().trim();
+    try {
+      URIBuilder uriBuilder = new URIBuilder(baseUrl);
+      uriBuilder.setFragment(fragment);
+      return uriBuilder.toString();
+    } catch (URISyntaxException e) {
+      logger.error("Bad URI syntax", e);
+      return baseUrl;
+    }
   }
 }

@@ -14,6 +14,7 @@ import static software.wings.beans.Workflow.WorkflowBuilder.aWorkflow;
 import static software.wings.beans.WorkflowExecution.WorkflowExecutionBuilder.aWorkflowExecution;
 import static software.wings.beans.artifact.Artifact.Builder.anArtifact;
 import static software.wings.common.Constants.BUILD_NO;
+import static software.wings.utils.WingsTestConstants.ACCOUNT_ID;
 import static software.wings.utils.WingsTestConstants.APP_ID;
 import static software.wings.utils.WingsTestConstants.ENV_ID;
 import static software.wings.utils.WingsTestConstants.ENV_NAME;
@@ -34,6 +35,8 @@ import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.Mockito;
 import software.wings.WingsBaseTest;
+import software.wings.app.MainConfiguration;
+import software.wings.app.PortalConfig;
 import software.wings.beans.CanaryOrchestrationWorkflow;
 import software.wings.beans.EmbeddedUser;
 import software.wings.beans.ExecutionScope;
@@ -53,16 +56,21 @@ import software.wings.sm.states.PhaseSubWorkflow;
  * Created by anubhaw on 4/14/17.
  */
 public class WorkflowNotificationHelperTest extends WingsBaseTest {
+  private static final String BASE_URL = "https://env.harness.io/";
+  private static final String EXPECTED_URL =
+      "https://env.harness.io/#/account/ACCOUNT_ID/app/APP_ID/env/ENV_ID/executions/WORKFLOW_EXECUTION_ID/details";
+
   @Mock private NotificationService notificationService;
   @Mock private WorkflowService workflowService;
   @Mock private WorkflowExecutionService workflowExecutionService;
+  @Mock private MainConfiguration configuration;
   @Inject @InjectMocks private WorkflowNotificationHelper workflowNotificationHelper;
 
   @Mock(answer = Answers.RETURNS_DEEP_STUBS) private ExecutionContextImpl executionContext;
 
   @Before
   public void setUp() throws Exception {
-    when(executionContext.getApp()).thenReturn(anApplication().withUuid(APP_ID).build());
+    when(executionContext.getApp()).thenReturn(anApplication().withAccountId(ACCOUNT_ID).withUuid(APP_ID).build());
     when(executionContext.getArtifacts())
         .thenReturn(ImmutableList.of(anArtifact()
                                          .withArtifactSourceName("artifact-1")
@@ -93,6 +101,9 @@ public class WorkflowNotificationHelperTest extends WingsBaseTest {
                         .build());
     when(workflowExecutionService.getExecutionDetails(APP_ID, WORKFLOW_EXECUTION_ID))
         .thenReturn(aWorkflowExecution().withTriggeredBy(EmbeddedUser.builder().name(USER_NAME).build()).build());
+    PortalConfig portalConfig = new PortalConfig();
+    portalConfig.setUrl(BASE_URL);
+    when(configuration.getPortal()).thenReturn(portalConfig);
   }
 
   @Test
@@ -115,8 +126,14 @@ public class WorkflowNotificationHelperTest extends WingsBaseTest {
     assertThat(notification).isInstanceOf(FailureNotification.class);
     assertThat(notification.getNotificationTemplateId())
         .isEqualTo(NotificationMessageType.WORKFLOW_FAILED_NOTIFICATION.name());
-    ImmutableMap<String, String> placeholders = ImmutableMap.of("WORKFLOW_NAME", WORKFLOW_NAME, "ARTIFACTS",
-        "artifact-1 (build# build-1), artifact-2 (build# build-2)", "USER_NAME", USER_NAME, "ENV_NAME", ENV_NAME);
+    ImmutableMap<String, String> placeholders =
+        ImmutableMap.<String, String>builder()
+            .put("WORKFLOW_NAME", WORKFLOW_NAME)
+            .put("WORKFLOW_URL", EXPECTED_URL)
+            .put("ARTIFACTS", "artifact-1 (build# build-1), artifact-2 (build# build-2)")
+            .put("USER_NAME", USER_NAME)
+            .put("ENV_NAME", ENV_NAME)
+            .build();
     assertThat(notification.getNotificationTemplateVariables()).containsAllEntriesOf(placeholders);
   }
 
@@ -145,8 +162,14 @@ public class WorkflowNotificationHelperTest extends WingsBaseTest {
     assertThat(notification).isInstanceOf(FailureNotification.class);
     assertThat(notification.getNotificationTemplateId())
         .isEqualTo(NotificationMessageType.WORKFLOW_PHASE_FAILED_NOTIFICATION.name());
-    ImmutableMap<String, String> placeholders = ImmutableMap.of("WORKFLOW_NAME", WORKFLOW_NAME, "PHASE_NAME", "Phase1",
-        "ARTIFACTS", "artifact-2 (build# build-2)", "USER_NAME", USER_NAME, "ENV_NAME", ENV_NAME);
+    ImmutableMap<String, String> placeholders = ImmutableMap.<String, String>builder()
+                                                    .put("WORKFLOW_NAME", WORKFLOW_NAME)
+                                                    .put("WORKFLOW_URL", EXPECTED_URL)
+                                                    .put("PHASE_NAME", "Phase1")
+                                                    .put("ARTIFACTS", "artifact-2 (build# build-2)")
+                                                    .put("USER_NAME", USER_NAME)
+                                                    .put("ENV_NAME", ENV_NAME)
+                                                    .build();
     assertThat(notification.getNotificationTemplateVariables()).containsAllEntriesOf(placeholders);
   }
 
@@ -172,8 +195,13 @@ public class WorkflowNotificationHelperTest extends WingsBaseTest {
     assertThat(notification).isInstanceOf(FailureNotification.class);
     assertThat(notification.getNotificationTemplateId())
         .isEqualTo(NotificationMessageType.WORKFLOW_FAILED_NOTIFICATION.name());
-    ImmutableMap<String, String> placeholders = ImmutableMap.of(
-        "WORKFLOW_NAME", WORKFLOW_NAME, "ARTIFACTS", "no artifacts", "USER_NAME", USER_NAME, "ENV_NAME", ENV_NAME);
+    ImmutableMap<String, String> placeholders = ImmutableMap.<String, String>builder()
+                                                    .put("WORKFLOW_NAME", WORKFLOW_NAME)
+                                                    .put("WORKFLOW_URL", EXPECTED_URL)
+                                                    .put("ARTIFACTS", "no artifacts")
+                                                    .put("USER_NAME", USER_NAME)
+                                                    .put("ENV_NAME", ENV_NAME)
+                                                    .build();
     assertThat(notification.getNotificationTemplateVariables()).containsAllEntriesOf(placeholders);
   }
 }
