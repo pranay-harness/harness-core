@@ -1098,7 +1098,10 @@ public class InfrastructureMappingServiceImpl implements InfrastructureMappingSe
   @Override
   public String getContainerRunningInstances(String appId, String infraMappingId, String serviceNameExpression) {
     InfrastructureMapping infrastructureMapping = get(appId, infraMappingId);
-    notNullCheck("Infrastructure Mapping", infrastructureMapping);
+
+    if (infrastructureMapping == null) {
+      return "0";
+    }
 
     Application app = appService.get(infrastructureMapping.getAppId());
     Environment env = envService.get(infrastructureMapping.getAppId(), infrastructureMapping.getEnvId(), false);

@@ -71,7 +71,7 @@ public interface DelegateService {
 
   List<DelegateTaskEvent> getDelegateTaskEvents(String accountId, String delegateId, boolean syncOnly);
 
-  Delegate updateHB(String accountId, String delegateId);
+  Delegate updateHeartbeat(String accountId, String delegateId);
 
   void deleteOldTasks(long retentionMillis);
 }
