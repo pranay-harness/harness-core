@@ -10,6 +10,7 @@ import static software.wings.beans.ErrorCode.INVALID_ARGUMENT;
 import static software.wings.beans.ReadPref.CRITICAL;
 import static software.wings.beans.SearchFilter.Operator.EQ;
 import static software.wings.beans.SearchFilter.Operator.GT;
+import static software.wings.beans.SearchFilter.Operator.IN;
 import static software.wings.beans.alert.AlertType.ManualInterventionNeeded;
 import static software.wings.dl.PageRequest.Builder.aPageRequest;
 import static software.wings.sm.ElementNotifyResponseData.Builder.anElementNotifyResponseData;
@@ -49,7 +50,6 @@ import org.slf4j.LoggerFactory;
 import software.wings.beans.Application;
 import software.wings.beans.ErrorCode;
 import software.wings.beans.ErrorStrategy;
-import software.wings.beans.SearchFilter.Operator;
 import software.wings.beans.WorkflowExecution;
 import software.wings.beans.alert.ManualInterventionNeededAlert;
 import software.wings.common.Constants;
@@ -663,11 +663,15 @@ public class StateMachineExecutor {
       ExecutionEventAdvice executionEventAdvice = invokeAdvisors(context, currentState);
       if (executionEventAdvice != null) {
         return handleExecutionEventAdvice(context, stateExecutionInstance, FAILED, executionEventAdvice);
-      } else {
-        return failedTransition(context, e);
       }
-    } catch (Exception e2) {
-      logger.error("Error in transitioning to failure state", e2);
+    } catch (RuntimeException exception) {
+      logger.error("Error when trying to obtain the advice ", exception);
+    }
+
+    try {
+      return failedTransition(context, e);
+    } catch (RuntimeException exception) {
+      logger.error("Error in transitioning to failure state", exception);
     }
     return null;
   }
@@ -1133,7 +1137,7 @@ public class StateMachineExecutor {
             .withLimit(PageRequest.UNLIMITED)
             .addFilter("appId", EQ, workflowExecutionInterrupt.getAppId())
             .addFilter("executionUuid", EQ, workflowExecutionInterrupt.getExecutionUuid())
-            .addFilter("status", Operator.IN, WAITING)
+            .addFilter("status", IN, WAITING)
             .addFilter("createdAt", GT, workflowExecution.getCreatedAt())
             .build();
 
@@ -1158,7 +1162,7 @@ public class StateMachineExecutor {
               .withLimit(PageRequest.UNLIMITED)
               .addFilter("appId", EQ, workflowExecutionInterrupt.getAppId())
               .addFilter("executionUuid", EQ, workflowExecutionInterrupt.getExecutionUuid())
-              .addFilter("status", Operator.IN, ABORTING)
+              .addFilter("status", IN, ABORTING)
               .addFilter("createdAt", GT, workflowExecution.getCreatedAt())
               .build();
 
@@ -1259,7 +1263,7 @@ public class StateMachineExecutor {
             .withLimit(PageRequest.UNLIMITED)
             .addFilter("appId", EQ, workflowExecutionInterrupt.getAppId())
             .addFilter("executionUuid", EQ, workflowExecutionInterrupt.getExecutionUuid())
-            .addFilter("status", Operator.IN, Arrays.copyOf(statuses, statuses.length, Object[].class))
+            .addFilter("status", IN, Arrays.copyOf(statuses, statuses.length, Object[].class))
             .addFilter("createdAt", GT, workflowExecution.getCreatedAt())
             .addFieldsIncluded("uuid", "stateType")
             .build();
@@ -1322,8 +1326,8 @@ public class StateMachineExecutor {
             .withLimit(PageRequest.UNLIMITED)
             .addFilter("appId", EQ, workflowExecutionInterrupt.getAppId())
             .addFilter("executionUuid", EQ, workflowExecutionInterrupt.getExecutionUuid())
-            .addFilter("parentInstanceId", Operator.IN, parentInstanceIds.toArray())
-            .addFilter("status", Operator.IN, NEW, QUEUED, STARTING, RUNNING, PAUSED, PAUSING, WAITING)
+            .addFilter("parentInstanceId", IN, parentInstanceIds.toArray())
+            .addFilter("status", IN, NEW, QUEUED, STARTING, RUNNING, PAUSED, PAUSING, WAITING)
             .addFilter("createdAt", GT, workflowExecution.getCreatedAt())
             .build();
 
