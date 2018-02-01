@@ -613,8 +613,11 @@ public class StateMachineExecutor {
                         .usingJobData("correlationId", resumeId)
                         .usingJobData("executionStatus", SUCCESS.name())
                         .build();
-    Trigger trigger =
-        TriggerBuilder.newTrigger().withIdentity(resumeId).startAt(new Date(wakeupTs)).forJob(job).build();
+    Trigger trigger = TriggerBuilder.newTrigger()
+                          .withIdentity(resumeId, Constants.WAIT_RESUME_GROUP)
+                          .startAt(new Date(wakeupTs))
+                          .forJob(job)
+                          .build();
     jobScheduler.scheduleJob(job, trigger);
 
     logger.info("ExecutionWaitCallback job scheduled - waitInterval: {}", waitInterval);
