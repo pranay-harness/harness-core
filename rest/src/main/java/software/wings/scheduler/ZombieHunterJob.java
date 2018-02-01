@@ -113,7 +113,7 @@ public class ZombieHunterJob implements Job {
   public static Duration cycle = interval.multipliedBy(zombieTypes.size());
 
   public static long nextHuntingExpedition(int index) {
-    final long hunting_cycles = (today.getTimeInMillis() - OUTBREAK_DATE) / interval.toMillis();
+    final long hunting_cycles = (today.getTimeInMillis() - OUTBREAK_DATE) / cycle.toMillis();
     final long current_hunting_cycle = OUTBREAK_DATE + hunting_cycles * cycle.toMillis();
     long hunting_squad = current_hunting_cycle + interval.toMillis() * index;
     if (hunting_squad < today.getTimeInMillis()) {
