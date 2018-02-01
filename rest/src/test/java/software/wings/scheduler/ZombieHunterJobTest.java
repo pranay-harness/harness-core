@@ -31,7 +31,8 @@ public class ZombieHunterJobTest extends WingsBaseTest {
     for (int i = 0; i < ZombieHunterJob.zombieTypes.size(); i++) {
       final long huntingExpedition = ZombieHunterJob.nextHuntingExpedition(i);
       assertThat(huntingExpedition).isGreaterThan(ZombieHunterJob.today.getTimeInMillis());
-      assertThat(huntingExpedition - ZombieHunterJob.today.getTimeInMillis() < ZombieHunterJob.cycle.toMillis());
+      assertThat(huntingExpedition - ZombieHunterJob.today.getTimeInMillis())
+          .isLessThan(ZombieHunterJob.cycle.toMillis());
     }
   }
 
