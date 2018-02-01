@@ -9,7 +9,6 @@ import org.quartz.DisallowConcurrentExecution;
 import org.quartz.Job;
 import org.quartz.JobExecutionContext;
 import org.quartz.JobExecutionException;
-import org.quartz.PersistJobDataAfterExecution;
 import org.quartz.SchedulerException;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -47,7 +46,6 @@ import java.util.concurrent.TimeoutException;
 /**
  * Created by rsingh on 9/11/17.
  */
-@PersistJobDataAfterExecution
 @DisallowConcurrentExecution
 public class MetricAnalysisJob implements Job {
   @Inject private MetricDataAnalysisService analysisService;
@@ -423,7 +421,7 @@ public class MetricAnalysisJob implements Job {
         final MetricDataAnalysisResponse response =
             MetricDataAnalysisResponse.builder().stateExecutionData(executionData).build();
         response.setExecutionStatus(status);
-        logger.info("Notifying state id:  {} , corr id: {}", context.getStateExecutionId(), context.getCorrelationId());
+        logger.info("Notifying state id: {} , corr id: {}", context.getStateExecutionId(), context.getCorrelationId());
         waitNotifyEngine.notify(context.getCorrelationId(), response);
       }
     }

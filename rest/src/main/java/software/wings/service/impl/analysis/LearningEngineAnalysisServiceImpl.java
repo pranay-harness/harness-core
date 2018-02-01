@@ -10,6 +10,8 @@ import com.google.inject.Inject;
 
 import org.apache.commons.lang3.StringUtils;
 import org.mongodb.morphia.FindAndModifyOptions;
+import org.mongodb.morphia.query.FindOptions;
+import org.mongodb.morphia.query.MorphiaIterator;
 import org.mongodb.morphia.query.Query;
 import org.mongodb.morphia.query.UpdateOperations;
 import org.slf4j.Logger;
@@ -27,6 +29,7 @@ import software.wings.sm.ExecutionStatus;
 
 import java.io.IOException;
 import java.io.InputStream;
+import java.util.Optional;
 import java.util.Properties;
 import java.util.concurrent.TimeUnit;
 
@@ -169,6 +172,28 @@ public class LearningEngineAnalysisServiceImpl implements LearningEngineService 
             .set("executionStatus", ExecutionStatus.SUCCESS);
 
     wingsPersistence.update(query, updateOperations);
+  }
+
+  @Override
+  public Optional<LearningEngineAnalysisTask> earliestQueued() {
+    MorphiaIterator<LearningEngineAnalysisTask, LearningEngineAnalysisTask> task =
+        wingsPersistence.createQuery(LearningEngineAnalysisTask.class)
+            .field("executionStatus")
+            .equal(ExecutionStatus.QUEUED)
+            .order("-createdAt")
+            .fetch(new FindOptions().limit(1));
+    if (!task.hasNext()) {
+      return Optional.empty();
+    }
+
+    return Optional.of(task.next());
+  }
+
+  @Override
+  public void cleanup(long keepAfterTimeMillis) {
+    Query<LearningEngineAnalysisTask> query =
+        wingsPersistence.createQuery(LearningEngineAnalysisTask.class).field("createdAt").lessThan(keepAfterTimeMillis);
+    wingsPersistence.delete(query);
   }
 
   @Override

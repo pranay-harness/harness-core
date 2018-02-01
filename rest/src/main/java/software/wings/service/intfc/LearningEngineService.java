@@ -7,6 +7,8 @@ import software.wings.service.impl.newrelic.LearningEngineAnalysisTask;
 import software.wings.service.intfc.analysis.ClusterLevel;
 import software.wings.sm.ExecutionStatus;
 
+import java.util.Optional;
+
 /**
  * Created by rsingh on 1/9/18.
  */
@@ -27,4 +29,8 @@ public interface LearningEngineService {
   void initializeServiceSecretKeys();
 
   String getServiceSecretKey(ServiceType serviceType);
+
+  void cleanup(long keepAfterTimeMillis);
+
+  Optional<LearningEngineAnalysisTask> earliestQueued();
 }
