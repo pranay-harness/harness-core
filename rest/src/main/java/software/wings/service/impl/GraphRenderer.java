@@ -238,10 +238,8 @@ public class GraphRenderer {
       if (elements == null) {
         elements = parentIdElementsMap.get(node.getId()).keySet();
       }
-      int i = 0;
       for (String element : elements) {
         generateElement(instanceIdMap, nodeIdMap, prevInstanceIdMap, parentIdElementsMap, node, group, element);
-        i++;
       }
     }
 

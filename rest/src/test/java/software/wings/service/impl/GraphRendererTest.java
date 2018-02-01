@@ -14,6 +14,7 @@ import static software.wings.sm.StateType.PHASE;
 import static software.wings.sm.StateType.PHASE_STEP;
 import static software.wings.sm.StateType.REPEAT;
 
+import com.google.common.collect.ImmutableMap;
 import com.google.inject.Inject;
 
 import org.junit.Test;
@@ -189,5 +190,27 @@ public class GraphRendererTest extends WingsBaseTest {
       assertThat(group.getElements().get(0)).isEqualTo(element);
       assertThat(element.getNext()).isEqualTo(next);
     }
+  }
+
+  @Test
+  public void testConvertToNode() {
+    final StateExecutionInstance instance = aStateExecutionInstance()
+                                                .withStateName("state name")
+                                                .withUuid("uuid")
+                                                .withStateType(PHASE_STEP.name())
+                                                .withContextTransition(true)
+                                                .withStatus(SUCCESS)
+                                                .build();
+
+    instance.setStateParams(ImmutableMap.of("key", "value"));
+
+    Node node = graphRenderer.convertToNode(instance);
+
+    assertThat(node.getId()).isEqualTo(instance.getUuid());
+    assertThat(node.getName()).isEqualTo(instance.getStateName());
+    assertThat(node.getType()).isEqualTo(instance.getStateType());
+    assertThat(node.getRollback()).isEqualTo(instance.isRollback());
+    assertThat(node.getStatus()).isEqualTo(instance.getStatus().name());
+    assertThat(node.getProperties()).isEqualTo(instance.getStateParams());
   }
 }
