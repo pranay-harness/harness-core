@@ -9,6 +9,7 @@ import software.wings.beans.ErrorCode;
 import software.wings.beans.GitConfig;
 import software.wings.beans.yaml.GitCommand.GitCommandType;
 import software.wings.beans.yaml.GitCommandExecutionResponse;
+import software.wings.beans.yaml.GitCommandExecutionResponse.GitCommandExecutionResponseBuilder;
 import software.wings.beans.yaml.GitCommandExecutionResponse.GitCommandStatus;
 import software.wings.beans.yaml.GitCommitAndPushResult;
 import software.wings.beans.yaml.GitCommitRequest;
@@ -81,19 +82,17 @@ public class GitCommandTask extends AbstractDelegateRunnableTask {
               .errorMessage("Git Operation not supported")
               .build();
       }
-    } catch (WingsException ex) {
-      logger.error("Exception in processing GitTask", ex);
-      return GitCommandExecutionResponse.builder()
-          .gitCommandStatus(GitCommandStatus.FAILURE)
-          .errorCode(ErrorCode.GIT_CONNECTION_ERROR)
-          .errorMessage(ex.getMessage())
-          .build();
     } catch (Exception ex) {
       logger.error("Exception in processing GitTask", ex);
-      return GitCommandExecutionResponse.builder()
-          .gitCommandStatus(GitCommandStatus.FAILURE)
-          .errorMessage(ex.getMessage())
-          .build();
+      GitCommandExecutionResponseBuilder builder = GitCommandExecutionResponse.builder()
+                                                       .gitCommandStatus(GitCommandStatus.FAILURE)
+                                                       .errorMessage(ex.getMessage());
+
+      if (ex instanceof WingsException
+          && ((WingsException) ex).getParams().containsKey(ErrorCode.GIT_CONNECTION_ERROR.name())) {
+        builder.errorCode(ErrorCode.GIT_CONNECTION_ERROR);
+      }
+      return builder.build();
     }
   }
 }
