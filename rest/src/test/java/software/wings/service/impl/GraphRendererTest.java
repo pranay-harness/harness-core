@@ -5,11 +5,13 @@ import static java.util.function.Function.identity;
 import static java.util.stream.Collectors.toMap;
 import static org.assertj.core.api.Assertions.assertThat;
 import static software.wings.api.HostElement.Builder.aHostElement;
+import static software.wings.beans.Graph.Node.Builder.aNode;
 import static software.wings.common.UUIDGenerator.getUuid;
 import static software.wings.sm.ExecutionStatus.SUCCESS;
 import static software.wings.sm.StateExecutionInstance.Builder.aStateExecutionInstance;
 import static software.wings.sm.StateType.COMMAND;
 import static software.wings.sm.StateType.PHASE;
+import static software.wings.sm.StateType.PHASE_STEP;
 import static software.wings.sm.StateType.REPEAT;
 
 import com.google.inject.Inject;
@@ -20,6 +22,7 @@ import org.slf4j.LoggerFactory;
 import software.wings.WingsBaseTest;
 import software.wings.beans.Graph.Group;
 import software.wings.beans.Graph.Node;
+import software.wings.common.Constants;
 import software.wings.sm.StateExecutionInstance;
 
 import java.util.List;
@@ -119,5 +122,72 @@ public class GraphRendererTest extends WingsBaseTest {
 
     assertThat(repeatChildElements.get(0).getNext().getName()).isEqualTo(host1.getStateName());
     assertThat(repeatChildElements.get(1).getNext().getName()).isEqualTo(host2.getStateName());
+  }
+
+  private Node getProvisionNode() {
+    final StateExecutionInstance provision = aStateExecutionInstance()
+                                                 .withStateName(Constants.PROVISION_NODE_NAME)
+                                                 .withUuid("provision")
+                                                 .withStateType(PHASE_STEP.name())
+                                                 .withContextTransition(true)
+                                                 .withStatus(SUCCESS)
+                                                 .build();
+
+    final StateExecutionInstance element = aStateExecutionInstance()
+                                               .withStateName("first")
+                                               .withUuid("first")
+                                               .withStateType(COMMAND.name())
+                                               .withContextTransition(true)
+                                               .withStatus(SUCCESS)
+                                               .withParentInstanceId(provision.getUuid())
+                                               .build();
+
+    List<StateExecutionInstance> stateExecutionInstances = asList(provision, element);
+    Map<String, StateExecutionInstance> stateExecutionInstanceMap =
+        stateExecutionInstances.stream().collect(toMap(StateExecutionInstance::getUuid, identity()));
+
+    return graphRenderer.generateHierarchyNode(stateExecutionInstanceMap, provision.getStateName());
+  }
+
+  @Test
+  public void testIsProvisionNode() {
+    assertThat(GraphRenderer.isProvisionNode(getProvisionNode())).isTrue();
+  }
+
+  @Test
+  public void testAdjustProvisionNode() {
+    GraphRenderer.adjustProvisionNode((Node) null);
+    GraphRenderer.adjustProvisionNode((Group) null);
+
+    {
+      Node node = aNode().build();
+      GraphRenderer.adjustProvisionNode(node);
+    }
+
+    {
+      Node provisionNode = getProvisionNode();
+      final Node element = provisionNode.getGroup().getElements().get(0);
+
+      Node node = aNode().build();
+      node.setNext(provisionNode);
+
+      GraphRenderer.adjustProvisionNode(node);
+      assertThat(node.getNext()).isEqualTo(element);
+    }
+
+    {
+      Node provisionNode = getProvisionNode();
+      Node next = aNode().withName("next").build();
+      provisionNode.setNext(next);
+
+      final Node element = provisionNode.getGroup().getElements().get(0);
+
+      final Group group = new Group();
+      group.setElements(asList(provisionNode));
+
+      GraphRenderer.adjustProvisionNode(group);
+      assertThat(group.getElements().get(0)).isEqualTo(element);
+      assertThat(element.getNext()).isEqualTo(next);
+    }
   }
 }
