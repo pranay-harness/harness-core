@@ -352,7 +352,6 @@ public class Graph {
     private Object executionSummary;
     private Object executionDetails;
     private String detailsReference;
-    private boolean expanded;
     private boolean origin;
 
     private boolean valid = true;
@@ -381,7 +380,6 @@ public class Graph {
                             .withWidth(getWidth())
                             .withHeight(getHeight())
                             .withTemplateExpressions(getTemplateExpressions())
-                            .withExpanded(isExpanded())
                             .withValid(isValid())
                             .withValidationMessage(getValidationMessage())
                             .withOrigin(isOrigin())
@@ -612,24 +610,6 @@ public class Graph {
      */
     public void setDetailsReference(String detailsReference) {
       this.detailsReference = detailsReference;
-    }
-
-    /**
-     * Is expanded boolean.
-     *
-     * @return the boolean
-     */
-    public boolean isExpanded() {
-      return expanded;
-    }
-
-    /**
-     * Sets expanded.
-     *
-     * @param expanded the expanded
-     */
-    public void setExpanded(boolean expanded) {
-      this.expanded = expanded;
     }
 
     public List<NameValuePair> getVariableOverrides() {
@@ -868,7 +848,6 @@ public class Graph {
           .add("executionSummary", executionSummary)
           .add("executionDetails", executionDetails)
           .add("detailsReference", detailsReference)
-          .add("expanded", expanded)
           .add("properties", properties)
           .add("next", next == null ? null : next.getId())
           .add("group", group == null ? null : group.getId())

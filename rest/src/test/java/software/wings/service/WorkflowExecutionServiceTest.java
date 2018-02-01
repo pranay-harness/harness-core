@@ -423,7 +423,7 @@ public class WorkflowExecutionServiceTest extends WingsBaseTest {
              eq(APP_ID), eq(ENV_ID), any(StateMachine.class), any(PageResponse.class)))
         .thenReturn(countsByStatuses);
     Node node = Node.Builder.aNode().build();
-    when(graphRenderer.generateHierarchyNode(stateExecutionInstanceMap, null, null, true, true)).thenReturn(node);
+    when(graphRenderer.generateHierarchyNode(stateExecutionInstanceMap, null)).thenReturn(node);
     PageResponse<WorkflowExecution> pageResponse2 =
         workflowExecutionService.listExecutions(pageRequest, true, true, false, true);
     assertThat(pageResponse2)
@@ -437,7 +437,7 @@ public class WorkflowExecutionServiceTest extends WingsBaseTest {
     verify(updateOperations, times(1)).set("breakdown", countsByStatuses);
     verify(stateMachineExecutionSimulator, times(2))
         .getStatusBreakdown(eq(APP_ID), eq(ENV_ID), any(StateMachine.class), any(PageResponse.class));
-    verify(graphRenderer, times(1)).generateHierarchyNode(stateExecutionInstanceMap, null, null, true, true);
+    verify(graphRenderer, times(1)).generateHierarchyNode(stateExecutionInstanceMap, null);
   }
 
   /**
