@@ -1168,10 +1168,10 @@ public class AwsHelperService {
   public void setAutoScalingGroupCapacityAndWaitForInstancesReadyState(AwsConfig awsConfig,
       List<EncryptedDataDetail> encryptionDetails, String region, String autoScalingGroupName, Integer desiredCapacity,
       ManagerExecutionLogCallback executionLogCallback, Integer autoScalingSteadyStateTimeout) {
+    encryptionService.decrypt(awsConfig, encryptionDetails);
     AmazonAutoScalingClient amazonAutoScalingClient =
         getAmazonAutoScalingClient(Regions.fromName(region), awsConfig.getAccessKey(), awsConfig.getSecretKey());
     try {
-      encryptionService.decrypt(awsConfig, encryptionDetails);
       executionLogCallback.saveExecutionLog(
           String.format("Set AutoScaling Group: [%s] desired capacity to [%s]", autoScalingGroupName, desiredCapacity));
       amazonAutoScalingClient.setDesiredCapacity(new SetDesiredCapacityRequest()
