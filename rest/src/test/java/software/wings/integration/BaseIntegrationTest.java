@@ -68,6 +68,7 @@ import software.wings.beans.User;
 import software.wings.dl.WingsPersistence;
 import software.wings.service.intfc.AccountService;
 import software.wings.service.intfc.AppService;
+import software.wings.service.intfc.LearningEngineService;
 import software.wings.service.intfc.SettingsService;
 import software.wings.utils.JsonSubtypeResolver;
 
@@ -113,6 +114,7 @@ public abstract class BaseIntegrationTest extends WingsBaseTest {
   @Inject private AccountService accountService;
   @Inject protected SettingsService settingsService;
   @Inject protected AppService appService;
+  @Inject protected LearningEngineService learningEngineService;
 
   protected static final char[] JENKINS_PASSWORD = "admin".toCharArray();
   protected static final String JENKINS_URL = "http://ec2-34-207-79-21.compute-1.amazonaws.com:8080/";
