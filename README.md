@@ -56,15 +56,7 @@ sudo apt install oracle-java8-unlimited-jce-policy
    (Optional) Follow https://help.github.com/articles/adding-a-new-ssh-key-to-your-github-account/
    to setup your SSH keys. You can then use SSH to interact with git
 
-2. Start mongo db (mongod)
-   You may need to create a blank mongo db directory to do this. If mongod fails:
-   `sudo mkdir /data`
-   `sudo mkdir /data/db`
-   `sudo chmod 777 /data/db`
-   You can also do
-   `sudo mkdir -p /data/db`
-   `sudo chown -R <user name> /data`
-3. Go to `portal` directory and run
+2. Go to `portal` directory and run
 
    `mvn clean install`
 
