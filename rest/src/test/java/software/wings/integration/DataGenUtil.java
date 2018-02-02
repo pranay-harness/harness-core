@@ -169,6 +169,7 @@ public class DataGenUtil extends BaseIntegrationTest {
             .secretKey("7E/PobSOEI6eiNW8TUS1YEcvQe5F4k2yGlobCZVS")
             .kmsArn("arn:aws:kms:us-east-1:830767422336:key/6b64906a-b7ab-4f69-8159-e20fef1f204d")
             .build());
+    learningEngineService.initializeServiceSecretKeys();
   }
 
   private void verifyAccountAndApplicationSetup(List<Application> apps) {

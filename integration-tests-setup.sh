@@ -102,3 +102,14 @@ if [[ $foundRegisteredDelegate -ne 0 ]] ; then
   echo 'Delegate registration failed';
   exit $foundRegisteredDelegate
 fi
+
+#build and start learning engine
+export HOSTNAME
+echo $HOSTNAME
+cd python/splunk_intelligence && make dist && docker build -t le_local .
+serviceSecret=`mongo harness --eval "db.serviceSecrets.find({ }, { serviceSecret: 1, _id: 0})"| grep serviceSecret | awk '{print $4}' | tr -d '"'`
+echo $serviceSecret
+server_url=https://$HOSTNAME:9090
+echo $server_url
+docker run -d -e server_url=$server_url -e service_secret=$serviceSecret -e https_port=10800  -e learning_env=integration-tests le_local
+

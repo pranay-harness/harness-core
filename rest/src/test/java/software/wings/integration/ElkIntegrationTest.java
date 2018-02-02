@@ -19,7 +19,6 @@ import com.google.inject.Inject;
 
 import org.assertj.core.util.Sets;
 import org.junit.Before;
-import org.junit.Ignore;
 import org.junit.Test;
 import org.mongodb.morphia.query.Query;
 import org.quartz.JobDataMap;
@@ -43,6 +42,7 @@ import software.wings.service.impl.analysis.LogMLAnalysisRecord;
 import software.wings.service.impl.analysis.LogMLAnalysisSummary;
 import software.wings.service.impl.analysis.LogMLClusterGenerator;
 import software.wings.service.impl.analysis.LogRequest;
+import software.wings.service.impl.newrelic.LearningEngineAnalysisTask;
 import software.wings.service.intfc.DelegateService;
 import software.wings.service.intfc.LearningEngineService;
 import software.wings.service.intfc.analysis.AnalysisService;
@@ -99,6 +99,7 @@ public class ElkIntegrationTest extends BaseIntegrationTest {
     deleteAllDocuments(asList(LogDataRecord.class));
     deleteAllDocuments(asList(WorkflowExecution.class));
     deleteAllDocuments(asList(Workflow.class));
+    deleteAllDocuments(asList(LearningEngineAnalysisTask.class));
     hosts.clear();
     hosts.add("ip-172-31-2-144");
     hosts.add("ip-172-31-4-253");
@@ -114,7 +115,6 @@ public class ElkIntegrationTest extends BaseIntegrationTest {
   }
 
   @Test
-  @Ignore
   public void testFirstLevelClustering() throws Exception {
     for (String host : hosts) {
       File file = new File(getClass().getClassLoader().getResource("./elk/" + host + ".json").getFile());
@@ -138,6 +138,7 @@ public class ElkIntegrationTest extends BaseIntegrationTest {
       wingsPersistence.saveIgnoringDuplicateKeys(logDataRecords);
 
       for (int logCollectionMinute : recordsByMinute.keySet()) {
+        Thread.sleep(TimeUnit.SECONDS.toMillis(1));
         final LogClusterContext logClusterContext =
             LogClusterContext.builder()
                 .accountId(accountId)
@@ -160,19 +161,26 @@ public class ElkIntegrationTest extends BaseIntegrationTest {
             new LogRequest(query, applicationId, stateExecutionId, workflowId, serviceId,
                 Sets.newHashSet(Collections.singletonList(host)), logCollectionMinute))
             .run();
-      }
 
-      for (int logCollectionMinute : recordsByMinute.keySet()) {
         final LogRequest logRequest = new LogRequest(query, applicationId, stateExecutionId, workflowId, serviceId,
             Collections.singleton(host), logCollectionMinute);
 
         WebTarget getTarget = client.target(API_BASE + "/" + LogAnalysisResource.ELK_RESOURCE_BASE_URL
             + LogAnalysisResource.ANALYSIS_STATE_GET_LOG_URL + "?accountId=" + accountId + "&clusterLevel="
             + ClusterLevel.L1.name() + "&compareCurrent=true&workflowExecutionId=" + workflowExecutionId);
-        RestResponse<List<LogDataRecord>> restResponse = getRequestBuilderWithAuthHeader(getTarget).post(
-            entity(logRequest, APPLICATION_JSON), new GenericType<RestResponse<List<LogDataRecord>>>() {});
-        assertEquals(
-            "failed for " + host + " for minute " + logCollectionMinute, 15, restResponse.getResource().size());
+        boolean succeess = false;
+        for (int i = 0; i < 10; i++) {
+          RestResponse<List<LogDataRecord>> restResponse = getRequestBuilderWithAuthHeader(getTarget).post(
+              entity(logRequest, APPLICATION_JSON), new GenericType<RestResponse<List<LogDataRecord>>>() {});
+          if (restResponse.getResource().size() == 15) {
+            succeess = true;
+            break;
+          } else {
+            Thread.sleep(TimeUnit.SECONDS.toMillis(1));
+          }
+        }
+
+        assertTrue("failed for " + host + " for minute " + logCollectionMinute, succeess);
       }
     }
   }
@@ -277,7 +285,6 @@ public class ElkIntegrationTest extends BaseIntegrationTest {
   }
 
   @Test
-  @Ignore
   public void controlButNoTestData() throws IOException, JobExecutionException, InterruptedException {
     StateExecutionInstance stateExecutionInstance = new StateExecutionInstance();
     String prevStateExecutionId = UUID.randomUUID().toString();
@@ -384,6 +391,7 @@ public class ElkIntegrationTest extends BaseIntegrationTest {
     new LogAnalysisTask(analysisService, waitNotifyEngine, delegateService, analysisContext, jobExecutionContext,
         delegateTaskId, learningEngineService)
         .run();
+    Thread.sleep(TimeUnit.SECONDS.toMillis(20));
     LogMLAnalysisSummary logMLAnalysisSummary =
         analysisService.getAnalysisSummary(stateExecutionId, appId, StateType.SPLUNKV2);
     assertEquals(logMLAnalysisSummary.getControlClusters().size(), 1);
@@ -393,7 +401,6 @@ public class ElkIntegrationTest extends BaseIntegrationTest {
   }
 
   @Test
-  @Ignore
   public void testButNoControlData() throws IOException, JobExecutionException, InterruptedException {
     StateExecutionInstance stateExecutionInstance = new StateExecutionInstance();
     String prevStateExecutionId = UUID.randomUUID().toString();
@@ -497,13 +504,14 @@ public class ElkIntegrationTest extends BaseIntegrationTest {
     when(jobExecutionContext.getScheduler()).thenReturn(mock(Scheduler.class));
     when(jobExecutionContext.getJobDetail()).thenReturn(mock(JobDetail.class));
 
-    new LogAnalysisTask(analysisService, waitNotifyEngine, delegateService, analysisContext, jobExecutionContext,
+    new LogAnalysisTestJob(analysisService, waitNotifyEngine, delegateService, analysisContext, jobExecutionContext,
         delegateTaskId, learningEngineService)
         .run();
+    Thread.sleep(TimeUnit.SECONDS.toMillis(10));
     LogMLAnalysisSummary logMLAnalysisSummary =
         analysisService.getAnalysisSummary(stateExecutionId, appId, StateType.SUMO);
-    assertEquals(logMLAnalysisSummary.getAnalysisSummaryMessage(),
-        "No baseline data for the given queries. This will be baseline for the next run.");
+    assertEquals("No baseline data for the given queries. This will be baseline for the next run.",
+        logMLAnalysisSummary.getAnalysisSummaryMessage());
     LogMLAnalysisRecord logAnalysisRecord =
         analysisService.getLogAnalysisRecords(appId, stateExecutionId, query, StateType.SUMO, logCollectionMinute);
     assertFalse(logAnalysisRecord.isBaseLineCreated());
@@ -621,5 +629,24 @@ public class ElkIntegrationTest extends BaseIntegrationTest {
     LogMLAnalysisRecord logAnalysisRecord =
         analysisService.getLogAnalysisRecords(appId, stateExecutionId, query, StateType.ELK, logCollectionMinute);
     assertNotNull(logAnalysisRecord);
+  }
+
+  private static class LogAnalysisTestJob extends LogAnalysisTask {
+    LogAnalysisTestJob(AnalysisService analysisService, WaitNotifyEngine waitNotifyEngine,
+        DelegateService delegateService, AnalysisContext context, JobExecutionContext jobExecutionContext,
+        String delegateTaskId, LearningEngineService learningEngineService) {
+      super(analysisService, waitNotifyEngine, delegateService, context, jobExecutionContext, delegateTaskId,
+          learningEngineService);
+    }
+
+    @Override
+    protected void preProcess(int logAnalysisMinute, String query, Set<String> nodes) {
+      super.preProcess(logAnalysisMinute, query, nodes);
+      try {
+        Thread.sleep(TimeUnit.SECONDS.toMillis(10));
+      } catch (InterruptedException e) {
+        e.printStackTrace();
+      }
+    }
   }
 }
