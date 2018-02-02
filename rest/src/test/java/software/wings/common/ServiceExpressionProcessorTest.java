@@ -94,7 +94,7 @@ public class ServiceExpressionProcessorTest {
 
     ServiceResourceService serviceResourceService = mock(ServiceResourceService.class);
 
-    PageResponse<Service> res = new PageResponse<Service>();
+    PageResponse<Service> res = new PageResponse<>();
     res.setResponse(services);
 
     when(serviceResourceService.list(any(PageRequest.class), eq(false), eq(true))).thenReturn(res);
@@ -145,7 +145,7 @@ public class ServiceExpressionProcessorTest {
     when(context.getApp()).thenReturn(Application.Builder.anApplication().withUuid(appId).build());
     when(context.getContextElement(ContextElementType.STANDARD)).thenReturn(aWorkflowStandardParams().build());
 
-    PageResponse<Service> res = new PageResponse<Service>();
+    PageResponse<Service> res = new PageResponse<>();
     res.setResponse(services);
 
     when(serviceResourceService.list(any(PageRequest.class), eq(false), eq(true))).thenReturn(res);
@@ -201,7 +201,7 @@ public class ServiceExpressionProcessorTest {
     when(context.getContextElement(ContextElementType.SERVICE)).thenReturn(serviceCElement);
     when(context.getContextElement(ContextElementType.STANDARD)).thenReturn(aWorkflowStandardParams().build());
 
-    PageResponse<Service> res = new PageResponse<Service>();
+    PageResponse<Service> res = new PageResponse<>();
     res.setResponse(services);
     when(serviceResourceService.list(any(PageRequest.class), eq(false), eq(true))).thenReturn(res);
 

@@ -55,7 +55,7 @@ public class FileSystemAwareProcessShell extends AbstractLoggingBean implements 
    * @param command the command
    */
   public FileSystemAwareProcessShell(Collection<String> command) {
-    this.command = new ArrayList<String>(ValidateUtils.checkNotNullAndNotEmpty(command, "No process shell command(s)"));
+    this.command = new ArrayList<>(ValidateUtils.checkNotNullAndNotEmpty(command, "No process shell command(s)"));
     this.cmdValue = GenericUtils.join(command, ' ');
   }
 

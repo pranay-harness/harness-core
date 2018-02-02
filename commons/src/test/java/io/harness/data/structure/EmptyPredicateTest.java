@@ -113,7 +113,7 @@ public class EmptyPredicateTest extends CategoryTest {
     assertTrue(isEmpty(collection));
     assertFalse(isNotEmpty(collection));
 
-    ImplementsMap<String, String> implMap = new ImplementsMap<String, String>(true);
+    ImplementsMap<String, String> implMap = new ImplementsMap<>(true);
     assertTrue(isEmpty(implMap));
     assertFalse(isNotEmpty(implMap));
 
@@ -179,7 +179,7 @@ public class EmptyPredicateTest extends CategoryTest {
     assertFalse(isEmpty(collection));
     assertTrue(isNotEmpty(collection));
 
-    ImplementsMap<String, String> implMap = new ImplementsMap<String, String>(false);
+    ImplementsMap<String, String> implMap = new ImplementsMap<>(false);
     assertFalse(isEmpty(implMap));
     assertTrue(isNotEmpty(implMap));
 
