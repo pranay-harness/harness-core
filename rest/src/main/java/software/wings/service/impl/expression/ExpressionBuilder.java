@@ -136,20 +136,20 @@ public abstract class ExpressionBuilder {
   }
 
   protected Set<String> getStateTypeExpressions(StateType stateType) {
-    Set<String> expressions = new TreeSet<>(asList(START_TS, END_TS, STATUS, ERROR_MSG));
+    Set<String> expressions = new TreeSet<>(asList(START_TS, END_TS, STATUS, ERROR_MSG, DEPLOYMENT_URL));
     switch (stateType) {
       case SHELL_SCRIPT:
         expressions.addAll(asList(WINGS_RUNTIME_PATH, WINGS_STAGING_PATH, WINGS_BACKUP_PATH));
         break;
       case HTTP:
         expressions.addAll(asList(HTTP_URL, HTTP_RESPONSE_METHOD, HTTP_RESPONSE_CODE, HTTP_RESPONSE_BODY,
-            ASSERTION_STATEMENT, ASSERTION_STATUS, XPATH, JSONPATH, DEPLOYMENT_URL));
+            ASSERTION_STATEMENT, ASSERTION_STATUS, XPATH, JSONPATH));
         break;
       case APPROVAL:
         expressions.addAll(asList(APPROVEDBY_NAME, APPROVEDBY_EMAIL));
         break;
       case EMAIL:
-        expressions.addAll(asList(EMAIl_TO_ADDRESS, EMAIL_CC_ADDRESS, EMAIL_SUBJECT, EMAIL_BODY, DEPLOYMENT_URL));
+        expressions.addAll(asList(EMAIl_TO_ADDRESS, EMAIL_CC_ADDRESS, EMAIL_SUBJECT, EMAIL_BODY));
         break;
       case COMMAND:
         expressions.addAll(asList(WINGS_RUNTIME_PATH, WINGS_STAGING_PATH, WINGS_BACKUP_PATH));
