@@ -18,6 +18,7 @@ import org.eclipse.jgit.api.errors.InvalidRemoteException;
 import org.eclipse.jgit.api.errors.RefAlreadyExistsException;
 import org.eclipse.jgit.diff.DiffEntry;
 import org.eclipse.jgit.errors.NoRemoteRepositoryException;
+import org.eclipse.jgit.errors.TransportException;
 import org.eclipse.jgit.lib.ObjectId;
 import org.eclipse.jgit.lib.ObjectLoader;
 import org.eclipse.jgit.lib.ObjectReader;
@@ -90,6 +91,7 @@ public class GitClientImpl implements GitClient {
       return GitCloneResult.builder().build();
     } catch (GitAPIException ex) {
       logger.error("Exception: ", ex);
+      checkIfTransportException(ex);
       throw new WingsException(ErrorCode.YAML_GIT_SYNC_ERROR).addParam("message", "Error in cloning repo");
     }
   }
@@ -427,12 +429,19 @@ public class GitClientImpl implements GitClient {
     } catch (GitAPIException ex) {
       logger.info("Hard reset failed for branch [{}]", gitConfig.getBranch());
       logger.error("Exception: ", ex);
-      // there is no point in continuing to clone() here, as in that case it would fail with error "local repo already
-      // exists", that would hide actual exception, "error in connection". So throwing exception from here
-      throw new WingsException("Error in connection to git: " + ex.getMessage());
+      checkIfTransportException(ex);
     }
 
     logger.info("Repo doesn't exist. Do a fresh clone");
     clone(gitConfig);
+  }
+
+  private void checkIfTransportException(GitAPIException ex) {
+    // TransportException is subclass of GitAPIException. This is thrown when there is any issue in connecting to git
+    // repo, like invalid authorization and invalid repo
+    if (ex.getCause() instanceof TransportException) {
+      throw new WingsException(ErrorCode.GIT_CONNECTION_ERROR + ":" + ex.getMessage(), WingsException.ALERTING)
+          .addParam(ErrorCode.GIT_CONNECTION_ERROR.name(), ErrorCode.GIT_CONNECTION_ERROR);
+    }
   }
 }

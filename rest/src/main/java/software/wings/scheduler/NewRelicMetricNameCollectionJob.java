@@ -12,6 +12,7 @@ import org.slf4j.LoggerFactory;
 import software.wings.beans.DelegateTask;
 import software.wings.beans.NewRelicConfig;
 import software.wings.beans.TaskType;
+import software.wings.common.UUIDGenerator;
 import software.wings.service.impl.newrelic.NewRelicDataCollectionInfo;
 import software.wings.service.impl.newrelic.NewRelicMetricNames;
 import software.wings.service.impl.newrelic.NewRelicMetricNames.WorkflowInfo;
@@ -19,6 +20,9 @@ import software.wings.service.intfc.DelegateService;
 import software.wings.service.intfc.MetricDataAnalysisService;
 import software.wings.service.intfc.SettingsService;
 import software.wings.service.intfc.security.SecretManager;
+import software.wings.waitnotify.NotifyCallback;
+import software.wings.waitnotify.NotifyResponseData;
+import software.wings.waitnotify.WaitNotifyEngine;
 
 import java.util.HashMap;
 import java.util.List;
@@ -36,6 +40,7 @@ public class NewRelicMetricNameCollectionJob implements Job {
   @Inject private DelegateService delegateService;
   @Inject private SecretManager secretManager;
   @Inject private MetricDataAnalysisService metricDataAnalysisService;
+  @Inject protected WaitNotifyEngine waitNotifyEngine;
 
   @Override
   public void execute(JobExecutionContext context) {
@@ -70,6 +75,7 @@ public class NewRelicMetricNameCollectionJob implements Job {
                       .settingAttributeId(metricNames.getNewRelicConfigId())
                       .build();
               logger.info("Scheduling new relic metric name collection task {}", dataCollectionInfo);
+              String waitId = UUIDGenerator.getUuid();
               DelegateTask delegateTask =
                   aDelegateTask()
                       .withTaskType(TaskType.NEWRELIC_COLLECT_METRIC_NAMES)
@@ -79,7 +85,18 @@ public class NewRelicMetricNameCollectionJob implements Job {
                       .withEnvId(workflowInfo.getEnvId())
                       .withInfrastructureMappingId(workflowInfo.getInfraMappingId())
                       .withTimeout(TimeUnit.MINUTES.toMillis(DEFAULT_NEWRELIC_COLLECTION_TIMEOUT_MINS))
+                      .withWaitId(waitId)
                       .build();
+              waitNotifyEngine.waitForAll(new NotifyCallback() {
+                @Override
+                public void notify(Map<String, NotifyResponseData> response) {
+                  // TODO implement this
+                }
+
+                @Override
+                public void notifyError(Map<String, NotifyResponseData> response) {}
+              }, waitId);
+
               delegateService.queueTask(delegateTask);
             }
           } catch (Exception ex) {

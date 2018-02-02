@@ -18,8 +18,8 @@ import static software.wings.common.Constants.WINGS_RUNTIME_PATH;
 import static software.wings.common.Constants.WINGS_STAGING_PATH;
 import static software.wings.common.Constants.XPATH;
 import static software.wings.dl.PageRequest.Builder.aPageRequest;
+import static software.wings.sm.ContextElement.DEPLOYMENT_URL;
 import static software.wings.utils.Switch.noop;
-import static software.wings.utils.Switch.unhandled;
 
 import com.google.inject.Inject;
 
@@ -136,7 +136,7 @@ public abstract class ExpressionBuilder {
   }
 
   protected Set<String> getStateTypeExpressions(StateType stateType) {
-    Set<String> expressions = new TreeSet<>(asList(START_TS, END_TS, STATUS, ERROR_MSG));
+    Set<String> expressions = new TreeSet<>(asList(START_TS, END_TS, STATUS, ERROR_MSG, DEPLOYMENT_URL));
     switch (stateType) {
       case SHELL_SCRIPT:
         expressions.addAll(asList(WINGS_RUNTIME_PATH, WINGS_STAGING_PATH, WINGS_BACKUP_PATH));
@@ -160,12 +160,14 @@ public abstract class ExpressionBuilder {
       case AWS_LAMBDA_STATE:
       case ECS_SERVICE_SETUP:
       case JENKINS:
+      case BAMBOO:
       case KUBERNETES_SETUP:
       case NEW_RELIC_DEPLOYMENT_MARKER:
+      case KUBERNETES_DEPLOY:
         noop();
         break;
       default:
-        unhandled(stateType);
+        break;
     }
 
     return expressions;

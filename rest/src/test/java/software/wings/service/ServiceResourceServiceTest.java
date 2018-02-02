@@ -212,7 +212,7 @@ public class ServiceResourceServiceTest extends WingsBaseTest {
   public void shouldListServices() {
     PageRequest<Service> request = new PageRequest<>();
     request.addFilter("appId", APP_ID, EQ);
-    when(wingsPersistence.query(Service.class, request)).thenReturn(new PageResponse<Service>());
+    when(wingsPersistence.query(Service.class, request)).thenReturn(new PageResponse<>());
     PageRequest<ServiceCommand> serviceCommandPageRequest =
         aPageRequest().withLimit(PageRequest.UNLIMITED).addFilter("appId", EQ, APP_ID).build();
     when(wingsPersistence.query(ServiceCommand.class, serviceCommandPageRequest))
@@ -264,8 +264,7 @@ public class ServiceResourceServiceTest extends WingsBaseTest {
   @Test
   public void shouldGetService() {
     when(wingsPersistence.get(Service.class, APP_ID, SERVICE_ID)).thenReturn(serviceBuilder.but().build());
-    when(configService.getConfigFilesForEntity(APP_ID, DEFAULT_TEMPLATE_ID, SERVICE_ID))
-        .thenReturn(new ArrayList<ConfigFile>());
+    when(configService.getConfigFilesForEntity(APP_ID, DEFAULT_TEMPLATE_ID, SERVICE_ID)).thenReturn(new ArrayList<>());
     srs.get(APP_ID, SERVICE_ID);
     verify(wingsPersistence).get(Service.class, APP_ID, SERVICE_ID);
     verify(configService).getConfigFilesForEntity(APP_ID, DEFAULT_TEMPLATE_ID, SERVICE_ID);

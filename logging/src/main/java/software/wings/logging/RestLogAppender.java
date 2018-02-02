@@ -18,7 +18,7 @@ import retrofit2.converter.jackson.JacksonConverterFactory;
 
 import java.util.ArrayList;
 import java.util.List;
-import java.util.concurrent.ConcurrentLinkedQueue;
+import java.util.Queue;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
 import java.util.concurrent.TimeUnit;
@@ -36,7 +36,7 @@ public class RestLogAppender<E> extends AppenderBase<E> {
   private String key;
   private String localhostName = "localhost";
   private Layout<E> layout;
-  private ConcurrentLinkedQueue<LogLine> logQueue; // don't call size(), it runs in linear time
+  private Queue<LogLine> logQueue; // don't call size(), it runs in linear time
   private ExecutorService appenderPool = Executors.newSingleThreadScheduledExecutor();
 
   /**

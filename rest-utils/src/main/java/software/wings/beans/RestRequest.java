@@ -29,7 +29,7 @@ public class RestRequest<T> {
    */
   public RestRequest(T resource) {
     this.resource = resource;
-    metaData = new HashMap<String, Object>();
+    metaData = new HashMap<>();
   }
 
   /**

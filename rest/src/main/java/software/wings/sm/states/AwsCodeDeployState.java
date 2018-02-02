@@ -303,6 +303,7 @@ public class AwsCodeDeployState extends State {
                               .withHostName(hostName)
                               .withPublicDns(instance.getPublicDnsName())
                               .withEc2Instance(instance)
+                              .withInstanceId(instance.getInstanceId())
                               .build())
                 .withServiceTemplateElement(aServiceTemplateElement()
                                                 .withUuid(serviceTemplateKey.getId().toString())

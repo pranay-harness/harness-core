@@ -166,8 +166,6 @@ public class ExecutionInterruptManager {
         sendNotification(executionInterrupt, ExecutionStatus.RESUMED);
         break;
       case ABORT_ALL:
-        sendNotification(executionInterrupt, ExecutionStatus.ABORTED);
-        break;
       case ABORT:
       case PAUSE:
       case RESUME:

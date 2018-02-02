@@ -29,6 +29,8 @@ import software.wings.WingsBaseTest;
 import software.wings.api.SelectedNodeExecutionData;
 import software.wings.api.ServiceInstanceArtifactParam;
 import software.wings.beans.AwsInfrastructureMapping;
+import software.wings.beans.InfrastructureMappingType;
+import software.wings.beans.PhysicalInfrastructureMapping;
 import software.wings.beans.ServiceInstance;
 import software.wings.beans.ServiceTemplate;
 import software.wings.beans.artifact.Artifact;
@@ -66,7 +68,16 @@ public class NodeSelectStateTest extends WingsBaseTest {
 
   StateExecutionInstance stateExecutionInstance = new StateExecutionInstance();
   AwsInfrastructureMapping awsInfrastructureMapping =
-      anAwsInfrastructureMapping().withRegion(Regions.US_EAST_1.getName()).withUsePublicDns(true).build();
+      anAwsInfrastructureMapping()
+          .withInfraMappingType(InfrastructureMappingType.AWS_SSH.name())
+          .withRegion(Regions.US_EAST_1.getName())
+          .withUsePublicDns(true)
+          .build();
+
+  PhysicalInfrastructureMapping physicalInfrastructureMapping =
+      PhysicalInfrastructureMapping.Builder.aPhysicalInfrastructureMapping()
+          .withInfraMappingType(InfrastructureMappingType.PHYSICAL_DATA_CENTER_SSH.name())
+          .build();
 
   private ServiceTemplate SERVICE_TEMPLATE =
       aServiceTemplate().withUuid(TEMPLATE_ID).withName("template").withServiceId(SERVICE_ID).build();
@@ -104,7 +115,6 @@ public class NodeSelectStateTest extends WingsBaseTest {
                         .withInfraMappingId(INFRA_MAPPING_ID)
                         .build());
     when(context.getStateExecutionInstance()).thenReturn(stateExecutionInstance);
-    when(infrastructureMappingService.get(APP_ID, INFRA_MAPPING_ID)).thenReturn(awsInfrastructureMapping);
     when(infrastructureMappingService.selectServiceInstances(anyString(), anyString(), anyString(), any()))
         .thenReturn(instances);
     when(infrastructureMappingService.listHostDisplayNames(anyString(), anyString(), anyString()))
@@ -119,6 +129,7 @@ public class NodeSelectStateTest extends WingsBaseTest {
   @Test
   public void shouldTestDonotExcludeHostsWithSameArtifact() {
     nodeSelectState.setInstanceCount(3);
+    when(infrastructureMappingService.get(APP_ID, INFRA_MAPPING_ID)).thenReturn(awsInfrastructureMapping);
     when(context.getAppId()).thenReturn(APP_ID);
     when(contextElement.getUuid()).thenReturn(instance1.getUuid());
     when(serviceInstanceArtifactParam.getInstanceArtifactMap())
@@ -142,9 +153,35 @@ public class NodeSelectStateTest extends WingsBaseTest {
   }
 
   @Test
+  public void shouldTestExcludeHostsForPhysicalSshInfra() {
+    nodeSelectState.setInstanceCount(3);
+    when(infrastructureMappingService.get(APP_ID, INFRA_MAPPING_ID)).thenReturn(physicalInfrastructureMapping);
+    when(context.getAppId()).thenReturn(APP_ID);
+    when(contextElement.getUuid()).thenReturn(instance1.getUuid());
+    when(serviceInstanceArtifactParam.getInstanceArtifactMap())
+        .thenReturn(ImmutableMap.of(instance1.getUuid(), ARTIFACT_ID));
+    when(artifactService.get(APP_ID, ARTIFACT_ID)).thenReturn(artifact);
+    when(workflowStandardParams.isExcludeHostsWithSameArtifact()).thenReturn(true);
+
+    PageResponse<Instance> pageResponse =
+        PageResponse.Builder.aPageResponse().withResponse(Arrays.asList(instance)).build();
+
+    when(instanceService.list(any(PageRequest.class))).thenReturn(pageResponse);
+
+    ExecutionResponse executionResponse = nodeSelectState.execute(context);
+
+    assertThat(executionResponse.getExecutionStatus().equals(ExecutionStatus.SUCCESS));
+    assertThat(executionResponse.getStateExecutionData()).isNotNull();
+    SelectedNodeExecutionData selectedNodeExecutionData =
+        (SelectedNodeExecutionData) executionResponse.getStateExecutionData();
+    assertThat(selectedNodeExecutionData).isNotNull();
+    assertThat(selectedNodeExecutionData.getServiceInstanceList()).size().isEqualTo(2);
+  }
+
+  @Test
   public void shouldTestExcludeHostsWithSameArtifact() {
     nodeSelectState.setInstanceCount(3);
-
+    when(infrastructureMappingService.get(APP_ID, INFRA_MAPPING_ID)).thenReturn(awsInfrastructureMapping);
     when(context.getAppId()).thenReturn(APP_ID);
     when(contextElement.getUuid()).thenReturn(instance1.getUuid());
     when(serviceInstanceArtifactParam.getInstanceArtifactMap())

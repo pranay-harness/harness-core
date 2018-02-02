@@ -21,7 +21,7 @@ import java.util.concurrent.TimeUnit;
  */
 public class DataCleanUpJob implements Job {
   private static final Logger logger = LoggerFactory.getLogger(DataCleanUpJob.class);
-  private static final long ARTIFACT_RETENTION_SIZE = 25L;
+  private static final int ARTIFACT_RETENTION_SIZE = 25;
   private static final long AUDIT_RETENTION_TIME = TimeUnit.DAYS.toMillis(7);
   private static final long ALERT_RETENTION_TIME = TimeUnit.DAYS.toMillis(7);
   private static final long DELEGATE_TASK_RETENTION_TIME = TimeUnit.HOURS.toMillis(48);

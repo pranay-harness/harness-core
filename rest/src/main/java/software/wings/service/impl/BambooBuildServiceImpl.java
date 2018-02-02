@@ -20,7 +20,6 @@ import software.wings.security.encryption.EncryptedDataDetail;
 import software.wings.service.intfc.BambooBuildService;
 import software.wings.utils.ArtifactType;
 
-import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
 import java.util.Map;
@@ -43,7 +42,7 @@ public class BambooBuildServiceImpl implements BambooBuildService {
   @Override
   public List<JobDetails> getJobs(
       BambooConfig bambooConfig, List<EncryptedDataDetail> encryptionDetails, Optional<String> parentJobName) {
-    ArrayList<String> strings = Lists.newArrayList(bambooService.getPlanKeys(bambooConfig, encryptionDetails).keySet());
+    List<String> strings = Lists.newArrayList(bambooService.getPlanKeys(bambooConfig, encryptionDetails).keySet());
     return wrapJobNameWithJobDetails(strings);
   }
 

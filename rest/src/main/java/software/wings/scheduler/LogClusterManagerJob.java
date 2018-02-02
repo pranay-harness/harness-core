@@ -10,7 +10,6 @@ import org.quartz.DisallowConcurrentExecution;
 import org.quartz.Job;
 import org.quartz.JobExecutionContext;
 import org.quartz.JobExecutionException;
-import org.quartz.PersistJobDataAfterExecution;
 import org.quartz.SchedulerException;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -32,7 +31,6 @@ import java.util.Set;
 /**
  * Created by sriram_parthasarathy on 8/24/17.
  */
-@PersistJobDataAfterExecution
 @DisallowConcurrentExecution
 public class LogClusterManagerJob implements Job {
   private static final Logger logger = LoggerFactory.getLogger(LogAnalysisManagerJob.class);
@@ -120,10 +118,6 @@ public class LogClusterManagerJob implements Job {
                     logger.info(" queued cluster task for " + context.getStateExecutionId() + " , minute "
                         + logRequest.getLogCollectionMinute());
 
-                    //                        analysisService.deleteClusterLevel(context.getStateType(),
-                    //                        context.getStateExecutionId(),
-                    //                            context.getAppId(), logRequest.getQuery(), logRequest.getNodes(),
-                    //                            logRequest.getLogCollectionMinute(), ClusterLevel.L0);
                   } else {
                     logger.info(" skipping cluster task no data found. for " + context.getStateExecutionId()
                         + " , minute " + logRequest.getLogCollectionMinute());

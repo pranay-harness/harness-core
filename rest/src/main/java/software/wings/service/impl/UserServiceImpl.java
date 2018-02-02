@@ -210,7 +210,7 @@ public class UserServiceImpl implements UserService {
       user.setRoles(Lists.newArrayList(roleService.getAccountAdminRole(account.getUuid())));
       return save(user);
     } else {
-      Map<String, Object> map = new HashMap<String, Object>();
+      Map<String, Object> map = new HashMap<>();
       map.put("name", user.getName());
       map.put("passwordHash", hashpw(new String(user.getPassword()), BCrypt.gensalt()));
       wingsPersistence.updateFields(User.class, existingUser.getUuid(), map);
@@ -252,8 +252,11 @@ public class UserServiceImpl implements UserService {
   }
 
   private String buildAbsoluteUrl(String fragment) throws URISyntaxException {
-    String baseURl = configuration.getPortal().getUrl().trim();
-    URIBuilder uriBuilder = new URIBuilder(baseURl);
+    String baseUrl = configuration.getPortal().getUrl().trim();
+    if (!baseUrl.endsWith("/")) {
+      baseUrl += "/";
+    }
+    URIBuilder uriBuilder = new URIBuilder(baseUrl);
     uriBuilder.setFragment(fragment);
     return uriBuilder.toString();
   }

@@ -148,7 +148,7 @@ public interface ArtifactService extends OwnedByApplication {
    *
    * @param retentionSize the size of the artifacts to be retained
    */
-  void deleteArtifacts(long retentionSize);
+  void deleteArtifacts(int retentionSize);
 
   /**
    * Delete by artifact stream.

@@ -429,14 +429,17 @@ public class WorkflowResource {
   @ExceptionMetered
   public RestResponse<Map<String, String>> stateDefaults(@QueryParam("appId") String appId,
       @QueryParam("serviceId") String serviceId, @QueryParam("stateType") String strStateType) {
+    if (isEmpty(strStateType)) {
+      return new RestResponse<>();
+    }
     return new RestResponse<>(workflowService.getStateDefaults(appId, serviceId, StateType.valueOf(strStateType)));
   }
 
   @GET
   @Path("{workflowId}/infra-types")
   @Timed
-  public RestResponse<Boolean> workflowHasAwsAsgInfraMapping(
+  public RestResponse<Boolean> workflowHasSSHInfraMapping(
       @QueryParam("appId") String appId, @PathParam("workflowId") String workflowId) {
-    return new RestResponse(workflowService.workflowHasAwsInfraMapping(appId, workflowId));
+    return new RestResponse(workflowService.workflowHasSshInfraMapping(appId, workflowId));
   }
 }

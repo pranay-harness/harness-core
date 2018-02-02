@@ -12,23 +12,23 @@ import org.quartz.Trigger;
 import org.quartz.TriggerBuilder;
 import software.wings.WingsBaseTest;
 import software.wings.rules.Integration;
-import software.wings.rules.SetupScheduler;
 import software.wings.scheduler.DataCleanUpJob;
 import software.wings.scheduler.QuartzScheduler;
 import software.wings.service.intfc.AlertService;
 import software.wings.service.intfc.ArtifactService;
 import software.wings.service.intfc.AuditService;
 
+import java.util.concurrent.TimeUnit;
+
 /**
  * Created by sgurubelli on 7/19/17.
  */
 @Integration
 @Ignore
-@SetupScheduler
 public class DataCleanUpJobUtil extends WingsBaseTest {
-  private static final long ARTIFACT_RETENTION_SIZE = 1L;
-  private static final long AUDIT_RETENTION_TIME = 7 * 24 * 60 * 60 * 1000L;
-  private static final long ALERT_RETENTION_TIME = 7 * 24 * 60 * 60 * 1000L;
+  private static final int ARTIFACT_RETENTION_SIZE = 100;
+  private static final long AUDIT_RETENTION_TIME = TimeUnit.DAYS.toMillis(7);
+  private static final long ALERT_RETENTION_TIME = TimeUnit.DAYS.toMillis(7);
 
   @Inject private ArtifactService artifactService;
   @Inject private AuditService auditService;

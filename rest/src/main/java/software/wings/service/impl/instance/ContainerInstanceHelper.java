@@ -89,59 +89,52 @@ public class ContainerInstanceHelper {
       Map<String, PhaseStepExecutionSummary> phaseStepExecutionSummaryMap =
           phaseExecutionSummary.getPhaseStepExecutionSummaryMap();
       if (phaseStepExecutionSummaryMap != null) {
-        for (String stepName : phaseStepExecutionSummaryMap.keySet()) {
-          if (stepName.equals(Constants.DEPLOY_CONTAINERS) && phaseStepExecutionSummaryMap.containsKey(stepName)) {
-            PhaseStepExecutionSummary phaseStepExecutionSummary = phaseStepExecutionSummaryMap.get(stepName);
-            if (phaseStepExecutionSummary == null) {
-              logger.debug(
-                  "PhaseStepExecutionSummary is null for stateExecutionInstanceId: " + stateExecutionInstanceId);
-              continue;
+        PhaseStepExecutionSummary phaseStepExecutionSummary =
+            phaseStepExecutionSummaryMap.get(Constants.DEPLOY_CONTAINERS);
+        if (phaseStepExecutionSummary == null) {
+          logger.debug("PhaseStepExecutionSummary is null for stateExecutionInstanceId: " + stateExecutionInstanceId);
+          return;
+        }
+        List<StepExecutionSummary> stepExecutionSummaryList = phaseStepExecutionSummary.getStepExecutionSummaryList();
+        // This was observed when the "deploy containers" step was executed in rollback and no commands were
+        // executed since setup failed.
+        if (stepExecutionSummaryList == null) {
+          logger.debug("StepExecutionSummaryList is null for stateExecutionInstanceId: " + stateExecutionInstanceId);
+          return;
+        }
+
+        for (StepExecutionSummary stepExecutionSummary : stepExecutionSummaryList) {
+          if (stepExecutionSummary != null && stepExecutionSummary instanceof CommandStepExecutionSummary) {
+            CommandStepExecutionSummary commandStepExecutionSummary =
+                (CommandStepExecutionSummary) stepExecutionSummary;
+            String clusterName = commandStepExecutionSummary.getClusterName();
+            Set<String> containerSvcNameSet = Sets.newHashSet();
+
+            if (commandStepExecutionSummary.getOldInstanceData() != null) {
+              containerSvcNameSet.addAll(commandStepExecutionSummary.getOldInstanceData()
+                                             .stream()
+                                             .map(ContainerServiceData::getName)
+                                             .collect(Collectors.toList()));
             }
-            List<StepExecutionSummary> stepExecutionSummaryList =
-                phaseStepExecutionSummary.getStepExecutionSummaryList();
-            // This was observed when the "deploy containers" step was executed in rollback and no commands were
-            // executed since setup failed.
-            if (stepExecutionSummaryList == null) {
-              logger.debug(
-                  "StepExecutionSummaryList is null for stateExecutionInstanceId: " + stateExecutionInstanceId);
-              continue;
+
+            if (commandStepExecutionSummary.getNewInstanceData() != null) {
+              List<String> newcontainerSvcNames = commandStepExecutionSummary.getNewInstanceData()
+                                                      .stream()
+                                                      .map(ContainerServiceData::getName)
+                                                      .collect(Collectors.toList());
+              containerSvcNameSet.addAll(newcontainerSvcNames);
             }
 
-            for (StepExecutionSummary stepExecutionSummary : stepExecutionSummaryList) {
-              if (stepExecutionSummary != null && stepExecutionSummary instanceof CommandStepExecutionSummary) {
-                CommandStepExecutionSummary commandStepExecutionSummary =
-                    (CommandStepExecutionSummary) stepExecutionSummary;
-                String clusterName = commandStepExecutionSummary.getClusterName();
-                Set<String> containerSvcNameSet = Sets.newHashSet();
-
-                if (commandStepExecutionSummary.getOldInstanceData() != null) {
-                  containerSvcNameSet.addAll(commandStepExecutionSummary.getOldInstanceData()
-                                                 .stream()
-                                                 .map(ContainerServiceData::getName)
-                                                 .collect(Collectors.toList()));
-                }
-
-                if (commandStepExecutionSummary.getNewInstanceData() != null) {
-                  List<String> newcontainerSvcNames = commandStepExecutionSummary.getNewInstanceData()
-                                                          .stream()
-                                                          .map(ContainerServiceData::getName)
-                                                          .collect(Collectors.toList());
-                  containerSvcNameSet.addAll(newcontainerSvcNames);
-                }
-
-                if (containerSvcNameSet.isEmpty()) {
-                  String msg = "Both old and new container services are empty. Cannot proceed for phase step "
-                      + commandStepExecutionSummary.getServiceId();
-                  logger.error(msg);
-                  throw new WingsException(msg);
-                }
-
-                ContainerDeploymentEvent containerDeploymentEvent =
-                    buildContainerDeploymentEvent(stateExecutionInstanceId, workflowExecution, phaseExecutionData,
-                        clusterName, containerSvcNameSet, infrastructureMapping);
-                containerDeploymentEventQueue.send(containerDeploymentEvent);
-              }
+            if (containerSvcNameSet.isEmpty()) {
+              String msg = "Both old and new container services are empty. Cannot proceed for phase step "
+                  + commandStepExecutionSummary.getServiceId();
+              logger.error(msg);
+              throw new WingsException(msg);
             }
+
+            ContainerDeploymentEvent containerDeploymentEvent = buildContainerDeploymentEvent(stateExecutionInstanceId,
+                workflowExecution, phaseExecutionData, clusterName, containerSvcNameSet, infrastructureMapping);
+            containerDeploymentEventQueue.send(containerDeploymentEvent);
           }
         }
       }

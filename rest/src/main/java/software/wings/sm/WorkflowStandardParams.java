@@ -9,6 +9,7 @@ import static software.wings.common.Constants.PHASE_PARAM;
 import com.google.inject.Inject;
 
 import com.fasterxml.jackson.annotation.JsonIgnore;
+import org.apache.http.client.utils.URIBuilder;
 import org.mongodb.morphia.Key;
 import org.mongodb.morphia.annotations.Transient;
 import software.wings.api.InstanceElement;
@@ -16,6 +17,7 @@ import software.wings.api.PhaseElement;
 import software.wings.api.ServiceElement;
 import software.wings.api.ServiceTemplateElement;
 import software.wings.api.WorkflowElement;
+import software.wings.app.MainConfiguration;
 import software.wings.beans.Application;
 import software.wings.beans.EmbeddedUser;
 import software.wings.beans.Environment;
@@ -29,8 +31,8 @@ import software.wings.service.intfc.AppService;
 import software.wings.service.intfc.ArtifactService;
 import software.wings.service.intfc.EnvironmentService;
 import software.wings.service.intfc.ServiceTemplateService;
-import software.wings.service.intfc.SettingsService;
 
+import java.net.URISyntaxException;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
@@ -51,9 +53,9 @@ public class WorkflowStandardParams implements ExecutionContextAware, ContextEle
 
   @Transient @Inject private transient EnvironmentService environmentService;
 
-  @Transient @Inject private transient SettingsService settingsService;
-
   @Transient @Inject private transient ServiceTemplateService serviceTemplateService;
+
+  @Transient @Inject private transient MainConfiguration configuration;
 
   private String appId;
   private String envId;
@@ -102,6 +104,10 @@ public class WorkflowStandardParams implements ExecutionContextAware, ContextEle
     map.put(ENV, getEnv());
     map.put(TIMESTAMP_ID, timestampId);
 
+    map.put(DEPLOYMENT_URL,
+        buildAbsoluteUrl(String.format("/account/%s/app/%s/env/%s/executions/%s/details", app.getAccountId(),
+            app.getUuid(), env.getUuid(), context.getWorkflowExecutionId())));
+
     ServiceElement serviceElement = fetchServiceElement(context);
     if (serviceElement != null) {
       Artifact artifact = getArtifactForService(serviceElement.getUuid());
@@ -146,6 +152,20 @@ public class WorkflowStandardParams implements ExecutionContextAware, ContextEle
               .collect(Collectors.toMap(ServiceVariable::getName, var -> new String(var.getValue()))));
     }
     return map;
+  }
+
+  private String buildAbsoluteUrl(String fragment) {
+    String baseUrl = configuration.getPortal().getUrl().trim();
+    if (!baseUrl.endsWith("/")) {
+      baseUrl += "/";
+    }
+    try {
+      URIBuilder uriBuilder = new URIBuilder(baseUrl);
+      uriBuilder.setFragment(fragment);
+      return uriBuilder.toString();
+    } catch (URISyntaxException e) {
+      return baseUrl;
+    }
   }
 
   private ServiceElement fetchServiceElement(ExecutionContext context) {

@@ -1,11 +1,12 @@
 package software.wings.utils;
 
+import static software.wings.beans.ErrorCode.CONNECTION_TIMEOUT;
 import static software.wings.beans.ErrorCode.INVALID_CREDENTIAL;
 import static software.wings.beans.ErrorCode.INVALID_KEY;
 import static software.wings.beans.ErrorCode.INVALID_KEYPATH;
-import static software.wings.beans.ErrorCode.INVALID_PORT;
 import static software.wings.beans.ErrorCode.SOCKET_CONNECTION_ERROR;
 import static software.wings.beans.ErrorCode.SOCKET_CONNECTION_TIMEOUT;
+import static software.wings.beans.ErrorCode.SSH_CONNECTION_ERROR;
 import static software.wings.beans.ErrorCode.SSH_SESSION_TIMEOUT;
 import static software.wings.beans.ErrorCode.UNKNOWN_ERROR;
 import static software.wings.beans.ErrorCode.UNKNOWN_HOST;
@@ -18,6 +19,8 @@ import static software.wings.core.ssh.executors.SshExecutor.ExecutorType.PASSWOR
 import static software.wings.core.ssh.executors.SshSessionConfig.Builder.aSshSessionConfig;
 
 import com.jcraft.jsch.JSchException;
+import com.sun.mail.iap.ConnectionException;
+import io.netty.channel.ConnectTimeoutException;
 import software.wings.beans.BastionConnectionAttributes;
 import software.wings.beans.ErrorCode;
 import software.wings.beans.HostConnectionAttributes;
@@ -30,7 +33,6 @@ import software.wings.core.ssh.executors.SshSessionConfig;
 import software.wings.core.ssh.executors.SshSessionConfig.Builder;
 
 import java.io.FileNotFoundException;
-import java.net.ConnectException;
 import java.net.NoRouteToHostException;
 import java.net.SocketException;
 import java.net.SocketTimeoutException;
@@ -79,8 +81,10 @@ public class SshHelperUtil {
         errorConst = UNKNOWN_HOST;
       } else if (cause instanceof SocketTimeoutException) {
         errorConst = SOCKET_CONNECTION_TIMEOUT;
-      } else if (cause instanceof ConnectException) {
-        errorConst = INVALID_PORT;
+      } else if (cause instanceof ConnectTimeoutException) {
+        errorConst = CONNECTION_TIMEOUT;
+      } else if (cause instanceof ConnectionException) {
+        errorConst = SSH_CONNECTION_ERROR;
       } else if (cause instanceof SocketException) {
         errorConst = SOCKET_CONNECTION_ERROR;
       } else if (cause instanceof FileNotFoundException) {

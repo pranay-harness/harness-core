@@ -67,10 +67,12 @@ public class GitCommandCallback implements NotifyCallback {
           logger.error("Git Command failed [{}] for changeSetId [{}] for account {}",
               gitCommandExecutionResponse.getErrorMessage(), changeSetId, accountId);
           yamlChangeSetService.updateStatus(accountId, changeSetId, Status.FAILED);
-          // raise alert if GitConnectionErrorAlert is not already open
-          yamlGitService.raiseAlertForGitFailure(accountId, GLOBAL_APP_ID, gitCommandExecutionResponse.getErrorCode(),
-              gitCommandExecutionResponse.getErrorMessage());
         }
+        // raise alert if GitConnectionErrorAlert is not already open (changeSetId will be null for webhook request, so
+        // putting outside if)
+        yamlGitService.raiseAlertForGitFailure(accountId, GLOBAL_APP_ID, gitCommandExecutionResponse.getErrorCode(),
+            gitCommandExecutionResponse.getErrorMessage());
+
         return;
       }
 

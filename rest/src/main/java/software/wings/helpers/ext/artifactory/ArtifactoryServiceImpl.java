@@ -280,11 +280,11 @@ public class ArtifactoryServiceImpl implements ArtifactoryService {
                                                    .requestBody(requestBody)
                                                    .requestType(TEXT)
                                                    .responseType(JSON);
-        LinkedHashMap<String, List> response = artifactory.restCall(repositoryRequest);
+        Map<String, List> response = artifactory.restCall(repositoryRequest);
         if (response != null) {
-          List<LinkedHashMap<String, String>> results = response.get("results");
+          List<Map<String, String>> results = response.get("results");
           if (results != null) {
-            for (LinkedHashMap<String, String> result : results) {
+            for (Map<String, String> result : results) {
               String created_by = result.get("created_by");
               if (created_by == null || !created_by.equals("_system_")) {
                 String path = result.get("path");
@@ -416,12 +416,12 @@ public class ArtifactoryServiceImpl implements ArtifactoryService {
                                                  .responseType(JSON)
                                                  .addQueryParam("list", "")
                                                  .addQueryParam("deep", "1");
-      LinkedHashMap<String, Object> response = artifactory.restCall(repositoryRequest);
+      Map<String, Object> response = artifactory.restCall(repositoryRequest);
       Set<String> groupIds = new HashSet<>();
       if (response != null) {
-        List<LinkedHashMap<String, String>> files = (List<LinkedHashMap<String, String>>) response.get("files");
+        List<Map<String, String>> files = (List<Map<String, String>>) response.get("files");
         if (files != null) {
-          for (LinkedHashMap<String, String> file : files) {
+          for (Map<String, String> file : files) {
             String uri = file.get("uri");
             if (uri != null) {
               // strip out the file
@@ -508,7 +508,7 @@ public class ArtifactoryServiceImpl implements ArtifactoryService {
   }
 
   private void traverseInParallel(Artifactory artifactory, String repoKey, Queue<Future> futures,
-      Stack<FolderPath> paths, FolderPath folderPath, String path) {
+      List<FolderPath> paths, FolderPath folderPath, String path) {
     futures.add(executorService.submit((Callable<Void>) () -> {
       paths.addAll(getFolderPaths(artifactory, repoKey, path + folderPath.getUri()));
       return null;
@@ -627,10 +627,10 @@ public class ArtifactoryServiceImpl implements ArtifactoryService {
                                               .addQueryParam("g", groupId)
                                               .addQueryParam("a", artifactId)
                                               .addQueryParam("repos", repoId);
-      LinkedHashMap<String, Object> response = artifactory.restCall(versionRequest);
+      Map<String, Object> response = artifactory.restCall(versionRequest);
       if (response != null) {
-        List<LinkedHashMap<String, String>> results = (List<LinkedHashMap<String, String>>) response.get("results");
-        for (LinkedHashMap<String, String> result : results) {
+        List<Map<String, String>> results = (List<Map<String, String>>) response.get("results");
+        for (Map<String, String> result : results) {
           String version = result.get("version");
           logger.info("Latest version {}", version);
           if (version == null) {

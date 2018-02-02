@@ -14,7 +14,6 @@ import software.wings.sm.ExecutionContext;
 import software.wings.sm.ExpressionProcessor;
 import software.wings.sm.ExpressionProcessorFactory;
 
-import java.util.ArrayList;
 import java.util.List;
 
 /**
@@ -90,7 +89,7 @@ public class WingsExpressionProcessorFactory implements ExpressionProcessorFacto
 
   @Override
   public List<ExpressionProcessor> getExpressionProcessors(ExecutionContext context) {
-    ArrayList<ExpressionProcessor> processorList =
+    List<ExpressionProcessor> processorList =
         Lists.newArrayList(new ServiceExpressionProcessor(context), new HostExpressionProcessor(context));
     for (ExpressionProcessor processor : processorList) {
       injector.injectMembers(processor);
