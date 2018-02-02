@@ -1,15 +1,15 @@
-/**
- *
- */
-
 package software.wings.sm;
 
+import static java.util.Collections.singletonList;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.joor.Reflect.on;
 import static org.mockito.Mockito.when;
 import static software.wings.api.ServiceElement.Builder.aServiceElement;
 import static software.wings.beans.SettingAttribute.Builder.aSettingAttribute;
+import static software.wings.beans.artifact.Artifact.Builder.anArtifact;
 import static software.wings.utils.WingsTestConstants.ACCOUNT_ID;
+import static software.wings.utils.WingsTestConstants.APP_ID;
+import static software.wings.utils.WingsTestConstants.ARTIFACT_ID;
 import static software.wings.utils.WingsTestConstants.SERVICE_ID;
 import static software.wings.utils.WingsTestConstants.SERVICE_NAME;
 
@@ -26,8 +26,10 @@ import software.wings.api.ServiceElement;
 import software.wings.beans.Application;
 import software.wings.beans.Environment;
 import software.wings.beans.Environment.Builder;
+import software.wings.beans.artifact.Artifact;
 import software.wings.scheduler.JobScheduler;
 import software.wings.service.intfc.AppService;
+import software.wings.service.intfc.ArtifactService;
 import software.wings.service.intfc.EnvironmentService;
 import software.wings.service.intfc.SettingsService;
 import software.wings.settings.SettingValue.SettingVariableTypes;
@@ -56,6 +58,7 @@ public class WorkflowStandardParamsTest extends WingsBaseTest {
   @Mock SettingsService settingsService;
   @Mock private JobScheduler jobScheduler;
   @Mock private ExecutionContext context;
+  @Mock private ArtifactService artifactService;
 
   @Before
   public void setup() {
@@ -86,5 +89,34 @@ public class WorkflowStandardParamsTest extends WingsBaseTest {
 
     Map<String, Object> map = std.paramMap(context);
     assertThat(map).isNotNull().containsEntry(ContextElement.APP, app).containsEntry(ContextElement.ENV, env);
+  }
+
+  @Test
+  public void shouldGetArtifactForService() {
+    when(artifactService.get(APP_ID, ARTIFACT_ID))
+        .thenReturn(
+            anArtifact().withUuid(ARTIFACT_ID).withAppId(APP_ID).withServiceIds(singletonList(SERVICE_ID)).build());
+    WorkflowStandardParams std = new WorkflowStandardParams();
+    injector.injectMembers(std);
+    on(std).set("artifactService", artifactService);
+    std.setAppId(APP_ID);
+    std.setArtifactIds(singletonList(ARTIFACT_ID));
+
+    Artifact artifact = std.getArtifactForService(SERVICE_ID);
+    assertThat(artifact).isNotNull();
+  }
+
+  @Test
+  public void shouldGetNullArtifact() {
+    when(artifactService.get(APP_ID, ARTIFACT_ID))
+        .thenReturn(anArtifact().withUuid(ARTIFACT_ID).withServiceIds(null).withAppId(APP_ID).build());
+    WorkflowStandardParams std = new WorkflowStandardParams();
+    injector.injectMembers(std);
+    on(std).set("artifactService", artifactService);
+    std.setAppId(APP_ID);
+    std.setArtifactIds(singletonList(ARTIFACT_ID));
+
+    Artifact artifact = std.getArtifactForService(SERVICE_ID);
+    assertThat(artifact).isNull();
   }
 }
