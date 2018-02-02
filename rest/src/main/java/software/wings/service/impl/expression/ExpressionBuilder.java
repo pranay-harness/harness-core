@@ -18,6 +18,7 @@ import static software.wings.common.Constants.WINGS_RUNTIME_PATH;
 import static software.wings.common.Constants.WINGS_STAGING_PATH;
 import static software.wings.common.Constants.XPATH;
 import static software.wings.dl.PageRequest.Builder.aPageRequest;
+import static software.wings.sm.ContextElement.DEPLOYMENT_URL;
 import static software.wings.utils.Switch.noop;
 import static software.wings.utils.Switch.unhandled;
 
@@ -143,13 +144,13 @@ public abstract class ExpressionBuilder {
         break;
       case HTTP:
         expressions.addAll(asList(HTTP_URL, HTTP_RESPONSE_METHOD, HTTP_RESPONSE_CODE, HTTP_RESPONSE_BODY,
-            ASSERTION_STATEMENT, ASSERTION_STATUS, XPATH, JSONPATH));
+            ASSERTION_STATEMENT, ASSERTION_STATUS, XPATH, JSONPATH, DEPLOYMENT_URL));
         break;
       case APPROVAL:
         expressions.addAll(asList(APPROVEDBY_NAME, APPROVEDBY_EMAIL));
         break;
       case EMAIL:
-        expressions.addAll(asList(EMAIl_TO_ADDRESS, EMAIL_CC_ADDRESS, EMAIL_SUBJECT, EMAIL_BODY));
+        expressions.addAll(asList(EMAIl_TO_ADDRESS, EMAIL_CC_ADDRESS, EMAIL_SUBJECT, EMAIL_BODY, DEPLOYMENT_URL));
         break;
       case COMMAND:
         expressions.addAll(asList(WINGS_RUNTIME_PATH, WINGS_STAGING_PATH, WINGS_BACKUP_PATH));
