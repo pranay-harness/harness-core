@@ -20,7 +20,6 @@ import static software.wings.common.Constants.XPATH;
 import static software.wings.dl.PageRequest.Builder.aPageRequest;
 import static software.wings.sm.ContextElement.DEPLOYMENT_URL;
 import static software.wings.utils.Switch.noop;
-import static software.wings.utils.Switch.unhandled;
 
 import com.google.inject.Inject;
 
@@ -161,12 +160,14 @@ public abstract class ExpressionBuilder {
       case AWS_LAMBDA_STATE:
       case ECS_SERVICE_SETUP:
       case JENKINS:
+      case BAMBOO:
       case KUBERNETES_SETUP:
       case NEW_RELIC_DEPLOYMENT_MARKER:
+      case KUBERNETES_DEPLOY:
         noop();
         break;
       default:
-        unhandled(stateType);
+        break;
     }
 
     return expressions;
