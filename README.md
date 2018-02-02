@@ -16,9 +16,14 @@
 
    `brew install maven`
 
-4. Install and start mongodb@3.4 :
+4. Install and start MongoDB Docker Image (v3.4):
 
-   `brew install mongo && brew services start mongodb`
+```
+$ docker login -u harnesshub     (get password from Credentials doc)
+$ docker pull harnesshub/debian-jessie-dbs && mkdir -p ~/_mongodb_data
+$ docker run -d -p 27017:27017 -v ~/_mongodb_data:/opt/mongodb_data harnesshub/debian-jessie-dbs
+```
+Install & use RoboMongo client to test MongoDB connection.
 
 5. Install npm (used for front-end):
    `brew install npm`
@@ -30,12 +35,7 @@
    export HOSTNAME
 ```
 
-7. Mac OSX Sierra Users should add to their `/etc/hosts` file with `sudo`, to speed up mongodb 
-
-```
-    127.0.0.1   localhost mbpro.local
-```
-8. Go to http://www.oracle.com/technetwork/java/javase/downloads/jce8-download-2133166.html. Accept the license agreement and download the files. Unzip the files. Copy the two jars to `$JAVA_HOME/jre/lib/security` (you'll probably need to use sudo).
+7. Go to http://www.oracle.com/technetwork/java/javase/downloads/jce8-download-2133166.html. Accept the license agreement and download the files. Unzip the files. Copy the two jars to `$JAVA_HOME/jre/lib/security` (you'll probably need to use sudo).
 
 Run this script to test if JCE is installed properly:
 
