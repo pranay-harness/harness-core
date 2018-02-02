@@ -2,7 +2,7 @@ package software.wings.service.impl.instance;
 
 import static io.harness.data.structure.EmptyPredicate.isEmpty;
 import static io.harness.data.structure.EmptyPredicate.isNotEmpty;
-import static software.wings.common.Constants.DEPLOY_SERVICE;
+import static software.wings.sm.ExecutionStatus.FAILED;
 
 import com.google.common.collect.Lists;
 import com.google.inject.Inject;
@@ -35,6 +35,7 @@ import software.wings.beans.infrastructure.instance.info.Ec2InstanceInfo;
 import software.wings.beans.infrastructure.instance.info.InstanceInfo;
 import software.wings.beans.infrastructure.instance.info.PhysicalHostInstanceInfo;
 import software.wings.beans.infrastructure.instance.key.HostInstanceKey;
+import software.wings.common.Constants;
 import software.wings.core.queue.Queue;
 import software.wings.exception.HarnessException;
 import software.wings.security.encryption.EncryptedDataDetail;
@@ -118,12 +119,23 @@ public class InstanceHelper {
           autoScalingGroupNames = getASGFromAMIDeploymentAndLoadInstances(
               infrastructureMapping, phaseExecutionData, workflowExecution, artifact, totalInstanceList);
         } else {
+          PhaseStepExecutionSummary phaseStepExecutionSummary =
+              getDeployPhaseStep(phaseExecutionData, Constants.DEPLOY_SERVICE);
+          if (phaseStepExecutionSummary != null) {
+            boolean failed = checkIfAnyStepsFailed(phaseStepExecutionSummary);
+            if (failed) {
+              logger.info("Deploy Service Phase step failed, not capturing any instances");
+              return;
+            }
+          }
+
           for (ElementExecutionSummary summary : phaseExecutionData.getElementStatusSummary()) {
             List<InstanceStatusSummary> instanceStatusSummaries = summary.getInstanceStatusSummaries();
             if (isEmpty(instanceStatusSummaries)) {
-              logger.debug("No instances to process");
+              logger.info("No instances to process");
               return;
             }
+
             for (InstanceStatusSummary instanceStatusSummary : instanceStatusSummaries) {
               if (shouldCaptureInstance(instanceStatusSummary.getStatus())) {
                 Instance instance = buildInstanceUsingHostInfo(
@@ -150,6 +162,18 @@ public class InstanceHelper {
     }
   }
 
+  private boolean checkIfAnyStepsFailed(PhaseStepExecutionSummary phaseStepExecutionSummary) {
+    return phaseStepExecutionSummary.getStepExecutionSummaryList()
+        .stream()
+        .filter(stepExecutionSummary -> stepExecutionSummary.getStatus() == FAILED)
+        .findFirst()
+        .isPresent();
+  }
+
+  private PhaseStepExecutionSummary getDeployPhaseStep(PhaseExecutionData phaseExecutionData, String phaseStepName) {
+    return phaseExecutionData.getPhaseExecutionSummary().getPhaseStepExecutionSummaryMap().get(phaseStepName);
+  }
+
   /**
    * Returns the auto scaling group names and also loads the instances to the totalInstanceList
    */
@@ -159,16 +183,9 @@ public class InstanceHelper {
     List<String> autoScalingGroupNames = Lists.newArrayList();
     AwsAmiInfrastructureMapping awsAmiInfrastructureMapping = (AwsAmiInfrastructureMapping) infrastructureMapping;
 
-    Optional<PhaseStepExecutionSummary> phaseStepSummaryOptional =
-        phaseExecutionData.getPhaseExecutionSummary()
-            .getPhaseStepExecutionSummaryMap()
-            .entrySet()
-            .stream()
-            .filter(mapEntry -> DEPLOY_SERVICE.equals(mapEntry.getKey()))
-            .map(mapEntry -> mapEntry.getValue())
-            .findFirst();
-    if (phaseStepSummaryOptional.isPresent()) {
-      PhaseStepExecutionSummary phaseStepExecutionSummary = phaseStepSummaryOptional.get();
+    PhaseStepExecutionSummary phaseStepExecutionSummary =
+        getDeployPhaseStep(phaseExecutionData, Constants.DEPLOY_SERVICE);
+    if (phaseStepExecutionSummary != null) {
       Optional<StepExecutionSummary> stepExecutionSummaryOptional =
           phaseStepExecutionSummary.getStepExecutionSummaryList()
               .stream()
@@ -253,10 +270,10 @@ public class InstanceHelper {
 
     switch (instanceExecutionStatus) {
       case SUCCESS:
+        return true;
       case FAILED:
       case ERROR:
       case ABORTED:
-        return true;
       default:
         return false;
     }
