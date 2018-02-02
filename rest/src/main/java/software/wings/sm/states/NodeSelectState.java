@@ -24,6 +24,7 @@ import software.wings.beans.AwsInfrastructureMapping;
 import software.wings.beans.DeploymentExecutionContext;
 import software.wings.beans.ErrorCode;
 import software.wings.beans.InfrastructureMapping;
+import software.wings.beans.InfrastructureMappingType;
 import software.wings.beans.InstanceUnitType;
 import software.wings.beans.ServiceInstance;
 import software.wings.beans.ServiceInstanceSelectionParams;
@@ -125,9 +126,13 @@ public abstract class NodeSelectState extends State {
       boolean excludeHostsWithSameArtifact = false;
       if (workflowStandardParams != null) {
         excludeHostsWithSameArtifact = workflowStandardParams.isExcludeHostsWithSameArtifact();
-        if (excludeHostsWithSameArtifact) {
-          serviceInstances =
-              excludeHostsWithTheSameArtifactDeployed(context, appId, serviceId, infraMappingId, serviceInstances);
+        if (InfrastructureMappingType.AWS_SSH.name().equals(infrastructureMapping.getInfraMappingType())
+            || InfrastructureMappingType.PHYSICAL_DATA_CENTER_SSH.name().equals(
+                   infrastructureMapping.getInfraMappingType())) {
+          if (excludeHostsWithSameArtifact) {
+            serviceInstances =
+                excludeHostsWithTheSameArtifactDeployed(context, appId, serviceId, infraMappingId, serviceInstances);
+          }
         }
       }
       SelectedNodeExecutionData selectedNodeExecutionData = new SelectedNodeExecutionData();
@@ -160,7 +165,7 @@ public abstract class NodeSelectState extends State {
       throw e;
     } catch (Exception e) {
       logger.warn(e.getMessage(), e);
-      throw new WingsException(ErrorCode.INVALID_REQUEST, e).addParam("message", e.getMessage());
+      throw new WingsException(ErrorCode.INVALID_REQUEST).addParam("message", e.getMessage());
     }
   }
 

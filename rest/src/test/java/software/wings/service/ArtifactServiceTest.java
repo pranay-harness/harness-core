@@ -4,9 +4,9 @@ import static java.util.Arrays.asList;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThatExceptionOfType;
 import static org.mockito.Matchers.any;
+import static org.mockito.Matchers.anyObject;
 import static org.mockito.Matchers.anyString;
 import static org.mockito.Mockito.when;
-import static software.wings.beans.Application.Builder.anApplication;
 import static software.wings.beans.Service.Builder.aService;
 import static software.wings.beans.artifact.Artifact.Builder.anArtifact;
 import static software.wings.beans.artifact.ArtifactFile.Builder.anArtifactFile;
@@ -19,12 +19,15 @@ import com.google.common.collect.Lists;
 import com.google.common.io.Files;
 import com.google.inject.Inject;
 
-import de.flapdoodle.embed.process.collections.Collections;
 import org.junit.Before;
 import org.junit.Ignore;
 import org.junit.Test;
 import org.mockito.InjectMocks;
 import org.mockito.Mock;
+import org.mockito.Spy;
+import org.mongodb.morphia.Key;
+import org.mongodb.morphia.query.FieldEnd;
+import org.mongodb.morphia.query.Query;
 import software.wings.WingsBaseTest;
 import software.wings.beans.Application;
 import software.wings.beans.EmbeddedUser;
@@ -32,16 +35,18 @@ import software.wings.beans.artifact.Artifact;
 import software.wings.beans.artifact.Artifact.Builder;
 import software.wings.beans.artifact.Artifact.Status;
 import software.wings.beans.artifact.ArtifactFile;
+import software.wings.beans.artifact.ArtifactStream;
+import software.wings.beans.artifact.JenkinsArtifactStream;
 import software.wings.dl.PageRequest;
-import software.wings.dl.PageResponse;
 import software.wings.dl.WingsPersistence;
 import software.wings.exception.WingsException;
-import software.wings.scheduler.QuartzScheduler;
+import software.wings.rules.SetupScheduler;
 import software.wings.service.intfc.AppService;
 import software.wings.service.intfc.ArtifactService;
 import software.wings.service.intfc.ArtifactStreamService;
 import software.wings.service.intfc.FileService;
 import software.wings.service.intfc.FileService.FileBucket;
+import software.wings.utils.ArtifactType;
 
 import java.io.File;
 import javax.validation.ConstraintViolationException;
@@ -49,41 +54,47 @@ import javax.validation.ConstraintViolationException;
 /**
  * Created by peeyushaggarwal on 4/4/16.
  */
+@SetupScheduler
 public class ArtifactServiceTest extends WingsBaseTest {
-  @Inject private WingsPersistence wingsPersistence;
+  @Inject @Spy private WingsPersistence wingsPersistence;
 
   @Mock private FileService fileService;
   @Mock private ArtifactStreamService artifactStreamService;
   @Mock private AppService appService;
-
-  @Mock private QuartzScheduler jobScheduler;
+  @Mock private Query<Application> appQuery;
+  @Mock private Query<ArtifactStream> artifactStreamQuery;
+  @Mock private FieldEnd fieldEnd;
 
   @InjectMocks @Inject private ArtifactService artifactService;
 
-  private Builder builder = anArtifact()
-                                .withAppId(APP_ID)
-                                .withArtifactStreamId(ARTIFACT_STREAM_ID)
-                                .withRevision("1.0")
-                                .withDisplayName("DISPLAY_NAME")
-                                .withCreatedAt(System.currentTimeMillis())
-                                .withCreatedBy(EmbeddedUser.builder().uuid("USER_ID").build())
-                                .withServiceIds(asList(SERVICE_ID));
+  private Builder artifactBuilder = anArtifact()
+                                        .withAppId(APP_ID)
+                                        .withArtifactStreamId(ARTIFACT_STREAM_ID)
+                                        .withRevision("1.0")
+                                        .withDisplayName("DISPLAY_NAME")
+                                        .withCreatedAt(System.currentTimeMillis())
+                                        .withCreatedBy(EmbeddedUser.builder().uuid("USER_ID").build())
+                                        .withServiceIds(asList(SERVICE_ID));
+
+  JenkinsArtifactStream jenkinsArtifactStream = aJenkinsArtifactStream()
+                                                    .withUuid(ARTIFACT_STREAM_ID)
+                                                    .withAppId(APP_ID)
+                                                    .withSourceName("ARTIFACT_SOURCE")
+                                                    .withServiceId(SERVICE_ID)
+                                                    .build();
 
   /**
    * test setup.
    */
   @Before
   public void setUp() {
-    wingsRule.getDatastore().save(aService().withAppId(APP_ID).withUuid(SERVICE_ID).build());
+    wingsRule.getDatastore().save(
+        aService().withAppId(APP_ID).withArtifactType(ArtifactType.WAR).withUuid(SERVICE_ID).build());
+    when(appQuery.field(anyString())).thenReturn(fieldEnd);
+    when(fieldEnd.equal(anyObject())).thenReturn(appQuery);
 
     when(appService.exist(APP_ID)).thenReturn(true);
-    when(artifactStreamService.get(APP_ID, ARTIFACT_STREAM_ID))
-        .thenReturn(aJenkinsArtifactStream()
-                        .withUuid(ARTIFACT_STREAM_ID)
-                        .withAppId(APP_ID)
-                        .withSourceName("ARTIFACT_SOURCE")
-                        .withServiceId(SERVICE_ID)
-                        .build());
+    when(artifactStreamService.get(APP_ID, ARTIFACT_STREAM_ID)).thenReturn(jenkinsArtifactStream);
   }
 
   /**
@@ -91,7 +102,7 @@ public class ArtifactServiceTest extends WingsBaseTest {
    */
   @Test
   public void shouldCreateArtifactWhenValid() {
-    assertThat(artifactService.create(builder.but().build()))
+    assertThat(artifactService.create(artifactBuilder.but().build()))
         .isNotNull()
         .hasFieldOrPropertyWithValue("artifactSourceName", "ARTIFACT_SOURCE");
   }
@@ -101,7 +112,7 @@ public class ArtifactServiceTest extends WingsBaseTest {
   @Test
   public void shouldThrowExceptionWhenAppIdDoesNotMatchForArtifacToBeCreated() {
     assertThatExceptionOfType(WingsException.class)
-        .isThrownBy(() -> artifactService.create(builder.but().withAppId("BAD_APP_ID").build()));
+        .isThrownBy(() -> artifactService.create(artifactBuilder.but().withAppId("BAD_APP_ID").build()));
   }
 
   /**
@@ -110,7 +121,8 @@ public class ArtifactServiceTest extends WingsBaseTest {
   @Test
   public void shouldThrowExceptionWhenReleaseIdDoesNotMatchForArtifacToBeCreated() {
     assertThatExceptionOfType(WingsException.class)
-        .isThrownBy(() -> artifactService.create(builder.but().withArtifactStreamId("NON_EXISTENT_ID").build()));
+        .isThrownBy(
+            () -> artifactService.create(artifactBuilder.but().withArtifactStreamId("NON_EXISTENT_ID").build()));
   }
 
   /**
@@ -120,7 +132,7 @@ public class ArtifactServiceTest extends WingsBaseTest {
   @Ignore
   public void shouldThrowExceptionWhenArtifactToBeCreatedIsInvalid() {
     assertThatExceptionOfType(ConstraintViolationException.class)
-        .isThrownBy(() -> artifactService.create(builder.but().withRevision(null).build()));
+        .isThrownBy(() -> artifactService.create(artifactBuilder.but().withRevision(null).build()));
   }
 
   /**
@@ -128,7 +140,7 @@ public class ArtifactServiceTest extends WingsBaseTest {
    */
   @Test
   public void shouldUpdateArtifactWhenValid() {
-    Artifact savedArtifact = artifactService.create(builder.but().build());
+    Artifact savedArtifact = artifactService.create(artifactBuilder.but().build());
 
     savedArtifact.setDisplayName("ARTIFACT_DISPLAY_NAME");
     assertThat(artifactService.update(savedArtifact)).isEqualTo(savedArtifact);
@@ -139,7 +151,7 @@ public class ArtifactServiceTest extends WingsBaseTest {
    */
   @Test
   public void shouldThrowExceptionWhenArtifactToBeUpdatedIsInvalid() {
-    Artifact savedArtifact = artifactService.create(builder.but().build());
+    Artifact savedArtifact = artifactService.create(artifactBuilder.but().build());
 
     savedArtifact.setDisplayName(null);
     assertThatExceptionOfType(ConstraintViolationException.class)
@@ -151,7 +163,7 @@ public class ArtifactServiceTest extends WingsBaseTest {
    */
   @Test
   public void shouldNotDownloadFileForArtifactWhenNotReady() {
-    Artifact savedArtifact = artifactService.create(builder.but().build());
+    Artifact savedArtifact = artifactService.create(artifactBuilder.but().build());
     assertThat(artifactService.download(APP_ID, savedArtifact.getUuid())).isNull();
   }
 
@@ -162,7 +174,7 @@ public class ArtifactServiceTest extends WingsBaseTest {
   public void shouldDownloadFileForArtifactWhenReady() {
     File file = null;
     try {
-      Artifact savedArtifact = artifactService.create(builder.but().build());
+      Artifact savedArtifact = artifactService.create(artifactBuilder.but().build());
       ArtifactFile artifactFile =
           anArtifactFile().withAppId(APP_ID).withName("test-artifact.war").withUuid("TEST_FILE_ID").build();
       wingsRule.getDatastore().save(artifactFile);
@@ -189,7 +201,7 @@ public class ArtifactServiceTest extends WingsBaseTest {
    */
   @Test
   public void shouldListArtifact() {
-    Artifact savedArtifact = artifactService.create(builder.but().build());
+    Artifact savedArtifact = artifactService.create(artifactBuilder.but().build());
     assertThat(artifactService.list(new PageRequest<>(), false)).hasSize(1).containsExactly(savedArtifact);
   }
 
@@ -198,7 +210,7 @@ public class ArtifactServiceTest extends WingsBaseTest {
    */
   @Test
   public void shouldGetArtifact() {
-    Artifact savedArtifact = artifactService.create(builder.but().build());
+    Artifact savedArtifact = artifactService.create(artifactBuilder.but().build());
     assertThat(artifactService.get(savedArtifact.getAppId(), savedArtifact.getUuid())).isEqualTo(savedArtifact);
   }
 
@@ -207,7 +219,7 @@ public class ArtifactServiceTest extends WingsBaseTest {
    */
   @Test
   public void shouldDeleteArtifact() {
-    Artifact savedArtifact = artifactService.create(builder.but().build());
+    Artifact savedArtifact = artifactService.create(artifactBuilder.but().build());
     assertThat(wingsPersistence.get(Artifact.class, savedArtifact.getUuid())).isNotNull();
     artifactService.delete(savedArtifact.getAppId(), savedArtifact.getUuid());
     assertThat(wingsPersistence.get(Artifact.class, savedArtifact.getUuid())).isNull();
@@ -215,32 +227,28 @@ public class ArtifactServiceTest extends WingsBaseTest {
 
   @Test
   public void shouldNotDeleteArtifacts() {
-    Application savedApp = anApplication()
-                               .withUuid(APP_ID)
-                               .withAccountId("ACCOUNT_ID")
-                               .withName("AppA")
-                               .withDescription("Description1")
-                               .build();
-    PageResponse<Application> pageResponse =
-        PageResponse.Builder.aPageResponse().withResponse(Collections.newArrayList(savedApp)).build();
-    when(appService.list(any())).thenReturn(pageResponse);
-    artifactService.create(builder.but().build());
+    when(wingsPersistence.createQuery(Application.class)).thenReturn(appQuery);
+    when(wingsPersistence.createQuery(ArtifactStream.class)).thenReturn(artifactStreamQuery);
+    when(appQuery.asKeyList()).thenReturn(asList(new Key(Application.class, "applications", APP_ID)));
+    when(artifactStreamQuery.field(anyString())).thenReturn(fieldEnd);
+    when(fieldEnd.equal(anyObject())).thenReturn(artifactStreamQuery);
+    when(artifactStreamQuery.asList()).thenReturn(asList(jenkinsArtifactStream));
+
+    artifactService.create(artifactBuilder.but().build());
     artifactService.deleteArtifacts(50);
     assertThat(artifactService.list(new PageRequest<>(), false)).hasSize(1);
   }
 
   @Test
   public void shouldDeleteArtifactsWithArtifactFiles() {
-    Application savedApp = anApplication()
-                               .withUuid(APP_ID)
-                               .withAccountId("ACCOUNT_ID")
-                               .withName("AppA")
-                               .withDescription("Description1")
-                               .build();
-    PageResponse<Application> pageResponse =
-        PageResponse.Builder.aPageResponse().withResponse(Collections.newArrayList(savedApp)).build();
-    when(appService.list(any())).thenReturn(pageResponse);
-    Artifact savedArtifact = artifactService.create(builder.but().build());
+    when(wingsPersistence.createQuery(Application.class)).thenReturn(appQuery);
+    when(wingsPersistence.createQuery(ArtifactStream.class)).thenReturn(artifactStreamQuery);
+    when(appQuery.asKeyList()).thenReturn(asList(new Key(Application.class, "applications", APP_ID)));
+    when(artifactStreamQuery.field(anyString())).thenReturn(fieldEnd);
+    when(fieldEnd.equal(anyObject())).thenReturn(artifactStreamQuery);
+    when(artifactStreamQuery.asList()).thenReturn(asList(jenkinsArtifactStream));
+
+    Artifact savedArtifact = artifactService.create(artifactBuilder.but().build());
     ArtifactFile artifactFile = anArtifactFile()
                                     .withAppId(APP_ID)
                                     .withName("test-artifact.war")
@@ -256,18 +264,15 @@ public class ArtifactServiceTest extends WingsBaseTest {
   }
 
   @Test
-  @Ignore
-  public void shouldDeleteFailedArtifacts() {
-    Application savedApp = anApplication()
-                               .withUuid(APP_ID)
-                               .withAccountId("ACCOUNT_ID")
-                               .withName("AppA")
-                               .withDescription("Description1")
-                               .build();
-    PageResponse<Application> pageResponse =
-        PageResponse.Builder.aPageResponse().withResponse(Collections.newArrayList(savedApp)).build();
-    when(appService.list(any())).thenReturn(pageResponse);
-    Artifact savedArtifact = artifactService.create(builder.but().build());
+  public void shouldNotDeleteFailedArtifacts() {
+    when(wingsPersistence.createQuery(Application.class)).thenReturn(appQuery);
+    when(wingsPersistence.createQuery(ArtifactStream.class)).thenReturn(artifactStreamQuery);
+    when(appQuery.asKeyList()).thenReturn(asList(new Key(Application.class, "applications", APP_ID)));
+    when(artifactStreamQuery.field(anyString())).thenReturn(fieldEnd);
+    when(fieldEnd.equal(anyObject())).thenReturn(artifactStreamQuery);
+    when(artifactStreamQuery.asList()).thenReturn(asList(jenkinsArtifactStream));
+
+    Artifact savedArtifact = artifactService.create(artifactBuilder.but().build());
     ArtifactFile artifactFile = anArtifactFile()
                                     .withAppId(APP_ID)
                                     .withName("test-artifact.war")
@@ -279,21 +284,19 @@ public class ArtifactServiceTest extends WingsBaseTest {
     savedArtifact.setStatus(Status.FAILED);
     wingsRule.getDatastore().save(savedArtifact);
     artifactService.deleteArtifacts(0);
-    assertThat(artifactService.list(new PageRequest<>(), false)).hasSize(0);
+    assertThat(artifactService.list(new PageRequest<>(), false)).hasSize(1);
   }
 
   @Test
   public void shouldNotDeleteArtifactsGreaterThanRetentionTime() {
-    Application savedApp = anApplication()
-                               .withUuid(APP_ID)
-                               .withAccountId("ACCOUNT_ID")
-                               .withName("AppA")
-                               .withDescription("Description1")
-                               .build();
-    PageResponse<Application> pageResponse =
-        PageResponse.Builder.aPageResponse().withResponse(Collections.newArrayList(savedApp)).build();
-    when(appService.list(any())).thenReturn(pageResponse);
-    Artifact savedArtifact = artifactService.create(builder.but().build());
+    when(wingsPersistence.createQuery(Application.class)).thenReturn(appQuery);
+    when(wingsPersistence.createQuery(ArtifactStream.class)).thenReturn(artifactStreamQuery);
+    when(appQuery.asKeyList()).thenReturn(asList(new Key(Application.class, "applications", APP_ID)));
+    when(artifactStreamQuery.field(anyString())).thenReturn(fieldEnd);
+    when(fieldEnd.equal(anyObject())).thenReturn(artifactStreamQuery);
+    when(artifactStreamQuery.asList()).thenReturn(asList(jenkinsArtifactStream));
+
+    Artifact savedArtifact = artifactService.create(artifactBuilder.but().build());
     ArtifactFile artifactFile = anArtifactFile()
                                     .withAppId(APP_ID)
                                     .withName("test-artifact.war")
@@ -304,7 +307,7 @@ public class ArtifactServiceTest extends WingsBaseTest {
     savedArtifact.setArtifactFiles(Lists.newArrayList(artifactFile));
     savedArtifact.setStatus(Status.READY);
     wingsRule.getDatastore().save(savedArtifact);
-    artifactService.deleteArtifacts(1 * 24 * 60 * 60 * 1000);
+    artifactService.deleteArtifacts(1);
     assertThat(artifactService.list(new PageRequest<>(), false)).hasSize(1);
   }
 }

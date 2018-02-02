@@ -8,7 +8,7 @@ import static org.mockito.Matchers.anyString;
 import static org.mockito.Matchers.eq;
 import static org.mockito.Mockito.when;
 import static software.wings.beans.ErrorCode.INVALID_CREDENTIAL;
-import static software.wings.beans.ErrorCode.INVALID_PORT;
+import static software.wings.beans.ErrorCode.SOCKET_CONNECTION_ERROR;
 import static software.wings.beans.ErrorCode.SOCKET_CONNECTION_TIMEOUT;
 import static software.wings.beans.ErrorCode.SSH_SESSION_TIMEOUT;
 import static software.wings.beans.ErrorCode.UNKNOWN_HOST;
@@ -139,7 +139,7 @@ public class SshPwdAuthExecutorTest extends WingsBaseTest {
     executor.init(configBuilder.but().withPort(3333).build());
     assertThatThrownBy(() -> executor.executeCommandString("ls"))
         .isInstanceOf(WingsException.class)
-        .hasMessage(INVALID_PORT.getCode());
+        .hasMessage(SOCKET_CONNECTION_ERROR.getCode());
   }
 
   /**

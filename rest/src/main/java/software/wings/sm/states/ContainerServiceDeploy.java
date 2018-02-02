@@ -78,7 +78,6 @@ import software.wings.waitnotify.NotifyResponseData;
 
 import java.util.ArrayList;
 import java.util.HashMap;
-import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Optional;
@@ -199,7 +198,7 @@ public abstract class ContainerServiceDeploy extends State {
 
   private List<ContainerServiceData> getOldInstanceData(ContextData contextData, ContainerServiceData newServiceData) {
     List<ContainerServiceData> desiredCounts = new ArrayList<>();
-    LinkedHashMap<String, Integer> previousCounts = getActiveServiceCounts(contextData);
+    Map<String, Integer> previousCounts = getActiveServiceCounts(contextData);
     previousCounts.remove(newServiceData.getName());
 
     int downsizeCount = contextData.deployingToHundredPercent
@@ -221,7 +220,7 @@ public abstract class ContainerServiceDeploy extends State {
     return desiredCounts;
   }
 
-  private LinkedHashMap<String, Integer> getActiveServiceCounts(ContextData contextData) {
+  private Map<String, Integer> getActiveServiceCounts(ContextData contextData) {
     return getContainerService(contextData).getActiveServiceCounts(contextData.containerServiceParams);
   }
 

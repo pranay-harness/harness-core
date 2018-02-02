@@ -6,7 +6,7 @@ import java.util.List;
 public class YamlVersionList implements YamlHistory {
   private final String NO_YAML_IN_VERSION_LIST = "Call with yamlVersionId (Uuid) to get Yaml.";
 
-  List<YamlVersion> versions = new ArrayList<YamlVersion>();
+  List<YamlVersion> versions = new ArrayList<>();
 
   public YamlVersionList() {}
 

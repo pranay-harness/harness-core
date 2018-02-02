@@ -21,7 +21,6 @@ import software.wings.security.encryption.EncryptedDataDetail;
 import software.wings.service.intfc.NexusBuildService;
 import software.wings.utils.ArtifactType;
 
-import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
 import java.util.Map;
@@ -62,7 +61,7 @@ public class NexusBuildServiceImpl implements NexusBuildService {
   @Override
   public List<JobDetails> getJobs(
       NexusConfig config, List<EncryptedDataDetail> encryptionDetails, Optional<String> parentJobName) {
-    ArrayList<String> jobNames = Lists.newArrayList(nexusService.getRepositories(config, encryptionDetails).keySet());
+    List<String> jobNames = Lists.newArrayList(nexusService.getRepositories(config, encryptionDetails).keySet());
     return wrapJobNameWithJobDetails(jobNames);
   }
 

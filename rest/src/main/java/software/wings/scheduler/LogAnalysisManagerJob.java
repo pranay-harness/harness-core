@@ -12,7 +12,6 @@ import org.quartz.DisallowConcurrentExecution;
 import org.quartz.Job;
 import org.quartz.JobExecutionContext;
 import org.quartz.JobExecutionException;
-import org.quartz.PersistJobDataAfterExecution;
 import org.quartz.SchedulerException;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -39,7 +38,7 @@ import java.util.Set;
 /**
  * Created by sriram_parthasarathy on 8/23/17.
  */
-@PersistJobDataAfterExecution
+
 @DisallowConcurrentExecution
 public class LogAnalysisManagerJob implements Job {
   private static final Logger logger = LoggerFactory.getLogger(LogAnalysisManagerJob.class);
@@ -102,21 +101,8 @@ public class LogAnalysisManagerJob implements Job {
           new LogMLClusterGenerator(
               learningEngineService, context.getClusterContext(), ClusterLevel.L1, ClusterLevel.L2, logRequest)
               .run();
-          //          analysisService.deleteClusterLevel(context.getStateType(), context.getStateExecutionId(),
-          //          context.getAppId(),
-          //              logRequest.getQuery(), logRequest.getNodes(), logRequest.getLogCollectionMinute(),
-          //              ClusterLevel.L1);
           break;
         case SPLUNKV2:
-          //          analysisService.bumpClusterLevel(context.getStateType(), context.getStateExecutionId(),
-          //          context.getAppId(),
-          //              logRequest.getQuery(), logRequest.getNodes(), logRequest.getLogCollectionMinute(),
-          //              ClusterLevel.L1, ClusterLevel.L2);
-          //          analysisService.bumpClusterLevel(context.getStateType(), context.getStateExecutionId(),
-          //          context.getAppId(),
-          //              context.getQueries().iterator().next(), context.getTestNodes(),
-          //              logRequest.getLogCollectionMinute(), ClusterLevel.getHeartBeatLevel(ClusterLevel.L1),
-          //              ClusterLevel.getHeartBeatLevel(ClusterLevel.L2));
           break;
         default:
           throw new RuntimeException("Unknown verification state " + context.getStateType());
@@ -172,30 +158,6 @@ public class LogAnalysisManagerJob implements Job {
             }
           }
 
-          //          if (context.getComparisonStrategy() == AnalysisComparisonStrategy.COMPARE_WITH_CURRENT) {
-          //            int logAnalysisClusteringControlMinute =
-          //                analysisService.getCollectionMinuteForLevel(context.getQueries().iterator().next(),
-          //                context.getAppId(),
-          //                    context.getStateExecutionId(), context.getStateType(), ClusterLevel.L1,
-          //                    context.getControlNodes());
-          //            if (logAnalysisClusteringControlMinute != -1) {
-          //              boolean hasControlRecords =
-          //              analysisService.hasDataRecords(context.getQueries().iterator().next(),
-          //                  context.getAppId(), context.getStateExecutionId(), context.getStateType(),
-          //                  context.getControlNodes(), ClusterLevel.L1, logAnalysisClusteringControlMinute);
-          //
-          //              if (hasControlRecords) {
-          //                preProcess(logAnalysisClusteringControlMinute, context.getQueries().iterator().next(),
-          //                    context.getControlNodes());
-          //              } else {
-          //                analysisService.bumpClusterLevel(context.getStateType(), context.getStateExecutionId(),
-          //                    context.getAppId(), context.getQueries().iterator().next(), context.getControlNodes(),
-          //                    logAnalysisClusteringControlMinute, ClusterLevel.getHeartBeatLevel(ClusterLevel.L1),
-          //                    ClusterLevel.getHeartBeatLevel(ClusterLevel.L2));
-          //              }
-          //            }
-          //          }
-
           int logAnalysisMinute =
               analysisService.getCollectionMinuteForLevel(context.getQueries().iterator().next(), context.getAppId(),
                   context.getStateExecutionId(), context.getStateType(), ClusterLevel.L2, getCollectedNodes());
@@ -215,11 +177,7 @@ public class LogAnalysisManagerJob implements Job {
              * the test events are saved for future processing.
              */
             new LogMLAnalysisGenerator(context, logAnalysisMinute, analysisService, learningEngineService).run();
-            //            analysisService.bumpClusterLevel(context.getStateType(), context.getStateExecutionId(),
-            //            context.getAppId(),
-            //                context.getQueries().iterator().next(), context.getTestNodes(),
-            //                logAnalysisClusteringTestMinute, ClusterLevel.getHeartBeatLevel(ClusterLevel.L1),
-            //                ClusterLevel.getFinal());
+
           } else {
             logger.warn("No data for log ml analysis " + context.getStateExecutionId());
           }

@@ -86,7 +86,7 @@ public class RestResponse<T> extends RestRequest<T> {
      * @return the builder
      */
     public static <T> Builder<T> aRestResponse() {
-      return new Builder<T>();
+      return new Builder<>();
     }
 
     /**

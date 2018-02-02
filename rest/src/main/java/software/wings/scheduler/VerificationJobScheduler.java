@@ -22,7 +22,8 @@ import java.util.concurrent.TimeUnit;
 
 public class VerificationJobScheduler extends AbstractQuartzScheduler {
   private static final Logger logger = LoggerFactory.getLogger(VerificationJobScheduler.class);
-  private static final int DEFAULT_NEWRELIC_COLLECTION_MINS = 60;
+  private static final int DEFAULT_COLLECTION_MINS = 60;
+  private static final int DEFAULT_CLEANUP_MINS = 1;
 
   /**
    * Instantiates a new Cron scheduler.
@@ -46,7 +47,42 @@ public class VerificationJobScheduler extends AbstractQuartzScheduler {
       configuration.getSchedulerConfig().setThreadCount("15");
       JobScheduler jobScheduler = new JobScheduler(injector, configuration);
       addNewRelicMetricNameCollectionCron(jobScheduler);
+      addLearningEngineCleaupJobCron(jobScheduler);
       return jobScheduler;
+    }
+
+    private void addLearningEngineCleaupJobCron(JobScheduler jobScheduler) {
+      try {
+        if (jobScheduler.getScheduler() == null
+            || jobScheduler.getScheduler()
+                   .getJobKeys(GroupMatcher.anyGroup())
+                   .contains(
+                       jobKey("LEARNING_ENGINE_TASK_QUEUE_DEL_CRON", "LEARNING_ENGINE_TASK_QUEUE_DEL_CRON_GROUP"))) {
+          return;
+        }
+
+        Date startDate = new Date(new Date().getTime() + TimeUnit.MINUTES.toMillis(1));
+        JobDetail job =
+            JobBuilder.newJob(LearningEngineTaskQueueCleanUpJob.class)
+                .withIdentity("LEARNING_ENGINE_TASK_QUEUE_DEL_CRON", "LEARNING_ENGINE_TASK_QUEUE_DEL_CRON_GROUP")
+                .usingJobData("timestamp", System.currentTimeMillis())
+                .withDescription("Cron to delete learning engine tasks older than 7 days")
+                .build();
+
+        Trigger trigger =
+            TriggerBuilder.newTrigger()
+                .withIdentity("LEARNING_ENGINE_TASK_QUEUE_DEL_CRON", "LEARNING_ENGINE_TASK_QUEUE_DEL_CRON_GROUP")
+                .withSchedule(SimpleScheduleBuilder.simpleSchedule()
+                                  .withIntervalInSeconds((int) TimeUnit.MINUTES.toSeconds(DEFAULT_CLEANUP_MINS))
+                                  .withMisfireHandlingInstructionNowWithExistingCount()
+                                  .repeatForever())
+                .startAt(startDate)
+                .build();
+
+        jobScheduler.scheduleJob(job, trigger);
+      } catch (SchedulerException e) {
+        logger.error("Unable to start new relic metric names cron", e);
+      }
     }
 
     private void addNewRelicMetricNameCollectionCron(JobScheduler jobScheduler) {
@@ -54,29 +90,29 @@ public class VerificationJobScheduler extends AbstractQuartzScheduler {
         if (jobScheduler.getScheduler() == null
             || jobScheduler.getScheduler()
                    .getJobKeys(GroupMatcher.anyGroup())
-                   .contains(jobKey("NEW_RELIC_METRIC_NAME_COLLECT_CRON_GROUP"))) {
+                   .contains(
+                       jobKey("NEW_RELIC_METRIC_NAME_COLLECT_CRON", "NEW_RELIC_METRIC_NAME_COLLECT_CRON_GROUP"))) {
           return;
         }
 
         Date startDate = new Date(new Date().getTime() + TimeUnit.MINUTES.toMillis(5));
         JobDetail job =
             JobBuilder.newJob(NewRelicMetricNameCollectionJob.class)
-                .withIdentity("NEW_RELIC_METRIC_NAME_COLLECT_CRON_GROUP")
+                .withIdentity("NEW_RELIC_METRIC_NAME_COLLECT_CRON", "NEW_RELIC_METRIC_NAME_COLLECT_CRON_GROUP")
                 .usingJobData("timestamp", System.currentTimeMillis())
                 .withDescription(
                     "Cron to collect metric names from New Relic for workflows configured with New Relic state")
                 .build();
 
-        Trigger trigger = TriggerBuilder.newTrigger()
-                              .withIdentity("NEW_RELIC_METRIC_NAME_COLLECT_CRON_GROUP_TRIGGER",
-                                  "NEW_RELIC_METRIC_NAME_COLLECT_CRON_GROUP_TRIGGER")
-                              .withSchedule(SimpleScheduleBuilder.simpleSchedule()
-                                                .withIntervalInSeconds(
-                                                    (int) TimeUnit.MINUTES.toSeconds(DEFAULT_NEWRELIC_COLLECTION_MINS))
-                                                .withMisfireHandlingInstructionNowWithExistingCount()
-                                                .repeatForever())
-                              .startAt(startDate)
-                              .build();
+        Trigger trigger =
+            TriggerBuilder.newTrigger()
+                .withIdentity("NEW_RELIC_METRIC_NAME_COLLECT_CRON", "NEW_RELIC_METRIC_NAME_COLLECT_CRON_GROUP")
+                .withSchedule(SimpleScheduleBuilder.simpleSchedule()
+                                  .withIntervalInSeconds((int) TimeUnit.MINUTES.toSeconds(DEFAULT_COLLECTION_MINS))
+                                  .withMisfireHandlingInstructionNowWithExistingCount()
+                                  .repeatForever())
+                .startAt(startDate)
+                .build();
 
         jobScheduler.scheduleJob(job, trigger);
       } catch (SchedulerException e) {

@@ -354,7 +354,7 @@ public class RepeatState extends State {
       return false;
     }
     final RepeatState other = (RepeatState) obj;
-    return Objects.equals(this.logger, other.logger) && Objects.equals(this.repeatElementType, other.repeatElementType)
+    return Objects.equals(this.repeatElementType, other.repeatElementType)
         && Objects.equals(this.repeatElementExpression, other.repeatElementExpression)
         && Objects.equals(this.executionStrategy, other.executionStrategy)
         && Objects.equals(this.executionStrategyExpression, other.executionStrategyExpression)

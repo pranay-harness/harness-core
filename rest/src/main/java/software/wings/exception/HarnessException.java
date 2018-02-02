@@ -22,8 +22,8 @@ public class HarnessException extends Exception {
   /**
    * The Response message list.
    */
-  List<ResponseMessage> responseMessageList = new ArrayList<ResponseMessage>();
-  private Map<String, Object> params = new HashMap<String, Object>();
+  List<ResponseMessage> responseMessageList = new ArrayList<>();
+  private Map<String, Object> params = new HashMap<>();
 
   /**
    * Instantiates a new wings exception.

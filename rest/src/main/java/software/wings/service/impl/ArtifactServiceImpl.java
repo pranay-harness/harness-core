@@ -4,9 +4,6 @@ import static io.harness.data.structure.EmptyPredicate.isEmpty;
 import static io.harness.data.structure.EmptyPredicate.isNotEmpty;
 import static java.util.Arrays.asList;
 import static org.mongodb.morphia.mapping.Mapper.ID_KEY;
-import static software.wings.beans.SearchFilter.Operator.EQ;
-import static software.wings.beans.SearchFilter.Operator.EXISTS;
-import static software.wings.beans.SearchFilter.Operator.IN;
 import static software.wings.beans.artifact.Artifact.Status.APPROVED;
 import static software.wings.beans.artifact.Artifact.Status.FAILED;
 import static software.wings.beans.artifact.Artifact.Status.QUEUED;
@@ -21,8 +18,6 @@ import static software.wings.beans.artifact.ArtifactStreamType.GCR;
 import static software.wings.beans.artifact.ArtifactStreamType.NEXUS;
 import static software.wings.collect.CollectEvent.Builder.aCollectEvent;
 import static software.wings.dl.MongoHelper.setUnset;
-import static software.wings.dl.PageRequest.Builder.aPageRequest;
-import static software.wings.dl.PageRequest.UNLIMITED;
 import static software.wings.service.intfc.FileService.FileBucket.ARTIFACTS;
 
 import com.google.common.io.Files;
@@ -32,6 +27,7 @@ import com.google.inject.name.Named;
 
 import com.mongodb.BasicDBObject;
 import org.bson.types.ObjectId;
+import org.mongodb.morphia.Key;
 import org.mongodb.morphia.query.Query;
 import org.mongodb.morphia.query.UpdateOperations;
 import org.slf4j.Logger;
@@ -69,7 +65,6 @@ import java.text.SimpleDateFormat;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Optional;
-import java.util.Set;
 import java.util.concurrent.ExecutorService;
 import java.util.stream.Collectors;
 import javax.validation.Valid;
@@ -350,50 +345,52 @@ public class ArtifactServiceImpl implements ArtifactService {
   }
 
   @Override
-  public void deleteArtifacts(long retentionSize) {
-    List<Application> apps =
-        appService.list(aPageRequest().withLimit(UNLIMITED).addFieldsIncluded("uuid").build()).getResponse();
-    for (Application app : apps) {
-      String appId = app.getUuid();
-      List<Artifact> artifacts = list(aPageRequest()
-                                          .addFilter("appId", EQ, appId)
-                                          .addFieldsIncluded("appId")
-                                          .addFieldsIncluded("uuid")
-                                          .addFieldsIncluded("artifactStreamId")
-                                          .withLimit(UNLIMITED)
-                                          .build(),
-          false)
-                                     .getResponse();
-      Set<String> artifactStreamIds = artifacts.stream().map(Artifact::getArtifactStreamId).collect(Collectors.toSet());
-      for (String artifactStreamId : artifactStreamIds) {
-        List<Artifact> toBeDeletedArtifacts = wingsPersistence
-                                                  .query(Artifact.class,
-                                                      aPageRequest()
-                                                          .withLimit(UNLIMITED)
-                                                          .withOffset(String.valueOf(retentionSize))
-                                                          .addFilter("appId", EQ, appId)
-                                                          .addFilter("artifactStreamId", EQ, artifactStreamId)
-                                                          .addFilter("status", IN, READY, APPROVED)
-                                                          .addFilter("artifactFiles", EXISTS)
-                                                          .build())
-                                                  .getResponse();
-        if (isNotEmpty(toBeDeletedArtifacts)) {
-          logger.info("Deleting artifacts for artifactStreamId {}  of size: {} for appId {}", artifactStreamId,
-              toBeDeletedArtifacts.size(), appId);
-          deleteArtifacts(appId, artifactStreamId, toBeDeletedArtifacts);
-        } else {
-          logger.info(
-              "ArtifactStreamId {} for the app {} does not have more than {} successful artifacts. Not deleting",
-              artifactStreamId, appId, retentionSize);
+  public void deleteArtifacts(int retentionSize) {
+    List<Key<Application>> appKeys = wingsPersistence.createQuery(Application.class).asKeyList();
+    for (Key<Application> app : appKeys) {
+      String appId = app.getId().toString();
+      List<Service> services = wingsPersistence.createQuery(Service.class).field("appId").equal(appId).asList();
+      for (Service service : services) {
+        if (ArtifactType.DOCKER.equals(service.getArtifactType())
+            || ArtifactType.AMI.name().equals(service.getArtifactType())) {
+          logger.info("Service [{}] artifact type   for the app [{}] is Docker or AMI. Skipping deleting artifacts",
+              service.getName(), appId);
+          continue;
         }
-        /* toBeDeletedArtifacts = wingsPersistence.query(Artifact.class,
-             aPageRequest().withLimit(UNLIMITED).addFilter("appId", EQ, appId).addFilter("artifactStreamId", EQ,
-         artifactStreamId) .addFilter("status", IN, FAILED, REJECTED, ERROR, ABORTED).build()).getResponse(); if
-         (isNotEmpty(toBeDeletedArtifacts)) { logger.info("Deleting failed artifacts for artifactStreamId
-         {}  of size: {} for appId {}", artifactStreamId, toBeDeletedArtifacts.size(), appId); deleteArtifacts(appId,
-         artifactStreamId, toBeDeletedArtifacts); } else { logger.info("ArtifactStreamId {} for the app {} does not have
-         failed artifacts to delete", artifactStreamId, appId);
-         }*/
+        List<ArtifactStream> artifactStreams = wingsPersistence.createQuery(ArtifactStream.class)
+                                                   .field("appId")
+                                                   .equal(appId)
+                                                   .field("serviceId")
+                                                   .equal(service.getUuid())
+                                                   .asList();
+        for (ArtifactStream artifactStream : artifactStreams) {
+          if (artifactStream.isMetadataOnly()) {
+            logger.info("Service [{}] artifact type   for the app [{}] is Metadata only. Skipping deleting artifacts",
+                service.getName(), appId);
+            continue;
+          }
+          List<Artifact> toBeDeletedArtifacts = wingsPersistence.createQuery(Artifact.class)
+                                                    .field("appId")
+                                                    .equal(appId)
+                                                    .field("artifactStreamId")
+                                                    .equal(artifactStream.getUuid())
+                                                    .field("status")
+                                                    .in(asList(READY, APPROVED))
+                                                    .offset(retentionSize)
+                                                    .asList();
+          if (isNotEmpty(toBeDeletedArtifacts)) {
+            toBeDeletedArtifacts = toBeDeletedArtifacts.stream()
+                                       .filter(artifact -> !artifact.getArtifactFiles().isEmpty())
+                                       .collect(Collectors.toList());
+            logger.info("Deleting artifacts for artifactStreamId [{}]  of size: [{}] for appId [{}]",
+                artifactStream.getUuid(), toBeDeletedArtifacts.size(), appId);
+            deleteArtifacts(app.getId().toString(), artifactStream.getUuid(), toBeDeletedArtifacts);
+          } else {
+            logger.info(
+                "ArtifactStreamId [{}] for the app [{}] does not have more than [{}] successful artifacts. Not deleting",
+                artifactStream.getUuid(), appId, retentionSize);
+          }
+        }
       }
     }
   }

@@ -120,7 +120,6 @@ import java.util.ArrayList;
 import java.util.Collections;
 import java.util.HashMap;
 import java.util.HashSet;
-import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Optional;
@@ -1099,7 +1098,10 @@ public class InfrastructureMappingServiceImpl implements InfrastructureMappingSe
   @Override
   public String getContainerRunningInstances(String appId, String infraMappingId, String serviceNameExpression) {
     InfrastructureMapping infrastructureMapping = get(appId, infraMappingId);
-    notNullCheck("Infrastructure Mapping", infrastructureMapping);
+
+    if (infrastructureMapping == null) {
+      return "0";
+    }
 
     Application app = appService.get(infrastructureMapping.getAppId());
     Environment env = envService.get(infrastructureMapping.getAppId(), infrastructureMapping.getEnvId(), false);
@@ -1159,9 +1161,8 @@ public class InfrastructureMappingServiceImpl implements InfrastructureMappingSe
                                                         .namespace(namespace)
                                                         .region(region)
                                                         .build();
-    LinkedHashMap<String, Integer> activeServiceCounts =
-        delegateProxyFactory.get(ContainerService.class, syncTaskContext)
-            .getActiveServiceCounts(containerServiceParams);
+    Map<String, Integer> activeServiceCounts = delegateProxyFactory.get(ContainerService.class, syncTaskContext)
+                                                   .getActiveServiceCounts(containerServiceParams);
     return Integer.toString(activeServiceCounts.values().stream().mapToInt(Integer::intValue).sum());
   }
 

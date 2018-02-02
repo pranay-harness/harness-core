@@ -154,9 +154,9 @@ public class DelegateServiceImpl implements DelegateService {
   private static final Logger logger = LoggerFactory.getLogger(DelegateServiceImpl.class);
   private final Object waiter = new Object();
 
-  private final ConcurrentHashMap<String, DelegateTask> currentlyValidatingTasks = new ConcurrentHashMap<>();
-  private final ConcurrentHashMap<String, DelegateTask> currentlyExecutingTasks = new ConcurrentHashMap<>();
-  private final ConcurrentHashMap<String, Future<?>> currentlyExecutingFutures = new ConcurrentHashMap<>();
+  private final Map<String, DelegateTask> currentlyValidatingTasks = new ConcurrentHashMap<>();
+  private final Map<String, DelegateTask> currentlyExecutingTasks = new ConcurrentHashMap<>();
+  private final Map<String, Future<?>> currentlyExecutingFutures = new ConcurrentHashMap<>();
 
   private final AtomicLong lastHeartbeatSentAt = new AtomicLong(System.currentTimeMillis());
   private final AtomicLong lastHeartbeatReceivedAt = new AtomicLong(System.currentTimeMillis());

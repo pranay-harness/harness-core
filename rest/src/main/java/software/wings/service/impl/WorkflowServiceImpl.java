@@ -15,6 +15,8 @@ import static software.wings.beans.ErrorCode.INVALID_REQUEST;
 import static software.wings.beans.ErrorCode.WORKFLOW_EXECUTION_IN_PROGRESS;
 import static software.wings.beans.FailureStrategy.FailureStrategyBuilder.aFailureStrategy;
 import static software.wings.beans.Graph.Node.Builder.aNode;
+import static software.wings.beans.InfrastructureMappingType.AWS_SSH;
+import static software.wings.beans.InfrastructureMappingType.PHYSICAL_DATA_CENTER_SSH;
 import static software.wings.beans.NotificationRule.NotificationRuleBuilder.aNotificationRule;
 import static software.wings.beans.OrchestrationWorkflowType.BASIC;
 import static software.wings.beans.OrchestrationWorkflowType.BUILD;
@@ -104,7 +106,6 @@ import software.wings.beans.Graph;
 import software.wings.beans.Graph.Node;
 import software.wings.beans.HostConnectionAttributes;
 import software.wings.beans.InfrastructureMapping;
-import software.wings.beans.InfrastructureMappingType;
 import software.wings.beans.MultiServiceOrchestrationWorkflow;
 import software.wings.beans.NotificationGroup;
 import software.wings.beans.NotificationRule;
@@ -1516,7 +1517,7 @@ public class WorkflowServiceImpl implements WorkflowService, DataProvider {
   }
 
   @Override
-  public boolean workflowHasAwsInfraMapping(String appId, String workflowId) {
+  public boolean workflowHasSshInfraMapping(String appId, String workflowId) {
     Workflow workflow = readWorkflow(appId, workflowId);
     Validator.notNullCheck("Workflow", workflow);
     OrchestrationWorkflow orchestrationWorkflow = workflow.getOrchestrationWorkflow();
@@ -1539,8 +1540,10 @@ public class WorkflowServiceImpl implements WorkflowService, DataProvider {
                                                                    .field("uuid")
                                                                    .in(infraMappingIds)
                                                                    .asList();
-          return infrastructureMappings.stream().anyMatch(infrastructureMapping
-              -> infrastructureMapping.getInfraMappingType().equals(InfrastructureMappingType.AWS_SSH.name()));
+          return infrastructureMappings.stream().anyMatch((InfrastructureMapping infra) -> {
+            return AWS_SSH.name().equals(infra.getInfraMappingType())
+                || PHYSICAL_DATA_CENTER_SSH.name().equals(infra.getInfraMappingType());
+          });
         }
       }
     }

@@ -36,11 +36,10 @@ import software.wings.service.intfc.instance.InstanceService;
 import software.wings.utils.Validator;
 
 import java.util.Collection;
-import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
+import java.util.NavigableSet;
 import java.util.Set;
-import java.util.TreeSet;
 import java.util.stream.Collectors;
 import javax.validation.Valid;
 
@@ -232,8 +231,8 @@ public class InstanceServiceImpl implements InstanceService {
     List<String> containerServiceNamesInDB = getContainerServiceNames(containerSvcNameNoRevision, appId);
     List<ContainerDeploymentInfo> newList = Lists.newArrayList();
     List<String> updateList = Lists.newArrayList();
-    HashSet<String> deleteSet = Sets.newHashSet();
-    TreeSet<String> treeSet = Sets.newTreeSet(containerServiceNamesInDB);
+    Set<String> deleteSet = Sets.newHashSet();
+    NavigableSet<String> treeSet = Sets.newTreeSet(containerServiceNamesInDB);
     synchronized (containerSvcNameNoRevision) {
       for (ContainerDeploymentInfo containerDeploymentInfo : containerDeploymentInfoCollection) {
         if (!treeSet.contains(containerDeploymentInfo.getContainerSvcName())) {

@@ -15,7 +15,10 @@ import lombok.Data;
 import lombok.EqualsAndHashCode;
 import org.hibernate.validator.constraints.NotEmpty;
 import org.mongodb.morphia.annotations.Entity;
+import org.mongodb.morphia.annotations.Field;
+import org.mongodb.morphia.annotations.Index;
 import org.mongodb.morphia.annotations.Indexed;
+import org.mongodb.morphia.annotations.Indexes;
 import org.mongodb.morphia.annotations.Transient;
 import software.wings.beans.Base;
 import software.wings.beans.EmbeddedUser;
@@ -34,6 +37,8 @@ import java.util.Map;
 @JsonIgnoreProperties(ignoreUnknown = true)
 @Data
 @EqualsAndHashCode(callSuper = true)
+@Indexes(@Index(fields = { @Field("artifactStreamId")
+                           , @Field("appId") }))
 public class Artifact extends Base {
   @Indexed private String artifactStreamId;
   @Indexed private String artifactSourceName;

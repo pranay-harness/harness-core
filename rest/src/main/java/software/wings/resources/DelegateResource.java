@@ -330,6 +330,6 @@ public class DelegateResource {
   @ExceptionMetered
   public Delegate updateDelegateHB(
       @PathParam("delegateId") @NotEmpty String delegateId, @QueryParam("accountId") @NotEmpty String accountId) {
-    return delegateService.updateHB(accountId, delegateId);
+    return delegateService.updateHeartbeat(accountId, delegateId);
   }
 }

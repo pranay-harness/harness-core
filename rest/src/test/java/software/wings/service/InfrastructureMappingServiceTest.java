@@ -617,7 +617,7 @@ public class InfrastructureMappingServiceTest extends WingsBaseTest {
         .thenReturn(directKubernetesInfrastructureMapping);
     when(delegateProxyFactory.get(eq(ContainerService.class), any(DelegateTask.SyncTaskContext.class)))
         .thenReturn(containerService);
-    LinkedHashMap<String, Integer> activeCounts = new LinkedHashMap<>();
+    Map<String, Integer> activeCounts = new LinkedHashMap<>();
     activeCounts.put("app-name.service-name.env-name.1", 2);
     activeCounts.put("app-name.service-name.env-name.2", 3);
     ArgumentCaptor<ContainerServiceParams> captor = ArgumentCaptor.forClass(ContainerServiceParams.class);
@@ -651,7 +651,7 @@ public class InfrastructureMappingServiceTest extends WingsBaseTest {
         .thenReturn(gcpKubernetesInfrastructureMapping);
     when(delegateProxyFactory.get(eq(ContainerService.class), any(DelegateTask.SyncTaskContext.class)))
         .thenReturn(containerService);
-    LinkedHashMap<String, Integer> activeCounts = new LinkedHashMap<>();
+    Map<String, Integer> activeCounts = new LinkedHashMap<>();
     activeCounts.put("app-name.service-name.env-name.1", 2);
     activeCounts.put("app-name.service-name.env-name.2", 3);
     ArgumentCaptor<ContainerServiceParams> captor = ArgumentCaptor.forClass(ContainerServiceParams.class);
@@ -684,7 +684,7 @@ public class InfrastructureMappingServiceTest extends WingsBaseTest {
         .thenReturn(ecsInfrastructureMapping);
     when(delegateProxyFactory.get(eq(ContainerService.class), any(DelegateTask.SyncTaskContext.class)))
         .thenReturn(containerService);
-    LinkedHashMap<String, Integer> activeCounts = new LinkedHashMap<>();
+    Map<String, Integer> activeCounts = new LinkedHashMap<>();
     activeCounts.put("APP_NAME__SERVICE_NAME__ENV_NAME__1", 2);
     activeCounts.put("APP_NAME__SERVICE_NAME__ENV_NAME__2", 3);
     ArgumentCaptor<ContainerServiceParams> captor = ArgumentCaptor.forClass(ContainerServiceParams.class);

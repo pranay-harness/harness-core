@@ -273,7 +273,7 @@ public class YamlDirectoryServiceImpl implements YamlDirectoryService {
     completionService.submit(() -> doNotificationGroups(accountId, directoryPath.clone()));
 
     // collect results to this map so we can rebuild the correct order
-    Map<String, FolderNode> map = new HashMap<String, FolderNode>();
+    Map<String, FolderNode> map = new HashMap<>();
     // the number of items submitted to the completionService
     int count = 7;
 
@@ -356,7 +356,7 @@ public class YamlDirectoryServiceImpl implements YamlDirectoryService {
       //      completionService.submit(() -> doTriggers(app, appPath.clone()));
 
       // collect results to this map so we can rebuild the correct order
-      Map<String, FolderNode> map = new HashMap<String, FolderNode>();
+      Map<String, FolderNode> map = new HashMap<>();
       // the number of items submitted to the completionService
       int count = 4;
 

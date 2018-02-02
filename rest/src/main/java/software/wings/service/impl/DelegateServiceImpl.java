@@ -94,6 +94,7 @@ import java.io.StringWriter;
 import java.time.Clock;
 import java.util.ArrayList;
 import java.util.HashSet;
+import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
 import java.util.Optional;
@@ -159,7 +160,7 @@ public class DelegateServiceImpl implements DelegateService {
   }
 
   @Override
-  public Delegate updateHB(String accountId, String delegateId) {
+  public Delegate updateHeartbeat(String accountId, String delegateId) {
     wingsPersistence.update(wingsPersistence.createQuery(Delegate.class)
                                 .field("accountId")
                                 .equal(accountId)
@@ -222,8 +223,7 @@ public class DelegateServiceImpl implements DelegateService {
   @Override
   public DelegateScripts checkForUpgrade(String accountId, String delegateId, String version, String managerHost)
       throws IOException, TemplateException {
-    Delegate delegate = get(accountId, delegateId);
-    logger.info("Checking delegate for upgrade: {}", delegate.getUuid());
+    logger.info("Checking delegate for upgrade: {}", delegateId);
 
     ImmutableMap<Object, Object> scriptParams = getJarAndScriptRunTimeParamMap(accountId, version, managerHost);
 
@@ -505,7 +505,7 @@ public class DelegateServiceImpl implements DelegateService {
         task.getTaskType(), task.isAsync());
     T responseData = topic.poll(task.getTimeout(), TimeUnit.MILLISECONDS);
     if (responseData == null) {
-      logger.warn("Task [{}] timed out. remove it from cache", task.toString());
+      logger.warn("Task {} timed out. remove it from cache", task.getUuid());
       Caching.getCache(DELEGATE_SYNC_CACHE, String.class, DelegateTask.class).remove(taskId);
       throw new WingsException(ErrorCode.REQUEST_TIMEOUT).addParam("name", Constants.DELEGATE_NAME);
     }
@@ -904,20 +904,31 @@ public class DelegateServiceImpl implements DelegateService {
     List<DelegateTaskEvent> syncTaskEvents = new ArrayList<>();
     Cache<String, DelegateTask> delegateSyncCache =
         cacheHelper.getCache(DELEGATE_SYNC_CACHE, String.class, DelegateTask.class);
-    delegateSyncCache.forEach(stringDelegateTaskEntry -> {
-      try {
-        DelegateTask syncDelegateTask = stringDelegateTaskEntry.getValue();
-        if (syncDelegateTask.getStatus().equals(QUEUED) && syncDelegateTask.getDelegateId() == null) {
-          syncTaskEvents.add(aDelegateTaskEvent()
-                                 .withAccountId(syncDelegateTask.getAccountId())
-                                 .withDelegateTaskId(syncDelegateTask.getUuid())
-                                 .withSync(!syncDelegateTask.isAsync())
-                                 .build());
+    Iterator<Cache.Entry<String, DelegateTask>> iterator = delegateSyncCache.iterator();
+    try {
+      while (iterator.hasNext()) {
+        Cache.Entry<String, DelegateTask> stringDelegateTaskEntry = iterator.next();
+        if (stringDelegateTaskEntry != null) {
+          try {
+            DelegateTask syncDelegateTask = stringDelegateTaskEntry.getValue();
+            if (syncDelegateTask.getStatus().equals(QUEUED) && syncDelegateTask.getDelegateId() == null) {
+              syncTaskEvents.add(aDelegateTaskEvent()
+                                     .withAccountId(syncDelegateTask.getAccountId())
+                                     .withDelegateTaskId(syncDelegateTask.getUuid())
+                                     .withSync(!syncDelegateTask.isAsync())
+                                     .build());
+            }
+          } catch (Exception ex) {
+            logger.error("Could not fetch delegate task from queue", ex);
+            logger.warn("Remove Delegate task {} from cache", stringDelegateTaskEntry.getKey());
+            Caching.getCache(DELEGATE_SYNC_CACHE, String.class, DelegateTask.class)
+                .remove(stringDelegateTaskEntry.getKey());
+          }
         }
-      } catch (Exception ex) {
-        logger.error("Error in reading sync task from DELEGATE_SYNC_CACHE", ex);
       }
-    });
+    } catch (Exception e) {
+      delegateSyncCache.clear();
+    }
     return syncTaskEvents;
   }
 

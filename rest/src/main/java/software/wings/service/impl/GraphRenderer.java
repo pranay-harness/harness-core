@@ -7,6 +7,9 @@ package software.wings.service.impl;
 import static io.harness.data.structure.EmptyPredicate.isEmpty;
 import static io.harness.data.structure.EmptyPredicate.isNotEmpty;
 import static software.wings.beans.Graph.Node.Builder.aNode;
+import static software.wings.sm.StateType.PHASE;
+import static software.wings.sm.StateType.PHASE_STEP;
+import static software.wings.sm.StateType.SUB_WORKFLOW;
 
 import com.google.inject.Inject;
 import com.google.inject.Injector;
@@ -30,7 +33,6 @@ import software.wings.sm.states.RepeatState.RepeatStateExecutionData;
 
 import java.util.Collection;
 import java.util.HashMap;
-import java.util.List;
 import java.util.Map;
 import java.util.stream.Collectors;
 
@@ -44,21 +46,30 @@ public class GraphRenderer {
   private static final Logger logger = LoggerFactory.getLogger(GraphRenderer.class);
   @Inject private Injector injector;
 
+  static boolean isSubWorkflow(StateExecutionInstance stateExecutionInstance) {
+    if (stateExecutionInstance == null) {
+      return false;
+    }
+
+    final String stateTypeName = stateExecutionInstance.getStateType();
+    if (stateTypeName == null) {
+      return false;
+    }
+
+    final StateType stateType = StateType.valueOf(stateTypeName);
+    return stateType == SUB_WORKFLOW || stateType == PHASE_STEP || stateType == PHASE;
+  }
+
   /**
    * Generate hierarchy node node.
    *
    * @param instanceIdMap    the instance id map
    * @param initialStateName the initial state name
-   * @param expandedGroupIds the expanded group ids
-   * @param expandLastOnly   the expand last only
-   * @param allExpanded      the all expanded
    * @return the node
    */
-  public Node generateHierarchyNode(Map<String, StateExecutionInstance> instanceIdMap, String initialStateName,
-      List<String> expandedGroupIds, Boolean expandLastOnly, boolean allExpanded) {
-    logger.debug(
-        "generateSubworkflows request received - instanceIdMap: {}, initialStateName: {}, expandedGroupIds: {}",
-        instanceIdMap, initialStateName, expandedGroupIds);
+  public Node generateHierarchyNode(Map<String, StateExecutionInstance> instanceIdMap, String initialStateName) {
+    logger.debug("generateSubworkflows request received - instanceIdMap: {}, initialStateName: {}", instanceIdMap,
+        initialStateName);
     Node originNode = null;
     Map<String, Node> nodeIdMap = new HashMap<>();
     Map<String, Node> prevInstanceIdMap = new HashMap<>();
@@ -67,36 +78,15 @@ public class GraphRenderer {
     for (StateExecutionInstance instance : instanceIdMap.values()) {
       Node node = convertToNode(instance);
 
-      if ((StateType.REPEAT.name().equals(instance.getStateType())
-              || StateType.FORK.name().equals(instance.getStateType())
-              || StateType.SUB_WORKFLOW.name().equals(instance.getStateType())
-              || StateType.PHASE_STEP.name().equals(instance.getStateType())
-              || StateType.PHASE.name().equals(instance.getStateType()))
-          && (allExpanded || expandedGroupIds == null || !expandedGroupIds.contains(instance.getUuid()))) {
-        node.setExpanded(false);
-      } else {
-        node.setExpanded(true);
-      }
-
       if (node.getName().equals(initialStateName)) {
         originNode = node;
       }
 
-      if (instance.getParentInstanceId() != null && instance.isContextTransition()) {
-        Map<String, Node> elementsMap = parentIdElementsMap.get(instance.getParentInstanceId());
-        if (elementsMap == null) {
-          elementsMap = new HashMap<>();
-          parentIdElementsMap.put(instance.getParentInstanceId(), elementsMap);
-        }
-        if (instanceIdMap.get(instance.getParentInstanceId()) != null
-            && instanceIdMap.get(instance.getParentInstanceId()).getStateType() != null
-            && (instanceIdMap.get(instance.getParentInstanceId()).getStateType().equals(StateType.SUB_WORKFLOW.name())
-                   || instanceIdMap.get(instance.getParentInstanceId())
-                          .getStateType()
-                          .equals(StateType.PHASE_STEP.name())
-                   || instanceIdMap.get(instance.getParentInstanceId())
-                          .getStateType()
-                          .equals(StateType.PHASE.name()))) {
+      final String parentInstanceId = instance.getParentInstanceId();
+      if (parentInstanceId != null && instance.isContextTransition()) {
+        Map<String, Node> elementsMap = parentIdElementsMap.computeIfAbsent(parentInstanceId, key -> new HashMap<>());
+
+        if (isSubWorkflow(instanceIdMap.get(parentInstanceId))) {
           elementsMap.put(Constants.SUB_WORKFLOW, node);
           continue;
         }
@@ -117,8 +107,7 @@ public class GraphRenderer {
         "generateNodeTree invoked - instanceIdMap: {}, nodeIdMap: {}, prevInstanceIdMap: {}, parentIdElementsMap: {}, originNode: {}",
         instanceIdMap, nodeIdMap, prevInstanceIdMap, parentIdElementsMap, originNode);
 
-    generateNodeTree(instanceIdMap, nodeIdMap, prevInstanceIdMap, parentIdElementsMap, originNode, null, expandLastOnly,
-        allExpanded);
+    generateNodeTree(instanceIdMap, nodeIdMap, prevInstanceIdMap, parentIdElementsMap, originNode, null);
 
     // special treatment to avoid unnecessary hierarchy
     adjustProvisionNode(originNode);
@@ -126,34 +115,39 @@ public class GraphRenderer {
     return originNode;
   }
 
-  private void adjustProvisionNode(Node node) {
+  static boolean isProvisionNode(Node node) {
+    return PHASE_STEP.name().equals(node.getType()) && node.getName().equals(Constants.PROVISION_NODE_NAME)
+        && node.getGroup() != null && isNotEmpty(node.getGroup().getElements());
+  }
+
+  static void adjustProvisionNode(Node node) {
     if (node == null) {
       return;
     }
 
     adjustProvisionNode(node.getGroup());
 
-    if (node.getNext() != null) {
-      Node next = node.getNext();
-      if (StateType.PHASE_STEP.name().equals(next.getType()) && next.getName().equals(Constants.PROVISION_NODE_NAME)
-          && next.getGroup() != null && isNotEmpty(next.getGroup().getElements())) {
-        Node nextToNext = next.getNext();
-        Node provisionStep = next.getGroup().getElements().get(0);
-        node.setNext(provisionStep);
-        provisionStep.setNext(nextToNext);
-      }
+    if (node.getNext() == null) {
+      return;
+    }
+
+    Node next = node.getNext();
+    if (isProvisionNode(next)) {
+      Node nextToNext = next.getNext();
+      Node provisionStep = next.getGroup().getElements().get(0);
+      node.setNext(provisionStep);
+      provisionStep.setNext(nextToNext);
     }
     adjustProvisionNode(node.getNext());
   }
 
-  private void adjustProvisionNode(Group group) {
+  static void adjustProvisionNode(Group group) {
     if (group == null || isEmpty(group.getElements())) {
       return;
     }
 
     Node first = group.getElements().get(0);
-    if (StateType.PHASE_STEP.name().equals(first.getType()) && first.getName().equals(Constants.PROVISION_NODE_NAME)
-        && first.getGroup() != null && isNotEmpty(first.getGroup().getElements())) {
+    if (isProvisionNode(first)) {
       Node nextToNext = first.getNext();
       Node provisionStep = first.getGroup().getElements().get(0);
       provisionStep.setNext(nextToNext);
@@ -213,7 +207,7 @@ public class GraphRenderer {
 
   private void generateNodeTree(Map<String, StateExecutionInstance> instanceIdMap, Map<String, Node> nodeIdMap,
       Map<String, Node> prevInstanceIdMap, Map<String, Map<String, Node>> parentIdElementsMap, Node node,
-      StateExecutionData elementStateExecutionData, Boolean expandLastOnly, boolean allExpanded) {
+      StateExecutionData elementStateExecutionData) {
     logger.debug("generateNodeTree requested- node: {}", node);
     StateExecutionInstance instance = instanceIdMap.get(node.getId());
 
@@ -221,7 +215,7 @@ public class GraphRenderer {
       elementStateExecutionData.setStartTs(instance.getStartTs());
     }
 
-    if ((allExpanded || expandLastOnly == null || expandLastOnly) && parentIdElementsMap.get(node.getId()) != null) {
+    if (parentIdElementsMap.get(node.getId()) != null) {
       Group group = new Group();
       group.setId(node.getId() + "-group");
       logger.debug("generateNodeTree group attached - group: {}, node: {}", group, node);
@@ -244,23 +238,17 @@ public class GraphRenderer {
       if (elements == null) {
         elements = parentIdElementsMap.get(node.getId()).keySet();
       }
-      int i = 0;
       for (String element : elements) {
-        generateElement(instanceIdMap, nodeIdMap, prevInstanceIdMap, parentIdElementsMap, node,
-            expandLastOnly == null ? null : (i == elements.size() - 1), allExpanded, group, element);
-        i++;
+        generateElement(instanceIdMap, nodeIdMap, prevInstanceIdMap, parentIdElementsMap, node, group, element);
       }
-    }
-    if (!allExpanded && expandLastOnly != null && !expandLastOnly) {
-      node.setExpanded(false);
     }
 
     if (prevInstanceIdMap.get(node.getId()) != null) {
       Node nextNode = prevInstanceIdMap.get(node.getId());
       logger.debug("generateNodeTree nextNode attached - nextNode: {}, node: {}", nextNode, node);
       node.setNext(nextNode);
-      generateNodeTree(instanceIdMap, nodeIdMap, prevInstanceIdMap, parentIdElementsMap, nextNode,
-          elementStateExecutionData, expandLastOnly, allExpanded);
+      generateNodeTree(
+          instanceIdMap, nodeIdMap, prevInstanceIdMap, parentIdElementsMap, nextNode, elementStateExecutionData);
     } else {
       if (elementStateExecutionData != null) {
         StateExecutionData executionData = instance.getStateExecutionData();
@@ -274,15 +262,14 @@ public class GraphRenderer {
   }
 
   private void generateElement(Map<String, StateExecutionInstance> instanceIdMap, Map<String, Node> nodeIdMap,
-      Map<String, Node> prevInstanceIdMap, Map<String, Map<String, Node>> parentIdElementsMap, Node node,
-      Boolean expandLastOnly, boolean allExpanded, Group group, String element) {
+      Map<String, Node> prevInstanceIdMap, Map<String, Map<String, Node>> parentIdElementsMap, Node node, Group group,
+      String element) {
     if (element.equals(Constants.SUB_WORKFLOW)) {
       Node elementRepeatNode = parentIdElementsMap.get(node.getId()).get(element);
       if (elementRepeatNode != null) {
         group.getElements().add(elementRepeatNode);
         logger.debug("generateNodeTree elementRepeatNode added - node: {}", elementRepeatNode);
-        generateNodeTree(instanceIdMap, nodeIdMap, prevInstanceIdMap, parentIdElementsMap, elementRepeatNode, null,
-            expandLastOnly, allExpanded);
+        generateNodeTree(instanceIdMap, nodeIdMap, prevInstanceIdMap, parentIdElementsMap, elementRepeatNode, null);
       }
       return;
     }
@@ -296,8 +283,8 @@ public class GraphRenderer {
     if (elementRepeatNode != null) {
       elementNode.setNext(elementRepeatNode);
       logger.debug("generateNodeTree elementNode next added - node: {}", elementRepeatNode);
-      generateNodeTree(instanceIdMap, nodeIdMap, prevInstanceIdMap, parentIdElementsMap, elementRepeatNode,
-          executionData, expandLastOnly, allExpanded);
+      generateNodeTree(
+          instanceIdMap, nodeIdMap, prevInstanceIdMap, parentIdElementsMap, elementRepeatNode, executionData);
     }
     if (executionData.getStatus() == null) {
       executionData.setStatus(ExecutionStatus.QUEUED);

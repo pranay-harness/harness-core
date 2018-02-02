@@ -95,6 +95,6 @@ public class YamlHistoryResource {
     yv.setAccountId(accountId);
     yv.setEntityId(entityId);
     yv.setType(type);
-    return new RestResponse<YamlVersion>(yamlHistoryService.save(yv));
+    return new RestResponse<>(yamlHistoryService.save(yv));
   }
 }

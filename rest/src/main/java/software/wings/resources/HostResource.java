@@ -104,7 +104,7 @@ public class HostResource {
       @PathParam("hostId") String hostId, Host host) {
     host.setUuid(hostId);
     host.setAppId(appId);
-    return new RestResponse<Host>(hostService.update(envId, host));
+    return new RestResponse<>(hostService.update(envId, host));
   }
 
   /**
