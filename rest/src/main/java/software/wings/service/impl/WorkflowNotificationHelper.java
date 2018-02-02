@@ -2,8 +2,6 @@ package software.wings.service.impl;
 
 import static io.harness.data.structure.EmptyPredicate.isEmpty;
 import static io.harness.data.structure.EmptyPredicate.isNotEmpty;
-import static java.util.Collections.singletonList;
-import static java.util.stream.Collectors.toList;
 import static software.wings.beans.ExecutionScope.WORKFLOW;
 import static software.wings.beans.ExecutionScope.WORKFLOW_PHASE;
 import static software.wings.beans.FailureNotification.Builder.aFailureNotification;
@@ -31,9 +29,7 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import software.wings.app.MainConfiguration;
 import software.wings.beans.Application;
-import software.wings.beans.Base;
 import software.wings.beans.CanaryOrchestrationWorkflow;
-import software.wings.beans.EmbeddedUser;
 import software.wings.beans.EntityType;
 import software.wings.beans.Environment;
 import software.wings.beans.ExecutionScope;
@@ -41,12 +37,13 @@ import software.wings.beans.FailureNotification;
 import software.wings.beans.InformationNotification;
 import software.wings.beans.NotificationRule;
 import software.wings.beans.OrchestrationWorkflow;
+import software.wings.beans.Service;
 import software.wings.beans.WorkflowExecution;
 import software.wings.beans.artifact.Artifact;
 import software.wings.common.NotificationMessageResolver.NotificationMessageType;
 import software.wings.service.intfc.NotificationService;
+import software.wings.service.intfc.ServiceResourceService;
 import software.wings.service.intfc.WorkflowExecutionService;
-import software.wings.service.intfc.WorkflowService;
 import software.wings.sm.ExecutionContext;
 import software.wings.sm.ExecutionContextImpl;
 import software.wings.sm.ExecutionStatus;
@@ -70,7 +67,7 @@ public class WorkflowNotificationHelper {
   private static final Logger logger = LoggerFactory.getLogger(WorkflowNotificationHelper.class);
 
   @Inject private NotificationService notificationService;
-  @Inject private WorkflowService workflowService;
+  @Inject private ServiceResourceService serviceResourceService;
   @Inject private WorkflowExecutionService workflowExecutionService;
   @Inject private MainConfiguration configuration;
   @Inject private Clock clock;
@@ -89,8 +86,7 @@ public class WorkflowNotificationHelper {
 
     WorkflowExecution workflowExecution =
         workflowExecutionService.getExecutionDetails(app.getUuid(), context.getWorkflowExecutionId());
-    EmbeddedUser triggeredBy = workflowExecution.getTriggeredBy();
-    String userName = triggeredBy != null ? triggeredBy.getName() : "deployment trigger";
+    String userName = workflowExecution.getTriggeredBy().getName();
     if (userName.equalsIgnoreCase("Deployment trigger")) {
       userName = userName.toLowerCase();
     }
@@ -101,7 +97,7 @@ public class WorkflowNotificationHelper {
     Map<String, String> placeHolderValues = new HashMap<>();
     placeHolderValues.put("WORKFLOW_NAME", context.getWorkflowExecutionName());
     placeHolderValues.put("WORKFLOW_URL", workflowUrl);
-    placeHolderValues.put("ARTIFACTS", getArtifactsMessage(context, WORKFLOW, null));
+    placeHolderValues.put("ARTIFACTS", getArtifactsMessage(context, workflowExecution, WORKFLOW, null));
     if (!BUILD.equals(context.getOrchestrationWorkflowType())) {
       placeHolderValues.put("ENV_NAME", env.getName());
     }
@@ -198,8 +194,7 @@ public class WorkflowNotificationHelper {
 
     WorkflowExecution workflowExecution =
         workflowExecutionService.getExecutionDetails(app.getUuid(), context.getWorkflowExecutionId());
-    EmbeddedUser triggeredBy = workflowExecution.getTriggeredBy();
-    String userName = triggeredBy != null ? triggeredBy.getName() : "deployment trigger";
+    String userName = workflowExecution.getTriggeredBy().getName();
     if (userName.equalsIgnoreCase("Deployment trigger")) {
       userName = userName.toLowerCase();
     }
@@ -211,7 +206,8 @@ public class WorkflowNotificationHelper {
     placeHolderValues.put("WORKFLOW_NAME", context.getWorkflowExecutionName());
     placeHolderValues.put("WORKFLOW_URL", workflowUrl);
     placeHolderValues.put("PHASE_NAME", phaseSubWorkflow.getName());
-    placeHolderValues.put("ARTIFACTS", getArtifactsMessage(context, WORKFLOW_PHASE, phaseSubWorkflow));
+    placeHolderValues.put(
+        "ARTIFACTS", getArtifactsMessage(context, workflowExecution, WORKFLOW_PHASE, phaseSubWorkflow));
     placeHolderValues.put("ENV_NAME", env.getName());
     placeHolderValues.put("USER_NAME", userName);
     placeHolderValues.put("DATE", getDateString());
@@ -248,26 +244,46 @@ public class WorkflowNotificationHelper {
     }
   }
 
-  private String getArtifactsMessage(
-      ExecutionContext context, ExecutionScope scope, PhaseSubWorkflow phaseSubWorkflow) {
-    List<String> serviceIds = scope == WORKFLOW_PHASE
-        ? singletonList(phaseSubWorkflow.getServiceId())
-        : workflowService.readWorkflow(context.getAppId(), context.getWorkflowId())
-              .getServices()
-              .stream()
-              .map(Base::getUuid)
-              .collect(toList());
+  private String getArtifactsMessage(ExecutionContext context, WorkflowExecution workflowExecution,
+      ExecutionScope scope, PhaseSubWorkflow phaseSubWorkflow) {
+    List<String> serviceIds = new ArrayList<>();
+    if (scope == WORKFLOW_PHASE) {
+      serviceIds.add(phaseSubWorkflow.getServiceId());
+    } else if (isNotEmpty(workflowExecution.getServiceIds())) {
+      serviceIds.addAll(workflowExecution.getServiceIds());
+    }
+
+    Map<String, Artifact> serviceIdArtifacts = new HashMap<>();
+
     List<Artifact> artifacts = ((ExecutionContextImpl) context).getArtifacts();
-    String artifactsMsg = "no artifacts";
     if (isNotEmpty(artifacts)) {
-      List<Artifact> relatedArtifacts =
-          artifacts.stream()
-              .filter(artifact -> artifact.getServiceIds().stream().anyMatch(serviceIds::contains))
-              .collect(toList());
-      artifactsMsg = Joiner.on(", ").join(
-          relatedArtifacts.stream()
-              .map(artifact -> artifact.getArtifactSourceName() + " (build# " + artifact.getBuildNo() + ")")
-              .collect(toList()));
+      for (Artifact artifact : artifacts) {
+        for (String serviceId : artifact.getServiceIds()) {
+          serviceIdArtifacts.put(serviceId, artifact);
+        }
+      }
+    }
+
+    List<String> serviceMsgs = new ArrayList<>();
+    for (String serviceId : serviceIds) {
+      StringBuilder serviceMsg = new StringBuilder();
+      Service service = serviceResourceService.get(context.getAppId(), serviceId);
+      serviceMsg.append(service.getName()).append(": ");
+      if (serviceIdArtifacts.containsKey(serviceId)) {
+        Artifact artifact = serviceIdArtifacts.get(serviceId);
+        serviceMsg.append(artifact.getArtifactSourceName())
+            .append(" (build# ")
+            .append(artifact.getBuildNo())
+            .append(')');
+      } else {
+        serviceMsg.append("no artifact");
+      }
+      serviceMsgs.add(serviceMsg.toString());
+    }
+
+    String artifactsMsg = "no services";
+    if (isNotEmpty(serviceMsgs)) {
+      artifactsMsg = Joiner.on(", ").join(serviceMsgs);
     }
     return artifactsMsg;
   }
