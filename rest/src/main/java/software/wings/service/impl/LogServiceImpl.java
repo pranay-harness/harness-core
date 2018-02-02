@@ -167,6 +167,8 @@ public class LogServiceImpl implements LogService {
 
   @Override
   public void purgeActivityLogs() {
+    long startTime = System.currentTimeMillis();
+    logger.info("Purging activities Start time", startTime);
     List<Key<Activity>> nonPurgedActivities =
         wingsPersistence.createQuery(Activity.class)
             .field("logPurged")
@@ -174,26 +176,33 @@ public class LogServiceImpl implements LogService {
             .field("createdAt")
             .greaterThan(System.currentTimeMillis() - DataCleanUpJob.LOGS_RETENTION_TIME)
             .asKeyList();
+    logger.info("Fetching activities time  {}", System.currentTimeMillis() - startTime);
     for (Key<Activity> activityKey : nonPurgedActivities) {
       List<Object> idsToKeep = new ArrayList<>();
+      startTime = System.currentTimeMillis();
       List<Key<Log>> logs = wingsPersistence.createQuery(Log.class)
                                 .field("activityId")
                                 .equal(activityKey.getId())
                                 .order("-createdAt")
                                 .asKeyList();
-
+      logger.info("Fetching log keys  for activity {}  End time {}", activityKey.getId(),
+          System.currentTimeMillis() - startTime);
       for (Key<Log> logKey : logs) {
         idsToKeep.add(logKey.getId());
         if (idsToKeep.size() >= NUM_OF_LOGS_TO_KEEP) {
           break;
         }
       }
-
-      wingsPersistence.delete(wingsPersistence.createQuery(Log.class)
-                                  .field("activityId")
-                                  .equal(activityKey.getId())
-                                  .field("_id")
-                                  .hasNoneOf(idsToKeep));
+      startTime = System.currentTimeMillis();
+      if (idsToKeep.size() != 0) {
+        wingsPersistence.delete(wingsPersistence.createQuery(Log.class)
+                                    .field("activityId")
+                                    .equal(activityKey.getId())
+                                    .field("_id")
+                                    .hasNoneOf(idsToKeep));
+      }
+      logger.info(
+          "Deleting logs for activity {}  time {}", activityKey.getId(), System.currentTimeMillis() - startTime);
     }
   }
 

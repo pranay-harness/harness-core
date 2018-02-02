@@ -17,6 +17,7 @@ import software.wings.scheduler.QuartzScheduler;
 import software.wings.service.intfc.AlertService;
 import software.wings.service.intfc.ArtifactService;
 import software.wings.service.intfc.AuditService;
+import software.wings.service.intfc.LogService;
 
 import java.util.concurrent.TimeUnit;
 
@@ -33,6 +34,7 @@ public class DataCleanUpJobUtil extends WingsBaseTest {
   @Inject private ArtifactService artifactService;
   @Inject private AuditService auditService;
   @Inject private AlertService alertService;
+  @Inject private LogService logService;
   @Inject @Named("JobScheduler") private QuartzScheduler jobScheduler;
 
   @Test
@@ -76,6 +78,19 @@ public class DataCleanUpJobUtil extends WingsBaseTest {
     System.out.println("Deleting alerts");
     try {
       alertService.deleteOldAlerts(ALERT_RETENTION_TIME);
+      System.out.println("Deleting alerts success");
+    } catch (Exception e) {
+      System.out.println("Deleting alerts failed.");
+      e.printStackTrace();
+    }
+    System.out.println("Deleting alerts completed");
+  }
+
+  @Test
+  public void deleteActivityLogs() {
+    System.out.println("Deleting alerts");
+    try {
+      logService.purgeActivityLogs();
       System.out.println("Deleting alerts success");
     } catch (Exception e) {
       System.out.println("Deleting alerts failed.");
