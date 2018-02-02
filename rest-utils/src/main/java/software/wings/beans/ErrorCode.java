@@ -145,7 +145,16 @@ public enum ErrorCode {
   /**
    * Socket connection timeout error codes.
    */
-  SOCKET_CONNECTION_TIMEOUT("SOCKET_CONNECTION_TIMEOUT", "Connection timeout"),
+  SOCKET_CONNECTION_TIMEOUT("SOCKET_CONNECTION_TIMEOUT", "Socket Connection timeout"),
+
+  /**
+   * Socket connection timeout error codes.
+   */
+  CONNECTION_TIMEOUT("CONNECTION_TIMEOUT", "Connection timeout"),
+  /**
+   * Connection error
+   */
+  SSH_CONNECTION_ERROR("CONNECTION_ERROR", "Ssh Connection error"),
 
   /**
    * Invalid execution id error codes.

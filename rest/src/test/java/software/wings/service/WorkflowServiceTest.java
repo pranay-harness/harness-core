@@ -100,7 +100,6 @@ import software.wings.beans.ExecutionScope;
 import software.wings.beans.FailureStrategy;
 import software.wings.beans.Graph;
 import software.wings.beans.Graph.Node;
-import software.wings.beans.InfrastructureMapping;
 import software.wings.beans.MultiServiceOrchestrationWorkflow;
 import software.wings.beans.NotificationGroup;
 import software.wings.beans.NotificationRule;
@@ -206,7 +205,6 @@ public class WorkflowServiceTest extends WingsBaseTest {
   @Mock private UpdateOperations<Workflow> updateOperations;
   @Mock Query<Workflow> query;
 
-  @Mock Query<InfrastructureMapping> infrastructureMappingQuery;
   @Inject private EntityVersionService entityVersionService;
 
   @InjectMocks @Inject private WorkflowService workflowService;
@@ -3021,7 +3019,7 @@ public class WorkflowServiceTest extends WingsBaseTest {
   }
 
   @Test
-  public void shouldTestWorkflowHasNoAwsInfraMapping() {
+  public void shouldTestWorkflowHasSshInfraMapping() {
     when(serviceResourceService.get(APP_ID, SERVICE_ID, false)).thenReturn(aService().withUuid(SERVICE_ID).build());
     when(serviceResourceService.get(APP_ID, SERVICE_ID)).thenReturn(aService().withUuid(SERVICE_ID).build());
     when(infrastructureMappingService.get(APP_ID, INFRA_MAPPING_ID))
@@ -3044,6 +3042,6 @@ public class WorkflowServiceTest extends WingsBaseTest {
     Workflow workflow2 = workflowService.readWorkflow(workflow1.getAppId(), workflow1.getUuid());
     assertThat(workflow2).isNotNull();
 
-    assertThat(workflowService.workflowHasAwsInfraMapping(workflow2.getAppId(), workflow2.getUuid())).isFalse();
+    assertThat(workflowService.workflowHasSshInfraMapping(workflow2.getAppId(), workflow2.getUuid())).isFalse();
   }
 }
