@@ -61,6 +61,8 @@ import software.wings.api.DeploymentType;
 import software.wings.api.PhaseElement;
 import software.wings.api.PhaseStepExecutionData;
 import software.wings.api.ServiceElement;
+import software.wings.app.MainConfiguration;
+import software.wings.app.PortalConfig;
 import software.wings.beans.Activity;
 import software.wings.beans.Application;
 import software.wings.beans.DelegateTask;
@@ -109,6 +111,7 @@ import java.util.Map;
 public class KubernetesSetupTest extends WingsBaseTest {
   private static final String KUBERNETES_REPLICATION_CONTROLLER_NAME = "kubernetes-rc-name.1";
   private static final String KUBERNETES_REPLICATION_CONTROLLER_OLD_NAME = "kubernetes-rc-name.0";
+  private static final String BASE_URL = "https://env.harness.io/";
 
   @Mock private SettingsService settingsService;
   @Mock private DelegateService delegateService;
@@ -130,6 +133,7 @@ public class KubernetesSetupTest extends WingsBaseTest {
   @InjectMocks private KubernetesSetup kubernetesSetup = new KubernetesSetup("name");
 
   @Mock private ContainerService containerService;
+  @Mock private MainConfiguration configuration;
 
   private ExecutionContextImpl context;
 
@@ -212,6 +216,7 @@ public class KubernetesSetupTest extends WingsBaseTest {
     on(workflowStandardParams).set("environmentService", environmentService);
     on(workflowStandardParams).set("artifactService", artifactService);
     on(workflowStandardParams).set("serviceTemplateService", serviceTemplateService);
+    on(workflowStandardParams).set("configuration", configuration);
 
     when(artifactService.get(any(), any())).thenReturn(artifact);
     when(artifactStreamService.get(any(), any())).thenReturn(artifactStream);
@@ -248,6 +253,9 @@ public class KubernetesSetupTest extends WingsBaseTest {
     when(delegateProxyFactory.get(eq(ContainerService.class), any(DelegateTask.SyncTaskContext.class)))
         .thenReturn(containerService);
     when(containerService.getActiveAutoscalers(any(ContainerServiceParams.class))).thenReturn(emptyList());
+    PortalConfig portalConfig = new PortalConfig();
+    portalConfig.setUrl(BASE_URL);
+    when(configuration.getPortal()).thenReturn(portalConfig);
   }
 
   @Test
