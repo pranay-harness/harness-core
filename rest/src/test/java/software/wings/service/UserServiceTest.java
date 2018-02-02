@@ -217,7 +217,7 @@ public class UserServiceTest extends WingsBaseTest {
     assertThat(emailDataArgumentCaptor.getValue().getTemplateName()).isEqualTo(SIGNUP_EMAIL_TEMPLATE_NAME);
     assertThat(((Map) emailDataArgumentCaptor.getValue().getTemplateModel()).get("name")).isEqualTo(USER_NAME);
     assertThat(((Map<String, String>) emailDataArgumentCaptor.getValue().getTemplateModel()).get("url"))
-        .startsWith(PORTAL_URL + "#" + VERIFICATION_PATH);
+        .startsWith(PORTAL_URL + "/#" + VERIFICATION_PATH);
     verify(cache).remove(USER_ID);
   }
 
@@ -613,9 +613,9 @@ public class UserServiceTest extends WingsBaseTest {
     assertThat(emailDataArgumentCaptor.getValue().getTemplateName()).isEqualTo("reset_password");
     assertThat(((Map) emailDataArgumentCaptor.getValue().getTemplateModel()).get("name")).isEqualTo(USER_NAME);
     assertThat(((Map<String, String>) emailDataArgumentCaptor.getValue().getTemplateModel()).get("url"))
-        .startsWith(PORTAL_URL + "#/reset-password/");
+        .startsWith(PORTAL_URL + "/#/reset-password/");
     assertThat(((Map<String, String>) emailDataArgumentCaptor.getValue().getTemplateModel()).get("url").length())
-        .isGreaterThan((PORTAL_URL + "#/reset-password/").length());
+        .isGreaterThan((PORTAL_URL + "/#/reset-password/").length());
   }
 
   /**

@@ -252,8 +252,11 @@ public class UserServiceImpl implements UserService {
   }
 
   private String buildAbsoluteUrl(String fragment) throws URISyntaxException {
-    String baseURl = configuration.getPortal().getUrl().trim();
-    URIBuilder uriBuilder = new URIBuilder(baseURl);
+    String baseUrl = configuration.getPortal().getUrl().trim();
+    if (!baseUrl.endsWith("/")) {
+      baseUrl += "/";
+    }
+    URIBuilder uriBuilder = new URIBuilder(baseUrl);
     uriBuilder.setFragment(fragment);
     return uriBuilder.toString();
   }
