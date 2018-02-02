@@ -37,7 +37,7 @@ public class ApprovalState extends State {
 
   @Attributes(required = true, title = "Group Name") private String groupName;
 
-  @Inject AlertService alertService;
+  @Inject private AlertService alertService;
 
   /**
    * Creates pause state with given name.

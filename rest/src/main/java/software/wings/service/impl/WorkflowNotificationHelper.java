@@ -274,6 +274,9 @@ public class WorkflowNotificationHelper {
 
   private String buildAbsoluteUrl(String fragment) {
     String baseUrl = configuration.getPortal().getUrl().trim();
+    if (!baseUrl.endsWith("/")) {
+      baseUrl += "/";
+    }
     try {
       URIBuilder uriBuilder = new URIBuilder(baseUrl);
       uriBuilder.setFragment(fragment);
