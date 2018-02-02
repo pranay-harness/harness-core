@@ -251,7 +251,7 @@ public class AwsAmiServiceSetupTest extends WingsBaseTest {
   @Test
   public void testCreateNewAutoScalingGroupRequestWithZeroTags() {
     AutoScalingGroup baseAutoScalingGroup = new AutoScalingGroup();
-    Collection<TagDescription> tags = new ArrayList<TagDescription>();
+    Collection<TagDescription> tags = new ArrayList<>();
     baseAutoScalingGroup.setTags(tags);
 
     CreateAutoScalingGroupRequest request = amiServiceSetup.createNewAutoScalingGroupRequest(

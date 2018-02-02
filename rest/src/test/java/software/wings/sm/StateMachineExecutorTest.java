@@ -680,7 +680,7 @@ public class StateMachineExecutorTest extends WingsBaseTest {
     sm.addState(stateC);
 
     ForkState fork1 = new ForkState("fork1");
-    List<String> forkStates = new ArrayList<String>();
+    List<String> forkStates = new ArrayList<>();
     forkStates.add(stateB.getName());
     forkStates.add(stateC.getName());
     fork1.setForkStateNames(forkStates);
@@ -728,7 +728,7 @@ public class StateMachineExecutorTest extends WingsBaseTest {
     sm.addState(stateBC);
 
     ForkState fork1 = new ForkState("fork1");
-    List<String> forkStates = new ArrayList<String>();
+    List<String> forkStates = new ArrayList<>();
     forkStates.add(stateB.getName());
     forkStates.add(stateBC.getName());
     fork1.setForkStateNames(forkStates);

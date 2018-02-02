@@ -210,7 +210,7 @@ public class UserServiceImpl implements UserService {
       user.setRoles(Lists.newArrayList(roleService.getAccountAdminRole(account.getUuid())));
       return save(user);
     } else {
-      Map<String, Object> map = new HashMap<String, Object>();
+      Map<String, Object> map = new HashMap<>();
       map.put("name", user.getName());
       map.put("passwordHash", hashpw(new String(user.getPassword()), BCrypt.gensalt()));
       wingsPersistence.updateFields(User.class, existingUser.getUuid(), map);

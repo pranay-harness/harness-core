@@ -37,7 +37,7 @@ public class MongoQueueTest extends WingsBaseTest {
    */
   @Before
   public void setup() throws UnknownHostException {
-    queue = new MongoQueueImpl<QueuableObject>(QueuableObject.class, datastore);
+    queue = new MongoQueueImpl<>(QueuableObject.class, datastore);
   }
 
   /**
@@ -441,7 +441,7 @@ public class MongoQueueTest extends WingsBaseTest {
   @Test
   public void shouldSendAndGetMessageWithEntityReference() {
     Queue<TestQueuableWithEntity> entityQueue;
-    entityQueue = new MongoQueueImpl<TestQueuableWithEntity>(TestQueuableWithEntity.class, datastore);
+    entityQueue = new MongoQueueImpl<>(TestQueuableWithEntity.class, datastore);
 
     TestEntity testEntity = new TestEntity(1);
     datastore.save(testEntity);

@@ -24,7 +24,7 @@ import javax.validation.constraints.NotNull;
  */
 public class GuiceObjectFactory implements AtmosphereObjectFactory<AbstractModule> {
   private static final Logger logger = LoggerFactory.getLogger(GuiceObjectFactory.class);
-  private final List<AbstractModule> modules = new ArrayList<AbstractModule>();
+  private final List<AbstractModule> modules = new ArrayList<>();
   /**
    * The Injector.
    */

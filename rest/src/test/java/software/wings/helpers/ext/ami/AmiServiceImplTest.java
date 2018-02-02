@@ -24,7 +24,7 @@ public class AmiServiceImplTest {
     assertThat(filters.get(1).getValues().size()).isEqualTo(1);
     assertThat(filters.get(1).getValues().get(0)).isEqualTo("available");
 
-    filters = service.getFilters(new HashMap<String, List<String>>(), new HashMap<>());
+    filters = service.getFilters(new HashMap<>(), new HashMap<>());
     assertThat(filters.size()).isEqualTo(2);
     assertThat(filters.get(0).getName()).isEqualTo("is-public");
     assertThat(filters.get(0).getValues().size()).isEqualTo(1);

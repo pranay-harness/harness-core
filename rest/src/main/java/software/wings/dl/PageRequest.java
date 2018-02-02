@@ -484,7 +484,7 @@ public class PageRequest<T> {
   public static final class Builder {
     private String offset;
     private String limit;
-    private List<SearchFilter> filters = new ArrayList<SearchFilter>();
+    private List<SearchFilter> filters = new ArrayList<>();
     private List<SortOrder> orders = new ArrayList<>();
     private List<String> fieldsIncluded = new ArrayList<>();
     private List<String> fieldsExcluded = new ArrayList<>();

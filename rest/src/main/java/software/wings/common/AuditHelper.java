@@ -19,7 +19,7 @@ import java.io.InputStream;
  */
 @Singleton
 public class AuditHelper {
-  private static final ThreadLocal<AuditHeader> auditThreadLocal = new ThreadLocal<AuditHeader>();
+  private static final ThreadLocal<AuditHeader> auditThreadLocal = new ThreadLocal<>();
   private static final Logger logger = LoggerFactory.getLogger(AuditHelper.class);
 
   @Inject private AuditService auditService;
