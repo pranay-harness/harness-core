@@ -19,11 +19,19 @@
 5. Install npm (used for front-end):
     `brew install npm`
 
-6. Set up JAVA_HOME: create ~/.bash_profile file and add following line:
+6. **Set up JAVA_HOME: create or add this to your bash profile `~/.bash_profile` file and add following line:**
 
-   `export JAVA_HOME=$(/usr/libexec/java_home -v1.8)`
+```
+   export JAVA_HOME=$(/usr/libexec/java_home -v1.8)
+   export HOSTNAME
+```
 
-7. Go to http://www.oracle.com/technetwork/java/javase/downloads/jce8-download-2133166.html. Accept the license agreement and download the files. Unzip the files. Copy the two jars to `$JAVA_HOME/jre/lib/security` (you'll probably need to use sudo).
+7. Mac OSX Sierra Users should add to their `/etc/hosts` file with `sudo`, to speed up mongodb 
+
+```
+    127.0.0.1   localhost mbpro.local
+```
+8. Go to http://www.oracle.com/technetwork/java/javase/downloads/jce8-download-2133166.html. Accept the license agreement and download the files. Unzip the files. Copy the two jars to `$JAVA_HOME/jre/lib/security` (you'll probably need to use sudo).
 
 Run this script to test if JCE is installed properly:
 
@@ -56,12 +64,9 @@ sudo apt install oracle-java8-unlimited-jce-policy
 
     `mvn clean install`
 
-Note: On MacOS sierra, you may need fix for the slow java.net.InetAddress.getLocalHost() response problem as documented in this blog post (https://thoeni.io/post/macos-sierra-java/).
 
 ### Run Harness without IDE (especially for the UI development)
 1) Start server : Replace the <Your Home Directory> with the appropriate value(such as /home/rishi) and run following commands.
-
-`export HOSTNAME`
 
 `mvn clean install -DskipTests && java -Xms1024m -Xmx4096m -XX:+HeapDumpOnOutOfMemoryError -XX:+PrintGCDetails -XX:+PrintGCDateStamps -Xloggc:mygclogfilename.gc -XX:+UseParallelGC -XX:MaxGCPauseMillis=500 -Xbootclasspath/p:<Your Home Directory>/.m2/repository/org/mortbay/jetty/alpn/alpn-boot/8.1.11.v20170118/alpn-boot-8.1.11.v20170118.jar -Dfile.encoding=UTF-8 -jar rest/target/rest-0.0.1-SNAPSHOT-capsule.jar rest/config.yml > portal.log &`
 
