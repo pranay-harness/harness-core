@@ -2252,6 +2252,11 @@ public class WorkflowServiceTest extends WingsBaseTest {
                                           .withServiceId(SERVICE_ID)
                                           .withDeploymentType(SSH)
                                           .build())
+                    .addWorkflowPhase(aWorkflowPhase()
+                                          .withInfraMappingId(INFRA_MAPPING_ID)
+                                          .withServiceId(SERVICE_ID)
+                                          .withDeploymentType(SSH)
+                                          .build())
                     .withPostDeploymentSteps(aPhaseStep(POST_DEPLOYMENT, Constants.POST_DEPLOYMENT).build())
                     .build())
             .build();
@@ -2283,11 +2288,13 @@ public class WorkflowServiceTest extends WingsBaseTest {
     assertThat(orchestrationWorkflow.getUserVariables().stream().anyMatch(
                    variable -> variable.getName().equals("ServiceInfra_SSH")))
         .isTrue();
+    assertThat(orchestrationWorkflow.getUserVariables().stream().anyMatch(
+                   variable -> variable.getName().equals("ServiceInfra_SSH2")))
+        .isTrue();
 
-    assertThat(workflowPhases).isNotNull().hasSize(1);
+    assertThat(workflowPhases).isNotNull().hasSize(2);
 
     WorkflowPhase workflowPhase = workflowPhases.get(0);
-    assertThat(workflowPhase).isNotNull().hasFieldOrPropertyWithValue("name", PHASE_NAME_PREFIX + 1);
     assertThat(workflowPhase.getInfraMappingId()).isNotNull();
     assertThat(workflowPhase.getTemplateExpressions())
         .isNotEmpty()
@@ -2296,6 +2303,13 @@ public class WorkflowServiceTest extends WingsBaseTest {
     assertThat(orchestrationWorkflow.getUserVariables())
         .extracting(variable -> variable.getEntityType())
         .containsSequence(ENVIRONMENT, INFRASTRUCTURE_MAPPING);
+
+    workflowPhase = workflowPhases.get(1);
+    assertThat(workflowPhase.getInfraMappingId()).isNotNull();
+    assertThat(workflowPhase.getTemplateExpressions())
+        .isNotEmpty()
+        .extracting(templateExpression -> templateExpression.getFieldName())
+        .contains("infraMappingId");
   }
 
   @Test
@@ -2318,6 +2332,11 @@ public class WorkflowServiceTest extends WingsBaseTest {
             .withOrchestrationWorkflow(
                 aCanaryOrchestrationWorkflow()
                     .withPreDeploymentSteps(aPhaseStep(PRE_DEPLOYMENT, Constants.PRE_DEPLOYMENT).build())
+                    .addWorkflowPhase(aWorkflowPhase()
+                                          .withInfraMappingId(INFRA_MAPPING_ID)
+                                          .withServiceId(SERVICE_ID)
+                                          .withDeploymentType(SSH)
+                                          .build())
                     .addWorkflowPhase(aWorkflowPhase()
                                           .withInfraMappingId(INFRA_MAPPING_ID)
                                           .withServiceId(SERVICE_ID)
@@ -2353,8 +2372,11 @@ public class WorkflowServiceTest extends WingsBaseTest {
     assertThat(orchestrationWorkflow.getUserVariables().stream().anyMatch(
                    variable -> variable.getName().equals("ServiceInfra_SSH")))
         .isTrue();
+    assertThat(orchestrationWorkflow.getUserVariables().stream().anyMatch(
+                   variable -> variable.getName().equals("ServiceInfra_SSH2")))
+        .isTrue();
 
-    assertThat(workflowPhases).isNotNull().hasSize(1);
+    assertThat(workflowPhases).isNotNull().hasSize(2);
 
     WorkflowPhase workflowPhase = workflowPhases.get(0);
     assertThat(workflowPhase).isNotNull().hasFieldOrPropertyWithValue("name", PHASE_NAME_PREFIX + 1);
@@ -2366,6 +2388,12 @@ public class WorkflowServiceTest extends WingsBaseTest {
     assertThat(orchestrationWorkflow.getUserVariables())
         .extracting(variable -> variable.getEntityType())
         .containsSequence(ENVIRONMENT, INFRASTRUCTURE_MAPPING);
+    workflowPhase = workflowPhases.get(1);
+    assertThat(workflowPhase.getInfraMappingId()).isNotNull();
+    assertThat(workflowPhase.getTemplateExpressions())
+        .isNotEmpty()
+        .extracting(templateExpression -> templateExpression.getFieldName())
+        .contains("infraMappingId");
   }
 
   @Test

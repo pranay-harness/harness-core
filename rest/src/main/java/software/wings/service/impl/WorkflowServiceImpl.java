@@ -919,14 +919,11 @@ public class WorkflowServiceImpl implements WorkflowService, DataProvider {
         metaData.put(ARTIFACT_TYPE, service.getArtifactType().name());
       }
       String expression = "${ServiceInfra";
-      int i = 0;
+      int i = 1;
       for (String serviceInfraVariable : serviceInfraVariables) {
-        if (serviceInfraVariable.startsWith("ServiceInfra") || serviceInfraVariable.startsWith("ServiceInfra" + i)) {
+        if (serviceInfraVariable.startsWith("ServiceInfra")) {
           i++;
         }
-      }
-      if (i != 0) {
-        expression = expression + i;
       }
       DeploymentType deploymentType = workflowPhase.getDeploymentType();
       if (deploymentType.equals(DeploymentType.SSH)) {
@@ -937,12 +934,21 @@ public class WorkflowServiceImpl implements WorkflowService, DataProvider {
         expression = expression + "_ECS";
       } else if (deploymentType.equals(DeploymentType.KUBERNETES)) {
         expression = expression + "_Kubernetes";
+      } else if (deploymentType.equals(DeploymentType.AWS_LAMBDA)) {
+        expression = expression + "_AWS_Lambda";
+      } else if (deploymentType.equals(DeploymentType.AMI)) {
+        expression = expression + "_AMI";
+      }
+      if (i != 1) {
+        expression = expression + i;
       }
       expression = expression + "}";
       templateExpression.setFieldName("infraMappingId");
       templateExpression.setMetadata(metaData);
       templateExpression.setExpression(expression);
       phaseTemplateExpressions.add(templateExpression);
+      orchestrationWorkflow.addToUserVariables(
+          phaseTemplateExpressions, StateType.PHASE.name(), workflowPhase.getName());
     }
   }
 
