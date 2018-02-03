@@ -62,12 +62,9 @@ import software.wings.utils.validation.Create;
 import software.wings.utils.validation.Update;
 
 import java.io.File;
-import java.text.DateFormat;
-import java.text.SimpleDateFormat;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Optional;
-import java.util.concurrent.ExecutorService;
 import java.util.stream.Collectors;
 import javax.validation.Valid;
 import javax.validation.executable.ValidateOnExecution;
@@ -88,11 +85,8 @@ public class ArtifactServiceImpl implements ArtifactService {
   @Inject private ArtifactStreamService artifactStreamService;
   @Inject private AppService appService;
   @Inject private ServiceResourceService serviceResourceService;
-  @Inject private ExecutorService executorService;
 
   @Inject @Named("JobScheduler") private QuartzScheduler jobScheduler;
-
-  private final DateFormat dateFormat = new SimpleDateFormat("HHMMSS");
 
   /* (non-Javadoc)
    * @see software.wings.service.intfc.ArtifactService#list(software.wings.dl.PageRequest)
@@ -399,7 +393,6 @@ public class ArtifactServiceImpl implements ArtifactService {
 
   private void deleteArtifacts(String appId, String artifactStreamId, List<Artifact> toBeDeletedArtifacts) {
     try {
-      List<String> artifactUuids = toBeDeletedArtifacts.stream().map(Artifact::getUuid).collect(Collectors.toList());
       List<ObjectId> artifactFileUuids = new ArrayList<>();
       for (Artifact artifact : toBeDeletedArtifacts) {
         for (ArtifactFile artifactFile : artifact.getArtifactFiles()) {
@@ -410,7 +403,8 @@ public class ArtifactServiceImpl implements ArtifactService {
       }
       if (!artifactFileUuids.isEmpty()) {
         wingsPersistence.getCollection("artifacts")
-            .remove(new BasicDBObject("_id", new BasicDBObject("$in", artifactUuids.toArray())));
+            .remove(new BasicDBObject(
+                "_id", new BasicDBObject("$in", toBeDeletedArtifacts.stream().map(Artifact::getUuid).toArray())));
         wingsPersistence.getCollection("artifacts.files")
             .remove(new BasicDBObject("_id", new BasicDBObject("$in", artifactFileUuids.toArray())));
         wingsPersistence.getCollection("artifacts.chunks")

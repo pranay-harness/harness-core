@@ -109,7 +109,7 @@ public class WorkflowStandardParamsTest extends WingsBaseTest {
   @Test
   public void shouldGetNullArtifact() {
     when(artifactService.get(APP_ID, ARTIFACT_ID))
-        .thenReturn(anArtifact().withUuid(ARTIFACT_ID).withServiceIds(null).withAppId(APP_ID).build());
+        .thenReturn(anArtifact().withUuid(ARTIFACT_ID).withAppId(APP_ID).build());
     WorkflowStandardParams std = new WorkflowStandardParams();
     injector.injectMembers(std);
     on(std).set("artifactService", artifactService);

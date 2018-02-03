@@ -448,10 +448,7 @@ public class WorkflowStandardParams implements ExecutionContextAware, ContextEle
     if (artifacts == null) {
       return null;
     }
-    return artifacts.stream()
-        .filter(artifact -> isNotEmpty(artifact.getServiceIds()) && artifact.getServiceIds().contains(serviceId))
-        .findFirst()
-        .orElse(null);
+    return artifacts.stream().filter(artifact -> artifact.getServiceIds().contains(serviceId)).findFirst().orElse(null);
   }
 
   @Override
