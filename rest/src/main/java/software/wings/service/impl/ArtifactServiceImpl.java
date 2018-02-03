@@ -28,7 +28,9 @@ import com.google.inject.name.Named;
 import com.mongodb.BasicDBObject;
 import org.bson.types.ObjectId;
 import org.mongodb.morphia.Key;
+import org.mongodb.morphia.query.FindOptions;
 import org.mongodb.morphia.query.Query;
+import org.mongodb.morphia.query.Sort;
 import org.mongodb.morphia.query.UpdateOperations;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -376,8 +378,8 @@ public class ArtifactServiceImpl implements ArtifactService {
                                                     .equal(artifactStream.getUuid())
                                                     .field("status")
                                                     .in(asList(READY, APPROVED))
-                                                    .offset(retentionSize)
-                                                    .asList();
+                                                    .order(Sort.descending("createdAt"))
+                                                    .asList(new FindOptions().skip(retentionSize));
           if (isNotEmpty(toBeDeletedArtifacts)) {
             toBeDeletedArtifacts = toBeDeletedArtifacts.stream()
                                        .filter(artifact -> !artifact.getArtifactFiles().isEmpty())
