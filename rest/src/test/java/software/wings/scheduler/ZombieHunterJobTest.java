@@ -1,7 +1,9 @@
 package software.wings.scheduler;
 
 import static org.assertj.core.api.Assertions.assertThat;
+import static software.wings.beans.Account.Builder.anAccount;
 import static software.wings.beans.Application.Builder.anApplication;
+import static software.wings.beans.Base.GLOBAL_APP_ID;
 
 import com.google.inject.Inject;
 import com.google.inject.name.Named;
@@ -12,6 +14,7 @@ import org.mockito.Mock;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import software.wings.WingsBaseTest;
+import software.wings.beans.Account;
 import software.wings.beans.Application;
 import software.wings.dl.WingsPersistence;
 import software.wings.service.intfc.AppService;
@@ -38,6 +41,12 @@ public class ZombieHunterJobTest extends WingsBaseTest {
 
   @Test
   public void exploratoryExpedition() {
+    Account acount = anAccount().withAppId(GLOBAL_APP_ID).withUuid("exists").build();
+    wingsPersistence.save(acount);
+
+    Application existApplication = anApplication().withName("dummy1").withAccountId(acount.getUuid()).build();
+    wingsPersistence.save(existApplication);
+
     Application application1 = anApplication().withName("dummy1").withAccountId("deleted").build();
     wingsPersistence.save(application1);
     Application application2 = anApplication().withName("dummy2").withAccountId("deleted").build();
@@ -51,6 +60,12 @@ public class ZombieHunterJobTest extends WingsBaseTest {
 
   @Test
   public void huntingExpedition() {
+    Account acount = anAccount().withAppId(GLOBAL_APP_ID).withUuid("exists").build();
+    wingsPersistence.save(acount);
+
+    Application existApplication = anApplication().withName("dummy1").withAccountId(acount.getUuid()).build();
+    wingsPersistence.save(existApplication);
+
     Application application1 = anApplication().withName("dummy1").withAccountId("deleted").build();
     wingsPersistence.save(application1);
     Application application2 = anApplication().withName("dummy2").withAccountId("deleted").build();
@@ -59,6 +74,7 @@ public class ZombieHunterJobTest extends WingsBaseTest {
         job.huntingExpedition(new ZombieHunterJob.ZombieType("applications", "accountId", "accounts", appService)))
         .isEqualTo(2);
 
+    assertThat(wingsPersistence.delete(existApplication)).isTrue();
     assertThat(wingsPersistence.delete(application1)).isFalse();
     assertThat(wingsPersistence.delete(application2)).isFalse();
   }

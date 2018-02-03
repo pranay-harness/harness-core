@@ -198,7 +198,7 @@ public class ZombieHunterJob implements Job {
       if (map.containsKey(ownerId)) {
         ownerObject = (DBObject) map.get(ownerId);
       } else {
-        owner.findOne(new BasicDBObject("_id", ownerId));
+        ownerObject = owner.findOne(new BasicDBObject("_id", ownerId));
         map.put(ownerId, ownerObject);
       }
 
