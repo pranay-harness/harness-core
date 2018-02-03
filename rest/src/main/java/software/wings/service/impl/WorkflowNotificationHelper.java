@@ -102,6 +102,7 @@ public class WorkflowNotificationHelper {
       placeHolderValues.put("ENV_NAME", env.getName());
     }
     placeHolderValues.put("USER_NAME", userName);
+    placeHolderValues.put("TS_SECS", Long.toString(clock.instant().getEpochSecond()));
     placeHolderValues.put("DATE", getDateString());
 
     String messageTemplate = null;
@@ -210,6 +211,7 @@ public class WorkflowNotificationHelper {
         "ARTIFACTS", getArtifactsMessage(context, workflowExecution, WORKFLOW_PHASE, phaseSubWorkflow));
     placeHolderValues.put("ENV_NAME", env.getName());
     placeHolderValues.put("USER_NAME", userName);
+    placeHolderValues.put("TS_SECS", Long.toString(clock.instant().getEpochSecond()));
     placeHolderValues.put("DATE", getDateString());
 
     if (status.equals(SUCCESS) || status.equals(PAUSED)) {
