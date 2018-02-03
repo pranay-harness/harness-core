@@ -23,6 +23,7 @@ import software.wings.beans.WorkflowExecution;
 import software.wings.beans.WorkflowType;
 import software.wings.core.queue.Queue;
 import software.wings.dl.WingsPersistence;
+import software.wings.exception.WingsException;
 import software.wings.service.intfc.AlertService;
 import software.wings.service.intfc.TriggerService;
 import software.wings.service.intfc.WorkflowExecutionService;
@@ -125,9 +126,16 @@ public class WorkflowExecutionUpdate implements StateMachineExecutionCallback {
     handlePostExecution(context);
 
     if (!WorkflowType.PIPELINE.equals(context.getWorkflowType())) {
-      workflowNotificationHelper.sendWorkflowStatusChangeNotification(context, status);
-      if (needToNotifyPipeline) {
-        waitNotifyEngine.notify(workflowExecutionId, new EnvExecutionResponseData(workflowExecutionId, status));
+      try {
+        workflowNotificationHelper.sendWorkflowStatusChangeNotification(context, status);
+        if (needToNotifyPipeline) {
+          waitNotifyEngine.notify(workflowExecutionId, new EnvExecutionResponseData(workflowExecutionId, status));
+        }
+      } catch (WingsException exception) {
+        exception.logProcessedMessages(logger);
+      } catch (RuntimeException exception) {
+        // Failing to send notification is not considered critical to interrupt the status update.
+        logger.error("Failed to send notification.", exception);
       }
     } else {
       if (status.isFinalStatus() && status.equals(SUCCESS)) {
