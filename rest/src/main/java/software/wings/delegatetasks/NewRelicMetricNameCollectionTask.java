@@ -157,7 +157,7 @@ public class NewRelicMetricNameCollectionTask extends AbstractDelegateRunnableTa
       return DataCollectionTaskResult.builder()
           .status(DataCollectionTaskStatus.FAILURE)
           .stateType(StateType.NEW_RELIC)
-          .errorMessage("Could not get metric names : " + e.getMessage())
+          .errorMessage("Could not get metric names : " + e.getMessage() + " for config " + dataCollectionInfo)
           .build();
     }
 

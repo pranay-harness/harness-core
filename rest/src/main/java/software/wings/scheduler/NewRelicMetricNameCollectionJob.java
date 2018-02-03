@@ -13,6 +13,7 @@ import software.wings.beans.DelegateTask;
 import software.wings.beans.NewRelicConfig;
 import software.wings.beans.TaskType;
 import software.wings.common.UUIDGenerator;
+import software.wings.service.impl.analysis.DataCollectionTaskResult;
 import software.wings.service.impl.newrelic.NewRelicDataCollectionInfo;
 import software.wings.service.impl.newrelic.NewRelicMetricNames;
 import software.wings.service.impl.newrelic.NewRelicMetricNames.WorkflowInfo;
@@ -49,6 +50,8 @@ public class NewRelicMetricNameCollectionJob implements Job {
       logger.info("Skipping batch new relic collection. Nothing to collect");
       return;
     }
+
+    DelegateCallbackHandler delegateCallbackHandler = new DelegateCallbackHandler();
     Map<String, NewRelicConfig> newRelicAppToConfigMap = new HashMap<>();
 
     newRelicMetricNamesList.stream()
@@ -87,21 +90,27 @@ public class NewRelicMetricNameCollectionJob implements Job {
                       .withTimeout(TimeUnit.MINUTES.toMillis(DEFAULT_NEWRELIC_COLLECTION_TIMEOUT_MINS))
                       .withWaitId(waitId)
                       .build();
-              waitNotifyEngine.waitForAll(new NotifyCallback() {
-                @Override
-                public void notify(Map<String, NotifyResponseData> response) {
-                  // TODO implement this
-                }
-
-                @Override
-                public void notifyError(Map<String, NotifyResponseData> response) {}
-              }, waitId);
 
               delegateService.queueTask(delegateTask);
+
+              waitNotifyEngine.waitForAll(delegateCallbackHandler, waitId);
             }
           } catch (Exception ex) {
             logger.error("Unable to schedule new relic task", ex);
           }
         });
+  }
+
+  private static class DelegateCallbackHandler implements NotifyCallback {
+    @Override
+    public void notify(Map<String, NotifyResponseData> response) {
+      final DataCollectionTaskResult result = (DataCollectionTaskResult) response.values().iterator().next();
+      if (result.getStatus() == DataCollectionTaskResult.DataCollectionTaskStatus.FAILURE) {
+        logger.error("[learning-engine] NewRelic metric name collection task failed {} ", result.getErrorMessage());
+      }
+    }
+
+    @Override
+    public void notifyError(Map<String, NotifyResponseData> response) {}
   }
 }
