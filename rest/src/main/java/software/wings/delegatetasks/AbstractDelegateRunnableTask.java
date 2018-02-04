@@ -18,6 +18,9 @@ import java.util.concurrent.Callable;
 import java.util.concurrent.CompletionService;
 import java.util.concurrent.ExecutorCompletionService;
 import java.util.concurrent.ExecutorService;
+import java.util.concurrent.Future;
+import java.util.concurrent.TimeUnit;
+import java.util.concurrent.TimeoutException;
 import java.util.function.Consumer;
 import java.util.function.Supplier;
 
@@ -88,8 +91,13 @@ public abstract class AbstractDelegateRunnableTask implements DelegateRunnableTa
     List<Optional<T>> rv = new ArrayList<>();
     for (int i = 0; i < callables.size(); i++) {
       try {
-        T result = completionService.take().get();
-        rv.add(result == null ? Optional.empty() : Optional.of(result));
+        Future<T> poll = completionService.poll(3, TimeUnit.MINUTES);
+        if (poll.isDone()) {
+          T result = poll.get();
+          rv.add(result == null ? Optional.empty() : Optional.of(result));
+        } else {
+          throw new TimeoutException("Timeout in executing " + callables);
+        }
       } catch (Exception e) {
         throw new IOException(e);
       }
