@@ -55,6 +55,7 @@ import software.wings.sm.states.PhaseSubWorkflow;
 import java.net.URISyntaxException;
 import java.text.DateFormat;
 import java.text.SimpleDateFormat;
+import java.time.Clock;
 import java.util.ArrayList;
 import java.util.Date;
 import java.util.HashMap;
@@ -76,8 +77,9 @@ public class WorkflowNotificationHelper {
   @Inject private WorkflowExecutionService workflowExecutionService;
   @Inject private MainConfiguration configuration;
   @Inject private WingsPersistence wingsPersistence;
+  @Inject private Clock clock;
 
-  private final DateFormat dateFormat = new SimpleDateFormat("MMM d HH:mm z");
+  private final DateFormat dateFormat = new SimpleDateFormat("MMM d");
   private final DateFormat timeFormat = new SimpleDateFormat("HH:mm z");
 
   public void sendWorkflowStatusChangeNotification(ExecutionContext context, ExecutionStatus status) {
@@ -196,6 +198,9 @@ public class WorkflowNotificationHelper {
     if (status == FAILED || status == ERROR || status == ABORTED) {
       status = FAILED;
     }
+    if (status == RESUMED) {
+      status = PAUSED;
+    }
 
     List<NotificationRule> filteredNotificationRules = new ArrayList<>();
     OrchestrationWorkflow orchestrationWorkflow = context.getStateMachine().getOrchestrationWorkflow();
@@ -239,13 +244,20 @@ public class WorkflowNotificationHelper {
       }
     }
 
+    if (endTs == startTs) {
+      endTs = clock.millis();
+    }
+
     String workflowUrl = buildAbsoluteUrl(String.format("/account/%s/app/%s/env/%s/executions/%s/details",
         app.getAccountId(), app.getUuid(), env.getUuid(), context.getWorkflowExecutionId()));
 
-    String pipeline = "";
-    if (workflowExecution.getPipelineExecution() != null) {
-      pipeline = " as part of " + workflowExecution.getPipelineExecution().getName() + " pipeline";
-    }
+    String pipeline = workflowExecution.getPipelineExecution() != null
+        ? String.format(" as part of %s pipeline", workflowExecution.getPipelineExecution().getName())
+        : "";
+
+    String startTime =
+        String.format("%s at %s", dateFormat.format(new Date(startTs)), timeFormat.format(new Date(startTs)));
+    String endTime = timeFormat.format(new Date(endTs));
 
     Map<String, String> placeHolderValues = new HashMap<>();
     placeHolderValues.put("WORKFLOW_NAME", context.getWorkflowExecutionName());
@@ -254,8 +266,8 @@ public class WorkflowNotificationHelper {
     placeHolderValues.put("PIPELINE", pipeline);
     placeHolderValues.put("START_TS_SECS", Long.toString(startTs / 1000L));
     placeHolderValues.put("END_TS_SECS", Long.toString(endTs / 1000L));
-    placeHolderValues.put("START_DATE", dateFormat.format(new Date(startTs)));
-    placeHolderValues.put("END_DATE", timeFormat.format(new Date(endTs)));
+    placeHolderValues.put("START_DATE", startTime);
+    placeHolderValues.put("END_DATE", endTime);
     placeHolderValues.put("DURATION", getDurationString(startTs, endTs));
     if (!BUILD.equals(context.getOrchestrationWorkflowType())) {
       placeHolderValues.put("ENV_NAME", env.getName());
