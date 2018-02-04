@@ -18,6 +18,7 @@ import static software.wings.sm.ExecutionStatus.FAILED;
 import static software.wings.sm.ExecutionStatus.PAUSED;
 import static software.wings.sm.ExecutionStatus.RESUMED;
 import static software.wings.sm.ExecutionStatus.SUCCESS;
+import static software.wings.sm.StateType.PHASE;
 import static software.wings.utils.Switch.unhandled;
 
 import com.google.common.base.Joiner;
@@ -41,23 +42,27 @@ import software.wings.beans.Service;
 import software.wings.beans.WorkflowExecution;
 import software.wings.beans.artifact.Artifact;
 import software.wings.common.NotificationMessageResolver.NotificationMessageType;
+import software.wings.dl.WingsPersistence;
 import software.wings.service.intfc.NotificationService;
 import software.wings.service.intfc.ServiceResourceService;
 import software.wings.service.intfc.WorkflowExecutionService;
 import software.wings.sm.ExecutionContext;
 import software.wings.sm.ExecutionContextImpl;
 import software.wings.sm.ExecutionStatus;
+import software.wings.sm.StateExecutionInstance;
 import software.wings.sm.states.PhaseSubWorkflow;
 
 import java.net.URISyntaxException;
 import java.text.DateFormat;
 import java.text.SimpleDateFormat;
-import java.time.Clock;
 import java.util.ArrayList;
 import java.util.Date;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.Optional;
+import java.util.concurrent.TimeUnit;
+import javax.annotation.Nullable;
 
 /**
  * Created by anubhaw on 4/7/17.
@@ -70,9 +75,10 @@ public class WorkflowNotificationHelper {
   @Inject private ServiceResourceService serviceResourceService;
   @Inject private WorkflowExecutionService workflowExecutionService;
   @Inject private MainConfiguration configuration;
-  @Inject private Clock clock;
+  @Inject private WingsPersistence wingsPersistence;
 
   private final DateFormat dateFormat = new SimpleDateFormat("MMM d HH:mm z");
+  private final DateFormat timeFormat = new SimpleDateFormat("HH:mm z");
 
   public void sendWorkflowStatusChangeNotification(ExecutionContext context, ExecutionStatus status) {
     List<NotificationRule> notificationRules =
@@ -81,29 +87,8 @@ public class WorkflowNotificationHelper {
       return;
     }
 
-    Environment env = ((ExecutionContextImpl) context).getEnv();
     Application app = ((ExecutionContextImpl) context).getApp();
-
-    WorkflowExecution workflowExecution =
-        workflowExecutionService.getExecutionDetails(app.getUuid(), context.getWorkflowExecutionId());
-    String userName = workflowExecution.getTriggeredBy().getName();
-    if (userName.equalsIgnoreCase("Deployment trigger")) {
-      userName = userName.toLowerCase();
-    }
-
-    String workflowUrl = buildAbsoluteUrl(String.format("/account/%s/app/%s/env/%s/executions/%s/details",
-        app.getAccountId(), app.getUuid(), env.getUuid(), context.getWorkflowExecutionId()));
-
-    Map<String, String> placeHolderValues = new HashMap<>();
-    placeHolderValues.put("WORKFLOW_NAME", context.getWorkflowExecutionName());
-    placeHolderValues.put("WORKFLOW_URL", workflowUrl);
-    placeHolderValues.put("ARTIFACTS", getArtifactsMessage(context, workflowExecution, WORKFLOW, null));
-    if (!BUILD.equals(context.getOrchestrationWorkflowType())) {
-      placeHolderValues.put("ENV_NAME", env.getName());
-    }
-    placeHolderValues.put("USER_NAME", userName);
-    placeHolderValues.put("TS_SECS", Long.toString(clock.instant().getEpochSecond()));
-    placeHolderValues.put("DATE", getDateString());
+    Environment env = ((ExecutionContextImpl) context).getEnv();
 
     String messageTemplate = null;
 
@@ -130,6 +115,9 @@ public class WorkflowNotificationHelper {
       logger.error("No messageTemplate found for notification, status={}", status);
       return;
     }
+
+    Map<String, String> placeHolderValues = getPlaceholderValues(context, app, env, null);
+
     if (status == SUCCESS || status == PAUSED || status == RESUMED) {
       InformationNotification notification = anInformationNotification()
                                                  .withAccountId(app.getAccountId())
@@ -156,30 +144,6 @@ public class WorkflowNotificationHelper {
     }
   }
 
-  private List<NotificationRule> getNotificationApplicableToScope(
-      ExecutionContextImpl context, ExecutionScope executionScope, ExecutionStatus status) {
-    if (status == FAILED || status == ERROR || status == ABORTED) {
-      status = FAILED;
-    }
-
-    List<NotificationRule> filteredNotificationRules = new ArrayList<>();
-    OrchestrationWorkflow orchestrationWorkflow = context.getStateMachine().getOrchestrationWorkflow();
-    if (orchestrationWorkflow instanceof CanaryOrchestrationWorkflow) {
-      List<NotificationRule> notificationRules = orchestrationWorkflow.getNotificationRules();
-      for (NotificationRule notificationRule : notificationRules) {
-        if (executionScope.equals(notificationRule.getExecutionScope()) && notificationRule.getConditions() != null
-            && notificationRule.getConditions().contains(status)) {
-          filteredNotificationRules.add(notificationRule);
-        }
-      }
-    }
-    return filteredNotificationRules;
-  }
-
-  private String getDateString() {
-    return dateFormat.format(Date.from(clock.instant()));
-  }
-
   public void sendWorkflowPhaseStatusChangeNotification(
       ExecutionContext context, ExecutionStatus status, PhaseSubWorkflow phaseSubWorkflow) {
     // TODO:: use phaseSubworkflow to send rollback notifications
@@ -193,26 +157,7 @@ public class WorkflowNotificationHelper {
     Environment env = ((ExecutionContextImpl) context).getEnv();
     Application app = ((ExecutionContextImpl) context).getApp();
 
-    WorkflowExecution workflowExecution =
-        workflowExecutionService.getExecutionDetails(app.getUuid(), context.getWorkflowExecutionId());
-    String userName = workflowExecution.getTriggeredBy().getName();
-    if (userName.equalsIgnoreCase("Deployment trigger")) {
-      userName = userName.toLowerCase();
-    }
-
-    String workflowUrl = buildAbsoluteUrl(String.format("/account/%s/app/%s/env/%s/executions/%s/details",
-        app.getAccountId(), app.getUuid(), env.getUuid(), context.getWorkflowExecutionId()));
-
-    Map<String, String> placeHolderValues = new HashMap<>();
-    placeHolderValues.put("WORKFLOW_NAME", context.getWorkflowExecutionName());
-    placeHolderValues.put("WORKFLOW_URL", workflowUrl);
-    placeHolderValues.put("PHASE_NAME", phaseSubWorkflow.getName());
-    placeHolderValues.put(
-        "ARTIFACTS", getArtifactsMessage(context, workflowExecution, WORKFLOW_PHASE, phaseSubWorkflow));
-    placeHolderValues.put("ENV_NAME", env.getName());
-    placeHolderValues.put("USER_NAME", userName);
-    placeHolderValues.put("TS_SECS", Long.toString(clock.instant().getEpochSecond()));
-    placeHolderValues.put("DATE", getDateString());
+    Map<String, String> placeHolderValues = getPlaceholderValues(context, app, env, phaseSubWorkflow);
 
     if (status.equals(SUCCESS) || status.equals(PAUSED)) {
       String messageTemplate = status.equals(SUCCESS)
@@ -243,6 +188,100 @@ public class WorkflowNotificationHelper {
       notificationService.sendNotificationAsync(notification, notificationRules);
     } else {
       logger.info("No template found for workflow status " + status);
+    }
+  }
+
+  private List<NotificationRule> getNotificationApplicableToScope(
+      ExecutionContextImpl context, ExecutionScope executionScope, ExecutionStatus status) {
+    if (status == FAILED || status == ERROR || status == ABORTED) {
+      status = FAILED;
+    }
+
+    List<NotificationRule> filteredNotificationRules = new ArrayList<>();
+    OrchestrationWorkflow orchestrationWorkflow = context.getStateMachine().getOrchestrationWorkflow();
+    if (orchestrationWorkflow instanceof CanaryOrchestrationWorkflow) {
+      List<NotificationRule> notificationRules = orchestrationWorkflow.getNotificationRules();
+      for (NotificationRule notificationRule : notificationRules) {
+        if (executionScope.equals(notificationRule.getExecutionScope()) && notificationRule.getConditions() != null
+            && notificationRule.getConditions().contains(status)) {
+          filteredNotificationRules.add(notificationRule);
+        }
+      }
+    }
+    return filteredNotificationRules;
+  }
+
+  private Map<String, String> getPlaceholderValues(
+      ExecutionContext context, Application app, Environment env, @Nullable PhaseSubWorkflow phaseSubWorkflow) {
+    WorkflowExecution workflowExecution =
+        workflowExecutionService.getExecutionDetails(app.getUuid(), context.getWorkflowExecutionId());
+    String userName = workflowExecution.getTriggeredBy().getName();
+    if (userName.equalsIgnoreCase("Deployment trigger")) {
+      userName = userName.toLowerCase();
+    }
+    long startTs = Optional.ofNullable(workflowExecution.getStartTs()).orElse(workflowExecution.getCreatedAt());
+    long endTs = Optional.ofNullable(workflowExecution.getEndTs()).orElse(workflowExecution.getLastUpdatedAt());
+
+    if (phaseSubWorkflow != null) {
+      StateExecutionInstance stateExecutionInstance = wingsPersistence.createQuery(StateExecutionInstance.class)
+                                                          .field("executionUuid")
+                                                          .equal(workflowExecution.getUuid())
+                                                          .field("stateType")
+                                                          .equal(PHASE.name())
+                                                          .field("stateName")
+                                                          .equal(phaseSubWorkflow.getName())
+                                                          .get();
+      if (stateExecutionInstance != null) {
+        startTs =
+            Optional.ofNullable(stateExecutionInstance.getStartTs()).orElse(stateExecutionInstance.getCreatedAt());
+        endTs =
+            Optional.ofNullable(stateExecutionInstance.getEndTs()).orElse(stateExecutionInstance.getLastUpdatedAt());
+      }
+    }
+
+    String workflowUrl = buildAbsoluteUrl(String.format("/account/%s/app/%s/env/%s/executions/%s/details",
+        app.getAccountId(), app.getUuid(), env.getUuid(), context.getWorkflowExecutionId()));
+
+    String pipeline = "";
+    if (workflowExecution.getPipelineExecution() != null) {
+      pipeline = " as part of " + workflowExecution.getPipelineExecution().getName() + " pipeline";
+    }
+
+    Map<String, String> placeHolderValues = new HashMap<>();
+    placeHolderValues.put("WORKFLOW_NAME", context.getWorkflowExecutionName());
+    placeHolderValues.put("WORKFLOW_URL", workflowUrl);
+    placeHolderValues.put("USER_NAME", userName);
+    placeHolderValues.put("PIPELINE", pipeline);
+    placeHolderValues.put("START_TS_SECS", Long.toString(startTs / 1000L));
+    placeHolderValues.put("END_TS_SECS", Long.toString(endTs / 1000L));
+    placeHolderValues.put("START_DATE", dateFormat.format(new Date(startTs)));
+    placeHolderValues.put("END_DATE", timeFormat.format(new Date(endTs)));
+    placeHolderValues.put("DURATION", getDurationString(startTs, endTs));
+    if (!BUILD.equals(context.getOrchestrationWorkflowType())) {
+      placeHolderValues.put("ENV_NAME", env.getName());
+    }
+    if (phaseSubWorkflow != null) {
+      placeHolderValues.put("PHASE_NAME", phaseSubWorkflow.getName());
+      placeHolderValues.put(
+          "ARTIFACTS", getArtifactsMessage(context, workflowExecution, WORKFLOW_PHASE, phaseSubWorkflow));
+    } else {
+      placeHolderValues.put("ARTIFACTS", getArtifactsMessage(context, workflowExecution, WORKFLOW, null));
+    }
+    return placeHolderValues;
+  }
+
+  private String buildAbsoluteUrl(String fragment) {
+    String baseUrl = configuration.getPortal().getUrl().trim();
+    if (!baseUrl.endsWith("/")) {
+      baseUrl += "/";
+    }
+    try {
+      URIBuilder uriBuilder = new URIBuilder(baseUrl);
+      uriBuilder.setFragment(fragment);
+      return uriBuilder.toString();
+    } catch (URISyntaxException e) {
+      logger.error("Bad URI syntax", e);
+      return baseUrl;
     }
   }
 
@@ -290,18 +329,38 @@ public class WorkflowNotificationHelper {
     return artifactsMsg;
   }
 
-  private String buildAbsoluteUrl(String fragment) {
-    String baseUrl = configuration.getPortal().getUrl().trim();
-    if (!baseUrl.endsWith("/")) {
-      baseUrl += "/";
+  private String getDurationString(long start, long end) {
+    long duration = end - start;
+    long elapsedHours = duration / TimeUnit.HOURS.toMillis(1);
+    duration = duration % TimeUnit.HOURS.toMillis(1);
+
+    long elapsedMinutes = duration / TimeUnit.MINUTES.toMillis(1);
+    duration = duration % TimeUnit.MINUTES.toMillis(1);
+
+    long elapsedSeconds = duration / TimeUnit.SECONDS.toMillis(1);
+
+    StringBuilder elapsed = new StringBuilder();
+
+    if (elapsedHours > 0) {
+      elapsed.append(elapsedHours).append('h');
     }
-    try {
-      URIBuilder uriBuilder = new URIBuilder(baseUrl);
-      uriBuilder.setFragment(fragment);
-      return uriBuilder.toString();
-    } catch (URISyntaxException e) {
-      logger.error("Bad URI syntax", e);
-      return baseUrl;
+    if (elapsedMinutes > 0) {
+      if (isNotEmpty(elapsed.toString())) {
+        elapsed.append(' ');
+      }
+      elapsed.append(elapsedMinutes).append('m');
     }
+    if (elapsedSeconds > 0) {
+      if (isNotEmpty(elapsed.toString())) {
+        elapsed.append(' ');
+      }
+      elapsed.append(elapsedSeconds).append('s');
+    }
+
+    if (isEmpty(elapsed.toString())) {
+      elapsed.append("0s");
+    }
+
+    return elapsed.toString();
   }
 }

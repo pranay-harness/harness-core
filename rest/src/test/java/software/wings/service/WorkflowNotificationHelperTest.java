@@ -2,6 +2,7 @@ package software.wings.service;
 
 import static java.util.Arrays.asList;
 import static org.assertj.core.api.Assertions.assertThat;
+import static org.mockito.Matchers.any;
 import static org.mockito.Matchers.eq;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
@@ -9,10 +10,12 @@ import static software.wings.beans.Application.Builder.anApplication;
 import static software.wings.beans.CanaryOrchestrationWorkflow.CanaryOrchestrationWorkflowBuilder.aCanaryOrchestrationWorkflow;
 import static software.wings.beans.Environment.Builder.anEnvironment;
 import static software.wings.beans.NotificationRule.NotificationRuleBuilder.aNotificationRule;
+import static software.wings.beans.PipelineExecution.Builder.aPipelineExecution;
 import static software.wings.beans.Service.Builder.aService;
 import static software.wings.beans.WorkflowExecution.WorkflowExecutionBuilder.aWorkflowExecution;
 import static software.wings.beans.artifact.Artifact.Builder.anArtifact;
 import static software.wings.common.Constants.BUILD_NO;
+import static software.wings.sm.StateExecutionInstance.Builder.aStateExecutionInstance;
 import static software.wings.utils.WingsTestConstants.ACCOUNT_ID;
 import static software.wings.utils.WingsTestConstants.APP_ID;
 import static software.wings.utils.WingsTestConstants.ENV_ID;
@@ -33,6 +36,8 @@ import org.mockito.ArgumentCaptor;
 import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.Mockito;
+import org.mongodb.morphia.query.FieldEnd;
+import org.mongodb.morphia.query.Query;
 import software.wings.WingsBaseTest;
 import software.wings.app.MainConfiguration;
 import software.wings.app.PortalConfig;
@@ -43,12 +48,14 @@ import software.wings.beans.FailureNotification;
 import software.wings.beans.Notification;
 import software.wings.beans.NotificationRule;
 import software.wings.common.NotificationMessageResolver.NotificationMessageType;
+import software.wings.dl.WingsPersistence;
 import software.wings.service.impl.WorkflowNotificationHelper;
 import software.wings.service.intfc.NotificationService;
 import software.wings.service.intfc.ServiceResourceService;
 import software.wings.service.intfc.WorkflowExecutionService;
 import software.wings.sm.ExecutionContextImpl;
 import software.wings.sm.ExecutionStatus;
+import software.wings.sm.StateExecutionInstance;
 import software.wings.sm.states.PhaseSubWorkflow;
 
 /**
@@ -63,9 +70,12 @@ public class WorkflowNotificationHelperTest extends WingsBaseTest {
   @Mock private ServiceResourceService serviceResourceService;
   @Mock private WorkflowExecutionService workflowExecutionService;
   @Mock private MainConfiguration configuration;
+  @Mock private WingsPersistence wingsPersistence;
   @Inject @InjectMocks private WorkflowNotificationHelper workflowNotificationHelper;
 
   @Mock(answer = Answers.RETURNS_DEEP_STUBS) private ExecutionContextImpl executionContext;
+  @Mock private Query<StateExecutionInstance> query;
+  @Mock private FieldEnd end;
 
   @Before
   public void setUp() throws Exception {
@@ -104,6 +114,10 @@ public class WorkflowNotificationHelperTest extends WingsBaseTest {
         .thenReturn(aService().withUuid("service-1").withName("Service One").build());
     when(serviceResourceService.get(APP_ID, "service-2"))
         .thenReturn(aService().withUuid("service-2").withName("Service Two").build());
+    when(wingsPersistence.createQuery(StateExecutionInstance.class)).thenReturn(query);
+    when(query.field(any())).thenReturn(end);
+    when(end.equal(any())).thenReturn(query);
+    when(query.get()).thenReturn(aStateExecutionInstance().withStartTs(1234L).withEndTs(2345L).build());
   }
 
   @Test
@@ -132,6 +146,45 @@ public class WorkflowNotificationHelperTest extends WingsBaseTest {
             .put("WORKFLOW_URL", EXPECTED_URL)
             .put("ARTIFACTS", "Service One: artifact-1 (build# build-1), Service Two: artifact-2 (build# build-2)")
             .put("USER_NAME", USER_NAME)
+            .put("PIPELINE", "")
+            .put("ENV_NAME", ENV_NAME)
+            .build();
+    assertThat(notification.getNotificationTemplateVariables()).containsAllEntriesOf(placeholders);
+  }
+
+  @Test
+  public void shouldSendWorkflowStatusChangeNotificationPipeline() {
+    when(workflowExecutionService.getExecutionDetails(APP_ID, WORKFLOW_EXECUTION_ID))
+        .thenReturn(aWorkflowExecution()
+                        .withServiceIds(asList("service-1", "service-2"))
+                        .withTriggeredBy(EmbeddedUser.builder().name(USER_NAME).build())
+                        .withPipelineExecution(aPipelineExecution().withName("Pipeline Name").build())
+                        .build());
+    NotificationRule notificationRule = aNotificationRule()
+                                            .withExecutionScope(ExecutionScope.WORKFLOW)
+                                            .withConditions(asList(ExecutionStatus.FAILED, ExecutionStatus.SUCCESS))
+                                            .build();
+    CanaryOrchestrationWorkflow canaryOrchestrationWorkflow =
+        aCanaryOrchestrationWorkflow().withNotificationRules(asList(notificationRule)).build();
+
+    when(executionContext.getStateMachine().getOrchestrationWorkflow()).thenReturn(canaryOrchestrationWorkflow);
+    workflowNotificationHelper.sendWorkflowStatusChangeNotification(executionContext, ExecutionStatus.FAILED);
+
+    ArgumentCaptor<Notification> notificationArgumentCaptor = ArgumentCaptor.forClass(Notification.class);
+
+    verify(notificationService)
+        .sendNotificationAsync(notificationArgumentCaptor.capture(), eq(asList(notificationRule)));
+    Notification notification = notificationArgumentCaptor.getAllValues().get(0);
+    assertThat(notification).isInstanceOf(FailureNotification.class);
+    assertThat(notification.getNotificationTemplateId())
+        .isEqualTo(NotificationMessageType.WORKFLOW_FAILED_NOTIFICATION.name());
+    ImmutableMap<String, String> placeholders =
+        ImmutableMap.<String, String>builder()
+            .put("WORKFLOW_NAME", WORKFLOW_NAME)
+            .put("WORKFLOW_URL", EXPECTED_URL)
+            .put("ARTIFACTS", "Service One: artifact-1 (build# build-1), Service Two: artifact-2 (build# build-2)")
+            .put("USER_NAME", USER_NAME)
+            .put("PIPELINE", " as part of Pipeline Name pipeline")
             .put("ENV_NAME", ENV_NAME)
             .build();
     assertThat(notification.getNotificationTemplateVariables()).containsAllEntriesOf(placeholders);
