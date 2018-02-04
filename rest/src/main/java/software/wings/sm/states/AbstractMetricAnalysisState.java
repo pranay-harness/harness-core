@@ -115,19 +115,30 @@ public abstract class AbstractMetricAnalysisState extends AbstractAnalysisState 
       hostsToCollect.addAll(lastExecutionNodes);
     }
 
-    String delegateTaskId = triggerAnalysisDataCollection(context, executionData.getCorrelationId(), hostsToCollect);
+    try {
+      String delegateTaskId = triggerAnalysisDataCollection(context, executionData.getCorrelationId(), hostsToCollect);
 
-    final MetricDataAnalysisResponse response =
-        MetricDataAnalysisResponse.builder().stateExecutionData(executionData).build();
-    response.setExecutionStatus(ExecutionStatus.RUNNING);
-    scheduleAnalysisCronJob(analysisContext, delegateTaskId);
-    return anExecutionResponse()
-        .withAsync(true)
-        .withCorrelationIds(Collections.singletonList(executionData.getCorrelationId()))
-        .withExecutionStatus(ExecutionStatus.RUNNING)
-        .withErrorMessage("New Relic Verification running")
-        .withStateExecutionData(executionData)
-        .build();
+      final MetricDataAnalysisResponse response =
+          MetricDataAnalysisResponse.builder().stateExecutionData(executionData).build();
+      response.setExecutionStatus(ExecutionStatus.RUNNING);
+      scheduleAnalysisCronJob(analysisContext, delegateTaskId);
+      return anExecutionResponse()
+          .withAsync(true)
+          .withCorrelationIds(Collections.singletonList(executionData.getCorrelationId()))
+          .withExecutionStatus(ExecutionStatus.RUNNING)
+          .withErrorMessage("New Relic Verification running")
+          .withStateExecutionData(executionData)
+          .build();
+    } catch (Exception ex) {
+      getLogger().error("metric analysis state failed", ex);
+      return anExecutionResponse()
+          .withAsync(true)
+          .withCorrelationIds(Collections.singletonList(executionData.getCorrelationId()))
+          .withExecutionStatus(ExecutionStatus.ERROR)
+          .withErrorMessage(ex.getMessage())
+          .withStateExecutionData(executionData)
+          .build();
+    }
   }
 
   private void scheduleAnalysisCronJob(AnalysisContext context, String delegateTaskId) {
