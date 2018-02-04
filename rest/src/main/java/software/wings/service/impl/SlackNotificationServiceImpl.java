@@ -1,6 +1,12 @@
 package software.wings.service.impl;
 
 import static io.harness.data.structure.EmptyPredicate.isNotEmpty;
+import static software.wings.common.Constants.ABORTED_COLOR;
+import static software.wings.common.Constants.COMPLETED_COLOR;
+import static software.wings.common.Constants.FAILED_COLOR;
+import static software.wings.common.Constants.PAUSED_COLOR;
+import static software.wings.common.Constants.RESUMED_COLOR;
+import static software.wings.common.Constants.WHITE_COLOR;
 import static software.wings.utils.Switch.unhandled;
 
 import com.google.common.collect.ImmutableList;
@@ -66,18 +72,18 @@ public class SlackNotificationServiceImpl implements SlackNotificationService {
   private String getColor(String status) {
     switch (status) {
       case "completed":
-        return "#5CB04D";
+        return COMPLETED_COLOR;
       case "failed":
-        return "#EC372E";
+        return FAILED_COLOR;
       case "paused":
-        return "#FBB731";
+        return PAUSED_COLOR;
       case "resumed":
-        return "#1DAEE2";
+        return RESUMED_COLOR;
       case "aborted":
-        return "#77787B";
+        return ABORTED_COLOR;
       default:
         unhandled(status);
     }
-    return "#FFFFFF";
+    return WHITE_COLOR;
   }
 }

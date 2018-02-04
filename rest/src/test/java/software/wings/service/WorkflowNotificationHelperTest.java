@@ -10,7 +10,6 @@ import static software.wings.beans.Application.Builder.anApplication;
 import static software.wings.beans.CanaryOrchestrationWorkflow.CanaryOrchestrationWorkflowBuilder.aCanaryOrchestrationWorkflow;
 import static software.wings.beans.Environment.Builder.anEnvironment;
 import static software.wings.beans.NotificationRule.NotificationRuleBuilder.aNotificationRule;
-import static software.wings.beans.PipelineExecution.Builder.aPipelineExecution;
 import static software.wings.beans.Service.Builder.aService;
 import static software.wings.beans.WorkflowExecution.WorkflowExecutionBuilder.aWorkflowExecution;
 import static software.wings.beans.artifact.Artifact.Builder.anArtifact;
@@ -20,6 +19,7 @@ import static software.wings.utils.WingsTestConstants.ACCOUNT_ID;
 import static software.wings.utils.WingsTestConstants.APP_ID;
 import static software.wings.utils.WingsTestConstants.ENV_ID;
 import static software.wings.utils.WingsTestConstants.ENV_NAME;
+import static software.wings.utils.WingsTestConstants.PIPELINE_EXECUTION_ID;
 import static software.wings.utils.WingsTestConstants.USER_NAME;
 import static software.wings.utils.WingsTestConstants.WORKFLOW_EXECUTION_ID;
 import static software.wings.utils.WingsTestConstants.WORKFLOW_ID;
@@ -47,6 +47,7 @@ import software.wings.beans.ExecutionScope;
 import software.wings.beans.FailureNotification;
 import software.wings.beans.Notification;
 import software.wings.beans.NotificationRule;
+import software.wings.beans.WorkflowExecution;
 import software.wings.common.NotificationMessageResolver.NotificationMessageType;
 import software.wings.dl.WingsPersistence;
 import software.wings.service.impl.WorkflowNotificationHelper;
@@ -74,8 +75,10 @@ public class WorkflowNotificationHelperTest extends WingsBaseTest {
   @Inject @InjectMocks private WorkflowNotificationHelper workflowNotificationHelper;
 
   @Mock(answer = Answers.RETURNS_DEEP_STUBS) private ExecutionContextImpl executionContext;
-  @Mock private Query<StateExecutionInstance> query;
-  @Mock private FieldEnd end;
+  @Mock private Query<StateExecutionInstance> stateExecutionInstanceQuery;
+  @Mock private FieldEnd stateExecutionInstanceEnd;
+  @Mock private Query<WorkflowExecution> workflowExecutionQuery;
+  @Mock private FieldEnd workflowExecutionEnd;
 
   @Before
   public void setUp() throws Exception {
@@ -114,10 +117,15 @@ public class WorkflowNotificationHelperTest extends WingsBaseTest {
         .thenReturn(aService().withUuid("service-1").withName("Service One").build());
     when(serviceResourceService.get(APP_ID, "service-2"))
         .thenReturn(aService().withUuid("service-2").withName("Service Two").build());
-    when(wingsPersistence.createQuery(StateExecutionInstance.class)).thenReturn(query);
-    when(query.field(any())).thenReturn(end);
-    when(end.equal(any())).thenReturn(query);
-    when(query.get()).thenReturn(aStateExecutionInstance().withStartTs(1234L).withEndTs(2345L).build());
+    when(wingsPersistence.createQuery(StateExecutionInstance.class)).thenReturn(stateExecutionInstanceQuery);
+    when(stateExecutionInstanceQuery.field(any())).thenReturn(stateExecutionInstanceEnd);
+    when(stateExecutionInstanceEnd.equal(any())).thenReturn(stateExecutionInstanceQuery);
+    when(stateExecutionInstanceQuery.get())
+        .thenReturn(aStateExecutionInstance().withStartTs(1234L).withEndTs(2345L).build());
+    when(wingsPersistence.createQuery(WorkflowExecution.class)).thenReturn(workflowExecutionQuery);
+    when(workflowExecutionQuery.field(any())).thenReturn(workflowExecutionEnd);
+    when(workflowExecutionEnd.equal(any())).thenReturn(workflowExecutionQuery);
+    when(workflowExecutionQuery.get()).thenReturn(aWorkflowExecution().withName("Pipeline Name").build());
   }
 
   @Test
@@ -158,7 +166,7 @@ public class WorkflowNotificationHelperTest extends WingsBaseTest {
         .thenReturn(aWorkflowExecution()
                         .withServiceIds(asList("service-1", "service-2"))
                         .withTriggeredBy(EmbeddedUser.builder().name(USER_NAME).build())
-                        .withPipelineExecution(aPipelineExecution().withName("Pipeline Name").build())
+                        .withPipelineExecutionId(PIPELINE_EXECUTION_ID)
                         .build());
     NotificationRule notificationRule = aNotificationRule()
                                             .withExecutionScope(ExecutionScope.WORKFLOW)

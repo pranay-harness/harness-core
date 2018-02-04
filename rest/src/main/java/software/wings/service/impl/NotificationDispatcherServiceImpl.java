@@ -6,6 +6,11 @@ import static software.wings.beans.ExecutionScope.WORKFLOW;
 import static software.wings.beans.ExecutionScope.WORKFLOW_PHASE;
 import static software.wings.beans.SearchFilter.Operator.EQ;
 import static software.wings.beans.SearchFilter.Operator.IN;
+import static software.wings.common.Constants.ABORTED_COLOR;
+import static software.wings.common.Constants.COMPLETED_COLOR;
+import static software.wings.common.Constants.FAILED_COLOR;
+import static software.wings.common.Constants.PAUSED_COLOR;
+import static software.wings.common.Constants.RESUMED_COLOR;
 import static software.wings.common.NotificationMessageResolver.NotificationMessageType.WORKFLOW_FAILED_NOTIFICATION;
 import static software.wings.common.NotificationMessageResolver.NotificationMessageType.WORKFLOW_PHASE_FAILED_NOTIFICATION;
 import static software.wings.common.NotificationMessageResolver.NotificationMessageType.WORKFLOW_PHASE_SUCCESSFUL_NOTIFICATION;
@@ -44,6 +49,7 @@ import software.wings.service.intfc.SettingsService;
 import software.wings.service.intfc.SlackNotificationService;
 import software.wings.service.intfc.UserService;
 import software.wings.settings.SettingValue.SettingVariableTypes;
+import software.wings.utils.Misc;
 
 import java.util.ArrayList;
 import java.util.Collections;
@@ -141,10 +147,18 @@ public class NotificationDispatcherServiceImpl implements NotificationDispatcher
       for (Entry<NotificationChannelType, List<String>> entry :
           notificationGroup.getAddressesByChannelType().entrySet()) {
         if (entry.getKey() == NotificationChannelType.EMAIL) {
-          dispatchEmail(notifications, entry.getValue());
+          try {
+            dispatchEmail(notifications, entry.getValue());
+          } catch (Exception e) {
+            logger.warn(Misc.getMessage(e));
+          }
         }
         if (entry.getKey() == NotificationChannelType.SLACK) {
-          dispatchSlackMessage(notifications, entry.getValue());
+          try {
+            dispatchSlackMessage(notifications, entry.getValue());
+          } catch (Exception e) {
+            logger.warn(Misc.getMessage(e));
+          }
         }
       }
     }
@@ -203,12 +217,27 @@ public class NotificationDispatcherServiceImpl implements NotificationDispatcher
       return;
     }
 
-    String body = String.join("\n\n", emailBodyList);
+    String body = processEmailHtml(String.join("<br>", emailBodyList));
     String subject = emailSubjectList.get(emailSubjectList.size() - 1);
 
     EmailData emailData = EmailData.builder().to(toAddress).subject(subject).body(body).system(true).build();
     emailData.setRetries(2);
     emailData.setCc(Collections.emptyList());
     emailNotificationService.sendAsync(emailData);
+  }
+
+  private String processEmailHtml(String text) {
+    return text.replaceAll("<<top-div>>", "<div style=\"margin-top:12px; margin-left:14px\">")
+        .replaceAll("<<bottom-div>>",
+            "<div style=\"margin:15px; padding-left:7px; "
+                + "border-left-width:3px; border-radius:3px; border-left-style:solid; border-left-color:")
+        .replaceAll("<<completed-color>>", COMPLETED_COLOR + ";\">")
+        .replaceAll("<<failed-color>>", FAILED_COLOR + ";\">")
+        .replaceAll("<<paused-color>>", PAUSED_COLOR + ";\">")
+        .replaceAll("<<resumed-color>>", RESUMED_COLOR + ";\">")
+        .replaceAll("<<aborted-color>>", ABORTED_COLOR + ";\">")
+        .replaceAll("<<img-path>>", "<img src=\"https://api.harness.io/storage/wings-assets/slackicons/")
+        .replaceAll(
+            "<<img-suffix>>", ".png\" height=\"13\" width=\"13\" style=\"padding-right:5px; padding-top:5px;\">");
   }
 }
