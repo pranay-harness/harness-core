@@ -1,10 +1,13 @@
 package software.wings.service.impl;
 
 import static io.harness.data.structure.EmptyPredicate.isNotEmpty;
+import static software.wings.utils.Switch.unhandled;
 
+import com.google.common.collect.ImmutableList;
 import com.google.inject.Singleton;
 
 import allbegray.slack.SlackClientFactory;
+import allbegray.slack.type.Attachment;
 import allbegray.slack.type.Payload;
 import allbegray.slack.webhook.SlackWebhookClient;
 import software.wings.beans.SlackConfig;
@@ -24,12 +27,29 @@ public class SlackNotificationServiceImpl implements SlackNotificationService {
     String webhookUrl = slackConfig.getOutgoingWebhookUrl();
 
     Payload payload = new Payload();
-    payload.setText(message.replaceAll("\\\\\\*", "*"));
+
+    if (message.contains("||")) {
+      Attachment attachment = new Attachment();
+      String[] parts = message.split("\\|\\|");
+      payload.setText(processText(parts[0]));
+      attachment.setText(processText(parts[1]));
+      attachment.setFooter(processText(parts[2]));
+      attachment.setColor(getColor(parts[3]));
+      attachment.setFooter_icon(
+          String.format("https://api.harness.io/storage/wings-assets/slackicons/%s.png", parts[3]));
+      payload.setAttachments(ImmutableList.of(attachment));
+    } else {
+      payload.setText(processText(message));
+    }
+
     if (isNotEmpty(slackChannel)) {
+      if (!slackChannel.startsWith("#")) {
+        slackChannel = "#" + slackChannel;
+      }
       payload.setChannel(slackChannel);
     }
     payload.setUsername(senderName);
-    payload.setIcon_url("https://api.harness.io/storage/wings-assets/logo-slack.png");
+    payload.setIcon_url("https://api.harness.io/storage/wings-assets/slackicons/logo-slack.png");
 
     SlackWebhookClient webhookClient = getWebhookClient(webhookUrl);
     webhookClient.post(payload);
@@ -37,5 +57,27 @@ public class SlackNotificationServiceImpl implements SlackNotificationService {
 
   public SlackWebhookClient getWebhookClient(String webhookUrl) {
     return SlackClientFactory.createWebhookClient(webhookUrl);
+  }
+
+  private String processText(String message) {
+    return message.replaceAll("\\\\\\*", "*");
+  }
+
+  private String getColor(String status) {
+    switch (status) {
+      case "completed":
+        return "#5CB04D";
+      case "failed":
+        return "#EC372E";
+      case "paused":
+        return "#FBB731";
+      case "resumed":
+        return "#1DAEE2";
+      case "aborted":
+        return "#77787B";
+      default:
+        unhandled(status);
+    }
+    return "#FFFFFF";
   }
 }

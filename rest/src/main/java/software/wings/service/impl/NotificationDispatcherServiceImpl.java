@@ -133,7 +133,7 @@ public class NotificationDispatcherServiceImpl implements NotificationDispatcher
                                           .build();
           PageResponse<User> users = userService.list(request);
           List<String> toAddresses =
-              users.stream().filter(user -> user.isEmailVerified()).map(User::getEmail).collect(Collectors.toList());
+              users.stream().filter(User::isEmailVerified).map(User::getEmail).collect(Collectors.toList());
           logger.info("Dispatching notifications to all the users of role {}", role.getRoleType().getDisplayName());
           dispatchEmail(notifications, toAddresses);
         });
@@ -175,9 +175,8 @@ public class NotificationDispatcherServiceImpl implements NotificationDispatcher
       messages.add(getDecoratedNotificationMessage(slackTemplate, notification.getNotificationTemplateVariables()));
     });
 
-    String concatenatedMessage = String.join("\n\n", messages);
-    channels.forEach(
-        channel -> slackNotificationService.sendMessage(slackConfig, channel, "harness", concatenatedMessage));
+    messages.forEach(message
+        -> channels.forEach(channel -> slackNotificationService.sendMessage(slackConfig, channel, "harness", message)));
   }
 
   private void dispatchEmail(List<Notification> notifications, List<String> toAddress) {
