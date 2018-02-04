@@ -230,14 +230,15 @@ public class NotificationDispatcherServiceImpl implements NotificationDispatcher
     return text.replaceAll("<<top-div>>", "<div style=\"margin-top:12px; margin-left:14px\">")
         .replaceAll("<<bottom-div>>",
             "<div style=\"margin:15px; padding-left:7px; "
-                + "border-left-width:3px; border-radius:3px; border-left-style:solid; border-left-color:")
+                + "border-left-width:3px; border-radius:3px; border-left-style:solid; font-size:smaller; border-left-color:")
         .replaceAll("<<completed-color>>", COMPLETED_COLOR + ";\">")
         .replaceAll("<<failed-color>>", FAILED_COLOR + ";\">")
         .replaceAll("<<paused-color>>", PAUSED_COLOR + ";\">")
         .replaceAll("<<resumed-color>>", RESUMED_COLOR + ";\">")
         .replaceAll("<<aborted-color>>", ABORTED_COLOR + ";\">")
         .replaceAll("<<img-path>>", "<img src=\"https://api.harness.io/storage/wings-assets/slackicons/")
-        .replaceAll(
-            "<<img-suffix>>", ".png\" height=\"13\" width=\"13\" style=\"padding-right:5px; padding-top:5px;\">");
+        .replaceAll("<<img-suffix>>",
+            ".png\" height=\"13\" width=\"13\" style=\"padding-right:5px; padding-top:5px;\">"
+                + "<span style=\"color:gray; font-size:small;\">");
   }
 }
