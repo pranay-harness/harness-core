@@ -566,4 +566,11 @@ public interface Constants {
   String STAGING_PATH = "STAGING_PATH";
 
   String ACTIVITY_ID = "activityId";
+
+  String RESUMED_COLOR = "#1DAEE2";
+  String COMPLETED_COLOR = "#5CB04D";
+  String FAILED_COLOR = "#EC372E";
+  String PAUSED_COLOR = "#FBB731";
+  String ABORTED_COLOR = "#77787B";
+  String WHITE_COLOR = "#FFFFFF";
 }

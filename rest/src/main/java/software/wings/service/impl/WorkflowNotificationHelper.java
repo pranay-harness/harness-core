@@ -2,6 +2,7 @@ package software.wings.service.impl;
 
 import static io.harness.data.structure.EmptyPredicate.isEmpty;
 import static io.harness.data.structure.EmptyPredicate.isNotEmpty;
+import static org.mongodb.morphia.mapping.Mapper.ID_KEY;
 import static software.wings.beans.ExecutionScope.WORKFLOW;
 import static software.wings.beans.ExecutionScope.WORKFLOW_PHASE;
 import static software.wings.beans.FailureNotification.Builder.aFailureNotification;
@@ -251,9 +252,16 @@ public class WorkflowNotificationHelper {
     String workflowUrl = buildAbsoluteUrl(String.format("/account/%s/app/%s/env/%s/executions/%s/details",
         app.getAccountId(), app.getUuid(), env.getUuid(), context.getWorkflowExecutionId()));
 
-    String pipeline = workflowExecution.getPipelineExecution() != null
-        ? String.format(" as part of %s pipeline", workflowExecution.getPipelineExecution().getName())
-        : "";
+    String pipeline = "";
+    if (workflowExecution.getPipelineExecutionId() != null) {
+      WorkflowExecution pipelineExecution = wingsPersistence.createQuery(WorkflowExecution.class)
+                                                .field(ID_KEY)
+                                                .equal(workflowExecution.getPipelineExecutionId())
+                                                .get();
+      if (pipelineExecution != null) {
+        pipeline = String.format(" as part of %s pipeline", pipelineExecution.getName());
+      }
+    }
 
     String startTime =
         String.format("%s at %s", dateFormat.format(new Date(startTs)), timeFormat.format(new Date(startTs)));
