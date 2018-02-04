@@ -98,13 +98,6 @@ public abstract class AbstractLogAnalysisState extends AbstractAnalysisState {
           + "Log data will be collected to be analyzed for next deployment run");
     }
 
-    //    if (getComparisonStrategy() == AnalysisComparisonStrategy.COMPARE_WITH_CURRENT
-    //        && lastExecutionNodes.equals(canaryNewHostNames)) {
-    //      getLogger().error("Control and test nodes are same. Will not be running Log analysis");
-    //      return generateAnalysisResponse(context, ExecutionStatus.FAILED,
-    //          "Skipping analysis. Baseline and new hosts are the same. (Minimum two phases are required).");
-    //    }
-
     final LogAnalysisExecutionData executionData =
         LogAnalysisExecutionData.Builder.anLogAnanlysisExecutionData()
             .withStateExecutionInstanceId(context.getStateExecutionId())
@@ -121,20 +114,31 @@ public abstract class AbstractLogAnalysisState extends AbstractAnalysisState {
     if (getComparisonStrategy() == AnalysisComparisonStrategy.COMPARE_WITH_CURRENT && lastExecutionNodes != null) {
       hostsToBeCollected.addAll(lastExecutionNodes);
     }
-    hostsToBeCollected.addAll(canaryNewHostNames);
-    String delegateTaskId =
-        triggerAnalysisDataCollection(executionContext, context.getCorrelationId(), hostsToBeCollected);
+    try {
+      hostsToBeCollected.addAll(canaryNewHostNames);
+      String delegateTaskId =
+          triggerAnalysisDataCollection(executionContext, context.getCorrelationId(), hostsToBeCollected);
 
-    scheduleClusterCronJob(context, delegateTaskId);
-    scheduleAnalysisCronJob(context, delegateTaskId);
+      scheduleClusterCronJob(context, delegateTaskId);
+      scheduleAnalysisCronJob(context, delegateTaskId);
 
-    return anExecutionResponse()
-        .withAsync(true)
-        .withCorrelationIds(Collections.singletonList(context.getCorrelationId()))
-        .withExecutionStatus(ExecutionStatus.RUNNING)
-        .withErrorMessage("Log Verification running")
-        .withStateExecutionData(executionData)
-        .build();
+      return anExecutionResponse()
+          .withAsync(true)
+          .withCorrelationIds(Collections.singletonList(context.getCorrelationId()))
+          .withExecutionStatus(ExecutionStatus.RUNNING)
+          .withErrorMessage("Log Verification running")
+          .withStateExecutionData(executionData)
+          .build();
+    } catch (Exception ex) {
+      getLogger().error("log analysis state failed ", ex);
+      return anExecutionResponse()
+          .withAsync(true)
+          .withCorrelationIds(Collections.singletonList(context.getCorrelationId()))
+          .withExecutionStatus(ExecutionStatus.ERROR)
+          .withErrorMessage(ex.getMessage())
+          .withStateExecutionData(executionData)
+          .build();
+    }
   }
 
   @Override

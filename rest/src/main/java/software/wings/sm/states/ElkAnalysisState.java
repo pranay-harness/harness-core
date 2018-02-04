@@ -3,14 +3,12 @@ package software.wings.sm.states;
 import static org.apache.commons.lang3.StringUtils.isBlank;
 import static software.wings.beans.DelegateTask.Builder.aDelegateTask;
 
-import com.google.common.base.Preconditions;
 import com.google.common.collect.Sets;
 import com.google.inject.Inject;
 
 import com.github.reinert.jjschema.Attributes;
 import com.github.reinert.jjschema.SchemaIgnore;
 import org.apache.commons.lang3.StringUtils;
-import org.json.JSONObject;
 import org.mongodb.morphia.annotations.Transient;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -26,7 +24,6 @@ import software.wings.service.impl.analysis.AnalysisTolerance;
 import software.wings.service.impl.analysis.AnalysisToleranceProvider;
 import software.wings.service.impl.analysis.DataCollectionCallback;
 import software.wings.service.impl.elk.ElkDataCollectionInfo;
-import software.wings.service.impl.elk.ElkIndexTemplate;
 import software.wings.service.impl.elk.ElkSettingProvider;
 import software.wings.service.intfc.elk.ElkAnalysisService;
 import software.wings.sm.ContextElementType;
@@ -36,11 +33,9 @@ import software.wings.sm.WorkflowStandardParams;
 import software.wings.stencils.DefaultValue;
 import software.wings.stencils.EnumData;
 import software.wings.time.WingsTimeUtils;
-import software.wings.utils.JsonUtils;
 
 import java.util.ArrayList;
 import java.util.List;
-import java.util.Map;
 import java.util.Set;
 import java.util.concurrent.TimeUnit;
 
@@ -65,6 +60,10 @@ public class ElkAnalysisState extends AbstractLogAnalysisState {
   @Attributes(required = true, title = "Hostname Field") @DefaultValue("beat.hostname") protected String hostnameField;
 
   @Attributes(required = true, title = "Message Field") @DefaultValue("message") protected String messageField;
+
+  @Attributes(required = true, title = "Timestamp format")
+  @DefaultValue("yyyy-MM-dd'T'HH:mm:ss.SSS'Z'")
+  private String timestampFormat;
 
   public ElkAnalysisState(String name) {
     super(name, StateType.ELK.getType());
@@ -138,11 +137,21 @@ public class ElkAnalysisState extends AbstractLogAnalysisState {
     return super.isExecuteWithPreviousSteps();
   }
 
+  public String getTimestampFormat() {
+    if (timestampFormat == null) {
+      return DEFAULT_TIME_FORMAT;
+    }
+    return timestampFormat;
+  }
+
+  public void setTimestampFormat(String format) {
+    this.timestampFormat = format;
+  }
+
   @Override
   protected String triggerAnalysisDataCollection(ExecutionContext context, String correlationId, Set<String> hosts) {
     final String timestampField = DEFAULT_TIME_FIELD;
     final String accountId = appService.get(context.getAppId()).getAccountId();
-    final String timestampFieldFormat = getTimestampFieldFormat(accountId, timestampField);
     WorkflowStandardParams workflowStandardParams = context.getContextElement(ContextElementType.STANDARD);
     String envId = workflowStandardParams == null ? null : workflowStandardParams.getEnv().getUuid();
     final SettingAttribute settingAttribute = settingsService.get(analysisServerConfigId);
@@ -163,7 +172,7 @@ public class ElkAnalysisState extends AbstractLogAnalysisState {
           new ElkDataCollectionInfo(elkConfig, appService.get(context.getAppId()).getAccountId(), context.getAppId(),
               context.getStateExecutionInstanceId(), getWorkflowId(context), context.getWorkflowExecutionId(),
               getPhaseServiceId(context), queries, indices, hostnameField, messageField, timestampField,
-              timestampFieldFormat, logCollectionStartTimeStamp, 0, Integer.parseInt(timeDuration), hostBatch,
+              timestampFormat, logCollectionStartTimeStamp, 0, Integer.parseInt(timeDuration), hostBatch,
               secretManager.getEncryptionDetails(elkConfig, context.getAppId(), context.getWorkflowExecutionId()));
 
       String waitId = UUIDGenerator.getUuid();
@@ -202,28 +211,5 @@ public class ElkAnalysisState extends AbstractLogAnalysisState {
   @SchemaIgnore
   public Logger getLogger() {
     return logger;
-  }
-
-  protected String getTimestampFieldFormat(String accountId, String timestampField) {
-    try {
-      Map<String, ElkIndexTemplate> indexTemplateMap = elkAnalysisService.getIndices(accountId, analysisServerConfigId);
-      final ElkIndexTemplate indexTemplate = indexTemplateMap.get(indices);
-      Preconditions.checkNotNull(indexTemplate, "No index template mapping found for " + indices);
-
-      final Object timeStampObject = indexTemplate.getProperties().get(timestampField);
-      if (timeStampObject == null) {
-        logger.warn("No timestamp field mapping for {} for index {} ", timestampField, indices);
-        return DEFAULT_TIME_FORMAT;
-      }
-
-      JSONObject timeStampJsonObject = new JSONObject(JsonUtils.asJson(timeStampObject));
-
-      if (!timeStampJsonObject.has("format")) {
-        return DEFAULT_TIME_FORMAT;
-      }
-      return timeStampJsonObject.getString("format");
-    } catch (Exception e) {
-      throw new WingsException(e);
-    }
   }
 }

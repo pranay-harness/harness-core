@@ -58,11 +58,7 @@ public class ElkDelegateServiceImpl implements ElkDelegateService {
       if (isBlank(elkConfig.getUsername()) && elkConfig.getPassword() != null) {
         throw new WingsException("User name is empty but password is given");
       }
-      if (elkConfig.getElkConnector() == ElkConnector.KIBANA_SERVER) {
-        validate(elkConfig, encryptedDataDetails);
-      } else {
-        getIndices(elkConfig, encryptedDataDetails);
-      }
+      getLogSample(elkConfig, "*", encryptedDataDetails);
       return true;
     } catch (Throwable t) {
       throw new WingsException(t.getMessage(), t);
