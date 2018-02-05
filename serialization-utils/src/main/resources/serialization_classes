@@ -265,3 +265,4 @@ software.wings.api.ServiceArtifactElement, 5231
 software.wings.service.impl.analysis.LogAnalysisExecutionData, 5232
 software.wings.beans.ErrorCode, 5233
 software.wings.beans.command.JenkinsTaskParams, 5234
+software.wings.api.ScriptStateExecutionData, 5235
