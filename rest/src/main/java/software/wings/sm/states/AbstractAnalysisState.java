@@ -224,7 +224,7 @@ public abstract class AbstractAnalysisState extends State {
 
     Algorithm algorithm = Algorithm.HMAC256(secret);
     return JWT.create()
-        .withIssuer("harness")
+        .withIssuer("Harness Inc")
         .withIssuedAt(new Date())
         .withExpiresAt(new Date(System.currentTimeMillis() + TimeUnit.HOURS.toMillis(1)))
         .sign(algorithm);
