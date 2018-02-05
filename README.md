@@ -19,9 +19,7 @@
 4. Install and start MongoDB Docker Image (v3.4):
 
 ```
-$ docker login -u harnesshub     (get password from Credentials doc)
-$ docker pull harnesshub/debian-jessie-dbs && mkdir -p ~/_mongodb_data
-$ docker run -d -p 27017:27017 -v ~/_mongodb_data:/opt/mongodb_data harnesshub/debian-jessie-dbs
+$ docker run -p 27017:27017 -v ~/_mongodb_data:/data/db --name mongoContainer -d --rm mongo:3.4
 ```
 Install & use RoboMongo client to test MongoDB connection.
 
