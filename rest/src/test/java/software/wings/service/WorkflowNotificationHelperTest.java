@@ -64,8 +64,10 @@ import software.wings.sm.states.PhaseSubWorkflow;
  */
 public class WorkflowNotificationHelperTest extends WingsBaseTest {
   private static final String BASE_URL = "https://env.harness.io/";
-  private static final String EXPECTED_URL =
+  private static final String EXPECTED_WORKFLOW_URL =
       "https://env.harness.io/#/account/ACCOUNT_ID/app/APP_ID/env/ENV_ID/executions/WORKFLOW_EXECUTION_ID/details";
+  private static final String EXPECTED_PIPELINE_URL =
+      "https://env.harness.io/#/account/ACCOUNT_ID/app/APP_ID/deployments/PIPELINE_EXECUTION_ID/details";
 
   @Mock private NotificationService notificationService;
   @Mock private ServiceResourceService serviceResourceService;
@@ -125,7 +127,8 @@ public class WorkflowNotificationHelperTest extends WingsBaseTest {
     when(wingsPersistence.createQuery(WorkflowExecution.class)).thenReturn(workflowExecutionQuery);
     when(workflowExecutionQuery.field(any())).thenReturn(workflowExecutionEnd);
     when(workflowExecutionEnd.equal(any())).thenReturn(workflowExecutionQuery);
-    when(workflowExecutionQuery.get()).thenReturn(aWorkflowExecution().withName("Pipeline Name").build());
+    when(workflowExecutionQuery.get())
+        .thenReturn(aWorkflowExecution().withUuid(PIPELINE_EXECUTION_ID).withName("Pipeline Name").build());
   }
 
   @Test
@@ -151,7 +154,7 @@ public class WorkflowNotificationHelperTest extends WingsBaseTest {
     ImmutableMap<String, String> placeholders =
         ImmutableMap.<String, String>builder()
             .put("WORKFLOW_NAME", WORKFLOW_NAME)
-            .put("WORKFLOW_URL", EXPECTED_URL)
+            .put("WORKFLOW_URL", EXPECTED_WORKFLOW_URL)
             .put("ARTIFACTS", "Service One: artifact-1 (build# build-1), Service Two: artifact-2 (build# build-2)")
             .put("USER_NAME", USER_NAME)
             .put("PIPELINE", "")
@@ -189,10 +192,10 @@ public class WorkflowNotificationHelperTest extends WingsBaseTest {
     ImmutableMap<String, String> placeholders =
         ImmutableMap.<String, String>builder()
             .put("WORKFLOW_NAME", WORKFLOW_NAME)
-            .put("WORKFLOW_URL", EXPECTED_URL)
+            .put("WORKFLOW_URL", EXPECTED_WORKFLOW_URL)
             .put("ARTIFACTS", "Service One: artifact-1 (build# build-1), Service Two: artifact-2 (build# build-2)")
             .put("USER_NAME", USER_NAME)
-            .put("PIPELINE", " as part of Pipeline Name pipeline")
+            .put("PIPELINE", " as part of <<<" + EXPECTED_PIPELINE_URL + "|-|Pipeline Name>>> pipeline")
             .put("ENV_NAME", ENV_NAME)
             .build();
     assertThat(notification.getNotificationTemplateVariables()).containsAllEntriesOf(placeholders);
@@ -225,7 +228,7 @@ public class WorkflowNotificationHelperTest extends WingsBaseTest {
         .isEqualTo(NotificationMessageType.WORKFLOW_PHASE_FAILED_NOTIFICATION.name());
     ImmutableMap<String, String> placeholders = ImmutableMap.<String, String>builder()
                                                     .put("WORKFLOW_NAME", WORKFLOW_NAME)
-                                                    .put("WORKFLOW_URL", EXPECTED_URL)
+                                                    .put("WORKFLOW_URL", EXPECTED_WORKFLOW_URL)
                                                     .put("PHASE_NAME", "Phase1")
                                                     .put("ARTIFACTS", "Service Two: artifact-2 (build# build-2)")
                                                     .put("USER_NAME", USER_NAME)
@@ -259,7 +262,7 @@ public class WorkflowNotificationHelperTest extends WingsBaseTest {
     ImmutableMap<String, String> placeholders =
         ImmutableMap.<String, String>builder()
             .put("WORKFLOW_NAME", WORKFLOW_NAME)
-            .put("WORKFLOW_URL", EXPECTED_URL)
+            .put("WORKFLOW_URL", EXPECTED_WORKFLOW_URL)
             .put("ARTIFACTS", "Service One: no artifact, Service Two: no artifact")
             .put("USER_NAME", USER_NAME)
             .put("ENV_NAME", ENV_NAME)
@@ -297,7 +300,7 @@ public class WorkflowNotificationHelperTest extends WingsBaseTest {
     ImmutableMap<String, String> placeholders =
         ImmutableMap.<String, String>builder()
             .put("WORKFLOW_NAME", WORKFLOW_NAME)
-            .put("WORKFLOW_URL", EXPECTED_URL)
+            .put("WORKFLOW_URL", EXPECTED_WORKFLOW_URL)
             .put("ARTIFACTS", "Service One: artifact-1 (build# build-1), Service Two: no artifact")
             .put("USER_NAME", USER_NAME)
             .put("ENV_NAME", ENV_NAME)
@@ -331,7 +334,7 @@ public class WorkflowNotificationHelperTest extends WingsBaseTest {
         .isEqualTo(NotificationMessageType.WORKFLOW_FAILED_NOTIFICATION.name());
     ImmutableMap<String, String> placeholders = ImmutableMap.<String, String>builder()
                                                     .put("WORKFLOW_NAME", WORKFLOW_NAME)
-                                                    .put("WORKFLOW_URL", EXPECTED_URL)
+                                                    .put("WORKFLOW_URL", EXPECTED_WORKFLOW_URL)
                                                     .put("ARTIFACTS", "no services")
                                                     .put("USER_NAME", USER_NAME)
                                                     .put("ENV_NAME", ENV_NAME)
