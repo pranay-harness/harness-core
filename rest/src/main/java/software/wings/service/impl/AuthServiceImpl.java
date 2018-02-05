@@ -227,7 +227,7 @@ public class AuthServiceImpl implements AuthService {
     }
     try {
       Algorithm algorithm = Algorithm.HMAC256(jwtExternalServiceSecret);
-      JWTVerifier verifier = JWT.require(algorithm).withIssuer("Harness Inc").build();
+      JWTVerifier verifier = JWT.require(algorithm).withIssuer("harness").build();
       verifier.verify(externalServiceToken);
       JWT decode = JWT.decode(externalServiceToken);
       if (decode.getExpiresAt().getTime() < System.currentTimeMillis()) {
@@ -248,7 +248,7 @@ public class AuthServiceImpl implements AuthService {
     }
     try {
       Algorithm algorithm = Algorithm.HMAC256(jwtLearningEngineServiceSecret);
-      JWTVerifier verifier = JWT.require(algorithm).withIssuer("Harness Inc").build();
+      JWTVerifier verifier = JWT.require(algorithm).withIssuer("harness").build();
       verifier.verify(learningEngineServiceToken);
       JWT decode = JWT.decode(learningEngineServiceToken);
       if (decode.getExpiresAt().getTime() < System.currentTimeMillis()) {

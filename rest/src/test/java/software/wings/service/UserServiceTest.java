@@ -629,7 +629,7 @@ public class UserServiceTest extends WingsBaseTest {
     when(configuration.getPortal().getJwtPasswordSecret()).thenReturn("SECRET");
     Algorithm algorithm = Algorithm.HMAC256("SECRET");
     String token = JWT.create()
-                       .withIssuer("Harness Inc")
+                       .withIssuer("harness")
                        .withIssuedAt(new Date())
                        .withExpiresAt(new Date(System.currentTimeMillis() + 4 * 60 * 60 * 1000)) // 4 hrs
                        .withClaim("email", USER_EMAIL)
