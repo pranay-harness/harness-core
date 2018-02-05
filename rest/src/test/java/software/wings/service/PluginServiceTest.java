@@ -2,7 +2,11 @@ package software.wings.service;
 
 import static java.util.Arrays.asList;
 import static org.assertj.core.api.Assertions.assertThat;
+import static org.mockito.Mockito.when;
+import static org.mockito.MockitoAnnotations.initMocks;
+import static org.mockito.internal.util.reflection.Whitebox.setInternalState;
 import static software.wings.beans.AccountPlugin.Builder.anAccountPlugin;
+import static software.wings.beans.FeatureName.AZURE_SUPPORT;
 import static software.wings.beans.PluginCategory.Artifact;
 import static software.wings.beans.PluginCategory.CloudProvider;
 import static software.wings.beans.PluginCategory.Collaboration;
@@ -10,7 +14,9 @@ import static software.wings.beans.PluginCategory.ConnectionAttributes;
 import static software.wings.beans.PluginCategory.LoadBalancer;
 import static software.wings.beans.PluginCategory.Verification;
 
+import org.junit.Before;
 import org.junit.Test;
+import org.mockito.Mock;
 import software.wings.beans.AppDynamicsConfig;
 import software.wings.beans.AwsConfig;
 import software.wings.beans.AzureConfig;
@@ -31,8 +37,11 @@ import software.wings.beans.config.LogzConfig;
 import software.wings.beans.config.NexusConfig;
 import software.wings.helpers.ext.mail.SmtpConfig;
 import software.wings.service.impl.PluginServiceImpl;
+import software.wings.service.intfc.FeatureFlagService;
 import software.wings.service.intfc.PluginService;
 import software.wings.sm.StateType;
+
+import java.io.IOException;
 
 /**
  * Created by peeyushaggarwal on 10/21/16.
@@ -40,12 +49,24 @@ import software.wings.sm.StateType;
 public class PluginServiceTest {
   private PluginService pluginService = new PluginServiceImpl();
 
+  private String accountId = "ACCOUNT_ID";
+  private String azureEnabledAccountId = "AZURE_ENABLED_ACCOUNT_ID";
+
+  //  @Inject private FeatureFlagService featureFlagService;
+  @Mock private FeatureFlagService mockFeatureFlagService;
+
+  @Before
+  public void setup() throws IOException {
+    initMocks(this);
+    setInternalState(pluginService, "featureFlagService", mockFeatureFlagService);
+    when(mockFeatureFlagService.isEnabled(AZURE_SUPPORT, accountId)).thenReturn(false);
+    when(mockFeatureFlagService.isEnabled(AZURE_SUPPORT, azureEnabledAccountId)).thenReturn(true);
+  }
+
   @Test
   public void shouldGetInstalledPlugins() throws Exception {
-    String accountId = "ACCOUNT_ID";
-
     assertThat(pluginService.getInstalledPlugins(accountId))
-        .hasSize(19)
+        .hasSize(18)
         .containsExactly(anAccountPlugin()
                              .withSettingClass(JenkinsConfig.class)
                              .withAccountId(accountId)
@@ -167,14 +188,6 @@ public class PluginServiceTest {
                 .withPluginCategories(asList(CloudProvider))
                 .build(),
             anAccountPlugin()
-                .withSettingClass(AzureConfig.class)
-                .withAccountId(accountId)
-                .withIsEnabled(true)
-                .withDisplayName("Microsoft Azure")
-                .withType("AZURE")
-                .withPluginCategories(asList(CloudProvider))
-                .build(),
-            anAccountPlugin()
                 .withSettingClass(PhysicalDataCenterConfig.class)
                 .withAccountId(accountId)
                 .withIsEnabled(true)
@@ -198,13 +211,28 @@ public class PluginServiceTest {
                 .withType("ELB")
                 .withPluginCategories(asList(LoadBalancer))
                 .build());
+
+    assertThat(pluginService.getInstalledPlugins(azureEnabledAccountId))
+        .hasSize(19)
+        .contains(anAccountPlugin()
+                      .withSettingClass(AzureConfig.class)
+                      .withAccountId(azureEnabledAccountId)
+                      .withIsEnabled(true)
+                      .withDisplayName("Microsoft Azure")
+                      .withType("AZURE")
+                      .withPluginCategories(asList(CloudProvider))
+                      .build());
   }
 
   @Test
   public void shouldGetPluginSettingSchema() throws Exception {
-    String accountId = "ACCOUNT_ID";
-
     assertThat(pluginService.getPluginSettingSchema(accountId))
+        .hasSize(18)
+        .containsOnlyKeys("APP_DYNAMICS", "NEW_RELIC", "JENKINS", "BAMBOO", "SMTP", "SLACK", "SPLUNK", "ELK", "LOGZ",
+            "SUMO", "AWS", "GCP", "PHYSICAL_DATA_CENTER", "DOCKER", "HOST_CONNECTION_ATTRIBUTES", "ELB", "NEXUS",
+            "ARTIFACTORY");
+
+    assertThat(pluginService.getPluginSettingSchema(azureEnabledAccountId))
         .hasSize(19)
         .containsOnlyKeys("APP_DYNAMICS", "NEW_RELIC", "JENKINS", "BAMBOO", "SMTP", "SLACK", "SPLUNK", "ELK", "LOGZ",
             "SUMO", "AWS", "GCP", "AZURE", "PHYSICAL_DATA_CENTER", "DOCKER", "HOST_CONNECTION_ATTRIBUTES", "ELB",
