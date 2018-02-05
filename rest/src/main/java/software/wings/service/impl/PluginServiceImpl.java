@@ -3,6 +3,7 @@ package software.wings.service.impl;
 import static java.util.Arrays.asList;
 import static java.util.stream.Collectors.toMap;
 import static software.wings.beans.AccountPlugin.Builder.anAccountPlugin;
+import static software.wings.beans.FeatureName.AZURE_SUPPORT;
 import static software.wings.beans.PluginCategory.Artifact;
 import static software.wings.beans.PluginCategory.CloudProvider;
 import static software.wings.beans.PluginCategory.Collaboration;
@@ -14,8 +15,10 @@ import com.google.common.base.Charsets;
 import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.Lists;
 import com.google.common.io.Resources;
+import com.google.inject.Inject;
 import com.google.inject.Singleton;
 
+import org.mongodb.morphia.annotations.Transient;
 import software.wings.beans.AccountPlugin;
 import software.wings.beans.AppDynamicsConfig;
 import software.wings.beans.AwsConfig;
@@ -37,6 +40,7 @@ import software.wings.beans.config.LogzConfig;
 import software.wings.beans.config.NexusConfig;
 import software.wings.exception.WingsException;
 import software.wings.helpers.ext.mail.SmtpConfig;
+import software.wings.service.intfc.FeatureFlagService;
 import software.wings.service.intfc.PluginService;
 import software.wings.settings.SettingValue.SettingVariableTypes;
 import software.wings.utils.JsonUtils;
@@ -54,17 +58,19 @@ public class PluginServiceImpl implements PluginService {
   private static final String stencilsPath = "/templates/plugins/";
   private static final String uiSchemaSuffix = "-SettingUISchema.json";
 
+  @Inject @Transient private transient FeatureFlagService featureFlagService;
+
   @Override
   public List<AccountPlugin> getInstalledPlugins(String accountId) {
-    return Lists.newArrayList(anAccountPlugin()
-                                  .withSettingClass(JenkinsConfig.class)
-                                  .withAccountId(accountId)
-                                  .withIsEnabled(true)
-                                  .withDisplayName("Jenkins")
-                                  .withType("JENKINS")
-                                  .withPluginCategories(asList(Verification, Artifact))
-                                  .withUiSchema(readUiSchema("JENKINS"))
-                                  .build(),
+    List<AccountPlugin> pluginList = Lists.newArrayList(anAccountPlugin()
+                                                            .withSettingClass(JenkinsConfig.class)
+                                                            .withAccountId(accountId)
+                                                            .withIsEnabled(true)
+                                                            .withDisplayName("Jenkins")
+                                                            .withType("JENKINS")
+                                                            .withPluginCategories(asList(Verification, Artifact))
+                                                            .withUiSchema(readUiSchema("JENKINS"))
+                                                            .build(),
         anAccountPlugin()
             .withSettingClass(BambooConfig.class)
             .withAccountId(accountId)
@@ -192,15 +198,6 @@ public class PluginServiceImpl implements PluginService {
             .withUiSchema(readUiSchema("GCP"))
             .build(),
         anAccountPlugin()
-            .withSettingClass(AzureConfig.class)
-            .withAccountId(accountId)
-            .withIsEnabled(true)
-            .withDisplayName("Microsoft Azure")
-            .withType("AZURE")
-            .withPluginCategories(asList(CloudProvider))
-            .withUiSchema(readUiSchema("AZURE"))
-            .build(),
-        anAccountPlugin()
             .withSettingClass(PhysicalDataCenterConfig.class)
             .withAccountId(accountId)
             .withIsEnabled(true)
@@ -227,6 +224,20 @@ public class PluginServiceImpl implements PluginService {
             .withPluginCategories(asList(LoadBalancer))
             .withUiSchema(readUiSchema("ELB"))
             .build());
+
+    if (featureFlagService.isEnabled(AZURE_SUPPORT, accountId)) {
+      pluginList.add(anAccountPlugin()
+                         .withSettingClass(AzureConfig.class)
+                         .withAccountId(accountId)
+                         .withIsEnabled(true)
+                         .withDisplayName("Microsoft Azure")
+                         .withType("AZURE")
+                         .withPluginCategories(asList(CloudProvider))
+                         .withUiSchema(readUiSchema("AZURE"))
+                         .build());
+    }
+
+    return pluginList;
   }
 
   @Override

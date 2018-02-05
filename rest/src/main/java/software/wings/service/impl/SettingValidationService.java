@@ -1,10 +1,12 @@
 package software.wings.service.impl;
 
+import static software.wings.beans.FeatureName.AZURE_SUPPORT;
 import static software.wings.utils.WingsReflectionUtils.getEncryptedRefField;
 
 import com.google.inject.Inject;
 import com.google.inject.Singleton;
 
+import org.mongodb.morphia.annotations.Transient;
 import org.mongodb.morphia.mapping.Mapper;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -30,6 +32,7 @@ import software.wings.dl.WingsPersistence;
 import software.wings.exception.WingsException;
 import software.wings.service.impl.analysis.ElkConnector;
 import software.wings.service.intfc.BuildSourceService;
+import software.wings.service.intfc.FeatureFlagService;
 import software.wings.service.intfc.analysis.AnalysisService;
 import software.wings.service.intfc.elk.ElkAnalysisService;
 import software.wings.service.intfc.newrelic.NewRelicService;
@@ -56,6 +59,7 @@ public class SettingValidationService {
   @Inject private AnalysisService analysisService;
   @Inject private ElkAnalysisService elkAnalysisService;
   @Inject private WingsPersistence wingsPersistence;
+  @Inject @Transient private transient FeatureFlagService featureFlagService;
 
   public boolean validate(SettingAttribute settingAttribute) {
     SettingValue settingValue = settingAttribute.getValue();
@@ -82,6 +86,10 @@ public class SettingValidationService {
     if (settingValue instanceof GcpConfig) {
       gcpHelperService.validateCredential((GcpConfig) settingValue);
     } else if (settingValue instanceof AzureConfig) {
+      if (!featureFlagService.isEnabled(AZURE_SUPPORT, settingAttribute.getAccountId())) {
+        throw new WingsException(ErrorCode.INVALID_REQUEST)
+            .addParam("message", "Adding Azure as Cloud Provider is not supported yet.");
+      }
       azureHelperService.validateAzureAccountCredential(((AzureConfig) settingValue).getClientId(),
           ((AzureConfig) settingValue).getTenantId(), ((AzureConfig) settingValue).getKey());
     } else if (settingValue instanceof AwsConfig) {
