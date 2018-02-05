@@ -553,15 +553,19 @@ public class DelegateServiceImpl implements DelegateService {
 
   private void startHeartbeat(Builder builder, Socket socket) {
     logger.info("Starting heartbeat at interval {} ms", delegateConfiguration.getHeartbeatIntervalMs());
-    heartbeatExecutor.scheduleAtFixedRate(()
-                                              -> executorService.submit(() -> {
+    heartbeatExecutor.scheduleAtFixedRate(() -> {
       try {
-        sendHeartbeat(builder, socket);
-      } catch (Exception ex) {
-        logger.error("Exception while sending heartbeat", ex);
+        executorService.submit(() -> {
+          try {
+            sendHeartbeat(builder, socket);
+          } catch (Exception ex) {
+            logger.error("Exception while sending heartbeat", ex);
+          }
+        });
+      } catch (Exception e) {
+        logger.error("Exception while scheduling heartbeat", e);
       }
-    }),
-        0, delegateConfiguration.getHeartbeatIntervalMs(), TimeUnit.MILLISECONDS);
+    }, 0, delegateConfiguration.getHeartbeatIntervalMs(), TimeUnit.MILLISECONDS);
   }
 
   private void startHeartbeat() {
@@ -836,6 +840,7 @@ public class DelegateServiceImpl implements DelegateService {
     return notifyResponseData -> {
       Response<ResponseBody> response = null;
       try {
+        logger.info("Sending response for task {} to manager", delegateTask.getUuid());
         response = managerClient
                        .sendTaskStatus(delegateId, delegateTask.getUuid(), accountId,
                            aDelegateTaskResponse()
@@ -844,7 +849,7 @@ public class DelegateServiceImpl implements DelegateService {
                                .withResponse(notifyResponseData)
                                .build())
                        .execute();
-        logger.info("Task [{}] response sent to manager", delegateTask.getUuid());
+        logger.info("Task {} response sent to manager", delegateTask.getUuid());
       } catch (IOException e) {
         logger.error("Unable to send response to manager", e);
       } finally {
