@@ -52,7 +52,7 @@ ARTIFACT_STREAM_TYPE:
     - name: AMAZON_S3
       value: Amazon S3
     - name: DOCKER
-      value: Docker
+      value: Docker Registry
     - name: ECR
       value: ECR
     - name: GCR
