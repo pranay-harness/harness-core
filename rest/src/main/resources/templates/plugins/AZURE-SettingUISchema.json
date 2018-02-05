@@ -1,0 +1,6 @@
+{
+  "key" : {"ui:widget" : "password"},
+  "custom:encryptedFields" : ["key"],
+  "type" : {"ui:widget" : "hidden"},
+  "ui:order" : [ "type", "clientId", "tenantId", "key" ]
+}

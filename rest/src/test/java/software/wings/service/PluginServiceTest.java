@@ -13,6 +13,7 @@ import static software.wings.beans.PluginCategory.Verification;
 import org.junit.Test;
 import software.wings.beans.AppDynamicsConfig;
 import software.wings.beans.AwsConfig;
+import software.wings.beans.AzureConfig;
 import software.wings.beans.BambooConfig;
 import software.wings.beans.DockerConfig;
 import software.wings.beans.ElasticLoadBalancerConfig;
@@ -44,7 +45,7 @@ public class PluginServiceTest {
     String accountId = "ACCOUNT_ID";
 
     assertThat(pluginService.getInstalledPlugins(accountId))
-        .hasSize(18)
+        .hasSize(19)
         .containsExactly(anAccountPlugin()
                              .withSettingClass(JenkinsConfig.class)
                              .withAccountId(accountId)
@@ -166,6 +167,14 @@ public class PluginServiceTest {
                 .withPluginCategories(asList(CloudProvider))
                 .build(),
             anAccountPlugin()
+                .withSettingClass(AzureConfig.class)
+                .withAccountId(accountId)
+                .withIsEnabled(true)
+                .withDisplayName("Microsoft Azure")
+                .withType("AZURE")
+                .withPluginCategories(asList(CloudProvider))
+                .build(),
+            anAccountPlugin()
                 .withSettingClass(PhysicalDataCenterConfig.class)
                 .withAccountId(accountId)
                 .withIsEnabled(true)
@@ -196,9 +205,9 @@ public class PluginServiceTest {
     String accountId = "ACCOUNT_ID";
 
     assertThat(pluginService.getPluginSettingSchema(accountId))
-        .hasSize(18)
+        .hasSize(19)
         .containsOnlyKeys("APP_DYNAMICS", "NEW_RELIC", "JENKINS", "BAMBOO", "SMTP", "SLACK", "SPLUNK", "ELK", "LOGZ",
-            "SUMO", "AWS", "GCP", "PHYSICAL_DATA_CENTER", "DOCKER", "HOST_CONNECTION_ATTRIBUTES", "ELB", "NEXUS",
-            "ARTIFACTORY");
+            "SUMO", "AWS", "GCP", "AZURE", "PHYSICAL_DATA_CENTER", "DOCKER", "HOST_CONNECTION_ATTRIBUTES", "ELB",
+            "NEXUS", "ARTIFACTORY");
   }
 }

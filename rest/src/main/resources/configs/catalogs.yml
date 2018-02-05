@@ -282,6 +282,8 @@ CLOUD_PROVIDERS:
       value: GCP
     - name: Amazon Web Services
       value: AWS
+    - name: Microsoft Azure
+      value: AZURE
     - name: Physical Data Center
       value: PHYSICAL_DATA_CENTER
     - name: Direct Kubernetes

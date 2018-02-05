@@ -174,6 +174,11 @@ public abstract class SettingValue implements ExtensionPoint {
     GCP("Google Cloud Platform"),
 
     /**
+     * Azure setting variable types.
+     */
+    AZURE("Microsoft Azure"),
+
+    /**
      * Direct connection setting variable types.
      */
     DIRECT("Direct Kubernetes"),
