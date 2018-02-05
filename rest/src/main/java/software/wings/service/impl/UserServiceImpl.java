@@ -479,7 +479,7 @@ public class UserServiceImpl implements UserService {
     try {
       Algorithm algorithm = Algorithm.HMAC256(jwtPasswordSecret);
       String token = JWT.create()
-                         .withIssuer("harness")
+                         .withIssuer("Harness Inc")
                          .withIssuedAt(new Date())
                          .withExpiresAt(new Date(System.currentTimeMillis() + 4 * 60 * 60 * 1000)) // 4 hrs
                          .withClaim("email", email)
@@ -500,7 +500,7 @@ public class UserServiceImpl implements UserService {
 
     try {
       Algorithm algorithm = Algorithm.HMAC256(jwtPasswordSecret);
-      JWTVerifier verifier = JWT.require(algorithm).withIssuer("harness").build();
+      JWTVerifier verifier = JWT.require(algorithm).withIssuer("Harness Inc").build();
       DecodedJWT jwt = verifier.verify(resetPasswordToken);
       JWT decode = JWT.decode(resetPasswordToken);
       String email = decode.getClaim("email").asString();
