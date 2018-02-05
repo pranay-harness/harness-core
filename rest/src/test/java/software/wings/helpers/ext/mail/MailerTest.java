@@ -71,7 +71,7 @@ public class MailerTest extends WingsBaseTest {
     assertThat(greenMail.getReceivedMessages()[0].getSubject()).isEqualTo("test");
     assertThat(greenMail.getReceivedMessages()[0].getFrom())
         .extracting(Address::toString)
-        .containsExactly("Harness Inc <" + EMAIL + ">");
+        .containsExactly("harness <" + EMAIL + ">");
     assertThat(greenMail.getReceivedMessages()[0].getAllRecipients())
         .extracting(Address::toString)
         .containsExactly("recieve@email.com");
@@ -106,7 +106,7 @@ public class MailerTest extends WingsBaseTest {
     assertThat(greenMail.getReceivedMessages()[0].getSubject()).isEqualTo("test");
     assertThat(greenMail.getReceivedMessages()[0].getFrom())
         .extracting(Address::toString)
-        .containsExactly("Harness Inc <" + EMAIL + ">");
+        .containsExactly("harness <" + EMAIL + ">");
     assertThat(greenMail.getReceivedMessages()[0].getAllRecipients())
         .extracting(Address::toString)
         .containsExactly("recieve@email.com");
@@ -142,7 +142,7 @@ public class MailerTest extends WingsBaseTest {
     assertThat(greenMail.getReceivedMessages()[0].getSubject()).isEqualTo("test you are invited");
     assertThat(greenMail.getReceivedMessages()[0].getFrom())
         .extracting(Address::toString)
-        .containsExactly("Harness Inc <" + EMAIL + ">");
+        .containsExactly("harness <" + EMAIL + ">");
     assertThat(greenMail.getReceivedMessages()[0].getAllRecipients())
         .extracting(Address::toString)
         .containsExactly("recieve@email.com", "recieve2@email.com");

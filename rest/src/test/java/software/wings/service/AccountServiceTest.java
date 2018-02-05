@@ -56,7 +56,7 @@ public class AccountServiceTest extends WingsBaseTest {
   public void shouldUpdateCompanyName() throws Exception {
     Account account = wingsPersistence.saveAndGet(
         Account.class, anAccount().withCompanyName("Harness").withAccountName("Wings").build());
-    account.setCompanyName("Harness Inc");
+    account.setCompanyName("harness");
     accountService.update(account);
     assertThat(wingsPersistence.get(Account.class, account.getUuid())).isEqualTo(account);
   }

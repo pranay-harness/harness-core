@@ -295,8 +295,8 @@ private void addAdminUser() {
                                      aSearchFilter().withField("roleType", Operator.EQ, RoleType.ACCOUNT_ADMIN).build())
                                  .build())
                          .getResponse())
-                 .withAccountName("Harness Inc")
-                 .withCompanyName("Harness Inc")
+                 .withAccountName("harness")
+                 .withCompanyName("harness")
                  .build(),
           APPLICATION_JSON),
       new GenericType<RestResponse<User>>() {});

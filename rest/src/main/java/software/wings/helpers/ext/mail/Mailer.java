@@ -59,7 +59,7 @@ public class Mailer {
         email.setSslSmtpPort(Integer.toString(smtpConfig.getPort()));
       }
 
-      email.setFrom(smtpConfig.getFromAddress(), "Harness Inc");
+      email.setFrom(smtpConfig.getFromAddress(), "harness");
 
       for (String to : emailData.getTo()) {
         email.addTo(to);

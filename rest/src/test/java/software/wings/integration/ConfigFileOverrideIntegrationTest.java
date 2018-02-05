@@ -134,7 +134,7 @@ public class ConfigFileOverrideIntegrationTest extends WingsBaseTest {
             Service.class, SettingAttribute.class)
         .forEach(aClass -> wingsPersistence.getDatastore().getCollection(aClass).drop());
 
-    String accountId = wingsPersistence.save(anAccount().withCompanyName("Harness Inc").build());
+    String accountId = wingsPersistence.save(anAccount().withCompanyName("harness").build());
 
     settingsService.save(aSettingAttribute()
                              .withCategory(Category.CONNECTOR)
