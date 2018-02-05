@@ -5,6 +5,7 @@ import static software.wings.settings.SettingValue.SettingVariableTypes.AMAZON_S
 import static software.wings.settings.SettingValue.SettingVariableTypes.APP_DYNAMICS;
 import static software.wings.settings.SettingValue.SettingVariableTypes.ARTIFACTORY;
 import static software.wings.settings.SettingValue.SettingVariableTypes.AWS;
+import static software.wings.settings.SettingValue.SettingVariableTypes.AZURE;
 import static software.wings.settings.SettingValue.SettingVariableTypes.BAMBOO;
 import static software.wings.settings.SettingValue.SettingVariableTypes.BASTION_HOST_CONNECTION_ATTRIBUTES;
 import static software.wings.settings.SettingValue.SettingVariableTypes.DIRECT;
@@ -70,7 +71,7 @@ public class SettingAttribute extends Base {
   @SchemaIgnore @Transient private transient String encryptedBy;
 
   public enum Category {
-    CLOUD_PROVIDER(Lists.newArrayList(PHYSICAL_DATA_CENTER, AWS, GCP, DIRECT)),
+    CLOUD_PROVIDER(Lists.newArrayList(PHYSICAL_DATA_CENTER, AWS, AZURE, GCP, DIRECT)),
 
     CONNECTOR(Lists.newArrayList(SMTP, JENKINS, BAMBOO, SPLUNK, ELK, LOGZ, SUMO, APP_DYNAMICS, NEW_RELIC, ELB, SLACK,
         DOCKER, ECR, GCR, NEXUS, ARTIFACTORY, AMAZON_S3)),

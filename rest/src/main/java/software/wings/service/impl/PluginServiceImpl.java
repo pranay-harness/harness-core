@@ -19,6 +19,7 @@ import com.google.inject.Singleton;
 import software.wings.beans.AccountPlugin;
 import software.wings.beans.AppDynamicsConfig;
 import software.wings.beans.AwsConfig;
+import software.wings.beans.AzureConfig;
 import software.wings.beans.BambooConfig;
 import software.wings.beans.DockerConfig;
 import software.wings.beans.ElasticLoadBalancerConfig;
@@ -189,6 +190,15 @@ public class PluginServiceImpl implements PluginService {
             .withType("GCP")
             .withPluginCategories(asList(CloudProvider))
             .withUiSchema(readUiSchema("GCP"))
+            .build(),
+        anAccountPlugin()
+            .withSettingClass(AzureConfig.class)
+            .withAccountId(accountId)
+            .withIsEnabled(true)
+            .withDisplayName("Microsoft Azure")
+            .withType("AZURE")
+            .withPluginCategories(asList(CloudProvider))
+            .withUiSchema(readUiSchema("AZURE"))
             .build(),
         anAccountPlugin()
             .withSettingClass(PhysicalDataCenterConfig.class)

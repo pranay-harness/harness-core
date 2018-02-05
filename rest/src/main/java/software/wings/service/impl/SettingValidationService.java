@@ -11,6 +11,7 @@ import org.slf4j.LoggerFactory;
 import software.wings.annotation.Encryptable;
 import software.wings.beans.AppDynamicsConfig;
 import software.wings.beans.AwsConfig;
+import software.wings.beans.AzureConfig;
 import software.wings.beans.BambooConfig;
 import software.wings.beans.Base;
 import software.wings.beans.DockerConfig;
@@ -49,6 +50,7 @@ public class SettingValidationService {
 
   @Inject private AwsHelperService awsHelperService;
   @Inject private GcpHelperService gcpHelperService;
+  @Inject private AzureHelperService azureHelperService;
   @Inject private BuildSourceService buildSourceService;
   @Inject private NewRelicService newRelicService;
   @Inject private AnalysisService analysisService;
@@ -79,6 +81,9 @@ public class SettingValidationService {
 
     if (settingValue instanceof GcpConfig) {
       gcpHelperService.validateCredential((GcpConfig) settingValue);
+    } else if (settingValue instanceof AzureConfig) {
+      azureHelperService.validateAzureAccountCredential(((AzureConfig) settingValue).getClientId(),
+          ((AzureConfig) settingValue).getTenantId(), ((AzureConfig) settingValue).getKey());
     } else if (settingValue instanceof AwsConfig) {
       awsHelperService.validateAwsAccountCredential(
           ((AwsConfig) settingValue).getAccessKey(), ((AwsConfig) settingValue).getSecretKey());
