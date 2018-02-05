@@ -227,10 +227,13 @@ public class NotificationDispatcherServiceImpl implements NotificationDispatcher
   }
 
   private String processEmailHtml(String text) {
-    return text.replaceAll("<<top-div>>", "<div style=\"margin-top:12px; margin-left:14px\">")
+    return text.replaceAll("<<<", "<b><a href=\"")
+        .replaceAll("\\|-\\|", "\" target=\"_blank\">")
+        .replaceAll(">>>", "</a></b>")
+        .replaceAll("<<top-div>>", "<div style=\"margin-top:12px; margin-left:14px\">")
         .replaceAll("<<bottom-div>>",
             "<div style=\"margin:15px; padding-left:7px; "
-                + "border-left-width:3px; border-radius:3px; border-left-style:solid; font-size:smaller; border-left-color:")
+                + "border-left-width:3px; border-radius:3px; border-left-style:solid; font-size:small; border-left-color:")
         .replaceAll("<<completed-color>>", COMPLETED_COLOR + ";\">")
         .replaceAll("<<failed-color>>", FAILED_COLOR + ";\">")
         .replaceAll("<<paused-color>>", PAUSED_COLOR + ";\">")

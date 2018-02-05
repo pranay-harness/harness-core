@@ -66,7 +66,10 @@ public class SlackNotificationServiceImpl implements SlackNotificationService {
   }
 
   private String processText(String message) {
-    return message.replaceAll("\\\\\\*", "*");
+    return message.replaceAll("<<<", "*<")
+        .replaceAll("\\|-\\|", "|")
+        .replaceAll(">>>", ">*")
+        .replaceAll("\\\\\\*", "*");
   }
 
   private String getColor(String status) {
