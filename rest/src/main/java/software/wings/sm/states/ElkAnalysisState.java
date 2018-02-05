@@ -172,7 +172,7 @@ public class ElkAnalysisState extends AbstractLogAnalysisState {
           new ElkDataCollectionInfo(elkConfig, appService.get(context.getAppId()).getAccountId(), context.getAppId(),
               context.getStateExecutionInstanceId(), getWorkflowId(context), context.getWorkflowExecutionId(),
               getPhaseServiceId(context), queries, indices, hostnameField, messageField, timestampField,
-              timestampFormat, logCollectionStartTimeStamp, 0, Integer.parseInt(timeDuration), hostBatch,
+              getTimestampFormat(), logCollectionStartTimeStamp, 0, Integer.parseInt(timeDuration), hostBatch,
               secretManager.getEncryptionDetails(elkConfig, context.getAppId(), context.getWorkflowExecutionId()));
 
       String waitId = UUIDGenerator.getUuid();
