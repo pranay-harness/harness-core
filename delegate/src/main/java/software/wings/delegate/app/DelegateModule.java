@@ -162,7 +162,7 @@ public class DelegateModule extends AbstractModule {
 
     int cores = Runtime.getRuntime().availableProcessors();
     bind(ExecutorService.class)
-        .toInstance(ThreadPool.create(2 * cores, 50, 0, TimeUnit.MILLISECONDS,
+        .toInstance(ThreadPool.create(20 * cores, 500, 0, TimeUnit.MILLISECONDS,
             new ThreadFactoryBuilder().setNameFormat("delegate-task-%d").setPriority(Thread.MIN_PRIORITY).build()));
     install(new FactoryModuleBuilder().implement(Jenkins.class, JenkinsImpl.class).build(JenkinsFactory.class));
     bind(DelegateFileManager.class).to(DelegateFileManagerImpl.class).asEagerSingleton();
