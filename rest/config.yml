@@ -46,7 +46,7 @@ smtp:
   type: SMTP
   host: smtp.gmail.com
   port: 465
-  fromAddress: support@harness.io
+  fromAddress: noreply@harness.io
   useSSL: true
   username: support@harness.io
   password: "H@rness@987"
