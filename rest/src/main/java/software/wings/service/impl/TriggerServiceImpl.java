@@ -536,6 +536,7 @@ public class TriggerServiceImpl implements TriggerService {
   }
 
   private void triggerScheduledExecution(Trigger trigger) {
+    logger.info("");
     List<Artifact> lastDeployedArtifacts =
         getLastDeployedArtifacts(trigger.getAppId(), trigger.getWorkflowId(), trigger.getWorkflowType(), null);
 
@@ -544,6 +545,10 @@ public class TriggerServiceImpl implements TriggerService {
     if (isEmpty(artifactSelections)) {
       logger.info("No artifactSelection configuration setup found. Executing pipeline {}", trigger.getWorkflowId());
       if (isNotEmpty(lastDeployedArtifacts)) {
+        triggerExecution(lastDeployedArtifacts, trigger, null);
+      } else {
+        logger.info(
+            "No last deployed artifacts found. Triggering execution {} without artifacts", trigger.getWorkflowId());
         triggerExecution(lastDeployedArtifacts, trigger, null);
       }
     } else {

@@ -933,7 +933,7 @@ public class TriggerServiceTest extends WingsBaseTest {
                         .build());
 
     triggerService.triggerScheduledExecutionAsync(scheduledConditionTrigger);
-    verify(workflowExecutionService, times(0))
+    verify(workflowExecutionService, times(1))
         .triggerPipelineExecution(anyString(), anyString(), any(ExecutionArgs.class));
   }
 
