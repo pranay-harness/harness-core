@@ -95,7 +95,7 @@ public class EcsServiceSetup extends ContainerServiceSetup {
   protected ContainerServiceElement buildContainerServiceElement(
       CommandStateExecutionData executionData, CommandExecutionResult executionResult, ExecutionStatus status) {
     EcsSetupParams setupParams = (EcsSetupParams) executionData.getContainerSetupParams();
-    int maxInstances = getMaxInstances() == 0 ? 10 : getMaxInstances();
+    int maxInstances = getMaxInstances() == 0 ? DEFAULT_MAX : getMaxInstances();
     int fixedInstances = getFixedInstances() == 0 ? maxInstances : getFixedInstances();
     ResizeStrategy resizeStrategy = getResizeStrategy() == null ? RESIZE_NEW_FIRST : getResizeStrategy();
     int serviceSteadyStateTimeout = (int) getServiceSteadyStateTimeout();

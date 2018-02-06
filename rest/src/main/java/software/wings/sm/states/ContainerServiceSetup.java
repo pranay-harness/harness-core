@@ -102,6 +102,7 @@ public abstract class ContainerServiceSetup extends State {
   @Transient private static final Logger logger = LoggerFactory.getLogger(ContainerServiceSetup.class);
 
   static final String FIXED_INSTANCES = "fixedInstances";
+  static final int DEFAULT_MAX = 2;
 
   private String desiredInstanceCount;
   private int fixedInstances;
