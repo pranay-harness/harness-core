@@ -2,7 +2,7 @@ package software.wings.service.impl;
 
 import static io.harness.data.structure.EmptyPredicate.isEmpty;
 import static io.harness.data.structure.EmptyPredicate.isNotEmpty;
-import static org.mongodb.morphia.mapping.Mapper.ID_KEY;
+import static org.apache.commons.lang3.StringUtils.isNotBlank;
 import static software.wings.beans.ExecutionScope.WORKFLOW;
 import static software.wings.beans.ExecutionScope.WORKFLOW_PHASE;
 import static software.wings.beans.FailureNotification.Builder.aFailureNotification;
@@ -221,9 +221,9 @@ public class WorkflowNotificationHelper {
       ExecutionContext context, Application app, Environment env, @Nullable PhaseSubWorkflow phaseSubWorkflow) {
     WorkflowExecution workflowExecution =
         workflowExecutionService.getExecutionDetails(app.getUuid(), context.getWorkflowExecutionId());
-    String userName = workflowExecution.getTriggeredBy().getName();
-    if (userName.equalsIgnoreCase("Deployment trigger")) {
-      userName = userName.toLowerCase();
+    String triggeredBy = workflowExecution.getTriggeredBy().getName();
+    if (triggeredBy.equalsIgnoreCase("Deployment trigger")) {
+      triggeredBy = triggeredBy.toLowerCase();
     }
     long startTs = Optional.ofNullable(workflowExecution.getStartTs()).orElse(workflowExecution.getCreatedAt());
     long endTs = Optional.ofNullable(workflowExecution.getEndTs()).orElse(workflowExecution.getLastUpdatedAt());
@@ -252,16 +252,13 @@ public class WorkflowNotificationHelper {
     String workflowUrl = buildAbsoluteUrl(String.format("/account/%s/app/%s/env/%s/executions/%s/details",
         app.getAccountId(), app.getUuid(), env.getUuid(), context.getWorkflowExecutionId()));
 
-    String pipeline = "";
+    String pipelineMsg = "";
     if (workflowExecution.getPipelineExecutionId() != null) {
-      WorkflowExecution pipelineExecution = wingsPersistence.createQuery(WorkflowExecution.class)
-                                                .field(ID_KEY)
-                                                .equal(workflowExecution.getPipelineExecutionId())
-                                                .get();
-      if (pipelineExecution != null) {
+      String pipelineName = workflowExecution.getPipelineSummary().getPipelineName();
+      if (isNotBlank(pipelineName)) {
         String pipelineUrl = buildAbsoluteUrl(String.format("/account/%s/app/%s/deployments/%s/details",
-            app.getAccountId(), app.getUuid(), pipelineExecution.getUuid()));
-        pipeline = String.format(" as part of <<<%s|-|%s>>> pipeline", pipelineUrl, pipelineExecution.getName());
+            app.getAccountId(), app.getUuid(), workflowExecution.getPipelineExecutionId()));
+        pipelineMsg = String.format(" as part of <<<%s|-|%s>>> pipeline", pipelineUrl, pipelineName);
       }
     }
 
@@ -272,8 +269,8 @@ public class WorkflowNotificationHelper {
     Map<String, String> placeHolderValues = new HashMap<>();
     placeHolderValues.put("WORKFLOW_NAME", context.getWorkflowExecutionName());
     placeHolderValues.put("WORKFLOW_URL", workflowUrl);
-    placeHolderValues.put("USER_NAME", userName);
-    placeHolderValues.put("PIPELINE", pipeline);
+    placeHolderValues.put("USER_NAME", triggeredBy);
+    placeHolderValues.put("PIPELINE", pipelineMsg);
     placeHolderValues.put("START_TS_SECS", Long.toString(startTs / 1000L));
     placeHolderValues.put("END_TS_SECS", Long.toString(endTs / 1000L));
     placeHolderValues.put("START_DATE", startTime);
