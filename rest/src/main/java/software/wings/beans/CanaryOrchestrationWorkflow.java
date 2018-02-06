@@ -183,7 +183,12 @@ public class CanaryOrchestrationWorkflow extends CustomOrchestrationWorkflow {
     if (workflowPhaseIdMap == null) {
       return null;
     }
-    return workflowPhaseIdMap.values().stream().map(WorkflowPhase::getServiceId).distinct().collect(toList());
+    return workflowPhaseIdMap.values()
+        .stream()
+        .filter(workflowPhase -> workflowPhase.getServiceId() != null)
+        .map(WorkflowPhase::getServiceId)
+        .distinct()
+        .collect(toList());
   }
 
   @Override

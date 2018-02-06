@@ -101,6 +101,7 @@ import software.wings.beans.EntityVersion;
 import software.wings.beans.ExecutionScope;
 import software.wings.beans.FailureStrategy;
 import software.wings.beans.FailureType;
+import software.wings.beans.FeatureName;
 import software.wings.beans.GcpKubernetesInfrastructureMapping;
 import software.wings.beans.Graph;
 import software.wings.beans.Graph.Node;
@@ -194,6 +195,7 @@ import java.util.concurrent.ExecutorService;
 import java.util.function.Predicate;
 import java.util.stream.Collectors;
 import javax.validation.executable.ValidateOnExecution;
+
 /**
  * The Class WorkflowServiceImpl.
  *
@@ -268,6 +270,24 @@ public class WorkflowServiceImpl implements WorkflowService, DataProvider {
   @Override
   public Map<StateTypeScope, List<Stencil>> stencils(
       String appId, String workflowId, String phaseId, StateTypeScope... stateTypeScopes) {
+    boolean isFeatureEnabled = false;
+    try {
+      String accountId = appService.getAccountIdByAppId(appId);
+      isFeatureEnabled = featureFlagService.isEnabled(FeatureName.STENCILS_PERFORMANCE, accountId);
+    } catch (Exception e) {
+      logger.warn("Feature flag check failed. Calling ");
+      isFeatureEnabled = false;
+    }
+    if (isFeatureEnabled) {
+      logger.info(
+          "Stencils performance improvement is enabled for app Id {}. Retrieving with the optimized way", appId);
+      return getStencilsNew(appId, workflowId, phaseId, stateTypeScopes);
+    }
+    return getStencilsOld(appId, workflowId, phaseId, stateTypeScopes);
+  }
+
+  private Map<StateTypeScope, List<Stencil>> getStencilsOld(
+      String appId, String workflowId, String phaseId, StateTypeScope[] stateTypeScopes) {
     Map<StateTypeScope, List<StateTypeDescriptor>> stencilsMap = loadStateTypes(appService.getAccountIdByAppId(appId));
 
     Map<StateTypeScope, List<Stencil>> mapByScope = stencilsMap.entrySet().stream().collect(toMap(Entry::getKey,
@@ -320,6 +340,76 @@ public class WorkflowServiceImpl implements WorkflowService, DataProvider {
         stateTypeScopeListEntry
         -> stateTypeScopeListEntry.getValue().stream().filter(finalPredicate).collect(toList())));
 
+    return maps;
+  }
+
+  private Map<StateTypeScope, List<Stencil>> getStencilsNew(
+      String appId, String workflowId, String phaseId, StateTypeScope[] stateTypeScopes) {
+    Map<StateTypeScope, List<StateTypeDescriptor>> stencilsMap = loadStateTypes(appService.getAccountIdByAppId(appId));
+
+    boolean filterForWorkflow = isNotBlank(workflowId);
+    boolean filterForPhase = filterForWorkflow && isNotBlank(phaseId);
+    Workflow workflow = null;
+    Map<StateTypeScope, List<Stencil>> mapByScope = null;
+    WorkflowPhase workflowPhase = null;
+    if (filterForWorkflow) {
+      workflow = readWorkflow(appId, workflowId);
+      if (filterForPhase) {
+        if (workflow != null) {
+          OrchestrationWorkflow orchestrationWorkflow = workflow.getOrchestrationWorkflow();
+          if (orchestrationWorkflow instanceof CanaryOrchestrationWorkflow) {
+            workflowPhase = ((CanaryOrchestrationWorkflow) orchestrationWorkflow).getWorkflowPhaseIdMap().get(phaseId);
+          }
+        }
+        String serviceId = workflowPhase.getServiceId();
+        if (serviceId != null) {
+          mapByScope = stencilsMap.entrySet().stream().collect(toMap(Entry::getKey,
+              stateTypeScopeListEntry
+              -> stencilPostProcessor.postProcess(stateTypeScopeListEntry.getValue(), appId, serviceId)));
+        } else {
+          mapByScope = stencilsMap.entrySet().stream().collect(toMap(Entry::getKey,
+              stateTypeScopeListEntry -> stencilPostProcessor.postProcess(stateTypeScopeListEntry.getValue(), appId)));
+        }
+      } else {
+        // For workflow, anyways skipping the command names. So, sending service Id as "NONE" to make sure that
+        // EnumDataProvider can ignore that.
+        mapByScope = stencilsMap.entrySet().stream().collect(toMap(Entry::getKey,
+            stateTypeScopeListEntry
+            -> stencilPostProcessor.postProcess(stateTypeScopeListEntry.getValue(), appId, "NONE")));
+      }
+    } else {
+      mapByScope = stencilsMap.entrySet().stream().collect(toMap(Entry::getKey,
+          stateTypeScopeListEntry -> stencilPostProcessor.postProcess(stateTypeScopeListEntry.getValue(), appId)));
+    }
+    Map<StateTypeScope, List<Stencil>> maps = new HashMap<>();
+    if (isEmpty(stateTypeScopes)) {
+      maps.putAll(mapByScope);
+    } else {
+      for (StateTypeScope scope : stateTypeScopes) {
+        maps.put(scope, mapByScope.get(scope));
+      }
+    }
+    maps.values().forEach(list -> list.sort(stencilDefaultSorter));
+
+    Predicate<Stencil> predicate = stencil -> true;
+    if (filterForWorkflow) {
+      if (filterForPhase) {
+        if (workflowPhase != null && workflowPhase.getInfraMappingId() != null
+            && !workflowPhase.checkInfraTemplatized()) {
+          InfrastructureMapping infrastructureMapping =
+              infrastructureMappingService.get(appId, workflowPhase.getInfraMappingId());
+          predicate = stencil -> stencil.matches(infrastructureMapping);
+        }
+      } else {
+        predicate = stencil
+            -> stencil.getStencilCategory() != StencilCategory.COMMANDS
+            && stencil.getStencilCategory() != StencilCategory.CLOUD;
+      }
+    }
+    Predicate<Stencil> finalPredicate = predicate;
+    maps = maps.entrySet().stream().collect(toMap(Entry::getKey,
+        stateTypeScopeListEntry
+        -> stateTypeScopeListEntry.getValue().stream().filter(finalPredicate).collect(toList())));
     return maps;
   }
 
@@ -1340,9 +1430,8 @@ public class WorkflowServiceImpl implements WorkflowService, DataProvider {
 
   @Override
   public Map<String, String> getData(String appId, String... params) {
-    PageRequest<Workflow> pageRequest = new PageRequest<>();
-    pageRequest.addFilter("appId", appId, EQ);
-    return listWorkflows(pageRequest).stream().collect(toMap(Workflow::getUuid, o -> o.getName()));
+    List<Workflow> workflows = wingsPersistence.createQuery(Workflow.class).field("appId").equal(appId).asList();
+    return workflows.stream().collect(toMap(Workflow::getUuid, o -> o.getName()));
   }
 
   @Override
