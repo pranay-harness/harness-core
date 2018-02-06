@@ -26,6 +26,13 @@ public interface ArtifactService extends OwnedByApplication {
    */
   PageResponse<Artifact> list(PageRequest<Artifact> pageRequest, boolean withServices);
 
+  /***
+   * List artifact sort by build nos
+   * @param pageRequest
+   * @return
+   */
+  PageResponse<Artifact> listSortByBuildNo(PageRequest<Artifact> pageRequest);
+
   /**
    * Creates the.
    *

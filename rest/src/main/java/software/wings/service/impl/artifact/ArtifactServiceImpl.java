@@ -1,4 +1,4 @@
-package software.wings.service.impl;
+package software.wings.service.impl.artifact;
 
 import static io.harness.data.structure.EmptyPredicate.isEmpty;
 import static io.harness.data.structure.EmptyPredicate.isNotEmpty;
@@ -64,6 +64,7 @@ import software.wings.utils.validation.Update;
 import java.io.File;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Map;
 import java.util.Optional;
 import java.util.stream.Collectors;
 import javax.validation.Valid;
@@ -111,6 +112,22 @@ public class ArtifactServiceImpl implements ArtifactService {
     return pageResponse;
   }
 
+  @Override
+  public PageResponse<Artifact> listSortByBuildNo(PageRequest<Artifact> pageRequest) {
+    PageResponse<Artifact> pageResponse = wingsPersistence.query(Artifact.class, pageRequest);
+    Map<String, List<Artifact>> groupByArtifactStream =
+        pageResponse.getResponse().stream().collect(Collectors.groupingBy(Artifact::getArtifactStreamId));
+    List<Artifact> artifacts = new ArrayList<>();
+    for (String artifactStreamId : groupByArtifactStream.keySet()) {
+      artifacts.addAll(groupByArtifactStream.get(artifactStreamId)
+                           .stream()
+                           .sorted(new ArtifactComparator())
+                           .collect(Collectors.toList()));
+    }
+    pageResponse.setResponse(artifacts);
+    return pageResponse;
+  }
+
   /* (non-Javadoc)
    * @see software.wings.service.intfc.ArtifactService#create(software.wings.beans.artifact.Artifact)
    */
@@ -144,12 +161,6 @@ public class ArtifactServiceImpl implements ArtifactService {
       logger.info("Sending event to collect artifact {} ", savedArtifact);
       collectQueue.send(aCollectEvent().withArtifact(savedArtifact).build());
     }
-    //    else {
-    //      logger.info("Artifact stream {} set as Meta-data Only. Not collecting artifact", artifactStream);
-    //      logger.info("Triggering deployment trigger  on post artifact collection if any");
-    //      artifactStreamService.triggerStreamActionPostArtifactCollectionAsync(savedArtifact);
-    //    }
-
     return savedArtifact;
   }
 

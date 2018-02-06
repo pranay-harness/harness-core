@@ -185,7 +185,7 @@ public class ArtifactResourceTest {
     PageRequest<Artifact> expectedPageRequest = new PageRequest<>();
     expectedPageRequest.addFilter("appId", APP_ID, Operator.EQ);
     expectedPageRequest.setOffset("0");
-    verify(ARTIFACT_SERVICE).list(expectedPageRequest, false);
+    verify(ARTIFACT_SERVICE).listSortByBuildNo(expectedPageRequest);
   }
 
   /**
