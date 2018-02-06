@@ -1,4 +1,4 @@
-package software.wings.service;
+package software.wings.service.impl.artifact;
 
 import static java.util.Arrays.asList;
 import static org.assertj.core.api.Assertions.assertThat;
@@ -15,6 +15,7 @@ import static software.wings.utils.WingsTestConstants.APP_ID;
 import static software.wings.utils.WingsTestConstants.ARTIFACT_STREAM_ID;
 import static software.wings.utils.WingsTestConstants.SERVICE_ID;
 
+import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.Lists;
 import com.google.common.io.Files;
 import com.google.inject.Inject;
@@ -37,6 +38,7 @@ import software.wings.beans.artifact.Artifact.Status;
 import software.wings.beans.artifact.ArtifactFile;
 import software.wings.beans.artifact.ArtifactStream;
 import software.wings.beans.artifact.JenkinsArtifactStream;
+import software.wings.common.Constants;
 import software.wings.dl.PageRequest;
 import software.wings.dl.WingsPersistence;
 import software.wings.exception.WingsException;
@@ -49,6 +51,7 @@ import software.wings.service.intfc.FileService.FileBucket;
 import software.wings.utils.ArtifactType;
 
 import java.io.File;
+import java.util.List;
 import javax.validation.ConstraintViolationException;
 
 /**
@@ -203,6 +206,28 @@ public class ArtifactServiceTest extends WingsBaseTest {
   public void shouldListArtifact() {
     Artifact savedArtifact = artifactService.create(artifactBuilder.but().build());
     assertThat(artifactService.list(new PageRequest<>(), false)).hasSize(1).containsExactly(savedArtifact);
+  }
+
+  @Test
+  public void shouldListSortByBuildNo() {
+    artifactService.create(
+        artifactBuilder.withMetadata(ImmutableMap.of(Constants.BUILD_NO, "todolist-1.0-1.x86_64.rpm")).but().build());
+
+    artifactService.create(
+        artifactBuilder.withMetadata(ImmutableMap.of(Constants.BUILD_NO, "todolist-1.0-10.x86_64.rpm")).but().build());
+    artifactService.create(
+        artifactBuilder.withMetadata(ImmutableMap.of(Constants.BUILD_NO, "todolist-1.0-5.x86_64.rpm")).but().build());
+
+    artifactService.create(
+        artifactBuilder.withMetadata(ImmutableMap.of(Constants.BUILD_NO, "todolist-1.0-15.x86_64.rpm")).but().build());
+
+    List<Artifact> artifacts = artifactService.listSortByBuildNo(new PageRequest<>());
+
+    assertThat(artifacts)
+        .hasSize(4)
+        .extracting(Artifact::getBuildNo)
+        .containsSequence("todolist-1.0-15.x86_64.rpm", "todolist-1.0-10.x86_64.rpm", "todolist-1.0-5.x86_64.rpm",
+            "todolist-1.0-1.x86_64.rpm");
   }
 
   /**
