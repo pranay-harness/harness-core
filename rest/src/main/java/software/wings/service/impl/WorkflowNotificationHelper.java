@@ -132,17 +132,18 @@ public class WorkflowNotificationHelper {
                                                  .build();
       notificationService.sendNotificationAsync(notification, notificationRules);
     } else {
-      FailureNotification notification = aFailureNotification()
-                                             .withAccountId(app.getAccountId())
-                                             .withAppId(app.getUuid())
-                                             .withEnvironmentId(env.getUuid())
-                                             .withEntityId(context.getWorkflowExecutionId())
-                                             .withEntityType(EntityType.ORCHESTRATED_DEPLOYMENT)
-                                             .withEntityName("Deployment")
-                                             .withNotificationTemplateId(messageTemplate)
-                                             .withNotificationTemplateVariables(placeHolderValues)
-                                             .withExecutionId(context.getWorkflowExecutionId())
-                                             .build();
+      FailureNotification notification =
+          aFailureNotification()
+              .withAccountId(app.getAccountId())
+              .withAppId(app.getUuid())
+              .withEnvironmentId(BUILD.equals(context.getOrchestrationWorkflowType()) ? "null" : env.getUuid())
+              .withEntityId(context.getWorkflowExecutionId())
+              .withEntityType(EntityType.ORCHESTRATED_DEPLOYMENT)
+              .withEntityName("Deployment")
+              .withNotificationTemplateId(messageTemplate)
+              .withNotificationTemplateVariables(placeHolderValues)
+              .withExecutionId(context.getWorkflowExecutionId())
+              .build();
       notificationService.sendNotificationAsync(notification, notificationRules);
     }
   }
@@ -249,8 +250,10 @@ public class WorkflowNotificationHelper {
       endTs = clock.millis();
     }
 
-    String workflowUrl = buildAbsoluteUrl(String.format("/account/%s/app/%s/env/%s/executions/%s/details",
-        app.getAccountId(), app.getUuid(), env.getUuid(), context.getWorkflowExecutionId()));
+    String workflowUrl =
+        buildAbsoluteUrl(String.format("/account/%s/app/%s/env/%s/executions/%s/details", app.getAccountId(),
+            app.getUuid(), BUILD.equals(context.getOrchestrationWorkflowType()) ? "null" : env.getUuid(),
+            context.getWorkflowExecutionId()));
 
     String pipelineMsg = "";
     if (workflowExecution.getPipelineExecutionId() != null) {
@@ -277,9 +280,8 @@ public class WorkflowNotificationHelper {
     placeHolderValues.put("START_DATE", startTime);
     placeHolderValues.put("END_DATE", endTime);
     placeHolderValues.put("DURATION", getDurationString(startTs, endTs));
-    if (!BUILD.equals(context.getOrchestrationWorkflowType())) {
-      placeHolderValues.put("ENV_NAME", env.getName());
-    }
+    placeHolderValues.put(
+        "ENV_NAME", BUILD.equals(context.getOrchestrationWorkflowType()) ? "no environment" : env.getName());
     if (phaseSubWorkflow != null) {
       placeHolderValues.put("PHASE_NAME", phaseSubWorkflow.getName());
       placeHolderValues.put(

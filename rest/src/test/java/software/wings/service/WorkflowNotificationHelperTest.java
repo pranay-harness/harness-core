@@ -7,6 +7,7 @@ import static org.mockito.Matchers.eq;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 import static software.wings.beans.Application.Builder.anApplication;
+import static software.wings.beans.BuildWorkflow.BuildOrchestrationWorkflowBuilder.aBuildOrchestrationWorkflow;
 import static software.wings.beans.CanaryOrchestrationWorkflow.CanaryOrchestrationWorkflowBuilder.aCanaryOrchestrationWorkflow;
 import static software.wings.beans.Environment.Builder.anEnvironment;
 import static software.wings.beans.NotificationRule.NotificationRuleBuilder.aNotificationRule;
@@ -43,12 +44,14 @@ import org.mongodb.morphia.query.Query;
 import software.wings.WingsBaseTest;
 import software.wings.app.MainConfiguration;
 import software.wings.app.PortalConfig;
+import software.wings.beans.BuildWorkflow;
 import software.wings.beans.CanaryOrchestrationWorkflow;
 import software.wings.beans.EmbeddedUser;
 import software.wings.beans.ExecutionScope;
 import software.wings.beans.FailureNotification;
 import software.wings.beans.Notification;
 import software.wings.beans.NotificationRule;
+import software.wings.beans.OrchestrationWorkflowType;
 import software.wings.beans.WorkflowExecution;
 import software.wings.common.NotificationMessageResolver.NotificationMessageType;
 import software.wings.dl.WingsPersistence;
@@ -349,6 +352,44 @@ public class WorkflowNotificationHelperTest extends WingsBaseTest {
                                                     .put("ENV_NAME", ENV_NAME)
                                                     .put("APP_NAME", APP_NAME)
                                                     .build();
+    assertThat(notification.getNotificationTemplateVariables()).containsAllEntriesOf(placeholders);
+  }
+
+  @Test
+  public void shouldSendWorkflowStatusChangeNotificationBuildWorkflow() {
+    when(executionContext.getEnv()).thenReturn(null);
+    when(executionContext.getArtifacts()).thenReturn(null);
+    when(workflowExecutionService.getExecutionDetails(APP_ID, WORKFLOW_EXECUTION_ID))
+        .thenReturn(aWorkflowExecution().withTriggeredBy(EmbeddedUser.builder().name(USER_NAME).build()).build());
+    NotificationRule notificationRule = aNotificationRule()
+                                            .withExecutionScope(ExecutionScope.WORKFLOW)
+                                            .withConditions(asList(ExecutionStatus.FAILED, ExecutionStatus.SUCCESS))
+                                            .build();
+    BuildWorkflow buildWorkflow = aBuildOrchestrationWorkflow().withNotificationRules(asList(notificationRule)).build();
+
+    when(executionContext.getStateMachine().getOrchestrationWorkflow()).thenReturn(buildWorkflow);
+    when(executionContext.getOrchestrationWorkflowType()).thenReturn(OrchestrationWorkflowType.BUILD);
+
+    workflowNotificationHelper.sendWorkflowStatusChangeNotification(executionContext, ExecutionStatus.FAILED);
+
+    ArgumentCaptor<Notification> notificationArgumentCaptor = ArgumentCaptor.forClass(Notification.class);
+
+    verify(notificationService)
+        .sendNotificationAsync(notificationArgumentCaptor.capture(), eq(asList(notificationRule)));
+    Notification notification = notificationArgumentCaptor.getAllValues().get(0);
+    assertThat(notification).isInstanceOf(FailureNotification.class);
+    assertThat(notification.getNotificationTemplateId())
+        .isEqualTo(NotificationMessageType.WORKFLOW_FAILED_NOTIFICATION.name());
+    ImmutableMap<String, String> placeholders =
+        ImmutableMap.<String, String>builder()
+            .put("WORKFLOW_NAME", WORKFLOW_NAME)
+            .put("WORKFLOW_URL",
+                "https://env.harness.io/#/account/ACCOUNT_ID/app/APP_ID/env/null/executions/WORKFLOW_EXECUTION_ID/details")
+            .put("ARTIFACTS", "no services")
+            .put("USER_NAME", USER_NAME)
+            .put("ENV_NAME", "no environment")
+            .put("APP_NAME", APP_NAME)
+            .build();
     assertThat(notification.getNotificationTemplateVariables()).containsAllEntriesOf(placeholders);
   }
 }
