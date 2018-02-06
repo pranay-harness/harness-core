@@ -202,7 +202,8 @@ public class LogAnalysisManagerJob implements Job {
             try {
               for (String id : delegateTaskId.split(",")) {
                 try {
-                  delegateService.abortTask(context.getAccountId(), delegateTaskId);
+                  logger.info("aborting delegate task {}, for state execution {}", id, context.getStateExecutionId());
+                  delegateService.abortTask(context.getAccountId(), id);
                 } catch (Exception e) {
                   logger.error("Delegate abort failed for log analysis manager for delegate task id " + id, e);
                 }
