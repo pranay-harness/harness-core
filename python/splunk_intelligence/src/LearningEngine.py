@@ -6,16 +6,20 @@ import signal
 import TimeSeriesML
 import SplunkIntelOptimized
 import ClusterInput
+import os
 from core.util.lelogging import get_log
 
 from sources.HarnessLoader import HarnessLoader
 from BaseHTTPServer import HTTPServer, BaseHTTPRequestHandler
 from collections import namedtuple
 import newrelic.agent
-# TODO should have two config file for dev and prod
-newrelic.agent.initialize('newrelic.ini')
 
 
+if os.environ.get('prod'):
+    newrelic_ini_file = 'newrelic_prod.ini'
+else:
+    newrelic_ini_file = 'newrelic.ini'
+newrelic.agent.initialize(newrelic_ini_file)
 logger = get_log(__name__)
 process = False
 VERSIONFILEPATH = 'service_version.properties'
