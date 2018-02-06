@@ -384,7 +384,7 @@ public class WorkflowNotificationHelperTest extends WingsBaseTest {
         ImmutableMap.<String, String>builder()
             .put("WORKFLOW_NAME", WORKFLOW_NAME)
             .put("WORKFLOW_URL",
-                "https://env.harness.io/#/account/ACCOUNT_ID/app/APP_ID/env/null/executions/WORKFLOW_EXECUTION_ID/details")
+                "https://env.harness.io/#/account/ACCOUNT_ID/app/APP_ID/env/build/executions/WORKFLOW_EXECUTION_ID/details")
             .put("ARTIFACTS", "no services")
             .put("USER_NAME", USER_NAME)
             .put("ENV_NAME", "no environment")
