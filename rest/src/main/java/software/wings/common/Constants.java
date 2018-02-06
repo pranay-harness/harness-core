@@ -573,5 +573,5 @@ public interface Constants {
   String PAUSED_COLOR = "#FBB731";
   String ABORTED_COLOR = "#77787B";
   String WHITE_COLOR = "#FFFFFF";
-  String LINK_COLOR = "#1B91CA";
+  String LINK_COLOR = "#1A89BF";
 }
