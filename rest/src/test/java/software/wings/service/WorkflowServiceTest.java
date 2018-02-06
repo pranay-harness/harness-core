@@ -3,6 +3,7 @@ package software.wings.service;
 import static java.util.Arrays.asList;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThatThrownBy;
+import static org.assertj.core.api.Assertions.fail;
 import static org.assertj.core.util.Lists.newArrayList;
 import static org.mockito.Matchers.any;
 import static org.mockito.Matchers.anyObject;
@@ -100,7 +101,9 @@ import software.wings.beans.CanaryOrchestrationWorkflow;
 import software.wings.beans.CustomOrchestrationWorkflow;
 import software.wings.beans.ErrorCode;
 import software.wings.beans.ExecutionScope;
+import software.wings.beans.FailureCriteria;
 import software.wings.beans.FailureStrategy;
+import software.wings.beans.FailureType;
 import software.wings.beans.Graph;
 import software.wings.beans.Graph.Node;
 import software.wings.beans.InfrastructureMappingType;
@@ -165,6 +168,7 @@ import java.util.List;
 import java.util.Map;
 import java.util.Random;
 import java.util.stream.Collectors;
+import javax.validation.ConstraintViolationException;
 
 /**
  * The Class WorkflowServiceTest.
@@ -1119,6 +1123,7 @@ public class WorkflowServiceTest extends WingsBaseTest {
     assertThat(workflowPhase.getComputeProviderId()).isNotNull();
     assertThat(workflowPhase.getInfraMappingName()).isNotNull();
   }
+
   @Test(expected = WingsException.class)
   public void shouldUpdateBasicEnvironmentServiceInfraMappingIncompatible() {
     Workflow workflow1 = createBasicWorkflow();
@@ -1728,6 +1733,7 @@ public class WorkflowServiceTest extends WingsBaseTest {
         aWorkflowPhase().withInfraMappingId(INFRA_MAPPING_ID).withServiceId(SERVICE_ID).build();
     workflowService.createWorkflowPhase(workflow1.getAppId(), workflow1.getUuid(), workflowPhase);
   }
+
   @Test(expected = WingsException.class)
   public void shouldUpdateWorkflowPhaseInvalidServiceandInfra() {
     when(serviceResourceService.get(APP_ID, SERVICE_ID, false)).thenReturn(aService().withUuid(SERVICE_ID).build());
@@ -2147,7 +2153,8 @@ public class WorkflowServiceTest extends WingsBaseTest {
   public void shouldUpdateFailureStrategies() {
     Workflow workflow1 = createCanaryWorkflow();
 
-    List<FailureStrategy> failureStrategies = newArrayList(aFailureStrategy().build());
+    List<FailureStrategy> failureStrategies =
+        newArrayList(aFailureStrategy().addFailureTypes(FailureType.VERIFICATION_FAILURE).build());
     List<FailureStrategy> updated =
         workflowService.updateFailureStrategies(workflow1.getAppId(), workflow1.getUuid(), failureStrategies);
 
@@ -2156,6 +2163,71 @@ public class WorkflowServiceTest extends WingsBaseTest {
     CanaryOrchestrationWorkflow orchestrationWorkflow =
         (CanaryOrchestrationWorkflow) workflow2.getOrchestrationWorkflow();
     assertThat(orchestrationWorkflow).isNotNull().hasFieldOrPropertyWithValue("failureStrategies", failureStrategies);
+  }
+
+  @Test
+  public void testValidationFailuresForUpdateFailureStrategies() {
+    try {
+      Workflow workflow1 = createCanaryWorkflow();
+
+      List<FailureStrategy> failureStrategies = newArrayList(aFailureStrategy().build());
+      List<FailureStrategy> updated =
+          workflowService.updateFailureStrategies(workflow1.getAppId(), workflow1.getUuid(), failureStrategies);
+      fail("No Constraint violation detected");
+    } catch (ConstraintViolationException e) {
+      logger.info("Expected constraintViolationException", e);
+    }
+
+    try {
+      Workflow workflow1 = createCanaryWorkflow();
+
+      List<FailureStrategy> failureStrategies =
+          newArrayList(aFailureStrategy()
+                           .addFailureTypes(FailureType.VERIFICATION_FAILURE)
+                           .withFailureCriteria(FailureCriteria.builder().failureThresholdPercentage(-1).build())
+                           .build());
+      List<FailureStrategy> updated =
+          workflowService.updateFailureStrategies(workflow1.getAppId(), workflow1.getUuid(), failureStrategies);
+      fail("No Constraint violation detected");
+    } catch (ConstraintViolationException e) {
+      logger.info("Expected constraintViolationException", e);
+    }
+
+    try {
+      Workflow workflow1 = createCanaryWorkflow();
+
+      List<FailureStrategy> failureStrategies =
+          newArrayList(aFailureStrategy()
+                           .addFailureTypes(FailureType.VERIFICATION_FAILURE)
+                           .withFailureCriteria(FailureCriteria.builder().failureThresholdPercentage(101).build())
+                           .build());
+      List<FailureStrategy> updated =
+          workflowService.updateFailureStrategies(workflow1.getAppId(), workflow1.getUuid(), failureStrategies);
+      fail("No Constraint violation detected");
+    } catch (ConstraintViolationException e) {
+      logger.info("Expected constraintViolationException", e);
+    }
+
+    try {
+      Workflow workflow1 = createCanaryWorkflow();
+
+      List<FailureStrategy> failureStrategies =
+          newArrayList(aFailureStrategy()
+                           .addFailureTypes(FailureType.VERIFICATION_FAILURE)
+                           .withFailureCriteria(FailureCriteria.builder().failureThresholdPercentage(100).build())
+                           .build());
+      List<FailureStrategy> updated =
+          workflowService.updateFailureStrategies(workflow1.getAppId(), workflow1.getUuid(), failureStrategies);
+
+      failureStrategies =
+          newArrayList(aFailureStrategy()
+                           .addFailureTypes(FailureType.VERIFICATION_FAILURE)
+                           .withFailureCriteria(FailureCriteria.builder().failureThresholdPercentage(100).build())
+                           .build());
+      updated = workflowService.updateFailureStrategies(workflow1.getAppId(), workflow1.getUuid(), failureStrategies);
+    } catch (Exception e) {
+      fail("Unexpected exception", e);
+    }
   }
 
   @Test
@@ -3099,6 +3171,7 @@ public class WorkflowServiceTest extends WingsBaseTest {
     assertThat(defaults).containsKeys("bucket", "key", "bundleType");
     assertThat(defaults).containsValues(ARTIFACT_S3_BUCKET_EXPRESSION, ARTIFACT__S3_KEY_EXPRESSION, "zip");
   }
+
   @Test
   public void shouldAwsCodeDeployNoStateDefaults() {
     assertThat(workflowService.getStateDefaults(APP_ID, SERVICE_ID, StateType.AWS_CODEDEPLOY_STATE)).isEmpty();

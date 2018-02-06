@@ -179,7 +179,7 @@ public interface WorkflowService extends OwnedByApplication, OwnedByEnvironment 
       String appId, String workflowId, List<NotificationRule> notificationRules);
 
   List<FailureStrategy> updateFailureStrategies(
-      String appId, String workflowId, List<FailureStrategy> failureStrategies);
+      String appId, String workflowId, @Valid List<FailureStrategy> failureStrategies);
 
   List<Variable> updateUserVariables(String appId, String workflowId, List<Variable> userVariables);
 
