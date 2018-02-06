@@ -1,0 +1,269 @@
+{
+    "_id" : "hgMIOE1MSueC8-Klsg4nNA",
+    "stateExecutionId" : "17c9kSu2RhylZoP04enUTQ",
+    "applicationId" : "zRRHCQowScKNiZdMAwlWlg",
+    "stateType" : "SUMO",
+    "logCollectionMinute" : 11,
+    "isBaseLineCreated" : true,
+    "query" : "*exception* OR *error*",
+    "score" : 1.33,
+    "unknown_events" : [
+        [
+            {
+                "className" : "software.wings.service.impl.splunk.SplunkAnalysisCluster",
+                "message_frequencies" : [
+                    {
+                        "count" : 1,
+                        "host" : "webservices-pr-1.sys.id.harness.com",
+                        "old_label" : "0",
+                        "time" : 1517893980000
+                    }
+                ],
+                "cluster_label" : 0,
+                "unexpected_freq" : false,
+                "text" : "2018-02-05 21:13:33.469 ERROR 8051 --- [io-8080-exec-11] c.harness.service.order.OrderServiceImpl   : DUPLICATE_ORDER_ATTEMPTED Validation Exception for sessionCartId: 411143755, Same order initiated at: 2018-02-05 21:13:33.088",
+                "x" : 0.0,
+                "y" : 0.0,
+                "alert_score" : 0.0,
+                "test_score" : 0.120096115353815,
+                "control_score" : 1,
+                "freq_score" : 0.0
+            },
+            {
+                "className" : "software.wings.service.impl.splunk.SplunkAnalysisCluster",
+                "message_frequencies" : [
+                    {
+                        "count" : 20,
+                        "host" : "webservices-pr-1.sys.id.harness.com",
+                        "old_label" : "0",
+                        "time" : 1517893380000
+                    }
+                ],
+                "cluster_label" : 0,
+                "unexpected_freq" : false,
+                "text" : "2018-02-05 21:03:12.641  WARN 8051 --- [           main] o.s.aop.framework.CglibAopProxy          : Unable to proxy interface-implementing method [public final void org.springframework.dao.support.DaoSupport.afterPropertiesSet() throws java.lang.IllegalArgumentException,org.springframework.beans.factory.BeanInitializationException] because it is marked as final: Consider using interface-based JDK proxies instead!",
+                "x" : 0.0,
+                "y" : 0.0,
+                "alert_score" : 0.0,
+                "test_score" : 0.120096115353815,
+                "control_score" : 1,
+                "freq_score" : 0.0
+            }
+        ],
+        [
+            {
+                "className" : "software.wings.service.impl.splunk.SplunkAnalysisCluster",
+                "message_frequencies" : [
+                    {
+                        "count" : 1,
+                        "host" : "webservices-pr-1.sys.id.harness.com",
+                        "old_label" : "1",
+                        "time" : 1517893380000
+                    }
+                ],
+                "cluster_label" : 0,
+                "unexpected_freq" : false,
+                "text" : "2018-02-05 21:03:12.304  WARN 8051 --- [           main] o.s.aop.framework.CglibAopProxy          : Unable to proxy interface-implementing method [public final void org.springframework.ws.client.core.support.WebServiceGatewaySupport.afterPropertiesSet() throws java.lang.Exception] because it is marked as final: Consider using interface-based JDK proxies instead!",
+                "x" : 0.0,
+                "y" : 0.0,
+                "alert_score" : 0.0,
+                "test_score" : 0.0,
+                "control_score" : 1,
+                "freq_score" : 0.0
+            }
+        ]
+    ],
+    "test_events" : {
+        "10000" : [
+            {
+                "className" : "software.wings.service.impl.splunk.SplunkAnalysisCluster",
+                "message_frequencies" : [
+                    {
+                        "count" : 1,
+                        "host" : "webservices-pr-1.sys.id.harness.com",
+                        "old_label" : "0",
+                        "time" : 1517893980000
+                    }
+                ],
+                "cluster_label" : 1000000,
+                "unexpected_freq" : false,
+                "text" : "2018-02-05 21:13:33.469 ERROR 8051 --- [io-8080-exec-11] c.harness.service.order.OrderServiceImpl   : DUPLICATE_ORDER_ATTEMPTED Validation Exception for sessionCartId: 411143755, Same order initiated at: 2018-02-05 21:13:33.088",
+                "x" : 0.0,
+                "y" : 0.0,
+                "alert_score" : 0.0,
+                "test_score" : 0.120096115353815,
+                "control_score" : 1,
+                "freq_score" : 0.0
+            },
+            {
+                "className" : "software.wings.service.impl.splunk.SplunkAnalysisCluster",
+                "message_frequencies" : [
+                    {
+                        "count" : 20,
+                        "host" : "webservices-pr-1.sys.id.harness.com",
+                        "old_label" : "0",
+                        "time" : 1517893380000
+                    }
+                ],
+                "cluster_label" : 1000001,
+                "unexpected_freq" : false,
+                "text" : "2018-02-05 21:03:12.641  WARN 8051 --- [           main] o.s.aop.framework.CglibAopProxy          : Unable to proxy interface-implementing method [public final void org.springframework.dao.support.DaoSupport.afterPropertiesSet() throws java.lang.IllegalArgumentException,org.springframework.beans.factory.BeanInitializationException] because it is marked as final: Consider using interface-based JDK proxies instead!",
+                "x" : 0.0,
+                "y" : 0.0,
+                "alert_score" : 0.0,
+                "test_score" : 0.120096115353815,
+                "control_score" : 1,
+                "freq_score" : 0.0
+            }
+        ],
+        "10001" : [
+            {
+                "className" : "software.wings.service.impl.splunk.SplunkAnalysisCluster",
+                "message_frequencies" : [
+                    {
+                        "count" : 1,
+                        "host" : "webservices-pr-1.sys.id.harness.com",
+                        "old_label" : "1",
+                        "time" : 1517893380000
+                    }
+                ],
+                "cluster_label" : 1000002,
+                "unexpected_freq" : false,
+                "text" : "2018-02-05 21:03:12.304  WARN 8051 --- [           main] o.s.aop.framework.CglibAopProxy          : Unable to proxy interface-implementing method [public final void org.springframework.ws.client.core.support.WebServiceGatewaySupport.afterPropertiesSet() throws java.lang.Exception] because it is marked as final: Consider using interface-based JDK proxies instead!",
+                "x" : 0.0,
+                "y" : 0.0,
+                "alert_score" : 0.0,
+                "test_score" : 0.0,
+                "control_score" : 1,
+                "freq_score" : 0.0
+            }
+        ]
+    },
+    "control_events" : {
+        "0" : [
+            {
+                "className" : "software.wings.service.impl.splunk.SplunkAnalysisCluster",
+                "message_frequencies" : [
+                    {
+                        "count" : 1,
+                        "host" : "webservices-pr-6",
+                        "old_label" : "0",
+                        "time" : 1517894040000
+                    }
+                ],
+                "cluster_label" : 0,
+                "unexpected_freq" : false,
+                "text" : "2018-02-05 21:14:47.282 ERROR 27621 --- [io-8080-exec-71] com.harness.webservice.ServiceController   : ERROR IN REQUEST : Calling Host [10.254.223.64] GET : /nps/undefined\norg.springframework.web.method.annotation.MethodArgumentTypeMismatchException: Failed to convert value of type 'java.lang.String' to required type 'int'; nested exception is java.lang.NumberFormatException: For input string: \"undefined\"\n\tat org.springframework.web.method.annotation.AbstractNamedValueMethodArgumentResolver.resolveArgument(AbstractNamedValueMethodArgumentResolver.java:128) ~[spring-web-4.3.13.RELEASE.jar!/:4.3.13.RELEASE]\n\tat org.springframework.web.method.support.HandlerMethodArgumentResolverComposite.resolveArgument(HandlerMethodArgumentResolverComposite.java:121) ~[spring-web-4.3.13.RELEASE.jar!/:4.3.13.RELEASE]\n\tat org.springframework.web.method.support.InvocableHandlerMethod.getMethodArgumentValues(InvocableHandlerMethod.java:158) ~[spring-web-4.3.13.RELEASE.jar!/:4.3.13.RELEASE]\n\tat org.springframework.web.method.support.InvocableHandlerMethod.invokeForRequest(InvocableHandlerMethod.java:128) ~[spring-web-4.3.13.RELEASE.jar!/:4.3.13.RELEASE]\n\tat org.springframework.web.servlet.mvc.method.annotation.ServletInvocableHandlerMethod.invokeAndHandle(ServletInvocableHandlerMethod.java:97) ~[spring-webmvc-4.3.13.RELEASE.jar!/:4.3.13.RELEASE]\n\tat org.springframework.web.servlet.mvc.method.annotation.RequestMappingHandlerAdapter.invokeHandlerMethod(RequestMappingHandlerAdapter.java:827) ~[spring-webmvc-4.3.13.RELEASE.jar!/:4.3.13.RELEASE]\n\tat org.springframework.web.servlet.mvc.method.annotation.RequestMappingHandlerAdapter.handleInternal(RequestMappingHandlerAdapter.java:738) ~[spring-webmvc-4.3.13.RELEASE.jar!/:4.3.13.RELEASE]\n\tat org.springframework.web.servlet.mvc.method.AbstractHandlerMethodAdapter.handle(AbstractHandlerMethodAdapter.java:85) ~[spring-webmvc-4.3.13.RELEASE.jar!/:4.3.13.RELEASE]\n\tat org.springframework.web.servlet.DispatcherServlet.doDispatch(DispatcherServlet.java:967) ~[spring-webmvc-4.3.13.RELEASE.jar!/:4.3.13.RELEASE]\n\tat org.springframework.web.servlet.DispatcherServlet.doService(DispatcherServlet.java:901) ~[spring-webmvc-4.3.13.RELEASE.jar!/:4.3.13.RELEASE]\n\tat org.springframework.web.servlet.FrameworkServlet.processRequest(FrameworkServlet.java:970) [spring-webmvc-4.3.13.RELEASE.jar!/:4.3.13.RELEASE]\n\tat org.springframework.web.servlet.FrameworkServlet.doGet(FrameworkServlet.java:861) [spring-webmvc-4.3.13.RELEASE.jar!/:4.3.13.RELEASE]\n\tat javax.servlet.http.HttpServlet.service(HttpServlet.java:635) [tomcat-embed-core-8.5.23.jar!/:8.5.23]\n\tat org.springframework.web.servlet.FrameworkServlet.service(FrameworkServlet.java:846) [spring-webmvc-4.3.13.RELEASE.jar!/:4.3.13.RELEASE]\n\tat javax.servlet.http.HttpServlet.service(HttpServlet.java:742) [tomcat-embed-core-8.5.23.jar!/:8.5.23]\n\tat org.apache.catalina.core.ApplicationFilterChain.internalDoFilter(ApplicationFilterChain.java:231) [tomcat-embed-core-8.5.23.jar!/:8.5.23]\n\tat org.apache.catalina.core.ApplicationFilterChain.doFilter(ApplicationFilterChain.java:166) [tomcat-embed-core-8.5.23.jar!/:8.5.23]\n\tat org.apache.tomcat.websocket.server.WsFilter.doFilter(WsFilter.java:52) [tomcat-embed-websocket-8.5.23.jar!/:8.5.23]\n\tat org.apache.catalina.core.ApplicationFilterChain.internalDoFilter(ApplicationFilterChain.java:193) [tomcat-embed-core-8.5.23.jar!/:8.5.23]\n\tat org.apache.catalina.core.ApplicationFilterChain.doFilter(ApplicationFilterChain.java:166) [tomcat-embed-core-8.5.23.jar!/:8.5.23]\n\tat org.springframework.boot.web.filter.ApplicationContextHeaderFilter.doFilterInternal(ApplicationContextHeaderFilter.java:55) [spring-boot-1.5.9.RELEASE.jar!/:1.5.9.RELEASE]\n\tat org.springframework.web.filter.OncePerRequestFilter.doFilter(OncePerRequestFilter.java:107) [spring-web-4.3.13.RELEASE.jar!/:4.3.13.RELEASE]\n\tat org.apache.catalina.core.ApplicationFilterChain.internalDoFilter(ApplicationFilterChain.java:193) [tomcat-embed-core-8.5.23.jar!/:8.5.23]\n\tat org.apache.catalina.core.ApplicationFilterChain.doFilter(ApplicationFilterChain.java:166) [tomcat-embed-core-8.5.23.jar!/:8.5.23]\n\tat org.springframework.boot.actuate.trace.WebRequestTraceFilter.doFilterInternal(WebRequestTraceFilter.java:110) [spring-boot-actuator-1.5.9.RELEASE.jar!/:1.5.9.RELEASE]\n\tat org.springframework.web.filter.OncePerRequestFilter.doFilter(OncePerRequestFilter.java:107) [spring-web-4.3.13.RELEASE.jar!/:4.3.13.RELEASE]\n\tat org.apache.catalina.core.ApplicationFilterChain.internalDoFilter(ApplicationFilterChain.java:193) [tomcat-embed-core-8.5.23.jar!/:8.5.23]\n\tat org.apache.catalina.core.ApplicationFilterChain.doFilter(ApplicationFilterChain.java:166) [tomcat-embed-core-8.5.23.jar!/:8.5.23]\n\tat org.springframework.web.filter.RequestContextFilter.doFilterInternal(RequestContextFilter.java:99) [spring-web-4.3.13.RELEASE.jar!/:4.3.13.RELEASE]\n\tat org.springframework.web.filter.OncePerRequestFilter.doFilter(OncePerRequestFilter.java:107) [spring-web-4.3.13.RELEASE.jar!/:4.3.13.RELEASE]\n\tat org.apache.catalina.core.ApplicationFilterChain.internalDoFilter(ApplicationFilterChain.java:193) [tomcat-embed-core-8.5.23.jar!/:8.5.23]\n\tat org.apache.catalina.core.ApplicationFilterChain.doFilter(ApplicationFilterChain.java:166) [tomcat-embed-core-8.5.23.jar!/:8.5.23]\n\tat org.springframework.web.filter.HttpPutFormContentFilter.doFilterInternal(HttpPutFormContentFilter.java:108) [spring-web-4.3.13.RELEASE.jar!/:4.3.13.RELEASE]\n\tat org.springframework.web.filter.OncePerRequestFilter.doFilter(OncePerRequestFilter.java:107) [spring-web-4.3.13.RELEASE.jar!/:4.3.13.RELEASE]\n\tat org.apache.catalina.core.ApplicationFilterChain.internalDoFilter(ApplicationFilterChain.java:193) [tomcat-embed-core-8.5.23.jar!/:8.5.23]\n\tat org.apache.catalina.core.ApplicationFilterChain.doFilter(ApplicationFilterChain.java:166) [tomcat-embed-core-8.5.23.jar!/:8.5.23]\n\tat org.springframework.web.filter.HiddenHttpMethodFilter.doFilterInternal(HiddenHttpMethodFilter.java:81) [spring-web-4.3.13.RELEASE.jar!/:4.3.13.RELEASE]\n\tat org.springframework.web.filter.OncePerRequestFilter.doFilter(OncePerRequestFilter.java:107) [spring-web-4.3.13.RELEASE.jar!/:4.3.13.RELEASE]\n\tat org.apache.catalina.core.ApplicationFilterChain.internalDoFilter(ApplicationFilterChain.java:193) [tomcat-embed-core-8.5.23.jar!/:8.5.23]\n\tat org.apache.catalina.core.ApplicationFilterChain.doFilter(ApplicationFilterChain.java:166) [tomcat-embed-core-8.5.23.jar!/:8.5.23]\n\tat org.springframework.web.filter.CharacterEncodingFilter.doFilterInternal(CharacterEncodingFilter.java:197) [spring-web-4.3.13.RELEASE.jar!/:4.3.13.RELEASE]\n\tat org.springframework.web.filter.OncePerRequestFilter.doFilter(OncePerRequestFilter.java:107) [spring-web-4.3.13.RELEASE.jar!/:4.3.13.RELEASE]\n\tat org.apache.catalina.core.ApplicationFilterChain.internalDoFilter(ApplicationFilterChain.java:193) [tomcat-embed-core-8.5.23.jar!/:8.5.23]\n\tat org.apache.catalina.core.ApplicationFilterChain.doFilter(ApplicationFilterChain.java:166) [tomcat-embed-core-8.5.23.jar!/:8.5.23]\n\tat org.springframework.boot.actuate.autoconfigure.MetricsFilter.doFilterInternal(MetricsFilter.java:106) [spring-boot-actuator-1.5.9.RELEASE.jar!/:1.5.9.RELEASE]\n\tat org.springframework.web.filter.OncePerRequestFilter.doFilter(OncePerRequestFilter.java:107) [spring-web-4.3.13.RELEASE.jar!/:4.3.13.RELEASE]\n\tat org.apache.catalina.core.ApplicationFilterChain.internalDoFilter(ApplicationFilterChain.java:193) [tomcat-embed-core-8.5.23.jar!/:8.5.23]\n\tat org.apache.catalina.core.ApplicationFilterChain.doFilter(ApplicationFilterChain.java:166) [tomcat-embed-core-8.5.23.jar!/:8.5.23]\n\tat org.apache.catalina.core.StandardWrapperValve.invoke(StandardWrapperValve.java:199) [tomcat-embed-core-8.5.23.jar!/:8.5.23]\n\tat org.apache.catalina.core.StandardContextValve.invoke(StandardContextValve.java:96) [tomcat-embed-core-8.5.23.jar!/:8.5.23]\n\tat org.apache.catalina.authenticator.AuthenticatorBase.invoke(AuthenticatorBase.java:478) [tomcat-embed-core-8.5.23.jar!/:8.5.23]\n\tat org.apache.catalina.core.StandardHostValve.invoke(StandardHostValve.java:140) [tomcat-embed-core-8.5.23.jar!/:8.5.23]\n\tat org.apache.catalina.valves.ErrorReportValve.invoke(ErrorReportValve.java:81) [tomcat-embed-core-8.5.23.jar!/:8.5.23]\n\tat org.apache.catalina.core.StandardEngineValve.invoke(StandardEngineValve.java:87) [tomcat-embed-core-8.5.23.jar!/:8.5.23]\n\tat org.apache.catalina.connector.CoyoteAdapter.service(CoyoteAdapter.java:342) [tomcat-embed-core-8.5.23.jar!/:8.5.23]\n\tat org.apache.coyote.http11.Http11Processor.service(Http11Processor.java:803) [tomcat-embed-core-8.5.23.jar!/:8.5.23]\n\tat org.apache.coyote.AbstractProcessorLight.process(AbstractProcessorLight.java:66) [tomcat-embed-core-8.5.23.jar!/:8.5.23]\n\tat org.apache.coyote.AbstractProtocol$ConnectionHandler.process(AbstractProtocol.java:868) [tomcat-embed-core-8.5.23.jar!/:8.5.23]\n\tat org.apache.tomcat.util.net.NioEndpoint$SocketProcessor.doRun(NioEndpoint.java:1459) [tomcat-embed-core-8.5.23.jar!/:8.5.23]\n\tat org.apache.tomcat.util.net.SocketProcessorBase.run(SocketProcessorBase.java:49) [tomcat-embed-core-8.5.23.jar!/:8.5.23]\n\tat java.util.concurrent.ThreadPoolExecutor.runWorker(ThreadPoolExecutor.java:1142) [na:1.8.0_112]\n\tat java.util.concurrent.ThreadPoolExecutor$Worker.run(ThreadPoolExecutor.java:617) [na:1.8.0_112]\n\tat org.apache.tomcat.util.threads.TaskThread$WrappingRunnable.run(TaskThread.java:61) [tomcat-embed-core-8.5.23.jar!/:8.5.23]\n\tat java.lang.Thread.run(Thread.java:745) [na:1.8.0_112]\nCaused by: java.lang.NumberFormatException: For input string: \"undefined\"\n\tat java.lang.NumberFormatException.forInputString(NumberFormatException.java:65) ~[na:1.8.0_112]\n\tat java.lang.Integer.parseInt(Integer.java:580) ~[na:1.8.0_112]\n\tat java.lang.Integer.valueOf(Integer.java:766) ~[na:1.8.0_112]\n\tat org.springframework.util.NumberUtils.parseNumber(NumberUtils.java:208) ~[spring-core-4.3.13.RELEASE.jar!/:4.3.13.RELEASE]\n\tat org.springframework.beans.propertyeditors.CustomNumberEditor.setAsText(CustomNumberEditor.java:113) ~[spring-beans-4.3.13.RELEASE.jar!/:4.3.13.RELEASE]\n\tat org.springframework.beans.TypeConverterDelegate.doConvertTextValue(TypeConverterDelegate.java:468) ~[spring-beans-4.3.13.RELEASE.jar!/:4.3.13.RELEASE]\n\tat org.springframework.beans.TypeConverterDelegate.doConvertValue(TypeConverterDelegate.java:441) ~[spring-beans-4.3.13.RELEASE.jar!/:4.3.13.RELEASE]\n\tat org.springframework.beans.TypeConverterDelegate.convertIfNecessary(TypeConverterDelegate.java:199) ~[spring-beans-4.3.13.RELEASE.jar!/:4.3.13.RELEASE]\n\tat org.springframework.beans.TypeConverterDelegate.convertIfNecessary(TypeConverterDelegate.java:108) ~[spring-beans-4.3.13.RELEASE.jar!/:4.3.13.RELEASE]\n\tat org.springframework.beans.TypeConverterSupport.doConvert(TypeConverterSupport.java:64) ~[spring-beans-4.3.13.RELEASE.jar!/:4.3.13.RELEASE]\n\tat org.springframework.beans.TypeConverterSupport.convertIfNecessary(TypeConverterSupport.java:47) ~[spring-beans-4.3.13.RELEASE.jar!/:4.3.13.RELEASE]\n\tat org.springframework.validation.DataBinder.convertIfNecessary(DataBinder.java:713) ~[spring-context-4.3.13.RELEASE.jar!/:4.3.13.RELEASE]\n\tat org.springframework.web.method.annotation.AbstractNamedValueMethodArgumentResolver.resolveArgument(AbstractNamedValueMethodArgumentResolver.java:120) ~[spring-web-4.3.13.RELEASE.jar!/:4.3.13.RELEASE]\n\t... 63 common frames omitted",
+                "x" : 0.0,
+                "y" : 0.0,
+                "alert_score" : 0.0,
+                "test_score" : 0.0,
+                "control_score" : 0.0,
+                "freq_score" : 0.0
+            }
+        ]
+    },
+    "control_clusters" : {
+        "0" : {
+            "webservices-pr-6" : {
+                "className" : "software.wings.service.impl.splunk.SplunkAnalysisCluster",
+                "message_frequencies" : [
+                    {
+                        "count" : 1,
+                        "host" : "webservices-pr-6",
+                        "old_label" : "0",
+                        "time" : 1517894040000
+                    }
+                ],
+                "cluster_label" : 0,
+                "tags" : [
+                    "org.apache.catalina.core.applicationfilterchain.dofilter",
+                    "org.apache.catalina.core.applicationfilterchain.internaldofilter",
+                    "org.springframework.web.filter.onceperrequestfilter.dofilter",
+                    "javax.servlet.http.httpservlet.service",
+                    "org.springframework.web.method.annotation.abstractnamedvaluemethodargumentresolver.resolveargument"
+                ],
+                "unexpected_freq" : false,
+                "text" : "2018-02-05 21:14:47.282 ERROR 27621 --- [io-8080-exec-71] com.harness.webservice.ServiceController   : ERROR IN REQUEST : Calling Host [10.254.223.64] GET : /nps/undefined\norg.springframework.web.method.annotation.MethodArgumentTypeMismatchException: Failed to convert value of type 'java.lang.String' to required type 'int'; nested exception is java.lang.NumberFormatException: For input string: \"undefined\"\n\tat org.springframework.web.method.annotation.AbstractNamedValueMethodArgumentResolver.resolveArgument(AbstractNamedValueMethodArgumentResolver.java:128) ~[spring-web-4.3.13.RELEASE.jar!/:4.3.13.RELEASE]\n\tat org.springframework.web.method.support.HandlerMethodArgumentResolverComposite.resolveArgument(HandlerMethodArgumentResolverComposite.java:121) ~[spring-web-4.3.13.RELEASE.jar!/:4.3.13.RELEASE]\n\tat org.springframework.web.method.support.InvocableHandlerMethod.getMethodArgumentValues(InvocableHandlerMethod.java:158) ~[spring-web-4.3.13.RELEASE.jar!/:4.3.13.RELEASE]\n\tat org.springframework.web.method.support.InvocableHandlerMethod.invokeForRequest(InvocableHandlerMethod.java:128) ~[spring-web-4.3.13.RELEASE.jar!/:4.3.13.RELEASE]\n\tat org.springframework.web.servlet.mvc.method.annotation.ServletInvocableHandlerMethod.invokeAndHandle(ServletInvocableHandlerMethod.java:97) ~[spring-webmvc-4.3.13.RELEASE.jar!/:4.3.13.RELEASE]\n\tat org.springframework.web.servlet.mvc.method.annotation.RequestMappingHandlerAdapter.invokeHandlerMethod(RequestMappingHandlerAdapter.java:827) ~[spring-webmvc-4.3.13.RELEASE.jar!/:4.3.13.RELEASE]\n\tat org.springframework.web.servlet.mvc.method.annotation.RequestMappingHandlerAdapter.handleInternal(RequestMappingHandlerAdapter.java:738) ~[spring-webmvc-4.3.13.RELEASE.jar!/:4.3.13.RELEASE]\n\tat org.springframework.web.servlet.mvc.method.AbstractHandlerMethodAdapter.handle(AbstractHandlerMethodAdapter.java:85) ~[spring-webmvc-4.3.13.RELEASE.jar!/:4.3.13.RELEASE]\n\tat org.springframework.web.servlet.DispatcherServlet.doDispatch(DispatcherServlet.java:967) ~[spring-webmvc-4.3.13.RELEASE.jar!/:4.3.13.RELEASE]\n\tat org.springframework.web.servlet.DispatcherServlet.doService(DispatcherServlet.java:901) ~[spring-webmvc-4.3.13.RELEASE.jar!/:4.3.13.RELEASE]\n\tat org.springframework.web.servlet.FrameworkServlet.processRequest(FrameworkServlet.java:970) [spring-webmvc-4.3.13.RELEASE.jar!/:4.3.13.RELEASE]\n\tat org.springframework.web.servlet.FrameworkServlet.doGet(FrameworkServlet.java:861) [spring-webmvc-4.3.13.RELEASE.jar!/:4.3.13.RELEASE]\n\tat javax.servlet.http.HttpServlet.service(HttpServlet.java:635) [tomcat-embed-core-8.5.23.jar!/:8.5.23]\n\tat org.springframework.web.servlet.FrameworkServlet.service(FrameworkServlet.java:846) [spring-webmvc-4.3.13.RELEASE.jar!/:4.3.13.RELEASE]\n\tat javax.servlet.http.HttpServlet.service(HttpServlet.java:742) [tomcat-embed-core-8.5.23.jar!/:8.5.23]\n\tat org.apache.catalina.core.ApplicationFilterChain.internalDoFilter(ApplicationFilterChain.java:231) [tomcat-embed-core-8.5.23.jar!/:8.5.23]\n\tat org.apache.catalina.core.ApplicationFilterChain.doFilter(ApplicationFilterChain.java:166) [tomcat-embed-core-8.5.23.jar!/:8.5.23]\n\tat org.apache.tomcat.websocket.server.WsFilter.doFilter(WsFilter.java:52) [tomcat-embed-websocket-8.5.23.jar!/:8.5.23]\n\tat org.apache.catalina.core.ApplicationFilterChain.internalDoFilter(ApplicationFilterChain.java:193) [tomcat-embed-core-8.5.23.jar!/:8.5.23]\n\tat org.apache.catalina.core.ApplicationFilterChain.doFilter(ApplicationFilterChain.java:166) [tomcat-embed-core-8.5.23.jar!/:8.5.23]\n\tat org.springframework.boot.web.filter.ApplicationContextHeaderFilter.doFilterInternal(ApplicationContextHeaderFilter.java:55) [spring-boot-1.5.9.RELEASE.jar!/:1.5.9.RELEASE]\n\tat org.springframework.web.filter.OncePerRequestFilter.doFilter(OncePerRequestFilter.java:107) [spring-web-4.3.13.RELEASE.jar!/:4.3.13.RELEASE]\n\tat org.apache.catalina.core.ApplicationFilterChain.internalDoFilter(ApplicationFilterChain.java:193) [tomcat-embed-core-8.5.23.jar!/:8.5.23]\n\tat org.apache.catalina.core.ApplicationFilterChain.doFilter(ApplicationFilterChain.java:166) [tomcat-embed-core-8.5.23.jar!/:8.5.23]\n\tat org.springframework.boot.actuate.trace.WebRequestTraceFilter.doFilterInternal(WebRequestTraceFilter.java:110) [spring-boot-actuator-1.5.9.RELEASE.jar!/:1.5.9.RELEASE]\n\tat org.springframework.web.filter.OncePerRequestFilter.doFilter(OncePerRequestFilter.java:107) [spring-web-4.3.13.RELEASE.jar!/:4.3.13.RELEASE]\n\tat org.apache.catalina.core.ApplicationFilterChain.internalDoFilter(ApplicationFilterChain.java:193) [tomcat-embed-core-8.5.23.jar!/:8.5.23]\n\tat org.apache.catalina.core.ApplicationFilterChain.doFilter(ApplicationFilterChain.java:166) [tomcat-embed-core-8.5.23.jar!/:8.5.23]\n\tat org.springframework.web.filter.RequestContextFilter.doFilterInternal(RequestContextFilter.java:99) [spring-web-4.3.13.RELEASE.jar!/:4.3.13.RELEASE]\n\tat org.springframework.web.filter.OncePerRequestFilter.doFilter(OncePerRequestFilter.java:107) [spring-web-4.3.13.RELEASE.jar!/:4.3.13.RELEASE]\n\tat org.apache.catalina.core.ApplicationFilterChain.internalDoFilter(ApplicationFilterChain.java:193) [tomcat-embed-core-8.5.23.jar!/:8.5.23]\n\tat org.apache.catalina.core.ApplicationFilterChain.doFilter(ApplicationFilterChain.java:166) [tomcat-embed-core-8.5.23.jar!/:8.5.23]\n\tat org.springframework.web.filter.HttpPutFormContentFilter.doFilterInternal(HttpPutFormContentFilter.java:108) [spring-web-4.3.13.RELEASE.jar!/:4.3.13.RELEASE]\n\tat org.springframework.web.filter.OncePerRequestFilter.doFilter(OncePerRequestFilter.java:107) [spring-web-4.3.13.RELEASE.jar!/:4.3.13.RELEASE]\n\tat org.apache.catalina.core.ApplicationFilterChain.internalDoFilter(ApplicationFilterChain.java:193) [tomcat-embed-core-8.5.23.jar!/:8.5.23]\n\tat org.apache.catalina.core.ApplicationFilterChain.doFilter(ApplicationFilterChain.java:166) [tomcat-embed-core-8.5.23.jar!/:8.5.23]\n\tat org.springframework.web.filter.HiddenHttpMethodFilter.doFilterInternal(HiddenHttpMethodFilter.java:81) [spring-web-4.3.13.RELEASE.jar!/:4.3.13.RELEASE]\n\tat org.springframework.web.filter.OncePerRequestFilter.doFilter(OncePerRequestFilter.java:107) [spring-web-4.3.13.RELEASE.jar!/:4.3.13.RELEASE]\n\tat org.apache.catalina.core.ApplicationFilterChain.internalDoFilter(ApplicationFilterChain.java:193) [tomcat-embed-core-8.5.23.jar!/:8.5.23]\n\tat org.apache.catalina.core.ApplicationFilterChain.doFilter(ApplicationFilterChain.java:166) [tomcat-embed-core-8.5.23.jar!/:8.5.23]\n\tat org.springframework.web.filter.CharacterEncodingFilter.doFilterInternal(CharacterEncodingFilter.java:197) [spring-web-4.3.13.RELEASE.jar!/:4.3.13.RELEASE]\n\tat org.springframework.web.filter.OncePerRequestFilter.doFilter(OncePerRequestFilter.java:107) [spring-web-4.3.13.RELEASE.jar!/:4.3.13.RELEASE]\n\tat org.apache.catalina.core.ApplicationFilterChain.internalDoFilter(ApplicationFilterChain.java:193) [tomcat-embed-core-8.5.23.jar!/:8.5.23]\n\tat org.apache.catalina.core.ApplicationFilterChain.doFilter(ApplicationFilterChain.java:166) [tomcat-embed-core-8.5.23.jar!/:8.5.23]\n\tat org.springframework.boot.actuate.autoconfigure.MetricsFilter.doFilterInternal(MetricsFilter.java:106) [spring-boot-actuator-1.5.9.RELEASE.jar!/:1.5.9.RELEASE]\n\tat org.springframework.web.filter.OncePerRequestFilter.doFilter(OncePerRequestFilter.java:107) [spring-web-4.3.13.RELEASE.jar!/:4.3.13.RELEASE]\n\tat org.apache.catalina.core.ApplicationFilterChain.internalDoFilter(ApplicationFilterChain.java:193) [tomcat-embed-core-8.5.23.jar!/:8.5.23]\n\tat org.apache.catalina.core.ApplicationFilterChain.doFilter(ApplicationFilterChain.java:166) [tomcat-embed-core-8.5.23.jar!/:8.5.23]\n\tat org.apache.catalina.core.StandardWrapperValve.invoke(StandardWrapperValve.java:199) [tomcat-embed-core-8.5.23.jar!/:8.5.23]\n\tat org.apache.catalina.core.StandardContextValve.invoke(StandardContextValve.java:96) [tomcat-embed-core-8.5.23.jar!/:8.5.23]\n\tat org.apache.catalina.authenticator.AuthenticatorBase.invoke(AuthenticatorBase.java:478) [tomcat-embed-core-8.5.23.jar!/:8.5.23]\n\tat org.apache.catalina.core.StandardHostValve.invoke(StandardHostValve.java:140) [tomcat-embed-core-8.5.23.jar!/:8.5.23]\n\tat org.apache.catalina.valves.ErrorReportValve.invoke(ErrorReportValve.java:81) [tomcat-embed-core-8.5.23.jar!/:8.5.23]\n\tat org.apache.catalina.core.StandardEngineValve.invoke(StandardEngineValve.java:87) [tomcat-embed-core-8.5.23.jar!/:8.5.23]\n\tat org.apache.catalina.connector.CoyoteAdapter.service(CoyoteAdapter.java:342) [tomcat-embed-core-8.5.23.jar!/:8.5.23]\n\tat org.apache.coyote.http11.Http11Processor.service(Http11Processor.java:803) [tomcat-embed-core-8.5.23.jar!/:8.5.23]\n\tat org.apache.coyote.AbstractProcessorLight.process(AbstractProcessorLight.java:66) [tomcat-embed-core-8.5.23.jar!/:8.5.23]\n\tat org.apache.coyote.AbstractProtocol$ConnectionHandler.process(AbstractProtocol.java:868) [tomcat-embed-core-8.5.23.jar!/:8.5.23]\n\tat org.apache.tomcat.util.net.NioEndpoint$SocketProcessor.doRun(NioEndpoint.java:1459) [tomcat-embed-core-8.5.23.jar!/:8.5.23]\n\tat org.apache.tomcat.util.net.SocketProcessorBase.run(SocketProcessorBase.java:49) [tomcat-embed-core-8.5.23.jar!/:8.5.23]\n\tat java.util.concurrent.ThreadPoolExecutor.runWorker(ThreadPoolExecutor.java:1142) [na:1.8.0_112]\n\tat java.util.concurrent.ThreadPoolExecutor$Worker.run(ThreadPoolExecutor.java:617) [na:1.8.0_112]\n\tat org.apache.tomcat.util.threads.TaskThread$WrappingRunnable.run(TaskThread.java:61) [tomcat-embed-core-8.5.23.jar!/:8.5.23]\n\tat java.lang.Thread.run(Thread.java:745) [na:1.8.0_112]\nCaused by: java.lang.NumberFormatException: For input string: \"undefined\"\n\tat java.lang.NumberFormatException.forInputString(NumberFormatException.java:65) ~[na:1.8.0_112]\n\tat java.lang.Integer.parseInt(Integer.java:580) ~[na:1.8.0_112]\n\tat java.lang.Integer.valueOf(Integer.java:766) ~[na:1.8.0_112]\n\tat org.springframework.util.NumberUtils.parseNumber(NumberUtils.java:208) ~[spring-core-4.3.13.RELEASE.jar!/:4.3.13.RELEASE]\n\tat org.springframework.beans.propertyeditors.CustomNumberEditor.setAsText(CustomNumberEditor.java:113) ~[spring-beans-4.3.13.RELEASE.jar!/:4.3.13.RELEASE]\n\tat org.springframework.beans.TypeConverterDelegate.doConvertTextValue(TypeConverterDelegate.java:468) ~[spring-beans-4.3.13.RELEASE.jar!/:4.3.13.RELEASE]\n\tat org.springframework.beans.TypeConverterDelegate.doConvertValue(TypeConverterDelegate.java:441) ~[spring-beans-4.3.13.RELEASE.jar!/:4.3.13.RELEASE]\n\tat org.springframework.beans.TypeConverterDelegate.convertIfNecessary(TypeConverterDelegate.java:199) ~[spring-beans-4.3.13.RELEASE.jar!/:4.3.13.RELEASE]\n\tat org.springframework.beans.TypeConverterDelegate.convertIfNecessary(TypeConverterDelegate.java:108) ~[spring-beans-4.3.13.RELEASE.jar!/:4.3.13.RELEASE]\n\tat org.springframework.beans.TypeConverterSupport.doConvert(TypeConverterSupport.java:64) ~[spring-beans-4.3.13.RELEASE.jar!/:4.3.13.RELEASE]\n\tat org.springframework.beans.TypeConverterSupport.convertIfNecessary(TypeConverterSupport.java:47) ~[spring-beans-4.3.13.RELEASE.jar!/:4.3.13.RELEASE]\n\tat org.springframework.validation.DataBinder.convertIfNecessary(DataBinder.java:713) ~[spring-context-4.3.13.RELEASE.jar!/:4.3.13.RELEASE]\n\tat org.springframework.web.method.annotation.AbstractNamedValueMethodArgumentResolver.resolveArgument(AbstractNamedValueMethodArgumentResolver.java:120) ~[spring-web-4.3.13.RELEASE.jar!/:4.3.13.RELEASE]\n\t... 63 common frames omitted",
+                "x" : 0.086673827206169,
+                "y" : 0.55390344929478,
+                "alert_score" : 0.0,
+                "test_score" : 0.0,
+                "control_score" : 0.0,
+                "freq_score" : 0.0
+            }
+        }
+    },
+    "unknown_clusters" : {
+        "0" : {
+            "webservices-pr-1․sys․id․harness․com" : {
+                "className" : "software.wings.service.impl.splunk.SplunkAnalysisCluster",
+                "message_frequencies" : [
+                    {
+                        "count" : 1,
+                        "host" : "webservices-pr-1.sys.id.harness.com",
+                        "old_label" : "1",
+                        "time" : 1517893380000
+                    }
+                ],
+                "cluster_label" : 0,
+                "unexpected_freq" : false,
+                "text" : "2018-02-05 21:03:12.304  WARN 8051 --- [           main] o.s.aop.framework.CglibAopProxy          : Unable to proxy interface-implementing method [public final void org.springframework.ws.client.core.support.WebServiceGatewaySupport.afterPropertiesSet() throws java.lang.Exception] because it is marked as final: Consider using interface-based JDK proxies instead!",
+                "x" : -0.541859854054761,
+                "y" : -0.216449805856475,
+                "alert_score" : 0.0,
+                "test_score" : 1.0,
+                "control_score" : 1,
+                "freq_score" : 0.0
+            }
+        },
+        "1" : {
+            "webservices-pr-1․sys․id․harness․com" : {
+                "className" : "software.wings.service.impl.splunk.SplunkAnalysisCluster",
+                "message_frequencies" : [
+                    {
+                        "count" : 1,
+                        "host" : "webservices-pr-1.sys.id.harness.com",
+                        "old_label" : "0",
+                        "time" : 1517893980000
+                    },
+                    {
+                        "count" : 20,
+                        "host" : "webservices-pr-1.sys.id.harness.com",
+                        "old_label" : "0",
+                        "time" : 1517893380000
+                    }
+                ],
+                "cluster_label" : 0,
+                "unexpected_freq" : false,
+                "text" : "2018-02-05 21:13:33.469 ERROR 8051 --- [io-8080-exec-11] c.harness.service.order.OrderServiceImpl   : DUPLICATE_ORDER_ATTEMPTED Validation Exception for sessionCartId: 411143755, Same order initiated at: 2018-02-05 21:13:33.088",
+                "x" : 0.455186026848592,
+                "y" : -0.337453643438306,
+                "alert_score" : 0.0238095238095238,
+                "test_score" : 0.88,
+                "control_score" : 1,
+                "freq_score" : 0.0
+            }
+        }
+    },
+    "cluster_scores" : {
+        "unknown" : {
+            "0" : {
+                "unexpected_freq" : false,
+                "alert_score" : 0.0,
+                "test_score" : 1.0,
+                "control_score" : 1,
+                "freq_score" : 0.0
+            },
+            "1" : {
+                "unexpected_freq" : false,
+                "alert_score" : 0.0,
+                "test_score" : 0.88,
+                "control_score" : 1,
+                "freq_score" : 0.0
+            }
+        }
+    },
+    "createdAt" : 1517894287731,
+    "lastUpdatedAt" : 1517894287731
+}

@@ -77,13 +77,13 @@ class SplunkIntelOptimized(object):
             anom_clusters = self.corpus.get_anom_clusters()
             for key, anomalies in anom_clusters.items():
                 for host, anomaly in anomalies.items():
-                    score = jaccard_text_similarity([control_clusters[anomaly['cluster_label']].values()[0]['text']],
+                    score = jaccard_text_similarity([control_clusters[anomaly['control_label']].values()[0]['text']],
                                                     anomaly['text'])
                     anomaly['alert_score'] = score[0]
                     if 0.9 > score[0] > 0.5:
                         anomaly['diff_tags'] = []
                         anomaly['diff_tags'].extend(
-                            jaccard_difference(control_clusters[anomaly['cluster_label']].values()[0]['text'],
+                            jaccard_difference(control_clusters[anomaly['control_label']].values()[0]['text'],
                                                anomaly['text']))
 
         logger.info("Finish create anomolous clusters")

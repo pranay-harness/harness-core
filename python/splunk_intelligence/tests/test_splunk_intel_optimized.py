@@ -50,8 +50,32 @@ def test_log_ml_out_1():
     result = sio.run()
     assert len(result.anom_clusters) == 2
 
+
+# Uses the analysis output to setup a test case
+def test_log_ml_out_2():
+    data = FileLoader.load_data('resources/logs/log_ml_out_2.json')
+    control = data['control_events']
+    test = data['test_events']
+    unknown = data['unknown_events']
+    corpus = LogCorpus()
+    for events in control.values():
+        for event in events:
+            corpus.add_event(event, 'control_prev')
+
+    for events in test.values():
+        for event in events:
+            corpus.add_event(event, 'test_prev')
+
+    sio = SplunkIntelOptimized(corpus, SplunkIntelOptimized.parse(['--sim_threshold', '0.9']))
+    result = sio.run()
+    assert len(result.anom_clusters) == 3
+    assert result.anom_clusters[0].values()[0]['cluster_label'] == 0
+    assert result.anom_clusters[1].values()[0]['cluster_label'] == 1
+    assert result.anom_clusters[2].values()[0]['cluster_label'] == 2
+
+
 def main(args):
-    test_log_ml_out_1()
+    test_log_ml_out_2()
 
 
 if __name__ == "__main__":
