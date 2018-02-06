@@ -331,8 +331,9 @@ class LogCorpus(object):
                 host = anom.get('message_frequencies')[0].get('host')
                 if host not in self.anom_clusters[clusters[index]]:
                     self.anom_clusters[clusters[index]][host] = dict(text=anom.get('text'),
-                                                                                 cluster_label=anom.get(
+                                                                                 control_label=anom.get(
                                                                                      'cluster_label'),
+                                                                                 cluster_label=clusters[index],
                                                                                  message_frequencies=[],
                                                                                  test_scores=[],
                                                                                  control_score=anom.get(
