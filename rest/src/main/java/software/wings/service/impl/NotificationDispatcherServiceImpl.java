@@ -9,6 +9,7 @@ import static software.wings.beans.SearchFilter.Operator.IN;
 import static software.wings.common.Constants.ABORTED_COLOR;
 import static software.wings.common.Constants.COMPLETED_COLOR;
 import static software.wings.common.Constants.FAILED_COLOR;
+import static software.wings.common.Constants.LINK_COLOR;
 import static software.wings.common.Constants.PAUSED_COLOR;
 import static software.wings.common.Constants.RESUMED_COLOR;
 import static software.wings.common.NotificationMessageResolver.NotificationMessageType.WORKFLOW_FAILED_NOTIFICATION;
@@ -227,9 +228,10 @@ public class NotificationDispatcherServiceImpl implements NotificationDispatcher
   }
 
   private String processEmailHtml(String text) {
-    return text.replaceAll("<<<", "<b><a href=\"")
+    return text.replaceAll("<<<", "<b><<a>>href=\"")
         .replaceAll("\\|-\\|", "\" target=\"_blank\">")
         .replaceAll(">>>", "</a></b>")
+        .replaceAll("<<a>>", "<a style=\"text-decoration:none; color:" + LINK_COLOR + ";\" ")
         .replaceAll("<<top-div>>", "<div style=\"margin-top:12px; margin-left:14px\">")
         .replaceAll("<<bottom-div>>",
             "<div style=\"margin:15px; padding-left:7px; "
@@ -242,6 +244,6 @@ public class NotificationDispatcherServiceImpl implements NotificationDispatcher
         .replaceAll("<<img-path>>", "<div><span><img src=\"https://api.harness.io/storage/wings-assets/slackicons/")
         .replaceAll("<<img-suffix>>",
             ".png\" height=\"13\" width=\"13\" style=\"padding-right:5px; padding-top:5px;\"></span>"
-                + "<span style=\"color:gray; font-size:small; display:inline-block; vertical-align:top; margin-top:4px;\">");
+                + "<span style=\"color:gray; display:inline-block; vertical-align:top; margin-top:4px;\">");
   }
 }
