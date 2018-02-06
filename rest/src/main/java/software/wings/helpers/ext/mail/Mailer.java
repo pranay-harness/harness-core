@@ -3,6 +3,7 @@ package software.wings.helpers.ext.mail;
 import static freemarker.template.Configuration.VERSION_2_3_23;
 import static org.apache.commons.lang3.StringUtils.isNotBlank;
 
+import com.google.common.collect.ImmutableList;
 import com.google.inject.Inject;
 
 import freemarker.cache.ClassTemplateLoader;
@@ -18,10 +19,13 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import software.wings.security.encryption.EncryptedDataDetail;
 import software.wings.service.intfc.security.EncryptionService;
+import software.wings.utils.Misc;
 
 import java.io.IOException;
 import java.io.StringWriter;
 import java.util.List;
+import javax.mail.internet.AddressException;
+import javax.mail.internet.InternetAddress;
 
 /**
  * Created by peeyushaggarwal on 5/20/16.
@@ -59,6 +63,11 @@ public class Mailer {
         email.setSslSmtpPort(Integer.toString(smtpConfig.getPort()));
       }
 
+      try {
+        email.setReplyTo(ImmutableList.of(new InternetAddress(smtpConfig.getFromAddress())));
+      } catch (AddressException e) {
+        logger.error(Misc.getMessage(e), e);
+      }
       email.setFrom(smtpConfig.getFromAddress(), "harness");
 
       for (String to : emailData.getTo()) {

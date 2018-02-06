@@ -50,7 +50,7 @@ public class MailerTest extends WingsBaseTest {
    * @throws MessagingException the messaging exception
    */
   @Test
-  public void shouldSendNormalEmail() throws EmailException, TemplateException, IOException, MessagingException {
+  public void shouldSendNormalEmail() throws MessagingException {
     mailer.send(SmtpConfig.builder()
                     .fromAddress(EMAIL)
                     .host("localhost")
@@ -72,6 +72,7 @@ public class MailerTest extends WingsBaseTest {
     assertThat(greenMail.getReceivedMessages()[0].getFrom())
         .extracting(Address::toString)
         .containsExactly("harness <" + EMAIL + ">");
+    assertThat(greenMail.getReceivedMessages()[0].getReplyTo()[0].toString()).isEqualTo(EMAIL);
     assertThat(greenMail.getReceivedMessages()[0].getAllRecipients())
         .extracting(Address::toString)
         .containsExactly("recieve@email.com");
@@ -86,7 +87,7 @@ public class MailerTest extends WingsBaseTest {
    * @throws IOException        the io exception
    */
   @Test
-  public void shouldSendHtmlEmail() throws MessagingException, EmailException, TemplateException, IOException {
+  public void shouldSendHtmlEmail() throws MessagingException {
     mailer.send(SmtpConfig.builder()
                     .fromAddress(EMAIL)
                     .host("localhost")
@@ -107,6 +108,7 @@ public class MailerTest extends WingsBaseTest {
     assertThat(greenMail.getReceivedMessages()[0].getFrom())
         .extracting(Address::toString)
         .containsExactly("harness <" + EMAIL + ">");
+    assertThat(greenMail.getReceivedMessages()[0].getReplyTo()[0].toString()).isEqualTo(EMAIL);
     assertThat(greenMail.getReceivedMessages()[0].getAllRecipients())
         .extracting(Address::toString)
         .containsExactly("recieve@email.com");
@@ -121,7 +123,7 @@ public class MailerTest extends WingsBaseTest {
    * @throws MessagingException the messaging exception
    */
   @Test
-  public void shouldSendTemplatedEmail() throws EmailException, TemplateException, IOException, MessagingException {
+  public void shouldSendTemplatedEmail() throws MessagingException {
     mailer.send(SmtpConfig.builder()
                     .fromAddress(EMAIL)
                     .host("localhost")
@@ -143,6 +145,7 @@ public class MailerTest extends WingsBaseTest {
     assertThat(greenMail.getReceivedMessages()[0].getFrom())
         .extracting(Address::toString)
         .containsExactly("harness <" + EMAIL + ">");
+    assertThat(greenMail.getReceivedMessages()[0].getReplyTo()[0].toString()).isEqualTo(EMAIL);
     assertThat(greenMail.getReceivedMessages()[0].getAllRecipients())
         .extracting(Address::toString)
         .containsExactly("recieve@email.com", "recieve2@email.com");
