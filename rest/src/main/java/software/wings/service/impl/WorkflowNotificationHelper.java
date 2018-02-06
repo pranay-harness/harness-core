@@ -136,7 +136,7 @@ public class WorkflowNotificationHelper {
           aFailureNotification()
               .withAccountId(app.getAccountId())
               .withAppId(app.getUuid())
-              .withEnvironmentId(BUILD.equals(context.getOrchestrationWorkflowType()) ? "null" : env.getUuid())
+              .withEnvironmentId(BUILD.equals(context.getOrchestrationWorkflowType()) ? null : env.getUuid())
               .withEntityId(context.getWorkflowExecutionId())
               .withEntityType(EntityType.ORCHESTRATED_DEPLOYMENT)
               .withEntityName("Deployment")
@@ -252,7 +252,7 @@ public class WorkflowNotificationHelper {
 
     String workflowUrl =
         buildAbsoluteUrl(String.format("/account/%s/app/%s/env/%s/executions/%s/details", app.getAccountId(),
-            app.getUuid(), BUILD.equals(context.getOrchestrationWorkflowType()) ? "null" : env.getUuid(),
+            app.getUuid(), BUILD.equals(context.getOrchestrationWorkflowType()) ? "build" : env.getUuid(),
             context.getWorkflowExecutionId()));
 
     String pipelineMsg = "";
