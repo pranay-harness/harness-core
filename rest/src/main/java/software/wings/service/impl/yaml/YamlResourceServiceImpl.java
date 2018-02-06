@@ -341,6 +341,7 @@ public class YamlResourceServiceImpl implements YamlResourceService {
       // cloud providers
       case AWS:
       case GCP:
+      case AZURE:
       case PHYSICAL_DATA_CENTER:
         return yamlHandlerFactory.getYamlHandler(YamlType.CLOUD_PROVIDER, settingVariableType.name());
 

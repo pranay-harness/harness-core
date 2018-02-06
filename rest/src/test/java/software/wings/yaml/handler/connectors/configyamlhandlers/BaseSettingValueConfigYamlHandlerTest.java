@@ -38,6 +38,7 @@ public abstract class BaseSettingValueConfigYamlHandlerTest extends BaseYamlHand
   @Mock protected SettingValidationService settingValidationService;
 
   public static final String verificationProviderYamlDir = "Setup/Verification Providers/";
+  public static final String cloudProviderYamlDir = "Setup/Cloud Providers/";
   public static final String artifactServerYamlDir = "Setup/Artifact Servers/";
   public static final String loadBalancerYamlDir = "Setup/Load Balancers/";
   public static final String collaborationProviderYamlDir = "Setup/Collaboration Providers/";

@@ -646,6 +646,7 @@ public class YamlDirectoryServiceImpl implements YamlDirectoryService {
     // TODO - should these use AwsConfig GcpConfig, etc. instead?
     doCloudProviderType(accountId, cloudProvidersFolder, SettingVariableTypes.AWS, directoryPath.clone());
     doCloudProviderType(accountId, cloudProvidersFolder, SettingVariableTypes.GCP, directoryPath.clone());
+    doCloudProviderType(accountId, cloudProvidersFolder, SettingVariableTypes.AZURE, directoryPath.clone());
     doCloudProviderType(
         accountId, cloudProvidersFolder, SettingVariableTypes.PHYSICAL_DATA_CENTER, directoryPath.clone());
 
@@ -913,6 +914,7 @@ public class YamlDirectoryServiceImpl implements YamlDirectoryService {
       // cloud providers
       case AWS:
       case GCP:
+      case AZURE:
       case PHYSICAL_DATA_CENTER:
         sb.append(CLOUD_PROVIDERS_FOLDER);
         break;
