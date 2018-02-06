@@ -5,6 +5,7 @@ import static io.harness.data.structure.EmptyPredicate.isEmpty;
 import software.wings.beans.NameValuePair;
 import software.wings.exception.WingsException;
 
+import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.stream.Collectors;
@@ -42,7 +43,10 @@ public class Util {
   }
 
   public static Map<String, Object> toProperties(List<NameValuePair> nameValuePairList) {
-    return nameValuePairList.stream().collect(Collectors.toMap(NameValuePair::getName, NameValuePair::getValue));
+    // do not use Collectors.toMap, as it throws NPE if any of the value is null
+    // here we do expect value to be null in some cases.
+    return nameValuePairList.stream().collect(
+        HashMap::new, (m, v) -> m.put(v.getName(), v.getValue()), HashMap::putAll);
   }
 
   public static <T extends Enum<T>> T getEnumFromString(Class<T> enumClass, String stringValue) {
