@@ -128,14 +128,16 @@ public class WorkflowExecutionUpdate implements StateMachineExecutionCallback {
     if (!WorkflowType.PIPELINE.equals(context.getWorkflowType())) {
       try {
         workflowNotificationHelper.sendWorkflowStatusChangeNotification(context, status);
-        if (needToNotifyPipeline) {
-          waitNotifyEngine.notify(workflowExecutionId, new EnvExecutionResponseData(workflowExecutionId, status));
-        }
-      } catch (WingsException exception) {
-        exception.logProcessedMessages(logger);
-      } catch (RuntimeException exception) {
+      } catch (Exception exception) {
         // Failing to send notification is not considered critical to interrupt the status update.
         logger.error("Failed to send notification.", exception);
+      }
+      if (needToNotifyPipeline) {
+        try {
+          waitNotifyEngine.notify(workflowExecutionId, new EnvExecutionResponseData(workflowExecutionId, status));
+        } catch (WingsException exception) {
+          exception.logProcessedMessages(logger);
+        }
       }
     } else {
       if (status.isFinalStatus() && status.equals(SUCCESS)) {
