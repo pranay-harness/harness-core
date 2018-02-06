@@ -271,12 +271,14 @@ public class WorkflowServiceImpl implements WorkflowService, DataProvider {
   public Map<StateTypeScope, List<Stencil>> stencils(
       String appId, String workflowId, String phaseId, StateTypeScope... stateTypeScopes) {
     boolean isFeatureEnabled = false;
-    try {
-      String accountId = appService.getAccountIdByAppId(appId);
-      isFeatureEnabled = featureFlagService.isEnabled(FeatureName.STENCILS_PERFORMANCE, accountId);
-    } catch (Exception e) {
-      logger.warn("Feature flag check failed. Calling ");
-      isFeatureEnabled = false;
+    if (appId != null) {
+      try {
+        String accountId = appService.getAccountIdByAppId(appId);
+        isFeatureEnabled = featureFlagService.isEnabled(FeatureName.STENCILS_PERFORMANCE, accountId);
+      } catch (Exception e) {
+        logger.warn("Feature flag check failed. Skipping optimized query");
+        isFeatureEnabled = false;
+      }
     }
     if (isFeatureEnabled) {
       logger.info(
