@@ -23,6 +23,7 @@ import com.google.inject.Inject;
 import io.harness.rule.RepeatRule.Repeat;
 import org.apache.commons.io.FileUtils;
 import org.junit.Before;
+import org.junit.Ignore;
 import org.junit.Test;
 import org.mockito.Mock;
 import org.mongodb.morphia.mapping.Mapper;
@@ -1700,6 +1701,7 @@ public class KmsTest extends WingsBaseTest {
   }
 
   @Test
+  @Ignore
   public void listKmsConfigMultiple() throws IOException {
     final String accountId = UUID.randomUUID().toString();
     KmsConfig kmsConfig1 = getKmsConfig();
