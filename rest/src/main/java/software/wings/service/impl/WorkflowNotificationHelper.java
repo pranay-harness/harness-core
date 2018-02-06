@@ -271,6 +271,7 @@ public class WorkflowNotificationHelper {
     placeHolderValues.put("WORKFLOW_URL", workflowUrl);
     placeHolderValues.put("USER_NAME", triggeredBy);
     placeHolderValues.put("PIPELINE", pipelineMsg);
+    placeHolderValues.put("APP_NAME", app.getName());
     placeHolderValues.put("START_TS_SECS", Long.toString(startTs / 1000L));
     placeHolderValues.put("END_TS_SECS", Long.toString(endTs / 1000L));
     placeHolderValues.put("START_DATE", startTime);

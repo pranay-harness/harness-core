@@ -18,6 +18,7 @@ import static software.wings.sm.PipelineSummary.Builder.aPipelineSummary;
 import static software.wings.sm.StateExecutionInstance.Builder.aStateExecutionInstance;
 import static software.wings.utils.WingsTestConstants.ACCOUNT_ID;
 import static software.wings.utils.WingsTestConstants.APP_ID;
+import static software.wings.utils.WingsTestConstants.APP_NAME;
 import static software.wings.utils.WingsTestConstants.ENV_ID;
 import static software.wings.utils.WingsTestConstants.ENV_NAME;
 import static software.wings.utils.WingsTestConstants.PIPELINE_EXECUTION_ID;
@@ -85,7 +86,8 @@ public class WorkflowNotificationHelperTest extends WingsBaseTest {
 
   @Before
   public void setUp() throws Exception {
-    when(executionContext.getApp()).thenReturn(anApplication().withAccountId(ACCOUNT_ID).withUuid(APP_ID).build());
+    when(executionContext.getApp())
+        .thenReturn(anApplication().withAccountId(ACCOUNT_ID).withUuid(APP_ID).withName(APP_NAME).build());
     when(executionContext.getArtifacts())
         .thenReturn(ImmutableList.of(anArtifact()
                                          .withArtifactSourceName("artifact-1")
@@ -157,6 +159,7 @@ public class WorkflowNotificationHelperTest extends WingsBaseTest {
             .put("ARTIFACTS", "Service One: artifact-1 (build# build-1), Service Two: artifact-2 (build# build-2)")
             .put("USER_NAME", USER_NAME)
             .put("PIPELINE", "")
+            .put("APP_NAME", APP_NAME)
             .put("ENV_NAME", ENV_NAME)
             .build();
     assertThat(notification.getNotificationTemplateVariables()).containsAllEntriesOf(placeholders);
@@ -198,6 +201,7 @@ public class WorkflowNotificationHelperTest extends WingsBaseTest {
             .put("ARTIFACTS", "Service One: artifact-1 (build# build-1), Service Two: artifact-2 (build# build-2)")
             .put("USER_NAME", USER_NAME)
             .put("PIPELINE", " as part of <<<" + EXPECTED_PIPELINE_URL + "|-|Pipeline Name>>> pipeline")
+            .put("APP_NAME", APP_NAME)
             .put("ENV_NAME", ENV_NAME)
             .build();
     assertThat(notification.getNotificationTemplateVariables()).containsAllEntriesOf(placeholders);
@@ -235,6 +239,7 @@ public class WorkflowNotificationHelperTest extends WingsBaseTest {
                                                     .put("ARTIFACTS", "Service Two: artifact-2 (build# build-2)")
                                                     .put("USER_NAME", USER_NAME)
                                                     .put("ENV_NAME", ENV_NAME)
+                                                    .put("APP_NAME", APP_NAME)
                                                     .build();
     assertThat(notification.getNotificationTemplateVariables()).containsAllEntriesOf(placeholders);
   }
@@ -268,6 +273,7 @@ public class WorkflowNotificationHelperTest extends WingsBaseTest {
             .put("ARTIFACTS", "Service One: no artifact, Service Two: no artifact")
             .put("USER_NAME", USER_NAME)
             .put("ENV_NAME", ENV_NAME)
+            .put("APP_NAME", APP_NAME)
             .build();
     assertThat(notification.getNotificationTemplateVariables()).containsAllEntriesOf(placeholders);
   }
@@ -306,6 +312,7 @@ public class WorkflowNotificationHelperTest extends WingsBaseTest {
             .put("ARTIFACTS", "Service One: artifact-1 (build# build-1), Service Two: no artifact")
             .put("USER_NAME", USER_NAME)
             .put("ENV_NAME", ENV_NAME)
+            .put("APP_NAME", APP_NAME)
             .build();
     assertThat(notification.getNotificationTemplateVariables()).containsAllEntriesOf(placeholders);
   }
@@ -340,6 +347,7 @@ public class WorkflowNotificationHelperTest extends WingsBaseTest {
                                                     .put("ARTIFACTS", "no services")
                                                     .put("USER_NAME", USER_NAME)
                                                     .put("ENV_NAME", ENV_NAME)
+                                                    .put("APP_NAME", APP_NAME)
                                                     .build();
     assertThat(notification.getNotificationTemplateVariables()).containsAllEntriesOf(placeholders);
   }
