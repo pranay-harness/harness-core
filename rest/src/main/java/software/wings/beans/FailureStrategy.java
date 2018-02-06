@@ -7,6 +7,7 @@ import software.wings.yaml.BaseYaml;
 
 import java.util.ArrayList;
 import java.util.List;
+import javax.validation.Valid;
 import javax.validation.constraints.NotNull;
 import javax.validation.constraints.Size;
 
@@ -22,6 +23,7 @@ public class FailureStrategy {
   private List<Integer> retryIntervals;
   private RepairActionCode repairActionCodeAfterRetry;
   private List<String> specificSteps;
+  @Valid private FailureCriteria failureCriteria;
 
   @Data
   @EqualsAndHashCode(callSuper = true)
@@ -33,6 +35,7 @@ public class FailureStrategy {
     private int retryCount;
     private List<Integer> retryIntervals;
     private String repairActionCodeAfterRetry;
+    private FailureCriteria failureCriteria;
 
     public static final class Builder {
       private List<String> failureTypes = new ArrayList<>();
@@ -41,6 +44,7 @@ public class FailureStrategy {
       private int retryCount;
       private List<Integer> retryIntervals;
       private String repairActionCodeAfterRetry;
+      private FailureCriteria failureCriteria;
 
       private Builder() {}
 
@@ -78,6 +82,11 @@ public class FailureStrategy {
         return this;
       }
 
+      public Builder withFailureCriteria(FailureCriteria failureCriteria) {
+        this.failureCriteria = failureCriteria;
+        return this;
+      }
+
       public Builder but() {
         return anYaml()
             .withFailureTypes(failureTypes)
@@ -85,7 +94,8 @@ public class FailureStrategy {
             .withRepairActionCode(repairActionCode)
             .withRetryCount(retryCount)
             .withRetryIntervals(retryIntervals)
-            .withRepairActionCodeAfterRetry(repairActionCodeAfterRetry);
+            .withRepairActionCodeAfterRetry(repairActionCodeAfterRetry)
+            .withFailureCriteria(failureCriteria);
       }
 
       public Yaml build() {
@@ -96,6 +106,7 @@ public class FailureStrategy {
         yaml.setRetryCount(retryCount);
         yaml.setRetryIntervals(retryIntervals);
         yaml.setRepairActionCodeAfterRetry(repairActionCodeAfterRetry);
+        yaml.setFailureCriteria(failureCriteria);
         return yaml;
       }
     }
@@ -157,6 +168,14 @@ public class FailureStrategy {
     this.specificSteps = specificSteps;
   }
 
+  public FailureCriteria getFailureCriteria() {
+    return failureCriteria;
+  }
+
+  public void setFailureCriteria(FailureCriteria failureCriteria) {
+    this.failureCriteria = failureCriteria;
+  }
+
   @Override
   public boolean equals(Object o) {
     if (this == o) {
@@ -183,7 +202,17 @@ public class FailureStrategy {
     if (retryIntervals != null ? !retryIntervals.equals(that.retryIntervals) : that.retryIntervals != null) {
       return false;
     }
-    return repairActionCodeAfterRetry == that.repairActionCodeAfterRetry;
+    if (repairActionCodeAfterRetry != that.repairActionCodeAfterRetry) {
+      return false;
+    }
+    if (specificSteps != null ? !specificSteps.equals(that.specificSteps) : that.specificSteps != null) {
+      return false;
+    }
+    if (failureCriteria != null ? !failureCriteria.equals(that.failureCriteria) : that.failureCriteria != null) {
+      return false;
+    }
+
+    return true;
   }
 
   @Override
@@ -194,6 +223,8 @@ public class FailureStrategy {
     result = 31 * result + retryCount;
     result = 31 * result + (retryIntervals != null ? retryIntervals.hashCode() : 0);
     result = 31 * result + (repairActionCodeAfterRetry != null ? repairActionCodeAfterRetry.hashCode() : 0);
+    result = 31 * result + (specificSteps != null ? specificSteps.hashCode() : 0);
+    result = 31 * result + (failureCriteria != null ? failureCriteria.hashCode() : 0);
     return result;
   }
 
@@ -204,6 +235,7 @@ public class FailureStrategy {
     private int retryCount;
     private List<Integer> retryIntervals;
     private RepairActionCode repairActionCodeAfterRetry;
+    private FailureCriteria failureCriteria;
 
     private FailureStrategyBuilder() {}
 
@@ -212,7 +244,7 @@ public class FailureStrategy {
     }
 
     public FailureStrategyBuilder addFailureTypes(FailureType failureType) {
-      this.failureTypes.add(failureType);
+      failureTypes.add(failureType);
       return this;
     }
 
@@ -241,6 +273,11 @@ public class FailureStrategy {
       return this;
     }
 
+    public FailureStrategyBuilder withFailureCriteria(FailureCriteria failureCriteria) {
+      this.failureCriteria = failureCriteria;
+      return this;
+    }
+
     public FailureStrategy build() {
       FailureStrategy failureStrategy = new FailureStrategy();
       failureStrategy.setFailureTypes(failureTypes);
@@ -249,6 +286,7 @@ public class FailureStrategy {
       failureStrategy.setRetryCount(retryCount);
       failureStrategy.setRetryIntervals(retryIntervals);
       failureStrategy.setRepairActionCodeAfterRetry(repairActionCodeAfterRetry);
+      failureStrategy.setFailureCriteria(failureCriteria);
       return failureStrategy;
     }
   }
