@@ -102,6 +102,7 @@ import software.wings.service.impl.yaml.handler.setting.artifactserver.GitConfig
 import software.wings.service.impl.yaml.handler.setting.artifactserver.JenkinsConfigYamlHandler;
 import software.wings.service.impl.yaml.handler.setting.artifactserver.NexusConfigYamlHandler;
 import software.wings.service.impl.yaml.handler.setting.cloudprovider.AwsConfigYamlHandler;
+import software.wings.service.impl.yaml.handler.setting.cloudprovider.AzureConfigYamlHandler;
 import software.wings.service.impl.yaml.handler.setting.cloudprovider.CloudProviderYamlHandler;
 import software.wings.service.impl.yaml.handler.setting.cloudprovider.GcpConfigYamlHandler;
 import software.wings.service.impl.yaml.handler.setting.cloudprovider.PhysicalDataCenterConfigYamlHandler;
@@ -225,6 +226,7 @@ public class YamlModule extends AbstractModule {
         MapBinder.newMapBinder(binder(), String.class, CloudProviderYamlHandler.class);
     cloudProviderYamlHelperMapBinder.addBinding(SettingVariableTypes.AWS.name()).to(AwsConfigYamlHandler.class);
     cloudProviderYamlHelperMapBinder.addBinding(SettingVariableTypes.GCP.name()).to(GcpConfigYamlHandler.class);
+    cloudProviderYamlHelperMapBinder.addBinding(SettingVariableTypes.AZURE.name()).to(AzureConfigYamlHandler.class);
     cloudProviderYamlHelperMapBinder.addBinding(SettingVariableTypes.PHYSICAL_DATA_CENTER.name())
         .to(PhysicalDataCenterConfigYamlHandler.class);
 
