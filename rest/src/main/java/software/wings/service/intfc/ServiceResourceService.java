@@ -90,6 +90,15 @@ public interface ServiceResourceService extends OwnedByApplication {
   Service get(@NotEmpty String appId, @NotEmpty String serviceId);
 
   /**
+   * Gets the.
+   *
+   * @param appId     the app id
+   * @param serviceId the service id
+   * @return the service
+   */
+  Service get(@NotEmpty String appId, @NotEmpty String serviceId, boolean includeCommands);
+
+  /**
    * Gets service by name.
    *
    * @param appId       the app id
@@ -97,16 +106,6 @@ public interface ServiceResourceService extends OwnedByApplication {
    * @return the service by name
    */
   Service getServiceByName(String appId, String serviceName);
-
-  /**
-   * Get service.
-   *
-   * @param appId          the app id
-   * @param serviceId      the service id
-   * @param includeDetails the include details
-   * @return the service
-   */
-  Service get(String appId, String serviceId, boolean includeDetails);
 
   /**
    * Exist boolean.

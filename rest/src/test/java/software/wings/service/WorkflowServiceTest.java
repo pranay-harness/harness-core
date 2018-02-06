@@ -38,6 +38,9 @@ import static software.wings.beans.TemplateExpression.Builder.aTemplateExpressio
 import static software.wings.beans.Variable.VariableBuilder.aVariable;
 import static software.wings.beans.Workflow.WorkflowBuilder.aWorkflow;
 import static software.wings.beans.WorkflowPhase.WorkflowPhaseBuilder.aWorkflowPhase;
+import static software.wings.beans.command.Command.Builder.aCommand;
+import static software.wings.beans.command.ExecCommandUnit.Builder.anExecCommandUnit;
+import static software.wings.beans.command.ServiceCommand.Builder.aServiceCommand;
 import static software.wings.common.Constants.ARTIFACT_S3_BUCKET_EXPRESSION;
 import static software.wings.common.Constants.ARTIFACT__S3_KEY_EXPRESSION;
 import static software.wings.common.Constants.DEPLOY_CONTAINERS;
@@ -63,6 +66,7 @@ import static software.wings.utils.WingsTestConstants.INFRA_MAPPING_ID;
 import static software.wings.utils.WingsTestConstants.INFRA_MAPPING_ID_CHANGED;
 import static software.wings.utils.WingsTestConstants.NOTIFICATION_GROUP_ID;
 import static software.wings.utils.WingsTestConstants.ROLE_ID;
+import static software.wings.utils.WingsTestConstants.SERVICE_COMMAND_ID;
 import static software.wings.utils.WingsTestConstants.SERVICE_ID;
 import static software.wings.utils.WingsTestConstants.SERVICE_ID_CHANGED;
 import static software.wings.utils.WingsTestConstants.SERVICE_NAME;
@@ -80,7 +84,6 @@ import org.junit.Test;
 import org.mockito.InOrder;
 import org.mockito.InjectMocks;
 import org.mockito.Mock;
-import org.mockito.invocation.InvocationOnMock;
 import org.mockito.stubbing.Answer;
 import org.mongodb.morphia.query.FieldEnd;
 import org.mongodb.morphia.query.Query;
@@ -100,6 +103,7 @@ import software.wings.beans.ExecutionScope;
 import software.wings.beans.FailureStrategy;
 import software.wings.beans.Graph;
 import software.wings.beans.Graph.Node;
+import software.wings.beans.InfrastructureMappingType;
 import software.wings.beans.MultiServiceOrchestrationWorkflow;
 import software.wings.beans.NotificationGroup;
 import software.wings.beans.NotificationRule;
@@ -120,6 +124,7 @@ import software.wings.beans.WorkflowPhase;
 import software.wings.beans.WorkflowType;
 import software.wings.beans.artifact.ArtifactStream;
 import software.wings.beans.artifact.ArtifactStreamType;
+import software.wings.beans.command.ServiceCommand;
 import software.wings.beans.stats.CloneMetadata;
 import software.wings.common.Constants;
 import software.wings.common.UUIDGenerator;
@@ -156,8 +161,6 @@ import software.wings.stencils.StencilPostProcessor;
 import software.wings.utils.JsonUtils;
 import software.wings.waitnotify.NotifyEventListener;
 
-import java.beans.IntrospectionException;
-import java.lang.reflect.InvocationTargetException;
 import java.util.List;
 import java.util.Map;
 import java.util.Random;
@@ -193,13 +196,11 @@ public class WorkflowServiceTest extends WingsBaseTest {
 
   @Mock @Named("JobScheduler") private QuartzScheduler jobScheduler;
 
-  private StencilPostProcessor stencilPostProcessor = mock(StencilPostProcessor.class, new Answer<List<Stencil>>() {
-    @Override
-    public List<Stencil> answer(InvocationOnMock invocationOnMock) throws Throwable {
-      logger.info("invocationOnMock.getArguments()[0] " + invocationOnMock.getArguments()[0]);
-      return (List<Stencil>) invocationOnMock.getArguments()[0];
-    }
-  });
+  private StencilPostProcessor stencilPostProcessor =
+      mock(StencilPostProcessor.class, (Answer<List<Stencil>>) invocationOnMock -> {
+        logger.info("invocationOnMock.getArguments()[0] " + invocationOnMock.getArguments()[0]);
+        return (List<Stencil>) invocationOnMock.getArguments()[0];
+      });
 
   @Mock private PluginManager pluginManager;
   @Mock private UpdateOperations<Workflow> updateOperations;
@@ -612,17 +613,8 @@ public class WorkflowServiceTest extends WingsBaseTest {
     return workflow;
   }
 
-  /**
-   * Stencils.
-   *
-   * @throws IllegalAccessException    the illegal access exception
-   * @throws IllegalArgumentException  the illegal argument exception
-   * @throws InvocationTargetException the invocation target exception
-   * @throws IntrospectionException    the introspection exception
-   */
   @Test
-  public void stencils()
-      throws IllegalAccessException, IllegalArgumentException, InvocationTargetException, IntrospectionException {
+  public void stencils() throws IllegalArgumentException {
     Map<StateTypeScope, List<Stencil>> stencils = workflowService.stencils(APP_ID, null, null);
     logger.debug(JsonUtils.asJson(stencils));
     assertThat(stencils).isNotNull().hasSize(4).containsKeys(StateTypeScope.ORCHESTRATION_STENCILS,
@@ -632,17 +624,8 @@ public class WorkflowServiceTest extends WingsBaseTest {
         .contains("REPEAT", "FORK");
   }
 
-  /**
-   * Stencils for pipeline.
-   *
-   * @throws IllegalAccessException    the illegal access exception
-   * @throws IllegalArgumentException  the illegal argument exception
-   * @throws InvocationTargetException the invocation target exception
-   * @throws IntrospectionException    the introspection exception
-   */
   @Test
-  public void stencilsForPipeline()
-      throws IllegalAccessException, IllegalArgumentException, InvocationTargetException, IntrospectionException {
+  public void stencilsForPipeline() throws IllegalArgumentException {
     Map<StateTypeScope, List<Stencil>> stencils =
         workflowService.stencils(APP_ID, null, null, StateTypeScope.PIPELINE_STENCILS);
     logger.debug(JsonUtils.asJson(stencils));
@@ -653,17 +636,8 @@ public class WorkflowServiceTest extends WingsBaseTest {
         .doesNotContain("REPEAT", "FORK");
   }
 
-  /**
-   * Stencils for orchestration.
-   *
-   * @throws IllegalAccessException    the illegal access exception
-   * @throws IllegalArgumentException  the illegal argument exception
-   * @throws InvocationTargetException the invocation target exception
-   * @throws IntrospectionException    the introspection exception
-   */
   @Test
-  public void stencilsForOrchestration()
-      throws IllegalAccessException, IllegalArgumentException, InvocationTargetException, IntrospectionException {
+  public void stencilsForOrchestration() throws IllegalArgumentException {
     Map<StateTypeScope, List<Stencil>> stencils =
         workflowService.stencils(APP_ID, null, null, StateTypeScope.ORCHESTRATION_STENCILS);
     logger.debug(JsonUtils.asJson(stencils));
@@ -672,6 +646,90 @@ public class WorkflowServiceTest extends WingsBaseTest {
         .extracting(Stencil::getType)
         .doesNotContain("BUILD", "ENV_STATE")
         .contains("REPEAT", "FORK");
+  }
+
+  @Test
+  public void stencilsForOrchestrationFilterWorkflow() throws IllegalArgumentException {
+    Workflow workflow =
+        aWorkflow()
+            .withName(WORKFLOW_NAME)
+            .withAppId(APP_ID)
+            .withOrchestrationWorkflow(
+                aCanaryOrchestrationWorkflow()
+                    .withPreDeploymentSteps(aPhaseStep(PRE_DEPLOYMENT, Constants.PRE_DEPLOYMENT).build())
+                    .withPostDeploymentSteps(aPhaseStep(POST_DEPLOYMENT, Constants.POST_DEPLOYMENT).build())
+                    .build())
+            .build();
+    Workflow workflow2 = workflowService.createWorkflow(workflow);
+    assertThat(workflow2).isNotNull().hasFieldOrProperty("uuid").hasFieldOrPropertyWithValue("appId", APP_ID);
+    Map<StateTypeScope, List<Stencil>> stencils =
+        workflowService.stencils(APP_ID, workflow2.getUuid(), null, StateTypeScope.ORCHESTRATION_STENCILS);
+
+    logger.debug(JsonUtils.asJson(stencils));
+    assertThat(stencils).isNotNull().hasSize(1).containsKeys(StateTypeScope.ORCHESTRATION_STENCILS);
+    assertThat(stencils.get(StateTypeScope.ORCHESTRATION_STENCILS))
+        .extracting(Stencil::getType)
+        .doesNotContain("BUILD", "ENV_STATE")
+        .contains("REPEAT", "FORK", "HTTP");
+  }
+
+  @Test
+  public void stencilsForOrchestrationFilterWorkflowPhase() throws IllegalArgumentException {
+    Workflow workflow =
+        aWorkflow()
+            .withName(WORKFLOW_NAME)
+            .withAppId(APP_ID)
+            .withServiceId(SERVICE_ID)
+            .withInfraMappingId(INFRA_MAPPING_ID)
+            .withOrchestrationWorkflow(
+                aBasicOrchestrationWorkflow()
+                    .withPreDeploymentSteps(aPhaseStep(PRE_DEPLOYMENT, Constants.PRE_DEPLOYMENT).build())
+                    .withPostDeploymentSteps(aPhaseStep(POST_DEPLOYMENT, Constants.POST_DEPLOYMENT).build())
+                    .build())
+            .build();
+    when(infrastructureMappingService.get(APP_ID, INFRA_MAPPING_ID))
+        .thenReturn(anAwsInfrastructureMapping()
+                        .withUuid(INFRA_MAPPING_ID)
+                        .withInfraMappingType(InfrastructureMappingType.AWS_SSH.name())
+                        .withDeploymentType(SSH.name())
+                        .withComputeProviderType(SettingVariableTypes.AWS.name())
+                        .build());
+    when(serviceResourceService.get(APP_ID, APP_ID)).thenReturn(aService().withUuid(SERVICE_ID).build());
+
+    ServiceCommand serviceCommand = aServiceCommand()
+                                        .withServiceId(SERVICE_ID)
+                                        .withUuid(SERVICE_COMMAND_ID)
+                                        .withAppId(APP_ID)
+                                        .withName("START")
+                                        .withCommand(aCommand()
+                                                         .withName("START")
+                                                         .addCommandUnits(anExecCommandUnit()
+                                                                              .withCommandPath("/home/xxx/tomcat")
+                                                                              .withCommandString("bin/startup.sh")
+                                                                              .build())
+                                                         .build())
+                                        .build();
+
+    when(serviceResourceService.get(APP_ID, SERVICE_ID, true))
+        .thenReturn(aService().withUuid(SERVICE_ID).withCommands(asList(serviceCommand)).build());
+
+    when(serviceResourceService.get(APP_ID, SERVICE_ID))
+        .thenReturn(aService().withUuid(SERVICE_ID).withCommands(asList(serviceCommand)).build());
+
+    Workflow workflow2 = workflowService.createWorkflow(workflow);
+    assertThat(workflow2).isNotNull().hasFieldOrProperty("uuid").hasFieldOrPropertyWithValue("appId", APP_ID);
+
+    BasicOrchestrationWorkflow basicOrchestrationWorkflow =
+        (BasicOrchestrationWorkflow) workflow2.getOrchestrationWorkflow();
+    Map<StateTypeScope, List<Stencil>> stencils = workflowService.stencils(APP_ID, workflow2.getUuid(),
+        basicOrchestrationWorkflow.getWorkflowPhases().get(0).getUuid(), StateTypeScope.ORCHESTRATION_STENCILS);
+
+    logger.debug(JsonUtils.asJson(stencils));
+    assertThat(stencils).isNotNull().hasSize(1).containsKeys(StateTypeScope.ORCHESTRATION_STENCILS);
+    assertThat(stencils.get(StateTypeScope.ORCHESTRATION_STENCILS))
+        .extracting(Stencil::getType)
+        .doesNotContain("BUILD", "ENV_STATE")
+        .contains("REPEAT", "FORK", "HTTP");
   }
 
   @Test
