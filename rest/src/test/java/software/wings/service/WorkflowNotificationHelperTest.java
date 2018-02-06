@@ -14,6 +14,7 @@ import static software.wings.beans.Service.Builder.aService;
 import static software.wings.beans.WorkflowExecution.WorkflowExecutionBuilder.aWorkflowExecution;
 import static software.wings.beans.artifact.Artifact.Builder.anArtifact;
 import static software.wings.common.Constants.BUILD_NO;
+import static software.wings.sm.PipelineSummary.Builder.aPipelineSummary;
 import static software.wings.sm.StateExecutionInstance.Builder.aStateExecutionInstance;
 import static software.wings.utils.WingsTestConstants.ACCOUNT_ID;
 import static software.wings.utils.WingsTestConstants.APP_ID;
@@ -127,8 +128,6 @@ public class WorkflowNotificationHelperTest extends WingsBaseTest {
     when(wingsPersistence.createQuery(WorkflowExecution.class)).thenReturn(workflowExecutionQuery);
     when(workflowExecutionQuery.field(any())).thenReturn(workflowExecutionEnd);
     when(workflowExecutionEnd.equal(any())).thenReturn(workflowExecutionQuery);
-    when(workflowExecutionQuery.get())
-        .thenReturn(aWorkflowExecution().withUuid(PIPELINE_EXECUTION_ID).withName("Pipeline Name").build());
   }
 
   @Test
@@ -166,11 +165,14 @@ public class WorkflowNotificationHelperTest extends WingsBaseTest {
   @Test
   public void shouldSendWorkflowStatusChangeNotificationPipeline() {
     when(workflowExecutionService.getExecutionDetails(APP_ID, WORKFLOW_EXECUTION_ID))
-        .thenReturn(aWorkflowExecution()
-                        .withServiceIds(asList("service-1", "service-2"))
-                        .withTriggeredBy(EmbeddedUser.builder().name(USER_NAME).build())
-                        .withPipelineExecutionId(PIPELINE_EXECUTION_ID)
-                        .build());
+        .thenReturn(
+            aWorkflowExecution()
+                .withServiceIds(asList("service-1", "service-2"))
+                .withTriggeredBy(EmbeddedUser.builder().name(USER_NAME).build())
+                .withPipelineExecutionId(PIPELINE_EXECUTION_ID)
+                .withPipelineSummary(
+                    aPipelineSummary().withPipelineId(PIPELINE_EXECUTION_ID).withPipelineName("Pipeline Name").build())
+                .build());
     NotificationRule notificationRule = aNotificationRule()
                                             .withExecutionScope(ExecutionScope.WORKFLOW)
                                             .withConditions(asList(ExecutionStatus.FAILED, ExecutionStatus.SUCCESS))
