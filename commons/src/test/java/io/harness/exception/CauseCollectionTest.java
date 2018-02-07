@@ -34,7 +34,7 @@ public class CauseCollectionTest extends CategoryTest {
   public void causeCollectionLimit() {
     CauseCollection collection = new CauseCollection().addCause(new Exception(new Exception()));
 
-    for (int i = 0; i < 20; i++) {
+    for (int i = 0; i < 3; i++) {
       collection.addCause(new Exception(new Exception(new Exception(new Exception()))));
     }
 
@@ -44,7 +44,7 @@ public class CauseCollectionTest extends CategoryTest {
       ex = ex.getCause();
       count++;
     }
-    assertThat(count).isEqualTo(50);
+    assertThat(count).isEqualTo(14);
   }
 
   @Category(FastUnitTests.class)
