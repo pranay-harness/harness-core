@@ -23,4 +23,5 @@ public class SplunkAnalysisCluster {
   private double test_score;
   private double control_score;
   private double freq_score;
+  private int control_label;
 }
