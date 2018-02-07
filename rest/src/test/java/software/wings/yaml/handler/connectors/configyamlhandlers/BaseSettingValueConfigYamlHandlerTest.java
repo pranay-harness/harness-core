@@ -12,7 +12,6 @@ import com.fasterxml.jackson.databind.exc.UnrecognizedPropertyException;
 import org.apache.commons.lang3.StringUtils;
 import org.mockito.InjectMocks;
 import org.mockito.Mock;
-import software.wings.beans.AppDynamicsConfig.Yaml;
 import software.wings.beans.SettingAttribute;
 import software.wings.beans.yaml.ChangeContext;
 import software.wings.beans.yaml.GitFileChange;
@@ -123,8 +122,8 @@ public abstract class BaseSettingValueConfigYamlHandlerTest extends BaseYamlHand
 
     // 4. Now, Use invalid yaml content (missing encrypted password) and  make sure upsertFromYaml fails
     try {
-      changeContext =
-          getChangeContext(settingValueYamlConfig.getInvalidYamlContent(), yamlFilePath, Yaml.class, yamlHandler);
+      changeContext = getChangeContext(settingValueYamlConfig.getInvalidYamlContent(), yamlFilePath,
+          settingValueYamlConfig.getYamlClass(), yamlHandler);
       yamlHandler.upsertFromYaml(changeContext, Arrays.asList(changeContext));
       assertTrue(false);
     } catch (UnrecognizedPropertyException ex) {
