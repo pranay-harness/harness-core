@@ -521,15 +521,18 @@ public class TriggerServiceImpl implements TriggerService {
           if (isEmpty(artifactSelections)) {
             logger.info("No artifactSelection configuration setup found. Executing pipeline {} from source pipeline {}",
                 trigger.getWorkflowId(), sourcePipelineId);
-            triggerExecution(
-                getLastDeployedArtifacts(appId, sourcePipelineId, trigger.getWorkflowType(), null), trigger);
+            triggerExecution(getLastDeployedArtifacts(appId, sourcePipelineId, PIPELINE, null), trigger);
           } else {
             List<Artifact> artifacts = new ArrayList<>();
             if (artifactSelections.stream().anyMatch(
                     artifactSelection -> artifactSelection.getType().equals(PIPELINE_SOURCE))) {
-              addLastDeployedArtifacts(appId, sourcePipelineId, trigger.getWorkflowType(), null, artifacts);
+              logger.info("Adding last deployed artifacts from source pipeline {} ", sourcePipelineId);
+              addLastDeployedArtifacts(appId, sourcePipelineId, PIPELINE, null, artifacts);
             }
             addArtifactsFromSelections(trigger.getAppId(), trigger, artifacts);
+            if (artifacts.size() == 0) {
+              logger.info("No artifacts supplied. Triggering execution without artifacts");
+            }
             triggerExecution(artifacts, trigger);
           }
         });
@@ -614,6 +617,7 @@ public class TriggerServiceImpl implements TriggerService {
    */
   private void addLastDeployedArtifacts(
       String appId, String workflowId, WorkflowType workflowType, String serviceId, List<Artifact> artifacts) {
+    logger.info("Adding last deployed artifacts for appId {}, workflowid {}", appId, workflowId);
     artifacts.addAll(getLastDeployedArtifacts(appId, workflowId, workflowType, serviceId));
   }
 
