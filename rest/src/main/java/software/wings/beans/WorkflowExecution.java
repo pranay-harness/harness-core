@@ -13,6 +13,7 @@ import org.mongodb.morphia.annotations.Entity;
 import org.mongodb.morphia.annotations.Indexed;
 import org.mongodb.morphia.annotations.Transient;
 import software.wings.beans.Environment.EnvironmentType;
+import software.wings.beans.Graph.Node;
 import software.wings.sm.ExecutionStatus;
 import software.wings.sm.InfraMappingSummary;
 import software.wings.sm.PipelineSummary;
@@ -42,7 +43,7 @@ public class WorkflowExecution extends Base {
   @Transient private Graph graph;
   @Transient private List<String> expandedGroupIds;
 
-  @Transient private GraphNode executionNode; // used for workflow details.
+  @Transient private Graph.Node executionNode; // used for workflow details.
   private PipelineExecution pipelineExecution; // used for pipeline details.
 
   @Indexed private String pipelineExecutionId;
@@ -330,7 +331,7 @@ public class WorkflowExecution extends Base {
    *
    * @return the execution node
    */
-  public GraphNode getExecutionNode() {
+  public Node getExecutionNode() {
     return executionNode;
   }
 
@@ -339,7 +340,7 @@ public class WorkflowExecution extends Base {
    *
    * @param executionNode the execution node
    */
-  public void setExecutionNode(GraphNode executionNode) {
+  public void setExecutionNode(Node executionNode) {
     this.executionNode = executionNode;
   }
 
@@ -530,7 +531,7 @@ public class WorkflowExecution extends Base {
     private ExecutionStatus status = ExecutionStatus.NEW;
     private Graph graph;
     private List<String> expandedGroupIds;
-    private GraphNode executionNode;
+    private Node executionNode;
     private ErrorStrategy errorStrategy;
     private String name;
     private int total;
@@ -611,7 +612,7 @@ public class WorkflowExecution extends Base {
       return this;
     }
 
-    public WorkflowExecutionBuilder withExecutionNode(GraphNode executionNode) {
+    public WorkflowExecutionBuilder withExecutionNode(Node executionNode) {
       this.executionNode = executionNode;
       return this;
     }

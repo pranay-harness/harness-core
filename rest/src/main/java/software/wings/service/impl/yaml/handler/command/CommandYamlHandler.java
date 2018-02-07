@@ -11,8 +11,8 @@ import com.google.inject.Singleton;
 import software.wings.beans.EntityVersion;
 import software.wings.beans.Environment;
 import software.wings.beans.Graph;
-import software.wings.beans.GraphLink;
-import software.wings.beans.GraphNode;
+import software.wings.beans.Graph.Link;
+import software.wings.beans.Graph.Node;
 import software.wings.beans.command.AbstractCommandUnit;
 import software.wings.beans.command.AbstractCommandUnit.Yaml;
 import software.wings.beans.command.Command;
@@ -58,15 +58,15 @@ public class CommandYamlHandler extends BaseYamlHandler<CommandYaml, ServiceComm
     String serviceId = yamlHelper.getServiceId(appId, yamlFilePath);
     Validator.notNullCheck("serviceId is null for given yamlFilePath: " + yamlFilePath, serviceId);
     CommandYaml commandYaml = changeContext.getYaml();
-    List<GraphNode> nodeList = Lists.newArrayList();
+    List<Node> nodeList = Lists.newArrayList();
     List<Yaml> commandUnitYamlList = commandYaml.getCommandUnits();
     List<CommandUnit> commandUnitList = Lists.newArrayList();
-    List<GraphLink> linkList = Lists.newArrayList();
+    List<Link> linkList = Lists.newArrayList();
     String name = yamlHelper.getNameFromYamlFilePath(yamlFilePath);
     Graph.Builder graphBuilder = Graph.Builder.aGraph().withGraphName(name);
 
     if (isNotEmpty(commandUnitYamlList)) {
-      GraphNode previousGraphNode = null;
+      Node previousGraphNode = null;
 
       for (Yaml commandUnitYaml : commandUnitYamlList) {
         CommandUnitYamlHandler commandUnitYamlHandler =
@@ -74,14 +74,14 @@ public class CommandYamlHandler extends BaseYamlHandler<CommandYaml, ServiceComm
         ChangeContext.Builder clonedContext = cloneFileChangeContext(changeContext, commandUnitYaml);
         CommandUnit commandUnit = commandUnitYamlHandler.upsertFromYaml(clonedContext.build(), changeSetContext);
         commandUnitList.add(commandUnit);
-        GraphNode graphNode = commandUnitYamlHandler.getGraphNode(clonedContext.build(), previousGraphNode);
+        Node graphNode = commandUnitYamlHandler.getGraphNode(clonedContext.build(), previousGraphNode);
         if (previousGraphNode != null) {
-          GraphLink link = GraphLink.Builder.aLink()
-                               .withType("SUCCESS")
-                               .withFrom(previousGraphNode.getId())
-                               .withTo(graphNode.getId())
-                               .withId(getLinkId())
-                               .build();
+          Link link = Link.Builder.aLink()
+                          .withType("SUCCESS")
+                          .withFrom(previousGraphNode.getId())
+                          .withTo(graphNode.getId())
+                          .withId(getLinkId())
+                          .build();
           linkList.add(link);
         }
         previousGraphNode = graphNode;

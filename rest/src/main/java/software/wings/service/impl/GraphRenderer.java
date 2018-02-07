@@ -6,7 +6,7 @@ package software.wings.service.impl;
 
 import static io.harness.data.structure.EmptyPredicate.isEmpty;
 import static io.harness.data.structure.EmptyPredicate.isNotEmpty;
-import static software.wings.beans.GraphNode.GraphNodeBuilder.aGraphNode;
+import static software.wings.beans.Graph.Node.Builder.aNode;
 import static software.wings.sm.StateType.PHASE;
 import static software.wings.sm.StateType.PHASE_STEP;
 import static software.wings.sm.StateType.SUB_WORKFLOW;
@@ -18,11 +18,10 @@ import com.google.inject.Singleton;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import software.wings.api.CommandStateExecutionData;
-import software.wings.beans.GraphGroup;
-import software.wings.beans.GraphNode;
+import software.wings.beans.Graph.Group;
+import software.wings.beans.Graph.Node;
 import software.wings.beans.WorkflowType;
 import software.wings.common.Constants;
-import software.wings.service.intfc.WorkflowExecutionService;
 import software.wings.sm.ContextElement;
 import software.wings.sm.ExecutionStatus;
 import software.wings.sm.StateExecutionData;
@@ -47,8 +46,6 @@ public class GraphRenderer {
   private static final Logger logger = LoggerFactory.getLogger(GraphRenderer.class);
   @Inject private Injector injector;
 
-  @Inject private WorkflowExecutionService workflowExecutionService;
-
   static boolean isSubWorkflow(StateExecutionInstance stateExecutionInstance) {
     if (stateExecutionInstance == null) {
       return false;
@@ -70,16 +67,16 @@ public class GraphRenderer {
    * @param initialStateName the initial state name
    * @return the node
    */
-  public GraphNode generateHierarchyNode(Map<String, StateExecutionInstance> instanceIdMap, String initialStateName) {
+  public Node generateHierarchyNode(Map<String, StateExecutionInstance> instanceIdMap, String initialStateName) {
     logger.debug("generateSubworkflows request received - instanceIdMap: {}, initialStateName: {}", instanceIdMap,
         initialStateName);
-    GraphNode originNode = null;
-    Map<String, GraphNode> nodeIdMap = new HashMap<>();
-    Map<String, GraphNode> prevInstanceIdMap = new HashMap<>();
-    Map<String, Map<String, GraphNode>> parentIdElementsMap = new HashMap<>();
+    Node originNode = null;
+    Map<String, Node> nodeIdMap = new HashMap<>();
+    Map<String, Node> prevInstanceIdMap = new HashMap<>();
+    Map<String, Map<String, Node>> parentIdElementsMap = new HashMap<>();
 
     for (StateExecutionInstance instance : instanceIdMap.values()) {
-      GraphNode node = convertToNode(instance);
+      Node node = convertToNode(instance);
 
       if (node.getName().equals(initialStateName)) {
         originNode = node;
@@ -87,8 +84,7 @@ public class GraphRenderer {
 
       final String parentInstanceId = instance.getParentInstanceId();
       if (parentInstanceId != null && instance.isContextTransition()) {
-        Map<String, GraphNode> elementsMap =
-            parentIdElementsMap.computeIfAbsent(parentInstanceId, key -> new HashMap<>());
+        Map<String, Node> elementsMap = parentIdElementsMap.computeIfAbsent(parentInstanceId, key -> new HashMap<>());
 
         if (isSubWorkflow(instanceIdMap.get(parentInstanceId))) {
           elementsMap.put(Constants.SUB_WORKFLOW, node);
@@ -119,12 +115,12 @@ public class GraphRenderer {
     return originNode;
   }
 
-  static boolean isProvisionNode(GraphNode node) {
+  static boolean isProvisionNode(Node node) {
     return PHASE_STEP.name().equals(node.getType()) && node.getName().equals(Constants.PROVISION_NODE_NAME)
         && node.getGroup() != null && isNotEmpty(node.getGroup().getElements());
   }
 
-  static void adjustProvisionNode(GraphNode node) {
+  static void adjustProvisionNode(Node node) {
     if (node == null) {
       return;
     }
@@ -135,25 +131,25 @@ public class GraphRenderer {
       return;
     }
 
-    GraphNode next = node.getNext();
+    Node next = node.getNext();
     if (isProvisionNode(next)) {
-      GraphNode nextToNext = next.getNext();
-      GraphNode provisionStep = next.getGroup().getElements().get(0);
+      Node nextToNext = next.getNext();
+      Node provisionStep = next.getGroup().getElements().get(0);
       node.setNext(provisionStep);
       provisionStep.setNext(nextToNext);
     }
     adjustProvisionNode(node.getNext());
   }
 
-  static void adjustProvisionNode(GraphGroup group) {
+  static void adjustProvisionNode(Group group) {
     if (group == null || isEmpty(group.getElements())) {
       return;
     }
 
-    GraphNode first = group.getElements().get(0);
+    Node first = group.getElements().get(0);
     if (isProvisionNode(first)) {
-      GraphNode nextToNext = first.getNext();
-      GraphNode provisionStep = first.getGroup().getElements().get(0);
+      Node nextToNext = first.getNext();
+      Node provisionStep = first.getGroup().getElements().get(0);
       provisionStep.setNext(nextToNext);
       group.getElements().set(0, provisionStep);
     }
@@ -166,24 +162,13 @@ public class GraphRenderer {
    * @param instance the instance
    * @return the node
    */
-  GraphNode convertToNode(StateExecutionInstance instance) {
-    GraphNode node = new GraphNode();
+  Node convertToNode(StateExecutionInstance instance) {
+    Node node = new Node();
     node.setId(instance.getUuid());
     node.setName(instance.getStateName());
     node.setType(instance.getStateType());
     node.setRollback(instance.isRollback());
     node.setStatus(String.valueOf(instance.getStatus()).toUpperCase());
-
-    if (instance.getStateExecutionDataHistory() != null) {
-      node.setExecutionHistoryCount(instance.getStateExecutionDataHistory().size());
-    }
-
-    int interrupts = (int) workflowExecutionService.getExecutionInterruptCount(instance.getUuid());
-    if (instance.getInterruptHistory() != null) {
-      interrupts += instance.getInterruptHistory().size();
-    }
-    node.setInterruptHistoryCount(interrupts);
-
     if (instance.getStateExecutionData() != null) {
       StateExecutionData executionData = instance.getStateExecutionData();
       injector.injectMembers(executionData);
@@ -220,8 +205,8 @@ public class GraphRenderer {
     return node;
   }
 
-  private void generateNodeTree(Map<String, StateExecutionInstance> instanceIdMap, Map<String, GraphNode> nodeIdMap,
-      Map<String, GraphNode> prevInstanceIdMap, Map<String, Map<String, GraphNode>> parentIdElementsMap, GraphNode node,
+  private void generateNodeTree(Map<String, StateExecutionInstance> instanceIdMap, Map<String, Node> nodeIdMap,
+      Map<String, Node> prevInstanceIdMap, Map<String, Map<String, Node>> parentIdElementsMap, Node node,
       StateExecutionData elementStateExecutionData) {
     logger.debug("generateNodeTree requested- node: {}", node);
     StateExecutionInstance instance = instanceIdMap.get(node.getId());
@@ -231,7 +216,7 @@ public class GraphRenderer {
     }
 
     if (parentIdElementsMap.get(node.getId()) != null) {
-      GraphGroup group = new GraphGroup();
+      Group group = new Group();
       group.setId(node.getId() + "-group");
       logger.debug("generateNodeTree group attached - group: {}, node: {}", group, node);
       node.setGroup(group);
@@ -259,7 +244,7 @@ public class GraphRenderer {
     }
 
     if (prevInstanceIdMap.get(node.getId()) != null) {
-      GraphNode nextNode = prevInstanceIdMap.get(node.getId());
+      Node nextNode = prevInstanceIdMap.get(node.getId());
       logger.debug("generateNodeTree nextNode attached - nextNode: {}, node: {}", nextNode, node);
       node.setNext(nextNode);
       generateNodeTree(
@@ -276,11 +261,11 @@ public class GraphRenderer {
     }
   }
 
-  private void generateElement(Map<String, StateExecutionInstance> instanceIdMap, Map<String, GraphNode> nodeIdMap,
-      Map<String, GraphNode> prevInstanceIdMap, Map<String, Map<String, GraphNode>> parentIdElementsMap, GraphNode node,
-      GraphGroup group, String element) {
+  private void generateElement(Map<String, StateExecutionInstance> instanceIdMap, Map<String, Node> nodeIdMap,
+      Map<String, Node> prevInstanceIdMap, Map<String, Map<String, Node>> parentIdElementsMap, Node node, Group group,
+      String element) {
     if (element.equals(Constants.SUB_WORKFLOW)) {
-      GraphNode elementRepeatNode = parentIdElementsMap.get(node.getId()).get(element);
+      Node elementRepeatNode = parentIdElementsMap.get(node.getId()).get(element);
       if (elementRepeatNode != null) {
         group.getElements().add(elementRepeatNode);
         logger.debug("generateNodeTree elementRepeatNode added - node: {}", elementRepeatNode);
@@ -289,12 +274,11 @@ public class GraphRenderer {
       return;
     }
 
-    GraphNode elementNode =
-        aGraphNode().withId(node.getId() + "-" + element).withName(element).withType("ELEMENT").build();
+    Node elementNode = aNode().withId(node.getId() + "-" + element).withName(element).withType("ELEMENT").build();
 
     group.getElements().add(elementNode);
     logger.debug("generateNodeTree elementNode added - node: {}", elementNode);
-    GraphNode elementRepeatNode = parentIdElementsMap.get(node.getId()).get(element);
+    Node elementRepeatNode = parentIdElementsMap.get(node.getId()).get(element);
     StateExecutionData executionData = new StateExecutionData();
     if (elementRepeatNode != null) {
       elementNode.setNext(elementRepeatNode);

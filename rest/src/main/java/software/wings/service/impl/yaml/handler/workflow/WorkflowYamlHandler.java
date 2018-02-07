@@ -12,7 +12,7 @@ import software.wings.beans.CanaryOrchestrationWorkflow;
 import software.wings.beans.EntityType;
 import software.wings.beans.Environment;
 import software.wings.beans.FailureStrategy;
-import software.wings.beans.GraphNode;
+import software.wings.beans.Graph.Node;
 import software.wings.beans.NotificationRule;
 import software.wings.beans.PhaseStep;
 import software.wings.beans.PhaseStep.PhaseStepBuilder;
@@ -192,18 +192,18 @@ public abstract class WorkflowYamlHandler<Y extends WorkflowYaml> extends BaseYa
           PhaseStepBuilder.aPhaseStep(PhaseStepType.PRE_DEPLOYMENT, PhaseStepType.PRE_DEPLOYMENT.name());
 
       if (yaml.getPreDeploymentSteps() != null) {
-        List<GraphNode> stepList =
-            yaml.getPreDeploymentSteps()
-                .stream()
-                .map(stepYaml -> {
-                  try {
-                    ChangeContext.Builder clonedContext = cloneFileChangeContext(changeContext, stepYaml);
-                    return stepYamlHandler.upsertFromYaml(clonedContext.build(), changeContextList);
-                  } catch (HarnessException e) {
-                    throw new WingsException(e);
-                  }
-                })
-                .collect(Collectors.toList());
+        List<Node> stepList = yaml.getPreDeploymentSteps()
+                                  .stream()
+                                  .map(stepYaml -> {
+                                    try {
+                                      ChangeContext.Builder clonedContext =
+                                          cloneFileChangeContext(changeContext, stepYaml);
+                                      return stepYamlHandler.upsertFromYaml(clonedContext.build(), changeContextList);
+                                    } catch (HarnessException e) {
+                                      throw new WingsException(e);
+                                    }
+                                  })
+                                  .collect(Collectors.toList());
         preDeploymentSteps.addAllSteps(stepList).build();
       }
 
@@ -212,7 +212,7 @@ public abstract class WorkflowYamlHandler<Y extends WorkflowYaml> extends BaseYa
           PhaseStepBuilder.aPhaseStep(PhaseStepType.POST_DEPLOYMENT, PhaseStepType.POST_DEPLOYMENT.name());
 
       if (yaml.getPostDeploymentSteps() != null) {
-        List<GraphNode> postDeployStepList =
+        List<Node> postDeployStepList =
             yaml.getPostDeploymentSteps()
                 .stream()
                 .map(stepYaml -> {

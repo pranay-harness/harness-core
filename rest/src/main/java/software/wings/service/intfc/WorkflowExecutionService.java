@@ -5,9 +5,8 @@ import software.wings.beans.BuildExecutionSummary;
 import software.wings.beans.CountsByStatuses;
 import software.wings.beans.ElementExecutionSummary;
 import software.wings.beans.ExecutionArgs;
-import software.wings.beans.GraphNode;
+import software.wings.beans.Graph.Node;
 import software.wings.beans.RequiredExecutionArgs;
-import software.wings.beans.StateExecutionInterrupt;
 import software.wings.beans.WorkflowExecution;
 import software.wings.beans.WorkflowType;
 import software.wings.beans.artifact.Artifact;
@@ -17,7 +16,6 @@ import software.wings.service.impl.WorkflowExecutionUpdate;
 import software.wings.sm.ExecutionInterrupt;
 import software.wings.sm.PhaseExecutionSummary;
 import software.wings.sm.PhaseStepExecutionSummary;
-import software.wings.sm.StateExecutionData;
 import software.wings.sm.StateExecutionInstance;
 import software.wings.sm.StateType;
 
@@ -215,38 +213,7 @@ public interface WorkflowExecutionService {
    * @param stateExecutionInstanceId the state execution instance id
    * @return the execution details for node
    */
-  GraphNode getExecutionDetailsForNode(String appId, String workflowExecutionId, String stateExecutionInstanceId);
-
-  /**
-   * Gets execution history.
-   *
-   * @param appId                    the app id
-   * @param workflowExecutionId      the workflow execution id
-   * @param stateExecutionInstanceId the state execution instance id
-   * @return the execution history
-   */
-  List<StateExecutionData> getExecutionHistory(
-      String appId, String workflowExecutionId, String stateExecutionInstanceId);
-
-  /**
-   * Gets execution history.
-   *
-   * @param appId                    the app id
-   * @param workflowExecutionId      the workflow execution id
-   * @param stateExecutionInstanceId the state execution instance id
-   * @return the execution history
-   */
-  List<StateExecutionInterrupt> getExecutionInterrupts(String appId, String stateExecutionInstanceId);
-
-  /**
-   * Gets recorded per execution instance interrupts.
-   *
-   * @param appId                    the app id
-   * @param workflowExecutionId      the workflow execution id
-   * @param stateExecutionInstanceId the state execution instance id
-   * @return the execution history
-   */
-  long getExecutionInterruptCount(String stateExecutionInstanceId);
+  Node getExecutionDetailsForNode(String appId, String workflowExecutionId, String stateExecutionInstanceId);
 
   /**
    * Returns the details of the state execution for give id

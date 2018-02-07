@@ -14,7 +14,7 @@ import static software.wings.beans.EntityType.WORKFLOW;
 import static software.wings.beans.ErrorCode.INVALID_REQUEST;
 import static software.wings.beans.ErrorCode.WORKFLOW_EXECUTION_IN_PROGRESS;
 import static software.wings.beans.FailureStrategy.FailureStrategyBuilder.aFailureStrategy;
-import static software.wings.beans.GraphNode.GraphNodeBuilder.aGraphNode;
+import static software.wings.beans.Graph.Node.Builder.aNode;
 import static software.wings.beans.InfrastructureMappingType.AWS_SSH;
 import static software.wings.beans.InfrastructureMappingType.PHYSICAL_DATA_CENTER_SSH;
 import static software.wings.beans.NotificationRule.NotificationRuleBuilder.aNotificationRule;
@@ -104,8 +104,7 @@ import software.wings.beans.FailureType;
 import software.wings.beans.FeatureName;
 import software.wings.beans.GcpKubernetesInfrastructureMapping;
 import software.wings.beans.Graph;
-import software.wings.beans.GraphNode;
-import software.wings.beans.GraphNode.GraphNodeBuilder;
+import software.wings.beans.Graph.Node;
 import software.wings.beans.HostConnectionAttributes;
 import software.wings.beans.InfrastructureMapping;
 import software.wings.beans.MultiServiceOrchestrationWorkflow;
@@ -664,7 +663,7 @@ public class WorkflowServiceImpl implements WorkflowService, DataProvider {
           if (phaseStep.getSteps() == null) {
             continue;
           }
-          for (GraphNode node : phaseStep.getSteps()) {
+          for (Node node : phaseStep.getSteps()) {
             if (!StateType.NEW_RELIC.name().equals(node.getType())) {
               continue;
             }
@@ -1250,9 +1249,9 @@ public class WorkflowServiceImpl implements WorkflowService, DataProvider {
     }
     for (PhaseStep phaseStep : phaseSteps) {
       if (phaseStep.getPhaseStepType().equals(PROVISION_NODE)) {
-        List<GraphNode> steps = phaseStep.getSteps();
+        List<Node> steps = phaseStep.getSteps();
         if (steps != null) {
-          for (GraphNode step : steps) {
+          for (Node step : steps) {
             if (step.getType().equals(DC_NODE_SELECT.name()) || step.getType().equals(AWS_NODE_SELECT.name())) {
               Map<String, Object> properties = step.getProperties();
               if ((Boolean) properties.get("specificHosts")) {
@@ -1839,7 +1838,7 @@ public class WorkflowServiceImpl implements WorkflowService, DataProvider {
   }
 
   @Override
-  public GraphNode updateGraphNode(String appId, String workflowId, String subworkflowId, GraphNode node) {
+  public Node updateGraphNode(String appId, String workflowId, String subworkflowId, Node node) {
     Workflow workflow = readWorkflow(appId, workflowId);
     notNullCheck("workflow", workflow);
     CanaryOrchestrationWorkflow orchestrationWorkflow =
@@ -1850,7 +1849,7 @@ public class WorkflowServiceImpl implements WorkflowService, DataProvider {
 
     boolean found = false;
     for (int i = 0; i < graph.getNodes().size(); i++) {
-      GraphNode childNode = graph.getNodes().get(i);
+      Node childNode = graph.getNodes().get(i);
       if (childNode.getId().equals(node.getId())) {
         graph.getNodes().remove(i);
         graph.getNodes().add(i, node);
@@ -2091,7 +2090,7 @@ public class WorkflowServiceImpl implements WorkflowService, DataProvider {
       if (phaseStep.getSteps() == null) {
         continue;
       }
-      for (GraphNode step : phaseStep.getSteps()) {
+      for (Node step : phaseStep.getSteps()) {
         if ("COMMAND".equals(step.getType())) {
           ServiceCommand command = serviceResourceService.getCommandByName(
               appId, serviceId, (String) step.getProperties().get("commandName"));
@@ -2136,7 +2135,7 @@ public class WorkflowServiceImpl implements WorkflowService, DataProvider {
         defaultData.put("maxInstances", 10);
         defaultData.put("autoScalingSteadyStateTimeout", 10);
         workflowPhase.addPhaseStep(aPhaseStep(AMI_AUTOSCALING_GROUP_SETUP, Constants.SETUP_AUTOSCALING_GROUP)
-                                       .addStep(aGraphNode()
+                                       .addStep(aNode()
                                                     .withId(getUuid())
                                                     .withType(AWS_AMI_SERVICE_SETUP.name())
                                                     .withName("AWS AutoScaling Group Setup")
@@ -2146,7 +2145,7 @@ public class WorkflowServiceImpl implements WorkflowService, DataProvider {
       }
     }
     workflowPhase.addPhaseStep(aPhaseStep(AMI_DEPLOY_AUTOSCALING_GROUP, Constants.DEPLOY_SERVICE)
-                                   .addStep(aGraphNode()
+                                   .addStep(aNode()
                                                 .withId(getUuid())
                                                 .withType(AWS_AMI_SERVICE_DEPLOY.name())
                                                 .withName(Constants.UPGRADE_AUTOSCALING_GROUP)
@@ -2168,8 +2167,7 @@ public class WorkflowServiceImpl implements WorkflowService, DataProvider {
 
     workflowPhase.addPhaseStep(
         aPhaseStep(DEPLOY_AWS_LAMBDA, Constants.DEPLOY_SERVICE)
-            .addStep(
-                aGraphNode().withId(getUuid()).withType(AWS_LAMBDA_STATE.name()).withName(Constants.AWS_LAMBDA).build())
+            .addStep(aNode().withId(getUuid()).withType(AWS_LAMBDA_STATE.name()).withName(Constants.AWS_LAMBDA).build())
             .build());
 
     workflowPhase.addPhaseStep(aPhaseStep(VERIFY_SERVICE, Constants.VERIFY_SERVICE)
@@ -2183,7 +2181,7 @@ public class WorkflowServiceImpl implements WorkflowService, DataProvider {
     workflowPhase.addPhaseStep(aPhaseStep(PREPARE_STEPS, Constants.PREPARE_STEPS).build());
 
     workflowPhase.addPhaseStep(aPhaseStep(COLLECT_ARTIFACT, Constants.COLLECT_ARTIFACT)
-                                   .addStep(aGraphNode()
+                                   .addStep(aNode()
                                                 .withId(getUuid())
                                                 .withType(ARTIFACT_COLLECTION.name())
                                                 .withName(Constants.ARTIFACT_COLLECTION)
@@ -2199,8 +2197,8 @@ public class WorkflowServiceImpl implements WorkflowService, DataProvider {
     workflowPhase.addPhaseStep(aPhaseStep(PREPARE_STEPS, Constants.PREPARE_STEPS).build());
 
     Map<String, String> stateDefaults = getStateDefaults(appId, service.getUuid(), AWS_CODEDEPLOY_STATE);
-    GraphNodeBuilder node =
-        aGraphNode().withId(getUuid()).withType(AWS_CODEDEPLOY_STATE.name()).withName(Constants.AWS_CODE_DEPLOY);
+    Graph.Node.Builder node =
+        aNode().withId(getUuid()).withType(AWS_CODEDEPLOY_STATE.name()).withName(Constants.AWS_CODE_DEPLOY);
     if (MapUtils.isNotEmpty(stateDefaults)) {
       if (isNotBlank(stateDefaults.get("bucket"))) {
         node.addProperty("bucket", stateDefaults.get("bucket"));
@@ -2231,16 +2229,14 @@ public class WorkflowServiceImpl implements WorkflowService, DataProvider {
       InfrastructureMapping infraMapping = infrastructureMappingService.get(appId, workflowPhase.getInfraMappingId());
       if (infraMapping instanceof EcsInfrastructureMapping
           && Constants.RUNTIME.equals(((EcsInfrastructureMapping) infraMapping).getClusterName())) {
-        workflowPhase.addPhaseStep(aPhaseStep(CLUSTER_SETUP, Constants.SETUP_CLUSTER)
-                                       .addStep(aGraphNode()
-                                                    .withId(getUuid())
-                                                    .withType(AWS_CLUSTER_SETUP.name())
-                                                    .withName("AWS Cluster Setup")
-                                                    .build())
-                                       .build());
+        workflowPhase.addPhaseStep(
+            aPhaseStep(CLUSTER_SETUP, Constants.SETUP_CLUSTER)
+                .addStep(
+                    aNode().withId(getUuid()).withType(AWS_CLUSTER_SETUP.name()).withName("AWS Cluster Setup").build())
+                .build());
       }
       workflowPhase.addPhaseStep(aPhaseStep(CONTAINER_SETUP, Constants.SETUP_CONTAINER)
-                                     .addStep(aGraphNode()
+                                     .addStep(aNode()
                                                   .withId(getUuid())
                                                   .withType(ECS_SERVICE_SETUP.name())
                                                   .withName(Constants.ECS_SERVICE_SETUP)
@@ -2248,7 +2244,7 @@ public class WorkflowServiceImpl implements WorkflowService, DataProvider {
                                      .build());
     }
     workflowPhase.addPhaseStep(aPhaseStep(CONTAINER_DEPLOY, Constants.DEPLOY_CONTAINERS)
-                                   .addStep(aGraphNode()
+                                   .addStep(aNode()
                                                 .withId(getUuid())
                                                 .withType(ECS_SERVICE_DEPLOY.name())
                                                 .withName(Constants.UPGRADE_CONTAINERS)
@@ -2271,16 +2267,14 @@ public class WorkflowServiceImpl implements WorkflowService, DataProvider {
       InfrastructureMapping infraMapping = infrastructureMappingService.get(appId, workflowPhase.getInfraMappingId());
       if (infraMapping instanceof GcpKubernetesInfrastructureMapping
           && Constants.RUNTIME.equals(((GcpKubernetesInfrastructureMapping) infraMapping).getClusterName())) {
-        workflowPhase.addPhaseStep(aPhaseStep(CLUSTER_SETUP, Constants.SETUP_CLUSTER)
-                                       .addStep(aGraphNode()
-                                                    .withId(getUuid())
-                                                    .withType(GCP_CLUSTER_SETUP.name())
-                                                    .withName("GCP Cluster Setup")
-                                                    .build())
-                                       .build());
+        workflowPhase.addPhaseStep(
+            aPhaseStep(CLUSTER_SETUP, Constants.SETUP_CLUSTER)
+                .addStep(
+                    aNode().withId(getUuid()).withType(GCP_CLUSTER_SETUP.name()).withName("GCP Cluster Setup").build())
+                .build());
       }
       workflowPhase.addPhaseStep(aPhaseStep(CONTAINER_SETUP, Constants.SETUP_CONTAINER)
-                                     .addStep(aGraphNode()
+                                     .addStep(aNode()
                                                   .withId(getUuid())
                                                   .withType(KUBERNETES_SETUP.name())
                                                   .withName("Kubernetes Service Setup")
@@ -2292,13 +2286,11 @@ public class WorkflowServiceImpl implements WorkflowService, DataProvider {
         (KubernetesContainerTask) serviceResourceService.getContainerTaskByDeploymentType(
             appId, workflowPhase.getServiceId(), DeploymentType.KUBERNETES.name());
     if (containerTask == null || !containerTask.checkDaemonSet()) {
-      workflowPhase.addPhaseStep(aPhaseStep(CONTAINER_DEPLOY, Constants.DEPLOY_CONTAINERS)
-                                     .addStep(aGraphNode()
-                                                  .withId(getUuid())
-                                                  .withType(KUBERNETES_DEPLOY.name())
-                                                  .withName("Upgrade Containers")
-                                                  .build())
-                                     .build());
+      workflowPhase.addPhaseStep(
+          aPhaseStep(CONTAINER_DEPLOY, Constants.DEPLOY_CONTAINERS)
+              .addStep(
+                  aNode().withId(getUuid()).withType(KUBERNETES_DEPLOY.name()).withName("Upgrade Containers").build())
+              .build());
     }
     workflowPhase.addPhaseStep(aPhaseStep(VERIFY_SERVICE, Constants.VERIFY_SERVICE)
                                    .addAllSteps(commandNodes(commandMap, CommandType.VERIFY))
@@ -2324,7 +2316,7 @@ public class WorkflowServiceImpl implements WorkflowService, DataProvider {
     Map<CommandType, List<Command>> commandMap = getCommandTypeListMap(service);
 
     workflowPhase.addPhaseStep(aPhaseStep(PROVISION_NODE, Constants.PROVISION_NODE_NAME)
-                                   .addStep(aGraphNode()
+                                   .addStep(aNode()
                                                 .withType(stateType.name())
                                                 .withName("Select Nodes")
                                                 .addProperty("specificHosts", false)
@@ -2333,16 +2325,16 @@ public class WorkflowServiceImpl implements WorkflowService, DataProvider {
                                                 .build())
                                    .build());
 
-    List<GraphNode> disableServiceSteps = commandNodes(commandMap, CommandType.DISABLE);
-    List<GraphNode> enableServiceSteps = commandNodes(commandMap, CommandType.ENABLE);
+    List<Node> disableServiceSteps = commandNodes(commandMap, CommandType.DISABLE);
+    List<Node> enableServiceSteps = commandNodes(commandMap, CommandType.ENABLE);
 
     if (attachElbSteps(infrastructureMapping)) {
-      disableServiceSteps.add(aGraphNode()
+      disableServiceSteps.add(aNode()
                                   .withType(ELASTIC_LOAD_BALANCER.name())
                                   .withName("Elastic Load Balancer")
                                   .addProperty("operation", Operation.Disable)
                                   .build());
-      enableServiceSteps.add(aGraphNode()
+      enableServiceSteps.add(aNode()
                                  .withType(ELASTIC_LOAD_BALANCER.name())
                                  .withName("Elastic Load Balancer")
                                  .addProperty("operation", Operation.Enable)
@@ -2405,7 +2397,7 @@ public class WorkflowServiceImpl implements WorkflowService, DataProvider {
         .withDeploymentType(workflowPhase.getDeploymentType())
         .withInfraMappingId(workflowPhase.getInfraMappingId())
         .addPhaseStep(aPhaseStep(AMI_DEPLOY_AUTOSCALING_GROUP, Constants.ROLLBACK_SERVICE)
-                          .addStep(aGraphNode()
+                          .addStep(aNode()
                                        .withId(getUuid())
                                        .withType(AWS_AMI_SERVICE_ROLLBACK.name())
                                        .withName(Constants.ROLLBACK_AWS_AMI_CLUSTER)
@@ -2430,7 +2422,7 @@ public class WorkflowServiceImpl implements WorkflowService, DataProvider {
         .withDeploymentType(workflowPhase.getDeploymentType())
         .withInfraMappingId(workflowPhase.getInfraMappingId())
         .addPhaseStep(aPhaseStep(DEPLOY_AWS_LAMBDA, Constants.DEPLOY_SERVICE)
-                          .addStep(aGraphNode()
+                          .addStep(aNode()
                                        .withId(getUuid())
                                        .withType(AWS_LAMBDA_ROLLBACK.name())
                                        .withName(Constants.ROLLBACK_AWS_LAMBDA)
@@ -2455,7 +2447,7 @@ public class WorkflowServiceImpl implements WorkflowService, DataProvider {
         .withDeploymentType(workflowPhase.getDeploymentType())
         .withInfraMappingId(workflowPhase.getInfraMappingId())
         .addPhaseStep(aPhaseStep(CONTAINER_DEPLOY, Constants.DEPLOY_CONTAINERS)
-                          .addStep(aGraphNode()
+                          .addStep(aNode()
                                        .withId(getUuid())
                                        .withType(ECS_SERVICE_ROLLBACK.name())
                                        .withName(Constants.ROLLBACK_CONTAINERS)
@@ -2480,7 +2472,7 @@ public class WorkflowServiceImpl implements WorkflowService, DataProvider {
         .withDeploymentType(workflowPhase.getDeploymentType())
         .withInfraMappingId(workflowPhase.getInfraMappingId())
         .addPhaseStep(aPhaseStep(DEPLOY_AWSCODEDEPLOY, Constants.DEPLOY_SERVICE)
-                          .addStep(aGraphNode()
+                          .addStep(aNode()
                                        .withId(getUuid())
                                        .withType(AWS_CODEDEPLOY_ROLLBACK.name())
                                        .withName(Constants.ROLLBACK_AWS_CODE_DEPLOY)
@@ -2505,17 +2497,17 @@ public class WorkflowServiceImpl implements WorkflowService, DataProvider {
         ? DC_NODE_SELECT
         : AWS_NODE_SELECT;
 
-    List<GraphNode> disableServiceSteps = commandNodes(commandMap, CommandType.DISABLE, true);
-    List<GraphNode> enableServiceSteps = commandNodes(commandMap, CommandType.ENABLE, true);
+    List<Node> disableServiceSteps = commandNodes(commandMap, CommandType.DISABLE, true);
+    List<Node> enableServiceSteps = commandNodes(commandMap, CommandType.ENABLE, true);
 
     if (attachElbSteps(infrastructureMapping)) {
-      disableServiceSteps.add(aGraphNode()
+      disableServiceSteps.add(aNode()
                                   .withType(ELASTIC_LOAD_BALANCER.name())
                                   .withName("Elastic Load Balancer")
                                   .addProperty("operation", Operation.Disable)
                                   .withRollback(true)
                                   .build());
-      enableServiceSteps.add(aGraphNode()
+      enableServiceSteps.add(aNode()
                                  .withType(ELASTIC_LOAD_BALANCER.name())
                                  .withName("Elastic Load Balancer")
                                  .addProperty("operation", Operation.Enable)
@@ -2564,7 +2556,7 @@ public class WorkflowServiceImpl implements WorkflowService, DataProvider {
     Optional<PhaseStep> provisionPhaseStep =
         workflowPhase.getPhaseSteps().stream().filter(ps -> ps.getPhaseStepType() == PROVISION_NODE).findFirst();
     if (provisionPhaseStep.isPresent() && provisionPhaseStep.get().getSteps() != null) {
-      Optional<GraphNode> awsProvisionNode =
+      Optional<Node> awsProvisionNode =
           provisionPhaseStep.get()
               .getSteps()
               .stream()
@@ -2601,7 +2593,7 @@ public class WorkflowServiceImpl implements WorkflowService, DataProvider {
               .withDeploymentType(workflowPhase.getDeploymentType())
               .withInfraMappingId(workflowPhase.getInfraMappingId())
               .addPhaseStep(aPhaseStep(CONTAINER_DEPLOY, Constants.DEPLOY_CONTAINERS)
-                                .addStep(aGraphNode()
+                                .addStep(aNode()
                                              .withId(getUuid())
                                              .withType(StateType.KUBERNETES_DEPLOY_ROLLBACK.name())
                                              .withName(Constants.ROLLBACK_CONTAINERS)
@@ -2613,7 +2605,7 @@ public class WorkflowServiceImpl implements WorkflowService, DataProvider {
                                 .build());
       if (serviceSetupRequired) {
         workflowPhaseBuilder.addPhaseStep(aPhaseStep(CONTAINER_SETUP, Constants.SETUP_CONTAINER)
-                                              .addStep(aGraphNode()
+                                              .addStep(aNode()
                                                            .withId(getUuid())
                                                            .withType(KUBERNETES_SETUP_ROLLBACK.name())
                                                            .withName(Constants.ROLLBACK_CONTAINERS)
@@ -2640,7 +2632,7 @@ public class WorkflowServiceImpl implements WorkflowService, DataProvider {
         .withDeploymentType(workflowPhase.getDeploymentType())
         .withInfraMappingId(workflowPhase.getInfraMappingId())
         .addPhaseStep(aPhaseStep(CONTAINER_SETUP, Constants.SETUP_CONTAINER)
-                          .addStep(aGraphNode()
+                          .addStep(aNode()
                                        .withId(getUuid())
                                        .withType(KUBERNETES_SETUP_ROLLBACK.name())
                                        .withName(Constants.ROLLBACK_CONTAINERS)
@@ -2669,13 +2661,13 @@ public class WorkflowServiceImpl implements WorkflowService, DataProvider {
     return commandMap;
   }
 
-  private List<GraphNode> commandNodes(Map<CommandType, List<Command>> commandMap, CommandType commandType) {
+  private List<Node> commandNodes(Map<CommandType, List<Command>> commandMap, CommandType commandType) {
     return commandNodes(commandMap, commandType, false);
   }
 
-  private List<GraphNode> commandNodes(
+  private List<Node> commandNodes(
       Map<CommandType, List<Command>> commandMap, CommandType commandType, boolean rollback) {
-    List<GraphNode> nodes = new ArrayList<>();
+    List<Node> nodes = new ArrayList<>();
 
     List<Command> commands = commandMap.get(commandType);
     if (commands == null) {
@@ -2683,7 +2675,7 @@ public class WorkflowServiceImpl implements WorkflowService, DataProvider {
     }
 
     for (Command command : commands) {
-      nodes.add(aGraphNode()
+      nodes.add(aNode()
                     .withId(getUuid())
                     .withType(COMMAND.name())
                     .withName(command.getName())

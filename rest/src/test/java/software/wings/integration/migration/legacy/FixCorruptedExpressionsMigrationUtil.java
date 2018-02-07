@@ -15,7 +15,7 @@ import software.wings.beans.AwsInfrastructureMapping;
 import software.wings.beans.AwsInstanceFilter.Tag;
 import software.wings.beans.CanaryOrchestrationWorkflow;
 import software.wings.beans.ConfigFile;
-import software.wings.beans.GraphNode;
+import software.wings.beans.Graph;
 import software.wings.beans.InfrastructureMapping;
 import software.wings.beans.InfrastructureMappingType;
 import software.wings.beans.PhaseStep;
@@ -155,7 +155,7 @@ public class FixCorruptedExpressionsMigrationUtil extends WingsBaseTest {
           CanaryOrchestrationWorkflow coWorkflow = (CanaryOrchestrationWorkflow) workflow.getOrchestrationWorkflow();
           for (WorkflowPhase workflowPhase : coWorkflow.getWorkflowPhases()) {
             for (PhaseStep phaseStep : workflowPhase.getPhaseSteps()) {
-              for (GraphNode node : phaseStep.getSteps()) {
+              for (Graph.Node node : phaseStep.getSteps()) {
                 boolean phaseStepFound = false;
                 Map<String, Object> properties = node.getProperties();
                 for (String key : properties.keySet()) {

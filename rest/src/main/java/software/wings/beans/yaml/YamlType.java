@@ -30,7 +30,7 @@ import software.wings.beans.ConfigFile;
 import software.wings.beans.EntityType;
 import software.wings.beans.Environment;
 import software.wings.beans.FailureStrategy;
-import software.wings.beans.GraphNode;
+import software.wings.beans.Graph.Node;
 import software.wings.beans.InfrastructureMapping;
 import software.wings.beans.LambdaSpecification.DefaultSpecification;
 import software.wings.beans.LambdaSpecification.FunctionSpecification;
@@ -150,7 +150,7 @@ public enum YamlType {
   PHASE_STEP(ObjectType.PHASE_STEP, "", "", PhaseStep.class),
   TEMPLATE_EXPRESSION(ObjectType.TEMPLATE_EXPRESSION, "", "", TemplateExpression.class),
   VARIABLE(ObjectType.VARIABLE, "", "", Variable.class),
-  STEP(ObjectType.STEP, "", "", GraphNode.class),
+  STEP(ObjectType.STEP, "", "", Node.class),
   FAILURE_STRATEGY(ObjectType.FAILURE_STRATEGY, "", "", FailureStrategy.class),
   NOTIFICATION_RULE(ObjectType.NOTIFICATION_RULE, "", "", NotificationRule.class),
   PIPELINE_STAGE(ObjectType.PIPELINE_STAGE, "", "", PipelineStage.class),

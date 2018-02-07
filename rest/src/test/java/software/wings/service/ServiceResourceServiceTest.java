@@ -18,7 +18,7 @@ import static software.wings.beans.CanaryOrchestrationWorkflow.CanaryOrchestrati
 import static software.wings.beans.ConfigFile.DEFAULT_TEMPLATE_ID;
 import static software.wings.beans.EntityVersion.Builder.anEntityVersion;
 import static software.wings.beans.Graph.Builder.aGraph;
-import static software.wings.beans.GraphNode.GraphNodeBuilder.aGraphNode;
+import static software.wings.beans.Graph.Node.Builder.aNode;
 import static software.wings.beans.PhaseStep.PhaseStepBuilder.aPhaseStep;
 import static software.wings.beans.SearchFilter.Operator.EQ;
 import static software.wings.beans.Service.Builder.aService;
@@ -371,7 +371,7 @@ public class ServiceResourceServiceTest extends WingsBaseTest {
 
     Graph commandGraph = aGraph()
                              .withGraphName("START")
-                             .addNodes(aGraphNode()
+                             .addNodes(aNode()
                                            .withId("1")
                                            .withOrigin(true)
                                            .withType("EXEC")
@@ -488,7 +488,7 @@ public class ServiceResourceServiceTest extends WingsBaseTest {
 
     Graph commandGraph = aGraph()
                              .withGraphName("START")
-                             .addNodes(aGraphNode()
+                             .addNodes(aNode()
                                            .withId("1")
                                            .withOrigin(true)
                                            .withType("EXEC")
@@ -527,7 +527,7 @@ public class ServiceResourceServiceTest extends WingsBaseTest {
   public void shouldUpdateCommandWhenCommandChanged() {
     Graph oldCommandGraph = aGraph()
                                 .withGraphName("START")
-                                .addNodes(aGraphNode()
+                                .addNodes(aNode()
                                               .withId("1")
                                               .withOrigin(true)
                                               .withType("EXEC")
@@ -584,7 +584,7 @@ public class ServiceResourceServiceTest extends WingsBaseTest {
 
     Graph commandGraph = aGraph()
                              .withGraphName("START")
-                             .addNodes(aGraphNode()
+                             .addNodes(aNode()
                                            .withId("1")
                                            .withOrigin(true)
                                            .withType("EXEC")
@@ -629,11 +629,10 @@ public class ServiceResourceServiceTest extends WingsBaseTest {
   public void shouldUpdateCommandWhenCommandGraphChanged() {
     Graph oldCommandGraph = aGraph()
                                 .withGraphName("START")
-                                .addNodes(aGraphNode()
+                                .addNodes(aNode()
                                               .withId("1")
                                               .withOrigin(true)
                                               .withType("EXEC")
-                                              .withRollback(true)
                                               .addProperty("commandPath", "/home/xxx/tomcat")
                                               .addProperty("commandString", "bin/startup.sh")
                                               .build())
@@ -670,11 +669,12 @@ public class ServiceResourceServiceTest extends WingsBaseTest {
 
     Graph commandGraph = aGraph()
                              .withGraphName("START")
-                             .addNodes(aGraphNode()
+                             .addNodes(aNode()
                                            .withId("1")
                                            .withOrigin(true)
                                            .withType("EXEC")
-                                           .withRollback(false)
+                                           .withX(1)
+                                           .withY(1)
                                            .addProperty("commandPath", "/home/xxx/tomcat")
                                            .addProperty("commandString", "bin/startup.sh")
                                            .build())
@@ -712,7 +712,7 @@ public class ServiceResourceServiceTest extends WingsBaseTest {
   public void shouldNotUpdateCommandNothingChanged() {
     Graph oldCommandGraph = aGraph()
                                 .withGraphName("START")
-                                .addNodes(aGraphNode()
+                                .addNodes(aNode()
                                               .withId("1")
                                               .withOrigin(true)
                                               .withType("EXEC")
@@ -752,7 +752,7 @@ public class ServiceResourceServiceTest extends WingsBaseTest {
 
     Graph commandGraph = aGraph()
                              .withGraphName("START")
-                             .addNodes(aGraphNode()
+                             .addNodes(aNode()
                                            .withId("1")
                                            .withOrigin(true)
                                            .withType("EXEC")
@@ -825,7 +825,7 @@ public class ServiceResourceServiceTest extends WingsBaseTest {
                                             aWorkflowPhase()
                                                 .withServiceId(SERVICE_ID)
                                                 .addPhaseStep(aPhaseStep(PhaseStepType.STOP_SERVICE, "Phase 1")
-                                                                  .addStep(aGraphNode()
+                                                                  .addStep(aNode()
                                                                                .withType("COMMAND")
                                                                                .addProperty("commandName", "START")
                                                                                .build())
@@ -861,7 +861,7 @@ public class ServiceResourceServiceTest extends WingsBaseTest {
                                             aWorkflowPhase()
                                                 .withServiceId(SERVICE_ID_CHANGED)
                                                 .addPhaseStep(aPhaseStep(PhaseStepType.STOP_SERVICE, "Phase 1")
-                                                                  .addStep(aGraphNode()
+                                                                  .addStep(aNode()
                                                                                .withType("COMMAND")
                                                                                .addProperty("commandName", "START")
                                                                                .build())

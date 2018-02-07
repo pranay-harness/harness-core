@@ -39,7 +39,6 @@ public class StateExecutionInstance extends Base {
   @Embedded private WingsDeque<ContextElement> contextElements = new WingsDeque<>();
   private Map<String, StateExecutionData> stateExecutionMap = new HashMap<>();
   private List<StateExecutionData> stateExecutionDataHistory = new ArrayList<>();
-  private List<ExecutionInterruptEffect> interruptHistory = new ArrayList<>();
 
   private List<ExecutionEventAdvisor> executionEventAdvisors;
 

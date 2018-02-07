@@ -15,17 +15,14 @@ import static software.wings.beans.ErrorCode.STATE_NOT_FOR_RESUME;
 import static software.wings.beans.ErrorCode.STATE_NOT_FOR_RETRY;
 import static software.wings.beans.SearchFilter.Operator.EQ;
 import static software.wings.beans.SearchFilter.Operator.GT;
-import static software.wings.beans.SearchFilter.Operator.IN;
 import static software.wings.beans.alert.AlertType.ManualInterventionNeeded;
 import static software.wings.dl.PageRequest.Builder.aPageRequest;
-import static software.wings.exception.WingsException.HARMLESS;
 import static software.wings.sm.ExecutionInterruptType.ABORT;
 import static software.wings.sm.ExecutionInterruptType.ABORT_ALL;
 import static software.wings.sm.ExecutionInterruptType.IGNORE;
 import static software.wings.sm.ExecutionInterruptType.PAUSE;
 import static software.wings.sm.ExecutionInterruptType.PAUSE_ALL;
 import static software.wings.sm.ExecutionInterruptType.RESUME;
-import static software.wings.sm.ExecutionInterruptType.RESUME_ALL;
 import static software.wings.sm.ExecutionInterruptType.ROLLBACK;
 import static software.wings.sm.ExecutionStatus.PAUSED;
 import static software.wings.sm.ExecutionStatus.RUNNING;
@@ -38,10 +35,10 @@ import static software.wings.utils.Switch.unhandled;
 import com.google.inject.Inject;
 import com.google.inject.Injector;
 
-import org.mongodb.morphia.query.UpdateOperations;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import software.wings.beans.ReadPref;
+import software.wings.beans.SearchFilter.Operator;
 import software.wings.beans.SortOrder.OrderType;
 import software.wings.beans.WorkflowExecution;
 import software.wings.beans.alert.ManualInterventionNeededAlert;
@@ -119,30 +116,34 @@ public class ExecutionInterruptManager {
       }
     }
 
-    PageResponse<ExecutionInterrupt> res = listActiveExecutionInterrupts(executionInterrupt);
+    PageResponse<ExecutionInterrupt> res = listExecutionInterrupts(executionInterrupt);
+
+    //    if (isPresent(res, ABORT_ALL)) {
+    //      throw new WingsException(ABORT_ALL_ALREADY);
+    //    }
 
     if (executionInterruptType == ROLLBACK) {
       if (isPresent(res, ROLLBACK)) {
-        throw new WingsException(ROLLBACK_ALREADY, HARMLESS);
+        throw new WingsException(ROLLBACK_ALREADY);
       }
     }
 
     if (executionInterruptType == PAUSE_ALL) {
       if (isPresent(res, PAUSE_ALL)) {
-        throw new WingsException(PAUSE_ALL_ALREADY, HARMLESS);
+        throw new WingsException(PAUSE_ALL_ALREADY);
       }
       ExecutionInterrupt resumeAll = getExecutionInterrupt(res, ExecutionInterruptType.RESUME_ALL);
       if (resumeAll != null) {
-        seize(resumeAll);
+        makeInactive(resumeAll);
       }
     }
 
     if (executionInterruptType == ExecutionInterruptType.RESUME_ALL) {
       ExecutionInterrupt pauseAll = getExecutionInterrupt(res, PAUSE_ALL);
       if (pauseAll == null || isPresent(res, ExecutionInterruptType.RESUME_ALL)) {
-        throw new WingsException(RESUME_ALL_ALREADY, HARMLESS);
+        throw new WingsException(RESUME_ALL_ALREADY);
       }
-      seize(pauseAll);
+      makeInactive(pauseAll);
       waitNotifyEngine.notify(
           pauseAll.getUuid(), anExecutionStatusData().withExecutionStatus(ExecutionStatus.SUCCESS).build());
     }
@@ -263,10 +264,8 @@ public class ExecutionInterruptManager {
     }
   }
 
-  private void seize(ExecutionInterrupt executionInterrupt) {
-    UpdateOperations<ExecutionInterrupt> updateOps =
-        wingsPersistence.createUpdateOperations(ExecutionInterrupt.class).set("seized", true);
-    wingsPersistence.update(executionInterrupt, updateOps);
+  private void makeInactive(ExecutionInterrupt executionInterrupt) {
+    wingsPersistence.delete(executionInterrupt);
   }
 
   private boolean isPresent(PageResponse<ExecutionInterrupt> res, ExecutionInterruptType eventType) {
@@ -286,12 +285,11 @@ public class ExecutionInterruptManager {
     return null;
   }
 
-  private PageResponse<ExecutionInterrupt> listActiveExecutionInterrupts(ExecutionInterrupt executionInterrupt) {
+  private PageResponse<ExecutionInterrupt> listExecutionInterrupts(ExecutionInterrupt executionInterrupt) {
     PageRequest<ExecutionInterrupt> req = aPageRequest()
                                               .withReadPref(ReadPref.CRITICAL)
                                               .addFilter("appId", EQ, executionInterrupt.getAppId())
                                               .addFilter("executionUuid", EQ, executionInterrupt.getExecutionUuid())
-                                              .addFilter("seized", EQ, false)
                                               .addOrder("createdAt", OrderType.DESC)
                                               .build();
     return wingsPersistence.query(ExecutionInterrupt.class, req);
@@ -310,8 +308,7 @@ public class ExecutionInterruptManager {
             .withReadPref(ReadPref.CRITICAL)
             .addFilter("appId", EQ, appId)
             .addFilter("executionUuid", EQ, executionUuid)
-            .addFilter("executionInterruptType", IN, ABORT_ALL, PAUSE_ALL, RESUME_ALL, ROLLBACK)
-            .addFilter("seized", EQ, false)
+            .addFilter("executionInterruptType", Operator.IN, ABORT_ALL, PAUSE_ALL, ROLLBACK)
             .addOrder("createdAt", OrderType.DESC)
             .build();
     PageResponse<ExecutionInterrupt> res = wingsPersistence.query(ExecutionInterrupt.class, req);

@@ -24,8 +24,8 @@ import software.wings.beans.EmbeddedUser;
 import software.wings.beans.ErrorCode;
 import software.wings.beans.ExecutionStrategy;
 import software.wings.beans.Graph;
-import software.wings.beans.GraphLink;
-import software.wings.beans.GraphNode;
+import software.wings.beans.Graph.Link;
+import software.wings.beans.Graph.Node;
 import software.wings.beans.OrchestrationWorkflow;
 import software.wings.beans.Pipeline;
 import software.wings.beans.PipelineStage;
@@ -273,7 +273,7 @@ public class StateMachine extends Base {
   private void transform(
       Graph graph, Map<String, StateTypeDescriptor> stencilMap, OrchestrationWorkflow orchestrationWorkflow) {
     String originStateName = null;
-    for (GraphNode node : graph.getNodes()) {
+    for (Node node : graph.getNodes()) {
       logger.info("node : {}", node);
 
       if (node.getType() == null || stencilMap.get(node.getType()) == null) {
@@ -302,7 +302,7 @@ public class StateMachine extends Base {
         properties = new HashMap<>();
       }
       properties.put("id", node.getId());
-      state.setRollback(node.isRollback());
+      state.setRollback(node.getRollback());
 
       state.setTemplateExpressions(node.getTemplateExpressions());
 
@@ -332,13 +332,13 @@ public class StateMachine extends Base {
     }
 
     try {
-      Map<String, GraphNode> nodeIdMap = graph.getNodesMap();
+      Map<String, Node> nodeIdMap = graph.getNodesMap();
       Map<String, State> statesMap = getStatesMap();
 
       if (graph.getLinks() != null) {
-        for (GraphLink link : graph.getLinks()) {
-          GraphNode nodeFrom = nodeIdMap.get(link.getFrom());
-          GraphNode nodeTo = nodeIdMap.get(link.getTo());
+        for (Link link : graph.getLinks()) {
+          Node nodeFrom = nodeIdMap.get(link.getFrom());
+          Node nodeTo = nodeIdMap.get(link.getTo());
 
           State stateFrom = null;
           try {

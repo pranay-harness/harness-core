@@ -1,7 +1,6 @@
 package software.wings.service.impl.yaml.handler.workflow;
 
 import static io.harness.data.structure.EmptyPredicate.isEmpty;
-import static software.wings.beans.GraphNode.GraphNodeBuilder.aGraphNode;
 
 import com.google.common.collect.Lists;
 import com.google.common.collect.Maps;
@@ -9,7 +8,7 @@ import com.google.inject.Inject;
 import com.google.inject.Singleton;
 
 import software.wings.beans.ErrorCode;
-import software.wings.beans.GraphNode;
+import software.wings.beans.Graph.Node;
 import software.wings.beans.InfrastructureMapping;
 import software.wings.beans.Service;
 import software.wings.beans.SettingAttribute;
@@ -40,7 +39,7 @@ import java.util.stream.Collectors;
  * @author rktummala on 10/28/17
  */
 @Singleton
-public class StepYamlHandler extends BaseYamlHandler<StepYaml, GraphNode> {
+public class StepYamlHandler extends BaseYamlHandler<StepYaml, Node> {
   @Inject YamlHandlerFactory yamlHandlerFactory;
   @Inject YamlHelper yamlHelper;
   @Inject ServiceResourceService serviceResourceService;
@@ -48,7 +47,7 @@ public class StepYamlHandler extends BaseYamlHandler<StepYaml, GraphNode> {
   @Inject InfrastructureMappingService infraMappingService;
   @Inject ArtifactStreamService artifactStreamService;
 
-  private GraphNode toBean(ChangeContext<StepYaml> changeContext, List<ChangeContext> changeContextList)
+  private Node toBean(ChangeContext<StepYaml> changeContext, List<ChangeContext> changeContextList)
       throws HarnessException {
     StepYaml yaml = changeContext.getYaml();
     String accountId = changeContext.getChange().getAccountId();
@@ -85,7 +84,7 @@ public class StepYamlHandler extends BaseYamlHandler<StepYaml, GraphNode> {
 
     generateKnownProperties(outputProperties, changeContext);
     Boolean isRollback = (Boolean) changeContext.getProperties().get(YamlConstants.IS_ROLLBACK);
-    return aGraphNode()
+    return Node.Builder.aNode()
         .withName(yaml.getName())
         .withType(yaml.getType())
         .withTemplateExpressions(templateExpressions)
@@ -104,7 +103,7 @@ public class StepYamlHandler extends BaseYamlHandler<StepYaml, GraphNode> {
   }
 
   @Override
-  public StepYaml toYaml(GraphNode bean, String appId) {
+  public StepYaml toYaml(Node bean, String appId) {
     Map<String, Object> properties = bean.getProperties();
     final Map<String, Object> outputProperties = Maps.newHashMap();
     if (properties != null) {
@@ -248,7 +247,7 @@ public class StepYamlHandler extends BaseYamlHandler<StepYaml, GraphNode> {
   }
 
   @Override
-  public GraphNode upsertFromYaml(ChangeContext<StepYaml> changeContext, List<ChangeContext> changeSetContext)
+  public Node upsertFromYaml(ChangeContext<StepYaml> changeContext, List<ChangeContext> changeSetContext)
       throws HarnessException {
     return toBean(changeContext, changeSetContext);
   }
@@ -264,7 +263,7 @@ public class StepYamlHandler extends BaseYamlHandler<StepYaml, GraphNode> {
   }
 
   @Override
-  public GraphNode get(String accountId, String yamlFilePath) {
+  public Node get(String accountId, String yamlFilePath) {
     throw new WingsException(ErrorCode.UNSUPPORTED_OPERATION_EXCEPTION);
   }
 
