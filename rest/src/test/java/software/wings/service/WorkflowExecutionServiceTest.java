@@ -14,6 +14,7 @@ import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 import static software.wings.beans.CanaryOrchestrationWorkflow.CanaryOrchestrationWorkflowBuilder.aCanaryOrchestrationWorkflow;
 import static software.wings.beans.CountsByStatuses.Builder.aCountsByStatuses;
+import static software.wings.beans.GraphNode.GraphNodeBuilder.aGraphNode;
 import static software.wings.beans.Workflow.WorkflowBuilder.aWorkflow;
 import static software.wings.beans.WorkflowExecution.WorkflowExecutionBuilder.aWorkflowExecution;
 import static software.wings.beans.command.ServiceCommand.Builder.aServiceCommand;
@@ -52,7 +53,7 @@ import software.wings.beans.CountsByStatuses;
 import software.wings.beans.EntityType;
 import software.wings.beans.ErrorCode;
 import software.wings.beans.ExecutionArgs;
-import software.wings.beans.Graph.Node;
+import software.wings.beans.GraphNode;
 import software.wings.beans.RequiredExecutionArgs;
 import software.wings.beans.ServiceInstance;
 import software.wings.beans.Workflow;
@@ -422,7 +423,7 @@ public class WorkflowExecutionServiceTest extends WingsBaseTest {
     when(stateMachineExecutionSimulator.getStatusBreakdown(
              eq(APP_ID), eq(ENV_ID), any(StateMachine.class), any(PageResponse.class)))
         .thenReturn(countsByStatuses);
-    Node node = Node.Builder.aNode().build();
+    GraphNode node = aGraphNode().build();
     when(graphRenderer.generateHierarchyNode(stateExecutionInstanceMap, null)).thenReturn(node);
     PageResponse<WorkflowExecution> pageResponse2 =
         workflowExecutionService.listExecutions(pageRequest, true, true, false, true);

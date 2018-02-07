@@ -7,8 +7,8 @@ import static software.wings.beans.Application.Builder.anApplication;
 import static software.wings.beans.BuildWorkflow.BuildOrchestrationWorkflowBuilder.aBuildOrchestrationWorkflow;
 import static software.wings.beans.FailureStrategy.FailureStrategyBuilder.aFailureStrategy;
 import static software.wings.beans.Graph.Builder.aGraph;
-import static software.wings.beans.Graph.Link.Builder.aLink;
-import static software.wings.beans.Graph.Node.Builder.aNode;
+import static software.wings.beans.GraphLink.Builder.aLink;
+import static software.wings.beans.GraphNode.GraphNodeBuilder.aGraphNode;
 import static software.wings.beans.Pipeline.Builder.aPipeline;
 import static software.wings.beans.Workflow.WorkflowBuilder.aWorkflow;
 import static software.wings.sm.StateType.ENV_STATE;
@@ -64,11 +64,9 @@ public class PipelineServiceDBTest extends WingsBaseTest {
 
   private Workflow createWorkflow(Application application) {
     Graph graph = aGraph()
-                      .addNodes(aNode()
+                      .addNodes(aGraphNode()
                                     .withId("n1")
                                     .withName("stop")
-                                    .withX(200)
-                                    .withY(50)
                                     .withType(StateType.ENV_STATE.name())
                                     .withOrigin(true)
                                     .build())
