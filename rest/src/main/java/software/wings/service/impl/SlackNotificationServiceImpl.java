@@ -43,6 +43,7 @@ public class SlackNotificationServiceImpl implements SlackNotificationService {
       attachment.setColor(getColor(parts[3]));
       attachment.setFooter_icon(
           String.format("https://api.harness.io/storage/wings-assets/slackicons/%s.png", parts[3]));
+      attachment.setMrkdwn_in(ImmutableList.of("text"));
       payload.setAttachments(ImmutableList.of(attachment));
     } else {
       payload.setText(processText(message));
