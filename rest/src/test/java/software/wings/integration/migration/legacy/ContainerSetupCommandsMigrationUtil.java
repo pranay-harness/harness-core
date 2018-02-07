@@ -3,7 +3,7 @@ package software.wings.integration.migration.legacy;
 import static io.harness.data.structure.EmptyPredicate.isEmpty;
 import static io.harness.data.structure.EmptyPredicate.isNotEmpty;
 import static software.wings.beans.Graph.Builder.aGraph;
-import static software.wings.beans.GraphNode.GraphNodeBuilder.aGraphNode;
+import static software.wings.beans.Graph.Node.Builder.aNode;
 import static software.wings.beans.SearchFilter.Builder.aSearchFilter;
 import static software.wings.beans.command.Command.Builder.aCommand;
 import static software.wings.beans.command.CommandUnitType.ECS_SETUP;
@@ -79,8 +79,10 @@ public class ContainerSetupCommandsMigrationUtil extends WingsBaseTest {
                                   .withCommandType(CommandType.SETUP)
                                   .withGraph(aGraph()
                                                  .withGraphName("Setup Service Cluster")
-                                                 .addNodes(aGraphNode()
+                                                 .addNodes(aNode()
                                                                .withOrigin(true)
+                                                               .withX(50)
+                                                               .withY(50)
                                                                .withId(UUIDGenerator.graphIdGenerator("node"))
                                                                .withName("Setup ECS Service")
                                                                .withType(ECS_SETUP.name())
@@ -101,8 +103,10 @@ public class ContainerSetupCommandsMigrationUtil extends WingsBaseTest {
                                   .withCommandType(CommandType.SETUP)
                                   .withGraph(aGraph()
                                                  .withGraphName("Setup Replication Controller")
-                                                 .addNodes(aGraphNode()
+                                                 .addNodes(aNode()
                                                                .withOrigin(true)
+                                                               .withX(50)
+                                                               .withY(50)
                                                                .withId(UUIDGenerator.graphIdGenerator("node"))
                                                                .withName("Setup Kubernetes Replication Controller")
                                                                .withType(KUBERNETES_SETUP.name())

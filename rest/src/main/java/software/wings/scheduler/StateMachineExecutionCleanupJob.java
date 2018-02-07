@@ -1,7 +1,7 @@
 package software.wings.scheduler;
 
 import static software.wings.dl.PageRequest.Builder.aPageRequest;
-import static software.wings.sm.ExecutionInterrupt.ExecutionInterruptBuilder.anExecutionInterrupt;
+import static software.wings.sm.ExecutionInterrupt.Builder.aWorkflowExecutionInterrupt;
 import static software.wings.sm.ExecutionInterruptType.ABORT;
 import static software.wings.sm.ExecutionStatus.NEW;
 import static software.wings.sm.ExecutionStatus.PAUSED;
@@ -98,7 +98,7 @@ public class StateMachineExecutionCleanupJob implements Job {
         for (StateExecutionInstance stateExecutionInstance : pageResponse) {
           try {
             logger.info("Expired StateExecutionInstance found: {}", stateExecutionInstance.getUuid());
-            ExecutionInterrupt executionInterrupt = anExecutionInterrupt()
+            ExecutionInterrupt executionInterrupt = aWorkflowExecutionInterrupt()
                                                         .withExecutionInterruptType(ABORT)
                                                         .withAppId(stateExecutionInstance.getAppId())
                                                         .withExecutionUuid(stateExecutionInstance.getExecutionUuid())

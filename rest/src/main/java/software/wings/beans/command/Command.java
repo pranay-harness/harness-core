@@ -18,7 +18,7 @@ import org.mongodb.morphia.annotations.Indexes;
 import software.wings.beans.Base;
 import software.wings.beans.EmbeddedUser;
 import software.wings.beans.Graph;
-import software.wings.beans.GraphNode;
+import software.wings.beans.Graph.Node;
 import software.wings.beans.command.CommandExecutionResult.CommandExecutionStatus;
 import software.wings.service.impl.ServiceResourceServiceImpl;
 import software.wings.stencils.EnumData;
@@ -255,9 +255,9 @@ public class Command extends Base implements CommandUnit {
    */
   public void transformGraph() {
     setName(graph.getGraphName());
-    Iterator<GraphNode> pipelineIterator = graph.getLinearGraphIterator();
+    Iterator<Node> pipelineIterator = graph.getLinearGraphIterator();
     while (pipelineIterator.hasNext()) {
-      GraphNode node = pipelineIterator.next();
+      Node node = pipelineIterator.next();
       CommandUnitType type = CommandUnitType.valueOf(node.getType().toUpperCase());
 
       CommandUnit commandUnit = type.newInstance("");

@@ -23,6 +23,7 @@ import org.mongodb.morphia.annotations.Transient;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import software.wings.api.PhaseElement;
+import software.wings.beans.Graph.Node;
 import software.wings.common.Constants;
 import software.wings.service.impl.WorkflowNotificationHelper;
 import software.wings.service.impl.instance.InstanceHelper;
@@ -266,8 +267,7 @@ public class CanaryWorkflowExecutionAdvisor implements ExecutionEventAdvisor {
       return null;
     }
     Graph graph = orchestrationWorkflow.getGraph().getSubworkflows().get(state.getParentId());
-    Optional<GraphNode> node1 =
-        graph.getNodes().stream().filter(node -> node.getId().equals(state.getId())).findFirst();
+    Optional<Node> node1 = graph.getNodes().stream().filter(node -> node.getId().equals(state.getId())).findFirst();
     if (!node1.isPresent()) {
       return null;
     }

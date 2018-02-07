@@ -3,8 +3,8 @@ package software.wings.beans;
 import static io.harness.data.structure.EmptyPredicate.isEmpty;
 import static io.harness.data.structure.EmptyPredicate.isNotEmpty;
 import static software.wings.beans.Graph.Builder.aGraph;
-import static software.wings.beans.GraphLink.Builder.aLink;
-import static software.wings.beans.GraphNode.GraphNodeBuilder.aGraphNode;
+import static software.wings.beans.Graph.Link.Builder.aLink;
+import static software.wings.beans.Graph.Node.Builder.aNode;
 import static software.wings.beans.PhaseStep.PhaseStepBuilder.aPhaseStep;
 import static software.wings.beans.PhaseStepType.CONTAINER_SETUP;
 import static software.wings.beans.PhaseStepType.PROVISION_NODE;
@@ -18,6 +18,7 @@ import org.mongodb.morphia.annotations.Embedded;
 import org.mongodb.morphia.annotations.Transient;
 import software.wings.api.DeploymentType;
 import software.wings.beans.Graph.Builder;
+import software.wings.beans.Graph.Node;
 import software.wings.common.Constants;
 import software.wings.common.UUIDGenerator;
 import software.wings.sm.ExecutionStatus;
@@ -40,7 +41,7 @@ public class PhaseStep {
   private String name;
   private PhaseStepType phaseStepType;
   @JsonIgnore private List<String> stepsIds = new ArrayList<>();
-  @Transient private List<GraphNode> steps = new ArrayList<>();
+  @Transient private List<Node> steps = new ArrayList<>();
   private boolean stepsInParallel;
   @Embedded private List<FailureStrategy> failureStrategies = new ArrayList<>();
 
@@ -86,11 +87,11 @@ public class PhaseStep {
     this.phaseStepType = phaseStepType;
   }
 
-  public List<GraphNode> getSteps() {
+  public List<Node> getSteps() {
     return steps;
   }
 
-  public void setSteps(List<GraphNode> steps) {
+  public void setSteps(List<Node> steps) {
     this.steps = steps;
   }
 
@@ -174,11 +175,11 @@ public class PhaseStep {
     this.artifactNeeded = artifactNeeded;
   }
 
-  public GraphNode generatePhaseStepNode() {
+  public Node generatePhaseStepNode() {
     // TODO: removing failure strategy as part of Node due to mongo driver limitation - we can try with later version
     // CodecConfigurationException: Can't find a codec for class software.wings.beans.FailureStrategy
 
-    return aGraphNode()
+    return aNode()
         .withId(uuid)
         .withName(getName())
         .withType(StateType.PHASE_STEP.name())
@@ -198,21 +199,21 @@ public class PhaseStep {
     if (isEmpty(steps)) {
       return graphBuilder.build();
     }
-    for (GraphNode step : getSteps()) {
+    for (Node step : getSteps()) {
       step.getProperties().put("parentId", getUuid());
     }
 
-    GraphNode originNode = null;
+    Node originNode = null;
 
     if (stepsInParallel && steps.size() > 1) {
-      GraphNode forkNode = aGraphNode()
-                               .withId(getUuid())
-                               .withType(FORK.name())
-                               .withName(name + "-FORK")
-                               .addProperty("parentId", getUuid())
-                               .build();
+      Node forkNode = aNode()
+                          .withId(getUuid())
+                          .withType(FORK.name())
+                          .withName(name + "-FORK")
+                          .addProperty("parentId", getUuid())
+                          .build();
       graphBuilder.addNodes(forkNode);
-      for (GraphNode step : steps) {
+      for (Node step : steps) {
         step.setOrigin(false);
         graphBuilder.addNodes(step);
         graphBuilder.addLinks(aLink()
@@ -227,10 +228,10 @@ public class PhaseStep {
       }
     } else {
       int i = 0;
-      GraphNode forkNode = null;
-      GraphNode prevNode = null;
+      Node forkNode = null;
+      Node prevNode = null;
       while (i < steps.size()) {
-        GraphNode step = steps.get(i);
+        Node step = steps.get(i);
         step.setOrigin(false);
         graphBuilder.addNodes(step);
         boolean executeWithPreviousSteps =
@@ -240,7 +241,7 @@ public class PhaseStep {
               aLink().withFrom(forkNode.getId()).withTo(step.getId()).withType(TransitionType.FORK.name()).build());
         } else if (i < steps.size() - 1
             && Boolean.TRUE.equals(steps.get(i + 1).getProperties().get(Constants.EXECUTE_WITH_PREVIOUS_STEPS))) {
-          forkNode = aGraphNode().withId(getUuid()).withType(FORK.name()).withName("Fork-" + step.getName()).build();
+          forkNode = aNode().withId(getUuid()).withType(FORK.name()).withName("Fork-" + step.getName()).build();
           graphBuilder.addNodes(forkNode);
           graphBuilder.addLinks(
               aLink().withFrom(forkNode.getId()).withTo(step.getId()).withType(TransitionType.FORK.name()).build());
@@ -279,7 +280,7 @@ public class PhaseStep {
     validationMessage = null;
     if (steps != null) {
       List<String> invalidChildren =
-          steps.stream().filter(step -> !step.validate()).map(GraphNode::getName).collect(Collectors.toList());
+          steps.stream().filter(step -> !step.validate()).map(Node::getName).collect(Collectors.toList());
       if (isNotEmpty(invalidChildren)) {
         valid = false;
         validationMessage = String.format(Constants.PHASE_STEP_VALIDATION_MESSAGE, invalidChildren.toString());
@@ -303,11 +304,11 @@ public class PhaseStep {
                                     .withArtifactNeeded(isArtifactNeeded())
                                     .withWaitInterval(getWaitInterval())
                                     .build();
-    List<GraphNode> steps = getSteps();
+    List<Node> steps = getSteps();
     List<String> clonedStepIds = new ArrayList<>();
-    List<GraphNode> clonedSteps = new ArrayList<>();
+    List<Node> clonedSteps = new ArrayList<>();
     if (steps != null) {
-      for (GraphNode step : steps) {
+      for (Node step : steps) {
         /* if (clonedPhaseStep.getPhaseStepType() != null && clonedPhaseStep.getPhaseStepType().equals(CONTAINER_SETUP))
          { if (step.getType().equals(ECS_SERVICE_SETUP.name()) ||
          step.getType().equals(KUBERNETES_SETUP.name())) {
@@ -315,7 +316,7 @@ public class PhaseStep {
              continue;
            }
          }*/
-        GraphNode clonedStep = step.clone();
+        Node clonedStep = step.clone();
         if (PROVISION_NODE.equals(clonedPhaseStep.getPhaseStepType())) {
           if (clonedStep.getType().equals(StateType.DC_NODE_SELECT.name())
               || clonedStep.getType().equals(StateType.AWS_NODE_SELECT.name())) {
@@ -394,7 +395,7 @@ public class PhaseStep {
     private String name;
     private PhaseStepType phaseStepType;
     private List<String> stepsIds = new ArrayList<>();
-    private List<GraphNode> steps = new ArrayList<>();
+    private List<Node> steps = new ArrayList<>();
     private boolean stepsInParallel;
     private List<FailureStrategy> failureStrategies = new ArrayList<>();
     private boolean rollback;
@@ -428,12 +429,12 @@ public class PhaseStep {
       return this;
     }
 
-    public PhaseStepBuilder addStep(GraphNode step) {
+    public PhaseStepBuilder addStep(Node step) {
       this.steps.add(step);
       return this;
     }
 
-    public PhaseStepBuilder addAllSteps(List<GraphNode> steps) {
+    public PhaseStepBuilder addAllSteps(List<Node> steps) {
       this.steps.addAll(steps);
       return this;
     }

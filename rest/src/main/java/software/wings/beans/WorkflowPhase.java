@@ -2,8 +2,8 @@ package software.wings.beans;
 
 import static io.harness.data.structure.EmptyPredicate.isNotEmpty;
 import static software.wings.beans.Graph.Builder.aGraph;
-import static software.wings.beans.GraphLink.Builder.aLink;
-import static software.wings.beans.GraphNode.GraphNodeBuilder.aGraphNode;
+import static software.wings.beans.Graph.Link.Builder.aLink;
+import static software.wings.beans.Graph.Node.Builder.aNode;
 import static software.wings.beans.WorkflowPhase.WorkflowPhaseBuilder.aWorkflowPhase;
 import static software.wings.sm.StateType.PHASE;
 
@@ -14,6 +14,7 @@ import lombok.NoArgsConstructor;
 import org.mongodb.morphia.annotations.Embedded;
 import software.wings.api.DeploymentType;
 import software.wings.beans.Graph.Builder;
+import software.wings.beans.Graph.Node;
 import software.wings.common.Constants;
 import software.wings.common.UUIDGenerator;
 import software.wings.sm.TransitionType;
@@ -176,8 +177,8 @@ public class WorkflowPhase implements UuidAware {
     this.templateExpressions = templateExpressions;
   }
 
-  public GraphNode generatePhaseNode() {
-    return aGraphNode()
+  public Node generatePhaseNode() {
+    return aNode()
         .withId(uuid)
         .withName(name)
         .withType(PHASE.name())
@@ -218,7 +219,7 @@ public class WorkflowPhase implements UuidAware {
 
     String id1 = null;
     String id2;
-    GraphNode node;
+    Node node;
     for (PhaseStep phaseStep : phaseSteps) {
       id2 = phaseStep.getUuid();
       node = phaseStep.generatePhaseStepNode();

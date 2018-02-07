@@ -1,7 +1,7 @@
 package migrations.all;
 
 import static io.harness.data.structure.EmptyPredicate.isEmpty;
-import static software.wings.beans.GraphNode.GraphNodeBuilder.aGraphNode;
+import static software.wings.beans.Graph.Node.Builder.aNode;
 import static software.wings.beans.PhaseStep.PhaseStepBuilder.aPhaseStep;
 import static software.wings.beans.PhaseStepType.CONTAINER_SETUP;
 import static software.wings.beans.SearchFilter.Operator.EQ;
@@ -17,7 +17,7 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import software.wings.beans.Application;
 import software.wings.beans.CanaryOrchestrationWorkflow;
-import software.wings.beans.GraphNode;
+import software.wings.beans.Graph;
 import software.wings.beans.PhaseStep;
 import software.wings.beans.Workflow;
 import software.wings.beans.WorkflowPhase;
@@ -65,7 +65,7 @@ public class AddK8sSetupRollbackToAllK8sWorkflows implements Migration {
             if (!workflowPhase.isRollback() && workflowPhase.getPhaseSteps().size() == 4) {
               for (PhaseStep phaseStep : workflowPhase.getPhaseSteps()) {
                 if (CONTAINER_SETUP == phaseStep.getPhaseStepType()) {
-                  for (GraphNode node : phaseStep.getSteps()) {
+                  for (Graph.Node node : phaseStep.getSteps()) {
                     if (StateType.KUBERNETES_SETUP.name().equals(node.getType())) {
                       candidateFound = true;
                       WorkflowPhase rollbackPhase =
@@ -74,7 +74,7 @@ public class AddK8sSetupRollbackToAllK8sWorkflows implements Migration {
                         workflowModified = true;
                         rollbackPhase.getPhaseSteps().add(1,
                             aPhaseStep(CONTAINER_SETUP, Constants.SETUP_CONTAINER)
-                                .addStep(aGraphNode()
+                                .addStep(aNode()
                                              .withId(getUuid())
                                              .withType(KUBERNETES_SETUP_ROLLBACK.name())
                                              .withName(Constants.ROLLBACK_CONTAINERS)

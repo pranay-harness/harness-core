@@ -3,7 +3,7 @@ package software.wings.utils;
 import static com.google.common.collect.ImmutableMap.of;
 import static java.util.Collections.singletonList;
 import static software.wings.beans.Graph.Builder.aGraph;
-import static software.wings.beans.GraphNode.GraphNodeBuilder.aGraphNode;
+import static software.wings.beans.Graph.Node.Builder.aNode;
 import static software.wings.beans.command.Command.Builder.aCommand;
 import static software.wings.beans.command.CommandUnitType.COMMAND;
 import static software.wings.beans.command.CommandUnitType.COPY_CONFIGS;
@@ -47,8 +47,10 @@ public enum ContainerFamily {
       Graph graph =
           aGraph()
               .withGraphName("Start")
-              .addNodes(aGraphNode()
+              .addNodes(aNode()
                             .withOrigin(true)
+                            .withX(50)
+                            .withY(50)
                             .withId(graphIdGenerator("node"))
                             .withType(EXEC.name())
                             .withName("Start Service")
@@ -60,7 +62,9 @@ public enum ContainerFamily {
                                     "Server startup in")))
                             .addProperty("commandType", CommandType.START)
                             .build(),
-                  aGraphNode()
+                  aNode()
+                      .withX(200)
+                      .withY(50)
                       .withId(graphIdGenerator("node"))
                       .withName("Process Running")
                       .withType(PROCESS_CHECK_RUNNING.name())
@@ -83,7 +87,9 @@ public enum ContainerFamily {
                               + "done\n"
                               + "exit 1")
                       .build(),
-                  aGraphNode()
+                  aNode()
+                      .withX(350)
+                      .withY(50)
                       .withId(graphIdGenerator("node"))
                       .withType(PORT_CHECK_LISTENING.name())
                       .withName("Port Listening")
@@ -109,8 +115,10 @@ public enum ContainerFamily {
       Graph graph =
           aGraph()
               .withGraphName("Stop")
-              .addNodes(aGraphNode()
+              .addNodes(aNode()
                             .withOrigin(true)
+                            .withX(50)
+                            .withY(50)
                             .withId(graphIdGenerator("node"))
                             .withType(EXEC.name())
                             .withName("Stop Service")
@@ -118,7 +126,9 @@ public enum ContainerFamily {
                             .addProperty("commandString", "[ -f ./shutdown.sh ] && ./shutdown.sh  || true")
                             .addProperty("commandType", CommandType.STOP)
                             .build(),
-                  aGraphNode()
+                  aNode()
+                      .withX(200)
+                      .withY(50)
                       .withId(graphIdGenerator("node"))
                       .withName("Process Stopped")
                       .withType(PROCESS_CHECK_STOPPED.name())
@@ -138,7 +148,9 @@ public enum ContainerFamily {
                               + "done\n"
                               + "exit 1")
                       .build(),
-                  aGraphNode()
+                  aNode()
+                      .withX(350)
+                      .withY(50)
                       .withId(graphIdGenerator("node"))
                       .withType(PORT_CHECK_CLEARED.name())
                       .withName("Port Cleared")
@@ -166,27 +178,35 @@ public enum ContainerFamily {
     protected Command getInstallCommand(ArtifactType artifactType, AppContainer appContainer) {
       Graph graph = aGraph()
                         .withGraphName("Install")
-                        .addNodes(aGraphNode()
+                        .addNodes(aNode()
                                       .withOrigin(true)
+                                      .withX(50)
+                                      .withY(50)
                                       .withId(graphIdGenerator("node"))
                                       .withName("Setup Runtime Paths")
                                       .withType(SETUP_ENV.name())
                                       .addProperty("commandString", SetupEnvCommandUnit.setupEnvCommandString)
                                       .build(),
-                            aGraphNode()
+                            aNode()
+                                .withX(200)
+                                .withY(50)
                                 .withId(graphIdGenerator("node"))
                                 .withName("Stop")
                                 .withType(COMMAND.name())
                                 .addProperty("referenceId", "Stop")
                                 .build(),
-                            aGraphNode()
+                            aNode()
+                                .withX(350)
+                                .withY(50)
                                 .withId(graphIdGenerator("node"))
                                 .withName("Copy App Stack")
                                 .withType(SCP.name())
                                 .addProperty("destinationDirectoryPath", "$WINGS_RUNTIME_PATH")
                                 .addProperty("fileCategory", ScpFileCategory.APPLICATION_STACK)
                                 .build(),
-                            aGraphNode()
+                            aNode()
+                                .withX(500)
+                                .withY(50)
                                 .withId(graphIdGenerator("node"))
                                 .withName("Expand App Stack")
                                 .withType(EXEC.name())
@@ -200,20 +220,26 @@ public enum ContainerFamily {
                                               appContainer.getStackRootDirectory(), "tomcat")
                                         + "\nchmod +x tomcat/bin/*")
                                 .build(),
-                            aGraphNode()
+                            aNode()
+                                .withX(650)
+                                .withY(50)
                                 .withId(graphIdGenerator("node"))
                                 .withName("Copy Artifact")
                                 .withType(SCP.name())
                                 .addProperty("fileCategory", ScpFileCategory.ARTIFACTS)
                                 .addProperty("destinationDirectoryPath", "$WINGS_RUNTIME_PATH/tomcat/webapps")
                                 .build(),
-                            aGraphNode()
+                            aNode()
+                                .withX(800)
+                                .withY(50)
                                 .withId(graphIdGenerator("node"))
                                 .withName("Copy Configs")
                                 .withType(COPY_CONFIGS.name())
                                 .addProperty("destinationParentPath", "$WINGS_RUNTIME_PATH")
                                 .build(),
-                            aGraphNode()
+                            aNode()
+                                .withX(950)
+                                .withY(50)
                                 .withId(graphIdGenerator("node"))
                                 .withName("Start")
                                 .withType(COMMAND.name())
@@ -241,8 +267,10 @@ public enum ContainerFamily {
           aGraph()
               .withGraphName("Start")
               .addNodes(
-                  aGraphNode()
+                  aNode()
                       .withOrigin(true)
+                      .withX(50)
+                      .withY(50)
                       .withId(graphIdGenerator("node"))
                       .withType(EXEC.name())
                       .withName("Start Service")
@@ -251,7 +279,9 @@ public enum ContainerFamily {
                       .addProperty("tailFiles", true)
                       .addProperty("tailPatterns", singletonList(of("filePath", "nohup.out", "pattern", "started in")))
                       .build(),
-                  aGraphNode()
+                  aNode()
+                      .withX(200)
+                      .withY(50)
                       .withId(graphIdGenerator("node"))
                       .withName("Process Running")
                       .withType(PROCESS_CHECK_RUNNING.name())
@@ -274,7 +304,9 @@ public enum ContainerFamily {
                               + "done\n"
                               + "exit 1")
                       .build(),
-                  aGraphNode()
+                  aNode()
+                      .withX(350)
+                      .withY(50)
                       .withId(graphIdGenerator("node"))
                       .withType(PORT_CHECK_LISTENING.name())
                       .withName("Port Listening")
@@ -300,8 +332,10 @@ public enum ContainerFamily {
       Graph graph =
           aGraph()
               .withGraphName("Stop")
-              .addNodes(aGraphNode()
+              .addNodes(aNode()
                             .withOrigin(true)
+                            .withX(50)
+                            .withY(50)
                             .withId(graphIdGenerator("node"))
                             .withType(EXEC.name())
                             .withName("Stop Service")
@@ -309,7 +343,9 @@ public enum ContainerFamily {
                             .addProperty("commandString",
                                 "pgrep -f \"\\-Djboss.home.dir=$WINGS_RUNTIME_PATH/jboss\" | xargs kill")
                             .build(),
-                  aGraphNode()
+                  aNode()
+                      .withX(200)
+                      .withY(50)
                       .withId(graphIdGenerator("node"))
                       .withName("Process Stopped")
                       .withType(PROCESS_CHECK_STOPPED.name())
@@ -329,7 +365,9 @@ public enum ContainerFamily {
                               + "done\n"
                               + "exit 1")
                       .build(),
-                  aGraphNode()
+                  aNode()
+                      .withX(350)
+                      .withY(50)
                       .withId(graphIdGenerator("node"))
                       .withType(PORT_CHECK_CLEARED.name())
                       .withName("Port Cleared")
@@ -357,27 +395,35 @@ public enum ContainerFamily {
     protected Command getInstallCommand(ArtifactType artifactType, AppContainer appContainer) {
       Graph graph = aGraph()
                         .withGraphName("Install")
-                        .addNodes(aGraphNode()
+                        .addNodes(aNode()
                                       .withOrigin(true)
+                                      .withX(50)
+                                      .withY(50)
                                       .withId(graphIdGenerator("node"))
                                       .withName("Setup Runtime Paths")
                                       .withType(SETUP_ENV.name())
                                       .addProperty("commandString", SetupEnvCommandUnit.setupEnvCommandString)
                                       .build(),
-                            aGraphNode()
+                            aNode()
+                                .withX(200)
+                                .withY(50)
                                 .withId(graphIdGenerator("node"))
                                 .withName("Stop")
                                 .withType(COMMAND.name())
                                 .addProperty("referenceId", "Stop")
                                 .build(),
-                            aGraphNode()
+                            aNode()
+                                .withX(350)
+                                .withY(50)
                                 .withId(graphIdGenerator("node"))
                                 .withName("Copy App Stack")
                                 .withType(SCP.name())
                                 .addProperty("destinationDirectoryPath", "$WINGS_RUNTIME_PATH")
                                 .addProperty("fileCategory", ScpFileCategory.APPLICATION_STACK)
                                 .build(),
-                            aGraphNode()
+                            aNode()
+                                .withX(500)
+                                .withY(50)
                                 .withId(graphIdGenerator("node"))
                                 .withName("Expand App Stack")
                                 .withType(EXEC.name())
@@ -391,14 +437,18 @@ public enum ContainerFamily {
                                               appContainer.getFileName(), appContainer.getStackRootDirectory(), "jboss")
                                         + "\nchmod +x jboss/bin/*")
                                 .build(),
-                            aGraphNode()
+                            aNode()
+                                .withX(650)
+                                .withY(50)
                                 .withId(graphIdGenerator("node"))
                                 .withName("Copy Artifact")
                                 .withType(SCP.name())
                                 .addProperty("fileCategory", ScpFileCategory.ARTIFACTS)
                                 .addProperty("destinationDirectoryPath", "$WINGS_RUNTIME_PATH")
                                 .build(),
-                            aGraphNode()
+                            aNode()
+                                .withX(800)
+                                .withY(50)
                                 .withId(graphIdGenerator("node"))
                                 .withName("Expand Artifact")
                                 .withType(EXEC.name())
@@ -409,13 +459,17 @@ public enum ContainerFamily {
                                         + "cd $ARTIFACT_FILE_NAME\n"
                                         + "jar xvf \"$WINGS_RUNTIME_PATH/$ARTIFACT_FILE_NAME\"")
                                 .build(),
-                            aGraphNode()
+                            aNode()
+                                .withX(950)
+                                .withY(50)
                                 .withId(graphIdGenerator("node"))
                                 .withName("Copy Configs")
                                 .withType(COPY_CONFIGS.name())
                                 .addProperty("destinationParentPath", "$WINGS_RUNTIME_PATH")
                                 .build(),
-                            aGraphNode()
+                            aNode()
+                                .withX(1100)
+                                .withY(50)
                                 .withId(graphIdGenerator("node"))
                                 .withName("Start")
                                 .withType(COMMAND.name())

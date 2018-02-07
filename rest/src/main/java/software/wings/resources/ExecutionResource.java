@@ -14,12 +14,11 @@ import io.swagger.annotations.Api;
 import software.wings.beans.Application;
 import software.wings.beans.ApprovalDetails;
 import software.wings.beans.ExecutionArgs;
-import software.wings.beans.GraphNode;
+import software.wings.beans.Graph.Node;
 import software.wings.beans.RequiredExecutionArgs;
 import software.wings.beans.RestResponse;
 import software.wings.beans.SearchFilter;
 import software.wings.beans.SearchFilter.Operator;
-import software.wings.beans.StateExecutionInterrupt;
 import software.wings.beans.WorkflowExecution;
 import software.wings.beans.WorkflowType;
 import software.wings.common.Constants;
@@ -30,7 +29,6 @@ import software.wings.security.annotations.AuthRule;
 import software.wings.service.intfc.AppService;
 import software.wings.service.intfc.WorkflowExecutionService;
 import software.wings.sm.ExecutionInterrupt;
-import software.wings.sm.StateExecutionData;
 
 import java.util.List;
 import java.util.stream.Collectors;
@@ -254,47 +252,10 @@ public class ExecutionResource {
   @Path("{workflowExecutionId}/node/{stateExecutionInstanceId}")
   @Timed
   @ExceptionMetered
-  public RestResponse<GraphNode> getExecutionNodeDetails(@QueryParam("appId") String appId,
+  public RestResponse<Node> getExecutionNodeDetails(@QueryParam("appId") String appId,
       @QueryParam("envId") String envId, @PathParam("workflowExecutionId") String workflowExecutionId,
       @PathParam("stateExecutionInstanceId") String stateExecutionInstanceId) {
     return new RestResponse<>(
         workflowExecutionService.getExecutionDetailsForNode(appId, workflowExecutionId, stateExecutionInstanceId));
-  }
-
-  /**
-   * Gets execution history list.
-   *
-   * @param appId                    the app id
-   * @param workflowExecutionId      the workflow execution id
-   * @param stateExecutionInstanceId the state execution instance id
-   * @return the execution history list
-   */
-  @GET
-  @Path("{workflowExecutionId}/history/{stateExecutionInstanceId}")
-  @Timed
-  @ExceptionMetered
-  public RestResponse<List<StateExecutionData>> getExecutionHistory(@QueryParam("appId") String appId,
-      @PathParam("workflowExecutionId") String workflowExecutionId,
-      @PathParam("stateExecutionInstanceId") String stateExecutionInstanceId) {
-    return new RestResponse<>(
-        workflowExecutionService.getExecutionHistory(appId, workflowExecutionId, stateExecutionInstanceId));
-  }
-
-  /**
-   * Gets execution history list.
-   *
-   * @param appId                    the app id
-   * @param workflowExecutionId      the workflow execution id
-   * @param stateExecutionInstanceId the state execution instance id
-   * @return the execution history list
-   */
-  @GET
-  @Path("{workflowExecutionId}/interruption/{stateExecutionInstanceId}")
-  @Timed
-  @ExceptionMetered
-  public RestResponse<List<StateExecutionInterrupt>> getExecutionInterrupt(@QueryParam("appId") String appId,
-      @PathParam("workflowExecutionId") String workflowExecutionId,
-      @PathParam("stateExecutionInstanceId") String stateExecutionInstanceId) {
-    return new RestResponse<>(workflowExecutionService.getExecutionInterrupts(appId, stateExecutionInstanceId));
   }
 }

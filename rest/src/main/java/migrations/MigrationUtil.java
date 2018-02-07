@@ -9,7 +9,7 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import software.wings.beans.Application;
 import software.wings.beans.CanaryOrchestrationWorkflow;
-import software.wings.beans.GraphNode;
+import software.wings.beans.Graph;
 import software.wings.beans.PhaseStep;
 import software.wings.beans.Workflow;
 import software.wings.beans.WorkflowPhase;
@@ -67,7 +67,7 @@ public class MigrationUtil {
             }
             for (WorkflowPhase phase : both) {
               for (PhaseStep phaseStep : phase.getPhaseSteps()) {
-                for (GraphNode node : phaseStep.getSteps()) {
+                for (Graph.Node node : phaseStep.getSteps()) {
                   if (oldStateType.name().equals(node.getType())) {
                     workflowModified = true;
                     node.setType(newStateType.name());

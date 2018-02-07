@@ -15,7 +15,7 @@ import org.junit.Test;
 import software.wings.WingsBaseTest;
 import software.wings.beans.Application;
 import software.wings.beans.CanaryOrchestrationWorkflow;
-import software.wings.beans.GraphNode;
+import software.wings.beans.Graph;
 import software.wings.beans.InstanceUnitType;
 import software.wings.beans.PhaseStep;
 import software.wings.beans.SearchFilter;
@@ -84,7 +84,7 @@ public class WorkflowSelectNodeCountsMigrationUtil extends WingsBaseTest {
                         + " App:" + app.getUuid() + " Workflow:" + workflow.getUuid());
                   }
                   candidateFound = true;
-                  for (GraphNode node : phaseStep.getSteps()) {
+                  for (Graph.Node node : phaseStep.getSteps()) {
                     if (StateType.AWS_NODE_SELECT.name().equals(node.getType())
                         || StateType.DC_NODE_SELECT.name().equals(node.getType())) {
                       Map<String, Object> properties = node.getProperties();

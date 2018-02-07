@@ -94,9 +94,9 @@ software.wings.beans.command.SshCommandExecutionContext, 5057
 software.wings.beans.command.SshCommandUnit, 5058
 software.wings.beans.command.TailFilePatternEntry, 5059
 software.wings.beans.Graph, 5060
-software.wings.beans.GraphNode, 5061
-software.wings.beans.GraphLink, 5062
-software.wings.beans.GraphGroup, 5063
+software.wings.beans.Graph$Node, 5061
+software.wings.beans.Graph$Link, 5062
+software.wings.beans.Graph$Group, 5063
 software.wings.beans.AppContainer, 5064
 software.wings.beans.ChecksumType, 5065
 software.wings.beans.artifact.ArtifactFile, 5066
@@ -266,4 +266,3 @@ software.wings.service.impl.analysis.LogAnalysisExecutionData, 5232
 software.wings.beans.ErrorCode, 5233
 software.wings.beans.command.JenkinsTaskParams, 5234
 software.wings.api.ScriptStateExecutionData, 5235
-software.wings.sm.ExecutionInterruptEffect, 5236
