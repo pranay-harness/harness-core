@@ -22,8 +22,8 @@ import static software.wings.beans.EntityType.INFRASTRUCTURE_MAPPING;
 import static software.wings.beans.EntityType.SERVICE;
 import static software.wings.beans.FailureStrategy.FailureStrategyBuilder.aFailureStrategy;
 import static software.wings.beans.Graph.Builder.aGraph;
-import static software.wings.beans.Graph.Link.Builder.aLink;
-import static software.wings.beans.Graph.Node.Builder.aNode;
+import static software.wings.beans.GraphLink.Builder.aLink;
+import static software.wings.beans.GraphNode.GraphNodeBuilder.aGraphNode;
 import static software.wings.beans.MultiServiceOrchestrationWorkflow.MultiServiceOrchestrationWorkflowBuilder.aMultiServiceOrchestrationWorkflow;
 import static software.wings.beans.NotificationGroup.NotificationGroupBuilder.aNotificationGroup;
 import static software.wings.beans.NotificationRule.NotificationRuleBuilder.aNotificationRule;
@@ -105,7 +105,7 @@ import software.wings.beans.FailureCriteria;
 import software.wings.beans.FailureStrategy;
 import software.wings.beans.FailureType;
 import software.wings.beans.Graph;
-import software.wings.beans.Graph.Node;
+import software.wings.beans.GraphNode;
 import software.wings.beans.InfrastructureMappingType;
 import software.wings.beans.MultiServiceOrchestrationWorkflow;
 import software.wings.beans.NotificationGroup;
@@ -482,7 +482,7 @@ public class WorkflowServiceTest extends WingsBaseTest {
 
     Graph graph2 =
         JsonUtils.clone(((CustomOrchestrationWorkflow) workflow.getOrchestrationWorkflow()).getGraph(), Graph.class);
-    graph2.getNodes().add(aNode().withId("n5").withName("http").withX(350).withType(StateType.HTTP.name()).build());
+    graph2.addNode(aGraphNode().withId("n5").withName("http").withType(StateType.HTTP.name()).build());
     graph2.getLinks().add(aLink().withId("l3").withFrom("n3").withTo("n5").withType("success").build());
 
     Workflow updatedWorkflow = workflowService.updateWorkflow(workflow);
@@ -563,29 +563,19 @@ public class WorkflowServiceTest extends WingsBaseTest {
 
   private Workflow createWorkflow() {
     Graph graph = aGraph()
-                      .addNodes(aNode()
+                      .addNodes(aGraphNode()
                                     .withId("n1")
                                     .withName("stop")
-                                    .withX(200)
-                                    .withY(50)
                                     .withType(StateType.ENV_STATE.name())
                                     .withOrigin(true)
-                                    .build())
-                      .addNodes(aNode()
-                                    .withId("n2")
-                                    .withName("wait")
-                                    .withX(250)
-                                    .withY(50)
-                                    .withType(StateType.WAIT.name())
-                                    .addProperty("duration", 1l)
-                                    .build())
-                      .addNodes(aNode()
-                                    .withId("n3")
-                                    .withName("start")
-                                    .withX(300)
-                                    .withY(50)
-                                    .withType(StateType.ENV_STATE.name())
-                                    .build())
+                                    .build(),
+                          aGraphNode()
+                              .withId("n2")
+                              .withName("wait")
+                              .withType(StateType.WAIT.name())
+                              .addProperty("duration", 1l)
+                              .build(),
+                          aGraphNode().withId("n3").withName("start").withType(StateType.ENV_STATE.name()).build())
                       .addLinks(aLink().withId("l1").withFrom("n1").withTo("n2").withType("success").build())
                       .addLinks(aLink().withId("l2").withFrom("n2").withTo("n3").withType("success").build())
                       .build();
@@ -978,7 +968,7 @@ public class WorkflowServiceTest extends WingsBaseTest {
                                           .withServiceId(SERVICE_ID)
                                           .withInfraMappingId(INFRA_MAPPING_ID)
                                           .addPhaseStep(aPhaseStep(PhaseStepType.CONTAINER_DEPLOY, DEPLOY_CONTAINERS)
-                                                            .addStep(aNode()
+                                                            .addStep(aGraphNode()
                                                                          .withId(getUuid())
                                                                          .withType(ECS_SERVICE_DEPLOY.name())
                                                                          .withName(UPGRADE_CONTAINERS)
@@ -2011,7 +2001,7 @@ public class WorkflowServiceTest extends WingsBaseTest {
             .withOrchestrationWorkflow(
                 aCanaryOrchestrationWorkflow()
                     .withPreDeploymentSteps(aPhaseStep(PRE_DEPLOYMENT, Constants.PRE_DEPLOYMENT)
-                                                .addStep(aNode()
+                                                .addStep(aGraphNode()
                                                              .withType("HTTP")
                                                              .withName("http")
                                                              .addProperty("url", "http://www.google.com")
@@ -2032,7 +2022,7 @@ public class WorkflowServiceTest extends WingsBaseTest {
         orchestrationWorkflow.getGraph().getSubworkflows().get(orchestrationWorkflow.getPreDeploymentSteps().getUuid());
     assertThat(graph).isNotNull();
     assertThat(graph.getNodes()).isNotNull().hasSize(1);
-    Node node = graph.getNodes().get(0);
+    GraphNode node = graph.getNodes().get(0);
     assertThat(node).isNotNull().hasFieldOrProperty("id").hasFieldOrPropertyWithValue("type", "HTTP");
     assertThat(node.getProperties()).isNotNull().containsKey("url").containsValue("http://www.google.com");
     node.getProperties().put("url", "http://www.yahoo.com");
@@ -2120,7 +2110,7 @@ public class WorkflowServiceTest extends WingsBaseTest {
     for (WorkflowPhase phase : orchestrationWorkflow3.getWorkflowPhases()) {
       for (PhaseStep phaseStep : phase.getPhaseSteps()) {
         if (SELECT_NODE == phaseStep.getPhaseStepType() || PROVISION_NODE == phaseStep.getPhaseStepType()) {
-          for (Graph.Node node : phaseStep.getSteps()) {
+          for (GraphNode node : phaseStep.getSteps()) {
             if (StateType.AWS_NODE_SELECT.name().equals(node.getType())
                 || StateType.DC_NODE_SELECT.name().equals(node.getType())) {
               Map<String, Object> properties = node.getProperties();
@@ -2290,7 +2280,7 @@ public class WorkflowServiceTest extends WingsBaseTest {
                                     .get(0);
 
     deployPhaseStep.getSteps().add(
-        aNode().withType("HTTP").withName("http").addProperty("url", "www.google.com").build());
+        aGraphNode().withType("HTTP").withName("http").addProperty("url", "www.google.com").build());
 
     workflowService.updateWorkflowPhase(workflow2.getAppId(), workflow2.getUuid(), workflowPhase);
 

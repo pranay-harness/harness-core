@@ -1,12 +1,11 @@
 package software.wings.service.impl.yaml.handler.command;
 
-import static software.wings.beans.yaml.YamlConstants.COORDINATE_INCREMENT_BY;
-import static software.wings.beans.yaml.YamlConstants.DEFAULT_COORDINATE;
+import static software.wings.beans.GraphNode.GraphNodeBuilder.aGraphNode;
 
 import com.google.common.collect.Maps;
 
 import software.wings.beans.ErrorCode;
-import software.wings.beans.Graph.Node;
+import software.wings.beans.GraphNode;
 import software.wings.beans.command.AbstractCommandUnit;
 import software.wings.beans.command.CommandUnit;
 import software.wings.beans.command.CommandUnitType;
@@ -28,21 +27,15 @@ public abstract class CommandUnitYamlHandler<Y extends AbstractCommandUnit.Yaml,
     extends BaseYamlHandler<Y, C> {
   protected abstract C getCommandUnit();
 
-  protected Node getGraphNode(ChangeContext<Y> changeContext, Node previousNode) {
+  protected GraphNode getGraphNode(ChangeContext<Y> changeContext, GraphNode previousNode) {
     Y yaml = changeContext.getYaml();
-    int xCoordinate = previousNode == null ? DEFAULT_COORDINATE : previousNode.getX() + COORDINATE_INCREMENT_BY;
-    return Node.Builder.aNode()
+    return aGraphNode()
         .withName(yaml.getName())
         .withType(yaml.getCommandUnitType())
         .withProperties(getNodeProperties(changeContext))
         .withOrigin(previousNode == null)
-        .withExpanded(false)
         .withId(getNodeId())
         .withValid(false)
-        .withHeight(0)
-        .withWidth(0)
-        .withX(xCoordinate)
-        .withY(DEFAULT_COORDINATE)
         .build();
     //    .withTemplateExpressions().withRollback(yaml.get);
   }

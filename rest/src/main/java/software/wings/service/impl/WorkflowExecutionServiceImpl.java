@@ -8,6 +8,7 @@ import static io.harness.data.structure.EmptyPredicate.isEmpty;
 import static io.harness.data.structure.EmptyPredicate.isNotEmpty;
 import static java.lang.String.format;
 import static java.util.Arrays.asList;
+import static java.util.stream.Collectors.toList;
 import static org.apache.commons.lang3.StringUtils.isBlank;
 import static org.apache.commons.lang3.StringUtils.isNotBlank;
 import static org.mongodb.morphia.mapping.Mapper.ID_KEY;
@@ -87,7 +88,7 @@ import software.wings.beans.EntityType;
 import software.wings.beans.Environment;
 import software.wings.beans.ErrorCode;
 import software.wings.beans.ExecutionArgs;
-import software.wings.beans.Graph.Node;
+import software.wings.beans.GraphNode;
 import software.wings.beans.InfrastructureMapping;
 import software.wings.beans.OrchestrationWorkflow;
 import software.wings.beans.OrchestrationWorkflowType;
@@ -99,6 +100,7 @@ import software.wings.beans.SearchFilter.Operator;
 import software.wings.beans.Service;
 import software.wings.beans.ServiceInstance;
 import software.wings.beans.SortOrder.OrderType;
+import software.wings.beans.StateExecutionInterrupt;
 import software.wings.beans.User;
 import software.wings.beans.Variable;
 import software.wings.beans.Workflow;
@@ -130,6 +132,7 @@ import software.wings.sm.ContextElement;
 import software.wings.sm.ContextElementType;
 import software.wings.sm.ExecutionEventAdvisor;
 import software.wings.sm.ExecutionInterrupt;
+import software.wings.sm.ExecutionInterruptEffect;
 import software.wings.sm.ExecutionInterruptManager;
 import software.wings.sm.ExecutionInterruptType;
 import software.wings.sm.ExecutionStatus;
@@ -156,6 +159,7 @@ import java.time.Duration;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.ConcurrentModificationException;
+import java.util.Date;
 import java.util.HashMap;
 import java.util.HashSet;
 import java.util.List;
@@ -728,8 +732,7 @@ public class WorkflowExecutionServiceImpl implements WorkflowExecutionService {
     WorkflowStandardParams stdParams = new WorkflowStandardParams();
     stdParams.setAppId(appId);
     if (isNotEmpty(executionArgs.getArtifacts())) {
-      stdParams.setArtifactIds(
-          executionArgs.getArtifacts().stream().map(Artifact::getUuid).collect(Collectors.toList()));
+      stdParams.setArtifactIds(executionArgs.getArtifacts().stream().map(Artifact::getUuid).collect(toList()));
     }
     if (isNotEmpty(executionArgs.getWorkflowVariables())) {
       stdParams.setWorkflowVariables(executionArgs.getWorkflowVariables());
@@ -750,8 +753,7 @@ public class WorkflowExecutionServiceImpl implements WorkflowExecutionService {
                 .build());
       });
       workflowExecution.setServiceExecutionSummaries(serviceExecutionSummaries);
-      workflowExecution.setServiceIds(
-          pipeline.getServices().stream().map(Service::getUuid).collect(Collectors.toList()));
+      workflowExecution.setServiceIds(pipeline.getServices().stream().map(Service::getUuid).collect(toList()));
     }
 
     Set<String> envIds = new HashSet<>();
@@ -826,7 +828,7 @@ public class WorkflowExecutionServiceImpl implements WorkflowExecutionService {
     workflowExecution.setStateMachineId(stateMachine.getUuid());
     workflowExecution.setPipelineExecutionId(pipelineExecutionId);
     workflowExecution.setExecutionArgs(executionArgs);
-    workflowExecution.setServiceIds(workflow.getServices().stream().map(Service::getUuid).collect(Collectors.toList()));
+    workflowExecution.setServiceIds(workflow.getServices().stream().map(Service::getUuid).collect(toList()));
     WorkflowStandardParams stdParams;
     if (workflow.getOrchestrationWorkflow().getOrchestrationWorkflowType() == OrchestrationWorkflowType.CANARY
         || workflow.getOrchestrationWorkflow().getOrchestrationWorkflowType() == OrchestrationWorkflowType.BASIC
@@ -851,8 +853,7 @@ public class WorkflowExecutionServiceImpl implements WorkflowExecutionService {
     stdParams.setAppId(appId);
     stdParams.setEnvId(envId);
     if (isNotEmpty(executionArgs.getArtifacts())) {
-      stdParams.setArtifactIds(
-          executionArgs.getArtifacts().stream().map(Artifact::getUuid).collect(Collectors.toList()));
+      stdParams.setArtifactIds(executionArgs.getArtifacts().stream().map(Artifact::getUuid).collect(toList()));
     }
 
     stdParams.setExecutionCredential(executionArgs.getExecutionCredential());
@@ -936,7 +937,7 @@ public class WorkflowExecutionServiceImpl implements WorkflowExecutionService {
     if (executionArgs != null) {
       if (executionArgs.getServiceInstances() != null) {
         List<String> serviceInstanceIds =
-            executionArgs.getServiceInstances().stream().map(ServiceInstance::getUuid).collect(Collectors.toList());
+            executionArgs.getServiceInstances().stream().map(ServiceInstance::getUuid).collect(toList());
         PageRequest<ServiceInstance> pageRequest = aPageRequest()
                                                        .addFilter("appId", EQ, workflowExecution.getAppId())
                                                        .addFilter("uuid", Operator.IN, serviceInstanceIds.toArray())
@@ -953,8 +954,7 @@ public class WorkflowExecutionServiceImpl implements WorkflowExecutionService {
       }
 
       if (isNotEmpty(executionArgs.getArtifacts())) {
-        List<String> artifactIds =
-            executionArgs.getArtifacts().stream().map(Artifact::getUuid).collect(Collectors.toList());
+        List<String> artifactIds = executionArgs.getArtifacts().stream().map(Artifact::getUuid).collect(toList());
         PageRequest<Artifact> pageRequest = aPageRequest()
                                                 .addFilter("appId", EQ, workflowExecution.getAppId())
                                                 .addFilter("uuid", Operator.IN, artifactIds.toArray())
@@ -1248,8 +1248,7 @@ public class WorkflowExecutionServiceImpl implements WorkflowExecutionService {
     stdParams.setAppId(appId);
     stdParams.setEnvId(envId);
     if (isNotEmpty(executionArgs.getArtifacts())) {
-      stdParams.setArtifactIds(
-          executionArgs.getArtifacts().stream().map(Artifact::getUuid).collect(Collectors.toList()));
+      stdParams.setArtifactIds(executionArgs.getArtifacts().stream().map(Artifact::getUuid).collect(toList()));
     }
     stdParams.setExecutionCredential(executionArgs.getExecutionCredential());
 
@@ -1257,7 +1256,7 @@ public class WorkflowExecutionServiceImpl implements WorkflowExecutionService {
     simpleOrchestrationParams.setServiceId(executionArgs.getServiceId());
     if (executionArgs.getServiceInstances() != null) {
       simpleOrchestrationParams.setInstanceIds(
-          executionArgs.getServiceInstances().stream().map(ServiceInstance::getUuid).collect(Collectors.toList()));
+          executionArgs.getServiceInstances().stream().map(ServiceInstance::getUuid).collect(toList()));
     }
     simpleOrchestrationParams.setExecutionStrategy(executionArgs.getExecutionStrategy());
     simpleOrchestrationParams.setCommandName(executionArgs.getCommandName());
@@ -1388,7 +1387,7 @@ public class WorkflowExecutionServiceImpl implements WorkflowExecutionService {
         }
       }
       List<String> serviceInstanceIds =
-          executionArgs.getServiceInstances().stream().map(ServiceInstance::getUuid).collect(Collectors.toList());
+          executionArgs.getServiceInstances().stream().map(ServiceInstance::getUuid).collect(toList());
       Set<EntityType> infraReqEntityTypes =
           stateMachineExecutionSimulator.getInfrastructureRequiredEntityType(appId, serviceInstanceIds);
       if (infraReqEntityTypes != null) {
@@ -1439,10 +1438,63 @@ public class WorkflowExecutionServiceImpl implements WorkflowExecutionService {
   }
 
   @Override
-  public Node getExecutionDetailsForNode(String appId, String workflowExecutionId, String stateExecutionInstanceId) {
+  public GraphNode getExecutionDetailsForNode(
+      String appId, String workflowExecutionId, String stateExecutionInstanceId) {
     StateExecutionInstance stateExecutionInstance =
         wingsPersistence.get(StateExecutionInstance.class, appId, stateExecutionInstanceId);
     return graphRenderer.convertToNode(stateExecutionInstance);
+  }
+
+  @Override
+  public List<StateExecutionData> getExecutionHistory(
+      String appId, String workflowExecutionId, String stateExecutionInstanceId) {
+    StateExecutionInstance stateExecutionInstance =
+        wingsPersistence.get(StateExecutionInstance.class, appId, stateExecutionInstanceId);
+    return stateExecutionInstance.getStateExecutionDataHistory();
+  }
+
+  @Override
+  public long getExecutionInterruptCount(String stateExecutionInstanceId) {
+    return wingsPersistence.createQuery(ExecutionInterrupt.class)
+        .field("stateExecutionInstanceId")
+        .equal(stateExecutionInstanceId)
+        .count();
+  }
+
+  @Override
+  public List<StateExecutionInterrupt> getExecutionInterrupts(String appId, String stateExecutionInstanceId) {
+    StateExecutionInstance stateExecutionInstance =
+        wingsPersistence.get(StateExecutionInstance.class, appId, stateExecutionInstanceId);
+
+    Map<String, ExecutionInterruptEffect> map = new HashMap<>();
+    stateExecutionInstance.getInterruptHistory().stream().forEach(effect -> map.put(effect.getInterruptId(), effect));
+
+    List<StateExecutionInterrupt> interrupts = wingsPersistence.createQuery(ExecutionInterrupt.class)
+                                                   .field("stateExecutionInstanceId")
+                                                   .equal(stateExecutionInstanceId)
+                                                   .asList()
+                                                   .stream()
+                                                   .map(interrupt
+                                                       -> StateExecutionInterrupt.builder()
+                                                              .interrupt(interrupt)
+                                                              .tookAffectAt(new Date(interrupt.getCreatedAt()))
+                                                              .build())
+                                                   .collect(toList());
+
+    if (isNotEmpty(stateExecutionInstance.getInterruptHistory())) {
+      wingsPersistence.createQuery(ExecutionInterrupt.class)
+          .field(ID_KEY)
+          .in(map.keySet())
+          .asList()
+          .stream()
+          .forEach(interrupt -> {
+            final ExecutionInterruptEffect effect = map.get(interrupt.getUuid());
+            interrupts.add(
+                StateExecutionInterrupt.builder().interrupt(interrupt).tookAffectAt(effect.getTookEffectAt()).build());
+          });
+    }
+
+    return interrupts;
   }
 
   @Override
@@ -1581,7 +1633,7 @@ public class WorkflowExecutionServiceImpl implements WorkflowExecutionService {
               .filter(variable
                   -> variable.getEntityType() != null && variable.getEntityType().equals(INFRASTRUCTURE_MAPPING))
               .map(Variable::getName)
-              .collect(Collectors.toList());
+              .collect(toList());
     }
     List<String> infraMappingIds = new ArrayList<>();
     Map<String, String> workflowVariables = workflowExecution.getExecutionArgs() != null
@@ -1822,9 +1874,8 @@ public class WorkflowExecutionServiceImpl implements WorkflowExecutionService {
       return null;
     }
 
-    List<StateExecutionInstance> contextTransitionInstances = allStateExecutionInstances.stream()
-                                                                  .filter(instance -> instance.isContextTransition())
-                                                                  .collect(Collectors.toList());
+    List<StateExecutionInstance> contextTransitionInstances =
+        allStateExecutionInstances.stream().filter(instance -> instance.isContextTransition()).collect(toList());
     Map<String, StateExecutionInstance> prevInstanceIdMap =
         allStateExecutionInstances.stream()
             .filter(instance -> instance.getPrevInstanceId() != null)
@@ -1884,11 +1935,11 @@ public class WorkflowExecutionServiceImpl implements WorkflowExecutionService {
 
       instanceStatusSummaries = instanceStatusSummaries.stream()
                                     .filter(instanceStatusSummary -> instanceStatusSummary.getInstanceElement() != null)
-                                    .collect(Collectors.toList());
+                                    .collect(toList());
       instanceStatusSummaries =
           instanceStatusSummaries.stream()
               .filter(distinctByKey(instanceStatusSummary -> instanceStatusSummary.getInstanceElement().getUuid()))
-              .collect(Collectors.toList());
+              .collect(toList());
 
       elementExecutionSummary.setStatus(last.getStatus());
       elementExecutionSummary.setInstanceStatusSummaries(instanceStatusSummaries);
@@ -1967,7 +2018,7 @@ public class WorkflowExecutionServiceImpl implements WorkflowExecutionService {
                                   -> StateType.REPEAT.name().equals(instance.getStateType())
                                       || StateType.FORK.name().equals(instance.getStateType()))
                               .map(StateExecutionInstance::getUuid)
-                              .collect(Collectors.toList());
+                              .collect(toList());
     }
 
     return phaseStepExecutionSummary;
@@ -2016,9 +2067,8 @@ public class WorkflowExecutionServiceImpl implements WorkflowExecutionService {
       buildExecutionSummaries = new ArrayList<>();
     }
     buildExecutionSummaries.add(buildExecutionSummary);
-    buildExecutionSummaries = buildExecutionSummaries.stream()
-                                  .filter(distinctByKey(bs -> bs.getArtifactStreamId()))
-                                  .collect(Collectors.toList());
+    buildExecutionSummaries =
+        buildExecutionSummaries.stream().filter(distinctByKey(bs -> bs.getArtifactStreamId())).collect(toList());
     wingsPersistence.updateField(
         WorkflowExecution.class, workflowExecutionId, "buildExecutionSummaries", buildExecutionSummaries);
   }
