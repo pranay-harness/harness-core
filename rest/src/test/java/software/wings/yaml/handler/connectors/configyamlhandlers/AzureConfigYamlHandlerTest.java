@@ -24,7 +24,7 @@ public class AzureConfigYamlHandlerTest extends BaseSettingValueConfigYamlHandle
   public static final String tenantId = "dummyTenantId";
   public static final String key = "dummyKey";
 
-  private String invalidYamlContent = "invlidClientId: dummyClientId\n"
+  private String invalidYamlContent = "invalidClientId: dummyClientId\n"
       + "tenantId: dummyTenantId\n"
       + "key: key=\n"
       + "harnessApiVersion: '1.0'\n"
