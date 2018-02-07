@@ -549,6 +549,27 @@ public class KubernetesDeployTest extends WingsBaseTest {
   }
 
   @Test
+  public void shouldUseMaxInstancesWithAnyPercentage() {
+    when(containerService.getServiceDesiredCount(any(ContainerServiceParams.class))).thenReturn(Optional.of(0));
+    Map<String, Integer> activeServiceCounts = new LinkedHashMap<>();
+    when(containerService.getActiveServiceCounts(any(ContainerServiceParams.class))).thenReturn(activeServiceCounts);
+    kubernetesReplicationControllerDeploy.setInstanceCount(20);
+    kubernetesReplicationControllerDeploy.setInstanceUnitType(PERCENTAGE);
+
+    ExecutionContext context = prepareContext("rc-name.0", false, 0, 5);
+    ExecutionResponse response = kubernetesReplicationControllerDeploy.execute(context);
+
+    CommandStateExecutionData executionData = (CommandStateExecutionData) response.getStateExecutionData();
+
+    assertThat(executionData.getNewInstanceData().size()).isEqualTo(1);
+    ContainerServiceData contextNewServiceData = executionData.getNewInstanceData().get(0);
+    assertThat(contextNewServiceData.getPreviousCount()).isEqualTo(0);
+    assertThat(contextNewServiceData.getDesiredCount()).isEqualTo(5);
+
+    assertThat(executionData.getOldInstanceData().size()).isEqualTo(0);
+  }
+
+  @Test
   public void shouldNotUseMaxInstancesWhenAlreadyRunningWithPercentage() {
     when(containerService.getServiceDesiredCount(any(ContainerServiceParams.class))).thenReturn(Optional.of(0));
     Map<String, Integer> activeServiceCounts = new LinkedHashMap<>();

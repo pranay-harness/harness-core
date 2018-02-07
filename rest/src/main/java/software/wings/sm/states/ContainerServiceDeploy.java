@@ -183,8 +183,11 @@ public abstract class ContainerServiceDeploy extends State {
       if (contextData.containerElement.isUseFixedInstances()) {
         totalInstancesAvailable = contextData.containerElement.getFixedInstances();
       } else {
-        int activeCount = getActiveServiceCounts(contextData).values().stream().mapToInt(Integer::intValue).sum();
-        totalInstancesAvailable = activeCount > 0 ? activeCount : contextData.containerElement.getMaxInstances();
+        totalInstancesAvailable =
+            getActiveServiceCounts(contextData).values().stream().mapToInt(Integer::intValue).sum();
+        if (totalInstancesAvailable == 0) {
+          return contextData.containerElement.getMaxInstances();
+        }
       }
       return (int) Math.round(Math.min(getInstanceCount(), 100) * totalInstancesAvailable / 100.0);
     } else {
