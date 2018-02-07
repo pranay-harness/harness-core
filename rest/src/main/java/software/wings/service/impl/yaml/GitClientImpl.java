@@ -1,6 +1,7 @@
 package software.wings.service.impl.yaml;
 
 import static org.apache.commons.lang3.StringUtils.isNotBlank;
+import static software.wings.beans.ErrorCode.UNREACHABLE_HOST;
 import static software.wings.beans.yaml.Change.ChangeType.ADD;
 import static software.wings.beans.yaml.Change.ChangeType.DELETE;
 import static software.wings.beans.yaml.Change.ChangeType.MODIFY;
@@ -53,6 +54,7 @@ import software.wings.service.intfc.yaml.GitClient;
 import java.io.File;
 import java.io.FileWriter;
 import java.io.IOException;
+import java.net.UnknownHostException;
 import java.nio.charset.Charset;
 import java.nio.file.Files;
 import java.nio.file.Path;
@@ -400,6 +402,17 @@ public class GitClientImpl implements GitClient {
       logger.error("Git validation failed [{}]", e);
       if (e instanceof InvalidRemoteException | e.getCause() instanceof NoRemoteRepositoryException) {
         return "Invalid git repo " + gitConfig.getRepoUrl();
+      }
+
+      if (e instanceof org.eclipse.jgit.api.errors.TransportException) {
+        org.eclipse.jgit.api.errors.TransportException te = (org.eclipse.jgit.api.errors.TransportException) e;
+        Throwable cause = te.getCause();
+        if (cause instanceof TransportException) {
+          TransportException tee = (TransportException) cause;
+          if (tee.getCause() instanceof UnknownHostException) {
+            return UNREACHABLE_HOST.getDescription() + gitConfig.getRepoUrl();
+          }
+        }
       }
       // Any generic error
       return e.getMessage();

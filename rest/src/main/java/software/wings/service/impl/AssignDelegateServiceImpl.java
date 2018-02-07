@@ -3,6 +3,7 @@ package software.wings.service.impl;
 import static io.harness.data.structure.EmptyPredicate.isEmpty;
 import static io.harness.data.structure.EmptyPredicate.isNotEmpty;
 import static org.apache.commons.lang3.StringUtils.isNotBlank;
+import static org.mongodb.morphia.mapping.Mapper.ID_KEY;
 
 import com.google.inject.Inject;
 import com.google.inject.Singleton;
@@ -22,7 +23,6 @@ import software.wings.service.intfc.DelegateService;
 import software.wings.service.intfc.EnvironmentService;
 
 import java.util.List;
-import java.util.Optional;
 import java.util.stream.Collectors;
 
 /**
@@ -124,19 +124,25 @@ public class AssignDelegateServiceImpl implements AssignDelegateService {
   public void saveConnectionResults(List<DelegateConnectionResult> results) {
     List<DelegateConnectionResult> resultsToSave =
         results.stream().filter(result -> isNotBlank(result.getCriteria())).collect(Collectors.toList());
-    resultsToSave.forEach(result
-        -> result.setUuid(Optional
-                              .ofNullable(wingsPersistence.createQuery(DelegateConnectionResult.class)
-                                              .field("accountId")
-                                              .equal(result.getAccountId())
-                                              .field("delegateId")
-                                              .equal(result.getDelegateId())
-                                              .field("criteria")
-                                              .equal(result.getCriteria())
-                                              .get())
-                              .orElse(result)
-                              .getUuid()));
-    wingsPersistence.saveIgnoringDuplicateKeys(resultsToSave);
+
+    for (DelegateConnectionResult result : resultsToSave) {
+      DelegateConnectionResult existingDelegateConnectionResult =
+          wingsPersistence.createQuery(DelegateConnectionResult.class)
+              .field("accountId")
+              .equal(result.getAccountId())
+              .field("delegateId")
+              .equal(result.getDelegateId())
+              .field("criteria")
+              .equal(result.getCriteria())
+              .project(ID_KEY, true)
+              .get();
+      if (existingDelegateConnectionResult != null) {
+        wingsPersistence.updateField(DelegateConnectionResult.class, existingDelegateConnectionResult.getUuid(),
+            "validated", result.isValidated());
+      } else {
+        wingsPersistence.save(result);
+      }
+    }
   }
 
   @Override
