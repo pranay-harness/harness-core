@@ -13,7 +13,7 @@ import org.junit.Test;
 import software.wings.WingsBaseTest;
 import software.wings.beans.Application;
 import software.wings.beans.CanaryOrchestrationWorkflow;
-import software.wings.beans.Graph;
+import software.wings.beans.GraphNode;
 import software.wings.beans.PhaseStep;
 import software.wings.beans.SearchFilter;
 import software.wings.beans.Workflow;
@@ -69,7 +69,7 @@ public class WorkflowSelectNodeExclusionFlagMigrationUtil extends WingsBaseTest 
             for (PhaseStep phaseStep : workflowPhase.getPhaseSteps()) {
               if (SELECT_NODE == phaseStep.getPhaseStepType() || PROVISION_NODE == phaseStep.getPhaseStepType()) {
                 candidateFound = true;
-                for (Graph.Node node : phaseStep.getSteps()) {
+                for (GraphNode node : phaseStep.getSteps()) {
                   if (StateType.AWS_NODE_SELECT.name().equals(node.getType())
                       || StateType.DC_NODE_SELECT.name().equals(node.getType())) {
                     Map<String, Object> properties = node.getProperties();
