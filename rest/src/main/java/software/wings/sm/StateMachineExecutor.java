@@ -15,6 +15,7 @@ import static software.wings.beans.alert.AlertType.ManualInterventionNeeded;
 import static software.wings.dl.PageRequest.Builder.aPageRequest;
 import static software.wings.sm.ElementNotifyResponseData.Builder.anElementNotifyResponseData;
 import static software.wings.sm.ExecutionInterruptType.PAUSE_ALL;
+import static software.wings.sm.ExecutionInterruptType.RESUME_ALL;
 import static software.wings.sm.ExecutionResponse.Builder.anExecutionResponse;
 import static software.wings.sm.ExecutionStatus.ABORTED;
 import static software.wings.sm.ExecutionStatus.ABORTING;
@@ -322,6 +323,7 @@ public class StateMachineExecutor {
   void startExecution(ExecutionContextImpl context) {
     StateExecutionInstance stateExecutionInstance = context.getStateExecutionInstance();
 
+    ExecutionInterrupt reason = null;
     List<ExecutionInterrupt> executionInterrupts = executionInterruptManager.checkForExecutionInterrupt(
         stateExecutionInstance.getAppId(), stateExecutionInstance.getExecutionUuid());
     if (executionInterrupts != null) {
@@ -330,17 +332,28 @@ public class StateMachineExecutor {
               .filter(ei -> ei != null && ei.getExecutionInterruptType() == PAUSE_ALL)
               .findFirst();
       if (pauseAll.isPresent()) {
-        updateStatus(stateExecutionInstance, PAUSED, Lists.newArrayList(NEW, QUEUED));
+        updateStatus(stateExecutionInstance, PAUSED, Lists.newArrayList(NEW, QUEUED), pauseAll.get());
         waitNotifyEngine.waitForAll(new ExecutionResumeAllCallback(stateExecutionInstance.getAppId(),
                                         stateExecutionInstance.getExecutionUuid(), stateExecutionInstance.getUuid()),
             pauseAll.get().getUuid());
         return;
       }
+
+      if (stateExecutionInstance.getStatus() == PAUSED) {
+        Optional<ExecutionInterrupt> resumeAll =
+            executionInterrupts.stream()
+                .filter(ei -> ei != null && ei.getExecutionInterruptType() == RESUME_ALL)
+                .findFirst();
+
+        if (resumeAll.isPresent()) {
+          reason = resumeAll.get();
+        }
+      }
     }
 
     StateMachine stateMachine = context.getStateMachine();
     boolean updated =
-        updateStartStatus(stateExecutionInstance, STARTING, Lists.newArrayList(NEW, QUEUED, PAUSED, WAITING));
+        updateStartStatus(stateExecutionInstance, STARTING, Lists.newArrayList(NEW, QUEUED, PAUSED, WAITING), reason);
     if (!updated) {
       throw new WingsException("stateExecutionInstance: " + stateExecutionInstance.getUuid() + " could not be started");
     }
@@ -716,7 +729,7 @@ public class StateMachineExecutor {
       } else if (errorStrategy == ErrorStrategy.PAUSE) {
         logger.info("Pausing execution  - currentState : {}, stateExecutionInstanceId: {}",
             stateExecutionInstance.getStateName(), stateExecutionInstance.getUuid());
-        updateStatus(stateExecutionInstance, WAITING, Lists.newArrayList(FAILED));
+        updateStatus(stateExecutionInstance, WAITING, Lists.newArrayList(FAILED), null);
       } else {
         // TODO: handle more strategy
         logger.info("Unhandled error strategy for the state: {}, stateExecutionInstanceId: {}, errorStrategy: {}"
@@ -749,7 +762,7 @@ public class StateMachineExecutor {
   private void abortExecution(ExecutionContextImpl context) {
     StateExecutionInstance stateExecutionInstance = context.getStateExecutionInstance();
     boolean updated = updateStatus(
-        stateExecutionInstance, ABORTING, Lists.newArrayList(NEW, QUEUED, STARTING, RUNNING, PAUSED, WAITING));
+        stateExecutionInstance, ABORTING, Lists.newArrayList(NEW, QUEUED, STARTING, RUNNING, PAUSED, WAITING), null);
     if (!updated) {
       throw new WingsException(ErrorCode.STATE_NOT_FOR_ABORT)
           .addParam("stateName", stateExecutionInstance.getStateName());
@@ -841,6 +854,8 @@ public class StateMachineExecutor {
    */
   private StateExecutionInstance clone(StateExecutionInstance stateExecutionInstance, State nextState) {
     StateExecutionInstance cloned = KryoUtils.clone(stateExecutionInstance);
+    cloned.setInterruptHistory(null);
+    cloned.setStateExecutionDataHistory(null);
     cloned.setUuid(null);
     cloned.setStateParams(null);
     cloned.setStateName(nextState.getName());
@@ -855,26 +870,26 @@ public class StateMachineExecutor {
   }
 
   private boolean updateStartStatus(StateExecutionInstance stateExecutionInstance, ExecutionStatus status,
-      List<ExecutionStatus> existingExecutionStatus) {
+      List<ExecutionStatus> existingExecutionStatus, ExecutionInterrupt reason) {
     stateExecutionInstance.setStartTs(System.currentTimeMillis());
-    return updateStatus(
-        stateExecutionInstance, "startTs", stateExecutionInstance.getStartTs(), status, existingExecutionStatus);
+    return updateStatus(stateExecutionInstance, "startTs", stateExecutionInstance.getStartTs(), status,
+        existingExecutionStatus, reason);
   }
 
   private boolean updateEndStatus(StateExecutionInstance stateExecutionInstance, ExecutionStatus status,
       List<ExecutionStatus> existingExecutionStatus) {
     stateExecutionInstance.setEndTs(System.currentTimeMillis());
     return updateStatus(
-        stateExecutionInstance, "endTs", stateExecutionInstance.getStartTs(), status, existingExecutionStatus);
+        stateExecutionInstance, "endTs", stateExecutionInstance.getStartTs(), status, existingExecutionStatus, null);
   }
 
   private boolean updateStatus(StateExecutionInstance stateExecutionInstance, ExecutionStatus status,
-      List<ExecutionStatus> existingExecutionStatus) {
-    return updateStatus(stateExecutionInstance, null, null, status, existingExecutionStatus);
+      List<ExecutionStatus> existingExecutionStatus, ExecutionInterrupt reason) {
+    return updateStatus(stateExecutionInstance, null, null, status, existingExecutionStatus, reason);
   }
 
   private boolean updateStatus(StateExecutionInstance stateExecutionInstance, String tsField, Long tsValue,
-      ExecutionStatus status, List<ExecutionStatus> existingExecutionStatus) {
+      ExecutionStatus status, List<ExecutionStatus> existingExecutionStatus, ExecutionInterrupt reason) {
     stateExecutionInstance.setStatus(status);
 
     UpdateOperations<StateExecutionInstance> ops =
@@ -882,6 +897,10 @@ public class StateMachineExecutor {
     ops.set("status", stateExecutionInstance.getStatus());
     if (tsField != null) {
       ops.set(tsField, tsValue);
+    }
+    if (reason != null) {
+      ops.addToSet("interruptHistory",
+          ExecutionInterruptEffect.builder().interruptId(reason.getUuid()).tookEffectAt(new Date()).build());
     }
 
     Query<StateExecutionInstance> query = wingsPersistence.createQuery(StateExecutionInstance.class)
@@ -893,13 +912,12 @@ public class StateMachineExecutor {
                                               .in(existingExecutionStatus);
     UpdateResults updateResult = wingsPersistence.update(query, ops);
     if (updateResult == null || updateResult.getWriteResult() == null || updateResult.getWriteResult().getN() != 1) {
-      logger.warn(
-          "StateExecutionInstance status could not be updated- stateExecutionInstance: {}, tsField: {}, tsValue: {}, status: {}, existingExecutionStatus: {}, ",
+      logger.warn("StateExecutionInstance status could not be updated - "
+              + "stateExecutionInstance: {}, tsField: {}, tsValue: {}, status: {}, existingExecutionStatus: {}, ",
           stateExecutionInstance.getUuid(), tsField, tsValue, status, existingExecutionStatus);
       return false;
-    } else {
-      return true;
     }
+    return true;
   }
 
   private boolean updateStateExecutionData(StateExecutionInstance stateExecutionInstance,
@@ -1054,7 +1072,7 @@ public class StateMachineExecutor {
         StateExecutionInstance stateExecutionInstance = getStateExecutionInstance(workflowExecutionInterrupt.getAppId(),
             workflowExecutionInterrupt.getExecutionUuid(), workflowExecutionInterrupt.getStateExecutionInstanceId());
 
-        updateStatus(stateExecutionInstance, FAILED, Lists.newArrayList(WAITING));
+        updateStatus(stateExecutionInstance, FAILED, Lists.newArrayList(WAITING), workflowExecutionInterrupt);
 
         StateMachine sm = wingsPersistence.get(StateMachine.class, workflowExecutionInterrupt.getAppId(),
             stateExecutionInstance.getStateMachineId(), CRITICAL);

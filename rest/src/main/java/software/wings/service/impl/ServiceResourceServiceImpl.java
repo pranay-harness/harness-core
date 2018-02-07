@@ -44,7 +44,7 @@ import software.wings.beans.ConfigFile;
 import software.wings.beans.EntityType;
 import software.wings.beans.EntityVersion;
 import software.wings.beans.ErrorCode;
-import software.wings.beans.Graph;
+import software.wings.beans.GraphNode;
 import software.wings.beans.LambdaSpecification;
 import software.wings.beans.LambdaSpecification.FunctionSpecification;
 import software.wings.beans.OrchestrationWorkflow;
@@ -580,7 +580,7 @@ public class ServiceResourceServiceImpl implements ServiceResourceService, DataP
             if (phaseStep.getSteps() == null) {
               continue;
             }
-            for (Graph.Node step : phaseStep.getSteps()) {
+            for (GraphNode step : phaseStep.getSteps()) {
               if ("COMMAND".equals(step.getType())
                   && serviceCommand.getName().equals(step.getProperties().get("commandName"))) {
                 sb.append(" (")

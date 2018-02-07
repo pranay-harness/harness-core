@@ -3,7 +3,6 @@ package software.wings.service.impl;
 import static io.harness.data.structure.EmptyPredicate.isEmpty;
 import static io.harness.data.structure.EmptyPredicate.isNotEmpty;
 import static java.util.Arrays.asList;
-import static org.mongodb.morphia.mapping.Mapper.ID_KEY;
 import static software.wings.beans.ErrorCode.INVALID_REQUEST;
 import static software.wings.beans.SearchFilter.Operator.EQ;
 import static software.wings.beans.artifact.ArtifactStreamType.AMAZON_S3;
@@ -250,11 +249,7 @@ public class ArtifactStreamServiceImpl implements ArtifactStreamService, DataPro
   private boolean pruneArtifactStream(String appId, String artifactStreamId) {
     PruneEntityJob.addDefaultJob(jobScheduler, ArtifactStream.class, appId, artifactStreamId, Duration.ofSeconds(5));
 
-    return wingsPersistence.delete(wingsPersistence.createQuery(ArtifactStream.class)
-                                       .field(ID_KEY)
-                                       .equal(artifactStreamId)
-                                       .field(ArtifactStream.APP_ID_KEY)
-                                       .equal(appId));
+    return wingsPersistence.delete(ArtifactStream.class, appId, artifactStreamId);
   }
 
   @Override

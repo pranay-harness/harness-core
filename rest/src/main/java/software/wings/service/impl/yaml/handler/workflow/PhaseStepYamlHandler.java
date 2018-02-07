@@ -6,7 +6,7 @@ import com.google.inject.Singleton;
 
 import software.wings.beans.ErrorCode;
 import software.wings.beans.FailureStrategy;
-import software.wings.beans.Graph.Node;
+import software.wings.beans.GraphNode;
 import software.wings.beans.PhaseStep;
 import software.wings.beans.PhaseStep.PhaseStepBuilder;
 import software.wings.beans.PhaseStep.Yaml;
@@ -42,7 +42,7 @@ public class PhaseStepYamlHandler extends BaseYamlHandler<PhaseStep.Yaml, PhaseS
 
     ExecutionStatus statusForRollback = Util.getEnumFromString(ExecutionStatus.class, yaml.getStatusForRollback());
 
-    List<Node> stepList = Lists.newArrayList();
+    List<GraphNode> stepList = Lists.newArrayList();
     if (yaml.getSteps() != null) {
       StepYamlHandler stepYamlHandler = yamlHandlerFactory.getYamlHandler(YamlType.STEP);
 

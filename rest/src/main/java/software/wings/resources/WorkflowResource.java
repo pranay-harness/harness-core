@@ -14,7 +14,7 @@ import com.codahale.metrics.annotation.Timed;
 import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
 import io.swagger.annotations.Api;
 import software.wings.beans.FailureStrategy;
-import software.wings.beans.Graph.Node;
+import software.wings.beans.GraphNode;
 import software.wings.beans.NotificationRule;
 import software.wings.beans.PhaseStep;
 import software.wings.beans.RestResponse;
@@ -337,9 +337,9 @@ public class WorkflowResource {
   @Path("{workflowId}/nodes/{nodeId}")
   @Timed
   @ExceptionMetered
-  public RestResponse<Node> updateGraphNode(@QueryParam("appId") String appId,
+  public RestResponse<GraphNode> updateGraphNode(@QueryParam("appId") String appId,
       @PathParam("workflowId") String workflowId, @QueryParam("subworkflowId") String subworkflowId,
-      @PathParam("nodeId") String nodeId, Node node) {
+      @PathParam("nodeId") String nodeId, GraphNode node) {
     node.setId(nodeId);
     return new RestResponse<>(workflowService.updateGraphNode(appId, workflowId, subworkflowId, node));
   }
