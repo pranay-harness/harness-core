@@ -31,6 +31,7 @@ import org.mockito.ArgumentCaptor;
 import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.stubbing.Answer;
+import org.mongodb.morphia.Key;
 import org.mongodb.morphia.query.FieldEnd;
 import org.mongodb.morphia.query.Query;
 import org.mongodb.morphia.query.UpdateOperations;
@@ -198,7 +199,8 @@ public class AlertServiceTest extends WingsBaseTest {
 
   @Test
   public void shouldDeleteOldAlerts() {
-    when(query.asList(any())).thenReturn(asList(noActive, noEligible));
+    when(query.asKeyList(any()))
+        .thenReturn(asList(new Key<>(Alert.class, "alerts", "ID1"), new Key<>(Alert.class, "alerts", "ID2")));
     when(wingsPersistence.getCollection("alerts")).thenReturn(alertsCollection);
 
     alertService.deleteOldAlerts(0);

@@ -174,18 +174,18 @@ public class AuditServiceImpl implements AuditService {
                     .map(auditHeader -> new ObjectId(auditHeader.getResponsePayloadUuid()))
                     .collect(toList());
             wingsPersistence.getCollection("audits").remove(new BasicDBObject(
-                "_id", new BasicDBObject("$in", auditHeaders.stream().map(AuditHeader::getUuid).toArray())));
+                ID_KEY, new BasicDBObject("$in", auditHeaders.stream().map(AuditHeader::getUuid).toArray())));
 
             if (requestPayloadIds != null) {
               wingsPersistence.getCollection("audits.files")
-                  .remove(new BasicDBObject("_id", new BasicDBObject("$in", requestPayloadIds.toArray())));
+                  .remove(new BasicDBObject(ID_KEY, new BasicDBObject("$in", requestPayloadIds.toArray())));
               wingsPersistence.getCollection("audits.chunks")
                   .remove(new BasicDBObject("files_id", new BasicDBObject("$in", requestPayloadIds.toArray())));
             }
 
             if (responsePayloadIds != null) {
               wingsPersistence.getCollection("audits.files")
-                  .remove(new BasicDBObject("_id", new BasicDBObject("$in", responsePayloadIds.toArray())));
+                  .remove(new BasicDBObject(ID_KEY, new BasicDBObject("$in", responsePayloadIds.toArray())));
               wingsPersistence.getCollection("audits.chunks")
                   .remove(new BasicDBObject("files_id", new BasicDBObject("$in", responsePayloadIds.toArray())));
             }
