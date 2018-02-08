@@ -91,7 +91,6 @@ import software.wings.service.intfc.AppService;
 import software.wings.service.intfc.ContainerService;
 import software.wings.service.intfc.EnvironmentService;
 import software.wings.service.intfc.FeatureFlagService;
-import software.wings.service.intfc.HostService;
 import software.wings.service.intfc.InfrastructureMappingService;
 import software.wings.service.intfc.InfrastructureProvider;
 import software.wings.service.intfc.ServiceInstanceService;
@@ -147,7 +146,6 @@ public class InfrastructureMappingServiceImpl implements InfrastructureMappingSe
   @Inject private DelegateProxyFactory delegateProxyFactory;
   @Inject private EntityUpdateService entityUpdateService;
   @Inject private ExecutorService executorService;
-  @Inject private HostService hostService;
   @Inject private FeatureFlagService featureFlagService;
   @Inject private ServiceInstanceService serviceInstanceService;
   @Inject private ServiceResourceService serviceResourceService;
@@ -401,11 +399,6 @@ public class InfrastructureMappingServiceImpl implements InfrastructureMappingSe
     } else if (infrastructureMapping instanceof DirectKubernetesInfrastructureMapping) {
       DirectKubernetesInfrastructureMapping directKubernetesInfrastructureMapping =
           (DirectKubernetesInfrastructureMapping) infrastructureMapping;
-      //      directKubernetesInfrastructureMapping.setEncryptedPassword(null);
-      //      directKubernetesInfrastructureMapping.setEncryptedCaCert(null);
-      //      directKubernetesInfrastructureMapping.setEncryptedClientCert(null);
-      //      directKubernetesInfrastructureMapping.setEncryptedClientKey(null);
-      //      directKubernetesInfrastructureMapping.setEncryptedClientKeyPassphrase(null);
       keyValuePairs.put("masterUrl", directKubernetesInfrastructureMapping.getMasterUrl());
       if (directKubernetesInfrastructureMapping.getUsername() != null) {
         keyValuePairs.put("username", directKubernetesInfrastructureMapping.getUsername());
@@ -1162,9 +1155,14 @@ public class InfrastructureMappingServiceImpl implements InfrastructureMappingSe
                                                         .namespace(namespace)
                                                         .region(region)
                                                         .build();
-    Map<String, Integer> activeServiceCounts = delegateProxyFactory.get(ContainerService.class, syncTaskContext)
-                                                   .getActiveServiceCounts(containerServiceParams);
-    return Integer.toString(activeServiceCounts.values().stream().mapToInt(Integer::intValue).sum());
+    try {
+      Map<String, Integer> activeServiceCounts = delegateProxyFactory.get(ContainerService.class, syncTaskContext)
+                                                     .getActiveServiceCounts(containerServiceParams);
+      return Integer.toString(activeServiceCounts.values().stream().mapToInt(Integer::intValue).sum());
+    } catch (Exception e) {
+      logger.warn(Misc.getMessage(e), e);
+      throw new WingsException(INVALID_REQUEST, ReportTarget.USER).addParam("message", e.getMessage());
+    }
   }
 
   private InfrastructureProvider getInfrastructureProviderByComputeProviderType(String computeProviderType) {
