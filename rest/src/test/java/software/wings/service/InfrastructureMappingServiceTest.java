@@ -99,7 +99,6 @@ import software.wings.service.impl.StaticInfrastructureProvider;
 import software.wings.service.intfc.AppService;
 import software.wings.service.intfc.ContainerService;
 import software.wings.service.intfc.EnvironmentService;
-import software.wings.service.intfc.HostService;
 import software.wings.service.intfc.InfrastructureMappingService;
 import software.wings.service.intfc.InfrastructureProvider;
 import software.wings.service.intfc.ServiceInstanceService;
@@ -129,7 +128,6 @@ public class InfrastructureMappingServiceTest extends WingsBaseTest {
   @Mock private ServiceTemplateService serviceTemplateService;
   @Mock private SettingsService settingsService;
   @Mock private AppService appService;
-  @Mock private HostService hostService;
   @Mock private EnvironmentService envService;
   @Mock private ServiceResourceService serviceResourceService;
   @Mock private WorkflowService workflowService;
@@ -347,8 +345,7 @@ public class InfrastructureMappingServiceTest extends WingsBaseTest {
   @Test
   public void shouldPruneDescendingObjects() {
     infrastructureMappingService.pruneDescendingEntities(APP_ID, INFRA_MAPPING_ID);
-    InOrder inOrder = inOrder(wingsPersistence, hostService, serviceInstanceService);
-    inOrder.verify(hostService).pruneByInfrastructureMapping(APP_ID, INFRA_MAPPING_ID);
+    InOrder inOrder = inOrder(wingsPersistence, serviceInstanceService);
     inOrder.verify(serviceInstanceService).pruneByInfrastructureMapping(APP_ID, INFRA_MAPPING_ID);
   }
 
