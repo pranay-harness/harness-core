@@ -381,7 +381,7 @@ public class YamlGitServiceImpl implements YamlGitService {
       List<GitFileChange> pendingChanges = orderedFileChanges.subList(index.intValue() + 1, orderedFileChanges.size());
       upsertGitSyncErrors(failedChange, pendingChanges, errorMessage);
     } else {
-      logger.error("Failed yaml not found in the result set, only adding it to the list of failures");
+      logger.warn("Failed yaml not found in the result set, only adding it to the list of failures");
       upsertGitSyncErrors(failedChange, Collections.emptyList(), errorMessage);
     }
 

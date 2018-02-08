@@ -64,7 +64,7 @@ public class GitCommandCallback implements NotifyCallback {
 
       if (gitCommandExecutionResponse.getGitCommandStatus().equals(GitCommandStatus.FAILURE)) {
         if (changeSetId != null) {
-          logger.error("Git Command failed [{}] for changeSetId [{}] for account {}",
+          logger.warn("Git Command failed [{}] for changeSetId [{}] for account {}",
               gitCommandExecutionResponse.getErrorMessage(), changeSetId, accountId);
           yamlChangeSetService.updateStatus(accountId, changeSetId, Status.FAILED);
         }
@@ -131,17 +131,17 @@ public class GitCommandCallback implements NotifyCallback {
                                         .build());
           yamlGitService.removeGitSyncErrors(accountId, gitFileChangeList);
         } catch (YamlProcessingException ex) {
-          logger.error("Unable to process git changeSet for account {}. Failed at {}", ex.getChange().getAccountId(),
+          logger.warn("Unable to process git changeSet for account {}. Failed at {}", ex.getChange().getAccountId(),
               ex.getChange().getFilePath(), ex);
           yamlGitService.processFailedOrUnprocessedChanges(gitFileChangeList, ex.getChange(), ex.getMessage());
         }
       } else {
-        logger.error("Unexpected commandType result: [{}] for changeSetId [{}] for account {}",
+        logger.warn("Unexpected commandType result: [{}] for changeSetId [{}] for account {}",
             gitCommandExecutionResponse.getErrorMessage(), changeSetId, accountId);
         yamlChangeSetService.updateStatus(accountId, changeSetId, Status.FAILED);
       }
     } else {
-      logger.error("Unexpected notify response data: [{}] for changeSetId [{}] for account {}", notifyResponseData,
+      logger.warn("Unexpected notify response data: [{}] for changeSetId [{}] for account {}", notifyResponseData,
           changeSetId, accountId);
       yamlChangeSetService.updateStatus(accountId, changeSetId, Status.FAILED);
     }
