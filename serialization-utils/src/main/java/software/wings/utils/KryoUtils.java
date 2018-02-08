@@ -15,6 +15,7 @@ import com.esotericsoftware.kryo.Kryo;
 import com.esotericsoftware.kryo.io.Input;
 import com.esotericsoftware.kryo.io.Output;
 import com.esotericsoftware.kryo.pool.KryoPool;
+import com.esotericsoftware.kryo.serializers.CompatibleFieldSerializer;
 import com.esotericsoftware.kryo.serializers.FieldSerializer;
 import de.javakaffee.kryoserializers.ArraysAsListSerializer;
 import de.javakaffee.kryoserializers.GregorianCalendarSerializer;
@@ -72,6 +73,7 @@ public class KryoUtils {
             Kryo kryo = new Kryo();
             // Log.TRACE();
             kryo.setInstantiatorStrategy(new Kryo.DefaultInstantiatorStrategy(new StdInstantiatorStrategy()));
+            kryo.setDefaultSerializer(CompatibleFieldSerializer.class);
             kryo.getFieldSerializerConfig().setCachedFieldNameStrategy(
                 FieldSerializer.CachedFieldNameStrategy.EXTENDED);
             kryo.getFieldSerializerConfig().setCopyTransient(false);
@@ -133,7 +135,6 @@ public class KryoUtils {
             kryo.register(
                 Lists.reverse(Lists.newArrayList()).getClass(), ReverseListSerializer.forRandomAccessReverseList(), 59);
 
-            kryo.register(asList("").getClass(), new ArraysAsListSerializer(), 60);
             kryo.register(InvocationHandler.class, new JdkProxySerializer(), 61);
             kryo.register(GregorianCalendar.class, new GregorianCalendarSerializer(), 62);
             // register CGLibProxySerializer, works in combination with the appropriate action in
