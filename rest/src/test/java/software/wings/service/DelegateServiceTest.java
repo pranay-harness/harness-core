@@ -5,6 +5,7 @@ import static com.github.tomakehurst.wiremock.client.WireMock.get;
 import static com.github.tomakehurst.wiremock.client.WireMock.head;
 import static com.github.tomakehurst.wiremock.client.WireMock.urlEqualTo;
 import static java.util.Arrays.asList;
+import static java.util.stream.Collectors.toSet;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.mockito.Matchers.any;
 import static org.mockito.Matchers.anyBoolean;
@@ -69,6 +70,7 @@ import java.io.File;
 import java.io.FileInputStream;
 import java.io.IOException;
 import java.io.InputStreamReader;
+import java.util.List;
 
 /**
  * Created by peeyushaggarwal on 11/28/16.
@@ -434,5 +436,21 @@ public class DelegateServiceTest extends WingsBaseTest {
   @Test
   public void shouldGetLatestVersion() {
     assertThat(delegateService.getLatestDelegateVersion()).isEqualTo("9.9.9");
+  }
+
+  @Test
+  public void shouldDeleteOldDelegateTasks() {
+    wingsPersistence.save(aDelegateTask().withUuid("ID1").withStatus(DelegateTask.Status.ABORTED).build());
+    wingsPersistence.save(aDelegateTask().withUuid("ID2").withStatus(DelegateTask.Status.ERROR).build());
+    wingsPersistence.save(aDelegateTask().withUuid("ID3").withStatus(DelegateTask.Status.QUEUED).build());
+    wingsPersistence.save(aDelegateTask().withUuid("ID4").withStatus(DelegateTask.Status.STARTED).build());
+    assertThat(wingsPersistence.createQuery(DelegateTask.class).asList().size()).isEqualTo(4);
+
+    delegateService.deleteOldTasks(0);
+
+    List<DelegateTask> delegateTasks = wingsPersistence.createQuery(DelegateTask.class).asList();
+    assertThat(delegateTasks.size()).isEqualTo(2);
+    assertThat(delegateTasks.stream().map(DelegateTask::getUuid).collect(toSet()))
+        .containsExactlyInAnyOrder("ID3", "ID4");
   }
 }

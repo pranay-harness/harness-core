@@ -986,26 +986,26 @@ public class DelegateServiceImpl implements DelegateService {
       logger.info("Start: Deleting delegate tasks older than {} hours", hours);
       timeLimiter.callWithTimeout(() -> {
         while (true) {
-          List<DelegateTask> delegateTasks = new ArrayList<>();
+          List<Key<DelegateTask>> delegateTaskKeys = new ArrayList<>();
           try {
             Query<DelegateTask> query = wingsPersistence.createQuery(DelegateTask.class)
                                             .field("createdAt")
                                             .lessThan(clock.millis() - retentionMillis);
             query.or(query.criteria("status").equal(ABORTED), query.criteria("status").equal(ERROR));
-            delegateTasks.addAll(query.asList(new FindOptions().limit(limit).batchSize(batchSize)));
-            if (isEmpty(delegateTasks)) {
+            delegateTaskKeys.addAll(query.asKeyList(new FindOptions().limit(limit).batchSize(batchSize)));
+            if (isEmpty(delegateTaskKeys)) {
               logger.info("No more delegate tasks older than {} hours", hours);
               return true;
             }
-            logger.info("Deleting {} delegate tasks", delegateTasks.size());
+            logger.info("Deleting {} delegate tasks", delegateTaskKeys.size());
             wingsPersistence.getCollection("delegateTasks")
-                .remove(new BasicDBObject(
-                    "_id", new BasicDBObject("$in", delegateTasks.stream().map(DelegateTask::getUuid).toArray())));
+                .remove(new BasicDBObject(ID_KEY,
+                    new BasicDBObject("$in", delegateTaskKeys.stream().map(key -> key.getId().toString()).toArray())));
           } catch (Exception ex) {
-            logger.warn("Failed to delete {} delegate tasks", delegateTasks.size(), ex);
+            logger.warn("Failed to delete {} delegate tasks", delegateTaskKeys.size(), ex);
           }
-          logger.info("Successfully deleted {} delegate tasks", delegateTasks.size());
-          if (delegateTasks.size() < limit) {
+          logger.info("Successfully deleted {} delegate tasks", delegateTaskKeys.size());
+          if (delegateTaskKeys.size() < limit) {
             return true;
           }
           sleep(ofSeconds(2L));

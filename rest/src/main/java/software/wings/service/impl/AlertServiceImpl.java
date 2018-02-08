@@ -19,6 +19,7 @@ import com.google.inject.Inject;
 import com.google.inject.Injector;
 
 import com.mongodb.BasicDBObject;
+import org.mongodb.morphia.Key;
 import org.mongodb.morphia.query.FindOptions;
 import org.mongodb.morphia.query.Query;
 import org.mongodb.morphia.query.UpdateOperations;
@@ -199,26 +200,26 @@ public class AlertServiceImpl implements AlertService {
       logger.info("Start: Deleting alerts older than {} days", days);
       timeLimiter.callWithTimeout(() -> {
         while (true) {
-          List<Alert> alerts = new ArrayList<>();
+          List<Key<Alert>> alertKeys = new ArrayList<>();
           try {
-            alerts.addAll(wingsPersistence.createQuery(Alert.class)
-                              .field("status")
-                              .equal(Closed)
-                              .field("createdAt")
-                              .lessThan(System.currentTimeMillis() - retentionMillis)
-                              .asList(new FindOptions().limit(limit).batchSize(batchSize)));
-            if (isEmpty(alerts)) {
+            alertKeys.addAll(wingsPersistence.createQuery(Alert.class)
+                                 .field("status")
+                                 .equal(Closed)
+                                 .field("createdAt")
+                                 .lessThan(System.currentTimeMillis() - retentionMillis)
+                                 .asKeyList(new FindOptions().limit(limit).batchSize(batchSize)));
+            if (isEmpty(alertKeys)) {
               logger.info("No more alerts older than {} days", days);
               return true;
             }
-            logger.info("Deleting {} alerts", alerts.size());
-            wingsPersistence.getCollection("alerts").remove(
-                new BasicDBObject("_id", new BasicDBObject("$in", alerts.stream().map(Alert::getUuid).toArray())));
+            logger.info("Deleting {} alerts", alertKeys.size());
+            wingsPersistence.getCollection("alerts").remove(new BasicDBObject(
+                ID_KEY, new BasicDBObject("$in", alertKeys.stream().map(key -> key.getId().toString()).toArray())));
           } catch (Exception ex) {
-            logger.warn("Failed to delete {} alerts", alerts.size(), ex);
+            logger.warn("Failed to delete {} alerts", alertKeys.size(), ex);
           }
-          logger.info("Successfully deleted {} alerts", alerts.size());
-          if (alerts.size() < limit) {
+          logger.info("Successfully deleted {} alerts", alertKeys.size());
+          if (alertKeys.size() < limit) {
             return true;
           }
           sleep(ofSeconds(2L));
