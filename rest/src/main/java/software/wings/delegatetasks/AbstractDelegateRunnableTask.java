@@ -92,11 +92,12 @@ public abstract class AbstractDelegateRunnableTask implements DelegateRunnableTa
     for (int i = 0; i < callables.size(); i++) {
       try {
         Future<T> poll = completionService.poll(3, TimeUnit.MINUTES);
-        if (poll.isDone()) {
+        if (poll != null && poll.isDone()) {
           T result = poll.get();
           rv.add(result == null ? Optional.empty() : Optional.of(result));
         } else {
-          throw new TimeoutException("Timeout in executing " + callables);
+          logger.info("Timeout. Execution took longer than 3 minutes {}", callables);
+          throw new TimeoutException("Timeout. Execution took longer than 3 minutes ");
         }
       } catch (Exception e) {
         throw new IOException(e);

@@ -124,12 +124,15 @@ public class NewRelicMetricNameCollectionTask extends AbstractDelegateRunnableTa
     dataCollectionInfo = (NewRelicDataCollectionInfo) parameters[0];
 
     try {
+      logger.info("Collecting metric names for {}", dataCollectionInfo);
       metrics = newRelicDelegateService.getMetricsNameToCollect(dataCollectionInfo.getNewRelicConfig(),
           dataCollectionInfo.getEncryptedDataDetails(), dataCollectionInfo.getNewRelicAppId());
+      logger.info("Done collecting {} metrics", metrics.size());
       instances = newRelicDelegateService.getApplicationInstances(dataCollectionInfo.getNewRelicConfig(),
           dataCollectionInfo.getEncryptedDataDetails(), dataCollectionInfo.getNewRelicAppId());
-
+      logger.info("Done collecting {} instances", instances.size());
       metrics = getMetricsWithDataIn24Hrs();
+      logger.info("Done collecting data for {} metrics", metrics.size());
       NewRelicMetricNames newRelicMetricNames =
           NewRelicMetricNames.builder()
               .metrics(new ArrayList(getMetrics()))
