@@ -2,6 +2,7 @@ package software.wings.helpers.ext.mail;
 
 import static freemarker.template.Configuration.VERSION_2_3_23;
 import static org.apache.commons.lang3.StringUtils.isNotBlank;
+import static software.wings.common.Constants.HARNESS_NAME;
 
 import com.google.common.collect.ImmutableList;
 import com.google.inject.Inject;
@@ -68,7 +69,7 @@ public class Mailer {
       } catch (AddressException e) {
         logger.error(Misc.getMessage(e), e);
       }
-      email.setFrom(smtpConfig.getFromAddress(), "harness");
+      email.setFrom(smtpConfig.getFromAddress(), HARNESS_NAME);
 
       for (String to : emailData.getTo()) {
         email.addTo(to);

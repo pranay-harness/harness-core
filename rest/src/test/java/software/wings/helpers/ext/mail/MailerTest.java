@@ -1,6 +1,7 @@
 package software.wings.helpers.ext.mail;
 
 import static org.assertj.core.api.Assertions.assertThat;
+import static software.wings.common.Constants.HARNESS_NAME;
 
 import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.Lists;
@@ -71,7 +72,7 @@ public class MailerTest extends WingsBaseTest {
     assertThat(greenMail.getReceivedMessages()[0].getSubject()).isEqualTo("test");
     assertThat(greenMail.getReceivedMessages()[0].getFrom())
         .extracting(Address::toString)
-        .containsExactly("harness <" + EMAIL + ">");
+        .containsExactly(HARNESS_NAME + " <" + EMAIL + ">");
     assertThat(greenMail.getReceivedMessages()[0].getReplyTo()[0].toString()).isEqualTo(EMAIL);
     assertThat(greenMail.getReceivedMessages()[0].getAllRecipients())
         .extracting(Address::toString)
@@ -107,7 +108,7 @@ public class MailerTest extends WingsBaseTest {
     assertThat(greenMail.getReceivedMessages()[0].getSubject()).isEqualTo("test");
     assertThat(greenMail.getReceivedMessages()[0].getFrom())
         .extracting(Address::toString)
-        .containsExactly("harness <" + EMAIL + ">");
+        .containsExactly(HARNESS_NAME + " <" + EMAIL + ">");
     assertThat(greenMail.getReceivedMessages()[0].getReplyTo()[0].toString()).isEqualTo(EMAIL);
     assertThat(greenMail.getReceivedMessages()[0].getAllRecipients())
         .extracting(Address::toString)
@@ -144,7 +145,7 @@ public class MailerTest extends WingsBaseTest {
     assertThat(greenMail.getReceivedMessages()[0].getSubject()).isEqualTo("test you are invited");
     assertThat(greenMail.getReceivedMessages()[0].getFrom())
         .extracting(Address::toString)
-        .containsExactly("harness <" + EMAIL + ">");
+        .containsExactly(HARNESS_NAME + " <" + EMAIL + ">");
     assertThat(greenMail.getReceivedMessages()[0].getReplyTo()[0].toString()).isEqualTo(EMAIL);
     assertThat(greenMail.getReceivedMessages()[0].getAllRecipients())
         .extracting(Address::toString)

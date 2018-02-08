@@ -574,4 +574,6 @@ public interface Constants {
   String ABORTED_COLOR = "#77787B";
   String WHITE_COLOR = "#FFFFFF";
   String LINK_COLOR = "#1A89BF";
+
+  String HARNESS_NAME = "Harness";
 }

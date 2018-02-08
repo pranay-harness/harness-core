@@ -5,6 +5,7 @@ import static org.mockito.Matchers.anyString;
 import static org.mockito.Matchers.eq;
 import static org.mockito.Mockito.verify;
 import static software.wings.beans.Account.Builder.anAccount;
+import static software.wings.common.Constants.HARNESS_NAME;
 
 import com.google.inject.Inject;
 
@@ -35,17 +36,17 @@ public class AccountServiceTest extends WingsBaseTest {
   @Inject private WingsPersistence wingsPersistence;
 
   @Test
-  public void shouldSaveAccount() throws Exception {
+  public void shouldSaveAccount() {
     Account account = accountService.save(
-        anAccount().withCompanyName("Harness").withAccountName("Harness").withAccountKey("ACCOUNT_KEY").build());
+        anAccount().withCompanyName(HARNESS_NAME).withAccountName(HARNESS_NAME).withAccountKey("ACCOUNT_KEY").build());
     assertThat(wingsPersistence.get(Account.class, account.getUuid())).isEqualTo(account);
     verify(settingsService).createDefaultAccountSettings(account.getUuid());
     verify(jobScheduler).deleteJob(eq(account.getUuid()), anyString());
   }
 
   @Test
-  public void shouldDeleteAccount() throws Exception {
-    String accountId = wingsPersistence.save(anAccount().withCompanyName("Harness").build());
+  public void shouldDeleteAccount() {
+    String accountId = wingsPersistence.save(anAccount().withCompanyName(HARNESS_NAME).build());
     accountService.delete(accountId);
     assertThat(wingsPersistence.get(Account.class, accountId)).isNull();
     verify(appService).deleteByAccountId(accountId);
@@ -53,23 +54,23 @@ public class AccountServiceTest extends WingsBaseTest {
   }
 
   @Test
-  public void shouldUpdateCompanyName() throws Exception {
+  public void shouldUpdateCompanyName() {
     Account account = wingsPersistence.saveAndGet(
-        Account.class, anAccount().withCompanyName("Harness").withAccountName("Wings").build());
-    account.setCompanyName("harness");
+        Account.class, anAccount().withCompanyName("Wings").withAccountName("Wings").build());
+    account.setCompanyName(HARNESS_NAME);
     accountService.update(account);
     assertThat(wingsPersistence.get(Account.class, account.getUuid())).isEqualTo(account);
   }
 
   @Test
-  public void shouldGetAccountByName() throws Exception {
-    Account account = wingsPersistence.saveAndGet(Account.class, anAccount().withCompanyName("Harness").build());
-    assertThat(accountService.getByName("Harness")).isEqualTo(account);
+  public void shouldGetAccountByName() {
+    Account account = wingsPersistence.saveAndGet(Account.class, anAccount().withCompanyName(HARNESS_NAME).build());
+    assertThat(accountService.getByName(HARNESS_NAME)).isEqualTo(account);
   }
 
   @Test
-  public void shouldGetAccount() throws Exception {
-    Account account = wingsPersistence.saveAndGet(Account.class, anAccount().withCompanyName("Harness").build());
+  public void shouldGetAccount() {
+    Account account = wingsPersistence.saveAndGet(Account.class, anAccount().withCompanyName(HARNESS_NAME).build());
     assertThat(accountService.get(account.getUuid())).isEqualTo(account);
   }
 }
