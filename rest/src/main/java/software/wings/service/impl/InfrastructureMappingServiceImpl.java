@@ -81,6 +81,7 @@ import software.wings.dl.PageRequest;
 import software.wings.dl.PageResponse;
 import software.wings.dl.WingsPersistence;
 import software.wings.exception.WingsException;
+import software.wings.exception.WingsException.ReportTarget;
 import software.wings.expression.ExpressionEvaluator;
 import software.wings.scheduler.PruneEntityJob;
 import software.wings.scheduler.QuartzScheduler;
@@ -602,7 +603,7 @@ public class InfrastructureMappingServiceImpl implements InfrastructureMappingSe
             .collect(toList());
 
     if (!referencingWorkflowNames.isEmpty()) {
-      throw new WingsException(INVALID_REQUEST)
+      throw new WingsException(INVALID_REQUEST, ReportTarget.USER)
           .addParam("message",
               String.format("Service Infrastructure is in use by %s workflow%s [%s].", referencingWorkflowNames.size(),
                   referencingWorkflowNames.size() == 1 ? "" : "s", Joiner.on(", ").join(referencingWorkflowNames)));

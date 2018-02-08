@@ -71,6 +71,7 @@ import software.wings.dl.PageRequest;
 import software.wings.dl.PageResponse;
 import software.wings.dl.WingsPersistence;
 import software.wings.exception.WingsException;
+import software.wings.exception.WingsException.ReportTarget;
 import software.wings.scheduler.PruneEntityJob;
 import software.wings.scheduler.QuartzScheduler;
 import software.wings.service.impl.yaml.YamlChangeSetHelper;
@@ -515,7 +516,7 @@ public class ServiceResourceServiceImpl implements ServiceResourceService, DataP
           String.format("Service [%s] couldn't be deleted. Remove Service reference from the following workflows ["
                   + workflowNames + "]",
               service.getName());
-      throw new WingsException(INVALID_REQUEST).addParam("message", message);
+      throw new WingsException(INVALID_REQUEST, ReportTarget.USER).addParam("message", message);
     }
   }
 
@@ -600,7 +601,7 @@ public class ServiceResourceServiceImpl implements ServiceResourceService, DataP
       String message = String.format(
           "Command [%s] couldn't be deleted. Remove reference from the following workflows [" + sb.toString() + "]",
           serviceCommand.getName());
-      throw new WingsException(INVALID_REQUEST).addParam("message", message);
+      throw new WingsException(INVALID_REQUEST, ReportTarget.USER).addParam("message", message);
     }
   }
 

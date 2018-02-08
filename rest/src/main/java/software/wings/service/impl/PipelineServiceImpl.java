@@ -50,6 +50,7 @@ import software.wings.dl.PageRequest;
 import software.wings.dl.PageResponse;
 import software.wings.dl.WingsPersistence;
 import software.wings.exception.WingsException;
+import software.wings.exception.WingsException.ReportTarget;
 import software.wings.scheduler.PruneEntityJob;
 import software.wings.scheduler.QuartzScheduler;
 import software.wings.service.intfc.AppService;
@@ -241,7 +242,7 @@ public class PipelineServiceImpl implements PipelineService {
       }
       List<String> triggerNames = triggers.stream().map(Trigger::getName).collect(Collectors.toList());
 
-      throw new WingsException(INVALID_REQUEST, HARMLESS)
+      throw new WingsException(INVALID_REQUEST, ReportTarget.USER)
           .addParam("message",
               String.format(
                   "Pipeline associated as a trigger action to triggers [%s]", Joiner.on(", ").join(triggerNames)));

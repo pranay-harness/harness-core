@@ -23,6 +23,7 @@ import software.wings.dl.PageRequest;
 import software.wings.dl.PageResponse;
 import software.wings.dl.WingsPersistence;
 import software.wings.exception.WingsException;
+import software.wings.exception.WingsException.ReportTarget;
 import software.wings.service.intfc.DelegateScopeService;
 import software.wings.service.intfc.DelegateService;
 
@@ -154,7 +155,7 @@ public class DelegateScopeServiceImpl implements DelegateScopeService {
       String message =
           String.format("Delegate scope [%s] could not be deleted because it's used by these delegates [%s]",
               delegateScope.getName(), Joiner.on(", ").join(delegateNames));
-      throw new WingsException(INVALID_REQUEST).addParam("message", message);
+      throw new WingsException(INVALID_REQUEST, ReportTarget.USER).addParam("message", message);
     }
   }
 }

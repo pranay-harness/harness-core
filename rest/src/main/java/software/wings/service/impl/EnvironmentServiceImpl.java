@@ -48,6 +48,7 @@ import software.wings.dl.PageRequest;
 import software.wings.dl.PageResponse;
 import software.wings.dl.WingsPersistence;
 import software.wings.exception.WingsException;
+import software.wings.exception.WingsException.ReportTarget;
 import software.wings.scheduler.PruneEntityJob;
 import software.wings.scheduler.QuartzScheduler;
 import software.wings.service.impl.yaml.YamlChangeSetHelper;
@@ -312,7 +313,7 @@ public class EnvironmentServiceImpl implements EnvironmentService, DataProvider 
 
     if (!pipelines.isEmpty()) {
       List<String> pipelineNames = pipelines.stream().map(Pipeline::getName).collect(Collectors.toList());
-      throw new WingsException(INVALID_REQUEST)
+      throw new WingsException(INVALID_REQUEST, ReportTarget.USER)
           .addParam("message",
               String.format("Environment is referenced by %s pipeline%s [%s].", pipelines.size(),
                   pipelines.size() == 1 ? "" : "s", Joiner.on(", ").join(pipelineNames)));
