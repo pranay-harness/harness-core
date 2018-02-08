@@ -12,6 +12,7 @@ import static software.wings.beans.Application.Builder.anApplication;
 import static software.wings.beans.License.Builder.aLicense;
 import static software.wings.beans.SearchFilter.Builder.aSearchFilter;
 import static software.wings.beans.User.Builder.anUser;
+import static software.wings.common.Constants.HARNESS_NAME;
 import static software.wings.dl.PageRequest.Builder.aPageRequest;
 import static software.wings.integration.IntegrationTestUtil.randomInt;
 import static software.wings.integration.SeedData.randomSeedString;
@@ -295,8 +296,8 @@ private void addAdminUser() {
                                      aSearchFilter().withField("roleType", Operator.EQ, RoleType.ACCOUNT_ADMIN).build())
                                  .build())
                          .getResponse())
-                 .withAccountName("harness")
-                 .withCompanyName("harness")
+                 .withAccountName(HARNESS_NAME)
+                 .withCompanyName(HARNESS_NAME)
                  .build(),
           APPLICATION_JSON),
       new GenericType<RestResponse<User>>() {});

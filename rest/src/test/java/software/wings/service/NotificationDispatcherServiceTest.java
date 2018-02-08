@@ -13,6 +13,7 @@ import static software.wings.beans.NotificationBatch.Builder.aNotificationBatch;
 import static software.wings.beans.NotificationGroup.NotificationGroupBuilder.aNotificationGroup;
 import static software.wings.beans.NotificationRule.NotificationRuleBuilder.aNotificationRule;
 import static software.wings.beans.SlackConfig.Builder.aSlackConfig;
+import static software.wings.common.Constants.HARNESS_NAME;
 import static software.wings.common.NotificationMessageResolver.NotificationMessageType.ENTITY_CREATE_NOTIFICATION;
 import static software.wings.common.NotificationMessageResolver.NotificationMessageType.WORKFLOW_FAILED_NOTIFICATION;
 import static software.wings.common.NotificationMessageResolver.NotificationMessageType.WORKFLOW_PHASE_SUCCESSFUL_NOTIFICATION;
@@ -271,6 +272,6 @@ public class NotificationDispatcherServiceTest extends WingsBaseTest {
     notificationDispatcherService.dispatchNotification(notification, asList(notificationRule));
     channels.forEach(channel
         -> verify(slackNotificationService)
-               .sendMessage(slackConfig, channel, "harness", ENTITY_CREATE_NOTIFICATION.name()));
+               .sendMessage(slackConfig, channel, HARNESS_NAME, ENTITY_CREATE_NOTIFICATION.name()));
   }
 }

@@ -9,6 +9,7 @@ import static software.wings.beans.ConfigFile.DEFAULT_TEMPLATE_ID;
 import static software.wings.beans.ServiceTemplate.Builder.aServiceTemplate;
 import static software.wings.beans.SettingAttribute.Builder.aSettingAttribute;
 import static software.wings.beans.infrastructure.Host.Builder.aHost;
+import static software.wings.common.Constants.HARNESS_NAME;
 import static software.wings.integration.IntegrationTestUtil.randomInt;
 
 import com.google.inject.Inject;
@@ -134,7 +135,7 @@ public class ConfigFileOverrideIntegrationTest extends WingsBaseTest {
             Service.class, SettingAttribute.class)
         .forEach(aClass -> wingsPersistence.getDatastore().getCollection(aClass).drop());
 
-    String accountId = wingsPersistence.save(anAccount().withCompanyName("harness").build());
+    String accountId = wingsPersistence.save(anAccount().withCompanyName(HARNESS_NAME).build());
 
     settingsService.save(aSettingAttribute()
                              .withCategory(Category.CONNECTOR)

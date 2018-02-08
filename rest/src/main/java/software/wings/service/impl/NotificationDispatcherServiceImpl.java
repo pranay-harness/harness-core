@@ -9,6 +9,7 @@ import static software.wings.beans.SearchFilter.Operator.IN;
 import static software.wings.common.Constants.ABORTED_COLOR;
 import static software.wings.common.Constants.COMPLETED_COLOR;
 import static software.wings.common.Constants.FAILED_COLOR;
+import static software.wings.common.Constants.HARNESS_NAME;
 import static software.wings.common.Constants.LINK_COLOR;
 import static software.wings.common.Constants.PAUSED_COLOR;
 import static software.wings.common.Constants.RESUMED_COLOR;
@@ -191,7 +192,8 @@ public class NotificationDispatcherServiceImpl implements NotificationDispatcher
     });
 
     messages.forEach(message
-        -> channels.forEach(channel -> slackNotificationService.sendMessage(slackConfig, channel, "harness", message)));
+        -> channels.forEach(
+            channel -> slackNotificationService.sendMessage(slackConfig, channel, HARNESS_NAME, message)));
   }
 
   private void dispatchEmail(List<Notification> notifications, List<String> toAddress) {
