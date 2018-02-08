@@ -29,10 +29,10 @@ public class DynaTraceDelegateServiceImpl implements DynaTraceDelegateService {
 
   @Override
   public boolean validateConfig(DynaTraceConfig dynaTraceConfig) throws IOException {
-    final Call<List<DynaTraceTimeSeries>> request =
+    final Call<Object> request =
         getDynaTraceRestClient(dynaTraceConfig)
             .listTimeSeries(getHeaderWithCredentials(dynaTraceConfig, Collections.emptyList()));
-    final Response<List<DynaTraceTimeSeries>> response = request.execute();
+    final Response<Object> response = request.execute();
     if (response.isSuccessful()) {
       return true;
     } else {
