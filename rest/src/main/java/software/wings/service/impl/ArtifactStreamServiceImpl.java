@@ -34,6 +34,7 @@ import software.wings.dl.PageRequest.Builder;
 import software.wings.dl.PageResponse;
 import software.wings.dl.WingsPersistence;
 import software.wings.exception.WingsException;
+import software.wings.exception.WingsException.ReportTarget;
 import software.wings.scheduler.ArtifactCollectionJob;
 import software.wings.scheduler.PruneEntityJob;
 import software.wings.scheduler.QuartzScheduler;
@@ -214,7 +215,7 @@ public class ArtifactStreamServiceImpl implements ArtifactStreamService, DataPro
     }
     List<String> triggerNames =
         triggers.stream().map(software.wings.beans.trigger.Trigger::getName).collect(Collectors.toList());
-    throw new WingsException(INVALID_REQUEST)
+    throw new WingsException(INVALID_REQUEST, ReportTarget.USER)
         .addParam("message",
             String.format(
                 "Artifact Source associated as a trigger action to triggers [%s]", Joiner.on(", ").join(triggerNames)));

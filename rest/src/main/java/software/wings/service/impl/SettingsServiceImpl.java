@@ -40,6 +40,7 @@ import software.wings.dl.PageRequest;
 import software.wings.dl.PageResponse;
 import software.wings.dl.WingsPersistence;
 import software.wings.exception.WingsException;
+import software.wings.exception.WingsException.ReportTarget;
 import software.wings.service.impl.yaml.YamlChangeSetHelper;
 import software.wings.service.intfc.AppService;
 import software.wings.service.intfc.ArtifactStreamService;
@@ -255,7 +256,7 @@ public class SettingsServiceImpl implements SettingsService {
                                               .map(ArtifactStream::getSourceName)
                                               .filter(java.util.Objects::nonNull)
                                               .collect(Collectors.toList());
-        throw new WingsException(INVALID_REQUEST)
+        throw new WingsException(INVALID_REQUEST, ReportTarget.USER)
             .addParam("message",
                 String.format("Connector [%s] is referenced by %s Artifact Source%s [%s].", connectorSetting.getName(),
                     artifactStreamName.size(), artifactStreamName.size() == 1 ? "" : "s",
@@ -277,7 +278,7 @@ public class SettingsServiceImpl implements SettingsService {
     if (!infrastructureMappings.isEmpty()) {
       List<String> infraMappingNames =
           infrastructureMappings.stream().map(InfrastructureMapping::getName).collect(Collectors.toList());
-      throw new WingsException(INVALID_REQUEST)
+      throw new WingsException(INVALID_REQUEST, ReportTarget.USER)
           .addParam("message",
               String.format("Cloud provider [%s] is referenced by %s Service Infrastructure%s [%s].",
                   clodProviderSetting.getName(), infraMappingNames.size(), infraMappingNames.size() == 1 ? "" : "s",

@@ -49,7 +49,6 @@ import static software.wings.common.Constants.WORKFLOW_INFRAMAPPING_VALIDATION_M
 import static software.wings.common.UUIDGenerator.getUuid;
 import static software.wings.dl.MongoHelper.setUnset;
 import static software.wings.dl.PageRequest.Builder.aPageRequest;
-import static software.wings.exception.WingsException.HARMLESS;
 import static software.wings.sm.StateMachineExecutionSimulator.populateRequiredEntityTypesByAccessType;
 import static software.wings.sm.StateType.ARTIFACT_COLLECTION;
 import static software.wings.sm.StateType.AWS_AMI_SERVICE_DEPLOY;
@@ -141,6 +140,7 @@ import software.wings.dl.PageRequest;
 import software.wings.dl.PageResponse;
 import software.wings.dl.WingsPersistence;
 import software.wings.exception.WingsException;
+import software.wings.exception.WingsException.ReportTarget;
 import software.wings.expression.ExpressionEvaluator;
 import software.wings.scheduler.PruneEntityJob;
 import software.wings.scheduler.QuartzScheduler;
@@ -1278,12 +1278,12 @@ public class WorkflowServiceImpl implements WorkflowService, DataProvider {
       List<String> pipelineNames = pipelines.stream().map(Pipeline::getName).collect(Collectors.toList());
       String message = String.format("Workflow is referenced by %s pipeline%s [%s].", pipelines.size(),
           pipelines.size() == 1 ? "" : "s", Joiner.on(", ").join(pipelineNames));
-      throw new WingsException(INVALID_REQUEST, HARMLESS).addParam("message", message);
+      throw new WingsException(INVALID_REQUEST, ReportTarget.USER).addParam("message", message);
     }
 
     if (workflowExecutionService.workflowExecutionsRunning(
             workflow.getWorkflowType(), workflow.getAppId(), workflow.getUuid())) {
-      throw new WingsException(WORKFLOW_EXECUTION_IN_PROGRESS, HARMLESS)
+      throw new WingsException(WORKFLOW_EXECUTION_IN_PROGRESS, ReportTarget.USER)
           .addParam("message", String.format("Workflow: [%s] couldn't be deleted", workflow.getName()));
     }
 
@@ -1293,7 +1293,7 @@ public class WorkflowServiceImpl implements WorkflowService, DataProvider {
     }
     List<String> triggerNames = triggers.stream().map(Trigger::getName).collect(Collectors.toList());
 
-    throw new WingsException(INVALID_REQUEST, HARMLESS)
+    throw new WingsException(INVALID_REQUEST, ReportTarget.USER)
         .addParam("message",
             String.format(
                 "Workflow associated as a trigger action to triggers [%s]", Joiner.on(", ").join(triggerNames)));
