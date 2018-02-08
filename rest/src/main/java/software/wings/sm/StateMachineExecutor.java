@@ -759,10 +759,10 @@ public class StateMachineExecutor {
     }
   }
 
-  private void abortExecution(ExecutionContextImpl context) {
+  private void abortExecution(ExecutionContextImpl context, ExecutionInterrupt reason) {
     StateExecutionInstance stateExecutionInstance = context.getStateExecutionInstance();
     boolean updated = updateStatus(
-        stateExecutionInstance, ABORTING, Lists.newArrayList(NEW, QUEUED, STARTING, RUNNING, PAUSED, WAITING), null);
+        stateExecutionInstance, ABORTING, Lists.newArrayList(NEW, QUEUED, STARTING, RUNNING, PAUSED, WAITING), reason);
     if (!updated) {
       throw new WingsException(ErrorCode.STATE_NOT_FOR_ABORT)
           .addParam("stateName", stateExecutionInstance.getStateName());
@@ -1011,8 +1011,8 @@ public class StateMachineExecutor {
     UpdateResults updateResult = wingsPersistence.update(query, ops);
     boolean updated = true;
     if (updateResult == null || updateResult.getWriteResult() == null || updateResult.getWriteResult().getN() != 1) {
-      logger.warn(
-          "StateExecutionInstance status could not be updated- stateExecutionInstance: {}, stateExecutionData: {}, status: {}, errorMsg: {}, ",
+      logger.warn("StateExecutionInstance status could not be updated -"
+              + " stateExecutionInstance: {}, stateExecutionData: {}, status: {}, errorMsg: {}, ",
           stateExecutionInstance.getUuid(), stateExecutionData, status, errorMsg);
 
       updated = false;
@@ -1122,7 +1122,7 @@ public class StateMachineExecutor {
             stateExecutionInstance.getStateMachineId(), CRITICAL);
         ExecutionContextImpl context = new ExecutionContextImpl(stateExecutionInstance, sm, injector);
         injector.injectMembers(context);
-        abortExecution(context);
+        abortExecution(context, workflowExecutionInterrupt);
         break;
       }
       case ABORT_ALL: {
@@ -1298,6 +1298,14 @@ public class StateMachineExecutor {
     UpdateOperations<StateExecutionInstance> ops =
         wingsPersistence.createUpdateOperations(StateExecutionInstance.class);
     ops.set("status", ABORTING);
+
+    if (workflowExecutionInterrupt != null) {
+      ops.addToSet("interruptHistory",
+          ExecutionInterruptEffect.builder()
+              .interruptId(workflowExecutionInterrupt.getUuid())
+              .tookEffectAt(new Date())
+              .build());
+    }
 
     Query<StateExecutionInstance> query = wingsPersistence.createQuery(StateExecutionInstance.class)
                                               .field("appId")
