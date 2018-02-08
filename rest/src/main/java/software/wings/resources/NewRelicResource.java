@@ -13,12 +13,7 @@ import software.wings.security.annotations.DelegateAuth;
 import software.wings.security.annotations.LearningEngineAuth;
 import software.wings.service.impl.analysis.TSRequest;
 import software.wings.service.impl.analysis.TimeSeriesMLAnalysisRecord;
-import software.wings.service.impl.analysis.TimeSeriesMLHostSummary;
-import software.wings.service.impl.analysis.TimeSeriesMLMetricScores;
-import software.wings.service.impl.analysis.TimeSeriesMLMetricSummary;
 import software.wings.service.impl.analysis.TimeSeriesMLScores;
-import software.wings.service.impl.analysis.TimeSeriesMLTxnScores;
-import software.wings.service.impl.analysis.TimeSeriesMLTxnSummary;
 import software.wings.service.impl.newrelic.NewRelicApplication;
 import software.wings.service.impl.newrelic.NewRelicMetricAnalysisRecord;
 import software.wings.service.impl.newrelic.NewRelicMetricAnalysisRecord.NewRelicMetricHostAnalysisValue;
@@ -33,10 +28,8 @@ import software.wings.sm.StateType;
 import java.io.IOException;
 import java.util.ArrayList;
 import java.util.HashMap;
-import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
-import java.util.Map.Entry;
 import javax.ws.rs.GET;
 import javax.ws.rs.POST;
 import javax.ws.rs.Path;
@@ -191,58 +184,9 @@ public class NewRelicResource implements MetricAnalysisResource {
       @QueryParam("workflowId") final String workflowId, @QueryParam("serviceId") final String serviceId,
       @QueryParam("analysisMinute") Integer analysisMinute, @QueryParam("taskId") String taskId,
       TimeSeriesMLAnalysisRecord mlAnalysisResponse) throws IOException {
-    mlAnalysisResponse.setStateType(StateType.NEW_RELIC);
-    mlAnalysisResponse.setApplicationId(applicationId);
-    mlAnalysisResponse.setWorkflowExecutionId(workflowExecutionId);
-    mlAnalysisResponse.setStateExecutionId(stateExecutionId);
-    mlAnalysisResponse.setAnalysisMinute(analysisMinute);
-
-    TimeSeriesMLScores timeSeriesMLScores = TimeSeriesMLScores.builder()
-                                                .applicationId(applicationId)
-                                                .stateExecutionId(stateExecutionId)
-                                                .workflowExecutionId(workflowExecutionId)
-                                                .workflowId(workflowId)
-                                                .analysisMinute(analysisMinute)
-                                                .stateType(StateType.NEW_RELIC)
-                                                .scoresMap(new HashMap<>())
-                                                .build();
-
-    int txnId = 0;
-    int metricId;
-    for (TimeSeriesMLTxnSummary txnSummary : mlAnalysisResponse.getTransactions().values()) {
-      TimeSeriesMLTxnScores txnScores =
-          TimeSeriesMLTxnScores.builder().transactionName(txnSummary.getTxn_name()).scoresMap(new HashMap<>()).build();
-      timeSeriesMLScores.getScoresMap().put(String.valueOf(txnId), txnScores);
-
-      metricId = 0;
-      for (TimeSeriesMLMetricSummary mlMetricSummary : txnSummary.getMetrics().values()) {
-        if (mlMetricSummary.getResults() != null) {
-          TimeSeriesMLMetricScores mlMetricScores = TimeSeriesMLMetricScores.builder()
-                                                        .metricName(mlMetricSummary.getMetric_name())
-                                                        .scores(new ArrayList<>())
-                                                        .build();
-          txnScores.getScoresMap().put(String.valueOf(metricId), mlMetricScores);
-
-          Iterator<Entry<String, TimeSeriesMLHostSummary>> it = mlMetricSummary.getResults().entrySet().iterator();
-          Map<String, TimeSeriesMLHostSummary> timeSeriesMLHostSummaryMap = new HashMap<>();
-          while (it.hasNext()) {
-            Entry<String, TimeSeriesMLHostSummary> pair = it.next();
-            timeSeriesMLHostSummaryMap.put(pair.getKey().replaceAll("\\.", "-"), pair.getValue());
-            mlMetricScores.getScores().add(pair.getValue().getScore());
-          }
-          mlMetricSummary.setResults(timeSeriesMLHostSummaryMap);
-          ++metricId;
-        }
-      }
-      ++txnId;
-    }
-
-    metricDataAnalysisService.saveTimeSeriesMLScores(timeSeriesMLScores);
-    metricDataAnalysisService.bumpCollectionMinuteToProcess(
-        StateType.NEW_RELIC, stateExecutionId, workflowExecutionId, serviceId, analysisMinute);
-    learningEngineService.markCompleted(taskId);
-
-    return new RestResponse<>(metricDataAnalysisService.saveAnalysisRecordsML(mlAnalysisResponse));
+    return new RestResponse<>(
+        metricDataAnalysisService.saveAnalysisRecordsML(StateType.NEW_RELIC, accountId, applicationId, stateExecutionId,
+            workflowExecutionId, workflowId, serviceId, analysisMinute, taskId, mlAnalysisResponse));
   }
 
   @Produces({"application/json", "application/v1+json"})

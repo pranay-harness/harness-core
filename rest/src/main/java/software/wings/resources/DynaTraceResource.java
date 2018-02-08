@@ -13,18 +13,12 @@ import software.wings.security.annotations.DelegateAuth;
 import software.wings.security.annotations.LearningEngineAuth;
 import software.wings.service.impl.analysis.TSRequest;
 import software.wings.service.impl.analysis.TimeSeriesMLAnalysisRecord;
-import software.wings.service.impl.appdynamics.AppdynamicsBusinessTransaction;
-import software.wings.service.impl.appdynamics.AppdynamicsMetric;
-import software.wings.service.impl.appdynamics.AppdynamicsMetricData;
-import software.wings.service.impl.appdynamics.AppdynamicsTier;
-import software.wings.service.impl.newrelic.NewRelicApplication;
 import software.wings.service.impl.newrelic.NewRelicMetricAnalysisRecord;
 import software.wings.service.impl.newrelic.NewRelicMetricAnalysisRecord.NewRelicMetricHostAnalysisValue;
 import software.wings.service.impl.newrelic.NewRelicMetricDataRecord;
 import software.wings.service.intfc.LearningEngineService;
 import software.wings.service.intfc.MetricDataAnalysisService;
 import software.wings.service.intfc.analysis.MetricAnalysisResource;
-import software.wings.service.intfc.appdynamics.AppdynamicsService;
 import software.wings.sm.StateType;
 
 import java.io.IOException;
@@ -38,70 +32,15 @@ import javax.ws.rs.Produces;
 import javax.ws.rs.QueryParam;
 
 /**
- * Created by rsingh on 4/14/17.
- *
- * For api versioning see documentation of {@link NewRelicResource}.
- *
+ * Created by rsingh on 2/6/18.
  */
-@Api("appdynamics")
-@Path("/appdynamics")
+@Api("dynatrace")
+@Path("/dynatrace")
 @Produces("application/json")
 @AuthRule(ResourceType.SETTING)
-public class AppdynamicsResource implements MetricAnalysisResource {
-  @Inject private AppdynamicsService appdynamicsService;
-
+public class DynaTraceResource implements MetricAnalysisResource {
   @Inject private MetricDataAnalysisService metricDataAnalysisService;
-
   @Inject private LearningEngineService learningEngineService;
-
-  @GET
-  @Path("/applications")
-  @Timed
-  @ExceptionMetered
-  public RestResponse<List<NewRelicApplication>> getAllApplications(
-      @QueryParam("accountId") String accountId, @QueryParam("settingId") final String settingId) throws IOException {
-    return new RestResponse<>(appdynamicsService.getApplications(settingId));
-  }
-
-  @GET
-  @Path("/tiers")
-  @Timed
-  @ExceptionMetered
-  public RestResponse<List<AppdynamicsTier>> getAllTiers(@QueryParam("accountId") String accountId,
-      @QueryParam("settingId") final String settingId, @QueryParam("appdynamicsAppId") long appdynamicsAppId)
-      throws IOException {
-    return new RestResponse<>(appdynamicsService.getTiers(settingId, appdynamicsAppId));
-  }
-
-  @GET
-  @Path("/business-transactions")
-  @Timed
-  @ExceptionMetered
-  public RestResponse<List<AppdynamicsBusinessTransaction>> getAllBusinessTransactions(
-      @QueryParam("accountId") String accountId, @QueryParam("settingId") final String settingId,
-      @QueryParam("appdynamicsAppId") long appdynamicsAppId) throws IOException {
-    return new RestResponse<>(appdynamicsService.getBusinessTransactions(settingId, appdynamicsAppId));
-  }
-
-  @GET
-  @Path("/tier-bt-metrics")
-  @Timed
-  @ExceptionMetered
-  public RestResponse<List<AppdynamicsMetric>> getTierBTMetrics(@QueryParam("settingId") final String settingId,
-      @QueryParam("appdynamicsAppId") long appdynamicsAppId, @QueryParam("tierId") long tierId) throws IOException {
-    return new RestResponse<>(appdynamicsService.getTierBTMetrics(settingId, appdynamicsAppId, tierId));
-  }
-
-  @GET
-  @Path("/get-metric-data")
-  @Timed
-  @ExceptionMetered
-  public RestResponse<List<AppdynamicsMetricData>> getTierBTMetricData(@QueryParam("settingId") final String settingId,
-      @QueryParam("appdynamicsAppId") long appdynamicsAppId, @QueryParam("tierId") long tierId,
-      @QueryParam("btName") String btName, @QueryParam("duration-in-mins") int durationInMinutes) throws IOException {
-    return new RestResponse<>(
-        appdynamicsService.getTierBTMetricData(settingId, appdynamicsAppId, tierId, btName, durationInMinutes));
-  }
 
   @POST
   @Path("/save-metrics")
@@ -123,34 +62,40 @@ public class AppdynamicsResource implements MetricAnalysisResource {
   @Timed
   @LearningEngineAuth
   @ExceptionMetered
+  @Override
   public RestResponse<List<NewRelicMetricDataRecord>> getMetricData(@QueryParam("accountId") String accountId,
       @QueryParam("workflowExecutionId") String workFlowExecutionId,
       @QueryParam("compareCurrent") boolean compareCurrent, TSRequest request) throws IOException {
+    List<NewRelicMetricDataRecord> metricDataRecords;
     if (compareCurrent) {
-      return new RestResponse<>(metricDataAnalysisService.getRecords(StateType.APP_DYNAMICS,
-          request.getWorkflowExecutionId(), request.getStateExecutionId(), request.getWorkflowId(),
-          request.getServiceId(), request.getNodes(), request.getAnalysisMinute(), request.getAnalysisStartMinute()));
+      metricDataRecords = metricDataAnalysisService.getRecords(StateType.DYNA_TRACE, request.getWorkflowExecutionId(),
+          request.getStateExecutionId(), request.getWorkflowId(), request.getServiceId(), request.getNodes(),
+          request.getAnalysisMinute(), request.getAnalysisStartMinute());
     } else {
       if (workFlowExecutionId == null || workFlowExecutionId.equals("-1")) {
-        return new RestResponse<>(new ArrayList<>());
+        metricDataRecords = new ArrayList<>();
+      } else {
+        metricDataRecords = metricDataAnalysisService.getPreviousSuccessfulRecords(StateType.DYNA_TRACE,
+            request.getWorkflowId(), workFlowExecutionId, request.getServiceId(), request.getAnalysisMinute(),
+            request.getAnalysisStartMinute());
       }
-
-      return new RestResponse<>(metricDataAnalysisService.getPreviousSuccessfulRecords(StateType.APP_DYNAMICS,
-          request.getWorkflowId(), workFlowExecutionId, request.getServiceId(), request.getAnalysisMinute(),
-          request.getAnalysisStartMinute()));
     }
+
+    metricDataRecords.forEach(metricDataRecord -> { metricDataRecord.setHost(metricDataRecord.getName()); });
+    return new RestResponse<>(metricDataRecords);
   }
 
   @GET
   @Path("/generate-metrics")
   @Timed
   @ExceptionMetered
+  @Override
   public RestResponse<NewRelicMetricAnalysisRecord> getMetricsAnalysis(
       @QueryParam("stateExecutionId") final String stateExecutionId,
       @QueryParam("workflowExecutionId") final String workflowExecutionId,
       @QueryParam("accountId") final String accountId) throws IOException {
     return new RestResponse<>(
-        metricDataAnalysisService.getMetricsAnalysis(StateType.APP_DYNAMICS, stateExecutionId, workflowExecutionId));
+        metricDataAnalysisService.getMetricsAnalysis(StateType.DYNA_TRACE, stateExecutionId, workflowExecutionId));
   }
 
   @Produces({"application/json", "application/v1+json"})
@@ -159,6 +104,7 @@ public class AppdynamicsResource implements MetricAnalysisResource {
   @Timed
   @ExceptionMetered
   @LearningEngineAuth
+  @Override
   public RestResponse<Boolean> saveMLAnalysisRecords(@QueryParam("accountId") String accountId,
       @QueryParam("applicationId") String applicationId, @QueryParam("stateExecutionId") String stateExecutionId,
       @QueryParam("workflowExecutionId") final String workflowExecutionId,
@@ -166,7 +112,7 @@ public class AppdynamicsResource implements MetricAnalysisResource {
       @QueryParam("analysisMinute") Integer analysisMinute, @QueryParam("taskId") String taskId,
       TimeSeriesMLAnalysisRecord mlAnalysisResponse) throws IOException {
     return new RestResponse<>(
-        metricDataAnalysisService.saveAnalysisRecordsML(StateType.APP_DYNAMICS, accountId, applicationId,
+        metricDataAnalysisService.saveAnalysisRecordsML(StateType.DYNA_TRACE, accountId, applicationId,
             stateExecutionId, workflowExecutionId, workflowId, serviceId, analysisMinute, taskId, mlAnalysisResponse));
   }
 
@@ -191,8 +137,9 @@ public class AppdynamicsResource implements MetricAnalysisResource {
   @Timed
   @ExceptionMetered
   @LearningEngineAuth
+  @Override
   public RestResponse<Map<String, TimeSeriesMetricDefinition>> getMetricTemplate(
       @QueryParam("accountId") String accountId) {
-    return new RestResponse<>(metricDataAnalysisService.getMetricTemplate(StateType.APP_DYNAMICS));
+    return new RestResponse<>(metricDataAnalysisService.getMetricTemplate(StateType.DYNA_TRACE));
   }
 }

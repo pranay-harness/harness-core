@@ -23,6 +23,7 @@ import software.wings.metrics.TimeSeriesMetricDefinition;
 import software.wings.service.impl.analysis.AnalysisComparisonStrategy;
 import software.wings.service.impl.analysis.AnalysisContext;
 import software.wings.service.impl.analysis.MLAnalysisType;
+import software.wings.service.impl.dynatrace.DynaTraceTimeSeries;
 import software.wings.service.impl.newrelic.NewRelicMetricAnalysisRecord.NewRelicMetricAnalysis;
 import software.wings.service.impl.newrelic.NewRelicMetricAnalysisRecord.NewRelicMetricAnalysisValue;
 import software.wings.service.intfc.DelegateService;
@@ -126,7 +127,7 @@ public class MetricAnalysisJob implements Job {
         Map<String, TimeSeriesMetricDefinition> stateValuesToAnalyze) {
       Map<String, List<Threshold>> stateValuesToThresholds = new HashMap<>();
       for (Entry<String, TimeSeriesMetricDefinition> entry : stateValuesToAnalyze.entrySet()) {
-        stateValuesToThresholds.put(entry.getKey(), entry.getValue().getThresholds());
+        stateValuesToThresholds.put(entry.getValue().getMetricName(), entry.getValue().getThresholds());
       }
 
       return stateValuesToThresholds;
@@ -167,6 +168,9 @@ public class MetricAnalysisJob implements Job {
           break;
         case APP_DYNAMICS:
           stateValuesToAnalyze = getThresholdsMap(NewRelicMetricValueDefinition.APP_DYNAMICS_VALUES_TO_ANALYZE);
+          break;
+        case DYNA_TRACE:
+          stateValuesToAnalyze = getThresholdsMap(DynaTraceTimeSeries.getDefinitionsToAnalyze());
           break;
         default:
           throw new IllegalStateException("Invalid stateType " + context.getStateType());

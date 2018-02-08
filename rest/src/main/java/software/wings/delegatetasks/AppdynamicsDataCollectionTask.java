@@ -86,7 +86,7 @@ public class AppdynamicsDataCollectionTask extends AbstractDelegateDataCollectio
     private final AppdynamicsDataCollectionInfo dataCollectionInfo;
     private long collectionStartTime;
     private int dataCollectionMinute;
-    private DataCollectionTaskResult taskResult;
+    private final DataCollectionTaskResult taskResult;
 
     private AppdynamicsMetricCollector(
         AppdynamicsDataCollectionInfo dataCollectionInfo, DataCollectionTaskResult taskResult) {
@@ -206,7 +206,8 @@ public class AppdynamicsDataCollectionTask extends AbstractDelegateDataCollectio
 
             records.putAll(processMetricData(metricsData));
             List<NewRelicMetricDataRecord> recordsToSave = getAllMetricRecords(records);
-            if (!saveMetrics(recordsToSave)) {
+            if (!saveMetrics(dataCollectionInfo.getAppDynamicsConfig().getAccountId(),
+                    dataCollectionInfo.getApplicationId(), dataCollectionInfo.getStateExecutionId(), recordsToSave)) {
               retry = RETRIES;
               taskResult.setErrorMessage(
                   "Cannot save new AppDynamics metric records to Harness. Server returned error");
@@ -258,20 +259,6 @@ public class AppdynamicsDataCollectionTask extends AbstractDelegateDataCollectio
         shutDownCollection();
         return;
       }
-    }
-
-    private boolean saveMetrics(List<NewRelicMetricDataRecord> records) {
-      int retrySave = 0;
-      do {
-        boolean response =
-            metricStoreService.saveNewRelicMetrics(dataCollectionInfo.getAppDynamicsConfig().getAccountId(),
-                dataCollectionInfo.getApplicationId(), dataCollectionInfo.getStateExecutionId(), getTaskId(), records);
-        if (response) {
-          return true;
-        }
-        sleep(RETRY_SLEEP);
-      } while (++retrySave != RETRIES);
-      return false;
     }
 
     private List<NewRelicMetricDataRecord> getAllMetricRecords(

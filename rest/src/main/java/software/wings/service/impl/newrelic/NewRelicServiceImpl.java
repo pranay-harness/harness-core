@@ -10,6 +10,7 @@ import software.wings.annotation.Encryptable;
 import software.wings.beans.AppDynamicsConfig;
 import software.wings.beans.Base;
 import software.wings.beans.DelegateTask.SyncTaskContext;
+import software.wings.beans.DynaTraceConfig;
 import software.wings.beans.ErrorCode;
 import software.wings.beans.NewRelicConfig;
 import software.wings.beans.SettingAttribute;
@@ -18,6 +19,7 @@ import software.wings.exception.WingsException;
 import software.wings.security.encryption.EncryptedDataDetail;
 import software.wings.service.intfc.SettingsService;
 import software.wings.service.intfc.appdynamics.AppdynamicsDelegateService;
+import software.wings.service.intfc.dynatrace.DynaTraceDelegateService;
 import software.wings.service.intfc.newrelic.NewRelicDelegateService;
 import software.wings.service.intfc.newrelic.NewRelicService;
 import software.wings.service.intfc.security.SecretManager;
@@ -51,6 +53,11 @@ public class NewRelicServiceImpl implements NewRelicService {
           errorCode = ErrorCode.APPDYNAMICS_CONFIGURATION_ERROR;
           AppDynamicsConfig appDynamicsConfig = (AppDynamicsConfig) settingAttribute.getValue();
           delegateProxyFactory.get(AppdynamicsDelegateService.class, syncTaskContext).validateConfig(appDynamicsConfig);
+          break;
+        case DYNA_TRACE:
+          errorCode = ErrorCode.DYNA_TRACE_CONFIGURATION_ERROR;
+          DynaTraceConfig dynaTraceConfig = (DynaTraceConfig) settingAttribute.getValue();
+          delegateProxyFactory.get(DynaTraceDelegateService.class, syncTaskContext).validateConfig(dynaTraceConfig);
           break;
         default:
           throw new IllegalStateException("Invalid state" + stateType);

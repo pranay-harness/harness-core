@@ -25,6 +25,7 @@ import software.wings.beans.AwsConfig;
 import software.wings.beans.AzureConfig;
 import software.wings.beans.BambooConfig;
 import software.wings.beans.DockerConfig;
+import software.wings.beans.DynaTraceConfig;
 import software.wings.beans.ElasticLoadBalancerConfig;
 import software.wings.beans.ElkConfig;
 import software.wings.beans.GcpConfig;
@@ -124,6 +125,15 @@ public class PluginServiceImpl implements PluginService {
             .withType(SettingVariableTypes.NEW_RELIC.name())
             .withPluginCategories(asList(Verification))
             .withUiSchema(readUiSchema(SettingVariableTypes.NEW_RELIC.name()))
+            .build(),
+        anAccountPlugin()
+            .withSettingClass(DynaTraceConfig.class)
+            .withAccountId(accountId)
+            .withIsEnabled(true)
+            .withDisplayName(SettingVariableTypes.DYNA_TRACE.getDisplayName())
+            .withType(SettingVariableTypes.DYNA_TRACE.name())
+            .withPluginCategories(asList(Verification))
+            .withUiSchema(readUiSchema(SettingVariableTypes.DYNA_TRACE.name()))
             .build(),
         anAccountPlugin()
             .withSettingClass(SplunkConfig.class)

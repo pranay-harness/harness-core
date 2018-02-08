@@ -17,6 +17,7 @@ import software.wings.beans.AzureConfig;
 import software.wings.beans.BambooConfig;
 import software.wings.beans.Base;
 import software.wings.beans.DockerConfig;
+import software.wings.beans.DynaTraceConfig;
 import software.wings.beans.ElkConfig;
 import software.wings.beans.ErrorCode;
 import software.wings.beans.GcpConfig;
@@ -121,6 +122,8 @@ public class SettingValidationService {
       analysisService.validateConfig(settingAttribute, StateType.SUMO);
     } else if (settingValue instanceof NewRelicConfig) {
       newRelicService.validateConfig(settingAttribute, StateType.NEW_RELIC);
+    } else if (settingValue instanceof DynaTraceConfig) {
+      newRelicService.validateConfig(settingAttribute, StateType.DYNA_TRACE);
     }
 
     if (Encryptable.class.isInstance(settingValue)) {
