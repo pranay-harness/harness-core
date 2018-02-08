@@ -154,6 +154,11 @@ public abstract class SettingValue implements ExtensionPoint {
     NEW_RELIC("NewRelic"),
 
     /**
+     * Dyna trace variable types.
+     */
+    DYNA_TRACE("Dynatrace"),
+
+    /**
      * Elastic Load Balancer Settings
      */
     ELB("Elastic Classic Load Balancer"),

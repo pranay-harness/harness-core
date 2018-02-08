@@ -11,6 +11,7 @@ public enum TaskGroup {
   SPLUNK,
   APPDYNAMICS,
   NEWRELIC,
+  DYNA_TRACE,
   JENKINS,
   COMMAND,
   BAMBOO,

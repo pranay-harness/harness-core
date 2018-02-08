@@ -267,3 +267,7 @@ software.wings.beans.ErrorCode, 5233
 software.wings.beans.command.JenkinsTaskParams, 5234
 software.wings.api.ScriptStateExecutionData, 5235
 software.wings.sm.ExecutionInterruptEffect, 5236
+software.wings.beans.DynaTraceConfig, 5237
+software.wings.service.impl.dynatrace.DynaTraceDataCollectionInfo, 5238
+software.wings.service.impl.dynatrace.DynaTraceTimeSeries, 5239
+software.wings.service.impl.analysis.AnalysisComparisonStrategy, 5240

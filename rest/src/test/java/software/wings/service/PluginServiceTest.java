@@ -22,6 +22,7 @@ import software.wings.beans.AwsConfig;
 import software.wings.beans.AzureConfig;
 import software.wings.beans.BambooConfig;
 import software.wings.beans.DockerConfig;
+import software.wings.beans.DynaTraceConfig;
 import software.wings.beans.ElasticLoadBalancerConfig;
 import software.wings.beans.ElkConfig;
 import software.wings.beans.GcpConfig;
@@ -66,7 +67,7 @@ public class PluginServiceTest {
   @Test
   public void shouldGetInstalledPlugins() throws Exception {
     assertThat(pluginService.getInstalledPlugins(accountId))
-        .hasSize(18)
+        .hasSize(19)
         .containsExactly(anAccountPlugin()
                              .withSettingClass(JenkinsConfig.class)
                              .withAccountId(accountId)
@@ -121,6 +122,14 @@ public class PluginServiceTest {
                 .withIsEnabled(true)
                 .withDisplayName("NewRelic")
                 .withType(StateType.NEW_RELIC.name())
+                .withPluginCategories(asList(Verification))
+                .build(),
+            anAccountPlugin()
+                .withSettingClass(DynaTraceConfig.class)
+                .withAccountId(accountId)
+                .withIsEnabled(true)
+                .withDisplayName("Dynatrace")
+                .withType(StateType.DYNA_TRACE.name())
                 .withPluginCategories(asList(Verification))
                 .build(),
             anAccountPlugin()
@@ -213,7 +222,7 @@ public class PluginServiceTest {
                 .build());
 
     assertThat(pluginService.getInstalledPlugins(azureEnabledAccountId))
-        .hasSize(19)
+        .hasSize(20)
         .contains(anAccountPlugin()
                       .withSettingClass(AzureConfig.class)
                       .withAccountId(azureEnabledAccountId)
@@ -227,15 +236,15 @@ public class PluginServiceTest {
   @Test
   public void shouldGetPluginSettingSchema() throws Exception {
     assertThat(pluginService.getPluginSettingSchema(accountId))
-        .hasSize(18)
-        .containsOnlyKeys("APP_DYNAMICS", "NEW_RELIC", "JENKINS", "BAMBOO", "SMTP", "SLACK", "SPLUNK", "ELK", "LOGZ",
-            "SUMO", "AWS", "GCP", "PHYSICAL_DATA_CENTER", "DOCKER", "HOST_CONNECTION_ATTRIBUTES", "ELB", "NEXUS",
-            "ARTIFACTORY");
+        .hasSize(19)
+        .containsOnlyKeys("APP_DYNAMICS", "NEW_RELIC", "DYNA_TRACE", "JENKINS", "BAMBOO", "SMTP", "SLACK", "SPLUNK",
+            "ELK", "LOGZ", "SUMO", "AWS", "GCP", "PHYSICAL_DATA_CENTER", "DOCKER", "HOST_CONNECTION_ATTRIBUTES", "ELB",
+            "NEXUS", "ARTIFACTORY");
 
     assertThat(pluginService.getPluginSettingSchema(azureEnabledAccountId))
-        .hasSize(19)
-        .containsOnlyKeys("APP_DYNAMICS", "NEW_RELIC", "JENKINS", "BAMBOO", "SMTP", "SLACK", "SPLUNK", "ELK", "LOGZ",
-            "SUMO", "AWS", "GCP", "AZURE", "PHYSICAL_DATA_CENTER", "DOCKER", "HOST_CONNECTION_ATTRIBUTES", "ELB",
-            "NEXUS", "ARTIFACTORY");
+        .hasSize(20)
+        .containsOnlyKeys("APP_DYNAMICS", "NEW_RELIC", "DYNA_TRACE", "JENKINS", "BAMBOO", "SMTP", "SLACK", "SPLUNK",
+            "ELK", "LOGZ", "SUMO", "AWS", "GCP", "AZURE", "PHYSICAL_DATA_CENTER", "DOCKER",
+            "HOST_CONNECTION_ATTRIBUTES", "ELB", "NEXUS", "ARTIFACTORY");
   }
 }

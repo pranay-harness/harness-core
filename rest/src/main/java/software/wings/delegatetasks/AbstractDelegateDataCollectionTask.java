@@ -1,5 +1,8 @@
 package software.wings.delegatetasks;
 
+import static io.harness.threading.Morpheus.sleep;
+import static software.wings.delegatetasks.SplunkDataCollectionTask.RETRY_SLEEP;
+
 import com.google.inject.Inject;
 import com.google.inject.name.Named;
 
@@ -7,11 +10,13 @@ import org.slf4j.Logger;
 import software.wings.beans.DelegateTask;
 import software.wings.service.impl.analysis.DataCollectionTaskResult;
 import software.wings.service.impl.analysis.DataCollectionTaskResult.DataCollectionTaskStatus;
+import software.wings.service.impl.newrelic.NewRelicMetricDataRecord;
 import software.wings.service.intfc.security.EncryptionService;
 import software.wings.sm.StateType;
 import software.wings.waitnotify.NotifyResponseData;
 
 import java.io.IOException;
+import java.util.List;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Future;
 import java.util.concurrent.ScheduledExecutorService;
@@ -33,6 +38,7 @@ public abstract class AbstractDelegateDataCollectionTask extends AbstractDelegat
   @Inject protected EncryptionService encryptionService;
   @Inject private ExecutorService executorService;
   @Inject @Named("verificationExecutor") private ScheduledExecutorService verificationExecutor;
+  @Inject private MetricDataStoreService metricStoreService;
 
   private ScheduledFuture future;
   private volatile Future taskFuture;
@@ -109,6 +115,24 @@ public abstract class AbstractDelegateDataCollectionTask extends AbstractDelegat
           .errorMessage("Data collection task failed : " + e.getMessage())
           .build();
     }
+  }
+
+  protected boolean saveMetrics(
+      String accountId, String appId, String stateExecutionId, List<NewRelicMetricDataRecord> records) {
+    if (records.isEmpty()) {
+      return true;
+    }
+    int retrySave = 0;
+    do {
+      boolean response =
+          metricStoreService.saveNewRelicMetrics(accountId, appId, stateExecutionId, getTaskId(), records);
+      if (response) {
+        return true;
+      }
+      getLogger().warn("Unable to save metrics to Harness manger {}. Retrying in {} ", stateExecutionId, RETRY_SLEEP);
+      sleep(RETRY_SLEEP);
+    } while (++retrySave != RETRIES);
+    return false;
   }
 
   protected abstract StateType getStateType();

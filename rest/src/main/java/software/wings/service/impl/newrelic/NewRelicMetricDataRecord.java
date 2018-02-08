@@ -67,4 +67,11 @@ public class NewRelicMetricDataRecord extends Base {
   private double response95th = -1;
   private double stalls = -1;
   private double slowCalls = -1;
+  // dynatrace metrics
+  private double clientSideFailureRate = -1;
+  private double errorCountHttp4xx = -1;
+  private double errorCountHttp5xx = -1;
+  private double requestsPerMin = -1;
+  private double responseTime = -1;
+  private double serverSideFailureRate = -1;
 }

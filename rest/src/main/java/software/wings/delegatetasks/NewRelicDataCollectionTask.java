@@ -360,7 +360,9 @@ public class NewRelicDataCollectionTask extends AbstractDelegateDataCollectionTa
             logger.info(
                 "Sending heartbeat new relic metric record to the server for minute " + dataCollectionMinuteEnd);
 
-            boolean result = saveMetrics(getAllMetricRecords(records));
+            boolean result = saveMetrics(dataCollectionInfo.getNewRelicConfig().getAccountId(),
+                dataCollectionInfo.getApplicationId(), dataCollectionInfo.getStateExecutionId(),
+                getAllMetricRecords(records));
             if (!result) {
               retry = RETRIES;
               throw new WingsException("Cannot save new relic metric records. Server returned error");
@@ -426,25 +428,8 @@ public class NewRelicDataCollectionTask extends AbstractDelegateDataCollectionTa
       List<NewRelicMetricDataRecord> metricRecords = getAllMetricRecords(records);
       logger.info("Sending {} new relic metric records for node {} for minute {}. Time taken: {}",
           records.cellSet().size(), node.getHost(), dataCollectionMinute, System.currentTimeMillis() - startTime);
-      return saveMetrics(metricRecords);
-    }
-
-    private boolean saveMetrics(List<NewRelicMetricDataRecord> records) {
-      if (records.isEmpty()) {
-        return true;
-      }
-      int retrySave = 0;
-      do {
-        boolean response = metricStoreService.saveNewRelicMetrics(dataCollectionInfo.getNewRelicConfig().getAccountId(),
-            dataCollectionInfo.getApplicationId(), dataCollectionInfo.getStateExecutionId(), getTaskId(), records);
-        if (response) {
-          return true;
-        }
-        logger.warn("Unable to save NewRelic metrics to Harness manger {}. Retrying in {} ",
-            dataCollectionInfo.getStateExecutionId(), RETRY_SLEEP);
-        sleep(RETRY_SLEEP);
-      } while (++retrySave != RETRIES);
-      return false;
+      return saveMetrics(dataCollectionInfo.getNewRelicConfig().getAccountId(), dataCollectionInfo.getApplicationId(),
+          dataCollectionInfo.getStateExecutionId(), metricRecords);
     }
 
     private Collection<String> getApdexMetricNames(Collection<String> metricNames) {

@@ -6,6 +6,7 @@ import software.wings.delegatetasks.AppdynamicsDataCollectionTask;
 import software.wings.delegatetasks.BambooTask;
 import software.wings.delegatetasks.CommandTask;
 import software.wings.delegatetasks.DelegateRunnableTask;
+import software.wings.delegatetasks.DynaTraceDataCollectionTask;
 import software.wings.delegatetasks.ElkLogzDataCollectionTask;
 import software.wings.delegatetasks.GitCommandTask;
 import software.wings.delegatetasks.HttpTask;
@@ -31,6 +32,7 @@ import software.wings.delegatetasks.validation.ContainerValidation;
 import software.wings.delegatetasks.validation.DelegateConnectionResult;
 import software.wings.delegatetasks.validation.DelegateValidateTask;
 import software.wings.delegatetasks.validation.DockerValidation;
+import software.wings.delegatetasks.validation.DynaTraceValidation;
 import software.wings.delegatetasks.validation.ElkValidation;
 import software.wings.delegatetasks.validation.GcrValidation;
 import software.wings.delegatetasks.validation.GitValidation;
@@ -153,7 +155,11 @@ public enum TaskType {
   AMI_GET_BUILDS(TaskGroup.AMI, ServiceImplDelegateTask.class, AlwaysTrueValidation.class),
   CONTAINER_DAEMON_SET_YAML(TaskGroup.CONTAINER, ServiceImplDelegateTask.class, ContainerValidation.class),
   CONTAINER_ACTIVE_AUTOSCALERS(TaskGroup.CONTAINER, ServiceImplDelegateTask.class, ContainerValidation.class),
-  CONTAINER_CONNECTION_VALIDATION(TaskGroup.CONTAINER, ServiceImplDelegateTask.class, ContainerValidation.class);
+  CONTAINER_CONNECTION_VALIDATION(TaskGroup.CONTAINER, ServiceImplDelegateTask.class, ContainerValidation.class),
+  DYNA_TRACE_VALIDATE_CONFIGURATION_TASK(
+      TaskGroup.DYNA_TRACE, ServiceImplDelegateTask.class, DynaTraceValidation.class),
+  DYNA_TRACE_METRIC_DATA_COLLECTION_TASK(
+      TaskGroup.DYNA_TRACE, DynaTraceDataCollectionTask.class, DynaTraceValidation.class);
 
   private final TaskGroup taskGroup;
   private final Class<? extends DelegateRunnableTask> delegateRunnableTaskClass;

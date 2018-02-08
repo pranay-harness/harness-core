@@ -22,6 +22,7 @@ import software.wings.dl.WingsPersistence;
 import software.wings.metrics.RiskLevel;
 import software.wings.metrics.TimeSeriesMetricDefinition;
 import software.wings.service.impl.DelegateServiceImpl;
+import software.wings.service.impl.dynatrace.DynaTraceTimeSeries;
 import software.wings.service.impl.newrelic.NewRelicMetricAnalysisRecord;
 import software.wings.service.impl.newrelic.NewRelicMetricAnalysisRecord.NewRelicMetricAnalysis;
 import software.wings.service.impl.newrelic.NewRelicMetricAnalysisRecord.NewRelicMetricAnalysisValue;
@@ -29,6 +30,7 @@ import software.wings.service.impl.newrelic.NewRelicMetricAnalysisRecord.NewReli
 import software.wings.service.impl.newrelic.NewRelicMetricDataRecord;
 import software.wings.service.impl.newrelic.NewRelicMetricNames;
 import software.wings.service.impl.newrelic.NewRelicMetricValueDefinition;
+import software.wings.service.intfc.LearningEngineService;
 import software.wings.service.intfc.MetricDataAnalysisService;
 import software.wings.service.intfc.WorkflowExecutionService;
 import software.wings.service.intfc.analysis.ClusterLevel;
@@ -40,6 +42,7 @@ import java.io.IOException;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.HashMap;
+import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
 import java.util.Map.Entry;
@@ -53,6 +56,7 @@ public class MetricDataAnalysisServiceImpl implements MetricDataAnalysisService 
 
   @Inject private WingsPersistence wingsPersistence;
   @Inject private WorkflowExecutionService workflowExecutionService;
+  @Inject private LearningEngineService learningEngineService;
   @Inject protected DelegateServiceImpl delegateService;
 
   @Override
@@ -140,17 +144,69 @@ public class MetricDataAnalysisServiceImpl implements MetricDataAnalysisService 
   }
 
   @Override
-  public boolean saveAnalysisRecordsML(TimeSeriesMLAnalysisRecord timeSeriesMLAnalysisRecord) {
+  public boolean saveAnalysisRecordsML(StateType stateType, String accountId, String applicationId,
+      String stateExecutionId, final String workflowExecutionId, final String workflowId, String serviceId,
+      Integer analysisMinute, String taskId, TimeSeriesMLAnalysisRecord mlAnalysisResponse) {
+    mlAnalysisResponse.setStateType(stateType);
+    mlAnalysisResponse.setApplicationId(applicationId);
+    mlAnalysisResponse.setWorkflowExecutionId(workflowExecutionId);
+    mlAnalysisResponse.setStateExecutionId(stateExecutionId);
+    mlAnalysisResponse.setAnalysisMinute(analysisMinute);
+
+    TimeSeriesMLScores timeSeriesMLScores = TimeSeriesMLScores.builder()
+                                                .applicationId(applicationId)
+                                                .stateExecutionId(stateExecutionId)
+                                                .workflowExecutionId(workflowExecutionId)
+                                                .workflowId(workflowId)
+                                                .analysisMinute(analysisMinute)
+                                                .stateType(stateType)
+                                                .scoresMap(new HashMap<>())
+                                                .build();
+
+    int txnId = 0;
+    int metricId;
+    for (TimeSeriesMLTxnSummary txnSummary : mlAnalysisResponse.getTransactions().values()) {
+      TimeSeriesMLTxnScores txnScores =
+          TimeSeriesMLTxnScores.builder().transactionName(txnSummary.getTxn_name()).scoresMap(new HashMap<>()).build();
+      timeSeriesMLScores.getScoresMap().put(String.valueOf(txnId), txnScores);
+
+      metricId = 0;
+      for (TimeSeriesMLMetricSummary mlMetricSummary : txnSummary.getMetrics().values()) {
+        if (mlMetricSummary.getResults() != null) {
+          TimeSeriesMLMetricScores mlMetricScores = TimeSeriesMLMetricScores.builder()
+                                                        .metricName(mlMetricSummary.getMetric_name())
+                                                        .scores(new ArrayList<>())
+                                                        .build();
+          txnScores.getScoresMap().put(String.valueOf(metricId), mlMetricScores);
+
+          Iterator<Entry<String, TimeSeriesMLHostSummary>> it = mlMetricSummary.getResults().entrySet().iterator();
+          Map<String, TimeSeriesMLHostSummary> timeSeriesMLHostSummaryMap = new HashMap<>();
+          while (it.hasNext()) {
+            Entry<String, TimeSeriesMLHostSummary> pair = it.next();
+            timeSeriesMLHostSummaryMap.put(pair.getKey().replaceAll("\\.", "-"), pair.getValue());
+            mlMetricScores.getScores().add(pair.getValue().getScore());
+          }
+          mlMetricSummary.setResults(timeSeriesMLHostSummaryMap);
+          ++metricId;
+        }
+      }
+      ++txnId;
+    }
+
+    saveTimeSeriesMLScores(timeSeriesMLScores);
+    bumpCollectionMinuteToProcess(stateType, stateExecutionId, workflowExecutionId, serviceId, analysisMinute);
+    learningEngineService.markCompleted(taskId);
+
     wingsPersistence.delete(wingsPersistence.createQuery(TimeSeriesMLAnalysisRecord.class)
                                 .field("workflowExecutionId")
-                                .equal(timeSeriesMLAnalysisRecord.getWorkflowExecutionId())
+                                .equal(workflowExecutionId)
                                 .field("stateExecutionId")
-                                .equal(timeSeriesMLAnalysisRecord.getStateExecutionId()));
+                                .equal(stateExecutionId));
 
-    wingsPersistence.save(timeSeriesMLAnalysisRecord);
-    logger.debug("inserted NewRelicMetricAnalysisRecord to persistence layer for workflowExecutionId: "
-        + timeSeriesMLAnalysisRecord.getWorkflowExecutionId()
-        + " StateExecutionInstanceId: " + timeSeriesMLAnalysisRecord.getStateExecutionId());
+    wingsPersistence.save(mlAnalysisResponse);
+    logger.debug(
+        "inserted NewRelicMetricAnalysisRecord to persistence layer for stateType: {}, workflowExecutionId: {} StateExecutionInstanceId: ",
+        stateType, workflowExecutionId, stateExecutionId);
     return true;
   }
 
@@ -419,6 +475,8 @@ public class MetricDataAnalysisServiceImpl implements MetricDataAnalysisService 
         return NewRelicMetricValueDefinition.NEW_RELIC_VALUES_TO_ANALYZE;
       case APP_DYNAMICS:
         return NewRelicMetricValueDefinition.APP_DYNAMICS_VALUES_TO_ANALYZE;
+      case DYNA_TRACE:
+        return DynaTraceTimeSeries.getDefinitionsToAnalyze();
       default:
         return null;
     }
@@ -486,7 +544,7 @@ public class MetricDataAnalysisServiceImpl implements MetricDataAnalysisService 
     if (analysisRecord == null) {
       return NewRelicMetricAnalysisRecord.builder()
           .showTimeSeries(false)
-          .stateType(StateType.NEW_RELIC)
+          .stateType(StateType.DYNA_TRACE)
           .riskLevel(RiskLevel.NA)
           .message("No data available")
           .build();

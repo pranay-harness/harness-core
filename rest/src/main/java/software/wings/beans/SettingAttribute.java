@@ -10,6 +10,7 @@ import static software.wings.settings.SettingValue.SettingVariableTypes.BAMBOO;
 import static software.wings.settings.SettingValue.SettingVariableTypes.BASTION_HOST_CONNECTION_ATTRIBUTES;
 import static software.wings.settings.SettingValue.SettingVariableTypes.DIRECT;
 import static software.wings.settings.SettingValue.SettingVariableTypes.DOCKER;
+import static software.wings.settings.SettingValue.SettingVariableTypes.DYNA_TRACE;
 import static software.wings.settings.SettingValue.SettingVariableTypes.ECR;
 import static software.wings.settings.SettingValue.SettingVariableTypes.ELB;
 import static software.wings.settings.SettingValue.SettingVariableTypes.ELK;
@@ -73,8 +74,8 @@ public class SettingAttribute extends Base {
   public enum Category {
     CLOUD_PROVIDER(Lists.newArrayList(PHYSICAL_DATA_CENTER, AWS, AZURE, GCP, DIRECT)),
 
-    CONNECTOR(Lists.newArrayList(SMTP, JENKINS, BAMBOO, SPLUNK, ELK, LOGZ, SUMO, APP_DYNAMICS, NEW_RELIC, ELB, SLACK,
-        DOCKER, ECR, GCR, NEXUS, ARTIFACTORY, AMAZON_S3)),
+    CONNECTOR(Lists.newArrayList(SMTP, JENKINS, BAMBOO, SPLUNK, ELK, LOGZ, SUMO, APP_DYNAMICS, NEW_RELIC, DYNA_TRACE,
+        ELB, SLACK, DOCKER, ECR, GCR, NEXUS, ARTIFACTORY, AMAZON_S3)),
 
     SETTING(Lists.newArrayList(HOST_CONNECTION_ATTRIBUTES, BASTION_HOST_CONNECTION_ATTRIBUTES, STRING));
 

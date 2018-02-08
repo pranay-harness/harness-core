@@ -61,6 +61,7 @@ import software.wings.sm.states.BambooState;
 import software.wings.sm.states.CloudWatchState;
 import software.wings.sm.states.CommandState;
 import software.wings.sm.states.DcNodeSelectState;
+import software.wings.sm.states.DynatraceState;
 import software.wings.sm.states.EcsServiceDeploy;
 import software.wings.sm.states.EcsServiceRollback;
 import software.wings.sm.states.EcsServiceSetup;
@@ -157,42 +158,47 @@ public enum StateType implements StateTypeDescriptor {
   NEW_RELIC(NewRelicState.class, VERIFICATIONS, 3, asList(), ORCHESTRATION_STENCILS),
 
   /**
+   * dyna trace state type.
+   */
+  DYNA_TRACE(DynatraceState.class, VERIFICATIONS, 4, asList(), ORCHESTRATION_STENCILS),
+
+  /**
    * Splunk state type.
    */
-  SPLUNK(SplunkState.class, VERIFICATIONS, 4, asList(), ORCHESTRATION_STENCILS),
+  SPLUNK(SplunkState.class, VERIFICATIONS, 5, asList(), ORCHESTRATION_STENCILS),
 
   /**
    * Splunk V2 state type.
    */
-  SPLUNKV2(SplunkV2State.class, VERIFICATIONS, 5, asList(), ORCHESTRATION_STENCILS),
+  SPLUNKV2(SplunkV2State.class, VERIFICATIONS, 6, asList(), ORCHESTRATION_STENCILS),
 
   /**
    * Elk state type.
    */
-  ELK(ElkAnalysisState.class, VERIFICATIONS, 6, "ELK", emptyList(), ORCHESTRATION_STENCILS),
+  ELK(ElkAnalysisState.class, VERIFICATIONS, 7, "ELK", emptyList(), ORCHESTRATION_STENCILS),
 
   /**
    * LOGZ state type.
    */
-  LOGZ(LogzAnalysisState.class, VERIFICATIONS, 7, "LOGZ", emptyList(), ORCHESTRATION_STENCILS),
+  LOGZ(LogzAnalysisState.class, VERIFICATIONS, 8, "LOGZ", emptyList(), ORCHESTRATION_STENCILS),
 
   /**
    * Sumo state type.
    */
-  SUMO(SumoLogicAnalysisState.class, VERIFICATIONS, 8, "SumoLogic", emptyList(), ORCHESTRATION_STENCILS),
+  SUMO(SumoLogicAnalysisState.class, VERIFICATIONS, 9, "SumoLogic", emptyList(), ORCHESTRATION_STENCILS),
 
   /**
    * Cloud watch state type.
    */
-  CLOUD_WATCH(CloudWatchState.class, VERIFICATIONS, 9, asList(), ORCHESTRATION_STENCILS),
+  CLOUD_WATCH(CloudWatchState.class, VERIFICATIONS, 10, asList(), ORCHESTRATION_STENCILS),
 
   /**
    * New relic deployment marker state type.
    */
-  NEW_RELIC_DEPLOYMENT_MARKER(NewRelicDeploymentMarkerState.class, VERIFICATIONS, 10, "NewRelic Deployment Marker",
+  NEW_RELIC_DEPLOYMENT_MARKER(NewRelicDeploymentMarkerState.class, VERIFICATIONS, 11, "NewRelic Deployment Marker",
       asList(), ORCHESTRATION_STENCILS),
 
-  AWS_LAMBDA_VERIFICATION(AwsLambdaVerification.class, VERIFICATIONS, 9, asList(), ORCHESTRATION_STENCILS),
+  AWS_LAMBDA_VERIFICATION(AwsLambdaVerification.class, VERIFICATIONS, 12, asList(), ORCHESTRATION_STENCILS),
 
   /**
    * Env state state type.

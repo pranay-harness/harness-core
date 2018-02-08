@@ -1,0 +1,11 @@
+
+{
+  "ui:order" :
+      [
+        "analysisServerConfigId", "serviceMethods", "timeDuration",
+        "comparisonStrategy", "analysisTolerance"
+      ],
+      "serviceMethods" : {
+    "ui:widget" : "textarea"
+  }
+}

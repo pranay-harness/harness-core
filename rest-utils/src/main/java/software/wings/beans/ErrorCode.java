@@ -424,6 +424,16 @@ public enum ErrorCode {
   NEWRELIC_ERROR("NEWRELIC_ERROR"),
 
   /**
+   * Dyna trace error error code.
+   */
+  DYNA_TRACE_CONFIGURATION_ERROR("DYNA_TRACE_CONFIGURATION_ERROR"),
+
+  /**
+   * Dyna trace error error code.
+   */
+  DYNA_TRACE_ERROR("DYNA_TRACE_ERROR"),
+
+  /**
    * Problem with encryption, most likely that the JCE Unlimited Strength jars aren't installed.
    */
   ENCRYPTION_NOT_CONFIGURED("ENCRYPTION_NOT_CONFIGURED"),
