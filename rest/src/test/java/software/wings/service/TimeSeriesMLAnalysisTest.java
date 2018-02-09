@@ -156,9 +156,11 @@ public class TimeSeriesMLAnalysisTest extends WingsBaseTest {
     List<NewRelicMetricAnalysis> metricAnalyses = analysisRecord.getMetricAnalyses();
     assertEquals(2, metricAnalyses.size());
     assertEquals("index.jsp", metricAnalyses.get(0).getMetricName());
+    assertEquals("index.jsp", metricAnalyses.get(0).getDisplayName());
     assertEquals("index.jsp", metricAnalyses.get(0).getFullMetricName());
 
-    assertEquals("startDelegateTask", metricAnalyses.get(1).getMetricName());
+    assertEquals("startDelegateTask:SERVICE_METHOD-F9A70E1663C0B9A4", metricAnalyses.get(1).getMetricName());
+    assertEquals("startDelegateTask", metricAnalyses.get(1).getDisplayName());
     assertEquals("startDelegateTask (SERVICE_METHOD-F9A70E1663C0B9A4)", metricAnalyses.get(1).getFullMetricName());
   }
 
