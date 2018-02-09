@@ -775,10 +775,7 @@ public class StateMachine extends Base {
       if (state instanceof RepeatState) {
         continue;
       }
-      ContextElementType requiredContextElementType = state.getRequiredContextElementType();
-      if (requiredContextElementType == null && state.getPatternsForRequiredContextElementType() != null) {
-        requiredContextElementType = scanRequiredContextElementType(state.getPatternsForRequiredContextElementType());
-      }
+      ContextElementType requiredContextElementType = getRequiredContextElementType(state);
 
       if (requiredContextElementType == null) {
         continue;
@@ -795,6 +792,7 @@ public class StateMachine extends Base {
                           .withFromState(newRepeatState)
                           .withToState(state)
                           .build());
+        postRepeatStateCheck(state, requiredContextElementType, newRepeatState);
         continue;
       } else {
         Map<Transition, Set<ContextElementType>> availableContextsByTransition = new HashMap<>();
@@ -816,8 +814,39 @@ public class StateMachine extends Base {
                           .withFromState(newRepeatState)
                           .withToState(state)
                           .build());
+
+        postRepeatStateCheck(state, requiredContextElementType, newRepeatState);
       }
     }
+  }
+
+  private void postRepeatStateCheck(State state, ContextElementType requiredContextElementType, State newRepeatState) {
+    State fromState = state;
+    for (;;) {
+      State nextState = getNextState(fromState.getName(), TransitionType.SUCCESS);
+      if (nextState == null) {
+        break;
+      }
+
+      final ContextElementType nextRequiredContextElementType = getRequiredContextElementType(nextState);
+      if (nextRequiredContextElementType != requiredContextElementType) {
+        final List<Transition> transitionsTo = getTransitionsTo(nextState);
+        final String name = fromState.getName();
+        transitionsTo.stream()
+            .filter(transition -> transition.getFromState().getName().equals(name))
+            .forEach(transition -> transition.setFromState(newRepeatState));
+        break;
+      }
+      fromState = nextState;
+    }
+  }
+
+  ContextElementType getRequiredContextElementType(State state) {
+    ContextElementType requiredContextElementType = state.getRequiredContextElementType();
+    if (requiredContextElementType == null && state.getPatternsForRequiredContextElementType() != null) {
+      requiredContextElementType = scanRequiredContextElementType(state.getPatternsForRequiredContextElementType());
+    }
+    return requiredContextElementType;
   }
 
   private State createRepeatState(State state, ContextElementType requiredContextElementType) {
