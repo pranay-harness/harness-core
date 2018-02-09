@@ -906,8 +906,13 @@ public class StateMachineExecutor {
       ops.set(tsField, tsValue);
     }
     if (reason != null) {
-      ops.addToSet("interruptHistory",
-          ExecutionInterruptEffect.builder().interruptId(reason.getUuid()).tookEffectAt(new Date()).build());
+      if (stateExecutionInstance.getUuid().equals(reason.getStateExecutionInstanceId())) {
+        logger.error("The reason execution interrupt is already assigned to this execution instance. "
+            + "There is no reason (it is a bug) to double bag it.");
+      } else {
+        ops.addToSet("interruptHistory",
+            ExecutionInterruptEffect.builder().interruptId(reason.getUuid()).tookEffectAt(new Date()).build());
+      }
     }
 
     Query<StateExecutionInstance> query = wingsPersistence.createQuery(StateExecutionInstance.class)
@@ -1079,7 +1084,7 @@ public class StateMachineExecutor {
         StateExecutionInstance stateExecutionInstance = getStateExecutionInstance(workflowExecutionInterrupt.getAppId(),
             workflowExecutionInterrupt.getExecutionUuid(), workflowExecutionInterrupt.getStateExecutionInstanceId());
 
-        updateStatus(stateExecutionInstance, FAILED, Lists.newArrayList(WAITING), workflowExecutionInterrupt);
+        updateStatus(stateExecutionInstance, FAILED, Lists.newArrayList(WAITING), null);
 
         StateMachine sm = wingsPersistence.get(StateMachine.class, workflowExecutionInterrupt.getAppId(),
             stateExecutionInstance.getStateMachineId(), CRITICAL);
