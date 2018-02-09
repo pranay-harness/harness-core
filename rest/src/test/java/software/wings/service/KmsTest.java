@@ -12,10 +12,12 @@ import static org.junit.Assert.fail;
 import static org.mockito.Matchers.any;
 import static org.mockito.Matchers.anyObject;
 import static org.mockito.Matchers.anyString;
+import static org.mockito.Matchers.eq;
 import static org.mockito.Mockito.doNothing;
 import static org.mockito.Mockito.when;
 import static org.mockito.MockitoAnnotations.initMocks;
 import static org.mockito.internal.util.reflection.Whitebox.setInternalState;
+import static software.wings.beans.Application.Builder.anApplication;
 import static software.wings.settings.SettingValue.SettingVariableTypes.CONFIG_FILE;
 
 import com.google.inject.Inject;
@@ -68,11 +70,13 @@ import software.wings.security.UserThreadLocal;
 import software.wings.security.encryption.EncryptedData;
 import software.wings.security.encryption.SecretChangeLog;
 import software.wings.security.encryption.SecretUsageLog;
+import software.wings.service.impl.ContainerServiceParams;
 import software.wings.service.impl.SettingValidationService;
 import software.wings.service.impl.security.KmsServiceImpl;
 import software.wings.service.impl.security.KmsTransitionEventListener;
 import software.wings.service.impl.security.SecretManagementDelegateServiceImpl;
 import software.wings.service.intfc.ConfigService;
+import software.wings.service.intfc.ContainerService;
 import software.wings.service.intfc.InfrastructureMappingService;
 import software.wings.service.intfc.SettingsService;
 import software.wings.service.intfc.newrelic.NewRelicService;
@@ -118,9 +122,10 @@ public class KmsTest extends WingsBaseTest {
   @Inject private SettingValidationService settingValidationService;
   @Inject private InfrastructureMappingService infrastructureMappingService;
   @Mock private SecretManagementDelegateService secretManagementDelegateService;
+  @Mock private ContainerService containerService;
   @Mock private NewRelicService newRelicService;
   @Mock private DelegateProxyFactory delegateProxyFactory;
-  final int numOfEncryptedValsForKms = 3;
+  private final int numOfEncryptedValsForKms = 3;
   private final String userEmail = "rsingh@harness.io";
   private final String userName = "raghu";
   private final User user = User.Builder.anUser().withEmail(userEmail).withName(userName).build();
@@ -147,7 +152,10 @@ public class KmsTest extends WingsBaseTest {
       Object[] args = invocation.getArguments();
       return decrypt((EncryptedData) args[0], (KmsConfig) args[1]);
     });
-    when(delegateProxyFactory.get(anyObject(), any(SyncTaskContext.class))).thenReturn(secretManagementDelegateService);
+    when(delegateProxyFactory.get(eq(SecretManagementDelegateService.class), any(SyncTaskContext.class)))
+        .thenReturn(secretManagementDelegateService);
+    when(delegateProxyFactory.get(eq(ContainerService.class), any(SyncTaskContext.class))).thenReturn(containerService);
+    when(containerService.validate(any(ContainerServiceParams.class))).thenReturn(true);
     doNothing().when(newRelicService).validateConfig(anyObject(), anyObject());
     setInternalState(kmsService, "delegateProxyFactory", delegateProxyFactory);
     setInternalState(secretManager, "kmsService", kmsService);
@@ -156,6 +164,7 @@ public class KmsTest extends WingsBaseTest {
     setInternalState(settingValidationService, "newRelicService", newRelicService);
     setInternalState(settingsService, "settingValidationService", settingValidationService);
     setInternalState(encryptionService, "secretManagementDelegateService", secretManagementDelegateService);
+    setInternalState(infrastructureMappingService, "delegateProxyFactory", delegateProxyFactory);
     wingsPersistence.save(user);
     UserThreadLocal.set(user);
   }
@@ -2932,13 +2941,13 @@ public class KmsTest extends WingsBaseTest {
   }
 
   @Test
-  public void testDirectKubernetsUpdate() throws IOException, IllegalAccessException {
+  public void testDirectKubernetesUpdate() {
     final String accountId = UUID.randomUUID().toString();
     final KmsConfig kmsConfig = getKmsConfig();
     kmsService.saveKmsConfig(accountId, kmsConfig);
     enableKmsFeatureFlag();
 
-    String appId = UUID.randomUUID().toString();
+    String appId = wingsPersistence.save(anApplication().withUuid(UUID.randomUUID().toString()).build());
 
     String serviceId = wingsPersistence.save(
         Service.Builder.aService().withAppId(appId).withName(UUID.randomUUID().toString()).build());
