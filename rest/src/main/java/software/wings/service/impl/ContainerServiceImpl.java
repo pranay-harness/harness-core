@@ -33,9 +33,9 @@ import software.wings.cloudprovider.aws.AwsClusterService;
 import software.wings.cloudprovider.gke.GkeClusterService;
 import software.wings.cloudprovider.gke.KubernetesContainerService;
 import software.wings.exception.WingsException;
+import software.wings.exception.WingsException.ReportTarget;
 import software.wings.service.intfc.ContainerService;
 import software.wings.settings.SettingValue;
-import software.wings.utils.Misc;
 import software.wings.utils.Validator;
 
 import java.io.IOException;
@@ -255,23 +255,16 @@ public class ContainerServiceImpl implements ContainerService {
   @Override
   public Boolean validate(ContainerServiceParams containerServiceParams) {
     SettingValue value = containerServiceParams.getSettingAttribute().getValue();
-    try {
-      if (value instanceof GcpConfig || value instanceof KubernetesConfig) {
-        KubernetesConfig kubernetesConfig = getKubernetesConfig(containerServiceParams);
-        kubernetesContainerService.listControllers(kubernetesConfig, containerServiceParams.getEncryptionDetails());
-        return true;
-      } else if (value instanceof AwsConfig) {
-        awsClusterService.getServices(containerServiceParams.getRegion(), containerServiceParams.getSettingAttribute(),
-            containerServiceParams.getEncryptionDetails(), containerServiceParams.getClusterName());
-        return true;
-      }
-    } catch (Exception ex) {
-      logger.error(ex.getMessage(), ex);
-      if (ex instanceof WingsException) {
-        throw ex;
-      }
-      throw new WingsException(ErrorCode.INVALID_ARGUMENT, ex).addParam("args", Misc.getMessage(ex));
+    if (value instanceof GcpConfig || value instanceof KubernetesConfig) {
+      KubernetesConfig kubernetesConfig = getKubernetesConfig(containerServiceParams);
+      kubernetesContainerService.listControllers(kubernetesConfig, containerServiceParams.getEncryptionDetails());
+      return true;
+    } else if (value instanceof AwsConfig) {
+      awsClusterService.getServices(containerServiceParams.getRegion(), containerServiceParams.getSettingAttribute(),
+          containerServiceParams.getEncryptionDetails(), containerServiceParams.getClusterName());
+      return true;
     }
-    return false;
+    throw new WingsException(
+        ErrorCode.INVALID_ARGUMENT, "Unknown setting value type: " + value.getType(), ReportTarget.USER);
   }
 }
