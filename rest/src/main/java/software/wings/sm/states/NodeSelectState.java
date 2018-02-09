@@ -182,6 +182,10 @@ public abstract class NodeSelectState extends State {
   private String buildServiceInstancesErrorMessage(List<ServiceInstance> serviceInstances,
       List<ServiceInstance> hostExclusionList, InfrastructureMapping infraMapping, int totalAvailableInstances,
       ExecutionContext context) {
+    if (totalAvailableInstances == 0) {
+      return "The service infrastructure [" + infraMapping.getName() + "] has no instances available.";
+    }
+
     String errorMessage = null;
     if (isEmpty(serviceInstances)) {
       StringBuilder msg = new StringBuilder(256);
@@ -194,11 +198,14 @@ public abstract class NodeSelectState extends State {
           msg.append("with these host names: ").append(hostNames).append(". ");
         }
       } else {
-        msg.append("This phase deploys to ");
         if (instanceUnitType == PERCENTAGE) {
           return null;
         } else {
-          msg.append(instanceCount).append(" instance").append(instanceCount == 1 ? "" : "s").append(" (cumulative) ");
+          msg.append("This phase deploys to ")
+              .append(instanceCount)
+              .append(" instance")
+              .append(instanceCount == 1 ? "" : "s")
+              .append(" (cumulative) ");
         }
       }
 
