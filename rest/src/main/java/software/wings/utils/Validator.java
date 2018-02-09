@@ -87,7 +87,7 @@ public class Validator {
       if (e.getCause() != null && e.getCause() instanceof DuplicateKeyException) {
         throw prepareWingsException(GENERAL_ERROR, "args", "Duplicate " + field + " " + value);
       }
-      throw prepareWingsException(GENERAL_ERROR, "args", "Duplicate " + field + " " + value);
+      throw prepareWingsException(GENERAL_ERROR, "args", e.getMessage());
     }
   }
 
