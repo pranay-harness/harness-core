@@ -15,6 +15,7 @@ import software.wings.core.queue.Queue;
 import software.wings.dl.PageRequest;
 import software.wings.dl.PageResponse;
 import software.wings.dl.WingsPersistence;
+import software.wings.utils.Misc;
 
 import java.util.Arrays;
 
@@ -26,6 +27,8 @@ import java.util.Arrays;
  */
 @Singleton
 public class WaitNotifyEngine {
+  private static final Logger logger = LoggerFactory.getLogger(WaitNotifyEngine.class);
+
   private static final long NO_TIMEOUT = 0L;
 
   @Inject private WingsPersistence wingsPersistence;
@@ -90,14 +93,22 @@ public class WaitNotifyEngine {
 
     log().debug("notify request received for the correlationId : {}", correlationId);
 
-    String notificationId = wingsPersistence.save(new NotifyResponse(correlationId, response, error));
+    try {
+      String notificationId = wingsPersistence.save(new NotifyResponse(correlationId, response, error));
 
-    PageRequest<WaitQueue> req = new PageRequest<>();
-    req.addFilter("correlationId", correlationId, SearchFilter.Operator.EQ);
-    PageResponse<WaitQueue> waitQueuesResponse = wingsPersistence.query(WaitQueue.class, req, ReadPref.CRITICAL);
-    waitQueuesResponse.forEach(waitQueue
-        -> notifyQueue.send(aNotifyEvent().withWaitInstanceId(waitQueue.getWaitInstanceId()).withError(error).build()));
+      PageRequest<WaitQueue> req = new PageRequest<>();
+      req.addFilter("correlationId", correlationId, SearchFilter.Operator.EQ);
+      PageResponse<WaitQueue> waitQueuesResponse = wingsPersistence.query(WaitQueue.class, req, ReadPref.CRITICAL);
+      waitQueuesResponse.forEach(waitQueue
+          -> notifyQueue.send(
+              aNotifyEvent().withWaitInstanceId(waitQueue.getWaitInstanceId()).withError(error).build()));
 
-    return notificationId;
+      return notificationId;
+    } catch (Exception e) {
+      logger.error(
+          "Failed to notify for response of type " + response.getClass().getSimpleName() + ": " + Misc.getMessage(e),
+          e);
+    }
+    return null;
   }
 }
