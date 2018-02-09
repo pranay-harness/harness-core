@@ -473,6 +473,7 @@ public class StateMachineTest extends WingsBaseTest {
     runCommand3.setRequiredContextElementType(ContextElementType.INSTANCE);
     sm.addState(runCommand3);
     StateSync finished = new StateSync("finished");
+    finished.setRequiredContextElementType(ContextElementType.INSTANCE);
     sm.addState(finished);
     sm.setInitialStateName("RepeatByServices");
 
@@ -526,6 +527,79 @@ public class StateMachineTest extends WingsBaseTest {
     assertThat(sm.getNextStates("command1", TransitionType.SUCCESS)).hasSize(1).containsOnly(runCommand2);
     assertThat(sm.getNextStates("command2", TransitionType.SUCCESS)).hasSize(1).containsOnly(runCommand3);
     assertThat(sm.getNextStates("command3", TransitionType.SUCCESS)).hasSize(1).containsOnly(finished);
+  }
+
+  @Test
+  public void shouldBreakRepeatTransitionsWhenNoNeeded() {
+    StateMachine sm = new StateMachine();
+    State starting = new StateSync("starting");
+    sm.addState(starting);
+    StateSync runCommand1 = new StateSync("command1");
+    runCommand1.setRequiredContextElementType(ContextElementType.INSTANCE);
+    sm.addState(runCommand1);
+    StateSync runCommand2 = new StateSync("command2");
+    sm.addState(runCommand2);
+    StateSync runCommand3 = new StateSync("command3");
+    runCommand3.setRequiredContextElementType(ContextElementType.INSTANCE);
+    sm.addState(runCommand3);
+    StateSync finished = new StateSync("finished");
+    sm.addState(finished);
+    sm.setInitialStateName(starting.getName());
+
+    sm.addTransition(Transition.Builder.aTransition()
+                         .withFromState(starting)
+                         .withToState(runCommand1)
+                         .withTransitionType(TransitionType.SUCCESS)
+                         .build());
+    sm.addTransition(Transition.Builder.aTransition()
+                         .withFromState(runCommand1)
+                         .withToState(runCommand2)
+                         .withTransitionType(TransitionType.SUCCESS)
+                         .build());
+    sm.addTransition(Transition.Builder.aTransition()
+                         .withFromState(runCommand2)
+                         .withToState(runCommand3)
+                         .withTransitionType(TransitionType.SUCCESS)
+                         .build());
+    sm.addTransition(Transition.Builder.aTransition()
+                         .withFromState(runCommand3)
+                         .withToState(finished)
+                         .withTransitionType(TransitionType.SUCCESS)
+                         .build());
+    sm.validate();
+
+    sm.addRepeatersForRequiredContextElement();
+
+    sm.clearCache();
+
+    sm.validate();
+
+    RepeatState expectedNewState1 = aRepeatState()
+                                        .withName("Repeat " + runCommand1.getName())
+                                        .withRepeatElementType(ContextElementType.INSTANCE)
+                                        .withExecutionStrategy(ExecutionStrategy.PARALLEL)
+                                        .withRepeatElementExpression(InstanceExpressionProcessor.DEFAULT_EXPRESSION)
+                                        .withRepeatTransitionStateName(runCommand1.getName())
+                                        .build();
+
+    assertThat(sm.getStates()).hasSize(7);
+    assertThat(sm.getNextStates("starting", TransitionType.SUCCESS)).hasSize(1).containsOnly(expectedNewState1);
+    assertThat(sm.getNextStates(expectedNewState1.getName(), TransitionType.REPEAT))
+        .hasSize(1)
+        .containsOnly(runCommand1);
+    assertThat(sm.getNextStates("command1", TransitionType.SUCCESS)).isNull();
+
+    RepeatState expectedNewState2 = aRepeatState()
+                                        .withName("Repeat " + runCommand3.getName())
+                                        .withRepeatElementType(ContextElementType.INSTANCE)
+                                        .withExecutionStrategy(ExecutionStrategy.PARALLEL)
+                                        .withRepeatElementExpression(InstanceExpressionProcessor.DEFAULT_EXPRESSION)
+                                        .withRepeatTransitionStateName(runCommand3.getName())
+                                        .build();
+
+    assertThat(sm.getNextStates("command2", TransitionType.SUCCESS)).hasSize(1).containsOnly(expectedNewState2);
+
+    assertThat(sm.getNextStates("command3", TransitionType.SUCCESS)).isNull();
   }
 
   /**
