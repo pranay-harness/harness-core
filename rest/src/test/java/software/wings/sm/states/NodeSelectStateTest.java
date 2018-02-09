@@ -1,5 +1,6 @@
 package software.wings.sm.states;
 
+import static java.util.Collections.emptyList;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.mockito.Matchers.any;
 import static org.mockito.Matchers.anyString;
@@ -8,6 +9,7 @@ import static software.wings.api.PhaseElement.PhaseElementBuilder.aPhaseElement;
 import static software.wings.api.ServiceElement.Builder.aServiceElement;
 import static software.wings.beans.Application.Builder.anApplication;
 import static software.wings.beans.AwsInfrastructureMapping.Builder.anAwsInfrastructureMapping;
+import static software.wings.beans.PhysicalInfrastructureMapping.Builder.aPhysicalInfrastructureMapping;
 import static software.wings.beans.ServiceInstance.Builder.aServiceInstance;
 import static software.wings.beans.ServiceTemplate.Builder.aServiceTemplate;
 import static software.wings.beans.infrastructure.Host.Builder.aHost;
@@ -30,6 +32,7 @@ import software.wings.api.SelectedNodeExecutionData;
 import software.wings.api.ServiceInstanceArtifactParam;
 import software.wings.beans.AwsInfrastructureMapping;
 import software.wings.beans.InfrastructureMappingType;
+import software.wings.beans.InstanceUnitType;
 import software.wings.beans.PhysicalInfrastructureMapping;
 import software.wings.beans.ServiceInstance;
 import software.wings.beans.ServiceTemplate;
@@ -75,7 +78,7 @@ public class NodeSelectStateTest extends WingsBaseTest {
           .build();
 
   PhysicalInfrastructureMapping physicalInfrastructureMapping =
-      PhysicalInfrastructureMapping.Builder.aPhysicalInfrastructureMapping()
+      aPhysicalInfrastructureMapping()
           .withInfraMappingType(InfrastructureMappingType.PHYSICAL_DATA_CENTER_SSH.name())
           .build();
 
@@ -143,7 +146,7 @@ public class NodeSelectStateTest extends WingsBaseTest {
     when(instanceService.list(any(PageRequest.class))).thenReturn(pageResponse);
 
     ExecutionResponse executionResponse = nodeSelectState.execute(context);
-    assertThat(executionResponse.getExecutionStatus().equals(ExecutionStatus.SUCCESS));
+    assertThat(executionResponse.getExecutionStatus()).isEqualTo(ExecutionStatus.SUCCESS);
     assertThat(executionResponse.getStateExecutionData()).isNotNull();
 
     SelectedNodeExecutionData selectedNodeExecutionData =
@@ -170,7 +173,7 @@ public class NodeSelectStateTest extends WingsBaseTest {
 
     ExecutionResponse executionResponse = nodeSelectState.execute(context);
 
-    assertThat(executionResponse.getExecutionStatus().equals(ExecutionStatus.SUCCESS));
+    assertThat(executionResponse.getExecutionStatus()).isEqualTo(ExecutionStatus.SUCCESS);
     assertThat(executionResponse.getStateExecutionData()).isNotNull();
     SelectedNodeExecutionData selectedNodeExecutionData =
         (SelectedNodeExecutionData) executionResponse.getStateExecutionData();
@@ -196,11 +199,67 @@ public class NodeSelectStateTest extends WingsBaseTest {
 
     ExecutionResponse executionResponse = nodeSelectState.execute(context);
 
-    assertThat(executionResponse.getExecutionStatus().equals(ExecutionStatus.SUCCESS));
+    assertThat(executionResponse.getExecutionStatus()).isEqualTo(ExecutionStatus.SUCCESS);
     assertThat(executionResponse.getStateExecutionData()).isNotNull();
     SelectedNodeExecutionData selectedNodeExecutionData =
         (SelectedNodeExecutionData) executionResponse.getStateExecutionData();
     assertThat(selectedNodeExecutionData).isNotNull();
     assertThat(selectedNodeExecutionData.getServiceInstanceList()).size().isEqualTo(2);
+  }
+
+  @Test
+  public void shouldSucceedForPartialPercentageInstances() {
+    nodeSelectState.setInstanceCount(1);
+    nodeSelectState.setInstanceUnitType(InstanceUnitType.PERCENTAGE);
+    when(infrastructureMappingService.get(APP_ID, INFRA_MAPPING_ID)).thenReturn(physicalInfrastructureMapping);
+    when(infrastructureMappingService.selectServiceInstances(anyString(), anyString(), anyString(), any()))
+        .thenReturn(emptyList());
+    when(context.getAppId()).thenReturn(APP_ID);
+    when(contextElement.getUuid()).thenReturn(instance1.getUuid());
+    when(serviceInstanceArtifactParam.getInstanceArtifactMap())
+        .thenReturn(ImmutableMap.of(instance1.getUuid(), ARTIFACT_ID));
+    when(artifactService.get(APP_ID, ARTIFACT_ID)).thenReturn(artifact);
+    when(workflowStandardParams.isExcludeHostsWithSameArtifact()).thenReturn(true);
+
+    PageResponse<Instance> pageResponse =
+        PageResponse.Builder.aPageResponse().withResponse(Arrays.asList(instance)).build();
+
+    when(instanceService.list(any(PageRequest.class))).thenReturn(pageResponse);
+
+    ExecutionResponse executionResponse = nodeSelectState.execute(context);
+
+    assertThat(executionResponse.getExecutionStatus()).isEqualTo(ExecutionStatus.SUCCESS);
+    assertThat(executionResponse.getStateExecutionData()).isNotNull();
+    SelectedNodeExecutionData selectedNodeExecutionData =
+        (SelectedNodeExecutionData) executionResponse.getStateExecutionData();
+    assertThat(selectedNodeExecutionData).isNotNull();
+    assertThat(selectedNodeExecutionData.getServiceInstanceList()).size().isEqualTo(0);
+  }
+
+  @Test
+  public void shouldFailForZeroTotalInstances() {
+    nodeSelectState.setInstanceCount(100);
+    nodeSelectState.setInstanceUnitType(InstanceUnitType.PERCENTAGE);
+    when(infrastructureMappingService.get(APP_ID, INFRA_MAPPING_ID)).thenReturn(physicalInfrastructureMapping);
+    when(infrastructureMappingService.selectServiceInstances(anyString(), anyString(), anyString(), any()))
+        .thenReturn(emptyList());
+    when(infrastructureMappingService.listHostDisplayNames(anyString(), anyString(), anyString()))
+        .thenReturn(emptyList());
+    when(context.getAppId()).thenReturn(APP_ID);
+    when(contextElement.getUuid()).thenReturn(instance1.getUuid());
+    when(serviceInstanceArtifactParam.getInstanceArtifactMap())
+        .thenReturn(ImmutableMap.of(instance1.getUuid(), ARTIFACT_ID));
+    when(artifactService.get(APP_ID, ARTIFACT_ID)).thenReturn(artifact);
+    when(workflowStandardParams.isExcludeHostsWithSameArtifact()).thenReturn(true);
+
+    PageResponse<Instance> pageResponse =
+        PageResponse.Builder.aPageResponse().withResponse(Arrays.asList(instance)).build();
+
+    when(instanceService.list(any(PageRequest.class))).thenReturn(pageResponse);
+
+    ExecutionResponse executionResponse = nodeSelectState.execute(context);
+
+    assertThat(executionResponse.getExecutionStatus()).isEqualTo(ExecutionStatus.FAILED);
+    assertThat(executionResponse.getStateExecutionData()).isNull();
   }
 }

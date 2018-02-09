@@ -67,7 +67,7 @@ public abstract class ContainerResizeCommandUnit extends AbstractCommandUnit {
         if (containerInfos.size() != totalDesiredCount) {
           executionLogCallback.saveExecutionLog(
               String.format("Expected data for %d container%s but got %d", totalDesiredCount,
-                  containerInfos.size() == 1 ? "" : "s", containerInfos.size()),
+                  totalDesiredCount == 1 ? "" : "s", containerInfos.size()),
               LogLevel.ERROR);
         }
         if (!allContainersSuccess) {
