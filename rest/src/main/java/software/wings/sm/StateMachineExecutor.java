@@ -14,8 +14,10 @@ import static software.wings.beans.SearchFilter.Operator.IN;
 import static software.wings.beans.alert.AlertType.ManualInterventionNeeded;
 import static software.wings.dl.PageRequest.Builder.aPageRequest;
 import static software.wings.sm.ElementNotifyResponseData.Builder.anElementNotifyResponseData;
+import static software.wings.sm.ExecutionInterrupt.ExecutionInterruptBuilder.anExecutionInterrupt;
 import static software.wings.sm.ExecutionInterruptType.PAUSE_ALL;
 import static software.wings.sm.ExecutionInterruptType.RESUME_ALL;
+import static software.wings.sm.ExecutionInterruptType.RETRY;
 import static software.wings.sm.ExecutionResponse.Builder.anExecutionResponse;
 import static software.wings.sm.ExecutionStatus.ABORTED;
 import static software.wings.sm.ExecutionStatus.ABORTING;
@@ -576,8 +578,13 @@ public class StateMachineExecutor {
                                           stateExecutionInstance.getExecutionUuid(), stateExecutionInstance.getUuid()),
               resumeId);
         } else {
-          logger.info("No Retry Wait Interval found");
-          retryStateExecutionInstance(stateExecutionInstance, null);
+          executionInterruptManager.registerExecutionInterrupt(
+              anExecutionInterrupt()
+                  .withAppId(stateExecutionInstance.getAppId())
+                  .withExecutionUuid(stateExecutionInstance.getExecutionUuid())
+                  .withStateExecutionInstanceId(stateExecutionInstance.getUuid())
+                  .withExecutionInterruptType(RETRY)
+                  .build());
         }
         break;
       }
