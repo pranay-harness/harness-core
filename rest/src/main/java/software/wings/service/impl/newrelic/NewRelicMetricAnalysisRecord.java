@@ -60,6 +60,7 @@ public class NewRelicMetricAnalysisRecord extends Base {
     private String metricName;
     private RiskLevel riskLevel;
     private List<NewRelicMetricAnalysisValue> metricValues;
+    @Transient private String displayName;
     @Transient private String fullMetricName;
 
     public void addNewRelicMetricAnalysisValue(NewRelicMetricAnalysisValue metricAnalysisValue) {

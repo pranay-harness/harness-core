@@ -97,16 +97,20 @@ public class DynaTraceResource implements MetricAnalysisResource {
       @QueryParam("accountId") final String accountId) throws IOException {
     NewRelicMetricAnalysisRecord metricsAnalysis =
         metricDataAnalysisService.getMetricsAnalysis(StateType.DYNA_TRACE, stateExecutionId, workflowExecutionId);
+    if (metricsAnalysis == null || metricsAnalysis.getMetricAnalyses() == null) {
+      return new RestResponse<>(metricsAnalysis);
+    }
     for (NewRelicMetricAnalysis analysis : metricsAnalysis.getMetricAnalyses()) {
       String metricName = analysis.getMetricName();
       String[] split = metricName.split(":");
       if (split == null || split.length == 1) {
+        analysis.setDisplayName(metricName);
         analysis.setFullMetricName(metricName);
         continue;
       }
       String btName = split[0];
       String fullBTName = btName + " (" + metricName.substring(btName.length() + 1) + ")";
-      analysis.setMetricName(btName);
+      analysis.setDisplayName(btName);
       analysis.setFullMetricName(fullBTName);
     }
     return new RestResponse<>(metricsAnalysis);
