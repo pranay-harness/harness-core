@@ -76,7 +76,7 @@ public class ArtifactCollectionJob implements Job {
   public static final String APP_ID_KEY = "appId";
   public static final String ARTIFACT_STREAM_ID_KEY = "artifactStreamId";
 
-  public static final Duration timeout = Duration.ofMinutes(6);
+  public static final Duration timeout = Duration.ofHours(1);
 
   @Inject private ArtifactService artifactService;
   @Inject private ArtifactStreamService artifactStreamService;
