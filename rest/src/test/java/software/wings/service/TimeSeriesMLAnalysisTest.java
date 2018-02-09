@@ -2,6 +2,7 @@ package software.wings.service;
 
 import static org.junit.Assert.assertEquals;
 
+import com.google.common.collect.Lists;
 import com.google.inject.Inject;
 
 import com.fasterxml.jackson.core.type.TypeReference;
@@ -16,6 +17,7 @@ import software.wings.WingsBaseTest;
 import software.wings.delegatetasks.DelegateProxyFactory;
 import software.wings.dl.WingsPersistence;
 import software.wings.metrics.RiskLevel;
+import software.wings.resources.DynaTraceResource;
 import software.wings.resources.NewRelicResource;
 import software.wings.service.impl.analysis.TSRequest;
 import software.wings.service.impl.analysis.TimeSeriesMLAnalysisRecord;
@@ -53,6 +55,7 @@ public class TimeSeriesMLAnalysisTest extends WingsBaseTest {
   private String delegateTaskId;
 
   @Inject private NewRelicResource newRelicResource;
+  @Inject private DynaTraceResource dynaTraceResource;
   @Mock private DelegateProxyFactory delegateProxyFactory;
   @Inject private WingsPersistence wingsPersistence;
   @Inject private MetricDataAnalysisService metricDataAnalysisService;
@@ -115,6 +118,48 @@ public class TimeSeriesMLAnalysisTest extends WingsBaseTest {
     assertEquals(analysisRecord.getMetricAnalyses().get(0).getMetricName(), "index.jsp");
     assertEquals(analysisRecord.getMetricAnalyses().get(0).getMetricValues().size(), 1);
     assertEquals(analysisRecord.getMetricAnalyses().get(0).getMetricValues().get(0).getName(), "requestsPerMinute");
+  }
+
+  @Test
+  public void testDynatraceMetricNameReplacement() throws IOException {
+    NewRelicMetricAnalysisValue metricAnalysisValue = NewRelicMetricAnalysisValue.builder()
+                                                          .name("requestsPerMinute")
+                                                          .riskLevel(RiskLevel.HIGH)
+                                                          .controlValue(100)
+                                                          .testValue(2000)
+                                                          .build();
+    NewRelicMetricAnalysis newRelicMetricAnalysis1 =
+        NewRelicMetricAnalysis.builder()
+            .metricName("startDelegateTask:SERVICE_METHOD-F9A70E1663C0B9A4")
+            .metricValues(Collections.singletonList(metricAnalysisValue))
+            .riskLevel(RiskLevel.MEDIUM)
+            .build();
+    NewRelicMetricAnalysis newRelicMetricAnalysis2 = NewRelicMetricAnalysis.builder()
+                                                         .metricName("index.jsp")
+                                                         .metricValues(Collections.singletonList(metricAnalysisValue))
+                                                         .riskLevel(RiskLevel.MEDIUM)
+                                                         .build();
+    NewRelicMetricAnalysisRecord newRelicMetricAnalysisRecord =
+        NewRelicMetricAnalysisRecord.builder()
+            .analysisMinute(0)
+            .metricAnalyses(Lists.newArrayList(newRelicMetricAnalysis1, newRelicMetricAnalysis2))
+            .applicationId(appId)
+            .stateExecutionId(stateExecutionId)
+            .workflowExecutionId(workflowExecutionId)
+            .message("1 high risk anomaly")
+            .stateType(StateType.DYNA_TRACE)
+            .build();
+
+    metricDataAnalysisService.saveAnalysisRecords(newRelicMetricAnalysisRecord);
+    NewRelicMetricAnalysisRecord analysisRecord =
+        dynaTraceResource.getMetricsAnalysis(stateExecutionId, workflowExecutionId, accountId).getResource();
+    List<NewRelicMetricAnalysis> metricAnalyses = analysisRecord.getMetricAnalyses();
+    assertEquals(2, metricAnalyses.size());
+    assertEquals("index.jsp", metricAnalyses.get(0).getMetricName());
+    assertEquals("index.jsp", metricAnalyses.get(0).getFullMetricName());
+
+    assertEquals("startDelegateTask", metricAnalyses.get(1).getMetricName());
+    assertEquals("startDelegateTask (SERVICE_METHOD-F9A70E1663C0B9A4)", metricAnalyses.get(1).getFullMetricName());
   }
 
   private List<NewRelicMetricDataRecord> loadMetrics(String fileName) throws IOException {

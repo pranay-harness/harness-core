@@ -10,6 +10,7 @@ import org.mongodb.morphia.annotations.Index;
 import org.mongodb.morphia.annotations.IndexOptions;
 import org.mongodb.morphia.annotations.Indexed;
 import org.mongodb.morphia.annotations.Indexes;
+import org.mongodb.morphia.annotations.Transient;
 import software.wings.beans.Base;
 import software.wings.metrics.RiskLevel;
 import software.wings.sm.StateType;
@@ -59,6 +60,7 @@ public class NewRelicMetricAnalysisRecord extends Base {
     private String metricName;
     private RiskLevel riskLevel;
     private List<NewRelicMetricAnalysisValue> metricValues;
+    @Transient private String fullMetricName;
 
     public void addNewRelicMetricAnalysisValue(NewRelicMetricAnalysisValue metricAnalysisValue) {
       metricValues.add(metricAnalysisValue);

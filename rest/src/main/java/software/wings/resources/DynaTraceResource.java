@@ -14,6 +14,7 @@ import software.wings.security.annotations.LearningEngineAuth;
 import software.wings.service.impl.analysis.TSRequest;
 import software.wings.service.impl.analysis.TimeSeriesMLAnalysisRecord;
 import software.wings.service.impl.newrelic.NewRelicMetricAnalysisRecord;
+import software.wings.service.impl.newrelic.NewRelicMetricAnalysisRecord.NewRelicMetricAnalysis;
 import software.wings.service.impl.newrelic.NewRelicMetricAnalysisRecord.NewRelicMetricHostAnalysisValue;
 import software.wings.service.impl.newrelic.NewRelicMetricDataRecord;
 import software.wings.service.intfc.LearningEngineService;
@@ -94,8 +95,21 @@ public class DynaTraceResource implements MetricAnalysisResource {
       @QueryParam("stateExecutionId") final String stateExecutionId,
       @QueryParam("workflowExecutionId") final String workflowExecutionId,
       @QueryParam("accountId") final String accountId) throws IOException {
-    return new RestResponse<>(
-        metricDataAnalysisService.getMetricsAnalysis(StateType.DYNA_TRACE, stateExecutionId, workflowExecutionId));
+    NewRelicMetricAnalysisRecord metricsAnalysis =
+        metricDataAnalysisService.getMetricsAnalysis(StateType.DYNA_TRACE, stateExecutionId, workflowExecutionId);
+    for (NewRelicMetricAnalysis analysis : metricsAnalysis.getMetricAnalyses()) {
+      String metricName = analysis.getMetricName();
+      String[] split = metricName.split(":");
+      if (split == null || split.length == 1) {
+        analysis.setFullMetricName(metricName);
+        continue;
+      }
+      String btName = split[0];
+      String fullBTName = btName + " (" + metricName.substring(btName.length() + 1) + ")";
+      analysis.setMetricName(btName);
+      analysis.setFullMetricName(fullBTName);
+    }
+    return new RestResponse<>(metricsAnalysis);
   }
 
   @Produces({"application/json", "application/v1+json"})
