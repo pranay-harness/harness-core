@@ -19,7 +19,6 @@ import software.wings.WingsBaseTest;
 import software.wings.beans.artifact.ArtifactStream;
 import software.wings.beans.artifact.JenkinsArtifactStream;
 import software.wings.dl.PageRequest;
-import software.wings.rules.RealMongo;
 import software.wings.scheduler.JobScheduler;
 import software.wings.service.intfc.ArtifactStreamService;
 
@@ -28,7 +27,6 @@ import java.util.List;
 /**
  * Created by peeyushaggarwal on 5/4/16.
  */
-@RealMongo
 public class ArtifactStreamResourceServiceTest extends WingsBaseTest {
   private static final JenkinsArtifactStream artifactStream = aJenkinsArtifactStream()
                                                                   .withAppId(APP_ID)
