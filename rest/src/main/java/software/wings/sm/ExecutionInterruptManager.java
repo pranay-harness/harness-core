@@ -5,14 +5,12 @@
 package software.wings.sm;
 
 import static io.harness.data.structure.EmptyPredicate.isEmpty;
+import static java.util.Arrays.asList;
 import static software.wings.beans.ErrorCode.INVALID_ARGUMENT;
 import static software.wings.beans.ErrorCode.PAUSE_ALL_ALREADY;
 import static software.wings.beans.ErrorCode.RESUME_ALL_ALREADY;
 import static software.wings.beans.ErrorCode.ROLLBACK_ALREADY;
-import static software.wings.beans.ErrorCode.STATE_NOT_FOR_ABORT;
-import static software.wings.beans.ErrorCode.STATE_NOT_FOR_PAUSE;
-import static software.wings.beans.ErrorCode.STATE_NOT_FOR_RESUME;
-import static software.wings.beans.ErrorCode.STATE_NOT_FOR_RETRY;
+import static software.wings.beans.ErrorCode.STATE_NOT_FOR_TYPE;
 import static software.wings.beans.SearchFilter.Operator.EQ;
 import static software.wings.beans.SearchFilter.Operator.GT;
 import static software.wings.beans.SearchFilter.Operator.IN;
@@ -41,6 +39,7 @@ import static software.wings.sm.ExecutionStatusData.Builder.anExecutionStatusDat
 import static software.wings.utils.Switch.noop;
 import static software.wings.utils.Switch.unhandled;
 
+import com.google.common.collect.ImmutableMap;
 import com.google.inject.Inject;
 import com.google.inject.Injector;
 
@@ -60,6 +59,7 @@ import software.wings.service.intfc.AlertService;
 import software.wings.waitnotify.WaitNotifyEngine;
 
 import java.util.List;
+import java.util.Map;
 
 /**
  * The interface State machine event manager.
@@ -77,6 +77,15 @@ public class ExecutionInterruptManager {
   @Inject private WorkflowNotificationHelper workflowNotificationHelper;
   @Inject private AlertService alertService;
 
+  Map<ExecutionInterruptType, List<ExecutionStatus>> acceptableIndividualStatusList =
+      ImmutableMap.<ExecutionInterruptType, List<ExecutionStatus>>builder()
+          .put(RESUME, asList(PAUSED))
+          .put(IGNORE, asList(PAUSED, WAITING))
+          .put(RETRY, asList(WAITING, FAILED, ERROR))
+          .put(ABORT, asList(NEW, STARTING, RUNNING, PAUSED, WAITING))
+          .put(PAUSE, asList(NEW, STARTING, RUNNING))
+          .build();
+
   /**
    * Register execution event execution event.
    *
@@ -86,8 +95,7 @@ public class ExecutionInterruptManager {
   public ExecutionInterrupt registerExecutionInterrupt(ExecutionInterrupt executionInterrupt) {
     StateExecutionInstance stateExecutionInstance = null;
     ExecutionInterruptType executionInterruptType = executionInterrupt.getExecutionInterruptType();
-    if (executionInterruptType == PAUSE || executionInterruptType == IGNORE || executionInterruptType == RETRY
-        || executionInterruptType == ABORT || executionInterruptType == RESUME) {
+    if (acceptableIndividualStatusList.containsKey(executionInterruptType)) {
       if (executionInterrupt.getStateExecutionInstanceId() == null) {
         throw new WingsException(INVALID_ARGUMENT).addParam("args", "null stateExecutionInstanceId");
       }
@@ -99,28 +107,13 @@ public class ExecutionInterruptManager {
             .addParam("args", "invalid stateExecutionInstanceId: " + executionInterrupt.getStateExecutionInstanceId());
       }
 
-      if (executionInterruptType == RESUME && stateExecutionInstance.getStatus() != PAUSED) {
-        throw new WingsException(STATE_NOT_FOR_RESUME).addParam("stateName", stateExecutionInstance.getStateName());
-      }
-
-      if (executionInterruptType == IGNORE && stateExecutionInstance.getStatus() != PAUSED
-          && stateExecutionInstance.getStatus() != WAITING) {
-        throw new WingsException(STATE_NOT_FOR_RESUME).addParam("stateName", stateExecutionInstance.getStateName());
-      }
-
-      if (executionInterruptType == RETRY && stateExecutionInstance.getStatus() != WAITING
-          && stateExecutionInstance.getStatus() != FAILED && stateExecutionInstance.getStatus() != ERROR) {
-        throw new WingsException(STATE_NOT_FOR_RETRY).addParam("stateName", stateExecutionInstance.getStateName());
-      }
-
-      if (executionInterruptType == ABORT && stateExecutionInstance.getStatus() != NEW
-          && stateExecutionInstance.getStatus() != STARTING && stateExecutionInstance.getStatus() != RUNNING
-          && stateExecutionInstance.getStatus() != PAUSED && stateExecutionInstance.getStatus() != WAITING) {
-        throw new WingsException(STATE_NOT_FOR_ABORT).addParam("stateName", stateExecutionInstance.getStateName());
-      }
-      if (executionInterruptType == PAUSE && stateExecutionInstance.getStatus() != NEW
-          && stateExecutionInstance.getStatus() != STARTING && stateExecutionInstance.getStatus() != RUNNING) {
-        throw new WingsException(STATE_NOT_FOR_PAUSE).addParam("stateName", stateExecutionInstance.getStateName());
+      final List<ExecutionStatus> statuses = acceptableIndividualStatusList.get(executionInterruptType);
+      if (!statuses.contains(stateExecutionInstance.getStatus())) {
+        throw new WingsException(STATE_NOT_FOR_TYPE)
+            .addParam("stateName", stateExecutionInstance.getStateName())
+            .addParam("type", executionInterruptType.name())
+            .addParam("status", stateExecutionInstance.getStatus().name())
+            .addParam("statuses", statuses);
       }
     }
 

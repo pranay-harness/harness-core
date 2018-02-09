@@ -283,11 +283,7 @@ public enum ErrorCode {
   /**
    * State not for resume error codes.
    */
-  STATE_NOT_FOR_RESUME("STATE_NOT_FOR_RESUME"),
-  /**
-   * State not for abort error codes.
-   */
-  STATE_NOT_FOR_ABORT("STATE_NOT_FOR_ABORT"),
+  STATE_NOT_FOR_TYPE("STATE_NOT_FOR_TYPE"),
   /**
    * State abort failed error codes.
    */
@@ -296,14 +292,6 @@ public enum ErrorCode {
    * State pause failed error codes.
    */
   STATE_PAUSE_FAILED("STATE_PAUSE_FAILED"),
-  /**
-   * State not for pause error codes.
-   */
-  STATE_NOT_FOR_PAUSE("STATE_NOT_FOR_PAUSE"),
-  /**
-   * State not for retry error codes.
-   */
-  STATE_NOT_FOR_RETRY("STATE_NOT_FOR_RETRY"),
   /**
    * Pause all already error codes.
    */
