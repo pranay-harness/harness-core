@@ -1,6 +1,7 @@
 package software.wings.beans;
 
 import static io.harness.data.structure.EmptyPredicate.isNotEmpty;
+import static org.apache.commons.lang3.StringUtils.isNotBlank;
 import static software.wings.beans.DirectKubernetesInfrastructureMapping.Builder.aDirectKubernetesInfrastructureMapping;
 
 import com.fasterxml.jackson.annotation.JsonIgnore;
@@ -14,6 +15,7 @@ import org.hibernate.validator.constraints.NotEmpty;
 import org.mongodb.morphia.annotations.Transient;
 import software.wings.annotation.Encryptable;
 import software.wings.annotation.Encrypted;
+import software.wings.beans.KubernetesConfig.KubernetesConfigBuilder;
 import software.wings.settings.SettingValue.SettingVariableTypes;
 import software.wings.utils.Util;
 
@@ -99,23 +101,43 @@ public class DirectKubernetesInfrastructureMapping extends ContainerInfrastructu
 
   @SchemaIgnore
   public KubernetesConfig createKubernetesConfig() {
-    return KubernetesConfig.builder()
-        .accountId(getAccountId())
-        .masterUrl(masterUrl)
-        .username(username)
-        .password(password)
-        .caCert(caCert)
-        .clientCert(clientCert)
-        .clientKey(clientKey)
-        .clientKeyPassphrase(clientKeyPassphrase)
-        .encryptedPassword(encryptedPassword)
-        .encryptedCaCert(encryptedCaCert)
-        .encryptedClientCert(encryptedClientCert)
-        .encryptedClientKey(encryptedClientKey)
-        .encryptedClientKeyPassphrase(encryptedClientKeyPassphrase)
-        .clientKeyAlgo(clientKeyAlgo)
-        .namespace(isNotEmpty(namespace) ? namespace : "default")
-        .build();
+    KubernetesConfigBuilder kubernetesConfig = KubernetesConfig.builder()
+                                                   .accountId(getAccountId())
+                                                   .masterUrl(masterUrl)
+                                                   .username(username)
+                                                   .clientKeyAlgo(clientKeyAlgo)
+                                                   .namespace(isNotEmpty(namespace) ? namespace : "default");
+    if (isNotBlank(encryptedPassword)) {
+      kubernetesConfig.encryptedPassword(encryptedPassword);
+    } else {
+      kubernetesConfig.password(password);
+    }
+
+    if (isNotBlank(encryptedCaCert)) {
+      kubernetesConfig.encryptedCaCert(encryptedCaCert);
+    } else {
+      kubernetesConfig.caCert(caCert);
+    }
+
+    if (isNotBlank(encryptedClientCert)) {
+      kubernetesConfig.encryptedClientCert(encryptedClientCert);
+    } else {
+      kubernetesConfig.clientCert(clientCert);
+    }
+
+    if (isNotBlank(encryptedClientKey)) {
+      kubernetesConfig.encryptedClientKey(encryptedClientKey);
+    } else {
+      kubernetesConfig.clientKey(clientKey);
+    }
+
+    if (isNotBlank(encryptedClientKeyPassphrase)) {
+      kubernetesConfig.encryptedClientKeyPassphrase(encryptedClientKeyPassphrase);
+    } else {
+      kubernetesConfig.clientKeyPassphrase(clientKeyPassphrase);
+    }
+
+    return kubernetesConfig.build();
   }
 
   public Builder deepClone() {
