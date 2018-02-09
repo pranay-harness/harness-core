@@ -1,5 +1,8 @@
 package software.wings.sm;
 
+import static software.wings.sm.ExecutionInterrupt.ExecutionInterruptBuilder.anExecutionInterrupt;
+import static software.wings.sm.ExecutionInterruptType.RETRY;
+
 import com.google.inject.Inject;
 
 import software.wings.waitnotify.NotifyCallback;
@@ -13,7 +16,7 @@ import java.util.Map;
  * @author Rishi
  */
 public class ExecutionWaitRetryCallback implements NotifyCallback {
-  @Inject private StateMachineExecutor stateMachineExecutor;
+  @Inject private ExecutionInterruptManager executionInterruptManager;
 
   private String appId;
   private String executionUuid;
@@ -36,48 +39,14 @@ public class ExecutionWaitRetryCallback implements NotifyCallback {
     this.stateExecutionInstanceId = stateExecutionInstanceId;
   }
 
-  /**
-   * Gets app id.
-   *
-   * @return the app id
-   */
-  public String getAppId() {
-    return appId;
-  }
-
-  /**
-   * Sets app id.
-   *
-   * @param appId the app id
-   */
-  public void setAppId(String appId) {
-    this.appId = appId;
-  }
-
-  /**
-   * Gets state execution instance id.
-   *
-   * @return the state execution instance id
-   */
-  public String getStateExecutionInstanceId() {
-    return stateExecutionInstanceId;
-  }
-
-  /**
-   * Sets state execution instance id.
-   *
-   * @param stateExecutionInstanceId the state execution instance id
-   */
-  public void setStateExecutionInstanceId(String stateExecutionInstanceId) {
-    this.stateExecutionInstanceId = stateExecutionInstanceId;
-  }
-
-  /* (non-Javadoc)
-   * @see software.wings.waitnotify.NotifyCallback#notify(java.util.Map)
-   */
   @Override
   public void notify(Map<String, NotifyResponseData> response) {
-    stateMachineExecutor.retryStateExecutionInstance(appId, executionUuid, stateExecutionInstanceId, null);
+    executionInterruptManager.registerExecutionInterrupt(anExecutionInterrupt()
+                                                             .withAppId(appId)
+                                                             .withExecutionUuid(executionUuid)
+                                                             .withStateExecutionInstanceId(stateExecutionInstanceId)
+                                                             .withExecutionInterruptType(RETRY)
+                                                             .build());
   }
 
   @Override
