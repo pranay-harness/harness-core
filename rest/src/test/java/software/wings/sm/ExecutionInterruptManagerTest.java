@@ -119,7 +119,7 @@ public class ExecutionInterruptManagerTest extends WingsBaseTest {
       executionInterrupt = executionInterruptManager.registerExecutionInterrupt(executionInterrupt);
       failBecauseExceptionWasNotThrown(WingsException.class);
     } catch (WingsException exception) {
-      assertThat(exception).hasMessage(ErrorCode.STATE_NOT_FOR_RESUME.getCode());
+      assertThat(exception).hasMessage(ErrorCode.STATE_NOT_FOR_TYPE.getCode());
     }
   }
 
@@ -148,7 +148,7 @@ public class ExecutionInterruptManagerTest extends WingsBaseTest {
       executionInterrupt = executionInterruptManager.registerExecutionInterrupt(executionInterrupt);
       failBecauseExceptionWasNotThrown(WingsException.class);
     } catch (WingsException exception) {
-      assertThat(exception).hasMessage(ErrorCode.STATE_NOT_FOR_RETRY.getCode());
+      assertThat(exception).hasMessage(ErrorCode.STATE_NOT_FOR_TYPE.getCode());
     }
   }
 
@@ -178,7 +178,7 @@ public class ExecutionInterruptManagerTest extends WingsBaseTest {
       executionInterrupt = executionInterruptManager.registerExecutionInterrupt(executionInterrupt);
       failBecauseExceptionWasNotThrown(WingsException.class);
     } catch (WingsException exception) {
-      assertThat(exception).hasMessage(ErrorCode.STATE_NOT_FOR_PAUSE.getCode());
+      assertThat(exception).hasMessage(ErrorCode.STATE_NOT_FOR_TYPE.getCode());
     }
   }
 
@@ -208,7 +208,7 @@ public class ExecutionInterruptManagerTest extends WingsBaseTest {
       executionInterrupt = executionInterruptManager.registerExecutionInterrupt(executionInterrupt);
       failBecauseExceptionWasNotThrown(WingsException.class);
     } catch (WingsException exception) {
-      assertThat(exception).hasMessage(ErrorCode.STATE_NOT_FOR_ABORT.getCode());
+      assertThat(exception).hasMessage(ErrorCode.STATE_NOT_FOR_TYPE.getCode());
     }
   }
 

@@ -7,6 +7,7 @@ import static java.util.Arrays.asList;
 import static org.apache.commons.lang3.StringUtils.isNotBlank;
 import static org.mongodb.morphia.mapping.Mapper.ID_KEY;
 import static software.wings.beans.ErrorCode.INVALID_ARGUMENT;
+import static software.wings.beans.ErrorCode.STATE_NOT_FOR_TYPE;
 import static software.wings.beans.ReadPref.CRITICAL;
 import static software.wings.beans.SearchFilter.Operator.EQ;
 import static software.wings.beans.SearchFilter.Operator.GT;
@@ -768,11 +769,16 @@ public class StateMachineExecutor {
 
   private void abortExecution(ExecutionContextImpl context, ExecutionInterrupt reason) {
     StateExecutionInstance stateExecutionInstance = context.getStateExecutionInstance();
-    boolean updated = updateStatus(
-        stateExecutionInstance, ABORTING, Lists.newArrayList(NEW, QUEUED, STARTING, RUNNING, PAUSED, WAITING), reason);
+
+    final List<ExecutionStatus> executionStatuses = asList(NEW, QUEUED, STARTING, RUNNING, PAUSED, WAITING);
+
+    boolean updated = updateStatus(stateExecutionInstance, ABORTING, executionStatuses, reason);
     if (!updated) {
-      throw new WingsException(ErrorCode.STATE_NOT_FOR_ABORT)
-          .addParam("stateName", stateExecutionInstance.getStateName());
+      throw new WingsException(STATE_NOT_FOR_TYPE)
+          .addParam("stateName", stateExecutionInstance.getStateName())
+          .addParam("type", ABORTING.name())
+          .addParam("status", stateExecutionInstance.getStatus().name())
+          .addParam("statuses", executionStatuses);
     }
 
     abortMarkedInstance(context, stateExecutionInstance);
