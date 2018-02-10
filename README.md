@@ -30,7 +30,7 @@ Install & use RoboMongo client to test MongoDB connection.
 
 ```
    export JAVA_HOME=$(/usr/libexec/java_home -v1.8)
-   export HOSTNAME
+  
 ```
 
 7. Go to http://www.oracle.com/technetwork/java/javase/downloads/jce8-download-2133166.html. Accept the license agreement and download the files. Unzip the files. Copy the two jars to `$JAVA_HOME/jre/lib/security` (you'll probably need to use sudo).
@@ -61,7 +61,11 @@ sudo apt install oracle-java8-unlimited-jce-policy
 
 ### Run Harness without IDE (especially for the UI development)
 
-1. Start server : Replace the <Your Home Directory> with the appropriate value(such as /home/rishi) and run following commands.
+1. Start server : Replace the <Your Home Directory> with the appropriate value(such as /home/rishi) and run following commands. Do
+   
+`export HOSTNAME` 
+
+then
 
 `mvn clean install -DskipTests && java -Xms1024m -Xmx4096m -XX:+HeapDumpOnOutOfMemoryError -XX:+PrintGCDetails -XX:+PrintGCDateStamps -Xloggc:mygclogfilename.gc -XX:+UseParallelGC -XX:MaxGCPauseMillis=500 -Xbootclasspath/p:<Your Home Directory>/.m2/repository/org/mortbay/jetty/alpn/alpn-boot/8.1.11.v20170118/alpn-boot-8.1.11.v20170118.jar -Dfile.encoding=UTF-8 -jar rest/target/rest-0.0.1-SNAPSHOT-capsule.jar rest/config.yml > portal.log &`
 
