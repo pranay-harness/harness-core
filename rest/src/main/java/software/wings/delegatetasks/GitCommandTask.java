@@ -67,7 +67,7 @@ public class GitCommandTask extends AbstractDelegateRunnableTask {
               .gitCommandStatus(GitCommandStatus.SUCCESS)
               .build();
         case VALIDATE:
-          String errorMessage = gitClient.validate(gitConfig);
+          String errorMessage = gitClient.validate(gitConfig, true);
           if (errorMessage == null) {
             return GitCommandExecutionResponse.builder().gitCommandStatus(GitCommandStatus.SUCCESS).build();
           } else {

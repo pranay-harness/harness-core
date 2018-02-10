@@ -6,6 +6,8 @@ import static software.wings.beans.ErrorCode.UNREACHABLE_HOST;
 
 import com.google.inject.Inject;
 
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import software.wings.beans.DelegateTask;
 import software.wings.beans.GitConfig;
 import software.wings.security.encryption.EncryptedDataDetail;
@@ -19,6 +21,7 @@ import java.util.function.Consumer;
  * Created by anubhaw on 11/6/17.
  */
 public class GitValidation extends AbstractDelegateValidateTask {
+  private static final Logger logger = LoggerFactory.getLogger(GitValidation.class);
   @Inject private GitClient gitClient;
   @Inject private EncryptionService encryptionService;
 
@@ -31,13 +34,15 @@ public class GitValidation extends AbstractDelegateValidateTask {
   @SuppressWarnings("unchecked")
   public List<DelegateConnectionResult> validate() {
     GitConfig gitConfig = (GitConfig) getParameters()[1];
+    logger.info("Running validation for task {} for repo {}", delegateTaskId, gitConfig.getRepoUrl());
     List<EncryptedDataDetail> encryptionDetails = (List<EncryptedDataDetail>) getParameters()[2];
     encryptionService.decrypt(gitConfig, encryptionDetails);
 
-    return singletonList(DelegateConnectionResult.builder()
-                             .criteria(gitConfig.getRepoUrl())
-                             .validated(!startsWith(gitClient.validate(gitConfig), UNREACHABLE_HOST.getDescription()))
-                             .build());
+    return singletonList(
+        DelegateConnectionResult.builder()
+            .criteria(gitConfig.getRepoUrl())
+            .validated(!startsWith(gitClient.validate(gitConfig, false), UNREACHABLE_HOST.getDescription()))
+            .build());
   }
 
   @Override
