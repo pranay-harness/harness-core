@@ -385,14 +385,13 @@ public interface Constants {
    */
   String DELEGATE_NAME = "Harness delegate";
 
-  /**
-   * The constant DEFAULT_SYNC_CALL_TIMEOUT.
-   */
-  int DEFAULT_SYNC_CALL_TIMEOUT = 60 * 1000; // 60 seconds
-  /**
-   * The constant DEFAULT_ASYNC_CALL_TIMEOUT.
-   */
-  int DEFAULT_ASYNC_CALL_TIMEOUT = 10 * 60 * 1000; // 10 minutes
+  long MAX_DELEGATE_LAST_HEARTBEAT = 2 * 60 * 1000; // 2 minutes
+
+  long DEFAULT_SYNC_CALL_TIMEOUT = 60 * 1000; // 1 minute
+
+  long CONTAINER_SYNC_CALL_TIMEOUT = 10 * 60 * 1000; // 10 minutes
+
+  long DEFAULT_ASYNC_CALL_TIMEOUT = 10 * 60 * 1000; // 10 minutes
 
   /**
    * The constant BUILD_NO.

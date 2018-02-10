@@ -2,12 +2,15 @@ package software.wings.service.impl;
 
 import static io.harness.data.structure.EmptyPredicate.isEmpty;
 import static io.harness.data.structure.EmptyPredicate.isNotEmpty;
+import static java.util.stream.Collectors.toList;
 import static org.apache.commons.lang3.StringUtils.isNotBlank;
-import static org.mongodb.morphia.mapping.Mapper.ID_KEY;
+import static software.wings.beans.Delegate.Status.ENABLED;
+import static software.wings.common.Constants.MAX_DELEGATE_LAST_HEARTBEAT;
 
 import com.google.inject.Inject;
 import com.google.inject.Singleton;
 
+import org.mongodb.morphia.Key;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import software.wings.beans.Delegate;
@@ -22,8 +25,9 @@ import software.wings.service.intfc.AssignDelegateService;
 import software.wings.service.intfc.DelegateService;
 import software.wings.service.intfc.EnvironmentService;
 
+import java.time.Clock;
+import java.util.ArrayList;
 import java.util.List;
-import java.util.stream.Collectors;
 
 /**
  * Created by brett on 7/20/17
@@ -35,6 +39,7 @@ public class AssignDelegateServiceImpl implements AssignDelegateService {
   @Inject private DelegateService delegateService;
   @Inject private EnvironmentService environmentService;
   @Inject private WingsPersistence wingsPersistence;
+  @Inject private Clock clock;
 
   @Override
   public boolean canAssign(String delegateId, DelegateTask task) {
@@ -104,6 +109,8 @@ public class AssignDelegateServiceImpl implements AssignDelegateService {
       for (String criteria : task.getTaskType().getCriteria(task)) {
         if (isNotBlank(criteria)) {
           DelegateConnectionResult result = wingsPersistence.createQuery(DelegateConnectionResult.class)
+                                                .field("accountId")
+                                                .equal(task.getAccountId())
                                                 .field("delegateId")
                                                 .equal(delegateId)
                                                 .field("criteria")
@@ -115,30 +122,67 @@ public class AssignDelegateServiceImpl implements AssignDelegateService {
         }
       }
     } catch (Exception e) {
-      logger.error("Error checking whether delegate is whitelisted for task", e);
+      logger.error("Error checking whether delegate is whitelisted for task {}", task.getUuid(), e);
     }
     return false;
   }
 
   @Override
+  public List<String> connectedWhitelistedDelegates(DelegateTask task) {
+    List<String> delegateIds = new ArrayList<>();
+    try {
+      List<String> connectedDelegates = wingsPersistence.createQuery(Delegate.class)
+                                            .field("accountId")
+                                            .equal(task.getAccountId())
+                                            .field("connected")
+                                            .equal(true)
+                                            .field("status")
+                                            .equal(ENABLED)
+                                            .field("lastHeartBeat")
+                                            .greaterThan(clock.millis() - MAX_DELEGATE_LAST_HEARTBEAT)
+                                            .asKeyList()
+                                            .stream()
+                                            .map(key -> key.getId().toString())
+                                            .collect(toList());
+
+      for (String criteria : task.getTaskType().getCriteria(task)) {
+        if (isNotBlank(criteria)) {
+          DelegateConnectionResult result = wingsPersistence.createQuery(DelegateConnectionResult.class)
+                                                .field("accountId")
+                                                .equal(task.getAccountId())
+                                                .field("delegateId")
+                                                .in(connectedDelegates)
+                                                .field("criteria")
+                                                .equal(criteria)
+                                                .get();
+          if (result != null && result.isValidated()) {
+            delegateIds.add(result.getDelegateId());
+          }
+        }
+      }
+    } catch (Exception e) {
+      logger.error("Error checking for whitelisted delegates for task {}", task.getUuid(), e);
+    }
+    return delegateIds;
+  }
+
+  @Override
   public void saveConnectionResults(List<DelegateConnectionResult> results) {
     List<DelegateConnectionResult> resultsToSave =
-        results.stream().filter(result -> isNotBlank(result.getCriteria())).collect(Collectors.toList());
+        results.stream().filter(result -> isNotBlank(result.getCriteria())).collect(toList());
 
     for (DelegateConnectionResult result : resultsToSave) {
-      DelegateConnectionResult existingDelegateConnectionResult =
-          wingsPersistence.createQuery(DelegateConnectionResult.class)
-              .field("accountId")
-              .equal(result.getAccountId())
-              .field("delegateId")
-              .equal(result.getDelegateId())
-              .field("criteria")
-              .equal(result.getCriteria())
-              .project(ID_KEY, true)
-              .get();
-      if (existingDelegateConnectionResult != null) {
-        wingsPersistence.updateField(DelegateConnectionResult.class, existingDelegateConnectionResult.getUuid(),
-            "validated", result.isValidated());
+      Key<DelegateConnectionResult> existingResultKey = wingsPersistence.createQuery(DelegateConnectionResult.class)
+                                                            .field("accountId")
+                                                            .equal(result.getAccountId())
+                                                            .field("delegateId")
+                                                            .equal(result.getDelegateId())
+                                                            .field("criteria")
+                                                            .equal(result.getCriteria())
+                                                            .getKey();
+      if (existingResultKey != null) {
+        wingsPersistence.updateField(
+            DelegateConnectionResult.class, existingResultKey.getId().toString(), "validated", result.isValidated());
       } else {
         wingsPersistence.save(result);
       }
