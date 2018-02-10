@@ -142,7 +142,7 @@ public class KubernetesSetupCommandUnit extends ContainerSetupCommandUnit {
 
     kubernetesContainerService.createNamespaceIfNotExist(kubernetesConfig, encryptedDataDetails);
 
-    String secretName = getKubernetesSecretName(setupParams.getImageDetails().getRegistryUrl());
+    String secretName = getKubernetesSecretName(setupParams.getImageDetails());
     kubernetesContainerService.createOrReplaceSecret(kubernetesConfig, encryptedDataDetails,
         createRegistrySecret(
             secretName, kubernetesConfig.getNamespace(), setupParams.getImageDetails(), executionLogCallback));

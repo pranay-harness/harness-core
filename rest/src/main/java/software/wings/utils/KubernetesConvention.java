@@ -1,7 +1,10 @@
 package software.wings.utils;
 
+import static org.apache.commons.lang3.StringUtils.isNotBlank;
+
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import software.wings.beans.container.ImageDetails;
 
 import java.util.Optional;
 import java.util.regex.Pattern;
@@ -38,12 +41,13 @@ public class KubernetesConvention {
     return noDot(normalize(rcNamePrefix));
   }
 
-  public static String getKubernetesSecretName(String registryUrl) {
-    String regName = registryUrl.substring(registryUrl.indexOf("://") + 3);
+  public static String getKubernetesSecretName(ImageDetails imageDetails) {
+    String regName = imageDetails.getRegistryUrl().substring(imageDetails.getRegistryUrl().indexOf("://") + 3);
     if (regName.endsWith("/")) {
       regName = regName.substring(0, regName.length() - 1);
     }
-    String name = normalize(noDot(regName));
+    String name =
+        normalize(noDot(regName + (isNotBlank(imageDetails.getUsername()) ? "-" + imageDetails.getUsername() : "")));
     int maxLength = 63 - (SECRET_PREFIX.length() + SECRET_SUFFIX.length());
     if (name.length() > maxLength) {
       name = name.substring(0, maxLength);
