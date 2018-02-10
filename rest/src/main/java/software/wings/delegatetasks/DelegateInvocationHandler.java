@@ -35,7 +35,7 @@ public class DelegateInvocationHandler implements InvocationHandler {
                                         .withAccountId(syncTaskContext.getAccountId())
                                         .withAppId(syncTaskContext.getAppId())
                                         .withAsync(false)
-                                        .withTimeout(syncTaskContext.getTimeOut())
+                                        .withTimeout(syncTaskContext.getTimeout())
                                         .build());
     if (returnValueData.getException() != null) {
       throw returnValueData.getException();

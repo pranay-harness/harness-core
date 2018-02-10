@@ -90,7 +90,7 @@ public class ContainerSyncImpl implements ContainerSync {
         Application app = appService.get(infrastructureMapping.getAppId());
 
         SyncTaskContext syncTaskContext = aContext().withAccountId(app.getAccountId()).withAppId(app.getUuid()).build();
-        syncTaskContext.setTimeOut(Constants.DEFAULT_SYNC_CALL_TIMEOUT * 2);
+        syncTaskContext.setTimeout(Constants.DEFAULT_SYNC_CALL_TIMEOUT * 2);
         ContainerServiceParams containerServiceParams =
             ContainerServiceParams.builder()
                 .settingAttribute(settingAttribute)

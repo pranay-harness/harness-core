@@ -7,6 +7,7 @@ import static software.wings.beans.DelegateTask.SyncTaskContext.Builder.aContext
 import static software.wings.beans.ResizeStrategy.RESIZE_NEW_FIRST;
 import static software.wings.beans.SettingAttribute.Builder.aSettingAttribute;
 import static software.wings.beans.command.KubernetesSetupParams.KubernetesSetupParamsBuilder.aKubernetesSetupParams;
+import static software.wings.common.Constants.CONTAINER_SYNC_CALL_TIMEOUT;
 import static software.wings.sm.StateType.KUBERNETES_SETUP;
 
 import com.google.inject.Inject;
@@ -199,8 +200,12 @@ public class KubernetesSetup extends ContainerServiceSetup {
   }
 
   private ContainerService getContainerService(Application app) {
-    return delegateProxyFactory.get(
-        ContainerService.class, aContext().withAccountId(app.getAccountId()).withAppId(app.getUuid()).build());
+    return delegateProxyFactory.get(ContainerService.class,
+        aContext()
+            .withAccountId(app.getAccountId())
+            .withAppId(app.getUuid())
+            .withTimeout(CONTAINER_SYNC_CALL_TIMEOUT)
+            .build());
   }
 
   public void setCommandName(String commandName) {

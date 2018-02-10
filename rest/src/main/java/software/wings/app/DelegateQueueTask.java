@@ -1,8 +1,11 @@
 package software.wings.app;
 
+import static io.harness.data.structure.EmptyPredicate.isEmpty;
 import static io.harness.data.structure.EmptyPredicate.isNotEmpty;
 import static java.util.stream.Collectors.toList;
 import static org.apache.commons.lang3.StringUtils.isBlank;
+import static org.mongodb.morphia.mapping.Mapper.ID_KEY;
+import static software.wings.beans.DelegateTask.Status.QUEUED;
 import static software.wings.common.Constants.DELEGATE_SYNC_CACHE;
 import static software.wings.core.maintenance.MaintenanceController.isMaintenance;
 import static software.wings.waitnotify.ErrorNotifyResponseData.Builder.anErrorNotifyResponseData;
@@ -30,6 +33,7 @@ import java.time.Duration;
 import java.util.ArrayList;
 import java.util.Iterator;
 import java.util.List;
+import java.util.Set;
 import java.util.concurrent.TimeUnit;
 import javax.cache.Cache;
 import javax.cache.Caching;
@@ -72,7 +76,7 @@ public class DelegateQueueTask implements Runnable {
 
       wingsPersistence.update(
           releaseLongQueuedTasks, wingsPersistence.createUpdateOperations(DelegateTask.class).unset("delegateId"));
-      // Find tasks which are timed out and update their status to FAILED.
+      // Find async tasks which are timed out and update their status to FAILED.
       List<DelegateTask> longRunningTimedOutTasks = new ArrayList<>();
       try {
         longRunningTimedOutTasks = wingsPersistence.createQuery(DelegateTask.class)
@@ -123,7 +127,7 @@ public class DelegateQueueTask implements Runnable {
         });
       }
 
-      // Find tasks which have been queued for too long and update their status to FAILED.
+      // Find async tasks which have been queued for too long and update their status to ERROR.
       List<DelegateTask> queuedTimedOutTasks = new ArrayList<>();
       try {
         queuedTimedOutTasks =
@@ -173,7 +177,7 @@ public class DelegateQueueTask implements Runnable {
         });
       }
 
-      // Re-broadcast queued sync tasks not picked up by any Delegate
+      // Re-broadcast queued sync tasks not picked up and not in process of validation and remove timed out tasks
       Cache<String, DelegateTask> delegateSyncCache =
           cacheHelper.getCache(DELEGATE_SYNC_CACHE, String.class, DelegateTask.class);
       Iterator<Cache.Entry<String, DelegateTask>> iterator = delegateSyncCache.iterator();
@@ -184,16 +188,26 @@ public class DelegateQueueTask implements Runnable {
             try {
               DelegateTask syncDelegateTask = stringDelegateTaskEntry.getValue();
               if (syncDelegateTask.getStatus().equals(Status.QUEUED) && syncDelegateTask.getDelegateId() == null) {
-                // If it's been more than ten minutes, remove it
-                if (clock.millis() - syncDelegateTask.getCreatedAt() > TimeUnit.MINUTES.toMillis(10)) {
+                // If it's timed out, remove it
+                if (clock.millis() - syncDelegateTask.getCreatedAt() > syncDelegateTask.getTimeout()) {
                   logger.warn("Evicting old delegate sync task {}", syncDelegateTask.getUuid());
                   Caching.getCache(DELEGATE_SYNC_CACHE, String.class, DelegateTask.class)
                       .remove(syncDelegateTask.getUuid());
                 } else {
-                  logger.info("Re-broadcast queued sync task [{}] {} Account: {}", syncDelegateTask.getUuid(),
-                      syncDelegateTask.getTaskType().name(), syncDelegateTask.getAccountId());
-                  broadcasterFactory.lookup("/stream/delegate/" + syncDelegateTask.getAccountId(), true)
-                      .broadcast(syncDelegateTask);
+                  Set<String> validatingDelegates = syncDelegateTask.getValidatingDelegateIds();
+                  Set<String> completeDelegates = syncDelegateTask.getValidationCompleteDelegateIds();
+                  if ((isEmpty(validatingDelegates) && isEmpty(completeDelegates))
+                      || completeDelegates.containsAll(validatingDelegates)) {
+                    syncDelegateTask.setValidatingDelegateIds(null);
+                    syncDelegateTask.setValidationCompleteDelegateIds(null);
+                    Caching.getCache(DELEGATE_SYNC_CACHE, String.class, DelegateTask.class)
+                        .put(syncDelegateTask.getUuid(), syncDelegateTask);
+
+                    logger.info("Re-broadcast queued sync task [{}] {} Account: {}", syncDelegateTask.getUuid(),
+                        syncDelegateTask.getTaskType().name(), syncDelegateTask.getAccountId());
+                    broadcasterFactory.lookup("/stream/delegate/" + syncDelegateTask.getAccountId(), true)
+                        .broadcast(syncDelegateTask);
+                  }
                 }
               }
             } catch (Exception ex) {
@@ -208,7 +222,7 @@ public class DelegateQueueTask implements Runnable {
         delegateSyncCache.clear();
       }
 
-      // Re-broadcast queued async tasks not picked up by any Delegate
+      // Re-broadcast queued async tasks not picked up by any Delegate and not in process of validation
       List<DelegateTask> unassignedTasks = null;
       try {
         unassignedTasks = wingsPersistence.createQuery(DelegateTask.class)
@@ -235,8 +249,28 @@ public class DelegateQueueTask implements Runnable {
 
       if (isNotEmpty(unassignedTasks)) {
         unassignedTasks.forEach(delegateTask -> {
-          logger.info("Re-broadcast queued async task [{}]", delegateTask.getUuid());
-          broadcasterFactory.lookup("/stream/delegate/" + delegateTask.getAccountId(), true).broadcast(delegateTask);
+          Set<String> validatingDelegates = delegateTask.getValidatingDelegateIds();
+          Set<String> completeDelegates = delegateTask.getValidationCompleteDelegateIds();
+          if ((isEmpty(validatingDelegates) && isEmpty(completeDelegates))
+              || completeDelegates.containsAll(validatingDelegates)) {
+            UpdateOperations<DelegateTask> updateOperations =
+                wingsPersistence.createUpdateOperations(DelegateTask.class)
+                    .unset("validatingDelegateIds")
+                    .unset("validationCompleteDelegateIds");
+            Query<DelegateTask> updateQuery = wingsPersistence.createQuery(DelegateTask.class)
+                                                  .field("accountId")
+                                                  .equal(delegateTask.getAccountId())
+                                                  .field("status")
+                                                  .equal(QUEUED)
+                                                  .field("delegateId")
+                                                  .doesNotExist()
+                                                  .field(ID_KEY)
+                                                  .equal(delegateTask.getUuid());
+            wingsPersistence.update(updateQuery, updateOperations);
+
+            logger.info("Re-broadcast queued async task [{}]", delegateTask.getUuid());
+            broadcasterFactory.lookup("/stream/delegate/" + delegateTask.getAccountId(), true).broadcast(delegateTask);
+          }
         });
       }
 

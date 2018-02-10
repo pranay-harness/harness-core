@@ -100,7 +100,6 @@ import java.util.Map;
 import java.util.Optional;
 import java.util.Set;
 import java.util.concurrent.TimeUnit;
-import java.util.stream.Collectors;
 import javax.cache.Cache;
 import javax.cache.Caching;
 import javax.validation.executable.ValidateOnExecution;
@@ -517,26 +516,27 @@ public class DelegateServiceImpl implements DelegateService {
       logger.warn("Delegate task is null");
       throw new WingsException(ErrorCode.INVALID_ARGUMENT).addParam("args", "Delegate task is null");
     }
-    List<Key<Delegate>> activeDelegates = wingsPersistence.createQuery(Delegate.class)
-                                              .field("accountId")
-                                              .equal(task.getAccountId())
-                                              .field("connected")
-                                              .equal(true)
-                                              .field("status")
-                                              .equal(Status.ENABLED)
-                                              .field("supportedTaskTypes")
-                                              .contains(task.getTaskType().name())
-                                              .field("lastHeartBeat")
-                                              .greaterThanOrEq(System.currentTimeMillis() - 3 * 60 * 1000)
-                                              .asKeyList(); // TODO:: make it more reliable. take out time factor
+    List<String> activeDelegates = wingsPersistence.createQuery(Delegate.class)
+                                       .field("accountId")
+                                       .equal(task.getAccountId())
+                                       .field("connected")
+                                       .equal(true)
+                                       .field("status")
+                                       .equal(Status.ENABLED)
+                                       .field("supportedTaskTypes")
+                                       .contains(task.getTaskType().name())
+                                       .field("lastHeartBeat")
+                                       .greaterThan(clock.millis() - Constants.MAX_DELEGATE_LAST_HEARTBEAT)
+                                       .asKeyList()
+                                       .stream()
+                                       .map(key -> key.getId().toString())
+                                       .collect(toList());
 
-    logger.info("{} delegates [{}] are active", activeDelegates.size(),
-        activeDelegates.stream().map(delegateKey -> delegateKey.getId().toString()).collect(Collectors.joining(", ")));
+    logger.info("{} delegates {} are active", activeDelegates.size(), activeDelegates);
 
-    List<Key<Delegate>> eligibleDelegates =
-        activeDelegates.stream()
-            .filter(delegateKey -> assignDelegateService.canAssign(delegateKey.getId().toString(), task))
-            .collect(toList());
+    List<String> eligibleDelegates = activeDelegates.stream()
+                                         .filter(delegateId -> assignDelegateService.canAssign(delegateId, task))
+                                         .collect(toList());
 
     if (activeDelegates.isEmpty()) {
       logger.warn("No delegates are active for the account: {}", task.getAccountId());
@@ -554,11 +554,8 @@ public class DelegateServiceImpl implements DelegateService {
               .build());
     }
 
-    List<String> eligibleDelegateIds =
-        eligibleDelegates.stream().map(delegateKey -> delegateKey.getId().toString()).collect(Collectors.toList());
-    logger.info("{} delegates [{}] eligible to execute the task", eligibleDelegates.size(),
-        Joiner.on(", ").join(eligibleDelegateIds));
-    return eligibleDelegateIds;
+    logger.info("{} delegates {} eligible to execute the task", eligibleDelegates.size(), eligibleDelegates);
+    return eligibleDelegates;
   }
 
   @Override
@@ -617,7 +614,15 @@ public class DelegateServiceImpl implements DelegateService {
     // Tell delegate whether to proceed anyway because all eligible delegates failed
     if (isValidationComplete(delegateTask)) {
       logger.info("Validation attempts are complete for task {}", taskId);
-      return assignTask(delegateId, taskId, delegateTask);
+      // Check whether a whitelisted delegate is connected
+      List<String> whitelistedDelegates = assignDelegateService.connectedWhitelistedDelegates(delegateTask);
+      if (isNotEmpty(whitelistedDelegates)) {
+        logger.info("Waiting for task {} to be acquired by a whitelisted delegate: {}", taskId, whitelistedDelegates);
+        return null;
+      } else {
+        logger.info("No whitelisted delegates found for task {}", taskId);
+        return assignTask(delegateId, taskId, delegateTask);
+      }
     } else {
       logger.info("Task {} is still being validated");
       return null;

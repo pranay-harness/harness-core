@@ -80,7 +80,7 @@ public class AppdynamicsServiceImpl implements AppdynamicsService {
     final SettingAttribute settingAttribute = settingsService.get(settingId);
     SyncTaskContext syncTaskContext =
         aContext().withAccountId(settingAttribute.getAccountId()).withAppId(Base.GLOBAL_APP_ID).build();
-    syncTaskContext.setTimeOut(APPDYNAMICS_CALL_TIMEOUT);
+    syncTaskContext.setTimeout(APPDYNAMICS_CALL_TIMEOUT);
     AppDynamicsConfig appDynamicsConfig = (AppDynamicsConfig) settingAttribute.getValue();
     List<EncryptedDataDetail> encryptionDetails = secretManager.getEncryptionDetails(appDynamicsConfig, null, null);
     return delegateProxyFactory.get(AppdynamicsDelegateService.class, syncTaskContext)
@@ -93,7 +93,7 @@ public class AppdynamicsServiceImpl implements AppdynamicsService {
     final SettingAttribute settingAttribute = settingsService.get(settingId);
     SyncTaskContext syncTaskContext =
         aContext().withAccountId(settingAttribute.getAccountId()).withAppId(Base.GLOBAL_APP_ID).build();
-    syncTaskContext.setTimeOut(APPDYNAMICS_CALL_TIMEOUT);
+    syncTaskContext.setTimeout(APPDYNAMICS_CALL_TIMEOUT);
     AppDynamicsConfig appDynamicsConfig = (AppDynamicsConfig) settingAttribute.getValue();
     List<EncryptedDataDetail> encryptionDetails = secretManager.getEncryptionDetails(appDynamicsConfig, null, null);
     return delegateProxyFactory.get(AppdynamicsDelegateService.class, syncTaskContext)

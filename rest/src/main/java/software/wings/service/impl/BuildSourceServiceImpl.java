@@ -175,7 +175,7 @@ public class BuildSourceServiceImpl implements BuildSourceService {
     SyncTaskContext syncTaskContext =
         aContext().withAccountId(settingAttribute.getAccountId()).withAppId(appId).build();
     if (settingAttribute.getValue().getType().equals(SettingVariableTypes.JENKINS.name())) {
-      syncTaskContext.setTimeOut(120 * 1000);
+      syncTaskContext.setTimeout(120 * 1000);
     }
     return delegateProxyFactory.get(buildServiceMap.get(settingAttribute.getValue().getClass()), syncTaskContext);
   }
@@ -188,7 +188,7 @@ public class BuildSourceServiceImpl implements BuildSourceService {
     SyncTaskContext syncTaskContext =
         aContext().withAccountId(settingAttribute.getAccountId()).withAppId(appId).build();
     if (artifactStreamType.equals(ArtifactStreamType.JENKINS.name())) {
-      syncTaskContext.setTimeOut(120 * 1000);
+      syncTaskContext.setTimeout(120 * 1000);
     }
     return delegateProxyFactory.get(buildServiceClass, syncTaskContext);
   }

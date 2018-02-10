@@ -15,6 +15,7 @@ import static software.wings.beans.ResizeStrategy.DOWNSIZE_OLD_FIRST;
 import static software.wings.beans.ResizeStrategy.RESIZE_NEW_FIRST;
 import static software.wings.beans.SettingAttribute.Builder.aSettingAttribute;
 import static software.wings.beans.command.CommandExecutionContext.Builder.aCommandExecutionContext;
+import static software.wings.common.Constants.CONTAINER_SYNC_CALL_TIMEOUT;
 import static software.wings.sm.ExecutionResponse.Builder.anExecutionResponse;
 import static software.wings.sm.InstanceStatusSummary.InstanceStatusSummaryBuilder.anInstanceStatusSummary;
 
@@ -233,7 +234,11 @@ public abstract class ContainerServiceDeploy extends State {
 
   private ContainerService getContainerService(ContextData contextData) {
     return delegateProxyFactory.get(ContainerService.class,
-        aContext().withAccountId(contextData.app.getAccountId()).withAppId(contextData.appId).build());
+        aContext()
+            .withAccountId(contextData.app.getAccountId())
+            .withAppId(contextData.appId)
+            .withTimeout(CONTAINER_SYNC_CALL_TIMEOUT)
+            .build());
   }
 
   private ExecutionResponse addNewInstances(ContextData contextData, CommandStateExecutionData executionData) {
