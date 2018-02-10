@@ -3,8 +3,12 @@ package software.wings.integration;
 import org.junit.Ignore;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import software.wings.beans.AzureConfig;
+import software.wings.helpers.ext.azure.AzureHelperService;
 import software.wings.rules.Integration;
-import software.wings.service.impl.AzureHelperService;
+
+import java.util.List;
+import java.util.Map;
 
 @Integration
 @Ignore
@@ -21,15 +25,43 @@ public class AzureIntegrationTest {
   private static final String subscriptionId = "12d2db62-5aa9-471d-84bb-faa489b3e319";
 
   public static void main(String[] args) {
+    logger.info("AzureIntegrationTest: Start.");
     AzureAuthenticationTest();
+    GetSubscriptions();
+    GetRepositoryTags();
+    logger.info("AzureIntegrationTest: Done.");
   }
 
   private static void AzureAuthenticationTest() {
-    logger.info("AzureAuthenticationTest: calling Azure.");
-
     AzureHelperService azure = new AzureHelperService();
     azure.validateAzureAccountCredential(clientId, tenantId, key);
+  }
 
-    logger.info("AzureAuthenticationTest: Done.");
+  private static void GetSubscriptions() {
+    AzureHelperService azure = new AzureHelperService();
+    AzureConfig config = getAzureConfig();
+    logger.info("Azure Subscriptions: " + azure.listSubscriptions(config).toString());
+  }
+
+  private static void GetRepositoryTags() {
+    AzureHelperService azure = new AzureHelperService();
+    AzureConfig config = getAzureConfig();
+    Map<String, String> subscriptions = azure.listSubscriptions(config);
+    subscriptions.forEach((subId, Desc) -> logger.info(subId + Desc));
+    for (Map.Entry<String, String> entry : subscriptions.entrySet()) {
+      String subscriptionId = entry.getKey();
+      List<String> registries = azure.listContainerRegistries(config, subscriptionId);
+      for (String registry : registries) {
+        List<String> repositories = azure.listRepositories(config, subscriptionId, registry);
+        for (String repository : repositories) {
+          List<String> tags = azure.listRepositoryTags(config, subscriptionId, registry, repository);
+          logger.info("Details: " + subscriptionId + " " + registry + " " + repository + " " + tags.toString());
+        }
+      }
+    }
+  }
+
+  private static AzureConfig getAzureConfig() {
+    return new AzureConfig(clientId, tenantId, key, "");
   }
 }

@@ -31,6 +31,7 @@ import software.wings.beans.config.LogzConfig;
 import software.wings.beans.config.NexusConfig;
 import software.wings.dl.WingsPersistence;
 import software.wings.exception.WingsException;
+import software.wings.helpers.ext.azure.AzureHelperService;
 import software.wings.service.impl.analysis.ElkConnector;
 import software.wings.service.intfc.BuildSourceService;
 import software.wings.service.intfc.FeatureFlagService;
