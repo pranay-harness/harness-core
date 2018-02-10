@@ -768,12 +768,12 @@ public class StateMachineExecutor {
     }
   }
 
-  private void abortExecution(ExecutionContextImpl context, ExecutionInterrupt reason) {
+  private void abortExecution(ExecutionContextImpl context) {
     StateExecutionInstance stateExecutionInstance = context.getStateExecutionInstance();
 
     final List<ExecutionStatus> executionStatuses = asList(NEW, QUEUED, STARTING, RUNNING, PAUSED, WAITING);
 
-    boolean updated = updateStatus(stateExecutionInstance, ABORTING, executionStatuses, reason);
+    boolean updated = updateStatus(stateExecutionInstance, ABORTING, executionStatuses, null);
     if (!updated) {
       throw new WingsException(STATE_NOT_FOR_TYPE)
           .addParam("stateName", stateExecutionInstance.getStateName())
@@ -1143,7 +1143,7 @@ public class StateMachineExecutor {
             stateExecutionInstance.getStateMachineId(), CRITICAL);
         ExecutionContextImpl context = new ExecutionContextImpl(stateExecutionInstance, sm, injector);
         injector.injectMembers(context);
-        abortExecution(context, workflowExecutionInterrupt);
+        abortExecution(context);
         break;
       }
       case ABORT_ALL: {
