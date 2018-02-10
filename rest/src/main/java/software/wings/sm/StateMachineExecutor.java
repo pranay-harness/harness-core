@@ -3,6 +3,7 @@ package software.wings.sm;
 import static io.harness.data.structure.EmptyPredicate.isEmpty;
 import static io.harness.data.structure.EmptyPredicate.isNotEmpty;
 import static io.harness.threading.Morpheus.quietSleep;
+import static java.lang.String.format;
 import static java.util.Arrays.asList;
 import static org.apache.commons.lang3.StringUtils.isNotBlank;
 import static org.mongodb.morphia.mapping.Mapper.ID_KEY;
@@ -913,8 +914,10 @@ public class StateMachineExecutor {
     }
     if (reason != null) {
       if (stateExecutionInstance.getUuid().equals(reason.getStateExecutionInstanceId())) {
-        logger.error("The reason execution interrupt is already assigned to this execution instance. "
-            + "There is no reason (it is a bug) to double bag it.");
+        logger.error(
+            format("The reason execution interrupt with type %s is already assigned to this execution instance.",
+                reason.getExecutionInterruptType().name()),
+            new Exception(""));
       } else {
         ops.addToSet("interruptHistory",
             ExecutionInterruptEffect.builder().interruptId(reason.getUuid()).tookEffectAt(new Date()).build());
