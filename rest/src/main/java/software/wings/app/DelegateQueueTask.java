@@ -4,8 +4,6 @@ import static io.harness.data.structure.EmptyPredicate.isEmpty;
 import static io.harness.data.structure.EmptyPredicate.isNotEmpty;
 import static java.util.stream.Collectors.toList;
 import static org.apache.commons.lang3.StringUtils.isBlank;
-import static org.mongodb.morphia.mapping.Mapper.ID_KEY;
-import static software.wings.beans.DelegateTask.Status.QUEUED;
 import static software.wings.common.Constants.DELEGATE_SYNC_CACHE;
 import static software.wings.core.maintenance.MaintenanceController.isMaintenance;
 import static software.wings.waitnotify.ErrorNotifyResponseData.Builder.anErrorNotifyResponseData;
@@ -198,10 +196,12 @@ public class DelegateQueueTask implements Runnable {
                   Set<String> completeDelegates = syncDelegateTask.getValidationCompleteDelegateIds();
                   if ((isEmpty(validatingDelegates) && isEmpty(completeDelegates))
                       || completeDelegates.containsAll(validatingDelegates)) {
-                    syncDelegateTask.setValidatingDelegateIds(null);
-                    syncDelegateTask.setValidationCompleteDelegateIds(null);
-                    Caching.getCache(DELEGATE_SYNC_CACHE, String.class, DelegateTask.class)
-                        .put(syncDelegateTask.getUuid(), syncDelegateTask);
+                    // TODO(brett): Consider interaction between rebroadcast and validation while waiting for all
+                    // results
+                    //                    syncDelegateTask.setValidatingDelegateIds(null);
+                    //                    syncDelegateTask.setValidationCompleteDelegateIds(null);
+                    //                    Caching.getCache(DELEGATE_SYNC_CACHE, String.class, DelegateTask.class)
+                    //                        .put(syncDelegateTask.getUuid(), syncDelegateTask);
 
                     logger.info("Re-broadcast queued sync task [{}] {} Account: {}", syncDelegateTask.getUuid(),
                         syncDelegateTask.getTaskType().name(), syncDelegateTask.getAccountId());
@@ -253,20 +253,21 @@ public class DelegateQueueTask implements Runnable {
           Set<String> completeDelegates = delegateTask.getValidationCompleteDelegateIds();
           if ((isEmpty(validatingDelegates) && isEmpty(completeDelegates))
               || completeDelegates.containsAll(validatingDelegates)) {
-            UpdateOperations<DelegateTask> updateOperations =
-                wingsPersistence.createUpdateOperations(DelegateTask.class)
-                    .unset("validatingDelegateIds")
-                    .unset("validationCompleteDelegateIds");
-            Query<DelegateTask> updateQuery = wingsPersistence.createQuery(DelegateTask.class)
-                                                  .field("accountId")
-                                                  .equal(delegateTask.getAccountId())
-                                                  .field("status")
-                                                  .equal(QUEUED)
-                                                  .field("delegateId")
-                                                  .doesNotExist()
-                                                  .field(ID_KEY)
-                                                  .equal(delegateTask.getUuid());
-            wingsPersistence.update(updateQuery, updateOperations);
+            // TODO(brett): Consider interaction between rebroadcast and validation while waiting for all results
+            //            UpdateOperations<DelegateTask> updateOperations =
+            //                wingsPersistence.createUpdateOperations(DelegateTask.class)
+            //                    .unset("validatingDelegateIds")
+            //                    .unset("validationCompleteDelegateIds");
+            //            Query<DelegateTask> updateQuery = wingsPersistence.createQuery(DelegateTask.class)
+            //                                                  .field("accountId")
+            //                                                  .equal(delegateTask.getAccountId())
+            //                                                  .field("status")
+            //                                                  .equal(QUEUED)
+            //                                                  .field("delegateId")
+            //                                                  .doesNotExist()
+            //                                                  .field(ID_KEY)
+            //                                                  .equal(delegateTask.getUuid());
+            //            wingsPersistence.update(updateQuery, updateOperations);
 
             logger.info("Re-broadcast queued async task [{}]", delegateTask.getUuid());
             broadcasterFactory.lookup("/stream/delegate/" + delegateTask.getAccountId(), true).broadcast(delegateTask);
