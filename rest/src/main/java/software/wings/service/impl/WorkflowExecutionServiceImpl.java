@@ -828,7 +828,21 @@ public class WorkflowExecutionServiceImpl implements WorkflowExecutionService {
     workflowExecution.setStateMachineId(stateMachine.getUuid());
     workflowExecution.setPipelineExecutionId(pipelineExecutionId);
     workflowExecution.setExecutionArgs(executionArgs);
-    workflowExecution.setServiceIds(workflow.getServices().stream().map(Service::getUuid).collect(toList()));
+
+    List<Service> services;
+    if (isServiceTemplatized(workflow)) {
+      Map<String, String> workflowVariables = workflowExecution.getExecutionArgs() != null
+          ? workflowExecution.getExecutionArgs().getWorkflowVariables()
+          : null;
+      services = workflowService.resolveServices(workflow, workflowVariables);
+    } else {
+      services = workflow.getServices();
+    }
+
+    if (isNotEmpty(services)) {
+      workflowExecution.setServiceIds(services.stream().map(Service::getUuid).collect(toList()));
+    }
+
     WorkflowStandardParams stdParams;
     if (workflow.getOrchestrationWorkflow().getOrchestrationWorkflowType() == OrchestrationWorkflowType.CANARY
         || workflow.getOrchestrationWorkflow().getOrchestrationWorkflowType() == OrchestrationWorkflowType.BASIC
