@@ -31,9 +31,13 @@ public interface NewRelicDelegateService {
       List<EncryptedDataDetail> encryptedDataDetails, long newRelicApplicationId) throws IOException;
 
   @DelegateTaskType(TaskType.NEWRELIC_GET_METRICES_DATA)
-  NewRelicMetricData getMetricData(NewRelicConfig newRelicConfig, List<EncryptedDataDetail> encryptedDataDetails,
-      long newRelicApplicationId, long instanceId, Collection<String> metricNames, long fromTime, long toTime)
-      throws IOException;
+  NewRelicMetricData getMetricDataApplicationInstance(NewRelicConfig newRelicConfig,
+      List<EncryptedDataDetail> encryptedDataDetails, long newRelicApplicationId, long instanceId,
+      Collection<String> metricNames, long fromTime, long toTime) throws IOException;
+
+  NewRelicMetricData getMetricDataApplication(NewRelicConfig newRelicConfig,
+      List<EncryptedDataDetail> encryptedDataDetails, long newRelicApplicationId, Collection<String> metricNames,
+      long fromTime, long toTime, boolean summarize) throws IOException;
 
   @DelegateTaskType(TaskType.NEWRELIC_POST_DEPLOYMENT_MARKER)
   String postDeploymentMarker(NewRelicConfig config, List<EncryptedDataDetail> encryptedDataDetails,

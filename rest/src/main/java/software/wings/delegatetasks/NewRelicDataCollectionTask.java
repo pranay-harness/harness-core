@@ -147,9 +147,9 @@ public class NewRelicDataCollectionTask extends AbstractDelegateDataCollectionTa
       int retry = 0;
       while (retry < RETRIES) {
         try {
-          NewRelicMetricData metricData = newRelicDelegateService.getMetricData(dataCollectionInfo.getNewRelicConfig(),
-              dataCollectionInfo.getEncryptedDataDetails(), dataCollectionInfo.getNewRelicAppId(), node.getId(),
-              metricNames, windowStartTimeManager, endTime);
+          NewRelicMetricData metricData = newRelicDelegateService.getMetricDataApplicationInstance(
+              dataCollectionInfo.getNewRelicConfig(), dataCollectionInfo.getEncryptedDataDetails(),
+              dataCollectionInfo.getNewRelicAppId(), node.getId(), metricNames, windowStartTimeManager, endTime);
 
           for (NewRelicMetricSlice metric : metricData.getMetrics()) {
             for (NewRelicMetricTimeSlice timeSlice : metric.getTimeslices()) {
@@ -200,9 +200,10 @@ public class NewRelicDataCollectionTask extends AbstractDelegateDataCollectionTa
       int retry = 0;
       while (retry < RETRIES) {
         try {
-          NewRelicMetricData metricData = newRelicDelegateService.getMetricData(dataCollectionInfo.getNewRelicConfig(),
-              dataCollectionInfo.getEncryptedDataDetails(), dataCollectionInfo.getNewRelicAppId(), node.getId(),
-              getErrorMetricNames(metricNames), windowStartTimeManager, endTime);
+          NewRelicMetricData metricData =
+              newRelicDelegateService.getMetricDataApplicationInstance(dataCollectionInfo.getNewRelicConfig(),
+                  dataCollectionInfo.getEncryptedDataDetails(), dataCollectionInfo.getNewRelicAppId(), node.getId(),
+                  getErrorMetricNames(metricNames), windowStartTimeManager, endTime);
           for (NewRelicMetricSlice metric : metricData.getMetrics()) {
             for (NewRelicMetricTimeSlice timeslice : metric.getTimeslices()) {
               long timeStamp = TimeUnit.SECONDS.toMillis(OffsetDateTime.parse(timeslice.getFrom()).toEpochSecond());
@@ -232,9 +233,10 @@ public class NewRelicDataCollectionTask extends AbstractDelegateDataCollectionTa
       int retry = 0;
       while (retry < RETRIES) {
         try {
-          NewRelicMetricData metricData = newRelicDelegateService.getMetricData(dataCollectionInfo.getNewRelicConfig(),
-              dataCollectionInfo.getEncryptedDataDetails(), dataCollectionInfo.getNewRelicAppId(), node.getId(),
-              getApdexMetricNames(metricNames), windowStartTimeManager, endTime);
+          NewRelicMetricData metricData =
+              newRelicDelegateService.getMetricDataApplicationInstance(dataCollectionInfo.getNewRelicConfig(),
+                  dataCollectionInfo.getEncryptedDataDetails(), dataCollectionInfo.getNewRelicAppId(), node.getId(),
+                  getApdexMetricNames(metricNames), windowStartTimeManager, endTime);
           for (NewRelicMetricSlice metric : metricData.getMetrics()) {
             for (NewRelicMetricTimeSlice timeslice : metric.getTimeslices()) {
               long timeStamp = TimeUnit.SECONDS.toMillis(OffsetDateTime.parse(timeslice.getFrom()).toEpochSecond());

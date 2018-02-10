@@ -126,9 +126,28 @@ public class NewRelicDelgateServiceImpl implements NewRelicDelegateService {
   }
 
   @Override
-  public NewRelicMetricData getMetricData(NewRelicConfig newRelicConfig, List<EncryptedDataDetail> encryptedDataDetails,
-      long newRelicApplicationId, long instanceId, Collection<String> metricNames, long fromTime, long toTime)
-      throws IOException {
+  public NewRelicMetricData getMetricDataApplication(NewRelicConfig newRelicConfig,
+      List<EncryptedDataDetail> encryptedDataDetails, long newRelicApplicationId, Collection<String> metricNames,
+      long fromTime, long toTime, boolean summarize) throws IOException {
+    String baseUrl = newRelicConfig.getNewRelicUrl().endsWith("/") ? newRelicConfig.getNewRelicUrl()
+                                                                   : newRelicConfig.getNewRelicUrl() + "/";
+    baseUrl += "v2/applications/" + newRelicApplicationId + "/metrics/data.json?summarize=" + summarize + "&";
+    return getMetricData(newRelicConfig, encryptedDataDetails, baseUrl, metricNames, fromTime, toTime);
+  }
+
+  @Override
+  public NewRelicMetricData getMetricDataApplicationInstance(NewRelicConfig newRelicConfig,
+      List<EncryptedDataDetail> encryptedDataDetails, long newRelicApplicationId, long instanceId,
+      Collection<String> metricNames, long fromTime, long toTime) throws IOException {
+    String baseUrl = newRelicConfig.getNewRelicUrl().endsWith("/") ? newRelicConfig.getNewRelicUrl()
+                                                                   : newRelicConfig.getNewRelicUrl() + "/";
+    baseUrl += "v2/applications/" + newRelicApplicationId + "/instances/" + instanceId + "/metrics/data.json?";
+    return getMetricData(newRelicConfig, encryptedDataDetails, baseUrl, metricNames, fromTime, toTime);
+  }
+
+  private NewRelicMetricData getMetricData(NewRelicConfig newRelicConfig,
+      List<EncryptedDataDetail> encryptedDataDetails, String baseUrl, Collection<String> metricNames, long fromTime,
+      long toTime) throws IOException {
     String metricsToCollectString = "";
     for (String metricName : metricNames) {
       metricsToCollectString += "names[]=" + metricName + "&";
@@ -136,10 +155,7 @@ public class NewRelicDelgateServiceImpl implements NewRelicDelegateService {
 
     metricsToCollectString = StringUtils.removeEnd(metricsToCollectString, "&");
 
-    final String baseUrl = newRelicConfig.getNewRelicUrl().endsWith("/") ? newRelicConfig.getNewRelicUrl()
-                                                                         : newRelicConfig.getNewRelicUrl() + "/";
-    final String url = baseUrl + "v2/applications/" + newRelicApplicationId + "/instances/" + instanceId
-        + "/metrics/data.json?" + metricsToCollectString;
+    final String url = baseUrl + metricsToCollectString;
     final Call<NewRelicMetricDataResponse> request =
         getNewRelicRestClient(newRelicConfig, encryptedDataDetails)
             .getRawMetricData(url, dateFormatter.format(new Date(fromTime)), dateFormatter.format(new Date(toTime)));
