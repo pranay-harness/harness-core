@@ -86,7 +86,7 @@ public class ZombieHunterJob implements Job {
       "shot in the head", "stabbed in the head", "impelled in the head", "decapitated", "skull crushed", "axed"};
   public static final String[] SQUAD_MEMBER = {"Rick", "Daryl", "Michonne", "Glenn", "Maggie", "Carl"};
 
-  public static final long OUTBREAK_DATE = 1288486800000L;
+  public static final long OUTBREAK_DATE = 1288515600000L;
   public static Calendar today = Calendar.getInstance();
 
   @Inject private WingsPersistence wingsPersistence;
@@ -107,7 +107,10 @@ public class ZombieHunterJob implements Job {
   }
 
   public static List<ZombieType> zombieTypes = asList(new ZombieType("applications", "accountId", "accounts", null),
-      new ZombieType("artifactStream", "serviceId", "services", null));
+      new ZombieType("artifactStream", "serviceId", "services", null),
+      new ZombieType("infrastructureMapping", "serviceId", "services", null),
+      new ZombieType("serviceTemplates", "serviceId", "services", null),
+      new ZombieType("serviceVariables", "entityId", "services", null));
 
   public static Duration interval = Duration.ofDays(1);
   public static Duration cycle = interval.multipliedBy(zombieTypes.size());
