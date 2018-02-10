@@ -388,7 +388,7 @@ public class GitClientImpl implements GitClient {
   }
 
   @Override
-  public String validate(GitConfig gitConfig) {
+  public String validate(GitConfig gitConfig, boolean logError) {
     try {
       Collection<Ref> refs = Git.lsRemoteRepository()
                                  .setRemote(gitConfig.getRepoUrl())
@@ -399,7 +399,9 @@ public class GitClientImpl implements GitClient {
                                  .call();
       logger.info("Remote branches [{}]", refs);
     } catch (Exception e) {
-      logger.error("Git validation failed [{}]", e);
+      if (logError) {
+        logger.error("Git validation failed [{}]", e);
+      }
       if (e instanceof InvalidRemoteException | e.getCause() instanceof NoRemoteRepositoryException) {
         return "Invalid git repo " + gitConfig.getRepoUrl();
       }

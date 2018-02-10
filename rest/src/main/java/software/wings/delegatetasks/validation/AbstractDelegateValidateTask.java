@@ -17,6 +17,8 @@ import java.util.function.Consumer;
 public abstract class AbstractDelegateValidateTask implements DelegateValidateTask {
   private static final Logger logger = LoggerFactory.getLogger(AbstractDelegateValidateTask.class);
 
+  protected String delegateTaskId;
+
   private String accountId;
   private String delegateId;
   private Object[] parameters;
@@ -27,6 +29,7 @@ public abstract class AbstractDelegateValidateTask implements DelegateValidateTa
     this.accountId = delegateTask.getAccountId();
     this.delegateId = delegateId;
     this.parameters = delegateTask.getParameters();
+    this.delegateTaskId = delegateTask.getUuid();
     this.consumer = consumer;
   }
 

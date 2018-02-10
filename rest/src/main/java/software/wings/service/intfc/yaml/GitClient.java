@@ -82,5 +82,5 @@ public interface GitClient {
    *
    * @param gitConfig the git config
    */
-  String validate(GitConfig gitConfig);
+  String validate(GitConfig gitConfig, boolean logError);
 }
