@@ -279,20 +279,15 @@ public class JenkinsImpl implements Jenkins {
     // Each jenkins server could have a different base url.
     // Whichever is the format, the url after the base would always start with "/job/"
     String relativeUrl;
-    String pattern;
-    if (!jenkinsBaseUrl.endsWith("/")) {
-      pattern = jenkinsBaseUrl + "/";
-    } else {
-      pattern = jenkinsBaseUrl;
-    }
+    String pattern = ".*?/job/";
 
-    relativeUrl = url.replace(pattern, "");
+    relativeUrl = url.replaceFirst(pattern, "");
 
     // URI uri = new URI(relativeUrl);
     String[] parts = relativeUrl.split("/");
     StringBuilder nameBuilder = new StringBuilder();
-    // We start with index 2 since we have to skip /job/
-    for (int idx = 1; idx <= parts.length - 1; idx = idx + 2) {
+    // We start with index 0 since /job/ has already been
+    for (int idx = 0; idx <= parts.length - 1; idx = idx + 2) {
       nameBuilder.append('/').append(parts[idx]);
     }
     String name = nameBuilder.toString();

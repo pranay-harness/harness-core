@@ -78,6 +78,29 @@ public class JenkinsTest {
   }
 
   /**
+   * Should get child jobs from jenkins.
+   *
+   * @throws URISyntaxException the URI syntax exception
+   * @throws IOException        Signals that an I/O exception has occurred.
+   */
+  @Test
+  public void shouldGetJobsFromJenkinsForDifferentHost() throws IOException {
+    wireMockRule.stubFor(
+        get(urlEqualTo("/job/parentJob/api/json"))
+            .willReturn(
+                aResponse()
+                    .withStatus(200)
+                    .withBody(
+                        "{\"_class\":\"com.cloudbees.hudson.plugins.folder.Folder\",\"actions\":[{},{\"_class\":\"hudson.plugins.jobConfigHistory.JobConfigHistoryProjectAction\"},{},{\"_class\":\"com.cloudbees.plugins.credentials.ViewCredentialsAction\"}],\"description\":null,\"displayName\":\"parentJob\",\"displayNameOrNull\":null,\"fullDisplayName\":\"parentJob\",\"fullName\":\"parentJob\",\"name\":\"parentJob\",\"url\":\"https://jenkins.wings.software/job/parentJob/\",\"healthReport\":[],\"jobs\":[{\"_class\":\"hudson.maven.MavenModuleSet\",\"name\":\"abcd\",\"url\":\"https://jenkins.wings.software/job/parentJob/job/abcd/\"},{\"_class\":\"hudson.maven.MavenModuleSet\",\"name\":\"parentJob_war_copy\",\"url\":\"https://jenkins.wings.software/job/parentJob/job/parentJob_war_copy/\",\"color\":\"notbuilt\"}],\"primaryView\":{\"_class\":\"hudson.model.AllView\",\"name\":\"All\",\"url\":\"https://jenkins.wings.software/job/parentJob/\"},\"views\":[{\"_class\":\"hudson.model.AllView\",\"name\":\"All\",\"url\":\"https://jenkins.wings.software/job/parentJob/\"}]}")
+                    .withHeader("Content-Type", "application/json")));
+
+    List<JobDetails> jobs = jenkins.getJobs("parentJob");
+    assertTrue(jobs.size() == 2);
+    assertTrue(jobs.get(0).getJobName().equals("parentJob/parentJob_war_copy"));
+    assertTrue(jobs.get(1).getJobName().equals("parentJob/abcd"));
+  }
+
+  /**
    * Should return null when job does not exist.
    *
    * @throws URISyntaxException the URI syntax exception
