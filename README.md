@@ -111,10 +111,12 @@ helper shell scripts:
    Then follow these instructions https://www.jetbrains.com/help/idea/configuring-keyboard-shortcuts.html to
    assign whatever key combination you would like it to be triggered on.
 
-4) Install Lombok Plugin: https://projectlombok.org/setup/intellij
-5) Change settings to mark injected fields as assigned. (Settings->Editor ->Inspections ->Java ->Declaration Redundancy->Unused Declarations->Entry Points->
-   Annotations->Mark field as implicitly written if annotated by) Click add, then search for "Inject". Add both google and javax annotations.
-6) Setup your imports settings. From Preferences | Editor > Code Style > Java | Imports make sure that your limits are big enough to not take affect
+4. Install Lombok Plugin: https://projectlombok.org/setup/intellij
+5. Change settings to mark injected fields as assigned. (Settings > Editor > Inspections > Java > Declaration Redundancy > Unused Declarations>Entry Points >
+   Annotations > Mark field as implicitly written if annotated by) Click add, then search for "Inject". Add both google and javax annotations.
+6. Setup code style. Preferences > Code Style > Scheme > Gear icon > Import > IntelliJ XML.
+   Select portal/tools/config/src/main/resources/do-not-use/intellij-java-google-style.xml
+7. Setup your imports settings. From Preferences | Editor > Code Style > Java | Imports make sure that your limits are big enough to not take affect
 
 ![config image](img/imports_limits.png)
 
@@ -125,7 +127,7 @@ Also make sure that the layout looks like this:
 ### Run from IntelliJ
 
 1. Create the API Server application - "WingsApplication":  
-   [Run -> Edit Configurations...]
+   [Run > Edit Configurations...]
 
        * Add new Application:  
            Use the "+" on the left to add a new application. Call it "WingsApplication"
@@ -151,11 +153,11 @@ Also make sure that the layout looks like this:
        * JRE:  
            Default (1.8 - SDK of 'rest' module)
 
-       * Ensure [File -> Project Structure -> Project SDK] "java version" is 1.8.0_\<update number>. (update number - java build aupdate number, say 152)
-       * Ensure [IntelliJ IDEA -> Preferences -> Build, Execution, Deployment -> Compile -> Java Compiler -> Module] "Target Bytecode Version" is 1.8 for all modules.
+       * Ensure [File > Project Structure > Project SDK] "java version" is 1.8.0_\<update number>. (update number - java build aupdate number, say 152)
+       * Ensure [IntelliJ IDEA > Preferences > Build, Execution, Deployment > Compile > Java Compiler > Module] "Target Bytecode Version" is 1.8 for all modules.
 
 2. Create the "DelegateApplication":  
-   [Run -> Edit Configurations...]
+   [Run > Edit Configurations...]
    _ Add new Application:  
     Use the "+" on the left to add a new application. Call it "DelegateApplication"
 
@@ -197,13 +199,13 @@ Alternatively, use Fish shell: `brew install fish` then set iterms command to `/
 
 1. Make sure your mongodb is running first.
 
-2. Run API Server (WingsApplication): [Run -> Run... -> WingsApplication]
+2. Run API Server (WingsApplication): [Run > Run... > WingsApplication]
 
 3. From within the IDE, run `rest/src/test/java/software/wings/integration/DataGenUtil.java` and
 
 4. `rest/src/test/java/software/wings/service/impl/RoleRefreshUtil.java` to create the default users and roles.
 
-5. Run DelegateApplication: [Run -> Run... -> DelegateApplication]
+5. Run DelegateApplication: [Run > Run... > DelegateApplication]
 
 The admin username and password are in BaseIntegrationTest.java.
 
