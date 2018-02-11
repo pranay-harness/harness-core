@@ -3,7 +3,10 @@ package software.wings.service.impl.yaml.handler;
 import com.google.inject.Inject;
 import com.google.inject.Singleton;
 
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import software.wings.beans.yaml.YamlType;
+import software.wings.exception.WingsException;
 import software.wings.service.impl.yaml.handler.app.ApplicationYamlHandler;
 import software.wings.service.impl.yaml.handler.artifactstream.ArtifactStreamYamlHandler;
 import software.wings.service.impl.yaml.handler.command.CommandUnitYamlHandler;
@@ -45,6 +48,8 @@ import java.util.Map;
  */
 @Singleton
 public class YamlHandlerFactory {
+  private static final Logger logger = LoggerFactory.getLogger(YamlHandlerFactory.class);
+
   @Inject private Map<String, ArtifactStreamYamlHandler> artifactStreamHelperMap;
   @Inject private Map<String, InfraMappingYamlHandler> infraMappingHelperMap;
   @Inject private Map<String, WorkflowYamlHandler> workflowYamlHelperMap;
@@ -86,80 +91,121 @@ public class YamlHandlerFactory {
   }
 
   public <T extends BaseYamlHandler> T getYamlHandler(YamlType yamlType, String subType) {
+    Object yamlHandler = null;
     switch (yamlType) {
       case CLOUD_PROVIDER:
-        return (T) cloudProviderYamlHelperMap.get(subType);
+        yamlHandler = cloudProviderYamlHelperMap.get(subType);
+        break;
       case ARTIFACT_SERVER:
-        return (T) artifactServerYamlHelperMap.get(subType);
+        yamlHandler = artifactServerYamlHelperMap.get(subType);
+        break;
       case COLLABORATION_PROVIDER:
-        return (T) collaborationProviderYamlHelperMap.get(subType);
+        yamlHandler = collaborationProviderYamlHelperMap.get(subType);
+        break;
       case LOADBALANCER_PROVIDER:
-        return (T) elbConfigYamlHandler;
+        yamlHandler = elbConfigYamlHandler;
+        break;
       case VERIFICATION_PROVIDER:
-        return (T) verificationProviderYamlHelperMap.get(subType);
+        yamlHandler = verificationProviderYamlHelperMap.get(subType);
+        break;
       case APPLICATION:
-        return (T) applicationYamlHandler;
+        yamlHandler = applicationYamlHandler;
+        break;
       case SERVICE:
-        return (T) serviceYamlHandler;
+        yamlHandler = serviceYamlHandler;
+        break;
       case ARTIFACT_STREAM:
-        return (T) artifactStreamHelperMap.get(subType);
+        yamlHandler = artifactStreamHelperMap.get(subType);
+        break;
       case COMMAND:
-        return (T) commandYamlHandler;
+        yamlHandler = commandYamlHandler;
+        break;
       case COMMAND_UNIT:
-        return (T) commandUnitYamlHandlerMap.get(subType);
+        yamlHandler = commandUnitYamlHandlerMap.get(subType);
+        break;
       case CONFIG_FILE:
-        return (T) configFileYamlHandler;
+        yamlHandler = configFileYamlHandler;
+        break;
       case ENVIRONMENT:
-        return (T) environmentYamlHandler;
+        yamlHandler = environmentYamlHandler;
+        break;
       case CONFIG_FILE_OVERRIDE:
-        return (T) configFileOverrideYamlHandler;
+        yamlHandler = configFileOverrideYamlHandler;
+        break;
       case INFRA_MAPPING:
-        return (T) infraMappingHelperMap.get(subType);
+        yamlHandler = infraMappingHelperMap.get(subType);
+        break;
       case PIPELINE:
-        return (T) pipelineYamlHandler;
+        yamlHandler = pipelineYamlHandler;
+        break;
       case PIPELINE_STAGE:
-        return (T) pipelineStageYamlHandler;
+        yamlHandler = pipelineStageYamlHandler;
+        break;
       case WORKFLOW:
-        return (T) workflowYamlHelperMap.get(subType);
+        yamlHandler = workflowYamlHelperMap.get(subType);
+        break;
       case NAME_VALUE_PAIR:
-        return (T) nameValuePairYamlHandler;
+        yamlHandler = nameValuePairYamlHandler;
+        break;
       case PHASE:
-        return (T) workflowPhaseYamlHandler;
+        yamlHandler = workflowPhaseYamlHandler;
+        break;
       case PHASE_STEP:
-        return (T) phaseStepYamlHandler;
+        yamlHandler = phaseStepYamlHandler;
+        break;
       case STEP:
-        return (T) stepYamlHandler;
+        yamlHandler = stepYamlHandler;
+        break;
       case TEMPLATE_EXPRESSION:
-        return (T) templateExpressionYamlHandler;
+        yamlHandler = templateExpressionYamlHandler;
+        break;
       case VARIABLE:
-        return (T) variableYamlHandler;
+        yamlHandler = variableYamlHandler;
+        break;
       case NOTIFICATION_RULE:
-        return (T) notificationRulesYamlHandler;
+        yamlHandler = notificationRulesYamlHandler;
+        break;
       case NOTIFICATION_GROUP:
-        return (T) notificationGroupYamlHandler;
+        yamlHandler = notificationGroupYamlHandler;
+        break;
       case FAILURE_STRATEGY:
-        return (T) failureStrategyYamlHandler;
+        yamlHandler = failureStrategyYamlHandler;
+        break;
       case CONTAINER_DEFINITION:
-        return (T) containerDefinitionYamlHandler;
+        yamlHandler = containerDefinitionYamlHandler;
+        break;
       case DEPLOYMENT_SPECIFICATION:
-        return (T) deploymentSpecYamlHandlerMap.get(subType);
+        yamlHandler = deploymentSpecYamlHandlerMap.get(subType);
+        break;
       case PORT_MAPPING:
-        return (T) portMappingYamlHandler;
+        yamlHandler = portMappingYamlHandler;
+        break;
       case STORAGE_CONFIGURATION:
-        return (T) storageConfigurationYamlHandler;
+        yamlHandler = storageConfigurationYamlHandler;
+        break;
       case LOG_CONFIGURATION:
-        return (T) logConfigurationYamlHandler;
+        yamlHandler = logConfigurationYamlHandler;
+        break;
       case DEFAULT_SPECIFICATION:
-        return (T) defaultSpecificationYamlHandler;
+        yamlHandler = defaultSpecificationYamlHandler;
+        break;
       case FUNCTION_SPECIFICATION:
-        return (T) functionSpecificationYamlHandler;
+        yamlHandler = functionSpecificationYamlHandler;
+        break;
       case ACCOUNT_DEFAULTS:
       case APPLICATION_DEFAULTS:
-        return (T) defaultsYamlHandler;
+        yamlHandler = defaultsYamlHandler;
+        break;
       default:
         break;
     }
 
-    return null;
+    if (yamlHandler == null) {
+      String msg = "Yaml handler not found for yaml type: " + yamlType + " and subType: " + subType;
+      logger.error(msg);
+      throw new WingsException(msg);
+    }
+
+    return (T) yamlHandler;
   }
 }
