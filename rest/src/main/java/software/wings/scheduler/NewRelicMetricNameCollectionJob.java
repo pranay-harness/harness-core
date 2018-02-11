@@ -21,6 +21,7 @@ import software.wings.service.intfc.DelegateService;
 import software.wings.service.intfc.MetricDataAnalysisService;
 import software.wings.service.intfc.SettingsService;
 import software.wings.service.intfc.security.SecretManager;
+import software.wings.settings.SettingValue;
 import software.wings.waitnotify.NotifyCallback;
 import software.wings.waitnotify.NotifyResponseData;
 import software.wings.waitnotify.WaitNotifyEngine;
@@ -63,10 +64,25 @@ public class NewRelicMetricNameCollectionJob implements Job {
         .forEach(metricNames -> {
           try {
             for (WorkflowInfo workflowInfo : metricNames.getRegisteredWorkflows()) {
-              NewRelicConfig newRelicConfig =
-                  (NewRelicConfig) settingsService
+              // TODO validate and cleanup stale records
+              SettingValue settingAttribute =
+                  settingsService
                       .getGlobalSettingAttributesById(workflowInfo.getAccountId(), metricNames.getNewRelicConfigId())
                       .getValue();
+              if (settingAttribute == null) {
+                logger.warn("No NewRelic connector found for account {} , NewRelic server config id {}",
+                    workflowInfo.getAccountId(), metricNames.getNewRelicConfigId());
+                continue;
+              }
+              NewRelicConfig newRelicConfig = (NewRelicConfig) settingAttribute;
+
+              if (newRelicAppToConfigMap.containsKey(
+                      metricNames.getNewRelicAppId() + "-" + metricNames.getNewRelicConfigId())) {
+                logger.info(
+                    "Skipping NewRelic metric names collection for NewRelic app id {}, NewRelic server config id {} ",
+                    metricNames.getNewRelicAppId(), metricNames.getNewRelicConfigId());
+                continue;
+              }
               newRelicAppToConfigMap.put(
                   metricNames.getNewRelicAppId() + "-" + metricNames.getNewRelicConfigId(), newRelicConfig);
               NewRelicDataCollectionInfo dataCollectionInfo =
@@ -78,6 +94,11 @@ public class NewRelicMetricNameCollectionJob implements Job {
                       .settingAttributeId(metricNames.getNewRelicConfigId())
                       .build();
               logger.info("Scheduling new relic metric name collection task {}", dataCollectionInfo);
+              if (System.currentTimeMillis() - metricNames.getLastUpdatedTime()
+                  > (TimeUnit.DAYS.toMillis(1) + TimeUnit.HOURS.toMillis(6))) {
+                logger.error("[learning-engine] NewRelic metric name collection task past due over 6 hours {} ",
+                    dataCollectionInfo);
+              }
               String waitId = UUIDGenerator.getUuid();
               DelegateTask delegateTask =
                   aDelegateTask()
@@ -106,7 +127,7 @@ public class NewRelicMetricNameCollectionJob implements Job {
     public void notify(Map<String, NotifyResponseData> response) {
       final DataCollectionTaskResult result = (DataCollectionTaskResult) response.values().iterator().next();
       if (result.getStatus() == DataCollectionTaskResult.DataCollectionTaskStatus.FAILURE) {
-        logger.error("[learning-engine] NewRelic metric name collection task failed {} ", result.getErrorMessage());
+        logger.warn("NewRelic metric name collection task failed {} ", result.getErrorMessage());
       }
     }
 
