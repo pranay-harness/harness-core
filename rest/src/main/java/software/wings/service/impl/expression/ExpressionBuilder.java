@@ -4,6 +4,7 @@ import static io.harness.data.structure.EmptyPredicate.isEmpty;
 import static java.util.Arrays.asList;
 import static software.wings.beans.EntityType.ENVIRONMENT;
 import static software.wings.beans.EntityType.SERVICE;
+import static software.wings.beans.EntityType.SERVICE_TEMPLATE;
 import static software.wings.beans.SearchFilter.Operator.EQ;
 import static software.wings.beans.SearchFilter.Operator.IN;
 import static software.wings.common.Constants.ASSERTION_STATEMENT;
@@ -34,6 +35,7 @@ import software.wings.sm.StateType;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Set;
+import java.util.SortedSet;
 import java.util.TreeSet;
 import java.util.stream.Collectors;
 /**
@@ -199,13 +201,16 @@ public abstract class ExpressionBuilder {
   protected Set<String> getServiceVariablesOfTemplates(
       String appId, PageRequest<ServiceTemplate> pageRequest, EntityType entityType) {
     List<ServiceTemplate> serviceTemplates = serviceTemplateService.list(pageRequest, false, false);
+    SortedSet<String> serviceVariables = new TreeSet<>();
     if (SERVICE.equals(entityType)) {
       return getServiceVariables(
           appId, serviceTemplates.stream().map(ServiceTemplate::getServiceId).collect(Collectors.toList()), SERVICE);
     } else if (ENVIRONMENT.equals(entityType)) {
-      return getServiceVariables(
-          appId, serviceTemplates.stream().map(ServiceTemplate::getEnvId).collect(Collectors.toList()), ENVIRONMENT);
+      serviceVariables.addAll(getServiceVariables(
+          appId, serviceTemplates.stream().map(ServiceTemplate::getEnvId).collect(Collectors.toList()), ENVIRONMENT));
     }
-    return new TreeSet<>();
+    serviceVariables.addAll(getServiceVariables(
+        appId, serviceTemplates.stream().map(ServiceTemplate::getUuid).collect(Collectors.toList()), SERVICE_TEMPLATE));
+    return serviceVariables;
   }
 }
