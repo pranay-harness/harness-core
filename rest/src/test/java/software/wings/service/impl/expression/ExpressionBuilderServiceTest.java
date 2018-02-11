@@ -101,9 +101,23 @@ public class ExpressionBuilderServiceTest extends WingsBaseTest {
                                                                    .addFilter("entityType", EQ, ENVIRONMENT)
                                                                    .build();
 
+  PageRequest<ServiceVariable> serviceTemplateServiceVariablePageRequest =
+      aPageRequest()
+          .withLimit(PageRequest.UNLIMITED)
+          .addFilter("appId", EQ, APP_ID)
+          .addFilter("entityId", IN, asList(TEMPLATE_ID).toArray())
+          .addFilter("entityType", EQ, SERVICE_TEMPLATE)
+          .build();
+
   PageResponse<ServiceVariable> envServiceVariables =
       aPageResponse()
           .withResponse(asList(ServiceVariable.builder().name("ENV").entityId(ENV_ID).entityType(ENVIRONMENT).build()))
+          .build();
+
+  PageResponse<ServiceVariable> envServiceOverrideVariables =
+      aPageResponse()
+          .withResponse(asList(
+              ServiceVariable.builder().name("ENVOverride").entityId(TEMPLATE_ID).entityType(SERVICE_TEMPLATE).build()))
           .build();
 
   PageRequest<ServiceTemplate> serviceTemplatePageRequest =
@@ -120,21 +134,6 @@ public class ExpressionBuilderServiceTest extends WingsBaseTest {
                                                                                 .withServiceId(SERVICE_ID)
                                                                                 .build()))
                                                        .build();
-
-  PageRequest<ServiceTemplate> envServiceTemplatePageRequest =
-      aPageRequest()
-          .withLimit(UNLIMITED)
-          .addFilter("appId", EQ, APP_ID)
-          .addFilter("serviceId", IN, asList(SERVICE_ID).toArray())
-          .build();
-  PageResponse<ServiceTemplate> envServiceTemplates = aPageResponse()
-                                                          .withResponse(asList(aServiceTemplate()
-                                                                                   .withUuid(TEMPLATE_ID)
-                                                                                   .withEnvId(ENV_ID)
-                                                                                   .withAppId(APP_ID)
-                                                                                   .withServiceId(SERVICE_ID)
-                                                                                   .build()))
-                                                          .build();
 
   @Before
   public void setUp() {
@@ -201,13 +200,15 @@ public class ExpressionBuilderServiceTest extends WingsBaseTest {
     when(serviceTemplateService.list(serviceTemplatePageRequest, false, false)).thenReturn(serviceTemplates);
     when(serviceVariableService.list(serviceVariablePageRequest, true)).thenReturn(serviceVariables);
     when(serviceVariableService.list(envServiceVariablePageRequest, true)).thenReturn(envServiceVariables);
-
+    when(serviceVariableService.list(serviceTemplateServiceVariablePageRequest, true))
+        .thenReturn(envServiceOverrideVariables);
     Set<String> expressions = builderService.listExpressions(APP_ID, SERVICE_ID, SERVICE);
 
     assertThat(expressions).isNotNull();
     assertThat(expressions.contains("service.name"));
     assertThat(expressions.contains("serviceVariable.SERVICE_VARIABLE_NAME")).isTrue();
     assertThat(expressions.contains("serviceVariable.ENV")).isTrue();
+    assertThat(expressions.contains("serviceVariable.ENVOverride")).isTrue();
   }
 
   @Test
@@ -246,10 +247,15 @@ public class ExpressionBuilderServiceTest extends WingsBaseTest {
     when(serviceVariableService.list(serviceVariablePageRequest, true)).thenReturn(serviceVariables);
     when(serviceTemplateService.list(any(PageRequest.class), anyBoolean(), anyBoolean())).thenReturn(serviceTemplates);
 
+    when(serviceVariableService.list(serviceTemplateServiceVariablePageRequest, true))
+        .thenReturn(envServiceOverrideVariables);
+
     Set<String> expressions = builderService.listExpressions(APP_ID, ENV_ID, ENVIRONMENT);
     assertThat(expressions).isNotNull();
     assertThat(expressions.contains("env.name"));
     assertThat(expressions.contains("serviceVariable.SERVICE_VARIABLE_NAME"));
+    assertThat(expressions.contains("serviceVariable.ENV")).isTrue();
+    assertThat(expressions.contains("serviceVariable.ENVOverride")).isTrue();
   }
 
   @Test
