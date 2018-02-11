@@ -100,7 +100,6 @@ import software.wings.beans.EntityVersion;
 import software.wings.beans.ExecutionScope;
 import software.wings.beans.FailureStrategy;
 import software.wings.beans.FailureType;
-import software.wings.beans.FeatureName;
 import software.wings.beans.GcpKubernetesInfrastructureMapping;
 import software.wings.beans.Graph;
 import software.wings.beans.GraphNode;
@@ -271,82 +270,10 @@ public class WorkflowServiceImpl implements WorkflowService, DataProvider {
   @Override
   public Map<StateTypeScope, List<Stencil>> stencils(
       String appId, String workflowId, String phaseId, StateTypeScope... stateTypeScopes) {
-    boolean isFeatureEnabled = false;
-    if (appId != null) {
-      try {
-        String accountId = appService.getAccountIdByAppId(appId);
-        isFeatureEnabled = featureFlagService.isEnabled(FeatureName.STENCILS_PERFORMANCE, accountId);
-      } catch (Exception e) {
-        logger.warn("Feature flag check failed. Skipping optimized query");
-        isFeatureEnabled = false;
-      }
-    }
-    if (isFeatureEnabled) {
-      logger.info(
-          "Stencils performance improvement is enabled for app Id {}. Retrieving with the optimized way", appId);
-      return getStencilsNew(appId, workflowId, phaseId, stateTypeScopes);
-    }
-    return getStencilsOld(appId, workflowId, phaseId, stateTypeScopes);
+    return getStencils(appId, workflowId, phaseId, stateTypeScopes);
   }
 
-  private Map<StateTypeScope, List<Stencil>> getStencilsOld(
-      String appId, String workflowId, String phaseId, StateTypeScope[] stateTypeScopes) {
-    Map<StateTypeScope, List<StateTypeDescriptor>> stencilsMap = loadStateTypes(appService.getAccountIdByAppId(appId));
-
-    Map<StateTypeScope, List<Stencil>> mapByScope = stencilsMap.entrySet().stream().collect(toMap(Entry::getKey,
-        stateTypeScopeListEntry -> stencilPostProcessor.postProcess(stateTypeScopeListEntry.getValue(), appId)));
-
-    Map<StateTypeScope, List<Stencil>> maps = new HashMap<>();
-    if (isEmpty(stateTypeScopes)) {
-      maps.putAll(mapByScope);
-    } else {
-      for (StateTypeScope scope : stateTypeScopes) {
-        maps.put(scope, mapByScope.get(scope));
-      }
-    }
-    maps.values().forEach(list -> list.sort(stencilDefaultSorter));
-
-    boolean filterForWorkflow = isNotBlank(workflowId);
-    boolean filterForPhase = filterForWorkflow && isNotBlank(phaseId);
-
-    Predicate<Stencil> predicate = stencil -> true;
-    if (filterForWorkflow) {
-      Workflow workflow = readWorkflow(appId, workflowId);
-      if (filterForPhase) {
-        WorkflowPhase workflowPhase = null;
-        if (workflow != null) {
-          OrchestrationWorkflow orchestrationWorkflow = workflow.getOrchestrationWorkflow();
-          if (orchestrationWorkflow instanceof CanaryOrchestrationWorkflow) {
-            workflowPhase = ((CanaryOrchestrationWorkflow) orchestrationWorkflow).getWorkflowPhaseIdMap().get(phaseId);
-          } else if (orchestrationWorkflow instanceof BasicOrchestrationWorkflow) {
-            workflowPhase = ((BasicOrchestrationWorkflow) orchestrationWorkflow).getWorkflowPhaseIdMap().get(phaseId);
-          } else if (orchestrationWorkflow instanceof MultiServiceOrchestrationWorkflow) {
-            workflowPhase =
-                ((MultiServiceOrchestrationWorkflow) orchestrationWorkflow).getWorkflowPhaseIdMap().get(phaseId);
-          }
-          if (workflowPhase != null && workflowPhase.getInfraMappingId() != null
-              && !workflowPhase.checkInfraTemplatized()) {
-            InfrastructureMapping infrastructureMapping =
-                infrastructureMappingService.get(appId, workflowPhase.getInfraMappingId());
-            predicate = stencil -> stencil.matches(infrastructureMapping);
-          }
-        }
-      } else {
-        predicate = stencil
-            -> stencil.getStencilCategory() != StencilCategory.COMMANDS
-            && stencil.getStencilCategory() != StencilCategory.CLOUD;
-      }
-    }
-
-    Predicate<Stencil> finalPredicate = predicate;
-    maps = maps.entrySet().stream().collect(toMap(Entry::getKey,
-        stateTypeScopeListEntry
-        -> stateTypeScopeListEntry.getValue().stream().filter(finalPredicate).collect(toList())));
-
-    return maps;
-  }
-
-  private Map<StateTypeScope, List<Stencil>> getStencilsNew(
+  private Map<StateTypeScope, List<Stencil>> getStencils(
       String appId, String workflowId, String phaseId, StateTypeScope[] stateTypeScopes) {
     Map<StateTypeScope, List<StateTypeDescriptor>> stencilsMap = loadStateTypes(appService.getAccountIdByAppId(appId));
 
