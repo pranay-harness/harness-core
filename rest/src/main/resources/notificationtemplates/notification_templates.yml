@@ -63,21 +63,21 @@ WORKFLOW_ABORTED_NOTIFICATION:
 
 WORKFLOW_PHASE_SUCCESSFUL_NOTIFICATION:
       web: <<top-div>>${PHASE_NAME} of <b><<a>>href="${WORKFLOW_URL}" target="_blank">${WORKFLOW_NAME}</a></b> completed successfully for <b>${ARTIFACTS}</b> in <b>${ENV_NAME}</b>, triggered by <b>${USER_NAME}</b>${PIPELINE} in <b>${APP_NAME}</b> application</div><<bottom-div>><<completed-color>><i>Started ${START_DATE} and completed at ${END_DATE}</i><<img-path>>completed<<img-suffix>>${DURATION}</span></div></div>
-      slack: ${PHASE_NAME} of \*${WORKFLOW_NAME}\* completed successfully for \*${ARTIFACTS}\* in \*${ENV_NAME}\*, triggered by \*${USER_NAME}\*${PIPELINE} in \*${APP_NAME}\* application||_Started<!date^${START_TS_SECS}^ {date_short_pretty} at {time}| ${START_DATE}> and completed at <!date^${END_TS_SECS}^{time}|${END_DATE}>_||${DURATION}||completed
+      slack: ${PHASE_NAME} of \*<${WORKFLOW_URL}|${WORKFLOW_NAME}>\* completed successfully for \*${ARTIFACTS}\* in \*${ENV_NAME}\*, triggered by \*${USER_NAME}\*${PIPELINE} in \*${APP_NAME}\* application||_Started<!date^${START_TS_SECS}^ {date_short_pretty} at {time}| ${START_DATE}> and completed at <!date^${END_TS_SECS}^{time}|${END_DATE}>_||${DURATION}||completed
       email:
           subject: ${PHASE_NAME} of ${WORKFLOW_NAME} completed
           body: <<top-div>>${PHASE_NAME} of <b><<a>>href="${WORKFLOW_URL}" target="_blank">${WORKFLOW_NAME}</a></b> completed successfully for <b>${ARTIFACTS}</b> in <b>${ENV_NAME}</b>, triggered by <b>${USER_NAME}</b>${PIPELINE} in <b>${APP_NAME}</b> application</div><<bottom-div>><<completed-color>><i>Started ${START_DATE} and completed at ${END_DATE}</i><<img-path>>completed<<img-suffix>>${DURATION}</span></div></div>
 
 WORKFLOW_PHASE_FAILED_NOTIFICATION:
       web: <<top-div>>${PHASE_NAME} of <b><<a>>href="${WORKFLOW_URL}" target="_blank">${WORKFLOW_NAME}</a></b> failed for <b>${ARTIFACTS}</b> in <b>${ENV_NAME}</b>, triggered by <b>${USER_NAME}</b>${PIPELINE} in <b>${APP_NAME}</b> application</div><<bottom-div>><<failed-color>><i>Started ${START_DATE} and failed at ${END_DATE}</i><<img-path>>failed<<img-suffix>>${DURATION}</span></div></div>
-      slack: ${PHASE_NAME} of \*${WORKFLOW_NAME}\* failed for \*${ARTIFACTS}\* in \*${ENV_NAME}\*, triggered by \*${USER_NAME}\*${PIPELINE} in \*${APP_NAME}\* application||_Started<!date^${START_TS_SECS}^ {date_short_pretty} at {time}| ${START_DATE}> and failed at <!date^${END_TS_SECS}^{time}|${END_DATE}>_||${DURATION}||failed
+      slack: ${PHASE_NAME} of \*<${WORKFLOW_URL}|${WORKFLOW_NAME}>\* failed for \*${ARTIFACTS}\* in \*${ENV_NAME}\*, triggered by \*${USER_NAME}\*${PIPELINE} in \*${APP_NAME}\* application||_Started<!date^${START_TS_SECS}^ {date_short_pretty} at {time}| ${START_DATE}> and failed at <!date^${END_TS_SECS}^{time}|${END_DATE}>_||${DURATION}||failed
       email:
           subject: ${PHASE_NAME} of ${WORKFLOW_NAME} failed
           body: <<top-div>>${PHASE_NAME} of <b><<a>>href="${WORKFLOW_URL}" target="_blank">${WORKFLOW_NAME}</a></b> failed for <b>${ARTIFACTS}</b> in <b>${ENV_NAME}</b>, triggered by <b>${USER_NAME}</b>${PIPELINE} in <b>${APP_NAME}</b> application</div><<bottom-div>><<failed-color>><i>Started ${START_DATE} and failed at ${END_DATE}</i><<img-path>>failed<<img-suffix>>${DURATION}</span></div></div>
 
 WORKFLOW_PHASE_PAUSED_NOTIFICATION:
       web: <<top-div>>${PHASE_NAME} of <b><<a>>href="${WORKFLOW_URL}" target="_blank">${WORKFLOW_NAME}</a></b> paused for <b>${ARTIFACTS}</b> in <b>${ENV_NAME}</b>, triggered by <b>${USER_NAME}</b>${PIPELINE} in <b>${APP_NAME}</b> application</div><<bottom-div>><<paused-color>><i>Started ${START_DATE} and paused at ${END_DATE}</i><<img-path>>paused<<img-suffix>>${DURATION}</span></div></div>
-      slack: ${PHASE_NAME} of \*${WORKFLOW_NAME}\* paused for \*${ARTIFACTS}\* in \*${ENV_NAME}\*, triggered by \*${USER_NAME}\*${PIPELINE} in \*${APP_NAME}\* application||_Started<!date^${START_TS_SECS}^ {date_short_pretty} at {time}| ${START_DATE}> and paused at <!date^${END_TS_SECS}^{time}|${END_DATE}>_||${DURATION}||paused
+      slack: ${PHASE_NAME} of \*<${WORKFLOW_URL}|${WORKFLOW_NAME}>\* paused for \*${ARTIFACTS}\* in \*${ENV_NAME}\*, triggered by \*${USER_NAME}\*${PIPELINE} in \*${APP_NAME}\* application||_Started<!date^${START_TS_SECS}^ {date_short_pretty} at {time}| ${START_DATE}> and paused at <!date^${END_TS_SECS}^{time}|${END_DATE}>_||${DURATION}||paused
       email:
           subject: ${PHASE_NAME} of ${WORKFLOW_NAME} paused
           body: <<top-div>>${PHASE_NAME} of <b><<a>>href="${WORKFLOW_URL}" target="_blank">${WORKFLOW_NAME}</a></b> paused for <b>${ARTIFACTS}</b> in <b>${ENV_NAME}</b>, triggered by <b>${USER_NAME}</b>${PIPELINE} in <b>${APP_NAME}</b> application</div><<bottom-div>><<paused-color>><i>Started ${START_DATE} and paused at ${END_DATE}</i><<img-path>>paused<<img-suffix>>${DURATION}</span></div></div>
