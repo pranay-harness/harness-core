@@ -36,6 +36,7 @@ mmmmmmmmmmmmmmmmmshdNm+-hm/`ommmd+`/dmmmdhhmmmmmmmmmmmmmmmmm
 
 import static java.lang.String.format;
 import static java.util.Arrays.asList;
+import static java.util.stream.Collectors.toList;
 import static org.mongodb.morphia.mapping.Mapper.ID_KEY;
 import static software.wings.beans.Base.APP_ID_KEY;
 
@@ -102,15 +103,17 @@ public class ZombieHunterJob implements Job {
   static class ZombieType {
     private String collection;
     private String ownerFieldName;
-    private String ownerCollection;
+    // The owner can be in any of these collections
+    private List<String> ownerCollections;
     private Exterminator exterminator;
   }
 
-  public static List<ZombieType> zombieTypes = asList(new ZombieType("applications", "accountId", "accounts", null),
-      new ZombieType("artifactStream", "serviceId", "services", null),
-      new ZombieType("infrastructureMapping", "serviceId", "services", null),
-      new ZombieType("serviceTemplates", "serviceId", "services", null),
-      new ZombieType("serviceVariables", "entityId", "services", null));
+  public static List<ZombieType> zombieTypes =
+      asList(new ZombieType("applications", "accountId", asList("accounts"), null),
+          new ZombieType("artifactStream", "serviceId", asList("services"), null),
+          new ZombieType("infrastructureMapping", "serviceId", asList("services"), null),
+          new ZombieType("serviceTemplates", "serviceId", asList("services"), null),
+          new ZombieType("serviceVariables", "entityId", asList("services", "serviceTemplates", "environments"), null));
 
   public static Duration interval = Duration.ofDays(1);
   public static Duration cycle = interval.multipliedBy(zombieTypes.size());
@@ -182,7 +185,8 @@ public class ZombieHunterJob implements Job {
   }
 
   int huntingExpedition(ZombieType zombieType) {
-    final DBCollection owner = wingsPersistence.getCollection(zombieType.ownerCollection);
+    List<DBCollection> owners =
+        zombieType.ownerCollections.stream().map(owner -> wingsPersistence.getCollection(owner)).collect(toList());
 
     LRUMap map = new LRUMap(5000);
 
@@ -201,7 +205,11 @@ public class ZombieHunterJob implements Job {
       if (map.containsKey(ownerId)) {
         ownerObject = (DBObject) map.get(ownerId);
       } else {
-        ownerObject = owner.findOne(new BasicDBObject("_id", ownerId));
+        for (DBCollection owner : owners) {
+          if ((ownerObject = owner.findOne(new BasicDBObject("_id", ownerId))) != null) {
+            break;
+          }
+        }
         map.put(ownerId, ownerObject);
       }
 

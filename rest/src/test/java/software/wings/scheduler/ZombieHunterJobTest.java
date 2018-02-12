@@ -1,5 +1,6 @@
 package software.wings.scheduler;
 
+import static java.util.Arrays.asList;
 import static org.assertj.core.api.Assertions.assertThat;
 import static software.wings.beans.Account.Builder.anAccount;
 import static software.wings.beans.Application.Builder.anApplication;
@@ -41,17 +42,18 @@ public class ZombieHunterJobTest extends WingsBaseTest {
 
   @Test
   public void exploratoryExpedition() {
-    Account acount = anAccount().withAppId(GLOBAL_APP_ID).withUuid("exists").build();
-    wingsPersistence.save(acount);
+    Account account = anAccount().withAppId(GLOBAL_APP_ID).withUuid("exists").build();
+    wingsPersistence.save(account);
 
-    Application existApplication = anApplication().withName("dummy1").withAccountId(acount.getUuid()).build();
+    Application existApplication = anApplication().withName("dummy1").withAccountId(account.getUuid()).build();
     wingsPersistence.save(existApplication);
 
     Application application1 = anApplication().withName("dummy1").withAccountId("deleted").build();
     wingsPersistence.save(application1);
     Application application2 = anApplication().withName("dummy2").withAccountId("deleted").build();
     wingsPersistence.save(application2);
-    assertThat(job.huntingExpedition(new ZombieHunterJob.ZombieType("applications", "accountId", "accounts", null)))
+    assertThat(
+        job.huntingExpedition(new ZombieHunterJob.ZombieType("applications", "accountId", asList("accounts"), null)))
         .isEqualTo(2);
 
     assertThat(wingsPersistence.delete(application1)).isTrue();
@@ -60,18 +62,39 @@ public class ZombieHunterJobTest extends WingsBaseTest {
 
   @Test
   public void huntingExpedition() {
-    Account acount = anAccount().withAppId(GLOBAL_APP_ID).withUuid("exists").build();
-    wingsPersistence.save(acount);
+    Account account = anAccount().withAppId(GLOBAL_APP_ID).withUuid("exists").build();
+    wingsPersistence.save(account);
 
-    Application existApplication = anApplication().withName("dummy1").withAccountId(acount.getUuid()).build();
+    Application existApplication = anApplication().withName("dummy1").withAccountId(account.getUuid()).build();
     wingsPersistence.save(existApplication);
 
     Application application1 = anApplication().withName("dummy1").withAccountId("deleted").build();
     wingsPersistence.save(application1);
     Application application2 = anApplication().withName("dummy2").withAccountId("deleted").build();
     wingsPersistence.save(application2);
-    assertThat(
-        job.huntingExpedition(new ZombieHunterJob.ZombieType("applications", "accountId", "accounts", appService)))
+    assertThat(job.huntingExpedition(
+                   new ZombieHunterJob.ZombieType("applications", "accountId", asList("accounts"), appService)))
+        .isEqualTo(2);
+
+    assertThat(wingsPersistence.delete(existApplication)).isTrue();
+    assertThat(wingsPersistence.delete(application1)).isFalse();
+    assertThat(wingsPersistence.delete(application2)).isFalse();
+  }
+
+  @Test
+  public void huntingForOwnersFromMultipleCollections() {
+    Account account = anAccount().withAppId(GLOBAL_APP_ID).withUuid("exists").build();
+    wingsPersistence.save(account);
+
+    Application existApplication = anApplication().withName("dummy1").withAccountId(account.getUuid()).build();
+    wingsPersistence.save(existApplication);
+
+    Application application1 = anApplication().withName("dummy1").withAccountId("deleted").build();
+    wingsPersistence.save(application1);
+    Application application2 = anApplication().withName("dummy2").withAccountId("deleted").build();
+    wingsPersistence.save(application2);
+    assertThat(job.huntingExpedition(new ZombieHunterJob.ZombieType(
+                   "applications", "accountId", asList("environments", "accounts"), appService)))
         .isEqualTo(2);
 
     assertThat(wingsPersistence.delete(existApplication)).isTrue();
