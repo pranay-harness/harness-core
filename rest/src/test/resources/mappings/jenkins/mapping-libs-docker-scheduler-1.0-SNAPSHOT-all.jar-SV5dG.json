@@ -13,7 +13,7 @@
   },
   "response" : {
     "status" : 200,
-    "bodyFileName" : "body-libs-docker-scheduler-1.0-SNAPSHOT-all.jar-SV5dG.json",
+    "bodyFileName" : "/jenkins/body-libs-docker-scheduler-1.0-SNAPSHOT-all.jar-SV5dG.json",
     "headers" : {
       "Date" : "Fri, 13 May 2016 18:17:28 GMT",
       "X-Content-Type-Options" : "nosniff",

@@ -1,6 +1,6 @@
 {
   "request" : {
-    "url" : "/job/scheduler/64/api/json",
+    "url" : "/job/scheduler1/api/json",
     "method" : "GET",
     "headers" : {
       "Accept-Encoding" : {
@@ -12,16 +12,14 @@
     }
   },
   "response" : {
-    "status" : 200,
-    "bodyFileName" : "body-api-json-GKucw.json",
+    "status" : 404,
+    "bodyFileName" : "/jenkins/body-api-json-MU1VH.json",
     "headers" : {
-      "Date" : "Fri, 13 May 2016 18:17:24 GMT",
+      "Date" : "Fri, 13 May 2016 18:17:25 GMT",
       "X-Content-Type-Options" : "nosniff",
-      "X-Jenkins" : "2.2",
-      "X-Jenkins-Session" : "a6be075a",
-      "Content-Type" : "application/json;charset=UTF-8",
-      "Content-Encoding" : "gzip",
-      "Content-Length" : "653",
+      "Content-Type" : "text/html; charset=ISO-8859-1",
+      "Cache-Control" : "must-revalidate,no-cache,no-store",
+      "Content-Length" : "307",
       "Server" : "Jetty(9.2.z-SNAPSHOT)"
     }
   }

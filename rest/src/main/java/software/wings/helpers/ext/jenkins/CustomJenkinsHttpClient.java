@@ -13,12 +13,12 @@ import java.net.URI;
  * Created by sgurubelli on 8/14/17.
  * To accept Untrusted certificates from delegate
  */
-public class HarnessJenkinsHttpClient extends JenkinsHttpClient {
-  public HarnessJenkinsHttpClient(URI uri, HttpClientBuilder builder) {
+public class CustomJenkinsHttpClient extends JenkinsHttpClient {
+  public CustomJenkinsHttpClient(URI uri, HttpClientBuilder builder) {
     super(uri, builder);
   }
 
-  public HarnessJenkinsHttpClient(URI uri, String username, String password, HttpClientBuilder builder) {
+  public CustomJenkinsHttpClient(URI uri, String username, String password, HttpClientBuilder builder) {
     super(uri, addAuthentication(builder, uri, username, password));
     if (isNotBlank(username)) {
       BasicHttpContext basicHttpContext = new BasicHttpContext();

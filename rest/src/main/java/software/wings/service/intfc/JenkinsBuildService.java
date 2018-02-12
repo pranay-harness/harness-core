@@ -37,4 +37,7 @@ public interface JenkinsBuildService extends BuildService<JenkinsConfig> {
 
   @DelegateTaskType(TaskType.JENKINS_VALIDATE_ARTIFACT_SERVER)
   boolean validateArtifactServer(JenkinsConfig jenkinsConfig);
+
+  @DelegateTaskType(TaskType.JENKINS_GET_JOB)
+  JobDetails getJob(String jobName, JenkinsConfig jenkinsConfig, List<EncryptedDataDetail> encryptionDetails);
 }

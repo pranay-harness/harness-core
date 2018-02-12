@@ -1,5 +1,6 @@
 package software.wings.service;
 
+import static java.util.Arrays.asList;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThatExceptionOfType;
 import static org.assertj.core.api.Assertions.fail;
@@ -39,6 +40,10 @@ import software.wings.helpers.ext.jenkins.BuildDetails;
 import software.wings.helpers.ext.jenkins.Jenkins;
 import software.wings.helpers.ext.jenkins.JenkinsFactory;
 import software.wings.helpers.ext.jenkins.JobDetails;
+import software.wings.helpers.ext.jenkins.model.JobProperty;
+import software.wings.helpers.ext.jenkins.model.JobWithExtendedDetails;
+import software.wings.helpers.ext.jenkins.model.ParametersDefinitionProperty;
+import software.wings.helpers.ext.jenkins.model.ParametersDefinitionProperty.DefaultParameterValue;
 import software.wings.service.intfc.JenkinsBuildService;
 
 import java.io.IOException;
@@ -145,7 +150,7 @@ public class JenkinsBuildServiceTest extends WingsBaseTest {
   }
 
   @Test
-  public void shouldValidateInvalidUrl() throws IOException {
+  public void shouldValidateInvalidUrl() {
     JenkinsConfig badJenkinsConfig = JenkinsConfig.builder()
                                          .jenkinsUrl("BAD_URL")
                                          .username("username")
@@ -160,5 +165,30 @@ public class JenkinsBuildServiceTest extends WingsBaseTest {
       assertThat(e.getParams()).isNotEmpty();
       assertThat(e.getParams().get("message")).isEqualTo("Jenkins URL must be a valid URL");
     }
+  }
+
+  @Test
+  public void shouldTestGetJobParameters() {
+    JobWithExtendedDetails jobWithDetails = Mockito.mock(JobWithExtendedDetails.class, RETURNS_DEEP_STUBS);
+    when(jenkins.getJob(BUILD_JOB_NAME)).thenReturn(jobWithDetails);
+    JobProperty jobProperty =
+        JobProperty.builder()
+            .parameterDefinitions(asList(
+                ParametersDefinitionProperty.builder()
+                    .name("branch")
+                    .defaultParameterValue(DefaultParameterValue.builder().name("branch").value("release").build())
+                    .build(),
+                ParametersDefinitionProperty.builder().name("Choices").choices(asList("A", "B", "C")).build()))
+            .build();
+    when(jobWithDetails.getProperties()).thenReturn(asList(jobProperty));
+    JobDetails jobDetails = jenkinsBuildService.getJob(BUILD_JOB_NAME, jenkinsConfig, null);
+    assertThat(jobDetails).isNotNull();
+    assertThat(jobDetails.getParameters())
+        .isNotNull()
+        .extracting(JobDetails.JobParameter::getName)
+        .contains("branch", "Choices");
+    assertThat(jobDetails.getParameters())
+        .extracting(JobDetails.JobParameter::getValues)
+        .contains(asList("release"), asList("A", "B", "C"));
   }
 }

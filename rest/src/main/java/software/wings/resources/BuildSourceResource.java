@@ -116,4 +116,13 @@ public class BuildSourceResource {
       @QueryParam("artifactStreamId") String artifactStreamId, @QueryParam("settingId") String settingId) {
     return new RestResponse<>(buildSourceService.getBuilds(appId, artifactStreamId, settingId));
   }
+
+  @GET
+  @Path("jobs/{jobName}/details")
+  @Timed
+  @ExceptionMetered
+  public RestResponse<JobDetails> getJob(@QueryParam("appId") String appId, @QueryParam("settingId") String settingId,
+      @PathParam("jobName") String jobName) {
+    return new RestResponse<>(buildSourceService.getJob(appId, settingId, jobName));
+  }
 }

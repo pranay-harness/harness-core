@@ -1,6 +1,6 @@
 {
   "request" : {
-    "url" : "/job/scheduler/57/api/json",
+    "url" : "/job/scheduler-svn/64/api/json",
     "method" : "GET",
     "headers" : {
       "Accept-Encoding" : {
@@ -13,15 +13,15 @@
   },
   "response" : {
     "status" : 200,
-    "bodyFileName" : "body-api-json-g8Ffr.json",
+    "bodyFileName" : "/jenkins/body-api-json-jdpqF.json",
     "headers" : {
-      "Date" : "Fri, 13 May 2016 18:17:25 GMT",
+      "Date" : "Fri, 13 May 2016 18:17:27 GMT",
       "X-Content-Type-Options" : "nosniff",
       "X-Jenkins" : "2.2",
       "X-Jenkins-Session" : "a6be075a",
       "Content-Type" : "application/json;charset=UTF-8",
       "Content-Encoding" : "gzip",
-      "Content-Length" : "643",
+      "Content-Length" : "492",
       "Server" : "Jetty(9.2.z-SNAPSHOT)"
     }
   }

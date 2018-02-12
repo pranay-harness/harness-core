@@ -21,9 +21,8 @@ public interface Jenkins {
    *
    * @param jobname the jobname
    * @return the job
-   * @throws IOException Signals that an I/O exception has occurred.
    */
-  JobWithDetails getJob(String jobname) throws IOException;
+  JobWithDetails getJob(String jobname);
 
   /**
    * Gets the child jobs for the given parent folder job. For the root level jobs, pass null.

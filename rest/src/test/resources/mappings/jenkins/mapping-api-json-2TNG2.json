@@ -13,7 +13,7 @@
   },
   "response" : {
     "status" : 200,
-    "bodyFileName" : "body-api-json-2TNG2.json",
+    "bodyFileName" : "/jenkins/body-api-json-2TNG2.json",
     "headers" : {
       "Date" : "Fri, 13 May 2016 18:17:24 GMT",
       "X-Content-Type-Options" : "nosniff",
