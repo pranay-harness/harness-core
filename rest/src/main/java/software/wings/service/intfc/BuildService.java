@@ -97,13 +97,22 @@ public interface BuildService<T> {
   boolean validateArtifactServer(T config);
 
   /**
-   * Validates Artifact Stream
-   *
-   * @param artifactStreamAttributes
-   * @throws software.wings.exception.WingsException if not valid
+   * Gets the all the Job details
+   * @param jobName
+   * @return
    */
-  boolean validateArtifactSource(
-      T config, List<EncryptedDataDetail> encryptionDetails, ArtifactStreamAttributes artifactStreamAttributes);
+  default JobDetails
+    getJob(String jobName, T config, List<EncryptedDataDetail> encryptionDetails) {
+      return null;
+    }
+    /**
+     * Validates Artifact Stream
+     *
+     * @param artifactStreamAttributes
+     * @throws software.wings.exception.WingsException if not valid
+     */
+    boolean validateArtifactSource(
+        T config, List<EncryptedDataDetail> encryptionDetails, ArtifactStreamAttributes artifactStreamAttributes);
 
   default List
     <JobDetails> wrapJobNameWithJobDetails(Collection<String> jobNames) {

@@ -1,6 +1,8 @@
 package software.wings.service.impl;
 
+import static io.harness.data.structure.EmptyPredicate.isEmpty;
 import static software.wings.exception.WingsException.ALERTING;
+import static software.wings.helpers.ext.jenkins.JobDetails.JobParameter;
 import static software.wings.utils.HttpUtil.connectableHttpUrl;
 import static software.wings.utils.HttpUtil.validUrl;
 import static software.wings.utils.Validator.equalCheck;
@@ -22,6 +24,9 @@ import software.wings.helpers.ext.jenkins.BuildDetails;
 import software.wings.helpers.ext.jenkins.Jenkins;
 import software.wings.helpers.ext.jenkins.JenkinsFactory;
 import software.wings.helpers.ext.jenkins.JobDetails;
+import software.wings.helpers.ext.jenkins.model.JobProperty;
+import software.wings.helpers.ext.jenkins.model.JobWithExtendedDetails;
+import software.wings.helpers.ext.jenkins.model.ParametersDefinitionProperty;
 import software.wings.security.encryption.EncryptedDataDetail;
 import software.wings.service.intfc.JenkinsBuildService;
 import software.wings.service.intfc.security.EncryptionService;
@@ -33,6 +38,7 @@ import java.util.Collections;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.Objects;
 import java.util.Optional;
 import java.util.stream.Collectors;
 
@@ -173,6 +179,49 @@ public class JenkinsBuildServiceImpl implements JenkinsBuildService {
         jenkinsFactory.create(jenkinsConfig.getJenkinsUrl(), jenkinsConfig.getUsername(), jenkinsConfig.getPassword());
 
     return jenkins.isRunning();
+  }
+
+  @Override
+  public JobDetails getJob(String jobName, JenkinsConfig jenkinsConfig, List<EncryptedDataDetail> encryptionDetails) {
+    logger.info("Retrieving Job with details for Job: {}", jobName);
+    encryptionService.decrypt(jenkinsConfig, encryptionDetails);
+    Jenkins jenkins =
+        jenkinsFactory.create(jenkinsConfig.getJenkinsUrl(), jenkinsConfig.getUsername(), jenkinsConfig.getPassword());
+    JobWithDetails jobWithDetails = jenkins.getJob(jobName);
+    List<JobParameter> parameters = new ArrayList<>();
+    if (jobWithDetails != null) {
+      JobWithExtendedDetails jobWithExtendedDetails = (JobWithExtendedDetails) jobWithDetails;
+      List<JobProperty> properties = jobWithExtendedDetails.getProperties();
+      if (properties != null) {
+        properties.stream()
+            .map(JobProperty::getParameterDefinitions)
+            .filter(Objects::nonNull)
+            .forEach((List<ParametersDefinitionProperty> pds) -> {
+              logger.info("Job Properties definitions {}", pds.toArray());
+              pds.forEach((ParametersDefinitionProperty pdProperty) -> parameters.add(getJobParameter(pdProperty)));
+            });
+      }
+      logger.info("Retrieving Job with details for Job: {} success", jobName);
+      return new JobDetails(jobWithDetails.getName(), jobWithDetails.getUrl(), parameters);
+    }
+    return null;
+  }
+
+  private JobParameter getJobParameter(ParametersDefinitionProperty pdProperty) {
+    JobParameter jobParameter = new JobParameter();
+    jobParameter.setName(pdProperty.getName());
+    jobParameter.setDescription(pdProperty.getDescription());
+    if (pdProperty.getDefaultParameterValue() != null) {
+      jobParameter.setDefaultValue(pdProperty.getDefaultParameterValue().getValue());
+    }
+    if (pdProperty.getChoices() != null) {
+      jobParameter.setValues(pdProperty.getChoices());
+    } else {
+      if (!isEmpty(jobParameter.getDefaultValue())) {
+        jobParameter.setValues(Collections.singletonList(jobParameter.getDefaultValue()));
+      }
+    }
+    return jobParameter;
   }
 
   @Override

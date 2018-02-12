@@ -68,8 +68,8 @@ public class SetupServiceTest extends WingsBaseTest {
   //    when(hostService.getHostsByEnv(APP_ID, ENV_ID)).thenReturn(asList(Host.Builder.aHost().build()));
   //    Setup setupStatus = setupService.getApplicationSetupStatus(application);
   //    assertThat(setupStatus.getSetupStatus()).isEqualTo(COMPLETE);
-  //    assertThat(setupStatus.getActions()).hasSize(1).doesNotContainNull();
-  //    assertThat(setupStatus.getActions().get(0).getCode()).isEqualTo("NO_RELEASE_FOUND");
+  //    assertThat(setupStatus.getProperty()).hasSize(1).doesNotContainNull();
+  //    assertThat(setupStatus.getProperty().get(0).getCode()).isEqualTo("NO_RELEASE_FOUND");
   //
   //    Release rel = Release.Builder.aRelease().build();
   //    PageResponse<Release> res = new PageResponse();
@@ -77,29 +77,29 @@ public class SetupServiceTest extends WingsBaseTest {
   //    when(artifactStreamService.list(any(PageRequest.class))).thenReturn(res);
   //    setupStatus = setupService.getApplicationSetupStatus(application);
   //    assertThat(setupStatus.getSetupStatus()).isEqualTo(COMPLETE);
-  //    assertThat(setupStatus.getActions()).hasSize(1).doesNotContainNull();
-  //    assertThat(setupStatus.getActions().get(0).getCode()).isEqualTo("NO_ARTIFACT_SOURCE_FOUND");
+  //    assertThat(setupStatus.getProperty()).hasSize(1).doesNotContainNull();
+  //    assertThat(setupStatus.getProperty().get(0).getCode()).isEqualTo("NO_ARTIFACT_SOURCE_FOUND");
   //
   //    rel.setArtifactSources(asList(new JenkinsArtifactStream()));
   //    setupStatus = setupService.getApplicationSetupStatus(application);
   //    assertThat(setupStatus.getSetupStatus()).isEqualTo(COMPLETE);
-  //    assertThat(setupStatus.getActions()).hasSize(1).doesNotContainNull();
-  //    assertThat(setupStatus.getActions().get(0).getCode()).isEqualTo("NO_ARTIFACT_FOUND");
+  //    assertThat(setupStatus.getProperty()).hasSize(1).doesNotContainNull();
+  //    assertThat(setupStatus.getProperty().get(0).getCode()).isEqualTo("NO_ARTIFACT_FOUND");
   //
   //    PageResponse<Artifact> artRes = new PageResponse<>();
   //    artRes.setResponse(asList(new Artifact()));
   //    when(artifactService.list(any(PageRequest.class))).thenReturn(artRes);
   //    setupStatus = setupService.getApplicationSetupStatus(application);
   //    assertThat(setupStatus.getSetupStatus()).isEqualTo(COMPLETE);
-  //    assertThat(setupStatus.getActions()).hasSize(1).doesNotContainNull();
-  //    assertThat(setupStatus.getActions().get(0).getCode()).isEqualTo("NO_DEPLOYMENT_FOUND");
+  //    assertThat(setupStatus.getProperty()).hasSize(1).doesNotContainNull();
+  //    assertThat(setupStatus.getProperty().get(0).getCode()).isEqualTo("NO_DEPLOYMENT_FOUND");
   //
   //    PageResponse<WorkflowExecution> execRes = new PageResponse<>();
   //    execRes.setResponse(asList(new WorkflowExecution()));
   //    when(workflowExecutionService.listExecutions(any(PageRequest.class), anyBoolean())).thenReturn(execRes);
   //    setupStatus = setupService.getApplicationSetupStatus(application);
   //    assertThat(setupStatus.getSetupStatus()).isEqualTo(COMPLETE);
-  //    assertThat(setupStatus.getActions()).isEmpty();
+  //    assertThat(setupStatus.getProperty()).isEmpty();
   //
   //
   //  }

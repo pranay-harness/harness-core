@@ -102,6 +102,15 @@ public interface BuildSourceService {
       @NotEmpty String appId, @NotEmpty String settingId, ArtifactStreamAttributes artifactStreamAttributes);
 
   /**
+   * Get Job details
+   * @param appId
+   * @param settingId
+   * @param jobName
+   * @return
+   */
+  JobDetails getJob(@NotEmpty String appId, @NotEmpty String settingId, @NotEmpty String jobName);
+
+  /**
    * Gets build service.
    *
    * @param settingAttribute the setting attribute

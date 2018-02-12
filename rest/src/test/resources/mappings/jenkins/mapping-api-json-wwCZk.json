@@ -5,7 +5,7 @@
   },
   "response" : {
     "status" : 201,
-    "bodyFileName" : "body-api-json-wwCZk.txt",
+    "bodyFileName" : "/jenkins/body-api-json-wwCZk.txt",
     "headers" : {
       "Server" : "nginx/1.4.6 (Ubuntu)",
       "Date" : "Mon, 24 Oct 2016 23:08:59 GMT",

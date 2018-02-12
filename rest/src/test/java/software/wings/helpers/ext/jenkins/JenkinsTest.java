@@ -15,17 +15,22 @@ import com.google.common.util.concurrent.FakeTimeLimiter;
 
 import com.github.tomakehurst.wiremock.junit.WireMockRule;
 import com.offbytwo.jenkins.model.Build;
+import com.offbytwo.jenkins.model.JobWithDetails;
 import com.offbytwo.jenkins.model.QueueReference;
 import org.apache.commons.lang3.tuple.Pair;
 import org.junit.Before;
 import org.junit.Rule;
 import org.junit.Test;
+import software.wings.helpers.ext.jenkins.model.JobWithExtendedDetails;
+import software.wings.helpers.ext.jenkins.model.ParametersDefinitionProperty;
 
 import java.io.IOException;
 import java.io.InputStream;
 import java.net.URISyntaxException;
 import java.util.Collections;
 import java.util.List;
+import java.util.Objects;
+import java.util.stream.Collectors;
 
 /**
  * The Class JenkinsTest.
@@ -70,7 +75,7 @@ public class JenkinsTest {
                 aResponse()
                     .withStatus(200)
                     .withBody(
-                        "{\"_class\":\"com.cloudbees.hudson.plugins.folder.Folder\",\"actions\":[{},{\"_class\":\"hudson.plugins.jobConfigHistory.JobConfigHistoryProjectAction\"},{},{\"_class\":\"com.cloudbees.plugins.credentials.ViewCredentialsAction\"}],\"description\":null,\"displayName\":\"parentJob\",\"displayNameOrNull\":null,\"fullDisplayName\":\"parentJob\",\"fullName\":\"parentJob\",\"name\":\"parentJob\",\"url\":\"https://jenkins.wings.software/job/parentJob/\",\"healthReport\":[],\"jobs\":[{\"_class\":\"hudson.maven.MavenModuleSet\",\"name\":\"abcd\",\"url\":\"https://jenkins.wings.software/job/parentJob/job/abcd/\"},{\"_class\":\"hudson.maven.MavenModuleSet\",\"name\":\"parentJob_war_copy\",\"url\":\"https://jenkins.wings.software/job/parentJob/job/parentJob_war_copy/\",\"color\":\"notbuilt\"}],\"primaryView\":{\"_class\":\"hudson.model.AllView\",\"name\":\"All\",\"url\":\"https://jenkins.wings.software/job/parentJob/\"},\"views\":[{\"_class\":\"hudson.model.AllView\",\"name\":\"All\",\"url\":\"https://jenkins.wings.software/job/parentJob/\"}]}")
+                        "{\"_class\":\"com.cloudbees.hudson.plugins.folder.Folder\",\"property\":[{},{\"_class\":\"hudson.plugins.jobConfigHistory.JobConfigHistoryProjectAction\"},{},{\"_class\":\"com.cloudbees.plugins.credentials.ViewCredentialsAction\"}],\"description\":null,\"displayName\":\"parentJob\",\"displayNameOrNull\":null,\"fullDisplayName\":\"parentJob\",\"fullName\":\"parentJob\",\"name\":\"parentJob\",\"url\":\"https://jenkins.wings.software/job/parentJob/\",\"healthReport\":[],\"jobs\":[{\"_class\":\"hudson.maven.MavenModuleSet\",\"name\":\"abcd\",\"url\":\"https://jenkins.wings.software/job/parentJob/job/abcd/\"},{\"_class\":\"hudson.maven.MavenModuleSet\",\"name\":\"parentJob_war_copy\",\"url\":\"https://jenkins.wings.software/job/parentJob/job/parentJob_war_copy/\",\"color\":\"notbuilt\"}],\"primaryView\":{\"_class\":\"hudson.model.AllView\",\"name\":\"All\",\"url\":\"https://jenkins.wings.software/job/parentJob/\"},\"views\":[{\"_class\":\"hudson.model.AllView\",\"name\":\"All\",\"url\":\"https://jenkins.wings.software/job/parentJob/\"}]}")
                     .withHeader("Content-Type", "application/json")));
 
     List<JobDetails> jobs = jenkins.getJobs("parentJob");
@@ -179,7 +184,7 @@ public class JenkinsTest {
   /**
    * Should get last n build details for git jobs.
    *
-   * @throws IOException        Signals that an I/O exception has occurred.
+   * @throws IOException Signals that an I/O exception has occurred.
    */
   @Test
   public void shouldGetLastNBuildDetailsForGitJobs() throws IOException {
@@ -207,14 +212,8 @@ public class JenkinsTest {
     assertThat(buildDetails).isNull();
   }
 
-  /**
-   * Should get last n build details for svn jobs.
-   *
-   * @throws URISyntaxException the URI syntax exception
-   * @throws IOException        Signals that an I/O exception has occurred.
-   */
   @Test
-  public void shouldGetLastNBuildDetailsForSvnJobs() throws URISyntaxException, IOException {
+  public void shouldGetLastNBuildDetailsForSvnJobs() throws IOException {
     List<BuildDetails> buildDetails = jenkins.getBuildsForJob("scheduler-svn", 5);
     assertThat(buildDetails)
         .hasSize(4)
@@ -223,19 +222,19 @@ public class JenkinsTest {
   }
 
   @Test
-  public void shouldTriggerJobWithParameters() throws URISyntaxException, IOException {
+  public void shouldTriggerJobWithParameters() throws IOException {
     QueueReference queueItem = jenkins.trigger("todolist_war", ImmutableMap.of("Test", "Test"));
     assertThat(queueItem.getQueueItemUrlPart()).isNotNull();
   }
 
   @Test
-  public void shouldFetchBuildFromQueueItem() throws URISyntaxException, IOException {
+  public void shouldFetchBuildFromQueueItem() throws IOException {
     Build build = jenkins.getBuild(new QueueReference("http://localhost:8089/queue/item/27287"));
     assertThat(build.getQueueId()).isEqualTo(27287);
   }
 
   @Test
-  public void shouldTriggerJobWithoutParameters() throws URISyntaxException, IOException {
+  public void shouldTriggerJobWithoutParameters() throws IOException {
     QueueReference queueItem = jenkins.trigger("todolist_war", Collections.emptyMap());
     assertThat(queueItem.getQueueItemUrlPart()).isNotNull();
   }
@@ -246,5 +245,29 @@ public class JenkinsTest {
     assertEquals("TestJob", jenkins.getNormalizedName("TestJob"));
     assertNull(jenkins.getNormalizedName(null));
     assertEquals("Test Job", jenkins.getNormalizedName("Test%20Job"));
+  }
+
+  @Test
+  public void shouldTestGetJobParameters() {
+    JobWithDetails jobWithDetails = jenkins.getJob("todolist_promot");
+    assertThat(jobWithDetails).isNotNull();
+    assertThat(jobWithDetails).isInstanceOf(JobWithExtendedDetails.class);
+    JobWithExtendedDetails jobWithExtendedDetails = (JobWithExtendedDetails) jobWithDetails;
+    assertThat(jobWithExtendedDetails).extracting(JobWithExtendedDetails::getProperties).isNotEmpty();
+
+    List<ParametersDefinitionProperty> properties = jobWithExtendedDetails.getProperties()
+                                                        .stream()
+                                                        .map(jp -> jp.getParameterDefinitions())
+                                                        .filter(Objects::nonNull)
+                                                        .flatMap(pd -> pd.stream())
+                                                        .collect(Collectors.toList());
+    assertThat(properties)
+        .isNotNull()
+        .extracting(ParametersDefinitionProperty::getName)
+        .containsSequence("revision", "branch", "Choices", "boolean", "Credentials");
+    assertThat(properties)
+        .extracting(ParametersDefinitionProperty::getDefaultParameterValue)
+        .extracting("value")
+        .contains("release");
   }
 }

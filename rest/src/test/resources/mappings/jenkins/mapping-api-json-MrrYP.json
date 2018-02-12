@@ -5,7 +5,7 @@
   },
   "response" : {
     "status" : 200,
-    "bodyFileName" : "body-api-json-MrrYP.json",
+    "bodyFileName" : "/jenkins/body-api-json-MrrYP.json",
     "headers" : {
       "Server" : "nginx/1.4.6 (Ubuntu)",
       "Date" : "Mon, 24 Oct 2016 23:08:36 GMT",
