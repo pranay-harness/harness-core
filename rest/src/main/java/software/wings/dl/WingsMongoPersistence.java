@@ -7,6 +7,7 @@ import static org.apache.commons.lang3.StringUtils.isBlank;
 import static org.apache.commons.lang3.StringUtils.isNotBlank;
 import static org.mongodb.morphia.mapping.Mapper.ID_KEY;
 import static software.wings.beans.SearchFilter.Builder.aSearchFilter;
+import static software.wings.exception.WingsException.HARMLESS;
 import static software.wings.utils.WingsReflectionUtils.getDeclaredAndInheritedFields;
 import static software.wings.utils.WingsReflectionUtils.getDecryptedField;
 import static software.wings.utils.WingsReflectionUtils.getEncryptedRefField;
@@ -650,7 +651,7 @@ public class WingsMongoPersistence implements WingsPersistence, Managed {
     if (authFilters(query)) {
       return query;
     }
-    throw new WingsException(getExceptionMsgWithUserContext());
+    throw new WingsException(getExceptionMsgWithUserContext(), HARMLESS);
   }
 
   @Override
@@ -662,7 +663,7 @@ public class WingsMongoPersistence implements WingsPersistence, Managed {
     if (authFilters(query)) {
       return query;
     }
-    throw new WingsException(getExceptionMsgWithUserContext());
+    throw new WingsException(getExceptionMsgWithUserContext(), HARMLESS);
   }
 
   private String getExceptionMsgWithUserContext() throws WingsException {
