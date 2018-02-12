@@ -15,7 +15,6 @@ import software.wings.exception.WingsException;
 import software.wings.utils.YamlUtils;
 
 import java.net.URL;
-import java.util.HashMap;
 import java.util.Map;
 import java.util.regex.Pattern;
 
@@ -24,61 +23,19 @@ import java.util.regex.Pattern;
  */
 @Singleton
 public class NotificationMessageResolver {
-  private Map<String, ChannelTemplate> templateMap = new HashMap<>();
+  private Map<String, ChannelTemplate> templateMap;
   private static final Logger logger = LoggerFactory.getLogger(NotificationMessageResolver.class);
 
   /**
    * The enum Notification message type.
    */
   public enum NotificationMessageType {
-    /**
-     * Entity create notification notification message type.
-     */
     ENTITY_CREATE_NOTIFICATION,
-    /**
-     * Entity delete notification notification message type.
-     */
     ENTITY_DELETE_NOTIFICATION,
-    /**
-     * Artifact approval notification notification message type.
-     */
     ARTIFACT_APPROVAL_NOTIFICATION,
-    /**
-     * Artifact approval notification status notification message type.
-     */
     ARTIFACT_APPROVAL_NOTIFICATION_STATUS,
-    /**
-     * Workflow successful notification notification message type.
-     */
-    WORKFLOW_SUCCESSFUL_NOTIFICATION,
-    /**
-     * Workflow paused notification notification message type.
-     */
-    WORKFLOW_PAUSED_NOTIFICATION,
-    /**
-     * Workflow failed notification notification message type.
-     */
-    WORKFLOW_FAILED_NOTIFICATION,
-    /**
-     * Workflow resumed notification notification message type.
-     */
-    WORKFLOW_RESUMED_NOTIFICATION,
-    /**
-     * Workflow aborted notification notification message type.
-     */
-    WORKFLOW_ABORTED_NOTIFICATION,
-    /**
-     * Workflow phase successful notification notification message type.
-     */
-    WORKFLOW_PHASE_SUCCESSFUL_NOTIFICATION,
-    /**
-     * Workflow phase paused notification notification message type.
-     */
-    WORKFLOW_PHASE_PAUSED_NOTIFICATION,
-    /**
-     * Workflow phase failed notification notification message type.
-     */
-    WORKFLOW_PHASE_FAILED_NOTIFICATION
+    WORKFLOW_NOTIFICATION,
+    WORKFLOW_PHASE_NOTIFICATION
   }
 
   private static Pattern placeHolderPattern = Pattern.compile("\\$\\{.+?}");

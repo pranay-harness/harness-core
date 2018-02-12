@@ -1,6 +1,7 @@
 package software.wings.service;
 
 import static java.util.Arrays.asList;
+import static java.util.Collections.singletonList;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.mockito.Matchers.any;
 import static org.mockito.Matchers.eq;
@@ -15,6 +16,8 @@ import static software.wings.beans.Service.Builder.aService;
 import static software.wings.beans.WorkflowExecution.WorkflowExecutionBuilder.aWorkflowExecution;
 import static software.wings.beans.artifact.Artifact.Builder.anArtifact;
 import static software.wings.common.Constants.BUILD_NO;
+import static software.wings.common.NotificationMessageResolver.NotificationMessageType.WORKFLOW_NOTIFICATION;
+import static software.wings.common.NotificationMessageResolver.NotificationMessageType.WORKFLOW_PHASE_NOTIFICATION;
 import static software.wings.sm.PipelineSummary.Builder.aPipelineSummary;
 import static software.wings.sm.StateExecutionInstance.Builder.aStateExecutionInstance;
 import static software.wings.utils.WingsTestConstants.ACCOUNT_ID;
@@ -49,6 +52,7 @@ import software.wings.beans.CanaryOrchestrationWorkflow;
 import software.wings.beans.EmbeddedUser;
 import software.wings.beans.ExecutionScope;
 import software.wings.beans.FailureNotification;
+import software.wings.beans.InformationNotification;
 import software.wings.beans.Notification;
 import software.wings.beans.NotificationRule;
 import software.wings.beans.OrchestrationWorkflowType;
@@ -142,23 +146,23 @@ public class WorkflowNotificationHelperTest extends WingsBaseTest {
                                             .withConditions(asList(ExecutionStatus.FAILED, ExecutionStatus.SUCCESS))
                                             .build();
     CanaryOrchestrationWorkflow canaryOrchestrationWorkflow =
-        aCanaryOrchestrationWorkflow().withNotificationRules(asList(notificationRule)).build();
+        aCanaryOrchestrationWorkflow().withNotificationRules(singletonList(notificationRule)).build();
 
     when(executionContext.getStateMachine().getOrchestrationWorkflow()).thenReturn(canaryOrchestrationWorkflow);
-    workflowNotificationHelper.sendWorkflowStatusChangeNotification(executionContext, ExecutionStatus.FAILED);
+    workflowNotificationHelper.sendWorkflowStatusChangeNotification(executionContext, ExecutionStatus.SUCCESS);
 
     ArgumentCaptor<Notification> notificationArgumentCaptor = ArgumentCaptor.forClass(Notification.class);
 
     verify(notificationService)
-        .sendNotificationAsync(notificationArgumentCaptor.capture(), eq(asList(notificationRule)));
+        .sendNotificationAsync(notificationArgumentCaptor.capture(), eq(singletonList(notificationRule)));
     Notification notification = notificationArgumentCaptor.getAllValues().get(0);
-    assertThat(notification).isInstanceOf(FailureNotification.class);
-    assertThat(notification.getNotificationTemplateId())
-        .isEqualTo(NotificationMessageType.WORKFLOW_FAILED_NOTIFICATION.name());
+    assertThat(notification).isInstanceOf(InformationNotification.class);
+    assertThat(notification.getNotificationTemplateId()).isEqualTo(WORKFLOW_NOTIFICATION.name());
     ImmutableMap<String, String> placeholders =
         ImmutableMap.<String, String>builder()
             .put("WORKFLOW_NAME", WORKFLOW_NAME)
             .put("WORKFLOW_URL", EXPECTED_WORKFLOW_URL)
+            .put("VERB", "completed")
             .put("ARTIFACTS", "Service One: artifact-1 (build# build-1), Service Two: artifact-2 (build# build-2)")
             .put("USER_NAME", USER_NAME)
             .put("PIPELINE", "")
@@ -192,15 +196,15 @@ public class WorkflowNotificationHelperTest extends WingsBaseTest {
     ArgumentCaptor<Notification> notificationArgumentCaptor = ArgumentCaptor.forClass(Notification.class);
 
     verify(notificationService)
-        .sendNotificationAsync(notificationArgumentCaptor.capture(), eq(asList(notificationRule)));
+        .sendNotificationAsync(notificationArgumentCaptor.capture(), eq(singletonList(notificationRule)));
     Notification notification = notificationArgumentCaptor.getAllValues().get(0);
     assertThat(notification).isInstanceOf(FailureNotification.class);
-    assertThat(notification.getNotificationTemplateId())
-        .isEqualTo(NotificationMessageType.WORKFLOW_FAILED_NOTIFICATION.name());
+    assertThat(notification.getNotificationTemplateId()).isEqualTo(WORKFLOW_NOTIFICATION.name());
     ImmutableMap<String, String> placeholders =
         ImmutableMap.<String, String>builder()
             .put("WORKFLOW_NAME", WORKFLOW_NAME)
             .put("WORKFLOW_URL", EXPECTED_WORKFLOW_URL)
+            .put("VERB", "failed")
             .put("ARTIFACTS", "Service One: artifact-1 (build# build-1), Service Two: artifact-2 (build# build-2)")
             .put("USER_NAME", USER_NAME)
             .put("PIPELINE", " as part of <<<" + EXPECTED_PIPELINE_URL + "|-|Pipeline Name>>> pipeline")
@@ -230,14 +234,14 @@ public class WorkflowNotificationHelperTest extends WingsBaseTest {
     ArgumentCaptor<Notification> notificationArgumentCaptor = ArgumentCaptor.forClass(Notification.class);
 
     verify(notificationService)
-        .sendNotificationAsync(notificationArgumentCaptor.capture(), eq(asList(notificationRule)));
+        .sendNotificationAsync(notificationArgumentCaptor.capture(), eq(singletonList(notificationRule)));
     Notification notification = notificationArgumentCaptor.getAllValues().get(0);
     assertThat(notification).isInstanceOf(FailureNotification.class);
-    assertThat(notification.getNotificationTemplateId())
-        .isEqualTo(NotificationMessageType.WORKFLOW_PHASE_FAILED_NOTIFICATION.name());
+    assertThat(notification.getNotificationTemplateId()).isEqualTo(WORKFLOW_PHASE_NOTIFICATION.name());
     ImmutableMap<String, String> placeholders = ImmutableMap.<String, String>builder()
                                                     .put("WORKFLOW_NAME", WORKFLOW_NAME)
                                                     .put("WORKFLOW_URL", EXPECTED_WORKFLOW_URL)
+                                                    .put("VERB", "failed")
                                                     .put("PHASE_NAME", "Phase1")
                                                     .put("ARTIFACTS", "Service Two: artifact-2 (build# build-2)")
                                                     .put("USER_NAME", USER_NAME)
@@ -264,15 +268,15 @@ public class WorkflowNotificationHelperTest extends WingsBaseTest {
     ArgumentCaptor<Notification> notificationArgumentCaptor = ArgumentCaptor.forClass(Notification.class);
 
     verify(notificationService)
-        .sendNotificationAsync(notificationArgumentCaptor.capture(), eq(asList(notificationRule)));
+        .sendNotificationAsync(notificationArgumentCaptor.capture(), eq(singletonList(notificationRule)));
     Notification notification = notificationArgumentCaptor.getAllValues().get(0);
     assertThat(notification).isInstanceOf(FailureNotification.class);
-    assertThat(notification.getNotificationTemplateId())
-        .isEqualTo(NotificationMessageType.WORKFLOW_FAILED_NOTIFICATION.name());
+    assertThat(notification.getNotificationTemplateId()).isEqualTo(WORKFLOW_NOTIFICATION.name());
     ImmutableMap<String, String> placeholders =
         ImmutableMap.<String, String>builder()
             .put("WORKFLOW_NAME", WORKFLOW_NAME)
             .put("WORKFLOW_URL", EXPECTED_WORKFLOW_URL)
+            .put("VERB", "failed")
             .put("ARTIFACTS", "Service One: no artifact, Service Two: no artifact")
             .put("USER_NAME", USER_NAME)
             .put("ENV_NAME", ENV_NAME)
@@ -294,7 +298,7 @@ public class WorkflowNotificationHelperTest extends WingsBaseTest {
                                             .withConditions(asList(ExecutionStatus.FAILED, ExecutionStatus.SUCCESS))
                                             .build();
     CanaryOrchestrationWorkflow canaryOrchestrationWorkflow =
-        aCanaryOrchestrationWorkflow().withNotificationRules(asList(notificationRule)).build();
+        aCanaryOrchestrationWorkflow().withNotificationRules(singletonList(notificationRule)).build();
 
     when(executionContext.getStateMachine().getOrchestrationWorkflow()).thenReturn(canaryOrchestrationWorkflow);
 
@@ -303,15 +307,15 @@ public class WorkflowNotificationHelperTest extends WingsBaseTest {
     ArgumentCaptor<Notification> notificationArgumentCaptor = ArgumentCaptor.forClass(Notification.class);
 
     verify(notificationService)
-        .sendNotificationAsync(notificationArgumentCaptor.capture(), eq(asList(notificationRule)));
+        .sendNotificationAsync(notificationArgumentCaptor.capture(), eq(singletonList(notificationRule)));
     Notification notification = notificationArgumentCaptor.getAllValues().get(0);
     assertThat(notification).isInstanceOf(FailureNotification.class);
-    assertThat(notification.getNotificationTemplateId())
-        .isEqualTo(NotificationMessageType.WORKFLOW_FAILED_NOTIFICATION.name());
+    assertThat(notification.getNotificationTemplateId()).isEqualTo(WORKFLOW_NOTIFICATION.name());
     ImmutableMap<String, String> placeholders =
         ImmutableMap.<String, String>builder()
             .put("WORKFLOW_NAME", WORKFLOW_NAME)
             .put("WORKFLOW_URL", EXPECTED_WORKFLOW_URL)
+            .put("VERB", "failed")
             .put("ARTIFACTS", "Service One: artifact-1 (build# build-1), Service Two: no artifact")
             .put("USER_NAME", USER_NAME)
             .put("ENV_NAME", ENV_NAME)
@@ -343,10 +347,11 @@ public class WorkflowNotificationHelperTest extends WingsBaseTest {
     Notification notification = notificationArgumentCaptor.getAllValues().get(0);
     assertThat(notification).isInstanceOf(FailureNotification.class);
     assertThat(notification.getNotificationTemplateId())
-        .isEqualTo(NotificationMessageType.WORKFLOW_FAILED_NOTIFICATION.name());
+        .isEqualTo(NotificationMessageType.WORKFLOW_NOTIFICATION.name());
     ImmutableMap<String, String> placeholders = ImmutableMap.<String, String>builder()
                                                     .put("WORKFLOW_NAME", WORKFLOW_NAME)
                                                     .put("WORKFLOW_URL", EXPECTED_WORKFLOW_URL)
+                                                    .put("VERB", "failed")
                                                     .put("ARTIFACTS", "no services")
                                                     .put("USER_NAME", USER_NAME)
                                                     .put("ENV_NAME", ENV_NAME)
@@ -365,7 +370,8 @@ public class WorkflowNotificationHelperTest extends WingsBaseTest {
                                             .withExecutionScope(ExecutionScope.WORKFLOW)
                                             .withConditions(asList(ExecutionStatus.FAILED, ExecutionStatus.SUCCESS))
                                             .build();
-    BuildWorkflow buildWorkflow = aBuildOrchestrationWorkflow().withNotificationRules(asList(notificationRule)).build();
+    BuildWorkflow buildWorkflow =
+        aBuildOrchestrationWorkflow().withNotificationRules(singletonList(notificationRule)).build();
 
     when(executionContext.getStateMachine().getOrchestrationWorkflow()).thenReturn(buildWorkflow);
     when(executionContext.getOrchestrationWorkflowType()).thenReturn(OrchestrationWorkflowType.BUILD);
@@ -375,16 +381,17 @@ public class WorkflowNotificationHelperTest extends WingsBaseTest {
     ArgumentCaptor<Notification> notificationArgumentCaptor = ArgumentCaptor.forClass(Notification.class);
 
     verify(notificationService)
-        .sendNotificationAsync(notificationArgumentCaptor.capture(), eq(asList(notificationRule)));
+        .sendNotificationAsync(notificationArgumentCaptor.capture(), eq(singletonList(notificationRule)));
     Notification notification = notificationArgumentCaptor.getAllValues().get(0);
     assertThat(notification).isInstanceOf(FailureNotification.class);
     assertThat(notification.getNotificationTemplateId())
-        .isEqualTo(NotificationMessageType.WORKFLOW_FAILED_NOTIFICATION.name());
+        .isEqualTo(NotificationMessageType.WORKFLOW_NOTIFICATION.name());
     ImmutableMap<String, String> placeholders =
         ImmutableMap.<String, String>builder()
             .put("WORKFLOW_NAME", WORKFLOW_NAME)
             .put("WORKFLOW_URL",
                 "https://env.harness.io/#/account/ACCOUNT_ID/app/APP_ID/env/build/executions/WORKFLOW_EXECUTION_ID/details")
+            .put("VERB", "failed")
             .put("ARTIFACTS", "no services")
             .put("USER_NAME", USER_NAME)
             .put("ENV_NAME", "no environment")
