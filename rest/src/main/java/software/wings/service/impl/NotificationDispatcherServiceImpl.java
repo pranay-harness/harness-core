@@ -1,9 +1,7 @@
 package software.wings.service.impl;
 
 import static io.harness.data.structure.EmptyPredicate.isEmpty;
-import static java.util.Arrays.asList;
-import static software.wings.beans.ExecutionScope.WORKFLOW;
-import static software.wings.beans.ExecutionScope.WORKFLOW_PHASE;
+import static java.util.Collections.singletonList;
 import static software.wings.beans.SearchFilter.Operator.EQ;
 import static software.wings.beans.SearchFilter.Operator.IN;
 import static software.wings.common.Constants.ABORTED_COLOR;
@@ -13,24 +11,15 @@ import static software.wings.common.Constants.HARNESS_NAME;
 import static software.wings.common.Constants.LINK_COLOR;
 import static software.wings.common.Constants.PAUSED_COLOR;
 import static software.wings.common.Constants.RESUMED_COLOR;
-import static software.wings.common.NotificationMessageResolver.NotificationMessageType.WORKFLOW_FAILED_NOTIFICATION;
-import static software.wings.common.NotificationMessageResolver.NotificationMessageType.WORKFLOW_PHASE_FAILED_NOTIFICATION;
-import static software.wings.common.NotificationMessageResolver.NotificationMessageType.WORKFLOW_PHASE_SUCCESSFUL_NOTIFICATION;
-import static software.wings.common.NotificationMessageResolver.NotificationMessageType.WORKFLOW_SUCCESSFUL_NOTIFICATION;
 import static software.wings.common.NotificationMessageResolver.getDecoratedNotificationMessage;
 import static software.wings.dl.PageRequest.Builder.aPageRequest;
 
-import com.google.common.collect.ImmutableMap;
 import com.google.inject.Inject;
 import com.google.inject.Singleton;
 
-import org.mongodb.morphia.query.Query;
-import org.mongodb.morphia.query.UpdateOperations;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-import software.wings.beans.ExecutionScope;
 import software.wings.beans.Notification;
-import software.wings.beans.NotificationBatch;
 import software.wings.beans.NotificationChannelType;
 import software.wings.beans.NotificationGroup;
 import software.wings.beans.NotificationRule;
@@ -39,10 +28,8 @@ import software.wings.beans.SlackConfig;
 import software.wings.beans.User;
 import software.wings.common.NotificationMessageResolver;
 import software.wings.common.NotificationMessageResolver.ChannelTemplate.EmailTemplate;
-import software.wings.common.NotificationMessageResolver.NotificationMessageType;
 import software.wings.dl.PageRequest;
 import software.wings.dl.PageResponse;
-import software.wings.dl.WingsPersistence;
 import software.wings.helpers.ext.mail.EmailData;
 import software.wings.service.intfc.EmailNotificationService;
 import software.wings.service.intfc.NotificationDispatcherService;
@@ -63,16 +50,12 @@ import java.util.stream.Collectors;
  */
 @Singleton
 public class NotificationDispatcherServiceImpl implements NotificationDispatcherService {
-  private static final ImmutableMap<ExecutionScope, List<NotificationMessageType>> BATCH_END_TEMPLATES =
-      ImmutableMap.of(WORKFLOW, asList(WORKFLOW_FAILED_NOTIFICATION, WORKFLOW_SUCCESSFUL_NOTIFICATION), WORKFLOW_PHASE,
-          asList(WORKFLOW_PHASE_FAILED_NOTIFICATION, WORKFLOW_PHASE_SUCCESSFUL_NOTIFICATION));
   private static final Logger logger = LoggerFactory.getLogger(NotificationDispatcherServiceImpl.class);
   @Inject private NotificationSetupService notificationSetupService;
   @Inject private EmailNotificationService emailNotificationService;
   @Inject private SlackNotificationService slackNotificationService;
   @Inject private SettingsService settingsService;
   @Inject private NotificationMessageResolver notificationMessageResolver;
-  @Inject private WingsPersistence wingsPersistence;
   @Inject private UserService userService;
 
   @Override
@@ -81,40 +64,8 @@ public class NotificationDispatcherServiceImpl implements NotificationDispatcher
       return;
     }
     for (NotificationRule notificationRule : notificationRules) {
-      if (notificationRule.isBatchNotifications()) {
-        batchDispatch(notification, notificationRule);
-      } else {
-        dispatch(asList(notification), notificationRule.getNotificationGroups());
-      }
+      dispatch(singletonList(notification), notificationRule.getNotificationGroups());
     }
-  }
-
-  private void batchDispatch(Notification notification, NotificationRule notificationRule) {
-    String batchId = String.join("-", notificationRule.getUuid(), notification.getEntityId());
-
-    Query<NotificationBatch> query = wingsPersistence.createQuery(NotificationBatch.class)
-                                         .field("appId")
-                                         .equal(notification.getAppId())
-                                         .field("batchId")
-                                         .equal(batchId);
-    UpdateOperations<NotificationBatch> updateOperations =
-        wingsPersistence.createUpdateOperations(NotificationBatch.class)
-            .set("batchId", batchId)
-            .set("notificationRule", notificationRule)
-            .addToSet("notifications", notification);
-
-    NotificationBatch notificationBatch = wingsPersistence.upsert(query, updateOperations);
-
-    if (isLastNotificationInBatch(notification, notificationRule)) {
-      dispatch(notificationBatch.getNotifications(), notificationBatch.getNotificationRule().getNotificationGroups());
-      wingsPersistence.delete(notificationBatch);
-    }
-  }
-
-  private boolean isLastNotificationInBatch(Notification notification, NotificationRule notificationRule) {
-    // TODO:: revisit. not sure if this logic belongs here.
-    return BATCH_END_TEMPLATES.get(notificationRule.getExecutionScope())
-        .contains(NotificationMessageType.valueOf(notification.getNotificationTemplateId()));
   }
 
   private void dispatch(List<Notification> notifications, List<NotificationGroup> notificationGroups) {
