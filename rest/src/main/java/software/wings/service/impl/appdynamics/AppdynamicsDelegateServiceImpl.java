@@ -85,22 +85,6 @@ public class AppdynamicsDelegateServiceImpl implements AppdynamicsDelegateServic
   }
 
   @Override
-  public List<AppdynamicsBusinessTransaction> getBusinessTransactions(AppDynamicsConfig appDynamicsConfig,
-      long appdynamicsAppId, List<EncryptedDataDetail> encryptionDetails) throws IOException {
-    final Call<List<AppdynamicsBusinessTransaction>> request =
-        getAppdynamicsRestClient(appDynamicsConfig)
-            .listBusinessTransactions(getHeaderWithCredentials(appDynamicsConfig, encryptionDetails), appdynamicsAppId);
-    final Response<List<AppdynamicsBusinessTransaction>> response = request.execute();
-    if (response.isSuccessful()) {
-      return response.body();
-    } else {
-      logger.error("Request not successful. Reason: {}", response);
-      throw new WingsException(ErrorCode.APPDYNAMICS_ERROR)
-          .addParam("reason", "could not fetch Appdynamics business transactions : " + response);
-    }
-  }
-
-  @Override
   public List<AppdynamicsMetric> getTierBTMetrics(AppDynamicsConfig appDynamicsConfig, long appdynamicsAppId,
       long tierId, List<EncryptedDataDetail> encryptionDetails) throws IOException {
     final AppdynamicsTier tier = getAppdynamicsTier(appDynamicsConfig, appdynamicsAppId, tierId, encryptionDetails);
@@ -128,12 +112,13 @@ public class AppdynamicsDelegateServiceImpl implements AppdynamicsDelegateServic
 
   @Override
   public List<AppdynamicsMetricData> getTierBTMetricData(AppDynamicsConfig appDynamicsConfig, long appdynamicsAppId,
-      long tierId, String btName, int durantionInMinutes, List<EncryptedDataDetail> encryptionDetails)
+      long tierId, String btName, String hostName, int durantionInMinutes, List<EncryptedDataDetail> encryptionDetails)
       throws IOException {
     logger.debug("getting AppDynamics metric data");
     final AppdynamicsTier tier = getAppdynamicsTier(appDynamicsConfig, appdynamicsAppId, tierId, encryptionDetails);
+
     String metricPath = BT_PERFORMANCE_PATH_PREFIX + tier.getName() + "|" + btName + "|"
-        + "Individual Nodes|*|*";
+        + "Individual Nodes|" + hostName + "|*";
     Call<List<AppdynamicsMetricData>> tierBTMetricRequest =
         getAppdynamicsRestClient(appDynamicsConfig)
             .getMetricData(getHeaderWithCredentials(appDynamicsConfig, encryptionDetails), appdynamicsAppId, metricPath,

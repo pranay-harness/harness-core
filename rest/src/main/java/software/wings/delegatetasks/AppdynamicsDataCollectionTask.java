@@ -35,6 +35,8 @@ import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.Optional;
+import java.util.concurrent.Callable;
 import java.util.concurrent.TimeUnit;
 import java.util.function.Consumer;
 import java.util.function.Supplier;
@@ -106,10 +108,21 @@ public class AppdynamicsDataCollectionTask extends AbstractDelegateDataCollectio
           appdynamicsDelegateService.getTierBTMetrics(appDynamicsConfig, appId, tierId, encryptionDetails);
 
       final List<AppdynamicsMetricData> metricsData = new ArrayList<>();
+      List<Callable<List<AppdynamicsMetricData>>> callables = new ArrayList<>();
       for (AppdynamicsMetric appdynamicsMetric : tierMetrics) {
-        metricsData.addAll(appdynamicsDelegateService.getTierBTMetricData(
-            appDynamicsConfig, appId, tierId, appdynamicsMetric.getName(), DURATION_TO_ASK_MINUTES, encryptionDetails));
+        for (String hostName : dataCollectionInfo.getHosts()) {
+          callables.add(()
+                            -> appdynamicsDelegateService.getTierBTMetricData(appDynamicsConfig, appId, tierId,
+                                appdynamicsMetric.getName(), hostName, DURATION_TO_ASK_MINUTES, encryptionDetails));
+        }
       }
+      List<Optional<List<AppdynamicsMetricData>>> results = executeParrallel(callables);
+      results.forEach(result -> {
+        if (result.isPresent()) {
+          metricsData.addAll(result.get());
+        }
+      });
+
       for (int i = metricsData.size() - 1; i >= 0; i--) {
         String metricName = metricsData.get(i).getMetricName();
         if (metricName.contains("|")) {

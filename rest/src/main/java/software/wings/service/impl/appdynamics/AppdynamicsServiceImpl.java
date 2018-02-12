@@ -62,46 +62,6 @@ public class AppdynamicsServiceImpl implements AppdynamicsService {
   }
 
   @Override
-  public List<AppdynamicsBusinessTransaction> getBusinessTransactions(String settingId, long appdynamicsAppId)
-      throws IOException {
-    final SettingAttribute settingAttribute = settingsService.get(settingId);
-    SyncTaskContext syncTaskContext =
-        aContext().withAccountId(settingAttribute.getAccountId()).withAppId(Base.GLOBAL_APP_ID).build();
-
-    AppDynamicsConfig appDynamicsConfig = (AppDynamicsConfig) settingAttribute.getValue();
-    List<EncryptedDataDetail> encryptionDetails = secretManager.getEncryptionDetails(appDynamicsConfig, null, null);
-    return delegateProxyFactory.get(AppdynamicsDelegateService.class, syncTaskContext)
-        .getBusinessTransactions(appDynamicsConfig, appdynamicsAppId, encryptionDetails);
-  }
-
-  @Override
-  public List<AppdynamicsMetric> getTierBTMetrics(String settingId, long appdynamicsAppId, long tierId)
-      throws IOException {
-    final SettingAttribute settingAttribute = settingsService.get(settingId);
-    SyncTaskContext syncTaskContext =
-        aContext().withAccountId(settingAttribute.getAccountId()).withAppId(Base.GLOBAL_APP_ID).build();
-    syncTaskContext.setTimeout(APPDYNAMICS_CALL_TIMEOUT);
-    AppDynamicsConfig appDynamicsConfig = (AppDynamicsConfig) settingAttribute.getValue();
-    List<EncryptedDataDetail> encryptionDetails = secretManager.getEncryptionDetails(appDynamicsConfig, null, null);
-    return delegateProxyFactory.get(AppdynamicsDelegateService.class, syncTaskContext)
-        .getTierBTMetrics(appDynamicsConfig, appdynamicsAppId, tierId, encryptionDetails);
-  }
-
-  @Override
-  public List<AppdynamicsMetricData> getTierBTMetricData(
-      String settingId, long appdynamicsAppId, long tierId, String btName, int durantionInMinutes) throws IOException {
-    final SettingAttribute settingAttribute = settingsService.get(settingId);
-    SyncTaskContext syncTaskContext =
-        aContext().withAccountId(settingAttribute.getAccountId()).withAppId(Base.GLOBAL_APP_ID).build();
-    syncTaskContext.setTimeout(APPDYNAMICS_CALL_TIMEOUT);
-    AppDynamicsConfig appDynamicsConfig = (AppDynamicsConfig) settingAttribute.getValue();
-    List<EncryptedDataDetail> encryptionDetails = secretManager.getEncryptionDetails(appDynamicsConfig, null, null);
-    return delegateProxyFactory.get(AppdynamicsDelegateService.class, syncTaskContext)
-        .getTierBTMetricData(
-            appDynamicsConfig, appdynamicsAppId, tierId, btName, durantionInMinutes, encryptionDetails);
-  }
-
-  @Override
   public void validateConfig(final SettingAttribute settingAttribute) {
     try {
       SyncTaskContext syncTaskContext =

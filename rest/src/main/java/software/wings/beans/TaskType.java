@@ -102,13 +102,8 @@ public enum TaskType {
   APP_DYNAMICS(TaskGroup.APPDYNAMICS, HttpTask.class, AppdynamicsValidation.class),
   APPDYNAMICS_CONFIGURATION_VALIDATE_TASK(
       TaskGroup.APPDYNAMICS, ServiceImplDelegateTask.class, AppdynamicsValidation.class),
-  APPDYNAMICS_GET_BUSINESS_TRANSACTION_TASK(
-      TaskGroup.APPDYNAMICS, ServiceImplDelegateTask.class, AppdynamicsValidation.class),
   APPDYNAMICS_GET_APP_TASK(TaskGroup.APPDYNAMICS, ServiceImplDelegateTask.class, AppdynamicsValidation.class),
   APPDYNAMICS_GET_TIER_TASK(TaskGroup.APPDYNAMICS, ServiceImplDelegateTask.class, AppdynamicsValidation.class),
-  APPDYNAMICS_GET_NODES_TASK(TaskGroup.APPDYNAMICS, ServiceImplDelegateTask.class, AppdynamicsValidation.class),
-  APPDYNAMICS_GET_METRICES_OF_BT(TaskGroup.APPDYNAMICS, ServiceImplDelegateTask.class, AppdynamicsValidation.class),
-  APPDYNAMICS_GET_METRICES_DATA(TaskGroup.APPDYNAMICS, ServiceImplDelegateTask.class, AppdynamicsValidation.class),
   APPDYNAMICS_COLLECT_METRIC_DATA(
       TaskGroup.APPDYNAMICS, AppdynamicsDataCollectionTask.class, AppdynamicsValidation.class),
   NEWRELIC_VALIDATE_CONFIGURATION_TASK(TaskGroup.NEWRELIC, ServiceImplDelegateTask.class, NewRelicValidation.class),

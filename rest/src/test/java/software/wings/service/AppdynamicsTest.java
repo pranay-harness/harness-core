@@ -2,7 +2,6 @@ package software.wings.service;
 
 import static java.util.Arrays.asList;
 import static org.junit.Assert.assertFalse;
-import static org.junit.Assert.assertNotNull;
 import static org.mockito.Matchers.any;
 import static org.mockito.Matchers.anyObject;
 import static org.mockito.Mockito.when;
@@ -32,8 +31,6 @@ import software.wings.beans.User;
 import software.wings.delegatetasks.DelegateProxyFactory;
 import software.wings.dl.WingsPersistence;
 import software.wings.security.UserThreadLocal;
-import software.wings.service.impl.appdynamics.AppdynamicsMetric;
-import software.wings.service.impl.appdynamics.AppdynamicsMetricData;
 import software.wings.service.impl.appdynamics.AppdynamicsTier;
 import software.wings.service.impl.newrelic.NewRelicApplication;
 import software.wings.service.impl.security.SecretManagementDelegateServiceImpl;
@@ -132,37 +129,6 @@ public class AppdynamicsTest extends WingsBaseTest {
     NewRelicApplication application = getDemoApp();
     List<AppdynamicsTier> tiers = appdynamicsService.getTiers(settingAttribute.getUuid(), application.getId());
     assertFalse(tiers.isEmpty());
-  }
-
-  @Test
-  @Repeat(times = 5, successes = 1)
-  public void getTierBTMetrics() throws IOException {
-    NewRelicApplication application = getDemoApp();
-    List<AppdynamicsTier> tiers = appdynamicsService.getTiers(settingAttribute.getUuid(), application.getId());
-    assertFalse(tiers.isEmpty());
-    for (AppdynamicsTier tier : tiers) {
-      List<AppdynamicsMetric> btMetrics =
-          appdynamicsService.getTierBTMetrics(settingAttribute.getUuid(), application.getId(), tier.getId());
-      assertFalse(btMetrics.isEmpty());
-    }
-  }
-
-  @Test
-  @Repeat(times = 5, successes = 1)
-  public void getTierBTMetricData() throws IOException {
-    NewRelicApplication application = getDemoApp();
-    List<AppdynamicsTier> tiers = appdynamicsService.getTiers(settingAttribute.getUuid(), application.getId());
-    assertFalse(tiers.isEmpty());
-    for (AppdynamicsTier tier : tiers) {
-      List<AppdynamicsMetric> btMetrics =
-          appdynamicsService.getTierBTMetrics(settingAttribute.getUuid(), application.getId(), tier.getId());
-      assertFalse(btMetrics.isEmpty());
-      for (AppdynamicsMetric btMetric : btMetrics) {
-        List<AppdynamicsMetricData> tierBTMetricData = appdynamicsService.getTierBTMetricData(
-            settingAttribute.getUuid(), application.getId(), tier.getId(), btMetric.getName(), 5);
-        assertNotNull(tierBTMetricData);
-      }
-    }
   }
 
   private NewRelicApplication getDemoApp() throws IOException {
