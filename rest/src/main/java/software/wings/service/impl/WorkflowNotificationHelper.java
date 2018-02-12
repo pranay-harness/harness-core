@@ -9,7 +9,6 @@ import static software.wings.beans.FailureNotification.Builder.aFailureNotificat
 import static software.wings.beans.InformationNotification.Builder.anInformationNotification;
 import static software.wings.beans.OrchestrationWorkflowType.BUILD;
 import static software.wings.common.NotificationMessageResolver.NotificationMessageType.WORKFLOW_NOTIFICATION;
-import static software.wings.common.NotificationMessageResolver.NotificationMessageType.WORKFLOW_PHASE_NOTIFICATION;
 import static software.wings.sm.ExecutionStatus.ABORTED;
 import static software.wings.sm.ExecutionStatus.ERROR;
 import static software.wings.sm.ExecutionStatus.FAILED;
@@ -139,7 +138,7 @@ public class WorkflowNotificationHelper {
                                                  .withAppId(context.getAppId())
                                                  .withEntityId(context.getWorkflowExecutionId())
                                                  .withEntityType(EntityType.ORCHESTRATED_DEPLOYMENT)
-                                                 .withNotificationTemplateId(WORKFLOW_PHASE_NOTIFICATION.name())
+                                                 .withNotificationTemplateId(WORKFLOW_NOTIFICATION.name())
                                                  .withNotificationTemplateVariables(placeHolderValues)
                                                  .build();
       notificationService.sendNotificationAsync(notification, notificationRules);
@@ -151,7 +150,7 @@ public class WorkflowNotificationHelper {
                                              .withEntityId(context.getWorkflowExecutionId())
                                              .withEntityType(EntityType.ORCHESTRATED_DEPLOYMENT)
                                              .withEntityName("Deployment")
-                                             .withNotificationTemplateId(WORKFLOW_PHASE_NOTIFICATION.name())
+                                             .withNotificationTemplateId(WORKFLOW_NOTIFICATION.name())
                                              .withNotificationTemplateVariables(placeHolderValues)
                                              .withExecutionId(context.getWorkflowExecutionId())
                                              .build();
@@ -250,10 +249,11 @@ public class WorkflowNotificationHelper {
     placeHolderValues.put(
         "ENV_NAME", BUILD.equals(context.getOrchestrationWorkflowType()) ? "no environment" : env.getName());
     if (phaseSubWorkflow != null) {
-      placeHolderValues.put("PHASE_NAME", phaseSubWorkflow.getName());
+      placeHolderValues.put("PHASE_NAME", phaseSubWorkflow.getName() + " of ");
       placeHolderValues.put(
           "ARTIFACTS", getArtifactsMessage(context, workflowExecution, WORKFLOW_PHASE, phaseSubWorkflow));
     } else {
+      placeHolderValues.put("PHASE_NAME", "");
       placeHolderValues.put("ARTIFACTS", getArtifactsMessage(context, workflowExecution, WORKFLOW, null));
     }
     return placeHolderValues;
