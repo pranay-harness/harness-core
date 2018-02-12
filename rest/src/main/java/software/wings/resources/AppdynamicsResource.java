@@ -13,9 +13,6 @@ import software.wings.security.annotations.DelegateAuth;
 import software.wings.security.annotations.LearningEngineAuth;
 import software.wings.service.impl.analysis.TSRequest;
 import software.wings.service.impl.analysis.TimeSeriesMLAnalysisRecord;
-import software.wings.service.impl.appdynamics.AppdynamicsBusinessTransaction;
-import software.wings.service.impl.appdynamics.AppdynamicsMetric;
-import software.wings.service.impl.appdynamics.AppdynamicsMetricData;
 import software.wings.service.impl.appdynamics.AppdynamicsTier;
 import software.wings.service.impl.newrelic.NewRelicApplication;
 import software.wings.service.impl.newrelic.NewRelicMetricAnalysisRecord;
@@ -71,36 +68,6 @@ public class AppdynamicsResource implements MetricAnalysisResource {
       @QueryParam("settingId") final String settingId, @QueryParam("appdynamicsAppId") long appdynamicsAppId)
       throws IOException {
     return new RestResponse<>(appdynamicsService.getTiers(settingId, appdynamicsAppId));
-  }
-
-  @GET
-  @Path("/business-transactions")
-  @Timed
-  @ExceptionMetered
-  public RestResponse<List<AppdynamicsBusinessTransaction>> getAllBusinessTransactions(
-      @QueryParam("accountId") String accountId, @QueryParam("settingId") final String settingId,
-      @QueryParam("appdynamicsAppId") long appdynamicsAppId) throws IOException {
-    return new RestResponse<>(appdynamicsService.getBusinessTransactions(settingId, appdynamicsAppId));
-  }
-
-  @GET
-  @Path("/tier-bt-metrics")
-  @Timed
-  @ExceptionMetered
-  public RestResponse<List<AppdynamicsMetric>> getTierBTMetrics(@QueryParam("settingId") final String settingId,
-      @QueryParam("appdynamicsAppId") long appdynamicsAppId, @QueryParam("tierId") long tierId) throws IOException {
-    return new RestResponse<>(appdynamicsService.getTierBTMetrics(settingId, appdynamicsAppId, tierId));
-  }
-
-  @GET
-  @Path("/get-metric-data")
-  @Timed
-  @ExceptionMetered
-  public RestResponse<List<AppdynamicsMetricData>> getTierBTMetricData(@QueryParam("settingId") final String settingId,
-      @QueryParam("appdynamicsAppId") long appdynamicsAppId, @QueryParam("tierId") long tierId,
-      @QueryParam("btName") String btName, @QueryParam("duration-in-mins") int durationInMinutes) throws IOException {
-    return new RestResponse<>(
-        appdynamicsService.getTierBTMetricData(settingId, appdynamicsAppId, tierId, btName, durationInMinutes));
   }
 
   @POST

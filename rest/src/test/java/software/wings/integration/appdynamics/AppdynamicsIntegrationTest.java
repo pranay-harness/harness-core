@@ -4,8 +4,11 @@ import static java.util.Arrays.asList;
 import static org.apache.commons.lang3.StringUtils.isBlank;
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertFalse;
+import static org.junit.Assert.assertNotNull;
 import static org.junit.Assert.assertTrue;
 import static software.wings.beans.SettingAttribute.Builder.aSettingAttribute;
+
+import com.google.inject.Inject;
 
 import io.harness.rule.RepeatRule.Repeat;
 import org.junit.Before;
@@ -16,15 +19,16 @@ import software.wings.beans.RestResponse;
 import software.wings.beans.SettingAttribute;
 import software.wings.beans.SettingAttribute.Category;
 import software.wings.integration.BaseIntegrationTest;
-import software.wings.service.impl.appdynamics.AppdynamicsBusinessTransaction;
 import software.wings.service.impl.appdynamics.AppdynamicsMetric;
 import software.wings.service.impl.appdynamics.AppdynamicsMetricData;
+import software.wings.service.impl.appdynamics.AppdynamicsNode;
 import software.wings.service.impl.appdynamics.AppdynamicsTier;
 import software.wings.service.impl.newrelic.NewRelicApplication;
+import software.wings.service.intfc.appdynamics.AppdynamicsDelegateService;
+import software.wings.service.intfc.security.SecretManager;
 import software.wings.utils.JsonUtils;
 
 import java.util.List;
-import java.util.concurrent.TimeUnit;
 import javax.ws.rs.client.WebTarget;
 import javax.ws.rs.core.GenericType;
 
@@ -33,6 +37,8 @@ import javax.ws.rs.core.GenericType;
  */
 public class AppdynamicsIntegrationTest extends BaseIntegrationTest {
   final String ACCOUNT_ID = "kmpySmUISimoRrJL6NL73w";
+  @Inject private AppdynamicsDelegateService appdynamicsDelegateService;
+  @Inject private SecretManager secretManager;
 
   @Before
   public void setUp() throws Exception {
@@ -116,50 +122,11 @@ public class AppdynamicsIntegrationTest extends BaseIntegrationTest {
 
   @Test
   @Repeat(times = 5, successes = 1)
-  public void testGetAllBusinessTransactions() throws Exception {
-    final List<SettingAttribute> appdynamicsSettings =
-        settingsService.getGlobalSettingAttributesByType(ACCOUNT_ID, "APP_DYNAMICS");
-    assertEquals(1, appdynamicsSettings.size());
-
-    // get all applications
-    WebTarget target = client.target(API_BASE
-        + "/appdynamics/applications?settingId=" + appdynamicsSettings.get(0).getUuid() + "&accountId=" + ACCOUNT_ID);
-    RestResponse<List<NewRelicApplication>> restResponse =
-        getRequestBuilderWithAuthHeader(target).get(new GenericType<RestResponse<List<NewRelicApplication>>>() {});
-
-    long appId = 0;
-
-    for (NewRelicApplication application : restResponse.getResource()) {
-      if (application.getName().equalsIgnoreCase("MyApp")) {
-        appId = application.getId();
-        break;
-      }
-    }
-
-    assertTrue("could not find MyApp application in appdynamics", appId > 0);
-    WebTarget btTarget = client.target(API_BASE + "/appdynamics/business-transactions?settingId="
-        + appdynamicsSettings.get(0).getUuid() + "&accountId=" + ACCOUNT_ID + "&appdynamicsAppId=" + appId);
-    RestResponse<List<AppdynamicsBusinessTransaction>> btRestResponse = getRequestBuilderWithAuthHeader(btTarget).get(
-        new GenericType<RestResponse<List<AppdynamicsBusinessTransaction>>>() {});
-    assertFalse(btRestResponse.getResource().isEmpty());
-
-    for (AppdynamicsBusinessTransaction bt : btRestResponse.getResource()) {
-      assertTrue(bt.getId() > 0);
-      assertTrue(bt.getTierId() > 0);
-      assertFalse(isBlank(bt.getName()));
-      assertFalse(isBlank(bt.getEntryPointType()));
-      assertFalse(isBlank(bt.getInternalName()));
-      assertFalse(isBlank(bt.getTierName()));
-      assertFalse(isBlank(bt.getInternalName()));
-    }
-  }
-
-  @Test
-  @Repeat(times = 5, successes = 1)
   public void testGetAllTierBTMetrics() throws Exception {
     final List<SettingAttribute> appdynamicsSettings =
         settingsService.getGlobalSettingAttributesByType(ACCOUNT_ID, "APP_DYNAMICS");
     assertEquals(1, appdynamicsSettings.size());
+    AppDynamicsConfig appDynamicsConfig = (AppDynamicsConfig) appdynamicsSettings.get(0).getValue();
 
     // get all applications
     WebTarget target = client.target(API_BASE
@@ -184,14 +151,9 @@ public class AppdynamicsIntegrationTest extends BaseIntegrationTest {
     assertFalse(tierRestResponse.getResource().isEmpty());
 
     for (AppdynamicsTier tier : tierRestResponse.getResource()) {
-      WebTarget btMetricsTarget =
-          client.target(API_BASE + "/appdynamics/tier-bt-metrics?settingId=" + appdynamicsSettings.get(0).getUuid()
-              + "&accountId=" + ACCOUNT_ID + "&appdynamicsAppId=" + appId + "&tierId=" + tier.getId());
-      RestResponse<List<AppdynamicsMetric>> tierBTMResponse =
-          getRequestBuilderWithAuthHeader(btMetricsTarget)
-              .get(new GenericType<RestResponse<List<AppdynamicsMetric>>>() {});
+      List<AppdynamicsMetric> btMetrics = appdynamicsDelegateService.getTierBTMetrics(
+          appDynamicsConfig, appId, tier.getId(), secretManager.getEncryptionDetails(appDynamicsConfig, null, null));
 
-      List<AppdynamicsMetric> btMetrics = tierBTMResponse.getResource();
       assertFalse(btMetrics.isEmpty());
 
       for (AppdynamicsMetric btMetric : btMetrics) {
@@ -213,6 +175,7 @@ public class AppdynamicsIntegrationTest extends BaseIntegrationTest {
     final List<SettingAttribute> appdynamicsSettings =
         settingsService.getGlobalSettingAttributesByType(ACCOUNT_ID, "APP_DYNAMICS");
     assertEquals(1, appdynamicsSettings.size());
+    AppDynamicsConfig appDynamicsConfig = (AppDynamicsConfig) appdynamicsSettings.get(0).getValue();
 
     // get all applications
     WebTarget target = client.target(API_BASE
@@ -237,29 +200,22 @@ public class AppdynamicsIntegrationTest extends BaseIntegrationTest {
     assertFalse(tierRestResponse.getResource().isEmpty());
 
     for (AppdynamicsTier tier : tierRestResponse.getResource()) {
-      WebTarget btMetricsTarget =
-          client.target(API_BASE + "/appdynamics/tier-bt-metrics?settingId=" + appdynamicsSettings.get(0).getUuid()
-              + "&accountId=" + ACCOUNT_ID + "&appdynamicsAppId=" + appId + "&tierId=" + tier.getId());
-      RestResponse<List<AppdynamicsMetric>> tierBTMResponse =
-          getRequestBuilderWithAuthHeader(btMetricsTarget)
-              .get(new GenericType<RestResponse<List<AppdynamicsMetric>>>() {});
-
-      List<AppdynamicsMetric> btMetrics = tierBTMResponse.getResource();
+      List<AppdynamicsMetric> btMetrics = appdynamicsDelegateService.getTierBTMetrics(
+          appDynamicsConfig, appId, tier.getId(), secretManager.getEncryptionDetails(appDynamicsConfig, null, null));
       assertFalse(btMetrics.isEmpty());
+
+      List<AppdynamicsNode> nodes = appdynamicsDelegateService.getNodes(
+          appDynamicsConfig, appId, tier.getId(), secretManager.getEncryptionDetails(appDynamicsConfig, null, null));
 
       for (AppdynamicsMetric btMetric : btMetrics) {
         assertFalse(isBlank(btMetric.getName()));
         assertFalse("failed for " + btMetric.getName(), btMetric.getChildMetrices().isEmpty());
 
-        final String url = API_BASE + "/appdynamics/get-metric-data?settingId=" + appdynamicsSettings.get(0).getUuid()
-            + "&accountId=" + ACCOUNT_ID + "&appdynamicsAppId=" + appId + "&tierId=" + tier.getId() + "&btName="
-            + btMetric.getName() + "&startTime=" + (System.currentTimeMillis() - TimeUnit.MINUTES.toMillis(5))
-            + "&endTime=" + System.currentTimeMillis();
-        WebTarget btMetricsDataTarget = client.target(url.replaceAll(" ", "%20"));
-        RestResponse<List<AppdynamicsMetricData>> tierBTMDataResponse =
-            getRequestBuilderWithAuthHeader(btMetricsDataTarget)
-                .get(new GenericType<RestResponse<List<AppdynamicsMetricData>>>() {});
-        System.out.println(JsonUtils.asJson(tierBTMDataResponse.getResource()));
+        List<AppdynamicsMetricData> tierBTMetricData =
+            appdynamicsDelegateService.getTierBTMetricData(appDynamicsConfig, appId, tier.getId(), btMetric.getName(),
+                nodes.get(0).getName(), 5, secretManager.getEncryptionDetails(appDynamicsConfig, null, null));
+        assertNotNull(tierBTMetricData);
+        System.out.println(JsonUtils.asJson(tierBTMetricData.size()));
       }
     }
   }

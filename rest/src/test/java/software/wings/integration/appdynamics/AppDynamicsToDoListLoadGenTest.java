@@ -11,7 +11,7 @@ import javax.ws.rs.client.WebTarget;
  */
 public class AppDynamicsToDoListLoadGenTest extends BaseIntegrationTest {
   //  private final String baseUrl = "http://rsingh-test-1026806332.us-east-1.elb.amazonaws.com";
-  private final String baseUrl = "http://ec2-34-207-252-238.compute-1.amazonaws.com:8080";
+  private final String baseUrl = "http://35.192.85.162";
   //  private final String baseUrl = "http://localhost:8080";
   @Test
   @Ignore
