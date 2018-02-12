@@ -10,6 +10,7 @@ import static java.util.Collections.emptyList;
 import static java.util.Collections.singletonList;
 import static java.util.stream.Collectors.toList;
 import static org.apache.commons.lang3.StringUtils.isBlank;
+import static software.wings.exception.WingsException.ReportTarget.USER;
 import static software.wings.helpers.ext.jenkins.BuildDetails.Builder.aBuildDetails;
 
 import com.google.common.collect.Lists;
@@ -488,23 +489,24 @@ public class JenkinsImpl implements Jenkins {
   private void jenkinsExceptionHandler(Exception e) {
     if (e instanceof HttpResponseException) {
       if (((HttpResponseException) e).getStatusCode() == 401) {
-        throw new WingsException(ErrorCode.INVALID_ARTIFACT_SERVER).addParam("message", "Invalid Jenkins credentials");
+        throw new WingsException(ErrorCode.INVALID_ARTIFACT_SERVER, USER)
+            .addParam("message", "Invalid Jenkins credentials");
       } else if (((HttpResponseException) e).getStatusCode() == 403) {
-        throw new WingsException(ErrorCode.INVALID_ARTIFACT_SERVER)
+        throw new WingsException(ErrorCode.INVALID_ARTIFACT_SERVER, USER)
             .addParam("message", "User not authorized to access jenkins");
       }
-      final WingsException wingsException = new WingsException(ErrorCode.JENKINS_ERROR);
+      final WingsException wingsException = new WingsException(ErrorCode.JENKINS_ERROR, USER);
       wingsException.addParam("message", "Jenkins server may not be running");
       wingsException.addParam("jenkinsResponse", e.getMessage());
       throw wingsException;
     } else if (e instanceof UncheckedTimeoutException) {
       logger.warn("Jenkins server request did not succeed within 25 secs", e);
-      final WingsException wingsException = new WingsException(ErrorCode.JENKINS_ERROR);
+      final WingsException wingsException = new WingsException(ErrorCode.JENKINS_ERROR, USER);
       wingsException.addParam("message", "Failed to get job details");
       wingsException.addParam("jenkinsResponse", "Server Error");
       throw wingsException;
     } else {
-      throw new WingsException(ErrorCode.INVALID_ARTIFACT_SERVER).addParam("message", e.getMessage());
+      throw new WingsException(ErrorCode.INVALID_ARTIFACT_SERVER, USER).addParam("message", e.getMessage());
     }
   }
 
