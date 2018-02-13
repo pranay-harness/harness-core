@@ -1,0 +1,26 @@
+# Common build base for any Java projects
+# used for building an image that can be used for running all the tests inside a Docker image, source of https://hub.docker.com/r/harness/java-build-base/tags/
+FROM harness/serverjre_8:131
+RUN yum install -y wget git unzip && \
+    wget http://repos.fedorapeople.org/repos/dchen/apache-maven/epel-apache-maven.repo -O /etc/yum.repos.d/epel-apache-maven.repo && \
+    yum install -y apache-maven
+
+COPY . /opt/harness/
+WORKDIR /opt/harness
+
+# run a bunch of jobs to force download of a number of Maven plugins
+RUN cd /opt/harness && \
+    mvn install -DskipTests=true -Djacoco.skip=true && \
+    mvn test -DskipTests=true && \
+    mvn -pl rest -Dtest=software.wings.service.AppServiceTest test && \
+    mvn install -pl tools/config -pl tools/checkstyle && \
+    mvn checkstyle:checkstyle && \
+    mvn findbugs:findbugs -Dfindbugs.skip=true && \
+    wget --no-check-certificate --no-cookies --header "Cookie: oraclelicense=accept-securebackup-cookie" "http://download.oracle.com/otn-pub/java/jce/8/jce_policy-8.zip" -O /tmp/jce_policy-8.zip && \
+    (cd /tmp/ && unzip /tmp/jce_policy-8.zip) && \
+    mv -f /tmp/UnlimitedJCEPolicyJDK8/*.jar /usr/java/default/jre/lib/security/ && \
+    rm -rf /tmp/Unli* /tmp/jce_policy-8.zip && \
+    mvn dependency:go-offline && \
+    (cd rest; mvn test -DskipTests=true) && \
+    mvn clean && \
+    rm -rf /opt/harness/*
