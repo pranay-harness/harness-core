@@ -10,7 +10,6 @@ import static software.wings.beans.ErrorCode.INVALID_ARGUMENT;
 import static software.wings.beans.ErrorCode.INVALID_REQUEST;
 import static software.wings.beans.ExecutionCredential.ExecutionType.SSH;
 import static software.wings.beans.OrchestrationWorkflowType.BUILD;
-import static software.wings.beans.ResponseMessage.aResponseMessage;
 import static software.wings.beans.SSHExecutionCredential.Builder.aSSHExecutionCredential;
 import static software.wings.beans.SearchFilter.Operator.EQ;
 import static software.wings.beans.SortOrder.Builder.aSortOrder;
@@ -27,6 +26,9 @@ import static software.wings.beans.trigger.TriggerConditionType.PIPELINE_COMPLET
 import static software.wings.beans.trigger.TriggerConditionType.SCHEDULED;
 import static software.wings.beans.trigger.TriggerConditionType.WEBHOOK;
 import static software.wings.dl.PageRequest.Builder.aPageRequest;
+import static software.wings.exception.WingsException.ALERTING;
+import static software.wings.exception.WingsException.ReportTarget.USER;
+import static software.wings.exception.WingsException.ReportTarget.USER_ADMIN;
 import static software.wings.sm.ExecutionStatus.SUCCESS;
 import static software.wings.sm.StateType.ENV_STATE;
 import static software.wings.utils.Validator.duplicateCheck;
@@ -322,7 +324,7 @@ public class TriggerServiceImpl implements TriggerService {
     List<Artifact> artifacts = new ArrayList<>();
     Trigger trigger = getTrigger(appId, webHookToken);
     if (trigger == null) {
-      throw new WingsException("No Trigger associated to the given token");
+      throw new WingsException("No Trigger associated to the given token", USER_ADMIN);
     }
     logger.info("Triggering  the execution for the Trigger {} by webhook", trigger.getName());
     addArtifactsFromVersionsOfWebHook(trigger, serviceBuildNumbers, artifacts);
@@ -335,7 +337,7 @@ public class TriggerServiceImpl implements TriggerService {
       String appId, String webHookToken, Artifact artifact, Map<String, String> parameters) {
     Trigger trigger = getTrigger(appId, webHookToken);
     if (trigger == null) {
-      throw new WingsException("No Trigger associated to the given token");
+      throw new WingsException("No Trigger associated to the given token", USER_ADMIN);
     }
     logger.info("Triggering  the execution for the Trigger {} by webhook", trigger.getName());
     List<Artifact> artifacts = new ArrayList<>();
@@ -389,7 +391,7 @@ public class TriggerServiceImpl implements TriggerService {
                           .findFirst()
                           .orElse(null);
     if (trigger == null) {
-      throw new WingsException("Trigger does not exist or Invalid WebHook token");
+      throw new WingsException("Trigger does not exist or Invalid WebHook token", ALERTING);
     }
     return trigger;
   }
@@ -410,7 +412,7 @@ public class TriggerServiceImpl implements TriggerService {
         logger.warn("Error occurred while retrieving Pipeline {} ", trigger.getWorkflowId());
       }
       if (workflow == null) {
-        throw new WingsException("Workflow " + trigger.getWorkflowName() + "does not exist.");
+        throw new WingsException("Workflow " + trigger.getWorkflowName() + " does not exist.", ALERTING);
       }
       if (!BUILD.equals(workflow.getOrchestrationWorkflow().getOrchestrationWorkflowType())) {
         if (workflow.getOrchestrationWorkflow().isServiceTemplatized()) {
@@ -428,7 +430,7 @@ public class TriggerServiceImpl implements TriggerService {
         logger.warn("Error occurred while retrieving Pipeline {} ", trigger.getWorkflowId());
       }
       if (pipeline == null) {
-        throw new WingsException("Pipeline " + trigger.getWorkflowName() + " does not exist.");
+        throw new WingsException("Pipeline " + trigger.getWorkflowName() + " does not exist.", ALERTING);
       }
       services = pipeline.getServices().stream().collect(Collectors.toMap(Base::getUuid, Service::getName));
     }
@@ -764,7 +766,7 @@ public class TriggerServiceImpl implements TriggerService {
             getCronDescription(ScheduledTriggerJob.PREFIX + scheduledTriggerCondition.getCronExpression()));
       }
     } catch (Exception ex) {
-      throw new WingsException(INVALID_ARGUMENT).addParam("args", "Invalid cron expression");
+      throw new WingsException(INVALID_ARGUMENT, USER).addParam("args", "Invalid cron expression");
     }
   }
 
@@ -775,7 +777,7 @@ public class TriggerServiceImpl implements TriggerService {
       return StringUtils.lowerCase("" + description.charAt(0)) + description.substring(1);
     } catch (Exception e) {
       logger.error("Error parsing cron expression: " + cronExpression, e);
-      throw new WingsException(INVALID_ARGUMENT).addParam("args", "Invalid cron expression");
+      throw new WingsException(INVALID_ARGUMENT, USER).addParam("args", "Invalid cron expression");
     }
   }
 
@@ -842,7 +844,7 @@ public class TriggerServiceImpl implements TriggerService {
     logger.info("Received the trigger execution for appId {} and infraMappingId {}");
     InfrastructureMapping infrastructureMapping = infrastructureMappingService.get(appId, infraMappingId);
     if (infrastructureMapping == null) {
-      throw new WingsException(INVALID_REQUEST)
+      throw new WingsException(INVALID_REQUEST, ALERTING)
           .addParam("message", "Infrastructure Mapping" + infraMappingId + " does not exist");
     }
     List<Trigger> triggers =
@@ -939,7 +941,7 @@ public class TriggerServiceImpl implements TriggerService {
         validateAndSetServiceInfraWorkflows(trigger);
         break;
       default:
-        throw new WingsException(INVALID_REQUEST).addParam("message", "Invalid trigger condition type");
+        throw new WingsException(INVALID_REQUEST, USER).addParam("message", "Invalid trigger condition type");
     }
   }
 
@@ -949,7 +951,7 @@ public class TriggerServiceImpl implements TriggerService {
       return;
     }
     if (isEmpty(services)) {
-      throw new WingsException(INVALID_REQUEST).addParam("message", "Pipeline services can not be empty");
+      throw new WingsException(INVALID_REQUEST, USER).addParam("message", "Pipeline services can not be empty");
     }
 
     Map<String, String> serviceIdNames =
@@ -960,7 +962,7 @@ public class TriggerServiceImpl implements TriggerService {
       switch (artifactSelection.getType()) {
         case LAST_DEPLOYED:
           if (isBlank(artifactSelection.getWorkflowId())) {
-            throw new WingsException(INVALID_REQUEST)
+            throw new WingsException(INVALID_REQUEST, USER)
                 .addParam("message", "Pipeline cannot be empty for Last deployed type");
           }
           if (ORCHESTRATION.equals(trigger.getWorkflowType())) {
@@ -977,7 +979,7 @@ public class TriggerServiceImpl implements TriggerService {
           break;
         case LAST_COLLECTED:
           if (isBlank(artifactSelection.getArtifactStreamId())) {
-            throw new WingsException(INVALID_REQUEST)
+            throw new WingsException(INVALID_REQUEST, USER)
                 .addParam("message", "Artifact Source cannot be empty for Last collected type");
           }
           artifactStream = validateArtifactStream(trigger.getAppId(), artifactSelection.getArtifactStreamId());
@@ -987,7 +989,7 @@ public class TriggerServiceImpl implements TriggerService {
           break;
         case WEBHOOK_VARIABLE:
           if (isBlank(artifactSelection.getArtifactStreamId())) {
-            throw new WingsException(INVALID_REQUEST)
+            throw new WingsException(INVALID_REQUEST, USER)
                 .addParam("message", "Artifact Source cannot be empty for Webhook Variable type");
           }
           artifactStream = validateArtifactStream(trigger.getAppId(), artifactSelection.getArtifactStreamId());
@@ -999,8 +1001,7 @@ public class TriggerServiceImpl implements TriggerService {
         case PIPELINE_SOURCE:
           break;
         default:
-          throw new WingsException(aResponseMessage().code(INVALID_REQUEST).build())
-              .addParam("message", "Invalid artifact selection type");
+          throw new WingsException(INVALID_REQUEST, USER).addParam("message", "Invalid artifact selection type");
       }
       if (serviceIdNames.get(artifactSelection.getServiceId()) == null) {
         service = serviceResourceService.get(trigger.getAppId(), artifactSelection.getServiceId(), false);
@@ -1029,7 +1030,7 @@ public class TriggerServiceImpl implements TriggerService {
         }
       });
     } else {
-      throw new WingsException("ServiceInfra and Workflow Mapping can not be empty");
+      throw new WingsException("ServiceInfra and Workflow Mapping can not be empty.", USER);
     }
   }
 
