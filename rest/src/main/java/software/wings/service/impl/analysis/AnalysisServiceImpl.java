@@ -10,11 +10,13 @@ import static software.wings.utils.Switch.unhandled;
 import com.google.common.collect.Sets;
 import com.google.inject.Inject;
 
+import org.apache.commons.codec.digest.DigestUtils;
 import org.mongodb.morphia.query.FindOptions;
 import org.mongodb.morphia.query.Query;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import software.wings.annotation.Encryptable;
+import software.wings.api.PhaseElement;
 import software.wings.app.MainConfiguration;
 import software.wings.beans.Base;
 import software.wings.beans.DelegateTask.SyncTaskContext;
@@ -49,6 +51,7 @@ import software.wings.service.intfc.logz.LogzDelegateService;
 import software.wings.service.intfc.security.SecretManager;
 import software.wings.service.intfc.splunk.SplunkDelegateService;
 import software.wings.service.intfc.sumo.SumoDelegateService;
+import software.wings.sm.ContextElement;
 import software.wings.sm.ExecutionStatus;
 import software.wings.sm.StateExecutionInstance;
 import software.wings.sm.StateType;
@@ -262,6 +265,41 @@ public class AnalysisServiceImpl implements AnalysisService {
 
     logger.debug("returning " + records.size() + " records for request: " + logRequest);
     return records;
+  }
+
+  @Override
+  public boolean saveFeedback(LogMLFeedback feedback, StateType stateType) {
+    StateExecutionInstance stateExecutionInstance =
+        wingsPersistence.get(StateExecutionInstance.class, feedback.getAppId(), feedback.getStateExecutionId());
+
+    if (stateExecutionInstance == null) {
+      throw new WingsException("Unable to find state execution for id " + stateExecutionInstance.getUuid());
+    }
+
+    Optional<ContextElement> optionalElement = stateExecutionInstance.getContextElements()
+                                                   .stream()
+                                                   .filter(contextElement -> contextElement instanceof PhaseElement)
+                                                   .findFirst();
+    if (!optionalElement.isPresent()) {
+      throw new WingsException(
+          "Unable to find phase element for state execution id " + stateExecutionInstance.getUuid());
+    }
+
+    PhaseElement phaseElement = (PhaseElement) optionalElement.get();
+
+    LogMLFeedbackRecord mlFeedbackRecord = LogMLFeedbackRecord.builder()
+                                               .applicationId(feedback.getAppId())
+                                               .serviceId(phaseElement.getServiceElement().getUuid())
+                                               .workflowId(stateExecutionInstance.getWorkflowId())
+                                               .workflowExecutionId(stateExecutionInstance.getExecutionUuid())
+                                               .logMessage(feedback.getText())
+                                               .feedbackType(feedback.getFeedbackType())
+                                               .logMD5Hash(DigestUtils.md5Hex(feedback.getText()))
+                                               .stateType(stateType)
+                                               .build();
+    wingsPersistence.save(mlFeedbackRecord);
+
+    return true;
   }
 
   @Override
@@ -937,5 +975,13 @@ public class AnalysisServiceImpl implements AnalysisService {
     return false;
   }
 
-  private enum CLUSTER_TYPE { CONTROL, TEST, UNKNOWN }
+  public enum CLUSTER_TYPE { CONTROL, TEST, UNKNOWN }
+  public enum FeedbackType {
+    IGNORE_SERVICE,
+    IGNORE_WORKFLOW,
+    IGNORE_WORKFLOW_EXECUTION,
+    IGNORE_ALWAYS,
+    DISMISS,
+    PRIORITIZE
+  }
 }

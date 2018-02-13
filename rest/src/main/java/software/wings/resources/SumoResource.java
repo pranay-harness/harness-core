@@ -15,6 +15,7 @@ import software.wings.service.impl.analysis.LogElement;
 import software.wings.service.impl.analysis.LogMLAnalysisRecord;
 import software.wings.service.impl.analysis.LogMLAnalysisRequest;
 import software.wings.service.impl.analysis.LogMLAnalysisSummary;
+import software.wings.service.impl.analysis.LogMLFeedback;
 import software.wings.service.impl.analysis.LogRequest;
 import software.wings.service.intfc.analysis.AnalysisService;
 import software.wings.service.intfc.analysis.ClusterLevel;
@@ -117,5 +118,15 @@ public class SumoResource implements LogAnalysisResource {
       @QueryParam("applicationId") String applicationId, @QueryParam("stateExecutionId") String stateExecutionId)
       throws IOException {
     return new RestResponse<>(analysisService.getAnalysisSummary(stateExecutionId, applicationId, StateType.SUMO));
+  }
+
+  @POST
+  @Path(LogAnalysisResource.ANALYSIS_USER_FEEDBACK)
+  @Timed
+  @ExceptionMetered
+  @Override
+  public RestResponse<Boolean> userFeedback(@QueryParam("accountId") String accountId, LogMLFeedback ignoreFeedback)
+      throws IOException {
+    return new RestResponse<>(analysisService.saveFeedback(ignoreFeedback, StateType.SUMO));
   }
 }
