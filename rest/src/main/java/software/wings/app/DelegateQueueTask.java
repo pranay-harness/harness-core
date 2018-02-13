@@ -195,7 +195,8 @@ public class DelegateQueueTask implements Runnable {
                   Set<String> validatingDelegates = syncDelegateTask.getValidatingDelegateIds();
                   Set<String> completeDelegates = syncDelegateTask.getValidationCompleteDelegateIds();
                   if ((isEmpty(validatingDelegates) && isEmpty(completeDelegates))
-                      || completeDelegates.containsAll(validatingDelegates)) {
+                      || (completeDelegates != null && validatingDelegates != null
+                             && completeDelegates.containsAll(validatingDelegates))) {
                     // TODO(brett): Consider interaction between rebroadcast and validation while waiting for all
                     // results
                     //                    syncDelegateTask.setValidatingDelegateIds(null);
@@ -252,7 +253,8 @@ public class DelegateQueueTask implements Runnable {
           Set<String> validatingDelegates = delegateTask.getValidatingDelegateIds();
           Set<String> completeDelegates = delegateTask.getValidationCompleteDelegateIds();
           if ((isEmpty(validatingDelegates) && isEmpty(completeDelegates))
-              || completeDelegates.containsAll(validatingDelegates)) {
+              || (completeDelegates != null && validatingDelegates != null
+                     && completeDelegates.containsAll(validatingDelegates))) {
             // TODO(brett): Consider interaction between rebroadcast and validation while waiting for all results
             //            UpdateOperations<DelegateTask> updateOperations =
             //                wingsPersistence.createUpdateOperations(DelegateTask.class)
