@@ -57,6 +57,8 @@ ARTIFACT_STREAM_TYPE:
       value: ECR
     - name: GCR
       value: GCR
+    - name: ACR
+      value: Azure Container Registry
     - name: AMI
       value: AMI
 
@@ -321,6 +323,8 @@ TASK_TYPES:
       value: ECR
     - name: Google Container Registry
       value: GCR
+    - name: Azure Container Registry
+      value: ACR
     - name: AppDynamics
       value: APPDYNAMICS
     - name: Splunk

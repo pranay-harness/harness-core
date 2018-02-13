@@ -13,6 +13,9 @@ public class ArtifactStreamAttributes {
   private String jobName;
   private String imageName;
   private String registryHostName;
+  private String subscriptionId;
+  private String registryName;
+  private String repositoryName;
   private String artifactStreamType;
   private SettingAttribute serverSetting;
   // TODO : Refactoring has to be done
@@ -54,13 +57,32 @@ public class ArtifactStreamAttributes {
     return imageName;
   }
 
-  /**
-   * Sets image name.
-   *
-   * @param imageName the image name
-   */
   public void setImageName(String imageName) {
     this.imageName = imageName;
+  }
+
+  public String getSubscriptionId() {
+    return subscriptionId;
+  }
+
+  public void setSubscriptionId(String subscriptionId) {
+    this.subscriptionId = subscriptionId;
+  }
+
+  public String getRegistryName() {
+    return registryName;
+  }
+
+  public void setRegistryName(String registryName) {
+    this.registryName = registryName;
+  }
+
+  public String getRepositoryName() {
+    return repositoryName;
+  }
+
+  public void setRepositoryName(String repositoryName) {
+    this.repositoryName = repositoryName;
   }
 
   /**
@@ -233,6 +255,9 @@ public class ArtifactStreamAttributes {
   public static final class Builder {
     private String jobName;
     private String registryHostName;
+    private String subscriptionId;
+    private String registryName;
+    private String repositoryName;
     private String imageName;
     private String artifactStreamType;
     private SettingAttribute serverSetting;
@@ -277,6 +302,21 @@ public class ArtifactStreamAttributes {
      */
     public Builder withImageName(String imageName) {
       this.imageName = imageName;
+      return this;
+    }
+
+    public Builder withSubscriptionId(String subscriptionId) {
+      this.subscriptionId = subscriptionId;
+      return this;
+    }
+
+    public Builder withRegistryName(String registryName) {
+      this.registryName = registryName;
+      return this;
+    }
+
+    public Builder withRepositoryName(String repositoryName) {
+      this.repositoryName = repositoryName;
       return this;
     }
 
@@ -387,6 +427,9 @@ public class ArtifactStreamAttributes {
       return anArtifactStreamAttributes()
           .withJobName(jobName)
           .withImageName(imageName)
+          .withSubscriptionId(subscriptionId)
+          .withRegistryName(registryName)
+          .withRepositoryName(repositoryName)
           .withRegistryHostName(registryHostName)
           .withArtifactStreamType(artifactStreamType)
           .withServerSetting(serverSetting)
@@ -411,6 +454,9 @@ public class ArtifactStreamAttributes {
       ArtifactStreamAttributes artifactStreamAttributes = new ArtifactStreamAttributes();
       artifactStreamAttributes.setJobName(jobName);
       artifactStreamAttributes.setImageName(imageName);
+      artifactStreamAttributes.setSubscriptionId(subscriptionId);
+      artifactStreamAttributes.setRegistryName(registryName);
+      artifactStreamAttributes.setRepositoryName(repositoryName);
       artifactStreamAttributes.setRegistryHostName(registryHostName);
       artifactStreamAttributes.setArtifactStreamType(artifactStreamType);
       artifactStreamAttributes.setServerSetting(serverSetting);

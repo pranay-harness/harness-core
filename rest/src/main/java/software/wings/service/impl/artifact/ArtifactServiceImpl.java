@@ -11,6 +11,7 @@ import static software.wings.beans.artifact.Artifact.Status.READY;
 import static software.wings.beans.artifact.Artifact.Status.REJECTED;
 import static software.wings.beans.artifact.Artifact.Status.RUNNING;
 import static software.wings.beans.artifact.Artifact.Status.WAITING;
+import static software.wings.beans.artifact.ArtifactStreamType.ACR;
 import static software.wings.beans.artifact.ArtifactStreamType.ARTIFACTORY;
 import static software.wings.beans.artifact.ArtifactStreamType.DOCKER;
 import static software.wings.beans.artifact.ArtifactStreamType.ECR;
@@ -171,6 +172,7 @@ public class ArtifactServiceImpl implements ArtifactService {
     return (DOCKER.name().equals(artifactStream.getArtifactStreamType())
                || ECR.name().equals(artifactStream.getArtifactStreamType())
                || GCR.name().equals(artifactStream.getArtifactStreamType())
+               || ACR.name().equals(artifactStream.getArtifactStreamType())
                || ARTIFACTORY.name().equals(artifactStream.getArtifactStreamType()))
         ? (artifactStream.isAutoApproveForProduction() ? APPROVED : READY)
         : QUEUED;

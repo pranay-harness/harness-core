@@ -273,3 +273,4 @@ software.wings.service.impl.dynatrace.DynaTraceDataCollectionInfo, 5238
 software.wings.service.impl.dynatrace.DynaTraceTimeSeries, 5239
 software.wings.service.impl.analysis.AnalysisComparisonStrategy, 5240
 software.wings.helpers.ext.jenkins.JobDetails$JobParameter, 5241
+software.wings.beans.AzureConfig, 5242
