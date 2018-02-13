@@ -57,7 +57,9 @@ public class ElkAnalysisState extends AbstractLogAnalysisState {
   @DefaultValue("_all")
   protected String indices;
 
-  @Attributes(required = true, title = "Hostname Field") @DefaultValue("beat.hostname") protected String hostnameField;
+  @Attributes(required = true, title = "Hostname or Container Id Field")
+  @DefaultValue("beat.hostname")
+  protected String hostnameField;
 
   @Attributes(required = true, title = "Message Field") @DefaultValue("message") protected String messageField;
 
@@ -127,7 +129,7 @@ public class ElkAnalysisState extends AbstractLogAnalysisState {
   }
 
   @Attributes(required = true, title = "Search Keywords")
-  @DefaultValue(".*exception.*")
+  @DefaultValue("error")
   public String getQuery() {
     return query;
   }
