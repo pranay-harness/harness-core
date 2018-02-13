@@ -439,13 +439,13 @@ public class PipelineServiceImpl implements PipelineService {
     if (isEmpty(pseWorkflowVariables)) {
       return;
     }
-    Set<String> pseWkflwVariableNames = pseWorkflowVariables.keySet();
+    Set<String> pseWorkflowVariableNames = pseWorkflowVariables.keySet();
     List<Variable> userVariables = workflow.getOrchestrationWorkflow().getUserVariables();
-    Set<String> wrkflowVariableNames = userVariables == null
+    Set<String> workflowVariableNames = userVariables == null
         ? new HashSet<>()
         : userVariables.stream().map(variable -> variable.getName()).collect(toSet());
-    for (String pseWkflwVariable : pseWkflwVariableNames) {
-      if (!wrkflowVariableNames.contains(pseWkflwVariable)) {
+    for (String pseWorkflowVariable : pseWorkflowVariableNames) {
+      if (!workflowVariableNames.contains(pseWorkflowVariable)) {
         pipelineStageElement.setValid(false);
         pipelineStageElement.setValidationMessage("Workflow variables updated or deleted");
         invalidWorkflows.add(workflow.getName());
