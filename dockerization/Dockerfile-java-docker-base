@@ -1,0 +1,12 @@
+# Basic Java 8 with Docker
+FROM harness/serverjre_8:131
+# wget is the only required one, net-tools and telnet are just for debuggin from inside container¬
+# download the list of repos that has addons and change it to be enabled to install docker
+RUN yum install -y wget ntp net-tools telnet && \
+    wget http://yum.oracle.com/public-yum-ol7.repo -O /etc/yum.repos.d/public-yum-ol7.repo && \
+    sed -i '/ol7_addons/!b;n;n;n;n;n;cenabled=1' /etc/yum.repos.d/public-yum-ol7.repo && \
+    yum install -y docker-engine
+
+# we need to install the JCE extensions
+COPY dockerization/common-resources/local_policy.jar /usr/java/jdk1.8.0_131/jre/lib/security/
+COPY dockerization/common-resources/US_export_policy.jar /usr/java/jdk1.8.0_131/jre/lib/security/
