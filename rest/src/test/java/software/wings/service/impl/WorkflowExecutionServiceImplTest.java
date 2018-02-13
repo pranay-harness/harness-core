@@ -763,7 +763,7 @@ public class WorkflowExecutionServiceImplTest extends WingsBaseTest {
     WorkflowExecution execution = workflowExecutionService.getExecutionDetails(appId, triggerWorkflow(appId, env));
     GraphNode node0 = execution.getExecutionNode();
     assertThat(workflowExecutionService.getExecutionDetailsForNode(appId, execution.getUuid(), node0.getId()))
-        .isEqualToIgnoringGivenFields(node0, "x", "y", "width", "height", "next", "expanded");
+        .isEqualToIgnoringGivenFields(node0, "next");
   }
 
   /**
