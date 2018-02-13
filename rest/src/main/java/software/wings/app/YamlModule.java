@@ -110,6 +110,7 @@ import software.wings.service.impl.yaml.handler.setting.collaborationprovider.Co
 import software.wings.service.impl.yaml.handler.setting.collaborationprovider.SlackConfigYamlHandler;
 import software.wings.service.impl.yaml.handler.setting.collaborationprovider.SmtpConfigYamlHandler;
 import software.wings.service.impl.yaml.handler.setting.verificationprovider.AppDynamicsConfigYamlHandler;
+import software.wings.service.impl.yaml.handler.setting.verificationprovider.DynaTraceConfigYamlHandler;
 import software.wings.service.impl.yaml.handler.setting.verificationprovider.ElkConfigYamlHandler;
 import software.wings.service.impl.yaml.handler.setting.verificationprovider.JenkinsConfigVerificationYamlHandler;
 import software.wings.service.impl.yaml.handler.setting.verificationprovider.LogzConfigYamlHandler;
@@ -210,6 +211,8 @@ public class YamlModule extends AbstractModule {
         .to(LogzConfigYamlHandler.class);
     verificationProviderYamlHelperMapBinder.addBinding(SettingVariableTypes.NEW_RELIC.name())
         .to(NewRelicConfigYamlHandler.class);
+    verificationProviderYamlHelperMapBinder.addBinding(SettingVariableTypes.DYNA_TRACE.name())
+        .to(DynaTraceConfigYamlHandler.class);
     verificationProviderYamlHelperMapBinder.addBinding(SettingVariableTypes.SPLUNK.name())
         .to(SplunkConfigYamlHandler.class);
     verificationProviderYamlHelperMapBinder.addBinding(SettingVariableTypes.SUMO.name())
