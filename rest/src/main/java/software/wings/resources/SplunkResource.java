@@ -15,6 +15,7 @@ import software.wings.service.impl.analysis.LogElement;
 import software.wings.service.impl.analysis.LogMLAnalysisRecord;
 import software.wings.service.impl.analysis.LogMLAnalysisRequest;
 import software.wings.service.impl.analysis.LogMLAnalysisSummary;
+import software.wings.service.impl.analysis.LogMLFeedback;
 import software.wings.service.impl.analysis.LogRequest;
 import software.wings.service.intfc.analysis.AnalysisService;
 import software.wings.service.intfc.analysis.ClusterLevel;
@@ -24,7 +25,6 @@ import software.wings.sm.StateType;
 import java.io.IOException;
 import java.util.List;
 import java.util.Optional;
-import javax.ws.rs.GET;
 import javax.ws.rs.POST;
 import javax.ws.rs.Path;
 import javax.ws.rs.Produces;
@@ -102,7 +102,7 @@ public class SplunkResource implements LogAnalysisResource {
         mlAnalysisRequest.getLogCollectionMinute()));
   }
 
-  @GET
+  @POST
   @Path(LogAnalysisResource.ANALYSIS_STATE_GET_ANALYSIS_SUMMARY_URL)
   @Timed
   @ExceptionMetered
@@ -110,5 +110,15 @@ public class SplunkResource implements LogAnalysisResource {
       @QueryParam("applicationId") String applicationId, @QueryParam("stateExecutionId") String stateExecutionId)
       throws IOException {
     return new RestResponse<>(analysisService.getAnalysisSummary(stateExecutionId, applicationId, StateType.SPLUNKV2));
+  }
+
+  @POST
+  @Path(LogAnalysisResource.ANALYSIS_USER_FEEDBACK)
+  @Timed
+  @ExceptionMetered
+  @Override
+  public RestResponse<Boolean> userFeedback(@QueryParam("accountId") String accountId, LogMLFeedback ignoreFeedback)
+      throws IOException {
+    return new RestResponse<>(analysisService.saveFeedback(ignoreFeedback, StateType.SPLUNKV2));
   }
 }

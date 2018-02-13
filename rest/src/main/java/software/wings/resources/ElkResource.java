@@ -18,6 +18,7 @@ import software.wings.service.impl.analysis.LogElement;
 import software.wings.service.impl.analysis.LogMLAnalysisRecord;
 import software.wings.service.impl.analysis.LogMLAnalysisRequest;
 import software.wings.service.impl.analysis.LogMLAnalysisSummary;
+import software.wings.service.impl.analysis.LogMLFeedback;
 import software.wings.service.impl.analysis.LogRequest;
 import software.wings.service.impl.elk.ElkIndexTemplate;
 import software.wings.service.intfc.analysis.ClusterLevel;
@@ -151,5 +152,15 @@ public class ElkResource implements LogAnalysisResource {
       logger.warn("Unable to get indices", ex);
     }
     return new RestResponse<>(null);
+  }
+
+  @POST
+  @Path(LogAnalysisResource.ANALYSIS_USER_FEEDBACK)
+  @Timed
+  @ExceptionMetered
+  @Override
+  public RestResponse<Boolean> userFeedback(@QueryParam("accountId") String accountId, LogMLFeedback ignoreFeedback)
+      throws IOException {
+    return new RestResponse<>(analysisService.saveFeedback(ignoreFeedback, StateType.ELK));
   }
 }

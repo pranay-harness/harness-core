@@ -15,6 +15,7 @@ import software.wings.service.impl.analysis.LogElement;
 import software.wings.service.impl.analysis.LogMLAnalysisRecord;
 import software.wings.service.impl.analysis.LogMLAnalysisRequest;
 import software.wings.service.impl.analysis.LogMLAnalysisSummary;
+import software.wings.service.impl.analysis.LogMLFeedback;
 import software.wings.service.impl.analysis.LogRequest;
 import software.wings.service.intfc.analysis.AnalysisService;
 import software.wings.service.intfc.analysis.ClusterLevel;
@@ -37,7 +38,7 @@ import javax.ws.rs.QueryParam;
 @Path("/" + LogAnalysisResource.LOGZ_RESOURCE_BASE_URL)
 @Produces("application/json")
 @AuthRule(ResourceType.SETTING)
-public class LogzResource {
+public class LogzResource implements LogAnalysisResource {
   @Inject private AnalysisService analysisService;
 
   @Produces({"application/json", "application/v1+json"})
@@ -77,7 +78,8 @@ public class LogzResource {
   @LearningEngineAuth
   public RestResponse<Boolean> saveLogAnalysisMLRecords(@QueryParam("accountId") String accountId,
       @QueryParam("applicationId") String applicationId, @QueryParam("stateExecutionId") String stateExecutionId,
-      @QueryParam("logCollectionMinute") Integer logCollectionMinute, @QueryParam("taskId") String taskId,
+      @QueryParam("logCollectionMinute") Integer logCollectionMinute,
+      @QueryParam("isBaselineCreated") boolean isBaselineCreated, @QueryParam("taskId") String taskId,
       LogMLAnalysisRecord mlAnalysisResponse) throws IOException {
     mlAnalysisResponse.setApplicationId(applicationId);
     mlAnalysisResponse.setStateExecutionId(stateExecutionId);
@@ -116,5 +118,15 @@ public class LogzResource {
   public RestResponse<Object> getSampleLogRecord(@QueryParam("accountId") String accountId,
       @QueryParam("serverConfigId") String analysisServerConfigId) throws IOException {
     return new RestResponse<>(analysisService.getLogSample(accountId, analysisServerConfigId, null, StateType.LOGZ));
+  }
+
+  @POST
+  @Path(LogAnalysisResource.ANALYSIS_USER_FEEDBACK)
+  @Timed
+  @ExceptionMetered
+  @Override
+  public RestResponse<Boolean> userFeedback(@QueryParam("accountId") String accountId, LogMLFeedback ignoreFeedback)
+      throws IOException {
+    return new RestResponse<>(analysisService.saveFeedback(ignoreFeedback, StateType.SPLUNKV2));
   }
 }

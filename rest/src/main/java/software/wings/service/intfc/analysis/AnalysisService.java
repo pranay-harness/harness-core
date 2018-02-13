@@ -7,6 +7,7 @@ import software.wings.service.impl.analysis.LogDataRecord;
 import software.wings.service.impl.analysis.LogElement;
 import software.wings.service.impl.analysis.LogMLAnalysisRecord;
 import software.wings.service.impl.analysis.LogMLAnalysisSummary;
+import software.wings.service.impl.analysis.LogMLFeedback;
 import software.wings.service.impl.analysis.LogRequest;
 import software.wings.sm.StateType;
 import software.wings.utils.validation.Create;
@@ -73,4 +74,6 @@ public interface AnalysisService {
 
   String getLastSuccessfulWorkflowExecutionIdWithLogs(
       StateType stateType, String appId, String serviceId, String query, String workflowId);
+
+  boolean saveFeedback(LogMLFeedback feedback, StateType stateType);
 }

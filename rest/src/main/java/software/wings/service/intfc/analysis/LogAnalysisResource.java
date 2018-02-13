@@ -6,6 +6,7 @@ import software.wings.service.impl.analysis.LogElement;
 import software.wings.service.impl.analysis.LogMLAnalysisRecord;
 import software.wings.service.impl.analysis.LogMLAnalysisRequest;
 import software.wings.service.impl.analysis.LogMLAnalysisSummary;
+import software.wings.service.impl.analysis.LogMLFeedback;
 import software.wings.service.impl.analysis.LogRequest;
 
 import java.io.IOException;
@@ -64,6 +65,11 @@ public interface LogAnalysisResource {
    */
   String ANALYSIS_STATE_GET_SAMPLE_RECORD_URL = "/get-sample-record";
 
+  /**
+   * Ignore feedback from the user
+   */
+  String ANALYSIS_USER_FEEDBACK = "/user-feedback";
+
   RestResponse<Boolean> saveRawLogData(@QueryParam("accountId") String accountId,
       @QueryParam("stateExecutionId") String stateExecutionId, @QueryParam("workflowId") String workflowId,
       @QueryParam("workflowExecutionId") String workflowExecutionId, @QueryParam("appId") String appId,
@@ -86,5 +92,8 @@ public interface LogAnalysisResource {
 
   RestResponse<LogMLAnalysisSummary> getLogAnalysisSummary(@QueryParam("accountId") String accountId,
       @QueryParam("applicationId") String applicationId, @QueryParam("stateExecutionId") String stateExecutionId)
+      throws IOException;
+
+  RestResponse<Boolean> userFeedback(@QueryParam("accountId") String accountId, LogMLFeedback ignoreFeedback)
       throws IOException;
 }
