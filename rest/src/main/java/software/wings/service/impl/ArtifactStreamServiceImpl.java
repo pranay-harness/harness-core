@@ -4,7 +4,9 @@ import static io.harness.data.structure.EmptyPredicate.isEmpty;
 import static io.harness.data.structure.EmptyPredicate.isNotEmpty;
 import static java.util.Arrays.asList;
 import static software.wings.beans.ErrorCode.INVALID_REQUEST;
+import static software.wings.beans.FeatureName.AZURE_SUPPORT;
 import static software.wings.beans.SearchFilter.Operator.EQ;
+import static software.wings.beans.artifact.ArtifactStreamType.ACR;
 import static software.wings.beans.artifact.ArtifactStreamType.AMAZON_S3;
 import static software.wings.beans.artifact.ArtifactStreamType.AMI;
 import static software.wings.beans.artifact.ArtifactStreamType.ARTIFACTORY;
@@ -21,6 +23,7 @@ import com.google.inject.Singleton;
 import com.google.inject.name.Named;
 
 import org.hibernate.validator.constraints.NotEmpty;
+import org.mongodb.morphia.annotations.Transient;
 import ru.vyarus.guice.validator.group.annotation.ValidationGroups;
 import software.wings.beans.SearchFilter.Operator;
 import software.wings.beans.Service;
@@ -42,6 +45,7 @@ import software.wings.service.impl.yaml.YamlChangeSetHelper;
 import software.wings.service.intfc.AppService;
 import software.wings.service.intfc.ArtifactStreamService;
 import software.wings.service.intfc.BuildSourceService;
+import software.wings.service.intfc.FeatureFlagService;
 import software.wings.service.intfc.ServiceResourceService;
 import software.wings.service.intfc.TriggerService;
 import software.wings.service.intfc.ownership.OwnedByArtifactStream;
@@ -84,6 +88,7 @@ public class ArtifactStreamServiceImpl implements ArtifactStreamService, DataPro
   @Inject private TriggerService triggerService;
   @Inject private YamlChangeSetService yamlChangeSetService;
   @Inject private YamlChangeSetHelper yamlChangeSetHelper;
+  @Inject @Transient private transient FeatureFlagService featureFlagService;
 
   @Override
   public PageResponse<ArtifactStream> list(PageRequest<ArtifactStream> req) {
@@ -113,6 +118,7 @@ public class ArtifactStreamServiceImpl implements ArtifactStreamService, DataPro
     if (DOCKER.name().equals(artifactStream.getArtifactStreamType())
         || ECR.name().equals(artifactStream.getArtifactStreamType())
         || GCR.name().equals(artifactStream.getArtifactStreamType())
+        || ACR.name().equals(artifactStream.getArtifactStreamType())
         || ARTIFACTORY.name().equals(artifactStream.getArtifactStreamType())) {
       buildSourceService.validateArtifactSource(
           artifactStream.getAppId(), artifactStream.getSettingId(), artifactStream.getArtifactStreamAttributes());
@@ -184,6 +190,7 @@ public class ArtifactStreamServiceImpl implements ArtifactStreamService, DataPro
     if (DOCKER.name().equals(artifactStream.getArtifactStreamType())
         || ECR.name().equals(artifactStream.getArtifactStreamType())
         || GCR.name().equals(artifactStream.getArtifactStreamType())
+        || ACR.name().equals(artifactStream.getArtifactStreamType())
         || ARTIFACTORY.name().equals(artifactStream.getArtifactStreamType())) {
       buildSourceService.validateArtifactSource(
           artifactStream.getAppId(), artifactStream.getSettingId(), artifactStream.getArtifactStreamAttributes());
@@ -285,8 +292,19 @@ public class ArtifactStreamServiceImpl implements ArtifactStreamService, DataPro
       throw new WingsException("Service " + serviceId + "for the given app " + appId + "does not exist ");
     }
     if (service.getArtifactType().equals(ArtifactType.DOCKER)) {
-      return ImmutableMap.of(DOCKER.name(), DOCKER.name(), ECR.name(), ECR.name(), GCR.name(), GCR.name(),
-          ARTIFACTORY.name(), ARTIFACTORY.name(), NEXUS.name(), NEXUS.name());
+      String accountId = appService.getAccountIdByAppId(appId);
+      ImmutableMap.Builder<String, String> builder = new ImmutableMap.Builder<String, String>()
+                                                         .put(DOCKER.name(), DOCKER.name())
+                                                         .put(ECR.name(), ECR.name())
+                                                         .put(GCR.name(), GCR.name())
+                                                         .put(ARTIFACTORY.name(), ARTIFACTORY.name())
+                                                         .put(NEXUS.name(), NEXUS.name());
+
+      if (featureFlagService.isEnabled(AZURE_SUPPORT, accountId)) {
+        builder.put(ACR.name(), ACR.name());
+      }
+
+      return builder.build();
     } else if (service.getArtifactType().equals(ArtifactType.AWS_LAMBDA)) {
       return ImmutableMap.of(AMAZON_S3.name(), AMAZON_S3.name());
     } else if (service.getArtifactType().equals(ArtifactType.AMI)) {

@@ -9,9 +9,7 @@ import com.microsoft.aad.adal4j.AuthenticationException;
 import com.microsoft.azure.AzureEnvironment;
 import com.microsoft.azure.credentials.ApplicationTokenCredentials;
 import com.microsoft.azure.management.Azure;
-import com.microsoft.azure.management.containerregistry.AccessKeyType;
 import com.microsoft.azure.management.containerregistry.Registry;
-import com.microsoft.azure.management.containerregistry.RegistryCredentials;
 import com.microsoft.rest.LogLevel;
 import okhttp3.OkHttpClient;
 import org.slf4j.Logger;
@@ -23,7 +21,6 @@ import software.wings.beans.ErrorCode;
 import software.wings.exception.WingsException;
 import software.wings.utils.HttpUtil;
 
-import java.io.IOException;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
@@ -57,6 +54,16 @@ public class AzureHelperService {
     return subscriptionMap;
   }
 
+  public boolean isValidSubscription(AzureConfig azureConfig, String subscriptionId) {
+    return getAzureClient(azureConfig)
+               .subscriptions()
+               .list()
+               .stream()
+               .filter(subscription -> subscription.subscriptionId().equalsIgnoreCase(subscriptionId))
+               .count()
+        != 0;
+  }
+
   public List<String> listContainerRegistries(AzureConfig azureConfig, String subscriptionId) {
     Azure azure = getAzureClient(azureConfig, subscriptionId);
     List<String> registries = new ArrayList<>();
@@ -64,20 +71,45 @@ public class AzureHelperService {
     return registries;
   }
 
+  public boolean isValidContainerRegistry(AzureConfig azureConfig, String subscriptionId, String registryName) {
+    return getAzureClient(azureConfig, subscriptionId)
+               .containerRegistries()
+               .list()
+               .stream()
+               .filter(registry -> registry.name().equalsIgnoreCase(registryName))
+               .count()
+        != 0;
+  }
+
+  public String getLoginServerForRegistry(AzureConfig azureConfig, String subscriptionId, String registryName) {
+    return getRegistry(azureConfig, subscriptionId, registryName).loginServerUrl();
+  }
+
+  private Registry getRegistry(AzureConfig azureConfig, String subscriptionId, String registryName) {
+    return getAzureClient(azureConfig, subscriptionId)
+        .containerRegistries()
+        .list()
+        .stream()
+        .filter(item -> item.name().equals(registryName))
+        .findFirst()
+        .get();
+  }
+
   public List<String> listRepositories(AzureConfig azureConfig, String subscriptionId, String registryName) {
     Azure azure = getAzureClient(azureConfig, subscriptionId);
-    List<String> registries = new ArrayList<>();
-    Registry registry =
-        azure.containerRegistries().list().stream().filter(item -> item.name().equals(registryName)).findFirst().get();
-    RegistryCredentials credentials = registry.getCredentials();
-    AcrRestClient acrRestClient = getAcrRestClient(registry.loginServerUrl());
     try {
-      return acrRestClient
-          .listRepositories(getAuthHeader(credentials.username(), credentials.accessKeys().get(AccessKeyType.PRIMARY)))
+      Registry registry = azure.containerRegistries()
+                              .list()
+                              .stream()
+                              .filter(item -> item.name().equals(registryName))
+                              .findFirst()
+                              .get();
+      AcrRestClient acrRestClient = getAcrRestClient(registry.loginServerUrl());
+      return acrRestClient.listRepositories(getAuthHeader(azureConfig.getClientId(), azureConfig.getKey()))
           .execute()
           .body()
           .getRepositories();
-    } catch (IOException e) {
+    } catch (Exception e) {
       logger.error("Error occurred while getting repositories from subscriptionId/registryName :" + subscriptionId + "/"
               + registryName,
           e);
@@ -88,20 +120,20 @@ public class AzureHelperService {
   public List<String> listRepositoryTags(
       AzureConfig azureConfig, String subscriptionId, String registryName, String repositoryName) {
     Azure azure = getAzureClient(azureConfig, subscriptionId);
-    List<String> registries = new ArrayList<>();
-    Registry registry =
-        azure.containerRegistries().list().stream().filter(item -> item.name().equals(registryName)).findFirst().get();
-    RegistryCredentials credentials = registry.getCredentials();
-    AcrRestClient acrRestClient = getAcrRestClient(registry.loginServerUrl());
     try {
+      Registry registry = azure.containerRegistries()
+                              .list()
+                              .stream()
+                              .filter(item -> item.name().equals(registryName))
+                              .findFirst()
+                              .get();
+      AcrRestClient acrRestClient = getAcrRestClient(registry.loginServerUrl());
       return acrRestClient
-          .listRepositoryTags(
-              getAuthHeader(credentials.username(), credentials.accessKeys().get(AccessKeyType.PRIMARY)),
-              repositoryName)
+          .listRepositoryTags(getAuthHeader(azureConfig.getClientId(), azureConfig.getKey()), repositoryName)
           .execute()
           .body()
           .getTags();
-    } catch (IOException e) {
+    } catch (Exception e) {
       logger.error("Error occurred while getting repositories from subscriptionId/registryName/repositoryName :"
               + subscriptionId + "/" + registryName + "/" + repositoryName,
           e);
@@ -152,7 +184,7 @@ public class AzureHelperService {
     return "Basic " + encodeBase64String(format("%s:%s", username, password).getBytes());
   }
 
-  private String getUrl(String acrHostName) {
+  public String getUrl(String acrHostName) {
     return "https://" + acrHostName + (acrHostName.endsWith("/") ? "" : "/");
   }
 

@@ -204,6 +204,11 @@ public abstract class SettingValue implements ExtensionPoint {
     GCR("Google Container Registry (GCR)"),
 
     /**
+     * Azure Container Registry setting variable types.
+     */
+    ACR("Azure Container Registry (ACR)"),
+
+    /**
      * Physical data center setting variable types.
      */
     PHYSICAL_DATA_CENTER("Physical Data Center"),

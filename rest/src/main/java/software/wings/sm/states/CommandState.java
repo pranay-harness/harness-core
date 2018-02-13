@@ -5,6 +5,7 @@ import static org.joor.Reflect.on;
 import static software.wings.api.CommandStateExecutionData.Builder.aCommandStateExecutionData;
 import static software.wings.beans.DelegateTask.Builder.aDelegateTask;
 import static software.wings.beans.ErrorCode.COMMAND_DOES_NOT_EXIST;
+import static software.wings.beans.artifact.ArtifactStreamType.ACR;
 import static software.wings.beans.artifact.ArtifactStreamType.DOCKER;
 import static software.wings.beans.artifact.ArtifactStreamType.ECR;
 import static software.wings.beans.artifact.ArtifactStreamType.GCR;
@@ -315,7 +316,8 @@ public class CommandState extends State {
 
         if (artifactStream.getArtifactStreamType().equals(DOCKER.name())
             || artifactStream.getArtifactStreamType().equals(ECR.name())
-            || artifactStream.getArtifactStreamType().equals(GCR.name())) {
+            || artifactStream.getArtifactStreamType().equals(GCR.name())
+            || artifactStream.getArtifactStreamType().equals(ACR.name())) {
           ArtifactStreamAttributes artifactStreamAttributes = artifactStream.getArtifactStreamAttributes();
           artifactStreamAttributes.setServerSetting(settingsService.get(artifactStream.getSettingId()));
           commandExecutionContextBuilder.withArtifactStreamAttributes(artifactStreamAttributes);

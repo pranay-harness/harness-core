@@ -26,24 +26,39 @@ public class AzureIntegrationTest {
 
   public static void main(String[] args) {
     logger.info("AzureIntegrationTest: Start.");
-    AzureAuthenticationTest();
-    GetSubscriptions();
-    GetRepositoryTags();
+    azureAuthenticationTest();
+    getSubscriptions();
+    getContainerRegistries();
+    getRepositoryTags();
     logger.info("AzureIntegrationTest: Done.");
   }
 
-  private static void AzureAuthenticationTest() {
+  private static void azureAuthenticationTest() {
     AzureHelperService azure = new AzureHelperService();
     azure.validateAzureAccountCredential(clientId, tenantId, key);
   }
 
-  private static void GetSubscriptions() {
+  private static void getSubscriptions() {
     AzureHelperService azure = new AzureHelperService();
     AzureConfig config = getAzureConfig();
     logger.info("Azure Subscriptions: " + azure.listSubscriptions(config).toString());
   }
 
-  private static void GetRepositoryTags() {
+  private static void getContainerRegistries() {
+    AzureHelperService azure = new AzureHelperService();
+    AzureConfig config = getAzureConfig();
+    Map<String, String> subscriptions = azure.listSubscriptions(config);
+    subscriptions.forEach((subId, Desc) -> logger.info(subId + Desc));
+    for (Map.Entry<String, String> entry : subscriptions.entrySet()) {
+      String subscriptionId = entry.getKey();
+      List<String> registries = azure.listContainerRegistries(config, subscriptionId);
+      for (String registry : registries) {
+        logger.info("Details: " + subscriptionId + " " + registry);
+      }
+    }
+  }
+
+  private static void getRepositoryTags() {
     AzureHelperService azure = new AzureHelperService();
     AzureConfig config = getAzureConfig();
     Map<String, String> subscriptions = azure.listSubscriptions(config);

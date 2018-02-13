@@ -7,6 +7,7 @@ import static software.wings.beans.SearchFilter.Operator.EQ;
 import static software.wings.beans.artifact.Artifact.Builder.anArtifact;
 import static software.wings.beans.artifact.Artifact.Status.APPROVED;
 import static software.wings.beans.artifact.Artifact.Status.READY;
+import static software.wings.beans.artifact.ArtifactStreamType.ACR;
 import static software.wings.beans.artifact.ArtifactStreamType.AMAZON_S3;
 import static software.wings.beans.artifact.ArtifactStreamType.AMI;
 import static software.wings.beans.artifact.ArtifactStreamType.ARTIFACTORY;
@@ -158,7 +159,8 @@ public class ArtifactCollectionJob implements Job {
     String artifactStreamId = artifactStream.getUuid();
     if (artifactStream.getArtifactStreamType().equals(DOCKER.name())
         || artifactStream.getArtifactStreamType().equals(ECR.name())
-        || artifactStream.getArtifactStreamType().equals(GCR.name())) {
+        || artifactStream.getArtifactStreamType().equals(GCR.name())
+        || artifactStream.getArtifactStreamType().equals(ACR.name())) {
       collectDockerArtifacts(appId, artifactStream, newArtifacts);
     } else if (artifactStream.getArtifactStreamType().equals(NEXUS.name())) {
       collectNexusArtifacts(appId, artifactStream, newArtifacts);

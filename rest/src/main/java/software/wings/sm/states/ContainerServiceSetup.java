@@ -8,6 +8,7 @@ import static software.wings.beans.DelegateTask.Builder.aDelegateTask;
 import static software.wings.beans.FeatureName.ECS_CREATE_CLUSTER;
 import static software.wings.beans.FeatureName.KUBERNETES_CREATE_CLUSTER;
 import static software.wings.beans.SettingAttribute.Builder.aSettingAttribute;
+import static software.wings.beans.artifact.ArtifactStreamType.ACR;
 import static software.wings.beans.artifact.ArtifactStreamType.ARTIFACTORY;
 import static software.wings.beans.artifact.ArtifactStreamType.DOCKER;
 import static software.wings.beans.artifact.ArtifactStreamType.ECR;
@@ -32,6 +33,7 @@ import software.wings.api.PhaseElement;
 import software.wings.beans.Activity;
 import software.wings.beans.Application;
 import software.wings.beans.AwsConfig;
+import software.wings.beans.AzureConfig;
 import software.wings.beans.ContainerInfrastructureMapping;
 import software.wings.beans.DeploymentExecutionContext;
 import software.wings.beans.DirectKubernetesInfrastructureMapping;
@@ -46,6 +48,7 @@ import software.wings.beans.ResizeStrategy;
 import software.wings.beans.Service;
 import software.wings.beans.SettingAttribute;
 import software.wings.beans.TaskType;
+import software.wings.beans.artifact.AcrArtifactStream;
 import software.wings.beans.artifact.Artifact;
 import software.wings.beans.artifact.ArtifactStream;
 import software.wings.beans.artifact.ArtifactoryArtifactStream;
@@ -64,6 +67,7 @@ import software.wings.beans.container.ImageDetails;
 import software.wings.beans.container.ImageDetails.ImageDetailsBuilder;
 import software.wings.common.Constants;
 import software.wings.exception.WingsException;
+import software.wings.helpers.ext.azure.AzureHelperService;
 import software.wings.helpers.ext.ecr.EcrClassicService;
 import software.wings.helpers.ext.ecr.EcrService;
 import software.wings.security.encryption.EncryptedDataDetail;
@@ -112,6 +116,7 @@ public abstract class ContainerServiceSetup extends State {
   @Inject @Transient private transient EcrService ecrService;
   @Inject @Transient private transient EcrClassicService ecrClassicService;
   @Inject @Transient private transient AwsHelperService awsHelperService;
+  @Inject @Transient private transient AzureHelperService azureHelperService;
   @Inject @Transient protected transient SettingsService settingsService;
   @Inject @Transient protected transient ServiceResourceService serviceResourceService;
   @Inject @Transient protected transient InfrastructureMappingService infrastructureMappingService;
@@ -376,6 +381,17 @@ public abstract class ContainerServiceSetup extends State {
       GcrArtifactStream gcrArtifactStream = (GcrArtifactStream) artifactStream;
       String imageName = gcrArtifactStream.getRegistryHostName() + "/" + gcrArtifactStream.getDockerImageName();
       imageDetails.name(imageName).sourceName(imageName).registryUrl(imageName);
+    } else if (artifactStream.getArtifactStreamType().equals(ACR.name())) {
+      AcrArtifactStream acrArtifactStream = (AcrArtifactStream) artifactStream;
+      AzureConfig azureConfig = (AzureConfig) settingsService.get(settingId).getValue();
+      String loginServer = azureHelperService.getLoginServerForRegistry(
+          azureConfig, acrArtifactStream.getSubscriptionId(), acrArtifactStream.getRegistryName());
+
+      imageDetails.registryUrl(azureHelperService.getUrl(loginServer))
+          .sourceName(acrArtifactStream.getRepositoryName())
+          .name(loginServer + "/" + acrArtifactStream.getRepositoryName())
+          .username(azureConfig.getClientId())
+          .password(azureConfig.getKey());
     } else if (artifactStream.getArtifactStreamType().equals(ARTIFACTORY.name())) {
       ArtifactoryArtifactStream artifactoryArtifactStream = (ArtifactoryArtifactStream) artifactStream;
       ArtifactoryConfig artifactoryConfig = (ArtifactoryConfig) settingsService.get(settingId).getValue();

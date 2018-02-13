@@ -40,6 +40,10 @@ public enum ArtifactStreamType implements ArtifactStreamTypeDescriptor {
    */
   GCR(GcrArtifactStream.class),
   /**
+   * Azure Container Registry source type.
+   */
+  ACR(AcrArtifactStream.class),
+  /**
    * Nexus Artifact source type.
    */
   NEXUS(NexusArtifactStream.class),
