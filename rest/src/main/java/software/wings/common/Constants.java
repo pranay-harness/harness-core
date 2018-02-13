@@ -393,6 +393,8 @@ public interface Constants {
 
   long DEFAULT_ASYNC_CALL_TIMEOUT = 10 * 60 * 1000; // 10 minutes
 
+  int DEFAULT_STEADY_STATE_TIMEOUT = 10;
+
   /**
    * The constant BUILD_NO.
    */

@@ -8,6 +8,7 @@ import static software.wings.beans.ResizeStrategy.RESIZE_NEW_FIRST;
 import static software.wings.beans.SettingAttribute.Builder.aSettingAttribute;
 import static software.wings.beans.command.KubernetesSetupParams.KubernetesSetupParamsBuilder.aKubernetesSetupParams;
 import static software.wings.common.Constants.CONTAINER_SYNC_CALL_TIMEOUT;
+import static software.wings.common.Constants.DEFAULT_STEADY_STATE_TIMEOUT;
 import static software.wings.sm.StateType.KUBERNETES_SETUP;
 
 import com.google.inject.Inject;
@@ -52,8 +53,6 @@ import java.util.List;
 @JsonIgnoreProperties(ignoreUnknown = true)
 public class KubernetesSetup extends ContainerServiceSetup {
   // *** Note: UI Schema specified in wingsui/src/containers/WorkflowEditor/custom/KubernetesRepCtrlSetup.js
-
-  static final int DEFAULT_STEADY_STATE_TIMEOUT = 10;
 
   private String replicationControllerName;
   private KubernetesServiceType serviceType;

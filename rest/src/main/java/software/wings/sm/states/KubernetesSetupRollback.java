@@ -1,8 +1,8 @@
 package software.wings.sm.states;
 
 import static software.wings.beans.command.KubernetesSetupParams.KubernetesSetupParamsBuilder.aKubernetesSetupParams;
+import static software.wings.common.Constants.DEFAULT_STEADY_STATE_TIMEOUT;
 import static software.wings.sm.StateType.KUBERNETES_SETUP_ROLLBACK;
-import static software.wings.sm.states.KubernetesSetup.DEFAULT_STEADY_STATE_TIMEOUT;
 
 import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
 import software.wings.api.CommandStateExecutionData;
