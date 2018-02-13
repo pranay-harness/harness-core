@@ -5,6 +5,7 @@ import static java.util.stream.Collectors.toList;
 import static org.apache.commons.lang3.StringUtils.isNotBlank;
 import static software.wings.beans.ResizeStrategy.RESIZE_NEW_FIRST;
 import static software.wings.beans.command.EcsSetupParams.EcsSetupParamsBuilder.anEcsSetupParams;
+import static software.wings.common.Constants.DEFAULT_STEADY_STATE_TIMEOUT;
 import static software.wings.sm.StateType.ECS_SERVICE_SETUP;
 
 import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
@@ -98,7 +99,8 @@ public class EcsServiceSetup extends ContainerServiceSetup {
     int maxInstances = getMaxInstances() == 0 ? DEFAULT_MAX : getMaxInstances();
     int fixedInstances = getFixedInstances() == 0 ? maxInstances : getFixedInstances();
     ResizeStrategy resizeStrategy = getResizeStrategy() == null ? RESIZE_NEW_FIRST : getResizeStrategy();
-    int serviceSteadyStateTimeout = (int) getServiceSteadyStateTimeout();
+    int serviceSteadyStateTimeout =
+        getServiceSteadyStateTimeout() > 0 ? (int) getServiceSteadyStateTimeout() : DEFAULT_STEADY_STATE_TIMEOUT;
     ContainerServiceElementBuilder containerServiceElementBuilder =
         ContainerServiceElement.builder()
             .uuid(executionData.getServiceId())
