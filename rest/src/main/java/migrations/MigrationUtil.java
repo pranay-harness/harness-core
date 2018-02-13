@@ -5,6 +5,9 @@ import static software.wings.beans.SearchFilter.Operator.EQ;
 import static software.wings.dl.PageRequest.Builder.aPageRequest;
 import static software.wings.dl.PageRequest.UNLIMITED;
 
+import com.mongodb.BasicDBList;
+import com.mongodb.DBCursor;
+import com.mongodb.DBObject;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import software.wings.beans.Application;
@@ -20,6 +23,7 @@ import software.wings.service.intfc.WorkflowService;
 import software.wings.sm.StateType;
 
 import java.util.ArrayList;
+import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
 
@@ -93,5 +97,28 @@ public class MigrationUtil {
       logger.info("Application migrated: {} - {}. Updated {} out of {} workflows", app.getUuid(), app.getName(),
           updateCount, workflows.size());
     }
+  }
+
+  public static void removeDelegateTaskType(String taskToRemove, WingsPersistence wingsPersistence) {
+    logger.info("Removing " + taskToRemove + " from supported delegate tasks");
+    DBCursor delegates = wingsPersistence.getCollection("delegates").find();
+    while (delegates.hasNext()) {
+      DBObject next = delegates.next();
+      String uuId = (String) next.get("_id");
+      logger.info("updating delegate {}", uuId);
+      BasicDBList supportedTaskTypes = (BasicDBList) next.get("supportedTaskTypes");
+      for (Iterator iterator = supportedTaskTypes.iterator(); iterator.hasNext();) {
+        String taskType = (String) iterator.next();
+        if (taskType.equals(taskToRemove)) {
+          logger.info("Removing {} from supported tasks for delegate {}", taskToRemove, uuId);
+          iterator.remove();
+        }
+      }
+
+      logger.info("setting supported tasks for delegate {} to {} ", uuId, supportedTaskTypes);
+      next.put("supportedTaskTypes", supportedTaskTypes);
+      wingsPersistence.getCollection("delegates").save(next);
+    }
+    logger.info("Done removing " + taskToRemove + " from supported delegate tasks");
   }
 }
