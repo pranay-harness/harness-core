@@ -21,8 +21,8 @@ import static software.wings.beans.ErrorCode.INVALID_ARTIFACT_SERVER;
 import static software.wings.common.Constants.ARTIFACT_FILE_NAME;
 import static software.wings.common.Constants.ARTIFACT_PATH;
 import static software.wings.common.Constants.BUILD_NO;
-import static software.wings.exception.WingsException.ALERTING;
-import static software.wings.exception.WingsException.HARMLESS;
+import static software.wings.exception.WingsException.ReportTarget.USER;
+import static software.wings.exception.WingsException.ReportTarget.USER_ADMIN;
 import static software.wings.helpers.ext.jenkins.BuildDetails.Builder.aBuildDetails;
 
 import com.google.common.util.concurrent.TimeLimiter;
@@ -59,6 +59,7 @@ import software.wings.utils.HttpUtil;
 import software.wings.waitnotify.ListNotifyResponseData;
 
 import java.io.InputStream;
+import java.net.SocketTimeoutException;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collections;
@@ -153,11 +154,11 @@ public class ArtifactoryServiceImpl implements ArtifactoryService {
       if (e instanceof HttpResponseException) {
         HttpResponseException httpResponseException = (HttpResponseException) e;
         if (httpResponseException.getStatusCode() == 404) {
-          throw new WingsException(INVALID_ARTIFACT_SERVER, e)
+          throw new WingsException(INVALID_ARTIFACT_SERVER, USER)
               .addParam("message", "Artifact server may not be running at " + artifactoryConfig.getArtifactoryUrl());
         }
       }
-      handleException(e);
+      handleException(e, USER);
     }
     return repositories;
   }
@@ -175,7 +176,7 @@ public class ArtifactoryServiceImpl implements ArtifactoryService {
     } catch (Exception e) {
       logger.error("Error occurred while retrieving repository  from artifactory {} for Repo {}",
           artifactoryConfig.getArtifactoryUrl(), repoKey, e);
-      handleException(e);
+      handleException(e, USER);
     }
     if (packageType.equals(docker)) {
       return listDockerImages(artifactory, repoKey);
@@ -206,7 +207,7 @@ public class ArtifactoryServiceImpl implements ArtifactoryService {
       logger.error(String.format("Error occurred while listing docker images from artifactory %s for Repo %s",
                        artifactory, repoKey),
           e);
-      handleException(e);
+      handleException(e, USER);
     }
     return images;
   }
@@ -237,7 +238,7 @@ public class ArtifactoryServiceImpl implements ArtifactoryService {
     } catch (Exception e) {
       logger.error("Error occurred while listing docker tags from artifactory {} for Repo {} for image {} ",
           artifactoryConfig.getArtifactoryUrl(), repoKey, imageName, e);
-      handleException(e);
+      handleException(e, USER_ADMIN);
     }
     logger.info("Retrieving docker tags for repoKey {} imageName {} success ", repoKey, imageName);
     return buildDetails;
@@ -329,7 +330,7 @@ public class ArtifactoryServiceImpl implements ArtifactoryService {
       }
       logger.error("Error occurred while retrieving File Paths from Artifactory server {}",
           artifactoryConfig.getArtifactoryUrl(), e);
-      handleException(e);
+      handleException(e, USER_ADMIN);
     }
     return new ArrayList<>();
   }
@@ -399,7 +400,7 @@ public class ArtifactoryServiceImpl implements ArtifactoryService {
       return artifactPaths;
     } catch (Exception e) {
       logger.error("Error occurred while retrieving File Paths from Artifactory server {}", artifactory.getUri(), e);
-      handleException(e);
+      handleException(e, USER_ADMIN);
     }
     return new ArrayList<>();
   }
@@ -450,7 +451,7 @@ public class ArtifactoryServiceImpl implements ArtifactoryService {
       }
       logger.error("Error occurred while retrieving groupIds from artifactory server {} and repoKey {}",
           artifactory.getUri(), repoKey, e);
-      handleException(e);
+      handleException(e, USER);
     }
     logger.info("Retrieving groupIds for repoKey {} success", repoKey);
     return groupIdList;
@@ -611,7 +612,7 @@ public class ArtifactoryServiceImpl implements ArtifactoryService {
       return aBuildDetails().withNumber(latestVersion).withRevision(latestVersion).build();
     } catch (Exception e) {
       logger.error("Failed to fetch the latest version for url {}  ", artifactoryConfig.getArtifactoryUrl(), e);
-      handleException(e);
+      handleException(e, USER_ADMIN);
     }
     return null;
   }
@@ -681,7 +682,7 @@ public class ArtifactoryServiceImpl implements ArtifactoryService {
     } catch (Exception e) {
       logger.error("Error occurred while Retrieving Artifact Ids from artifactory url {} repoKey {} groupId {} ",
           artifactoryConfig.getArtifactoryUrl(), repoKey, groupId, e);
-      handleException(e);
+      handleException(e, USER);
     }
     logger.info("Retrieving Artifact Ids from artifactory url {} repoKey {} groupId {} success",
         artifactoryConfig.getArtifactoryUrl(), repoKey, groupId);
@@ -764,7 +765,7 @@ public class ArtifactoryServiceImpl implements ArtifactoryService {
       }
     } catch (Exception e) {
       String msg = "Failed to download the latest artifacts  of repo [" + repoType + "] groupId [" + groupId;
-      prepareAndThrowException(msg + "Reason:" + ExceptionUtils.getRootCauseMessage(e), ALERTING);
+      prepareAndThrowException(msg + "Reason:" + ExceptionUtils.getRootCauseMessage(e), USER_ADMIN);
     }
     return res;
   }
@@ -794,12 +795,12 @@ public class ArtifactoryServiceImpl implements ArtifactoryService {
       // First get the groupId
       String[] artifactPaths = artifactPath.split("/");
       if (isEmpty(artifactPaths)) {
-        prepareAndThrowException("Invalid artifact path", HARMLESS);
+        prepareAndThrowException("Invalid artifact path", USER);
       }
       if (artifactPaths.length < 4) {
         prepareAndThrowException(
-            "Not in maven style format. Sample format: com/mycompany/myservice/*/myservice*.war", HARMLESS);
-        throw new WingsException(INVALID_ARTIFACT_SERVER, HARMLESS)
+            "Not in maven style format. Sample format: com/mycompany/myservice/*/myservice*.war", USER);
+        throw new WingsException(INVALID_ARTIFACT_SERVER, USER)
             .addParam("message", "Not in maven style format. Sample format: com/mycompany/myservice/*/myservice*.war");
       }
       String groupId =
@@ -826,11 +827,11 @@ public class ArtifactoryServiceImpl implements ArtifactoryService {
   }
 
   private void prepareAndThrowException(String message) {
-    prepareAndThrowException(message, HARMLESS);
+    prepareAndThrowException(message, USER);
   }
 
-  private void prepareAndThrowException(String message, ReportTarget[] reportTargets) {
-    throw new WingsException(ErrorCode.INVALID_ARTIFACT_SERVER, reportTargets).addParam("message", message);
+  private void prepareAndThrowException(String message, ReportTarget reportTarget) {
+    throw new WingsException(ErrorCode.INVALID_ARTIFACT_SERVER, reportTarget).addParam("message", message);
   }
 
   private ListNotifyResponseData downloadArtifacts(ArtifactoryConfig artifactoryConfig,
@@ -892,17 +893,16 @@ public class ArtifactoryServiceImpl implements ArtifactoryService {
         builder.setUsername(artifactoryConfig.getUsername());
         builder.setPassword(new String(artifactoryConfig.getPassword()));
       }
-      // TODO Ignore SSL issues -
-
       HttpHost httpProxyHost = HttpUtil.getHttpProxyHost(artifactoryConfig.getArtifactoryUrl());
       if (httpProxyHost != null) {
         builder.setProxy(new ProxyConfig(httpProxyHost.getHostName(), httpProxyHost.getPort(), null, null, null));
       }
-
+      builder.setSocketTimeout(15000);
+      builder.setConnectionTimeout(15000);
       return builder.build();
     } catch (Exception ex) {
       logger.error("Error occurred while trying to initialize artifactory", ex);
-      prepareAndThrowException("Invalid Artifactory credentials", ALERTING);
+      prepareAndThrowException("Invalid Artifactory credentials", USER);
     }
     return null;
   }
@@ -916,15 +916,20 @@ public class ArtifactoryServiceImpl implements ArtifactoryService {
     return "/" + path.replace(".", "/") + "/";
   }
 
-  private void handleException(Exception e) {
+  private void handleException(Exception e, ReportTarget reportTarget) {
     if (e instanceof HttpResponseException) {
       HttpResponseException httpResponseException = (HttpResponseException) e;
       if (httpResponseException.getStatusCode() == 401) {
-        prepareAndThrowException("Invalid Artifactory credentials", ALERTING);
+        prepareAndThrowException("Invalid Artifactory credentials", reportTarget);
       } else if (httpResponseException.getStatusCode() == 403) {
-        prepareAndThrowException("User not authorized to access artifactory", ALERTING);
+        prepareAndThrowException("User not authorized to access artifactory", reportTarget);
       }
     }
-    throw new WingsException(ARTIFACT_SERVER_ERROR, e).addParam("message", e.getMessage());
+    if (e instanceof SocketTimeoutException) {
+      prepareAndThrowException(e.getMessage() + "."
+              + " Artifactory server may not be running",
+          reportTarget);
+    }
+    throw new WingsException(ARTIFACT_SERVER_ERROR, reportTarget).addParam("message", e.getMessage());
   }
 }
