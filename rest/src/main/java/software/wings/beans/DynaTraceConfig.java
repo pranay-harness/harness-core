@@ -7,6 +7,7 @@ import com.github.reinert.jjschema.SchemaIgnore;
 import lombok.Builder;
 import lombok.Data;
 import lombok.EqualsAndHashCode;
+import lombok.NoArgsConstructor;
 import lombok.ToString;
 import org.hibernate.validator.constraints.NotEmpty;
 import ro.fortsoft.pf4j.Extension;
@@ -15,6 +16,7 @@ import software.wings.annotation.Encrypted;
 import software.wings.jersey.JsonViews;
 import software.wings.settings.SettingValue;
 import software.wings.sm.StateType;
+import software.wings.yaml.setting.VerificationProviderYaml;
 
 /**
  * Created by raghu on 8/28/17.
@@ -47,5 +49,20 @@ public class DynaTraceConfig extends SettingValue implements Encryptable {
     this.apiToken = apiToken;
     this.accountId = accountId;
     this.encryptedApiToken = encryptedApiToken;
+  }
+
+  @Data
+  @EqualsAndHashCode(callSuper = true)
+  @NoArgsConstructor
+  public static final class DynaTraceYaml extends VerificationProviderYaml {
+    private String apiToken;
+    private String dynaTraceUrl;
+
+    @Builder
+    public DynaTraceYaml(String type, String harnessApiVersion, String dynaTraceUrl, String apiToken) {
+      super(type, harnessApiVersion);
+      this.dynaTraceUrl = dynaTraceUrl;
+      this.apiToken = apiToken;
+    }
   }
 }
