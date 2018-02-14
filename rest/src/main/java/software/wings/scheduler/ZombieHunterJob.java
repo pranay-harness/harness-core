@@ -195,6 +195,9 @@ public class ZombieHunterJob implements Job {
     select.put(APP_ID_KEY, 1);
     select.put(zombieType.ownerFieldName, 1);
 
+    BasicDBObject selectOwner = new BasicDBObject();
+    selectOwner.put(ID_KEY, 1);
+
     int count = 0;
     final DBCursor dbCursor = wingsPersistence.getCollection(zombieType.collection).find(null, select);
     while (dbCursor.hasNext()) {
@@ -205,8 +208,9 @@ public class ZombieHunterJob implements Job {
       if (map.containsKey(ownerId)) {
         ownerObject = (DBObject) map.get(ownerId);
       } else {
+        final BasicDBObject queryOwner = new BasicDBObject("_id", ownerId);
         for (DBCollection owner : owners) {
-          if ((ownerObject = owner.findOne(new BasicDBObject("_id", ownerId))) != null) {
+          if ((ownerObject = owner.findOne(queryOwner, selectOwner)) != null) {
             break;
           }
         }
