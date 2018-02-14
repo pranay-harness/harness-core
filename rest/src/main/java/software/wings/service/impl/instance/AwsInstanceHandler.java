@@ -107,8 +107,10 @@ public class AwsInstanceHandler extends InstanceHandler {
       } else if (instanceInfo instanceof Ec2InstanceInfo) {
         Ec2InstanceInfo ec2InstanceInfo = (Ec2InstanceInfo) instanceInfo;
         com.amazonaws.services.ec2.model.Instance ec2Instance = ec2InstanceInfo.getEc2Instance();
-        String ec2InstanceId = ec2Instance.getInstanceId();
-        ec2InstanceIdInstanceMap.put(ec2InstanceId, instance);
+        if (ec2Instance != null) {
+          String ec2InstanceId = ec2Instance.getInstanceId();
+          ec2InstanceIdInstanceMap.put(ec2InstanceId, instance);
+        }
       }
     });
   }
