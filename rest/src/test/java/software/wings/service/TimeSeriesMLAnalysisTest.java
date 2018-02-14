@@ -121,6 +121,249 @@ public class TimeSeriesMLAnalysisTest extends WingsBaseTest {
   }
 
   @Test
+  public void testNewRelicSorting() throws IOException {
+    NewRelicMetricAnalysisValue requestsPerMinute = NewRelicMetricAnalysisValue.builder()
+                                                        .name("requestsPerMinute")
+                                                        .riskLevel(RiskLevel.LOW)
+                                                        .controlValue(100)
+                                                        .testValue(2000)
+                                                        .build();
+
+    NewRelicMetricAnalysisValue appdex = NewRelicMetricAnalysisValue.builder()
+                                             .name("appdex")
+                                             .riskLevel(RiskLevel.LOW)
+                                             .controlValue(100)
+                                             .testValue(2000)
+                                             .build();
+    NewRelicMetricAnalysis indexAnalysis = NewRelicMetricAnalysis.builder()
+                                               .metricName("index.jsp")
+                                               .metricValues(Lists.newArrayList(requestsPerMinute, appdex))
+                                               .riskLevel(RiskLevel.LOW)
+                                               .build();
+
+    requestsPerMinute = NewRelicMetricAnalysisValue.builder()
+                            .name("requestsPerMinute")
+                            .riskLevel(RiskLevel.LOW)
+                            .controlValue(100)
+                            .testValue(3000)
+                            .build();
+
+    appdex = NewRelicMetricAnalysisValue.builder()
+                 .name("appdex")
+                 .riskLevel(RiskLevel.LOW)
+                 .controlValue(100)
+                 .testValue(423)
+                 .build();
+
+    NewRelicMetricAnalysis accountAnalyis = NewRelicMetricAnalysis.builder()
+                                                .metricName("account")
+                                                .metricValues(Lists.newArrayList(requestsPerMinute, appdex))
+                                                .riskLevel(RiskLevel.LOW)
+                                                .build();
+
+    requestsPerMinute = NewRelicMetricAnalysisValue.builder()
+                            .name("requestsPerMinute")
+                            .riskLevel(RiskLevel.LOW)
+                            .controlValue(100)
+                            .testValue(2500)
+                            .build();
+
+    appdex = NewRelicMetricAnalysisValue.builder()
+                 .name("appdex")
+                 .riskLevel(RiskLevel.LOW)
+                 .controlValue(100)
+                 .testValue(8000)
+                 .build();
+
+    NewRelicMetricAnalysis loginAnalysis = NewRelicMetricAnalysis.builder()
+                                               .metricName("login")
+                                               .metricValues(Lists.newArrayList(requestsPerMinute, appdex))
+                                               .riskLevel(RiskLevel.LOW)
+                                               .build();
+
+    NewRelicMetricAnalysisRecord newRelicMetricAnalysisRecord =
+        NewRelicMetricAnalysisRecord.builder()
+            .analysisMinute(0)
+            .metricAnalyses(Lists.newArrayList(indexAnalysis, accountAnalyis, loginAnalysis))
+            .applicationId(appId)
+            .stateExecutionId(stateExecutionId)
+            .workflowExecutionId(workflowExecutionId)
+            .message("1 high risk anomaly")
+            .stateType(StateType.NEW_RELIC)
+            .build();
+
+    metricDataAnalysisService.saveAnalysisRecords(newRelicMetricAnalysisRecord);
+    NewRelicMetricAnalysisRecord analysisRecord =
+        newRelicResource.getMetricsAnalysis(stateExecutionId, workflowExecutionId, accountId).getResource();
+    assertEquals(analysisRecord.getMetricAnalyses().size(), 3);
+    assertEquals(analysisRecord.getMetricAnalyses().get(0).getMetricName(), "account");
+    assertEquals(analysisRecord.getMetricAnalyses().get(1).getMetricName(), "login");
+    assertEquals(analysisRecord.getMetricAnalyses().get(2).getMetricName(), "index.jsp");
+  }
+
+  @Test
+  public void testAppDSorting() throws IOException {
+    NewRelicMetricAnalysisValue requestsPerMinute = NewRelicMetricAnalysisValue.builder()
+                                                        .name("response95th")
+                                                        .riskLevel(RiskLevel.LOW)
+                                                        .controlValue(100)
+                                                        .testValue(2000)
+                                                        .build();
+
+    NewRelicMetricAnalysisValue appdex = NewRelicMetricAnalysisValue.builder()
+                                             .name("stalls")
+                                             .riskLevel(RiskLevel.LOW)
+                                             .controlValue(100)
+                                             .testValue(2000)
+                                             .build();
+    NewRelicMetricAnalysis indexAnalysis = NewRelicMetricAnalysis.builder()
+                                               .metricName("index.jsp")
+                                               .metricValues(Lists.newArrayList(requestsPerMinute, appdex))
+                                               .riskLevel(RiskLevel.LOW)
+                                               .build();
+
+    requestsPerMinute = NewRelicMetricAnalysisValue.builder()
+                            .name("response95th")
+                            .riskLevel(RiskLevel.LOW)
+                            .controlValue(100)
+                            .testValue(3000)
+                            .build();
+
+    appdex = NewRelicMetricAnalysisValue.builder()
+                 .name("stalls")
+                 .riskLevel(RiskLevel.LOW)
+                 .controlValue(100)
+                 .testValue(423)
+                 .build();
+
+    NewRelicMetricAnalysis accountAnalyis = NewRelicMetricAnalysis.builder()
+                                                .metricName("account")
+                                                .metricValues(Lists.newArrayList(requestsPerMinute, appdex))
+                                                .riskLevel(RiskLevel.LOW)
+                                                .build();
+
+    requestsPerMinute = NewRelicMetricAnalysisValue.builder()
+                            .name("response95th")
+                            .riskLevel(RiskLevel.LOW)
+                            .controlValue(100)
+                            .testValue(2500)
+                            .build();
+
+    appdex = NewRelicMetricAnalysisValue.builder()
+                 .name("stalls")
+                 .riskLevel(RiskLevel.LOW)
+                 .controlValue(100)
+                 .testValue(8000)
+                 .build();
+
+    NewRelicMetricAnalysis loginAnalysis = NewRelicMetricAnalysis.builder()
+                                               .metricName("login")
+                                               .metricValues(Lists.newArrayList(requestsPerMinute, appdex))
+                                               .riskLevel(RiskLevel.LOW)
+                                               .build();
+
+    NewRelicMetricAnalysisRecord newRelicMetricAnalysisRecord =
+        NewRelicMetricAnalysisRecord.builder()
+            .analysisMinute(0)
+            .metricAnalyses(Lists.newArrayList(indexAnalysis, accountAnalyis, loginAnalysis))
+            .applicationId(appId)
+            .stateExecutionId(stateExecutionId)
+            .workflowExecutionId(workflowExecutionId)
+            .message("1 high risk anomaly")
+            .stateType(StateType.APP_DYNAMICS)
+            .build();
+
+    metricDataAnalysisService.saveAnalysisRecords(newRelicMetricAnalysisRecord);
+    NewRelicMetricAnalysisRecord analysisRecord =
+        newRelicResource.getMetricsAnalysis(stateExecutionId, workflowExecutionId, accountId).getResource();
+    assertEquals(analysisRecord.getMetricAnalyses().size(), 3);
+    assertEquals(analysisRecord.getMetricAnalyses().get(0).getMetricName(), "account");
+    assertEquals(analysisRecord.getMetricAnalyses().get(1).getMetricName(), "login");
+    assertEquals(analysisRecord.getMetricAnalyses().get(2).getMetricName(), "index.jsp");
+  }
+
+  @Test
+  public void testDynaTraceSorting() throws IOException {
+    NewRelicMetricAnalysisValue requestsPerMinute = NewRelicMetricAnalysisValue.builder()
+                                                        .name("requestsPerMin")
+                                                        .riskLevel(RiskLevel.LOW)
+                                                        .controlValue(100)
+                                                        .testValue(2000)
+                                                        .build();
+
+    NewRelicMetricAnalysisValue appdex = NewRelicMetricAnalysisValue.builder()
+                                             .name("serverSideError")
+                                             .riskLevel(RiskLevel.LOW)
+                                             .controlValue(100)
+                                             .testValue(2000)
+                                             .build();
+    NewRelicMetricAnalysis indexAnalysis = NewRelicMetricAnalysis.builder()
+                                               .metricName("index.jsp")
+                                               .metricValues(Lists.newArrayList(requestsPerMinute, appdex))
+                                               .riskLevel(RiskLevel.LOW)
+                                               .build();
+
+    requestsPerMinute = NewRelicMetricAnalysisValue.builder()
+                            .name("requestsPerMin")
+                            .riskLevel(RiskLevel.LOW)
+                            .controlValue(100)
+                            .testValue(3000)
+                            .build();
+
+    appdex = NewRelicMetricAnalysisValue.builder()
+                 .name("stalls")
+                 .riskLevel(RiskLevel.LOW)
+                 .controlValue(100)
+                 .testValue(423)
+                 .build();
+
+    NewRelicMetricAnalysis accountAnalyis = NewRelicMetricAnalysis.builder()
+                                                .metricName("account")
+                                                .metricValues(Lists.newArrayList(requestsPerMinute, appdex))
+                                                .riskLevel(RiskLevel.LOW)
+                                                .build();
+
+    requestsPerMinute = NewRelicMetricAnalysisValue.builder()
+                            .name("requestsPerMin")
+                            .riskLevel(RiskLevel.LOW)
+                            .controlValue(100)
+                            .testValue(2500)
+                            .build();
+
+    appdex = NewRelicMetricAnalysisValue.builder()
+                 .name("clientSideError")
+                 .riskLevel(RiskLevel.LOW)
+                 .controlValue(100)
+                 .testValue(8000)
+                 .build();
+
+    NewRelicMetricAnalysis loginAnalysis = NewRelicMetricAnalysis.builder()
+                                               .metricName("login")
+                                               .metricValues(Lists.newArrayList(requestsPerMinute, appdex))
+                                               .riskLevel(RiskLevel.LOW)
+                                               .build();
+
+    NewRelicMetricAnalysisRecord newRelicMetricAnalysisRecord =
+        NewRelicMetricAnalysisRecord.builder()
+            .analysisMinute(0)
+            .metricAnalyses(Lists.newArrayList(indexAnalysis, accountAnalyis, loginAnalysis))
+            .applicationId(appId)
+            .stateExecutionId(stateExecutionId)
+            .workflowExecutionId(workflowExecutionId)
+            .message("1 high risk anomaly")
+            .stateType(StateType.DYNA_TRACE)
+            .build();
+
+    metricDataAnalysisService.saveAnalysisRecords(newRelicMetricAnalysisRecord);
+    NewRelicMetricAnalysisRecord analysisRecord =
+        newRelicResource.getMetricsAnalysis(stateExecutionId, workflowExecutionId, accountId).getResource();
+    assertEquals(analysisRecord.getMetricAnalyses().size(), 3);
+    assertEquals(analysisRecord.getMetricAnalyses().get(0).getMetricName(), "account");
+    assertEquals(analysisRecord.getMetricAnalyses().get(1).getMetricName(), "login");
+    assertEquals(analysisRecord.getMetricAnalyses().get(2).getMetricName(), "index.jsp");
+  }
+
+  @Test
   public void testDynatraceMetricNameReplacement() throws IOException {
     NewRelicMetricAnalysisValue metricAnalysisValue = NewRelicMetricAnalysisValue.builder()
                                                           .name("requestsPerMinute")
