@@ -21,6 +21,7 @@ import com.amazonaws.services.codedeploy.model.DeploymentInfo;
 import com.amazonaws.services.codedeploy.model.ErrorInformation;
 import com.amazonaws.services.codedeploy.model.GetDeploymentGroupRequest;
 import com.amazonaws.services.codedeploy.model.GetDeploymentRequest;
+import com.amazonaws.services.codedeploy.model.InstanceStatus;
 import com.amazonaws.services.codedeploy.model.ListApplicationsRequest;
 import com.amazonaws.services.codedeploy.model.ListApplicationsResult;
 import com.amazonaws.services.codedeploy.model.ListDeploymentConfigsRequest;
@@ -32,6 +33,7 @@ import com.amazonaws.services.codedeploy.model.ListDeploymentInstancesResult;
 import com.amazonaws.services.codedeploy.model.RevisionLocation;
 import com.amazonaws.services.ec2.model.DescribeInstancesRequest;
 import com.amazonaws.services.ec2.model.Instance;
+import org.apache.commons.collections.CollectionUtils;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import software.wings.beans.AwsConfig;
@@ -45,6 +47,7 @@ import software.wings.security.encryption.EncryptedDataDetail;
 import software.wings.service.impl.AwsHelperService;
 
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.List;
 import java.util.Set;
 import java.util.concurrent.TimeUnit;
@@ -143,8 +146,8 @@ public class AwsCodeDeployServiceImpl implements AwsCodeDeployService {
       codeDeployDeploymentInfo.setStatus(Failed.name().equals(finalDeploymentStatus) ? CommandExecutionStatus.FAILURE
                                                                                      : CommandExecutionStatus.SUCCESS);
 
-      List<String> instanceIds =
-          fetchAllDeploymentInstances(awsConfig, encryptedDataDetails, region, deploymentResult.getDeploymentId());
+      List<String> instanceIds = fetchAllDeploymentInstances(
+          awsConfig, encryptedDataDetails, region, deploymentResult.getDeploymentId(), null);
       DescribeInstancesRequest describeInstancesRequest = new DescribeInstancesRequest().withInstanceIds(instanceIds);
       List<Instance> instances =
           awsHelperService.describeEc2Instances(awsConfig, encryptedDataDetails, region, describeInstancesRequest)
@@ -154,6 +157,7 @@ public class AwsCodeDeployServiceImpl implements AwsCodeDeployService {
               .collect(Collectors.toList());
 
       codeDeployDeploymentInfo.setInstances(instances);
+      codeDeployDeploymentInfo.setDeploymentId(deploymentResult.getDeploymentId());
       return codeDeployDeploymentInfo;
     } catch (WingsException wex) {
       executionLogCallback.saveExecutionLog("Deployment failed ", LogLevel.ERROR);
@@ -162,6 +166,21 @@ public class AwsCodeDeployServiceImpl implements AwsCodeDeployService {
           LogLevel.ERROR);
       throw wex;
     }
+  }
+
+  @Override
+  public List<Instance> listDeploymentInstances(String region, SettingAttribute cloudProviderSetting,
+      List<EncryptedDataDetail> encryptedDataDetails, String deploymentId) {
+    AwsConfig awsConfig = awsHelperService.validateAndGetAwsConfig(cloudProviderSetting, encryptedDataDetails);
+
+    List<String> instanceIds = fetchAllDeploymentInstances(
+        awsConfig, encryptedDataDetails, region, deploymentId, Arrays.asList(InstanceStatus.Succeeded.name()));
+    DescribeInstancesRequest describeInstancesRequest = new DescribeInstancesRequest().withInstanceIds(instanceIds);
+    return awsHelperService.describeEc2Instances(awsConfig, encryptedDataDetails, region, describeInstancesRequest)
+        .getReservations()
+        .stream()
+        .flatMap(reservation -> reservation.getInstances().stream())
+        .collect(Collectors.toList());
   }
 
   public RevisionLocation getApplicationRevisionList(String region, String appName, String deploymentGroupName,
@@ -176,17 +195,21 @@ public class AwsCodeDeployServiceImpl implements AwsCodeDeployService {
     return deploymentGroupInfo.getTargetRevision();
   }
 
-  private List<String> fetchAllDeploymentInstances(
-      AwsConfig awsConfig, List<EncryptedDataDetail> encryptedDataDetails, String region, String deploymentId) {
+  private List<String> fetchAllDeploymentInstances(AwsConfig awsConfig, List<EncryptedDataDetail> encryptedDataDetails,
+      String region, String deploymentId, List<String> instanceStatusList) {
     List<String> instances = new ArrayList<>();
     ListDeploymentInstancesResult listDeploymentInstancesResult;
     ListDeploymentInstancesRequest listDeploymentInstancesRequest =
         new ListDeploymentInstancesRequest().withDeploymentId(deploymentId);
+    if (CollectionUtils.isNotEmpty(instanceStatusList)) {
+      listDeploymentInstancesRequest.withInstanceStatusFilter(instanceStatusList);
+    }
+
     do {
       listDeploymentInstancesResult = awsHelperService.listDeploymentInstances(
           awsConfig, encryptedDataDetails, region, listDeploymentInstancesRequest);
       instances.addAll(listDeploymentInstancesResult.getInstancesList());
-      listDeploymentInstancesResult.setNextToken(listDeploymentInstancesResult.getNextToken());
+      listDeploymentInstancesRequest.setNextToken(listDeploymentInstancesResult.getNextToken());
     } while (listDeploymentInstancesResult.getNextToken() != null);
     return instances;
   }

@@ -87,7 +87,7 @@ public class NodeSelectStateTest extends WingsBaseTest {
 
   HostInstanceKey hostInstanceKey =
       HostInstanceKey.builder().hostName("host1").infraMappingId(INFRA_MAPPING_ID).build();
-  Instance instance = Instance.Builder.anInstance().withHostInstanceKey(hostInstanceKey).build();
+  Instance instance = Instance.builder().hostInstanceKey(hostInstanceKey).build();
 
   ServiceInstance instance1 = aServiceInstance()
                                   .withUuid(UUIDGenerator.getUuid())

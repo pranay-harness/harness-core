@@ -9,25 +9,26 @@ import com.hazelcast.util.Preconditions;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import software.wings.api.CommandStepExecutionSummary;
-import software.wings.api.ContainerDeploymentEvent;
+import software.wings.api.ContainerDeploymentInfo;
 import software.wings.api.ContainerServiceData;
+import software.wings.api.DeploymentEvent;
+import software.wings.api.DeploymentInfo;
 import software.wings.api.PhaseExecutionData;
 import software.wings.api.PhaseStepExecutionData;
-import software.wings.beans.Application;
 import software.wings.beans.ContainerInfrastructureMapping;
 import software.wings.beans.DirectKubernetesInfrastructureMapping;
-import software.wings.beans.EmbeddedUser;
 import software.wings.beans.ExecutionArgs;
 import software.wings.beans.GcpKubernetesInfrastructureMapping;
 import software.wings.beans.InfrastructureMapping;
 import software.wings.beans.WorkflowExecution;
 import software.wings.beans.artifact.Artifact;
-import software.wings.beans.infrastructure.instance.ContainerDeploymentInfo;
 import software.wings.beans.infrastructure.instance.Instance;
+import software.wings.beans.infrastructure.instance.Instance.InstanceBuilder;
 import software.wings.beans.infrastructure.instance.InstanceType;
 import software.wings.beans.infrastructure.instance.info.ContainerInfo;
 import software.wings.beans.infrastructure.instance.info.EcsContainerInfo;
 import software.wings.beans.infrastructure.instance.info.KubernetesContainerInfo;
+import software.wings.beans.infrastructure.instance.key.ContainerInstanceKey;
 import software.wings.common.Constants;
 import software.wings.core.queue.Queue;
 import software.wings.exception.WingsException;
@@ -42,7 +43,6 @@ import software.wings.service.intfc.instance.InstanceService;
 import software.wings.sm.ExecutionContext;
 import software.wings.sm.PhaseExecutionSummary;
 import software.wings.sm.PhaseStepExecutionSummary;
-import software.wings.sm.PipelineSummary;
 import software.wings.sm.StateExecutionData;
 import software.wings.sm.StateExecutionInstance;
 import software.wings.sm.StateType;
@@ -52,12 +52,13 @@ import software.wings.utils.Validator;
 import java.util.Collection;
 import java.util.List;
 import java.util.Map;
+import java.util.Optional;
 import java.util.Set;
 import java.util.stream.Collectors;
 
 /**
  * Handles all the container instance related operations like querying the latest instances from container provider,
- * building instances out of container info, etc.
+ * building instances out of container deploymentInfo, etc.
  *
  * @author rktummala on 09/10/17
  */
@@ -74,7 +75,7 @@ public class ContainerInstanceHelper {
 
   // This queue is used to asynchronously process all the container deployment information that the workflow touched
   // upon.
-  @Inject private Queue<ContainerDeploymentEvent> containerDeploymentEventQueue;
+  @Inject private Queue<DeploymentEvent> deploymentEventQueue;
 
   public boolean isContainerDeployment(InfrastructureMapping infrastructureMapping) {
     return infrastructureMapping instanceof ContainerInfrastructureMapping
@@ -82,8 +83,9 @@ public class ContainerInstanceHelper {
         || infrastructureMapping instanceof DirectKubernetesInfrastructureMapping;
   }
 
-  public void extractContainerInfoAndSendEvent(String stateExecutionInstanceId, PhaseExecutionData phaseExecutionData,
-      WorkflowExecution workflowExecution, InfrastructureMapping infrastructureMapping) {
+  public Optional<DeploymentEvent> extractContainerInfoAndSendEvent(String stateExecutionInstanceId,
+      PhaseExecutionData phaseExecutionData, WorkflowExecution workflowExecution, Artifact artifact,
+      InfrastructureMapping infrastructureMapping) {
     PhaseExecutionSummary phaseExecutionSummary = phaseExecutionData.getPhaseExecutionSummary();
     if (phaseExecutionSummary != null) {
       Map<String, PhaseStepExecutionSummary> phaseStepExecutionSummaryMap =
@@ -93,14 +95,14 @@ public class ContainerInstanceHelper {
             phaseStepExecutionSummaryMap.get(Constants.DEPLOY_CONTAINERS);
         if (phaseStepExecutionSummary == null) {
           logger.debug("PhaseStepExecutionSummary is null for stateExecutionInstanceId: " + stateExecutionInstanceId);
-          return;
+          return Optional.empty();
         }
         List<StepExecutionSummary> stepExecutionSummaryList = phaseStepExecutionSummary.getStepExecutionSummaryList();
         // This was observed when the "deploy containers" step was executed in rollback and no commands were
         // executed since setup failed.
         if (stepExecutionSummaryList == null) {
           logger.debug("StepExecutionSummaryList is null for stateExecutionInstanceId: " + stateExecutionInstanceId);
-          return;
+          return Optional.empty();
         }
 
         for (StepExecutionSummary stepExecutionSummary : stepExecutionSummaryList) {
@@ -132,13 +134,14 @@ public class ContainerInstanceHelper {
               throw new WingsException(msg);
             }
 
-            ContainerDeploymentEvent containerDeploymentEvent = buildContainerDeploymentEvent(stateExecutionInstanceId,
-                workflowExecution, phaseExecutionData, clusterName, containerSvcNameSet, infrastructureMapping);
-            containerDeploymentEventQueue.send(containerDeploymentEvent);
+            return Optional.of(buildContainerDeploymentEvent(stateExecutionInstanceId, workflowExecution,
+                phaseExecutionData, clusterName, containerSvcNameSet, infrastructureMapping, artifact));
           }
         }
       }
     }
+
+    return Optional.empty();
   }
 
   public Set<String> getContainerServiceNames(ExecutionContext context, String serviceId, String infraMappingId) {
@@ -202,9 +205,10 @@ public class ContainerInstanceHelper {
 
     String containerSvcNameNoRevision =
         getcontainerSvcNameNoRevision(instanceType, containerSvcNames.iterator().next());
-    Map<String, ContainerDeploymentInfo> containerSvcNameDeploymentInfoMap = Maps.newHashMap();
+    Map<String, software.wings.beans.infrastructure.instance.ContainerDeploymentInfo>
+        containerSvcNameDeploymentInfoMap = Maps.newHashMap();
 
-    List<ContainerDeploymentInfo> currentContainerDeploymentsInDB =
+    List<software.wings.beans.infrastructure.instance.ContainerDeploymentInfo> currentContainerDeploymentsInDB =
         instanceService.getContainerDeploymentInfoList(containerSvcNameNoRevision, context.getAppId());
 
     currentContainerDeploymentsInDB.stream().forEach(currentContainerDeploymentInDB
@@ -212,16 +216,18 @@ public class ContainerInstanceHelper {
             currentContainerDeploymentInDB.getContainerSvcName(), currentContainerDeploymentInDB));
 
     for (String containerSvcName : containerSvcNames) {
-      ContainerDeploymentInfo containerDeploymentInfo = containerSvcNameDeploymentInfoMap.get(containerSvcName);
+      software.wings.beans.infrastructure.instance.ContainerDeploymentInfo containerDeploymentInfo =
+          containerSvcNameDeploymentInfoMap.get(containerSvcName);
       if (containerDeploymentInfo == null) {
-        containerDeploymentInfo = ContainerDeploymentInfo.Builder.aContainerDeploymentInfo()
-                                      .withAppId(context.getAppId())
-                                      .withContainerSvcName(containerSvcName)
-                                      .withInfraMappingId(infrastructureMappingId)
-                                      .withWorkflowId(context.getWorkflowId())
-                                      .withWorkflowExecutionId(context.getWorkflowExecutionId())
-                                      .withServiceId(serviceId)
-                                      .build();
+        containerDeploymentInfo =
+            software.wings.beans.infrastructure.instance.ContainerDeploymentInfo.Builder.aContainerDeploymentInfo()
+                .withAppId(context.getAppId())
+                .withContainerSvcName(containerSvcName)
+                .withInfraMappingId(infrastructureMappingId)
+                .withWorkflowId(context.getWorkflowId())
+                .withWorkflowExecutionId(context.getWorkflowExecutionId())
+                .withServiceId(serviceId)
+                .build();
 
         containerSvcNameDeploymentInfoMap.put(containerSvcName, containerDeploymentInfo);
       }
@@ -233,9 +239,9 @@ public class ContainerInstanceHelper {
     return instanceSyncResponse.getContainerInfoList();
   }
 
-  private ContainerDeploymentEvent buildContainerDeploymentEvent(String stateExecutionInstanceId,
+  private DeploymentEvent buildContainerDeploymentEvent(String stateExecutionInstanceId,
       WorkflowExecution workflowExecution, PhaseExecutionData phaseExecutionData, String clusterName,
-      Set<String> containerSvcNameSet, InfrastructureMapping infrastructureMapping) {
+      Set<String> containerSvcNameSet, InfrastructureMapping infrastructureMapping, Artifact artifact) {
     Validator.notNullCheck("containerSvcNameSet", containerSvcNameSet);
     if (containerSvcNameSet.isEmpty()) {
       String msg = "No container service names processed by the event";
@@ -243,40 +249,13 @@ public class ContainerInstanceHelper {
       throw new WingsException(msg);
     }
 
-    PipelineSummary pipelineSummary = workflowExecution.getPipelineSummary();
-    Application application = appService.get(workflowExecution.getAppId());
-    Validator.notNullCheck("Application", application);
-    EmbeddedUser triggeredBy = workflowExecution.getTriggeredBy();
-    Validator.notNullCheck("triggeredBy", triggeredBy);
-    String infraMappingType = infrastructureMapping.getInfraMappingType();
+    ContainerDeploymentInfo containerDeploymentInfo =
+        ContainerDeploymentInfo.builder().containerSvcNameSet(containerSvcNameSet).clusterName(clusterName).build();
 
-    String workflowName = instanceUtil.getWorkflowName(workflowExecution.getName());
-    Validator.notNullCheck("WorkflowName", workflowName);
-
-    InstanceType instanceType = instanceUtil.getInstanceType(infraMappingType);
-    Validator.notNullCheck("InstanceType", instanceType);
-
-    String[] containerSvcNames = containerSvcNameSet.toArray(new String[0]);
-    String containerSvcNameNoRevision = getcontainerSvcNameNoRevision(instanceType, containerSvcNames[0]);
-
-    ContainerDeploymentEvent.Builder containerDeploymentEvent =
-        ContainerDeploymentEvent.Builder.aContainerDeploymentEvent()
-            .withContainerSvcNameSet(containerSvcNameSet)
-            .withAppId(workflowExecution.getAppId())
-            .withAccountId(application.getAccountId())
-            .withComputeProviderId(phaseExecutionData.getComputeProviderId())
-            .withEnvId(workflowExecution.getEnvId())
-            .withInfraMappingId(phaseExecutionData.getInfraMappingId())
-            .withInstanceType(instanceType)
-            .withPipelineExecutionId(pipelineSummary == null ? null : pipelineSummary.getPipelineId())
-            .withServiceId(phaseExecutionData.getServiceId())
-            .withStateExecutionInstanceId(stateExecutionInstanceId)
-            .withWorkflowExecutionId(workflowExecution.getUuid())
-            .withWorkflowId(workflowExecution.getWorkflowId())
-            .withClusterName(clusterName)
-            .withContainerSvcNameNoRevision(containerSvcNameNoRevision);
-
-    return containerDeploymentEvent.build();
+    // builder pattern doesn't quite work well here since we will have to duplicate the same setter code in multiple
+    // places
+    return instanceHelper.setValuesToDeploymentEvent(stateExecutionInstanceId, workflowExecution, phaseExecutionData,
+        infrastructureMapping, artifact, containerDeploymentInfo);
   }
 
   private String getcontainerSvcNameNoRevision(InstanceType instanceType, String containerSvcName) {
@@ -302,17 +281,10 @@ public class ContainerInstanceHelper {
     return containerSvcName.substring(0, index);
   }
 
-  private String getContainerSvcName(ContainerInfo containerInfo) {
-    if (containerInfo instanceof KubernetesContainerInfo) {
-      return ((KubernetesContainerInfo) containerInfo).getControllerName();
-    } else if (containerInfo instanceof EcsContainerInfo) {
-      return ((EcsContainerInfo) containerInfo).getServiceName();
-    } else {
-      throw new WingsException("Unsupported container info type:" + containerInfo.getClass().getCanonicalName());
-    }
-  }
-
-  public void updateInstancesFromContainerInfo(Map<String, ContainerDeploymentInfo> containerSvcNameDeploymentInfoMap,
+  // TODO check if there is some missing functionality
+  public void updateInstancesFromContainerInfo(
+      Map<String, software.wings.beans.infrastructure.instance.ContainerDeploymentInfo>
+          containerSvcNameDeploymentInfoMap,
       List<ContainerInfo> containerInfoList, String containerSvcNameNoRevision, InstanceType instanceType,
       String appId) {
     List<Instance> instanceList = Lists.newArrayList();
@@ -321,14 +293,16 @@ public class ContainerInstanceHelper {
     Set<String> containerSvcNamesWithZeroInstances = Sets.newHashSet(containerSvcNameDeploymentInfoMap.keySet());
     for (ContainerInfo containerInfo : containerInfoList) {
       String containerSvcName = getContainerSvcName(containerInfo);
-      ContainerDeploymentInfo containerDeploymentInfo = containerSvcNameDeploymentInfoMap.get(containerSvcName);
-      Validator.notNullCheck("ContainerDeploymentInfo" + containerSvcName, containerDeploymentInfo);
+      software.wings.beans.infrastructure.instance.ContainerDeploymentInfo containerDeploymentInfo =
+          containerSvcNameDeploymentInfoMap.get(containerSvcName);
+      Validator.notNullCheck(
+          "ContainerDeploymentDeploymentInfo is null for name: " + containerSvcName, containerDeploymentInfo);
 
       // remove the ones which have instances in it.
       containerSvcNamesWithZeroInstances.remove(containerSvcName);
       Instance instance = buildInstanceFromContainerInfo(containerDeploymentInfo.getAppId(),
           containerDeploymentInfo.getWorkflowExecutionId(), containerDeploymentInfo.getStateExecutionInstanceId(),
-          containerDeploymentInfo.getInfraMappingId(), containerInfo, instanceType);
+          containerDeploymentInfo.getInfraMappingId(), containerInfo);
       // instance could be returned null in some scenarios like artifact is null, etc
       if (instance != null) {
         instanceList.add(instance);
@@ -346,7 +320,7 @@ public class ContainerInstanceHelper {
   }
 
   private Instance buildInstanceFromContainerInfo(String appId, String workflowExecutionId,
-      String stateExecutionInstanceId, String infraMappingId, ContainerInfo containerInfo, InstanceType instanceType) {
+      String stateExecutionInstanceId, String infraMappingId, ContainerInfo containerInfo) {
     InfrastructureMapping infrastructureMapping = infrastructureMappingService.get(appId, infraMappingId);
     Validator.notNullCheck("InfrastructureMapping", infrastructureMapping);
     WorkflowExecution workflowExecution =
@@ -377,10 +351,10 @@ public class ContainerInstanceHelper {
 
       final String infraMappingType = infrastructureMapping.getInfraMappingType();
 
-      Instance.Builder builder =
+      InstanceBuilder builder =
           instanceHelper.buildInstanceBase(workflowExecution, serviceArtifact, phaseExecutionData, infraMappingType);
-      builder.withContainerInstanceKey(instanceUtil.generateInstanceKeyForContainer(containerInfo, instanceType));
-      builder.withInstanceInfo(containerInfo);
+      builder.containerInstanceKey(generateInstanceKeyForContainer(containerInfo));
+      builder.instanceInfo(containerInfo);
 
       return builder.build();
     } else {
@@ -390,36 +364,48 @@ public class ContainerInstanceHelper {
     }
   }
 
-  public void buildAndSaveContainerDeploymentInfo(String containerSvcNameNoRevision,
-      Collection<ContainerDeploymentInfo> containerDeploymentInfoSet, String appId, InstanceType instanceType,
-      long syncTimestamp) {
-    instanceService.saveOrUpdateContainerDeploymentInfo(
-        containerSvcNameNoRevision, containerDeploymentInfoSet, appId, instanceType, syncTimestamp);
+  public Instance buildInstanceFromContainerInfo(
+      InfrastructureMapping infraMapping, ContainerInfo containerInfo, DeploymentInfo newDeploymentInfo) {
+    InstanceBuilder builder = instanceHelper.buildInstanceBase(null, infraMapping, newDeploymentInfo);
+    builder.containerInstanceKey(generateInstanceKeyForContainer(containerInfo));
+    builder.instanceInfo(containerInfo);
+
+    return builder.build();
   }
 
-  public ContainerDeploymentInfo buildContainerDeploymentInfo(
-      String containerSvcName, ContainerDeploymentEvent containerDeploymentEvent, long syncTimestamp) {
-    return ContainerDeploymentInfo.Builder.aContainerDeploymentInfo()
-        .withAppId(containerDeploymentEvent.getAppId())
-        .withAccountId(containerDeploymentEvent.getAccountId())
-        .withContainerSvcName(containerSvcName)
-        .withContainerSvcNameNoRevision(containerDeploymentEvent.getContainerSvcNameNoRevision())
-        .withClusterName(containerDeploymentEvent.getClusterName())
-        .withComputeProviderId(containerDeploymentEvent.getComputeProviderId())
-        .withEnvId(containerDeploymentEvent.getEnvId())
-        .withInfraMappingId(containerDeploymentEvent.getInfraMappingId())
-        .withInstanceType(containerDeploymentEvent.getInstanceType())
-        .withLastVisited(syncTimestamp)
-        .withWorkflowId(containerDeploymentEvent.getWorkflowId())
-        .withWorkflowExecutionId(containerDeploymentEvent.getWorkflowExecutionId())
-        .withPipelineExecutionId(containerDeploymentEvent.getPipelineExecutionId())
-        .withServiceId(containerDeploymentEvent.getServiceId())
-        .withStateExecutionInstanceId(containerDeploymentEvent.getStateExecutionInstanceId())
-        .build();
+  private ContainerInstanceKey generateInstanceKeyForContainer(ContainerInfo containerInfo) {
+    ContainerInstanceKey containerInstanceKey;
+
+    if (containerInfo instanceof KubernetesContainerInfo) {
+      KubernetesContainerInfo kubernetesContainerInfo = (KubernetesContainerInfo) containerInfo;
+      containerInstanceKey = ContainerInstanceKey.builder().containerId(kubernetesContainerInfo.getPodName()).build();
+    } else if (containerInfo instanceof EcsContainerInfo) {
+      EcsContainerInfo ecsContainerInfo = (EcsContainerInfo) containerInfo;
+      containerInstanceKey = ContainerInstanceKey.builder().containerId(ecsContainerInfo.getTaskArn()).build();
+    } else {
+      String msg = "Unsupported container instance type:" + containerInfo;
+      logger.error(msg);
+      throw new WingsException(msg);
+    }
+
+    return containerInstanceKey;
+  }
+
+  public String getContainerSvcName(ContainerInfo containerInfo) {
+    if (containerInfo instanceof KubernetesContainerInfo) {
+      return ((KubernetesContainerInfo) containerInfo).getControllerName();
+    } else if (containerInfo instanceof EcsContainerInfo) {
+      return ((EcsContainerInfo) containerInfo).getServiceName();
+    } else {
+      throw new WingsException(
+          "Unsupported container deploymentInfo type:" + containerInfo.getClass().getCanonicalName());
+    }
   }
 
   public ContainerSyncResponse getLatestInstancesFromContainerServer(
-      Collection<ContainerDeploymentInfo> containerDeploymentInfoCollection, InstanceType instanceType) {
+      Collection<software.wings.beans.infrastructure.instance.ContainerDeploymentInfo>
+          containerDeploymentInfoCollection,
+      InstanceType instanceType) {
     ContainerFilter containerFilter =
         ContainerFilter.builder().containerDeploymentInfoCollection(containerDeploymentInfoCollection).build();
 

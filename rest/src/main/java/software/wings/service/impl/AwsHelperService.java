@@ -81,6 +81,8 @@ import com.amazonaws.services.ec2.AmazonEC2ClientBuilder;
 import com.amazonaws.services.ec2.model.AmazonEC2Exception;
 import com.amazonaws.services.ec2.model.DescribeImagesRequest;
 import com.amazonaws.services.ec2.model.DescribeImagesResult;
+import com.amazonaws.services.ec2.model.DescribeInstanceStatusRequest;
+import com.amazonaws.services.ec2.model.DescribeInstanceStatusResult;
 import com.amazonaws.services.ec2.model.DescribeInstancesRequest;
 import com.amazonaws.services.ec2.model.DescribeInstancesResult;
 import com.amazonaws.services.ec2.model.DescribeSecurityGroupsRequest;
@@ -187,6 +189,7 @@ import com.amazonaws.services.s3.model.ListObjectsV2Request;
 import com.amazonaws.services.s3.model.ListObjectsV2Result;
 import com.amazonaws.services.s3.model.ObjectMetadata;
 import com.amazonaws.services.s3.model.S3Object;
+import org.apache.commons.collections.CollectionUtils;
 import org.apache.commons.lang3.StringUtils;
 import org.apache.http.HttpEntity;
 import org.apache.http.client.config.RequestConfig;
@@ -732,6 +735,19 @@ public class AwsHelperService {
       handleAmazonServiceException(amazonServiceException);
     }
     return new DescribeInstancesResult();
+  }
+
+  public DescribeInstanceStatusResult describeEc2InstanceStatus(AwsConfig awsConfig,
+      List<EncryptedDataDetail> encryptionDetails, String region,
+      DescribeInstanceStatusRequest describeInstanceStatusRequest) {
+    try {
+      encryptionService.decrypt(awsConfig, encryptionDetails);
+      return getAmazonEc2Client(region, awsConfig.getAccessKey(), awsConfig.getSecretKey())
+          .describeInstanceStatus(describeInstanceStatusRequest);
+    } catch (AmazonServiceException amazonServiceException) {
+      handleAmazonServiceException(amazonServiceException);
+    }
+    return new DescribeInstanceStatusResult();
   }
 
   public TerminateInstancesResult terminateEc2Instances(
@@ -1307,6 +1323,36 @@ public class AwsHelperService {
       handleAmazonServiceException(amazonServiceException);
     }
     return new DescribeInstancesResult();
+  }
+
+  public List<Instance> listAutoScalingGroupInstances(
+      AwsConfig awsConfig, List<EncryptedDataDetail> encryptionDetails, String region, String autoScalingGroupName) {
+    List<Instance> instanceList = Lists.newArrayList();
+    try {
+      encryptionService.decrypt(awsConfig, encryptionDetails);
+      AmazonEC2Client amazonEc2Client = getAmazonEc2Client(region, awsConfig.getAccessKey(), awsConfig.getSecretKey());
+      List<String> instanceIds =
+          listInstanceIdsFromAutoScalingGroup(awsConfig, encryptionDetails, region, autoScalingGroupName);
+
+      if (CollectionUtils.isEmpty(instanceIds)) {
+        return instanceList;
+      }
+
+      DescribeInstancesRequest describeInstancesRequest = new DescribeInstancesRequest().withInstanceIds(instanceIds);
+      DescribeInstancesResult describeInstancesResult;
+
+      do {
+        describeInstancesResult = amazonEc2Client.describeInstances(describeInstancesRequest);
+        describeInstancesResult.getReservations().stream().forEach(
+            reservation -> instanceList.addAll(reservation.getInstances()));
+
+        describeInstancesRequest.withNextToken(describeInstancesResult.getNextToken());
+
+      } while (describeInstancesResult.getNextToken() != null);
+    } catch (AmazonServiceException amazonServiceException) {
+      handleAmazonServiceException(amazonServiceException);
+    }
+    return instanceList;
   }
 
   public List<String> listInstanceIdsFromAutoScalingGroup(

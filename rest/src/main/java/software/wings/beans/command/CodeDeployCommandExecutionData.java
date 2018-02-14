@@ -13,6 +13,7 @@ public class CodeDeployCommandExecutionData extends CommandExecutionData {
    * The Instances.
    */
   List<Instance> instances = new ArrayList<>();
+  private String deploymentId;
 
   /**
    * Gets instances.
@@ -32,6 +33,14 @@ public class CodeDeployCommandExecutionData extends CommandExecutionData {
     this.instances = instances;
   }
 
+  public String getDeploymentId() {
+    return deploymentId;
+  }
+
+  public void setDeploymentId(String deploymentId) {
+    this.deploymentId = deploymentId;
+  }
+
   /**
    * The type Builder.
    */
@@ -40,6 +49,7 @@ public class CodeDeployCommandExecutionData extends CommandExecutionData {
      * The Instances.
      */
     List<Instance> instances = new ArrayList<>();
+    private String deploymentId;
 
     private Builder() {}
 
@@ -64,12 +74,23 @@ public class CodeDeployCommandExecutionData extends CommandExecutionData {
     }
 
     /**
+     * With deployment id builder.
+     *
+     * @param deploymentId the deployment id
+     * @return the builder
+     */
+    public Builder withDeploymentId(String deploymentId) {
+      this.deploymentId = deploymentId;
+      return this;
+    }
+
+    /**
      * But builder.
      *
      * @return the builder
      */
     public Builder but() {
-      return aCodeDeployCommandExecutionData().withInstances(instances);
+      return aCodeDeployCommandExecutionData().withInstances(instances).withDeploymentId(deploymentId);
     }
 
     /**
@@ -80,6 +101,7 @@ public class CodeDeployCommandExecutionData extends CommandExecutionData {
     public CodeDeployCommandExecutionData build() {
       CodeDeployCommandExecutionData codeDeployCommandExecutionData = new CodeDeployCommandExecutionData();
       codeDeployCommandExecutionData.setInstances(instances);
+      codeDeployCommandExecutionData.setDeploymentId(deploymentId);
       return codeDeployCommandExecutionData;
     }
   }

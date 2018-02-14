@@ -23,6 +23,7 @@ public class AwsConfigYamlHandler extends CloudProviderYamlHandler<Yaml, AwsConf
         .harnessApiVersion(getHarnessApiVersion())
         .accessKey(awsConfig.getAccessKey())
         .secretKey(getEncryptedValue(awsConfig, "secretKey", false))
+        .type(awsConfig.getType())
         .build();
   }
 

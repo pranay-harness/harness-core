@@ -113,8 +113,24 @@ public class AwsInfrastructureProvider implements InfrastructureProvider {
     return describeInstancesResult;
   }
 
+  public List<Instance> listFilteredInstances(AwsInfrastructureMapping awsInfrastructureMapping, AwsConfig awsConfig,
+      List<EncryptedDataDetail> encryptedDataDetails) {
+    DescribeInstancesResult describeInstancesResult =
+        listFilteredHosts(awsInfrastructureMapping, awsConfig, encryptedDataDetails);
+    List<Instance> instanceList = Lists.newArrayList();
+    describeInstancesResult.getReservations().stream().forEach(
+        reservation -> instanceList.addAll(reservation.getInstances()));
+    return instanceList;
+  }
+
   private DescribeInstancesResult listFilteredHosts(AwsInfrastructureMapping awsInfrastructureMapping,
       AwsConfig awsConfig, List<EncryptedDataDetail> encryptedDataDetails) {
+    List<Filter> awsFilters = getAwsFilters(awsInfrastructureMapping);
+    return awsHelperService.describeEc2Instances(awsConfig, encryptedDataDetails, awsInfrastructureMapping.getRegion(),
+        new DescribeInstancesRequest().withFilters(awsFilters));
+  }
+
+  private List<Filter> getAwsFilters(AwsInfrastructureMapping awsInfrastructureMapping) {
     AwsInstanceFilter instanceFilter = awsInfrastructureMapping.getAwsInstanceFilter();
     List<Filter> filters = new ArrayList<>();
     filters.add(new Filter("instance-state-name").withValues("running"));
@@ -134,8 +150,7 @@ public class AwsInfrastructureProvider implements InfrastructureProvider {
         tags.keySet().forEach(key -> filters.add(new Filter("tag:" + key, new ArrayList<>(tags.get(key)))));
       }
     }
-    return awsHelperService.describeEc2Instances(awsConfig, encryptedDataDetails, awsInfrastructureMapping.getRegion(),
-        new DescribeInstancesRequest().withFilters(filters));
+    return filters;
   }
 
   @Override

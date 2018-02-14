@@ -20,7 +20,7 @@ import software.wings.dl.PageRequest;
 import software.wings.dl.PageResponse;
 import software.wings.dl.WingsPersistence;
 import software.wings.rules.Integration;
-import software.wings.scheduler.ContainerSyncJob;
+import software.wings.scheduler.InstanceSyncJob;
 import software.wings.scheduler.QuartzScheduler;
 
 /**
@@ -28,7 +28,7 @@ import software.wings.scheduler.QuartzScheduler;
  */
 @Integration
 @Ignore
-public class ContainerSyncJobTriggerMigratorUtil extends WingsBaseTest {
+public class InstanceSyncJobTriggerMigratorUtil extends WingsBaseTest {
   private static final String CONTAINER_SYNC_CRON_GROUP = "CONTAINER_SYNC_CRON_GROUP";
   // This was the old cron group name, dropping that job and adding the new cron group for all apps.
   private static final String INSTANCE_SYNC_CRON_GROUP = "INSTANCE_SYNC_CRON_GROUP";
@@ -41,7 +41,7 @@ public class ContainerSyncJobTriggerMigratorUtil extends WingsBaseTest {
    * Run this test by specifying VM argument -DsetupScheduler="true"
    */
   @Test
-  public void scheduleCronForContainerSync() {
+  public void scheduleCronForInstanceSync() {
     PageRequest<Application> pageRequest = aPageRequest().withLimit(UNLIMITED).build();
     System.out.println("Retrieving applications");
     PageResponse<Application> pageResponse = wingsPersistence.query(Application.class, pageRequest);
@@ -55,19 +55,19 @@ public class ContainerSyncJobTriggerMigratorUtil extends WingsBaseTest {
       // deleting the old
       jobScheduler.deleteJob(application.getUuid(), INSTANCE_SYNC_CRON_GROUP);
       jobScheduler.deleteJob(application.getUuid(), CONTAINER_SYNC_CRON_GROUP);
-      addCronForContainerSync(application);
+      addCronForInstanceSync(application);
     });
   }
 
-  void addCronForContainerSync(Application application) {
-    JobDetail job = JobBuilder.newJob(ContainerSyncJob.class)
-                        .withIdentity(application.getUuid(), CONTAINER_SYNC_CRON_GROUP)
+  void addCronForInstanceSync(Application application) {
+    JobDetail job = JobBuilder.newJob(InstanceSyncJob.class)
+                        .withIdentity(application.getUuid(), INSTANCE_SYNC_CRON_GROUP)
                         .usingJobData("appId", application.getUuid())
                         .build();
 
     Trigger trigger =
         TriggerBuilder.newTrigger()
-            .withIdentity(application.getUuid(), CONTAINER_SYNC_CRON_GROUP)
+            .withIdentity(application.getUuid(), INSTANCE_SYNC_CRON_GROUP)
             .withSchedule(SimpleScheduleBuilder.simpleSchedule().withIntervalInSeconds(POLL_INTERVAL).repeatForever())
             .build();
 
