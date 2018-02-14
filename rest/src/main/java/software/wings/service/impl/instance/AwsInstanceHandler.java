@@ -1,5 +1,7 @@
 package software.wings.service.impl.instance;
 
+import static java.util.stream.Collectors.toSet;
+
 import com.google.common.collect.ArrayListMultimap;
 import com.google.common.collect.Maps;
 import com.google.common.collect.Multimap;
@@ -8,8 +10,6 @@ import com.google.common.collect.Sets.SetView;
 import com.google.inject.Inject;
 import com.google.inject.Singleton;
 
-import com.amazonaws.services.ec2.model.DescribeInstanceStatusRequest;
-import com.amazonaws.services.ec2.model.DescribeInstanceStatusResult;
 import org.apache.commons.collections.CollectionUtils;
 import software.wings.annotation.Encryptable;
 import software.wings.api.AwsAutoScalingGroupDeploymentInfo;
@@ -230,34 +230,25 @@ public class AwsInstanceHandler extends InstanceHandler {
 
   protected void handleEc2InstanceSync(Map<String, Instance> ec2InstanceIdInstanceMap, AwsConfig awsConfig,
       List<EncryptedDataDetail> encryptedDataDetails, String region) {
-    Set<String> runningInstanceSet = Sets.newHashSet();
-
     // Check if the instances are still running. These instances were the ones that were stored with the old schema.
     if (ec2InstanceIdInstanceMap.size() > 0) {
-      DescribeInstanceStatusRequest describeInstanceStatusRequest = new DescribeInstanceStatusRequest();
-      DescribeInstanceStatusResult describeInstanceStatusResult;
-      do {
-        describeInstanceStatusRequest.withInstanceIds(ec2InstanceIdInstanceMap.keySet());
-        describeInstanceStatusResult = awsHelperService.describeEc2InstanceStatus(
-            awsConfig, encryptedDataDetails, region, describeInstanceStatusRequest);
-        Set<String> runningInstanceSetForCurrentPage =
-            describeInstanceStatusResult.getInstanceStatuses()
-                .stream()
-                .filter(instanceStatus -> instanceStatus.getInstanceState().getName().equalsIgnoreCase("running"))
-                .map(instanceStatus -> instanceStatus.getInstanceId())
-                .collect(Collectors.toSet());
-        runningInstanceSet.addAll(runningInstanceSetForCurrentPage);
+      // we do not want to use any special filter here, if awsFilter is null then,
+      // awsInfrastructureProvider.listFilteredInstances() uses default filter as "instance-state-name" = "running"
+      AwsInfrastructureMapping awsInfrastructureMapping = AwsInfrastructureMapping.Builder.anAwsInfrastructureMapping()
+                                                              .withRegion(region)
+                                                              .withAwsInstanceFilter(null)
+                                                              .build();
+      List<com.amazonaws.services.ec2.model.Instance> activeInstanceList =
+          awsInfrastructureProvider.listFilteredInstances(awsInfrastructureMapping, awsConfig, encryptedDataDetails);
 
-        describeInstanceStatusRequest.withNextToken(describeInstanceStatusResult.getNextToken());
-
-      } while (describeInstanceStatusResult.getNextToken() != null);
-
-      ec2InstanceIdInstanceMap.keySet().removeAll(runningInstanceSet);
+      ec2InstanceIdInstanceMap.keySet().removeAll(
+          activeInstanceList.stream().map(instance -> instance.getInstanceId()).collect(toSet()));
 
       Set<String> instanceIdsToBeDeleted = ec2InstanceIdInstanceMap.entrySet()
                                                .stream()
                                                .map(entry -> entry.getValue().getUuid())
                                                .collect(Collectors.toSet());
+
       if (CollectionUtils.isNotEmpty(instanceIdsToBeDeleted)) {
         instanceService.delete(instanceIdsToBeDeleted);
       }
