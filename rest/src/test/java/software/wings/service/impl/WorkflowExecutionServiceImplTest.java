@@ -930,7 +930,7 @@ public class WorkflowExecutionServiceImplTest extends WingsBaseTest {
    * @throws InterruptedException the interrupted exception
    */
   @Test
-  @Repeat(times = 2, successes = 1)
+  @Repeat(times = 3, successes = 1)
   public void shouldPauseAndResumeState() throws InterruptedException {
     Graph graph = aGraph()
                       .addNodes(aGraphNode()
@@ -979,13 +979,11 @@ public class WorkflowExecutionServiceImplTest extends WingsBaseTest {
     logger.debug("Workflow executionId: {}", executionId);
     assertThat(executionId).isNotNull();
 
-    int i = 0;
-    do {
-      i++;
-      Thread.sleep(1000);
-      execution = workflowExecutionService.getExecutionDetails(app.getUuid(), executionId);
-    } while (execution.getStatus() != ExecutionStatus.PAUSED && i < 5);
-    Thread.sleep(1000);
+    pullFor(Duration.ofSeconds(10), () -> {
+      final WorkflowExecution pull = workflowExecutionService.getExecutionDetails(app.getUuid(), executionId);
+      return pull.getStatus() == ExecutionStatus.PAUSED;
+    });
+
     execution = workflowExecutionService.getExecutionDetails(app.getUuid(), executionId);
 
     assertThat(execution).isNotNull().extracting("uuid", "status").containsExactly(executionId, ExecutionStatus.PAUSED);
