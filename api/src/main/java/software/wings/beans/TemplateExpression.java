@@ -122,11 +122,7 @@ public class TemplateExpression {
 
   @Override
   public String toString() {
-    return MoreObjects.toStringHelper(this)
-        .add("fieldName", fieldName)
-        .add("expression", expression)
-        .add("metadata", metadata)
-        .toString();
+    return MoreObjects.toStringHelper(this).add("fieldName", fieldName).add("expression", expression).toString();
   }
 
   @Override

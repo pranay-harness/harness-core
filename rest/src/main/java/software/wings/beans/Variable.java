@@ -1,5 +1,6 @@
 package software.wings.beans;
 
+import static io.harness.data.structure.EmptyPredicate.isEmpty;
 import static software.wings.common.Constants.ARTIFACT_TYPE;
 import static software.wings.common.Constants.ENTITY_TYPE;
 import static software.wings.common.Constants.RELATED_FIELD;
@@ -12,7 +13,7 @@ import lombok.Builder;
 import lombok.Data;
 import lombok.EqualsAndHashCode;
 import lombok.NoArgsConstructor;
-import software.wings.sm.StateType;
+import software.wings.common.Constants;
 import software.wings.utils.ArtifactType;
 import software.wings.yaml.BaseYamlWithType;
 
@@ -223,12 +224,20 @@ public class Variable {
       return this;
     }
 
-    public VariableBuilder withStateType(StateType stateType) {
+    public VariableBuilder withStateType(String stateType) {
       this.metadata.put(STATE_TYPE, stateType);
       return this;
     }
+
     public VariableBuilder withMetadata(Map<String, Object> metadata) {
       this.metadata = metadata;
+      return this;
+    }
+
+    public VariableBuilder withParentFields(Map<String, String> parentFields) {
+      if (!isEmpty(parentFields)) {
+        this.metadata.put(Constants.PARENT_FIELDS, parentFields);
+      }
       return this;
     }
 

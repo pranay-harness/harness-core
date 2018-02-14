@@ -5,6 +5,11 @@ import static io.harness.data.structure.EmptyPredicate.isNotEmpty;
 import static java.util.stream.Collectors.toList;
 import static org.apache.commons.lang3.StringUtils.isBlank;
 import static software.wings.beans.CanaryOrchestrationWorkflow.CanaryOrchestrationWorkflowBuilder.aCanaryOrchestrationWorkflow;
+import static software.wings.beans.EntityType.APPDYNAMICS_APPID;
+import static software.wings.beans.EntityType.APPDYNAMICS_CONFIGID;
+import static software.wings.beans.EntityType.APPDYNAMICS_TIERID;
+import static software.wings.beans.EntityType.ELK_CONFIGID;
+import static software.wings.beans.EntityType.ELK_INDICES;
 import static software.wings.beans.EntityType.ENVIRONMENT;
 import static software.wings.beans.EntityType.INFRASTRUCTURE_MAPPING;
 import static software.wings.beans.EntityType.SERVICE;
@@ -33,7 +38,6 @@ import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
-import java.util.Optional;
 import java.util.Set;
 /**
  * Created by rishi on 12/21/16.
@@ -289,44 +293,15 @@ public class CanaryOrchestrationWorkflow extends CustomOrchestrationWorkflow {
     List<Variable> reorderVariables = new ArrayList<>();
     if (userVariables != null) {
       // First get all Entity type user variables
-      List<Variable> entityVariables =
-          userVariables.stream().filter(variable -> variable.getEntityType() != null).collect(toList());
-      List<Variable> nonEntityVariables =
-          userVariables.stream().filter(variable -> variable.getEntityType() == null).collect(toList());
+      List<Variable> entityVariables = getEntityVariables();
+      List<Variable> nonEntityVariables = getNonEntityVariables();
       if (entityVariables != null) {
-        for (Variable variable : entityVariables) {
-          EntityType entityType = variable.getEntityType();
-          if (entityType.equals(ENVIRONMENT)) {
-            reorderVariables.add(variable);
-            break;
-          }
-        }
-        List<Variable> serviceInfraVariables = new ArrayList<>();
-        for (Variable variable : entityVariables) {
-          EntityType entityType = variable.getEntityType();
-          if (entityType.equals(SERVICE)) {
-            serviceInfraVariables.add(variable);
-            Optional<Variable> infraVariable = entityVariables.stream()
-                                                   .filter(variable1
-                                                       -> variable1.getEntityType().equals(INFRASTRUCTURE_MAPPING)
-                                                           && variable1.getName().equals(variable.getRelatedField()))
-                                                   .findFirst();
-            if (infraVariable.isPresent()) {
-              serviceInfraVariables.add(infraVariable.get());
-            }
-          }
-        }
-        for (Variable variable : entityVariables) {
-          EntityType entityType = variable.getEntityType();
-          if (entityType.equals(INFRASTRUCTURE_MAPPING)) {
-            if (!serviceInfraVariables.stream().anyMatch(variable1 -> variable1.getName().equals(variable.getName()))) {
-              serviceInfraVariables.add(variable);
-            }
-          }
-        }
-        if (serviceInfraVariables != null) {
-          reorderVariables.addAll(serviceInfraVariables);
-        }
+        // Environment, Service and Infra Variables
+        addEnvServiceInfraVariables(reorderVariables, entityVariables);
+        // AppDynamic state user variables
+        addAppDUserVariables(reorderVariables, entityVariables);
+        // Add elk variables
+        addElkUserVariables(reorderVariables, entityVariables);
       }
       if (nonEntityVariables != null) {
         reorderVariables.addAll(nonEntityVariables);
@@ -335,17 +310,97 @@ public class CanaryOrchestrationWorkflow extends CustomOrchestrationWorkflow {
     userVariables = reorderVariables;
   }
 
+  private List<Variable> getNonEntityVariables() {
+    return userVariables.stream().filter(variable -> variable.getEntityType() == null).collect(toList());
+  }
+
+  private void addEnvServiceInfraVariables(List<Variable> reorderVariables, List<Variable> entityVariables) {
+    for (Variable variable : entityVariables) {
+      EntityType entityType = variable.getEntityType();
+      if (entityType.equals(ENVIRONMENT)) {
+        reorderVariables.add(variable);
+        break;
+      }
+    }
+    for (Variable variable : entityVariables) {
+      if (variable.getEntityType().equals(SERVICE)) {
+        if (reorderVariables.stream().noneMatch(variable1 -> variable1.getName().equals(variable.getName()))) {
+          reorderVariables.add(variable);
+          addRelatedEntity(entityVariables, reorderVariables, variable, INFRASTRUCTURE_MAPPING);
+        }
+      }
+    }
+    addRemainingEntity(reorderVariables, entityVariables, INFRASTRUCTURE_MAPPING);
+  }
+
+  private void addAppDUserVariables(List<Variable> reorderVariables, List<Variable> entityVariables) {
+    for (Variable variable : entityVariables) {
+      if (variable.getEntityType().equals(APPDYNAMICS_CONFIGID)) {
+        reorderVariables.add(variable);
+        entityVariables.stream()
+            .filter(var
+                -> var.getEntityType().equals(APPDYNAMICS_APPID) && var.getName().equals(variable.getRelatedField()))
+            .findFirst()
+            .ifPresent((Variable e) -> {
+              reorderVariables.add(e);
+              entityVariables.stream()
+                  .filter(variable1
+                      -> variable1.getEntityType().equals(APPDYNAMICS_TIERID)
+                          && variable1.getName().equals(e.getRelatedField()))
+                  .findFirst()
+                  .ifPresent(e1 -> reorderVariables.add(e1));
+            });
+      }
+    }
+    for (Variable variable : entityVariables) {
+      if (variable.getEntityType().equals(APPDYNAMICS_APPID)) {
+        if (reorderVariables.stream().noneMatch(variable1 -> variable1.getName().equals(variable.getName()))) {
+          reorderVariables.add(variable);
+          addRelatedEntity(entityVariables, reorderVariables, variable, APPDYNAMICS_TIERID);
+        }
+      }
+    }
+    addRemainingEntity(reorderVariables, entityVariables, APPDYNAMICS_TIERID);
+  }
+
+  private void addElkUserVariables(List<Variable> reorderVariables, List<Variable> entityVariables) {
+    for (Variable variable : entityVariables) {
+      if (variable.getEntityType().equals(ELK_CONFIGID)) {
+        reorderVariables.add(variable);
+        addRelatedEntity(entityVariables, reorderVariables, variable, ELK_INDICES);
+      }
+    }
+    addRemainingEntity(reorderVariables, entityVariables, ELK_INDICES);
+  }
+
+  private void addRemainingEntity(
+      List<Variable> reorderVariables, List<Variable> entityVariables, EntityType entityType) {
+    for (Variable variable : entityVariables) {
+      if (variable.getEntityType().equals(entityType)) {
+        if (reorderVariables.stream().noneMatch(variable1 -> variable1.getName().equals(variable.getName()))) {
+          reorderVariables.add(variable);
+        }
+      }
+    }
+  }
+
+  private void addRelatedEntity(
+      List<Variable> entityVariables, List<Variable> reorderVariables, Variable variable, EntityType entityType) {
+    entityVariables.stream()
+        .filter(variable1
+            -> variable1.getEntityType().equals(entityType) && variable1.getName().equals(variable.getRelatedField()))
+        .findFirst()
+        .ifPresent(reorderVariables::add);
+  }
+
   @Override
   public void updateUserVariables() {
     List<String> templateVariables = getTemplateVariables();
     List<Variable> newVariables = new ArrayList<>();
     if (userVariables != null) {
       // First get all Entity type user variables
-      // First get all Entity type user variables
-      List<Variable> entityVariables =
-          userVariables.stream().filter(variable -> variable.getEntityType() != null).collect(toList());
-      List<Variable> nonEntityVariables =
-          userVariables.stream().filter(variable -> variable.getEntityType() == null).collect(toList());
+      List<Variable> entityVariables = getEntityVariables();
+      List<Variable> nonEntityVariables = getNonEntityVariables();
       if (entityVariables != null) {
         for (Variable variable : entityVariables) {
           if (templateVariables.contains(variable.getName())) {
@@ -356,6 +411,10 @@ public class CanaryOrchestrationWorkflow extends CustomOrchestrationWorkflow {
       newVariables.addAll(nonEntityVariables);
     }
     userVariables = newVariables;
+  }
+
+  private List<Variable> getEntityVariables() {
+    return userVariables.stream().filter(variable -> variable.getEntityType() != null).collect(toList());
   }
 
   public void populatePhaseStepIds(WorkflowPhase workflowPhase) {

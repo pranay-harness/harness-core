@@ -320,8 +320,7 @@ public class StateMachine extends Base {
 
       if (orchestrationWorkflow != null) {
         if (state.getTemplateExpressions() != null) {
-          orchestrationWorkflow.addToUserVariables(
-              state.getTemplateExpressions(), state.getStateType(), state.getName());
+          orchestrationWorkflow.addToUserVariables(state);
         }
       }
       addState(state);

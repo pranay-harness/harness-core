@@ -20,6 +20,7 @@ import software.wings.dl.PageRequest;
 import software.wings.dl.PageResponse;
 import software.wings.dl.WingsPersistence;
 import software.wings.rules.Integration;
+import software.wings.rules.SetupScheduler;
 import software.wings.scheduler.InstanceSyncJob;
 import software.wings.scheduler.QuartzScheduler;
 
@@ -28,6 +29,7 @@ import software.wings.scheduler.QuartzScheduler;
  */
 @Integration
 @Ignore
+@SetupScheduler
 public class InstanceSyncJobTriggerMigratorUtil extends WingsBaseTest {
   private static final String CONTAINER_SYNC_CRON_GROUP = "CONTAINER_SYNC_CRON_GROUP";
   // This was the old cron group name, dropping that job and adding the new cron group for all apps.

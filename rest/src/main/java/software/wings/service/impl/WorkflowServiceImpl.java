@@ -968,7 +968,7 @@ public class WorkflowServiceImpl implements WorkflowService, DataProvider {
       templateExpression.setExpression(expression);
       phaseTemplateExpressions.add(templateExpression);
       orchestrationWorkflow.addToUserVariables(
-          phaseTemplateExpressions, StateType.PHASE.name(), workflowPhase.getName());
+          phaseTemplateExpressions, StateType.PHASE.name(), workflowPhase.getName(), null);
     }
   }
 
@@ -1552,12 +1552,10 @@ public class WorkflowServiceImpl implements WorkflowService, DataProvider {
       CanaryOrchestrationWorkflow canaryOrchestrationWorkflow = (CanaryOrchestrationWorkflow) orchestrationWorkflow;
       List<WorkflowPhase> workflowPhases = canaryOrchestrationWorkflow.getWorkflowPhases();
       if (workflowPhases != null) {
-        infraMappingIds =
-            workflowPhases.stream()
-                .filter(workflowPhase
-                    -> workflowPhase.getInfraMappingId() != null && !workflowPhase.checkInfraTemplatized())
-                .map(WorkflowPhase::getInfraMappingId)
-                .collect(Collectors.toList());
+        infraMappingIds = workflowPhases.stream()
+                              .filter(workflowPhase -> workflowPhase.getInfraMappingId() != null)
+                              .map(WorkflowPhase::getInfraMappingId)
+                              .collect(Collectors.toList());
         if (infraMappingIds.size() != 0) {
           List<InfrastructureMapping> infrastructureMappings = wingsPersistence.createQuery(InfrastructureMapping.class)
                                                                    .field("appId")

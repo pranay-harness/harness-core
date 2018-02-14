@@ -1,5 +1,6 @@
 package software.wings.sm.states;
 
+import static io.harness.data.structure.EmptyPredicate.isEmpty;
 import static org.apache.commons.lang3.StringUtils.isBlank;
 import static software.wings.beans.DelegateTask.Builder.aDelegateTask;
 
@@ -13,7 +14,9 @@ import software.wings.beans.AppDynamicsConfig;
 import software.wings.beans.DelegateTask;
 import software.wings.beans.SettingAttribute;
 import software.wings.beans.TaskType;
+import software.wings.beans.TemplateExpression;
 import software.wings.common.Constants;
+import software.wings.common.TemplateExpressionProcessor;
 import software.wings.common.UUIDGenerator;
 import software.wings.exception.WingsException;
 import software.wings.service.impl.analysis.AnalysisComparisonStrategy;
@@ -31,8 +34,12 @@ import software.wings.stencils.DefaultValue;
 import software.wings.stencils.EnumData;
 import software.wings.time.WingsTimeUtils;
 
+import java.util.LinkedHashMap;
+import java.util.Map;
 import java.util.Set;
 import java.util.concurrent.TimeUnit;
+
+;
 
 /**
  * Created by anubhaw on 8/4/16.
@@ -116,12 +123,36 @@ public class AppDynamicsState extends AbstractMetricAnalysisState {
   protected String triggerAnalysisDataCollection(ExecutionContext context, String correlationId, Set<String> hosts) {
     WorkflowStandardParams workflowStandardParams = context.getContextElement(ContextElementType.STANDARD);
     String envId = workflowStandardParams == null ? null : workflowStandardParams.getEnv().getUuid();
-    final SettingAttribute settingAttribute = settingsService.get(analysisServerConfigId);
-    if (settingAttribute == null) {
-      throw new WingsException("No new relic setting with id: " + analysisServerConfigId + " found");
-    }
 
-    final AppDynamicsConfig appDynamicsConfig = (AppDynamicsConfig) settingAttribute.getValue();
+    SettingAttribute settingAttribute = null;
+    String finalApplicationId = applicationId;
+    String finalServerConfigId = analysisServerConfigId;
+    String finalTierId = tierId;
+    if (!isEmpty(getTemplateExpressions())) {
+      TemplateExpression configIdExpression =
+          templateExpressionProcessor.getTemplateExpression(getTemplateExpressions(), "analysisServerConfigId");
+      if (configIdExpression != null) {
+        settingAttribute = templateExpressionProcessor.resolveSettingAttribute(context, configIdExpression);
+        finalServerConfigId = settingAttribute.getUuid();
+      }
+      TemplateExpression appIdExpression =
+          templateExpressionProcessor.getTemplateExpression(getTemplateExpressions(), "applicationId");
+      if (appIdExpression != null) {
+        finalApplicationId = templateExpressionProcessor.resolveTemplateExpression(context, appIdExpression);
+      }
+      TemplateExpression tierIdExpression =
+          templateExpressionProcessor.getTemplateExpression(getTemplateExpressions(), "tierId");
+      if (tierIdExpression != null) {
+        finalTierId = templateExpressionProcessor.resolveTemplateExpression(context, tierIdExpression);
+      }
+    }
+    if (settingAttribute == null) {
+      settingAttribute = settingsService.get(finalServerConfigId);
+      if (settingAttribute == null) {
+        throw new WingsException("No appdynamics setting with id: " + finalServerConfigId + " found");
+      }
+    }
+    AppDynamicsConfig appDynamicsConfig = (AppDynamicsConfig) settingAttribute.getValue();
 
     final long dataCollectionStartTimeStamp = WingsTimeUtils.getMinuteBoundary(System.currentTimeMillis());
     final AppdynamicsDataCollectionInfo dataCollectionInfo =
@@ -134,8 +165,8 @@ public class AppDynamicsState extends AbstractMetricAnalysisState {
             .serviceId(getPhaseServiceId(context))
             .startTime(dataCollectionStartTimeStamp)
             .collectionTime(Integer.parseInt(timeDuration))
-            .appId(Long.parseLong(applicationId))
-            .tierId(Long.parseLong(tierId))
+            .appId(Long.parseLong(finalApplicationId))
+            .tierId(Long.parseLong(finalTierId))
             .dataCollectionMinute(0)
             .encryptedDataDetails(secretManager.getEncryptionDetails(
                 appDynamicsConfig, context.getAppId(), context.getWorkflowExecutionId()))
@@ -178,5 +209,31 @@ public class AppDynamicsState extends AbstractMetricAnalysisState {
   @Override
   protected String getStateBaseUrl() {
     return "appdynamics";
+  }
+
+  @Override
+  public Map<String, String> parentTemplateFields(String fieldName) {
+    Map<String, String> parentTemplateFields = new LinkedHashMap<>();
+    if (fieldName.equals("applicationId")) {
+      if (!configIdTemplatized()) {
+        parentTemplateFields.put("analysisServerConfigId", analysisServerConfigId);
+      }
+    } else if (fieldName.equals("tierId")) {
+      if (!configIdTemplatized()) {
+        parentTemplateFields.put("analysisServerConfigId", analysisServerConfigId);
+        if (!appIdTemplatized()) {
+          parentTemplateFields.put("applicationId", applicationId);
+        }
+      }
+    }
+    return parentTemplateFields;
+  }
+
+  private boolean appIdTemplatized() {
+    return TemplateExpressionProcessor.checkFieldTemplatized("applicationId", getTemplateExpressions());
+  }
+
+  private boolean configIdTemplatized() {
+    return TemplateExpressionProcessor.checkFieldTemplatized("analysisServerConfigId", getTemplateExpressions());
   }
 }
