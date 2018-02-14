@@ -80,7 +80,7 @@ public class JobDetails {
 
   public static class JobParameter {
     String name;
-    List<String> values = new ArrayList<>();
+    List<String> options = new ArrayList<>();
     String defaultValue;
     String description;
 
@@ -92,12 +92,12 @@ public class JobDetails {
       this.name = name;
     }
 
-    public List<String> getValues() {
-      return values;
+    public List<String> getOptions() {
+      return options;
     }
 
-    public void setValues(List<String> values) {
-      this.values = values;
+    public void setOptions(List<String> options) {
+      this.options = options;
     }
 
     public String getDefaultValue() {

@@ -178,7 +178,15 @@ public class JenkinsBuildServiceTest extends WingsBaseTest {
                     .name("branch")
                     .defaultParameterValue(DefaultParameterValue.builder().name("branch").value("release").build())
                     .build(),
-                ParametersDefinitionProperty.builder().name("Choices").choices(asList("A", "B", "C")).build()))
+                ParametersDefinitionProperty.builder()
+                    .name("revision")
+                    .defaultParameterValue(DefaultParameterValue.builder().name("revision").build())
+                    .build(),
+                ParametersDefinitionProperty.builder()
+                    .name("Choices")
+                    .defaultParameterValue(DefaultParameterValue.builder().name("B").value("B").build())
+                    .choices(asList("A", "B", "C"))
+                    .build()))
             .build();
     when(jobWithDetails.getProperties()).thenReturn(asList(jobProperty));
     JobDetails jobDetails = jenkinsBuildService.getJob(BUILD_JOB_NAME, jenkinsConfig, null);
@@ -186,9 +194,13 @@ public class JenkinsBuildServiceTest extends WingsBaseTest {
     assertThat(jobDetails.getParameters())
         .isNotNull()
         .extracting(JobDetails.JobParameter::getName)
-        .contains("branch", "Choices");
+        .contains("branch", "revision", "Choices");
     assertThat(jobDetails.getParameters())
-        .extracting(JobDetails.JobParameter::getValues)
-        .contains(asList("release"), asList("A", "B", "C"));
+        .extracting(JobDetails.JobParameter::getOptions)
+        .contains(asList("A", "B", "C"));
+
+    assertThat(jobDetails.getParameters())
+        .extracting(JobDetails.JobParameter::getDefaultValue)
+        .contains("release", "B");
   }
 }

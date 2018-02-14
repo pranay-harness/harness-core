@@ -1,6 +1,5 @@
 package software.wings.service.impl;
 
-import static io.harness.data.structure.EmptyPredicate.isEmpty;
 import static software.wings.exception.WingsException.ALERTING;
 import static software.wings.helpers.ext.jenkins.JobDetails.JobParameter;
 import static software.wings.utils.HttpUtil.connectableHttpUrl;
@@ -215,11 +214,7 @@ public class JenkinsBuildServiceImpl implements JenkinsBuildService {
       jobParameter.setDefaultValue(pdProperty.getDefaultParameterValue().getValue());
     }
     if (pdProperty.getChoices() != null) {
-      jobParameter.setValues(pdProperty.getChoices());
-    } else {
-      if (!isEmpty(jobParameter.getDefaultValue())) {
-        jobParameter.setValues(Collections.singletonList(jobParameter.getDefaultValue()));
-      }
+      jobParameter.setOptions(pdProperty.getChoices());
     }
     return jobParameter;
   }
