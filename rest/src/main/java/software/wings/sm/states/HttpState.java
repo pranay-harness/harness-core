@@ -1,6 +1,5 @@
 package software.wings.sm.states;
 
-import static io.harness.data.structure.EmptyPredicate.isNotEmpty;
 import static java.util.Arrays.asList;
 import static org.apache.commons.lang3.StringUtils.isNotBlank;
 import static org.apache.commons.lang3.StringUtils.trim;
@@ -34,9 +33,7 @@ import software.wings.beans.Application;
 import software.wings.beans.Environment;
 import software.wings.beans.ErrorCode;
 import software.wings.beans.TaskType;
-import software.wings.beans.TemplateExpression;
 import software.wings.common.Constants;
-import software.wings.common.TemplateExpressionProcessor;
 import software.wings.exception.WingsException;
 import software.wings.service.intfc.ActivityService;
 import software.wings.service.intfc.DelegateService;
@@ -268,37 +265,11 @@ public class HttpState extends State {
         : workflowStandardParams.getEnv().getUuid();
 
     String finalUrl = getFinalUrl(context);
-    String bodyExpression = null;
-    String headerExpression = null;
-    String methodExpression = null;
-    String assertionExpression = null;
-    List<TemplateExpression> templateExpressions = getTemplateExpressions();
-    if (isNotEmpty(templateExpressions)) {
-      for (TemplateExpression templateExpression : templateExpressions) {
-        String fieldName = templateExpression.getFieldName();
-        if (fieldName != null) {
-          if (fieldName.equals("url")) {
-            finalUrl = TemplateExpressionProcessor.changeToWorkflowVariable(templateExpression);
-          } else if (fieldName.equals("header")) {
-            headerExpression = TemplateExpressionProcessor.changeToWorkflowVariable(templateExpression);
-          } else if (fieldName.equals("body")) {
-            bodyExpression = TemplateExpressionProcessor.changeToWorkflowVariable(templateExpression);
-          } else if (fieldName.equals("method")) {
-            methodExpression = TemplateExpressionProcessor.changeToWorkflowVariable(templateExpression);
-          } else if (fieldName.equals("assertion")) {
-            assertionExpression = TemplateExpressionProcessor.changeToWorkflowVariable(templateExpression);
-          }
-        }
-      }
-    }
     String evaluatedUrl = trim(context.renderExpression(finalUrl));
     logger.info("evaluatedUrl: {}", evaluatedUrl);
     String evaluatedBody = null;
     try {
       evaluatedBody = getFinalBody(context);
-      if (bodyExpression != null) {
-        evaluatedBody = bodyExpression;
-      }
     } catch (UnsupportedEncodingException e) {
       e.printStackTrace();
     }
@@ -309,21 +280,10 @@ public class HttpState extends State {
 
     String evaluatedHeader = getFinalHeader(context);
     if (evaluatedHeader != null) {
-      if (headerExpression != null) {
-        evaluatedHeader = headerExpression;
-      }
       evaluatedHeader = trim(context.renderExpression(evaluatedHeader));
       logger.info("evaluatedHeader: {}", evaluatedHeader);
     }
-
     String evaluatedMethod = getFinalMethod(context);
-    if (methodExpression != null) {
-      evaluatedMethod = trim(context.renderExpression(evaluatedMethod));
-    }
-
-    if (assertionExpression != null) {
-      assertion = trim(context.renderExpression(assertionExpression));
-    }
     PhaseElement phaseElement = context.getContextElement(ContextElementType.PARAM, Constants.PHASE_PARAM);
     String infrastructureMappingId = phaseElement == null ? null : phaseElement.getInfraMappingId();
 

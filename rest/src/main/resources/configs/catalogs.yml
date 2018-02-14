@@ -298,6 +298,16 @@ FORM_FIELD_TO_ENTITY_TYPE:
       value: SERVICE
     - name: infraMappingId
       value: INFRASTRUCTURE_MAPPING
+    - name: analysisServerConfigId
+      value: APPDYNAMICS_CONFIGID
+    - name: applicationId
+      value: APPDYNAMICS_APPID
+    - name: tierId
+      value: APPDYNAMICS_TIERID
+    - name: indices
+      value: ELK_INDICES
+    - name: analysisServerConfigId
+      value: ELK_CONFIGID
 
 
 TASK_TYPES:

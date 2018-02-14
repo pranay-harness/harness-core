@@ -5,7 +5,6 @@ import static software.wings.api.BambooExecutionData.Builder.aBambooExecutionDat
 import static software.wings.beans.Base.GLOBAL_ENV_ID;
 import static software.wings.beans.Environment.EnvironmentType.ALL;
 import static software.wings.beans.OrchestrationWorkflowType.BUILD;
-import static software.wings.beans.SettingAttribute.Category.CONNECTOR;
 import static software.wings.common.Constants.DEFAULT_ASYNC_CALL_TIMEOUT;
 import static software.wings.sm.ExecutionResponse.Builder.anExecutionResponse;
 import static software.wings.sm.StateType.BAMBOO;
@@ -28,9 +27,7 @@ import software.wings.beans.Application;
 import software.wings.beans.BambooConfig;
 import software.wings.beans.DelegateTask;
 import software.wings.beans.Environment;
-import software.wings.beans.SettingAttribute;
 import software.wings.beans.TaskType;
-import software.wings.beans.TemplateExpression;
 import software.wings.common.Constants;
 import software.wings.common.TemplateExpressionProcessor;
 import software.wings.service.impl.BambooSettingProvider;
@@ -142,42 +139,15 @@ public class BambooState extends State {
     String envId = (workflowStandardParams == null || workflowStandardParams.getEnv() == null)
         ? null
         : workflowStandardParams.getEnv().getUuid();
-
-    String bambooConfigExpression = null;
-    String planNameExpression = null;
     String accountId = ((ExecutionContextImpl) context).getApp().getAccountId();
-    List<TemplateExpression> templateExpressions = getTemplateExpressions();
-    if (isNotEmpty(templateExpressions)) {
-      for (TemplateExpression templateExpression : templateExpressions) {
-        String fieldName = templateExpression.getFieldName();
-        if (fieldName != null) {
-          if (fieldName.equals("bambooConfigId")) {
-            bambooConfigExpression = templateExpression.getExpression();
-          } else if (fieldName.equals("planName")) {
-            planNameExpression = templateExpression.getExpression();
-          }
-        }
-      }
-    }
-    BambooConfig bambooConfig = null;
-    if (bambooConfigExpression != null) {
-      SettingAttribute settingAttribute =
-          templateExpressionProcessor.resolveSettingAttribute(context, accountId, bambooConfigExpression, CONNECTOR);
-      if (settingAttribute.getValue() instanceof BambooConfig) {
-        bambooConfig = (BambooConfig) settingAttribute.getValue();
-      }
-    } else {
-      bambooConfig = (BambooConfig) context.getGlobalSettingValue(accountId, bambooConfigId, BAMBOO.name());
-    }
+
+    BambooConfig bambooConfig = (BambooConfig) context.getGlobalSettingValue(accountId, bambooConfigId, BAMBOO.name());
+
     Validator.notNullCheck("BambooConfig", bambooConfig);
 
     String evaluatedPlanName;
     try {
-      if (planNameExpression != null) {
-        evaluatedPlanName = context.renderExpression(planNameExpression);
-      } else {
-        evaluatedPlanName = context.renderExpression(planName);
-      }
+      evaluatedPlanName = context.renderExpression(planName);
     } catch (Exception e) {
       evaluatedPlanName = planName;
     }

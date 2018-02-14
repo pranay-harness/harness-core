@@ -7,7 +7,6 @@ import static software.wings.beans.Base.GLOBAL_ENV_ID;
 import static software.wings.beans.DelegateTask.Builder.aDelegateTask;
 import static software.wings.beans.Environment.EnvironmentType.ALL;
 import static software.wings.beans.OrchestrationWorkflowType.BUILD;
-import static software.wings.beans.SettingAttribute.Category.CONNECTOR;
 import static software.wings.common.Constants.DEFAULT_ASYNC_CALL_TIMEOUT;
 import static software.wings.sm.ExecutionResponse.Builder.anExecutionResponse;
 
@@ -30,9 +29,7 @@ import software.wings.beans.Application;
 import software.wings.beans.DelegateTask;
 import software.wings.beans.Environment;
 import software.wings.beans.JenkinsConfig;
-import software.wings.beans.SettingAttribute;
 import software.wings.beans.TaskType;
-import software.wings.beans.TemplateExpression;
 import software.wings.beans.command.CommandUnitDetails.CommandUnitType;
 import software.wings.beans.command.JenkinsTaskParams;
 import software.wings.common.Constants;
@@ -195,46 +192,20 @@ public class JenkinsState extends State {
    */
   protected ExecutionResponse executeInternal(ExecutionContext context, String activityId) {
     WorkflowStandardParams workflowStandardParams = context.getContextElement(ContextElementType.STANDARD);
+
     String envId = (workflowStandardParams == null || workflowStandardParams.getEnv() == null)
         ? null
         : workflowStandardParams.getEnv().getUuid();
 
-    String jenkinsConfigExpression = null;
-    String jobNameExpression = null;
     String accountId = ((ExecutionContextImpl) context).getApp().getAccountId();
-    List<TemplateExpression> templateExpressions = getTemplateExpressions();
-    if (isNotEmpty(templateExpressions)) {
-      for (TemplateExpression templateExpression : templateExpressions) {
-        String fieldName = templateExpression.getFieldName();
-        if (fieldName != null) {
-          if (fieldName.equals("jenkinsConfigId")) {
-            jenkinsConfigExpression = templateExpression.getExpression();
-          } else if (fieldName.equals("jobName")) {
-            jobNameExpression = templateExpression.getExpression();
-          }
-        }
-      }
-    }
-    JenkinsConfig jenkinsConfig = null;
-    if (jenkinsConfigExpression != null) {
-      SettingAttribute settingAttribute =
-          templateExpressionProcessor.resolveSettingAttribute(context, accountId, jenkinsConfigExpression, CONNECTOR);
-      if (settingAttribute.getValue() instanceof JenkinsConfig) {
-        jenkinsConfig = (JenkinsConfig) settingAttribute.getValue();
-      }
-    } else {
-      jenkinsConfig =
-          (JenkinsConfig) context.getGlobalSettingValue(accountId, jenkinsConfigId, StateType.JENKINS.name());
-    }
+
+    JenkinsConfig jenkinsConfig =
+        (JenkinsConfig) context.getGlobalSettingValue(accountId, jenkinsConfigId, StateType.JENKINS.name());
     Validator.notNullCheck("JenkinsConfig", jenkinsConfig);
 
     String evaluatedJobName;
     try {
-      if (jobNameExpression != null) {
-        evaluatedJobName = context.renderExpression(jobNameExpression);
-      } else {
-        evaluatedJobName = context.renderExpression(jobName);
-      }
+      evaluatedJobName = context.renderExpression(jobName);
     } catch (Exception e) {
       evaluatedJobName = jobName;
     }

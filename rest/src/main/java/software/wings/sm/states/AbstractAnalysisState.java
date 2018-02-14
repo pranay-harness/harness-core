@@ -24,6 +24,7 @@ import software.wings.beans.infrastructure.instance.info.ContainerInfo;
 import software.wings.beans.infrastructure.instance.info.EcsContainerInfo;
 import software.wings.beans.infrastructure.instance.info.KubernetesContainerInfo;
 import software.wings.common.Constants;
+import software.wings.common.TemplateExpressionProcessor;
 import software.wings.dl.PageRequest;
 import software.wings.dl.PageResponse;
 import software.wings.dl.WingsPersistence;
@@ -81,6 +82,8 @@ public abstract class AbstractAnalysisState extends State {
   @Transient @Inject @SchemaIgnore protected ContainerInstanceHelper containerInstanceHelper;
 
   @Transient @Inject @SchemaIgnore protected InfrastructureMappingService infraMappingService;
+
+  @Transient @Inject protected TemplateExpressionProcessor templateExpressionProcessor;
 
   @Attributes(title = "Analysis Time duration (in minutes)")
   @DefaultValue("15")

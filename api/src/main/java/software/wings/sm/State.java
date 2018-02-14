@@ -252,4 +252,11 @@ public abstract class State {
   public Map<String, String> validateFields() {
     return null;
   }
+
+  /**
+   * Resolves parent template fields
+   */
+  public Map<String, String> parentTemplateFields(String fieldName) {
+    return null;
+  }
 }

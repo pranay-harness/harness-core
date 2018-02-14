@@ -463,6 +463,11 @@ public interface Constants {
   String STATE_TYPE = "stateType";
 
   /**
+   * The constant STATE_TYPE.
+   */
+  String PARENT_FIELDS = "parentFields";
+
+  /**
    * The constant S3.
    */
   String S3 = "S3";

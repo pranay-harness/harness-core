@@ -2,6 +2,11 @@ package software.wings.beans;
 
 import static io.harness.data.structure.EmptyPredicate.isEmpty;
 import static java.util.Arrays.asList;
+import static software.wings.beans.EntityType.APPDYNAMICS_APPID;
+import static software.wings.beans.EntityType.APPDYNAMICS_CONFIGID;
+import static software.wings.beans.EntityType.APPDYNAMICS_TIERID;
+import static software.wings.beans.EntityType.ELK_CONFIGID;
+import static software.wings.beans.EntityType.ELK_INDICES;
 import static software.wings.beans.EntityType.ENVIRONMENT;
 import static software.wings.beans.EntityType.INFRASTRUCTURE_MAPPING;
 import static software.wings.beans.EntityType.SERVICE;
@@ -11,20 +16,27 @@ import static software.wings.beans.VariableType.ENTITY;
 import static software.wings.beans.VariableType.TEXT;
 import static software.wings.common.Constants.ARTIFACT_TYPE;
 import static software.wings.common.Constants.ENTITY_TYPE;
+import static software.wings.common.Constants.PARENT_FIELDS;
 import static software.wings.common.Constants.RELATED_FIELD;
+import static software.wings.common.Constants.STATE_TYPE;
 
 import com.fasterxml.jackson.annotation.JsonIgnore;
 import com.fasterxml.jackson.annotation.JsonSubTypes;
 import com.fasterxml.jackson.annotation.JsonTypeInfo;
 import com.fasterxml.jackson.annotation.JsonTypeInfo.As;
+import software.wings.beans.Variable.VariableBuilder;
+import software.wings.common.Constants;
 import software.wings.exception.WingsException;
 import software.wings.expression.ExpressionEvaluator;
+import software.wings.sm.State;
 
 import java.util.ArrayList;
+import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
 import java.util.regex.Matcher;
+
 /**
  * Created by rishi on 3/28/17.
  */
@@ -100,6 +112,7 @@ public abstract class OrchestrationWorkflow {
 
   /**
    * Checks if the workflow is templatized or not
+   *
    * @return
    */
   @JsonIgnore
@@ -125,6 +138,7 @@ public abstract class OrchestrationWorkflow {
 
   /**
    * Checks if any one of InfraMapping is templatized
+   *
    * @return
    */
   @JsonIgnore
@@ -134,17 +148,23 @@ public abstract class OrchestrationWorkflow {
 
   /**
    * Checks if any one of Env is templatized
+   *
    * @return
    */
   @JsonIgnore
   public boolean isInfraMappingTemplatized() {
     return false;
   }
+
+  public void addToUserVariables(State state) {
+    addToUserVariables(state.getTemplateExpressions(), state.getStateType(), state.getName(), state);
+  }
+
   /***
    * Add template expressions to workflow variables
    */
-
-  public void addToUserVariables(List<TemplateExpression> templateExpressions, String stateType, String name) {
+  public void addToUserVariables(
+      List<TemplateExpression> templateExpressions, String stateType, String name, State state) {
     if (isEmpty(templateExpressions)) {
       return;
     }
@@ -178,35 +198,63 @@ public abstract class OrchestrationWorkflow {
       } else {
         expression = getTemplateExpressionName(templateExpression, expression, entityType, stateType);
       }
-      if (!contains(getUserVariables(), expression)) {
-        Variable variable = aVariable()
-                                .withName(expression)
-                                .withEntityType(entityType)
-                                .withArtifactType(artifactType)
-                                .withRelatedField(relatedField)
-                                .withType(entityType != null ? ENTITY : TEXT)
-                                .withMandatory(entityType != null)
-                                .build();
+      Variable variable = contains(getUserVariables(), expression);
+      Map<String, String> parentTemplateFields =
+          state == null ? null : state.parentTemplateFields(templateExpression.getFieldName());
+      if (variable == null) {
+        VariableBuilder variableBuilder = aVariable()
+                                              .withName(expression)
+                                              .withEntityType(entityType)
+                                              .withArtifactType(artifactType)
+                                              .withRelatedField(relatedField)
+                                              .withType(entityType != null ? ENTITY : TEXT)
+                                              .withMandatory(entityType != null);
+
+        variableBuilder.withParentFields(parentTemplateFields);
+        variableBuilder.withStateType(stateType);
 
         // Set the description
+        variable = variableBuilder.build();
         setVariableDescription(variable, name);
         getUserVariables().add(variable);
+      } else {
+        Map<String, Object> variableMetadata = variable.getMetadata();
+        if (variableMetadata == null) {
+          variableMetadata = new HashMap<>();
+        }
+        variableMetadata.put(ENTITY_TYPE, entityType);
+        variableMetadata.put(ARTIFACT_TYPE, artifactType);
+        variableMetadata.put(RELATED_FIELD, relatedField);
+        variableMetadata.put(STATE_TYPE, stateType);
+        variable.setMandatory(entityType != null);
+        if (isEmpty(parentTemplateFields)) {
+          variableMetadata.remove(Constants.PARENT_FIELDS);
+        } else {
+          variableMetadata.put(PARENT_FIELDS, parentTemplateFields);
+        }
+        setVariableDescription(variable, name);
       }
       getTemplateVariables().add(expression);
     }
   }
+
   /**
    * Adds template expression as workflow variables
+   *
    * @param templateExpressions
    */
   public void addToUserVariables(List<TemplateExpression> templateExpressions) {
-    addToUserVariables(templateExpressions, null, null);
+    addToUserVariables(templateExpressions, null, null, null);
   }
 
-  private boolean contains(List<Variable> userVariables, String name) {
-    return userVariables != null
-        && userVariables.stream().anyMatch(
-               variable -> variable != null && variable.getName() != null && variable.getName().equals(name));
+  private Variable contains(List<Variable> userVariables, String name) {
+    if (userVariables == null) {
+      return null;
+    }
+    return userVariables.stream()
+        .filter(variable -> variable != null && variable.getName() != null && variable.getName().equals(name))
+        .findFirst()
+        .orElse(null);
   }
 
   private String getTemplateExpressionName(
@@ -232,6 +280,7 @@ public abstract class OrchestrationWorkflow {
 
   /**
    * Set template description
+   *
    * @param variable
    * @param stateName
    */
@@ -252,6 +301,16 @@ public abstract class OrchestrationWorkflow {
         } else {
           variable.setDescription("Variable for Service Infra-structure entity " + stateName);
         }
+      } else if (entityType.equals(APPDYNAMICS_CONFIGID)) {
+        variable.setDescription("Variable for AppDynamics Server entity " + stateName);
+      } else if (entityType.equals(APPDYNAMICS_APPID)) {
+        variable.setDescription("Variable for AppDynamics Application entity " + stateName);
+      } else if (entityType.equals(APPDYNAMICS_TIERID)) {
+        variable.setDescription("Variable for AppDynamics Tier entity " + stateName);
+      } else if (entityType.equals(ELK_CONFIGID)) {
+        variable.setDescription("Variable for Elastic Search Server entity " + stateName);
+      } else if (entityType.equals(ELK_INDICES)) {
+        variable.setDescription("Variable for Elastic Search Indices entity " + stateName);
       }
     }
   }

@@ -1,14 +1,17 @@
 package software.wings.sm.states;
 
+import static io.harness.data.structure.EmptyPredicate.isEmpty;
 import static org.apache.commons.lang3.StringUtils.isBlank;
 import static software.wings.beans.DelegateTask.Builder.aDelegateTask;
 
+import com.google.common.base.Preconditions;
 import com.google.common.collect.Sets;
 import com.google.inject.Inject;
 
 import com.github.reinert.jjschema.Attributes;
 import com.github.reinert.jjschema.SchemaIgnore;
 import org.apache.commons.lang3.StringUtils;
+import org.json.JSONObject;
 import org.mongodb.morphia.annotations.Transient;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -16,6 +19,8 @@ import software.wings.beans.DelegateTask;
 import software.wings.beans.ElkConfig;
 import software.wings.beans.SettingAttribute;
 import software.wings.beans.TaskType;
+import software.wings.beans.TemplateExpression;
+import software.wings.common.TemplateExpressionProcessor;
 import software.wings.common.UUIDGenerator;
 import software.wings.exception.WingsException;
 import software.wings.service.impl.analysis.AnalysisComparisonStrategy;
@@ -24,6 +29,7 @@ import software.wings.service.impl.analysis.AnalysisTolerance;
 import software.wings.service.impl.analysis.AnalysisToleranceProvider;
 import software.wings.service.impl.analysis.DataCollectionCallback;
 import software.wings.service.impl.elk.ElkDataCollectionInfo;
+import software.wings.service.impl.elk.ElkIndexTemplate;
 import software.wings.service.impl.elk.ElkSettingProvider;
 import software.wings.service.intfc.elk.ElkAnalysisService;
 import software.wings.sm.ContextElementType;
@@ -33,9 +39,12 @@ import software.wings.sm.WorkflowStandardParams;
 import software.wings.stencils.DefaultValue;
 import software.wings.stencils.EnumData;
 import software.wings.time.WingsTimeUtils;
+import software.wings.utils.JsonUtils;
 
 import java.util.ArrayList;
+import java.util.LinkedHashMap;
 import java.util.List;
+import java.util.Map;
 import java.util.Set;
 import java.util.concurrent.TimeUnit;
 
@@ -156,12 +165,33 @@ public class ElkAnalysisState extends AbstractLogAnalysisState {
     final String accountId = appService.get(context.getAppId()).getAccountId();
     WorkflowStandardParams workflowStandardParams = context.getContextElement(ContextElementType.STANDARD);
     String envId = workflowStandardParams == null ? null : workflowStandardParams.getEnv().getUuid();
-    final SettingAttribute settingAttribute = settingsService.get(analysisServerConfigId);
-    if (settingAttribute == null) {
-      throw new WingsException("No elk setting with id: " + analysisServerConfigId + " found");
-    }
 
+    SettingAttribute settingAttribute = null;
+    String finalAnalysisServerConfigId = analysisServerConfigId;
+    String finalIndices = indices;
+    if (!isEmpty(getTemplateExpressions())) {
+      TemplateExpression configIdExpression =
+          templateExpressionProcessor.getTemplateExpression(getTemplateExpressions(), "analysisServerConfigId");
+      if (configIdExpression != null) {
+        settingAttribute = templateExpressionProcessor.resolveSettingAttribute(context, configIdExpression);
+        finalAnalysisServerConfigId = settingAttribute.getUuid();
+      }
+      TemplateExpression indicesExpression =
+          templateExpressionProcessor.getTemplateExpression(getTemplateExpressions(), "indices");
+      if (indicesExpression != null) {
+        finalIndices = templateExpressionProcessor.resolveTemplateExpression(context, indicesExpression);
+      }
+    }
+    if (settingAttribute == null) {
+      settingAttribute = settingsService.get(finalAnalysisServerConfigId);
+    }
+    if (settingAttribute == null) {
+      throw new WingsException("No elk setting with id: " + finalAnalysisServerConfigId + " found");
+    }
     final ElkConfig elkConfig = (ElkConfig) settingAttribute.getValue();
+
+    final String timestampFieldFormat =
+        getTimestampFieldFormat(accountId, finalAnalysisServerConfigId, finalIndices, timestampField);
     final Set<String> queries = Sets.newHashSet(query.split(","));
     final long logCollectionStartTimeStamp = WingsTimeUtils.getMinuteBoundary(System.currentTimeMillis());
 
@@ -171,16 +201,16 @@ public class ElkAnalysisState extends AbstractLogAnalysisState {
     int i = 0;
     for (Set<String> hostBatch : batchedHosts) {
       final ElkDataCollectionInfo dataCollectionInfo =
-          new ElkDataCollectionInfo(elkConfig, appService.get(context.getAppId()).getAccountId(), context.getAppId(),
-              context.getStateExecutionInstanceId(), getWorkflowId(context), context.getWorkflowExecutionId(),
-              getPhaseServiceId(context), queries, indices, hostnameField, messageField, timestampField,
-              getTimestampFormat(), logCollectionStartTimeStamp, 0, Integer.parseInt(timeDuration), hostBatch,
+          new ElkDataCollectionInfo(elkConfig, accountId, context.getAppId(), context.getStateExecutionInstanceId(),
+              getWorkflowId(context), context.getWorkflowExecutionId(), getPhaseServiceId(context), queries,
+              finalIndices, hostnameField, messageField, timestampField, timestampFieldFormat,
+              logCollectionStartTimeStamp, 0, Integer.parseInt(timeDuration), hostBatch,
               secretManager.getEncryptionDetails(elkConfig, context.getAppId(), context.getWorkflowExecutionId()));
 
       String waitId = UUIDGenerator.getUuid();
       delegateTasks.add(aDelegateTask()
                             .withTaskType(TaskType.ELK_COLLECT_LOG_DATA)
-                            .withAccountId(appService.get(context.getAppId()).getAccountId())
+                            .withAccountId(accountId)
                             .withAppId(context.getAppId())
                             .withWaitId(waitId)
                             .withParameters(new Object[] {dataCollectionInfo})
@@ -213,5 +243,44 @@ public class ElkAnalysisState extends AbstractLogAnalysisState {
   @SchemaIgnore
   public Logger getLogger() {
     return logger;
+  }
+
+  protected String getTimestampFieldFormat(
+      String accountId, String analysisServerConfigId, String indices, String timestampField) {
+    try {
+      Map<String, ElkIndexTemplate> indexTemplateMap = elkAnalysisService.getIndices(accountId, analysisServerConfigId);
+      final ElkIndexTemplate indexTemplate = indexTemplateMap.get(indices);
+      Preconditions.checkNotNull(indexTemplate, "No index template mapping found for " + indices);
+
+      final Object timeStampObject = indexTemplate.getProperties().get(timestampField);
+      if (timeStampObject == null) {
+        logger.warn("No timestamp field mapping for {} for index {} ", timestampField, indices);
+        return DEFAULT_TIME_FORMAT;
+      }
+
+      JSONObject timeStampJsonObject = new JSONObject(JsonUtils.asJson(timeStampObject));
+
+      if (!timeStampJsonObject.has("format")) {
+        return DEFAULT_TIME_FORMAT;
+      }
+      return timeStampJsonObject.getString("format");
+    } catch (Exception e) {
+      throw new WingsException(e);
+    }
+  }
+
+  @Override
+  public Map<String, String> parentTemplateFields(String fieldName) {
+    Map<String, String> parentTemplateFields = new LinkedHashMap<>();
+    if (fieldName.equals("indices")) {
+      if (!configIdTemplatized()) {
+        parentTemplateFields.put("analysisServerConfigId", analysisServerConfigId);
+      }
+    }
+    return parentTemplateFields;
+  }
+
+  private boolean configIdTemplatized() {
+    return TemplateExpressionProcessor.checkFieldTemplatized("analysisServerConfigId", getTemplateExpressions());
   }
 }

@@ -104,5 +104,25 @@ public enum EntityType {
   /**
    * Artifact Stream entity type
    */
-  ARTIFACT_STREAM
+  ARTIFACT_STREAM,
+  /**
+   *  AppDynamics ConfigId
+   */
+  APPDYNAMICS_CONFIGID,
+  /**
+   * AppDynamics AppId
+   */
+  APPDYNAMICS_APPID,
+  /**
+   * AppDynamics TierId
+   */
+  APPDYNAMICS_TIERID,
+  /**
+   * Elk config Id
+   */
+  ELK_CONFIGID,
+  /**
+   * Elk indices
+   */
+  ELK_INDICES
 }

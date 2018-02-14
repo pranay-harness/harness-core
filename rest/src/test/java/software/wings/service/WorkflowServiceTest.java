@@ -17,6 +17,9 @@ import static software.wings.beans.BasicOrchestrationWorkflow.BasicOrchestration
 import static software.wings.beans.BuildWorkflow.BuildOrchestrationWorkflowBuilder.aBuildOrchestrationWorkflow;
 import static software.wings.beans.CanaryOrchestrationWorkflow.CanaryOrchestrationWorkflowBuilder.aCanaryOrchestrationWorkflow;
 import static software.wings.beans.CustomOrchestrationWorkflow.CustomOrchestrationWorkflowBuilder.aCustomOrchestrationWorkflow;
+import static software.wings.beans.EntityType.APPDYNAMICS_CONFIGID;
+import static software.wings.beans.EntityType.ELK_CONFIGID;
+import static software.wings.beans.EntityType.ELK_INDICES;
 import static software.wings.beans.EntityType.ENVIRONMENT;
 import static software.wings.beans.EntityType.INFRASTRUCTURE_MAPPING;
 import static software.wings.beans.EntityType.SERVICE;
@@ -99,6 +102,7 @@ import software.wings.beans.BasicOrchestrationWorkflow;
 import software.wings.beans.BuildWorkflow;
 import software.wings.beans.CanaryOrchestrationWorkflow;
 import software.wings.beans.CustomOrchestrationWorkflow;
+import software.wings.beans.EntityType;
 import software.wings.beans.ErrorCode;
 import software.wings.beans.ExecutionScope;
 import software.wings.beans.FailureCriteria;
@@ -2823,17 +2827,17 @@ public class WorkflowServiceTest extends WingsBaseTest {
 
     workflowPhase.setName("phase2-changed");
 
-    TemplateExpression infraExpression = aTemplateExpression()
-                                             .withFieldName("infraMappingId")
-                                             .withExpression("${ServiceInfra_SSH}")
-                                             .withMetadata(ImmutableMap.of("entityType", "INFRASTRUCTURE_MAPPING"))
-                                             .build();
-    TemplateExpression serviceExpression = aTemplateExpression()
-                                               .withFieldName("serviceId")
-                                               .withExpression("${Service}")
-                                               .withMetadata(ImmutableMap.of("entityType", "SERVICE"))
-                                               .build();
-    workflowPhase.setTemplateExpressions(asList(serviceExpression, infraExpression));
+    workflowPhase.setTemplateExpressions(
+        asList(aTemplateExpression()
+                   .withFieldName("infraMappingId")
+                   .withExpression("${ServiceInfra_SSH}")
+                   .withMetadata(ImmutableMap.of("entityType", "INFRASTRUCTURE_MAPPING"))
+                   .build(),
+            aTemplateExpression()
+                .withFieldName("serviceId")
+                .withExpression("${Service}")
+                .withMetadata(ImmutableMap.of("entityType", "SERVICE"))
+                .build()));
 
     workflowService.updateWorkflowPhase(workflow.getAppId(), workflow.getUuid(), workflowPhase);
 
@@ -3192,5 +3196,122 @@ public class WorkflowServiceTest extends WingsBaseTest {
     assertThat(workflow2).isNotNull();
 
     assertThat(workflowService.workflowHasSshInfraMapping(workflow2.getAppId(), workflow2.getUuid())).isFalse();
+  }
+
+  @Test
+  public void shouldTemplatizeAppDElkState() {
+    when(serviceResourceService.get(APP_ID, SERVICE_ID)).thenReturn(aService().withUuid(SERVICE_ID).build());
+    when(serviceResourceService.get(APP_ID, SERVICE_ID, false)).thenReturn(aService().withUuid(SERVICE_ID).build());
+    when(infrastructureMappingService.get(APP_ID, INFRA_MAPPING_ID))
+        .thenReturn(anAwsInfrastructureMapping()
+                        .withServiceId(SERVICE_ID)
+                        .withUuid(INFRA_MAPPING_ID)
+                        .withDeploymentType(SSH.name())
+                        .withComputeProviderType(SettingVariableTypes.AWS.name())
+                        .build());
+
+    Workflow workflow1 =
+        aWorkflow()
+            .withName(WORKFLOW_NAME)
+            .withAppId(APP_ID)
+            .withWorkflowType(WorkflowType.ORCHESTRATION)
+            .withOrchestrationWorkflow(
+                aCanaryOrchestrationWorkflow()
+                    .withPreDeploymentSteps(aPhaseStep(PRE_DEPLOYMENT, Constants.PRE_DEPLOYMENT).build())
+                    .addWorkflowPhase(aWorkflowPhase()
+                                          .withInfraMappingId(INFRA_MAPPING_ID)
+                                          .withServiceId(SERVICE_ID)
+                                          .withDeploymentType(SSH)
+                                          .build())
+                    .withPostDeploymentSteps(aPhaseStep(POST_DEPLOYMENT, Constants.POST_DEPLOYMENT).build())
+                    .build())
+            .build();
+
+    Workflow workflow2 = workflowService.createWorkflow(workflow1);
+    assertThat(workflow2).isNotNull().hasFieldOrProperty("uuid");
+
+    Workflow workflow3 = workflowService.readWorkflow(workflow2.getAppId(), workflow2.getUuid());
+    assertThat(workflow3).isNotNull();
+    CanaryOrchestrationWorkflow orchestrationWorkflow3 =
+        (CanaryOrchestrationWorkflow) workflow3.getOrchestrationWorkflow();
+    assertThat(orchestrationWorkflow3.getWorkflowPhases()).isNotNull().hasSize(1);
+
+    WorkflowPhase workflowPhase = orchestrationWorkflow3.getWorkflowPhases().get(0);
+    PhaseStep verifyPhaseStep = workflowPhase.getPhaseSteps()
+                                    .stream()
+                                    .filter(ps -> ps.getPhaseStepType() == PhaseStepType.VERIFY_SERVICE)
+                                    .collect(Collectors.toList())
+                                    .get(0);
+
+    verifyPhaseStep.getSteps().add(aGraphNode()
+                                       .withType("APP_DYNAMICS")
+                                       .withName("APP_DYNAMICS")
+                                       .addProperty("analysisServerConfigId", "analysisServerConfigId")
+                                       .addProperty("applicationId", "applicagionId")
+                                       .addProperty("tierId", "tierId")
+                                       .build());
+
+    verifyPhaseStep.getSteps().add(aGraphNode()
+                                       .withType("ELK")
+                                       .withName("ELK")
+                                       .addProperty("analysisServerConfigId", "analysisServerConfigId")
+                                       .addProperty("indices", "indices")
+                                       .build());
+
+    workflowService.updateWorkflowPhase(workflow2.getAppId(), workflow2.getUuid(), workflowPhase);
+
+    Workflow workflow4 = workflowService.readWorkflow(workflow2.getAppId(), workflow2.getUuid());
+    CanaryOrchestrationWorkflow orchestrationWorkflow4 =
+        (CanaryOrchestrationWorkflow) workflow4.getOrchestrationWorkflow();
+
+    workflowPhase = orchestrationWorkflow4.getWorkflowPhases().get(0);
+    verifyPhaseStep = workflowPhase.getPhaseSteps()
+                          .stream()
+                          .filter(ps -> ps.getPhaseStepType() == PhaseStepType.VERIFY_SERVICE)
+                          .collect(Collectors.toList())
+                          .get(0);
+
+    List<TemplateExpression> appDTemplateExpressions =
+        asList(aTemplateExpression()
+                   .withFieldName("analysisServerConfigId")
+                   .withExpression("${AppDynamics_Server}")
+                   .withMetadata(ImmutableMap.of("entityType", "APPDYNAMICS_CONFIGID"))
+                   .build(),
+            aTemplateExpression()
+                .withFieldName("applicationId")
+                .withExpression("${AppDynamics_App}")
+                .withMetadata(ImmutableMap.of("entityType", "APPDYNAMICS_APPID"))
+                .build(),
+            aTemplateExpression()
+                .withFieldName("tierId")
+                .withExpression("${AppDynamics_Tier}")
+                .withMetadata(ImmutableMap.of("entityType", "APPDYNAMICS_TIERID"))
+                .build());
+
+    List<TemplateExpression> elkTemplateExpressions =
+        asList(aTemplateExpression()
+                   .withFieldName("analysisServerConfigId")
+                   .withExpression("${ELK_Server}")
+                   .withMetadata(ImmutableMap.of("entityType", "ELK_CONFIGID"))
+                   .build(),
+            aTemplateExpression()
+                .withFieldName("indices")
+                .withExpression("${ELK_Indices}")
+                .withMetadata(ImmutableMap.of("entityType", "ELK_INDICES"))
+                .build());
+    verifyPhaseStep.getSteps().get(0).setTemplateExpressions(appDTemplateExpressions);
+    verifyPhaseStep.getSteps().get(1).setTemplateExpressions(elkTemplateExpressions);
+
+    workflowService.updateWorkflowPhase(workflow2.getAppId(), workflow2.getUuid(), workflowPhase);
+
+    Workflow workflow5 = workflowService.readWorkflow(workflow2.getAppId(), workflow2.getUuid());
+    assertThat(workflow5).isNotNull();
+    CanaryOrchestrationWorkflow orchestrationWorkflow5 =
+        (CanaryOrchestrationWorkflow) workflow5.getOrchestrationWorkflow();
+    assertThat(orchestrationWorkflow5).extracting("userVariables").isNotEmpty();
+    assertThat(orchestrationWorkflow5.getUserVariables())
+        .extracting(variable -> variable.getEntityType())
+        .containsSequence(APPDYNAMICS_CONFIGID, EntityType.APPDYNAMICS_APPID, EntityType.APPDYNAMICS_TIERID,
+            ELK_CONFIGID, ELK_INDICES);
   }
 }
