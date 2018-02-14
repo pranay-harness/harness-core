@@ -25,6 +25,7 @@ import software.wings.sm.StateType;
 import java.io.IOException;
 import java.util.List;
 import java.util.Optional;
+import javax.ws.rs.GET;
 import javax.ws.rs.POST;
 import javax.ws.rs.Path;
 import javax.ws.rs.Produces;
@@ -102,7 +103,7 @@ public class SplunkResource implements LogAnalysisResource {
         mlAnalysisRequest.getLogCollectionMinute()));
   }
 
-  @POST
+  @GET
   @Path(LogAnalysisResource.ANALYSIS_STATE_GET_ANALYSIS_SUMMARY_URL)
   @Timed
   @ExceptionMetered
