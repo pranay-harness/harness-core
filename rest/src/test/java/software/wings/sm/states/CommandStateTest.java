@@ -152,6 +152,7 @@ public class CommandStateTest extends WingsBaseTest {
     ACTIVITY_WITH_ID.setAppId(APP_ID);
     ACTIVITY_WITH_ID.setUuid(ACTIVITY_ID);
   }
+
   private static final WorkflowStandardParams WORKFLOW_STANDARD_PARAMS =
       aWorkflowStandardParams().withAppId(APP_ID).withEnvId(ENV_ID).build();
   private static final SimpleWorkflowParam SIMPLE_WORKFLOW_PARAM = aSimpleWorkflowParam().build();
@@ -491,5 +492,18 @@ public class CommandStateTest extends WingsBaseTest {
 
     verifyNoMoreInteractions(serviceResourceService, serviceInstanceService, serviceCommandExecutorService,
         activityService, settingsService, workflowExecutionService, artifactStreamService);
+  }
+
+  @Test
+  public void shouldRenderCommandString() {
+    final Command command =
+        aCommand()
+            .addCommandUnits(anExecCommandUnit().withCommandString("${var1}").build())
+            .addCommandUnits(
+                aCommand().addCommandUnits(anExecCommandUnit().withCommandString("${var2}").build()).build())
+            .build();
+    CommandState.renderCommandString(command, context);
+    verify(context, times(1)).renderExpression("${var1}");
+    verify(context, times(1)).renderExpression("${var2}");
   }
 }

@@ -1,5 +1,6 @@
 package software.wings.sm.states;
 
+import static io.harness.data.structure.EmptyPredicate.isEmpty;
 import static io.harness.data.structure.EmptyPredicate.isNotEmpty;
 import static org.joor.Reflect.on;
 import static software.wings.api.CommandStateExecutionData.Builder.aCommandStateExecutionData;
@@ -374,14 +375,26 @@ public class CommandState extends State {
         .build();
   }
 
-  private void renderCommandString(Command command, ExecutionContext context) {
+  static void renderCommandString(Command command, ExecutionContext context) {
     for (CommandUnit commandUnit : command.getCommandUnits()) {
-      if (commandUnit.getCommandUnitType() != CommandUnitType.EXEC || !(commandUnit instanceof ExecCommandUnit)
-          || ((ExecCommandUnit) commandUnit).getCommandString() == null) {
+      if (CommandUnitType.COMMAND.equals(commandUnit.getCommandUnitType())) {
+        renderCommandString((Command) commandUnit, context);
         continue;
       }
-      ((ExecCommandUnit) commandUnit)
-          .setCommandString(context.renderExpression(((ExecCommandUnit) commandUnit).getCommandString()));
+
+      if (commandUnit.getCommandUnitType() != CommandUnitType.EXEC) {
+        continue;
+      }
+
+      if (!(commandUnit instanceof ExecCommandUnit)) {
+        continue;
+      }
+
+      ExecCommandUnit execCommandUnit = (ExecCommandUnit) commandUnit;
+      if (isEmpty(execCommandUnit.getCommandString())) {
+        continue;
+      }
+      execCommandUnit.setCommandString(context.renderExpression(execCommandUnit.getCommandString()));
     }
   }
 
@@ -512,15 +525,15 @@ public class CommandState extends State {
 
   private void expandCommand(ServiceInstance serviceInstance, Command command, String serviceId, String envId) {
     if (isNotEmpty(command.getReferenceId())) {
-      Command referedCommand = Optional
-                                   .ofNullable(serviceResourceService.getCommandByName(
-                                       serviceInstance.getAppId(), serviceId, envId, command.getReferenceId()))
-                                   .orElse(aServiceCommand().build())
-                                   .getCommand();
-      if (referedCommand == null) {
+      Command referredCommand = Optional
+                                    .ofNullable(serviceResourceService.getCommandByName(
+                                        serviceInstance.getAppId(), serviceId, envId, command.getReferenceId()))
+                                    .orElse(aServiceCommand().build())
+                                    .getCommand();
+      if (referredCommand == null) {
         throw new WingsException(COMMAND_DOES_NOT_EXIST);
       }
-      command.setCommandUnits(referedCommand.getCommandUnits());
+      command.setCommandUnits(referredCommand.getCommandUnits());
     }
 
     for (CommandUnit commandUnit : command.getCommandUnits()) {
