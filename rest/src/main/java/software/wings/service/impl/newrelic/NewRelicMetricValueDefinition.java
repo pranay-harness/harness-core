@@ -1,12 +1,16 @@
 package software.wings.service.impl.newrelic;
 
 import static io.harness.data.structure.EmptyPredicate.isEmpty;
+import static software.wings.beans.SortOrder.Builder.aSortOrder;
 
+import com.google.common.collect.ImmutableMap;
 import com.google.common.math.Stats;
 
 import lombok.Builder;
 import lombok.Data;
 import org.apache.commons.text.WordUtils;
+import software.wings.beans.SortOrder;
+import software.wings.beans.SortOrder.OrderType;
 import software.wings.metrics.MetricType;
 import software.wings.metrics.RiskLevel;
 import software.wings.metrics.Threshold;
@@ -15,6 +19,7 @@ import software.wings.metrics.ThresholdType;
 import software.wings.metrics.TimeSeriesMetricDefinition;
 import software.wings.metrics.appdynamics.AppdynamicsConstants;
 import software.wings.service.impl.newrelic.NewRelicMetricAnalysisRecord.NewRelicMetricAnalysisValue;
+import software.wings.sm.StateType;
 
 import java.lang.reflect.InvocationTargetException;
 import java.lang.reflect.Method;
@@ -28,6 +33,11 @@ import java.util.Map;
 @Data
 @Builder
 public class NewRelicMetricValueDefinition {
+  public static Map<StateType, SortOrder> SORTING_METRIC_NAME =
+      ImmutableMap.of(StateType.APP_DYNAMICS, aSortOrder().withField("response95th", OrderType.DESC).build(),
+          StateType.NEW_RELIC, aSortOrder().withField("requestsPerMinute", OrderType.DESC).build(),
+          StateType.DYNA_TRACE, aSortOrder().withField("requestsPerMin", OrderType.DESC).build());
+
   public static Map<String, TimeSeriesMetricDefinition> NEW_RELIC_VALUES_TO_ANALYZE = new HashMap<>();
 
   static {

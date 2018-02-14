@@ -12,6 +12,8 @@ import org.mongodb.morphia.annotations.Indexed;
 import org.mongodb.morphia.annotations.Indexes;
 import org.mongodb.morphia.annotations.Transient;
 import software.wings.beans.Base;
+import software.wings.beans.SortOrder;
+import software.wings.exception.WingsException;
 import software.wings.metrics.RiskLevel;
 import software.wings.sm.StateType;
 
@@ -73,6 +75,38 @@ public class NewRelicMetricAnalysisRecord extends Base {
 
       if (riskDiff != 0) {
         return riskDiff;
+      }
+
+      if (metricValues != null) {
+        for (SortOrder sortOrder : NewRelicMetricValueDefinition.SORTING_METRIC_NAME.values()) {
+          for (NewRelicMetricAnalysisValue metricAnalysisValue : metricValues) {
+            if (metricAnalysisValue.getName().equals(sortOrder.getFieldName())) {
+              if (other.metricValues != null) {
+                for (NewRelicMetricAnalysisValue otherMetricAnalysisValue : other.metricValues) {
+                  if (otherMetricAnalysisValue.getName().equals(sortOrder.getFieldName())) {
+                    int sortCriteriaDiff = 0;
+                    switch (sortOrder.getOrderType()) {
+                      case ASC:
+                        sortCriteriaDiff =
+                            (int) (metricAnalysisValue.getTestValue() - otherMetricAnalysisValue.getTestValue());
+                        break;
+                      case DESC:
+                        sortCriteriaDiff =
+                            (int) (otherMetricAnalysisValue.getTestValue() - metricAnalysisValue.getTestValue());
+                        break;
+                      default:
+                        throw new WingsException("Invalid sort order " + sortOrder.getOrderType());
+                    }
+
+                    if (sortCriteriaDiff != 0) {
+                      return sortCriteriaDiff;
+                    }
+                  }
+                }
+              }
+            }
+          }
+        }
       }
 
       return this.metricName.compareTo(other.metricName);
