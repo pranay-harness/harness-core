@@ -2483,7 +2483,7 @@ public class WorkflowServiceImpl implements WorkflowService, DataProvider {
                               .withStatusForRollback(ExecutionStatus.SUCCESS)
                               .build())
             .addPhaseStep(aPhaseStep(VERIFY_SERVICE, Constants.VERIFY_SERVICE)
-                              .addAllSteps(commandNodes(commandMap, CommandType.VERIFY))
+                              .addAllSteps(commandNodes(commandMap, CommandType.VERIFY, true))
                               .withRollback(true)
                               .withPhaseStepNameForRollback(Constants.VERIFY_SERVICE)
                               .withStatusForRollback(ExecutionStatus.SUCCESS)
