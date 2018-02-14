@@ -12,19 +12,17 @@ import software.wings.WingsBaseTest;
 public class InitSshCommandUnitTest extends WingsBaseTest {
   @Test
   public void testEscapifyString() {
-    assertThat(escapifyString("a\\b")).isEqualTo("a\\\\b");
-    assertThat(escapifyString("a\\\\b")).isEqualTo("a\\\\\\\\b");
-    assertThat(escapifyString("a$b")).isEqualTo("a\\$b");
-    assertThat(escapifyString("a&b")).isEqualTo("a\\&b");
+    assertThat(escapifyString("ab\\")).isEqualTo("ab\\\\");
+    assertThat(escapifyString("ab\\cd")).isEqualTo("ab\\cd");
     assertThat(escapifyString("a\"b")).isEqualTo("a\\\"b");
-    assertThat(escapifyString("a'b")).isEqualTo("a\\'b");
+    assertThat(escapifyString("a'b")).isEqualTo("a'b");
     assertThat(escapifyString("a`b")).isEqualTo("a\\`b");
-    assertThat(escapifyString("a(b")).isEqualTo("a\\(b");
-    assertThat(escapifyString("a)b")).isEqualTo("a\\)b");
-    assertThat(escapifyString("a|b")).isEqualTo("a\\|b");
-    assertThat(escapifyString("a<b")).isEqualTo("a\\<b");
-    assertThat(escapifyString("a>b")).isEqualTo("a\\>b");
-    assertThat(escapifyString("a;b")).isEqualTo("a\\;b");
-    assertThat(escapifyString("a b")).isEqualTo("a\\ b");
+    assertThat(escapifyString("a(b")).isEqualTo("a(b");
+    assertThat(escapifyString("a)b")).isEqualTo("a)b");
+    assertThat(escapifyString("a|b")).isEqualTo("a|b");
+    assertThat(escapifyString("a<b")).isEqualTo("a<b");
+    assertThat(escapifyString("a>b")).isEqualTo("a>b");
+    assertThat(escapifyString("a;b")).isEqualTo("a;b");
+    assertThat(escapifyString("a b")).isEqualTo("a b");
   }
 }
