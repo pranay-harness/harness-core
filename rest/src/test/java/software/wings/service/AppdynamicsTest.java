@@ -13,6 +13,7 @@ import com.google.inject.Inject;
 
 import io.harness.rule.RepeatRule.Repeat;
 import org.junit.Before;
+import org.junit.Ignore;
 import org.junit.Test;
 import org.junit.runner.RunWith;
 import org.junit.runners.Parameterized;
@@ -48,6 +49,7 @@ import java.util.UUID;
 /**
  * Created by rsingh on 10/10/17.
  */
+@Ignore
 @RunWith(Parameterized.class)
 public class AppdynamicsTest extends WingsBaseTest {
   @Inject private KmsService kmsService;
