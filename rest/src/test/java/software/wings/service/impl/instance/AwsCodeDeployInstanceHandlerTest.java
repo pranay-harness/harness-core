@@ -1,4 +1,3 @@
-// Shriram jai ram jai jai ram
 package software.wings.service.impl.instance;
 
 import static org.junit.Assert.assertEquals;
@@ -41,9 +40,8 @@ import static software.wings.service.impl.instance.InstanceSyncTestConstants.US_
 
 import com.google.inject.Inject;
 
-import com.amazonaws.services.ec2.model.DescribeInstanceStatusResult;
-import com.amazonaws.services.ec2.model.InstanceState;
-import com.amazonaws.services.ec2.model.InstanceStatus;
+import com.amazonaws.services.ec2.model.DescribeInstancesResult;
+import com.amazonaws.services.ec2.model.Reservation;
 import org.junit.Before;
 import org.junit.Test;
 import org.mockito.ArgumentCaptor;
@@ -70,6 +68,7 @@ import software.wings.cloudprovider.aws.AwsCodeDeployService;
 import software.wings.dl.PageResponse;
 import software.wings.security.encryption.EncryptedDataDetail;
 import software.wings.service.impl.AwsHelperService;
+import software.wings.service.impl.AwsInfrastructureProvider;
 import software.wings.service.intfc.AppService;
 import software.wings.service.intfc.EnvironmentService;
 import software.wings.service.intfc.InfrastructureMappingService;
@@ -78,7 +77,9 @@ import software.wings.service.intfc.SettingsService;
 import software.wings.service.intfc.instance.InstanceService;
 import software.wings.service.intfc.security.SecretManager;
 
+import java.util.ArrayList;
 import java.util.Arrays;
+import java.util.Collection;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Set;
@@ -95,6 +96,7 @@ public class AwsCodeDeployInstanceHandlerTest extends WingsBaseTest {
   @Mock EnvironmentService environmentService;
   @Mock ServiceResourceService serviceResourceService;
   @InjectMocks @Inject AwsCodeDeployInstanceHandler awsCodeDeployInstanceHandler;
+  @InjectMocks @Spy AwsInfrastructureProvider awsInfrastructureProvider;
   @InjectMocks @Spy InstanceHelper instanceHelper;
   @Spy InstanceUtil instanceUtil;
   private com.amazonaws.services.ec2.model.Instance instance1;
@@ -218,31 +220,11 @@ public class AwsCodeDeployInstanceHandlerTest extends WingsBaseTest {
 
     doReturn(pageResponse).when(instanceService).list(any());
 
-    InstanceState instanceState = new InstanceState();
-    instanceState.setName("stopped");
-
-    InstanceStatus instanceStatus = new InstanceStatus();
-    instanceStatus.setInstanceId(INSTANCE_1_ID);
-    instanceStatus.setInstanceState(instanceState);
-
-    InstanceState instanceState2 = new InstanceState();
-    instanceState2.setName("stopped");
-
-    InstanceStatus instanceStatus2 = new InstanceStatus();
-    instanceStatus2.setInstanceId(INSTANCE_2_ID);
-    instanceStatus2.setInstanceState(instanceState2);
-
-    InstanceState instanceState3 = new InstanceState();
-    instanceState3.setName("running");
-
-    InstanceStatus instanceStatus3 = new InstanceStatus();
-    instanceStatus3.setInstanceId(INSTANCE_3_ID);
-    instanceStatus3.setInstanceState(instanceState3);
-
-    DescribeInstanceStatusResult describeInstanceStatusResult = new DescribeInstanceStatusResult();
-    describeInstanceStatusResult.setNextToken(null);
-    describeInstanceStatusResult.setInstanceStatuses(Arrays.asList(instanceStatus, instanceStatus2, instanceStatus3));
-    doReturn(describeInstanceStatusResult).when(awsHelperService).describeEc2InstanceStatus(any(), any(), any(), any());
+    DescribeInstancesResult result = new DescribeInstancesResult();
+    Collection<Reservation> reservations = new ArrayList<>();
+    reservations.add(new Reservation().withInstances(new com.amazonaws.services.ec2.model.Instance[] {instance3}));
+    result.setReservations(reservations);
+    doReturn(result).when(awsHelperService).describeEc2Instances(any(), any(), any(), any());
 
     awsCodeDeployInstanceHandler.syncInstances(APP_ID, INFRA_MAPPING_ID);
     ArgumentCaptor<Set> captor = ArgumentCaptor.forClass(Set.class);
@@ -305,24 +287,12 @@ public class AwsCodeDeployInstanceHandlerTest extends WingsBaseTest {
         .listDeploymentInstances(any(), any(), any(), any());
     doReturn(HOST_NAME_IP3).when(awsHelperService).getHostnameFromPrivateDnsName(PRIVATE_DNS_3);
 
-    InstanceState instanceState = new InstanceState();
-    instanceState.setName("running");
-
-    InstanceStatus instanceStatus = new InstanceStatus();
-    instanceStatus.setInstanceId(INSTANCE_1_ID);
-    instanceStatus.setInstanceState(instanceState);
-
-    InstanceState instanceState3 = new InstanceState();
-    instanceState3.setName("running");
-
-    InstanceStatus instanceStatus3 = new InstanceStatus();
-    instanceStatus3.setInstanceId(INSTANCE_3_ID);
-    instanceStatus3.setInstanceState(instanceState3);
-
-    DescribeInstanceStatusResult describeInstanceStatusResult = new DescribeInstanceStatusResult();
-    describeInstanceStatusResult.setNextToken(null);
-    describeInstanceStatusResult.setInstanceStatuses(Arrays.asList(instanceStatus, instanceStatus3));
-    doReturn(describeInstanceStatusResult).when(awsHelperService).describeEc2InstanceStatus(any(), any(), any(), any());
+    DescribeInstancesResult result = new DescribeInstancesResult();
+    Collection<Reservation> reservations = new ArrayList<>();
+    reservations.add(
+        new Reservation().withInstances(new com.amazonaws.services.ec2.model.Instance[] {instance1, instance3}));
+    result.setReservations(reservations);
+    doReturn(result).when(awsHelperService).describeEc2Instances(any(), any(), any(), any());
 
     awsCodeDeployInstanceHandler.handleNewDeployment(AwsCodeDeployDeploymentInfo.builder()
                                                          .appId(APP_ID)

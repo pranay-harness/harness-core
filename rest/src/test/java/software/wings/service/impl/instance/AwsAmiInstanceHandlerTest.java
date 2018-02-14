@@ -39,9 +39,7 @@ import static software.wings.service.impl.instance.InstanceSyncTestConstants.US_
 
 import com.google.inject.Inject;
 
-import com.amazonaws.services.ec2.model.DescribeInstanceStatusResult;
-import com.amazonaws.services.ec2.model.InstanceState;
-import com.amazonaws.services.ec2.model.InstanceStatus;
+import com.amazonaws.services.ec2.model.DescribeInstancesResult;
 import org.junit.Before;
 import org.junit.Test;
 import org.mockito.ArgumentCaptor;
@@ -68,6 +66,7 @@ import software.wings.cloudprovider.aws.AwsCodeDeployService;
 import software.wings.dl.PageResponse;
 import software.wings.security.encryption.EncryptedDataDetail;
 import software.wings.service.impl.AwsHelperService;
+import software.wings.service.impl.AwsInfrastructureProvider;
 import software.wings.service.intfc.AppService;
 import software.wings.service.intfc.EnvironmentService;
 import software.wings.service.intfc.InfrastructureMappingService;
@@ -94,6 +93,7 @@ public class AwsAmiInstanceHandlerTest extends WingsBaseTest {
   @Mock ServiceResourceService serviceResourceService;
   @InjectMocks @Inject AwsAmiInstanceHandler awsAmiInstanceHandler;
   @InjectMocks @Spy InstanceHelper instanceHelper;
+  @InjectMocks @Spy AwsInfrastructureProvider awsInfrastructureProvider;
   @Spy InstanceUtil instanceUtil;
   private com.amazonaws.services.ec2.model.Instance instance1;
   private com.amazonaws.services.ec2.model.Instance instance2;
@@ -226,17 +226,7 @@ public class AwsAmiInstanceHandlerTest extends WingsBaseTest {
             .build()));
 
     doReturn(pageResponse).when(instanceService).list(any());
-
-    InstanceState instanceState = new InstanceState();
-    instanceState.setName("stopped");
-    InstanceStatus instanceStatus = new InstanceStatus();
-    instanceStatus.setInstanceId(INSTANCE_3_ID);
-    instanceStatus.setInstanceState(instanceState);
-
-    DescribeInstanceStatusResult describeInstanceStatusResult = new DescribeInstanceStatusResult();
-    describeInstanceStatusResult.setNextToken(null);
-    describeInstanceStatusResult.setInstanceStatuses(Arrays.asList(instanceStatus));
-    doReturn(describeInstanceStatusResult).when(awsHelperService).describeEc2InstanceStatus(any(), any(), any(), any());
+    doReturn(new DescribeInstancesResult()).when(awsHelperService).describeEc2Instances(any(), any(), any(), any());
 
     com.amazonaws.services.ec2.model.Instance ec2Instance1 = new com.amazonaws.services.ec2.model.Instance();
     ec2Instance1.setPrivateDnsName(PRIVATE_DNS_1);
