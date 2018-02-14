@@ -109,4 +109,57 @@ public class ContainerSyncImpl implements ContainerSync {
     }
     return ContainerSyncResponse.builder().containerInfoList(result).build();
   }
+
+  @Override
+  public ContainerSyncResponse getInstances(
+      ContainerInfrastructureMapping containerInfraMapping, List<String> containerSvcNameList) {
+    List<ContainerInfo> result = Lists.newArrayList();
+    containerSvcNameList.stream().forEach(containerSvcName -> {
+
+      try {
+        SettingAttribute settingAttribute;
+        String clusterName = null;
+        String namespace = null;
+        String region = null;
+        if (containerInfraMapping instanceof DirectKubernetesInfrastructureMapping) {
+          DirectKubernetesInfrastructureMapping directInfraMapping =
+              (DirectKubernetesInfrastructureMapping) containerInfraMapping;
+          settingAttribute = aSettingAttribute().withValue(directInfraMapping.createKubernetesConfig()).build();
+          namespace = directInfraMapping.getNamespace();
+        } else {
+          settingAttribute = settingsService.get(containerInfraMapping.getComputeProviderSettingId());
+          clusterName = containerInfraMapping.getClusterName();
+          if (containerInfraMapping instanceof GcpKubernetesInfrastructureMapping) {
+            namespace = ((GcpKubernetesInfrastructureMapping) containerInfraMapping).getNamespace();
+          } else if (containerInfraMapping instanceof EcsInfrastructureMapping) {
+            region = ((EcsInfrastructureMapping) containerInfraMapping).getRegion();
+          }
+        }
+        Validator.notNullCheck("SettingAttribute", settingAttribute);
+
+        List<EncryptedDataDetail> encryptionDetails = secretManager.getEncryptionDetails(
+            (Encryptable) settingAttribute.getValue(), containerInfraMapping.getAppId(), null);
+
+        Application app = appService.get(containerInfraMapping.getAppId());
+
+        SyncTaskContext syncTaskContext = aContext().withAccountId(app.getAccountId()).withAppId(app.getUuid()).build();
+        syncTaskContext.setTimeOut(Constants.DEFAULT_SYNC_CALL_TIMEOUT * 2);
+        ContainerServiceParams containerServiceParams = ContainerServiceParams.builder()
+                                                            .settingAttribute(settingAttribute)
+                                                            .containerServiceName(containerSvcName)
+                                                            .encryptionDetails(encryptionDetails)
+                                                            .clusterName(clusterName)
+                                                            .namespace(namespace)
+                                                            .region(region)
+                                                            .build();
+
+        result.addAll(delegateProxyFactory.get(ContainerService.class, syncTaskContext)
+                          .getContainerInfos(containerServiceParams));
+      } catch (Exception ex) {
+        logger.warn("Error while getting instances for container for appId {} and infraMappingId {}",
+            containerInfraMapping.getAppId(), containerInfraMapping.getUuid(), ex);
+      }
+    });
+    return ContainerSyncResponse.builder().containerInfoList(result).build();
+  }
 }

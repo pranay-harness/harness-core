@@ -1,7 +1,5 @@
 package software.wings.cloudprovider;
 
-import com.google.common.base.MoreObjects;
-
 import com.amazonaws.services.ec2.model.Instance;
 import software.wings.beans.command.CommandExecutionResult.CommandExecutionStatus;
 
@@ -13,6 +11,7 @@ import java.util.List;
 public class CodeDeployDeploymentInfo {
   private CommandExecutionStatus status;
   private List<Instance> instances;
+  private String deploymentId;
 
   /**
    * Gets status.
@@ -50,8 +49,25 @@ public class CodeDeployDeploymentInfo {
     this.instances = instances;
   }
 
+  public String getDeploymentId() {
+    return deploymentId;
+  }
+
+  public void setDeploymentId(String deploymentId) {
+    this.deploymentId = deploymentId;
+  }
+
   @Override
   public String toString() {
-    return MoreObjects.toStringHelper(this).add("status", status).add("instances", instances).toString();
+    return new StringBuffer("CodeDeployDeploymentInfo{")
+        .append("status=")
+        .append(status)
+        .append(", instances=")
+        .append(instances)
+        .append(", deploymentId='")
+        .append(deploymentId)
+        .append('\'')
+        .append('}')
+        .toString();
   }
 }

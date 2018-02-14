@@ -1,14 +1,12 @@
 package software.wings.service.impl.instance;
 
+import com.google.inject.Singleton;
+
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import software.wings.beans.InfrastructureMappingType;
-import software.wings.beans.infrastructure.instance.Instance;
+import software.wings.beans.infrastructure.instance.Instance.InstanceBuilder;
 import software.wings.beans.infrastructure.instance.InstanceType;
-import software.wings.beans.infrastructure.instance.info.ContainerInfo;
-import software.wings.beans.infrastructure.instance.info.EcsContainerInfo;
-import software.wings.beans.infrastructure.instance.info.KubernetesContainerInfo;
-import software.wings.beans.infrastructure.instance.key.ContainerInstanceKey;
 import software.wings.exception.WingsException;
 
 /**
@@ -17,13 +15,14 @@ import software.wings.exception.WingsException;
  * InstanceServiceImpl.
  * @author rktummala on 09/11/17
  */
+@Singleton
 public class InstanceUtil {
   private static final String WORKFLOW_PREFIX = "Workflow: ";
   private static final int WORKFLOW_PREFIX_LENGTH = 10;
   private static final Logger logger = LoggerFactory.getLogger(InstanceUtil.class);
 
-  public void setInstanceType(Instance.Builder builder, String infraMappingType) {
-    builder.withInstanceType(getInstanceType(infraMappingType));
+  public void setInstanceType(InstanceBuilder builder, String infraMappingType) {
+    builder.instanceType(getInstanceType(infraMappingType));
   }
 
   public InstanceType getInstanceType(String infraMappingType) {
@@ -58,24 +57,5 @@ public class InstanceUtil {
     } else {
       return workflowName;
     }
-  }
-
-  public ContainerInstanceKey generateInstanceKeyForContainer(ContainerInfo containerInfo, InstanceType instanceType) {
-    ContainerInstanceKey containerInstanceKey;
-
-    if (instanceType == InstanceType.KUBERNETES_CONTAINER_INSTANCE) {
-      KubernetesContainerInfo kubernetesContainerInfo = (KubernetesContainerInfo) containerInfo;
-      containerInstanceKey = ContainerInstanceKey.builder().containerId(kubernetesContainerInfo.getPodName()).build();
-
-    } else if (instanceType == InstanceType.ECS_CONTAINER_INSTANCE) {
-      EcsContainerInfo ecsContainerInfo = (EcsContainerInfo) containerInfo;
-      containerInstanceKey = ContainerInstanceKey.builder().containerId(ecsContainerInfo.getTaskArn()).build();
-    } else {
-      String msg = "Unsupported container instance type:" + instanceType;
-      logger.error(msg);
-      throw new WingsException(msg);
-    }
-
-    return containerInstanceKey;
   }
 }

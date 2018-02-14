@@ -25,4 +25,5 @@ public class CommandStepExecutionSummary extends StepExecutionSummary {
   private String clusterName;
   private CodeDeployParams codeDeployParams;
   private CodeDeployParams oldCodeDeployParams;
+  private String codeDeployDeploymentId;
 }

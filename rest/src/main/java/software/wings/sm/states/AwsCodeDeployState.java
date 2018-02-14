@@ -319,6 +319,7 @@ public class AwsCodeDeployState extends State {
       });
       instanceElementListParam = anInstanceElementListParam().withInstanceElements(instanceElements).build();
       commandStateExecutionData.setNewInstanceStatusSummaries(instanceStatusSummaries);
+      commandStateExecutionData.setCodeDeployDeploymentId(commandExecutionData.getDeploymentId());
     }
 
     return anExecutionResponse()

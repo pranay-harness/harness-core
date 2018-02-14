@@ -116,8 +116,10 @@ public class CodeDeployCommandUnit extends AbstractCommandUnit {
               context.getCloudProviderCredentials(), createDeploymentRequest, executionLogCallback);
       commandExecutionStatus = codeDeployDeploymentInfo.getStatus();
       // go over instance data in command execution data and prepare execution data
-      context.setCommandExecutionData(
-          aCodeDeployCommandExecutionData().withInstances(codeDeployDeploymentInfo.getInstances()).build());
+      context.setCommandExecutionData(aCodeDeployCommandExecutionData()
+                                          .withInstances(codeDeployDeploymentInfo.getInstances())
+                                          .withDeploymentId(codeDeployDeploymentInfo.getDeploymentId())
+                                          .build());
     } catch (Exception ex) {
       logger.error(ex.getMessage(), ex);
       Misc.logAllMessages(ex, executionLogCallback);

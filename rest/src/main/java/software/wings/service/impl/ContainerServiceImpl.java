@@ -202,7 +202,7 @@ public class ContainerServiceImpl implements ContainerService {
         ListTasksRequest listTasksRequest = new ListTasksRequest()
                                                 .withCluster(containerServiceParams.getClusterName())
                                                 .withServiceName(containerServiceName)
-                                                .withMaxResults(100)
+                                                //.withMaxResults(100)
                                                 .withNextToken(nextToken)
                                                 .withDesiredStatus("RUNNING");
         ListTasksResult listTasksResult;

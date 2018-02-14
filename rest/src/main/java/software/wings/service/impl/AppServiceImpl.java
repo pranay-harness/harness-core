@@ -42,7 +42,7 @@ import software.wings.dl.PageRequest;
 import software.wings.dl.PageResponse;
 import software.wings.dl.WingsPersistence;
 import software.wings.exception.WingsException;
-import software.wings.scheduler.ContainerSyncJob;
+import software.wings.scheduler.InstanceSyncJob;
 import software.wings.scheduler.PruneEntityJob;
 import software.wings.scheduler.QuartzScheduler;
 import software.wings.scheduler.StateMachineExecutionCleanupJob;
@@ -124,7 +124,7 @@ public class AppServiceImpl implements AppService {
                 ImmutableMap.of("ENTITY_TYPE", "Application", "ENTITY_NAME", application.getName()))
             .build());
     StateMachineExecutionCleanupJob.add(jobScheduler, application.getUuid());
-    ContainerSyncJob.add(jobScheduler, application.getUuid());
+    InstanceSyncJob.add(jobScheduler, application.getUuid());
 
     yamlChangeSetHelper.applicationYamlChangeAsync(application, ChangeType.ADD);
 

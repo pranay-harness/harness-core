@@ -7,13 +7,17 @@ import lombok.EqualsAndHashCode;
 
 /**
  *
- * @author rktummala on 08/25/17
+ * @author rktummala on 01/30/18
  */
 @Data
 @EqualsAndHashCode(callSuper = true)
-public class Ec2InstanceInfo extends AbstractEc2InstanceInfo {
+public class CodeDeployInstanceInfo extends AbstractEc2InstanceInfo {
+  private String deploymentId;
+
   @Builder
-  public Ec2InstanceInfo(String hostId, String hostName, String hostPublicDns, Instance ec2Instance) {
+  public CodeDeployInstanceInfo(
+      String hostId, String hostName, String hostPublicDns, Instance ec2Instance, String deploymentId) {
     super(hostId, hostName, hostPublicDns, ec2Instance);
+    this.deploymentId = deploymentId;
   }
 }

@@ -60,6 +60,7 @@ public class CommandStateExecutionData extends StateExecutionData {
 
   private CodeDeployParams codeDeployParams;
   private CodeDeployParams oldCodeDeployParams;
+  private String codeDeployDeploymentId;
   private ContainerSetupParams containerSetupParams;
   private String containerServiceName;
 
@@ -150,6 +151,7 @@ public class CommandStateExecutionData extends StateExecutionData {
     commandStepExecutionSummary.setServiceId(serviceId);
     commandStepExecutionSummary.setCodeDeployParams(codeDeployParams);
     commandStepExecutionSummary.setOldCodeDeployParams(oldCodeDeployParams);
+    commandStepExecutionSummary.setCodeDeployDeploymentId(codeDeployDeploymentId);
     return commandStepExecutionSummary;
   }
 
@@ -184,6 +186,7 @@ public class CommandStateExecutionData extends StateExecutionData {
     private List<InstanceStatusSummary> newInstanceStatusSummaries = new ArrayList<>();
     private CodeDeployParams codeDeployParams;
     private CodeDeployParams oldCodeDeployParams;
+    private String codeDeployDeploymentId;
     private ContainerSetupParams containerSetupParams;
     private String containerServiceName;
     private transient ActivityService activityService;
@@ -344,6 +347,11 @@ public class CommandStateExecutionData extends StateExecutionData {
       return this;
     }
 
+    public Builder withCodeDeploymentId(String codeDeployDeploymentId) {
+      this.codeDeployDeploymentId = codeDeployDeploymentId;
+      return this;
+    }
+
     public Builder withContainerSetupParams(ContainerSetupParams containerSetupParams) {
       this.containerSetupParams = containerSetupParams;
       return this;
@@ -391,6 +399,7 @@ public class CommandStateExecutionData extends StateExecutionData {
           .withNewInstanceStatusSummaries(newInstanceStatusSummaries)
           .withCodeDeployParams(codeDeployParams)
           .withOldCodeDeployParams(oldCodeDeployParams)
+          .withCodeDeploymentId(codeDeployDeploymentId)
           .withContainerSetupParams(containerSetupParams)
           .withContainerServiceName(containerServiceName)
           .withActivityService(activityService);
@@ -428,6 +437,7 @@ public class CommandStateExecutionData extends StateExecutionData {
       commandStateExecutionData.setNewInstanceStatusSummaries(newInstanceStatusSummaries);
       commandStateExecutionData.setCodeDeployParams(codeDeployParams);
       commandStateExecutionData.setOldCodeDeployParams(oldCodeDeployParams);
+      commandStateExecutionData.setCodeDeployDeploymentId(codeDeployDeploymentId);
       commandStateExecutionData.setContainerSetupParams(containerSetupParams);
       commandStateExecutionData.setContainerServiceName(containerServiceName);
       commandStateExecutionData.setActivityService(activityService);

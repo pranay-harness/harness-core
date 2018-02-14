@@ -2,6 +2,7 @@ package software.wings.cloudprovider.aws;
 
 import com.amazonaws.services.codedeploy.model.CreateDeploymentRequest;
 import com.amazonaws.services.codedeploy.model.RevisionLocation;
+import com.amazonaws.services.ec2.model.Instance;
 import software.wings.beans.SettingAttribute;
 import software.wings.beans.command.ExecutionLogCallback;
 import software.wings.cloudprovider.CodeDeployDeploymentInfo;
@@ -59,6 +60,17 @@ public interface AwsCodeDeployService {
   CodeDeployDeploymentInfo deployApplication(String region, SettingAttribute cloudProviderSetting,
       List<EncryptedDataDetail> encryptedDataDetails, CreateDeploymentRequest createDeploymentRequest,
       ExecutionLogCallback executionLogCallback);
+
+  /**
+   * Get all the instances from the given codeDeploy deployment group
+   * @param region                aws region
+   * @param cloudProviderSetting  cloud provider setting
+   * @param encryptedDataDetails  encrypted data details
+   * @param deploymentId          deployment id
+   * @return
+   */
+  List<Instance> listDeploymentInstances(String region, SettingAttribute cloudProviderSetting,
+      List<EncryptedDataDetail> encryptedDataDetails, String deploymentId);
 
   /**
    * Gets application current revision info.
