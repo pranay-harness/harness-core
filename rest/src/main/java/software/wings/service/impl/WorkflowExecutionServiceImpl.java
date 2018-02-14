@@ -535,26 +535,14 @@ public class WorkflowExecutionServiceImpl implements WorkflowExecutionService {
    */
   @Override
   public WorkflowExecution getExecutionDetails(String appId, String workflowExecutionId) {
-    return getExecutionDetails(appId, workflowExecutionId, null);
-  }
-
-  /**
-   * {@inheritDoc}
-   */
-  @Override
-  public WorkflowExecution getExecutionDetails(
-      String appId, String workflowExecutionId, List<String> expandedGroupIds) {
     WorkflowExecution workflowExecution = getExecutionDetailsWithoutGraph(appId, workflowExecutionId);
 
     if (workflowExecution.getWorkflowType() == PIPELINE) {
       return workflowExecution;
     }
-    if (expandedGroupIds == null) {
-      expandedGroupIds = new ArrayList<>();
-    }
+
     if (workflowExecution != null) {
       populateNodeHierarchyWithGraph(workflowExecution);
-      workflowExecution.setExpandedGroupIds(expandedGroupIds);
     }
     return workflowExecution;
   }

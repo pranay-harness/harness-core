@@ -40,7 +40,6 @@ public class WorkflowExecution extends Base {
   @Indexed private WorkflowType workflowType;
   @Indexed private ExecutionStatus status = ExecutionStatus.NEW;
   @Transient private Graph graph;
-  @Transient private List<String> expandedGroupIds;
 
   @Transient private GraphNode executionNode; // used for workflow details.
   private PipelineExecution pipelineExecution; // used for pipeline details.
@@ -206,24 +205,6 @@ public class WorkflowExecution extends Base {
    */
   public void setEnvId(String envId) {
     this.envId = envId;
-  }
-
-  /**
-   * Gets expanded group ids.
-   *
-   * @return the expanded group ids
-   */
-  public List<String> getExpandedGroupIds() {
-    return expandedGroupIds;
-  }
-
-  /**
-   * Sets expanded group ids.
-   *
-   * @param expandedGroupIds the expanded group ids
-   */
-  public void setExpandedGroupIds(List<String> expandedGroupIds) {
-    this.expandedGroupIds = expandedGroupIds;
   }
 
   /**
@@ -529,7 +510,6 @@ public class WorkflowExecution extends Base {
     private WorkflowType workflowType;
     private ExecutionStatus status = ExecutionStatus.NEW;
     private Graph graph;
-    private List<String> expandedGroupIds;
     private GraphNode executionNode;
     private ErrorStrategy errorStrategy;
     private String name;
@@ -603,11 +583,6 @@ public class WorkflowExecution extends Base {
 
     public WorkflowExecutionBuilder withGraph(Graph graph) {
       this.graph = graph;
-      return this;
-    }
-
-    public WorkflowExecutionBuilder withExpandedGroupIds(List<String> expandedGroupIds) {
-      this.expandedGroupIds = expandedGroupIds;
       return this;
     }
 
@@ -754,7 +729,6 @@ public class WorkflowExecution extends Base {
           .withWorkflowType(workflowType)
           .withStatus(status)
           .withGraph(graph)
-          .withExpandedGroupIds(expandedGroupIds)
           .withExecutionNode(executionNode)
           .withErrorStrategy(errorStrategy)
           .withName(name)
@@ -792,7 +766,6 @@ public class WorkflowExecution extends Base {
       workflowExecution.setWorkflowType(workflowType);
       workflowExecution.setStatus(status);
       workflowExecution.setGraph(graph);
-      workflowExecution.setExpandedGroupIds(expandedGroupIds);
       workflowExecution.setExecutionNode(executionNode);
       workflowExecution.setErrorStrategy(errorStrategy);
       workflowExecution.setName(name);

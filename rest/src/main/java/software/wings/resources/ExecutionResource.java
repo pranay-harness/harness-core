@@ -144,10 +144,8 @@ public class ExecutionResource {
   @Timed
   @ExceptionMetered
   public RestResponse<WorkflowExecution> getExecutionDetails(@QueryParam("appId") String appId,
-      @QueryParam("envId") String envId, @PathParam("workflowExecutionId") String workflowExecutionId,
-      @QueryParam("expandedGroupId") List<String> expandedGroupIds) {
-    return new RestResponse<>(
-        workflowExecutionService.getExecutionDetails(appId, workflowExecutionId, expandedGroupIds));
+      @QueryParam("envId") String envId, @PathParam("workflowExecutionId") String workflowExecutionId) {
+    return new RestResponse<>(workflowExecutionService.getExecutionDetails(appId, workflowExecutionId));
   }
 
   /**
