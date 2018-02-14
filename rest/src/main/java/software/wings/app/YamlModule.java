@@ -12,6 +12,7 @@ import static software.wings.beans.OrchestrationWorkflowType.BASIC;
 import static software.wings.beans.OrchestrationWorkflowType.BUILD;
 import static software.wings.beans.OrchestrationWorkflowType.CANARY;
 import static software.wings.beans.OrchestrationWorkflowType.MULTI_SERVICE;
+import static software.wings.beans.artifact.ArtifactStreamType.ACR;
 import static software.wings.beans.artifact.ArtifactStreamType.AMAZON_S3;
 import static software.wings.beans.artifact.ArtifactStreamType.AMI;
 import static software.wings.beans.artifact.ArtifactStreamType.ARTIFACTORY;
@@ -50,6 +51,7 @@ import software.wings.service.impl.yaml.YamlDirectoryServiceImpl;
 import software.wings.service.impl.yaml.YamlGitServiceImpl;
 import software.wings.service.impl.yaml.YamlHistoryServiceImpl;
 import software.wings.service.impl.yaml.YamlResourceServiceImpl;
+import software.wings.service.impl.yaml.handler.artifactstream.AcrArtifactStreamYamlHandler;
 import software.wings.service.impl.yaml.handler.artifactstream.AmazonS3ArtifactStreamYamlHandler;
 import software.wings.service.impl.yaml.handler.artifactstream.AmiArtifactStreamYamlHandler;
 import software.wings.service.impl.yaml.handler.artifactstream.ArtifactStreamYamlHandler;
@@ -163,6 +165,7 @@ public class YamlModule extends AbstractModule {
     artifactStreamYamlHelperMapBinder.addBinding(DOCKER.name()).to(DockerArtifactStreamYamlHandler.class);
     artifactStreamYamlHelperMapBinder.addBinding(ECR.name()).to(EcrArtifactStreamYamlHandler.class);
     artifactStreamYamlHelperMapBinder.addBinding(GCR.name()).to(GcrArtifactStreamYamlHandler.class);
+    artifactStreamYamlHelperMapBinder.addBinding(ACR.name()).to(AcrArtifactStreamYamlHandler.class);
     artifactStreamYamlHelperMapBinder.addBinding(JENKINS.name()).to(JenkinsArtifactStreamYamlHandler.class);
     artifactStreamYamlHelperMapBinder.addBinding(NEXUS.name()).to(NexusArtifactStreamYamlHandler.class);
 
