@@ -173,6 +173,7 @@ public class WorkflowExecutionServiceImplTest extends WingsBaseTest {
   }
 
   @Test
+  @Repeat(times = 3, successes = 1)
   public void shouldTriggerSimpleWorkflow() throws InterruptedException {
     Graph graph =
         aGraph()
