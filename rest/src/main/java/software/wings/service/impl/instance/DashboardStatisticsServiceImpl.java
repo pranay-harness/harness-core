@@ -13,6 +13,7 @@ import static software.wings.beans.WorkflowType.ORCHESTRATION;
 import static software.wings.beans.WorkflowType.PIPELINE;
 import static software.wings.beans.instance.dashboard.EntitySummary.Builder.anEntitySummary;
 import static software.wings.beans.instance.dashboard.EntitySummaryStats.Builder.anEntitySummaryStats;
+import static software.wings.beans.instance.dashboard.InstanceSummaryStats.Builder.anInstanceSummaryStats;
 import static software.wings.beans.instance.dashboard.service.PipelineExecutionHistory.Builder.aPipelineExecutionHistory;
 import static software.wings.dl.PageRequest.Builder.aPageRequest;
 
@@ -96,12 +97,12 @@ public class DashboardStatisticsServiceImpl implements DashboardStatisticsServic
     long instanceCount = 0;
     try {
       instanceCount = getInstanceCount(getQuery(appIds));
+    } catch (WingsException exception) {
+      exception.logProcessedMessages(logger);
+      return anInstanceSummaryStats().withCountMap(null).withTotalCount(instanceCount).build();
     } catch (Exception e) {
       logger.error("Unable to get app instance summary stats", e);
-      return InstanceSummaryStats.Builder.anInstanceSummaryStats()
-          .withCountMap(null)
-          .withTotalCount(instanceCount)
-          .build();
+      return anInstanceSummaryStats().withCountMap(null).withTotalCount(instanceCount).build();
     }
 
     Map<String, List<EntitySummaryStats>> instanceSummaryMap = new HashMap<>();
@@ -127,10 +128,7 @@ public class DashboardStatisticsServiceImpl implements DashboardStatisticsServic
       instanceSummaryMap.put(groupByEntityType, entitySummaryStatsList);
     }
 
-    return InstanceSummaryStats.Builder.anInstanceSummaryStats()
-        .withCountMap(instanceSummaryMap)
-        .withTotalCount(instanceCount)
-        .build();
+    return anInstanceSummaryStats().withCountMap(instanceSummaryMap).withTotalCount(instanceCount).build();
   }
 
   private List<EntitySummaryStats> getEntitySummaryStats(
@@ -139,6 +137,9 @@ public class DashboardStatisticsServiceImpl implements DashboardStatisticsServic
     Query<Instance> query;
     try {
       query = getQuery(appIds);
+    } catch (WingsException exception) {
+      exception.logProcessedMessages(logger);
+      return Lists.newArrayList();
     } catch (Exception e) {
       logger.error("Unable to get entity summary stats ", e);
       return Lists.newArrayList();
@@ -177,6 +178,9 @@ public class DashboardStatisticsServiceImpl implements DashboardStatisticsServic
     Query<Instance> query = null;
     try {
       query = getQuery(null).field("serviceId").equal(serviceId);
+    } catch (WingsException exception) {
+      exception.logProcessedMessages(logger);
+      return Lists.newArrayList();
     } catch (Exception e) {
       logger.error("Unable to get service summary stats", e);
       return Lists.newArrayList();
@@ -202,6 +206,9 @@ public class DashboardStatisticsServiceImpl implements DashboardStatisticsServic
     Query<Instance> query = null;
     try {
       query = getQuery(appIds);
+    } catch (WingsException exception) {
+      exception.logProcessedMessages(logger);
+      return Lists.newArrayList();
     } catch (Exception e) {
       logger.error("Unable to get environment type summary stats", e);
       return Lists.newArrayList();
@@ -241,9 +248,12 @@ public class DashboardStatisticsServiceImpl implements DashboardStatisticsServic
     Query<Instance> query;
     try {
       query = getQuery(null).field("serviceId").equal(serviceId);
+    } catch (WingsException exception) {
+      exception.logProcessedMessages(logger);
+      return anInstanceSummaryStats().withCountMap(null).withTotalCount(0).build();
     } catch (Exception e) {
       logger.error("Unable to get current active instances", e);
-      return InstanceSummaryStats.Builder.anInstanceSummaryStats().withCountMap(null).withTotalCount(0).build();
+      return anInstanceSummaryStats().withCountMap(null).withTotalCount(0).build();
     }
 
     long instanceCount = getInstanceCount(query);
@@ -269,10 +279,7 @@ public class DashboardStatisticsServiceImpl implements DashboardStatisticsServic
       instanceSummaryMap.put(groupByEntityType, entitySummaryStatsList);
     }
 
-    return InstanceSummaryStats.Builder.anInstanceSummaryStats()
-        .withCountMap(instanceSummaryMap)
-        .withTotalCount(instanceCount)
-        .build();
+    return anInstanceSummaryStats().withCountMap(instanceSummaryMap).withTotalCount(instanceCount).build();
   }
 
   @Override
@@ -280,6 +287,9 @@ public class DashboardStatisticsServiceImpl implements DashboardStatisticsServic
     Query<Instance> query = null;
     try {
       query = getQuery(appIds);
+    } catch (WingsException exception) {
+      exception.logProcessedMessages(logger);
+      return Lists.newArrayList();
     } catch (Exception e) {
       logger.error("Unable to get current active instances", e);
       return Lists.newArrayList();
@@ -533,6 +543,9 @@ public class DashboardStatisticsServiceImpl implements DashboardStatisticsServic
     Query<Instance> query;
     try {
       query = getQuery(null).field("serviceId").equal(serviceId);
+    } catch (WingsException exception) {
+      exception.logProcessedMessages(logger);
+      return Lists.newArrayList();
     } catch (Exception e) {
       logger.error("Unable to get current active instances", e);
       return Lists.newArrayList();
