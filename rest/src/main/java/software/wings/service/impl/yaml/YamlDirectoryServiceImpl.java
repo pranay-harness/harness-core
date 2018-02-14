@@ -929,6 +929,7 @@ public class YamlDirectoryServiceImpl implements YamlDirectoryService {
       case ARTIFACTORY:
       case ECR:
       case GCR:
+      case ACR:
       case AMAZON_S3:
       case GIT:
         sb.append(ARTIFACT_SOURCES_FOLDER);

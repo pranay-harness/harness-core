@@ -353,6 +353,7 @@ public class YamlResourceServiceImpl implements YamlResourceService {
       case ARTIFACTORY:
       case ECR:
       case GCR:
+      case ACR:
       case AMAZON_S3:
       case GIT:
         return yamlHandlerFactory.getYamlHandler(YamlType.ARTIFACT_SERVER, settingVariableType.name());
