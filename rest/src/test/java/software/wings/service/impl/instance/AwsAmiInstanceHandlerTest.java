@@ -23,16 +23,19 @@ import static software.wings.service.impl.instance.InstanceSyncTestConstants.ENV
 import static software.wings.service.impl.instance.InstanceSyncTestConstants.HOST_NAME_IP1;
 import static software.wings.service.impl.instance.InstanceSyncTestConstants.HOST_NAME_IP2;
 import static software.wings.service.impl.instance.InstanceSyncTestConstants.HOST_NAME_IP3;
+import static software.wings.service.impl.instance.InstanceSyncTestConstants.HOST_NAME_IP4;
 import static software.wings.service.impl.instance.InstanceSyncTestConstants.INFRA_MAPPING_ID;
 import static software.wings.service.impl.instance.InstanceSyncTestConstants.INSTANCE_1_ID;
 import static software.wings.service.impl.instance.InstanceSyncTestConstants.INSTANCE_2_ID;
 import static software.wings.service.impl.instance.InstanceSyncTestConstants.INSTANCE_3_ID;
+import static software.wings.service.impl.instance.InstanceSyncTestConstants.INSTANCE_4_ID;
 import static software.wings.service.impl.instance.InstanceSyncTestConstants.PRIVATE_DNS_1;
 import static software.wings.service.impl.instance.InstanceSyncTestConstants.PRIVATE_DNS_2;
 import static software.wings.service.impl.instance.InstanceSyncTestConstants.PRIVATE_DNS_3;
 import static software.wings.service.impl.instance.InstanceSyncTestConstants.PUBLIC_DNS_1;
 import static software.wings.service.impl.instance.InstanceSyncTestConstants.PUBLIC_DNS_2;
 import static software.wings.service.impl.instance.InstanceSyncTestConstants.PUBLIC_DNS_3;
+import static software.wings.service.impl.instance.InstanceSyncTestConstants.PUBLIC_DNS_4;
 import static software.wings.service.impl.instance.InstanceSyncTestConstants.SERVICE_ID;
 import static software.wings.service.impl.instance.InstanceSyncTestConstants.SERVICE_NAME;
 import static software.wings.service.impl.instance.InstanceSyncTestConstants.US_EAST;
@@ -223,6 +226,25 @@ public class AwsAmiInstanceHandlerTest extends WingsBaseTest {
             .instanceType(InstanceType.EC2_CLOUD_INSTANCE)
             .containerInstanceKey(ContainerInstanceKey.builder().containerId(CONTAINER_ID).build())
             .instanceInfo(Ec2InstanceInfo.builder().ec2Instance(instance3).hostPublicDns(PUBLIC_DNS_3).build())
+            .build(),
+        Instance.builder()
+            .uuid(INSTANCE_4_ID)
+            .accountId(ACCOUNT_ID)
+            .appId(APP_ID)
+            .computeProviderId(COMPUTE_PROVIDER_NAME)
+            .appName(APP_NAME)
+            .envId(ENV_ID)
+            .envName(ENV_NAME)
+            .envType(EnvironmentType.PROD)
+            .infraMappingId(INFRA_MAPPING_ID)
+            .infraMappingType(InfrastructureMappingType.AWS_AMI.getName())
+            .hostInstanceKey(HostInstanceKey.builder().infraMappingId(INFRA_MAPPING_ID).hostName(HOST_NAME_IP4).build())
+            .instanceType(InstanceType.EC2_CLOUD_INSTANCE)
+            .containerInstanceKey(ContainerInstanceKey.builder().containerId(CONTAINER_ID).build())
+            .instanceInfo(Ec2InstanceInfo.builder()
+                              .ec2Instance(null /*for NPE issue we saw in prod*/)
+                              .hostPublicDns(PUBLIC_DNS_4)
+                              .build())
             .build()));
 
     doReturn(pageResponse).when(instanceService).list(any());
