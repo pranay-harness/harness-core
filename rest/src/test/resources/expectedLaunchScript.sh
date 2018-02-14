@@ -4,17 +4,17 @@
 set -m
 
 # Set Environment Variables.
-export WINGS_BACKUP_PATH=/tmp/backup
-export PORT=8080
-export PASSWORD=aSecret
-export WINGS_RUNTIME_PATH=/tmp/runtime
-export WINGS_SCRIPT_DIR=/tmp/ACTIVITY_ID
-export ARTIFACT_FILE_NAME=artifact.war
-export WINGS_STAGING_PATH=/tmp/staging
+export WINGS_BACKUP_PATH="/tmp/backup"
+export PORT="8080"
+export PASSWORD="aSecret"
+export WINGS_RUNTIME_PATH="/tmp/runtime"
+export WINGS_SCRIPT_DIR="/tmp/ACTIVITY_ID"
+export ARTIFACT_FILE_NAME="artifact.war"
+export WINGS_STAGING_PATH="/tmp/staging"
 
 # Display Environment Variables.
-echo "export PORT=8080"
-echo "export PASSWORD=*****"
+echo "export PORT=\"8080\""
+echo "export PASSWORD=\"*****\""
 
 set -x
 
