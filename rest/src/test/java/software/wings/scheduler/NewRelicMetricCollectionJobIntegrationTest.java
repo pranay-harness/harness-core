@@ -1,4 +1,4 @@
-package software.wings;
+package software.wings.scheduler;
 
 import static software.wings.beans.DelegateTask.Builder.aDelegateTask;
 import static software.wings.dl.PageRequest.Builder.aPageRequest;
