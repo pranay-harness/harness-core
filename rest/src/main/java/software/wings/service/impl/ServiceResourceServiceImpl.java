@@ -956,14 +956,18 @@ public class ServiceResourceServiceImpl implements ServiceResourceService, DataP
   @Override
   public Map<String, String> getData(String appId, String... params) {
     Service service = wingsPersistence.get(Service.class, appId, params[0]);
+    if (service == null) {
+      return emptyMap();
+    }
+
     List<ServiceCommand> serviceCommands = getServiceCommands(service.getAppId(), service.getUuid(), false);
     if (isEmpty(serviceCommands)) {
       return emptyMap();
-    } else {
-      return serviceCommands.stream()
-          .filter(serviceCommand -> !StringUtils.equals(serviceCommand.getName(), params[1]))
-          .collect(toMap(ServiceCommand::getName, ServiceCommand::getName));
     }
+
+    return serviceCommands.stream()
+        .filter(serviceCommand -> !StringUtils.equals(serviceCommand.getName(), params[1]))
+        .collect(toMap(ServiceCommand::getName, ServiceCommand::getName));
   }
 
   @Override
