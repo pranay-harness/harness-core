@@ -168,7 +168,8 @@ public class ElkAnalysisState extends AbstractLogAnalysisState {
 
     SettingAttribute settingAttribute = null;
     String finalAnalysisServerConfigId = analysisServerConfigId;
-    String finalIndices = indices;
+    String finalIndices = context.renderExpression(indices);
+
     if (!isEmpty(getTemplateExpressions())) {
       TemplateExpression configIdExpression =
           templateExpressionProcessor.getTemplateExpression(getTemplateExpressions(), "analysisServerConfigId");
@@ -200,12 +201,12 @@ public class ElkAnalysisState extends AbstractLogAnalysisState {
     List<DelegateTask> delegateTasks = new ArrayList<>();
     int i = 0;
     for (Set<String> hostBatch : batchedHosts) {
-      final ElkDataCollectionInfo dataCollectionInfo =
-          new ElkDataCollectionInfo(elkConfig, accountId, context.getAppId(), context.getStateExecutionInstanceId(),
-              getWorkflowId(context), context.getWorkflowExecutionId(), getPhaseServiceId(context), queries,
-              finalIndices, hostnameField, messageField, timestampField, timestampFieldFormat,
-              logCollectionStartTimeStamp, 0, Integer.parseInt(timeDuration), hostBatch,
-              secretManager.getEncryptionDetails(elkConfig, context.getAppId(), context.getWorkflowExecutionId()));
+      final ElkDataCollectionInfo dataCollectionInfo = new ElkDataCollectionInfo(elkConfig, accountId,
+          context.getAppId(), context.getStateExecutionInstanceId(), getWorkflowId(context),
+          context.getWorkflowExecutionId(), getPhaseServiceId(context), queries, finalIndices,
+          context.renderExpression(hostnameField), context.renderExpression(messageField), timestampField,
+          timestampFieldFormat, logCollectionStartTimeStamp, 0, Integer.parseInt(timeDuration), hostBatch,
+          secretManager.getEncryptionDetails(elkConfig, context.getAppId(), context.getWorkflowExecutionId()));
 
       String waitId = UUIDGenerator.getUuid();
       delegateTasks.add(aDelegateTask()
