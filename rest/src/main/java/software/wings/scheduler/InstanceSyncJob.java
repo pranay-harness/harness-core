@@ -81,6 +81,8 @@ public class InstanceSyncJob implements Job {
       }
       final String appIdFinal = appId;
       executorService.submit(() -> executeInternal(appIdFinal));
+    } catch (WingsException exception) {
+      exception.logProcessedMessages(logger);
     } catch (Exception ex) {
       logger.error("Error while looking up appId instances for app: {}", appId, ex);
     }
@@ -109,7 +111,7 @@ public class InstanceSyncJob implements Job {
             }
             instanceHandler.syncInstances(appIdFinal, infraMappingId);
           } catch (WingsException ex) {
-            logger.warn("Could not retrieve handler for infraMappingType: " + infraMappingType);
+            logger.warn("Could not retrieve handler for infraMappingType: " + infraMappingType, ex);
           }
         } catch (HarnessException ex) {
           logger.error(
@@ -118,6 +120,8 @@ public class InstanceSyncJob implements Job {
       });
 
       logger.info("Instance sync done for appId:" + appId);
+    } catch (WingsException exception) {
+      exception.logProcessedMessages(logger);
     } catch (Exception ex) {
       logger.error("Error while syncing instances for app: {}", appId, ex);
     }
