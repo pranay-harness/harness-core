@@ -635,7 +635,7 @@ public class DelegateServiceImpl implements DelegateService {
     Set<String> validating = Optional.ofNullable(delegateTask.getValidatingDelegateIds()).orElse(new HashSet<>());
     validating.add(delegateId);
     delegateTask.setValidatingDelegateIds(validating);
-    storeDelegateTracking(delegateTask, "validatingDelegateIds", delegateTask.getValidatingDelegateIds());
+    storeDelegateTracking(delegateTask, "validatingDelegateIds", delegateId);
   }
 
   private void addToValidationComplete(String delegateId, DelegateTask delegateTask) {
@@ -645,8 +645,7 @@ public class DelegateServiceImpl implements DelegateService {
         Optional.ofNullable(delegateTask.getValidationCompleteDelegateIds()).orElse(new HashSet<>());
     validationComplete.add(delegateId);
     delegateTask.setValidationCompleteDelegateIds(validationComplete);
-    storeDelegateTracking(
-        delegateTask, "validationCompleteDelegateIds", delegateTask.getValidationCompleteDelegateIds());
+    storeDelegateTracking(delegateTask, "validationCompleteDelegateIds", delegateId);
   }
 
   private void addToBlacklisted(String delegateId, DelegateTask delegateTask) {
@@ -655,7 +654,7 @@ public class DelegateServiceImpl implements DelegateService {
     Set<String> blacklisted = Optional.ofNullable(delegateTask.getBlacklistedDelegateIds()).orElse(new HashSet<>());
     blacklisted.add(delegateId);
     delegateTask.setBlacklistedDelegateIds(blacklisted);
-    storeDelegateTracking(delegateTask, "blacklistedDelegateIds", delegateTask.getBlacklistedDelegateIds());
+    storeDelegateTracking(delegateTask, "blacklistedDelegateIds", delegateId);
   }
 
   private boolean isValidationComplete(DelegateTask delegateTask) {
@@ -670,11 +669,10 @@ public class DelegateServiceImpl implements DelegateService {
     return isNotEmpty(blacklistedDelegateIds) && blacklistedDelegateIds.contains(delegateId);
   }
 
-  private void storeDelegateTracking(
-      DelegateTask delegateTask, String trackDelegateField, Set<String> trackedDelegates) {
+  private void storeDelegateTracking(DelegateTask delegateTask, String trackDelegateField, String delegateId) {
     if (delegateTask.isAsync()) {
       UpdateOperations<DelegateTask> updateOperations =
-          wingsPersistence.createUpdateOperations(DelegateTask.class).set(trackDelegateField, trackedDelegates);
+          wingsPersistence.createUpdateOperations(DelegateTask.class).addToSet(trackDelegateField, delegateId);
       Query<DelegateTask> updateQuery = wingsPersistence.createQuery(DelegateTask.class)
                                             .field("accountId")
                                             .equal(delegateTask.getAccountId())
