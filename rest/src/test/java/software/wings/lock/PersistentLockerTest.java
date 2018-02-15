@@ -14,6 +14,7 @@ import com.google.inject.Inject;
 import com.deftlabs.lock.mongo.DistributedLock;
 import com.deftlabs.lock.mongo.DistributedLockOptions;
 import com.deftlabs.lock.mongo.DistributedLockSvc;
+import io.harness.MockableTest;
 import org.junit.Ignore;
 import org.junit.Test;
 import org.mockito.InOrder;
@@ -21,7 +22,6 @@ import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.internal.util.reflection.Whitebox;
 import org.slf4j.Logger;
-import software.wings.MockTest;
 import software.wings.common.cache.ResponseCodeCache;
 import software.wings.exception.WingsException;
 
@@ -30,7 +30,7 @@ import java.time.Duration;
 /**
  * The Class PersistentLockerTest.
  */
-public class PersistentLockerTest extends MockTest {
+public class PersistentLockerTest extends MockableTest {
   @Mock private DistributedLockSvc distributedLockSvc;
 
   @Inject @InjectMocks private PersistentLocker persistentLocker;
