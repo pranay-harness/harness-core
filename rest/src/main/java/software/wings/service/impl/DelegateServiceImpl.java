@@ -275,11 +275,6 @@ public class DelegateServiceImpl implements DelegateService {
     String delegateJarDownloadUrl = null;
     boolean jarFileExists = false;
 
-    String watcherLatestVersion = "";
-    String watcherJarRelativePath;
-    String watcherJarDownloadUrl = "";
-    String watcherMetadataUrl = "";
-
     try {
       String delegateMetadataUrl = mainConfiguration.getDelegateMetadataUrl().trim();
       String delegateMatadata = Request.Get(delegateMetadataUrl)
@@ -312,29 +307,34 @@ public class DelegateServiceImpl implements DelegateService {
       doUpgrade = !(Version.valueOf(version).equals(Version.valueOf(latestVersion)));
     }
 
-    try {
-      watcherMetadataUrl = mainConfiguration.getWatcherMetadataUrl().trim();
-      String watcherMetadata = Request.Get(watcherMetadataUrl)
-                                   .connectTimeout(10000)
-                                   .socketTimeout(10000)
-                                   .execute()
-                                   .returnContent()
-                                   .asString()
-                                   .trim();
-      logger.info("Watcher meta data: [{}]", watcherMetadata);
-
-      watcherLatestVersion = substringBefore(watcherMetadata, " ").trim();
-      watcherJarRelativePath = substringAfter(watcherMetadata, " ").trim();
-      watcherJarDownloadUrl =
-          watcherMetadataUrl.substring(0, watcherMetadataUrl.lastIndexOf('/')) + "/" + watcherJarRelativePath;
-    } catch (IOException e) {
-      logger.warn("Unable to fetch watcher version information", e);
-      logger.warn("LatestVersion=[{}], watcherJarDownloadUrl=[{}]", watcherLatestVersion, watcherJarDownloadUrl);
-    }
-
-    logger.info("Found watcher latest version: [{}] url: [{}]", watcherLatestVersion, watcherJarDownloadUrl);
-
     if (doUpgrade) {
+      String watcherLatestVersion = "";
+      String watcherJarRelativePath;
+      String watcherJarDownloadUrl = "";
+      String watcherMetadataUrl = "";
+
+      try {
+        watcherMetadataUrl = mainConfiguration.getWatcherMetadataUrl().trim();
+        String watcherMetadata = Request.Get(watcherMetadataUrl)
+                                     .connectTimeout(10000)
+                                     .socketTimeout(10000)
+                                     .execute()
+                                     .returnContent()
+                                     .asString()
+                                     .trim();
+        logger.info("Watcher meta data: [{}]", watcherMetadata);
+
+        watcherLatestVersion = substringBefore(watcherMetadata, " ").trim();
+        watcherJarRelativePath = substringAfter(watcherMetadata, " ").trim();
+        watcherJarDownloadUrl =
+            watcherMetadataUrl.substring(0, watcherMetadataUrl.lastIndexOf('/')) + "/" + watcherJarRelativePath;
+      } catch (IOException e) {
+        logger.warn("Unable to fetch watcher version information", e);
+        logger.warn("LatestVersion=[{}], watcherJarDownloadUrl=[{}]", watcherLatestVersion, watcherJarDownloadUrl);
+      }
+
+      logger.info("Found watcher latest version: [{}] url: [{}]", watcherLatestVersion, watcherJarDownloadUrl);
+
       Account account = accountService.get(accountId);
       return ImmutableMap.builder()
           .put("accountId", accountId)
@@ -624,7 +624,7 @@ public class DelegateServiceImpl implements DelegateService {
         return assignTask(delegateId, taskId, delegateTask);
       }
     } else {
-      logger.info("Task {} is still being validated");
+      logger.info("Task {} is still being validated", taskId);
       return null;
     }
   }
