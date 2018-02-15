@@ -214,8 +214,7 @@ public class AwsInstanceHandler extends InstanceHandler {
   }
 
   /**
-   *
-   * @param ec2Instance Ec2 instance
+   * @param ec2Instance     Ec2 instance
    * @param infraMappingId  Infra mapping id
    * @param instanceBuilder Instance builder
    * @return privateDnsName private dns name
@@ -243,6 +242,18 @@ public class AwsInstanceHandler extends InstanceHandler {
       List<com.amazonaws.services.ec2.model.Instance> activeInstanceList =
           awsInfrastructureProvider.listFilteredInstances(awsInfrastructureMapping, awsConfig, encryptedDataDetails);
 
+      Instance ec2instance = ec2InstanceIdInstanceMap.values().iterator().next();
+      logger.info(new StringBuilder()
+                      .append("Total no of Ec2 instances found in DB for InfraMappingId: ")
+                      .append(ec2instance.getInfraMappingId())
+                      .append(" and AppId: ")
+                      .append(ec2instance.getAppId())
+                      .append(": ")
+                      .append(ec2InstanceIdInstanceMap.size())
+                      .append(", No of Running instances found in aws:")
+                      .append(activeInstanceList.size())
+                      .toString());
+
       ec2InstanceIdInstanceMap.keySet().removeAll(
           activeInstanceList.stream().map(instance -> instance.getInstanceId()).collect(toSet()));
 
@@ -252,6 +263,15 @@ public class AwsInstanceHandler extends InstanceHandler {
                                                .collect(Collectors.toSet());
 
       if (CollectionUtils.isNotEmpty(instanceIdsToBeDeleted)) {
+        logger.info(new StringBuilder()
+                        .append("Total no of Ec2 instances to be deleted for InfraMappingId: ")
+                        .append(ec2instance.getInfraMappingId())
+                        .append(", AppId: ")
+                        .append(ec2instance.getAppId())
+                        .append(" : ")
+                        .append(instanceIdsToBeDeleted.size())
+                        .toString());
+
         instanceService.delete(instanceIdsToBeDeleted);
       }
     }
