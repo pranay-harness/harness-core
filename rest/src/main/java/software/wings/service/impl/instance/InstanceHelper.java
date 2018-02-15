@@ -128,6 +128,15 @@ public class InstanceHelper {
         logger.debug("artifact is null for stateExecutionInstance:" + stateExecutionInstanceId);
       }
 
+      if (phaseExecutionData.getInfraMappingId() == null) {
+        logger.debug(new StringBuilder()
+                         .append("infraMappingId is null for appId:")
+                         .append(appId)
+                         .append(", WorkflowExecutionId:")
+                         .append(workflowExecution.getUuid())
+                         .toString());
+        return;
+      }
       InfrastructureMapping infrastructureMapping =
           infraMappingService.get(appId, phaseExecutionData.getInfraMappingId());
 
