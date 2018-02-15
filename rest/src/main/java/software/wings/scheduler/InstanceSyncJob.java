@@ -107,6 +107,7 @@ public class InstanceSyncJob implements Job {
           try {
             InstanceHandler instanceHandler = instanceHandlerFactory.getInstanceHandler(infraMappingType);
             if (instanceHandler == null) {
+              logger.warn("handler is null for infraMappingType: " + infraMappingType.name());
               return;
             }
             instanceHandler.syncInstances(appIdFinal, infraMappingId);

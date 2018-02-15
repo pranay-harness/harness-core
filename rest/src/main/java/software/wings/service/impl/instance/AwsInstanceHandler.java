@@ -78,9 +78,8 @@ public class AwsInstanceHandler extends InstanceHandler {
     // schema or the instances created using aws infra mapping with filter.
     if (ec2InstanceIdInstanceMap.size() > 0) {
       if (awsInfraMapping.getAwsInstanceFilter() != null) {
-        List<com.amazonaws.services.ec2.model.Instance> filteredInstanceList =
-            awsInfrastructureProvider.listFilteredInstances(awsInfraMapping, awsConfig, encryptedDataDetails);
-        ec2InstanceIdInstanceMap.keySet().removeAll(filteredInstanceList);
+        handleEc2InstanceSyncWithAwsInfraMapping(
+            ec2InstanceIdInstanceMap, awsConfig, encryptedDataDetails, region, awsInfraMapping);
       } else {
         handleEc2InstanceSync(ec2InstanceIdInstanceMap, awsConfig, encryptedDataDetails, region);
       }
@@ -229,6 +228,15 @@ public class AwsInstanceHandler extends InstanceHandler {
     return privateDnsName;
   }
 
+  private void handleEc2InstanceSyncWithAwsInfraMapping(Map<String, Instance> ec2InstanceIdInstanceMap,
+      AwsConfig awsConfig, List<EncryptedDataDetail> encryptedDataDetails, String region,
+      AwsInfrastructureMapping awsInfrastructureMapping) {
+    List<com.amazonaws.services.ec2.model.Instance> activeInstanceList =
+        awsInfrastructureProvider.listFilteredInstances(awsInfrastructureMapping, awsConfig, encryptedDataDetails);
+
+    deleteRunningEc2InstancesFromMap(ec2InstanceIdInstanceMap, activeInstanceList);
+  }
+
   protected void handleEc2InstanceSync(Map<String, Instance> ec2InstanceIdInstanceMap, AwsConfig awsConfig,
       List<EncryptedDataDetail> encryptedDataDetails, String region) {
     // Check if the instances are still running. These instances were the ones that were stored with the old schema.
@@ -242,38 +250,43 @@ public class AwsInstanceHandler extends InstanceHandler {
       List<com.amazonaws.services.ec2.model.Instance> activeInstanceList =
           awsInfrastructureProvider.listFilteredInstances(awsInfrastructureMapping, awsConfig, encryptedDataDetails);
 
-      Instance ec2instance = ec2InstanceIdInstanceMap.values().iterator().next();
+      deleteRunningEc2InstancesFromMap(ec2InstanceIdInstanceMap, activeInstanceList);
+    }
+  }
+
+  private void deleteRunningEc2InstancesFromMap(Map<String, Instance> ec2InstanceIdInstanceMap,
+      List<com.amazonaws.services.ec2.model.Instance> activeInstanceList) {
+    Instance ec2instance = ec2InstanceIdInstanceMap.values().iterator().next();
+    logger.info(new StringBuilder()
+                    .append("Total no of Ec2 instances found in DB for InfraMappingId: ")
+                    .append(ec2instance.getInfraMappingId())
+                    .append(" and AppId: ")
+                    .append(ec2instance.getAppId())
+                    .append(": ")
+                    .append(ec2InstanceIdInstanceMap.size())
+                    .append(", No of Running instances found in aws:")
+                    .append(activeInstanceList.size())
+                    .toString());
+
+    ec2InstanceIdInstanceMap.keySet().removeAll(
+        activeInstanceList.stream().map(instance -> instance.getInstanceId()).collect(toSet()));
+
+    Set<String> instanceIdsToBeDeleted = ec2InstanceIdInstanceMap.entrySet()
+                                             .stream()
+                                             .map(entry -> entry.getValue().getUuid())
+                                             .collect(Collectors.toSet());
+
+    if (CollectionUtils.isNotEmpty(instanceIdsToBeDeleted)) {
       logger.info(new StringBuilder()
-                      .append("Total no of Ec2 instances found in DB for InfraMappingId: ")
+                      .append("Total no of Ec2 instances to be deleted for InfraMappingId: ")
                       .append(ec2instance.getInfraMappingId())
-                      .append(" and AppId: ")
+                      .append(", AppId: ")
                       .append(ec2instance.getAppId())
-                      .append(": ")
-                      .append(ec2InstanceIdInstanceMap.size())
-                      .append(", No of Running instances found in aws:")
-                      .append(activeInstanceList.size())
+                      .append(" : ")
+                      .append(instanceIdsToBeDeleted.size())
                       .toString());
 
-      ec2InstanceIdInstanceMap.keySet().removeAll(
-          activeInstanceList.stream().map(instance -> instance.getInstanceId()).collect(toSet()));
-
-      Set<String> instanceIdsToBeDeleted = ec2InstanceIdInstanceMap.entrySet()
-                                               .stream()
-                                               .map(entry -> entry.getValue().getUuid())
-                                               .collect(Collectors.toSet());
-
-      if (CollectionUtils.isNotEmpty(instanceIdsToBeDeleted)) {
-        logger.info(new StringBuilder()
-                        .append("Total no of Ec2 instances to be deleted for InfraMappingId: ")
-                        .append(ec2instance.getInfraMappingId())
-                        .append(", AppId: ")
-                        .append(ec2instance.getAppId())
-                        .append(" : ")
-                        .append(instanceIdsToBeDeleted.size())
-                        .toString());
-
-        instanceService.delete(instanceIdsToBeDeleted);
-      }
+      instanceService.delete(instanceIdsToBeDeleted);
     }
   }
 
