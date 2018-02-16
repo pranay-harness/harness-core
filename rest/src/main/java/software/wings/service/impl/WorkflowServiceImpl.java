@@ -2340,6 +2340,11 @@ public class WorkflowServiceImpl implements WorkflowService, DataProvider {
                           .withStatusForRollback(ExecutionStatus.SUCCESS)
                           .withRollback(true)
                           .build())
+        .addPhaseStep(aPhaseStep(VERIFY_SERVICE, Constants.VERIFY_SERVICE)
+                          .withRollback(true)
+                          .withPhaseStepNameForRollback(Constants.VERIFY_SERVICE)
+                          .withStatusForRollback(ExecutionStatus.SUCCESS)
+                          .build())
         .addPhaseStep(aPhaseStep(WRAP_UP, Constants.WRAP_UP).build())
         .build();
   }
@@ -2364,6 +2369,11 @@ public class WorkflowServiceImpl implements WorkflowService, DataProvider {
                           .withPhaseStepNameForRollback(Constants.DEPLOY_SERVICE)
                           .withStatusForRollback(ExecutionStatus.SUCCESS)
                           .withRollback(true)
+                          .build())
+        .addPhaseStep(aPhaseStep(VERIFY_SERVICE, Constants.VERIFY_SERVICE)
+                          .withRollback(true)
+                          .withPhaseStepNameForRollback(Constants.VERIFY_SERVICE)
+                          .withStatusForRollback(ExecutionStatus.SUCCESS)
                           .build())
         .addPhaseStep(aPhaseStep(WRAP_UP, Constants.WRAP_UP).build())
         .build();
@@ -2390,6 +2400,11 @@ public class WorkflowServiceImpl implements WorkflowService, DataProvider {
                           .withStatusForRollback(ExecutionStatus.SUCCESS)
                           .withRollback(true)
                           .build())
+        .addPhaseStep(aPhaseStep(VERIFY_SERVICE, Constants.VERIFY_SERVICE)
+                          .withRollback(true)
+                          .withPhaseStepNameForRollback(Constants.VERIFY_SERVICE)
+                          .withStatusForRollback(ExecutionStatus.SUCCESS)
+                          .build())
         .addPhaseStep(aPhaseStep(WRAP_UP, Constants.WRAP_UP).build())
         .build();
   }
@@ -2414,6 +2429,11 @@ public class WorkflowServiceImpl implements WorkflowService, DataProvider {
                           .withPhaseStepNameForRollback(Constants.DEPLOY_SERVICE)
                           .withStatusForRollback(ExecutionStatus.SUCCESS)
                           .withRollback(true)
+                          .build())
+        .addPhaseStep(aPhaseStep(VERIFY_SERVICE, Constants.VERIFY_SERVICE)
+                          .withRollback(true)
+                          .withPhaseStepNameForRollback(Constants.VERIFY_SERVICE)
+                          .withStatusForRollback(ExecutionStatus.SUCCESS)
                           .build())
         .addPhaseStep(aPhaseStep(WRAP_UP, Constants.WRAP_UP).build())
         .build();
@@ -2555,7 +2575,13 @@ public class WorkflowServiceImpl implements WorkflowService, DataProvider {
                                               .withRollback(true)
                                               .build());
       }
-      workflowPhaseBuilder.addPhaseStep(aPhaseStep(WRAP_UP, Constants.WRAP_UP).build());
+      workflowPhaseBuilder
+          .addPhaseStep(aPhaseStep(VERIFY_SERVICE, Constants.VERIFY_SERVICE)
+                            .withRollback(true)
+                            .withPhaseStepNameForRollback(Constants.VERIFY_SERVICE)
+                            .withStatusForRollback(ExecutionStatus.SUCCESS)
+                            .build())
+          .addPhaseStep(aPhaseStep(WRAP_UP, Constants.WRAP_UP).build());
       return workflowPhaseBuilder.build();
     }
   }
