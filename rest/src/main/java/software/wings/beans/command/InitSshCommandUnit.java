@@ -145,19 +145,12 @@ public class InitSshCommandUnit extends SshCommandUnit {
 
   @VisibleForTesting
   static String escapifyString(String input) {
-    return input.replaceAll("\\\\", "\\\\\\\\")
-        .replaceAll("&", "\\\\&")
-        .replaceAll("\\$", "\\\\\\$")
-        .replaceAll("`", "\\\\`")
-        .replaceAll("\"", "\\\\\"")
-        .replaceAll("'", "\\\\'")
-        .replaceAll("\\(", "\\\\(")
-        .replaceAll("\\)", "\\\\)")
-        .replaceAll("\\|", "\\\\|")
-        .replaceAll("<", "\\\\<")
-        .replaceAll(">", "\\\\>")
-        .replaceAll(";", "\\\\;")
-        .replaceAll(" ", "\\\\ ");
+    String str = input.replaceAll("`", "\\\\`").replaceAll("\"", "\\\\\"");
+
+    if (str.endsWith("\\")) {
+      str = str.substring(0, str.length() - 1) + "\\\\";
+    }
+    return str;
   }
 
   /**
