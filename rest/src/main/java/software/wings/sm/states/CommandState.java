@@ -273,9 +273,9 @@ public class CommandState extends State {
                                             .serviceVariables(serviceVariables)
                                             .status(ExecutionStatus.RUNNING);
 
-      String backupPath = getEvaluatedSettingValue(context, accountId, appId, envId, BACKUP_PATH).replace(" ", "\\ ");
-      String runtimePath = getEvaluatedSettingValue(context, accountId, appId, envId, RUNTIME_PATH).replace(" ", "\\ ");
-      String stagingPath = getEvaluatedSettingValue(context, accountId, appId, envId, STAGING_PATH).replace(" ", "\\ ");
+      String backupPath = getEvaluatedSettingValue(context, accountId, appId, envId, BACKUP_PATH);
+      String runtimePath = getEvaluatedSettingValue(context, accountId, appId, envId, RUNTIME_PATH);
+      String stagingPath = getEvaluatedSettingValue(context, accountId, appId, envId, STAGING_PATH);
 
       CommandExecutionContext.Builder commandExecutionContextBuilder =
           aCommandExecutionContext()
