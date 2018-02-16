@@ -158,6 +158,14 @@ public class InstanceHelper {
               phaseExecutionData, infrastructureMapping, artifact, deploymentInfo));
         } else if (DeploymentType.AWS_CODEDEPLOY.getDisplayName().equals(phaseExecutionData.getDeploymentType())) {
           String codeDeployDeploymentId = getCodeDeployDeploymentId(phaseExecutionData, workflowExecution);
+
+          if (codeDeployDeploymentId == null) {
+            logger.warn(new StringBuilder("Phase step execution summary null for Deploy for workflow:")
+                            .append(workflowExecution.getName())
+                            .append("Cant create deployment event")
+                            .toString());
+            return;
+          }
           AwsCodeDeployDeploymentInfo deploymentInfo =
               AwsCodeDeployDeploymentInfo.builder().deploymentId(codeDeployDeploymentId).build();
 
@@ -337,8 +345,7 @@ public class InstanceHelper {
       }
 
     } else {
-      throw new HarnessException(
-          "Phase step execution summary null for Deploy for workflow: " + workflowExecution.getName());
+      return null;
     }
   }
 

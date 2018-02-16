@@ -1,16 +1,13 @@
 package software.wings.service.impl;
 
-import static io.harness.data.structure.EmptyPredicate.isNotEmpty;
 import static java.util.Collections.emptyList;
 import static java.util.stream.Collectors.toList;
 import static software.wings.beans.ErrorCode.INVALID_ARGUMENT;
 import static software.wings.beans.infrastructure.Host.Builder.aHost;
 import static software.wings.dl.PageResponse.Builder.aPageResponse;
 
-import com.google.common.collect.ArrayListMultimap;
 import com.google.common.collect.Lists;
 import com.google.common.collect.Maps;
-import com.google.common.collect.Multimap;
 import com.google.inject.Inject;
 import com.google.inject.Singleton;
 
@@ -34,7 +31,6 @@ import org.slf4j.LoggerFactory;
 import software.wings.app.MainConfiguration;
 import software.wings.beans.AwsConfig;
 import software.wings.beans.AwsInfrastructureMapping;
-import software.wings.beans.AwsInstanceFilter;
 import software.wings.beans.ErrorCode;
 import software.wings.beans.InfrastructureMapping;
 import software.wings.beans.SettingAttribute;
@@ -125,32 +121,9 @@ public class AwsInfrastructureProvider implements InfrastructureProvider {
 
   private DescribeInstancesResult listFilteredHosts(AwsInfrastructureMapping awsInfrastructureMapping,
       AwsConfig awsConfig, List<EncryptedDataDetail> encryptedDataDetails) {
-    List<Filter> awsFilters = getAwsFilters(awsInfrastructureMapping);
+    List<Filter> filters = awsHelperService.getAwsFilters(awsInfrastructureMapping);
     return awsHelperService.describeEc2Instances(awsConfig, encryptedDataDetails, awsInfrastructureMapping.getRegion(),
-        new DescribeInstancesRequest().withFilters(awsFilters));
-  }
-
-  private List<Filter> getAwsFilters(AwsInfrastructureMapping awsInfrastructureMapping) {
-    AwsInstanceFilter instanceFilter = awsInfrastructureMapping.getAwsInstanceFilter();
-    List<Filter> filters = new ArrayList<>();
-    filters.add(new Filter("instance-state-name").withValues("running"));
-    if (instanceFilter != null) {
-      if (isNotEmpty(instanceFilter.getVpcIds())) {
-        filters.add(new Filter("vpc-id", instanceFilter.getVpcIds()));
-      }
-      if (isNotEmpty(instanceFilter.getSecurityGroupIds())) {
-        filters.add(new Filter("instance.group-id", instanceFilter.getSecurityGroupIds()));
-      }
-      if (isNotEmpty(instanceFilter.getSubnetIds())) {
-        filters.add(new Filter("network-interface.subnet-id", instanceFilter.getSubnetIds()));
-      }
-      if (isNotEmpty(instanceFilter.getTags())) {
-        Multimap<String, String> tags = ArrayListMultimap.create();
-        instanceFilter.getTags().forEach(tag -> tags.put(tag.getKey(), tag.getValue()));
-        tags.keySet().forEach(key -> filters.add(new Filter("tag:" + key, new ArrayList<>(tags.get(key)))));
-      }
-    }
-    return filters;
+        new DescribeInstancesRequest().withFilters(filters));
   }
 
   @Override

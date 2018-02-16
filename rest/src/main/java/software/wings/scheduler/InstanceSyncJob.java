@@ -100,10 +100,11 @@ public class InstanceSyncJob implements Job {
 
       infraMappingList.stream().forEach(infraMapping -> {
         String infraMappingId = infraMapping.getUuid();
+        InfrastructureMappingType infraMappingType =
+            Util.getEnumFromString(InfrastructureMappingType.class, infraMapping.getInfraMappingType());
+
         try (AcquiredLock lock =
                  persistentLocker.acquireLock(InfrastructureMapping.class, infraMappingId, Duration.ofSeconds(120))) {
-          InfrastructureMappingType infraMappingType =
-              Util.getEnumFromString(InfrastructureMappingType.class, infraMapping.getInfraMappingType());
           try {
             InstanceHandler instanceHandler = instanceHandlerFactory.getInstanceHandler(infraMappingType);
             if (instanceHandler == null) {
@@ -112,7 +113,7 @@ public class InstanceSyncJob implements Job {
             }
             instanceHandler.syncInstances(appIdFinal, infraMappingId);
           } catch (WingsException ex) {
-            logger.warn("Could not retrieve handler for infraMappingType: " + infraMappingType, ex);
+            logger.warn("Could not retrieve handler for infraMappingType: " + infraMappingType.name());
           }
         } catch (HarnessException ex) {
           logger.error(
