@@ -15,6 +15,7 @@ public class MigrationList {
   public static List<Pair<Integer, Class<? extends Migration>>> getMigrations() {
     return new ImmutableList.Builder<Pair<Integer, Class<? extends Migration>>>()
         .add(Pair.of(105, BaseMigration.class))
+        //        .add(Pair.of(106, AddVerifyToRollbackWorkflows.class))
         .build();
   }
 }
