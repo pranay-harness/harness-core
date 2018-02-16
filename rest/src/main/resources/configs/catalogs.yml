@@ -9,24 +9,24 @@ CARD_VIEW_SORT_BY:
 ARTIFACT_TYPE:
     - name: Docker Image
       value: DOCKER
-    - name: Web Archive (WAR)
-      value: WAR
-    - name: Java Archive (JAR)
-      value: JAR
-    - name: TAR File
-      value: TAR
-    - name: ZIP File
-      value: ZIP
-    - name: RPM File
-      value: RPM
-    - name: Other
-      value: OTHER
-    - name: AWS Lambda
-      value: AWS_LAMBDA
-    - name: AWS Code Deploy
-      value: AWS_CODEDEPLOY
     - name: AMI
       value: AMI
+    - name: AWS Code Deploy
+      value: AWS_CODEDEPLOY
+    - name: AWS Lambda
+      value: AWS_LAMBDA
+    - name: Java Archive (JAR)
+      value: JAR
+    - name: RPM File
+      value: RPM
+    - name: TAR File
+      value: TAR
+    - name: Web Archive (WAR)
+      value: WAR
+    - name: ZIP File
+      value: ZIP
+    - name: Other
+      value: OTHER
 
 ARTIFACT_SOURCE_TYPE:
     - name: Jenkins Server
