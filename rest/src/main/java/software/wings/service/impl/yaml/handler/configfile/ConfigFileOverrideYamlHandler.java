@@ -196,12 +196,6 @@ public class ConfigFileOverrideYamlHandler extends BaseYamlHandler<OverrideYaml,
   }
 
   @Override
-  public boolean validate(ChangeContext<OverrideYaml> changeContext, List<ChangeContext> changeSetContext) {
-    OverrideYaml yaml = changeContext.getYaml();
-    return !(yaml == null || yaml.getTargetFilePath() == null || yaml.getFileName() == null);
-  }
-
-  @Override
   public Class getYamlClass() {
     return OverrideYaml.class;
   }

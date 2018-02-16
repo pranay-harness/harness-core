@@ -60,7 +60,6 @@ public abstract class WorkflowYamlHandler<Y extends WorkflowYaml> extends BaseYa
   @Override
   public Workflow upsertFromYaml(ChangeContext<Y> changeContext, List<ChangeContext> changeSetContext)
       throws HarnessException {
-    ensureValidChange(changeContext, changeSetContext);
     String accountId = changeContext.getChange().getAccountId();
     String yamlFilePath = changeContext.getChange().getFilePath();
     Workflow previous = get(accountId, yamlFilePath);
@@ -385,11 +384,6 @@ public abstract class WorkflowYamlHandler<Y extends WorkflowYaml> extends BaseYa
     yaml.setNotificationRules(notificationRuleYamlList);
     yaml.setFailureStrategies(failureStrategyYamlList);
     yaml.setHarnessApiVersion(getHarnessApiVersion());
-  }
-
-  @Override
-  public boolean validate(ChangeContext<Y> changeContext, List<ChangeContext> changeSetContext) {
-    return true;
   }
 
   @Override

@@ -49,7 +49,7 @@ public interface YamlDirectoryService {
   YamlGitConfig weNeedToPushChanges(String accountId);
 
   List<GitFileChange> traverseDirectory(
-      List<GitFileChange> gitFileChanges, String accountId, FolderNode fn, String path);
+      List<GitFileChange> gitFileChanges, String accountId, FolderNode fn, String path, boolean includeFiles);
 
   String getRootPath();
 

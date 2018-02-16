@@ -35,11 +35,6 @@ public class PortMappingYamlHandler extends BaseYamlHandler<Yaml, PortMapping> {
   }
 
   @Override
-  public boolean validate(ChangeContext<Yaml> changeContext, List<ChangeContext> changeSetContext) {
-    return true;
-  }
-
-  @Override
   public Class getYamlClass() {
     return Yaml.class;
   }

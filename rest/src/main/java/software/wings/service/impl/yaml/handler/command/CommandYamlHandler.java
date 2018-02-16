@@ -208,12 +208,6 @@ public class CommandYamlHandler extends BaseYamlHandler<CommandYaml, ServiceComm
   }
 
   @Override
-  public boolean validate(ChangeContext<CommandYaml> changeContext, List<ChangeContext> changeSetContext) {
-    CommandYaml yaml = changeContext.getYaml();
-    return !(yaml == null || yaml.getCommandUnitType() == null || yaml.getType() == null);
-  }
-
-  @Override
   public Class getYamlClass() {
     return CommandYaml.class;
   }

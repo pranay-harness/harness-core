@@ -67,11 +67,6 @@ public abstract class AbstractExecCommandUnitYamlHandler<Y extends AbstractYaml,
   }
 
   @Override
-  public boolean validate(ChangeContext<Y> changeContext, List<ChangeContext> changeSetContext) {
-    return super.validate(changeContext, changeSetContext);
-  }
-
-  @Override
   protected Map<String, Object> getNodeProperties(ChangeContext<Y> changeContext) {
     Y yaml = changeContext.getYaml();
 

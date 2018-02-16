@@ -1,6 +1,5 @@
 package software.wings.service.impl.yaml.handler.defaults;
 
-import static io.harness.data.structure.EmptyPredicate.isEmpty;
 import static software.wings.beans.Base.GLOBAL_APP_ID;
 
 import com.google.inject.Inject;
@@ -83,12 +82,6 @@ public class DefaultVariablesYamlHandler extends BaseYamlHandler<Yaml, List<Sett
 
     defaultsHelper.saveOrUpdateDefaults(changeContext.getYaml(), appId, accountId);
     return defaultsHelper.getCurrentDefaultVariables(appId, accountId);
-  }
-
-  @Override
-  public boolean validate(ChangeContext<Yaml> changeContext, List<ChangeContext> changeSetContext) {
-    String type = changeContext.getYaml().getType();
-    return !isEmpty(type);
   }
 
   @Override

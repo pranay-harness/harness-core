@@ -1,7 +1,5 @@
 package software.wings.service.impl.yaml.handler.artifactstream;
 
-import static io.harness.data.structure.EmptyPredicate.isEmpty;
-
 import com.google.inject.Singleton;
 
 import software.wings.beans.artifact.DockerArtifactStream;
@@ -43,12 +41,6 @@ public class DockerArtifactStreamYamlHandler
     } else {
       return (DockerArtifactStream) artifactStreamService.create(builder.build());
     }
-  }
-
-  @Override
-  public boolean validate(ChangeContext<Yaml> changeContext, List<ChangeContext> changeSetContext) {
-    DockerArtifactStream.Yaml artifactStreamYaml = changeContext.getYaml();
-    return !(isEmpty(artifactStreamYaml.getImageName()) || isEmpty(artifactStreamYaml.getServerName()));
   }
 
   @Override

@@ -73,11 +73,6 @@ public class AppDefYamlHandler extends BaseYamlHandler<Yaml, TemplateExpression>
   }
 
   @Override
-  public boolean validate(ChangeContext<Yaml> changeContext, List<ChangeContext> changeSetContext) {
-    return true;
-  }
-
-  @Override
   public Class getYamlClass() {
     return Yaml.class;
   }

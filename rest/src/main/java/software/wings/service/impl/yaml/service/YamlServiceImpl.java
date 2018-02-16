@@ -27,6 +27,7 @@ import static software.wings.beans.yaml.YamlType.VERIFICATION_PROVIDER;
 import static software.wings.beans.yaml.YamlType.WORKFLOW;
 
 import com.google.common.collect.Lists;
+import com.google.common.collect.Maps;
 import com.google.inject.Inject;
 import com.google.inject.Singleton;
 
@@ -293,6 +294,7 @@ public class YamlServiceImpl<Y extends BaseYaml, B extends Base> implements Yaml
   private <T extends BaseYamlHandler> List<ChangeContext> validate(List<Change> changeList)
       throws YamlProcessingException {
     List<ChangeContext> changeContextList = Lists.newArrayList();
+    Map<Change, String> failedChangeErrorMsgMap = Maps.newHashMap();
 
     for (Change change : changeList) {
       String yamlFilePath = change.getFilePath();
@@ -316,9 +318,8 @@ public class YamlServiceImpl<Y extends BaseYaml, B extends Base> implements Yaml
                                                              .withYamlSyncHandler(yamlSyncHandler);
             ChangeContext changeContext = changeContextBuilder.build();
             changeContextList.add(changeContext);
-            yamlSyncHandler.validate(changeContext, changeContextList);
           } else {
-            throw new YamlProcessingException("Unsupported type: " + yamlType, change);
+            failedChangeErrorMsgMap.put(change, "Unsupported type: " + yamlType);
           }
         } else if (yamlFilePath.contains(YamlConstants.CONFIG_FILES_FOLDER)) {
           // Special handling for config files
@@ -328,7 +329,7 @@ public class YamlServiceImpl<Y extends BaseYaml, B extends Base> implements Yaml
                 ChangeContext.Builder.aChangeContext().withChange(change).withYamlType(yamlType);
             changeContextList.add(changeContextBuilder.build());
           } else {
-            throw new YamlProcessingException("Unsupported type: " + yamlType, change);
+            failedChangeErrorMsgMap.put(change, "Unsupported type: " + yamlType);
           }
         }
       } catch (ScannerException ex) {
@@ -346,21 +347,26 @@ public class YamlServiceImpl<Y extends BaseYaml, B extends Base> implements Yaml
           message = ex.getMessage();
         }
         logger.error(message, ex);
-        throw new YamlProcessingException(message, ex, change);
+        failedChangeErrorMsgMap.put(change, message);
       } catch (UnrecognizedPropertyException ex) {
         String propertyName = ex.getPropertyName();
         if (propertyName != null) {
           String error = "Unrecognized field: " + propertyName;
           logger.error(error, ex);
-          throw new YamlProcessingException(error, ex, change);
+          failedChangeErrorMsgMap.put(change, error);
         } else {
           logger.error("Unable to load yaml from string for file: " + yamlFilePath, ex);
-          throw new YamlProcessingException(ex.getMessage(), ex, change);
+          failedChangeErrorMsgMap.put(change, ex.getMessage());
         }
       } catch (Exception ex) {
         logger.error("Unable to load yaml from string for file: " + yamlFilePath, ex);
-        throw new YamlProcessingException(ex.getMessage(), ex, change);
+        failedChangeErrorMsgMap.put(change, ex.getMessage());
       }
+    }
+
+    if (failedChangeErrorMsgMap.size() > 0) {
+      throw new YamlProcessingException(
+          "Error while processing some yaml files in the changeset", failedChangeErrorMsgMap);
     }
 
     return changeContextList;
@@ -379,6 +385,7 @@ public class YamlServiceImpl<Y extends BaseYaml, B extends Base> implements Yaml
   }
 
   private void process(List<ChangeContext> changeContextList) throws YamlProcessingException {
+    Map<Change, String> failedChangeErrorMsgMap = Maps.newHashMap();
     for (ChangeContext changeContext : changeContextList) {
       String yamlFilePath = changeContext.getChange().getFilePath();
       try {
@@ -388,13 +395,19 @@ public class YamlServiceImpl<Y extends BaseYaml, B extends Base> implements Yaml
         logger.info("Processing done for change [{}]", changeContext.getChange());
       } catch (Exception ex) {
         logger.error("Exception while processing yaml file {}", yamlFilePath, ex);
-        throw new YamlProcessingException(Misc.getMessage(ex), ex, changeContext.getChange());
+        // We continue processing the yaml files we understand, the failures are reported at the end
+        failedChangeErrorMsgMap.put(changeContext.getChange(), Misc.getMessage(ex));
       }
+    }
+
+    if (failedChangeErrorMsgMap.size() > 0) {
+      throw new YamlProcessingException(
+          "Error while processing some yaml files in the changeset", failedChangeErrorMsgMap);
     }
   }
 
-  private <T extends BaseYamlHandler> void processYamlChange(
-      ChangeContext changeContext, List<ChangeContext> changeContextList) throws HarnessException {
+  private void processYamlChange(ChangeContext changeContext, List<ChangeContext> changeContextList)
+      throws HarnessException {
     Validator.notNullCheck("changeContext is null", changeContext);
     Change change = changeContext.getChange();
     Validator.notNullCheck("FileChange is null", change);

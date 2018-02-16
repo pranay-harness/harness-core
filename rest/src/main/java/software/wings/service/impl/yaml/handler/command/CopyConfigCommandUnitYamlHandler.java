@@ -9,7 +9,6 @@ import software.wings.beans.command.CopyConfigCommandUnit.Yaml;
 import software.wings.beans.yaml.ChangeContext;
 import software.wings.exception.HarnessException;
 
-import java.util.List;
 import java.util.Map;
 
 /**
@@ -42,18 +41,6 @@ public class CopyConfigCommandUnitYamlHandler
     Yaml yaml = changeContext.getYaml();
     copyConfigCommandUnit.setDestinationParentPath(yaml.getDestinationParentPath());
     return copyConfigCommandUnit;
-  }
-
-  @Override
-  public boolean validate(
-      ChangeContext<CopyConfigCommandUnit.Yaml> changeContext, List<ChangeContext> changeSetContext) {
-    boolean validate = super.validate(changeContext, changeSetContext);
-    CopyConfigCommandUnit.Yaml yaml = changeContext.getYaml();
-    if (validate) {
-      return !(yaml.getDestinationParentPath() == null);
-    }
-
-    return validate;
   }
 
   @Override

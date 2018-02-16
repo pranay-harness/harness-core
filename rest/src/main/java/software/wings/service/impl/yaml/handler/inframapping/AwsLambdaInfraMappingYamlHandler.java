@@ -1,7 +1,5 @@
 package software.wings.service.impl.yaml.handler.inframapping;
 
-import static io.harness.data.structure.EmptyPredicate.isEmpty;
-
 import com.google.inject.Singleton;
 
 import software.wings.beans.AwsLambdaInfraStructureMapping;
@@ -35,8 +33,6 @@ public class AwsLambdaInfraMappingYamlHandler
   @Override
   public AwsLambdaInfraStructureMapping upsertFromYaml(
       ChangeContext<Yaml> changeContext, List<ChangeContext> changeSetContext) throws HarnessException {
-    ensureValidChange(changeContext, changeSetContext);
-
     Yaml infraMappingYaml = changeContext.getYaml();
     String yamlFilePath = changeContext.getChange().getFilePath();
     String accountId = changeContext.getChange().getAccountId();
@@ -76,15 +72,6 @@ public class AwsLambdaInfraMappingYamlHandler
     bean.setSubnetIds(infraMappingYaml.getSubnetIds());
     bean.setSecurityGroupIds(infraMappingYaml.getSecurityGroupIds());
     bean.setRole(infraMappingYaml.getRole());
-  }
-
-  @Override
-  public boolean validate(ChangeContext<Yaml> changeContext, List<ChangeContext> changeSetContext) {
-    Yaml infraMappingYaml = changeContext.getYaml();
-    return !(isEmpty(infraMappingYaml.getComputeProviderName()) || isEmpty(infraMappingYaml.getComputeProviderType())
-        || isEmpty(infraMappingYaml.getDeploymentType()) || isEmpty(infraMappingYaml.getInfraMappingType())
-        || isEmpty(infraMappingYaml.getServiceName()) || isEmpty(infraMappingYaml.getType())
-        || isEmpty(infraMappingYaml.getRegion()));
   }
 
   @Override

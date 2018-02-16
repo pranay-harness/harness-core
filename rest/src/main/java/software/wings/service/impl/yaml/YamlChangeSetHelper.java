@@ -26,6 +26,7 @@ import software.wings.beans.container.ContainerTask;
 import software.wings.beans.container.UserDataSpecification;
 import software.wings.beans.yaml.Change.ChangeType;
 import software.wings.beans.yaml.GitFileChange;
+import software.wings.exception.WingsException;
 import software.wings.service.intfc.AppService;
 import software.wings.service.intfc.EnvironmentService;
 import software.wings.service.intfc.FileService;
@@ -129,13 +130,17 @@ public class YamlChangeSetHelper {
   }
 
   public void configFileYamlChange(ConfigFile configFile, ChangeType changeType) {
+    queueYamlChangeSet(configFile.getAccountId(), getConfigFileGitChangeSet(configFile, changeType));
+  }
+
+  public List<GitFileChange> getConfigFileGitChangeSet(ConfigFile configFile, ChangeType changeType) {
     if (configFile.getEntityType() == EntityType.SERVICE) {
       String fileContent = loadFileContentIntoString(configFile);
 
       Service service = serviceResourceService.get(configFile.getAppId(), configFile.getEntityId());
-      queueYamlChangeSet(configFile.getAccountId(),
-          entityUpdateService.getConfigFileGitSyncFileSet(
-              configFile.getAccountId(), service, configFile, changeType, fileContent));
+      return entityUpdateService.getConfigFileGitSyncFileSet(
+          configFile.getAccountId(), service, configFile, changeType, fileContent);
+
     } else if (configFile.getEntityType() == EntityType.SERVICE_TEMPLATE
         || configFile.getEntityType() == EntityType.ENVIRONMENT) {
       String fileContent = loadFileContentIntoString(configFile);
@@ -148,11 +153,14 @@ public class YamlChangeSetHelper {
 
       Environment environment = environmentService.get(configFile.getAppId(), envId, false);
       Validator.notNullCheck("Environment not found for the given id:" + envId, environment);
-      queueYamlChangeSet(configFile.getAccountId(),
-          entityUpdateService.getConfigFileOverrideGitSyncFileSet(
-              configFile.getAccountId(), environment, configFile, changeType, fileContent));
+      return entityUpdateService.getConfigFileOverrideGitSyncFileSet(
+          configFile.getAccountId(), environment, configFile, changeType, fileContent);
+
     } else {
-      logger.error("Unsupported override type {} for config file {}", configFile.getEntityType(), configFile.getUuid());
+      String msg =
+          "Unsupported override type " + configFile.getEntityType() + " for config file " + configFile.getUuid();
+      logger.error(msg);
+      throw new WingsException(msg);
     }
   }
 

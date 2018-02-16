@@ -1,6 +1,5 @@
 package software.wings.service.impl.yaml.handler.inframapping;
 
-import static io.harness.data.structure.EmptyPredicate.isEmpty;
 import static org.apache.commons.lang3.StringUtils.isNotBlank;
 
 import com.google.inject.Singleton;
@@ -41,8 +40,6 @@ public class PhysicalInfraMappingYamlHandler
   @Override
   public PhysicalInfrastructureMapping upsertFromYaml(
       ChangeContext<Yaml> changeContext, List<ChangeContext> changeSetContext) throws HarnessException {
-    ensureValidChange(changeContext, changeSetContext);
-
     Yaml infraMappingYaml = changeContext.getYaml();
     String yamlFilePath = changeContext.getChange().getFilePath();
     String accountId = changeContext.getChange().getAccountId();
@@ -86,15 +83,6 @@ public class PhysicalInfraMappingYamlHandler
     Validator.notNullCheck("HostConnectionAttrs is null for name:" + hostConnAttrsName, hostConnAttributes);
     bean.setHostConnectionAttrs(hostConnAttributes.getUuid());
     bean.setHostNames(yaml.getHostNames());
-  }
-
-  @Override
-  public boolean validate(ChangeContext<Yaml> changeContext, List<ChangeContext> changeSetContext) {
-    Yaml infraMappingYaml = changeContext.getYaml();
-    return !(isEmpty(infraMappingYaml.getComputeProviderName()) || isEmpty(infraMappingYaml.getComputeProviderType())
-        || isEmpty(infraMappingYaml.getDeploymentType()) || isEmpty(infraMappingYaml.getInfraMappingType())
-        || isEmpty(infraMappingYaml.getServiceName()) || isEmpty(infraMappingYaml.getType())
-        || isEmpty(infraMappingYaml.getConnection()) || isEmpty(infraMappingYaml.getHostNames()));
   }
 
   @Override

@@ -1,6 +1,5 @@
 package software.wings.service.impl.yaml.handler.deploymentspec.container;
 
-import static io.harness.data.structure.EmptyPredicate.isEmpty;
 import static io.harness.data.structure.EmptyPredicate.isNotEmpty;
 import static org.apache.commons.lang3.StringUtils.isNotBlank;
 
@@ -140,12 +139,6 @@ public class ContainerDefinitionYamlHandler extends BaseYamlHandler<ContainerDef
         .portMappings(portMappings)
         .storageConfigurations(storageConfigs)
         .build();
-  }
-
-  @Override
-  public boolean validate(ChangeContext<Yaml> changeContext, List<ChangeContext> changeSetContext) {
-    Yaml applicationYaml = changeContext.getYaml();
-    return !(isEmpty(applicationYaml.getName()));
   }
 
   @Override

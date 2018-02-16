@@ -37,11 +37,6 @@ public class NameValuePairYamlHandler extends BaseYamlHandler<NameValuePair.Yaml
   }
 
   @Override
-  public boolean validate(ChangeContext<Yaml> changeContext, List<ChangeContext> changeSetContext) {
-    return true;
-  }
-
-  @Override
   public Class getYamlClass() {
     return NameValuePair.Yaml.class;
   }

@@ -117,6 +117,7 @@ public class YamlDirectoryServiceImpl implements YamlDirectoryService {
   @Inject private YamlGitService yamlGitSyncService;
   @Inject private AppYamlResourceService appYamlResourceService;
   @Inject private YamlResourceService yamlResourceService;
+  @Inject private YamlChangeSetHelper yamlChangeSetHelper;
   @Inject private FeatureFlagService featureFlagService;
   @Inject private ConfigService configService;
   @Inject private NotificationSetupService notificationSetupService;
@@ -138,12 +139,13 @@ public class YamlDirectoryServiceImpl implements YamlDirectoryService {
   }
 
   public List<GitFileChange> traverseDirectory(
-      List<GitFileChange> gitFileChanges, String accountId, FolderNode fn, String path) {
+      List<GitFileChange> gitFileChanges, String accountId, FolderNode fn, String path, boolean includeFiles) {
     path = path + "/" + fn.getName();
 
     for (DirectoryNode dn : fn.getChildren()) {
       logger.info("Traverse Directory: " + (dn.getName() == null ? dn.getName() : path + "/" + dn.getName()));
 
+      boolean addToFileChangeList = true;
       if (dn instanceof YamlNode) {
         String entityId = ((YamlNode) dn).getUuid();
         String yaml = "";
@@ -188,7 +190,15 @@ public class YamlDirectoryServiceImpl implements YamlDirectoryService {
               appId = ((EnvLevelYamlNode) dn).getAppId();
             }
 
-            yaml = yamlResourceService.getConfigFileYaml(accountId, appId, entityId).getResource().getYaml();
+            if (includeFiles) {
+              ConfigFile configFile = configService.get(appId, entityId);
+              List<GitFileChange> gitChangeSet =
+                  yamlChangeSetHelper.getConfigFileGitChangeSet(configFile, ChangeType.ADD);
+              gitFileChanges.addAll(gitChangeSet);
+              addToFileChangeList = false;
+            } else {
+              yaml = yamlResourceService.getConfigFileYaml(accountId, appId, entityId).getResource().getYaml();
+            }
             break;
           case "Workflow":
             appId = ((AppLevelYamlNode) dn).getAppId();
@@ -220,17 +230,20 @@ public class YamlDirectoryServiceImpl implements YamlDirectoryService {
             logger.warn("No toYaml for entity[{}, {}]", dn.getShortClassName(), entityId);
         }
 
-        GitFileChange gitFileChange = Builder.aGitFileChange()
-                                          .withAccountId(accountId)
-                                          .withFilePath(dn.getName() == null ? dn.getName() : path + "/" + dn.getName())
-                                          .withFileContent(yaml)
-                                          .withChangeType(ChangeType.ADD)
-                                          .build();
-        gitFileChanges.add(gitFileChange);
+        if (addToFileChangeList) {
+          GitFileChange gitFileChange =
+              Builder.aGitFileChange()
+                  .withAccountId(accountId)
+                  .withFilePath(dn.getName() == null ? dn.getName() : path + "/" + dn.getName())
+                  .withFileContent(yaml)
+                  .withChangeType(ChangeType.ADD)
+                  .build();
+          gitFileChanges.add(gitFileChange);
+        }
       }
 
       if (dn instanceof FolderNode) {
-        traverseDirectory(gitFileChanges, accountId, (FolderNode) dn, path);
+        traverseDirectory(gitFileChanges, accountId, (FolderNode) dn, path, includeFiles);
       }
     }
 

@@ -130,7 +130,6 @@ public class EnvironmentYamlHandler extends BaseYamlHandler<Environment.Yaml, En
   @Override
   public Environment upsertFromYaml(ChangeContext<Yaml> changeContext, List<ChangeContext> changeSetContext)
       throws HarnessException {
-    ensureValidChange(changeContext, changeSetContext);
     String appId =
         yamlHelper.getAppId(changeContext.getChange().getAccountId(), changeContext.getChange().getFilePath());
     Validator.notNullCheck("appId null for given yaml file:" + changeContext.getChange().getFilePath(), appId);
@@ -157,11 +156,6 @@ public class EnvironmentYamlHandler extends BaseYamlHandler<Environment.Yaml, En
           null, yaml.getVariableOverrides(), emptyList(), current.getAppId(), current.getUuid());
       return environmentService.save(current);
     }
-  }
-
-  @Override
-  public boolean validate(ChangeContext<Yaml> changeContext, List<ChangeContext> changeSetContext) {
-    return true;
   }
 
   @Override

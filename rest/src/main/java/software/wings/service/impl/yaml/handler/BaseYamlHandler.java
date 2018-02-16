@@ -1,7 +1,5 @@
 package software.wings.service.impl.yaml.handler;
 
-import static java.lang.String.format;
-
 import software.wings.beans.yaml.Change;
 import software.wings.beans.yaml.ChangeContext;
 import software.wings.beans.yaml.ChangeContext.Builder;
@@ -24,18 +22,9 @@ public abstract class BaseYamlHandler<Y extends BaseYaml, B extends Object> {
   public abstract B upsertFromYaml(ChangeContext<Y> changeContext, List<ChangeContext> changeSetContext)
       throws HarnessException;
 
-  public abstract boolean validate(ChangeContext<Y> changeContext, List<ChangeContext> changeSetContext);
-
   public abstract Class getYamlClass();
 
   public abstract B get(String accountId, String yamlFilePath);
-
-  protected void ensureValidChange(ChangeContext<Y> changeContext, List<ChangeContext> changeSetContext)
-      throws HarnessException {
-    if (!validate(changeContext, changeSetContext)) {
-      throw new HarnessException(format("Invalid yaml change [%s]", changeContext));
-    }
-  }
 
   protected Builder cloneFileChangeContext(ChangeContext<Y> context, BaseYaml yaml) {
     Change change = context.getChange();

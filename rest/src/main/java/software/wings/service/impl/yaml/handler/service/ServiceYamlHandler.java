@@ -97,8 +97,6 @@ public class ServiceYamlHandler extends BaseYamlHandler<Yaml, Service> {
   @Override
   public Service upsertFromYaml(ChangeContext<Yaml> changeContext, List<ChangeContext> changeSetContext)
       throws HarnessException {
-    ensureValidChange(changeContext, changeSetContext);
-
     String yamlFilePath = changeContext.getChange().getFilePath();
     String accountId = changeContext.getChange().getAccountId();
     String appId = yamlHelper.getAppId(accountId, yamlFilePath);
@@ -134,11 +132,6 @@ public class ServiceYamlHandler extends BaseYamlHandler<Yaml, Service> {
       saveOrUpdateServiceVariables(null, yaml, emptyList(), current.getAppId(), current.getUuid());
     }
     return current;
-  }
-
-  @Override
-  public boolean validate(ChangeContext<Yaml> changeContext, List<ChangeContext> changeSetContext) {
-    return true;
   }
 
   @Override

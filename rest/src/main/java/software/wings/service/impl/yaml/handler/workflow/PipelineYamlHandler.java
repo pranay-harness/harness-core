@@ -102,11 +102,6 @@ public class PipelineYamlHandler extends BaseYamlHandler<Yaml, Pipeline> {
   }
 
   @Override
-  public boolean validate(ChangeContext<Yaml> changeContext, List<ChangeContext> changeSetContext) {
-    return true;
-  }
-
-  @Override
   public Class getYamlClass() {
     return Yaml.class;
   }

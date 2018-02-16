@@ -254,11 +254,6 @@ public class StepYamlHandler extends BaseYamlHandler<StepYaml, GraphNode> {
   }
 
   @Override
-  public boolean validate(ChangeContext<StepYaml> changeContext, List<ChangeContext> changeSetContext) {
-    return false;
-  }
-
-  @Override
   public Class getYamlClass() {
     return StepYaml.class;
   }

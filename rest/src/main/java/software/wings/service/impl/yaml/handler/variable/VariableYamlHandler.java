@@ -52,11 +52,6 @@ public class VariableYamlHandler extends BaseYamlHandler<Variable.Yaml, Variable
   }
 
   @Override
-  public boolean validate(ChangeContext<Yaml> changeContext, List<ChangeContext> changeSetContext) {
-    return true;
-  }
-
-  @Override
   public Class getYamlClass() {
     return Variable.Yaml.class;
   }
