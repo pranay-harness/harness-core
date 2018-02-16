@@ -1,14 +1,10 @@
 package software.wings.service.impl.yaml.handler.artifactstream;
 
-import static io.harness.data.structure.EmptyPredicate.isEmpty;
-
 import com.google.inject.Singleton;
 
 import software.wings.beans.artifact.ArtifactoryArtifactStream;
 import software.wings.beans.artifact.ArtifactoryArtifactStream.Yaml;
 import software.wings.beans.yaml.ChangeContext;
-
-import java.util.List;
 
 /**
  * @author rktummala on 10/09/17
@@ -39,13 +35,6 @@ public class ArtifactoryArtifactStreamYamlHandler extends ArtifactStreamYamlHand
     artifactStream.setJobname(yaml.getRepositoryName());
     artifactStream.setRepositoryType(yaml.getRepositoryType());
     artifactStream.setDockerRepositoryServer(yaml.getDockerRepositoryServer());
-  }
-
-  @Override
-  public boolean validate(ChangeContext<Yaml> changeContext, List<ChangeContext> changeSetContext) {
-    Yaml artifactStreamYaml = changeContext.getYaml();
-    return !(isEmpty(artifactStreamYaml.getServerName()) || isEmpty(artifactStreamYaml.getGroupId())
-        || isEmpty(artifactStreamYaml.getImageName()));
   }
 
   @Override

@@ -1,7 +1,5 @@
 package software.wings.service.impl.yaml.handler.inframapping;
 
-import static io.harness.data.structure.EmptyPredicate.isEmpty;
-
 import com.google.inject.Inject;
 import com.google.inject.Singleton;
 
@@ -74,8 +72,6 @@ public class DirectKubernetesInfraMappingYamlHandler
   @Override
   public DirectKubernetesInfrastructureMapping upsertFromYaml(
       ChangeContext<Yaml> changeContext, List<ChangeContext> changeSetContext) throws HarnessException {
-    ensureValidChange(changeContext, changeSetContext);
-
     Yaml infraMappingYaml = changeContext.getYaml();
     String yamlFilePath = changeContext.getChange().getFilePath();
     String appId = yamlHelper.getAppId(changeContext.getChange().getAccountId(), yamlFilePath);
@@ -152,14 +148,6 @@ public class DirectKubernetesInfraMappingYamlHandler
     } catch (IllegalAccessException | IOException e) {
       throw new HarnessException("Exception while decrypting the encrypted ref: " + encryptedRef);
     }
-  }
-
-  @Override
-  public boolean validate(ChangeContext<Yaml> changeContext, List<ChangeContext> changeSetContext) {
-    Yaml infraMappingYaml = changeContext.getYaml();
-    return !(isEmpty(infraMappingYaml.getDeploymentType()) || isEmpty(infraMappingYaml.getInfraMappingType())
-        || isEmpty(infraMappingYaml.getServiceName()) || isEmpty(infraMappingYaml.getType())
-        || isEmpty(infraMappingYaml.getMasterUrl()));
   }
 
   @Override

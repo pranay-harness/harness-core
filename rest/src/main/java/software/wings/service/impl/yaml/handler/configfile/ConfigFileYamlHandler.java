@@ -86,12 +86,11 @@ public class ConfigFileYamlHandler extends BaseYamlHandler<Yaml, ConfigFile> {
 
     String fileName;
     if (bean.isEncrypted()) {
-      //      try {
-      //        fileName = secretManager.getEncryptedYamlRef(bean);
-      //      } catch (IllegalAccessException e) {
-      //        throw new WingsException(e);
-      //      }
-      fileName = bean.getEncryptedFileId();
+      try {
+        fileName = secretManager.getEncryptedYamlRef(bean);
+      } catch (IllegalAccessException e) {
+        throw new WingsException(e);
+      }
     } else {
       fileName = Util.normalize(bean.getRelativeFilePath());
     }
@@ -202,12 +201,6 @@ public class ConfigFileYamlHandler extends BaseYamlHandler<Yaml, ConfigFile> {
 
   private String getEnvIdVersionMapString(Map<String, EntityVersion> entityVersionMap) {
     return JsonUtils.asJson(entityVersionMap);
-  }
-
-  @Override
-  public boolean validate(ChangeContext<Yaml> changeContext, List<ChangeContext> changeSetContext) {
-    Yaml yaml = changeContext.getYaml();
-    return !(yaml == null || yaml.getTargetFilePath() == null || yaml.getFileName() == null);
   }
 
   @Override

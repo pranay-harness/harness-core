@@ -42,11 +42,6 @@ public class StorageConfigurationYamlHandler extends BaseYamlHandler<Yaml, Stora
   }
 
   @Override
-  public boolean validate(ChangeContext<Yaml> changeContext, List<ChangeContext> changeSetContext) {
-    return true;
-  }
-
-  @Override
   public Class getYamlClass() {
     return Yaml.class;
   }

@@ -73,11 +73,6 @@ public class FailureStrategyYamlHandler extends BaseYamlHandler<FailureStrategy.
   }
 
   @Override
-  public boolean validate(ChangeContext<Yaml> changeContext, List<ChangeContext> changeSetContext) {
-    return true;
-  }
-
-  @Override
   public Class getYamlClass() {
     return FailureStrategy.Yaml.class;
   }

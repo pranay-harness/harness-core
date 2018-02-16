@@ -61,12 +61,10 @@ import software.wings.yaml.gitSync.YamlGitConfig;
 
 import java.util.ArrayList;
 import java.util.Arrays;
-import java.util.Collections;
 import java.util.List;
-import java.util.Optional;
+import java.util.Map;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.TimeUnit;
-import java.util.concurrent.atomic.AtomicInteger;
 import java.util.regex.Pattern;
 import java.util.stream.Collectors;
 import javax.validation.executable.ValidateOnExecution;
@@ -173,7 +171,7 @@ public class YamlGitServiceImpl implements YamlGitService {
       try {
         FolderNode top = yamlDirectoryService.getDirectory(accountId, SETUP_ENTITY_ID);
         List<GitFileChange> gitFileChanges = new ArrayList<>();
-        gitFileChanges = yamlDirectoryService.traverseDirectory(gitFileChanges, accountId, top, "");
+        gitFileChanges = yamlDirectoryService.traverseDirectory(gitFileChanges, accountId, top, "", true);
         syncFiles(accountId, gitFileChanges);
         logger.info("Performed git full-sync for account {} successfully" + accountId);
       } catch (Exception ex) {
@@ -206,7 +204,7 @@ public class YamlGitServiceImpl implements YamlGitService {
       logger.info("Performing full-sync dry-run for account {}" + accountId);
       FolderNode top = yamlDirectoryService.getDirectory(accountId, SETUP_ENTITY_ID);
       List<GitFileChange> gitFileChanges = new ArrayList<>();
-      yamlDirectoryService.traverseDirectory(gitFileChanges, accountId, top, "");
+      yamlDirectoryService.traverseDirectory(gitFileChanges, accountId, top, "", false);
       logger.info("Performed full-sync dry-run for account {}" + accountId);
       return gitFileChanges;
     } catch (Exception ex) {
@@ -365,28 +363,13 @@ public class YamlGitServiceImpl implements YamlGitService {
   }
 
   @Override
-  public void processFailedOrUnprocessedChanges(
-      List<GitFileChange> orderedFileChanges, Change failedChange, String errorMessage) {
-    AtomicInteger index = new AtomicInteger(-1);
+  public void processFailedChanges(String accountId, Map<Change, String> failedChangeErrorMsgMap) {
+    if (failedChangeErrorMsgMap.size() > 0) {
+      failedChangeErrorMsgMap.entrySet().stream().forEach(
+          entry -> upsertGitSyncErrors(entry.getKey(), entry.getValue()));
 
-    Optional<GitFileChange> fileChangeOptional =
-        orderedFileChanges.stream()
-            .filter(gitFileChange -> {
-              index.incrementAndGet();
-              return gitFileChange.getFilePath().equals(failedChange.getFilePath());
-            })
-            .findFirst();
-
-    if (fileChangeOptional.isPresent()) {
-      List<GitFileChange> pendingChanges = orderedFileChanges.subList(index.intValue() + 1, orderedFileChanges.size());
-      upsertGitSyncErrors(failedChange, pendingChanges, errorMessage);
-    } else {
-      logger.warn("Failed yaml not found in the result set, only adding it to the list of failures");
-      upsertGitSyncErrors(failedChange, Collections.emptyList(), errorMessage);
+      alertService.openAlert(accountId, GLOBAL_APP_ID, AlertType.GitSyncError, getGitSyncErrorAlert(accountId));
     }
-
-    alertService.openAlert(failedChange.getAccountId(), GLOBAL_APP_ID, AlertType.GitSyncError,
-        getGitSyncErrorAlert(failedChange.getAccountId()));
   }
 
   @Override
@@ -410,8 +393,7 @@ public class YamlGitServiceImpl implements YamlGitService {
     return GitConnectionErrorAlert.builder().accountId(accountId).message(message).build();
   }
 
-  private <T extends Change> void upsertGitSyncErrors(
-      T failedChange, List<? extends Change> pendingChanges, String errorMessage) {
+  private <T extends Change> void upsertGitSyncErrors(T failedChange, String errorMessage) {
     Query<GitSyncError> failedQuery = wingsPersistence.createQuery(GitSyncError.class)
                                           .field("accountId")
                                           .equal(failedChange.getAccountId())
@@ -429,26 +411,6 @@ public class YamlGitServiceImpl implements YamlGitService {
             .set("failureReason",
                 errorMessage != null ? errorMessage : "Reason could not be captured. Logs might have some info");
     wingsPersistence.upsert(failedQuery, failedUpdateOperations);
-
-    pendingChanges.stream().forEach(change -> {
-      Query<GitSyncError> query = wingsPersistence.createQuery(GitSyncError.class)
-                                      .field("accountId")
-                                      .equal(change.getAccountId())
-                                      .field("yamlFilePath")
-                                      .equal(change.getFilePath());
-      GitFileChange gitFileChange = (GitFileChange) change;
-      String commitId = gitFileChange.getCommitId() != null ? gitFileChange.getCommitId() : "";
-      UpdateOperations<GitSyncError> updateOperations =
-          wingsPersistence.createUpdateOperations(GitSyncError.class)
-              .set("accountId", change.getAccountId())
-              .set("yamlFilePath", change.getFilePath())
-              .set("yamlContent", change.getFileContent())
-              .set("gitCommitId", commitId)
-              .set("changeType", change.getChangeType().name())
-              .set("failureReason", "Blocked due to the other yaml processing failure");
-
-      wingsPersistence.upsert(query, updateOperations);
-    });
   }
 
   @Override
@@ -532,8 +494,8 @@ public class YamlGitServiceImpl implements YamlGitService {
       logger.info("Processed ChangeSet: [{}]", fileChangeContexts);
       removeGitSyncErrors(accountId, gitFileChangeList);
     } catch (YamlProcessingException ex) {
-      logger.error("Unable to process changeSet. Failed at {}", ex.getChange().getFilePath(), ex);
-      processFailedOrUnprocessedChanges(gitFileChangeList, ex.getChange(), ex.getMessage());
+      logger.error("Unable to process Git sync errors for account {}", accountId, ex);
+      processFailedChanges(accountId, ex.getFailedChangeErrorMsgMap());
     }
 
     return RestResponse.Builder.aRestResponse().build();

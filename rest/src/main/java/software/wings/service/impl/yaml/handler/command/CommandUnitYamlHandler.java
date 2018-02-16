@@ -66,13 +66,6 @@ public abstract class CommandUnitYamlHandler<Y extends AbstractCommandUnit.Yaml,
   }
 
   @Override
-  public boolean validate(ChangeContext<Y> changeContext, List<ChangeContext> changeSetContext) {
-    Y yaml = changeContext.getYaml();
-    return !(yaml == null || yaml.getCommandUnitType() == null || yaml.getName() == null
-        || yaml.getDeploymentType() == null);
-  }
-
-  @Override
   public C get(String accountId, String yamlFilePath) {
     throw new WingsException(ErrorCode.UNSUPPORTED_OPERATION_EXCEPTION);
   }

@@ -131,9 +131,8 @@ public class GitCommandCallback implements NotifyCallback {
                                         .build());
           yamlGitService.removeGitSyncErrors(accountId, gitFileChangeList);
         } catch (YamlProcessingException ex) {
-          logger.warn("Unable to process git changeSet for account {}. Failed at {}", ex.getChange().getAccountId(),
-              ex.getChange().getFilePath(), ex);
-          yamlGitService.processFailedOrUnprocessedChanges(gitFileChangeList, ex.getChange(), ex.getMessage());
+          logger.warn("Unable to process git commit {} for account {}. ", gitDiffResult.getCommitId(), accountId, ex);
+          yamlGitService.processFailedChanges(accountId, ex.getFailedChangeErrorMsgMap());
         }
       } else {
         logger.warn("Unexpected commandType result: [{}] for changeSetId [{}] for account {}",

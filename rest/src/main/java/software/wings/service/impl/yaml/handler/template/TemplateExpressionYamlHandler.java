@@ -72,11 +72,6 @@ public class TemplateExpressionYamlHandler extends BaseYamlHandler<TemplateExpre
   }
 
   @Override
-  public boolean validate(ChangeContext<Yaml> changeContext, List<ChangeContext> changeSetContext) {
-    return true;
-  }
-
-  @Override
   public Class getYamlClass() {
     return TemplateExpression.Yaml.class;
   }

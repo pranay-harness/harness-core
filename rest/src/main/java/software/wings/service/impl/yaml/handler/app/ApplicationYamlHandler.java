@@ -44,7 +44,6 @@ public class ApplicationYamlHandler extends BaseYamlHandler<Application.Yaml, Ap
   @Override
   public Application upsertFromYaml(ChangeContext<Yaml> changeContext, List<ChangeContext> changeSetContext)
       throws HarnessException {
-    ensureValidChange(changeContext, changeSetContext);
     String accountId = changeContext.getChange().getAccountId();
     Yaml yaml = changeContext.getYaml();
     String yamlFilePath = changeContext.getChange().getFilePath();
@@ -60,11 +59,6 @@ public class ApplicationYamlHandler extends BaseYamlHandler<Application.Yaml, Ap
     } else {
       return appService.save(current);
     }
-  }
-
-  @Override
-  public boolean validate(ChangeContext<Yaml> changeContext, List<ChangeContext> changeSetContext) {
-    return true;
   }
 
   @Override

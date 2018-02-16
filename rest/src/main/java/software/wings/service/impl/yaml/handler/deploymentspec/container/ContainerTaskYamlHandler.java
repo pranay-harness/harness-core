@@ -85,12 +85,6 @@ public abstract class ContainerTaskYamlHandler<Y extends ContainerTask.Yaml, C e
     }
   }
 
-  @Override
-  public boolean validate(ChangeContext<Y> changeContext, List<ChangeContext> changeSetContext) {
-    Y yaml = changeContext.getYaml();
-    return !(yaml == null || yaml.getType() == null);
-  }
-
   protected C getContainerTask(String accountId, String yamlFilePath, String deploymentType) {
     String appId = yamlHelper.getAppId(accountId, yamlFilePath);
     Validator.notNullCheck("Could not locate app info in file path:" + yamlFilePath, appId);

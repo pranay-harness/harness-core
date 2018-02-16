@@ -67,11 +67,6 @@ public class LogConfigurationYamlHandler extends BaseYamlHandler<Yaml, LogConfig
   }
 
   @Override
-  public boolean validate(ChangeContext<Yaml> changeContext, List<ChangeContext> changeSetContext) {
-    return true;
-  }
-
-  @Override
   public Class getYamlClass() {
     return Yaml.class;
   }

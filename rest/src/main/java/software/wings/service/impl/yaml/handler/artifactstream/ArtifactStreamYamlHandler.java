@@ -1,7 +1,5 @@
 package software.wings.service.impl.yaml.handler.artifactstream;
 
-import static io.harness.data.structure.EmptyPredicate.isEmpty;
-
 import com.google.inject.Inject;
 
 import software.wings.beans.SettingAttribute;
@@ -69,9 +67,6 @@ public abstract class ArtifactStreamYamlHandler<Y extends Yaml, B extends Artifa
   @Override
   public B upsertFromYaml(ChangeContext<Y> changeContext, List<ChangeContext> changeSetContext)
       throws HarnessException {
-    if (!validate(changeContext, changeSetContext)) {
-      return null;
-    }
     String yamlFilePath = changeContext.getChange().getFilePath();
     B previous = get(changeContext.getChange().getAccountId(), yamlFilePath);
     if (previous != null) {
@@ -98,12 +93,6 @@ public abstract class ArtifactStreamYamlHandler<Y extends Yaml, B extends Artifa
     bean.setSettingId(getSettingId(changeContext.getChange().getAccountId(), appId, yaml.getServerName()));
     bean.setAutoApproveForProduction(true);
     bean.setMetadataOnly(yaml.isMetadataOnly());
-  }
-
-  @Override
-  public boolean validate(ChangeContext<Y> changeContext, List<ChangeContext> changeSetContext) {
-    Yaml artifactStreamYaml = changeContext.getYaml();
-    return !(isEmpty(artifactStreamYaml.getServerName()));
   }
 
   protected abstract B getNewArtifactStreamObject();

@@ -18,6 +18,7 @@ import software.wings.yaml.gitSync.YamlChangeSet;
 import software.wings.yaml.gitSync.YamlGitConfig;
 
 import java.util.List;
+import java.util.Map;
 import javax.validation.Valid;
 
 /**
@@ -116,14 +117,11 @@ public interface YamlGitService {
   GitCommit saveCommit(GitCommit gitCommit);
 
   /**
-   * Process failed or unprocessed changes.
-   *
-   * @param failedOrPendingChanges the failed or pending changes
-   * @param failedChange           the failed change
-   * @param errorMessage           the error message
+   * Create git sync errors for failed changes
+   * @param accountId
+   * @param failedChangeErrorMsgMap
    */
-  void processFailedOrUnprocessedChanges(
-      List<GitFileChange> failedOrPendingChanges, Change failedChange, String errorMessage);
+  void processFailedChanges(String accountId, Map<Change, String> failedChangeErrorMsgMap);
 
   /**
    * Remove git sync errors.

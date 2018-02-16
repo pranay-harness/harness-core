@@ -51,12 +51,6 @@ public abstract class SettingValueYamlHandler<Y extends SettingValue.Yaml, B ext
   protected abstract SettingAttribute toBean(SettingAttribute previous, ChangeContext<Y> changeContext,
       List<ChangeContext> changeSetContext) throws HarnessException;
 
-  @Override
-  public boolean validate(ChangeContext<Y> changeContext, List<ChangeContext> changeSetContext) {
-    Y yaml = changeContext.getYaml();
-    return !(yaml == null || yaml.getType() == null);
-  }
-
   protected String getEncryptedValue(Encryptable settingValue, String fieldName, boolean encryptMultipleFields)
       throws WingsException {
     try {

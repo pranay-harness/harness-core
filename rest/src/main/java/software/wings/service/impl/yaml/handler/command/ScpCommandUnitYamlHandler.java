@@ -10,7 +10,6 @@ import software.wings.beans.yaml.YamlConstants;
 import software.wings.exception.HarnessException;
 import software.wings.utils.Util;
 
-import java.util.List;
 import java.util.Map;
 
 /**
@@ -45,17 +44,6 @@ public class ScpCommandUnitYamlHandler extends SshCommandUnitYamlHandler<Yaml, S
     ScpFileCategory scpFileCategory = Util.getEnumFromString(ScpFileCategory.class, yaml.getSource());
     scpCommandUnit.setFileCategory(scpFileCategory);
     return scpCommandUnit;
-  }
-
-  @Override
-  public boolean validate(ChangeContext<Yaml> changeContext, List<ChangeContext> changeSetContext) {
-    boolean validate = super.validate(changeContext, changeSetContext);
-    Yaml yaml = changeContext.getYaml();
-    if (validate) {
-      return !(yaml.getDestinationDirectoryPath() == null || yaml.getSource() == null);
-    }
-
-    return validate;
   }
 
   @Override
