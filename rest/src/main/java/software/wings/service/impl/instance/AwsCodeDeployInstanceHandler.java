@@ -81,7 +81,7 @@ public class AwsCodeDeployInstanceHandler extends AwsInstanceHandler {
               .filter(instance -> instance != null)
               .collect(Collectors.toMap(instance -> instance.getHostInstanceKey().getHostName(), instance -> instance));
 
-      // latestEc2Instances are instances related to current deployment
+      // This will create filter for "instance-state-name" = "running"
       List<com.amazonaws.services.ec2.model.Instance> latestEc2Instances = awsCodeDeployService.listDeploymentInstances(
           region, cloudProviderSetting, encryptedDataDetails, awsCodeDeployDeploymentInfo.getDeploymentId());
       Map<String, com.amazonaws.services.ec2.model.Instance> latestEc2InstanceMap =

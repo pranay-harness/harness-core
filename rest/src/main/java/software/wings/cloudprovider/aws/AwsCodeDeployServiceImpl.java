@@ -175,7 +175,10 @@ public class AwsCodeDeployServiceImpl implements AwsCodeDeployService {
 
     List<String> instanceIds = fetchAllDeploymentInstances(
         awsConfig, encryptedDataDetails, region, deploymentId, Arrays.asList(InstanceStatus.Succeeded.name()));
-    DescribeInstancesRequest describeInstancesRequest = new DescribeInstancesRequest().withInstanceIds(instanceIds);
+
+    DescribeInstancesRequest describeInstancesRequest =
+        awsHelperService.getDescribeInstancesRequestWithRunningFilter().withInstanceIds(instanceIds);
+
     return awsHelperService.describeEc2Instances(awsConfig, encryptedDataDetails, region, describeInstancesRequest)
         .getReservations()
         .stream()

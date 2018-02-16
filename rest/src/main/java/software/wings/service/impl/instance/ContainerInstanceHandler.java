@@ -128,6 +128,23 @@ public class ContainerInstanceHandler extends InstanceHandler {
           }
         });
 
+        logger.info(new StringBuilder()
+                        .append("Total no of Container instances found in DB for InfraMappingId: ")
+                        .append(infraMappingId)
+                        .append(" and AppId: ")
+                        .append(appId)
+                        .append(", No of instances in DB: ")
+                        .append(instancesInDB.size())
+                        .append(", No of Running instances: ")
+                        .append(latestContainerInfoMap.keySet().size())
+                        .append(", No of instances updated: ")
+                        .append(instancesToBeUpdated.size())
+                        .append(", No of instances to be Added: ")
+                        .append(instancesToBeAdded.size())
+                        .append(", No of instances to be deleted: ")
+                        .append(instanceIdsToBeDeleted.size())
+                        .toString());
+
         if (CollectionUtils.isNotEmpty(instanceIdsToBeDeleted)) {
           instanceService.delete(instanceIdsToBeDeleted);
         }

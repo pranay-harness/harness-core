@@ -5,6 +5,8 @@ import static java.util.Collections.singletonList;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.mockito.Matchers.anyObject;
 import static org.mockito.Matchers.anyString;
+import static org.mockito.Mockito.doNothing;
+import static org.mockito.Mockito.doReturn;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 import static org.mockito.internal.util.reflection.Whitebox.setInternalState;
@@ -33,6 +35,8 @@ import org.junit.Before;
 import org.junit.Test;
 import org.mockito.InjectMocks;
 import org.mockito.Mock;
+import org.mockito.MockitoAnnotations;
+import org.mockito.Spy;
 import software.wings.WingsBaseTest;
 import software.wings.beans.AwsConfig;
 import software.wings.beans.AwsInfrastructureMapping;
@@ -54,7 +58,7 @@ import java.util.List;
  */
 public class AwsInfrastructureProviderTest extends WingsBaseTest {
   @Mock private HostService hostService;
-  @Mock private AwsHelperService awsHelperService;
+  @Spy private AwsHelperService awsHelperService;
   @Mock private SecretManager secretManager;
 
   @Inject @InjectMocks private AwsInfrastructureProvider infrastructureProvider = new AwsInfrastructureProvider();
@@ -67,6 +71,7 @@ public class AwsInfrastructureProviderTest extends WingsBaseTest {
   private AwsConfig awsConfig = (AwsConfig) awsSetting.getValue();
   @Before
   public void setUp() throws Exception {
+    MockitoAnnotations.initMocks(this);
     when(secretManager.getEncryptionDetails(anyObject(), anyString(), anyString())).thenReturn(Collections.emptyList());
     setInternalState(infrastructureProvider, "secretManager", secretManager);
   }
@@ -78,9 +83,11 @@ public class AwsInfrastructureProviderTest extends WingsBaseTest {
     DescribeInstancesResult describeInstancesResult =
         new DescribeInstancesResult().withReservations(new Reservation().withInstances(
             new Instance().withPublicDnsName("HOST_NAME_1"), new Instance().withPublicDnsName("HOST_NAME_2")));
-    when(awsHelperService.describeEc2Instances(
-             (AwsConfig) awsSetting.getValue(), Collections.emptyList(), Regions.US_EAST_1.getName(), instancesRequest))
-        .thenReturn(describeInstancesResult);
+
+    doReturn(describeInstancesResult)
+        .when(awsHelperService)
+        .describeEc2Instances(
+            (AwsConfig) awsSetting.getValue(), Collections.emptyList(), Regions.US_EAST_1.getName(), instancesRequest);
 
     AwsInfrastructureMapping awsInfrastructureMapping =
         anAwsInfrastructureMapping().withRegion(Regions.US_EAST_1.getName()).withUsePublicDns(true).build();
@@ -104,9 +111,11 @@ public class AwsInfrastructureProviderTest extends WingsBaseTest {
     DescribeInstancesResult describeInstancesResult =
         new DescribeInstancesResult().withReservations(new Reservation().withInstances(
             new Instance().withPrivateDnsName("HOST_NAME_1"), new Instance().withPrivateDnsName("HOST_NAME_2")));
-    when(awsHelperService.describeEc2Instances(
-             (AwsConfig) awsSetting.getValue(), Collections.emptyList(), Regions.US_EAST_1.getName(), instancesRequest))
-        .thenReturn(describeInstancesResult);
+
+    doReturn(describeInstancesResult)
+        .when(awsHelperService)
+        .describeEc2Instances(
+            (AwsConfig) awsSetting.getValue(), Collections.emptyList(), Regions.US_EAST_1.getName(), instancesRequest);
 
     AwsInfrastructureMapping awsInfrastructureMapping =
         anAwsInfrastructureMapping().withRegion(Regions.US_EAST_1.getName()).withUsePublicDns(false).build();
@@ -129,9 +138,10 @@ public class AwsInfrastructureProviderTest extends WingsBaseTest {
         new DescribeInstancesRequest().withFilters(new Filter("instance-state-name", asList("running")));
     DescribeInstancesResult describeInstancesResult = new DescribeInstancesResult();
 
-    when(awsHelperService.describeEc2Instances(
-             (AwsConfig) awsSetting.getValue(), Collections.emptyList(), Regions.US_EAST_1.getName(), instancesRequest))
-        .thenReturn(describeInstancesResult);
+    doReturn(describeInstancesResult)
+        .when(awsHelperService)
+        .describeEc2Instances(
+            (AwsConfig) awsSetting.getValue(), Collections.emptyList(), Regions.US_EAST_1.getName(), instancesRequest);
 
     AwsInfrastructureMapping awsInfrastructureMapping =
         anAwsInfrastructureMapping().withRegion(Regions.US_EAST_1.getName()).withUsePublicDns(true).build();
@@ -179,19 +189,28 @@ public class AwsInfrastructureProviderTest extends WingsBaseTest {
                                                          .withDesiredCapacity(1)
                                                          .build();
 
-    when(awsHelperService.listInstanceIdsFromAutoScalingGroup(awsConfig, Collections.emptyList(),
-             infrastructureMapping.getRegion(), infrastructureMapping.getAutoScalingGroupName()))
-        .thenReturn(singletonList("INSTANCE_ID"));
+    doReturn(singletonList("INSTANCE_ID"))
+        .when(awsHelperService)
+        .listInstanceIdsFromAutoScalingGroup(awsConfig, Collections.emptyList(), infrastructureMapping.getRegion(),
+            infrastructureMapping.getAutoScalingGroupName());
 
-    when(awsHelperService.describeEc2Instances(
-             awsConfig, Collections.emptyList(), region, new DescribeInstancesRequest().withInstanceIds("INSTANCE_ID")))
-        .thenReturn(new DescribeInstancesResult().withReservations(
-            new Reservation().withInstances(new Instance()
-                                                .withPrivateDnsName(HOST_NAME)
-                                                .withPublicDnsName(HOST_NAME)
-                                                .withInstanceId("INSTANCE_ID")
-                                                .withState(new InstanceState().withName("running")))));
-    when(awsHelperService.getHostnameFromPrivateDnsName(HOST_NAME)).thenReturn(HOST_NAME);
+    doReturn(new DescribeInstancesResult().withReservations(
+                 new Reservation().withInstances(new Instance()
+                                                     .withPrivateDnsName(HOST_NAME)
+                                                     .withPublicDnsName(HOST_NAME)
+                                                     .withInstanceId("INSTANCE_ID")
+                                                     .withState(new InstanceState().withName("running")))))
+        .when(awsHelperService)
+        .describeEc2Instances(
+            awsConfig, Collections.emptyList(), region, new DescribeInstancesRequest().withInstanceIds("INSTANCE_ID"));
+
+    doReturn(HOST_NAME).when(awsHelperService).getHostnameFromPrivateDnsName(HOST_NAME);
+
+    doNothing()
+        .when(awsHelperService)
+        .setAutoScalingGroupCapacityAndWaitForInstancesReadyState(awsConfig, Collections.emptyList(),
+            infrastructureMapping.getRegion(), infrastructureMapping.getAutoScalingGroupName(),
+            infrastructureMapping.getDesiredCapacity(), new ManagerExecutionLogCallback());
 
     List<Host> hosts =
         infrastructureProvider.maybeSetAutoScaleCapacityAndGetHosts(null, null, infrastructureMapping, awsSetting);
