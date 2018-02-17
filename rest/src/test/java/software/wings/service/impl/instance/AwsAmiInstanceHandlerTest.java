@@ -255,16 +255,13 @@ public class AwsAmiInstanceHandlerTest extends WingsBaseTest {
     ec2Instance1.setPublicDnsName(PUBLIC_DNS_1);
     ec2Instance1.setInstanceId(INSTANCE_1_ID);
 
+    // ec2Instance with empty privateDnsName
     com.amazonaws.services.ec2.model.Instance ec2Instance2 = new com.amazonaws.services.ec2.model.Instance();
-    ec2Instance2.setPrivateDnsName(PRIVATE_DNS_2);
-    ec2Instance2.setPublicDnsName(PUBLIC_DNS_2);
-    ec2Instance1.setInstanceId(INSTANCE_2_ID);
+    ec2Instance2.setInstanceId(INSTANCE_2_ID);
 
     doReturn(Arrays.asList(ec2Instance1, ec2Instance2))
         .when(awsHelperService)
         .listAutoScalingGroupInstances(any(), any(), any(), any());
-    doReturn(HOST_NAME_IP1).when(awsHelperService).getHostnameFromPrivateDnsName(PRIVATE_DNS_1);
-    doReturn(HOST_NAME_IP2).when(awsHelperService).getHostnameFromPrivateDnsName(PRIVATE_DNS_2);
 
     awsAmiInstanceHandler.syncInstances(APP_ID, INFRA_MAPPING_ID);
 
@@ -278,7 +275,7 @@ public class AwsAmiInstanceHandlerTest extends WingsBaseTest {
     verify(instanceService, times(2)).saveOrUpdate(captorInstance.capture());
 
     List<Instance> capturedInstances = captorInstance.getAllValues();
-    Set<String> hostNames = new HashSet<>(Arrays.asList(HOST_NAME_IP1, HOST_NAME_IP2));
+    Set<String> hostNames = new HashSet<>(Arrays.asList(HOST_NAME_IP1, ""));
     assertTrue(hostNames.contains(capturedInstances.get(0).getHostInstanceKey().getHostName()));
     assertTrue(hostNames.contains(capturedInstances.get(1).getHostInstanceKey().getHostName()));
   }

@@ -11,6 +11,7 @@ import com.google.inject.Inject;
 import com.google.inject.Singleton;
 
 import org.apache.commons.collections.CollectionUtils;
+import org.apache.commons.lang3.StringUtils;
 import software.wings.annotation.Encryptable;
 import software.wings.api.AwsAutoScalingGroupDeploymentInfo;
 import software.wings.api.DeploymentInfo;
@@ -131,13 +132,8 @@ public class AwsInstanceHandler extends InstanceHandler {
             getEc2InstancesFromAutoScalingGroup(region, autoScalingGroupName, awsConfig, encryptedDataDetails);
 
         Map<String, com.amazonaws.services.ec2.model.Instance> latestEc2InstanceMap =
-            latestEc2Instances.stream().collect(Collectors.toMap(ec2Instance -> {
-              String privateDnsName = ec2Instance.getPrivateDnsName();
-              if (privateDnsName != null) {
-                return awsHelperService.getHostnameFromPrivateDnsName(privateDnsName);
-              }
-              return null;
-            }, ec2Instance -> ec2Instance));
+            latestEc2Instances.stream().collect(
+                Collectors.toMap(ec2Instance -> { return ec2Instance.getInstanceId(); }, ec2Instance -> ec2Instance));
 
         Collection<Instance> instancesInDB = asgInstanceMap.get(autoScalingGroupName);
         Map<String, Instance> instancesInDBMap = Maps.newHashMap();
@@ -146,7 +142,7 @@ public class AwsInstanceHandler extends InstanceHandler {
         if (CollectionUtils.isNotEmpty(instancesInDB)) {
           instancesInDB.stream().forEach(instance -> {
             if (instance != null) {
-              instancesInDBMap.put(instance.getHostInstanceKey().getHostName(), instance);
+              instancesInDBMap.put(getEc2InstanceId(instance), instance);
             }
           });
         }
@@ -191,6 +187,10 @@ public class AwsInstanceHandler extends InstanceHandler {
     }
   }
 
+  private String getEc2InstanceId(Instance instance) {
+    return ((AutoScalingGroupInstanceInfo) instance.getInstanceInfo()).getEc2Instance().getInstanceId();
+  }
+
   protected Instance buildInstanceUsingEc2InstanceAndASG(String instanceId,
       com.amazonaws.services.ec2.model.Instance ec2Instance, InfrastructureMapping infraMapping,
       String autoScalingGroupName, DeploymentInfo newDeploymentInfo) {
@@ -221,7 +221,9 @@ public class AwsInstanceHandler extends InstanceHandler {
   protected String buildHostInstanceKey(
       com.amazonaws.services.ec2.model.Instance ec2Instance, String infraMappingId, InstanceBuilder instanceBuilder) {
     String privateDnsNameWithSuffix = ec2Instance.getPrivateDnsName();
-    String privateDnsName = privateDnsNameWithSuffix.substring(0, privateDnsNameWithSuffix.indexOf('.'));
+    String privateDnsName = privateDnsNameWithSuffix == null
+        ? StringUtils.EMPTY
+        : privateDnsNameWithSuffix.substring(0, privateDnsNameWithSuffix.indexOf('.'));
     HostInstanceKey hostInstanceKey =
         HostInstanceKey.builder().hostName(privateDnsName).infraMappingId(infraMappingId).build();
     instanceBuilder.hostInstanceKey(hostInstanceKey);

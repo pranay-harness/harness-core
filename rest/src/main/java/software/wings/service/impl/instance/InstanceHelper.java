@@ -9,6 +9,7 @@ import com.google.inject.Inject;
 
 import com.amazonaws.services.ec2.model.DescribeInstancesRequest;
 import com.amazonaws.services.ec2.model.Reservation;
+import org.apache.commons.lang3.StringUtils;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import software.wings.annotation.Encryptable;
@@ -567,7 +568,9 @@ public class InstanceHelper {
   private void setInstanceInfoAndKey(
       InstanceBuilder builder, com.amazonaws.services.ec2.model.Instance ec2Instance, String infraMappingId) {
     String privateDnsNameWithSuffix = ec2Instance.getPrivateDnsName();
-    String privateDnsName = privateDnsNameWithSuffix.substring(0, privateDnsNameWithSuffix.indexOf('.'));
+    String privateDnsName = privateDnsNameWithSuffix == null
+        ? StringUtils.EMPTY
+        : privateDnsNameWithSuffix.substring(0, privateDnsNameWithSuffix.indexOf('.'));
     HostInstanceKey hostInstanceKey =
         HostInstanceKey.builder().hostName(privateDnsName).infraMappingId(infraMappingId).build();
     builder.hostInstanceKey(hostInstanceKey);
