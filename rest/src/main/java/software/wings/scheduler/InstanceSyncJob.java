@@ -112,7 +112,6 @@ public class InstanceSyncJob implements Job {
             }
             instanceHandler.syncInstances(appIdFinal, infraMappingId);
           } catch (WingsException ex) {
-            logger.warn("Could not retrieve handler for infraMappingType: " + infraMappingType.name());
           }
         } catch (HarnessException ex) {
           logger.error(
