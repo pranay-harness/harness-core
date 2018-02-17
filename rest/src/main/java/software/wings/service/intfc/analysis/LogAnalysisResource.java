@@ -70,6 +70,11 @@ public interface LogAnalysisResource {
    */
   String ANALYSIS_USER_FEEDBACK = "/user-feedback";
 
+  /**
+   * Validate query
+   */
+  String ELK_VALIDATE_QUERY = "/validate-query";
+
   RestResponse<Boolean> saveRawLogData(@QueryParam("accountId") String accountId,
       @QueryParam("stateExecutionId") String stateExecutionId, @QueryParam("workflowId") String workflowId,
       @QueryParam("workflowExecutionId") String workflowExecutionId, @QueryParam("appId") String appId,

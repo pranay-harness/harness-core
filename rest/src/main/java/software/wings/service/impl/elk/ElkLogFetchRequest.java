@@ -3,13 +3,16 @@ package software.wings.service.impl.elk;
 import lombok.AllArgsConstructor;
 import lombok.Data;
 import org.json.JSONObject;
+import software.wings.exception.WingsException;
 import software.wings.utils.JsonUtils;
 
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
+import java.util.Stack;
 
 /**
  * Created by rsingh on 8/3/17.
@@ -33,8 +36,6 @@ public class ElkLogFetchRequest {
       hostJsonObjects.add(new JSONObject().put("term", new JSONObject().put(hostnameField, host)));
     }
 
-    JSONObject boolObject = new JSONObject().put("bool", new JSONObject().put("should", hostJsonObjects));
-
     JSONObject regexObject = new JSONObject();
     regexObject.put("regexp", new JSONObject().put(messageField, new JSONObject().put("value", query)));
 
@@ -44,15 +45,17 @@ public class ElkLogFetchRequest {
             timestampField, new JSONObject().put("gte", startTime).put("lt", endTime).put("format", "epoch_millis")));
 
     Map<String, List<JSONObject>> mustArrayObjects = new HashMap<>();
+    mustArrayObjects.put("filter", new ArrayList<>());
+    mustArrayObjects.put("should", new ArrayList<>());
     mustArrayObjects.put("must", new ArrayList<>());
-    mustArrayObjects.get("must").add(regexObject);
-    mustArrayObjects.get("must").add(boolObject);
-    mustArrayObjects.get("must").add(rangeObject);
 
-    String jsonOut = null;
+    mustArrayObjects.get("filter").add(rangeObject);
+    mustArrayObjects.get("should").addAll(hostJsonObjects);
+    mustArrayObjects.get("must").add(eval());
+
     JSONObject queryObject =
         new JSONObject().put("query", new JSONObject().put("bool", mustArrayObjects)).put("size", 10000);
-    jsonOut = queryObject.toString();
+    String jsonOut = queryObject.toString();
 
     return JsonUtils.asObject(jsonOut, Object.class);
   }
@@ -65,5 +68,104 @@ public class ElkLogFetchRequest {
     jsonObject.put("sort", new JSONObject().put("@timestamp", "desc"));
 
     return JsonUtils.asObject(jsonObject.toString(), Object.class);
+  }
+
+  private String insertSpaces(String expr) {
+    StringBuilder result = new StringBuilder();
+    for (int i = 0; i < expr.length(); i++) {
+      if (expr.charAt(i) == '(') {
+        result.append(expr.charAt(i));
+        result.append(' ');
+      } else if (expr.charAt(i) == ')') {
+        result.append(' ');
+        result.append(expr.charAt(i));
+      } else {
+        result.append(expr.charAt(i));
+      }
+    }
+    return result.toString();
+  }
+
+  protected JSONObject eval() {
+    try {
+      String[] tokens = insertSpaces(query).split(" ");
+      Stack<JSONObject> operandStack = new Stack<>();
+      Stack<String> operatorStack = new Stack<>();
+      JSONObject rval, lval;
+      String operator;
+      for (String token : tokens) {
+        if (")".equals(token)) {
+          Stack<JSONObject> result = new Stack<>();
+          while (!(rval = operandStack.pop()).toString().equals("{\"term\":{\"(\":\"(\"}}")) {
+            lval = operandStack.pop();
+            operator = operatorStack.pop();
+            result.push(eval(lval, rval, operator));
+          }
+          result.stream().forEach(op -> operandStack.push(op));
+        } else {
+          if ("or".equals(token) || "and".equals(token)) {
+            operatorStack.push(token);
+          } else {
+            operandStack.push(stringToJson(token));
+          }
+        }
+      }
+
+      while (!operatorStack.empty()) {
+        rval = operandStack.pop();
+        lval = operandStack.pop();
+        operator = operatorStack.pop();
+        operandStack.push(eval(lval, rval, operator));
+      }
+
+      return operandStack.pop();
+    } catch (Exception ex) {
+      throw new WingsException(
+          "Malformed Query. Braces should be matching. Only supported operators are 'or' and 'and' ");
+    }
+  }
+
+  private JSONObject eval(JSONObject lval, JSONObject rval, String operator) {
+    if ("or".equals(operator.toLowerCase())) {
+      return evalOrExpression(lval, rval);
+    } else if ("and".equals(operator.toLowerCase())) {
+      return evalAndExpression(lval, rval);
+    } else {
+      throw new WingsException("Unknown operator in expression " + operator);
+    }
+  }
+
+  private JSONObject evalOrExpression(JSONObject left, JSONObject right) {
+    List<JSONObject> jsonObjects = Arrays.asList(left, right);
+    return new JSONObject().put("bool", new JSONObject().put("should", jsonObjects));
+  }
+
+  private JSONObject evalAndExpression(JSONObject left, JSONObject right) {
+    List<JSONObject> jsonObjects = Arrays.asList(left, right);
+    return new JSONObject().put("bool", new JSONObject().put("must", jsonObjects));
+  }
+
+  private JSONObject stringToJson(String str) {
+    if (str.equals("(") || str.equals(")")) {
+      return termToJson(str, str);
+    } else if (str.contains(":")) {
+      String[] terms = str.split(":");
+      if (terms.length > 2) {
+        throw new WingsException("Cannot parse " + str + " . Should be value or key:value");
+      }
+      return termToJson(terms[0], terms[1]);
+    } else {
+      return messageToJson(messageField, str);
+    }
+  }
+
+  private JSONObject messageToJson(String term, String val) {
+    JSONObject regexObject = new JSONObject();
+    regexObject.put("regexp", new JSONObject().put(term, new JSONObject().put("value", val)));
+    return regexObject;
+  }
+
+  private JSONObject termToJson(String term, String val) {
+    return new JSONObject().put("term", new JSONObject().put(term, val));
   }
 }
