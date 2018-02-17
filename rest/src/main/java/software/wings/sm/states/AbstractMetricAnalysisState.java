@@ -63,14 +63,14 @@ public abstract class AbstractMetricAnalysisState extends AbstractAnalysisState 
 
     Set<String> canaryNewHostNames = analysisContext.getTestNodes();
     if (isEmpty(canaryNewHostNames)) {
-      getLogger().error("Could not find test nodes to compare the data");
+      getLogger().warn("Could not find test nodes to compare the data");
       return generateAnalysisResponse(context, ExecutionStatus.SUCCESS, "Could not find nodes to analyze!");
     }
 
     Set<String> lastExecutionNodes = analysisContext.getControlNodes();
     if (isEmpty(lastExecutionNodes)) {
       if (getComparisonStrategy() == AnalysisComparisonStrategy.COMPARE_WITH_CURRENT) {
-        getLogger().error("No nodes with older version found to compare the logs. Skipping analysis");
+        getLogger().warn("No nodes with older version found to compare the logs. Skipping analysis");
         return generateAnalysisResponse(context, ExecutionStatus.SUCCESS,
             "Skipping analysis due to lack of baseline data (First time deployment).");
       }
@@ -81,7 +81,7 @@ public abstract class AbstractMetricAnalysisState extends AbstractAnalysisState 
 
     if (getComparisonStrategy() == AnalysisComparisonStrategy.COMPARE_WITH_CURRENT
         && lastExecutionNodes.equals(canaryNewHostNames)) {
-      getLogger().error("Control and test nodes are same. Will not be running Log analysis");
+      getLogger().warn("Control and test nodes are same. Will not be running Log analysis");
       return generateAnalysisResponse(context, ExecutionStatus.FAILED,
           "Skipping analysis due to lack of baseline data (Minimum two phases are required).");
     }

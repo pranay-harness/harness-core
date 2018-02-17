@@ -5,7 +5,6 @@ import retrofit2.http.GET;
 import retrofit2.http.Header;
 import retrofit2.http.Path;
 import retrofit2.http.Query;
-import software.wings.service.impl.appdynamics.AppdynamicsBusinessTransaction;
 import software.wings.service.impl.appdynamics.AppdynamicsMetric;
 import software.wings.service.impl.appdynamics.AppdynamicsMetricData;
 import software.wings.service.impl.appdynamics.AppdynamicsNode;
@@ -48,17 +47,6 @@ public interface AppdynamicsRestClient {
   @GET("rest/applications/{appdynamicsAppId}/tiers/{tierId}/nodes?output=json")
   Call<List<AppdynamicsNode>> listNodes(@Header("Authorization") String authorization,
       @Path("appdynamicsAppId") long appdynamicsAppId, @Path("tierId") long tierId);
-
-  /**
-   * Get all the business transactions of an application
-   *
-   * @param authorization
-   * @param appdynamicsAppId
-   * @return
-   */
-  @GET("rest/applications/{appdynamicsAppId}/business-transactions?output=json")
-  Call<List<AppdynamicsBusinessTransaction>> listBusinessTransactions(
-      @Header("Authorization") String authorization, @Path("appdynamicsAppId") long appdynamicsAppId);
 
   /**
    * Get all the details of a tier

@@ -163,4 +163,13 @@ public class ElkResource implements LogAnalysisResource {
       throws IOException {
     return new RestResponse<>(analysisService.saveFeedback(ignoreFeedback, StateType.ELK));
   }
+
+  @POST
+  @Path(LogAnalysisResource.ELK_VALIDATE_QUERY)
+  @Timed
+  @ExceptionMetered
+  public RestResponse<Boolean> validateQuery(@QueryParam("accountId") String accountId, String query)
+      throws IOException {
+    return new RestResponse<>(true);
+  }
 }
