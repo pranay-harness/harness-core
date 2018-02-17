@@ -11,6 +11,7 @@ import software.wings.beans.StateExecutionInterrupt;
 import software.wings.beans.WorkflowExecution;
 import software.wings.beans.WorkflowType;
 import software.wings.beans.artifact.Artifact;
+import software.wings.beans.baseline.WorkflowExecutionBaseline;
 import software.wings.dl.PageRequest;
 import software.wings.dl.PageResponse;
 import software.wings.service.impl.WorkflowExecutionUpdate;
@@ -22,6 +23,7 @@ import software.wings.sm.StateExecutionInstance;
 import software.wings.sm.StateType;
 
 import java.util.List;
+import java.util.Set;
 import javax.validation.Valid;
 import javax.validation.constraints.NotNull;
 
@@ -274,4 +276,6 @@ public interface WorkflowExecutionService {
 
   void refreshBuildExecutionSummary(
       String appId, String workflowExecutionId, BuildExecutionSummary buildExecutionSummary);
+
+  Set<WorkflowExecutionBaseline> markAsBaseline(String appId, String workflowExecutionId);
 }

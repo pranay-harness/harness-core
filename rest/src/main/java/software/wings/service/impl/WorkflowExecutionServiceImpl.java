@@ -54,6 +54,7 @@ import static software.wings.utils.Switch.unhandled;
 import static software.wings.utils.Validator.notNullCheck;
 
 import com.google.common.collect.ImmutableMap;
+import com.google.common.collect.Lists;
 import com.google.common.collect.Maps;
 import com.google.inject.Inject;
 import com.google.inject.Singleton;
@@ -107,6 +108,7 @@ import software.wings.beans.Workflow;
 import software.wings.beans.WorkflowExecution;
 import software.wings.beans.WorkflowType;
 import software.wings.beans.artifact.Artifact;
+import software.wings.beans.baseline.WorkflowExecutionBaseline;
 import software.wings.beans.command.ServiceCommand;
 import software.wings.common.Constants;
 import software.wings.common.UUIDGenerator;
@@ -126,6 +128,7 @@ import software.wings.service.intfc.InfrastructureMappingService;
 import software.wings.service.intfc.PipelineService;
 import software.wings.service.intfc.ServiceInstanceService;
 import software.wings.service.intfc.ServiceResourceService;
+import software.wings.service.intfc.WorkflowExecutionBaselineService;
 import software.wings.service.intfc.WorkflowExecutionService;
 import software.wings.service.intfc.WorkflowService;
 import software.wings.sm.ContextElement;
@@ -203,6 +206,7 @@ public class WorkflowExecutionServiceImpl implements WorkflowExecutionService {
   @Inject private ExecutorService executorService;
   @Inject private WaitNotifyEngine waitNotifyEngine;
   @Inject private Queue<ExecutionEvent> executionEventQueue;
+  @Inject private WorkflowExecutionBaselineService workflowExecutionBaselineService;
 
   /**
    * {@inheritDoc}
@@ -2073,5 +2077,74 @@ public class WorkflowExecutionServiceImpl implements WorkflowExecutionService {
         buildExecutionSummaries.stream().filter(distinctByKey(bs -> bs.getArtifactStreamId())).collect(toList());
     wingsPersistence.updateField(
         WorkflowExecution.class, workflowExecutionId, "buildExecutionSummaries", buildExecutionSummaries);
+  }
+
+  @Override
+  public Set<WorkflowExecutionBaseline> markAsBaseline(String appId, String workflowExecutionId) {
+    WorkflowExecution workflowExecution = wingsPersistence.get(WorkflowExecution.class, appId, workflowExecutionId);
+    if (workflowExecution == null) {
+      throw new WingsException(ErrorCode.BASELINE_CONFIGURATION_ERROR,
+          "No workflow execution found with id: " + workflowExecutionId + " appId: " + appId);
+    }
+    if (workflowExecution.getWorkflowType() != WorkflowType.PIPELINE) {
+      throw new WingsException(ErrorCode.BASELINE_CONFIGURATION_ERROR, "Only pipelines can be marked as baseline.");
+    }
+
+    PipelineExecution pipelineExecution = workflowExecution.getPipelineExecution();
+    if (pipelineExecution == null) {
+      throw new WingsException(ErrorCode.BASELINE_CONFIGURATION_ERROR, "Pipeline has not been executed.");
+    }
+
+    List<PipelineStageExecution> pipelineStageExecutions = pipelineExecution.getPipelineStageExecutions();
+    if (isEmpty(pipelineStageExecutions)) {
+      throw new WingsException(
+          ErrorCode.BASELINE_CONFIGURATION_ERROR, "No workflows have been executed for this pipeline.");
+    }
+
+    final Set<WorkflowExecutionBaseline> baselines = new HashSet<>();
+
+    pipelineStageExecutions.forEach(pipelineStageExecution -> {
+      List<WorkflowExecution> workflowExecutions = pipelineStageExecution.getWorkflowExecutions();
+      if (!isEmpty(workflowExecutions)) {
+        workflowExecutions.forEach(stageExecution -> {
+          String executionUuid = stageExecution.getUuid();
+          List<StateExecutionInstance> stateExecutionInstances =
+              wingsPersistence.createQuery(StateExecutionInstance.class)
+                  .field("executionUuid")
+                  .equal(executionUuid)
+                  .asList();
+
+          boolean containsVerificationState = false;
+          for (StateExecutionInstance stateExecutionInstance : stateExecutionInstances) {
+            StateType stateType = StateType.valueOf(stateExecutionInstance.getStateType());
+            if (stateType.isVerificationState()) {
+              containsVerificationState = true;
+              break;
+            }
+          }
+
+          if (containsVerificationState) {
+            for (String serviceId : stageExecution.getServiceIds()) {
+              WorkflowExecutionBaseline executionBaseline = WorkflowExecutionBaseline.builder()
+                                                                .workflowId(stageExecution.getWorkflowId())
+                                                                .workflowExecutionId(executionUuid)
+                                                                .envId(stageExecution.getEnvId())
+                                                                .serviceId(serviceId)
+                                                                .build();
+              executionBaseline.setAppId(stageExecution.getAppId());
+              baselines.add(executionBaseline);
+            }
+          }
+        });
+      }
+    });
+
+    if (isEmpty(baselines)) {
+      throw new WingsException(ErrorCode.BASELINE_CONFIGURATION_ERROR,
+          "There is no workflow execution in this pipeline with verification steps.");
+    }
+
+    workflowExecutionBaselineService.markBaseline(Lists.newArrayList(baselines));
+    return baselines;
   }
 }

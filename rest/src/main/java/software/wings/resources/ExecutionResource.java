@@ -22,6 +22,7 @@ import software.wings.beans.SearchFilter.Operator;
 import software.wings.beans.StateExecutionInterrupt;
 import software.wings.beans.WorkflowExecution;
 import software.wings.beans.WorkflowType;
+import software.wings.beans.baseline.WorkflowExecutionBaseline;
 import software.wings.common.Constants;
 import software.wings.dl.PageRequest;
 import software.wings.dl.PageResponse;
@@ -33,6 +34,7 @@ import software.wings.sm.ExecutionInterrupt;
 import software.wings.sm.StateExecutionData;
 
 import java.util.List;
+import java.util.Set;
 import java.util.stream.Collectors;
 import javax.ws.rs.BeanParam;
 import javax.ws.rs.DefaultValue;
@@ -294,5 +296,20 @@ public class ExecutionResource {
       @PathParam("workflowExecutionId") String workflowExecutionId,
       @PathParam("stateExecutionInstanceId") String stateExecutionInstanceId) {
     return new RestResponse<>(workflowExecutionService.getExecutionInterrupts(appId, stateExecutionInstanceId));
+  }
+
+  /**
+   * Marks the pipeline as baseline for verification steps
+   * @param appId
+   * @param workflowExecutionId
+   * @return
+   */
+  @GET
+  @Path("{workflowExecutionId}/mark-baseline")
+  @Timed
+  @ExceptionMetered
+  public RestResponse<Set<WorkflowExecutionBaseline>> markAsBaseline(
+      @QueryParam("appId") String appId, @PathParam("workflowExecutionId") String workflowExecutionId) {
+    return new RestResponse<>(workflowExecutionService.markAsBaseline(appId, workflowExecutionId));
   }
 }

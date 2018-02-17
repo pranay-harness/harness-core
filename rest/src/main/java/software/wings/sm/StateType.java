@@ -489,4 +489,8 @@ public enum StateType implements StateTypeDescriptor {
   public List<String> getPhaseStepTypes() {
     return phaseStepTypes;
   }
+
+  public boolean isVerificationState() {
+    return this.stencilCategory == StencilCategory.VERIFICATIONS;
+  }
 }
