@@ -2,6 +2,7 @@ package software.wings.service.impl;
 
 import static software.wings.exception.WingsException.ALERTING;
 import static software.wings.helpers.ext.jenkins.JobDetails.JobParameter;
+import static software.wings.helpers.ext.jenkins.model.ParamPropertyType.BooleanParameterDefinition;
 import static software.wings.utils.HttpUtil.connectableHttpUrl;
 import static software.wings.utils.HttpUtil.validUrl;
 import static software.wings.utils.Validator.equalCheck;
@@ -215,6 +216,12 @@ public class JenkinsBuildServiceImpl implements JenkinsBuildService {
     }
     if (pdProperty.getChoices() != null) {
       jobParameter.setOptions(pdProperty.getChoices());
+    }
+    if (BooleanParameterDefinition.name().equals(pdProperty.getType())) {
+      List<String> booleanValues = new ArrayList<>();
+      booleanValues.add("true");
+      booleanValues.add("false");
+      jobParameter.setOptions(booleanValues);
     }
     return jobParameter;
   }
