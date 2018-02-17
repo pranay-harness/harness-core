@@ -45,11 +45,16 @@ public class DockerConfig extends SettingValue implements Encryptable {
   public DockerConfig(
       String dockerRegistryUrl, String username, char[] password, String accountId, String encryptedPassword) {
     super(SettingVariableTypes.DOCKER.name());
-    this.dockerRegistryUrl = dockerRegistryUrl;
+    setDockerRegistryUrl(dockerRegistryUrl);
     this.username = username;
     this.password = password;
     this.accountId = accountId;
     this.encryptedPassword = encryptedPassword;
+  }
+
+  // override the setter for URL to enforce that we always put / (slash) at the end
+  public void setDockerRegistryUrl(String dockerRegistryUrl) {
+    this.dockerRegistryUrl = dockerRegistryUrl.endsWith("/") ? dockerRegistryUrl : dockerRegistryUrl.concat("/");
   }
 
   @Data
