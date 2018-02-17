@@ -13,6 +13,7 @@ import static org.mockito.Mockito.RETURNS_DEEP_STUBS;
 import static org.mockito.Mockito.when;
 import static software.wings.beans.artifact.JenkinsArtifactStream.Builder.aJenkinsArtifactStream;
 import static software.wings.helpers.ext.jenkins.BuildDetails.Builder.aBuildDetails;
+import static software.wings.helpers.ext.jenkins.model.ParametersDefinitionProperty.builder;
 import static software.wings.utils.WingsTestConstants.ACCOUNT_ID;
 import static software.wings.utils.WingsTestConstants.APP_ID;
 import static software.wings.utils.WingsTestConstants.ARTIFACT_STREAM_ID;
@@ -42,7 +43,6 @@ import software.wings.helpers.ext.jenkins.JenkinsFactory;
 import software.wings.helpers.ext.jenkins.JobDetails;
 import software.wings.helpers.ext.jenkins.model.JobProperty;
 import software.wings.helpers.ext.jenkins.model.JobWithExtendedDetails;
-import software.wings.helpers.ext.jenkins.model.ParametersDefinitionProperty;
 import software.wings.helpers.ext.jenkins.model.ParametersDefinitionProperty.DefaultParameterValue;
 import software.wings.service.intfc.JenkinsBuildService;
 
@@ -174,16 +174,22 @@ public class JenkinsBuildServiceTest extends WingsBaseTest {
     JobProperty jobProperty =
         JobProperty.builder()
             .parameterDefinitions(asList(
-                ParametersDefinitionProperty.builder()
+                builder()
                     .name("branch")
                     .defaultParameterValue(DefaultParameterValue.builder().name("branch").value("release").build())
                     .build(),
-                ParametersDefinitionProperty.builder()
+                builder()
                     .name("revision")
                     .defaultParameterValue(DefaultParameterValue.builder().name("revision").build())
                     .build(),
-                ParametersDefinitionProperty.builder()
+                builder()
                     .name("Choices")
+                    .defaultParameterValue(DefaultParameterValue.builder().name("B").value("B").build())
+                    .choices(asList("A", "B", "C"))
+                    .build(),
+                builder()
+                    .name("BooleanParams")
+                    .type("BooleanParameterDefinition")
                     .defaultParameterValue(DefaultParameterValue.builder().name("B").value("B").build())
                     .choices(asList("A", "B", "C"))
                     .build()))
@@ -194,10 +200,10 @@ public class JenkinsBuildServiceTest extends WingsBaseTest {
     assertThat(jobDetails.getParameters())
         .isNotNull()
         .extracting(JobDetails.JobParameter::getName)
-        .contains("branch", "revision", "Choices");
+        .contains("branch", "revision", "Choices", "BooleanParams");
     assertThat(jobDetails.getParameters())
         .extracting(JobDetails.JobParameter::getOptions)
-        .contains(asList("A", "B", "C"));
+        .contains(asList("A", "B", "C"), asList("true", "false"));
 
     assertThat(jobDetails.getParameters())
         .extracting(JobDetails.JobParameter::getDefaultValue)
