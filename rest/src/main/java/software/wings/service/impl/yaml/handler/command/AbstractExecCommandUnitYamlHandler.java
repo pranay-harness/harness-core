@@ -35,6 +35,7 @@ public abstract class AbstractExecCommandUnitYamlHandler<Y extends AbstractYaml,
     }
 
     return patternEntryList.stream()
+        .filter(entry -> entry != null)
         .map(entry
             -> TailFilePatternEntry.Yaml.Builder.anYaml()
                    .withFilePath(entry.getFilePath())
@@ -49,6 +50,7 @@ public abstract class AbstractExecCommandUnitYamlHandler<Y extends AbstractYaml,
     }
 
     return patternEntryYamlList.stream()
+        .filter(yamlEntry -> yamlEntry != null)
         .map(yamlEntry
             -> TailFilePatternEntry.Builder.aTailFilePatternEntry()
                    .withFilePath(yamlEntry.getFilePath())
@@ -79,6 +81,7 @@ public abstract class AbstractExecCommandUnitYamlHandler<Y extends AbstractYaml,
     List<TailFilePatternEntry.Yaml> filePatternEntryList = yaml.getFilePatternEntryList();
     if (isNotEmpty(filePatternEntryList)) {
       List<String> patternList = filePatternEntryList.stream()
+                                     .filter(filePatternEntry -> filePatternEntry != null)
                                      .map(filePatternEntry -> filePatternEntry.getSearchPattern())
                                      .collect(Collectors.toList());
       nodeProperties.put(NODE_PROPERTY_TAIL_FILES, true);
