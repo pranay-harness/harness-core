@@ -13,6 +13,7 @@ import software.wings.beans.CodeDeployInfrastructureMapping;
 import software.wings.beans.InfrastructureMapping;
 import software.wings.beans.SettingAttribute;
 import software.wings.beans.infrastructure.instance.Instance;
+import software.wings.beans.infrastructure.instance.info.CodeDeployInstanceInfo;
 import software.wings.beans.infrastructure.instance.info.Ec2InstanceInfo;
 import software.wings.beans.infrastructure.instance.info.InstanceInfo;
 import software.wings.cloudprovider.aws.AwsCodeDeployService;
@@ -79,19 +80,13 @@ public class AwsCodeDeployInstanceHandler extends AwsInstanceHandler {
       Map<String, Instance> instancesInDBMap =
           instanceList.stream()
               .filter(instance -> instance != null)
-              .collect(Collectors.toMap(instance -> instance.getHostInstanceKey().getHostName(), instance -> instance));
+              .collect(Collectors.toMap(instance -> getKeyFromInstance(instance), instance -> instance));
 
       // This will create filter for "instance-state-name" = "running"
       List<com.amazonaws.services.ec2.model.Instance> latestEc2Instances = awsCodeDeployService.listDeploymentInstances(
           region, cloudProviderSetting, encryptedDataDetails, awsCodeDeployDeploymentInfo.getDeploymentId());
-      Map<String, com.amazonaws.services.ec2.model.Instance> latestEc2InstanceMap =
-          latestEc2Instances.stream().collect(Collectors.toMap(ec2Instance -> {
-            String privateDnsName = ec2Instance.getPrivateDnsName();
-            if (privateDnsName != null) {
-              return awsHelperService.getHostnameFromPrivateDnsName(privateDnsName);
-            }
-            return null;
-          }, ec2Instance -> ec2Instance));
+      Map<String, com.amazonaws.services.ec2.model.Instance> latestEc2InstanceMap = latestEc2Instances.stream().collect(
+          Collectors.toMap(ec2Instance -> { return ec2Instance.getInstanceId(); }, ec2Instance -> ec2Instance));
 
       SetView<String> instancesToBeUpdated =
           Sets.intersection(latestEc2InstanceMap.keySet(), instancesInDBMap.keySet());
@@ -122,6 +117,19 @@ public class AwsCodeDeployInstanceHandler extends AwsInstanceHandler {
     }
 
     handleEc2InstanceSync(ec2InstanceIdInstanceMap, awsConfig, encryptedDataDetails, region);
+  }
+
+  private String getKeyFromInstance(Instance instance) {
+    String instanceInfoString;
+    if (instance.getInstanceInfo() instanceof Ec2InstanceInfo) {
+      Ec2InstanceInfo ec2InstanceInfo = (Ec2InstanceInfo) instance.getInstanceInfo();
+      instanceInfoString = ec2InstanceInfo.getEc2Instance().getInstanceId();
+    } else {
+      CodeDeployInstanceInfo instanceInfo = (CodeDeployInstanceInfo) instance.getInstanceInfo();
+      instanceInfoString = instanceInfo.getEc2Instance().getInstanceId();
+    }
+
+    return instanceInfoString;
   }
 
   @Override
