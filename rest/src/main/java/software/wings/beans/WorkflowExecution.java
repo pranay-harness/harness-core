@@ -66,6 +66,8 @@ public class WorkflowExecution extends Base {
 
   private OrchestrationWorkflowType orchestrationType;
 
+  private boolean isBaseline;
+
   /**
    * Gets name.
    *
@@ -498,6 +500,14 @@ public class WorkflowExecution extends Base {
 
   public void setOrchestrationType(OrchestrationWorkflowType orchestrationType) {
     this.orchestrationType = orchestrationType;
+  }
+
+  public boolean isBaseline() {
+    return isBaseline;
+  }
+
+  public void setBaseline(boolean baseline) {
+    isBaseline = baseline;
   }
 
   public static final class WorkflowExecutionBuilder {

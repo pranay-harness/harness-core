@@ -122,6 +122,7 @@ import software.wings.service.impl.TriggerServiceImpl;
 import software.wings.service.impl.UserGroupServiceImpl;
 import software.wings.service.impl.UserServiceImpl;
 import software.wings.service.impl.WebHookServiceImpl;
+import software.wings.service.impl.WorkflowExecutionBaselineServiceImpl;
 import software.wings.service.impl.WorkflowExecutionServiceImpl;
 import software.wings.service.impl.WorkflowServiceImpl;
 import software.wings.service.impl.analysis.AnalysisServiceImpl;
@@ -211,6 +212,7 @@ import software.wings.service.intfc.TriggerService;
 import software.wings.service.intfc.UserGroupService;
 import software.wings.service.intfc.UserService;
 import software.wings.service.intfc.WebHookService;
+import software.wings.service.intfc.WorkflowExecutionBaselineService;
 import software.wings.service.intfc.WorkflowExecutionService;
 import software.wings.service.intfc.WorkflowService;
 import software.wings.service.intfc.analysis.AnalysisService;
@@ -366,6 +368,7 @@ public class WingsModule extends AbstractModule {
     bind(LearningEngineService.class).to(LearningEngineAnalysisServiceImpl.class);
     bind(Clock.class).toInstance(Clock.systemUTC());
     bind(MigrationService.class).to(MigrationServiceImpl.class).in(Singleton.class);
+    bind(WorkflowExecutionBaselineService.class).to(WorkflowExecutionBaselineServiceImpl.class);
 
     MapBinder<String, InfrastructureProvider> infrastructureProviderMapBinder =
         MapBinder.newMapBinder(binder(), String.class, InfrastructureProvider.class);
