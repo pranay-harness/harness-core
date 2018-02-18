@@ -373,15 +373,7 @@ public class KubernetesSetupCommandUnit extends ContainerSetupCommandUnit {
                     .getLoadBalancer();
             if (!loadBalancerStatus.getIngress().isEmpty()
                 && (isEmpty(loadBalancerIP) || loadBalancerIP.equals(loadBalancerStatus.getIngress().get(0).getIp()))) {
-              LoadBalancerIngress loadBalancerIngress = loadBalancerStatus.getIngress().get(0);
-              String loadBalancerEndpoint = isNotEmpty(loadBalancerIngress.getHostname())
-                  ? loadBalancerIngress.getHostname()
-                  : loadBalancerIngress.getIp();
-              executionLogCallback.saveExecutionLog(
-                  String.format(
-                      "Service [%s] load balancer is ready with endpoint [%s]", serviceName, loadBalancerEndpoint),
-                  LogLevel.INFO);
-              return loadBalancerEndpoint;
+              return getLoadBalancerEndpoint(executionLogCallback, serviceName, loadBalancerStatus);
             }
             sleep(ofSeconds(1));
           }
@@ -392,8 +384,21 @@ public class KubernetesSetupCommandUnit extends ContainerSetupCommandUnit {
       } catch (Exception e) {
         Misc.logAllMessages(e, executionLogCallback);
       }
+    } else if (loadBalancer != null && !loadBalancer.getIngress().isEmpty()) {
+      return getLoadBalancerEndpoint(executionLogCallback, serviceName, loadBalancer);
     }
     return null;
+  }
+
+  private String getLoadBalancerEndpoint(
+      ExecutionLogCallback executionLogCallback, String serviceName, LoadBalancerStatus loadBalancer) {
+    LoadBalancerIngress loadBalancerIngress = loadBalancer.getIngress().get(0);
+    String loadBalancerEndpoint =
+        isNotEmpty(loadBalancerIngress.getHostname()) ? loadBalancerIngress.getHostname() : loadBalancerIngress.getIp();
+    executionLogCallback.saveExecutionLog(
+        String.format("Service [%s] load balancer is ready with endpoint [%s]", serviceName, loadBalancerEndpoint),
+        LogLevel.INFO);
+    return loadBalancerEndpoint;
   }
 
   private String lastController(
