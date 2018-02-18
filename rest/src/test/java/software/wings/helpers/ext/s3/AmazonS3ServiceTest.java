@@ -109,7 +109,7 @@ public class AmazonS3ServiceTest extends WingsBaseTest {
       ArtifactFile artifactFile = new ArtifactFile();
       artifactFile.setName("key1");
       assertThat(artifactFileList).hasSize(1);
-      assertThat(artifactFileList.get(0).getName().equals("key1"));
+      assertThat(artifactFileList.get(0).getName()).isEqualTo("key1");
     } finally {
       file.delete();
     }
@@ -134,7 +134,7 @@ public class AmazonS3ServiceTest extends WingsBaseTest {
 
     BuildDetails artifactBuildDetails =
         amazonS3Service.getArtifactBuildDetails(awsConfig, null, "bucket1", "key1", false);
-    assertThat(artifactBuildDetails.getArtifactPath().equals("key1"));
+    assertThat(artifactBuildDetails.getArtifactPath()).isEqualTo("key1");
   }
 
   @Test
@@ -157,6 +157,6 @@ public class AmazonS3ServiceTest extends WingsBaseTest {
     List<BuildDetails> artifactsBuildDetails =
         amazonS3Service.getArtifactsBuildDetails(awsConfig, null, "bucket1", Lists.newArrayList("key1"), false);
     assertThat(artifactsBuildDetails).hasSize(1);
-    assertThat(artifactsBuildDetails.get(0).getArtifactPath().equals("key1"));
+    assertThat(artifactsBuildDetails.get(0).getArtifactPath()).isEqualTo("key1");
   }
 }

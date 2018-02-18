@@ -75,7 +75,7 @@ public class ContainerMaxInstancesMigrationUtil extends WingsBaseTest {
         if (!kubeSetup.isEmpty()) {
           System.out.println("\nKubernetes Setups: " + kubeSetup.size());
           System.out.println("Kubernetes Deploys: " + kubeDeploy.size());
-          assertThat(kubeSetup.size() == 1);
+          assertThat(kubeSetup.size()).isEqualTo(1);
           KubernetesSetup setup = (KubernetesSetup) kubeSetup.get(0);
           if (setup.getMaxInstances() < 10) {
             affected = true;
@@ -107,7 +107,7 @@ public class ContainerMaxInstancesMigrationUtil extends WingsBaseTest {
         if (!ecsSetup.isEmpty()) {
           System.out.println("\nECS Setups: " + ecsSetup.size());
           System.out.println("ECS Deploys: " + ecsDeploy.size());
-          assertThat(ecsSetup.size() == 1);
+          assertThat(ecsSetup.size()).isEqualTo(1);
           EcsServiceSetup setup = (EcsServiceSetup) ecsSetup.get(0);
           if (setup.getMaxInstances() < 10) {
             affected = true;

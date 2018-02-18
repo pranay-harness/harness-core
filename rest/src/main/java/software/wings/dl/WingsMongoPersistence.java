@@ -320,7 +320,7 @@ public class WingsMongoPersistence implements WingsPersistence, Managed {
 
   @Override
   public <T> void updateFields(Class<T> cls, String entityId, Map<String, Object> keyValuePairs) {
-    updateFields(cls, entityId, keyValuePairs, Collections.EMPTY_SET);
+    updateFields(cls, entityId, keyValuePairs, Collections.emptySet());
   }
 
   /**

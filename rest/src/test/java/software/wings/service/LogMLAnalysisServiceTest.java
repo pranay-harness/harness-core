@@ -274,7 +274,7 @@ public class LogMLAnalysisServiceTest extends WingsBaseTest {
 
     List<LogDataRecord> logData =
         analysisService.getLogData(logRequest, true, UUID.randomUUID().toString(), ClusterLevel.L1, StateType.SPLUNKV2);
-    assertEquals(logData.size(), 0);
+    assertEquals(0, logData.size());
   }
 
   @Test
@@ -957,14 +957,14 @@ public class LogMLAnalysisServiceTest extends WingsBaseTest {
     InputStream is = getClass().getClassLoader().getResourceAsStream("verification/LogAnalysisRecord.json");
     String jsonTxt = IOUtils.toString(is, Charset.defaultCharset());
     LogMLAnalysisRecord records = JsonUtils.asObject(jsonTxt, LogMLAnalysisRecord.class);
-    assertEquals(records.getUnknown_events().size(), 7);
-    assertEquals(records.getTest_events().size(), 33);
-    assertEquals(records.getControl_events().size(), 31);
-    assertEquals(records.getControl_clusters().size(), 31);
-    assertEquals(records.getTest_clusters().size(), 26);
-    assertEquals(records.getUnknown_clusters().size(), 4);
-    assertEquals(records.getCluster_scores().getTest().size(), 0);
-    assertEquals(records.getCluster_scores().getUnknown().size(), 4);
+    assertEquals(7, records.getUnknown_events().size());
+    assertEquals(33, records.getTest_events().size());
+    assertEquals(31, records.getControl_events().size());
+    assertEquals(31, records.getControl_clusters().size());
+    assertEquals(26, records.getTest_clusters().size());
+    assertEquals(4, records.getUnknown_clusters().size());
+    assertEquals(0, records.getCluster_scores().getTest().size());
+    assertEquals(4, records.getCluster_scores().getUnknown().size());
   }
 
   @Test
@@ -980,7 +980,7 @@ public class LogMLAnalysisServiceTest extends WingsBaseTest {
     analysisService.saveLogAnalysisRecords(records, StateType.SPLUNKV2, Optional.empty());
     LogMLAnalysisSummary analysisSummary =
         analysisService.getAnalysisSummary(stateExecutionId, appId, StateType.SPLUNKV2);
-    assertEquals(Double.compare(analysisSummary.getScore(), 0.23477964144180682 * 100), 0);
+    assertEquals(0, Double.compare(analysisSummary.getScore(), 0.23477964144180682 * 100));
     for (LogMLClusterSummary clusterSummary : analysisSummary.getUnknownClusters()) {
       assert clusterSummary.getScore() > 0;
     }

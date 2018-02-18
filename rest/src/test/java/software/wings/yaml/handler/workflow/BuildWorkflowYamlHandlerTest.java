@@ -82,7 +82,7 @@ public class BuildWorkflowYamlHandlerTest extends BaseWorkflowYamlHandlerTest {
 
     BuildWorkflowYaml yaml = yamlHandler.toYaml(workflow, APP_ID);
     assertNotNull(yaml);
-    assertEquals(yaml.getType(), "BUILD");
+    assertEquals("BUILD", yaml.getType());
 
     String yamlContent = getYamlContent(yaml);
     assertNotNull(yamlContent);

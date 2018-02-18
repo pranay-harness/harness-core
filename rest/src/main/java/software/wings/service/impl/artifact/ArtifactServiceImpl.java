@@ -361,7 +361,7 @@ public class ArtifactServiceImpl implements ArtifactService {
       List<Service> services = wingsPersistence.createQuery(Service.class).field("appId").equal(appId).asList();
       for (Service service : services) {
         if (ArtifactType.DOCKER.equals(service.getArtifactType())
-            || ArtifactType.AMI.name().equals(service.getArtifactType())) {
+            || ArtifactType.AMI.equals(service.getArtifactType())) {
           logger.info("Service [{}] artifact type   for the app [{}] is Docker or AMI. Skipping deleting artifacts",
               service.getName(), appId);
           continue;

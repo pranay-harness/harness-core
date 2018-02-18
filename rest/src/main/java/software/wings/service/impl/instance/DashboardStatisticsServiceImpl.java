@@ -510,7 +510,7 @@ public class DashboardStatisticsServiceImpl implements DashboardStatisticsServic
                                   .stream()
                                   .filter(artifact1 -> artifact1.getServiceIds().contains(serviceId))
                                   .findFirst()
-                                  .get();
+                                  .orElse(null);
           if (artifact != null) {
             artifactSummary = getArtifactSummary(
                 artifact.getDisplayName(), artifact.getUuid(), artifact.getBuildNo(), artifact.getArtifactSourceName());

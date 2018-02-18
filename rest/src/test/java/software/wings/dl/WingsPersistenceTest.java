@@ -674,10 +674,7 @@ public class WingsPersistenceTest extends WingsBaseTest {
 
     String serviceVariableId = wingsPersistence.save(serviceVariable);
     ServiceVariable result = wingsPersistence.get(ServiceVariable.class, serviceVariableId);
-    assertThat(Arrays.equals(password, result.getValue()));
-    ServiceVariable undecryptedResult = wingsPersistence.get(ServiceVariable.class, serviceVariableId);
-    assertThat(undecryptedResult).isNotNull();
-    assertThat(Arrays.equals(password, undecryptedResult.getValue())).isFalse();
+    assertThat(password).isEqualTo(result.getEncryptedValue().toCharArray());
   }
 
   @Test
@@ -698,10 +695,10 @@ public class WingsPersistenceTest extends WingsBaseTest {
 
     String serviceVariableId = wingsPersistence.save(serviceVariable);
     ServiceVariable result = wingsPersistence.get(ServiceVariable.class, serviceVariableId);
-    assertThat(Arrays.equals(password, result.getValue()));
+    assertThat(password).isEqualTo(result.getValue());
     ServiceVariable undecryptedResult = wingsPersistence.get(ServiceVariable.class, serviceVariableId);
     assertThat(undecryptedResult).isNotNull();
-    assertThat(Arrays.equals(password, undecryptedResult.getValue()));
+    assertThat(password).isEqualTo(undecryptedResult.getValue());
   }
   /**
    * The Class TestEntity.

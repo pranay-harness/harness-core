@@ -150,7 +150,7 @@ public class ExpressionBuilderServiceTest extends WingsBaseTest {
     when(serviceTemplateService.list(serviceTemplatePageRequest, false, false)).thenReturn(aPageResponse().build());
     Set<String> expressions = builderService.listExpressions(APP_ID, SERVICE_ID, SERVICE);
     assertThat(expressions).isNotNull();
-    assertThat(expressions.contains("service.name"));
+    assertThat(expressions).contains("service.name");
   }
 
   @Test
@@ -160,11 +160,11 @@ public class ExpressionBuilderServiceTest extends WingsBaseTest {
 
     Set<String> expressions = builderService.listExpressions(APP_ID, SERVICE_ID, SERVICE, SERVICE_ID, COMMAND);
     assertThat(expressions).isNotNull();
-    assertThat(expressions.contains("service.name"));
-    assertThat(expressions.contains("serviceVariable.SERVICE_VARIABLE_NAME")).isTrue();
-    assertThat(expressions.contains(WINGS_RUNTIME_PATH));
-    assertThat(expressions.contains(WINGS_BACKUP_PATH));
-    assertThat(expressions.contains(WINGS_STAGING_PATH));
+    assertThat(expressions).contains("service.name");
+    assertThat(expressions).contains("serviceVariable.SERVICE_VARIABLE_NAME");
+    assertThat(expressions).contains(WINGS_RUNTIME_PATH);
+    assertThat(expressions).contains(WINGS_BACKUP_PATH);
+    assertThat(expressions).contains(WINGS_STAGING_PATH);
   }
 
   @Test
@@ -205,10 +205,10 @@ public class ExpressionBuilderServiceTest extends WingsBaseTest {
     Set<String> expressions = builderService.listExpressions(APP_ID, SERVICE_ID, SERVICE);
 
     assertThat(expressions).isNotNull();
-    assertThat(expressions.contains("service.name"));
-    assertThat(expressions.contains("serviceVariable.SERVICE_VARIABLE_NAME")).isTrue();
-    assertThat(expressions.contains("serviceVariable.ENV")).isTrue();
-    assertThat(expressions.contains("serviceVariable.ENVOverride")).isTrue();
+    assertThat(expressions).contains("service.name");
+    assertThat(expressions).contains("serviceVariable.SERVICE_VARIABLE_NAME");
+    assertThat(expressions).contains("serviceVariable.ENV");
+    assertThat(expressions).contains("serviceVariable.ENVOverride");
   }
 
   @Test
@@ -218,7 +218,7 @@ public class ExpressionBuilderServiceTest extends WingsBaseTest {
 
     Set<String> expressions = builderService.listExpressions(APP_ID, ENV_ID, ENVIRONMENT, SERVICE_ID);
     assertThat(expressions).isNotNull();
-    assertThat(expressions.contains("env.name"));
+    assertThat(expressions).contains("env.name");
   }
 
   @Test
@@ -228,8 +228,8 @@ public class ExpressionBuilderServiceTest extends WingsBaseTest {
 
     Set<String> expressions = builderService.listExpressions(APP_ID, ENV_ID, ENVIRONMENT, SERVICE_ID);
     assertThat(expressions).isNotNull();
-    assertThat(expressions.contains("env.name"));
-    assertThat(expressions.contains("serviceVariable.SERVICE_VARIABLE_NAME"));
+    assertThat(expressions).contains("env.name");
+    assertThat(expressions).contains("serviceVariable.SERVICE_VARIABLE_NAME");
   }
 
   @Test
@@ -252,10 +252,9 @@ public class ExpressionBuilderServiceTest extends WingsBaseTest {
 
     Set<String> expressions = builderService.listExpressions(APP_ID, ENV_ID, ENVIRONMENT);
     assertThat(expressions).isNotNull();
-    assertThat(expressions.contains("env.name"));
-    assertThat(expressions.contains("serviceVariable.SERVICE_VARIABLE_NAME"));
-    assertThat(expressions.contains("serviceVariable.ENV")).isTrue();
-    assertThat(expressions.contains("serviceVariable.ENVOverride")).isTrue();
+    assertThat(expressions).contains("env.name");
+    assertThat(expressions).contains("serviceVariable.ENV");
+    assertThat(expressions).contains("serviceVariable.ENVOverride");
   }
 
   @Test
@@ -274,7 +273,7 @@ public class ExpressionBuilderServiceTest extends WingsBaseTest {
 
     Set<String> expressions = builderService.listExpressions(APP_ID, WORKFLOW_ID, WORKFLOW, SERVICE_ID);
     assertThat(expressions).isNotNull();
-    assertThat(expressions.contains("env.name"));
+    assertThat(expressions).contains("env.name");
   }
 
   @Test
@@ -334,9 +333,9 @@ public class ExpressionBuilderServiceTest extends WingsBaseTest {
 
     Set<String> expressions = builderService.listExpressions(APP_ID, WORKFLOW_ID, WORKFLOW, SERVICE_ID, HTTP);
     assertThat(expressions).isNotNull();
-    assertThat(expressions.contains("env.name"));
-    assertThat(expressions.contains("workflow.variables.name1")).isTrue();
-    assertThat(expressions.contains(HTTP_URL)).isTrue();
+    assertThat(expressions).contains("env.name");
+    assertThat(expressions).contains("workflow.variables.name1");
+    assertThat(expressions).contains(HTTP_URL);
   }
 
   @Test
@@ -372,9 +371,9 @@ public class ExpressionBuilderServiceTest extends WingsBaseTest {
                                                                   .build();
     Set<String> expressions = builderService.listExpressions(APP_ID, WORKFLOW_ID, WORKFLOW, "All", HTTP);
     assertThat(expressions).isNotNull();
-    assertThat(expressions.contains("env.name"));
-    assertThat(expressions.contains("workflow.variables.name1")).isTrue();
-    assertThat(expressions.contains(HTTP_URL)).isTrue();
+    assertThat(expressions).contains("env.name");
+    assertThat(expressions).contains("workflow.variables.name1");
+    assertThat(expressions).contains(HTTP_URL);
   }
 
   @Test
@@ -400,9 +399,9 @@ public class ExpressionBuilderServiceTest extends WingsBaseTest {
     Set<String> expressions =
         builderService.listExpressions(APP_ID, WORKFLOW_ID, WORKFLOW, SERVICE_ID, AWS_CODEDEPLOY_STATE);
     assertThat(expressions).isNotNull();
-    assertThat(expressions.contains("env.name"));
-    assertThat(expressions.contains("workflow.variables.name1")).isTrue();
-    assertThat(expressions.contains("artifact.bucketName")).isTrue();
+    assertThat(expressions).contains("env.name");
+    assertThat(expressions).contains("workflow.variables.name1");
+    assertThat(expressions).contains("artifact.bucketName");
   }
 
   @Test
@@ -415,9 +414,9 @@ public class ExpressionBuilderServiceTest extends WingsBaseTest {
 
     Set<String> expressions = builderService.listExpressions(APP_ID, WORKFLOW_ID, WORKFLOW, SERVICE_ID, COMMAND);
     assertThat(expressions).isNotNull();
-    assertThat(expressions.contains("env.name"));
-    assertThat(expressions.contains("workflow.variables.name1")).isTrue();
-    assertThat(expressions.contains(WINGS_STAGING_PATH)).isTrue();
+    assertThat(expressions).contains("env.name");
+    assertThat(expressions).contains("workflow.variables.name1");
+    assertThat(expressions).contains(WINGS_STAGING_PATH);
   }
 
   private Workflow buildCanaryWorkflow(List<Variable> userVariables) {
