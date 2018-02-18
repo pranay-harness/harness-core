@@ -81,10 +81,10 @@ public class TimeSeriesMLAnalysisTest extends WingsBaseTest {
         accountId, appId, stateExecutionId, workflowExecutionId, workflowId, serviceId, 0, null, record);
     NewRelicMetricAnalysisRecord analysisRecord =
         newRelicResource.getMetricsAnalysis(stateExecutionId, workflowExecutionId, accountId).getResource();
-    assertEquals(analysisRecord.getMetricAnalyses().size(), 1);
-    assertEquals(analysisRecord.getMetricAnalyses().get(0).getMetricName(), "WebTransaction/Servlet/Register");
-    assertEquals(analysisRecord.getMetricAnalyses().get(0).getMetricValues().size(), 1);
-    assertEquals(analysisRecord.getMetricAnalyses().get(0).getMetricValues().get(0).getName(), "requestsPerMinute");
+    assertEquals(1, analysisRecord.getMetricAnalyses().size());
+    assertEquals("WebTransaction/Servlet/Register", analysisRecord.getMetricAnalyses().get(0).getMetricName());
+    assertEquals(1, analysisRecord.getMetricAnalyses().get(0).getMetricValues().size());
+    assertEquals("requestsPerMinute", analysisRecord.getMetricAnalyses().get(0).getMetricValues().get(0).getName());
   }
 
   @Test
@@ -114,10 +114,10 @@ public class TimeSeriesMLAnalysisTest extends WingsBaseTest {
     metricDataAnalysisService.saveAnalysisRecords(newRelicMetricAnalysisRecord);
     NewRelicMetricAnalysisRecord analysisRecord =
         newRelicResource.getMetricsAnalysis(stateExecutionId, workflowExecutionId, accountId).getResource();
-    assertEquals(analysisRecord.getMetricAnalyses().size(), 1);
-    assertEquals(analysisRecord.getMetricAnalyses().get(0).getMetricName(), "index.jsp");
-    assertEquals(analysisRecord.getMetricAnalyses().get(0).getMetricValues().size(), 1);
-    assertEquals(analysisRecord.getMetricAnalyses().get(0).getMetricValues().get(0).getName(), "requestsPerMinute");
+    assertEquals(1, analysisRecord.getMetricAnalyses().size());
+    assertEquals("index.jsp", analysisRecord.getMetricAnalyses().get(0).getMetricName());
+    assertEquals(1, analysisRecord.getMetricAnalyses().get(0).getMetricValues().size());
+    assertEquals("requestsPerMinute", analysisRecord.getMetricAnalyses().get(0).getMetricValues().get(0).getName());
   }
 
   @Test
@@ -195,10 +195,10 @@ public class TimeSeriesMLAnalysisTest extends WingsBaseTest {
     metricDataAnalysisService.saveAnalysisRecords(newRelicMetricAnalysisRecord);
     NewRelicMetricAnalysisRecord analysisRecord =
         newRelicResource.getMetricsAnalysis(stateExecutionId, workflowExecutionId, accountId).getResource();
-    assertEquals(analysisRecord.getMetricAnalyses().size(), 3);
-    assertEquals(analysisRecord.getMetricAnalyses().get(0).getMetricName(), "account");
-    assertEquals(analysisRecord.getMetricAnalyses().get(1).getMetricName(), "login");
-    assertEquals(analysisRecord.getMetricAnalyses().get(2).getMetricName(), "index.jsp");
+    assertEquals(3, analysisRecord.getMetricAnalyses().size());
+    assertEquals("account", analysisRecord.getMetricAnalyses().get(0).getMetricName());
+    assertEquals("login", analysisRecord.getMetricAnalyses().get(1).getMetricName());
+    assertEquals("index.jsp", analysisRecord.getMetricAnalyses().get(2).getMetricName());
   }
 
   @Test
@@ -276,10 +276,10 @@ public class TimeSeriesMLAnalysisTest extends WingsBaseTest {
     metricDataAnalysisService.saveAnalysisRecords(newRelicMetricAnalysisRecord);
     NewRelicMetricAnalysisRecord analysisRecord =
         newRelicResource.getMetricsAnalysis(stateExecutionId, workflowExecutionId, accountId).getResource();
-    assertEquals(analysisRecord.getMetricAnalyses().size(), 3);
-    assertEquals(analysisRecord.getMetricAnalyses().get(0).getMetricName(), "account");
-    assertEquals(analysisRecord.getMetricAnalyses().get(1).getMetricName(), "login");
-    assertEquals(analysisRecord.getMetricAnalyses().get(2).getMetricName(), "index.jsp");
+    assertEquals(3, analysisRecord.getMetricAnalyses().size());
+    assertEquals("account", analysisRecord.getMetricAnalyses().get(0).getMetricName());
+    assertEquals("login", analysisRecord.getMetricAnalyses().get(1).getMetricName());
+    assertEquals("index.jsp", analysisRecord.getMetricAnalyses().get(2).getMetricName());
   }
 
   @Test
@@ -357,10 +357,10 @@ public class TimeSeriesMLAnalysisTest extends WingsBaseTest {
     metricDataAnalysisService.saveAnalysisRecords(newRelicMetricAnalysisRecord);
     NewRelicMetricAnalysisRecord analysisRecord =
         newRelicResource.getMetricsAnalysis(stateExecutionId, workflowExecutionId, accountId).getResource();
-    assertEquals(analysisRecord.getMetricAnalyses().size(), 3);
-    assertEquals(analysisRecord.getMetricAnalyses().get(0).getMetricName(), "account");
-    assertEquals(analysisRecord.getMetricAnalyses().get(1).getMetricName(), "login");
-    assertEquals(analysisRecord.getMetricAnalyses().get(2).getMetricName(), "index.jsp");
+    assertEquals(3, analysisRecord.getMetricAnalyses().size());
+    assertEquals("account", analysisRecord.getMetricAnalyses().get(0).getMetricName());
+    assertEquals("login", analysisRecord.getMetricAnalyses().get(1).getMetricName());
+    assertEquals("index.jsp", analysisRecord.getMetricAnalyses().get(2).getMetricName());
   }
 
   @Test

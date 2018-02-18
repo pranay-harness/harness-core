@@ -45,7 +45,6 @@ import software.wings.service.intfc.ServiceVariableService;
 import software.wings.service.intfc.yaml.YamlDirectoryService;
 
 import java.io.IOException;
-import java.util.Arrays;
 import java.util.List;
 
 /**
@@ -305,6 +304,6 @@ public class ServiceVariableServiceTest extends WingsBaseTest {
     PageResponse<ServiceVariable> serviceVariablePageResponse = serviceVariableService.list(pageRequest);
     assertThat(serviceVariablePageResponse).isNotNull();
     assertThat(serviceVariablePageResponse.getResponse().get(0)).isInstanceOf(ServiceVariable.class);
-    assertThat(Arrays.equals(serviceVariablePageResponse.getResponse().get(0).getValue(), "******".toCharArray()));
+    assertThat(serviceVariablePageResponse.getResponse().get(0).getValue()).isEqualTo("9090".toCharArray());
   }
 }

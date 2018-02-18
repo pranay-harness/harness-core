@@ -165,7 +165,7 @@ public class MultiServiceWorkflowYamlHandlerTest extends BaseWorkflowYamlHandler
 
     MultiServiceWorkflowYaml yaml = yamlHandler.toYaml(workflow, APP_ID);
     assertNotNull(yaml);
-    assertEquals(yaml.getType(), "MULTI_SERVICE");
+    assertEquals("MULTI_SERVICE", yaml.getType());
 
     String yamlContent = getYamlContent(yaml);
     assertNotNull(yamlContent);

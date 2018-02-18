@@ -24,6 +24,7 @@ import java.lang.reflect.Method;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.Objects;
 import java.util.stream.Stream;
 
 /**
@@ -134,9 +135,8 @@ public class StencilPostProcessor {
     }
 
     if (stream(t.getTypeClass().getDeclaredMethods())
-            .filter(method -> method.getAnnotation(DefaultValue.class) != null)
-            .findFirst()
-            .isPresent()) {
+            .map(method -> method.getAnnotation(DefaultValue.class))
+            .anyMatch(Objects::nonNull)) {
       List<Stencil> stencils = returnValue.collect(toList());
       stream(t.getTypeClass().getDeclaredMethods())
           .filter(method -> method.getAnnotation(DefaultValue.class) != null)

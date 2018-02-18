@@ -116,7 +116,7 @@ public class AppdynamicsIntegrationTest extends BaseIntegrationTest {
       assertFalse(isBlank(tier.getName()));
       assertFalse(isBlank(tier.getType()));
       assertFalse(isBlank(tier.getAgentType()));
-      assertEquals(tier.getName(), "MyTier");
+      assertEquals("MyTier", tier.getName());
     }
   }
 

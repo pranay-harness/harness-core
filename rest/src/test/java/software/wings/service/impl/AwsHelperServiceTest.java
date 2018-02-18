@@ -93,7 +93,7 @@ public class AwsHelperServiceTest extends WingsBaseTest {
             "AutoScalingGroup [TestAutoScalingGroup] activity [TestDescription2] progress [100 percent] , statuscode [TestStatusCode2]  details [TestDetails2]");
 
     assertThat(completedActivities.size()).isEqualTo(1);
-    assertThat(completedActivities.contains("TestID2"));
+    assertThat(completedActivities).contains("TestID2");
 
     logResult.clear();
     completedActivities.clear();
@@ -113,6 +113,6 @@ public class AwsHelperServiceTest extends WingsBaseTest {
             "AutoScalingGroup [TestAutoScalingGroup] activity [TestDescription2] progress [100 percent] , statuscode [TestStatusCode2]  details [TestDetails2] cause [TestCause2]");
 
     assertThat(completedActivities.size()).isEqualTo(1);
-    assertThat(completedActivities.contains("TestID2"));
+    assertThat(completedActivities).contains("TestID2");
   }
 }

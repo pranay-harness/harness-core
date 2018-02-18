@@ -164,7 +164,7 @@ public class CanaryWorkflowYamlHandlerTest extends BaseWorkflowYamlHandlerTest {
 
     CanaryWorkflowYaml yaml = yamlHandler.toYaml(workflow, APP_ID);
     assertNotNull(yaml);
-    assertEquals(yaml.getType(), "CANARY");
+    assertEquals("CANARY", yaml.getType());
 
     String yamlContent = getYamlContent(yaml);
     assertNotNull(yamlContent);

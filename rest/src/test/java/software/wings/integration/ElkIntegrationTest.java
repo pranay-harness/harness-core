@@ -394,10 +394,10 @@ public class ElkIntegrationTest extends BaseIntegrationTest {
     Thread.sleep(TimeUnit.SECONDS.toMillis(20));
     LogMLAnalysisSummary logMLAnalysisSummary =
         analysisService.getAnalysisSummary(stateExecutionId, appId, StateType.SPLUNKV2);
-    assertEquals(logMLAnalysisSummary.getControlClusters().size(), 1);
-    assertEquals(logMLAnalysisSummary.getTestClusters().size(), 0);
-    assertEquals(logMLAnalysisSummary.getAnalysisSummaryMessage(),
-        "No new data for the given queries. Showing baseline data if any.");
+    assertEquals(1, logMLAnalysisSummary.getControlClusters().size());
+    assertEquals(0, logMLAnalysisSummary.getTestClusters().size());
+    assertEquals("No new data for the given queries. Showing baseline data if any.",
+        logMLAnalysisSummary.getAnalysisSummaryMessage());
   }
 
   @Test
@@ -515,7 +515,7 @@ public class ElkIntegrationTest extends BaseIntegrationTest {
     LogMLAnalysisRecord logAnalysisRecord =
         analysisService.getLogAnalysisRecords(appId, stateExecutionId, query, StateType.SUMO, logCollectionMinute);
     assertFalse(logAnalysisRecord.isBaseLineCreated());
-    assertEquals(logAnalysisRecord.getControl_clusters().size(), 1);
+    assertEquals(1, logAnalysisRecord.getControl_clusters().size());
     assertNull(logAnalysisRecord.getTest_clusters());
     assertNull(logAnalysisRecord.getTest_events());
   }
@@ -625,7 +625,7 @@ public class ElkIntegrationTest extends BaseIntegrationTest {
         .run();
     LogMLAnalysisSummary logMLAnalysisSummary =
         analysisService.getAnalysisSummary(stateExecutionId, appId, StateType.ELK);
-    assertEquals(logMLAnalysisSummary.getAnalysisSummaryMessage(), "No data found for the given queries.");
+    assertEquals("No data found for the given queries.", logMLAnalysisSummary.getAnalysisSummaryMessage());
     LogMLAnalysisRecord logAnalysisRecord =
         analysisService.getLogAnalysisRecords(appId, stateExecutionId, query, StateType.ELK, logCollectionMinute);
     assertNotNull(logAnalysisRecord);

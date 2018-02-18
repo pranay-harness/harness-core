@@ -218,7 +218,7 @@ public class AwsAmiServiceSetupTest extends WingsBaseTest {
     ExecutionResponse executionResponse = amiServiceSetup.execute(context);
     assertThat(executionResponse.getExecutionStatus()).isEqualTo(ExecutionStatus.SUCCESS);
     assertThat(executionResponse.getContextElements().size()).isEqualTo(1);
-    assertThat(executionResponse.getContextElements().get(0) instanceof AmiServiceSetupElement);
+    assertThat(executionResponse.getContextElements().get(0)).isInstanceOf(AmiServiceSetupElement.class);
     AmiServiceSetupElement amiServiceSetupElement =
         (AmiServiceSetupElement) executionResponse.getContextElements().get(0);
     assertThat(amiServiceSetupElement.getNewAutoScalingGroupName()).isEqualTo("APP_NAME__SERVICE_NAME__ENV_NAME__1");
@@ -237,7 +237,7 @@ public class AwsAmiServiceSetupTest extends WingsBaseTest {
     ExecutionResponse executionResponse = amiServiceSetup.execute(context);
     assertThat(executionResponse.getExecutionStatus()).isEqualTo(ExecutionStatus.FAILED);
     assertThat(executionResponse.getContextElements().size()).isEqualTo(1);
-    assertThat(executionResponse.getContextElements().get(0) instanceof AmiServiceSetupElement);
+    assertThat(executionResponse.getContextElements().get(0)).isInstanceOf(AmiServiceSetupElement.class);
     AmiServiceSetupElement serviceElement = (AmiServiceSetupElement) executionResponse.getContextElements().get(0);
     assertThat(serviceElement.getNewAutoScalingGroupName()).isNull();
     assertThat(serviceElement.getOldAutoScalingGroupName()).isNull();

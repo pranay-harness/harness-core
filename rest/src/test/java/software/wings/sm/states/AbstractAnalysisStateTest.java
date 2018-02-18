@@ -114,7 +114,7 @@ public class AbstractAnalysisStateTest extends WingsBaseTest {
     setInternalState(splunkV2State, "infraMappingService", infraMappingService);
     Reflect.on(splunkV2State).set("workflowExecutionService", workflowExecutionService);
     Set<String> nodes = splunkV2State.getLastExecutionNodes(context);
-    assertEquals(nodes.size(), 10);
+    assertEquals(10, nodes.size());
     for (int i = 0; i < 5; ++i) {
       assertTrue(nodes.contains("serviceA"
           + "-" + i + ".harness.com"));
@@ -125,7 +125,7 @@ public class AbstractAnalysisStateTest extends WingsBaseTest {
       nodes.remove("serviceA"
           + "-" + i);
     }
-    assertEquals(nodes.size(), 0);
+    assertEquals(0, nodes.size());
   }
 
   @Test
@@ -144,7 +144,7 @@ public class AbstractAnalysisStateTest extends WingsBaseTest {
     doReturn(params).when(context).getContextElement(ContextElementType.STANDARD);
     SplunkV2State splunkV2State = spy(new SplunkV2State("SplunkState"));
     Set<String> nodes = splunkV2State.getCanaryNewHostNames(context);
-    assertEquals(nodes.size(), 10);
+    assertEquals(10, nodes.size());
     for (int i = 0; i < 5; ++i) {
       assertTrue(nodes.contains("serviceA"
           + "-" + i + ".harness.com"));
@@ -155,6 +155,6 @@ public class AbstractAnalysisStateTest extends WingsBaseTest {
       nodes.remove("serviceA"
           + "-" + i);
     }
-    assertEquals(nodes.size(), 0);
+    assertEquals(0, nodes.size());
   }
 }

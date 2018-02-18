@@ -114,7 +114,7 @@ public class BasicWorkflowYamlHandlerTest extends BaseWorkflowYamlHandlerTest {
 
     BasicWorkflowYaml yaml = yamlHandler.toYaml(workflow, APP_ID);
     assertNotNull(yaml);
-    assertEquals(yaml.getType(), "BASIC");
+    assertEquals("BASIC", yaml.getType());
 
     String yamlContent = getYamlContent(yaml);
     assertNotNull(yamlContent);

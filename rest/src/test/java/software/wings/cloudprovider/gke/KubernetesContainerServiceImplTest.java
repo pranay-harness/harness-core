@@ -135,7 +135,7 @@ public class KubernetesContainerServiceImplTest extends WingsBaseTest {
 
     ArgumentCaptor<String> args = ArgumentCaptor.forClass(String.class);
     verify(namespacedControllers, times(2)).withName(args.capture());
-    assertThat(args.getValue().equals("ctrl"));
+    assertThat(args.getValue()).isEqualTo("ctrl");
     verify(scalableReplicationController).delete();
   }
 
@@ -151,7 +151,7 @@ public class KubernetesContainerServiceImplTest extends WingsBaseTest {
 
     ArgumentCaptor<String> args = ArgumentCaptor.forClass(String.class);
     verify(namespacedServices).withName(args.capture());
-    assertThat(args.getValue().equals("service"));
+    assertThat(args.getValue()).isEqualTo("service");
     verify(serviceResource).delete();
   }
 

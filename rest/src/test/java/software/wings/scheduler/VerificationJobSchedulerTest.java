@@ -19,10 +19,10 @@ public class VerificationJobSchedulerTest extends WingsBaseTest {
 
   @Test
   public void config() throws SchedulerException {
-    assertEquals(((JobScheduler) jobScheduler).getScheduler().getMetaData().getSchedulerInstanceId(), "verification");
+    assertEquals("verification", ((JobScheduler) jobScheduler).getScheduler().getMetaData().getSchedulerInstanceId());
     assertEquals(
-        ((JobScheduler) jobScheduler).getScheduler().getMetaData().getSchedulerName(), "verification_scheduler");
-    assertEquals(((JobScheduler) jobScheduler).getScheduler().getMetaData().getThreadPoolSize(), 15);
+        "verification_scheduler", ((JobScheduler) jobScheduler).getScheduler().getMetaData().getSchedulerName());
+    assertEquals(15, ((JobScheduler) jobScheduler).getScheduler().getMetaData().getThreadPoolSize());
   }
   @Test
   public void defaultJobs() throws SchedulerException {
