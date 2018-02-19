@@ -4,7 +4,6 @@ import com.google.inject.Inject;
 
 import org.quartz.Job;
 import org.quartz.JobExecutionContext;
-import org.quartz.JobExecutionException;
 import software.wings.api.ArtifactCollectionExecutionData;
 import software.wings.waitnotify.WaitNotifyEngine;
 
@@ -15,8 +14,7 @@ public class ArtifactCollectionStateNotifyJob implements Job {
   @Inject private WaitNotifyEngine waitNotifyEngine;
 
   @Override
-  public void execute(JobExecutionContext jobExecutionContext) throws JobExecutionException {
-    System.out.println("In artifact collection state notify job = " + jobExecutionContext);
+  public void execute(JobExecutionContext jobExecutionContext) {
     String correlationId = jobExecutionContext.getMergedJobDataMap().getString("correlationId");
     String artifactStreamId = jobExecutionContext.getMergedJobDataMap().getString("artifactStreamId");
     waitNotifyEngine.notify(

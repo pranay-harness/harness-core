@@ -10,7 +10,6 @@ import org.quartz.Job;
 import org.quartz.JobBuilder;
 import org.quartz.JobDetail;
 import org.quartz.JobExecutionContext;
-import org.quartz.JobExecutionException;
 import org.quartz.SimpleScheduleBuilder;
 import org.quartz.Trigger;
 import org.quartz.TriggerBuilder;
@@ -24,6 +23,7 @@ import software.wings.dl.WingsPersistence;
 import software.wings.service.intfc.AlertService;
 
 import java.util.List;
+import java.util.concurrent.ExecutorService;
 import java.util.concurrent.TimeUnit;
 
 /**
@@ -44,6 +44,8 @@ public class AlertCheckJob implements Job {
 
   @Inject @Named("JobScheduler") private QuartzScheduler jobScheduler;
 
+  @Inject private ExecutorService executorService;
+
   public static void add(QuartzScheduler jobScheduler, Account account) {
     jobScheduler.deleteJob(account.getUuid(), GROUP);
     JobDetail job = JobBuilder.newJob(AlertCheckJob.class)
@@ -61,10 +63,14 @@ public class AlertCheckJob implements Job {
   }
 
   @Override
-  public void execute(JobExecutionContext jobExecutionContext) throws JobExecutionException {
-    String accountId = (String) jobExecutionContext.getJobDetail().getJobDataMap().get(ACCOUNT_ID);
-    logger.info("Checking account " + accountId + " for alert conditions.");
+  public void execute(JobExecutionContext jobExecutionContext) {
+    logger.info("Running AlertCheck Job asynchronously and returning");
+    executorService.submit(
+        () -> executeInternal((String) jobExecutionContext.getJobDetail().getJobDataMap().get(ACCOUNT_ID)));
+  }
 
+  private void executeInternal(String accountId) {
+    logger.info("Checking account " + accountId + " for alert conditions.");
     List<Delegate> delegates =
         wingsPersistence.createQuery(Delegate.class).field(Delegate.ACCOUNT_ID_KEY).equal(accountId).asList();
 
@@ -75,7 +81,6 @@ public class AlertCheckJob implements Job {
         return;
       }
     }
-
     if (isEmpty(delegates)
         || delegates.stream().allMatch(
                delegate -> System.currentTimeMillis() - delegate.getLastHeartBeat() > MAX_HB_TIMEOUT)) {

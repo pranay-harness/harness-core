@@ -33,6 +33,8 @@ import software.wings.sm.ExecutionInterrupt;
 import software.wings.sm.ExecutionInterruptManager;
 import software.wings.sm.StateExecutionInstance;
 
+import java.util.concurrent.ExecutorService;
+
 /**
  * Created by rishi on 4/6/17.
  */
@@ -48,6 +50,8 @@ public class StateMachineExecutionCleanupJob implements Job {
   @Inject private ExecutionInterruptManager executionInterruptManager;
 
   @Inject @Named("JobScheduler") private QuartzScheduler jobScheduler;
+
+  @Inject private ExecutorService executorService;
 
   public static void add(QuartzScheduler jobScheduler, String appId) {
     jobScheduler.deleteJob(appId, GROUP);
@@ -77,6 +81,11 @@ public class StateMachineExecutionCleanupJob implements Job {
       jobScheduler.deleteJob(appId, GROUP);
       return;
     }
+    logger.info("Executing StateMachineExecutionJob asynchronously for appId {} and returning", appId);
+    executorService.submit(() -> executeInternal(appId));
+  }
+
+  private void executeInternal(String appId) {
     PageRequest<WorkflowExecution> pageRequest =
         aPageRequest()
             .withLimit(PageRequest.UNLIMITED)
