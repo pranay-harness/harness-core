@@ -6,7 +6,6 @@ import com.google.inject.Inject;
 
 import org.quartz.Job;
 import org.quartz.JobExecutionContext;
-import org.quartz.JobExecutionException;
 import software.wings.sm.ExecutionStatus;
 import software.wings.waitnotify.WaitNotifyEngine;
 
@@ -17,7 +16,7 @@ public class NotifyJob implements Job {
   @Inject private WaitNotifyEngine waitNotifyEngine;
 
   @Override
-  public void execute(JobExecutionContext jobExecutionContext) throws JobExecutionException {
+  public void execute(JobExecutionContext jobExecutionContext) {
     String correlationId = jobExecutionContext.getMergedJobDataMap().getString("correlationId");
     String executionStatus = jobExecutionContext.getMergedJobDataMap().getString("executionStatus");
     waitNotifyEngine.notify(

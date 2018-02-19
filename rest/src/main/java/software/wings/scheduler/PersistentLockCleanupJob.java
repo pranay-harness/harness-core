@@ -8,7 +8,6 @@ import org.quartz.Job;
 import org.quartz.JobBuilder;
 import org.quartz.JobDetail;
 import org.quartz.JobExecutionContext;
-import org.quartz.JobExecutionException;
 import org.quartz.SimpleScheduleBuilder;
 import org.quartz.Trigger;
 import org.quartz.TriggerBuilder;
@@ -21,6 +20,7 @@ import software.wings.lock.PersistentLocker;
 
 import java.time.Duration;
 import java.util.Calendar;
+import java.util.concurrent.ExecutorService;
 
 /**
  * Created by rishi on 4/6/17.
@@ -34,6 +34,7 @@ public class PersistentLockCleanupJob implements Job {
 
   @Inject private WingsPersistence wingsPersistence;
   @Inject private PersistentLocker persistentLocker;
+  @Inject private ExecutorService executorService;
 
   public static void add(QuartzScheduler jobScheduler) {
     jobScheduler.deleteJob(NAME, GROUP);
@@ -62,7 +63,12 @@ public class PersistentLockCleanupJob implements Job {
   }
 
   @Override
-  public void execute(JobExecutionContext jobExecutionContext) throws JobExecutionException {
+  public void execute(JobExecutionContext jobExecutionContext) {
+    logger.info("Running PersistentLockCleanup Job asynchronously and returning");
+    executorService.submit(this ::executeInternal);
+  }
+
+  private void executeInternal() {
     try (AcquiredLock lock = persistentLocker.acquireLock(PersistentLocker.class, NAME, Duration.ofMinutes(1))) {
       Calendar date = Calendar.getInstance();
       date.add(Calendar.HOUR, -7 * 24);

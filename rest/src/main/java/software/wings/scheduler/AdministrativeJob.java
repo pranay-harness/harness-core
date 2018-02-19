@@ -4,7 +4,6 @@ import com.google.inject.Inject;
 
 import org.quartz.Job;
 import org.quartz.JobExecutionContext;
-import org.quartz.JobExecutionException;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import software.wings.service.intfc.security.SecretManager;
@@ -22,7 +21,7 @@ public class AdministrativeJob implements Job {
   @Inject private ExecutorService executorService;
 
   @Override
-  public void execute(JobExecutionContext jobExecutionContext) throws JobExecutionException {
+  public void execute(JobExecutionContext jobExecutionContext) {
     logger.info("Running Administrative Job asynchronously and returning");
     executorService.submit(this ::executeInternal);
   }

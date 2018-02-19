@@ -11,7 +11,6 @@ import org.mockito.InjectMocks;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import software.wings.WingsBaseTest;
-import software.wings.dl.WingsPersistence;
 import software.wings.lock.AcquiredLock;
 import software.wings.lock.PersistentLocker;
 
@@ -20,8 +19,6 @@ import java.util.Calendar;
 
 public class PersistentLockCleanupJobTest extends WingsBaseTest {
   public static final Logger logger = LoggerFactory.getLogger(PersistentLockCleanupJobTest.class);
-
-  @Inject private WingsPersistence wingsPersistence;
 
   @Inject private PersistentLocker persistentLocker;
 
