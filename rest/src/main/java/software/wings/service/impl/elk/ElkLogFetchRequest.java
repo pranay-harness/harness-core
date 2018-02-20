@@ -103,7 +103,7 @@ public class ElkLogFetchRequest {
           }
           result.stream().forEach(op -> operandStack.push(op));
         } else {
-          if ("or".equals(token) || "and".equals(token)) {
+          if ("or".equals(token.toLowerCase()) || "and".equals(token.toLowerCase())) {
             operatorStack.push(token);
           } else {
             operandStack.push(stringToJson(token));
