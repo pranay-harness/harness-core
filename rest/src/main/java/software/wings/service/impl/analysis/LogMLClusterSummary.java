@@ -18,4 +18,5 @@ public class LogMLClusterSummary {
   private double score;
   private RiskLevel riskLevel;
   private int clusterLabel;
+  private AnalysisServiceImpl.LogMLFeedbackType logMLFeedbackType;
 }

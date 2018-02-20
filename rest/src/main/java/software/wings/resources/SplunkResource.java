@@ -118,8 +118,8 @@ public class SplunkResource implements LogAnalysisResource {
   @Timed
   @ExceptionMetered
   @Override
-  public RestResponse<Boolean> userFeedback(@QueryParam("accountId") String accountId, LogMLFeedback ignoreFeedback)
+  public RestResponse<Boolean> userFeedback(@QueryParam("accountId") String accountId, LogMLFeedback feedback)
       throws IOException {
-    return new RestResponse<>(analysisService.saveFeedback(ignoreFeedback, StateType.SPLUNKV2));
+    return new RestResponse<>(analysisService.saveFeedback(feedback, StateType.SPLUNKV2));
   }
 }

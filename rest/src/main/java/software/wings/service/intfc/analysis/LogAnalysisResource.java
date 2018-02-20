@@ -99,6 +99,6 @@ public interface LogAnalysisResource {
       @QueryParam("applicationId") String applicationId, @QueryParam("stateExecutionId") String stateExecutionId)
       throws IOException;
 
-  RestResponse<Boolean> userFeedback(@QueryParam("accountId") String accountId, LogMLFeedback ignoreFeedback)
+  RestResponse<Boolean> userFeedback(@QueryParam("accountId") String accountId, LogMLFeedback feedback)
       throws IOException;
 }

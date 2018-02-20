@@ -295,7 +295,7 @@ public abstract class AbstractLogAnalysisState extends AbstractAnalysisState {
           .serviceId(getPhaseServiceId(context))
           .controlNodes(controlNodes)
           .testNodes(testNodes)
-          .queries(Sets.newHashSet(query.split(",")))
+          .queries(Sets.newHashSet(query))
           .isSSL(this.configuration.isSslEnabled())
           .appPort(this.configuration.getApplicationPort())
           .comparisonStrategy(getComparisonStrategy())
