@@ -13,6 +13,15 @@ export SPLUNKML_ENVIRONMENT=REMOTE
 
 mongo harness --eval "db.dropDatabase();"
 
+#build python docker image in parrallel
+set +e
+echo "remove existing image"
+docker rmi le_local
+set -e
+echo "build docker image in background"
+nohup sh -c 'cd python/splunk_intelligence && make dist && docker build -t le_local .' > docker_container_build.out &
+docker_container_build_pid=$!
+
 if [[ -z "${SERVER_BUILD_DIR}" ]]; then
   echo "SERVER_BUILD_DIR not set, building server code"
   mvn clean install -DskipTests=true
@@ -106,6 +115,9 @@ fi
 #build and start learning engine
 export HOSTNAME
 echo $HOSTNAME
+#wait for docker container to finish
+echo "waiting for docker image to build"
+wait $docker_container_build_pid
 cd python/splunk_intelligence && make dist && docker build -t le_local .
 serviceSecret=`mongo harness --eval "db.serviceSecrets.find({ }, { serviceSecret: 1, _id: 0})"| grep serviceSecret | awk '{print $4}' | tr -d '"'`
 echo $serviceSecret
