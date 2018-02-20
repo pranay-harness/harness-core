@@ -184,8 +184,7 @@ public class HostServiceImpl implements HostService {
   @Override
   public void pruneDescendingEntities(@NotEmpty String appId, @NotEmpty String hostId) {
     List<OwnedByHost> services = ServiceClassLocator.descendingServices(this, HostServiceImpl.class, OwnedByHost.class);
-    PruneEntityJob.pruneDescendingEntities(
-        services, appId, hostId, descending -> descending.pruneByHost(appId, hostId));
+    PruneEntityJob.pruneDescendingEntities(services, descending -> descending.pruneByHost(appId, hostId));
   }
 
   @Override

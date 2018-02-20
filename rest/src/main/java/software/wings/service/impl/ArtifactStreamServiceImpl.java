@@ -261,11 +261,11 @@ public class ArtifactStreamServiceImpl implements ArtifactStreamService, DataPro
   }
 
   @Override
-  public void pruneDescendingEntities(@NotEmpty String appId, @NotEmpty String triggerId) {
+  public void pruneDescendingEntities(@NotEmpty String appId, @NotEmpty String artifactStreamId) {
     List<OwnedByArtifactStream> services =
         ServiceClassLocator.descendingServices(this, ArtifactStreamServiceImpl.class, OwnedByArtifactStream.class);
     PruneEntityJob.pruneDescendingEntities(
-        services, appId, appId, descending -> descending.pruneByArtifactStream(appId, triggerId));
+        services, descending -> descending.pruneByArtifactStream(appId, artifactStreamId));
   }
 
   @Override

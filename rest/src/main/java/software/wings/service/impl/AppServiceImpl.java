@@ -328,7 +328,7 @@ public class AppServiceImpl implements AppService {
   public void pruneDescendingEntities(@NotEmpty String appId) {
     List<OwnedByApplication> services =
         ServiceClassLocator.descendingServices(this, AppServiceImpl.class, OwnedByApplication.class);
-    PruneEntityJob.pruneDescendingEntities(services, appId, appId, descending -> descending.pruneByApplication(appId));
+    PruneEntityJob.pruneDescendingEntities(services, descending -> descending.pruneByApplication(appId));
   }
 
   @Override

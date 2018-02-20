@@ -21,7 +21,7 @@ import software.wings.dl.WingsPersistence;
 import software.wings.service.intfc.AppService;
 
 import java.time.Duration;
-import java.time.LocalDateTime;
+import java.time.OffsetDateTime;
 
 public class ZombieHunterJobTest extends WingsBaseTest {
   public static final Logger logger = LoggerFactory.getLogger(ZombieHunterJobTest.class);
@@ -36,14 +36,14 @@ public class ZombieHunterJobTest extends WingsBaseTest {
   @Test
   public void huntingExpeditionSchedule() {
     for (int i = 0; i < ZombieHunterJob.zombieTypes.size(); i++) {
-      final LocalDateTime huntingExpedition = ZombieHunterJob.nextHuntingExpedition(i);
+      final OffsetDateTime huntingExpedition = ZombieHunterJob.nextHuntingExpedition(i);
       assertThat(huntingExpedition).isAfter(ZombieHunterJob.today);
       assertThat(Duration.between(huntingExpedition, ZombieHunterJob.today)).isLessThan(ZombieHunterJob.cycle);
     }
 
     for (int i = 1; i < ZombieHunterJob.zombieTypes.size(); i++) {
-      final LocalDateTime huntingExpedition0 = ZombieHunterJob.nextHuntingExpedition(i - 1);
-      final LocalDateTime huntingExpedition1 = ZombieHunterJob.nextHuntingExpedition(i);
+      final OffsetDateTime huntingExpedition0 = ZombieHunterJob.nextHuntingExpedition(i - 1);
+      final OffsetDateTime huntingExpedition1 = ZombieHunterJob.nextHuntingExpedition(i);
       assertThat(huntingExpedition0).isNotEqualTo(huntingExpedition1);
     }
   }

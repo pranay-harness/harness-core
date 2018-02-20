@@ -19,17 +19,16 @@ import software.wings.lock.AcquiredLock;
 import software.wings.lock.PersistentLocker;
 
 import java.time.Duration;
-import java.util.Calendar;
+import java.time.OffsetDateTime;
+import java.util.Date;
 import java.util.concurrent.ExecutorService;
 
-/**
- * Created by rishi on 4/6/17.
- */
 public class PersistentLockCleanupJob implements Job {
   private static final Logger logger = LoggerFactory.getLogger(PersistentLockCleanupJob.class);
 
   public static final String NAME = "MAINTENANCE";
   public static final String GROUP = "PERSISTENT_LOCK_CRON_GROUP";
+
   private static final int POLL_INTERVAL = 60 * 60;
 
   @Inject private WingsPersistence wingsPersistence;
@@ -41,23 +40,22 @@ public class PersistentLockCleanupJob implements Job {
 
     JobDetail job = JobBuilder.newJob(PersistentLockCleanupJob.class).withIdentity(NAME, GROUP).build();
 
-    Calendar startTime = Calendar.getInstance();
-    startTime.add(Calendar.MINUTE, 10);
+    OffsetDateTime startTime = OffsetDateTime.now().plusMinutes(10);
 
     Trigger trigger =
         TriggerBuilder.newTrigger()
             .withIdentity(NAME, GROUP)
-            .startAt(startTime.getTime())
+            .startAt(Date.from(startTime.toInstant()))
             .withSchedule(SimpleScheduleBuilder.simpleSchedule().withIntervalInSeconds(POLL_INTERVAL).repeatForever())
             .build();
 
     jobScheduler.scheduleJob(job, trigger);
   }
 
-  public DBCursor queryOldLocks(Calendar date) {
+  public DBCursor queryOldLocks(OffsetDateTime date) {
     final BasicDBObject filter = new BasicDBObject()
                                      .append("lockState", "unlocked")
-                                     .append("lastUpdated", new BasicDBObject("$lt", date.getTime()));
+                                     .append("lastUpdated", new BasicDBObject("$lt", Date.from(date.toInstant())));
 
     return wingsPersistence.getCollection("locks").find(filter).limit(1000);
   }
@@ -70,31 +68,33 @@ public class PersistentLockCleanupJob implements Job {
 
   private void executeInternal() {
     try (AcquiredLock lock = persistentLocker.acquireLock(PersistentLocker.class, NAME, Duration.ofMinutes(1))) {
-      Calendar date = Calendar.getInstance();
-      date.add(Calendar.HOUR, -7 * 24);
-
-      final DBCursor locks = queryOldLocks(date);
+      OffsetDateTime startTime = OffsetDateTime.now().minusWeeks(1);
+      final DBCursor locks = queryOldLocks(startTime);
 
       while (locks.hasNext()) {
-        final Object object = locks.next().get("_id");
-
-        // Do not delete the lock willy-nilly. We are in race between the query for unlocked state, the deleting
-        // and some other process attempting to lock the same locks.
-        //
-        // The lock needs to be deleted only if successfully acquired
-
-        try (AcquiredLock lk = persistentLocker.acquireLock(object.toString(), Duration.ofSeconds(10))) {
-          logger.info("Destroy outdated lock " + object.toString());
-          persistentLocker.destroy(lk);
-        } catch (WingsException exception) {
-          // Nothing to do. If we did not get the lock or we succeeded to destroy it - either way move to the
-          // next one.
-        }
+        delete(locks.next().get("_id"));
       }
     } catch (WingsException exception) {
       exception.logProcessedMessages(logger);
-    } catch (Exception exception) {
+    } catch (RuntimeException exception) {
       logger.error("Error seen in the PersistentLockCleanupJob execute call", exception);
+    }
+  }
+
+  private void delete(Object lock) {
+    // Do not delete the lock willy-nilly. We are in race between the query for unlocked state, the deleting
+    // and some other process attempting to lock the same locks.
+    //
+    // The lock needs to be deleted only if successfully acquired
+
+    try (AcquiredLock lk = persistentLocker.acquireLock(lock.toString(), Duration.ofSeconds(10))) {
+      if (logger.isInfoEnabled()) {
+        logger.info("Destroy outdated lock " + lock.toString());
+      }
+      persistentLocker.destroy(lk);
+    } catch (WingsException exception) {
+      // Nothing to do. If we did not get the lock or we succeeded to destroy it - either way move to the
+      // next one.
     }
   }
 }

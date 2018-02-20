@@ -72,7 +72,7 @@ import software.wings.service.intfc.Exterminator;
 import java.security.SecureRandom;
 import java.time.Duration;
 import java.time.LocalDate;
-import java.time.LocalDateTime;
+import java.time.OffsetDateTime;
 import java.time.ZoneOffset;
 import java.time.temporal.ChronoUnit;
 import java.util.Date;
@@ -92,8 +92,9 @@ public class ZombieHunterJob implements Job {
       "shot in the head", "stabbed in the head", "impelled in the head", "decapitated", "skull crushed", "axed"};
   private static final String[] SQUAD_MEMBER = {"Rick", "Daryl", "Michonne", "Glenn", "Maggie", "Carl"};
 
-  private static final LocalDateTime OUTBREAK_DAY = LocalDate.of(2010, 10, 31).atStartOfDay();
-  protected static final LocalDateTime today = LocalDateTime.now();
+  private static final OffsetDateTime OUTBREAK_DAY =
+      OffsetDateTime.of(LocalDate.of(2010, 10, 31).atStartOfDay(), ZoneOffset.UTC);
+  protected static final OffsetDateTime today = OffsetDateTime.now();
 
   private static final int CACHE_MAX_SIZE = 5000;
   private LRUMap cache = new LRUMap(CACHE_MAX_SIZE);
@@ -129,10 +130,10 @@ public class ZombieHunterJob implements Job {
   public static final Duration interval = Duration.ofDays(1);
   public static final Duration cycle = interval.multipliedBy(zombieTypes.size());
 
-  public static LocalDateTime nextHuntingExpedition(int index) {
+  public static OffsetDateTime nextHuntingExpedition(int index) {
     final long huntingCycles = Duration.between(OUTBREAK_DAY, today).getSeconds() / cycle.getSeconds();
-    LocalDateTime currentHuntingCycle = OUTBREAK_DAY.plus(huntingCycles * cycle.getSeconds(), ChronoUnit.SECONDS);
-    LocalDateTime date = currentHuntingCycle.plus(interval.multipliedBy(index)).plus(1, ChronoUnit.HOURS);
+    OffsetDateTime currentHuntingCycle = OUTBREAK_DAY.plus(huntingCycles * cycle.getSeconds(), ChronoUnit.SECONDS);
+    OffsetDateTime date = currentHuntingCycle.plus(interval.multipliedBy(index)).plus(1, ChronoUnit.HOURS);
     if (date.isBefore(today)) {
       date = date.plus(cycle);
     }
@@ -143,7 +144,7 @@ public class ZombieHunterJob implements Job {
   public static Trigger defaultTrigger(int index) {
     final TriggerBuilder<SimpleTrigger> builder =
         TriggerBuilder.newTrigger()
-            .startAt(Date.from(nextHuntingExpedition(index).toInstant(ZoneOffset.UTC)))
+            .startAt(Date.from(nextHuntingExpedition(index).toInstant()))
             .withIdentity("" + index, GROUP)
             .withSchedule(SimpleScheduleBuilder.simpleSchedule().withIntervalInHours(zombieTypes.size() * 24));
 

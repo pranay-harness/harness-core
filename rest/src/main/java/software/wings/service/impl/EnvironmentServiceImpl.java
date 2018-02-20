@@ -356,8 +356,7 @@ public class EnvironmentServiceImpl implements EnvironmentService, DataProvider 
   public void pruneDescendingEntities(@NotEmpty String appId, @NotEmpty String envId) {
     List<OwnedByEnvironment> services =
         ServiceClassLocator.descendingServices(this, EnvironmentServiceImpl.class, OwnedByEnvironment.class);
-    PruneEntityJob.pruneDescendingEntities(
-        services, appId, envId, descending -> descending.pruneByEnvironment(appId, envId));
+    PruneEntityJob.pruneDescendingEntities(services, descending -> descending.pruneByEnvironment(appId, envId));
   }
 
   @Override
