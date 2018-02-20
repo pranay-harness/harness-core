@@ -269,6 +269,20 @@ public class AnalysisServiceImpl implements AnalysisService {
 
   @Override
   public boolean saveFeedback(LogMLFeedback feedback, StateType stateType) {
+    String logmd5Hash = DigestUtils.md5Hex(feedback.getText());
+
+    Query<LogMLFeedbackRecord> query = wingsPersistence.createQuery(LogMLFeedbackRecord.class)
+                                           .field("stateExecutionId")
+                                           .equal(feedback.getStateExecutionId())
+                                           .field("applicationId")
+                                           .equal(feedback.getAppId())
+                                           .field("clusterType")
+                                           .equal(feedback.getClusterType())
+                                           .field("clusterLabel")
+                                           .equal(feedback.getClusterLabel());
+
+    wingsPersistence.delete(query);
+
     StateExecutionInstance stateExecutionInstance =
         wingsPersistence.get(StateExecutionInstance.class, feedback.getAppId(), feedback.getStateExecutionId());
 
@@ -292,11 +306,16 @@ public class AnalysisServiceImpl implements AnalysisService {
                                                .serviceId(phaseElement.getServiceElement().getUuid())
                                                .workflowId(stateExecutionInstance.getWorkflowId())
                                                .workflowExecutionId(stateExecutionInstance.getExecutionUuid())
+                                               .stateExecutionId(feedback.getStateExecutionId())
                                                .logMessage(feedback.getText())
-                                               .feedbackType(feedback.getFeedbackType())
-                                               .logMD5Hash(DigestUtils.md5Hex(feedback.getText()))
+                                               .logMLFeedbackType(feedback.getLogMLFeedbackType())
+                                               .clusterLabel(feedback.getClusterLabel())
+                                               .clusterType(feedback.getClusterType())
+                                               .logMD5Hash(logmd5Hash)
                                                .stateType(stateType)
+                                               .comment(feedback.getComment())
                                                .build();
+
     wingsPersistence.save(mlFeedbackRecord);
 
     return true;
@@ -462,6 +481,56 @@ public class AnalysisServiceImpl implements AnalysisService {
     return iteratorAnalysisRecord.hasNext() ? iteratorAnalysisRecord.next() : null;
   }
 
+  private Map<CLUSTER_TYPE, Map<Integer, LogMLFeedbackRecord>> getMLUserFeedbacks(
+      String stateExecutionId, String applicationId) {
+    Map<CLUSTER_TYPE, Map<Integer, LogMLFeedbackRecord>> userFeedbackMap = new HashMap<>();
+    userFeedbackMap.put(CLUSTER_TYPE.CONTROL, new HashMap<>());
+    userFeedbackMap.put(CLUSTER_TYPE.TEST, new HashMap<>());
+    userFeedbackMap.put(CLUSTER_TYPE.UNKNOWN, new HashMap<>());
+
+    List<LogMLFeedbackRecord> logMLFeedbackRecords = wingsPersistence.createQuery(LogMLFeedbackRecord.class)
+                                                         .field("stateExecutionId")
+                                                         .equal(stateExecutionId)
+                                                         .field("applicationId")
+                                                         .equal(applicationId)
+                                                         .asList();
+
+    if (logMLFeedbackRecords == null) {
+      return userFeedbackMap;
+    }
+
+    for (LogMLFeedbackRecord logMLFeedbackRecord : logMLFeedbackRecords) {
+      userFeedbackMap.get(logMLFeedbackRecord.getClusterType())
+          .put(logMLFeedbackRecord.getClusterLabel(), logMLFeedbackRecord);
+    }
+
+    return userFeedbackMap;
+  }
+
+  private void assignUserFeedback(
+      LogMLAnalysisSummary analysisSummary, Map<CLUSTER_TYPE, Map<Integer, LogMLFeedbackRecord>> mlUserFeedbacks) {
+    for (LogMLClusterSummary summary : analysisSummary.getControlClusters()) {
+      if (mlUserFeedbacks.get(CLUSTER_TYPE.CONTROL).containsKey(summary.getClusterLabel())) {
+        summary.setLogMLFeedbackType(
+            mlUserFeedbacks.get(CLUSTER_TYPE.CONTROL).get(summary.getClusterLabel()).getLogMLFeedbackType());
+      }
+    }
+
+    for (LogMLClusterSummary summary : analysisSummary.getTestClusters()) {
+      if (mlUserFeedbacks.get(CLUSTER_TYPE.TEST).containsKey(summary.getClusterLabel())) {
+        summary.setLogMLFeedbackType(
+            mlUserFeedbacks.get(CLUSTER_TYPE.TEST).get(summary.getClusterLabel()).getLogMLFeedbackType());
+      }
+    }
+
+    for (LogMLClusterSummary summary : analysisSummary.getUnknownClusters()) {
+      if (mlUserFeedbacks.get(CLUSTER_TYPE.UNKNOWN).containsKey(summary.getClusterLabel())) {
+        summary.setLogMLFeedbackType(
+            mlUserFeedbacks.get(CLUSTER_TYPE.UNKNOWN).get(summary.getClusterLabel()).getLogMLFeedbackType());
+      }
+    }
+  }
+
   @Override
   public LogMLAnalysisSummary getAnalysisSummary(String stateExecutionId, String applicationId, StateType stateType) {
     Iterator<LogMLAnalysisRecord> iteratorAnalysisRecord = wingsPersistence.createQuery(LogMLAnalysisRecord.class)
@@ -477,6 +546,10 @@ public class AnalysisServiceImpl implements AnalysisService {
     if (!iteratorAnalysisRecord.hasNext()) {
       return null;
     }
+
+    Map<CLUSTER_TYPE, Map<Integer, LogMLFeedbackRecord>> mlUserFeedbacks =
+        getMLUserFeedbacks(stateExecutionId, applicationId);
+
     LogMLAnalysisRecord analysisRecord = iteratorAnalysisRecord.next();
     final LogMLAnalysisSummary analysisSummary = new LogMLAnalysisSummary();
     analysisSummary.setQuery(analysisRecord.getQuery());
@@ -494,6 +567,8 @@ public class AnalysisServiceImpl implements AnalysisService {
       analysisSummary.setTestClusters(analysisSummary.getControlClusters());
       analysisSummary.setControlClusters(new ArrayList<>());
     }
+
+    assignUserFeedback(analysisSummary, mlUserFeedbacks);
 
     RiskLevel riskLevel = RiskLevel.NA;
     String analysisSummaryMsg = isEmpty(analysisRecord.getAnalysisSummaryMessage())
@@ -976,12 +1051,14 @@ public class AnalysisServiceImpl implements AnalysisService {
   }
 
   public enum CLUSTER_TYPE { CONTROL, TEST, UNKNOWN }
-  public enum FeedbackType {
+  public enum LogMLFeedbackType {
     IGNORE_SERVICE,
     IGNORE_WORKFLOW,
     IGNORE_WORKFLOW_EXECUTION,
     IGNORE_ALWAYS,
     DISMISS,
-    PRIORITIZE
+    PRIORITIZE,
+    THUMBS_UP,
+    THUMBS_DOWN
   }
 }

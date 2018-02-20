@@ -9,5 +9,6 @@ public class LogMLFeedback {
   private String text;
   private AnalysisServiceImpl.CLUSTER_TYPE clusterType;
   private int clusterLabel;
-  private AnalysisServiceImpl.FeedbackType feedbackType;
+  private AnalysisServiceImpl.LogMLFeedbackType logMLFeedbackType;
+  private String comment;
 }
