@@ -13,7 +13,7 @@ public class SchedulerConfig {
   @JsonProperty(defaultValue = "10000") private String idleWaitTime = "10000";
   @JsonProperty(defaultValue = "true") private String autoStart = "true";
   @JsonProperty(defaultValue = "automation_scheduler") private String schedulerName = "automation_scheduler";
-  @JsonProperty(defaultValue = "automation") private String instanceId = "AUTO";
+  @JsonProperty(defaultValue = "automation") private String instanceId = "automation";
   @JsonProperty(defaultValue = "quartz") private String tablePrefix = "quartz";
   @JsonProperty(defaultValue = "true") private boolean isClustered;
 
