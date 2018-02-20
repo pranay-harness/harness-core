@@ -69,8 +69,12 @@ import software.wings.lock.PersistentLocker;
 import software.wings.service.intfc.AppService;
 import software.wings.service.intfc.Exterminator;
 
+import java.security.SecureRandom;
 import java.time.Duration;
-import java.util.Calendar;
+import java.time.LocalDate;
+import java.time.LocalDateTime;
+import java.time.ZoneOffset;
+import java.time.temporal.ChronoUnit;
 import java.util.Date;
 import java.util.List;
 import java.util.Random;
@@ -81,14 +85,18 @@ public class ZombieHunterJob implements Job {
 
   public static final String GROUP = "ZOMBIE_HUNTER_GROUP";
   public static final String INDEX_KEY = "index";
+  public static final Duration TIMEOUT = Duration.ofMinutes(2);
 
-  public static final Random random = new Random();
-  public static final String[] KILL_METHOD = {
+  public static final Random random = new SecureRandom();
+  private static final String[] KILL_METHOD = {
       "shot in the head", "stabbed in the head", "impelled in the head", "decapitated", "skull crushed", "axed"};
-  public static final String[] SQUAD_MEMBER = {"Rick", "Daryl", "Michonne", "Glenn", "Maggie", "Carl"};
+  private static final String[] SQUAD_MEMBER = {"Rick", "Daryl", "Michonne", "Glenn", "Maggie", "Carl"};
 
-  public static final long OUTBREAK_DATE = 1288515600000L;
-  public static Calendar today = Calendar.getInstance();
+  private static final LocalDateTime OUTBREAK_DAY = LocalDate.of(2010, 10, 31).atStartOfDay();
+  protected static final LocalDateTime today = LocalDateTime.now();
+
+  private static final int CACHE_MAX_SIZE = 5000;
+  private LRUMap cache = new LRUMap(CACHE_MAX_SIZE);
 
   @Inject private WingsPersistence wingsPersistence;
   @Inject private PersistentLocker persistentLocker;
@@ -108,31 +116,34 @@ public class ZombieHunterJob implements Job {
     private Exterminator exterminator;
   }
 
-  public static List<ZombieType> zombieTypes =
+  public static final String SERVICE_ID = "serviceId";
+  public static final String SERVICES = "services";
+
+  protected static final List<ZombieType> zombieTypes =
       asList(new ZombieType("applications", "accountId", asList("accounts"), null),
-          new ZombieType("artifactStream", "serviceId", asList("services"), null),
-          new ZombieType("infrastructureMapping", "serviceId", asList("services"), null),
-          new ZombieType("serviceTemplates", "serviceId", asList("services"), null),
-          new ZombieType("serviceVariables", "entityId", asList("services", "serviceTemplates", "environments"), null));
+          new ZombieType("artifactStream", SERVICE_ID, asList(SERVICES), null),
+          new ZombieType("infrastructureMapping", SERVICE_ID, asList(SERVICES), null),
+          new ZombieType("serviceTemplates", SERVICE_ID, asList(SERVICES), null),
+          new ZombieType("serviceVariables", "entityId", asList(SERVICES, "serviceTemplates", "environments"), null));
 
-  public static Duration interval = Duration.ofDays(1);
-  public static Duration cycle = interval.multipliedBy(zombieTypes.size());
+  public static final Duration interval = Duration.ofDays(1);
+  public static final Duration cycle = interval.multipliedBy(zombieTypes.size());
 
-  public static long nextHuntingExpedition(int index) {
-    final long hunting_cycles = (today.getTimeInMillis() - OUTBREAK_DATE) / cycle.toMillis();
-    final long current_hunting_cycle = OUTBREAK_DATE + hunting_cycles * cycle.toMillis();
-    long hunting_squad = current_hunting_cycle + interval.toMillis() * index;
-    if (hunting_squad < today.getTimeInMillis()) {
-      hunting_squad += cycle.toMillis();
+  public static LocalDateTime nextHuntingExpedition(int index) {
+    final long huntingCycles = Duration.between(OUTBREAK_DAY, today).getSeconds() / cycle.getSeconds();
+    LocalDateTime currentHuntingCycle = OUTBREAK_DAY.plus(huntingCycles * cycle.getSeconds(), ChronoUnit.SECONDS);
+    LocalDateTime date = currentHuntingCycle.plus(interval.multipliedBy(index)).plus(1, ChronoUnit.HOURS);
+    if (date.isBefore(today)) {
+      date = date.plus(cycle);
     }
 
-    return hunting_squad;
+    return date;
   }
 
   public static Trigger defaultTrigger(int index) {
     final TriggerBuilder<SimpleTrigger> builder =
         TriggerBuilder.newTrigger()
-            .startAt(new Date(nextHuntingExpedition(index)))
+            .startAt(Date.from(nextHuntingExpedition(index).toInstant(ZoneOffset.UTC)))
             .withIdentity("" + index, GROUP)
             .withSchedule(SimpleScheduleBuilder.simpleSchedule().withIntervalInHours(zombieTypes.size() * 24));
 
@@ -141,7 +152,7 @@ public class ZombieHunterJob implements Job {
 
   public static void scheduleJobs(QuartzScheduler jobScheduler) {
     // Scheduling a job for every zombie type on an `interval` distance from each other.
-    // The algo preserves the schedule from execution to execution to avoid restarting
+    // The algorithm preserves the schedule from execution to execution to avoid restarting
     // the cycle after every deploy. This will be broken only if new zombie types are
     // added, but this is not critical.
     for (int i = 0; i < zombieTypes.size(); ++i) {
@@ -152,7 +163,7 @@ public class ZombieHunterJob implements Job {
       JobDetail details =
           JobBuilder.newJob(ZombieHunterJob.class).withIdentity(id, GROUP).usingJobData(INDEX_KEY, i).build();
 
-      org.quartz.Trigger trigger = defaultTrigger(i);
+      Trigger trigger = defaultTrigger(i);
       jobScheduler.scheduleJob(details, trigger);
     }
   }
@@ -172,14 +183,14 @@ public class ZombieHunterJob implements Job {
   }
 
   public void executeAsync(int index) {
-    try (AcquiredLock lock = persistentLocker.acquireLock(ZombieHunterJob.class, "expedition", Duration.ofMinutes(2))) {
+    try (AcquiredLock lock = persistentLocker.acquireLock(ZombieHunterJob.class, "expedition", TIMEOUT)) {
       final ZombieType zombieType = zombieTypes.get(index);
 
       huntingExpedition(zombieType);
 
     } catch (WingsException exception) {
       exception.logProcessedMessages(logger);
-    } catch (Exception exception) {
+    } catch (RuntimeException exception) {
       logger.error("Error seen in the ZombieHunterJob  execute call", exception);
     }
   }
@@ -187,8 +198,6 @@ public class ZombieHunterJob implements Job {
   int huntingExpedition(ZombieType zombieType) {
     List<DBCollection> owners =
         zombieType.ownerCollections.stream().map(owner -> wingsPersistence.getCollection(owner)).collect(toList());
-
-    LRUMap map = new LRUMap(5000);
 
     BasicDBObject select = new BasicDBObject();
     select.put(ID_KEY, 1);
@@ -204,36 +213,47 @@ public class ZombieHunterJob implements Job {
       final DBObject object = dbCursor.next();
       final Object ownerId = object.get(zombieType.ownerFieldName);
 
-      DBObject ownerObject = null;
-      if (map.containsKey(ownerId)) {
-        ownerObject = (DBObject) map.get(ownerId);
-      } else {
-        final BasicDBObject queryOwner = new BasicDBObject("_id", ownerId);
-        for (DBCollection owner : owners) {
-          if ((ownerObject = owner.findOne(queryOwner, selectOwner)) != null) {
-            break;
-          }
-        }
-        map.put(ownerId, ownerObject);
+      if (getDbObject(owners, selectOwner, ownerId) != null) {
+        continue;
       }
 
-      if (ownerObject == null) {
-        ++count;
-        final Object entityId = object.get(ID_KEY);
-        if (zombieType.exterminator != null) {
-          final Object appId = object.get(APP_ID_KEY);
-          zombieType.exterminator.delete(appId.toString(), entityId.toString());
-
-          logger.warn(format("Zombie %s from %s.%s=%s was discovered. It was %s by %s.", entityId,
-              zombieType.collection, zombieType.ownerFieldName, ownerId,
-              KILL_METHOD[random.nextInt(KILL_METHOD.length)], SQUAD_MEMBER[random.nextInt(SQUAD_MEMBER.length)]));
-        } else {
+      ++count;
+      final Object entityId = object.get(ID_KEY);
+      if (zombieType.exterminator == null) {
+        if (logger.isWarnEnabled()) {
           logger.warn(format("Zombie %s from %s.%s=%s will be spreading the deadly virus.", entityId,
               zombieType.collection, zombieType.ownerFieldName, ownerId));
         }
+        continue;
+      }
+
+      final Object appId = object.get(APP_ID_KEY);
+      zombieType.exterminator.delete(appId.toString(), entityId.toString());
+
+      if (logger.isWarnEnabled()) {
+        logger.warn(format("Zombie %s from %s.%s=%s was discovered. It was %s by %s.", entityId, zombieType.collection,
+            zombieType.ownerFieldName, ownerId, KILL_METHOD[random.nextInt(KILL_METHOD.length)],
+            SQUAD_MEMBER[random.nextInt(SQUAD_MEMBER.length)]));
       }
     }
 
     return count;
+  }
+
+  private DBObject getDbObject(List<DBCollection> owners, BasicDBObject selectOwner, Object ownerId) {
+    if (cache.containsKey(ownerId)) {
+      return (DBObject) cache.get(ownerId);
+    }
+
+    DBObject ownerObject = null;
+    final BasicDBObject queryOwner = new BasicDBObject("_id", ownerId);
+    for (DBCollection owner : owners) {
+      if ((ownerObject = owner.findOne(queryOwner, selectOwner)) != null) {
+        break;
+      }
+    }
+    cache.put(ownerId, ownerObject);
+
+    return ownerObject;
   }
 }
