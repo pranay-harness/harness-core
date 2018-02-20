@@ -28,7 +28,6 @@ import static software.wings.beans.trigger.TriggerConditionType.WEBHOOK;
 import static software.wings.dl.PageRequest.Builder.aPageRequest;
 import static software.wings.exception.WingsException.ALERTING;
 import static software.wings.exception.WingsException.ReportTarget.USER;
-import static software.wings.exception.WingsException.ReportTarget.USER_ADMIN;
 import static software.wings.sm.ExecutionStatus.SUCCESS;
 import static software.wings.sm.StateType.ENV_STATE;
 import static software.wings.utils.Validator.duplicateCheck;
@@ -323,9 +322,6 @@ public class TriggerServiceImpl implements TriggerService {
       String appId, String webHookToken, Map<String, String> serviceBuildNumbers, Map<String, String> parameters) {
     List<Artifact> artifacts = new ArrayList<>();
     Trigger trigger = getTrigger(appId, webHookToken);
-    if (trigger == null) {
-      throw new WingsException("No Trigger associated to the given token", USER_ADMIN);
-    }
     logger.info("Triggering  the execution for the Trigger {} by webhook", trigger.getName());
     addArtifactsFromVersionsOfWebHook(trigger, serviceBuildNumbers, artifacts);
     addArtifactsFromSelections(appId, trigger, artifacts);
@@ -336,9 +332,6 @@ public class TriggerServiceImpl implements TriggerService {
   public WorkflowExecution triggerExecutionByWebHook(
       String appId, String webHookToken, Artifact artifact, Map<String, String> parameters) {
     Trigger trigger = getTrigger(appId, webHookToken);
-    if (trigger == null) {
-      throw new WingsException("No Trigger associated to the given token", USER_ADMIN);
-    }
     logger.info("Triggering  the execution for the Trigger {} by webhook", trigger.getName());
     List<Artifact> artifacts = new ArrayList<>();
     if (artifact != null) {

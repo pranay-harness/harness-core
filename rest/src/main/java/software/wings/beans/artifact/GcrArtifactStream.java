@@ -16,8 +16,6 @@ import software.wings.stencils.DefaultValue;
 import software.wings.stencils.UIOrder;
 import software.wings.utils.Util;
 
-import java.text.DateFormat;
-import java.text.SimpleDateFormat;
 import java.util.Date;
 
 /**
@@ -146,13 +144,11 @@ public class GcrArtifactStream extends ArtifactStream {
   }
 
   public static final class Builder {
-    private static DateFormat dateFormat = new SimpleDateFormat("HHMMSS");
     public transient String entityYamlPath; // TODO:: remove it with changeSet batching
     protected String appId;
     private String registryHostName;
     private String dockerImageName;
     private String uuid;
-    private String artifactStreamType;
     private String sourceName;
     private EmbeddedUser createdBy;
     private String settingId;
@@ -183,18 +179,8 @@ public class GcrArtifactStream extends ArtifactStream {
       return this;
     }
 
-    public Builder withDateFormat(DateFormat dateFormat) {
-      this.dateFormat = dateFormat;
-      return this;
-    }
-
     public Builder withUuid(String uuid) {
       this.uuid = uuid;
-      return this;
-    }
-
-    public Builder withArtifactStreamType(String artifactStreamType) {
-      this.artifactStreamType = artifactStreamType;
       return this;
     }
 

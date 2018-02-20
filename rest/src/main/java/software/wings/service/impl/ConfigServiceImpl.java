@@ -174,7 +174,7 @@ public class ConfigServiceImpl implements ConfigService {
         throw new WingsException(INVALID_ARGUMENT).addParam("args", "Relative path can not be absolute");
       }
       return path.normalize().toString();
-    } catch (InvalidPathException | NullPointerException ex) {
+    } catch (InvalidPathException ex) {
       throw new WingsException(INVALID_ARGUMENT).addParam("args", "Invalid relativePath");
     }
   }

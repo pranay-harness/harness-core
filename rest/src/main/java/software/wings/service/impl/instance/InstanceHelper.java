@@ -2,6 +2,7 @@ package software.wings.service.impl.instance;
 
 import static io.harness.data.structure.EmptyPredicate.isEmpty;
 import static io.harness.data.structure.EmptyPredicate.isNotEmpty;
+import static software.wings.exception.WingsException.SERIOUS;
 import static software.wings.sm.ExecutionStatus.FAILED;
 
 import com.google.common.collect.Lists;
@@ -586,8 +587,8 @@ public class InstanceHelper {
 
   public void handleDeploymentEvent(DeploymentEvent deploymentEvent) {
     DeploymentInfo deploymentInfo = deploymentEvent.getDeploymentInfo();
-    if (deploymentEvent == null) {
-      throw new WingsException("Deployment info can not be null: " + deploymentEvent, WingsException.SERIOUS);
+    if (deploymentInfo == null) {
+      throw new WingsException("Deployment info can not be null: " + deploymentInfo, SERIOUS);
     }
 
     String infraMappingId = deploymentInfo.getInfraMappingId();

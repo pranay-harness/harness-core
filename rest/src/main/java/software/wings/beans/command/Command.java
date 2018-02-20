@@ -502,6 +502,7 @@ public class Command extends Base implements CommandUnit {
     public Command build() {
       Command command = new Command();
       command.setReferenceId(referenceId);
+      command.setOriginEntityId(originEntityId);
       command.setGraph(graph);
       command.setCommandUnits(commandUnits);
       command.setName(name);
