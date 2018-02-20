@@ -173,7 +173,7 @@ public class WingsApplication extends Application<MainConfiguration> {
         new ExecutorModule(), new QueueModule(databaseModule.getPrimaryDatastore()));
     Caching.getCachingProvider().getCacheManager().createCache(
         DELEGATE_SYNC_CACHE, new Configuration<String, DelegateTask>() {
-          public static final long serialVersionUID = 1l;
+          public static final long serialVersionUID = 1L;
 
           @Override
           public Class<String> getKeyType() {
@@ -192,7 +192,7 @@ public class WingsApplication extends Application<MainConfiguration> {
         });
 
     Caching.getCachingProvider().getCacheManager().createCache(USER_CACHE, new Configuration<String, User>() {
-      public static final long serialVersionUID = 1l;
+      public static final long serialVersionUID = 1L;
 
       @Override
       public Class<String> getKeyType() {

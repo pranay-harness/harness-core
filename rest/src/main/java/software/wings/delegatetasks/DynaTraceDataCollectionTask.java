@@ -103,7 +103,7 @@ public class DynaTraceDataCollectionTask extends AbstractDelegateDataCollectionT
             List<DynaTraceMetricDataResponse> metricsData = getMetricsData();
             TreeBasedTable<String, Long, NewRelicMetricDataRecord> records = TreeBasedTable.create();
             // HeartBeat
-            records.put(HARNESS_HEARTBEAT_METRIC_NAME, 0l,
+            records.put(HARNESS_HEARTBEAT_METRIC_NAME, 0L,
                 NewRelicMetricDataRecord.builder()
                     .stateType(getStateType())
                     .name(HARNESS_HEARTBEAT_METRIC_NAME)

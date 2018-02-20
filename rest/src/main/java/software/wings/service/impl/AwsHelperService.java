@@ -1726,11 +1726,10 @@ public class AwsHelperService {
       String region, String accessKey, char[] secretKey, GetFunctionRequest getFunctionRequest) {
     try {
       return getAmazonLambdaClient(region, accessKey, secretKey).getFunction(getFunctionRequest);
-    } catch (AmazonServiceException amazonServiceException) {
-      if (amazonServiceException instanceof ResourceNotFoundException) {
-        return null;
-      }
-      handleAmazonServiceException(amazonServiceException);
+    } catch (ResourceNotFoundException exception) {
+      return null;
+    } catch (AmazonServiceException exception) {
+      handleAmazonServiceException(exception);
     }
     return new GetFunctionResult();
   }

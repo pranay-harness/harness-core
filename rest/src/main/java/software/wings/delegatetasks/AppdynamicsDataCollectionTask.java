@@ -201,8 +201,8 @@ public class AppdynamicsDataCollectionTask extends AbstractDelegateDataCollectio
             TreeBasedTable<String, Long, Map<String, NewRelicMetricDataRecord>> records = TreeBasedTable.create();
 
             // HeartBeat
-            records.put(HARNESS_HEARTBEAT_METRIC_NAME, 0l, new HashMap<>());
-            records.get(HARNESS_HEARTBEAT_METRIC_NAME, 0l)
+            records.put(HARNESS_HEARTBEAT_METRIC_NAME, 0L, new HashMap<>());
+            records.get(HARNESS_HEARTBEAT_METRIC_NAME, 0L)
                 .put("heartbeatHost",
                     NewRelicMetricDataRecord.builder()
                         .stateType(getStateType())

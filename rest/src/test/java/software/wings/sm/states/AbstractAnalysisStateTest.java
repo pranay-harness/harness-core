@@ -69,7 +69,7 @@ public class AbstractAnalysisStateTest extends WingsBaseTest {
   }
 
   @Test
-  public void getLastExecutionNodes() throws NoSuchAlgorithmException, KeyManagementException {
+  public void testGetLastExecutionNodes() throws NoSuchAlgorithmException, KeyManagementException {
     List<ElementExecutionSummary> elementExecutionSummary = new ArrayList<>();
     for (String service : new String[] {"serviceA", "serviceB"}) {
       List<InstanceStatusSummary> instanceStatusSummaryList = new ArrayList<>();
@@ -129,7 +129,7 @@ public class AbstractAnalysisStateTest extends WingsBaseTest {
   }
 
   @Test
-  public void getCanaryNewNodes() throws NoSuchAlgorithmException, KeyManagementException {
+  public void testGetCanaryNewNodes() throws NoSuchAlgorithmException, KeyManagementException {
     List<InstanceElement> instanceElements = new ArrayList<>();
     for (int i = 0; i < 5; ++i) {
       instanceElements.add(InstanceElement.Builder.anInstanceElement()

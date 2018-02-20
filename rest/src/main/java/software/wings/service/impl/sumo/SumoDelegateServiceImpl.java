@@ -34,17 +34,13 @@ public class SumoDelegateServiceImpl implements SumoDelegateService {
               String.valueOf(WingsTimeUtils.getMinuteBoundary(System.currentTimeMillis())),
               TimeZone.getDefault().getID());
       return true;
-    } catch (Throwable t) {
-      if (t instanceof MalformedURLException) {
-        throw new WingsException(sumoConfig.getSumoUrl() + " is not a valid url. ", t);
-      }
-      if (t instanceof SumoServerException) {
-        SumoServerException sumoServerException = (SumoServerException) t;
-        throw new WingsException(
-            "Error from Sumo xxxxxxxx " + sumoServerException.getHTTPStatus() + " - " + sumoServerException.getMessage(),
-            sumoServerException);
-      }
-      throw new WingsException("An error occurred connecting to Sumo xxxxxxxx " + t.getMessage(), t);
+    } catch (MalformedURLException exception) {
+      throw new WingsException(sumoConfig.getSumoUrl() + " is not a valid url. ", exception);
+    } catch (SumoServerException exception) {
+      throw new WingsException(
+          "Error from Sumo xxxxxxxx " + exception.getHTTPStatus() + " - " + exception.getMessage(), exception);
+    } catch (Exception exception) {
+      throw new WingsException("An error occurred connecting to Sumo xxxxxxxx " + exception.getMessage(), exception);
     }
   }
 

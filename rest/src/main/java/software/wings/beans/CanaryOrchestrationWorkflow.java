@@ -562,7 +562,6 @@ public class CanaryOrchestrationWorkflow extends CustomOrchestrationWorkflow {
   @Override
   public OrchestrationWorkflow clone() {
     return aCanaryOrchestrationWorkflow()
-        .aCanaryOrchestrationWorkflow()
         .withGraph(getGraph())
         .withPreDeploymentSteps(getPreDeploymentSteps())
         .withWorkflowPhases(getWorkflowPhases())

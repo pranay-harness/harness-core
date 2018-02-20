@@ -103,7 +103,6 @@ public class NewRelicDataCollectionTask extends AbstractDelegateDataCollectionTa
 
   private class NewRelicMetricCollector implements Runnable {
     private final NewRelicDataCollectionInfo dataCollectionInfo;
-    private List<NewRelicApplicationInstance> instances;
     private long windowStartTimeManager;
     private Collection<NewRelicMetric> metrics;
     private int dataCollectionMinute;
@@ -307,9 +306,10 @@ public class NewRelicDataCollectionTask extends AbstractDelegateDataCollectionTa
                   COLLECTION_PERIOD_MINS);
               return;
             }
-            this.instances = newRelicDelegateService.getApplicationInstances(dataCollectionInfo.getNewRelicConfig(),
-                dataCollectionInfo.getEncryptedDataDetails(), dataCollectionInfo.getNewRelicAppId());
-            logger.info("Got {} new relic nodes.", this.instances.size());
+            List<NewRelicApplicationInstance> instances =
+                newRelicDelegateService.getApplicationInstances(dataCollectionInfo.getNewRelicConfig(),
+                    dataCollectionInfo.getEncryptedDataDetails(), dataCollectionInfo.getNewRelicAppId());
+            logger.info("Got {} new relic nodes.", instances.size());
 
             lastCollectionTime = System.currentTimeMillis();
 
