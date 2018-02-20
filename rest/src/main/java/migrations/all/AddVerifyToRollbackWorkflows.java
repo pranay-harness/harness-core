@@ -2,7 +2,6 @@ package migrations.all;
 
 import static io.harness.data.structure.EmptyPredicate.isEmpty;
 import static software.wings.beans.PhaseStep.PhaseStepBuilder.aPhaseStep;
-import static software.wings.beans.PhaseStepType.ENABLE_SERVICE;
 import static software.wings.beans.PhaseStepType.VERIFY_SERVICE;
 import static software.wings.beans.PhaseStepType.WRAP_UP;
 import static software.wings.beans.SearchFilter.Operator.EQ;
@@ -92,11 +91,6 @@ public class AddVerifyToRollbackWorkflows implements Migration {
         --index;
       }
 
-      if (index <= rollbackPhase.getPhaseSteps().size()
-          && rollbackPhase.getPhaseSteps().get(index - 1).getPhaseStepType() == ENABLE_SERVICE) {
-        --index;
-      }
-
       rollbackPhase.getPhaseSteps().add(index,
           aPhaseStep(VERIFY_SERVICE, Constants.VERIFY_SERVICE)
               .withRollback(true)
@@ -110,7 +104,7 @@ public class AddVerifyToRollbackWorkflows implements Migration {
     if (modified) {
       try {
         logger.info("--- Workflow updated: {}", workflow.getName());
-        // workflowService.updateWorkflow(workflow);
+        workflowService.updateWorkflow(workflow);
         Thread.sleep(100);
       } catch (Exception e) {
         logger.error("Error updating workflow", e);
