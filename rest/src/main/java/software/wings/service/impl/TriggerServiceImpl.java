@@ -561,11 +561,14 @@ public class TriggerServiceImpl implements TriggerService {
           List<String> artifactIds = artifacts.stream().map(Artifact::getUuid).distinct().collect(toList());
           if (!lastDeployedArtifactIds.containsAll(artifactIds)) {
             logger.info(
-                "No new version of artifacts found from the last successful execution of pipeline {}. So, not triggering pipeline execution");
+                "New version of artifacts found from the last successful execution of pipeline/ workflow {}. So, triggering  execution",
+                trigger.getWorkflowId());
+            triggerExecution(artifacts, trigger);
+          } else {
+            logger.info(
+                "No new version of artifacts found from the last successful execution of pipeline/ workflow {}. So, not triggering execution",
+                trigger.getWorkflowId());
           }
-          logger.info(
-              "New version of artifacts found from the last successful execution of pipeline {}. So, triggering pipeline execution");
-          triggerExecution(artifacts, trigger);
         }
       }
     }
