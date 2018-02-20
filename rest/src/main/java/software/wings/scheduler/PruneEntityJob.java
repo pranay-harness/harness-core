@@ -38,8 +38,9 @@ import software.wings.service.intfc.ServiceResourceService;
 import software.wings.service.intfc.WorkflowService;
 
 import java.time.Duration;
-import java.util.Calendar;
-import java.util.List;
+import java.time.OffsetDateTime;
+import java.util.Date;
+import java.util.function.Consumer;
 
 public class PruneEntityJob implements Job {
   protected static Logger logger = LoggerFactory.getLogger(PruneEntityJob.class);
@@ -70,9 +71,8 @@ public class PruneEntityJob implements Job {
 
     if (delay.toMillis() > 5) {
       // Run the job with daley. This can be used to give enough time the entity to be deleted.
-      Calendar calendar = Calendar.getInstance();
-      calendar.add(Calendar.MILLISECOND, (int) delay.toMillis());
-      builder.startAt(calendar.getTime());
+      OffsetDateTime time = OffsetDateTime.now().plus(delay);
+      builder.startAt(Date.from(time.toInstant()));
     }
 
     return builder.build();
@@ -90,24 +90,21 @@ public class PruneEntityJob implements Job {
                             .usingJobData(ENTITY_ID_KEY, entityId)
                             .build();
 
-    org.quartz.Trigger trigger = defaultTrigger(entityId, delay);
+    Trigger trigger = defaultTrigger(entityId, delay);
 
     jobScheduler.scheduleJob(details, trigger);
   }
 
-  public interface PruneService<T> { void prune(T descending); }
-
-  public static <T> void pruneDescendingEntities(
-      List<T> descendingServices, String appId, String entityId, PruneService<T> lambda) {
+  public static <T> void pruneDescendingEntities(Iterable<T> descendingServices, Consumer<T> lambda) {
     CauseCollection causeCollection = new CauseCollection();
     boolean succeeded = true;
     for (T descending : descendingServices) {
       try {
-        lambda.prune(descending);
+        lambda.accept(descending);
       } catch (WingsException exception) {
         succeeded = false;
         exception.logProcessedMessages(logger);
-      } catch (Throwable e) {
+      } catch (RuntimeException e) {
         succeeded = false;
         causeCollection.addCause(e);
       }
@@ -150,7 +147,7 @@ public class PruneEntityJob implements Job {
     } catch (WingsException exception) {
       exception.logProcessedMessages(logger);
       return false;
-    } catch (Exception e) {
+    } catch (RuntimeException e) {
       logger.error("", e);
       return false;
     }

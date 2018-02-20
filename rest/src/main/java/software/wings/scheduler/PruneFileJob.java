@@ -50,8 +50,6 @@ public class PruneFileJob implements Job {
     jobScheduler.scheduleJob(details, trigger);
   }
 
-  public interface PruneService<T> { void prune(T descending); }
-
   @Override
   public void execute(JobExecutionContext jobExecutionContext) {
     JobDataMap map = jobExecutionContext.getJobDetail().getJobDataMap();

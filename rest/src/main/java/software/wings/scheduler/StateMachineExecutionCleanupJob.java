@@ -72,10 +72,9 @@ public class StateMachineExecutionCleanupJob implements Job {
 
   @Override
   public void execute(JobExecutionContext jobExecutionContext) throws JobExecutionException {
-    String appId = jobExecutionContext.getMergedJobDataMap().getString("appId");
+    String appId = jobExecutionContext.getMergedJobDataMap().getString(APP_ID_KEY);
 
     // This is making the job self pruning. This allow to simplify the logic in deletion of the application.
-    // TODO: generalize this self pruning logic for every job.
     Application application = wingsPersistence.get(Application.class, appId);
     if (application == null) {
       jobScheduler.deleteJob(appId, GROUP);
@@ -89,7 +88,7 @@ public class StateMachineExecutionCleanupJob implements Job {
     PageRequest<WorkflowExecution> pageRequest =
         aPageRequest()
             .withLimit(PageRequest.UNLIMITED)
-            .addFilter("appId", Operator.EQ, appId)
+            .addFilter(APP_ID_KEY, Operator.EQ, appId)
             .addFilter("status", Operator.IN, RUNNING, NEW, STARTING, PAUSED, WAITING)
             .build();
     PageResponse<WorkflowExecution> executionPageResponse =

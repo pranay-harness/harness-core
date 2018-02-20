@@ -1537,8 +1537,7 @@ public class WorkflowServiceImpl implements WorkflowService, DataProvider {
   public void pruneDescendingEntities(String appId, String workflowId) {
     List<OwnedByWorkflow> services =
         ServiceClassLocator.descendingServices(this, WorkflowServiceImpl.class, OwnedByWorkflow.class);
-    PruneEntityJob.pruneDescendingEntities(
-        services, appId, workflowId, descending -> descending.pruneByWorkflow(appId, workflowId));
+    PruneEntityJob.pruneDescendingEntities(services, descending -> descending.pruneByWorkflow(appId, workflowId));
   }
 
   @Override

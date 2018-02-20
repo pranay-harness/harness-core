@@ -15,7 +15,7 @@ import software.wings.lock.AcquiredLock;
 import software.wings.lock.PersistentLocker;
 
 import java.time.Duration;
-import java.util.Calendar;
+import java.time.OffsetDateTime;
 
 public class PersistentLockCleanupJobTest extends WingsBaseTest {
   public static final Logger logger = LoggerFactory.getLogger(PersistentLockCleanupJobTest.class);
@@ -26,9 +26,7 @@ public class PersistentLockCleanupJobTest extends WingsBaseTest {
 
   @Test
   public void selfPruneTheJobWhenSucceed() throws Exception {
-    Calendar before = Calendar.getInstance();
-    before.add(Calendar.SECOND, -1);
-
+    OffsetDateTime before = OffsetDateTime.now().minusSeconds(1);
     try (AcquiredLock lock =
              persistentLocker.acquireLock(PersistentLockCleanupJob.class, "bar1", Duration.ofSeconds(1))) {
     }
@@ -37,8 +35,7 @@ public class PersistentLockCleanupJobTest extends WingsBaseTest {
              persistentLocker.acquireLock(PersistentLockCleanupJob.class, "bar2", Duration.ofSeconds(1))) {
     }
 
-    Calendar after = Calendar.getInstance();
-    after.add(Calendar.SECOND, 1);
+    OffsetDateTime after = OffsetDateTime.now().plusSeconds(1);
 
     // Query with before date - we should not have the locks in the result
     DBCursor dbObjects = job.queryOldLocks(before);

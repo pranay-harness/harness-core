@@ -490,13 +490,11 @@ public class ServiceResourceServiceImpl implements ServiceResourceService, DataP
 
   @Override
   public void pruneDescendingEntities(@NotEmpty String appId, @NotEmpty String serviceId) {
-    // TODO: Fix this one into the pattern
     executorService.submit(() -> deleteCommands(appId, serviceId));
 
     List<OwnedByService> services =
         ServiceClassLocator.descendingServices(this, ServiceResourceServiceImpl.class, OwnedByService.class);
-    PruneEntityJob.pruneDescendingEntities(
-        services, appId, serviceId, descending -> descending.pruneByService(appId, serviceId));
+    PruneEntityJob.pruneDescendingEntities(services, descending -> descending.pruneByService(appId, serviceId));
   }
 
   private void ensureServiceSafeToDelete(Service service) {
