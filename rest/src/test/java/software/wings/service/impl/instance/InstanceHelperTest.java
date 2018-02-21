@@ -14,6 +14,7 @@ import static org.mockito.Mockito.when;
 
 import com.google.inject.Inject;
 
+import org.apache.commons.lang3.StringUtils;
 import org.apache.commons.lang3.reflect.MethodUtils;
 import org.junit.Before;
 import org.junit.Test;
@@ -429,6 +430,36 @@ public class InstanceHelperTest extends WingsBaseTest {
         instanceHelper, true, "isSupported", new Object[] {InfrastructureMappingType.GCP_KUBERNETES}));
     assertTrue((Boolean) MethodUtils.invokeMethod(
         instanceHelper, true, "isSupported", new Object[] {InfrastructureMappingType.AWS_SSH}));
+  }
+
+  @Test
+  public void testGetPrivateDnsName() throws Exception {
+    String privateDnsName = "ip-172-31-11-6.ec2.internal";
+
+    // privateDnsName is nonNull and contains .
+    String name =
+        (String) MethodUtils.invokeMethod(instanceHelper, true, "getPrivateDnsName", new Object[] {privateDnsName});
+    assertEquals("ip-172-31-11-6", name);
+
+    // privateDnsName is nonNull and does not contains . (not sure if this can happen, but good to handle)
+    privateDnsName = "ip-172-31-11-6ec2_internal";
+    name = (String) MethodUtils.invokeMethod(instanceHelper, true, "getPrivateDnsName", new Object[] {privateDnsName});
+    assertEquals(privateDnsName, name);
+
+    // privateDnsName is nonNull and empty
+    privateDnsName = "";
+    name = (String) MethodUtils.invokeMethod(instanceHelper, true, "getPrivateDnsName", new Object[] {privateDnsName});
+    assertEquals(StringUtils.EMPTY, name);
+
+    // privateDnsName is nonNull and contains spaces
+    privateDnsName = "  ";
+    name = (String) MethodUtils.invokeMethod(instanceHelper, true, "getPrivateDnsName", new Object[] {privateDnsName});
+    assertEquals(StringUtils.EMPTY, name);
+
+    // privateDnsName is null
+    privateDnsName = null;
+    name = (String) MethodUtils.invokeMethod(instanceHelper, true, "getPrivateDnsName", new Object[] {privateDnsName});
+    assertEquals(StringUtils.EMPTY, name);
   }
 
   private void assertDeploymentInfoObject(DeploymentInfo deploymentInfo) {
