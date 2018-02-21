@@ -43,10 +43,11 @@ public class GitCommandTask extends AbstractDelegateRunnableTask {
   public GitCommandExecutionResponse run(Object[] parameters) {
     GitCommandType gitCommandType = (GitCommandType) parameters[0];
     GitConfig gitConfig = (GitConfig) parameters[1];
-    List<EncryptedDataDetail> encryptionDetails = (List<EncryptedDataDetail>) parameters[2];
-    encryptionService.decrypt(gitConfig, encryptionDetails);
 
     try {
+      List<EncryptedDataDetail> encryptionDetails = (List<EncryptedDataDetail>) parameters[2];
+      encryptionService.decrypt(gitConfig, encryptionDetails);
+
       switch (gitCommandType) {
         case COMMIT_AND_PUSH:
           GitCommitRequest gitCommitRequest = (GitCommitRequest) parameters[3];

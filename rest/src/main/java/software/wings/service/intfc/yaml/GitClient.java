@@ -56,9 +56,10 @@ public interface GitClient {
    * Push git push result.
    *
    * @param gitConfig the git config
+   * @param forcePush push the changes to git forcefully
    * @return the git push result
    */
-  GitPushResult push(GitConfig gitConfig);
+  GitPushResult push(GitConfig gitConfig, boolean forcePush);
 
   /**
    * Commit and push git commit and push result.

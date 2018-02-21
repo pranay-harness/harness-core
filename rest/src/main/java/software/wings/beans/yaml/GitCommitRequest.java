@@ -16,13 +16,15 @@ import java.util.List;
 @Builder
 public class GitCommitRequest extends GitCommandRequest {
   private List<GitFileChange> gitFileChanges = new ArrayList<>();
+  private boolean forcePush;
 
   public GitCommitRequest() {
     super(GitCommandType.COMMIT);
   }
 
-  public GitCommitRequest(List<GitFileChange> gitFileChanges) {
+  public GitCommitRequest(List<GitFileChange> gitFileChanges, boolean forcePush) {
     super(GitCommandType.COMMIT);
     this.gitFileChanges = gitFileChanges;
+    this.forcePush = forcePush;
   }
 }

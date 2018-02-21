@@ -24,19 +24,21 @@ public class YamlChangeSet extends Base {
   @NotNull private List<GitFileChange> gitFileChanges = new ArrayList<>();
   @Indexed @NotNull private Status status;
   private boolean gitToHarness;
+  private boolean forcePush;
   @Indexed private long queuedOn = System.currentTimeMillis();
 
   public enum Status { QUEUED, RUNNING, FAILED, COMPLETED }
 
   @Builder
   public YamlChangeSet(String appId, String accountId, List<GitFileChange> gitFileChanges, Status status,
-      boolean gitToHarness, long queuedOn) {
+      boolean gitToHarness, boolean forcePush, long queuedOn) {
     super();
     this.appId = appId;
     this.accountId = accountId;
     this.gitFileChanges = gitFileChanges;
     this.status = status;
     this.gitToHarness = gitToHarness;
+    this.forcePush = forcePush;
     this.queuedOn = queuedOn;
   }
 }

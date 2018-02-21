@@ -172,7 +172,7 @@ public class YamlGitServiceImpl implements YamlGitService {
         FolderNode top = yamlDirectoryService.getDirectory(accountId, SETUP_ENTITY_ID);
         List<GitFileChange> gitFileChanges = new ArrayList<>();
         gitFileChanges = yamlDirectoryService.traverseDirectory(gitFileChanges, accountId, top, "", true);
-        syncFiles(accountId, gitFileChanges);
+        syncFiles(accountId, gitFileChanges, true);
         logger.info("Performed git full-sync for account {} successfully" + accountId);
       } catch (Exception ex) {
         logger.error("Failed to perform git full-sync for account {} ", yamlGitConfig.getAccountId(), ex);
@@ -181,13 +181,14 @@ public class YamlGitServiceImpl implements YamlGitService {
   }
 
   @Override
-  public void syncFiles(String accountId, List<GitFileChange> gitFileChangeList) {
+  public void syncFiles(String accountId, List<GitFileChange> gitFileChangeList, boolean forcePush) {
     YamlGitConfig yamlGitConfig = yamlDirectoryService.weNeedToPushChanges(accountId);
     if (yamlGitConfig != null) {
       try {
         YamlChangeSet yamlChangeSet = YamlChangeSet.builder()
                                           .accountId(accountId)
                                           .status(Status.QUEUED)
+                                          .forcePush(forcePush)
                                           .gitFileChanges(gitFileChangeList)
                                           .appId(GLOBAL_APP_ID)
                                           .build();
@@ -233,7 +234,10 @@ public class YamlGitServiceImpl implements YamlGitService {
             .withWaitId(waitId)
             .withParameters(new Object[] {GitCommandType.COMMIT_AND_PUSH, yamlGitConfig.getGitConfig(),
                 secretManager.getEncryptionDetails(yamlGitConfig.getGitConfig(), GLOBAL_APP_ID, null),
-                GitCommitRequest.builder().gitFileChanges(gitFileChanges).build()})
+                GitCommitRequest.builder()
+                    .gitFileChanges(gitFileChanges)
+                    .forcePush(yamlChangeSet.isForcePush())
+                    .build()})
             .withTimeout(TimeUnit.MINUTES.toMillis(10))
             .build();
 
