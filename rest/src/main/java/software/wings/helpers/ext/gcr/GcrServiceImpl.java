@@ -2,7 +2,6 @@ package software.wings.helpers.ext.gcr;
 
 import static java.util.Collections.emptyList;
 import static software.wings.helpers.ext.jenkins.BuildDetails.Builder.aBuildDetails;
-import static software.wings.utils.HttpUtil.getOkHttpClientBuilder;
 import static software.wings.utils.Switch.unhandled;
 
 import com.google.api.client.googleapis.auth.oauth2.GoogleCredential;
@@ -50,7 +49,8 @@ public class GcrServiceImpl implements GcrService {
 
   private GcrRestClient getGcrRestClient(String registryHostName) {
     String url = getUrl(registryHostName);
-    OkHttpClient okHttpClient = getOkHttpClientBuilder()
+    OkHttpClient okHttpClient = new OkHttpClient()
+                                    .newBuilder()
                                     .connectTimeout(CONNECT_TIMEOUT, TimeUnit.SECONDS)
                                     .proxy(HttpUtil.checkAndGetNonProxyIfApplicable(url))
                                     .build();

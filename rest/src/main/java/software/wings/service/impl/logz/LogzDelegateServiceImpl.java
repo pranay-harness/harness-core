@@ -1,7 +1,5 @@
 package software.wings.service.impl.logz;
 
-import static software.wings.utils.HttpUtil.getOkHttpClientBuilder;
-
 import com.google.inject.Inject;
 
 import okhttp3.OkHttpClient;
@@ -71,7 +69,7 @@ public class LogzDelegateServiceImpl implements LogzDelegateService {
   private LogzRestClient getLogzRestClient(
       final LogzConfig logzConfig, List<EncryptedDataDetail> encryptedDataDetails) {
     encryptionService.decrypt(logzConfig, encryptedDataDetails);
-    OkHttpClient.Builder httpClient = getOkHttpClientBuilder();
+    OkHttpClient.Builder httpClient = new OkHttpClient.Builder();
     httpClient.addInterceptor(chain -> {
       Request original = chain.request();
 

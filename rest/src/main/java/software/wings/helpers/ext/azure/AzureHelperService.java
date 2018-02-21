@@ -2,7 +2,6 @@ package software.wings.helpers.ext.azure;
 
 import static java.lang.String.format;
 import static org.apache.commons.codec.binary.Base64.encodeBase64String;
-import static software.wings.utils.HttpUtil.getOkHttpClientBuilder;
 
 import com.google.inject.Singleton;
 
@@ -168,7 +167,8 @@ public class AzureHelperService {
 
   private AcrRestClient getAcrRestClient(String registryHostName) {
     String url = getUrl(registryHostName);
-    OkHttpClient okHttpClient = getOkHttpClientBuilder()
+    OkHttpClient okHttpClient = new OkHttpClient()
+                                    .newBuilder()
                                     .connectTimeout(CONNECT_TIMEOUT, TimeUnit.SECONDS)
                                     .proxy(HttpUtil.checkAndGetNonProxyIfApplicable(url))
                                     .build();
