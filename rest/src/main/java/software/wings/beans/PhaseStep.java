@@ -193,6 +193,13 @@ public class PhaseStep {
         .build();
   }
 
+  private static boolean isExecuteWithPreviousSteps(GraphNode step) {
+    if (step.getProperties() == null) {
+      return false;
+    }
+    return Boolean.TRUE.equals(step.getProperties().get(Constants.EXECUTE_WITH_PREVIOUS_STEPS));
+  }
+
   public Graph generateSubworkflow(DeploymentType deploymentType) {
     Builder graphBuilder = aGraph().withGraphName(name);
     if (isEmpty(steps)) {
@@ -206,7 +213,7 @@ public class PhaseStep {
 
     if (stepsInParallel && steps.size() > 1) {
       GraphNode forkNode = aGraphNode()
-                               .withId(getUuid())
+                               .withId(UUIDGenerator.getUuid())
                                .withType(FORK.name())
                                .withName(name + "-FORK")
                                .addProperty("parentId", getUuid())
@@ -216,7 +223,7 @@ public class PhaseStep {
         step.setOrigin(false);
         graphBuilder.addNodes(step);
         graphBuilder.addLinks(aLink()
-                                  .withId(getUuid())
+                                  .withId(UUIDGenerator.getUuid())
                                   .withFrom(forkNode.getId())
                                   .withTo(step.getId())
                                   .withType(TransitionType.FORK.name())
@@ -226,21 +233,23 @@ public class PhaseStep {
         originNode = forkNode;
       }
     } else {
-      int i = 0;
       GraphNode forkNode = null;
       GraphNode prevNode = null;
-      while (i < steps.size()) {
+      for (int i = 0; i < steps.size(); ++i) {
         GraphNode step = steps.get(i);
         step.setOrigin(false);
         graphBuilder.addNodes(step);
-        boolean executeWithPreviousSteps =
-            Boolean.TRUE.equals(step.getProperties().get(Constants.EXECUTE_WITH_PREVIOUS_STEPS));
-        if (i > 0 && step.getProperties() != null && executeWithPreviousSteps) {
+        if (i > 0 && isExecuteWithPreviousSteps(step)) {
           graphBuilder.addLinks(
               aLink().withFrom(forkNode.getId()).withTo(step.getId()).withType(TransitionType.FORK.name()).build());
-        } else if (i < steps.size() - 1
-            && Boolean.TRUE.equals(steps.get(i + 1).getProperties().get(Constants.EXECUTE_WITH_PREVIOUS_STEPS))) {
-          forkNode = aGraphNode().withId(getUuid()).withType(FORK.name()).withName("Fork-" + step.getName()).build();
+          continue;
+        }
+        if (i < steps.size() - 1 && isExecuteWithPreviousSteps(steps.get(i + 1))) {
+          forkNode = aGraphNode()
+                         .withId(UUIDGenerator.getUuid())
+                         .withType(FORK.name())
+                         .withName("Fork-" + step.getName())
+                         .build();
           graphBuilder.addNodes(forkNode);
           graphBuilder.addLinks(
               aLink().withFrom(forkNode.getId()).withTo(step.getId()).withType(TransitionType.FORK.name()).build());
@@ -254,19 +263,15 @@ public class PhaseStep {
                                       .build());
           }
           prevNode = forkNode;
-        } else {
-          if (prevNode == null) {
-            originNode = step;
-          } else {
-            graphBuilder.addLinks(aLink()
-                                      .withFrom(prevNode.getId())
-                                      .withTo(step.getId())
-                                      .withType(TransitionType.SUCCESS.name())
-                                      .build());
-          }
-          prevNode = step;
+          continue;
         }
-        i++;
+        if (prevNode == null) {
+          originNode = step;
+        } else {
+          graphBuilder.addLinks(
+              aLink().withFrom(prevNode.getId()).withTo(step.getId()).withType(TransitionType.SUCCESS.name()).build());
+        }
+        prevNode = step;
       }
     }
     originNode.setOrigin(true);
