@@ -1,6 +1,7 @@
 package software.wings.delegate.service;
 
 import static javax.ws.rs.core.MediaType.MULTIPART_FORM_DATA;
+import static software.wings.common.UUIDGenerator.generateUuid;
 import static software.wings.managerclient.SafeHttpCall.execute;
 
 import com.google.common.cache.CacheBuilder;
@@ -20,7 +21,6 @@ import org.slf4j.LoggerFactory;
 import retrofit2.Response;
 import software.wings.beans.ErrorCode;
 import software.wings.beans.RestResponse;
-import software.wings.common.UUIDGenerator;
 import software.wings.delegate.app.DelegateConfiguration;
 import software.wings.delegatetasks.DelegateFile;
 import software.wings.delegatetasks.DelegateFileManager;
@@ -184,7 +184,7 @@ public class DelegateFileManagerImpl implements DelegateFileManager {
 
   @Override
   public DelegateFile upload(DelegateFile delegateFile, InputStream contentSource) {
-    File file = new File(delegateConfiguration.getLocalDiskPath(), UUIDGenerator.getUuid());
+    File file = new File(delegateConfiguration.getLocalDiskPath(), generateUuid());
     logger.info("File {} created", file.getName());
     try {
       FileOutputStream fout = new FileOutputStream(file);

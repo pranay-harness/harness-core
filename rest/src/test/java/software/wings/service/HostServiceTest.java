@@ -217,7 +217,8 @@ public class HostServiceTest extends WingsBaseTest {
         SettingAttribute hostConnAttr =
             aSettingAttribute().withUuid(HOST_CONN_ATTR_ID).withValue(aHostConnectionAttributes().withAccessType(USER_PASSWORD).build()).build();
 
-        Host requestHost = aHost().withAppId(APP_ID).withHostName(HOST_NAME).withHostConnAttr(hostConnAttr.getUuid())
+        Host requestHost =
+       aHost().withAppId(APP_ID).withHostName(HOST_NAME).withHostConnAttr(hostConnAttr.getUuid())
             .withServiceTemplates(asList(serviceTemplate)).withServiceTemplates(asList(serviceTemplate)).build();
 
         Host hostPreSave =

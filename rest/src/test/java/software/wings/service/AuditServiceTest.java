@@ -2,6 +2,7 @@ package software.wings.service;
 
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.joor.Reflect.on;
+import static software.wings.common.UUIDGenerator.generateUuid;
 import static software.wings.service.intfc.FileService.FileBucket.AUDITS;
 
 import com.google.common.util.concurrent.FakeTimeLimiter;
@@ -16,7 +17,6 @@ import software.wings.beans.HttpMethod;
 import software.wings.beans.SearchFilter;
 import software.wings.beans.SearchFilter.Operator;
 import software.wings.beans.User;
-import software.wings.common.UUIDGenerator;
 import software.wings.dl.PageRequest;
 import software.wings.dl.PageResponse;
 import software.wings.rules.RealMongo;
@@ -32,7 +32,7 @@ public class AuditServiceTest extends WingsBaseTest {
   @Inject private AuditService auditService;
   @Inject private FileService fileService;
 
-  private String appId = UUIDGenerator.getUuid();
+  private String appId = generateUuid();
 
   @Before
   public void setupMocks() {
@@ -125,7 +125,7 @@ public class AuditServiceTest extends WingsBaseTest {
     AuditHeader header = createAuditHeader();
     assertThat(header).isNotNull();
     assertThat(header.getRemoteUser()).isNull();
-    User user = User.Builder.anUser().withUuid(UUIDGenerator.getUuid()).withName("abc").build();
+    User user = User.Builder.anUser().withUuid(generateUuid()).withName("abc").build();
     auditService.updateUser(header, user);
     AuditHeader header2 = auditService.read(header.getAppId(), header.getUuid());
     assertThat(header2).isNotNull();

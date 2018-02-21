@@ -3,6 +3,7 @@ package software.wings.service.impl.yaml;
 import static io.harness.data.structure.EmptyPredicate.isEmpty;
 import static software.wings.beans.Base.GLOBAL_APP_ID;
 import static software.wings.beans.DelegateTask.Builder.aDelegateTask;
+import static software.wings.common.UUIDGenerator.generateUuid;
 
 import com.google.common.collect.Lists;
 import com.google.inject.Inject;
@@ -36,7 +37,6 @@ import software.wings.beans.yaml.GitFileChange;
 import software.wings.beans.yaml.GitFileChange.Builder;
 import software.wings.beans.yaml.YamlConstants;
 import software.wings.beans.yaml.YamlType;
-import software.wings.common.UUIDGenerator;
 import software.wings.dl.PageRequest;
 import software.wings.dl.PageResponse;
 import software.wings.dl.WingsPersistence;
@@ -225,7 +225,7 @@ public class YamlGitServiceImpl implements YamlGitService {
 
     logger.info("Change set [{}] files", yamlChangeSet.getUuid());
 
-    String waitId = UUIDGenerator.getUuid();
+    String waitId = generateUuid();
     DelegateTask delegateTask =
         aDelegateTask()
             .withTaskType(TaskType.GIT_COMMAND)
@@ -305,7 +305,7 @@ public class YamlGitServiceImpl implements YamlGitService {
 
       String processedCommit = gitCommit == null ? null : gitCommit.getCommitId();
 
-      String waitId = UUIDGenerator.getUuid();
+      String waitId = generateUuid();
       DelegateTask delegateTask =
           aDelegateTask()
               .withTaskType(TaskType.GIT_COMMAND)

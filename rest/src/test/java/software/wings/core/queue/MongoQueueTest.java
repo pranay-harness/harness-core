@@ -2,6 +2,7 @@ package software.wings.core.queue;
 
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThatExceptionOfType;
+import static software.wings.common.UUIDGenerator.generateUuid;
 
 import com.google.common.base.MoreObjects;
 import com.google.inject.Inject;
@@ -16,7 +17,6 @@ import org.mongodb.morphia.annotations.Id;
 import org.mongodb.morphia.annotations.PrePersist;
 import org.mongodb.morphia.annotations.Reference;
 import software.wings.WingsBaseTest;
-import software.wings.common.UUIDGenerator;
 
 import java.net.UnknownHostException;
 import java.util.Date;
@@ -523,7 +523,7 @@ public class MongoQueueTest extends WingsBaseTest {
     @PrePersist
     public void onUpdate() {
       if (id == null) {
-        id = UUIDGenerator.getUuid();
+        id = generateUuid();
       }
     }
 

@@ -1,13 +1,13 @@
 package software.wings.service.impl;
 
 import static org.apache.commons.lang3.StringUtils.equalsIgnoreCase;
+import static software.wings.common.UUIDGenerator.generateUuid;
 import static software.wings.exception.WingsException.ALERTING;
 
 import com.google.inject.Inject;
 import com.google.inject.Singleton;
 
 import software.wings.beans.ErrorCode;
-import software.wings.common.UUIDGenerator;
 import software.wings.exception.WingsException;
 import software.wings.service.intfc.DownloadTokenService;
 import software.wings.utils.CacheHelper;
@@ -24,7 +24,7 @@ public class DownloadTokenServiceImpl implements DownloadTokenService {
   @Override
   public String createDownloadToken(String resource) {
     Cache<String, String> cache = cacheHelper.getCache("downloadTokenCache", String.class, String.class);
-    String token = UUIDGenerator.getUuid();
+    String token = generateUuid();
     cache.put(token, resource);
     return token;
   }

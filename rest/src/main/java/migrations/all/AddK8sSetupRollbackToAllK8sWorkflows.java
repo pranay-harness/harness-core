@@ -5,7 +5,7 @@ import static software.wings.beans.GraphNode.GraphNodeBuilder.aGraphNode;
 import static software.wings.beans.PhaseStep.PhaseStepBuilder.aPhaseStep;
 import static software.wings.beans.PhaseStepType.CONTAINER_SETUP;
 import static software.wings.beans.SearchFilter.Operator.EQ;
-import static software.wings.common.UUIDGenerator.getUuid;
+import static software.wings.common.UUIDGenerator.generateUuid;
 import static software.wings.dl.PageRequest.Builder.aPageRequest;
 import static software.wings.dl.PageRequest.UNLIMITED;
 import static software.wings.sm.StateType.KUBERNETES_SETUP_ROLLBACK;
@@ -75,7 +75,7 @@ public class AddK8sSetupRollbackToAllK8sWorkflows implements Migration {
                         rollbackPhase.getPhaseSteps().add(1,
                             aPhaseStep(CONTAINER_SETUP, Constants.SETUP_CONTAINER)
                                 .addStep(aGraphNode()
-                                             .withId(getUuid())
+                                             .withId(generateUuid())
                                              .withType(KUBERNETES_SETUP_ROLLBACK.name())
                                              .withName(Constants.ROLLBACK_CONTAINERS)
                                              .addProperty("rollback", true)

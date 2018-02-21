@@ -7,13 +7,13 @@ package software.wings.sm.states;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.when;
+import static software.wings.common.UUIDGenerator.generateUuid;
 
 import org.junit.Test;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import software.wings.api.ServiceElement;
 import software.wings.beans.ExecutionStrategy;
-import software.wings.common.UUIDGenerator;
 import software.wings.sm.ContextElement;
 import software.wings.sm.ContextElementType;
 import software.wings.sm.ExecutionContextImpl;
@@ -112,7 +112,7 @@ public class RepeatStateTest {
 
   private ExecutionContextImpl prepareExecutionContext(String stateName, List<ContextElement> repeatElements) {
     StateExecutionInstance stateExecutionInstance = new StateExecutionInstance();
-    stateExecutionInstance.setUuid(UUIDGenerator.getUuid());
+    stateExecutionInstance.setUuid(generateUuid());
     stateExecutionInstance.setStateName(stateName);
 
     ExecutionContextImpl context = mock(ExecutionContextImpl.class);

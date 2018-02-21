@@ -2,6 +2,7 @@ package software.wings.service.impl.yaml.handler.workflow;
 
 import static io.harness.data.structure.EmptyPredicate.isEmpty;
 import static software.wings.beans.GraphNode.GraphNodeBuilder.aGraphNode;
+import static software.wings.common.UUIDGenerator.generateUuid;
 
 import com.google.common.collect.Lists;
 import com.google.common.collect.Maps;
@@ -18,7 +19,6 @@ import software.wings.beans.artifact.ArtifactStream;
 import software.wings.beans.yaml.ChangeContext;
 import software.wings.beans.yaml.YamlConstants;
 import software.wings.beans.yaml.YamlType;
-import software.wings.common.UUIDGenerator;
 import software.wings.exception.HarnessException;
 import software.wings.exception.WingsException;
 import software.wings.service.impl.yaml.handler.BaseYamlHandler;
@@ -95,7 +95,7 @@ public class StepYamlHandler extends BaseYamlHandler<StepYaml, GraphNode> {
   }
 
   private void generateKnownProperties(Map<String, Object> outputProperties, ChangeContext<StepYaml> changeContext) {
-    String id = UUIDGenerator.getUuid();
+    String id = generateUuid();
 
     String phaseStepId = changeContext.getEntityIdMap().get("PHASE_STEP");
     outputProperties.put("id", id);

@@ -1,6 +1,7 @@
 package software.wings.service.impl.analysis;
 
 import static org.apache.commons.lang3.StringUtils.isNotBlank;
+import static software.wings.common.UUIDGenerator.generateUuid;
 
 import com.google.common.base.Preconditions;
 import com.google.common.collect.Lists;
@@ -9,7 +10,6 @@ import com.github.reinert.jjschema.SchemaIgnore;
 import org.mongodb.morphia.annotations.Transient;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-import software.wings.common.UUIDGenerator;
 import software.wings.service.impl.newrelic.LearningEngineAnalysisTask;
 import software.wings.service.impl.newrelic.LearningEngineAnalysisTask.LearningEngineAnalysisTaskBuilder;
 import software.wings.service.intfc.LearningEngineService;
@@ -73,7 +73,7 @@ public class LogMLAnalysisGenerator implements Runnable {
   private void generateAnalysis() {
     try {
       for (String query : queries) {
-        String uuid = UUIDGenerator.getUuid();
+        String uuid = generateUuid();
         // TODO fix this
         if (context.getComparisonStrategy() == AnalysisComparisonStrategy.COMPARE_WITH_CURRENT
             && !analysisService.isLogDataCollected(

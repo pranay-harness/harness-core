@@ -1,6 +1,7 @@
 package software.wings.service.impl.yaml.handler.notification;
 
 import static software.wings.beans.NotificationGroup.NotificationGroupBuilder.aNotificationGroup;
+import static software.wings.common.UUIDGenerator.generateUuid;
 
 import com.google.common.collect.Lists;
 import com.google.inject.Inject;
@@ -14,7 +15,6 @@ import software.wings.beans.NotificationRule;
 import software.wings.beans.NotificationRule.NotificationRuleBuilder;
 import software.wings.beans.NotificationRule.Yaml;
 import software.wings.beans.yaml.ChangeContext;
-import software.wings.common.UUIDGenerator;
 import software.wings.exception.HarnessException;
 import software.wings.exception.WingsException;
 import software.wings.service.impl.yaml.handler.BaseYamlHandler;
@@ -64,7 +64,7 @@ public class NotificationRulesYamlHandler extends BaseYamlHandler<NotificationRu
                                            .map(condition -> Util.getEnumFromString(ExecutionStatus.class, condition))
                                            .collect(Collectors.toList());
     return NotificationRuleBuilder.aNotificationRule()
-        .withUuid(UUIDGenerator.getUuid())
+        .withUuid(generateUuid())
         .withActive(true)
         .withBatchNotifications(false)
         .withConditions(conditions)

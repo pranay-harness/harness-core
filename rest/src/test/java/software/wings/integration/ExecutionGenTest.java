@@ -1,5 +1,7 @@
 package software.wings.integration;
 
+import static software.wings.common.UUIDGenerator.generateUuid;
+
 import com.google.inject.Inject;
 
 import org.junit.Ignore;
@@ -8,7 +10,6 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import software.wings.WingsBaseTest;
 import software.wings.beans.WorkflowExecution;
-import software.wings.common.UUIDGenerator;
 import software.wings.dl.PageRequest;
 import software.wings.dl.PageResponse;
 import software.wings.dl.WingsPersistence;
@@ -43,7 +44,7 @@ public class ExecutionGenTest extends WingsBaseTest {
           && workflowExecution.getStatus() != ExecutionStatus.FAILED) {
         continue;
       }
-      workflowExecution.setUuid(UUIDGenerator.getUuid());
+      workflowExecution.setUuid(generateUuid());
       int day = random.nextInt(30);
       long interval = day * 24 * 3600 * 1000;
       workflowExecution.setCreatedAt(workflowExecution.getCreatedAt() - interval);

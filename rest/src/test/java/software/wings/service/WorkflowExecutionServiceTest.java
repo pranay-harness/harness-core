@@ -18,7 +18,7 @@ import static software.wings.beans.GraphNode.GraphNodeBuilder.aGraphNode;
 import static software.wings.beans.Workflow.WorkflowBuilder.aWorkflow;
 import static software.wings.beans.WorkflowExecution.WorkflowExecutionBuilder.aWorkflowExecution;
 import static software.wings.beans.command.ServiceCommand.Builder.aServiceCommand;
-import static software.wings.common.UUIDGenerator.getUuid;
+import static software.wings.common.UUIDGenerator.generateUuid;
 import static software.wings.dl.PageRequest.Builder.aPageRequest;
 import static software.wings.dl.PageResponse.Builder.aPageResponse;
 import static software.wings.sm.ExecutionStatus.RUNNING;
@@ -149,14 +149,14 @@ public class WorkflowExecutionServiceTest extends WingsBaseTest {
     PageResponse<WorkflowExecution> pageResponse = aPageResponse()
                                                        .withResponse(asList(aWorkflowExecution()
                                                                                 .withAppId(APP_ID)
-                                                                                .withUuid(getUuid())
+                                                                                .withUuid(generateUuid())
                                                                                 .withEnvId(ENV_ID)
                                                                                 .withStateMachineId(STATE_MACHINE_ID)
                                                                                 .withStatus(SUCCESS)
                                                                                 .build(),
                                                            aWorkflowExecution()
                                                                .withAppId(APP_ID)
-                                                               .withUuid(getUuid())
+                                                               .withUuid(generateUuid())
                                                                .withEnvId(ENV_ID)
                                                                .withStateMachineId(STATE_MACHINE_ID)
                                                                .withStatus(SUCCESS)
@@ -164,7 +164,7 @@ public class WorkflowExecutionServiceTest extends WingsBaseTest {
                                                                .build(),
                                                            aWorkflowExecution()
                                                                .withAppId(APP_ID)
-                                                               .withUuid(getUuid())
+                                                               .withUuid(generateUuid())
                                                                .withEnvId(ENV_ID)
                                                                .withStateMachineId(STATE_MACHINE_ID)
                                                                .withStatus(ExecutionStatus.FAILED)
@@ -172,7 +172,7 @@ public class WorkflowExecutionServiceTest extends WingsBaseTest {
                                                                .build(),
                                                            aWorkflowExecution()
                                                                .withAppId(APP_ID)
-                                                               .withUuid(getUuid())
+                                                               .withUuid(generateUuid())
                                                                .withEnvId(ENV_ID)
                                                                .withStateMachineId(STATE_MACHINE_ID)
                                                                .withStatus(ExecutionStatus.ABORTED)
@@ -207,14 +207,14 @@ public class WorkflowExecutionServiceTest extends WingsBaseTest {
     PageResponse<WorkflowExecution> pageResponse = aPageResponse()
                                                        .withResponse(asList(aWorkflowExecution()
                                                                                 .withAppId(APP_ID)
-                                                                                .withUuid(getUuid())
+                                                                                .withUuid(generateUuid())
                                                                                 .withEnvId(ENV_ID)
                                                                                 .withStateMachineId(STATE_MACHINE_ID)
                                                                                 .withStatus(SUCCESS)
                                                                                 .build(),
                                                            aWorkflowExecution()
                                                                .withAppId(APP_ID)
-                                                               .withUuid(getUuid())
+                                                               .withUuid(generateUuid())
                                                                .withEnvId(ENV_ID)
                                                                .withStateMachineId(STATE_MACHINE_ID)
                                                                .withStatus(SUCCESS)
@@ -222,7 +222,7 @@ public class WorkflowExecutionServiceTest extends WingsBaseTest {
                                                                .build(),
                                                            aWorkflowExecution()
                                                                .withAppId(APP_ID)
-                                                               .withUuid(getUuid())
+                                                               .withUuid(generateUuid())
                                                                .withEnvId(ENV_ID)
                                                                .withStateMachineId(STATE_MACHINE_ID)
                                                                .withStatus(ExecutionStatus.FAILED)
@@ -230,7 +230,7 @@ public class WorkflowExecutionServiceTest extends WingsBaseTest {
                                                                .build(),
                                                            aWorkflowExecution()
                                                                .withAppId(APP_ID)
-                                                               .withUuid(getUuid())
+                                                               .withUuid(generateUuid())
                                                                .withEnvId(ENV_ID)
                                                                .withStateMachineId(STATE_MACHINE_ID)
                                                                .withStatus(ExecutionStatus.RUNNING)
@@ -265,14 +265,14 @@ public class WorkflowExecutionServiceTest extends WingsBaseTest {
     PageResponse<WorkflowExecution> pageResponse = aPageResponse()
                                                        .withResponse(asList(aWorkflowExecution()
                                                                                 .withAppId(APP_ID)
-                                                                                .withUuid(getUuid())
+                                                                                .withUuid(generateUuid())
                                                                                 .withEnvId(ENV_ID)
                                                                                 .withStateMachineId(STATE_MACHINE_ID)
                                                                                 .withStatus(SUCCESS)
                                                                                 .build(),
                                                            aWorkflowExecution()
                                                                .withAppId(APP_ID)
-                                                               .withUuid(getUuid())
+                                                               .withUuid(generateUuid())
                                                                .withEnvId(ENV_ID)
                                                                .withStateMachineId(STATE_MACHINE_ID)
                                                                .withStatus(SUCCESS)
@@ -290,9 +290,9 @@ public class WorkflowExecutionServiceTest extends WingsBaseTest {
 
     PageResponse<StateExecutionInstance> stateExecutionInstancePageResponse =
         aPageResponse()
-            .withResponse(asList(aStateExecutionInstance().withUuid(getUuid()).withStatus(SUCCESS).build(),
-                aStateExecutionInstance().withUuid(getUuid()).withStatus(ExecutionStatus.PAUSED).build(),
-                aStateExecutionInstance().withUuid(getUuid()).withStatus(ExecutionStatus.FAILED).build()))
+            .withResponse(asList(aStateExecutionInstance().withUuid(generateUuid()).withStatus(SUCCESS).build(),
+                aStateExecutionInstance().withUuid(generateUuid()).withStatus(ExecutionStatus.PAUSED).build(),
+                aStateExecutionInstance().withUuid(generateUuid()).withStatus(ExecutionStatus.FAILED).build()))
             .build();
     when(wingsPersistence.queryAll(eq(StateExecutionInstance.class), any(PageRequest.class)))
         .thenReturn(stateExecutionInstancePageResponse.getResponse());
@@ -325,14 +325,14 @@ public class WorkflowExecutionServiceTest extends WingsBaseTest {
                                                        .withTotal(3)
                                                        .withResponse(asList(aWorkflowExecution()
                                                                                 .withAppId(APP_ID)
-                                                                                .withUuid(getUuid())
+                                                                                .withUuid(generateUuid())
                                                                                 .withEnvId(ENV_ID)
                                                                                 .withStateMachineId(STATE_MACHINE_ID)
                                                                                 .withStatus(SUCCESS)
                                                                                 .build(),
                                                            aWorkflowExecution()
                                                                .withAppId(APP_ID)
-                                                               .withUuid(getUuid())
+                                                               .withUuid(generateUuid())
                                                                .withEnvId(ENV_ID)
                                                                .withStateMachineId(STATE_MACHINE_ID)
                                                                .withStatus(SUCCESS)
@@ -351,9 +351,9 @@ public class WorkflowExecutionServiceTest extends WingsBaseTest {
     PageResponse<StateExecutionInstance> stateExecutionInstancePageResponse =
         aPageResponse()
             .withTotal(3)
-            .withResponse(asList(aStateExecutionInstance().withUuid(getUuid()).withStatus(SUCCESS).build(),
-                aStateExecutionInstance().withUuid(getUuid()).withStatus(WAITING).build(),
-                aStateExecutionInstance().withUuid(getUuid()).withStatus(ExecutionStatus.FAILED).build()))
+            .withResponse(asList(aStateExecutionInstance().withUuid(generateUuid()).withStatus(SUCCESS).build(),
+                aStateExecutionInstance().withUuid(generateUuid()).withStatus(WAITING).build(),
+                aStateExecutionInstance().withUuid(generateUuid()).withStatus(ExecutionStatus.FAILED).build()))
             .build();
     when(wingsPersistence.queryAll(eq(StateExecutionInstance.class), any(PageRequest.class)))
         .thenReturn(stateExecutionInstancePageResponse.getResponse());
@@ -385,14 +385,14 @@ public class WorkflowExecutionServiceTest extends WingsBaseTest {
     PageResponse<WorkflowExecution> pageResponse = aPageResponse()
                                                        .withResponse(asList(aWorkflowExecution()
                                                                                 .withAppId(APP_ID)
-                                                                                .withUuid(getUuid())
+                                                                                .withUuid(generateUuid())
                                                                                 .withEnvId(ENV_ID)
                                                                                 .withStateMachineId(STATE_MACHINE_ID)
                                                                                 .withStatus(SUCCESS)
                                                                                 .build(),
                                                            aWorkflowExecution()
                                                                .withAppId(APP_ID)
-                                                               .withUuid(getUuid())
+                                                               .withUuid(generateUuid())
                                                                .withEnvId(ENV_ID)
                                                                .withStateMachineId(STATE_MACHINE_ID)
                                                                .withStatus(SUCCESS)
@@ -409,9 +409,9 @@ public class WorkflowExecutionServiceTest extends WingsBaseTest {
     when(wingsPersistence.query(WorkflowExecution.class, pageRequest)).thenReturn(pageResponse);
 
     List<StateExecutionInstance> stateExecutionInstances =
-        asList(aStateExecutionInstance().withUuid(getUuid()).withStatus(SUCCESS).build(),
-            aStateExecutionInstance().withUuid(getUuid()).withStatus(ExecutionStatus.RUNNING).build(),
-            aStateExecutionInstance().withUuid(getUuid()).withStatus(ExecutionStatus.FAILED).build());
+        asList(aStateExecutionInstance().withUuid(generateUuid()).withStatus(SUCCESS).build(),
+            aStateExecutionInstance().withUuid(generateUuid()).withStatus(ExecutionStatus.RUNNING).build(),
+            aStateExecutionInstance().withUuid(generateUuid()).withStatus(ExecutionStatus.FAILED).build());
     Map<String, StateExecutionInstance> stateExecutionInstanceMap =
         stateExecutionInstances.stream().collect(toMap(StateExecutionInstance::getUuid, identity()));
 
@@ -454,8 +454,8 @@ public class WorkflowExecutionServiceTest extends WingsBaseTest {
     String commandName = "Start";
     executionArgs.setCommandName(commandName);
 
-    ServiceInstance inst1 = ServiceInstance.Builder.aServiceInstance().withUuid(getUuid()).build();
-    ServiceInstance inst2 = ServiceInstance.Builder.aServiceInstance().withUuid(getUuid()).build();
+    ServiceInstance inst1 = ServiceInstance.Builder.aServiceInstance().withUuid(generateUuid()).build();
+    ServiceInstance inst2 = ServiceInstance.Builder.aServiceInstance().withUuid(generateUuid()).build();
     executionArgs.setServiceInstances(Lists.newArrayList(inst1, inst2));
 
     when(stateMachineExecutionSimulator.getInfrastructureRequiredEntityType(
@@ -592,7 +592,7 @@ public class WorkflowExecutionServiceTest extends WingsBaseTest {
     try {
       ExecutionArgs executionArgs = new ExecutionArgs();
       executionArgs.setWorkflowType(WorkflowType.SIMPLE);
-      String serviceId = getUuid();
+      String serviceId = generateUuid();
       executionArgs.setServiceId(serviceId);
 
       String commandName = "Start";

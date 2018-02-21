@@ -46,7 +46,7 @@ import static software.wings.beans.WorkflowPhase.WorkflowPhaseBuilder.aWorkflowP
 import static software.wings.common.Constants.ARTIFACT_TYPE;
 import static software.wings.common.Constants.ENTITY_TYPE;
 import static software.wings.common.Constants.WORKFLOW_INFRAMAPPING_VALIDATION_MESSAGE;
-import static software.wings.common.UUIDGenerator.getUuid;
+import static software.wings.common.UUIDGenerator.generateUuid;
 import static software.wings.dl.MongoHelper.setUnset;
 import static software.wings.dl.PageRequest.Builder.aPageRequest;
 import static software.wings.sm.StateMachineExecutionSimulator.populateRequiredEntityTypesByAccessType;
@@ -2061,7 +2061,7 @@ public class WorkflowServiceImpl implements WorkflowService, DataProvider {
         defaultData.put("autoScalingSteadyStateTimeout", 10);
         workflowPhase.addPhaseStep(aPhaseStep(AMI_AUTOSCALING_GROUP_SETUP, Constants.SETUP_AUTOSCALING_GROUP)
                                        .addStep(aGraphNode()
-                                                    .withId(getUuid())
+                                                    .withId(generateUuid())
                                                     .withType(AWS_AMI_SERVICE_SETUP.name())
                                                     .withName("AWS AutoScaling Group Setup")
                                                     .withProperties(defaultData)
@@ -2071,7 +2071,7 @@ public class WorkflowServiceImpl implements WorkflowService, DataProvider {
     }
     workflowPhase.addPhaseStep(aPhaseStep(AMI_DEPLOY_AUTOSCALING_GROUP, Constants.DEPLOY_SERVICE)
                                    .addStep(aGraphNode()
-                                                .withId(getUuid())
+                                                .withId(generateUuid())
                                                 .withType(AWS_AMI_SERVICE_DEPLOY.name())
                                                 .withName(Constants.UPGRADE_AUTOSCALING_GROUP)
                                                 .build())
@@ -2090,11 +2090,13 @@ public class WorkflowServiceImpl implements WorkflowService, DataProvider {
 
     workflowPhase.addPhaseStep(aPhaseStep(PREPARE_STEPS, Constants.PREPARE_STEPS).build());
 
-    workflowPhase.addPhaseStep(
-        aPhaseStep(DEPLOY_AWS_LAMBDA, Constants.DEPLOY_SERVICE)
-            .addStep(
-                aGraphNode().withId(getUuid()).withType(AWS_LAMBDA_STATE.name()).withName(Constants.AWS_LAMBDA).build())
-            .build());
+    workflowPhase.addPhaseStep(aPhaseStep(DEPLOY_AWS_LAMBDA, Constants.DEPLOY_SERVICE)
+                                   .addStep(aGraphNode()
+                                                .withId(generateUuid())
+                                                .withType(AWS_LAMBDA_STATE.name())
+                                                .withName(Constants.AWS_LAMBDA)
+                                                .build())
+                                   .build());
 
     workflowPhase.addPhaseStep(aPhaseStep(VERIFY_SERVICE, Constants.VERIFY_SERVICE)
                                    .addAllSteps(commandNodes(commandMap, CommandType.VERIFY))
@@ -2108,7 +2110,7 @@ public class WorkflowServiceImpl implements WorkflowService, DataProvider {
 
     workflowPhase.addPhaseStep(aPhaseStep(COLLECT_ARTIFACT, Constants.COLLECT_ARTIFACT)
                                    .addStep(aGraphNode()
-                                                .withId(getUuid())
+                                                .withId(generateUuid())
                                                 .withType(ARTIFACT_COLLECTION.name())
                                                 .withName(Constants.ARTIFACT_COLLECTION)
                                                 .build())
@@ -2124,7 +2126,7 @@ public class WorkflowServiceImpl implements WorkflowService, DataProvider {
 
     Map<String, String> stateDefaults = getStateDefaults(appId, service.getUuid(), AWS_CODEDEPLOY_STATE);
     GraphNodeBuilder node =
-        aGraphNode().withId(getUuid()).withType(AWS_CODEDEPLOY_STATE.name()).withName(Constants.AWS_CODE_DEPLOY);
+        aGraphNode().withId(generateUuid()).withType(AWS_CODEDEPLOY_STATE.name()).withName(Constants.AWS_CODE_DEPLOY);
     if (MapUtils.isNotEmpty(stateDefaults)) {
       if (isNotBlank(stateDefaults.get("bucket"))) {
         node.addProperty("bucket", stateDefaults.get("bucket"));
@@ -2157,7 +2159,7 @@ public class WorkflowServiceImpl implements WorkflowService, DataProvider {
           && Constants.RUNTIME.equals(((EcsInfrastructureMapping) infraMapping).getClusterName())) {
         workflowPhase.addPhaseStep(aPhaseStep(CLUSTER_SETUP, Constants.SETUP_CLUSTER)
                                        .addStep(aGraphNode()
-                                                    .withId(getUuid())
+                                                    .withId(generateUuid())
                                                     .withType(AWS_CLUSTER_SETUP.name())
                                                     .withName("AWS Cluster Setup")
                                                     .build())
@@ -2165,7 +2167,7 @@ public class WorkflowServiceImpl implements WorkflowService, DataProvider {
       }
       workflowPhase.addPhaseStep(aPhaseStep(CONTAINER_SETUP, Constants.SETUP_CONTAINER)
                                      .addStep(aGraphNode()
-                                                  .withId(getUuid())
+                                                  .withId(generateUuid())
                                                   .withType(ECS_SERVICE_SETUP.name())
                                                   .withName(Constants.ECS_SERVICE_SETUP)
                                                   .build())
@@ -2173,7 +2175,7 @@ public class WorkflowServiceImpl implements WorkflowService, DataProvider {
     }
     workflowPhase.addPhaseStep(aPhaseStep(CONTAINER_DEPLOY, Constants.DEPLOY_CONTAINERS)
                                    .addStep(aGraphNode()
-                                                .withId(getUuid())
+                                                .withId(generateUuid())
                                                 .withType(ECS_SERVICE_DEPLOY.name())
                                                 .withName(Constants.UPGRADE_CONTAINERS)
                                                 .build())
@@ -2197,7 +2199,7 @@ public class WorkflowServiceImpl implements WorkflowService, DataProvider {
           && Constants.RUNTIME.equals(((GcpKubernetesInfrastructureMapping) infraMapping).getClusterName())) {
         workflowPhase.addPhaseStep(aPhaseStep(CLUSTER_SETUP, Constants.SETUP_CLUSTER)
                                        .addStep(aGraphNode()
-                                                    .withId(getUuid())
+                                                    .withId(generateUuid())
                                                     .withType(GCP_CLUSTER_SETUP.name())
                                                     .withName("GCP Cluster Setup")
                                                     .build())
@@ -2205,7 +2207,7 @@ public class WorkflowServiceImpl implements WorkflowService, DataProvider {
       }
       workflowPhase.addPhaseStep(aPhaseStep(CONTAINER_SETUP, Constants.SETUP_CONTAINER)
                                      .addStep(aGraphNode()
-                                                  .withId(getUuid())
+                                                  .withId(generateUuid())
                                                   .withType(KUBERNETES_SETUP.name())
                                                   .withName("Kubernetes Service Setup")
                                                   .build())
@@ -2218,7 +2220,7 @@ public class WorkflowServiceImpl implements WorkflowService, DataProvider {
     if (containerTask == null || !containerTask.checkDaemonSet()) {
       workflowPhase.addPhaseStep(aPhaseStep(CONTAINER_DEPLOY, Constants.DEPLOY_CONTAINERS)
                                      .addStep(aGraphNode()
-                                                  .withId(getUuid())
+                                                  .withId(generateUuid())
                                                   .withType(KUBERNETES_DEPLOY.name())
                                                   .withName("Upgrade Containers")
                                                   .build())
@@ -2330,7 +2332,7 @@ public class WorkflowServiceImpl implements WorkflowService, DataProvider {
         .withInfraMappingId(workflowPhase.getInfraMappingId())
         .addPhaseStep(aPhaseStep(AMI_DEPLOY_AUTOSCALING_GROUP, Constants.ROLLBACK_SERVICE)
                           .addStep(aGraphNode()
-                                       .withId(getUuid())
+                                       .withId(generateUuid())
                                        .withType(AWS_AMI_SERVICE_ROLLBACK.name())
                                        .withName(Constants.ROLLBACK_AWS_AMI_CLUSTER)
                                        .addProperty("rollback", true)
@@ -2360,7 +2362,7 @@ public class WorkflowServiceImpl implements WorkflowService, DataProvider {
         .withInfraMappingId(workflowPhase.getInfraMappingId())
         .addPhaseStep(aPhaseStep(DEPLOY_AWS_LAMBDA, Constants.DEPLOY_SERVICE)
                           .addStep(aGraphNode()
-                                       .withId(getUuid())
+                                       .withId(generateUuid())
                                        .withType(AWS_LAMBDA_ROLLBACK.name())
                                        .withName(Constants.ROLLBACK_AWS_LAMBDA)
                                        .addProperty("rollback", true)
@@ -2390,7 +2392,7 @@ public class WorkflowServiceImpl implements WorkflowService, DataProvider {
         .withInfraMappingId(workflowPhase.getInfraMappingId())
         .addPhaseStep(aPhaseStep(CONTAINER_DEPLOY, Constants.DEPLOY_CONTAINERS)
                           .addStep(aGraphNode()
-                                       .withId(getUuid())
+                                       .withId(generateUuid())
                                        .withType(ECS_SERVICE_ROLLBACK.name())
                                        .withName(Constants.ROLLBACK_CONTAINERS)
                                        .addProperty("rollback", true)
@@ -2420,7 +2422,7 @@ public class WorkflowServiceImpl implements WorkflowService, DataProvider {
         .withInfraMappingId(workflowPhase.getInfraMappingId())
         .addPhaseStep(aPhaseStep(DEPLOY_AWSCODEDEPLOY, Constants.DEPLOY_SERVICE)
                           .addStep(aGraphNode()
-                                       .withId(getUuid())
+                                       .withId(generateUuid())
                                        .withType(AWS_CODEDEPLOY_ROLLBACK.name())
                                        .withName(Constants.ROLLBACK_AWS_CODE_DEPLOY)
                                        .addProperty("rollback", true)
@@ -2552,7 +2554,7 @@ public class WorkflowServiceImpl implements WorkflowService, DataProvider {
               .withInfraMappingId(workflowPhase.getInfraMappingId())
               .addPhaseStep(aPhaseStep(CONTAINER_DEPLOY, Constants.DEPLOY_CONTAINERS)
                                 .addStep(aGraphNode()
-                                             .withId(getUuid())
+                                             .withId(generateUuid())
                                              .withType(StateType.KUBERNETES_DEPLOY_ROLLBACK.name())
                                              .withName(Constants.ROLLBACK_CONTAINERS)
                                              .addProperty("rollback", true)
@@ -2564,7 +2566,7 @@ public class WorkflowServiceImpl implements WorkflowService, DataProvider {
       if (serviceSetupRequired) {
         workflowPhaseBuilder.addPhaseStep(aPhaseStep(CONTAINER_SETUP, Constants.SETUP_CONTAINER)
                                               .addStep(aGraphNode()
-                                                           .withId(getUuid())
+                                                           .withId(generateUuid())
                                                            .withType(KUBERNETES_SETUP_ROLLBACK.name())
                                                            .withName(Constants.ROLLBACK_CONTAINERS)
                                                            .addProperty("rollback", true)
@@ -2597,7 +2599,7 @@ public class WorkflowServiceImpl implements WorkflowService, DataProvider {
         .withInfraMappingId(workflowPhase.getInfraMappingId())
         .addPhaseStep(aPhaseStep(CONTAINER_SETUP, Constants.SETUP_CONTAINER)
                           .addStep(aGraphNode()
-                                       .withId(getUuid())
+                                       .withId(generateUuid())
                                        .withType(KUBERNETES_SETUP_ROLLBACK.name())
                                        .withName(Constants.ROLLBACK_CONTAINERS)
                                        .addProperty("rollback", true)
@@ -2640,7 +2642,7 @@ public class WorkflowServiceImpl implements WorkflowService, DataProvider {
 
     for (Command command : commands) {
       nodes.add(aGraphNode()
-                    .withId(getUuid())
+                    .withId(generateUuid())
                     .withType(COMMAND.name())
                     .withName(command.getName())
                     .addProperty("commandName", command.getName())

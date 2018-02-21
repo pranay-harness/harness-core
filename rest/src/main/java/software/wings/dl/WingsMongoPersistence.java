@@ -7,6 +7,7 @@ import static org.apache.commons.lang3.StringUtils.isBlank;
 import static org.apache.commons.lang3.StringUtils.isNotBlank;
 import static org.mongodb.morphia.mapping.Mapper.ID_KEY;
 import static software.wings.beans.SearchFilter.Builder.aSearchFilter;
+import static software.wings.common.UUIDGenerator.generateUuid;
 import static software.wings.exception.WingsException.HARMLESS;
 import static software.wings.utils.WingsReflectionUtils.getDeclaredAndInheritedFields;
 import static software.wings.utils.WingsReflectionUtils.getDecryptedField;
@@ -45,7 +46,6 @@ import software.wings.beans.ServiceVariable;
 import software.wings.beans.ServiceVariable.Type;
 import software.wings.beans.SettingAttribute;
 import software.wings.beans.User;
-import software.wings.common.UUIDGenerator;
 import software.wings.exception.WingsException;
 import software.wings.security.EncryptionType;
 import software.wings.security.UserRequestInfo;
@@ -279,7 +279,7 @@ public class WingsMongoPersistence implements WingsPersistence, Managed {
               .build());
     }
     updateOperations.setOnInsert("createdAt", currentTimeMillis());
-    updateOperations.setOnInsert("_id", UUIDGenerator.getUuid());
+    updateOperations.setOnInsert("_id", generateUuid());
     return primaryDatastore.findAndModify(query, updateOperations, new FindAndModifyOptions().upsert(true));
   }
 

@@ -9,7 +9,7 @@ import static software.wings.api.ServiceElement.Builder.aServiceElement;
 import static software.wings.beans.Application.Builder.anApplication;
 import static software.wings.beans.Environment.Builder.anEnvironment;
 import static software.wings.beans.SettingAttribute.Builder.aSettingAttribute;
-import static software.wings.common.UUIDGenerator.getUuid;
+import static software.wings.common.UUIDGenerator.generateUuid;
 import static software.wings.utils.WingsTestConstants.ACCOUNT_ID;
 import static software.wings.utils.WingsTestConstants.ARTIFACT_ID;
 
@@ -85,17 +85,17 @@ public class ExecutionContextImplTest extends WingsBaseTest {
     ExecutionContextImpl context = new ExecutionContextImpl(stateExecutionInstance);
 
     ServiceElement element1 = new ServiceElement();
-    element1.setUuid(getUuid());
+    element1.setUuid(generateUuid());
     element1.setName("svc1");
     context.pushContextElement(element1);
 
     ServiceElement element2 = new ServiceElement();
-    element2.setUuid(getUuid());
+    element2.setUuid(generateUuid());
     element2.setName("svc2");
     context.pushContextElement(element2);
 
     ServiceElement element3 = new ServiceElement();
-    element3.setUuid(getUuid());
+    element3.setUuid(generateUuid());
     element3.setName("svc3");
     context.pushContextElement(element3);
 
@@ -114,18 +114,18 @@ public class ExecutionContextImplTest extends WingsBaseTest {
     injector.injectMembers(context);
 
     ServiceElement svc = new ServiceElement();
-    svc.setUuid(getUuid());
+    svc.setUuid(generateUuid());
     svc.setName("svc1");
     context.pushContextElement(svc);
 
     ServiceTemplateElement st = new ServiceTemplateElement();
-    st.setUuid(getUuid());
+    st.setUuid(generateUuid());
     st.setName("st1");
-    st.setServiceElement(aServiceElement().withUuid(getUuid()).withName("svc2").build());
+    st.setServiceElement(aServiceElement().withUuid(generateUuid()).withName("svc2").build());
     context.pushContextElement(st);
 
     HostElement host = new HostElement();
-    host.setUuid(getUuid());
+    host.setUuid(generateUuid());
     host.setHostName("host1");
     context.pushContextElement(host);
 
@@ -156,24 +156,24 @@ public class ExecutionContextImplTest extends WingsBaseTest {
   @Test
   public void shouldEvaluateIndirectExpression() {
     StateExecutionInstance stateExecutionInstance = new StateExecutionInstance();
-    stateExecutionInstance.setExecutionUuid(getUuid());
+    stateExecutionInstance.setExecutionUuid(generateUuid());
     stateExecutionInstance.setStateName("http");
     ExecutionContextImpl context = new ExecutionContextImpl(stateExecutionInstance);
     injector.injectMembers(context);
 
     ServiceElement svc = new ServiceElement();
-    svc.setUuid(getUuid());
+    svc.setUuid(generateUuid());
     svc.setName("svc1");
     context.pushContextElement(svc);
 
     ServiceTemplateElement st = new ServiceTemplateElement();
-    st.setUuid(getUuid());
+    st.setUuid(generateUuid());
     st.setName("st1");
-    st.setServiceElement(aServiceElement().withUuid(getUuid()).withName("svc2").build());
+    st.setServiceElement(aServiceElement().withUuid(generateUuid()).withName("svc2").build());
     context.pushContextElement(st);
 
     HostElement host = new HostElement();
-    host.setUuid(getUuid());
+    host.setUuid(generateUuid());
     host.setHostName("host1");
     context.pushContextElement(host);
 

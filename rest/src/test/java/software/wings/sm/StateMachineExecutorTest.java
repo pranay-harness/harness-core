@@ -2,6 +2,7 @@ package software.wings.sm;
 
 import static org.apache.commons.lang3.RandomUtils.nextInt;
 import static org.assertj.core.api.Assertions.assertThat;
+import static software.wings.common.UUIDGenerator.generateUuid;
 import static software.wings.sm.ExecutionEventAdvice.ExecutionEventAdviceBuilder.anExecutionEventAdvice;
 
 import com.google.inject.Inject;
@@ -9,7 +10,6 @@ import com.google.inject.Inject;
 import io.harness.rule.RepeatRule.Repeat;
 import org.junit.Test;
 import software.wings.WingsBaseTest;
-import software.wings.common.UUIDGenerator;
 import software.wings.rules.Listeners;
 import software.wings.service.StaticMap;
 import software.wings.service.intfc.WorkflowService;
@@ -38,7 +38,7 @@ public class StateMachineExecutorTest extends WingsBaseTest {
    */
   @Test
   public void shouldTrigger() throws InterruptedException {
-    String appId = UUIDGenerator.getUuid();
+    String appId = generateUuid();
 
     StateMachine sm = new StateMachine();
     sm.setAppId(appId);
@@ -66,7 +66,7 @@ public class StateMachineExecutorTest extends WingsBaseTest {
 
     String smId = sm.getUuid();
     System.out.println("Going to trigger state machine");
-    String executionUuid = UUIDGenerator.getUuid();
+    String executionUuid = generateUuid();
 
     StateMachineExecutionCallbackMock callback = new StateMachineExecutionCallbackMock();
 
@@ -92,7 +92,7 @@ public class StateMachineExecutorTest extends WingsBaseTest {
    */
   @Test
   public void shouldTriggerFailedTransition() throws InterruptedException {
-    String appId = UUIDGenerator.getUuid();
+    String appId = generateUuid();
     StateMachine sm = new StateMachine();
     sm.setAppId(appId);
     State stateA = new StateSync("stateA" + new Random().nextInt(10000));
@@ -126,7 +126,7 @@ public class StateMachineExecutorTest extends WingsBaseTest {
 
     String smId = sm.getUuid();
     System.out.println("Going to trigger state machine");
-    String executionUuid = UUIDGenerator.getUuid();
+    String executionUuid = generateUuid();
 
     StateMachineExecutionCallbackMock callback = new StateMachineExecutionCallbackMock();
 
@@ -154,7 +154,7 @@ public class StateMachineExecutorTest extends WingsBaseTest {
    */
   @Test
   public void shouldTriggerAndFail() throws InterruptedException {
-    String appId = UUIDGenerator.getUuid();
+    String appId = generateUuid();
     StateMachine sm = new StateMachine();
     sm.setAppId(appId);
     State stateA = new StateMachineTest.StateSync("stateA" + new Random().nextInt(10000));
@@ -188,7 +188,7 @@ public class StateMachineExecutorTest extends WingsBaseTest {
 
     String smId = sm.getUuid();
     System.out.println("Going to trigger state machine");
-    String executionUuid = UUIDGenerator.getUuid();
+    String executionUuid = generateUuid();
 
     StateMachineExecutionCallbackMock callback = new StateMachineExecutionCallbackMock();
 
@@ -214,7 +214,7 @@ public class StateMachineExecutorTest extends WingsBaseTest {
    */
   @Test
   public void shouldTriggerAsync() throws InterruptedException {
-    String appId = UUIDGenerator.getUuid();
+    String appId = generateUuid();
     StateMachine sm = new StateMachine();
     sm.setAppId(appId);
     State stateA = new StateSync("stateA" + nextInt(0, 10000));
@@ -256,7 +256,7 @@ public class StateMachineExecutorTest extends WingsBaseTest {
     assertThat(sm).isNotNull().extracting(StateMachine::getUuid).doesNotContainNull();
 
     System.out.println("Going to trigger state machine");
-    String executionUuid = UUIDGenerator.getUuid();
+    String executionUuid = generateUuid();
 
     StateMachineExecutionCallbackMock callback = new StateMachineExecutionCallbackMock();
     stateMachineExecutor.execute(appId, sm.getUuid(), executionUuid, executionUuid, null, callback);
@@ -283,7 +283,7 @@ public class StateMachineExecutorTest extends WingsBaseTest {
    */
   @Test
   public void shouldTriggerFailedAsync() throws InterruptedException {
-    String appId = UUIDGenerator.getUuid();
+    String appId = generateUuid();
     StateMachine sm = new StateMachine();
     sm.setAppId(appId);
     State stateA = new StateSync("stateA" + new Random().nextInt(10000));
@@ -318,7 +318,7 @@ public class StateMachineExecutorTest extends WingsBaseTest {
     assertThat(sm).isNotNull().extracting(StateMachine::getUuid).doesNotContainNull();
 
     System.out.println("Going to trigger state machine");
-    String executionUuid = UUIDGenerator.getUuid();
+    String executionUuid = generateUuid();
 
     StateMachineExecutionCallbackMock callback = new StateMachineExecutionCallbackMock();
     stateMachineExecutor.execute(appId, sm.getUuid(), executionUuid, executionUuid, null, callback);
@@ -344,7 +344,7 @@ public class StateMachineExecutorTest extends WingsBaseTest {
    */
   @Test
   public void shouldAdviceToMarkSuccess() throws InterruptedException {
-    String appId = UUIDGenerator.getUuid();
+    String appId = generateUuid();
     StateMachine sm = new StateMachine();
     sm.setAppId(appId);
     State stateA = new StateSync("stateA" + new Random().nextInt(10000));
@@ -379,7 +379,7 @@ public class StateMachineExecutorTest extends WingsBaseTest {
     assertThat(sm).isNotNull().extracting(StateMachine::getUuid).doesNotContainNull();
 
     System.out.println("Going to trigger state machine");
-    String executionUuid = UUIDGenerator.getUuid();
+    String executionUuid = generateUuid();
 
     StateMachineExecutionCallbackMock callback = new StateMachineExecutionCallbackMock();
     CustomeExecutionEventAdvisor advisor = new CustomeExecutionEventAdvisor(ExecutionInterruptType.MARK_SUCCESS);
@@ -406,7 +406,7 @@ public class StateMachineExecutorTest extends WingsBaseTest {
    */
   @Test
   public void shouldAdviceToMarkFailed() throws InterruptedException {
-    String appId = UUIDGenerator.getUuid();
+    String appId = generateUuid();
     StateMachine sm = new StateMachine();
     sm.setAppId(appId);
     State stateA = new StateSync("stateA" + new Random().nextInt(10000));
@@ -441,7 +441,7 @@ public class StateMachineExecutorTest extends WingsBaseTest {
     assertThat(sm).isNotNull().extracting(StateMachine::getUuid).doesNotContainNull();
 
     System.out.println("Going to trigger state machine");
-    String executionUuid = UUIDGenerator.getUuid();
+    String executionUuid = generateUuid();
 
     StateMachineExecutionCallbackMock callback = new StateMachineExecutionCallbackMock();
     CustomeExecutionEventAdvisor advisor = new CustomeExecutionEventAdvisor(ExecutionInterruptType.MARK_FAILED);
@@ -468,7 +468,7 @@ public class StateMachineExecutorTest extends WingsBaseTest {
    */
   @Test
   public void shouldAdviceToMarkAborted() throws InterruptedException {
-    String appId = UUIDGenerator.getUuid();
+    String appId = generateUuid();
     StateMachine sm = new StateMachine();
     sm.setAppId(appId);
     State stateA = new StateSync("stateA" + new Random().nextInt(10000));
@@ -503,7 +503,7 @@ public class StateMachineExecutorTest extends WingsBaseTest {
     assertThat(sm).isNotNull().extracting(StateMachine::getUuid).doesNotContainNull();
 
     System.out.println("Going to trigger state machine");
-    String executionUuid = UUIDGenerator.getUuid();
+    String executionUuid = generateUuid();
 
     StateMachineExecutionCallbackMock callback = new StateMachineExecutionCallbackMock();
     CustomeExecutionEventAdvisor advisor = new CustomeExecutionEventAdvisor(ExecutionInterruptType.ABORT);
@@ -553,7 +553,7 @@ public class StateMachineExecutorTest extends WingsBaseTest {
   @Test
   @Repeat(times = 2, successes = 1)
   public void shouldTriggerAndFailAsync() throws InterruptedException {
-    String appId = UUIDGenerator.getUuid();
+    String appId = generateUuid();
     StateMachine sm = new StateMachine();
     sm.setAppId(appId);
     State stateA = new StateMachineTest.StateSync("stateA" + new Random().nextInt(10000));
@@ -588,7 +588,7 @@ public class StateMachineExecutorTest extends WingsBaseTest {
     assertThat(sm).isNotNull().extracting(StateMachine::getUuid).doesNotContainNull();
 
     System.out.println("Going to trigger state machine");
-    String executionUuid = UUIDGenerator.getUuid();
+    String executionUuid = generateUuid();
 
     StateMachineExecutionCallbackMock callback = new StateMachineExecutionCallbackMock();
     stateMachineExecutor.execute(appId, sm.getUuid(), executionUuid, executionUuid, null, callback);
@@ -611,7 +611,7 @@ public class StateMachineExecutorTest extends WingsBaseTest {
    */
   @Test
   public void shouldFailAfterException() throws InterruptedException {
-    String appId = UUIDGenerator.getUuid();
+    String appId = generateUuid();
     StateMachine sm = new StateMachine();
     sm.setAppId(appId);
     State stateA = new StateMachineTest.StateSync("stateA" + new Random().nextInt(10000));
@@ -646,7 +646,7 @@ public class StateMachineExecutorTest extends WingsBaseTest {
     assertThat(sm).isNotNull().extracting(StateMachine::getUuid).doesNotContainNull();
 
     System.out.println("Going to trigger state machine");
-    String executionUuid = UUIDGenerator.getUuid();
+    String executionUuid = generateUuid();
 
     StateMachineExecutionCallbackMock callback = new StateMachineExecutionCallbackMock();
     stateMachineExecutor.execute(appId, sm.getUuid(), executionUuid, executionUuid, null, callback);
@@ -669,7 +669,7 @@ public class StateMachineExecutorTest extends WingsBaseTest {
    */
   @Test
   public void shouldTriggerSimpleFork() throws InterruptedException {
-    String appId = UUIDGenerator.getUuid();
+    String appId = generateUuid();
     StateMachine sm = new StateMachine();
     sm.setAppId(appId);
     State stateA = new StateSync("stateA" + new Random().nextInt(10000));
@@ -698,7 +698,7 @@ public class StateMachineExecutorTest extends WingsBaseTest {
     assertThat(sm).isNotNull().extracting(StateMachine::getUuid).doesNotContainNull();
 
     System.out.println("Going to trigger state machine");
-    String executionUuid = UUIDGenerator.getUuid();
+    String executionUuid = generateUuid();
 
     StateMachineExecutionCallbackMock callback = new StateMachineExecutionCallbackMock();
     stateMachineExecutor.execute(appId, sm.getUuid(), executionUuid, executionUuid, null, callback);
@@ -712,7 +712,7 @@ public class StateMachineExecutorTest extends WingsBaseTest {
    */
   @Test
   public void shouldTriggerMixedFork() throws InterruptedException {
-    String appId = UUIDGenerator.getUuid();
+    String appId = generateUuid();
     StateMachine sm = new StateMachine();
     sm.setAppId(appId);
     State stateA = new StateSync("stateA" + new Random().nextInt(10000));
@@ -757,7 +757,7 @@ public class StateMachineExecutorTest extends WingsBaseTest {
 
     String smId = sm.getUuid();
     System.out.println("Going to trigger state machine");
-    String executionUuid = UUIDGenerator.getUuid();
+    String executionUuid = generateUuid();
 
     StateMachineExecutionCallbackMock callback = new StateMachineExecutionCallbackMock();
     stateMachineExecutor.execute(appId, smId, executionUuid, executionUuid, null, callback);

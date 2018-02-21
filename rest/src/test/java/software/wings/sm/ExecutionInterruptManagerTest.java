@@ -3,6 +3,7 @@ package software.wings.sm;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.failBecauseExceptionWasNotThrown;
 import static software.wings.beans.WorkflowExecution.WorkflowExecutionBuilder.aWorkflowExecution;
+import static software.wings.common.UUIDGenerator.generateUuid;
 import static software.wings.sm.ExecutionInterrupt.ExecutionInterruptBuilder.anExecutionInterrupt;
 
 import com.google.inject.Inject;
@@ -19,7 +20,6 @@ import software.wings.beans.Environment;
 import software.wings.beans.Environment.Builder;
 import software.wings.beans.ErrorCode;
 import software.wings.beans.WorkflowExecution;
-import software.wings.common.UUIDGenerator;
 import software.wings.dl.WingsPersistence;
 import software.wings.exception.WingsException;
 
@@ -78,8 +78,8 @@ public class ExecutionInterruptManagerTest extends WingsBaseTest {
                                                 .withAppId(app.getUuid())
                                                 .withExecutionInterruptType(ExecutionInterruptType.PAUSE)
                                                 .withEnvId(env.getUuid())
-                                                .withExecutionUuid(UUIDGenerator.getUuid())
-                                                .withStateExecutionInstanceId(UUIDGenerator.getUuid())
+                                                .withExecutionUuid(generateUuid())
+                                                .withStateExecutionInstanceId(generateUuid())
                                                 .build();
     try {
       executionInterrupt = executionInterruptManager.registerExecutionInterrupt(executionInterrupt);
@@ -112,7 +112,7 @@ public class ExecutionInterruptManagerTest extends WingsBaseTest {
                                                 .withAppId(app.getUuid())
                                                 .withExecutionInterruptType(ExecutionInterruptType.RESUME)
                                                 .withEnvId(env.getUuid())
-                                                .withExecutionUuid(UUIDGenerator.getUuid())
+                                                .withExecutionUuid(generateUuid())
                                                 .withStateExecutionInstanceId(stateExecutionInstance.getUuid())
                                                 .build();
     try {
@@ -141,7 +141,7 @@ public class ExecutionInterruptManagerTest extends WingsBaseTest {
                                                 .withAppId(app.getUuid())
                                                 .withExecutionInterruptType(ExecutionInterruptType.RETRY)
                                                 .withEnvId(env.getUuid())
-                                                .withExecutionUuid(UUIDGenerator.getUuid())
+                                                .withExecutionUuid(generateUuid())
                                                 .withStateExecutionInstanceId(stateExecutionInstance.getUuid())
                                                 .build();
     try {
@@ -171,7 +171,7 @@ public class ExecutionInterruptManagerTest extends WingsBaseTest {
                                                 .withAppId(app.getUuid())
                                                 .withExecutionInterruptType(ExecutionInterruptType.PAUSE)
                                                 .withEnvId(env.getUuid())
-                                                .withExecutionUuid(UUIDGenerator.getUuid())
+                                                .withExecutionUuid(generateUuid())
                                                 .withStateExecutionInstanceId(stateExecutionInstance.getUuid())
                                                 .build();
     try {
@@ -201,7 +201,7 @@ public class ExecutionInterruptManagerTest extends WingsBaseTest {
                                                 .withAppId(app.getUuid())
                                                 .withExecutionInterruptType(ExecutionInterruptType.ABORT)
                                                 .withEnvId(env.getUuid())
-                                                .withExecutionUuid(UUIDGenerator.getUuid())
+                                                .withExecutionUuid(generateUuid())
                                                 .withStateExecutionInstanceId(stateExecutionInstance.getUuid())
                                                 .build();
     try {
@@ -223,7 +223,7 @@ public class ExecutionInterruptManagerTest extends WingsBaseTest {
     Environment env =
         wingsPersistence.saveAndGet(Environment.class, Builder.anEnvironment().withAppId(app.getUuid()).build());
 
-    String executionUuid = UUIDGenerator.getUuid();
+    String executionUuid = generateUuid();
     ExecutionInterrupt executionInterrupt = anExecutionInterrupt()
                                                 .withAppId(app.getUuid())
                                                 .withExecutionInterruptType(ExecutionInterruptType.ABORT_ALL)
@@ -330,7 +330,7 @@ public class ExecutionInterruptManagerTest extends WingsBaseTest {
     Environment env =
         wingsPersistence.saveAndGet(Environment.class, Builder.anEnvironment().withAppId(app.getUuid()).build());
 
-    String executionUuid = UUIDGenerator.getUuid();
+    String executionUuid = generateUuid();
     ExecutionInterrupt executionInterrupt = anExecutionInterrupt()
                                                 .withAppId(app.getUuid())
                                                 .withExecutionInterruptType(ExecutionInterruptType.RESUME_ALL)

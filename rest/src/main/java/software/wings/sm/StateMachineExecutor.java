@@ -14,6 +14,7 @@ import static software.wings.beans.SearchFilter.Operator.EQ;
 import static software.wings.beans.SearchFilter.Operator.GT;
 import static software.wings.beans.SearchFilter.Operator.IN;
 import static software.wings.beans.alert.AlertType.ManualInterventionNeeded;
+import static software.wings.common.UUIDGenerator.generateUuid;
 import static software.wings.dl.PageRequest.Builder.aPageRequest;
 import static software.wings.sm.ElementNotifyResponseData.Builder.anElementNotifyResponseData;
 import static software.wings.sm.ExecutionInterrupt.ExecutionInterruptBuilder.anExecutionInterrupt;
@@ -58,7 +59,6 @@ import software.wings.beans.ErrorStrategy;
 import software.wings.beans.WorkflowExecution;
 import software.wings.beans.alert.ManualInterventionNeededAlert;
 import software.wings.common.Constants;
-import software.wings.common.UUIDGenerator;
 import software.wings.dl.PageRequest;
 import software.wings.dl.PageResponse;
 import software.wings.dl.WingsDeque;
@@ -628,7 +628,7 @@ public class StateMachineExecutor {
   }
 
   private String scheduleWaitNotify(int waitInterval) {
-    String resumeId = UUIDGenerator.getUuid();
+    String resumeId = generateUuid();
     long wakeupTs = System.currentTimeMillis() + (waitInterval * 1000);
     JobDetail job = JobBuilder.newJob(NotifyJob.class)
                         .withIdentity(resumeId, Constants.WAIT_RESUME_GROUP)

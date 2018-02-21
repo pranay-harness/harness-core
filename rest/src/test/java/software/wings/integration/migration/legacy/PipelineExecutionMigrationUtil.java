@@ -2,6 +2,7 @@ package software.wings.integration.migration.legacy;
 
 import static io.harness.data.structure.EmptyPredicate.isEmpty;
 import static org.mongodb.morphia.mapping.Mapper.ID_KEY;
+import static software.wings.common.UUIDGenerator.generateUuid;
 import static software.wings.dl.MongoHelper.setUnset;
 import static software.wings.dl.PageRequest.Builder.aPageRequest;
 import static software.wings.dl.PageRequest.UNLIMITED;
@@ -14,7 +15,6 @@ import software.wings.WingsBaseTest;
 import software.wings.beans.Application;
 import software.wings.beans.PipelineExecution;
 import software.wings.beans.SearchFilter;
-import software.wings.common.UUIDGenerator;
 import software.wings.dl.PageRequest;
 import software.wings.dl.PageResponse;
 import software.wings.dl.WingsPersistence;
@@ -55,7 +55,7 @@ public class PipelineExecutionMigrationUtil extends WingsBaseTest {
       pipelineExecutions.forEach(pipelineExecution -> {
         UpdateOperations<PipelineExecution> ops = wingsPersistence.createUpdateOperations(PipelineExecution.class);
         System.out.println("Updating pipeline execution  = " + pipelineExecution);
-        setUnset(ops, "pipeline._id", UUIDGenerator.getUuid() + "_embedded");
+        setUnset(ops, "pipeline._id", generateUuid() + "_embedded");
         wingsPersistence.update(wingsPersistence.createQuery(PipelineExecution.class)
                                     .field("appId")
                                     .equal(application.getAppId())

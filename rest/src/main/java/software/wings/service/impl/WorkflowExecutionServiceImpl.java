@@ -32,6 +32,7 @@ import static software.wings.beans.SearchFilter.Operator.GT;
 import static software.wings.beans.SearchFilter.Operator.IN;
 import static software.wings.beans.WorkflowType.ORCHESTRATION;
 import static software.wings.beans.WorkflowType.PIPELINE;
+import static software.wings.common.UUIDGenerator.generateUuid;
 import static software.wings.dl.PageRequest.Builder.aPageRequest;
 import static software.wings.dl.PageRequest.UNLIMITED;
 import static software.wings.service.impl.ExecutionEvent.ExecutionEventBuilder.anExecutionEvent;
@@ -111,7 +112,6 @@ import software.wings.beans.artifact.Artifact;
 import software.wings.beans.baseline.WorkflowExecutionBaseline;
 import software.wings.beans.command.ServiceCommand;
 import software.wings.common.Constants;
-import software.wings.common.UUIDGenerator;
 import software.wings.core.queue.Queue;
 import software.wings.dl.PageRequest;
 import software.wings.dl.PageResponse;
@@ -711,7 +711,7 @@ public class WorkflowExecutionServiceImpl implements WorkflowExecutionService {
     workflowExecution.setName(pipeline.getName());
 
     // Do not remove this. Morphia referencing it by id and one object getting overridden by the other
-    pipeline.setUuid(UUIDGenerator.getUuid() + "_embedded");
+    pipeline.setUuid(generateUuid() + "_embedded");
 
     PipelineExecution pipelineExecution =
         aPipelineExecution().withPipelineId(pipelineId).withPipeline(pipeline).build();
@@ -1427,13 +1427,6 @@ public class WorkflowExecutionServiceImpl implements WorkflowExecutionService {
     if (workflowExecution.getWorkflowType() == WorkflowType.SIMPLE) {
       entityType = SIMPLE_DEPLOYMENT;
     }
-    //
-    //    History history =
-    //    History.Builder.aHistory().withAppId(workflowExecution.getAppId()).withEventType(EventType.CREATED).withEntityType(entityType)
-    //        .withEntityId(workflowExecution.getUuid()).withEntityName(workflowExecution.getName()).withEntityNewValue(workflowExecution)
-    //        .withShortDescription(workflowExecution.getName() + " started").withTitle(workflowExecution.getName() + "
-    //        started").build();
-    //    historyService.createAsync(history);
   }
 
   @Override

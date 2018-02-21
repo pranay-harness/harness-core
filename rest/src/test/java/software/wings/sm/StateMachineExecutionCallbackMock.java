@@ -1,6 +1,6 @@
 package software.wings.sm;
 
-import software.wings.common.UUIDGenerator;
+import static software.wings.common.UUIDGenerator.generateUuid;
 
 import java.util.HashMap;
 import java.util.Map;
@@ -14,7 +14,7 @@ public class StateMachineExecutionCallbackMock implements StateMachineExecutionC
   private String signalId;
 
   public StateMachineExecutionCallbackMock() {
-    this.signalId = UUIDGenerator.getUuid();
+    this.signalId = generateUuid();
     signalIdsMap.put(signalId, new CountDownLatch(1));
   }
 

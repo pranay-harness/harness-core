@@ -8,6 +8,7 @@ import static org.mockito.Mockito.when;
 import static software.wings.api.EmailStateExecutionData.Builder.anEmailStateExecutionData;
 import static software.wings.beans.Application.Builder.anApplication;
 import static software.wings.beans.Environment.Builder.anEnvironment;
+import static software.wings.common.UUIDGenerator.generateUuid;
 import static software.wings.utils.WingsTestConstants.ACCOUNT_ID;
 import static software.wings.utils.WingsTestConstants.APP_ID;
 import static software.wings.utils.WingsTestConstants.ENV_ID;
@@ -27,7 +28,6 @@ import software.wings.api.EmailStateExecutionData;
 import software.wings.api.HostElement;
 import software.wings.app.MainConfiguration;
 import software.wings.app.PortalConfig;
-import software.wings.common.UUIDGenerator;
 import software.wings.helpers.ext.mail.EmailData;
 import software.wings.service.intfc.EmailNotificationService;
 import software.wings.sm.ExecutionContextImpl;
@@ -72,7 +72,7 @@ public class EmailStateTest extends WingsBaseTest {
   @Before
   public void setUpContextAndState() {
     StateExecutionInstance stateExecutionInstance = new StateExecutionInstance();
-    stateExecutionInstance.setUuid(UUIDGenerator.getUuid());
+    stateExecutionInstance.setUuid(generateUuid());
     stateExecutionInstance.setStateName(stateName);
 
     context = new ExecutionContextImpl(stateExecutionInstance, null, injector);

@@ -9,6 +9,7 @@ import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.when;
 import static org.mongodb.morphia.mapping.Mapper.ID_KEY;
 import static software.wings.beans.SearchFilter.Builder.aSearchFilter;
+import static software.wings.common.UUIDGenerator.generateUuid;
 import static software.wings.dl.PageRequest.Builder.aPageRequest;
 import static software.wings.utils.WingsTestConstants.ENV_ID;
 import static software.wings.utils.WingsTestConstants.TEMPLATE_ID;
@@ -34,7 +35,6 @@ import software.wings.beans.SettingAttribute;
 import software.wings.beans.SettingAttribute.Category;
 import software.wings.beans.SortOrder;
 import software.wings.beans.SortOrder.OrderType;
-import software.wings.common.UUIDGenerator;
 import software.wings.service.intfc.security.EncryptionService;
 import software.wings.service.intfc.security.KmsService;
 import software.wings.service.intfc.security.SecretManager;
@@ -800,7 +800,7 @@ public class WingsPersistenceTest extends WingsBaseTest {
 
     public TestEntityB(String fieldB) {
       this.fieldB = fieldB;
-      setUuid(UUIDGenerator.getUuid());
+      setUuid(generateUuid());
     }
 
     /**

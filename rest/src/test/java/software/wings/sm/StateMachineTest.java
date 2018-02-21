@@ -2,6 +2,7 @@ package software.wings.sm;
 
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.failBecauseExceptionWasNotThrown;
+import static software.wings.common.UUIDGenerator.generateUuid;
 import static software.wings.sm.states.RepeatState.Builder.aRepeatState;
 import static software.wings.waitnotify.StringNotifyResponseData.Builder.aStringNotifyResponseData;
 
@@ -13,7 +14,6 @@ import software.wings.WingsBaseTest;
 import software.wings.beans.ErrorCode;
 import software.wings.beans.ExecutionStrategy;
 import software.wings.common.InstanceExpressionProcessor;
-import software.wings.common.UUIDGenerator;
 import software.wings.common.thread.ThreadPool;
 import software.wings.exception.WingsException;
 import software.wings.rules.Listeners;
@@ -789,7 +789,7 @@ public class StateMachineTest extends WingsBaseTest {
      */
     @Override
     public ExecutionResponse execute(ExecutionContext context) {
-      String uuid = UUIDGenerator.getUuid();
+      String uuid = generateUuid();
 
       System.out.println("Executing ..." + StateAsync.class.getName() + "..duration=" + duration + ", uuid=" + uuid);
       ExecutionResponse response = new ExecutionResponse();

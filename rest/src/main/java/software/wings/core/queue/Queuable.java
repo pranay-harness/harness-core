@@ -1,12 +1,13 @@
 package software.wings.core.queue;
 
+import static software.wings.common.UUIDGenerator.generateUuid;
+
 import org.mongodb.morphia.annotations.Field;
 import org.mongodb.morphia.annotations.Id;
 import org.mongodb.morphia.annotations.Index;
 import org.mongodb.morphia.annotations.Indexed;
 import org.mongodb.morphia.annotations.Indexes;
 import org.mongodb.morphia.annotations.PrePersist;
-import software.wings.common.UUIDGenerator;
 
 import java.util.Date;
 
@@ -181,7 +182,7 @@ public abstract class Queuable {
   @PrePersist
   public void onUpdate() {
     if (id == null) {
-      id = UUIDGenerator.getUuid();
+      id = generateUuid();
     }
   }
 }

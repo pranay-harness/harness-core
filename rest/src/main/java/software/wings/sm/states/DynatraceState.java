@@ -2,6 +2,7 @@ package software.wings.sm.states;
 
 import static org.apache.commons.lang3.StringUtils.isBlank;
 import static software.wings.beans.DelegateTask.Builder.aDelegateTask;
+import static software.wings.common.UUIDGenerator.generateUuid;
 
 import com.google.common.base.Preconditions;
 import com.google.common.collect.Lists;
@@ -19,7 +20,6 @@ import software.wings.beans.DynaTraceConfig;
 import software.wings.beans.SettingAttribute;
 import software.wings.beans.TaskType;
 import software.wings.common.Constants;
-import software.wings.common.UUIDGenerator;
 import software.wings.service.impl.analysis.AnalysisComparisonStrategy;
 import software.wings.service.impl.analysis.AnalysisComparisonStrategyProvider;
 import software.wings.service.impl.analysis.AnalysisTolerance;
@@ -121,7 +121,7 @@ public class DynatraceState extends AbstractMetricAnalysisState {
             .analysisComparisonStrategy(getComparisonStrategy())
             .build();
 
-    String waitId = UUIDGenerator.getUuid();
+    String waitId = generateUuid();
     PhaseElement phaseElement = context.getContextElement(ContextElementType.PARAM, Constants.PHASE_PARAM);
     String infrastructureMappingId = phaseElement == null ? null : phaseElement.getInfraMappingId();
     DelegateTask delegateTask = aDelegateTask()

@@ -12,6 +12,7 @@ import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.when;
 import static software.wings.api.ServiceElement.Builder.aServiceElement;
 import static software.wings.beans.Service.Builder.aService;
+import static software.wings.common.UUIDGenerator.generateUuid;
 import static software.wings.sm.WorkflowStandardParams.Builder.aWorkflowStandardParams;
 import static software.wings.utils.WingsTestConstants.SERVICE_ID;
 
@@ -43,7 +44,7 @@ public class ServiceExpressionProcessorTest {
    * The Mockito rule.
    */
   @Rule public MockitoRule mockitoRule = MockitoJUnit.rule();
-  private String appId = UUIDGenerator.getUuid();
+  private String appId = generateUuid();
 
   @Mock private ExecutionContextImpl context;
 

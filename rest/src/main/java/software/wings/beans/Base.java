@@ -1,6 +1,7 @@
 package software.wings.beans;
 
 import static java.lang.System.currentTimeMillis;
+import static software.wings.common.UUIDGenerator.generateUuid;
 
 import com.fasterxml.jackson.annotation.JsonIgnore;
 import com.github.reinert.jjschema.SchemaIgnore;
@@ -14,7 +15,6 @@ import org.mongodb.morphia.annotations.Id;
 import org.mongodb.morphia.annotations.Indexed;
 import org.mongodb.morphia.annotations.PrePersist;
 import org.mongodb.morphia.annotations.Transient;
-import software.wings.common.UUIDGenerator;
 import software.wings.security.UserThreadLocal;
 import software.wings.utils.validation.Update;
 
@@ -65,7 +65,7 @@ public class Base implements UuidAware {
   @PrePersist
   public void onSave() {
     if (uuid == null) {
-      uuid = UUIDGenerator.getUuid();
+      uuid = generateUuid();
       if (this instanceof Application) {
         this.appId = uuid;
       }

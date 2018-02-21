@@ -28,7 +28,7 @@ import static software.wings.beans.artifact.DockerArtifactStream.Builder.aDocker
 import static software.wings.beans.command.Command.Builder.aCommand;
 import static software.wings.beans.command.ServiceCommand.Builder.aServiceCommand;
 import static software.wings.common.Constants.BUILD_NO;
-import static software.wings.common.UUIDGenerator.getUuid;
+import static software.wings.common.UUIDGenerator.generateUuid;
 import static software.wings.sm.StateExecutionInstance.Builder.aStateExecutionInstance;
 import static software.wings.sm.WorkflowStandardParams.Builder.aWorkflowStandardParams;
 import static software.wings.utils.WingsTestConstants.ACCOUNT_ID;
@@ -144,7 +144,7 @@ public class KubernetesSetupTest extends WingsBaseTest {
                                                               .build();
   private ServiceElement serviceElement = aServiceElement().withUuid(SERVICE_ID).withName(SERVICE_NAME).build();
   private PhaseElement phaseElement = aPhaseElement()
-                                          .withUuid(getUuid())
+                                          .withUuid(generateUuid())
                                           .withServiceElement(serviceElement)
                                           .withInfraMappingId(INFRA_MAPPING_ID)
                                           .withDeploymentType(DeploymentType.KUBERNETES.name())

@@ -3,6 +3,7 @@ package software.wings.sm.states;
 import static java.util.Arrays.asList;
 import static software.wings.api.ApprovalStateExecutionData.Builder.anApprovalStateExecutionData;
 import static software.wings.beans.alert.AlertType.ApprovalNeeded;
+import static software.wings.common.UUIDGenerator.generateUuid;
 import static software.wings.sm.ExecutionResponse.Builder.anExecutionResponse;
 
 import com.google.inject.Inject;
@@ -15,7 +16,6 @@ import software.wings.api.ApprovalStateExecutionData;
 import software.wings.beans.Application;
 import software.wings.beans.alert.ApprovalNeededAlert;
 import software.wings.common.Constants;
-import software.wings.common.UUIDGenerator;
 import software.wings.service.intfc.AlertService;
 import software.wings.sm.ExecutionContext;
 import software.wings.sm.ExecutionContextImpl;
@@ -53,7 +53,7 @@ public class ApprovalState extends State {
    */
   @Override
   public ExecutionResponse execute(ExecutionContext context) {
-    String approvalId = UUIDGenerator.getUuid();
+    String approvalId = generateUuid();
     ApprovalStateExecutionData executionData = anApprovalStateExecutionData().withApprovalId(approvalId).build();
 
     // Open an alert
