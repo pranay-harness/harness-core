@@ -5,6 +5,7 @@ import static org.apache.commons.lang3.StringUtils.isNotBlank;
 
 import com.google.common.base.Splitter;
 
+import okhttp3.ConnectionPool;
 import okhttp3.OkHttpClient;
 import org.apache.commons.lang3.StringUtils;
 import org.apache.commons.validator.routines.UrlValidator;
@@ -113,7 +114,7 @@ public class HttpUtil {
 
   public static OkHttpClient getUnsafeOkHttpClient(String url) {
     try {
-      return new OkHttpClient.Builder()
+      return getOkHttpClientBuilder()
           .sslSocketFactory(HttpUtil.getSslContext().getSocketFactory())
           .hostnameVerifier((s, sslSession) -> true)
           .connectTimeout(15000, TimeUnit.SECONDS)
@@ -258,6 +259,10 @@ public class HttpUtil {
   }
 
   public static OkHttpClient.Builder getOkHttpClientWithNoProxyValueSet(String url) {
-    return new OkHttpClient.Builder().proxy(checkAndGetNonProxyIfApplicable(url));
+    return getOkHttpClientBuilder().proxy(checkAndGetNonProxyIfApplicable(url));
+  }
+
+  public static OkHttpClient.Builder getOkHttpClientBuilder() {
+    return new OkHttpClient.Builder().connectionPool(new ConnectionPool(0, 5, TimeUnit.MINUTES));
   }
 }

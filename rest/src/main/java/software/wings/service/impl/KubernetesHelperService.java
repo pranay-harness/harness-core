@@ -5,6 +5,7 @@ import static com.fasterxml.jackson.dataformat.yaml.YAMLGenerator.Feature.WRITE_
 import static io.fabric8.kubernetes.client.utils.Utils.isNotNullOrEmpty;
 import static okhttp3.ConnectionSpec.CLEARTEXT;
 import static org.apache.commons.lang3.StringUtils.isNotBlank;
+import static software.wings.utils.HttpUtil.getOkHttpClientBuilder;
 
 import com.google.inject.Inject;
 import com.google.inject.Singleton;
@@ -113,7 +114,7 @@ public class KubernetesHelperService {
    */
   private OkHttpClient createHttpClientWithProxySetting(final Config config) {
     try {
-      OkHttpClient.Builder httpClientBuilder = new OkHttpClient.Builder();
+      OkHttpClient.Builder httpClientBuilder = getOkHttpClientBuilder();
       httpClientBuilder.proxy(HttpUtil.checkAndGetNonProxyIfApplicable(config.getMasterUrl()));
 
       // Follow any redirects
