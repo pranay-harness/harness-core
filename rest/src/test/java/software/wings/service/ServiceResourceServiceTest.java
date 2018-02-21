@@ -3,6 +3,7 @@ package software.wings.service;
 import static java.util.Arrays.asList;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThatThrownBy;
+import static org.assertj.core.api.Assertions.fail;
 import static org.mockito.Matchers.any;
 import static org.mockito.Matchers.anyString;
 import static org.mockito.Matchers.eq;
@@ -56,6 +57,7 @@ import org.mockito.Captor;
 import org.mockito.InOrder;
 import org.mockito.InjectMocks;
 import org.mockito.Mock;
+import org.mockito.Mockito;
 import org.mockito.Spy;
 import org.mockito.stubbing.Answer;
 import org.mongodb.morphia.AdvancedDatastore;
@@ -69,6 +71,8 @@ import software.wings.beans.EntityType;
 import software.wings.beans.EntityVersion.ChangeType;
 import software.wings.beans.ErrorCode;
 import software.wings.beans.Graph;
+import software.wings.beans.LambdaSpecification;
+import software.wings.beans.LambdaSpecification.FunctionSpecification;
 import software.wings.beans.Notification;
 import software.wings.beans.PhaseStepType;
 import software.wings.beans.SearchFilter;
@@ -106,6 +110,7 @@ import software.wings.utils.BoundedInputStream;
 import java.io.IOException;
 import java.io.InputStream;
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.List;
 import java.util.concurrent.ExecutorService;
 
@@ -1005,5 +1010,45 @@ public class ServiceResourceServiceTest extends WingsBaseTest {
     assertThat(srs.getCommandByName(APP_ID, SERVICE_ID, ENV_ID, "START")).isNull();
 
     verify(wingsPersistence, times(1)).get(Service.class, APP_ID, SERVICE_ID);
+  }
+
+  @Test
+  public void testLambdaValidation() {
+    FunctionSpecification functionSpecification = FunctionSpecification.builder()
+                                                      .runtime("TestRunTime")
+                                                      .functionName("TestFunctionName")
+                                                      .handler("TestHandler")
+                                                      .build();
+    LambdaSpecification lambdaSpecification =
+        LambdaSpecification.builder()
+            .serviceId("TestServiceID")
+            .functions(Arrays.asList(functionSpecification, functionSpecification))
+            .build();
+    lambdaSpecification.setAppId("TestAppID");
+    try {
+      srs.updateLambdaSpecification(lambdaSpecification);
+      fail("Should have thrown a wingsException");
+    } catch (WingsException e) {
+      log().info("Expected exception");
+    }
+
+    FunctionSpecification functionSpecification2 = FunctionSpecification.builder()
+                                                       .runtime("TestRunTime")
+                                                       .functionName("TestFunctionName2")
+                                                       .handler("TestHandler")
+                                                       .build();
+    lambdaSpecification = LambdaSpecification.builder()
+                              .serviceId("TestServiceID")
+                              .functions(Arrays.asList(functionSpecification, functionSpecification2))
+                              .build();
+    lambdaSpecification.setAppId("TestAppID");
+    Mockito.when(wingsPersistence.saveAndGet(Mockito.any(Class.class), Mockito.any(LambdaSpecification.class)))
+        .thenReturn(lambdaSpecification);
+
+    try {
+      srs.updateLambdaSpecification(lambdaSpecification);
+    } catch (WingsException e) {
+      fail("Should not have thrown a wingsException", e);
+    }
   }
 }
