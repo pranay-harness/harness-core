@@ -28,6 +28,7 @@ import org.slf4j.LoggerFactory;
 import software.wings.annotation.Encryptable;
 import software.wings.api.CommandStateExecutionData;
 import software.wings.api.CommandStateExecutionData.Builder;
+import software.wings.api.HostElement;
 import software.wings.api.InstanceElement;
 import software.wings.api.InstanceElementListParam;
 import software.wings.api.PhaseElement;
@@ -286,6 +287,10 @@ public class AwsCodeDeployState extends State {
     Key<ServiceTemplate> serviceTemplateKey =
         serviceTemplateService.getTemplateRefKeysByService(app.getUuid(), serviceId, env.getUuid()).get(0);
 
+    CodeDeployInfrastructureMapping infrastructureMapping =
+        (CodeDeployInfrastructureMapping) infrastructureMappingService.get(
+            app.getUuid(), phaseElement.getInfraMappingId());
+
     InstanceElementListParam instanceElementListParam = anInstanceElementListParam().build();
     List<InstanceStatusSummary> instanceStatusSummaries = new ArrayList<>();
     if (commandExecutionResult != null && commandExecutionResult.getCommandExecutionData() != null) {
@@ -293,18 +298,20 @@ public class AwsCodeDeployState extends State {
           (CodeDeployCommandExecutionData) commandExecutionResult.getCommandExecutionData();
       List<InstanceElement> instanceElements = new ArrayList<>();
       commandExecutionData.getInstances().forEach(instance -> {
-        String hostName = awsHelperService.getHostnameFromPrivateDnsName(instance.getPrivateDnsName());
+        HostElement hostElement = aHostElement()
+                                      .withPublicDns(instance.getPublicDnsName())
+                                      .withEc2Instance(instance)
+                                      .withInstanceId(instance.getInstanceId())
+                                      .build();
+        String hostName =
+            awsHelperService.getHostnameFromConvention(hostElement, infrastructureMapping.getHostNameConvention());
+        hostElement.setHostName(hostName);
         InstanceElement instanceElement =
             anInstanceElement()
                 .withUuid(instance.getInstanceId())
                 .withHostName(hostName)
                 .withDisplayName(instance.getPublicDnsName())
-                .withHost(aHostElement()
-                              .withHostName(hostName)
-                              .withPublicDns(instance.getPublicDnsName())
-                              .withEc2Instance(instance)
-                              .withInstanceId(instance.getInstanceId())
-                              .build())
+                .withHost(hostElement)
                 .withServiceTemplateElement(aServiceTemplateElement()
                                                 .withUuid(serviceTemplateKey.getId().toString())
                                                 .withServiceElement(phaseElement.getServiceElement())

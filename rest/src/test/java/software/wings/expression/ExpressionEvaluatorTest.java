@@ -9,10 +9,12 @@ import static org.assertj.core.api.Assertions.assertThatThrownBy;
 
 import com.google.inject.Inject;
 
+import com.amazonaws.services.ec2.model.Instance;
 import lombok.Builder;
 import lombok.Value;
 import org.junit.Test;
 import software.wings.WingsBaseTest;
+import software.wings.api.HostElement;
 import software.wings.beans.infrastructure.Host;
 import software.wings.exception.WingsException;
 
@@ -229,6 +231,22 @@ public class ExpressionEvaluatorTest extends WingsBaseTest {
         .isEqualTo(false);
 
     assertThat(expressionEvaluator.evaluate("regex.match('York', ${bob.address.city})", persons)).isEqualTo(true);
+  }
+
+  @Test
+  public void shouldEvaluate() {
+    Instance ec2 = new Instance();
+    ec2.setPrivateDnsName("ip-172-31-24-237.ec2.internal");
+    ec2.setInstanceId("1qazxsw2");
+    HostElement host = HostElement.Builder.aHostElement().withEc2Instance(ec2).build();
+    Map<String, Object> map = new HashMap<String, Object>() {
+      { put("host", host); }
+    };
+
+    assertThat(expressionEvaluator.evaluate("${host.ec2Instance.privateDnsName}.split('\\.')[0]", map))
+        .isEqualTo("ip-172-31-24-237");
+    assertThat(expressionEvaluator.evaluate("'abc-' + ${host.ec2Instance.instanceId} + '-def'", map))
+        .isEqualTo("abc-1qazxsw2-def");
   }
 
   @Test
