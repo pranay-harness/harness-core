@@ -203,12 +203,7 @@ public class JenkinsState extends State {
         (JenkinsConfig) context.getGlobalSettingValue(accountId, jenkinsConfigId, StateType.JENKINS.name());
     Validator.notNullCheck("JenkinsConfig", jenkinsConfig);
 
-    String evaluatedJobName;
-    try {
-      evaluatedJobName = context.renderExpression(jobName);
-    } catch (Exception e) {
-      evaluatedJobName = jobName;
-    }
+    String evaluatedJobName = context.renderExpression(jobName);
 
     Map<String, String> jobParameterMap = isEmpty(jobParameters)
         ? Collections.emptyMap()
@@ -216,27 +211,14 @@ public class JenkinsState extends State {
     final String finalJobName = evaluatedJobName;
 
     Map<String, String> evaluatedParameters = Maps.newHashMap(jobParameterMap);
-    evaluatedParameters.forEach((key, value) -> {
-      String evaluatedValue;
-      try {
-        evaluatedValue = context.renderExpression(value);
-      } catch (Exception e) {
-        evaluatedValue = value;
-      }
-      evaluatedParameters.put(key, evaluatedValue);
-    });
+    evaluatedParameters.forEach(
+        (String key, String value) -> evaluatedParameters.put(key, context.renderExpression(value)));
 
     Map<String, String> evaluatedFilePathsForAssertion = Maps.newHashMap();
     if (isNotEmpty(filePathsForAssertion)) {
-      filePathsForAssertion.forEach(filePathAssertionMap -> {
-        String evaluatedKey;
-        try {
-          evaluatedKey = context.renderExpression(filePathAssertionMap.getFilePath());
-        } catch (Exception e) {
-          evaluatedKey = filePathAssertionMap.getFilePath();
-        }
-        evaluatedFilePathsForAssertion.put(evaluatedKey, filePathAssertionMap.getAssertion());
-      });
+      filePathsForAssertion.forEach(filePathAssertionEntry
+          -> evaluatedFilePathsForAssertion.put(
+              context.renderExpression(filePathAssertionEntry.getFilePath()), filePathAssertionEntry.getAssertion()));
     }
 
     PhaseElement phaseElement = context.getContextElement(ContextElementType.PARAM, Constants.PHASE_PARAM);

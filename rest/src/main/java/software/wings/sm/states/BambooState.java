@@ -145,39 +145,22 @@ public class BambooState extends State {
 
     Validator.notNullCheck("BambooConfig", bambooConfig);
 
-    String evaluatedPlanName;
-    try {
-      evaluatedPlanName = context.renderExpression(planName);
-    } catch (Exception e) {
-      evaluatedPlanName = planName;
-    }
+    String evaluatedPlanName = context.renderExpression(planName);
+
     List<ParameterEntry> evaluatedParameters = new ArrayList<>();
     if (isNotEmpty(parameters)) {
       parameters.forEach(parameterEntry -> {
-        String evaluatedValue;
-        try {
-          evaluatedValue = context.renderExpression(parameterEntry.getValue());
-        } catch (Exception e) {
-          evaluatedValue = parameterEntry.value;
-        }
         ParameterEntry evaluatedParameterEntry = new ParameterEntry();
         evaluatedParameterEntry.setKey(parameterEntry.getKey());
-        evaluatedParameterEntry.setValue(evaluatedValue);
+        evaluatedParameterEntry.setValue(context.renderExpression(parameterEntry.getValue()));
         evaluatedParameters.add(evaluatedParameterEntry);
       });
     }
     List<FilePathAssertionEntry> evaluatedFilePathsForAssertion = new ArrayList<>();
     if (isNotEmpty(filePathsForAssertion)) {
       filePathsForAssertion.forEach(filePathAssertionEntry -> {
-        String evaluatedFilePath = filePathAssertionEntry.getFilePath();
-        try {
-          evaluatedFilePath = context.renderExpression(evaluatedFilePath);
-
-        } catch (Exception e) {
-          evaluatedFilePath = filePathAssertionEntry.getFilePath();
-        }
         FilePathAssertionEntry evaluatedPathAssertionEntry = new FilePathAssertionEntry();
-        evaluatedPathAssertionEntry.setFilePath(evaluatedFilePath);
+        evaluatedPathAssertionEntry.setFilePath(context.renderExpression(filePathAssertionEntry.getFilePath()));
         evaluatedPathAssertionEntry.setAssertion(filePathAssertionEntry.getAssertion());
         evaluatedFilePathsForAssertion.add(filePathAssertionEntry);
       });
