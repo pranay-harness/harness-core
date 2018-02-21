@@ -582,4 +582,6 @@ public interface Constants {
   String LINK_COLOR = "#1A89BF";
 
   String HARNESS_NAME = "Harness";
+
+  String DEFAULT_AWS_HOST_NAME_CONVENTION = "${host.ec2Instance.privateDnsName}.split('\\.')[0]";
 }

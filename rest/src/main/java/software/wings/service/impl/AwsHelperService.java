@@ -1,5 +1,6 @@
 package software.wings.service.impl;
 
+import static io.harness.data.structure.EmptyPredicate.isEmpty;
 import static io.harness.data.structure.EmptyPredicate.isNotEmpty;
 import static io.harness.threading.Morpheus.sleep;
 import static java.time.Duration.ofSeconds;
@@ -202,6 +203,7 @@ import org.apache.http.util.EntityUtils;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import software.wings.annotation.Encryptable;
+import software.wings.api.HostElement;
 import software.wings.beans.AwsConfig;
 import software.wings.beans.AwsInfrastructureMapping;
 import software.wings.beans.AwsInstanceFilter;
@@ -210,7 +212,9 @@ import software.wings.beans.ErrorCode;
 import software.wings.beans.SettingAttribute;
 import software.wings.beans.command.CommandExecutionResult.CommandExecutionStatus;
 import software.wings.beans.command.LogCallback;
+import software.wings.common.Constants;
 import software.wings.exception.WingsException;
+import software.wings.expression.ExpressionEvaluator;
 import software.wings.security.encryption.EncryptedDataDetail;
 import software.wings.service.intfc.security.EncryptionService;
 import software.wings.sm.states.ManagerExecutionLogCallback;
@@ -238,6 +242,7 @@ public class AwsHelperService {
       "http://169.254.169.254/latest/meta-data/placement/availability-zone";
   @Inject private EncryptionService encryptionService;
   @Inject private TimeLimiter timeLimiter;
+  @Inject private ExpressionEvaluator expressionEvaluator;
 
   private static final long AUTOSCALING_REQUEST_STATUS_CHECK_INTERVAL = TimeUnit.SECONDS.toSeconds(15);
 
@@ -468,6 +473,26 @@ public class AwsHelperService {
    */
   public String getHostnameFromPrivateDnsName(String dnsName) {
     return isNotEmpty(dnsName) ? dnsName.split("\\.")[0] : "";
+  }
+
+  /**
+   * Gets hostname based on convention
+   *
+   * @param hostElement the host element
+   * @param hostNameConvention the host name convention
+   * @return the hostname from dns name
+   */
+  public String getHostnameFromConvention(HostElement hostElement, String hostNameConvention) {
+    if (isEmpty(hostNameConvention)) {
+      hostNameConvention = Constants.DEFAULT_AWS_HOST_NAME_CONVENTION;
+    }
+    String hostName;
+    try {
+      hostName = (String) expressionEvaluator.evaluate(hostNameConvention, "host", hostElement);
+    } catch (Exception e) {
+      hostName = hostElement.getInstanceId();
+    }
+    return hostName;
   }
 
   /**

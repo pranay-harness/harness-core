@@ -27,6 +27,7 @@ public class AwsAmiInfrastructureMapping extends InfrastructureMapping {
   private String autoScalingGroupName;
   private List<String> classicLoadBalancers;
   private List<String> targetGroupArns;
+  private String hostNameConvention;
 
   public AwsAmiInfrastructureMapping() {
     super(InfrastructureMappingType.AWS_AMI.name());
@@ -77,6 +78,14 @@ public class AwsAmiInfrastructureMapping extends InfrastructureMapping {
 
   public void setTargetGroupArns(List<String> targetGroupArns) {
     this.targetGroupArns = targetGroupArns;
+  }
+
+  public String getHostNameConvention() {
+    return hostNameConvention;
+  }
+
+  public void setHostNameConvention(String hostNameConvention) {
+    this.hostNameConvention = hostNameConvention;
   }
 
   public static final class Builder {
@@ -190,6 +199,11 @@ public class AwsAmiInfrastructureMapping extends InfrastructureMapping {
       return this;
     }
 
+    public Builder withHostNameConvention(String hostNameConvention) {
+      awsAmiInfrastructureMapping.setHostNameConvention(hostNameConvention);
+      return this;
+    }
+
     public Builder but() {
       return anAwsAmiInfrastructureMapping()
           .withRegion(awsAmiInfrastructureMapping.getRegion())
@@ -211,7 +225,8 @@ public class AwsAmiInfrastructureMapping extends InfrastructureMapping {
           .withDeploymentType(awsAmiInfrastructureMapping.getDeploymentType())
           .withComputeProviderName(awsAmiInfrastructureMapping.getComputeProviderName())
           .withName(awsAmiInfrastructureMapping.getName())
-          .withAccountId(awsAmiInfrastructureMapping.getAccountId());
+          .withAccountId(awsAmiInfrastructureMapping.getAccountId())
+          .withHostNameConvention(awsAmiInfrastructureMapping.getHostNameConvention());
     }
 
     public AwsAmiInfrastructureMapping build() {

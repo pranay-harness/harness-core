@@ -27,6 +27,7 @@ public class CodeDeployInfrastructureMapping extends InfrastructureMapping {
   @Attributes(title = "Application Name", required = true) @NotEmpty private String applicationName;
   @Attributes(title = "Deployment Group", required = true) @NotEmpty private String deploymentGroup;
   @Attributes(title = "Deployment Configuration") private String deploymentConfig;
+  @Attributes(title = "AWS Host Name Convention") private String hostNameConvention;
 
   /**
    * Instantiates a new Aws CodeDeploy infrastructure mapping.
@@ -104,6 +105,14 @@ public class CodeDeployInfrastructureMapping extends InfrastructureMapping {
     this.deploymentConfig = deploymentConfig;
   }
 
+  public String getHostNameConvention() {
+    return hostNameConvention;
+  }
+
+  public void setHostNameConvention(String hostNameConvention) {
+    this.hostNameConvention = hostNameConvention;
+  }
+
   public CodeDeployInfrastructureMappingBuilder deepClone() {
     return aCodeDeployInfrastructureMapping()
         .withRegion(getRegion())
@@ -121,7 +130,8 @@ public class CodeDeployInfrastructureMapping extends InfrastructureMapping {
         .withComputeProviderType(getComputeProviderType())
         .withDeploymentType(getDeploymentType())
         .withComputeProviderName(getComputeProviderName())
-        .withName(getName());
+        .withName(getName())
+        .withHostNameConvention(getHostNameConvention());
   }
 
   public static final class CodeDeployInfrastructureMappingBuilder {
@@ -146,6 +156,7 @@ public class CodeDeployInfrastructureMapping extends InfrastructureMapping {
     private String deploymentType;
     private String computeProviderName;
     private String name;
+    private String hostNameConvention;
     // auto populate name
     private boolean autoPopulate = true;
 
@@ -265,6 +276,11 @@ public class CodeDeployInfrastructureMapping extends InfrastructureMapping {
       return this;
     }
 
+    public CodeDeployInfrastructureMappingBuilder withHostNameConvention(String hostNameConvention) {
+      this.hostNameConvention = hostNameConvention;
+      return this;
+    }
+
     public CodeDeployInfrastructureMappingBuilder but() {
       return aCodeDeployInfrastructureMapping()
           .withRegion(region)
@@ -288,7 +304,8 @@ public class CodeDeployInfrastructureMapping extends InfrastructureMapping {
           .withDeploymentType(deploymentType)
           .withComputeProviderName(computeProviderName)
           .withName(name)
-          .withAutoPopulate(autoPopulate);
+          .withAutoPopulate(autoPopulate)
+          .withHostNameConvention(hostNameConvention);
     }
 
     public CodeDeployInfrastructureMapping build() {
@@ -315,6 +332,7 @@ public class CodeDeployInfrastructureMapping extends InfrastructureMapping {
       codeDeployInfrastructureMapping.setName(name);
       codeDeployInfrastructureMapping.setAutoPopulate(autoPopulate);
       codeDeployInfrastructureMapping.setAccountId(accountId);
+      codeDeployInfrastructureMapping.setHostNameConvention(hostNameConvention);
       return codeDeployInfrastructureMapping;
     }
   }
