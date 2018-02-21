@@ -2,6 +2,7 @@ package software.wings.service.impl.instance;
 
 import static io.harness.data.structure.EmptyPredicate.isEmpty;
 import static io.harness.data.structure.EmptyPredicate.isNotEmpty;
+import static software.wings.common.UUIDGenerator.generateUuid;
 import static software.wings.exception.WingsException.SERIOUS;
 import static software.wings.sm.ExecutionStatus.FAILED;
 
@@ -46,7 +47,6 @@ import software.wings.beans.infrastructure.instance.info.InstanceInfo;
 import software.wings.beans.infrastructure.instance.info.PhysicalHostInstanceInfo;
 import software.wings.beans.infrastructure.instance.key.HostInstanceKey;
 import software.wings.common.Constants;
-import software.wings.common.UUIDGenerator;
 import software.wings.core.queue.Queue;
 import software.wings.exception.HarnessException;
 import software.wings.exception.WingsException;
@@ -544,7 +544,7 @@ public class InstanceHelper {
     String infraMappingType = infraMapping.getInfraMappingType();
 
     if (instanceUuid == null) {
-      instanceUuid = UUIDGenerator.getUuid();
+      instanceUuid = generateUuid();
     }
 
     InstanceBuilder builder = Instance.builder()

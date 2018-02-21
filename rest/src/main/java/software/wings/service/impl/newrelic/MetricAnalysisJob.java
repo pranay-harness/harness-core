@@ -1,6 +1,7 @@
 package software.wings.service.impl.newrelic;
 
 import static org.apache.commons.lang3.StringUtils.isNotBlank;
+import static software.wings.common.UUIDGenerator.generateUuid;
 
 import com.google.common.base.Preconditions;
 import com.google.inject.Inject;
@@ -13,7 +14,6 @@ import org.quartz.SchedulerException;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import software.wings.api.MetricDataAnalysisResponse;
-import software.wings.common.UUIDGenerator;
 import software.wings.delegatetasks.NewRelicDataCollectionTask;
 import software.wings.dl.WingsPersistence;
 import software.wings.exception.WingsException;
@@ -230,7 +230,7 @@ public class MetricAnalysisJob implements Job {
         controlInputUrl = controlInputUrl + false + "&workflowExecutionId=" + context.getPrevWorkflowExecutionId();
       }
 
-      String uuid = UUIDGenerator.getUuid();
+      String uuid = generateUuid();
 
       final String logAnalysisSaveUrl = "/api/" + context.getStateBaseUrl()
           + "/save-analysis?accountId=" + context.getAccountId() + "&applicationId=" + context.getAppId() + "&"

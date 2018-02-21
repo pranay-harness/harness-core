@@ -20,7 +20,7 @@ import static software.wings.beans.Role.Builder.aRole;
 import static software.wings.beans.SearchFilter.Operator.EQ;
 import static software.wings.beans.User.Builder.anUser;
 import static software.wings.beans.UserInvite.UserInviteBuilder.anUserInvite;
-import static software.wings.common.UUIDGenerator.getUuid;
+import static software.wings.common.UUIDGenerator.generateUuid;
 import static software.wings.security.PermissionAttribute.ResourceType.APPLICATION;
 import static software.wings.security.PermissionAttribute.ResourceType.ARTIFACT;
 import static software.wings.security.PermissionAttribute.ResourceType.DEPLOYMENT;
@@ -228,7 +228,7 @@ public class UserServiceTest extends WingsBaseTest {
    */
   @Test
   public void shouldRegisterExistingUser() throws Exception {
-    User existingUser = userBuilder.withUuid(getUuid()).build();
+    User existingUser = userBuilder.withUuid(generateUuid()).build();
     User savedUser = userBuilder.withUuid(USER_ID)
                          .withEmailVerified(false)
                          .withCompanyName(COMPANY_NAME)
@@ -278,7 +278,7 @@ public class UserServiceTest extends WingsBaseTest {
   @Test
   public void shouldUpdateUser() {
     List<Role> roles = Lists.newArrayList(
-        aRole().withUuid(getUuid()).withRoleType(RoleType.APPLICATION_ADMIN).withAppId(getUuid()).build());
+        aRole().withUuid(generateUuid()).withRoleType(RoleType.APPLICATION_ADMIN).withAppId(generateUuid()).build());
     User user =
         anUser().withAppId(APP_ID).withUuid(USER_ID).withEmail(USER_EMAIL).withName(USER_NAME).withRoles(roles).build();
 
@@ -524,7 +524,7 @@ public class UserServiceTest extends WingsBaseTest {
   @Test
   public void shouldGetAccountRole() {
     List<Role> roles =
-        asList(aRole().withUuid(getUuid()).withRoleType(RoleType.ACCOUNT_ADMIN).withAccountId(ACCOUNT_ID).build());
+        asList(aRole().withUuid(generateUuid()).withRoleType(RoleType.ACCOUNT_ADMIN).withAccountId(ACCOUNT_ID).build());
     when(wingsPersistence.get(User.class, USER_ID)).thenReturn(userBuilder.withUuid(USER_ID).withRoles(roles).build());
     when(accountService.get(ACCOUNT_ID))
         .thenReturn(Account.Builder.anAccount().withUuid(ACCOUNT_ID).withAccountName(ACCOUNT_NAME).build());
@@ -548,7 +548,7 @@ public class UserServiceTest extends WingsBaseTest {
   @Test
   public void shouldGetAccountForAllApsAdminRole() {
     List<Role> roles = asList(aRole()
-                                  .withUuid(getUuid())
+                                  .withUuid(generateUuid())
                                   .withRoleType(RoleType.APPLICATION_ADMIN)
                                   .withAccountId(ACCOUNT_ID)
                                   .withAllApps(true)
@@ -576,7 +576,7 @@ public class UserServiceTest extends WingsBaseTest {
   @Test
   public void shouldGetApplicationRole() {
     List<Role> roles =
-        asList(aRole().withUuid(getUuid()).withRoleType(RoleType.ACCOUNT_ADMIN).withAccountId(ACCOUNT_ID).build());
+        asList(aRole().withUuid(generateUuid()).withRoleType(RoleType.ACCOUNT_ADMIN).withAccountId(ACCOUNT_ID).build());
     when(wingsPersistence.get(User.class, USER_ID)).thenReturn(userBuilder.withUuid(USER_ID).withRoles(roles).build());
     when(appService.get(APP_ID))
         .thenReturn(anApplication().withUuid(APP_ID).withName(APP_NAME).withAccountId(ACCOUNT_ID).build());

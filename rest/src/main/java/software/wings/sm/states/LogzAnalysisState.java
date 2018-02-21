@@ -2,6 +2,7 @@ package software.wings.sm.states;
 
 import static org.apache.commons.lang3.StringUtils.isBlank;
 import static software.wings.beans.DelegateTask.Builder.aDelegateTask;
+import static software.wings.common.UUIDGenerator.generateUuid;
 
 import com.google.common.collect.Sets;
 
@@ -15,7 +16,6 @@ import software.wings.beans.DelegateTask;
 import software.wings.beans.SettingAttribute;
 import software.wings.beans.TaskType;
 import software.wings.beans.config.LogzConfig;
-import software.wings.common.UUIDGenerator;
 import software.wings.exception.WingsException;
 import software.wings.service.impl.analysis.AnalysisComparisonStrategy;
 import software.wings.service.impl.analysis.AnalysisComparisonStrategyProvider;
@@ -71,7 +71,7 @@ public class LogzAnalysisState extends ElkAnalysisState {
               getPhaseServiceId(context), queries, hostnameField, messageField, DEFAULT_TIME_FIELD, DEFAULT_TIME_FORMAT,
               logCollectionStartTimeStamp, 0, Integer.parseInt(timeDuration), hostBatch,
               secretManager.getEncryptionDetails(logzConfig, context.getAppId(), context.getWorkflowExecutionId()));
-      String waitId = UUIDGenerator.getUuid();
+      String waitId = generateUuid();
       delegateTasks.add(aDelegateTask()
                             .withTaskType(TaskType.LOGZ_COLLECT_LOG_DATA)
                             .withAccountId(appService.get(context.getAppId()).getAccountId())

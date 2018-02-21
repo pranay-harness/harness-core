@@ -14,7 +14,7 @@ import static software.wings.beans.ErrorCode.SSH_SESSION_TIMEOUT;
 import static software.wings.beans.ErrorCode.UNKNOWN_HOST;
 import static software.wings.beans.command.CommandExecutionResult.CommandExecutionStatus.FAILURE;
 import static software.wings.beans.command.CommandExecutionResult.CommandExecutionStatus.SUCCESS;
-import static software.wings.common.UUIDGenerator.getUuid;
+import static software.wings.common.UUIDGenerator.generateUuid;
 import static software.wings.core.ssh.executors.SshSessionConfig.Builder.aSshSessionConfig;
 import static software.wings.delegatetasks.DelegateFile.Builder.aDelegateFile;
 import static software.wings.service.intfc.FileService.FileBucket.CONFIGS;
@@ -101,7 +101,7 @@ public class SshPwdAuthExecutorTest extends WingsBaseTest {
     executor = new SshPwdAuthExecutor(fileService, logService);
     configBuilder = aSshSessionConfig()
                         .withAppId("APP_ID")
-                        .withExecutionId(getUuid())
+                        .withExecutionId(generateUuid())
                         .withExecutorType(ExecutorType.PASSWORD_AUTH)
                         .withHost(HOST)
                         .withPort(sshRule.getPort())
@@ -163,7 +163,7 @@ public class SshPwdAuthExecutorTest extends WingsBaseTest {
     SshSessionConfig sshSessionConfig = configBuilder.but().build();
 
     executor.init(sshSessionConfig);
-    String fileName = getUuid();
+    String fileName = generateUuid();
     CommandExecutionStatus execute =
         executor.executeCommandString(String.format("touch %s && rm %s", fileName, fileName));
     assertThat(execute).isEqualTo(SUCCESS);

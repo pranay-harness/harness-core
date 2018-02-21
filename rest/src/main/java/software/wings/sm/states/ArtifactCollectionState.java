@@ -6,6 +6,7 @@ import static software.wings.common.Constants.BUILD_NO;
 import static software.wings.common.Constants.DEFAULT_STATE_TIMEOUT_MILLIS;
 import static software.wings.common.Constants.URL;
 import static software.wings.common.Constants.WAIT_RESUME_GROUP;
+import static software.wings.common.UUIDGenerator.generateUuid;
 import static software.wings.sm.ExecutionResponse.Builder.anExecutionResponse;
 import static software.wings.sm.StateType.ARTIFACT_COLLECTION;
 import static software.wings.utils.Validator.notNullCheck;
@@ -27,7 +28,6 @@ import software.wings.api.ArtifactCollectionExecutionData;
 import software.wings.beans.BuildExecutionSummary;
 import software.wings.beans.artifact.Artifact;
 import software.wings.beans.artifact.ArtifactStream;
-import software.wings.common.UUIDGenerator;
 import software.wings.scheduler.ArtifactCollectionStateNotifyJob;
 import software.wings.scheduler.QuartzScheduler;
 import software.wings.service.impl.ArtifactSourceProvider;
@@ -135,7 +135,7 @@ public class ArtifactCollectionState extends State {
   public void handleAbortEvent(ExecutionContext context) {}
 
   private String scheduleWaitNotify() {
-    String resumeId = UUIDGenerator.getUuid();
+    String resumeId = generateUuid();
     long wakeupTs = System.currentTimeMillis() + (60 * 1000); // every minute
     JobDetail job = JobBuilder.newJob(ArtifactCollectionStateNotifyJob.class)
                         .withIdentity(resumeId, WAIT_RESUME_GROUP)

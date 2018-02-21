@@ -18,6 +18,7 @@ import static software.wings.beans.Service.Builder.aService;
 import static software.wings.beans.ServiceInstance.Builder.aServiceInstance;
 import static software.wings.beans.ServiceTemplate.Builder.aServiceTemplate;
 import static software.wings.beans.infrastructure.Host.Builder.aHost;
+import static software.wings.common.UUIDGenerator.generateUuid;
 import static software.wings.utils.WingsTestConstants.SERVICE_ID;
 import static software.wings.utils.WingsTestConstants.SERVICE_NAME;
 import static software.wings.utils.WingsTestConstants.TEMPLATE_ID;
@@ -116,37 +117,37 @@ public class InstancePartitionExpressionProcessorTest extends WingsBaseTest {
         aServiceTemplate().withUuid(TEMPLATE_ID).withName("template").withServiceId(service.getUuid()).build();
 
     ServiceInstance instance1 = aServiceInstance()
-                                    .withUuid(UUIDGenerator.getUuid())
+                                    .withUuid(generateUuid())
                                     .withHost(aHost().withUuid("huuid1").withHostName("host1").build())
                                     .withServiceTemplate(serviceTemplate)
                                     .build();
     ServiceInstance instance2 = aServiceInstance()
-                                    .withUuid(UUIDGenerator.getUuid())
+                                    .withUuid(generateUuid())
                                     .withHost(aHost().withUuid("huuid2").withHostName("host2").build())
                                     .withServiceTemplate(serviceTemplate)
                                     .build();
     ServiceInstance instance3 = aServiceInstance()
-                                    .withUuid(UUIDGenerator.getUuid())
+                                    .withUuid(generateUuid())
                                     .withHost(aHost().withUuid("huuid3").withHostName("host3").build())
                                     .withServiceTemplate(serviceTemplate)
                                     .build();
     ServiceInstance instance4 = aServiceInstance()
-                                    .withUuid(UUIDGenerator.getUuid())
+                                    .withUuid(generateUuid())
                                     .withHost(aHost().withUuid("huuid4").withHostName("host3").build())
                                     .withServiceTemplate(serviceTemplate)
                                     .build();
     ServiceInstance instance5 = aServiceInstance()
-                                    .withUuid(UUIDGenerator.getUuid())
+                                    .withUuid(generateUuid())
                                     .withHost(aHost().withUuid("huuid5").withHostName("host3").build())
                                     .withServiceTemplate(serviceTemplate)
                                     .build();
     ServiceInstance instance6 = aServiceInstance()
-                                    .withUuid(UUIDGenerator.getUuid())
+                                    .withUuid(generateUuid())
                                     .withHost(aHost().withUuid("huuid6").withHostName("host3").build())
                                     .withServiceTemplate(serviceTemplate)
                                     .build();
     ServiceInstance instance7 = aServiceInstance()
-                                    .withUuid(UUIDGenerator.getUuid())
+                                    .withUuid(generateUuid())
                                     .withHost(aHost().withUuid("huuid7").withHostName("host3").build())
                                     .withServiceTemplate(serviceTemplate)
                                     .build();

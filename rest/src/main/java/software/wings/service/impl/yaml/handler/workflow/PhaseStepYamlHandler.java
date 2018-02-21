@@ -1,5 +1,7 @@
 package software.wings.service.impl.yaml.handler.workflow;
 
+import static software.wings.common.UUIDGenerator.generateUuid;
+
 import com.google.common.collect.Lists;
 import com.google.inject.Inject;
 import com.google.inject.Singleton;
@@ -14,7 +16,6 @@ import software.wings.beans.PhaseStepType;
 import software.wings.beans.yaml.ChangeContext;
 import software.wings.beans.yaml.YamlConstants;
 import software.wings.beans.yaml.YamlType;
-import software.wings.common.UUIDGenerator;
 import software.wings.exception.HarnessException;
 import software.wings.exception.WingsException;
 import software.wings.service.impl.yaml.handler.BaseYamlHandler;
@@ -37,7 +38,7 @@ public class PhaseStepYamlHandler extends BaseYamlHandler<PhaseStep.Yaml, PhaseS
       throws HarnessException {
     Yaml yaml = changeContext.getYaml();
     PhaseStepType phaseStepType = Util.getEnumFromString(PhaseStepType.class, yaml.getType());
-    String phaseStepUuid = UUIDGenerator.getUuid();
+    String phaseStepUuid = generateUuid();
     PhaseStepBuilder phaseStepBuilder = PhaseStepBuilder.aPhaseStep(phaseStepType, yaml.getName(), phaseStepUuid);
 
     ExecutionStatus statusForRollback = Util.getEnumFromString(ExecutionStatus.class, yaml.getStatusForRollback());

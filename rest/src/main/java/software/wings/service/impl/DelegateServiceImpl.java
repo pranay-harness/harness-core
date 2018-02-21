@@ -24,6 +24,7 @@ import static software.wings.beans.SearchFilter.Operator.IN;
 import static software.wings.beans.alert.AlertType.NoEligibleDelegates;
 import static software.wings.beans.alert.NoEligibleDelegatesAlert.NoEligibleDelegatesAlertBuilder.aNoEligibleDelegatesAlert;
 import static software.wings.common.Constants.DELEGATE_SYNC_CACHE;
+import static software.wings.common.UUIDGenerator.generateUuid;
 import static software.wings.dl.MongoHelper.setUnset;
 import static software.wings.dl.PageRequest.Builder.aPageRequest;
 import static software.wings.exception.WingsException.ALERTING;
@@ -70,7 +71,6 @@ import software.wings.beans.Event.Type;
 import software.wings.beans.alert.AlertType;
 import software.wings.beans.alert.NoActiveDelegatesAlert;
 import software.wings.common.Constants;
-import software.wings.common.UUIDGenerator;
 import software.wings.delegatetasks.validation.DelegateConnectionResult;
 import software.wings.dl.PageRequest;
 import software.wings.dl.PageResponse;
@@ -493,7 +493,7 @@ public class DelegateServiceImpl implements DelegateService {
     if (isEmpty(eligibleDelegateIds)) {
       throw new WingsException(UNAVAILABLE_DELEGATES, ALERTING);
     }
-    String taskId = UUIDGenerator.getUuid();
+    String taskId = generateUuid();
     task.setQueueName(taskId);
     task.setUuid(taskId);
     task.setCreatedAt(clock.millis());

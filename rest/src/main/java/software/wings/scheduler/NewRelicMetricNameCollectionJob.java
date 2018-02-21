@@ -1,6 +1,7 @@
 package software.wings.scheduler;
 
 import static software.wings.beans.DelegateTask.Builder.aDelegateTask;
+import static software.wings.common.UUIDGenerator.generateUuid;
 
 import com.google.inject.Inject;
 
@@ -12,7 +13,6 @@ import org.slf4j.LoggerFactory;
 import software.wings.beans.DelegateTask;
 import software.wings.beans.NewRelicConfig;
 import software.wings.beans.TaskType;
-import software.wings.common.UUIDGenerator;
 import software.wings.service.impl.analysis.DataCollectionTaskResult;
 import software.wings.service.impl.newrelic.NewRelicDataCollectionInfo;
 import software.wings.service.impl.newrelic.NewRelicMetricNames;
@@ -99,7 +99,7 @@ public class NewRelicMetricNameCollectionJob implements Job {
                 logger.error("[learning-engine] NewRelic metric name collection task past due over 6 hours {} ",
                     dataCollectionInfo);
               }
-              String waitId = UUIDGenerator.getUuid();
+              String waitId = generateUuid();
               DelegateTask delegateTask =
                   aDelegateTask()
                       .withTaskType(TaskType.NEWRELIC_COLLECT_METRIC_NAMES)

@@ -16,11 +16,11 @@ public class SshJumpBoxExecutorTest {
   @Test
   public void testExecute() throws Exception {
     //    SshSessionConfig jumpboxConfig =
-    //        new SshSessionConfigBuilder().executionId(getUuid()).host("192.168.43.163").port(22)
+    //        new SshSessionConfigBuilder().executionId(generateUuid()).host("192.168.43.163").port(22)
     //            .user("osboxes").password("osboxes.org").build();
     //
     //    SshSessionConfig config =
-    //        new SshSessionConfigBuilder().executionId(getUuid()).host("192.168.43.8").port(22)
+    //        new SshSessionConfigBuilder().executionId(generateUuid()).host("192.168.43.8").port(22)
     //            .user("vagrant").password("wings1234").jumpboxConfig(jumpboxConfig).build();
     //
     //    SshExecutor executor = SshExecutorFactory.getExecutor(config);

@@ -6,6 +6,7 @@ package software.wings.waitnotify;
 
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.mongodb.morphia.mapping.Mapper.ID_KEY;
+import static software.wings.common.UUIDGenerator.generateUuid;
 import static software.wings.waitnotify.StringNotifyResponseData.Builder.aStringNotifyResponseData;
 
 import com.google.inject.Inject;
@@ -13,7 +14,6 @@ import com.google.inject.Inject;
 import org.junit.Test;
 import software.wings.WingsBaseTest;
 import software.wings.beans.SearchFilter.Operator;
-import software.wings.common.UUIDGenerator;
 import software.wings.dl.PageRequest;
 import software.wings.dl.PageResponse;
 import software.wings.dl.WingsPersistence;
@@ -36,7 +36,7 @@ public class NotifyResponseCleanupHandlerTest extends WingsBaseTest {
    */
   @Test
   public void shouldCleanup() throws InterruptedException {
-    String corrId = UUIDGenerator.getUuid();
+    String corrId = generateUuid();
     NotifyResponse<StringNotifyResponseData> notifyResponse =
         new NotifyResponse<>(corrId, aStringNotifyResponseData().withData("TEST").build());
     notifyResponse.setStatus(ExecutionStatus.SUCCESS);

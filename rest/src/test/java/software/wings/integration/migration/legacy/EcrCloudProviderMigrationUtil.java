@@ -2,6 +2,7 @@ package software.wings.integration.migration.legacy;
 
 import static software.wings.beans.Base.GLOBAL_APP_ID;
 import static software.wings.beans.Base.GLOBAL_ENV_ID;
+import static software.wings.common.UUIDGenerator.generateUuid;
 
 import com.google.inject.Inject;
 
@@ -17,7 +18,6 @@ import software.wings.beans.EmbeddedUser;
 import software.wings.beans.SettingAttribute;
 import software.wings.beans.SettingAttribute.Category;
 import software.wings.beans.artifact.EcrArtifactStream;
-import software.wings.common.UUIDGenerator;
 import software.wings.dl.WingsPersistence;
 import software.wings.rules.Integration;
 import software.wings.security.encryption.SimpleEncryption;
@@ -89,13 +89,13 @@ public class EcrCloudProviderMigrationUtil extends WingsBaseTest {
           settingAttribute.setCreatedAt(System.nanoTime());
           settingAttribute.setCreatedBy(EmbeddedUser.builder().email(userEmail).name(userName).uuid(userUuid).build());
 
-          settingAttribute.setUuid(UUIDGenerator.getUuid());
+          settingAttribute.setUuid(generateUuid());
           try {
             String newId = wingsPersistence.save(settingAttribute);
             cloudProviderId = newId;
           } catch (DuplicateKeyException ex) {
             // If there is a cloud provider with the same
-            settingAttribute.setName(name + UUIDGenerator.getUuid());
+            settingAttribute.setName(name + generateUuid());
             String newId = wingsPersistence.save(settingAttribute);
             cloudProviderId = newId;
           }

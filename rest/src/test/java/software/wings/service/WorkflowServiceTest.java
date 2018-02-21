@@ -55,7 +55,7 @@ import static software.wings.common.Constants.STEP_VALIDATION_MESSAGE;
 import static software.wings.common.Constants.UPGRADE_CONTAINERS;
 import static software.wings.common.Constants.WORKFLOW_INFRAMAPPING_VALIDATION_MESSAGE;
 import static software.wings.common.Constants.WORKFLOW_VALIDATION_MESSAGE;
-import static software.wings.common.UUIDGenerator.getUuid;
+import static software.wings.common.UUIDGenerator.generateUuid;
 import static software.wings.dl.PageRequest.Builder.aPageRequest;
 import static software.wings.dl.PageResponse.Builder.aPageResponse;
 import static software.wings.sm.StateType.ECS_SERVICE_DEPLOY;
@@ -134,7 +134,6 @@ import software.wings.beans.artifact.ArtifactStreamType;
 import software.wings.beans.command.ServiceCommand;
 import software.wings.beans.stats.CloneMetadata;
 import software.wings.common.Constants;
-import software.wings.common.UUIDGenerator;
 import software.wings.dl.PageRequest;
 import software.wings.dl.PageResponse;
 import software.wings.dl.WingsPersistence;
@@ -181,8 +180,8 @@ import javax.validation.ConstraintViolationException;
  */
 @Listeners(NotifyEventListener.class)
 public class WorkflowServiceTest extends WingsBaseTest {
-  private static String envId = UUIDGenerator.getUuid();
-  private static String workflowId = UUIDGenerator.getUuid();
+  private static String envId = generateUuid();
+  private static String workflowId = generateUuid();
 
   private static final Logger logger = LoggerFactory.getLogger(WorkflowServiceTest.class);
 
@@ -973,7 +972,7 @@ public class WorkflowServiceTest extends WingsBaseTest {
                                           .withInfraMappingId(INFRA_MAPPING_ID)
                                           .addPhaseStep(aPhaseStep(PhaseStepType.CONTAINER_DEPLOY, DEPLOY_CONTAINERS)
                                                             .addStep(aGraphNode()
-                                                                         .withId(getUuid())
+                                                                         .withId(generateUuid())
                                                                          .withType(ECS_SERVICE_DEPLOY.name())
                                                                          .withName(UPGRADE_CONTAINERS)
                                                                          .build())

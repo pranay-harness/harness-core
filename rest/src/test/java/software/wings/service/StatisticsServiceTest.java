@@ -23,7 +23,7 @@ import static software.wings.beans.stats.ActivityStatusAggregation.Builder.anAct
 import static software.wings.beans.stats.AppKeyStatistics.AppKeyStatsBreakdown.Builder.anAppKeyStatistics;
 import static software.wings.beans.stats.NotificationCount.Builder.aNotificationCount;
 import static software.wings.beans.stats.TopConsumer.Builder.aTopConsumer;
-import static software.wings.common.UUIDGenerator.getUuid;
+import static software.wings.common.UUIDGenerator.generateUuid;
 import static software.wings.dl.PageResponse.Builder.aPageResponse;
 import static software.wings.sm.ExecutionStatus.FAILED;
 import static software.wings.sm.ExecutionStatus.SUCCESS;
@@ -187,7 +187,7 @@ public class StatisticsServiceTest extends WingsBaseTest {
                            .withStatus(SUCCESS)
                            .withInstanceElement(
                                anInstanceElement()
-                                   .withUuid(getUuid())
+                                   .withUuid(generateUuid())
                                    .withServiceTemplateElement(
                                        aServiceTemplateElement()
                                            .withName(SERVICE_NAME)
@@ -206,7 +206,7 @@ public class StatisticsServiceTest extends WingsBaseTest {
                            .withStatus(FAILED)
                            .withInstanceElement(
                                anInstanceElement()
-                                   .withUuid(getUuid())
+                                   .withUuid(generateUuid())
                                    .withServiceTemplateElement(
                                        aServiceTemplateElement()
                                            .withName(SERVICE_NAME)
@@ -285,7 +285,7 @@ public class StatisticsServiceTest extends WingsBaseTest {
         .thenReturn(
             aPageResponse().withResponse(asList(anApplication().withUuid(APP_ID).withName(APP_NAME).build())).build());
 
-    String instanceUuid = getUuid();
+    String instanceUuid = generateUuid();
     List<ElementExecutionSummary> serviceExecutionSummaries = asList(
         anElementExecutionSummary()
             .withInstanceStatusSummaries(
@@ -326,7 +326,7 @@ public class StatisticsServiceTest extends WingsBaseTest {
                            .withStatus(FAILED)
                            .withInstanceElement(
                                anInstanceElement()
-                                   .withUuid(getUuid())
+                                   .withUuid(generateUuid())
                                    .withServiceTemplateElement(
                                        aServiceTemplateElement()
                                            .withName(SERVICE_NAME)
@@ -480,11 +480,13 @@ public class StatisticsServiceTest extends WingsBaseTest {
                           .toInstant()
                           .toEpochMilli();
 
-    List<ElementExecutionSummary> serviceExecutionSummaries = asList(
-        anElementExecutionSummary()
-            .withInstanceStatusSummaries(asList(
-                anInstanceStatusSummary().withInstanceElement(anInstanceElement().withUuid(getUuid()).build()).build()))
-            .build());
+    List<ElementExecutionSummary> serviceExecutionSummaries =
+        asList(anElementExecutionSummary()
+                   .withInstanceStatusSummaries(
+                       asList(anInstanceStatusSummary()
+                                  .withInstanceElement(anInstanceElement().withUuid(generateUuid()).build())
+                                  .build()))
+                   .build());
 
     List<WorkflowExecution> executions = asList(aWorkflowExecution()
                                                     .withAppId(APP_ID)
@@ -611,11 +613,13 @@ public class StatisticsServiceTest extends WingsBaseTest {
                           .toInstant()
                           .toEpochMilli();
 
-    List<ElementExecutionSummary> serviceExecutionSummaries = asList(
-        anElementExecutionSummary()
-            .withInstanceStatusSummaries(asList(
-                anInstanceStatusSummary().withInstanceElement(anInstanceElement().withUuid(getUuid()).build()).build()))
-            .build());
+    List<ElementExecutionSummary> serviceExecutionSummaries =
+        asList(anElementExecutionSummary()
+                   .withInstanceStatusSummaries(
+                       asList(anInstanceStatusSummary()
+                                  .withInstanceElement(anInstanceElement().withUuid(generateUuid()).build())
+                                  .build()))
+                   .build());
 
     List<WorkflowExecution> executions = asList(aWorkflowExecution()
                                                     .withAppId(APP_ID)

@@ -1,6 +1,7 @@
 package software.wings.core.queue;
 
 import static io.harness.threading.Morpheus.sleep;
+import static software.wings.common.UUIDGenerator.generateUuid;
 import static software.wings.core.maintenance.MaintenanceController.isMaintenance;
 
 import com.google.inject.Inject;
@@ -8,7 +9,6 @@ import com.google.inject.name.Named;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-import software.wings.common.UUIDGenerator;
 import software.wings.exception.WingsException;
 import software.wings.utils.ThreadContext;
 
@@ -40,7 +40,7 @@ public abstract class AbstractQueueListener<T extends Queuable> implements Runna
    */
   @Override
   public void run() {
-    String threadName = ThreadContext.getContext() + queue.name() + "-handler-" + UUIDGenerator.getUuid();
+    String threadName = ThreadContext.getContext() + queue.name() + "-handler-" + generateUuid();
     logger.debug("Setting thread name to {}", threadName);
     Thread.currentThread().setName(threadName);
 

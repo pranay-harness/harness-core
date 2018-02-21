@@ -2,6 +2,7 @@ package software.wings.collect;
 
 import static software.wings.beans.DelegateTask.Builder.aDelegateTask;
 import static software.wings.beans.Event.Builder.anEvent;
+import static software.wings.common.UUIDGenerator.generateUuid;
 
 import com.google.inject.Inject;
 import com.google.inject.Singleton;
@@ -27,7 +28,6 @@ import software.wings.beans.artifact.JenkinsArtifactStream;
 import software.wings.beans.artifact.NexusArtifactStream;
 import software.wings.beans.config.ArtifactoryConfig;
 import software.wings.beans.config.NexusConfig;
-import software.wings.common.UUIDGenerator;
 import software.wings.core.queue.AbstractQueueListener;
 import software.wings.exception.WingsException;
 import software.wings.service.impl.EventEmitter;
@@ -71,7 +71,7 @@ public class ArtifactCollectEventListener extends AbstractQueueListener<CollectE
 
       ArtifactStream artifactStream = artifactStreamService.get(artifact.getAppId(), artifact.getArtifactStreamId());
       String accountId = appService.get(artifactStream.getAppId()).getAccountId();
-      String waitId = UUIDGenerator.getUuid();
+      String waitId = generateUuid();
 
       DelegateTask delegateTask = createDelegateTask(accountId, artifactStream, artifact, waitId);
       waitNotifyEngine.waitForAll(new ArtifactCollectionCallback(artifact.getAppId(), artifact.getUuid()), waitId);

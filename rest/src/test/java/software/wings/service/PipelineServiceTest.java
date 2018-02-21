@@ -21,6 +21,7 @@ import static software.wings.beans.SearchFilter.Operator.EQ;
 import static software.wings.beans.Service.Builder.aService;
 import static software.wings.beans.Variable.VariableBuilder.aVariable;
 import static software.wings.beans.Workflow.WorkflowBuilder.aWorkflow;
+import static software.wings.common.UUIDGenerator.generateUuid;
 import static software.wings.dl.PageRequest.Builder.aPageRequest;
 import static software.wings.dl.PageResponse.Builder.aPageResponse;
 import static software.wings.sm.StateType.ENV_STATE;
@@ -52,7 +53,6 @@ import software.wings.beans.PipelineStage;
 import software.wings.beans.PipelineStage.PipelineStageElement;
 import software.wings.beans.RepairActionCode;
 import software.wings.common.Constants;
-import software.wings.common.UUIDGenerator;
 import software.wings.dl.PageResponse;
 import software.wings.dl.WingsPersistence;
 import software.wings.exception.WingsException;
@@ -138,13 +138,13 @@ public class PipelineServiceTest extends WingsBaseTest {
     List<String> workflowIds = new ArrayList<>();
     List<PipelineStage> pipelineStages = new ArrayList<>();
     for (int i = 0; i < 60; i++) {
-      String uuid = UUIDGenerator.getUuid();
+      String uuid = generateUuid();
       workflowIds.add(uuid);
       when(workflowService.readWorkflow(APP_ID, uuid))
           .thenReturn(aWorkflow().withOrchestrationWorkflow(aCanaryOrchestrationWorkflow().build()).build());
 
       Map<String, Object> properties = new HashMap<>();
-      properties.put("envId", UUIDGenerator.getUuid());
+      properties.put("envId", generateUuid());
       properties.put("workflowId", uuid);
       PipelineStage pipelineStage =
           new PipelineStage(asList(new PipelineStageElement("SE" + i, ENV_STATE.name(), properties)));

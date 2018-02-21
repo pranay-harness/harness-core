@@ -23,7 +23,7 @@ import static software.wings.common.Constants.ROLLBACK_PREFIX;
 import static software.wings.common.Constants.WORKFLOW_INFRAMAPPING_VALIDATION_MESSAGE;
 import static software.wings.common.Constants.WORKFLOW_VALIDATION_MESSAGE;
 import static software.wings.common.Constants.phaseNamePattern;
-import static software.wings.common.UUIDGenerator.getUuid;
+import static software.wings.common.UUIDGenerator.generateUuid;
 
 import com.fasterxml.jackson.annotation.JsonIgnore;
 import com.fasterxml.jackson.annotation.JsonTypeName;
@@ -465,8 +465,12 @@ public class CanaryOrchestrationWorkflow extends CustomOrchestrationWorkflow {
       for (WorkflowPhase workflowPhase : workflowPhases) {
         id2 = workflowPhase.getUuid();
         graphBuilder.addNodes(workflowPhase.generatePhaseNode())
-            .addLinks(
-                aLink().withId(getUuid()).withFrom(id1).withTo(id2).withType(TransitionType.SUCCESS.name()).build())
+            .addLinks(aLink()
+                          .withId(generateUuid())
+                          .withFrom(id1)
+                          .withTo(id2)
+                          .withType(TransitionType.SUCCESS.name())
+                          .build())
             .addSubworkflows(workflowPhase.generateSubworkflows());
 
         if (rollbackWorkflowPhaseIdMap != null && rollbackWorkflowPhaseIdMap.get(workflowPhase.getUuid()) != null) {
@@ -479,7 +483,8 @@ public class CanaryOrchestrationWorkflow extends CustomOrchestrationWorkflow {
     }
     id2 = postDeploymentSteps.getUuid();
     graphBuilder.addNodes(postDeploymentSteps.generatePhaseStepNode())
-        .addLinks(aLink().withId(getUuid()).withFrom(id1).withTo(id2).withType(TransitionType.SUCCESS.name()).build())
+        .addLinks(
+            aLink().withId(generateUuid()).withFrom(id1).withTo(id2).withType(TransitionType.SUCCESS.name()).build())
         .addSubworkflow(id2, postDeploymentSteps.generateSubworkflow(null));
 
     return graphBuilder.build();

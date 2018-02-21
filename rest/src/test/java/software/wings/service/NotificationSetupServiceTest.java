@@ -2,6 +2,7 @@ package software.wings.service;
 
 import static org.assertj.core.api.Assertions.assertThat;
 import static software.wings.beans.NotificationGroup.NotificationGroupBuilder.aNotificationGroup;
+import static software.wings.common.UUIDGenerator.generateUuid;
 import static software.wings.dl.PageRequest.Builder.aPageRequest;
 
 import com.google.common.collect.Lists;
@@ -15,7 +16,6 @@ import software.wings.beans.Base;
 import software.wings.beans.NotificationChannelType;
 import software.wings.beans.NotificationGroup;
 import software.wings.beans.SearchFilter.Operator;
-import software.wings.common.UUIDGenerator;
 import software.wings.dl.PageRequest;
 import software.wings.dl.PageResponse;
 import software.wings.service.intfc.NotificationSetupService;
@@ -34,7 +34,7 @@ public class NotificationSetupServiceTest extends WingsBaseTest {
   //  @Test
   //  public void shouldReturnSupportedChannelTypes() {
   //    List<SettingAttribute> settingList = Lists.newArrayList(new SettingAttribute());
-  //    String appId = UUIDGenerator.getUuid();
+  //    String appId = UUIDGenerator.generateUuid();
   //    when(settingsService.getSettingAttributesByType(appId,
   //    SettingVariableTypes.SMTP.name())).thenReturn(settingList); Map<NotificationChannelType, Object> channelTypes =
   //    notificationSetupService.getSupportedChannelTypeDetails(appId);
@@ -43,18 +43,18 @@ public class NotificationSetupServiceTest extends WingsBaseTest {
 
   @Test
   public void shouldCreateNotificationGroup() {
-    String accountId = UUIDGenerator.getUuid();
+    String accountId = generateUuid();
     createAndAssertNotificationGroup(accountId);
   }
 
   @Test
   public void shouldListNotificationGroups() {
-    String accountId = UUIDGenerator.getUuid();
+    String accountId = generateUuid();
     createAndAssertNotificationGroup(accountId);
     createAndAssertNotificationGroup(accountId);
     createAndAssertNotificationGroup(accountId);
 
-    createAndAssertNotificationGroup(UUIDGenerator.getUuid());
+    createAndAssertNotificationGroup(generateUuid());
 
     PageRequest<NotificationGroup> pageRequest = aPageRequest().addFilter("accountId", Operator.EQ, accountId).build();
     PageResponse<NotificationGroup> pageResponse = notificationSetupService.listNotificationGroups(pageRequest);
@@ -68,12 +68,12 @@ public class NotificationSetupServiceTest extends WingsBaseTest {
 
   @Test
   public void shouldListNotificationGroupsByAccountId() {
-    String accountId = UUIDGenerator.getUuid();
+    String accountId = generateUuid();
     createAndAssertNotificationGroup(accountId);
     createAndAssertNotificationGroup(accountId);
     createAndAssertNotificationGroup(accountId);
 
-    createAndAssertNotificationGroup(UUIDGenerator.getUuid());
+    createAndAssertNotificationGroup(generateUuid());
 
     List<NotificationGroup> notificationGroups = notificationSetupService.listNotificationGroups(accountId);
     assertThat(notificationGroups)
@@ -86,12 +86,12 @@ public class NotificationSetupServiceTest extends WingsBaseTest {
 
   @Test
   public void shouldListNotificationGroupsByAccountIdName() {
-    String accountId = UUIDGenerator.getUuid();
+    String accountId = generateUuid();
     createAndAssertNotificationGroup(accountId);
     createAndAssertNotificationGroup(accountId);
     createAndAssertNotificationGroup(accountId);
 
-    createAndAssertNotificationGroup(UUIDGenerator.getUuid());
+    createAndAssertNotificationGroup(generateUuid());
 
     List<NotificationGroup> notificationGroups = notificationSetupService.listNotificationGroups(accountId, "prod_ops");
     assertThat(notificationGroups)
@@ -104,7 +104,7 @@ public class NotificationSetupServiceTest extends WingsBaseTest {
 
   @Test
   public void shouldDeleteNotificationGroup() {
-    String accountId = UUIDGenerator.getUuid();
+    String accountId = generateUuid();
     NotificationGroup notificationGroup = createAndAssertNotificationGroup(accountId);
     boolean deleted = notificationSetupService.deleteNotificationGroups(
         notificationGroup.getAccountId(), notificationGroup.getUuid());
@@ -113,7 +113,7 @@ public class NotificationSetupServiceTest extends WingsBaseTest {
 
   @Test
   public void shouldReadNotificationGroup() {
-    String accountId = UUIDGenerator.getUuid();
+    String accountId = generateUuid();
     NotificationGroup notificationGroup = createAndAssertNotificationGroup(accountId);
     NotificationGroup notificationGroup2 =
         notificationSetupService.readNotificationGroup(notificationGroup.getAccountId(), notificationGroup.getUuid());
@@ -141,17 +141,17 @@ public class NotificationSetupServiceTest extends WingsBaseTest {
   //
   //  @Test
   //  public void shouldCreateNotificationRule() {
-  //    String appId = UUIDGenerator.getUuid();
+  //    String appId = UUIDGenerator.generateUuid();
   //    createAndAssertNotificationRule(appId);
   //  }
 
   //  @Test
   //  public void shouldListNotificationRule() {
-  //    String appId = UUIDGenerator.getUuid();
+  //    String appId = UUIDGenerator.generateUuid();
   //    createAndAssertNotificationRule(appId);
   //    createAndAssertNotificationRule(appId);
   //    createAndAssertNotificationRule(appId);
-  //    createAndAssertNotificationRule(UUIDGenerator.getUuid());
+  //    createAndAssertNotificationRule(UUIDGenerator.generateUuid());
   //
   //    PageRequest<NotificationRule> pageRequest = aPageRequest().addFilter("appId", Operator.EQ, appId).build();
   //    PageResponse<NotificationRule> pageResponse = notificationSetupService.listNotificationRules(pageRequest);
@@ -161,11 +161,11 @@ public class NotificationSetupServiceTest extends WingsBaseTest {
   //
   //  @Test
   //  public void shouldListNotificationRuleByAppId() {
-  //    String appId = UUIDGenerator.getUuid();
+  //    String appId = UUIDGenerator.generateUuid();
   //    createAndAssertNotificationRule(appId);
   //    createAndAssertNotificationRule(appId);
   //    createAndAssertNotificationRule(appId);
-  //    createAndAssertNotificationRule(UUIDGenerator.getUuid());
+  //    createAndAssertNotificationRule(UUIDGenerator.generateUuid());
   //
   //    List<NotificationRule> res = notificationSetupService.listNotificationRules(appId);
   //    assertThat(res).isNotNull().hasSize(3).doesNotContainNull().extracting("appId").containsExactly(appId, appId,
@@ -174,19 +174,19 @@ public class NotificationSetupServiceTest extends WingsBaseTest {
   //
   //  @Test
   //  public void shouldReadNotificationRule() {
-  //    String appId = UUIDGenerator.getUuid();
+  //    String appId = UUIDGenerator.generateUuid();
   //    NotificationRule notificationRule = createAndAssertNotificationRule(appId);
   //    NotificationRule notificationRule2 = notificationSetupService.readNotificationRule(notificationRule.getAppId(),
-  //    notificationRule.getUuid());
+  //    notificationRule.generateUuid());
   //    assertThat(notificationRule2).isNotNull().isEqualToIgnoringGivenFields(notificationRule);
   //  }
   //
   //  @Test
   //  public void shouldDeleteNotificationRule() {
-  //    String appId = UUIDGenerator.getUuid();
+  //    String appId = UUIDGenerator.generateUuid();
   //    NotificationRule notificationRule = createAndAssertNotificationRule(appId);
   //    boolean deleted = notificationSetupService.deleteNotificationRule(notificationRule.getAppId(),
-  //    notificationRule.getUuid()); assertThat(deleted).isTrue();
+  //    notificationRule.generateUuid()); assertThat(deleted).isTrue();
   //  }
   //
   //  private NotificationRule createAndAssertNotificationRule(String appId) {

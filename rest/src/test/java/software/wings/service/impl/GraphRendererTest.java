@@ -6,7 +6,7 @@ import static java.util.stream.Collectors.toMap;
 import static org.assertj.core.api.Assertions.assertThat;
 import static software.wings.api.HostElement.Builder.aHostElement;
 import static software.wings.beans.GraphNode.GraphNodeBuilder.aGraphNode;
-import static software.wings.common.UUIDGenerator.getUuid;
+import static software.wings.common.UUIDGenerator.generateUuid;
 import static software.wings.sm.ExecutionStatus.SUCCESS;
 import static software.wings.sm.StateExecutionInstance.Builder.aStateExecutionInstance;
 import static software.wings.sm.StateType.COMMAND;
@@ -48,7 +48,7 @@ public class GraphRendererTest extends WingsBaseTest {
   public void testSanity() {
     List<StateExecutionInstance> stateExecutionInstances = asList(aStateExecutionInstance()
                                                                       .withStateName("origin")
-                                                                      .withUuid(getUuid())
+                                                                      .withUuid(generateUuid())
                                                                       .withStateType("PHASE")
                                                                       .withStatus(SUCCESS)
                                                                       .build());

@@ -1,5 +1,6 @@
 package software.wings.sm.states;
 
+import static software.wings.common.UUIDGenerator.generateUuid;
 import static software.wings.sm.ExecutionResponse.Builder.anExecutionResponse;
 import static software.wings.sm.ExecutionStatusData.Builder.anExecutionStatusData;
 
@@ -9,7 +10,6 @@ import com.google.inject.name.Named;
 import com.github.reinert.jjschema.Attributes;
 import org.mongodb.morphia.annotations.Transient;
 import software.wings.api.WaitStateExecutionData;
-import software.wings.common.UUIDGenerator;
 import software.wings.scheduler.QuartzScheduler;
 import software.wings.sm.ExecutionContext;
 import software.wings.sm.ExecutionResponse;
@@ -53,7 +53,7 @@ public class WaitState extends State {
     waitStateExecutionData.setDuration(duration);
     long wakeupTs = System.currentTimeMillis() + (duration * 1000);
     waitStateExecutionData.setWakeupTs(wakeupTs);
-    waitStateExecutionData.setResumeId(UUIDGenerator.getUuid());
+    waitStateExecutionData.setResumeId(generateUuid());
 
     // TODO: Fix the test cases and then checkin the persistent notification
     //    JobDetail job = JobBuilder.newJob(NotifyJob.class).withIdentity(Constants.WAIT_RESUME_GROUP,

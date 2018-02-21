@@ -13,6 +13,7 @@ import static software.wings.beans.PhysicalInfrastructureMapping.Builder.aPhysic
 import static software.wings.beans.ServiceInstance.Builder.aServiceInstance;
 import static software.wings.beans.ServiceTemplate.Builder.aServiceTemplate;
 import static software.wings.beans.infrastructure.Host.Builder.aHost;
+import static software.wings.common.UUIDGenerator.generateUuid;
 import static software.wings.utils.WingsTestConstants.APP_ID;
 import static software.wings.utils.WingsTestConstants.ARTIFACT_ID;
 import static software.wings.utils.WingsTestConstants.INFRA_MAPPING_ID;
@@ -40,7 +41,6 @@ import software.wings.beans.artifact.Artifact;
 import software.wings.beans.infrastructure.instance.Instance;
 import software.wings.beans.infrastructure.instance.key.HostInstanceKey;
 import software.wings.common.Constants;
-import software.wings.common.UUIDGenerator;
 import software.wings.dl.PageRequest;
 import software.wings.dl.PageResponse;
 import software.wings.service.intfc.ArtifactService;
@@ -90,17 +90,17 @@ public class NodeSelectStateTest extends WingsBaseTest {
   Instance instance = Instance.builder().hostInstanceKey(hostInstanceKey).build();
 
   ServiceInstance instance1 = aServiceInstance()
-                                  .withUuid(UUIDGenerator.getUuid())
+                                  .withUuid(generateUuid())
                                   .withHost(aHost().withHostName("host1").build())
                                   .withServiceTemplate(SERVICE_TEMPLATE)
                                   .build();
   ServiceInstance instance2 = aServiceInstance()
-                                  .withUuid(UUIDGenerator.getUuid())
+                                  .withUuid(generateUuid())
                                   .withHost(aHost().withHostName("host2").build())
                                   .withServiceTemplate(SERVICE_TEMPLATE)
                                   .build();
   ServiceInstance instance3 = aServiceInstance()
-                                  .withUuid(UUIDGenerator.getUuid())
+                                  .withUuid(generateUuid())
                                   .withHost(aHost().withHostName("host3").build())
                                   .withServiceTemplate(SERVICE_TEMPLATE)
                                   .build();
@@ -109,7 +109,7 @@ public class NodeSelectStateTest extends WingsBaseTest {
 
   @Before
   public void setUp() throws Exception {
-    stateExecutionInstance.setUuid(UUIDGenerator.getUuid());
+    stateExecutionInstance.setUuid(generateUuid());
     stateExecutionInstance.setStateName("DC_NODE_SELECT");
     when(context.getApp()).thenReturn(anApplication().withUuid(APP_ID).build());
     when(context.getContextElement(ContextElementType.PARAM, Constants.PHASE_PARAM))

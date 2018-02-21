@@ -1,6 +1,7 @@
 package software.wings.resources;
 
 import static javax.ws.rs.core.MediaType.MULTIPART_FORM_DATA;
+import static software.wings.common.UUIDGenerator.generateUuid;
 import static software.wings.delegatetasks.DelegateFile.Builder.aDelegateFile;
 import static software.wings.service.intfc.FileService.FileBucket.ARTIFACTS;
 
@@ -19,7 +20,6 @@ import org.slf4j.LoggerFactory;
 import software.wings.app.MainConfiguration;
 import software.wings.beans.FileMetadata;
 import software.wings.beans.RestResponse;
-import software.wings.common.UUIDGenerator;
 import software.wings.delegatetasks.DelegateFile;
 import software.wings.security.PermissionAttribute.ResourceType;
 import software.wings.security.annotations.AuthRule;
@@ -119,7 +119,7 @@ public class DelegateFileResource {
     logger.info("fileId: {}, fileBucket: {}", fileId, fileBucket);
     return output -> {
       if (encrypted) {
-        File file = new File(Files.createTempDir(), UUIDGenerator.getUuid());
+        File file = new File(Files.createTempDir(), generateUuid());
         logger.info("Temp file path [{}]", file.getAbsolutePath());
         fileService.download(fileId, file, fileBucket);
         EncryptionUtils.decryptToStream(file, accountId, output);

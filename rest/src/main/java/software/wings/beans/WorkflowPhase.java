@@ -5,6 +5,7 @@ import static software.wings.beans.Graph.Builder.aGraph;
 import static software.wings.beans.GraphLink.Builder.aLink;
 import static software.wings.beans.GraphNode.GraphNodeBuilder.aGraphNode;
 import static software.wings.beans.WorkflowPhase.WorkflowPhaseBuilder.aWorkflowPhase;
+import static software.wings.common.UUIDGenerator.generateUuid;
 import static software.wings.sm.StateType.PHASE;
 
 import com.fasterxml.jackson.annotation.JsonIgnore;
@@ -15,7 +16,6 @@ import org.mongodb.morphia.annotations.Embedded;
 import software.wings.api.DeploymentType;
 import software.wings.beans.Graph.Builder;
 import software.wings.common.Constants;
-import software.wings.common.UUIDGenerator;
 import software.wings.sm.TransitionType;
 import software.wings.yaml.BaseYamlWithType;
 
@@ -29,7 +29,7 @@ import java.util.stream.Collectors;
  * Created by rishi on 12/21/16.
  */
 public class WorkflowPhase implements UuidAware {
-  private String uuid = UUIDGenerator.getUuid();
+  private String uuid = generateUuid();
   private String name;
   private String serviceId;
 
@@ -256,7 +256,7 @@ public class WorkflowPhase implements UuidAware {
 
   public WorkflowPhase clone() {
     WorkflowPhase clonedWorkflowPhase = aWorkflowPhase()
-                                            .withUuid(UUIDGenerator.getUuid())
+                                            .withUuid(generateUuid())
                                             .withServiceId(getServiceId())
                                             .withInfraMappingId(getInfraMappingId())
                                             .withInfraMappingName(getInfraMappingName())
@@ -301,7 +301,7 @@ public class WorkflowPhase implements UuidAware {
   }
 
   public static final class WorkflowPhaseBuilder {
-    private String uuid = UUIDGenerator.getUuid();
+    private String uuid = generateUuid();
     private String name;
     private String serviceId;
     private String infraMappingId;

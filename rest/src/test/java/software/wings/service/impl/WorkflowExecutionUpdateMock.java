@@ -1,6 +1,7 @@
 package software.wings.service.impl;
 
-import software.wings.common.UUIDGenerator;
+import static software.wings.common.UUIDGenerator.generateUuid;
+
 import software.wings.sm.ExecutionContext;
 import software.wings.sm.ExecutionStatus;
 
@@ -22,7 +23,7 @@ public class WorkflowExecutionUpdateMock extends WorkflowExecutionUpdate {
    */
   public WorkflowExecutionUpdateMock() {
     super();
-    this.signalId = UUIDGenerator.getUuid();
+    this.signalId = generateUuid();
     signalIdsMap.put(signalId, new CountDownLatch(1));
   }
 
@@ -33,7 +34,7 @@ public class WorkflowExecutionUpdateMock extends WorkflowExecutionUpdate {
    */
   public WorkflowExecutionUpdateMock(String appId, String workflowExecutionId) {
     super(appId, workflowExecutionId);
-    this.signalId = UUIDGenerator.getUuid();
+    this.signalId = generateUuid();
     signalIdsMap.put(signalId, new CountDownLatch(1));
   }
 

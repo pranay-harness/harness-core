@@ -16,7 +16,7 @@ public class UUIDGenerator {
    *
    * @return the uuid
    */
-  public static String getUuid() {
+  public static String generateUuid() {
     UUID uuid = UUID.randomUUID();
     byte[] bytes = new byte[16];
     ByteBuffer uuidBytes = ByteBuffer.wrap(bytes);

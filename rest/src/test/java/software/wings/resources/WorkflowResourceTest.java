@@ -10,6 +10,7 @@ import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 import static software.wings.beans.CanaryOrchestrationWorkflow.CanaryOrchestrationWorkflowBuilder.aCanaryOrchestrationWorkflow;
 import static software.wings.beans.Workflow.WorkflowBuilder.aWorkflow;
+import static software.wings.common.UUIDGenerator.generateUuid;
 import static software.wings.dl.PageRequest.Builder.aPageRequest;
 import static software.wings.dl.PageResponse.Builder.aPageResponse;
 
@@ -23,7 +24,6 @@ import software.wings.WingsBaseTest;
 import software.wings.beans.RestResponse;
 import software.wings.beans.Workflow;
 import software.wings.beans.stats.CloneMetadata;
-import software.wings.common.UUIDGenerator;
 import software.wings.dl.PageRequest;
 import software.wings.dl.PageResponse;
 import software.wings.exception.WingsExceptionMapper;
@@ -66,7 +66,7 @@ public class WorkflowResourceTest extends WingsBaseTest {
   public void shouldCreateWorkflow() {
     Workflow workflow2 = aWorkflow()
                              .withAppId(APP_ID)
-                             .withUuid(UUIDGenerator.getUuid())
+                             .withUuid(generateUuid())
                              .withOrchestrationWorkflow(aCanaryOrchestrationWorkflow().build())
                              .build();
     when(WORKFLOW_SERVICE.createWorkflow(WORKFLOW)).thenReturn(workflow2);
@@ -88,7 +88,7 @@ public class WorkflowResourceTest extends WingsBaseTest {
   public void shouldCloneWorkflow() {
     Workflow workflow2 = aWorkflow()
                              .withAppId(APP_ID)
-                             .withUuid(UUIDGenerator.getUuid())
+                             .withUuid(generateUuid())
                              .withOrchestrationWorkflow(aCanaryOrchestrationWorkflow().build())
                              .build();
     CloneMetadata cloneMetadata = CloneMetadata.builder().workflow(WORKFLOW).build();

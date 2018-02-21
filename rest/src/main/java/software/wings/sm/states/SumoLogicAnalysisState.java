@@ -2,6 +2,7 @@ package software.wings.sm.states;
 
 import static org.apache.commons.lang3.StringUtils.isBlank;
 import static software.wings.beans.DelegateTask.Builder.aDelegateTask;
+import static software.wings.common.UUIDGenerator.generateUuid;
 
 import com.google.common.collect.Sets;
 
@@ -17,7 +18,6 @@ import software.wings.beans.SettingAttribute;
 import software.wings.beans.SumoConfig;
 import software.wings.beans.TaskType;
 import software.wings.common.Constants;
-import software.wings.common.UUIDGenerator;
 import software.wings.exception.WingsException;
 import software.wings.service.impl.analysis.AnalysisComparisonStrategy;
 import software.wings.service.impl.analysis.AnalysisComparisonStrategyProvider;
@@ -122,7 +122,7 @@ public class SumoLogicAnalysisState extends AbstractLogAnalysisState {
           getWorkflowId(context), context.getWorkflowExecutionId(), getPhaseServiceId(context), queries,
           logCollectionStartTimeStamp, 0, Integer.parseInt(timeDuration), hostBatch,
           secretManager.getEncryptionDetails(sumoConfig, context.getAppId(), context.getWorkflowExecutionId()));
-      String waitId = UUIDGenerator.getUuid();
+      String waitId = generateUuid();
       PhaseElement phaseElement = context.getContextElement(ContextElementType.PARAM, Constants.PHASE_PARAM);
       String infrastructureMappingId = phaseElement == null ? null : phaseElement.getInfraMappingId();
       delegateTasks.add(aDelegateTask()

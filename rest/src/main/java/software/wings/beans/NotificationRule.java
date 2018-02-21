@@ -1,12 +1,13 @@
 package software.wings.beans;
 
+import static software.wings.common.UUIDGenerator.generateUuid;
+
 import com.google.common.base.MoreObjects;
 
 import lombok.Builder;
 import lombok.Data;
 import lombok.EqualsAndHashCode;
 import lombok.NoArgsConstructor;
-import software.wings.common.UUIDGenerator;
 import software.wings.sm.ExecutionStatus;
 import software.wings.yaml.BaseYaml;
 
@@ -20,7 +21,7 @@ import javax.validation.constraints.Size;
  * Created by rishi on 10/30/16.
  */
 public class NotificationRule {
-  private String uuid = UUIDGenerator.getUuid();
+  private String uuid = generateUuid();
   private List<ExecutionStatus> conditions = new ArrayList<>();
   private ExecutionScope executionScope;
 
@@ -175,7 +176,7 @@ public class NotificationRule {
    * The type Notification rule builder.
    */
   public static final class NotificationRuleBuilder {
-    private String uuid = UUIDGenerator.getUuid();
+    private String uuid = generateUuid();
     private List<ExecutionStatus> conditions = new ArrayList<>();
     private ExecutionScope executionScope;
     private List<NotificationGroup> notificationGroups = new ArrayList<>();

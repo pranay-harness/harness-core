@@ -17,6 +17,7 @@ import static software.wings.beans.ServiceInstance.Builder.aServiceInstance;
 import static software.wings.beans.ServiceTemplate.Builder.aServiceTemplate;
 import static software.wings.beans.SettingAttribute.Builder.aSettingAttribute;
 import static software.wings.beans.infrastructure.Host.Builder.aHost;
+import static software.wings.common.UUIDGenerator.generateUuid;
 import static software.wings.utils.WingsTestConstants.ACCOUNT_ID;
 import static software.wings.utils.WingsTestConstants.SERVICE_ID;
 import static software.wings.utils.WingsTestConstants.TEMPLATE_ID;
@@ -137,17 +138,17 @@ public class InstanceExpressionProcessorTest extends WingsBaseTest {
 
     PageResponse<ServiceInstance> res = new PageResponse<>();
     ServiceInstance instance1 = aServiceInstance()
-                                    .withUuid(UUIDGenerator.getUuid())
+                                    .withUuid(generateUuid())
                                     .withHost(aHost().withHostName("host1").build())
                                     .withServiceTemplate(SERVICE_TEMPLATE)
                                     .build();
     ServiceInstance instance2 = aServiceInstance()
-                                    .withUuid(UUIDGenerator.getUuid())
+                                    .withUuid(generateUuid())
                                     .withHost(aHost().withHostName("host2").build())
                                     .withServiceTemplate(SERVICE_TEMPLATE)
                                     .build();
     ServiceInstance instance3 = aServiceInstance()
-                                    .withUuid(UUIDGenerator.getUuid())
+                                    .withUuid(generateUuid())
                                     .withHost(aHost().withHostName("host3").build())
                                     .withServiceTemplate(SERVICE_TEMPLATE)
                                     .build();
@@ -203,8 +204,8 @@ public class InstanceExpressionProcessorTest extends WingsBaseTest {
     when(context.getApp()).thenReturn(app);
     when(context.getEnv()).thenReturn(env);
 
-    String instance1 = UUIDGenerator.getUuid();
-    String instance2 = UUIDGenerator.getUuid();
+    String instance1 = generateUuid();
+    String instance2 = generateUuid();
 
     ServiceInstanceIdsParam element = new ServiceInstanceIdsParam();
     element.setInstanceIds(Lists.newArrayList(instance1, instance2));
@@ -252,9 +253,9 @@ public class InstanceExpressionProcessorTest extends WingsBaseTest {
     when(context.getApp()).thenReturn(app);
     when(context.getEnv()).thenReturn(env);
 
-    String instance1 = UUIDGenerator.getUuid();
-    String instance2 = UUIDGenerator.getUuid();
-    String instance3 = UUIDGenerator.getUuid();
+    String instance1 = generateUuid();
+    String instance2 = generateUuid();
+    String instance3 = generateUuid();
 
     ServiceInstanceIdsParam element = new ServiceInstanceIdsParam();
     element.setInstanceIds(Lists.newArrayList(instance1, instance2));
@@ -304,8 +305,8 @@ public class InstanceExpressionProcessorTest extends WingsBaseTest {
     when(context.getApp()).thenReturn(app);
     when(context.getEnv()).thenReturn(env);
 
-    String instance1 = UUIDGenerator.getUuid();
-    String instance2 = UUIDGenerator.getUuid();
+    String instance1 = generateUuid();
+    String instance2 = generateUuid();
 
     ServiceInstanceIdsParam element = new ServiceInstanceIdsParam();
     element.setInstanceIds(Lists.newArrayList(instance1, instance2));
@@ -375,7 +376,7 @@ public class InstanceExpressionProcessorTest extends WingsBaseTest {
 
     PageResponse<ServiceInstance> res = new PageResponse<>();
     ServiceInstance instance1 = aServiceInstance()
-                                    .withUuid(UUIDGenerator.getUuid())
+                                    .withUuid(generateUuid())
                                     .withAppId(app.getUuid())
                                     .withEnvId(env.getUuid())
                                     .withHost(aHost().withHostName("host1").build())
@@ -432,7 +433,7 @@ public class InstanceExpressionProcessorTest extends WingsBaseTest {
         Host.class, aHost().withAppId(app.getAppId()).withEnvId(env.getUuid()).withHostName("host1").build());
 
     Service service = wingsPersistence.saveAndGet(
-        Service.class, aService().withAppId(app.getAppId()).withUuid(UUIDGenerator.getUuid()).withName("svc1").build());
+        Service.class, aService().withAppId(app.getAppId()).withUuid(generateUuid()).withName("svc1").build());
     ServiceTemplate serviceTemplate = serviceTemplateService.save(aServiceTemplate()
                                                                       .withAppId(app.getUuid())
                                                                       .withEnvId(env.getUuid())
@@ -487,9 +488,9 @@ public class InstanceExpressionProcessorTest extends WingsBaseTest {
     ExecutionContextImpl context = mock(ExecutionContextImpl.class);
     when(context.getApp()).thenReturn(app);
     when(context.getEnv()).thenReturn(env);
-    InstanceElement i1 = anInstanceElement().withUuid(UUIDGenerator.getUuid()).build();
-    InstanceElement i2 = anInstanceElement().withUuid(UUIDGenerator.getUuid()).build();
-    InstanceElement i3 = anInstanceElement().withUuid(UUIDGenerator.getUuid()).build();
+    InstanceElement i1 = anInstanceElement().withUuid(generateUuid()).build();
+    InstanceElement i2 = anInstanceElement().withUuid(generateUuid()).build();
+    InstanceElement i3 = anInstanceElement().withUuid(generateUuid()).build();
     PartitionElement pe = new PartitionElement();
     pe.setPartitionElements(Lists.newArrayList(i1, i2, i3));
     when(context.getContextElementList(ContextElementType.PARTITION)).thenReturn(Lists.newArrayList(pe));

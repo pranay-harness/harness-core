@@ -7,7 +7,7 @@ import static org.mockito.Mockito.when;
 import static software.wings.api.PhaseElement.PhaseElementBuilder.aPhaseElement;
 import static software.wings.api.ServiceElement.Builder.aServiceElement;
 import static software.wings.beans.ResizeStrategy.RESIZE_NEW_FIRST;
-import static software.wings.common.UUIDGenerator.getUuid;
+import static software.wings.common.UUIDGenerator.generateUuid;
 import static software.wings.sm.ElementNotifyResponseData.Builder.anElementNotifyResponseData;
 import static software.wings.sm.ExecutionStatusData.Builder.anExecutionStatusData;
 import static software.wings.sm.StateExecutionInstance.Builder.aStateExecutionInstance;
@@ -61,8 +61,8 @@ public class PhaseStepSubWorkflowTest extends WingsBaseTest {
   public void shouldExecutePreDeployStep() {
     PhaseElement phaseElement =
         aPhaseElement()
-            .withUuid(getUuid())
-            .withServiceElement(aServiceElement().withUuid(getUuid()).withName("service1").build())
+            .withUuid(generateUuid())
+            .withServiceElement(aServiceElement().withUuid(generateUuid()).withName("service1").build())
             .build();
     StateExecutionInstance stateExecutionInstance = aStateExecutionInstance()
                                                         .withStateName(STATE_NAME)
@@ -91,8 +91,8 @@ public class PhaseStepSubWorkflowTest extends WingsBaseTest {
     try {
       PhaseElement phaseElement =
           aPhaseElement()
-              .withUuid(getUuid())
-              .withServiceElement(aServiceElement().withUuid(getUuid()).withName("service1").build())
+              .withUuid(generateUuid())
+              .withServiceElement(aServiceElement().withUuid(generateUuid()).withName("service1").build())
               .build();
       StateExecutionInstance stateExecutionInstance = aStateExecutionInstance()
                                                           .withStateName(STATE_NAME)
@@ -119,8 +119,8 @@ public class PhaseStepSubWorkflowTest extends WingsBaseTest {
     try {
       PhaseElement phaseElement =
           aPhaseElement()
-              .withUuid(getUuid())
-              .withServiceElement(aServiceElement().withUuid(getUuid()).withName("service1").build())
+              .withUuid(generateUuid())
+              .withServiceElement(aServiceElement().withUuid(generateUuid()).withName("service1").build())
               .build();
       StateExecutionInstance stateExecutionInstance = aStateExecutionInstance()
                                                           .withStateName(STATE_NAME)
@@ -147,8 +147,8 @@ public class PhaseStepSubWorkflowTest extends WingsBaseTest {
 
   @Test
   public void shouldValidateContainerDeploy() {
-    ServiceElement serviceElement = aServiceElement().withUuid(getUuid()).withName("service1").build();
-    PhaseElement phaseElement = aPhaseElement().withUuid(getUuid()).withServiceElement(serviceElement).build();
+    ServiceElement serviceElement = aServiceElement().withUuid(generateUuid()).withName("service1").build();
+    PhaseElement phaseElement = aPhaseElement().withUuid(generateUuid()).withServiceElement(serviceElement).build();
     StateExecutionInstance stateExecutionInstance = aStateExecutionInstance()
                                                         .withStateName(STATE_NAME)
                                                         .addContextElement(workflowStandardParams)
@@ -184,7 +184,7 @@ public class PhaseStepSubWorkflowTest extends WingsBaseTest {
 
   @Test
   public void shouldHandleAsyncPreDeploy() {
-    ExecutionContextImpl context = new ExecutionContextImpl(aStateExecutionInstance().withUuid(getUuid()).build());
+    ExecutionContextImpl context = new ExecutionContextImpl(aStateExecutionInstance().withUuid(generateUuid()).build());
     PhaseStepSubWorkflow phaseStepSubWorkflow = new PhaseStepSubWorkflow(PHASE_STEP);
     phaseStepSubWorkflow.setPhaseStepType(PhaseStepType.PRE_DEPLOYMENT);
     Map<String, NotifyResponseData> notifyResponse = new HashMap<>();
@@ -198,8 +198,8 @@ public class PhaseStepSubWorkflowTest extends WingsBaseTest {
     when(workflowExecutionService.getElementsSummary(anyString(), anyString(), anyString()))
         .thenReturn(elementExecutionSummaries);
 
-    List<String> instanceIds = Lists.newArrayList(getUuid(), getUuid());
-    String serviceId = getUuid();
+    List<String> instanceIds = Lists.newArrayList(generateUuid(), generateUuid());
+    String serviceId = generateUuid();
     ServiceInstanceIdsParam serviceInstanceIdsParam = ServiceInstanceIdsParamBuilder.aServiceInstanceIdsParam()
                                                           .withInstanceIds(instanceIds)
                                                           .withServiceId(serviceId)
@@ -207,7 +207,7 @@ public class PhaseStepSubWorkflowTest extends WingsBaseTest {
 
     ServiceElement serviceElement = aServiceElement().withUuid(serviceId).withName("service1").build();
     PhaseElement phaseElement = aPhaseElement()
-                                    .withUuid(getUuid())
+                                    .withUuid(generateUuid())
                                     .withServiceElement(serviceElement)
                                     .withDeploymentType(DeploymentType.SSH.name())
                                     .build();
@@ -238,10 +238,10 @@ public class PhaseStepSubWorkflowTest extends WingsBaseTest {
     when(workflowExecutionService.getElementsSummary(anyString(), anyString(), anyString()))
         .thenReturn(elementExecutionSummaries);
 
-    String serviceId = getUuid();
+    String serviceId = generateUuid();
     ServiceElement serviceElement = aServiceElement().withUuid(serviceId).withName("service1").build();
     PhaseElement phaseElement = aPhaseElement()
-                                    .withUuid(getUuid())
+                                    .withUuid(generateUuid())
                                     .withServiceElement(serviceElement)
                                     .withDeploymentType(DeploymentType.ECS.name())
                                     .build();
@@ -272,10 +272,10 @@ public class PhaseStepSubWorkflowTest extends WingsBaseTest {
     when(workflowExecutionService.getElementsSummary(anyString(), anyString(), anyString()))
         .thenReturn(elementExecutionSummaries);
 
-    String serviceId = getUuid();
+    String serviceId = generateUuid();
     ServiceElement serviceElement = aServiceElement().withUuid(serviceId).withName("service1").build();
     PhaseElement phaseElement = aPhaseElement()
-                                    .withUuid(getUuid())
+                                    .withUuid(generateUuid())
                                     .withServiceElement(serviceElement)
                                     .withDeploymentType(DeploymentType.ECS.name())
                                     .build();
@@ -305,10 +305,10 @@ public class PhaseStepSubWorkflowTest extends WingsBaseTest {
     when(workflowExecutionService.getElementsSummary(anyString(), anyString(), anyString()))
         .thenReturn(elementExecutionSummaries);
 
-    String serviceId = getUuid();
+    String serviceId = generateUuid();
     ServiceElement serviceElement = aServiceElement().withUuid(serviceId).withName("service1").build();
     PhaseElement phaseElement = aPhaseElement()
-                                    .withUuid(getUuid())
+                                    .withUuid(generateUuid())
                                     .withServiceElement(serviceElement)
                                     .withDeploymentType(DeploymentType.KUBERNETES.name())
                                     .build();
@@ -339,10 +339,10 @@ public class PhaseStepSubWorkflowTest extends WingsBaseTest {
     when(workflowExecutionService.getElementsSummary(anyString(), anyString(), anyString()))
         .thenReturn(elementExecutionSummaries);
 
-    String serviceId = getUuid();
+    String serviceId = generateUuid();
     ServiceElement serviceElement = aServiceElement().withUuid(serviceId).withName("service1").build();
     PhaseElement phaseElement = aPhaseElement()
-                                    .withUuid(getUuid())
+                                    .withUuid(generateUuid())
                                     .withServiceElement(serviceElement)
                                     .withDeploymentType(DeploymentType.KUBERNETES.name())
                                     .build();

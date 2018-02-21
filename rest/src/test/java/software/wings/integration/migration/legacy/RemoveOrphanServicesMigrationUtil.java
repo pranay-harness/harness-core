@@ -39,7 +39,6 @@ public class RemoveOrphanServicesMigrationUtil extends WingsBaseTest {
       boolean missingApp = !appService.exist(service.getAppId());
 
       if (missingApp) {
-        //        System.out.println("\nservice: " + service.getUuid());
         wingsPersistence.delete(service);
         deleted++;
       }
@@ -54,7 +53,6 @@ public class RemoveOrphanServicesMigrationUtil extends WingsBaseTest {
       boolean missingApp = !appService.exist(workflow.getAppId());
 
       if (missingApp) {
-        //        System.out.println("\nworkflow: " + workflow.getUuid());
         wingsPersistence.delete(workflow);
         deleted++;
       }
@@ -69,7 +67,6 @@ public class RemoveOrphanServicesMigrationUtil extends WingsBaseTest {
       boolean missingApp = !appService.exist(pipeline.getAppId());
 
       if (missingApp) {
-        //        System.out.println("\npipeline: " + pipeline.getUuid());
         wingsPersistence.delete(pipeline);
         deleted++;
       }

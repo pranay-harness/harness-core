@@ -8,6 +8,7 @@ import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.reset;
 import static org.mockito.Mockito.when;
 import static software.wings.beans.Application.Builder.anApplication;
+import static software.wings.common.UUIDGenerator.generateUuid;
 import static software.wings.dl.PageRequest.Builder.aPageRequest;
 import static software.wings.dl.PageResponse.Builder.aPageResponse;
 
@@ -18,7 +19,6 @@ import org.junit.Test;
 import software.wings.beans.Application;
 import software.wings.beans.RestResponse;
 import software.wings.beans.WorkflowExecution;
-import software.wings.common.UUIDGenerator;
 import software.wings.dl.PageRequest;
 import software.wings.dl.PageResponse;
 import software.wings.service.intfc.AppService;
@@ -57,7 +57,7 @@ public class ExecutionResourceTest {
   @Test
   @Ignore
   public void testListExecutions() {
-    String appId = UUIDGenerator.getUuid();
+    String appId = generateUuid();
 
     PageRequest<Application> applicationPageRequest = aPageRequest().build();
     PageRequest<WorkflowExecution> workflowExecutionPageRequest = aPageRequest().build();

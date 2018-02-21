@@ -1,6 +1,7 @@
 package software.wings.scheduler;
 
 import static software.wings.beans.DelegateTask.Builder.aDelegateTask;
+import static software.wings.common.UUIDGenerator.generateUuid;
 import static software.wings.dl.PageRequest.Builder.aPageRequest;
 import static software.wings.dl.PageRequest.UNLIMITED;
 
@@ -17,7 +18,6 @@ import software.wings.beans.SettingAttribute;
 import software.wings.beans.TaskType;
 import software.wings.beans.Workflow;
 import software.wings.common.Constants;
-import software.wings.common.UUIDGenerator;
 import software.wings.dl.PageRequest;
 import software.wings.dl.WingsPersistence;
 import software.wings.integration.BaseIntegrationTest;
@@ -67,8 +67,8 @@ public class NewRelicMetricCollectionJobIntegrationTest extends BaseIntegrationT
   //            .addFilter("appId", SearchFilter.Operator.EQ, appId).build()).getResponse())
   //            .flatMap(list -> list.stream())
   //            .map(workflow -> workflowService.readLatestStateMachine(((Workflow) workflow).getAppId(), ((Workflow)
-  //            workflow).getUuid())) .map(sm -> sm.getStates()) .flatMap(states -> states.stream()) .filter(state ->
-  //            state instanceof NewRelicState) .map(state -> (NewRelicState) state) .forEach(newRelicState ->
+  //            workflow).getUuid())) .map(sm -> sm.getStates()) .flatMap(states -> states.stream()) .filter(state
+  //            -> state instanceof NewRelicState) .map(state -> (NewRelicState) state) .forEach(newRelicState ->
   //            newRelicAppToConfigMap.put(newRelicState.getApplicationId(), newRelicState)));
   //
   //
@@ -134,7 +134,7 @@ public class NewRelicMetricCollectionJobIntegrationTest extends BaseIntegrationT
                                          .settingAttributeId(
                                              (String) node.getProperties().get("analysisServerConfigId"))
                                          .build();
-                                 String waitId = UUIDGenerator.getUuid();
+                                 String waitId = generateUuid();
                                  logger.info("Scheduling new relic metric name collection task {}", dataCollectionInfo);
                                  DelegateTask delegateTask =
                                      aDelegateTask()
@@ -222,7 +222,7 @@ public class NewRelicMetricCollectionJobIntegrationTest extends BaseIntegrationT
                                      .encryptedDataDetails(
                                          secretManager.getEncryptionDetails(newRelicConfig, workflow.getAppId(), ""))
                                      .build();
-                             String waitId = UUIDGenerator.getUuid();
+                             String waitId = generateUuid();
 
                              DelegateTask delegateTask = aDelegateTask()
                                                              .withTaskType(TaskType.NEWRELIC_COLLECT_METRIC_NAMES)

@@ -8,6 +8,7 @@ import static software.wings.beans.GraphNode.GraphNodeBuilder.aGraphNode;
 import static software.wings.beans.PhaseStep.PhaseStepBuilder.aPhaseStep;
 import static software.wings.beans.PhaseStepType.CONTAINER_SETUP;
 import static software.wings.beans.PhaseStepType.PROVISION_NODE;
+import static software.wings.common.UUIDGenerator.generateUuid;
 import static software.wings.sm.StateType.FORK;
 
 import com.fasterxml.jackson.annotation.JsonIgnore;
@@ -19,7 +20,6 @@ import org.mongodb.morphia.annotations.Transient;
 import software.wings.api.DeploymentType;
 import software.wings.beans.Graph.Builder;
 import software.wings.common.Constants;
-import software.wings.common.UUIDGenerator;
 import software.wings.sm.ExecutionStatus;
 import software.wings.sm.StateType;
 import software.wings.sm.TransitionType;
@@ -36,7 +36,7 @@ import java.util.stream.Collectors;
  * Created by rishi on 12/21/16.
  */
 public class PhaseStep {
-  private String uuid = UUIDGenerator.getUuid();
+  private String uuid = generateUuid();
   private String name;
   private PhaseStepType phaseStepType;
   @JsonIgnore private List<String> stepsIds = new ArrayList<>();
@@ -58,7 +58,7 @@ public class PhaseStep {
 
   public PhaseStep(PhaseStepType phaseStepType, String name) {
     this.phaseStepType = phaseStepType;
-    this.uuid = UUIDGenerator.getUuid();
+    this.uuid = generateUuid();
     this.name = name;
   }
 
@@ -213,7 +213,7 @@ public class PhaseStep {
 
     if (stepsInParallel && steps.size() > 1) {
       GraphNode forkNode = aGraphNode()
-                               .withId(UUIDGenerator.getUuid())
+                               .withId(generateUuid())
                                .withType(FORK.name())
                                .withName(name + "-FORK")
                                .addProperty("parentId", getUuid())
@@ -223,7 +223,7 @@ public class PhaseStep {
         step.setOrigin(false);
         graphBuilder.addNodes(step);
         graphBuilder.addLinks(aLink()
-                                  .withId(UUIDGenerator.getUuid())
+                                  .withId(generateUuid())
                                   .withFrom(forkNode.getId())
                                   .withTo(step.getId())
                                   .withType(TransitionType.FORK.name())
@@ -245,11 +245,8 @@ public class PhaseStep {
           continue;
         }
         if (i < steps.size() - 1 && isExecuteWithPreviousSteps(steps.get(i + 1))) {
-          forkNode = aGraphNode()
-                         .withId(UUIDGenerator.getUuid())
-                         .withType(FORK.name())
-                         .withName("Fork-" + step.getName())
-                         .build();
+          forkNode =
+              aGraphNode().withId(generateUuid()).withType(FORK.name()).withName("Fork-" + step.getName()).build();
           graphBuilder.addNodes(forkNode);
           graphBuilder.addLinks(
               aLink().withFrom(forkNode.getId()).withTo(step.getId()).withType(TransitionType.FORK.name()).build());
@@ -395,7 +392,7 @@ public class PhaseStep {
   }
 
   public static final class PhaseStepBuilder {
-    private String uuid = UUIDGenerator.getUuid();
+    private String uuid = generateUuid();
     private String name;
     private PhaseStepType phaseStepType;
     private List<String> stepsIds = new ArrayList<>();
@@ -416,7 +413,7 @@ public class PhaseStep {
       PhaseStepBuilder phaseStepBuilder = new PhaseStepBuilder();
       phaseStepBuilder.phaseStepType = phaseStepType;
       phaseStepBuilder.name = name;
-      phaseStepBuilder.uuid = UUIDGenerator.getUuid();
+      phaseStepBuilder.uuid = generateUuid();
       return phaseStepBuilder;
     }
 

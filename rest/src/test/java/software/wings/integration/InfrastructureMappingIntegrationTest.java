@@ -195,18 +195,6 @@ public class InfrastructureMappingIntegrationTest extends BaseIntegrationTest {
             .build();
 
     awsInfrastructureMapping = (AwsInfrastructureMapping) infrastructureMappingService.save(awsInfrastructureMapping);
-
-    //    List<ServiceInstance> serviceInstances = infrastructureMappingService
-    //        .selectServiceInstances(app.getUuid(), environment.getUuid(), awsInfrastructureMapping.getUuid(),
-    //        ImmutableMap.of(), new ArrayList<>());
-
-    //    System.out.println(serviceInstances.size());
-    //    serviceInstances = infrastructureMappingService
-    //        .selectServiceInstances(app.getUuid(), environment.getUuid(), awsInfrastructureMapping.getUuid(),
-    //        ImmutableMap.of(), new ArrayList<>());
-    //    System.out.println(serviceInstances.size());
-
-    System.out.println(awsInfrastructureMapping.toString());
   }
 
   @Test
@@ -252,13 +240,5 @@ public class InfrastructureMappingIntegrationTest extends BaseIntegrationTest {
 
     List<Host> hosts =
         infrastructureMappingService.getAutoScaleGroupNodes(app.getUuid(), awsInfrastructureMapping.getUuid(), null);
-
-    System.out.println(hosts.size());
-    //    serviceInstances = infrastructureMappingService
-    //        .selectServiceInstances(app.getUuid(), environment.getUuid(), awsInfrastructureMapping.getUuid(),
-    //        ImmutableMap.of(), new ArrayList<>());
-    System.out.println(hosts.size());
-
-    System.out.println(awsInfrastructureMapping.toString());
   }
 }

@@ -2,12 +2,12 @@ package software.wings.beans;
 
 import static io.harness.data.structure.EmptyPredicate.isEmpty;
 import static software.wings.beans.GraphNode.GraphNodeBuilder.aGraphNode;
+import static software.wings.common.UUIDGenerator.generateUuid;
 
 import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
 import lombok.Data;
 import org.mongodb.morphia.annotations.Embedded;
 import software.wings.common.Constants;
-import software.wings.common.UUIDGenerator;
 import software.wings.sm.InstanceStatusSummary;
 
 import java.util.HashMap;
@@ -20,7 +20,7 @@ import java.util.Map;
 @Data
 @JsonIgnoreProperties(ignoreUnknown = true)
 public class GraphNode {
-  private String id = UUIDGenerator.getUuid();
+  private String id = generateUuid();
   private String name;
   private String type;
   private boolean rollback;
@@ -50,7 +50,7 @@ public class GraphNode {
 
   public GraphNode clone() {
     GraphNode clonedNode = aGraphNode()
-                               .withId("node_" + UUIDGenerator.getUuid())
+                               .withId("node_" + generateUuid())
                                .withName(getName())
                                .withType(getType())
                                .withRollback(isRollback())
@@ -85,7 +85,7 @@ public class GraphNode {
   }
 
   public static final class GraphNodeBuilder {
-    private String id = UUIDGenerator.getUuid();
+    private String id = generateUuid();
     private String name;
     private String type;
     private boolean rollback;
