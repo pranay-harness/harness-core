@@ -2,7 +2,6 @@ package software.wings.service.impl.elk;
 
 import static org.apache.commons.lang3.StringUtils.isBlank;
 import static org.apache.commons.lang3.StringUtils.isNotBlank;
-import static software.wings.utils.HttpUtil.getOkHttpClientBuilder;
 
 import com.google.inject.Inject;
 
@@ -181,7 +180,7 @@ public class ElkDelegateServiceImpl implements ElkDelegateService {
   private Retrofit createRetrofit(ElkConfig elkConfig, List<EncryptedDataDetail> encryptedDataDetails) {
     encryptionService.decrypt(elkConfig, encryptedDataDetails);
     OkHttpClient.Builder httpClient =
-        elkConfig.getElkUrl().startsWith("https") ? getUnsafeOkHttpClient() : getOkHttpClientBuilder();
+        elkConfig.getElkUrl().startsWith("https") ? getUnsafeOkHttpClient() : new OkHttpClient.Builder();
     httpClient
         .addInterceptor(chain -> {
           Request original = chain.request();
@@ -248,7 +247,7 @@ sslContext.init(null, trustAllCerts, new java.security.SecureRandom());
 // Create an ssl socket factory with our all-trusting manager
 final SSLSocketFactory sslSocketFactory = sslContext.getSocketFactory();
 
-OkHttpClient.Builder builder = getOkHttpClientBuilder();
+OkHttpClient.Builder builder = new OkHttpClient.Builder();
 builder.sslSocketFactory(sslSocketFactory, (X509TrustManager) trustAllCerts[0]);
 builder.hostnameVerifier((hostname, session) -> true);
 
