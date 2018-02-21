@@ -982,14 +982,8 @@ public class ServiceResourceServiceImpl implements ServiceResourceService, DataP
               "Function name should be unique. Duplicate function names: [" + Joiner.on(",").join(duplicateFunctionName)
                   + "]");
     }
-    List<String> duplicateHandlerName =
-        getFunctionAttributeDuplicateValues(lambdaSpecification, FunctionSpecification::getHandler);
-    if (isNotEmpty(duplicateHandlerName)) {
-      throw new WingsException(INVALID_REQUEST)
-          .addParam("message",
-              "Function Handler name should be unique. Duplicate function handlers: ["
-                  + Joiner.on(",").join(duplicateHandlerName) + "]");
-    }
+
+    /** Removed validation to check for duplicate handler names as part of HAR-3209 */
   }
 
   private List<String> getFunctionAttributeDuplicateValues(
