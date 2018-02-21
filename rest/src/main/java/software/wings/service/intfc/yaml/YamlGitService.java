@@ -62,8 +62,9 @@ public interface YamlGitService {
    *
    * @param accountId         the account id
    * @param gitFileChangeList the git file change list
+   * @param forcePush         force push
    */
-  void syncFiles(String accountId, List<GitFileChange> gitFileChangeList);
+  void syncFiles(String accountId, List<GitFileChange> gitFileChangeList, boolean forcePush);
 
   /**
    * Perform full sync dry run list.

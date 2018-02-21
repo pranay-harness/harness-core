@@ -326,12 +326,13 @@ public class GitClientImpl implements GitClient {
   }
 
   @Override
-  public synchronized GitPushResult push(GitConfig gitConfig) {
+  public synchronized GitPushResult push(GitConfig gitConfig, boolean forcePush) {
     try (Git git = Git.open(new File(getRepoDirectory(gitConfig)))) {
       Iterable<PushResult> pushResults = git.push()
                                              .setCredentialsProvider(new UsernamePasswordCredentialsProvider(
                                                  gitConfig.getUsername(), gitConfig.getPassword()))
                                              .setRemote("origin")
+                                             .setForce(forcePush)
                                              .setRefSpecs(new RefSpec(gitConfig.getBranch()))
                                              .call();
 
@@ -360,7 +361,7 @@ public class GitClientImpl implements GitClient {
     GitCommitAndPushResult gitCommitAndPushResult =
         GitCommitAndPushResult.builder().gitCommitResult(commitResult).build();
     if (isNotBlank(commitResult.getCommitId())) {
-      gitCommitAndPushResult.setGitPushResult(push(gitConfig));
+      gitCommitAndPushResult.setGitPushResult(push(gitConfig, gitCommitRequest.isForcePush()));
     } else {
       logger.warn("Null commitId. Nothing to push for request [{}]", gitCommitRequest);
     }
