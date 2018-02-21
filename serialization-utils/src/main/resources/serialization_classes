@@ -22,6 +22,7 @@ com.amazonaws.AbortedException, 1015
 com.amazonaws.services.ec2.model.StateReason, 1016
 com.amazonaws.SdkClientException, 1017
 com.amazonaws.services.ec2.model.InstanceIpv6Address, 1018
+com.amazonaws.services.ec2.model.ProductCode, 1019
 
 io.fabric8.kubernetes.client.KubernetesClientException, 2000
 
