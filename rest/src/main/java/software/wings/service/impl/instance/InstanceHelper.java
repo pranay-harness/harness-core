@@ -569,9 +569,7 @@ public class InstanceHelper {
   private void setInstanceInfoAndKey(
       InstanceBuilder builder, com.amazonaws.services.ec2.model.Instance ec2Instance, String infraMappingId) {
     String privateDnsNameWithSuffix = ec2Instance.getPrivateDnsName();
-    String privateDnsName = privateDnsNameWithSuffix == null
-        ? StringUtils.EMPTY
-        : privateDnsNameWithSuffix.substring(0, privateDnsNameWithSuffix.indexOf('.'));
+    String privateDnsName = getPrivateDnsName(privateDnsNameWithSuffix);
     HostInstanceKey hostInstanceKey =
         HostInstanceKey.builder().hostName(privateDnsName).infraMappingId(infraMappingId).build();
     builder.hostInstanceKey(hostInstanceKey);
@@ -583,6 +581,20 @@ public class InstanceHelper {
                                     .build();
 
     builder.instanceInfo(instanceInfo);
+  }
+
+  private String getPrivateDnsName(String privateDnsNameWithSuffix) {
+    // e.g. null, "", "   "
+    if (StringUtils.isEmpty(privateDnsNameWithSuffix) || StringUtils.isBlank(privateDnsNameWithSuffix)) {
+      return StringUtils.EMPTY;
+    }
+
+    // "ip-172-31-11-6.ec2.internal", we return ip-172-31-11-6
+    if (privateDnsNameWithSuffix.indexOf('.') != -1) {
+      return privateDnsNameWithSuffix.substring(0, privateDnsNameWithSuffix.indexOf('.'));
+    }
+
+    return privateDnsNameWithSuffix;
   }
 
   public void handleDeploymentEvent(DeploymentEvent deploymentEvent) {
