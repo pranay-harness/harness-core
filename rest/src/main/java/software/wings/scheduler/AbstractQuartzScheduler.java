@@ -87,8 +87,9 @@ public class AbstractQuartzScheduler implements QuartzScheduler, MaintenanceList
       props.setProperty("org.quartz.jobStore.mongoUri", uri.getURI());
       props.setProperty("org.quartz.jobStore.dbName", uri.getDatabase());
       props.setProperty("org.quartz.jobStore.collectionPrefix", schedulerConfig.getTablePrefix());
-      props.setProperty("org.quartz.jobStore.mongoOptionWriteConcernTimeoutMillis", "10000");
-      //      props.setProperty("org.quartz.jobStore.isClustered", "true");
+      props.setProperty("org.quartz.jobStore.mongoOptionWriteConcernTimeoutMillis",
+          schedulerConfig.getMongoOptionWriteConcernTimeoutMillis());
+      props.setProperty("org.quartz.jobStore.isClustered", String.valueOf(schedulerConfig.isClustered()));
     }
 
     props.setProperty("org.quartz.scheduler.idleWaitTime", schedulerConfig.getIdleWaitTime());
