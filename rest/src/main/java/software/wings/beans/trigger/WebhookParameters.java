@@ -16,7 +16,7 @@ public class WebhookParameters {
   public static final String TARGET_BRANCH_NAME = "${pullrequest.toRef.branch.name}";
   public static final String SOURCE_REPOSITORY_NAME = "${pullrequest.fromRef.repository.project.name}";
   public static final String SOURCE_REPOSITORY_OWNER = "${pullrequest.fromRef.repository.owner.username}";
-  public static final String DESTINATION_REPOSITORY_NAME = "${pullrequest.toRef.repository.project.name}  ";
+  public static final String DESTINATION_REPOSITORY_NAME = "${pullrequest.toRef.repository.project.name}";
   public static final String DESTINATION_REPOSITORY_OWNER = "${pullrequest.toRef.repository.owner.username}";
   public static final String SOURCE_COMMIT_HASH = "${pullrequest.fromRef.commit.hash}";
   public static final String DESTINATION_COMMIT_HASH = "${pullrequest.toRef.commit.hash}";

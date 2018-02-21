@@ -106,7 +106,7 @@ public class WorkflowStandardParams implements ExecutionContextAware, ContextEle
 
     map.put(DEPLOYMENT_URL,
         buildAbsoluteUrl(String.format("/account/%s/app/%s/env/%s/executions/%s/details", app.getAccountId(),
-            app.getUuid(), env.getUuid(), context.getWorkflowExecutionId())));
+            app.getUuid(), env == null ? null : env.getUuid(), context.getWorkflowExecutionId())));
 
     ServiceElement serviceElement = fetchServiceElement(context);
     if (serviceElement != null) {
