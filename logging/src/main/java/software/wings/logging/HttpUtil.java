@@ -1,5 +1,6 @@
 package software.wings.logging;
 
+import okhttp3.ConnectionPool;
 import okhttp3.OkHttpClient;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -69,7 +70,7 @@ public class HttpUtil {
   }
 
   public static OkHttpClient.Builder getOkHttpClientWithNonProxySetting(String url) {
-    OkHttpClient.Builder builder = new OkHttpClient.Builder();
+    OkHttpClient.Builder builder = getOkHttpClientBuilder();
     try {
       Class clazz = Class.forName("software.wings.utils.HttpUtil");
       Method method = clazz.getMethod("shouldUseNonProxy", String.class);
@@ -83,5 +84,9 @@ public class HttpUtil {
     }
 
     return builder;
+  }
+
+  public static OkHttpClient.Builder getOkHttpClientBuilder() {
+    return new OkHttpClient.Builder().connectionPool(new ConnectionPool(0, 5, TimeUnit.MINUTES));
   }
 }
