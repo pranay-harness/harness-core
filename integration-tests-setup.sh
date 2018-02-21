@@ -3,8 +3,7 @@
 set -e
 
 sudo service mongod restart
-cd python/splunk_intelligence; make init; make dist;
-cd ../../
+sleep 5
 
 echo 'starting server'
 export HOSTNAME
@@ -19,7 +18,7 @@ echo "remove existing image"
 docker rmi le_local
 set -e
 echo "build docker image in background"
-nohup sh -c 'cd python/splunk_intelligence && make dist && docker build -t le_local .' > docker_container_build.out &
+nohup sh -c 'cd python/splunk_intelligence && make init && make dist && docker build -t le_local .' > docker_container_build.log &
 docker_container_build_pid=$!
 
 if [[ -z "${SERVER_BUILD_DIR}" ]]; then
@@ -118,7 +117,6 @@ echo $HOSTNAME
 #wait for docker container to finish
 echo "waiting for docker image to build"
 wait $docker_container_build_pid
-cd python/splunk_intelligence && make dist && docker build -t le_local .
 serviceSecret=`mongo harness --eval "db.serviceSecrets.find({ }, { serviceSecret: 1, _id: 0})"| grep serviceSecret | awk '{print $4}' | tr -d '"'`
 echo $serviceSecret
 server_url=https://$HOSTNAME:9090
