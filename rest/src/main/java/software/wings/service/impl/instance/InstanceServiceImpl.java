@@ -63,7 +63,8 @@ public class InstanceServiceImpl implements InstanceService {
           + " and infraMappingId:" + instance.getInfraMappingId());
     }
     if (!appService.exist(instance.getAppId())) {
-      throw new WingsException(ErrorCode.INVALID_ARGUMENT);
+      throw new WingsException(ErrorCode.INVALID_ARGUMENT)
+          .addParam("args", "App does not exist: " + instance.getAppId());
     }
 
     Instance currentInstance = get(instance.getUuid());

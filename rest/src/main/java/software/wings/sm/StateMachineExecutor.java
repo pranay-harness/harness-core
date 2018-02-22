@@ -157,7 +157,7 @@ public class StateMachineExecutor {
       ExecutionEventAdvisor executionEventAdvisor) {
     if (sm == null) {
       logger.error("StateMachine passed for execution is null");
-      throw new WingsException(INVALID_ARGUMENT);
+      throw new WingsException(INVALID_ARGUMENT).addParam("args", "State machine is null");
     }
 
     StateExecutionInstance stateExecutionInstance = new StateExecutionInstance();
@@ -202,15 +202,15 @@ public class StateMachineExecutor {
    */
   public StateExecutionInstance queue(StateMachine stateMachine, StateExecutionInstance stateExecutionInstance) {
     if (stateExecutionInstance == null) {
-      throw new WingsException(INVALID_ARGUMENT).addParam(ErrorCode.ARGS_NAME, "stateExecutionInstance");
+      throw new WingsException(INVALID_ARGUMENT).addParam(ErrorCode.ARGS, "stateExecutionInstance");
     }
     if (stateMachine == null) {
-      throw new WingsException(INVALID_ARGUMENT).addParam(ErrorCode.ARGS_NAME, "rootStateMachine");
+      throw new WingsException(INVALID_ARGUMENT).addParam(ErrorCode.ARGS, "rootStateMachine");
     }
     if (stateExecutionInstance.getChildStateMachineId() != null
         && !stateExecutionInstance.getChildStateMachineId().equals(stateMachine.getUuid())
         && stateMachine.getChildStateMachines().get(stateExecutionInstance.getChildStateMachineId()) == null) {
-      throw new WingsException(INVALID_ARGUMENT).addParam(ErrorCode.ARGS_NAME, "stateMachine");
+      throw new WingsException(INVALID_ARGUMENT).addParam(ErrorCode.ARGS, "stateMachine");
     }
     StateMachine sm;
     if (stateExecutionInstance.getChildStateMachineId() == null) {
@@ -227,7 +227,7 @@ public class StateMachineExecutor {
   private StateExecutionInstance saveStateExecutionInstance(
       StateMachine stateMachine, StateExecutionInstance stateExecutionInstance) {
     if (stateExecutionInstance.getStateName() == null) {
-      throw new WingsException(INVALID_ARGUMENT).addParam(ErrorCode.ARGS_NAME, "stateName");
+      throw new WingsException(INVALID_ARGUMENT).addParam(ErrorCode.ARGS, "stateName");
     }
 
     stateExecutionInstance.setAppId(stateMachine.getAppId());

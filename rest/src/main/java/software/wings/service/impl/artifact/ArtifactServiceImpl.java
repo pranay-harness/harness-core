@@ -142,7 +142,8 @@ public class ArtifactServiceImpl implements ArtifactService {
   @ValidationGroups(Create.class)
   public Artifact create(@Valid Artifact artifact, ArtifactType artifactType) {
     if (!appService.exist(artifact.getAppId())) {
-      throw new WingsException(ErrorCode.INVALID_ARGUMENT);
+      throw new WingsException(ErrorCode.INVALID_ARGUMENT)
+          .addParam("args", "App does not exist: " + artifact.getAppId());
     }
     ArtifactStream artifactStream = artifactStreamService.get(artifact.getAppId(), artifact.getArtifactStreamId());
     Validator.notNullCheck("Artifact Stream", artifactStream);
