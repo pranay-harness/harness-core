@@ -1,6 +1,7 @@
 package software.wings.service;
 
 import static org.assertj.core.api.Assertions.assertThat;
+import static org.junit.Assert.assertTrue;
 import static software.wings.beans.NotificationGroup.NotificationGroupBuilder.aNotificationGroup;
 import static software.wings.common.UUIDGenerator.generateUuid;
 import static software.wings.dl.PageRequest.Builder.aPageRequest;
@@ -8,6 +9,7 @@ import static software.wings.dl.PageRequest.Builder.aPageRequest;
 import com.google.common.collect.Lists;
 import com.google.inject.Inject;
 
+import org.apache.commons.collections.CollectionUtils;
 import org.junit.Test;
 import org.mockito.InjectMocks;
 import org.mockito.Mock;
@@ -45,6 +47,63 @@ public class NotificationSetupServiceTest extends WingsBaseTest {
   public void shouldCreateNotificationGroup() {
     String accountId = generateUuid();
     createAndAssertNotificationGroup(accountId);
+    String name1 = "name1" + System.currentTimeMillis();
+    NotificationGroup notificationGroup1 = createAndAssertNotificationGroup(accountId, name1, true);
+    String name2 = "name2" + System.currentTimeMillis();
+    NotificationGroup notificationGroup2 = createAndAssertNotificationGroup(accountId, name2, false);
+    notificationSetupService.deleteNotificationGroups(accountId, notificationGroup1.getUuid());
+    notificationSetupService.deleteNotificationGroups(accountId, notificationGroup2.getUuid());
+  }
+
+  @Test
+  public void listDefaultNotificationGroup() {
+    String accountId = generateUuid();
+
+    String name1 = "name1" + System.currentTimeMillis();
+    NotificationGroup notificationGroup1 = createAndAssertNotificationGroup(accountId, name1, false);
+    List<NotificationGroup> notificationGroups = notificationSetupService.listDefaultNotificationGroup(accountId);
+    assertTrue(CollectionUtils.isEmpty(notificationGroups));
+
+    String name2 = "name2" + System.currentTimeMillis();
+    NotificationGroup notificationGroup2 = createAndAssertNotificationGroup(accountId, name2, true);
+    notificationGroups = notificationSetupService.listDefaultNotificationGroup(accountId);
+    assertThat(notificationGroups)
+        .isNotNull()
+        .hasSize(1)
+        .doesNotContainNull()
+        .extracting("name")
+        .containsExactly(name2);
+
+    notificationSetupService.deleteNotificationGroups(accountId, notificationGroup1.getUuid());
+    notificationSetupService.deleteNotificationGroups(accountId, notificationGroup2.getUuid());
+  }
+
+  @Test
+  public void updateNotificationGroupDefaultValue() {
+    String accountId = generateUuid();
+
+    String name1 = "name1" + System.currentTimeMillis();
+    NotificationGroup notificationGroup1 = createAndAssertNotificationGroup(accountId, name1, true);
+    List<NotificationGroup> notificationGroups = notificationSetupService.listDefaultNotificationGroup(accountId);
+    assertThat(notificationGroups)
+        .isNotNull()
+        .hasSize(1)
+        .doesNotContainNull()
+        .extracting("name")
+        .containsExactly(name1);
+
+    String name2 = "name2" + System.currentTimeMillis();
+    NotificationGroup notificationGroup2 = createAndAssertNotificationGroup(accountId, name2, true);
+    notificationGroups = notificationSetupService.listDefaultNotificationGroup(accountId);
+    assertThat(notificationGroups)
+        .isNotNull()
+        .hasSize(1)
+        .doesNotContainNull()
+        .extracting("name")
+        .containsExactly(name2);
+
+    notificationSetupService.deleteNotificationGroups(accountId, notificationGroup1.getUuid());
+    notificationSetupService.deleteNotificationGroups(accountId, notificationGroup2.getUuid());
   }
 
   @Test
@@ -121,18 +180,24 @@ public class NotificationSetupServiceTest extends WingsBaseTest {
   }
 
   private NotificationGroup createAndAssertNotificationGroup(String accountId) {
+    return createAndAssertNotificationGroup(accountId, "prod_ops", true);
+  }
+
+  private NotificationGroup createAndAssertNotificationGroup(
+      String accountId, String name, boolean defaultNotificationGroupForAccount) {
     NotificationGroup notificationGroup =
         aNotificationGroup()
-            .withName("prod_ops")
+            .withName(name)
             .withEditable(true)
             .withAppId(Base.GLOBAL_APP_ID)
             .withAccountId(accountId)
+            .withDefaultNotificationGroupForAccount(defaultNotificationGroupForAccount)
             .addAddressesByChannelType(NotificationChannelType.EMAIL, Lists.newArrayList("a@b.com", "b@c.com"))
             .build();
 
     NotificationGroup created = notificationSetupService.createNotificationGroup(notificationGroup);
     assertThat(created).isNotNull().isEqualToComparingOnlyGivenFields(
-        notificationGroup, "name", "accountId", "addressesByChannelType");
+        notificationGroup, "name", "accountId", "addressesByChannelType", "defaultNotificationGroupForAccount");
     return created;
   }
 

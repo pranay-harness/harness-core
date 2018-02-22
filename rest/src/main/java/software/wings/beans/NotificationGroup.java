@@ -31,7 +31,7 @@ public class NotificationGroup extends Base {
   @NotNull private String name;
   private boolean editable = true;
   @Reference(idOnly = true, ignoreMissing = true) private List<Role> roles = new ArrayList<>();
-
+  private boolean defaultNotificationGroupForAccount;
   @NotNull private Map<NotificationChannelType, List<String>> addressesByChannelType = new HashMap<>();
 
   /**
@@ -104,7 +104,16 @@ public class NotificationGroup extends Base {
     this.editable = editable;
   }
 
+  public boolean isDefaultNotificationGroupForAccount() {
+    return defaultNotificationGroupForAccount;
+  }
+
+  public void setDefaultNotificationGroupForAccount(boolean defaultNotificationGroupForAccount) {
+    this.defaultNotificationGroupForAccount = defaultNotificationGroupForAccount;
+  }
+
   /**
+   *
    * Gets roles.
    *
    * @return the roles
@@ -149,6 +158,7 @@ public class NotificationGroup extends Base {
     private EmbeddedUser lastUpdatedBy;
     private long lastUpdatedAt;
     private boolean editable;
+    private boolean defaultNotificationGroupForAccount;
 
     private NotificationGroupBuilder() {}
 
@@ -298,6 +308,12 @@ public class NotificationGroup extends Base {
       this.editable = editable;
       return this;
     }
+
+    public NotificationGroupBuilder withDefaultNotificationGroupForAccount(boolean defaultNotificationGroupForAccount) {
+      this.defaultNotificationGroupForAccount = defaultNotificationGroupForAccount;
+      return this;
+    }
+
     /**
      * But notification group builder.
      *
@@ -310,6 +326,7 @@ public class NotificationGroup extends Base {
           .withAddressesByChannelType(addressesByChannelType)
           .withRoles(roles)
           .withEditable(editable)
+          .withDefaultNotificationGroupForAccount(defaultNotificationGroupForAccount)
           .withUuid(uuid)
           .withAppId(appId)
           .withCreatedBy(createdBy)
@@ -336,6 +353,7 @@ public class NotificationGroup extends Base {
       notificationGroup.setLastUpdatedBy(lastUpdatedBy);
       notificationGroup.setLastUpdatedAt(lastUpdatedAt);
       notificationGroup.setEditable(editable);
+      notificationGroup.setDefaultNotificationGroupForAccount(defaultNotificationGroupForAccount);
       return notificationGroup;
     }
   }
@@ -345,11 +363,14 @@ public class NotificationGroup extends Base {
   @NoArgsConstructor
   public static final class Yaml extends BaseEntityYaml {
     private List<AddressYaml> addresses;
+    private String defaultNotificationGroupForAccount;
 
     @Builder
-    public Yaml(String type, String harnessApiVersion, List<AddressYaml> addresses) {
+    public Yaml(
+        String type, String harnessApiVersion, List<AddressYaml> addresses, String defaultNotificationGroupForAccount) {
       super(type, harnessApiVersion);
       this.addresses = addresses;
+      this.defaultNotificationGroupForAccount = defaultNotificationGroupForAccount;
     }
   }
 

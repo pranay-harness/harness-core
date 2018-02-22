@@ -49,8 +49,13 @@ public class NotificationGroupYamlHandler extends BaseYamlHandler<Yaml, Notifica
         .withAddressesByChannelType(addressByChannelTypeMap)
         .withEditable(true)
         .withName(notificationGroupName)
+        .withDefaultNotificationGroupForAccount(parseIsDefaultFromYaml(yaml))
         .build();
     //        .withRoles()
+  }
+
+  private boolean parseIsDefaultFromYaml(Yaml yaml) {
+    return Boolean.parseBoolean(yaml.getDefaultNotificationGroupForAccount());
   }
 
   @Override
@@ -61,6 +66,7 @@ public class NotificationGroupYamlHandler extends BaseYamlHandler<Yaml, Notifica
         .harnessApiVersion(getHarnessApiVersion())
         .addresses(addressYamlList)
         .type(NOTIFICATION_GROUP)
+        .defaultNotificationGroupForAccount(String.valueOf(bean.isDefaultNotificationGroupForAccount()))
         .build();
   }
 

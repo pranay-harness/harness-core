@@ -78,6 +78,7 @@ import com.google.inject.Inject;
 import com.google.inject.Singleton;
 import com.google.inject.name.Named;
 
+import org.apache.commons.collections.CollectionUtils;
 import org.apache.commons.collections.MapUtils;
 import org.mongodb.morphia.Key;
 import org.mongodb.morphia.query.UpdateOperations;
@@ -2655,10 +2656,8 @@ public class WorkflowServiceImpl implements WorkflowService, DataProvider {
   private void createDefaultNotificationRule(Workflow workflow) {
     Application app = appService.get(workflow.getAppId());
     Account account = accountService.get(app.getAccountId());
-    // TODO: We should be able to get Logged On User Admin role dynamically
-    String name = RoleType.ACCOUNT_ADMIN.getDisplayName();
-    List<NotificationGroup> notificationGroups =
-        notificationSetupService.listNotificationGroups(app.getAccountId(), name);
+    List<NotificationGroup> notificationGroups = getNotificationGroupForDefaultNotificationRule(app.getAccountId());
+
     if (isEmpty(notificationGroups)) {
       logger.warn("Default notification group not created for account {}. Ignoring adding notification group",
           account.getAccountName());
@@ -2673,6 +2672,24 @@ public class WorkflowServiceImpl implements WorkflowService, DataProvider {
 
     List<NotificationRule> notificationRules = asList(notificationRule);
     workflow.getOrchestrationWorkflow().setNotificationRules(notificationRules);
+  }
+
+  /**
+   * This method will return defaultNotificationGroup for account. If default notification group is not set,
+   * then "Account Administrator" notification group would be returned.
+   * @param accountId
+   * @return
+   */
+  private List<NotificationGroup> getNotificationGroupForDefaultNotificationRule(String accountId) {
+    List<NotificationGroup> notificationGroups = notificationSetupService.listDefaultNotificationGroup(accountId);
+
+    if (CollectionUtils.isEmpty(notificationGroups)) {
+      // TODO: We should be able to get Logged On User Admin role dynamically
+      notificationGroups =
+          notificationSetupService.listNotificationGroups(accountId, RoleType.ACCOUNT_ADMIN.getDisplayName());
+    }
+
+    return notificationGroups;
   }
 
   private void createDefaultFailureStrategy(Workflow workflow) {

@@ -84,4 +84,11 @@ public interface NotificationSetupService {
    * @return the boolean
    */
   boolean deleteNotificationGroups(@NotEmpty String accountId, @NotEmpty String notificationGroupId);
+
+  /**
+   *
+   * @param accountId
+   * @return
+   */
+  List<NotificationGroup> listDefaultNotificationGroup(String accountId);
 }

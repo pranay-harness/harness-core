@@ -3,6 +3,7 @@ package software.wings.integration.migration;
 import com.google.inject.Inject;
 import com.google.inject.Injector;
 
+import migrations.all.AddIsDefaultToExistingNotificationGroups;
 import migrations.all.VerifyStepWorkflowOrder;
 import org.junit.Ignore;
 import org.junit.Test;
@@ -28,5 +29,6 @@ public class RunMigrationsUtil extends WingsBaseTest {
   public void runSpecificMigration() {
     // Temporarily change this to any Migration class to execute it directly
     injector.getInstance(VerifyStepWorkflowOrder.class).migrate();
+    injector.getInstance(AddIsDefaultToExistingNotificationGroups.class).migrate();
   }
 }

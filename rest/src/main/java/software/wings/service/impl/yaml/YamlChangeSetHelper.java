@@ -386,6 +386,9 @@ public class YamlChangeSetHelper {
           entityUpdateService.getInfraMappingGitSyncFile(accountId, (InfrastructureMapping) value, changeType);
     } else if (value instanceof ArtifactStream) {
       gitFileChange = entityUpdateService.getArtifactStreamGitSyncFile(accountId, (ArtifactStream) value, changeType);
+    } else if (value instanceof NotificationGroup) {
+      gitFileChange =
+          entityUpdateService.getNotificationGroupGitSyncFile(accountId, (NotificationGroup) value, changeType);
     }
 
     return gitFileChange;

@@ -8,6 +8,7 @@ import com.google.common.base.Joiner;
 import com.google.inject.Inject;
 import com.google.inject.Singleton;
 
+import org.apache.commons.collections.CollectionUtils;
 import software.wings.beans.Base;
 import software.wings.beans.CanaryOrchestrationWorkflow;
 import software.wings.beans.NotificationChannelType;
@@ -104,6 +105,7 @@ public class NotificationSetupServiceImpl implements NotificationSetupService {
 
   @Override
   public NotificationGroup createNotificationGroup(NotificationGroup notificationGroup) {
+    checkIfChangeInDefaultNotificationGroup(notificationGroup);
     NotificationGroup savedNotificationGroup =
         Validator.duplicateCheck(()
                                      -> wingsPersistence.saveAndGet(NotificationGroup.class, notificationGroup),
@@ -115,6 +117,7 @@ public class NotificationSetupServiceImpl implements NotificationSetupService {
 
   @Override
   public NotificationGroup updateNotificationGroup(NotificationGroup notificationGroup) {
+    checkIfChangeInDefaultNotificationGroup(notificationGroup);
     NotificationGroup existingGroup =
         wingsPersistence.get(NotificationGroup.class, Base.GLOBAL_APP_ID, notificationGroup.getUuid());
     if (!existingGroup.isEditable()) {
@@ -169,5 +172,39 @@ public class NotificationSetupServiceImpl implements NotificationSetupService {
     return listNotificationGroups(
         aPageRequest().addFilter("accountId", Operator.EQ, accountId).addFilter("name", Operator.EQ, name).build())
         .getResponse();
+  }
+
+  @Override
+  public List<NotificationGroup> listDefaultNotificationGroup(String accountId) {
+    return listNotificationGroups(aPageRequest()
+                                      .addFilter("accountId", Operator.EQ, accountId)
+                                      .addFilter("defaultNotificationGroupForAccount", Operator.EQ, true)
+                                      .build())
+        .getResponse();
+  }
+
+  /**
+   * There can be only 1 default notification group per account.
+   * So while a notification group is being created or updated, where isDefault = true,
+   * this method will check if there exists any notification group that is set as default,
+   * and will set its default=false.
+   * @param notificationGroup
+   */
+  private void checkIfChangeInDefaultNotificationGroup(NotificationGroup notificationGroup) {
+    List<NotificationGroup> notificationGroups = null;
+    if (notificationGroup.isDefaultNotificationGroupForAccount()
+        && CollectionUtils.isNotEmpty(
+               notificationGroups = listDefaultNotificationGroup(notificationGroup.getAccountId()))) {
+      NotificationGroup previousDefaultNotificationGroup = notificationGroups.get(0);
+      // make sure, previous and current one being saved/updated is not the same
+      if (!previousDefaultNotificationGroup.getName().equals(notificationGroup.getName())) {
+        previousDefaultNotificationGroup.setDefaultNotificationGroupForAccount(false);
+        // updateNotificationGroup() will call checkIfChangeInDefaultNotificationGroup() again, but this time,
+        // as previousDefaultNotificationGroup.IsDefault = false, it will not even enter top "if" condition and exit
+        // method immediately. Reason we need to go through entire updateNotificationGroup() flow is, it also calls
+        // yamlUpdate.
+        updateNotificationGroup(previousDefaultNotificationGroup);
+      }
+    }
   }
 }
