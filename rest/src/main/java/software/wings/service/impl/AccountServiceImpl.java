@@ -208,7 +208,14 @@ public class AccountServiceImpl implements AccountService {
                                                 .withRole(role)
                                                 .withName(name)
                                                 .withEditable(false)
+                                                .withDefaultNotificationGroupForAccount(false)
                                                 .build();
+
+      // Reason we are setting withDefaultNotificationGroupForAccount(false), is We have also added a concept of default
+      // group, where user can mark any editable notificationGroup as default (1 per account). This default group will
+      // be selected for sending notifications in case of workflow execution. If no default group is set, then
+      // automatically,  "ACCOUNT_ADMIN" notification group is selected. So for "ACCOUNT_ADMIN" isDefault = false, as we
+      // want to first check for any explicitly set default notification group
       notificationSetupService.createNotificationGroup(notificationGroup);
     } else {
       logger.info("Default notification group already exists for role {} and account {}",
