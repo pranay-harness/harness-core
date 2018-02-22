@@ -264,7 +264,7 @@ public class ContainerServiceImpl implements ContainerService {
           containerServiceParams.getEncryptionDetails(), containerServiceParams.getClusterName());
       return true;
     }
-    throw new WingsException(
-        ErrorCode.INVALID_ARGUMENT, "Unknown setting value type: " + value.getType(), ReportTarget.USER);
+    throw new WingsException(ErrorCode.INVALID_ARGUMENT, ReportTarget.USER)
+        .addParam("args", "Unknown setting value type: " + value.getType());
   }
 }

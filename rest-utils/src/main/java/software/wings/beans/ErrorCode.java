@@ -506,7 +506,7 @@ public enum ErrorCode {
   /**
    * The constant ARGS_NAME.
    */
-  public static final String ARGS_NAME = "ARGS_NAME";
+  public static final String ARGS = "args";
   private String code;
   private Status status = BAD_REQUEST;
   private String description;
