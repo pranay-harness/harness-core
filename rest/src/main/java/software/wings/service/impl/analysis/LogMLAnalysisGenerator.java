@@ -1,9 +1,7 @@
 package software.wings.service.impl.analysis;
 
-import static org.apache.commons.lang3.StringUtils.isNotBlank;
 import static software.wings.common.UUIDGenerator.generateUuid;
 
-import com.google.common.base.Preconditions;
 import com.google.common.collect.Lists;
 
 import com.github.reinert.jjschema.SchemaIgnore;
@@ -23,15 +21,11 @@ import java.util.Set;
  * Created by sriram_parthasarathy on 8/23/17.
  */
 public class LogMLAnalysisGenerator implements Runnable {
-  public static final int PYTHON_JOB_RETRIES = 3;
-
   @SchemaIgnore @Transient private static final Logger logger = LoggerFactory.getLogger(LogMLAnalysisGenerator.class);
 
-  public static final String LOG_ML_ROOT = "SPLUNKML_ROOT";
   protected static final String LOG_ML_SHELL_FILE_NAME = "run_splunkml.sh";
 
   private final AnalysisContext context;
-  private final String pythonScriptRoot;
   private final String accountId;
   private final String applicationId;
   private final String workflowId;
@@ -47,8 +41,6 @@ public class LogMLAnalysisGenerator implements Runnable {
       LearningEngineService learningEngineService) {
     this.context = context;
     this.analysisService = analysisService;
-    this.pythonScriptRoot = System.getenv(LOG_ML_ROOT);
-    Preconditions.checkState(isNotBlank(pythonScriptRoot), "SPLUNKML_ROOT can not be null or empty");
 
     this.applicationId = context.getAppId();
     this.accountId = context.getAccountId();
@@ -56,9 +48,6 @@ public class LogMLAnalysisGenerator implements Runnable {
     this.serviceId = context.getServiceId();
     this.testNodes = context.getTestNodes();
     this.controlNodes = context.getControlNodes();
-    //    if (context.getComparisonStrategy() == AnalysisComparisonStrategy.COMPARE_WITH_CURRENT) {
-    //      this.controlNodes.removeAll(this.testNodes);
-    //    }
     this.queries = context.getQueries();
     this.logAnalysisMinute = logAnalysisMinute;
     this.learningEngineService = learningEngineService;

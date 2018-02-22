@@ -51,8 +51,6 @@ import java.util.concurrent.TimeUnit;
  * Created by rsingh on 7/6/17.
  */
 public abstract class AbstractLogAnalysisState extends AbstractAnalysisState {
-  public static final String LOG_ML_ROOT = "SPLUNKML_ROOT";
-  protected static final String LOG_ML_SHELL_FILE_NAME = "run_splunkml.sh";
   protected static final int HOST_BATCH_SIZE = 5;
   @Inject @Named("VerificationJobScheduler") private QuartzScheduler jobScheduler;
 

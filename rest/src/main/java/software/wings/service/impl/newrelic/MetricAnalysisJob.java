@@ -1,9 +1,7 @@
 package software.wings.service.impl.newrelic;
 
-import static org.apache.commons.lang3.StringUtils.isNotBlank;
 import static software.wings.common.UUIDGenerator.generateUuid;
 
-import com.google.common.base.Preconditions;
 import com.google.inject.Inject;
 
 import org.quartz.DisallowConcurrentExecution;
@@ -87,11 +85,8 @@ public class MetricAnalysisJob implements Job {
   public static class MetricAnalysisGenerator implements Runnable {
     //    public static final int PYTHON_JOB_RETRIES = 3;
     public static final int ANALYSIS_DURATION = 30;
-    public static final String LOG_ML_ROOT = "SPLUNKML_ROOT";
     protected static final String TS_ML_SHELL_FILE_NAME = "run_time_series_ml.sh";
     private static final int APM_BUFFER_MINUTES = 2;
-    private final String pythonScriptRoot;
-
     private final AnalysisContext context;
     private final JobExecutionContext jobExecutionContext;
     private final String delegateTaskId;
@@ -110,8 +105,6 @@ public class MetricAnalysisJob implements Job {
       this.learningEngineService = learningEngineService;
       this.waitNotifyEngine = waitNotifyEngine;
       this.delegateService = delegateService;
-      this.pythonScriptRoot = System.getenv(LOG_ML_ROOT);
-      Preconditions.checkState(isNotBlank(pythonScriptRoot), "SPLUNKML_ROOT can not be null or empty");
       this.context = context;
       this.jobExecutionContext = jobExecutionContext;
       this.delegateTaskId = delegateTaskId;
