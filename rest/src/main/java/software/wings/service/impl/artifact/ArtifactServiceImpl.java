@@ -30,6 +30,7 @@ import com.mongodb.BasicDBObject;
 import org.bson.types.ObjectId;
 import org.mongodb.morphia.Key;
 import org.mongodb.morphia.query.FindOptions;
+import org.mongodb.morphia.query.MorphiaIterator;
 import org.mongodb.morphia.query.Query;
 import org.mongodb.morphia.query.Sort;
 import org.mongodb.morphia.query.UpdateOperations;
@@ -298,17 +299,23 @@ public class ArtifactServiceImpl implements ArtifactService {
       return true;
     }
 
+    return prune(appId, artifactId);
+  }
+
+  public boolean prune(String appId, String artifactId) {
     PruneFileJob.addDefaultJob(jobScheduler, Artifact.class, artifactId, FileBucket.ARTIFACTS);
-    return wingsPersistence.delete(artifact);
+    return wingsPersistence.delete(Artifact.class, artifactId);
   }
 
   @Override
   public void pruneByApplication(String appId) {
-    wingsPersistence.createQuery(Artifact.class)
-        .field(Artifact.APP_ID_KEY)
-        .equal(appId)
-        .asList()
-        .forEach(artifact -> delete(appId, artifact.getUuid()));
+    final MorphiaIterator<Artifact, Artifact> iterator =
+        wingsPersistence.createQuery(Artifact.class).field(Artifact.APP_ID_KEY).equal(appId).fetch();
+
+    while (iterator.hasNext()) {
+      Artifact artifact = iterator.next();
+      prune(appId, artifact.getUuid());
+    }
   }
 
   @Override
