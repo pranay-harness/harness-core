@@ -1,8 +1,5 @@
 package software.wings.service.impl.analysis;
 
-import static org.apache.commons.lang3.StringUtils.isNotBlank;
-
-import com.google.common.base.Preconditions;
 import com.google.common.collect.Lists;
 
 import org.slf4j.Logger;
@@ -11,7 +8,6 @@ import software.wings.service.impl.newrelic.LearningEngineAnalysisTask;
 import software.wings.service.intfc.LearningEngineService;
 import software.wings.service.intfc.analysis.ClusterLevel;
 import software.wings.service.intfc.analysis.LogAnalysisResource;
-import software.wings.sm.states.AbstractLogAnalysisState;
 
 /**
  * Created by sriram_parthasarathy on 8/24/17.
@@ -26,7 +22,6 @@ public class LogMLClusterGenerator implements Runnable {
   private final ClusterLevel fromLevel;
   private final ClusterLevel toLevel;
   private final LogRequest logRequest;
-  private final String pythonScriptRoot;
 
   public LogMLClusterGenerator(LearningEngineService learningEngineService, LogClusterContext context,
       ClusterLevel fromLevel, ClusterLevel toLevel, LogRequest logRequest) {
@@ -35,8 +30,6 @@ public class LogMLClusterGenerator implements Runnable {
     this.fromLevel = fromLevel;
     this.toLevel = toLevel;
     this.logRequest = logRequest;
-    this.pythonScriptRoot = System.getenv(AbstractLogAnalysisState.LOG_ML_ROOT);
-    Preconditions.checkState(isNotBlank(pythonScriptRoot), "SPLUNKML_ROOT can not be null or empty");
   }
 
   @Override
@@ -72,48 +65,6 @@ public class LogMLClusterGenerator implements Runnable {
       if (taskQueued) {
         logger.info("Clustering queued for {}", logRequest);
       }
-      //
-      //      final List<String> command = new ArrayList<>();
-      //      command.add(this.pythonScriptRoot + "/" + CLUSTER_ML_SHELL_FILE_NAME);
-      //      command.add("--input_url");
-      //      command.add(inputLogsUrl);
-      //      command.add("--output_url");
-      //      command.add(clusteredLogSaveUrl);
-      //      command.add("--auth_token=" + context.getAuthToken());
-      //      command.add("--application_id=" + context.getAppId());
-      //      command.add("--workflow_id=" + context.getWorkflowId());
-      //      command.add("--state_execution_id=" + context.getStateExecutionId());
-      //      command.add("--service_id=" + context.getServiceId());
-      //      command.add("--nodes");
-      //      command.addAll(logRequest.getNodes());
-      //      command.add("--sim_threshold");
-      //      command.add(String.valueOf(0.99));
-      //      command.add("--log_collection_minute");
-      //      command.add(String.valueOf(logRequest.getLogCollectionMinute()));
-      //      command.add("--cluster_level");
-      //      command.add(String.valueOf(toLevel.getLevel()));
-      //      command.add("--query");
-      //      command.addAll(Lists.newArrayList(logRequest.getQuery().split(" ")));
-      //
-      //      final ProcessResult result =
-      //          new ProcessExecutor(command)
-      //              .redirectOutput(
-      //                  Slf4jStream.of(LoggerFactory.getLogger(getClass().getName() + "." +
-      //                  context.getStateExecutionId()))
-      //                      .asInfo())
-      //              .execute();
-      //
-      //      switch (result.getExitValue()) {
-      //        case 0:
-      //          logger.info("Clustering done for " + logRequest);
-      //          break;
-      //        case 2:
-      //          logger.info("Clustering skipped. Nothing to process " + logRequest);
-      //          break;
-      //        default:
-      //          throw new RuntimeException("Python Cluster job failed ");
-      //      }
-
     } catch (Exception e) {
       throw new RuntimeException("First level clustering failed for " + logRequest, e);
     }
