@@ -47,6 +47,7 @@ import com.amazonaws.services.autoscaling.model.DeleteLaunchConfigurationRequest
 import com.amazonaws.services.autoscaling.model.DescribeAutoScalingGroupsRequest;
 import com.amazonaws.services.autoscaling.model.DescribeAutoScalingGroupsResult;
 import com.amazonaws.services.autoscaling.model.DescribeLaunchConfigurationsRequest;
+import com.amazonaws.services.autoscaling.model.DescribeLaunchConfigurationsResult;
 import com.amazonaws.services.autoscaling.model.DescribeScalingActivitiesRequest;
 import com.amazonaws.services.autoscaling.model.DescribeScalingActivitiesResult;
 import com.amazonaws.services.autoscaling.model.LaunchConfiguration;
@@ -906,24 +907,43 @@ public class AwsHelperService {
       encryptionService.decrypt(awsConfig, encryptionDetails);
       AmazonAutoScalingClient amazonAutoScalingClient =
           getAmazonAutoScalingClient(Regions.fromName(region), awsConfig.getAccessKey(), awsConfig.getSecretKey());
-      return amazonAutoScalingClient
-          .describeAutoScalingGroups(new DescribeAutoScalingGroupsRequest().withMaxRecords(100))
-          .getAutoScalingGroups();
+      List<AutoScalingGroup> result = new ArrayList<>();
+
+      DescribeAutoScalingGroupsResult describeAutoScalingGroupsResult =
+          amazonAutoScalingClient.describeAutoScalingGroups(new DescribeAutoScalingGroupsRequest().withMaxRecords(100));
+      while (isNotEmpty(describeAutoScalingGroupsResult.getAutoScalingGroups())) {
+        result.addAll(describeAutoScalingGroupsResult.getAutoScalingGroups());
+        describeAutoScalingGroupsResult =
+            amazonAutoScalingClient
+                .describeAutoScalingGroups(new DescribeAutoScalingGroupsRequest().withMaxRecords(100))
+                .withNextToken(describeAutoScalingGroupsResult.getNextToken());
+      }
+      return result;
     } catch (AmazonServiceException amazonServiceException) {
       handleAmazonServiceException(amazonServiceException);
     }
     return emptyList();
   }
 
-  public List<LaunchConfiguration> listLaunchConfiguration(
+  public List<LaunchConfiguration> listLaunchConfigurations(
       AwsConfig awsConfig, List<EncryptedDataDetail> encryptionDetails, String region) {
     try {
       encryptionService.decrypt(awsConfig, encryptionDetails);
       AmazonAutoScalingClient amazonAutoScalingClient =
           getAmazonAutoScalingClient(Regions.fromName(region), awsConfig.getAccessKey(), awsConfig.getSecretKey());
-      return amazonAutoScalingClient
-          .describeLaunchConfigurations(new DescribeLaunchConfigurationsRequest().withMaxRecords(100))
-          .getLaunchConfigurations();
+      List<LaunchConfiguration> result = new ArrayList<>();
+
+      DescribeLaunchConfigurationsResult describeLaunchConfigurationsResult =
+          amazonAutoScalingClient.describeLaunchConfigurations(
+              new DescribeLaunchConfigurationsRequest().withMaxRecords(100));
+      while (isNotEmpty(describeLaunchConfigurationsResult.getLaunchConfigurations())) {
+        result.addAll(describeLaunchConfigurationsResult.getLaunchConfigurations());
+        describeLaunchConfigurationsResult =
+            amazonAutoScalingClient
+                .describeLaunchConfigurations(new DescribeLaunchConfigurationsRequest().withMaxRecords(100))
+                .withNextToken(describeLaunchConfigurationsResult.getNextToken());
+      }
+      return result;
     } catch (AmazonServiceException amazonServiceException) {
       handleAmazonServiceException(amazonServiceException);
     }
