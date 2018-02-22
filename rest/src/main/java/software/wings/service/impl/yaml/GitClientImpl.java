@@ -1,6 +1,8 @@
 package software.wings.service.impl.yaml;
 
 import static org.apache.commons.lang3.StringUtils.isNotBlank;
+import static org.eclipse.jgit.transport.RemoteRefUpdate.Status.OK;
+import static org.eclipse.jgit.transport.RemoteRefUpdate.Status.UP_TO_DATE;
 import static software.wings.beans.ErrorCode.UNREACHABLE_HOST;
 import static software.wings.beans.yaml.Change.ChangeType.ADD;
 import static software.wings.beans.yaml.Change.ChangeType.DELETE;
@@ -344,7 +346,21 @@ public class GitClientImpl implements GitClient {
                                 .forceUpdate(remoteRefUpdate.isForceUpdate())
                                 .message(remoteRefUpdate.getMessage())
                                 .build();
-      return GitPushResult.builder().refUpdate(refUpdate).build();
+      if (remoteRefUpdate.getStatus() == OK || remoteRefUpdate.getStatus() == UP_TO_DATE) {
+        return GitPushResult.builder().refUpdate(refUpdate).build();
+      } else {
+        StringBuilder builder =
+            new StringBuilder("Unable to push changes to git repository. Status reported by Remote is: ")
+                .append(remoteRefUpdate.getStatus())
+                .append(" and message is: ")
+                .append(remoteRefUpdate.getMessage())
+                .append(". Other info: Force push: ")
+                .append(remoteRefUpdate.isForceUpdate())
+                .append("")
+                .append(remoteRefUpdate.isFastForward());
+        String errorMsg = builder.toString();
+        throw new WingsException(ErrorCode.YAML_GIT_SYNC_ERROR).addParam("message", errorMsg);
+      }
     } catch (IOException | GitAPIException ex) {
       logger.error("Exception: ", ex);
       String errorMsg = ex.getMessage();
