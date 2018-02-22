@@ -572,9 +572,8 @@ public class AnalysisServiceImpl implements AnalysisService {
 
     RiskLevel riskLevel = RiskLevel.NA;
     String analysisSummaryMsg = isEmpty(analysisRecord.getAnalysisSummaryMessage())
-        ? analysisSummary.getControlClusters().isEmpty()
-            ? "No baseline data for the given queries. This will be baseline for the next run."
-            : analysisSummary.getTestClusters().isEmpty()
+        ? analysisSummary.getControlClusters().isEmpty() ? "No baseline data for the given query was found."
+                                                         : analysisSummary.getTestClusters().isEmpty()
                 ? "No new data for the given queries. Showing baseline data if any."
                 : "No anomaly found"
         : analysisRecord.getAnalysisSummaryMessage();

@@ -510,8 +510,7 @@ public class ElkIntegrationTest extends BaseIntegrationTest {
     Thread.sleep(TimeUnit.SECONDS.toMillis(10));
     LogMLAnalysisSummary logMLAnalysisSummary =
         analysisService.getAnalysisSummary(stateExecutionId, appId, StateType.SUMO);
-    assertEquals("No baseline data for the given queries. This will be baseline for the next run.",
-        logMLAnalysisSummary.getAnalysisSummaryMessage());
+    assertEquals("No baseline data for the given query was found.", logMLAnalysisSummary.getAnalysisSummaryMessage());
     LogMLAnalysisRecord logAnalysisRecord =
         analysisService.getLogAnalysisRecords(appId, stateExecutionId, query, StateType.SUMO, logCollectionMinute);
     assertFalse(logAnalysisRecord.isBaseLineCreated());

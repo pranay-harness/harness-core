@@ -691,7 +691,7 @@ public class LogMLAnalysisServiceTest extends WingsBaseTest {
     assertTrue(analysisSummary.getControlClusters().isEmpty());
     String message;
     if (numOfUnexpectedFreq == 0) {
-      message = "No baseline data for the given queries. This will be baseline for the next run.";
+      message = "No baseline data for the given query was found.";
     } else if (numOfUnexpectedFreq == 1) {
       message = numOfUnexpectedFreq + " anomalous cluster found";
     } else {
