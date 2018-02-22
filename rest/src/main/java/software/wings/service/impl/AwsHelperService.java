@@ -907,7 +907,7 @@ public class AwsHelperService {
       AmazonAutoScalingClient amazonAutoScalingClient =
           getAmazonAutoScalingClient(Regions.fromName(region), awsConfig.getAccessKey(), awsConfig.getSecretKey());
       return amazonAutoScalingClient
-          .describeAutoScalingGroups(new DescribeAutoScalingGroupsRequest().withMaxRecords(1000))
+          .describeAutoScalingGroups(new DescribeAutoScalingGroupsRequest().withMaxRecords(100))
           .getAutoScalingGroups();
     } catch (AmazonServiceException amazonServiceException) {
       handleAmazonServiceException(amazonServiceException);
@@ -922,7 +922,7 @@ public class AwsHelperService {
       AmazonAutoScalingClient amazonAutoScalingClient =
           getAmazonAutoScalingClient(Regions.fromName(region), awsConfig.getAccessKey(), awsConfig.getSecretKey());
       return amazonAutoScalingClient
-          .describeLaunchConfigurations(new DescribeLaunchConfigurationsRequest().withMaxRecords(1000))
+          .describeLaunchConfigurations(new DescribeLaunchConfigurationsRequest().withMaxRecords(100))
           .getLaunchConfigurations();
     } catch (AmazonServiceException amazonServiceException) {
       handleAmazonServiceException(amazonServiceException);

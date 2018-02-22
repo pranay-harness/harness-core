@@ -10,6 +10,7 @@ import static software.wings.waitnotify.ErrorNotifyResponseData.Builder.anErrorN
 
 import com.google.inject.Inject;
 
+import com.hazelcast.core.HazelcastInstance;
 import org.atmosphere.cpr.BroadcasterFactory;
 import org.mongodb.morphia.Key;
 import org.mongodb.morphia.mapping.Mapper;
@@ -50,6 +51,7 @@ public class DelegateQueueTask implements Runnable {
   @Inject private WaitNotifyEngine waitNotifyEngine;
   @Inject private CacheHelper cacheHelper;
   @Inject private Clock clock;
+  @Inject private HazelcastInstance hazelcastInstance;
 
   /* (non-Javadoc)
    * @see java.lang.Runnable#run()
@@ -191,6 +193,7 @@ public class DelegateQueueTask implements Runnable {
                   logger.warn("Evicting old delegate sync task {}", syncDelegateTask.getUuid());
                   Caching.getCache(DELEGATE_SYNC_CACHE, String.class, DelegateTask.class)
                       .remove(syncDelegateTask.getUuid());
+                  hazelcastInstance.getQueue(syncDelegateTask.getUuid()).destroy();
                 } else {
                   Set<String> validatingDelegates = syncDelegateTask.getValidatingDelegateIds();
                   Set<String> completeDelegates = syncDelegateTask.getValidationCompleteDelegateIds();
@@ -216,6 +219,7 @@ public class DelegateQueueTask implements Runnable {
               logger.warn("Remove Delegate task {} from cache", stringDelegateTaskEntry.getKey());
               Caching.getCache(DELEGATE_SYNC_CACHE, String.class, DelegateTask.class)
                   .remove(stringDelegateTaskEntry.getKey());
+              hazelcastInstance.getQueue(stringDelegateTaskEntry.getKey()).destroy();
             }
           }
         }

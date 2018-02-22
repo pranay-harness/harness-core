@@ -498,16 +498,22 @@ public class DelegateServiceImpl implements DelegateService {
     task.setUuid(taskId);
     task.setCreatedAt(clock.millis());
     IQueue<T> topic = hazelcastInstance.getQueue(taskId);
-    cacheHelper.getCache(DELEGATE_SYNC_CACHE, String.class, DelegateTask.class).put(taskId, task);
-    broadcasterFactory.lookup("/stream/delegate/" + task.getAccountId(), true).broadcast(task);
-    logger.info("Broadcast new task: uuid: {}, accountId: {}, type: {}, async: {}", task.getUuid(), task.getAccountId(),
-        task.getTaskType(), task.isAsync());
-    T responseData = topic.poll(task.getTimeout(), TimeUnit.MILLISECONDS);
-    if (responseData == null) {
-      logger.warn("Task {} timed out. remove it from cache", task.getUuid());
+    T responseData;
+    try {
+      cacheHelper.getCache(DELEGATE_SYNC_CACHE, String.class, DelegateTask.class).put(taskId, task);
+      broadcasterFactory.lookup("/stream/delegate/" + task.getAccountId(), true).broadcast(task);
+      logger.info("Broadcast new task: uuid: {}, accountId: {}, type: {}, async: {}", task.getUuid(),
+          task.getAccountId(), task.getTaskType(), task.isAsync());
+      responseData = topic.poll(task.getTimeout(), TimeUnit.MILLISECONDS);
+      if (responseData == null) {
+        logger.warn("Task {} timed out, removed it from cache", task.getUuid());
+        throw new WingsException(ErrorCode.REQUEST_TIMEOUT).addParam("name", Constants.DELEGATE_NAME);
+      }
+    } finally {
       Caching.getCache(DELEGATE_SYNC_CACHE, String.class, DelegateTask.class).remove(taskId);
-      throw new WingsException(ErrorCode.REQUEST_TIMEOUT).addParam("name", Constants.DELEGATE_NAME);
+      topic.destroy();
     }
+
     return responseData;
   }
 
