@@ -271,17 +271,12 @@ public class AnalysisServiceImpl implements AnalysisService {
   public boolean saveFeedback(LogMLFeedback feedback, StateType stateType) {
     String logmd5Hash = DigestUtils.md5Hex(feedback.getText());
 
-    Query<LogMLFeedbackRecord> query = wingsPersistence.createQuery(LogMLFeedbackRecord.class)
-                                           .field("stateExecutionId")
-                                           .equal(feedback.getStateExecutionId())
-                                           .field("applicationId")
-                                           .equal(feedback.getAppId())
-                                           .field("clusterType")
-                                           .equal(feedback.getClusterType())
-                                           .field("clusterLabel")
-                                           .equal(feedback.getClusterLabel());
+    if (!isEmpty(feedback.getLogMlFeedbackId())) {
+      Query<LogMLFeedbackRecord> query =
+          wingsPersistence.createQuery(LogMLFeedbackRecord.class).field("_id").equal(feedback.getLogMlFeedbackId());
 
-    wingsPersistence.delete(query);
+      wingsPersistence.delete(query);
+    }
 
     StateExecutionInstance stateExecutionInstance =
         wingsPersistence.get(StateExecutionInstance.class, feedback.getAppId(), feedback.getStateExecutionId());
@@ -513,6 +508,7 @@ public class AnalysisServiceImpl implements AnalysisService {
       if (mlUserFeedbacks.get(CLUSTER_TYPE.CONTROL).containsKey(summary.getClusterLabel())) {
         summary.setLogMLFeedbackType(
             mlUserFeedbacks.get(CLUSTER_TYPE.CONTROL).get(summary.getClusterLabel()).getLogMLFeedbackType());
+        summary.setLogMLFeedbackId(mlUserFeedbacks.get(CLUSTER_TYPE.CONTROL).get(summary.getClusterLabel()).getUuid());
       }
     }
 
@@ -520,6 +516,7 @@ public class AnalysisServiceImpl implements AnalysisService {
       if (mlUserFeedbacks.get(CLUSTER_TYPE.TEST).containsKey(summary.getClusterLabel())) {
         summary.setLogMLFeedbackType(
             mlUserFeedbacks.get(CLUSTER_TYPE.TEST).get(summary.getClusterLabel()).getLogMLFeedbackType());
+        summary.setLogMLFeedbackId(mlUserFeedbacks.get(CLUSTER_TYPE.TEST).get(summary.getClusterLabel()).getUuid());
       }
     }
 
@@ -527,6 +524,7 @@ public class AnalysisServiceImpl implements AnalysisService {
       if (mlUserFeedbacks.get(CLUSTER_TYPE.UNKNOWN).containsKey(summary.getClusterLabel())) {
         summary.setLogMLFeedbackType(
             mlUserFeedbacks.get(CLUSTER_TYPE.UNKNOWN).get(summary.getClusterLabel()).getLogMLFeedbackType());
+        summary.setLogMLFeedbackId(mlUserFeedbacks.get(CLUSTER_TYPE.UNKNOWN).get(summary.getClusterLabel()).getUuid());
       }
     }
   }
