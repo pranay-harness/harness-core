@@ -400,7 +400,7 @@ public class MetricAnalysisJob implements Job {
 
     private void sendStateNotification(AnalysisContext context, boolean error, String errMsg) {
       if (analysisService.isStateValid(context.getAppId(), context.getStateExecutionId())) {
-        final ExecutionStatus status = error ? ExecutionStatus.FAILED : ExecutionStatus.SUCCESS;
+        final ExecutionStatus status = error ? ExecutionStatus.ERROR : ExecutionStatus.SUCCESS;
         final MetricAnalysisExecutionData executionData =
             MetricAnalysisExecutionData.builder()
                 .workflowExecutionId(context.getWorkflowExecutionId())

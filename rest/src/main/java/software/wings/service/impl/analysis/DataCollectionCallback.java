@@ -43,23 +43,23 @@ public class DataCollectionCallback implements NotifyCallback {
     if (result.getStatus() == DataCollectionTaskStatus.FAILURE) {
       if (isLogCollection) {
         final LogAnalysisExecutionData executionData = LogAnalysisExecutionData.Builder.anLogAnanlysisExecutionData()
-                                                           .withStatus(ExecutionStatus.FAILED)
+                                                           .withStatus(ExecutionStatus.ERROR)
                                                            .withErrorMsg(result.getErrorMessage())
                                                            .build();
         waitNotifyEngine.notify(correlationId,
             aLogAnalysisResponse()
                 .withLogAnalysisExecutionData(executionData)
-                .withExecutionStatus(ExecutionStatus.FAILED)
+                .withExecutionStatus(ExecutionStatus.ERROR)
                 .build());
       } else {
         MetricDataAnalysisResponse metricDataAnalysisResponse =
             MetricDataAnalysisResponse.builder()
                 .stateExecutionData(StateExecutionDataBuilder.aStateExecutionData()
-                                        .withStatus(ExecutionStatus.FAILED)
+                                        .withStatus(ExecutionStatus.ERROR)
                                         .withErrorMsg(result.getErrorMessage())
                                         .build())
                 .build();
-        metricDataAnalysisResponse.setExecutionStatus(ExecutionStatus.FAILED);
+        metricDataAnalysisResponse.setExecutionStatus(ExecutionStatus.ERROR);
         waitNotifyEngine.notify(correlationId, metricDataAnalysisResponse);
       }
     }

@@ -123,6 +123,7 @@ public class LogAnalysisManagerJob implements Job {
     public void run() {
       boolean completeCron = false;
       boolean error = false;
+      String errorMsg = "";
       try {
         logger.info("running log ml analysis for " + context.getStateExecutionId());
         /*
@@ -194,6 +195,7 @@ public class LogAnalysisManagerJob implements Job {
       } catch (Exception ex) {
         completeCron = true;
         error = true;
+        errorMsg = ex.getMessage();
         logger.warn("analysis failed", ex);
       } finally {
         try {
@@ -208,7 +210,7 @@ public class LogAnalysisManagerJob implements Job {
                   logger.error("Delegate abort failed for log analysis manager for delegate task id " + id, e);
                 }
               }
-              sendStateNotification(context, error);
+              sendStateNotification(context, error, errorMsg);
             } catch (Exception e) {
               logger.error("Send notification failed for log analysis manager", e);
             } finally {
@@ -225,10 +227,11 @@ public class LogAnalysisManagerJob implements Job {
       }
     }
 
-    private void sendStateNotification(AnalysisContext context, boolean error) {
+    private void sendStateNotification(AnalysisContext context, boolean error, String errorMsg) {
       if (analysisService.isStateValid(context.getAppId(), context.getStateExecutionId())) {
-        final ExecutionStatus status = error ? ExecutionStatus.FAILED : ExecutionStatus.SUCCESS;
-        final LogAnalysisExecutionData executionData =
+        final ExecutionStatus status = error ? ExecutionStatus.ERROR : ExecutionStatus.SUCCESS;
+
+        LogAnalysisExecutionData.Builder logAnalysisExecutionDataBuilder =
             LogAnalysisExecutionData.Builder.anLogAnanlysisExecutionData()
                 .withStateExecutionInstanceId(context.getStateExecutionId())
                 .withServerConfigID(context.getAnalysisServerConfigId())
@@ -237,10 +240,16 @@ public class LogAnalysisManagerJob implements Job {
                 .withStatus(status)
                 .withCanaryNewHostNames(context.getTestNodes())
                 .withLastExecutionNodes(context.getControlNodes() == null ? new HashSet<>() : context.getControlNodes())
-                .withCorrelationId(context.getCorrelationId())
-                .build();
+                .withCorrelationId(context.getCorrelationId());
+
+        if (error) {
+          logAnalysisExecutionDataBuilder.withErrorMsg(errorMsg);
+        }
+
+        final LogAnalysisExecutionData executionData = logAnalysisExecutionDataBuilder.build();
         final LogAnalysisResponse response =
             aLogAnalysisResponse().withLogAnalysisExecutionData(executionData).withExecutionStatus(status).build();
+        logger.info("Notifying state id: {} , corr id: {}", context.getStateExecutionId(), context.getCorrelationId());
         waitNotifyEngine.notify(response.getLogAnalysisExecutionData().getCorrelationId(), response);
       }
     }

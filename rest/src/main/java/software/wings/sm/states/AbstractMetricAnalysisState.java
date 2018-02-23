@@ -171,9 +171,10 @@ public abstract class AbstractMetricAnalysisState extends AbstractAnalysisState 
   public ExecutionResponse handleAsyncResponse(ExecutionContext context, Map<String, NotifyResponseData> response) {
     ExecutionStatus executionStatus = ExecutionStatus.SUCCESS;
     MetricDataAnalysisResponse executionResponse = (MetricDataAnalysisResponse) response.values().iterator().next();
-    if (executionResponse.getExecutionStatus() == ExecutionStatus.FAILED) {
+    if (executionResponse.getExecutionStatus() == ExecutionStatus.ERROR
+        || executionResponse.getExecutionStatus() == ExecutionStatus.FAILED) {
       return anExecutionResponse()
-          .withExecutionStatus(executionResponse.getExecutionStatus())
+          .withExecutionStatus(ExecutionStatus.ERROR)
           .withStateExecutionData(executionResponse.getStateExecutionData())
           .withErrorMessage(executionResponse.getStateExecutionData().getErrorMsg())
           .build();

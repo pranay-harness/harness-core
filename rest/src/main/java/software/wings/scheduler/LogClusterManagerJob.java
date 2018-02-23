@@ -172,13 +172,15 @@ public class LogClusterManagerJob implements Job {
           if (analysisService.isStateValid(context.getAppId(), context.getStateExecutionId())) {
             final LogAnalysisExecutionData executionData =
                 LogAnalysisExecutionData.Builder.anLogAnanlysisExecutionData()
-                    .withStatus(ExecutionStatus.FAILED)
+                    .withStatus(ExecutionStatus.ERROR)
                     .withErrorMsg(ex.getMessage())
                     .build();
+            logger.info(
+                "Notifying state id: {} , corr id: {}", context.getStateExecutionId(), context.getCorrelationId());
             waitNotifyEngine.notify(context.getCorrelationId(),
                 aLogAnalysisResponse()
                     .withLogAnalysisExecutionData(executionData)
-                    .withExecutionStatus(ExecutionStatus.FAILED)
+                    .withExecutionStatus(ExecutionStatus.ERROR)
                     .build());
           }
         } catch (Exception e) {
