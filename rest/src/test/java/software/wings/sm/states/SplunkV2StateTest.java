@@ -5,6 +5,7 @@ import static org.junit.Assert.assertNotNull;
 import static org.junit.Assert.assertTrue;
 import static org.mockito.Matchers.anyBoolean;
 import static org.mockito.Matchers.anyObject;
+import static org.mockito.Matchers.anyString;
 import static org.mockito.Mockito.doReturn;
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.spy;
@@ -22,20 +23,27 @@ import org.junit.Test;
 import org.mockito.Mock;
 import org.mockito.MockitoAnnotations;
 import software.wings.WingsBaseTest;
+import software.wings.api.PhaseElement;
+import software.wings.api.ServiceElement;
 import software.wings.app.MainConfiguration;
 import software.wings.beans.Application;
 import software.wings.beans.DelegateTask;
 import software.wings.beans.DelegateTask.Status;
+import software.wings.beans.Environment;
 import software.wings.beans.SettingAttribute;
 import software.wings.beans.SplunkConfig;
 import software.wings.beans.TaskType;
 import software.wings.beans.WorkflowExecution.WorkflowExecutionBuilder;
+import software.wings.beans.artifact.Artifact;
+import software.wings.common.Constants;
 import software.wings.delegatetasks.DelegateProxyFactory;
 import software.wings.dl.WingsPersistence;
 import software.wings.exception.WingsException;
 import software.wings.metrics.RiskLevel;
 import software.wings.scheduler.QuartzScheduler;
 import software.wings.service.impl.analysis.AnalysisComparisonStrategy;
+import software.wings.service.impl.analysis.CVExecutionMetaData;
+import software.wings.service.impl.analysis.CVService;
 import software.wings.service.impl.analysis.LogAnalysisExecutionData;
 import software.wings.service.impl.analysis.LogAnalysisResponse;
 import software.wings.service.impl.analysis.LogMLAnalysisSummary;
@@ -44,17 +52,21 @@ import software.wings.service.impl.splunk.SplunkDataCollectionInfo;
 import software.wings.service.intfc.AppService;
 import software.wings.service.intfc.DelegateService;
 import software.wings.service.intfc.SettingsService;
+import software.wings.service.intfc.WorkflowExecutionService;
 import software.wings.service.intfc.analysis.AnalysisService;
 import software.wings.service.intfc.elk.ElkAnalysisService;
 import software.wings.service.intfc.security.SecretManager;
-import software.wings.sm.ExecutionContext;
+import software.wings.sm.ContextElementType;
+import software.wings.sm.ExecutionContextImpl;
 import software.wings.sm.ExecutionResponse;
 import software.wings.sm.ExecutionStatus;
+import software.wings.sm.StateExecutionInstance;
 import software.wings.sm.StateType;
 import software.wings.waitnotify.NotifyResponseData;
 import software.wings.waitnotify.WaitNotifyEngine;
 
 import java.io.IOException;
+import java.text.ParseException;
 import java.text.ParsePosition;
 import java.text.SimpleDateFormat;
 import java.util.Collections;
@@ -62,6 +74,7 @@ import java.util.Date;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.TreeMap;
 import java.util.UUID;
 
 /**
@@ -75,7 +88,7 @@ public class SplunkV2StateTest extends WingsBaseTest {
   private String workflowExecutionId;
   private String serviceId;
   private String delegateTaskId;
-  @Mock private ExecutionContext executionContext;
+  @Mock private ExecutionContextImpl executionContext;
 
   @Mock private DelegateProxyFactory delegateProxyFactory;
   @Mock private BroadcasterFactory broadcasterFactory;
@@ -87,6 +100,14 @@ public class SplunkV2StateTest extends WingsBaseTest {
   @Inject private DelegateService delegateService;
   @Inject private MainConfiguration configuration;
   @Inject private SecretManager secretManager;
+  @Inject private CVService cvService;
+
+  @Inject private WorkflowExecutionService workflowExecutionService;
+  @Mock private PhaseElement phaseElement;
+  @Mock private Environment environment;
+  @Mock private Application application;
+  @Mock private Artifact artifact;
+  @Mock private StateExecutionInstance stateExecutionInstance;
   @Mock private QuartzScheduler jobScheduler;
   @Mock private ElkAnalysisService elkAnalysisService;
   private SplunkV2State splunkState;
@@ -102,14 +123,32 @@ public class SplunkV2StateTest extends WingsBaseTest {
     delegateTaskId = UUID.randomUUID().toString();
 
     wingsPersistence.save(Application.Builder.anApplication().withUuid(appId).withAccountId(accountId).build());
-    wingsPersistence.save(
-        WorkflowExecutionBuilder.aWorkflowExecution().withAppId(appId).withWorkflowId(workflowId).build());
+    wingsPersistence.save(WorkflowExecutionBuilder.aWorkflowExecution()
+                              .withAppId(appId)
+                              .withWorkflowId(workflowId)
+                              .withUuid(workflowExecutionId)
+                              .withStartTs(1519200000000L)
+                              .withName("dummy workflow")
+                              .build());
     configuration.getPortal().setJwtExternalServiceSecret(accountId);
     MockitoAnnotations.initMocks(this);
 
     when(executionContext.getAppId()).thenReturn(appId);
     when(executionContext.getWorkflowExecutionId()).thenReturn(workflowExecutionId);
     when(executionContext.getStateExecutionInstanceId()).thenReturn(stateExecutionId);
+    when(executionContext.getWorkflowExecutionName()).thenReturn("dummy workflow");
+
+    when(phaseElement.getServiceElement())
+        .thenReturn(ServiceElement.Builder.aServiceElement().withName("dummy").withUuid("1").build());
+    when(executionContext.getContextElement(ContextElementType.PARAM, Constants.PHASE_PARAM)).thenReturn(phaseElement);
+    when(environment.getName()).thenReturn("dummy env");
+    when(executionContext.getEnv()).thenReturn(environment);
+    when(application.getName()).thenReturn("dummuy app");
+    when(executionContext.getApp()).thenReturn(application);
+    when(artifact.getDisplayName()).thenReturn("dummy artifact");
+    when(executionContext.getArtifactForService(anyString())).thenReturn(artifact);
+    when(stateExecutionInstance.getStartTs()).thenReturn(1519200000000L);
+    when(executionContext.getStateExecutionInstance()).thenReturn(stateExecutionInstance);
 
     Broadcaster broadcaster = mock(Broadcaster.class);
     when(broadcaster.broadcast(anyObject())).thenReturn(null);
@@ -129,6 +168,8 @@ public class SplunkV2StateTest extends WingsBaseTest {
     setInternalState(splunkState, "delegateService", delegateService);
     setInternalState(splunkState, "jobScheduler", jobScheduler);
     setInternalState(splunkState, "secretManager", secretManager);
+    setInternalState(splunkState, "workflowExecutionService", workflowExecutionService);
+    setInternalState(splunkState, "cvService", cvService);
   }
 
   @Test
@@ -208,7 +249,7 @@ public class SplunkV2StateTest extends WingsBaseTest {
   }
 
   @Test
-  public void testTriggerCollection() {
+  public void testTriggerCollection() throws ParseException {
     assertEquals(0, wingsPersistence.createQuery(DelegateTask.class).asList().size());
     SplunkConfig splunkConfig = SplunkConfig.builder()
                                     .accountId(accountId)
@@ -248,6 +289,19 @@ public class SplunkV2StateTest extends WingsBaseTest {
     assertEquals(accountId, task.getAccountId());
     assertEquals(Status.QUEUED, task.getStatus());
     assertEquals(appId, task.getAppId());
+    Map<Long, TreeMap<String, Map<String, Map<String, Map<String, List<CVExecutionMetaData>>>>>> cvExecutionMetaData =
+        cvService.getCVExecutionMetaData(accountId, 1519200000000L, 1519200000001L);
+    assertNotNull(cvExecutionMetaData);
+    CVExecutionMetaData cvExecutionMetaData1 = cvExecutionMetaData.get(1519171200000L)
+                                                   .get("dummy artifact")
+                                                   .get("dummy env/dummy workflow")
+                                                   .values()
+                                                   .iterator()
+                                                   .next()
+                                                   .get("BASIC")
+                                                   .get(0);
+    assertEquals(cvExecutionMetaData1.getAccountId(), accountId);
+    assertEquals(cvExecutionMetaData1.getArtifactName(), "dummy artifact");
   }
 
   @Test

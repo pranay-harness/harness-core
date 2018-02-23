@@ -41,7 +41,6 @@ public class LogMLAnalysisGenerator implements Runnable {
       LearningEngineService learningEngineService) {
     this.context = context;
     this.analysisService = analysisService;
-
     this.applicationId = context.getAppId();
     this.accountId = context.getAccountId();
     this.workflowId = context.getWorkflowId();
