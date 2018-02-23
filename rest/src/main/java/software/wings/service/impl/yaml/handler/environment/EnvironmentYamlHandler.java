@@ -3,6 +3,7 @@ package software.wings.service.impl.yaml.handler.environment;
 import static io.harness.data.structure.EmptyPredicate.isEmpty;
 import static java.util.Collections.emptyList;
 import static software.wings.beans.EntityType.ENVIRONMENT;
+import static software.wings.beans.EntityType.SERVICE_TEMPLATE;
 
 import com.google.common.collect.Lists;
 import com.google.inject.Inject;
@@ -105,14 +106,26 @@ public class EnvironmentYamlHandler extends BaseYamlHandler<Environment.Yaml, En
           }
 
           String parentServiceName;
-          String parentServiceVariableId = serviceVariable.getParentServiceVariableId();
-          if (parentServiceVariableId != null) {
-            ServiceVariable parentServiceVariable =
-                serviceVariableService.get(serviceVariable.getAppId(), parentServiceVariableId);
-            String serviceId = parentServiceVariable.getEntityId();
-            Service service = serviceResourceService.get(serviceVariable.getAppId(), serviceId);
-            Validator.notNullCheck("Service not found for id: " + serviceId, service);
-            parentServiceName = service.getName();
+          if (serviceVariable.getEntityType() == SERVICE_TEMPLATE) {
+            String parentServiceVariableId = serviceVariable.getParentServiceVariableId();
+
+            if (parentServiceVariableId != null) {
+              ServiceVariable parentServiceVariable =
+                  serviceVariableService.get(serviceVariable.getAppId(), parentServiceVariableId);
+              String serviceId = parentServiceVariable.getEntityId();
+              Service service = serviceResourceService.get(serviceVariable.getAppId(), serviceId);
+              Validator.notNullCheck("Service not found for id: " + serviceId, service);
+              parentServiceName = service.getName();
+            } else {
+              ServiceTemplate serviceTemplate =
+                  serviceTemplateService.get(serviceVariable.getAppId(), serviceVariable.getEntityId());
+              Validator.notNullCheck(
+                  "Service template not found for id: " + serviceVariable.getEntityId(), serviceTemplate);
+              String serviceId = serviceTemplate.getServiceId();
+              Service service = serviceResourceService.get(serviceVariable.getAppId(), serviceId);
+              Validator.notNullCheck("Service not found for id: " + serviceId, service);
+              parentServiceName = service.getName();
+            }
           } else {
             parentServiceName = null;
           }
@@ -146,16 +159,17 @@ public class EnvironmentYamlHandler extends BaseYamlHandler<Environment.Yaml, En
 
     if (previous != null) {
       current.setUuid(previous.getUuid());
+      current = environmentService.update(current);
       Yaml previousYaml = toYaml(previous, previous.getAppId());
       List<ServiceVariable> currentVariableList = getAllVariableOverridesForEnv(previous);
       saveOrUpdateVariableOverrides(previousYaml.getVariableOverrides(), yaml.getVariableOverrides(),
           currentVariableList, current.getAppId(), current.getUuid());
-      return environmentService.update(current);
     } else {
+      current = environmentService.save(current);
       saveOrUpdateVariableOverrides(
           null, yaml.getVariableOverrides(), emptyList(), current.getAppId(), current.getUuid());
-      return environmentService.save(current);
     }
+    return current;
   }
 
   @Override
@@ -294,8 +308,6 @@ public class EnvironmentYamlHandler extends BaseYamlHandler<Environment.Yaml, En
       if (variableOptional.isPresent()) {
         ServiceVariable parentServiceVariable = variableOptional.get();
         variableBuilder.parentServiceVariableId(parentServiceVariable.getUuid());
-      } else {
-        throw new HarnessException("Missing field parentServiceName in yaml");
       }
 
       variableBuilder.entityType(EntityType.SERVICE_TEMPLATE)
