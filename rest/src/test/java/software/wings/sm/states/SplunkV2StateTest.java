@@ -317,7 +317,7 @@ public class SplunkV2StateTest extends WingsBaseTest {
     logAnalysisExecutionData.setErrorMsg(UUID.randomUUID().toString());
 
     LogAnalysisResponse response = LogAnalysisResponse.Builder.aLogAnalysisResponse()
-                                       .withExecutionStatus(ExecutionStatus.FAILED)
+                                       .withExecutionStatus(ExecutionStatus.ERROR)
                                        .withLogAnalysisExecutionData(logAnalysisExecutionData)
                                        .build();
 
@@ -325,7 +325,7 @@ public class SplunkV2StateTest extends WingsBaseTest {
     responseMap.put("somekey", response);
 
     ExecutionResponse executionResponse = splunkState.handleAsyncResponse(executionContext, responseMap);
-    assertEquals(ExecutionStatus.FAILED, executionResponse.getExecutionStatus());
+    assertEquals(ExecutionStatus.ERROR, executionResponse.getExecutionStatus());
     assertEquals(logAnalysisExecutionData.getErrorMsg(), executionResponse.getErrorMessage());
     assertEquals(logAnalysisExecutionData, executionResponse.getStateExecutionData());
   }

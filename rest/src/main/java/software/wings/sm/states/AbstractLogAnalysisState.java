@@ -144,9 +144,10 @@ public abstract class AbstractLogAnalysisState extends AbstractAnalysisState {
   public ExecutionResponse handleAsyncResponse(
       ExecutionContext executionContext, Map<String, NotifyResponseData> response) {
     LogAnalysisResponse executionResponse = (LogAnalysisResponse) response.values().iterator().next();
-    if (executionResponse.getExecutionStatus() == ExecutionStatus.FAILED) {
+    if (executionResponse.getExecutionStatus() == ExecutionStatus.ERROR
+        || executionResponse.getExecutionStatus() == ExecutionStatus.FAILED) {
       return anExecutionResponse()
-          .withExecutionStatus(executionResponse.getExecutionStatus())
+          .withExecutionStatus(ExecutionStatus.ERROR)
           .withStateExecutionData(executionResponse.getLogAnalysisExecutionData())
           .withErrorMessage(executionResponse.getLogAnalysisExecutionData().getErrorMsg())
           .build();
