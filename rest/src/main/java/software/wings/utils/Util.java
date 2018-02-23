@@ -4,6 +4,7 @@ import static io.harness.data.structure.EmptyPredicate.isEmpty;
 
 import software.wings.beans.NameValuePair;
 import software.wings.exception.WingsException;
+import software.wings.service.impl.yaml.handler.NameValuePairYamlHandler;
 
 import java.util.HashMap;
 import java.util.List;
@@ -31,14 +32,17 @@ public class Util {
     }
   }
 
-  public static List<NameValuePair> toYamlList(Map<String, Object> properties) {
+  public static List<NameValuePair.Yaml> toNameValuePairYamlList(
+      Map<String, Object> properties, String appId, NameValuePairYamlHandler nameValuePairYamlHandler) {
     return properties.entrySet()
         .stream()
-        .map(entry
-            -> NameValuePair.builder()
-                   .name(entry.getKey())
-                   .value(entry.getValue() != null ? entry.getValue().toString() : null)
-                   .build())
+        .map(entry -> {
+          NameValuePair nameValuePair = NameValuePair.builder()
+                                            .name(entry.getKey())
+                                            .value(entry.getValue() != null ? entry.getValue().toString() : null)
+                                            .build();
+          return nameValuePairYamlHandler.toYaml(nameValuePair, appId);
+        })
         .collect(Collectors.toList());
   }
 

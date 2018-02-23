@@ -50,13 +50,9 @@ public class TemplateExpressionYamlHandler extends BaseYamlHandler<TemplateExpre
 
   @Override
   public Yaml toYaml(TemplateExpression bean, String appId) {
-    List<NameValuePair> nameValuePairs = Util.toYamlList(bean.getMetadata());
-    // properties
     NameValuePairYamlHandler nameValuePairYamlHandler = yamlHandlerFactory.getYamlHandler(YamlType.NAME_VALUE_PAIR);
     List<NameValuePair.Yaml> nameValuePairYamlList =
-        nameValuePairs.stream()
-            .map(nameValuePair -> nameValuePairYamlHandler.toYaml(nameValuePair, appId))
-            .collect(Collectors.toList());
+        Util.toNameValuePairYamlList(bean.getMetadata(), appId, nameValuePairYamlHandler);
 
     return Yaml.Builder.aYaml()
         .withExpression(bean.getExpression())
