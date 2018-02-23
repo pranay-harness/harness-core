@@ -30,6 +30,9 @@ import software.wings.dl.PageResponse;
 import software.wings.dl.WingsPersistence;
 import software.wings.exception.WingsException;
 import software.wings.service.impl.analysis.AnalysisComparisonStrategy;
+import software.wings.service.impl.analysis.CVExecutionMetaData;
+import software.wings.service.impl.analysis.CVExecutionMetaData.CVExecutionMetaDataBuilder;
+import software.wings.service.impl.analysis.CVService;
 import software.wings.service.impl.instance.ContainerInstanceHelper;
 import software.wings.service.intfc.AppService;
 import software.wings.service.intfc.DelegateService;
@@ -39,9 +42,11 @@ import software.wings.service.intfc.WorkflowExecutionService;
 import software.wings.service.intfc.security.SecretManager;
 import software.wings.sm.ContextElementType;
 import software.wings.sm.ExecutionContext;
+import software.wings.sm.ExecutionContextImpl;
 import software.wings.sm.ExecutionStatus;
 import software.wings.sm.InstanceStatusSummary;
 import software.wings.sm.State;
+import software.wings.sm.StateType;
 import software.wings.stencils.DefaultValue;
 import software.wings.waitnotify.WaitNotifyEngine;
 
@@ -85,6 +90,8 @@ public abstract class AbstractAnalysisState extends State {
 
   @Transient @Inject protected TemplateExpressionProcessor templateExpressionProcessor;
 
+  @Transient @Inject @SchemaIgnore protected CVService cvService;
+
   @Attributes(title = "Analysis Time duration (in minutes)")
   @DefaultValue("15")
   public String getTimeDuration() {
@@ -106,6 +113,42 @@ public abstract class AbstractAnalysisState extends State {
 
   public AbstractAnalysisState(String name, String stateType) {
     super(name, stateType);
+  }
+
+  protected void saveMetaDataForDashboard(String accountId, ExecutionContext executionContext) {
+    try {
+      WorkflowExecution workflowExecution = workflowExecutionService.getWorkflowExecution(
+          executionContext.getAppId(), executionContext.getWorkflowExecutionId());
+
+      CVExecutionMetaDataBuilder cvExecutionMetaDataBuilder =
+          CVExecutionMetaData.builder()
+              .accountId(accountId)
+              .applicationId(executionContext.getAppId())
+              .workflowExecutionId(executionContext.getWorkflowExecutionId())
+              .workflowId(executionContext.getWorkflowId())
+              .stateExecutionId(executionContext.getStateExecutionInstanceId())
+              .serviceId(getPhaseServiceId(executionContext))
+              .envName(((ExecutionContextImpl) executionContext).getEnv().getName())
+              .workflowName(executionContext.getWorkflowExecutionName())
+              .appName(((ExecutionContextImpl) executionContext).getApp().getName())
+              .artifactName(((ExecutionContextImpl) executionContext)
+                                .getArtifactForService(getPhaseServiceId(executionContext))
+                                .getDisplayName())
+              .serviceName(getPhaseServiceName(executionContext))
+              .workflowStartTs(workflowExecution.getStartTs())
+              .stateType(StateType.valueOf(getStateType()))
+              .stateStartTs(((ExecutionContextImpl) executionContext).getStateExecutionInstance().getStartTs())
+              .phaseName(getPhaseName(executionContext));
+
+      if (workflowExecution.getPipelineExecution() != null) {
+        cvExecutionMetaDataBuilder.pipelineName(workflowExecution.getPipelineExecution().getName())
+            .pipelineStartTs(workflowExecution.getPipelineExecution().getStartTs());
+      }
+
+      cvService.saveCVExecutionMetaData(cvExecutionMetaDataBuilder.build());
+    } catch (Exception ex) {
+      getLogger().error("[learning-engine] Unable to save ml analysis metadata", ex);
+    }
   }
 
   protected Set<String> getLastExecutionNodes(ExecutionContext context) {
@@ -199,6 +242,16 @@ public abstract class AbstractAnalysisState extends State {
   protected String getPhaseServiceId(ExecutionContext context) {
     PhaseElement phaseElement = context.getContextElement(ContextElementType.PARAM, Constants.PHASE_PARAM);
     return phaseElement.getServiceElement().getUuid();
+  }
+
+  protected String getPhaseServiceName(ExecutionContext context) {
+    PhaseElement phaseElement = context.getContextElement(ContextElementType.PARAM, Constants.PHASE_PARAM);
+    return phaseElement.getServiceElement().getName();
+  }
+
+  protected String getPhaseName(ExecutionContext context) {
+    PhaseElement phaseElement = context.getContextElement(ContextElementType.PARAM, Constants.PHASE_PARAM);
+    return phaseElement.getName();
   }
 
   protected String getWorkflowId(ExecutionContext context) {

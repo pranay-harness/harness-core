@@ -2,8 +2,10 @@ package software.wings.sm.states;
 
 import static java.util.Arrays.asList;
 import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertNotNull;
 import static org.mockito.Matchers.anyBoolean;
 import static org.mockito.Matchers.anyObject;
+import static org.mockito.Matchers.anyString;
 import static org.mockito.Mockito.doReturn;
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.spy;
@@ -22,26 +24,40 @@ import org.junit.Test;
 import org.mockito.Mock;
 import org.mockito.MockitoAnnotations;
 import software.wings.WingsBaseTest;
+import software.wings.api.PhaseElement;
+import software.wings.api.ServiceElement;
 import software.wings.app.MainConfiguration;
 import software.wings.beans.AppDynamicsConfig;
 import software.wings.beans.Application;
+import software.wings.beans.Environment;
 import software.wings.beans.SettingAttribute;
+import software.wings.beans.artifact.Artifact;
+import software.wings.common.Constants;
 import software.wings.common.TemplateExpressionProcessor;
 import software.wings.dl.WingsPersistence;
 import software.wings.scheduler.QuartzScheduler;
+import software.wings.service.impl.analysis.CVExecutionMetaData;
+import software.wings.service.impl.analysis.CVService;
 import software.wings.service.intfc.AppService;
 import software.wings.service.intfc.DelegateService;
 import software.wings.service.intfc.MetricDataAnalysisService;
 import software.wings.service.intfc.SettingsService;
+import software.wings.service.intfc.WorkflowExecutionService;
 import software.wings.service.intfc.security.SecretManager;
-import software.wings.sm.ExecutionContext;
+import software.wings.sm.ContextElementType;
+import software.wings.sm.ExecutionContextImpl;
 import software.wings.sm.ExecutionResponse;
 import software.wings.sm.ExecutionStatus;
+import software.wings.sm.StateExecutionInstance;
 import software.wings.sm.StateType;
 import software.wings.waitnotify.WaitNotifyEngine;
 
+import java.text.ParseException;
 import java.util.Collections;
 import java.util.Date;
+import java.util.List;
+import java.util.Map;
+import java.util.TreeMap;
 import java.util.UUID;
 
 /**
@@ -54,7 +70,7 @@ public class AppDynamicsStateTest extends WingsBaseTest {
   private String workflowId;
   private String workflowExecutionId;
   private String serviceId;
-  @Mock private ExecutionContext executionContext;
+  @Mock private ExecutionContextImpl executionContext;
 
   @Mock private BroadcasterFactory broadcasterFactory;
   @Inject private WingsPersistence wingsPersistence;
@@ -65,8 +81,15 @@ public class AppDynamicsStateTest extends WingsBaseTest {
   @Inject private MainConfiguration configuration;
   @Inject private SecretManager secretManager;
   @Inject private TemplateExpressionProcessor templateExpressionProcessor;
+  @Inject private WorkflowExecutionService workflowExecutionService;
+  @Inject private CVService cvService;
   @Mock private MetricDataAnalysisService metricAnalysisService;
   @Mock private QuartzScheduler jobScheduler;
+  @Mock private PhaseElement phaseElement;
+  @Mock private Environment environment;
+  @Mock private Application application;
+  @Mock private Artifact artifact;
+  @Mock private StateExecutionInstance stateExecutionInstance;
 
   private AppDynamicsState appDynamicsState;
 
@@ -80,13 +103,32 @@ public class AppDynamicsStateTest extends WingsBaseTest {
     serviceId = UUID.randomUUID().toString();
 
     wingsPersistence.save(Application.Builder.anApplication().withUuid(appId).withAccountId(accountId).build());
-    wingsPersistence.save(aWorkflowExecution().withAppId(appId).withWorkflowId(workflowId).build());
+    wingsPersistence.save(aWorkflowExecution()
+                              .withAppId(appId)
+                              .withWorkflowId(workflowId)
+                              .withUuid(workflowExecutionId)
+                              .withStartTs(1519200000000L)
+                              .withName("dummy workflow")
+                              .build());
     configuration.getPortal().setJwtExternalServiceSecret(accountId);
     MockitoAnnotations.initMocks(this);
 
     when(executionContext.getAppId()).thenReturn(appId);
     when(executionContext.getWorkflowExecutionId()).thenReturn(workflowExecutionId);
     when(executionContext.getStateExecutionInstanceId()).thenReturn(stateExecutionId);
+    when(executionContext.getWorkflowExecutionName()).thenReturn("dummy workflow");
+
+    when(phaseElement.getServiceElement())
+        .thenReturn(ServiceElement.Builder.aServiceElement().withName("dummy").withUuid("1").build());
+    when(executionContext.getContextElement(ContextElementType.PARAM, Constants.PHASE_PARAM)).thenReturn(phaseElement);
+    when(environment.getName()).thenReturn("dummy env");
+    when(executionContext.getEnv()).thenReturn(environment);
+    when(application.getName()).thenReturn("dummuy app");
+    when(executionContext.getApp()).thenReturn(application);
+    when(artifact.getDisplayName()).thenReturn("dummy artifact");
+    when(executionContext.getArtifactForService(anyString())).thenReturn(artifact);
+    when(stateExecutionInstance.getStartTs()).thenReturn(1519200000000L);
+    when(executionContext.getStateExecutionInstance()).thenReturn(stateExecutionInstance);
 
     Broadcaster broadcaster = mock(Broadcaster.class);
     when(broadcaster.broadcast(anyObject())).thenReturn(null);
@@ -109,6 +151,8 @@ public class AppDynamicsStateTest extends WingsBaseTest {
     setInternalState(appDynamicsState, "secretManager", secretManager);
     setInternalState(appDynamicsState, "metricAnalysisService", metricAnalysisService);
     setInternalState(appDynamicsState, "templateExpressionProcessor", templateExpressionProcessor);
+    setInternalState(appDynamicsState, "workflowExecutionService", workflowExecutionService);
+    setInternalState(appDynamicsState, "cvService", cvService);
   }
 
   @Test
@@ -141,7 +185,7 @@ public class AppDynamicsStateTest extends WingsBaseTest {
   }
 
   @Test
-  public void shouldTestAllTemplatized() {
+  public void shouldTestAllTemplatized() throws ParseException {
     AppDynamicsConfig appDynamicsConfig = AppDynamicsConfig.builder()
                                               .accountId(accountId)
                                               .controllerUrl("appd-url")
@@ -186,8 +230,22 @@ public class AppDynamicsStateTest extends WingsBaseTest {
         .thenReturn(settingAttribute.getUuid());
     when(executionContext.renderExpression("${workflow.variables.AppDynamics_App}")).thenReturn("30444");
     when(executionContext.renderExpression("${workflow.variables.AppDynamics_Tier}")).thenReturn("30889");
-
     ExecutionResponse executionResponse = spyAppDynamicsState.execute(executionContext);
     assertEquals(ExecutionStatus.RUNNING, executionResponse.getExecutionStatus());
+    Map<Long, TreeMap<String, Map<String, Map<String, Map<String, List<CVExecutionMetaData>>>>>> cvExecutionMetaData =
+        cvService.getCVExecutionMetaData(accountId, 1519200000000L, 1519200000001L);
+    assertNotNull(cvExecutionMetaData);
+    System.out.println("Here....");
+    System.out.println(cvExecutionMetaData);
+    CVExecutionMetaData cvExecutionMetaData1 = cvExecutionMetaData.get(1519171200000L)
+                                                   .get("dummy artifact")
+                                                   .get("dummy env/dummy workflow")
+                                                   .values()
+                                                   .iterator()
+                                                   .next()
+                                                   .get("BASIC")
+                                                   .get(0);
+    assertEquals(cvExecutionMetaData1.getAccountId(), accountId);
+    assertEquals(cvExecutionMetaData1.getArtifactName(), "dummy artifact");
   }
 }

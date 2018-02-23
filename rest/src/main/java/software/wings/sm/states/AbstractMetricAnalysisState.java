@@ -122,6 +122,7 @@ public abstract class AbstractMetricAnalysisState extends AbstractAnalysisState 
           MetricDataAnalysisResponse.builder().stateExecutionData(executionData).build();
       response.setExecutionStatus(ExecutionStatus.RUNNING);
       scheduleAnalysisCronJob(analysisContext, delegateTaskId);
+      saveMetaDataForDashboard(analysisContext.getAccountId(), context);
       return anExecutionResponse()
           .withAsync(true)
           .withCorrelationIds(Collections.singletonList(executionData.getCorrelationId()))

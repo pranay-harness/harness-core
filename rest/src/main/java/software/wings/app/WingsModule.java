@@ -126,6 +126,8 @@ import software.wings.service.impl.WorkflowExecutionBaselineServiceImpl;
 import software.wings.service.impl.WorkflowExecutionServiceImpl;
 import software.wings.service.impl.WorkflowServiceImpl;
 import software.wings.service.impl.analysis.AnalysisServiceImpl;
+import software.wings.service.impl.analysis.CVService;
+import software.wings.service.impl.analysis.CVServiceImpl;
 import software.wings.service.impl.analysis.LearningEngineAnalysisServiceImpl;
 import software.wings.service.impl.analysis.MetricDataAnalysisServiceImpl;
 import software.wings.service.impl.appdynamics.AppdynamicsServiceImpl;
@@ -330,6 +332,7 @@ public class WingsModule extends AbstractModule {
     bind(NewRelicService.class).to(NewRelicServiceImpl.class);
     bind(MetricDataAnalysisService.class).to(MetricDataAnalysisServiceImpl.class);
     bind(AnalysisService.class).to(AnalysisServiceImpl.class);
+    bind(CVService.class).to(CVServiceImpl.class);
     bind(ElkAnalysisService.class).to(ElkAnalysisServiceImpl.class);
     bind(SystemCatalogService.class).to(SystemCatalogSeviceImpl.class);
     bind(AwsCodeDeployService.class).to(AwsCodeDeployServiceImpl.class);

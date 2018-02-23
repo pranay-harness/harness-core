@@ -120,6 +120,7 @@ public abstract class AbstractLogAnalysisState extends AbstractAnalysisState {
       scheduleClusterCronJob(context, delegateTaskId);
       scheduleAnalysisCronJob(context, delegateTaskId);
 
+      saveMetaDataForDashboard(context.getAccountId(), executionContext);
       return anExecutionResponse()
           .withAsync(true)
           .withCorrelationIds(Collections.singletonList(context.getCorrelationId()))
