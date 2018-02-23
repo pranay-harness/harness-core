@@ -18,4 +18,6 @@ public class ContainerServiceParams {
   private String clusterName;
   private String namespace;
   private String region;
+  private String subscriptionId;
+  private String resourceGroup;
 }

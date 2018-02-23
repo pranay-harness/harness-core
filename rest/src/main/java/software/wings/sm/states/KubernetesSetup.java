@@ -21,6 +21,7 @@ import software.wings.api.ContainerServiceElement;
 import software.wings.api.ContainerServiceElement.ContainerServiceElementBuilder;
 import software.wings.api.DeploymentType;
 import software.wings.beans.Application;
+import software.wings.beans.AzureKubernetesInfrastructureMapping;
 import software.wings.beans.ContainerInfrastructureMapping;
 import software.wings.beans.DirectKubernetesInfrastructureMapping;
 import software.wings.beans.Environment;
@@ -107,6 +108,14 @@ public class KubernetesSetup extends ContainerServiceSetup {
     String previousDaemonSetYaml = isDaemonSet ? getDaemonSetYaml(contextData) : null;
     List<String> activeAutoscalers = isDaemonSet ? null : getActiveAutoscalers(contextData);
 
+    String subscriptionId = null;
+    String resourceGroup = null;
+
+    if (infrastructureMapping instanceof AzureKubernetesInfrastructureMapping) {
+      subscriptionId = ((AzureKubernetesInfrastructureMapping) infrastructureMapping).getSubscriptionId();
+      resourceGroup = ((AzureKubernetesInfrastructureMapping) infrastructureMapping).getResourceGroup();
+    }
+
     return aKubernetesSetupParams()
         .withAppName(app.getName())
         .withEnvName(env.getName())
@@ -132,6 +141,8 @@ public class KubernetesSetup extends ContainerServiceSetup {
         .withMinAutoscaleInstances(minAutoscaleInstances)
         .withMaxAutoscaleInstances(maxAutoscaleInstances)
         .withTargetCpuUtilizationPercentage(targetCpuUtilizationPercentage)
+        .withSubscriptionId(subscriptionId)
+        .withResourceGroup(resourceGroup)
         .build();
   }
 
@@ -177,6 +188,7 @@ public class KubernetesSetup extends ContainerServiceSetup {
   @Override
   protected boolean isValidInfraMapping(InfrastructureMapping infrastructureMapping) {
     return infrastructureMapping instanceof GcpKubernetesInfrastructureMapping
+        || infrastructureMapping instanceof AzureKubernetesInfrastructureMapping
         || infrastructureMapping instanceof DirectKubernetesInfrastructureMapping;
   }
 
@@ -354,6 +366,16 @@ public class KubernetesSetup extends ContainerServiceSetup {
                 .withValue(((DirectKubernetesInfrastructureMapping) infrastructureMapping).createKubernetesConfig())
                 .build()
           : setup.settingsService.get(infrastructureMapping.getComputeProviderSettingId());
+
+      String subscriptionId = null;
+      String resourceGroup = null;
+      String namespace = null;
+      if (infrastructureMapping instanceof AzureKubernetesInfrastructureMapping) {
+        subscriptionId = ((AzureKubernetesInfrastructureMapping) infrastructureMapping).getSubscriptionId();
+        resourceGroup = ((AzureKubernetesInfrastructureMapping) infrastructureMapping).getResourceGroup();
+        namespace = ((AzureKubernetesInfrastructureMapping) infrastructureMapping).getNamespace();
+      }
+
       List<EncryptedDataDetail> encryptionDetails = setup.secretManager.getEncryptionDetails(
           (Encryptable) settingAttribute.getValue(), context.getAppId(), context.getWorkflowExecutionId());
       containerServiceParams = ContainerServiceParams.builder()
@@ -361,6 +383,9 @@ public class KubernetesSetup extends ContainerServiceSetup {
                                    .containerServiceName(controllerNamePrefix)
                                    .encryptionDetails(encryptionDetails)
                                    .clusterName(clusterName)
+                                   .subscriptionId(subscriptionId)
+                                   .resourceGroup(resourceGroup)
+                                   .namespace(namespace)
                                    .build();
     }
   }

@@ -8,6 +8,7 @@ import com.google.inject.Inject;
 import com.codahale.metrics.annotation.ExceptionMetered;
 import com.codahale.metrics.annotation.Timed;
 import io.swagger.annotations.Api;
+import software.wings.beans.AzureKubernetesCluster;
 import software.wings.beans.RestResponse;
 import software.wings.security.annotations.AuthRule;
 import software.wings.service.intfc.AzureResourceService;
@@ -68,5 +69,15 @@ public class AzureResource {
       @PathParam(value = "repositoryName") String repositoryName) {
     return new RestResponse(
         azureResourceService.listRepositoryTags(cloudProviderId, subscriptionId, registryName, repositoryName));
+  }
+
+  @GET
+  @Path("/subscriptions/{subscriptionId}/kubernetesClusters")
+  @Timed
+  @ExceptionMetered
+  public RestResponse<List<AzureKubernetesCluster>> listKubernetesClusters(@QueryParam("accountId") String accountId,
+      @QueryParam("cloudProviderId") String cloudProviderId,
+      @PathParam(value = "subscriptionId") String subscriptionId) {
+    return new RestResponse(azureResourceService.listKubernetesClusters(cloudProviderId, subscriptionId));
   }
 }

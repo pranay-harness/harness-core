@@ -10,6 +10,7 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import software.wings.annotation.Encryptable;
 import software.wings.beans.Application;
+import software.wings.beans.AzureKubernetesInfrastructureMapping;
 import software.wings.beans.ContainerInfrastructureMapping;
 import software.wings.beans.DelegateTask.SyncTaskContext;
 import software.wings.beans.DirectKubernetesInfrastructureMapping;
@@ -66,6 +67,8 @@ public class ContainerSyncImpl implements ContainerSync {
         String clusterName = null;
         String namespace = null;
         String region = null;
+        String subscriptionId = null;
+        String resourceGroup = null;
         ContainerInfrastructureMapping containerInfraMapping = (ContainerInfrastructureMapping) infrastructureMapping;
         if (containerInfraMapping instanceof DirectKubernetesInfrastructureMapping) {
           DirectKubernetesInfrastructureMapping directInfraMapping =
@@ -77,6 +80,10 @@ public class ContainerSyncImpl implements ContainerSync {
           clusterName = containerInfraMapping.getClusterName();
           if (containerInfraMapping instanceof GcpKubernetesInfrastructureMapping) {
             namespace = ((GcpKubernetesInfrastructureMapping) containerInfraMapping).getNamespace();
+          } else if (containerInfraMapping instanceof AzureKubernetesInfrastructureMapping) {
+            namespace = ((AzureKubernetesInfrastructureMapping) containerInfraMapping).getNamespace();
+            subscriptionId = ((AzureKubernetesInfrastructureMapping) containerInfraMapping).getSubscriptionId();
+            resourceGroup = ((AzureKubernetesInfrastructureMapping) containerInfraMapping).getResourceGroup();
           } else if (containerInfraMapping instanceof EcsInfrastructureMapping) {
             region = ((EcsInfrastructureMapping) containerInfraMapping).getRegion();
           }
@@ -99,6 +106,8 @@ public class ContainerSyncImpl implements ContainerSync {
                 .clusterName(clusterName)
                 .namespace(namespace)
                 .region(region)
+                .subscriptionId(subscriptionId)
+                .resourceGroup(resourceGroup)
                 .build();
 
         result.addAll(delegateProxyFactory.get(ContainerService.class, syncTaskContext)
@@ -121,6 +130,8 @@ public class ContainerSyncImpl implements ContainerSync {
         String clusterName = null;
         String namespace = null;
         String region = null;
+        String resourceGroup = null;
+        String subscriptionId = null;
         if (containerInfraMapping instanceof DirectKubernetesInfrastructureMapping) {
           DirectKubernetesInfrastructureMapping directInfraMapping =
               (DirectKubernetesInfrastructureMapping) containerInfraMapping;
@@ -131,6 +142,10 @@ public class ContainerSyncImpl implements ContainerSync {
           clusterName = containerInfraMapping.getClusterName();
           if (containerInfraMapping instanceof GcpKubernetesInfrastructureMapping) {
             namespace = ((GcpKubernetesInfrastructureMapping) containerInfraMapping).getNamespace();
+          } else if (containerInfraMapping instanceof AzureKubernetesInfrastructureMapping) {
+            subscriptionId = ((AzureKubernetesInfrastructureMapping) containerInfraMapping).getSubscriptionId();
+            resourceGroup = ((AzureKubernetesInfrastructureMapping) containerInfraMapping).getResourceGroup();
+            namespace = ((AzureKubernetesInfrastructureMapping) containerInfraMapping).getNamespace();
           } else if (containerInfraMapping instanceof EcsInfrastructureMapping) {
             region = ((EcsInfrastructureMapping) containerInfraMapping).getRegion();
           }
@@ -151,6 +166,8 @@ public class ContainerSyncImpl implements ContainerSync {
                                                             .clusterName(clusterName)
                                                             .namespace(namespace)
                                                             .region(region)
+                                                            .subscriptionId(subscriptionId)
+                                                            .resourceGroup(resourceGroup)
                                                             .build();
 
         result.addAll(delegateProxyFactory.get(ContainerService.class, syncTaskContext)

@@ -1,5 +1,7 @@
 package software.wings.service.intfc;
 
+import software.wings.beans.AzureKubernetesCluster;
+
 import java.util.List;
 import java.util.Map;
 
@@ -12,4 +14,6 @@ public interface AzureResourceService {
 
   List<String> listRepositoryTags(
       String cloudProviderId, String subscriptionId, String registryName, String repositoryName);
+
+  List<AzureKubernetesCluster> listKubernetesClusters(String cloudProviderId, String subscriptionId);
 }

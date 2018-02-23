@@ -16,6 +16,7 @@ import static software.wings.api.DeploymentType.KUBERNETES;
 import static software.wings.api.DeploymentType.SSH;
 import static software.wings.beans.DelegateTask.SyncTaskContext.Builder.aContext;
 import static software.wings.beans.ErrorCode.INVALID_REQUEST;
+import static software.wings.beans.FeatureName.AZURE_SUPPORT;
 import static software.wings.beans.FeatureName.ECS_CREATE_CLUSTER;
 import static software.wings.beans.FeatureName.KUBERNETES_CREATE_CLUSTER;
 import static software.wings.beans.SettingAttribute.Builder.aSettingAttribute;
@@ -48,6 +49,7 @@ import software.wings.beans.Application;
 import software.wings.beans.AwsAmiInfrastructureMapping;
 import software.wings.beans.AwsInfrastructureMapping;
 import software.wings.beans.AwsLambdaInfraStructureMapping;
+import software.wings.beans.AzureKubernetesInfrastructureMapping;
 import software.wings.beans.CanaryOrchestrationWorkflow;
 import software.wings.beans.CodeDeployInfrastructureMapping;
 import software.wings.beans.ContainerInfrastructureMapping;
@@ -230,6 +232,12 @@ public class InfrastructureMappingServiceImpl implements InfrastructureMappingSe
       validateGcpInfraMapping(gcpKubernetesInfrastructureMapping, computeProviderSetting);
     }
 
+    if (infraMapping instanceof AzureKubernetesInfrastructureMapping) {
+      AzureKubernetesInfrastructureMapping azureKubernetesInfrastructureMapping =
+          (AzureKubernetesInfrastructureMapping) infraMapping;
+      validateAzureInfraMapping(azureKubernetesInfrastructureMapping);
+    }
+
     if (infraMapping instanceof DirectKubernetesInfrastructureMapping) {
       DirectKubernetesInfrastructureMapping directKubernetesInfrastructureMapping =
           (DirectKubernetesInfrastructureMapping) infraMapping;
@@ -350,6 +358,35 @@ public class InfrastructureMappingServiceImpl implements InfrastructureMappingSe
     }
   }
 
+  private void validateAzureInfraMapping(AzureKubernetesInfrastructureMapping infraMapping) {
+    SettingAttribute settingAttribute = settingsService.get(infraMapping.getComputeProviderSettingId());
+    Validator.notNullCheck("SettingAttribute", settingAttribute);
+    String clusterName = infraMapping.getClusterName();
+    String subscriptionId = infraMapping.getSubscriptionId();
+    String resourceGroup = infraMapping.getResourceGroup();
+    String namespace = infraMapping.getNamespace();
+
+    List<EncryptedDataDetail> encryptionDetails =
+        secretManager.getEncryptionDetails((Encryptable) settingAttribute.getValue(), null, null);
+
+    Application app = appService.get(infraMapping.getAppId());
+    SyncTaskContext syncTaskContext = aContext().withAccountId(app.getAccountId()).withAppId(app.getUuid()).build();
+    ContainerServiceParams containerServiceParams = ContainerServiceParams.builder()
+                                                        .settingAttribute(settingAttribute)
+                                                        .encryptionDetails(encryptionDetails)
+                                                        .clusterName(clusterName)
+                                                        .subscriptionId(subscriptionId)
+                                                        .resourceGroup(resourceGroup)
+                                                        .namespace(namespace)
+                                                        .build();
+    try {
+      delegateProxyFactory.get(ContainerService.class, syncTaskContext).validate(containerServiceParams);
+    } catch (Exception e) {
+      logger.warn(Misc.getMessage(e), e);
+      throw new WingsException(INVALID_REQUEST, ReportTarget.USER).addParam("message", Misc.getMessage(e));
+    }
+  }
+
   private void validateDirectKubernetesInfraMapping(DirectKubernetesInfrastructureMapping infraMapping) {
     SettingAttribute settingAttribute = aSettingAttribute().withValue(infraMapping.createKubernetesConfig()).build();
     String namespace = infraMapping.getNamespace();
@@ -456,6 +493,17 @@ public class InfrastructureMappingServiceImpl implements InfrastructureMappingSe
       keyValuePairs.put("namespace",
           isNotBlank(gcpKubernetesInfrastructureMapping.getNamespace())
               ? gcpKubernetesInfrastructureMapping.getNamespace()
+              : "default");
+    } else if (infrastructureMapping instanceof AzureKubernetesInfrastructureMapping) {
+      AzureKubernetesInfrastructureMapping azureKubernetesInfrastructureMapping =
+          (AzureKubernetesInfrastructureMapping) infrastructureMapping;
+      validateAzureInfraMapping(azureKubernetesInfrastructureMapping);
+      keyValuePairs.put("clusterName", azureKubernetesInfrastructureMapping.getClusterName());
+      keyValuePairs.put("subscriptionId", azureKubernetesInfrastructureMapping.getSubscriptionId());
+      keyValuePairs.put("resourceGroup", azureKubernetesInfrastructureMapping.getResourceGroup());
+      keyValuePairs.put("namespace",
+          isNotBlank(azureKubernetesInfrastructureMapping.getNamespace())
+              ? azureKubernetesInfrastructureMapping.getNamespace()
               : "default");
     } else if (infrastructureMapping instanceof AwsInfrastructureMapping) {
       AwsInfrastructureMapping awsInfrastructureMapping = (AwsInfrastructureMapping) infrastructureMapping;
@@ -1117,6 +1165,8 @@ public class InfrastructureMappingServiceImpl implements InfrastructureMappingSe
     String namespace = null;
     String containerServiceName = null;
     String region = null;
+    String subscriptionId = null;
+    String resourceGroup = null;
     ContainerInfrastructureMapping containerInfraMapping = (ContainerInfrastructureMapping) infrastructureMapping;
     if (containerInfraMapping instanceof DirectKubernetesInfrastructureMapping) {
       DirectKubernetesInfrastructureMapping directInfraMapping =
@@ -1138,6 +1188,16 @@ public class InfrastructureMappingServiceImpl implements InfrastructureMappingSe
                     ? KubernetesConvention.normalize(evaluator.substitute(serviceNameExpression, context))
                     : KubernetesConvention.getControllerNamePrefix(app.getName(), service.getName(), env.getName()))
             + KubernetesConvention.DOT + "0";
+      } else if (containerInfraMapping instanceof AzureKubernetesInfrastructureMapping) {
+        namespace = ((AzureKubernetesInfrastructureMapping) containerInfraMapping).getNamespace();
+        subscriptionId = ((AzureKubernetesInfrastructureMapping) containerInfraMapping).getSubscriptionId();
+        resourceGroup = ((AzureKubernetesInfrastructureMapping) containerInfraMapping).getResourceGroup();
+        containerServiceName =
+            (isNotBlank(serviceNameExpression)
+                    ? KubernetesConvention.normalize(evaluator.substitute(serviceNameExpression, context))
+                    : KubernetesConvention.getControllerNamePrefix(app.getName(), service.getName(), env.getName()))
+            + KubernetesConvention.DOT + "0";
+
       } else if (containerInfraMapping instanceof EcsInfrastructureMapping) {
         region = ((EcsInfrastructureMapping) containerInfraMapping).getRegion();
         containerServiceName = (isNotBlank(serviceNameExpression)
@@ -1158,6 +1218,8 @@ public class InfrastructureMappingServiceImpl implements InfrastructureMappingSe
                                                         .encryptionDetails(encryptionDetails)
                                                         .clusterName(clusterName)
                                                         .namespace(namespace)
+                                                        .subscriptionId(subscriptionId)
+                                                        .resourceGroup(resourceGroup)
                                                         .region(region)
                                                         .build();
     try {
@@ -1219,7 +1281,13 @@ public class InfrastructureMappingServiceImpl implements InfrastructureMappingSe
 
     if (artifactType == ArtifactType.DOCKER) {
       infraTypes.put(ECS, asList(SettingVariableTypes.AWS));
-      infraTypes.put(KUBERNETES, asList(SettingVariableTypes.GCP, SettingVariableTypes.DIRECT));
+      String accountId = appService.getAccountIdByAppId(appId);
+      if (featureFlagService.isEnabled(AZURE_SUPPORT, accountId)) {
+        infraTypes.put(
+            KUBERNETES, asList(SettingVariableTypes.GCP, SettingVariableTypes.DIRECT, SettingVariableTypes.AZURE));
+      } else {
+        infraTypes.put(KUBERNETES, asList(SettingVariableTypes.GCP, SettingVariableTypes.DIRECT));
+      }
     } else if (artifactType == ArtifactType.AWS_CODEDEPLOY) {
       infraTypes.put(AWS_CODEDEPLOY, asList(SettingVariableTypes.AWS));
     } else if (artifactType == ArtifactType.AWS_LAMBDA) {

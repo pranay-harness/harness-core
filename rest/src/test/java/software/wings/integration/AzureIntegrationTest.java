@@ -4,6 +4,7 @@ import org.junit.Ignore;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import software.wings.beans.AzureConfig;
+import software.wings.beans.AzureKubernetesCluster;
 import software.wings.helpers.ext.azure.AzureHelperService;
 import software.wings.rules.Integration;
 
@@ -30,6 +31,8 @@ public class AzureIntegrationTest {
     getSubscriptions();
     getContainerRegistries();
     getRepositoryTags();
+    getKubernetesClusters();
+    getKubernetesClusterConfig();
     logger.info("AzureIntegrationTest: Done.");
   }
 
@@ -74,6 +77,21 @@ public class AzureIntegrationTest {
         }
       }
     }
+  }
+
+  private static void getKubernetesClusters() {
+    AzureHelperService azure = new AzureHelperService();
+    AzureConfig config = getAzureConfig();
+    List<AzureKubernetesCluster> clusters = azure.listKubernetesClusters(config, subscriptionId);
+    logger.info("Clusters:");
+    clusters.stream().forEach(
+        cluster -> logger.info("Cluster Detail: " + cluster.getResourceGroup() + "/" + cluster.getName()));
+  }
+
+  private static void getKubernetesClusterConfig() {
+    AzureHelperService azure = new AzureHelperService();
+    AzureConfig config = getAzureConfig();
+    azure.getKubernetesClusterConfig(config, subscriptionId, "puneet-aks", "puneet-aks", "default");
   }
 
   private static AzureConfig getAzureConfig() {

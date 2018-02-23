@@ -7,6 +7,7 @@ import com.google.inject.Singleton;
 
 import software.wings.app.MainConfiguration;
 import software.wings.beans.AzureConfig;
+import software.wings.beans.AzureKubernetesCluster;
 import software.wings.beans.SettingAttribute;
 import software.wings.exception.WingsException;
 import software.wings.helpers.ext.azure.AzureHelperService;
@@ -50,6 +51,12 @@ public class AzureResourceServiceImpl implements AzureResourceService {
     SettingAttribute cloudProviderSetting = settingService.get(cloudProviderId);
     AzureConfig azureConfig = validateAndGetAzureConfig(cloudProviderSetting);
     return azureHelperService.listRepositoryTags(azureConfig, subscriptionId, registryName, repositoryName);
+  }
+
+  public List<AzureKubernetesCluster> listKubernetesClusters(String cloudProviderId, String subscriptionId) {
+    SettingAttribute cloudProviderSetting = settingService.get(cloudProviderId);
+    AzureConfig azureConfig = validateAndGetAzureConfig(cloudProviderSetting);
+    return azureHelperService.listKubernetesClusters(azureConfig, subscriptionId);
   }
 
   private AzureConfig validateAndGetAzureConfig(SettingAttribute cloudProviderSetting) {
