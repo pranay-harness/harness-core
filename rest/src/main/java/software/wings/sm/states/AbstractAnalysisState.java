@@ -190,6 +190,11 @@ public abstract class AbstractAnalysisState extends State {
     do {
       workflowExecutions = workflowExecutionService.listExecutions(pageRequest, false);
 
+      if (workflowExecutions == null) {
+        getLogger().info("Did not find a successful workflow with service {}. It will be a baseline run", serviceId);
+        return Collections.emptySet();
+      }
+
       for (WorkflowExecution workflowExecution : workflowExecutions) {
         ElementExecutionSummary executionSummary = null;
         for (ElementExecutionSummary summary : workflowExecution.getServiceExecutionSummaries()) {
