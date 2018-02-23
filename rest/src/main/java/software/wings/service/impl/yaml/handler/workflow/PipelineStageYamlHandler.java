@@ -9,14 +9,18 @@ import com.google.inject.Inject;
 import com.google.inject.Singleton;
 
 import software.wings.beans.ErrorCode;
+import software.wings.beans.NameValuePair;
 import software.wings.beans.PipelineStage;
 import software.wings.beans.PipelineStage.PipelineStageElement;
 import software.wings.beans.Workflow;
 import software.wings.beans.yaml.Change;
 import software.wings.beans.yaml.ChangeContext;
+import software.wings.beans.yaml.YamlType;
 import software.wings.exception.HarnessException;
 import software.wings.exception.WingsException;
 import software.wings.service.impl.yaml.handler.BaseYamlHandler;
+import software.wings.service.impl.yaml.handler.NameValuePairYamlHandler;
+import software.wings.service.impl.yaml.handler.YamlHandlerFactory;
 import software.wings.service.impl.yaml.service.YamlHelper;
 import software.wings.service.intfc.WorkflowService;
 import software.wings.sm.StateType;
@@ -24,6 +28,7 @@ import software.wings.utils.Validator;
 
 import java.util.List;
 import java.util.Map;
+import java.util.stream.Collectors;
 
 /**
  * @author rktummala on 11/2/17
@@ -32,6 +37,7 @@ import java.util.Map;
 public class PipelineStageYamlHandler extends BaseYamlHandler<Yaml, PipelineStage> {
   @Inject YamlHelper yamlHelper;
   @Inject WorkflowService workflowService;
+  @Inject YamlHandlerFactory yamlHandlerFactory;
 
   private PipelineStage toBean(ChangeContext<Yaml> context) throws HarnessException {
     Yaml yaml = context.getYaml();
@@ -81,6 +87,7 @@ public class PipelineStageYamlHandler extends BaseYamlHandler<Yaml, PipelineStag
     Validator.notNullCheck("Pipeline stage element is null", stageElement);
 
     String workflowName = null;
+    List<NameValuePair.Yaml> nameValuePairYamlList = null;
     if (!StateType.APPROVAL.name().equals(stageElement.getType())) {
       Map<String, Object> properties = stageElement.getProperties();
       Validator.notNullCheck("Pipeline stage element is null", properties);
@@ -92,6 +99,21 @@ public class PipelineStageYamlHandler extends BaseYamlHandler<Yaml, PipelineStag
       Validator.notNullCheck("Workflow id is null in stage properties", workflowId);
 
       workflowName = workflow.getName();
+
+      Map<String, String> workflowVariables = stageElement.getWorkflowVariables();
+      Validator.notNullCheck("Pipeline stage element is null", workflowVariables);
+
+      // properties
+      NameValuePairYamlHandler nameValuePairYamlHandler = yamlHandlerFactory.getYamlHandler(YamlType.NAME_VALUE_PAIR);
+
+      nameValuePairYamlList = workflowVariables.entrySet()
+                                  .stream()
+                                  .map(entry -> {
+                                    NameValuePair nameValuePair =
+                                        NameValuePair.builder().name(entry.getKey()).value(entry.getValue()).build();
+                                    return nameValuePairYamlHandler.toYaml(nameValuePair, appId);
+                                  })
+                                  .collect(Collectors.toList());
     }
 
     return Yaml.builder()
@@ -99,6 +121,7 @@ public class PipelineStageYamlHandler extends BaseYamlHandler<Yaml, PipelineStag
         .parallel(bean.isParallel())
         .type(stageElement.getType())
         .workflowName(workflowName)
+        .workflowVariables(nameValuePairYamlList)
         .build();
   }
 

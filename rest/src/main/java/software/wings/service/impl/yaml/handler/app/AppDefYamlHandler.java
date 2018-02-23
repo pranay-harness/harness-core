@@ -6,7 +6,6 @@ import com.google.inject.Singleton;
 
 import software.wings.beans.ErrorCode;
 import software.wings.beans.NameValuePair;
-import software.wings.beans.ObjectType;
 import software.wings.beans.TemplateExpression;
 import software.wings.beans.TemplateExpression.Yaml;
 import software.wings.beans.yaml.ChangeContext;
@@ -14,6 +13,7 @@ import software.wings.beans.yaml.YamlType;
 import software.wings.exception.HarnessException;
 import software.wings.exception.WingsException;
 import software.wings.service.impl.yaml.handler.BaseYamlHandler;
+import software.wings.service.impl.yaml.handler.NameValuePairYamlHandler;
 import software.wings.service.impl.yaml.handler.YamlHandlerFactory;
 import software.wings.utils.Util;
 
@@ -50,14 +50,9 @@ public class AppDefYamlHandler extends BaseYamlHandler<Yaml, TemplateExpression>
 
   @Override
   public Yaml toYaml(TemplateExpression bean, String appId) {
-    List<NameValuePair> nameValuePairs = Util.toYamlList(bean.getMetadata());
-    // properties
-    BaseYamlHandler nameValuePairYamlHandler =
-        yamlHandlerFactory.getYamlHandler(YamlType.NAME_VALUE_PAIR, ObjectType.NAME_VALUE_PAIR);
+    NameValuePairYamlHandler nameValuePairYamlHandler = yamlHandlerFactory.getYamlHandler(YamlType.NAME_VALUE_PAIR);
     List<NameValuePair.Yaml> nameValuePairYamlList =
-        nameValuePairs.stream()
-            .map(nameValuePair -> (NameValuePair.Yaml) nameValuePairYamlHandler.toYaml(nameValuePair, appId))
-            .collect(Collectors.toList());
+        Util.toNameValuePairYamlList(bean.getMetadata(), appId, nameValuePairYamlHandler);
 
     return Yaml.Builder.aYaml()
         .withExpression(bean.getExpression())

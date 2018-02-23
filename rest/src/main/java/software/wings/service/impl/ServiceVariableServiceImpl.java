@@ -111,7 +111,7 @@ public class ServiceVariableServiceImpl implements ServiceVariableService {
   @Override
   public ServiceVariable get(String appId, String settingId, boolean maskEncryptedFields) {
     ServiceVariable serviceVariable = wingsPersistence.get(ServiceVariable.class, appId, settingId);
-    Validator.notNullCheck("ServiceVariable", serviceVariable);
+    Validator.notNullCheck("ServiceVariable is null for id: " + settingId, serviceVariable);
     if (maskEncryptedFields) {
       processEncryptedServiceVariable(maskEncryptedFields, serviceVariable);
     }
