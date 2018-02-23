@@ -11,6 +11,7 @@ import software.wings.api.ContainerServiceElement;
 import software.wings.api.ContainerServiceElement.ContainerServiceElementBuilder;
 import software.wings.api.DeploymentType;
 import software.wings.beans.Application;
+import software.wings.beans.AzureKubernetesInfrastructureMapping;
 import software.wings.beans.ContainerInfrastructureMapping;
 import software.wings.beans.DirectKubernetesInfrastructureMapping;
 import software.wings.beans.Environment;
@@ -45,6 +46,14 @@ public class KubernetesSetupRollback extends ContainerServiceSetup {
     ContainerRollbackRequestElement rollbackElement =
         context.getContextElement(ContextElementType.PARAM, Constants.CONTAINER_ROLLBACK_REQUEST_PARAM);
 
+    String subscriptionId = null;
+    String resourceGroup = null;
+
+    if (infrastructureMapping instanceof AzureKubernetesInfrastructureMapping) {
+      subscriptionId = ((AzureKubernetesInfrastructureMapping) infrastructureMapping).getSubscriptionId();
+      resourceGroup = ((AzureKubernetesInfrastructureMapping) infrastructureMapping).getResourceGroup();
+    }
+
     int serviceSteadyStateTimeout =
         getServiceSteadyStateTimeout() > 0 ? (int) getServiceSteadyStateTimeout() : DEFAULT_STEADY_STATE_TIMEOUT;
     return aKubernetesSetupParams()
@@ -59,6 +68,8 @@ public class KubernetesSetupRollback extends ContainerServiceSetup {
         .withActiveAutoscalers(rollbackElement.getPreviousActiveAutoscalers())
         .withServiceSteadyStateTimeout(serviceSteadyStateTimeout)
         .withRollback(true)
+        .withSubscriptionId(subscriptionId)
+        .withResourceGroup(resourceGroup)
         .build();
   }
 
@@ -86,6 +97,7 @@ public class KubernetesSetupRollback extends ContainerServiceSetup {
   @Override
   protected boolean isValidInfraMapping(InfrastructureMapping infrastructureMapping) {
     return infrastructureMapping instanceof GcpKubernetesInfrastructureMapping
+        || infrastructureMapping instanceof AzureKubernetesInfrastructureMapping
         || infrastructureMapping instanceof DirectKubernetesInfrastructureMapping;
   }
 

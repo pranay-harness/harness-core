@@ -25,6 +25,7 @@ public class InstanceHandlerFactory {
       case AWS_AWS_CODEDEPLOY:
         return awsCodeDeployInstanceHandler;
       case GCP_KUBERNETES:
+      case AZURE_KUBERNETES:
       case DIRECT_KUBERNETES:
       case AWS_ECS:
         return containerInstanceHandler;

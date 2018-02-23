@@ -70,6 +70,8 @@ public class KubernetesDeploy extends ContainerServiceDeploy {
         .withServiceSteadyStateTimeout(contextData.containerElement.getServiceSteadyStateTimeout())
         .withDeployingToHundredPercent(contextData.deployingToHundredPercent)
         .withUseAutoscaler(contextData.containerElement.isUseAutoscaler())
+        .withSubscriptionId(contextData.containerServiceParams.getSubscriptionId())
+        .withResourceGroup(contextData.containerServiceParams.getResourceGroup())
         .build();
   }
 

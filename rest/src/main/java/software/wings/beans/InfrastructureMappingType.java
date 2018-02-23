@@ -52,7 +52,11 @@ public enum InfrastructureMappingType implements InfrastructureMappingDescriptor
       6), /**
            * Aws aws lambda infrastructure mapping type.
            */
-  AWS_AWS_LAMBDA(AwsLambdaInfraStructureMapping.class, "AWS_AWS_LAMBDA", StencilCategory.OTHERS, 7);
+  AWS_AWS_LAMBDA(AwsLambdaInfraStructureMapping.class, "AWS_AWS_LAMBDA", StencilCategory.OTHERS, 7),
+  /**
+   * Azure kubernetes [AKS] infra mapping type.
+   */
+  AZURE_KUBERNETES(AzureKubernetesInfrastructureMapping.class, "AZURE_KUBERNETES", StencilCategory.OTHERS, 8);
 
   private static final String stencilsPath = "/templates/inframapping/";
   private static final String uiSchemaSuffix = "-InfraMappingUISchema.json";

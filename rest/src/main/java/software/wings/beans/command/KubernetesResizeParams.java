@@ -16,6 +16,8 @@ public class KubernetesResizeParams extends ContainerResizeParams {
   private boolean deployingToHundredPercent;
   private boolean useAutoscaler;
   private boolean rollbackAutoscaler;
+  private String subscriptionId;
+  private String resourceGroup;
 
   public static final class KubernetesResizeParamsBuilder {
     private String clusterName;
@@ -25,6 +27,8 @@ public class KubernetesResizeParams extends ContainerResizeParams {
     private boolean deployingToHundredPercent;
     private boolean useAutoscaler;
     private boolean rollbackAutoscaler;
+    private String subscriptionId;
+    private String resourceGroup;
 
     private KubernetesResizeParamsBuilder() {}
 
@@ -67,6 +71,16 @@ public class KubernetesResizeParams extends ContainerResizeParams {
       return this;
     }
 
+    public KubernetesResizeParamsBuilder withSubscriptionId(String subscriptionId) {
+      this.subscriptionId = subscriptionId;
+      return this;
+    }
+
+    public KubernetesResizeParamsBuilder withResourceGroup(String resourceGroup) {
+      this.resourceGroup = resourceGroup;
+      return this;
+    }
+
     public KubernetesResizeParamsBuilder but() {
       return aKubernetesResizeParams()
           .withClusterName(clusterName)
@@ -75,7 +89,9 @@ public class KubernetesResizeParams extends ContainerResizeParams {
           .withNamespace(namespace)
           .withDeployingToHundredPercent(deployingToHundredPercent)
           .withUseAutoscaler(useAutoscaler)
-          .withRollbackAutoscaler(rollbackAutoscaler);
+          .withRollbackAutoscaler(rollbackAutoscaler)
+          .withSubscriptionId(subscriptionId)
+          .withResourceGroup(resourceGroup);
     }
 
     public KubernetesResizeParams build() {
@@ -87,6 +103,8 @@ public class KubernetesResizeParams extends ContainerResizeParams {
       kubernetesResizeParams.setDeployingToHundredPercent(deployingToHundredPercent);
       kubernetesResizeParams.setUseAutoscaler(useAutoscaler);
       kubernetesResizeParams.setRollbackAutoscaler(rollbackAutoscaler);
+      kubernetesResizeParams.setSubscriptionId(subscriptionId);
+      kubernetesResizeParams.setResourceGroup(resourceGroup);
       return kubernetesResizeParams;
     }
   }

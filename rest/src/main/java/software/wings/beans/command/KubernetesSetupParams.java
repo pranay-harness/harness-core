@@ -33,6 +33,8 @@ public class KubernetesSetupParams extends ContainerSetupParams {
   private int minAutoscaleInstances;
   private int maxAutoscaleInstances;
   private int targetCpuUtilizationPercentage;
+  private String subscriptionId;
+  private String resourceGroup;
 
   public static final class KubernetesSetupParamsBuilder {
     private String serviceName;
@@ -61,6 +63,8 @@ public class KubernetesSetupParams extends ContainerSetupParams {
     private int minAutoscaleInstances;
     private int maxAutoscaleInstances;
     private int targetCpuUtilizationPercentage;
+    private String subscriptionId;
+    private String resourceGroup;
 
     private KubernetesSetupParamsBuilder() {}
 
@@ -198,6 +202,16 @@ public class KubernetesSetupParams extends ContainerSetupParams {
       return this;
     }
 
+    public KubernetesSetupParamsBuilder withSubscriptionId(String subscriptionId) {
+      this.subscriptionId = subscriptionId;
+      return this;
+    }
+
+    public KubernetesSetupParamsBuilder withResourceGroup(String resourceGroup) {
+      this.resourceGroup = resourceGroup;
+      return this;
+    }
+
     public KubernetesSetupParamsBuilder but() {
       return aKubernetesSetupParams()
           .withServiceName(serviceName)
@@ -225,7 +239,9 @@ public class KubernetesSetupParams extends ContainerSetupParams {
           .withUseAutoscaler(useAutoscaler)
           .withMinAutoscaleInstances(minAutoscaleInstances)
           .withMaxAutoscaleInstances(maxAutoscaleInstances)
-          .withTargetCpuUtilizationPercentage(targetCpuUtilizationPercentage);
+          .withTargetCpuUtilizationPercentage(targetCpuUtilizationPercentage)
+          .withSubscriptionId(subscriptionId)
+          .withResourceGroup(resourceGroup);
     }
 
     public KubernetesSetupParams build() {
@@ -256,6 +272,8 @@ public class KubernetesSetupParams extends ContainerSetupParams {
       kubernetesSetupParams.setMinAutoscaleInstances(minAutoscaleInstances);
       kubernetesSetupParams.setMaxAutoscaleInstances(maxAutoscaleInstances);
       kubernetesSetupParams.setTargetCpuUtilizationPercentage(targetCpuUtilizationPercentage);
+      kubernetesSetupParams.setSubscriptionId(subscriptionId);
+      kubernetesSetupParams.setResourceGroup(resourceGroup);
       return kubernetesSetupParams;
     }
   }

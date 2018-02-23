@@ -36,6 +36,7 @@ import software.wings.api.ServiceElement;
 import software.wings.beans.Activity;
 import software.wings.beans.Activity.Type;
 import software.wings.beans.Application;
+import software.wings.beans.AzureKubernetesInfrastructureMapping;
 import software.wings.beans.DirectKubernetesInfrastructureMapping;
 import software.wings.beans.EcsInfrastructureMapping;
 import software.wings.beans.Environment;
@@ -519,13 +520,26 @@ public abstract class ContainerServiceDeploy extends State {
                              .findFirst()
                              .orElse(ContainerServiceElement.builder().build());
       rollbackElement = context.getContextElement(ContextElementType.PARAM, Constants.CONTAINER_ROLLBACK_REQUEST_PARAM);
+
+      String subscriptionId = null;
+      String resourceGroup = null;
+      String namespace = containerElement.getNamespace();
+
+      if (infrastructureMapping instanceof AzureKubernetesInfrastructureMapping) {
+        subscriptionId = ((AzureKubernetesInfrastructureMapping) infrastructureMapping).getSubscriptionId();
+        resourceGroup = ((AzureKubernetesInfrastructureMapping) infrastructureMapping).getResourceGroup();
+        namespace = ((AzureKubernetesInfrastructureMapping) infrastructureMapping).getNamespace();
+      }
+
       containerServiceParams = ContainerServiceParams.builder()
                                    .settingAttribute(settingAttribute)
                                    .containerServiceName(containerElement.getName())
                                    .encryptionDetails(encryptedDataDetails)
                                    .clusterName(containerElement.getClusterName())
-                                   .namespace(containerElement.getNamespace())
                                    .region(region)
+                                   .namespace(namespace)
+                                   .subscriptionId(subscriptionId)
+                                   .resourceGroup(resourceGroup)
                                    .build();
       deployingToHundredPercent = containerServiceDeploy.getInstanceUnitType() == PERCENTAGE
           ? containerServiceDeploy.getInstanceCount() >= 100

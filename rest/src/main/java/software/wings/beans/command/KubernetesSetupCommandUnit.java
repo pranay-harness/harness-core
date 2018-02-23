@@ -56,6 +56,7 @@ import org.mongodb.morphia.annotations.Transient;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import software.wings.api.DeploymentType;
+import software.wings.beans.AzureConfig;
 import software.wings.beans.ErrorCode;
 import software.wings.beans.KubernetesConfig;
 import software.wings.beans.Log.LogLevel;
@@ -68,6 +69,7 @@ import software.wings.cloudprovider.ContainerInfo;
 import software.wings.cloudprovider.gke.GkeClusterService;
 import software.wings.cloudprovider.gke.KubernetesContainerService;
 import software.wings.exception.WingsException;
+import software.wings.helpers.ext.azure.AzureHelperService;
 import software.wings.security.encryption.EncryptedDataDetail;
 import software.wings.utils.KubernetesConvention;
 import software.wings.utils.Misc;
@@ -97,6 +99,7 @@ public class KubernetesSetupCommandUnit extends ContainerSetupCommandUnit {
   @Inject @Transient private transient GkeClusterService gkeClusterService;
   @Inject @Transient private transient KubernetesContainerService kubernetesContainerService;
   @Inject @Transient private transient TimeLimiter timeLimiter;
+  @Inject @Transient private transient AzureHelperService azureHelperService;
 
   public KubernetesSetupCommandUnit() {
     super(CommandUnitType.KUBERNETES_SETUP);
@@ -114,6 +117,12 @@ public class KubernetesSetupCommandUnit extends ContainerSetupCommandUnit {
     if (cloudProviderSetting.getValue() instanceof KubernetesConfig) {
       kubernetesConfig = (KubernetesConfig) cloudProviderSetting.getValue();
       encryptedDataDetails = edd;
+    } else if (cloudProviderSetting.getValue() instanceof AzureConfig) {
+      AzureConfig azureConfig = (AzureConfig) cloudProviderSetting.getValue();
+      kubernetesConfig = azureHelperService.getKubernetesClusterConfig(azureConfig, setupParams.getSubscriptionId(),
+          setupParams.getResourceGroup(), setupParams.getClusterName(), setupParams.getNamespace());
+      kubernetesConfig.setDecrypted(true);
+      encryptedDataDetails = emptyList();
     } else {
       kubernetesConfig = gkeClusterService.getCluster(
           cloudProviderSetting, edd, setupParams.getClusterName(), setupParams.getNamespace());

@@ -2,27 +2,40 @@ package software.wings.helpers.ext.azure;
 
 import static java.lang.String.format;
 import static org.apache.commons.codec.binary.Base64.encodeBase64String;
+import static org.apache.commons.lang3.StringUtils.isNotBlank;
+import static software.wings.beans.AzureKubernetesCluster.Builder.anAzureKubernetesCluster;
 import static software.wings.utils.HttpUtil.getOkHttpClientBuilder;
 
 import com.google.inject.Singleton;
 
+import com.fasterxml.jackson.databind.ObjectMapper;
+import com.fasterxml.jackson.dataformat.yaml.YAMLFactory;
 import com.microsoft.aad.adal4j.AuthenticationException;
 import com.microsoft.azure.AzureEnvironment;
 import com.microsoft.azure.credentials.ApplicationTokenCredentials;
 import com.microsoft.azure.management.Azure;
 import com.microsoft.azure.management.containerregistry.Registry;
+import com.microsoft.azure.management.containerservice.KubernetesCluster;
 import com.microsoft.rest.LogLevel;
+import io.fabric8.kubernetes.api.model.AuthInfo;
+import io.fabric8.kubernetes.api.model.Cluster;
+import io.fabric8.kubernetes.api.model.Context;
+import io.fabric8.kubernetes.client.internal.KubeConfigUtils;
 import okhttp3.OkHttpClient;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import retrofit2.Response;
 import retrofit2.Retrofit;
 import retrofit2.converter.jackson.JacksonConverterFactory;
 import software.wings.beans.AzureConfig;
+import software.wings.beans.AzureKubernetesCluster;
 import software.wings.beans.ErrorCode;
+import software.wings.beans.KubernetesConfig;
 import software.wings.exception.WingsException;
 import software.wings.utils.HttpUtil;
 
 import java.util.ArrayList;
+import java.util.Base64;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
@@ -142,6 +155,86 @@ public class AzureHelperService {
     }
   }
 
+  public List<AzureKubernetesCluster> listKubernetesClusters(AzureConfig azureConfig, String subscriptionId) {
+    List<AzureKubernetesCluster> clusters = new ArrayList<>();
+
+    getAzureClient(azureConfig, subscriptionId)
+        .kubernetesClusters()
+        .list()
+        .forEach(cluster
+            -> clusters.add(anAzureKubernetesCluster()
+                                .withName(cluster.name())
+                                .withResourceGroup(cluster.resourceGroupName())
+                                .build()));
+    return clusters;
+  }
+
+  public boolean isValidKubernetesCluster(
+      AzureConfig azureConfig, String subscriptionId, String resourceGroup, String clusterName) {
+    KubernetesCluster cluster =
+        getAzureClient(azureConfig, subscriptionId).kubernetesClusters().getByResourceGroup(resourceGroup, clusterName);
+    return cluster != null;
+  }
+
+  public KubernetesConfig getKubernetesClusterConfig(
+      AzureConfig azureConfig, String subscriptionId, String resourceGroup, String clusterName, String namespace) {
+    try {
+      Response<AksGetCredentialsResponse> response =
+          getAzureManagementRestClient()
+              .getAdminCredentials(getAzureBearerAuthToken(azureConfig), subscriptionId, resourceGroup, clusterName)
+              .execute();
+
+      if (response.isSuccessful()) {
+        return parseConfig(
+            response.body().getProperties().getKubeConfig(), isNotBlank(namespace) ? namespace : "default");
+      } else {
+        logger.error(
+            "Error occurred while getting KubernetesClusterConfig from subscriptionId/resourceGroup/clusterName :"
+            + subscriptionId + "/" + resourceGroup + "/" + clusterName + response.raw());
+        throw new WingsException(ErrorCode.DEFAULT_ERROR_CODE).addParam("message", response.message());
+      }
+    } catch (Exception e) {
+      HandleAzureAuthenticationException(e);
+    }
+    return null;
+  }
+
+  private KubernetesConfig parseConfig(String configContent, String namespace) {
+    try {
+      byte[] configBytes = Base64.getDecoder().decode(configContent);
+      ObjectMapper mapper = new ObjectMapper(new YAMLFactory());
+      io.fabric8.kubernetes.api.model.Config kubeConfig =
+          mapper.readValue(new String(configBytes), io.fabric8.kubernetes.api.model.Config.class);
+
+      Context currentContext = KubeConfigUtils.getCurrentContext(kubeConfig);
+      Cluster currentCluster = KubeConfigUtils.getCluster(kubeConfig, currentContext);
+      AuthInfo currentAuthInfo = KubeConfigUtils.getUserAuthInfo(kubeConfig, currentContext);
+
+      return KubernetesConfig.builder()
+          .namespace(namespace)
+          .masterUrl(currentCluster.getServer())
+          .caCert(currentCluster.getCertificateAuthorityData().toCharArray())
+          .username(currentContext.getUser())
+          .clientCert(currentAuthInfo.getClientCertificateData().toCharArray())
+          .clientKey(currentAuthInfo.getClientKeyData().toCharArray())
+          .build();
+    } catch (Exception e) {
+      throw new WingsException(ErrorCode.DEFAULT_ERROR_CODE).addParam("message", e.getMessage());
+    }
+  }
+
+  private String getAzureBearerAuthToken(AzureConfig azureConfig) {
+    try {
+      ApplicationTokenCredentials credentials = new ApplicationTokenCredentials(
+          azureConfig.getClientId(), azureConfig.getTenantId(), azureConfig.getKey(), AzureEnvironment.AZURE);
+      String token = credentials.getToken("https://management.core.windows.net/");
+      return "Bearer " + token;
+    } catch (Exception e) {
+      HandleAzureAuthenticationException(e);
+    }
+    return null;
+  }
+
   private Azure getAzureClient(AzureConfig azureConfig) {
     try {
       ApplicationTokenCredentials credentials = new ApplicationTokenCredentials(
@@ -178,6 +271,20 @@ public class AzureHelperService {
                             .addConverterFactory(JacksonConverterFactory.create())
                             .build();
     return retrofit.create(AcrRestClient.class);
+  }
+
+  private AzureManagementRestClient getAzureManagementRestClient() {
+    String url = getUrl("management.azure.com");
+    OkHttpClient okHttpClient = getOkHttpClientBuilder()
+                                    .connectTimeout(CONNECT_TIMEOUT, TimeUnit.SECONDS)
+                                    .proxy(HttpUtil.checkAndGetNonProxyIfApplicable(url))
+                                    .build();
+    Retrofit retrofit = new Retrofit.Builder()
+                            .client(okHttpClient)
+                            .baseUrl(url)
+                            .addConverterFactory(JacksonConverterFactory.create())
+                            .build();
+    return retrofit.create(AzureManagementRestClient.class);
   }
 
   private String getAuthHeader(String username, String password) {

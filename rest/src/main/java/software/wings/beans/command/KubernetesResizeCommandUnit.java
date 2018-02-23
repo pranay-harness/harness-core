@@ -13,12 +13,14 @@ import lombok.EqualsAndHashCode;
 import org.mongodb.morphia.annotations.Transient;
 import software.wings.api.ContainerServiceData;
 import software.wings.api.DeploymentType;
+import software.wings.beans.AzureConfig;
 import software.wings.beans.KubernetesConfig;
 import software.wings.beans.Log.LogLevel;
 import software.wings.beans.SettingAttribute;
 import software.wings.cloudprovider.ContainerInfo;
 import software.wings.cloudprovider.gke.GkeClusterService;
 import software.wings.cloudprovider.gke.KubernetesContainerService;
+import software.wings.helpers.ext.azure.AzureHelperService;
 import software.wings.security.encryption.EncryptedDataDetail;
 
 import java.util.List;
@@ -30,6 +32,7 @@ public class KubernetesResizeCommandUnit extends ContainerResizeCommandUnit {
   @Inject @Transient private transient GkeClusterService gkeClusterService;
 
   @Inject @Transient private transient KubernetesContainerService kubernetesContainerService;
+  @Inject @Transient private transient AzureHelperService azureHelperService;
 
   public KubernetesResizeCommandUnit() {
     super(CommandUnitType.RESIZE_KUBERNETES);
@@ -46,6 +49,12 @@ public class KubernetesResizeCommandUnit extends ContainerResizeCommandUnit {
     if (cloudProviderSetting.getValue() instanceof KubernetesConfig) {
       kubernetesConfig = (KubernetesConfig) cloudProviderSetting.getValue();
       encryptedDataDetails = edd;
+    } else if (cloudProviderSetting.getValue() instanceof AzureConfig) {
+      AzureConfig azureConfig = (AzureConfig) cloudProviderSetting.getValue();
+      kubernetesConfig = azureHelperService.getKubernetesClusterConfig(azureConfig, resizeParams.getSubscriptionId(),
+          resizeParams.getResourceGroup(), resizeParams.getClusterName(), resizeParams.getNamespace());
+      kubernetesConfig.setDecrypted(true);
+      encryptedDataDetails = emptyList();
     } else {
       kubernetesConfig = gkeClusterService.getCluster(
           cloudProviderSetting, edd, resizeParams.getClusterName(), resizeParams.getNamespace());

@@ -54,6 +54,8 @@ public class KubernetesDeployRollback extends ContainerServiceDeploy {
         .withServiceSteadyStateTimeout(contextData.containerElement.getServiceSteadyStateTimeout())
         .withUseAutoscaler(contextData.containerElement.isUseAutoscaler())
         .withRollbackAutoscaler(true)
+        .withSubscriptionId(contextData.containerServiceParams.getSubscriptionId())
+        .withResourceGroup(contextData.containerServiceParams.getResourceGroup())
         .build();
   }
 }

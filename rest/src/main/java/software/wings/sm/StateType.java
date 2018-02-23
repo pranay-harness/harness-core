@@ -303,25 +303,30 @@ public enum StateType implements StateTypeDescriptor {
       asList(CONTAINER_DEPLOY), ORCHESTRATION_STENCILS),
 
   KUBERNETES_SETUP(KubernetesSetup.class, CLOUD,
-      Lists.newArrayList(InfrastructureMappingType.DIRECT_KUBERNETES, InfrastructureMappingType.GCP_KUBERNETES),
+      Lists.newArrayList(InfrastructureMappingType.DIRECT_KUBERNETES, InfrastructureMappingType.GCP_KUBERNETES,
+          InfrastructureMappingType.AZURE_KUBERNETES),
       asList(CONTAINER_SETUP), ORCHESTRATION_STENCILS),
 
   KUBERNETES_SETUP_ROLLBACK(KubernetesSetupRollback.class, COMMANDS,
-      Lists.newArrayList(InfrastructureMappingType.DIRECT_KUBERNETES, InfrastructureMappingType.GCP_KUBERNETES),
+      Lists.newArrayList(InfrastructureMappingType.DIRECT_KUBERNETES, InfrastructureMappingType.GCP_KUBERNETES,
+          InfrastructureMappingType.AZURE_KUBERNETES),
       asList(CONTAINER_SETUP), ORCHESTRATION_STENCILS),
 
   KUBERNETES_DEPLOY(KubernetesDeploy.class, COMMANDS,
-      Lists.newArrayList(InfrastructureMappingType.DIRECT_KUBERNETES, InfrastructureMappingType.GCP_KUBERNETES),
+      Lists.newArrayList(InfrastructureMappingType.DIRECT_KUBERNETES, InfrastructureMappingType.GCP_KUBERNETES,
+          InfrastructureMappingType.AZURE_KUBERNETES),
       asList(CONTAINER_DEPLOY), ORCHESTRATION_STENCILS),
 
   KUBERNETES_DEPLOY_ROLLBACK(KubernetesDeployRollback.class, COMMANDS,
-      Lists.newArrayList(InfrastructureMappingType.DIRECT_KUBERNETES, InfrastructureMappingType.GCP_KUBERNETES),
+      Lists.newArrayList(InfrastructureMappingType.DIRECT_KUBERNETES, InfrastructureMappingType.GCP_KUBERNETES,
+          InfrastructureMappingType.AZURE_KUBERNETES),
       asList(CONTAINER_DEPLOY), ORCHESTRATION_STENCILS),
 
   AWS_CLUSTER_SETUP(AwsClusterSetup.class, CLOUD, Lists.newArrayList(InfrastructureMappingType.AWS_ECS),
       asList(CLUSTER_SETUP), ORCHESTRATION_STENCILS),
 
-  GCP_CLUSTER_SETUP(GcpClusterSetup.class, CLOUD, Lists.newArrayList(InfrastructureMappingType.GCP_KUBERNETES),
+  GCP_CLUSTER_SETUP(GcpClusterSetup.class, CLOUD,
+      Lists.newArrayList(InfrastructureMappingType.GCP_KUBERNETES, InfrastructureMappingType.AZURE_KUBERNETES),
       asList(CLUSTER_SETUP), ORCHESTRATION_STENCILS);
 
   private static final String stencilsPath = "/templates/stencils/";

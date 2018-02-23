@@ -15,6 +15,7 @@ import software.wings.api.DeploymentEvent;
 import software.wings.api.DeploymentInfo;
 import software.wings.api.PhaseExecutionData;
 import software.wings.api.PhaseStepExecutionData;
+import software.wings.beans.AzureKubernetesInfrastructureMapping;
 import software.wings.beans.ContainerInfrastructureMapping;
 import software.wings.beans.DirectKubernetesInfrastructureMapping;
 import software.wings.beans.ExecutionArgs;
@@ -80,6 +81,7 @@ public class ContainerInstanceHelper {
   public boolean isContainerDeployment(InfrastructureMapping infrastructureMapping) {
     return infrastructureMapping instanceof ContainerInfrastructureMapping
         || infrastructureMapping instanceof GcpKubernetesInfrastructureMapping
+        || infrastructureMapping instanceof AzureKubernetesInfrastructureMapping
         || infrastructureMapping instanceof DirectKubernetesInfrastructureMapping;
   }
 

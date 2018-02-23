@@ -24,6 +24,7 @@ import io.fabric8.kubernetes.api.model.Pod;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import software.wings.beans.AwsConfig;
+import software.wings.beans.AzureConfig;
 import software.wings.beans.ErrorCode;
 import software.wings.beans.GcpConfig;
 import software.wings.beans.KubernetesConfig;
@@ -34,6 +35,7 @@ import software.wings.cloudprovider.gke.GkeClusterService;
 import software.wings.cloudprovider.gke.KubernetesContainerService;
 import software.wings.exception.WingsException;
 import software.wings.exception.WingsException.ReportTarget;
+import software.wings.helpers.ext.azure.AzureHelperService;
 import software.wings.service.intfc.ContainerService;
 import software.wings.settings.SettingValue;
 import software.wings.utils.Validator;
@@ -52,12 +54,17 @@ public class ContainerServiceImpl implements ContainerService {
   @Inject private KubernetesContainerService kubernetesContainerService;
   @Inject private AwsClusterService awsClusterService;
   @Inject private AwsHelperService awsHelperService;
+  @Inject private AzureHelperService azureHelperService;
+
+  private boolean isKubernetesClusterConfig(SettingValue value) {
+    return value instanceof AzureConfig || value instanceof GcpConfig || value instanceof KubernetesConfig;
+  }
 
   @Override
   public Optional<Integer> getServiceDesiredCount(ContainerServiceParams containerServiceParams) {
     if (isNotEmpty(containerServiceParams.getContainerServiceName())) {
       SettingValue value = containerServiceParams.getSettingAttribute().getValue();
-      if (value instanceof GcpConfig || value instanceof KubernetesConfig) {
+      if (isKubernetesClusterConfig(value)) {
         KubernetesConfig kubernetesConfig = getKubernetesConfig(containerServiceParams);
         return kubernetesContainerService.getControllerPodCount(kubernetesConfig,
             containerServiceParams.getEncryptionDetails(), containerServiceParams.getContainerServiceName());
@@ -81,7 +88,7 @@ public class ContainerServiceImpl implements ContainerService {
   public LinkedHashMap<String, Integer> getActiveServiceCounts(ContainerServiceParams containerServiceParams) {
     LinkedHashMap<String, Integer> result = new LinkedHashMap<>();
     SettingValue value = containerServiceParams.getSettingAttribute().getValue();
-    if (value instanceof GcpConfig || value instanceof KubernetesConfig) {
+    if (isKubernetesClusterConfig(value)) {
       KubernetesConfig kubernetesConfig = getKubernetesConfig(containerServiceParams);
       String controllerNamePrefix = getPrefixFromControllerName(containerServiceParams.getContainerServiceName());
       kubernetesContainerService.listControllers(kubernetesConfig, containerServiceParams.getEncryptionDetails())
@@ -111,7 +118,7 @@ public class ContainerServiceImpl implements ContainerService {
   @Override
   public String getDaemonSetYaml(ContainerServiceParams containerServiceParams) {
     SettingValue value = containerServiceParams.getSettingAttribute().getValue();
-    if (!(value instanceof GcpConfig) && !(value instanceof KubernetesConfig)) {
+    if (!isKubernetesClusterConfig(value)) {
       throw new WingsException(ErrorCode.INVALID_ARGUMENT).addParam("args", "DaemonSets apply to kubernetes only");
     }
     KubernetesConfig kubernetesConfig = getKubernetesConfig(containerServiceParams);
@@ -131,7 +138,7 @@ public class ContainerServiceImpl implements ContainerService {
   @Override
   public List<String> getActiveAutoscalers(ContainerServiceParams containerServiceParams) {
     SettingValue value = containerServiceParams.getSettingAttribute().getValue();
-    if (!(value instanceof GcpConfig) && !(value instanceof KubernetesConfig)) {
+    if (!isKubernetesClusterConfig(value)) {
       throw new WingsException(ErrorCode.INVALID_ARGUMENT)
           .addParam("args", "Horizontal Pod Autoscalers apply to kubernetes only");
     }
@@ -153,6 +160,12 @@ public class ContainerServiceImpl implements ContainerService {
           containerServiceParams.getEncryptionDetails(), containerServiceParams.getClusterName(),
           containerServiceParams.getNamespace());
       kubernetesConfig.setDecrypted(true);
+    } else if (containerServiceParams.getSettingAttribute().getValue() instanceof AzureConfig) {
+      AzureConfig azureConfig = (AzureConfig) containerServiceParams.getSettingAttribute().getValue();
+      kubernetesConfig = azureHelperService.getKubernetesClusterConfig(azureConfig,
+          containerServiceParams.getSubscriptionId(), containerServiceParams.getResourceGroup(),
+          containerServiceParams.getClusterName(), containerServiceParams.getNamespace());
+      kubernetesConfig.setDecrypted(true);
     } else {
       kubernetesConfig = (KubernetesConfig) containerServiceParams.getSettingAttribute().getValue();
     }
@@ -164,7 +177,7 @@ public class ContainerServiceImpl implements ContainerService {
     List<ContainerInfo> result = new ArrayList<>();
     SettingValue value = containerServiceParams.getSettingAttribute().getValue();
     String containerServiceName = containerServiceParams.getContainerServiceName();
-    if (value instanceof GcpConfig || value instanceof KubernetesConfig) {
+    if (isKubernetesClusterConfig(value)) {
       KubernetesConfig kubernetesConfig = getKubernetesConfig(containerServiceParams);
       Validator.notNullCheck("KubernetesConfig", kubernetesConfig);
       HasMetadata controller = kubernetesContainerService.getController(
@@ -255,15 +268,29 @@ public class ContainerServiceImpl implements ContainerService {
   @Override
   public Boolean validate(ContainerServiceParams containerServiceParams) {
     SettingValue value = containerServiceParams.getSettingAttribute().getValue();
-    if (value instanceof GcpConfig || value instanceof KubernetesConfig) {
-      KubernetesConfig kubernetesConfig = getKubernetesConfig(containerServiceParams);
-      kubernetesContainerService.listControllers(kubernetesConfig, containerServiceParams.getEncryptionDetails());
-      return true;
-    } else if (value instanceof AwsConfig) {
+    if (value instanceof AwsConfig) {
       awsClusterService.getServices(containerServiceParams.getRegion(), containerServiceParams.getSettingAttribute(),
           containerServiceParams.getEncryptionDetails(), containerServiceParams.getClusterName());
       return true;
+    } else if (value instanceof AzureConfig) {
+      AzureConfig azureConfig = (AzureConfig) containerServiceParams.getSettingAttribute().getValue();
+      if (azureHelperService.isValidKubernetesCluster(azureConfig, containerServiceParams.getSubscriptionId(),
+              containerServiceParams.getResourceGroup(), containerServiceParams.getClusterName())) {
+        KubernetesConfig kubernetesConfig = azureHelperService.getKubernetesClusterConfig(azureConfig,
+            containerServiceParams.getSubscriptionId(), containerServiceParams.getResourceGroup(),
+            containerServiceParams.getClusterName(), containerServiceParams.getNamespace());
+        kubernetesConfig.setDecrypted(true);
+        kubernetesContainerService.listControllers(kubernetesConfig, containerServiceParams.getEncryptionDetails());
+        return true;
+      } else {
+        throw new WingsException(ErrorCode.INVALID_ARGUMENT, "Invalid Argument: Not a valid AKS cluster");
+      }
+    } else if (isKubernetesClusterConfig(value)) {
+      KubernetesConfig kubernetesConfig = getKubernetesConfig(containerServiceParams);
+      kubernetesContainerService.listControllers(kubernetesConfig, containerServiceParams.getEncryptionDetails());
+      return true;
     }
+
     throw new WingsException(ErrorCode.INVALID_ARGUMENT, ReportTarget.USER)
         .addParam("args", "Unknown setting value type: " + value.getType());
   }
