@@ -11,4 +11,5 @@ public class LogMLFeedback {
   private int clusterLabel;
   private AnalysisServiceImpl.LogMLFeedbackType logMLFeedbackType;
   private String comment;
+  private String logMlFeedbackId;
 }

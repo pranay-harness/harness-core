@@ -1,5 +1,7 @@
 package software.wings.resources;
 
+import static io.harness.data.structure.EmptyPredicate.isEmpty;
+
 import com.google.inject.Inject;
 
 import com.codahale.metrics.annotation.ExceptionMetered;
@@ -8,6 +10,7 @@ import io.swagger.annotations.Api;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import software.wings.beans.RestResponse;
+import software.wings.exception.WingsException;
 import software.wings.security.PermissionAttribute.ResourceType;
 import software.wings.security.annotations.AuthRule;
 import software.wings.security.annotations.DelegateAuth;
@@ -32,6 +35,7 @@ import java.util.Map;
 import java.util.Optional;
 import javax.ws.rs.GET;
 import javax.ws.rs.POST;
+import javax.ws.rs.PUT;
 import javax.ws.rs.Path;
 import javax.ws.rs.Produces;
 import javax.ws.rs.QueryParam;
@@ -159,8 +163,21 @@ public class ElkResource implements LogAnalysisResource {
   @Timed
   @ExceptionMetered
   @Override
-  public RestResponse<Boolean> userFeedback(@QueryParam("accountId") String accountId, LogMLFeedback feedback)
+  public RestResponse<Boolean> createUserFeedback(@QueryParam("accountId") String accountId, LogMLFeedback feedback)
       throws IOException {
+    return new RestResponse<>(analysisService.saveFeedback(feedback, StateType.ELK));
+  }
+
+  @PUT
+  @Path(LogAnalysisResource.ANALYSIS_USER_FEEDBACK)
+  @Timed
+  @ExceptionMetered
+  @Override
+  public RestResponse<Boolean> updateUserFeedback(@QueryParam("accountId") String accountId, LogMLFeedback feedback)
+      throws IOException {
+    if (isEmpty(feedback.getLogMlFeedbackId())) {
+      throw new WingsException("logMlFeedBackId should be set for update");
+    }
     return new RestResponse<>(analysisService.saveFeedback(feedback, StateType.ELK));
   }
 
