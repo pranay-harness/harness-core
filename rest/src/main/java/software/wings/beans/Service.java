@@ -616,9 +616,9 @@ public class Service extends Base {
     private List<NameValuePair.Yaml> configVariables = new ArrayList<>();
 
     @lombok.Builder
-    public Yaml(String type, String harnessApiVersion, String description, String artifactType, String applicationStack,
+    public Yaml(String harnessApiVersion, String description, String artifactType, String applicationStack,
         List<NameValuePair.Yaml> configVariables) {
-      super(type, harnessApiVersion);
+      super(EntityType.SERVICE.name(), harnessApiVersion);
       this.description = description;
       this.artifactType = artifactType;
       this.applicationStack = applicationStack;

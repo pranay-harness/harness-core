@@ -52,24 +52,24 @@ public class AccountDefaultVarYamlHandlerTest extends BaseYamlHandlerTest {
   private SettingAttribute v2_settingAttribute3;
   private List<SettingAttribute> v2_settingAttributeList;
 
-  private String v1_validYamlContent = "defaults:\n"
+  private String v1_validYamlContent = "harnessApiVersion: '1.0'\n"
+      + "type: ACCOUNT_DEFAULTS\n"
+      + "defaults:\n"
       + "  - name: var1\n"
       + "    value: value1\n"
       + "  - name: var2\n"
       + "    value: value2\n"
       + "  - name: var3\n"
-      + "    value: value3\n"
-      + "harnessApiVersion: '1.0'\n"
-      + "type: ACCOUNT_DEFAULTS";
-  private String v2_validYamlContent = "defaults:\n"
+      + "    value: value3";
+  private String v2_validYamlContent = "harnessApiVersion: '1.0'\n"
+      + "type: ACCOUNT_DEFAULTS\n"
+      + "defaults:\n"
       + "  - name: var1\n"
       + "    value: modified\n"
       + "  - name: var4\n"
       + "    value: add\n"
       + "  - name: var3\n"
-      + "    value: value3\n"
-      + "harnessApiVersion: '1.0'\n"
-      + "type: ACCOUNT_DEFAULTS";
+      + "    value: value3";
   private String validYamlFilePath = "Setup/Defaults.yaml";
   private String invalidYamlContent = "invalid:\n"
       + "  - name: var1\n"

@@ -2,7 +2,6 @@ package software.wings.service.impl.yaml.handler.environment;
 
 import static io.harness.data.structure.EmptyPredicate.isEmpty;
 import static java.util.Collections.emptyList;
-import static software.wings.beans.EntityType.ENVIRONMENT;
 import static software.wings.beans.EntityType.SERVICE_TEMPLATE;
 
 import com.google.common.collect.Lists;
@@ -59,7 +58,6 @@ public class EnvironmentYamlHandler extends BaseYamlHandler<Environment.Yaml, En
     List<ServiceVariable> serviceVariableList = getAllVariableOverridesForEnv(environment);
     List<VariableOverrideYaml> variableOverrideYamlList = convertToVariableOverrideYaml(serviceVariableList);
     return Environment.Yaml.builder()
-        .type(ENVIRONMENT.name())
         .description(environment.getDescription())
         .environmentType(environment.getEnvironmentType().name())
         .variableOverrides(variableOverrideYamlList)

@@ -5,7 +5,6 @@ import static software.wings.beans.yaml.YamlConstants.YAML_EXTENSION;
 import com.google.inject.Inject;
 import com.google.inject.Singleton;
 
-import com.fasterxml.jackson.dataformat.yaml.snakeyaml.Yaml;
 import software.wings.beans.Base;
 import software.wings.beans.ErrorCode;
 import software.wings.beans.ResponseMessage.Level;
@@ -59,8 +58,7 @@ public class YamlArtifactStreamServiceImpl implements YamlArtifactStreamService 
 
   @Override
   public String getArtifactStreamYamlString(ArtifactStream artifactStream) {
-    Yaml yaml = new Yaml(YamlHelper.getRepresenter(), YamlHelper.getDumperOptions());
-    return YamlHelper.cleanupYaml(yaml.dump(getArtifactStreamYamlObject(artifactStream)));
+    return YamlHelper.toYamlString(getArtifactStreamYamlObject(artifactStream));
   }
 
   @Override

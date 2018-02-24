@@ -233,9 +233,9 @@ public class ConfigFile extends BaseFile implements Encryptable {
     }
 
     @Builder
-    public OverrideYaml(String type, String harnessApiVersion, String serviceName, String targetFilePath,
-        String fileName, String checksum, String checksumType, boolean encrypted) {
-      super(type, harnessApiVersion);
+    public OverrideYaml(String harnessApiVersion, String serviceName, String targetFilePath, String fileName,
+        String checksum, String checksumType, boolean encrypted) {
+      super(YamlType.CONFIG_FILE_OVERRIDE.name(), harnessApiVersion);
       this.serviceName = serviceName;
       this.targetFilePath = targetFilePath;
       this.fileName = fileName;

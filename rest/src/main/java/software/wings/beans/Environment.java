@@ -409,9 +409,9 @@ public class Environment extends Base {
     private List<VariableOverrideYaml> variableOverrides = new ArrayList<>();
 
     @lombok.Builder
-    public Yaml(String type, String harnessApiVersion, String description, String environmentType,
+    public Yaml(String harnessApiVersion, String description, String environmentType,
         List<VariableOverrideYaml> variableOverrides) {
-      super(type, harnessApiVersion);
+      super(EntityType.ENVIRONMENT.name(), harnessApiVersion);
       this.description = description;
       this.environmentType = environmentType;
       this.variableOverrides = variableOverrides;

@@ -442,8 +442,8 @@ public class Pipeline extends Base {
     private List<FailureStrategy.Yaml> failureStrategies;
 
     @lombok.Builder
-    public Yaml(String type, String harnessApiVersion, String description, List<PipelineStage.Yaml> pipelineStages) {
-      super(type, harnessApiVersion);
+    public Yaml(String harnessApiVersion, String description, List<PipelineStage.Yaml> pipelineStages) {
+      super(EntityType.PIPELINE.name(), harnessApiVersion);
       this.description = description;
       this.pipelineStages = pipelineStages;
     }
