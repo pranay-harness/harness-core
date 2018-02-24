@@ -26,6 +26,7 @@ public class CodeDeployInfraMappingYamlHandler
     yaml.setApplicationName(bean.getApplicationName());
     yaml.setDeploymentGroup(bean.getDeploymentGroup());
     yaml.setDeploymentConfig(bean.getDeploymentConfig());
+    yaml.setHostNameConvention(bean.getHostNameConvention());
     return yaml;
   }
 
@@ -68,6 +69,7 @@ public class CodeDeployInfraMappingYamlHandler
     bean.setApplicationName(infraMappingYaml.getApplicationName());
     bean.setDeploymentGroup(infraMappingYaml.getDeploymentGroup());
     bean.setDeploymentConfig(infraMappingYaml.getDeploymentConfig());
+    bean.setHostNameConvention(infraMappingYaml.getHostNameConvention());
   }
 
   @Override

@@ -1,0 +1,88 @@
+package software.wings.yaml.handler.inframappings;
+
+import static org.assertj.core.api.Assertions.assertThat;
+import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertNotNull;
+import static org.junit.Assert.assertNull;
+import static software.wings.utils.WingsTestConstants.ACCOUNT_ID;
+import static software.wings.utils.WingsTestConstants.APP_ID;
+import static software.wings.utils.WingsTestConstants.ENV_ID;
+
+import com.google.inject.Inject;
+
+import org.junit.Before;
+import org.junit.Test;
+import org.mockito.InjectMocks;
+import software.wings.beans.AwsInfrastructureMapping;
+import software.wings.beans.AwsInfrastructureMapping.Yaml;
+import software.wings.beans.InfrastructureMapping;
+import software.wings.beans.InfrastructureMappingType;
+import software.wings.beans.yaml.ChangeContext;
+import software.wings.exception.HarnessException;
+import software.wings.service.impl.yaml.handler.inframapping.AwsInfraMappingYamlHandler;
+import software.wings.service.intfc.InfrastructureMappingService;
+
+import java.io.IOException;
+import java.util.Arrays;
+
+public class AwsInfraMappingYamlHandlerTest extends BaseInfraMappingYamlHandlerTest {
+  private String validYamlContent = "region: us-east-1\n"
+      + "connectionType: Wings Key\n"
+      + "usePublicDns: true\n"
+      + "provisionInstances: false\n"
+      + "desiredCapacity: 0\n"
+      + "hostNameConvention: ${host.ec2Instance.privateDnsName}.split('.')[1]\n"
+      + "computeProviderType: AWS\n"
+      + "computeProviderName: aws\n"
+      + "serviceName: SERVICE_NAME\n"
+      + "infraMappingType: AWS_SSH\n"
+      + "deploymentType: SSH\n"
+      + "harnessApiVersion: '1.0'\n"
+      + "type: AWS_SSH";
+
+  @InjectMocks @Inject private AwsInfraMappingYamlHandler yamlHandler;
+
+  @InjectMocks @Inject private InfrastructureMappingService infrastructureMappingService;
+
+  private String validYamlFilePath =
+      "Setup/Applications/APP_NAME/Environments/ENV_NAME/Service Infrastructure/aws.yaml";
+  private String infraMappingName = "aws";
+
+  @Before
+  public void runBeforeTest() {
+    setup(validYamlFilePath, infraMappingName);
+  }
+
+  @Test
+  public void testCRUDAndGet() throws HarnessException, IOException {
+    ChangeContext<Yaml> changeContext = getChangeContext(validYamlContent, validYamlFilePath, yamlHandler);
+
+    Yaml yamlObject = (Yaml) getYaml(validYamlContent, Yaml.class, false);
+    changeContext.setYaml(yamlObject);
+
+    AwsInfrastructureMapping infrastructureMapping =
+        yamlHandler.upsertFromYaml(changeContext, Arrays.asList(changeContext));
+    assertNotNull(infrastructureMapping);
+    assertEquals(infrastructureMapping.getName(), infraMappingName);
+
+    Yaml yaml = yamlHandler.toYaml(infrastructureMapping, APP_ID);
+    assertNotNull(yaml);
+    assertEquals(InfrastructureMappingType.AWS_SSH.name(), yaml.getType());
+
+    String yamlContent = getYamlContent(yaml);
+    assertNotNull(yamlContent);
+    yamlContent = yamlContent.substring(0, yamlContent.length() - 1);
+    assertEquals(validYamlContent, yamlContent);
+
+    InfrastructureMapping infrastructureMapping2 =
+        infrastructureMappingService.getInfraMappingByName(APP_ID, ENV_ID, infraMappingName);
+    // TODO find out why this couldn't be called
+    //    Workflow savedWorkflow = yamlHandler.get(ACCOUNT_ID, validYamlFilePath);
+    assertThat(infrastructureMapping2).isNotNull().hasFieldOrPropertyWithValue("name", infraMappingName);
+
+    yamlHandler.delete(changeContext);
+
+    AwsInfrastructureMapping afterDelete = yamlHandler.get(ACCOUNT_ID, validYamlFilePath);
+    assertNull(afterDelete);
+  }
+}

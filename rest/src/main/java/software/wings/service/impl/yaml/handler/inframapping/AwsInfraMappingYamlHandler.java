@@ -60,6 +60,7 @@ public class AwsInfraMappingYamlHandler
     yaml.setSubnetIds(subnetIds);
     yaml.setSecurityGroupIds(securityGroupIds);
     yaml.setTags(getTagsYaml(tagList));
+    yaml.setHostNameConvention(bean.getHostNameConvention());
     return yaml;
   }
 
@@ -140,6 +141,7 @@ public class AwsInfraMappingYamlHandler
     bean.setAutoScalingGroupName(yaml.getAutoScalingGroup());
     bean.setDesiredCapacity(yaml.getDesiredCapacity());
     bean.setAwsInstanceFilter(awsInstanceFilter);
+    bean.setHostNameConvention(yaml.getHostNameConvention());
   }
 
   @Override

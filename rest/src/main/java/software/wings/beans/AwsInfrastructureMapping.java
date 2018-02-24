@@ -65,6 +65,8 @@ public class AwsInfrastructureMapping extends InfrastructureMapping {
 
   @Attributes(title = "Desired Capacity") private int desiredCapacity;
 
+  @Attributes(title = "AWS Host Name Convention") private String hostNameConvention;
+
   /**
    * Instantiates a new Aws infrastructure mapping.
    */
@@ -92,6 +94,7 @@ public class AwsInfrastructureMapping extends InfrastructureMapping {
     private boolean provisionInstances;
     private String autoScalingGroup;
     private int desiredCapacity;
+    private String hostNameConvention;
 
     // These four fields map to AwsInstanceFilter
     private List<String> vpcs = new ArrayList<>();
@@ -104,7 +107,8 @@ public class AwsInfrastructureMapping extends InfrastructureMapping {
         String infraMappingType, String deploymentType, String computeProviderName, String name, String restrictions,
         String expression, String region, String connectionType, String loadBalancer, boolean usePublicDns,
         boolean provisionInstances, String autoScalingGroup, int desiredCapacity, List<String> vpcs,
-        List<String> subnetIds, List<String> securityGroupIds, List<NameValuePair.Yaml> tags) {
+        List<String> subnetIds, List<String> securityGroupIds, List<NameValuePair.Yaml> tags,
+        String hostNameConvention) {
       super(type, harnessApiVersion, computeProviderType, serviceName, infraMappingType, deploymentType,
           computeProviderName);
       this.restrictions = restrictions;
@@ -120,6 +124,7 @@ public class AwsInfrastructureMapping extends InfrastructureMapping {
       this.subnetIds = subnetIds;
       this.securityGroupIds = securityGroupIds;
       this.tags = tags;
+      this.hostNameConvention = hostNameConvention;
     }
   }
 
@@ -383,6 +388,14 @@ public class AwsInfrastructureMapping extends InfrastructureMapping {
     this.desiredCapacity = desiredCapacity;
   }
 
+  public String getHostNameConvention() {
+    return hostNameConvention;
+  }
+
+  public void setHostNameConvention(String hostNameConvention) {
+    this.hostNameConvention = hostNameConvention;
+  }
+
   /**
    * The enum Restriction type.
    */
@@ -486,7 +499,8 @@ public class AwsInfrastructureMapping extends InfrastructureMapping {
         .withDeploymentType(getDeploymentType())
         .withComputeProviderName(getComputeProviderName())
         .withName(getName())
-        .withSetDesiredCapacity(isSetDesiredCapacity());
+        .withSetDesiredCapacity(isSetDesiredCapacity())
+        .withHostNameConvention(hostNameConvention);
   }
 
   /**
@@ -525,6 +539,7 @@ public class AwsInfrastructureMapping extends InfrastructureMapping {
     private String computeProviderType;
     private String infraMappingType;
     private boolean setDesiredCapacity;
+    private String hostNameConvention;
     private String deploymentType;
     private int desiredCapacity;
     private String computeProviderName;
@@ -824,6 +839,17 @@ public class AwsInfrastructureMapping extends InfrastructureMapping {
     }
 
     /**
+     * With set host name convention builder.
+     *
+     * @param hostNameConvention the hostNameConvention
+     * @return the builder
+     */
+    public Builder withHostNameConvention(String hostNameConvention) {
+      this.hostNameConvention = hostNameConvention;
+      return this;
+    }
+
+    /**
      * With deployment type builder.
      *
      * @param deploymentType the deployment type
@@ -915,7 +941,8 @@ public class AwsInfrastructureMapping extends InfrastructureMapping {
           .withDesiredCapacity(desiredCapacity)
           .withComputeProviderName(computeProviderName)
           .withName(name)
-          .withAutoPopulate(autoPopulate);
+          .withAutoPopulate(autoPopulate)
+          .withHostNameConvention(hostNameConvention);
     }
 
     /**
@@ -956,6 +983,7 @@ public class AwsInfrastructureMapping extends InfrastructureMapping {
       awsInfrastructureMapping.setName(name);
       awsInfrastructureMapping.setAutoPopulate(autoPopulate);
       awsInfrastructureMapping.setAccountId(accountId);
+      awsInfrastructureMapping.setHostNameConvention(hostNameConvention);
       return awsInfrastructureMapping;
     }
   }

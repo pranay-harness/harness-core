@@ -2,6 +2,7 @@ package software.wings.service.impl;
 
 import static java.util.Collections.emptyList;
 import static java.util.stream.Collectors.toList;
+import static software.wings.api.HostElement.Builder.aHostElement;
 import static software.wings.beans.ErrorCode.INVALID_ARGUMENT;
 import static software.wings.beans.infrastructure.Host.Builder.aHost;
 import static software.wings.dl.PageResponse.Builder.aPageResponse;
@@ -28,6 +29,7 @@ import com.amazonaws.services.ecs.model.ListClustersResult;
 import com.amazonaws.services.elasticloadbalancingv2.model.TargetGroup;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import software.wings.api.HostElement;
 import software.wings.app.MainConfiguration;
 import software.wings.beans.AwsConfig;
 import software.wings.beans.AwsInfrastructureMapping;
@@ -35,6 +37,7 @@ import software.wings.beans.ErrorCode;
 import software.wings.beans.InfrastructureMapping;
 import software.wings.beans.SettingAttribute;
 import software.wings.beans.infrastructure.Host;
+import software.wings.common.Constants;
 import software.wings.dl.PageRequest;
 import software.wings.dl.PageResponse;
 import software.wings.exception.WingsException;
@@ -84,6 +87,14 @@ public class AwsInfrastructureProvider implements InfrastructureProvider {
                          .withEc2Instance(instance)
                          .build())
               .collect(toList());
+      if (awsInfrastructureMapping.getHostNameConvention() != null
+          && !awsInfrastructureMapping.getHostNameConvention().equals(Constants.DEFAULT_AWS_HOST_NAME_CONVENTION)) {
+        awsHosts.stream().forEach(h -> {
+          HostElement hostElement = aHostElement().withEc2Instance(h.getEc2Instance()).build();
+          h.setHostName(awsHelperService.getHostnameFromConvention(
+              hostElement, awsInfrastructureMapping.getHostNameConvention()));
+        });
+      }
       return aPageResponse().withResponse(awsHosts).build();
     }
     return aPageResponse().withResponse(emptyList()).build();
