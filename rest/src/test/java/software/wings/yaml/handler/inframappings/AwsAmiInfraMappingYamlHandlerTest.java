@@ -26,17 +26,17 @@ import java.io.IOException;
 import java.util.Arrays;
 
 public class AwsAmiInfraMappingYamlHandlerTest extends BaseInfraMappingYamlHandlerTest {
-  private String validYamlContent = "region: us-east-1\n"
+  private String validYamlContent = "harnessApiVersion: '1.0'\n"
+      + "type: AWS_AMI\n"
       + "autoScalingGroupName: Abaris__AMI__Test__deploy__v2__QA__Env__1\n"
       + "classicLoadBalancers:\n"
       + "  - todolist-lb\n"
-      + "computeProviderType: AWS\n"
       + "computeProviderName: aws\n"
-      + "serviceName: SERVICE_NAME\n"
-      + "infraMappingType: AWS_AMI\n"
+      + "computeProviderType: AWS\n"
       + "deploymentType: AMI\n"
-      + "harnessApiVersion: '1.0'\n"
-      + "type: AWS_AMI";
+      + "infraMappingType: AWS_AMI\n"
+      + "region: us-east-1\n"
+      + "serviceName: SERVICE_NAME";
 
   @InjectMocks @Inject private AwsAmiInfraMappingYamlHandler yamlHandler;
 

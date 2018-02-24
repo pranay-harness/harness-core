@@ -26,19 +26,19 @@ import java.io.IOException;
 import java.util.Arrays;
 
 public class AwsInfraMappingYamlHandlerTest extends BaseInfraMappingYamlHandlerTest {
-  private String validYamlContent = "region: us-east-1\n"
+  private String validYamlContent = "harnessApiVersion: '1.0'\n"
+      + "type: AWS_SSH\n"
+      + "computeProviderName: aws\n"
+      + "computeProviderType: AWS\n"
       + "connectionType: Wings Key\n"
-      + "usePublicDns: true\n"
-      + "provisionInstances: false\n"
+      + "deploymentType: SSH\n"
       + "desiredCapacity: 0\n"
       + "hostNameConvention: ${host.ec2Instance.privateDnsName}.split('.')[1]\n"
-      + "computeProviderType: AWS\n"
-      + "computeProviderName: aws\n"
-      + "serviceName: SERVICE_NAME\n"
       + "infraMappingType: AWS_SSH\n"
-      + "deploymentType: SSH\n"
-      + "harnessApiVersion: '1.0'\n"
-      + "type: AWS_SSH";
+      + "provisionInstances: false\n"
+      + "region: us-east-1\n"
+      + "serviceName: SERVICE_NAME\n"
+      + "usePublicDns: true";
 
   @InjectMocks @Inject private AwsInfraMappingYamlHandler yamlHandler;
 

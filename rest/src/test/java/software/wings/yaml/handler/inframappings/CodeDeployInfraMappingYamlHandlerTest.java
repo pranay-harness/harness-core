@@ -26,18 +26,18 @@ import java.io.IOException;
 import java.util.Arrays;
 
 public class CodeDeployInfraMappingYamlHandlerTest extends BaseInfraMappingYamlHandlerTest {
-  private String validYamlContent = "region: us-east-1\n"
+  private String validYamlContent = "harnessApiVersion: '1.0'\n"
+      + "type: AWS_AWS_CODEDEPLOY\n"
       + "applicationName: CustomTodolist\n"
-      + "deploymentGroup: Custom-DeploymentGroup\n"
-      + "deploymentConfig: Custom-todolistDC\n"
-      + "hostNameConvention: '''harness-'' + ${host.ec2Instance.instanceId}'\n"
-      + "computeProviderType: AWS\n"
       + "computeProviderName: aws\n"
-      + "serviceName: SERVICE_NAME\n"
-      + "infraMappingType: AWS_AWS_CODEDEPLOY\n"
+      + "computeProviderType: AWS\n"
+      + "deploymentConfig: Custom-todolistDC\n"
+      + "deploymentGroup: Custom-DeploymentGroup\n"
       + "deploymentType: AWS_CODEDEPLOY\n"
-      + "harnessApiVersion: '1.0'\n"
-      + "type: AWS_AWS_CODEDEPLOY";
+      + "hostNameConvention: '''harness-'' + ${host.ec2Instance.instanceId}'\n"
+      + "infraMappingType: AWS_AWS_CODEDEPLOY\n"
+      + "region: us-east-1\n"
+      + "serviceName: SERVICE_NAME";
 
   @InjectMocks @Inject private CodeDeployInfraMappingYamlHandler yamlHandler;
 
