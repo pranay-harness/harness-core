@@ -40,7 +40,7 @@ public class ApplicationYamlHandlerTest extends BaseYamlHandlerTest {
   private final String APP_NAME = "app1";
   private Application application;
 
-  private String validYamlContent = "description: valid application yaml\nharnessApiVersion: '1.0'\ntype: APPLICATION";
+  private String validYamlContent = "harnessApiVersion: '1.0'\ntype: APPLICATION\ndescription: valid application yaml";
   private String validYamlFilePath = "Setup/Applications/" + APP_NAME + "/Index.yaml";
   private String invalidYamlContent = "description1: valid application yaml\ntype: APPLICATION";
   private String invalidYamlFilePath = "Setup/ApplicationsInvalid/" + APP_NAME + "/Index.yaml";

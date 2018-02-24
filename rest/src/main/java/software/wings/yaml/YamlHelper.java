@@ -89,7 +89,7 @@ public class YamlHelper {
     YamlRepresenter representer = new YamlRepresenter(removeEmptyValues);
 
     // use custom that PropertyUtils that doesn't sort alphabetically
-    PropertyUtils pu = new UnsortedPropertyUtils();
+    PropertyUtils pu = new CustomPropertyUtils();
     pu.setSkipMissingProperties(false);
 
     representer.setPropertyUtils(pu);
@@ -112,9 +112,8 @@ public class YamlHelper {
       YamlGitService yamlGitSyncService, String entityId, String accountId, BaseYaml theYaml, String payloadName) {
     RestResponse rr = new RestResponse<>();
 
-    Yaml yaml = new Yaml(YamlHelper.getRepresenter(), YamlHelper.getDumperOptions());
-    String dumpedYaml = yaml.dump(theYaml);
-    YamlPayload yp = new YamlPayload(cleanupYaml(dumpedYaml));
+    String dumpedYaml = toYamlString(theYaml);
+    YamlPayload yp = new YamlPayload(dumpedYaml);
     yp.setName(payloadName);
 
     // add the YamlGitSync instance (if found) to the payload
@@ -136,7 +135,7 @@ public class YamlHelper {
 
   public static String toYamlString(BaseYaml theYaml) {
     Yaml yaml = new Yaml(YamlHelper.getRepresenter(), YamlHelper.getDumperOptions());
-    return yaml.dump(theYaml);
+    return cleanupYaml(yaml.dump(theYaml));
   }
 
   public static String cleanupYaml(String yaml) {

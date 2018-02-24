@@ -1,7 +1,6 @@
 package software.wings.service.impl.yaml.handler.service;
 
 import static java.util.Collections.emptyList;
-import static software.wings.beans.EntityType.SERVICE;
 import static software.wings.beans.Service.Builder.aService;
 
 import com.google.common.collect.Lists;
@@ -55,7 +54,6 @@ public class ServiceYamlHandler extends BaseYamlHandler<Yaml, Service> {
     AppContainer appContainer = service.getAppContainer();
     String applicationStack = appContainer != null ? appContainer.getName() : null;
     return Yaml.builder()
-        .type(SERVICE.name())
         .harnessApiVersion(getHarnessApiVersion())
         .description(service.getDescription())
         .artifactType(service.getArtifactType().name())

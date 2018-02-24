@@ -53,9 +53,6 @@ public interface YamlConstants {
   String LINK_PREFIX = "link";
   String NODE_PREFIX = "node";
 
-  int DEFAULT_COORDINATE = 50;
-  int COORDINATE_INCREMENT_BY = 150;
-
   String NODE_PROPERTY_REFERENCEID = "referenceId";
   String NODE_PROPERTY_COMMAND_STRING = "commandString";
   String NODE_PROPERTY_TAIL_FILES = "tailFiles";
@@ -66,4 +63,7 @@ public interface YamlConstants {
   String NODE_PROPERTY_DESTINATION_DIR_PATH = "destinationDirectoryPath";
   String NODE_PROPERTY_DESTINATION_PARENT_PATH = "destinationParentPath";
   String IS_ROLLBACK = "IS_ROLLBACK";
+
+  String FIELD_HARNESS_API_VERSION = "harnessApiVersion";
+  String FIELD_TYPE = "type";
 }
