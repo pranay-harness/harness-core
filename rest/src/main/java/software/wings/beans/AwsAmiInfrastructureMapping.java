@@ -242,17 +242,20 @@ public class AwsAmiInfrastructureMapping extends InfrastructureMapping {
     private String autoScalingGroupName;
     private List<String> classicLoadBalancers;
     private List<String> targetGroupArns;
+    private String hostNameConvention;
 
     @lombok.Builder
     public Yaml(String type, String harnessApiVersion, String computeProviderType, String serviceName,
         String infraMappingType, String deploymentType, String computeProviderName, String region,
-        String autoScalingGroupName, List<String> classicLoadBalancers, List<String> targetGroupArns) {
+        String autoScalingGroupName, List<String> classicLoadBalancers, List<String> targetGroupArns,
+        String hostNameConvention) {
       super(type, harnessApiVersion, computeProviderType, serviceName, infraMappingType, deploymentType,
           computeProviderName);
       this.region = region;
       this.autoScalingGroupName = autoScalingGroupName;
       this.classicLoadBalancers = classicLoadBalancers;
       this.targetGroupArns = targetGroupArns;
+      this.hostNameConvention = hostNameConvention;
     }
   }
 }

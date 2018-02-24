@@ -26,6 +26,7 @@ public class AwsAmiInfraMappingYamlHandler
     yaml.setAutoScalingGroupName(bean.getAutoScalingGroupName());
     yaml.setClassicLoadBalancers(bean.getClassicLoadBalancers());
     yaml.setTargetGroupArns(bean.getTargetGroupArns());
+    yaml.setHostNameConvention(bean.getHostNameConvention());
     return yaml;
   }
 
@@ -70,6 +71,7 @@ public class AwsAmiInfraMappingYamlHandler
     bean.setAutoScalingGroupName(infraMappingYaml.getAutoScalingGroupName());
     bean.setClassicLoadBalancers(infraMappingYaml.getClassicLoadBalancers());
     bean.setTargetGroupArns(infraMappingYaml.getTargetGroupArns());
+    bean.setHostNameConvention(infraMappingYaml.getHostNameConvention());
   }
 
   @Override

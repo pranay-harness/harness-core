@@ -491,7 +491,7 @@ public class AwsHelperService {
     try {
       hostName = (String) expressionEvaluator.evaluate(hostNameConvention, "host", hostElement);
     } catch (Exception e) {
-      hostName = hostElement.getInstanceId();
+      hostName = getHostnameFromPrivateDnsName(hostElement.getEc2Instance().getPrivateDnsName());
     }
     return hostName;
   }

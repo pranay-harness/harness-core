@@ -516,6 +516,7 @@ public class InfrastructureMappingServiceImpl implements InfrastructureMappingSe
       }
       keyValuePairs.put("usePublicDns", awsInfrastructureMapping.isUsePublicDns());
       keyValuePairs.put("setDesiredCapacity", awsInfrastructureMapping.isSetDesiredCapacity());
+      keyValuePairs.put("hostNameConvention", awsInfrastructureMapping.getHostNameConvention());
       keyValuePairs.put("desiredCapacity", awsInfrastructureMapping.getDesiredCapacity());
       keyValuePairs.put("provisionInstances", awsInfrastructureMapping.isProvisionInstances());
       if (awsInfrastructureMapping.getAwsInstanceFilter() != null) {
@@ -550,6 +551,7 @@ public class InfrastructureMappingServiceImpl implements InfrastructureMappingSe
       keyValuePairs.put("applicationName", codeDeployInfrastructureMapping.getApplicationName());
       keyValuePairs.put("deploymentGroup", codeDeployInfrastructureMapping.getDeploymentGroup());
       keyValuePairs.put("deploymentConfig", codeDeployInfrastructureMapping.getDeploymentConfig());
+      keyValuePairs.put("hostNameConvention", codeDeployInfrastructureMapping.getHostNameConvention());
     } else if (infrastructureMapping instanceof AwsAmiInfrastructureMapping) {
       AwsAmiInfrastructureMapping awsAmiInfrastructureMapping = (AwsAmiInfrastructureMapping) infrastructureMapping;
       keyValuePairs.put("region", awsAmiInfrastructureMapping.getRegion());
@@ -560,6 +562,7 @@ public class InfrastructureMappingServiceImpl implements InfrastructureMappingSe
       if (awsAmiInfrastructureMapping.getTargetGroupArns() != null) {
         keyValuePairs.put("targetGroupArns", awsAmiInfrastructureMapping.getTargetGroupArns());
       }
+      keyValuePairs.put("hostNameConvention", awsAmiInfrastructureMapping.getHostNameConvention());
     }
 
     wingsPersistence.updateFields(
