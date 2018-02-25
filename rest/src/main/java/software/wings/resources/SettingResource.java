@@ -78,7 +78,7 @@ public class SettingResource {
     if (isNotEmpty(settingVariableTypes)) {
       pageRequest.addFilter(aSearchFilter().withField("value.type", IN, settingVariableTypes.toArray()).build());
     }
-    pageRequest.addFilter("appId", appId, EQ);
+    pageRequest.addFilter("appId", EQ, appId);
     return new RestResponse<>(attributeService.list(pageRequest));
   }
 

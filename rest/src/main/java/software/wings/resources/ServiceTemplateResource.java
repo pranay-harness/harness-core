@@ -57,8 +57,8 @@ public class ServiceTemplateResource {
   @ExceptionMetered
   public RestResponse<PageResponse<ServiceTemplate>> list(@QueryParam("envId") String envId,
       @QueryParam("appId") String appId, @BeanParam PageRequest<ServiceTemplate> pageRequest) {
-    pageRequest.addFilter("appId", appId, EQ);
-    pageRequest.addFilter("envId", envId, EQ);
+    pageRequest.addFilter("appId", EQ, appId);
+    pageRequest.addFilter("envId", EQ, envId);
     return new RestResponse<>(serviceTemplateService.list(pageRequest, true, true));
   }
 

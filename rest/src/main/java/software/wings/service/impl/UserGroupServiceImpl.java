@@ -47,7 +47,7 @@ public class UserGroupServiceImpl implements UserGroupService {
     Validator.notNullCheck("accountId", accountId);
     Account account = accountService.get(accountId);
     Validator.notNullCheck("account", account);
-    req.addFilter("accountId", accountId, Operator.EQ);
+    req.addFilter("accountId", Operator.EQ, accountId);
     PageResponse<UserGroup> res = wingsPersistence.query(UserGroup.class, req);
     res.getResponse().forEach(userGroup -> loadUsers(userGroup, account));
     return res;

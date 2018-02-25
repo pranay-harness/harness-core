@@ -125,7 +125,7 @@ public class ActivityResourceTest {
 
     assertThat(restResponse.getResource()).isInstanceOf(PageResponse.class);
     PageRequest<Activity> expectedPageRequest = new PageRequest<>();
-    expectedPageRequest.addFilter("environmentId", ENV_ID, Operator.EQ);
+    expectedPageRequest.addFilter("environmentId", Operator.EQ, ENV_ID);
     expectedPageRequest.setOffset("0");
     expectedPageRequest.setLimit(Constants.DEFAULT_RUNTIME_ENTITY_PAGESIZE_STR);
 

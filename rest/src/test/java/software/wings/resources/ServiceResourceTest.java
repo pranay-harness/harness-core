@@ -71,7 +71,7 @@ public class ServiceResourceTest {
             .get(new GenericType<RestResponse<PageResponse<Service>>>() {});
     PageRequest<Service> pageRequest = new PageRequest<>();
     pageRequest.setOffset("0");
-    pageRequest.addFilter("appId", APP_ID, Operator.EQ);
+    pageRequest.addFilter("appId", Operator.EQ, APP_ID);
     verify(RESOURCE_SERVICE).list(pageRequest, true, true);
     assertThat(restResponse.getResource().getResponse().size()).isEqualTo(1);
     assertThat(restResponse.getResource().getResponse().get(0)).isNotNull();

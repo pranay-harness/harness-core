@@ -70,7 +70,7 @@ public class ServiceResource {
   @ExceptionMetered
   public RestResponse<PageResponse<Service>> list(
       @QueryParam("appId") String appId, @BeanParam PageRequest<Service> pageRequest) {
-    pageRequest.addFilter("appId", appId, EQ);
+    pageRequest.addFilter("appId", EQ, appId);
     return new RestResponse<>(serviceResourceService.list(pageRequest, true, true));
   }
 
@@ -260,8 +260,8 @@ public class ServiceResource {
   @ExceptionMetered
   public RestResponse<PageResponse<ContainerTask>> listContainerTask(@QueryParam("appId") String appId,
       @PathParam("serviceId") String serviceId, @BeanParam PageRequest<ContainerTask> pageRequest) {
-    pageRequest.addFilter("appId", appId, EQ);
-    pageRequest.addFilter("serviceId", serviceId, EQ);
+    pageRequest.addFilter("appId", EQ, appId);
+    pageRequest.addFilter("serviceId", EQ, serviceId);
     return new RestResponse<>(serviceResourceService.listContainerTasks(pageRequest));
   }
 
@@ -328,8 +328,8 @@ public class ServiceResource {
   @ExceptionMetered
   public RestResponse<PageResponse<LambdaSpecification>> listLambdaSpecification(@QueryParam("appId") String appId,
       @PathParam("serviceId") String serviceId, @BeanParam PageRequest<LambdaSpecification> pageRequest) {
-    pageRequest.addFilter("appId", appId, EQ);
-    pageRequest.addFilter("serviceId", serviceId, EQ);
+    pageRequest.addFilter("appId", EQ, appId);
+    pageRequest.addFilter("serviceId", EQ, serviceId);
     return new RestResponse<>(serviceResourceService.listLambdaSpecification(pageRequest));
   }
 
@@ -363,8 +363,8 @@ public class ServiceResource {
   @ExceptionMetered
   public RestResponse<PageResponse<UserDataSpecification>> listUserDataSpecification(@QueryParam("appId") String appId,
       @PathParam("serviceId") String serviceId, @BeanParam PageRequest<UserDataSpecification> pageRequest) {
-    pageRequest.addFilter("appId", appId, EQ);
-    pageRequest.addFilter("serviceId", serviceId, EQ);
+    pageRequest.addFilter("appId", EQ, appId);
+    pageRequest.addFilter("serviceId", EQ, serviceId);
     return new RestResponse<>(serviceResourceService.listUserDataSpecification(pageRequest));
   }
 }

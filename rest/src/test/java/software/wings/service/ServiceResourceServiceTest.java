@@ -216,7 +216,7 @@ public class ServiceResourceServiceTest extends WingsBaseTest {
   @Test
   public void shouldListServices() {
     PageRequest<Service> request = new PageRequest<>();
-    request.addFilter("appId", APP_ID, EQ);
+    request.addFilter("appId", EQ, APP_ID);
     when(wingsPersistence.query(Service.class, request)).thenReturn(new PageResponse<>());
     PageRequest<ServiceCommand> serviceCommandPageRequest =
         aPageRequest().withLimit(PageRequest.UNLIMITED).addFilter("appId", EQ, APP_ID).build();

@@ -62,7 +62,7 @@ public class NotificationSetupResource {
     if (pageRequest.getFilters() == null
         || pageRequest.getFilters().stream().noneMatch(
                searchFilter -> searchFilter.getFieldName().equals("accountId"))) {
-      pageRequest.addFilter("accountId", accountId, EQ);
+      pageRequest.addFilter("accountId", EQ, accountId);
     }
     return new RestResponse<>(notificationSetupService.listNotificationGroups(pageRequest));
   }

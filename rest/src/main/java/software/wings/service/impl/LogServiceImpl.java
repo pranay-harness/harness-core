@@ -65,9 +65,9 @@ public class LogServiceImpl implements LogService {
    */
   @Override
   public PageResponse<Log> list(String appId, String activityId, String unitName, PageRequest<Log> pageRequest) {
-    pageRequest.addFilter("appId", appId, EQ);
-    pageRequest.addFilter("activityId", activityId, EQ);
-    pageRequest.addFilter("commandUnitName", unitName, EQ);
+    pageRequest.addFilter("appId", EQ, appId);
+    pageRequest.addFilter("activityId", EQ, activityId);
+    pageRequest.addFilter("commandUnitName", EQ, unitName);
     pageRequest.addOrder(aSortOrder().withField("createdAt", OrderType.DESC).build());
     pageRequest.setLimit(String.valueOf(NUM_OF_LOGS_TO_KEEP));
     PageResponse<Log> response = wingsPersistence.query(Log.class, pageRequest);

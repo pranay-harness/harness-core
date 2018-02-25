@@ -65,8 +65,8 @@ public class HostResourceTest extends WingsBaseTest {
     PageRequest<Host> pageRequest = new PageRequest<>();
     pageRequest.setOffset("0");
     pageRequest.setLimit("50");
-    pageRequest.addFilter("appId", APP_ID, EQ);
-    pageRequest.addFilter("envId", ENV_ID, EQ);
+    pageRequest.addFilter("appId", EQ, APP_ID);
+    pageRequest.addFilter("envId", EQ, ENV_ID);
     verify(RESOURCE_SERVICE).list(pageRequest);
     assertThat(restResponse.getResource().getResponse().size()).isEqualTo(1);
     assertThat(restResponse.getResource().getResponse().get(0)).isNotNull();

@@ -93,7 +93,7 @@ public class InstanceSyncJob implements Job {
       final String appIdFinal = appId;
       logger.info("Executing instance sync job for appId:" + appId);
       PageRequest<InfrastructureMapping> pageRequest = new PageRequest<>();
-      pageRequest.addFilter("appId", appId, Operator.EQ);
+      pageRequest.addFilter("appId", Operator.EQ, appId);
       PageResponse<InfrastructureMapping> response = infraMappingService.list(pageRequest);
       // Response only contains id
       List<InfrastructureMapping> infraMappingList = response.getResponse();

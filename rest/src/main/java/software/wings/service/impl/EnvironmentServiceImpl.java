@@ -35,7 +35,6 @@ import software.wings.beans.Environment;
 import software.wings.beans.ErrorCode;
 import software.wings.beans.InfrastructureMapping;
 import software.wings.beans.Pipeline;
-import software.wings.beans.SearchFilter;
 import software.wings.beans.Service;
 import software.wings.beans.ServiceTemplate;
 import software.wings.beans.ServiceVariable;
@@ -186,8 +185,8 @@ public class EnvironmentServiceImpl implements EnvironmentService, DataProvider 
 
   private void addServiceTemplates(Environment environment) {
     PageRequest<ServiceTemplate> pageRequest = new PageRequest<>();
-    pageRequest.addFilter("appId", environment.getAppId(), SearchFilter.Operator.EQ);
-    pageRequest.addFilter("envId", environment.getUuid(), EQ);
+    pageRequest.addFilter("appId", EQ, environment.getAppId());
+    pageRequest.addFilter("envId", EQ, environment.getUuid());
     environment.setServiceTemplates(serviceTemplateService.list(pageRequest, false, false).getResponse());
   }
 
@@ -197,7 +196,7 @@ public class EnvironmentServiceImpl implements EnvironmentService, DataProvider 
   @Override
   public Map<String, String> getData(String appId, String... params) {
     PageRequest<Environment> pageRequest = new PageRequest<>();
-    pageRequest.addFilter("appId", appId, EQ);
+    pageRequest.addFilter("appId", EQ, appId);
     return list(pageRequest, false).stream().collect(toMap(Environment::getUuid, Environment::getName));
   }
 

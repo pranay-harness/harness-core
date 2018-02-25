@@ -238,7 +238,7 @@ public class ConfigFileOverrideIntegrationTest extends WingsBaseTest {
     //    hostService.bulkSave(infraId, envId, baseHost);
     //    log().info("{} host imported", numOfHostsImported);
     PageRequest<Host> pageRequest = new PageRequest<>();
-    //    pageRequest.addFilter("infraId", infraId, EQ);
+    //    pageRequest.addFilter("infraId", EQ, infraId);
     return hostService.list(pageRequest).getResponse();
   }
 

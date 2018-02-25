@@ -86,7 +86,7 @@ public class WorkflowResource {
         && (pageRequest.getFilters() == null
                || pageRequest.getFilters().stream().noneMatch(
                       searchFilter -> searchFilter.getFieldName().equals("workflowType")))) {
-      pageRequest.addFilter("workflowType", WorkflowType.ORCHESTRATION, Operator.EQ);
+      pageRequest.addFilter("workflowType", Operator.EQ, WorkflowType.ORCHESTRATION);
     }
     return new RestResponse<>(workflowService.listWorkflows(pageRequest, previousExecutionsCount));
   }

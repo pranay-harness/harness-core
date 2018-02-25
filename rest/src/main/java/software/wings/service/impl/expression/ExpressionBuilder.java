@@ -189,7 +189,7 @@ public abstract class ExpressionBuilder {
                                                                   .addFilter("entityId", IN, entityIds.toArray())
                                                                   .build();
     if (entityType != null) {
-      serviceVariablePageRequest.addFilter("entityType", entityType, EQ);
+      serviceVariablePageRequest.addFilter("entityType", EQ, entityType);
     }
     List<ServiceVariable> serviceVariables = serviceVariablesService.list(serviceVariablePageRequest, true);
 
