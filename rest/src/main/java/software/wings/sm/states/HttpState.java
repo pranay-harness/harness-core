@@ -473,7 +473,7 @@ public class HttpState extends State {
     private int socketTimeoutMillis = 10000;
 
     /**
-     * Do not instantiate Builder.
+     * Do not instantiate PageResponseBuilder.
      */
     private Builder() {}
 

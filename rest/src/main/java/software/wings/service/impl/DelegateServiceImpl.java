@@ -26,7 +26,7 @@ import static software.wings.beans.alert.NoEligibleDelegatesAlert.NoEligibleDele
 import static software.wings.common.Constants.DELEGATE_SYNC_CACHE;
 import static software.wings.common.UUIDGenerator.generateUuid;
 import static software.wings.dl.MongoHelper.setUnset;
-import static software.wings.dl.PageRequest.Builder.aPageRequest;
+import static software.wings.dl.PageRequest.PageRequestBuilder.aPageRequest;
 import static software.wings.exception.WingsException.ALERTING;
 
 import com.google.common.base.Joiner;

@@ -4,6 +4,7 @@ import static io.harness.data.structure.EmptyPredicate.isEmpty;
 import static software.wings.beans.Base.GLOBAL_APP_ID;
 import static software.wings.beans.DelegateTask.Builder.aDelegateTask;
 import static software.wings.common.UUIDGenerator.generateUuid;
+import static software.wings.dl.PageRequest.PageRequestBuilder.aPageRequest;
 
 import com.google.common.collect.Lists;
 import com.google.inject.Inject;
@@ -430,7 +431,7 @@ public class YamlGitServiceImpl implements YamlGitService {
 
   @Override
   public RestResponse<List<GitSyncError>> listGitSyncErrors(String accountId) {
-    PageRequest<GitSyncError> pageRequest = PageRequest.Builder.aPageRequest()
+    PageRequest<GitSyncError> pageRequest = aPageRequest()
                                                 .addFilter("accountId", Operator.EQ, accountId)
                                                 .withLimit("500")
                                                 .addOrder("lastUpdatedAt", OrderType.ASC)
@@ -441,8 +442,7 @@ public class YamlGitServiceImpl implements YamlGitService {
 
   @Override
   public long getGitSyncErrorCount(String accountId) {
-    PageRequest<GitSyncError> pageRequest =
-        PageRequest.Builder.aPageRequest().addFilter("accountId", Operator.EQ, accountId).build();
+    PageRequest<GitSyncError> pageRequest = aPageRequest().addFilter("accountId", Operator.EQ, accountId).build();
     return wingsPersistence.getCount(GitSyncError.class, pageRequest);
   }
 

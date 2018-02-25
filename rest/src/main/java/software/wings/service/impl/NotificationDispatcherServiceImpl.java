@@ -12,7 +12,7 @@ import static software.wings.common.Constants.LINK_COLOR;
 import static software.wings.common.Constants.PAUSED_COLOR;
 import static software.wings.common.Constants.RESUMED_COLOR;
 import static software.wings.common.NotificationMessageResolver.getDecoratedNotificationMessage;
-import static software.wings.dl.PageRequest.Builder.aPageRequest;
+import static software.wings.dl.PageRequest.PageRequestBuilder.aPageRequest;
 
 import com.google.inject.Inject;
 import com.google.inject.Singleton;

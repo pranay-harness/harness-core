@@ -379,7 +379,7 @@ public class PageResponse<T> extends PageRequest<T> implements List<T> {
    *
    * @param <T> the type parameter
    */
-  public static final class Builder<T> {
+  public static final class PageResponseBuilder<T> {
     private List<T> response = Lists.newArrayList();
     private long total;
     private String offset;
@@ -390,15 +390,15 @@ public class PageResponse<T> extends PageRequest<T> implements List<T> {
     private List<String> fieldsExcluded = new ArrayList<>();
     private UriInfo uriInfo;
 
-    private Builder() {}
+    private PageResponseBuilder() {}
 
     /**
      * A page response builder.
      *
      * @return the builder
      */
-    public static Builder aPageResponse() {
-      return new Builder();
+    public static PageResponseBuilder aPageResponse() {
+      return new PageResponseBuilder();
     }
 
     /**
@@ -407,7 +407,7 @@ public class PageResponse<T> extends PageRequest<T> implements List<T> {
      * @param response the response
      * @return the builder
      */
-    public Builder withResponse(List<T> response) {
+    public PageResponseBuilder withResponse(List<T> response) {
       this.response = response;
       return this;
     }
@@ -418,7 +418,7 @@ public class PageResponse<T> extends PageRequest<T> implements List<T> {
      * @param total the total
      * @return the builder
      */
-    public Builder withTotal(long total) {
+    public PageResponseBuilder withTotal(long total) {
       this.total = total;
       return this;
     }
@@ -429,7 +429,7 @@ public class PageResponse<T> extends PageRequest<T> implements List<T> {
      * @param offset the offset
      * @return the builder
      */
-    public Builder withOffset(String offset) {
+    public PageResponseBuilder withOffset(String offset) {
       this.offset = offset;
       return this;
     }
@@ -440,7 +440,7 @@ public class PageResponse<T> extends PageRequest<T> implements List<T> {
      * @param limit the limit
      * @return the builder
      */
-    public Builder withLimit(String limit) {
+    public PageResponseBuilder withLimit(String limit) {
       this.limit = limit;
       return this;
     }
@@ -451,7 +451,7 @@ public class PageResponse<T> extends PageRequest<T> implements List<T> {
      * @param filters the filters
      * @return the builder
      */
-    public Builder withFilters(List<SearchFilter> filters) {
+    public PageResponseBuilder withFilters(List<SearchFilter> filters) {
       this.filters = filters;
       return this;
     }
@@ -462,7 +462,7 @@ public class PageResponse<T> extends PageRequest<T> implements List<T> {
      * @param orders the orders
      * @return the builder
      */
-    public Builder withOrders(List<SortOrder> orders) {
+    public PageResponseBuilder withOrders(List<SortOrder> orders) {
       this.orders = orders;
       return this;
     }
@@ -473,7 +473,7 @@ public class PageResponse<T> extends PageRequest<T> implements List<T> {
      * @param fieldsIncluded the fields included
      * @return the builder
      */
-    public Builder withFieldsIncluded(List<String> fieldsIncluded) {
+    public PageResponseBuilder withFieldsIncluded(List<String> fieldsIncluded) {
       this.fieldsIncluded = fieldsIncluded;
       return this;
     }
@@ -484,7 +484,7 @@ public class PageResponse<T> extends PageRequest<T> implements List<T> {
      * @param fieldsExcluded the fields excluded
      * @return the builder
      */
-    public Builder withFieldsExcluded(List<String> fieldsExcluded) {
+    public PageResponseBuilder withFieldsExcluded(List<String> fieldsExcluded) {
       this.fieldsExcluded = fieldsExcluded;
       return this;
     }
@@ -495,7 +495,7 @@ public class PageResponse<T> extends PageRequest<T> implements List<T> {
      * @param uriInfo the uri info
      * @return the builder
      */
-    public Builder withUriInfo(UriInfo uriInfo) {
+    public PageResponseBuilder withUriInfo(UriInfo uriInfo) {
       this.uriInfo = uriInfo;
       return this;
     }
@@ -505,7 +505,7 @@ public class PageResponse<T> extends PageRequest<T> implements List<T> {
      *
      * @return the builder
      */
-    public Builder but() {
+    public PageResponseBuilder but() {
       return aPageResponse()
           .withResponse(response)
           .withTotal(total)

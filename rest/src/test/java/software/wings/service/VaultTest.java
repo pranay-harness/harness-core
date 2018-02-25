@@ -14,6 +14,7 @@ import static org.mockito.Matchers.anyObject;
 import static org.mockito.Mockito.when;
 import static org.mockito.MockitoAnnotations.initMocks;
 import static org.mockito.internal.util.reflection.Whitebox.setInternalState;
+import static software.wings.dl.PageRequest.PageRequestBuilder.aPageRequest;
 import static software.wings.service.impl.security.KmsServiceImpl.SECRET_MASK;
 import static software.wings.settings.SettingValue.SettingVariableTypes.CONFIG_FILE;
 
@@ -55,7 +56,6 @@ import software.wings.beans.VaultConfig;
 import software.wings.beans.WorkflowExecution.WorkflowExecutionBuilder;
 import software.wings.core.queue.Queue;
 import software.wings.delegatetasks.DelegateProxyFactory;
-import software.wings.dl.PageRequest.Builder;
 import software.wings.dl.PageResponse;
 import software.wings.dl.WingsPersistence;
 import software.wings.exception.WingsException;
@@ -1090,7 +1090,7 @@ public class VaultTest extends WingsBaseTest {
 
       // read the values and compare
       PageResponse<SettingAttribute> attributeQuery =
-          wingsPersistence.query(SettingAttribute.class, Builder.aPageRequest().build());
+          wingsPersistence.query(SettingAttribute.class, aPageRequest().build());
       assertEquals(numOfSettingAttributes, attributeQuery.size());
       for (SettingAttribute settingAttribute : attributeQuery) {
         assertEquals(encryptedEntities.get(settingAttribute.getUuid()), settingAttribute);
@@ -1246,7 +1246,7 @@ public class VaultTest extends WingsBaseTest {
 
       // read the values and compare
       PageResponse<SettingAttribute> attributeQuery =
-          wingsPersistence.query(SettingAttribute.class, Builder.aPageRequest().build());
+          wingsPersistence.query(SettingAttribute.class, aPageRequest().build());
       assertEquals(numOfSettingAttributes, attributeQuery.size());
       for (SettingAttribute settingAttribute : attributeQuery) {
         assertEquals(encryptedEntities.get(settingAttribute.getUuid()), settingAttribute);

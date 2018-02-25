@@ -13,7 +13,8 @@ import static software.wings.beans.ConfigFile.DEFAULT_TEMPLATE_ID;
 import static software.wings.beans.Environment.Builder.anEnvironment;
 import static software.wings.beans.Service.Builder.aService;
 import static software.wings.beans.ServiceTemplate.Builder.aServiceTemplate;
-import static software.wings.dl.PageRequest.Builder.aPageRequest;
+import static software.wings.dl.PageRequest.PageRequestBuilder.aPageRequest;
+import static software.wings.dl.PageResponse.PageResponseBuilder.aPageResponse;
 import static software.wings.utils.WingsTestConstants.APP_ID;
 import static software.wings.utils.WingsTestConstants.ENV_ID;
 import static software.wings.utils.WingsTestConstants.HOST_ID;
@@ -104,13 +105,10 @@ public class ServiceTemplateServiceTest extends WingsBaseTest {
   @Test
   public void shouldListSavedServiceTemplates() {
     PageResponse<ServiceTemplate> pageResponse =
-        PageResponse.Builder.aPageResponse()
-            .withResponse(asList(builder.but().withServiceId(SERVICE_ID).build()))
-            .build();
+        aPageResponse().withResponse(asList(builder.but().withServiceId(SERVICE_ID).build())).build();
 
     when(wingsPersistence.query(ServiceTemplate.class, aPageRequest().build())).thenReturn(pageResponse);
-    when(infrastructureMappingService.list(any(PageRequest.class)))
-        .thenReturn(PageResponse.Builder.aPageResponse().build());
+    when(infrastructureMappingService.list(any(PageRequest.class))).thenReturn(aPageResponse().build());
 
     PageResponse<ServiceTemplate> templatePageResponse = templateService.list(aPageRequest().build(), true, false);
 
@@ -180,8 +178,7 @@ public class ServiceTemplateServiceTest extends WingsBaseTest {
   public void shouldUpdateServiceTemplate() {
     ServiceTemplate template = builder.build();
     when(wingsPersistence.get(ServiceTemplate.class, APP_ID, TEMPLATE_ID)).thenReturn(template);
-    when(infrastructureMappingService.list(any(PageRequest.class)))
-        .thenReturn(PageResponse.Builder.aPageResponse().build());
+    when(infrastructureMappingService.list(any(PageRequest.class))).thenReturn(aPageResponse().build());
     templateService.update(template);
     verify(wingsPersistence)
         .updateFields(

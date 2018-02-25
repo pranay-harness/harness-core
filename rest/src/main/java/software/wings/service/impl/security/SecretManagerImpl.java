@@ -2,6 +2,7 @@ package software.wings.service.impl.security;
 
 import static org.apache.commons.lang3.StringUtils.isBlank;
 import static org.apache.commons.lang3.StringUtils.isNotBlank;
+import static software.wings.dl.PageRequest.PageRequestBuilder.aPageRequest;
 import static software.wings.security.EncryptionType.LOCAL;
 import static software.wings.security.encryption.SimpleEncryption.CHARSET;
 import static software.wings.service.impl.security.KmsServiceImpl.SECRET_MASK;
@@ -41,7 +42,6 @@ import software.wings.beans.alert.AlertType;
 import software.wings.beans.alert.KmsSetupAlert;
 import software.wings.core.queue.Queue;
 import software.wings.dl.PageRequest;
-import software.wings.dl.PageRequest.Builder;
 import software.wings.dl.PageResponse;
 import software.wings.dl.WingsPersistence;
 import software.wings.exception.WingsException;
@@ -251,7 +251,7 @@ public class SecretManagerImpl implements SecretManager {
     final List<String> secretIds = getSecretIds(entityId, variableType);
 
     final PageRequest<SecretUsageLog> request =
-        PageRequest.Builder.aPageRequest().addFilter("encryptedDataId", Operator.IN, secretIds.toArray()).build();
+        aPageRequest().addFilter("encryptedDataId", Operator.IN, secretIds.toArray()).build();
     PageResponse<SecretUsageLog> response = wingsPersistence.query(SecretUsageLog.class, request);
     response.getResponse().forEach(secretUsageLog -> {
       if (isNotBlank(secretUsageLog.getWorkflowExecutionId())) {
@@ -267,7 +267,7 @@ public class SecretManagerImpl implements SecretManager {
   public long getUsageLogsSize(String entityId, SettingVariableTypes variableType) throws IllegalAccessException {
     final List<String> secretIds = getSecretIds(entityId, variableType);
     final PageRequest<SecretUsageLog> request =
-        PageRequest.Builder.aPageRequest().addFilter("encryptedDataId", Operator.IN, secretIds.toArray()).build();
+        aPageRequest().addFilter("encryptedDataId", Operator.IN, secretIds.toArray()).build();
     return wingsPersistence.getCount(SecretUsageLog.class, request);
   }
 
@@ -460,7 +460,7 @@ public class SecretManagerImpl implements SecretManager {
 
   @Override
   public void checkAndAlertForInvalidManagers() {
-    PageRequest<Account> pageRequest = Builder.aPageRequest().build();
+    PageRequest<Account> pageRequest = aPageRequest().build();
     List<Account> accounts = accountService.list(pageRequest);
     for (Account account : accounts) {
       vaildateKmsConfigs(account.getUuid());

@@ -21,6 +21,7 @@ import static software.wings.beans.SearchFilter.Operator.EQ;
 import static software.wings.beans.User.Builder.anUser;
 import static software.wings.beans.UserInvite.UserInviteBuilder.anUserInvite;
 import static software.wings.common.UUIDGenerator.generateUuid;
+import static software.wings.dl.PageResponse.PageResponseBuilder.aPageResponse;
 import static software.wings.security.PermissionAttribute.ResourceType.APPLICATION;
 import static software.wings.security.PermissionAttribute.ResourceType.ARTIFACT;
 import static software.wings.security.PermissionAttribute.ResourceType.DEPLOYMENT;
@@ -81,7 +82,6 @@ import software.wings.beans.UserInvite;
 import software.wings.beans.UserInvite.UserInviteBuilder;
 import software.wings.common.Constants;
 import software.wings.dl.PageRequest;
-import software.wings.dl.PageResponse;
 import software.wings.dl.WingsPersistence;
 import software.wings.exception.WingsException;
 import software.wings.helpers.ext.mail.EmailData;
@@ -202,8 +202,7 @@ public class UserServiceTest extends WingsBaseTest {
         .thenReturn(new EmailVerificationToken(USER_ID));
     when(accountService.save(any(Account.class)))
         .thenReturn(anAccount().withCompanyName(COMPANY_NAME).withUuid(ACCOUNT_ID).build());
-    when(wingsPersistence.query(eq(User.class), any(PageRequest.class)))
-        .thenReturn(PageResponse.Builder.aPageResponse().build());
+    when(wingsPersistence.query(eq(User.class), any(PageRequest.class))).thenReturn(aPageResponse().build());
 
     userService.register(userBuilder.build());
 
@@ -243,7 +242,7 @@ public class UserServiceTest extends WingsBaseTest {
     when(accountService.save(any(Account.class)))
         .thenReturn(anAccount().withCompanyName(COMPANY_NAME).withUuid(ACCOUNT_ID).build());
     when(wingsPersistence.query(eq(User.class), any(PageRequest.class)))
-        .thenReturn(PageResponse.Builder.aPageResponse().withResponse(Lists.newArrayList(existingUser)).build());
+        .thenReturn(aPageResponse().withResponse(Lists.newArrayList(existingUser)).build());
     when(wingsPersistence.saveAndGet(eq(EmailVerificationToken.class), any(EmailVerificationToken.class)))
         .thenReturn(anEmailVerificationToken().withToken("token123").build());
 

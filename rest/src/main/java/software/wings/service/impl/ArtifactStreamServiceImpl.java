@@ -14,7 +14,7 @@ import static software.wings.beans.artifact.ArtifactStreamType.DOCKER;
 import static software.wings.beans.artifact.ArtifactStreamType.ECR;
 import static software.wings.beans.artifact.ArtifactStreamType.GCR;
 import static software.wings.beans.artifact.ArtifactStreamType.NEXUS;
-import static software.wings.dl.PageRequest.Builder.aPageRequest;
+import static software.wings.dl.PageRequest.PageRequestBuilder.aPageRequest;
 
 import com.google.common.base.Joiner;
 import com.google.common.collect.ImmutableMap;
@@ -33,7 +33,6 @@ import software.wings.beans.artifact.ArtifactStreamType;
 import software.wings.beans.yaml.Change.ChangeType;
 import software.wings.beans.yaml.GitFileChange;
 import software.wings.dl.PageRequest;
-import software.wings.dl.PageRequest.Builder;
 import software.wings.dl.PageResponse;
 import software.wings.dl.WingsPersistence;
 import software.wings.exception.WingsException;
@@ -162,7 +161,7 @@ public class ArtifactStreamServiceImpl implements ArtifactStreamService, DataPro
     String escapedString = Pattern.quote(name);
 
     // We need to check if the name exists in case of auto generate, if it exists, we need to add a suffix to the name.
-    PageRequest<ArtifactStream> pageRequest = PageRequest.Builder.aPageRequest()
+    PageRequest<ArtifactStream> pageRequest = aPageRequest()
                                                   .addFilter("appId", Operator.EQ, artifactStream.getAppId())
                                                   .addFilter("serviceId", Operator.EQ, artifactStream.getServiceId())
                                                   .addFilter("name", Operator.STARTS_WITH, escapedString)
@@ -270,7 +269,7 @@ public class ArtifactStreamServiceImpl implements ArtifactStreamService, DataPro
 
   @Override
   public List<ArtifactStream> getArtifactStreamsForService(String appId, String serviceId) {
-    PageRequest pageRequest = Builder.aPageRequest()
+    PageRequest pageRequest = aPageRequest()
                                   .addFilter("appId", Operator.EQ, appId)
                                   .addFilter("serviceId", Operator.EQ, serviceId)
                                   .addOrder("createdAt", OrderType.ASC)

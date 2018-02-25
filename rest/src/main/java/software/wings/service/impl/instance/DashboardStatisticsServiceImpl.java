@@ -15,7 +15,7 @@ import static software.wings.beans.instance.dashboard.EntitySummary.Builder.anEn
 import static software.wings.beans.instance.dashboard.EntitySummaryStats.Builder.anEntitySummaryStats;
 import static software.wings.beans.instance.dashboard.InstanceSummaryStats.Builder.anInstanceSummaryStats;
 import static software.wings.beans.instance.dashboard.service.PipelineExecutionHistory.Builder.aPipelineExecutionHistory;
-import static software.wings.dl.PageRequest.Builder.aPageRequest;
+import static software.wings.dl.PageRequest.PageRequestBuilder.aPageRequest;
 
 import com.google.common.collect.Lists;
 import com.google.inject.Inject;

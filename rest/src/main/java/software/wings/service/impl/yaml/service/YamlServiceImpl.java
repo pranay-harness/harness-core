@@ -25,6 +25,7 @@ import static software.wings.beans.yaml.YamlType.PIPELINE;
 import static software.wings.beans.yaml.YamlType.SERVICE;
 import static software.wings.beans.yaml.YamlType.VERIFICATION_PROVIDER;
 import static software.wings.beans.yaml.YamlType.WORKFLOW;
+import static software.wings.dl.PageRequest.PageRequestBuilder.aPageRequest;
 
 import com.google.common.collect.Lists;
 import com.google.common.collect.Maps;
@@ -56,7 +57,7 @@ import software.wings.beans.yaml.ChangeContext;
 import software.wings.beans.yaml.GitFileChange;
 import software.wings.beans.yaml.YamlConstants;
 import software.wings.beans.yaml.YamlType;
-import software.wings.dl.PageRequest;
+import software.wings.dl.PageRequest.PageRequestBuilder;
 import software.wings.dl.PageResponse;
 import software.wings.dl.WingsPersistence;
 import software.wings.exception.HarnessException;
@@ -160,7 +161,7 @@ public class YamlServiceImpl<Y extends BaseYaml, B extends Base> implements Yaml
       final Class beanClass = yamlType.getBeanClass();
       String entityName =
           yamlHelper.extractEntityNameFromYamlPath(yamlType.getPathExpression(), yamlFilePath, PATH_DELIMITER);
-      PageRequest.Builder pageRequest = PageRequest.Builder.aPageRequest();
+      PageRequestBuilder pageRequest = aPageRequest();
       String appId;
       String serviceId;
       Object entity;
@@ -273,7 +274,7 @@ public class YamlServiceImpl<Y extends BaseYaml, B extends Base> implements Yaml
     return rr;
   }
 
-  private Object getResult(Class beanClass, PageRequest.Builder pageRequest) {
+  private Object getResult(Class beanClass, PageRequestBuilder pageRequest) {
     PageResponse response = wingsPersistence.query(beanClass, pageRequest.build());
     if (response.getTotal() > 0) {
       return response.get(0);

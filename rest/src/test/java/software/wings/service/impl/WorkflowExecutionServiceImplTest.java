@@ -27,7 +27,8 @@ import static software.wings.beans.WorkflowPhase.WorkflowPhaseBuilder.aWorkflowP
 import static software.wings.beans.artifact.Artifact.Builder.anArtifact;
 import static software.wings.beans.infrastructure.Host.Builder.aHost;
 import static software.wings.common.UUIDGenerator.generateUuid;
-import static software.wings.dl.PageResponse.Builder.aPageResponse;
+import static software.wings.dl.PageRequest.PageRequestBuilder.aPageRequest;
+import static software.wings.dl.PageResponse.PageResponseBuilder.aPageResponse;
 import static software.wings.settings.SettingValue.SettingVariableTypes.PHYSICAL_DATA_CENTER;
 import static software.wings.sm.ExecutionInterrupt.ExecutionInterruptBuilder.anExecutionInterrupt;
 import static software.wings.utils.WingsTestConstants.ACCOUNT_NAME;
@@ -406,7 +407,7 @@ public class WorkflowExecutionServiceImplTest extends WingsBaseTest {
         .extracting("status")
         .contains("FAILED", "FAILED");
 
-    PageRequest<WorkflowExecution> pageRequest = PageRequest.Builder.aPageRequest()
+    PageRequest<WorkflowExecution> pageRequest = aPageRequest()
                                                      .addFilter("appId", Operator.EQ, app.getUuid())
                                                      .addFilter("uuid", Operator.EQ, workflowExecution.getUuid())
                                                      .build();
@@ -769,8 +770,8 @@ public class WorkflowExecutionServiceImplTest extends WingsBaseTest {
   //  @Test
   //  public void shouldUpdateInProgressCount() throws InterruptedException {
   //    Environment env = wingsPersistence.saveAndGet(Environment.class,
-  //    Builder.anEnvironment().withAppId(appId).build()); triggerWorkflow(env); WorkflowExecution workflowExecution =
-  //    wingsPersistence.get(WorkflowExecution.class, new PageRequest<>());
+  //    PageResponseBuilder.anEnvironment().withAppId(appId).build()); triggerWorkflow(env); WorkflowExecution
+  //    workflowExecution = wingsPersistence.get(WorkflowExecution.class, new PageRequest<>());
   //    workflowExecutionService.incrementInProgressCount(workflowExecution.getAccountId(),
   //    workflowExecution.getUuid(), 1); workflowExecution = wingsPersistence.get(WorkflowExecution.class, new
   //    PageRequest<>()); assertThat(workflowExecution.getBreakdown().getInprogress()).isEqualTo(1);
@@ -784,8 +785,8 @@ public class WorkflowExecutionServiceImplTest extends WingsBaseTest {
   //  @Test
   //  public void shouldUpdateSuccessCount() throws InterruptedException {
   //    Environment env = wingsPersistence.saveAndGet(Environment.class,
-  //    Builder.anEnvironment().withAppId(appId).build()); triggerWorkflow(env); WorkflowExecution workflowExecution =
-  //    wingsPersistence.get(WorkflowExecution.class, new PageRequest<>());
+  //    PageResponseBuilder.anEnvironment().withAppId(appId).build()); triggerWorkflow(env); WorkflowExecution
+  //    workflowExecution = wingsPersistence.get(WorkflowExecution.class, new PageRequest<>());
   //    workflowExecutionService.incrementSuccess(workflowExecution.getAccountId(), workflowExecution.getUuid(),
   //    1); workflowExecution = wingsPersistence.get(WorkflowExecution.class, new PageRequest<>());
   //    assertThat(workflowExecution.getBreakdown().getSuccess()).isEqualTo(2);

@@ -4,6 +4,7 @@ import static io.harness.data.structure.EmptyPredicate.isEmpty;
 import static io.harness.data.structure.EmptyPredicate.isNotEmpty;
 import static java.util.Arrays.asList;
 import static software.wings.beans.DelegateTask.SyncTaskContext.Builder.aContext;
+import static software.wings.dl.PageRequest.PageRequestBuilder.aPageRequest;
 import static software.wings.utils.Switch.noop;
 import static software.wings.utils.Switch.unhandled;
 
@@ -374,7 +375,7 @@ public class AnalysisServiceImpl implements AnalysisService {
   }
 
   private List<String> getLastSuccessfulWorkflowExecutionIds(String appId, String workflowId) {
-    final PageRequest<WorkflowExecution> pageRequest = PageRequest.Builder.aPageRequest()
+    final PageRequest<WorkflowExecution> pageRequest = aPageRequest()
                                                            .addFilter("appId", Operator.EQ, appId)
                                                            .addFilter("workflowId", Operator.EQ, workflowId)
                                                            .addFilter("status", Operator.EQ, ExecutionStatus.SUCCESS)
@@ -815,11 +816,11 @@ public class AnalysisServiceImpl implements AnalysisService {
 
   @Override
   public boolean purgeLogs() {
-    final PageRequest<Workflow> workflowRequest = PageRequest.Builder.aPageRequest().build();
+    final PageRequest<Workflow> workflowRequest = aPageRequest().build();
     PageResponse<Workflow> workflows = wingsPersistence.query(Workflow.class, workflowRequest);
     for (Workflow workflow : workflows) {
       final PageRequest<WorkflowExecution> workflowExecutionRequest =
-          PageRequest.Builder.aPageRequest()
+          aPageRequest()
               .addFilter("workflowId", Operator.EQ, workflow.getUuid())
               .addFilter("status", Operator.EQ, ExecutionStatus.SUCCESS)
               .addOrder("createdAt", OrderType.DESC)

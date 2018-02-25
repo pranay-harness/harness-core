@@ -2,7 +2,7 @@ package software.wings.scheduler;
 
 import static software.wings.beans.DelegateTask.Builder.aDelegateTask;
 import static software.wings.common.UUIDGenerator.generateUuid;
-import static software.wings.dl.PageRequest.Builder.aPageRequest;
+import static software.wings.dl.PageRequest.PageRequestBuilder.aPageRequest;
 import static software.wings.dl.PageRequest.UNLIMITED;
 
 import com.google.inject.Inject;

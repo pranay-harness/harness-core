@@ -19,7 +19,7 @@ import static software.wings.common.Constants.DEFAULT_RUNTIME_PATH;
 import static software.wings.common.Constants.DEFAULT_STAGING_PATH;
 import static software.wings.common.Constants.RUNTIME_PATH;
 import static software.wings.common.Constants.STAGING_PATH;
-import static software.wings.dl.PageRequest.Builder.aPageRequest;
+import static software.wings.dl.PageRequest.PageRequestBuilder.aPageRequest;
 
 import com.google.common.base.Joiner;
 import com.google.common.collect.ImmutableMap;

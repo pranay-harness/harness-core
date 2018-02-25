@@ -17,7 +17,7 @@ import static software.wings.beans.HostConnectionCredential.HostConnectionCreden
 import static software.wings.beans.SearchFilter.Operator.EQ;
 import static software.wings.beans.SettingAttribute.Builder.aSettingAttribute;
 import static software.wings.beans.infrastructure.Host.Builder.aHost;
-import static software.wings.dl.PageRequest.Builder.aPageRequest;
+import static software.wings.dl.PageRequest.PageRequestBuilder.aPageRequest;
 import static software.wings.utils.WingsTestConstants.APP_ID;
 import static software.wings.utils.WingsTestConstants.ENV_ID;
 import static software.wings.utils.WingsTestConstants.HOST_CONN_ATTR_ID;
@@ -223,10 +223,10 @@ public class HostServiceTest extends WingsBaseTest {
         Host hostPostSave =
        aHost().withUuid(HOST_ID).withAppId(APP_ID).withInfraId(INFRA_ID).withHostName(HOST_NAME).withHostConnAttr(hostConnAttr).build();
         Host applicationHostPreSave =
-            Host.Builder.aHost().withAppId(APP_ID).withEnvId(ENV_ID).withInfraId(INFRA_ID).withHostName(HOST_NAME)
+            Host.PageResponseBuilder.aHost().withAppId(APP_ID).withEnvId(ENV_ID).withInfraId(INFRA_ID).withHostName(HOST_NAME)
                 .withHost(hostPostSave).build();
         Host applicationHostPostSave =
-            Host.Builder.aHost().withUuid(HOST_ID).withAppId(APP_ID).withEnvId(ENV_ID).withInfraId(INFRA_ID).withHostName(HOST_NAME)
+            Host.PageResponseBuilder.aHost().withUuid(HOST_ID).withAppId(APP_ID).withEnvId(ENV_ID).withInfraId(INFRA_ID).withHostName(HOST_NAME)
                 .withHost(hostPostSave).build();
 
         when(environmentService.get(APP_ID, ENV_ID, false)).thenReturn(anEnvironment().withName("PROD").build());
@@ -234,7 +234,7 @@ public class HostServiceTest extends WingsBaseTest {
         when(wingsPersistence.saveAndGet(Host.class, hostPreSave)).thenReturn(hostPostSave);
         when(wingsPersistence.saveAndGet(Host.class, applicationHostPreSave)).thenReturn(applicationHostPostSave);
         when(infrastructureService.get(INFRA_ID))
-            .thenReturn(Infrastructure.Builder.anInfrastructure().withType(STATIC).withAppId(GLOBAL_APP_ID).withUuid(INFRA_ID).build());
+            .thenReturn(Infrastructure.PageResponseBuilder.anInfrastructure().withType(STATIC).withAppId(GLOBAL_APP_ID).withUuid(INFRA_ID).build());
         when(settingsService.get(GLOBAL_APP_ID, HOST_CONN_ATTR_ID)).thenReturn(hostConnAttr);
 
         hostService.bulkSave(INFRA_ID, ENV_ID, requestHost);
@@ -258,7 +258,7 @@ public class HostServiceTest extends WingsBaseTest {
         when(aggregationPipeline.match(hostQuery)).thenReturn(aggregationPipeline);
         when(aggregationPipeline.group(anyString(), any())).thenReturn(aggregationPipeline);
         when(aggregationPipeline.aggregate(HostUsage.class)).thenReturn(
-            asList(HostUsage.Builder.aHostUsage().withAppId("ID1").withCount(1).build(),
+            asList(HostUsage.PageResponseBuilder.aHostUsage().withAppId("ID1").withCount(1).build(),
        aHostUsage().withAppId("ID2").withCount(2).build()).listIterator());
 
         List<HostUsage> usageByApplication = hostService.getInfrastructureHostUsageByApplication(INFRA_ID);

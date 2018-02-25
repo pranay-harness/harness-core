@@ -2,7 +2,7 @@ package software.wings.sm.states;
 
 import static java.util.stream.Collectors.toMap;
 import static software.wings.beans.SearchFilter.Operator.EQ;
-import static software.wings.dl.PageRequest.Builder.aPageRequest;
+import static software.wings.dl.PageRequest.PageRequestBuilder.aPageRequest;
 
 import com.google.common.collect.Maps;
 import com.google.inject.Inject;

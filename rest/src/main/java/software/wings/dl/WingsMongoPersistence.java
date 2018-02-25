@@ -8,6 +8,7 @@ import static org.apache.commons.lang3.StringUtils.isBlank;
 import static org.apache.commons.lang3.StringUtils.isNotBlank;
 import static org.mongodb.morphia.mapping.Mapper.ID_KEY;
 import static software.wings.common.UUIDGenerator.generateUuid;
+import static software.wings.dl.PageResponse.PageResponseBuilder.aPageResponse;
 import static software.wings.exception.WingsException.HARMLESS;
 import static software.wings.utils.WingsReflectionUtils.getDeclaredAndInheritedFields;
 import static software.wings.utils.WingsReflectionUtils.getDecryptedField;
@@ -508,7 +509,7 @@ public class WingsMongoPersistence implements WingsPersistence, Managed {
   @Override
   public <T> PageResponse<T> query(Class<T> cls, PageRequest<T> req, ReadPref readPref) {
     if (!authFilters(req)) {
-      return PageResponse.Builder.aPageResponse().withTotal(0).build();
+      return aPageResponse().withTotal(0).build();
     }
     if (readPref == ReadPref.NORMAL && req.getReadPref() == ReadPref.CRITICAL) {
       readPref = ReadPref.CRITICAL;
@@ -530,7 +531,7 @@ public class WingsMongoPersistence implements WingsPersistence, Managed {
   @Override
   public <T> PageResponse<T> query(Class<T> cls, PageRequest<T> req, ReadPref readPref, boolean disableValidation) {
     if (!authFilters(req)) {
-      return PageResponse.Builder.aPageResponse().withTotal(0).build();
+      return aPageResponse().withTotal(0).build();
     }
     return MongoHelper.queryPageRequest(datastoreMap.get(readPref), cls, req, disableValidation);
   }

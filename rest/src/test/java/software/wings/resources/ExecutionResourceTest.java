@@ -9,8 +9,8 @@ import static org.mockito.Mockito.reset;
 import static org.mockito.Mockito.when;
 import static software.wings.beans.Application.Builder.anApplication;
 import static software.wings.common.UUIDGenerator.generateUuid;
-import static software.wings.dl.PageRequest.Builder.aPageRequest;
-import static software.wings.dl.PageResponse.Builder.aPageResponse;
+import static software.wings.dl.PageRequest.PageRequestBuilder.aPageRequest;
+import static software.wings.dl.PageResponse.PageResponseBuilder.aPageResponse;
 
 import org.junit.After;
 import org.junit.ClassRule;

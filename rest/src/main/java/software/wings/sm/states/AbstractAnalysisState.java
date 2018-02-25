@@ -2,6 +2,7 @@ package software.wings.sm.states;
 
 import static org.apache.commons.lang3.StringUtils.isBlank;
 import static software.wings.beans.ErrorCode.INVALID_REQUEST;
+import static software.wings.dl.PageRequest.PageRequestBuilder.aPageRequest;
 
 import com.google.common.collect.Lists;
 import com.google.inject.Inject;
@@ -177,7 +178,7 @@ public abstract class AbstractAnalysisState extends State {
     }
     int offSet = 0;
     final PageRequest<WorkflowExecution> pageRequest =
-        PageRequest.Builder.aPageRequest()
+        aPageRequest()
             .addFilter("appId", Operator.EQ, context.getAppId())
             .addFilter("workflowId", Operator.EQ, getWorkflowId(context))
             .addFilter("_id", Operator.NOT_EQ, context.getWorkflowExecutionId())

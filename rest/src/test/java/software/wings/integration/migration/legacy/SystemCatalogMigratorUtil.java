@@ -5,7 +5,7 @@ import static software.wings.beans.AppContainer.Builder.anAppContainer;
 import static software.wings.beans.SearchFilter.Operator.EQ;
 import static software.wings.beans.SystemCatalog.Builder.aSystemCatalog;
 import static software.wings.beans.SystemCatalog.CatalogType.APPSTACK;
-import static software.wings.dl.PageRequest.Builder.aPageRequest;
+import static software.wings.dl.PageRequest.PageRequestBuilder.aPageRequest;
 import static software.wings.service.intfc.FileService.FileBucket.PLATFORMS;
 import static software.wings.utils.ContainerFamily.TOMCAT;
 

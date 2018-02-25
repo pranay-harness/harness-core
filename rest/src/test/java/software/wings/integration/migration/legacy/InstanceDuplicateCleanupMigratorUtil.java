@@ -1,7 +1,7 @@
 package software.wings.integration.migration.legacy;
 
 import static java.util.Arrays.asList;
-import static software.wings.dl.PageRequest.Builder.aPageRequest;
+import static software.wings.dl.PageRequest.PageRequestBuilder.aPageRequest;
 import static software.wings.dl.PageRequest.UNLIMITED;
 
 import com.google.common.collect.HashMultimap;

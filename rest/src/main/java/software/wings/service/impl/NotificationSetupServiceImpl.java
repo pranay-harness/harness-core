@@ -2,7 +2,7 @@ package software.wings.service.impl;
 
 import static io.harness.data.structure.EmptyPredicate.isNotEmpty;
 import static software.wings.beans.ErrorCode.INVALID_REQUEST;
-import static software.wings.dl.PageRequest.Builder.aPageRequest;
+import static software.wings.dl.PageRequest.PageRequestBuilder.aPageRequest;
 
 import com.google.common.base.Joiner;
 import com.google.inject.Inject;
@@ -96,7 +96,7 @@ public class NotificationSetupServiceImpl implements NotificationSetupService {
 
   @Override
   public NotificationGroup readNotificationGroupByName(String accountId, String notificationGroupName) {
-    PageRequest<NotificationGroup> pageRequest = PageRequest.Builder.aPageRequest()
+    PageRequest<NotificationGroup> pageRequest = aPageRequest()
                                                      .addFilter("accountId", Operator.EQ, accountId)
                                                      .addFilter("name", Operator.EQ, notificationGroupName)
                                                      .build();

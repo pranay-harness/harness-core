@@ -12,6 +12,7 @@ import static software.wings.beans.ConfigFile.DEFAULT_TEMPLATE_ID;
 import static software.wings.beans.SearchFilter.Operator.EQ;
 import static software.wings.beans.SearchFilter.Operator.IN;
 import static software.wings.beans.ServiceTemplate.Builder.aServiceTemplate;
+import static software.wings.dl.PageRequest.PageRequestBuilder.aPageRequest;
 
 import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.Maps;
@@ -122,7 +123,7 @@ public class ServiceTemplateServiceImpl implements ServiceTemplateService {
     });
 
     PageRequest<InfrastructureMapping> infraPageRequest =
-        PageRequest.Builder.aPageRequest()
+        aPageRequest()
             .addFilter("appId", EQ, appId)
             .addFilter("envId", EQ, envId)
             .addFilter("serviceTemplateId", IN, serviceTemplateMap.keySet().toArray())

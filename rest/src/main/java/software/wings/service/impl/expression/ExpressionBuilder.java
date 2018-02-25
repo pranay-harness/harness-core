@@ -18,7 +18,7 @@ import static software.wings.common.Constants.WINGS_BACKUP_PATH;
 import static software.wings.common.Constants.WINGS_RUNTIME_PATH;
 import static software.wings.common.Constants.WINGS_STAGING_PATH;
 import static software.wings.common.Constants.XPATH;
-import static software.wings.dl.PageRequest.Builder.aPageRequest;
+import static software.wings.dl.PageRequest.PageRequestBuilder.aPageRequest;
 import static software.wings.sm.ContextElement.DEPLOYMENT_URL;
 import static software.wings.utils.Switch.noop;
 

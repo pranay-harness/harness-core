@@ -20,7 +20,7 @@ import static software.wings.beans.PhaseStepType.STOP_SERVICE;
 import static software.wings.beans.SearchFilter.Operator.EQ;
 import static software.wings.beans.SearchFilter.Operator.EXISTS;
 import static software.wings.beans.SearchFilter.Operator.NOT_EQ;
-import static software.wings.dl.PageRequest.Builder.aPageRequest;
+import static software.wings.dl.PageRequest.PageRequestBuilder.aPageRequest;
 import static software.wings.utils.Switch.noop;
 import static software.wings.utils.Switch.unhandled;
 

@@ -10,7 +10,7 @@ import static software.wings.beans.ErrorCode.INVALID_ARGUMENT;
 import static software.wings.beans.ErrorCode.INVALID_REQUEST;
 import static software.wings.beans.SearchFilter.Builder.aSearchFilter;
 import static software.wings.beans.yaml.Change.ChangeType.ADD;
-import static software.wings.dl.PageRequest.Builder.aPageRequest;
+import static software.wings.dl.PageRequest.PageRequestBuilder.aPageRequest;
 import static software.wings.service.intfc.FileService.FileBucket.CONFIGS;
 
 import com.google.common.base.Preconditions;
@@ -28,7 +28,7 @@ import software.wings.beans.EntityVersion.ChangeType;
 import software.wings.beans.SearchFilter.Operator;
 import software.wings.beans.ServiceTemplate;
 import software.wings.dl.PageRequest;
-import software.wings.dl.PageRequest.Builder;
+import software.wings.dl.PageRequest.PageRequestBuilder;
 import software.wings.dl.PageResponse;
 import software.wings.dl.WingsPersistence;
 import software.wings.exception.WingsException;
@@ -193,7 +193,7 @@ public class ConfigServiceImpl implements ConfigService {
 
   @Override
   public ConfigFile get(String appId, String entityId, EntityType entityType, String relativeFilePath) {
-    Builder builder = Builder.aPageRequest();
+    PageRequestBuilder builder = aPageRequest();
     String columnName = null;
     if (EntityType.SERVICE.equals(entityType)) {
       columnName = "entityId";
@@ -435,7 +435,7 @@ public class ConfigServiceImpl implements ConfigService {
 
   @Override
   public void delete(String appId, String entityId, EntityType entityType, String configFileName) {
-    PageRequest<ConfigFile> pageRequest = PageRequest.Builder.aPageRequest()
+    PageRequest<ConfigFile> pageRequest = aPageRequest()
                                               .addFilter("appId", Operator.EQ, appId)
                                               .addFilter("entityType", Operator.EQ, entityType.name())
                                               .addFilter("entityId", Operator.EQ, entityId)

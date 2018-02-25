@@ -8,7 +8,7 @@ import static software.wings.beans.command.Command.Builder.aCommand;
 import static software.wings.beans.command.CommandUnitType.ECS_SETUP;
 import static software.wings.beans.command.CommandUnitType.KUBERNETES_SETUP;
 import static software.wings.beans.command.ServiceCommand.Builder.aServiceCommand;
-import static software.wings.dl.PageRequest.Builder.aPageRequest;
+import static software.wings.dl.PageRequest.PageRequestBuilder.aPageRequest;
 import static software.wings.dl.PageRequest.UNLIMITED;
 
 import com.google.inject.Inject;

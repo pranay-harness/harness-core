@@ -8,7 +8,8 @@ import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 import static software.wings.beans.artifact.DockerArtifactStream.Builder.aDockerArtifactStream;
 import static software.wings.beans.artifact.JenkinsArtifactStream.Builder.aJenkinsArtifactStream;
-import static software.wings.dl.PageResponse.Builder.aPageResponse;
+import static software.wings.dl.PageRequest.PageRequestBuilder.aPageRequest;
+import static software.wings.dl.PageResponse.PageResponseBuilder.aPageResponse;
 import static software.wings.utils.WingsTestConstants.ACCOUNT_ID;
 import static software.wings.utils.WingsTestConstants.APP_ID;
 import static software.wings.utils.WingsTestConstants.ARTIFACT_STREAM_ID;
@@ -103,7 +104,7 @@ public class ArtifactStreamServiceTest extends WingsBaseTest {
 
   @Test
   public void shouldList() {
-    PageRequest pageRequest = PageRequest.Builder.aPageRequest().build();
+    PageRequest pageRequest = aPageRequest().build();
     when(wingsPersistence.query(ArtifactStream.class, pageRequest))
         .thenReturn(aPageResponse().withResponse(asList(jenkinsArtifactStream)).build());
 

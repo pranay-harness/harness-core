@@ -4,6 +4,7 @@ import static java.util.stream.Collectors.toMap;
 import static java.util.stream.Collectors.toSet;
 import static software.wings.beans.infrastructure.instance.InstanceType.ECS_CONTAINER_INSTANCE;
 import static software.wings.beans.infrastructure.instance.InstanceType.KUBERNETES_CONTAINER_INSTANCE;
+import static software.wings.dl.PageRequest.PageRequestBuilder.aPageRequest;
 
 import com.google.common.collect.Lists;
 import com.google.common.collect.Sets;
@@ -274,7 +275,7 @@ public class InstanceServiceImpl implements InstanceService {
   @Override
   public List<ContainerDeploymentInfo> getContainerDeploymentInfoList(String containerSvcNameNoRevision, String appId) {
     PageRequest<ContainerDeploymentInfo> pageRequest =
-        PageRequest.Builder.aPageRequest()
+        aPageRequest()
             .addFilter("containerSvcNameNoRevision", Operator.EQ, containerSvcNameNoRevision)
             .addFilter("appId", Operator.EQ, appId)
             .addOrder("containerSvcName", OrderType.ASC)
@@ -286,7 +287,7 @@ public class InstanceServiceImpl implements InstanceService {
   @Override
   public List<String> getContainerServiceNames(String containerSvcNameNoRevision, String appId) {
     PageRequest<ContainerDeploymentInfo> pageRequest =
-        PageRequest.Builder.aPageRequest()
+        aPageRequest()
             .addFilter("containerSvcNameNoRevision", Operator.EQ, containerSvcNameNoRevision)
             .addFilter("appId", Operator.EQ, appId)
             .addFieldsIncluded("containerSvcName")
