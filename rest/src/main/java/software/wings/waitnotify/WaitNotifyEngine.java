@@ -1,6 +1,7 @@
 package software.wings.waitnotify;
 
 import static io.harness.data.structure.EmptyPredicate.isNotEmpty;
+import static software.wings.beans.SearchFilter.Operator.EQ;
 import static software.wings.waitnotify.NotifyEvent.Builder.aNotifyEvent;
 
 import com.google.common.base.Preconditions;
@@ -10,7 +11,6 @@ import com.google.inject.Singleton;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import software.wings.beans.ReadPref;
-import software.wings.beans.SearchFilter;
 import software.wings.core.queue.Queue;
 import software.wings.dl.PageRequest;
 import software.wings.dl.PageResponse;
@@ -97,7 +97,7 @@ public class WaitNotifyEngine {
       String notificationId = wingsPersistence.save(new NotifyResponse(correlationId, response, error));
 
       PageRequest<WaitQueue> req = new PageRequest<>();
-      req.addFilter("correlationId", correlationId, SearchFilter.Operator.EQ);
+      req.addFilter("correlationId", EQ, correlationId);
       PageResponse<WaitQueue> waitQueuesResponse = wingsPersistence.query(WaitQueue.class, req, ReadPref.CRITICAL);
       waitQueuesResponse.forEach(waitQueue
           -> notifyQueue.send(

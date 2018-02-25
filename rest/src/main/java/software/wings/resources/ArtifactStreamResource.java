@@ -89,7 +89,7 @@ public class ArtifactStreamResource {
   @ExceptionMetered
   public RestResponse<PageResponse<ArtifactStream>> list(
       @QueryParam("appId") String appId, @BeanParam PageRequest<ArtifactStream> pageRequest) {
-    pageRequest.addFilter("appId", appId, EQ);
+    pageRequest.addFilter("appId", EQ, appId);
     return new RestResponse<>(artifactStreamService.list(pageRequest));
   }
 

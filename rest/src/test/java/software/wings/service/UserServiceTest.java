@@ -294,7 +294,7 @@ public class UserServiceTest extends WingsBaseTest {
   @Test
   public void shouldListUsers() {
     PageRequest<User> request = new PageRequest<>();
-    request.addFilter("appId", GLOBAL_APP_ID, EQ);
+    request.addFilter("appId", EQ, GLOBAL_APP_ID);
     userService.list(request);
     verify(wingsPersistence).query(eq(User.class), pageRequestArgumentCaptor.capture());
     SearchFilter filter = (SearchFilter) pageRequestArgumentCaptor.getValue().getFilters().get(0);

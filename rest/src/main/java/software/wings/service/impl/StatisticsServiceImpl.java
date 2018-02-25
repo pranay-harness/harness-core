@@ -413,9 +413,9 @@ public class StatisticsServiceImpl implements StatisticsService {
       }
     } else {
       authorizedAppIds = appIds;
-      actionableNotificationRequest.addFilter("appId", authorizedAppIds.toArray(), IN);
-      nonActionableNotificationRequest.addFilter("appId", authorizedAppIds.toArray(), IN);
-      failureRequest.addFilter("appId", authorizedAppIds.toArray(), IN);
+      actionableNotificationRequest.addFilter("appId", IN, authorizedAppIds.toArray());
+      nonActionableNotificationRequest.addFilter("appId", IN, authorizedAppIds.toArray());
+      failureRequest.addFilter("appId", IN, authorizedAppIds.toArray());
     }
 
     int actionableNotificationCount = notificationService.list(actionableNotificationRequest).getResponse().size();

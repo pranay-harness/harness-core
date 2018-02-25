@@ -183,7 +183,7 @@ public class ArtifactResourceTest {
             .request()
             .get(new GenericType<RestResponse<PageResponse<Artifact>>>() {});
     PageRequest<Artifact> expectedPageRequest = new PageRequest<>();
-    expectedPageRequest.addFilter("appId", APP_ID, Operator.EQ);
+    expectedPageRequest.addFilter("appId", Operator.EQ, APP_ID);
     expectedPageRequest.setOffset("0");
     verify(ARTIFACT_SERVICE).listSortByBuildNo(expectedPageRequest);
   }

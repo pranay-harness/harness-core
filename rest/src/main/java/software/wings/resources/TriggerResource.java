@@ -57,7 +57,7 @@ public class TriggerResource {
   @ExceptionMetered
   public RestResponse<PageResponse<Trigger>> list(
       @QueryParam("appId") String appId, @BeanParam PageRequest<Trigger> pageRequest) {
-    pageRequest.addFilter("appId", appId, EQ);
+    pageRequest.addFilter("appId", EQ, appId);
     return new RestResponse<>(triggerService.list(pageRequest));
   }
 

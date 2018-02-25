@@ -72,7 +72,7 @@ public class ActivityResource {
   public RestResponse<PageResponse<Activity>> list(@QueryParam("accountId") String accountId,
       @QueryParam("envId") String envId, @BeanParam PageRequest<Activity> request) {
     if (isNotEmpty(envId)) {
-      request.addFilter("environmentId", envId, EQ);
+      request.addFilter("environmentId", EQ, envId);
     }
     if (request.getPageSize() > Constants.DEFAULT_RUNTIME_ENTITY_PAGESIZE) {
       request.setLimit(Constants.DEFAULT_RUNTIME_ENTITY_PAGESIZE_STR);

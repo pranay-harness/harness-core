@@ -55,7 +55,7 @@ public class NotificationResource {
   public RestResponse<PageResponse<Notification>> list(@QueryParam("appId") String appId,
       @BeanParam PageRequest<Notification> pageRequest, @QueryParam("accountId") @NotEmpty String accountId) {
     if (isNotEmpty(appId)) {
-      pageRequest.addFilter("appId", appId, EQ);
+      pageRequest.addFilter("appId", EQ, appId);
     }
     pageRequest.setOrders(
         asList(aSortOrder().withField("complete", ASC).build(), aSortOrder().withField("createdAt", DESC).build()));

@@ -36,8 +36,8 @@ public abstract class InstanceHandler {
 
   protected List<Instance> getInstances(String appId, String infraMappingId) {
     PageRequest<Instance> pageRequest = new PageRequest<>();
-    pageRequest.addFilter("infraMappingId", infraMappingId, Operator.EQ);
-    pageRequest.addFilter("appId", appId, Operator.EQ);
+    pageRequest.addFilter("infraMappingId", Operator.EQ, infraMappingId);
+    pageRequest.addFilter("appId", Operator.EQ, appId);
     PageResponse<Instance> pageResponse = instanceService.list(pageRequest);
     return pageResponse.getResponse();
   }

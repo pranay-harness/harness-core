@@ -404,7 +404,7 @@ public class PageRequest<T> {
    * @param fieldValue value for RHS.
    * @param op         Operator for filter.
    */
-  public void addFilter(String fieldName, Object fieldValue, Operator op) {
+  public void addFilter(String fieldName, Operator op, Object fieldValue) {
     SearchFilter filter = new SearchFilter();
     filter.setFieldName(fieldName);
     filter.setFieldValues(fieldValue);

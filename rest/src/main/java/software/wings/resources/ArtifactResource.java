@@ -66,7 +66,7 @@ public class ArtifactResource {
   @ExceptionMetered
   public RestResponse<PageResponse<Artifact>> list(
       @QueryParam("appId") String appId, @BeanParam PageRequest<Artifact> pageRequest) {
-    pageRequest.addFilter("appId", appId, EQ);
+    pageRequest.addFilter("appId", EQ, appId);
     return new RestResponse<>(artifactService.listSortByBuildNo(pageRequest));
   }
 

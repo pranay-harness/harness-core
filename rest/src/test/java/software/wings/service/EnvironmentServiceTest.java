@@ -63,6 +63,7 @@ import software.wings.beans.Notification;
 import software.wings.beans.PhysicalInfrastructureMapping;
 import software.wings.beans.Pipeline;
 import software.wings.beans.SearchFilter;
+import software.wings.beans.SearchFilter.Operator;
 import software.wings.beans.Service;
 import software.wings.beans.ServiceTemplate;
 import software.wings.beans.ServiceVariable;
@@ -153,8 +154,8 @@ public class EnvironmentServiceTest extends WingsBaseTest {
 
     ServiceTemplate serviceTemplate = aServiceTemplate().build();
     PageRequest<ServiceTemplate> serviceTemplatePageRequest = new PageRequest<>();
-    serviceTemplatePageRequest.addFilter("appId", environment.getAppId(), SearchFilter.Operator.EQ);
-    serviceTemplatePageRequest.addFilter("envId", environment.getUuid(), EQ);
+    serviceTemplatePageRequest.addFilter("appId", Operator.EQ, environment.getAppId());
+    serviceTemplatePageRequest.addFilter("envId", EQ, environment.getUuid());
     PageResponse<ServiceTemplate> serviceTemplatePageResponse = new PageResponse<>();
     serviceTemplatePageResponse.setResponse(asList(serviceTemplate));
     when(serviceTemplateService.list(serviceTemplatePageRequest, false, false)).thenReturn(serviceTemplatePageResponse);
@@ -217,8 +218,8 @@ public class EnvironmentServiceTest extends WingsBaseTest {
     when(wingsPersistence.saveAndGet(any(), any(Environment.class))).thenReturn(clonedEnvironment);
 
     PageRequest<ServiceTemplate> pageRequest = new PageRequest<>();
-    pageRequest.addFilter("appId", environment.getAppId(), SearchFilter.Operator.EQ);
-    pageRequest.addFilter("envId", environment.getUuid(), EQ);
+    pageRequest.addFilter("appId", SearchFilter.Operator.EQ, environment.getAppId());
+    pageRequest.addFilter("envId", EQ, environment.getUuid());
 
     PhysicalInfrastructureMapping physicalInfrastructureMapping = aPhysicalInfrastructureMapping()
                                                                       .withHostConnectionAttrs(HOST_CONN_ATTR_ID)
@@ -265,8 +266,8 @@ public class EnvironmentServiceTest extends WingsBaseTest {
     when(wingsPersistence.saveAndGet(any(), any(Environment.class))).thenReturn(clonedEnvironment);
 
     PageRequest<ServiceTemplate> pageRequest = new PageRequest<>();
-    pageRequest.addFilter("appId", environment.getAppId(), SearchFilter.Operator.EQ);
-    pageRequest.addFilter("envId", environment.getUuid(), EQ);
+    pageRequest.addFilter("appId", SearchFilter.Operator.EQ, environment.getAppId());
+    pageRequest.addFilter("envId", EQ, environment.getUuid());
 
     PhysicalInfrastructureMapping physicalInfrastructureMapping = aPhysicalInfrastructureMapping()
                                                                       .withHostConnectionAttrs(HOST_CONN_ATTR_ID)
@@ -424,8 +425,8 @@ public class EnvironmentServiceTest extends WingsBaseTest {
     when(wingsPersistence.get(Environment.class, APP_ID, ENV_ID)).thenReturn(environment);
 
     PageRequest<ServiceTemplate> pageRequest = new PageRequest<>();
-    pageRequest.addFilter("appId", environment.getAppId(), SearchFilter.Operator.EQ);
-    pageRequest.addFilter("envId", environment.getUuid(), EQ);
+    pageRequest.addFilter("appId", SearchFilter.Operator.EQ, environment.getAppId());
+    pageRequest.addFilter("envId", EQ, environment.getUuid());
 
     PhysicalInfrastructureMapping physicalInfrastructureMapping = aPhysicalInfrastructureMapping()
                                                                       .withHostConnectionAttrs(HOST_CONN_ATTR_ID)
@@ -462,8 +463,8 @@ public class EnvironmentServiceTest extends WingsBaseTest {
     when(wingsPersistence.get(Environment.class, APP_ID, ENV_ID)).thenReturn(environment);
 
     PageRequest<ServiceTemplate> pageRequest = new PageRequest<>();
-    pageRequest.addFilter("appId", environment.getAppId(), SearchFilter.Operator.EQ);
-    pageRequest.addFilter("envId", environment.getUuid(), EQ);
+    pageRequest.addFilter("appId", SearchFilter.Operator.EQ, environment.getAppId());
+    pageRequest.addFilter("envId", EQ, environment.getUuid());
 
     PhysicalInfrastructureMapping physicalInfrastructureMapping = aPhysicalInfrastructureMapping()
                                                                       .withHostConnectionAttrs(HOST_CONN_ATTR_ID)

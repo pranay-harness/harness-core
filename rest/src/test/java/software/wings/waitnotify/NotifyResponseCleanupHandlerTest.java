@@ -43,7 +43,7 @@ public class NotifyResponseCleanupHandlerTest extends WingsBaseTest {
     wingsPersistence.save(notifyResponse);
 
     PageRequest<NotifyResponse> reqNotifyRes = new PageRequest<>();
-    reqNotifyRes.addFilter("status", ExecutionStatus.SUCCESS, Operator.EQ);
+    reqNotifyRes.addFilter("status", Operator.EQ, ExecutionStatus.SUCCESS);
     reqNotifyRes.setLimit(PageRequest.UNLIMITED);
     reqNotifyRes.addFieldsIncluded(ID_KEY);
     PageResponse<NotifyResponse> notifyPageResponses = wingsPersistence.query(NotifyResponse.class, reqNotifyRes);

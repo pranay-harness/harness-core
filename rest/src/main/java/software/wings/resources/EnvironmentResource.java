@@ -56,7 +56,7 @@ public class EnvironmentResource {
   @ExceptionMetered
   public RestResponse<PageResponse<Environment>> list(
       @QueryParam("appId") String appId, @BeanParam PageRequest<Environment> pageRequest) {
-    pageRequest.addFilter("appId", appId, EQ);
+    pageRequest.addFilter("appId", EQ, appId);
     return new RestResponse<>(envService.list(pageRequest, true));
   }
 

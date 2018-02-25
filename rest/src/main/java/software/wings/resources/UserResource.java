@@ -87,7 +87,7 @@ public class UserResource {
   public RestResponse<PageResponse<User>> list(
       @BeanParam PageRequest<User> pageRequest, @QueryParam("accountId") @NotEmpty String accountId) {
     Account account = accountService.get(accountId);
-    pageRequest.addFilter("accounts", account, Operator.HAS);
+    pageRequest.addFilter("accounts", Operator.HAS, account);
     PageResponse<User> pageResponse = userService.list(pageRequest);
     if (isNotEmpty(pageResponse)) {
       pageResponse.forEach(user -> {
