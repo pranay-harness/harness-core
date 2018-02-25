@@ -6,7 +6,6 @@ import static io.harness.data.structure.EmptyPredicate.isEmpty;
 import static java.util.stream.Collectors.toList;
 import static java.util.stream.Collectors.toMap;
 import static org.mongodb.morphia.mapping.Mapper.ID_KEY;
-import static software.wings.beans.SearchFilter.Builder.aSearchFilter;
 import static software.wings.core.maintenance.MaintenanceController.isMaintenance;
 import static software.wings.dl.PageRequest.Builder.aPageRequest;
 
@@ -46,20 +45,15 @@ public final class NotifyResponseCleanupHandler implements Runnable {
 
     try {
       PageResponse<NotifyResponse> notifyPageResponses = wingsPersistence.query(NotifyResponse.class,
-          aPageRequest()
-              .addFilter(aSearchFilter().withField("status", Operator.EQ, ExecutionStatus.SUCCESS).build())
-              .addFieldsIncluded(ID_KEY)
-              .build());
+          aPageRequest().addFilter("status", Operator.EQ, ExecutionStatus.SUCCESS).addFieldsIncluded(ID_KEY).build());
       if (isEmpty(notifyPageResponses)) {
         logger.debug("There are no NotifyResponse entries to cleanup");
         return;
       }
 
       List<String> correlationIds = notifyPageResponses.stream().map(NotifyResponse::getUuid).collect(toList());
-      PageResponse<WaitQueue> waitQueuesResponse = wingsPersistence.query(WaitQueue.class,
-          aPageRequest()
-              .addFilter(aSearchFilter().withField("correlationId", Operator.IN, correlationIds.toArray()).build())
-              .build());
+      PageResponse<WaitQueue> waitQueuesResponse = wingsPersistence.query(
+          WaitQueue.class, aPageRequest().addFilter("correlationId", Operator.IN, correlationIds.toArray()).build());
 
       Map<String, List<WaitQueue>> waitQueueMap = new HashMap<>();
 

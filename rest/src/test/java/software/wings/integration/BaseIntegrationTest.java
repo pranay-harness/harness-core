@@ -10,7 +10,6 @@ import static org.assertj.core.api.Assertions.assertThat;
 import static org.junit.Assert.assertNotNull;
 import static software.wings.beans.Application.Builder.anApplication;
 import static software.wings.beans.License.Builder.aLicense;
-import static software.wings.beans.SearchFilter.Builder.aSearchFilter;
 import static software.wings.beans.User.Builder.anUser;
 import static software.wings.common.Constants.HARNESS_NAME;
 import static software.wings.dl.PageRequest.Builder.aPageRequest;
@@ -288,14 +287,10 @@ private void addAdminUser() {
                  .withName("Admin")
                  .withEmail(adminUserName)
                  .withPassword(adminPassword)
-                 .withRoles(
-                     wingsPersistence
-                         .query(Role.class,
-                             aPageRequest()
-                                 .addFilter(
-                                     aSearchFilter().withField("roleType", Operator.EQ, RoleType.ACCOUNT_ADMIN).build())
-                                 .build())
-                         .getResponse())
+                 .withRoles(wingsPersistence
+                                .query(Role.class,
+                                    aPageRequest().addFilter("roleType", Operator.EQ, RoleType.ACCOUNT_ADMIN).build())
+                                .getResponse())
                  .withAccountName(HARNESS_NAME)
                  .withCompanyName(HARNESS_NAME)
                  .build(),

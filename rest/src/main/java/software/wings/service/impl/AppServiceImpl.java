@@ -10,9 +10,7 @@ import static software.wings.beans.Role.Builder.aRole;
 import static software.wings.beans.RoleType.APPLICATION_ADMIN;
 import static software.wings.beans.RoleType.NON_PROD_SUPPORT;
 import static software.wings.beans.RoleType.PROD_SUPPORT;
-import static software.wings.beans.SearchFilter.Builder.aSearchFilter;
 import static software.wings.beans.Setup.SetupStatus.INCOMPLETE;
-import static software.wings.beans.SortOrder.Builder.aSortOrder;
 import static software.wings.dl.PageRequest.Builder.aPageRequest;
 
 import com.google.common.collect.ImmutableMap;
@@ -200,14 +198,11 @@ public class AppServiceImpl implements AppService {
         try {
           application.setRecentExecutions(
               workflowExecutionService
-                  .listExecutions(
-                      aPageRequest()
-                          .withLimit(Integer.toString(numberOfExecutions))
-                          .addFilter(aSearchFilter()
-                                         .withField(WorkflowExecution.APP_ID_KEY, Operator.EQ, application.getUuid())
-                                         .build())
-                          .addOrder(aSortOrder().withField("createdAt", OrderType.DESC).build())
-                          .build(),
+                  .listExecutions(aPageRequest()
+                                      .withLimit(Integer.toString(numberOfExecutions))
+                                      .addFilter(WorkflowExecution.APP_ID_KEY, Operator.EQ, application.getUuid())
+                                      .addOrder("createdAt", OrderType.DESC)
+                                      .build(),
                       false)
                   .getResponse());
         } catch (Exception e) {
@@ -231,9 +226,9 @@ public class AppServiceImpl implements AppService {
   private List<Notification> getIncompleteActionableApplicationNotifications(String appId) {
     return notificationService
         .list(aPageRequest()
-                  .addFilter(aSearchFilter().withField(Notification.APP_ID_KEY, Operator.EQ, appId).build())
-                  .addFilter(aSearchFilter().withField("complete", Operator.EQ, false).build())
-                  .addFilter(aSearchFilter().withField("actionable", Operator.EQ, true).build())
+                  .addFilter(Notification.APP_ID_KEY, Operator.EQ, appId)
+                  .addFilter("complete", Operator.EQ, false)
+                  .addFilter("actionable", Operator.EQ, true)
                   .build())
         .getResponse();
   }

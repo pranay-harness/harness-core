@@ -2,6 +2,7 @@ package software.wings.dl;
 
 import static java.util.Arrays.asList;
 import static software.wings.beans.SearchFilter.Builder.aSearchFilter;
+import static software.wings.beans.SortOrder.Builder.aSortOrder;
 
 import com.google.common.base.MoreObjects;
 import com.google.common.base.Objects;
@@ -295,21 +296,16 @@ public class PageRequest<T> {
             }
             Base referenceObject = (Base) constructor.getDeclaringClass().newInstance();
             String collection = mapper.getCollectionName(referenceObject);
-            filters.add(
-                aSearchFilter()
-                    .withField(key, Operator.IN,
-                        map.get(key).stream().map(s -> new Key(referenceObject.getClass(), collection, s)).toArray())
-                    .build());
+            addFilter(key, Operator.IN,
+                map.get(key).stream().map(s -> new Key(referenceObject.getClass(), collection, s)).toArray());
           } catch (IllegalAccessException | InstantiationException | NoSuchMethodException e) {
-            filters.add(aSearchFilter().withField(key, Operator.IN, map.get(key).toArray()).build());
+            addFilter(key, Operator.IN, map.get(key).toArray());
           }
         } else {
           if (asList(Boolean.TYPE).contains(mappedClass.getMappedField(key).getType())) {
-            filters.add(aSearchFilter()
-                            .withField(key, Operator.IN, map.get(key).stream().map(Boolean::parseBoolean).toArray())
-                            .build());
+            addFilter(key, Operator.IN, map.get(key).stream().map(Boolean::parseBoolean).toArray());
           } else {
-            filters.add(aSearchFilter().withField(key, Operator.IN, map.get(key).toArray()).build());
+            addFilter(key, Operator.IN, map.get(key).toArray());
           }
         }
       }
@@ -398,16 +394,26 @@ public class PageRequest<T> {
   }
 
   /**
+   * Add an order.
+   *
+   * @param fieldName the field name
+   * @param orderType the order type
+   */
+  public void addOrder(String fieldName, OrderType orderType) {
+    this.orders.add(aSortOrder().withField(fieldName, orderType).build());
+  }
+
+  /**
    * Creates and adds a new search filter to PageRequest.
    *
    * @param fieldName  name of field to apply filter on.
    * @param fieldValue value for RHS.
    * @param op         Operator for filter.
    */
-  public void addFilter(String fieldName, Operator op, Object fieldValue) {
+  public void addFilter(String fieldName, Operator op, Object... fieldValues) {
     SearchFilter filter = new SearchFilter();
     filter.setFieldName(fieldName);
-    filter.setFieldValues(fieldValue);
+    filter.setFieldValues(fieldValues);
     filter.setOp(op);
     filters.add(filter);
   }
@@ -544,7 +550,7 @@ public class PageRequest<T> {
      * @return the builder
      */
     public Builder addFilter(String fieldName, Operator op, Object... fieldValues) {
-      this.filters.add(aSearchFilter().withField(fieldName, op, fieldValues).build());
+      filters.add(aSearchFilter().withField(fieldName, op, fieldValues).build());
       return this;
     }
 
@@ -567,7 +573,7 @@ public class PageRequest<T> {
      * @return the builder
      */
     public Builder addOrder(String fieldName, OrderType orderType) {
-      this.orders.add(SortOrder.Builder.aSortOrder().withField(fieldName, orderType).build());
+      this.orders.add(aSortOrder().withField(fieldName, orderType).build());
       return this;
     }
 

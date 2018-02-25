@@ -65,7 +65,7 @@ public class FeatureFlagTest extends WingsBaseTest {
     when(end.equal(FEATURE.name())).thenReturn(query);
 
     ffPageRequest.addFilter("name", SearchFilter.Operator.EQ, FEATURE.name());
-    ffPageRequestTypeNull.addFilter("name", SearchFilter.Operator.EQ, null);
+    ffPageRequestTypeNull.addFilter("name", SearchFilter.Operator.EQ);
   }
 
   @Test

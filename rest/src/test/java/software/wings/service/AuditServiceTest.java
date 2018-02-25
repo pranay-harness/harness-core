@@ -14,7 +14,6 @@ import software.wings.WingsBaseTest;
 import software.wings.audit.AuditHeader;
 import software.wings.audit.AuditHeader.RequestType;
 import software.wings.beans.HttpMethod;
-import software.wings.beans.SearchFilter;
 import software.wings.beans.SearchFilter.Operator;
 import software.wings.beans.User;
 import software.wings.dl.PageRequest;
@@ -99,12 +98,11 @@ public class AuditServiceTest extends WingsBaseTest {
     createAuditHeader();
     createAuditHeader();
 
-    PageResponse<AuditHeader> res = auditService.list(
-        PageRequest.Builder.aPageRequest()
-            .withOffset("1")
-            .withLimit("2")
-            .addFilter(SearchFilter.Builder.aSearchFilter().withField("appId", Operator.EQ, appId).build())
-            .build());
+    PageResponse<AuditHeader> res = auditService.list(PageRequest.Builder.aPageRequest()
+                                                          .withOffset("1")
+                                                          .withLimit("2")
+                                                          .addFilter("appId", Operator.EQ, appId)
+                                                          .build());
 
     assertThat(res).isNotNull();
     assertThat(res.size()).isEqualTo(2);

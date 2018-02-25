@@ -24,11 +24,8 @@ public class ArtifactEnumDataProvider implements DataProvider {
     String serviceId = params[0];
     Optional<ArtifactStream> artifactStream =
         artifactStreamService
-            .list(PageRequest.Builder.aPageRequest()
-                      .addFilter(SearchFilter.Builder.aSearchFilter()
-                                     .withField("serviceId", SearchFilter.Operator.EQ, serviceId)
-                                     .build())
-                      .build())
+            .list(
+                PageRequest.Builder.aPageRequest().addFilter("serviceId", SearchFilter.Operator.EQ, serviceId).build())
             .getResponse()
             .stream()
             .findFirst();

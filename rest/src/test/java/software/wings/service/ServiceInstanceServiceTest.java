@@ -47,7 +47,6 @@ import org.mongodb.morphia.query.Query;
 import org.mongodb.morphia.query.UpdateOperations;
 import software.wings.WingsBaseTest;
 import software.wings.beans.Activity;
-import software.wings.beans.SearchFilter;
 import software.wings.beans.ServiceInstance;
 import software.wings.beans.ServiceTemplate;
 import software.wings.beans.infrastructure.Host;
@@ -109,10 +108,8 @@ public class ServiceInstanceServiceTest extends WingsBaseTest {
     PageRequest pageRequest = aPageRequest()
                                   .withLimit("50")
                                   .withOffset("0")
-                                  .addFilter(SearchFilter.Builder.aSearchFilter()
-                                                 .withField("appId", EQ, APP_ID)
-                                                 .withField("envId", EQ, ENV_ID)
-                                                 .build())
+                                  .addFilter("appId", EQ, APP_ID)
+                                  .addFilter("envId", EQ, ENV_ID)
                                   .build();
     when(wingsPersistence.query(ServiceInstance.class, pageRequest)).thenReturn(pageResponse);
     PageResponse<ServiceInstance> serviceInstances = serviceInstanceService.list(pageRequest);

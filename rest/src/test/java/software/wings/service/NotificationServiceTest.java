@@ -13,7 +13,6 @@ import static software.wings.beans.ApprovalNotification.Builder.anApprovalNotifi
 import static software.wings.beans.EntityType.ARTIFACT;
 import static software.wings.beans.InformationNotification.Builder.anInformationNotification;
 import static software.wings.beans.NotificationAction.NotificationActionType.APPROVE;
-import static software.wings.beans.SearchFilter.Builder.aSearchFilter;
 import static software.wings.beans.SearchFilter.Operator.EQ;
 import static software.wings.dl.PageRequest.Builder.aPageRequest;
 import static software.wings.utils.WingsTestConstants.APP_ID;
@@ -75,7 +74,7 @@ public class NotificationServiceTest extends WingsBaseTest {
    */
   @Test
   public void shouldList() {
-    PageRequest pageRequest = aPageRequest().addFilter(aSearchFilter().withField("appId", EQ, APP_ID).build()).build();
+    PageRequest pageRequest = aPageRequest().addFilter("appId", EQ, APP_ID).build();
     notificationService.list(pageRequest);
     verify(wingsPersistence).query(Notification.class, pageRequest);
   }

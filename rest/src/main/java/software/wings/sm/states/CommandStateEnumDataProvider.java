@@ -1,7 +1,6 @@
 package software.wings.sm.states;
 
 import static java.util.stream.Collectors.toMap;
-import static software.wings.beans.SearchFilter.Builder.aSearchFilter;
 import static software.wings.beans.SearchFilter.Operator.EQ;
 import static software.wings.dl.PageRequest.Builder.aPageRequest;
 
@@ -30,9 +29,7 @@ public class CommandStateEnumDataProvider implements DataProvider {
     if (appId != null) {
       List<Service> services;
       if (params.length == 0) {
-        services = serviceResourceService
-                       .list(aPageRequest().addFilter(aSearchFilter().withField("appId", EQ, appId).build()).build(),
-                           false, true)
+        services = serviceResourceService.list(aPageRequest().addFilter("appId", EQ, appId).build(), false, true)
                        .getResponse();
       } else {
         if (params[0].equals("NONE")) {

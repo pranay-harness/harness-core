@@ -4,7 +4,6 @@ import static io.harness.data.structure.EmptyPredicate.isEmpty;
 import static io.harness.data.structure.EmptyPredicate.isNotEmpty;
 import static software.wings.beans.Graph.Builder.aGraph;
 import static software.wings.beans.GraphNode.GraphNodeBuilder.aGraphNode;
-import static software.wings.beans.SearchFilter.Builder.aSearchFilter;
 import static software.wings.beans.command.Command.Builder.aCommand;
 import static software.wings.beans.command.CommandUnitType.ECS_SETUP;
 import static software.wings.beans.command.CommandUnitType.KUBERNETES_SETUP;
@@ -59,9 +58,7 @@ public class ContainerSetupCommandsMigrationUtil extends WingsBaseTest {
     System.out.println("Updating " + apps.size() + " applications.");
     for (Application app : apps) {
       PageRequest<Service> svcPageRequest =
-          aPageRequest()
-              .addFilter(aSearchFilter().withField("appId", SearchFilter.Operator.EQ, app.getUuid()).build())
-              .build();
+          aPageRequest().addFilter("appId", SearchFilter.Operator.EQ, app.getUuid()).build();
 
       List<Service> services = serviceResourceService.list(svcPageRequest, false, true).getResponse();
       Set<Service> updatedServices = new HashSet<>();

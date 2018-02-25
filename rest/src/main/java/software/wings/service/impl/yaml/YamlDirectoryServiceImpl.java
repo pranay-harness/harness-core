@@ -3,7 +3,6 @@ package software.wings.service.impl.yaml;
 import static software.wings.beans.Base.GLOBAL_APP_ID;
 import static software.wings.beans.ConfigFile.DEFAULT_TEMPLATE_ID;
 import static software.wings.beans.FeatureName.GIT_SYNC;
-import static software.wings.beans.SearchFilter.Builder.aSearchFilter;
 import static software.wings.beans.yaml.YamlConstants.APPLICATIONS_FOLDER;
 import static software.wings.beans.yaml.YamlConstants.ARTIFACT_SOURCES_FOLDER;
 import static software.wings.beans.yaml.YamlConstants.CLOUD_PROVIDERS_FOLDER;
@@ -610,8 +609,7 @@ public class YamlDirectoryServiceImpl implements YamlDirectoryService {
     FolderNode workflowsFolder = new FolderNode(accountId, WORKFLOWS_FOLDER, Workflow.class,
         directoryPath.add(WORKFLOWS_FOLDER), app.getUuid(), yamlGitSyncService);
 
-    PageRequest<Workflow> pageRequest =
-        aPageRequest().addFilter(aSearchFilter().withField("appId", Operator.EQ, app.getAppId()).build()).build();
+    PageRequest<Workflow> pageRequest = aPageRequest().addFilter("appId", Operator.EQ, app.getAppId()).build();
     List<Workflow> workflows = workflowService.listWorkflows(pageRequest).getResponse();
 
     if (workflows != null) {
@@ -633,8 +631,7 @@ public class YamlDirectoryServiceImpl implements YamlDirectoryService {
     FolderNode pipelinesFolder = new FolderNode(accountId, PIPELINES_FOLDER, Pipeline.class,
         directoryPath.add(PIPELINES_FOLDER), app.getUuid(), yamlGitSyncService);
 
-    PageRequest<Pipeline> pageRequest =
-        aPageRequest().addFilter(aSearchFilter().withField("appId", Operator.EQ, app.getAppId()).build()).build();
+    PageRequest<Pipeline> pageRequest = aPageRequest().addFilter("appId", Operator.EQ, app.getAppId()).build();
     List<Pipeline> pipelines = pipelineService.listPipelines(pageRequest).getResponse();
 
     if (pipelines != null) {

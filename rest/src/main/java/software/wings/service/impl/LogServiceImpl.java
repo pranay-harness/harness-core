@@ -9,7 +9,6 @@ import static java.util.stream.Collectors.groupingBy;
 import static java.util.stream.Collectors.toList;
 import static java.util.stream.Collectors.toMap;
 import static software.wings.beans.SearchFilter.Operator.EQ;
-import static software.wings.beans.SortOrder.Builder.aSortOrder;
 import static software.wings.beans.command.CommandExecutionResult.CommandExecutionStatus.RUNNING;
 
 import com.google.common.io.Files;
@@ -68,7 +67,7 @@ public class LogServiceImpl implements LogService {
     pageRequest.addFilter("appId", EQ, appId);
     pageRequest.addFilter("activityId", EQ, activityId);
     pageRequest.addFilter("commandUnitName", EQ, unitName);
-    pageRequest.addOrder(aSortOrder().withField("createdAt", OrderType.DESC).build());
+    pageRequest.addOrder("createdAt", OrderType.DESC);
     pageRequest.setLimit(String.valueOf(NUM_OF_LOGS_TO_KEEP));
     PageResponse<Log> response = wingsPersistence.query(Log.class, pageRequest);
 

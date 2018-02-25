@@ -6,7 +6,6 @@ import static software.wings.beans.Base.GLOBAL_ENV_ID;
 import static software.wings.beans.EntityType.ENVIRONMENT;
 import static software.wings.beans.EntityType.SERVICE;
 import static software.wings.beans.ErrorCode.INVALID_ARGUMENT;
-import static software.wings.beans.SearchFilter.Builder.aSearchFilter;
 import static software.wings.beans.ServiceVariable.Type.ENCRYPTED_TEXT;
 import static software.wings.dl.PageRequest.Builder.aPageRequest;
 import static software.wings.service.impl.security.KmsServiceImpl.SECRET_MASK;
@@ -173,10 +172,7 @@ public class ServiceVariableServiceImpl implements ServiceVariableService {
   public List<ServiceVariable> getServiceVariablesForEntity(
       String appId, String entityId, boolean maskEncryptedFields) {
     PageRequest<ServiceVariable> request =
-        aPageRequest()
-            .addFilter(aSearchFilter().withField("appId", Operator.EQ, appId).build())
-            .addFilter(aSearchFilter().withField("entityId", Operator.EQ, entityId).build())
-            .build();
+        aPageRequest().addFilter("appId", Operator.EQ, appId).addFilter("entityId", Operator.EQ, entityId).build();
     List<ServiceVariable> variables = wingsPersistence.query(ServiceVariable.class, request).getResponse();
     variables.forEach(serviceVariable -> processEncryptedServiceVariable(maskEncryptedFields, serviceVariable));
     return variables;
@@ -185,12 +181,11 @@ public class ServiceVariableServiceImpl implements ServiceVariableService {
   @Override
   public List<ServiceVariable> getServiceVariablesByTemplate(
       String appId, String envId, ServiceTemplate serviceTemplate, boolean maskEncryptedFields) {
-    PageRequest<ServiceVariable> request =
-        aPageRequest()
-            .addFilter(aSearchFilter().withField("appId", Operator.EQ, appId).build())
-            .addFilter(aSearchFilter().withField("envId", Operator.EQ, envId).build())
-            .addFilter(aSearchFilter().withField("templateId", Operator.EQ, serviceTemplate.getUuid()).build())
-            .build();
+    PageRequest<ServiceVariable> request = aPageRequest()
+                                               .addFilter("appId", Operator.EQ, appId)
+                                               .addFilter("envId", Operator.EQ, envId)
+                                               .addFilter("templateId", Operator.EQ, serviceTemplate.getUuid())
+                                               .build();
     List<ServiceVariable> variables = wingsPersistence.query(ServiceVariable.class, request).getResponse();
     variables.forEach(serviceVariable -> processEncryptedServiceVariable(maskEncryptedFields, serviceVariable));
     return variables;

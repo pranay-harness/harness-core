@@ -73,7 +73,6 @@ import software.wings.beans.PhysicalInfrastructureMapping;
 import software.wings.beans.Pipeline;
 import software.wings.beans.PipelineStage;
 import software.wings.beans.PipelineStage.PipelineStageElement;
-import software.wings.beans.SearchFilter;
 import software.wings.beans.SearchFilter.Operator;
 import software.wings.beans.Service;
 import software.wings.beans.ServiceInstance;
@@ -697,11 +696,7 @@ public class WorkflowExecutionServiceImplTest extends WingsBaseTest {
     assertThat(pipeline.getUuid()).isNotNull();
 
     PageRequest<StateMachine> req = new PageRequest<>();
-    SearchFilter filter = new SearchFilter();
-    filter.setFieldName("originId");
-    filter.setFieldValues(pipeline.getUuid());
-    filter.setOp(Operator.EQ);
-    req.addFilter(filter);
+    req.addFilter("originId", Operator.EQ, pipeline.getUuid());
     PageResponse<StateMachine> res = workflowService.listStateMachines(req);
 
     assertThat(res).isNotNull().hasSize(1).doesNotContainNull();

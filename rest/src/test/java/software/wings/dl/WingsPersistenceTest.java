@@ -98,12 +98,7 @@ public class WingsPersistenceTest extends WingsBaseTest {
     wingsPersistence.save(entity);
 
     PageRequest<TestEntity> req = new PageRequest<>();
-    SearchFilter filter = new SearchFilter();
-
-    filter.setFieldValues("fieldA11", "fieldA21");
-    filter.setFieldName("fieldA");
-    filter.setOp(Operator.IN);
-    req.addFilter(filter);
+    req.addFilter("fieldA", Operator.IN, new Object[] {"fieldA11", "fieldA21"});
     PageResponse<TestEntity> res = wingsPersistence.query(TestEntity.class, req);
     assertThat(res).isNotNull();
     assertThat(res.size()).isEqualTo(2);
@@ -127,12 +122,7 @@ public class WingsPersistenceTest extends WingsBaseTest {
     wingsPersistence.save(entity);
 
     PageRequest<TestEntity> req = new PageRequest<>();
-    SearchFilter filter = new SearchFilter();
-
-    filter.setFieldValues("fieldList11", "fieldList13", "fieldList21");
-    filter.setFieldName("fieldList");
-    filter.setOp(Operator.IN);
-    req.addFilter(filter);
+    req.addFilter("fieldList", Operator.IN, "fieldList11", "fieldList13", "fieldList21");
     PageResponse<TestEntity> res = wingsPersistence.query(TestEntity.class, req);
     assertThat(res).isNotNull();
     assertThat(res.size()).isEqualTo(2);
@@ -183,11 +173,7 @@ public class WingsPersistenceTest extends WingsBaseTest {
     PageRequest<TestEntity> req = new PageRequest<>();
     req.setLimit("2");
     req.setOffset("1");
-    SearchFilter filter = new SearchFilter();
-    filter.setFieldValues("fieldA1");
-    filter.setFieldName("fieldA");
-    filter.setOp(Operator.CONTAINS);
-    req.addFilter(filter);
+    req.addFilter("fieldA", Operator.CONTAINS, "fieldA1");
 
     SortOrder order = new SortOrder();
     order.setFieldName("fieldA");
@@ -492,16 +478,8 @@ public class WingsPersistenceTest extends WingsBaseTest {
     PageRequest<TestEntity> req = new PageRequest<>();
     req.setLimit("2");
     req.setOffset("1");
-    SearchFilter filter = new SearchFilter();
-    filter.setFieldValues("fieldA1");
-    filter.setFieldName("fieldA");
-    filter.setOp(Operator.CONTAINS);
-    req.addFilter(filter);
-
-    SortOrder order = new SortOrder();
-    order.setFieldName("fieldA");
-    order.setOrderType(OrderType.DESC);
-    req.addOrder(order);
+    req.addFilter("fieldA", Operator.CONTAINS, "fieldA1");
+    req.addOrder("fieldA", OrderType.DESC);
 
     req.setOptions(asList(PageRequest.Option.COUNT));
     PageResponse<TestEntity> res = wingsPersistence.query(TestEntity.class, req);
@@ -544,16 +522,8 @@ public class WingsPersistenceTest extends WingsBaseTest {
     createEntitiesForPagination();
 
     PageRequest<TestEntity> req = new PageRequest<>();
-    SearchFilter filter = new SearchFilter();
-    filter.setFieldValues("fieldA1");
-    filter.setFieldName("fieldA");
-    filter.setOp(Operator.CONTAINS);
-    req.addFilter(filter);
-
-    SortOrder order = new SortOrder();
-    order.setFieldName("fieldA");
-    order.setOrderType(OrderType.DESC);
-    req.addOrder(order);
+    req.addFilter("fieldA", Operator.CONTAINS, "fieldA1");
+    req.addOrder("fieldA", OrderType.DESC);
 
     req.setOptions(asList(PageRequest.Option.LIST, PageRequest.Option.COUNT));
     PageResponse<TestEntity> res = wingsPersistence.query(TestEntity.class, req);

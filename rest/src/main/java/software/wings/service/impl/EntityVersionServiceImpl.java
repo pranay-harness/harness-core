@@ -3,7 +3,6 @@ package software.wings.service.impl;
 import static org.apache.commons.lang3.StringUtils.isNotBlank;
 import static org.mongodb.morphia.mapping.Mapper.ID_KEY;
 import static software.wings.beans.EntityVersionCollection.Builder.anEntityVersionCollection;
-import static software.wings.beans.SearchFilter.Builder.aSearchFilter;
 import static software.wings.dl.PageRequest.Builder.aPageRequest;
 
 import com.google.inject.Inject;
@@ -53,7 +52,7 @@ public class EntityVersionServiceImpl implements EntityVersionService {
                                                            .addFilter("entityUuid", Operator.EQ, entityUuid)
                                                            .build();
     if (isNotBlank(parentUuid)) {
-      pageRequest.addFilter(aSearchFilter().withField("entityParentUuid", Operator.EQ, parentUuid).build());
+      pageRequest.addFilter("entityParentUuid", Operator.EQ, parentUuid);
     }
     return wingsPersistence.get(EntityVersionCollection.class, pageRequest);
   }
