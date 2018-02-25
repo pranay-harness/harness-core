@@ -17,7 +17,7 @@ import org.mongodb.morphia.query.UpdateOperations;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import software.wings.beans.ReadPref;
-import software.wings.beans.SearchFilter;
+import software.wings.beans.SearchFilter.Operator;
 import software.wings.core.queue.AbstractQueueListener;
 import software.wings.dl.PageRequest;
 import software.wings.dl.PageResponse;
@@ -91,13 +91,9 @@ public final class NotifyEventListener extends AbstractQueueListener<NotifyEvent
     Map<String, NotifyResponse> notifyResponseMap = new HashMap<>();
     Map<String, NotifyResponseData> responseMap = new HashMap<>();
 
-    SearchFilter searchFilter = new SearchFilter();
-    searchFilter.setFieldName(ID_KEY);
-    searchFilter.setFieldValues(
-        waitQueuesResponse.stream().map(WaitQueue::getCorrelationId).collect(toList()).toArray());
-    searchFilter.setOp(SearchFilter.Operator.IN);
     PageRequest<NotifyResponse> notifyResponseReq = new PageRequest<>();
-    notifyResponseReq.addFilter(searchFilter);
+    notifyResponseReq.addFilter(
+        ID_KEY, Operator.IN, waitQueuesResponse.stream().map(WaitQueue::getCorrelationId).collect(toList()).toArray());
     notifyResponseReq.setLimit(PageRequest.UNLIMITED);
     PageResponse<NotifyResponse> notifyResponses =
         wingsPersistence.query(NotifyResponse.class, notifyResponseReq, ReadPref.CRITICAL);

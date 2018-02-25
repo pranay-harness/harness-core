@@ -11,7 +11,6 @@ import com.google.inject.Inject;
 
 import software.wings.api.ServiceElement;
 import software.wings.beans.ErrorCode;
-import software.wings.beans.SearchFilter;
 import software.wings.beans.SearchFilter.Operator;
 import software.wings.beans.Service;
 import software.wings.dl.PageRequest;
@@ -204,10 +203,9 @@ public class ServiceExpressionProcessor implements ExpressionProcessor {
     }
 
     if (selectedServices == null) {
-      Builder pageRequest =
-          PageRequest.Builder.aPageRequest()
-              .withLimit(PageRequest.UNLIMITED)
-              .addFilter(SearchFilter.Builder.aSearchFilter().withField("appId", Operator.EQ, getAppId()).build());
+      Builder pageRequest = PageRequest.Builder.aPageRequest()
+                                .withLimit(PageRequest.UNLIMITED)
+                                .addFilter("appId", Operator.EQ, getAppId());
       List<Service> services = serviceResourceService.list(pageRequest.build(), false, true);
       selectedServices = convertToServiceElements(services);
     }

@@ -3,7 +3,6 @@ package software.wings.waitnotify;
 import static io.harness.data.structure.EmptyPredicate.isEmpty;
 import static java.util.stream.Collectors.toList;
 import static org.mongodb.morphia.mapping.Mapper.ID_KEY;
-import static software.wings.beans.SearchFilter.Builder.aSearchFilter;
 import static software.wings.core.maintenance.MaintenanceController.isMaintenance;
 import static software.wings.dl.PageRequest.Builder.aPageRequest;
 import static software.wings.dl.PageRequest.UNLIMITED;
@@ -61,7 +60,7 @@ public class Notifier implements Runnable {
       PageResponse<WaitQueue> waitQueuesResponse = wingsPersistence.query(WaitQueue.class,
           aPageRequest()
               .withLimit(UNLIMITED)
-              .addFilter(aSearchFilter().withField("correlationId", Operator.IN, correlationIds.toArray()).build())
+              .addFilter("correlationId", Operator.IN, correlationIds.toArray())
               .build());
 
       if (isEmpty(waitQueuesResponse)) {

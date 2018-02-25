@@ -12,7 +12,6 @@ import static software.wings.beans.ExecutionCredential.ExecutionType.SSH;
 import static software.wings.beans.OrchestrationWorkflowType.BUILD;
 import static software.wings.beans.SSHExecutionCredential.Builder.aSSHExecutionCredential;
 import static software.wings.beans.SearchFilter.Operator.EQ;
-import static software.wings.beans.SortOrder.Builder.aSortOrder;
 import static software.wings.beans.SortOrder.OrderType.DESC;
 import static software.wings.beans.WorkflowType.ORCHESTRATION;
 import static software.wings.beans.WorkflowType.PIPELINE;
@@ -637,7 +636,7 @@ public class TriggerServiceImpl implements TriggerService {
                                                      .addFilter("workflowId", EQ, workflowId)
                                                      .addFilter("appId", EQ, appId)
                                                      .addFilter("status", EQ, SUCCESS)
-                                                     .addOrder(aSortOrder().withField("createdAt", DESC).build())
+                                                     .addOrder("createdAt", DESC)
                                                      .build();
 
     PageResponse<WorkflowExecution> pageResponse =

@@ -8,7 +8,6 @@ import static org.mockito.Matchers.eq;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 import static software.wings.beans.ErrorCode.INVALID_ARGUMENT;
-import static software.wings.beans.SearchFilter.Builder.aSearchFilter;
 import static software.wings.beans.SearchFilter.Operator.EQ;
 import static software.wings.beans.ServiceTemplate.Builder.aServiceTemplate;
 import static software.wings.dl.PageRequest.Builder.aPageRequest;
@@ -111,12 +110,10 @@ public class ConfigServiceTest extends WingsBaseTest {
     PageRequest pageRequest = aPageRequest()
                                   .withLimit("50")
                                   .withOffset("0")
-                                  .addFilter(aSearchFilter()
-                                                 .withField("appId", EQ, APP_ID)
-                                                 .withField("envId", EQ, ENV_ID)
-                                                 .withField("templateId", EQ, TEMPLATE_ID)
-                                                 .withField("entityId", EQ, "ENTITY_ID")
-                                                 .build())
+                                  .addFilter("appId", EQ, APP_ID)
+                                  .addFilter("envId", EQ, ENV_ID)
+                                  .addFilter("templateId", EQ, TEMPLATE_ID)
+                                  .addFilter("entityId", EQ, "ENTITY_ID")
                                   .build();
 
     when(wingsPersistence.query(ConfigFile.class, pageRequest)).thenReturn(pageResponse);
@@ -310,12 +307,11 @@ public class ConfigServiceTest extends WingsBaseTest {
     pageResponse.setResponse(asList(configFile));
     pageResponse.setTotal(1l);
 
-    PageRequest<ConfigFile> pageRequest =
-        aPageRequest()
-            .addFilter(aSearchFilter().withField("appId", Operator.EQ, APP_ID).build())
-            .addFilter(aSearchFilter().withField("templateId", Operator.EQ, TEMPLATE_ID).build())
-            .addFilter(aSearchFilter().withField("entityId", Operator.EQ, "ENTITY_ID").build())
-            .build();
+    PageRequest<ConfigFile> pageRequest = aPageRequest()
+                                              .addFilter("appId", Operator.EQ, APP_ID)
+                                              .addFilter("templateId", Operator.EQ, TEMPLATE_ID)
+                                              .addFilter("entityId", Operator.EQ, "ENTITY_ID")
+                                              .build();
 
     when(wingsPersistence.query(ConfigFile.class, pageRequest)).thenReturn(pageResponse);
 
@@ -348,12 +344,11 @@ public class ConfigServiceTest extends WingsBaseTest {
     pageResponse.setResponse(asList(configFile));
     pageResponse.setTotal(1l);
 
-    PageRequest<ConfigFile> pageRequest =
-        aPageRequest()
-            .addFilter(aSearchFilter().withField("appId", Operator.EQ, APP_ID).build())
-            .addFilter(aSearchFilter().withField("templateId", Operator.EQ, TEMPLATE_ID).build())
-            .addFilter(aSearchFilter().withField("entityId", Operator.EQ, "ENTITY_ID").build())
-            .build();
+    PageRequest<ConfigFile> pageRequest = aPageRequest()
+                                              .addFilter("appId", Operator.EQ, APP_ID)
+                                              .addFilter("templateId", Operator.EQ, TEMPLATE_ID)
+                                              .addFilter("entityId", Operator.EQ, "ENTITY_ID")
+                                              .build();
 
     when(wingsPersistence.createQuery(ConfigFile.class)).thenReturn(query);
     when(wingsPersistence.query(ConfigFile.class, pageRequest)).thenReturn(pageResponse);

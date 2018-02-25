@@ -10,12 +10,10 @@ import static org.mongodb.morphia.aggregation.Projection.projection;
 import static software.wings.beans.Environment.EnvironmentType.ALL;
 import static software.wings.beans.Environment.EnvironmentType.NON_PROD;
 import static software.wings.beans.Environment.EnvironmentType.PROD;
-import static software.wings.beans.SearchFilter.Builder.aSearchFilter;
 import static software.wings.beans.SearchFilter.Operator.EQ;
 import static software.wings.beans.SearchFilter.Operator.GT;
 import static software.wings.beans.SearchFilter.Operator.IN;
 import static software.wings.beans.SearchFilter.Operator.NOT_EXISTS;
-import static software.wings.beans.SortOrder.Builder.aSortOrder;
 import static software.wings.beans.WorkflowType.ORCHESTRATION;
 import static software.wings.beans.WorkflowType.PIPELINE;
 import static software.wings.beans.WorkflowType.SIMPLE;
@@ -140,15 +138,14 @@ public class StatisticsServiceImpl implements StatisticsService {
 
     Map<String, AppKeyStatistics> appKeyStatisticsMap = new HashMap<>();
 
-    PageRequest pageRequest =
-        aPageRequest()
-            .withLimit(UNLIMITED)
-            .addFilter(aSearchFilter().withField("createdAt", GT, fromDateEpochMilli).build())
-            .addFilter(aSearchFilter().withField("workflowType", IN, ORCHESTRATION, SIMPLE, PIPELINE).build())
-            .addFilter(aSearchFilter().withField("pipelineExecutionId", NOT_EXISTS).build())
-            .addFilter("appId", IN, appIds.toArray())
-            .addOrder(aSortOrder().withField("createdAt", OrderType.DESC).build())
-            .build();
+    PageRequest pageRequest = aPageRequest()
+                                  .withLimit(UNLIMITED)
+                                  .addFilter("createdAt", GT, fromDateEpochMilli)
+                                  .addFilter("workflowType", IN, ORCHESTRATION, SIMPLE, PIPELINE)
+                                  .addFilter("pipelineExecutionId", NOT_EXISTS)
+                                  .addFilter("appId", IN, appIds.toArray())
+                                  .addOrder("createdAt", OrderType.DESC)
+                                  .build();
 
     PageResponse<WorkflowExecution> pageResponse =
         workflowExecutionService.listExecutions(pageRequest, false, false, false, false);
@@ -238,14 +235,13 @@ public class StatisticsServiceImpl implements StatisticsService {
       authorizedAppIds = appIds;
     }
 
-    PageRequest pageRequest =
-        aPageRequest()
-            .withLimit(UNLIMITED)
-            .addFilter(aSearchFilter().withField("createdAt", GT, statsFetchedOn).build())
-            .addFilter(aSearchFilter().withField("workflowType", IN, ORCHESTRATION, SIMPLE, PIPELINE).build())
-            .addFilter(aSearchFilter().withField("pipelineExecutionId", NOT_EXISTS).build())
-            .addFilter("appId", IN, authorizedAppIds.toArray())
-            .build();
+    PageRequest pageRequest = aPageRequest()
+                                  .withLimit(UNLIMITED)
+                                  .addFilter("createdAt", GT, statsFetchedOn)
+                                  .addFilter("workflowType", IN, ORCHESTRATION, SIMPLE, PIPELINE)
+                                  .addFilter("pipelineExecutionId", NOT_EXISTS)
+                                  .addFilter("appId", IN, authorizedAppIds.toArray())
+                                  .build();
     List<WorkflowExecution> workflowExecutions =
         workflowExecutionService.listExecutions(pageRequest, false, false, false, false).getResponse();
 
@@ -285,24 +281,23 @@ public class StatisticsServiceImpl implements StatisticsService {
   public DeploymentStatistics getDeploymentStatistics(String accountId, List<String> appIds, int numOfDays) {
     long fromDateEpochMilli = getEpochMilliOfStartOfDayForXDaysInPastFromNow(numOfDays);
 
-    PageRequest pageRequest =
-        aPageRequest()
-            .withLimit(UNLIMITED)
-            .addFilter(aSearchFilter().withField("createdAt", GT, fromDateEpochMilli).build())
-            .addFilter(aSearchFilter().withField("workflowType", IN, ORCHESTRATION, SIMPLE, PIPELINE).build())
-            .addFilter(aSearchFilter().withField("pipelineExecutionId", NOT_EXISTS).build())
-            .addOrder(aSortOrder().withField("createdAt", OrderType.DESC).build())
-            .build();
+    PageRequest pageRequest = aPageRequest()
+                                  .withLimit(UNLIMITED)
+                                  .addFilter("createdAt", GT, fromDateEpochMilli)
+                                  .addFilter("workflowType", IN, ORCHESTRATION, SIMPLE, PIPELINE)
+                                  .addFilter("pipelineExecutionId", NOT_EXISTS)
+                                  .addOrder("createdAt", OrderType.DESC)
+                                  .build();
 
     if (isEmpty(appIds)) {
       appIds = getAppIdsForAccount(accountId);
       if (isEmpty(appIds)) {
         return null;
       }
-      pageRequest.addFilter(aSearchFilter().withField("appId", IN, appIds.toArray()).build());
+      pageRequest.addFilter("appId", IN, appIds.toArray());
 
     } else {
-      pageRequest.addFilter(aSearchFilter().withField("appId", IN, appIds.toArray()).build());
+      pageRequest.addFilter("appId", IN, appIds.toArray());
     }
 
     DeploymentStatistics deploymentStats = new DeploymentStatistics();
@@ -329,23 +324,22 @@ public class StatisticsServiceImpl implements StatisticsService {
   public ServiceInstanceStatistics getServiceInstanceStatistics(String accountId, List<String> appIds, int numOfDays) {
     long fromDateEpochMilli = getEpochMilliOfStartOfDayForXDaysInPastFromNow(numOfDays);
 
-    PageRequest pageRequest =
-        aPageRequest()
-            .withLimit(UNLIMITED)
-            .addFilter(aSearchFilter().withField("createdAt", GT, fromDateEpochMilli).build())
-            .addFilter(aSearchFilter().withField("workflowType", IN, ORCHESTRATION, SIMPLE, PIPELINE).build())
-            .addFilter(aSearchFilter().withField("pipelineExecutionId", NOT_EXISTS).build())
-            .addOrder(aSortOrder().withField("createdAt", OrderType.DESC).build())
-            .build();
+    PageRequest pageRequest = aPageRequest()
+                                  .withLimit(UNLIMITED)
+                                  .addFilter("createdAt", GT, fromDateEpochMilli)
+                                  .addFilter("workflowType", IN, ORCHESTRATION, SIMPLE, PIPELINE)
+                                  .addFilter("pipelineExecutionId", NOT_EXISTS)
+                                  .addOrder("createdAt", OrderType.DESC)
+                                  .build();
     if (isEmpty(appIds)) {
       appIds = getAppIdsForAccount(accountId);
       if (isEmpty(appIds)) {
         return null;
       }
-      pageRequest.addFilter(aSearchFilter().withField("appId", IN, appIds.toArray()).build());
+      pageRequest.addFilter("appId", IN, appIds.toArray());
 
     } else {
-      pageRequest.addFilter(aSearchFilter().withField("appId", IN, appIds.toArray()).build());
+      pageRequest.addFilter("appId", IN, appIds.toArray());
     }
 
     ServiceInstanceStatistics instanceStats = new ServiceInstanceStatistics();
@@ -409,7 +403,7 @@ public class StatisticsServiceImpl implements StatisticsService {
     if (isEmpty(appIds)) {
       authorizedAppIds = getAppIdsForAccount(accountId);
       if (isNotEmpty(authorizedAppIds)) {
-        failureRequest.addFilter(aSearchFilter().withField("appId", IN, authorizedAppIds.toArray()).build());
+        failureRequest.addFilter("appId", IN, authorizedAppIds.toArray());
       }
     } else {
       authorizedAppIds = appIds;
@@ -540,14 +534,13 @@ public class StatisticsServiceImpl implements StatisticsService {
   private List<TopConsumer> getTopConsumerServicesForPastXDays(int days, Map<String, Application> appIdMap) {
     long epochMilli = getEpochMilliOfStartOfDayForXDaysInPastFromNow(days);
     List<TopConsumer> topConsumers = new ArrayList<>();
-    PageRequest pageRequest =
-        aPageRequest()
-            .withLimit(UNLIMITED)
-            .addFilter(aSearchFilter().withField("createdAt", GT, epochMilli).build())
-            .addFilter(aSearchFilter().withField("workflowType", IN, ORCHESTRATION, SIMPLE, PIPELINE).build())
-            .addFilter(aSearchFilter().withField("pipelineExecutionId", NOT_EXISTS).build())
-            .addFilter(aSearchFilter().withField("appId", IN, appIdMap.keySet().toArray()).build())
-            .build();
+    PageRequest pageRequest = aPageRequest()
+                                  .withLimit(UNLIMITED)
+                                  .addFilter("createdAt", GT, epochMilli)
+                                  .addFilter("workflowType", IN, ORCHESTRATION, SIMPLE, PIPELINE)
+                                  .addFilter("pipelineExecutionId", NOT_EXISTS)
+                                  .addFilter("appId", IN, appIdMap.keySet().toArray())
+                                  .build();
 
     PageResponse<WorkflowExecution> pageResponse =
         workflowExecutionService.listExecutions(pageRequest, false, false, false, false);

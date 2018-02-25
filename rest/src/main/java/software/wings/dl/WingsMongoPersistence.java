@@ -6,7 +6,6 @@ import static java.lang.System.currentTimeMillis;
 import static org.apache.commons.lang3.StringUtils.isBlank;
 import static org.apache.commons.lang3.StringUtils.isNotBlank;
 import static org.mongodb.morphia.mapping.Mapper.ID_KEY;
-import static software.wings.beans.SearchFilter.Builder.aSearchFilter;
 import static software.wings.common.UUIDGenerator.generateUuid;
 import static software.wings.exception.WingsException.HARMLESS;
 import static software.wings.utils.WingsReflectionUtils.getDeclaredAndInheritedFields;
@@ -609,12 +608,10 @@ public class WingsMongoPersistence implements WingsPersistence, Managed {
         if (isEmpty(userRequestInfo.getAllowedAppIds())) {
           return false;
         } else {
-          pageRequest.addFilter(
-              aSearchFilter().withField("appId", Operator.IN, userRequestInfo.getAllowedAppIds().toArray()).build());
+          pageRequest.addFilter("appId", Operator.IN, userRequestInfo.getAllowedAppIds().toArray());
         }
       } else {
-        pageRequest.addFilter(
-            aSearchFilter().withField("appId", Operator.IN, userRequestInfo.getAppIds().toArray()).build());
+        pageRequest.addFilter("appId", Operator.IN, userRequestInfo.getAppIds().toArray());
       }
     } else if (userRequestInfo.isEnvIdFilterRequired()) {
       // TODO:

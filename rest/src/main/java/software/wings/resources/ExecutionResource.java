@@ -3,7 +3,6 @@ package software.wings.resources;
 import static io.harness.data.structure.EmptyPredicate.isEmpty;
 import static io.harness.data.structure.EmptyPredicate.isNotEmpty;
 import static org.apache.commons.lang3.StringUtils.isNotBlank;
-import static software.wings.beans.SearchFilter.Builder.aSearchFilter;
 import static software.wings.dl.PageRequest.Builder.aPageRequest;
 
 import com.google.inject.Inject;
@@ -17,7 +16,6 @@ import software.wings.beans.ExecutionArgs;
 import software.wings.beans.GraphNode;
 import software.wings.beans.RequiredExecutionArgs;
 import software.wings.beans.RestResponse;
-import software.wings.beans.SearchFilter;
 import software.wings.beans.SearchFilter.Operator;
 import software.wings.beans.StateExecutionInterrupt;
 import software.wings.beans.WorkflowExecution;
@@ -87,9 +85,6 @@ public class ExecutionResource {
       @DefaultValue("false") @QueryParam("includeGraph") boolean includeGraph,
       @QueryParam("workflowType") List<String> workflowTypes,
       @DefaultValue("false") @QueryParam("includeIndirectExecutions") boolean includeIndirectExecutions) {
-    SearchFilter filter = new SearchFilter();
-    filter.setFieldName("appId");
-
     List<String> authorizedAppIds = null;
     if (isNotEmpty(appIds)) {
       authorizedAppIds = appIds; //(List<String>) CollectionUtils.intersection(authorizedAppIds, appIds);
@@ -105,29 +100,24 @@ public class ExecutionResource {
       }
       authorizedAppIds = res.stream().map(Application::getUuid).collect(Collectors.toList());
     }
-    filter.setFieldValues(authorizedAppIds.toArray());
-    filter.setOp(Operator.IN);
-    pageRequest.addFilter(filter);
+
+    pageRequest.addFilter("appId", Operator.IN, authorizedAppIds.toArray());
 
     if (pageRequest.getPageSize() > Constants.DEFAULT_RUNTIME_ENTITY_PAGESIZE) {
       pageRequest.setLimit(Constants.DEFAULT_RUNTIME_ENTITY_PAGESIZE_STR);
     }
 
     if (isNotEmpty(workflowTypes)) {
-      pageRequest.addFilter(aSearchFilter().withField("workflowType", Operator.IN, workflowTypes.toArray()).build());
+      pageRequest.addFilter("workflowType", Operator.IN, workflowTypes.toArray());
     }
 
     // No need to show child executions unless includeIndirectExecutions is true
     if (!includeIndirectExecutions) {
-      pageRequest.addFilter(aSearchFilter().withField("pipelineExecutionId", Operator.NOT_EXISTS).build());
+      pageRequest.addFilter("pipelineExecutionId", Operator.NOT_EXISTS);
     }
 
     if (isNotBlank(orchestrationId)) {
-      filter = new SearchFilter();
-      filter.setFieldName("workflowId");
-      filter.setFieldValues(orchestrationId);
-      filter.setOp(Operator.EQ);
-      pageRequest.addFilter(filter);
+      pageRequest.addFilter("workflowId", Operator.EQ, orchestrationId);
     }
     return new RestResponse<>(workflowExecutionService.listExecutions(pageRequest, includeGraph, true, true, false));
   }

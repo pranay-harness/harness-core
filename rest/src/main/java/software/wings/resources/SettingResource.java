@@ -4,7 +4,6 @@ import static io.harness.data.structure.EmptyPredicate.isNotEmpty;
 import static javax.ws.rs.core.MediaType.APPLICATION_JSON;
 import static javax.ws.rs.core.MediaType.MULTIPART_FORM_DATA;
 import static software.wings.beans.Base.GLOBAL_APP_ID;
-import static software.wings.beans.SearchFilter.Builder.aSearchFilter;
 import static software.wings.beans.SearchFilter.Operator.EQ;
 import static software.wings.beans.SearchFilter.Operator.IN;
 import static software.wings.beans.SettingAttribute.Builder.aSettingAttribute;
@@ -76,7 +75,7 @@ public class SettingResource {
       @QueryParam("type") List<SettingVariableTypes> settingVariableTypes,
       @BeanParam PageRequest<SettingAttribute> pageRequest) {
     if (isNotEmpty(settingVariableTypes)) {
-      pageRequest.addFilter(aSearchFilter().withField("value.type", IN, settingVariableTypes.toArray()).build());
+      pageRequest.addFilter("value.type", IN, settingVariableTypes.toArray());
     }
     pageRequest.addFilter("appId", EQ, appId);
     return new RestResponse<>(attributeService.list(pageRequest));

@@ -5,7 +5,6 @@ import static org.assertj.core.api.Assertions.assertThat;
 import static org.mockito.Matchers.any;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
-import static software.wings.beans.SearchFilter.Builder.aSearchFilter;
 import static software.wings.beans.SearchFilter.Operator.EQ;
 import static software.wings.beans.ServiceTemplate.Builder.aServiceTemplate;
 import static software.wings.beans.ServiceVariable.Type.ENCRYPTED_TEXT;
@@ -119,12 +118,10 @@ public class ServiceVariableServiceTest extends WingsBaseTest {
     PageRequest pageRequest = aPageRequest()
                                   .withLimit("50")
                                   .withOffset("0")
-                                  .addFilter(aSearchFilter()
-                                                 .withField("appId", EQ, APP_ID)
-                                                 .withField("envId", EQ, ENV_ID)
-                                                 .withField("templateId", EQ, TEMPLATE_ID)
-                                                 .withField("entityId", EQ, "ENTITY_ID")
-                                                 .build())
+                                  .addFilter("appId", EQ, APP_ID)
+                                  .addFilter("envId", EQ, ENV_ID)
+                                  .addFilter("templateId", EQ, TEMPLATE_ID)
+                                  .addFilter("entityId", EQ, "ENTITY_ID")
                                   .build();
 
     when(wingsPersistence.query(ServiceVariable.class, pageRequest)).thenReturn(pageResponse);
@@ -187,12 +184,11 @@ public class ServiceVariableServiceTest extends WingsBaseTest {
     ServiceTemplate serviceTemplate =
         aServiceTemplate().withAppId(APP_ID).withEnvId(ENV_ID).withUuid(TEMPLATE_ID).build();
 
-    PageRequest<ServiceVariable> request =
-        aPageRequest()
-            .addFilter(aSearchFilter().withField("appId", Operator.EQ, APP_ID).build())
-            .addFilter(aSearchFilter().withField("envId", Operator.EQ, ENV_ID).build())
-            .addFilter(aSearchFilter().withField("templateId", Operator.EQ, TEMPLATE_ID).build())
-            .build();
+    PageRequest<ServiceVariable> request = aPageRequest()
+                                               .addFilter("appId", Operator.EQ, APP_ID)
+                                               .addFilter("envId", Operator.EQ, ENV_ID)
+                                               .addFilter("templateId", Operator.EQ, TEMPLATE_ID)
+                                               .build();
     PageResponse<ServiceVariable> resp = new PageResponse<>();
     resp.setResponse(asList(SERVICE_VARIABLE));
     when(wingsPersistence.query(ServiceVariable.class, request)).thenReturn(resp);
@@ -246,10 +242,7 @@ public class ServiceVariableServiceTest extends WingsBaseTest {
     pageResponse.setTotal(1l);
 
     PageRequest<ServiceVariable> pageRequest =
-        aPageRequest()
-            .addFilter(aSearchFilter().withField("appId", Operator.EQ, APP_ID).build())
-            .addFilter(aSearchFilter().withField("entityId", Operator.EQ, "ENTITY_ID").build())
-            .build();
+        aPageRequest().addFilter("appId", Operator.EQ, APP_ID).addFilter("entityId", Operator.EQ, "ENTITY_ID").build();
 
     when(wingsPersistence.query(ServiceVariable.class, pageRequest)).thenReturn(pageResponse);
 
@@ -267,10 +260,7 @@ public class ServiceVariableServiceTest extends WingsBaseTest {
     pageResponse.setTotal(1l);
 
     PageRequest<ServiceVariable> pageRequest =
-        aPageRequest()
-            .addFilter(aSearchFilter().withField("appId", Operator.EQ, APP_ID).build())
-            .addFilter(aSearchFilter().withField("entityId", Operator.EQ, "ENTITY_ID").build())
-            .build();
+        aPageRequest().addFilter("appId", Operator.EQ, APP_ID).addFilter("entityId", Operator.EQ, "ENTITY_ID").build();
 
     when(wingsPersistence.createQuery(ServiceVariable.class)).thenReturn(query);
     when(wingsPersistence.query(ServiceVariable.class, pageRequest)).thenReturn(pageResponse);
@@ -292,12 +282,10 @@ public class ServiceVariableServiceTest extends WingsBaseTest {
     PageRequest pageRequest = aPageRequest()
                                   .withLimit("50")
                                   .withOffset("0")
-                                  .addFilter(aSearchFilter()
-                                                 .withField("appId", EQ, APP_ID)
-                                                 .withField("envId", EQ, ENV_ID)
-                                                 .withField("templateId", EQ, TEMPLATE_ID)
-                                                 .withField("entityId", EQ, "ENTITY_ID")
-                                                 .build())
+                                  .addFilter("appId", EQ, APP_ID)
+                                  .addFilter("envId", EQ, ENV_ID)
+                                  .addFilter("templateId", EQ, TEMPLATE_ID)
+                                  .addFilter("entityId", EQ, "ENTITY_ID")
                                   .build();
 
     when(wingsPersistence.query(ServiceVariable.class, pageRequest)).thenReturn(pageResponse);

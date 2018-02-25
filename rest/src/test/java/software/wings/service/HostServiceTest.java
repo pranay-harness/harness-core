@@ -40,7 +40,6 @@ import org.mongodb.morphia.query.Query;
 import org.mongodb.morphia.query.UpdateOperations;
 import software.wings.WingsBaseTest;
 import software.wings.beans.HostConnectionCredential;
-import software.wings.beans.SearchFilter;
 import software.wings.beans.SettingAttribute;
 import software.wings.beans.infrastructure.Host;
 import software.wings.dl.PageRequest;
@@ -118,10 +117,8 @@ public class HostServiceTest extends WingsBaseTest {
     PageRequest pageRequest = aPageRequest()
                                   .withLimit("50")
                                   .withOffset("0")
-                                  .addFilter(SearchFilter.Builder.aSearchFilter()
-                                                 .withField("appId", EQ, APP_ID)
-                                                 .withField("envId", EQ, ENV_ID)
-                                                 .build())
+                                  .addFilter("appId", EQ, APP_ID)
+                                  .addFilter("envId", EQ, ENV_ID)
                                   .build();
     when(wingsPersistence.query(Host.class, pageRequest)).thenReturn(pageResponse);
     PageResponse<Host> hosts = hostService.list(pageRequest);

@@ -7,7 +7,6 @@ import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 import static software.wings.beans.Log.Builder.aLog;
 import static software.wings.beans.Log.LogLevel.INFO;
-import static software.wings.beans.SearchFilter.Builder.aSearchFilter;
 import static software.wings.beans.SearchFilter.Operator.EQ;
 import static software.wings.dl.PageRequest.Builder.aPageRequest;
 import static software.wings.utils.WingsTestConstants.ACTIVITY_ID;
@@ -68,11 +67,9 @@ public class LogServiceTest extends WingsBaseTest {
   @Test
   public void shouldListLogs() {
     PageRequest pageRequest = aPageRequest()
-                                  .addFilter(aSearchFilter()
-                                                 .withField("appId", EQ, APP_ID)
-                                                 .withField("activityId", EQ, ACTIVITY_ID)
-                                                 .withField("commandUnitName", EQ, COMMAND_UNIT_NAME)
-                                                 .build())
+                                  .addFilter("appId", EQ, APP_ID)
+                                  .addFilter("activityId", EQ, ACTIVITY_ID)
+                                  .addFilter("commandUnitName", EQ, COMMAND_UNIT_NAME)
                                   .build();
     logService.list(appId, activityId, unitName, pageRequest);
     verify(wingsPersistence).query(eq(Log.class), eq(pageRequest));

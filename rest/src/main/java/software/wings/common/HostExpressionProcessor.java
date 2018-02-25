@@ -9,7 +9,6 @@ import static io.harness.data.structure.EmptyPredicate.isEmpty;
 import com.google.inject.Inject;
 
 import software.wings.api.HostElement;
-import software.wings.beans.SearchFilter;
 import software.wings.beans.SearchFilter.Operator;
 import software.wings.beans.infrastructure.Host;
 import software.wings.dl.PageRequest;
@@ -120,11 +119,10 @@ public class HostExpressionProcessor implements ExpressionProcessor {
    */
   public List<HostElement> list() {
     List<Host> hosts = null;
-    PageRequest<Host> pageRequest =
-        PageRequest.Builder.aPageRequest()
-            .withLimit(PageRequest.UNLIMITED)
-            .addFilter(SearchFilter.Builder.aSearchFilter().withField("appId", Operator.EQ, appId).build())
-            .build();
+    PageRequest<Host> pageRequest = PageRequest.Builder.aPageRequest()
+                                        .withLimit(PageRequest.UNLIMITED)
+                                        .addFilter("appId", Operator.EQ, appId)
+                                        .build();
     if (isEmpty(hostNames)) {
       hosts = hostService.list(pageRequest);
     } else {

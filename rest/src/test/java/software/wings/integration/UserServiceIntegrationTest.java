@@ -8,7 +8,6 @@ import static org.junit.Assert.assertFalse;
 import static org.junit.Assert.assertNotNull;
 import static org.junit.Assert.assertNull;
 import static org.junit.Assert.assertTrue;
-import static software.wings.beans.SearchFilter.Builder.aSearchFilter;
 import static software.wings.beans.User.Builder.anUser;
 import static software.wings.dl.PageRequest.Builder.aPageRequest;
 
@@ -120,22 +119,17 @@ public class UserServiceIntegrationTest extends BaseIntegrationTest {
     final String companyName = "some company" + System.currentTimeMillis();
     WebTarget target = client.target(API_BASE + "/users");
     RestResponse<User> response = target.request().post(
-        entity(
-            anUser()
-                .withName(name)
-                .withEmail(email)
-                .withPassword(pwd)
-                .withRoles(
-                    wingsPersistence
-                        .query(Role.class,
-                            aPageRequest()
-                                .addFilter(
-                                    aSearchFilter().withField("roleType", Operator.EQ, RoleType.ACCOUNT_ADMIN).build())
-                                .build())
-                        .getResponse())
-                .withAccountName(accountName)
-                .withCompanyName(companyName)
-                .build(),
+        entity(anUser()
+                   .withName(name)
+                   .withEmail(email)
+                   .withPassword(pwd)
+                   .withRoles(wingsPersistence
+                                  .query(Role.class,
+                                      aPageRequest().addFilter("roleType", Operator.EQ, RoleType.ACCOUNT_ADMIN).build())
+                                  .getResponse())
+                   .withAccountName(accountName)
+                   .withCompanyName(companyName)
+                   .build(),
             APPLICATION_JSON),
         new GenericType<RestResponse<User>>() {});
     assertEquals(0, response.getResponseMessages().size());
@@ -160,21 +154,18 @@ public class UserServiceIntegrationTest extends BaseIntegrationTest {
     RestResponse<User> response = null;
     try {
       response = target.request().post(
-          entity(anUser()
-                     .withName(name)
-                     .withEmail(email)
-                     .withPassword(pwd)
-                     .withRoles(wingsPersistence
-                                    .query(Role.class,
-                                        aPageRequest()
-                                            .addFilter(aSearchFilter()
-                                                           .withField("roleType", Operator.EQ, RoleType.ACCOUNT_ADMIN)
-                                                           .build())
-                                            .build())
-                                    .getResponse())
-                     .withAccountName(accountName)
-                     .withCompanyName(companyName)
-                     .build(),
+          entity(
+              anUser()
+                  .withName(name)
+                  .withEmail(email)
+                  .withPassword(pwd)
+                  .withRoles(wingsPersistence
+                                 .query(Role.class,
+                                     aPageRequest().addFilter("roleType", Operator.EQ, RoleType.ACCOUNT_ADMIN).build())
+                                 .getResponse())
+                  .withAccountName(accountName)
+                  .withCompanyName(companyName)
+                  .build(),
               APPLICATION_JSON),
           new GenericType<RestResponse<User>>() {});
     } catch (BadRequestException e) {
@@ -202,21 +193,18 @@ public class UserServiceIntegrationTest extends BaseIntegrationTest {
 
     try {
       RestResponse<User> response = target.request().post(
-          entity(anUser()
-                     .withName(name)
-                     .withEmail(email)
-                     .withPassword(pwd)
-                     .withRoles(wingsPersistence
-                                    .query(Role.class,
-                                        aPageRequest()
-                                            .addFilter(aSearchFilter()
-                                                           .withField("roleType", Operator.EQ, RoleType.ACCOUNT_ADMIN)
-                                                           .build())
-                                            .build())
-                                    .getResponse())
-                     .withAccountName(accountName)
-                     .withCompanyName(companyName)
-                     .build(),
+          entity(
+              anUser()
+                  .withName(name)
+                  .withEmail(email)
+                  .withPassword(pwd)
+                  .withRoles(wingsPersistence
+                                 .query(Role.class,
+                                     aPageRequest().addFilter("roleType", Operator.EQ, RoleType.ACCOUNT_ADMIN).build())
+                                 .getResponse())
+                  .withAccountName(accountName)
+                  .withCompanyName(companyName)
+                  .build(),
               APPLICATION_JSON),
           new GenericType<RestResponse<User>>() {});
       Assert.fail("was able to sign up with bad email");
@@ -241,21 +229,18 @@ public class UserServiceIntegrationTest extends BaseIntegrationTest {
 
     try {
       RestResponse<User> response = target.request().post(
-          entity(anUser()
-                     .withName(name)
-                     .withEmail(email)
-                     .withPassword(pwd)
-                     .withRoles(wingsPersistence
-                                    .query(Role.class,
-                                        aPageRequest()
-                                            .addFilter(aSearchFilter()
-                                                           .withField("roleType", Operator.EQ, RoleType.ACCOUNT_ADMIN)
-                                                           .build())
-                                            .build())
-                                    .getResponse())
-                     .withAccountName(accountName)
-                     .withCompanyName(companyName)
-                     .build(),
+          entity(
+              anUser()
+                  .withName(name)
+                  .withEmail(email)
+                  .withPassword(pwd)
+                  .withRoles(wingsPersistence
+                                 .query(Role.class,
+                                     aPageRequest().addFilter("roleType", Operator.EQ, RoleType.ACCOUNT_ADMIN).build())
+                                 .getResponse())
+                  .withAccountName(accountName)
+                  .withCompanyName(companyName)
+                  .build(),
               APPLICATION_JSON),
           new GenericType<RestResponse<User>>() {});
       Assert.fail("was able to sign up with bad email");
@@ -280,21 +265,18 @@ public class UserServiceIntegrationTest extends BaseIntegrationTest {
 
     try {
       RestResponse<User> response = target.request().post(
-          entity(anUser()
-                     .withName(name)
-                     .withEmail(email)
-                     .withPassword(pwd)
-                     .withRoles(wingsPersistence
-                                    .query(Role.class,
-                                        aPageRequest()
-                                            .addFilter(aSearchFilter()
-                                                           .withField("roleType", Operator.EQ, RoleType.ACCOUNT_ADMIN)
-                                                           .build())
-                                            .build())
-                                    .getResponse())
-                     .withAccountName(accountName)
-                     .withCompanyName(companyName)
-                     .build(),
+          entity(
+              anUser()
+                  .withName(name)
+                  .withEmail(email)
+                  .withPassword(pwd)
+                  .withRoles(wingsPersistence
+                                 .query(Role.class,
+                                     aPageRequest().addFilter("roleType", Operator.EQ, RoleType.ACCOUNT_ADMIN).build())
+                                 .getResponse())
+                  .withAccountName(accountName)
+                  .withCompanyName(companyName)
+                  .build(),
               APPLICATION_JSON),
           new GenericType<RestResponse<User>>() {});
       Assert.fail("was able to sign up with bad email");
@@ -319,21 +301,18 @@ public class UserServiceIntegrationTest extends BaseIntegrationTest {
 
     try {
       RestResponse<User> response = target.request().post(
-          entity(anUser()
-                     .withName(name)
-                     .withEmail(email)
-                     .withPassword(pwd)
-                     .withRoles(wingsPersistence
-                                    .query(Role.class,
-                                        aPageRequest()
-                                            .addFilter(aSearchFilter()
-                                                           .withField("roleType", Operator.EQ, RoleType.ACCOUNT_ADMIN)
-                                                           .build())
-                                            .build())
-                                    .getResponse())
-                     .withAccountName(accountName)
-                     .withCompanyName(companyName)
-                     .build(),
+          entity(
+              anUser()
+                  .withName(name)
+                  .withEmail(email)
+                  .withPassword(pwd)
+                  .withRoles(wingsPersistence
+                                 .query(Role.class,
+                                     aPageRequest().addFilter("roleType", Operator.EQ, RoleType.ACCOUNT_ADMIN).build())
+                                 .getResponse())
+                  .withAccountName(accountName)
+                  .withCompanyName(companyName)
+                  .build(),
               APPLICATION_JSON),
           new GenericType<RestResponse<User>>() {});
       Assert.fail("was able to sign up with existing email");
