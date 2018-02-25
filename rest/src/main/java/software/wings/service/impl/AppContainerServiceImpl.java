@@ -2,7 +2,7 @@ package software.wings.service.impl;
 
 import static com.google.common.collect.ImmutableMap.of;
 import static software.wings.beans.ErrorCode.INVALID_REQUEST;
-import static software.wings.dl.PageRequest.Builder.aPageRequest;
+import static software.wings.dl.PageRequest.PageRequestBuilder.aPageRequest;
 import static software.wings.service.intfc.FileService.FileBucket.PLATFORMS;
 
 import com.google.common.collect.Maps;

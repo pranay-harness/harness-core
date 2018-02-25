@@ -9,7 +9,7 @@ import static org.junit.Assert.assertNotNull;
 import static org.junit.Assert.assertNull;
 import static org.junit.Assert.assertTrue;
 import static software.wings.beans.User.Builder.anUser;
-import static software.wings.dl.PageRequest.Builder.aPageRequest;
+import static software.wings.dl.PageRequest.PageRequestBuilder.aPageRequest;
 
 import com.google.common.io.ByteStreams;
 import com.google.inject.Inject;

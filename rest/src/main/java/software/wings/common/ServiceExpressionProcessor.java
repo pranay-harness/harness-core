@@ -5,6 +5,7 @@
 package software.wings.common;
 
 import static io.harness.data.structure.EmptyPredicate.isNotEmpty;
+import static software.wings.dl.PageRequest.PageRequestBuilder.aPageRequest;
 
 import com.google.common.collect.Lists;
 import com.google.inject.Inject;
@@ -14,7 +15,7 @@ import software.wings.beans.ErrorCode;
 import software.wings.beans.SearchFilter.Operator;
 import software.wings.beans.Service;
 import software.wings.dl.PageRequest;
-import software.wings.dl.PageRequest.Builder;
+import software.wings.dl.PageRequest.PageRequestBuilder;
 import software.wings.exception.WingsException;
 import software.wings.service.intfc.ServiceResourceService;
 import software.wings.sm.ContextElementType;
@@ -203,9 +204,8 @@ public class ServiceExpressionProcessor implements ExpressionProcessor {
     }
 
     if (selectedServices == null) {
-      Builder pageRequest = PageRequest.Builder.aPageRequest()
-                                .withLimit(PageRequest.UNLIMITED)
-                                .addFilter("appId", Operator.EQ, getAppId());
+      PageRequestBuilder pageRequest =
+          aPageRequest().withLimit(PageRequest.UNLIMITED).addFilter("appId", Operator.EQ, getAppId());
       List<Service> services = serviceResourceService.list(pageRequest.build(), false, true);
       selectedServices = convertToServiceElements(services);
     }

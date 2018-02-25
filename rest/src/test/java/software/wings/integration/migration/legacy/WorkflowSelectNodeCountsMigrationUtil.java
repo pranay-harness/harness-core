@@ -3,7 +3,7 @@ package software.wings.integration.migration.legacy;
 import static io.harness.data.structure.EmptyPredicate.isEmpty;
 import static software.wings.beans.PhaseStepType.PROVISION_NODE;
 import static software.wings.beans.PhaseStepType.SELECT_NODE;
-import static software.wings.dl.PageRequest.Builder.aPageRequest;
+import static software.wings.dl.PageRequest.PageRequestBuilder.aPageRequest;
 import static software.wings.dl.PageRequest.UNLIMITED;
 
 import com.google.common.collect.ArrayListMultimap;

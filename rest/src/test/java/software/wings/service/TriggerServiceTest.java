@@ -32,7 +32,7 @@ import static software.wings.beans.trigger.ArtifactSelection.Type.PIPELINE_SOURC
 import static software.wings.beans.trigger.ArtifactSelection.Type.WEBHOOK_VARIABLE;
 import static software.wings.beans.trigger.ArtifactSelection.builder;
 import static software.wings.beans.trigger.Trigger.Builder.aTrigger;
-import static software.wings.dl.PageResponse.Builder.aPageResponse;
+import static software.wings.dl.PageResponse.PageResponseBuilder.aPageResponse;
 import static software.wings.sm.ExecutionStatus.SUCCESS;
 import static software.wings.sm.StateType.ENV_STATE;
 import static software.wings.utils.WingsTestConstants.APP_ID;

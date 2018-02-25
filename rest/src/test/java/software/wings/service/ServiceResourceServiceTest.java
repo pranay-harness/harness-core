@@ -29,8 +29,8 @@ import static software.wings.beans.WorkflowPhase.WorkflowPhaseBuilder.aWorkflowP
 import static software.wings.beans.command.Command.Builder.aCommand;
 import static software.wings.beans.command.ExecCommandUnit.Builder.anExecCommandUnit;
 import static software.wings.beans.command.ServiceCommand.Builder.aServiceCommand;
-import static software.wings.dl.PageRequest.Builder.aPageRequest;
-import static software.wings.dl.PageResponse.Builder.aPageResponse;
+import static software.wings.dl.PageRequest.PageRequestBuilder.aPageRequest;
+import static software.wings.dl.PageResponse.PageResponseBuilder.aPageResponse;
 import static software.wings.utils.ArtifactType.JAR;
 import static software.wings.utils.ArtifactType.WAR;
 import static software.wings.utils.WingsTestConstants.ACCOUNT_ID;
@@ -201,7 +201,7 @@ public class ServiceResourceServiceTest extends WingsBaseTest {
                                                                 .build();
 
     when(wingsPersistence.query(ServiceCommand.class, serviceCommandPageRequest))
-        .thenReturn(PageResponse.Builder.aPageResponse()
+        .thenReturn(aPageResponse()
                         .withResponse(asList(aServiceCommand()
                                                  .withTargetToAllEnv(true)
                                                  .withName("START")
@@ -221,7 +221,7 @@ public class ServiceResourceServiceTest extends WingsBaseTest {
     PageRequest<ServiceCommand> serviceCommandPageRequest =
         aPageRequest().withLimit(PageRequest.UNLIMITED).addFilter("appId", EQ, APP_ID).build();
     when(wingsPersistence.query(ServiceCommand.class, serviceCommandPageRequest))
-        .thenReturn(PageResponse.Builder.aPageResponse()
+        .thenReturn(aPageResponse()
                         .withResponse(asList(aServiceCommand()
                                                  .withUuid(SERVICE_COMMAND_ID)
                                                  .withServiceId(SERVICE_ID)
@@ -390,7 +390,7 @@ public class ServiceResourceServiceTest extends WingsBaseTest {
     command.setVersion(1L);
 
     when(wingsPersistence.query(ServiceCommand.class, serviceCommandPageRequest))
-        .thenReturn(PageResponse.Builder.aPageResponse()
+        .thenReturn(aPageResponse()
                         .withResponse(asList(aServiceCommand()
                                                  .withUuid("SERVICE_COMMAND_ID")
                                                  .withTargetToAllEnv(true)
@@ -553,7 +553,7 @@ public class ServiceResourceServiceTest extends WingsBaseTest {
                                                                 .build();
 
     when(wingsPersistence.query(ServiceCommand.class, serviceCommandPageRequest))
-        .thenReturn(PageResponse.Builder.aPageResponse()
+        .thenReturn(aPageResponse()
                         .withResponse(asList(aServiceCommand()
                                                  .withUuid(ID_KEY)
                                                  .withTargetToAllEnv(true)
@@ -915,7 +915,7 @@ public class ServiceResourceServiceTest extends WingsBaseTest {
                                                                 .build();
 
     when(wingsPersistence.query(ServiceCommand.class, serviceCommandPageRequest))
-        .thenReturn(PageResponse.Builder.aPageResponse()
+        .thenReturn(aPageResponse()
                         .withResponse(asList(aServiceCommand()
                                                  .withTargetToAllEnv(false)
                                                  .withName("START")
@@ -999,7 +999,7 @@ public class ServiceResourceServiceTest extends WingsBaseTest {
                                                                 .build();
 
     when(wingsPersistence.query(ServiceCommand.class, serviceCommandPageRequest))
-        .thenReturn(PageResponse.Builder.aPageResponse()
+        .thenReturn(aPageResponse()
                         .withResponse(asList(aServiceCommand()
                                                  .withTargetToAllEnv(false)
                                                  .withName("START")

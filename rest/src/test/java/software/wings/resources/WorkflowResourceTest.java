@@ -11,8 +11,8 @@ import static org.mockito.Mockito.when;
 import static software.wings.beans.CanaryOrchestrationWorkflow.CanaryOrchestrationWorkflowBuilder.aCanaryOrchestrationWorkflow;
 import static software.wings.beans.Workflow.WorkflowBuilder.aWorkflow;
 import static software.wings.common.UUIDGenerator.generateUuid;
-import static software.wings.dl.PageRequest.Builder.aPageRequest;
-import static software.wings.dl.PageResponse.Builder.aPageResponse;
+import static software.wings.dl.PageRequest.PageRequestBuilder.aPageRequest;
+import static software.wings.dl.PageResponse.PageResponseBuilder.aPageResponse;
 
 import com.google.common.collect.Lists;
 

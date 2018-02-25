@@ -33,7 +33,7 @@ import static software.wings.beans.SearchFilter.Operator.IN;
 import static software.wings.beans.WorkflowType.ORCHESTRATION;
 import static software.wings.beans.WorkflowType.PIPELINE;
 import static software.wings.common.UUIDGenerator.generateUuid;
-import static software.wings.dl.PageRequest.Builder.aPageRequest;
+import static software.wings.dl.PageRequest.PageRequestBuilder.aPageRequest;
 import static software.wings.dl.PageRequest.UNLIMITED;
 import static software.wings.service.impl.ExecutionEvent.ExecutionEventBuilder.anExecutionEvent;
 import static software.wings.sm.ExecutionInterruptType.ABORT_ALL;

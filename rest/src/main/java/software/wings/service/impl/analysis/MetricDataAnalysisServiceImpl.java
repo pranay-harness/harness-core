@@ -2,6 +2,7 @@ package software.wings.service.impl.analysis;
 
 import static io.harness.data.structure.EmptyPredicate.isNotEmpty;
 import static java.util.Arrays.asList;
+import static software.wings.dl.PageRequest.PageRequestBuilder.aPageRequest;
 import static software.wings.utils.Switch.noop;
 import static software.wings.utils.Switch.unhandled;
 
@@ -369,7 +370,7 @@ public class MetricDataAnalysisServiceImpl implements MetricDataAnalysisService 
 
   @Override
   public List<String> getLastSuccessfulWorkflowExecutionIds(String workflowId) {
-    final PageRequest<WorkflowExecution> pageRequest = PageRequest.Builder.aPageRequest()
+    final PageRequest<WorkflowExecution> pageRequest = aPageRequest()
                                                            .addFilter("workflowId", Operator.EQ, workflowId)
                                                            .addFilter("status", Operator.EQ, ExecutionStatus.SUCCESS)
                                                            .addOrder("createdAt", OrderType.DESC)

@@ -9,6 +9,7 @@ import static software.wings.beans.InstanceUnitType.PERCENTAGE;
 import static software.wings.beans.SearchFilter.Operator.EQ;
 import static software.wings.beans.ServiceInstance.Builder.aServiceInstance;
 import static software.wings.beans.ServiceInstanceSelectionParams.Builder.aServiceInstanceSelectionParams;
+import static software.wings.dl.PageRequest.PageRequestBuilder.aPageRequest;
 import static software.wings.sm.ExecutionResponse.Builder.anExecutionResponse;
 
 import com.google.inject.Inject;
@@ -258,7 +259,7 @@ public abstract class NodeSelectState extends State {
     if (artifact == null) {
       return serviceInstances;
     }
-    PageRequest<Instance> pageRequest = PageRequest.Builder.aPageRequest()
+    PageRequest<Instance> pageRequest = aPageRequest()
                                             .withLimit(PageRequest.UNLIMITED)
                                             .addFilter("appId", EQ, appId)
                                             .addFilter("serviceId", EQ, serviceId)

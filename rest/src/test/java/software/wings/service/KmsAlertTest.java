@@ -7,6 +7,7 @@ import static org.mockito.Matchers.anyString;
 import static org.mockito.Mockito.when;
 import static org.mockito.MockitoAnnotations.initMocks;
 import static org.mockito.internal.util.reflection.Whitebox.setInternalState;
+import static software.wings.dl.PageRequest.PageRequestBuilder.aPageRequest;
 
 import com.google.inject.Inject;
 
@@ -27,7 +28,6 @@ import software.wings.beans.alert.AlertType;
 import software.wings.beans.alert.KmsSetupAlert;
 import software.wings.delegatetasks.DelegateProxyFactory;
 import software.wings.dl.PageRequest;
-import software.wings.dl.PageRequest.Builder;
 import software.wings.dl.PageResponse;
 import software.wings.dl.WingsPersistence;
 import software.wings.service.intfc.AlertService;
@@ -89,7 +89,7 @@ public class KmsAlertTest extends WingsBaseTest {
     vaultService.saveVaultConfig(accountId, vaultConfig);
     when(delegateProxyFactory.get(anyObject(), any(SyncTaskContext.class))).thenReturn(mockDelegateServiceEx);
     secretManager.checkAndAlertForInvalidManagers();
-    PageRequest<Alert> pageRequest = Builder.aPageRequest().addFilter("status", Operator.EQ, AlertStatus.Open).build();
+    PageRequest<Alert> pageRequest = aPageRequest().addFilter("status", Operator.EQ, AlertStatus.Open).build();
     PageResponse<Alert> alerts = alertService.list(pageRequest);
     assertEquals(1, alerts.size());
     Alert alert = alerts.get(0);
@@ -104,7 +104,7 @@ public class KmsAlertTest extends WingsBaseTest {
     Thread.sleep(2000);
     assertEquals(0, alertService.list(pageRequest).size());
 
-    pageRequest = Builder.aPageRequest().addFilter("status", Operator.EQ, AlertStatus.Closed).build();
+    pageRequest = aPageRequest().addFilter("status", Operator.EQ, AlertStatus.Closed).build();
     assertEquals(1, alertService.list(pageRequest).size());
   }
 
@@ -116,7 +116,7 @@ public class KmsAlertTest extends WingsBaseTest {
     kmsService.saveKmsConfig(accountId, kmsConfig);
     when(delegateProxyFactory.get(anyObject(), any(SyncTaskContext.class))).thenReturn(mockDelegateServiceEx);
     secretManager.checkAndAlertForInvalidManagers();
-    PageRequest<Alert> pageRequest = Builder.aPageRequest().addFilter("status", Operator.EQ, AlertStatus.Open).build();
+    PageRequest<Alert> pageRequest = aPageRequest().addFilter("status", Operator.EQ, AlertStatus.Open).build();
     PageResponse<Alert> alerts = alertService.list(pageRequest);
     assertEquals(1, alerts.size());
     Alert alert = alerts.get(0);
@@ -131,7 +131,7 @@ public class KmsAlertTest extends WingsBaseTest {
     Thread.sleep(2000);
     assertEquals(0, alertService.list(pageRequest).size());
 
-    pageRequest = Builder.aPageRequest().addFilter("status", Operator.EQ, AlertStatus.Closed).build();
+    pageRequest = aPageRequest().addFilter("status", Operator.EQ, AlertStatus.Closed).build();
     assertEquals(1, alertService.list(pageRequest).size());
   }
 

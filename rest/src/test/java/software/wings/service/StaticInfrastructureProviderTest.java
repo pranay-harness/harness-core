@@ -9,7 +9,7 @@ import static software.wings.beans.PhysicalDataCenterConfig.Builder.aPhysicalDat
 import static software.wings.beans.PhysicalInfrastructureMapping.Builder.aPhysicalInfrastructureMapping;
 import static software.wings.beans.SettingAttribute.Builder.aSettingAttribute;
 import static software.wings.beans.infrastructure.Host.Builder.aHost;
-import static software.wings.dl.PageResponse.Builder.aPageResponse;
+import static software.wings.dl.PageResponse.PageResponseBuilder.aPageResponse;
 import static software.wings.utils.WingsTestConstants.APP_ID;
 import static software.wings.utils.WingsTestConstants.COMPUTE_PROVIDER_ID;
 import static software.wings.utils.WingsTestConstants.HOST_CONN_ATTR_ID;

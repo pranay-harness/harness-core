@@ -14,6 +14,7 @@ import static software.wings.beans.ServiceInstance.Builder.aServiceInstance;
 import static software.wings.beans.ServiceTemplate.Builder.aServiceTemplate;
 import static software.wings.beans.infrastructure.Host.Builder.aHost;
 import static software.wings.common.UUIDGenerator.generateUuid;
+import static software.wings.dl.PageResponse.PageResponseBuilder.aPageResponse;
 import static software.wings.utils.WingsTestConstants.APP_ID;
 import static software.wings.utils.WingsTestConstants.ARTIFACT_ID;
 import static software.wings.utils.WingsTestConstants.INFRA_MAPPING_ID;
@@ -140,8 +141,7 @@ public class NodeSelectStateTest extends WingsBaseTest {
     when(artifactService.get(APP_ID, ARTIFACT_ID)).thenReturn(artifact);
     when(workflowStandardParams.isExcludeHostsWithSameArtifact()).thenReturn(false);
 
-    PageResponse<Instance> pageResponse =
-        PageResponse.Builder.aPageResponse().withResponse(Arrays.asList(instance)).build();
+    PageResponse<Instance> pageResponse = aPageResponse().withResponse(Arrays.asList(instance)).build();
 
     when(instanceService.list(any(PageRequest.class))).thenReturn(pageResponse);
 
@@ -166,8 +166,7 @@ public class NodeSelectStateTest extends WingsBaseTest {
     when(artifactService.get(APP_ID, ARTIFACT_ID)).thenReturn(artifact);
     when(workflowStandardParams.isExcludeHostsWithSameArtifact()).thenReturn(true);
 
-    PageResponse<Instance> pageResponse =
-        PageResponse.Builder.aPageResponse().withResponse(Arrays.asList(instance)).build();
+    PageResponse<Instance> pageResponse = aPageResponse().withResponse(Arrays.asList(instance)).build();
 
     when(instanceService.list(any(PageRequest.class))).thenReturn(pageResponse);
 
@@ -192,8 +191,7 @@ public class NodeSelectStateTest extends WingsBaseTest {
     when(artifactService.get(APP_ID, ARTIFACT_ID)).thenReturn(artifact);
     when(workflowStandardParams.isExcludeHostsWithSameArtifact()).thenReturn(true);
 
-    PageResponse<Instance> pageResponse =
-        PageResponse.Builder.aPageResponse().withResponse(Arrays.asList(instance)).build();
+    PageResponse<Instance> pageResponse = aPageResponse().withResponse(Arrays.asList(instance)).build();
 
     when(instanceService.list(any(PageRequest.class))).thenReturn(pageResponse);
 
@@ -221,8 +219,7 @@ public class NodeSelectStateTest extends WingsBaseTest {
     when(artifactService.get(APP_ID, ARTIFACT_ID)).thenReturn(artifact);
     when(workflowStandardParams.isExcludeHostsWithSameArtifact()).thenReturn(true);
 
-    PageResponse<Instance> pageResponse =
-        PageResponse.Builder.aPageResponse().withResponse(Arrays.asList(instance)).build();
+    PageResponse<Instance> pageResponse = aPageResponse().withResponse(Arrays.asList(instance)).build();
 
     when(instanceService.list(any(PageRequest.class))).thenReturn(pageResponse);
 
@@ -252,8 +249,7 @@ public class NodeSelectStateTest extends WingsBaseTest {
     when(artifactService.get(APP_ID, ARTIFACT_ID)).thenReturn(artifact);
     when(workflowStandardParams.isExcludeHostsWithSameArtifact()).thenReturn(true);
 
-    PageResponse<Instance> pageResponse =
-        PageResponse.Builder.aPageResponse().withResponse(Arrays.asList(instance)).build();
+    PageResponse<Instance> pageResponse = aPageResponse().withResponse(Arrays.asList(instance)).build();
 
     when(instanceService.list(any(PageRequest.class))).thenReturn(pageResponse);
 

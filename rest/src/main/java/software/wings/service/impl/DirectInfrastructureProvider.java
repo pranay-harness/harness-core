@@ -1,6 +1,6 @@
 package software.wings.service.impl;
 
-import static software.wings.dl.PageResponse.Builder.aPageResponse;
+import static software.wings.dl.PageResponse.PageResponseBuilder.aPageResponse;
 
 import com.google.inject.Singleton;
 

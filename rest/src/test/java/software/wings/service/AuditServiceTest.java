@@ -3,6 +3,7 @@ package software.wings.service;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.joor.Reflect.on;
 import static software.wings.common.UUIDGenerator.generateUuid;
+import static software.wings.dl.PageRequest.PageRequestBuilder.aPageRequest;
 import static software.wings.service.intfc.FileService.FileBucket.AUDITS;
 
 import com.google.common.util.concurrent.FakeTimeLimiter;
@@ -98,11 +99,8 @@ public class AuditServiceTest extends WingsBaseTest {
     createAuditHeader();
     createAuditHeader();
 
-    PageResponse<AuditHeader> res = auditService.list(PageRequest.Builder.aPageRequest()
-                                                          .withOffset("1")
-                                                          .withLimit("2")
-                                                          .addFilter("appId", Operator.EQ, appId)
-                                                          .build());
+    PageResponse<AuditHeader> res =
+        auditService.list(aPageRequest().withOffset("1").withLimit("2").addFilter("appId", Operator.EQ, appId).build());
 
     assertThat(res).isNotNull();
     assertThat(res.size()).isEqualTo(2);

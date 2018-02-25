@@ -12,7 +12,7 @@ import static software.wings.beans.Application.Builder.anApplication;
 import static software.wings.beans.License.Builder.aLicense;
 import static software.wings.beans.User.Builder.anUser;
 import static software.wings.common.Constants.HARNESS_NAME;
-import static software.wings.dl.PageRequest.Builder.aPageRequest;
+import static software.wings.dl.PageRequest.PageRequestBuilder.aPageRequest;
 import static software.wings.integration.IntegrationTestUtil.randomInt;
 import static software.wings.integration.SeedData.randomSeedString;
 import static software.wings.service.KmsTest.getKmsConfig;

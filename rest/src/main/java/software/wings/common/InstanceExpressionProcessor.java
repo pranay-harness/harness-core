@@ -8,7 +8,7 @@ import static java.util.stream.Collectors.toList;
 import static org.apache.commons.collections.CollectionUtils.intersection;
 import static org.apache.commons.lang3.StringUtils.isNotBlank;
 import static org.mongodb.morphia.mapping.Mapper.ID_KEY;
-import static software.wings.dl.PageRequest.Builder.aPageRequest;
+import static software.wings.dl.PageRequest.PageRequestBuilder.aPageRequest;
 import static software.wings.dl.PageRequest.UNLIMITED;
 
 import com.google.common.collect.Lists;
@@ -30,7 +30,7 @@ import software.wings.beans.ServiceTemplate;
 import software.wings.beans.SortOrder.OrderType;
 import software.wings.beans.infrastructure.Host;
 import software.wings.dl.PageRequest;
-import software.wings.dl.PageRequest.Builder;
+import software.wings.dl.PageRequest.PageRequestBuilder;
 import software.wings.dl.PageResponse;
 import software.wings.exception.WingsException;
 import software.wings.service.intfc.HostService;
@@ -244,7 +244,7 @@ public class InstanceExpressionProcessor implements ExpressionProcessor {
   PageRequest<ServiceInstance> buildPageRequest() {
     Application app = ((ExecutionContextImpl) context).getApp();
     Environment env = ((ExecutionContextImpl) context).getEnv();
-    Builder pageRequest = aPageRequest().withLimit(UNLIMITED);
+    PageRequestBuilder pageRequest = aPageRequest().withLimit(UNLIMITED);
 
     applyServiceTemplatesFilter(app.getUuid(), env.getUuid(), pageRequest);
     applyHostNamesFilter(app.getUuid(), pageRequest);
@@ -289,7 +289,7 @@ public class InstanceExpressionProcessor implements ExpressionProcessor {
     return elements;
   }
 
-  private void applyServiceInstanceIdsFilter(Builder pageRequest) {
+  private void applyServiceInstanceIdsFilter(PageRequestBuilder pageRequest) {
     ServiceInstanceIdsParam serviceInstanceIdsParam = getServiceInstanceIdsParam();
     if (serviceInstanceIdsParam != null) {
       if (isNotEmpty(instanceIds)) {
@@ -317,11 +317,11 @@ public class InstanceExpressionProcessor implements ExpressionProcessor {
     }
   }
 
-  private void applyHostNamesFilter(String appId, Builder pageRequest) {
+  private void applyHostNamesFilter(String appId, PageRequestBuilder pageRequest) {
     // TODO
   }
 
-  private void applyServiceTemplatesFilter(String appId, String envId, Builder pageRequest) {
+  private void applyServiceTemplatesFilter(String appId, String envId, PageRequestBuilder pageRequest) {
     List<Service> services = null;
     List<ServiceTemplate> serviceTemplates = null;
     if (isEmpty(serviceTemplateNames)) {
@@ -373,7 +373,7 @@ public class InstanceExpressionProcessor implements ExpressionProcessor {
   }
 
   private List<ServiceTemplate> getServiceTemplates(String envId, List<Service> services, String... names) {
-    Builder pageRequestBuilder =
+    PageRequestBuilder pageRequestBuilder =
         aPageRequest().withLimit(UNLIMITED).addFilter("envId", Operator.EQ, envId).addOrder("createdAt", OrderType.ASC);
     if (isNotEmpty(services)) {
       pageRequestBuilder.addFilter(

@@ -19,7 +19,7 @@ import static software.wings.beans.DelegateTaskResponse.Builder.aDelegateTaskRes
 import static software.wings.beans.Event.Builder.anEvent;
 import static software.wings.common.Constants.DELEGATE_SYNC_CACHE;
 import static software.wings.common.UUIDGenerator.generateUuid;
-import static software.wings.dl.PageRequest.Builder.aPageRequest;
+import static software.wings.dl.PageRequest.PageRequestBuilder.aPageRequest;
 import static software.wings.sm.ExecutionStatusData.Builder.anExecutionStatusData;
 import static software.wings.utils.WingsTestConstants.ACCOUNT_ID;
 import static software.wings.utils.WingsTestConstants.APP_ID;

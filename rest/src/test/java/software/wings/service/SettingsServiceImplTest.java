@@ -14,8 +14,8 @@ import static software.wings.beans.HostConnectionAttributes.AccessType.USER_PASS
 import static software.wings.beans.HostConnectionAttributes.Builder.aHostConnectionAttributes;
 import static software.wings.beans.HostConnectionAttributes.ConnectionType.SSH;
 import static software.wings.beans.SettingAttribute.Builder.aSettingAttribute;
-import static software.wings.dl.PageRequest.Builder.aPageRequest;
-import static software.wings.dl.PageResponse.Builder.aPageResponse;
+import static software.wings.dl.PageRequest.PageRequestBuilder.aPageRequest;
+import static software.wings.dl.PageResponse.PageResponseBuilder.aPageResponse;
 import static software.wings.settings.SettingValue.SettingVariableTypes.AWS;
 import static software.wings.settings.SettingValue.SettingVariableTypes.HOST_CONNECTION_ATTRIBUTES;
 import static software.wings.utils.WingsTestConstants.ACCOUNT_ID;

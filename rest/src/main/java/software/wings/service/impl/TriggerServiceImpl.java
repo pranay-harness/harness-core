@@ -24,7 +24,7 @@ import static software.wings.beans.trigger.TriggerConditionType.NEW_ARTIFACT;
 import static software.wings.beans.trigger.TriggerConditionType.PIPELINE_COMPLETION;
 import static software.wings.beans.trigger.TriggerConditionType.SCHEDULED;
 import static software.wings.beans.trigger.TriggerConditionType.WEBHOOK;
-import static software.wings.dl.PageRequest.Builder.aPageRequest;
+import static software.wings.dl.PageRequest.PageRequestBuilder.aPageRequest;
 import static software.wings.exception.WingsException.ALERTING;
 import static software.wings.exception.WingsException.ReportTarget.USER;
 import static software.wings.sm.ExecutionStatus.SUCCESS;

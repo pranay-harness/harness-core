@@ -24,7 +24,7 @@ import static software.wings.beans.stats.AppKeyStatistics.AppKeyStatsBreakdown.B
 import static software.wings.beans.stats.NotificationCount.Builder.aNotificationCount;
 import static software.wings.beans.stats.TopConsumer.Builder.aTopConsumer;
 import static software.wings.common.UUIDGenerator.generateUuid;
-import static software.wings.dl.PageResponse.Builder.aPageResponse;
+import static software.wings.dl.PageResponse.PageResponseBuilder.aPageResponse;
 import static software.wings.sm.ExecutionStatus.FAILED;
 import static software.wings.sm.ExecutionStatus.SUCCESS;
 import static software.wings.sm.InstanceStatusSummary.InstanceStatusSummaryBuilder.anInstanceStatusSummary;
@@ -64,7 +64,6 @@ import software.wings.beans.stats.TopConsumersStatistics;
 import software.wings.beans.stats.UserStatistics;
 import software.wings.beans.stats.UserStatistics.AppDeployment;
 import software.wings.dl.PageRequest;
-import software.wings.dl.PageResponse;
 import software.wings.dl.WingsPersistence;
 import software.wings.security.UserThreadLocal;
 import software.wings.service.intfc.ActivityService;
@@ -685,7 +684,7 @@ public class StatisticsServiceTest extends WingsBaseTest {
                         .withResponse(asList(anInformationNotification().build(), anInformationNotification().build()))
                         .build());
     when(activityService.list(any(PageRequest.class)))
-        .thenReturn(PageResponse.Builder.aPageResponse().withResponse(asList(Activity.builder().build())).build());
+        .thenReturn(aPageResponse().withResponse(asList(Activity.builder().build())).build());
 
     NotificationCount notificationCount = statisticsService.getNotificationCount(ACCOUNT_ID, asList(APP_ID), 30);
     assertThat(notificationCount)

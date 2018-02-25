@@ -23,7 +23,7 @@ import static software.wings.beans.yaml.YamlConstants.SETUP_FOLDER;
 import static software.wings.beans.yaml.YamlConstants.VERIFICATION_PROVIDERS_FOLDER;
 import static software.wings.beans.yaml.YamlConstants.WORKFLOWS_FOLDER;
 import static software.wings.beans.yaml.YamlConstants.YAML_EXTENSION;
-import static software.wings.dl.PageRequest.Builder.aPageRequest;
+import static software.wings.dl.PageRequest.PageRequestBuilder.aPageRequest;
 
 import com.google.inject.Inject;
 import com.google.inject.Singleton;
@@ -566,7 +566,7 @@ public class YamlDirectoryServiceImpl implements YamlDirectoryService {
             infraMappingPath, environment.getAppId(), yamlGitSyncService);
         envFolder.addChild(infraMappingsFolder);
 
-        PageRequest<InfrastructureMapping> pageRequest = PageRequest.Builder.aPageRequest()
+        PageRequest<InfrastructureMapping> pageRequest = aPageRequest()
                                                              .addFilter("appId", Operator.EQ, environment.getAppId())
                                                              .addFilter("envId", Operator.EQ, environment.getUuid())
                                                              .build();

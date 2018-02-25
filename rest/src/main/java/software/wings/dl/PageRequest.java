@@ -485,9 +485,9 @@ public class PageRequest<T> {
   }
 
   /**
-   * The Class Builder.
+   * The Class PageRequestBuilder.
    */
-  public static final class Builder {
+  public static final class PageRequestBuilder {
     private String offset;
     private String limit;
     private List<SearchFilter> filters = new ArrayList<>();
@@ -497,15 +497,15 @@ public class PageRequest<T> {
     private UriInfo uriInfo;
     private ReadPref readPref;
 
-    private Builder() {}
+    private PageRequestBuilder() {}
 
     /**
      * A page request.
      *
      * @return the builder
      */
-    public static Builder aPageRequest() {
-      return new Builder();
+    public static PageRequestBuilder aPageRequest() {
+      return new PageRequestBuilder();
     }
 
     /**
@@ -514,7 +514,7 @@ public class PageRequest<T> {
      * @param offset the offset
      * @return the builder
      */
-    public Builder withOffset(String offset) {
+    public PageRequestBuilder withOffset(String offset) {
       this.offset = offset;
       return this;
     }
@@ -525,7 +525,7 @@ public class PageRequest<T> {
      * @param limit the limit
      * @return the builder
      */
-    public Builder withLimit(String limit) {
+    public PageRequestBuilder withLimit(String limit) {
       this.limit = limit;
       return this;
     }
@@ -536,7 +536,7 @@ public class PageRequest<T> {
      * @param filter the filter
      * @return the builder
      */
-    public Builder addFilter(SearchFilter filter) {
+    public PageRequestBuilder addFilter(SearchFilter filter) {
       this.filters.add(filter);
       return this;
     }
@@ -549,7 +549,7 @@ public class PageRequest<T> {
      * @param fieldValues the field values
      * @return the builder
      */
-    public Builder addFilter(String fieldName, Operator op, Object... fieldValues) {
+    public PageRequestBuilder addFilter(String fieldName, Operator op, Object... fieldValues) {
       filters.add(aSearchFilter().withField(fieldName, op, fieldValues).build());
       return this;
     }
@@ -560,7 +560,7 @@ public class PageRequest<T> {
      * @param order the order
      * @return the builder
      */
-    public Builder addOrder(SortOrder order) {
+    public PageRequestBuilder addOrder(SortOrder order) {
       this.orders.add(order);
       return this;
     }
@@ -572,7 +572,7 @@ public class PageRequest<T> {
      * @param orderType the order type
      * @return the builder
      */
-    public Builder addOrder(String fieldName, OrderType orderType) {
+    public PageRequestBuilder addOrder(String fieldName, OrderType orderType) {
       this.orders.add(aSortOrder().withField(fieldName, orderType).build());
       return this;
     }
@@ -583,7 +583,7 @@ public class PageRequest<T> {
      * @param fieldsIncluded the fields included
      * @return the builder
      */
-    public Builder addFieldsIncluded(String... fieldsIncluded) {
+    public PageRequestBuilder addFieldsIncluded(String... fieldsIncluded) {
       this.fieldsIncluded.addAll(asList(fieldsIncluded));
       return this;
     }
@@ -594,7 +594,7 @@ public class PageRequest<T> {
      * @param fieldsExcluded the fields excluded
      * @return the builder
      */
-    public Builder addFieldsExcluded(String... fieldsExcluded) {
+    public PageRequestBuilder addFieldsExcluded(String... fieldsExcluded) {
       this.fieldsExcluded.addAll(asList(fieldsExcluded));
       return this;
     }
@@ -605,7 +605,7 @@ public class PageRequest<T> {
      * @param uriInfo the uri info
      * @return the builder
      */
-    public Builder withUriInfo(UriInfo uriInfo) {
+    public PageRequestBuilder withUriInfo(UriInfo uriInfo) {
       this.uriInfo = uriInfo;
       return this;
     }
@@ -616,7 +616,7 @@ public class PageRequest<T> {
      * @param readPref the read pref
      * @return the builder
      */
-    public Builder withReadPref(ReadPref readPref) {
+    public PageRequestBuilder withReadPref(ReadPref readPref) {
       this.readPref = readPref;
       return this;
     }

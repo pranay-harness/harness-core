@@ -5,7 +5,7 @@ import static java.util.stream.Collectors.toList;
 import static software.wings.api.HostElement.Builder.aHostElement;
 import static software.wings.beans.ErrorCode.INVALID_ARGUMENT;
 import static software.wings.beans.infrastructure.Host.Builder.aHost;
-import static software.wings.dl.PageResponse.Builder.aPageResponse;
+import static software.wings.dl.PageResponse.PageResponseBuilder.aPageResponse;
 
 import com.google.common.collect.Lists;
 import com.google.common.collect.Maps;

@@ -19,7 +19,7 @@ import static software.wings.beans.ErrorCode.UNKNOWN_ERROR;
 import static software.wings.beans.ErrorCode.USER_DOES_NOT_EXIST;
 import static software.wings.beans.ErrorCode.USER_INVITATION_DOES_NOT_EXIST;
 import static software.wings.beans.User.Builder.anUser;
-import static software.wings.dl.PageRequest.Builder.aPageRequest;
+import static software.wings.dl.PageRequest.PageRequestBuilder.aPageRequest;
 import static software.wings.exception.WingsException.HARMLESS;
 import static software.wings.security.PermissionAttribute.ResourceType.APPLICATION;
 import static software.wings.security.PermissionAttribute.ResourceType.ARTIFACT;

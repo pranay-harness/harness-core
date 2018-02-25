@@ -21,8 +21,7 @@ import static software.wings.beans.stats.AppKeyStatistics.AppKeyStatsBreakdown.B
 import static software.wings.beans.stats.NotificationCount.Builder.aNotificationCount;
 import static software.wings.beans.stats.TopConsumer.Builder.aTopConsumer;
 import static software.wings.beans.stats.UserStatistics.Builder.anUserStatistics;
-import static software.wings.dl.PageRequest.Builder;
-import static software.wings.dl.PageRequest.Builder.aPageRequest;
+import static software.wings.dl.PageRequest.PageRequestBuilder.aPageRequest;
 import static software.wings.dl.PageRequest.UNLIMITED;
 import static software.wings.sm.ExecutionStatus.ABORTED;
 import static software.wings.sm.ExecutionStatus.ERROR;
@@ -270,7 +269,7 @@ public class StatisticsServiceImpl implements StatisticsService {
 
   private List<String> getAppIdsForAccount(String accountId) {
     List<Application> applications =
-        appService.list(Builder.aPageRequest().addFilter("accountId", EQ, accountId).build(), false, 0, 0);
+        appService.list(aPageRequest().addFilter("accountId", EQ, accountId).build(), false, 0, 0);
     if (applications == null) {
       return new ArrayList<>();
     } else {

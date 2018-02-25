@@ -1,6 +1,7 @@
 package software.wings.integration;
 
 import static software.wings.common.UUIDGenerator.generateUuid;
+import static software.wings.dl.PageRequest.PageRequestBuilder.aPageRequest;
 
 import com.google.inject.Inject;
 
@@ -33,7 +34,7 @@ public class ExecutionGenTest extends WingsBaseTest {
   @Test
   @Ignore
   public void generateData() {
-    PageRequest<WorkflowExecution> pageRequest = PageRequest.Builder.aPageRequest().withLimit("500").build();
+    PageRequest<WorkflowExecution> pageRequest = aPageRequest().withLimit("500").build();
 
     PageResponse<WorkflowExecution> response = wingsPersistence.query(WorkflowExecution.class, pageRequest);
 

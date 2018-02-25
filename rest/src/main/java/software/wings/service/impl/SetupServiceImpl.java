@@ -6,6 +6,7 @@ import static software.wings.beans.Setup.Builder.aSetup;
 import static software.wings.beans.Setup.SetupStatus.COMPLETE;
 import static software.wings.beans.Setup.SetupStatus.INCOMPLETE;
 import static software.wings.beans.SetupAction.Builder.aSetupAction;
+import static software.wings.dl.PageRequest.PageRequestBuilder.aPageRequest;
 
 import com.google.inject.Inject;
 import com.google.inject.Singleton;
@@ -76,8 +77,7 @@ public class SetupServiceImpl implements SetupService {
   }
 
   private SetupAction getArtifactStreamSetupAction(Application application) {
-    PageRequest<ArtifactStream> req =
-        PageRequest.Builder.aPageRequest().addFilter("appId", Operator.EQ, application.getUuid()).build();
+    PageRequest<ArtifactStream> req = aPageRequest().addFilter("appId", Operator.EQ, application.getUuid()).build();
     PageResponse<ArtifactStream> res = artifactStreamService.list(req);
     if (isEmpty(res)) {
       return SetupAction.Builder.aSetupAction()
@@ -89,10 +89,8 @@ public class SetupServiceImpl implements SetupService {
 
     ArtifactStream artifactStream = res.getResponse().get(0);
 
-    PageRequest<Artifact> pageReques = PageRequest.Builder.aPageRequest()
-                                           .addFilter("appId", Operator.EQ, application.getUuid())
-                                           .withLimit("1")
-                                           .build();
+    PageRequest<Artifact> pageReques =
+        aPageRequest().addFilter("appId", Operator.EQ, application.getUuid()).withLimit("1").build();
     PageResponse<Artifact> artRes = artifactService.list(pageReques, false);
     if (isEmpty(artRes)) {
       return SetupAction.Builder.aSetupAction()
@@ -114,10 +112,8 @@ public class SetupServiceImpl implements SetupService {
   }
 
   private SetupAction getDeploymentSetupAction(Application application) {
-    PageRequest<WorkflowExecution> req = PageRequest.Builder.aPageRequest()
-                                             .addFilter("appId", Operator.EQ, application.getUuid())
-                                             .withLimit("1")
-                                             .build();
+    PageRequest<WorkflowExecution> req =
+        aPageRequest().addFilter("appId", Operator.EQ, application.getUuid()).withLimit("1").build();
     PageResponse<WorkflowExecution> res = workflowExecutionService.listExecutions(req, false);
     if (isNotEmpty(res)) {
       return null;

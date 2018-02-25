@@ -63,15 +63,15 @@ public class SetupServiceTest extends WingsBaseTest {
   //  @Test
   //  public void shouldGetApplicationSetupStatus() {
   //    Application application =
-  //    Builder.anApplication().withUuid(APP_ID).withServices(asList(aService().withUuid(SERVICE_ID).build()))
+  //    PageResponseBuilder.anApplication().withUuid(APP_ID).withServices(asList(aService().withUuid(SERVICE_ID).build()))
   //        .withEnvironments(asList(anEnvironment().withAppId(APP_ID).withUuid(ENV_ID).build())).build();
-  //    when(hostService.getHostsByEnv(APP_ID, ENV_ID)).thenReturn(asList(Host.Builder.aHost().build()));
+  //    when(hostService.getHostsByEnv(APP_ID, ENV_ID)).thenReturn(asList(Host.PageResponseBuilder.aHost().build()));
   //    Setup setupStatus = setupService.getApplicationSetupStatus(application);
   //    assertThat(setupStatus.getSetupStatus()).isEqualTo(COMPLETE);
   //    assertThat(setupStatus.getProperty()).hasSize(1).doesNotContainNull();
   //    assertThat(setupStatus.getProperty().get(0).getCode()).isEqualTo("NO_RELEASE_FOUND");
   //
-  //    Release rel = Release.Builder.aRelease().build();
+  //    Release rel = Release.PageResponseBuilder.aRelease().build();
   //    PageResponse<Release> res = new PageResponse();
   //    res.setResponse(asList(rel));
   //    when(artifactStreamService.list(any(PageRequest.class))).thenReturn(res);

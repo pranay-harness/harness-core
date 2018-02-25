@@ -11,7 +11,7 @@ import static software.wings.beans.RoleType.NON_PROD_SUPPORT;
 import static software.wings.beans.RoleType.PROD_SUPPORT;
 import static software.wings.beans.SearchFilter.Operator.EQ;
 import static software.wings.beans.SystemCatalog.CatalogType.APPSTACK;
-import static software.wings.dl.PageRequest.Builder.aPageRequest;
+import static software.wings.dl.PageRequest.PageRequestBuilder.aPageRequest;
 import static software.wings.utils.Misc.generateSecretKey;
 
 import com.google.common.collect.Lists;
@@ -29,7 +29,6 @@ import software.wings.beans.RoleType;
 import software.wings.beans.SearchFilter.Operator;
 import software.wings.beans.SystemCatalog;
 import software.wings.dl.PageRequest;
-import software.wings.dl.PageRequest.Builder;
 import software.wings.dl.WingsPersistence;
 import software.wings.licensing.LicenseManager;
 import software.wings.scheduler.AlertCheckJob;
@@ -161,7 +160,7 @@ public class AccountServiceImpl implements AccountService {
     int i = rand.nextInt(1000);
     do {
       Account res = wingsPersistence.get(
-          Account.class, Builder.aPageRequest().addFilter("accountName", Operator.EQ, suggestedAccountName).build());
+          Account.class, aPageRequest().addFilter("accountName", Operator.EQ, suggestedAccountName).build());
       if (res == null) {
         return suggestedAccountName;
       }
@@ -171,8 +170,8 @@ public class AccountServiceImpl implements AccountService {
 
   @Override
   public boolean exists(String accountName) {
-    Account res = wingsPersistence.get(
-        Account.class, Builder.aPageRequest().addFilter("accountName", Operator.EQ, accountName).build());
+    Account res =
+        wingsPersistence.get(Account.class, aPageRequest().addFilter("accountName", Operator.EQ, accountName).build());
     return res != null;
   }
 
