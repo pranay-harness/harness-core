@@ -2,6 +2,7 @@ package software.wings.dl;
 
 import static io.harness.data.structure.EmptyPredicate.isEmpty;
 import static io.harness.data.structure.EmptyPredicate.isNotEmpty;
+import static java.lang.String.format;
 import static java.lang.System.currentTimeMillis;
 import static org.apache.commons.lang3.StringUtils.isBlank;
 import static org.apache.commons.lang3.StringUtils.isNotBlank;
@@ -94,6 +95,14 @@ public class WingsMongoPersistence implements WingsPersistence, Managed {
     this.datastoreMap = datastoreMap;
   }
 
+  private <T> void checkListSize(List<T> list) {
+    if (list.size() > 1000) {
+      if (logger.isErrorEnabled()) {
+        logger.error(format("List query returns %d items.", list.size()), new Exception(""));
+      }
+    }
+  }
+
   /**
    * {@inheritDoc}
    */
@@ -107,7 +116,9 @@ public class WingsMongoPersistence implements WingsPersistence, Managed {
    */
   @Override
   public <T extends Base> List<T> list(Class<T> cls, ReadPref readPref) {
-    return datastoreMap.get(readPref).find(cls).asList();
+    final List<T> list = datastoreMap.get(readPref).find(cls).asList();
+    checkListSize(list);
+    return list;
   }
 
   /**
@@ -471,6 +482,7 @@ public class WingsMongoPersistence implements WingsPersistence, Managed {
       req.setOffset(String.valueOf(ret.size()));
       res = query(cls, req);
     }
+    checkListSize(ret);
     return ret;
   }
 
@@ -544,7 +556,7 @@ public class WingsMongoPersistence implements WingsPersistence, Managed {
    */
   @Override
   public <T> Query<T> createQuery(Class<T> cls, ReadPref readPref) {
-    return datastoreMap.get(readPref).createQuery(cls);
+    return new HQuery(datastoreMap.get(readPref).createQuery(cls));
   }
 
   /**
