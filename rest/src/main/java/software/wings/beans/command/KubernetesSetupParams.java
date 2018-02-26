@@ -35,6 +35,8 @@ public class KubernetesSetupParams extends ContainerSetupParams {
   private int targetCpuUtilizationPercentage;
   private String subscriptionId;
   private String resourceGroup;
+  private boolean useIngress;
+  private String ingressYaml;
 
   public static final class KubernetesSetupParamsBuilder {
     private String serviceName;
@@ -65,6 +67,8 @@ public class KubernetesSetupParams extends ContainerSetupParams {
     private int targetCpuUtilizationPercentage;
     private String subscriptionId;
     private String resourceGroup;
+    private boolean useIngress;
+    private String ingressYaml;
 
     private KubernetesSetupParamsBuilder() {}
 
@@ -212,6 +216,16 @@ public class KubernetesSetupParams extends ContainerSetupParams {
       return this;
     }
 
+    public KubernetesSetupParamsBuilder withUseIngress(boolean useIngress) {
+      this.useIngress = useIngress;
+      return this;
+    }
+
+    public KubernetesSetupParamsBuilder withIngressYaml(String ingressYaml) {
+      this.ingressYaml = ingressYaml;
+      return this;
+    }
+
     public KubernetesSetupParamsBuilder but() {
       return aKubernetesSetupParams()
           .withServiceName(serviceName)
@@ -241,7 +255,9 @@ public class KubernetesSetupParams extends ContainerSetupParams {
           .withMaxAutoscaleInstances(maxAutoscaleInstances)
           .withTargetCpuUtilizationPercentage(targetCpuUtilizationPercentage)
           .withSubscriptionId(subscriptionId)
-          .withResourceGroup(resourceGroup);
+          .withResourceGroup(resourceGroup)
+          .withUseIngress(useIngress)
+          .withIngressYaml(ingressYaml);
     }
 
     public KubernetesSetupParams build() {
@@ -274,6 +290,8 @@ public class KubernetesSetupParams extends ContainerSetupParams {
       kubernetesSetupParams.setTargetCpuUtilizationPercentage(targetCpuUtilizationPercentage);
       kubernetesSetupParams.setSubscriptionId(subscriptionId);
       kubernetesSetupParams.setResourceGroup(resourceGroup);
+      kubernetesSetupParams.setUseIngress(useIngress);
+      kubernetesSetupParams.setIngressYaml(ingressYaml);
       return kubernetesSetupParams;
     }
   }

@@ -69,6 +69,8 @@ public class KubernetesSetup extends ContainerServiceSetup {
   private int minAutoscaleInstances;
   private int maxAutoscaleInstances;
   private int targetCpuUtilizationPercentage;
+  private boolean useIngress;
+  private String ingressYaml;
 
   private String commandName = "Setup Replication Controller";
 
@@ -100,6 +102,11 @@ public class KubernetesSetup extends ContainerServiceSetup {
             context.renderExpression(kubernetesContainerTask.getAdvancedConfig()));
       }
       isDaemonSet = kubernetesContainerTask.checkDaemonSet();
+    }
+
+    String ingressYamlEvaluated = null;
+    if (isNotBlank(ingressYaml)) {
+      ingressYamlEvaluated = context.renderExpression(ingressYaml);
     }
 
     int serviceSteadyStateTimeout =
@@ -143,6 +150,8 @@ public class KubernetesSetup extends ContainerServiceSetup {
         .withTargetCpuUtilizationPercentage(targetCpuUtilizationPercentage)
         .withSubscriptionId(subscriptionId)
         .withResourceGroup(resourceGroup)
+        .withUseIngress(useIngress)
+        .withIngressYaml(ingressYamlEvaluated)
         .build();
   }
 
@@ -347,6 +356,22 @@ public class KubernetesSetup extends ContainerServiceSetup {
 
   public void setTargetCpuUtilizationPercentage(int targetCpuUtilizationPercentage) {
     this.targetCpuUtilizationPercentage = targetCpuUtilizationPercentage;
+  }
+
+  public boolean isUseIngress() {
+    return useIngress;
+  }
+
+  public void setUseIngress(boolean useIngress) {
+    this.useIngress = useIngress;
+  }
+
+  public String getIngressYaml() {
+    return ingressYaml;
+  }
+
+  public void setIngressYaml(String ingressYaml) {
+    this.ingressYaml = ingressYaml;
   }
 
   private ContextData buildContextData(ExecutionContext context, Application app,
