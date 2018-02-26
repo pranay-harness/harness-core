@@ -44,6 +44,9 @@ import io.fabric8.kubernetes.api.model.extensions.DaemonSet;
 import io.fabric8.kubernetes.api.model.extensions.DaemonSetSpec;
 import io.fabric8.kubernetes.api.model.extensions.Deployment;
 import io.fabric8.kubernetes.api.model.extensions.DeploymentSpec;
+import io.fabric8.kubernetes.api.model.extensions.HTTPIngressPath;
+import io.fabric8.kubernetes.api.model.extensions.Ingress;
+import io.fabric8.kubernetes.api.model.extensions.IngressRule;
 import io.fabric8.kubernetes.api.model.extensions.ReplicaSet;
 import io.fabric8.kubernetes.api.model.extensions.ReplicaSetSpec;
 import io.fabric8.kubernetes.api.model.extensions.StatefulSet;
@@ -95,6 +98,9 @@ public class KubernetesSetupCommandUnit extends ContainerSetupCommandUnit {
   @Transient
   private static final String DOCKER_REGISTRY_CREDENTIAL_TEMPLATE =
       "{\"%s\":{\"username\":\"%s\",\"password\":\"%s\"}}";
+
+  @Transient private static final String SERVICE_NAME_PLACEHOLDER_REGEX = "\\$\\{SERVICE_NAME}";
+  @Transient private static final String SERVICE_PORT_PLACEHOLDER_REGEX = "\\$\\{SERVICE_PORT}";
 
   @Inject @Transient private transient GkeClusterService gkeClusterService;
   @Inject @Transient private transient KubernetesContainerService kubernetesContainerService;
@@ -188,9 +194,9 @@ public class KubernetesSetupCommandUnit extends ContainerSetupCommandUnit {
     String serviceClusterIP = null;
     String serviceLoadBalancerEndpoint = null;
 
+    // Setup service
     Service service =
         kubernetesContainerService.getService(kubernetesConfig, encryptedDataDetails, kubernetesServiceName);
-
     if (setupParams.getServiceType() != null && setupParams.getServiceType() != KubernetesServiceType.None) {
       Service serviceDefinition =
           createServiceDefinition(kubernetesServiceName, kubernetesConfig.getNamespace(), serviceLabels, setupParams);
@@ -213,10 +219,28 @@ public class KubernetesSetupCommandUnit extends ContainerSetupCommandUnit {
         serviceLoadBalancerEndpoint = waitForLoadBalancerEndpoint(
             kubernetesConfig, encryptedDataDetails, service, setupParams.getLoadBalancerIP(), executionLogCallback);
       }
+
     } else if (service != null) {
       executionLogCallback.saveExecutionLog(
           "Kubernetes service type set to 'None'. Deleting existing service " + kubernetesServiceName, LogLevel.INFO);
       kubernetesContainerService.deleteService(kubernetesConfig, encryptedDataDetails, kubernetesServiceName);
+      service = null;
+    }
+
+    // Setup ingress
+    Ingress ingress =
+        kubernetesContainerService.getIngress(kubernetesConfig, encryptedDataDetails, kubernetesServiceName);
+    if (setupParams.isUseIngress() && service != null) {
+      try {
+        Ingress ingressDefinition = createIngressDefinition(setupParams, service, kubernetesServiceName);
+        ingress = kubernetesContainerService.createOrReplaceIngress(
+            kubernetesConfig, encryptedDataDetails, ingressDefinition);
+      } catch (IOException e) {
+        Misc.logAllMessages(e, executionLogCallback);
+      }
+    } else if (ingress != null) {
+      kubernetesContainerService.deleteIngress(kubernetesConfig, encryptedDataDetails, kubernetesServiceName);
+      ingress = null;
     }
 
     // Disable previous autoscalers
@@ -248,6 +272,7 @@ public class KubernetesSetupCommandUnit extends ContainerSetupCommandUnit {
 
     executionLogCallback.saveExecutionLog("Cluster Name: " + setupParams.getClusterName(), LogLevel.INFO);
     executionLogCallback.saveExecutionLog("Controller Name: " + containerServiceName, LogLevel.INFO);
+    executionLogCallback.saveExecutionLog("Docker Image Name: " + dockerImageName, LogLevel.INFO);
     executionLogCallback.saveExecutionLog("Service Name: " + kubernetesServiceName, LogLevel.INFO);
     if (isNotBlank(serviceClusterIP)) {
       executionLogCallback.saveExecutionLog("Service Cluster IP: " + serviceClusterIP, LogLevel.INFO);
@@ -255,7 +280,10 @@ public class KubernetesSetupCommandUnit extends ContainerSetupCommandUnit {
     if (isNotBlank(serviceLoadBalancerEndpoint)) {
       executionLogCallback.saveExecutionLog("Load Balancer Endpoint: " + serviceLoadBalancerEndpoint, LogLevel.INFO);
     }
-    executionLogCallback.saveExecutionLog("Docker Image Name: " + dockerImageName, LogLevel.INFO);
+    if (ingress != null) {
+      executionLogCallback.saveExecutionLog("Ingress Name: " + kubernetesServiceName, LogLevel.INFO);
+      executionLogCallback.saveExecutionLog("Ingress Rule: " + getIngressRuleString(ingress), LogLevel.INFO);
+    }
 
     if (isDaemonSet) {
       listContainerInfosWhenReady(encryptedDataDetails, setupParams.getServiceSteadyStateTimeout(),
@@ -265,6 +293,17 @@ public class KubernetesSetupCommandUnit extends ContainerSetupCommandUnit {
       cleanup(kubernetesConfig, encryptedDataDetails, containerServiceName);
     }
     return ContainerSetupCommandUnitExecutionData.builder().containerServiceName(containerServiceName).build();
+  }
+
+  private Ingress createIngressDefinition(
+      KubernetesSetupParams setupParams, Service service, String kubernetesServiceName) throws IOException {
+    int port = isNotEmpty(service.getSpec().getPorts()) ? service.getSpec().getPorts().get(0).getPort() : 80;
+    Ingress ingress =
+        KubernetesHelper.loadYaml(setupParams.getIngressYaml()
+                                      .replaceAll(SERVICE_NAME_PLACEHOLDER_REGEX, kubernetesServiceName)
+                                      .replaceAll(SERVICE_PORT_PLACEHOLDER_REGEX, Integer.toString(port)));
+    ingress.getMetadata().setName(kubernetesServiceName);
+    return ingress;
   }
 
   private void listContainerInfosWhenReady(List<EncryptedDataDetail> encryptedDataDetails,
@@ -598,6 +637,25 @@ public class KubernetesSetupCommandUnit extends ContainerSetupCommandUnit {
             }
           });
     }
+  }
+
+  private String getIngressRuleString(Ingress ingress) {
+    String path;
+    String port;
+    String serviceName;
+    String host;
+    try {
+      IngressRule ingressRule = ingress.getSpec().getRules().get(0);
+      HTTPIngressPath httpIngressPath = ingressRule.getHttp().getPaths().get(0);
+      path = httpIngressPath.getPath();
+      port = httpIngressPath.getBackend().getServicePort().getIntVal().toString();
+      serviceName = httpIngressPath.getBackend().getServiceName();
+      host = ingressRule.getHost();
+    } catch (Exception e) {
+      logger.error("Couldn't get path from ingress rule.", e);
+      return "ERROR - " + Misc.getMessage(e);
+    }
+    return (isNotBlank(host) ? host : "") + ":" + port + path + " -> " + serviceName;
   }
 
   @Data

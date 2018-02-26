@@ -13,6 +13,7 @@ import com.google.common.util.concurrent.UncheckedTimeoutException;
 import com.google.inject.Inject;
 import com.google.inject.Singleton;
 
+import io.fabric8.kubernetes.api.model.ConfigMap;
 import io.fabric8.kubernetes.api.model.Container;
 import io.fabric8.kubernetes.api.model.ContainerStateRunning;
 import io.fabric8.kubernetes.api.model.ContainerStateTerminated;
@@ -44,6 +45,7 @@ import io.fabric8.kubernetes.api.model.extensions.DoneableDaemonSet;
 import io.fabric8.kubernetes.api.model.extensions.DoneableDeployment;
 import io.fabric8.kubernetes.api.model.extensions.DoneableReplicaSet;
 import io.fabric8.kubernetes.api.model.extensions.DoneableStatefulSet;
+import io.fabric8.kubernetes.api.model.extensions.Ingress;
 import io.fabric8.kubernetes.api.model.extensions.ReplicaSet;
 import io.fabric8.kubernetes.api.model.extensions.ReplicaSetList;
 import io.fabric8.kubernetes.api.model.extensions.StatefulSet;
@@ -486,21 +488,6 @@ public class KubernetesContainerServiceImpl implements KubernetesContainerServic
   }
 
   @Override
-  public void createNamespaceIfNotExist(
-      KubernetesConfig kubernetesConfig, List<EncryptedDataDetail> encryptedDataDetails) {
-    NamespaceList namespaces =
-        kubernetesHelperService.getKubernetesClient(kubernetesConfig, encryptedDataDetails).namespaces().list();
-    if (namespaces.getItems().stream().noneMatch(
-            namespace -> namespace.getMetadata().getName().equals(kubernetesConfig.getNamespace()))) {
-      logger.info("Creating namespace [{}]", kubernetesConfig.getNamespace());
-      kubernetesHelperService.getKubernetesClient(kubernetesConfig, encryptedDataDetails)
-          .namespaces()
-          .create(
-              new NamespaceBuilder().withNewMetadata().withName(kubernetesConfig.getNamespace()).endMetadata().build());
-    }
-  }
-
-  @Override
   public Service getService(
       KubernetesConfig kubernetesConfig, List<EncryptedDataDetail> encryptedDataDetails, String name) {
     return isNotBlank(name) ? kubernetesHelperService.getKubernetesClient(kubernetesConfig, encryptedDataDetails)
@@ -538,6 +525,79 @@ public class KubernetesContainerServiceImpl implements KubernetesContainerServic
         .inNamespace(kubernetesConfig.getNamespace())
         .withName(name)
         .delete();
+  }
+
+  @Override
+  public Ingress createOrReplaceIngress(
+      KubernetesConfig kubernetesConfig, List<EncryptedDataDetail> encryptedDataDetails, Ingress definition) {
+    String name = definition.getMetadata().getName();
+    Ingress ingress = kubernetesHelperService.getKubernetesClient(kubernetesConfig, encryptedDataDetails)
+                          .extensions()
+                          .ingresses()
+                          .inNamespace(kubernetesConfig.getNamespace())
+                          .withName(name)
+                          .get();
+    logger.info("{} ingress [{}]", ingress == null ? "Creating" : "Replacing", name);
+    return kubernetesHelperService.getKubernetesClient(kubernetesConfig, encryptedDataDetails)
+        .extensions()
+        .ingresses()
+        .inNamespace(kubernetesConfig.getNamespace())
+        .createOrReplace(definition);
+  }
+
+  @Override
+  public Ingress getIngress(
+      KubernetesConfig kubernetesConfig, List<EncryptedDataDetail> encryptedDataDetails, String name) {
+    return isNotBlank(name) ? kubernetesHelperService.getKubernetesClient(kubernetesConfig, encryptedDataDetails)
+                                  .extensions()
+                                  .ingresses()
+                                  .inNamespace(kubernetesConfig.getNamespace())
+                                  .withName(name)
+                                  .get()
+                            : null;
+  }
+
+  @Override
+  public void deleteIngress(
+      KubernetesConfig kubernetesConfig, List<EncryptedDataDetail> encryptedDataDetails, String name) {
+    logger.info("Deleting service {}", name);
+    kubernetesHelperService.getKubernetesClient(kubernetesConfig, encryptedDataDetails)
+        .extensions()
+        .ingresses()
+        .inNamespace(kubernetesConfig.getNamespace())
+        .withName(name)
+        .delete();
+  }
+
+  @Override
+  public ConfigMap createOrReplaceConfigMap(
+      KubernetesConfig kubernetesConfig, List<EncryptedDataDetail> encryptedDataDetails, ConfigMap definition) {
+    String name = definition.getMetadata().getName();
+    ConfigMap configMap = kubernetesHelperService.getKubernetesClient(kubernetesConfig, encryptedDataDetails)
+                              .configMaps()
+                              .inNamespace(kubernetesConfig.getNamespace())
+                              .withName(name)
+                              .get();
+    logger.info("{} config map [{}]", configMap == null ? "Creating" : "Replacing", name);
+    return kubernetesHelperService.getKubernetesClient(kubernetesConfig, encryptedDataDetails)
+        .configMaps()
+        .inNamespace(kubernetesConfig.getNamespace())
+        .createOrReplace(definition);
+  }
+
+  @Override
+  public void createNamespaceIfNotExist(
+      KubernetesConfig kubernetesConfig, List<EncryptedDataDetail> encryptedDataDetails) {
+    NamespaceList namespaces =
+        kubernetesHelperService.getKubernetesClient(kubernetesConfig, encryptedDataDetails).namespaces().list();
+    if (namespaces.getItems().stream().noneMatch(
+            namespace -> namespace.getMetadata().getName().equals(kubernetesConfig.getNamespace()))) {
+      logger.info("Creating namespace [{}]", kubernetesConfig.getNamespace());
+      kubernetesHelperService.getKubernetesClient(kubernetesConfig, encryptedDataDetails)
+          .namespaces()
+          .create(
+              new NamespaceBuilder().withNewMetadata().withName(kubernetesConfig.getNamespace()).endMetadata().build());
+    }
   }
 
   @Override
