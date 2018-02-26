@@ -37,12 +37,14 @@ public class NewRelicDeploymentMarkerTask extends AbstractDelegateRunnableTask {
           dataCollectionInfo.getEncryptedDataDetails(), dataCollectionInfo.getNewRelicAppId(), payload);
       return DataCollectionTaskResult.builder()
           .status(DataCollectionTaskResult.DataCollectionTaskStatus.SUCCESS)
+          .newRelicDeploymentMarkerBody(dataCollectionInfo.getDeploymentMarker())
           .build();
     } catch (Exception ex) {
       return DataCollectionTaskResult.builder()
           .status(DataCollectionTaskResult.DataCollectionTaskStatus.FAILURE)
           .stateType(StateType.NEW_RELIC)
           .errorMessage("Could not send deployment marker : " + ex.getMessage())
+          .newRelicDeploymentMarkerBody(dataCollectionInfo.getDeploymentMarker())
           .build();
     }
   }

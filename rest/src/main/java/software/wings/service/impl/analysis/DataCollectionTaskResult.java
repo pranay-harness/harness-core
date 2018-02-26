@@ -19,6 +19,11 @@ public class DataCollectionTaskResult implements NotifyResponseData {
   private String errorMessage;
   private StateType stateType;
 
+  // State specific results.....
+
+  // NewRelicDeploymentMarker state
+  private String newRelicDeploymentMarkerBody;
+
   public enum DataCollectionTaskStatus {
     /**
      * Success execution status.
