@@ -45,13 +45,9 @@ public class ElkLogFetchRequest {
             timestampField, new JSONObject().put("gte", startTime).put("lt", endTime).put("format", "epoch_millis")));
 
     Map<String, List<JSONObject>> mustArrayObjects = new HashMap<>();
-    mustArrayObjects.put("filter", new ArrayList<>());
-    mustArrayObjects.put("should", new ArrayList<>());
-    mustArrayObjects.put("must", new ArrayList<>());
-
-    mustArrayObjects.get("filter").add(rangeObject);
-    mustArrayObjects.get("should").addAll(hostJsonObjects);
-    mustArrayObjects.get("must").add(eval());
+    mustArrayObjects.put("filter",
+        Arrays.asList(
+            new JSONObject().put("bool", new JSONObject().put("should", hostJsonObjects)), rangeObject, eval()));
 
     JSONObject queryObject =
         new JSONObject().put("query", new JSONObject().put("bool", mustArrayObjects)).put("size", 10000);

@@ -19,8 +19,8 @@ import software.wings.beans.TaskType;
 import software.wings.common.Constants;
 import software.wings.exception.WingsException;
 import software.wings.service.impl.analysis.DataCollectionTaskResult;
-import software.wings.service.impl.newrelic.MetricAnalysisExecutionData;
 import software.wings.service.impl.newrelic.NewRelicDataCollectionInfo;
+import software.wings.service.impl.newrelic.NewRelicMarkerExecutionData;
 import software.wings.service.impl.newrelic.NewRelicSettingProvider;
 import software.wings.service.intfc.DelegateService;
 import software.wings.service.intfc.SettingsService;
@@ -31,7 +31,6 @@ import software.wings.sm.ExecutionContextImpl;
 import software.wings.sm.ExecutionResponse;
 import software.wings.sm.ExecutionStatus;
 import software.wings.sm.State;
-import software.wings.sm.StateExecutionData.StateExecutionDataBuilder;
 import software.wings.sm.WorkflowStandardParams;
 import software.wings.stencils.EnumData;
 import software.wings.waitnotify.NotifyResponseData;
@@ -121,13 +120,8 @@ public class NewRelicDeploymentMarkerState extends State {
 
     // waitNotifyEngine.waitForAll(new DataCollectionCallback(context.getAppId(), correlationId, false), waitId);
 
-    final MetricAnalysisExecutionData executionData =
-        MetricAnalysisExecutionData.builder()
-            .workflowExecutionId(context.getWorkflowExecutionId())
-            .stateExecutionInstanceId(context.getStateExecutionInstanceId())
-            .serverConfigId(getAnalysisServerConfigId())
-            .correlationId(correlationId)
-            .build();
+    final NewRelicMarkerExecutionData executionData =
+        NewRelicMarkerExecutionData.builder().payload(body).evaluatedPayload(evaluatedBody).build();
     executionData.setStatus(ExecutionStatus.RUNNING);
 
     return anExecutionResponse()
@@ -144,21 +138,27 @@ public class NewRelicDeploymentMarkerState extends State {
   public ExecutionResponse handleAsyncResponse(ExecutionContext context, Map<String, NotifyResponseData> response) {
     ExecutionStatus executionStatus = ExecutionStatus.SUCCESS;
     DataCollectionTaskResult executionResponse = (DataCollectionTaskResult) response.values().iterator().next();
+    NewRelicMarkerExecutionData analysisExecutionData =
+        NewRelicMarkerExecutionData.builder()
+            .payload(body)
+            .evaluatedPayload(executionResponse.getNewRelicDeploymentMarkerBody())
+            .build();
     if (executionResponse.getStatus() == DataCollectionTaskResult.DataCollectionTaskStatus.FAILURE) {
+      analysisExecutionData.setErrorMsg(executionResponse.getErrorMessage());
+      analysisExecutionData.setStatus(ExecutionStatus.FAILED);
+
       return anExecutionResponse()
           .withExecutionStatus(ExecutionStatus.FAILED)
-          .withStateExecutionData(StateExecutionDataBuilder.aStateExecutionData()
-                                      .withStatus(ExecutionStatus.FAILED)
-                                      .withErrorMsg(executionResponse.getErrorMessage())
-                                      .build())
+          .withStateExecutionData(analysisExecutionData)
           .withErrorMessage(executionResponse.getErrorMessage())
           .build();
     }
 
+    analysisExecutionData.setStatus(ExecutionStatus.SUCCESS);
     return anExecutionResponse()
         .withExecutionStatus(executionStatus)
-        .withStateExecutionData(
-            StateExecutionDataBuilder.aStateExecutionData().withStatus(ExecutionStatus.SUCCESS).build())
+        .withStateExecutionData(analysisExecutionData)
+
         .build();
   }
 
