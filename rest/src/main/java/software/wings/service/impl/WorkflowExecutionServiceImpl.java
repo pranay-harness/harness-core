@@ -35,6 +35,7 @@ import static software.wings.beans.WorkflowType.PIPELINE;
 import static software.wings.common.UUIDGenerator.generateUuid;
 import static software.wings.dl.PageRequest.PageRequestBuilder.aPageRequest;
 import static software.wings.dl.PageRequest.UNLIMITED;
+import static software.wings.exception.WingsException.HARMLESS;
 import static software.wings.service.impl.ExecutionEvent.ExecutionEventBuilder.anExecutionEvent;
 import static software.wings.sm.ExecutionInterruptType.ABORT_ALL;
 import static software.wings.sm.ExecutionInterruptType.PAUSE_ALL;
@@ -1297,7 +1298,10 @@ public class WorkflowExecutionServiceImpl implements WorkflowExecutionService {
     }
 
     if (workflowExecution.getStatus().isFinalStatus()) {
-      throw new WingsException(ErrorCode.INVALID_ARGUMENT)
+      // There is a race between the workflow progress and request coming from the user.
+      // It is completely normal the workflow to finish while interrupt request is coming.
+      // Therefore there is nothing alarming when this occurs.
+      throw new WingsException(ErrorCode.INVALID_REQUEST, HARMLESS)
           .addParam("args", "Workflow execution already completed. executionUuid:" + executionUuid);
     }
 
@@ -1315,10 +1319,12 @@ public class WorkflowExecutionServiceImpl implements WorkflowExecutionService {
 
     try {
       executionInterruptManager.registerExecutionInterrupt(executionInterrupt);
-    } catch (Exception e) {
-      logger.warn("Error in interrupting workflowExecution - uuid: {}, executionInterruptType: {}",
-          workflowExecution.getUuid(), executionInterrupt.getExecutionInterruptType());
-      logger.warn(e.getMessage(), e);
+    } catch (WingsException exception) {
+      exception.logProcessedMessages(logger);
+    } catch (RuntimeException exception) {
+      logger.error(format("Error in interrupting workflowExecution - uuid: %s, executionInterruptType: %s",
+                       workflowExecution.getUuid(), executionInterrupt.getExecutionInterruptType()),
+          exception);
     }
 
     List<StateExecutionInstance> stateExecutionInstances = getStateExecutionInstances(workflowExecution);
@@ -1340,10 +1346,12 @@ public class WorkflowExecutionServiceImpl implements WorkflowExecutionService {
         ExecutionInterrupt executionInterruptClone = KryoUtils.clone(executionInterrupt);
         executionInterruptClone.setExecutionUuid(workflowExecution2.getUuid());
         executionInterruptManager.registerExecutionInterrupt(executionInterruptClone);
-      } catch (Exception e) {
-        logger.warn("Error in interrupting workflowExecution - uuid: {}, executionInterruptType: {}",
-            workflowExecution2.getUuid(), executionInterrupt.getExecutionInterruptType());
-        logger.warn(e.getMessage(), e);
+      } catch (WingsException exception) {
+        exception.logProcessedMessages(logger);
+      } catch (RuntimeException exception) {
+        logger.error(format("Error in interrupting workflowExecution - uuid: %s, executionInterruptType: %s",
+                         workflowExecution.getUuid(), executionInterrupt.getExecutionInterruptType()),
+            exception);
       }
     }
     return executionInterrupt;
