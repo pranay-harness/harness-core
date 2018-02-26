@@ -190,6 +190,8 @@ public class ExpressionEvaluatorTest extends WingsBaseTest {
     assertThat(expressionEvaluator.substitute("${regex.extract('Y..k', ${bob.address.city})}", persons))
         .isEqualTo("York");
 
+    assertThat(expressionEvaluator.substitute("${regex.extract('..', ${bob.address.city})}", persons)).isEqualTo("Ne");
+
     assertThat(expressionEvaluator.substitute("${regex.extract('has matching', 'text has matching pattern')}", persons))
         .isEqualTo("has matching");
 

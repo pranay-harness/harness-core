@@ -6,16 +6,17 @@ import static org.mockito.Matchers.any;
 import static org.mockito.Matchers.anyString;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
-import static software.wings.beans.Application.Builder.anApplication;
-import static software.wings.beans.Environment.Builder.anEnvironment;
+import static org.mockito.internal.util.reflection.Whitebox.setInternalState;
+import static software.wings.api.WorkflowElement.WorkflowElementBuilder.aWorkflowElement;
+import static software.wings.beans.OrchestrationWorkflowType.BUILD;
 import static software.wings.beans.artifact.Artifact.Builder.anArtifact;
 import static software.wings.beans.artifact.JenkinsArtifactStream.Builder.aJenkinsArtifactStream;
+import static software.wings.sm.StateExecutionInstance.Builder.aStateExecutionInstance;
 import static software.wings.utils.WingsTestConstants.ACCOUNT_ID;
 import static software.wings.utils.WingsTestConstants.ACTIVITY_ID;
 import static software.wings.utils.WingsTestConstants.APP_ID;
 import static software.wings.utils.WingsTestConstants.ARTIFACT_SOURCE_NAME;
 import static software.wings.utils.WingsTestConstants.ARTIFACT_STREAM_ID;
-import static software.wings.utils.WingsTestConstants.ENV_ID;
 import static software.wings.utils.WingsTestConstants.SERVICE_ID;
 import static software.wings.utils.WingsTestConstants.SETTING_ID;
 
@@ -31,25 +32,39 @@ import org.mockito.junit.MockitoRule;
 import org.quartz.JobDetail;
 import org.quartz.Trigger;
 import software.wings.api.ArtifactCollectionExecutionData;
+import software.wings.app.MainConfiguration;
+import software.wings.app.PortalConfig;
+import software.wings.beans.Application;
 import software.wings.beans.artifact.Artifact.Status;
 import software.wings.beans.artifact.JenkinsArtifactStream;
+import software.wings.common.VariableProcessor;
+import software.wings.expression.ExpressionEvaluator;
 import software.wings.scheduler.JobScheduler;
+import software.wings.service.intfc.AppService;
 import software.wings.service.intfc.ArtifactService;
 import software.wings.service.intfc.ArtifactStreamService;
 import software.wings.service.intfc.WorkflowExecutionService;
 import software.wings.sm.ExecutionContextImpl;
 import software.wings.sm.ExecutionResponse;
+import software.wings.sm.StateExecutionInstance;
+import software.wings.sm.StateType;
+import software.wings.sm.WorkflowStandardParams;
 
 /**
  * Created by sgurubelli on 11/28/17.
  */
 public class ArtifactCollectionStateTest {
   @Rule public MockitoRule mockitoRule = MockitoJUnit.rule();
-  @Mock private ExecutionContextImpl executionContext;
   @Mock private ArtifactStreamService artifactStreamService;
   @Mock private JobScheduler jobScheduler;
   @Mock private ArtifactService artifactService;
   @Mock private WorkflowExecutionService workflowExecutionService;
+  @Mock private AppService appService;
+  @Mock MainConfiguration configuration;
+  @Mock PortalConfig portalConfig;
+  @Mock VariableProcessor variableProcessor;
+  private ExpressionEvaluator expressionEvaluator = new ExpressionEvaluator();
+
   @InjectMocks
   private ArtifactCollectionState artifactCollectionState = new ArtifactCollectionState("Collect Artifact");
 
@@ -62,20 +77,41 @@ public class ArtifactCollectionStateTest {
                                                             .withServiceId(SERVICE_ID)
                                                             .withArtifactPaths(asList("*WAR"))
                                                             .build();
+  private WorkflowStandardParams workflowStandardParams =
+      WorkflowStandardParams.Builder.aWorkflowStandardParams()
+          .withAppId(APP_ID)
+          .withWorkflowElement(
+              aWorkflowElement()
+                  .withVariables(ImmutableMap.of("sourceCommitHash", "0fcb2caa537745f8228fb081aac2af55765d8e62"))
+                  .build())
+          .build();
+  private StateExecutionInstance stateExecutionInstance = aStateExecutionInstance()
+                                                              .withStateName(StateType.ARTIFACT_COLLECTION.name())
+                                                              .withOrchestrationWorkflowType(BUILD)
+                                                              .addContextElement(workflowStandardParams)
+                                                              .build();
+
+  private ExecutionContextImpl executionContext = new ExecutionContextImpl(stateExecutionInstance);
 
   @Before
   public void setUp() throws Exception {
     artifactCollectionState.setArtifactStreamId(ARTIFACT_STREAM_ID);
-    when(executionContext.getAppId()).thenReturn(APP_ID);
-    when(executionContext.getApp()).thenReturn(anApplication().withAccountId(ACCOUNT_ID).withUuid(APP_ID).build());
-    when(executionContext.getEnv()).thenReturn(anEnvironment().withUuid(ENV_ID).withAppId(APP_ID).build());
+    setInternalState(executionContext, "variableProcessor", variableProcessor);
+    setInternalState(executionContext, "evaluator", expressionEvaluator);
+    setInternalState(workflowStandardParams, "appService", appService);
+    setInternalState(workflowStandardParams, "configuration", configuration);
+    when(configuration.getPortal()).thenReturn(portalConfig);
+    when(portalConfig.getUrl()).thenReturn("http://portalUrl");
+    when(appService.get(APP_ID))
+        .thenReturn(
+            Application.Builder.anApplication().withAppId(APP_ID).withUuid(APP_ID).withAccountId(ACCOUNT_ID).build());
     when(artifactStreamService.get(APP_ID, ARTIFACT_STREAM_ID)).thenReturn(jenkinsArtifactStream);
     when(artifactService.fetchLatestArtifactForArtifactStream(APP_ID, ARTIFACT_STREAM_ID, ARTIFACT_SOURCE_NAME))
         .thenReturn(anArtifact().withAppId(APP_ID).withStatus(Status.APPROVED).build());
   }
 
   @Test
-  public void shouldExecute() throws Exception {
+  public void shouldExecute() {
     ExecutionResponse executionResponse = artifactCollectionState.execute(executionContext);
     assertThat(executionResponse).isNotNull().hasFieldOrPropertyWithValue("async", true);
     verify(artifactStreamService).get(APP_ID, ARTIFACT_STREAM_ID);
@@ -83,8 +119,18 @@ public class ArtifactCollectionStateTest {
   }
 
   @Test
-  public void shouldHandleAsyncResponse() throws Exception {
-    when(executionContext.getStateExecutionData()).thenReturn(ArtifactCollectionExecutionData.builder().build());
+  public void shouldHandleAsyncResponse() {
+    artifactCollectionState.handleAsyncResponse(executionContext,
+        ImmutableMap.of(
+            ACTIVITY_ID, ArtifactCollectionExecutionData.builder().artifactStreamId(ARTIFACT_STREAM_ID).build()));
+    verify(workflowExecutionService).refreshBuildExecutionSummary(anyString(), anyString(), any());
+  }
+
+  @Test
+  public void shouldArtifactCollectionEvaluateBuildNo() {
+    artifactCollectionState.setBuildNo("${regex.extract('...', ${workflow.variables.sourceCommitHash})}");
+    when(artifactService.getArtifactByBuildNumberContains(APP_ID, ARTIFACT_STREAM_ID, ARTIFACT_SOURCE_NAME, "0fc"))
+        .thenReturn(anArtifact().withAppId(APP_ID).withStatus(Status.APPROVED).build());
     artifactCollectionState.handleAsyncResponse(executionContext,
         ImmutableMap.of(
             ACTIVITY_ID, ArtifactCollectionExecutionData.builder().artifactStreamId(ARTIFACT_STREAM_ID).build()));

@@ -3,7 +3,7 @@ package software.wings.sm.states;
 import static java.util.Arrays.asList;
 import static org.apache.commons.lang3.StringUtils.isBlank;
 import static software.wings.common.Constants.BUILD_NO;
-import static software.wings.common.Constants.DEFAULT_STATE_TIMEOUT_MILLIS;
+import static software.wings.common.Constants.DEFAULT_ARTIFACT_COLLECTION_STATE_TIMEOUT_MILLIS;
 import static software.wings.common.Constants.URL;
 import static software.wings.common.Constants.WAIT_RESUME_GROUP;
 import static software.wings.common.UUIDGenerator.generateUuid;
@@ -49,7 +49,7 @@ import java.util.Map;
  * Created by sgurubelli on 11/13/17.
  */
 public class ArtifactCollectionState extends State {
-  @Transient private static final Logger logger = LoggerFactory.getLogger(JenkinsState.class);
+  @Transient private static final Logger logger = LoggerFactory.getLogger(ArtifactCollectionState.class);
 
   private static final String LATEST = "LATEST";
   @EnumData(enumDataProvider = ArtifactSourceProvider.class)
@@ -164,20 +164,15 @@ public class ArtifactCollectionState extends State {
   @SchemaIgnore
   @Override
   public Integer getTimeoutMillis() {
-    return DEFAULT_STATE_TIMEOUT_MILLIS;
+    return DEFAULT_ARTIFACT_COLLECTION_STATE_TIMEOUT_MILLIS;
   }
 
   private Artifact getLastCollectedArtifact(ExecutionContext context, String artifactStreamId, String sourceName) {
     if (isBlank(buildNo) || buildNo.equalsIgnoreCase(LATEST)) {
       return artifactService.fetchLatestArtifactForArtifactStream(context.getAppId(), artifactStreamId, sourceName);
     } else {
-      String evaluatedBuildNo = buildNo;
-      try {
-        evaluatedBuildNo = context.renderExpression(buildNo);
-      } catch (Exception e) {
-        logger.warn("Failed to evaluate Build Number expresson {}", e);
-      }
-      return artifactService.getArtifactByBuildNumber(context.getAppId(), artifactStreamId, evaluatedBuildNo);
+      return artifactService.getArtifactByBuildNumberContains(
+          context.getAppId(), artifactStreamId, sourceName, context.renderExpression(buildNo));
     }
   }
 
