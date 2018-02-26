@@ -501,6 +501,7 @@ public class WorkflowStandardParams implements ExecutionContextAware, ContextEle
     private String timestampId = System.currentTimeMillis() + "-" + nextInt(0, 1000);
     private EmbeddedUser currentUser;
     private boolean excludeHostsWithSameArtifact;
+    private WorkflowElement workflowElement;
 
     private Builder() {}
 
@@ -590,34 +591,11 @@ public class WorkflowStandardParams implements ExecutionContextAware, ContextEle
       return this;
     }
 
-    /**
-     * With timestamp id builder.
-     *
-     * @param timestampId the timestamp id
-     * @return the builder
+    /***
+     * With WokflowElement builder
      */
-    public Builder withTimestampId(String timestampId) {
-      this.timestampId = timestampId;
-      return this;
-    }
-
-    /**
-     * With current user
-     * @param currentUser
-     * @return
-     */
-    public Builder withCurrentUser(EmbeddedUser currentUser) {
-      this.currentUser = currentUser;
-      return this;
-    }
-
-    /**
-     * With ExcludeHostsWithSameArtifact
-     * @param excludeHostsWithSameArtifact
-     * @return
-     */
-    public Builder withExcludeHostsWithSameArtifact(boolean excludeHostsWithSameArtifact) {
-      this.excludeHostsWithSameArtifact = excludeHostsWithSameArtifact;
+    public Builder withWorkflowElement(WorkflowElement workflowElement) {
+      this.workflowElement = workflowElement;
       return this;
     }
 
@@ -638,6 +616,7 @@ public class WorkflowStandardParams implements ExecutionContextAware, ContextEle
       workflowStandardParams.setTimestampId(timestampId);
       workflowStandardParams.setCurrentUser(currentUser);
       workflowStandardParams.setExcludeHostsWithSameArtifact(excludeHostsWithSameArtifact);
+      workflowStandardParams.setWorkflowElement(workflowElement);
       return workflowStandardParams;
     }
   }
