@@ -15,7 +15,7 @@ from collections import namedtuple
 import newrelic.agent
 
 
-if os.environ.get('learning_env').lower() == 'prod':
+if str(os.environ.get('learning_env')).lower() == 'prod':
     newrelic_ini_file = 'newrelic_prod.ini'
 else:
     newrelic_ini_file = 'newrelic.ini'
