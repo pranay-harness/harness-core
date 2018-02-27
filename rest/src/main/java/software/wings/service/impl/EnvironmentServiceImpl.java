@@ -2,6 +2,8 @@ package software.wings.service.impl;
 
 import static io.harness.data.structure.EmptyPredicate.isEmpty;
 import static io.harness.data.structure.EmptyPredicate.isNotEmpty;
+import static io.harness.data.structure.ListUtil.trimList;
+import static java.util.Arrays.asList;
 import static java.util.stream.Collectors.toMap;
 import static org.mongodb.morphia.mapping.Mapper.ID_KEY;
 import static software.wings.beans.Base.GLOBAL_ENV_ID;
@@ -205,6 +207,8 @@ public class EnvironmentServiceImpl implements EnvironmentService, DataProvider 
    */
   @Override
   public Environment save(Environment environment) {
+    environment.setKeywords(
+        trimList(asList(environment.getName(), environment.getDescription(), environment.getEnvironmentType())));
     Environment savedEnvironment = Validator.duplicateCheck(
         () -> wingsPersistence.saveAndGet(Environment.class, environment), "name", environment.getName());
     serviceTemplateService.createDefaultTemplatesByEnv(savedEnvironment);
@@ -230,8 +234,10 @@ public class EnvironmentServiceImpl implements EnvironmentService, DataProvider 
         wingsPersistence.get(Environment.class, environment.getAppId(), environment.getUuid());
 
     String description = Optional.ofNullable(environment.getDescription()).orElse("");
-    ImmutableMap<String, Object> paramMap = ImmutableMap.of(
-        "name", environment.getName(), "environmentType", environment.getEnvironmentType(), "description", description);
+    List<String> keywords =
+        trimList(asList(environment.getName(), environment.getDescription(), environment.getEnvironmentType()));
+    ImmutableMap<String, Object> paramMap = ImmutableMap.of("name", environment.getName(), "environmentType",
+        environment.getEnvironmentType(), "description", description, "keywords", keywords);
 
     wingsPersistence.updateFields(Environment.class, environment.getUuid(), paramMap);
 

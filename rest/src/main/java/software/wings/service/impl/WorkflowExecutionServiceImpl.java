@@ -4,8 +4,10 @@
 
 package software.wings.service.impl;
 
+import static com.google.common.collect.Lists.newArrayList;
 import static io.harness.data.structure.EmptyPredicate.isEmpty;
 import static io.harness.data.structure.EmptyPredicate.isNotEmpty;
+import static io.harness.data.structure.ListUtil.trimList;
 import static java.lang.String.format;
 import static java.util.Arrays.asList;
 import static java.util.stream.Collectors.toList;
@@ -56,7 +58,6 @@ import static software.wings.utils.Switch.unhandled;
 import static software.wings.utils.Validator.notNullCheck;
 
 import com.google.common.collect.ImmutableMap;
-import com.google.common.collect.Lists;
 import com.google.common.collect.Maps;
 import com.google.inject.Inject;
 import com.google.inject.Singleton;
@@ -918,13 +919,21 @@ public class WorkflowExecutionServiceImpl implements WorkflowExecutionService {
   private WorkflowExecution triggerExecution(WorkflowExecution workflowExecution, StateMachine stateMachine,
       ExecutionEventAdvisor workflowExecutionAdvisor, WorkflowExecutionUpdate workflowExecutionUpdate,
       WorkflowStandardParams stdParams, ContextElement... contextElements) {
+    List<Object> keywords = newArrayList(
+        workflowExecution.getName(), workflowExecution.getWorkflowType(), workflowExecution.getOrchestrationType());
+
     Application app = appService.get(workflowExecution.getAppId());
     workflowExecution.setAppName(app.getName());
+    keywords.add(workflowExecution.getAppName());
+
     if (workflowExecution.getEnvId() != null) {
       Environment env = environmentService.get(workflowExecution.getAppId(), workflowExecution.getEnvId(), false);
       workflowExecution.setEnvName(env.getName());
       workflowExecution.setEnvType(env.getEnvironmentType());
     }
+    keywords.add(workflowExecution.getEnvType());
+    keywords.add(workflowExecution.getEnvName());
+
     User user = UserThreadLocal.get();
     if (user != null) {
       EmbeddedUser triggeredBy =
@@ -940,6 +949,9 @@ public class WorkflowExecutionServiceImpl implements WorkflowExecutionService {
       workflowExecution.setTriggeredBy(EmbeddedUser.builder().name("Deployment trigger").build());
       workflowExecution.setCreatedBy(EmbeddedUser.builder().name("Deployment trigger").build());
     }
+    keywords.add(workflowExecution.getCreatedBy().getName());
+    keywords.add(workflowExecution.getCreatedBy().getEmail());
+
     ExecutionArgs executionArgs = workflowExecution.getExecutionArgs();
     if (executionArgs != null) {
       if (executionArgs.getServiceInstances() != null) {
@@ -958,6 +970,9 @@ public class WorkflowExecutionServiceImpl implements WorkflowExecutionService {
         executionArgs.setServiceInstanceIdNames(
             serviceInstances.stream().collect(Collectors.toMap(ServiceInstance::getUuid,
                 serviceInstance -> serviceInstance.getHostName() + ":" + serviceInstance.getServiceName())));
+
+        keywords.addAll(serviceInstances.stream().map(ServiceInstance::getHostName).collect(toList()));
+        keywords.addAll(serviceInstances.stream().map(ServiceInstance::getServiceName).collect(toList()));
       }
 
       if (isNotEmpty(executionArgs.getArtifacts())) {
@@ -980,6 +995,10 @@ public class WorkflowExecutionServiceImpl implements WorkflowExecutionService {
           artifact.setArtifactFiles(null);
           artifact.setCreatedBy(null);
           artifact.setLastUpdatedBy(null);
+          keywords.add(artifact.getArtifactSourceName());
+          keywords.add(artifact.getDescription());
+          keywords.add(artifact.getRevision());
+          keywords.add(artifact.getMetadata());
         });
         executionArgs.setArtifacts(artifacts);
         List<ServiceElement> services = new ArrayList<>();
@@ -989,6 +1008,7 @@ public class WorkflowExecutionServiceImpl implements WorkflowExecutionService {
             ServiceElement se = new ServiceElement();
             MapperUtils.mapObject(service, se);
             services.add(se);
+            keywords.add(se.getName());
           });
         });
         stdParams.setServices(services);
@@ -1003,9 +1023,11 @@ public class WorkflowExecutionServiceImpl implements WorkflowExecutionService {
                                                  .withPipelineId(pipeline.getUuid())
                                                  .withPipelineName(pipeline.getName())
                                                  .build());
+        keywords.add(pipeline.getName());
       }
     }
 
+    workflowExecution.setKeywords(trimList(keywords));
     workflowExecution.setStatus(QUEUED);
     workflowExecution = wingsPersistence.saveAndGet(WorkflowExecution.class, workflowExecution);
 
@@ -2145,7 +2167,7 @@ public class WorkflowExecutionServiceImpl implements WorkflowExecutionService {
           "There is no workflow execution in this pipeline with verification steps.");
     }
 
-    workflowExecutionBaselineService.markBaseline(Lists.newArrayList(baselines));
+    workflowExecutionBaselineService.markBaseline(newArrayList(baselines));
     return baselines;
   }
 }

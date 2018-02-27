@@ -332,7 +332,8 @@ public class EnvironmentServiceTest extends WingsBaseTest {
     environmentService.update(environment);
     verify(wingsPersistence)
         .updateFields(Environment.class, ENV_ID,
-            ImmutableMap.of("name", ENV_NAME, "environmentType", PROD, "description", ENV_DESCRIPTION));
+            ImmutableMap.of("name", ENV_NAME, "environmentType", PROD, "description", ENV_DESCRIPTION, "keywords",
+                asList(ENV_NAME.toLowerCase(), ENV_DESCRIPTION.toLowerCase(), PROD.name().toLowerCase())));
     verify(wingsPersistence, times(2)).get(Environment.class, APP_ID, ENV_ID);
   }
 

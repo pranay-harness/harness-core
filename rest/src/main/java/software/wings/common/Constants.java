@@ -1,5 +1,7 @@
 package software.wings.common;
 
+import static org.mongodb.morphia.mapping.Mapper.ID_KEY;
+
 import java.util.regex.Pattern;
 
 /**
@@ -589,4 +591,7 @@ public interface Constants {
   String HARNESS_NAME = "Harness";
 
   String DEFAULT_AWS_HOST_NAME_CONVENTION = "${host.ec2Instance.privateDnsName}.split('\\.')[0]";
+
+  String APP_ID = "appId";
+  String UUID = ID_KEY;
 }

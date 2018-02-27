@@ -68,7 +68,7 @@ public class Instance extends Base {
       String lastDeployedById, String lastDeployedByName, long lastDeployedAt, String lastWorkflowExecutionId,
       String lastWorkflowExecutionName, String lastPipelineExecutionId, String lastPipelineExecutionName,
       InstanceInfo instanceInfo) {
-    super(uuid, appId, createdBy, createdAt, lastUpdatedBy, lastUpdatedAt, entityYamlPath);
+    super(uuid, appId, createdBy, createdAt, lastUpdatedBy, lastUpdatedAt, null, entityYamlPath);
     this.instanceType = instanceType;
     this.hostInstanceKey = hostInstanceKey;
     this.containerInstanceKey = containerInstanceKey;

@@ -2,6 +2,7 @@ package software.wings.service.impl;
 
 import static io.harness.data.structure.EmptyPredicate.isEmpty;
 import static io.harness.data.structure.EmptyPredicate.isNotEmpty;
+import static io.harness.data.structure.ListUtil.trimList;
 import static java.util.Arrays.asList;
 import static org.mongodb.morphia.mapping.Mapper.ID_KEY;
 import static software.wings.beans.ErrorCode.INVALID_ARGUMENT;
@@ -109,6 +110,7 @@ public class AppServiceImpl implements AppService {
   @Override
   public Application save(Application app) {
     Validator.notNullCheck("accountId", app.getAccountId());
+    app.setKeywords(trimList(asList(app.getName(), app.getDescription())));
     Application application =
         Validator.duplicateCheck(() -> wingsPersistence.saveAndGet(Application.class, app), "name", app.getName());
     createDefaultRoles(app);
@@ -264,8 +266,11 @@ public class AppServiceImpl implements AppService {
     Query<Application> query = wingsPersistence.createQuery(Application.class).field(ID_KEY).equal(app.getUuid());
     UpdateOperations<Application> operations =
         wingsPersistence.createUpdateOperations(Application.class).set("name", app.getName());
+
+    List<String> keywords = trimList(asList(app.getName(), app.getDescription()));
+
     if (isNotEmpty(app.getDescription())) {
-      operations.set("description", app.getDescription());
+      operations.set("description", app.getDescription()).set("keywords", keywords);
     }
 
     wingsPersistence.update(query, operations);
