@@ -1,5 +1,7 @@
 package software.wings.delegatetasks;
 
+import static software.wings.beans.yaml.YamlConstants.GIT_YAML_LOG_PREFIX;
+
 import com.google.inject.Inject;
 
 import org.slf4j.Logger;
@@ -51,7 +53,7 @@ public class GitCommandTask extends AbstractDelegateRunnableTask {
       switch (gitCommandType) {
         case COMMIT_AND_PUSH:
           GitCommitRequest gitCommitRequest = (GitCommitRequest) parameters[3];
-          logger.info("COMMIT_AND_PUSH: [{}]", gitCommitRequest);
+          logger.info(GIT_YAML_LOG_PREFIX + "COMMIT_AND_PUSH: [{}]", gitCommitRequest);
           GitCommitAndPushResult gitCommitAndPushResult = gitClient.commitAndPush(gitConfig, gitCommitRequest);
           return GitCommandExecutionResponse.builder()
               .gitCommandRequest(gitCommitRequest)
@@ -60,7 +62,7 @@ public class GitCommandTask extends AbstractDelegateRunnableTask {
               .build();
         case DIFF:
           GitDiffRequest gitDiffRequest = (GitDiffRequest) parameters[3];
-          logger.info("DIFF: [{}]", gitDiffRequest);
+          logger.info(GIT_YAML_LOG_PREFIX + "DIFF: [{}]", gitDiffRequest);
           GitDiffResult gitDiffResult = gitClient.diff(gitConfig, gitDiffRequest.getLastProcessedCommitId());
           return GitCommandExecutionResponse.builder()
               .gitCommandRequest(gitDiffRequest)
@@ -68,6 +70,7 @@ public class GitCommandTask extends AbstractDelegateRunnableTask {
               .gitCommandStatus(GitCommandStatus.SUCCESS)
               .build();
         case VALIDATE:
+          logger.info(GIT_YAML_LOG_PREFIX + " Processing Git command: VALIDATE");
           String errorMessage = gitClient.validate(gitConfig, true);
           if (errorMessage == null) {
             return GitCommandExecutionResponse.builder().gitCommandStatus(GitCommandStatus.SUCCESS).build();
@@ -80,11 +83,11 @@ public class GitCommandTask extends AbstractDelegateRunnableTask {
         default:
           return GitCommandExecutionResponse.builder()
               .gitCommandStatus(GitCommandStatus.FAILURE)
-              .errorMessage("Git Operation not supported")
+              .errorMessage(GIT_YAML_LOG_PREFIX + "Git Operation not supported")
               .build();
       }
     } catch (Exception ex) {
-      logger.error("Exception in processing GitTask", ex);
+      logger.error(GIT_YAML_LOG_PREFIX + "Exception in processing GitTask", ex);
       GitCommandExecutionResponseBuilder builder = GitCommandExecutionResponse.builder()
                                                        .gitCommandStatus(GitCommandStatus.FAILURE)
                                                        .errorMessage(ex.getMessage());

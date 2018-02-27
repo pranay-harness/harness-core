@@ -8,6 +8,7 @@ import static software.wings.beans.yaml.Change.ChangeType.ADD;
 import static software.wings.beans.yaml.Change.ChangeType.DELETE;
 import static software.wings.beans.yaml.Change.ChangeType.MODIFY;
 import static software.wings.beans.yaml.Change.ChangeType.RENAME;
+import static software.wings.beans.yaml.YamlConstants.GIT_YAML_LOG_PREFIX;
 import static software.wings.utils.Switch.unhandled;
 
 import groovy.lang.Singleton;
@@ -84,6 +85,11 @@ public class GitClientImpl implements GitClient {
   @Override
   public synchronized GitCloneResult clone(GitConfig gitConfig) {
     String gitRepoDirectory = getRepoDirectory(gitConfig);
+    logger.info(new StringBuilder()
+                    .append(GIT_YAML_LOG_PREFIX)
+                    .append("cloning repo, Git repo directory :")
+                    .append(gitRepoDirectory)
+                    .toString());
 
     try (Git git = Git.cloneRepository()
                        .setURI(gitConfig.getRepoUrl())
@@ -94,7 +100,7 @@ public class GitClientImpl implements GitClient {
                        .call()) {
       return GitCloneResult.builder().build();
     } catch (GitAPIException ex) {
-      logger.error("Exception: ", ex);
+      logger.error(GIT_YAML_LOG_PREFIX + "Exception: ", ex);
       checkIfTransportException(ex);
       throw new WingsException(ErrorCode.YAML_GIT_SYNC_ERROR).addParam("message", "Error in cloning repo");
     }
@@ -164,7 +170,7 @@ public class GitClientImpl implements GitClient {
         addToGitDiffResult(diffs, diffResult, headCommitId, gitConfig, repository);
       }
     } catch (IOException | GitAPIException ex) {
-      logger.error("Exception: ", ex);
+      logger.error(GIT_YAML_LOG_PREFIX + "Exception: ", ex);
       throw new WingsException(ErrorCode.YAML_GIT_SYNC_ERROR).addParam("message", "Error in getting commit diff");
     }
     return diffResult;
@@ -172,6 +178,7 @@ public class GitClientImpl implements GitClient {
 
   private void addToGitDiffResult(List<DiffEntry> diffs, GitDiffResult diffResult, ObjectId headCommitId,
       GitConfig gitConfig, Repository repository) throws IOException {
+    logger.info(GIT_YAML_LOG_PREFIX + "Total diff entries found : " + diffs.size());
     for (DiffEntry entry : diffs) {
       String content = null;
       String filePath;
@@ -210,10 +217,11 @@ public class GitClientImpl implements GitClient {
                     .call();
       return GitCheckoutResult.builder().build();
     } catch (RefAlreadyExistsException refExIgnored) {
-      logger.info("Reference already exist do nothing."); // TODO:: check gracefully instead of relying on Exception
+      logger.info(GIT_YAML_LOG_PREFIX
+          + "Reference already exist do nothing."); // TODO:: check gracefully instead of relying on Exception
       return GitCheckoutResult.builder().build();
     } catch (IOException | GitAPIException ex) {
-      logger.error("Exception: ", ex);
+      logger.error(GIT_YAML_LOG_PREFIX + "Exception: ", ex);
       throw new WingsException(ErrorCode.YAML_GIT_SYNC_ERROR).addParam("message", "Error in getting commit diff");
     }
   }
@@ -235,7 +243,7 @@ public class GitClientImpl implements GitClient {
           case ADD:
           case MODIFY:
             try {
-              logger.info("Adding git file " + gitFileChange.toString());
+              logger.info(GIT_YAML_LOG_PREFIX + "Adding git file " + gitFileChange.toString());
               file.getParentFile().mkdirs();
               file.createNewFile();
               try (FileWriter writer = new FileWriter(file)) {
@@ -246,7 +254,7 @@ public class GitClientImpl implements GitClient {
               //              commitMessage.append(String.format("%s: %s\n", gitFileChange.getChangeType(),
               //              gitFileChange.getFilePath()));
             } catch (IOException | GitAPIException ex) {
-              logger.error("Exception in adding/modifying file to git " + ex);
+              logger.error(GIT_YAML_LOG_PREFIX + "Exception in adding/modifying file to git " + ex);
               throw new WingsException(ErrorCode.YAML_GIT_SYNC_ERROR)
                   .addParam("message", "Error in ADD/MODIFY git operation");
             }
@@ -256,7 +264,8 @@ public class GitClientImpl implements GitClient {
           //            gitFileChange.getChangeType());
           case RENAME:
             try {
-              logger.info("Old path:[{}], new path: [{}]", gitFileChange.getOldFilePath(), gitFileChange.getFilePath());
+              logger.info(GIT_YAML_LOG_PREFIX + "Old path:[{}], new path: [{}]", gitFileChange.getOldFilePath(),
+                  gitFileChange.getFilePath());
               String oldFilePath = repoDirectory + "/" + gitFileChange.getOldFilePath();
               String newFilePath = repoDirectory + "/" + gitFileChange.getFilePath();
 
@@ -271,10 +280,10 @@ public class GitClientImpl implements GitClient {
                 //                    String.format("%s: %s -> %s\n", gitFileChange.getChangeType(),
                 //                    gitFileChange.getOldFilePath(), gitFileChange.getFilePath()));
               } else {
-                logger.warn("File doesn't exist. path: [{}]", gitFileChange.getOldFilePath());
+                logger.warn(GIT_YAML_LOG_PREFIX + "File doesn't exist. path: [{}]", gitFileChange.getOldFilePath());
               }
             } catch (IOException | GitAPIException ex) {
-              logger.error("Exception in moving file", ex);
+              logger.error(GIT_YAML_LOG_PREFIX + "Exception in moving file", ex);
               // TODO:: check before moving and then uncomment this exception
               throw new WingsException(ErrorCode.YAML_GIT_SYNC_ERROR)
                   .addParam("message", "Error in RENAME git operation");
@@ -284,15 +293,15 @@ public class GitClientImpl implements GitClient {
             try {
               File fileToBeDeleted = new File(repoDirectory + "/" + gitFileChange.getFilePath());
               if (fileToBeDeleted.exists()) {
-                logger.info("Deleting git file " + gitFileChange.toString());
+                logger.info(GIT_YAML_LOG_PREFIX + "Deleting git file " + gitFileChange.toString());
                 git.rm().addFilepattern(gitFileChange.getFilePath()).call();
                 //                commitMessage.append(String.format("%s: %s\n", gitFileChange.getChangeType(),
                 //                gitFileChange.getFilePath()));
               } else {
-                logger.warn("File already deleted. path: [{}]", gitFileChange.getFilePath());
+                logger.warn(GIT_YAML_LOG_PREFIX + "File already deleted. path: [{}]", gitFileChange.getFilePath());
               }
             } catch (GitAPIException ex) {
-              logger.error("Exception in deleting file" + ex);
+              logger.error(GIT_YAML_LOG_PREFIX + "Exception in deleting file" + ex);
               throw new WingsException(ErrorCode.YAML_GIT_SYNC_ERROR)
                   .addParam("message", "Error in DELETE git operation");
             }
@@ -303,7 +312,7 @@ public class GitClientImpl implements GitClient {
       });
       Status status = git.status().call();
       if (status.getAdded().isEmpty() && status.getChanged().isEmpty() && status.getRemoved().isEmpty()) {
-        logger.warn("No git change to commit. GitCommitRequest: [{}]", gitCommitRequest);
+        logger.warn(GIT_YAML_LOG_PREFIX + "No git change to commit. GitCommitRequest: [{}]", gitCommitRequest);
         return GitCommitResult.builder().build(); // do nothing
       } else {
         status.getAdded().forEach(
@@ -322,13 +331,14 @@ public class GitClientImpl implements GitClient {
       return GitCommitResult.builder().commitId(revCommit.getName()).commitTime(revCommit.getCommitTime()).build();
 
     } catch (IOException | GitAPIException ex) {
-      logger.error("Exception: ", ex);
+      logger.error(GIT_YAML_LOG_PREFIX + "Exception: ", ex);
       throw new WingsException(ErrorCode.YAML_GIT_SYNC_ERROR).addParam("message", "Error in writing commit");
     }
   }
 
   @Override
   public synchronized GitPushResult push(GitConfig gitConfig, boolean forcePush) {
+    logger.info(GIT_YAML_LOG_PREFIX + "Performing git PUSH, forcePush is: " + forcePush);
     try (Git git = Git.open(new File(getRepoDirectory(gitConfig)))) {
       Iterable<PushResult> pushResults = git.push()
                                              .setCredentialsProvider(new UsernamePasswordCredentialsProvider(
@@ -361,7 +371,7 @@ public class GitClientImpl implements GitClient {
         throw new WingsException(ErrorCode.YAML_GIT_SYNC_ERROR).addParam("message", errorMsg);
       }
     } catch (IOException | GitAPIException ex) {
-      logger.error("Exception: ", ex);
+      logger.error(GIT_YAML_LOG_PREFIX + "Exception: ", ex);
       String errorMsg = ex.getMessage();
       if (ex instanceof InvalidRemoteException | ex.getCause() instanceof NoRemoteRepositoryException) {
         errorMsg = "Invalid git repo or user doesn't have write access to repository. repo:" + gitConfig.getRepoUrl();
@@ -378,7 +388,7 @@ public class GitClientImpl implements GitClient {
     if (isNotBlank(commitResult.getCommitId())) {
       gitCommitAndPushResult.setGitPushResult(push(gitConfig, gitCommitRequest.isForcePush()));
     } else {
-      logger.warn("Null commitId. Nothing to push for request [{}]", gitCommitRequest);
+      logger.warn(GIT_YAML_LOG_PREFIX + "Null commitId. Nothing to push for request [{}]", gitCommitRequest);
     }
     return gitCommitAndPushResult;
   }
@@ -398,7 +408,7 @@ public class GitClientImpl implements GitClient {
               new UsernamePasswordCredentialsProvider(gitConfig.getUsername(), gitConfig.getPassword()))
           .call();
     } catch (IOException | GitAPIException ex) {
-      logger.error("Exception: ", ex);
+      logger.error(GIT_YAML_LOG_PREFIX + "Exception: ", ex);
       throw new WingsException(ErrorCode.YAML_GIT_SYNC_ERROR).addParam("message", "Error in getting commit diff");
     }
   }
@@ -413,10 +423,10 @@ public class GitClientImpl implements GitClient {
                                  .setCredentialsProvider(new UsernamePasswordCredentialsProvider(
                                      gitConfig.getUsername(), gitConfig.getPassword()))
                                  .call();
-      logger.info("Remote branches [{}]", refs);
+      logger.info(GIT_YAML_LOG_PREFIX + "Remote branches [{}]", refs);
     } catch (Exception e) {
       if (logError) {
-        logger.error("Git validation failed [{}]", e);
+        logger.error(GIT_YAML_LOG_PREFIX + "Git validation failed [{}]", e);
       }
       if (e instanceof InvalidRemoteException | e.getCause() instanceof NoRemoteRepositoryException) {
         return "Invalid git repo " + gitConfig.getRepoUrl();
@@ -445,25 +455,25 @@ public class GitClientImpl implements GitClient {
    */
   synchronized void ensureRepoLocallyClonedAndUpdated(GitConfig gitConfig) {
     try (Git git = Git.open(new File(getRepoDirectory(gitConfig)))) {
-      logger.info("Repo exist. do hard sync with remote branch");
+      logger.info(GIT_YAML_LOG_PREFIX + "Repo exist. do hard sync with remote branch");
       FetchResult fetchResult = git.fetch()
                                     .setCredentialsProvider(new UsernamePasswordCredentialsProvider(
                                         gitConfig.getUsername(), gitConfig.getPassword()))
                                     .call(); // fetch all remote references
       checkout(gitConfig);
       Ref ref = git.reset().setMode(ResetType.HARD).setRef("refs/remotes/origin/" + gitConfig.getBranch()).call();
-      logger.info("Hard reset done for branch " + gitConfig.getBranch());
+      logger.info(GIT_YAML_LOG_PREFIX + "Hard reset done for branch " + gitConfig.getBranch());
       // TODO:: log failed commits queued and being ignored.
       return;
     } catch (IOException ex) {
-      logger.error("Repo doesn't exist locally [repo: {}], {}", gitConfig.getRepoUrl(), ex);
+      logger.error(GIT_YAML_LOG_PREFIX + "Repo doesn't exist locally [repo: {}], {}", gitConfig.getRepoUrl(), ex);
     } catch (GitAPIException ex) {
-      logger.info("Hard reset failed for branch [{}]", gitConfig.getBranch());
-      logger.error("Exception: ", ex);
+      logger.info(GIT_YAML_LOG_PREFIX + "Hard reset failed for branch [{}]", gitConfig.getBranch());
+      logger.error(GIT_YAML_LOG_PREFIX + "Exception: ", ex);
       checkIfTransportException(ex);
     }
 
-    logger.info("Repo doesn't exist. Do a fresh clone");
+    logger.info(GIT_YAML_LOG_PREFIX + "Repo doesn't exist. Do a fresh clone");
     clone(gitConfig);
   }
 

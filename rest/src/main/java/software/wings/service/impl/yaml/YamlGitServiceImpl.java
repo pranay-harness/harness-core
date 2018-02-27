@@ -3,6 +3,7 @@ package software.wings.service.impl.yaml;
 import static io.harness.data.structure.EmptyPredicate.isEmpty;
 import static software.wings.beans.Base.GLOBAL_APP_ID;
 import static software.wings.beans.DelegateTask.Builder.aDelegateTask;
+import static software.wings.beans.yaml.YamlConstants.GIT_YAML_LOG_PREFIX;
 import static software.wings.common.UUIDGenerator.generateUuid;
 import static software.wings.dl.PageRequest.PageRequestBuilder.aPageRequest;
 
@@ -154,7 +155,7 @@ public class YamlGitServiceImpl implements YamlGitService {
                                           .withParameters(new Object[] {GitCommandType.VALIDATE, gitConfig,
                                               secretManager.getEncryptionDetails(gitConfig, GLOBAL_APP_ID, null)})
                                           .build());
-      logger.info("GitConfigValidation [{}]", gitCommandExecutionResponse);
+      logger.info(GIT_YAML_LOG_PREFIX + "GitConfigValidation [{}]", gitCommandExecutionResponse);
       if (gitCommandExecutionResponse.getGitCommandStatus().equals(GitCommandStatus.FAILURE)) {
         throw new WingsException(ErrorCode.INVALID_REQUEST)
             .addParam("message", gitCommandExecutionResponse.getErrorMessage());
@@ -166,7 +167,7 @@ public class YamlGitServiceImpl implements YamlGitService {
 
   @Override
   public void fullSync(String accountId) {
-    logger.info("Performing git full-sync for account {} " + accountId);
+    logger.info(GIT_YAML_LOG_PREFIX + "Performing git full-sync for account {} " + accountId);
     YamlGitConfig yamlGitConfig = yamlDirectoryService.weNeedToPushChanges(accountId);
     if (yamlGitConfig != null) {
       try {
@@ -174,9 +175,10 @@ public class YamlGitServiceImpl implements YamlGitService {
         List<GitFileChange> gitFileChanges = new ArrayList<>();
         gitFileChanges = yamlDirectoryService.traverseDirectory(gitFileChanges, accountId, top, "", true);
         syncFiles(accountId, gitFileChanges, true);
-        logger.info("Performed git full-sync for account {} successfully" + accountId);
+        logger.info(GIT_YAML_LOG_PREFIX + "Performed git full-sync for account {} successfully" + accountId);
       } catch (Exception ex) {
-        logger.error("Failed to perform git full-sync for account {} ", yamlGitConfig.getAccountId(), ex);
+        logger.error(
+            GIT_YAML_LOG_PREFIX + "Failed to perform git full-sync for account {} ", yamlGitConfig.getAccountId(), ex);
       }
     }
   }
@@ -195,7 +197,7 @@ public class YamlGitServiceImpl implements YamlGitService {
                                           .build();
         yamlChangeSetService.save(yamlChangeSet);
       } catch (Exception ex) {
-        logger.error("Failed to sync files for account {} ", yamlGitConfig.getAccountId(), ex);
+        logger.error(GIT_YAML_LOG_PREFIX + "Failed to sync files for account {} ", yamlGitConfig.getAccountId(), ex);
       }
     }
   }
@@ -220,11 +222,19 @@ public class YamlGitServiceImpl implements YamlGitService {
     YamlGitConfig yamlGitConfig = get(yamlChangeSet.getAccountId(), yamlChangeSet.getAccountId());
     List<GitFileChange> gitFileChanges = yamlChangeSet.getGitFileChanges();
     if (yamlGitConfig == null) {
+      logger.warn(GIT_YAML_LOG_PREFIX + "YamlGitConfig is null for accountId: " + yamlChangeSet.getAccountId());
       throw new WingsException(ErrorCode.YAML_GIT_SYNC_ERROR);
     }
     checkForValidNameSyntax(gitFileChanges);
 
-    logger.info("Change set [{}] files", yamlChangeSet.getUuid());
+    // @TODO_GITLOG add accountId here
+    logger.info(new StringBuilder()
+                    .append(GIT_YAML_LOG_PREFIX)
+                    .append("Creating COMMIT_AND_PUSH git delegate task for account: ")
+                    .append(yamlChangeSet.getAccountId())
+                    .toString());
+
+    logger.info(GIT_YAML_LOG_PREFIX + "Change set [{}] files", yamlChangeSet.getUuid());
 
     String waitId = generateUuid();
     DelegateTask delegateTask =
@@ -290,7 +300,7 @@ public class YamlGitServiceImpl implements YamlGitService {
                                         .equal(webhookToken)
                                         .get();
       if (yamlGitConfig == null) {
-        logger.error("Invalid git webhook request [{}]", webhookToken);
+        logger.error(GIT_YAML_LOG_PREFIX + "Invalid git webhook request [{}]", webhookToken);
         return;
       }
 
@@ -322,7 +332,7 @@ public class YamlGitServiceImpl implements YamlGitService {
       delegateService.queueTask(delegateTask);
 
     } catch (Exception ex) {
-      logger.error("Error while processing git webhook post", ex);
+      logger.error(GIT_YAML_LOG_PREFIX + "Error while processing git webhook post", ex);
     }
   }
 
@@ -337,8 +347,9 @@ public class YamlGitServiceImpl implements YamlGitService {
                               .equal(Status.COMPLETED)
                               .get();
     if (gitCommit != null) {
-      logger.info("Commit [id:{}] already processed [status:{}] on [date:{}] mode:[{}]", gitCommit.getCommitId(),
-          gitCommit.getStatus(), gitCommit.getLastUpdatedAt(), gitCommit.getYamlChangeSet().isGitToHarness());
+      logger.info(GIT_YAML_LOG_PREFIX + "Commit [id:{}] already processed [status:{}] on [date:{}] mode:[{}]",
+          gitCommit.getCommitId(), gitCommit.getStatus(), gitCommit.getLastUpdatedAt(),
+          gitCommit.getYamlChangeSet().isGitToHarness());
       return true;
     }
     return false;
@@ -495,10 +506,10 @@ public class YamlGitServiceImpl implements YamlGitService {
 
     try {
       List<ChangeContext> fileChangeContexts = yamlService.processChangeSet(gitFileChangeList);
-      logger.info("Processed ChangeSet: [{}]", fileChangeContexts);
+      logger.info(GIT_YAML_LOG_PREFIX + "Processed ChangeSet: [{}]", fileChangeContexts);
       removeGitSyncErrors(accountId, gitFileChangeList);
     } catch (YamlProcessingException ex) {
-      logger.error("Unable to process Git sync errors for account {}", accountId, ex);
+      logger.error(GIT_YAML_LOG_PREFIX + "Unable to process Git sync errors for account {}", accountId, ex);
       processFailedChanges(accountId, ex.getFailedChangeErrorMsgMap());
     }
 
