@@ -26,6 +26,8 @@ import io.fabric8.kubernetes.client.dsl.NonNamespaceOperation;
 import io.fabric8.kubernetes.client.dsl.Resource;
 import io.fabric8.kubernetes.client.dsl.internal.HorizontalPodAutoscalerOperationsImpl;
 import io.fabric8.kubernetes.client.internal.SSLUtils;
+import me.snowdrop.istio.client.IstioClient;
+import me.snowdrop.istio.client.KubernetesAdapter;
 import okhttp3.Authenticator;
 import okhttp3.ConnectionSpec;
 import okhttp3.Credentials;
@@ -120,6 +122,10 @@ public class KubernetesHelperService {
     Config config = configBuilder.build();
     OkHttpClient okHttpClient = createHttpClientWithProxySetting(config);
     return new DefaultKubernetesClient(okHttpClient, config).inNamespace(namespace);
+  }
+
+  public IstioClient getIstioClient(KubernetesConfig kubernetesConfig, List<EncryptedDataDetail> encryptedDataDetails) {
+    return new IstioClient(new KubernetesAdapter(getKubernetesClient(kubernetesConfig, encryptedDataDetails)));
   }
 
   /**

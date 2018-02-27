@@ -4,8 +4,11 @@ import static io.harness.data.structure.EmptyPredicate.isNotEmpty;
 import static io.harness.threading.Morpheus.sleep;
 import static java.time.Duration.ofSeconds;
 import static java.util.Collections.emptySet;
+import static java.util.Comparator.comparingInt;
 import static java.util.stream.Collectors.toList;
 import static org.apache.commons.lang3.StringUtils.isNotBlank;
+import static software.wings.utils.KubernetesConvention.getPrefixFromControllerName;
+import static software.wings.utils.KubernetesConvention.getRevisionFromControllerName;
 
 import com.google.common.base.Joiner;
 import com.google.common.util.concurrent.TimeLimiter;
@@ -53,6 +56,8 @@ import io.fabric8.kubernetes.client.dsl.NonNamespaceOperation;
 import io.fabric8.kubernetes.client.dsl.Resource;
 import io.fabric8.kubernetes.client.dsl.RollableScalableResource;
 import io.fabric8.kubernetes.client.dsl.ScalableResource;
+import me.snowdrop.istio.api.model.IstioResource;
+import me.snowdrop.istio.client.IstioClient;
 import org.apache.commons.lang3.StringUtils;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -68,6 +73,7 @@ import software.wings.security.encryption.EncryptedDataDetail;
 import software.wings.service.impl.KubernetesHelperService;
 
 import java.util.ArrayList;
+import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Optional;
@@ -91,7 +97,7 @@ public class KubernetesContainerServiceImpl implements KubernetesContainerServic
   @Override
   public HasMetadata createController(
       KubernetesConfig kubernetesConfig, List<EncryptedDataDetail> encryptedDataDetails, HasMetadata definition) {
-    logger.info("Creating controller {}", definition.getMetadata().getName());
+    logger.info("Creating {} {}", definition.getKind(), definition.getMetadata().getName());
 
     // TODO - Use definition.getKind()
     HasMetadata controller = null;
@@ -276,6 +282,7 @@ public class KubernetesContainerServiceImpl implements KubernetesContainerServic
         desiredCount, serviceSteadyStateTimeout, executionLogCallback);
   }
 
+  @Override
   public List<ContainerInfo> getContainerInfosWhenReady(KubernetesConfig kubernetesConfig,
       List<EncryptedDataDetail> encryptedDataDetails, String controllerName, int previousCount, int desiredCount,
       int serviceSteadyStateTimeout, ExecutionLogCallback executionLogCallback) {
@@ -361,6 +368,21 @@ public class KubernetesContainerServiceImpl implements KubernetesContainerServic
     }
 
     return containerInfos;
+  }
+
+  @Override
+  public LinkedHashMap<String, Integer> getActiveServiceCounts(
+      KubernetesConfig kubernetesConfig, List<EncryptedDataDetail> encryptedDataDetails, String containerServiceName) {
+    LinkedHashMap<String, Integer> result = new LinkedHashMap<>();
+    String controllerNamePrefix = getPrefixFromControllerName(containerServiceName);
+    listControllers(kubernetesConfig, encryptedDataDetails)
+        .stream()
+        .filter(ctrl -> ctrl.getMetadata().getName().startsWith(controllerNamePrefix))
+        .filter(ctrl -> getControllerPodCount(ctrl) > 0)
+        .filter(ctrl -> getRevisionFromControllerName(ctrl.getMetadata().getName()).isPresent())
+        .sorted(comparingInt(ctrl -> getRevisionFromControllerName(ctrl.getMetadata().getName()).orElse(-1)))
+        .forEach(ctrl -> result.put(ctrl.getMetadata().getName(), getControllerPodCount(ctrl)));
+    return result;
   }
 
   private boolean inSteadyState(Pod pod) {
@@ -586,6 +608,35 @@ public class KubernetesContainerServiceImpl implements KubernetesContainerServic
         .configMaps()
         .inNamespace(kubernetesConfig.getNamespace())
         .createOrReplace(definition);
+  }
+
+  @Override
+  public IstioResource createOrReplaceRouteRule(
+      KubernetesConfig kubernetesConfig, List<EncryptedDataDetail> encryptedDataDetails, IstioResource definition) {
+    String name = definition.getMetadata().getName();
+    logger.info("Registering route rule [{}]", name);
+    IstioClient istioClient = kubernetesHelperService.getIstioClient(kubernetesConfig, encryptedDataDetails);
+    try {
+      istioClient.unregisterCustomResource(definition);
+    } catch (Exception e) {
+      // Do nothing
+    }
+    return istioClient.registerCustomResource(definition);
+  }
+
+  @Override
+  public IstioResource getRouteRule(
+      KubernetesConfig kubernetesConfig, List<EncryptedDataDetail> encryptedDataDetails, IstioResource definition) {
+    return kubernetesHelperService.getKubernetesClient(kubernetesConfig, encryptedDataDetails)
+        .resource(definition)
+        .get();
+  }
+
+  @Override
+  public void deleteRouteRule(
+      KubernetesConfig kubernetesConfig, List<EncryptedDataDetail> encryptedDataDetails, IstioResource definition) {
+    logger.info("Deleting route rule {}", definition.getMetadata().getName());
+    kubernetesHelperService.getKubernetesClient(kubernetesConfig, encryptedDataDetails).resource(definition).delete();
   }
 
   @Override

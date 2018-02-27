@@ -1,15 +1,10 @@
 package software.wings.service.impl;
 
 import static io.harness.data.structure.EmptyPredicate.isNotEmpty;
-import static java.util.Comparator.comparingInt;
 import static java.util.stream.Collectors.toList;
 import static software.wings.beans.infrastructure.instance.info.EcsContainerInfo.Builder.anEcsContainerInfo;
 import static software.wings.beans.infrastructure.instance.info.KubernetesContainerInfo.Builder.aKubernetesContainerInfo;
 import static software.wings.service.impl.KubernetesHelperService.toYaml;
-import static software.wings.utils.EcsConvention.getRevisionFromServiceName;
-import static software.wings.utils.EcsConvention.getServiceNamePrefixFromServiceName;
-import static software.wings.utils.KubernetesConvention.getPrefixFromControllerName;
-import static software.wings.utils.KubernetesConvention.getRevisionFromControllerName;
 
 import com.google.inject.Inject;
 
@@ -86,33 +81,18 @@ public class ContainerServiceImpl implements ContainerService {
 
   @Override
   public LinkedHashMap<String, Integer> getActiveServiceCounts(ContainerServiceParams containerServiceParams) {
-    LinkedHashMap<String, Integer> result = new LinkedHashMap<>();
     SettingValue value = containerServiceParams.getSettingAttribute().getValue();
     if (isKubernetesClusterConfig(value)) {
-      KubernetesConfig kubernetesConfig = getKubernetesConfig(containerServiceParams);
-      String controllerNamePrefix = getPrefixFromControllerName(containerServiceParams.getContainerServiceName());
-      kubernetesContainerService.listControllers(kubernetesConfig, containerServiceParams.getEncryptionDetails())
-          .stream()
-          .filter(ctrl -> ctrl.getMetadata().getName().startsWith(controllerNamePrefix))
-          .filter(ctrl -> kubernetesContainerService.getControllerPodCount(ctrl) > 0)
-          .filter(ctrl -> getRevisionFromControllerName(ctrl.getMetadata().getName()).isPresent())
-          .sorted(comparingInt(ctrl -> getRevisionFromControllerName(ctrl.getMetadata().getName()).orElse(-1)))
-          .forEach(
-              ctrl -> result.put(ctrl.getMetadata().getName(), kubernetesContainerService.getControllerPodCount(ctrl)));
+      return kubernetesContainerService.getActiveServiceCounts(getKubernetesConfig(containerServiceParams),
+          containerServiceParams.getEncryptionDetails(), containerServiceParams.getContainerServiceName());
     } else if (value instanceof AwsConfig) {
-      String serviceNamePrefix = getServiceNamePrefixFromServiceName(containerServiceParams.getContainerServiceName());
-      List<Service> activeOldServices =
-          awsClusterService
-              .getServices(containerServiceParams.getRegion(), containerServiceParams.getSettingAttribute(),
-                  containerServiceParams.getEncryptionDetails(), containerServiceParams.getClusterName())
-              .stream()
-              .filter(
-                  service -> service.getServiceName().startsWith(serviceNamePrefix) && service.getDesiredCount() > 0)
-              .sorted(comparingInt(service -> getRevisionFromServiceName(service.getServiceName())))
-              .collect(toList());
-      activeOldServices.forEach(service -> result.put(service.getServiceName(), service.getDesiredCount()));
+      return awsClusterService.getActiveServiceCounts(containerServiceParams.getRegion(),
+          containerServiceParams.getSettingAttribute(), containerServiceParams.getEncryptionDetails(),
+          containerServiceParams.getClusterName(), containerServiceParams.getContainerServiceName());
+    } else {
+      throw new WingsException(ErrorCode.INVALID_ARGUMENT)
+          .addParam("args", "Unknown setting value type for container service: " + value.getType());
     }
-    return result;
   }
 
   @Override

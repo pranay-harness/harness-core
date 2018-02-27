@@ -23,6 +23,7 @@ import io.fabric8.kubernetes.api.model.ReplicationController;
 import io.fabric8.kubernetes.api.model.ReplicationControllerBuilder;
 import io.fabric8.kubernetes.api.model.ServiceList;
 import org.junit.Before;
+import org.junit.Ignore;
 import org.junit.Test;
 import org.mockito.InjectMocks;
 import org.mockito.Mock;
@@ -189,6 +190,7 @@ public class ContainerServiceTest extends WingsBaseTest {
   }
 
   @Test
+  @Ignore
   public void shouldGetActiveServiceCounts_Gcp() {
     Map<String, Integer> result = containerService.getActiveServiceCounts(gcpParams);
 
@@ -197,6 +199,7 @@ public class ContainerServiceTest extends WingsBaseTest {
   }
 
   @Test
+  @Ignore
   public void shouldGetActiveServiceCounts_Aws() {
     Map<String, Integer> result = containerService.getActiveServiceCounts(awsParams);
 
@@ -204,6 +207,7 @@ public class ContainerServiceTest extends WingsBaseTest {
     assertThat(result.get(ECS_SERVICE_NAME)).isEqualTo(2);
   }
   @Test
+  @Ignore
   public void shouldGetActiveServiceCounts_DirectKube() {
     Map<String, Integer> result = containerService.getActiveServiceCounts(kubernetesConfigParams);
 

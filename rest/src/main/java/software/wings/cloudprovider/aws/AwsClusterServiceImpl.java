@@ -1,5 +1,10 @@
 package software.wings.cloudprovider.aws;
 
+import static java.util.Comparator.comparingInt;
+import static java.util.stream.Collectors.toList;
+import static software.wings.utils.EcsConvention.getRevisionFromServiceName;
+import static software.wings.utils.EcsConvention.getServiceNamePrefixFromServiceName;
+
 import com.google.inject.Inject;
 import com.google.inject.Singleton;
 
@@ -18,6 +23,7 @@ import software.wings.cloudprovider.ContainerInfo;
 import software.wings.security.encryption.EncryptedDataDetail;
 
 import java.util.HashMap;
+import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
 
@@ -88,5 +94,20 @@ public class AwsClusterServiceImpl implements AwsClusterService {
       List<EncryptedDataDetail> encryptedDataDetails, RegisterTaskDefinitionRequest registerTaskDefinitionRequest) {
     return ecsContainerService.createTask(
         region, settingAttribute, encryptedDataDetails, registerTaskDefinitionRequest);
+  }
+
+  @Override
+  public LinkedHashMap<String, Integer> getActiveServiceCounts(String region, SettingAttribute cloudProviderSetting,
+      List<EncryptedDataDetail> encryptedDataDetails, String clusterName, String containerServiceName) {
+    LinkedHashMap<String, Integer> result = new LinkedHashMap<>();
+    String serviceNamePrefix = getServiceNamePrefixFromServiceName(containerServiceName);
+    List<Service> activeOldServices =
+        getServices(region, cloudProviderSetting, encryptedDataDetails, clusterName)
+            .stream()
+            .filter(service -> service.getServiceName().startsWith(serviceNamePrefix) && service.getDesiredCount() > 0)
+            .sorted(comparingInt(service -> getRevisionFromServiceName(service.getServiceName())))
+            .collect(toList());
+    activeOldServices.forEach(service -> result.put(service.getServiceName(), service.getDesiredCount()));
+    return result;
   }
 }

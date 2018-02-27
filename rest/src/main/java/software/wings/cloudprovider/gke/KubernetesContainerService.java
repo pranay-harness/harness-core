@@ -9,11 +9,13 @@ import io.fabric8.kubernetes.api.model.Secret;
 import io.fabric8.kubernetes.api.model.Service;
 import io.fabric8.kubernetes.api.model.ServiceList;
 import io.fabric8.kubernetes.api.model.extensions.Ingress;
+import me.snowdrop.istio.api.model.IstioResource;
 import software.wings.beans.KubernetesConfig;
 import software.wings.beans.command.ExecutionLogCallback;
 import software.wings.cloudprovider.ContainerInfo;
 import software.wings.security.encryption.EncryptedDataDetail;
 
+import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Optional;
@@ -66,6 +68,9 @@ public interface KubernetesContainerService {
 
   Integer getControllerPodCount(HasMetadata controller);
 
+  LinkedHashMap<String, Integer> getActiveServiceCounts(
+      KubernetesConfig kubernetesConfig, List<EncryptedDataDetail> encryptedDataDetails, String containerServiceName);
+
   Service createOrReplaceService(
       KubernetesConfig kubernetesConfig, List<EncryptedDataDetail> encryptedDataDetails, Service definition);
 
@@ -87,6 +92,15 @@ public interface KubernetesContainerService {
 
   ConfigMap createOrReplaceConfigMap(
       KubernetesConfig kubernetesConfig, List<EncryptedDataDetail> encryptedDataDetails, ConfigMap definition);
+
+  IstioResource createOrReplaceRouteRule(
+      KubernetesConfig kubernetesConfig, List<EncryptedDataDetail> encryptedDataDetails, IstioResource definition);
+
+  IstioResource getRouteRule(
+      KubernetesConfig kubernetesConfig, List<EncryptedDataDetail> encryptedDataDetails, IstioResource definition);
+
+  void deleteRouteRule(
+      KubernetesConfig kubernetesConfig, List<EncryptedDataDetail> encryptedDataDetails, IstioResource definition);
 
   void createNamespaceIfNotExist(KubernetesConfig kubernetesConfig, List<EncryptedDataDetail> encryptedDataDetails);
 

@@ -691,7 +691,19 @@
             <dependency>
                 <groupId>io.fabric8</groupId>
                 <artifactId>kubernetes-client</artifactId>
-                <version>3.1.1</version>
+                <version>3.1.8</version>
+            </dependency>
+
+            <dependency>
+                <groupId>io.fabric8</groupId>
+                <artifactId>kubernetes-model</artifactId>
+                <version>2.0.8</version>
+            </dependency>
+
+            <dependency>
+                <groupId>me.snowdrop</groupId>
+                <artifactId>istio-client-uberjar</artifactId>
+                <version>0.8</version>
             </dependency>
 
             <dependency>
