@@ -6,17 +6,14 @@ import static software.wings.beans.Event.Builder.anEvent;
 import static software.wings.beans.artifact.Artifact.Status.APPROVED;
 import static software.wings.beans.artifact.Artifact.Status.ERROR;
 import static software.wings.beans.artifact.Artifact.Status.FAILED;
-import static software.wings.beans.artifact.Artifact.Status.READY;
 
 import com.google.inject.Inject;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-import software.wings.beans.ApprovalNotification.ApprovalStage;
 import software.wings.beans.EntityType;
 import software.wings.beans.Event.Type;
 import software.wings.beans.artifact.Artifact;
-import software.wings.beans.artifact.ArtifactStream;
 import software.wings.service.impl.EventEmitter;
 import software.wings.service.impl.EventEmitter.Channel;
 import software.wings.service.intfc.ArtifactService;
@@ -63,24 +60,18 @@ public class ArtifactCollectionCallback implements NotifyCallback {
       Artifact artifact = artifactService.get(appId, artifactId);
       logger.info("Artifact collection completed - artifactId : {}", artifact.getUuid());
       artifactService.addArtifactFile(artifact.getUuid(), artifact.getAppId(), responseData.getData());
-      artifactService.updateStatus(artifact.getUuid(), artifact.getAppId(), READY);
+      artifactService.updateStatus(artifact.getUuid(), artifact.getAppId(), APPROVED);
 
-      ArtifactStream artifactStream = artifactStreamService.get(artifact.getAppId(), artifact.getArtifactStreamId());
-
-      if (artifactStream.isAutoApproveForProduction()) {
-        artifactService.updateStatus(artifact.getUuid(), artifact.getAppId(), APPROVED);
-      }
       artifact = artifactService.get(appId, artifactId);
+
       triggerService.triggerExecutionPostArtifactCollectionAsync(artifact);
-      notificationService.sendNotificationAsync(
-          anApprovalNotification()
-              .withAppId(artifact.getAppId())
-              .withStage(artifactStream.isAutoApproveForProduction() ? ApprovalStage.APPROVED : ApprovalStage.PENDING)
-              .withEntityId(artifact.getUuid())
-              .withEntityType(EntityType.ARTIFACT)
-              .withEntityName(artifact.getDisplayName())
-              .withArtifactStreamId(artifact.getArtifactStreamId())
-              .build());
+      notificationService.sendNotificationAsync(anApprovalNotification()
+                                                    .withAppId(artifact.getAppId())
+                                                    .withEntityId(artifact.getUuid())
+                                                    .withEntityType(EntityType.ARTIFACT)
+                                                    .withEntityName(artifact.getDisplayName())
+                                                    .withArtifactStreamId(artifact.getArtifactStreamId())
+                                                    .build());
     }
     eventEmitter.send(Channel.ARTIFACTS, anEvent().withType(Type.UPDATE).withUuid(artifactId).withAppId(appId).build());
   }

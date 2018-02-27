@@ -304,17 +304,16 @@ public class ArtifactServiceImpl implements ArtifactService {
 
   public boolean prune(String appId, String artifactId) {
     PruneFileJob.addDefaultJob(jobScheduler, Artifact.class, artifactId, FileBucket.ARTIFACTS);
-    return wingsPersistence.delete(Artifact.class, artifactId);
+    return wingsPersistence.delete(Artifact.class, appId, artifactId);
   }
 
   @Override
   public void pruneByApplication(String appId) {
     final MorphiaIterator<Artifact, Artifact> iterator =
-        wingsPersistence.createQuery(Artifact.class).field(Artifact.APP_ID_KEY).equal(appId).fetch();
+        wingsPersistence.createQuery(Artifact.class).field(Artifact.APP_ID_KEY).equal(appId).fetchEmptyEntities();
 
     while (iterator.hasNext()) {
-      Artifact artifact = iterator.next();
-      prune(appId, artifact.getUuid());
+      prune(appId, iterator.next().getUuid());
     }
   }
 
@@ -348,17 +347,6 @@ public class ArtifactServiceImpl implements ArtifactService {
         .field("status")
         .hasAnyOf(asList(READY, APPROVED))
         .get();
-  }
-
-  @Override
-  public void deleteByArtifactStream(String appId, String artifactStreamId) {
-    wingsPersistence.createQuery(Artifact.class)
-        .field(Artifact.APP_ID_KEY)
-        .equal(appId)
-        .field("artifactStreamId")
-        .equal(artifactStreamId)
-        .asList()
-        .forEach(artifact -> delete(appId, artifact.getUuid()));
   }
 
   @Override

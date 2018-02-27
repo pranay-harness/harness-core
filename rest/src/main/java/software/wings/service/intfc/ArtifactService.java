@@ -145,14 +145,6 @@ public interface ArtifactService extends OwnedByApplication {
   /**
    * Delete by artifact stream.
    *
-   * @param appId            the app id
-   * @param artifactStreamId the artifact stream id
-   */
-  void deleteByArtifactStream(String appId, String artifactStreamId);
-
-  /**
-   * Delete by artifact stream.
-   *
    * @param retentionSize the size of the artifacts to be retained
    */
   void deleteArtifacts(int retentionSize);

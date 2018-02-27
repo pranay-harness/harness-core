@@ -4,6 +4,7 @@ import static java.lang.String.format;
 import static software.wings.beans.ErrorCode.INVALID_ARTIFACT_SERVER;
 import static software.wings.beans.ResponseMessage.Level.ERROR;
 import static software.wings.beans.ResponseMessage.aResponseMessage;
+import static software.wings.exception.WingsException.ReportTarget.USER;
 import static software.wings.utils.ArtifactType.DOCKER;
 import static software.wings.utils.ArtifactType.WAR;
 
@@ -62,12 +63,12 @@ public class NexusServiceImpl implements NexusService {
         case 404:
           return false;
         case 401:
-          throw new WingsException(INVALID_ARTIFACT_SERVER).addParam("message", "Invalid Nexus credentials");
+          throw new WingsException(INVALID_ARTIFACT_SERVER, USER).addParam("message", "Invalid Nexus credentials");
         case 405:
-          throw new WingsException(INVALID_ARTIFACT_SERVER)
+          throw new WingsException(INVALID_ARTIFACT_SERVER, USER)
               .addParam("message", "Method not allowed" + response.message());
         default:
-          throw new WingsException(INVALID_ARTIFACT_SERVER).addParam("message", response.message());
+          throw new WingsException(INVALID_ARTIFACT_SERVER, USER).addParam("message", response.message());
       }
     }
     return true;
@@ -99,28 +100,29 @@ public class NexusServiceImpl implements NexusService {
           if (!DOCKER.equals(artifactType)) {
             return nexusTwoService.getRepositories(nexusConfig, encryptionDetails);
           }
-          throw new WingsException(INVALID_ARTIFACT_SERVER)
+          throw new WingsException(INVALID_ARTIFACT_SERVER, USER)
               .addParam("message", "Nexus 2.x does not support Docker artifact type");
         } else {
           if (DOCKER.equals(artifactType)) {
             return nexusThreeService.getRepositories(nexusConfig, encryptionDetails);
           } else {
-            throw new WingsException(INVALID_ARTIFACT_SERVER)
+            throw new WingsException(INVALID_ARTIFACT_SERVER, USER)
                 .addParam("message", "Not supported for Nexus 3.x version");
           }
         }
       }, 20L, TimeUnit.SECONDS, true);
     } catch (UncheckedTimeoutException e) {
       logger.warn("Nexus server request did not succeed within 20 secs");
-      throw new WingsException(INVALID_ARTIFACT_SERVER).addParam("message", "Nexus server took too long to respond");
+      throw new WingsException(INVALID_ARTIFACT_SERVER, USER)
+          .addParam("message", "Nexus server took too long to respond");
     } catch (WingsException e) {
       throw e;
     } catch (Exception e) {
       logger.error("Error occurred while retrieving Repositories from Nexus server " + nexusConfig.getNexusUrl(), e);
       if (e.getCause() != null && e.getCause() instanceof XMLStreamException) {
-        throw new WingsException(INVALID_ARTIFACT_SERVER, e).addParam("message", "Nexus may not be running");
+        throw new WingsException(INVALID_ARTIFACT_SERVER, USER).addParam("message", "Nexus may not be running");
       }
-      throw new WingsException(INVALID_ARTIFACT_SERVER, e)
+      throw new WingsException(INVALID_ARTIFACT_SERVER, USER)
           .addParam("message", e.getMessage() == null ? "Unknown error" : e.getMessage());
     }
   }
@@ -137,16 +139,17 @@ public class NexusServiceImpl implements NexusService {
           20L, TimeUnit.SECONDS, true);
     } catch (UncheckedTimeoutException e) {
       logger.warn("Nexus server request did not succeed within 20 secs");
-      throw new WingsException(INVALID_ARTIFACT_SERVER).addParam("message", "Nexus server took too long to respond");
+      throw new WingsException(INVALID_ARTIFACT_SERVER, USER)
+          .addParam("message", "Nexus server took too long to respond");
     } catch (WingsException e) {
       throw e;
     } catch (Exception e) {
       logger.error(
           "Failed to fetch images/groups from Nexus server " + nexusConfig.getNexusUrl() + " under repo " + repoId, e);
       if (e.getCause() != null && e.getCause() instanceof XMLStreamException) {
-        throw new WingsException(INVALID_ARTIFACT_SERVER, e).addParam("message", "Nexus may not be running");
+        throw new WingsException(INVALID_ARTIFACT_SERVER, USER).addParam("message", "Nexus may not be running");
       }
-      throw new WingsException(INVALID_ARTIFACT_SERVER, e)
+      throw new WingsException(INVALID_ARTIFACT_SERVER, USER)
           .addParam("message", e.getMessage() == null ? "Unknown error" : e.getMessage());
     }
   }

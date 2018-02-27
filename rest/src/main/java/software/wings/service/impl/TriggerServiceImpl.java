@@ -533,7 +533,7 @@ public class TriggerServiceImpl implements TriggerService {
   }
 
   private void triggerScheduledExecution(Trigger trigger) {
-    logger.info("");
+    logger.info("Received scheduled trigger for appId {} and Trigger Id {}", trigger.getAppId(), trigger.getUuid());
     List<Artifact> lastDeployedArtifacts =
         getLastDeployedArtifacts(trigger.getAppId(), trigger.getWorkflowId(), trigger.getWorkflowType(), null);
 
