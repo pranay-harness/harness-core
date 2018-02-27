@@ -490,7 +490,10 @@ public class PipelineServiceImpl implements PipelineService {
     if (Collections.isEmpty(pipeline.getPipelineStages())) {
       throw new WingsException(INVALID_ARGUMENT).addParam("args", "At least one pipeline stage required");
     }
-    for (PipelineStage pipelineStage : pipeline.getPipelineStages()) {
+
+    final List<PipelineStage> pipelineStages = pipeline.getPipelineStages();
+    for (int i = 0; i < pipelineStages.size(); ++i) {
+      PipelineStage pipelineStage = pipelineStages.get(i);
       if (isEmpty(pipelineStage.getPipelineStageElements())) {
         throw new WingsException(INVALID_ARGUMENT).addParam("args", "Invalid pipeline stage");
       }
@@ -511,6 +514,15 @@ public class PipelineServiceImpl implements PipelineService {
             && isNullOrEmpty((String) stageElement.getProperties().get("envId"))) {
           throw new WingsException(INVALID_ARGUMENT)
               .addParam("args", "Environment can not be null for non-build state");
+        }
+
+        if (workflow.getOrchestrationWorkflow().getOrchestrationWorkflowType() == OrchestrationWorkflowType.BUILD
+            && i > 0) {
+          throw new WingsException(INVALID_ARGUMENT)
+              .addParam("args",
+                  "A pipeline can have only one build workflow and it has to be at the beginning of the pipeline. "
+                      + "If the pipeline needs more than one artifact use multiple steps in the build workflow "
+                      + "to build and collect all required artifacts.");
         }
       }
     }
