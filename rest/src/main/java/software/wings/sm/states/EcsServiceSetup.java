@@ -94,7 +94,8 @@ public class EcsServiceSetup extends ContainerServiceSetup {
 
   @Override
   protected ContainerServiceElement buildContainerServiceElement(
-      CommandStateExecutionData executionData, CommandExecutionResult executionResult, ExecutionStatus status) {
+      ExecutionContext context, CommandExecutionResult executionResult, ExecutionStatus status) {
+    CommandStateExecutionData executionData = (CommandStateExecutionData) context.getStateExecutionData();
     EcsSetupParams setupParams = (EcsSetupParams) executionData.getContainerSetupParams();
     int maxInstances = getMaxInstances() == 0 ? DEFAULT_MAX : getMaxInstances();
     int fixedInstances = getFixedInstances() == 0 ? maxInstances : getFixedInstances();
