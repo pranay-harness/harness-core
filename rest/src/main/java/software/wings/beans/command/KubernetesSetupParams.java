@@ -38,6 +38,7 @@ public class KubernetesSetupParams extends ContainerSetupParams {
   private String resourceGroup;
   private boolean useIngress;
   private String ingressYaml;
+  private boolean useIstioRouteRule;
 
   public static final class KubernetesSetupParamsBuilder {
     private String serviceName;
@@ -71,6 +72,7 @@ public class KubernetesSetupParams extends ContainerSetupParams {
     private String resourceGroup;
     private boolean useIngress;
     private String ingressYaml;
+    private boolean useIstioRouteRule;
 
     private KubernetesSetupParamsBuilder() {}
 
@@ -233,6 +235,11 @@ public class KubernetesSetupParams extends ContainerSetupParams {
       return this;
     }
 
+    public KubernetesSetupParamsBuilder withUseIstioRouteRule(boolean useIstioRouteRule) {
+      this.useIstioRouteRule = useIstioRouteRule;
+      return this;
+    }
+
     public KubernetesSetupParamsBuilder but() {
       return aKubernetesSetupParams()
           .withServiceName(serviceName)
@@ -265,7 +272,8 @@ public class KubernetesSetupParams extends ContainerSetupParams {
           .withSubscriptionId(subscriptionId)
           .withResourceGroup(resourceGroup)
           .withUseIngress(useIngress)
-          .withIngressYaml(ingressYaml);
+          .withIngressYaml(ingressYaml)
+          .withUseIstioRouteRule(useIstioRouteRule);
     }
 
     public KubernetesSetupParams build() {
@@ -301,6 +309,7 @@ public class KubernetesSetupParams extends ContainerSetupParams {
       kubernetesSetupParams.setResourceGroup(resourceGroup);
       kubernetesSetupParams.setUseIngress(useIngress);
       kubernetesSetupParams.setIngressYaml(ingressYaml);
+      kubernetesSetupParams.setUseIstioRouteRule(useIstioRouteRule);
       return kubernetesSetupParams;
     }
   }

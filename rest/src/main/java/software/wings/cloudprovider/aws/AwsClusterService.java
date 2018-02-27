@@ -11,6 +11,7 @@ import software.wings.cloudprovider.ClusterConfiguration;
 import software.wings.cloudprovider.ContainerInfo;
 import software.wings.security.encryption.EncryptedDataDetail;
 
+import java.util.LinkedHashMap;
 import java.util.List;
 
 /**
@@ -54,4 +55,7 @@ public interface AwsClusterService {
    */
   TaskDefinition createTask(String region, SettingAttribute settingAttribute,
       List<EncryptedDataDetail> encryptedDataDetails, RegisterTaskDefinitionRequest registerTaskDefinitionRequest);
+
+  LinkedHashMap<String, Integer> getActiveServiceCounts(String region, SettingAttribute cloudProviderSetting,
+      List<EncryptedDataDetail> encryptedDataDetails, String clusterName, String containerServiceName);
 }

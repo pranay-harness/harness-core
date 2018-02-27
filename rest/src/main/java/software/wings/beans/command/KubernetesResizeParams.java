@@ -19,6 +19,7 @@ public class KubernetesResizeParams extends ContainerResizeParams {
   private boolean rollbackAutoscaler;
   private String subscriptionId;
   private String resourceGroup;
+  private boolean useIstioRouteRule;
 
   public static final class KubernetesResizeParamsBuilder {
     private String clusterName;
@@ -31,6 +32,7 @@ public class KubernetesResizeParams extends ContainerResizeParams {
     private boolean rollbackAutoscaler;
     private String subscriptionId;
     private String resourceGroup;
+    private boolean useIstioRouteRule;
 
     private KubernetesResizeParamsBuilder() {}
 
@@ -88,6 +90,11 @@ public class KubernetesResizeParams extends ContainerResizeParams {
       return this;
     }
 
+    public KubernetesResizeParamsBuilder withUseIstioRouteRule(boolean useIstioRouteRule) {
+      this.useIstioRouteRule = useIstioRouteRule;
+      return this;
+    }
+
     public KubernetesResizeParamsBuilder but() {
       return aKubernetesResizeParams()
           .withClusterName(clusterName)
@@ -99,7 +106,8 @@ public class KubernetesResizeParams extends ContainerResizeParams {
           .withApiVersion(apiVersion)
           .withRollbackAutoscaler(rollbackAutoscaler)
           .withSubscriptionId(subscriptionId)
-          .withResourceGroup(resourceGroup);
+          .withResourceGroup(resourceGroup)
+          .withUseIstioRouteRule(useIstioRouteRule);
     }
 
     public KubernetesResizeParams build() {
@@ -114,6 +122,7 @@ public class KubernetesResizeParams extends ContainerResizeParams {
       kubernetesResizeParams.setRollbackAutoscaler(rollbackAutoscaler);
       kubernetesResizeParams.setSubscriptionId(subscriptionId);
       kubernetesResizeParams.setResourceGroup(resourceGroup);
+      kubernetesResizeParams.setUseIstioRouteRule(useIstioRouteRule);
       return kubernetesResizeParams;
     }
   }

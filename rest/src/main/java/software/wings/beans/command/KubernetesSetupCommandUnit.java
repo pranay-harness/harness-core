@@ -54,6 +54,9 @@ import io.fabric8.kubernetes.api.model.extensions.StatefulSetSpec;
 import lombok.Builder;
 import lombok.Data;
 import lombok.EqualsAndHashCode;
+import me.snowdrop.istio.api.model.IstioResource;
+import me.snowdrop.istio.api.model.IstioResourceBuilder;
+import me.snowdrop.istio.api.model.IstioResourceFluent.RouteRuleSpecNested;
 import org.apache.commons.collections.MapUtils;
 import org.apache.commons.lang3.StringUtils;
 import org.mongodb.morphia.annotations.Transient;
@@ -245,6 +248,25 @@ public class KubernetesSetupCommandUnit extends ContainerSetupCommandUnit {
       ingress = null;
     }
 
+    // Setup route rule
+    IstioResource routeRule = null;
+    Map<String, Integer> activeControllers = null;
+    int totalInstances = 0;
+    if (setupParams.isUseIstioRouteRule()) {
+      activeControllers = kubernetesContainerService.getActiveServiceCounts(
+          kubernetesConfig, encryptedDataDetails, containerServiceName);
+      totalInstances = activeControllers.values().stream().mapToInt(Integer::intValue).sum();
+      executionLogCallback.saveExecutionLog(
+          String.format("Setting Istio route rule %s - 100%% of traffic %s initially", kubernetesServiceName,
+              isNotEmpty(activeControllers) ? "to "
+                      + (activeControllers.size() == 1 ? activeControllers.keySet().iterator().next()
+                                                       : activeControllers.size() + " previous controllers")
+                                            : "disabled"),
+          LogLevel.INFO);
+      routeRule = kubernetesContainerService.createOrReplaceRouteRule(kubernetesConfig, encryptedDataDetails,
+          createRouteRuleDefinition(setupParams, kubernetesServiceName, activeControllers));
+    }
+
     // Disable previous autoscalers
     if (isNotEmpty(setupParams.getActiveAutoscalers())) {
       setupParams.getActiveAutoscalers().forEach(autoscaler -> {
@@ -292,6 +314,14 @@ public class KubernetesSetupCommandUnit extends ContainerSetupCommandUnit {
     if (ingress != null) {
       executionLogCallback.saveExecutionLog("Ingress Name: " + kubernetesServiceName, LogLevel.INFO);
       executionLogCallback.saveExecutionLog("Ingress Rule: " + getIngressRuleString(ingress), LogLevel.INFO);
+    }
+    if (routeRule != null) {
+      executionLogCallback.saveExecutionLog(
+          "Istio route rule weights:" + (isEmpty(activeControllers) ? " disabled initially" : ""));
+      for (String controller : activeControllers.keySet()) {
+        int weight = (int) Math.round((activeControllers.get(controller) * 100.0) / totalInstances);
+        executionLogCallback.saveExecutionLog("   " + controller + ": " + weight + "%");
+      }
     }
 
     if (isDaemonSet) {
@@ -385,6 +415,29 @@ public class KubernetesSetupCommandUnit extends ContainerSetupCommandUnit {
         .endMetadata()
         .withSpec(spec.build())
         .build();
+  }
+
+  private IstioResource createRouteRuleDefinition(
+      KubernetesSetupParams setupParams, String kubernetesServiceName, Map<String, Integer> activeControllers) {
+    RouteRuleSpecNested<IstioResourceBuilder> routeRuleSpecNested = new IstioResourceBuilder()
+                                                                        .withNewMetadata()
+                                                                        .withName(kubernetesServiceName)
+                                                                        .endMetadata()
+                                                                        .withNewRouteRuleSpec()
+                                                                        .withNewDestination()
+                                                                        .withName(kubernetesServiceName)
+                                                                        .withNamespace(setupParams.getNamespace())
+                                                                        .endDestination();
+    int totalInstances = activeControllers.values().stream().mapToInt(Integer::intValue).sum();
+    for (String controller : activeControllers.keySet()) {
+      int revision = getRevisionFromControllerName(controller).orElse(-1);
+      routeRuleSpecNested.addNewRoute()
+          .addToLabels("revision", Integer.toString(revision))
+          .withWeight((int) Math.round((activeControllers.get(controller) * 100.0) / totalInstances))
+          .endRoute();
+    }
+
+    return routeRuleSpecNested.endRouteRuleSpec().build();
   }
 
   private void listContainerInfosWhenReady(List<EncryptedDataDetail> encryptedDataDetails,

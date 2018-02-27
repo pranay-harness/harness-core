@@ -72,6 +72,7 @@ public class KubernetesSetup extends ContainerServiceSetup {
   private boolean useIngress;
   private String ingressYaml;
   private String customMetricYamlConfig;
+  private boolean useIstioRouteRule;
 
   private String commandName = "Setup Replication Controller";
 
@@ -154,6 +155,7 @@ public class KubernetesSetup extends ContainerServiceSetup {
         .withResourceGroup(resourceGroup)
         .withUseIngress(useIngress)
         .withIngressYaml(ingressYamlEvaluated)
+        .withUseIstioRouteRule(true) // TODO use var
         .build();
   }
 
@@ -177,7 +179,8 @@ public class KubernetesSetup extends ContainerServiceSetup {
             .clusterName(executionData.getClusterName())
             .namespace(setupParams.getNamespace())
             .deploymentType(DeploymentType.KUBERNETES)
-            .infraMappingId(setupParams.getInfraMappingId());
+            .infraMappingId(setupParams.getInfraMappingId())
+            .useIstioRouteRule(true); // TODO use var
     if (executionResult != null) {
       ContainerSetupCommandUnitExecutionData setupExecutionData =
           (ContainerSetupCommandUnitExecutionData) executionResult.getCommandExecutionData();
@@ -383,6 +386,14 @@ public class KubernetesSetup extends ContainerServiceSetup {
 
   public void setIngressYaml(String ingressYaml) {
     this.ingressYaml = ingressYaml;
+  }
+
+  public boolean isUseIstioRouteRule() {
+    return useIstioRouteRule;
+  }
+
+  public void setUseIstioRouteRule(boolean useIstioRouteRule) {
+    this.useIstioRouteRule = useIstioRouteRule;
   }
 
   private ContextData buildContextData(ExecutionContext context, Application app,

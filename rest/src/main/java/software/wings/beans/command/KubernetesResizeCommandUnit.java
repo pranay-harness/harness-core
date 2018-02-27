@@ -2,6 +2,8 @@ package software.wings.beans.command;
 
 import static java.util.Collections.emptyList;
 import static software.wings.cloudprovider.ContainerInfo.Status.SUCCESS;
+import static software.wings.utils.KubernetesConvention.DOT;
+import static software.wings.utils.KubernetesConvention.getRevisionFromControllerName;
 
 import com.google.inject.Inject;
 
@@ -10,6 +12,9 @@ import io.fabric8.kubernetes.api.model.HorizontalPodAutoscaler;
 import lombok.Builder;
 import lombok.Data;
 import lombok.EqualsAndHashCode;
+import me.snowdrop.istio.api.model.IstioResource;
+import me.snowdrop.istio.api.model.IstioResourceBuilder;
+import me.snowdrop.istio.api.model.IstioResourceFluent.RouteRuleSpecNested;
 import org.mongodb.morphia.annotations.Transient;
 import software.wings.api.ContainerServiceData;
 import software.wings.api.DeploymentType;
@@ -24,6 +29,7 @@ import software.wings.helpers.ext.azure.AzureHelperService;
 import software.wings.security.encryption.EncryptedDataDetail;
 
 import java.util.List;
+import java.util.Map;
 
 /**
  * Created by brett on 3/3/17
@@ -106,7 +112,44 @@ public class KubernetesResizeCommandUnit extends ContainerResizeCommandUnit {
       }
     }
 
+    // Edit weights for Istio route rule if applicable
+    if (resizeParams.isUseIstioRouteRule()) {
+      String controllerName = resizeParams.getDesiredCounts().get(0).getName();
+      Map<String, Integer> activeControllers =
+          kubernetesContainerService.getActiveServiceCounts(kubernetesConfig, encryptedDataDetails, controllerName);
+      kubernetesContainerService.createOrReplaceRouteRule(kubernetesConfig, encryptedDataDetails,
+          createRouteRuleDefinition(resizeParams.getNamespace(),
+              controllerName.substring(0, controllerName.lastIndexOf(DOT)).replaceAll("\\.", "-"), activeControllers,
+              executionLogCallback));
+    }
+
     return containerInfos;
+  }
+
+  private IstioResource createRouteRuleDefinition(String namespace, String kubernetesServiceName,
+      Map<String, Integer> activeControllers, ExecutionLogCallback executionLogCallback) {
+    RouteRuleSpecNested<IstioResourceBuilder> routeRuleSpecNested = new IstioResourceBuilder()
+                                                                        .withNewMetadata()
+                                                                        .withName(kubernetesServiceName)
+                                                                        .endMetadata()
+                                                                        .withNewRouteRuleSpec()
+                                                                        .withNewDestination()
+                                                                        .withName(kubernetesServiceName)
+                                                                        .withNamespace(namespace)
+                                                                        .endDestination();
+    int totalInstances = activeControllers.values().stream().mapToInt(Integer::intValue).sum();
+    executionLogCallback.saveExecutionLog("Setting Istio RouteRule weights:");
+    for (String controller : activeControllers.keySet()) {
+      int revision = getRevisionFromControllerName(controller).orElse(-1);
+      int weight = (int) Math.round((activeControllers.get(controller) * 100.0) / totalInstances);
+      executionLogCallback.saveExecutionLog("   " + controller + ": " + weight + "%");
+      routeRuleSpecNested.addNewRoute()
+          .addToLabels("revision", Integer.toString(revision))
+          .withWeight(weight)
+          .endRoute();
+    }
+
+    return routeRuleSpecNested.endRouteRuleSpec().build();
   }
 
   @Data
