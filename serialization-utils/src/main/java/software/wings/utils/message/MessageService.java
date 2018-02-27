@@ -45,4 +45,6 @@ public interface MessageService {
   void removeData(String name, String key);
 
   void closeData(String name);
+
+  void logAllMessages(MessengerType sourceType, String sourceProcessId);
 }
