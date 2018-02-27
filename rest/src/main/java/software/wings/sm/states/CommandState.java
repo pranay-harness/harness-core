@@ -248,6 +248,15 @@ public class CommandState extends State {
       Map<String, String> serviceVariables = context.getServiceVariables();
       Map<String, String> safeDisplayServiceVariables = context.getSafeDisplayServiceVariables();
 
+      if (serviceVariables != null) {
+        serviceVariables.entrySet().forEach(entry -> { entry.setValue(context.renderExpression(entry.getValue())); });
+      }
+
+      if (safeDisplayServiceVariables != null) {
+        safeDisplayServiceVariables.entrySet().forEach(
+            entry -> { entry.setValue(context.renderExpression(entry.getValue())); });
+      }
+
       ActivityBuilder activityBuilder = Activity.builder()
                                             .applicationName(application.getName())
                                             .environmentId(environment.getUuid())
