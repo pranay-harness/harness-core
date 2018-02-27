@@ -17,6 +17,7 @@ public class KubernetesSetupParams extends ContainerSetupParams {
   private KubernetesServiceType serviceType;
   private Integer port;
   private Integer targetPort;
+  private String portName;
   private KubernetesPortProtocol protocol;
   private String clusterIP;
   private String externalIPs;
@@ -51,6 +52,7 @@ public class KubernetesSetupParams extends ContainerSetupParams {
     private KubernetesServiceType serviceType;
     private Integer port;
     private Integer targetPort;
+    private String portName;
     private KubernetesPortProtocol protocol;
     private String clusterIP;
     private String externalIPs;
@@ -127,6 +129,11 @@ public class KubernetesSetupParams extends ContainerSetupParams {
 
     public KubernetesSetupParamsBuilder withTargetPort(Integer targetPort) {
       this.targetPort = targetPort;
+      return this;
+    }
+
+    public KubernetesSetupParamsBuilder withPortName(String portName) {
+      this.portName = portName;
       return this;
     }
 
@@ -252,6 +259,7 @@ public class KubernetesSetupParams extends ContainerSetupParams {
           .withServiceType(serviceType)
           .withPort(port)
           .withTargetPort(targetPort)
+          .withPortName(portName)
           .withProtocol(protocol)
           .withClusterIP(clusterIP)
           .withExternalIPs(externalIPs)
@@ -288,6 +296,7 @@ public class KubernetesSetupParams extends ContainerSetupParams {
       kubernetesSetupParams.setServiceType(serviceType);
       kubernetesSetupParams.setPort(port);
       kubernetesSetupParams.setTargetPort(targetPort);
+      kubernetesSetupParams.setPortName(portName);
       kubernetesSetupParams.setProtocol(protocol);
       kubernetesSetupParams.setClusterIP(clusterIP);
       kubernetesSetupParams.setExternalIPs(externalIPs);

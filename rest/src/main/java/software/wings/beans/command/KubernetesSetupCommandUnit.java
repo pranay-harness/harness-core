@@ -709,12 +709,14 @@ public class KubernetesSetupCommandUnit extends ContainerSetupCommandUnit {
         new ServiceSpecBuilder().addToSelector(serviceLabels).withType(setupParams.getServiceType().name());
 
     if (setupParams.getServiceType() != KubernetesServiceType.ExternalName) {
-      ServicePortBuilder servicePort = new ServicePortBuilder()
-                                           .withProtocol(setupParams.getProtocol().name())
-                                           .withPort(setupParams.getPort())
-                                           .withNewTargetPort()
-                                           .withIntVal(setupParams.getTargetPort())
-                                           .endTargetPort();
+      ServicePortBuilder servicePort =
+          new ServicePortBuilder()
+              .withProtocol(setupParams.getProtocol().name())
+              .withPort(setupParams.getPort())
+              .withNewTargetPort()
+              .withIntVal(setupParams.getTargetPort())
+              .endTargetPort()
+              .withName(isNotBlank(setupParams.getPortName()) ? setupParams.getPortName() : "http");
       if (setupParams.getServiceType() == KubernetesServiceType.NodePort && setupParams.getNodePort() != null) {
         servicePort.withNodePort(setupParams.getNodePort());
       }

@@ -59,6 +59,7 @@ public class KubernetesSetup extends ContainerServiceSetup {
   private KubernetesServiceType serviceType;
   private Integer port;
   private Integer targetPort;
+  private String portName;
   private KubernetesPortProtocol protocol;
   private String clusterIP;
   private String externalIPs;
@@ -142,6 +143,7 @@ public class KubernetesSetup extends ContainerServiceSetup {
         .withProtocol(protocol)
         .withServiceType(serviceType)
         .withTargetPort(targetPort)
+        .withPortName(portName)
         .withControllerNamePrefix(controllerNamePrefix)
         .withPreviousDaemonSetYaml(previousDaemonSetYaml)
         .withActiveAutoscalers(activeAutoscalers)
@@ -278,6 +280,14 @@ public class KubernetesSetup extends ContainerServiceSetup {
 
   public void setTargetPort(String targetPort) {
     this.targetPort = Integer.parseInt(targetPort);
+  }
+
+  public String getPortName() {
+    return portName;
+  }
+
+  public void setPortName(String portName) {
+    this.portName = portName;
   }
 
   public String getProtocol() {
