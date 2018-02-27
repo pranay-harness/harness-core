@@ -42,8 +42,9 @@ public class HQuery<T> implements Query<T> {
   }
 
   @Override
+  @SuppressWarnings("deprecation")
   public Query<T> batchSize(int value) {
-    logger.error("Do not use batchSize it is deprecated", new Exception(""));
+    impl.batchSize(value);
     return this;
   }
 
@@ -53,8 +54,9 @@ public class HQuery<T> implements Query<T> {
   }
 
   @Override
+  @SuppressWarnings("deprecation")
   public Query<T> comment(String comment) {
-    logger.error("Do not use comment it is deprecated", new Exception(""));
+    impl.comment(comment);
     return this;
   }
 
@@ -64,14 +66,16 @@ public class HQuery<T> implements Query<T> {
   }
 
   @Override
+  @SuppressWarnings("deprecation")
   public Query<T> disableCursorTimeout() {
-    logger.error("Do not use disableCursorTimeout it is deprecated", new Exception(""));
+    impl.disableCursorTimeout();
     return this;
   }
 
   @Override
+  @SuppressWarnings("deprecation")
   public Query<T> disableSnapshotMode() {
-    logger.error("Do not use disableSnapshotMode it is deprecated", new Exception(""));
+    impl.disableSnapshotMode();
     return this;
   }
 
@@ -81,14 +85,16 @@ public class HQuery<T> implements Query<T> {
   }
 
   @Override
+  @SuppressWarnings("deprecation")
   public Query<T> enableCursorTimeout() {
-    logger.error("Do not use enableCursorTimeout it is deprecated", new Exception(""));
+    impl.enableCursorTimeout();
     return this;
   }
 
   @Override
+  @SuppressWarnings("deprecation")
   public Query<T> enableSnapshotMode() {
-    logger.error("Do not use enableSnapshotMode it is deprecated", new Exception(""));
+    impl.enableSnapshotMode();
     return this;
   }
 
@@ -118,14 +124,14 @@ public class HQuery<T> implements Query<T> {
   }
 
   @Override
+  @SuppressWarnings("deprecation")
   public int getBatchSize() {
-    logger.error("Do not use enableSnapshotMode it is deprecated", new Exception(""));
     return impl.getBatchSize();
   }
 
   @Override
+  @SuppressWarnings("deprecation")
   public DBCollection getCollection() {
-    logger.error("Do not use getCollection it is deprecated", new Exception(""));
     return impl.getCollection();
   }
 
@@ -135,68 +141,74 @@ public class HQuery<T> implements Query<T> {
   }
 
   @Override
+  @SuppressWarnings("deprecation")
   public DBObject getFieldsObject() {
-    logger.error("Do not use getFieldsObject it is deprecated", new Exception(""));
     return impl.getFieldsObject();
   }
 
   @Override
+  @SuppressWarnings("deprecation")
   public int getLimit() {
-    logger.error("Do not use getLimit it is deprecated", new Exception(""));
     return impl.getLimit();
   }
 
   @Override
+  @SuppressWarnings("deprecation")
   public int getOffset() {
-    logger.error("Do not use getOffset it is deprecated", new Exception(""));
     return impl.getOffset();
   }
 
   @Override
+  @SuppressWarnings("deprecation")
   public DBObject getQueryObject() {
-    logger.error("Do not use getQueryObject it is deprecated", new Exception(""));
     return impl.getQueryObject();
   }
 
   @Override
+  @SuppressWarnings("deprecation")
   public DBObject getSortObject() {
-    logger.error("Do not use getSortObject it is deprecated", new Exception(""));
     return impl.getSortObject();
   }
 
   @Override
+  @SuppressWarnings("deprecation")
   public Query<T> hintIndex(String idxName) {
-    logger.error("Do not use hintIndex it is deprecated", new Exception(""));
+    impl.hintIndex(idxName);
     return this;
   }
 
   @Override
+  @SuppressWarnings("deprecation")
   public Query<T> limit(int value) {
-    logger.error("Do not use limit it is deprecated", new Exception(""));
+    impl.limit(value);
     return this;
   }
 
   @Override
+  @SuppressWarnings("deprecation")
   public Query<T> lowerIndexBound(DBObject lowerBound) {
-    logger.error("Do not use lowerIndexBound it is deprecated", new Exception(""));
+    impl.lowerIndexBound(lowerBound);
     return this;
   }
 
   @Override
+  @SuppressWarnings("deprecation")
   public Query<T> maxScan(int value) {
-    logger.error("Do not use maxScan it is deprecated", new Exception(""));
+    impl.maxScan(value);
     return this;
   }
 
   @Override
+  @SuppressWarnings("deprecation")
   public Query<T> maxTime(long maxTime, TimeUnit maxTimeUnit) {
-    logger.error("Do not use maxTime it is deprecated", new Exception(""));
+    impl.maxTime(maxTime, maxTimeUnit);
     return this;
   }
 
   @Override
+  @SuppressWarnings("deprecation")
   public Query<T> offset(int value) {
-    logger.error("Do not use offset it is deprecated", new Exception(""));
+    impl.offset(value);
     return this;
   }
 
@@ -236,14 +248,16 @@ public class HQuery<T> implements Query<T> {
   }
 
   @Override
+  @SuppressWarnings("deprecation")
   public Query<T> queryNonPrimary() {
-    logger.error("Do not use queryNonPrimary it is deprecated", new Exception(""));
+    impl.queryNonPrimary();
     return this;
   }
 
   @Override
+  @SuppressWarnings("deprecation")
   public Query<T> queryPrimaryOnly() {
-    logger.error("Do not use queryPrimaryOnly it is deprecated", new Exception(""));
+    impl.queryPrimaryOnly();
     return this;
   }
 
@@ -253,14 +267,16 @@ public class HQuery<T> implements Query<T> {
   }
 
   @Override
+  @SuppressWarnings("deprecation")
   public Query<T> retrievedFields(boolean include, String... fields) {
-    logger.error("Do not use retrievedFields it is deprecated", new Exception(""));
+    impl.retrievedFields(include, fields);
     return this;
   }
 
   @Override
+  @SuppressWarnings("deprecation")
   public Query<T> returnKey() {
-    logger.error("Do not use returnKey it is deprecated");
+    impl.returnKey();
     return this;
   }
 
@@ -275,14 +291,16 @@ public class HQuery<T> implements Query<T> {
   }
 
   @Override
+  @SuppressWarnings("deprecation")
   public Query<T> upperIndexBound(DBObject upperBound) {
-    logger.error("Do not use upperIndexBound it is deprecated", new Exception(""));
+    this.upperIndexBound(upperBound);
     return this;
   }
 
   @Override
+  @SuppressWarnings("deprecation")
   public Query<T> useReadPreference(ReadPreference readPref) {
-    logger.error("Do not use useReadPreference it is deprecated", new Exception(""));
+    impl.useReadPreference(readPref);
     return this;
   }
 
@@ -341,8 +359,8 @@ public class HQuery<T> implements Query<T> {
   }
 
   @Override
+  @SuppressWarnings("deprecation")
   public long countAll() {
-    logger.error("Do not use countAll it is deprecated", new Exception(""));
     return impl.countAll();
   }
 
@@ -407,14 +425,14 @@ public class HQuery<T> implements Query<T> {
   }
 
   @Override
+  @SuppressWarnings("deprecation")
   public MorphiaIterator<T, T> tail() {
-    logger.error("Do not use tail it is deprecated", new Exception(""));
     return impl.tail();
   }
 
   @Override
+  @SuppressWarnings("deprecation")
   public MorphiaIterator<T, T> tail(boolean awaitData) {
-    logger.error("Do not use tail it is deprecated", new Exception(""));
     return impl.tail(awaitData);
   }
 

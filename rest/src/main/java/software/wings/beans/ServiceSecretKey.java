@@ -2,6 +2,7 @@ package software.wings.beans;
 
 import lombok.Builder;
 import lombok.Data;
+import lombok.EqualsAndHashCode;
 import org.mongodb.morphia.annotations.Entity;
 import org.mongodb.morphia.annotations.Field;
 import org.mongodb.morphia.annotations.Index;
@@ -16,6 +17,7 @@ import org.mongodb.morphia.annotations.Indexes;
 @Entity(value = "serviceSecrets", noClassnameStored = true)
 @Data
 @Builder
+@EqualsAndHashCode(callSuper = false)
 public class ServiceSecretKey extends Base {
   private String serviceSecret;
   private ServiceType serviceType;

@@ -235,9 +235,8 @@ public class TriggerServiceTest extends WingsBaseTest {
     when(end.equal(any())).thenReturn(query);
     when(end.lessThan(any())).thenReturn(query);
     when(end.in(any())).thenReturn(query);
-    when(query.offset(1)).thenReturn(query);
     when(query.order(any(Sort.class))).thenReturn(query);
-    when(query.get()).thenReturn(workflowExecution);
+    when(query.get(any())).thenReturn(workflowExecution);
     when(pipelineService.readPipeline(APP_ID, PIPELINE_ID, true)).thenReturn(pipeline);
     when(pipelineService.readPipeline(APP_ID, PIPELINE_ID, false)).thenReturn(pipeline);
     when(workflowService.readWorkflow(APP_ID, WORKFLOW_ID)).thenReturn(workflow);
