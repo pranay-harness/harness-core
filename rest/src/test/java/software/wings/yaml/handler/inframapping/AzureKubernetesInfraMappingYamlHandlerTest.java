@@ -71,17 +71,17 @@ public class AzureKubernetesInfraMappingYamlHandlerTest extends BaseYamlHandlerT
   @InjectMocks @Inject protected InfrastructureMappingService infrastructureMappingService;
   @InjectMocks @Inject protected AzureKubernetesInfraMappingYamlHandler azureKubernetesInfraMappingYamlHandler;
 
-  private String validYamlContent = "subscriptionId: 52d2db62-5aa9-471d-84bb-faa489b3e319\n"
-      + "resourceGroup: test-aks\n"
-      + "namespace: default\n"
+  private String validYamlContent = "harnessApiVersion: '1.0'\n"
+      + "type: AZURE_KUBERNETES\n"
       + "cluster: test-aks\n"
-      + "computeProviderType: AZURE\n"
       + "computeProviderName: azure-infra\n"
-      + "serviceName: dockersvc\n"
-      + "infraMappingType: AZURE_KUBERNETES\n"
+      + "computeProviderType: AZURE\n"
       + "deploymentType: KUBERNETES\n"
-      + "harnessApiVersion: '1.0'\n"
-      + "type: AZURE_KUBERNETES";
+      + "infraMappingType: AZURE_KUBERNETES\n"
+      + "namespace: default\n"
+      + "resourceGroup: test-aks\n"
+      + "serviceName: dockersvc\n"
+      + "subscriptionId: 52d2db62-5aa9-471d-84bb-faa489b3e319";
 
   private String invalidYamlContent = "invalidSubscriptionId: 52d2db62-5aa9-471d-84bb-faa489b3e319\n"
       + "resourceGroup: test-aks\n"
