@@ -1,9 +1,6 @@
 package software.wings.yaml;
 
-import static java.util.Arrays.asList;
-
 import org.junit.Before;
-import software.wings.beans.SettingAttribute;
 import software.wings.integration.BaseIntegrationTest;
 
 /**
@@ -23,7 +20,6 @@ public class YamlPayloadIntegrationTest extends BaseIntegrationTest {
   @Before
   public void setUp() throws Exception {
     loginAdminUser();
-    deleteAllDocuments(asList(SettingAttribute.class));
   }
 
   /* TODO - update these tests using new endpoints

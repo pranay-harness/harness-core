@@ -1,6 +1,5 @@
 package software.wings.integration.appdynamics;
 
-import static java.util.Arrays.asList;
 import static org.apache.commons.lang3.StringUtils.isBlank;
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertFalse;
@@ -40,14 +39,15 @@ public class AppdynamicsIntegrationTest extends BaseIntegrationTest {
   @Inject private AppdynamicsDelegateService appdynamicsDelegateService;
   @Inject private SecretManager secretManager;
 
+  private String appdynamicsSettingId;
+
   @Before
   public void setUp() throws Exception {
     loginAdminUser();
-    deleteAllDocuments(asList(SettingAttribute.class));
     SettingAttribute appdSettingAttribute =
         aSettingAttribute()
             .withCategory(Category.CONNECTOR)
-            .withName("AppDynamics")
+            .withName("AppDynamics" + System.currentTimeMillis())
             .withAccountId(ACCOUNT_ID)
             .withValue(AppDynamicsConfig.builder()
                            .controllerUrl("https://wings251.saas.appdynamics.com/controller")
@@ -57,19 +57,15 @@ public class AppdynamicsIntegrationTest extends BaseIntegrationTest {
                            .accountId(ACCOUNT_ID)
                            .build())
             .build();
-    wingsPersistence.saveAndGet(SettingAttribute.class, appdSettingAttribute);
+    appdynamicsSettingId = wingsPersistence.saveAndGet(SettingAttribute.class, appdSettingAttribute).getUuid();
   }
 
   @Test
   @Repeat(times = 5, successes = 1)
   public void testGetAllApplications() throws Exception {
-    final List<SettingAttribute> appdynamicsSettings =
-        settingsService.getGlobalSettingAttributesByType(ACCOUNT_ID, "APP_DYNAMICS");
-    assertEquals(1, appdynamicsSettings.size());
-
     // get all applications
-    WebTarget target = client.target(API_BASE
-        + "/appdynamics/applications?settingId=" + appdynamicsSettings.get(0).getUuid() + "&accountId=" + ACCOUNT_ID);
+    WebTarget target = client.target(
+        API_BASE + "/appdynamics/applications?settingId=" + appdynamicsSettingId + "&accountId=" + ACCOUNT_ID);
     RestResponse<List<NewRelicApplication>> restResponse =
         getRequestBuilderWithAuthHeader(target).get(new GenericType<RestResponse<List<NewRelicApplication>>>() {});
 
@@ -85,13 +81,9 @@ public class AppdynamicsIntegrationTest extends BaseIntegrationTest {
   @Test
   @Repeat(times = 5, successes = 1)
   public void testGetAllTiers() throws Exception {
-    final List<SettingAttribute> appdynamicsSettings =
-        settingsService.getGlobalSettingAttributesByType(ACCOUNT_ID, "APP_DYNAMICS");
-    assertEquals(1, appdynamicsSettings.size());
-
     // get all applications
-    WebTarget target = client.target(API_BASE
-        + "/appdynamics/applications?settingId=" + appdynamicsSettings.get(0).getUuid() + "&accountId=" + ACCOUNT_ID);
+    WebTarget target = client.target(
+        API_BASE + "/appdynamics/applications?settingId=" + appdynamicsSettingId + "&accountId=" + ACCOUNT_ID);
     RestResponse<List<NewRelicApplication>> restResponse =
         getRequestBuilderWithAuthHeader(target).get(new GenericType<RestResponse<List<NewRelicApplication>>>() {});
 
@@ -105,7 +97,7 @@ public class AppdynamicsIntegrationTest extends BaseIntegrationTest {
     }
 
     assertTrue("could not find MyApp application in appdynamics", appId > 0);
-    WebTarget btTarget = client.target(API_BASE + "/appdynamics/tiers?settingId=" + appdynamicsSettings.get(0).getUuid()
+    WebTarget btTarget = client.target(API_BASE + "/appdynamics/tiers?settingId=" + appdynamicsSettingId
         + "&accountId=" + ACCOUNT_ID + "&appdynamicsAppId=" + appId);
     RestResponse<List<AppdynamicsTier>> tierRestResponse =
         getRequestBuilderWithAuthHeader(btTarget).get(new GenericType<RestResponse<List<AppdynamicsTier>>>() {});
@@ -123,14 +115,12 @@ public class AppdynamicsIntegrationTest extends BaseIntegrationTest {
   @Test
   @Repeat(times = 5, successes = 1)
   public void testGetAllTierBTMetrics() throws Exception {
-    final List<SettingAttribute> appdynamicsSettings =
-        settingsService.getGlobalSettingAttributesByType(ACCOUNT_ID, "APP_DYNAMICS");
-    assertEquals(1, appdynamicsSettings.size());
-    AppDynamicsConfig appDynamicsConfig = (AppDynamicsConfig) appdynamicsSettings.get(0).getValue();
+    SettingAttribute appdSettingAttribute = settingsService.get(appdynamicsSettingId);
+    AppDynamicsConfig appDynamicsConfig = (AppDynamicsConfig) appdSettingAttribute.getValue();
 
     // get all applications
-    WebTarget target = client.target(API_BASE
-        + "/appdynamics/applications?settingId=" + appdynamicsSettings.get(0).getUuid() + "&accountId=" + ACCOUNT_ID);
+    WebTarget target = client.target(
+        API_BASE + "/appdynamics/applications?settingId=" + appdynamicsSettingId + "&accountId=" + ACCOUNT_ID);
     RestResponse<List<NewRelicApplication>> restResponse =
         getRequestBuilderWithAuthHeader(target).get(new GenericType<RestResponse<List<NewRelicApplication>>>() {});
 
@@ -144,7 +134,7 @@ public class AppdynamicsIntegrationTest extends BaseIntegrationTest {
     }
 
     assertTrue("could not find MyApp application in appdynamics", appId > 0);
-    WebTarget btTarget = client.target(API_BASE + "/appdynamics/tiers?settingId=" + appdynamicsSettings.get(0).getUuid()
+    WebTarget btTarget = client.target(API_BASE + "/appdynamics/tiers?settingId=" + appdynamicsSettingId
         + "&accountId=" + ACCOUNT_ID + "&appdynamicsAppId=" + appId);
     RestResponse<List<AppdynamicsTier>> tierRestResponse =
         getRequestBuilderWithAuthHeader(btTarget).get(new GenericType<RestResponse<List<AppdynamicsTier>>>() {});
@@ -172,14 +162,12 @@ public class AppdynamicsIntegrationTest extends BaseIntegrationTest {
   @Test
   @Ignore
   public void testGetBTMetricData() throws Exception {
-    final List<SettingAttribute> appdynamicsSettings =
-        settingsService.getGlobalSettingAttributesByType(ACCOUNT_ID, "APP_DYNAMICS");
-    assertEquals(1, appdynamicsSettings.size());
-    AppDynamicsConfig appDynamicsConfig = (AppDynamicsConfig) appdynamicsSettings.get(0).getValue();
+    SettingAttribute appdSettingAttribute = settingsService.get(appdynamicsSettingId);
+    AppDynamicsConfig appDynamicsConfig = (AppDynamicsConfig) appdSettingAttribute.getValue();
 
     // get all applications
-    WebTarget target = client.target(API_BASE
-        + "/appdynamics/applications?settingId=" + appdynamicsSettings.get(0).getUuid() + "&accountId=" + ACCOUNT_ID);
+    WebTarget target = client.target(
+        API_BASE + "/appdynamics/applications?settingId=" + appdynamicsSettingId + "&accountId=" + ACCOUNT_ID);
     RestResponse<List<NewRelicApplication>> restResponse =
         getRequestBuilderWithAuthHeader(target).get(new GenericType<RestResponse<List<NewRelicApplication>>>() {});
 
@@ -193,7 +181,7 @@ public class AppdynamicsIntegrationTest extends BaseIntegrationTest {
     }
 
     assertTrue("could not find MyApp application in appdynamics", appId > 0);
-    WebTarget btTarget = client.target(API_BASE + "/appdynamics/tiers?settingId=" + appdynamicsSettings.get(0).getUuid()
+    WebTarget btTarget = client.target(API_BASE + "/appdynamics/tiers?settingId=" + appdynamicsSettingId
         + "&accountId=" + ACCOUNT_ID + "&appdynamicsAppId=" + appId);
     RestResponse<List<AppdynamicsTier>> tierRestResponse =
         getRequestBuilderWithAuthHeader(btTarget).get(new GenericType<RestResponse<List<AppdynamicsTier>>>() {});
