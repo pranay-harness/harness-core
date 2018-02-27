@@ -230,7 +230,9 @@ public abstract class AbstractMetricAnalysisState extends AbstractAnalysisState 
 
   private AnalysisContext getAnalysisContext(ExecutionContext context, String correlationId) {
     try {
-      Set<String> controlNodes = getLastExecutionNodes(context);
+      Set<String> controlNodes = getComparisonStrategy() == AnalysisComparisonStrategy.COMPARE_WITH_PREVIOUS
+          ? Collections.emptySet()
+          : getLastExecutionNodes(context);
       Set<String> testNodes = getCanaryNewHostNames(context);
       controlNodes.removeAll(testNodes);
       return AnalysisContext.builder()
