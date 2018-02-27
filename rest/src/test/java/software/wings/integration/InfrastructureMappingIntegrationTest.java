@@ -66,10 +66,8 @@ public class InfrastructureMappingIntegrationTest extends BaseIntegrationTest {
 
   @Before
   public void setUp() throws Exception {
-    deleteAllDocuments(
-        asList(Application.class, Service.class, SettingAttribute.class, ServiceInstance.class, Host.class));
-
-    app = appService.save(anApplication().withName("AppA").withAccountId(accountId).build());
+    app =
+        appService.save(anApplication().withName("AppA" + System.currentTimeMillis()).withAccountId(accountId).build());
     service = serviceResourceService.save(aService().withAppId(app.getUuid()).withName("Catalog").build());
 
     environment = environmentService.save(

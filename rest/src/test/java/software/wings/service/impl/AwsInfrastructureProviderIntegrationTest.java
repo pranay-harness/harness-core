@@ -1,6 +1,5 @@
 package software.wings.service.impl;
 
-import static java.util.Arrays.asList;
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertNotNull;
 import static org.junit.Assert.assertTrue;
@@ -55,8 +54,8 @@ public class AwsInfrastructureProviderIntegrationTest extends BaseIntegrationTes
 
   @Before
   public void setUp() throws Exception {
-    deleteAllDocuments(asList(Application.class));
-    app = appService.save(anApplication().withName("AppA").withAccountId(accountId).build());
+    app =
+        appService.save(anApplication().withName("AppA" + System.currentTimeMillis()).withAccountId(accountId).build());
     environment = Environment.Builder.anEnvironment().withAppId(app.getUuid()).withName("Developmenet").build();
 
     SettingAttribute hostConnectionAttr = aSettingAttribute()
