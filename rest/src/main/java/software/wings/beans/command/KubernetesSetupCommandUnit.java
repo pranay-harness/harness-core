@@ -55,6 +55,7 @@ import lombok.Builder;
 import lombok.Data;
 import lombok.EqualsAndHashCode;
 import org.apache.commons.collections.MapUtils;
+import org.apache.commons.lang3.StringUtils;
 import org.mongodb.morphia.annotations.Transient;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -98,6 +99,7 @@ public class KubernetesSetupCommandUnit extends ContainerSetupCommandUnit {
   @Transient
   private static final String DOCKER_REGISTRY_CREDENTIAL_TEMPLATE =
       "{\"%s\":{\"username\":\"%s\",\"password\":\"%s\"}}";
+  public static final String NONE = "none";
 
   @Transient private static final String SERVICE_NAME_PLACEHOLDER_REGEX = "\\$\\{SERVICE_NAME}";
   @Transient private static final String SERVICE_PORT_PLACEHOLDER_REGEX = "\\$\\{SERVICE_PORT}";
@@ -247,23 +249,30 @@ public class KubernetesSetupCommandUnit extends ContainerSetupCommandUnit {
     if (isNotEmpty(setupParams.getActiveAutoscalers())) {
       setupParams.getActiveAutoscalers().forEach(autoscaler -> {
         executionLogCallback.saveExecutionLog("Disabling autoscaler " + autoscaler, LogLevel.INFO);
-        kubernetesContainerService.disableAutoscaler(kubernetesConfig, encryptedDataDetails, autoscaler);
+        /*
+         * Ideally we should be sending apiVersion as "v2beta1" when we are dealing with
+         * customMetricHPA, but there is a bug in fabric8 library in HasMetadataOperation.replace() method. For
+         * customMetricHPA, metric config info resides in HPA.Spec.additionalProperties map. but during execution of
+         * replace(), due to build() method in HorizontalPodAutoscalerSpecBuilder, this map goes away, and replace()
+         * call actually removes all metricConfig from autoScalar. So currently use v1 version only, till this issue
+         * gets fixed. (customMetricConfig is preserved as annotations in version_v1 HPA object, and that path is
+         * working fine)
+         * */
+        kubernetesContainerService.disableAutoscaler(
+            kubernetesConfig, encryptedDataDetails, autoscaler, ContainerApiVersions.KUBERNETES_V1.getVersionName());
       });
     }
 
     // Create new autoscaler
     if (setupParams.isUseAutoscaler()) {
-      HorizontalPodAutoscaler autoscalerDefinition =
-          createAutoscaler(containerServiceName, kubernetesConfig.getNamespace(), controllerLabels, setupParams);
+      HorizontalPodAutoscaler autoscalerDefinition = createAutoscaler(
+          containerServiceName, kubernetesConfig.getNamespace(), controllerLabels, setupParams, executionLogCallback);
+
       if (autoscalerDefinition != null) {
         executionLogCallback.saveExecutionLog(
             String.format("Creating autoscaler %s - disabled until 100%% deployed", containerServiceName),
             LogLevel.INFO);
-        executionLogCallback.saveExecutionLog(
-            String.format("Setting autoscaler min instances %d, max instances %d, with target CPU utilization %d%%",
-                setupParams.getMinAutoscaleInstances(), setupParams.getMaxAutoscaleInstances(),
-                setupParams.getTargetCpuUtilizationPercentage()),
-            LogLevel.INFO);
+
         kubernetesContainerService.createAutoscaler(kubernetesConfig, encryptedDataDetails, autoscalerDefinition);
       }
     }
@@ -304,6 +313,78 @@ public class KubernetesSetupCommandUnit extends ContainerSetupCommandUnit {
                                       .replaceAll(SERVICE_PORT_PLACEHOLDER_REGEX, Integer.toString(port)));
     ingress.getMetadata().setName(kubernetesServiceName);
     return ingress;
+  }
+
+  private HorizontalPodAutoscaler createAutoscaler(String autoscalerName, String namespace,
+      Map<String, String> serviceLabels, KubernetesSetupParams setupParams, ExecutionLogCallback executionLogCallback) {
+    HorizontalPodAutoscaler horizontalPodAutoscaler = null;
+
+    if (StringUtils.isNotEmpty(setupParams.getCustomMetricYamlConfig())) {
+      executionLogCallback.saveExecutionLog(
+          String.format("Setting autoscaler with custom metric config: ", setupParams.getCustomMetricYamlConfig()),
+          LogLevel.INFO);
+      horizontalPodAutoscaler =
+          getCustomMetricHorizontalPodAutoscalar(autoscalerName, namespace, serviceLabels, setupParams);
+    } else {
+      executionLogCallback.saveExecutionLog(
+          String.format("Setting autoscaler min instances %d, max instances %d, with target CPU utilization %d%%",
+              setupParams.getMinAutoscaleInstances(), setupParams.getMaxAutoscaleInstances(),
+              setupParams.getTargetCpuUtilizationPercentage()),
+          LogLevel.INFO);
+
+      horizontalPodAutoscaler = getBasicHorizontalPodAutoscaler(autoscalerName, namespace, serviceLabels, setupParams);
+    }
+
+    return horizontalPodAutoscaler;
+  }
+
+  private HorizontalPodAutoscaler getCustomMetricHorizontalPodAutoscalar(
+      String autoscalerName, String namespace, Map<String, String> serviceLabels, KubernetesSetupParams setupParams) {
+    try {
+      HorizontalPodAutoscaler horizontalPodAutoscaler =
+          (HorizontalPodAutoscaler) KubernetesHelper.loadYaml(setupParams.getCustomMetricYamlConfig());
+
+      // set kind/name to none
+      horizontalPodAutoscaler.getSpec().getScaleTargetRef().setName(NONE);
+      horizontalPodAutoscaler.getSpec().getScaleTargetRef().setKind(NONE);
+
+      // create metadata
+      ObjectMeta objectMeta = horizontalPodAutoscaler.getMetadata();
+      if (objectMeta == null) {
+        objectMeta = new ObjectMeta();
+        horizontalPodAutoscaler.setMetadata(objectMeta);
+      }
+
+      // set labels, name and namespace
+      objectMeta.setLabels(serviceLabels);
+      objectMeta.setName(autoscalerName);
+      objectMeta.setNamespace(namespace);
+
+      return horizontalPodAutoscaler;
+    } catch (IOException e) {
+      throw new WingsException("Error while loading customMetricYaml for horizontal pod autoscaling");
+    }
+  }
+
+  private HorizontalPodAutoscaler getBasicHorizontalPodAutoscaler(
+      String autoscalerName, String namespace, Map<String, String> serviceLabels, KubernetesSetupParams setupParams) {
+    HorizontalPodAutoscalerSpecBuilder spec =
+        new HorizontalPodAutoscalerSpecBuilder()
+            .withMinReplicas(setupParams.getMinAutoscaleInstances())
+            .withMaxReplicas(setupParams.getMaxAutoscaleInstances())
+            .withTargetCPUUtilizationPercentage(setupParams.getTargetCpuUtilizationPercentage())
+            .withNewScaleTargetRef()
+            .withKind(NONE)
+            .withName(NONE)
+            .endScaleTargetRef();
+    return new HorizontalPodAutoscalerBuilder()
+        .withNewMetadata()
+        .withName(autoscalerName)
+        .withNamespace(namespace)
+        .addToLabels(serviceLabels)
+        .endMetadata()
+        .withSpec(spec.build())
+        .build();
   }
 
   private void listContainerInfosWhenReady(List<EncryptedDataDetail> encryptedDataDetails,
@@ -381,9 +462,25 @@ public class KubernetesSetupCommandUnit extends ContainerSetupCommandUnit {
     if (isNotEmpty(autoscalerNames)) {
       for (String autoscalerName : autoscalerNames) {
         executionLogCallback.saveExecutionLog("Enabling autoscaler " + autoscalerName, LogLevel.INFO);
-        kubernetesContainerService.enableAutoscaler(kubernetesConfig, encryptedDataDetails, autoscalerName);
+        /*
+         * Ideally we should be sending apiVersion as "v2beta1" when we are dealing with
+         * customMetricHPA, but there is a bug in fabric8 library in HasMetadataOperation.replace() method. For
+         * customMetricHPA, metric config info resides in HPA.Spec.additionalProperties map. but during execution of
+         * replace(), due to build() method in HorizontalPodAutoscalerSpecBuilder, this map goes away, and replace()
+         * call actually removes all metricConfig from autoScalar. So currently use v1 version only, till this issue
+         * gets fixed. (customMetricConfig is preserved as annotations in version_v1 HPA object, and that path is
+         * working fine)
+         * */
+        kubernetesContainerService.enableAutoscaler(kubernetesConfig, encryptedDataDetails, autoscalerName,
+            ContainerApiVersions.KUBERNETES_V1.getVersionName());
       }
     }
+  }
+
+  public String getApiVersionForHPA(String yamlConfig) {
+    return (StringUtils.isEmpty(yamlConfig) || StringUtils.isBlank(yamlConfig))
+        ? ContainerApiVersions.KUBERNETES_V1.getVersionName()
+        : ContainerApiVersions.KUBERNETES_V2_BETA1.getVersionName();
   }
 
   private Secret createRegistrySecret(
@@ -589,27 +686,6 @@ public class KubernetesSetupCommandUnit extends ContainerSetupCommandUnit {
     return new ServiceBuilder()
         .withNewMetadata()
         .withName(serviceName)
-        .withNamespace(namespace)
-        .addToLabels(serviceLabels)
-        .endMetadata()
-        .withSpec(spec.build())
-        .build();
-  }
-
-  private HorizontalPodAutoscaler createAutoscaler(
-      String autoscalerName, String namespace, Map<String, String> serviceLabels, KubernetesSetupParams setupParams) {
-    HorizontalPodAutoscalerSpecBuilder spec =
-        new HorizontalPodAutoscalerSpecBuilder()
-            .withMinReplicas(setupParams.getMinAutoscaleInstances())
-            .withMaxReplicas(setupParams.getMaxAutoscaleInstances())
-            .withTargetCPUUtilizationPercentage(setupParams.getTargetCpuUtilizationPercentage())
-            .withNewScaleTargetRef()
-            .withKind("none")
-            .withName("none")
-            .endScaleTargetRef();
-    return new HorizontalPodAutoscalerBuilder()
-        .withNewMetadata()
-        .withName(autoscalerName)
         .withNamespace(namespace)
         .addToLabels(serviceLabels)
         .endMetadata()

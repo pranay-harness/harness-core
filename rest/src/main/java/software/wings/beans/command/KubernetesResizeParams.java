@@ -15,6 +15,7 @@ public class KubernetesResizeParams extends ContainerResizeParams {
   private String namespace;
   private boolean deployingToHundredPercent;
   private boolean useAutoscaler;
+  private String apiVersion;
   private boolean rollbackAutoscaler;
   private String subscriptionId;
   private String resourceGroup;
@@ -25,6 +26,7 @@ public class KubernetesResizeParams extends ContainerResizeParams {
     private int serviceSteadyStateTimeout;
     private String namespace;
     private boolean deployingToHundredPercent;
+    private String apiVersion;
     private boolean useAutoscaler;
     private boolean rollbackAutoscaler;
     private String subscriptionId;
@@ -81,6 +83,11 @@ public class KubernetesResizeParams extends ContainerResizeParams {
       return this;
     }
 
+    public KubernetesResizeParamsBuilder withApiVersion(String apiVersion) {
+      this.apiVersion = apiVersion;
+      return this;
+    }
+
     public KubernetesResizeParamsBuilder but() {
       return aKubernetesResizeParams()
           .withClusterName(clusterName)
@@ -89,6 +96,7 @@ public class KubernetesResizeParams extends ContainerResizeParams {
           .withNamespace(namespace)
           .withDeployingToHundredPercent(deployingToHundredPercent)
           .withUseAutoscaler(useAutoscaler)
+          .withApiVersion(apiVersion)
           .withRollbackAutoscaler(rollbackAutoscaler)
           .withSubscriptionId(subscriptionId)
           .withResourceGroup(resourceGroup);
@@ -102,6 +110,7 @@ public class KubernetesResizeParams extends ContainerResizeParams {
       kubernetesResizeParams.setNamespace(namespace);
       kubernetesResizeParams.setDeployingToHundredPercent(deployingToHundredPercent);
       kubernetesResizeParams.setUseAutoscaler(useAutoscaler);
+      kubernetesResizeParams.setApiVersion(apiVersion);
       kubernetesResizeParams.setRollbackAutoscaler(rollbackAutoscaler);
       kubernetesResizeParams.setSubscriptionId(subscriptionId);
       kubernetesResizeParams.setResourceGroup(resourceGroup);

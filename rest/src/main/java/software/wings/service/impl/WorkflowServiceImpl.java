@@ -242,6 +242,7 @@ public class WorkflowServiceImpl implements WorkflowService, DataProvider {
   @Inject private YamlDirectoryService yamlDirectoryService;
   @Inject private MetricDataAnalysisService metricDataAnalysisService;
   @Inject private TriggerService triggerService;
+  @Inject private WorkflowServiceHelper workflowServiceHelper;
 
   @Inject @Named("JobScheduler") private QuartzScheduler jobScheduler;
 
@@ -387,6 +388,13 @@ public class WorkflowServiceImpl implements WorkflowService, DataProvider {
   @Override
   public PageResponse<Workflow> listWorkflows(PageRequest<Workflow> pageRequest) {
     return listWorkflows(pageRequest, 0);
+  }
+
+  @Override
+  public String getHPAYamlStringWithCustomMetric(
+      Integer minAutoscaleInstances, Integer maxAutoscaleInstances, Integer targetCpuUtilizationPercentage) {
+    return workflowServiceHelper.getHPAYamlStringWithCustomMetric(
+        minAutoscaleInstances, maxAutoscaleInstances, targetCpuUtilizationPercentage);
   }
 
   /**

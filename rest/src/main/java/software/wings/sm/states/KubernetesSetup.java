@@ -71,6 +71,7 @@ public class KubernetesSetup extends ContainerServiceSetup {
   private int targetCpuUtilizationPercentage;
   private boolean useIngress;
   private String ingressYaml;
+  private String customMetricYamlConfig;
 
   private String commandName = "Setup Replication Controller";
 
@@ -148,6 +149,7 @@ public class KubernetesSetup extends ContainerServiceSetup {
         .withMinAutoscaleInstances(minAutoscaleInstances)
         .withMaxAutoscaleInstances(maxAutoscaleInstances)
         .withTargetCpuUtilizationPercentage(targetCpuUtilizationPercentage)
+        .withCustomMetricYamlConfig(customMetricYamlConfig)
         .withSubscriptionId(subscriptionId)
         .withResourceGroup(resourceGroup)
         .withUseIngress(useIngress)
@@ -188,7 +190,8 @@ public class KubernetesSetup extends ContainerServiceSetup {
       containerServiceElementBuilder.useAutoscaler(true)
           .minAutoscaleInstances(minAutoscaleInstances)
           .maxAutoscaleInstances(maxAutoscaleInstances)
-          .targetCpuUtilizationPercentage(targetCpuUtilizationPercentage);
+          .targetCpuUtilizationPercentage(targetCpuUtilizationPercentage)
+          .customMetricYamlConfig(customMetricYamlConfig);
     }
 
     return containerServiceElementBuilder.build();
@@ -356,6 +359,14 @@ public class KubernetesSetup extends ContainerServiceSetup {
 
   public void setTargetCpuUtilizationPercentage(int targetCpuUtilizationPercentage) {
     this.targetCpuUtilizationPercentage = targetCpuUtilizationPercentage;
+  }
+
+  public String getCustomMetricYamlConfig() {
+    return customMetricYamlConfig;
+  }
+
+  public void setCustomMetricYamlConfig(String customMetricYamlConfig) {
+    this.customMetricYamlConfig = customMetricYamlConfig;
   }
 
   public boolean isUseIngress() {

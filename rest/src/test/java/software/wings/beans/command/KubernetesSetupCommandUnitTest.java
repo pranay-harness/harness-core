@@ -3,9 +3,14 @@ package software.wings.beans.command;
 import static java.util.Collections.emptyList;
 import static java.util.Collections.singletonList;
 import static org.assertj.core.api.Assertions.assertThat;
+import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertNotNull;
+import static org.junit.Assert.assertTrue;
 import static org.mockito.Matchers.any;
 import static org.mockito.Matchers.anyString;
 import static org.mockito.Matchers.eq;
+import static org.mockito.Mockito.doNothing;
+import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 import static software.wings.beans.SettingAttribute.Builder.aSettingAttribute;
@@ -18,12 +23,14 @@ import static software.wings.utils.WingsTestConstants.SERVICE_NAME;
 
 import com.google.common.collect.ImmutableMap;
 
+import io.fabric8.kubernetes.api.model.HorizontalPodAutoscaler;
 import io.fabric8.kubernetes.api.model.Quantity;
 import io.fabric8.kubernetes.api.model.ReplicationController;
 import io.fabric8.kubernetes.api.model.ReplicationControllerBuilder;
 import io.fabric8.kubernetes.api.model.Secret;
 import io.fabric8.kubernetes.api.model.SecretBuilder;
 import io.fabric8.kubernetes.api.model.ServiceBuilder;
+import org.apache.commons.lang3.reflect.MethodUtils;
 import org.junit.Before;
 import org.junit.Test;
 import org.mockito.InjectMocks;
@@ -33,6 +40,7 @@ import software.wings.beans.GcpConfig;
 import software.wings.beans.KubernetesConfig;
 import software.wings.beans.SettingAttribute;
 import software.wings.beans.command.CommandExecutionResult.CommandExecutionStatus;
+import software.wings.beans.command.KubernetesSetupParams.KubernetesSetupParamsBuilder;
 import software.wings.beans.container.ImageDetails;
 import software.wings.beans.container.KubernetesPortProtocol;
 import software.wings.beans.container.KubernetesServiceType;
@@ -41,7 +49,9 @@ import software.wings.cloudprovider.gke.KubernetesContainerService;
 import software.wings.utils.KubernetesConvention;
 
 import java.util.Date;
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
 
 public class KubernetesSetupCommandUnitTest extends WingsBaseTest {
   @Mock private GkeClusterService gkeClusterService;
@@ -185,5 +195,128 @@ public class KubernetesSetupCommandUnitTest extends WingsBaseTest {
     assertThat(status).isEqualTo(CommandExecutionStatus.SUCCESS);
     verify(gkeClusterService).getCluster(any(SettingAttribute.class), eq(emptyList()), anyString(), anyString());
     verify(kubernetesContainerService).createController(eq(kubernetesConfig), any(), any(ReplicationController.class));
+  }
+
+  @Test
+  public void testCreateCustomMetricHorizontalPodAutoscalar() throws Exception {
+    ExecutionLogCallback executionLogCallback = mock(ExecutionLogCallback.class);
+    doNothing().when(executionLogCallback).saveExecutionLog(anyString(), any());
+
+    Map labels = new HashMap();
+    labels.put("app", "appName");
+    labels.put("version", "9");
+
+    String yamlForHPAWithCustomMetric = "apiVersion: autoscaling/v2beta1\n"
+        + "kind: HorizontalPodAutoscaler\n"
+        + "metadata:\n"
+        + "  name: none\n"
+        + "  namespace: none\n"
+        + "spec:\n"
+        + "  scaleTargetRef:\n"
+        + "    kind: none\n"
+        + "    name: none\n"
+        + "  minReplicas: 3\n"
+        + "  maxReplicas: 6\n"
+        + "  metrics:\n"
+        + "  - type: Resource\n"
+        + "    resource:\n"
+        + "      name: cpu\n"
+        + "      targetAverageUtilization: 70\n";
+
+    KubernetesSetupParams setupParams = KubernetesSetupParamsBuilder
+                                            .aKubernetesSetupParams()
+                                            // use customMetricHPA
+                                            .withCustomMetricYamlConfig(yamlForHPAWithCustomMetric)
+                                            .build();
+
+    HorizontalPodAutoscaler horizontalPodAutoscaler =
+        (HorizontalPodAutoscaler) MethodUtils.invokeMethod(kubernetesSetupCommandUnit, true, "createAutoscaler",
+            new Object[] {"autoScalarName", "default", labels, setupParams, executionLogCallback});
+
+    assertEquals("autoscaling/v2beta1", horizontalPodAutoscaler.getApiVersion());
+    assertNotNull(horizontalPodAutoscaler.getSpec());
+    assertEquals("none", horizontalPodAutoscaler.getSpec().getScaleTargetRef().getName());
+    assertEquals("none", horizontalPodAutoscaler.getSpec().getScaleTargetRef().getKind());
+    assertNotNull(horizontalPodAutoscaler.getMetadata());
+    assertEquals("autoScalarName", horizontalPodAutoscaler.getMetadata().getName());
+    assertEquals("default", horizontalPodAutoscaler.getMetadata().getNamespace());
+    assertNotNull(horizontalPodAutoscaler.getMetadata().getLabels());
+    assertTrue(horizontalPodAutoscaler.getMetadata().getLabels().containsKey("app"));
+    assertTrue(horizontalPodAutoscaler.getMetadata().getLabels().containsKey("version"));
+    assertEquals("appName", horizontalPodAutoscaler.getMetadata().getLabels().get("app"));
+    assertEquals("9", horizontalPodAutoscaler.getMetadata().getLabels().get("version"));
+    assertNotNull(horizontalPodAutoscaler.getSpec().getAdditionalProperties());
+    assertEquals(1, horizontalPodAutoscaler.getSpec().getAdditionalProperties().size());
+    assertEquals("metrics", horizontalPodAutoscaler.getSpec().getAdditionalProperties().keySet().iterator().next());
+    assertEquals(new Integer(3), horizontalPodAutoscaler.getSpec().getMinReplicas());
+    assertEquals(new Integer(6), horizontalPodAutoscaler.getSpec().getMaxReplicas());
+  }
+
+  @Test
+  public void testBasicHorizontalPodAutoscalar() throws Exception {
+    ExecutionLogCallback executionLogCallback = mock(ExecutionLogCallback.class);
+    doNothing().when(executionLogCallback).saveExecutionLog(anyString(), any());
+
+    Map labels = new HashMap();
+    labels.put("app", "appName");
+    labels.put("version", "9");
+
+    KubernetesSetupParams setupParams = KubernetesSetupParamsBuilder
+                                            .aKubernetesSetupParams()
+                                            // null customMetricConfigYaml, so use basic HPA
+                                            .withCustomMetricYamlConfig(null)
+                                            .withMinAutoscaleInstances(1)
+                                            .withMaxAutoscaleInstances(2)
+                                            .withTargetCpuUtilizationPercentage(20)
+                                            .build();
+
+    HorizontalPodAutoscaler horizontalPodAutoscaler =
+        (HorizontalPodAutoscaler) MethodUtils.invokeMethod(kubernetesSetupCommandUnit, true, "createAutoscaler",
+            new Object[] {"abaris.hpanormal.prod.0", "default", labels, setupParams, executionLogCallback});
+
+    assertEquals("autoscaling/v1", horizontalPodAutoscaler.getApiVersion());
+    assertNotNull(horizontalPodAutoscaler.getSpec());
+    assertEquals("none", horizontalPodAutoscaler.getSpec().getScaleTargetRef().getName());
+    assertEquals("none", horizontalPodAutoscaler.getSpec().getScaleTargetRef().getKind());
+    assertNotNull(horizontalPodAutoscaler.getMetadata());
+    assertEquals("abaris.hpanormal.prod.0", horizontalPodAutoscaler.getMetadata().getName());
+    assertEquals("default", horizontalPodAutoscaler.getMetadata().getNamespace());
+    assertNotNull(horizontalPodAutoscaler.getMetadata().getLabels());
+    assertTrue(horizontalPodAutoscaler.getMetadata().getLabels().containsKey("app"));
+    assertTrue(horizontalPodAutoscaler.getMetadata().getLabels().containsKey("version"));
+    assertEquals("appName", horizontalPodAutoscaler.getMetadata().getLabels().get("app"));
+    assertEquals("9", horizontalPodAutoscaler.getMetadata().getLabels().get("version"));
+    assertEquals(new Integer(1), horizontalPodAutoscaler.getSpec().getMinReplicas());
+    assertEquals(new Integer(2), horizontalPodAutoscaler.getSpec().getMaxReplicas());
+    assertEquals(new Integer(20), horizontalPodAutoscaler.getSpec().getTargetCPUUtilizationPercentage());
+
+    setupParams = KubernetesSetupParamsBuilder
+                      .aKubernetesSetupParams()
+                      // empty customMetricConfigYaml, so use basic HPA
+                      .withCustomMetricYamlConfig("")
+                      .withMinAutoscaleInstances(2)
+                      .withMaxAutoscaleInstances(3)
+                      .withTargetCpuUtilizationPercentage(30)
+                      .build();
+
+    horizontalPodAutoscaler =
+        (HorizontalPodAutoscaler) MethodUtils.invokeMethod(kubernetesSetupCommandUnit, true, "createAutoscaler",
+            new Object[] {"abaris.hpanormal.prod.0", "default", labels, setupParams, executionLogCallback});
+
+    assertEquals("autoscaling/v1", horizontalPodAutoscaler.getApiVersion());
+    assertNotNull(horizontalPodAutoscaler.getSpec());
+    assertEquals("none", horizontalPodAutoscaler.getSpec().getScaleTargetRef().getName());
+    assertEquals("none", horizontalPodAutoscaler.getSpec().getScaleTargetRef().getKind());
+    assertNotNull(horizontalPodAutoscaler.getMetadata());
+    assertEquals("abaris.hpanormal.prod.0", horizontalPodAutoscaler.getMetadata().getName());
+    assertEquals("default", horizontalPodAutoscaler.getMetadata().getNamespace());
+    assertNotNull(horizontalPodAutoscaler.getMetadata().getLabels());
+    assertTrue(horizontalPodAutoscaler.getMetadata().getLabels().containsKey("app"));
+    assertTrue(horizontalPodAutoscaler.getMetadata().getLabels().containsKey("version"));
+    assertEquals("appName", horizontalPodAutoscaler.getMetadata().getLabels().get("app"));
+    assertEquals("9", horizontalPodAutoscaler.getMetadata().getLabels().get("version"));
+    assertEquals(new Integer(2), horizontalPodAutoscaler.getSpec().getMinReplicas());
+    assertEquals(new Integer(3), horizontalPodAutoscaler.getSpec().getMaxReplicas());
+    assertEquals(new Integer(30), horizontalPodAutoscaler.getSpec().getTargetCPUUtilizationPercentage());
   }
 }

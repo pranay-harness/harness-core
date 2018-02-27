@@ -13,11 +13,18 @@ import com.google.inject.Singleton;
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.dataformat.yaml.YAMLFactory;
+import io.fabric8.kubernetes.api.model.DoneableHorizontalPodAutoscaler;
+import io.fabric8.kubernetes.api.model.HorizontalPodAutoscaler;
+import io.fabric8.kubernetes.api.model.HorizontalPodAutoscalerList;
 import io.fabric8.kubernetes.client.Config;
 import io.fabric8.kubernetes.client.ConfigBuilder;
 import io.fabric8.kubernetes.client.DefaultKubernetesClient;
 import io.fabric8.kubernetes.client.KubernetesClient;
 import io.fabric8.kubernetes.client.KubernetesClientException;
+import io.fabric8.kubernetes.client.dsl.MixedOperation;
+import io.fabric8.kubernetes.client.dsl.NonNamespaceOperation;
+import io.fabric8.kubernetes.client.dsl.Resource;
+import io.fabric8.kubernetes.client.dsl.internal.HorizontalPodAutoscalerOperationsImpl;
 import io.fabric8.kubernetes.client.internal.SSLUtils;
 import okhttp3.Authenticator;
 import okhttp3.ConnectionSpec;
@@ -46,6 +53,7 @@ import java.security.GeneralSecurityException;
 import java.util.Arrays;
 import java.util.Base64;
 import java.util.List;
+import java.util.TreeMap;
 import java.util.concurrent.TimeUnit;
 import javax.net.ssl.HostnameVerifier;
 import javax.net.ssl.KeyManager;
@@ -60,11 +68,17 @@ import javax.net.ssl.X509TrustManager;
 @Singleton
 public class KubernetesHelperService {
   @Inject private EncryptionService encryptionService;
+
+  public KubernetesClient getKubernetesClient(
+      KubernetesConfig kubernetesConfig, List<EncryptedDataDetail> encryptedDataDetails) {
+    return getKubernetesClient(kubernetesConfig, encryptedDataDetails, StringUtils.EMPTY);
+  }
+
   /**
    * Gets a Kubernetes client.
    */
   public KubernetesClient getKubernetesClient(
-      KubernetesConfig kubernetesConfig, List<EncryptedDataDetail> encryptedDataDetails) {
+      KubernetesConfig kubernetesConfig, List<EncryptedDataDetail> encryptedDataDetails, String apiVersion) {
     if (!kubernetesConfig.isDecrypted()) {
       encryptionService.decrypt(kubernetesConfig, encryptedDataDetails);
     }
@@ -97,6 +111,10 @@ public class KubernetesHelperService {
     }
     if (kubernetesConfig.getClientKeyAlgo() != null) {
       configBuilder.withClientKeyAlgo(kubernetesConfig.getClientKeyAlgo().trim());
+    }
+
+    if (StringUtils.isNotEmpty(apiVersion)) {
+      configBuilder.withApiVersion(apiVersion);
     }
 
     Config config = configBuilder.build();
@@ -275,5 +293,57 @@ public class KubernetesHelperService {
     return new ObjectMapper(new YAMLFactory().configure(WRITE_DOC_START_MARKER, false))
         .setSerializationInclusion(NON_EMPTY)
         .writeValueAsString(entity);
+  }
+
+  public NonNamespaceOperation<HorizontalPodAutoscaler, HorizontalPodAutoscalerList, DoneableHorizontalPodAutoscaler,
+      Resource<HorizontalPodAutoscaler, DoneableHorizontalPodAutoscaler>>
+  hpaOperationsForCustomMetricHPA(
+      KubernetesConfig kubernetesConfig, List<EncryptedDataDetail> encryptedDataDetails, String apiName) {
+    DefaultKubernetesClient kubernetesClient =
+        (DefaultKubernetesClient) getKubernetesClient(kubernetesConfig, encryptedDataDetails, apiName);
+
+    /*
+     * Following constructor invocation content is copied from HorizontalPodAutoscalerOperationsImpl(OkHttpClient
+     * client, Config config, String namespace){...}, except we are passing apiName, where as in above mentioned one its
+     * hardcoded as "v1".
+     *
+     * Following call does exactly what
+     * getKubernetesClient(kubernetesConfig,encryptedDataDetails).autoscaling().horizontalPodAutoscalers()) does, Only
+     * diff is, here its based on apiVersion we passed. So for "v2beta1" version, we needed to take this approach, as
+     * there was this issue with fabric8 library, that
+     * getKubernetesClient(kubernetesConfig,encryptedDataDetails).autoscaling().horizontalPodAutoscalers()) always
+     * returns client with "v1" apiVersion.
+     * */
+    MixedOperation<HorizontalPodAutoscaler, HorizontalPodAutoscalerList, DoneableHorizontalPodAutoscaler,
+        Resource<HorizontalPodAutoscaler, DoneableHorizontalPodAutoscaler>> mixedOperation =
+        new HorizontalPodAutoscalerOperationsImpl(kubernetesClient.getHttpClient(), kubernetesClient.getConfiguration(),
+            apiName, kubernetesClient.getNamespace(), null, true, null, null, false, -1, new TreeMap<String, String>(),
+            new TreeMap<String, String>(), new TreeMap<String, String[]>(), new TreeMap<String, String[]>(),
+            new TreeMap<String, String>());
+
+    return mixedOperation.inNamespace(kubernetesConfig.getNamespace());
+  }
+
+  public NonNamespaceOperation<HorizontalPodAutoscaler, HorizontalPodAutoscalerList, DoneableHorizontalPodAutoscaler,
+      Resource<HorizontalPodAutoscaler, DoneableHorizontalPodAutoscaler>>
+  hpaOperations(KubernetesConfig kubernetesConfig, List<EncryptedDataDetail> encryptedDataDetails) {
+    return getKubernetesClient(kubernetesConfig, encryptedDataDetails)
+        .autoscaling()
+        .horizontalPodAutoscalers()
+        .inNamespace(kubernetesConfig.getNamespace());
+  }
+
+  /**
+   * Separates apiVersion for apiGroup/apiVersion combination.
+   * @param apiVersion  The apiVersion or apiGroup/apiVersion combo.
+   * @return            Just the apiVersion part without the apiGroup.
+   */
+  public String trimVersion(String apiVersion) {
+    if (apiVersion == null) {
+      return null;
+    } else {
+      String[] versionParts = apiVersion.split("/");
+      return versionParts[versionParts.length - 1];
+    }
   }
 }

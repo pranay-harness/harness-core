@@ -33,6 +33,7 @@ public class KubernetesSetupParams extends ContainerSetupParams {
   private int minAutoscaleInstances;
   private int maxAutoscaleInstances;
   private int targetCpuUtilizationPercentage;
+  private String customMetricYamlConfig;
   private String subscriptionId;
   private String resourceGroup;
   private boolean useIngress;
@@ -65,6 +66,7 @@ public class KubernetesSetupParams extends ContainerSetupParams {
     private int minAutoscaleInstances;
     private int maxAutoscaleInstances;
     private int targetCpuUtilizationPercentage;
+    private String customMetricYamlConfig;
     private String subscriptionId;
     private String resourceGroup;
     private boolean useIngress;
@@ -206,6 +208,11 @@ public class KubernetesSetupParams extends ContainerSetupParams {
       return this;
     }
 
+    public KubernetesSetupParamsBuilder withCustomMetricYamlConfig(String customMetricYamlConfig) {
+      this.customMetricYamlConfig = customMetricYamlConfig;
+      return this;
+    }
+
     public KubernetesSetupParamsBuilder withSubscriptionId(String subscriptionId) {
       this.subscriptionId = subscriptionId;
       return this;
@@ -254,6 +261,7 @@ public class KubernetesSetupParams extends ContainerSetupParams {
           .withMinAutoscaleInstances(minAutoscaleInstances)
           .withMaxAutoscaleInstances(maxAutoscaleInstances)
           .withTargetCpuUtilizationPercentage(targetCpuUtilizationPercentage)
+          .withCustomMetricYamlConfig(customMetricYamlConfig)
           .withSubscriptionId(subscriptionId)
           .withResourceGroup(resourceGroup)
           .withUseIngress(useIngress)
@@ -288,6 +296,7 @@ public class KubernetesSetupParams extends ContainerSetupParams {
       kubernetesSetupParams.setMinAutoscaleInstances(minAutoscaleInstances);
       kubernetesSetupParams.setMaxAutoscaleInstances(maxAutoscaleInstances);
       kubernetesSetupParams.setTargetCpuUtilizationPercentage(targetCpuUtilizationPercentage);
+      kubernetesSetupParams.setCustomMetricYamlConfig(customMetricYamlConfig);
       kubernetesSetupParams.setSubscriptionId(subscriptionId);
       kubernetesSetupParams.setResourceGroup(resourceGroup);
       kubernetesSetupParams.setUseIngress(useIngress);
