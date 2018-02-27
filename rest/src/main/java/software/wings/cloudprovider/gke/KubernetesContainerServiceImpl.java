@@ -625,21 +625,6 @@ public class KubernetesContainerServiceImpl implements KubernetesContainerServic
   }
 
   @Override
-  public IstioResource getRouteRule(
-      KubernetesConfig kubernetesConfig, List<EncryptedDataDetail> encryptedDataDetails, IstioResource definition) {
-    return kubernetesHelperService.getKubernetesClient(kubernetesConfig, encryptedDataDetails)
-        .resource(definition)
-        .get();
-  }
-
-  @Override
-  public void deleteRouteRule(
-      KubernetesConfig kubernetesConfig, List<EncryptedDataDetail> encryptedDataDetails, IstioResource definition) {
-    logger.info("Deleting route rule {}", definition.getMetadata().getName());
-    kubernetesHelperService.getKubernetesClient(kubernetesConfig, encryptedDataDetails).resource(definition).delete();
-  }
-
-  @Override
   public void createNamespaceIfNotExist(
       KubernetesConfig kubernetesConfig, List<EncryptedDataDetail> encryptedDataDetails) {
     NamespaceList namespaces =
