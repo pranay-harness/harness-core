@@ -1,5 +1,7 @@
 package io.harness.threading;
 
+import io.harness.exception.InterruptedRuntimeException;
+
 import java.time.Duration;
 
 public class Morpheus {
@@ -26,6 +28,7 @@ public class Morpheus {
       Thread.sleep(delay.toMillis());
     } catch (InterruptedException exception) {
       Thread.currentThread().interrupt();
+      throw new InterruptedRuntimeException(exception);
     }
   }
 }
