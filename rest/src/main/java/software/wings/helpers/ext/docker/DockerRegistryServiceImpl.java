@@ -2,6 +2,7 @@ package software.wings.helpers.ext.docker;
 
 import static io.harness.data.structure.EmptyPredicate.isNotEmpty;
 import static java.util.Collections.emptyList;
+import static software.wings.exception.WingsException.ReportTarget.USER;
 import static software.wings.helpers.ext.jenkins.BuildDetails.Builder.aBuildDetails;
 import static software.wings.utils.Switch.unhandled;
 
@@ -129,7 +130,7 @@ public class DockerRegistryServiceImpl implements DockerRegistryService {
       if (!isSuccessful(response)) {
         // image not found or user doesn't have permission to list image tags
         logger.warn("Image name [" + imageName + "] does not exist in Docker registry.");
-        throw new WingsException(ErrorCode.INVALID_ARGUMENT)
+        throw new WingsException(ErrorCode.INVALID_ARGUMENT, USER)
             .addParam("args", "Image name [" + imageName + "] does not exist in Docker registry.");
       }
     } catch (IOException e) {

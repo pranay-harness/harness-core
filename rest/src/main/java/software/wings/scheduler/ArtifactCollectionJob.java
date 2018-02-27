@@ -1,9 +1,7 @@
 package software.wings.scheduler;
 
+import static io.harness.data.structure.EmptyPredicate.isEmpty;
 import static io.harness.data.structure.EmptyPredicate.isNotEmpty;
-import static java.lang.String.format;
-import static software.wings.beans.ErrorCode.GENERAL_ERROR;
-import static software.wings.beans.SearchFilter.Operator.EQ;
 import static software.wings.beans.artifact.Artifact.Builder.anArtifact;
 import static software.wings.beans.artifact.Artifact.Status.APPROVED;
 import static software.wings.beans.artifact.Artifact.Status.READY;
@@ -21,15 +19,14 @@ import static software.wings.common.Constants.BUCKET_NAME;
 import static software.wings.common.Constants.BUILD_NO;
 import static software.wings.common.Constants.KEY;
 import static software.wings.common.Constants.URL;
-import static software.wings.dl.PageRequest.PageRequestBuilder.aPageRequest;
-import static software.wings.dl.PageRequest.UNLIMITED;
-import static software.wings.utils.ArtifactType.RPM;
 
 import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.Maps;
 import com.google.inject.Inject;
 import com.google.inject.name.Named;
 
+import org.mongodb.morphia.query.MorphiaIterator;
+import org.mongodb.morphia.query.Query;
 import org.quartz.Job;
 import org.quartz.JobBuilder;
 import org.quartz.JobDetail;
@@ -39,9 +36,11 @@ import org.quartz.Trigger;
 import org.quartz.TriggerBuilder;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import software.wings.beans.ErrorCode;
 import software.wings.beans.Service;
 import software.wings.beans.artifact.Artifact;
 import software.wings.beans.artifact.ArtifactStream;
+import software.wings.dl.WingsPersistence;
 import software.wings.exception.WingsException;
 import software.wings.exception.WingsException.ReportTarget;
 import software.wings.helpers.ext.jenkins.BuildDetails;
@@ -59,7 +58,9 @@ import java.time.Duration;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
+import java.util.Set;
 import java.util.concurrent.ExecutorService;
+import java.util.function.Function;
 import java.util.stream.Collectors;
 
 /**
@@ -71,8 +72,8 @@ public class ArtifactCollectionJob implements Job {
   public static final String GROUP = "ARTIFACT_STREAM_CRON_GROUP";
   private static final int POLL_INTERVAL = 60; // in secs
 
-  public static final String APP_ID_KEY = "appId";
-  public static final String ARTIFACT_STREAM_ID_KEY = "artifactStreamId";
+  private static final String APP_ID_KEY = "appId";
+  private static final String ARTIFACT_STREAM_ID_KEY = "artifactStreamId";
 
   public static final Duration timeout = Duration.ofHours(1);
 
@@ -83,6 +84,7 @@ public class ArtifactCollectionJob implements Job {
   @Inject private ExecutorService executorService;
   @Inject private TriggerService triggerService;
   @Inject private PersistentLocker persistentLocker;
+  @Inject private WingsPersistence wingsPersistence;
 
   @Inject @Named("JobScheduler") private QuartzScheduler jobScheduler;
 
@@ -173,39 +175,32 @@ public class ArtifactCollectionJob implements Job {
     return newArtifacts;
   }
 
-  private void collectAmiImages(String appId, ArtifactStream artifactStream, List<Artifact> newArtifacts) {
+  private void collectDockerArtifacts(String appId, ArtifactStream artifactStream, List<Artifact> newArtifacts) {
     String artifactStreamId = artifactStream.getUuid();
     try (AcquiredLock lock = persistentLocker.acquireLock(ArtifactStream.class, artifactStreamId, timeout)) {
-      logger.info("Collecting images for artifact stream id {} type {} and source name {} ", artifactStreamId,
+      logger.info("Collecting tags for artifact stream id {} type {} and source name {} ", artifactStreamId,
           artifactStream.getArtifactStreamType(), artifactStream.getSourceName());
       List<BuildDetails> builds = buildSourceService.getBuilds(appId, artifactStreamId, artifactStream.getSettingId());
-      List<Artifact> artifacts = artifactService
-                                     .list(aPageRequest()
-                                               .addFilter("appId", EQ, appId)
-                                               .addFilter("artifactStreamId", EQ, artifactStreamId)
-                                               .addFilter("artifactSourceName", EQ, artifactStream.getSourceName())
-                                               .withLimit(UNLIMITED)
-                                               .build(),
-                                         false)
-                                     .getResponse();
-      Map<String, String> existingBuilds =
-          artifacts.stream().collect(Collectors.toMap(Artifact::getBuildNo, Artifact::getUuid, (s, s2) -> s));
-      builds.forEach(buildDetails -> {
-        if (!existingBuilds.containsKey(buildDetails.getNumber())) {
-          logger.info("New Artifact version [{}] found for Artifact stream [type: {}, uuid: {}]. "
-                  + "Add entry in Artifact collection",
-              buildDetails.getNumber(), artifactStream.getArtifactStreamType(), artifactStream.getUuid());
-          Artifact artifact = anArtifact()
-                                  .withAppId(appId)
-                                  .withArtifactStreamId(artifactStreamId)
-                                  .withArtifactSourceName(artifactStream.getSourceName())
-                                  .withDisplayName(artifactStream.getArtifactDisplayName(buildDetails.getNumber()))
-                                  .withMetadata(ImmutableMap.of(BUILD_NO, buildDetails.getNumber()))
-                                  .withRevision(buildDetails.getRevision())
-                                  .build();
-          newArtifacts.add(artifactService.create(artifact));
-        }
-      });
+      if (!isEmpty(builds)) {
+        Set<String> newBuildNumbers = getNewBuildNumbers(appId, artifactStream, builds);
+        builds.forEach((BuildDetails buildDetails1) -> {
+          if (newBuildNumbers.contains(buildDetails1.getNumber())) {
+            logger.info("New Artifact version [{}] found for Artifact stream [type: {}, uuid: {}]. "
+                    + "Add entry in Artifact collection",
+                buildDetails1.getNumber(), artifactStream.getArtifactStreamType(), artifactStream.getUuid());
+            Artifact newArtifact =
+                anArtifact()
+                    .withAppId(appId)
+                    .withArtifactStreamId(artifactStreamId)
+                    .withArtifactSourceName(artifactStream.getSourceName())
+                    .withDisplayName(artifactStream.getArtifactDisplayName(buildDetails1.getNumber()))
+                    .withMetadata(ImmutableMap.of(BUILD_NO, buildDetails1.getNumber()))
+                    .withRevision(buildDetails1.getRevision())
+                    .build();
+            newArtifacts.add(artifactService.create(newArtifact));
+          }
+        });
+      }
     }
   }
 
@@ -245,44 +240,8 @@ public class ArtifactCollectionJob implements Job {
                                 .build();
         newArtifacts.add(artifactService.create(artifact));
       } else {
-        logger.info("Artifact of the version {} already collected. Artifact status {}", buildNo,
-            lastCollectedArtifact.getStatus());
+        logger.info("Artifact of the version {} already collected.", buildNo);
       }
-    }
-  }
-
-  private void collectDockerArtifacts(String appId, ArtifactStream artifactStream, List<Artifact> newArtifacts) {
-    String artifactStreamId = artifactStream.getUuid();
-    try (AcquiredLock lock = persistentLocker.acquireLock(ArtifactStream.class, artifactStreamId, timeout)) {
-      logger.info("Collecting tags for artifact stream id {} type {} and source name {} ", artifactStreamId,
-          artifactStream.getArtifactStreamType(), artifactStream.getSourceName());
-      List<BuildDetails> builds = buildSourceService.getBuilds(appId, artifactStreamId, artifactStream.getSettingId());
-      List<Artifact> artifacts = artifactService
-                                     .list(aPageRequest()
-                                               .addFilter("appId", EQ, appId)
-                                               .addFilter("artifactStreamId", EQ, artifactStreamId)
-                                               .withLimit(UNLIMITED)
-                                               .build(),
-                                         false)
-                                     .getResponse();
-      Map<String, String> existingBuilds =
-          artifacts.stream().collect(Collectors.toMap(Artifact::getBuildNo, Artifact::getUuid, (s, s2) -> s));
-      builds.forEach(buildDetails -> {
-        if (!existingBuilds.containsKey(buildDetails.getNumber())) {
-          logger.debug("New Artifact version [{}] found for Artifact stream [type: {}, uuid: {}]."
-                  + " Add entry in Artifact collection",
-              buildDetails.getNumber(), artifactStream.getArtifactStreamType(), artifactStream.getUuid());
-          Artifact artifact = anArtifact()
-                                  .withAppId(appId)
-                                  .withArtifactStreamId(artifactStreamId)
-                                  .withArtifactSourceName(artifactStream.getSourceName())
-                                  .withDisplayName(artifactStream.getArtifactDisplayName(buildDetails.getNumber()))
-                                  .withMetadata(ImmutableMap.of(BUILD_NO, buildDetails.getNumber()))
-                                  .withRevision(buildDetails.getRevision())
-                                  .build();
-          newArtifacts.add(artifactService.create(artifact));
-        }
-      });
     }
   }
 
@@ -291,37 +250,30 @@ public class ArtifactCollectionJob implements Job {
     try (AcquiredLock lock = persistentLocker.acquireLock(ArtifactStream.class, artifactStreamId, timeout)) {
       logger.info("Collecting Artifact for artifact stream {} ", AMAZON_S3.name());
       List<BuildDetails> builds = buildSourceService.getBuilds(appId, artifactStreamId, artifactStream.getSettingId());
-      List<Artifact> artifacts = artifactService
-                                     .list(aPageRequest()
-                                               .addFilter("appId", EQ, appId)
-                                               .addFilter("artifactStreamId", EQ, artifactStreamId)
-                                               .withLimit(UNLIMITED)
-                                               .build(),
-                                         false)
-                                     .getResponse();
-      Map<String, String> existingBuilds = artifacts.stream().distinct().collect(
-          Collectors.toMap(Artifact::getArtifactPath, Artifact::getUuid, (s, s2) -> s));
-      builds.forEach(buildDetails -> {
-        if (!existingBuilds.containsKey(buildDetails.getArtifactPath())) {
-          Map<String, String> buildParameters = buildDetails.getBuildParameters();
-          Map<String, String> map = Maps.newHashMap();
-          map.put(ARTIFACT_PATH, buildParameters.get(ARTIFACT_PATH));
-          map.put(ARTIFACT_FILE_NAME, buildParameters.get(ARTIFACT_PATH));
-          map.put(BUILD_NO, buildParameters.get(BUILD_NO));
-          map.put(BUCKET_NAME, buildParameters.get(BUCKET_NAME));
-          map.put(KEY, buildParameters.get(KEY));
-          map.put(URL, buildParameters.get(URL));
+      if (!isEmpty(builds)) {
+        Set<String> newArtifactPaths = getNewArtifactPaths(appId, artifactStreamId, builds);
+        builds.forEach(buildDetails -> {
+          if (newArtifactPaths.contains(buildDetails.getArtifactPath())) {
+            Map<String, String> buildParameters = buildDetails.getBuildParameters();
+            Map<String, String> map = Maps.newHashMap();
+            map.put(ARTIFACT_PATH, buildParameters.get(ARTIFACT_PATH));
+            map.put(ARTIFACT_FILE_NAME, buildParameters.get(ARTIFACT_PATH));
+            map.put(BUILD_NO, buildParameters.get(BUILD_NO));
+            map.put(BUCKET_NAME, buildParameters.get(BUCKET_NAME));
+            map.put(KEY, buildParameters.get(KEY));
+            map.put(URL, buildParameters.get(URL));
 
-          Artifact artifact = anArtifact()
-                                  .withAppId(appId)
-                                  .withArtifactStreamId(artifactStreamId)
-                                  .withArtifactSourceName(artifactStream.getSourceName())
-                                  .withDisplayName(artifactStream.getArtifactDisplayName(""))
-                                  .withMetadata(map)
-                                  .build();
-          newArtifacts.add(artifactService.create(artifact));
-        }
-      });
+            Artifact artifact = anArtifact()
+                                    .withAppId(appId)
+                                    .withArtifactStreamId(artifactStreamId)
+                                    .withArtifactSourceName(artifactStream.getSourceName())
+                                    .withDisplayName(artifactStream.getArtifactDisplayName(""))
+                                    .withMetadata(map)
+                                    .build();
+            newArtifacts.add(artifactService.create(artifact));
+          }
+        });
+      }
     }
   }
 
@@ -332,13 +284,13 @@ public class ArtifactCollectionJob implements Job {
       collectArtifactoryDockerArtifacts(appId, artifactStream, newArtifacts);
     } else if (artifactStream.getArtifactStreamAttributes().getRepositoryType() == null
         || !artifactStream.getArtifactStreamAttributes().getRepositoryType().equals("maven")) {
-      collectMavenArtifactoryArtifacts(appId, artifactStream, newArtifacts);
+      collectArtifactoryGenericArtifacts(appId, artifactStream, newArtifacts);
     } else {
-      collectArtifactoryGenericArtifacts(appId, artifactStream, newArtifacts, artifactType);
+      collectArtifactoryMavenArtifacts(appId, artifactStream, newArtifacts, artifactType);
     }
   }
 
-  private void collectArtifactoryGenericArtifacts(
+  private void collectArtifactoryMavenArtifacts(
       String appId, ArtifactStream artifactStream, List<Artifact> newArtifacts, ArtifactType artifactType) {
     String artifactStreamId = artifactStream.getUuid();
     try (AcquiredLock lock = persistentLocker.acquireLock(ArtifactStream.class, artifactStreamId, timeout)) {
@@ -374,36 +326,30 @@ public class ArtifactCollectionJob implements Job {
     }
   }
 
-  private void collectMavenArtifactoryArtifacts(
+  private void collectArtifactoryGenericArtifacts(
       String appId, ArtifactStream artifactStream, List<Artifact> newArtifacts) {
     String artifactStreamId = artifactStream.getUuid();
     try (AcquiredLock lock = persistentLocker.acquireLock(ArtifactStream.class, artifactStreamId, timeout)) {
       logger.info("Collecting Artifact for artifact stream id {} type {} and source name {} ", artifactStreamId,
           artifactStream.getArtifactStreamType(), artifactStream.getSourceName());
       List<BuildDetails> builds = buildSourceService.getBuilds(appId, artifactStreamId, artifactStream.getSettingId());
-      List<Artifact> artifacts = artifactService
-                                     .list(aPageRequest()
-                                               .addFilter("appId", EQ, appId)
-                                               .addFilter("artifactStreamId", EQ, artifactStreamId)
-                                               .withLimit(UNLIMITED)
-                                               .build(),
-                                         false)
-                                     .getResponse();
-      Map<String, String> existingBuilds = artifacts.stream().distinct().collect(
-          Collectors.toMap(Artifact::getArtifactPath, Artifact::getUuid, (s, s2) -> s));
-      builds.forEach(buildDetails -> {
-        if (!existingBuilds.containsKey(buildDetails.getArtifactPath())) {
-          Artifact artifact = anArtifact()
-                                  .withAppId(appId)
-                                  .withArtifactStreamId(artifactStreamId)
-                                  .withArtifactSourceName(artifactStream.getSourceName())
-                                  .withDisplayName(artifactStream.getArtifactDisplayName(""))
-                                  .withMetadata(ImmutableMap.of(ARTIFACT_PATH, buildDetails.getArtifactPath(),
-                                      ARTIFACT_FILE_NAME, buildDetails.getNumber(), BUILD_NO, buildDetails.getNumber()))
-                                  .build();
-          newArtifacts.add(artifactService.create(artifact, RPM));
-        }
-      });
+      if (!isEmpty(builds)) {
+        Set<String> newArtifactPaths = getNewArtifactPaths(appId, artifactStreamId, builds);
+        builds.forEach(buildDetails -> {
+          if (newArtifactPaths.contains(buildDetails.getArtifactPath())) {
+            Artifact artifact =
+                anArtifact()
+                    .withAppId(appId)
+                    .withArtifactStreamId(artifactStreamId)
+                    .withArtifactSourceName(artifactStream.getSourceName())
+                    .withDisplayName(artifactStream.getArtifactDisplayName(""))
+                    .withMetadata(ImmutableMap.of(ARTIFACT_PATH, buildDetails.getArtifactPath(), ARTIFACT_FILE_NAME,
+                        buildDetails.getNumber(), BUILD_NO, buildDetails.getNumber()))
+                    .build();
+            newArtifacts.add(artifactService.create(artifact, ArtifactType.RPM));
+          }
+        });
+      }
     }
   }
 
@@ -414,32 +360,25 @@ public class ArtifactCollectionJob implements Job {
       logger.info("Collecting Artifact for artifact stream id {} type {} and source name {} ", artifactStreamId,
           artifactStream.getArtifactStreamType(), artifactStream.getSourceName());
       List<BuildDetails> builds = buildSourceService.getBuilds(appId, artifactStreamId, artifactStream.getSettingId());
-      List<Artifact> artifacts = artifactService
-                                     .list(aPageRequest()
-                                               .addFilter("appId", EQ, appId)
-                                               .addFilter("artifactStreamId", EQ, artifactStreamId)
-                                               .withLimit(UNLIMITED)
-                                               .build(),
-                                         false)
-                                     .getResponse();
-      Map<String, String> existingBuilds = artifacts.stream().distinct().collect(
-          Collectors.toMap(Artifact::getBuildNo, Artifact::getUuid, (s, s2) -> s));
-      builds.forEach(buildDetails -> {
-        if (!existingBuilds.containsKey(buildDetails.getNumber())) {
-          logger.info(
-              "New Artifact version [{}] found for Artifact stream [type: {}, uuid: {}]. Add entry in Artifact collection",
-              buildDetails.getNumber(), artifactStream.getArtifactStreamType(), artifactStream.getUuid());
-          Artifact artifact = anArtifact()
-                                  .withAppId(appId)
-                                  .withArtifactStreamId(artifactStreamId)
-                                  .withArtifactSourceName(artifactStream.getSourceName())
-                                  .withDisplayName(artifactStream.getArtifactDisplayName(buildDetails.getNumber()))
-                                  .withMetadata(ImmutableMap.of(BUILD_NO, buildDetails.getNumber()))
-                                  .withRevision(buildDetails.getRevision())
-                                  .build();
-          newArtifacts.add(artifactService.create(artifact));
-        }
-      });
+      if (!isEmpty(builds)) {
+        Set<String> newBuildNumbers = getNewBuildNumbers(appId, artifactStream, builds);
+        builds.forEach(buildDetails -> {
+          if (newBuildNumbers.contains(buildDetails.getNumber())) {
+            logger.info(
+                "New Artifact version [{}] found for Artifact stream [type: {}, uuid: {}]. Add entry in Artifact collection",
+                buildDetails.getNumber(), artifactStream.getArtifactStreamType(), artifactStream.getUuid());
+            Artifact artifact = anArtifact()
+                                    .withAppId(appId)
+                                    .withArtifactStreamId(artifactStreamId)
+                                    .withArtifactSourceName(artifactStream.getSourceName())
+                                    .withDisplayName(artifactStream.getArtifactDisplayName(buildDetails.getNumber()))
+                                    .withMetadata(ImmutableMap.of(BUILD_NO, buildDetails.getNumber()))
+                                    .withRevision(buildDetails.getRevision())
+                                    .build();
+            newArtifacts.add(artifactService.create(artifact));
+          }
+        });
+      }
     }
   }
 
@@ -447,13 +386,13 @@ public class ArtifactCollectionJob implements Job {
     Service service = obtainService(appId, artifactStream);
     ArtifactType artifactType = service.getArtifactType();
     if (artifactType.equals(ArtifactType.DOCKER)) {
-      collectNexusMavenArtifacts(appId, artifactStream, newArtifacts);
+      collectNexusDockerArtifacts(appId, artifactStream, newArtifacts);
     } else {
-      collectNexusGenericArtifacts(appId, artifactStream, newArtifacts);
+      collectNexusMavenArtifacts(appId, artifactStream, newArtifacts);
     }
   }
 
-  private void collectNexusGenericArtifacts(String appId, ArtifactStream artifactStream, List<Artifact> newArtifacts) {
+  private void collectNexusMavenArtifacts(String appId, ArtifactStream artifactStream, List<Artifact> newArtifacts) {
     String artifactStreamId = artifactStream.getUuid();
     try (AcquiredLock lock = persistentLocker.acquireLock(ArtifactStream.class, artifactStreamId, timeout)) {
       logger.info("Collecting artifact for artifact stream id {} type {} and source name {} ", artifactStreamId,
@@ -488,39 +427,105 @@ public class ArtifactCollectionJob implements Job {
     }
   }
 
-  private void collectNexusMavenArtifacts(String appId, ArtifactStream artifactStream, List<Artifact> newArtifacts) {
+  private void collectNexusDockerArtifacts(String appId, ArtifactStream artifactStream, List<Artifact> newArtifacts) {
     String artifactStreamId = artifactStream.getUuid();
     try (AcquiredLock lock = persistentLocker.acquireLock(ArtifactStream.class, artifactStreamId, timeout)) {
       logger.info("Collecting tags for artifact stream id {} type {} and source name {} ", artifactStreamId,
           artifactStream.getArtifactStreamType(), artifactStream.getSourceName());
       List<BuildDetails> builds = buildSourceService.getBuilds(appId, artifactStreamId, artifactStream.getSettingId());
-      List<Artifact> artifacts = artifactService
-                                     .list(aPageRequest()
-                                               .addFilter("appId", EQ, appId)
-                                               .addFilter("artifactStreamId", EQ, artifactStreamId)
-                                               .withLimit(UNLIMITED)
-                                               .build(),
-                                         false)
-                                     .getResponse();
-      Map<String, String> existingBuilds =
-          artifacts.stream().collect(Collectors.toMap(Artifact::getBuildNo, Artifact::getUuid, (s, s2) -> s));
-      builds.forEach(buildDetails -> {
-        if (!existingBuilds.containsKey(buildDetails.getNumber())) {
-          logger.info(
-              "New Artifact version [{}] found for Artifact stream [type: {}, uuid: {}]. Add entry in Artifact collection",
-              buildDetails.getNumber(), artifactStream.getArtifactStreamType(), artifactStream.getUuid());
-          Artifact artifact = anArtifact()
-                                  .withAppId(appId)
-                                  .withArtifactStreamId(artifactStreamId)
-                                  .withArtifactSourceName(artifactStream.getSourceName())
-                                  .withDisplayName(artifactStream.getArtifactDisplayName(buildDetails.getNumber()))
-                                  .withMetadata(ImmutableMap.of(BUILD_NO, buildDetails.getNumber()))
-                                  .withRevision(buildDetails.getRevision())
-                                  .build();
-          newArtifacts.add(artifactService.create(artifact, ArtifactType.DOCKER));
-        }
-      });
+      if (!isEmpty(builds)) {
+        Set<String> newBuildNumbers = getNewBuildNumbers(appId, artifactStream, builds);
+        builds.forEach((BuildDetails buildDetails1) -> {
+          if (newBuildNumbers.contains(buildDetails1.getNumber())) {
+            logger.info("New Artifact version [{}] found for Artifact stream [type: {}, uuid: {}]. "
+                    + "Add entry in Artifact collection",
+                buildDetails1.getNumber(), artifactStream.getArtifactStreamType(), artifactStream.getUuid());
+            Artifact newArtifact =
+                anArtifact()
+                    .withAppId(appId)
+                    .withArtifactStreamId(artifactStreamId)
+                    .withArtifactSourceName(artifactStream.getSourceName())
+                    .withDisplayName(artifactStream.getArtifactDisplayName(buildDetails1.getNumber()))
+                    .withMetadata(ImmutableMap.of(BUILD_NO, buildDetails1.getNumber()))
+                    .withRevision(buildDetails1.getRevision())
+                    .build();
+            newArtifacts.add(artifactService.create(newArtifact, ArtifactType.DOCKER));
+          }
+        });
+      }
     }
+  }
+
+  private void collectAmiImages(String appId, ArtifactStream artifactStream, List<Artifact> newArtifacts) {
+    String artifactStreamId = artifactStream.getUuid();
+    try (AcquiredLock lock = persistentLocker.acquireLock(ArtifactStream.class, artifactStreamId, timeout)) {
+      logger.info("Collecting images for artifact stream id {} type {} and source name {} ", artifactStreamId,
+          artifactStream.getArtifactStreamType(), artifactStream.getSourceName());
+      List<BuildDetails> builds = buildSourceService.getBuilds(appId, artifactStreamId, artifactStream.getSettingId());
+      if (!isEmpty(builds)) {
+        Set<String> newBuildNumbers = getNewBuildNumbers(appId, artifactStream, builds);
+        builds.forEach((BuildDetails buildDetails1) -> {
+          if (newBuildNumbers.contains(buildDetails1.getNumber())) {
+            logger.info("New Artifact version [{}] found for Artifact stream [type: {}, uuid: {}]. "
+                    + "Add entry in Artifact collection",
+                buildDetails1.getNumber(), artifactStream.getArtifactStreamType(), artifactStream.getUuid());
+            Artifact newArtifact =
+                anArtifact()
+                    .withAppId(appId)
+                    .withArtifactStreamId(artifactStreamId)
+                    .withArtifactSourceName(artifactStream.getSourceName())
+                    .withDisplayName(artifactStream.getArtifactDisplayName(buildDetails1.getNumber()))
+                    .withMetadata(ImmutableMap.of(BUILD_NO, buildDetails1.getNumber()))
+                    .withRevision(buildDetails1.getRevision())
+                    .build();
+            newArtifacts.add(artifactService.create(newArtifact));
+          }
+        });
+      }
+    }
+  }
+  /**
+   * Gets all  existing artifacts for the given artifact stream, and compares with artifact source data
+   * @param appId
+   * @param artifactStream
+   * @param builds
+   * @return
+   */
+  private Set<String> getNewBuildNumbers(String appId, ArtifactStream artifactStream, List<BuildDetails> builds) {
+    Map<String, BuildDetails> buildDetails =
+        builds.parallelStream().collect(Collectors.toMap(BuildDetails::getNumber, Function.identity()));
+    Query artifactQuery = wingsPersistence.createQuery(Artifact.class)
+                              .project("metadata", true)
+                              .field(Artifact.APP_ID_KEY)
+                              .equal(appId)
+                              .field("artifactStreamId")
+                              .equal(artifactStream.getUuid())
+                              .field("artifactSourceName")
+                              .equal(artifactStream.getSourceName())
+                              .disableValidation();
+
+    final MorphiaIterator<Artifact, Artifact> iterator = artifactQuery.fetch();
+    while (iterator.hasNext()) {
+      buildDetails.remove(iterator.next().getBuildNo());
+    }
+    return buildDetails.keySet();
+  }
+
+  private Set<String> getNewArtifactPaths(String appId, String artifactStreamId, List<BuildDetails> builds) {
+    Map<String, BuildDetails> buildDetails =
+        builds.parallelStream().collect(Collectors.toMap(BuildDetails::getArtifactPath, Function.identity()));
+    Query artifactQuery = wingsPersistence.createQuery(Artifact.class)
+                              .project("metadata", true)
+                              .field(Artifact.APP_ID_KEY)
+                              .equal(appId)
+                              .field("artifactStreamId")
+                              .equal(artifactStreamId)
+                              .disableValidation();
+    final MorphiaIterator<Artifact, Artifact> iterator = artifactQuery.fetch();
+    while (iterator.hasNext()) {
+      buildDetails.remove(iterator.next().getArtifactPath());
+    }
+    return buildDetails.keySet();
   }
 
   public Service obtainService(String appId, ArtifactStream artifactStream) {
@@ -528,8 +533,8 @@ public class ArtifactCollectionJob implements Job {
     if (service == null) {
       PruneEntityJob.addDefaultJob(
           jobScheduler, Service.class, appId, artifactStream.getServiceId(), Duration.ofMillis(0));
-      throw new WingsException(GENERAL_ERROR)
-          .addParam("args", format("Artifact stream %s is a zombie.", artifactStream.getUuid()));
+      throw new WingsException(ErrorCode.GENERAL_ERROR)
+          .addParam("args", String.format("Artifact stream %s is a zombie.", artifactStream.getUuid()));
     }
     return service;
   }

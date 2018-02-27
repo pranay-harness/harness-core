@@ -3,22 +3,17 @@ package software.wings.collect;
 import static java.util.Arrays.asList;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
-import static software.wings.beans.SettingAttribute.Builder.aSettingAttribute;
 import static software.wings.beans.artifact.Artifact.Builder.anArtifact;
 import static software.wings.beans.artifact.ArtifactFile.Builder.anArtifactFile;
 import static software.wings.beans.artifact.JenkinsArtifactStream.Builder.aJenkinsArtifactStream;
-import static software.wings.utils.WingsTestConstants.ACCOUNT_ID;
 import static software.wings.utils.WingsTestConstants.APP_ID;
 import static software.wings.utils.WingsTestConstants.ARTIFACT_ID;
 import static software.wings.utils.WingsTestConstants.ARTIFACT_PATH;
 import static software.wings.utils.WingsTestConstants.ARTIFACT_STREAM_ID;
 import static software.wings.utils.WingsTestConstants.ARTIFACT_STREAM_NAME;
-import static software.wings.utils.WingsTestConstants.JENKINS_URL;
 import static software.wings.utils.WingsTestConstants.JOB_NAME;
-import static software.wings.utils.WingsTestConstants.PASSWORD;
 import static software.wings.utils.WingsTestConstants.SERVICE_ID;
 import static software.wings.utils.WingsTestConstants.SETTING_ID;
-import static software.wings.utils.WingsTestConstants.USER_NAME;
 import static software.wings.waitnotify.ListNotifyResponseData.Builder.aListNotifyResponseData;
 
 import com.google.common.collect.Lists;
@@ -30,8 +25,6 @@ import org.junit.Test;
 import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import software.wings.WingsBaseTest;
-import software.wings.beans.JenkinsConfig;
-import software.wings.beans.SettingAttribute;
 import software.wings.beans.artifact.Artifact;
 import software.wings.beans.artifact.Artifact.Status;
 import software.wings.beans.artifact.ArtifactFile;
@@ -68,15 +61,6 @@ public class ArtifactCollectionCallbackTest extends WingsBaseTest {
                                                      .withAutoApproveForProduction(false)
                                                      .build();
 
-  private final SettingAttribute SETTING_ATTRIBUTE = aSettingAttribute()
-                                                         .withValue(JenkinsConfig.builder()
-                                                                        .jenkinsUrl(JENKINS_URL)
-                                                                        .username(USER_NAME)
-                                                                        .password(PASSWORD)
-                                                                        .accountId(ACCOUNT_ID)
-                                                                        .build())
-                                                         .build();
-
   /**
    * The constant ARTIFACT_FILE.
    */
@@ -100,9 +84,9 @@ public class ArtifactCollectionCallbackTest extends WingsBaseTest {
    * @throws Exception the exception
    */
   @Test
-  public void shouldNotify() throws Exception {
+  public void shouldNotify() {
     artifactCollectionCallback.notify(Maps.newHashMap("", aListNotifyResponseData().addData(ARTIFACT_FILE).build()));
-    verify(artifactService).updateStatus(ARTIFACT_ID, APP_ID, Status.READY);
+    verify(artifactService).updateStatus(ARTIFACT_ID, APP_ID, Status.APPROVED);
     verify(artifactService).addArtifactFile(ARTIFACT_ID, APP_ID, Lists.newArrayList(ARTIFACT_FILE));
   }
 }
