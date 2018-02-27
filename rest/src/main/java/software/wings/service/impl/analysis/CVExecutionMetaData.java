@@ -2,6 +2,7 @@ package software.wings.service.impl.analysis;
 
 import lombok.Builder;
 import lombok.Data;
+import lombok.EqualsAndHashCode;
 import org.hibernate.validator.constraints.NotEmpty;
 import org.mongodb.morphia.annotations.Entity;
 import org.mongodb.morphia.annotations.Indexed;
@@ -11,6 +12,7 @@ import software.wings.sm.StateType;
 @Entity(value = "cvExecutionData", noClassnameStored = true)
 @Data
 @Builder
+@EqualsAndHashCode(callSuper = false)
 public class CVExecutionMetaData extends Base {
   @NotEmpty @Indexed private long workflowStartTs;
   @NotEmpty @Indexed private long stateStartTs;

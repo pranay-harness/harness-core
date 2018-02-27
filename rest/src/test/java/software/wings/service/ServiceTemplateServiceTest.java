@@ -96,7 +96,6 @@ public class ServiceTemplateServiceTest extends WingsBaseTest {
     when(wingsPersistence.createQuery(ServiceTemplate.class)).thenReturn(query);
     when(query.field(any())).thenReturn(end);
     when(end.equal(any())).thenReturn(query);
-    when(end.hasThisElement(any())).thenReturn(query);
   }
 
   /**

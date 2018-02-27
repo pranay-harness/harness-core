@@ -11,6 +11,7 @@ import com.google.common.collect.Sets;
 import com.github.reinert.jjschema.Attributes;
 import com.github.reinert.jjschema.SchemaIgnore;
 import lombok.Data;
+import lombok.EqualsAndHashCode;
 import org.mongodb.morphia.annotations.Transient;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -44,6 +45,7 @@ import java.util.concurrent.TimeUnit;
  * Created by rsingh on 2/6/18.
  */
 @Data
+@EqualsAndHashCode(callSuper = false)
 public class DynatraceState extends AbstractMetricAnalysisState {
   @Transient @SchemaIgnore private static final Logger logger = LoggerFactory.getLogger(DynatraceState.class);
   @Transient @SchemaIgnore public static final String TEST_HOST_NAME = "testNode";

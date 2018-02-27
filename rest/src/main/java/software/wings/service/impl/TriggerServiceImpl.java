@@ -42,6 +42,7 @@ import net.redhogs.cronparser.I18nMessages;
 import net.redhogs.cronparser.Options;
 import org.apache.commons.collections.MapUtils;
 import org.apache.commons.lang3.StringUtils;
+import org.mongodb.morphia.query.FindOptions;
 import org.mongodb.morphia.query.Sort;
 import org.quartz.CronScheduleBuilder;
 import org.quartz.TriggerKey;
@@ -879,9 +880,8 @@ public class TriggerServiceImpl implements TriggerService {
                                                   .in(serviceIds)
                                                   .field("envIds")
                                                   .in(envIds)
-                                                  .offset(1)
                                                   .order(Sort.descending("createdAt"))
-                                                  .get();
+                                                  .get(new FindOptions().skip(1));
         if (workflowExecution == null) {
           logger.warn("No Last workflow execution found for workflowId {} and infraMappingId {}",
               serviceInfraWorkflow.getWorkflowId(), serviceInfraWorkflow.getInfraMappingId());

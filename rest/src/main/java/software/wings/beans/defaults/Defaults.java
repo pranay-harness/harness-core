@@ -14,6 +14,7 @@ import java.util.List;
  * @author rktummala on 1/15/18
  */
 @Data
+@EqualsAndHashCode(callSuper = false)
 public class Defaults extends Base {
   private String accountId;
   private List<NameValuePair> nameValuePairList;

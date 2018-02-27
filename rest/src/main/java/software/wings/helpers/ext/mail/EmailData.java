@@ -30,7 +30,7 @@ public class EmailData extends Queuable {
   private String templateName;
   private Object templateModel;
   @Builder.Default private boolean hasHtml = true;
-  @Builder.Default private boolean system;
+  private boolean system;
   private String appId;
   private String workflowExecutionId;
 }
