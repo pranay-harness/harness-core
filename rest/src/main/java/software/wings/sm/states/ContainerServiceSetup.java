@@ -251,14 +251,13 @@ public abstract class ContainerServiceSetup extends State {
   public ExecutionResponse handleAsyncResponse(ExecutionContext context, Map<String, NotifyResponseData> response) {
     try {
       logger.info("Received async response");
-      CommandStateExecutionData executionData = (CommandStateExecutionData) context.getStateExecutionData();
       CommandExecutionResult commandExecutionResult = (CommandExecutionResult) response.values().iterator().next();
 
       if (commandExecutionResult == null || commandExecutionResult.getStatus() != SUCCESS) {
-        return buildEndStateExecution(executionData, commandExecutionResult, ExecutionStatus.FAILED);
+        return buildEndStateExecution(context, commandExecutionResult, ExecutionStatus.FAILED);
       }
 
-      return buildEndStateExecution(executionData, commandExecutionResult, ExecutionStatus.SUCCESS);
+      return buildEndStateExecution(context, commandExecutionResult, ExecutionStatus.SUCCESS);
     } catch (WingsException e) {
       throw e;
     } catch (Exception e) {
@@ -268,11 +267,11 @@ public abstract class ContainerServiceSetup extends State {
   }
 
   private ExecutionResponse buildEndStateExecution(
-      CommandStateExecutionData executionData, CommandExecutionResult executionResult, ExecutionStatus status) {
+      ExecutionContext context, CommandExecutionResult executionResult, ExecutionStatus status) {
+    CommandStateExecutionData executionData = (CommandStateExecutionData) context.getStateExecutionData();
     activityService.updateStatus(executionData.getActivityId(), executionData.getAppId(), status);
 
-    ContainerServiceElement containerServiceElement =
-        buildContainerServiceElement(executionData, executionResult, status);
+    ContainerServiceElement containerServiceElement = buildContainerServiceElement(context, executionResult, status);
 
     InstanceElementListParam instanceElementListParam =
         anInstanceElementListParam()
@@ -513,5 +512,5 @@ public abstract class ContainerServiceSetup extends State {
   protected abstract boolean isValidInfraMapping(InfrastructureMapping infrastructureMapping);
 
   protected abstract ContainerServiceElement buildContainerServiceElement(
-      CommandStateExecutionData executionData, CommandExecutionResult executionResult, ExecutionStatus status);
+      ExecutionContext context, CommandExecutionResult executionResult, ExecutionStatus status);
 }

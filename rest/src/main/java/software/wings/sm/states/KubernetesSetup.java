@@ -112,6 +112,11 @@ public class KubernetesSetup extends ContainerServiceSetup {
       ingressYamlEvaluated = context.renderExpression(ingressYaml);
     }
 
+    String customMetricYamlEvaluated = null;
+    if (isNotBlank(customMetricYamlConfig)) {
+      customMetricYamlEvaluated = context.renderExpression(customMetricYamlConfig);
+    }
+
     int serviceSteadyStateTimeout =
         getServiceSteadyStateTimeout() > 0 ? (int) getServiceSteadyStateTimeout() : DEFAULT_STEADY_STATE_TIMEOUT;
     ContextData contextData = buildContextData(context, app, infrastructureMapping, controllerNamePrefix, clusterName);
@@ -152,7 +157,7 @@ public class KubernetesSetup extends ContainerServiceSetup {
         .withMinAutoscaleInstances(minAutoscaleInstances)
         .withMaxAutoscaleInstances(maxAutoscaleInstances)
         .withTargetCpuUtilizationPercentage(targetCpuUtilizationPercentage)
-        .withCustomMetricYamlConfig(customMetricYamlConfig)
+        .withCustomMetricYamlConfig(customMetricYamlEvaluated)
         .withSubscriptionId(subscriptionId)
         .withResourceGroup(resourceGroup)
         .withUseIngress(useIngress)
@@ -163,13 +168,20 @@ public class KubernetesSetup extends ContainerServiceSetup {
 
   @Override
   protected ContainerServiceElement buildContainerServiceElement(
-      CommandStateExecutionData executionData, CommandExecutionResult executionResult, ExecutionStatus status) {
+      ExecutionContext context, CommandExecutionResult executionResult, ExecutionStatus status) {
+    CommandStateExecutionData executionData = (CommandStateExecutionData) context.getStateExecutionData();
     KubernetesSetupParams setupParams = (KubernetesSetupParams) executionData.getContainerSetupParams();
     int maxInstances = getMaxInstances() == 0 ? DEFAULT_MAX : getMaxInstances();
     int fixedInstances = getFixedInstances() == 0 ? maxInstances : getFixedInstances();
     ResizeStrategy resizeStrategy = getResizeStrategy() == null ? RESIZE_NEW_FIRST : getResizeStrategy();
     int serviceSteadyStateTimeout =
         getServiceSteadyStateTimeout() > 0 ? (int) getServiceSteadyStateTimeout() : DEFAULT_STEADY_STATE_TIMEOUT;
+
+    String customMetricYamlEvaluated = null;
+    if (isNotBlank(customMetricYamlConfig)) {
+      customMetricYamlEvaluated = context.renderExpression(customMetricYamlConfig);
+    }
+
     ContainerServiceElementBuilder containerServiceElementBuilder =
         ContainerServiceElement.builder()
             .uuid(executionData.getServiceId())
@@ -196,7 +208,7 @@ public class KubernetesSetup extends ContainerServiceSetup {
           .minAutoscaleInstances(minAutoscaleInstances)
           .maxAutoscaleInstances(maxAutoscaleInstances)
           .targetCpuUtilizationPercentage(targetCpuUtilizationPercentage)
-          .customMetricYamlConfig(customMetricYamlConfig);
+          .customMetricYamlConfig(customMetricYamlEvaluated);
     }
 
     return containerServiceElementBuilder.build();
