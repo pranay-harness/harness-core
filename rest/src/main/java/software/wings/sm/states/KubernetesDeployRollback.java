@@ -56,6 +56,7 @@ public class KubernetesDeployRollback extends ContainerServiceDeploy {
         .withRollbackAutoscaler(true)
         .withSubscriptionId(contextData.containerServiceParams.getSubscriptionId())
         .withResourceGroup(contextData.containerServiceParams.getResourceGroup())
+        .withUseIstioRouteRule(contextData.containerElement.isUseIstioRouteRule())
         .build();
   }
 }
