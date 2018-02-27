@@ -27,8 +27,10 @@ public class AzureKubernetesInfrastructureMapping extends ContainerInfrastructur
   @SchemaIgnore
   @Override
   public String getDefaultName() {
-    return Util.normalize(String.format("%s (AZURE/Kubernetes::%s) %s", this.getClusterName(),
-        Optional.ofNullable(this.getComputeProviderName()).orElse(this.getComputeProviderType().toLowerCase()),
+    return Util.normalize(String.format("%s_AZURE_Kubernetes_%s_%s", this.getClusterName(),
+        Optional.ofNullable(this.getComputeProviderName())
+            .orElse(this.getComputeProviderType().toLowerCase())
+            .replace(':', '_'),
         Optional.ofNullable(this.getNamespace()).orElse("default")));
   }
 
