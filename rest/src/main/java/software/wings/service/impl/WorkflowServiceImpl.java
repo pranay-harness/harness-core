@@ -1,7 +1,9 @@
 package software.wings.service.impl;
 
+import static com.google.common.collect.Lists.newArrayList;
 import static io.harness.data.structure.EmptyPredicate.isEmpty;
 import static io.harness.data.structure.EmptyPredicate.isNotEmpty;
+import static io.harness.data.structure.ListUtil.trimList;
 import static java.util.Arrays.asList;
 import static java.util.stream.Collectors.toList;
 import static java.util.stream.Collectors.toMap;
@@ -98,6 +100,7 @@ import software.wings.beans.CustomOrchestrationWorkflow;
 import software.wings.beans.EcsInfrastructureMapping;
 import software.wings.beans.EntityType;
 import software.wings.beans.EntityVersion;
+import software.wings.beans.Environment;
 import software.wings.beans.ExecutionScope;
 import software.wings.beans.FailureStrategy;
 import software.wings.beans.FailureType;
@@ -150,6 +153,7 @@ import software.wings.service.intfc.AccountService;
 import software.wings.service.intfc.AppService;
 import software.wings.service.intfc.ArtifactStreamService;
 import software.wings.service.intfc.EntityVersionService;
+import software.wings.service.intfc.EnvironmentService;
 import software.wings.service.intfc.FeatureFlagService;
 import software.wings.service.intfc.InfrastructureMappingService;
 import software.wings.service.intfc.MetricDataAnalysisService;
@@ -242,6 +246,7 @@ public class WorkflowServiceImpl implements WorkflowService, DataProvider {
   @Inject private YamlDirectoryService yamlDirectoryService;
   @Inject private MetricDataAnalysisService metricDataAnalysisService;
   @Inject private TriggerService triggerService;
+  @Inject private EnvironmentService environmentService;
   @Inject private WorkflowServiceHelper workflowServiceHelper;
 
   @Inject @Named("JobScheduler") private QuartzScheduler jobScheduler;
@@ -502,6 +507,8 @@ public class WorkflowServiceImpl implements WorkflowService, DataProvider {
     validateBasicWorkflow(workflow);
     OrchestrationWorkflow orchestrationWorkflow = workflow.getOrchestrationWorkflow();
     workflow.setDefaultVersion(1);
+    workflow.setKeywords(trimList(
+        newArrayList(workflow.getName(), workflow.getDescription(), workflow.getWorkflowType(), workflow.getNotes())));
     String key = wingsPersistence.save(workflow);
     if (orchestrationWorkflow != null) {
       if (orchestrationWorkflow.getOrchestrationWorkflowType().equals(CANARY)) {
@@ -559,6 +566,7 @@ public class WorkflowServiceImpl implements WorkflowService, DataProvider {
         workflow.getAppId(), WORKFLOW, key, workflow.getName(), EntityVersion.ChangeType.CREATED, workflow.getNotes());
 
     Workflow newWorkflow = readWorkflow(workflow.getAppId(), key, workflow.getDefaultVersion());
+    updateKeywords(newWorkflow);
 
     Workflow finalWorkflow1 = newWorkflow;
     executorService.submit(() -> notifyNewRelicMetricCollection(finalWorkflow1));
@@ -574,6 +582,34 @@ public class WorkflowServiceImpl implements WorkflowService, DataProvider {
     });
 
     return newWorkflow;
+  }
+
+  private void updateKeywords(Workflow workflow) {
+    List<Object> keywords =
+        newArrayList(workflow.getName(), workflow.getDescription(), workflow.getWorkflowType(), workflow.getNotes());
+    if (workflow.getServices() != null) {
+      workflow.getServices().forEach(service -> keywords.add(service.getName()));
+    }
+    if (workflow.getEnvId() != null) {
+      Environment environment = environmentService.get(workflow.getAppId(), workflow.getEnvId(), false);
+      if (environment != null) {
+        keywords.add(environment.getName());
+      }
+    }
+    if (workflow.getOrchestrationWorkflow() != null) {
+      keywords.add(workflow.getOrchestrationWorkflow().getOrchestrationWorkflowType());
+    }
+
+    if (workflow.isTemplatized()) {
+      keywords.add("template");
+    }
+
+    wingsPersistence.update(wingsPersistence.createQuery(Workflow.class)
+                                .field(Constants.APP_ID)
+                                .equal(workflow.getAppId())
+                                .field(Constants.UUID)
+                                .equal(workflow.getUuid()),
+        wingsPersistence.createUpdateOperations(Workflow.class).set("keywords", trimList(keywords)));
   }
 
   private void notifyNewRelicMetricCollection(Workflow workflow) {
@@ -755,6 +791,7 @@ public class WorkflowServiceImpl implements WorkflowService, DataProvider {
         executorService.submit(() -> triggerService.updateByApp(finalWorkflow.getAppId()));
       }
     }
+    updateKeywords(workflow);
     return workflow;
   }
 

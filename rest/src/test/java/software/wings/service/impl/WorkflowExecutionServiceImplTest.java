@@ -68,6 +68,7 @@ import software.wings.beans.GraphNode;
 import software.wings.beans.HostConnectionAttributes.AccessType;
 import software.wings.beans.InfrastructureMapping;
 import software.wings.beans.OrchestrationWorkflow;
+import software.wings.beans.OrchestrationWorkflowType;
 import software.wings.beans.PhaseStep;
 import software.wings.beans.PhaseStepType;
 import software.wings.beans.PhysicalInfrastructureMapping;
@@ -520,7 +521,7 @@ public class WorkflowExecutionServiceImplTest extends WingsBaseTest {
 
     Workflow workflow =
         aWorkflow()
-            .withEnvId(ENV_ID)
+            .withEnvId(env.getUuid())
             .withAppId(app.getUuid())
             .withName("workflow1")
             .withDescription("Sample Workflow")
@@ -546,6 +547,11 @@ public class WorkflowExecutionServiceImplTest extends WingsBaseTest {
         .isNotNull()
         .extracting("uuid", "status")
         .containsExactly(executionId, ExecutionStatus.SUCCESS);
+    assertThat(execution.getKeywords())
+        .contains(workflow.getName().toLowerCase(), OrchestrationWorkflowType.CUSTOM.name().toLowerCase(),
+            app.getName().toLowerCase(), env.getEnvironmentType().name().toLowerCase(),
+            WorkflowType.ORCHESTRATION.name().toLowerCase());
+
     assertThat(execution.getExecutionNode())
         .isNotNull()
         .extracting("name", "type", "status")
@@ -669,7 +675,7 @@ public class WorkflowExecutionServiceImplTest extends WingsBaseTest {
 
     Workflow workflow =
         aWorkflow()
-            .withEnvId(ENV_ID)
+            .withEnvId(env.getUuid())
             .withAppId(app.getUuid())
             .withName("workflow1")
             .withDescription("Sample Workflow")
@@ -887,7 +893,7 @@ public class WorkflowExecutionServiceImplTest extends WingsBaseTest {
 
     Workflow workflow =
         aWorkflow()
-            .withEnvId(ENV_ID)
+            .withEnvId(env.getUuid())
             .withAppId(appId)
             .withName("workflow1")
             .withDescription("Sample Workflow")
@@ -953,7 +959,7 @@ public class WorkflowExecutionServiceImplTest extends WingsBaseTest {
 
     Workflow workflow =
         aWorkflow()
-            .withEnvId(ENV_ID)
+            .withEnvId(env.getUuid())
             .withAppId(app.getUuid())
             .withName("workflow1")
             .withDescription("Sample Workflow")
@@ -1227,7 +1233,7 @@ public class WorkflowExecutionServiceImplTest extends WingsBaseTest {
 
     Workflow workflow =
         aWorkflow()
-            .withEnvId(ENV_ID)
+            .withEnvId(env.getUuid())
             .withAppId(app.getUuid())
             .withName("workflow1")
             .withDescription("Sample Workflow")
@@ -1333,7 +1339,7 @@ public class WorkflowExecutionServiceImplTest extends WingsBaseTest {
 
     Workflow workflow =
         aWorkflow()
-            .withEnvId(ENV_ID)
+            .withEnvId(env.getUuid())
             .withAppId(app.getUuid())
             .withName("workflow1")
             .withDescription("Sample Workflow")
@@ -1464,7 +1470,7 @@ public class WorkflowExecutionServiceImplTest extends WingsBaseTest {
 
     Workflow workflow =
         aWorkflow()
-            .withEnvId(ENV_ID)
+            .withEnvId(env.getUuid())
             .withAppId(app.getUuid())
             .withName("workflow1")
             .withDescription("Sample Workflow")
@@ -1662,7 +1668,7 @@ public class WorkflowExecutionServiceImplTest extends WingsBaseTest {
 
     Workflow workflow =
         aWorkflow()
-            .withEnvId(ENV_ID)
+            .withEnvId(env.getUuid())
             .withAppId(app.getUuid())
             .withName("workflow1")
             .withDescription("Sample Workflow")

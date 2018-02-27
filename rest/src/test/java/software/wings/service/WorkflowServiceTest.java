@@ -68,6 +68,7 @@ import static software.wings.utils.WingsTestConstants.APP_ID;
 import static software.wings.utils.WingsTestConstants.COMPUTE_PROVIDER_ID;
 import static software.wings.utils.WingsTestConstants.ENV_ID;
 import static software.wings.utils.WingsTestConstants.ENV_ID_CHANGED;
+import static software.wings.utils.WingsTestConstants.ENV_NAME;
 import static software.wings.utils.WingsTestConstants.INFRA_MAPPING_ID;
 import static software.wings.utils.WingsTestConstants.INFRA_MAPPING_ID_CHANGED;
 import static software.wings.utils.WingsTestConstants.NOTIFICATION_GROUP_ID;
@@ -107,6 +108,7 @@ import software.wings.beans.BuildWorkflow;
 import software.wings.beans.CanaryOrchestrationWorkflow;
 import software.wings.beans.CustomOrchestrationWorkflow;
 import software.wings.beans.EntityType;
+import software.wings.beans.Environment;
 import software.wings.beans.ErrorCode;
 import software.wings.beans.ExecutionScope;
 import software.wings.beans.FailureCriteria;
@@ -119,6 +121,7 @@ import software.wings.beans.MultiServiceOrchestrationWorkflow;
 import software.wings.beans.NotificationGroup;
 import software.wings.beans.NotificationRule;
 import software.wings.beans.OrchestrationWorkflow;
+import software.wings.beans.OrchestrationWorkflowType;
 import software.wings.beans.PhaseStep;
 import software.wings.beans.PhaseStepType;
 import software.wings.beans.Pipeline;
@@ -148,6 +151,7 @@ import software.wings.service.intfc.AccountService;
 import software.wings.service.intfc.AppService;
 import software.wings.service.intfc.ArtifactStreamService;
 import software.wings.service.intfc.EntityVersionService;
+import software.wings.service.intfc.EnvironmentService;
 import software.wings.service.intfc.InfrastructureMappingService;
 import software.wings.service.intfc.NotificationSetupService;
 import software.wings.service.intfc.PipelineService;
@@ -204,6 +208,7 @@ public class WorkflowServiceTest extends WingsBaseTest {
   @Mock private ArtifactStreamService artifactStreamService;
   @Mock private ArtifactStream artifactStream;
   @Mock private TriggerService triggerService;
+  @Mock private EnvironmentService environmentService;
 
   @Mock @Named("JobScheduler") private QuartzScheduler jobScheduler;
 
@@ -237,6 +242,9 @@ public class WorkflowServiceTest extends WingsBaseTest {
         .thenReturn(false);
     when(appService.get(TARGET_APP_ID))
         .thenReturn(Application.Builder.anApplication().withAccountId(ACCOUNT_ID).build());
+
+    when(environmentService.get(APP_ID, ENV_ID, false))
+        .thenReturn(Environment.Builder.anEnvironment().withUuid(ENV_ID).withName(ENV_NAME).withAppId(APP_ID).build());
   }
 
   /**
@@ -739,6 +747,7 @@ public class WorkflowServiceTest extends WingsBaseTest {
         aWorkflow()
             .withName(WORKFLOW_NAME)
             .withAppId(APP_ID)
+            .withWorkflowType(WorkflowType.ORCHESTRATION)
             .withOrchestrationWorkflow(
                 aCanaryOrchestrationWorkflow()
                     .withPreDeploymentSteps(aPhaseStep(PRE_DEPLOYMENT, Constants.PRE_DEPLOYMENT).build())
@@ -775,6 +784,18 @@ public class WorkflowServiceTest extends WingsBaseTest {
     assertThat(res).isNotNull().hasSize(1);
     assertThat(res.get(0)).isNotNull().hasFieldOrPropertyWithValue("orchestrationWorkflow", orchestrationWorkflow);
 
+    assertThat(workflow2.getKeywords())
+        .isNotNull()
+        .contains(workflow.getName().toLowerCase())
+        .contains(WorkflowType.ORCHESTRATION.name().toLowerCase());
+
+    workflow2 = workflowService.readWorkflow(workflow2.getAppId(), workflow2.getUuid());
+    assertThat(workflow2.getKeywords())
+        .isNotNull()
+        .contains(workflow.getName().toLowerCase())
+        .contains(WorkflowType.ORCHESTRATION.name().toLowerCase())
+        .contains(OrchestrationWorkflowType.CANARY.name().toLowerCase());
+
     logger.info(JsonUtils.asJson(workflow2));
   }
 
@@ -783,6 +804,7 @@ public class WorkflowServiceTest extends WingsBaseTest {
     Workflow workflow =
         aWorkflow()
             .withName(WORKFLOW_NAME)
+            .withWorkflowType(WorkflowType.ORCHESTRATION)
             .withAppId(APP_ID)
             .withServiceId(SERVICE_ID)
             .withInfraMappingId(INFRA_MAPPING_ID)
@@ -857,6 +879,13 @@ public class WorkflowServiceTest extends WingsBaseTest {
     assertThat(res).isNotNull().hasSize(1);
     assertThat(res.get(0)).isNotNull().hasFieldOrPropertyWithValue("orchestrationWorkflow", orchestrationWorkflow);
 
+    workflow2 = workflowService.readWorkflow(workflow2.getAppId(), workflow2.getUuid());
+    assertThat(workflow2.getKeywords())
+        .isNotNull()
+        .contains(workflow.getName().toLowerCase())
+        .contains(WorkflowType.ORCHESTRATION.name().toLowerCase())
+        .contains(OrchestrationWorkflowType.BASIC.name().toLowerCase());
+
     logger.info(JsonUtils.asJson(workflow2));
   }
 
@@ -913,6 +942,7 @@ public class WorkflowServiceTest extends WingsBaseTest {
     Workflow workflow =
         aWorkflow()
             .withName(WORKFLOW_NAME)
+            .withWorkflowType(WorkflowType.ORCHESTRATION)
             .withAppId(APP_ID)
             .withOrchestrationWorkflow(
                 aMultiServiceOrchestrationWorkflow()
@@ -949,6 +979,11 @@ public class WorkflowServiceTest extends WingsBaseTest {
 
     assertThat(res).isNotNull().hasSize(1);
     assertThat(res.get(0)).isNotNull().hasFieldOrPropertyWithValue("orchestrationWorkflow", orchestrationWorkflow);
+
+    assertThat(workflow2.getKeywords())
+        .isNotNull()
+        .contains(workflow.getName().toLowerCase())
+        .contains(WorkflowType.ORCHESTRATION.name().toLowerCase());
 
     logger.info(JsonUtils.asJson(workflow2));
   }
@@ -1043,6 +1078,7 @@ public class WorkflowServiceTest extends WingsBaseTest {
 
     Workflow orchestrationWorkflow3 = workflowService.readWorkflow(workflow1.getAppId(), workflow1.getUuid());
     assertThat(orchestrationWorkflow3).isNotNull().hasFieldOrPropertyWithValue("name", name2);
+    assertThat(orchestrationWorkflow3.getKeywords()).isNotNull().contains(name2.toLowerCase(), ENV_NAME.toLowerCase());
   }
 
   @Test

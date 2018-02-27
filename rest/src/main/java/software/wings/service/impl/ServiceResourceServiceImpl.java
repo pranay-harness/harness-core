@@ -2,6 +2,7 @@ package software.wings.service.impl;
 
 import static io.harness.data.structure.EmptyPredicate.isEmpty;
 import static io.harness.data.structure.EmptyPredicate.isNotEmpty;
+import static io.harness.data.structure.ListUtil.trimList;
 import static java.util.Arrays.asList;
 import static java.util.Collections.emptyList;
 import static java.util.Collections.emptyMap;
@@ -209,6 +210,7 @@ public class ServiceResourceServiceImpl implements ServiceResourceService, DataP
 
   @Override
   public Service save(Service service, boolean pushToYaml) {
+    service.setKeywords(getKeywords(service));
     Service savedService =
         Validator.duplicateCheck(() -> wingsPersistence.saveAndGet(Service.class, service), "name", service.getName());
     savedService = addDefaultCommands(savedService, pushToYaml);
@@ -228,6 +230,19 @@ public class ServiceResourceServiceImpl implements ServiceResourceService, DataP
     return savedService;
   }
 
+  private List<String> getKeywords(Service service) {
+    List<Object> keywords = asList(service.getName(), service.getDescription(), service.getArtifactType());
+    if (service.getCreatedBy() != null) {
+      keywords.add(service.getCreatedBy().getName());
+      keywords.add(service.getCreatedBy().getEmail());
+    }
+    if (service.getLastUpdatedBy() != null) {
+      keywords.add(service.getLastUpdatedBy().getName());
+      keywords.add(service.getLastUpdatedBy().getEmail());
+    }
+    return trimList(keywords);
+  }
+
   @Override
   public Service clone(String appId, String originalServiceId, Service service) {
     Service originalService = get(appId, originalServiceId);
@@ -235,6 +250,7 @@ public class ServiceResourceServiceImpl implements ServiceResourceService, DataP
     clonedService.setName(service.getName());
     clonedService.setDescription(service.getDescription());
 
+    clonedService.setKeywords(getKeywords(clonedService));
     Service savedCloneService = Validator.duplicateCheck(
         () -> wingsPersistence.saveAndGet(Service.class, clonedService), "name", service.getName());
 
@@ -387,10 +403,12 @@ public class ServiceResourceServiceImpl implements ServiceResourceService, DataP
     Service savedService = get(service.getAppId(), service.getUuid(), false);
     Validator.notNullCheck("Service", savedService);
 
+    List<String> keywords = getKeywords(service);
     UpdateOperations<Service> updateOperations =
         wingsPersistence.createUpdateOperations(Service.class)
             .set("name", service.getName().trim())
-            .set("description", service.getDescription() == null ? "" : service.getDescription());
+            .set("description", service.getDescription() == null ? "" : service.getDescription())
+            .set("keywords", keywords);
 
     wingsPersistence.update(savedService, updateOperations);
     Service updatedService = get(service.getAppId(), service.getUuid(), false);

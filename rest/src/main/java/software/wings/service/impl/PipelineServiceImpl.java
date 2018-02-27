@@ -1,8 +1,10 @@
 package software.wings.service.impl;
 
 import static com.google.common.base.Strings.isNullOrEmpty;
+import static com.google.common.collect.Lists.newArrayList;
 import static io.harness.data.structure.EmptyPredicate.isEmpty;
 import static io.harness.data.structure.EmptyPredicate.isNotEmpty;
+import static io.harness.data.structure.ListUtil.trimList;
 import static java.util.stream.Collectors.toList;
 import static java.util.stream.Collectors.toSet;
 import static org.mongodb.morphia.mapping.Mapper.ID_KEY;
@@ -42,6 +44,7 @@ import software.wings.beans.Service;
 import software.wings.beans.Variable;
 import software.wings.beans.Workflow;
 import software.wings.beans.WorkflowExecution;
+import software.wings.beans.WorkflowType;
 import software.wings.beans.trigger.Trigger;
 import software.wings.beans.yaml.Change.ChangeType;
 import software.wings.beans.yaml.GitFileChange;
@@ -180,12 +183,15 @@ public class PipelineServiceImpl implements PipelineService {
     Pipeline savedPipeline = wingsPersistence.get(Pipeline.class, pipeline.getAppId(), pipeline.getUuid());
     notNullCheck("Pipeline", savedPipeline);
 
-    validatePipeline(pipeline);
+    List<Object> keywords = newArrayList(pipeline.getName(), pipeline.getDescription(), WorkflowType.PIPELINE);
+
+    validatePipeline(pipeline, keywords);
     UpdateOperations<Pipeline> ops = wingsPersistence.createUpdateOperations(Pipeline.class);
     setUnset(ops, "description", pipeline.getDescription());
     setUnset(ops, "name", pipeline.getName());
     setUnset(ops, "pipelineStages", pipeline.getPipelineStages());
     setUnset(ops, "failureStrategies", pipeline.getFailureStrategies());
+    setUnset(ops, "keywords", keywords);
 
     wingsPersistence.update(wingsPersistence.createQuery(Pipeline.class)
                                 .field("appId")
@@ -467,7 +473,9 @@ public class PipelineServiceImpl implements PipelineService {
 
   @Override
   public Pipeline createPipeline(Pipeline pipeline) {
-    validatePipeline(pipeline);
+    List<Object> keywords = newArrayList(pipeline.getName(), pipeline.getDescription(), WorkflowType.PIPELINE);
+    validatePipeline(pipeline, keywords);
+    pipeline.setKeywords(trimList(keywords));
     pipeline = wingsPersistence.saveAndGet(Pipeline.class, pipeline);
     Map<StateTypeScope, List<Stencil>> stencils = workflowService.stencils(null, null, null);
     wingsPersistence.saveAndGet(StateMachine.class, new StateMachine(pipeline, workflowService.stencilMap()));
@@ -486,7 +494,7 @@ public class PipelineServiceImpl implements PipelineService {
     return pipeline;
   }
 
-  private void validatePipeline(Pipeline pipeline) {
+  private void validatePipeline(Pipeline pipeline, List<Object> keywords) {
     if (Collections.isEmpty(pipeline.getPipelineStages())) {
       throw new WingsException(INVALID_ARGUMENT).addParam("args", "At least one pipeline stage required");
     }
@@ -510,6 +518,13 @@ public class PipelineServiceImpl implements PipelineService {
         if (workflow == null || workflow.getOrchestrationWorkflow() == null) {
           throw new WingsException(INVALID_ARGUMENT).addParam("args", "Workflow can not be null for Environment state");
         }
+        keywords.add(workflow.getName());
+        keywords.add(workflow.getDescription());
+        // TODO: resolve the templatized ones
+        if (workflow.getServices() != null) {
+          keywords.addAll(workflow.getServices().stream().map(service -> service.getName()).collect(toList()));
+        }
+
         if (workflow.getOrchestrationWorkflow().getOrchestrationWorkflowType() != OrchestrationWorkflowType.BUILD
             && isNullOrEmpty((String) stageElement.getProperties().get("envId"))) {
           throw new WingsException(INVALID_ARGUMENT)

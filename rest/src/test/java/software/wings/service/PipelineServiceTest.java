@@ -52,6 +52,7 @@ import software.wings.beans.PipelineExecution;
 import software.wings.beans.PipelineStage;
 import software.wings.beans.PipelineStage.PipelineStageElement;
 import software.wings.beans.RepairActionCode;
+import software.wings.beans.WorkflowType;
 import software.wings.common.Constants;
 import software.wings.dl.PageResponse;
 import software.wings.dl.WingsPersistence;
@@ -205,11 +206,15 @@ public class PipelineServiceTest extends WingsBaseTest {
     pipelineService.createPipeline(pipeline);
 
     verify(wingsPersistence).saveAndGet(eq(Pipeline.class), pipelineArgumentCaptor.capture());
-    assertThat(pipelineArgumentCaptor.getValue())
+    Pipeline argumentCaptorValue = pipelineArgumentCaptor.getValue();
+    assertThat(argumentCaptorValue)
         .isNotNull()
         .extracting("failureStrategies")
         .doesNotContainNull()
         .contains(asList(failureStrategy));
+    assertThat(argumentCaptorValue.getKeywords())
+        .isNotNull()
+        .contains(WorkflowType.PIPELINE.name().toLowerCase(), pipeline.getName().toLowerCase());
   }
 
   @Test

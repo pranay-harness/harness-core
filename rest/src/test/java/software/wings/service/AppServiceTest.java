@@ -145,7 +145,17 @@ public class AppServiceTest extends WingsBaseTest {
         .thenReturn(Lists.newArrayList(aSettingAttribute().withUuid("id").build()));
 
     appService.save(app);
-    verify(wingsPersistence).saveAndGet(Application.class, app);
+    ArgumentCaptor<Application> calledApp = ArgumentCaptor.forClass(Application.class);
+    verify(wingsPersistence).saveAndGet(eq(Application.class), calledApp.capture());
+    Application calledAppValue = calledApp.getValue();
+    assertThat(calledAppValue)
+        .isNotNull()
+        .extracting("accountId", "name", "description")
+        .containsExactly(app.getAccountId(), app.getName(), app.getDescription());
+    assertThat(calledAppValue.getKeywords())
+        .isNotNull()
+        .contains(app.getName().toLowerCase(), app.getDescription().toLowerCase());
+
     verify(settingsService).createDefaultApplicationSettings(APP_ID, "ACCOUNT_ID");
     verify(notificationService).sendNotificationAsync(any(Notification.class));
     ArgumentCaptor<JobDetail> jobDetailArgumentCaptor = ArgumentCaptor.forClass(JobDetail.class);
@@ -257,6 +267,7 @@ public class AppServiceTest extends WingsBaseTest {
     verify(end).equal(APP_ID);
     verify(updateOperations).set("name", "App_Name");
     verify(updateOperations).set("description", "Description");
+    verify(updateOperations).set("keywords", asList("App_Name".toLowerCase(), "Description".toLowerCase()));
     verify(wingsPersistence).update(query, updateOperations);
     verify(wingsPersistence, times(3)).get(Application.class, APP_ID);
   }

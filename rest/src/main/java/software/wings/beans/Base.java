@@ -19,6 +19,7 @@ import software.wings.security.UserThreadLocal;
 import software.wings.utils.validation.Update;
 
 import java.util.HashMap;
+import java.util.List;
 import java.util.Map;
 import javax.validation.constraints.NotNull;
 
@@ -52,6 +53,8 @@ public class Base implements UuidAware {
   @SchemaIgnore @Indexed private long createdAt;
   @SchemaIgnore private EmbeddedUser lastUpdatedBy;
   @SchemaIgnore private long lastUpdatedAt;
+
+  @SchemaIgnore @Indexed private List<String> keywords;
 
   @Getter(AccessLevel.NONE)
   @SchemaIgnore

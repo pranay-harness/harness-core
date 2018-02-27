@@ -249,7 +249,18 @@ public class ServiceResourceServiceTest extends WingsBaseTest {
     Service savedService = spyServiceResourceService.save(service);
 
     assertThat(savedService.getUuid()).isEqualTo(SERVICE_ID);
-    verify(wingsPersistence).saveAndGet(Service.class, service);
+    ArgumentCaptor<Service> calledService = ArgumentCaptor.forClass(Service.class);
+    verify(wingsPersistence).saveAndGet(eq(Service.class), calledService.capture());
+    Service calledServiceValue = calledService.getValue();
+    assertThat(calledServiceValue)
+        .isNotNull()
+        .extracting("appId", "name", "description", "artifactType")
+        .containsExactly(service.getAppId(), service.getName(), service.getDescription(), service.getArtifactType());
+    assertThat(calledServiceValue.getKeywords())
+        .isNotNull()
+        .contains(service.getName().toLowerCase(), service.getDescription().toLowerCase(),
+            service.getArtifactType().name().toLowerCase());
+
     verify(serviceTemplateService).createDefaultTemplatesByService(savedService);
     verify(spyServiceResourceService, times(3))
         .addCommand(eq(APP_ID), eq(SERVICE_ID), serviceCommandArgumentCaptor.capture(), eq(true));
@@ -307,6 +318,10 @@ public class ServiceResourceServiceTest extends WingsBaseTest {
     verify(wingsPersistence).createUpdateOperations(Service.class);
     verify(updateOperations).set("name", "UPDATED_SERVICE_NAME");
     verify(updateOperations).set("description", "UPDATED_SERVICE_DESC");
+    verify(updateOperations)
+        .set("keywords",
+            asList(service.getName().toLowerCase(), service.getDescription().toLowerCase(),
+                service.getArtifactType().name().toLowerCase()));
 
     verify(serviceTemplateService)
         .updateDefaultServiceTemplateName(APP_ID, SERVICE_ID, SERVICE_NAME, "UPDATED_SERVICE_NAME");
