@@ -2,7 +2,9 @@ package software.wings.watcher.service;
 
 import static io.harness.data.structure.EmptyPredicate.isEmpty;
 import static io.harness.data.structure.EmptyPredicate.isNotEmpty;
+import static io.harness.threading.Morpheus.sleep;
 import static java.nio.charset.StandardCharsets.UTF_8;
+import static java.time.Duration.ofSeconds;
 import static java.util.Collections.emptyList;
 import static java.util.Collections.synchronizedList;
 import static org.apache.commons.io.filefilter.FileFilterUtils.falseFileFilter;
@@ -366,11 +368,12 @@ public class WatcherServiceImpl implements WatcherService {
                           .start();
 
         boolean success = false;
+        String newDelegateProcess = null;
 
         if (newDelegate.getProcess().isAlive()) {
           Message message = messageService.waitForMessage(NEW_DELEGATE, TimeUnit.MINUTES.toMillis(2));
           if (message != null) {
-            String newDelegateProcess = message.getParams().get(0);
+            newDelegateProcess = message.getParams().get(0);
             logger.info("Got process ID from new delegate: " + newDelegateProcess);
             Map<String, Object> delegateData = new HashMap<>();
             delegateData.put(DELEGATE_IS_NEW, true);
@@ -388,6 +391,7 @@ public class WatcherServiceImpl implements WatcherService {
                 messageService.writeMessageToChannel(DELEGATE, oldDelegateProcess, DELEGATE_STOP_ACQUIRING);
               });
               logger.info("Sending new delegate process {} go-ahead message", newDelegateProcess);
+              sleep(ofSeconds(2));
               messageService.writeMessageToChannel(DELEGATE, newDelegateProcess, DELEGATE_GO_AHEAD);
               success = true;
             }
@@ -395,6 +399,12 @@ public class WatcherServiceImpl implements WatcherService {
         }
         if (!success) {
           logger.error("Failed to start new delegate");
+          logger.error("Watcher messages:");
+          messageService.logAllMessages(WATCHER, watcherProcess);
+          if (isNotBlank(newDelegateProcess)) {
+            logger.error("Delegate messages:");
+            messageService.logAllMessages(DELEGATE, newDelegateProcess);
+          }
           newDelegate.getProcess().destroy();
           newDelegate.getProcess().waitFor();
           oldDelegateProcesses.forEach(oldDelegateProcess -> {

@@ -187,6 +187,7 @@ public class DelegateServiceImpl implements DelegateService {
 
       if (watched) {
         logger.info("[New] Delegate process started. Sending confirmation");
+        sleep(ofSeconds(2));
         messageService.writeMessage(DELEGATE_STARTED);
         startInputCheck();
         logger.info("[New] Waiting for go ahead from watcher");

@@ -382,6 +382,21 @@ public class MessageServiceImpl implements MessageService {
     }
   }
 
+  @Override
+  public void logAllMessages(MessengerType sourceType, String sourceProcessId) {
+    try {
+      File channel = getMessageChannel(sourceType, sourceProcessId);
+      if (channel.exists()) {
+        LineIterator reader = FileUtils.lineIterator(channel);
+        while (reader.hasNext()) {
+          logger.error(reader.nextLine());
+        }
+      }
+    } catch (IOException e) {
+      logger.error("Couldn't read channel for {} {}.", sourceType, sourceProcessId, e);
+    }
+  }
+
   private File getMessageChannel(MessengerType type, String id) throws IOException {
     File channel = new File(ROOT + IO + type.name().toLowerCase() + "/" + id);
     FileUtils.forceMkdirParent(channel);
