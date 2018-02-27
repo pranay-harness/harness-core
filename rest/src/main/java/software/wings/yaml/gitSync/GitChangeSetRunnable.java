@@ -1,10 +1,12 @@
 package software.wings.yaml.gitSync;
 
+import static software.wings.beans.yaml.YamlConstants.GIT_YAML_LOG_PREFIX;
 import static software.wings.core.maintenance.MaintenanceController.isMaintenance;
 
 import com.google.inject.Inject;
 
 import com.mongodb.BasicDBObject;
+import org.apache.commons.collections.CollectionUtils;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import software.wings.dl.WingsPersistence;
@@ -49,8 +51,22 @@ public class GitChangeSetRunnable implements Runnable {
         return;
       }
 
-      logger.info("queuedAccountIdList:[{}], runningAccountIdList:[{}], waitingAccountIdList:[{}]", queuedAccountIdList,
-          runningAccountIdList, waitingAccountIdList);
+      logger.info(
+          GIT_YAML_LOG_PREFIX + "queuedAccountIdList:[{}], runningAccountIdList:[{}], waitingAccountIdList:[{}]",
+          queuedAccountIdList, runningAccountIdList, waitingAccountIdList);
+
+      // @TODO
+      // We should check here or create a cron job, that will check periodically if there is any task running for more
+      // than 10 mins (same as timeout duration for GitDelegateTask), just mark it as failed, so other YamlChangeSets
+      // for that account get unblocked
+      if (CollectionUtils.isNotEmpty(runningAccountIdList)) {
+        logger.info(new StringBuilder()
+                        .append(GIT_YAML_LOG_PREFIX)
+                        .append(" Skipping processing of GitChangeSet for Accounts :{")
+                        .append(runningAccountIdList)
+                        .append("}, as there is already running task for these accounts")
+                        .toString());
+      }
 
       // nothing already in execution and lock acquired
       waitingAccountIdList.forEach(accountId -> {
@@ -58,10 +74,10 @@ public class GitChangeSetRunnable implements Runnable {
         try {
           queuedChangeSet = yamlChangeSetService.getQueuedChangeSet(accountId);
           if (queuedChangeSet != null) {
-            logger.info("Processing ChangeSet {}", queuedChangeSet);
+            logger.info(GIT_YAML_LOG_PREFIX + "Processing ChangeSet {}", queuedChangeSet);
             yamlGitSyncService.handleChangeSet(queuedChangeSet);
           } else {
-            logger.info("No change set queued to process for accountId [{}]", accountId);
+            logger.info(GIT_YAML_LOG_PREFIX + "No change set queued to process for accountId [{}]", accountId);
           }
         } catch (Exception ex) {
           yamlChangeSetService.updateStatus(queuedChangeSet.getAccountId(), queuedChangeSet.getUuid(), Status.FAILED);
@@ -71,13 +87,13 @@ public class GitChangeSetRunnable implements Runnable {
             stringBuilder.append(" and for changeSet: ").append(queuedChangeSet.getUuid());
           }
           stringBuilder.append(" Reason: ").append(ex.getMessage());
-          logger.error(stringBuilder.toString(), ex);
+          logger.error(GIT_YAML_LOG_PREFIX + stringBuilder.toString(), ex);
         }
       });
     } catch (WingsException exception) {
       exception.logProcessedMessages(logger);
     } catch (Exception exception) {
-      logger.error("Unexpected error", exception);
+      logger.error(GIT_YAML_LOG_PREFIX + "Unexpected error", exception);
     }
   }
 }
