@@ -34,6 +34,7 @@ public class ContainerServiceElement implements ContextElement {
   private int minAutoscaleInstances;
   private int maxAutoscaleInstances;
   private int targetCpuUtilizationPercentage;
+  private String customMetricYamlConfig;
 
   @Override
   public ContextElementType getElementType() {

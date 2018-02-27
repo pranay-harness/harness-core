@@ -92,6 +92,28 @@ public class WorkflowResource {
   }
 
   /**
+   *
+   * @param minAutoscaleInstances
+   * @param maxAutoscaleInstances
+   * @param targetCpuUtilizationPercentage
+   * @return
+   */
+  @GET
+  @Path("hpa-metric-yaml")
+  @Timed
+  @ExceptionMetered
+  public RestResponse<String> getHPAYamlStringWithCustomMetric(@QueryParam("appId") String appId,
+      @QueryParam("minAutoscaleInstances") Integer minAutoscaleInstances,
+      @QueryParam("maxAutoscaleInstances") Integer maxAutoscaleInstances,
+      @QueryParam("targetCpuUtilizationPercentage") Integer targetCpuUtilizationPercentage) {
+    minAutoscaleInstances = minAutoscaleInstances == null ? 0 : minAutoscaleInstances;
+    maxAutoscaleInstances = maxAutoscaleInstances == null ? 0 : maxAutoscaleInstances;
+    targetCpuUtilizationPercentage = targetCpuUtilizationPercentage == null ? 80 : targetCpuUtilizationPercentage;
+    return new RestResponse<>(workflowService.getHPAYamlStringWithCustomMetric(
+        minAutoscaleInstances, maxAutoscaleInstances, targetCpuUtilizationPercentage));
+  }
+
+  /**
    * Read.
    *
    * @param appId      the app id

@@ -208,4 +208,7 @@ public interface WorkflowService extends OwnedByApplication, OwnedByEnvironment 
       @org.hibernate.validator.constraints.NotEmpty String workflowId);
 
   boolean workflowHasSshInfraMapping(String appId, String workflowId);
+
+  String getHPAYamlStringWithCustomMetric(
+      Integer minAutoscaleInstances, Integer maxAutoscaleInstances, Integer targetCpuUtilizationPercentage);
 }

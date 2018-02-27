@@ -63,12 +63,21 @@ public class KubernetesResizeCommandUnit extends ContainerResizeCommandUnit {
     }
 
     if (resizeParams.isRollbackAutoscaler() && resizeParams.isUseAutoscaler()) {
-      HorizontalPodAutoscaler autoscaler = kubernetesContainerService.getAutoscaler(
-          kubernetesConfig, encryptedDataDetails, containerServiceData.getName());
+      HorizontalPodAutoscaler autoscaler = kubernetesContainerService.getAutoscaler(kubernetesConfig,
+          encryptedDataDetails, containerServiceData.getName(), ((KubernetesResizeParams) params).getApiVersion());
       if (containerServiceData.getName().equals(autoscaler.getSpec().getScaleTargetRef().getName())) {
         executionLogCallback.saveExecutionLog("Disabling autoscaler " + containerServiceData.getName(), LogLevel.INFO);
-        kubernetesContainerService.disableAutoscaler(
-            kubernetesConfig, encryptedDataDetails, containerServiceData.getName());
+        /*
+         * Ideally we should be sending resizeParams.getApiVersion(), so we use "v2beta1" when we are dealing with
+         * customMetricHPA, but there is a bug in fabric8 library in HasMetadataOperation.replace() method. For
+         * customMetricHPA, metric config info resides in HPA.Spec.additionalProperties map. but during execution of
+         * replace(), due to build() method in HorizontalPodAutoscalerSpecBuilder, this map goes away, and replace()
+         * call actually removes all metricConfig from autoScalar. So currently use v1 version only, till this issue
+         * gets fixed. (customMetricConfig is preserved as annotations in version_v1 HPA object, and that path is
+         * working fine)
+         * */
+        kubernetesContainerService.disableAutoscaler(kubernetesConfig, encryptedDataDetails,
+            containerServiceData.getName(), ContainerApiVersions.KUBERNETES_V1.getVersionName());
       }
     }
 
@@ -83,8 +92,17 @@ public class KubernetesResizeCommandUnit extends ContainerResizeCommandUnit {
         && resizeParams.isDeployingToHundredPercent()) {
       if (resizeParams.isUseAutoscaler()) {
         executionLogCallback.saveExecutionLog("Enabling autoscaler " + containerServiceData.getName(), LogLevel.INFO);
-        kubernetesContainerService.enableAutoscaler(
-            kubernetesConfig, encryptedDataDetails, containerServiceData.getName());
+        /*
+         * Ideally we should be sending resizeParams.getApiVersion(), so we use "v2beta1" when we are dealing with
+         * customMetricHPA, but there is a bug in fabric8 library in HasMetadataOperation.replace() method. For
+         * customMetricHPA, metric config info resides in HPA.Spec.additionalProperties map. but during execution of
+         * replace(), due to build() method in HorizontalPodAutoscalerSpecBuilder, this map goes away, and replace()
+         * call actually removes all metricConfig from autoScalar. So currently use v1 version only, till this issue
+         * gets fixed. (customMetricConfig is preserved as annotations in version_v1 HPA object, and that path is
+         * working fine)
+         * */
+        kubernetesContainerService.enableAutoscaler(kubernetesConfig, encryptedDataDetails,
+            containerServiceData.getName(), ContainerApiVersions.KUBERNETES_V1.getVersionName());
       }
     }
 

@@ -5,6 +5,8 @@ import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThatThrownBy;
 import static org.assertj.core.api.Assertions.fail;
 import static org.assertj.core.util.Lists.newArrayList;
+import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertNotNull;
 import static org.mockito.Matchers.any;
 import static org.mockito.Matchers.anyObject;
 import static org.mockito.Matchers.anyString;
@@ -83,6 +85,8 @@ import com.google.common.collect.ImmutableMap;
 import com.google.inject.Inject;
 import com.google.inject.name.Named;
 
+import io.fabric8.kubernetes.api.KubernetesHelper;
+import io.fabric8.kubernetes.api.model.HorizontalPodAutoscaler;
 import org.junit.Before;
 import org.junit.Test;
 import org.mockito.InOrder;
@@ -3312,5 +3316,30 @@ public class WorkflowServiceTest extends WingsBaseTest {
         .extracting(variable -> variable.getEntityType())
         .containsSequence(APPDYNAMICS_CONFIGID, EntityType.APPDYNAMICS_APPID, EntityType.APPDYNAMICS_TIERID,
             ELK_CONFIGID, ELK_INDICES);
+  }
+
+  /**
+   * Test custom metric yaml generation
+   * @throws Exception
+   */
+  @Test
+  public void testGetHPAYamlStringWithCustomMetric() throws Exception {
+    Integer minAutoscaleInstances = 2;
+    Integer maxAutoscaleInstances = 10;
+    Integer targetCpuUtilizationPercentage = 60;
+
+    String yamlHPA = workflowService.getHPAYamlStringWithCustomMetric(
+        minAutoscaleInstances, maxAutoscaleInstances, targetCpuUtilizationPercentage);
+
+    HorizontalPodAutoscaler horizontalPodAutoscaler = KubernetesHelper.loadYaml(yamlHPA);
+    assertEquals("autoscaling/v2beta1", horizontalPodAutoscaler.getApiVersion());
+    assertEquals("HorizontalPodAutoscaler", horizontalPodAutoscaler.getKind());
+    assertNotNull(horizontalPodAutoscaler.getSpec());
+    assertNotNull(horizontalPodAutoscaler.getMetadata());
+    assertEquals(new Integer(2), horizontalPodAutoscaler.getSpec().getMinReplicas());
+    assertEquals(new Integer(10), horizontalPodAutoscaler.getSpec().getMaxReplicas());
+    assertNotNull(horizontalPodAutoscaler.getSpec().getAdditionalProperties());
+    assertEquals(1, horizontalPodAutoscaler.getSpec().getAdditionalProperties().size());
+    assertEquals("metrics", horizontalPodAutoscaler.getSpec().getAdditionalProperties().keySet().iterator().next());
   }
 }

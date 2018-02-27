@@ -4,8 +4,10 @@ import static software.wings.beans.command.KubernetesResizeParams.KubernetesResi
 import static software.wings.sm.StateType.KUBERNETES_DEPLOY;
 
 import com.github.reinert.jjschema.Attributes;
+import org.apache.commons.lang3.StringUtils;
 import software.wings.api.ContainerServiceData;
 import software.wings.beans.InstanceUnitType;
+import software.wings.beans.command.ContainerApiVersions;
 import software.wings.beans.command.ContainerResizeParams;
 import software.wings.sm.ContextElementType;
 import software.wings.stencils.DefaultValue;
@@ -72,7 +74,14 @@ public class KubernetesDeploy extends ContainerServiceDeploy {
         .withUseAutoscaler(contextData.containerElement.isUseAutoscaler())
         .withSubscriptionId(contextData.containerServiceParams.getSubscriptionId())
         .withResourceGroup(contextData.containerServiceParams.getResourceGroup())
+        .withApiVersion(getApiVersion(contextData))
         .build();
+  }
+
+  private String getApiVersion(ContextData contextData) {
+    return StringUtils.isEmpty(contextData.containerElement.getCustomMetricYamlConfig())
+        ? ContainerApiVersions.KUBERNETES_V1.getVersionName()
+        : ContainerApiVersions.KUBERNETES_V2_BETA1.getVersionName();
   }
 
   public static final class KubernetesDeployBuilder {
