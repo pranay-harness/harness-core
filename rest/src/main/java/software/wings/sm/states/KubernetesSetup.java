@@ -155,7 +155,7 @@ public class KubernetesSetup extends ContainerServiceSetup {
         .withResourceGroup(resourceGroup)
         .withUseIngress(useIngress)
         .withIngressYaml(ingressYamlEvaluated)
-        .withUseIstioRouteRule(true) // TODO use var
+        .withUseIstioRouteRule(useIstioRouteRule)
         .build();
   }
 
@@ -180,7 +180,7 @@ public class KubernetesSetup extends ContainerServiceSetup {
             .namespace(setupParams.getNamespace())
             .deploymentType(DeploymentType.KUBERNETES)
             .infraMappingId(setupParams.getInfraMappingId())
-            .useIstioRouteRule(true); // TODO use var
+            .useIstioRouteRule(useIstioRouteRule);
     if (executionResult != null) {
       ContainerSetupCommandUnitExecutionData setupExecutionData =
           (ContainerSetupCommandUnitExecutionData) executionResult.getCommandExecutionData();
