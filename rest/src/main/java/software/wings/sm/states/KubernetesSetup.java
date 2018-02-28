@@ -2,6 +2,7 @@ package software.wings.sm.states;
 
 import static io.harness.data.structure.EmptyPredicate.isNotEmpty;
 import static java.util.stream.Collectors.toList;
+import static org.apache.commons.lang3.StringUtils.isBlank;
 import static org.apache.commons.lang3.StringUtils.isNotBlank;
 import static software.wings.beans.DelegateTask.SyncTaskContext.Builder.aContext;
 import static software.wings.beans.ResizeStrategy.RESIZE_NEW_FIRST;
@@ -10,6 +11,7 @@ import static software.wings.beans.command.KubernetesSetupParams.KubernetesSetup
 import static software.wings.common.Constants.CONTAINER_SYNC_CALL_TIMEOUT;
 import static software.wings.common.Constants.DEFAULT_STEADY_STATE_TIMEOUT;
 import static software.wings.sm.StateType.KUBERNETES_SETUP;
+import static software.wings.utils.Switch.unhandled;
 
 import com.google.inject.Inject;
 
@@ -131,11 +133,26 @@ public class KubernetesSetup extends ContainerServiceSetup {
       resourceGroup = ((AzureKubernetesInfrastructureMapping) infrastructureMapping).getResourceGroup();
     }
 
+    String namespace = null;
+    if (infrastructureMapping instanceof GcpKubernetesInfrastructureMapping) {
+      namespace = ((GcpKubernetesInfrastructureMapping) infrastructureMapping).getNamespace();
+    } else if (infrastructureMapping instanceof AzureKubernetesInfrastructureMapping) {
+      namespace = ((AzureKubernetesInfrastructureMapping) infrastructureMapping).getNamespace();
+    } else if (infrastructureMapping instanceof DirectKubernetesInfrastructureMapping) {
+      namespace = ((DirectKubernetesInfrastructureMapping) infrastructureMapping).getNamespace();
+    } else {
+      unhandled(infrastructureMapping.getInfraMappingType());
+    }
+    if (isBlank(namespace)) {
+      namespace = "default";
+    }
+
     return aKubernetesSetupParams()
         .withAppName(app.getName())
         .withEnvName(env.getName())
         .withServiceName(serviceName)
         .withClusterName(clusterName)
+        .withNamespace(namespace)
         .withImageDetails(imageDetails)
         .withClusterIP(clusterIP)
         .withContainerTask(containerTask)
