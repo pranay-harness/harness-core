@@ -730,7 +730,13 @@ public class KubernetesContainerServiceImpl implements KubernetesContainerServic
           if (pods.size() != desiredCount) {
             executionLogCallback.saveExecutionLog(
                 String.format("Waiting for desired number of pods [%d/%d]", pods.size(), desiredCount), LogLevel.INFO);
-            sleep(ofSeconds(2));
+
+            if (pods.size() > desiredCount) {
+              pods.stream()
+                  .filter(pod -> "Failed".equals(pod.getStatus().getPhase()))
+                  .forEach(pod -> kubernetesClient.resource(pod).delete());
+            }
+            sleep(ofSeconds(5));
             continue;
           }
           if (!countReached.getAndSet(true)) {
@@ -745,7 +751,7 @@ public class KubernetesContainerServiceImpl implements KubernetesContainerServic
                   String.format(
                       "Waiting for pods to be updated with image %s [%d/%d]", images, haveImages, desiredCount),
                   LogLevel.INFO);
-              sleep(ofSeconds(2));
+              sleep(ofSeconds(5));
               continue;
             }
             if (!haveImagesCountReached.getAndSet(true)) {
@@ -760,7 +766,7 @@ public class KubernetesContainerServiceImpl implements KubernetesContainerServic
             if (running != desiredCount) {
               executionLogCallback.saveExecutionLog(
                   String.format("Waiting for pods to be running [%d/%d]", running, desiredCount), LogLevel.INFO);
-              sleep(ofSeconds(5));
+              sleep(ofSeconds(10));
               continue;
             }
             if (!runningCountReached.getAndSet(true)) {
@@ -773,7 +779,7 @@ public class KubernetesContainerServiceImpl implements KubernetesContainerServic
               executionLogCallback.saveExecutionLog(
                   String.format("Waiting for pods to reach steady state [%d/%d]", steadyState, desiredCount),
                   LogLevel.INFO);
-              sleep(ofSeconds(10));
+              sleep(ofSeconds(15));
               continue;
             }
             if (!steadyStateCountReached.getAndSet(true)) {
