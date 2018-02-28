@@ -422,6 +422,7 @@ public class KubernetesSetupCommandUnit extends ContainerSetupCommandUnit {
     RouteRuleSpecNested<IstioResourceBuilder> routeRuleSpecNested = new IstioResourceBuilder()
                                                                         .withNewMetadata()
                                                                         .withName(kubernetesServiceName)
+                                                                        .withNamespace(setupParams.getNamespace())
                                                                         .endMetadata()
                                                                         .withNewRouteRuleSpec()
                                                                         .withNewDestination()
