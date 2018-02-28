@@ -344,6 +344,7 @@ public class GitClientImpl implements GitClient {
                                              .setCredentialsProvider(new UsernamePasswordCredentialsProvider(
                                                  gitConfig.getUsername(), gitConfig.getPassword()))
                                              .setRemote("origin")
+                                             .setForce(forcePush)
                                              .setRefSpecs(new RefSpec(gitConfig.getBranch()))
                                              .call();
 
