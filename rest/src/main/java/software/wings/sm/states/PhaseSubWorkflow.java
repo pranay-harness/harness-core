@@ -172,6 +172,7 @@ public class PhaseSubWorkflow extends SubWorkflowState {
                                       .withServiceElement(serviceElement)
                                       .withDeploymentType(infrastructureMapping.getDeploymentType())
                                       .withInfraMappingId(infrastructureMapping.getUuid())
+                                      .withAppId(infrastructureMapping.getAppId())
                                       .withPhaseNameForRollback(phaseNameForRollback)
                                       .build();
 

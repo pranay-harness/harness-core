@@ -4,8 +4,19 @@
 
 package software.wings.api;
 
+import static org.apache.commons.lang3.StringUtils.isBlank;
+import static software.wings.utils.Switch.unhandled;
+
+import com.google.inject.Inject;
+
+import org.mongodb.morphia.annotations.Transient;
+import software.wings.beans.AzureKubernetesInfrastructureMapping;
+import software.wings.beans.DirectKubernetesInfrastructureMapping;
+import software.wings.beans.GcpKubernetesInfrastructureMapping;
+import software.wings.beans.InfrastructureMapping;
 import software.wings.beans.NameValuePair;
 import software.wings.common.Constants;
+import software.wings.service.intfc.InfrastructureMappingService;
 import software.wings.sm.ContextElement;
 import software.wings.sm.ContextElementType;
 import software.wings.sm.ExecutionContext;
@@ -21,8 +32,11 @@ import java.util.Map;
  * @author Rishi
  */
 public class PhaseElement implements ContextElement {
+  @Transient @Inject private transient InfrastructureMappingService infrastructureMappingService;
+
   private String uuid;
   private ServiceElement serviceElement;
+  private String appId;
   private String infraMappingId;
   private String deploymentType;
   private String phaseNameForRollback;
@@ -43,29 +57,14 @@ public class PhaseElement implements ContextElement {
     return Constants.PHASE_PARAM;
   }
 
-  /**
-   * Sets uuid.
-   *
-   * @param uuid the uuid
-   */
   public void setUuid(String uuid) {
     this.uuid = uuid;
   }
 
-  /**
-   * Gets service element.
-   *
-   * @return the service element
-   */
   public ServiceElement getServiceElement() {
     return serviceElement;
   }
 
-  /**
-   * Sets service element.
-   *
-   * @param serviceElement the service element
-   */
   public void setServiceElement(ServiceElement serviceElement) {
     this.serviceElement = serviceElement;
   }
@@ -79,6 +78,27 @@ public class PhaseElement implements ContextElement {
   public Map<String, Object> paramMap(ExecutionContext context) {
     Map<String, Object> map = new HashMap<>();
     map.put(SERVICE, serviceElement);
+    InfrastructureMapping infrastructureMapping = infrastructureMappingService.get(appId, infraMappingId);
+    if (DeploymentType.KUBERNETES.name().equals(infrastructureMapping.getDeploymentType())) {
+      String namespace = null;
+      if (infrastructureMapping instanceof GcpKubernetesInfrastructureMapping) {
+        namespace = ((GcpKubernetesInfrastructureMapping) infrastructureMapping).getNamespace();
+      } else if (infrastructureMapping instanceof AzureKubernetesInfrastructureMapping) {
+        namespace = ((AzureKubernetesInfrastructureMapping) infrastructureMapping).getNamespace();
+      } else if (infrastructureMapping instanceof DirectKubernetesInfrastructureMapping) {
+        namespace = ((DirectKubernetesInfrastructureMapping) infrastructureMapping).getNamespace();
+      } else {
+        unhandled(infrastructureMapping.getInfraMappingType());
+      }
+      if (isBlank(namespace)) {
+        namespace = "default";
+      }
+      Map<String, Object> namespaceMap = new HashMap<>();
+      namespaceMap.put(NAMESPACE, namespace);
+      Map<String, Object> kubernetesMap = new HashMap<>();
+      kubernetesMap.put(KUBERNETES, namespaceMap);
+      map.put(INFRA, kubernetesMap);
+    }
     return map;
   }
 
@@ -90,38 +110,26 @@ public class PhaseElement implements ContextElement {
     this.phaseNameForRollback = phaseNameForRollback;
   }
 
-  /**
-   * Gets infr mapping id.
-   *
-   * @return the infr mapping id
-   */
+  public String getAppId() {
+    return appId;
+  }
+
+  public void setAppId(String appId) {
+    this.appId = appId;
+  }
+
   public String getInfraMappingId() {
     return infraMappingId;
   }
 
-  /**
-   * Sets infr mapping id.
-   *
-   * @param infraMappingId the infr mapping id
-   */
   public void setInfraMappingId(String infraMappingId) {
     this.infraMappingId = infraMappingId;
   }
 
-  /**
-   * Gets deployment type.
-   *
-   * @return the deployment type
-   */
   public String getDeploymentType() {
     return deploymentType;
   }
 
-  /**
-   * Sets deployment type.
-   *
-   * @param deploymentType the deployment type
-   */
   public void setDeploymentType(String deploymentType) {
     this.deploymentType = deploymentType;
   }
@@ -134,57 +142,42 @@ public class PhaseElement implements ContextElement {
     this.variableOverrides = variableOverrides;
   }
 
-  /**
-   * The type Phase element builder.
-   */
   public static final class PhaseElementBuilder {
     private String uuid;
     private ServiceElement serviceElement;
+    private String appId;
     private String infraMappingId;
     private String deploymentType;
     private String phaseNameForRollback;
 
     private PhaseElementBuilder() {}
 
-    /**
-     * A phase element phase element builder.
-     *
-     * @return the phase element builder
-     */
     public static PhaseElementBuilder aPhaseElement() {
       return new PhaseElementBuilder();
     }
 
-    /**
-     * With uuid phase element builder.
-     *
-     * @param uuid the uuid
-     * @return the phase element builder
-     */
     public PhaseElementBuilder withUuid(String uuid) {
       this.uuid = uuid;
       return this;
     }
 
-    /**
-     * With service element phase element builder.
-     *
-     * @param serviceElement the service element
-     * @return the phase element builder
-     */
     public PhaseElementBuilder withServiceElement(ServiceElement serviceElement) {
       this.serviceElement = serviceElement;
       return this;
     }
 
-    /**
-     * With infra mapping id phase element builder.
-     *
-     * @param infraMappingId the infra mapping id
-     * @return the phase element builder
-     */
+    public PhaseElementBuilder withAppId(String appId) {
+      this.appId = appId;
+      return this;
+    }
+
     public PhaseElementBuilder withInfraMappingId(String infraMappingId) {
       this.infraMappingId = infraMappingId;
+      return this;
+    }
+
+    public PhaseElementBuilder withDeploymentType(String deploymentType) {
+      this.deploymentType = deploymentType;
       return this;
     }
 
@@ -193,40 +186,21 @@ public class PhaseElement implements ContextElement {
       return this;
     }
 
-    /**
-     * With deployment type phase element builder.
-     *
-     * @param deploymentType the deployment type
-     * @return the phase element builder
-     */
-    public PhaseElementBuilder withDeploymentType(String deploymentType) {
-      this.deploymentType = deploymentType;
-      return this;
-    }
-
-    /**
-     * But phase element builder.
-     *
-     * @return the phase element builder
-     */
     public PhaseElementBuilder but() {
       return aPhaseElement()
           .withUuid(uuid)
           .withServiceElement(serviceElement)
+          .withAppId(appId)
           .withInfraMappingId(infraMappingId)
           .withDeploymentType(deploymentType)
           .withPhaseNameForRollback(phaseNameForRollback);
     }
 
-    /**
-     * Build phase element.
-     *
-     * @return the phase element
-     */
     public PhaseElement build() {
       PhaseElement phaseElement = new PhaseElement();
       phaseElement.setUuid(uuid);
       phaseElement.setServiceElement(serviceElement);
+      phaseElement.setAppId(appId);
       phaseElement.setInfraMappingId(infraMappingId);
       phaseElement.setDeploymentType(deploymentType);
       phaseElement.setPhaseNameForRollback(phaseNameForRollback);
