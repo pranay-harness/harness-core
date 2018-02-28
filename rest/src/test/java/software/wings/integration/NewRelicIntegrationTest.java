@@ -1,6 +1,5 @@
 package software.wings.integration;
 
-import static java.util.Arrays.asList;
 import static javax.ws.rs.client.Entity.entity;
 import static javax.ws.rs.core.MediaType.APPLICATION_JSON;
 import static org.apache.commons.lang3.StringUtils.isBlank;
@@ -10,10 +9,8 @@ import static org.junit.Assert.assertNotNull;
 import static org.junit.Assert.assertTrue;
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.when;
-import static software.wings.beans.SearchFilter.Operator.EQ;
 import static software.wings.beans.SettingAttribute.Builder.aSettingAttribute;
 import static software.wings.beans.WorkflowExecution.WorkflowExecutionBuilder.aWorkflowExecution;
-import static software.wings.dl.PageRequest.PageRequestBuilder.aPageRequest;
 
 import com.google.common.collect.Lists;
 import com.google.inject.Inject;
@@ -32,8 +29,6 @@ import software.wings.beans.RestResponse;
 import software.wings.beans.SettingAttribute;
 import software.wings.beans.SettingAttribute.Category;
 import software.wings.beans.WorkflowExecution;
-import software.wings.dl.PageRequest;
-import software.wings.dl.PageResponse;
 import software.wings.metrics.RiskLevel;
 import software.wings.service.impl.analysis.AnalysisComparisonStrategy;
 import software.wings.service.impl.analysis.AnalysisContext;
@@ -78,12 +73,12 @@ public class NewRelicIntegrationTest extends BaseIntegrationTest {
   @Inject private WaitNotifyEngine waitNotifyEngine;
   @Inject private DelegateService delegateService;
 
+  private String newRelicConfigId;
+
   @Before
   public void setUp() throws Exception {
+    super.setUp();
     loginAdminUser();
-    deleteAllDocuments(asList(NewRelicMetricDataRecord.class));
-    deleteAllDocuments(asList(NewRelicMetricAnalysisRecord.class));
-    deleteAllDocuments(asList(SettingAttribute.class));
     hosts.clear();
     hosts.add("ip-172-31-2-144");
     hosts.add("ip-172-31-4-253");
@@ -92,7 +87,7 @@ public class NewRelicIntegrationTest extends BaseIntegrationTest {
     SettingAttribute newRelicSettingAttribute =
         aSettingAttribute()
             .withCategory(Category.CONNECTOR)
-            .withName("NewRelic")
+            .withName("NewRelic" + System.currentTimeMillis())
             .withAccountId(accountId)
             .withValue(NewRelicConfig.builder()
                            .accountId(accountId)
@@ -100,21 +95,13 @@ public class NewRelicIntegrationTest extends BaseIntegrationTest {
                            .apiKey("5ed76b50ebcfda54b77cd1daaabe635bd7f2e13dc6c5b11".toCharArray())
                            .build())
             .build();
-    wingsPersistence.saveAndGet(SettingAttribute.class, newRelicSettingAttribute);
+    newRelicConfigId = wingsPersistence.saveAndGet(SettingAttribute.class, newRelicSettingAttribute).getUuid();
   }
 
   @Test
   public void getNewRelicApplications() throws Exception {
-    // find new relic setting id
-
-    PageRequest<SettingAttribute> pageRequest =
-        aPageRequest().addFilter("accountId", EQ, accountId).addFilter("name", EQ, "NewRelic").build();
-    PageResponse<SettingAttribute> settings = settingsService.list(pageRequest);
-
-    assertEquals(1, settings.size());
-
-    WebTarget target = client.target(
-        API_BASE + "/newrelic/applications?settingId=" + settings.get(0).getUuid() + "&accountId=" + accountId);
+    WebTarget target =
+        client.target(API_BASE + "/newrelic/applications?settingId=" + newRelicConfigId + "&accountId=" + accountId);
     RestResponse<List<NewRelicApplication>> restResponse =
         getRequestBuilderWithAuthHeader(target).get(new GenericType<RestResponse<List<NewRelicApplication>>>() {});
 
@@ -201,7 +188,9 @@ public class NewRelicIntegrationTest extends BaseIntegrationTest {
           entity(metricDataRecords, APPLICATION_JSON), new GenericType<RestResponse<Boolean>>() {});
       assertTrue(restResponse.getResource());
 
-      Query<NewRelicMetricDataRecord> query = wingsPersistence.createQuery(NewRelicMetricDataRecord.class);
+      Query<NewRelicMetricDataRecord> query = wingsPersistence.createQuery(NewRelicMetricDataRecord.class)
+                                                  .field("stateExecutionId")
+                                                  .equal(stateExecutionId);
       assertEquals((batchNum + 1) * numOfMetricsPerBatch * hosts.size() * numOfMinutes, query.asList().size());
     }
   }

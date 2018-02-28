@@ -31,6 +31,7 @@ import javax.ws.rs.core.Response;
 public class SettingServiceIntegrationTest extends BaseIntegrationTest {
   @Before
   public void setUp() throws Exception {
+    super.setUp();
     loginAdminUser();
   }
 

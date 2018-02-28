@@ -1,6 +1,5 @@
 package software.wings.integration;
 
-import static java.util.Arrays.asList;
 import static javax.ws.rs.client.Entity.entity;
 import static javax.ws.rs.core.MediaType.APPLICATION_JSON;
 import static org.junit.Assert.assertEquals;
@@ -21,14 +20,12 @@ import org.junit.Before;
 import org.junit.Test;
 import software.wings.beans.Account;
 import software.wings.beans.ErrorCode;
-import software.wings.beans.KmsConfig;
 import software.wings.beans.ResponseMessage;
 import software.wings.beans.RestResponse;
 import software.wings.beans.Role;
 import software.wings.beans.RoleType;
 import software.wings.beans.SearchFilter.Operator;
 import software.wings.beans.User;
-import software.wings.security.encryption.EncryptedData;
 import software.wings.service.intfc.AccountService;
 import software.wings.utils.JsonUtils;
 
@@ -49,9 +46,8 @@ public class UserServiceIntegrationTest extends BaseIntegrationTest {
 
   @Before
   public void setUp() throws Exception {
+    super.setUp();
     loginAdminUser();
-    deleteAllDocuments(asList(KmsConfig.class));
-    deleteAllDocuments(asList(EncryptedData.class));
   }
 
   @Test
@@ -329,7 +325,6 @@ public class UserServiceIntegrationTest extends BaseIntegrationTest {
   @Test
   public void testAccountCreationWithKms() {
     loginAdminUser();
-    enableKmsFeatureFlag();
     Account account = Account.Builder.anAccount()
                           .withAccountName(UUID.randomUUID().toString())
                           .withCompanyName(UUID.randomUUID().toString())

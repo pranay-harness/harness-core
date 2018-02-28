@@ -4,11 +4,7 @@ import static java.lang.String.format;
 import static javax.ws.rs.client.Entity.entity;
 import static javax.ws.rs.core.MediaType.APPLICATION_JSON;
 import static org.assertj.core.api.Assertions.assertThat;
-import static org.mockito.Mockito.any;
-import static org.mockito.Mockito.anyObject;
-import static org.mockito.Mockito.when;
 import static org.mockito.MockitoAnnotations.initMocks;
-import static org.mockito.internal.util.reflection.Whitebox.setInternalState;
 import static software.wings.beans.Application.Builder.anApplication;
 import static software.wings.beans.Base.GLOBAL_APP_ID;
 import static software.wings.beans.Base.GLOBAL_ENV_ID;
@@ -34,17 +30,19 @@ import org.junit.Rule;
 import org.junit.Test;
 import org.junit.rules.TemporaryFolder;
 import org.junit.runner.JUnitCore;
-import org.mockito.Mock;
+import org.mongodb.morphia.query.Query;
+import org.mongodb.morphia.query.UpdateOperations;
 import software.wings.app.MainConfiguration;
 import software.wings.beans.AppContainer;
 import software.wings.beans.AppDynamicsConfig;
 import software.wings.beans.Application;
 import software.wings.beans.BambooConfig;
 import software.wings.beans.Base;
-import software.wings.beans.DelegateTask.SyncTaskContext;
 import software.wings.beans.DockerConfig;
 import software.wings.beans.EntityType;
 import software.wings.beans.Environment;
+import software.wings.beans.FeatureFlag;
+import software.wings.beans.FeatureName;
 import software.wings.beans.InfrastructureMappingType;
 import software.wings.beans.JenkinsConfig;
 import software.wings.beans.KmsConfig;
@@ -56,16 +54,13 @@ import software.wings.beans.SettingAttribute.Category;
 import software.wings.beans.SplunkConfig;
 import software.wings.beans.config.ArtifactoryConfig;
 import software.wings.beans.config.NexusConfig;
-import software.wings.delegatetasks.DelegateProxyFactory;
 import software.wings.dl.PageResponse;
 import software.wings.helpers.ext.mail.SmtpConfig;
 import software.wings.rules.SetupScheduler;
-import software.wings.service.impl.security.SecretManagementDelegateServiceImpl;
 import software.wings.service.intfc.FeatureFlagService;
 import software.wings.service.intfc.SystemCatalogService;
 import software.wings.service.intfc.WorkflowExecutionService;
 import software.wings.service.intfc.WorkflowService;
-import software.wings.service.intfc.security.KmsService;
 
 import java.io.BufferedWriter;
 import java.io.File;
@@ -112,8 +107,6 @@ public class DataGenUtil extends BaseIntegrationTest {
   @Inject private MainConfiguration configuration;
   @Inject private SystemCatalogService systemCatalogService;
   @Inject private FeatureFlagService featureFlagService;
-  @Inject private KmsService kmsService;
-  @Mock private DelegateProxyFactory delegateProxyFactory;
 
   /**
    * Generated Data for across the API use.
@@ -122,6 +115,7 @@ public class DataGenUtil extends BaseIntegrationTest {
    */
   @Before
   public void setUp() throws Exception {
+    super.setUp();
     initMocks(this);
 
     assertThat(NUM_APPS).isBetween(1, 1000);
@@ -132,9 +126,6 @@ public class DataGenUtil extends BaseIntegrationTest {
     assertThat(TAG_HIERARCHY_DEPTH).isBetween(1, 10);
 
     dropDBAndEnsureIndexes();
-    when(delegateProxyFactory.get(anyObject(), any(SyncTaskContext.class)))
-        .thenReturn(new SecretManagementDelegateServiceImpl());
-    setInternalState(kmsService, "delegateProxyFactory", delegateProxyFactory);
   }
 
   /**
@@ -160,15 +151,7 @@ public class DataGenUtil extends BaseIntegrationTest {
     }
     verifyAccountAndApplicationSetup(apps);
     featureFlagService.initializeFeatureFlags();
-    kmsService.saveKmsConfig(accountId,
-        KmsConfig.builder()
-            .isDefault(true)
-            .accountId(accountId)
-            .name("Account_kms")
-            .accessKey("AKIAIVRKRUMJ3LAVBMSQ")
-            .secretKey("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")
-            .kmsArn("arn:aws:kms:us-east-1:830767422336:key/6b64906a-b7ab-4f69-8159-e20fef1f204d")
-            .build());
+    addAndEnableKms();
     learningEngineService.initializeServiceSecretKeys();
   }
 
@@ -518,6 +501,23 @@ public class DataGenUtil extends BaseIntegrationTest {
     String name = names.get(nameIdx);
     names.remove(nameIdx);
     return name;
+  }
+
+  private void addAndEnableKms() {
+    kmsService.saveKmsConfig(accountId,
+        KmsConfig.builder()
+            .isDefault(true)
+            .accountId(accountId)
+            .name("Account_kms")
+            .accessKey("AKIAIVRKRUMJ3LAVBMSQ")
+            .secretKey("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")
+            .kmsArn("arn:aws:kms:us-east-1:830767422336:key/6b64906a-b7ab-4f69-8159-e20fef1f204d")
+            .build());
+    Query<FeatureFlag> kmsFlagQuery =
+        wingsPersistence.createQuery(FeatureFlag.class).field("name").equal(FeatureName.KMS.name());
+    UpdateOperations<FeatureFlag> updateOperations = wingsPersistence.createUpdateOperations(FeatureFlag.class);
+    updateOperations.set("enabled", true);
+    wingsPersistence.update(kmsFlagQuery, updateOperations);
   }
 
   /**
