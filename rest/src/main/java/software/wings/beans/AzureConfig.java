@@ -10,6 +10,7 @@ import lombok.NoArgsConstructor;
 import lombok.ToString;
 import org.hibernate.validator.constraints.NotEmpty;
 import software.wings.annotation.Encryptable;
+import software.wings.annotation.Encrypted;
 import software.wings.settings.SettingValue;
 import software.wings.yaml.setting.CloudProviderYaml;
 
@@ -23,9 +24,11 @@ public class AzureConfig extends SettingValue implements Encryptable {
 
   @Attributes(title = "Tenant ID", required = true) @NotEmpty private String tenantId;
 
-  @Attributes(title = "Key", required = true) @NotEmpty private String key;
+  @Attributes(title = "Key", required = true) @Encrypted @NotEmpty private char[] key;
 
   @SchemaIgnore @NotEmpty private String accountId;
+
+  @SchemaIgnore private String encryptedKey;
 
   /**
    * Instantiates a new Azure config.
@@ -34,12 +37,13 @@ public class AzureConfig extends SettingValue implements Encryptable {
     super(SettingVariableTypes.AZURE.name());
   }
 
-  public AzureConfig(String clientId, String tenantId, String key, String accountId) {
+  public AzureConfig(String clientId, String tenantId, char[] key, String accountId, String encryptedKey) {
     this();
     this.clientId = clientId;
     this.tenantId = tenantId;
     this.key = key;
     this.accountId = accountId;
+    this.encryptedKey = encryptedKey;
   }
 
   @Data
@@ -51,8 +55,7 @@ public class AzureConfig extends SettingValue implements Encryptable {
     private String key;
 
     @Builder
-    public Yaml(
-        String type, String harnessApiVersion, String clientId, String tenantId, String key, String subscriptionId) {
+    public Yaml(String type, String harnessApiVersion, String clientId, String tenantId, String key) {
       super(type, harnessApiVersion);
       this.clientId = clientId;
       this.tenantId = tenantId;

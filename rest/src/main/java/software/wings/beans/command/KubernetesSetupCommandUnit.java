@@ -130,8 +130,9 @@ public class KubernetesSetupCommandUnit extends ContainerSetupCommandUnit {
       encryptedDataDetails = edd;
     } else if (cloudProviderSetting.getValue() instanceof AzureConfig) {
       AzureConfig azureConfig = (AzureConfig) cloudProviderSetting.getValue();
-      kubernetesConfig = azureHelperService.getKubernetesClusterConfig(azureConfig, setupParams.getSubscriptionId(),
-          setupParams.getResourceGroup(), setupParams.getClusterName(), setupParams.getNamespace());
+      kubernetesConfig =
+          azureHelperService.getKubernetesClusterConfig(azureConfig, edd, setupParams.getSubscriptionId(),
+              setupParams.getResourceGroup(), setupParams.getClusterName(), setupParams.getNamespace());
       kubernetesConfig.setDecrypted(true);
       encryptedDataDetails = emptyList();
     } else {
