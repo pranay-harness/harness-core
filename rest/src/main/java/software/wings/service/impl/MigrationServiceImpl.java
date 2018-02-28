@@ -1,5 +1,6 @@
 package software.wings.service.impl;
 
+import static java.time.Duration.ofMinutes;
 import static software.wings.beans.Schema.SCHEMA_ID;
 import static software.wings.beans.Schema.SchemaBuilder.aSchema;
 
@@ -11,15 +12,15 @@ import migrations.MigrationList;
 import org.apache.commons.lang3.tuple.Pair;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import software.wings.beans.ErrorCode;
 import software.wings.beans.Schema;
 import software.wings.dl.WingsPersistence;
+import software.wings.exception.WingsException;
 import software.wings.lock.AcquiredLock;
 import software.wings.lock.PersistentLocker;
 import software.wings.service.intfc.MigrationService;
 
-import java.time.Duration;
 import java.util.Map;
-import java.util.concurrent.TimeUnit;
 import java.util.stream.Collectors;
 
 public class MigrationServiceImpl implements MigrationService {
@@ -35,8 +36,13 @@ public class MigrationServiceImpl implements MigrationService {
         MigrationList.getMigrations().stream().collect(Collectors.toMap(Pair::getKey, Pair::getValue));
     int maxVersion = migrations.keySet().stream().mapToInt(Integer::intValue).max().orElse(0);
 
-    try (AcquiredLock lock = persistentLocker.waitToAcquireLock(
-             Schema.class, SCHEMA_ID, Duration.ofMinutes(15), 20L, TimeUnit.MINUTES)) {
+    try (
+        AcquiredLock lock = persistentLocker.waitToAcquireLock(Schema.class, SCHEMA_ID, ofMinutes(15), ofMinutes(20))) {
+      if (lock == null) {
+        throw new WingsException(ErrorCode.GENERAL_ERROR)
+            .addParam("args", "The persistent lock was not acquired. That very unlikely, but yet it happened.");
+      }
+
       logger.info("[Migration] - Checking for new migrations");
       Schema schema = wingsPersistence.createQuery(Schema.class).get();
 

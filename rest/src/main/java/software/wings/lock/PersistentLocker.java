@@ -62,7 +62,7 @@ public class PersistentLocker implements Locker {
 
   @Override
   public AcquiredLock waitToAcquireLock(
-      Class entityClass, String entityId, Duration lockTimeout, long timeoutDuration, TimeUnit timeoutUnit) {
+      Class entityClass, String entityId, Duration lockTimeout, Duration waitTimeout) {
     String name = entityClass.getName() + "-" + entityId;
     try {
       return timeLimiter.callWithTimeout(() -> {
@@ -73,12 +73,10 @@ public class PersistentLocker implements Locker {
             sleep(ofMillis(100));
           }
         }
-      }, timeoutDuration, timeoutUnit, true);
+      }, waitTimeout.toMillis(), TimeUnit.MILLISECONDS, true);
     } catch (Exception e) {
       throw new WingsException(GENERAL_ERROR, IGNORABLE)
-          .addParam("args",
-              format("Failed to acquire distributed lock for %s within %s %s", name, timeoutDuration,
-                  timeoutUnit.name().toLowerCase()));
+          .addParam("args", format("Failed to acquire distributed lock for %s within %s", name, waitTimeout));
     }
   }
 
