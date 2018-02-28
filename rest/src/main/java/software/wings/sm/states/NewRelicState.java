@@ -1,5 +1,6 @@
 package software.wings.sm.states;
 
+import static io.harness.data.structure.EmptyPredicate.isEmpty;
 import static org.apache.commons.lang3.StringUtils.isBlank;
 import static software.wings.beans.DelegateTask.Builder.aDelegateTask;
 import static software.wings.common.UUIDGenerator.generateUuid;
@@ -14,7 +15,9 @@ import software.wings.beans.DelegateTask;
 import software.wings.beans.NewRelicConfig;
 import software.wings.beans.SettingAttribute;
 import software.wings.beans.TaskType;
+import software.wings.beans.TemplateExpression;
 import software.wings.common.Constants;
+import software.wings.common.TemplateExpressionProcessor;
 import software.wings.exception.WingsException;
 import software.wings.service.impl.analysis.AnalysisComparisonStrategy;
 import software.wings.service.impl.analysis.AnalysisComparisonStrategyProvider;
@@ -31,6 +34,8 @@ import software.wings.stencils.DefaultValue;
 import software.wings.stencils.EnumData;
 import software.wings.time.WingsTimeUtils;
 
+import java.util.LinkedHashMap;
+import java.util.Map;
 import java.util.Set;
 import java.util.concurrent.TimeUnit;
 
@@ -106,9 +111,27 @@ public class NewRelicState extends AbstractMetricAnalysisState {
   protected String triggerAnalysisDataCollection(ExecutionContext context, String correlationId, Set<String> hosts) {
     WorkflowStandardParams workflowStandardParams = context.getContextElement(ContextElementType.STANDARD);
     String envId = workflowStandardParams == null ? null : workflowStandardParams.getEnv().getUuid();
-    final SettingAttribute settingAttribute = settingsService.get(analysisServerConfigId);
+    SettingAttribute settingAttribute = null;
+    String finalServerConfigId = analysisServerConfigId;
+    String finalNewRelicApplicationId = applicationId;
+    if (!isEmpty(getTemplateExpressions())) {
+      TemplateExpression configIdExpression =
+          templateExpressionProcessor.getTemplateExpression(getTemplateExpressions(), "analysisServerConfigId");
+      if (configIdExpression != null) {
+        settingAttribute = templateExpressionProcessor.resolveSettingAttribute(context, configIdExpression);
+        finalServerConfigId = settingAttribute.getUuid();
+      }
+      TemplateExpression appIdExpression =
+          templateExpressionProcessor.getTemplateExpression(getTemplateExpressions(), "applicationId");
+      if (appIdExpression != null) {
+        finalNewRelicApplicationId = templateExpressionProcessor.resolveTemplateExpression(context, appIdExpression);
+      }
+    }
     if (settingAttribute == null) {
-      throw new WingsException("No new relic setting with id: " + analysisServerConfigId + " found");
+      settingAttribute = settingsService.get(analysisServerConfigId);
+      if (settingAttribute == null) {
+        throw new WingsException("No new relic setting with id: " + analysisServerConfigId + " found");
+      }
     }
 
     final NewRelicConfig newRelicConfig = (NewRelicConfig) settingAttribute.getValue();
@@ -123,12 +146,12 @@ public class NewRelicState extends AbstractMetricAnalysisState {
             .serviceId(getPhaseServiceId(context))
             .startTime(dataCollectionStartTimeStamp)
             .collectionTime(Integer.parseInt(timeDuration))
-            .newRelicAppId(Long.parseLong(applicationId))
+            .newRelicAppId(Long.parseLong(finalNewRelicApplicationId))
             .dataCollectionMinute(0)
             .encryptedDataDetails(secretManager.getEncryptionDetails(
                 newRelicConfig, context.getAppId(), context.getWorkflowExecutionId()))
             .hosts(hosts)
-            .settingAttributeId(analysisServerConfigId)
+            .settingAttributeId(finalServerConfigId)
             .build();
 
     String waitId = generateUuid();
@@ -151,5 +174,20 @@ public class NewRelicState extends AbstractMetricAnalysisState {
   @SchemaIgnore
   protected String getStateBaseUrl() {
     return "newrelic";
+  }
+
+  @Override
+  public Map<String, String> parentTemplateFields(String fieldName) {
+    Map<String, String> parentTemplateFields = new LinkedHashMap<>();
+    if (fieldName.equals("applicationId")) {
+      if (!configIdTemplatized()) {
+        parentTemplateFields.put("analysisServerConfigId", analysisServerConfigId);
+      }
+    }
+    return parentTemplateFields;
+  }
+
+  private boolean configIdTemplatized() {
+    return TemplateExpressionProcessor.checkFieldTemplatized("analysisServerConfigId", getTemplateExpressions());
   }
 }
