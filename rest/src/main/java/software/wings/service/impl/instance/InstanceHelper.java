@@ -616,6 +616,8 @@ public class InstanceHelper {
         InstanceHandler instanceHandler = instanceHandlerFactory.getInstanceHandler(infrastructureMappingType);
         instanceHandler.handleNewDeployment(deploymentInfo);
       }
+    } catch (WingsException exception) {
+      exception.logProcessedMessages(logger);
     } catch (Exception ex) {
       // We have to catch all kinds of runtime exceptions, log it and move on, otherwise the queue impl keeps retrying
       // forever in case of exception

@@ -2,6 +2,7 @@ package software.wings.app;
 
 import static com.google.common.collect.ImmutableMap.of;
 import static com.google.inject.matcher.Matchers.not;
+import static java.time.Duration.ofSeconds;
 import static software.wings.app.LoggingInitializer.initializeLogging;
 import static software.wings.common.Constants.DELEGATE_SYNC_CACHE;
 import static software.wings.common.Constants.USER_CACHE;
@@ -61,6 +62,8 @@ import software.wings.filter.AuditResponseFilter;
 import software.wings.health.WingsHealthCheck;
 import software.wings.jersey.JsonViews;
 import software.wings.jersey.KryoFeature;
+import software.wings.lock.AcquiredLock;
+import software.wings.lock.PersistentLocker;
 import software.wings.resources.AppResource;
 import software.wings.scheduler.ArchivalManager;
 import software.wings.scheduler.PersistentLockCleanupJob;
@@ -336,8 +339,17 @@ public class WingsApplication extends Application<MainConfiguration> {
     final QuartzScheduler jobScheduler =
         injector.getInstance(Key.get(QuartzScheduler.class, Names.named("JobScheduler")));
 
-    PersistentLockCleanupJob.add(jobScheduler);
-    ZombieHunterJob.scheduleJobs(jobScheduler);
+    PersistentLocker persistentLocker = injector.getInstance(Key.get(PersistentLocker.class));
+
+    try (AcquiredLock acquiredLock = persistentLocker.waitToAcquireLock(
+             WingsApplication.class, "Initialization", ofSeconds(5), ofSeconds(10))) {
+      // If we do not get the lock, that's not critical - that's most likely because other managers took it
+      // and they will initialize the jobs.
+      if (acquiredLock != null) {
+        PersistentLockCleanupJob.add(jobScheduler);
+        ZombieHunterJob.scheduleJobs(jobScheduler);
+      }
+    }
   }
 
   private void registerJerseyProviders(Environment environment) {
