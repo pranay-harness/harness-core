@@ -117,8 +117,16 @@ public class AuthServiceImpl implements AuthService {
       logger.warn("userCache is null. Fetch from DB");
       return userService.get(authToken.getUserId());
     } else {
-      User user = userCache.get(authToken.getUserId());
-      if (user == null) {
+      User user;
+      try {
+        user = userCache.get(authToken.getUserId());
+        if (user == null) {
+          user = userService.get(authToken.getUserId());
+          userCache.put(user.getUuid(), user);
+        }
+      } catch (Exception ex) {
+        // If there was any exception, remove that entry from cache
+        userCache.remove(authToken.getUserId());
         user = userService.get(authToken.getUserId());
         userCache.put(user.getUuid(), user);
       }

@@ -650,13 +650,23 @@ public class UserServiceImpl implements UserService {
   @Override
   public User getUserFromCacheOrDB(String userId) {
     Cache<String, User> userCache = cacheHelper.getUserCache();
-    User user = userCache.get(userId);
+    User user;
+    try {
+      user = userCache.get(userId);
 
-    if (user == null) {
-      logger.info("User [{}] not found in Cache. Load it from DB", userId);
+      if (user == null) {
+        logger.info("User [{}] not found in Cache. Load it from DB", userId);
+        user = get(userId);
+        userCache.put(user.getUuid(), user);
+      }
+      return user;
+    } catch (Exception ex) {
+      // If there was any exception, remove that entry from cache
+      userCache.remove(userId);
       user = get(userId);
       userCache.put(user.getUuid(), user);
     }
+
     return user;
   }
 
