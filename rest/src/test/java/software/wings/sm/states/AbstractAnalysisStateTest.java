@@ -144,16 +144,12 @@ public class AbstractAnalysisStateTest extends WingsBaseTest {
     doReturn(params).when(context).getContextElement(ContextElementType.STANDARD);
     SplunkV2State splunkV2State = spy(new SplunkV2State("SplunkState"));
     Set<String> nodes = splunkV2State.getCanaryNewHostNames(context);
-    assertEquals(10, nodes.size());
+    assertEquals(5, nodes.size());
     for (int i = 0; i < 5; ++i) {
       assertTrue(nodes.contains("serviceA"
           + "-" + i + ".harness.com"));
       nodes.remove("serviceA"
           + "-" + i + ".harness.com");
-      assertTrue(nodes.contains("serviceA"
-          + "-" + i));
-      nodes.remove("serviceA"
-          + "-" + i);
     }
     assertEquals(0, nodes.size());
   }

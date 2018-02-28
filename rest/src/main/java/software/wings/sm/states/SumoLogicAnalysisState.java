@@ -125,6 +125,7 @@ public class SumoLogicAnalysisState extends AbstractLogAnalysisState {
     final SumoConfig sumoConfig = (SumoConfig) settingAttribute.getValue();
     final Set<String> queries = Sets.newHashSet(query.split(","));
     final long logCollectionStartTimeStamp = WingsTimeUtils.getMinuteBoundary(System.currentTimeMillis());
+
     List<Set<String>> batchedHosts = batchHosts(hosts);
     String[] waitIds = new String[batchedHosts.size()];
     List<DelegateTask> delegateTasks = new ArrayList<>();
@@ -134,7 +135,8 @@ public class SumoLogicAnalysisState extends AbstractLogAnalysisState {
           appService.get(context.getAppId()).getAccountId(), context.getAppId(), context.getStateExecutionInstanceId(),
           getWorkflowId(context), context.getWorkflowExecutionId(), getPhaseServiceId(context), queries,
           logCollectionStartTimeStamp, 0, Integer.parseInt(timeDuration), hostBatch,
-          secretManager.getEncryptionDetails(sumoConfig, context.getAppId(), context.getWorkflowExecutionId()));
+          secretManager.getEncryptionDetails(sumoConfig, context.getAppId(), context.getWorkflowExecutionId()),
+          hostnameField);
       String waitId = generateUuid();
       PhaseElement phaseElement = context.getContextElement(ContextElementType.PARAM, Constants.PHASE_PARAM);
       String infrastructureMappingId = phaseElement == null ? null : phaseElement.getInfraMappingId();
@@ -156,5 +158,33 @@ public class SumoLogicAnalysisState extends AbstractLogAnalysisState {
       delegateTaskIds.add(delegateService.queueTask(task));
     }
     return StringUtils.join(delegateTaskIds, ",");
+  }
+
+  @DefaultValue("_sourceHost")
+  @Attributes(required = true, title = "Field name for Host/Container")
+  public String getHostnameField() {
+    return hostnameField;
+  }
+
+  public void setHostnameField(String hostnameField) {
+    this.hostnameField = hostnameField;
+  }
+
+  @Attributes(required = false, title = "Expression for Host/Container name")
+  public String getHostnameTemplate() {
+    return hostnameTemplate;
+  }
+
+  public void setHostnameTemplate(String hostnameTemplate) {
+    this.hostnameTemplate = hostnameTemplate;
+  }
+
+  @Attributes(title = "Analysis Time duration (in minutes)", description = "Default 15 minutes")
+  @DefaultValue("15")
+  public String getTimeDuration() {
+    if (isBlank(timeDuration)) {
+      return String.valueOf(15);
+    }
+    return timeDuration;
   }
 }

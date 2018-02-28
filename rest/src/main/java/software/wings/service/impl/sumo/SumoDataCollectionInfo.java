@@ -18,12 +18,15 @@ import java.util.Set;
 @ToString(callSuper = true)
 public class SumoDataCollectionInfo extends LogDataCollectionInfo {
   private SumoConfig sumoConfig;
+  private String hostnameField;
 
   public SumoDataCollectionInfo(SumoConfig sumoConfig, String accountId, String applicationId, String stateExecutionId,
       String workflowId, String workflowExecutionId, String serviceId, Set<String> queries, long startTime,
-      int startMinute, int collectionTime, Set<String> hosts, List<EncryptedDataDetail> encryptedDataDetails) {
+      int startMinute, int collectionTime, Set<String> hosts, List<EncryptedDataDetail> encryptedDataDetails,
+      String hostnameField) {
     super(accountId, applicationId, stateExecutionId, workflowId, workflowExecutionId, serviceId, queries, startTime,
         startMinute, collectionTime, hosts, StateType.SUMO, encryptedDataDetails);
     this.sumoConfig = sumoConfig;
+    this.hostnameField = hostnameField;
   }
 }
