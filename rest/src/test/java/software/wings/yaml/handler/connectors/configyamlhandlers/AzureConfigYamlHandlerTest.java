@@ -53,14 +53,17 @@ public class AzureConfigYamlHandlerTest extends BaseSettingValueConfigYamlHandle
   private SettingAttribute createAzureConfigProvider(String azureConfigName) {
     when(settingValidationService.validate(any(SettingAttribute.class))).thenReturn(true);
 
-    return settingsService.save(
-        aSettingAttribute()
-            .withCategory(Category.CLOUD_PROVIDER)
-            .withName(azureConfigName)
-            .withAccountId(ACCOUNT_ID)
-            .withValue(
-                AzureConfig.builder().clientId(clientId).tenantId(tenantId).key(key).accountId(ACCOUNT_ID).build())
-            .build());
+    return settingsService.save(aSettingAttribute()
+                                    .withCategory(Category.CLOUD_PROVIDER)
+                                    .withName(azureConfigName)
+                                    .withAccountId(ACCOUNT_ID)
+                                    .withValue(AzureConfig.builder()
+                                                   .clientId(clientId)
+                                                   .tenantId(tenantId)
+                                                   .key(key.toCharArray())
+                                                   .accountId(ACCOUNT_ID)
+                                                   .build())
+                                    .build());
   }
 
   private SettingValueYamlConfig generateSettingValueYamlConfig(String name, SettingAttribute settingAttributeSaved) {

@@ -93,7 +93,7 @@ public class SettingValidationService {
             .addParam("message", "Adding Azure as Cloud Provider is not supported yet.");
       }
       azureHelperService.validateAzureAccountCredential(((AzureConfig) settingValue).getClientId(),
-          ((AzureConfig) settingValue).getTenantId(), ((AzureConfig) settingValue).getKey());
+          ((AzureConfig) settingValue).getTenantId(), new String(((AzureConfig) settingValue).getKey()));
     } else if (settingValue instanceof AwsConfig) {
       awsHelperService.validateAwsAccountCredential(
           ((AwsConfig) settingValue).getAccessKey(), ((AwsConfig) settingValue).getSecretKey());

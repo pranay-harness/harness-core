@@ -1,5 +1,7 @@
 package software.wings.integration;
 
+import static org.mockito.internal.util.reflection.Whitebox.setInternalState;
+
 import org.junit.Ignore;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -7,7 +9,9 @@ import software.wings.beans.AzureConfig;
 import software.wings.beans.AzureKubernetesCluster;
 import software.wings.helpers.ext.azure.AzureHelperService;
 import software.wings.rules.Integration;
+import software.wings.service.impl.security.EncryptionServiceImpl;
 
+import java.util.Collections;
 import java.util.List;
 import java.util.Map;
 
@@ -20,13 +24,20 @@ This is not to be run as an automated test[hence the @Ignore].
 public class AzureIntegrationTest {
   private static final Logger logger = LoggerFactory.getLogger(AzureIntegrationTest.class);
 
-  private static final String clientId = "a19170f2-a2b1-49d2-9a0f-091b02fb7cb7";
-  private static final String tenantId = "bd57732b-0443-4542-887b-e601cff640a1";
-  private static final String key = "aqFVAJLuVL7fyOyv0OPW6N8HTyQWr1366t1smLIDfXA=";
+  private static final String clientId = "2d7ae800-e1dd-4098-97f8-f6ae330abf82";
+  private static final String tenantId = "b229b2bb-5f33-4d22-bce0-730f6474e906";
+  private static final String key = "7cRKp5OKktQnxDeFYtGrpV2qYk3pyIMdB35siZpFa7o=";
   private static final String subscriptionId = "12d2db62-5aa9-471d-84bb-faa489b3e319";
+
+  private static AzureHelperService azureHelperService = new AzureHelperService();
+
+  public static void setUp() {
+    setInternalState(azureHelperService, "encryptionService", new EncryptionServiceImpl());
+  }
 
   public static void main(String[] args) {
     logger.info("AzureIntegrationTest: Start.");
+    setUp();
     azureAuthenticationTest();
     getSubscriptions();
     getContainerRegistries();
@@ -37,24 +48,23 @@ public class AzureIntegrationTest {
   }
 
   private static void azureAuthenticationTest() {
-    AzureHelperService azure = new AzureHelperService();
-    azure.validateAzureAccountCredential(clientId, tenantId, key);
+    azureHelperService.validateAzureAccountCredential(clientId, tenantId, key);
   }
 
   private static void getSubscriptions() {
-    AzureHelperService azure = new AzureHelperService();
     AzureConfig config = getAzureConfig();
-    logger.info("Azure Subscriptions: " + azure.listSubscriptions(config).toString());
+    logger.info(
+        "Azure Subscriptions: " + azureHelperService.listSubscriptions(config, Collections.emptyList()).toString());
   }
 
   private static void getContainerRegistries() {
-    AzureHelperService azure = new AzureHelperService();
     AzureConfig config = getAzureConfig();
-    Map<String, String> subscriptions = azure.listSubscriptions(config);
+    Map<String, String> subscriptions = azureHelperService.listSubscriptions(config, Collections.emptyList());
     subscriptions.forEach((subId, Desc) -> logger.info(subId + Desc));
     for (Map.Entry<String, String> entry : subscriptions.entrySet()) {
       String subscriptionId = entry.getKey();
-      List<String> registries = azure.listContainerRegistries(config, subscriptionId);
+      List<String> registries =
+          azureHelperService.listContainerRegistries(config, Collections.emptyList(), subscriptionId);
       for (String registry : registries) {
         logger.info("Details: " + subscriptionId + " " + registry);
       }
@@ -62,17 +72,19 @@ public class AzureIntegrationTest {
   }
 
   private static void getRepositoryTags() {
-    AzureHelperService azure = new AzureHelperService();
     AzureConfig config = getAzureConfig();
-    Map<String, String> subscriptions = azure.listSubscriptions(config);
+    Map<String, String> subscriptions = azureHelperService.listSubscriptions(config, Collections.emptyList());
     subscriptions.forEach((subId, Desc) -> logger.info(subId + Desc));
     for (Map.Entry<String, String> entry : subscriptions.entrySet()) {
       String subscriptionId = entry.getKey();
-      List<String> registries = azure.listContainerRegistries(config, subscriptionId);
+      List<String> registries =
+          azureHelperService.listContainerRegistries(config, Collections.emptyList(), subscriptionId);
       for (String registry : registries) {
-        List<String> repositories = azure.listRepositories(config, subscriptionId, registry);
+        List<String> repositories =
+            azureHelperService.listRepositories(config, Collections.emptyList(), subscriptionId, registry);
         for (String repository : repositories) {
-          List<String> tags = azure.listRepositoryTags(config, subscriptionId, registry, repository);
+          List<String> tags = azureHelperService.listRepositoryTags(
+              config, Collections.emptyList(), subscriptionId, registry, repository);
           logger.info("Details: " + subscriptionId + " " + registry + " " + repository + " " + tags.toString());
         }
       }
@@ -80,21 +92,21 @@ public class AzureIntegrationTest {
   }
 
   private static void getKubernetesClusters() {
-    AzureHelperService azure = new AzureHelperService();
     AzureConfig config = getAzureConfig();
-    List<AzureKubernetesCluster> clusters = azure.listKubernetesClusters(config, subscriptionId);
+    List<AzureKubernetesCluster> clusters =
+        azureHelperService.listKubernetesClusters(config, Collections.emptyList(), subscriptionId);
     logger.info("Clusters:");
     clusters.stream().forEach(
         cluster -> logger.info("Cluster Detail: " + cluster.getResourceGroup() + "/" + cluster.getName()));
   }
 
   private static void getKubernetesClusterConfig() {
-    AzureHelperService azure = new AzureHelperService();
     AzureConfig config = getAzureConfig();
-    azure.getKubernetesClusterConfig(config, subscriptionId, "puneet-aks", "puneet-aks", "default");
+    azureHelperService.getKubernetesClusterConfig(
+        config, Collections.emptyList(), subscriptionId, "puneet-aks", "puneet-aks", "default");
   }
 
   private static AzureConfig getAzureConfig() {
-    return new AzureConfig(clientId, tenantId, key, "");
+    return new AzureConfig(clientId, tenantId, key.toCharArray(), "", "");
   }
 }

@@ -31,32 +31,37 @@ public class AzureResourceServiceImpl implements AzureResourceService {
   public Map<String, String> listSubscriptions(String cloudProviderId) {
     SettingAttribute cloudProviderSetting = settingService.get(cloudProviderId);
     AzureConfig azureConfig = validateAndGetAzureConfig(cloudProviderSetting);
-    return azureHelperService.listSubscriptions(azureConfig);
+    return azureHelperService.listSubscriptions(
+        azureConfig, secretManager.getEncryptionDetails(azureConfig, null, null));
   }
 
   public List<String> listContainerRegistries(String cloudProviderId, String subscriptionId) {
     SettingAttribute cloudProviderSetting = settingService.get(cloudProviderId);
     AzureConfig azureConfig = validateAndGetAzureConfig(cloudProviderSetting);
-    return azureHelperService.listContainerRegistries(azureConfig, subscriptionId);
+    return azureHelperService.listContainerRegistries(
+        azureConfig, secretManager.getEncryptionDetails(azureConfig, null, null), subscriptionId);
   }
 
   public List<String> listRepositories(String cloudProviderId, String subscriptionId, String registryName) {
     SettingAttribute cloudProviderSetting = settingService.get(cloudProviderId);
     AzureConfig azureConfig = validateAndGetAzureConfig(cloudProviderSetting);
-    return azureHelperService.listRepositories(azureConfig, subscriptionId, registryName);
+    return azureHelperService.listRepositories(
+        azureConfig, secretManager.getEncryptionDetails(azureConfig, null, null), subscriptionId, registryName);
   }
 
   public List<String> listRepositoryTags(
       String cloudProviderId, String subscriptionId, String registryName, String repositoryName) {
     SettingAttribute cloudProviderSetting = settingService.get(cloudProviderId);
     AzureConfig azureConfig = validateAndGetAzureConfig(cloudProviderSetting);
-    return azureHelperService.listRepositoryTags(azureConfig, subscriptionId, registryName, repositoryName);
+    return azureHelperService.listRepositoryTags(azureConfig,
+        secretManager.getEncryptionDetails(azureConfig, null, null), subscriptionId, registryName, repositoryName);
   }
 
   public List<AzureKubernetesCluster> listKubernetesClusters(String cloudProviderId, String subscriptionId) {
     SettingAttribute cloudProviderSetting = settingService.get(cloudProviderId);
     AzureConfig azureConfig = validateAndGetAzureConfig(cloudProviderSetting);
-    return azureHelperService.listKubernetesClusters(azureConfig, subscriptionId);
+    return azureHelperService.listKubernetesClusters(
+        azureConfig, secretManager.getEncryptionDetails(azureConfig, null, null), subscriptionId);
   }
 
   private AzureConfig validateAndGetAzureConfig(SettingAttribute cloudProviderSetting) {

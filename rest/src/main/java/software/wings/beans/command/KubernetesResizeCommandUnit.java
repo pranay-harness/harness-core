@@ -57,8 +57,9 @@ public class KubernetesResizeCommandUnit extends ContainerResizeCommandUnit {
       encryptedDataDetails = edd;
     } else if (cloudProviderSetting.getValue() instanceof AzureConfig) {
       AzureConfig azureConfig = (AzureConfig) cloudProviderSetting.getValue();
-      kubernetesConfig = azureHelperService.getKubernetesClusterConfig(azureConfig, resizeParams.getSubscriptionId(),
-          resizeParams.getResourceGroup(), resizeParams.getClusterName(), resizeParams.getNamespace());
+      kubernetesConfig =
+          azureHelperService.getKubernetesClusterConfig(azureConfig, edd, resizeParams.getSubscriptionId(),
+              resizeParams.getResourceGroup(), resizeParams.getClusterName(), resizeParams.getNamespace());
       kubernetesConfig.setDecrypted(true);
       encryptedDataDetails = emptyList();
     } else {

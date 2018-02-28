@@ -152,7 +152,7 @@ public class AzureKubernetesInfraMappingYamlHandlerTest extends BaseYamlHandlerT
     return aSettingAttribute()
         .withName(computeProviderName)
         .withUuid(SETTING_ID)
-        .withValue(AzureConfig.builder().clientId("ClientId").tenantId("tenantId").key("key").build())
+        .withValue(AzureConfig.builder().clientId("ClientId").tenantId("tenantId").key("key".toCharArray()).build())
         .build();
   }
 

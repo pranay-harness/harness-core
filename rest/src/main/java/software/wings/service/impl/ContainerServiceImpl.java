@@ -142,9 +142,10 @@ public class ContainerServiceImpl implements ContainerService {
       kubernetesConfig.setDecrypted(true);
     } else if (containerServiceParams.getSettingAttribute().getValue() instanceof AzureConfig) {
       AzureConfig azureConfig = (AzureConfig) containerServiceParams.getSettingAttribute().getValue();
-      kubernetesConfig = azureHelperService.getKubernetesClusterConfig(azureConfig,
-          containerServiceParams.getSubscriptionId(), containerServiceParams.getResourceGroup(),
-          containerServiceParams.getClusterName(), containerServiceParams.getNamespace());
+      kubernetesConfig =
+          azureHelperService.getKubernetesClusterConfig(azureConfig, containerServiceParams.getEncryptionDetails(),
+              containerServiceParams.getSubscriptionId(), containerServiceParams.getResourceGroup(),
+              containerServiceParams.getClusterName(), containerServiceParams.getNamespace());
       kubernetesConfig.setDecrypted(true);
     } else {
       kubernetesConfig = (KubernetesConfig) containerServiceParams.getSettingAttribute().getValue();
@@ -254,11 +255,13 @@ public class ContainerServiceImpl implements ContainerService {
       return true;
     } else if (value instanceof AzureConfig) {
       AzureConfig azureConfig = (AzureConfig) containerServiceParams.getSettingAttribute().getValue();
-      if (azureHelperService.isValidKubernetesCluster(azureConfig, containerServiceParams.getSubscriptionId(),
-              containerServiceParams.getResourceGroup(), containerServiceParams.getClusterName())) {
-        KubernetesConfig kubernetesConfig = azureHelperService.getKubernetesClusterConfig(azureConfig,
-            containerServiceParams.getSubscriptionId(), containerServiceParams.getResourceGroup(),
-            containerServiceParams.getClusterName(), containerServiceParams.getNamespace());
+      if (azureHelperService.isValidKubernetesCluster(azureConfig, containerServiceParams.getEncryptionDetails(),
+              containerServiceParams.getSubscriptionId(), containerServiceParams.getResourceGroup(),
+              containerServiceParams.getClusterName())) {
+        KubernetesConfig kubernetesConfig =
+            azureHelperService.getKubernetesClusterConfig(azureConfig, containerServiceParams.getEncryptionDetails(),
+                containerServiceParams.getSubscriptionId(), containerServiceParams.getResourceGroup(),
+                containerServiceParams.getClusterName(), containerServiceParams.getNamespace());
         kubernetesConfig.setDecrypted(true);
         kubernetesContainerService.listControllers(kubernetesConfig, containerServiceParams.getEncryptionDetails());
         return true;

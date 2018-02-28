@@ -6,6 +6,7 @@ import static org.apache.commons.lang3.StringUtils.isNotBlank;
 import static software.wings.beans.AzureKubernetesCluster.Builder.anAzureKubernetesCluster;
 import static software.wings.utils.HttpUtil.getOkHttpClientBuilder;
 
+import com.google.inject.Inject;
 import com.google.inject.Singleton;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
@@ -32,6 +33,8 @@ import software.wings.beans.AzureKubernetesCluster;
 import software.wings.beans.ErrorCode;
 import software.wings.beans.KubernetesConfig;
 import software.wings.exception.WingsException;
+import software.wings.security.encryption.EncryptedDataDetail;
+import software.wings.service.intfc.security.EncryptionService;
 import software.wings.utils.HttpUtil;
 
 import java.util.ArrayList;
@@ -46,29 +49,31 @@ public class AzureHelperService {
   private static final Logger logger = LoggerFactory.getLogger(AzureHelperService.class);
 
   private static final int CONNECT_TIMEOUT = 5; // TODO:: read from config
+  @Inject private EncryptionService encryptionService;
 
   public void validateAzureAccountCredential(String clientId, String tenantId, String key) {
     try {
       ApplicationTokenCredentials credentials =
           new ApplicationTokenCredentials(clientId, tenantId, key, AzureEnvironment.AZURE);
 
-      Azure azure = Azure.configure().withLogLevel(LogLevel.NONE).authenticate(credentials).withDefaultSubscription();
-
-      azure.getCurrentSubscription().listLocations();
+      Azure.configure().withLogLevel(LogLevel.NONE).authenticate(credentials).withDefaultSubscription();
 
     } catch (Exception e) {
       HandleAzureAuthenticationException(e);
     }
   }
 
-  public Map<String, String> listSubscriptions(AzureConfig azureConfig) {
+  public Map<String, String> listSubscriptions(AzureConfig azureConfig, List<EncryptedDataDetail> encryptionDetails) {
+    encryptionService.decrypt(azureConfig, encryptionDetails);
     Azure azure = getAzureClient(azureConfig);
     Map<String, String> subscriptionMap = new HashMap<>();
     azure.subscriptions().list().forEach(sub -> subscriptionMap.put(sub.subscriptionId(), sub.displayName()));
     return subscriptionMap;
   }
 
-  public boolean isValidSubscription(AzureConfig azureConfig, String subscriptionId) {
+  public boolean isValidSubscription(
+      AzureConfig azureConfig, List<EncryptedDataDetail> encryptionDetails, String subscriptionId) {
+    encryptionService.decrypt(azureConfig, encryptionDetails);
     return getAzureClient(azureConfig)
                .subscriptions()
                .list()
@@ -78,14 +83,18 @@ public class AzureHelperService {
         != 0;
   }
 
-  public List<String> listContainerRegistries(AzureConfig azureConfig, String subscriptionId) {
+  public List<String> listContainerRegistries(
+      AzureConfig azureConfig, List<EncryptedDataDetail> encryptionDetails, String subscriptionId) {
+    encryptionService.decrypt(azureConfig, encryptionDetails);
     Azure azure = getAzureClient(azureConfig, subscriptionId);
     List<String> registries = new ArrayList<>();
     azure.containerRegistries().list().forEach(registry -> registries.add(registry.name()));
     return registries;
   }
 
-  public boolean isValidContainerRegistry(AzureConfig azureConfig, String subscriptionId, String registryName) {
+  public boolean isValidContainerRegistry(AzureConfig azureConfig, List<EncryptedDataDetail> encryptionDetails,
+      String subscriptionId, String registryName) {
+    encryptionService.decrypt(azureConfig, encryptionDetails);
     return getAzureClient(azureConfig, subscriptionId)
                .containerRegistries()
                .list()
@@ -95,11 +104,15 @@ public class AzureHelperService {
         != 0;
   }
 
-  public String getLoginServerForRegistry(AzureConfig azureConfig, String subscriptionId, String registryName) {
-    return getRegistry(azureConfig, subscriptionId, registryName).loginServerUrl();
+  public String getLoginServerForRegistry(AzureConfig azureConfig, List<EncryptedDataDetail> encryptionDetails,
+      String subscriptionId, String registryName) {
+    encryptionService.decrypt(azureConfig, encryptionDetails);
+    return getRegistry(azureConfig, encryptionDetails, subscriptionId, registryName).loginServerUrl();
   }
 
-  private Registry getRegistry(AzureConfig azureConfig, String subscriptionId, String registryName) {
+  private Registry getRegistry(AzureConfig azureConfig, List<EncryptedDataDetail> encryptionDetails,
+      String subscriptionId, String registryName) {
+    encryptionService.decrypt(azureConfig, encryptionDetails);
     return getAzureClient(azureConfig, subscriptionId)
         .containerRegistries()
         .list()
@@ -109,7 +122,9 @@ public class AzureHelperService {
         .get();
   }
 
-  public List<String> listRepositories(AzureConfig azureConfig, String subscriptionId, String registryName) {
+  public List<String> listRepositories(AzureConfig azureConfig, List<EncryptedDataDetail> encryptionDetails,
+      String subscriptionId, String registryName) {
+    encryptionService.decrypt(azureConfig, encryptionDetails);
     Azure azure = getAzureClient(azureConfig, subscriptionId);
     try {
       Registry registry = azure.containerRegistries()
@@ -119,7 +134,7 @@ public class AzureHelperService {
                               .findFirst()
                               .get();
       AcrRestClient acrRestClient = getAcrRestClient(registry.loginServerUrl());
-      return acrRestClient.listRepositories(getAuthHeader(azureConfig.getClientId(), azureConfig.getKey()))
+      return acrRestClient.listRepositories(getAuthHeader(azureConfig.getClientId(), new String(azureConfig.getKey())))
           .execute()
           .body()
           .getRepositories();
@@ -131,8 +146,9 @@ public class AzureHelperService {
     }
   }
 
-  public List<String> listRepositoryTags(
-      AzureConfig azureConfig, String subscriptionId, String registryName, String repositoryName) {
+  public List<String> listRepositoryTags(AzureConfig azureConfig, List<EncryptedDataDetail> encryptionDetails,
+      String subscriptionId, String registryName, String repositoryName) {
+    encryptionService.decrypt(azureConfig, encryptionDetails);
     Azure azure = getAzureClient(azureConfig, subscriptionId);
     try {
       Registry registry = azure.containerRegistries()
@@ -143,7 +159,8 @@ public class AzureHelperService {
                               .get();
       AcrRestClient acrRestClient = getAcrRestClient(registry.loginServerUrl());
       return acrRestClient
-          .listRepositoryTags(getAuthHeader(azureConfig.getClientId(), azureConfig.getKey()), repositoryName)
+          .listRepositoryTags(
+              getAuthHeader(azureConfig.getClientId(), new String(azureConfig.getKey())), repositoryName)
           .execute()
           .body()
           .getTags();
@@ -155,7 +172,9 @@ public class AzureHelperService {
     }
   }
 
-  public List<AzureKubernetesCluster> listKubernetesClusters(AzureConfig azureConfig, String subscriptionId) {
+  public List<AzureKubernetesCluster> listKubernetesClusters(
+      AzureConfig azureConfig, List<EncryptedDataDetail> encryptionDetails, String subscriptionId) {
+    encryptionService.decrypt(azureConfig, encryptionDetails);
     List<AzureKubernetesCluster> clusters = new ArrayList<>();
 
     getAzureClient(azureConfig, subscriptionId)
@@ -169,15 +188,18 @@ public class AzureHelperService {
     return clusters;
   }
 
-  public boolean isValidKubernetesCluster(
-      AzureConfig azureConfig, String subscriptionId, String resourceGroup, String clusterName) {
+  public boolean isValidKubernetesCluster(AzureConfig azureConfig, List<EncryptedDataDetail> encryptionDetails,
+      String subscriptionId, String resourceGroup, String clusterName) {
+    encryptionService.decrypt(azureConfig, encryptionDetails);
     KubernetesCluster cluster =
         getAzureClient(azureConfig, subscriptionId).kubernetesClusters().getByResourceGroup(resourceGroup, clusterName);
     return cluster != null;
   }
 
-  public KubernetesConfig getKubernetesClusterConfig(
-      AzureConfig azureConfig, String subscriptionId, String resourceGroup, String clusterName, String namespace) {
+  public KubernetesConfig getKubernetesClusterConfig(AzureConfig azureConfig,
+      List<EncryptedDataDetail> encryptionDetails, String subscriptionId, String resourceGroup, String clusterName,
+      String namespace) {
+    encryptionService.decrypt(azureConfig, encryptionDetails);
     try {
       Response<AksGetCredentialsResponse> response =
           getAzureManagementRestClient()
@@ -225,8 +247,8 @@ public class AzureHelperService {
 
   private String getAzureBearerAuthToken(AzureConfig azureConfig) {
     try {
-      ApplicationTokenCredentials credentials = new ApplicationTokenCredentials(
-          azureConfig.getClientId(), azureConfig.getTenantId(), azureConfig.getKey(), AzureEnvironment.AZURE);
+      ApplicationTokenCredentials credentials = new ApplicationTokenCredentials(azureConfig.getClientId(),
+          azureConfig.getTenantId(), new String(azureConfig.getKey()), AzureEnvironment.AZURE);
       String token = credentials.getToken("https://management.core.windows.net/");
       return "Bearer " + token;
     } catch (Exception e) {
@@ -237,8 +259,8 @@ public class AzureHelperService {
 
   private Azure getAzureClient(AzureConfig azureConfig) {
     try {
-      ApplicationTokenCredentials credentials = new ApplicationTokenCredentials(
-          azureConfig.getClientId(), azureConfig.getTenantId(), azureConfig.getKey(), AzureEnvironment.AZURE);
+      ApplicationTokenCredentials credentials = new ApplicationTokenCredentials(azureConfig.getClientId(),
+          azureConfig.getTenantId(), new String(azureConfig.getKey()), AzureEnvironment.AZURE);
 
       return Azure.configure().withLogLevel(LogLevel.NONE).authenticate(credentials).withDefaultSubscription();
     } catch (Exception e) {
@@ -249,8 +271,8 @@ public class AzureHelperService {
 
   private Azure getAzureClient(AzureConfig azureConfig, String subscriptionId) {
     try {
-      ApplicationTokenCredentials credentials = new ApplicationTokenCredentials(
-          azureConfig.getClientId(), azureConfig.getTenantId(), azureConfig.getKey(), AzureEnvironment.AZURE);
+      ApplicationTokenCredentials credentials = new ApplicationTokenCredentials(azureConfig.getClientId(),
+          azureConfig.getTenantId(), new String(azureConfig.getKey()), AzureEnvironment.AZURE);
 
       return Azure.configure().withLogLevel(LogLevel.NONE).authenticate(credentials).withSubscription(subscriptionId);
     } catch (Exception e) {
@@ -296,6 +318,8 @@ public class AzureHelperService {
   }
 
   private void HandleAzureAuthenticationException(Exception e) {
+    logger.error("HandleAzureAuthenticationException: Exception:" + e);
+
     Throwable e1 = e;
     while (e1.getCause() != null) {
       e1 = e1.getCause();

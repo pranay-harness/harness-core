@@ -383,14 +383,15 @@ public abstract class ContainerServiceSetup extends State {
     } else if (artifactStream.getArtifactStreamType().equals(ACR.name())) {
       AcrArtifactStream acrArtifactStream = (AcrArtifactStream) artifactStream;
       AzureConfig azureConfig = (AzureConfig) settingsService.get(settingId).getValue();
-      String loginServer = azureHelperService.getLoginServerForRegistry(
-          azureConfig, acrArtifactStream.getSubscriptionId(), acrArtifactStream.getRegistryName());
+      String loginServer = azureHelperService.getLoginServerForRegistry(azureConfig,
+          secretManager.getEncryptionDetails(azureConfig, context.getAppId(), context.getWorkflowExecutionId()),
+          acrArtifactStream.getSubscriptionId(), acrArtifactStream.getRegistryName());
 
       imageDetails.registryUrl(azureHelperService.getUrl(loginServer))
           .sourceName(acrArtifactStream.getRepositoryName())
           .name(loginServer + "/" + acrArtifactStream.getRepositoryName())
           .username(azureConfig.getClientId())
-          .password(azureConfig.getKey());
+          .password(new String(azureConfig.getKey()));
     } else if (artifactStream.getArtifactStreamType().equals(ARTIFACTORY.name())) {
       ArtifactoryArtifactStream artifactoryArtifactStream = (ArtifactoryArtifactStream) artifactStream;
       ArtifactoryConfig artifactoryConfig = (ArtifactoryConfig) settingsService.get(settingId).getValue();
