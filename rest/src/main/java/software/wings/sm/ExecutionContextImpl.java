@@ -112,6 +112,19 @@ public class ExecutionContextImpl implements DeploymentExecutionContext {
    * {@inheritDoc}
    */
   @Override
+  public String renderExpression(String expression, List<ContextElement> contextElements) {
+    Map<String, Object> context = new HashMap<>();
+    context.putAll(prepareContext());
+    for (ContextElement contextElement : contextElements) {
+      context.putAll(contextElement.paramMap(this));
+    }
+    return renderExpression(expression, context);
+  }
+
+  /**
+   * {@inheritDoc}
+   */
+  @Override
   public String renderExpression(String expression, StateExecutionData stateExecutionData) {
     Map<String, Object> context = prepareContext(stateExecutionData);
     return renderExpression(expression, context);
