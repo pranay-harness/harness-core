@@ -1,5 +1,6 @@
 package software.wings.sm.states;
 
+import static io.harness.data.structure.EmptyPredicate.isEmpty;
 import static org.apache.commons.lang3.StringUtils.isBlank;
 import static software.wings.beans.ErrorCode.INVALID_REQUEST;
 import static software.wings.dl.PageRequest.PageRequestBuilder.aPageRequest;
@@ -92,6 +93,10 @@ public abstract class AbstractAnalysisState extends State {
   @Transient @Inject protected TemplateExpressionProcessor templateExpressionProcessor;
 
   @Transient @Inject @SchemaIgnore protected CVService cvService;
+
+  protected String hostnameField;
+
+  protected String hostnameTemplate;
 
   @Attributes(title = "Analysis Time duration (in minutes)")
   @DefaultValue("15")
@@ -233,15 +238,12 @@ public abstract class AbstractAnalysisState extends State {
     CanaryWorkflowStandardParams canaryWorkflowStandardParams = context.getContextElement(ContextElementType.STANDARD);
     Set<String> rv = new HashSet<>();
     for (InstanceElement instanceElement : canaryWorkflowStandardParams.getInstances()) {
-      rv.add(instanceElement.getHostName());
+      if (isEmpty(hostnameTemplate)) {
+        rv.add(instanceElement.getHostName());
+      } else {
+        rv.add(context.renderExpression(hostnameTemplate, Lists.newArrayList(instanceElement)));
+      }
     }
-
-    rv = rv.stream()
-             .flatMap(hostname
-                 -> hostname.contains(".") ? Lists.newArrayList(hostname.split("\\.")[0], hostname).stream()
-                                           : Stream.of(hostname))
-             .collect(Collectors.toSet());
-
     return rv;
   }
 

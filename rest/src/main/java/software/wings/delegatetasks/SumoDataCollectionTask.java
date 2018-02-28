@@ -111,15 +111,9 @@ public class SumoDataCollectionTask extends AbstractDelegateDataCollectionTask {
           int retry = 0;
           while (!completed.get() && retry < RETRIES) {
             try {
-              String hostStr = null;
               final List<LogElement> logElements = new ArrayList<>();
               for (String host : dataCollectionInfo.getHosts()) {
-                if (hostStr == null) {
-                  hostStr = "_sourceHost = " + host;
-                } else {
-                  hostStr += " OR "
-                      + " _sourceHost = " + host;
-                }
+                String hostStr = dataCollectionInfo.getHostnameField() + " = " + host;
 
                 /* Heart beat */
                 final LogElement sumoHeartBeatElement = new LogElement();
@@ -131,82 +125,82 @@ public class SumoDataCollectionTask extends AbstractDelegateDataCollectionTask {
                 sumoHeartBeatElement.setTimeStamp(0);
                 sumoHeartBeatElement.setLogCollectionMinute(logCollectionMinute);
                 logElements.add(sumoHeartBeatElement);
-              }
 
-              if (hostStr == null) {
-                throw new IllegalArgumentException("No hosts found for Sumo task " + dataCollectionInfo.toString());
-              }
-
-              hostStr = " (" + hostStr + ") ";
-
-              String searchQuery = "";
-              if (!query.startsWith("(") && !query.endsWith(")")) {
-                searchQuery = " (" + query + ") " + hostStr + " | timeslice 1m";
-              } else {
-                searchQuery = query + hostStr + " | timeslice 1m";
-              }
-
-              final long endTime = collectionStartTime + TimeUnit.MINUTES.toMillis(1) - 1;
-              logger.info("triggering sumo query startTime: " + collectionStartTime + " endTime: " + endTime
-                  + " query: " + searchQuery);
-              String searchJobId = sumoClient.createSearchJob(
-                  searchQuery, Long.toString(collectionStartTime), Long.toString(endTime), "UTC");
-
-              int messageCount = 0;
-              int recordCount = 0;
-              GetSearchJobStatusResponse getSearchJobStatusResponse = null;
-              // We will loop until the search job status
-              // is either "DONE GATHERING RESULTS" or
-              // "CANCELLED".
-              while (getSearchJobStatusResponse == null
-                  || (!getSearchJobStatusResponse.getState().equals("DONE GATHERING RESULTS")
-                         && !getSearchJobStatusResponse.getState().equals("CANCELLED"))) {
-                Thread.sleep(5000);
-
-                // Get the latest search job status.
-                getSearchJobStatusResponse = sumoClient.getSearchJobStatus(searchJobId);
-                logger.info(
-                    "Waiting on search job ID: " + searchJobId + " status: " + getSearchJobStatusResponse.getState());
-              }
-
-              // If the last search job status indicated
-              // that the search job was "CANCELLED", we
-              // can't get messages or records.
-              if (getSearchJobStatusResponse.getState().equals("CANCELLED")) {
-                logger.info("Ugh. Search job was cancelled. Retrying ...");
-                if (++retry == RETRIES) {
-                  taskResult.setStatus(DataCollectionTaskStatus.FAILURE);
-                  taskResult.setErrorMessage("Sumo Logic cancelled search job " + RETRIES + " times");
-                  completed.set(true);
-                  break;
+                if (hostStr == null) {
+                  throw new IllegalArgumentException("No hosts found for Sumo task " + dataCollectionInfo.toString());
                 }
-                continue;
-              }
 
-              messageCount = getSearchJobStatusResponse.getMessageCount();
+                hostStr = " (" + hostStr + ") ";
 
-              int clusterLabel = 0;
-              int messageOffset = 0;
-              int messageLength = Math.min(messageCount, 1000);
-              if (messageCount > 0) {
-                do {
-                  GetMessagesForSearchJobResponse getMessagesForSearchJobResponse =
-                      sumoClient.getMessagesForSearchJob(searchJobId, messageOffset, messageLength);
-                  for (LogMessage logMessage : getMessagesForSearchJobResponse.getMessages()) {
-                    final LogElement sumoLogElement = new LogElement();
-                    sumoLogElement.setQuery(query);
-                    sumoLogElement.setClusterLabel(String.valueOf(clusterLabel++));
-                    sumoLogElement.setHost(logMessage.getSourceHost());
-                    sumoLogElement.setCount(1);
-                    sumoLogElement.setLogMessage(logMessage.getProperties().get("_raw"));
-                    sumoLogElement.setTimeStamp(Long.parseLong(logMessage.getProperties().get("_timeslice")));
-                    sumoLogElement.setLogCollectionMinute(logCollectionMinute);
-                    logElements.add(sumoLogElement);
+                String searchQuery = "";
+                if (!query.startsWith("(") && !query.endsWith(")")) {
+                  searchQuery = " (" + query + ") " + hostStr + " | timeslice 1m";
+                } else {
+                  searchQuery = query + hostStr + " | timeslice 1m";
+                }
+
+                final long endTime = collectionStartTime + TimeUnit.MINUTES.toMillis(1) - 1;
+                logger.info("triggering sumo query startTime: " + collectionStartTime + " endTime: " + endTime
+                    + " query: " + searchQuery);
+                String searchJobId = sumoClient.createSearchJob(
+                    searchQuery, Long.toString(collectionStartTime), Long.toString(endTime), "UTC");
+
+                int messageCount = 0;
+                int recordCount = 0;
+                GetSearchJobStatusResponse getSearchJobStatusResponse = null;
+                // We will loop until the search job status
+                // is either "DONE GATHERING RESULTS" or
+                // "CANCELLED".
+                while (getSearchJobStatusResponse == null
+                    || (!getSearchJobStatusResponse.getState().equals("DONE GATHERING RESULTS")
+                           && !getSearchJobStatusResponse.getState().equals("CANCELLED"))) {
+                  Thread.sleep(5000);
+
+                  // Get the latest search job status.
+                  getSearchJobStatusResponse = sumoClient.getSearchJobStatus(searchJobId);
+                  logger.info(
+                      "Waiting on search job ID: " + searchJobId + " status: " + getSearchJobStatusResponse.getState());
+                }
+
+                // If the last search job status indicated
+                // that the search job was "CANCELLED", we
+                // can't get messages or records.
+                if (getSearchJobStatusResponse.getState().equals("CANCELLED")) {
+                  logger.info("Ugh. Search job was cancelled. Retrying ...");
+                  if (++retry == RETRIES) {
+                    taskResult.setStatus(DataCollectionTaskStatus.FAILURE);
+                    taskResult.setErrorMessage("Sumo Logic cancelled search job " + RETRIES + " times");
+                    completed.set(true);
+                    break;
                   }
-                  messageCount -= messageLength;
-                  messageOffset += messageLength;
-                  messageLength = Math.min(messageCount, 1000);
-                } while (messageCount > 0);
+                  continue;
+                }
+
+                messageCount = getSearchJobStatusResponse.getMessageCount();
+
+                int clusterLabel = 0;
+                int messageOffset = 0;
+                int messageLength = Math.min(messageCount, 1000);
+                if (messageCount > 0) {
+                  do {
+                    GetMessagesForSearchJobResponse getMessagesForSearchJobResponse =
+                        sumoClient.getMessagesForSearchJob(searchJobId, messageOffset, messageLength);
+                    for (LogMessage logMessage : getMessagesForSearchJobResponse.getMessages()) {
+                      final LogElement sumoLogElement = new LogElement();
+                      sumoLogElement.setQuery(query);
+                      sumoLogElement.setClusterLabel(String.valueOf(clusterLabel++));
+                      sumoLogElement.setCount(1);
+                      sumoLogElement.setLogMessage(logMessage.getProperties().get("_raw"));
+                      sumoLogElement.setTimeStamp(Long.parseLong(logMessage.getProperties().get("_timeslice")));
+                      sumoLogElement.setLogCollectionMinute(logCollectionMinute);
+                      logElements.add(sumoLogElement);
+                      sumoLogElement.setHost(host);
+                    }
+                    messageCount -= messageLength;
+                    messageOffset += messageLength;
+                    messageLength = Math.min(messageCount, 1000);
+                  } while (messageCount > 0);
+                }
               }
 
               boolean response = logAnalysisStoreService.save(StateType.SUMO, dataCollectionInfo.getAccountId(),
