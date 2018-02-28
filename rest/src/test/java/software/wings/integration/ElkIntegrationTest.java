@@ -1,6 +1,5 @@
 package software.wings.integration;
 
-import static java.util.Arrays.asList;
 import static javax.ws.rs.client.Entity.entity;
 import static javax.ws.rs.core.MediaType.APPLICATION_JSON;
 import static org.junit.Assert.assertEquals;
@@ -19,6 +18,7 @@ import com.google.inject.Inject;
 
 import org.assertj.core.util.Sets;
 import org.junit.Before;
+import org.junit.Ignore;
 import org.junit.Test;
 import org.mongodb.morphia.query.Query;
 import org.quartz.JobDataMap;
@@ -42,7 +42,6 @@ import software.wings.service.impl.analysis.LogMLAnalysisRecord;
 import software.wings.service.impl.analysis.LogMLAnalysisSummary;
 import software.wings.service.impl.analysis.LogMLClusterGenerator;
 import software.wings.service.impl.analysis.LogRequest;
-import software.wings.service.impl.newrelic.LearningEngineAnalysisTask;
 import software.wings.service.intfc.DelegateService;
 import software.wings.service.intfc.LearningEngineService;
 import software.wings.service.intfc.analysis.AnalysisService;
@@ -95,11 +94,8 @@ public class ElkIntegrationTest extends BaseIntegrationTest {
 
   @Before
   public void setUp() throws Exception {
+    super.setUp();
     loginAdminUser();
-    deleteAllDocuments(asList(LogDataRecord.class));
-    deleteAllDocuments(asList(WorkflowExecution.class));
-    deleteAllDocuments(asList(Workflow.class));
-    deleteAllDocuments(asList(LearningEngineAnalysisTask.class));
     hosts.clear();
     hosts.add("ip-172-31-2-144");
     hosts.add("ip-172-31-4-253");
@@ -119,20 +115,17 @@ public class ElkIntegrationTest extends BaseIntegrationTest {
     for (String host : hosts) {
       File file = new File(getClass().getClassLoader().getResource("./elk/" + host + ".json").getFile());
 
-      List<LogDataRecord> logDataRecords = readLogDataRecordsFromFile(file);
+      List<LogDataRecord> logDataRecords =
+          readLogDataRecordsFromFile(file, appId, workflowId, workflowExecutionId, stateExecutionId);
       Map<Integer, List<LogElement>> recordsByMinute = splitRecordsByMinute(logDataRecords);
 
-      final String stateExecutionId = logDataRecords.get(0).getStateExecutionId();
-      final String workflowId = logDataRecords.get(0).getWorkflowId();
-      final String workflowExecutionId = logDataRecords.get(0).getWorkflowExecutionId();
-      final String applicationId = logDataRecords.get(0).getApplicationId();
       final String serviceId = logDataRecords.get(0).getServiceId();
       final String query = ".*exception.*";
 
       StateExecutionInstance stateExecutionInstance = new StateExecutionInstance();
       stateExecutionInstance.setUuid(stateExecutionId);
       stateExecutionInstance.setStatus(ExecutionStatus.RUNNING);
-      stateExecutionInstance.setAppId(applicationId);
+      stateExecutionInstance.setAppId(appId);
       wingsPersistence.saveIgnoringDuplicateKeys(Collections.singletonList(stateExecutionInstance));
 
       wingsPersistence.saveIgnoringDuplicateKeys(logDataRecords);
@@ -142,7 +135,7 @@ public class ElkIntegrationTest extends BaseIntegrationTest {
         final LogClusterContext logClusterContext =
             LogClusterContext.builder()
                 .accountId(accountId)
-                .appId(applicationId)
+                .appId(appId)
                 .workflowExecutionId(workflowExecutionId)
                 .workflowId(workflowId)
                 .stateExecutionId(stateExecutionId)
@@ -158,12 +151,12 @@ public class ElkIntegrationTest extends BaseIntegrationTest {
                 .build();
 
         new LogMLClusterGenerator(learningEngineService, logClusterContext, ClusterLevel.L0, ClusterLevel.L1,
-            new LogRequest(query, applicationId, stateExecutionId, workflowId, serviceId,
+            new LogRequest(query, appId, stateExecutionId, workflowId, serviceId,
                 Sets.newHashSet(Collections.singletonList(host)), logCollectionMinute))
             .run();
 
-        final LogRequest logRequest = new LogRequest(query, applicationId, stateExecutionId, workflowId, serviceId,
-            Collections.singleton(host), logCollectionMinute);
+        final LogRequest logRequest = new LogRequest(
+            query, appId, stateExecutionId, workflowId, serviceId, Collections.singleton(host), logCollectionMinute);
 
         WebTarget getTarget = client.target(API_BASE + "/" + LogAnalysisResource.ELK_RESOURCE_BASE_URL
             + LogAnalysisResource.ANALYSIS_STATE_GET_LOG_URL + "?accountId=" + accountId + "&clusterLevel="
@@ -200,14 +193,24 @@ public class ElkIntegrationTest extends BaseIntegrationTest {
     return rv;
   }
 
-  private List<LogDataRecord> readLogDataRecordsFromFile(File file) throws FileNotFoundException {
+  private List<LogDataRecord> readLogDataRecordsFromFile(File file, String appId, String workflowId,
+      String workflowExecutionId, String stateExecutionId) throws FileNotFoundException {
     final Gson gson = new Gson();
     BufferedReader br = new BufferedReader(new FileReader(file));
     Type type = new TypeToken<List<LogDataRecord>>() {}.getType();
-    return gson.fromJson(br, type);
+    List<LogDataRecord> rv = gson.fromJson(br, type);
+    rv.forEach(logDataRecord -> {
+      logDataRecord.setAppId(appId);
+      logDataRecord.setApplicationId(appId);
+      logDataRecord.setWorkflowId(workflowId);
+      logDataRecord.setWorkflowExecutionId(workflowExecutionId);
+      logDataRecord.setStateExecutionId(stateExecutionId);
+    });
+    return rv;
   }
 
   // TODO Disabled test. Enable when purge is revisited
+  @Ignore
   public void testPurge() throws Exception {
     final String sameApplicationId = "some-application";
     final String sameServiceId = "some-service";

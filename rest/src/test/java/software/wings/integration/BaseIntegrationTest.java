@@ -7,7 +7,10 @@ import static javax.ws.rs.client.Entity.entity;
 import static javax.ws.rs.core.MediaType.APPLICATION_JSON;
 import static org.apache.commons.codec.binary.Base64.encodeBase64String;
 import static org.assertj.core.api.Assertions.assertThat;
-import static org.junit.Assert.assertNotNull;
+import static org.mockito.Matchers.any;
+import static org.mockito.Matchers.anyObject;
+import static org.mockito.Mockito.when;
+import static org.mockito.internal.util.reflection.Whitebox.setInternalState;
 import static software.wings.beans.Application.Builder.anApplication;
 import static software.wings.beans.License.Builder.aLicense;
 import static software.wings.beans.User.Builder.anUser;
@@ -15,7 +18,6 @@ import static software.wings.common.Constants.HARNESS_NAME;
 import static software.wings.dl.PageRequest.PageRequestBuilder.aPageRequest;
 import static software.wings.integration.IntegrationTestUtil.randomInt;
 import static software.wings.integration.SeedData.randomSeedString;
-import static software.wings.service.KmsTest.getKmsConfig;
 
 import com.google.common.collect.ImmutableMap;
 import com.google.inject.Inject;
@@ -41,7 +43,9 @@ import org.assertj.core.util.Lists;
 import org.glassfish.jersey.client.ClientConfig;
 import org.glassfish.jersey.media.multipart.MultiPartFeature;
 import org.glassfish.jersey.media.multipart.internal.MultiPartWriter;
+import org.junit.Before;
 import org.junit.BeforeClass;
+import org.mockito.Mock;
 import org.mongodb.morphia.Datastore;
 import org.mongodb.morphia.Morphia;
 import org.mongodb.morphia.annotations.Indexed;
@@ -54,10 +58,7 @@ import software.wings.WingsBaseTest;
 import software.wings.app.DatabaseModule;
 import software.wings.beans.Account;
 import software.wings.beans.Application;
-import software.wings.beans.Base;
-import software.wings.beans.FeatureFlag;
-import software.wings.beans.FeatureName;
-import software.wings.beans.KmsConfig;
+import software.wings.beans.DelegateTask.SyncTaskContext;
 import software.wings.beans.License;
 import software.wings.beans.RestResponse;
 import software.wings.beans.Role;
@@ -65,11 +66,15 @@ import software.wings.beans.RoleType;
 import software.wings.beans.SearchFilter.Operator;
 import software.wings.beans.Service;
 import software.wings.beans.User;
+import software.wings.delegatetasks.DelegateProxyFactory;
 import software.wings.dl.WingsPersistence;
+import software.wings.service.impl.security.SecretManagementDelegateServiceImpl;
 import software.wings.service.intfc.AccountService;
 import software.wings.service.intfc.AppService;
 import software.wings.service.intfc.LearningEngineService;
 import software.wings.service.intfc.SettingsService;
+import software.wings.service.intfc.security.KmsService;
+import software.wings.service.intfc.security.SecretManager;
 import software.wings.utils.JsonSubtypeResolver;
 
 import java.io.IOException;
@@ -115,6 +120,9 @@ public abstract class BaseIntegrationTest extends WingsBaseTest {
   @Inject protected SettingsService settingsService;
   @Inject protected AppService appService;
   @Inject protected LearningEngineService learningEngineService;
+  @Inject protected KmsService kmsService;
+  @Inject protected SecretManager secretManager;
+  @Mock private DelegateProxyFactory delegateProxyFactory;
 
   protected static final char[] JENKINS_PASSWORD = "admin".toCharArray();
   protected static final String JENKINS_URL = "http://ec2-34-207-79-21.compute-1.amazonaws.com:8080/";
@@ -163,6 +171,15 @@ client = ClientBuilder.newBuilder()
              .register(MultiPartFeature.class)
              .register(jacksonProvider)
              .build();
+}
+
+@Before
+public void setUp() throws Exception {
+  when(delegateProxyFactory.get(anyObject(), any(SyncTaskContext.class)))
+      .thenReturn(new SecretManagementDelegateServiceImpl());
+  setInternalState(kmsService, "delegateProxyFactory", delegateProxyFactory);
+  setInternalState(secretManager, "kmsService", kmsService);
+  setInternalState(wingsPersistence, "secretManager", secretManager);
 }
 
 protected String loginUser(final String userName, final String password) {
@@ -379,19 +396,5 @@ public String getDelegateToken() {
   }
 
   return jwt.serialize();
-}
-protected void enableKmsFeatureFlag() {
-  KmsConfig kmsConfig = getKmsConfig();
-  kmsConfig.setAccountId(Base.GLOBAL_ACCOUNT_ID);
-
-  WebTarget target = client.target(API_BASE + "/kms/save-global-kms?accountId=" + accountId);
-  RestResponse<String> response = getRequestBuilderWithAuthHeader(target).post(
-      entity(kmsConfig, APPLICATION_JSON), new GenericType<RestResponse<String>>() {});
-
-  assertNotNull(response.getResource());
-  FeatureFlag kmsFeatureFlag =
-      wingsPersistence.createQuery(FeatureFlag.class).field("name").equal(FeatureName.KMS.name()).get();
-  kmsFeatureFlag.setEnabled(true);
-  wingsPersistence.save(kmsFeatureFlag);
 }
 }

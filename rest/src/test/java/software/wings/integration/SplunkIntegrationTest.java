@@ -1,6 +1,5 @@
 package software.wings.integration;
 
-import static java.util.Arrays.asList;
 import static javax.ws.rs.client.Entity.entity;
 import static javax.ws.rs.core.MediaType.APPLICATION_JSON;
 import static org.junit.Assert.assertEquals;
@@ -41,9 +40,8 @@ import javax.ws.rs.core.GenericType;
 public class SplunkIntegrationTest extends BaseIntegrationTest {
   @Before
   public void setUp() throws Exception {
+    super.setUp();
     loginAdminUser();
-    deleteAllDocuments(asList(LogDataRecord.class));
-    deleteAllDocuments(asList(WorkflowExecution.class));
   }
 
   @Test

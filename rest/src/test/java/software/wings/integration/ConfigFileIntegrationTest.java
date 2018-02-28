@@ -4,6 +4,7 @@ import static org.assertj.core.api.Assertions.assertThat;
 import static org.mockito.Matchers.any;
 import static org.mockito.Matchers.anyObject;
 import static org.mockito.Mockito.when;
+import static org.mockito.internal.util.reflection.Whitebox.setInternalState;
 import static software.wings.beans.Application.Builder.anApplication;
 import static software.wings.beans.Base.GLOBAL_ENV_ID;
 import static software.wings.beans.ConfigFile.DEFAULT_TEMPLATE_ID;
@@ -33,7 +34,6 @@ import software.wings.service.intfc.ConfigService;
 import software.wings.service.intfc.FileService;
 import software.wings.service.intfc.FileService.FileBucket;
 import software.wings.service.intfc.ServiceResourceService;
-import software.wings.service.intfc.security.SecretManager;
 import software.wings.utils.BoundedInputStream;
 
 import java.io.BufferedWriter;
@@ -57,7 +57,6 @@ public class ConfigFileIntegrationTest extends BaseIntegrationTest {
   @Mock private DelegateProxyFactory delegateProxyFactory;
   @Inject private ServiceResourceService serviceResourceService;
   @Inject private FileService fileService;
-  @Inject private SecretManager secretManager;
 
   @Rule public TemporaryFolder testFolder = new TemporaryFolder();
   private Application app;
@@ -68,6 +67,8 @@ public class ConfigFileIntegrationTest extends BaseIntegrationTest {
 
   @Before
   public void setUp() throws Exception {
+    super.setUp();
+    setInternalState(configService, "secretManager", secretManager);
     loginAdminUser();
     when(delegateProxyFactory.get(anyObject(), any(SyncTaskContext.class)))
         .thenReturn(new SecretManagementDelegateServiceImpl());

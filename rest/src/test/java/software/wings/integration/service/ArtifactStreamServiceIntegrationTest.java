@@ -15,7 +15,6 @@ import static software.wings.utils.WingsTestConstants.SETTING_ID;
 import com.google.common.collect.ImmutableMap;
 import com.google.inject.Inject;
 
-import org.junit.Before;
 import org.junit.Ignore;
 import org.junit.Test;
 import software.wings.beans.Application;
@@ -57,9 +56,6 @@ public class ArtifactStreamServiceIntegrationTest extends BaseIntegrationTest {
                                                           .withSettingId(SETTING_ID)
                                                           .withImageName("wingsplugins/todolist")
                                                           .build();
-
-  @Before
-  public void setUp() throws Exception {}
 
   @Test
   public void testAddArtifactStream() {

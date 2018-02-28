@@ -54,6 +54,7 @@ public class AwsInfrastructureProviderIntegrationTest extends BaseIntegrationTes
 
   @Before
   public void setUp() throws Exception {
+    super.setUp();
     app =
         appService.save(anApplication().withName("AppA" + System.currentTimeMillis()).withAccountId(accountId).build());
     environment = Environment.Builder.anEnvironment().withAppId(app.getUuid()).withName("Developmenet").build();

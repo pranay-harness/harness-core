@@ -24,6 +24,7 @@ public class JenkinsIntegrationTest extends BaseIntegrationTest {
 
   @Test
   public void testSettingsOverwrite() throws Exception {
+    super.setUp();
     loginAdminUser();
     wingsPersistence.delete(
         wingsPersistence.createQuery(SettingAttribute.class).field("name").equal("Harness Jenkins"));

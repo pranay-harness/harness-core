@@ -66,6 +66,7 @@ public class InfrastructureMappingIntegrationTest extends BaseIntegrationTest {
 
   @Before
   public void setUp() throws Exception {
+    super.setUp();
     app =
         appService.save(anApplication().withName("AppA" + System.currentTimeMillis()).withAccountId(accountId).build());
     service = serviceResourceService.save(aService().withAppId(app.getUuid()).withName("Catalog").build());

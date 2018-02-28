@@ -24,7 +24,6 @@ import software.wings.service.impl.appdynamics.AppdynamicsNode;
 import software.wings.service.impl.appdynamics.AppdynamicsTier;
 import software.wings.service.impl.newrelic.NewRelicApplication;
 import software.wings.service.intfc.appdynamics.AppdynamicsDelegateService;
-import software.wings.service.intfc.security.SecretManager;
 import software.wings.utils.JsonUtils;
 
 import java.util.List;
@@ -37,12 +36,12 @@ import javax.ws.rs.core.GenericType;
 public class AppdynamicsIntegrationTest extends BaseIntegrationTest {
   final String ACCOUNT_ID = "kmpySmUISimoRrJL6NL73w";
   @Inject private AppdynamicsDelegateService appdynamicsDelegateService;
-  @Inject private SecretManager secretManager;
 
   private String appdynamicsSettingId;
 
   @Before
   public void setUp() throws Exception {
+    super.setUp();
     loginAdminUser();
     SettingAttribute appdSettingAttribute =
         aSettingAttribute()
