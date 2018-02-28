@@ -1,5 +1,6 @@
 package software.wings.sm.states;
 
+import static io.harness.data.structure.EmptyPredicate.isEmpty;
 import static org.apache.commons.lang3.StringUtils.isBlank;
 import static software.wings.beans.DelegateTask.Builder.aDelegateTask;
 import static software.wings.common.UUIDGenerator.generateUuid;
@@ -17,6 +18,7 @@ import software.wings.beans.DelegateTask;
 import software.wings.beans.SettingAttribute;
 import software.wings.beans.SumoConfig;
 import software.wings.beans.TaskType;
+import software.wings.beans.TemplateExpression;
 import software.wings.common.Constants;
 import software.wings.exception.WingsException;
 import software.wings.service.impl.analysis.AnalysisComparisonStrategy;
@@ -104,9 +106,20 @@ public class SumoLogicAnalysisState extends AbstractLogAnalysisState {
   protected String triggerAnalysisDataCollection(ExecutionContext context, String correlationId, Set<String> hosts) {
     WorkflowStandardParams workflowStandardParams = context.getContextElement(ContextElementType.STANDARD);
     String envId = workflowStandardParams == null ? null : workflowStandardParams.getEnv().getUuid();
-    final SettingAttribute settingAttribute = settingsService.get(analysisServerConfigId);
+
+    SettingAttribute settingAttribute = null;
+    if (!isEmpty(getTemplateExpressions())) {
+      TemplateExpression configIdExpression =
+          templateExpressionProcessor.getTemplateExpression(getTemplateExpressions(), "analysisServerConfigId");
+      if (configIdExpression != null) {
+        settingAttribute = templateExpressionProcessor.resolveSettingAttribute(context, configIdExpression);
+      }
+    }
     if (settingAttribute == null) {
-      throw new WingsException("No sumo setting with id: " + analysisServerConfigId + " found");
+      settingAttribute = settingsService.get(analysisServerConfigId);
+      if (settingAttribute == null) {
+        throw new WingsException("No sumo setting with id: " + analysisServerConfigId + " found");
+      }
     }
 
     final SumoConfig sumoConfig = (SumoConfig) settingAttribute.getValue();

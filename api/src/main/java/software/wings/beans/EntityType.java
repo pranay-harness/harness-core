@@ -124,5 +124,26 @@ public enum EntityType {
   /**
    * Elk indices
    */
-  ELK_INDICES
+  ELK_INDICES,
+  /**
+   *  NewRelic ConfigId
+   */
+  NEWRELIC_CONFIGID,
+  /**
+   * NewRelic AppId
+   */
+  NEWRELIC_APPID,
+  /***
+   * SUMO ConfigId
+   */
+  SUMOLOGIC_CONFIGID,
+
+  /**
+   *  NewRelic ConfigId
+   */
+  NEWRELIC_MARKER_CONFIGID,
+  /**
+   * NewRelic AppId
+   */
+  NEWRELIC_MARKER_APPID
 }

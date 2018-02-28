@@ -1,5 +1,6 @@
 package software.wings.sm.states;
 
+import static io.harness.data.structure.EmptyPredicate.isEmpty;
 import static java.util.Arrays.asList;
 import static software.wings.beans.DelegateTask.Builder.aDelegateTask;
 import static software.wings.sm.ExecutionResponse.Builder.anExecutionResponse;
@@ -16,7 +17,9 @@ import software.wings.api.PhaseElement;
 import software.wings.beans.NewRelicConfig;
 import software.wings.beans.SettingAttribute;
 import software.wings.beans.TaskType;
+import software.wings.beans.TemplateExpression;
 import software.wings.common.Constants;
+import software.wings.common.TemplateExpressionProcessor;
 import software.wings.exception.WingsException;
 import software.wings.service.impl.analysis.DataCollectionTaskResult;
 import software.wings.service.impl.newrelic.NewRelicDataCollectionInfo;
@@ -37,6 +40,7 @@ import software.wings.waitnotify.NotifyResponseData;
 import software.wings.waitnotify.WaitNotifyEngine;
 
 import java.util.Collections;
+import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.UUID;
@@ -53,6 +57,8 @@ public class NewRelicDeploymentMarkerState extends State {
   @Inject @Transient protected SecretManager secretManager;
 
   @Transient @Inject protected WaitNotifyEngine waitNotifyEngine;
+
+  @Transient @Inject protected TemplateExpressionProcessor templateExpressionProcessor;
 
   @EnumData(enumDataProvider = NewRelicSettingProvider.class)
   @Attributes(required = true, title = "New Relic Server")
@@ -79,12 +85,32 @@ public class NewRelicDeploymentMarkerState extends State {
 
   @Override
   public ExecutionResponse execute(ExecutionContext context) {
-    final SettingAttribute settingAttribute = settingsService.get(analysisServerConfigId);
+    SettingAttribute settingAttribute = null;
+    String finalServerConfigId = analysisServerConfigId;
+    String finalNewRelicApplicationId = applicationId;
+    if (!isEmpty(getTemplateExpressions())) {
+      TemplateExpression configIdExpression =
+          templateExpressionProcessor.getTemplateExpression(getTemplateExpressions(), "analysisServerConfigId");
+      if (configIdExpression != null) {
+        settingAttribute = templateExpressionProcessor.resolveSettingAttribute(context, configIdExpression);
+        finalServerConfigId = settingAttribute.getUuid();
+      }
+      TemplateExpression appIdExpression =
+          templateExpressionProcessor.getTemplateExpression(getTemplateExpressions(), "applicationId");
+      if (appIdExpression != null) {
+        finalNewRelicApplicationId = templateExpressionProcessor.resolveTemplateExpression(context, appIdExpression);
+      }
+    }
+
     if (settingAttribute == null) {
-      throw new WingsException("No new relic setting with id: " + analysisServerConfigId + " found");
+      settingAttribute = settingsService.get(analysisServerConfigId);
+      if (settingAttribute == null) {
+        throw new WingsException("No new relic setting with id: " + analysisServerConfigId + " found");
+      }
     }
 
     final NewRelicConfig newRelicConfig = (NewRelicConfig) settingAttribute.getValue();
+
     WorkflowStandardParams workflowStandardParams = context.getContextElement(ContextElementType.STANDARD);
     String envId = workflowStandardParams == null ? null : workflowStandardParams.getEnv().getUuid();
     PhaseElement phaseElement = context.getContextElement(ContextElementType.PARAM, Constants.PHASE_PARAM);
@@ -97,11 +123,11 @@ public class NewRelicDeploymentMarkerState extends State {
             .applicationId(context.getAppId())
             .stateExecutionId(context.getStateExecutionInstanceId())
             .workflowExecutionId(context.getWorkflowExecutionId())
-            .newRelicAppId(Long.parseLong(applicationId))
+            .newRelicAppId(Long.parseLong(finalNewRelicApplicationId))
             .dataCollectionMinute(0)
             .encryptedDataDetails(secretManager.getEncryptionDetails(
                 newRelicConfig, context.getAppId(), context.getWorkflowExecutionId()))
-            .settingAttributeId(analysisServerConfigId)
+            .settingAttributeId(finalServerConfigId)
             .deploymentMarker(evaluatedBody)
             .build();
     // String waitId = UUID.randomUUID().toString();
@@ -187,5 +213,20 @@ public class NewRelicDeploymentMarkerState extends State {
 
   public void setBody(String body) {
     this.body = body;
+  }
+
+  @Override
+  public Map<String, String> parentTemplateFields(String fieldName) {
+    Map<String, String> parentTemplateFields = new LinkedHashMap<>();
+    if (fieldName.equals("applicationId")) {
+      if (!configIdTemplatized()) {
+        parentTemplateFields.put("analysisServerConfigId", analysisServerConfigId);
+      }
+    }
+    return parentTemplateFields;
+  }
+
+  private boolean configIdTemplatized() {
+    return TemplateExpressionProcessor.checkFieldTemplatized("analysisServerConfigId", getTemplateExpressions());
   }
 }

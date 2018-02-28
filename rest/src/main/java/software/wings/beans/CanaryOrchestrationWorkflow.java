@@ -12,7 +12,12 @@ import static software.wings.beans.EntityType.ELK_CONFIGID;
 import static software.wings.beans.EntityType.ELK_INDICES;
 import static software.wings.beans.EntityType.ENVIRONMENT;
 import static software.wings.beans.EntityType.INFRASTRUCTURE_MAPPING;
+import static software.wings.beans.EntityType.NEWRELIC_APPID;
+import static software.wings.beans.EntityType.NEWRELIC_CONFIGID;
+import static software.wings.beans.EntityType.NEWRELIC_MARKER_APPID;
+import static software.wings.beans.EntityType.NEWRELIC_MARKER_CONFIGID;
 import static software.wings.beans.EntityType.SERVICE;
+import static software.wings.beans.EntityType.SUMOLOGIC_CONFIGID;
 import static software.wings.beans.Graph.Builder.aGraph;
 import static software.wings.beans.GraphLink.Builder.aLink;
 import static software.wings.beans.OrchestrationWorkflowType.CANARY;
@@ -300,8 +305,14 @@ public class CanaryOrchestrationWorkflow extends CustomOrchestrationWorkflow {
         addEnvServiceInfraVariables(reorderVariables, entityVariables);
         // AppDynamic state user variables
         addAppDUserVariables(reorderVariables, entityVariables);
+        // NewRelic state user variables
+        addNewRelicUserVariables(reorderVariables, entityVariables);
+        // NewRelic Marker State user variables
+        addNewRelicMarkerUserVariables(reorderVariables, entityVariables);
         // Add elk variables
         addElkUserVariables(reorderVariables, entityVariables);
+        // Add SUMO variables
+        addSumoLogicUserVariables(reorderVariables, entityVariables);
       }
       if (nonEntityVariables != null) {
         reorderVariables.addAll(nonEntityVariables);
@@ -363,6 +374,26 @@ public class CanaryOrchestrationWorkflow extends CustomOrchestrationWorkflow {
     addRemainingEntity(reorderVariables, entityVariables, APPDYNAMICS_TIERID);
   }
 
+  private void addNewRelicUserVariables(List<Variable> reorderVariables, List<Variable> entityVariables) {
+    for (Variable variable : entityVariables) {
+      if (variable.getEntityType().equals(NEWRELIC_CONFIGID)) {
+        reorderVariables.add(variable);
+        addRelatedEntity(entityVariables, reorderVariables, variable, NEWRELIC_APPID);
+      }
+    }
+    addRemainingEntity(reorderVariables, entityVariables, NEWRELIC_APPID);
+  }
+
+  private void addNewRelicMarkerUserVariables(List<Variable> reorderVariables, List<Variable> entityVariables) {
+    for (Variable variable : entityVariables) {
+      if (variable.getEntityType().equals(NEWRELIC_MARKER_CONFIGID)) {
+        reorderVariables.add(variable);
+        addRelatedEntity(entityVariables, reorderVariables, variable, NEWRELIC_MARKER_APPID);
+      }
+    }
+    addRemainingEntity(reorderVariables, entityVariables, NEWRELIC_MARKER_APPID);
+  }
+
   private void addElkUserVariables(List<Variable> reorderVariables, List<Variable> entityVariables) {
     for (Variable variable : entityVariables) {
       if (variable.getEntityType().equals(ELK_CONFIGID)) {
@@ -371,6 +402,14 @@ public class CanaryOrchestrationWorkflow extends CustomOrchestrationWorkflow {
       }
     }
     addRemainingEntity(reorderVariables, entityVariables, ELK_INDICES);
+  }
+
+  private void addSumoLogicUserVariables(List<Variable> reorderVariables, List<Variable> entityVariables) {
+    for (Variable variable : entityVariables) {
+      if (variable.getEntityType().equals(SUMOLOGIC_CONFIGID)) {
+        reorderVariables.add(variable);
+      }
+    }
   }
 
   private void addRemainingEntity(
