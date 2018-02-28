@@ -143,10 +143,13 @@ public class KubernetesSetupTest extends WingsBaseTest {
                                                               .withArtifactIds(Lists.newArrayList(ARTIFACT_ID))
                                                               .build();
   private ServiceElement serviceElement = aServiceElement().withUuid(SERVICE_ID).withName(SERVICE_NAME).build();
+
+  @InjectMocks
   private PhaseElement phaseElement = aPhaseElement()
                                           .withUuid(generateUuid())
                                           .withServiceElement(serviceElement)
                                           .withInfraMappingId(INFRA_MAPPING_ID)
+                                          .withAppId(APP_ID)
                                           .withDeploymentType(DeploymentType.KUBERNETES.name())
                                           .build();
   private StateExecutionInstance stateExecutionInstance =

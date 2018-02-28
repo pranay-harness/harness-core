@@ -21,6 +21,9 @@ public interface ContextElement {
   String SAFE_DISPLAY_SERVICE_VARIABLE = "safeDisplayServiceVariable";
   String TIMESTAMP_ID = "timestampId";
   String PIPELINE = "pipeline";
+  String INFRA = "infra";
+  String KUBERNETES = "kubernetes";
+  String NAMESPACE = "namespace";
 
   ContextElementType getElementType();
 

@@ -83,6 +83,8 @@ public abstract class ExpressionBuilder {
   protected static final String HOST_INSTANCE_SUBNETID = "host.ec2Instance.subnetId";
   protected static final String HOST_INSTANCE_VPCID = "host.ec2Instance.vpcId";
 
+  protected static final String INFRA_KUBERNETES_NAMESPACE = "infra.kubernetes.namespace";
+
   protected static final String START_TS = "startTs";
   protected static final String END_TS = "endTs";
   protected static final String STATUS = "status";
@@ -133,6 +135,8 @@ public abstract class ExpressionBuilder {
         HOST_INSTANCE_IMAGEID, HOST_INSTANCE_ARCH, HOST_INSTANCE_KERNELID, HOST_INSTANCE_KEY_NAME, HOST_INSTANCE_PVTDNS,
         HOST_INSTANCE_PRIVATEIP, HOST_INSTANCE_PUBLICDNS, HOST_INSTANCE_PUBLICIP, HOST_INSTANCE_SUBNETID,
         HOST_INSTANCE_VPCID));
+
+    expressions.add(INFRA_KUBERNETES_NAMESPACE);
 
     return expressions;
   }
