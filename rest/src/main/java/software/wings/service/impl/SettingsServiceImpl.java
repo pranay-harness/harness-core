@@ -267,11 +267,11 @@ public class SettingsServiceImpl implements SettingsService {
     // TODO:: workflow scan for finding out usage in Steps ???
   }
 
-  private void ensureCloudProviderSafeToDelete(SettingAttribute clodProviderSetting) {
+  private void ensureCloudProviderSafeToDelete(SettingAttribute cloudProviderSetting) {
     List<InfrastructureMapping> infrastructureMappings =
         infrastructureMappingService
             .list(aPageRequest()
-                      .addFilter("computeProviderSettingId", EQ, clodProviderSetting.getUuid())
+                      .addFilter("computeProviderSettingId", EQ, cloudProviderSetting.getUuid())
                       .withLimit(PageRequest.UNLIMITED)
                       .build())
             .getResponse();
@@ -281,9 +281,26 @@ public class SettingsServiceImpl implements SettingsService {
       throw new WingsException(INVALID_REQUEST, ReportTarget.USER)
           .addParam("message",
               String.format("Cloud provider [%s] is referenced by %s Service Infrastructure%s [%s].",
-                  clodProviderSetting.getName(), infraMappingNames.size(), infraMappingNames.size() == 1 ? "" : "s",
+                  cloudProviderSetting.getName(), infraMappingNames.size(), infraMappingNames.size() == 1 ? "" : "s",
                   Joiner.on(", ").join(infraMappingNames)));
     }
+
+    List<ArtifactStream> artifactStreams = artifactStreamService
+                                               .list(aPageRequest()
+                                                         .addFilter("settingId", EQ, cloudProviderSetting.getUuid())
+                                                         .withLimit(PageRequest.UNLIMITED)
+                                                         .build())
+                                               .getResponse();
+    if (!artifactStreams.isEmpty()) {
+      List<String> artifactStreamNames =
+          artifactStreams.stream().map(ArtifactStream::getName).collect(Collectors.toList());
+      throw new WingsException(INVALID_REQUEST, ReportTarget.USER)
+          .addParam("message",
+              String.format("Cloud provider [%s] is referenced by %s Artifact Stream%s [%s].",
+                  cloudProviderSetting.getName(), artifactStreamNames.size(),
+                  artifactStreamNames.size() == 1 ? "" : "s", Joiner.on(", ").join(artifactStreamNames)));
+    }
+
     // TODO:: workflow scan for finding out usage in Steps ???
   }
 
