@@ -37,10 +37,10 @@ import static software.wings.utils.WingsTestConstants.ACCOUNT_ID;
 import static software.wings.utils.WingsTestConstants.APP_ID;
 import static software.wings.utils.WingsTestConstants.APP_NAME;
 import static software.wings.utils.WingsTestConstants.COMPUTE_PROVIDER_ID;
+import static software.wings.utils.WingsTestConstants.COMPUTE_PROVIDER_ID_CHANGED;
 import static software.wings.utils.WingsTestConstants.ENV_ID;
 import static software.wings.utils.WingsTestConstants.ENV_NAME;
 import static software.wings.utils.WingsTestConstants.HOST_CONN_ATTR_ID;
-import static software.wings.utils.WingsTestConstants.HOST_ID;
 import static software.wings.utils.WingsTestConstants.HOST_NAME;
 import static software.wings.utils.WingsTestConstants.INFRA_MAPPING_ID;
 import static software.wings.utils.WingsTestConstants.SERVICE_ID;
@@ -111,9 +111,11 @@ import software.wings.settings.SettingValue.SettingVariableTypes;
 import software.wings.utils.WingsTestConstants;
 
 import java.util.Collections;
+import java.util.HashSet;
 import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.Set;
 
 /**
  * Created by anubhaw on 1/10/17.
@@ -302,17 +304,83 @@ public class InfrastructureMappingServiceTest extends WingsBaseTest {
         .when(serviceTemplateService)
         .get(APP_ID, TEMPLATE_ID);
 
-    Host host = aHost()
-                    .withAppId(APP_ID)
-                    .withEnvId(ENV_ID)
-                    .withServiceTemplateId(TEMPLATE_ID)
-                    .withInfraMappingId(INFRA_MAPPING_ID)
-                    .withUuid(HOST_ID)
-                    .withHostName("HOST_NAME_1")
-                    .build();
+    InfrastructureMapping returnedInfra = infrastructureMappingService.update(updatedInfra);
+    assertThat(returnedInfra).isNotNull();
+    verify(wingsPersistence, times(2)).get(InfrastructureMapping.class, APP_ID, INFRA_MAPPING_ID);
+    verify(staticInfrastructureProvider).updateHostConnAttrs(updatedInfra, updatedInfra.getHostConnectionAttrs());
+  }
+
+  @Test
+  public void shouldUpdateInfraComputerProviderId() {
+    PhysicalInfrastructureMapping savedInfra = aPhysicalInfrastructureMapping()
+                                                   .withHostConnectionAttrs(HOST_CONN_ATTR_ID)
+                                                   .withComputeProviderSettingId(SETTING_ID)
+                                                   .withComputeProviderSettingId(COMPUTE_PROVIDER_ID)
+                                                   .withComputeProviderType(PHYSICAL_DATA_CENTER.name())
+                                                   .withDeploymentType(DeploymentType.SSH.name())
+                                                   .withAppId(APP_ID)
+                                                   .withEnvId(ENV_ID)
+                                                   .withServiceId(SERVICE_ID)
+                                                   .withUuid(INFRA_MAPPING_ID)
+                                                   .withServiceTemplateId(TEMPLATE_ID)
+                                                   .withHostNames(singletonList(HOST_NAME))
+                                                   .withInfraMappingType(PHYSICAL_DATA_CENTER.name())
+                                                   .build();
+
+    PhysicalInfrastructureMapping updatedInfra = aPhysicalInfrastructureMapping()
+                                                     .withHostConnectionAttrs("HOST_CONN_ATTR_ID_1")
+                                                     .withComputeProviderSettingId(SETTING_ID)
+                                                     .withComputeProviderSettingId(COMPUTE_PROVIDER_ID_CHANGED)
+                                                     .withComputeProviderName(COMPUTE_PROVIDER_ID_CHANGED)
+                                                     .withComputeProviderType(PHYSICAL_DATA_CENTER.name())
+                                                     .withAccountId(ACCOUNT_ID)
+                                                     .withDeploymentType(DeploymentType.SSH.name())
+                                                     .withAppId(APP_ID)
+                                                     .withEnvId(ENV_ID)
+                                                     .withUuid(INFRA_MAPPING_ID)
+                                                     .withServiceId(SERVICE_ID)
+                                                     .withServiceTemplateId(TEMPLATE_ID)
+                                                     .withHostNames(singletonList(HOST_NAME))
+                                                     .withInfraMappingType(PHYSICAL_DATA_CENTER.name())
+                                                     .build();
+
+    when(appService.getAccountIdByAppId(APP_ID)).thenReturn(ACCOUNT_ID);
+
+    doReturn(savedInfra).when(wingsPersistence).get(InfrastructureMapping.class, APP_ID, INFRA_MAPPING_ID);
+
+    doReturn(aSettingAttribute()
+                 .withUuid(COMPUTE_PROVIDER_ID)
+                 .withName(COMPUTE_PROVIDER_ID)
+                 .withValue(aPhysicalDataCenterConfig().build())
+                 .build())
+        .when(settingsService)
+        .get(COMPUTE_PROVIDER_ID);
+
+    doReturn(aSettingAttribute()
+                 .withUuid(COMPUTE_PROVIDER_ID_CHANGED)
+                 .withName(COMPUTE_PROVIDER_ID_CHANGED)
+                 .withValue(aPhysicalDataCenterConfig().build())
+                 .build())
+        .when(settingsService)
+        .get(COMPUTE_PROVIDER_ID_CHANGED);
+
+    doReturn(aServiceTemplate().withAppId(APP_ID).withServiceId(SERVICE_ID).withUuid(TEMPLATE_ID).build())
+        .when(serviceTemplateService)
+        .get(APP_ID, TEMPLATE_ID);
 
     InfrastructureMapping returnedInfra = infrastructureMappingService.update(updatedInfra);
+    assertThat(returnedInfra).isNotNull();
+    Map<String, Object> keyValuePairs = new LinkedHashMap<>();
+    keyValuePairs.put("loadBalancerId", null);
+    keyValuePairs.put("computeProviderSettingId", COMPUTE_PROVIDER_ID_CHANGED);
+    keyValuePairs.put("hostConnectionAttrs", "HOST_CONN_ATTR_ID_1");
+    keyValuePairs.put("hostNames", singletonList(HOST_NAME));
+    keyValuePairs.put("computeProviderName", COMPUTE_PROVIDER_ID_CHANGED);
 
+    Set<String> fieldsToRemove = new HashSet<>();
+    fieldsToRemove.add("name");
+    verify(wingsPersistence)
+        .updateFields(PhysicalInfrastructureMapping.class, INFRA_MAPPING_ID, keyValuePairs, fieldsToRemove);
     verify(wingsPersistence, times(2)).get(InfrastructureMapping.class, APP_ID, INFRA_MAPPING_ID);
     verify(staticInfrastructureProvider).updateHostConnAttrs(updatedInfra, updatedInfra.getHostConnectionAttrs());
   }

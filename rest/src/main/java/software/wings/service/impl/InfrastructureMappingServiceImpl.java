@@ -564,7 +564,9 @@ public class InfrastructureMappingServiceImpl implements InfrastructureMappingSe
       }
       keyValuePairs.put("hostNameConvention", awsAmiInfrastructureMapping.getHostNameConvention());
     }
-
+    if (computeProviderSetting != null) {
+      keyValuePairs.put("computeProviderName", computeProviderSetting.getName());
+    }
     wingsPersistence.updateFields(
         infrastructureMapping.getClass(), infrastructureMapping.getUuid(), keyValuePairs, fieldsToRemove);
     InfrastructureMapping updatedInfraMapping = get(infrastructureMapping.getAppId(), infrastructureMapping.getUuid());
