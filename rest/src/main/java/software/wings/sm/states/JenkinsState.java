@@ -33,7 +33,6 @@ import software.wings.beans.TaskType;
 import software.wings.beans.command.CommandUnitDetails.CommandUnitType;
 import software.wings.beans.command.JenkinsTaskParams;
 import software.wings.common.Constants;
-import software.wings.common.TemplateExpressionProcessor;
 import software.wings.service.impl.JenkinsSettingProvider;
 import software.wings.service.intfc.ActivityService;
 import software.wings.service.intfc.DelegateService;
@@ -80,8 +79,6 @@ public class JenkinsState extends State {
 
   @Transient @Inject private ActivityService activityService;
   @Transient @Inject private SecretManager secretManager;
-
-  @Transient @Inject private TemplateExpressionProcessor templateExpressionProcessor;
 
   public JenkinsState(String name) {
     super(name, StateType.JENKINS.name());
@@ -278,6 +275,7 @@ public class JenkinsState extends State {
     jenkinsExecutionData.setErrorMsg(jenkinsExecutionResponse.getErrorMessage());
     jenkinsExecutionData.setBuildUrl(jenkinsExecutionResponse.getJobUrl());
     jenkinsExecutionData.setBuildNumber(jenkinsExecutionResponse.getBuildNumber());
+    jenkinsExecutionData.setDescription(jenkinsExecutionResponse.getDescription());
     jenkinsExecutionData.setMetadata(jenkinsExecutionResponse.getMetadata());
     return anExecutionResponse()
         .withExecutionStatus(jenkinsExecutionResponse.getExecutionStatus())
@@ -365,6 +363,8 @@ public class JenkinsState extends State {
     private List<FilePathAssertionEntry> filePathAssertionMap = Lists.newArrayList();
     private String buildNumber;
     private Map<String, String> metadata;
+    private Map<String, String> jobParameters;
+    private String description;
 
     public JenkinsExecutionResponse() {}
 
@@ -466,8 +466,24 @@ public class JenkinsState extends State {
       this.buildNumber = buildNumber;
     }
 
+    public String getDescription() {
+      return description;
+    }
+
+    public void setDescription(String description) {
+      this.description = description;
+    }
+
     public Map<String, String> getMetadata() {
       return metadata;
+    }
+
+    public Map<String, String> getJobParameters() {
+      return jobParameters;
+    }
+
+    public void setJobParameters(Map<String, String> jobParameters) {
+      this.jobParameters = jobParameters;
     }
 
     public void setMetadata(Map<String, String> metadata) {
@@ -482,6 +498,8 @@ public class JenkinsState extends State {
       private List<FilePathAssertionEntry> filePathAssertionMap = Lists.newArrayList();
       private String buildNumber;
       private Map<String, String> metadata;
+      private String description;
+      private Map<String, String> jobParameters;
 
       private Builder() {}
 
@@ -519,8 +537,18 @@ public class JenkinsState extends State {
         return this;
       }
 
+      public Builder withDescription(String description) {
+        this.description = description;
+        return this;
+      }
+
       public Builder withMetadata(Map<String, String> metadata) {
         this.metadata = metadata;
+        return this;
+      }
+
+      public Builder withJobParameters(Map<String, String> jobParameters) {
+        this.jobParameters = jobParameters;
         return this;
       }
 
@@ -532,7 +560,9 @@ public class JenkinsState extends State {
             .withJobUrl(jobUrl)
             .withFilePathAssertionMap(filePathAssertionMap)
             .withBuildNumber(buildNumber)
-            .withMetadata(metadata);
+            .withDescription(description)
+            .withMetadata(metadata)
+            .withJobParameters(jobParameters);
       }
 
       public JenkinsExecutionResponse build() {
@@ -544,6 +574,8 @@ public class JenkinsState extends State {
         jenkinsExecutionResponse.setFilePathAssertionMap(filePathAssertionMap);
         jenkinsExecutionResponse.setBuildNumber(buildNumber);
         jenkinsExecutionResponse.setMetadata(metadata);
+        jenkinsExecutionResponse.setDescription(description);
+        jenkinsExecutionResponse.setJobParameters(jobParameters);
         return jenkinsExecutionResponse;
       }
     }

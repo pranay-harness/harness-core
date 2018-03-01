@@ -23,6 +23,7 @@ import static software.wings.utils.WingsTestConstants.SETTING_ID;
 import com.google.common.collect.ImmutableMap;
 
 import org.junit.Before;
+import org.junit.Ignore;
 import org.junit.Rule;
 import org.junit.Test;
 import org.mockito.InjectMocks;
@@ -129,7 +130,19 @@ public class ArtifactCollectionStateTest {
   @Test
   public void shouldArtifactCollectionEvaluateBuildNo() {
     artifactCollectionState.setBuildNo("${regex.extract('...', ${workflow.variables.sourceCommitHash})}");
-    when(artifactService.getArtifactByBuildNumberContains(APP_ID, ARTIFACT_STREAM_ID, ARTIFACT_SOURCE_NAME, "0fc"))
+    when(artifactService.getArtifactByBuildNumber(APP_ID, ARTIFACT_STREAM_ID, ARTIFACT_SOURCE_NAME, "0fc"))
+        .thenReturn(anArtifact().withAppId(APP_ID).withStatus(Status.APPROVED).build());
+    artifactCollectionState.handleAsyncResponse(executionContext,
+        ImmutableMap.of(
+            ACTIVITY_ID, ArtifactCollectionExecutionData.builder().artifactStreamId(ARTIFACT_STREAM_ID).build()));
+    verify(workflowExecutionService).refreshBuildExecutionSummary(anyString(), anyString(), any());
+  }
+
+  @Test
+  @Ignore // for srinivas to modify; need to simulate real Jenkins
+  public void shouldArtifactCollectionEvaluateBuildNoFromDescription() {
+    artifactCollectionState.setBuildNo("${regex.replace('tag: ([\\w-]+)', '$1', ${Jenkins.description}}");
+    when(artifactService.getArtifactByBuildNumber(APP_ID, ARTIFACT_STREAM_ID, ARTIFACT_SOURCE_NAME, "0fc"))
         .thenReturn(anArtifact().withAppId(APP_ID).withStatus(Status.APPROVED).build());
     artifactCollectionState.handleAsyncResponse(executionContext,
         ImmutableMap.of(

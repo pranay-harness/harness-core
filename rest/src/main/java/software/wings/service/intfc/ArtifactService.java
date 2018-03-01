@@ -172,6 +172,5 @@ public interface ArtifactService extends OwnedByApplication {
    * @param buildNumber      the build number
    * @return the artifact by build number
    */
-  Artifact getArtifactByBuildNumberContains(
-      String appId, String artifactStreamId, String artifactSource, String buildNumber);
+  Artifact getArtifactByBuildNumber(String appId, String artifactStreamId, String artifactSource, String buildNumber);
 }

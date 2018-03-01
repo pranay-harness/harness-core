@@ -2,6 +2,7 @@ package software.wings.delegatetasks;
 
 import static java.util.Collections.emptyList;
 import static org.assertj.core.api.Assertions.assertThat;
+import static org.junit.Assert.assertEquals;
 import static org.mockito.Matchers.any;
 import static org.mockito.Matchers.anyString;
 import static org.mockito.Mockito.verify;
@@ -71,6 +72,7 @@ public class JenkinsTaskTest {
   @Test
   public void shouldExecuteSuccessfullyWhenBuildPasses() throws Exception {
     when(buildWithDetails.getResult()).thenReturn(BuildResult.SUCCESS);
+    when(buildWithDetails.getDescription()).thenReturn("test-description");
     JenkinsTaskParams params = JenkinsTaskParams.builder()
                                    .jenkinsConfig(jenkinsConfig)
                                    .encryptedDataDetails(emptyList())
@@ -84,6 +86,7 @@ public class JenkinsTaskTest {
     verify(jenkinsFactory).create(jenkinsUrl, userName, password);
     verify(jenkins).trigger(jobName, Collections.emptyMap());
     verify(jenkins).getBuild(any(QueueReference.class));
+    assertEquals("jenkins job description didn't come through", "test-description", response.getDescription());
     assertThat(response.getExecutionStatus()).isEqualTo(ExecutionStatus.SUCCESS);
   }
 

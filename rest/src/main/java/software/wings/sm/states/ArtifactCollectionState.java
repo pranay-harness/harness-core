@@ -171,7 +171,7 @@ public class ArtifactCollectionState extends State {
     if (isBlank(buildNo) || buildNo.equalsIgnoreCase(LATEST)) {
       return artifactService.fetchLatestArtifactForArtifactStream(context.getAppId(), artifactStreamId, sourceName);
     } else {
-      return artifactService.getArtifactByBuildNumberContains(
+      return artifactService.getArtifactByBuildNumber(
           context.getAppId(), artifactStreamId, sourceName, context.renderExpression(buildNo));
     }
   }
