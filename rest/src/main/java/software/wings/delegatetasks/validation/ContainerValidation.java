@@ -6,6 +6,7 @@ import static software.wings.utils.HttpUtil.connectableHttpUrl;
 
 import org.apache.commons.lang3.StringUtils;
 import software.wings.beans.AwsConfig;
+import software.wings.beans.AzureConfig;
 import software.wings.beans.DelegateTask;
 import software.wings.beans.GcpConfig;
 import software.wings.beans.KubernetesConfig;
@@ -36,6 +37,8 @@ public class ContainerValidation extends AbstractDelegateValidateTask {
       result.validated(false);
     } else if ("GCP".equals(criteria)) {
       result.validated(true);
+    } else if ("AZURE".equals(criteria)) {
+      result.validated(true);
     } else if (StringUtils.startsWith(criteria, "AWS")) {
       result.validated(AwsHelperService.isInAwsRegion(substringAfter(criteria, ":")));
     } else {
@@ -63,6 +66,10 @@ public class ContainerValidation extends AbstractDelegateValidateTask {
 
     if (value instanceof AwsConfig) {
       return "AWS:" + containerServiceParams.getRegion();
+    }
+
+    if (value instanceof AzureConfig) {
+      return "AZURE";
     }
 
     return "none";
