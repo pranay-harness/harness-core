@@ -56,10 +56,11 @@ def test_max_threshold_node():
         tsa_class.analyze()
         assert not mock_update_in.called
 
-def test_run_2():
-    control = FileLoader.load_data('resources/ts/nr_control_live.json')
-    test = FileLoader.load_data('resources/ts/nr_test_live.json')
-    out = FileLoader.load_data('resources/ts/nr_out_live.json')['transactions']
+
+def run_analysis(options_var, ctrl_file, test_file, out_file):
+    control = FileLoader.load_data(ctrl_file)
+    test = FileLoader.load_data(test_file)
+    out = FileLoader.load_data(out_file)['transactions']
     out_mod = {}
     for o in out.values():
         out_mod[o['txn_name']] = {'metrics': {}}
@@ -68,13 +69,14 @@ def test_run_2():
 
     out = out_mod
 
-    anomaly_detector = TSAnomlyDetector(options, metric_template, control, test)
+    anomaly_detector = TSAnomlyDetector(options_var, metric_template, control, test)
     result = anomaly_detector.analyze()
     for txn_id, txn_data in result['transactions'].items():
         assert txn_data['txn_name'] in out
         for metrics_id, metric_data in txn_data['metrics'].items():
             assert metric_data['metric_name'] in out[txn_data['txn_name']]['metrics']
-            assert metric_data['max_risk'] == out[txn_data['txn_name']]['metrics'][metric_data['metric_name']]['max_risk']
+            assert metric_data['max_risk'] == out[txn_data['txn_name']]['metrics'][metric_data['metric_name']][
+                'max_risk']
             out_metric_data = out[txn_data['txn_name']]['metrics'][metric_data['metric_name']]['results']
             for host_name, host_data in metric_data['results'].items():
                 assert out_metric_data[host_name] is not None
@@ -86,9 +88,26 @@ def test_run_2():
                 assert host_data['nn'] == out_metric_data[host_name]['nn']
 
 
+def test_run_2():
+    run_analysis(options, 'resources/ts/nr_control_live.json', 'resources/ts/nr_test_live.json', 'resources/ts/nr_out_live.json')
+
+def test_run_3():
+    options_var = parser.parse_args(
+        ['--analysis_minute', '2', '--analysis_start_min', 0, '--tolerance', '1', '--smooth_window', '3', '--min_rpm',
+         '10',
+         '--comparison_unit_window', '1', '--parallelProcesses', '1', '--max_nodes_threshold', '19'])
+    run_analysis(options_var, 'resources/ts/nr_control_live_3.json', 'resources/ts/nr_test_live_3.json', 'resources/ts/nr_out_live_3.json')
+
+def test_run_4():
+    options_var = parser.parse_args(
+        ['--analysis_minute', '2', '--analysis_start_min', 0, '--tolerance', '1', '--smooth_window', '3', '--min_rpm',
+         '10',
+         '--comparison_unit_window', '1', '--parallelProcesses', '1', '--max_nodes_threshold', '19'])
+    run_analysis(options_var, 'resources/ts/nr_control_live_4.json', 'resources/ts/nr_test_live_4.json', 'resources/ts/nr_out_live_4.json')
+
 def main(args):
-    test_run_2()
-    test_max_threshold_node()
+    test_run_4()
+    #test_max_threshold_node()
 
 
 if __name__ == "__main__":

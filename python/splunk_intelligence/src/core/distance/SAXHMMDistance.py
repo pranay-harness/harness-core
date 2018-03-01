@@ -151,7 +151,7 @@ class SAXHMMDistance(object):
             Also, its low deviation if the % change is within a specified value. For now its at 50%
         """
         if not np.isnan(x) and not np.isnan(y):
-            return abs(y - x) < min_threshold_delta or abs(y - x) < min_threshold_ratio * min(x, y)
+            return abs(y - x) < min_threshold_delta or (min(x, y) > 0 and abs(y - x) < min_threshold_ratio * min(x, y))
         else:
             return False
 
