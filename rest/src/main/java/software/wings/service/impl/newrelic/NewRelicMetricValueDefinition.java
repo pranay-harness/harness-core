@@ -184,7 +184,7 @@ public class NewRelicMetricValueDefinition {
     APP_DYNAMICS_VALUES_TO_ANALYZE.put(metricName,
         TimeSeriesMetricDefinition.builder()
             .metricName(metricName)
-            .metricType(MetricType.COUNT)
+            .metricType(MetricType.ERROR)
             .thresholds(thresholds)
             .build());
 
@@ -232,7 +232,7 @@ public class NewRelicMetricValueDefinition {
     APP_DYNAMICS_VALUES_TO_ANALYZE.put(metricName,
         TimeSeriesMetricDefinition.builder()
             .metricName(metricName)
-            .metricType(MetricType.COUNT)
+            .metricType(MetricType.ERROR)
             .thresholds(thresholds)
             .build());
   }
