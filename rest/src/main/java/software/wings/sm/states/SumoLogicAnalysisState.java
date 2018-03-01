@@ -136,7 +136,7 @@ public class SumoLogicAnalysisState extends AbstractLogAnalysisState {
           getWorkflowId(context), context.getWorkflowExecutionId(), getPhaseServiceId(context), queries,
           logCollectionStartTimeStamp, 0, Integer.parseInt(timeDuration), hostBatch,
           secretManager.getEncryptionDetails(sumoConfig, context.getAppId(), context.getWorkflowExecutionId()),
-          hostnameField);
+          getHostnameField());
       String waitId = generateUuid();
       PhaseElement phaseElement = context.getContextElement(ContextElementType.PARAM, Constants.PHASE_PARAM);
       String infrastructureMappingId = phaseElement == null ? null : phaseElement.getInfraMappingId();
@@ -163,6 +163,9 @@ public class SumoLogicAnalysisState extends AbstractLogAnalysisState {
   @DefaultValue("_sourceHost")
   @Attributes(required = true, title = "Field name for Host/Container")
   public String getHostnameField() {
+    if (isEmpty(hostnameField)) {
+      return "_sourceHost";
+    }
     return hostnameField;
   }
 
