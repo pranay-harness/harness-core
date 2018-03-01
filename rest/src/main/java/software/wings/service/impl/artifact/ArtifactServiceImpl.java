@@ -461,7 +461,7 @@ public class ArtifactServiceImpl implements ArtifactService {
   }
 
   @Override
-  public Artifact getArtifactByBuildNumberContains(
+  public Artifact getArtifactByBuildNumber(
       String appId, String artifactStreamId, String artifactSource, String buildNumber) {
     return wingsPersistence.createQuery(Artifact.class)
         .field("appId")
@@ -471,7 +471,7 @@ public class ArtifactServiceImpl implements ArtifactService {
         .field("artifactSourceName")
         .equal(artifactSource)
         .field("metadata.buildNo")
-        .contains(buildNumber)
+        .equal(buildNumber)
         .disableValidation()
         .get();
   }
