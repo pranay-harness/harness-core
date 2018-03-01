@@ -435,6 +435,11 @@ public class WingsTestConstants {
   public static final String COMPUTE_PROVIDER_ID = "COMPUTE_PROVIDER_ID";
 
   /**
+   * The constant COMPUTE_PROVIDER_ID_CHANGED.
+   */
+  public static final String COMPUTE_PROVIDER_ID_CHANGED = "COMPUTE_PROVIDER_ID_CHANGED";
+
+  /**
    * The constant STATE_NAME.
    */
   public static final String STATE_NAME = "STATE_NAME";
