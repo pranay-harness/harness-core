@@ -32,9 +32,9 @@ import software.wings.dl.PageResponse;
 import software.wings.dl.WingsPersistence;
 import software.wings.exception.WingsException;
 import software.wings.service.impl.analysis.AnalysisComparisonStrategy;
-import software.wings.service.impl.analysis.CVExecutionMetaData;
-import software.wings.service.impl.analysis.CVExecutionMetaData.CVExecutionMetaDataBuilder;
-import software.wings.service.impl.analysis.CVService;
+import software.wings.service.impl.analysis.ContinuousVerificationExecutionMetaData;
+import software.wings.service.impl.analysis.ContinuousVerificationExecutionMetaData.ContinuousVerificationExecutionMetaDataBuilder;
+import software.wings.service.impl.analysis.ContinuousVerificationService;
 import software.wings.service.impl.instance.ContainerInstanceHelper;
 import software.wings.service.intfc.AppService;
 import software.wings.service.intfc.DelegateService;
@@ -92,7 +92,7 @@ public abstract class AbstractAnalysisState extends State {
 
   @Transient @Inject protected TemplateExpressionProcessor templateExpressionProcessor;
 
-  @Transient @Inject @SchemaIgnore protected CVService cvService;
+  @Transient @Inject @SchemaIgnore protected ContinuousVerificationService continuousVerificationService;
 
   protected String hostnameField;
 
@@ -126,8 +126,8 @@ public abstract class AbstractAnalysisState extends State {
       WorkflowExecution workflowExecution = workflowExecutionService.getWorkflowExecution(
           executionContext.getAppId(), executionContext.getWorkflowExecutionId());
 
-      CVExecutionMetaDataBuilder cvExecutionMetaDataBuilder =
-          CVExecutionMetaData.builder()
+      ContinuousVerificationExecutionMetaDataBuilder cvExecutionMetaDataBuilder =
+          ContinuousVerificationExecutionMetaData.builder()
               .accountId(accountId)
               .applicationId(executionContext.getAppId())
               .workflowExecutionId(executionContext.getWorkflowExecutionId())
@@ -151,7 +151,7 @@ public abstract class AbstractAnalysisState extends State {
             .pipelineStartTs(workflowExecution.getPipelineExecution().getStartTs());
       }
 
-      cvService.saveCVExecutionMetaData(cvExecutionMetaDataBuilder.build());
+      continuousVerificationService.saveCVExecutionMetaData(cvExecutionMetaDataBuilder.build());
     } catch (Exception ex) {
       getLogger().error("[learning-engine] Unable to save ml analysis metadata", ex);
     }

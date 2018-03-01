@@ -2,6 +2,7 @@ package software.wings.sm.states;
 
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertNotNull;
+import static org.junit.Assert.assertNull;
 import static org.junit.Assert.assertTrue;
 import static org.mockito.Matchers.anyBoolean;
 import static org.mockito.Matchers.anyObject;
@@ -42,8 +43,8 @@ import software.wings.exception.WingsException;
 import software.wings.metrics.RiskLevel;
 import software.wings.scheduler.QuartzScheduler;
 import software.wings.service.impl.analysis.AnalysisComparisonStrategy;
-import software.wings.service.impl.analysis.CVExecutionMetaData;
-import software.wings.service.impl.analysis.CVService;
+import software.wings.service.impl.analysis.ContinuousVerificationExecutionMetaData;
+import software.wings.service.impl.analysis.ContinuousVerificationService;
 import software.wings.service.impl.analysis.LogAnalysisExecutionData;
 import software.wings.service.impl.analysis.LogAnalysisResponse;
 import software.wings.service.impl.analysis.LogMLAnalysisSummary;
@@ -100,7 +101,7 @@ public class SplunkV2StateTest extends WingsBaseTest {
   @Inject private DelegateService delegateService;
   @Inject private MainConfiguration configuration;
   @Inject private SecretManager secretManager;
-  @Inject private CVService cvService;
+  @Inject private ContinuousVerificationService continuousVerificationService;
 
   @Inject private WorkflowExecutionService workflowExecutionService;
   @Mock private PhaseElement phaseElement;
@@ -169,7 +170,7 @@ public class SplunkV2StateTest extends WingsBaseTest {
     setInternalState(splunkState, "jobScheduler", jobScheduler);
     setInternalState(splunkState, "secretManager", secretManager);
     setInternalState(splunkState, "workflowExecutionService", workflowExecutionService);
-    setInternalState(splunkState, "cvService", cvService);
+    setInternalState(splunkState, "continuousVerificationService", continuousVerificationService);
   }
 
   @Test
@@ -289,10 +290,35 @@ public class SplunkV2StateTest extends WingsBaseTest {
     assertEquals(accountId, task.getAccountId());
     assertEquals(Status.QUEUED, task.getStatus());
     assertEquals(appId, task.getAppId());
-    Map<Long, TreeMap<String, Map<String, Map<String, Map<String, List<CVExecutionMetaData>>>>>> cvExecutionMetaData =
-        cvService.getCVExecutionMetaData(accountId, 1519200000000L, 1519200000001L);
+    Map<Long, TreeMap<String, Map<String, Map<String, Map<String, List<ContinuousVerificationExecutionMetaData>>>>>>
+        cvExecutionMetaData =
+            continuousVerificationService.getCVExecutionMetaData(accountId, 1519200000000L, 1519200000001L);
     assertNotNull(cvExecutionMetaData);
-    CVExecutionMetaData cvExecutionMetaData1 = cvExecutionMetaData.get(1519171200000L)
+    ContinuousVerificationExecutionMetaData continuousVerificationExecutionMetaData1 =
+        cvExecutionMetaData.get(1519171200000L)
+            .get("dummy artifact")
+            .get("dummy env/dummy workflow")
+            .values()
+            .iterator()
+            .next()
+            .get("BASIC")
+            .get(0);
+    assertEquals(continuousVerificationExecutionMetaData1.getAccountId(), accountId);
+    assertEquals(continuousVerificationExecutionMetaData1.getArtifactName(), "dummy artifact");
+    assertNull(continuousVerificationExecutionMetaData1.getExecutionStatus());
+
+    LogAnalysisExecutionData logAnalysisExecutionData = new LogAnalysisExecutionData();
+    LogAnalysisResponse logAnalysisResponse = LogAnalysisResponse.Builder.aLogAnalysisResponse()
+                                                  .withExecutionStatus(ExecutionStatus.ERROR)
+                                                  .withLogAnalysisExecutionData(logAnalysisExecutionData)
+                                                  .build();
+    Map<String, NotifyResponseData> responseMap = new HashMap<>();
+    responseMap.put("somekey", logAnalysisResponse);
+    splunkState.handleAsyncResponse(executionContext, responseMap);
+
+    cvExecutionMetaData =
+        continuousVerificationService.getCVExecutionMetaData(accountId, 1519200000000L, 1519200000001L);
+    continuousVerificationExecutionMetaData1 = cvExecutionMetaData.get(1519171200000L)
                                                    .get("dummy artifact")
                                                    .get("dummy env/dummy workflow")
                                                    .values()
@@ -300,8 +326,7 @@ public class SplunkV2StateTest extends WingsBaseTest {
                                                    .next()
                                                    .get("BASIC")
                                                    .get(0);
-    assertEquals(cvExecutionMetaData1.getAccountId(), accountId);
-    assertEquals(cvExecutionMetaData1.getArtifactName(), "dummy artifact");
+    assertNotNull(continuousVerificationExecutionMetaData1.getExecutionStatus());
   }
 
   @Test

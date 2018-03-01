@@ -2,7 +2,9 @@ package software.wings.service.impl.analysis;
 
 import com.google.inject.Inject;
 
+import org.mongodb.morphia.query.Query;
 import software.wings.dl.WingsPersistence;
+import software.wings.sm.ExecutionStatus;
 
 import java.text.ParseException;
 import java.time.Instant;
@@ -15,31 +17,45 @@ import java.util.TreeMap;
 import javax.validation.executable.ValidateOnExecution;
 
 @ValidateOnExecution
-public class CVServiceImpl implements CVService {
+public class ContinuousVerificationServiceImpl implements ContinuousVerificationService {
   @Inject protected WingsPersistence wingsPersistence;
 
   @Override
-  public void saveCVExecutionMetaData(CVExecutionMetaData cvExecutionMetaData) {
-    wingsPersistence.save(cvExecutionMetaData);
+  public void saveCVExecutionMetaData(ContinuousVerificationExecutionMetaData continuousVerificationExecutionMetaData) {
+    wingsPersistence.save(continuousVerificationExecutionMetaData);
   }
 
   @Override
-  public Map<Long, TreeMap<String, Map<String, Map<String, Map<String, List<CVExecutionMetaData>>>>>>
-  getCVExecutionMetaData(String accountId, long beginEpochTs, long endEpochTs) throws ParseException {
-    List<CVExecutionMetaData> cvExecutionMetaDatas = wingsPersistence.createQuery(CVExecutionMetaData.class)
-                                                         .field("accountId")
-                                                         .equal(accountId)
-                                                         .field("workflowStartTs")
-                                                         .greaterThanOrEq(beginEpochTs)
-                                                         .field("workflowStartTs")
-                                                         .lessThan(endEpochTs)
-                                                         .order("-pipelineStartTs,-workflowStartTs")
-                                                         .asList();
+  public void setMetaDataExecutionStatus(String stateExecutionId, ExecutionStatus status) {
+    Query<ContinuousVerificationExecutionMetaData> query =
+        wingsPersistence.createQuery(ContinuousVerificationExecutionMetaData.class)
+            .field("stateExecutionId")
+            .equal(stateExecutionId);
 
-    Map<Long, TreeMap<String, Map<String, Map<String, Map<String, List<CVExecutionMetaData>>>>>> results =
-        new HashMap<>();
+    wingsPersistence.update(query,
+        wingsPersistence.createUpdateOperations(ContinuousVerificationExecutionMetaData.class)
+            .set("executionStatus", status));
+  }
+
+  @Override
+  public Map<Long,
+      TreeMap<String, Map<String, Map<String, Map<String, List<ContinuousVerificationExecutionMetaData>>>>>>
+  getCVExecutionMetaData(String accountId, long beginEpochTs, long endEpochTs) throws ParseException {
+    List<ContinuousVerificationExecutionMetaData> continuousVerificationExecutionMetaData =
+        wingsPersistence.createQuery(ContinuousVerificationExecutionMetaData.class)
+            .field("accountId")
+            .equal(accountId)
+            .field("workflowStartTs")
+            .greaterThanOrEq(beginEpochTs)
+            .field("workflowStartTs")
+            .lessThan(endEpochTs)
+            .order("-pipelineStartTs,-workflowStartTs")
+            .asList();
+
+    Map<Long, TreeMap<String, Map<String, Map<String, Map<String, List<ContinuousVerificationExecutionMetaData>>>>>>
+        results = new HashMap<>();
     long startTimeTs = 0;
-    for (CVExecutionMetaData executionMetaData : cvExecutionMetaDatas) {
+    for (ContinuousVerificationExecutionMetaData executionMetaData : continuousVerificationExecutionMetaData) {
       if (executionMetaData.getPipelineStartTs() != 0) {
         startTimeTs = executionMetaData.getPipelineStartTs();
       } else {
