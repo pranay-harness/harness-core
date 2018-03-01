@@ -7,13 +7,14 @@ import org.hibernate.validator.constraints.NotEmpty;
 import org.mongodb.morphia.annotations.Entity;
 import org.mongodb.morphia.annotations.Indexed;
 import software.wings.beans.Base;
+import software.wings.sm.ExecutionStatus;
 import software.wings.sm.StateType;
 
 @Entity(value = "cvExecutionData", noClassnameStored = true)
 @Data
 @Builder
 @EqualsAndHashCode(callSuper = false)
-public class CVExecutionMetaData extends Base {
+public class ContinuousVerificationExecutionMetaData extends Base {
   @NotEmpty @Indexed private long workflowStartTs;
   @NotEmpty @Indexed private long stateStartTs;
   @NotEmpty @Indexed private long pipelineStartTs;
@@ -32,4 +33,5 @@ public class CVExecutionMetaData extends Base {
   @NotEmpty @Indexed private String pipelineName;
   @NotEmpty @Indexed private StateType stateType;
   @NotEmpty @Indexed private String accountId;
+  @Indexed private ExecutionStatus executionStatus;
 }

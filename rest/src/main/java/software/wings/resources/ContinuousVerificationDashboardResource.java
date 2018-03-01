@@ -10,8 +10,8 @@ import org.mongodb.morphia.annotations.Transient;
 import software.wings.beans.RestResponse;
 import software.wings.security.PermissionAttribute;
 import software.wings.security.annotations.AuthRule;
-import software.wings.service.impl.analysis.CVExecutionMetaData;
-import software.wings.service.impl.analysis.CVService;
+import software.wings.service.impl.analysis.ContinuousVerificationExecutionMetaData;
+import software.wings.service.impl.analysis.ContinuousVerificationService;
 
 import java.text.ParseException;
 import java.util.List;
@@ -26,16 +26,18 @@ import javax.ws.rs.QueryParam;
 @Path("/cvdash")
 @Produces("application/json")
 @AuthRule(PermissionAttribute.ResourceType.SERVICE)
-public class CVDashboardResource {
-  @Transient @Inject @SchemaIgnore protected CVService cvService;
+public class ContinuousVerificationDashboardResource {
+  @Transient @Inject @SchemaIgnore protected ContinuousVerificationService continuousVerificationService;
 
   @GET
   @Path("/get-records")
   @Timed
   @ExceptionMetered
-  public RestResponse<Map<Long, TreeMap<String, Map<String, Map<String, Map<String, List<CVExecutionMetaData>>>>>>>
+  public RestResponse<
+      Map<Long, TreeMap<String, Map<String, Map<String, Map<String, List<ContinuousVerificationExecutionMetaData>>>>>>>
   getCVExecutionRecords(@QueryParam("accountId") String accountId, @QueryParam("beginEpochTs") long beginEpochTs,
       @QueryParam("endEpochTs") long endEpochTs) throws ParseException {
-    return new RestResponse<>(cvService.getCVExecutionMetaData(accountId, beginEpochTs, endEpochTs));
+    return new RestResponse<>(
+        continuousVerificationService.getCVExecutionMetaData(accountId, beginEpochTs, endEpochTs));
   }
 }

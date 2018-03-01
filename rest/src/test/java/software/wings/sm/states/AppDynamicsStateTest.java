@@ -36,8 +36,8 @@ import software.wings.common.Constants;
 import software.wings.common.TemplateExpressionProcessor;
 import software.wings.dl.WingsPersistence;
 import software.wings.scheduler.QuartzScheduler;
-import software.wings.service.impl.analysis.CVExecutionMetaData;
-import software.wings.service.impl.analysis.CVService;
+import software.wings.service.impl.analysis.ContinuousVerificationExecutionMetaData;
+import software.wings.service.impl.analysis.ContinuousVerificationService;
 import software.wings.service.intfc.AppService;
 import software.wings.service.intfc.DelegateService;
 import software.wings.service.intfc.MetricDataAnalysisService;
@@ -82,7 +82,7 @@ public class AppDynamicsStateTest extends WingsBaseTest {
   @Inject private SecretManager secretManager;
   @Inject private TemplateExpressionProcessor templateExpressionProcessor;
   @Inject private WorkflowExecutionService workflowExecutionService;
-  @Inject private CVService cvService;
+  @Inject private ContinuousVerificationService continuousVerificationService;
   @Mock private MetricDataAnalysisService metricAnalysisService;
   @Mock private QuartzScheduler jobScheduler;
   @Mock private PhaseElement phaseElement;
@@ -152,7 +152,7 @@ public class AppDynamicsStateTest extends WingsBaseTest {
     setInternalState(appDynamicsState, "metricAnalysisService", metricAnalysisService);
     setInternalState(appDynamicsState, "templateExpressionProcessor", templateExpressionProcessor);
     setInternalState(appDynamicsState, "workflowExecutionService", workflowExecutionService);
-    setInternalState(appDynamicsState, "cvService", cvService);
+    setInternalState(appDynamicsState, "continuousVerificationService", continuousVerificationService);
   }
 
   @Test
@@ -232,20 +232,22 @@ public class AppDynamicsStateTest extends WingsBaseTest {
     when(executionContext.renderExpression("${workflow.variables.AppDynamics_Tier}")).thenReturn("30889");
     ExecutionResponse executionResponse = spyAppDynamicsState.execute(executionContext);
     assertEquals(ExecutionStatus.RUNNING, executionResponse.getExecutionStatus());
-    Map<Long, TreeMap<String, Map<String, Map<String, Map<String, List<CVExecutionMetaData>>>>>> cvExecutionMetaData =
-        cvService.getCVExecutionMetaData(accountId, 1519200000000L, 1519200000001L);
+    Map<Long, TreeMap<String, Map<String, Map<String, Map<String, List<ContinuousVerificationExecutionMetaData>>>>>>
+        cvExecutionMetaData =
+            continuousVerificationService.getCVExecutionMetaData(accountId, 1519200000000L, 1519200000001L);
     assertNotNull(cvExecutionMetaData);
     System.out.println("Here....");
     System.out.println(cvExecutionMetaData);
-    CVExecutionMetaData cvExecutionMetaData1 = cvExecutionMetaData.get(1519171200000L)
-                                                   .get("dummy artifact")
-                                                   .get("dummy env/dummy workflow")
-                                                   .values()
-                                                   .iterator()
-                                                   .next()
-                                                   .get("BASIC")
-                                                   .get(0);
-    assertEquals(cvExecutionMetaData1.getAccountId(), accountId);
-    assertEquals(cvExecutionMetaData1.getArtifactName(), "dummy artifact");
+    ContinuousVerificationExecutionMetaData continuousVerificationExecutionMetaData1 =
+        cvExecutionMetaData.get(1519171200000L)
+            .get("dummy artifact")
+            .get("dummy env/dummy workflow")
+            .values()
+            .iterator()
+            .next()
+            .get("BASIC")
+            .get(0);
+    assertEquals(continuousVerificationExecutionMetaData1.getAccountId(), accountId);
+    assertEquals(continuousVerificationExecutionMetaData1.getArtifactName(), "dummy artifact");
   }
 }
