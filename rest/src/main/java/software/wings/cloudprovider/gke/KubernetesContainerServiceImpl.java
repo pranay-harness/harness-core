@@ -727,15 +727,17 @@ public class KubernetesContainerServiceImpl implements KubernetesContainerServic
           List<Pod> pods =
               kubernetesClient.pods().inNamespace(kubernetesConfig.getNamespace()).withLabels(labels).list().getItems();
 
+          pods.stream()
+              .filter(pod -> "Failed".equals(pod.getStatus().getPhase()))
+              .forEach(pod
+                  -> kubernetesClient.pods()
+                         .inNamespace(kubernetesConfig.getNamespace())
+                         .withName(pod.getMetadata().getName())
+                         .delete());
+
           if (pods.size() != desiredCount) {
             executionLogCallback.saveExecutionLog(
                 String.format("Waiting for desired number of pods [%d/%d]", pods.size(), desiredCount), LogLevel.INFO);
-
-            if (pods.size() > desiredCount) {
-              pods.stream()
-                  .filter(pod -> "Failed".equals(pod.getStatus().getPhase()))
-                  .forEach(pod -> kubernetesClient.resource(pod).delete());
-            }
             sleep(ofSeconds(5));
             continue;
           }
