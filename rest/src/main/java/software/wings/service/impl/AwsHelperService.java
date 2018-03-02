@@ -755,6 +755,16 @@ public class AwsHelperService {
     return new ListDeploymentInstancesResult();
   }
 
+  /**
+   * Be a bit careful when calling this method.
+   * When describeInstancesRequest.instanceIds is empty, AmazonEc2Client.describeInstances(), returns all instances
+   * in aws farm or if filter is present then all the instances that match the filter  in describeInstancesRequest.
+   * @param awsConfig
+   * @param encryptionDetails
+   * @param region
+   * @param describeInstancesRequest
+   * @return
+   */
   public DescribeInstancesResult describeEc2Instances(AwsConfig awsConfig, List<EncryptedDataDetail> encryptionDetails,
       String region, DescribeInstancesRequest describeInstancesRequest) {
     try {
