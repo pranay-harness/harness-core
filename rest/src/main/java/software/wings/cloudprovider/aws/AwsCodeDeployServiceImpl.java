@@ -48,6 +48,7 @@ import software.wings.service.impl.AwsHelperService;
 
 import java.util.ArrayList;
 import java.util.Arrays;
+import java.util.Collections;
 import java.util.List;
 import java.util.Set;
 import java.util.concurrent.TimeUnit;
@@ -176,14 +177,18 @@ public class AwsCodeDeployServiceImpl implements AwsCodeDeployService {
     List<String> instanceIds = fetchAllDeploymentInstances(
         awsConfig, encryptedDataDetails, region, deploymentId, Arrays.asList(InstanceStatus.Succeeded.name()));
 
-    DescribeInstancesRequest describeInstancesRequest =
-        awsHelperService.getDescribeInstancesRequestWithRunningFilter().withInstanceIds(instanceIds);
+    if (CollectionUtils.isNotEmpty(instanceIds)) {
+      DescribeInstancesRequest describeInstancesRequest =
+          awsHelperService.getDescribeInstancesRequestWithRunningFilter().withInstanceIds(instanceIds);
 
-    return awsHelperService.describeEc2Instances(awsConfig, encryptedDataDetails, region, describeInstancesRequest)
-        .getReservations()
-        .stream()
-        .flatMap(reservation -> reservation.getInstances().stream())
-        .collect(Collectors.toList());
+      return awsHelperService.describeEc2Instances(awsConfig, encryptedDataDetails, region, describeInstancesRequest)
+          .getReservations()
+          .stream()
+          .flatMap(reservation -> reservation.getInstances().stream())
+          .collect(Collectors.toList());
+    } else {
+      return Collections.EMPTY_LIST;
+    }
   }
 
   public RevisionLocation getApplicationRevisionList(String region, String appName, String deploymentGroupName,
