@@ -53,6 +53,8 @@ public class CommandStateExecutionData extends StateExecutionData {
   private CountsByStatuses countsByStatuses;
   private List<ContainerServiceData> newInstanceData = new ArrayList<>();
   private List<ContainerServiceData> oldInstanceData = new ArrayList<>();
+  private String previousDaemonSetYaml;
+  private List<String> previousActiveAutoscalers;
   private boolean downsize;
   private String clusterName;
 
@@ -62,7 +64,6 @@ public class CommandStateExecutionData extends StateExecutionData {
   private CodeDeployParams oldCodeDeployParams;
   private String codeDeployDeploymentId;
   private ContainerSetupParams containerSetupParams;
-  private String containerServiceName;
 
   @Transient @Inject private transient ActivityService activityService;
 
@@ -140,11 +141,11 @@ public class CommandStateExecutionData extends StateExecutionData {
     if (containerSetupParams != null && containerSetupParams instanceof KubernetesSetupParams) {
       KubernetesSetupParams kubernetesSetupParams = (KubernetesSetupParams) containerSetupParams;
       commandStepExecutionSummary.setControllerNamePrefix(kubernetesSetupParams.getControllerNamePrefix());
-      if (kubernetesSetupParams.getActiveAutoscalers() != null) {
-        commandStepExecutionSummary.setPreviousActiveAutoscalers(kubernetesSetupParams.getActiveAutoscalers());
+      if (previousActiveAutoscalers != null) {
+        commandStepExecutionSummary.setPreviousActiveAutoscalers(previousActiveAutoscalers);
       }
-      if (kubernetesSetupParams.getPreviousDaemonSetYaml() != null) {
-        commandStepExecutionSummary.setPreviousDaemonSetYaml(kubernetesSetupParams.getPreviousDaemonSetYaml());
+      if (previousDaemonSetYaml != null) {
+        commandStepExecutionSummary.setPreviousDaemonSetYaml(previousDaemonSetYaml);
       }
     }
     commandStepExecutionSummary.setClusterName(clusterName);
@@ -188,7 +189,6 @@ public class CommandStateExecutionData extends StateExecutionData {
     private CodeDeployParams oldCodeDeployParams;
     private String codeDeployDeploymentId;
     private ContainerSetupParams containerSetupParams;
-    private String containerServiceName;
     private transient ActivityService activityService;
 
     private Builder() {}
@@ -357,11 +357,6 @@ public class CommandStateExecutionData extends StateExecutionData {
       return this;
     }
 
-    public Builder withContainerServiceName(String containerServiceName) {
-      this.containerServiceName = containerServiceName;
-      return this;
-    }
-
     public Builder withActivityService(ActivityService activityService) {
       this.activityService = activityService;
       return this;
@@ -401,7 +396,6 @@ public class CommandStateExecutionData extends StateExecutionData {
           .withOldCodeDeployParams(oldCodeDeployParams)
           .withCodeDeploymentId(codeDeployDeploymentId)
           .withContainerSetupParams(containerSetupParams)
-          .withContainerServiceName(containerServiceName)
           .withActivityService(activityService);
     }
 
@@ -439,7 +433,6 @@ public class CommandStateExecutionData extends StateExecutionData {
       commandStateExecutionData.setOldCodeDeployParams(oldCodeDeployParams);
       commandStateExecutionData.setCodeDeployDeploymentId(codeDeployDeploymentId);
       commandStateExecutionData.setContainerSetupParams(containerSetupParams);
-      commandStateExecutionData.setContainerServiceName(containerServiceName);
       commandStateExecutionData.setActivityService(activityService);
       return commandStateExecutionData;
     }

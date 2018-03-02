@@ -7,6 +7,7 @@ import static java.time.Duration.ofSeconds;
 import static java.util.Collections.emptyList;
 import static java.util.stream.Collectors.toList;
 import static org.apache.commons.lang3.StringUtils.isNotBlank;
+import static software.wings.service.impl.KubernetesHelperService.toYaml;
 import static software.wings.utils.KubernetesConvention.getKubernetesSecretName;
 import static software.wings.utils.KubernetesConvention.getKubernetesServiceName;
 import static software.wings.utils.KubernetesConvention.getRevisionFromControllerName;
@@ -152,7 +153,7 @@ public class KubernetesSetupCommandUnit extends ContainerSetupCommandUnit {
       if (isNotBlank(setupParams.getPreviousDaemonSetYaml())) {
         performDaemonSetRollback(encryptedDataDetails, executionLogCallback, setupParams, kubernetesConfig);
       }
-      if (isNotEmpty(setupParams.getActiveAutoscalers())) {
+      if (isNotEmpty(setupParams.getPreviousActiveAutoscalers())) {
         performAutoscalerRollback(encryptedDataDetails, executionLogCallback, setupParams, kubernetesConfig);
       }
       executionLogCallback.saveExecutionLog("Rollback complete", LogLevel.INFO);
@@ -179,6 +180,10 @@ public class KubernetesSetupCommandUnit extends ContainerSetupCommandUnit {
     String containerServiceName = isDaemonSet
         ? setupParams.getControllerNamePrefix()
         : KubernetesConvention.getControllerName(setupParams.getControllerNamePrefix(), revision);
+    String previousDaemonSetYaml =
+        isDaemonSet ? getDaemonSetYaml(kubernetesConfig, encryptedDataDetails, containerServiceName) : null;
+    List<String> previousActiveAutoscalers =
+        isDaemonSet ? null : getActiveAutoscalers(kubernetesConfig, encryptedDataDetails, containerServiceName);
 
     Map<String, String> serviceLabels =
         ImmutableMap.<String, String>builder()
@@ -269,8 +274,8 @@ public class KubernetesSetupCommandUnit extends ContainerSetupCommandUnit {
     }
 
     // Disable previous autoscalers
-    if (isNotEmpty(setupParams.getActiveAutoscalers())) {
-      setupParams.getActiveAutoscalers().forEach(autoscaler -> {
+    if (isNotEmpty(previousActiveAutoscalers)) {
+      previousActiveAutoscalers.forEach(autoscaler -> {
         executionLogCallback.saveExecutionLog("Disabling autoscaler " + autoscaler, LogLevel.INFO);
         /*
          * Ideally we should be sending apiVersion as "v2beta1" when we are dealing with
@@ -332,7 +337,36 @@ public class KubernetesSetupCommandUnit extends ContainerSetupCommandUnit {
       executionLogCallback.saveExecutionLog("Cleaning up old versions", LogLevel.INFO);
       cleanup(kubernetesConfig, encryptedDataDetails, containerServiceName);
     }
-    return ContainerSetupCommandUnitExecutionData.builder().containerServiceName(containerServiceName).build();
+    return ContainerSetupCommandUnitExecutionData.builder()
+        .containerServiceName(containerServiceName)
+        .previousDaemonSetYaml(previousDaemonSetYaml)
+        .previousActiveAutoscalers(previousActiveAutoscalers)
+        .build();
+  }
+
+  private String getDaemonSetYaml(
+      KubernetesConfig kubernetesConfig, List<EncryptedDataDetail> encryptedDataDetails, String containerServiceName) {
+    HasMetadata daemonSet =
+        kubernetesContainerService.getController(kubernetesConfig, encryptedDataDetails, containerServiceName);
+    if (daemonSet != null) {
+      try {
+        return toYaml(daemonSet);
+      } catch (IOException e) {
+        logger.error("Error converting DaemonSet to yaml: {}", containerServiceName);
+      }
+    }
+    return null;
+  }
+
+  private List<String> getActiveAutoscalers(
+      KubernetesConfig kubernetesConfig, List<EncryptedDataDetail> encryptedDataDetails, String containerServiceName) {
+    String controllerNamePrefix = KubernetesConvention.getPrefixFromControllerName(containerServiceName);
+    return kubernetesContainerService.listAutoscalers(kubernetesConfig, encryptedDataDetails)
+        .stream()
+        .filter(autoscaler -> autoscaler.getMetadata().getName().startsWith(controllerNamePrefix))
+        .filter(autoscaler -> !"none".equals(autoscaler.getSpec().getScaleTargetRef().getName()))
+        .map(autoscaler -> autoscaler.getMetadata().getName())
+        .collect(toList());
   }
 
   private Ingress createIngressDefinition(
@@ -513,7 +547,7 @@ public class KubernetesSetupCommandUnit extends ContainerSetupCommandUnit {
 
   private void performAutoscalerRollback(List<EncryptedDataDetail> encryptedDataDetails,
       ExecutionLogCallback executionLogCallback, KubernetesSetupParams setupParams, KubernetesConfig kubernetesConfig) {
-    List<String> autoscalerNames = setupParams.getActiveAutoscalers();
+    List<String> autoscalerNames = setupParams.getPreviousActiveAutoscalers();
     if (isNotEmpty(autoscalerNames)) {
       for (String autoscalerName : autoscalerNames) {
         executionLogCallback.saveExecutionLog("Enabling autoscaler " + autoscalerName, LogLevel.INFO);

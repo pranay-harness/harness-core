@@ -10,6 +10,7 @@ import software.wings.sm.ContextElement;
 import software.wings.sm.ContextElementType;
 import software.wings.sm.ExecutionContext;
 
+import java.util.List;
 import java.util.Map;
 
 /**
@@ -36,6 +37,8 @@ public class ContainerServiceElement implements ContextElement {
   private int targetCpuUtilizationPercentage;
   private String customMetricYamlConfig;
   private boolean useIstioRouteRule;
+  private String previousDaemonSetYaml;
+  private List<String> previousActiveAutoscalers;
 
   @Override
   public ContextElementType getElementType() {

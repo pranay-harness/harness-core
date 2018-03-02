@@ -27,7 +27,7 @@ public class KubernetesSetupParams extends ContainerSetupParams {
   private String namespace;
   private String controllerNamePrefix;
   private String previousDaemonSetYaml;
-  private List<String> activeAutoscalers;
+  private List<String> previousActiveAutoscalers;
   private boolean rollback;
   private int serviceSteadyStateTimeout;
   private boolean useAutoscaler;
@@ -306,7 +306,7 @@ public class KubernetesSetupParams extends ContainerSetupParams {
       kubernetesSetupParams.setNamespace(namespace);
       kubernetesSetupParams.setControllerNamePrefix(controllerNamePrefix);
       kubernetesSetupParams.setPreviousDaemonSetYaml(previousDaemonSetYaml);
-      kubernetesSetupParams.setActiveAutoscalers(activeAutoscalers);
+      kubernetesSetupParams.setPreviousActiveAutoscalers(activeAutoscalers);
       kubernetesSetupParams.setRollback(rollback);
       kubernetesSetupParams.setServiceSteadyStateTimeout(serviceSteadyStateTimeout);
       kubernetesSetupParams.setUseAutoscaler(useAutoscaler);
