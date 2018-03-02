@@ -87,7 +87,7 @@ class LogCorpus(object):
         HarnessLoader.post_to_wings_server(url, payload, version_file_path, service_secret)
 
     # Called with the production workflow
-    def load_from_harness(self, options):
+    def load_from_harness(self, options, experimental_prev_state = None):
 
         control_events = HarnessLoader.load_from_wings_server(options.control_input_url,
                                                               options.application_id,
@@ -128,15 +128,19 @@ class LogCorpus(object):
         if test_events is not None:
             for event in test_events:
                 self.add_event(event, 'test')
+        if experimental_prev_state is None:
 
-        prev_state = HarnessLoader.load_prev_output_from_harness(options.log_analysis_get_url,
-                                                                 options.application_id,
-                                                                 options.state_execution_id,
-                                                                 options.query,
-                                                                 options.log_collection_minute,
-                                                                 options.version_file_path,
-                                                                 options.service_secret
-                                                                 )
+            prev_state = HarnessLoader.load_prev_output_from_harness(options.log_analysis_get_url,
+                                                                     options.application_id,
+                                                                     options.state_execution_id,
+                                                                     options.query,
+                                                                     options.log_collection_minute,
+                                                                     options.version_file_path,
+                                                                     options.service_secret
+                                                                     )
+        else:
+            prev_state = experimental_prev_state
+
         if prev_state is not None:
 
             if prev_state.get('control_events') is not None:

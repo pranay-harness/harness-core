@@ -23,12 +23,15 @@ import software.wings.beans.ServiceSecretKey.ServiceType;
 import software.wings.dl.WingsPersistence;
 import software.wings.exception.WingsException;
 import software.wings.service.impl.newrelic.LearningEngineAnalysisTask;
+import software.wings.service.impl.newrelic.LearningEngineExperimentalAnalysisTask;
+import software.wings.service.impl.newrelic.MLExperiments;
 import software.wings.service.intfc.LearningEngineService;
 import software.wings.service.intfc.analysis.ClusterLevel;
 import software.wings.sm.ExecutionStatus;
 
 import java.io.IOException;
 import java.io.InputStream;
+import java.util.List;
 import java.util.Optional;
 import java.util.Properties;
 import java.util.concurrent.TimeUnit;
@@ -114,6 +117,15 @@ public class LearningEngineAnalysisServiceImpl implements LearningEngineService 
   }
 
   @Override
+  public boolean addLearningEngineExperimentalAnalysisTask(LearningEngineExperimentalAnalysisTask analysisTask) {
+    analysisTask.setVersion(learningEngineApiVersion);
+    analysisTask.setExecutionStatus(ExecutionStatus.QUEUED);
+    analysisTask.setRetry(0);
+    wingsPersistence.save(analysisTask);
+    return true;
+  }
+
+  @Override
   public LearningEngineAnalysisTask getNextLearningEngineAnalysisTask(ServiceApiVersion serviceApiVersion) {
     Query<LearningEngineAnalysisTask> query = wingsPersistence.createQuery(LearningEngineAnalysisTask.class)
                                                   .field("version")
@@ -125,6 +137,28 @@ public class LearningEngineAnalysisServiceImpl implements LearningEngineService 
             query.criteria("lastUpdatedAt").lessThan(System.currentTimeMillis() - TIME_SERIES_ANALYSIS_TASK_TIME_OUT)));
     UpdateOperations<LearningEngineAnalysisTask> updateOperations =
         wingsPersistence.createUpdateOperations(LearningEngineAnalysisTask.class)
+            .set("executionStatus", ExecutionStatus.RUNNING)
+            .inc("retry")
+            .set("lastUpdatedAt", System.currentTimeMillis());
+    return wingsPersistence.findAndModify(query, updateOperations, new FindAndModifyOptions());
+  }
+
+  @Override
+  public LearningEngineExperimentalAnalysisTask getNextLearningEngineExperimentalAnalysisTask(
+      String experimentName, ServiceApiVersion serviceApiVersion) {
+    Query<LearningEngineExperimentalAnalysisTask> query =
+        wingsPersistence.createQuery(LearningEngineExperimentalAnalysisTask.class)
+            .field("version")
+            .equal(serviceApiVersion)
+            .field("experiment_name")
+            .equal(experimentName)
+            .field("retry")
+            .lessThan(LearningEngineAnalysisTask.RETRIES);
+    query.or(query.criteria("executionStatus").equal(ExecutionStatus.QUEUED),
+        query.and(query.criteria("executionStatus").equal(ExecutionStatus.RUNNING),
+            query.criteria("lastUpdatedAt").lessThan(System.currentTimeMillis() - TIME_SERIES_ANALYSIS_TASK_TIME_OUT)));
+    UpdateOperations<LearningEngineExperimentalAnalysisTask> updateOperations =
+        wingsPersistence.createUpdateOperations(LearningEngineExperimentalAnalysisTask.class)
             .set("executionStatus", ExecutionStatus.RUNNING)
             .inc("retry")
             .set("lastUpdatedAt", System.currentTimeMillis());
@@ -206,6 +240,16 @@ public class LearningEngineAnalysisServiceImpl implements LearningEngineService 
   }
 
   @Override
+  public void markExpTaskCompleted(String taskId) {
+    if (taskId == null) {
+      logger.warn("taskId is null");
+      return;
+    }
+    wingsPersistence.updateField(
+        LearningEngineExperimentalAnalysisTask.class, taskId, "executionStatus", ExecutionStatus.SUCCESS);
+  }
+
+  @Override
   public void markStatus(
       String workflowExecutionId, String stateExecutionId, int analysisMinute, ExecutionStatus executionStatus) {
     Query<LearningEngineAnalysisTask> query = wingsPersistence.createQuery(LearningEngineAnalysisTask.class)
@@ -240,5 +284,10 @@ public class LearningEngineAnalysisServiceImpl implements LearningEngineService 
     Query<ServiceSecretKey> query =
         wingsPersistence.createQuery(ServiceSecretKey.class).field("serviceType").equal(serviceType);
     return wingsPersistence.executeGetOneQuery(query).getServiceSecret();
+  }
+
+  @Override
+  public List<MLExperiments> getExperiments(MLAnalysisType ml_analysis_type) {
+    return wingsPersistence.createQuery(MLExperiments.class).field("ml_analysis_type").equal(ml_analysis_type).asList();
   }
 }

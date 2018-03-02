@@ -12,12 +12,14 @@ import software.wings.security.PermissionAttribute.ResourceType;
 import software.wings.security.annotations.AuthRule;
 import software.wings.security.annotations.LearningEngineAuth;
 import software.wings.service.impl.newrelic.LearningEngineAnalysisTask;
+import software.wings.service.impl.newrelic.LearningEngineExperimentalAnalysisTask;
 import software.wings.service.intfc.LearningEngineService;
 
 import javax.ws.rs.GET;
 import javax.ws.rs.HeaderParam;
 import javax.ws.rs.Path;
 import javax.ws.rs.Produces;
+import javax.ws.rs.QueryParam;
 
 /**
  * Created by rsingh on 09/05/17.
@@ -37,5 +39,17 @@ public class LearningEngineResource {
   @Produces({"application/json", "application/v1+json"})
   public RestResponse<LearningEngineAnalysisTask> getNextTask(@HeaderParam("Accept") String acceptHeaders) {
     return new RestResponse<>(learningEngineService.getNextLearningEngineAnalysisTask(parseApisVersion(acceptHeaders)));
+  }
+
+  @GET
+  @Path("/get-next-exp-task")
+  @Timed
+  @ExceptionMetered
+  @LearningEngineAuth
+  @Produces({"application/json", "application/v1+json"})
+  public RestResponse<LearningEngineExperimentalAnalysisTask> getNextExperimentalTask(
+      @QueryParam("experimentName") String experimentName, @HeaderParam("Accept") String acceptHeaders) {
+    return new RestResponse<>(learningEngineService.getNextLearningEngineExperimentalAnalysisTask(
+        experimentName, parseApisVersion(acceptHeaders)));
   }
 }
