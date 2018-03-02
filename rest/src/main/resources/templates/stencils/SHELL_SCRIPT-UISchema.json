@@ -2,5 +2,5 @@
   "scriptString": {
     "ui:widget": "textarea"
   },
-  "ui:order": [ "commandPath", "host", "sshKeyRef", "scriptString"  ]
+  "ui:order": [ "commandPath", "host", "sshKeyRef", "scriptString", "timeoutMillis"  ]
 }

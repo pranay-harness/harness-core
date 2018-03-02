@@ -5,6 +5,7 @@ import static software.wings.beans.Base.GLOBAL_ENV_ID;
 import static software.wings.beans.DelegateTask.Builder.aDelegateTask;
 import static software.wings.beans.Environment.EnvironmentType.ALL;
 import static software.wings.beans.OrchestrationWorkflowType.BUILD;
+import static software.wings.common.Constants.DEFAULT_ASYNC_CALL_TIMEOUT;
 import static software.wings.sm.ExecutionResponse.Builder.anExecutionResponse;
 
 import com.google.common.collect.Maps;
@@ -24,6 +25,7 @@ import software.wings.api.ScriptStateExecutionData;
 import software.wings.beans.Activity;
 import software.wings.beans.Activity.ActivityBuilder;
 import software.wings.beans.Application;
+import software.wings.beans.DelegateTask;
 import software.wings.beans.Environment;
 import software.wings.beans.HostConnectionAttributes;
 import software.wings.beans.SettingAttribute;
@@ -48,6 +50,7 @@ import software.wings.sm.ExecutionStatus;
 import software.wings.sm.State;
 import software.wings.sm.StateType;
 import software.wings.sm.WorkflowStandardParams;
+import software.wings.stencils.DefaultValue;
 import software.wings.stencils.EnumData;
 import software.wings.waitnotify.ErrorNotifyResponseData;
 import software.wings.waitnotify.NotifyResponseData;
@@ -83,6 +86,13 @@ public class ShellScriptState extends State {
    */
   public ShellScriptState(String name) {
     super(name, StateType.SHELL_SCRIPT.name());
+  }
+
+  @Attributes(title = "Timeout (ms)")
+  @DefaultValue("" + DEFAULT_ASYNC_CALL_TIMEOUT)
+  @Override
+  public Integer getTimeoutMillis() {
+    return super.getTimeoutMillis();
   }
 
   @Override
@@ -161,7 +171,7 @@ public class ShellScriptState extends State {
     List<EncryptedDataDetail> keyEncryptionDetails = secretManager.getEncryptionDetails(
         (Encryptable) keySettingAttribute.getValue(), context.getAppId(), context.getWorkflowExecutionId());
 
-    String delegateTaskId = delegateService.queueTask(
+    DelegateTask delegateTask =
         aDelegateTask()
             .withTaskType(TaskType.SCRIPT)
             .withAccountId(executionContext.getApp().getAccountId())
@@ -178,7 +188,12 @@ public class ShellScriptState extends State {
                                               .build()})
             .withEnvId(envId)
             .withInfrastructureMappingId(infrastructureMappingId)
-            .build());
+            .build();
+
+    if (getTimeoutMillis() != null) {
+      delegateTask.setTimeout(getTimeoutMillis());
+    }
+    String delegateTaskId = delegateService.queueTask(delegateTask);
 
     return anExecutionResponse()
         .withAsync(true)
