@@ -1,10 +1,8 @@
 package software.wings.service.impl;
 
 import static io.harness.data.structure.EmptyPredicate.isNotEmpty;
-import static java.util.stream.Collectors.toList;
 import static software.wings.beans.infrastructure.instance.info.EcsContainerInfo.Builder.anEcsContainerInfo;
 import static software.wings.beans.infrastructure.instance.info.KubernetesContainerInfo.Builder.aKubernetesContainerInfo;
-import static software.wings.service.impl.KubernetesHelperService.toYaml;
 
 import com.google.inject.Inject;
 
@@ -35,7 +33,6 @@ import software.wings.service.intfc.ContainerService;
 import software.wings.settings.SettingValue;
 import software.wings.utils.Validator;
 
-import java.io.IOException;
 import java.util.ArrayList;
 import java.util.LinkedHashMap;
 import java.util.List;
@@ -93,44 +90,6 @@ public class ContainerServiceImpl implements ContainerService {
       throw new WingsException(ErrorCode.INVALID_ARGUMENT)
           .addParam("args", "Unknown setting value type for container service: " + value.getType());
     }
-  }
-
-  @Override
-  public String getDaemonSetYaml(ContainerServiceParams containerServiceParams) {
-    SettingValue value = containerServiceParams.getSettingAttribute().getValue();
-    if (!isKubernetesClusterConfig(value)) {
-      throw new WingsException(ErrorCode.INVALID_ARGUMENT).addParam("args", "DaemonSets apply to kubernetes only");
-    }
-    KubernetesConfig kubernetesConfig = getKubernetesConfig(containerServiceParams);
-    String containerServiceName = containerServiceParams.getContainerServiceName();
-    HasMetadata daemonSet = kubernetesContainerService.getController(
-        kubernetesConfig, containerServiceParams.getEncryptionDetails(), containerServiceName);
-    if (daemonSet != null) {
-      try {
-        return toYaml(daemonSet);
-      } catch (IOException e) {
-        logger.error("Error converting DaemonSet to yaml: {}", containerServiceName);
-      }
-    }
-    return null;
-  }
-
-  @Override
-  public List<String> getActiveAutoscalers(ContainerServiceParams containerServiceParams) {
-    SettingValue value = containerServiceParams.getSettingAttribute().getValue();
-    if (!isKubernetesClusterConfig(value)) {
-      throw new WingsException(ErrorCode.INVALID_ARGUMENT)
-          .addParam("args", "Horizontal Pod Autoscalers apply to kubernetes only");
-    }
-    KubernetesConfig kubernetesConfig = getKubernetesConfig(containerServiceParams);
-    String autoscalerNamePrefix = containerServiceParams.getContainerServiceName();
-
-    return kubernetesContainerService.listAutoscalers(kubernetesConfig, containerServiceParams.getEncryptionDetails())
-        .stream()
-        .filter(autoscaler -> autoscaler.getMetadata().getName().startsWith(autoscalerNamePrefix))
-        .filter(autoscaler -> !"none".equals(autoscaler.getSpec().getScaleTargetRef().getName()))
-        .map(autoscaler -> autoscaler.getMetadata().getName())
-        .collect(toList());
   }
 
   private KubernetesConfig getKubernetesConfig(ContainerServiceParams containerServiceParams) {

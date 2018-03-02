@@ -514,9 +514,8 @@ public abstract class ContainerServiceDeploy extends State {
           : CommandUnitType.RESIZE_KUBERNETES.name();
       containerElement = context.<ContainerServiceElement>getContextElementList(ContextElementType.CONTAINER_SERVICE)
                              .stream()
-                             .filter(cse
-                                 -> phaseElement.getDeploymentType().equals(cse.getDeploymentType().name())
-                                     && phaseElement.getInfraMappingId().equals(cse.getInfraMappingId()))
+                             .filter(cse -> phaseElement.getDeploymentType().equals(cse.getDeploymentType().name()))
+                             .filter(cse -> phaseElement.getInfraMappingId().equals(cse.getInfraMappingId()))
                              .findFirst()
                              .orElse(ContainerServiceElement.builder().build());
       rollbackElement = context.getContextElement(ContextElementType.PARAM, Constants.CONTAINER_ROLLBACK_REQUEST_PARAM);
