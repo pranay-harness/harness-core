@@ -25,6 +25,7 @@ import software.wings.beans.Activity;
 import software.wings.beans.Activity.ActivityBuilder;
 import software.wings.beans.Application;
 import software.wings.beans.Environment;
+import software.wings.beans.HostConnectionAttributes;
 import software.wings.beans.SettingAttribute;
 import software.wings.beans.TaskType;
 import software.wings.beans.command.Command;
@@ -155,6 +156,8 @@ public class ShellScriptState extends State {
     ExecutionContextImpl executionContext = (ExecutionContextImpl) context;
 
     SettingAttribute keySettingAttribute = settingsService.get(sshKeyRef);
+    HostConnectionAttributes hostConnectionAttributes = (HostConnectionAttributes) keySettingAttribute.getValue();
+
     List<EncryptedDataDetail> keyEncryptionDetails = secretManager.getEncryptionDetails(
         (Encryptable) keySettingAttribute.getValue(), context.getAppId(), context.getWorkflowExecutionId());
 
@@ -169,6 +172,7 @@ public class ShellScriptState extends State {
                                               .appId(executionContext.getAppId())
                                               .activityId(activityId)
                                               .host(host)
+                                              .userName(hostConnectionAttributes.getUserName())
                                               .keyEncryptedDataDetails(keyEncryptionDetails)
                                               .script(scriptString)
                                               .build()})

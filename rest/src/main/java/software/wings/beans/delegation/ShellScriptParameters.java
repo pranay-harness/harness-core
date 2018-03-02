@@ -22,6 +22,7 @@ public class ShellScriptParameters {
   private final String activityId;
 
   private final String host;
+  private final String userName;
   private final List<EncryptedDataDetail> keyEncryptedDataDetails;
 
   private final String script;
@@ -32,6 +33,7 @@ public class ShellScriptParameters {
         .withAppId(appId)
         .withExecutionId(activityId)
         .withHost(host)
+        .withUserName(userName)
         .withKey(encryptionService.getDecryptedValue(keyEncryptedDataDetails.get(0)))
         .withCommandUnitName(CommandUnit)
         .withPort(22)
