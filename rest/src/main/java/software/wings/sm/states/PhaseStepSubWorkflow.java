@@ -7,16 +7,6 @@ import static java.util.Collections.singletonList;
 import static software.wings.api.AwsCodeDeployRequestElement.AwsCodeDeployRequestElementBuilder.anAwsCodeDeployRequestElement;
 import static software.wings.api.PhaseStepExecutionData.PhaseStepExecutionDataBuilder.aPhaseStepExecutionData;
 import static software.wings.api.ServiceInstanceIdsParam.ServiceInstanceIdsParamBuilder.aServiceInstanceIdsParam;
-import static software.wings.beans.PhaseStepType.AMI_DEPLOY_AUTOSCALING_GROUP;
-import static software.wings.beans.PhaseStepType.CONTAINER_DEPLOY;
-import static software.wings.beans.PhaseStepType.CONTAINER_SETUP;
-import static software.wings.beans.PhaseStepType.DEPLOY_AWSCODEDEPLOY;
-import static software.wings.beans.PhaseStepType.DEPLOY_AWS_LAMBDA;
-import static software.wings.beans.PhaseStepType.DEPLOY_SERVICE;
-import static software.wings.beans.PhaseStepType.DISABLE_SERVICE;
-import static software.wings.beans.PhaseStepType.ENABLE_SERVICE;
-import static software.wings.beans.PhaseStepType.START_SERVICE;
-import static software.wings.beans.PhaseStepType.STOP_SERVICE;
 import static software.wings.beans.SearchFilter.Operator.EQ;
 import static software.wings.beans.SearchFilter.Operator.EXISTS;
 import static software.wings.beans.SearchFilter.Operator.NOT_EQ;
@@ -82,10 +72,6 @@ import java.util.stream.Collectors;
 public class PhaseStepSubWorkflow extends SubWorkflowState {
   @Inject private ActivityService activityService;
 
-  public PhaseStepSubWorkflow(String name) {
-    super(name, StateType.PHASE_STEP.name());
-  }
-
   @Transient @Inject private transient WorkflowExecutionService workflowExecutionService;
 
   private PhaseStepType phaseStepType;
@@ -97,6 +83,10 @@ public class PhaseStepSubWorkflow extends SubWorkflowState {
   @SchemaIgnore private String phaseStepNameForRollback;
   @SchemaIgnore private ExecutionStatus statusForRollback;
   @SchemaIgnore private boolean artifactNeeded;
+
+  public PhaseStepSubWorkflow(String name) {
+    super(name, StateType.PHASE_STEP.name());
+  }
 
   @Override
   public ExecutionResponse execute(ExecutionContext contextIntf) {
@@ -150,78 +140,89 @@ public class PhaseStepSubWorkflow extends SubWorkflowState {
       return null;
     }
 
-    if (phaseStepType == DISABLE_SERVICE || phaseStepType == DEPLOY_SERVICE || phaseStepType == STOP_SERVICE
-        || phaseStepType == START_SERVICE || phaseStepType == ENABLE_SERVICE) {
-      // Needs service instance id param
-      List<String> serviceInstanceIds = phaseStepExecutionSummary.getStepExecutionSummaryList()
-                                            .stream()
-                                            .filter(s -> s.getElement() != null)
-                                            .map(s -> s.getElement().getUuid())
-                                            .distinct()
-                                            .collect(Collectors.toList());
+    switch (phaseStepType) {
+      case DISABLE_SERVICE:
+      case DEPLOY_SERVICE:
+      case STOP_SERVICE:
+      case START_SERVICE:
+      case ENABLE_SERVICE:
+      case VERIFY_SERVICE:
+        // Needs service instance id param
+        List<String> serviceInstanceIds = phaseStepExecutionSummary.getStepExecutionSummaryList()
+                                              .stream()
+                                              .filter(s -> s.getElement() != null)
+                                              .map(s -> s.getElement().getUuid())
+                                              .distinct()
+                                              .collect(Collectors.toList());
 
-      List<ContextElement> contextParams =
-          Lists.newArrayList(aServiceInstanceIdsParam().withInstanceIds(serviceInstanceIds).build());
-      if (artifactNeeded) {
-        ServiceInstanceArtifactParam serviceInstanceArtifactParam = buildInstanceArtifactParam(
-            contextIntf.getAppId(), contextIntf.getWorkflowExecutionId(), serviceInstanceIds);
-        contextParams.add(serviceInstanceArtifactParam);
+        List<ContextElement> contextParams =
+            Lists.newArrayList(aServiceInstanceIdsParam().withInstanceIds(serviceInstanceIds).build());
+        if (artifactNeeded) {
+          ServiceInstanceArtifactParam serviceInstanceArtifactParam = buildInstanceArtifactParam(
+              contextIntf.getAppId(), contextIntf.getWorkflowExecutionId(), serviceInstanceIds);
+          contextParams.add(serviceInstanceArtifactParam);
+        }
+        return contextParams;
+      case CONTAINER_DEPLOY: {
+        Optional<StepExecutionSummary> first = phaseStepExecutionSummary.getStepExecutionSummaryList()
+                                                   .stream()
+                                                   .filter(s -> s instanceof CommandStepExecutionSummary)
+                                                   .findFirst();
+        if (!first.isPresent()) {
+          return null;
+        }
+        CommandStepExecutionSummary commandStepExecutionSummary = (CommandStepExecutionSummary) first.get();
+        return singletonList(ContainerRollbackRequestElement.builder()
+                                 .oldInstanceData(reverse(commandStepExecutionSummary.getNewInstanceData()))
+                                 .newInstanceData(reverse(commandStepExecutionSummary.getOldInstanceData()))
+                                 .build());
       }
-      return contextParams;
-    } else if (phaseStepType == CONTAINER_DEPLOY) {
-      Optional<StepExecutionSummary> first = phaseStepExecutionSummary.getStepExecutionSummaryList()
-                                                 .stream()
-                                                 .filter(s -> s instanceof CommandStepExecutionSummary)
-                                                 .findFirst();
-      if (!first.isPresent()) {
-        return null;
+      case DEPLOY_AWSCODEDEPLOY: {
+        Optional<StepExecutionSummary> first = phaseStepExecutionSummary.getStepExecutionSummaryList()
+                                                   .stream()
+                                                   .filter(s -> s instanceof CommandStepExecutionSummary)
+                                                   .findFirst();
+        if (!first.isPresent()) {
+          return null;
+        }
+        CommandStepExecutionSummary commandStepExecutionSummary = (CommandStepExecutionSummary) first.get();
+        AwsCodeDeployRequestElement deployRequestElement =
+            anAwsCodeDeployRequestElement()
+                .withCodeDeployParams(commandStepExecutionSummary.getCodeDeployParams())
+                .withOldCodeDeployParams(commandStepExecutionSummary.getOldCodeDeployParams())
+                .build();
+        return singletonList(deployRequestElement);
       }
-      CommandStepExecutionSummary commandStepExecutionSummary = (CommandStepExecutionSummary) first.get();
-      return singletonList(ContainerRollbackRequestElement.builder()
-                               .oldInstanceData(reverse(commandStepExecutionSummary.getNewInstanceData()))
-                               .newInstanceData(reverse(commandStepExecutionSummary.getOldInstanceData()))
-                               .build());
-    } else if (phaseStepType == DEPLOY_AWSCODEDEPLOY) {
-      Optional<StepExecutionSummary> first = phaseStepExecutionSummary.getStepExecutionSummaryList()
-                                                 .stream()
-                                                 .filter(s -> s instanceof CommandStepExecutionSummary)
-                                                 .findFirst();
-      if (!first.isPresent()) {
-        return null;
+      case DEPLOY_AWS_LAMBDA:
+        return new ArrayList<>();
+      case AMI_DEPLOY_AUTOSCALING_GROUP: {
+        Optional<StepExecutionSummary> first = phaseStepExecutionSummary.getStepExecutionSummaryList()
+                                                   .stream()
+                                                   .filter(s -> s instanceof AmiStepExecutionSummary)
+                                                   .findFirst();
+        if (!first.isPresent()) {
+          return null;
+        }
+        AmiStepExecutionSummary amiStepExecutionSummary = (AmiStepExecutionSummary) first.get();
+        return asList(amiStepExecutionSummary.getRollbackAmiServiceElement());
       }
-      CommandStepExecutionSummary commandStepExecutionSummary = (CommandStepExecutionSummary) first.get();
-      AwsCodeDeployRequestElement deployRequestElement =
-          anAwsCodeDeployRequestElement()
-              .withCodeDeployParams(commandStepExecutionSummary.getCodeDeployParams())
-              .withOldCodeDeployParams(commandStepExecutionSummary.getOldCodeDeployParams())
-              .build();
-      return singletonList(deployRequestElement);
-    } else if (phaseStepType == DEPLOY_AWS_LAMBDA) {
-      return new ArrayList<>();
-    } else if (phaseStepType == AMI_DEPLOY_AUTOSCALING_GROUP) {
-      Optional<StepExecutionSummary> first = phaseStepExecutionSummary.getStepExecutionSummaryList()
-                                                 .stream()
-                                                 .filter(s -> s instanceof AmiStepExecutionSummary)
-                                                 .findFirst();
-      if (!first.isPresent()) {
-        return null;
+      case CONTAINER_SETUP: {
+        Optional<StepExecutionSummary> first = phaseStepExecutionSummary.getStepExecutionSummaryList()
+                                                   .stream()
+                                                   .filter(s -> s instanceof CommandStepExecutionSummary)
+                                                   .findFirst();
+        if (!first.isPresent()) {
+          return null;
+        }
+        CommandStepExecutionSummary commandStepExecutionSummary = (CommandStepExecutionSummary) first.get();
+        return singletonList(ContainerRollbackRequestElement.builder()
+                                 .controllerNamePrefix(commandStepExecutionSummary.getControllerNamePrefix())
+                                 .previousDaemonSetYaml(commandStepExecutionSummary.getPreviousDaemonSetYaml())
+                                 .previousActiveAutoscalers(commandStepExecutionSummary.getPreviousActiveAutoscalers())
+                                 .build());
       }
-      AmiStepExecutionSummary amiStepExecutionSummary = (AmiStepExecutionSummary) first.get();
-      return asList(amiStepExecutionSummary.getRollbackAmiServiceElement());
-    } else if (phaseStepType == CONTAINER_SETUP) {
-      Optional<StepExecutionSummary> first = phaseStepExecutionSummary.getStepExecutionSummaryList()
-                                                 .stream()
-                                                 .filter(s -> s instanceof CommandStepExecutionSummary)
-                                                 .findFirst();
-      if (!first.isPresent()) {
-        return null;
-      }
-      CommandStepExecutionSummary commandStepExecutionSummary = (CommandStepExecutionSummary) first.get();
-      return singletonList(ContainerRollbackRequestElement.builder()
-                               .controllerNamePrefix(commandStepExecutionSummary.getControllerNamePrefix())
-                               .previousDaemonSetYaml(commandStepExecutionSummary.getPreviousDaemonSetYaml())
-                               .previousActiveAutoscalers(commandStepExecutionSummary.getPreviousActiveAutoscalers())
-                               .build());
+      default:
+        unhandled(phaseStepType);
     }
     return null;
   }
