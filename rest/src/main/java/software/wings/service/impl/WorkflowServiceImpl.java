@@ -2389,8 +2389,9 @@ public class WorkflowServiceImpl implements WorkflowService, DataProvider {
                           .build())
         .addPhaseStep(aPhaseStep(VERIFY_SERVICE, Constants.VERIFY_SERVICE)
                           .withRollback(true)
-                          .withPhaseStepNameForRollback(Constants.VERIFY_SERVICE)
+                          .withPhaseStepNameForRollback(Constants.DEPLOY_SERVICE)
                           .withStatusForRollback(ExecutionStatus.SUCCESS)
+                          .withRollback(true)
                           .build())
         .addPhaseStep(aPhaseStep(WRAP_UP, Constants.WRAP_UP).build())
         .build();
@@ -2417,10 +2418,11 @@ public class WorkflowServiceImpl implements WorkflowService, DataProvider {
                           .withStatusForRollback(ExecutionStatus.SUCCESS)
                           .withRollback(true)
                           .build())
+        // Verificanion is not exactly rollbacking operation. It should be executed if deployment is needed
         .addPhaseStep(aPhaseStep(VERIFY_SERVICE, Constants.VERIFY_SERVICE)
-                          .withRollback(true)
-                          .withPhaseStepNameForRollback(Constants.VERIFY_SERVICE)
+                          .withPhaseStepNameForRollback(Constants.DEPLOY_SERVICE)
                           .withStatusForRollback(ExecutionStatus.SUCCESS)
+                          .withRollback(true)
                           .build())
         .addPhaseStep(aPhaseStep(WRAP_UP, Constants.WRAP_UP).build())
         .build();
@@ -2447,10 +2449,11 @@ public class WorkflowServiceImpl implements WorkflowService, DataProvider {
                           .withStatusForRollback(ExecutionStatus.SUCCESS)
                           .withRollback(true)
                           .build())
+        // When we rolling back the verification steps the same criterie to run if deployment is needed should be used
         .addPhaseStep(aPhaseStep(VERIFY_SERVICE, Constants.VERIFY_SERVICE)
-                          .withRollback(true)
-                          .withPhaseStepNameForRollback(Constants.VERIFY_SERVICE)
+                          .withPhaseStepNameForRollback(Constants.DEPLOY_CONTAINERS)
                           .withStatusForRollback(ExecutionStatus.SUCCESS)
+                          .withRollback(true)
                           .build())
         .addPhaseStep(aPhaseStep(WRAP_UP, Constants.WRAP_UP).build())
         .build();
@@ -2477,10 +2480,11 @@ public class WorkflowServiceImpl implements WorkflowService, DataProvider {
                           .withStatusForRollback(ExecutionStatus.SUCCESS)
                           .withRollback(true)
                           .build())
+        // When we rolling back the verification steps the same criterie to run if deployment is needed should be used
         .addPhaseStep(aPhaseStep(VERIFY_SERVICE, Constants.VERIFY_SERVICE)
-                          .withRollback(true)
-                          .withPhaseStepNameForRollback(Constants.VERIFY_SERVICE)
+                          .withPhaseStepNameForRollback(Constants.DEPLOY_SERVICE)
                           .withStatusForRollback(ExecutionStatus.SUCCESS)
+                          .withRollback(true)
                           .build())
         .addPhaseStep(aPhaseStep(WRAP_UP, Constants.WRAP_UP).build())
         .build();
@@ -2533,27 +2537,29 @@ public class WorkflowServiceImpl implements WorkflowService, DataProvider {
                               .build())
             .addPhaseStep(aPhaseStep(STOP_SERVICE, Constants.STOP_SERVICE)
                               .addAllSteps(commandNodes(commandMap, CommandType.STOP, true))
-                              .withRollback(true)
                               .withPhaseStepNameForRollback(Constants.DEPLOY_SERVICE)
                               .withStatusForRollback(ExecutionStatus.SUCCESS)
+                              .withRollback(true)
                               .build())
             .addPhaseStep(aPhaseStep(DEPLOY_SERVICE, Constants.DEPLOY_SERVICE)
                               .addAllSteps(commandNodes(commandMap, CommandType.INSTALL, true))
-                              .withRollback(true)
                               .withPhaseStepNameForRollback(Constants.DEPLOY_SERVICE)
                               .withStatusForRollback(ExecutionStatus.SUCCESS)
+                              .withRollback(true)
                               .build())
             .addPhaseStep(aPhaseStep(ENABLE_SERVICE, Constants.ENABLE_SERVICE)
                               .addAllSteps(enableServiceSteps)
-                              .withRollback(true)
                               .withPhaseStepNameForRollback(Constants.DISABLE_SERVICE)
                               .withStatusForRollback(ExecutionStatus.SUCCESS)
+                              .withRollback(true)
                               .build())
+            // When we rolling back the verification steps the same criterie to run if deployment is needed should be
+            // used
             .addPhaseStep(aPhaseStep(VERIFY_SERVICE, Constants.VERIFY_SERVICE)
                               .addAllSteps(commandNodes(commandMap, CommandType.VERIFY, true))
-                              .withRollback(true)
-                              .withPhaseStepNameForRollback(Constants.VERIFY_SERVICE)
+                              .withPhaseStepNameForRollback(Constants.DEPLOY_SERVICE)
                               .withStatusForRollback(ExecutionStatus.SUCCESS)
+                              .withRollback(true)
                               .build())
             .addPhaseStep(aPhaseStep(WRAP_UP, Constants.WRAP_UP).build())
             .build();
@@ -2622,11 +2628,13 @@ public class WorkflowServiceImpl implements WorkflowService, DataProvider {
                                               .withRollback(true)
                                               .build());
       }
+
+      // When we rolling back the verification steps the same criterie to run if deployment is needed should be used
       workflowPhaseBuilder
           .addPhaseStep(aPhaseStep(VERIFY_SERVICE, Constants.VERIFY_SERVICE)
-                            .withRollback(true)
-                            .withPhaseStepNameForRollback(Constants.VERIFY_SERVICE)
+                            .withPhaseStepNameForRollback(Constants.DEPLOY_CONTAINERS)
                             .withStatusForRollback(ExecutionStatus.SUCCESS)
+                            .withRollback(true)
                             .build())
           .addPhaseStep(aPhaseStep(WRAP_UP, Constants.WRAP_UP).build());
       return workflowPhaseBuilder.build();
@@ -2650,6 +2658,12 @@ public class WorkflowServiceImpl implements WorkflowService, DataProvider {
                                        .withName(Constants.ROLLBACK_CONTAINERS)
                                        .addProperty("rollback", true)
                                        .build())
+                          .withPhaseStepNameForRollback(Constants.SETUP_CONTAINER)
+                          .withStatusForRollback(ExecutionStatus.SUCCESS)
+                          .withRollback(true)
+                          .build())
+        // When we rolling back the verification steps the same criterie to run if deployment is needed should be used
+        .addPhaseStep(aPhaseStep(VERIFY_SERVICE, Constants.VERIFY_SERVICE)
                           .withPhaseStepNameForRollback(Constants.SETUP_CONTAINER)
                           .withStatusForRollback(ExecutionStatus.SUCCESS)
                           .withRollback(true)
