@@ -13,6 +13,7 @@ import static software.wings.beans.artifact.ArtifactStreamType.GCR;
 import static software.wings.beans.command.CommandExecutionContext.Builder.aCommandExecutionContext;
 import static software.wings.beans.command.CommandExecutionResult.CommandExecutionStatus.SUCCESS;
 import static software.wings.beans.command.ServiceCommand.Builder.aServiceCommand;
+import static software.wings.common.Constants.DEFAULT_ASYNC_CALL_TIMEOUT;
 import static software.wings.sm.ExecutionResponse.Builder.anExecutionResponse;
 import static software.wings.sm.StateType.COMMAND;
 
@@ -36,6 +37,7 @@ import software.wings.beans.Activity.ActivityBuilder;
 import software.wings.beans.Activity.Type;
 import software.wings.beans.Application;
 import software.wings.beans.CountsByStatuses;
+import software.wings.beans.DelegateTask;
 import software.wings.beans.DeploymentExecutionContext;
 import software.wings.beans.EntityType;
 import software.wings.beans.Environment;
@@ -81,6 +83,7 @@ import software.wings.sm.ExecutionStatus;
 import software.wings.sm.State;
 import software.wings.sm.StateExecutionException;
 import software.wings.sm.WorkflowStandardParams;
+import software.wings.stencils.DefaultValue;
 import software.wings.stencils.EnumData;
 import software.wings.stencils.Expand;
 import software.wings.waitnotify.NotifyResponseData;
@@ -182,6 +185,13 @@ public class CommandState extends State {
    */
   public void setCommandName(String commandName) {
     this.commandName = commandName;
+  }
+
+  @Attributes(title = "Timeout (ms)")
+  @DefaultValue("" + DEFAULT_ASYNC_CALL_TIMEOUT)
+  @Override
+  public Integer getTimeoutMillis() {
+    return super.getTimeoutMillis();
   }
 
   @Override
@@ -354,16 +364,21 @@ public class CommandState extends State {
 
       PhaseElement phaseElement = context.getContextElement(ContextElementType.PARAM, Constants.PHASE_PARAM);
       String infrastructureMappingId = phaseElement == null ? null : phaseElement.getInfraMappingId();
-      delegateTaskId = delegateService.queueTask(aDelegateTask()
-                                                     .withAccountId(accountId)
-                                                     .withAppId(appId)
-                                                     .withTaskType(TaskType.COMMAND)
-                                                     .withWaitId(activityId)
-                                                     .withParameters(new Object[] {command, commandExecutionContext})
-                                                     .withEnvId(envId)
-                                                     .withTimeout(TimeUnit.MINUTES.toMillis(30))
-                                                     .withInfrastructureMappingId(infrastructureMappingId)
-                                                     .build());
+      DelegateTask delegateTask = aDelegateTask()
+                                      .withAccountId(accountId)
+                                      .withAppId(appId)
+                                      .withTaskType(TaskType.COMMAND)
+                                      .withWaitId(activityId)
+                                      .withParameters(new Object[] {command, commandExecutionContext})
+                                      .withEnvId(envId)
+                                      .withTimeout(TimeUnit.MINUTES.toMillis(30))
+                                      .withInfrastructureMappingId(infrastructureMappingId)
+                                      .build();
+
+      if (getTimeoutMillis() != null) {
+        delegateTask.setTimeout(getTimeoutMillis());
+      }
+      delegateTaskId = delegateService.queueTask(delegateTask);
       logger.info("DelegateTaskId [{}] sent for activityId [{}]", delegateTaskId, activityId);
     } catch (Exception e) {
       logger.error("Exception in command execution", e);
