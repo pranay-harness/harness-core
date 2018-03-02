@@ -3,10 +3,12 @@ package software.wings.service.intfc.analysis;
 import ru.vyarus.guice.validator.group.annotation.ValidationGroups;
 import software.wings.beans.SettingAttribute;
 import software.wings.service.impl.analysis.AnalysisComparisonStrategy;
+import software.wings.service.impl.analysis.ExperimentalLogMLAnalysisRecord;
 import software.wings.service.impl.analysis.LogDataRecord;
 import software.wings.service.impl.analysis.LogElement;
 import software.wings.service.impl.analysis.LogMLAnalysisRecord;
 import software.wings.service.impl.analysis.LogMLAnalysisSummary;
+import software.wings.service.impl.analysis.LogMLExpAnalysisInfo;
 import software.wings.service.impl.analysis.LogMLFeedback;
 import software.wings.service.impl.analysis.LogRequest;
 import software.wings.sm.StateType;
@@ -41,6 +43,9 @@ public interface AnalysisService {
       String applicationId, String stateExecutionId, String query, StateType stateType, Integer logCollectionMinute);
 
   LogMLAnalysisSummary getAnalysisSummary(String stateExecutionId, String applicationId, StateType stateType);
+  LogMLAnalysisSummary getExperimentalAnalysisSummary(
+      String stateExecutionId, String applicationId, StateType stateType);
+  List<LogMLExpAnalysisInfo> getExpAnalysisInfoList();
 
   void validateConfig(@NotNull SettingAttribute settingAttribute, StateType stateType);
 
@@ -76,4 +81,7 @@ public interface AnalysisService {
       StateType stateType, String appId, String serviceId, String query, String workflowId);
 
   boolean saveFeedback(LogMLFeedback feedback, StateType stateType);
+
+  boolean saveExperimentalLogAnalysisRecords(
+      ExperimentalLogMLAnalysisRecord mlAnalysisResponse, StateType stateType, Optional<String> taskId);
 }

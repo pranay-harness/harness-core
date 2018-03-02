@@ -130,17 +130,16 @@ public class LogAnalysisManagerJob implements Job {
          * Work flow is invalid
          * exit immediately
          */
+        boolean createExperiment = false;
         if (!analysisService.isStateValid(context.getAppId(), context.getStateExecutionId())) {
           logger.warn(" log ml analysis : state is not valid " + context.getStateExecutionId());
           return;
         }
 
-        // TODO support multiple queries
         if (analysisService.isProcessingComplete(context.getQueries().iterator().next(), context.getAppId(),
                 context.getStateExecutionId(), context.getStateType(), context.getTimeDuration())) {
           completeCron = true;
         } else {
-          // TODO support multiple queries
           int logAnalysisClusteringTestMinute =
               analysisService.getCollectionMinuteForLevel(context.getQueries().iterator().next(), context.getAppId(),
                   context.getStateExecutionId(), context.getStateType(), ClusterLevel.L1, getCollectedNodes());
@@ -177,7 +176,10 @@ public class LogAnalysisManagerJob implements Job {
              * and no test, the control data is processed and added to the result. If test is present, but no control,
              * the test events are saved for future processing.
              */
-            new LogMLAnalysisGenerator(context, logAnalysisMinute, analysisService, learningEngineService).run();
+            createExperiment = logAnalysisMinute >= context.getTimeDuration() - 1;
+            new LogMLAnalysisGenerator(
+                context, logAnalysisMinute, createExperiment, analysisService, learningEngineService)
+                .run();
 
           } else {
             logger.warn("No data for log ml analysis " + context.getStateExecutionId());
@@ -192,6 +194,7 @@ public class LogAnalysisManagerJob implements Job {
               context.getStateExecutionId(), StringUtils.join(context.getQueries(), ","),
               "No data found for the given queries.");
         }
+
       } catch (Exception ex) {
         completeCron = true;
         error = true;

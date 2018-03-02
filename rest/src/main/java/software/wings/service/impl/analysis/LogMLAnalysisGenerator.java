@@ -10,11 +10,15 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import software.wings.service.impl.newrelic.LearningEngineAnalysisTask;
 import software.wings.service.impl.newrelic.LearningEngineAnalysisTask.LearningEngineAnalysisTaskBuilder;
+import software.wings.service.impl.newrelic.LearningEngineExperimentalAnalysisTask;
+import software.wings.service.impl.newrelic.LearningEngineExperimentalAnalysisTask.LearningEngineExperimentalAnalysisTaskBuilder;
+import software.wings.service.impl.newrelic.MLExperiments;
 import software.wings.service.intfc.LearningEngineService;
 import software.wings.service.intfc.analysis.AnalysisService;
 import software.wings.service.intfc.analysis.ClusterLevel;
 import software.wings.service.intfc.analysis.LogAnalysisResource;
 
+import java.util.List;
 import java.util.Set;
 
 /**
@@ -33,12 +37,13 @@ public class LogMLAnalysisGenerator implements Runnable {
   private final Set<String> testNodes;
   private final Set<String> controlNodes;
   private final Set<String> queries;
+  private final boolean createExperiment;
   private int logAnalysisMinute;
   private AnalysisService analysisService;
   private LearningEngineService learningEngineService;
 
-  public LogMLAnalysisGenerator(AnalysisContext context, int logAnalysisMinute, AnalysisService analysisService,
-      LearningEngineService learningEngineService) {
+  public LogMLAnalysisGenerator(AnalysisContext context, int logAnalysisMinute, boolean createExperiment,
+      AnalysisService analysisService, LearningEngineService learningEngineService) {
     this.context = context;
     this.analysisService = analysisService;
     this.applicationId = context.getAppId();
@@ -50,6 +55,7 @@ public class LogMLAnalysisGenerator implements Runnable {
     this.queries = context.getQueries();
     this.logAnalysisMinute = logAnalysisMinute;
     this.learningEngineService = learningEngineService;
+    this.createExperiment = createExperiment;
   }
 
   @Override
@@ -98,8 +104,52 @@ public class LogMLAnalysisGenerator implements Runnable {
             + "&applicationId=" + applicationId + "&stateExecutionId=" + context.getStateExecutionId()
             + "&logCollectionMinute=" + logAnalysisMinute + "&isBaselineCreated=" + isBaselineCreated
             + "&taskId=" + uuid;
+
         final String logAnalysisGetUrl = "/api/" + context.getStateBaseUrl()
             + LogAnalysisResource.ANALYSIS_STATE_GET_ANALYSIS_RECORDS_URL + "?accountId=" + accountId;
+
+        if (createExperiment) {
+          final String experimentalLogAnalysisSaveUrl = "/api/learning-exp"
+              + LogAnalysisResource.ANALYSIS_STATE_SAVE_ANALYSIS_RECORDS_URL + "?accountId=" + accountId
+              + "&applicationId=" + applicationId + "&stateExecutionId=" + context.getStateExecutionId()
+              + "&logCollectionMinute=" + logAnalysisMinute + "&isBaselineCreated=" + isBaselineCreated
+              + "&taskId=" + uuid + "&stateType=" + context.getStateType();
+
+          List<MLExperiments> experiments = learningEngineService.getExperiments(MLAnalysisType.LOG_ML);
+
+          LearningEngineExperimentalAnalysisTaskBuilder experimentalAnalysisTaskBuilder =
+              LearningEngineExperimentalAnalysisTask.builder()
+                  .ml_shell_file_name(LOG_ML_SHELL_FILE_NAME)
+                  .query(Lists.newArrayList(query.split(" ")))
+                  .workflow_id(context.getWorkflowId())
+                  .workflow_execution_id(context.getWorkflowExecutionId())
+                  .state_execution_id(context.getStateExecutionId())
+                  .service_id(context.getServiceId())
+                  .sim_threshold(0.9)
+                  .analysis_minute(logAnalysisMinute)
+                  .analysis_save_url(experimentalLogAnalysisSaveUrl)
+                  .log_analysis_get_url(logAnalysisGetUrl)
+                  .ml_analysis_type(MLAnalysisType.LOG_ML)
+                  .stateType(context.getStateType());
+
+          if (isBaselineCreated) {
+            experimentalAnalysisTaskBuilder.control_input_url(controlInputUrl)
+                .test_input_url(testInputUrl)
+                .control_nodes(controlNodes)
+                .test_nodes(testNodes);
+          } else {
+            experimentalAnalysisTaskBuilder.control_input_url(testInputUrl).control_nodes(testNodes);
+          }
+
+          LearningEngineExperimentalAnalysisTask experimentalAnalysisTask;
+          for (MLExperiments experiment : experiments) {
+            experimentalAnalysisTask =
+                experimentalAnalysisTaskBuilder.experiment_name(experiment.getExperimentName()).build();
+            experimentalAnalysisTask.setAppId(applicationId);
+            experimentalAnalysisTask.setUuid(uuid);
+            learningEngineService.addLearningEngineExperimentalAnalysisTask(experimentalAnalysisTask);
+          }
+        }
 
         LearningEngineAnalysisTaskBuilder analysisTaskBuilder =
             LearningEngineAnalysisTask.builder()
@@ -130,6 +180,7 @@ public class LogMLAnalysisGenerator implements Runnable {
         analysisTask.setUuid(uuid);
         learningEngineService.addLearningEngineAnalysisTask(analysisTask);
       }
+
     } catch (Exception e) {
       throw new RuntimeException(
           "Log analysis failed for " + context.getStateExecutionId() + " for minute " + logAnalysisMinute, e);
