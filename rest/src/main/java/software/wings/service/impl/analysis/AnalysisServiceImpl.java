@@ -542,7 +542,7 @@ public class AnalysisServiceImpl implements AnalysisService {
 
   @Override
   public LogMLAnalysisSummary getExperimentalAnalysisSummary(
-      String stateExecutionId, String applicationId, StateType stateType) {
+      String stateExecutionId, String applicationId, StateType stateType, String expName) {
     Iterator<ExperimentalLogMLAnalysisRecord> iteratorAnalysisRecord =
         wingsPersistence.createQuery(ExperimentalLogMLAnalysisRecord.class)
             .field("stateExecutionId")
@@ -551,6 +551,8 @@ public class AnalysisServiceImpl implements AnalysisService {
             .equal(applicationId)
             .field("stateType")
             .equal(stateType)
+            .field("experiment_name")
+            .equal(expName)
             .order("-logCollectionMinute")
             .fetch(new FindOptions().limit(1));
 
@@ -632,7 +634,9 @@ public class AnalysisServiceImpl implements AnalysisService {
   @Override
   public List<LogMLExpAnalysisInfo> getExpAnalysisInfoList() {
     PageRequest<ExperimentalLogMLAnalysisRecord> pageRequest =
-        aPageRequest().addFieldsIncluded("stateExecutionId", "applicationId", "stateType").build();
+        aPageRequest()
+            .addFieldsIncluded("stateExecutionId", "applicationId", "stateType", "experiment_name", "createdAt")
+            .build();
     List<ExperimentalLogMLAnalysisRecord> experimentalLogMLAnalysisRecords =
         wingsPersistence.queryAll(ExperimentalLogMLAnalysisRecord.class, pageRequest);
     List<LogMLExpAnalysisInfo> result = new ArrayList<>();
@@ -641,6 +645,8 @@ public class AnalysisServiceImpl implements AnalysisService {
                      .stateExecutionId(record.getStateExecutionId())
                      .applicationId(record.getApplicationId())
                      .stateType(record.getStateType())
+                     .createdAt(record.getCreatedAt())
+                     .expName(record.getExperiment_name())
                      .build());
     });
 

@@ -16,6 +16,7 @@ from sources.HarnessLoader import HarnessLoader
 
 logger = get_log(__name__)
 VERSIONFILEPATH = 'service_version.properties'
+EXPNAME = 'doc2vec'
 
 
 
@@ -28,11 +29,11 @@ def complete_url(server_url, url):
     print ('server url is ', server_url)
     if url:
         return server_url + url
-def output_to_json(corpus, options):
+def output_to_dict(corpus, options):
 
     return dict(query=options.query, application_id=options.application_id,
-                state_execution_id = options.state_execution_id,
-                log_collection_minute = options.log_collection_minute, control_events=corpus.control_events,
+                state_execution_id=options.state_execution_id,
+                log_collection_minute=options.log_collection_minute, control_events=corpus.control_events,
                 test_events=corpus.test_events, unknown_events=corpus.anomalies,
                 control_clusters=corpus.control_clusters, test_clusters=corpus.test_clusters,
                 unknown_clusters=corpus.anom_clusters, cluster_scores=corpus.cluster_scores, score=corpus.score)
@@ -41,7 +42,7 @@ def run_learning_engine(parameters): #
 
     while 1:
 
-        learning_api_url = complete_url(parameters.server_url, '/api/learning/get-next-exp-task?experimentName=doc2vec')
+        learning_api_url = complete_url(parameters.server_url, '/api/learning/get-next-exp-task?experimentName='+EXPNAME)
         try:
             text, status_code = HarnessLoader.get_request(learning_api_url, VERSIONFILEPATH, parameters.service_secret)
             version = HarnessLoader.get_accept_header(VERSIONFILEPATH)
@@ -81,6 +82,7 @@ def run_learning_engine(parameters): #
                                                                            options_dict['version_file_path'],
                                                                            options_dict['service_secret'])
 
+                    options_dict['experiment_name'] = EXPNAME
                     last_min = options_dict['log_collection_minute']
                     for min in range(last_min+1):
                         options_dict['log_collection_minute'] = min
@@ -90,7 +92,7 @@ def run_learning_engine(parameters): #
                             corpus.load_from_harness(options, experimental_prev_state)
                             splunk_intel = SplunkIntelOptimized(corpus, options)
                             result = splunk_intel.run()
-                            experimental_prev_state = output_to_json(result, options)
+                            experimental_prev_state = output_to_dict(result, options)
                             del corpus
                         except Exception as e:
                             payload = dict(applicationId=options.application_id,

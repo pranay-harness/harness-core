@@ -10,9 +10,6 @@ import java.io.IOException;
 import java.util.List;
 import javax.ws.rs.QueryParam;
 
-/**
- * Created by rsingh on 8/7/17.
- */
 public interface ExperimentalLogAnalysisResource {
   String ANALYSIS_STATE_SAVE_ANALYSIS_RECORDS_URL = "/save-analysis-records";
   String ANALYSIS_STATE_GET_ANALYSIS_SUMMARY_URL = "/get-analysis-summary";
@@ -27,7 +24,7 @@ public interface ExperimentalLogAnalysisResource {
 
   RestResponse<LogMLAnalysisSummary> getLogAnalysisSummary(@QueryParam("accountId") String accountId,
       @QueryParam("applicationId") String applicationId, @QueryParam("stateExecutionId") String stateExecutionId,
-      @QueryParam("stateType") StateType stateType) throws IOException;
+      @QueryParam("stateType") StateType stateType, @QueryParam("expName") String expName) throws IOException;
 
   RestResponse<List<LogMLExpAnalysisInfo>> getLogExpAnalysisInfo(@QueryParam("accountId") String accountId)
       throws IOException;

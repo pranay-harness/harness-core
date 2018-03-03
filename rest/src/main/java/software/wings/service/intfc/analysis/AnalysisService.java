@@ -44,7 +44,7 @@ public interface AnalysisService {
 
   LogMLAnalysisSummary getAnalysisSummary(String stateExecutionId, String applicationId, StateType stateType);
   LogMLAnalysisSummary getExperimentalAnalysisSummary(
-      String stateExecutionId, String applicationId, StateType stateType);
+      String stateExecutionId, String applicationId, StateType stateType, String expName);
   List<LogMLExpAnalysisInfo> getExpAnalysisInfoList();
 
   void validateConfig(@NotNull SettingAttribute settingAttribute, StateType stateType);
