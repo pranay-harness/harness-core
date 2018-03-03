@@ -5,7 +5,10 @@ import static org.assertj.core.api.Assertions.assertThat;
 import org.junit.Rule;
 import org.junit.Test;
 import org.junit.rules.ExpectedException;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import software.wings.exception.WingsException;
+import software.wings.utils.Util;
 
 import java.nio.charset.StandardCharsets;
 import java.security.NoSuchAlgorithmException;
@@ -15,6 +18,8 @@ import javax.crypto.Cipher;
  * Created by mike@ on 4/24/17.
  */
 public class SimpleEncryptionTest {
+  private static final Logger logger = LoggerFactory.getLogger(Util.class);
+
   @Rule public ExpectedException thrown = ExpectedException.none();
 
   @Test
@@ -57,7 +62,8 @@ public class SimpleEncryptionTest {
     try {
       int maxKeyLength = Cipher.getMaxAllowedKeyLength("AES");
       assertThat(maxKeyLength).isEqualTo(2147483647);
-    } catch (NoSuchAlgorithmException nsae) {
+    } catch (NoSuchAlgorithmException exception) {
+      logger.error("", exception);
     }
   }
 }

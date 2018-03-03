@@ -19,6 +19,8 @@ import org.junit.runner.RunWith;
 import org.mockito.Mock;
 import org.mockito.Mockito;
 import org.mockito.runners.MockitoJUnitRunner;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import software.wings.beans.SumoConfig;
 import software.wings.exception.WingsException;
 import software.wings.service.impl.security.EncryptionServiceImpl;
@@ -31,6 +33,8 @@ import java.util.Collections;
  */
 @RunWith(MockitoJUnitRunner.class)
 public class SumoDelegateServiceImplTest {
+  private static final Logger logger = LoggerFactory.getLogger(SumoDelegateServiceImplTest.class);
+
   @Mock SumoConfig sumoConfig;
 
   @Mock SumoLogicClient sumoLogicClient;
@@ -78,7 +82,8 @@ public class SumoDelegateServiceImplTest {
     doReturn(sumoLogicClient).when(sumoDelegateService).getSumoClient(sumoConfig, Collections.emptyList());
     try {
       sumoDelegateService.validateConfig(sumoConfig, Collections.emptyList());
-    } catch (RuntimeException ex) {
+    } catch (RuntimeException exception) {
+      logger.error("", exception);
     }
     verify(sumoDelegateService, times(1)).getSumoClient(sumoConfig, Collections.emptyList());
     verify(sumoLogicClient, times(1)).createSearchJob(eq("*exception*"), any(), any(), any());

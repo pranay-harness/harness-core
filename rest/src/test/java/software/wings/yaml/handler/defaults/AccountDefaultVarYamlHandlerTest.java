@@ -1,5 +1,6 @@
 package software.wings.yaml.handler.defaults;
 
+import static org.assertj.core.api.Fail.failBecauseExceptionWasNotThrown;
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertNotNull;
 import static org.junit.Assert.assertTrue;
@@ -169,8 +170,9 @@ public class AccountDefaultVarYamlHandlerTest extends BaseYamlHandlerTest {
       changeContext.setYaml(yamlObject);
 
       yamlHandler.upsertFromYaml(changeContext, Arrays.asList(changeContext));
-      assertTrue(false);
+      failBecauseExceptionWasNotThrown(UnrecognizedPropertyException.class);
     } catch (UnrecognizedPropertyException ex) {
+      // Do nothing
     }
   }
 

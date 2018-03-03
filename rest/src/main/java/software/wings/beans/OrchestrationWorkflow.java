@@ -272,9 +272,8 @@ public abstract class OrchestrationWorkflow {
             .addParam(
                 "args", "Template expression:" + templateExpression.getExpression() + " contains special characters");
       }
-    } else if (stateType != null) {
-      // TODO: Check if it can contain other expressions
     }
+    // TODO: else if (stateType != null) check if it can contain other expressions
     return templateVariable;
   }
 

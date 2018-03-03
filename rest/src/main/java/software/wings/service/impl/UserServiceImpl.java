@@ -763,10 +763,8 @@ public class UserServiceImpl implements UserService {
           .withAllEnvironments(true)
           .withResourceAccess(builder.build())
           .build();
-    } else {
-      // TODO - for Prod support and non prod support
     }
-
+    // TODO - for Prod support and non prod support
     return null;
   }
 

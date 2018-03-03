@@ -1,9 +1,9 @@
 package software.wings.yaml.handler;
 
+import static org.assertj.core.api.Fail.failBecauseExceptionWasNotThrown;
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertNotNull;
 import static org.junit.Assert.assertNull;
-import static org.junit.Assert.assertTrue;
 import static software.wings.utils.WingsTestConstants.ACCOUNT_ID;
 import static software.wings.utils.WingsTestConstants.APP_ID;
 
@@ -109,8 +109,9 @@ public class ApplicationYamlHandlerTest extends BaseYamlHandlerTest {
 
     try {
       yamlHandler.upsertFromYaml(changeContext, Arrays.asList(changeContext));
-      assertTrue(false);
+      failBecauseExceptionWasNotThrown(WingsException.class);
     } catch (WingsException ex) {
+      // do nothing
     }
 
     // Invalid yaml content
@@ -122,8 +123,9 @@ public class ApplicationYamlHandlerTest extends BaseYamlHandlerTest {
       changeContext.setYaml(yamlObject);
 
       yamlHandler.upsertFromYaml(changeContext, Arrays.asList(changeContext));
-      assertTrue(false);
+      failBecauseExceptionWasNotThrown(UnrecognizedPropertyException.class);
     } catch (UnrecognizedPropertyException ex) {
+      // Do nothing
     }
   }
 

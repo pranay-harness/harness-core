@@ -2,6 +2,8 @@ package software.wings.utils;
 
 import static io.harness.data.structure.EmptyPredicate.isEmpty;
 
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import software.wings.beans.NameValuePair;
 import software.wings.exception.WingsException;
 import software.wings.service.impl.yaml.handler.NameValuePairYamlHandler;
@@ -16,6 +18,8 @@ import java.util.stream.Collectors;
  * @author rktummala on 10/11/17
  */
 public class Util {
+  private static final Logger logger = LoggerFactory.getLogger(Util.class);
+
   private static final String FIRST_REVISION = ".1";
 
   public static String generatePath(String delimiter, boolean endsWithDelimiter, String... elements) {
@@ -99,6 +103,7 @@ public class Util {
         try {
           revision = Integer.parseInt(revisionString);
         } catch (NumberFormatException ex) {
+          logger.error("", ex);
         }
 
         if (revision != -1) {

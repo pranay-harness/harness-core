@@ -124,9 +124,8 @@ public class HostExpressionProcessor implements ExpressionProcessor {
         aPageRequest().withLimit(PageRequest.UNLIMITED).addFilter("appId", Operator.EQ, appId).build();
     if (isEmpty(hostNames)) {
       hosts = hostService.list(pageRequest);
-    } else {
-      // TODO :
     }
+    // TODO : else
 
     return convertToHostElements(hosts);
   }

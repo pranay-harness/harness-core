@@ -1,5 +1,6 @@
 package software.wings.yaml.handler.connectors.configyamlhandlers;
 
+import static org.assertj.core.api.Fail.failBecauseExceptionWasNotThrown;
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertNotNull;
 import static org.junit.Assert.assertNull;
@@ -116,8 +117,9 @@ public abstract class BaseSettingValueConfigYamlHandlerTest extends BaseYamlHand
         getChangeContext(yamlContent, invalidYamlPath, settingValueYamlConfig.getYamlClass(), yamlHandler);
     try {
       yamlHandler.upsertFromYaml(changeContext, Arrays.asList(changeContext));
-      assertTrue(false);
+      failBecauseExceptionWasNotThrown(WingsException.class);
     } catch (WingsException ex) {
+      // Do nothing
     }
 
     // 4. Now, Use invalid yaml content (missing encrypted password) and  make sure upsertFromYaml fails
@@ -125,8 +127,9 @@ public abstract class BaseSettingValueConfigYamlHandlerTest extends BaseYamlHand
       changeContext = getChangeContext(settingValueYamlConfig.getInvalidYamlContent(), yamlFilePath,
           settingValueYamlConfig.getYamlClass(), yamlHandler);
       yamlHandler.upsertFromYaml(changeContext, Arrays.asList(changeContext));
-      assertTrue(false);
+      failBecauseExceptionWasNotThrown(UnrecognizedPropertyException.class);
     } catch (UnrecognizedPropertyException ex) {
+      // Do nothing
     }
   }
 
@@ -163,6 +166,7 @@ public abstract class BaseSettingValueConfigYamlHandlerTest extends BaseYamlHand
       method.invoke(settingValueYamlConfig.getSettingAttributeSaved().getValue(),
           settingValueYamlConfig.getCurrentFieldValue() + "_1");
     } catch (Exception e) {
+      // Do nothing
     }
   }
 }

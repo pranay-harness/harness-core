@@ -30,6 +30,7 @@ public class HttpUtil {
       socket.connect(new InetSocketAddress(host, port), 5000); // 5 sec timeout
       return true;
     } catch (IOException ignored) {
+      // Do nothing
     }
     return false; // Either timeout or unreachable or failed DNS lookup.
   }
@@ -80,7 +81,8 @@ public class HttpUtil {
         builder.proxy(Proxy.NO_PROXY);
       }
 
-    } catch (Exception e) {
+    } catch (ReflectiveOperationException e) {
+      logger.error("", e);
     }
 
     return builder;
