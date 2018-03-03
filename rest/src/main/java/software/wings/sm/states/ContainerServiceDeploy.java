@@ -3,6 +3,7 @@ package software.wings.sm.states;
 import static io.harness.data.structure.EmptyPredicate.isEmpty;
 import static java.util.Collections.emptyList;
 import static java.util.Collections.singletonList;
+import static org.apache.commons.lang3.StringUtils.isBlank;
 import static software.wings.api.CommandStateExecutionData.Builder.aCommandStateExecutionData;
 import static software.wings.api.HostElement.Builder.aHostElement;
 import static software.wings.api.InstanceElement.Builder.anInstanceElement;
@@ -191,12 +192,12 @@ public abstract class ContainerServiceDeploy extends State {
           return contextData.containerElement.getMaxInstances();
         }
       }
-      return (int) Math.round(Math.min(getInstanceCount(), 100) * totalInstancesAvailable / 100.0);
+      return (int) Math.round(Math.min(contextData.instanceCount, 100) * totalInstancesAvailable / 100.0);
     } else {
       if (contextData.containerElement.isUseFixedInstances()) {
-        return Math.min(getInstanceCount(), contextData.containerElement.getFixedInstances());
+        return Math.min(contextData.instanceCount, contextData.containerElement.getFixedInstances());
       } else {
-        return getInstanceCount();
+        return contextData.instanceCount;
       }
     }
   }
@@ -342,11 +343,11 @@ public abstract class ContainerServiceDeploy extends State {
   @Override
   public Map<String, String> validateFields() {
     Map<String, String> invalidFields = new HashMap<>();
-    if (!isRollback() && getInstanceCount() == 0) {
-      invalidFields.put("instanceCount", "Instance count must be greater than 0");
+    if (!isRollback() && isBlank(getInstanceCount())) {
+      invalidFields.put("instanceCount", "Instance count must not be blank");
     }
-    if (getCommandName() == null) {
-      invalidFields.put("commandName", "Command name must not be null");
+    if (isBlank(getCommandName())) {
+      invalidFields.put("commandName", "Command name must not be blank");
     }
     return invalidFields;
   }
@@ -354,7 +355,7 @@ public abstract class ContainerServiceDeploy extends State {
   @Override
   public void handleAbortEvent(ExecutionContext context) {}
 
-  public abstract int getInstanceCount();
+  public abstract String getInstanceCount();
 
   public abstract InstanceUnitType getInstanceUnitType();
 
@@ -483,6 +484,7 @@ public abstract class ContainerServiceDeploy extends State {
     final String commandUnitName;
     final String infrastructureMappingId;
     final boolean deployingToHundredPercent;
+    final int instanceCount;
 
     ContextData(ExecutionContext context, ContainerServiceDeploy containerServiceDeploy) {
       PhaseElement phaseElement = context.getContextElement(ContextElementType.PARAM, Constants.PHASE_PARAM);
@@ -540,10 +542,10 @@ public abstract class ContainerServiceDeploy extends State {
                                    .subscriptionId(subscriptionId)
                                    .resourceGroup(resourceGroup)
                                    .build();
+      instanceCount = Integer.valueOf(context.renderExpression(containerServiceDeploy.getInstanceCount()));
       deployingToHundredPercent = containerServiceDeploy.getInstanceUnitType() == PERCENTAGE
-          ? containerServiceDeploy.getInstanceCount() >= 100
-          : containerElement.isUseFixedInstances()
-              && containerServiceDeploy.getInstanceCount() >= containerElement.getFixedInstances();
+          ? instanceCount >= 100
+          : containerElement.isUseFixedInstances() && instanceCount >= containerElement.getFixedInstances();
     }
   }
 }

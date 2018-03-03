@@ -55,7 +55,7 @@ public class KubernetesSetupRollback extends ContainerServiceSetup {
     }
 
     int serviceSteadyStateTimeout =
-        getServiceSteadyStateTimeout() > 0 ? (int) getServiceSteadyStateTimeout() : DEFAULT_STEADY_STATE_TIMEOUT;
+        getServiceSteadyStateTimeout() > 0 ? getServiceSteadyStateTimeout() : DEFAULT_STEADY_STATE_TIMEOUT;
     return aKubernetesSetupParams()
         .withAppName(app.getName())
         .withEnvName(env.getName())
