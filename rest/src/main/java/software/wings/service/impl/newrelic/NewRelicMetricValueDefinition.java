@@ -103,7 +103,7 @@ public class NewRelicMetricValueDefinition {
                        .comparisonType(ThresholdComparisonType.DELTA)
                        .high(10)
                        .medium(5)
-                       .min(0)
+                       .min(5)
                        .build());
     NEW_RELIC_VALUES_TO_ANALYZE.put("error",
         TimeSeriesMetricDefinition.builder()
@@ -203,7 +203,7 @@ public class NewRelicMetricValueDefinition {
                        .comparisonType(ThresholdComparisonType.DELTA)
                        .high(10)
                        .medium(5)
-                       .min(0)
+                       .min(5)
                        .build());
     APP_DYNAMICS_VALUES_TO_ANALYZE.put(metricName,
         TimeSeriesMetricDefinition.builder()
@@ -220,7 +220,7 @@ public class NewRelicMetricValueDefinition {
                        .comparisonType(ThresholdComparisonType.DELTA)
                        .high(10)
                        .medium(5)
-                       .min(10)
+                       .min(5)
                        .build());
     thresholds.add(Threshold.builder()
                        .thresholdType(ThresholdType.ALERT_WHEN_HIGHER)

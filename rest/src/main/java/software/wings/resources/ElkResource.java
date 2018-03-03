@@ -165,6 +165,9 @@ public class ElkResource implements LogAnalysisResource {
   @Override
   public RestResponse<Boolean> createUserFeedback(@QueryParam("accountId") String accountId, LogMLFeedback feedback)
       throws IOException {
+    if (!isEmpty(feedback.getLogMlFeedbackId())) {
+      throw new WingsException("feedback id should not be set in POST call. to update feedback use PUT");
+    }
     return new RestResponse<>(analysisService.saveFeedback(feedback, StateType.ELK));
   }
 

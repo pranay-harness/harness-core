@@ -1,6 +1,5 @@
 package software.wings.integration;
 
-import static java.util.Arrays.asList;
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertFalse;
 
@@ -13,6 +12,8 @@ import software.wings.service.impl.analysis.ContinuousVerificationExecutionMetaD
 import software.wings.service.impl.analysis.ContinuousVerificationService;
 import software.wings.sm.StateType;
 
+import java.time.Instant;
+import java.time.temporal.ChronoUnit;
 import java.util.List;
 import java.util.Map;
 import java.util.TreeMap;
@@ -32,7 +33,6 @@ public class ContinuousVerificationDashboardIntegrationTest extends BaseIntegrat
   @Before
   public void setUp() throws Exception {
     loginAdminUser();
-    deleteAllDocuments(asList(ContinuousVerificationExecutionMetaData.class));
     appId = UUID.randomUUID().toString();
     stateExecutionId = UUID.randomUUID().toString();
     workflowId = UUID.randomUUID().toString();
@@ -42,7 +42,7 @@ public class ContinuousVerificationDashboardIntegrationTest extends BaseIntegrat
 
   @Test
   public void getRecords() throws Exception {
-    long now = 1519877689711L;
+    long now = System.currentTimeMillis();
     continuousVerificationService.saveCVExecutionMetaData(ContinuousVerificationExecutionMetaData.builder()
                                                               .accountId(accountId)
                                                               .applicationId(appId)
@@ -71,10 +71,12 @@ public class ContinuousVerificationDashboardIntegrationTest extends BaseIntegrat
 
     assertFalse(response.getResource().isEmpty());
 
+    long start = Instant.ofEpochMilli(now).truncatedTo(ChronoUnit.DAYS).toEpochMilli();
+
     Map<Long, TreeMap<String, Map<String, Map<String, Map<String, List<ContinuousVerificationExecutionMetaData>>>>>>
         map = response.getResource();
     ContinuousVerificationExecutionMetaData continuousVerificationExecutionMetaData1 =
-        map.get(1519862400000L)
+        map.get(start)
             .get("cv dummy artifact")
             .get("cv dummy env/dummy workflow")
             .values()

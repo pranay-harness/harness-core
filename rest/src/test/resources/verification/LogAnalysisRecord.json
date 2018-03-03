@@ -2944,7 +2944,7 @@
         "x": -0.26288818259507674,
         "alert_score": 0.7407407407407407,
         "text": "2017-07-21 22:33:10,350 \u001b[32m[dw-171 - POST /api/settings?&accountId=kmpySmUISimoRrJL6NL73w]\u001b[0;39m \u001b[1;31mERROR\u001b[0;39m \u001b[36msoftware.wings.exception.WingsExceptionMapper\u001b[0;39m - Exception occurred: INVALID_ARTIFACT_SERVER \nsoftware.wings.exception.WingsException: INVALID_ARTIFACT_SERVER\n\tat software.wings.service.impl.NexusBuildServiceImpl.validateArtifactServer(NexusBuildServiceImpl.java:83)\n\tat sun.reflect.NativeMethodAccessorImpl.invoke0(Native Method)\n\tat sun.reflect.NativeMethodAccessorImpl.invoke(NativeMethodAccessorImpl.java:62)\n\tat sun.reflect.DelegatingMethodAccessorImpl.invoke(DelegatingMethodAccessorImpl.java:43)\n\tat java.lang.reflect.Method.invoke(Method.java:498)\n\tat org.joor.Reflect.on(Reflect.java:677)\n\tat org.joor.Reflect.call(Reflect.java:379)\n\tat software.wings.delegatetasks.ServiceImplDelegateTask.run(ServiceImplDelegateTask.java:46)\n\tat software.wings.delegatetasks.ServiceImplDelegateTask.run(ServiceImplDelegateTask.java:19)\n\tat software.wings.delegatetasks.AbstractDelegateRunnableTask.run(AbstractDelegateRunnableTask.java:32)\n\tat java.util.concurrent.Executors$RunnableAdapter.call(Executors.java:511)\n\tat java.util.concurrent.FutureTask.run(FutureTask.java:266)\n\tat java.util.concurrent.ThreadPoolExecutor.runWorker(ThreadPoolExecutor.java:1142)\n\tat java.util.concurrent.ThreadPoolExecutor$Worker.run(ThreadPoolExecutor.java:617)\n\tat java.lang.Thread.run(Thread.java:748)",
-        "cluster_label": 3,
+        "cluster_label": 0,
         "test_score": 0.8545760333853878,
         "control_score": 1,
         "message_frequencies": [
