@@ -23,7 +23,7 @@ public class EvaluateVariableResolver extends StrLookup {
       if (isNotEmpty(objectPrefix)) {
         variable = NormalizeVariableResolver.expand(variable, context, objectPrefix);
       }
-      value = expressionEvaluator.evaluate(variable, context, objectPrefix);
+      value = expressionEvaluator.evaluate(variable, context);
     } catch (JexlException exception) {
       value = "${" + variable + "}";
     }

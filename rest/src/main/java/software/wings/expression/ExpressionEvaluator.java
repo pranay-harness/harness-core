@@ -58,13 +58,13 @@ public class ExpressionEvaluator {
     expression = normalizeExpression(expression, context, defaultObjectPrefix);
 
     JexlContext jc = prepareContext(context);
-    return evaluate(expression, jc, defaultObjectPrefix);
+    return evaluate(expression, jc);
   }
 
-  public Object evaluate(String expression, JexlContext context, String defaultObjectPrefix) {
+  public Object evaluate(String expression, JexlContext context) {
     logger.debug("evaluate request - expression: {}, context: {}", expression, context);
     if (expression == null) {
-      return expression;
+      return null;
     }
 
     JexlExpression jexlExpression = engine.createExpression(expression);
@@ -75,7 +75,7 @@ public class ExpressionEvaluator {
 
   public String normalizeExpression(String expression, Map<String, Object> context, String defaultObjectPrefix) {
     if (expression == null) {
-      return expression;
+      return null;
     }
 
     JexlContext jc = prepareContext(context);
@@ -96,7 +96,7 @@ public class ExpressionEvaluator {
 
   public String substitute(String expression, Map<String, Object> context, String defaultObjectPrefix) {
     if (expression == null) {
-      return expression;
+      return null;
     }
 
     JexlContext jc = prepareContext(context);
