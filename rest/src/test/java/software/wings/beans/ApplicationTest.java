@@ -30,10 +30,14 @@ public class ApplicationTest extends WingsBaseTest {
     app.setName(appName);
     app.setDescription(desc);
     app.onSave();
-    logger.debug("TestApp : " + app);
+    if (logger.isDebugEnabled()) {
+      logger.debug("TestApp : " + app);
+    }
 
     String json = jsonUtils.asJson(app);
-    logger.debug("json : " + json);
+    if (logger.isDebugEnabled()) {
+      logger.debug("json : " + json);
+    }
 
     Application app2 = jsonUtils.asObject(json, Application.class);
     assertThat(app2).isEqualToComparingFieldByField(app);

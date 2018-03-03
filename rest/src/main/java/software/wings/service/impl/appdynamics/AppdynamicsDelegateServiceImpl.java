@@ -126,7 +126,9 @@ public class AppdynamicsDelegateServiceImpl implements AppdynamicsDelegateServic
 
     final Response<List<AppdynamicsMetricData>> tierBTMResponse = tierBTMetricRequest.execute();
     if (tierBTMResponse.isSuccessful()) {
-      logger.debug("AppDynamics metric data found: " + tierBTMResponse.body().size() + " records.");
+      if (logger.isDebugEnabled()) {
+        logger.debug("AppDynamics metric data found: " + tierBTMResponse.body().size() + " records.");
+      }
       return tierBTMResponse.body();
     } else {
       logger.error("Request not successful. Reason: {}", tierBTMResponse);

@@ -74,9 +74,11 @@ public class MessageServiceImpl implements MessageService {
   public void writeMessageToChannel(
       MessengerType targetType, String targetProcessId, String message, String... params) {
     boolean isOutput = messengerType == targetType && processId.equals(targetProcessId);
-    logger.debug("{}: {}({})",
-        isOutput ? "Writing message" : "Sending message to " + targetType + " " + targetProcessId, message,
-        params != null ? Joiner.on(", ").join(params) : "");
+    if (logger.isDebugEnabled()) {
+      logger.debug("{}: {}({})",
+          isOutput ? "Writing message" : "Sending message to " + targetType + " " + targetProcessId, message,
+          params != null ? Joiner.on(", ").join(params) : "");
+    }
     try {
       File channel = getMessageChannel(targetType, targetProcessId);
       List<String> messageContent = new ArrayList<>();
@@ -147,8 +149,11 @@ public class MessageServiceImpl implements MessageService {
                                       .fromType(fromType)
                                       .fromProcess(fromProcess)
                                       .build();
-                logger.debug("{}: {}",
-                    isInput ? "Read message" : "Retrieved message from " + sourceType + " " + sourceProcessId, message);
+                if (logger.isDebugEnabled()) {
+                  logger.debug("{}: {}",
+                      isInput ? "Read message" : "Retrieved message from " + sourceType + " " + sourceProcessId,
+                      message);
+                }
                 messageTimestamps.put(channel, timestamp);
                 reader.close();
                 return message;

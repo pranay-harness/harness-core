@@ -107,7 +107,9 @@ public class RepeatStateTest {
     assertThat(response.getCorrelationIds()).isNotNull();
     assertThat(response.getCorrelationIds().size()).as("correlationIds").isEqualTo(corrIdsExpected);
 
-    logger.debug("correlationIds: " + response.getCorrelationIds());
+    if (logger.isDebugEnabled()) {
+      logger.debug("correlationIds: " + response.getCorrelationIds());
+    }
   }
 
   private ExecutionContextImpl prepareExecutionContext(String stateName, List<ContextElement> repeatElements) {

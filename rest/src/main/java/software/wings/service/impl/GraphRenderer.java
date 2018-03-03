@@ -185,9 +185,11 @@ public class GraphRenderer {
           prevInstanceIdMap.put(instance.getPrevInstanceId(), node);
         }
       }
-      logger.debug("generateNodeTree invoked - "
-              + "instanceIdMap: {}, prevInstanceIdMap: {}, parentIdElementsMap: {}, originNode: {}",
-          instanceIdMap, prevInstanceIdMap, parentIdElementsMap, originNode);
+      if (logger.isDebugEnabled()) {
+        logger.debug("generateNodeTree invoked - "
+                + "instanceIdMap: {}, prevInstanceIdMap: {}, parentIdElementsMap: {}, originNode: {}",
+            instanceIdMap, prevInstanceIdMap, parentIdElementsMap, originNode);
+      }
 
       generateNodeTree(originNode, null);
 

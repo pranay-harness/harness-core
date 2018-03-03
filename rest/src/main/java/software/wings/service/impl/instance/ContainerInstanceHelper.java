@@ -96,14 +96,18 @@ public class ContainerInstanceHelper {
         PhaseStepExecutionSummary phaseStepExecutionSummary =
             phaseStepExecutionSummaryMap.get(Constants.DEPLOY_CONTAINERS);
         if (phaseStepExecutionSummary == null) {
-          logger.debug("PhaseStepExecutionSummary is null for stateExecutionInstanceId: " + stateExecutionInstanceId);
+          if (logger.isDebugEnabled()) {
+            logger.debug("PhaseStepExecutionSummary is null for stateExecutionInstanceId: " + stateExecutionInstanceId);
+          }
           return Optional.empty();
         }
         List<StepExecutionSummary> stepExecutionSummaryList = phaseStepExecutionSummary.getStepExecutionSummaryList();
         // This was observed when the "deploy containers" step was executed in rollback and no commands were
         // executed since setup failed.
         if (stepExecutionSummaryList == null) {
-          logger.debug("StepExecutionSummaryList is null for stateExecutionInstanceId: " + stateExecutionInstanceId);
+          if (logger.isDebugEnabled()) {
+            logger.debug("StepExecutionSummaryList is null for stateExecutionInstanceId: " + stateExecutionInstanceId);
+          }
           return Optional.empty();
         }
 
@@ -348,7 +352,9 @@ public class ContainerInstanceHelper {
       }
 
       if (serviceArtifact == null) {
-        logger.debug("artifact is null for stateExecutionInstance: " + stateExecutionInstanceId);
+        if (logger.isDebugEnabled()) {
+          logger.debug("artifact is null for stateExecutionInstance: " + stateExecutionInstanceId);
+        }
       }
 
       final String infraMappingType = infrastructureMapping.getInfraMappingType();

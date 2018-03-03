@@ -503,8 +503,10 @@ public class StateMachineExecutor {
     stateExecutionInstance = getStateExecutionInstance(
         stateExecutionInstance.getAppId(), stateExecutionInstance.getExecutionUuid(), stateExecutionInstanceId);
     if (stateExecutionInstance.getStatus().isFinalStatus()) {
-      logger.debug("StateExecutionInstance already reached the final status. Skipping the update for "
-          + stateExecutionInstanceId);
+      if (logger.isDebugEnabled()) {
+        logger.debug("StateExecutionInstance already reached the final status. Skipping the update for "
+            + stateExecutionInstanceId);
+      }
       return stateExecutionInstance;
     } else {
       throw new WingsException("updateStateExecutionData failed");
