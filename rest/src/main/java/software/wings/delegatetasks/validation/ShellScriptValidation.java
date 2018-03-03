@@ -7,6 +7,7 @@ import com.google.inject.Inject;
 
 import com.jcraft.jsch.JSchException;
 import org.apache.commons.lang3.StringUtils;
+import org.mongodb.morphia.annotations.Transient;
 import software.wings.beans.DelegateTask;
 import software.wings.beans.delegation.ShellScriptParameters;
 import software.wings.core.ssh.executors.SshSessionConfig;
@@ -18,7 +19,7 @@ import java.util.List;
 import java.util.function.Consumer;
 
 public class ShellScriptValidation extends AbstractDelegateValidateTask {
-  @Inject private EncryptionService encryptionService;
+  @Inject @Transient private transient EncryptionService encryptionService;
 
   public ShellScriptValidation(
       String delegateId, DelegateTask delegateTask, Consumer<List<DelegateConnectionResult>> postExecute) {

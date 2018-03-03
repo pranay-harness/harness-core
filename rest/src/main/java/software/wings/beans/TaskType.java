@@ -2,6 +2,8 @@ package software.wings.beans;
 
 import static org.joor.Reflect.on;
 
+import com.google.inject.Injector;
+
 import software.wings.delegatetasks.AppdynamicsDataCollectionTask;
 import software.wings.delegatetasks.BambooTask;
 import software.wings.delegatetasks.CommandTask;
@@ -191,7 +193,9 @@ public enum TaskType {
     return on(delegateValidateTaskClass).create(delegateId, delegateTask, postExecute).get();
   }
 
-  public List<String> getCriteria(DelegateTask delegateTask) {
-    return ((DelegateValidateTask) on(delegateValidateTaskClass).create(null, delegateTask, null).get()).getCriteria();
+  public List<String> getCriteria(DelegateTask delegateTask, Injector injector) {
+    DelegateValidateTask delegateValidateTask = on(delegateValidateTaskClass).create(null, delegateTask, null).get();
+    injector.injectMembers(delegateValidateTask);
+    return delegateValidateTask.getCriteria();
   }
 }
