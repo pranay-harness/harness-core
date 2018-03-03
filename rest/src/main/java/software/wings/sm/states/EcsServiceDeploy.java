@@ -17,7 +17,7 @@ import java.util.List;
  * Created by rishi on 2/8/17.
  */
 public class EcsServiceDeploy extends ContainerServiceDeploy {
-  @Attributes(title = "Desired Instances (cumulative)") private int instanceCount;
+  @Attributes(title = "Desired Instances (cumulative)") private String instanceCount;
 
   @Attributes(title = "Instance Unit Type (Count/Percent)")
   @EnumData(enumDataProvider = InstanceUnitTypeDataProvider.class)
@@ -42,11 +42,11 @@ public class EcsServiceDeploy extends ContainerServiceDeploy {
     this.commandName = commandName;
   }
 
-  public int getInstanceCount() {
+  public String getInstanceCount() {
     return instanceCount;
   }
 
-  public void setInstanceCount(int instanceCount) {
+  public void setInstanceCount(String instanceCount) {
     this.instanceCount = instanceCount;
   }
 
@@ -76,7 +76,7 @@ public class EcsServiceDeploy extends ContainerServiceDeploy {
     private ContextElementType requiredContextElementType;
     private String stateType;
     private String commandName;
-    private int instanceCount;
+    private String instanceCount;
     private InstanceUnitType instanceUnitType = InstanceUnitType.COUNT;
 
     private EcsServiceDeployBuilder(String name) {
@@ -112,7 +112,7 @@ public class EcsServiceDeploy extends ContainerServiceDeploy {
       return this;
     }
 
-    public EcsServiceDeployBuilder withInstanceCount(int instanceCount) {
+    public EcsServiceDeployBuilder withInstanceCount(String instanceCount) {
       this.instanceCount = instanceCount;
       return this;
     }

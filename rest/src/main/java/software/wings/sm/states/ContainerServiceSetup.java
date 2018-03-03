@@ -110,8 +110,8 @@ public abstract class ContainerServiceSetup extends State {
   static final int DEFAULT_MAX = 2;
 
   private String desiredInstanceCount;
-  private int fixedInstances;
-  private int maxInstances; // Named minimum in the UI
+  private String fixedInstances;
+  private String maxInstances; // Named minimum in the UI
   private ResizeStrategy resizeStrategy;
   private int serviceSteadyStateTimeout; // Minutes
   @Inject @Transient private transient EcrService ecrService;
@@ -311,19 +311,19 @@ public abstract class ContainerServiceSetup extends State {
     this.desiredInstanceCount = desiredInstanceCount;
   }
 
-  public int getFixedInstances() {
+  public String getFixedInstances() {
     return fixedInstances;
   }
 
-  public void setFixedInstances(int fixedInstances) {
+  public void setFixedInstances(String fixedInstances) {
     this.fixedInstances = fixedInstances;
   }
 
-  public int getMaxInstances() {
+  public String getMaxInstances() {
     return maxInstances;
   }
 
-  public void setMaxInstances(int maxInstances) {
+  public void setMaxInstances(String maxInstances) {
     this.maxInstances = maxInstances;
   }
 
@@ -335,7 +335,7 @@ public abstract class ContainerServiceSetup extends State {
     this.resizeStrategy = resizeStrategy;
   }
 
-  public long getServiceSteadyStateTimeout() {
+  public int getServiceSteadyStateTimeout() {
     return serviceSteadyStateTimeout;
   }
 

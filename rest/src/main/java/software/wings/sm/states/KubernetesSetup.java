@@ -102,7 +102,7 @@ public class KubernetesSetup extends ContainerServiceSetup {
     }
 
     int serviceSteadyStateTimeout =
-        getServiceSteadyStateTimeout() > 0 ? (int) getServiceSteadyStateTimeout() : DEFAULT_STEADY_STATE_TIMEOUT;
+        getServiceSteadyStateTimeout() > 0 ? getServiceSteadyStateTimeout() : DEFAULT_STEADY_STATE_TIMEOUT;
 
     String subscriptionId = null;
     String resourceGroup = null;
@@ -165,11 +165,13 @@ public class KubernetesSetup extends ContainerServiceSetup {
       ExecutionContext context, CommandExecutionResult executionResult, ExecutionStatus status) {
     CommandStateExecutionData executionData = (CommandStateExecutionData) context.getStateExecutionData();
     KubernetesSetupParams setupParams = (KubernetesSetupParams) executionData.getContainerSetupParams();
-    int maxInstances = getMaxInstances() == 0 ? DEFAULT_MAX : getMaxInstances();
-    int fixedInstances = getFixedInstances() == 0 ? maxInstances : getFixedInstances();
+    int evaluatedMaxInstances = Integer.valueOf(context.renderExpression(getMaxInstances()));
+    int maxInstances = evaluatedMaxInstances == 0 ? DEFAULT_MAX : evaluatedMaxInstances;
+    int evaluatedFixedInstances = Integer.valueOf(context.renderExpression(getFixedInstances()));
+    int fixedInstances = evaluatedFixedInstances == 0 ? maxInstances : evaluatedFixedInstances;
     ResizeStrategy resizeStrategy = getResizeStrategy() == null ? RESIZE_NEW_FIRST : getResizeStrategy();
     int serviceSteadyStateTimeout =
-        getServiceSteadyStateTimeout() > 0 ? (int) getServiceSteadyStateTimeout() : DEFAULT_STEADY_STATE_TIMEOUT;
+        getServiceSteadyStateTimeout() > 0 ? getServiceSteadyStateTimeout() : DEFAULT_STEADY_STATE_TIMEOUT;
 
     String customMetricYamlEvaluated = null;
     if (isNotBlank(customMetricYamlConfig)) {

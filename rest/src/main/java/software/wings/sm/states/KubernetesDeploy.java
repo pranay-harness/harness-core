@@ -19,7 +19,7 @@ import java.util.List;
  * Created by brett on 3/1/17
  */
 public class KubernetesDeploy extends ContainerServiceDeploy {
-  @Attributes(title = "Desired Instances (cumulative)") private int instanceCount;
+  @Attributes(title = "Desired Instances (cumulative)") private String instanceCount;
 
   @Attributes(title = "Instance Unit Type (Count/Percent)")
   @EnumData(enumDataProvider = InstanceUnitTypeDataProvider.class)
@@ -45,11 +45,11 @@ public class KubernetesDeploy extends ContainerServiceDeploy {
   }
 
   @Override
-  public int getInstanceCount() {
+  public String getInstanceCount() {
     return instanceCount;
   }
 
-  public void setInstanceCount(int instanceCount) {
+  public void setInstanceCount(String instanceCount) {
     this.instanceCount = instanceCount;
   }
 
@@ -91,7 +91,7 @@ public class KubernetesDeploy extends ContainerServiceDeploy {
     private ContextElementType requiredContextElementType;
     private String stateType;
     private String commandName;
-    private int instanceCount;
+    private String instanceCount;
     private InstanceUnitType instanceUnitType = InstanceUnitType.COUNT;
 
     private KubernetesDeployBuilder(String name) {
@@ -127,7 +127,7 @@ public class KubernetesDeploy extends ContainerServiceDeploy {
       return this;
     }
 
-    public KubernetesDeployBuilder withInstanceCount(int instanceCount) {
+    public KubernetesDeployBuilder withInstanceCount(String instanceCount) {
       this.instanceCount = instanceCount;
       return this;
     }

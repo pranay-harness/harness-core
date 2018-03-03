@@ -117,11 +117,11 @@ public class CanaryWorkflowStandardParams extends WorkflowStandardParams {
         State infraState =
             getInfraState(rootStateMachine, phaseStateMachine, CONTAINER_DEPLOY, KUBERNETES_DEPLOY.name());
         if (infraState != null) {
-          KubernetesDeploy replicationControllerDeploy = (KubernetesDeploy) infraState;
+          KubernetesDeploy kubernetesDeploy = (KubernetesDeploy) infraState;
           return anInfraNodeRequest()
               .withDeploymentType(DeploymentType.KUBERNETES)
-              .withInstanceCount(replicationControllerDeploy.getInstanceCount())
-              .withInstanceUnitType(replicationControllerDeploy.getInstanceUnitType())
+              .withInstanceCount(kubernetesDeploy.getInstanceCount())
+              .withInstanceUnitType(kubernetesDeploy.getInstanceUnitType())
               .withPhaseElement(phaseElement)
               .build();
         }
@@ -138,10 +138,10 @@ public class CanaryWorkflowStandardParams extends WorkflowStandardParams {
                 anInfraNodeRequest().withDeploymentType(DeploymentType.SSH).withPhaseElement(phaseElement);
             if (dcNodeSelectState.isSpecificHosts()) {
               infraNodeRequestBuilder.withNodeNames(dcNodeSelectState.getHostNames())
-                  .withInstanceCount(dcNodeSelectState.getHostNames().size())
+                  .withInstanceCount(Integer.toString(dcNodeSelectState.getHostNames().size()))
                   .withInstanceUnitType(InstanceUnitType.COUNT);
             } else {
-              infraNodeRequestBuilder.withInstanceCount(dcNodeSelectState.getInstanceCount())
+              infraNodeRequestBuilder.withInstanceCount(Integer.toString(dcNodeSelectState.getInstanceCount()))
                   .withInstanceUnitType(dcNodeSelectState.getInstanceUnitType());
             }
             return infraNodeRequestBuilder.build();
@@ -151,10 +151,10 @@ public class CanaryWorkflowStandardParams extends WorkflowStandardParams {
                 anInfraNodeRequest().withDeploymentType(DeploymentType.SSH).withPhaseElement(phaseElement);
             if (awsNodeSelectState.isSpecificHosts()) {
               infraNodeRequestBuilder.withNodeNames(awsNodeSelectState.getHostNames())
-                  .withInstanceCount(awsNodeSelectState.getHostNames().size())
+                  .withInstanceCount(Integer.toString(awsNodeSelectState.getHostNames().size()))
                   .withInstanceUnitType(InstanceUnitType.COUNT);
             } else {
-              infraNodeRequestBuilder.withInstanceCount(awsNodeSelectState.getInstanceCount())
+              infraNodeRequestBuilder.withInstanceCount(Integer.toString(awsNodeSelectState.getInstanceCount()))
                   .withInstanceUnitType(awsNodeSelectState.getInstanceUnitType());
             }
             return infraNodeRequestBuilder.build();

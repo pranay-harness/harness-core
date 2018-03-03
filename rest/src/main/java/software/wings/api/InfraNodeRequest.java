@@ -9,16 +9,16 @@ import java.util.List;
  */
 public class InfraNodeRequest {
   private DeploymentType deploymentType;
-  private int instanceCount;
+  private String instanceCount;
   private List<String> nodeNames;
   private PhaseElement phaseElement;
   private InstanceUnitType instanceUnitType;
 
-  public int getInstanceCount() {
+  public String getInstanceCount() {
     return instanceCount;
   }
 
-  public void setInstanceCount(int instanceCount) {
+  public void setInstanceCount(String instanceCount) {
     this.instanceCount = instanceCount;
   }
 
@@ -55,7 +55,7 @@ public class InfraNodeRequest {
 
   public static final class InfraNodeRequestBuilder {
     private DeploymentType deploymentType;
-    private int instanceCount;
+    private String instanceCount;
     private List<String> nodeNames;
     private PhaseElement phaseElement;
     private InstanceUnitType instanceUnitType;
@@ -71,7 +71,7 @@ public class InfraNodeRequest {
       return this;
     }
 
-    public InfraNodeRequestBuilder withInstanceCount(int instanceCount) {
+    public InfraNodeRequestBuilder withInstanceCount(String instanceCount) {
       this.instanceCount = instanceCount;
       return this;
     }

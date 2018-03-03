@@ -1,6 +1,7 @@
 package software.wings.sm.states;
 
 import static java.util.Collections.emptyList;
+import static java.util.Collections.emptyMap;
 import static java.util.Collections.singletonList;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.failBecauseExceptionWasNotThrown;
@@ -25,6 +26,7 @@ import static software.wings.beans.Service.Builder.aService;
 import static software.wings.beans.ServiceTemplate.Builder.aServiceTemplate;
 import static software.wings.beans.SettingAttribute.Builder.aSettingAttribute;
 import static software.wings.beans.WorkflowExecution.WorkflowExecutionBuilder.aWorkflowExecution;
+import static software.wings.beans.artifact.Artifact.Builder.anArtifact;
 import static software.wings.beans.command.Command.Builder.aCommand;
 import static software.wings.beans.command.CommandExecutionResult.Builder.aCommandExecutionResult;
 import static software.wings.beans.command.ServiceCommand.Builder.aServiceCommand;
@@ -63,6 +65,8 @@ import software.wings.api.DeploymentType;
 import software.wings.api.PhaseElement;
 import software.wings.api.PhaseStepExecutionData;
 import software.wings.api.ServiceElement;
+import software.wings.app.MainConfiguration;
+import software.wings.app.PortalConfig;
 import software.wings.beans.Activity;
 import software.wings.beans.Application;
 import software.wings.beans.DelegateTask;
@@ -78,11 +82,14 @@ import software.wings.beans.command.CommandExecutionResult.CommandExecutionStatu
 import software.wings.beans.command.CommandType;
 import software.wings.beans.command.ContainerResizeParams;
 import software.wings.beans.command.ServiceCommand;
+import software.wings.common.VariableProcessor;
 import software.wings.delegatetasks.DelegateProxyFactory;
 import software.wings.exception.WingsException;
+import software.wings.expression.ExpressionEvaluator;
 import software.wings.service.impl.ContainerServiceParams;
 import software.wings.service.intfc.ActivityService;
 import software.wings.service.intfc.AppService;
+import software.wings.service.intfc.ArtifactService;
 import software.wings.service.intfc.ContainerService;
 import software.wings.service.intfc.DelegateService;
 import software.wings.service.intfc.EnvironmentService;
@@ -124,22 +131,29 @@ public class KubernetesDeployTest extends WingsBaseTest {
   @Mock private SecretManager secretManager;
   @Mock private WorkflowExecutionService workflowExecutionService;
   @Mock private DelegateProxyFactory delegateProxyFactory;
+  @Mock private MainConfiguration configuration;
+  @Mock private PortalConfig portalConfig;
+  @Mock private ArtifactService artifactService;
+  @Mock private VariableProcessor variableProcessor;
+  @Mock private ExpressionEvaluator evaluator;
 
   @InjectMocks
   private KubernetesDeploy kubernetesReplicationControllerDeploy = aKubernetesDeploy(STATE_NAME)
                                                                        .withCommandName(COMMAND_NAME)
-                                                                       .withInstanceCount(1)
+                                                                       .withInstanceCount("1")
                                                                        .withInstanceUnitType(COUNT)
                                                                        .build();
 
   @Mock private ContainerService containerService;
 
+  @InjectMocks
   private WorkflowStandardParams workflowStandardParams = aWorkflowStandardParams()
                                                               .withAppId(APP_ID)
                                                               .withEnvId(ENV_ID)
                                                               .withArtifactIds(Lists.newArrayList(ARTIFACT_ID))
                                                               .build();
   private ServiceElement serviceElement = aServiceElement().withUuid(SERVICE_ID).withName(SERVICE_NAME).build();
+  @InjectMocks
   private PhaseElement phaseElement = aPhaseElement()
                                           .withUuid(generateUuid())
                                           .withServiceElement(serviceElement)
@@ -217,11 +231,18 @@ public class KubernetesDeployTest extends WingsBaseTest {
     when(delegateProxyFactory.get(eq(ContainerService.class), any(DelegateTask.SyncTaskContext.class)))
         .thenReturn(containerService);
     when(containerService.getServiceDesiredCount(any(ContainerServiceParams.class))).thenReturn(Optional.of(0));
+    when(configuration.getPortal()).thenReturn(portalConfig);
+    when(portalConfig.getUrl()).thenReturn("http://www.url.com");
+    when(artifactService.get(any(), any())).thenReturn(anArtifact().build());
+    when(variableProcessor.getVariables(any(), any())).thenReturn(emptyMap());
+    when(evaluator.substitute(any(), any(), any())).thenAnswer(i -> i.getArguments()[0]);
   }
 
   @Test
   public void shouldExecute() {
     on(context).set("serviceTemplateService", serviceTemplateService);
+    on(context).set("variableProcessor", variableProcessor);
+    on(context).set("evaluator", evaluator);
 
     ExecutionResponse response = kubernetesReplicationControllerDeploy.execute(context);
     assertThat(response).isNotNull().hasFieldOrPropertyWithValue("async", true);
@@ -243,6 +264,8 @@ public class KubernetesDeployTest extends WingsBaseTest {
     when(containerService.getServiceDesiredCount(any(ContainerServiceParams.class))).thenReturn(Optional.empty());
     try {
       on(context).set("serviceTemplateService", serviceTemplateService);
+      on(context).set("variableProcessor", variableProcessor);
+      on(context).set("evaluator", evaluator);
       kubernetesReplicationControllerDeploy.execute(context);
       failBecauseExceptionWasNotThrown(WingsException.class);
     } catch (WingsException exception) {
@@ -254,6 +277,8 @@ public class KubernetesDeployTest extends WingsBaseTest {
 
   @Test
   public void shouldExecuteAsync() {
+    on(context).set("variableProcessor", variableProcessor);
+    on(context).set("evaluator", evaluator);
     Map<String, NotifyResponseData> notifyResponse = new HashMap<>();
     notifyResponse.put("key", aCommandExecutionResult().withStatus(CommandExecutionStatus.SUCCESS).build());
 
@@ -269,6 +294,8 @@ public class KubernetesDeployTest extends WingsBaseTest {
 
   @Test
   public void shouldExecuteAsyncWithOldReplicationController() {
+    on(context).set("variableProcessor", variableProcessor);
+    on(context).set("evaluator", evaluator);
     Map<String, NotifyResponseData> notifyResponse = new HashMap<>();
     notifyResponse.put("key", aCommandExecutionResult().withStatus(CommandExecutionStatus.SUCCESS).build());
 
@@ -298,6 +325,8 @@ public class KubernetesDeployTest extends WingsBaseTest {
 
   @Test
   public void shouldExecuteAsyncWithOldReplicationControllerWithNoInstance() {
+    on(context).set("variableProcessor", variableProcessor);
+    on(context).set("evaluator", evaluator);
     Map<String, NotifyResponseData> notifyResponse = new HashMap<>();
     notifyResponse.put("key", aCommandExecutionResult().withStatus(CommandExecutionStatus.SUCCESS).build());
     stateExecutionInstance.getStateExecutionMap().put(
@@ -333,8 +362,10 @@ public class KubernetesDeployTest extends WingsBaseTest {
 
     stateExecutionInstance.getStateExecutionMap().put(stateExecutionInstance.getStateName(), commandStateExecutionData);
 
-    kubernetesReplicationControllerDeploy.handleAsyncResponse(
-        new ExecutionContextImpl(stateExecutionInstance), notifyResponse);
+    ExecutionContextImpl context = new ExecutionContextImpl(stateExecutionInstance);
+    on(context).set("variableProcessor", variableProcessor);
+    on(context).set("evaluator", evaluator);
+    kubernetesReplicationControllerDeploy.handleAsyncResponse(context, notifyResponse);
 
     ArgumentCaptor<DelegateTask> captor = ArgumentCaptor.forClass(DelegateTask.class);
     verify(delegateService).queueTask(captor.capture());
@@ -370,6 +401,8 @@ public class KubernetesDeployTest extends WingsBaseTest {
                                      .build());
 
     on(context).set("serviceTemplateService", serviceTemplateService);
+    on(context).set("variableProcessor", variableProcessor);
+    on(context).set("evaluator", evaluator);
     return context;
   }
 
@@ -379,7 +412,7 @@ public class KubernetesDeployTest extends WingsBaseTest {
     Map<String, Integer> activeServiceCounts = new LinkedHashMap<>();
     activeServiceCounts.put("rc-name.0", 1);
     when(containerService.getActiveServiceCounts(any(ContainerServiceParams.class))).thenReturn(activeServiceCounts);
-    kubernetesReplicationControllerDeploy.setInstanceCount(2);
+    kubernetesReplicationControllerDeploy.setInstanceCount("2");
     kubernetesReplicationControllerDeploy.setInstanceUnitType(COUNT);
 
     ExecutionContext context = prepareContext("rc-name.1", false, 0, 0);
@@ -415,7 +448,7 @@ public class KubernetesDeployTest extends WingsBaseTest {
     activeServiceCounts.put("rc-name.0", 1);
     activeServiceCounts.put("rc-name.1", 2);
     when(containerService.getActiveServiceCounts(any(ContainerServiceParams.class))).thenReturn(activeServiceCounts);
-    kubernetesReplicationControllerDeploy.setInstanceCount(3);
+    kubernetesReplicationControllerDeploy.setInstanceCount("3");
     kubernetesReplicationControllerDeploy.setInstanceUnitType(COUNT);
 
     ExecutionContext context = prepareContext("rc-name.2", false, 0, 0);
@@ -446,7 +479,7 @@ public class KubernetesDeployTest extends WingsBaseTest {
     activeServiceCounts.put("rc-name.0", 2);
     activeServiceCounts.put("rc-name.1", 2);
     when(containerService.getActiveServiceCounts(any(ContainerServiceParams.class))).thenReturn(activeServiceCounts);
-    kubernetesReplicationControllerDeploy.setInstanceCount(3);
+    kubernetesReplicationControllerDeploy.setInstanceCount("3");
     kubernetesReplicationControllerDeploy.setInstanceUnitType(COUNT);
 
     ExecutionContext context = prepareContext("rc-name.2", true, 3, 0);
@@ -476,7 +509,7 @@ public class KubernetesDeployTest extends WingsBaseTest {
     Map<String, Integer> activeServiceCounts = new LinkedHashMap<>();
     activeServiceCounts.put("rc-name.0", 3);
     when(containerService.getActiveServiceCounts(any(ContainerServiceParams.class))).thenReturn(activeServiceCounts);
-    kubernetesReplicationControllerDeploy.setInstanceCount(5);
+    kubernetesReplicationControllerDeploy.setInstanceCount("5");
     kubernetesReplicationControllerDeploy.setInstanceUnitType(COUNT);
 
     ExecutionContext context = prepareContext("rc-name.1", true, 3, 0);
@@ -503,7 +536,7 @@ public class KubernetesDeployTest extends WingsBaseTest {
     activeServiceCounts.put("rc-name.0", 2);
     activeServiceCounts.put("rc-name.1", 2);
     when(containerService.getActiveServiceCounts(any(ContainerServiceParams.class))).thenReturn(activeServiceCounts);
-    kubernetesReplicationControllerDeploy.setInstanceCount(100);
+    kubernetesReplicationControllerDeploy.setInstanceCount("100");
     kubernetesReplicationControllerDeploy.setInstanceUnitType(PERCENTAGE);
 
     ExecutionContext context = prepareContext("rc-name.2", true, 3, 0);
@@ -532,7 +565,7 @@ public class KubernetesDeployTest extends WingsBaseTest {
     when(containerService.getServiceDesiredCount(any(ContainerServiceParams.class))).thenReturn(Optional.of(0));
     Map<String, Integer> activeServiceCounts = new LinkedHashMap<>();
     when(containerService.getActiveServiceCounts(any(ContainerServiceParams.class))).thenReturn(activeServiceCounts);
-    kubernetesReplicationControllerDeploy.setInstanceCount(100);
+    kubernetesReplicationControllerDeploy.setInstanceCount("100");
     kubernetesReplicationControllerDeploy.setInstanceUnitType(PERCENTAGE);
 
     ExecutionContext context = prepareContext("rc-name.0", false, 0, 5);
@@ -553,7 +586,7 @@ public class KubernetesDeployTest extends WingsBaseTest {
     when(containerService.getServiceDesiredCount(any(ContainerServiceParams.class))).thenReturn(Optional.of(0));
     Map<String, Integer> activeServiceCounts = new LinkedHashMap<>();
     when(containerService.getActiveServiceCounts(any(ContainerServiceParams.class))).thenReturn(activeServiceCounts);
-    kubernetesReplicationControllerDeploy.setInstanceCount(20);
+    kubernetesReplicationControllerDeploy.setInstanceCount("20");
     kubernetesReplicationControllerDeploy.setInstanceUnitType(PERCENTAGE);
 
     ExecutionContext context = prepareContext("rc-name.0", false, 0, 5);
@@ -575,7 +608,7 @@ public class KubernetesDeployTest extends WingsBaseTest {
     Map<String, Integer> activeServiceCounts = new LinkedHashMap<>();
     activeServiceCounts.put("rc-name.0", 10);
     when(containerService.getActiveServiceCounts(any(ContainerServiceParams.class))).thenReturn(activeServiceCounts);
-    kubernetesReplicationControllerDeploy.setInstanceCount(100);
+    kubernetesReplicationControllerDeploy.setInstanceCount("100");
     kubernetesReplicationControllerDeploy.setInstanceUnitType(PERCENTAGE);
 
     ExecutionContext context = prepareContext("rc-name.1", false, 0, 5);
@@ -601,7 +634,7 @@ public class KubernetesDeployTest extends WingsBaseTest {
     Map<String, Integer> activeServiceCounts = new LinkedHashMap<>();
     activeServiceCounts.put("rc-name.0", 3);
     when(containerService.getActiveServiceCounts(any(ContainerServiceParams.class))).thenReturn(activeServiceCounts);
-    kubernetesReplicationControllerDeploy.setInstanceCount(100);
+    kubernetesReplicationControllerDeploy.setInstanceCount("100");
     kubernetesReplicationControllerDeploy.setInstanceUnitType(PERCENTAGE);
 
     ExecutionContext context = prepareContext("rc-name.1", false, 0, 5);
