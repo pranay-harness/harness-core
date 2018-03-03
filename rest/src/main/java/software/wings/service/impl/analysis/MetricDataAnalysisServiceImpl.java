@@ -69,9 +69,13 @@ public class MetricDataAnalysisServiceImpl implements MetricDataAnalysisService 
       delegateService.abortTask(accountId, delegateTaskId);
       return false;
     }
-    logger.debug("inserting " + metricData.size() + " pieces of new relic metrics data");
+    if (logger.isDebugEnabled()) {
+      logger.debug("inserting " + metricData.size() + " pieces of new relic metrics data");
+    }
     wingsPersistence.saveIgnoringDuplicateKeys(metricData);
-    logger.debug("inserted " + metricData.size() + " NewRelicMetricDataRecord to persistence layer.");
+    if (logger.isDebugEnabled()) {
+      logger.debug("inserted " + metricData.size() + " NewRelicMetricDataRecord to persistence layer.");
+    }
     return true;
   }
 
@@ -96,8 +100,10 @@ public class MetricDataAnalysisServiceImpl implements MetricDataAnalysisService 
 
   @Override
   public boolean updateMetricNames(String accountId, NewRelicMetricNames metricNames) throws IOException {
-    logger.debug("updating " + metricNames.getMetrics().size() + " pieces of new relic metric names for {}, {}",
-        metricNames.getNewRelicAppId(), metricNames.getNewRelicConfigId());
+    if (logger.isDebugEnabled()) {
+      logger.debug("updating " + metricNames.getMetrics().size() + " pieces of new relic metric names for {}, {}",
+          metricNames.getNewRelicAppId(), metricNames.getNewRelicConfigId());
+    }
     Query<NewRelicMetricNames> query = wingsPersistence.createQuery(NewRelicMetricNames.class)
                                            .field("newRelicAppId")
                                            .equal(metricNames.getNewRelicAppId())
@@ -138,9 +144,11 @@ public class MetricDataAnalysisServiceImpl implements MetricDataAnalysisService 
                                 .equal(metricAnalysisRecord.getStateExecutionId()));
 
     wingsPersistence.save(metricAnalysisRecord);
-    logger.debug("inserted NewRelicMetricAnalysisRecord to persistence layer for workflowExecutionId: "
-        + metricAnalysisRecord.getWorkflowExecutionId()
-        + " StateExecutionInstanceId: " + metricAnalysisRecord.getStateExecutionId());
+    if (logger.isDebugEnabled()) {
+      logger.debug("inserted NewRelicMetricAnalysisRecord to persistence layer for workflowExecutionId: "
+          + metricAnalysisRecord.getWorkflowExecutionId()
+          + " StateExecutionInstanceId: " + metricAnalysisRecord.getStateExecutionId());
+    }
     return true;
   }
 

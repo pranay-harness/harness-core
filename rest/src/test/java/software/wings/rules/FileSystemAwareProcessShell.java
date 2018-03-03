@@ -191,7 +191,9 @@ public class FileSystemAwareProcessShell extends AbstractLoggingBean implements 
   public void destroy() {
     // NOTE !!! DO NOT NULL-IFY THE PROCESS SINCE "exitValue" is called subsequently
     if (process != null) {
-      log.debug("Destroy process for " + cmdValue);
+      if (log.isDebugEnabled()) {
+        log.debug("Destroy process for " + cmdValue);
+      }
       process.destroy();
     }
 

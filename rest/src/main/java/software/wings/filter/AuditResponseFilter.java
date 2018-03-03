@@ -45,7 +45,9 @@ public class AuditResponseFilter implements Filter {
     AuditHeader header = auditHelper.get();
     if (header != null) {
       String path = ((HttpServletRequest) request).getPathInfo();
-      logger.debug("path :" + path);
+      if (logger.isDebugEnabled()) {
+        logger.debug("path :" + path);
+      }
       if (response.getCharacterEncoding() == null) {
         response.setCharacterEncoding("UTF-8");
       }

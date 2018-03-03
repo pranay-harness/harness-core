@@ -29,6 +29,13 @@
         </properties>
     </rule>
 
+    <rule ref="rulesets/java/logging-java.xml/GuardLogStatementJavaUtil">
+        <properties>
+            <property name="logLevels" value="debug"/>
+            <property name="guardsMethods" value="isDebugEnabled"/>
+        </properties>
+    </rule>
+
     <rule ref="rulesets/java/strings.xml">
         <exclude name="AvoidDuplicateLiterals"/>
     </rule>

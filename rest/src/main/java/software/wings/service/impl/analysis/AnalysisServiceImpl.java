@@ -264,7 +264,9 @@ public class AnalysisServiceImpl implements AnalysisService {
                     .asList();
     }
 
-    logger.debug("returning " + records.size() + " records for request: " + logRequest);
+    if (logger.isDebugEnabled()) {
+      logger.debug("returning " + records.size() + " records for request: " + logRequest);
+    }
     return records;
   }
 
@@ -478,9 +480,11 @@ public class AnalysisServiceImpl implements AnalysisService {
         || !isEmpty(mlAnalysisResponse.getTest_events())) {
       wingsPersistence.saveIgnoringDuplicateKeys(Collections.singletonList(mlAnalysisResponse));
     }
-    logger.debug(
-        "inserted ml LogMLAnalysisRecord to persistence layer for app: " + mlAnalysisResponse.getApplicationId()
-        + " StateExecutionInstanceId: " + mlAnalysisResponse.getStateExecutionId());
+    if (logger.isDebugEnabled()) {
+      logger.debug(
+          "inserted ml LogMLAnalysisRecord to persistence layer for app: " + mlAnalysisResponse.getApplicationId()
+          + " StateExecutionInstanceId: " + mlAnalysisResponse.getStateExecutionId());
+    }
     bumpClusterLevel(stateType, mlAnalysisResponse.getStateExecutionId(), mlAnalysisResponse.getApplicationId(),
         mlAnalysisResponse.getQuery(), Collections.emptySet(), mlAnalysisResponse.getLogCollectionMinute(),
         ClusterLevel.getHeartBeatLevel(ClusterLevel.L2), ClusterLevel.getFinal());
@@ -541,9 +545,11 @@ public class AnalysisServiceImpl implements AnalysisService {
         || !isEmpty(mlAnalysisResponse.getTest_events())) {
       wingsPersistence.saveIgnoringDuplicateKeys(Collections.singletonList(mlAnalysisResponse));
     }
-    logger.debug(
-        "inserted ml LogMLAnalysisRecord to persistence layer for app: " + mlAnalysisResponse.getApplicationId()
-        + " StateExecutionInstanceId: " + mlAnalysisResponse.getStateExecutionId());
+    if (logger.isDebugEnabled()) {
+      logger.debug(
+          "inserted ml LogMLAnalysisRecord to persistence layer for app: " + mlAnalysisResponse.getApplicationId()
+          + " StateExecutionInstanceId: " + mlAnalysisResponse.getStateExecutionId());
+    }
     bumpClusterLevel(stateType, mlAnalysisResponse.getStateExecutionId(), mlAnalysisResponse.getApplicationId(),
         mlAnalysisResponse.getQuery(), Collections.emptySet(), mlAnalysisResponse.getLogCollectionMinute(),
         ClusterLevel.getHeartBeatLevel(ClusterLevel.L2), ClusterLevel.getFinal());

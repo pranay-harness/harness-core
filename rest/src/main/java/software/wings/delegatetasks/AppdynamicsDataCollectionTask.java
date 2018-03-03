@@ -131,7 +131,9 @@ public class AppdynamicsDataCollectionTask extends AbstractDelegateDataCollectio
         if (!AppdynamicsConstants.METRICS_TO_TRACK.contains(metricName)) {
           metricsData.remove(i);
           if (!metricName.equals("METRIC DATA NOT FOUND")) {
-            logger.debug("metric with unexpected name found: " + metricName);
+            if (logger.isDebugEnabled()) {
+              logger.debug("metric with unexpected name found: " + metricName);
+            }
           }
         }
       }
