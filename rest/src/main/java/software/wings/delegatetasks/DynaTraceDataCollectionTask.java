@@ -57,7 +57,7 @@ public class DynaTraceDataCollectionTask extends AbstractDelegateDataCollectionT
   @Override
   protected DataCollectionTaskResult initDataCollection(Object[] parameters) {
     dataCollectionInfo = (DynaTraceDataCollectionInfo) parameters[0];
-    logger.info("metric collection - dataCollectionInfo: {}" + dataCollectionInfo);
+    logger.info("metric collection - dataCollectionInfo: {}", dataCollectionInfo);
     return DataCollectionTaskResult.builder()
         .status(DataCollectionTaskStatus.SUCCESS)
         .stateType(StateType.DYNA_TRACE)

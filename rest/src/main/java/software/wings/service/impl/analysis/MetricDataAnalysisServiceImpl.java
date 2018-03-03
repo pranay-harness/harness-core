@@ -213,9 +213,11 @@ public class MetricDataAnalysisServiceImpl implements MetricDataAnalysisService 
                                 .equal(stateExecutionId));
 
     wingsPersistence.save(mlAnalysisResponse);
-    logger.debug(
-        "inserted NewRelicMetricAnalysisRecord to persistence layer for stateType: {}, workflowExecutionId: {} StateExecutionInstanceId: ",
-        stateType, workflowExecutionId, stateExecutionId);
+    if (logger.isDebugEnabled()) {
+      logger.debug("inserted NewRelicMetricAnalysisRecord to persistence layer for "
+              + "stateType: {}, workflowExecutionId: {} StateExecutionInstanceId: {}",
+          stateType, workflowExecutionId, stateExecutionId);
+    }
     return true;
   }
 

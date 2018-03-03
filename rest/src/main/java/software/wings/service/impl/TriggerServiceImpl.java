@@ -837,7 +837,7 @@ public class TriggerServiceImpl implements TriggerService {
 
   @Override
   public boolean triggerExecutionByServiceInfra(String appId, String infraMappingId) {
-    logger.info("Received the trigger execution for appId {} and infraMappingId {}");
+    logger.info("Received the trigger execution for appId {} and infraMappingId {}", appId, infraMappingId);
     InfrastructureMapping infrastructureMapping = infrastructureMappingService.get(appId, infraMappingId);
     if (infrastructureMapping == null) {
       throw new WingsException(INVALID_REQUEST, ALERTING)

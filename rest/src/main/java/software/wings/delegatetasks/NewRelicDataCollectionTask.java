@@ -69,7 +69,7 @@ public class NewRelicDataCollectionTask extends AbstractDelegateDataCollectionTa
   protected DataCollectionTaskResult initDataCollection(Object[] parameters) {
     dataCollectionInfo = (NewRelicDataCollectionInfo) parameters[0];
     metricNameCollectionTask.setService(newRelicDelegateService, metricStoreService);
-    logger.info("metric collection - dataCollectionInfo: {}" + dataCollectionInfo);
+    logger.info("metric collection - dataCollectionInfo: {}", dataCollectionInfo);
     return DataCollectionTaskResult.builder()
         .status(DataCollectionTaskStatus.SUCCESS)
         .stateType(StateType.NEW_RELIC)
@@ -329,7 +329,7 @@ public class NewRelicDataCollectionTask extends AbstractDelegateDataCollectionTa
                 continue;
               }
 
-              logger.info("Going to collect for host {} for stateExecutionId {}, for metrics ", node.getHost(),
+              logger.info("Going to collect for host {} for stateExecutionId {}, for metrics {}", node.getHost(),
                   dataCollectionInfo.getStateExecutionId(), metricBatches);
               callables.add(() -> fetchAndSaveMetricsForNode(node, metricBatches, windowEndTimeManager));
             }

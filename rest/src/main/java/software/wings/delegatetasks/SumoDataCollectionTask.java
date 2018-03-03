@@ -54,7 +54,7 @@ public class SumoDataCollectionTask extends AbstractDelegateDataCollectionTask {
     DataCollectionTaskResult taskResult =
         DataCollectionTaskResult.builder().status(DataCollectionTaskStatus.SUCCESS).stateType(StateType.SUMO).build();
     this.dataCollectionInfo = (SumoDataCollectionInfo) parameters[0];
-    logger.info("log collection - dataCollectionInfo: {}" + dataCollectionInfo);
+    logger.info("log collection - dataCollectionInfo: {}", dataCollectionInfo);
     encryptionService.decrypt(dataCollectionInfo.getSumoConfig(), dataCollectionInfo.getEncryptedDataDetails());
     Credentials credential = new Credentials(new String(dataCollectionInfo.getSumoConfig().getAccessId()),
         new String(dataCollectionInfo.getSumoConfig().getAccessKey()));

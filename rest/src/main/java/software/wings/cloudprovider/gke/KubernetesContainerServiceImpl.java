@@ -840,7 +840,7 @@ public class KubernetesContainerServiceImpl implements KubernetesContainerServic
     Service service = client.services().inNamespace(kubernetesConfig.getNamespace()).withName(serviceName).get();
     if (service != null) {
       String serviceLink = masterUrl + service.getMetadata().getSelfLink().substring(1);
-      logger.info("Service %s: {}", serviceName, serviceLink);
+      logger.info("Service %s: {}, link: {}", serviceName, serviceLink);
     } else {
       logger.info("Service {} does not exist", serviceName);
     }

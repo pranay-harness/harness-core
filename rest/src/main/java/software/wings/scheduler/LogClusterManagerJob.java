@@ -85,7 +85,7 @@ public class LogClusterManagerJob implements Job {
         Set<String> nodes = getCollectedNodes();
         // TODO handle pause
         for (String node : nodes) {
-          logger.info("Running cluster task for {}, node {}" + context.getStateExecutionId(), node);
+          logger.info("Running cluster task for {}, node {}", context.getStateExecutionId(), node);
           /*
            * Work flow is invalid
            * exit immediately

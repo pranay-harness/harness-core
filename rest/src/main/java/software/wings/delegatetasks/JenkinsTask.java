@@ -117,7 +117,7 @@ public class JenkinsTask extends AbstractDelegateRunnableTask {
         logger.warn("Jenkins server unreachable {}", ex.getMessage());
       }
     } while (jenkinsBuildWithDetails == null || jenkinsBuildWithDetails.isBuilding());
-    logger.info("Job {} execution completed. Status:", jenkinsBuildWithDetails.getNumber(),
+    logger.info("Job {} execution completed. Status: {}", jenkinsBuildWithDetails.getNumber(),
         jenkinsBuildWithDetails.getResult());
     return jenkinsBuildWithDetails;
   }

@@ -219,8 +219,8 @@ public class NexusTwoServiceImpl {
   public Pair<String, InputStream> downloadArtifact(NexusConfig nexusConfig,
       List<EncryptedDataDetail> encryptionDetails, String repoType, String groupId, String artifactName, String version)
       throws IOException {
-    logger.info(
-        "Downloading artifact of repo {} group {} artifact {} and version  ", repoType, groupId, artifactName, version);
+    logger.info("Downloading artifact of repo {} group {} artifact {} and version {}", repoType, groupId, artifactName,
+        version);
     final Project project = getPomModel(nexusConfig, encryptionDetails, repoType, groupId, artifactName, version);
     final String relativePath = getGroupId(groupId) + project.getArtifactId() + "/"
         + (project.getVersion() != null ? project.getVersion() : project.getParent().getVersion()) + "/";
@@ -284,7 +284,7 @@ public class NexusTwoServiceImpl {
       if (isSuccessful(response)) {
         return response.body();
       } else {
-        logger.error("Error while getting the latest version from Nexus url and queryParams {}. Reason:{}", url,
+        logger.error("Error while getting the latest version from Nexus url {} and queryParams {}. Reason:{}", url,
             queryParams, response.message());
         throw new WingsException(INVALID_REQUEST).addParam("message", response.message());
       }
