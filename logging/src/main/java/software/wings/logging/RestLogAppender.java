@@ -12,6 +12,8 @@ import ch.qos.logback.classic.spi.ILoggingEvent;
 import ch.qos.logback.core.AppenderBase;
 import ch.qos.logback.core.Layout;
 import com.fasterxml.jackson.databind.JsonNode;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import retrofit2.Response;
 import retrofit2.Retrofit;
 import retrofit2.converter.jackson.JacksonConverterFactory;
@@ -29,6 +31,8 @@ import java.util.concurrent.TimeUnit;
  * @param <E> the type parameter
  */
 public class RestLogAppender<E> extends AppenderBase<E> {
+  private static final Logger logger = LoggerFactory.getLogger(RestLogAppender.class);
+
   private static final int MAX_BATCH_SIZE = 1000;
   private static final String LOGDNA_INGEST_URL = "https://logs.logdna.com/logs/ingest?hostname=%s&now=:now";
   public static final String LOGDNA_HOST = "https://logs.logdna.com";
@@ -80,7 +84,7 @@ public class RestLogAppender<E> extends AppenderBase<E> {
       Response<JsonNode> execute =
           retrofit.create(LogdnaRestClient.class).postLogs(getAuthHeader(), localhostName, logLines).execute();
     } catch (Exception ex) {
-      ex.printStackTrace();
+      logger.error("", ex);
     }
   }
 
@@ -101,7 +105,7 @@ public class RestLogAppender<E> extends AppenderBase<E> {
         LogLine logLine = new LogLine(message, logLevel, programName);
         logQueue.add(logLine);
       } catch (Exception ex) {
-        ex.printStackTrace();
+        logger.error("", ex);
       }
     });
   }

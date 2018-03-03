@@ -413,7 +413,6 @@ public class WatcherServiceImpl implements WatcherService {
           });
         }
       } catch (Exception e) {
-        e.printStackTrace();
         logger.error("Exception while upgrading", e);
         oldDelegateProcesses.forEach(oldDelegateProcess -> {
           logger.info("Sending old delegate process {} resume message", oldDelegateProcess);
@@ -598,7 +597,7 @@ public class WatcherServiceImpl implements WatcherService {
         process.getProcess().waitFor();
       }
     } catch (Exception e) {
-      e.printStackTrace();
+      logger.error("", e);
       logger.error("[Old] Exception while upgrading", e);
       if (process != null) {
         try {

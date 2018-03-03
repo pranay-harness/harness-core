@@ -167,7 +167,7 @@ public class KubernetesYamlIntegrationTest {
       kubernetesService.createController(
           config, Collections.emptyList(), KubernetesHelper.loadYaml(rcDefinition, ReplicationController.class));
     } catch (IOException e) {
-      e.printStackTrace();
+      logger.error("", e);
     }
 
     yaml = "---\n"
@@ -195,7 +195,7 @@ public class KubernetesYamlIntegrationTest {
       kubernetesService.createOrReplaceService(
           config, Collections.emptyList(), KubernetesHelper.loadYaml(yaml, Service.class));
     } catch (IOException e) {
-      e.printStackTrace();
+      logger.error("", e);
     }
 
     yaml = "---\n"
@@ -245,7 +245,7 @@ public class KubernetesYamlIntegrationTest {
       kubernetesService.createController(
           config, Collections.emptyList(), KubernetesHelper.loadYaml(rcDefinition, ReplicationController.class));
     } catch (IOException e) {
-      e.printStackTrace();
+      logger.error("", e);
     }
 
     yaml = "---\n"
@@ -274,7 +274,7 @@ public class KubernetesYamlIntegrationTest {
       kubernetesService.createOrReplaceService(
           config, Collections.emptyList(), KubernetesHelper.loadYaml(yaml, Service.class));
     } catch (IOException e) {
-      e.printStackTrace();
+      logger.error("", e);
     }
 
     kubernetesService.setControllerPodCount(

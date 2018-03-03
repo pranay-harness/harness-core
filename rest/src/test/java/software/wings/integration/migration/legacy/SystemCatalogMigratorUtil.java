@@ -13,6 +13,8 @@ import com.google.inject.Inject;
 
 import org.junit.Ignore;
 import org.junit.Test;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import software.wings.WingsBaseTest;
 import software.wings.app.MainConfiguration;
 import software.wings.beans.Account;
@@ -39,6 +41,8 @@ import java.util.stream.Collectors;
 @Integration
 @Ignore
 public class SystemCatalogMigratorUtil extends WingsBaseTest {
+  private static final Logger logger = LoggerFactory.getLogger(SystemCatalogMigratorUtil.class);
+
   @Inject private MainConfiguration configuration;
   @Inject private SystemCatalogService systemCatalogService;
   @Inject private AppContainerService appContainerService;
@@ -184,7 +188,7 @@ public class SystemCatalogMigratorUtil extends WingsBaseTest {
             appContainerService.update(storedAppContainer);
           }
         } catch (Exception e) {
-          e.printStackTrace();
+          logger.error("", e);
           System.out.println("Error while creating system app container " + appContainer);
         }
       }

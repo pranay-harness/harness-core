@@ -64,7 +64,7 @@ CloseableHttpClient httpClient =
 httpRequestExecutor = Executor.newInstance(httpClient);
 }
 catch (Exception e) {
-  e.printStackTrace();
+  logger.error("", e);
 }
 }
 

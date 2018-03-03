@@ -10,6 +10,8 @@ import com.google.inject.Inject;
 import com.google.inject.Injector;
 
 import org.junit.Test;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import software.wings.WingsBaseTest;
 import software.wings.beans.ErrorCode;
 import software.wings.beans.ExecutionStrategy;
@@ -35,6 +37,8 @@ import java.util.Objects;
  */
 @Listeners(NotifyEventListener.class)
 public class StateMachineTest extends WingsBaseTest {
+  private static final Logger logger = LoggerFactory.getLogger(StateMachineTest.class);
+
   /**
    * Should validate.
    */
@@ -650,7 +654,7 @@ public class StateMachineTest extends WingsBaseTest {
         Thread.sleep(duration);
       } catch (InterruptedException e) {
         // TODO Auto-generated catch block
-        e.printStackTrace();
+        logger.error("", e);
       }
       StaticMap.putValue(name, System.currentTimeMillis());
       if (shouldFail) {

@@ -10,6 +10,8 @@ import org.quartz.JobDetail;
 import org.quartz.SimpleScheduleBuilder;
 import org.quartz.Trigger;
 import org.quartz.TriggerBuilder;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import software.wings.WingsBaseTest;
 import software.wings.rules.Integration;
 import software.wings.scheduler.DataCleanUpJob;
@@ -27,6 +29,8 @@ import java.util.concurrent.TimeUnit;
 @Integration
 @Ignore
 public class DataCleanUpJobUtil extends WingsBaseTest {
+  private static final Logger logger = LoggerFactory.getLogger(DataCleanUpJobUtil.class);
+
   private static final int ARTIFACT_RETENTION_SIZE = 100;
   private static final long AUDIT_RETENTION_TIME = TimeUnit.DAYS.toMillis(7);
   private static final long ALERT_RETENTION_TIME = TimeUnit.DAYS.toMillis(7);
@@ -44,7 +48,7 @@ public class DataCleanUpJobUtil extends WingsBaseTest {
       artifactService.deleteArtifacts(ARTIFACT_RETENTION_SIZE);
     } catch (Exception e) {
       System.out.println("Deleting artifacts failed");
-      e.printStackTrace();
+      logger.error("", e);
     }
     System.out.println("Deleting artifacts completed");
   }
@@ -56,7 +60,7 @@ public class DataCleanUpJobUtil extends WingsBaseTest {
       artifactService.deleteArtifactFiles();
     } catch (Exception e) {
       System.out.println("Deleting artifacts failed");
-      e.printStackTrace();
+      logger.error("", e);
     }
     System.out.println("Deleting artifacts completed");
   }
@@ -68,7 +72,7 @@ public class DataCleanUpJobUtil extends WingsBaseTest {
       auditService.deleteAuditRecords(AUDIT_RETENTION_TIME);
     } catch (Exception e) {
       System.out.println("Deleting audit records failed");
-      e.printStackTrace();
+      logger.error("", e);
     }
     System.out.println("Deleting audit records completed");
   }
@@ -81,7 +85,7 @@ public class DataCleanUpJobUtil extends WingsBaseTest {
       System.out.println("Deleting alerts success");
     } catch (Exception e) {
       System.out.println("Deleting alerts failed.");
-      e.printStackTrace();
+      logger.error("", e);
     }
     System.out.println("Deleting alerts completed");
   }
@@ -94,7 +98,7 @@ public class DataCleanUpJobUtil extends WingsBaseTest {
       System.out.println("Deleting alerts success");
     } catch (Exception e) {
       System.out.println("Deleting alerts failed.");
-      e.printStackTrace();
+      logger.error("", e);
     }
     System.out.println("Deleting alerts completed");
   }

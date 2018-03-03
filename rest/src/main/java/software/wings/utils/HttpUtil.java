@@ -55,7 +55,7 @@ public class HttpUtil {
       URL url = new URL(urlString);
       return connectableHost(url.getHost(), url.getPort() < 0 ? 80 : url.getPort());
     } catch (MalformedURLException e) {
-      e.printStackTrace();
+      logger.error("", e);
     }
     return false;
   }

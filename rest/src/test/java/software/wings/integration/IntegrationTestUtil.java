@@ -6,6 +6,8 @@ import com.mongodb.BasicDBObject;
 import com.mongodb.DBCollection;
 import com.mongodb.DBCursor;
 import com.mongodb.util.JSON;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 import java.io.BufferedWriter;
 import java.io.File;
@@ -17,6 +19,8 @@ import java.util.Random;
  * Created by anubhaw on 5/11/16.
  */
 public class IntegrationTestUtil {
+  private static final Logger logger = LoggerFactory.getLogger(IntegrationTestUtil.class);
+
   private static Random random = new Random();
 
   /**
@@ -52,7 +56,7 @@ public class IntegrationTestUtil {
       fileWriter.write(st);
       fileWriter.close();
     } catch (IOException e) {
-      e.printStackTrace();
+      logger.error("", e);
     }
   }
 

@@ -4,6 +4,8 @@ import com.google.inject.Inject;
 
 import org.junit.Ignore;
 import org.junit.Test;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import software.wings.WingsBaseTest;
 import software.wings.beans.AwsInfrastructureMapping;
 import software.wings.beans.InfrastructureMapping;
@@ -20,6 +22,8 @@ import java.util.List;
 @Integration
 @Ignore
 public class AwsInfrastructureMappingPublicDnsMigrationUtil extends WingsBaseTest {
+  private static final Logger logger = LoggerFactory.getLogger(AwsInfrastructureMappingPublicDnsMigrationUtil.class);
+
   @Inject private WingsPersistence wingsPersistence;
 
   @Test
@@ -37,7 +41,7 @@ public class AwsInfrastructureMappingPublicDnsMigrationUtil extends WingsBaseTes
         try {
           Thread.sleep(100);
         } catch (InterruptedException e) {
-          e.printStackTrace();
+          logger.error("", e);
         }
       }
     }

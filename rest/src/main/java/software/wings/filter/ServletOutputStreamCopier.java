@@ -62,7 +62,7 @@ public class ServletOutputStreamCopier extends ServletOutputStream {
         copy.close();
       }
     } catch (IOException io) {
-      io.printStackTrace();
+      logger.error("", io);
     }
   }
 

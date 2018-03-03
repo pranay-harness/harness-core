@@ -16,6 +16,8 @@ import com.fasterxml.jackson.databind.introspect.AnnotatedMember;
 import com.fasterxml.jackson.databind.jsontype.NamedType;
 import com.fasterxml.jackson.databind.jsontype.SubtypeResolver;
 import org.reflections.Reflections;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 import java.util.Collection;
 import java.util.LinkedHashSet;
@@ -27,6 +29,7 @@ import java.util.concurrent.TimeUnit;
  * Created by peeyushaggarwal on 9/30/16.
  */
 public class JsonSubtypeResolver extends SubtypeResolver {
+  private static final Logger logger = LoggerFactory.getLogger(JsonSubtypeResolver.class);
   private SubtypeResolver subtypeResolver;
 
   private LoadingCache<Class<?>, List<NamedType>> classListLoadingCache =
@@ -72,7 +75,7 @@ public class JsonSubtypeResolver extends SubtypeResolver {
       try {
         newReturnValue.addAll(classListLoadingCache.get(property.getRawType()));
       } catch (ExecutionException e) {
-        e.printStackTrace();
+        logger.error("", e);
       }
     }
     return returnValue;
@@ -87,7 +90,7 @@ public class JsonSubtypeResolver extends SubtypeResolver {
       try {
         newReturnValue.addAll(classListLoadingCache.get(baseType.getAnnotated()));
       } catch (ExecutionException e) {
-        e.printStackTrace();
+        logger.error("", e);
       }
     }
     return newReturnValue;

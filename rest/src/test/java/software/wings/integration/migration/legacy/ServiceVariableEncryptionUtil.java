@@ -4,6 +4,8 @@ import com.google.inject.Inject;
 
 import org.junit.Ignore;
 import org.junit.Test;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import software.wings.WingsBaseTest;
 import software.wings.beans.ServiceVariable;
 import software.wings.dl.WingsPersistence;
@@ -19,6 +21,8 @@ import java.util.List;
 @Integration
 @Ignore
 public class ServiceVariableEncryptionUtil extends WingsBaseTest {
+  private static final Logger logger = LoggerFactory.getLogger(ServiceVariableEncryptionUtil.class);
+
   @Inject private WingsPersistence wingsPersistence;
   @Inject private AppService appService;
 
@@ -47,7 +51,7 @@ public class ServiceVariableEncryptionUtil extends WingsBaseTest {
         serviceVariable.setAccountId(accountId);
         serviceVariable.setValue(decryptedValue);
       } catch (Exception e) {
-        e.printStackTrace();
+        logger.error("", e);
       }
       updated++;
 

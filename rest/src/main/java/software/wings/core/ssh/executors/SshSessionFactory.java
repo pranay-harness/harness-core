@@ -75,18 +75,6 @@ public class SshSessionFactory {
     session.setTimeout(config.getSshSessionTimeout());
     session.setServerAliveInterval(10 * 1000); // Send noop packet every 10 sec
 
-    //    Socket client = new Socket();
-    //    config.setSocketConnectTimeout(30*1000);
-    //    try {
-    //      client.connect(new InetSocketAddress(config.getHost(), config.getPort()), config.getSocketConnectTimeout());
-    //      client.close();
-    //    } catch (IOException e) {
-    //      logger.error("timeout: socket is not established", e);
-    //      e.printStackTrace();
-    //      throw new JSchException("timeout: socket is not established: " + e.getMessage(), e);
-    //    } finally {
-    //      IOUtils.closeQuietly(client);
-    //    }
     session.connect(config.getSshConnectionTimeout());
 
     return session;

@@ -53,6 +53,8 @@ import org.junit.Before;
 import org.junit.ClassRule;
 import org.junit.Test;
 import org.mockito.Mockito;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import software.wings.app.MainConfiguration;
 import software.wings.beans.Account;
 import software.wings.beans.Application;
@@ -95,6 +97,8 @@ import javax.ws.rs.core.Response;
  * Created by anubhaw on 8/31/16.
  */
 public class SecureResourceTest {
+  private static final Logger logger = LoggerFactory.getLogger(SecureResourceTest.class);
+
   /**
    * The constant TOKEN_EXPIRY_IN_MILLIS.
    */
@@ -495,19 +499,19 @@ public class SecureResourceTest {
     try {
       encodedKey = Hex.decodeHex(accountSecret.toCharArray());
     } catch (DecoderException e) {
-      e.printStackTrace();
+      logger.error("", e);
     }
     try {
       directEncrypter = new DirectEncrypter(new SecretKeySpec(encodedKey, 0, encodedKey.length, "AES"));
     } catch (KeyLengthException e) {
-      e.printStackTrace();
+      logger.error("", e);
       return null;
     }
 
     try {
       jwt.encrypt(directEncrypter);
     } catch (JOSEException e) {
-      e.printStackTrace();
+      logger.error("", e);
       return null;
     }
     return jwt.serialize();

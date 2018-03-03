@@ -36,6 +36,8 @@
         </properties>
     </rule>
 
+    <rule ref="rulesets/java/logging-java.xml/AvoidPrintStackTrace"/>
+
     <rule ref="rulesets/java/strings.xml">
         <exclude name="AvoidDuplicateLiterals"/>
     </rule>

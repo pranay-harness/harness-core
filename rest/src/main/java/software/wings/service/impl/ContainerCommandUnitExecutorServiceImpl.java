@@ -60,7 +60,6 @@ public class ContainerCommandUnitExecutorServiceImpl implements CommandUnitExecu
     try {
       commandExecutionStatus = commandUnit.execute(context);
     } catch (Exception ex) {
-      ex.printStackTrace();
       logger.error("Error while executing command", ex);
       logService.save(context.getAccountId(),
           aLog()

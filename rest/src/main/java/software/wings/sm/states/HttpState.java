@@ -271,7 +271,7 @@ public class HttpState extends State {
     try {
       evaluatedBody = getFinalBody(context);
     } catch (UnsupportedEncodingException e) {
-      e.printStackTrace();
+      logger.error("", e);
     }
     if (evaluatedBody != null) {
       evaluatedBody = trim(context.renderExpression(evaluatedBody));

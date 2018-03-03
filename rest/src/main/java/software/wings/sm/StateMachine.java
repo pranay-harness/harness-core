@@ -343,7 +343,7 @@ public class StateMachine extends Base {
           try {
             stateFrom = statesMap.get(nodeFrom.getName());
           } catch (Exception e) {
-            e.printStackTrace();
+            logger.error("", e);
           }
           State stateTo = statesMap.get(nodeTo.getName());
 

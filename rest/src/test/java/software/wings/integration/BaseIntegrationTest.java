@@ -381,18 +381,18 @@ public String getDelegateToken() {
   try {
     encodedKey = Hex.decodeHex(delegateAccountSecret.toCharArray());
   } catch (DecoderException e) {
-    e.printStackTrace();
+    logger.error("", e);
   }
   try {
     directEncrypter = new DirectEncrypter(new SecretKeySpec(encodedKey, 0, encodedKey.length, "AES"));
   } catch (KeyLengthException e) {
-    e.printStackTrace();
+    logger.error("", e);
   }
 
   try {
     jwt.encrypt(directEncrypter);
   } catch (JOSEException e) {
-    e.printStackTrace();
+    logger.error("", e);
   }
 
   return jwt.serialize();
