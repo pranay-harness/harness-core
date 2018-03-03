@@ -10,4 +10,6 @@ public class LogMLExpAnalysisInfo {
   private String stateExecutionId;
   private String applicationId;
   private StateType stateType;
+  private String expName;
+  private long createdAt;
 }

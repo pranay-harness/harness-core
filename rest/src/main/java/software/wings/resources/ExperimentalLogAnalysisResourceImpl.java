@@ -63,20 +63,16 @@ public class ExperimentalLogAnalysisResourceImpl implements ExperimentalLogAnaly
   @Path(ExperimentalLogAnalysisResource.ANALYSIS_STATE_GET_ANALYSIS_SUMMARY_URL)
   @Timed
   @ExceptionMetered
-  @LearningEngineAuth
-  @Produces({"application/json", "application/v1+json"})
   public RestResponse<LogMLAnalysisSummary> getLogAnalysisSummary(@QueryParam("accountId") String accountId,
       @QueryParam("applicationId") String applicationId, @QueryParam("stateExecutionId") String stateExecutionId,
-      @QueryParam("stateType") StateType stateType) throws IOException {
+      @QueryParam("stateType") StateType stateType, @QueryParam("expName") String expName) throws IOException {
     return new RestResponse<>(
-        analysisService.getExperimentalAnalysisSummary(stateExecutionId, applicationId, stateType));
+        analysisService.getExperimentalAnalysisSummary(stateExecutionId, applicationId, stateType, expName));
   }
   @GET
   @Path(ExperimentalLogAnalysisResource.ANALYSIS_STATE_GET_EXP_ANALYSIS_INFO_URL)
   @Timed
   @ExceptionMetered
-  @LearningEngineAuth
-  @Produces({"application/json", "application/v1+json"})
   public RestResponse<List<LogMLExpAnalysisInfo>> getLogExpAnalysisInfo(@QueryParam("accountId") String accountId)
       throws IOException {
     return new RestResponse<>(analysisService.getExpAnalysisInfoList());

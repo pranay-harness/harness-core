@@ -17,13 +17,12 @@ import software.wings.sm.StateType;
 import java.util.List;
 import java.util.Map;
 
-/**
- * Created by rsingh on 6/23/17.
- */
 @Entity(value = "experimentalLogAnalysisRecords", noClassnameStored = true)
 @Indexes(@Index(fields =
-    { @Field("applicationId")
-      , @Field("stateExecutionId"), @Field("stateType"), @Field("logCollectionMinute") },
+    {
+      @Field("applicationId")
+      , @Field("stateExecutionId"), @Field("stateType"), @Field("experiment_name"), @Field("logCollectionMinute")
+    },
     options = @IndexOptions(unique = true, name = "explogAnalysisUniqueIdx")))
 @Data
 @EqualsAndHashCode(callSuper = false)
@@ -33,13 +32,13 @@ public class ExperimentalLogMLAnalysisRecord extends Base {
   @NotEmpty @Indexed private String applicationId;
 
   @NotEmpty @Indexed private StateType stateType;
+  @NotEmpty @Indexed private String experiment_name;
 
   @NotEmpty @Indexed private int logCollectionMinute;
 
   private boolean isBaseLineCreated = true;
 
   private String query;
-  private String experiment_name;
   private String analysisSummaryMessage;
   private double score;
   private List<List<SplunkAnalysisCluster>> unknown_events;

@@ -447,14 +447,16 @@ class LogCorpus(object):
                 self.anomalies.append(anomal)
 
     def get_output_as_json(self, options):
-
-        return json.dumps(dict(query=options.query, control_events=self.control_events, test_events=self.test_events,
+        out_dict = dict(query=options.query, control_events=self.control_events, test_events=self.test_events,
                                unknown_events=self.anomalies,
                                control_clusters=self.control_clusters, test_clusters=self.test_clusters,
                                unknown_clusters=self.anom_clusters,
                                cluster_scores=self.cluster_scores,
                                score=self.score
-                               ))
+                               )
+        if hasattr(options, 'experiment_name'):
+            out_dict['experiment_name'] = options.experiment_name
+        return json.dumps(out_dict)
 
     @property
     def get_output_for_notebook_as_json(self):
