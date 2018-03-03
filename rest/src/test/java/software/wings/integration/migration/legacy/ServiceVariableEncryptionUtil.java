@@ -30,24 +30,24 @@ public class ServiceVariableEncryptionUtil extends WingsBaseTest {
   public void migrateServiceVariableEncryption() throws InterruptedException {
     List<ServiceVariable> serviceVariables = wingsPersistence.createQuery(ServiceVariable.class).asList();
 
-    System.out.println("will update " + serviceVariables.size() + " records");
+    logger.info("will update " + serviceVariables.size() + " records");
 
     int updated = 0;
     for (ServiceVariable serviceVariable : serviceVariables) {
       String appId = serviceVariable.getAppId();
       if (!appService.exist(appId)) {
-        System.out.println("\nDeleting orphan service var: " + serviceVariable.getName());
+        logger.info("\nDeleting orphan service var: " + serviceVariable.getName());
         //        wingsPersistence.delete(serviceVariable);
         continue;
       }
       String accountId = appService.get(appId).getAccountId();
-      System.out.println("\naccountId = " + accountId);
-      System.out.println("appId = " + appId);
-      System.out.println("chars = " + new String(serviceVariable.getValue()));
+      logger.info("\naccountId = " + accountId);
+      logger.info("appId = " + appId);
+      logger.info("chars = " + new String(serviceVariable.getValue()));
       try {
         SimpleEncryption simpleEncryption = new SimpleEncryption(appId);
         char[] decryptedValue = simpleEncryption.decryptChars(serviceVariable.getValue());
-        System.out.println("decrypted chars : " + new String(decryptedValue));
+        logger.info("decrypted chars : " + new String(decryptedValue));
         serviceVariable.setAccountId(accountId);
         serviceVariable.setValue(decryptedValue);
       } catch (Exception e) {
@@ -58,6 +58,6 @@ public class ServiceVariableEncryptionUtil extends WingsBaseTest {
       //      wingsPersistence.save(serviceVariable);
     }
 
-    System.out.println("Complete. Updated " + updated + " service vars.");
+    logger.info("Complete. Updated " + updated + " service vars.");
   }
 }

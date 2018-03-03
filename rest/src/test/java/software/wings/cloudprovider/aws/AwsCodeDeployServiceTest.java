@@ -22,6 +22,8 @@ import org.junit.Test;
 import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.MockitoAnnotations;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import software.wings.WingsBaseTest;
 import software.wings.beans.AwsConfig;
 import software.wings.beans.SettingAttribute;
@@ -38,6 +40,8 @@ import java.util.List;
  */
 @Ignore
 public class AwsCodeDeployServiceTest extends WingsBaseTest {
+  private static final Logger logger = LoggerFactory.getLogger(AwsCodeDeployServiceTest.class);
+
   @InjectMocks @Inject private AwsCodeDeployService awsCodeDeployService;
   @Mock private AwsHelperService awsHelperService;
 
@@ -59,15 +63,15 @@ public class AwsCodeDeployServiceTest extends WingsBaseTest {
   @Test
   public void shouldListApplication() {
     awsCodeDeployService.listApplications(Regions.US_EAST_1.getName(), cloudProvider, Collections.emptyList())
-        .forEach(application -> { System.out.println(application.toString()); });
+        .forEach(application -> { logger.info(application.toString()); });
 
     awsCodeDeployService
         .listDeploymentGroup(Regions.US_EAST_1.getName(), "todolistwar", cloudProvider, Collections.emptyList())
-        .forEach(dg -> { System.out.println(dg.toString()); });
+        .forEach(dg -> { logger.info(dg.toString()); });
 
     awsCodeDeployService
         .listDeploymentConfiguration(Regions.US_EAST_1.getName(), cloudProvider, Collections.emptyList())
-        .forEach(dc -> { System.out.println(dc.toString()); });
+        .forEach(dc -> { logger.info(dc.toString()); });
 
     CreateDeploymentRequest createDeploymentRequest =
         new CreateDeploymentRequest()
@@ -82,13 +86,15 @@ public class AwsCodeDeployServiceTest extends WingsBaseTest {
     CodeDeployDeploymentInfo codeDeployDeploymentInfo =
         awsCodeDeployService.deployApplication(Regions.US_EAST_1.getName(), cloudProvider, Collections.emptyList(),
             createDeploymentRequest, new ExecutionLogCallback());
-    System.out.println(codeDeployDeploymentInfo);
+    logger.info(codeDeployDeploymentInfo.toString());
   }
 
   @Test
   public void shouldListApplicationRevisions() {
-    System.out.println(awsCodeDeployService.getApplicationRevisionList(
-        Regions.US_EAST_1.getName(), "todolistwar", "todolistwarDG", cloudProvider, Collections.emptyList()));
+    logger.info(awsCodeDeployService
+                    .getApplicationRevisionList(Regions.US_EAST_1.getName(), "todolistwar", "todolistwarDG",
+                        cloudProvider, Collections.emptyList())
+                    .toString());
   }
 
   @Test

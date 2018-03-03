@@ -202,7 +202,7 @@ public class AppdynamicsIntegrationTest extends BaseIntegrationTest {
             appdynamicsDelegateService.getTierBTMetricData(appDynamicsConfig, appId, tier.getId(), btMetric.getName(),
                 nodes.get(0).getName(), 5, secretManager.getEncryptionDetails(appDynamicsConfig, null, null));
         assertNotNull(tierBTMetricData);
-        System.out.println(JsonUtils.asJson(tierBTMetricData.size()));
+        logger.info(JsonUtils.asJson(tierBTMetricData.size()));
       }
     }
   }

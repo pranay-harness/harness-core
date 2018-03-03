@@ -8,6 +8,8 @@ import com.google.inject.Inject;
 
 import org.junit.Ignore;
 import org.junit.Test;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import software.wings.WingsBaseTest;
 import software.wings.beans.InfrastructureMapping;
 import software.wings.beans.SearchFilter.Operator;
@@ -25,17 +27,19 @@ import java.util.List;
 @Integration
 @Ignore
 public class InfraMappingMigratorUtil extends WingsBaseTest {
+  private static final Logger logger = LoggerFactory.getLogger(InfraMappingMigratorUtil.class);
+
   @Inject private WingsPersistence wingsPersistence;
 
   @Test
   public void setNameFieldInInfraMapping() {
     PageRequest<InfrastructureMapping> pageRequest =
         aPageRequest().withLimit(UNLIMITED).addOrder("envId", OrderType.ASC).build();
-    System.out.println("Retrieving infra mapping info");
+    logger.info("Retrieving infra mapping info");
     PageResponse<InfrastructureMapping> pageResponse = wingsPersistence.query(InfrastructureMapping.class, pageRequest);
 
     if (pageResponse.isEmpty() || isEmpty(pageResponse.getResponse())) {
-      System.out.println("No infra mapping info found");
+      logger.info("No infra mapping info found");
       return;
     }
 
@@ -58,7 +62,7 @@ public class InfraMappingMigratorUtil extends WingsBaseTest {
         prevEnvId = infraMapping.getEnvId();
       }
 
-      System.out.println("Checking if infra mapping info with name exists: " + infraMapping.getDefaultName());
+      logger.info("Checking if infra mapping info with name exists: " + infraMapping.getDefaultName());
       PageResponse<InfrastructureMapping> response = wingsPersistence.query(InfrastructureMapping.class, pageRequest);
       String name = infraMapping.getDefaultName();
       if (!response.isEmpty()) {

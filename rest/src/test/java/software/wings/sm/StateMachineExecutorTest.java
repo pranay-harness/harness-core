@@ -9,6 +9,8 @@ import com.google.inject.Inject;
 
 import io.harness.rule.RepeatRule.Repeat;
 import org.junit.Test;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import software.wings.WingsBaseTest;
 import software.wings.rules.Listeners;
 import software.wings.service.StaticMap;
@@ -27,6 +29,8 @@ import java.util.Random;
  */
 @Listeners(NotifyEventListener.class)
 public class StateMachineExecutorTest extends WingsBaseTest {
+  private static final Logger logger = LoggerFactory.getLogger(StateMachineExecutorTest.class);
+
   @Inject StateMachineExecutor stateMachineExecutor;
 
   @Inject private WorkflowService workflowService;
@@ -65,7 +69,7 @@ public class StateMachineExecutorTest extends WingsBaseTest {
     assertThat(sm).isNotNull().extracting(StateMachine::getUuid).doesNotContainNull();
 
     String smId = sm.getUuid();
-    System.out.println("Going to trigger state machine");
+    logger.info("Going to trigger state machine");
     String executionUuid = generateUuid();
 
     StateMachineExecutionCallbackMock callback = new StateMachineExecutionCallbackMock();
@@ -125,7 +129,7 @@ public class StateMachineExecutorTest extends WingsBaseTest {
     assertThat(sm).isNotNull().extracting(StateMachine::getUuid).doesNotContainNull();
 
     String smId = sm.getUuid();
-    System.out.println("Going to trigger state machine");
+    logger.info("Going to trigger state machine");
     String executionUuid = generateUuid();
 
     StateMachineExecutionCallbackMock callback = new StateMachineExecutionCallbackMock();
@@ -187,7 +191,7 @@ public class StateMachineExecutorTest extends WingsBaseTest {
     assertThat(sm).isNotNull().extracting(StateMachine::getUuid).doesNotContainNull();
 
     String smId = sm.getUuid();
-    System.out.println("Going to trigger state machine");
+    logger.info("Going to trigger state machine");
     String executionUuid = generateUuid();
 
     StateMachineExecutionCallbackMock callback = new StateMachineExecutionCallbackMock();
@@ -255,7 +259,7 @@ public class StateMachineExecutorTest extends WingsBaseTest {
     sm = workflowService.createStateMachine(sm);
     assertThat(sm).isNotNull().extracting(StateMachine::getUuid).doesNotContainNull();
 
-    System.out.println("Going to trigger state machine");
+    logger.info("Going to trigger state machine");
     String executionUuid = generateUuid();
 
     StateMachineExecutionCallbackMock callback = new StateMachineExecutionCallbackMock();
@@ -317,7 +321,7 @@ public class StateMachineExecutorTest extends WingsBaseTest {
     sm = workflowService.createStateMachine(sm);
     assertThat(sm).isNotNull().extracting(StateMachine::getUuid).doesNotContainNull();
 
-    System.out.println("Going to trigger state machine");
+    logger.info("Going to trigger state machine");
     String executionUuid = generateUuid();
 
     StateMachineExecutionCallbackMock callback = new StateMachineExecutionCallbackMock();
@@ -378,7 +382,7 @@ public class StateMachineExecutorTest extends WingsBaseTest {
     sm = workflowService.createStateMachine(sm);
     assertThat(sm).isNotNull().extracting(StateMachine::getUuid).doesNotContainNull();
 
-    System.out.println("Going to trigger state machine");
+    logger.info("Going to trigger state machine");
     String executionUuid = generateUuid();
 
     StateMachineExecutionCallbackMock callback = new StateMachineExecutionCallbackMock();
@@ -440,7 +444,7 @@ public class StateMachineExecutorTest extends WingsBaseTest {
     sm = workflowService.createStateMachine(sm);
     assertThat(sm).isNotNull().extracting(StateMachine::getUuid).doesNotContainNull();
 
-    System.out.println("Going to trigger state machine");
+    logger.info("Going to trigger state machine");
     String executionUuid = generateUuid();
 
     StateMachineExecutionCallbackMock callback = new StateMachineExecutionCallbackMock();
@@ -502,7 +506,7 @@ public class StateMachineExecutorTest extends WingsBaseTest {
     sm = workflowService.createStateMachine(sm);
     assertThat(sm).isNotNull().extracting(StateMachine::getUuid).doesNotContainNull();
 
-    System.out.println("Going to trigger state machine");
+    logger.info("Going to trigger state machine");
     String executionUuid = generateUuid();
 
     StateMachineExecutionCallbackMock callback = new StateMachineExecutionCallbackMock();
@@ -587,7 +591,7 @@ public class StateMachineExecutorTest extends WingsBaseTest {
     sm = workflowService.createStateMachine(sm);
     assertThat(sm).isNotNull().extracting(StateMachine::getUuid).doesNotContainNull();
 
-    System.out.println("Going to trigger state machine");
+    logger.info("Going to trigger state machine");
     String executionUuid = generateUuid();
 
     StateMachineExecutionCallbackMock callback = new StateMachineExecutionCallbackMock();
@@ -645,7 +649,7 @@ public class StateMachineExecutorTest extends WingsBaseTest {
     sm = workflowService.createStateMachine(sm);
     assertThat(sm).isNotNull().extracting(StateMachine::getUuid).doesNotContainNull();
 
-    System.out.println("Going to trigger state machine");
+    logger.info("Going to trigger state machine");
     String executionUuid = generateUuid();
 
     StateMachineExecutionCallbackMock callback = new StateMachineExecutionCallbackMock();
@@ -697,7 +701,7 @@ public class StateMachineExecutorTest extends WingsBaseTest {
     sm = workflowService.createStateMachine(sm);
     assertThat(sm).isNotNull().extracting(StateMachine::getUuid).doesNotContainNull();
 
-    System.out.println("Going to trigger state machine");
+    logger.info("Going to trigger state machine");
     String executionUuid = generateUuid();
 
     StateMachineExecutionCallbackMock callback = new StateMachineExecutionCallbackMock();
@@ -756,7 +760,7 @@ public class StateMachineExecutorTest extends WingsBaseTest {
     assertThat(sm).isNotNull().extracting(StateMachine::getUuid).doesNotContainNull();
 
     String smId = sm.getUuid();
-    System.out.println("Going to trigger state machine");
+    logger.info("Going to trigger state machine");
     String executionUuid = generateUuid();
 
     StateMachineExecutionCallbackMock callback = new StateMachineExecutionCallbackMock();

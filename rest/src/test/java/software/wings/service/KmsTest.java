@@ -31,6 +31,8 @@ import org.junit.Test;
 import org.mockito.Mock;
 import org.mongodb.morphia.mapping.Mapper;
 import org.mongodb.morphia.query.Query;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import software.wings.WingsBaseTest;
 import software.wings.annotation.Encryptable;
 import software.wings.api.KmsTransitionEvent;
@@ -110,6 +112,8 @@ import javax.crypto.spec.SecretKeySpec;
  * Created by rsingh on 9/29/17.
  */
 public class KmsTest extends WingsBaseTest {
+  private static final Logger logger = LoggerFactory.getLogger(KmsTest.class);
+
   private static final String plainTextKey = "1234567890123456";
 
   @Inject private KmsService kmsService;
@@ -2171,7 +2175,7 @@ public class KmsTest extends WingsBaseTest {
   @RealMongo
   public void saveUpdateConfigFileNoKms() throws IOException, InterruptedException, IllegalAccessException {
     final long seed = System.currentTimeMillis();
-    System.out.println("seed: " + seed);
+    logger.info("seed: " + seed);
     Random r = new Random(seed);
     final String renameAccountId = UUID.randomUUID().toString();
     final String renameAppId = UUID.randomUUID().toString();
@@ -2268,7 +2272,7 @@ public class KmsTest extends WingsBaseTest {
   @RealMongo
   public void saveConfigFileNoEncryption() throws IOException, InterruptedException {
     final long seed = System.currentTimeMillis();
-    System.out.println("seed: " + seed);
+    logger.info("seed: " + seed);
     Random r = new Random(seed);
     final String renameAccountId = UUID.randomUUID().toString();
     final String renameAppId = UUID.randomUUID().toString();
@@ -2316,7 +2320,7 @@ public class KmsTest extends WingsBaseTest {
   @RealMongo
   public void saveConfigFileWithEncryption() throws IOException, InterruptedException, IllegalAccessException {
     final long seed = System.currentTimeMillis();
-    System.out.println("seed: " + seed);
+    logger.info("seed: " + seed);
     Random r = new Random(seed);
     final String randomAccountId = UUID.randomUUID().toString();
     final String randomAppId = UUID.randomUUID().toString();
@@ -2432,7 +2436,7 @@ public class KmsTest extends WingsBaseTest {
   @RealMongo
   public void saveConfigFileTemplateWithEncryption() throws IOException, InterruptedException, IllegalAccessException {
     final long seed = System.currentTimeMillis();
-    System.out.println("seed: " + seed);
+    logger.info("seed: " + seed);
     Random r = new Random(seed);
     final String renameAccountId = UUID.randomUUID().toString();
     final String renameAppId = UUID.randomUUID().toString();

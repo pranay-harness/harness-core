@@ -4,6 +4,8 @@ import com.google.inject.Inject;
 
 import org.junit.Ignore;
 import org.junit.Test;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import software.wings.WingsBaseTest;
 import software.wings.beans.GcpConfig;
 import software.wings.beans.SettingAttribute;
@@ -18,6 +20,8 @@ import java.util.List;
 @Integration
 @Ignore
 public class GcpConfigEncryptionUtil extends WingsBaseTest {
+  private static final Logger logger = LoggerFactory.getLogger(GcpConfigEncryptionUtil.class);
+
   @Inject private WingsPersistence wingsPersistence;
 
   @Test
@@ -25,21 +29,21 @@ public class GcpConfigEncryptionUtil extends WingsBaseTest {
     List<SettingAttribute> gcpConfigs =
         wingsPersistence.createQuery(SettingAttribute.class).field("value.type").equal("GCP").asList();
 
-    System.out.println("will update " + gcpConfigs.size() + " records");
+    logger.info("will update " + gcpConfigs.size() + " records");
 
     int updated = 0;
     for (SettingAttribute settingAttribute : gcpConfigs) {
       String accountId = settingAttribute.getAccountId();
-      System.out.println("accountId: " + accountId);
+      logger.info("accountId: " + accountId);
       GcpConfig gcpConfig = (GcpConfig) settingAttribute.getValue();
       gcpConfig.setAccountId(accountId);
 
-      System.out.println("value:" + gcpConfig.getServiceAccountKeyFileContent());
+      logger.info("value:" + gcpConfig.getServiceAccountKeyFileContent());
       updated++;
 
       //      wingsPersistence.save(settingAttribute);
     }
 
-    System.out.println("Complete. Updated " + updated + " gcp configs.");
+    logger.info("Complete. Updated " + updated + " gcp configs.");
   }
 }

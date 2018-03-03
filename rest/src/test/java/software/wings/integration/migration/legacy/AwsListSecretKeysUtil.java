@@ -7,6 +7,8 @@ import com.google.inject.Inject;
 
 import org.junit.Ignore;
 import org.junit.Test;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import software.wings.WingsBaseTest;
 import software.wings.beans.AwsConfig;
 import software.wings.beans.SearchFilter;
@@ -25,6 +27,8 @@ import java.util.List;
 @Integration
 @Ignore
 public class AwsListSecretKeysUtil extends WingsBaseTest {
+  private static final Logger logger = LoggerFactory.getLogger(AwsListSecretKeysUtil.class);
+
   @Inject private WingsPersistence wingsPersistence;
 
   @Test
@@ -40,15 +44,15 @@ public class AwsListSecretKeysUtil extends WingsBaseTest {
     //    List<SettingAttribute> settingAttributes =
     //    wingsPersistence.createQuery(SettingAttribute.class).field("category")
     //        .equal("CLOUD_PROVIDER").field("value.type").equal("AWS").asList();
-    System.out.println("found " + settingAttributes.size() + " records");
+    logger.info("found " + settingAttributes.size() + " records");
     for (SettingAttribute settingAttribute : settingAttributes) {
       AwsConfig awsConfig = (AwsConfig) settingAttribute.getValue();
       String accessKey = awsConfig.getAccessKey();
       String secretKey = new String(awsConfig.getSecretKey());
-      System.out.println(settingAttribute.getUuid() + " - " + accessKey + ": " + secretKey);
+      logger.info(settingAttribute.getUuid() + " - " + accessKey + ": " + secretKey);
       //      wingsPersistence.save(SettingAttribute)
     }
 
-    System.out.println("Complete.");
+    logger.info("Complete.");
   }
 }

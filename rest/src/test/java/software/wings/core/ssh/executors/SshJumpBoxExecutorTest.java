@@ -28,6 +28,6 @@ public class SshJumpBoxExecutorTest {
     //    String fileName = "mvim";
     //    SshExecutor.CommandExecutionStatus result =
     //        executor.execute("/Users/anubhaw/Downloads/" + fileName, "./" + fileName);
-    //    System.out.println(result);
+    //    logger.info(result);
   }
 }

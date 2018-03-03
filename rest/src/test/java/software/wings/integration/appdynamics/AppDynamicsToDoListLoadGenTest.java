@@ -21,13 +21,13 @@ public class AppDynamicsToDoListLoadGenTest extends BaseIntegrationTest {
         WebTarget btTarget = client.target(baseUrl + "/todolist/exception");
         getRequestBuilder(btTarget).get();
         btTarget = client.target(baseUrl + "/todolist/register?name=cahksdc&password=abc&password2=abc");
-        System.out.println(getRequestBuilder(btTarget).post(null));
+        logger.info(getRequestBuilder(btTarget).post(null).toString());
         btTarget = client.target(baseUrl + "/todolist/login.jsp");
-        System.out.println(getRequestBuilder(btTarget).get().getStatus());
+        logger.info("" + getRequestBuilder(btTarget).get().getStatus());
         btTarget = client.target(baseUrl + "/todolist/inside/load?priority=1&task=task1");
-        System.out.println(getRequestBuilder(btTarget).get().getStatus());
+        logger.info("" + getRequestBuilder(btTarget).get().getStatus());
       } catch (Throwable t) {
-        System.out.println(t.fillInStackTrace());
+        logger.info(t.fillInStackTrace().toString());
       }
     }
   }

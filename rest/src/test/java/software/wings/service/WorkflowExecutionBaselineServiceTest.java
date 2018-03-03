@@ -12,6 +12,8 @@ import com.google.inject.Inject;
 
 import org.junit.Before;
 import org.junit.Test;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import software.wings.WingsBaseTest;
 import software.wings.beans.ErrorCode;
 import software.wings.beans.PipelineExecution;
@@ -34,6 +36,8 @@ import java.util.UUID;
  * Created by rsingh on 2/16/18.
  */
 public class WorkflowExecutionBaselineServiceTest extends WingsBaseTest {
+  private static final Logger logger = LoggerFactory.getLogger(WorkflowExecutionBaselineServiceTest.class);
+
   @Inject private WingsPersistence wingsPersistence;
   @Inject private WorkflowExecutionService workflowExecutionService;
 
@@ -202,7 +206,7 @@ public class WorkflowExecutionBaselineServiceTest extends WingsBaseTest {
     }
 
     for (int i = 0; i < numOfPipelines; i++) {
-      System.out.println("running for pipeline " + i);
+      logger.info("running for pipeline " + i);
       workflowExecutionIds.add(new ArrayList<>());
       List<WorkflowExecution> workflowExecutions = new ArrayList<>();
       for (int j = 0; j < numOfWorkflowExecutions; j++) {

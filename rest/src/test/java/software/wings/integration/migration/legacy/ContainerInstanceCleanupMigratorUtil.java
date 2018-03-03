@@ -11,6 +11,8 @@ import org.assertj.core.util.Objects;
 import org.junit.Ignore;
 import org.junit.Test;
 import org.mongodb.morphia.query.Query;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import software.wings.WingsBaseTest;
 import software.wings.beans.SearchFilter.Operator;
 import software.wings.beans.infrastructure.instance.ContainerDeploymentInfo;
@@ -32,17 +34,19 @@ import java.util.stream.Collectors;
 @Integration
 @Ignore
 public class ContainerInstanceCleanupMigratorUtil extends WingsBaseTest {
+  private static final Logger logger = LoggerFactory.getLogger(ContainerInstanceCleanupMigratorUtil.class);
+
   @Inject private WingsPersistence wingsPersistence;
 
   @Test
   public void cleanupInstances() {
     PageRequest<ContainerDeploymentInfo> pageRequest = aPageRequest().withLimit(UNLIMITED).build();
-    System.out.println("Retrieving Container deployment info");
+    logger.info("Retrieving Container deployment info");
     PageResponse<ContainerDeploymentInfo> pageResponse =
         wingsPersistence.query(ContainerDeploymentInfo.class, pageRequest);
 
     if (pageResponse.isEmpty() || isEmpty(pageResponse.getResponse())) {
-      System.out.println("No Container deployment info found");
+      logger.info("No Container deployment info found");
       return;
     }
 
@@ -60,10 +64,10 @@ public class ContainerInstanceCleanupMigratorUtil extends WingsBaseTest {
             .withLimit(UNLIMITED)
             .addFilter("instanceType", Operator.IN, "ECS_CONTAINER_INSTANCE", "KUBERNETES_CONTAINER_INSTANCE")
             .build();
-    System.out.println("Retrieving Container instances");
+    logger.info("Retrieving Container instances");
     PageResponse<Instance> pageResponse = wingsPersistence.query(Instance.class, pageRequest);
     if (pageResponse.isEmpty() || isEmpty(pageResponse.getResponse())) {
-      System.out.println("No Container instance found");
+      logger.info("No Container instance found");
       return;
     }
 

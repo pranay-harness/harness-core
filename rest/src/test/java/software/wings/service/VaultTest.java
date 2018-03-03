@@ -30,6 +30,8 @@ import org.junit.runners.Parameterized.Parameter;
 import org.junit.runners.Parameterized.Parameters;
 import org.mockito.Mock;
 import org.mongodb.morphia.query.Query;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import software.wings.WingsBaseTest;
 import software.wings.annotation.Encryptable;
 import software.wings.api.KmsTransitionEvent;
@@ -100,6 +102,8 @@ import java.util.concurrent.TimeUnit;
 @RunWith(Parameterized.class)
 @Ignore
 public class VaultTest extends WingsBaseTest {
+  private static final Logger logger = LoggerFactory.getLogger(VaultTest.class);
+
   private static String VAULT_TOKEN = System.getProperty("vault.token");
 
   private final int numOfEncryptedValsForKms = 3;
@@ -1260,7 +1264,7 @@ public class VaultTest extends WingsBaseTest {
   @RealMongo
   public void saveConfigFileWithEncryption() throws IOException, InterruptedException, IllegalAccessException {
     final long seed = System.currentTimeMillis();
-    System.out.println("seed: " + seed);
+    logger.info("seed: " + seed);
     Random r = new Random(seed);
     VaultConfig fromConfig = getVaultConfig();
     vaultService.saveVaultConfig(accountId, fromConfig);
@@ -1454,15 +1458,15 @@ public class VaultTest extends WingsBaseTest {
     URL resource = getClass().getClassLoader().getResource("vault_token.txt");
 
     if (resource == null) {
-      System.out.println("reading vault token from environment variable");
+      logger.info("reading vault token from environment variable");
     } else {
-      System.out.println("reading vault token from file");
+      logger.info("reading vault token from file");
       VAULT_TOKEN = FileUtils.readFileToString(new File(resource.getFile()), Charset.defaultCharset());
     }
     if (VAULT_TOKEN.endsWith("\n")) {
       VAULT_TOKEN = VAULT_TOKEN.replaceAll("\n", "");
     }
-    System.out.println("VAULT_TOKEN: " + VAULT_TOKEN);
+    logger.info("VAULT_TOKEN: " + VAULT_TOKEN);
     return VaultConfig.builder()
         .vaultUrl("http://127.0.0.1:8200")
         .authToken(VAULT_TOKEN)

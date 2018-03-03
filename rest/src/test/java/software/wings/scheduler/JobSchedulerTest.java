@@ -48,7 +48,7 @@ public class JobSchedulerTest extends WingsBaseTest {
   public static class JobA implements Job {
     @Override
     public void execute(JobExecutionContext jobExecutionContext) throws JobExecutionException {
-      System.out.println("Job a execution");
+      logger.info("Job a execution");
     }
   }
 
@@ -75,7 +75,7 @@ public class JobSchedulerTest extends WingsBaseTest {
     // Tell quartz to schedule the job using our trigger
     jobScheduler.getScheduler().scheduleJob(job, trigger2);
     Thread.sleep(1000000);
-    System.out.println("Completed");
+    logger.info("Completed");
   }
 
   @Test
@@ -83,6 +83,6 @@ public class JobSchedulerTest extends WingsBaseTest {
   public void shouldResumeIncompleteJob() throws InterruptedException, SchedulerException {
     jobScheduler.getScheduler().resumeAll();
     Thread.sleep(100000);
-    System.out.println("Completed");
+    logger.info("Completed");
   }
 }

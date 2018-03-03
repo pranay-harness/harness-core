@@ -42,15 +42,15 @@ public class ContainerSetupStateMigrationUtil extends WingsBaseTest {
   @Test
   public void setupStateMigration() {
     PageRequest<Application> pageRequest = aPageRequest().withLimit(UNLIMITED).build();
-    System.out.println("Retrieving applications");
+    logger.info("Retrieving applications");
     PageResponse<Application> pageResponse = wingsPersistence.query(Application.class, pageRequest);
 
     List<Application> apps = pageResponse.getResponse();
     if (pageResponse.isEmpty() || isEmpty(apps)) {
-      System.out.println("No applications found");
+      logger.info("No applications found");
       return;
     }
-    System.out.println("Updating " + apps.size() + " applications.");
+    logger.info("Updating " + apps.size() + " applications.");
     StringBuilder result = new StringBuilder();
     for (Application app : apps) {
       List<Workflow> workflows = workflowService
@@ -110,6 +110,6 @@ public class ContainerSetupStateMigrationUtil extends WingsBaseTest {
             .append(" candidates.\n");
       }
     }
-    System.out.println(result.toString());
+    logger.info(result.toString());
   }
 }

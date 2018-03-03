@@ -7,6 +7,8 @@ import com.google.inject.Inject;
 
 import org.junit.Ignore;
 import org.junit.Test;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import software.wings.WingsBaseTest;
 import software.wings.beans.Application;
 import software.wings.dl.PageRequest;
@@ -21,6 +23,8 @@ import software.wings.service.intfc.TriggerService;
 @Integration
 @Ignore
 public class TriggerMigrationUtil extends WingsBaseTest {
+  private static final Logger logger = LoggerFactory.getLogger(TriggerMigrationUtil.class);
+
   @Inject WingsPersistence wingsPersistence;
   @Inject TriggerService triggerService;
 
@@ -30,13 +34,13 @@ public class TriggerMigrationUtil extends WingsBaseTest {
   @Test
   public void updateTriggersByApp() {
     PageRequest<Application> pageRequest = aPageRequest().withLimit(UNLIMITED).build();
-    System.out.println("Retrieving applications");
+    logger.info("Retrieving applications");
     PageResponse<Application> pageResponse = wingsPersistence.query(Application.class, pageRequest);
 
     pageResponse.getResponse().forEach(application -> {
-      System.out.println("Updating triggers for app {} = " + application.getName());
+      logger.info("Updating triggers for app {} = " + application.getName());
       triggerService.updateByApp(application.getAppId());
-      System.out.println("Updated triggers for app {} = " + application.getName());
+      logger.info("Updated triggers for app {} = " + application.getName());
     });
   }
 }

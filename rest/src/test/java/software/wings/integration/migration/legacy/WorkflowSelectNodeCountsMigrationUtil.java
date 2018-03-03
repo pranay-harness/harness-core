@@ -49,15 +49,15 @@ public class WorkflowSelectNodeCountsMigrationUtil extends WingsBaseTest {
   @Test
   public void setSelectNodeCounts() {
     PageRequest<Application> pageRequest = aPageRequest().withLimit(UNLIMITED).build();
-    System.out.println("Retrieving applications");
+    logger.info("Retrieving applications");
     PageResponse<Application> pageResponse = wingsPersistence.query(Application.class, pageRequest);
 
     List<Application> apps = pageResponse.getResponse();
     if (pageResponse.isEmpty() || isEmpty(apps)) {
-      System.out.println("No applications found");
+      logger.info("No applications found");
       return;
     }
-    System.out.println("Updating " + apps.size() + " applications.");
+    logger.info("Updating " + apps.size() + " applications.");
     StringBuilder result = new StringBuilder();
     for (Application app : apps) {
       List<Workflow> workflows = workflowService
@@ -84,8 +84,8 @@ public class WorkflowSelectNodeCountsMigrationUtil extends WingsBaseTest {
               for (PhaseStep phaseStep : workflowPhase.getPhaseSteps()) {
                 if (SELECT_NODE == phaseStep.getPhaseStepType() || PROVISION_NODE == phaseStep.getPhaseStepType()) {
                   if (!candidateFound && infraIds.size() > 1) {
-                    System.out.println("**** More than 1 infra mapping. Acct:" + app.getAccountId()
-                        + " App:" + app.getUuid() + " Workflow:" + workflow.getUuid());
+                    logger.info("**** More than 1 infra mapping. Acct:" + app.getAccountId() + " App:" + app.getUuid()
+                        + " Workflow:" + workflow.getUuid());
                   }
                   candidateFound = true;
                   for (GraphNode node : phaseStep.getSteps()) {
@@ -94,7 +94,7 @@ public class WorkflowSelectNodeCountsMigrationUtil extends WingsBaseTest {
                       Map<String, Object> properties = node.getProperties();
                       if (properties.containsKey("instanceCount") && !properties.containsKey("instanceUnitType")) {
                         if (!workflowModified) {
-                          System.out.println(
+                          logger.info(
                               "\n" + (updateCount + 1) + ": " + coWorkflow.getWorkflowPhases().size() + " phases");
                         }
                         workflowModified = true;
@@ -104,7 +104,7 @@ public class WorkflowSelectNodeCountsMigrationUtil extends WingsBaseTest {
                         properties.put("instanceUnitType", InstanceUnitType.COUNT);
                         properties.remove("provisionNode");
                         properties.remove("launcherConfigName");
-                        System.out.println("properties = " + properties);
+                        logger.info("properties = " + properties);
                       }
                     }
                   }
@@ -137,6 +137,6 @@ public class WorkflowSelectNodeCountsMigrationUtil extends WingsBaseTest {
             .append(" candidates.\n");
       }
     }
-    System.out.println(result.toString());
+    logger.info(result.toString());
   }
 }

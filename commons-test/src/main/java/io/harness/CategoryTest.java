@@ -11,6 +11,8 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 public class CategoryTest {
+  private static final Logger logger = LoggerFactory.getLogger(CategoryTest.class);
+
   @Rule public TestName testName = new TestName();
 
   private RepeatRule repeatRule = new RepeatRule();
@@ -28,7 +30,7 @@ public class CategoryTest {
     if (repetition > 0) {
       sb.append(" - ").append(repetition);
     }
-    System.out.println(sb.toString());
+    logger.info(sb.toString());
   }
 
   /**

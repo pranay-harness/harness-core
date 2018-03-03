@@ -45,7 +45,7 @@ public class EcrCloudProviderMigrationUtil extends WingsBaseTest {
 
   @Test
   public void createAwsCloudProvidersFromEcrArtifactServers() {
-    System.out.println("Creating new AWS cloud providers based on the ECR Artifact Servers");
+    logger.info("Creating new AWS cloud providers based on the ECR Artifact Servers");
     try {
       // Get ECR Artifact Servers / Connectors
       DBCursor artifactServerCursor =
@@ -123,9 +123,9 @@ public class EcrCloudProviderMigrationUtil extends WingsBaseTest {
         }
       }
     } catch (Exception e) {
-      System.out.println("Creating cloud provider failed");
+      logger.info("Creating cloud provider failed");
       logger.error("", e);
     }
-    System.out.println("Creating cloud provider completed");
+    logger.info("Creating cloud provider completed");
   }
 }

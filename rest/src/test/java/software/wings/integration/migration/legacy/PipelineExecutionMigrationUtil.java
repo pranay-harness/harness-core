@@ -11,6 +11,8 @@ import com.google.inject.Inject;
 
 import org.junit.Test;
 import org.mongodb.morphia.query.UpdateOperations;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import software.wings.WingsBaseTest;
 import software.wings.beans.Application;
 import software.wings.beans.PipelineExecution;
@@ -25,6 +27,8 @@ import software.wings.rules.Integration;
  */
 @Integration
 public class PipelineExecutionMigrationUtil extends WingsBaseTest {
+  private static final Logger logger = LoggerFactory.getLogger(PipelineExecutionMigrationUtil.class);
+
   @Inject private WingsPersistence wingsPersistence;
 
   /***
@@ -33,15 +37,15 @@ public class PipelineExecutionMigrationUtil extends WingsBaseTest {
   @Test
   public void updatePipelineExecution() {
     PageRequest<Application> pageRequest = aPageRequest().withLimit(UNLIMITED).build();
-    System.out.println("Retrieving applications");
+    logger.info("Retrieving applications");
     PageResponse<Application> pageResponse = wingsPersistence.query(Application.class, pageRequest);
 
     if (pageResponse.isEmpty() || isEmpty(pageResponse.getResponse())) {
-      System.out.println("No applications found");
+      logger.info("No applications found");
       return;
     }
     pageResponse.getResponse().forEach(application -> {
-      System.out.println("Updating " + application);
+      logger.info("Updating " + application);
       PageRequest<PipelineExecution> pipelineRequest =
           aPageRequest()
               .withLimit(UNLIMITED)
@@ -50,11 +54,11 @@ public class PipelineExecutionMigrationUtil extends WingsBaseTest {
       PageResponse<PipelineExecution> pipelineExecutions =
           wingsPersistence.query(PipelineExecution.class, pipelineRequest);
       if (pipelineExecutions == null) {
-        System.out.println("No pipeline executions found for Application" + application);
+        logger.info("No pipeline executions found for Application" + application);
       }
       pipelineExecutions.forEach(pipelineExecution -> {
         UpdateOperations<PipelineExecution> ops = wingsPersistence.createUpdateOperations(PipelineExecution.class);
-        System.out.println("Updating pipeline execution  = " + pipelineExecution);
+        logger.info("Updating pipeline execution  = " + pipelineExecution);
         setUnset(ops, "pipeline._id", generateUuid() + "_embedded");
         wingsPersistence.update(wingsPersistence.createQuery(PipelineExecution.class)
                                     .field("appId")

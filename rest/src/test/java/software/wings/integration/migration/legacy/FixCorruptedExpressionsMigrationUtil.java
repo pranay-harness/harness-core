@@ -52,13 +52,13 @@ public class FixCorruptedExpressionsMigrationUtil extends WingsBaseTest {
 
   @Test
   public void fixCorruptedExpressions() {
-    System.out.println("Checking for corrupted expressions.");
+    logger.info("Checking for corrupted expressions.");
     checkWorkflows();
     checkServiceVariables();
     checkCommands();
     checkAwsInfraMappings();
     checkConfigFiles();
-    System.out.println("Finished checking for corrupted expressions.");
+    logger.info("Finished checking for corrupted expressions.");
   }
 
   private void checkConfigFiles() {
@@ -66,7 +66,7 @@ public class FixCorruptedExpressionsMigrationUtil extends WingsBaseTest {
     for (ConfigFile configFile : configFiles) {
       String value = configFile.getRelativeFilePath();
       if (isNotEmpty(value) && (value.contains("style1|") || value.contains("style2|"))) {
-        System.out.println(configFile.getName() + ":" + value);
+        logger.info(configFile.getName() + ":" + value);
         configFile.setRelativeFilePath(value.replaceAll("style1\\|", "").replaceAll("style2\\|", ""));
         wingsPersistence.updateField(ConfigFile.class, configFile.getUuid(), "relativeFilePath", value);
       }
@@ -86,7 +86,7 @@ public class FixCorruptedExpressionsMigrationUtil extends WingsBaseTest {
         for (Tag tag : tags) {
           String value = tag.getValue();
           if (isNotEmpty(value) && (value.contains("style1|") || value.contains("style2|"))) {
-            System.out.println(tag.getKey() + ":" + value);
+            logger.info(tag.getKey() + ":" + value);
             tag.setValue(value.replaceAll("style1\\|", "").replaceAll("style2\\|", ""));
             modified = true;
           }
@@ -109,7 +109,7 @@ public class FixCorruptedExpressionsMigrationUtil extends WingsBaseTest {
         }
         String value = ((ExecCommandUnit) commandUnit).getCommandString();
         if (isNotEmpty(value) && (value.contains("style1|") || value.contains("style2|"))) {
-          System.out.println(command.getName() + ":" + value);
+          logger.info(command.getName() + ":" + value);
           ((ExecCommandUnit) commandUnit)
               .setCommandString(value.replaceAll("style1\\|", "").replaceAll("style2\\|", ""));
           modified = true;
@@ -126,7 +126,7 @@ public class FixCorruptedExpressionsMigrationUtil extends WingsBaseTest {
     for (ServiceVariable serviceVariable : serviceVariables) {
       String value = new String(serviceVariable.getValue());
       if (isNotEmpty(value) && (value.contains("style1|") || value.contains("style2|"))) {
-        System.out.println(serviceVariable.getName() + ":" + value);
+        logger.info(serviceVariable.getName() + ":" + value);
         serviceVariable.setValue(value.replaceAll("style1\\|", "").replaceAll("style2\\|", "").toCharArray());
         wingsPersistence.updateField(ServiceVariable.class, serviceVariable.getUuid(), "value", value);
       }
@@ -135,15 +135,15 @@ public class FixCorruptedExpressionsMigrationUtil extends WingsBaseTest {
 
   private void checkWorkflows() {
     PageRequest<Application> pageRequest = aPageRequest().withLimit(UNLIMITED).build();
-    System.out.println("Retrieving applications");
+    logger.info("Retrieving applications");
     PageResponse<Application> pageResponse = wingsPersistence.query(Application.class, pageRequest);
 
     List<Application> apps = pageResponse.getResponse();
     if (pageResponse.isEmpty() || isEmpty(apps)) {
-      System.out.println("No applications found");
+      logger.info("No applications found");
       return;
     }
-    System.out.println("Updating " + apps.size() + " applications.");
+    logger.info("Updating " + apps.size() + " applications.");
     StringBuilder result = new StringBuilder();
     for (Application app : apps) {
       List<Workflow> workflows = workflowService
@@ -168,10 +168,10 @@ public class FixCorruptedExpressionsMigrationUtil extends WingsBaseTest {
                     String value = (String) obj;
                     if (isNotEmpty(value) && (value.contains("style1|") || value.contains("style2|"))) {
                       if (!phaseStepFound) {
-                        System.out.println("\n" + app.getName() + ":" + workflow.getName() + ":"
-                            + workflowPhase.getName() + ":" + phaseStep.getName() + ":" + node.getName());
+                        logger.info("\n" + app.getName() + ":" + workflow.getName() + ":" + workflowPhase.getName()
+                            + ":" + phaseStep.getName() + ":" + node.getName());
                       }
-                      System.out.println(key + ":" + value);
+                      logger.info(key + ":" + value);
                       properties.put(key, value.replaceAll("style1\\|", "").replaceAll("style2\\|", ""));
                       phaseStepFound = true;
                       workflowModified = true;
@@ -201,6 +201,6 @@ public class FixCorruptedExpressionsMigrationUtil extends WingsBaseTest {
             .append(" workflows.\n");
       }
     }
-    System.out.println(result.toString());
+    logger.info(result.toString());
   }
 }

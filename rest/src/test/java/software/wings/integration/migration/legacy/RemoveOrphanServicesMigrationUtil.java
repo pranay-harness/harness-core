@@ -6,6 +6,8 @@ import com.google.inject.Inject;
 
 import org.junit.Ignore;
 import org.junit.Test;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import software.wings.WingsBaseTest;
 import software.wings.beans.Pipeline;
 import software.wings.beans.Service;
@@ -26,6 +28,8 @@ import java.util.List;
 @Integration
 @Ignore
 public class RemoveOrphanServicesMigrationUtil extends WingsBaseTest {
+  private static final Logger logger = LoggerFactory.getLogger(RemoveOrphanServicesMigrationUtil.class);
+
   @Inject private WingsPersistence wingsPersistence;
   @Inject private AppService appService;
   @Inject private WorkflowService workflowService;
@@ -43,7 +47,7 @@ public class RemoveOrphanServicesMigrationUtil extends WingsBaseTest {
         deleted++;
       }
     }
-    System.out.println("Complete. Deleted " + deleted + " services.");
+    logger.info("Complete. Deleted " + deleted + " services.");
 
     List<Workflow> workflows =
         workflowService.listWorkflows(aPageRequest().withLimit(PageRequest.UNLIMITED).build()).getResponse();
@@ -57,7 +61,7 @@ public class RemoveOrphanServicesMigrationUtil extends WingsBaseTest {
         deleted++;
       }
     }
-    System.out.println("Complete. Deleted " + deleted + " workflows.");
+    logger.info("Complete. Deleted " + deleted + " workflows.");
 
     List<Pipeline> pipelines =
         pipelineService.listPipelines(aPageRequest().withLimit(PageRequest.UNLIMITED).build()).getResponse();
@@ -71,6 +75,6 @@ public class RemoveOrphanServicesMigrationUtil extends WingsBaseTest {
         deleted++;
       }
     }
-    System.out.println("Complete. Deleted " + deleted + " pipelines.");
+    logger.info("Complete. Deleted " + deleted + " pipelines.");
   }
 }

@@ -256,7 +256,7 @@ public class ElkIntegrationTest extends BaseIntegrationTest {
             }
           }
         }
-        System.out.println("done for workFlow: " + workFlowId + " execution: " + workFlowExecutionId);
+        logger.info("done for workFlow: " + workFlowId + " execution: " + workFlowExecutionId);
       }
     }
 

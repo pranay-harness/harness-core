@@ -65,7 +65,7 @@ public class SystemCatalogMigratorUtil extends WingsBaseTest {
         aPageRequest().addFilter("catalogType", EQ, APPSTACK).addFilter("family", EQ, TOMCAT).build());
     Map<String, SystemCatalog> fileToSystemCatalog =
         systemCatalogs.stream().collect(Collectors.toMap(SystemCatalog::getFileName, Function.identity()));
-    System.out.println("Creating System App Stack Catalogs");
+    logger.info("Creating System App Stack Catalogs");
     // Create Tomcat 7 Standard
     SystemCatalog systemCatalog;
     if (!fileToSystemCatalog.containsKey("apache-tomcat-7.0.78.tar.gz")) {
@@ -143,7 +143,7 @@ public class SystemCatalogMigratorUtil extends WingsBaseTest {
 
   @Test
   public void createOrUpdateSystemAppContainers() {
-    System.out.println("Creating System App Containers");
+    logger.info("Creating System App Containers");
     List<Account> accounts =
         accountService.list(aPageRequest().withLimit(PageRequest.UNLIMITED).addFieldsIncluded("uuid").build());
     if (isEmpty(accounts)) {
@@ -189,11 +189,11 @@ public class SystemCatalogMigratorUtil extends WingsBaseTest {
           }
         } catch (Exception e) {
           logger.error("", e);
-          System.out.println("Error while creating system app container " + appContainer);
+          logger.info("Error while creating system app container " + appContainer);
         }
       }
 
     });
-    System.out.println("System App Containers created successfully");
+    logger.info("System App Containers created successfully");
   }
 }

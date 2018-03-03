@@ -7,6 +7,8 @@ import com.google.inject.Inject;
 import org.junit.Ignore;
 import org.junit.Test;
 import org.mockito.InjectMocks;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import software.wings.WingsBaseTest;
 import software.wings.beans.DockerConfig;
 import software.wings.beans.ErrorCode;
@@ -28,6 +30,8 @@ import java.util.List;
 @Ignore
 @Integration
 public class DockerBuildServiceImplTest extends WingsBaseTest {
+  private static final Logger logger = LoggerFactory.getLogger(DockerBuildServiceImplTest.class);
+
   @Inject private DockerRegistryService dockerRegistryService;
   @Inject private ArtifactStreamService artifactStreamService;
 
@@ -46,7 +50,7 @@ public class DockerBuildServiceImplTest extends WingsBaseTest {
                                                     .withServiceId("Yn57GaqwR9ioXq8YZ4V87Q")
                                                     .build();
     ArtifactStream artifactStream = artifactStreamService.create(dockerArtifactStream);
-    System.out.println(artifactStream.toString());
+    logger.info(artifactStream.toString());
   }
 
   @Test
@@ -57,7 +61,7 @@ public class DockerBuildServiceImplTest extends WingsBaseTest {
                                     .password("anubhaw@Dhub".toCharArray())
                                     .build();
     List<BuildDetails> builds = dockerRegistryService.getBuilds(dockerConfig, null, "library/mysql", 5);
-    System.out.println(builds);
+    logger.info(builds.toString());
   }
 
   @Test

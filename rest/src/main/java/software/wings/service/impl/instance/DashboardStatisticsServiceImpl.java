@@ -317,7 +317,7 @@ public class DashboardStatisticsServiceImpl implements DashboardStatisticsServic
         .aggregate(AggregationInfo.class)
         .forEachRemaining(instanceInfo -> {
           instanceInfoList.add(instanceInfo);
-          System.out.println(instanceInfo);
+          logger.info(instanceInfo.toString());
         });
 
     return constructInstanceStatsByService(instanceInfoList);
@@ -571,7 +571,7 @@ public class DashboardStatisticsServiceImpl implements DashboardStatisticsServic
         .aggregate(AggregationInfo.class)
         .forEachRemaining(instanceInfo -> {
           instanceInfoList.add(instanceInfo);
-          System.out.println(instanceInfo);
+          logger.info(instanceInfo.toString());
         });
     return constructCurrentActiveInstances(instanceInfoList);
   }

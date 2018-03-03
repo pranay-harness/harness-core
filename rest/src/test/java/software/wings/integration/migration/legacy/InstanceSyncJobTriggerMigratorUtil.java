@@ -14,6 +14,8 @@ import org.quartz.JobDetail;
 import org.quartz.SimpleScheduleBuilder;
 import org.quartz.Trigger;
 import org.quartz.TriggerBuilder;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import software.wings.WingsBaseTest;
 import software.wings.beans.Application;
 import software.wings.dl.PageRequest;
@@ -31,6 +33,8 @@ import software.wings.scheduler.QuartzScheduler;
 @Ignore
 @SetupScheduler
 public class InstanceSyncJobTriggerMigratorUtil extends WingsBaseTest {
+  private static final Logger logger = LoggerFactory.getLogger(InstanceSyncJobTriggerMigratorUtil.class);
+
   private static final String CONTAINER_SYNC_CRON_GROUP = "CONTAINER_SYNC_CRON_GROUP";
   // This was the old cron group name, dropping that job and adding the new cron group for all apps.
   private static final String INSTANCE_SYNC_CRON_GROUP = "INSTANCE_SYNC_CRON_GROUP";
@@ -45,15 +49,15 @@ public class InstanceSyncJobTriggerMigratorUtil extends WingsBaseTest {
   @Test
   public void scheduleCronForInstanceSync() {
     PageRequest<Application> pageRequest = aPageRequest().withLimit(UNLIMITED).build();
-    System.out.println("Retrieving applications");
+    logger.info("Retrieving applications");
     PageResponse<Application> pageResponse = wingsPersistence.query(Application.class, pageRequest);
 
     if (pageResponse.isEmpty() || isEmpty(pageResponse.getResponse())) {
-      System.out.println("No applications found");
+      logger.info("No applications found");
       return;
     }
     pageResponse.getResponse().forEach(application -> {
-      System.out.println("Creating scheduler for application " + application);
+      logger.info("Creating scheduler for application " + application);
       // deleting the old
       jobScheduler.deleteJob(application.getUuid(), INSTANCE_SYNC_CRON_GROUP);
       jobScheduler.deleteJob(application.getUuid(), CONTAINER_SYNC_CRON_GROUP);

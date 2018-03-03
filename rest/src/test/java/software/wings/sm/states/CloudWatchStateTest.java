@@ -39,6 +39,8 @@ import org.junit.Test;
 import org.mockito.ArgumentCaptor;
 import org.mockito.InjectMocks;
 import org.mockito.Mock;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import software.wings.WingsBaseTest;
 import software.wings.beans.Activity;
 import software.wings.beans.AwsConfig;
@@ -61,6 +63,8 @@ import java.util.List;
  * Created by anubhaw on 12/6/16.
  */
 public class CloudWatchStateTest extends WingsBaseTest {
+  private static final Logger logger = LoggerFactory.getLogger(CloudWatchStateTest.class);
+
   private static final Activity ACTIVITY_WITH_ID = Activity.builder().build();
 
   static {
@@ -151,6 +155,6 @@ public class CloudWatchStateTest extends WingsBaseTest {
     List<Datapoint> dps = new ArrayList<>();
     Datapoint datapoint1 = dps.stream().min(Comparator.comparing(Datapoint::getTimestamp)).orElse(null);
 
-    System.out.println(metricStatistics);
+    logger.info(metricStatistics.toString());
   }
 }

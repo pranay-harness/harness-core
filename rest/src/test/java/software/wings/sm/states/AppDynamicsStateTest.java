@@ -23,6 +23,8 @@ import org.junit.Before;
 import org.junit.Test;
 import org.mockito.Mock;
 import org.mockito.MockitoAnnotations;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import software.wings.WingsBaseTest;
 import software.wings.api.PhaseElement;
 import software.wings.api.ServiceElement;
@@ -64,6 +66,8 @@ import java.util.UUID;
  * author Srinivas
  */
 public class AppDynamicsStateTest extends WingsBaseTest {
+  private static final Logger logger = LoggerFactory.getLogger(AppDynamicsStateTest.class);
+
   private String accountId;
   private String appId;
   private String stateExecutionId;
@@ -236,8 +240,8 @@ public class AppDynamicsStateTest extends WingsBaseTest {
         cvExecutionMetaData =
             continuousVerificationService.getCVExecutionMetaData(accountId, 1519200000000L, 1519200000001L);
     assertNotNull(cvExecutionMetaData);
-    System.out.println("Here....");
-    System.out.println(cvExecutionMetaData);
+    logger.info("Here....");
+    logger.info(cvExecutionMetaData.toString());
     ContinuousVerificationExecutionMetaData continuousVerificationExecutionMetaData1 =
         cvExecutionMetaData.get(1519171200000L)
             .get("dummy artifact")

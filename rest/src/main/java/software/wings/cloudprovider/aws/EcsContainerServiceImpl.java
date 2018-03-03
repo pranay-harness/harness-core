@@ -425,7 +425,7 @@ public class EcsContainerServiceImpl implements EcsContainerService {
       sleep(ofSeconds(1));
     }
 
-    stack.getOutputs().forEach(output -> System.out.println(output.getOutputKey() + " = " + output.getOutputValue()));
+    stack.getOutputs().forEach(output -> logger.info(output.getOutputKey() + " = " + output.getOutputValue()));
   }
 
   /**
@@ -769,7 +769,7 @@ public class EcsContainerServiceImpl implements EcsContainerService {
       sleep(ofSeconds(1));
     }
 
-    stack.getOutputs().forEach(output -> System.out.println(output.getOutputKey() + " = " + output.getOutputValue()));
+    stack.getOutputs().forEach(output -> logger.info(output.getOutputKey() + " = " + output.getOutputValue()));
   }
 
   @Override

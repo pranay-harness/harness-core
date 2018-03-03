@@ -20,6 +20,8 @@ import org.junit.Before;
 import org.junit.Ignore;
 import org.junit.Test;
 import org.mockito.Mock;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import software.wings.WingsBaseTest;
 import software.wings.annotation.Encryptable;
 import software.wings.beans.ConfigFile;
@@ -62,6 +64,8 @@ import java.util.UUID;
 @Integration
 @Ignore
 public class SecretMigrationUtil extends WingsBaseTest {
+  private static final Logger logger = LoggerFactory.getLogger(SecretMigrationUtil.class);
+
   @Inject private WingsPersistence wingsPersistence;
   @Inject private EncryptionService encryptionService;
   @Inject private SecretManager secretManager;
@@ -88,7 +92,7 @@ public class SecretMigrationUtil extends WingsBaseTest {
     List<InfrastructureMapping> infrastructureMappings =
         wingsPersistence.createQuery(InfrastructureMapping.class).asList();
 
-    System.out.println("will go through " + infrastructureMappings.size() + " records");
+    logger.info("will go through " + infrastructureMappings.size() + " records");
 
     int updated = 0;
     for (InfrastructureMapping infrastructureMapping : infrastructureMappings) {
@@ -97,7 +101,7 @@ public class SecretMigrationUtil extends WingsBaseTest {
       //      wingsPersistence.save(infrastructureMapping);
       updated++;
     }
-    System.out.println("Complete. Updated " + updated + " records.");
+    logger.info("Complete. Updated " + updated + " records.");
   }
 
   @Test
@@ -109,19 +113,19 @@ public class SecretMigrationUtil extends WingsBaseTest {
         continue;
       }
 
-      System.out.println("Processing " + configFile.getUuid());
+      logger.info("Processing " + configFile.getUuid());
       EncryptedData encryptedData = wingsPersistence.get(EncryptedData.class, configFile.getEncryptedFileId());
       Preconditions.checkNotNull(encryptedData, "Did not find reference for " + configFile.getUuid());
 
       encryptedData.setName(configFile.getFileName());
       encryptedData.setEncryptedValue(configFile.getFileUuid().toCharArray());
 
-      System.out.println("setting name of " + encryptedData.getUuid() + "  to " + configFile.getFileName());
+      logger.info("setting name of " + encryptedData.getUuid() + "  to " + configFile.getFileName());
 
       //      wingsPersistence.save(encryptedData);
       updated++;
     }
-    System.out.println("Complete. Updated " + updated + " records.");
+    logger.info("Complete. Updated " + updated + " records.");
   }
 
   @Test
@@ -133,7 +137,7 @@ public class SecretMigrationUtil extends WingsBaseTest {
         continue;
       }
 
-      System.out.println("Processing " + serviceVariable.getUuid());
+      logger.info("Processing " + serviceVariable.getUuid());
       EncryptedData encryptedData = wingsPersistence.get(EncryptedData.class, serviceVariable.getEncryptedValue());
       Preconditions.checkNotNull(encryptedData, "Did not find reference for " + serviceVariable.getUuid());
 
@@ -146,18 +150,18 @@ public class SecretMigrationUtil extends WingsBaseTest {
       String secretTextName = serviceVariable.getName();
       encryptedData.setName(secretTextName);
       encryptedData.setType(SettingVariableTypes.SECRET_TEXT);
-      System.out.println("setting name of " + encryptedData.getUuid() + "  to " + secretTextName);
+      logger.info("setting name of " + encryptedData.getUuid() + "  to " + secretTextName);
 
       //      wingsPersistence.save(encryptedData);
       updated++;
     }
-    System.out.println("Complete. Updated " + updated + " records.");
+    logger.info("Complete. Updated " + updated + " records.");
   }
 
   @Test
   public void migrateParentsOfEncryptedRecords() throws Exception {
     DBCursor encryptedDatas = wingsPersistence.getCollection("encryptedRecords").find();
-    System.out.println("will go through " + encryptedDatas.size() + " records");
+    logger.info("will go through " + encryptedDatas.size() + " records");
 
     int updated = 0;
     while (encryptedDatas.hasNext()) {
@@ -176,19 +180,19 @@ public class SecretMigrationUtil extends WingsBaseTest {
         encryptedData.setEncryptionType(EncryptionType.KMS);
       }
 
-      System.out.println("going to save " + encryptedData);
+      logger.info("going to save " + encryptedData);
       updated++;
       //      wingsPersistence.save(encryptedData);
     }
 
-    System.out.println("Complete. Updated " + updated + " records.");
+    logger.info("Complete. Updated " + updated + " records.");
   }
 
   @Test
   public void migrateRecordsWithNoName() throws Exception {
     List<EncryptedData> encryptedDataRecords = wingsPersistence.createQuery(EncryptedData.class).asList();
 
-    System.out.println("will go through " + encryptedDataRecords.size() + " records");
+    logger.info("will go through " + encryptedDataRecords.size() + " records");
 
     int updated = 0;
     for (EncryptedData encryptedData : encryptedDataRecords) {
@@ -199,21 +203,21 @@ public class SecretMigrationUtil extends WingsBaseTest {
       }
     }
 
-    System.out.println("Complete. Updated " + updated + " records.");
+    logger.info("Complete. Updated " + updated + " records.");
   }
 
   @Test
   public void migrateSettingsVariable() throws InterruptedException, IllegalAccessException {
     List<SettingAttribute> settingAttributes = wingsPersistence.createQuery(SettingAttribute.class).asList();
 
-    System.out.println("will go through " + settingAttributes.size() + " records");
+    logger.info("will go through " + settingAttributes.size() + " records");
 
     int changedObject = 0;
     for (SettingAttribute settingAttribute : settingAttributes) {
       SettingValue value = settingAttribute.getValue();
 
       if (!Encryptable.class.isInstance(value)) {
-        System.out.println("nothing to do for " + settingAttribute);
+        logger.info("nothing to do for " + settingAttribute);
         continue;
       }
 
@@ -225,15 +229,15 @@ public class SecretMigrationUtil extends WingsBaseTest {
         char[] encryptedValue = (char[]) encryptedField.get(toMigrate);
 
         if (encryptedValue == null) {
-          System.out.println("This seems like already is the new format, field: " + encryptedField.getName()
+          logger.info("This seems like already is the new format, field: " + encryptedField.getName()
               + " uuid: " + settingAttribute.getUuid() + " object " + settingAttribute);
           continue;
         }
         SimpleEncryption simpleEncryption = new SimpleEncryption(toMigrate.getAccountId());
         char[] decryptedValue = simpleEncryption.decryptChars(encryptedValue);
 
-        System.out.println("uuid: " + settingAttribute.getUuid());
-        System.out.println(
+        logger.info("uuid: " + settingAttribute.getUuid());
+        logger.info(
             "going to encrypt " + String.valueOf(decryptedValue) + " for object uuid: " + settingAttribute.getUuid());
         encryptedField.set(toMigrate, decryptedValue);
 
@@ -248,14 +252,14 @@ public class SecretMigrationUtil extends WingsBaseTest {
       // }
     }
 
-    System.out.println("Complete. Updated " + changedObject + " setting attributes.");
+    logger.info("Complete. Updated " + changedObject + " setting attributes.");
   }
 
   @Test
   public void migrateServiceVariable() throws InterruptedException, IllegalAccessException {
     List<ServiceVariable> serviceVariables = wingsPersistence.createQuery(ServiceVariable.class).asList();
 
-    System.out.println("will go through " + serviceVariables.size() + " records");
+    logger.info("will go through " + serviceVariables.size() + " records");
 
     int changedObject = 0;
     for (ServiceVariable serviceVariable : serviceVariables) {
@@ -270,14 +274,14 @@ public class SecretMigrationUtil extends WingsBaseTest {
         char[] encryptedValue = (char[]) encryptedField.get(serviceVariable);
 
         if (encryptedValue == null) {
-          System.out.println("This seems like already is the new format, field: " + encryptedField.getName()
+          logger.info("This seems like already is the new format, field: " + encryptedField.getName()
               + " uuid: " + serviceVariable.getUuid() + " object " + serviceVariable);
           continue;
         }
         SimpleEncryption simpleEncryption = new SimpleEncryption(serviceVariable.getAccountId());
         char[] decryptedValue = simpleEncryption.decryptChars(encryptedValue);
 
-        System.out.println(
+        logger.info(
             "going to encrypt " + String.valueOf(decryptedValue) + " for object uuid: " + serviceVariable.getUuid());
         encryptedField.set(serviceVariable, decryptedValue);
 
@@ -292,14 +296,14 @@ public class SecretMigrationUtil extends WingsBaseTest {
       // }
     }
 
-    System.out.println("Complete. Updated " + changedObject + " setting attributes.");
+    logger.info("Complete. Updated " + changedObject + " setting attributes.");
   }
 
   @Test
   public void migrateConfigFiles() throws InterruptedException, IllegalAccessException, IOException {
     List<ConfigFile> configFiles = wingsPersistence.createQuery(ConfigFile.class).asList();
 
-    System.out.println("will go through " + configFiles.size() + " records");
+    logger.info("will go through " + configFiles.size() + " records");
 
     int changedObject = 0;
     for (ConfigFile configFile : configFiles) {
@@ -308,22 +312,22 @@ public class SecretMigrationUtil extends WingsBaseTest {
       }
       File file = new File(Files.createTempDir(), new File(configFile.getRelativeFilePath()).getName());
       fileService.download(configFile.getFileUuid(), file, CONFIGS);
-      System.out.println("processing " + configFile);
+      logger.info("processing " + configFile);
       EncryptionUtils.decrypt(file, configFile.getAccountId());
-      System.out.println("going to save: " + FileUtils.readFileToString(file, Charset.defaultCharset()));
+      logger.info("going to save: " + FileUtils.readFileToString(file, Charset.defaultCharset()));
 
       //      configService.save(configFile, new BoundedInputStream(new FileInputStream(file)));
       changedObject++;
     }
 
-    System.out.println("Complete. Updated " + changedObject + " file attributes.");
+    logger.info("Complete. Updated " + changedObject + " file attributes.");
   }
 
   @Test
   public void migrateSMTPConfigs() throws InterruptedException, IllegalAccessException {
     List<SettingAttribute> settingAttributes = wingsPersistence.createQuery(SettingAttribute.class).asList();
 
-    System.out.println("will go through " + settingAttributes.size() + " records");
+    logger.info("will go through " + settingAttributes.size() + " records");
 
     int changedObject = 0;
     for (SettingAttribute settingAttribute : settingAttributes) {
@@ -331,13 +335,13 @@ public class SecretMigrationUtil extends WingsBaseTest {
       if (!(value instanceof SmtpConfig)) {
         continue;
       }
-      System.out.println("Processing " + settingAttribute.getUuid());
+      logger.info("Processing " + settingAttribute.getUuid());
 
       SmtpConfig config = (SmtpConfig) value;
       if (isBlank(config.getEncryptedPassword())) {
-        System.out.println("-------- Found value to be migrated ----------");
+        logger.info("-------- Found value to be migrated ----------");
       } else {
-        System.out.println("All good, continuing");
+        logger.info("All good, continuing");
         continue;
       }
 
@@ -345,7 +349,7 @@ public class SecretMigrationUtil extends WingsBaseTest {
       changedObject++;
     }
 
-    System.out.println("Complete. Updated " + changedObject + " setting attributes.");
+    logger.info("Complete. Updated " + changedObject + " setting attributes.");
   }
 
   //  @Test
@@ -356,7 +360,7 @@ public class SecretMigrationUtil extends WingsBaseTest {
   //      SettingAttribute settingAttribute = wingsPersistence.get(SettingAttribute.class, id);
   //      SettingValue value = settingAttribute.getValue();
   //      if (!Encryptable.class.isInstance(value)) {
-  //        System.out.println("nothing to do for " + settingAttribute);
+  //        logger.info("nothing to do for " + settingAttribute);
   //        continue;
   //      }
   //
@@ -366,9 +370,9 @@ public class SecretMigrationUtil extends WingsBaseTest {
   //
   //        SimpleEncryption simpleEncryption = new SimpleEncryption(settingAttribute.getAccountId());
   //        char[] decryptChars = simpleEncryption.decryptChars((char[]) f.get(value));
-  //        System.out.println("decrypt1: " + String.valueOf(decryptChars));
+  //        logger.info("decrypt1: " + String.valueOf(decryptChars));
   //
-  //        System.out.println("Again: " + String.valueOf(simpleEncryption.decryptChars(decryptChars)));
+  //        logger.info("Again: " + String.valueOf(simpleEncryption.decryptChars(decryptChars)));
   //
   //        f.set(value, simpleEncryption.decryptChars(decryptChars));
   //        wingsPersistence.save(settingAttribute);

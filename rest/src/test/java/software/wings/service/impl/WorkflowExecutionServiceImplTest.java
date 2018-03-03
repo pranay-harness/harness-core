@@ -811,7 +811,7 @@ public class WorkflowExecutionServiceImplTest extends WingsBaseTest {
     workflowExecutionService.incrementFailed(workflowExecution.getAppId(), workflowExecution.getUuid(), 1);
     workflowExecution = wingsPersistence.get(WorkflowExecution.class, new PageRequest<>());
     assertThat(workflowExecution.getBreakdown().getFailed()).isEqualTo(1);
-    System.out.println("shouldUpdateFailedCount test done");
+    logger.info("shouldUpdateFailedCount test done");
   }
 
   /**

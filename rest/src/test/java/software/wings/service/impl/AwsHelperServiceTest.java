@@ -101,7 +101,7 @@ public class AwsHelperServiceTest extends WingsBaseTest {
     awsHelperService.describeAutoScalingGroupActivities(
         client, "TestAutoScalingGroup", completedActivities, logCallback, true);
 
-    // logResult.stream().forEach(s -> System.out.println(s));
+    // logResult.stream().forEach(s -> logger.info(s));
 
     assertThat(logResult.size()).isEqualTo(2);
 

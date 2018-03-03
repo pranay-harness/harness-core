@@ -23,6 +23,8 @@ import org.junit.ClassRule;
 import org.junit.Ignore;
 import org.junit.Test;
 import org.mockito.ArgumentCaptor;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import software.wings.beans.Delegate;
 import software.wings.beans.DelegateTask;
 import software.wings.beans.DelegateTaskResponse;
@@ -51,6 +53,8 @@ import javax.ws.rs.core.Response;
  * Created by peeyushaggarwal on 11/2/16.
  */
 public class DelegateResourceTest {
+  private static final Logger logger = LoggerFactory.getLogger(DelegateResourceTest.class);
+
   private static DelegateService DELEGATE_SERVICE = mock(DelegateService.class);
   private static DelegateScopeService DELEGATE_SCOPE_SERVICE = mock(DelegateScopeService.class);
   private static DownloadTokenService DOWNLOAD_TOKEN_SERVICE = mock(DownloadTokenService.class);
@@ -218,7 +222,7 @@ public class DelegateResourceTest {
                              .target("/delegates/" + ID_KEY + "/tasks/1?accountId=" + ACCOUNT_ID)
                              .request()
                              .post(entity(response, "application/x-kryo"), Response.class);
-    System.out.println(response1);
+    logger.info(response1.toString());
 
     verify(DELEGATE_SERVICE).processDelegateResponse(response);
   }

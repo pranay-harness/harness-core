@@ -12,6 +12,8 @@ import com.google.inject.Inject;
 import org.junit.Ignore;
 import org.junit.Test;
 import org.mongodb.morphia.query.Query;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import software.wings.WingsBaseTest;
 import software.wings.beans.Application;
 import software.wings.beans.SearchFilter.Operator;
@@ -32,6 +34,8 @@ import java.util.List;
 @Integration
 @Ignore
 public class InstanceDuplicateCleanupMigratorUtil extends WingsBaseTest {
+  private static final Logger logger = LoggerFactory.getLogger(InstanceDuplicateCleanupMigratorUtil.class);
+
   @Inject private WingsPersistence wingsPersistence;
   @Inject private ServiceResourceService serviceResourceService;
 
@@ -75,7 +79,7 @@ public class InstanceDuplicateCleanupMigratorUtil extends WingsBaseTest {
 
     int size = idsToDelete.size();
     if (size > 1) {
-      System.out.println("Duplicate count for service: " + serviceId + " size:" + size);
+      logger.info("Duplicate count for service: " + serviceId + " size:" + size);
     }
 
     if (!idsToDelete.isEmpty()) {

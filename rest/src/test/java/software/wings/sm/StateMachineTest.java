@@ -649,7 +649,7 @@ public class StateMachineTest extends WingsBaseTest {
      */
     @Override
     public void run() {
-      System.out.println("duration = " + duration);
+      logger.info("duration = " + duration);
       try {
         Thread.sleep(duration);
       } catch (InterruptedException e) {
@@ -700,12 +700,12 @@ public class StateMachineTest extends WingsBaseTest {
      */
     @Override
     public ExecutionResponse execute(ExecutionContext context) {
-      System.out.println("Executing ..." + getClass());
+      logger.info("Executing ..." + getClass());
       ExecutionResponse response = new ExecutionResponse();
       StateExecutionData stateExecutionData = new TestStateExecutionData(getName(), System.currentTimeMillis() + "");
       response.setStateExecutionData(stateExecutionData);
       StaticMap.putValue(getName(), System.currentTimeMillis());
-      System.out.println("stateExecutionData:" + stateExecutionData);
+      logger.info("stateExecutionData:" + stateExecutionData);
       if (shouldFail) {
         response.setExecutionStatus(ExecutionStatus.FAILED);
       }
@@ -795,7 +795,7 @@ public class StateMachineTest extends WingsBaseTest {
     public ExecutionResponse execute(ExecutionContext context) {
       String uuid = generateUuid();
 
-      System.out.println("Executing ..." + StateAsync.class.getName() + "..duration=" + duration + ", uuid=" + uuid);
+      logger.info("Executing ..." + StateAsync.class.getName() + "..duration=" + duration + ", uuid=" + uuid);
       ExecutionResponse response = new ExecutionResponse();
       response.setAsync(true);
       List<String> correlationIds = new ArrayList<>();

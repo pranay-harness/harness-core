@@ -14,6 +14,8 @@ import org.quartz.JobDetail;
 import org.quartz.SimpleScheduleBuilder;
 import org.quartz.Trigger;
 import org.quartz.TriggerBuilder;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import software.wings.WingsBaseTest;
 import software.wings.beans.Application;
 import software.wings.dl.PageRequest;
@@ -29,6 +31,8 @@ import software.wings.scheduler.StateMachineExecutionCleanupJob;
 @Integration
 @Ignore
 public class QuartzJobTriggerMigratorUtil extends WingsBaseTest {
+  private static final Logger logger = LoggerFactory.getLogger(QuartzJobTriggerMigratorUtil.class);
+
   private static final String SM_CLEANUP_CRON_GROUP = "SM_CLEANUP_CRON_GROUP";
   private static final int SM_CLEANUP_POLL_INTERVAL = 60;
 
@@ -41,15 +45,15 @@ public class QuartzJobTriggerMigratorUtil extends WingsBaseTest {
   @Test
   public void scheduleCronForStateMachineExecutionCleanup() {
     PageRequest<Application> pageRequest = aPageRequest().withLimit(UNLIMITED).build();
-    System.out.println("Retrieving applications");
+    logger.info("Retrieving applications");
     PageResponse<Application> pageResponse = wingsPersistence.query(Application.class, pageRequest);
 
     if (pageResponse.isEmpty() || isEmpty(pageResponse.getResponse())) {
-      System.out.println("No applications found");
+      logger.info("No applications found");
       return;
     }
     pageResponse.getResponse().forEach(application -> {
-      System.out.println("Creating scheduler for application " + application);
+      logger.info("Creating scheduler for application " + application);
       jobScheduler.deleteJob(application.getUuid(), "SM_CLEANUP_CRON_GROUP");
       addCronForStateMachineExecutionCleanup(application);
     });

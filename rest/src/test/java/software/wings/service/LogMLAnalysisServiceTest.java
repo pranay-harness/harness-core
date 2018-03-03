@@ -19,6 +19,8 @@ import org.junit.Ignore;
 import org.junit.Test;
 import org.mockito.Mock;
 import org.mockito.MockitoAnnotations;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import software.wings.WingsBaseTest;
 import software.wings.api.PhaseElement.PhaseElementBuilder;
 import software.wings.api.ServiceElement;
@@ -76,6 +78,8 @@ import java.util.UUID;
  * Created by rsingh on 9/27/17.
  */
 public class LogMLAnalysisServiceTest extends WingsBaseTest {
+  private static final Logger logger = LoggerFactory.getLogger(LogMLAnalysisServiceTest.class);
+
   private String accountId;
   private String appId;
   private String stateExecutionId;
@@ -98,7 +102,7 @@ public class LogMLAnalysisServiceTest extends WingsBaseTest {
   @Before
   public void setup() {
     long seed = System.currentTimeMillis();
-    System.out.println("random seed: " + seed);
+    logger.info("random seed: " + seed);
     r = new Random(seed);
     accountId = UUID.randomUUID().toString();
     appId = UUID.randomUUID().toString();

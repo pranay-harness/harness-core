@@ -4,6 +4,8 @@ import com.google.inject.Inject;
 
 import org.junit.Ignore;
 import org.junit.Test;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import software.wings.WingsBaseTest;
 import software.wings.beans.InfrastructureMapping;
 import software.wings.dl.WingsPersistence;
@@ -21,6 +23,8 @@ import java.util.List;
 @Integration
 @Ignore
 public class RemoveOrphanInfrastructureMappingMigrationUtil extends WingsBaseTest {
+  private static final Logger logger = LoggerFactory.getLogger(RemoveOrphanInfrastructureMappingMigrationUtil.class);
+
   @Inject private WingsPersistence wingsPersistence;
   @Inject private AppService appService;
   @Inject private ServiceResourceService serviceResourceService;
@@ -37,13 +41,13 @@ public class RemoveOrphanInfrastructureMappingMigrationUtil extends WingsBaseTes
           !serviceTemplateService.exist(infraMapping.getAppId(), infraMapping.getServiceTemplateId());
 
       if (missingApp || missingService || missingServiceTemplate) {
-        System.out.println("\ninframapping: " + infraMapping.getUuid());
-        System.out.println("missing app: " + missingApp + ", missing service: " + missingService
+        logger.info("\ninframapping: " + infraMapping.getUuid());
+        logger.info("missing app: " + missingApp + ", missing service: " + missingService
             + ", missing template: " + missingServiceTemplate);
         wingsPersistence.delete(infraMapping);
         deleted++;
       }
     }
-    System.out.println("Complete. Deleted " + deleted + " infrastructure mappings.");
+    logger.info("Complete. Deleted " + deleted + " infrastructure mappings.");
   }
 }
