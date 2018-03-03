@@ -15,6 +15,8 @@ import org.quartz.SimpleScheduleBuilder;
 import org.quartz.Trigger;
 import org.quartz.TriggerBuilder;
 import org.quartz.impl.matchers.GroupMatcher;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import software.wings.WingsBaseTest;
 
 /**
@@ -22,6 +24,8 @@ import software.wings.WingsBaseTest;
  */
 @Ignore
 public class JobSchedulerTest extends WingsBaseTest {
+  private static final Logger logger = LoggerFactory.getLogger(JobSchedulerTest.class);
+
   @Inject private JobScheduler jobScheduler;
 
   @Before
@@ -32,11 +36,11 @@ public class JobSchedulerTest extends WingsBaseTest {
           try {
             jobScheduler.getScheduler().deleteJob(jobKey);
           } catch (SchedulerException e) {
-            e.printStackTrace();
+            logger.error("", e);
           }
         });
       } catch (SchedulerException e) {
-        e.printStackTrace();
+        logger.error("", e);
       }
     });
   }

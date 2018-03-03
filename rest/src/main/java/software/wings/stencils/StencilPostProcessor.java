@@ -16,7 +16,6 @@ import org.slf4j.LoggerFactory;
 import software.wings.utils.JsonUtils;
 
 import java.beans.BeanInfo;
-import java.beans.IntrospectionException;
 import java.beans.Introspector;
 import java.beans.PropertyDescriptor;
 import java.lang.reflect.Field;
@@ -46,10 +45,8 @@ public class StencilPostProcessor {
           return pd.getName();
         }
       }
-    } catch (IntrospectionException e) {
-      e.printStackTrace();
     } catch (Exception e) {
-      e.printStackTrace();
+      logger.error("", e);
     }
 
     return null;

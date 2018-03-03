@@ -10,6 +10,8 @@ import com.fasterxml.jackson.dataformat.yaml.snakeyaml.DumperOptions.FlowStyle;
 import com.fasterxml.jackson.dataformat.yaml.snakeyaml.DumperOptions.ScalarStyle;
 import com.fasterxml.jackson.dataformat.yaml.snakeyaml.Yaml;
 import com.fasterxml.jackson.dataformat.yaml.snakeyaml.introspector.PropertyUtils;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import software.wings.beans.Account;
 import software.wings.beans.Application;
 import software.wings.beans.Environment;
@@ -38,6 +40,8 @@ import java.util.List;
 import java.util.Optional;
 
 public class YamlHelper {
+  private static final Logger logger = LoggerFactory.getLogger(YamlHelper.class);
+
   public static final String ENCRYPTED_VALUE_STR = "<KMS URL>";
 
   public static void addResponseMessage(RestResponse rr, ErrorCode errorCode, Level level, String message) {
@@ -189,7 +193,7 @@ public class YamlHelper {
         sb.append(line).append('\n');
       }
     } catch (Exception e) {
-      e.printStackTrace();
+      logger.error("", e);
     }
 
     return sb.toString();
@@ -224,7 +228,7 @@ public class YamlHelper {
         sb.append(line).append('\n');
       }
     } catch (Exception e) {
-      e.printStackTrace();
+      logger.error("", e);
     }
 
     return sb.toString();
@@ -251,7 +255,7 @@ public class YamlHelper {
       throw e;
     } catch (Exception e) {
       // bad before Yaml
-      e.printStackTrace();
+      logger.error("", e);
       YamlHelper.addCouldNotMapBeforeYamlMessage(rr);
       return Optional.empty();
     }

@@ -12,6 +12,8 @@ import com.google.inject.Inject;
 
 import org.junit.Ignore;
 import org.junit.Test;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import software.wings.WingsBaseTest;
 import software.wings.beans.Application;
 import software.wings.beans.CanaryOrchestrationWorkflow;
@@ -39,6 +41,8 @@ import java.util.Set;
 @Integration
 @Ignore
 public class WorkflowSelectNodeCountsMigrationUtil extends WingsBaseTest {
+  private static final Logger logger = LoggerFactory.getLogger(WorkflowSelectNodeCountsMigrationUtil.class);
+
   @Inject private WingsPersistence wingsPersistence;
   @Inject private WorkflowService workflowService;
 
@@ -117,7 +121,7 @@ public class WorkflowSelectNodeCountsMigrationUtil extends WingsBaseTest {
             workflowService.updateWorkflow(workflow);
             Thread.sleep(100);
           } catch (Exception e) {
-            e.printStackTrace();
+            logger.error("", e);
           }
 
           updateCount++;

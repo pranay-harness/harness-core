@@ -106,6 +106,8 @@ import javax.validation.ValidatorFactory;
  * Created by peeyushaggarwal on 4/5/16.
  */
 public class WingsRule implements MethodRule {
+  private static final Logger logger = LoggerFactory.getLogger(WingsRule.class);
+
   private static IRuntimeConfig runtimeConfig =
       new RuntimeConfigBuilder().defaultsWithLogger(Command.MongoD, LoggerFactory.getLogger(RealMongo.class)).build();
 
@@ -333,7 +335,7 @@ public class WingsRule implements MethodRule {
       executorService.shutdownNow();
       log().info("Stopped executorService...");
     } catch (Exception ex) {
-      ex.printStackTrace();
+      logger.error("", ex);
     }
 
     try {
@@ -341,7 +343,7 @@ public class WingsRule implements MethodRule {
       ((Managed) injector.getInstance(Key.get(ScheduledExecutorService.class, Names.named("notifier")))).stop();
       log().info("Stopped notifier...");
     } catch (Exception ex) {
-      ex.printStackTrace();
+      logger.error("", ex);
     }
 
     try {
@@ -349,7 +351,7 @@ public class WingsRule implements MethodRule {
       injector.getInstance(QueueListenerController.class).stop();
       log().info("Stopped queue listener controller...");
     } catch (Exception ex) {
-      ex.printStackTrace();
+      logger.error("", ex);
     }
 
     try {
@@ -357,7 +359,7 @@ public class WingsRule implements MethodRule {
       ((Managed) injector.getInstance(Key.get(ScheduledExecutorService.class, Names.named("timer")))).stop();
       log().info("Stopped timer...");
     } catch (Exception ex) {
-      ex.printStackTrace();
+      logger.error("", ex);
     }
 
     try {
@@ -365,7 +367,7 @@ public class WingsRule implements MethodRule {
       ((Managed) distributedLockSvc).stop();
       log().info("Stopped distributed lock service...");
     } catch (Exception ex) {
-      ex.printStackTrace();
+      logger.error("", ex);
     }
 
     try {
@@ -373,7 +375,7 @@ public class WingsRule implements MethodRule {
       ((Managed) injector.getInstance(WingsPersistence.class)).stop();
       log().info("Stopped WingsPersistance...");
     } catch (Exception ex) {
-      ex.printStackTrace();
+      logger.error("", ex);
     }
 
     log().info("Stopping Mongo server...");

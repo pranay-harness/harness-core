@@ -7,6 +7,8 @@ import com.google.common.collect.Sets;
 import com.google.inject.Inject;
 import com.google.inject.Singleton;
 
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import software.wings.annotation.Encryptable;
 import software.wings.api.DeploymentType;
 import software.wings.beans.command.CleanupSshCommandUnit;
@@ -30,6 +32,8 @@ import javax.validation.executable.ValidateOnExecution;
 @ValidateOnExecution
 @Singleton
 public class ServiceCommandExecutorServiceImpl implements ServiceCommandExecutorService {
+  private static final Logger logger = LoggerFactory.getLogger(ServiceCommandExecutorServiceImpl.class);
+
   @Inject private Map<String, CommandUnitExecutorService> commandUnitExecutorServiceMap;
   @Inject private EncryptionService encryptionService;
 
@@ -57,7 +61,6 @@ public class ServiceCommandExecutorServiceImpl implements ServiceCommandExecutor
       commandUnitExecutorService.cleanup(context.getActivityId(), context.getHost());
       return commandExecutionStatus;
     } catch (Exception ex) {
-      ex.printStackTrace();
       commandUnitExecutorService.cleanup(context.getActivityId(), context.getHost());
       throw ex;
     }
@@ -75,7 +78,7 @@ public class ServiceCommandExecutorServiceImpl implements ServiceCommandExecutor
       commandUnitExecutorService.cleanup(context.getActivityId(), context.getHost());
       return commandExecutionStatus;
     } catch (Exception ex) {
-      ex.printStackTrace();
+      logger.error("", ex);
       commandUnitExecutorService.cleanup(context.getActivityId(), context.getHost());
       throw ex;
     }

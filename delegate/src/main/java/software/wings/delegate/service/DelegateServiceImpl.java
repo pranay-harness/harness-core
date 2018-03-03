@@ -328,7 +328,6 @@ public class DelegateServiceImpl implements DelegateService {
           builder.but().withLastHeartBeat(clock.millis()).withStatus(Status.ENABLED).withConnected(true).build());
     } catch (IOException e) {
       logger.error("Error connecting", e);
-      e.printStackTrace();
     }
   }
 

@@ -23,7 +23,6 @@ public class GuiceQuartzJobFactory implements JobFactory {
     try {
       return (Job) injector.getInstance(jobClass);
     } catch (Exception e) {
-      e.printStackTrace();
       throw new UnsupportedOperationException(e);
     }
   }

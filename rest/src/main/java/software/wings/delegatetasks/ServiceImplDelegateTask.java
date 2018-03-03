@@ -8,6 +8,8 @@ import com.google.inject.Injector;
 import com.google.inject.Key;
 
 import org.joor.ReflectException;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import software.wings.beans.DelegateTask;
 import software.wings.waitnotify.NotifyResponseData;
 
@@ -18,6 +20,8 @@ import java.util.function.Supplier;
  * Created by peeyushaggarwal on 1/12/17.
  */
 public class ServiceImplDelegateTask extends AbstractDelegateRunnableTask {
+  private static final Logger logger = LoggerFactory.getLogger(AbstractDelegateRunnableTask.class);
+
   @Inject private Injector injector;
 
   public ServiceImplDelegateTask(String delegateId, DelegateTask delegateTask, Consumer<NotifyResponseData> postExecute,
@@ -32,7 +36,7 @@ public class ServiceImplDelegateTask extends AbstractDelegateRunnableTask {
     try {
       service = injector.getInstance(Key.get(Class.forName(key)));
     } catch (ClassNotFoundException e) {
-      e.printStackTrace();
+      logger.error("", e);
     }
     String method = (String) parameters[1];
     Throwable exception = null;

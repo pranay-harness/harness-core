@@ -668,7 +668,7 @@ public class ElkIntegrationTest extends BaseIntegrationTest {
       try {
         Thread.sleep(TimeUnit.SECONDS.toMillis(10));
       } catch (InterruptedException e) {
-        e.printStackTrace();
+        logger.error("", e);
       }
     }
   }

@@ -12,6 +12,8 @@ import com.mongodb.DBObject;
 import com.mongodb.DuplicateKeyException;
 import org.junit.Ignore;
 import org.junit.Test;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import software.wings.WingsBaseTest;
 import software.wings.beans.AwsConfig;
 import software.wings.beans.EmbeddedUser;
@@ -35,6 +37,8 @@ import java.util.List;
 @Integration
 @Ignore
 public class EcrCloudProviderMigrationUtil extends WingsBaseTest {
+  private static final Logger logger = LoggerFactory.getLogger(EcrCloudProviderMigrationUtil.class);
+
   @Inject private SettingsService settingsService;
   @Inject private ArtifactStreamService artifactStreamService;
   @Inject private WingsPersistence wingsPersistence;
@@ -120,7 +124,7 @@ public class EcrCloudProviderMigrationUtil extends WingsBaseTest {
       }
     } catch (Exception e) {
       System.out.println("Creating cloud provider failed");
-      e.printStackTrace();
+      logger.error("", e);
     }
     System.out.println("Creating cloud provider completed");
   }

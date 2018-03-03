@@ -67,13 +67,13 @@ public class HttpTask extends AbstractDelegateRunnableTask {
     try {
       builder.loadTrustMaterial((x509Certificates, s) -> true);
     } catch (NoSuchAlgorithmException | KeyStoreException e) {
-      e.printStackTrace();
+      logger.error("", e);
     }
     SSLConnectionSocketFactory sslsf = null;
     try {
       sslsf = new SSLConnectionSocketFactory(builder.build(), (s, sslSession) -> true);
     } catch (NoSuchAlgorithmException | KeyManagementException e) {
-      e.printStackTrace();
+      logger.error("", e);
     }
 
     RequestConfig.Builder requestBuilder = RequestConfig.custom();

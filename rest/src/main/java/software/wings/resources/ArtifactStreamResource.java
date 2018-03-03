@@ -119,16 +119,11 @@ public class ArtifactStreamResource {
   @Timed
   @ExceptionMetered
   public RestResponse<ArtifactStream> save(@QueryParam("appId") String appId, ArtifactStream artifactStream) {
-    try {
-      if (!appService.exist(appId)) {
-        throw new NotFoundException("application with id " + appId + " not found.");
-      }
-      artifactStream.setAppId(appId);
-      return new RestResponse<>(artifactStreamService.create(artifactStream));
-    } catch (Exception exception) {
-      exception.printStackTrace();
-      throw exception;
+    if (!appService.exist(appId)) {
+      throw new NotFoundException("application with id " + appId + " not found.");
     }
+    artifactStream.setAppId(appId);
+    return new RestResponse<>(artifactStreamService.create(artifactStream));
   }
 
   /**

@@ -7,6 +7,8 @@ import com.google.inject.Inject;
 import com.codahale.metrics.annotation.ExceptionMetered;
 import com.codahale.metrics.annotation.Timed;
 import io.swagger.annotations.Api;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import software.wings.beans.Application;
 import software.wings.beans.Base;
 import software.wings.beans.ConfigFile;
@@ -56,6 +58,8 @@ import javax.ws.rs.QueryParam;
 @Produces(APPLICATION_JSON)
 @AuthRule(ResourceType.SETTING)
 public class YamlResource {
+  private static final Logger logger = LoggerFactory.getLogger(YamlResource.class);
+
   private YamlResourceService yamlResourceService;
   private AppYamlResourceService appYamlResourceService;
   private YamlArtifactStreamService yamlArtifactStreamService;
@@ -689,7 +693,7 @@ public class YamlResource {
     try {
       entityId = URLDecoder.decode(entityId, "UTF-8");
     } catch (UnsupportedEncodingException e) {
-      e.printStackTrace();
+      logger.error("", e);
     }
     return new RestResponse<>(yamlGitService.getWebhook(entityId, accountId));
   }

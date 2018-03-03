@@ -239,7 +239,7 @@ public class CommandState extends State {
       try {
         actualCommand = context.renderExpression(commandName);
       } catch (Exception e) {
-        e.printStackTrace();
+        logger.error("", e);
       }
 
       executionDataBuilder.withCommandName(actualCommand);

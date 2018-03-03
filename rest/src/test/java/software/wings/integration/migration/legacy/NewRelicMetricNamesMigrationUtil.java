@@ -7,6 +7,8 @@ import com.google.inject.Inject;
 
 import org.junit.Ignore;
 import org.junit.Test;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import software.wings.WingsBaseTest;
 import software.wings.beans.Account;
 import software.wings.beans.CanaryOrchestrationWorkflow;
@@ -46,6 +48,8 @@ import java.util.stream.Stream;
 @Ignore
 @SetupScheduler
 public class NewRelicMetricNamesMigrationUtil extends WingsBaseTest {
+  private static final Logger logger = LoggerFactory.getLogger(NewRelicMetricNamesMigrationUtil.class);
+
   @Inject private AccountService accountService;
   @Inject private SettingsService settingsService;
   @Inject private WorkflowService workflowService;
@@ -126,7 +130,7 @@ public class NewRelicMetricNamesMigrationUtil extends WingsBaseTest {
                                newRelicConfig.getAccountId(), newRelicMetricNames);
                          }
                        } catch (Exception ex) {
-                         ex.printStackTrace();
+                         logger.error("", ex);
                        }
 
                      }));

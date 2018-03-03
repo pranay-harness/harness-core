@@ -12,6 +12,8 @@ import com.nimbusds.jwt.EncryptedJWT;
 import com.nimbusds.jwt.JWTClaimsSet;
 import org.apache.commons.codec.DecoderException;
 import org.apache.commons.codec.binary.Hex;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 import java.util.Date;
 import java.util.UUID;
@@ -23,6 +25,8 @@ import javax.crypto.spec.SecretKeySpec;
  */
 @Singleton
 public class TokenGenerator {
+  private static final Logger logger = LoggerFactory.getLogger(TokenGenerator.class);
+
   private String accountId;
   private String accountSecret;
 
@@ -49,18 +53,18 @@ public class TokenGenerator {
     try {
       encodedKey = Hex.decodeHex(accountSecret.toCharArray());
     } catch (DecoderException e) {
-      e.printStackTrace();
+      logger.error("", e);
     }
     try {
       directEncrypter = new DirectEncrypter(new SecretKeySpec(encodedKey, 0, encodedKey.length, "AES"));
     } catch (KeyLengthException e) {
-      e.printStackTrace();
+      logger.error("", e);
     }
 
     try {
       jwt.encrypt(directEncrypter);
     } catch (JOSEException e) {
-      e.printStackTrace();
+      logger.error("", e);
     }
 
     return jwt.serialize();

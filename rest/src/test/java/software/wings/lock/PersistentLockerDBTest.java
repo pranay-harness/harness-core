@@ -14,6 +14,8 @@ import com.mongodb.BasicDBObject;
 import com.mongodb.DBObject;
 import org.junit.Ignore;
 import org.junit.Test;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import software.wings.WingsBaseTest;
 import software.wings.dl.WingsPersistence;
 import software.wings.exception.WingsException;
@@ -24,6 +26,8 @@ import java.time.Duration;
  * The Class PersistentLockerTest.
  */
 public class PersistentLockerDBTest extends WingsBaseTest {
+  private static final Logger logger = LoggerFactory.getLogger(PersistentLockerDBTest.class);
+
   @Inject private DistributedLockSvc distributedLockSvc;
   @Inject private WingsPersistence wingsPersistence;
   @Inject private PersistentLocker persistentLocker;
@@ -95,7 +99,7 @@ public class PersistentLockerDBTest extends WingsBaseTest {
               try {
                 this.wait();
               } catch (InterruptedException e) {
-                e.printStackTrace();
+                logger.error("", e);
               }
             }
           }
