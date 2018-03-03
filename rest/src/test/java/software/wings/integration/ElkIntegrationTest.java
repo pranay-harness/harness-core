@@ -26,6 +26,8 @@ import org.quartz.JobDetail;
 import org.quartz.JobExecutionContext;
 import org.quartz.JobExecutionException;
 import org.quartz.Scheduler;
+import software.wings.api.PhaseElement.PhaseElementBuilder;
+import software.wings.api.ServiceElement;
 import software.wings.beans.CountsByStatuses;
 import software.wings.beans.RestResponse;
 import software.wings.beans.Workflow;
@@ -41,6 +43,7 @@ import software.wings.service.impl.analysis.LogElement;
 import software.wings.service.impl.analysis.LogMLAnalysisRecord;
 import software.wings.service.impl.analysis.LogMLAnalysisSummary;
 import software.wings.service.impl.analysis.LogMLClusterGenerator;
+import software.wings.service.impl.analysis.LogMLFeedback;
 import software.wings.service.impl.analysis.LogRequest;
 import software.wings.service.intfc.DelegateService;
 import software.wings.service.intfc.LearningEngineService;
@@ -448,6 +451,10 @@ public class ElkIntegrationTest extends BaseIntegrationTest {
     stateExecutionInstance.setAppId(appId);
     stateExecutionInstance.setUuid(stateExecutionId);
     stateExecutionInstance.setStatus(ExecutionStatus.RUNNING);
+    stateExecutionInstance.getContextElements().push(
+        PhaseElementBuilder.aPhaseElement()
+            .withServiceElement(ServiceElement.Builder.aServiceElement().withUuid(serviceId).build())
+            .build());
     wingsPersistence.save(stateExecutionInstance);
 
     workflowExecution = aWorkflowExecution()
@@ -520,6 +527,20 @@ public class ElkIntegrationTest extends BaseIntegrationTest {
     assertEquals(1, logAnalysisRecord.getControl_clusters().size());
     assertNull(logAnalysisRecord.getTest_clusters());
     assertNull(logAnalysisRecord.getTest_events());
+
+    LogMLFeedback mlFeedback = LogMLFeedback.builder()
+                                   .stateExecutionId(stateExecutionId)
+                                   .logMLFeedbackType(AnalysisServiceImpl.LogMLFeedbackType.IGNORE_ALWAYS)
+                                   .comment("awesome")
+                                   .clusterType(AnalysisServiceImpl.CLUSTER_TYPE.TEST)
+                                   .clusterLabel(0)
+                                   .appId(appId)
+                                   .build();
+    WebTarget getTarget = client.target(API_BASE + "/" + LogAnalysisResource.SUMO_RESOURCE_BASE_URL
+        + LogAnalysisResource.ANALYSIS_USER_FEEDBACK + "?accountId=" + accountId);
+    RestResponse<Boolean> restResponse = getRequestBuilderWithAuthHeader(getTarget).post(
+        entity(mlFeedback, APPLICATION_JSON), new GenericType<RestResponse<Boolean>>() {});
+    assertTrue(restResponse.getResource());
   }
 
   @Test

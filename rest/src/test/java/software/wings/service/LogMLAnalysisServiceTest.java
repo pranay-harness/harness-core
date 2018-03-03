@@ -20,6 +20,8 @@ import org.junit.Test;
 import org.mockito.Mock;
 import org.mockito.MockitoAnnotations;
 import software.wings.WingsBaseTest;
+import software.wings.api.PhaseElement.PhaseElementBuilder;
+import software.wings.api.ServiceElement;
 import software.wings.beans.DelegateTask.SyncTaskContext;
 import software.wings.beans.ElkConfig;
 import software.wings.beans.SettingAttribute;
@@ -31,12 +33,14 @@ import software.wings.dl.WingsPersistence;
 import software.wings.metrics.RiskLevel;
 import software.wings.rules.RealMongo;
 import software.wings.service.impl.analysis.AnalysisComparisonStrategy;
+import software.wings.service.impl.analysis.AnalysisServiceImpl;
 import software.wings.service.impl.analysis.ElkConnector;
 import software.wings.service.impl.analysis.LogDataRecord;
 import software.wings.service.impl.analysis.LogElement;
 import software.wings.service.impl.analysis.LogMLAnalysisRecord;
 import software.wings.service.impl.analysis.LogMLAnalysisSummary;
 import software.wings.service.impl.analysis.LogMLClusterSummary;
+import software.wings.service.impl.analysis.LogMLFeedback;
 import software.wings.service.impl.analysis.LogRequest;
 import software.wings.service.impl.splunk.SplunkAnalysisCluster;
 import software.wings.service.intfc.analysis.AnalysisService;
@@ -984,5 +988,38 @@ public class LogMLAnalysisServiceTest extends WingsBaseTest {
     for (LogMLClusterSummary clusterSummary : analysisSummary.getUnknownClusters()) {
       assert clusterSummary.getScore() > 0;
     }
+  }
+
+  @Test
+  public void testUserFeedback() throws Exception {
+    InputStream is = getClass().getClassLoader().getResourceAsStream("verification/LogAnalysisRecord.json");
+    String jsonTxt = IOUtils.toString(is, Charset.defaultCharset());
+    final StateExecutionInstance stateExecutionInstance = new StateExecutionInstance();
+    stateExecutionInstance.setAppId(appId);
+    stateExecutionInstance.setUuid(stateExecutionId);
+    stateExecutionInstance.setStatus(ExecutionStatus.ABORTED);
+    stateExecutionInstance.getContextElements().push(
+        PhaseElementBuilder.aPhaseElement()
+            .withServiceElement(ServiceElement.Builder.aServiceElement().withUuid(serviceId).build())
+            .build());
+    wingsPersistence.save(stateExecutionInstance);
+
+    LogMLAnalysisRecord records = JsonUtils.asObject(jsonTxt, LogMLAnalysisRecord.class);
+    records.setStateType(StateType.ELK);
+    records.setApplicationId(appId);
+    records.setStateExecutionId(stateExecutionId);
+    records.setAnalysisSummaryMessage("10");
+    analysisService.saveLogAnalysisRecords(records, StateType.ELK, Optional.empty());
+
+    LogMLFeedback logMLFeedback = LogMLFeedback.builder()
+                                      .appId(appId)
+                                      .clusterLabel(0)
+                                      .clusterType(AnalysisServiceImpl.CLUSTER_TYPE.UNKNOWN)
+                                      .comment("excellent!!")
+                                      .logMLFeedbackType(AnalysisServiceImpl.LogMLFeedbackType.IGNORE_ALWAYS)
+                                      .stateExecutionId(stateExecutionId)
+                                      .build();
+
+    analysisService.saveFeedback(logMLFeedback, StateType.ELK);
   }
 }

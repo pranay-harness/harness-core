@@ -270,8 +270,6 @@ public class AnalysisServiceImpl implements AnalysisService {
 
   @Override
   public boolean saveFeedback(LogMLFeedback feedback, StateType stateType) {
-    String logmd5Hash = DigestUtils.md5Hex(feedback.getText());
-
     if (!isEmpty(feedback.getLogMlFeedbackId())) {
       Query<LogMLFeedbackRecord> query =
           wingsPersistence.createQuery(LogMLFeedbackRecord.class).field("_id").equal(feedback.getLogMlFeedbackId());
@@ -285,6 +283,41 @@ public class AnalysisServiceImpl implements AnalysisService {
     if (stateExecutionInstance == null) {
       throw new WingsException("Unable to find state execution for id " + stateExecutionInstance.getUuid());
     }
+
+    LogMLAnalysisSummary analysisSummary =
+        getAnalysisSummary(feedback.getStateExecutionId(), feedback.getAppId(), stateType);
+
+    if (analysisSummary == null) {
+      throw new WingsException("Unable to find analysisSummary for feedback " + feedback);
+    }
+
+    String logText = "";
+    List<LogMLClusterSummary> logMLClusterSummaryList;
+    switch (feedback.getClusterType()) {
+      case CONTROL:
+        logMLClusterSummaryList = analysisSummary.getControlClusters();
+        break;
+      case TEST:
+        logMLClusterSummaryList = analysisSummary.getTestClusters();
+        break;
+      case UNKNOWN:
+        logMLClusterSummaryList = analysisSummary.getUnknownClusters();
+        break;
+      default:
+        throw new WingsException("unsupported cluster type " + feedback.getClusterType() + " in feedback");
+    }
+
+    for (LogMLClusterSummary clusterSummary : logMLClusterSummaryList) {
+      if (clusterSummary.getClusterLabel() == feedback.getClusterLabel()) {
+        logText = clusterSummary.getLogText();
+      }
+    }
+
+    if (isEmpty(logText)) {
+      throw new WingsException("Unable to find logText for feedback " + feedback);
+    }
+
+    String logmd5Hash = DigestUtils.md5Hex(logText);
 
     Optional<ContextElement> optionalElement = stateExecutionInstance.getContextElements()
                                                    .stream()
@@ -303,7 +336,7 @@ public class AnalysisServiceImpl implements AnalysisService {
                                                .workflowId(stateExecutionInstance.getWorkflowId())
                                                .workflowExecutionId(stateExecutionInstance.getExecutionUuid())
                                                .stateExecutionId(feedback.getStateExecutionId())
-                                               .logMessage(feedback.getText())
+                                               .logMessage(logText)
                                                .logMLFeedbackType(feedback.getLogMLFeedbackType())
                                                .clusterLabel(feedback.getClusterLabel())
                                                .clusterType(feedback.getClusterType())
@@ -1225,6 +1258,7 @@ public class AnalysisServiceImpl implements AnalysisService {
   }
 
   public enum CLUSTER_TYPE { CONTROL, TEST, UNKNOWN }
+
   public enum LogMLFeedbackType {
     IGNORE_SERVICE,
     IGNORE_WORKFLOW,
