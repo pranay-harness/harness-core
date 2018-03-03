@@ -9,6 +9,7 @@ import com.google.inject.Inject;
 
 import com.jcraft.jsch.JSchException;
 import org.apache.commons.lang3.StringUtils;
+import org.mongodb.morphia.annotations.Transient;
 import software.wings.annotation.Encryptable;
 import software.wings.beans.DelegateTask;
 import software.wings.beans.ExecutionCredential;
@@ -27,9 +28,9 @@ import java.util.function.Consumer;
  * Created by brett on 11/2/17
  */
 public class HostValidationValidation extends AbstractDelegateValidateTask {
-  @Inject private EncryptionService encryptionService;
-  @Inject private TimeLimiter timeLimiter;
-  @Inject private Clock clock;
+  @Inject @Transient private transient EncryptionService encryptionService;
+  @Inject @Transient private transient TimeLimiter timeLimiter;
+  @Inject @Transient private transient Clock clock;
 
   public HostValidationValidation(
       String delegateId, DelegateTask delegateTask, Consumer<List<DelegateConnectionResult>> postExecute) {

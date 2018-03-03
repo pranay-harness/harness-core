@@ -19,12 +19,15 @@ import org.mongodb.morphia.annotations.Transient;
 import software.wings.api.ContainerServiceData;
 import software.wings.api.DeploymentType;
 import software.wings.beans.AzureConfig;
+import software.wings.beans.ErrorCode;
+import software.wings.beans.GcpConfig;
 import software.wings.beans.KubernetesConfig;
 import software.wings.beans.Log.LogLevel;
 import software.wings.beans.SettingAttribute;
 import software.wings.cloudprovider.ContainerInfo;
 import software.wings.cloudprovider.gke.GkeClusterService;
 import software.wings.cloudprovider.gke.KubernetesContainerService;
+import software.wings.exception.WingsException;
 import software.wings.helpers.ext.azure.AzureHelperService;
 import software.wings.security.encryption.EncryptedDataDetail;
 
@@ -62,11 +65,15 @@ public class KubernetesResizeCommandUnit extends ContainerResizeCommandUnit {
               resizeParams.getResourceGroup(), resizeParams.getClusterName(), resizeParams.getNamespace());
       kubernetesConfig.setDecrypted(true);
       encryptedDataDetails = emptyList();
-    } else {
+    } else if (cloudProviderSetting.getValue() instanceof GcpConfig) {
       kubernetesConfig = gkeClusterService.getCluster(
           cloudProviderSetting, edd, resizeParams.getClusterName(), resizeParams.getNamespace());
       kubernetesConfig.setDecrypted(true);
       encryptedDataDetails = emptyList();
+    } else {
+      throw new WingsException(ErrorCode.INVALID_ARGUMENT)
+          .addParam(
+              "args", "Unknown kubernetes cloud provider setting value: " + cloudProviderSetting.getValue().getType());
     }
 
     if (resizeParams.isRollbackAutoscaler() && resizeParams.isUseAutoscaler()) {

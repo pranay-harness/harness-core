@@ -8,6 +8,7 @@ import static software.wings.beans.Delegate.Status.ENABLED;
 import static software.wings.common.Constants.MAX_DELEGATE_LAST_HEARTBEAT;
 
 import com.google.inject.Inject;
+import com.google.inject.Injector;
 import com.google.inject.Singleton;
 
 import org.mongodb.morphia.Key;
@@ -40,6 +41,7 @@ public class AssignDelegateServiceImpl implements AssignDelegateService {
   @Inject private EnvironmentService environmentService;
   @Inject private WingsPersistence wingsPersistence;
   @Inject private Clock clock;
+  @Inject private Injector injector;
 
   @Override
   public boolean canAssign(String delegateId, DelegateTask task) {
@@ -106,7 +108,7 @@ public class AssignDelegateServiceImpl implements AssignDelegateService {
   @Override
   public boolean isWhitelisted(DelegateTask task, String delegateId) {
     try {
-      for (String criteria : task.getTaskType().getCriteria(task)) {
+      for (String criteria : task.getTaskType().getCriteria(task, injector)) {
         if (isNotBlank(criteria)) {
           DelegateConnectionResult result = wingsPersistence.createQuery(DelegateConnectionResult.class)
                                                 .field("accountId")
@@ -145,7 +147,7 @@ public class AssignDelegateServiceImpl implements AssignDelegateService {
                                             .map(key -> key.getId().toString())
                                             .collect(toList());
 
-      for (String criteria : task.getTaskType().getCriteria(task)) {
+      for (String criteria : task.getTaskType().getCriteria(task, injector)) {
         if (isNotBlank(criteria)) {
           DelegateConnectionResult result = wingsPersistence.createQuery(DelegateConnectionResult.class)
                                                 .field("accountId")
