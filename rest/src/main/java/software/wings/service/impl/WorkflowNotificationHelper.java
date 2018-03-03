@@ -279,6 +279,7 @@ public class WorkflowNotificationHelper {
       case SUCCESS:
         return "completed";
       case FAILED:
+      case ERROR:
         return "failed";
       case PAUSED:
         return "paused";
@@ -287,7 +288,6 @@ public class WorkflowNotificationHelper {
       case ABORTED:
         return "aborted";
       default:
-        logger.error("Unknown status: {}", status);
         unhandled(status);
         return "failed";
     }
