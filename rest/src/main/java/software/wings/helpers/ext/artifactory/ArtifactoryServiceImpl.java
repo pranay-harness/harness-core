@@ -434,7 +434,7 @@ public class ArtifactoryServiceImpl implements ArtifactoryService {
                   groupIdList.add(groupId);
                 }
               } else {
-                logger.info("Ignoring uri {} as it is not valid GAVC format");
+                logger.info("Ignoring uri {} as it is not valid GAVC format", uri);
               }
             }
           }

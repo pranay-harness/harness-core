@@ -61,7 +61,7 @@ public class SplunkDataCollectionTask extends AbstractDelegateDataCollectionTask
                                               .stateType(StateType.SPLUNKV2)
                                               .build();
     this.dataCollectionInfo = (SplunkDataCollectionInfo) parameters[0];
-    logger.info("log collection - dataCollectionInfo: {}" + dataCollectionInfo);
+    logger.info("log collection - dataCollectionInfo: {}", dataCollectionInfo);
 
     final SplunkConfig splunkConfig = dataCollectionInfo.getSplunkConfig();
     encryptionService.decrypt(splunkConfig, dataCollectionInfo.getEncryptedDataDetails());

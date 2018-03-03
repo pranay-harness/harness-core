@@ -53,7 +53,7 @@ public class ElkLogzDataCollectionTask extends AbstractDelegateDataCollectionTas
   @Override
   protected DataCollectionTaskResult initDataCollection(Object[] parameters) {
     this.dataCollectionInfo = (LogDataCollectionInfo) parameters[0];
-    logger.info("log collection - dataCollectionInfo: {}" + dataCollectionInfo);
+    logger.info("log collection - dataCollectionInfo: {}", dataCollectionInfo);
     return DataCollectionTaskResult.builder()
         .status(DataCollectionTaskStatus.SUCCESS)
         .stateType(dataCollectionInfo.getStateType())

@@ -62,7 +62,7 @@ public class AppdynamicsDataCollectionTask extends AbstractDelegateDataCollectio
   @Override
   protected DataCollectionTaskResult initDataCollection(Object[] parameters) {
     dataCollectionInfo = (AppdynamicsDataCollectionInfo) parameters[0];
-    logger.info("metric collection - dataCollectionInfo: {}" + dataCollectionInfo);
+    logger.info("metric collection - dataCollectionInfo: {}", dataCollectionInfo);
     return DataCollectionTaskResult.builder()
         .status(DataCollectionTaskStatus.SUCCESS)
         .stateType(StateType.APP_DYNAMICS)

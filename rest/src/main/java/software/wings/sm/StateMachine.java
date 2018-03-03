@@ -141,7 +141,7 @@ public class StateMachine extends Base {
   }
 
   public StateMachine(Pipeline pipeline, Map<String, StateTypeDescriptor> stencilMap) {
-    logger.info("Pipeline received for transformation {} " + pipeline.toString());
+    logger.info("Pipeline received for transformation {}", pipeline.toString());
     setAppId(pipeline.getAppId());
     this.originId = pipeline.getUuid();
     try {

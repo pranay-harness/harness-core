@@ -1686,7 +1686,7 @@ public class WorkflowExecutionServiceImpl implements WorkflowExecutionService {
     if (!infraMappingIds.isEmpty()) {
       return getInfrastructureMappings(workflow, infraMappingIds);
     } else {
-      logger.info("No inframappings resolved for templatized workflow id {} and workflow execution {]",
+      logger.info("No inframappings resolved for templatized workflow id {} and workflow execution {}",
           workflow.getUuid(), workflowExecution);
       return new ArrayList<>();
     }

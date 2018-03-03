@@ -624,7 +624,7 @@ public class StateMachineExecutor {
           app.getAccountId(), app.getUuid(), ManualInterventionNeeded, manualInterventionNeededAlert);
 
     } catch (Exception e) {
-      logger.warn("Failed to open ManualInterventionNeeded alarm for  executionId {} and name ",
+      logger.warn("Failed to open ManualInterventionNeeded alarm for executionId {} and name {}",
           context.getWorkflowExecutionId(), context.getWorkflowExecutionName(), e);
     }
   }
@@ -743,9 +743,8 @@ public class StateMachineExecutor {
         updateStatus(stateExecutionInstance, WAITING, Lists.newArrayList(FAILED), null);
       } else {
         // TODO: handle more strategy
-        logger.info("Unhandled error strategy for the state: {}, stateExecutionInstanceId: {}, errorStrategy: {}"
-                + stateExecutionInstance.getStateName(),
-            stateExecutionInstance.getUuid(), errorStrategy);
+        logger.info("Unhandled error strategy for the state: {}, stateExecutionInstanceId: {}, errorStrategy: {}",
+            stateExecutionInstance.getStateName(), stateExecutionInstance.getUuid(), errorStrategy);
       }
     } else {
       StateExecutionInstance cloned = clone(stateExecutionInstance, nextState);

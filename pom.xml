@@ -1176,9 +1176,11 @@
                 <plugin>
                     <groupId>org.apache.maven.plugins</groupId>
                     <artifactId>maven-pmd-plugin</artifactId>
-                    <version>3.8</version>
+                    <version>3.9.0</version>
                     <configuration>
                         <rulesets>do-not-use/harness_pmd_ruleset.xml</rulesets>
+                        <analysisCache>true</analysisCache>
+                        <analysisCacheLocation>${project.build.directory}/pmd/pmd.cache</analysisCacheLocation>
                     </configuration>
                     <dependencies>
                         <dependency>
