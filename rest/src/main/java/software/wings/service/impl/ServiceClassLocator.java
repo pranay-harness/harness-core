@@ -1,5 +1,7 @@
 package software.wings.service.impl;
 
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import software.wings.beans.artifact.ArtifactStreamType;
 import software.wings.exception.WingsException;
 import software.wings.service.intfc.AmazonS3BuildService;
@@ -25,6 +27,8 @@ import java.util.List;
  * @author rktummala on 08/17/17
  */
 public class ServiceClassLocator {
+  private static final Logger logger = LoggerFactory.getLogger(AccountServiceImpl.class);
+
   public Class<? extends BuildService> getBuildServiceClass(String artifactStreamTypeStr) {
     ArtifactStreamType artifactStreamType = ArtifactStreamType.valueOf(artifactStreamTypeStr);
     switch (artifactStreamType) {
@@ -68,6 +72,7 @@ public class ServiceClassLocator {
             descendings.add(descending);
           }
         } catch (IllegalAccessException e) {
+          logger.error("", e);
         } finally {
           if (!originalAccessible) {
             field.setAccessible(false);

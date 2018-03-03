@@ -39,8 +39,6 @@ import java.util.Map;
 import java.util.Set;
 import java.util.concurrent.TimeUnit;
 
-;
-
 /**
  * Created by anubhaw on 8/4/16.
  */

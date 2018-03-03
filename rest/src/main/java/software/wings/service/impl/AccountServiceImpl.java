@@ -137,6 +137,7 @@ public class AccountServiceImpl implements AccountService {
           descendings.add(descending);
         }
       } catch (IllegalAccessException e) {
+        logger.error("", e);
       }
     }
 

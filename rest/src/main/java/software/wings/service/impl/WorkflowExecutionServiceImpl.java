@@ -695,9 +695,8 @@ public class WorkflowExecutionServiceImpl implements WorkflowExecutionService {
         if (workflowExecution.getStatus() == NEW) {
           throw new WingsException(ErrorCode.PIPELINE_ALREADY_TRIGGERED).addParam("pipelineName", pipeline.getName());
         }
-        if (workflowExecution.getStatus() == RUNNING) {
-          // Analyze if pipeline is in initial stage
-        }
+        // TODO: if (workflowExecution.getStatus() == RUNNING)
+        // Analyze if pipeline is in initial stage
       }
     }
 

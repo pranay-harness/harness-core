@@ -40,6 +40,7 @@ public class ServletOutputStreamCopier extends ServletOutputStream {
       outputStream.write(b);
       copy.write(b);
     } catch (IOException ex) {
+      logger.error("", ex);
     }
   }
 

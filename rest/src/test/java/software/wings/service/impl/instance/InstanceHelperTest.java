@@ -82,7 +82,7 @@ public class InstanceHelperTest extends WingsBaseTest {
   @InjectMocks @Inject private InstanceHelper instanceHelper;
   private WorkflowExecution workflowExecution;
   private StateExecutionData stateExecutionData;
-  private long endsAtTime = 0;
+  private long endsAtTime;
   private String PRIVATE_DNS_1 = "ip-171-31-14-5.us-west-2.compute.internal";
   private String PRIVATE_DNS_2 = "ip-172-31-14-5.us-west-2.compute.internal";
   private String HOST_NAME_IP1 = "ip-171-31-14-5";

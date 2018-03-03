@@ -31,6 +31,7 @@ public class SeedDataService {
 
   public Application getSeedApp() {
     if (seedEntitiesCache.get(SEED_APP) == null) {
+      return null;
     }
     return (Application) seedEntitiesCache.get(SEED_APP);
   }

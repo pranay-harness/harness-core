@@ -112,6 +112,7 @@ public class InstanceSyncJob implements Job {
             }
             instanceHandler.syncInstances(appIdFinal, infraMappingId);
           } catch (WingsException ex) {
+            // TODO: why we ignoring this exception?
           }
         } catch (HarnessException ex) {
           logger.error(

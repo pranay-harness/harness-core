@@ -243,9 +243,9 @@ public class SecretMigrationUtil extends WingsBaseTest {
         }
       }
 
-      if (changeCount) {
-        //        wingsPersistence.save(settingAttribute);
-      }
+      // if (changeCount) {
+      //   wingsPersistence.save(settingAttribute);
+      // }
     }
 
     System.out.println("Complete. Updated " + changedObject + " setting attributes.");
@@ -287,9 +287,9 @@ public class SecretMigrationUtil extends WingsBaseTest {
         }
       }
 
-      if (changeCount) {
-        //        wingsPersistence.save(serviceVariable);
-      }
+      // if (changeCount) {
+      //   wingsPersistence.save(serviceVariable);
+      // }
     }
 
     System.out.println("Complete. Updated " + changedObject + " setting attributes.");

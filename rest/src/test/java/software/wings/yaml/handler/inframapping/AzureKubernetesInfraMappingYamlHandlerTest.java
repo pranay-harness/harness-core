@@ -1,10 +1,10 @@
 package software.wings.yaml.handler.inframapping;
 
 import static java.util.Arrays.asList;
+import static org.assertj.core.api.Fail.failBecauseExceptionWasNotThrown;
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertNotNull;
 import static org.junit.Assert.assertNull;
-import static org.junit.Assert.assertTrue;
 import static org.mockito.Matchers.any;
 import static org.mockito.Matchers.anyObject;
 import static org.mockito.Matchers.anyString;
@@ -204,8 +204,9 @@ public class AzureKubernetesInfraMappingYamlHandlerTest extends BaseYamlHandlerT
       changeContext.setYaml(yamlObject);
 
       yamlHandler.upsertFromYaml(changeContext, Arrays.asList(changeContext));
-      assertTrue(false);
+      failBecauseExceptionWasNotThrown(UnrecognizedPropertyException.class);
     } catch (UnrecognizedPropertyException ex) {
+      // Do nothing
     }
   }
 

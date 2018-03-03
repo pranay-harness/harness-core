@@ -120,9 +120,9 @@ public class AwsClusterSetup extends State {
     if (isNotEmpty(launcherConfig)) {
       clusterConfiguration.setLauncherConfiguration(launcherConfig);
     }
-    if (isNotEmpty(machineType)) {
-      // TODO:: specify machine type for the cluster
-    }
+    // if (isNotEmpty(machineType))
+    // TODO:: specify machine type for the cluster
+
     if (isEmpty(region)) {
       region = "us-west-1";
     }

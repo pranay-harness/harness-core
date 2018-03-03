@@ -107,8 +107,9 @@ public class EntityUpdateServiceImpl implements EntityUpdateService {
 
   @Override
   public GitFileChange getDefaultVarGitSyncFile(String accountId, String appId, ChangeType changeType) {
-    if (ChangeType.DELETE.equals(changeType)) {
-    }
+    // if (ChangeType.DELETE.equals(changeType)) {
+    //   TODO: handle this
+    //}
     String yaml = yamlResourceService.getDefaultVariables(accountId, appId).getResource().getYaml();
 
     if (GLOBAL_APP_ID.equals(appId)) {

@@ -1,6 +1,5 @@
 package software.wings.delegatetasks;
 
-import static io.harness.data.structure.EmptyPredicate.isNotEmpty;
 import static io.harness.threading.Morpheus.sleep;
 import static org.apache.commons.lang3.StringUtils.isNotBlank;
 import static software.wings.beans.Log.Builder.aLog;
@@ -86,34 +85,8 @@ public class JenkinsTask extends AbstractDelegateRunnableTask {
             jenkinsBuildWithDetails.getNumber(), e.getMessage());
       }
 
-      if (buildResult == BuildResult.SUCCESS
-          || (buildResult == BuildResult.UNSTABLE && jenkinsTaskParams.isUnstableSuccess())) {
-        if (isNotEmpty(jenkinsTaskParams.getFilePathsForAssertion())) {
-          //          for (Entry<String, String> entry : evaluatedFilePathsForAssertion.entrySet()) {
-          //            String filePathForAssertion = entry.getKey();
-          //            String assertion = entry.getValue();
-          //
-          //            Pattern pattern = Pattern.compile(filePathForAssertion.replace(".", "\\.").replace("?",
-          //            ".?").replace("*", ".*?")); Optional<Artifact> artifactOptional =
-          //                jenkinsBuildWithDetails.getArtifacts().stream().filter(artifact ->
-          //                pattern.matcher(artifact.getRelativePath()).matches()).findFirst();
-          //            if (artifactOptional.isPresent()) {
-          //              String data = CharStreams.toString(new
-          //              InputStreamReader(jenkinsBuildWithDetails.downloadArtifact(artifactOptional.get())));
-          //              FilePathAssertionEntry filePathAssertionEntry = new
-          //              FilePathAssertionEntry(artifactOptional.get().getRelativePath(), assertion, data);
-          //              filePathAssertionEntry
-          //                  .setStatus(Boolean.TRUE.equals(evaluator.evaluateExpression(assertion,
-          //                  filePathAssertionEntry)) ? Status.SUCCESS : Status.FAILED);
-          //              jenkinsExecutionResponse.getFilePathAssertionMap().add(filePathAssertionEntry);
-          //            } else {
-          //              executionStatus = ExecutionStatus.FAILED;
-          //              jenkinsExecutionResponse.getFilePathAssertionMap().add(new
-          //              FilePathAssertionEntry(filePathForAssertion, assertion, Status.NOT_FOUND));
-          //            }
-          //          }
-        }
-      } else {
+      if (buildResult != BuildResult.SUCCESS
+          && (buildResult != BuildResult.UNSTABLE || !jenkinsTaskParams.isUnstableSuccess())) {
         executionStatus = ExecutionStatus.FAILED;
       }
     } catch (Exception e) {

@@ -1,6 +1,6 @@
 package software.wings.yaml.handler.workflow;
 
-import static org.junit.Assert.assertTrue;
+import static org.assertj.core.api.Fail.failBecauseExceptionWasNotThrown;
 import static org.mockito.Matchers.anyString;
 import static org.mockito.Mockito.when;
 import static software.wings.beans.NotificationGroup.NotificationGroupBuilder.aNotificationGroup;
@@ -200,8 +200,9 @@ public abstract class BaseWorkflowYamlHandlerTest extends BaseYamlHandlerTest {
 
     try {
       yamlHandler.upsertFromYaml(changeContext, Arrays.asList(changeContext));
-      assertTrue(false);
+      failBecauseExceptionWasNotThrown(ConstraintViolationException.class);
     } catch (ConstraintViolationException | HarnessException ex) {
+      // Do nothing
     }
 
     // Invalid yaml content
@@ -212,8 +213,9 @@ public abstract class BaseWorkflowYamlHandlerTest extends BaseYamlHandlerTest {
       changeContext.setYaml(yamlObject);
 
       yamlHandler.upsertFromYaml(changeContext, Arrays.asList(changeContext));
-      assertTrue(false);
+      failBecauseExceptionWasNotThrown(UnrecognizedPropertyException.class);
     } catch (UnrecognizedPropertyException ex) {
+      // Do nothing
     }
   }
 }
