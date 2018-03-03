@@ -43,64 +43,64 @@ public class DataCleanUpJobUtil extends WingsBaseTest {
 
   @Test
   public void deleteArtifacts() {
-    System.out.println("Deleting artifacts");
+    logger.info("Deleting artifacts");
     try {
       artifactService.deleteArtifacts(ARTIFACT_RETENTION_SIZE);
     } catch (Exception e) {
-      System.out.println("Deleting artifacts failed");
+      logger.info("Deleting artifacts failed");
       logger.error("", e);
     }
-    System.out.println("Deleting artifacts completed");
+    logger.info("Deleting artifacts completed");
   }
 
   @Test
   public void deleteArtifactFiles() {
-    System.out.println("Deleting artifact files");
+    logger.info("Deleting artifact files");
     try {
       artifactService.deleteArtifactFiles();
     } catch (Exception e) {
-      System.out.println("Deleting artifacts failed");
+      logger.info("Deleting artifacts failed");
       logger.error("", e);
     }
-    System.out.println("Deleting artifacts completed");
+    logger.info("Deleting artifacts completed");
   }
 
   @Test
   public void deleteAuditRecords() {
-    System.out.println("Deleting audit records");
+    logger.info("Deleting audit records");
     try {
       auditService.deleteAuditRecords(AUDIT_RETENTION_TIME);
     } catch (Exception e) {
-      System.out.println("Deleting audit records failed");
+      logger.info("Deleting audit records failed");
       logger.error("", e);
     }
-    System.out.println("Deleting audit records completed");
+    logger.info("Deleting audit records completed");
   }
 
   @Test
   public void deleteAlerts() {
-    System.out.println("Deleting alerts");
+    logger.info("Deleting alerts");
     try {
       alertService.deleteOldAlerts(ALERT_RETENTION_TIME);
-      System.out.println("Deleting alerts success");
+      logger.info("Deleting alerts success");
     } catch (Exception e) {
-      System.out.println("Deleting alerts failed.");
+      logger.info("Deleting alerts failed.");
       logger.error("", e);
     }
-    System.out.println("Deleting alerts completed");
+    logger.info("Deleting alerts completed");
   }
 
   @Test
   public void deleteActivityLogs() {
-    System.out.println("Deleting alerts");
+    logger.info("Deleting alerts");
     try {
       logService.purgeActivityLogs();
-      System.out.println("Deleting alerts success");
+      logger.info("Deleting alerts success");
     } catch (Exception e) {
-      System.out.println("Deleting alerts failed.");
+      logger.info("Deleting alerts failed.");
       logger.error("", e);
     }
-    System.out.println("Deleting alerts completed");
+    logger.info("Deleting alerts completed");
   }
 
   /**
@@ -108,7 +108,7 @@ public class DataCleanUpJobUtil extends WingsBaseTest {
    */
   @Test
   public void addCronForSystemDataCleanup() {
-    System.out.println("Adding System Data Cleanup cron");
+    logger.info("Adding System Data Cleanup cron");
     JobDetail job = JobBuilder.newJob(DataCleanUpJob.class)
                         .withIdentity("DATA_CLEANUP_CRON_NAME", "DATA_CLEANUP_CRON_GROUP")
                         .withDescription("Data cleanup job that deletes records")
@@ -120,7 +120,7 @@ public class DataCleanUpJobUtil extends WingsBaseTest {
             .withSchedule(SimpleScheduleBuilder.simpleSchedule().withIntervalInMinutes(30).repeatForever())
             .build();
     jobScheduler.scheduleJob(job, trigger);
-    System.out.println("Added System Data Cleanup cron");
+    logger.info("Added System Data Cleanup cron");
   }
 
   @Test

@@ -2,6 +2,8 @@ package software.wings.service.impl;
 
 import static software.wings.common.UUIDGenerator.generateUuid;
 
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import software.wings.sm.ExecutionContext;
 import software.wings.sm.ExecutionStatus;
 
@@ -13,6 +15,8 @@ import java.util.concurrent.CountDownLatch;
  * The type Workflow execution update mock.
  */
 public class WorkflowExecutionUpdateMock extends WorkflowExecutionUpdate {
+  private static final Logger logger = LoggerFactory.getLogger(WorkflowExecutionUpdateMock.class);
+
   private static Map<String, CountDownLatch> signalIdsMap = new HashMap<>();
 
   private String signalId;
@@ -40,7 +44,7 @@ public class WorkflowExecutionUpdateMock extends WorkflowExecutionUpdate {
 
   @Override
   public void callback(ExecutionContext context, ExecutionStatus status, Exception ex) {
-    System.out.println(status);
+    logger.info(status.toString());
     super.callback(context, status, ex);
     signalIdsMap.get(signalId).countDown();
   }

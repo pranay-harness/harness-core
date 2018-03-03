@@ -8,6 +8,8 @@ import com.google.inject.Inject;
 
 import org.junit.Ignore;
 import org.junit.Test;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import software.wings.WingsBaseTest;
 import software.wings.beans.InfrastructureMappingType;
 import software.wings.beans.infrastructure.instance.Instance;
@@ -26,11 +28,13 @@ import java.util.stream.Collectors;
 @Integration
 @Ignore
 public class InstanceHostNameReconciliationMigrationUtil extends WingsBaseTest {
+  private static final Logger logger = LoggerFactory.getLogger(InstanceHostNameReconciliationMigrationUtil.class);
+
   @Inject private WingsPersistence wingsPersistence;
 
   @Test
   public void mergeDuplicateHostNames() {
-    System.out.println("Finding duplicate host names");
+    logger.info("Finding duplicate host names");
 
     List<Instance> instances = wingsPersistence.createQuery(Instance.class).asList();
     Multimap<String, Instance> hostNameInstances = ArrayListMultimap.create();
@@ -49,14 +53,14 @@ public class InstanceHostNameReconciliationMigrationUtil extends WingsBaseTest {
       List<Instance> deleteInstances =
           matchingInstances.stream().filter(instance -> instance != keepInstance).collect(Collectors.toList());
       if (isNotEmpty(deleteInstances)) {
-        System.out.println("\nKeeping: " + keepInstance.getHostInstanceKey().getHostName());
-        System.out.println("Deleting: "
+        logger.info("\nKeeping: " + keepInstance.getHostInstanceKey().getHostName());
+        logger.info("Deleting: "
             + deleteInstances.stream()
                   .map(instance -> instance.getHostInstanceKey().getHostName())
                   .collect(Collectors.toList()));
         deleteInstances.forEach(instance -> wingsPersistence.delete(instance));
       }
     }
-    System.out.println("\nReconciling host names completed");
+    logger.info("\nReconciling host names completed");
   }
 }

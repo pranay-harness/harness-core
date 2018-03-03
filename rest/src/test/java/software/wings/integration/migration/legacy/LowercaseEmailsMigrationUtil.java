@@ -4,6 +4,8 @@ import com.google.inject.Inject;
 
 import org.junit.Ignore;
 import org.junit.Test;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import software.wings.WingsBaseTest;
 import software.wings.beans.User;
 import software.wings.dl.WingsPersistence;
@@ -18,20 +20,22 @@ import java.util.List;
 @Integration
 @Ignore
 public class LowercaseEmailsMigrationUtil extends WingsBaseTest {
+  private static final Logger logger = LoggerFactory.getLogger(LowercaseEmailsMigrationUtil.class);
+
   @Inject private WingsPersistence wingsPersistence;
 
   @Test
   public void lowercaseEmails() {
-    System.out.println("Checking emails");
+    logger.info("Checking emails");
 
     List<User> users = wingsPersistence.createQuery(User.class).asList();
     for (User user : users) {
       String lowercaseEmail = user.getEmail().trim().toLowerCase();
       if (!lowercaseEmail.equals(user.getEmail())) {
-        System.out.println(user.getEmail());
+        logger.info(user.getEmail());
         wingsPersistence.updateField(User.class, user.getUuid(), "email", lowercaseEmail);
       }
     }
-    System.out.println("\nLowercase emails completed");
+    logger.info("\nLowercase emails completed");
   }
 }

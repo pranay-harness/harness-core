@@ -15,6 +15,8 @@ import com.google.inject.Inject;
 
 import org.junit.Ignore;
 import org.junit.Test;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import software.wings.WingsBaseTest;
 import software.wings.beans.Application;
 import software.wings.beans.SearchFilter;
@@ -41,21 +43,23 @@ import java.util.stream.Collectors;
 @Integration
 @Ignore
 public class ContainerSetupCommandsMigrationUtil extends WingsBaseTest {
+  private static final Logger logger = LoggerFactory.getLogger(ContainerSetupCommandsMigrationUtil.class);
+
   @Inject private WingsPersistence wingsPersistence;
   @Inject private ServiceResourceService serviceResourceService;
 
   @Test
   public void addCommandsToServices() {
     PageRequest<Application> pageRequest = aPageRequest().withLimit(UNLIMITED).build();
-    System.out.println("Retrieving applications");
+    logger.info("Retrieving applications");
     PageResponse<Application> pageResponse = wingsPersistence.query(Application.class, pageRequest);
 
     List<Application> apps = pageResponse.getResponse();
     if (pageResponse.isEmpty() || isEmpty(apps)) {
-      System.out.println("No applications found");
+      logger.info("No applications found");
       return;
     }
-    System.out.println("Updating " + apps.size() + " applications.");
+    logger.info("Updating " + apps.size() + " applications.");
     for (Application app : apps) {
       PageRequest<Service> svcPageRequest =
           aPageRequest().addFilter("appId", SearchFilter.Operator.EQ, app.getUuid()).build();
@@ -63,14 +67,14 @@ public class ContainerSetupCommandsMigrationUtil extends WingsBaseTest {
       List<Service> services = serviceResourceService.list(svcPageRequest, false, true).getResponse();
       Set<Service> updatedServices = new HashSet<>();
       for (Service service : services) {
-        System.out.println("\nservice = " + service.getName());
+        logger.info("\nservice = " + service.getName());
         List<ServiceCommand> commands = service.getServiceCommands();
         boolean containsEcsSetup =
             commands.stream().anyMatch(serviceCommand -> "Setup Service Cluster".equals(serviceCommand.getName()));
         boolean containsKubeSetup = commands.stream().anyMatch(
             serviceCommand -> "Setup Replication Controller".equals(serviceCommand.getName()));
         for (ServiceCommand serviceCommand : commands) {
-          System.out.println("command = " + serviceCommand.getName());
+          logger.info("command = " + serviceCommand.getName());
           if (!containsEcsSetup && "Resize Service Cluster".equals(serviceCommand.getName())) {
             Command command = aCommand()
                                   .withCommandType(CommandType.SETUP)
@@ -118,7 +122,7 @@ public class ContainerSetupCommandsMigrationUtil extends WingsBaseTest {
         }
       }
       if (isNotEmpty(updatedServices)) {
-        System.out.println("Updated services in app " + app.getName() + ": "
+        logger.info("Updated services in app " + app.getName() + ": "
             + updatedServices.stream().map(Service::getName).collect(Collectors.toList()));
       }
     }

@@ -8,6 +8,8 @@ import com.google.inject.Inject;
 
 import org.junit.Ignore;
 import org.junit.Test;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import software.wings.WingsBaseTest;
 import software.wings.beans.SearchFilter.Operator;
 import software.wings.beans.SortOrder.OrderType;
@@ -25,17 +27,19 @@ import java.util.List;
 @Integration
 @Ignore
 public class ArtifactStreamMigratorUtil extends WingsBaseTest {
+  private static final Logger logger = LoggerFactory.getLogger(ArtifactStreamMigratorUtil.class);
+
   @Inject private WingsPersistence wingsPersistence;
 
   @Test
   public void setNameFieldInArtifactStream() {
     PageRequest<ArtifactStream> pageRequest =
         aPageRequest().withLimit(UNLIMITED).addOrder("serviceId", OrderType.ASC).build();
-    System.out.println("Retrieving artifact streams");
+    logger.info("Retrieving artifact streams");
     PageResponse<ArtifactStream> pageResponse = wingsPersistence.query(ArtifactStream.class, pageRequest);
 
     if (pageResponse.isEmpty() || isEmpty(pageResponse.getResponse())) {
-      System.out.println("No artifact streams found");
+      logger.info("No artifact streams found");
       return;
     }
 
@@ -57,7 +61,7 @@ public class ArtifactStreamMigratorUtil extends WingsBaseTest {
         prevServiceId = artifactStream.getServiceId();
       }
 
-      System.out.println("Checking if artifact stream info with name exists: " + artifactStream.generateName());
+      logger.info("Checking if artifact stream info with name exists: " + artifactStream.generateName());
       PageResponse<ArtifactStream> response = wingsPersistence.query(ArtifactStream.class, pageRequest);
       String name = artifactStream.generateName();
       if (!response.isEmpty()) {

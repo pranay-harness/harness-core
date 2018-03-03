@@ -45,6 +45,6 @@ public class AwsInfrastructureMappingPublicDnsMigrationUtil extends WingsBaseTes
         }
       }
     }
-    System.out.println("Complete. Updated " + updated + " infrastructure mappings.");
+    logger.info("Complete. Updated " + updated + " infrastructure mappings.");
   }
 }

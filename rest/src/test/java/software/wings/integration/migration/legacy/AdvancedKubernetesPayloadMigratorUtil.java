@@ -8,6 +8,8 @@ import com.google.inject.Inject;
 
 import org.junit.Ignore;
 import org.junit.Test;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import software.wings.WingsBaseTest;
 import software.wings.beans.SearchFilter.Operator;
 import software.wings.beans.container.ContainerTask;
@@ -25,6 +27,8 @@ import java.util.List;
 @Integration
 @Ignore
 public class AdvancedKubernetesPayloadMigratorUtil extends WingsBaseTest {
+  private static final Logger logger = LoggerFactory.getLogger(AdvancedKubernetesPayloadMigratorUtil.class);
+
   @Inject private WingsPersistence wingsPersistence;
 
   @Test
@@ -35,11 +39,11 @@ public class AdvancedKubernetesPayloadMigratorUtil extends WingsBaseTest {
                                                  .addFilter("advancedType", Operator.EQ, "YAML")
                                                  .addFieldsIncluded("_id", "advancedConfig")
                                                  .build();
-    System.out.println("Retrieving advanced kubernetes yaml deployment specifications");
+    logger.info("Retrieving advanced kubernetes yaml deployment specifications");
     PageResponse<ContainerTask> pageResponse = wingsPersistence.query(ContainerTask.class, pageRequest);
 
     if (pageResponse.isEmpty() || isEmpty(pageResponse.getResponse())) {
-      System.out.println("No kubernetes yaml deployment specifications found");
+      logger.info("No kubernetes yaml deployment specifications found");
       return;
     }
 

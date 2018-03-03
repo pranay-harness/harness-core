@@ -5,6 +5,8 @@ import com.google.inject.Inject;
 import org.junit.Ignore;
 import org.junit.Test;
 import org.mongodb.morphia.query.Query;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import software.wings.WingsBaseTest;
 import software.wings.beans.infrastructure.instance.Instance;
 import software.wings.dl.WingsPersistence;
@@ -19,11 +21,13 @@ import java.util.List;
 @Integration
 @Ignore
 public class InstanceWorkflowNameMigrationUtil extends WingsBaseTest {
+  private static final Logger logger = LoggerFactory.getLogger(InstanceWorkflowNameMigrationUtil.class);
+
   @Inject private WingsPersistence wingsPersistence;
 
   @Test
   public void removePrefixFromWorkflowName() {
-    System.out.println("Removing prefix from workflow name");
+    logger.info("Removing prefix from workflow name");
     Query<Instance> query = wingsPersistence.createQuery(Instance.class);
     List<Instance> instanceList = query.field("lastWorkflowExecutionName")
                                       .startsWith("Workflow: ")
@@ -33,6 +37,6 @@ public class InstanceWorkflowNameMigrationUtil extends WingsBaseTest {
       wingsPersistence.updateField(Instance.class, instance.getUuid(), "lastWorkflowExecutionName",
           instance.getLastWorkflowExecutionName().substring(10));
     }
-    System.out.println("Changing instance workflow names completed");
+    logger.info("Changing instance workflow names completed");
   }
 }

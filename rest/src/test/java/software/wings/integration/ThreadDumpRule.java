@@ -16,7 +16,7 @@ public class ThreadDumpRule extends TestWatcher {
 
   @Override
   protected void failed(Throwable e, Description description) {
-    System.out.println(description.getDisplayName() + " failed. taking thread dumps");
+    logger.info(description.getDisplayName() + " failed. taking thread dumps");
 
     try {
       String cmd = "killall -3 java";
@@ -26,7 +26,7 @@ public class ThreadDumpRule extends TestWatcher {
       BufferedReader buf = new BufferedReader(new InputStreamReader(pr.getInputStream()));
       String line = "";
       while ((line = buf.readLine()) != null) {
-        System.out.println(line);
+        logger.info(line);
       }
     } catch (Exception ex) {
       logger.error("", ex);

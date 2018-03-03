@@ -19,6 +19,8 @@ import org.apache.commons.lang3.StringUtils;
 import org.apache.commons.lang3.reflect.FieldUtils;
 import org.apache.commons.lang3.reflect.MethodUtils;
 import org.apache.commons.lang3.tuple.Pair;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import software.wings.beans.ResponseMessage;
 import software.wings.beans.RestResponse;
 
@@ -49,6 +51,8 @@ import javax.ws.rs.ext.Provider;
  */
 @Provider
 public class ConstraintViolationExceptionMapper implements ExceptionMapper<ConstraintViolationException> {
+  private static final Logger logger = LoggerFactory.getLogger(ConstraintViolationExceptionMapper.class);
+
   private static final Cache<Pair<Path, ? extends ConstraintDescriptor<?>>, String> MESSAGES_CACHE =
       CacheBuilder.newBuilder().expireAfterWrite(1, TimeUnit.HOURS).build();
   private static final Joiner DOT_JOINER = Joiner.on('.');
@@ -166,7 +170,7 @@ public class ConstraintViolationExceptionMapper implements ExceptionMapper<Const
       errors = ImmutableList.of(Strings.nullToEmpty(exception.getMessage()));
     }
 
-    System.out.println(toRestResponse(errors));
+    logger.info(toRestResponse(errors).toString());
 
     return Response.status(Status.BAD_REQUEST).entity(toRestResponse(errors)).build();
   }

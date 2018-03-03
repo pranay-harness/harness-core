@@ -250,6 +250,6 @@ public class NewRelicMetricCollectionJobIntegrationTest extends BaseIntegrationT
         -> {
 
         });
-    System.out.println(newRelicAppToConfigMap.size());
+    logger.info("" + newRelicAppToConfigMap.size());
   }
 }

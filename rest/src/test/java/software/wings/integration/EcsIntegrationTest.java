@@ -34,6 +34,8 @@ import com.fasterxml.jackson.databind.ObjectMapper;
 import org.apache.commons.codec.binary.Base64;
 import org.junit.Ignore;
 import org.junit.Test;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 import java.io.IOException;
 import java.util.List;
@@ -44,6 +46,8 @@ import java.util.List;
 
 @Ignore
 public class EcsIntegrationTest {
+  private static final Logger logger = LoggerFactory.getLogger(EcsIntegrationTest.class);
+
   private AmazonECSClient ecsClient =
       new AmazonECSClient(new BasicAWSCredentials("AKIAJLEKM45P4PO5QUFQ", "nU8xaNacU65ZBdlNxfXvKM2Yjoda7pQnNP3fClVE"));
   private ObjectMapper mapper = new ObjectMapper();
@@ -56,7 +60,7 @@ public class EcsIntegrationTest {
             -> ecsClient.describeClusters(new DescribeClustersRequest().withClusters(clusterArns))
                    .getClusters()
                    .stream())
-        .forEach(cluster -> System.out.println("Cluster : " + cluster));
+        .forEach(cluster -> logger.info("Cluster : " + cluster));
   }
 
   @Test
@@ -67,14 +71,14 @@ public class EcsIntegrationTest {
             -> ecsClient.listContainerInstances(new ListContainerInstancesRequest().withCluster(arn))
                    .getContainerInstanceArns()
                    .stream())
-        .forEach(containInstance -> System.out.println("Container Instance : " + containInstance));
+        .forEach(containInstance -> logger.info("Container Instance : " + containInstance));
   }
 
   @Test
   public void shouldCreateCluster() {
     CreateClusterRequest demo2 = new CreateClusterRequest().withClusterName("Demo2");
     CreateClusterResult demo2Cluster = ecsClient.createCluster(demo2);
-    System.out.println(demo2Cluster);
+    logger.info(demo2Cluster.toString());
   }
 
   @Test
@@ -83,7 +87,7 @@ public class EcsIntegrationTest {
         ecsClient.listTasks(new ListTasksRequest().withCluster("test2").withServiceName("Nix__docker__Development__6"));
     List<String> taskArns = listTasksResult.getTaskArns();
     DescribeTasksResult describeTasksResult = ecsClient.describeTasks(new DescribeTasksRequest().withTasks(taskArns));
-    System.out.println(taskArns);
+    logger.info(taskArns.toString());
   }
 
   @Test
@@ -114,7 +118,7 @@ public class EcsIntegrationTest {
         mapper.readValue(josn, RegisterTaskDefinitionRequest.class);
     RegisterTaskDefinitionResult registerTaskDefinitionResult =
         ecsClient.registerTaskDefinition(registerTaskDefinitionRequest);
-    System.out.println(registerTaskDefinitionResult);
+    logger.info(registerTaskDefinitionResult.toString());
   }
 
   @Test
@@ -132,7 +136,7 @@ public class EcsIntegrationTest {
     CreateServiceRequest createServiceRequest = mapper.readValue(serviceJson, CreateServiceRequest.class);
 
     CreateServiceResult service = ecsClient.createService(createServiceRequest);
-    System.out.println(service);
+    logger.info(service.toString());
   }
 
   @Test
@@ -141,7 +145,7 @@ public class EcsIntegrationTest {
         "{\"cluster\":\"demo\",\"desiredCount\":1,\"service\":\"tomcat\",\"taskDefinition\":\"tomcat:7\"}";
     UpdateServiceRequest updateServiceRequest = mapper.readValue(serviceJson, UpdateServiceRequest.class);
     UpdateServiceResult updateServiceResult = ecsClient.updateService(updateServiceRequest);
-    System.out.println(updateServiceResult);
+    logger.info(updateServiceResult.toString());
   }
 
   @Test
@@ -150,7 +154,7 @@ public class EcsIntegrationTest {
         "{\"cluster\":\"demo\",\"desiredCount\":10,\"service\":\"tomcat\",\"taskDefinition\":\"tomcat:6\"}";
     UpdateServiceRequest updateServiceRequest = mapper.readValue(serviceJson, UpdateServiceRequest.class);
     UpdateServiceResult updateServiceResult = ecsClient.updateService(updateServiceRequest);
-    System.out.println(updateServiceResult);
+    logger.info(updateServiceResult.toString());
   }
 
   @Test
@@ -159,7 +163,7 @@ public class EcsIntegrationTest {
         "{\"cluster\":\"demo\",\"desiredCount\":0,\"service\":\"tomcat\",\"taskDefinition\":\"tomcat:6\"}";
     UpdateServiceRequest updateServiceRequest = mapper.readValue(serviceJson, UpdateServiceRequest.class);
     UpdateServiceResult updateServiceResult = ecsClient.updateService(updateServiceRequest);
-    System.out.println(updateServiceResult);
+    logger.info(updateServiceResult.toString());
   }
 
   @Test
@@ -180,7 +184,7 @@ public class EcsIntegrationTest {
                 Base64.encodeBase64String("#!/bin/bash\necho ECS_CLUSTER=demo >> /etc/ecs/ecs.config".getBytes()));
 
     RunInstancesResult runInstancesResult = amazonEC2Client.runInstances(runInstancesRequest);
-    System.out.println(runInstancesRequest.toString());
+    logger.info(runInstancesRequest.toString());
   }
 
   @Test
@@ -191,12 +195,12 @@ public class EcsIntegrationTest {
         new UpdateAutoScalingGroupRequest()
             .withAutoScalingGroupName("EC2ContainerService-demo-EcsInstanceAsg-1TUMY9AGURFZC")
             .withMaxSize(10));
-    System.out.println(updateAutoScalingGroupResult.toString());
+    logger.info(updateAutoScalingGroupResult.toString());
     SetDesiredCapacityResult setDesiredCapacityResult = amazonAutoScalingClient.setDesiredCapacity(
         new SetDesiredCapacityRequest()
             .withAutoScalingGroupName("EC2ContainerService-demo-EcsInstanceAsg-1TUMY9AGURFZC")
             .withDesiredCapacity(5));
-    System.out.println(setDesiredCapacityResult.toString());
+    logger.info(setDesiredCapacityResult.toString());
   }
 
   @Test
@@ -205,7 +209,7 @@ public class EcsIntegrationTest {
     //        new AmazonAutoScalingClient(new BasicAWSCredentials("AKIAJLEKM45P4PO5QUFQ",
     //        "nU8xaNacU65ZBdlNxfXvKM2Yjoda7pQnNP3fClVE"));
 
-    System.out.println(
+    logger.info(
         "curl --data \"name=wings&password=wings123&password2=wings123\" http://localhost:${PORT}/todolist/register\ncurl -b cookies.txt -c cookies.txt --data \"name=wings&password=wings123\" http://localhost:${PORT}/todolist/requestLogin\ncurl -IL -b cookies.txt -c cookies.txt http://localhost:${PORT}/todolist/inside/display\nfor i in $(seq 10)\ndo\n    curl -IL -b cookies.txt -c cookies.txt \"http://localhost:${PORT}/todolist/inside/addTask?priority=1&task=task\"$i\n    sleep 0.1\ndone\nrm cookies.txt\n");
   }
 

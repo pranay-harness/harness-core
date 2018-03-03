@@ -10,6 +10,8 @@ import org.quartz.JobDetail;
 import org.quartz.SimpleScheduleBuilder;
 import org.quartz.Trigger;
 import org.quartz.TriggerBuilder;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import software.wings.WingsBaseTest;
 import software.wings.rules.Integration;
 import software.wings.rules.SetupScheduler;
@@ -23,6 +25,8 @@ import software.wings.scheduler.QuartzScheduler;
 @Ignore
 @SetupScheduler
 public class AdministrativeJobUtil extends WingsBaseTest {
+  private static final Logger logger = LoggerFactory.getLogger(AdministrativeJobUtil.class);
+
   private static final String ADMINISTRATIVE_CRON_NAME = "ADMINISTRATIVE_CRON_NAME";
   private static final String ADMINISTRATIVE_CRON_GROUP = "ADMINISTRATIVE_CRON_GROUP";
 
@@ -33,7 +37,7 @@ public class AdministrativeJobUtil extends WingsBaseTest {
    */
   @Test
   public void addCronForAdministrativeJob() {
-    System.out.println("Adding Administrative cron");
+    logger.info("Adding Administrative cron");
     JobDetail job = JobBuilder.newJob(AdministrativeJob.class)
                         .withIdentity(ADMINISTRATIVE_CRON_NAME, ADMINISTRATIVE_CRON_GROUP)
                         .withDescription("Administrative job ")
@@ -44,7 +48,7 @@ public class AdministrativeJobUtil extends WingsBaseTest {
                           .withSchedule(SimpleScheduleBuilder.simpleSchedule().withIntervalInMinutes(3).repeatForever())
                           .build();
     jobScheduler.scheduleJob(job, trigger);
-    System.out.println("Added Administrative cron");
+    logger.info("Added Administrative cron");
   }
 
   @Test

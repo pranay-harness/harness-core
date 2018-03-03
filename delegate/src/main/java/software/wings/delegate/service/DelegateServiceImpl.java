@@ -382,7 +382,7 @@ public class DelegateServiceImpl implements DelegateService {
           dispatchDelegateTask(delegateTaskEvent);
         }
       } catch (Exception e) {
-        System.out.println(message);
+        logger.info(message);
         logger.error("Exception while decoding task", e);
       }
     }

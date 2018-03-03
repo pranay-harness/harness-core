@@ -10,6 +10,8 @@ import com.google.inject.Inject;
 
 import org.junit.Ignore;
 import org.junit.Test;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import software.wings.WingsBaseTest;
 import software.wings.beans.Application;
 import software.wings.beans.CanaryOrchestrationWorkflow;
@@ -35,21 +37,23 @@ import java.util.Map;
 @Integration
 @Ignore
 public class WorkflowSelectNodeExclusionFlagMigrationUtil extends WingsBaseTest {
+  private static final Logger logger = LoggerFactory.getLogger(WorkflowSelectNodeExclusionFlagMigrationUtil.class);
+
   @Inject private WingsPersistence wingsPersistence;
   @Inject private WorkflowService workflowService;
 
   @Test
   public void setSelectNodeExclusionFlag() {
     PageRequest<Application> pageRequest = aPageRequest().withLimit(UNLIMITED).build();
-    System.out.println("Retrieving applications");
+    logger.info("Retrieving applications");
     PageResponse<Application> pageResponse = wingsPersistence.query(Application.class, pageRequest);
 
     List<Application> apps = pageResponse.getResponse();
     if (pageResponse.isEmpty() || isEmpty(apps)) {
-      System.out.println("No applications found");
+      logger.info("No applications found");
       return;
     }
-    System.out.println("Updating " + apps.size() + " applications.");
+    logger.info("Updating " + apps.size() + " applications.");
     StringBuilder result = new StringBuilder(64);
     for (Application app : apps) {
       List<Workflow> workflows = workflowService
@@ -108,6 +112,6 @@ public class WorkflowSelectNodeExclusionFlagMigrationUtil extends WingsBaseTest 
             .append(" candidates.\n");
       }
     }
-    System.out.println(result.toString());
+    logger.info(result.toString());
   }
 }

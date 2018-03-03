@@ -5,6 +5,8 @@ import com.google.inject.Inject;
 import org.apache.commons.lang3.tuple.Pair;
 import org.junit.Ignore;
 import org.junit.Test;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import software.wings.WingsBaseTest;
 import software.wings.beans.BambooConfig;
 import software.wings.beans.SettingAttribute;
@@ -20,6 +22,8 @@ import java.io.InputStream;
  */
 @Ignore
 public class BambooServiceBuildServiceTest extends WingsBaseTest {
+  private static final Logger logger = LoggerFactory.getLogger(BambooServiceBuildServiceTest.class);
+
   @Inject BambooService bambooService;
   @Inject SettingsService settingsService;
 
@@ -34,12 +38,12 @@ public class BambooServiceBuildServiceTest extends WingsBaseTest {
   public void shouldFetchBambooSettings() {
     PageResponse<SettingAttribute> settingAttributes = settingsService.list(new PageRequest<>());
     SettingAttribute settingAttribute = settingsService.get("YcsuxTFqR6uH093foR_K5w-bamboo");
-    System.out.println(settingAttribute.toString());
+    logger.info(settingAttribute.toString());
   }
 
   @Test
   public void shouldGetJobs() {
-    System.out.println(bambooService.getPlanKeys(bambooConfig, null));
+    logger.info(bambooService.getPlanKeys(bambooConfig, null).toString());
   }
 
   @Test
@@ -47,18 +51,18 @@ public class BambooServiceBuildServiceTest extends WingsBaseTest {
 
   @Test
   public void shouldGetLastSuccessfulBuild() {
-    System.out.println(bambooService.getLastSuccessfulBuild(bambooConfig, null, "TOD-TOD-JOB1"));
+    logger.info(bambooService.getLastSuccessfulBuild(bambooConfig, null, "TOD-TOD-JOB1").toString());
   }
 
   @Test
   public void shouldGetBuilds() {
-    System.out.println(bambooService.getBuilds(bambooConfig, null, "TOD-TOD-JOB1", 50));
+    logger.info(bambooService.getBuilds(bambooConfig, null, "TOD-TOD-JOB1", 50).toString());
   }
 
   @Test
   public void shouldGetBuildArtifacts() {
     Pair<String, InputStream> stringInputStreamPair =
         bambooService.downloadArtifact(bambooConfig, null, "TOD-TOD-JOB1", "11", "*");
-    System.out.println(stringInputStreamPair.getKey());
+    logger.info(stringInputStreamPair.getKey());
   }
 }

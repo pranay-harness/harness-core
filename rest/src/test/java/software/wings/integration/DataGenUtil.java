@@ -525,7 +525,7 @@ public class DataGenUtil extends BaseIntegrationTest {
    * @param args
    */
   public static void main(String[] args) {
-    System.out.println("Running tests!");
+    logger.info("Running tests!");
     JUnitCore.main("software.wings.integration.DataGenUtil");
   }
 }

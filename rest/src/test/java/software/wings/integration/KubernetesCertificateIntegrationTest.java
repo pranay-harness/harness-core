@@ -95,9 +95,9 @@ public class KubernetesCertificateIntegrationTest {
                                .withClientKeyData(clientKeyData);
 
     try (KubernetesClient client = new DefaultKubernetesClient(config.build())) {
-      System.out.println("Version: " + client.getApiVersion());
+      logger.info("Version: " + client.getApiVersion());
       client.replicationControllers().list().getItems().forEach(
-          replicationController -> System.out.println(replicationController.getMetadata().getName()));
+          replicationController -> logger.info(replicationController.getMetadata().getName()));
     }
   }
 }

@@ -8,6 +8,8 @@ import com.amazonaws.regions.Regions;
 import com.amazonaws.services.ecs.model.Service;
 import org.junit.Ignore;
 import org.junit.Test;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import software.wings.WingsBaseTest;
 import software.wings.beans.AwsConfig;
 import software.wings.beans.SettingAttribute;
@@ -25,6 +27,8 @@ import java.util.stream.Collectors;
 @Integration
 @Ignore
 public class EcsClusterCleanupUtil extends WingsBaseTest {
+  private static final Logger logger = LoggerFactory.getLogger(EcsClusterCleanupUtil.class);
+
   @Inject private AwsClusterService awsClusterService;
 
   // Comment out the following line in WingsTestModule to execute:
@@ -48,10 +52,10 @@ public class EcsClusterCleanupUtil extends WingsBaseTest {
             .stream()
             .filter(s -> s.getDesiredCount() == 0)
             .collect(Collectors.toList());
-    System.out.println("Deleting " + zeroTaskServices.size() + " unused services.");
+    logger.info("Deleting " + zeroTaskServices.size() + " unused services.");
     zeroTaskServices.forEach(s -> {
       String oldServiceName = s.getServiceName();
-      System.out.println("Deleting " + oldServiceName);
+      logger.info("Deleting " + oldServiceName);
       awsClusterService.deleteService(
           region.getName(), connectorConfig, Collections.emptyList(), clusterName, oldServiceName);
     });

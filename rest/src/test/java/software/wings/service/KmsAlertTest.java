@@ -16,6 +16,8 @@ import org.junit.Before;
 import org.junit.Ignore;
 import org.junit.Test;
 import org.mockito.Mock;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import software.wings.WingsBaseTest;
 import software.wings.alerts.AlertStatus;
 import software.wings.beans.Account;
@@ -47,6 +49,8 @@ import java.util.UUID;
  */
 @Ignore
 public class KmsAlertTest extends WingsBaseTest {
+  private static final Logger logger = LoggerFactory.getLogger(KmsAlertTest.class);
+
   private static String VAULT_TOKEN = System.getProperty("vault.token");
 
   @Inject private VaultService vaultService;
@@ -139,15 +143,15 @@ public class KmsAlertTest extends WingsBaseTest {
     URL resource = getClass().getClassLoader().getResource("vault_token.txt");
 
     if (resource == null) {
-      System.out.println("reading vault token from environment variable");
+      logger.info("reading vault token from environment variable");
     } else {
-      System.out.println("reading vault token from file");
+      logger.info("reading vault token from file");
       VAULT_TOKEN = FileUtils.readFileToString(new File(resource.getFile()), Charset.defaultCharset());
     }
     if (VAULT_TOKEN.endsWith("\n")) {
       VAULT_TOKEN = VAULT_TOKEN.replaceAll("\n", "");
     }
-    System.out.println("VAULT_TOKEN: " + VAULT_TOKEN);
+    logger.info("VAULT_TOKEN: " + VAULT_TOKEN);
     return VaultConfig.builder()
         .vaultUrl("http://127.0.0.1:8200")
         .authToken(VAULT_TOKEN)
