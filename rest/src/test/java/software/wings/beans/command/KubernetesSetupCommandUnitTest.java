@@ -248,8 +248,8 @@ public class KubernetesSetupCommandUnitTest extends WingsBaseTest {
     assertNotNull(horizontalPodAutoscaler.getSpec().getAdditionalProperties());
     assertEquals(1, horizontalPodAutoscaler.getSpec().getAdditionalProperties().size());
     assertEquals("metrics", horizontalPodAutoscaler.getSpec().getAdditionalProperties().keySet().iterator().next());
-    assertEquals(new Integer(3), horizontalPodAutoscaler.getSpec().getMinReplicas());
-    assertEquals(new Integer(6), horizontalPodAutoscaler.getSpec().getMaxReplicas());
+    assertEquals(Integer.valueOf(3), horizontalPodAutoscaler.getSpec().getMinReplicas());
+    assertEquals(Integer.valueOf(6), horizontalPodAutoscaler.getSpec().getMaxReplicas());
   }
 
   @Test
@@ -286,9 +286,9 @@ public class KubernetesSetupCommandUnitTest extends WingsBaseTest {
     assertTrue(horizontalPodAutoscaler.getMetadata().getLabels().containsKey("version"));
     assertEquals("appName", horizontalPodAutoscaler.getMetadata().getLabels().get("app"));
     assertEquals("9", horizontalPodAutoscaler.getMetadata().getLabels().get("version"));
-    assertEquals(new Integer(1), horizontalPodAutoscaler.getSpec().getMinReplicas());
-    assertEquals(new Integer(2), horizontalPodAutoscaler.getSpec().getMaxReplicas());
-    assertEquals(new Integer(20), horizontalPodAutoscaler.getSpec().getTargetCPUUtilizationPercentage());
+    assertEquals(Integer.valueOf(1), horizontalPodAutoscaler.getSpec().getMinReplicas());
+    assertEquals(Integer.valueOf(2), horizontalPodAutoscaler.getSpec().getMaxReplicas());
+    assertEquals(Integer.valueOf(20), horizontalPodAutoscaler.getSpec().getTargetCPUUtilizationPercentage());
 
     setupParams = KubernetesSetupParamsBuilder
                       .aKubernetesSetupParams()
@@ -315,8 +315,8 @@ public class KubernetesSetupCommandUnitTest extends WingsBaseTest {
     assertTrue(horizontalPodAutoscaler.getMetadata().getLabels().containsKey("version"));
     assertEquals("appName", horizontalPodAutoscaler.getMetadata().getLabels().get("app"));
     assertEquals("9", horizontalPodAutoscaler.getMetadata().getLabels().get("version"));
-    assertEquals(new Integer(2), horizontalPodAutoscaler.getSpec().getMinReplicas());
-    assertEquals(new Integer(3), horizontalPodAutoscaler.getSpec().getMaxReplicas());
-    assertEquals(new Integer(30), horizontalPodAutoscaler.getSpec().getTargetCPUUtilizationPercentage());
+    assertEquals(Integer.valueOf(2), horizontalPodAutoscaler.getSpec().getMinReplicas());
+    assertEquals(Integer.valueOf(3), horizontalPodAutoscaler.getSpec().getMaxReplicas());
+    assertEquals(Integer.valueOf(30), horizontalPodAutoscaler.getSpec().getTargetCPUUtilizationPercentage());
   }
 }

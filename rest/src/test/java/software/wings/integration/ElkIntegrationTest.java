@@ -213,6 +213,7 @@ public class ElkIntegrationTest extends BaseIntegrationTest {
   }
 
   // TODO Disabled test. Enable when purge is revisited
+  @Test
   @Ignore
   public void testPurge() throws Exception {
     final String sameApplicationId = "some-application";
