@@ -215,7 +215,7 @@ public class DelegateServiceImpl implements DelegateService {
                                      .withAccountId(accountId)
                                      .withHostName(hostName)
                                      .withVersion(getVersion())
-                                     .withSupportedTaskTypes(Lists.newArrayList(TaskType.values()))
+                                     .withSupportedTaskTypes(getSupportedTaskTypes())
                                      .withIncludeScopes(new ArrayList<>())
                                      .withExcludeScopes(new ArrayList<>());
 
@@ -315,6 +315,18 @@ public class DelegateServiceImpl implements DelegateService {
     } catch (Exception e) {
       logger.error("Exception while starting/running delegate", e);
     }
+  }
+
+  private List<TaskType> getSupportedTaskTypes() {
+    List<TaskType> suppportedTaskTypes = new ArrayList<>();
+    for (TaskType taskType : TaskType.values()) {
+      if (!taskType.isDeprecated()) {
+        suppportedTaskTypes.add(taskType);
+      } else {
+        logger.warn("Task type [{}] is deprecated", taskType.name());
+      }
+    }
+    return suppportedTaskTypes;
   }
 
   private void handleClose(Object o) {
