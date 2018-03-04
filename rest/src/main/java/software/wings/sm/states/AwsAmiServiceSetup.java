@@ -258,13 +258,13 @@ public class AwsAmiServiceSetup extends State {
 
       executionLogCallback.saveExecutionLog(
           String.format("Completed AWS AMI Setup with new autoScalingGroupName [%s]", newAutoScalingGroupName));
-    } catch (Throwable throwable) {
-      logger.error("Ami setup step failed with error ", throwable);
+    } catch (Exception exception) {
+      logger.error("Ami setup step failed with error ", exception);
       executionStatus = ExecutionStatus.FAILED;
-      errorMessage = throwable.getMessage();
+      errorMessage = exception.getMessage();
       awsAmiExecutionData.setStatus(executionStatus);
       awsAmiExecutionData.setErrorMsg(errorMessage);
-      Misc.logAllMessages(throwable, executionLogCallback, CommandExecutionStatus.FAILURE);
+      Misc.logAllMessages(exception, executionLogCallback, CommandExecutionStatus.FAILURE);
     }
 
     return anExecutionResponse()

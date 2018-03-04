@@ -47,8 +47,8 @@ public abstract class AbstractDelegateValidateTask implements DelegateValidateTa
           result.setDuration(duration);
         }
       }
-    } catch (Throwable t) {
-      logger.error("Unexpected error validating delegate task.", t);
+    } catch (Exception exception) {
+      logger.error("Unexpected error validating delegate task.", exception);
     } finally {
       if (consumer != null) {
         consumer.accept(results);

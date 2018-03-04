@@ -203,8 +203,8 @@ public class AppdynamicsDelegateServiceImpl implements AppdynamicsDelegateServic
       if (response.isSuccessful()) {
         return true;
       }
-    } catch (Throwable t) {
-      throw new WingsException("Could not reach AppDynamics server. " + t.getMessage(), t);
+    } catch (Exception exception) {
+      throw new WingsException("Could not reach AppDynamics server. " + exception.getMessage(), exception);
     }
 
     final int errorCode = response.code();

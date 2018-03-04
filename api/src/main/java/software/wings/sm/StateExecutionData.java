@@ -1,5 +1,6 @@
 package software.wings.sm;
 
+import static io.harness.govern.Switch.unhandled;
 import static software.wings.api.ExecutionDataValue.Builder.anExecutionDataValue;
 
 import com.google.common.collect.Maps;
@@ -190,7 +191,7 @@ public class StateExecutionData {
         breakDown.setSuccess(1);
         break;
       default:
-        throw new RuntimeException("Unhandled ExecutionStatus: " + status.name());
+        unhandled(status);
     }
     executionData.put("breakdown", anExecutionDataValue().withDisplayName("breakdown").withValue(breakDown).build());
     putNotNull(

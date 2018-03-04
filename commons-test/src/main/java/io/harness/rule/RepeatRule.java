@@ -54,11 +54,11 @@ public class RepeatRule implements TestRule {
         } catch (TestTimedOutException ex) {
           // We track timeouts in every scenario
           lastException = ex;
-        } catch (Throwable throwable) {
+        } catch (Exception exception) {
           if (timeoutOnly) {
-            throw throwable;
+            throw exception;
           }
-          lastException = throwable;
+          lastException = exception;
         }
       }
       if (successfulCount != successes) {

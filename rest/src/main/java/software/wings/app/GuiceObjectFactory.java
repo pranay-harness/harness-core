@@ -4,6 +4,7 @@ import com.google.inject.AbstractModule;
 import com.google.inject.Guice;
 import com.google.inject.Injector;
 
+import com.hazelcast.util.Preconditions;
 import org.atmosphere.cpr.AtmosphereConfig;
 import org.atmosphere.cpr.AtmosphereFramework;
 import org.atmosphere.cpr.AtmosphereObjectFactory;
@@ -45,9 +46,8 @@ public class GuiceObjectFactory implements AtmosphereObjectFactory<AbstractModul
 
   @Override
   public void configure(@NotNull AtmosphereConfig config) {
-    if (config == null) {
-      throw new NullPointerException("AtmosphereConfig can't be null");
-    }
+    Preconditions.checkNotNull(config);
+
     this.config = config;
 
     modules.add(new AtmosphereModule());

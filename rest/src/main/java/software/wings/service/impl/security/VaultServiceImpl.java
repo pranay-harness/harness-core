@@ -121,8 +121,8 @@ public class VaultServiceImpl extends AbstractSecretServiceImpl implements Vault
   public String saveVaultConfig(String accountId, VaultConfig vaultConfig) {
     try {
       validateVaultConfig(accountId, vaultConfig);
-    } catch (WingsException e) {
-      throw new WingsException(ErrorCode.VAULT_OPERATION_ERROR)
+    } catch (WingsException exception) {
+      throw new WingsException(ErrorCode.VAULT_OPERATION_ERROR, exception)
           .addParam("reason", "Validation failed. Please check your token");
     }
 
