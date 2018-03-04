@@ -38,9 +38,9 @@ public class TriggerMigrationUtil extends WingsBaseTest {
     PageResponse<Application> pageResponse = wingsPersistence.query(Application.class, pageRequest);
 
     pageResponse.getResponse().forEach(application -> {
-      logger.info("Updating triggers for app {} = " + application.getName());
+      logger.info("Updating triggers for app {} = ", application.getName());
       triggerService.updateByApp(application.getAppId());
-      logger.info("Updated triggers for app {} = " + application.getName());
+      logger.info("Updated triggers for app {} = ", application.getName());
     });
   }
 }
