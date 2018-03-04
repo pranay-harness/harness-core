@@ -4,6 +4,7 @@ import static software.wings.beans.GraphNode.GraphNodeBuilder.aGraphNode;
 
 import com.google.common.collect.Maps;
 
+import io.harness.data.structure.UUIDGenerator;
 import software.wings.beans.ErrorCode;
 import software.wings.beans.GraphNode;
 import software.wings.beans.command.AbstractCommandUnit;
@@ -11,7 +12,6 @@ import software.wings.beans.command.CommandUnit;
 import software.wings.beans.command.CommandUnitType;
 import software.wings.beans.yaml.ChangeContext;
 import software.wings.beans.yaml.YamlConstants;
-import software.wings.common.UUIDGenerator;
 import software.wings.exception.HarnessException;
 import software.wings.exception.WingsException;
 import software.wings.service.impl.yaml.handler.BaseYamlHandler;

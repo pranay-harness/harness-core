@@ -1,12 +1,12 @@
 package software.wings.service.impl;
 
+import static io.harness.data.structure.UUIDGenerator.generateUuid;
 import static java.util.Arrays.asList;
 import static java.util.function.Function.identity;
 import static java.util.stream.Collectors.toMap;
 import static org.assertj.core.api.Assertions.assertThat;
 import static software.wings.api.HostElement.Builder.aHostElement;
 import static software.wings.beans.GraphNode.GraphNodeBuilder.aGraphNode;
-import static software.wings.common.UUIDGenerator.generateUuid;
 import static software.wings.sm.ExecutionStatus.SUCCESS;
 import static software.wings.sm.StateExecutionInstance.Builder.aStateExecutionInstance;
 import static software.wings.sm.StateType.COMMAND;

@@ -1,6 +1,6 @@
 package software.wings.service.impl.analysis;
 
-import static software.wings.common.UUIDGenerator.generateUuid;
+import static io.harness.data.structure.UUIDGenerator.generateUuid;
 
 import com.google.common.collect.Lists;
 

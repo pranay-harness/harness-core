@@ -13,6 +13,7 @@ import static software.wings.dl.PageRequest.UNLIMITED;
 
 import com.google.inject.Inject;
 
+import io.harness.data.structure.UUIDGenerator;
 import org.junit.Ignore;
 import org.junit.Test;
 import org.slf4j.Logger;
@@ -24,7 +25,6 @@ import software.wings.beans.Service;
 import software.wings.beans.command.Command;
 import software.wings.beans.command.CommandType;
 import software.wings.beans.command.ServiceCommand;
-import software.wings.common.UUIDGenerator;
 import software.wings.dl.PageRequest;
 import software.wings.dl.PageResponse;
 import software.wings.dl.WingsPersistence;

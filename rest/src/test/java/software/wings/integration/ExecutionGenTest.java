@@ -1,6 +1,6 @@
 package software.wings.integration;
 
-import static software.wings.common.UUIDGenerator.generateUuid;
+import static io.harness.data.structure.UUIDGenerator.generateUuid;
 import static software.wings.dl.PageRequest.PageRequestBuilder.aPageRequest;
 
 import com.google.inject.Inject;

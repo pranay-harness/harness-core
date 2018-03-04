@@ -1,6 +1,6 @@
 package software.wings.sm.states;
 
-import static software.wings.common.UUIDGenerator.generateUuid;
+import static io.harness.data.structure.UUIDGenerator.generateUuid;
 import static software.wings.sm.ExecutionResponse.Builder.anExecutionResponse;
 import static software.wings.sm.ExecutionStatusData.Builder.anExecutionStatusData;
 

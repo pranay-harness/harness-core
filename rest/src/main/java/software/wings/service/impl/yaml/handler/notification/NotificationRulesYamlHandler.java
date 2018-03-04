@@ -1,7 +1,7 @@
 package software.wings.service.impl.yaml.handler.notification;
 
+import static io.harness.data.structure.UUIDGenerator.generateUuid;
 import static software.wings.beans.NotificationGroup.NotificationGroupBuilder.aNotificationGroup;
-import static software.wings.common.UUIDGenerator.generateUuid;
 
 import com.google.common.collect.Lists;
 import com.google.inject.Inject;

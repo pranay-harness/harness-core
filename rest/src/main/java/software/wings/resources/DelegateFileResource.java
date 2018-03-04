@@ -1,7 +1,7 @@
 package software.wings.resources;
 
+import static io.harness.data.structure.UUIDGenerator.generateUuid;
 import static javax.ws.rs.core.MediaType.MULTIPART_FORM_DATA;
-import static software.wings.common.UUIDGenerator.generateUuid;
 import static software.wings.delegatetasks.DelegateFile.Builder.aDelegateFile;
 import static software.wings.service.intfc.FileService.FileBucket.ARTIFACTS;
 

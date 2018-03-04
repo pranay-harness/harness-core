@@ -2,7 +2,7 @@ package software.wings.service.impl.instance;
 
 import static io.harness.data.structure.EmptyPredicate.isEmpty;
 import static io.harness.data.structure.EmptyPredicate.isNotEmpty;
-import static software.wings.common.UUIDGenerator.generateUuid;
+import static io.harness.data.structure.UUIDGenerator.generateUuid;
 import static software.wings.exception.WingsException.SERIOUS;
 import static software.wings.sm.ExecutionStatus.FAILED;
 

@@ -13,10 +13,10 @@ import static software.wings.sm.TransitionType.SUCCESS;
 
 import com.fasterxml.jackson.annotation.JsonIgnore;
 import com.fasterxml.jackson.annotation.JsonProperty;
+import io.harness.data.structure.UUIDGenerator;
 import org.mongodb.morphia.annotations.Embedded;
 import org.mongodb.morphia.annotations.Transient;
 import software.wings.common.Constants;
-import software.wings.common.UUIDGenerator;
 
 import java.util.ArrayList;
 import java.util.HashMap;

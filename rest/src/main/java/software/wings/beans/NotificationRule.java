@@ -1,6 +1,6 @@
 package software.wings.beans;
 
-import static software.wings.common.UUIDGenerator.generateUuid;
+import static io.harness.data.structure.UUIDGenerator.generateUuid;
 
 import com.google.common.base.MoreObjects;
 

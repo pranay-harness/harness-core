@@ -1,5 +1,6 @@
 package software.wings.core.ssh.executors;
 
+import static io.harness.data.structure.UUIDGenerator.generateUuid;
 import static java.util.Arrays.asList;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThatThrownBy;
@@ -14,7 +15,6 @@ import static software.wings.beans.ErrorCode.SSH_SESSION_TIMEOUT;
 import static software.wings.beans.ErrorCode.UNKNOWN_HOST;
 import static software.wings.beans.command.CommandExecutionResult.CommandExecutionStatus.FAILURE;
 import static software.wings.beans.command.CommandExecutionResult.CommandExecutionStatus.SUCCESS;
-import static software.wings.common.UUIDGenerator.generateUuid;
 import static software.wings.core.ssh.executors.SshSessionConfig.Builder.aSshSessionConfig;
 import static software.wings.delegatetasks.DelegateFile.Builder.aDelegateFile;
 import static software.wings.service.intfc.FileService.FileBucket.CONFIGS;

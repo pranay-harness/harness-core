@@ -1,8 +1,8 @@
 package software.wings.collect;
 
+import static io.harness.data.structure.UUIDGenerator.generateUuid;
 import static software.wings.beans.DelegateTask.Builder.aDelegateTask;
 import static software.wings.beans.Event.Builder.anEvent;
-import static software.wings.common.UUIDGenerator.generateUuid;
 
 import com.google.inject.Inject;
 import com.google.inject.Singleton;
