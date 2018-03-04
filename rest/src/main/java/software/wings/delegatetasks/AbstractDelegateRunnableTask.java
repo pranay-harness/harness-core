@@ -59,9 +59,9 @@ public abstract class AbstractDelegateRunnableTask implements DelegateRunnableTa
         logger.info("Started executing task {}", taskId);
         result = run(parameters);
         logger.info("Completed executing task {}", taskId);
-      } catch (Throwable t) {
-        logger.error("Unexpected error executing delegate task {}", taskId, t);
-        result = anErrorNotifyResponseData().withErrorMessage(t.getMessage()).build();
+      } catch (Exception exception) {
+        logger.error("Unexpected error executing delegate task {}", taskId, exception);
+        result = anErrorNotifyResponseData().withErrorMessage(exception.getMessage()).build();
       } finally {
         if (consumer != null) {
           if (result == null) {
@@ -81,8 +81,8 @@ public abstract class AbstractDelegateRunnableTask implements DelegateRunnableTa
       completionService.submit(() -> {
         try {
           return callable.call();
-        } catch (Throwable t) {
-          logger.error("Error in executing parallel callable ", t);
+        } catch (Exception exception) {
+          logger.error("Error in executing parallel callable ", exception);
           return null;
         }
       });

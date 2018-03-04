@@ -429,8 +429,8 @@ public abstract class AbstractSshExecutor implements SshExecutor {
       testChannel.connect();
       testChannel.disconnect();
       logger.info("Session connection test successful");
-    } catch (Throwable throwable) {
-      logger.error("Session connection test failed. Reopen new session", throwable);
+    } catch (Exception exception) {
+      logger.error("Session connection test failed. Reopen new session", exception);
       cachedSession = sessions.merge(key, cachedSession, (session1, session2) -> getSession(this.config));
     }
     return cachedSession;

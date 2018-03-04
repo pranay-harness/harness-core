@@ -26,8 +26,8 @@ public class AppDynamicsToDoListLoadGenTest extends BaseIntegrationTest {
         logger.info("" + getRequestBuilder(btTarget).get().getStatus());
         btTarget = client.target(baseUrl + "/todolist/inside/load?priority=1&task=task1");
         logger.info("" + getRequestBuilder(btTarget).get().getStatus());
-      } catch (Throwable t) {
-        logger.info(t.fillInStackTrace().toString());
+      } catch (Exception exception) {
+        logger.info("", exception);
       }
     }
   }
