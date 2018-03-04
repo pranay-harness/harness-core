@@ -37,6 +37,10 @@
             <version>1.10</version>
         </dependency>
         <dependency>
+            <groupId>org.slf4j</groupId>
+            <artifactId>slf4j-api</artifactId>
+        </dependency>
+        <dependency>
             <groupId>software.wings</groupId>
             <artifactId>commons-test</artifactId>
             <version>${project.parent.version}</version>

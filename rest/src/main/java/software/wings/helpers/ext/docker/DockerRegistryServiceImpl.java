@@ -1,10 +1,10 @@
 package software.wings.helpers.ext.docker;
 
 import static io.harness.data.structure.EmptyPredicate.isNotEmpty;
+import static io.harness.govern.Switch.unhandled;
 import static java.util.Collections.emptyList;
 import static software.wings.exception.WingsException.ReportTarget.USER;
 import static software.wings.helpers.ext.jenkins.BuildDetails.Builder.aBuildDetails;
-import static software.wings.utils.Switch.unhandled;
 
 import com.google.inject.Inject;
 import com.google.inject.Singleton;

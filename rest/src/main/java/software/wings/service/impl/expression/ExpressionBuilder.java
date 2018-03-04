@@ -1,6 +1,7 @@
 package software.wings.service.impl.expression;
 
 import static io.harness.data.structure.EmptyPredicate.isEmpty;
+import static io.harness.govern.Switch.noop;
 import static java.util.Arrays.asList;
 import static software.wings.beans.EntityType.ENVIRONMENT;
 import static software.wings.beans.EntityType.SERVICE;
@@ -20,7 +21,6 @@ import static software.wings.common.Constants.WINGS_STAGING_PATH;
 import static software.wings.common.Constants.XPATH;
 import static software.wings.dl.PageRequest.PageRequestBuilder.aPageRequest;
 import static software.wings.sm.ContextElement.DEPLOYMENT_URL;
-import static software.wings.utils.Switch.noop;
 
 import com.google.inject.Inject;
 

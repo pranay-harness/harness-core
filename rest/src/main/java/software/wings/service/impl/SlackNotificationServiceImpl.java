@@ -1,13 +1,13 @@
 package software.wings.service.impl;
 
 import static io.harness.data.structure.EmptyPredicate.isNotEmpty;
+import static io.harness.govern.Switch.unhandled;
 import static software.wings.common.Constants.ABORTED_COLOR;
 import static software.wings.common.Constants.COMPLETED_COLOR;
 import static software.wings.common.Constants.FAILED_COLOR;
 import static software.wings.common.Constants.PAUSED_COLOR;
 import static software.wings.common.Constants.RESUMED_COLOR;
 import static software.wings.common.Constants.WHITE_COLOR;
-import static software.wings.utils.Switch.unhandled;
 
 import com.google.common.collect.ImmutableList;
 import com.google.inject.Singleton;

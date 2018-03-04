@@ -1,7 +1,7 @@
 package software.wings.core.ssh.executors;
 
+import static io.harness.govern.Switch.unhandled;
 import static software.wings.core.ssh.executors.SshSessionConfig.Builder.aSshSessionConfig;
-import static software.wings.utils.Switch.unhandled;
 
 import com.google.common.base.Charsets;
 

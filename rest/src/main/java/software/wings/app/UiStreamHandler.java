@@ -1,5 +1,6 @@
 package software.wings.app;
 
+import static io.harness.govern.Switch.unhandled;
 import static java.util.Arrays.asList;
 import static org.apache.commons.lang3.StringUtils.isBlank;
 import static software.wings.beans.ErrorCode.INVALID_REQUEST;
@@ -7,7 +8,6 @@ import static software.wings.beans.ErrorCode.INVALID_TOKEN;
 import static software.wings.beans.ErrorCode.UNKNOWN_ERROR;
 import static software.wings.beans.ResponseMessage.Level.ERROR;
 import static software.wings.beans.ResponseMessage.aResponseMessage;
-import static software.wings.utils.Switch.unhandled;
 
 import com.google.common.base.Splitter;
 import com.google.inject.Inject;

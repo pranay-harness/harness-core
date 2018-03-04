@@ -1,9 +1,9 @@
 package software.wings.helpers.ext.gcr;
 
+import static io.harness.govern.Switch.unhandled;
 import static java.util.Collections.emptyList;
 import static software.wings.helpers.ext.jenkins.BuildDetails.Builder.aBuildDetails;
 import static software.wings.utils.HttpUtil.getOkHttpClientBuilder;
-import static software.wings.utils.Switch.unhandled;
 
 import com.google.api.client.googleapis.auth.oauth2.GoogleCredential;
 import com.google.inject.Inject;

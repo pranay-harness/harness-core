@@ -1,6 +1,4 @@
-package software.wings.utils;
-
-import com.google.api.client.repackaged.com.google.common.base.Throwables;
+package io.harness.govern;
 
 import lombok.Setter;
 import org.slf4j.Logger;
@@ -15,8 +13,7 @@ public class Switch {
    * @param value the switch value that was not handled.
    */
   public static void unhandled(Object value) {
-    logger.error("Unhandled switch value {}: {}\n{}", value.getClass().getCanonicalName(), value,
-        Throwables.getStackTraceAsString(new Exception("")));
+    logger.error("Unhandled switch value {}: {}\n{}", value.getClass().getCanonicalName(), value, new Exception(""));
   }
 
   /**

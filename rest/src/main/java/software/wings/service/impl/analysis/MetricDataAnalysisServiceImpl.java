@@ -1,10 +1,10 @@
 package software.wings.service.impl.analysis;
 
 import static io.harness.data.structure.EmptyPredicate.isNotEmpty;
+import static io.harness.govern.Switch.noop;
+import static io.harness.govern.Switch.unhandled;
 import static java.util.Arrays.asList;
 import static software.wings.dl.PageRequest.PageRequestBuilder.aPageRequest;
-import static software.wings.utils.Switch.noop;
-import static software.wings.utils.Switch.unhandled;
 
 import com.google.common.collect.Lists;
 import com.google.inject.Inject;
