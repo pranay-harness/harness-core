@@ -51,8 +51,8 @@ public class CommandStateExecutionData extends StateExecutionData {
   private String artifactId;
   private String artifactName;
   private CountsByStatuses countsByStatuses;
-  private List<ContainerServiceData> newInstanceData = new ArrayList<>();
-  private List<ContainerServiceData> oldInstanceData = new ArrayList<>();
+  private List<ContainerServiceData> newInstanceData;
+  private List<ContainerServiceData> oldInstanceData;
   private String previousDaemonSetYaml;
   private List<String> previousActiveAutoscalers;
   private boolean downsize;
@@ -132,10 +132,10 @@ public class CommandStateExecutionData extends StateExecutionData {
   public StepExecutionSummary getStepExecutionSummary() {
     CommandStepExecutionSummary commandStepExecutionSummary = new CommandStepExecutionSummary();
     populateStepExecutionSummary(commandStepExecutionSummary);
-    if (newInstanceData != null) {
+    if (isNotEmpty(newInstanceData)) {
       commandStepExecutionSummary.setNewInstanceData(newInstanceData);
     }
-    if (oldInstanceData != null) {
+    if (isNotEmpty(oldInstanceData)) {
       commandStepExecutionSummary.setOldInstanceData(oldInstanceData);
     }
     if (containerSetupParams != null && containerSetupParams instanceof KubernetesSetupParams) {

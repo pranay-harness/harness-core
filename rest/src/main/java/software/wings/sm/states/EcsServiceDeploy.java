@@ -3,15 +3,12 @@ package software.wings.sm.states;
 import static software.wings.beans.command.EcsResizeParams.EcsResizeParamsBuilder.anEcsResizeParams;
 
 import com.github.reinert.jjschema.Attributes;
-import software.wings.api.ContainerServiceData;
 import software.wings.beans.InstanceUnitType;
 import software.wings.beans.command.ContainerResizeParams;
 import software.wings.sm.ContextElementType;
 import software.wings.sm.StateType;
 import software.wings.stencils.DefaultValue;
 import software.wings.stencils.EnumData;
-
-import java.util.List;
 
 /**
  * Created by rishi on 2/8/17.
@@ -60,13 +57,19 @@ public class EcsServiceDeploy extends ContainerServiceDeploy {
   }
 
   @Override
-  protected ContainerResizeParams buildContainerResizeParams(
-      ContextData contextData, List<ContainerServiceData> desiredCounts) {
+  protected ContainerResizeParams buildContainerResizeParams(ContextData contextData) {
     return anEcsResizeParams()
         .withClusterName(contextData.containerElement.getClusterName())
-        .withDesiredCounts(desiredCounts)
         .withRegion(contextData.region)
         .withServiceSteadyStateTimeout(contextData.containerElement.getServiceSteadyStateTimeout())
+        .withRollback(isRollback())
+        .withInstanceCount(contextData.instanceCount)
+        .withInstanceUnitType(getInstanceUnitType())
+        .withContainerServiceName(contextData.containerElement.getName())
+        .withResizeStrategy(contextData.containerElement.getResizeStrategy())
+        .withUseFixedInstances(contextData.containerElement.isUseFixedInstances())
+        .withMaxInstances(contextData.containerElement.getMaxInstances())
+        .withFixedInstances(contextData.containerElement.getFixedInstances())
         .build();
   }
 

@@ -1,7 +1,8 @@
 package software.wings.beans.command;
 
-import static software.wings.beans.command.CommandExecutionResult.CommandExecutionStatus.FAILURE;
-import static software.wings.beans.command.CommandExecutionResult.CommandExecutionStatus.SUCCESS;
+import static io.harness.data.structure.EmptyPredicate.isNotEmpty;
+import static software.wings.beans.InstanceUnitType.PERCENTAGE;
+import static software.wings.beans.ResizeStrategy.RESIZE_NEW_FIRST;
 
 import com.google.inject.Inject;
 
@@ -15,6 +16,7 @@ import software.wings.beans.ErrorCode;
 import software.wings.beans.Log.LogLevel;
 import software.wings.beans.SettingAttribute;
 import software.wings.beans.command.CommandExecutionResult.CommandExecutionStatus;
+import software.wings.beans.command.ResizeCommandUnitExecutionData.ResizeCommandUnitExecutionDataBuilder;
 import software.wings.cloudprovider.ContainerInfo;
 import software.wings.delegatetasks.DelegateLogService;
 import software.wings.exception.WingsException;
@@ -23,21 +25,17 @@ import software.wings.utils.Misc;
 
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Map;
+import java.util.Optional;
 import java.util.stream.Collectors;
 
-/**
- * Created by peeyushaggarwal on 2/1/17.
- */
 public abstract class ContainerResizeCommandUnit extends AbstractCommandUnit {
   private static final Logger logger = LoggerFactory.getLogger(ContainerResizeCommandUnit.class);
 
+  private static final String DASH_STRING = "----------";
+
   @Inject @Transient private transient DelegateLogService logService;
 
-  /**
-   * Instantiates a new command unit.
-   *
-   * @param commandUnitType the command unit type
-   */
   public ContainerResizeCommandUnit(CommandUnitType commandUnitType) {
     super(commandUnitType);
     setArtifactNeeded(true);
@@ -45,41 +43,38 @@ public abstract class ContainerResizeCommandUnit extends AbstractCommandUnit {
 
   @Override
   public CommandExecutionStatus execute(CommandExecutionContext context) {
-    SettingAttribute cloudProviderSetting = context.getCloudProviderSetting();
-    List<EncryptedDataDetail> cloudProviderCredentials = context.getCloudProviderCredentials();
-    ContainerResizeParams params = context.getContainerResizeParams();
     ExecutionLogCallback executionLogCallback = new ExecutionLogCallback(context, getName());
     executionLogCallback.setLogService(logService);
-    CommandExecutionStatus commandExecutionStatus = FAILURE;
 
     try {
-      List<ContainerInfo> containerInfos = new ArrayList<>();
-      params.getDesiredCounts().forEach(containerServiceData
-          -> containerInfos.addAll(executeInternal(
-              cloudProviderSetting, cloudProviderCredentials, params, containerServiceData, executionLogCallback)));
-      context.setCommandExecutionData(ResizeCommandUnitExecutionData.builder().containerInfos(containerInfos).build());
-      boolean allContainersSuccess =
-          containerInfos.stream().allMatch(info -> info.getStatus() == ContainerInfo.Status.SUCCESS);
-      int totalDesiredCount = params.getDesiredCounts().stream().mapToInt(ContainerServiceData::getDesiredCount).sum();
-      if (containerInfos.size() == totalDesiredCount && allContainersSuccess) {
-        commandExecutionStatus = SUCCESS;
+      ContextData contextData = new ContextData(context);
+
+      List<ContainerServiceData> newInstanceDataList;
+      List<ContainerServiceData> oldInstanceDataList;
+      if (!contextData.resizeParams.isRollback()) {
+        newInstanceDataList = new ArrayList<>();
+        ContainerServiceData newInstanceData = getNewInstanceData(contextData);
+        newInstanceDataList.add(newInstanceData);
+        oldInstanceDataList = getOldInstanceData(contextData, newInstanceData);
       } else {
-        if (containerInfos.size() != totalDesiredCount) {
-          executionLogCallback.saveExecutionLog(
-              String.format("Expected data for %d container%s but got %d", totalDesiredCount,
-                  totalDesiredCount == 1 ? "" : "s", containerInfos.size()),
-              LogLevel.ERROR);
-        }
-        if (!allContainersSuccess) {
-          List<ContainerInfo> failed = containerInfos.stream()
-                                           .filter(info -> info.getStatus() != ContainerInfo.Status.SUCCESS)
-                                           .collect(Collectors.toList());
-          executionLogCallback.saveExecutionLog(
-              String.format("The following container%s did not have success status: %s", failed.size() == 1 ? "" : "s",
-                  failed.stream().map(ContainerInfo::getContainerId).collect(Collectors.toList())),
-              LogLevel.ERROR);
-        }
+        newInstanceDataList = contextData.resizeParams.getNewInstanceData();
+        oldInstanceDataList = contextData.resizeParams.getOldInstanceData();
       }
+
+      ResizeCommandUnitExecutionDataBuilder executionDataBuilder = ResizeCommandUnitExecutionData.builder()
+                                                                       .newInstanceData(newInstanceDataList)
+                                                                       .oldInstanceData(oldInstanceDataList);
+
+      boolean resizeNewFirst = contextData.resizeParams.getResizeStrategy() == RESIZE_NEW_FIRST;
+      List<ContainerServiceData> firstDataList = resizeNewFirst ? newInstanceDataList : oldInstanceDataList;
+      List<ContainerServiceData> secondDataList = resizeNewFirst ? oldInstanceDataList : newInstanceDataList;
+
+      boolean executionSucceeded =
+          resizeInstances(contextData, firstDataList, executionDataBuilder, executionLogCallback, resizeNewFirst)
+          && resizeInstances(contextData, secondDataList, executionDataBuilder, executionLogCallback, !resizeNewFirst);
+
+      context.setCommandExecutionData(executionDataBuilder.build());
+      return executionSucceeded ? CommandExecutionStatus.SUCCESS : CommandExecutionStatus.FAILURE;
     } catch (Exception ex) {
       logger.error(ex.getMessage(), ex);
       Misc.logAllMessages(ex, executionLogCallback);
@@ -88,11 +83,146 @@ public abstract class ContainerResizeCommandUnit extends AbstractCommandUnit {
       }
       throw new WingsException(ErrorCode.UNKNOWN_ERROR, ex.getMessage(), ex);
     }
-    return commandExecutionStatus;
   }
 
-  protected abstract List<ContainerInfo> executeInternal(SettingAttribute cloudProviderSetting,
-      List<EncryptedDataDetail> encryptedDataDetails, ContainerResizeParams params, ContainerServiceData serviceData,
+  private boolean resizeInstances(ContextData contextData, List<ContainerServiceData> instanceDataList,
+      ResizeCommandUnitExecutionDataBuilder executionDataBuilder, ExecutionLogCallback executionLogCallback,
+      boolean isUpsize) {
+    boolean executionSucceeded;
+    if (isNotEmpty(instanceDataList)) {
+      List<ContainerInfo> containerInfos = executeResize(contextData, instanceDataList, executionLogCallback);
+      executionSucceeded = allContainersSuccess(containerInfos, instanceDataList, executionLogCallback);
+      if (isUpsize) {
+        executionDataBuilder.containerInfos(containerInfos);
+      }
+    } else {
+      executionSucceeded = true;
+    }
+    return executionSucceeded;
+  }
+
+  private boolean allContainersSuccess(List<ContainerInfo> containerInfos, List<ContainerServiceData> desiredCounts,
+      ExecutionLogCallback executionLogCallback) {
+    boolean success = false;
+    boolean allContainersSuccess =
+        containerInfos.stream().allMatch(info -> info.getStatus() == ContainerInfo.Status.SUCCESS);
+    int totalDesiredCount = desiredCounts.stream().mapToInt(ContainerServiceData::getDesiredCount).sum();
+    if (containerInfos.size() == totalDesiredCount && allContainersSuccess) {
+      success = true;
+      logger.info("Successfully completed resize operation");
+      executionLogCallback.saveExecutionLog(
+          String.format("Completed resize operation.\n%s\n", DASH_STRING), LogLevel.INFO);
+    } else {
+      if (containerInfos.size() != totalDesiredCount) {
+        executionLogCallback.saveExecutionLog(
+            String.format("Expected data for %d container%s but got %d", totalDesiredCount,
+                totalDesiredCount == 1 ? "" : "s", containerInfos.size()),
+            LogLevel.ERROR);
+      }
+      if (!allContainersSuccess) {
+        List<ContainerInfo> failed = containerInfos.stream()
+                                         .filter(info -> info.getStatus() != ContainerInfo.Status.SUCCESS)
+                                         .collect(Collectors.toList());
+        executionLogCallback.saveExecutionLog(
+            String.format("The following container%s did not have success status: %s", failed.size() == 1 ? "" : "s",
+                failed.stream().map(ContainerInfo::getContainerId).collect(Collectors.toList())),
+            LogLevel.ERROR);
+      }
+      logger.error("Completed operation with errors");
+      executionLogCallback.saveExecutionLog(
+          String.format("Completed operation with errors.\n%s\n", DASH_STRING), LogLevel.ERROR);
+    }
+    return success;
+  }
+
+  private ContainerServiceData getNewInstanceData(ContextData contextData) {
+    Optional<Integer> previousDesiredCount = getServiceDesiredCount(contextData);
+
+    if (!previousDesiredCount.isPresent()) {
+      throw new WingsException(ErrorCode.INVALID_REQUEST)
+          .addParam(
+              "message", "Service setup not done, service name: " + contextData.resizeParams.getContainerServiceName());
+    }
+
+    int previousCount = previousDesiredCount.get();
+    int desiredCount = getNewInstancesDesiredCount(contextData);
+
+    if (desiredCount < previousCount) {
+      String msg = "Desired instance count must be greater than or equal to the current instance count: {current: "
+          + previousCount + ", desired: " + desiredCount + "}";
+      logger.error(msg);
+      throw new WingsException(ErrorCode.INVALID_REQUEST).addParam("message", msg);
+    }
+
+    return ContainerServiceData.builder()
+        .name(contextData.resizeParams.getContainerServiceName())
+        .previousCount(previousCount)
+        .desiredCount(desiredCount)
+        .build();
+  }
+
+  private int getNewInstancesDesiredCount(ContextData contextData) {
+    int instanceCount = contextData.resizeParams.getInstanceCount();
+    if (contextData.resizeParams.getInstanceUnitType() == PERCENTAGE) {
+      int totalInstancesAvailable;
+      if (contextData.resizeParams.isUseFixedInstances()) {
+        totalInstancesAvailable = contextData.resizeParams.getFixedInstances();
+      } else {
+        totalInstancesAvailable =
+            getActiveServiceCounts(contextData).values().stream().mapToInt(Integer::intValue).sum();
+        if (totalInstancesAvailable == 0) {
+          return contextData.resizeParams.getMaxInstances();
+        }
+      }
+      return (int) Math.round(Math.min(instanceCount, 100) * totalInstancesAvailable / 100.0);
+    } else {
+      if (contextData.resizeParams.isUseFixedInstances()) {
+        return Math.min(instanceCount, contextData.resizeParams.getFixedInstances());
+      } else {
+        return instanceCount;
+      }
+    }
+  }
+
+  private List<ContainerServiceData> getOldInstanceData(ContextData contextData, ContainerServiceData newServiceData) {
+    List<ContainerServiceData> desiredCounts = new ArrayList<>();
+    Map<String, Integer> previousCounts = getActiveServiceCounts(contextData);
+    previousCounts.remove(newServiceData.getName());
+
+    int downsizeCount = contextData.deployingToHundredPercent
+        ? previousCounts.values().stream().mapToInt(Integer::intValue).sum()
+        : Math.max(newServiceData.getDesiredCount() - newServiceData.getPreviousCount(), 0);
+
+    for (String serviceName : previousCounts.keySet()) {
+      int previousCount = previousCounts.get(serviceName);
+      int desiredCount = Math.max(previousCount - downsizeCount, 0);
+      if (previousCount != desiredCount) {
+        desiredCounts.add(ContainerServiceData.builder()
+                              .name(serviceName)
+                              .previousCount(previousCount)
+                              .desiredCount(desiredCount)
+                              .build());
+      }
+      downsizeCount -= previousCount - desiredCount;
+    }
+    return desiredCounts;
+  }
+
+  private List<ContainerInfo> executeResize(
+      ContextData contextData, List<ContainerServiceData> desiredCounts, ExecutionLogCallback executionLogCallback) {
+    List<ContainerInfo> containerInfos = new ArrayList<>();
+    desiredCounts.forEach(containerServiceData
+        -> containerInfos.addAll(
+            executeInternal(contextData, desiredCounts, containerServiceData, executionLogCallback)));
+    return containerInfos;
+  }
+
+  protected abstract Map<String, Integer> getActiveServiceCounts(ContextData contextData);
+
+  protected abstract Optional<Integer> getServiceDesiredCount(ContextData contextData);
+
+  protected abstract List<ContainerInfo> executeInternal(ContextData contextData,
+      List<ContainerServiceData> desiredCounts, ContainerServiceData containerServiceData,
       ExecutionLogCallback executionLogCallback);
 
   @Data
@@ -104,6 +234,23 @@ public abstract class ContainerResizeCommandUnit extends AbstractCommandUnit {
 
     public Yaml(String name, String commandUnitType, String deploymentType) {
       super(name, commandUnitType, deploymentType);
+    }
+  }
+
+  protected static class ContextData {
+    final SettingAttribute settingAttribute;
+    final List<EncryptedDataDetail> encryptedDataDetails;
+    final ContainerResizeParams resizeParams;
+    final boolean deployingToHundredPercent;
+
+    ContextData(CommandExecutionContext context) {
+      settingAttribute = context.getCloudProviderSetting();
+      encryptedDataDetails = context.getCloudProviderCredentials();
+      resizeParams = context.getContainerResizeParams();
+
+      deployingToHundredPercent = resizeParams.getInstanceUnitType() == PERCENTAGE
+          ? resizeParams.getInstanceCount() >= 100
+          : resizeParams.isUseFixedInstances() && resizeParams.getInstanceCount() >= resizeParams.getFixedInstances();
     }
   }
 }

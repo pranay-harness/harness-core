@@ -5,15 +5,12 @@ import static software.wings.sm.StateType.KUBERNETES_DEPLOY;
 
 import com.github.reinert.jjschema.Attributes;
 import org.apache.commons.lang3.StringUtils;
-import software.wings.api.ContainerServiceData;
 import software.wings.beans.InstanceUnitType;
 import software.wings.beans.command.ContainerApiVersions;
 import software.wings.beans.command.ContainerResizeParams;
 import software.wings.sm.ContextElementType;
 import software.wings.stencils.DefaultValue;
 import software.wings.stencils.EnumData;
-
-import java.util.List;
 
 /**
  * Created by brett on 3/1/17
@@ -63,19 +60,24 @@ public class KubernetesDeploy extends ContainerServiceDeploy {
   }
 
   @Override
-  protected ContainerResizeParams buildContainerResizeParams(
-      ContextData contextData, List<ContainerServiceData> desiredCounts) {
+  protected ContainerResizeParams buildContainerResizeParams(ContextData contextData) {
     return aKubernetesResizeParams()
         .withClusterName(contextData.containerElement.getClusterName())
-        .withDesiredCounts(desiredCounts)
         .withNamespace(contextData.containerElement.getNamespace())
         .withServiceSteadyStateTimeout(contextData.containerElement.getServiceSteadyStateTimeout())
-        .withDeployingToHundredPercent(contextData.deployingToHundredPercent)
         .withUseAutoscaler(contextData.containerElement.isUseAutoscaler())
-        .withSubscriptionId(contextData.containerServiceParams.getSubscriptionId())
-        .withResourceGroup(contextData.containerServiceParams.getResourceGroup())
+        .withSubscriptionId(contextData.subscriptionId)
+        .withResourceGroup(contextData.resourceGroup)
         .withApiVersion(getApiVersion(contextData))
         .withUseIstioRouteRule(contextData.containerElement.isUseIstioRouteRule())
+        .withRollback(isRollback())
+        .withInstanceCount(contextData.instanceCount)
+        .withInstanceUnitType(getInstanceUnitType())
+        .withContainerServiceName(contextData.containerElement.getName())
+        .withResizeStrategy(contextData.containerElement.getResizeStrategy())
+        .withUseFixedInstances(contextData.containerElement.isUseFixedInstances())
+        .withMaxInstances(contextData.containerElement.getMaxInstances())
+        .withFixedInstances(contextData.containerElement.getFixedInstances())
         .build();
   }
 

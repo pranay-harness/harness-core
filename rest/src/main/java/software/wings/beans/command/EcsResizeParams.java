@@ -3,8 +3,9 @@ package software.wings.beans.command;
 import lombok.Data;
 import lombok.EqualsAndHashCode;
 import software.wings.api.ContainerServiceData;
+import software.wings.beans.InstanceUnitType;
+import software.wings.beans.ResizeStrategy;
 
-import java.util.ArrayList;
 import java.util.List;
 
 @Data
@@ -15,8 +16,17 @@ public class EcsResizeParams extends ContainerResizeParams {
   public static final class EcsResizeParamsBuilder {
     private String region;
     private String clusterName;
-    private List<ContainerServiceData> desiredCounts = new ArrayList<>();
     private int serviceSteadyStateTimeout;
+    private boolean rollback;
+    private String containerServiceName;
+    private ResizeStrategy resizeStrategy;
+    private boolean useFixedInstances;
+    private int maxInstances;
+    private int fixedInstances;
+    private List<ContainerServiceData> newInstanceData;
+    private List<ContainerServiceData> oldInstanceData;
+    private int instanceCount;
+    private InstanceUnitType instanceUnitType;
 
     private EcsResizeParamsBuilder() {}
 
@@ -34,13 +44,58 @@ public class EcsResizeParams extends ContainerResizeParams {
       return this;
     }
 
-    public EcsResizeParamsBuilder withDesiredCounts(List<ContainerServiceData> desiredCounts) {
-      this.desiredCounts = desiredCounts;
+    public EcsResizeParamsBuilder withServiceSteadyStateTimeout(int serviceSteadyStateTimeout) {
+      this.serviceSteadyStateTimeout = serviceSteadyStateTimeout;
       return this;
     }
 
-    public EcsResizeParamsBuilder withServiceSteadyStateTimeout(int serviceSteadyStateTimeout) {
-      this.serviceSteadyStateTimeout = serviceSteadyStateTimeout;
+    public EcsResizeParamsBuilder withRollback(boolean rollback) {
+      this.rollback = rollback;
+      return this;
+    }
+
+    public EcsResizeParamsBuilder withContainerServiceName(String containerServiceName) {
+      this.containerServiceName = containerServiceName;
+      return this;
+    }
+
+    public EcsResizeParamsBuilder withResizeStrategy(ResizeStrategy resizeStrategy) {
+      this.resizeStrategy = resizeStrategy;
+      return this;
+    }
+
+    public EcsResizeParamsBuilder withUseFixedInstances(boolean useFixedInstances) {
+      this.useFixedInstances = useFixedInstances;
+      return this;
+    }
+
+    public EcsResizeParamsBuilder withMaxInstances(int maxInstances) {
+      this.maxInstances = maxInstances;
+      return this;
+    }
+
+    public EcsResizeParamsBuilder withFixedInstances(int fixedInstances) {
+      this.fixedInstances = fixedInstances;
+      return this;
+    }
+
+    public EcsResizeParamsBuilder withNewInstanceData(List<ContainerServiceData> newInstanceData) {
+      this.newInstanceData = newInstanceData;
+      return this;
+    }
+
+    public EcsResizeParamsBuilder withOldInstanceData(List<ContainerServiceData> oldInstanceData) {
+      this.oldInstanceData = oldInstanceData;
+      return this;
+    }
+
+    public EcsResizeParamsBuilder withInstanceCount(int instanceCount) {
+      this.instanceCount = instanceCount;
+      return this;
+    }
+
+    public EcsResizeParamsBuilder withInstanceUnitType(InstanceUnitType instanceUnitType) {
+      this.instanceUnitType = instanceUnitType;
       return this;
     }
 
@@ -48,16 +103,34 @@ public class EcsResizeParams extends ContainerResizeParams {
       return anEcsResizeParams()
           .withRegion(region)
           .withClusterName(clusterName)
-          .withDesiredCounts(desiredCounts)
-          .withServiceSteadyStateTimeout(serviceSteadyStateTimeout);
+          .withServiceSteadyStateTimeout(serviceSteadyStateTimeout)
+          .withRollback(rollback)
+          .withContainerServiceName(containerServiceName)
+          .withResizeStrategy(resizeStrategy)
+          .withUseFixedInstances(useFixedInstances)
+          .withMaxInstances(maxInstances)
+          .withFixedInstances(fixedInstances)
+          .withNewInstanceData(newInstanceData)
+          .withOldInstanceData(oldInstanceData)
+          .withInstanceCount(instanceCount)
+          .withInstanceUnitType(instanceUnitType);
     }
 
     public EcsResizeParams build() {
       EcsResizeParams ecsResizeParams = new EcsResizeParams();
       ecsResizeParams.setRegion(region);
       ecsResizeParams.setClusterName(clusterName);
-      ecsResizeParams.setDesiredCounts(desiredCounts);
       ecsResizeParams.setServiceSteadyStateTimeout(serviceSteadyStateTimeout);
+      ecsResizeParams.setRollback(rollback);
+      ecsResizeParams.setContainerServiceName(containerServiceName);
+      ecsResizeParams.setResizeStrategy(resizeStrategy);
+      ecsResizeParams.setUseFixedInstances(useFixedInstances);
+      ecsResizeParams.setMaxInstances(maxInstances);
+      ecsResizeParams.setFixedInstances(fixedInstances);
+      ecsResizeParams.setNewInstanceData(newInstanceData);
+      ecsResizeParams.setOldInstanceData(oldInstanceData);
+      ecsResizeParams.setInstanceCount(instanceCount);
+      ecsResizeParams.setInstanceUnitType(instanceUnitType);
       return ecsResizeParams;
     }
   }

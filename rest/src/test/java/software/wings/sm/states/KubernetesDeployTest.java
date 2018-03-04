@@ -5,7 +5,6 @@ import static java.util.Collections.emptyList;
 import static java.util.Collections.emptyMap;
 import static java.util.Collections.singletonList;
 import static org.assertj.core.api.Assertions.assertThat;
-import static org.assertj.core.api.Assertions.failBecauseExceptionWasNotThrown;
 import static org.joor.Reflect.on;
 import static org.mockito.Matchers.any;
 import static org.mockito.Matchers.anyObject;
@@ -21,7 +20,6 @@ import static software.wings.beans.Application.Builder.anApplication;
 import static software.wings.beans.Environment.Builder.anEnvironment;
 import static software.wings.beans.GcpKubernetesInfrastructureMapping.Builder.aGcpKubernetesInfrastructureMapping;
 import static software.wings.beans.InstanceUnitType.COUNT;
-import static software.wings.beans.InstanceUnitType.PERCENTAGE;
 import static software.wings.beans.ResizeStrategy.RESIZE_NEW_FIRST;
 import static software.wings.beans.Service.Builder.aService;
 import static software.wings.beans.ServiceTemplate.Builder.aServiceTemplate;
@@ -58,8 +56,6 @@ import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mongodb.morphia.Key;
 import software.wings.WingsBaseTest;
-import software.wings.api.CommandStateExecutionData;
-import software.wings.api.ContainerServiceData;
 import software.wings.api.ContainerServiceElement;
 import software.wings.api.DeploymentType;
 import software.wings.api.PhaseElement;
@@ -71,7 +67,6 @@ import software.wings.beans.Activity;
 import software.wings.beans.Application;
 import software.wings.beans.DelegateTask;
 import software.wings.beans.Environment;
-import software.wings.beans.ErrorCode;
 import software.wings.beans.GcpConfig;
 import software.wings.beans.InfrastructureMapping;
 import software.wings.beans.Service;
@@ -84,9 +79,7 @@ import software.wings.beans.command.ContainerResizeParams;
 import software.wings.beans.command.ServiceCommand;
 import software.wings.common.VariableProcessor;
 import software.wings.delegatetasks.DelegateProxyFactory;
-import software.wings.exception.WingsException;
 import software.wings.expression.ExpressionEvaluator;
-import software.wings.service.impl.ContainerServiceParams;
 import software.wings.service.intfc.ActivityService;
 import software.wings.service.intfc.AppService;
 import software.wings.service.intfc.ArtifactService;
@@ -99,7 +92,6 @@ import software.wings.service.intfc.ServiceTemplateService;
 import software.wings.service.intfc.SettingsService;
 import software.wings.service.intfc.WorkflowExecutionService;
 import software.wings.service.intfc.security.SecretManager;
-import software.wings.sm.ExecutionContext;
 import software.wings.sm.ExecutionContextImpl;
 import software.wings.sm.ExecutionResponse;
 import software.wings.sm.ExecutionStatus;
@@ -109,16 +101,13 @@ import software.wings.waitnotify.NotifyResponseData;
 
 import java.util.Collections;
 import java.util.HashMap;
-import java.util.LinkedHashMap;
 import java.util.Map;
-import java.util.Optional;
 
 /**
  * Created by brett on 3/10/17
  */
 public class KubernetesDeployTest extends WingsBaseTest {
   private static final String KUBERNETES_REPLICATION_CONTROLLER_NAME = "kubernetes-rc-name.1";
-  private static final String KUBERNETES_REPLICATION_CONTROLLER_OLD_NAME = "kubernetes-rc-name.0";
 
   @Mock private SettingsService settingsService;
   @Mock private DelegateService delegateService;
@@ -138,11 +127,11 @@ public class KubernetesDeployTest extends WingsBaseTest {
   @Mock private ExpressionEvaluator evaluator;
 
   @InjectMocks
-  private KubernetesDeploy kubernetesReplicationControllerDeploy = aKubernetesDeploy(STATE_NAME)
-                                                                       .withCommandName(COMMAND_NAME)
-                                                                       .withInstanceCount("1")
-                                                                       .withInstanceUnitType(COUNT)
-                                                                       .build();
+  private KubernetesDeploy kubernetesDeploy = aKubernetesDeploy(STATE_NAME)
+                                                  .withCommandName(COMMAND_NAME)
+                                                  .withInstanceCount("1")
+                                                  .withInstanceUnitType(COUNT)
+                                                  .build();
 
   @Mock private ContainerService containerService;
 
@@ -223,14 +212,13 @@ public class KubernetesDeployTest extends WingsBaseTest {
     when(serviceTemplateService.computeServiceVariables(APP_ID, ENV_ID, TEMPLATE_ID, null, false))
         .thenReturn(emptyList());
     when(secretManager.getEncryptionDetails(anyObject(), anyString(), anyString())).thenReturn(Collections.emptyList());
-    setInternalState(kubernetesReplicationControllerDeploy, "secretManager", secretManager);
+    setInternalState(kubernetesDeploy, "secretManager", secretManager);
     when(workflowExecutionService.getExecutionDetails(anyString(), anyString()))
         .thenReturn(aWorkflowExecution().build());
     context = new ExecutionContextImpl(stateExecutionInstance);
 
     when(delegateProxyFactory.get(eq(ContainerService.class), any(DelegateTask.SyncTaskContext.class)))
         .thenReturn(containerService);
-    when(containerService.getServiceDesiredCount(any(ContainerServiceParams.class))).thenReturn(Optional.of(0));
     when(configuration.getPortal()).thenReturn(portalConfig);
     when(portalConfig.getUrl()).thenReturn("http://www.url.com");
     when(artifactService.get(any(), any())).thenReturn(anArtifact().build());
@@ -244,7 +232,7 @@ public class KubernetesDeployTest extends WingsBaseTest {
     on(context).set("variableProcessor", variableProcessor);
     on(context).set("evaluator", evaluator);
 
-    ExecutionResponse response = kubernetesReplicationControllerDeploy.execute(context);
+    ExecutionResponse response = kubernetesDeploy.execute(context);
     assertThat(response).isNotNull().hasFieldOrPropertyWithValue("async", true);
     assertThat(response.getCorrelationIds()).isNotNull().hasSize(1);
     verify(activityService).save(any(Activity.class));
@@ -253,26 +241,10 @@ public class KubernetesDeployTest extends WingsBaseTest {
     DelegateTask delegateTask = captor.getValue();
     CommandExecutionContext executionContext = (CommandExecutionContext) delegateTask.getParameters()[1];
     ContainerResizeParams params = executionContext.getContainerResizeParams();
-    assertThat(params.getDesiredCounts().size()).isEqualTo(1);
-    ContainerServiceData taskParamsServiceData = params.getDesiredCounts().get(0);
-    assertThat(taskParamsServiceData.getPreviousCount()).isEqualTo(0);
-    assertThat(taskParamsServiceData.getDesiredCount()).isEqualTo(1);
-  }
-
-  @Test
-  public void shouldExecuteThrowInvalidRequest() {
-    when(containerService.getServiceDesiredCount(any(ContainerServiceParams.class))).thenReturn(Optional.empty());
-    try {
-      on(context).set("serviceTemplateService", serviceTemplateService);
-      on(context).set("variableProcessor", variableProcessor);
-      on(context).set("evaluator", evaluator);
-      kubernetesReplicationControllerDeploy.execute(context);
-      failBecauseExceptionWasNotThrown(WingsException.class);
-    } catch (WingsException exception) {
-      assertThat(exception).hasMessage(ErrorCode.INVALID_REQUEST.getCode());
-      assertThat(exception.getParams()).hasSize(1).containsKey("message");
-      assertThat(exception.getParams().get("message")).asString().contains("Service setup not done, service name:");
-    }
+    //        assertThat(params.getDesiredCounts().size()).isEqualTo(1);
+    //        ContainerServiceData taskParamsServiceData = params.getDesiredCounts().get(0);
+    //        assertThat(taskParamsServiceData.getPreviousCount()).isEqualTo(0);
+    //        assertThat(taskParamsServiceData.getDesiredCount()).isEqualTo(1);
   }
 
   @Test
@@ -285,7 +257,7 @@ public class KubernetesDeployTest extends WingsBaseTest {
     stateExecutionInstance.getStateExecutionMap().put(
         stateExecutionInstance.getStateName(), aCommandStateExecutionData().build());
 
-    ExecutionResponse response = kubernetesReplicationControllerDeploy.handleAsyncResponse(context, notifyResponse);
+    ExecutionResponse response = kubernetesDeploy.handleAsyncResponse(context, notifyResponse);
     assertThat(response)
         .isNotNull()
         .hasFieldOrPropertyWithValue("async", false)
@@ -293,38 +265,7 @@ public class KubernetesDeployTest extends WingsBaseTest {
   }
 
   @Test
-  public void shouldExecuteAsyncWithOldReplicationController() {
-    on(context).set("variableProcessor", variableProcessor);
-    on(context).set("evaluator", evaluator);
-    Map<String, NotifyResponseData> notifyResponse = new HashMap<>();
-    notifyResponse.put("key", aCommandExecutionResult().withStatus(CommandExecutionStatus.SUCCESS).build());
-
-    CommandStateExecutionData commandStateExecutionData =
-        aCommandStateExecutionData()
-            .withActivityId(ACTIVITY_ID)
-            .withNewInstanceData(singletonList(ContainerServiceData.builder()
-                                                   .name(KUBERNETES_REPLICATION_CONTROLLER_NAME)
-                                                   .previousCount(0)
-                                                   .desiredCount(1)
-                                                   .build()))
-            .withOldInstanceData(singletonList(ContainerServiceData.builder()
-                                                   .name(KUBERNETES_REPLICATION_CONTROLLER_OLD_NAME)
-                                                   .previousCount(1)
-                                                   .desiredCount(0)
-                                                   .build()))
-            .withDownsize(false)
-            .build();
-    stateExecutionInstance.getStateExecutionMap().put(stateExecutionInstance.getStateName(), commandStateExecutionData);
-
-    ExecutionResponse response = kubernetesReplicationControllerDeploy.handleAsyncResponse(context, notifyResponse);
-    assertThat(response).isNotNull().hasFieldOrPropertyWithValue("async", true);
-    assertThat(response.getCorrelationIds()).isNotNull().hasSize(1);
-    assertThat(response.getStateExecutionData()).isNotNull().isEqualTo(commandStateExecutionData);
-    verify(delegateService).queueTask(any(DelegateTask.class));
-  }
-
-  @Test
-  public void shouldExecuteAsyncWithOldReplicationControllerWithNoInstance() {
+  public void shouldExecuteAsyncWithOldRControllerWithNoInstance() {
     on(context).set("variableProcessor", variableProcessor);
     on(context).set("evaluator", evaluator);
     Map<String, NotifyResponseData> notifyResponse = new HashMap<>();
@@ -332,325 +273,10 @@ public class KubernetesDeployTest extends WingsBaseTest {
     stateExecutionInstance.getStateExecutionMap().put(
         stateExecutionInstance.getStateName(), aCommandStateExecutionData().build());
 
-    ExecutionResponse response = kubernetesReplicationControllerDeploy.handleAsyncResponse(context, notifyResponse);
+    ExecutionResponse response = kubernetesDeploy.handleAsyncResponse(context, notifyResponse);
     assertThat(response)
         .isNotNull()
         .hasFieldOrPropertyWithValue("async", false)
         .hasFieldOrPropertyWithValue("executionStatus", ExecutionStatus.SUCCESS);
-  }
-
-  @Test
-  public void shouldDownsizeOld() {
-    Map<String, NotifyResponseData> notifyResponse = new HashMap<>();
-    notifyResponse.put("key", aCommandExecutionResult().withStatus(CommandExecutionStatus.SUCCESS).build());
-
-    CommandStateExecutionData commandStateExecutionData =
-        aCommandStateExecutionData()
-            .withActivityId(ACTIVITY_ID)
-            .withNewInstanceData(singletonList(ContainerServiceData.builder()
-                                                   .name(KUBERNETES_REPLICATION_CONTROLLER_NAME)
-                                                   .previousCount(1)
-                                                   .desiredCount(2)
-                                                   .build()))
-            .withOldInstanceData(singletonList(ContainerServiceData.builder()
-                                                   .name(KUBERNETES_REPLICATION_CONTROLLER_OLD_NAME)
-                                                   .previousCount(6)
-                                                   .desiredCount(5)
-                                                   .build()))
-            .withDownsize(false)
-            .build();
-
-    stateExecutionInstance.getStateExecutionMap().put(stateExecutionInstance.getStateName(), commandStateExecutionData);
-
-    ExecutionContextImpl context = new ExecutionContextImpl(stateExecutionInstance);
-    on(context).set("variableProcessor", variableProcessor);
-    on(context).set("evaluator", evaluator);
-    kubernetesReplicationControllerDeploy.handleAsyncResponse(context, notifyResponse);
-
-    ArgumentCaptor<DelegateTask> captor = ArgumentCaptor.forClass(DelegateTask.class);
-    verify(delegateService).queueTask(captor.capture());
-    DelegateTask delegateTask = captor.getValue();
-    CommandExecutionContext executionContext = (CommandExecutionContext) delegateTask.getParameters()[1];
-    ContainerResizeParams params = executionContext.getContainerResizeParams();
-    assertThat(params.getDesiredCounts().size()).isEqualTo(1);
-    ContainerServiceData containerServiceData = params.getDesiredCounts().get(0);
-    assertThat(containerServiceData.getPreviousCount()).isEqualTo(6);
-    assertThat(containerServiceData.getDesiredCount()).isEqualTo(5);
-  }
-
-  private ExecutionContext prepareContext(
-      String name, boolean useFixedInstances, int fixedInstances, int maxInstances) {
-    ExecutionContextImpl context =
-        new ExecutionContextImpl(aStateExecutionInstance()
-                                     .withStateName(STATE_NAME)
-                                     .addContextElement(workflowStandardParams)
-                                     .addContextElement(phaseElement)
-                                     .addContextElement(ContainerServiceElement.builder()
-                                                            .uuid(serviceElement.getUuid())
-                                                            .useFixedInstances(useFixedInstances)
-                                                            .fixedInstances(fixedInstances)
-                                                            .maxInstances(maxInstances)
-                                                            .clusterName(CLUSTER_NAME)
-                                                            .namespace("default")
-                                                            .name(name)
-                                                            .resizeStrategy(RESIZE_NEW_FIRST)
-                                                            .infraMappingId(INFRA_MAPPING_ID)
-                                                            .deploymentType(DeploymentType.KUBERNETES)
-                                                            .build())
-                                     .addStateExecutionData(new PhaseStepExecutionData())
-                                     .build());
-
-    on(context).set("serviceTemplateService", serviceTemplateService);
-    on(context).set("variableProcessor", variableProcessor);
-    on(context).set("evaluator", evaluator);
-    return context;
-  }
-
-  @Test
-  public void shouldResizeAndDownsize() {
-    when(containerService.getServiceDesiredCount(any(ContainerServiceParams.class))).thenReturn(Optional.of(1));
-    Map<String, Integer> activeServiceCounts = new LinkedHashMap<>();
-    activeServiceCounts.put("rc-name.0", 1);
-    when(containerService.getActiveServiceCounts(any(ContainerServiceParams.class))).thenReturn(activeServiceCounts);
-    kubernetesReplicationControllerDeploy.setInstanceCount("2");
-    kubernetesReplicationControllerDeploy.setInstanceUnitType(COUNT);
-
-    ExecutionContext context = prepareContext("rc-name.1", false, 0, 0);
-    ExecutionResponse response = kubernetesReplicationControllerDeploy.execute(context);
-
-    ArgumentCaptor<DelegateTask> captor = ArgumentCaptor.forClass(DelegateTask.class);
-    verify(delegateService).queueTask(captor.capture());
-    DelegateTask delegateTask = captor.getValue();
-    CommandExecutionContext executionContext = (CommandExecutionContext) delegateTask.getParameters()[1];
-    ContainerResizeParams params = executionContext.getContainerResizeParams();
-    assertThat(params.getDesiredCounts().size()).isEqualTo(1);
-    ContainerServiceData taskParamsServiceData = params.getDesiredCounts().get(0);
-    assertThat(taskParamsServiceData.getPreviousCount()).isEqualTo(1);
-    assertThat(taskParamsServiceData.getDesiredCount()).isEqualTo(2);
-
-    CommandStateExecutionData executionData = (CommandStateExecutionData) response.getStateExecutionData();
-
-    assertThat(executionData.getNewInstanceData().size()).isEqualTo(1);
-    ContainerServiceData contextNewServiceData = executionData.getNewInstanceData().get(0);
-    assertThat(contextNewServiceData.getPreviousCount()).isEqualTo(1);
-    assertThat(contextNewServiceData.getDesiredCount()).isEqualTo(2);
-
-    assertThat(executionData.getOldInstanceData().size()).isEqualTo(1);
-    ContainerServiceData contextOldServiceData = executionData.getOldInstanceData().get(0);
-    assertThat(contextOldServiceData.getPreviousCount()).isEqualTo(1);
-    assertThat(contextOldServiceData.getDesiredCount()).isEqualTo(0);
-  }
-
-  @Test
-  public void shouldDownsizeMultiple() {
-    when(containerService.getServiceDesiredCount(any(ContainerServiceParams.class))).thenReturn(Optional.of(0));
-    Map<String, Integer> activeServiceCounts = new LinkedHashMap<>();
-    activeServiceCounts.put("rc-name.0", 1);
-    activeServiceCounts.put("rc-name.1", 2);
-    when(containerService.getActiveServiceCounts(any(ContainerServiceParams.class))).thenReturn(activeServiceCounts);
-    kubernetesReplicationControllerDeploy.setInstanceCount("3");
-    kubernetesReplicationControllerDeploy.setInstanceUnitType(COUNT);
-
-    ExecutionContext context = prepareContext("rc-name.2", false, 0, 0);
-    ExecutionResponse response = kubernetesReplicationControllerDeploy.execute(context);
-
-    CommandStateExecutionData executionData = (CommandStateExecutionData) response.getStateExecutionData();
-
-    assertThat(executionData.getNewInstanceData().size()).isEqualTo(1);
-    ContainerServiceData contextNewServiceData = executionData.getNewInstanceData().get(0);
-    assertThat(contextNewServiceData.getPreviousCount()).isEqualTo(0);
-    assertThat(contextNewServiceData.getDesiredCount()).isEqualTo(3);
-
-    assertThat(executionData.getOldInstanceData().size()).isEqualTo(2);
-    ContainerServiceData contextOldServiceData = executionData.getOldInstanceData().get(0);
-    assertThat(contextOldServiceData.getName()).isEqualTo("rc-name.0");
-    assertThat(contextOldServiceData.getPreviousCount()).isEqualTo(1);
-    assertThat(contextOldServiceData.getDesiredCount()).isEqualTo(0);
-    contextOldServiceData = executionData.getOldInstanceData().get(1);
-    assertThat(contextOldServiceData.getName()).isEqualTo("rc-name.1");
-    assertThat(contextOldServiceData.getPreviousCount()).isEqualTo(2);
-    assertThat(contextOldServiceData.getDesiredCount()).isEqualTo(0);
-  }
-
-  @Test
-  public void shouldUseFixedInstancesWithCount() {
-    when(containerService.getServiceDesiredCount(any(ContainerServiceParams.class))).thenReturn(Optional.of(0));
-    Map<String, Integer> activeServiceCounts = new LinkedHashMap<>();
-    activeServiceCounts.put("rc-name.0", 2);
-    activeServiceCounts.put("rc-name.1", 2);
-    when(containerService.getActiveServiceCounts(any(ContainerServiceParams.class))).thenReturn(activeServiceCounts);
-    kubernetesReplicationControllerDeploy.setInstanceCount("3");
-    kubernetesReplicationControllerDeploy.setInstanceUnitType(COUNT);
-
-    ExecutionContext context = prepareContext("rc-name.2", true, 3, 0);
-    ExecutionResponse response = kubernetesReplicationControllerDeploy.execute(context);
-
-    CommandStateExecutionData executionData = (CommandStateExecutionData) response.getStateExecutionData();
-
-    assertThat(executionData.getNewInstanceData().size()).isEqualTo(1);
-    ContainerServiceData contextNewServiceData = executionData.getNewInstanceData().get(0);
-    assertThat(contextNewServiceData.getPreviousCount()).isEqualTo(0);
-    assertThat(contextNewServiceData.getDesiredCount()).isEqualTo(3);
-
-    assertThat(executionData.getOldInstanceData().size()).isEqualTo(2);
-    ContainerServiceData contextOldServiceData = executionData.getOldInstanceData().get(0);
-    assertThat(contextOldServiceData.getName()).isEqualTo("rc-name.0");
-    assertThat(contextOldServiceData.getPreviousCount()).isEqualTo(2);
-    assertThat(contextOldServiceData.getDesiredCount()).isEqualTo(0);
-    contextOldServiceData = executionData.getOldInstanceData().get(1);
-    assertThat(contextOldServiceData.getName()).isEqualTo("rc-name.1");
-    assertThat(contextOldServiceData.getPreviousCount()).isEqualTo(2);
-    assertThat(contextOldServiceData.getDesiredCount()).isEqualTo(0);
-  }
-
-  @Test
-  public void shouldCapCountAtFixed() {
-    when(containerService.getServiceDesiredCount(any(ContainerServiceParams.class))).thenReturn(Optional.of(0));
-    Map<String, Integer> activeServiceCounts = new LinkedHashMap<>();
-    activeServiceCounts.put("rc-name.0", 3);
-    when(containerService.getActiveServiceCounts(any(ContainerServiceParams.class))).thenReturn(activeServiceCounts);
-    kubernetesReplicationControllerDeploy.setInstanceCount("5");
-    kubernetesReplicationControllerDeploy.setInstanceUnitType(COUNT);
-
-    ExecutionContext context = prepareContext("rc-name.1", true, 3, 0);
-    ExecutionResponse response = kubernetesReplicationControllerDeploy.execute(context);
-
-    CommandStateExecutionData executionData = (CommandStateExecutionData) response.getStateExecutionData();
-
-    assertThat(executionData.getNewInstanceData().size()).isEqualTo(1);
-    ContainerServiceData contextNewServiceData = executionData.getNewInstanceData().get(0);
-    assertThat(contextNewServiceData.getPreviousCount()).isEqualTo(0);
-    assertThat(contextNewServiceData.getDesiredCount()).isEqualTo(3);
-
-    assertThat(executionData.getOldInstanceData().size()).isEqualTo(1);
-    ContainerServiceData contextOldServiceData = executionData.getOldInstanceData().get(0);
-    assertThat(contextOldServiceData.getName()).isEqualTo("rc-name.0");
-    assertThat(contextOldServiceData.getPreviousCount()).isEqualTo(3);
-    assertThat(contextOldServiceData.getDesiredCount()).isEqualTo(0);
-  }
-
-  @Test
-  public void shouldUseFixedInstancesWithPercentage() {
-    when(containerService.getServiceDesiredCount(any(ContainerServiceParams.class))).thenReturn(Optional.of(0));
-    Map<String, Integer> activeServiceCounts = new LinkedHashMap<>();
-    activeServiceCounts.put("rc-name.0", 2);
-    activeServiceCounts.put("rc-name.1", 2);
-    when(containerService.getActiveServiceCounts(any(ContainerServiceParams.class))).thenReturn(activeServiceCounts);
-    kubernetesReplicationControllerDeploy.setInstanceCount("100");
-    kubernetesReplicationControllerDeploy.setInstanceUnitType(PERCENTAGE);
-
-    ExecutionContext context = prepareContext("rc-name.2", true, 3, 0);
-    ExecutionResponse response = kubernetesReplicationControllerDeploy.execute(context);
-
-    CommandStateExecutionData executionData = (CommandStateExecutionData) response.getStateExecutionData();
-
-    assertThat(executionData.getNewInstanceData().size()).isEqualTo(1);
-    ContainerServiceData contextNewServiceData = executionData.getNewInstanceData().get(0);
-    assertThat(contextNewServiceData.getPreviousCount()).isEqualTo(0);
-    assertThat(contextNewServiceData.getDesiredCount()).isEqualTo(3);
-
-    assertThat(executionData.getOldInstanceData().size()).isEqualTo(2);
-    ContainerServiceData contextOldServiceData = executionData.getOldInstanceData().get(0);
-    assertThat(contextOldServiceData.getName()).isEqualTo("rc-name.0");
-    assertThat(contextOldServiceData.getPreviousCount()).isEqualTo(2);
-    assertThat(contextOldServiceData.getDesiredCount()).isEqualTo(0);
-    contextOldServiceData = executionData.getOldInstanceData().get(1);
-    assertThat(contextOldServiceData.getName()).isEqualTo("rc-name.1");
-    assertThat(contextOldServiceData.getPreviousCount()).isEqualTo(2);
-    assertThat(contextOldServiceData.getDesiredCount()).isEqualTo(0);
-  }
-
-  @Test
-  public void shouldUseMaxInstancesWithPercentage() {
-    when(containerService.getServiceDesiredCount(any(ContainerServiceParams.class))).thenReturn(Optional.of(0));
-    Map<String, Integer> activeServiceCounts = new LinkedHashMap<>();
-    when(containerService.getActiveServiceCounts(any(ContainerServiceParams.class))).thenReturn(activeServiceCounts);
-    kubernetesReplicationControllerDeploy.setInstanceCount("100");
-    kubernetesReplicationControllerDeploy.setInstanceUnitType(PERCENTAGE);
-
-    ExecutionContext context = prepareContext("rc-name.0", false, 0, 5);
-    ExecutionResponse response = kubernetesReplicationControllerDeploy.execute(context);
-
-    CommandStateExecutionData executionData = (CommandStateExecutionData) response.getStateExecutionData();
-
-    assertThat(executionData.getNewInstanceData().size()).isEqualTo(1);
-    ContainerServiceData contextNewServiceData = executionData.getNewInstanceData().get(0);
-    assertThat(contextNewServiceData.getPreviousCount()).isEqualTo(0);
-    assertThat(contextNewServiceData.getDesiredCount()).isEqualTo(5);
-
-    assertThat(executionData.getOldInstanceData().size()).isEqualTo(0);
-  }
-
-  @Test
-  public void shouldUseMaxInstancesWithAnyPercentage() {
-    when(containerService.getServiceDesiredCount(any(ContainerServiceParams.class))).thenReturn(Optional.of(0));
-    Map<String, Integer> activeServiceCounts = new LinkedHashMap<>();
-    when(containerService.getActiveServiceCounts(any(ContainerServiceParams.class))).thenReturn(activeServiceCounts);
-    kubernetesReplicationControllerDeploy.setInstanceCount("20");
-    kubernetesReplicationControllerDeploy.setInstanceUnitType(PERCENTAGE);
-
-    ExecutionContext context = prepareContext("rc-name.0", false, 0, 5);
-    ExecutionResponse response = kubernetesReplicationControllerDeploy.execute(context);
-
-    CommandStateExecutionData executionData = (CommandStateExecutionData) response.getStateExecutionData();
-
-    assertThat(executionData.getNewInstanceData().size()).isEqualTo(1);
-    ContainerServiceData contextNewServiceData = executionData.getNewInstanceData().get(0);
-    assertThat(contextNewServiceData.getPreviousCount()).isEqualTo(0);
-    assertThat(contextNewServiceData.getDesiredCount()).isEqualTo(5);
-
-    assertThat(executionData.getOldInstanceData().size()).isEqualTo(0);
-  }
-
-  @Test
-  public void shouldNotUseMaxInstancesWhenAlreadyRunningWithPercentage() {
-    when(containerService.getServiceDesiredCount(any(ContainerServiceParams.class))).thenReturn(Optional.of(0));
-    Map<String, Integer> activeServiceCounts = new LinkedHashMap<>();
-    activeServiceCounts.put("rc-name.0", 10);
-    when(containerService.getActiveServiceCounts(any(ContainerServiceParams.class))).thenReturn(activeServiceCounts);
-    kubernetesReplicationControllerDeploy.setInstanceCount("100");
-    kubernetesReplicationControllerDeploy.setInstanceUnitType(PERCENTAGE);
-
-    ExecutionContext context = prepareContext("rc-name.1", false, 0, 5);
-    ExecutionResponse response = kubernetesReplicationControllerDeploy.execute(context);
-
-    CommandStateExecutionData executionData = (CommandStateExecutionData) response.getStateExecutionData();
-
-    assertThat(executionData.getNewInstanceData().size()).isEqualTo(1);
-    ContainerServiceData contextNewServiceData = executionData.getNewInstanceData().get(0);
-    assertThat(contextNewServiceData.getPreviousCount()).isEqualTo(0);
-    assertThat(contextNewServiceData.getDesiredCount()).isEqualTo(10);
-
-    assertThat(executionData.getOldInstanceData().size()).isEqualTo(1);
-    ContainerServiceData contextOldServiceData = executionData.getOldInstanceData().get(0);
-    assertThat(contextOldServiceData.getName()).isEqualTo("rc-name.0");
-    assertThat(contextOldServiceData.getPreviousCount()).isEqualTo(10);
-    assertThat(contextOldServiceData.getDesiredCount()).isEqualTo(0);
-  }
-
-  @Test
-  public void shouldNotUseMaxInstancesWhenAlreadyRunningLessThanMaxWithPercentage() {
-    when(containerService.getServiceDesiredCount(any(ContainerServiceParams.class))).thenReturn(Optional.of(0));
-    Map<String, Integer> activeServiceCounts = new LinkedHashMap<>();
-    activeServiceCounts.put("rc-name.0", 3);
-    when(containerService.getActiveServiceCounts(any(ContainerServiceParams.class))).thenReturn(activeServiceCounts);
-    kubernetesReplicationControllerDeploy.setInstanceCount("100");
-    kubernetesReplicationControllerDeploy.setInstanceUnitType(PERCENTAGE);
-
-    ExecutionContext context = prepareContext("rc-name.1", false, 0, 5);
-    ExecutionResponse response = kubernetesReplicationControllerDeploy.execute(context);
-
-    CommandStateExecutionData executionData = (CommandStateExecutionData) response.getStateExecutionData();
-
-    assertThat(executionData.getNewInstanceData().size()).isEqualTo(1);
-    ContainerServiceData contextNewServiceData = executionData.getNewInstanceData().get(0);
-    assertThat(contextNewServiceData.getPreviousCount()).isEqualTo(0);
-    assertThat(contextNewServiceData.getDesiredCount()).isEqualTo(3);
-
-    assertThat(executionData.getOldInstanceData().size()).isEqualTo(1);
-    ContainerServiceData contextOldServiceData = executionData.getOldInstanceData().get(0);
-    assertThat(contextOldServiceData.getName()).isEqualTo("rc-name.0");
-    assertThat(contextOldServiceData.getPreviousCount()).isEqualTo(3);
-    assertThat(contextOldServiceData.getDesiredCount()).isEqualTo(0);
   }
 }

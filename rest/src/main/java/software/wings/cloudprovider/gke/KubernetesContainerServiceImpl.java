@@ -67,6 +67,7 @@ import software.wings.beans.Log.LogLevel;
 import software.wings.beans.command.ContainerApiVersions;
 import software.wings.beans.command.ExecutionLogCallback;
 import software.wings.cloudprovider.ContainerInfo;
+import software.wings.cloudprovider.ContainerInfo.ContainerInfoBuilder;
 import software.wings.cloudprovider.ContainerInfo.Status;
 import software.wings.exception.WingsException;
 import software.wings.security.encryption.EncryptedDataDetail;
@@ -298,11 +299,10 @@ public class KubernetesContainerServiceImpl implements KubernetesContainerServic
     }
     for (Pod pod : pods) {
       String podName = pod.getMetadata().getName();
-      ContainerInfo containerInfo = ContainerInfo.builder().build();
-      containerInfo.setHostName(podName);
-      containerInfo.setContainerId(!pod.getStatus().getContainerStatuses().isEmpty()
-              ? StringUtils.substring(pod.getStatus().getContainerStatuses().get(0).getContainerID(), 9, 21)
-              : "");
+      String containerId = !pod.getStatus().getContainerStatuses().isEmpty()
+          ? StringUtils.substring(pod.getStatus().getContainerStatuses().get(0).getContainerID(), 9, 21)
+          : "";
+      ContainerInfoBuilder containerInfoBuilder = ContainerInfo.builder().hostName(podName).containerId(containerId);
       Set<String> images = getControllerImages(getController(kubernetesConfig, encryptedDataDetails, controllerName));
 
       if (desiredCount > 0 && !podHasImages(pod, images)) {
@@ -329,13 +329,13 @@ public class KubernetesContainerServiceImpl implements KubernetesContainerServic
       }
 
       if (!hasErrors) {
-        containerInfo.setStatus(Status.SUCCESS);
+        containerInfoBuilder.status(Status.SUCCESS);
         logger.info("Pod {} started successfully", podName);
         executionLogCallback.saveExecutionLog(String.format("Pod [%s] is running. Host IP: %s. Pod IP: %s", podName,
                                                   pod.getStatus().getHostIP(), pod.getStatus().getPodIP()),
             LogLevel.INFO);
       } else {
-        containerInfo.setStatus(Status.FAILURE);
+        containerInfoBuilder.status(Status.FAILURE);
         String containerMessage = Joiner.on("], [").join(
             pod.getStatus().getContainerStatuses().stream().map(this ::getContainerStatusMessage).collect(toList()));
         String conditionMessage = Joiner.on("], [").join(
@@ -356,17 +356,8 @@ public class KubernetesContainerServiceImpl implements KubernetesContainerServic
         logger.error(msg);
         executionLogCallback.saveExecutionLog(msg, LogLevel.ERROR);
       }
-      containerInfos.add(containerInfo);
+      containerInfos.add(containerInfoBuilder.build());
     }
-
-    if (hasErrors) {
-      logger.error("Completed operation with errors");
-      executionLogCallback.saveExecutionLog("Completed operation with errors.", LogLevel.ERROR);
-    } else {
-      logger.info("Successfully completed operation");
-      executionLogCallback.saveExecutionLog("Successfully completed operation.", LogLevel.INFO);
-    }
-
     return containerInfos;
   }
 
