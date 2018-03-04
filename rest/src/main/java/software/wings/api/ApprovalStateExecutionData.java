@@ -96,11 +96,6 @@ public class ApprovalStateExecutionData extends StateExecutionData implements No
     return executionDetails;
   }
 
-  @Override
-  public Map<String, ExecutionDataValue> getExecutionDetails() {
-    return super.getExecutionDetails();
-  }
-
   /**
    * The type Builder.
    */
