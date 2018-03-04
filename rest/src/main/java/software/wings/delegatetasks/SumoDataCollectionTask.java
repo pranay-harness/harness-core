@@ -133,7 +133,7 @@ public class SumoDataCollectionTask extends AbstractDelegateDataCollectionTask {
                 hostStr = " (" + hostStr + ") ";
 
                 String searchQuery = "";
-                if (!query.startsWith("(") && !query.endsWith(")")) {
+                if (query.charAt(0) != '(' && !query.endsWith(")")) {
                   searchQuery = " (" + query + ") " + hostStr + " | timeslice 1m";
                 } else {
                   searchQuery = query + hostStr + " | timeslice 1m";

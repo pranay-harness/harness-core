@@ -151,7 +151,7 @@ public class HttpUtil {
     String[] versionSplit = versionHeader.split("\\+");
 
     String version = versionSplit[0].trim();
-    if (version.toUpperCase().startsWith("V")) {
+    if (version.toUpperCase().charAt(0) == 'V') {
       return ServiceApiVersion.valueOf(version.toUpperCase());
     }
 
@@ -252,7 +252,7 @@ public class HttpUtil {
   }
 
   private static boolean checkPattern(String pattern, String domain) {
-    if (pattern.startsWith("*")) { // remove *, *.jenkins.com to .jenkins.com
+    if (pattern.charAt(0) == '*') { // remove *, *.jenkins.com to .jenkins.com
       pattern = pattern.substring(1);
     }
 

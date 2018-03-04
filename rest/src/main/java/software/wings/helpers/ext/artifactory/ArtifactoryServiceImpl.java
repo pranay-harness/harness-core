@@ -256,7 +256,7 @@ public class ArtifactoryServiceImpl implements ArtifactoryService {
       String aclQuery = "api/search/aql";
       String requestBody;
       if (isNotBlank(artifactPath)) {
-        if (artifactPath.startsWith("/")) {
+        if (artifactPath.charAt(0) == '/') {
           artifactPath = artifactPath.substring(1);
         }
         String subPath;
@@ -343,7 +343,7 @@ public class ArtifactoryServiceImpl implements ArtifactoryService {
     List<FolderPath> folderPaths;
     try {
       if (isNotBlank(artifactPath)) {
-        if (artifactPath.startsWith("/")) {
+        if (artifactPath.charAt(0) == '/') {
           artifactPath = artifactPath.substring(1);
         }
         if (artifactPath.endsWith("/")) {

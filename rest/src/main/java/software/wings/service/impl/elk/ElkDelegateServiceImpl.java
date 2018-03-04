@@ -97,7 +97,7 @@ public class ElkDelegateServiceImpl implements ElkDelegateService {
 
     final Map<String, ElkIndexTemplate> rv = new HashMap<>();
     for (Entry<String, Map<String, Object>> indexEntry : response.body().entrySet()) {
-      if (!indexEntry.getKey().startsWith(".")) {
+      if (indexEntry.getKey().charAt(0) != '.') {
         JSONObject jsonObject = new JSONObject((Map) indexEntry.getValue().get("mappings"));
 
         for (String key : jsonObject.keySet()) {

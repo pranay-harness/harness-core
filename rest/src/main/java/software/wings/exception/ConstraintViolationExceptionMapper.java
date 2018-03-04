@@ -157,7 +157,7 @@ public class ConstraintViolationExceptionMapper implements ExceptionMapper<Const
   private static <T> String validationMethodFormatted(ConstraintViolation<T> v) {
     final ImmutableList<Path.Node> nodes = ImmutableList.copyOf(v.getPropertyPath());
     String usefulNodes = DOT_JOINER.join(nodes.subList(0, nodes.size() - 1));
-    String msg = usefulNodes + (v.getMessage().startsWith(".") ? "" : " ") + v.getMessage();
+    String msg = usefulNodes + (v.getMessage().charAt(0) == '.' ? "" : " ") + v.getMessage();
     return msg.trim();
   }
 

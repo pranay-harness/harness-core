@@ -27,7 +27,7 @@ public class SerializationClasses {
         return Resources.readLines(url, Charsets.UTF_8)
             .stream()
             .filter(StringUtils::isNotBlank)
-            .filter(s -> !StringUtils.startsWith(s, "#"))
+            .filter(s -> s.charAt(0) != '#')
             .collect(Collectors.toMap(
                 s -> trim(substringBefore(s, ",")), s -> Integer.valueOf(trim(substringAfter(s, ",")))));
       }
