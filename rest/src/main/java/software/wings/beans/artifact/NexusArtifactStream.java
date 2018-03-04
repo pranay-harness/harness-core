@@ -55,18 +55,6 @@ public class NexusArtifactStream extends ArtifactStream {
     return String.format("%s_%s_%s", getJobname() + "/" + getImageName(), buildNo, getDateFormat().format(new Date()));
   }
 
-  public String getArtifactStreamType() {
-    return super.getArtifactStreamType();
-  }
-
-  public String getSettingId() {
-    return super.getSettingId();
-  }
-
-  public boolean getAutoApproveForProduction() {
-    return super.isAutoApproveForProduction();
-  }
-
   public String getDockerPort() {
     return dockerPort;
   }
@@ -152,7 +140,7 @@ public class NexusArtifactStream extends ArtifactStream {
         .withAppId(getAppId())
         .withSourceName(getSourceName())
         .withSettingId(getSettingId())
-        .withAutoApproveForProduction(getAutoApproveForProduction())
+        .withAutoApproveForProduction(isAutoApproveForProduction())
         .withJobname(getJobname())
         .withGroupId(getGroupId())
         .withMetadataOnly(getMetadataOnly())
