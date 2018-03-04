@@ -13,7 +13,6 @@ import static software.wings.beans.artifact.ArtifactStreamType.GCR;
 import static software.wings.beans.command.CommandExecutionContext.Builder.aCommandExecutionContext;
 import static software.wings.beans.command.CommandExecutionResult.CommandExecutionStatus.SUCCESS;
 import static software.wings.beans.command.ServiceCommand.Builder.aServiceCommand;
-import static software.wings.common.Constants.DEFAULT_ASYNC_CALL_TIMEOUT;
 import static software.wings.sm.ExecutionResponse.Builder.anExecutionResponse;
 import static software.wings.sm.StateType.COMMAND;
 
@@ -83,7 +82,6 @@ import software.wings.sm.ExecutionStatus;
 import software.wings.sm.State;
 import software.wings.sm.StateExecutionException;
 import software.wings.sm.WorkflowStandardParams;
-import software.wings.stencils.DefaultValue;
 import software.wings.stencils.EnumData;
 import software.wings.stencils.Expand;
 import software.wings.waitnotify.NotifyResponseData;
@@ -188,7 +186,6 @@ public class CommandState extends State {
   }
 
   @Attributes(title = "Timeout (ms)")
-  @DefaultValue("" + DEFAULT_ASYNC_CALL_TIMEOUT)
   @Override
   public Integer getTimeoutMillis() {
     return super.getTimeoutMillis();
