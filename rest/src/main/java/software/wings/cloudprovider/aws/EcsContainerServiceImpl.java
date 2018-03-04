@@ -986,10 +986,19 @@ public class EcsContainerServiceImpl implements EcsContainerService {
         }
       }
 
-      List<String> taskArns = awsHelperService
-                                  .listTasks(region, awsConfig, encryptedDataDetails,
-                                      new ListTasksRequest().withCluster(clusterName).withServiceName(serviceName))
-                                  .getTaskArns();
+      ListTasksRequest listTasksRequest = new ListTasksRequest().withCluster(clusterName).withServiceName(serviceName);
+      List<String> taskArns = new ArrayList<>(
+          awsHelperService.listTasks(region, awsConfig, encryptedDataDetails, listTasksRequest).getTaskArns());
+      timeLimiter.callWithTimeout(() -> {
+        while (taskArns.size() != desiredCount) {
+          sleep(ofSeconds(5L));
+          taskArns.clear();
+          taskArns.addAll(
+              awsHelperService.listTasks(region, awsConfig, encryptedDataDetails, listTasksRequest).getTaskArns());
+        }
+        return true;
+      }, 30L, TimeUnit.SECONDS, true);
+
       if (isEmpty(taskArns)) {
         logger.info("No task arns.");
         return emptyList();
