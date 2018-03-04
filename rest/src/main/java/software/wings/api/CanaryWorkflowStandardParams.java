@@ -1,6 +1,7 @@
 package software.wings.api;
 
 import static io.harness.data.structure.EmptyPredicate.isEmpty;
+import static io.harness.govern.Switch.unhandled;
 import static java.util.Arrays.asList;
 import static software.wings.api.InfraNodeRequest.InfraNodeRequestBuilder.anInfraNodeRequest;
 import static software.wings.beans.PhaseStepType.CONTAINER_DEPLOY;
@@ -9,7 +10,6 @@ import static software.wings.sm.StateType.AWS_NODE_SELECT;
 import static software.wings.sm.StateType.DC_NODE_SELECT;
 import static software.wings.sm.StateType.ECS_SERVICE_DEPLOY;
 import static software.wings.sm.StateType.KUBERNETES_DEPLOY;
-import static software.wings.utils.Switch.unhandled;
 
 import com.google.inject.Inject;
 

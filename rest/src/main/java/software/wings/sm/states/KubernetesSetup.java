@@ -1,6 +1,7 @@
 package software.wings.sm.states;
 
 import static io.harness.data.structure.EmptyPredicate.isNotEmpty;
+import static io.harness.govern.Switch.unhandled;
 import static java.util.stream.Collectors.toList;
 import static org.apache.commons.lang3.StringUtils.isBlank;
 import static org.apache.commons.lang3.StringUtils.isNotBlank;
@@ -8,7 +9,6 @@ import static software.wings.beans.ResizeStrategy.RESIZE_NEW_FIRST;
 import static software.wings.beans.command.KubernetesSetupParams.KubernetesSetupParamsBuilder.aKubernetesSetupParams;
 import static software.wings.common.Constants.DEFAULT_STEADY_STATE_TIMEOUT;
 import static software.wings.sm.StateType.KUBERNETES_SETUP;
-import static software.wings.utils.Switch.unhandled;
 
 import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
 import software.wings.api.CommandStateExecutionData;

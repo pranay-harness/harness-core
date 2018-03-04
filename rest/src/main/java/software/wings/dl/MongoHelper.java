@@ -2,6 +2,7 @@ package software.wings.dl;
 
 import static io.harness.data.structure.EmptyPredicate.isEmpty;
 import static io.harness.data.structure.EmptyPredicate.isNotEmpty;
+import static io.harness.govern.Switch.unhandled;
 import static java.util.Arrays.asList;
 import static org.apache.commons.lang3.StringUtils.isBlank;
 import static software.wings.beans.SearchFilter.Operator.AND;
@@ -10,7 +11,6 @@ import static software.wings.beans.SearchFilter.Operator.EXISTS;
 import static software.wings.beans.SearchFilter.Operator.NOT_EXISTS;
 import static software.wings.beans.SearchFilter.Operator.OR;
 import static software.wings.beans.SortOrder.OrderType.DESC;
-import static software.wings.utils.Switch.unhandled;
 
 import org.mongodb.morphia.Datastore;
 import org.mongodb.morphia.DatastoreImpl;

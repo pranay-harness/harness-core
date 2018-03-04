@@ -4,8 +4,8 @@
 
 package software.wings.api;
 
+import static io.harness.govern.Switch.unhandled;
 import static org.apache.commons.lang3.StringUtils.isBlank;
-import static software.wings.utils.Switch.unhandled;
 
 import com.google.inject.Inject;
 

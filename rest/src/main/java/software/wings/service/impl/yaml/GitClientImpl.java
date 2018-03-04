@@ -1,5 +1,6 @@
 package software.wings.service.impl.yaml;
 
+import static io.harness.govern.Switch.unhandled;
 import static org.apache.commons.lang3.StringUtils.isNotBlank;
 import static org.eclipse.jgit.transport.RemoteRefUpdate.Status.OK;
 import static org.eclipse.jgit.transport.RemoteRefUpdate.Status.UP_TO_DATE;
@@ -9,7 +10,6 @@ import static software.wings.beans.yaml.Change.ChangeType.DELETE;
 import static software.wings.beans.yaml.Change.ChangeType.MODIFY;
 import static software.wings.beans.yaml.Change.ChangeType.RENAME;
 import static software.wings.beans.yaml.YamlConstants.GIT_YAML_LOG_PREFIX;
-import static software.wings.utils.Switch.unhandled;
 
 import groovy.lang.Singleton;
 import org.eclipse.jgit.api.CreateBranchCommand.SetupUpstreamMode;

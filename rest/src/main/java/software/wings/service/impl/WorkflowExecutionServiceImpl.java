@@ -9,6 +9,7 @@ import static io.harness.data.structure.EmptyPredicate.isEmpty;
 import static io.harness.data.structure.EmptyPredicate.isNotEmpty;
 import static io.harness.data.structure.ListUtil.trimList;
 import static io.harness.data.structure.UUIDGenerator.generateUuid;
+import static io.harness.govern.Switch.unhandled;
 import static java.lang.String.format;
 import static java.util.Arrays.asList;
 import static java.util.stream.Collectors.toList;
@@ -54,7 +55,6 @@ import static software.wings.sm.InfraMappingSummary.Builder.anInfraMappingSummar
 import static software.wings.sm.InstanceStatusSummary.InstanceStatusSummaryBuilder.anInstanceStatusSummary;
 import static software.wings.sm.StateType.APPROVAL;
 import static software.wings.sm.StateType.ENV_STATE;
-import static software.wings.utils.Switch.unhandled;
 import static software.wings.utils.Validator.notNullCheck;
 
 import com.google.common.collect.ImmutableMap;

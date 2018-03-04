@@ -5,6 +5,8 @@
 package software.wings.sm;
 
 import static io.harness.data.structure.EmptyPredicate.isEmpty;
+import static io.harness.govern.Switch.noop;
+import static io.harness.govern.Switch.unhandled;
 import static java.util.Arrays.asList;
 import static software.wings.beans.ErrorCode.INVALID_ARGUMENT;
 import static software.wings.beans.ErrorCode.PAUSE_ALL_ALREADY;
@@ -36,8 +38,6 @@ import static software.wings.sm.ExecutionStatus.STARTING;
 import static software.wings.sm.ExecutionStatus.SUCCESS;
 import static software.wings.sm.ExecutionStatus.WAITING;
 import static software.wings.sm.ExecutionStatusData.Builder.anExecutionStatusData;
-import static software.wings.utils.Switch.noop;
-import static software.wings.utils.Switch.unhandled;
 
 import com.google.common.collect.ImmutableMap;
 import com.google.inject.Inject;
