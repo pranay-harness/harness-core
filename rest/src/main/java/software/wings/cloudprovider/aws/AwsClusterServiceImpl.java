@@ -32,9 +32,9 @@ import java.util.Map;
  */
 @Singleton
 public class AwsClusterServiceImpl implements AwsClusterService {
-  @Inject private EcsContainerService ecsContainerService;
   private static final Logger logger = LoggerFactory.getLogger(AwsClusterServiceImpl.class);
-  private static final String DASH_STRING = "----------";
+
+  @Inject private EcsContainerService ecsContainerService;
 
   @Override
   public void createCluster(String region, SettingAttribute cloudProviderSetting,
@@ -62,12 +62,8 @@ public class AwsClusterServiceImpl implements AwsClusterService {
     executionLogCallback.saveExecutionLog(String.format("Resize service [%s] in cluster [%s] from %s to %s instances",
                                               serviceName, clusterName, previousCount, desiredCount),
         LogLevel.INFO);
-    List<ContainerInfo> containerInfos =
-        ecsContainerService.provisionTasks(region, cloudProviderSetting, encryptedDataDetails, clusterName, serviceName,
-            previousCount, desiredCount, serviceSteadyStateTimeout, executionLogCallback);
-    executionLogCallback.saveExecutionLog(
-        String.format("Completed resize operation.\n%s\n", DASH_STRING), LogLevel.INFO);
-    return containerInfos;
+    return ecsContainerService.provisionTasks(region, cloudProviderSetting, encryptedDataDetails, clusterName,
+        serviceName, previousCount, desiredCount, serviceSteadyStateTimeout, executionLogCallback);
   }
 
   @Override

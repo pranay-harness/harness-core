@@ -1,6 +1,5 @@
 package software.wings.service.impl;
 
-import static io.harness.data.structure.EmptyPredicate.isNotEmpty;
 import static software.wings.beans.infrastructure.instance.info.EcsContainerInfo.Builder.anEcsContainerInfo;
 import static software.wings.beans.infrastructure.instance.info.KubernetesContainerInfo.Builder.aKubernetesContainerInfo;
 
@@ -10,7 +9,6 @@ import com.amazonaws.services.ecs.model.DescribeTasksRequest;
 import com.amazonaws.services.ecs.model.DescribeTasksResult;
 import com.amazonaws.services.ecs.model.ListTasksRequest;
 import com.amazonaws.services.ecs.model.ListTasksResult;
-import com.amazonaws.services.ecs.model.Service;
 import com.amazonaws.services.ecs.model.Task;
 import io.fabric8.kubernetes.api.model.HasMetadata;
 import io.fabric8.kubernetes.api.model.Pod;
@@ -37,7 +35,6 @@ import java.util.ArrayList;
 import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
-import java.util.Optional;
 
 public class ContainerServiceImpl implements ContainerService {
   private static final Logger logger = LoggerFactory.getLogger(ContainerServiceImpl.class);
@@ -50,30 +47,6 @@ public class ContainerServiceImpl implements ContainerService {
 
   private boolean isKubernetesClusterConfig(SettingValue value) {
     return value instanceof AzureConfig || value instanceof GcpConfig || value instanceof KubernetesConfig;
-  }
-
-  @Override
-  public Optional<Integer> getServiceDesiredCount(ContainerServiceParams containerServiceParams) {
-    if (isNotEmpty(containerServiceParams.getContainerServiceName())) {
-      SettingValue value = containerServiceParams.getSettingAttribute().getValue();
-      if (isKubernetesClusterConfig(value)) {
-        KubernetesConfig kubernetesConfig = getKubernetesConfig(containerServiceParams);
-        return kubernetesContainerService.getControllerPodCount(kubernetesConfig,
-            containerServiceParams.getEncryptionDetails(), containerServiceParams.getContainerServiceName());
-      } else if (value instanceof AwsConfig) {
-        Optional<Service> service =
-            awsClusterService
-                .getServices(containerServiceParams.getRegion(), containerServiceParams.getSettingAttribute(),
-                    containerServiceParams.getEncryptionDetails(), containerServiceParams.getClusterName())
-                .stream()
-                .filter(svc -> svc.getServiceName().equals(containerServiceParams.getContainerServiceName()))
-                .findFirst();
-        if (service.isPresent()) {
-          return Optional.of(service.get().getDesiredCount());
-        }
-      }
-    }
-    return Optional.empty();
   }
 
   @Override

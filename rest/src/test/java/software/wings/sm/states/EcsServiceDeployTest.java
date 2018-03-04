@@ -5,7 +5,6 @@ import static java.util.Collections.emptyList;
 import static java.util.Collections.emptyMap;
 import static java.util.Collections.singletonList;
 import static org.assertj.core.api.Assertions.assertThat;
-import static org.assertj.core.api.Assertions.failBecauseExceptionWasNotThrown;
 import static org.joor.Reflect.on;
 import static org.mockito.Matchers.any;
 import static org.mockito.Matchers.anyObject;
@@ -39,7 +38,6 @@ import static software.wings.utils.WingsTestConstants.CLUSTER_NAME;
 import static software.wings.utils.WingsTestConstants.COMMAND_NAME;
 import static software.wings.utils.WingsTestConstants.COMPUTE_PROVIDER_ID;
 import static software.wings.utils.WingsTestConstants.ECS_SERVICE_NAME;
-import static software.wings.utils.WingsTestConstants.ECS_SERVICE_OLD_NAME;
 import static software.wings.utils.WingsTestConstants.ENV_ID;
 import static software.wings.utils.WingsTestConstants.ENV_NAME;
 import static software.wings.utils.WingsTestConstants.INFRA_MAPPING_ID;
@@ -57,8 +55,6 @@ import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mongodb.morphia.Key;
 import software.wings.WingsBaseTest;
-import software.wings.api.CommandStateExecutionData;
-import software.wings.api.ContainerServiceData;
 import software.wings.api.ContainerServiceElement;
 import software.wings.api.DeploymentType;
 import software.wings.api.PhaseElement;
@@ -70,7 +66,6 @@ import software.wings.beans.Activity;
 import software.wings.beans.Application;
 import software.wings.beans.DelegateTask;
 import software.wings.beans.Environment;
-import software.wings.beans.ErrorCode;
 import software.wings.beans.InfrastructureMapping;
 import software.wings.beans.Service;
 import software.wings.beans.ServiceTemplate;
@@ -80,9 +75,7 @@ import software.wings.beans.command.CommandType;
 import software.wings.beans.command.ServiceCommand;
 import software.wings.common.VariableProcessor;
 import software.wings.delegatetasks.DelegateProxyFactory;
-import software.wings.exception.WingsException;
 import software.wings.expression.ExpressionEvaluator;
-import software.wings.service.impl.ContainerServiceParams;
 import software.wings.service.intfc.ActivityService;
 import software.wings.service.intfc.AppService;
 import software.wings.service.intfc.ArtifactService;
@@ -104,7 +97,6 @@ import software.wings.waitnotify.NotifyResponseData;
 import java.util.Collections;
 import java.util.HashMap;
 import java.util.Map;
-import java.util.Optional;
 
 /**
  * Created by rishi on 2/27/17.
@@ -212,7 +204,6 @@ public class EcsServiceDeployTest extends WingsBaseTest {
 
     when(delegateProxyFactory.get(eq(ContainerService.class), any(DelegateTask.SyncTaskContext.class)))
         .thenReturn(containerService);
-    when(containerService.getServiceDesiredCount(any(ContainerServiceParams.class))).thenReturn(Optional.of(0));
     when(configuration.getPortal()).thenReturn(portalConfig);
     when(portalConfig.getUrl()).thenReturn("http://www.url.com");
     when(artifactService.get(any(), any())).thenReturn(anArtifact().build());
@@ -233,22 +224,6 @@ public class EcsServiceDeployTest extends WingsBaseTest {
   }
 
   @Test
-  public void shouldExecuteThrowInvalidRequest() {
-    when(containerService.getServiceDesiredCount(any(ContainerServiceParams.class))).thenReturn(Optional.empty());
-    try {
-      on(context).set("serviceTemplateService", serviceTemplateService);
-      on(context).set("variableProcessor", variableProcessor);
-      on(context).set("evaluator", evaluator);
-      ecsServiceDeploy.execute(context);
-      failBecauseExceptionWasNotThrown(WingsException.class);
-    } catch (WingsException exception) {
-      assertThat(exception).hasMessage(ErrorCode.INVALID_REQUEST.getCode());
-      assertThat(exception.getParams()).hasSize(1).containsKey("message");
-      assertThat(exception.getParams().get("message")).asString().contains("Service setup not done, service name:");
-    }
-  }
-
-  @Test
   public void shouldExecuteAsync() {
     on(context).set("variableProcessor", variableProcessor);
     on(context).set("evaluator", evaluator);
@@ -263,31 +238,6 @@ public class EcsServiceDeployTest extends WingsBaseTest {
         .isNotNull()
         .hasFieldOrPropertyWithValue("async", false)
         .hasFieldOrPropertyWithValue("executionStatus", ExecutionStatus.SUCCESS);
-  }
-
-  @Test
-  public void shouldExecuteAsyncWithOldService() {
-    on(context).set("variableProcessor", variableProcessor);
-    on(context).set("evaluator", evaluator);
-    Map<String, NotifyResponseData> notifyResponse = new HashMap<>();
-    notifyResponse.put("key", aCommandExecutionResult().withStatus(CommandExecutionStatus.SUCCESS).build());
-
-    CommandStateExecutionData commandStateExecutionData =
-        aCommandStateExecutionData()
-            .withActivityId(ACTIVITY_ID)
-            .withNewInstanceData(singletonList(
-                ContainerServiceData.builder().name(ECS_SERVICE_NAME).previousCount(0).desiredCount(1).build()))
-            .withOldInstanceData(singletonList(
-                ContainerServiceData.builder().name(ECS_SERVICE_OLD_NAME).previousCount(1).desiredCount(0).build()))
-            .withDownsize(false)
-            .build();
-    stateExecutionInstance.getStateExecutionMap().put(stateExecutionInstance.getStateName(), commandStateExecutionData);
-
-    ExecutionResponse response = ecsServiceDeploy.handleAsyncResponse(context, notifyResponse);
-    assertThat(response).isNotNull().hasFieldOrPropertyWithValue("async", true);
-    assertThat(response.getCorrelationIds()).isNotNull().hasSize(1);
-    assertThat(response.getStateExecutionData()).isNotNull().isEqualTo(commandStateExecutionData);
-    verify(delegateService).queueTask(any(DelegateTask.class));
   }
 
   @Test
