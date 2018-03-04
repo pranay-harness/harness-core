@@ -1,7 +1,8 @@
 package software.wings.sm.states;
 
-import static java.util.Collections.emptyList;
+import static io.harness.data.structure.EmptyPredicate.isNotEmpty;
 import static java.util.Collections.singletonList;
+import static java.util.stream.Collectors.toList;
 import static org.apache.commons.lang3.StringUtils.isBlank;
 import static software.wings.api.CommandStateExecutionData.Builder.aCommandStateExecutionData;
 import static software.wings.api.HostElement.Builder.aHostElement;
@@ -24,9 +25,12 @@ import software.wings.annotation.Encryptable;
 import software.wings.api.CommandStateExecutionData;
 import software.wings.api.ContainerRollbackRequestElement;
 import software.wings.api.ContainerServiceElement;
+import software.wings.api.HostElement;
+import software.wings.api.InstanceElement;
 import software.wings.api.InstanceElementListParam;
 import software.wings.api.PhaseElement;
 import software.wings.api.ServiceElement;
+import software.wings.api.ServiceTemplateElement;
 import software.wings.beans.Activity;
 import software.wings.beans.Activity.Type;
 import software.wings.beans.Application;
@@ -49,6 +53,7 @@ import software.wings.beans.command.CommandExecutionResult.CommandExecutionStatu
 import software.wings.beans.command.ContainerResizeParams;
 import software.wings.beans.command.ResizeCommandUnitExecutionData;
 import software.wings.cloudprovider.ContainerInfo;
+import software.wings.cloudprovider.ContainerInfo.Status;
 import software.wings.common.Constants;
 import software.wings.exception.WingsException;
 import software.wings.security.encryption.EncryptedDataDetail;
@@ -72,10 +77,8 @@ import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
-import java.util.Optional;
 import java.util.UUID;
 import java.util.concurrent.TimeUnit;
-import java.util.stream.Collectors;
 
 public abstract class ContainerServiceDeploy extends State {
   private static final Logger logger = LoggerFactory.getLogger(ContainerServiceDeploy.class);
@@ -96,10 +99,81 @@ public abstract class ContainerServiceDeploy extends State {
   public ExecutionResponse execute(ExecutionContext context) {
     try {
       logger.info("Executing container service deploy");
-      ContextData contextData = buildContextData(context);
-      Activity activity = buildActivity(context, contextData);
-      CommandStateExecutionData executionData = buildStateExecutionData(contextData, activity.getUuid());
-      return queueResizeTask(contextData, executionData);
+      ContextData contextData = new ContextData(context, this);
+
+      Activity activity = Activity.builder()
+                              .applicationName(contextData.app.getName())
+                              .environmentId(contextData.env.getUuid())
+                              .environmentName(contextData.env.getName())
+                              .environmentType(contextData.env.getEnvironmentType())
+                              .serviceId(contextData.service.getUuid())
+                              .serviceName(contextData.service.getName())
+                              .commandName(contextData.command.getName())
+                              .type(Type.Command)
+                              .workflowExecutionId(context.getWorkflowExecutionId())
+                              .workflowType(context.getWorkflowType())
+                              .workflowId(context.getWorkflowId())
+                              .workflowExecutionName(context.getWorkflowExecutionName())
+                              .stateExecutionInstanceId(context.getStateExecutionInstanceId())
+                              .stateExecutionInstanceName(context.getStateExecutionInstanceName())
+                              .commandUnits(serviceResourceService.getFlattenCommandUnitList(contextData.app.getUuid(),
+                                  contextData.serviceId, contextData.env.getUuid(), contextData.command.getName()))
+                              .commandType(contextData.command.getCommandUnitType().name())
+                              .serviceVariables(context.getServiceVariables())
+                              .status(ExecutionStatus.RUNNING)
+                              .build();
+
+      activity.setAppId(contextData.appId);
+      activity = activityService.save(activity);
+
+      CommandStateExecutionData.Builder executionDataBuilder =
+          aCommandStateExecutionData()
+              .withServiceId(contextData.service.getUuid())
+              .withServiceName(contextData.service.getName())
+              .withAppId(contextData.app.getUuid())
+              .withCommandName(getCommandName())
+              .withClusterName(contextData.containerElement.getClusterName())
+              .withActivityId(activity.getUuid());
+
+      if (isRollback()) {
+        logger.info("Executing rollback");
+        executionDataBuilder.withNewInstanceData(contextData.rollbackElement.getNewInstanceData());
+        executionDataBuilder.withOldInstanceData(contextData.rollbackElement.getOldInstanceData());
+      }
+
+      CommandStateExecutionData executionData = executionDataBuilder.build();
+
+      ContainerResizeParams params = buildContainerResizeParams(contextData);
+      CommandExecutionContext commandExecutionContext =
+          aCommandExecutionContext()
+              .withAccountId(contextData.app.getAccountId())
+              .withAppId(contextData.app.getUuid())
+              .withEnvId(contextData.env.getUuid())
+              .withActivityId(activity.getUuid())
+              .withCloudProviderSetting(contextData.settingAttribute)
+              .withCloudProviderCredentials(contextData.encryptedDataDetails)
+              .withContainerResizeParams(params)
+              .build();
+
+      String waitId = UUID.randomUUID().toString();
+      String delegateTaskId =
+          delegateService.queueTask(aDelegateTask()
+                                        .withAccountId(contextData.app.getAccountId())
+                                        .withAppId(contextData.appId)
+                                        .withTaskType(TaskType.COMMAND)
+                                        .withWaitId(waitId)
+                                        .withParameters(new Object[] {contextData.command, commandExecutionContext})
+                                        .withEnvId(contextData.env.getUuid())
+                                        .withInfrastructureMappingId(contextData.infrastructureMappingId)
+                                        .withTimeout(TimeUnit.HOURS.toMillis(1))
+                                        .build());
+
+      return anExecutionResponse()
+          .withAsync(true)
+          .withCorrelationIds(singletonList(waitId))
+          .withStateExecutionData(executionData)
+          .withDelegateTaskId(delegateTaskId)
+          .build();
     } catch (WingsException e) {
       logger.warn(e.getMessage(), e);
       throw e;
@@ -107,50 +181,6 @@ public abstract class ContainerServiceDeploy extends State {
       logger.warn(e.getMessage(), e);
       throw new WingsException(ErrorCode.INVALID_REQUEST, e).addParam("message", e.getMessage());
     }
-  }
-
-  private CommandStateExecutionData buildStateExecutionData(ContextData contextData, String activityId) {
-    CommandStateExecutionData.Builder executionDataBuilder =
-        aCommandStateExecutionData()
-            .withServiceId(contextData.service.getUuid())
-            .withServiceName(contextData.service.getName())
-            .withAppId(contextData.app.getUuid())
-            .withCommandName(getCommandName())
-            .withClusterName(contextData.containerElement.getClusterName())
-            .withActivityId(activityId);
-
-    if (isRollback()) {
-      logger.info("Executing rollback");
-      executionDataBuilder.withNewInstanceData(contextData.rollbackElement.getNewInstanceData());
-      executionDataBuilder.withOldInstanceData(contextData.rollbackElement.getOldInstanceData());
-    }
-
-    return executionDataBuilder.build();
-  }
-
-  private ExecutionResponse queueResizeTask(ContextData contextData, CommandStateExecutionData executionData) {
-    CommandExecutionContext commandExecutionContext =
-        buildCommandExecutionContext(contextData, executionData.getActivityId());
-
-    String waitId = UUID.randomUUID().toString();
-    String delegateTaskId =
-        delegateService.queueTask(aDelegateTask()
-                                      .withAccountId(contextData.app.getAccountId())
-                                      .withAppId(contextData.appId)
-                                      .withTaskType(TaskType.COMMAND)
-                                      .withWaitId(waitId)
-                                      .withParameters(new Object[] {contextData.command, commandExecutionContext})
-                                      .withEnvId(contextData.env.getUuid())
-                                      .withInfrastructureMappingId(contextData.infrastructureMappingId)
-                                      .withTimeout(TimeUnit.HOURS.toMillis(1))
-                                      .build());
-
-    return anExecutionResponse()
-        .withAsync(true)
-        .withCorrelationIds(singletonList(waitId))
-        .withStateExecutionData(executionData)
-        .withDelegateTaskId(delegateTaskId)
-        .build();
   }
 
   @Override
@@ -164,8 +194,14 @@ public abstract class ContainerServiceDeploy extends State {
         return buildEndStateExecution(executionData, commandExecutionResult, ExecutionStatus.FAILED);
       }
 
-      ContextData contextData = buildContextData(context);
-      executionData.setNewInstanceStatusSummaries(buildInstanceStatusSummaries(contextData, response));
+      PhaseElement phaseElement = context.getContextElement(ContextElementType.PARAM, Constants.PHASE_PARAM);
+      ServiceElement serviceElement = phaseElement.getServiceElement();
+      String serviceId = phaseElement.getServiceElement().getUuid();
+      String appId = context.getAppId();
+      WorkflowStandardParams workflowStandardParams = context.getContextElement(ContextElementType.STANDARD);
+      String envId = workflowStandardParams.getEnv().getUuid();
+      executionData.setNewInstanceStatusSummaries(
+          buildInstanceStatusSummaries(appId, serviceId, envId, serviceElement, response));
       return buildEndStateExecution(executionData, commandExecutionResult, ExecutionStatus.SUCCESS);
     } catch (WingsException e) {
       throw e;
@@ -198,45 +234,15 @@ public abstract class ContainerServiceDeploy extends State {
 
   protected abstract ContainerResizeParams buildContainerResizeParams(ContextData contextData);
 
-  private Activity buildActivity(ExecutionContext context, ContextData contextData) {
-    Activity activity = Activity.builder()
-                            .applicationName(contextData.app.getName())
-                            .environmentId(contextData.env.getUuid())
-                            .environmentName(contextData.env.getName())
-                            .environmentType(contextData.env.getEnvironmentType())
-                            .serviceId(contextData.service.getUuid())
-                            .serviceName(contextData.service.getName())
-                            .commandName(contextData.command.getName())
-                            .type(Type.Command)
-                            .workflowExecutionId(context.getWorkflowExecutionId())
-                            .workflowType(context.getWorkflowType())
-                            .workflowId(context.getWorkflowId())
-                            .workflowExecutionName(context.getWorkflowExecutionName())
-                            .stateExecutionInstanceId(context.getStateExecutionInstanceId())
-                            .stateExecutionInstanceName(context.getStateExecutionInstanceName())
-                            .commandUnits(serviceResourceService.getFlattenCommandUnitList(contextData.app.getUuid(),
-                                contextData.serviceId, contextData.env.getUuid(), contextData.command.getName()))
-                            .commandType(contextData.command.getCommandUnitType().name())
-                            .serviceVariables(context.getServiceVariables())
-                            .status(ExecutionStatus.RUNNING)
-                            .build();
-
-    activity.setAppId(contextData.appId);
-    return activityService.save(activity);
-  }
-
   private ExecutionResponse buildEndStateExecution(
       CommandStateExecutionData executionData, CommandExecutionResult executionResult, ExecutionStatus status) {
     activityService.updateStatus(executionData.getActivityId(), executionData.getAppId(), status);
-    InstanceElementListParam instanceElementListParam =
-        anInstanceElementListParam()
-            .withInstanceElements(Optional
-                                      .ofNullable(executionData.getNewInstanceStatusSummaries()
-                                                      .stream()
-                                                      .map(InstanceStatusSummary::getInstanceElement)
-                                                      .collect(Collectors.toList()))
-                                      .orElse(emptyList()))
-            .build();
+
+    List<InstanceElement> instanceElements = executionData.getNewInstanceStatusSummaries()
+                                                 .stream()
+                                                 .map(InstanceStatusSummary::getInstanceElement)
+                                                 .collect(toList());
+    InstanceElementListParam listParam = anInstanceElementListParam().withInstanceElements(instanceElements).build();
 
     if (executionResult != null) {
       ResizeCommandUnitExecutionData resizeExecutionData =
@@ -250,65 +256,45 @@ public abstract class ContainerServiceDeploy extends State {
     return anExecutionResponse()
         .withStateExecutionData(executionData)
         .withExecutionStatus(status)
-        .addContextElement(instanceElementListParam)
-        .addNotifyElement(instanceElementListParam)
+        .addContextElement(listParam)
+        .addNotifyElement(listParam)
         .build();
   }
 
-  private List<InstanceStatusSummary> buildInstanceStatusSummaries(
-      ContextData contextData, Map<String, NotifyResponseData> response) {
+  private List<InstanceStatusSummary> buildInstanceStatusSummaries(String appId, String serviceId, String envId,
+      ServiceElement serviceElement, Map<String, NotifyResponseData> response) {
     Key<ServiceTemplate> serviceTemplateKey =
-        serviceTemplateService
-            .getTemplateRefKeysByService(contextData.appId, contextData.serviceId, contextData.env.getUuid())
-            .get(0);
+        serviceTemplateService.getTemplateRefKeysByService(appId, serviceId, envId).get(0);
     CommandExecutionData commandExecutionData =
         ((CommandExecutionResult) response.values().iterator().next()).getCommandExecutionData();
-    List<InstanceStatusSummary> instanceStatusSummaries = new ArrayList<>();
+    ResizeCommandUnitExecutionData resizeExecutionData = (ResizeCommandUnitExecutionData) commandExecutionData;
 
-    if (commandExecutionData instanceof ResizeCommandUnitExecutionData
-        && ((ResizeCommandUnitExecutionData) commandExecutionData).getContainerInfos() != null) {
-      ((ResizeCommandUnitExecutionData) commandExecutionData)
-          .getContainerInfos()
-          .forEach(containerInfo
-              -> instanceStatusSummaries.add(
-                  anInstanceStatusSummary()
-                      .withStatus(containerInfo.getStatus() == ContainerInfo.Status.SUCCESS ? ExecutionStatus.SUCCESS
-                                                                                            : ExecutionStatus.FAILED)
-                      .withInstanceElement(
-                          anInstanceElement()
-                              .withUuid(containerInfo.getContainerId())
-                              .withDockerId(containerInfo.getContainerId())
-                              .withHostName(containerInfo.getHostName())
-                              .withHost(aHostElement()
-                                            .withHostName(containerInfo.getHostName())
-                                            .withEc2Instance(containerInfo.getEc2Instance())
-                                            .build())
-                              .withServiceTemplateElement(aServiceTemplateElement()
-                                                              .withUuid(serviceTemplateKey.getId().toString())
-                                                              .withServiceElement(contextData.serviceElement)
-                                                              .build())
-                              .withDisplayName(containerInfo.getContainerId())
-                              .build())
-                      .build()));
+    List<InstanceStatusSummary> instanceStatusSummaries = new ArrayList<>();
+    if (resizeExecutionData != null && isNotEmpty(resizeExecutionData.getContainerInfos())) {
+      for (ContainerInfo containerInfo : resizeExecutionData.getContainerInfos()) {
+        HostElement hostElement = aHostElement()
+                                      .withHostName(containerInfo.getHostName())
+                                      .withEc2Instance(containerInfo.getEc2Instance())
+                                      .build();
+        ServiceTemplateElement serviceTemplateElement = aServiceTemplateElement()
+                                                            .withUuid(serviceTemplateKey.getId().toString())
+                                                            .withServiceElement(serviceElement)
+                                                            .build();
+        InstanceElement instanceElement = anInstanceElement()
+                                              .withUuid(containerInfo.getContainerId())
+                                              .withDockerId(containerInfo.getContainerId())
+                                              .withHostName(containerInfo.getHostName())
+                                              .withHost(hostElement)
+                                              .withServiceTemplateElement(serviceTemplateElement)
+                                              .withDisplayName(containerInfo.getContainerId())
+                                              .build();
+        ExecutionStatus status =
+            containerInfo.getStatus() == Status.SUCCESS ? ExecutionStatus.SUCCESS : ExecutionStatus.FAILED;
+        instanceStatusSummaries.add(
+            anInstanceStatusSummary().withStatus(status).withInstanceElement(instanceElement).build());
+      }
     }
     return instanceStatusSummaries;
-  }
-
-  private CommandExecutionContext buildCommandExecutionContext(ContextData contextData, String activityId) {
-    ContainerResizeParams params = buildContainerResizeParams(contextData);
-    return aCommandExecutionContext()
-        .withAccountId(contextData.app.getAccountId())
-        .withAppId(contextData.app.getUuid())
-        .withEnvId(contextData.env.getUuid())
-        .withActivityId(activityId)
-        .withCloudProviderSetting(contextData.settingAttribute)
-        .withCloudProviderCredentials(contextData.encryptedDataDetails)
-        .withContainerResizeParams(params)
-        .build();
-  }
-
-  private ContextData buildContextData(ExecutionContext context) {
-    return new ContextData(context, this);
   }
 
   protected static class ContextData {
@@ -316,7 +302,6 @@ public abstract class ContainerServiceDeploy extends State {
     final Environment env;
     final Service service;
     final Command command;
-    final ServiceElement serviceElement;
     final ContainerServiceElement containerElement;
     final ContainerRollbackRequestElement rollbackElement;
     final SettingAttribute settingAttribute;
@@ -331,7 +316,6 @@ public abstract class ContainerServiceDeploy extends State {
 
     ContextData(ExecutionContext context, ContainerServiceDeploy containerServiceDeploy) {
       PhaseElement phaseElement = context.getContextElement(ContextElementType.PARAM, Constants.PHASE_PARAM);
-      serviceElement = phaseElement.getServiceElement();
       serviceId = phaseElement.getServiceElement().getUuid();
       appId = context.getAppId();
       WorkflowStandardParams workflowStandardParams = context.getContextElement(ContextElementType.STANDARD);
