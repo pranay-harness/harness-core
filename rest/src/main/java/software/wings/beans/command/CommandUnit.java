@@ -1,6 +1,5 @@
 package software.wings.beans.command;
 
-import com.fasterxml.jackson.annotation.JsonIgnore;
 import com.fasterxml.jackson.annotation.JsonTypeInfo;
 import com.fasterxml.jackson.annotation.JsonTypeInfo.As;
 import com.fasterxml.jackson.annotation.JsonTypeInfo.Id;
@@ -111,15 +110,4 @@ public interface CommandUnit {
      * @param deploymentType the deployment type
      */
     void setDeploymentType(String deploymentType);
-
-    /**
-     * Gets command execution timeout.
-     *
-     * @return the command execution timeout
-     */
-    @SchemaIgnore
-    @JsonIgnore
-    default int getCommandExecutionTimeout() {
-      return 10 * 60 * 1000;
-    }
 }

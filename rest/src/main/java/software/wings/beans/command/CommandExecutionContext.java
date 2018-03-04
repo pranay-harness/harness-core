@@ -52,6 +52,7 @@ public class CommandExecutionContext {
   private ContainerResizeParams containerResizeParams;
   private Map<String, String> metadata = Maps.newHashMap();
   private CommandExecutionData commandExecutionData;
+  private Integer timeout;
 
   public CommandExecutionContext() {}
 
@@ -88,6 +89,7 @@ public class CommandExecutionContext {
     this.containerResizeParams = other.containerResizeParams;
     this.metadata = other.metadata;
     this.commandExecutionData = other.commandExecutionData;
+    this.timeout = other.timeout;
   }
 
   /**
@@ -148,6 +150,7 @@ public class CommandExecutionContext {
     private ContainerResizeParams containerResizeParams;
     private Map<String, String> metadata = Maps.newHashMap();
     private CommandExecutionData commandExecutionData;
+    private Integer timeout;
 
     private Builder() {}
 
@@ -295,6 +298,11 @@ public class CommandExecutionContext {
       return this;
     }
 
+    public Builder withTimeout(Integer timeout) {
+      this.timeout = timeout;
+      return this;
+    }
+
     public Builder but() {
       return aCommandExecutionContext()
           .withAccountId(accountId)
@@ -324,7 +332,8 @@ public class CommandExecutionContext {
           .withContainerSetupParams(containerSetupParams)
           .withContainerResizeParams(containerResizeParams)
           .withSafeDisplayServiceVariables(safeDisplayServiceVariables)
-          .withServiceName(serviceName);
+          .withServiceName(serviceName)
+          .withTimeout(timeout);
     }
 
     public CommandExecutionContext build() {
@@ -357,6 +366,7 @@ public class CommandExecutionContext {
       commandExecutionContext.setCommandExecutionData(commandExecutionData);
       commandExecutionContext.setContainerSetupParams(containerSetupParams);
       commandExecutionContext.setContainerResizeParams(containerResizeParams);
+      commandExecutionContext.setTimeout(timeout);
       return commandExecutionContext;
     }
   }
