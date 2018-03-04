@@ -291,7 +291,7 @@ public class JenkinsImpl implements Jenkins {
       nameBuilder.append('/').append(parts[idx]);
     }
     String name = nameBuilder.toString();
-    name = name.startsWith("/") ? name.substring(1) : name;
+    name = name.charAt(0) == '/' ? name.substring(1) : name;
     return getNormalizedName(name);
   }
 

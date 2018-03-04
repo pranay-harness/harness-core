@@ -273,8 +273,8 @@ public class YamlGitServiceImpl implements YamlGitService {
     // Setup/Application/app/name/index.yaml is invalid. (this case is happening id app was names as "app/name")
     // we do not want to allow this scenario.
     gitFileChanges.stream().forEach(gitFileChange
-        -> matchPathPrefix(gitFileChange.getFilePath().startsWith("/") ? gitFileChange.getFilePath().substring(1)
-                                                                       : gitFileChange.getFilePath(),
+        -> matchPathPrefix(gitFileChange.getFilePath().charAt(0) == '/' ? gitFileChange.getFilePath().substring(1)
+                                                                        : gitFileChange.getFilePath(),
             folderYamlTypes));
   }
 

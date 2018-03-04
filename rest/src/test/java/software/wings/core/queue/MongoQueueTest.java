@@ -120,13 +120,12 @@ public class MongoQueueTest extends WingsBaseTest {
    * Should wait for specified time period for get when no messages.
    */
   @Test
-  @Repeat(times = 3, successes = 1)
   public void shouldWaitForSpecifiedTimePeriodForGetWhenNoMessages() {
     Date start = new Date();
     queue.get(1000);
     long elapsed = new Date().getTime() - start.getTime();
 
-    assertThat(elapsed).isBetween(1000L, 2000L);
+    assertThat(elapsed).isBetween(1000L, 3000L);
   }
 
   /**

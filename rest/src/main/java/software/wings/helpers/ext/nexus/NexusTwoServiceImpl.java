@@ -172,7 +172,7 @@ public class NexusTwoServiceImpl {
 
   public List<String> getArtifactPaths(NexusConfig nexusConfig, List<EncryptedDataDetail> encryptionDetails,
       String repoId, String name) throws IOException {
-    name = name.startsWith("/") ? name.substring(1) : name;
+    name = name.charAt(0) == '/' ? name.substring(1) : name;
     final Call<ContentListResourceResponse> request =
         getRestClient(nexusConfig, encryptionDetails)
             .getRepositoryContents(

@@ -50,7 +50,7 @@ public class SlackNotificationServiceImpl implements SlackNotificationService {
     }
 
     if (isNotEmpty(slackChannel)) {
-      if (!slackChannel.startsWith("#")) {
+      if (slackChannel.charAt(0) != '#') {
         slackChannel = "#" + slackChannel;
       }
       payload.setChannel(slackChannel);
