@@ -249,6 +249,8 @@ public class CommandState extends State {
             String.format("Unable to find command %s for service %s", actualCommand, service.getName()));
       }
 
+      command.setGraph(null);
+
       Application application = appService.get(serviceInstance.getAppId());
       String accountId = application.getAccountId();
 
