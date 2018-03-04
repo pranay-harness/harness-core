@@ -196,6 +196,8 @@ public interface Constants {
    * The constant ECS_SERVICE_SETUP.
    */
   String ECS_SERVICE_SETUP = "ECS Service Setup";
+  String KUBERNETES_SERVICE_SETUP = "Kubernetes Service Setup";
+  String ROLLBACK_KUBERNETES_SETUP = "Rollback Kubernetes Setup";
   /**
    * The constant PREPARE_STEPS.
    */
@@ -205,11 +207,6 @@ public interface Constants {
    * The constant SETUP_AUTOSCALING_GROUP.
    */
   String SETUP_AUTOSCALING_GROUP = "Setup AutoScaling Group";
-
-  /**
-   * The constant DEPLOY_AUTOSCALING_GROUP.
-   */
-  String DEPLOY_AUTOSCALING_GROUP = "Scale AutoScaling Group";
 
   /**
    * The constant UPGRADE_AUTOSCALING_GROUP.

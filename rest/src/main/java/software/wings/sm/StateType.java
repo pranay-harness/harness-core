@@ -43,6 +43,7 @@ import org.slf4j.LoggerFactory;
 import software.wings.beans.InfrastructureMapping;
 import software.wings.beans.InfrastructureMappingType;
 import software.wings.beans.PhaseStepType;
+import software.wings.common.Constants;
 import software.wings.exception.WingsException;
 import software.wings.sm.states.AppDynamicsState;
 import software.wings.sm.states.ApprovalState;
@@ -135,12 +136,12 @@ public enum StateType implements StateTypeDescriptor {
   /**
    * Script state type.
    */
-  SHELL_SCRIPT(ShellScriptState.class, OTHERS, 1, asList(), ORCHESTRATION_STENCILS, COMMON),
+  SHELL_SCRIPT(ShellScriptState.class, OTHERS, 1, "Shell Script", asList(), ORCHESTRATION_STENCILS, COMMON),
 
   /**
    * Http state type.
    */
-  HTTP(HttpState.class, OTHERS, 2, asList(), ORCHESTRATION_STENCILS, COMMON),
+  HTTP(HttpState.class, OTHERS, 2, "HTTP", asList(), ORCHESTRATION_STENCILS, COMMON),
 
   /**
    * Email state type.
@@ -198,7 +199,8 @@ public enum StateType implements StateTypeDescriptor {
   NEW_RELIC_DEPLOYMENT_MARKER(NewRelicDeploymentMarkerState.class, VERIFICATIONS, 11, "NewRelic Deployment Marker",
       asList(), ORCHESTRATION_STENCILS),
 
-  AWS_LAMBDA_VERIFICATION(AwsLambdaVerification.class, VERIFICATIONS, 12, asList(), ORCHESTRATION_STENCILS),
+  AWS_LAMBDA_VERIFICATION(
+      AwsLambdaVerification.class, VERIFICATIONS, 12, "AWS Lambda Verification", asList(), ORCHESTRATION_STENCILS),
 
   /**
    * Env state state type.
@@ -237,8 +239,8 @@ public enum StateType implements StateTypeDescriptor {
   /**
    * Artifact Collection state type.
    */
-  ARTIFACT_COLLECTION(ArtifactCollectionState.class, COLLECTIONS, "Artifact Collection", emptyList(), emptyList(),
-      ORCHESTRATION_STENCILS, COMMON),
+  ARTIFACT_COLLECTION(ArtifactCollectionState.class, COLLECTIONS, Constants.ARTIFACT_COLLECTION, emptyList(),
+      emptyList(), ORCHESTRATION_STENCILS, COMMON),
 
   /**
    * AWS Node Select state.
@@ -253,71 +255,63 @@ public enum StateType implements StateTypeDescriptor {
       Lists.newArrayList(InfrastructureMappingType.AWS_SSH), asList(PROVISION_NODE, SELECT_NODE),
       ORCHESTRATION_STENCILS),
 
-  /**
-   * Phase state type.
-   */
   DC_NODE_SELECT(DcNodeSelectState.class, CLOUD, Lists.newArrayList(InfrastructureMappingType.PHYSICAL_DATA_CENTER_SSH),
       asList(SELECT_NODE), ORCHESTRATION_STENCILS),
 
-  /**
-   * Phase state type.
-   */
   PHASE(PhaseSubWorkflow.class, StencilCategory.SUB_WORKFLOW, asList(), NONE),
 
-  /**
-   * Phase state type.
-   */
   PHASE_STEP(PhaseStepSubWorkflow.class, StencilCategory.SUB_WORKFLOW, asList(), NONE),
 
-  AWS_CODEDEPLOY_STATE(AwsCodeDeployState.class, COMMANDS,
+  AWS_CODEDEPLOY_STATE(AwsCodeDeployState.class, COMMANDS, Constants.AWS_CODE_DEPLOY,
       Lists.newArrayList(InfrastructureMappingType.AWS_AWS_CODEDEPLOY), asList(DEPLOY_AWSCODEDEPLOY),
       ORCHESTRATION_STENCILS),
 
-  AWS_CODEDEPLOY_ROLLBACK(AwsCodeDeployRollback.class, COMMANDS,
+  AWS_CODEDEPLOY_ROLLBACK(AwsCodeDeployRollback.class, COMMANDS, Constants.ROLLBACK_AWS_CODE_DEPLOY,
       Lists.newArrayList(InfrastructureMappingType.AWS_AWS_CODEDEPLOY), asList(DEPLOY_AWSCODEDEPLOY),
       ORCHESTRATION_STENCILS),
 
-  AWS_LAMBDA_STATE(AwsLambdaState.class, COMMANDS, Lists.newArrayList(InfrastructureMappingType.AWS_AWS_LAMBDA),
-      asList(DEPLOY_AWS_LAMBDA), ORCHESTRATION_STENCILS),
+  AWS_LAMBDA_STATE(AwsLambdaState.class, COMMANDS, Constants.AWS_LAMBDA,
+      Lists.newArrayList(InfrastructureMappingType.AWS_AWS_LAMBDA), asList(DEPLOY_AWS_LAMBDA), ORCHESTRATION_STENCILS),
 
-  AWS_LAMBDA_ROLLBACK(AwsLambdaRollback.class, COMMANDS, Lists.newArrayList(InfrastructureMappingType.AWS_AWS_LAMBDA),
-      asList(DEPLOY_AWS_LAMBDA), ORCHESTRATION_STENCILS),
+  AWS_LAMBDA_ROLLBACK(AwsLambdaRollback.class, COMMANDS, Constants.ROLLBACK_AWS_LAMBDA,
+      Lists.newArrayList(InfrastructureMappingType.AWS_AWS_LAMBDA), asList(DEPLOY_AWS_LAMBDA), ORCHESTRATION_STENCILS),
 
-  AWS_AMI_SERVICE_SETUP(AwsAmiServiceSetup.class, CLOUD, Lists.newArrayList(InfrastructureMappingType.AWS_AMI),
-      asList(CONTAINER_SETUP), ORCHESTRATION_STENCILS),
+  AWS_AMI_SERVICE_SETUP(AwsAmiServiceSetup.class, CLOUD, Constants.AMI_SETUP_COMMAND_NAME,
+      Lists.newArrayList(InfrastructureMappingType.AWS_AMI), asList(CONTAINER_SETUP), ORCHESTRATION_STENCILS),
 
-  AWS_AMI_SERVICE_DEPLOY(AwsAmiServiceDeployState.class, COMMANDS,
+  AWS_AMI_SERVICE_DEPLOY(AwsAmiServiceDeployState.class, COMMANDS, Constants.UPGRADE_AUTOSCALING_GROUP,
       Lists.newArrayList(InfrastructureMappingType.AWS_AMI), asList(AMI_DEPLOY_AUTOSCALING_GROUP),
       ORCHESTRATION_STENCILS),
 
-  AWS_AMI_SERVICE_ROLLBACK(AwsAmiServiceRollback.class, COMMANDS, Lists.newArrayList(InfrastructureMappingType.AWS_AMI),
-      asList(AMI_DEPLOY_AUTOSCALING_GROUP), ORCHESTRATION_STENCILS),
+  AWS_AMI_SERVICE_ROLLBACK(AwsAmiServiceRollback.class, COMMANDS, Constants.ROLLBACK_AWS_AMI_CLUSTER,
+      Lists.newArrayList(InfrastructureMappingType.AWS_AMI), asList(AMI_DEPLOY_AUTOSCALING_GROUP),
+      ORCHESTRATION_STENCILS),
 
-  ECS_SERVICE_SETUP(EcsServiceSetup.class, CLOUD, Lists.newArrayList(InfrastructureMappingType.AWS_ECS),
-      asList(CONTAINER_SETUP), ORCHESTRATION_STENCILS),
+  ECS_SERVICE_SETUP(EcsServiceSetup.class, CLOUD, Constants.ECS_SERVICE_SETUP,
+      Lists.newArrayList(InfrastructureMappingType.AWS_ECS), asList(CONTAINER_SETUP), ORCHESTRATION_STENCILS),
 
-  ECS_SERVICE_DEPLOY(EcsServiceDeploy.class, COMMANDS, Lists.newArrayList(InfrastructureMappingType.AWS_ECS),
-      asList(CONTAINER_DEPLOY), ORCHESTRATION_STENCILS),
+  ECS_SERVICE_DEPLOY(EcsServiceDeploy.class, COMMANDS, Constants.UPGRADE_CONTAINERS,
+      Lists.newArrayList(InfrastructureMappingType.AWS_ECS), asList(CONTAINER_DEPLOY), ORCHESTRATION_STENCILS),
 
-  ECS_SERVICE_ROLLBACK(EcsServiceRollback.class, COMMANDS, Lists.newArrayList(InfrastructureMappingType.AWS_ECS),
-      asList(CONTAINER_DEPLOY), ORCHESTRATION_STENCILS),
+  ECS_SERVICE_ROLLBACK(EcsServiceRollback.class, COMMANDS, Constants.ROLLBACK_CONTAINERS,
+      Lists.newArrayList(InfrastructureMappingType.AWS_ECS), asList(CONTAINER_DEPLOY), ORCHESTRATION_STENCILS),
 
-  KUBERNETES_SETUP(KubernetesSetup.class, CLOUD,
+  KUBERNETES_SETUP(KubernetesSetup.class, CLOUD, Constants.KUBERNETES_SERVICE_SETUP,
       Lists.newArrayList(InfrastructureMappingType.DIRECT_KUBERNETES, InfrastructureMappingType.GCP_KUBERNETES,
           InfrastructureMappingType.AZURE_KUBERNETES),
       asList(CONTAINER_SETUP), ORCHESTRATION_STENCILS),
 
-  KUBERNETES_SETUP_ROLLBACK(KubernetesSetupRollback.class, COMMANDS,
+  KUBERNETES_SETUP_ROLLBACK(KubernetesSetupRollback.class, COMMANDS, Constants.ROLLBACK_KUBERNETES_SETUP,
       Lists.newArrayList(InfrastructureMappingType.DIRECT_KUBERNETES, InfrastructureMappingType.GCP_KUBERNETES,
           InfrastructureMappingType.AZURE_KUBERNETES),
       asList(CONTAINER_SETUP), ORCHESTRATION_STENCILS),
 
-  KUBERNETES_DEPLOY(KubernetesDeploy.class, COMMANDS,
+  KUBERNETES_DEPLOY(KubernetesDeploy.class, COMMANDS, Constants.UPGRADE_CONTAINERS,
       Lists.newArrayList(InfrastructureMappingType.DIRECT_KUBERNETES, InfrastructureMappingType.GCP_KUBERNETES,
           InfrastructureMappingType.AZURE_KUBERNETES),
       asList(CONTAINER_DEPLOY), ORCHESTRATION_STENCILS),
 
-  KUBERNETES_DEPLOY_ROLLBACK(KubernetesDeployRollback.class, COMMANDS,
+  KUBERNETES_DEPLOY_ROLLBACK(KubernetesDeployRollback.class, COMMANDS, Constants.ROLLBACK_CONTAINERS,
       Lists.newArrayList(InfrastructureMappingType.DIRECT_KUBERNETES, InfrastructureMappingType.GCP_KUBERNETES,
           InfrastructureMappingType.AZURE_KUBERNETES),
       asList(CONTAINER_DEPLOY), ORCHESTRATION_STENCILS),

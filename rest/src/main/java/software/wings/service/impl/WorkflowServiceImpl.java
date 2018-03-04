@@ -2255,7 +2255,7 @@ public class WorkflowServiceImpl implements WorkflowService, DataProvider {
                                      .addStep(aGraphNode()
                                                   .withId(generateUuid())
                                                   .withType(KUBERNETES_SETUP.name())
-                                                  .withName("Kubernetes Service Setup")
+                                                  .withName(Constants.KUBERNETES_SERVICE_SETUP)
                                                   .build())
                                      .build());
     }
@@ -2268,7 +2268,7 @@ public class WorkflowServiceImpl implements WorkflowService, DataProvider {
                                      .addStep(aGraphNode()
                                                   .withId(generateUuid())
                                                   .withType(KUBERNETES_DEPLOY.name())
-                                                  .withName("Upgrade Containers")
+                                                  .withName(Constants.UPGRADE_CONTAINERS)
                                                   .build())
                                      .build());
     }
@@ -2620,7 +2620,7 @@ public class WorkflowServiceImpl implements WorkflowService, DataProvider {
                                               .addStep(aGraphNode()
                                                            .withId(generateUuid())
                                                            .withType(KUBERNETES_SETUP_ROLLBACK.name())
-                                                           .withName(Constants.ROLLBACK_CONTAINERS)
+                                                           .withName(Constants.ROLLBACK_KUBERNETES_SETUP)
                                                            .addProperty("rollback", true)
                                                            .build())
                                               .withPhaseStepNameForRollback(Constants.SETUP_CONTAINER)
@@ -2655,7 +2655,7 @@ public class WorkflowServiceImpl implements WorkflowService, DataProvider {
                           .addStep(aGraphNode()
                                        .withId(generateUuid())
                                        .withType(KUBERNETES_SETUP_ROLLBACK.name())
-                                       .withName(Constants.ROLLBACK_CONTAINERS)
+                                       .withName(Constants.ROLLBACK_KUBERNETES_SETUP)
                                        .addProperty("rollback", true)
                                        .build())
                           .withPhaseStepNameForRollback(Constants.SETUP_CONTAINER)
