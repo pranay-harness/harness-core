@@ -93,9 +93,9 @@ public class SshCommandUnitExecutorServiceImpl implements CommandUnitExecutorSer
     injector.injectMembers(commandUnit);
 
     try {
-      commandExecutionStatus = timeLimiter.callWithTimeout(()
-                                                               -> commandUnit.execute(sshCommandExecutionContext),
-          commandUnit.getCommandExecutionTimeout(), TimeUnit.MILLISECONDS, true);
+      long timeoutMs = context.getTimeout() == null ? TimeUnit.MINUTES.toMillis(10) : context.getTimeout().longValue();
+      commandExecutionStatus = timeLimiter.callWithTimeout(
+          () -> commandUnit.execute(sshCommandExecutionContext), timeoutMs, TimeUnit.MILLISECONDS, true);
     } catch (InterruptedException | TimeoutException | UncheckedTimeoutException e) {
       logService.save(context.getAccountId(),
           aLog()

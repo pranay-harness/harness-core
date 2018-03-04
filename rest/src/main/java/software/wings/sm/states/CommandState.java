@@ -306,7 +306,8 @@ public class CommandState extends State {
               .withHost(host)
               .withServiceTemplateId(serviceTemplateId)
               .withAppContainer(service.getAppContainer())
-              .withAccountId(accountId);
+              .withAccountId(accountId)
+              .withTimeout(getTimeoutMillis());
 
       if (isNotEmpty(host.getHostConnAttr())) {
         SettingAttribute hostConnectionAttribute = settingsService.get(host.getHostConnAttr());
