@@ -1,6 +1,6 @@
 package software.wings.service.impl;
 
-import static software.wings.common.UUIDGenerator.generateUuid;
+import static io.harness.data.structure.UUIDGenerator.generateUuid;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;

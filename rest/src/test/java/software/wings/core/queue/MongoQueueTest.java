@@ -1,8 +1,8 @@
 package software.wings.core.queue;
 
+import static io.harness.data.structure.UUIDGenerator.generateUuid;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThatExceptionOfType;
-import static software.wings.common.UUIDGenerator.generateUuid;
 
 import com.google.common.base.MoreObjects;
 import com.google.inject.Inject;

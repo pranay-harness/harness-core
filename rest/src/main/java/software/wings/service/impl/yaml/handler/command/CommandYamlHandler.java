@@ -8,6 +8,7 @@ import com.google.common.collect.Maps;
 import com.google.inject.Inject;
 import com.google.inject.Singleton;
 
+import io.harness.data.structure.UUIDGenerator;
 import software.wings.beans.EntityVersion;
 import software.wings.beans.Environment;
 import software.wings.beans.Graph;
@@ -23,7 +24,6 @@ import software.wings.beans.command.ServiceCommand;
 import software.wings.beans.yaml.ChangeContext;
 import software.wings.beans.yaml.YamlConstants;
 import software.wings.beans.yaml.YamlType;
-import software.wings.common.UUIDGenerator;
 import software.wings.exception.HarnessException;
 import software.wings.service.impl.yaml.handler.BaseYamlHandler;
 import software.wings.service.impl.yaml.handler.YamlHandlerFactory;

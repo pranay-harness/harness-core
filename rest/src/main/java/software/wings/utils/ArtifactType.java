@@ -21,12 +21,12 @@ import static software.wings.beans.command.CommandUnitType.SETUP_ENV;
 import static software.wings.common.Constants.AMI_SETUP_COMMAND_NAME;
 import static software.wings.common.Constants.ASG_COMMAND_NAME;
 
+import io.harness.data.structure.UUIDGenerator;
 import software.wings.beans.command.Command;
 import software.wings.beans.command.CommandType;
 import software.wings.beans.command.ScpCommandUnit.ScpFileCategory;
 import software.wings.beans.command.SetupEnvCommandUnit;
 import software.wings.common.Constants;
-import software.wings.common.UUIDGenerator;
 
 import java.util.List;
 

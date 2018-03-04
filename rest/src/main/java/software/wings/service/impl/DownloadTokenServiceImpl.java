@@ -1,7 +1,7 @@
 package software.wings.service.impl;
 
+import static io.harness.data.structure.UUIDGenerator.generateUuid;
 import static org.apache.commons.lang3.StringUtils.equalsIgnoreCase;
-import static software.wings.common.UUIDGenerator.generateUuid;
 import static software.wings.exception.WingsException.ALERTING;
 
 import com.google.inject.Inject;

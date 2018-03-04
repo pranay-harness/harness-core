@@ -1,12 +1,12 @@
 package software.wings.sm.states;
 
+import static io.harness.data.structure.UUIDGenerator.generateUuid;
 import static java.util.Arrays.asList;
 import static org.apache.commons.lang3.StringUtils.isBlank;
 import static software.wings.common.Constants.BUILD_NO;
 import static software.wings.common.Constants.DEFAULT_ARTIFACT_COLLECTION_STATE_TIMEOUT_MILLIS;
 import static software.wings.common.Constants.URL;
 import static software.wings.common.Constants.WAIT_RESUME_GROUP;
-import static software.wings.common.UUIDGenerator.generateUuid;
 import static software.wings.sm.ExecutionResponse.Builder.anExecutionResponse;
 import static software.wings.sm.StateType.ARTIFACT_COLLECTION;
 import static software.wings.utils.Validator.notNullCheck;

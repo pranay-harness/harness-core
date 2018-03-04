@@ -1,8 +1,8 @@
 package software.wings.integration.migration.legacy;
 
+import static io.harness.data.structure.UUIDGenerator.generateUuid;
 import static software.wings.beans.Base.GLOBAL_APP_ID;
 import static software.wings.beans.Base.GLOBAL_ENV_ID;
-import static software.wings.common.UUIDGenerator.generateUuid;
 
 import com.google.inject.Inject;
 

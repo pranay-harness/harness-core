@@ -1,8 +1,8 @@
 package software.wings.sm;
 
+import static io.harness.data.structure.UUIDGenerator.generateUuid;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.failBecauseExceptionWasNotThrown;
-import static software.wings.common.UUIDGenerator.generateUuid;
 import static software.wings.sm.states.RepeatState.Builder.aRepeatState;
 import static software.wings.waitnotify.StringNotifyResponseData.Builder.aStringNotifyResponseData;
 

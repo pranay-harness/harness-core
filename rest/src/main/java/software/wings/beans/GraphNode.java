@@ -1,8 +1,8 @@
 package software.wings.beans;
 
 import static io.harness.data.structure.EmptyPredicate.isEmpty;
+import static io.harness.data.structure.UUIDGenerator.generateUuid;
 import static software.wings.beans.GraphNode.GraphNodeBuilder.aGraphNode;
-import static software.wings.common.UUIDGenerator.generateUuid;
 
 import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
 import lombok.Data;

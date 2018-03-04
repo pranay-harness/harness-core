@@ -1,7 +1,7 @@
 package software.wings.core.queue;
 
+import static io.harness.data.structure.UUIDGenerator.generateUuid;
 import static io.harness.threading.Morpheus.sleep;
-import static software.wings.common.UUIDGenerator.generateUuid;
 import static software.wings.core.maintenance.MaintenanceController.isMaintenance;
 
 import com.google.inject.Inject;

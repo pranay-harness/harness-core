@@ -1,6 +1,6 @@
 package software.wings.core.queue;
 
-import static software.wings.common.UUIDGenerator.generateUuid;
+import static io.harness.data.structure.UUIDGenerator.generateUuid;
 
 import org.mongodb.morphia.annotations.Field;
 import org.mongodb.morphia.annotations.Id;

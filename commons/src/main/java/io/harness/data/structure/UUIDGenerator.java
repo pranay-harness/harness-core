@@ -1,4 +1,4 @@
-package software.wings.common;
+package io.harness.data.structure;
 
 import org.apache.commons.codec.binary.Base64;
 
@@ -6,13 +6,15 @@ import java.nio.ByteBuffer;
 import java.util.UUID;
 
 /**
- * A common universal unique ID generator that will be used throughout the wings application.
+ * A universal unique ID generator.
  *
  * @author Rishi
  */
-public class UUIDGenerator {
+public final class UUIDGenerator {
+  private UUIDGenerator() {}
+
   /**
-   * Gets uuid.
+   * Generates a random uuid in base64 format.
    *
    * @return the uuid
    */

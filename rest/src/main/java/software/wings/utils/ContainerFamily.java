@@ -1,6 +1,7 @@
 package software.wings.utils;
 
 import static com.google.common.collect.ImmutableMap.of;
+import static io.harness.data.structure.UUIDGenerator.graphIdGenerator;
 import static java.util.Collections.singletonList;
 import static software.wings.beans.Graph.Builder.aGraph;
 import static software.wings.beans.GraphNode.GraphNodeBuilder.aGraphNode;
@@ -14,7 +15,6 @@ import static software.wings.beans.command.CommandUnitType.PROCESS_CHECK_RUNNING
 import static software.wings.beans.command.CommandUnitType.PROCESS_CHECK_STOPPED;
 import static software.wings.beans.command.CommandUnitType.SCP;
 import static software.wings.beans.command.CommandUnitType.SETUP_ENV;
-import static software.wings.common.UUIDGenerator.graphIdGenerator;
 
 import com.google.common.collect.Lists;
 

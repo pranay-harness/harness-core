@@ -4,10 +4,10 @@
 
 package software.wings.sm.states;
 
+import static io.harness.data.structure.UUIDGenerator.generateUuid;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.when;
-import static software.wings.common.UUIDGenerator.generateUuid;
 
 import org.junit.Test;
 import org.slf4j.Logger;

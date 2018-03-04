@@ -1,9 +1,9 @@
 package software.wings.sm.states;
 
 import static io.harness.data.structure.EmptyPredicate.isEmpty;
+import static io.harness.data.structure.UUIDGenerator.generateUuid;
 import static org.apache.commons.lang3.StringUtils.isBlank;
 import static software.wings.beans.DelegateTask.Builder.aDelegateTask;
-import static software.wings.common.UUIDGenerator.generateUuid;
 
 import com.google.common.base.Preconditions;
 import com.google.common.collect.Sets;

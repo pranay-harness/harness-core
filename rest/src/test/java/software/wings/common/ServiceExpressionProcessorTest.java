@@ -4,6 +4,7 @@
 
 package software.wings.common;
 
+import static io.harness.data.structure.UUIDGenerator.generateUuid;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.mockito.Matchers.any;
 import static org.mockito.Matchers.anyString;
@@ -12,7 +13,6 @@ import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.when;
 import static software.wings.api.ServiceElement.Builder.aServiceElement;
 import static software.wings.beans.Service.Builder.aService;
-import static software.wings.common.UUIDGenerator.generateUuid;
 import static software.wings.sm.WorkflowStandardParams.Builder.aWorkflowStandardParams;
 import static software.wings.utils.WingsTestConstants.SERVICE_ID;
 
