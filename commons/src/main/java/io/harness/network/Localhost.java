@@ -1,9 +1,9 @@
-package io.harness.data.network;
+package io.harness.network;
 
 import java.net.InetAddress;
 import java.net.UnknownHostException;
 
-public class NetworkUtil {
+public class Localhost {
   public static String getLocalHostAddress() {
     try {
       return InetAddress.getLocalHost().getHostAddress();

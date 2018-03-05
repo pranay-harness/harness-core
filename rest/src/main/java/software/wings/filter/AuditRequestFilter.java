@@ -1,8 +1,8 @@
 package software.wings.filter;
 
-import static io.harness.data.network.NetworkUtil.getLocalHostAddress;
-import static io.harness.data.network.NetworkUtil.getLocalHostName;
 import static io.harness.data.structure.EmptyPredicate.isEmpty;
+import static io.harness.network.Localhost.getLocalHostAddress;
+import static io.harness.network.Localhost.getLocalHostName;
 import static java.util.Arrays.asList;
 import static software.wings.common.Constants.FILE_CONTENT_NOT_STORED;
 

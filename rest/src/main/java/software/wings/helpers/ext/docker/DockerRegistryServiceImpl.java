@@ -9,6 +9,7 @@ import static software.wings.helpers.ext.jenkins.BuildDetails.Builder.aBuildDeta
 import com.google.inject.Inject;
 import com.google.inject.Singleton;
 
+import io.harness.network.Http;
 import net.jodah.expiringmap.ExpirationPolicy;
 import net.jodah.expiringmap.ExpiringMap;
 import okhttp3.Credentials;
@@ -25,7 +26,6 @@ import software.wings.exception.WingsException;
 import software.wings.helpers.ext.jenkins.BuildDetails;
 import software.wings.security.encryption.EncryptedDataDetail;
 import software.wings.service.intfc.security.EncryptionService;
-import software.wings.utils.HttpUtil;
 
 import java.io.IOException;
 import java.util.Arrays;
@@ -49,7 +49,7 @@ public class DockerRegistryServiceImpl implements DockerRegistryService {
   private DockerRegistryRestClient getDockerRegistryRestClient(
       DockerConfig dockerConfig, List<EncryptedDataDetail> encryptionDetails) {
     encryptionService.decrypt(dockerConfig, encryptionDetails);
-    OkHttpClient okHttpClient = HttpUtil.getUnsafeOkHttpClient(dockerConfig.getDockerRegistryUrl());
+    OkHttpClient okHttpClient = Http.getUnsafeOkHttpClient(dockerConfig.getDockerRegistryUrl());
     Retrofit retrofit = new Retrofit.Builder()
                             .client(okHttpClient)
                             .baseUrl(dockerConfig.getDockerRegistryUrl())

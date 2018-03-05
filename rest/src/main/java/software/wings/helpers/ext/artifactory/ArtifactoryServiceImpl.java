@@ -31,6 +31,7 @@ import com.google.inject.Inject;
 import com.google.inject.Singleton;
 
 import groovyx.net.http.HttpResponseException;
+import io.harness.network.Http;
 import org.apache.commons.lang3.exception.ExceptionUtils;
 import org.apache.commons.lang3.tuple.ImmutablePair;
 import org.apache.http.HttpHost;
@@ -55,7 +56,6 @@ import software.wings.helpers.ext.jenkins.BuildDetails;
 import software.wings.security.encryption.EncryptedDataDetail;
 import software.wings.service.intfc.security.EncryptionService;
 import software.wings.utils.ArtifactType;
-import software.wings.utils.HttpUtil;
 import software.wings.waitnotify.ListNotifyResponseData;
 
 import java.io.InputStream;
@@ -893,7 +893,7 @@ public class ArtifactoryServiceImpl implements ArtifactoryService {
         builder.setUsername(artifactoryConfig.getUsername());
         builder.setPassword(new String(artifactoryConfig.getPassword()));
       }
-      HttpHost httpProxyHost = HttpUtil.getHttpProxyHost(artifactoryConfig.getArtifactoryUrl());
+      HttpHost httpProxyHost = Http.getHttpProxyHost(artifactoryConfig.getArtifactoryUrl());
       if (httpProxyHost != null) {
         builder.setProxy(new ProxyConfig(httpProxyHost.getHostName(), httpProxyHost.getPort(), null, null, null));
       }

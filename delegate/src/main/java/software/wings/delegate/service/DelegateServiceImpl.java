@@ -1,9 +1,9 @@
 package software.wings.delegate.service;
 
-import static io.harness.data.network.NetworkUtil.getLocalHostAddress;
-import static io.harness.data.network.NetworkUtil.getLocalHostName;
 import static io.harness.data.structure.EmptyPredicate.isEmpty;
 import static io.harness.data.structure.EmptyPredicate.isNotEmpty;
+import static io.harness.network.Localhost.getLocalHostAddress;
+import static io.harness.network.Localhost.getLocalHostName;
 import static io.harness.threading.Morpheus.sleep;
 import static java.nio.charset.StandardCharsets.UTF_8;
 import static java.time.Duration.ofMinutes;

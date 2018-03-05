@@ -2,6 +2,7 @@ package software.wings.service.impl.dynatrace;
 
 import com.google.inject.Inject;
 
+import io.harness.network.Http;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import retrofit2.Call;
@@ -14,7 +15,6 @@ import software.wings.helpers.ext.dynatrace.DynaTraceRestClient;
 import software.wings.security.encryption.EncryptedDataDetail;
 import software.wings.service.intfc.dynatrace.DynaTraceDelegateService;
 import software.wings.service.intfc.security.EncryptionService;
-import software.wings.utils.HttpUtil;
 
 import java.io.IOException;
 import java.util.Collections;
@@ -61,7 +61,7 @@ public class DynaTraceDelegateServiceImpl implements DynaTraceDelegateService {
         new Retrofit.Builder()
             .baseUrl(dynaTraceConfig.getDynaTraceUrl())
             .addConverterFactory(JacksonConverterFactory.create())
-            .client(HttpUtil.getOkHttpClientWithNoProxyValueSet(dynaTraceConfig.getDynaTraceUrl()).build())
+            .client(Http.getOkHttpClientWithNoProxyValueSet(dynaTraceConfig.getDynaTraceUrl()).build())
             .build();
     return retrofit.create(DynaTraceRestClient.class);
   }

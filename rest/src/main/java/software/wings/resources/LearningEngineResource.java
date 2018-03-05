@@ -1,6 +1,6 @@
 package software.wings.resources;
 
-import static software.wings.utils.HttpUtil.parseApisVersion;
+import static software.wings.utils.Misc.parseApisVersion;
 
 import com.google.inject.Inject;
 

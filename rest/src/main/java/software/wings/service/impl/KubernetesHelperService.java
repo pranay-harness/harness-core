@@ -3,9 +3,9 @@ package software.wings.service.impl;
 import static com.fasterxml.jackson.annotation.JsonInclude.Include.NON_EMPTY;
 import static com.fasterxml.jackson.dataformat.yaml.YAMLGenerator.Feature.WRITE_DOC_START_MARKER;
 import static io.fabric8.kubernetes.client.utils.Utils.isNotNullOrEmpty;
+import static io.harness.network.Http.getOkHttpClientBuilder;
 import static okhttp3.ConnectionSpec.CLEARTEXT;
 import static org.apache.commons.lang3.StringUtils.isNotBlank;
-import static software.wings.utils.HttpUtil.getOkHttpClientBuilder;
 
 import com.google.inject.Inject;
 import com.google.inject.Singleton;
@@ -26,6 +26,7 @@ import io.fabric8.kubernetes.client.dsl.NonNamespaceOperation;
 import io.fabric8.kubernetes.client.dsl.Resource;
 import io.fabric8.kubernetes.client.dsl.internal.HorizontalPodAutoscalerOperationsImpl;
 import io.fabric8.kubernetes.client.internal.SSLUtils;
+import io.harness.network.Http;
 import me.snowdrop.istio.client.IstioClient;
 import me.snowdrop.istio.client.KubernetesAdapter;
 import okhttp3.Authenticator;
@@ -44,7 +45,6 @@ import org.slf4j.LoggerFactory;
 import software.wings.beans.KubernetesConfig;
 import software.wings.security.encryption.EncryptedDataDetail;
 import software.wings.service.intfc.security.EncryptionService;
-import software.wings.utils.HttpUtil;
 
 import java.io.IOException;
 import java.net.InetSocketAddress;
@@ -139,7 +139,7 @@ public class KubernetesHelperService {
   private OkHttpClient createHttpClientWithProxySetting(final Config config) {
     try {
       OkHttpClient.Builder httpClientBuilder = getOkHttpClientBuilder();
-      httpClientBuilder.proxy(HttpUtil.checkAndGetNonProxyIfApplicable(config.getMasterUrl()));
+      httpClientBuilder.proxy(Http.checkAndGetNonProxyIfApplicable(config.getMasterUrl()));
 
       // Follow any redirects
       httpClientBuilder.followRedirects(true);

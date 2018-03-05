@@ -1,11 +1,12 @@
 package software.wings.service.impl.elk;
 
+import static io.harness.network.Http.getOkHttpClientBuilder;
 import static org.apache.commons.lang3.StringUtils.isBlank;
 import static org.apache.commons.lang3.StringUtils.isNotBlank;
-import static software.wings.utils.HttpUtil.getOkHttpClientBuilder;
 
 import com.google.inject.Inject;
 
+import io.harness.network.Http;
 import okhttp3.OkHttpClient;
 import okhttp3.Request;
 import org.apache.commons.codec.binary.Base64;
@@ -24,7 +25,6 @@ import software.wings.security.encryption.EncryptedDataDetail;
 import software.wings.service.impl.analysis.ElkConnector;
 import software.wings.service.intfc.elk.ElkDelegateService;
 import software.wings.service.intfc.security.EncryptionService;
-import software.wings.utils.HttpUtil;
 
 import java.io.IOException;
 import java.nio.charset.StandardCharsets;
@@ -205,7 +205,7 @@ public class ElkDelegateServiceImpl implements ElkDelegateService {
         })
         .connectTimeout(30, TimeUnit.SECONDS)
         .readTimeout(30, TimeUnit.SECONDS)
-        .proxy(HttpUtil.checkAndGetNonProxyIfApplicable(elkConfig.getElkUrl()));
+        .proxy(Http.checkAndGetNonProxyIfApplicable(elkConfig.getElkUrl()));
 
     String baseUrl = elkConfig.getElkUrl();
     if (baseUrl.charAt(baseUrl.length() - 1) != '/') {

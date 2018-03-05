@@ -1,12 +1,13 @@
 package software.wings.logging;
 
+import static io.harness.network.Http.shouldUseNonProxy;
+
 import okhttp3.ConnectionPool;
 import okhttp3.OkHttpClient;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import java.io.IOException;
-import java.lang.reflect.Method;
 import java.net.InetSocketAddress;
 import java.net.Proxy;
 import java.net.Socket;
@@ -72,19 +73,9 @@ public class HttpUtil {
 
   public static OkHttpClient.Builder getOkHttpClientWithNonProxySetting(String url) {
     OkHttpClient.Builder builder = getOkHttpClientBuilder();
-    try {
-      Class clazz = Class.forName("software.wings.utils.HttpUtil");
-      Method method = clazz.getMethod("shouldUseNonProxy", String.class);
-      Boolean useNonProxy = (Boolean) method.invoke(null, url);
-
-      if (useNonProxy) {
-        builder.proxy(Proxy.NO_PROXY);
-      }
-
-    } catch (ReflectiveOperationException e) {
-      logger.error("", e);
+    if (shouldUseNonProxy(null, url)) {
+      builder.proxy(Proxy.NO_PROXY);
     }
-
     return builder;
   }
 

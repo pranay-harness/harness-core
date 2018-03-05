@@ -1,6 +1,6 @@
 package software.wings.logging;
 
-import static io.harness.data.network.NetworkUtil.getLocalHostName;
+import static io.harness.network.Localhost.getLocalHostName;
 import static java.lang.String.format;
 import static org.apache.commons.codec.binary.Base64.encodeBase64String;
 

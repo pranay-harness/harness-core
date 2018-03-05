@@ -4,8 +4,10 @@ import static io.harness.data.structure.EmptyPredicate.isEmpty;
 import static org.apache.commons.lang3.StringUtils.isNotBlank;
 
 import org.apache.commons.codec.binary.Hex;
+import org.apache.commons.lang3.StringUtils;
 import software.wings.beans.ErrorCode;
 import software.wings.beans.Log.LogLevel;
+import software.wings.beans.ServiceSecretKey.ServiceApiVersion;
 import software.wings.beans.command.CommandExecutionResult.CommandExecutionStatus;
 import software.wings.beans.command.ExecutionLogCallback;
 import software.wings.common.Constants;
@@ -168,6 +170,32 @@ public class Misc {
     } else {
       return t.getClass().getSimpleName() + ": " + t.getMessage();
     }
+  }
+
+  public static ServiceApiVersion parseApisVersion(String acceptHeader) {
+    if (StringUtils.isEmpty(acceptHeader)) {
+      return null;
+    }
+
+    String[] headers = acceptHeader.split(",");
+    String header = headers[0].trim();
+    if (!header.startsWith("application/")) {
+      throw new IllegalArgumentException("Invalid header " + acceptHeader);
+    }
+
+    String versionHeader = header.replace("application/", "").trim();
+    if (StringUtils.isEmpty(versionHeader)) {
+      throw new IllegalArgumentException("Invalid header " + acceptHeader);
+    }
+
+    String[] versionSplit = versionHeader.split("\\+");
+
+    String version = versionSplit[0].trim();
+    if (version.toUpperCase().charAt(0) == 'V') {
+      return ServiceApiVersion.valueOf(version.toUpperCase());
+    }
+
+    return ServiceApiVersion.values()[ServiceApiVersion.values().length - 1];
   }
 
   /**

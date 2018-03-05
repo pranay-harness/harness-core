@@ -1,10 +1,10 @@
 package software.wings.helpers.ext.azure;
 
+import static io.harness.network.Http.getOkHttpClientBuilder;
 import static java.lang.String.format;
 import static org.apache.commons.codec.binary.Base64.encodeBase64String;
 import static org.apache.commons.lang3.StringUtils.isNotBlank;
 import static software.wings.beans.AzureKubernetesCluster.Builder.anAzureKubernetesCluster;
-import static software.wings.utils.HttpUtil.getOkHttpClientBuilder;
 
 import com.google.inject.Inject;
 import com.google.inject.Singleton;
@@ -22,6 +22,7 @@ import io.fabric8.kubernetes.api.model.AuthInfo;
 import io.fabric8.kubernetes.api.model.Cluster;
 import io.fabric8.kubernetes.api.model.Context;
 import io.fabric8.kubernetes.client.internal.KubeConfigUtils;
+import io.harness.network.Http;
 import okhttp3.OkHttpClient;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -35,7 +36,6 @@ import software.wings.beans.KubernetesConfig;
 import software.wings.exception.WingsException;
 import software.wings.security.encryption.EncryptedDataDetail;
 import software.wings.service.intfc.security.EncryptionService;
-import software.wings.utils.HttpUtil;
 
 import java.util.ArrayList;
 import java.util.Base64;
@@ -285,7 +285,7 @@ public class AzureHelperService {
     String url = getUrl(registryHostName);
     OkHttpClient okHttpClient = getOkHttpClientBuilder()
                                     .connectTimeout(CONNECT_TIMEOUT, TimeUnit.SECONDS)
-                                    .proxy(HttpUtil.checkAndGetNonProxyIfApplicable(url))
+                                    .proxy(Http.checkAndGetNonProxyIfApplicable(url))
                                     .build();
     Retrofit retrofit = new Retrofit.Builder()
                             .client(okHttpClient)
@@ -299,7 +299,7 @@ public class AzureHelperService {
     String url = getUrl("management.azure.com");
     OkHttpClient okHttpClient = getOkHttpClientBuilder()
                                     .connectTimeout(CONNECT_TIMEOUT, TimeUnit.SECONDS)
-                                    .proxy(HttpUtil.checkAndGetNonProxyIfApplicable(url))
+                                    .proxy(Http.checkAndGetNonProxyIfApplicable(url))
                                     .build();
     Retrofit retrofit = new Retrofit.Builder()
                             .client(okHttpClient)

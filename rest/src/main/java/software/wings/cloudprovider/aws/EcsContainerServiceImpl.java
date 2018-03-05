@@ -46,6 +46,7 @@ import com.amazonaws.services.ecs.model.UpdateServiceRequest;
 import com.amazonaws.services.ecs.model.UpdateServiceResult;
 import com.fasterxml.jackson.databind.DeserializationFeature;
 import com.fasterxml.jackson.databind.ObjectMapper;
+import io.harness.network.Http;
 import org.apache.commons.lang3.StringUtils;
 import org.apache.http.client.fluent.Request;
 import org.slf4j.Logger;
@@ -60,7 +61,6 @@ import software.wings.cloudprovider.ContainerInfo.Status;
 import software.wings.exception.WingsException;
 import software.wings.security.encryption.EncryptedDataDetail;
 import software.wings.service.impl.AwsHelperService;
-import software.wings.utils.HttpUtil;
 import software.wings.utils.JsonUtils;
 
 import java.io.IOException;
@@ -1031,7 +1031,7 @@ public class EcsContainerServiceImpl implements EcsContainerService {
                 .get(0);
         String ipAddress = ec2Instance.getPrivateIpAddress();
         String uri = "http://" + ipAddress + ":51678/v1/tasks";
-        if (HttpUtil.connectableHttpUrl(uri)) {
+        if (Http.connectableHttpUrl(uri)) {
           try {
             executionLogCallback.saveExecutionLog("Fetching container meta data from " + uri, LogLevel.INFO);
             logger.info("requesting data from {}", uri);

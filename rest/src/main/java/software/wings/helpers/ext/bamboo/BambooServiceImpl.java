@@ -11,6 +11,7 @@ import com.google.inject.Inject;
 import com.google.inject.Singleton;
 
 import com.fasterxml.jackson.databind.JsonNode;
+import io.harness.network.Http;
 import okhttp3.Credentials;
 import org.apache.commons.io.IOUtils;
 import org.apache.commons.lang3.exception.ExceptionUtils;
@@ -28,7 +29,6 @@ import software.wings.exception.WingsException;
 import software.wings.helpers.ext.jenkins.BuildDetails;
 import software.wings.security.encryption.EncryptedDataDetail;
 import software.wings.service.intfc.security.EncryptionService;
-import software.wings.utils.HttpUtil;
 
 import java.io.IOException;
 import java.io.InputStream;
@@ -65,7 +65,7 @@ public class BambooServiceImpl implements BambooService {
       Retrofit retrofit = new Retrofit.Builder()
                               .baseUrl(bambooUrl)
                               .addConverterFactory(JacksonConverterFactory.create())
-                              .client(HttpUtil.getUnsafeOkHttpClient(bambooUrl))
+                              .client(Http.getUnsafeOkHttpClient(bambooUrl))
                               .build();
       return retrofit.create(BambooRestClient.class);
     } catch (Exception e) {
