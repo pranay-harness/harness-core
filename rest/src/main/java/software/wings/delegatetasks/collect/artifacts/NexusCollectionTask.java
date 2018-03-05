@@ -41,7 +41,7 @@ public class NexusCollectionTask extends AbstractDelegateRunnableTask {
   public ListNotifyResponseData run(Object[] parameters) {
     try {
       return run((NexusConfig) parameters[0], (List<EncryptedDataDetail>) parameters[1], (String) parameters[2],
-          (String) parameters[3], (List<String>) parameters[4]);
+          (String) parameters[3], (List<String>) parameters[4], (String) parameters[5]);
     } catch (Exception e) {
       logger.error("Exception occurred while collecting artifact", e);
       return new ListNotifyResponseData();
@@ -49,14 +49,14 @@ public class NexusCollectionTask extends AbstractDelegateRunnableTask {
   }
 
   public ListNotifyResponseData run(NexusConfig nexusConfig, List<EncryptedDataDetail> encryptionDetails,
-      String repoType, String groupId, List<String> artifactPaths) {
+      String repoType, String groupId, List<String> artifactPaths, String version) {
     InputStream in = null;
     ListNotifyResponseData res = new ListNotifyResponseData();
     try {
       for (String artifactPath : artifactPaths) {
         logger.info("Collecting artifact {}  from Nexus server {}", artifactPath, nexusConfig.getNexusUrl());
         Pair<String, InputStream> fileInfo =
-            nexusService.downloadArtifact(nexusConfig, encryptionDetails, repoType, groupId, artifactPath);
+            nexusService.downloadArtifact(nexusConfig, encryptionDetails, repoType, groupId, artifactPath, version);
         artifactCollectionTaskHelper.addDataToResponse(
             fileInfo, artifactPath, res, getDelegateId(), getTaskId(), getAccountId());
       }

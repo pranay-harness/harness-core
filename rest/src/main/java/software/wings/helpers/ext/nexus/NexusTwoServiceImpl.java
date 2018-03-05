@@ -225,6 +225,7 @@ public class NexusTwoServiceImpl {
     final String relativePath = getGroupId(groupId) + project.getArtifactId() + "/"
         + (project.getVersion() != null ? project.getVersion() : project.getParent().getVersion()) + "/";
     final String url = getIndexContentPathUrl(nexusConfig, repoType, relativePath);
+    logger.info("Url {}", url);
     final Response<IndexBrowserTreeViewResponse> response =
         getIndexBrowserTreeViewResponseResponse(nexusConfig, encryptionDetails, url);
     if (isSuccessful(response)) {

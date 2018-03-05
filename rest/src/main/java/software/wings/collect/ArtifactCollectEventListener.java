@@ -127,7 +127,7 @@ public class ArtifactCollectEventListener extends AbstractQueueListener<CollectE
             .withWaitId(waitId)
             .withParameters(new Object[] {nexusConfig, secretManager.getEncryptionDetails(nexusConfig, null, null),
                 nexusArtifactStream.getJobname(), nexusArtifactStream.getGroupId(),
-                nexusArtifactStream.getArtifactPaths()})
+                nexusArtifactStream.getArtifactPaths(), artifact.getBuildNo()})
             .build();
       }
       case ARTIFACTORY: {
