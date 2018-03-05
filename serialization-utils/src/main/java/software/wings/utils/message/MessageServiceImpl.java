@@ -210,6 +210,11 @@ public class MessageServiceImpl implements MessageService {
   }
 
   @Override
+  public List<Message> waitForMessages(String messageName, long timeout, long minWaitTime) {
+    return waitForMessagesOnChannel(messengerType, processId, messageName, timeout, minWaitTime);
+  }
+
+  @Override
   public Message waitForMessageOnChannel(
       MessengerType sourceType, String sourceProcessId, String messageName, long timeout) {
     try {
@@ -230,6 +235,48 @@ public class MessageServiceImpl implements MessageService {
           }
         }
         return message;
+      }, timeout, TimeUnit.MILLISECONDS, true);
+    } catch (UncheckedTimeoutException e) {
+      logger.debug("Timed out waiting for message {} from channel {} {}", messageName, sourceType, sourceProcessId);
+    } catch (Exception e) {
+      logger.error(
+          "Error while waiting for message {} from channel {} {}", messageName, sourceType, sourceProcessId, e);
+    }
+    return null;
+  }
+
+  @Override
+  public List<Message> waitForMessagesOnChannel(
+      MessengerType sourceType, String sourceProcessId, String messageName, long timeout, long minWaitTime) {
+    try {
+      BlockingQueue<Message> queue = messageQueues.get(getMessageChannel(sourceType, sourceProcessId));
+      if (queue == null) {
+        RuntimeException ex = new RuntimeException(
+            "To wait for a message you must first schedule the runnable returned by getMessageCheckingRunnable[ForChannel] at regular intervals.");
+        logger.error(ex.getMessage(), ex);
+        throw ex;
+      }
+      return timeLimiter.callWithTimeout(() -> {
+        List<Message> messages = new ArrayList<>();
+        while (messages.isEmpty()) {
+          try {
+            timeLimiter.callWithTimeout(() -> {
+              while (true) {
+                try {
+                  Message message = queue.take();
+                  if (messageName.equals(message.getMessage())) {
+                    messages.add(message);
+                  }
+                } catch (InterruptedException e) {
+                  Thread.currentThread().interrupt();
+                }
+              }
+            }, minWaitTime, TimeUnit.MILLISECONDS, true);
+          } catch (UncheckedTimeoutException e) {
+            // Do nothing
+          }
+        }
+        return messages;
       }, timeout, TimeUnit.MILLISECONDS, true);
     } catch (UncheckedTimeoutException e) {
       logger.debug("Timed out waiting for message {} from channel {} {}", messageName, sourceType, sourceProcessId);

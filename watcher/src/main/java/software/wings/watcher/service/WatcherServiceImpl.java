@@ -371,9 +371,13 @@ public class WatcherServiceImpl implements WatcherService {
         String newDelegateProcess = null;
 
         if (newDelegate.getProcess().isAlive()) {
-          Message message = messageService.waitForMessage(NEW_DELEGATE, TimeUnit.MINUTES.toMillis(2));
-          if (message != null) {
-            newDelegateProcess = message.getParams().get(0);
+          List<Message> newDelegateMessages =
+              messageService.waitForMessages(NEW_DELEGATE, TimeUnit.MINUTES.toMillis(5), TimeUnit.SECONDS.toMillis(5));
+          if (isNotEmpty(newDelegateMessages)) {
+            for (int i = 0; i < newDelegateMessages.size() - 1; i++) {
+              shutdownDelegate(newDelegateMessages.get(i).getParams().get(0));
+            }
+            newDelegateProcess = newDelegateMessages.get(newDelegateMessages.size() - 1).getParams().get(0);
             logger.info("Got process ID from new delegate: " + newDelegateProcess);
             Map<String, Object> delegateData = new HashMap<>();
             delegateData.put(DELEGATE_IS_NEW, true);
@@ -383,7 +387,8 @@ public class WatcherServiceImpl implements WatcherService {
               runningDelegates.add(newDelegateProcess);
               messageService.putData(WATCHER_DATA, RUNNING_DELEGATES, runningDelegates);
             }
-            message = messageService.readMessageFromChannel(DELEGATE, newDelegateProcess, TimeUnit.MINUTES.toMillis(2));
+            Message message =
+                messageService.readMessageFromChannel(DELEGATE, newDelegateProcess, TimeUnit.MINUTES.toMillis(2));
             if (message != null && message.getMessage().equals(DELEGATE_STARTED)) {
               logger.info("Retrieved delegate-started message from new delegate {}", newDelegateProcess);
               oldDelegateProcesses.forEach(oldDelegateProcess -> {
@@ -391,7 +396,6 @@ public class WatcherServiceImpl implements WatcherService {
                 messageService.writeMessageToChannel(DELEGATE, oldDelegateProcess, DELEGATE_STOP_ACQUIRING);
               });
               logger.info("Sending new delegate process {} go-ahead message", newDelegateProcess);
-              sleep(ofSeconds(2));
               messageService.writeMessageToChannel(DELEGATE, newDelegateProcess, DELEGATE_GO_AHEAD);
               success = true;
             }
@@ -446,12 +450,10 @@ public class WatcherServiceImpl implements WatcherService {
     executorService.submit(() -> {
       messageService.writeMessageToChannel(DELEGATE, delegateProcess, DELEGATE_STOP_ACQUIRING);
       try {
-        Thread.sleep(TimeUnit.SECONDS.toMillis(5));
+        sleep(ofSeconds(5));
         new ProcessExecutor().timeout(5, TimeUnit.SECONDS).command("kill", "-3", delegateProcess).start();
-        Thread.sleep(TimeUnit.SECONDS.toMillis(15));
+        sleep(ofSeconds(15));
         new ProcessExecutor().timeout(5, TimeUnit.SECONDS).command("kill", "-9", delegateProcess).start();
-      } catch (InterruptedException e) {
-        Thread.currentThread().interrupt();
       } catch (Exception e) {
         logger.error("Error killing delegate {}", delegateProcess, e);
       }

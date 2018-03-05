@@ -187,7 +187,6 @@ public class DelegateServiceImpl implements DelegateService {
 
       if (watched) {
         logger.info("[New] Delegate process started. Sending confirmation");
-        sleep(ofSeconds(2));
         messageService.writeMessage(DELEGATE_STARTED);
         startInputCheck();
         logger.info("[New] Waiting for go ahead from watcher");
@@ -639,7 +638,7 @@ public class DelegateServiceImpl implements DelegateService {
         try {
           new ProcessExecutor().timeout(5, TimeUnit.SECONDS).command("kill", "-9", watcherProcess).start();
           messageService.closeChannel(WATCHER, watcherProcess);
-          Thread.sleep(TimeUnit.SECONDS.toMillis(2));
+          sleep(ofSeconds(2));
           // Prevent a second restart attempt right away at next heartbeat by writing the watcher heartbeat and
           // resetting version matched timestamp
           messageService.putData(WATCHER_DATA, WATCHER_HEARTBEAT, clock.millis());
