@@ -35,7 +35,6 @@ import org.eclipse.jgit.transport.FetchResult;
 import org.eclipse.jgit.transport.PushResult;
 import org.eclipse.jgit.transport.RefSpec;
 import org.eclipse.jgit.transport.RemoteRefUpdate;
-import org.eclipse.jgit.transport.UsernamePasswordCredentialsProvider;
 import org.eclipse.jgit.treewalk.CanonicalTreeParser;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -93,8 +92,7 @@ public class GitClientImpl implements GitClient {
 
     try (Git git = Git.cloneRepository()
                        .setURI(gitConfig.getRepoUrl())
-                       .setCredentialsProvider(
-                           new UsernamePasswordCredentialsProvider(gitConfig.getUsername(), gitConfig.getPassword()))
+                       .setCredentialsProvider(getCredentialsProvider(gitConfig))
                        .setDirectory(new File(gitRepoDirectory))
                        .setBranch(gitConfig.getBranch())
                        .call()) {
@@ -104,6 +102,10 @@ public class GitClientImpl implements GitClient {
       checkIfTransportException(ex);
       throw new WingsException(ErrorCode.YAML_GIT_SYNC_ERROR).addParam("message", "Error in cloning repo");
     }
+  }
+
+  private UsernamePasswordCredentialsProviderWithSkipSslVerify getCredentialsProvider(GitConfig gitConfig) {
+    return new UsernamePasswordCredentialsProviderWithSkipSslVerify(gitConfig.getUsername(), gitConfig.getPassword());
   }
 
   private String getRepoDirectory(GitConfig gitConfig) {
@@ -140,10 +142,7 @@ public class GitClientImpl implements GitClient {
                                    .build();
     try (Git git = Git.open(new File(getRepoDirectory(gitConfig)))) {
       git.checkout().setName(gitConfig.getBranch()).call();
-      git.pull()
-          .setCredentialsProvider(
-              new UsernamePasswordCredentialsProvider(gitConfig.getUsername(), gitConfig.getPassword()))
-          .call();
+      git.pull().setCredentialsProvider(getCredentialsProvider(gitConfig)).call();
       Repository repository = git.getRepository();
       ObjectId headCommitId = repository.resolve("HEAD");
       diffResult.setCommitId(headCommitId.getName());
@@ -341,8 +340,7 @@ public class GitClientImpl implements GitClient {
     logger.info(GIT_YAML_LOG_PREFIX + "Performing git PUSH, forcePush is: " + forcePush);
     try (Git git = Git.open(new File(getRepoDirectory(gitConfig)))) {
       Iterable<PushResult> pushResults = git.push()
-                                             .setCredentialsProvider(new UsernamePasswordCredentialsProvider(
-                                                 gitConfig.getUsername(), gitConfig.getPassword()))
+                                             .setCredentialsProvider(getCredentialsProvider(gitConfig))
                                              .setRemote("origin")
                                              .setForce(forcePush)
                                              .setRefSpecs(new RefSpec(gitConfig.getBranch()))
@@ -404,10 +402,7 @@ public class GitClientImpl implements GitClient {
           .setStartPoint("origin/" + gitConfig.getBranch())
           .call();
       git.checkout().setName(gitConfig.getBranch()).call();
-      return git.pull()
-          .setCredentialsProvider(
-              new UsernamePasswordCredentialsProvider(gitConfig.getUsername(), gitConfig.getPassword()))
-          .call();
+      return git.pull().setCredentialsProvider(getCredentialsProvider(gitConfig)).call();
     } catch (IOException | GitAPIException ex) {
       logger.error(GIT_YAML_LOG_PREFIX + "Exception: ", ex);
       throw new WingsException(ErrorCode.YAML_GIT_SYNC_ERROR).addParam("message", "Error in getting commit diff");
@@ -421,8 +416,7 @@ public class GitClientImpl implements GitClient {
                                  .setRemote(gitConfig.getRepoUrl())
                                  .setHeads(true)
                                  .setTags(true)
-                                 .setCredentialsProvider(new UsernamePasswordCredentialsProvider(
-                                     gitConfig.getUsername(), gitConfig.getPassword()))
+                                 .setCredentialsProvider(getCredentialsProvider(gitConfig))
                                  .call();
       logger.info(GIT_YAML_LOG_PREFIX + "Remote branches [{}]", refs);
     } catch (Exception e) {
@@ -457,10 +451,8 @@ public class GitClientImpl implements GitClient {
   synchronized void ensureRepoLocallyClonedAndUpdated(GitConfig gitConfig) {
     try (Git git = Git.open(new File(getRepoDirectory(gitConfig)))) {
       logger.info(GIT_YAML_LOG_PREFIX + "Repo exist. do hard sync with remote branch");
-      FetchResult fetchResult = git.fetch()
-                                    .setCredentialsProvider(new UsernamePasswordCredentialsProvider(
-                                        gitConfig.getUsername(), gitConfig.getPassword()))
-                                    .call(); // fetch all remote references
+      FetchResult fetchResult =
+          git.fetch().setCredentialsProvider(getCredentialsProvider(gitConfig)).call(); // fetch all remote references
       checkout(gitConfig);
       Ref ref = git.reset().setMode(ResetType.HARD).setRef("refs/remotes/origin/" + gitConfig.getBranch()).call();
       logger.info(GIT_YAML_LOG_PREFIX + "Hard reset done for branch " + gitConfig.getBranch());
