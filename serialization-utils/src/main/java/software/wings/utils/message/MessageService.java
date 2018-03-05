@@ -26,7 +26,12 @@ public interface MessageService {
 
   Message waitForMessage(String messageName, long timeout);
 
+  List<Message> waitForMessages(String messageName, long timeout, long minWaitTime);
+
   Message waitForMessageOnChannel(MessengerType sourceType, String sourceProcessId, String messageName, long timeout);
+
+  List<Message> waitForMessagesOnChannel(
+      MessengerType sourceType, String sourceProcessId, String messageName, long timeout, long minWaitTime);
 
   List<String> listChannels(MessengerType type);
 
