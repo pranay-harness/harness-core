@@ -1,14 +1,15 @@
 package software.wings.helpers.ext.gcr;
 
 import static io.harness.govern.Switch.unhandled;
+import static io.harness.network.Http.getOkHttpClientBuilder;
 import static java.util.Collections.emptyList;
 import static software.wings.helpers.ext.jenkins.BuildDetails.Builder.aBuildDetails;
-import static software.wings.utils.HttpUtil.getOkHttpClientBuilder;
 
 import com.google.api.client.googleapis.auth.oauth2.GoogleCredential;
 import com.google.inject.Inject;
 import com.google.inject.Singleton;
 
+import io.harness.network.Http;
 import okhttp3.Credentials;
 import okhttp3.OkHttpClient;
 import org.slf4j.Logger;
@@ -23,7 +24,6 @@ import software.wings.exception.WingsException;
 import software.wings.helpers.ext.jenkins.BuildDetails;
 import software.wings.security.encryption.EncryptedDataDetail;
 import software.wings.service.impl.GcpHelperService;
-import software.wings.utils.HttpUtil;
 
 import java.io.IOException;
 import java.util.HashMap;
@@ -52,7 +52,7 @@ public class GcrServiceImpl implements GcrService {
     String url = getUrl(registryHostName);
     OkHttpClient okHttpClient = getOkHttpClientBuilder()
                                     .connectTimeout(CONNECT_TIMEOUT, TimeUnit.SECONDS)
-                                    .proxy(HttpUtil.checkAndGetNonProxyIfApplicable(url))
+                                    .proxy(Http.checkAndGetNonProxyIfApplicable(url))
                                     .build();
     Retrofit retrofit = new Retrofit.Builder()
                             .client(okHttpClient)

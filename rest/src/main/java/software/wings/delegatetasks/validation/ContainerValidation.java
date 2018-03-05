@@ -1,8 +1,8 @@
 package software.wings.delegatetasks.validation;
 
+import static io.harness.network.Http.connectableHttpUrl;
 import static java.util.Collections.singletonList;
 import static org.apache.commons.lang3.StringUtils.substringAfter;
-import static software.wings.utils.HttpUtil.connectableHttpUrl;
 
 import com.google.inject.Inject;
 

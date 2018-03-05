@@ -32,6 +32,7 @@ import com.offbytwo.jenkins.model.Job;
 import com.offbytwo.jenkins.model.JobWithDetails;
 import com.offbytwo.jenkins.model.QueueItem;
 import com.offbytwo.jenkins.model.QueueReference;
+import io.harness.network.Http;
 import org.apache.commons.lang3.NotImplementedException;
 import org.apache.commons.lang3.tuple.ImmutablePair;
 import org.apache.commons.lang3.tuple.Pair;
@@ -42,7 +43,6 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import software.wings.beans.ErrorCode;
 import software.wings.exception.WingsException;
-import software.wings.utils.HttpUtil;
 
 import java.io.IOException;
 import java.io.InputStream;
@@ -555,10 +555,10 @@ public class JenkinsImpl implements Jenkins {
 
   private HttpClientBuilder getUnSafeBuilder(String jenkinsUrl) {
     HttpClientBuilder builder = HttpClientBuilder.create();
-    HttpHost httpProxyHost = HttpUtil.getHttpProxyHost(jenkinsUrl);
+    HttpHost httpProxyHost = Http.getHttpProxyHost(jenkinsUrl);
     try {
       // Set ssl context
-      builder.setSSLContext(HttpUtil.getSslContext());
+      builder.setSSLContext(Http.getSslContext());
       // Create all-trusting host name verifier
       HostnameVerifier allHostsValid = (s, sslSession) -> true;
       if (httpProxyHost != null) {

@@ -1,7 +1,7 @@
 package software.wings.integration;
 
 import static com.fasterxml.jackson.databind.DeserializationFeature.FAIL_ON_UNKNOWN_PROPERTIES;
-import static io.harness.data.network.NetworkUtil.getLocalHostName;
+import static io.harness.network.Localhost.getLocalHostName;
 import static java.lang.String.format;
 import static javax.ws.rs.client.Entity.entity;
 import static javax.ws.rs.core.MediaType.APPLICATION_JSON;

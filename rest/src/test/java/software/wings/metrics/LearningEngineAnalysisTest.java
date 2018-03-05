@@ -18,7 +18,7 @@ import software.wings.dl.WingsPersistence;
 import software.wings.service.impl.newrelic.LearningEngineAnalysisTask;
 import software.wings.service.intfc.LearningEngineService;
 import software.wings.sm.ExecutionStatus;
-import software.wings.utils.HttpUtil;
+import software.wings.utils.Misc;
 
 import java.util.List;
 import java.util.UUID;
@@ -201,11 +201,11 @@ public class LearningEngineAnalysisTest extends WingsBaseTest {
   @Test
   public void testParseVersion() {
     ServiceApiVersion latestVersion = ServiceApiVersion.values()[ServiceApiVersion.values().length - 1];
-    assertEquals(latestVersion, HttpUtil.parseApisVersion("application/json"));
+    assertEquals(latestVersion, Misc.parseApisVersion("application/json"));
 
     for (ServiceApiVersion serviceApiVersion : ServiceApiVersion.values()) {
       String headerString = "application/" + serviceApiVersion.name().toLowerCase() + "+json, application/json";
-      assertEquals(serviceApiVersion, HttpUtil.parseApisVersion(headerString));
+      assertEquals(serviceApiVersion, Misc.parseApisVersion(headerString));
     }
   }
 }

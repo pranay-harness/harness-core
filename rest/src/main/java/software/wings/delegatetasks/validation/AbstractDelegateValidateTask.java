@@ -1,8 +1,8 @@
 package software.wings.delegatetasks.validation;
 
+import static io.harness.network.Http.connectableHttpUrl;
 import static java.util.Collections.emptyList;
 import static java.util.Collections.singletonList;
-import static software.wings.utils.HttpUtil.connectableHttpUrl;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;

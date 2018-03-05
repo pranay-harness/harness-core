@@ -1,9 +1,10 @@
 package software.wings.service.impl.appdynamics;
 
-import static software.wings.utils.HttpUtil.validUrl;
+import static io.harness.network.Http.validUrl;
 
 import com.google.inject.Inject;
 
+import io.harness.network.Http;
 import org.apache.commons.codec.binary.Base64;
 import org.apache.http.HttpStatus;
 import org.slf4j.Logger;
@@ -21,7 +22,6 @@ import software.wings.service.impl.appdynamics.AppdynamicsMetric.AppdynamicsMetr
 import software.wings.service.impl.newrelic.NewRelicApplication;
 import software.wings.service.intfc.appdynamics.AppdynamicsDelegateService;
 import software.wings.service.intfc.security.EncryptionService;
-import software.wings.utils.HttpUtil;
 
 import java.io.IOException;
 import java.nio.charset.StandardCharsets;
@@ -220,7 +220,7 @@ public class AppdynamicsDelegateServiceImpl implements AppdynamicsDelegateServic
         new Retrofit.Builder()
             .baseUrl(appDynamicsConfig.getControllerUrl() + "/")
             .addConverterFactory(JacksonConverterFactory.create())
-            .client(HttpUtil.getOkHttpClientWithNoProxyValueSet(appDynamicsConfig.getControllerUrl()).build())
+            .client(Http.getOkHttpClientWithNoProxyValueSet(appDynamicsConfig.getControllerUrl()).build())
             .build();
     return retrofit.create(AppdynamicsRestClient.class);
   }

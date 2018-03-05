@@ -1,6 +1,6 @@
 package software.wings.service.impl.logz;
 
-import static software.wings.utils.HttpUtil.getOkHttpClientBuilder;
+import static io.harness.network.Http.getOkHttpClientBuilder;
 
 import com.google.inject.Inject;
 

@@ -1,7 +1,7 @@
 package software.wings.service.impl;
 
-import static software.wings.utils.HttpUtil.connectableHttpUrl;
-import static software.wings.utils.HttpUtil.validUrl;
+import static io.harness.network.Http.connectableHttpUrl;
+import static io.harness.network.Http.validUrl;
 import static software.wings.utils.Validator.equalCheck;
 
 import com.google.inject.Inject;

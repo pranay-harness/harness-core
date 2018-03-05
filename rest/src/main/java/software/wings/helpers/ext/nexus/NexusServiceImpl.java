@@ -13,6 +13,7 @@ import com.google.common.util.concurrent.UncheckedTimeoutException;
 import com.google.inject.Inject;
 import com.google.inject.Singleton;
 
+import io.harness.network.Http;
 import org.apache.commons.lang3.tuple.Pair;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -24,7 +25,6 @@ import software.wings.exception.WingsException;
 import software.wings.helpers.ext.jenkins.BuildDetails;
 import software.wings.security.encryption.EncryptedDataDetail;
 import software.wings.utils.ArtifactType;
-import software.wings.utils.HttpUtil;
 
 import java.io.IOException;
 import java.io.InputStream;
@@ -82,7 +82,7 @@ public class NexusServiceImpl implements NexusService {
     return new Retrofit.Builder()
         .baseUrl(baseUrl)
         .addConverterFactory(converterFactory)
-        .client(HttpUtil.getUnsafeOkHttpClient(baseUrl))
+        .client(Http.getUnsafeOkHttpClient(baseUrl))
         .build();
   }
 

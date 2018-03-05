@@ -1,4 +1,4 @@
-package software.wings.utils;
+package io.harness.network;
 
 import static io.harness.data.structure.EmptyPredicate.isNotEmpty;
 import static org.apache.commons.lang3.StringUtils.isNotBlank;
@@ -7,12 +7,10 @@ import com.google.common.base.Splitter;
 
 import okhttp3.ConnectionPool;
 import okhttp3.OkHttpClient;
-import org.apache.commons.lang3.StringUtils;
 import org.apache.commons.validator.routines.UrlValidator;
 import org.apache.http.HttpHost;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-import software.wings.beans.ServiceSecretKey.ServiceApiVersion;
 
 import java.io.IOException;
 import java.net.HttpURLConnection;
@@ -33,10 +31,10 @@ import javax.net.ssl.X509TrustManager;
 /**
  * Created by anubhaw on 5/2/17.
  */
-public class HttpUtil {
+public class Http {
   private static UrlValidator urlValidator =
       new UrlValidator(new String[] {"http", "https"}, UrlValidator.ALLOW_LOCAL_URLS);
-  private static final Logger logger = LoggerFactory.getLogger(HttpUtil.class);
+  private static final Logger logger = LoggerFactory.getLogger(Http.class);
   private static TrustManager[] trustAllCerts = getTrustManagers();
   private static SSLContext sc = getSslContext();
 
@@ -83,7 +81,7 @@ public class HttpUtil {
         return true;
       }
     } catch (Exception e) {
-      logger.info("Could not connect to url {}: {}", url, Misc.getMessage(e));
+      logger.info("Could not connect to url {}: {}", url, e.getMessage());
       return false;
     }
     return false;
@@ -116,7 +114,7 @@ public class HttpUtil {
   public static OkHttpClient getUnsafeOkHttpClient(String url) {
     try {
       return getOkHttpClientBuilder()
-          .sslSocketFactory(HttpUtil.getSslContext().getSocketFactory())
+          .sslSocketFactory(Http.getSslContext().getSocketFactory())
           .hostnameVerifier((s, sslSession) -> true)
           .connectTimeout(15000, TimeUnit.SECONDS)
           .proxy(checkAndGetNonProxyIfApplicable(url))
@@ -130,32 +128,6 @@ public class HttpUtil {
 
   public static boolean validUrl(String url) {
     return urlValidator.isValid(url);
-  }
-
-  public static ServiceApiVersion parseApisVersion(String acceptHeader) {
-    if (StringUtils.isEmpty(acceptHeader)) {
-      return null;
-    }
-
-    String[] headers = acceptHeader.split(",");
-    String header = headers[0].trim();
-    if (!header.startsWith("application/")) {
-      throw new IllegalArgumentException("Invalid header " + acceptHeader);
-    }
-
-    String versionHeader = header.replace("application/", "").trim();
-    if (StringUtils.isEmpty(versionHeader)) {
-      throw new IllegalArgumentException("Invalid header " + acceptHeader);
-    }
-
-    String[] versionSplit = versionHeader.split("\\+");
-
-    String version = versionSplit[0].trim();
-    if (version.toUpperCase().charAt(0) == 'V') {
-      return ServiceApiVersion.valueOf(version.toUpperCase());
-    }
-
-    return ServiceApiVersion.values()[ServiceApiVersion.values().length - 1];
   }
 
   public static HttpHost getHttpProxyHost() {

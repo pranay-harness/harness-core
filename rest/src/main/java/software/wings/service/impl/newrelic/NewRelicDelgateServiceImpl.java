@@ -4,6 +4,7 @@ import static io.harness.data.structure.EmptyPredicate.isEmpty;
 
 import com.google.inject.Inject;
 
+import io.harness.network.Http;
 import okhttp3.OkHttpClient;
 import okhttp3.Request;
 import org.apache.commons.lang3.StringUtils;
@@ -21,7 +22,6 @@ import software.wings.helpers.ext.newrelic.NewRelicRestClient;
 import software.wings.security.encryption.EncryptedDataDetail;
 import software.wings.service.intfc.newrelic.NewRelicDelegateService;
 import software.wings.service.intfc.security.EncryptionService;
-import software.wings.utils.HttpUtil;
 
 import java.io.IOException;
 import java.text.SimpleDateFormat;
@@ -187,7 +187,7 @@ public class NewRelicDelgateServiceImpl implements NewRelicDelegateService {
   private NewRelicRestClient getNewRelicRestClient(
       final NewRelicConfig newRelicConfig, List<EncryptedDataDetail> encryptedDataDetails) {
     encryptionService.decrypt(newRelicConfig, encryptedDataDetails);
-    OkHttpClient.Builder httpClient = HttpUtil.getOkHttpClientWithNoProxyValueSet(newRelicConfig.getNewRelicUrl());
+    OkHttpClient.Builder httpClient = Http.getOkHttpClientWithNoProxyValueSet(newRelicConfig.getNewRelicUrl());
     httpClient.addInterceptor(chain -> {
       Request original = chain.request();
 

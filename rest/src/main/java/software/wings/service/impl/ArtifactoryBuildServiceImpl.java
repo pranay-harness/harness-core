@@ -1,10 +1,10 @@
 package software.wings.service.impl;
 
 import static io.harness.data.structure.EmptyPredicate.isEmpty;
+import static io.harness.network.Http.connectableHttpUrl;
+import static io.harness.network.Http.validUrl;
 import static software.wings.beans.ErrorCode.INVALID_ARTIFACT_SERVER;
 import static software.wings.utils.ArtifactType.DOCKER;
-import static software.wings.utils.HttpUtil.connectableHttpUrl;
-import static software.wings.utils.HttpUtil.validUrl;
 import static software.wings.utils.Validator.equalCheck;
 
 import com.google.inject.Inject;
