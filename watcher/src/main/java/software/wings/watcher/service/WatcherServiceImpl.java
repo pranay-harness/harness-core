@@ -210,18 +210,7 @@ public class WatcherServiceImpl implements WatcherService {
 
       String extraWatcher = messageService.getData(WATCHER_DATA, EXTRA_WATCHER, String.class);
       if (isNotEmpty(extraWatcher)) {
-        if (!StringUtils.equals(extraWatcher, getProcessId())) {
-          logger.warn("Shutting down extra watcher {}", extraWatcher);
-          executorService.submit(() -> {
-            try {
-              new ProcessExecutor().timeout(5, TimeUnit.SECONDS).command("kill", "-9", extraWatcher).start();
-            } catch (Exception e) {
-              logger.error("Error killing watcher {}", extraWatcher, e);
-            }
-            messageService.closeChannel(WATCHER, extraWatcher);
-            messageService.removeData(WATCHER_DATA, EXTRA_WATCHER);
-          });
-        }
+        shutdownWatcher(extraWatcher);
       } else {
         messageService.listChannels(WATCHER)
             .stream()
@@ -466,6 +455,21 @@ public class WatcherServiceImpl implements WatcherService {
     });
   }
 
+  private void shutdownWatcher(String watcherProcess) {
+    if (!StringUtils.equals(watcherProcess, getProcessId())) {
+      logger.warn("Shutting down extra watcher {}", watcherProcess);
+      executorService.submit(() -> {
+        try {
+          new ProcessExecutor().timeout(5, TimeUnit.SECONDS).command("kill", "-9", watcherProcess).start();
+        } catch (Exception e) {
+          logger.error("Error killing watcher {}", watcherProcess, e);
+        }
+        messageService.closeChannel(WATCHER, watcherProcess);
+        messageService.removeData(WATCHER_DATA, EXTRA_WATCHER);
+      });
+    }
+  }
+
   private void checkForWatcherUpgrade() {
     if (!watcherConfiguration.isDoUpgrade()) {
       logger.info("Auto upgrade is disabled in watcher configuration");
@@ -575,12 +579,17 @@ public class WatcherServiceImpl implements WatcherService {
       boolean success = false;
 
       if (process.getProcess().isAlive()) {
-        Message message = messageService.waitForMessage(NEW_WATCHER, TimeUnit.MINUTES.toMillis(2));
-        if (message != null) {
-          String newWatcherProcess = message.getParams().get(0);
+        List<Message> newWatcherMessages =
+            messageService.waitForMessages(NEW_WATCHER, TimeUnit.MINUTES.toMillis(5), TimeUnit.SECONDS.toMillis(5));
+        if (isNotEmpty(newWatcherMessages)) {
+          for (int i = 0; i < newWatcherMessages.size() - 1; i++) {
+            shutdownWatcher(newWatcherMessages.get(i).getParams().get(0));
+          }
+          String newWatcherProcess = newWatcherMessages.get(newWatcherMessages.size() - 1).getParams().get(0);
           logger.info("[Old] Got process ID from new watcher: " + newWatcherProcess);
           messageService.putData(WATCHER_DATA, NEXT_WATCHER, newWatcherProcess);
-          message = messageService.readMessageFromChannel(WATCHER, newWatcherProcess, TimeUnit.MINUTES.toMillis(2));
+          Message message =
+              messageService.readMessageFromChannel(WATCHER, newWatcherProcess, TimeUnit.MINUTES.toMillis(2));
           if (message != null && message.getMessage().equals(WATCHER_STARTED)) {
             logger.info(
                 "[Old] Retrieved watcher-started message from new watcher {}. Sending go-ahead", newWatcherProcess);
