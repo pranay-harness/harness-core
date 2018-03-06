@@ -16,8 +16,8 @@ import static software.wings.api.CommandStateExecutionData.Builder.aCommandState
 import static software.wings.api.PhaseElement.PhaseElementBuilder.aPhaseElement;
 import static software.wings.api.ServiceElement.Builder.aServiceElement;
 import static software.wings.beans.Application.Builder.anApplication;
+import static software.wings.beans.EcsInfrastructureMapping.Builder.anEcsInfrastructureMapping;
 import static software.wings.beans.Environment.Builder.anEnvironment;
-import static software.wings.beans.GcpKubernetesInfrastructureMapping.Builder.aGcpKubernetesInfrastructureMapping;
 import static software.wings.beans.ResizeStrategy.RESIZE_NEW_FIRST;
 import static software.wings.beans.Service.Builder.aService;
 import static software.wings.beans.ServiceTemplate.Builder.aServiceTemplate;
@@ -27,7 +27,6 @@ import static software.wings.beans.artifact.Artifact.Builder.anArtifact;
 import static software.wings.beans.artifact.DockerArtifactStream.Builder.aDockerArtifactStream;
 import static software.wings.beans.command.Command.Builder.aCommand;
 import static software.wings.beans.command.CommandExecutionResult.Builder.aCommandExecutionResult;
-import static software.wings.beans.command.KubernetesSetupParams.KubernetesSetupParamsBuilder.aKubernetesSetupParams;
 import static software.wings.beans.command.ServiceCommand.Builder.aServiceCommand;
 import static software.wings.common.Constants.BUILD_NO;
 import static software.wings.sm.StateExecutionInstance.Builder.aStateExecutionInstance;
@@ -40,6 +39,7 @@ import static software.wings.utils.WingsTestConstants.APP_NAME;
 import static software.wings.utils.WingsTestConstants.ARTIFACT_ID;
 import static software.wings.utils.WingsTestConstants.CLUSTER_NAME;
 import static software.wings.utils.WingsTestConstants.COMPUTE_PROVIDER_ID;
+import static software.wings.utils.WingsTestConstants.ECS_SERVICE_NAME;
 import static software.wings.utils.WingsTestConstants.ENV_ID;
 import static software.wings.utils.WingsTestConstants.ENV_NAME;
 import static software.wings.utils.WingsTestConstants.INFRA_MAPPING_ID;
@@ -82,10 +82,11 @@ import software.wings.beans.command.CommandExecutionResult;
 import software.wings.beans.command.CommandType;
 import software.wings.beans.command.ContainerSetupCommandUnitExecutionData;
 import software.wings.beans.command.ContainerSetupParams;
-import software.wings.beans.command.KubernetesSetupParams;
+import software.wings.beans.command.EcsSetupParams;
+import software.wings.beans.command.EcsSetupParams.EcsSetupParamsBuilder;
 import software.wings.beans.command.ServiceCommand;
 import software.wings.beans.container.ContainerDefinition;
-import software.wings.beans.container.KubernetesContainerTask;
+import software.wings.beans.container.EcsContainerTask;
 import software.wings.common.VariableProcessor;
 import software.wings.expression.ExpressionEvaluator;
 import software.wings.service.intfc.ActivityService;
@@ -111,8 +112,7 @@ import java.util.Collections;
 import java.util.List;
 import java.util.Map;
 
-public class KubernetesSetupTest extends WingsBaseTest {
-  private static final String KUBERNETES_CONTROLLER_NAME = "kubernetes-rc-name.1";
+public class EcsServiceSetupTest extends WingsBaseTest {
   private static final String BASE_URL = "https://env.harness.io/";
 
   @Mock private SettingsService settingsService;
@@ -131,7 +131,7 @@ public class KubernetesSetupTest extends WingsBaseTest {
   @Mock private VariableProcessor variableProcessor;
   @Mock private ExpressionEvaluator evaluator;
 
-  @InjectMocks private KubernetesSetup kubernetesSetup = new KubernetesSetup("name");
+  @InjectMocks private EcsServiceSetup ecsServiceSetup = new EcsServiceSetup("name");
 
   @Mock private MainConfiguration configuration;
 
@@ -142,6 +142,7 @@ public class KubernetesSetupTest extends WingsBaseTest {
                                                               .withEnvId(ENV_ID)
                                                               .withArtifactIds(Lists.newArrayList(ARTIFACT_ID))
                                                               .build();
+
   private ServiceElement serviceElement = aServiceElement().withUuid(SERVICE_ID).withName(SERVICE_NAME).build();
 
   @InjectMocks
@@ -150,8 +151,9 @@ public class KubernetesSetupTest extends WingsBaseTest {
                                           .withServiceElement(serviceElement)
                                           .withInfraMappingId(INFRA_MAPPING_ID)
                                           .withAppId(APP_ID)
-                                          .withDeploymentType(DeploymentType.KUBERNETES.name())
+                                          .withDeploymentType(DeploymentType.ECS.name())
                                           .build();
+
   private StateExecutionInstance stateExecutionInstance =
       aStateExecutionInstance()
           .withStateName(STATE_NAME)
@@ -162,10 +164,10 @@ public class KubernetesSetupTest extends WingsBaseTest {
                                  .maxInstances(10)
                                  .clusterName(CLUSTER_NAME)
                                  .namespace("default")
-                                 .name(KUBERNETES_CONTROLLER_NAME)
+                                 .name(ECS_SERVICE_NAME)
                                  .resizeStrategy(RESIZE_NEW_FIRST)
                                  .infraMappingId(INFRA_MAPPING_ID)
-                                 .deploymentType(DeploymentType.KUBERNETES)
+                                 .deploymentType(DeploymentType.ECS)
                                  .build())
           .addStateExecutionData(aCommandStateExecutionData().build())
           .build();
@@ -205,16 +207,16 @@ public class KubernetesSetupTest extends WingsBaseTest {
 
     ServiceCommand serviceCommand =
         aServiceCommand()
-            .withCommand(aCommand().withCommandType(CommandType.SETUP).withName("Setup Replication Controller").build())
+            .withCommand(aCommand().withCommandType(CommandType.SETUP).withName("Setup Service Cluster").build())
             .build();
-    when(serviceResourceService.getCommandByName(APP_ID, SERVICE_ID, ENV_ID, "Setup Replication Controller"))
+    when(serviceResourceService.getCommandByName(APP_ID, SERVICE_ID, ENV_ID, "Setup Service Cluster"))
         .thenReturn(serviceCommand);
 
-    KubernetesContainerTask kubernetesContainerTask = new KubernetesContainerTask();
+    EcsContainerTask ecsContainerTask = new EcsContainerTask();
     ContainerDefinition containerDefinition = ContainerDefinition.builder().memory(256).cpu(1).build();
-    kubernetesContainerTask.setContainerDefinitions(Lists.newArrayList(containerDefinition));
-    when(serviceResourceService.getContainerTaskByDeploymentType(APP_ID, SERVICE_ID, DeploymentType.KUBERNETES.name()))
-        .thenReturn(kubernetesContainerTask);
+    ecsContainerTask.setContainerDefinitions(Lists.newArrayList(containerDefinition));
+    when(serviceResourceService.getContainerTaskByDeploymentType(APP_ID, SERVICE_ID, DeploymentType.ECS.name()))
+        .thenReturn(ecsContainerTask);
     on(workflowStandardParams).set("appService", appService);
     on(workflowStandardParams).set("environmentService", environmentService);
     on(workflowStandardParams).set("artifactService", artifactService);
@@ -224,7 +226,7 @@ public class KubernetesSetupTest extends WingsBaseTest {
     when(artifactService.get(any(), any())).thenReturn(artifact);
     when(artifactStreamService.get(any(), any())).thenReturn(artifactStream);
 
-    InfrastructureMapping infrastructureMapping = aGcpKubernetesInfrastructureMapping()
+    InfrastructureMapping infrastructureMapping = anEcsInfrastructureMapping()
                                                       .withClusterName(CLUSTER_NAME)
                                                       .withComputeProviderSettingId(COMPUTE_PROVIDER_ID)
                                                       .build();
@@ -245,7 +247,7 @@ public class KubernetesSetupTest extends WingsBaseTest {
     when(serviceTemplateService.computeServiceVariables(APP_ID, ENV_ID, TEMPLATE_ID, null, true))
         .thenReturn(safeDisplayServiceVariableList);
     when(secretManager.getEncryptionDetails(anyObject(), anyString(), anyString())).thenReturn(Collections.emptyList());
-    setInternalState(kubernetesSetup, "secretManager", secretManager);
+    setInternalState(ecsServiceSetup, "secretManager", secretManager);
     when(workflowExecutionService.getExecutionDetails(anyString(), anyString()))
         .thenReturn(aWorkflowExecution().build());
     context = new ExecutionContextImpl(stateExecutionInstance);
@@ -262,7 +264,7 @@ public class KubernetesSetupTest extends WingsBaseTest {
   public void shouldExecute() {
     on(context).set("serviceTemplateService", serviceTemplateService);
 
-    kubernetesSetup.execute(context);
+    ecsServiceSetup.execute(context);
 
     ArgumentCaptor<DelegateTask> captor = ArgumentCaptor.forClass(DelegateTask.class);
     verify(delegateService).queueTask(captor.capture());
@@ -289,7 +291,7 @@ public class KubernetesSetupTest extends WingsBaseTest {
 
   @Test
   public void shouldBuildContainerServiceElement() {
-    KubernetesSetupParams setupParams = aKubernetesSetupParams().withNamespace("default").build();
+    EcsSetupParams setupParams = EcsSetupParamsBuilder.anEcsSetupParams().build();
     StateExecutionInstance stateExecutionInstance =
         aStateExecutionInstance()
             .withStateName(STATE_NAME)
@@ -300,35 +302,35 @@ public class KubernetesSetupTest extends WingsBaseTest {
                                    .maxInstances(10)
                                    .clusterName(CLUSTER_NAME)
                                    .namespace("default")
-                                   .name(KUBERNETES_CONTROLLER_NAME)
+                                   .name(ECS_SERVICE_NAME)
                                    .resizeStrategy(RESIZE_NEW_FIRST)
                                    .infraMappingId(INFRA_MAPPING_ID)
-                                   .deploymentType(DeploymentType.KUBERNETES)
+                                   .deploymentType(DeploymentType.ECS)
                                    .build())
             .addStateExecutionData(aCommandStateExecutionData().withContainerSetupParams(setupParams).build())
             .build();
     ExecutionContext context = new ExecutionContextImpl(stateExecutionInstance);
     on(context).set("variableProcessor", variableProcessor);
     on(context).set("evaluator", evaluator);
-    CommandExecutionResult result = aCommandExecutionResult()
-                                        .withCommandExecutionData(ContainerSetupCommandUnitExecutionData.builder()
-                                                                      .containerServiceName(KUBERNETES_CONTROLLER_NAME)
-                                                                      .build())
-                                        .build();
+    CommandExecutionResult result =
+        aCommandExecutionResult()
+            .withCommandExecutionData(
+                ContainerSetupCommandUnitExecutionData.builder().containerServiceName(ECS_SERVICE_NAME).build())
+            .build();
 
-    kubernetesSetup.setMaxInstances("10");
-    kubernetesSetup.setFixedInstances("5");
+    ecsServiceSetup.setMaxInstances("10");
+    ecsServiceSetup.setFixedInstances("5");
     ContainerServiceElement containerServiceElement =
-        kubernetesSetup.buildContainerServiceElement(context, result, ExecutionStatus.SUCCESS);
+        ecsServiceSetup.buildContainerServiceElement(context, result, ExecutionStatus.SUCCESS);
 
-    assertThat(containerServiceElement.getName()).isEqualTo(KUBERNETES_CONTROLLER_NAME);
+    assertThat(containerServiceElement.getName()).isEqualTo(ECS_SERVICE_NAME);
     assertThat(containerServiceElement.getMaxInstances()).isEqualTo(10);
     assertThat(containerServiceElement.getFixedInstances()).isEqualTo(5);
   }
 
   @Test
   public void shouldBuildContainerServiceElementEmptyValues() {
-    KubernetesSetupParams setupParams = aKubernetesSetupParams().withNamespace("default").build();
+    EcsSetupParams setupParams = EcsSetupParamsBuilder.anEcsSetupParams().build();
     StateExecutionInstance stateExecutionInstance =
         aStateExecutionInstance()
             .withStateName(STATE_NAME)
@@ -339,35 +341,35 @@ public class KubernetesSetupTest extends WingsBaseTest {
                                    .maxInstances(10)
                                    .clusterName(CLUSTER_NAME)
                                    .namespace("default")
-                                   .name(KUBERNETES_CONTROLLER_NAME)
+                                   .name(ECS_SERVICE_NAME)
                                    .resizeStrategy(RESIZE_NEW_FIRST)
                                    .infraMappingId(INFRA_MAPPING_ID)
-                                   .deploymentType(DeploymentType.KUBERNETES)
+                                   .deploymentType(DeploymentType.ECS)
                                    .build())
             .addStateExecutionData(aCommandStateExecutionData().withContainerSetupParams(setupParams).build())
             .build();
     ExecutionContext context = new ExecutionContextImpl(stateExecutionInstance);
     on(context).set("variableProcessor", variableProcessor);
     on(context).set("evaluator", evaluator);
-    CommandExecutionResult result = aCommandExecutionResult()
-                                        .withCommandExecutionData(ContainerSetupCommandUnitExecutionData.builder()
-                                                                      .containerServiceName(KUBERNETES_CONTROLLER_NAME)
-                                                                      .build())
-                                        .build();
+    CommandExecutionResult result =
+        aCommandExecutionResult()
+            .withCommandExecutionData(
+                ContainerSetupCommandUnitExecutionData.builder().containerServiceName(ECS_SERVICE_NAME).build())
+            .build();
 
-    kubernetesSetup.setMaxInstances(null);
-    kubernetesSetup.setFixedInstances(null);
+    ecsServiceSetup.setMaxInstances(null);
+    ecsServiceSetup.setFixedInstances(null);
     ContainerServiceElement containerServiceElement =
-        kubernetesSetup.buildContainerServiceElement(context, result, ExecutionStatus.SUCCESS);
+        ecsServiceSetup.buildContainerServiceElement(context, result, ExecutionStatus.SUCCESS);
 
-    assertThat(containerServiceElement.getName()).isEqualTo(KUBERNETES_CONTROLLER_NAME);
+    assertThat(containerServiceElement.getName()).isEqualTo(ECS_SERVICE_NAME);
     assertThat(containerServiceElement.getMaxInstances()).isEqualTo(DEFAULT_MAX);
     assertThat(containerServiceElement.getFixedInstances()).isEqualTo(DEFAULT_MAX);
   }
 
   @Test
-  public void shouldBuildContainerServiceElementEmptyValuesEmptyFixed() {
-    KubernetesSetupParams setupParams = aKubernetesSetupParams().withNamespace("default").build();
+  public void shouldBuildContainerServiceElementEmptyFixed() {
+    EcsSetupParams setupParams = EcsSetupParamsBuilder.anEcsSetupParams().build();
     StateExecutionInstance stateExecutionInstance =
         aStateExecutionInstance()
             .withStateName(STATE_NAME)
@@ -378,28 +380,28 @@ public class KubernetesSetupTest extends WingsBaseTest {
                                    .maxInstances(10)
                                    .clusterName(CLUSTER_NAME)
                                    .namespace("default")
-                                   .name(KUBERNETES_CONTROLLER_NAME)
+                                   .name(ECS_SERVICE_NAME)
                                    .resizeStrategy(RESIZE_NEW_FIRST)
                                    .infraMappingId(INFRA_MAPPING_ID)
-                                   .deploymentType(DeploymentType.KUBERNETES)
+                                   .deploymentType(DeploymentType.ECS)
                                    .build())
             .addStateExecutionData(aCommandStateExecutionData().withContainerSetupParams(setupParams).build())
             .build();
     ExecutionContext context = new ExecutionContextImpl(stateExecutionInstance);
     on(context).set("variableProcessor", variableProcessor);
     on(context).set("evaluator", evaluator);
-    CommandExecutionResult result = aCommandExecutionResult()
-                                        .withCommandExecutionData(ContainerSetupCommandUnitExecutionData.builder()
-                                                                      .containerServiceName(KUBERNETES_CONTROLLER_NAME)
-                                                                      .build())
-                                        .build();
+    CommandExecutionResult result =
+        aCommandExecutionResult()
+            .withCommandExecutionData(
+                ContainerSetupCommandUnitExecutionData.builder().containerServiceName(ECS_SERVICE_NAME).build())
+            .build();
 
-    kubernetesSetup.setMaxInstances("10");
-    kubernetesSetup.setFixedInstances(null);
+    ecsServiceSetup.setMaxInstances("10");
+    ecsServiceSetup.setFixedInstances(null);
     ContainerServiceElement containerServiceElement =
-        kubernetesSetup.buildContainerServiceElement(context, result, ExecutionStatus.SUCCESS);
+        ecsServiceSetup.buildContainerServiceElement(context, result, ExecutionStatus.SUCCESS);
 
-    assertThat(containerServiceElement.getName()).isEqualTo(KUBERNETES_CONTROLLER_NAME);
+    assertThat(containerServiceElement.getName()).isEqualTo(ECS_SERVICE_NAME);
     assertThat(containerServiceElement.getMaxInstances()).isEqualTo(10);
     assertThat(containerServiceElement.getFixedInstances()).isEqualTo(10);
   }
