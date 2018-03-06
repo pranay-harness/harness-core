@@ -37,7 +37,6 @@ public class LogMLAnalysisRecord extends Base {
   @NotEmpty @Indexed private int logCollectionMinute;
 
   private boolean isBaseLineCreated = true;
-  private String baseLineExecutionId;
 
   private String query;
   private String analysisSummaryMessage;

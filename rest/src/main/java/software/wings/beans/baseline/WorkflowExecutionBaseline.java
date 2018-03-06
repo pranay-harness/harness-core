@@ -29,5 +29,4 @@ public class WorkflowExecutionBaseline extends Base {
   @NotEmpty @Indexed private String envId;
   @NotEmpty @Indexed private String serviceId;
   private String workflowExecutionId;
-  private String pipelineExecutionId;
 }

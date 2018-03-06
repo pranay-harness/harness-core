@@ -2,7 +2,6 @@ package software.wings.service;
 
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertFalse;
-import static org.junit.Assert.assertNull;
 import static org.junit.Assert.assertTrue;
 import static org.junit.Assert.fail;
 import static software.wings.beans.WorkflowExecution.WorkflowExecutionBuilder.aWorkflowExecution;
@@ -30,10 +29,8 @@ import software.wings.sm.StateType;
 
 import java.util.ArrayList;
 import java.util.List;
-import java.util.Random;
 import java.util.Set;
 import java.util.UUID;
-import java.util.concurrent.atomic.AtomicInteger;
 
 /**
  * Created by rsingh on 2/16/18.
@@ -63,6 +60,20 @@ public class WorkflowExecutionBaselineServiceTest extends WingsBaseTest {
       assertEquals(ErrorCode.BASELINE_CONFIGURATION_ERROR, e.getResponseMessage().getCode());
       assertEquals("No workflow execution found with id: " + workflowExecutionId + " appId: " + appId,
           e.getResponseMessage().getMessage());
+    }
+  }
+
+  @Test
+  public void testNotPipeline() {
+    WorkflowExecution workflowExecution =
+        aWorkflowExecution().withWorkflowId(workflowId).withWorkflowType(WorkflowType.ORCHESTRATION).build();
+    workflowExecution.setAppId(appId);
+    String workflowExecutionId = wingsPersistence.save(workflowExecution);
+    try {
+      workflowExecutionService.markAsBaseline(appId, workflowExecutionId);
+    } catch (WingsException e) {
+      assertEquals(ErrorCode.BASELINE_CONFIGURATION_ERROR, e.getResponseMessage().getCode());
+      assertEquals("Only pipelines can be marked as baseline.", e.getResponseMessage().getMessage());
     }
   }
 
@@ -111,20 +122,18 @@ public class WorkflowExecutionBaselineServiceTest extends WingsBaseTest {
       workflowExecutionService.markAsBaseline(appId, workflowExecutionId);
     } catch (WingsException e) {
       assertEquals(ErrorCode.BASELINE_CONFIGURATION_ERROR, e.getResponseMessage().getCode());
-      assertEquals(
-          "Either there is no workflow execution with verification steps or verification steps haven't been executed for the workflow.",
+      assertEquals("There is no workflow execution in this pipeline with verification steps.",
           e.getResponseMessage().getMessage());
     }
   }
 
   @Test
-  public void testMarkAndCreateBaselinesForPipeline() {
+  public void testMarkAndCreateBaselines() {
     int numOfWorkflowExecutions = 10;
     List<String> envIds = new ArrayList<>();
     List<String> serviceIds = new ArrayList<>();
     List<String> workflowExecutionIds = new ArrayList<>();
     List<WorkflowExecution> workflowExecutions = new ArrayList<>();
-    String pipelineExecutionId = UUID.randomUUID().toString();
 
     for (int i = 0; i < numOfWorkflowExecutions; i++) {
       String envId = UUID.randomUUID().toString();
@@ -136,7 +145,6 @@ public class WorkflowExecutionBaselineServiceTest extends WingsBaseTest {
                                                 .withWorkflowId(workflowId)
                                                 .withEnvId(envId)
                                                 .withServiceIds(Lists.newArrayList(serviceId))
-                                                .withPipelineExecutionId(pipelineExecutionId)
                                                 .build();
       workflowExecution.setAppId(appId);
 
@@ -156,11 +164,8 @@ public class WorkflowExecutionBaselineServiceTest extends WingsBaseTest {
       assertFalse(workflowExecution.isBaseline());
     }
 
-    WorkflowExecution workflowExecution = aWorkflowExecution()
-                                              .withWorkflowId(workflowId)
-                                              .withWorkflowType(WorkflowType.PIPELINE)
-                                              .withUuid(pipelineExecutionId)
-                                              .build();
+    WorkflowExecution workflowExecution =
+        aWorkflowExecution().withWorkflowId(workflowId).withWorkflowType(WorkflowType.PIPELINE).build();
     workflowExecution.setAppId(appId);
     PipelineStageExecution pipelineStageExecution =
         PipelineStageExecution.Builder.aPipelineStageExecution().withWorkflowExecutions(workflowExecutions).build();
@@ -176,7 +181,6 @@ public class WorkflowExecutionBaselineServiceTest extends WingsBaseTest {
     for (WorkflowExecutionBaseline baseline : workflowExecutionBaselines) {
       assertEquals(appId, baseline.getAppId());
       assertEquals(workflowId, baseline.getWorkflowId());
-      assertEquals(workflowExecutionId, baseline.getPipelineExecutionId());
       assertTrue(envIds.contains(baseline.getEnvId()));
       assertTrue(serviceIds.contains(baseline.getServiceId()));
       assertTrue(workflowExecutionIds.contains(baseline.getWorkflowExecutionId()));
@@ -186,24 +190,15 @@ public class WorkflowExecutionBaselineServiceTest extends WingsBaseTest {
       WorkflowExecution workflowExecution1 = wingsPersistence.get(WorkflowExecution.class, appId, executionId);
       assertTrue(workflowExecution1.isBaseline());
     }
-
-    WorkflowExecution savedPipelineExecution = wingsPersistence.get(WorkflowExecution.class, workflowExecutionId);
-    pipelineExecution = savedPipelineExecution.getPipelineExecution();
-    List<PipelineStageExecution> pipelineStageExecutions = pipelineExecution.getPipelineStageExecutions();
-    pipelineStageExecutions.forEach(
-        stageExecution -> stageExecution.getWorkflowExecutions().forEach(pipelineWorkflowExecution -> {
-          assertTrue(pipelineWorkflowExecution.isBaseline());
-        }));
   }
 
   @Test
-  public void testMarkBaselinesUpdateForPipeline() {
+  public void testMarkBaselinesUpdate() {
     int numOfWorkflowExecutions = 10;
     int numOfPipelines = 5;
     List<String> envIds = new ArrayList<>();
     List<String> serviceIds = new ArrayList<>();
     List<List<String>> workflowExecutionIds = new ArrayList<>();
-    List<String> pipelineIds = new ArrayList<>();
 
     for (int n = 0; n < numOfWorkflowExecutions; n++) {
       envIds.add(UUID.randomUUID().toString());
@@ -211,7 +206,6 @@ public class WorkflowExecutionBaselineServiceTest extends WingsBaseTest {
     }
 
     for (int i = 0; i < numOfPipelines; i++) {
-      String pipeLineExecId = UUID.randomUUID().toString();
       logger.info("running for pipeline " + i);
       workflowExecutionIds.add(new ArrayList<>());
       List<WorkflowExecution> workflowExecutions = new ArrayList<>();
@@ -221,7 +215,6 @@ public class WorkflowExecutionBaselineServiceTest extends WingsBaseTest {
                                                   .withEnvId(envIds.get(j))
                                                   .withServiceIds(Lists.newArrayList(serviceIds.get(j)))
                                                   .withUuid("workflowExecution-" + i + "-" + j)
-                                                  .withPipelineExecutionId(pipeLineExecId)
                                                   .build();
         workflowExecution.setAppId(appId);
 
@@ -241,11 +234,8 @@ public class WorkflowExecutionBaselineServiceTest extends WingsBaseTest {
         assertFalse(workflowExecution.isBaseline());
       }
 
-      WorkflowExecution workflowExecution = aWorkflowExecution()
-                                                .withWorkflowId(workflowId)
-                                                .withWorkflowType(WorkflowType.PIPELINE)
-                                                .withUuid(pipeLineExecId)
-                                                .build();
+      WorkflowExecution workflowExecution =
+          aWorkflowExecution().withWorkflowId(workflowId).withWorkflowType(WorkflowType.PIPELINE).build();
       workflowExecution.setAppId(appId);
       PipelineStageExecution pipelineStageExecution =
           PipelineStageExecution.Builder.aPipelineStageExecution().withWorkflowExecutions(workflowExecutions).build();
@@ -253,11 +243,9 @@ public class WorkflowExecutionBaselineServiceTest extends WingsBaseTest {
                                                 .withPipelineStageExecutions(Lists.newArrayList(pipelineStageExecution))
                                                 .build();
       workflowExecution.setPipelineExecution(pipelineExecution);
-      wingsPersistence.save(workflowExecution);
-      pipelineIds.add(pipeLineExecId);
-
+      String workflowExecutionId = wingsPersistence.save(workflowExecution);
       Set<WorkflowExecutionBaseline> workflowExecutionBaselines =
-          workflowExecutionService.markAsBaseline(appId, pipeLineExecId);
+          workflowExecutionService.markAsBaseline(appId, workflowExecutionId);
       assertEquals(numOfWorkflowExecutions, workflowExecutionBaselines.size());
 
       for (WorkflowExecutionBaseline baseline : workflowExecutionBaselines) {
@@ -269,14 +257,6 @@ public class WorkflowExecutionBaselineServiceTest extends WingsBaseTest {
       }
 
       for (int pipeline = 0; pipeline <= i; pipeline++) {
-        WorkflowExecution pipelineExec =
-            wingsPersistence.get(WorkflowExecution.class, appId, pipelineIds.get(pipeline));
-        if (pipeline == i) {
-          assertTrue("failing for loop " + pipeline + " i: " + i, pipelineExec.isBaseline());
-        } else {
-          assertFalse("failing for loop " + pipeline + " i: " + i, pipelineExec.isBaseline());
-        }
-
         for (String executionId : workflowExecutionIds.get(pipeline)) {
           WorkflowExecution workflowExecution1 = wingsPersistence.get(WorkflowExecution.class, appId, executionId);
 
@@ -288,188 +268,5 @@ public class WorkflowExecutionBaselineServiceTest extends WingsBaseTest {
         }
       }
     }
-  }
-
-  @Test
-  public void testMarkAndCreateBaselinesForWorkflow() {
-    int numOfWorkflowExecutions = 10;
-    List<String> workflowExecutionIds = new ArrayList<>();
-    List<WorkflowExecution> workflowExecutions = new ArrayList<>();
-    String envId = UUID.randomUUID().toString();
-    String serviceId = UUID.randomUUID().toString();
-
-    for (int i = 0; i < numOfWorkflowExecutions; i++) {
-      WorkflowExecution workflowExecution = aWorkflowExecution()
-                                                .withWorkflowId(workflowId)
-                                                .withEnvId(envId)
-                                                .withServiceIds(Lists.newArrayList(serviceId))
-                                                .withWorkflowType(WorkflowType.ORCHESTRATION)
-                                                .build();
-      workflowExecution.setAppId(appId);
-
-      String workflowExecutionId = wingsPersistence.save(workflowExecution);
-      workflowExecutionIds.add(workflowExecutionId);
-      workflowExecutions.add(workflowExecution);
-      StateExecutionInstance stateExecutionInstance = aStateExecutionInstance()
-                                                          .withExecutionUuid(workflowExecutionId)
-                                                          .withStateType(StateType.DYNA_TRACE.name())
-                                                          .build();
-      stateExecutionInstance.setAppId(appId);
-      wingsPersistence.save(stateExecutionInstance);
-    }
-
-    for (String workflowExecutionId : workflowExecutionIds) {
-      WorkflowExecution workflowExecution = wingsPersistence.get(WorkflowExecution.class, appId, workflowExecutionId);
-      assertFalse(workflowExecution.isBaseline());
-    }
-
-    for (int i = 0; i < numOfWorkflowExecutions; i++) {
-      String workflowExecutionId = workflowExecutionIds.get(i);
-      Set<WorkflowExecutionBaseline> workflowExecutionBaselines =
-          workflowExecutionService.markAsBaseline(appId, workflowExecutionId);
-      assertEquals(1, workflowExecutionBaselines.size());
-      WorkflowExecutionBaseline baseline = workflowExecutionBaselines.iterator().next();
-      assertEquals(appId, baseline.getAppId());
-      assertEquals(workflowId, baseline.getWorkflowId());
-      assertEquals(envId, baseline.getEnvId());
-      assertEquals(serviceId, baseline.getServiceId());
-
-      for (String executionId : workflowExecutionIds) {
-        WorkflowExecution workflowExecution = wingsPersistence.get(WorkflowExecution.class, appId, executionId);
-        if (workflowExecutionId.equals(executionId)) {
-          assertTrue(workflowExecution.isBaseline());
-        } else {
-          assertFalse(workflowExecution.isBaseline());
-        }
-      }
-    }
-  }
-
-  @Test
-  public void testMarkAndCreateBaselinesForPipelineAndWorkflow() {
-    int numOfWorkflowExecutions = 10;
-    List<String> envIds = new ArrayList<>();
-    List<String> serviceIds = new ArrayList<>();
-    List<String> workflowExecutionIds = new ArrayList<>();
-    List<WorkflowExecution> workflowExecutions = new ArrayList<>();
-    String pipelineExecutionId = UUID.randomUUID().toString();
-
-    for (int i = 0; i < numOfWorkflowExecutions; i++) {
-      String envId = UUID.randomUUID().toString();
-      envIds.add(envId);
-      String serviceId = UUID.randomUUID().toString();
-      serviceIds.add(serviceId);
-
-      WorkflowExecution workflowExecution = aWorkflowExecution()
-                                                .withWorkflowId(workflowId)
-                                                .withEnvId(envId)
-                                                .withServiceIds(Lists.newArrayList(serviceId))
-                                                .withPipelineExecutionId(pipelineExecutionId)
-                                                .build();
-      workflowExecution.setAppId(appId);
-
-      String workflowExecutionId = wingsPersistence.save(workflowExecution);
-      workflowExecutionIds.add(workflowExecutionId);
-      workflowExecutions.add(workflowExecution);
-      StateExecutionInstance stateExecutionInstance = aStateExecutionInstance()
-                                                          .withExecutionUuid(workflowExecutionId)
-                                                          .withStateType(StateType.DYNA_TRACE.name())
-                                                          .build();
-      stateExecutionInstance.setAppId(appId);
-      wingsPersistence.save(stateExecutionInstance);
-    }
-
-    for (String workflowExecutionId : workflowExecutionIds) {
-      WorkflowExecution workflowExecution = wingsPersistence.get(WorkflowExecution.class, appId, workflowExecutionId);
-      assertFalse(workflowExecution.isBaseline());
-    }
-
-    WorkflowExecution piplelineExecution = aWorkflowExecution()
-                                               .withWorkflowId(workflowId)
-                                               .withWorkflowType(WorkflowType.PIPELINE)
-                                               .withUuid(pipelineExecutionId)
-                                               .build();
-    piplelineExecution.setAppId(appId);
-    PipelineStageExecution pipelineStageExecution =
-        PipelineStageExecution.Builder.aPipelineStageExecution().withWorkflowExecutions(workflowExecutions).build();
-    PipelineExecution pipelineExecution = PipelineExecution.Builder.aPipelineExecution()
-                                              .withPipelineStageExecutions(Lists.newArrayList(pipelineStageExecution))
-                                              .build();
-    piplelineExecution.setPipelineExecution(pipelineExecution);
-    wingsPersistence.save(piplelineExecution);
-    Set<WorkflowExecutionBaseline> workflowExecutionBaselines =
-        workflowExecutionService.markAsBaseline(appId, pipelineExecutionId);
-    assertEquals(numOfWorkflowExecutions, workflowExecutionBaselines.size());
-
-    for (WorkflowExecutionBaseline baseline : workflowExecutionBaselines) {
-      assertEquals(appId, baseline.getAppId());
-      assertEquals(workflowId, baseline.getWorkflowId());
-      assertEquals(pipelineExecutionId, baseline.getPipelineExecutionId());
-      assertTrue(envIds.contains(baseline.getEnvId()));
-      assertTrue(serviceIds.contains(baseline.getServiceId()));
-      assertTrue(workflowExecutionIds.contains(baseline.getWorkflowExecutionId()));
-    }
-
-    for (String executionId : workflowExecutionIds) {
-      WorkflowExecution workflowExecution1 = wingsPersistence.get(WorkflowExecution.class, appId, executionId);
-      assertTrue(workflowExecution1.isBaseline());
-    }
-
-    WorkflowExecution savedPipelineExecution = wingsPersistence.get(WorkflowExecution.class, pipelineExecutionId);
-    pipelineExecution = savedPipelineExecution.getPipelineExecution();
-    List<PipelineStageExecution> pipelineStageExecutions = pipelineExecution.getPipelineStageExecutions();
-    pipelineStageExecutions.forEach(
-        stageExecution -> stageExecution.getWorkflowExecutions().forEach(pipelineWorkflowExecution -> {
-          assertTrue(pipelineWorkflowExecution.isBaseline());
-        }));
-
-    final int workflowNum = new Random().nextInt(10) % numOfWorkflowExecutions;
-    String envId = envIds.get(workflowNum);
-    String serviceId = serviceIds.get(workflowNum);
-
-    WorkflowExecution workflowExecution = aWorkflowExecution()
-                                              .withWorkflowId(workflowId)
-                                              .withEnvId(envId)
-                                              .withWorkflowType(WorkflowType.ORCHESTRATION)
-                                              .withServiceIds(Lists.newArrayList(serviceId))
-                                              .build();
-    workflowExecution.setAppId(appId);
-    String workflowExecutionId = wingsPersistence.save(workflowExecution);
-
-    StateExecutionInstance stateExecutionInstance = aStateExecutionInstance()
-                                                        .withExecutionUuid(workflowExecutionId)
-                                                        .withStateType(StateType.DYNA_TRACE.name())
-                                                        .build();
-    stateExecutionInstance.setAppId(appId);
-    wingsPersistence.save(stateExecutionInstance);
-
-    workflowExecutionBaselines = workflowExecutionService.markAsBaseline(appId, workflowExecutionId);
-    assertEquals(1, workflowExecutionBaselines.size());
-    WorkflowExecutionBaseline workflowExecutionBaseline = workflowExecutionBaselines.iterator().next();
-    assertEquals(envId, workflowExecutionBaseline.getEnvId());
-    assertEquals(serviceId, workflowExecutionBaseline.getServiceId());
-    assertEquals(workflowId, workflowExecutionBaseline.getWorkflowId());
-    assertEquals(workflowExecutionId, workflowExecutionBaseline.getWorkflowExecutionId());
-    assertNull(workflowExecutionBaseline.getPipelineExecutionId());
-
-    savedPipelineExecution = wingsPersistence.get(WorkflowExecution.class, pipelineExecutionId);
-    pipelineExecution = savedPipelineExecution.getPipelineExecution();
-    pipelineStageExecutions = pipelineExecution.getPipelineStageExecutions();
-    AtomicInteger numOfBaselineWorkflow = new AtomicInteger(0);
-    AtomicInteger numOfNonBaselineWorkflow = new AtomicInteger(0);
-    pipelineStageExecutions.forEach(stageExecution -> {
-      for (int i = 0; i < numOfWorkflowExecutions; i++) {
-        if (i == workflowNum) {
-          assertFalse(stageExecution.getWorkflowExecutions().get(i).isBaseline());
-          numOfNonBaselineWorkflow.incrementAndGet();
-        } else {
-          assertTrue(stageExecution.getWorkflowExecutions().get(i).isBaseline());
-          numOfBaselineWorkflow.incrementAndGet();
-        }
-      }
-    });
-
-    assertEquals(1, numOfNonBaselineWorkflow.get());
-    assertEquals(numOfWorkflowExecutions - 1, numOfBaselineWorkflow.get());
   }
 }

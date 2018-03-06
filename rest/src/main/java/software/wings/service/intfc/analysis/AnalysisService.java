@@ -50,7 +50,7 @@ public interface AnalysisService {
   void validateConfig(@NotNull SettingAttribute settingAttribute, StateType stateType);
 
   boolean isBaselineCreated(AnalysisComparisonStrategy comparisonStrategy, StateType stateType, String applicationId,
-      String workflowId, String workflowExecutionId, String serviceId);
+      String workflowId, String workflowExecutionId, String serviceId, String query);
 
   Object getLogSample(String accountId, String analysisServerConfigId, String index, StateType stateType);
 
@@ -78,7 +78,7 @@ public interface AnalysisService {
       ClusterLevel level, int logCollectionMinute);
 
   String getLastSuccessfulWorkflowExecutionIdWithLogs(
-      StateType stateType, String appId, String serviceId, String workflowId);
+      StateType stateType, String appId, String serviceId, String query, String workflowId);
 
   boolean saveFeedback(LogMLFeedback feedback, StateType stateType);
 

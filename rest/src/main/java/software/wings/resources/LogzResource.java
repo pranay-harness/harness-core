@@ -84,12 +84,10 @@ public class LogzResource implements LogAnalysisResource {
       @QueryParam("applicationId") String applicationId, @QueryParam("stateExecutionId") String stateExecutionId,
       @QueryParam("logCollectionMinute") Integer logCollectionMinute,
       @QueryParam("isBaselineCreated") boolean isBaselineCreated, @QueryParam("taskId") String taskId,
-      @QueryParam("baseLineExecutionId") String baseLineExecutionId, LogMLAnalysisRecord mlAnalysisResponse)
-      throws IOException {
+      LogMLAnalysisRecord mlAnalysisResponse) throws IOException {
     mlAnalysisResponse.setApplicationId(applicationId);
     mlAnalysisResponse.setStateExecutionId(stateExecutionId);
     mlAnalysisResponse.setLogCollectionMinute(logCollectionMinute);
-    mlAnalysisResponse.setBaseLineExecutionId(baseLineExecutionId);
     return new RestResponse<>(
         analysisService.saveLogAnalysisRecords(mlAnalysisResponse, StateType.LOGZ, Optional.of(taskId)));
   }

@@ -1,6 +1,5 @@
 package software.wings.service.impl.newrelic;
 
-import static io.harness.data.structure.EmptyPredicate.isEmpty;
 import static io.harness.data.structure.UUIDGenerator.generateUuid;
 
 import com.google.inject.Inject;
@@ -226,15 +225,11 @@ public class MetricAnalysisJob implements Job {
 
       String uuid = generateUuid();
 
-      String logAnalysisSaveUrl = "/api/" + context.getStateBaseUrl()
+      final String logAnalysisSaveUrl = "/api/" + context.getStateBaseUrl()
           + "/save-analysis?accountId=" + context.getAccountId() + "&applicationId=" + context.getAppId() + "&"
           + "workflowExecutionId=" + context.getWorkflowExecutionId()
           + "&stateExecutionId=" + context.getStateExecutionId() + "&analysisMinute=" + analysisMinute
           + "&taskId=" + uuid + "&serviceId=" + context.getServiceId() + "&workflowId=" + context.getWorkflowId();
-
-      if (!isEmpty(context.getPrevWorkflowExecutionId())) {
-        logAnalysisSaveUrl += "&baseLineExecutionId=" + context.getPrevWorkflowExecutionId();
-      }
 
       LearningEngineAnalysisTask learningEngineAnalysisTask =
           LearningEngineAnalysisTask.builder()
@@ -263,7 +258,6 @@ public class MetricAnalysisJob implements Job {
               .build();
       learningEngineAnalysisTask.setAppId(context.getAppId());
       learningEngineAnalysisTask.setUuid(uuid);
-
       logger.info("Queueing for analysis {}", learningEngineAnalysisTask);
       return learningEngineService.addLearningEngineAnalysisTask(learningEngineAnalysisTask);
     }
@@ -312,7 +306,7 @@ public class MetricAnalysisJob implements Job {
         if (runTimeSeriesML) {
           switch (context.getComparisonStrategy()) {
             case COMPARE_WITH_PREVIOUS:
-              if (isEmpty(context.getPrevWorkflowExecutionId())) {
+              if (context.getPrevWorkflowExecutionId().equals("-1")) {
                 runTimeSeriesML = false;
                 break;
               }
