@@ -18,6 +18,7 @@ import retrofit2.Response;
 import retrofit2.Retrofit;
 import retrofit2.converter.jackson.JacksonConverterFactory;
 
+import java.nio.charset.StandardCharsets;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Queue;
@@ -89,7 +90,7 @@ public class RestLogAppender<E> extends AppenderBase<E> {
   }
 
   private String getAuthHeader() {
-    return "Basic " + encodeBase64String(format("%s:%s", key, "").getBytes());
+    return "Basic " + encodeBase64String(format("%s:%s", key, "").getBytes(StandardCharsets.UTF_8));
   }
 
   @Override
