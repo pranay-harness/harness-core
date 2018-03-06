@@ -17,6 +17,7 @@ import static software.wings.beans.DelegateTaskResponse.Builder.aDelegateTaskRes
 import static software.wings.delegate.app.DelegateApplication.getProcessId;
 import static software.wings.managerclient.ManagerClientFactory.TRUST_ALL_CERTS;
 import static software.wings.managerclient.SafeHttpCall.execute;
+import static software.wings.utils.Misc.getDurationString;
 import static software.wings.utils.message.MessageConstants.DELEGATE_DASH;
 import static software.wings.utils.message.MessageConstants.DELEGATE_GO_AHEAD;
 import static software.wings.utils.message.MessageConstants.DELEGATE_HEARTBEAT;
@@ -378,10 +379,12 @@ public class DelegateServiceImpl implements DelegateService {
     if (StringUtils.startsWith(message, "[X]")) {
       String receivedId = message.substring(3); // Remove the "[X]"
       if (delegateId.equals(receivedId)) {
-        logger.info("Delegate {} received heartbeat response", receivedId);
-        lastHeartbeatReceivedAt.set(clock.millis());
+        long now = clock.millis();
+        logger.info("Delegate {} received heartbeat response {} after sending. {} since last response.", receivedId,
+            getDurationString(lastHeartbeatSentAt.get(), now), getDurationString(lastHeartbeatReceivedAt.get(), now));
+        lastHeartbeatReceivedAt.set(now);
       } else {
-        logger.info("Delegate {} received heartbeat response for another delegate, {}", delegateId, receivedId);
+        logger.info("Heartbeat response for another delegate received: {}", delegateId, receivedId);
       }
     } else if (!StringUtils.equals(message, "X")) {
       logger.info("Executing: Event:{}, message:[{}]", Event.MESSAGE.name(), message);
@@ -681,7 +684,7 @@ public class DelegateServiceImpl implements DelegateService {
   }
 
   private void sendHeartbeat(Builder builder, Socket socket) throws IOException {
-    logger.debug("sending heartbeat...");
+    logger.info("Sending heartbeat...");
     if (socket.status() == STATUS.OPEN || socket.status() == STATUS.REOPENED) {
       socket.fire(JsonUtils.asJson(
           builder.but()
@@ -694,7 +697,7 @@ public class DelegateServiceImpl implements DelegateService {
   }
 
   private void sendHeartbeat() throws IOException {
-    logger.debug("sending heartbeat...");
+    logger.info("Sending heartbeat...");
     Delegate response = execute(managerClient.delegateHeartbeat(delegateId, accountId));
     if (delegateId.equals(response.getUuid())) {
       lastHeartbeatSentAt.set(clock.millis());

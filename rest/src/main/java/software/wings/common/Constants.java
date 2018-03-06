@@ -389,11 +389,9 @@ public interface Constants {
    */
   String DELEGATE_NAME = "Harness delegate";
 
-  long MAX_DELEGATE_LAST_HEARTBEAT = 2 * 60 * 1000; // 2 minutes
+  long MAX_DELEGATE_LAST_HEARTBEAT = (3 * 60 * 1000) + (15 * 1000); // 3 minutes 15 seconds
 
   long DEFAULT_SYNC_CALL_TIMEOUT = 60 * 1000; // 1 minute
-
-  long CONTAINER_SYNC_CALL_TIMEOUT = 10 * 60 * 1000; // 10 minutes
 
   long DEFAULT_ASYNC_CALL_TIMEOUT = 10 * 60 * 1000; // 10 minutes
 

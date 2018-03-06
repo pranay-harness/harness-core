@@ -1,6 +1,7 @@
 package software.wings.utils;
 
 import static io.harness.data.structure.EmptyPredicate.isEmpty;
+import static io.harness.data.structure.EmptyPredicate.isNotEmpty;
 import static org.apache.commons.lang3.StringUtils.isNotBlank;
 
 import org.apache.commons.codec.binary.Hex;
@@ -15,6 +16,7 @@ import software.wings.exception.WingsException;
 import software.wings.sm.states.ManagerExecutionLogCallback;
 
 import java.security.NoSuchAlgorithmException;
+import java.util.concurrent.TimeUnit;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 import javax.crypto.KeyGenerator;
@@ -196,6 +198,41 @@ public class Misc {
     }
 
     return ServiceApiVersion.values()[ServiceApiVersion.values().length - 1];
+  }
+
+  public static String getDurationString(long start, long end) {
+    long duration = end - start;
+    long elapsedHours = duration / TimeUnit.HOURS.toMillis(1);
+    duration = duration % TimeUnit.HOURS.toMillis(1);
+
+    long elapsedMinutes = duration / TimeUnit.MINUTES.toMillis(1);
+    duration = duration % TimeUnit.MINUTES.toMillis(1);
+
+    long elapsedSeconds = duration / TimeUnit.SECONDS.toMillis(1);
+
+    StringBuilder elapsed = new StringBuilder();
+
+    if (elapsedHours > 0) {
+      elapsed.append(elapsedHours).append('h');
+    }
+    if (elapsedMinutes > 0) {
+      if (isNotEmpty(elapsed.toString())) {
+        elapsed.append(' ');
+      }
+      elapsed.append(elapsedMinutes).append('m');
+    }
+    if (elapsedSeconds > 0) {
+      if (isNotEmpty(elapsed.toString())) {
+        elapsed.append(' ');
+      }
+      elapsed.append(elapsedSeconds).append('s');
+    }
+
+    if (isEmpty(elapsed.toString())) {
+      elapsed.append("0s");
+    }
+
+    return elapsed.toString();
   }
 
   /**
