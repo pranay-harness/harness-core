@@ -102,6 +102,7 @@ public class EcsServiceSetup extends ContainerServiceSetup {
     int maxInstances = evaluatedMaxInstances == 0 ? DEFAULT_MAX : evaluatedMaxInstances;
     int evaluatedFixedInstances =
         isNotBlank(getFixedInstances()) ? Integer.valueOf(context.renderExpression(getFixedInstances())) : maxInstances;
+    int fixedInstances = evaluatedFixedInstances == 0 ? maxInstances : evaluatedFixedInstances;
     ResizeStrategy resizeStrategy = getResizeStrategy() == null ? RESIZE_NEW_FIRST : getResizeStrategy();
     int serviceSteadyStateTimeout =
         getServiceSteadyStateTimeout() > 0 ? getServiceSteadyStateTimeout() : DEFAULT_STEADY_STATE_TIMEOUT;
@@ -109,8 +110,8 @@ public class EcsServiceSetup extends ContainerServiceSetup {
         ContainerServiceElement.builder()
             .uuid(executionData.getServiceId())
             .useFixedInstances(FIXED_INSTANCES.equals(getDesiredInstanceCount()))
-            .fixedInstances(evaluatedFixedInstances)
-            .maxInstances(evaluatedMaxInstances)
+            .fixedInstances(fixedInstances)
+            .maxInstances(maxInstances)
             .resizeStrategy(resizeStrategy)
             .serviceSteadyStateTimeout(serviceSteadyStateTimeout)
             .clusterName(executionData.getClusterName())

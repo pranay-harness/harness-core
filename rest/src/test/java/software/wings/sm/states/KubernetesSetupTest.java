@@ -403,4 +403,43 @@ public class KubernetesSetupTest extends WingsBaseTest {
     assertThat(containerServiceElement.getMaxInstances()).isEqualTo(10);
     assertThat(containerServiceElement.getFixedInstances()).isEqualTo(10);
   }
+
+  @Test
+  public void shouldBuildContainerServiceElementEmptyValuesZero() {
+    KubernetesSetupParams setupParams = aKubernetesSetupParams().withNamespace("default").build();
+    StateExecutionInstance stateExecutionInstance =
+        aStateExecutionInstance()
+            .withStateName(STATE_NAME)
+            .addContextElement(workflowStandardParams)
+            .addContextElement(phaseElement)
+            .addContextElement(ContainerServiceElement.builder()
+                                   .uuid(serviceElement.getUuid())
+                                   .maxInstances(10)
+                                   .clusterName(CLUSTER_NAME)
+                                   .namespace("default")
+                                   .name(KUBERNETES_CONTROLLER_NAME)
+                                   .resizeStrategy(RESIZE_NEW_FIRST)
+                                   .infraMappingId(INFRA_MAPPING_ID)
+                                   .deploymentType(DeploymentType.KUBERNETES)
+                                   .build())
+            .addStateExecutionData(aCommandStateExecutionData().withContainerSetupParams(setupParams).build())
+            .build();
+    ExecutionContext context = new ExecutionContextImpl(stateExecutionInstance);
+    on(context).set("variableProcessor", variableProcessor);
+    on(context).set("evaluator", evaluator);
+    CommandExecutionResult result = aCommandExecutionResult()
+                                        .withCommandExecutionData(ContainerSetupCommandUnitExecutionData.builder()
+                                                                      .containerServiceName(KUBERNETES_CONTROLLER_NAME)
+                                                                      .build())
+                                        .build();
+
+    kubernetesSetup.setMaxInstances("0");
+    kubernetesSetup.setFixedInstances("0");
+    ContainerServiceElement containerServiceElement =
+        kubernetesSetup.buildContainerServiceElement(context, result, ExecutionStatus.SUCCESS);
+
+    assertThat(containerServiceElement.getName()).isEqualTo(KUBERNETES_CONTROLLER_NAME);
+    assertThat(containerServiceElement.getMaxInstances()).isEqualTo(DEFAULT_MAX);
+    assertThat(containerServiceElement.getFixedInstances()).isEqualTo(DEFAULT_MAX);
+  }
 }

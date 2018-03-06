@@ -405,4 +405,43 @@ public class EcsServiceSetupTest extends WingsBaseTest {
     assertThat(containerServiceElement.getMaxInstances()).isEqualTo(10);
     assertThat(containerServiceElement.getFixedInstances()).isEqualTo(10);
   }
+
+  @Test
+  public void shouldBuildContainerServiceElementZero() {
+    EcsSetupParams setupParams = EcsSetupParamsBuilder.anEcsSetupParams().build();
+    StateExecutionInstance stateExecutionInstance =
+        aStateExecutionInstance()
+            .withStateName(STATE_NAME)
+            .addContextElement(workflowStandardParams)
+            .addContextElement(phaseElement)
+            .addContextElement(ContainerServiceElement.builder()
+                                   .uuid(serviceElement.getUuid())
+                                   .maxInstances(10)
+                                   .clusterName(CLUSTER_NAME)
+                                   .namespace("default")
+                                   .name(ECS_SERVICE_NAME)
+                                   .resizeStrategy(RESIZE_NEW_FIRST)
+                                   .infraMappingId(INFRA_MAPPING_ID)
+                                   .deploymentType(DeploymentType.ECS)
+                                   .build())
+            .addStateExecutionData(aCommandStateExecutionData().withContainerSetupParams(setupParams).build())
+            .build();
+    ExecutionContext context = new ExecutionContextImpl(stateExecutionInstance);
+    on(context).set("variableProcessor", variableProcessor);
+    on(context).set("evaluator", evaluator);
+    CommandExecutionResult result =
+        aCommandExecutionResult()
+            .withCommandExecutionData(
+                ContainerSetupCommandUnitExecutionData.builder().containerServiceName(ECS_SERVICE_NAME).build())
+            .build();
+
+    ecsServiceSetup.setMaxInstances("0");
+    ecsServiceSetup.setFixedInstances("0");
+    ContainerServiceElement containerServiceElement =
+        ecsServiceSetup.buildContainerServiceElement(context, result, ExecutionStatus.SUCCESS);
+
+    assertThat(containerServiceElement.getName()).isEqualTo(ECS_SERVICE_NAME);
+    assertThat(containerServiceElement.getMaxInstances()).isEqualTo(DEFAULT_MAX);
+    assertThat(containerServiceElement.getFixedInstances()).isEqualTo(DEFAULT_MAX);
+  }
 }
