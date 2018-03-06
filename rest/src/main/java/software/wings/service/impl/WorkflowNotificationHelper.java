@@ -17,6 +17,7 @@ import static software.wings.sm.ExecutionStatus.PAUSED;
 import static software.wings.sm.ExecutionStatus.RESUMED;
 import static software.wings.sm.ExecutionStatus.SUCCESS;
 import static software.wings.sm.StateType.PHASE;
+import static software.wings.utils.Misc.getDurationString;
 
 import com.google.common.base.Joiner;
 import com.google.inject.Inject;
@@ -58,7 +59,6 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Optional;
-import java.util.concurrent.TimeUnit;
 import javax.annotation.Nullable;
 
 /**
@@ -335,40 +335,5 @@ public class WorkflowNotificationHelper {
       artifactsMsg = Joiner.on(", ").join(serviceMsgs);
     }
     return artifactsMsg;
-  }
-
-  private String getDurationString(long start, long end) {
-    long duration = end - start;
-    long elapsedHours = duration / TimeUnit.HOURS.toMillis(1);
-    duration = duration % TimeUnit.HOURS.toMillis(1);
-
-    long elapsedMinutes = duration / TimeUnit.MINUTES.toMillis(1);
-    duration = duration % TimeUnit.MINUTES.toMillis(1);
-
-    long elapsedSeconds = duration / TimeUnit.SECONDS.toMillis(1);
-
-    StringBuilder elapsed = new StringBuilder();
-
-    if (elapsedHours > 0) {
-      elapsed.append(elapsedHours).append('h');
-    }
-    if (elapsedMinutes > 0) {
-      if (isNotEmpty(elapsed.toString())) {
-        elapsed.append(' ');
-      }
-      elapsed.append(elapsedMinutes).append('m');
-    }
-    if (elapsedSeconds > 0) {
-      if (isNotEmpty(elapsed.toString())) {
-        elapsed.append(' ');
-      }
-      elapsed.append(elapsedSeconds).append('s');
-    }
-
-    if (isEmpty(elapsed.toString())) {
-      elapsed.append("0s");
-    }
-
-    return elapsed.toString();
   }
 }
