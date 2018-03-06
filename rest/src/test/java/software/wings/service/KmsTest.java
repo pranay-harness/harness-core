@@ -106,15 +106,12 @@ import java.util.Set;
 import java.util.UUID;
 import java.util.concurrent.ScheduledThreadPoolExecutor;
 import java.util.concurrent.TimeUnit;
-import javax.crypto.spec.SecretKeySpec;
 
 /**
  * Created by rsingh on 9/29/17.
  */
 public class KmsTest extends WingsBaseTest {
   private static final Logger logger = LoggerFactory.getLogger(KmsTest.class);
-
-  private static final String plainTextKey = "1234567890123456";
 
   @Inject private KmsService kmsService;
   @Inject private SecretManager secretManager;
@@ -3146,30 +3143,5 @@ public class KmsTest extends WingsBaseTest {
   private void stopTransitionListener(Thread thread) throws InterruptedException {
     transitionEventListener.shutDown();
     thread.join();
-  }
-
-  private EncryptedData encrypt(String accountId, char[] value, KmsConfig kmsConfig) throws Exception {
-    if (kmsConfig.getAccessKey().equals("invalidKey")) {
-      throw new WingsException(ErrorCode.KMS_OPERATION_ERROR);
-    }
-    char[] encryptedValue = value == null ? null
-                                          : SecretManagementDelegateServiceImpl.encrypt(
-                                                new String(value), new SecretKeySpec(plainTextKey.getBytes(), "AES"));
-
-    return EncryptedData.builder()
-        .encryptionKey(plainTextKey)
-        .encryptedValue(encryptedValue)
-        .encryptionType(EncryptionType.KMS)
-        .kmsId(kmsConfig.getUuid())
-        .enabled(true)
-        .parentIds(new HashSet<>())
-        .accountId(accountId)
-        .build();
-  }
-
-  public char[] decrypt(EncryptedData data, KmsConfig kmsConfig) throws Exception {
-    return SecretManagementDelegateServiceImpl
-        .decrypt(data.getEncryptedValue(), new SecretKeySpec(plainTextKey.getBytes(), "AES"))
-        .toCharArray();
   }
 }

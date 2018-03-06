@@ -8,6 +8,8 @@ import static org.junit.Assert.assertTrue;
 import static org.junit.Assert.fail;
 import static org.mockito.Matchers.any;
 import static org.mockito.Matchers.anyObject;
+import static org.mockito.Matchers.anyString;
+import static org.mockito.Matchers.eq;
 import static org.mockito.Mockito.when;
 import static org.mockito.MockitoAnnotations.initMocks;
 import static org.mockito.internal.util.reflection.Whitebox.setInternalState;
@@ -20,7 +22,6 @@ import com.google.inject.Inject;
 
 import org.apache.commons.io.FileUtils;
 import org.junit.Before;
-import org.junit.Ignore;
 import org.junit.Test;
 import org.junit.runner.RunWith;
 import org.junit.runners.Parameterized;
@@ -57,20 +58,20 @@ import software.wings.security.EncryptionType;
 import software.wings.security.UserThreadLocal;
 import software.wings.security.encryption.EncryptedData;
 import software.wings.security.encryption.SecretChangeLog;
-import software.wings.service.impl.security.SecretManagementDelegateServiceImpl;
 import software.wings.service.intfc.ConfigService;
 import software.wings.service.intfc.FileService;
 import software.wings.service.intfc.ServiceVariableService;
 import software.wings.service.intfc.security.EncryptionService;
 import software.wings.service.intfc.security.KmsService;
+import software.wings.service.intfc.security.SecretManagementDelegateService;
 import software.wings.service.intfc.security.SecretManager;
 import software.wings.service.intfc.security.VaultService;
+import software.wings.settings.SettingValue.SettingVariableTypes;
 import software.wings.utils.BoundedInputStream;
 
 import java.io.File;
 import java.io.FileInputStream;
 import java.io.IOException;
-import java.net.URL;
 import java.nio.charset.Charset;
 import java.util.Collection;
 import java.util.Collections;
@@ -86,7 +87,6 @@ import java.util.UUID;
  * Created by rsingh on 11/3/17.
  */
 @RunWith(Parameterized.class)
-@Ignore
 public class SecretTextTest extends WingsBaseTest {
   private static final Logger logger = LoggerFactory.getLogger(SecretTextTest.class);
 
@@ -102,6 +102,7 @@ public class SecretTextTest extends WingsBaseTest {
   @Inject private ServiceVariableService serviceVariableService;
   @Inject private FileService fileService;
   @Mock private DelegateProxyFactory delegateProxyFactory;
+  @Mock private SecretManagementDelegateService secretManagementDelegateService;
   private final String userEmail = "rsingh@harness.io";
   private final String userName = "raghu";
   private final User user = User.Builder.anUser().withEmail(userEmail).withName(userName).build();
@@ -115,7 +116,7 @@ public class SecretTextTest extends WingsBaseTest {
 
   @Parameters
   public static Collection<Object[]> data() {
-    return asList(new Object[][] {{EncryptionType.LOCAL}, {EncryptionType.VAULT}, {EncryptionType.KMS}});
+    return asList(new Object[][] {{EncryptionType.LOCAL}, {EncryptionType.KMS}, {EncryptionType.VAULT}});
   }
 
   @Before
@@ -126,8 +127,31 @@ public class SecretTextTest extends WingsBaseTest {
     envId = UUID.randomUUID().toString();
     workflowExecutionId = wingsPersistence.save(
         WorkflowExecutionBuilder.aWorkflowExecution().withName(workflowName).withEnvId(envId).build());
-    when(delegateProxyFactory.get(anyObject(), any(SyncTaskContext.class)))
-        .thenReturn(new SecretManagementDelegateServiceImpl());
+    when(secretManagementDelegateService.encrypt(anyString(), anyObject(), any(KmsConfig.class))).then(invocation -> {
+      Object[] args = invocation.getArguments();
+      return encrypt((String) args[0], (char[]) args[1], (KmsConfig) args[2]);
+    });
+
+    when(secretManagementDelegateService.decrypt(anyObject(), any(KmsConfig.class))).then(invocation -> {
+      Object[] args = invocation.getArguments();
+      return decrypt((EncryptedData) args[0], (KmsConfig) args[1]);
+    });
+
+    when(secretManagementDelegateService.encrypt(anyString(), anyString(), anyString(), any(SettingVariableTypes.class),
+             any(VaultConfig.class), any(EncryptedData.class)))
+        .then(invocation -> {
+          Object[] args = invocation.getArguments();
+          return encrypt((String) args[0], (String) args[1], (String) args[2], (SettingVariableTypes) args[3],
+              (VaultConfig) args[4], (EncryptedData) args[5]);
+        });
+
+    when(secretManagementDelegateService.decrypt(anyObject(), any(VaultConfig.class))).then(invocation -> {
+      Object[] args = invocation.getArguments();
+      return decrypt((EncryptedData) args[0], (VaultConfig) args[1]);
+    });
+
+    when(delegateProxyFactory.get(eq(SecretManagementDelegateService.class), any(SyncTaskContext.class)))
+        .thenReturn(secretManagementDelegateService);
     setInternalState(vaultService, "delegateProxyFactory", delegateProxyFactory);
     setInternalState(kmsService, "delegateProxyFactory", delegateProxyFactory);
     setInternalState(secretManager, "kmsService", kmsService);
@@ -135,6 +159,8 @@ public class SecretTextTest extends WingsBaseTest {
     setInternalState(wingsPersistence, "secretManager", secretManager);
     setInternalState(vaultService, "kmsService", kmsService);
     setInternalState(configService, "secretManager", secretManager);
+    setInternalState(encryptionService, "secretManagementDelegateService", secretManagementDelegateService);
+    setInternalState(secretManager, "encryptionService", encryptionService);
     wingsPersistence.save(user);
     UserThreadLocal.set(user);
 
@@ -1141,21 +1167,9 @@ public class SecretTextTest extends WingsBaseTest {
   }
 
   private VaultConfig getVaultConfig() throws IOException {
-    URL resource = getClass().getClassLoader().getResource("vault_token.txt");
-
-    if (resource == null) {
-      logger.info("reading vault token from environment variable");
-    } else {
-      logger.info("reading vault token from file");
-      VAULT_TOKEN = FileUtils.readFileToString(new File(resource.getFile()), Charset.defaultCharset());
-    }
-    if (VAULT_TOKEN.endsWith("\n")) {
-      VAULT_TOKEN = VAULT_TOKEN.replaceAll("\n", "");
-    }
-    logger.info("VAULT_TOKEN: " + VAULT_TOKEN);
     return VaultConfig.builder()
         .vaultUrl("http://127.0.0.1:8200")
-        .authToken(VAULT_TOKEN)
+        .authToken(UUID.randomUUID().toString())
         .name("myVault")
         .isDefault(true)
         .build();
