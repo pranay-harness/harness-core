@@ -155,7 +155,9 @@ public abstract class AbstractAnalysisState extends State {
               .workflowStartTs(workflowExecution.getStartTs())
               .stateType(StateType.valueOf(getStateType()))
               .stateStartTs(((ExecutionContextImpl) executionContext).getStateExecutionInstance().getStartTs())
-              .phaseName(getPhaseName(executionContext));
+              .phaseName(getPhaseName(executionContext))
+              .phaseId(getPhaseId(executionContext))
+              .envId(((ExecutionContextImpl) executionContext).getEnv().getUuid());
 
       if (workflowExecution.getPipelineExecution() != null) {
         cvExecutionMetaDataBuilder.pipelineName(workflowExecution.getPipelineExecution().getName())
@@ -270,13 +272,18 @@ public abstract class AbstractAnalysisState extends State {
 
   protected String getPhaseName(ExecutionContext context) {
     PhaseElement phaseElement = context.getContextElement(ContextElementType.PARAM, Constants.PHASE_PARAM);
-    return phaseElement.getName();
+    return phaseElement.getPhaseName();
   }
 
   protected String getWorkflowId(ExecutionContext context) {
     final WorkflowExecution executionDetails =
         workflowExecutionService.getWorkflowExecution(context.getAppId(), context.getWorkflowExecutionId());
     return executionDetails.getWorkflowId();
+  }
+
+  protected String getPhaseId(ExecutionContext context) {
+    PhaseElement phaseElement = context.getContextElement(ContextElementType.PARAM, Constants.PHASE_PARAM);
+    return phaseElement.getUuid();
   }
 
   @SchemaIgnore public abstract Logger getLogger();
