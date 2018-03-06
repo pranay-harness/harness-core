@@ -4,6 +4,7 @@ import static io.harness.data.structure.UUIDGenerator.generateUuid;
 import static java.util.Arrays.asList;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThatThrownBy;
+import static org.junit.Assert.assertEquals;
 import static org.mockito.Matchers.any;
 import static org.mockito.Matchers.anyString;
 import static org.mockito.Matchers.eq;
@@ -73,7 +74,7 @@ import java.util.concurrent.ExecutionException;
 */
 
 public class SshPwdAuthExecutorTest extends WingsBaseTest {
-  private final String HOST = "localhost";
+  private static final String HOST = "localhost";
   /**
    * The Test folder.
    */
@@ -166,7 +167,7 @@ public class SshPwdAuthExecutorTest extends WingsBaseTest {
     String fileName = generateUuid();
     CommandExecutionStatus execute =
         executor.executeCommandString(String.format("touch %s && rm %s", fileName, fileName));
-    assertThat(execute).isEqualTo(SUCCESS);
+    assertEquals("ssh command result is " + execute.toString(), SUCCESS, execute);
   }
 
   /**
