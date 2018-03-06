@@ -45,7 +45,7 @@ public class EcsServiceRollback extends ContainerServiceDeploy {
         .withClusterName(contextData.containerElement.getClusterName())
         .withRegion(contextData.region)
         .withServiceSteadyStateTimeout(contextData.containerElement.getServiceSteadyStateTimeout())
-        .withRollback(isRollback())
+        .withRollback(true)
         .withInstanceCount(contextData.instanceCount)
         .withInstanceUnitType(getInstanceUnitType())
         .withContainerServiceName(contextData.containerElement.getName())

@@ -59,6 +59,7 @@ import org.mockito.Mock;
 import org.mongodb.morphia.Key;
 import software.wings.WingsBaseTest;
 import software.wings.api.ContainerServiceElement;
+import software.wings.api.ContainerServiceElement.ContainerServiceElementBuilder;
 import software.wings.api.DeploymentType;
 import software.wings.api.PhaseElement;
 import software.wings.api.ServiceElement;
@@ -289,37 +290,7 @@ public class KubernetesSetupTest extends WingsBaseTest {
 
   @Test
   public void shouldBuildContainerServiceElement() {
-    KubernetesSetupParams setupParams = aKubernetesSetupParams().withNamespace("default").build();
-    StateExecutionInstance stateExecutionInstance =
-        aStateExecutionInstance()
-            .withStateName(STATE_NAME)
-            .addContextElement(workflowStandardParams)
-            .addContextElement(phaseElement)
-            .addContextElement(ContainerServiceElement.builder()
-                                   .uuid(serviceElement.getUuid())
-                                   .maxInstances(10)
-                                   .clusterName(CLUSTER_NAME)
-                                   .namespace("default")
-                                   .name(KUBERNETES_CONTROLLER_NAME)
-                                   .resizeStrategy(RESIZE_NEW_FIRST)
-                                   .infraMappingId(INFRA_MAPPING_ID)
-                                   .deploymentType(DeploymentType.KUBERNETES)
-                                   .build())
-            .addStateExecutionData(aCommandStateExecutionData().withContainerSetupParams(setupParams).build())
-            .build();
-    ExecutionContext context = new ExecutionContextImpl(stateExecutionInstance);
-    on(context).set("variableProcessor", variableProcessor);
-    on(context).set("evaluator", evaluator);
-    CommandExecutionResult result = aCommandExecutionResult()
-                                        .withCommandExecutionData(ContainerSetupCommandUnitExecutionData.builder()
-                                                                      .containerServiceName(KUBERNETES_CONTROLLER_NAME)
-                                                                      .build())
-                                        .build();
-
-    kubernetesSetup.setMaxInstances("10");
-    kubernetesSetup.setFixedInstances("5");
-    ContainerServiceElement containerServiceElement =
-        kubernetesSetup.buildContainerServiceElement(context, result, ExecutionStatus.SUCCESS);
+    ContainerServiceElement containerServiceElement = buildContainerServiceElement("10", "5");
 
     assertThat(containerServiceElement.getName()).isEqualTo(KUBERNETES_CONTROLLER_NAME);
     assertThat(containerServiceElement.getMaxInstances()).isEqualTo(10);
@@ -328,37 +299,7 @@ public class KubernetesSetupTest extends WingsBaseTest {
 
   @Test
   public void shouldBuildContainerServiceElementEmptyValues() {
-    KubernetesSetupParams setupParams = aKubernetesSetupParams().withNamespace("default").build();
-    StateExecutionInstance stateExecutionInstance =
-        aStateExecutionInstance()
-            .withStateName(STATE_NAME)
-            .addContextElement(workflowStandardParams)
-            .addContextElement(phaseElement)
-            .addContextElement(ContainerServiceElement.builder()
-                                   .uuid(serviceElement.getUuid())
-                                   .maxInstances(10)
-                                   .clusterName(CLUSTER_NAME)
-                                   .namespace("default")
-                                   .name(KUBERNETES_CONTROLLER_NAME)
-                                   .resizeStrategy(RESIZE_NEW_FIRST)
-                                   .infraMappingId(INFRA_MAPPING_ID)
-                                   .deploymentType(DeploymentType.KUBERNETES)
-                                   .build())
-            .addStateExecutionData(aCommandStateExecutionData().withContainerSetupParams(setupParams).build())
-            .build();
-    ExecutionContext context = new ExecutionContextImpl(stateExecutionInstance);
-    on(context).set("variableProcessor", variableProcessor);
-    on(context).set("evaluator", evaluator);
-    CommandExecutionResult result = aCommandExecutionResult()
-                                        .withCommandExecutionData(ContainerSetupCommandUnitExecutionData.builder()
-                                                                      .containerServiceName(KUBERNETES_CONTROLLER_NAME)
-                                                                      .build())
-                                        .build();
-
-    kubernetesSetup.setMaxInstances(null);
-    kubernetesSetup.setFixedInstances(null);
-    ContainerServiceElement containerServiceElement =
-        kubernetesSetup.buildContainerServiceElement(context, result, ExecutionStatus.SUCCESS);
+    ContainerServiceElement containerServiceElement = buildContainerServiceElement(null, null);
 
     assertThat(containerServiceElement.getName()).isEqualTo(KUBERNETES_CONTROLLER_NAME);
     assertThat(containerServiceElement.getMaxInstances()).isEqualTo(DEFAULT_MAX);
@@ -367,37 +308,7 @@ public class KubernetesSetupTest extends WingsBaseTest {
 
   @Test
   public void shouldBuildContainerServiceElementEmptyValuesEmptyFixed() {
-    KubernetesSetupParams setupParams = aKubernetesSetupParams().withNamespace("default").build();
-    StateExecutionInstance stateExecutionInstance =
-        aStateExecutionInstance()
-            .withStateName(STATE_NAME)
-            .addContextElement(workflowStandardParams)
-            .addContextElement(phaseElement)
-            .addContextElement(ContainerServiceElement.builder()
-                                   .uuid(serviceElement.getUuid())
-                                   .maxInstances(10)
-                                   .clusterName(CLUSTER_NAME)
-                                   .namespace("default")
-                                   .name(KUBERNETES_CONTROLLER_NAME)
-                                   .resizeStrategy(RESIZE_NEW_FIRST)
-                                   .infraMappingId(INFRA_MAPPING_ID)
-                                   .deploymentType(DeploymentType.KUBERNETES)
-                                   .build())
-            .addStateExecutionData(aCommandStateExecutionData().withContainerSetupParams(setupParams).build())
-            .build();
-    ExecutionContext context = new ExecutionContextImpl(stateExecutionInstance);
-    on(context).set("variableProcessor", variableProcessor);
-    on(context).set("evaluator", evaluator);
-    CommandExecutionResult result = aCommandExecutionResult()
-                                        .withCommandExecutionData(ContainerSetupCommandUnitExecutionData.builder()
-                                                                      .containerServiceName(KUBERNETES_CONTROLLER_NAME)
-                                                                      .build())
-                                        .build();
-
-    kubernetesSetup.setMaxInstances("10");
-    kubernetesSetup.setFixedInstances(null);
-    ContainerServiceElement containerServiceElement =
-        kubernetesSetup.buildContainerServiceElement(context, result, ExecutionStatus.SUCCESS);
+    ContainerServiceElement containerServiceElement = buildContainerServiceElement("10", null);
 
     assertThat(containerServiceElement.getName()).isEqualTo(KUBERNETES_CONTROLLER_NAME);
     assertThat(containerServiceElement.getMaxInstances()).isEqualTo(10);
@@ -405,23 +316,36 @@ public class KubernetesSetupTest extends WingsBaseTest {
   }
 
   @Test
-  public void shouldBuildContainerServiceElementEmptyValuesZero() {
-    KubernetesSetupParams setupParams = aKubernetesSetupParams().withNamespace("default").build();
+  public void shouldBuildContainerServiceElementZero() {
+    ContainerServiceElement containerServiceElement = buildContainerServiceElement("0", "0");
+
+    assertThat(containerServiceElement.getName()).isEqualTo(KUBERNETES_CONTROLLER_NAME);
+    assertThat(containerServiceElement.getMaxInstances()).isEqualTo(DEFAULT_MAX);
+    assertThat(containerServiceElement.getFixedInstances()).isEqualTo(DEFAULT_MAX);
+  }
+
+  private ContainerServiceElement buildContainerServiceElement(String maxInstances, String fixedInstances) {
+    KubernetesSetupParams setupParams = aKubernetesSetupParams().build();
+    ContainerServiceElementBuilder serviceElementBuilder = ContainerServiceElement.builder()
+                                                               .uuid(serviceElement.getUuid())
+                                                               .clusterName(CLUSTER_NAME)
+                                                               .namespace("default")
+                                                               .name(KUBERNETES_CONTROLLER_NAME)
+                                                               .resizeStrategy(RESIZE_NEW_FIRST)
+                                                               .infraMappingId(INFRA_MAPPING_ID)
+                                                               .deploymentType(DeploymentType.KUBERNETES);
+    if (maxInstances != null) {
+      serviceElementBuilder.maxInstances(Integer.valueOf(maxInstances));
+    }
+    if (fixedInstances != null) {
+      serviceElementBuilder.maxInstances(Integer.valueOf(fixedInstances));
+    }
     StateExecutionInstance stateExecutionInstance =
         aStateExecutionInstance()
             .withStateName(STATE_NAME)
             .addContextElement(workflowStandardParams)
             .addContextElement(phaseElement)
-            .addContextElement(ContainerServiceElement.builder()
-                                   .uuid(serviceElement.getUuid())
-                                   .maxInstances(10)
-                                   .clusterName(CLUSTER_NAME)
-                                   .namespace("default")
-                                   .name(KUBERNETES_CONTROLLER_NAME)
-                                   .resizeStrategy(RESIZE_NEW_FIRST)
-                                   .infraMappingId(INFRA_MAPPING_ID)
-                                   .deploymentType(DeploymentType.KUBERNETES)
-                                   .build())
+            .addContextElement(serviceElementBuilder.build())
             .addStateExecutionData(aCommandStateExecutionData().withContainerSetupParams(setupParams).build())
             .build();
     ExecutionContext context = new ExecutionContextImpl(stateExecutionInstance);
@@ -433,13 +357,8 @@ public class KubernetesSetupTest extends WingsBaseTest {
                                                                       .build())
                                         .build();
 
-    kubernetesSetup.setMaxInstances("0");
-    kubernetesSetup.setFixedInstances("0");
-    ContainerServiceElement containerServiceElement =
-        kubernetesSetup.buildContainerServiceElement(context, result, ExecutionStatus.SUCCESS);
-
-    assertThat(containerServiceElement.getName()).isEqualTo(KUBERNETES_CONTROLLER_NAME);
-    assertThat(containerServiceElement.getMaxInstances()).isEqualTo(DEFAULT_MAX);
-    assertThat(containerServiceElement.getFixedInstances()).isEqualTo(DEFAULT_MAX);
+    kubernetesSetup.setMaxInstances(maxInstances);
+    kubernetesSetup.setFixedInstances(fixedInstances);
+    return kubernetesSetup.buildContainerServiceElement(context, result, ExecutionStatus.SUCCESS);
   }
 }

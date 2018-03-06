@@ -16,7 +16,6 @@ public class KubernetesResizeParams extends ContainerResizeParams {
   private String namespace;
   private boolean useAutoscaler;
   private String apiVersion;
-  private boolean rollbackAutoscaler;
   private String subscriptionId;
   private String resourceGroup;
   private boolean useIstioRouteRule;
@@ -29,7 +28,6 @@ public class KubernetesResizeParams extends ContainerResizeParams {
     private boolean useAutoscaler;
     private String containerServiceName;
     private String apiVersion;
-    private boolean rollbackAutoscaler;
     private ResizeStrategy resizeStrategy;
     private String subscriptionId;
     private boolean useFixedInstances;
@@ -80,11 +78,6 @@ public class KubernetesResizeParams extends ContainerResizeParams {
 
     public KubernetesResizeParamsBuilder withApiVersion(String apiVersion) {
       this.apiVersion = apiVersion;
-      return this;
-    }
-
-    public KubernetesResizeParamsBuilder withRollbackAutoscaler(boolean rollbackAutoscaler) {
-      this.rollbackAutoscaler = rollbackAutoscaler;
       return this;
     }
 
@@ -152,7 +145,6 @@ public class KubernetesResizeParams extends ContainerResizeParams {
           .withUseAutoscaler(useAutoscaler)
           .withContainerServiceName(containerServiceName)
           .withApiVersion(apiVersion)
-          .withRollbackAutoscaler(rollbackAutoscaler)
           .withResizeStrategy(resizeStrategy)
           .withSubscriptionId(subscriptionId)
           .withUseFixedInstances(useFixedInstances)
@@ -175,7 +167,6 @@ public class KubernetesResizeParams extends ContainerResizeParams {
       kubernetesResizeParams.setUseAutoscaler(useAutoscaler);
       kubernetesResizeParams.setContainerServiceName(containerServiceName);
       kubernetesResizeParams.setApiVersion(apiVersion);
-      kubernetesResizeParams.setRollbackAutoscaler(rollbackAutoscaler);
       kubernetesResizeParams.setResizeStrategy(resizeStrategy);
       kubernetesResizeParams.setSubscriptionId(subscriptionId);
       kubernetesResizeParams.setUseFixedInstances(useFixedInstances);

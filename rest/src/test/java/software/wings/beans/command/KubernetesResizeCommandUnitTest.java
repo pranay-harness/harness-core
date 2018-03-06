@@ -23,6 +23,7 @@ import software.wings.WingsBaseTest;
 import software.wings.api.ContainerServiceData;
 import software.wings.beans.ErrorCode;
 import software.wings.beans.GcpConfig;
+import software.wings.beans.InstanceUnitType;
 import software.wings.beans.KubernetesConfig;
 import software.wings.beans.ResizeStrategy;
 import software.wings.beans.SettingAttribute;
@@ -107,25 +108,12 @@ public class KubernetesResizeCommandUnitTest extends WingsBaseTest {
 
   @Test
   public void shouldUseMaxInstancesWithPercentage() {
-    when(kubernetesContainerService.getControllerPodCount(eq(kubernetesConfig), any(), anyString()))
-        .thenReturn(Optional.of(0));
     LinkedHashMap<String, Integer> activeServiceCounts = new LinkedHashMap<>();
-    when(kubernetesContainerService.getActiveServiceCounts(eq(kubernetesConfig), any(), anyString()))
-        .thenReturn(activeServiceCounts);
-    KubernetesResizeParams resizeParams = resizeParamsBuilder.but()
-                                              .withContainerServiceName("rc-name.0")
-                                              .withUseFixedInstances(false)
-                                              .withMaxInstances(5)
-                                              .withInstanceCount(100)
-                                              .withInstanceUnitType(PERCENTAGE)
-                                              .build();
 
-    CommandExecutionContext context = contextBuilder.but().withContainerResizeParams(resizeParams).build();
-    CommandExecutionStatus status = kubernetesResizeCommandUnit.execute(context);
-    ResizeCommandUnitExecutionData executionData = (ResizeCommandUnitExecutionData) context.getCommandExecutionData();
+    ResizeCommandUnitExecutionData executionData =
+        execute(activeServiceCounts, 0, "rc-name.0", false, 5, 0, 100, PERCENTAGE);
 
-    assertThat(status).isEqualTo(CommandExecutionStatus.SUCCESS);
-
+    assertThat(executionData.getContainerInfos().size()).isEqualTo(5);
     assertThat(executionData.getNewInstanceData().size()).isEqualTo(1);
     ContainerServiceData contextNewServiceData = executionData.getNewInstanceData().get(0);
     assertThat(contextNewServiceData.getPreviousCount()).isEqualTo(0);
@@ -136,25 +124,12 @@ public class KubernetesResizeCommandUnitTest extends WingsBaseTest {
 
   @Test
   public void shouldUseMaxInstancesWithAnyPercentage() {
-    when(kubernetesContainerService.getControllerPodCount(eq(kubernetesConfig), any(), anyString()))
-        .thenReturn(Optional.of(0));
     LinkedHashMap<String, Integer> activeServiceCounts = new LinkedHashMap<>();
-    when(kubernetesContainerService.getActiveServiceCounts(eq(kubernetesConfig), any(), anyString()))
-        .thenReturn(activeServiceCounts);
-    KubernetesResizeParams resizeParams = resizeParamsBuilder.but()
-                                              .withContainerServiceName("rc-name.0")
-                                              .withUseFixedInstances(false)
-                                              .withMaxInstances(5)
-                                              .withInstanceCount(20)
-                                              .withInstanceUnitType(PERCENTAGE)
-                                              .build();
 
-    CommandExecutionContext context = contextBuilder.but().withContainerResizeParams(resizeParams).build();
-    CommandExecutionStatus status = kubernetesResizeCommandUnit.execute(context);
-    ResizeCommandUnitExecutionData executionData = (ResizeCommandUnitExecutionData) context.getCommandExecutionData();
+    ResizeCommandUnitExecutionData executionData =
+        execute(activeServiceCounts, 0, "rc-name.0", false, 5, 0, 20, PERCENTAGE);
 
-    assertThat(status).isEqualTo(CommandExecutionStatus.SUCCESS);
-
+    assertThat(executionData.getContainerInfos().size()).isEqualTo(5);
     assertThat(executionData.getNewInstanceData().size()).isEqualTo(1);
     ContainerServiceData contextNewServiceData = executionData.getNewInstanceData().get(0);
     assertThat(contextNewServiceData.getPreviousCount()).isEqualTo(0);
@@ -165,25 +140,12 @@ public class KubernetesResizeCommandUnitTest extends WingsBaseTest {
 
   @Test
   public void shouldResizeAndDownsize() {
-    when(kubernetesContainerService.getControllerPodCount(eq(kubernetesConfig), any(), anyString()))
-        .thenReturn(Optional.of(1));
     LinkedHashMap<String, Integer> activeServiceCounts = new LinkedHashMap<>();
     activeServiceCounts.put("rc-name.0", 1);
-    when(kubernetesContainerService.getActiveServiceCounts(eq(kubernetesConfig), any(), anyString()))
-        .thenReturn(activeServiceCounts);
-    KubernetesResizeParams resizeParams = resizeParamsBuilder.but()
-                                              .withContainerServiceName("rc-name.1")
-                                              .withUseFixedInstances(false)
-                                              .withInstanceCount(2)
-                                              .withInstanceUnitType(COUNT)
-                                              .build();
 
-    CommandExecutionContext context = contextBuilder.but().withContainerResizeParams(resizeParams).build();
-    CommandExecutionStatus status = kubernetesResizeCommandUnit.execute(context);
-    ResizeCommandUnitExecutionData executionData = (ResizeCommandUnitExecutionData) context.getCommandExecutionData();
+    ResizeCommandUnitExecutionData executionData = execute(activeServiceCounts, 1, "rc-name.1", false, 0, 0, 2, COUNT);
 
-    assertThat(status).isEqualTo(CommandExecutionStatus.SUCCESS);
-
+    assertThat(executionData.getContainerInfos().size()).isEqualTo(2);
     assertThat(executionData.getNewInstanceData().size()).isEqualTo(1);
     ContainerServiceData contextNewServiceData = executionData.getNewInstanceData().get(0);
     assertThat(contextNewServiceData.getPreviousCount()).isEqualTo(1);
@@ -197,26 +159,13 @@ public class KubernetesResizeCommandUnitTest extends WingsBaseTest {
 
   @Test
   public void shouldDownsizeMultiple() {
-    when(kubernetesContainerService.getControllerPodCount(eq(kubernetesConfig), any(), anyString()))
-        .thenReturn(Optional.of(0));
     LinkedHashMap<String, Integer> activeServiceCounts = new LinkedHashMap<>();
     activeServiceCounts.put("rc-name.0", 1);
     activeServiceCounts.put("rc-name.1", 2);
-    when(kubernetesContainerService.getActiveServiceCounts(eq(kubernetesConfig), any(), anyString()))
-        .thenReturn(activeServiceCounts);
-    KubernetesResizeParams resizeParams = resizeParamsBuilder.but()
-                                              .withContainerServiceName("rc-name.2")
-                                              .withUseFixedInstances(false)
-                                              .withInstanceCount(3)
-                                              .withInstanceUnitType(COUNT)
-                                              .build();
 
-    CommandExecutionContext context = contextBuilder.but().withContainerResizeParams(resizeParams).build();
-    CommandExecutionStatus status = kubernetesResizeCommandUnit.execute(context);
-    ResizeCommandUnitExecutionData executionData = (ResizeCommandUnitExecutionData) context.getCommandExecutionData();
+    ResizeCommandUnitExecutionData executionData = execute(activeServiceCounts, 0, "rc-name.2", false, 0, 0, 3, COUNT);
 
-    assertThat(status).isEqualTo(CommandExecutionStatus.SUCCESS);
-
+    assertThat(executionData.getContainerInfos().size()).isEqualTo(3);
     assertThat(executionData.getNewInstanceData().size()).isEqualTo(1);
     ContainerServiceData contextNewServiceData = executionData.getNewInstanceData().get(0);
     assertThat(contextNewServiceData.getPreviousCount()).isEqualTo(0);
@@ -235,27 +184,13 @@ public class KubernetesResizeCommandUnitTest extends WingsBaseTest {
 
   @Test
   public void shouldUseFixedInstancesWithCount() {
-    when(kubernetesContainerService.getControllerPodCount(eq(kubernetesConfig), any(), anyString()))
-        .thenReturn(Optional.of(0));
     LinkedHashMap<String, Integer> activeServiceCounts = new LinkedHashMap<>();
     activeServiceCounts.put("rc-name.0", 2);
     activeServiceCounts.put("rc-name.1", 2);
-    when(kubernetesContainerService.getActiveServiceCounts(eq(kubernetesConfig), any(), anyString()))
-        .thenReturn(activeServiceCounts);
-    KubernetesResizeParams resizeParams = resizeParamsBuilder.but()
-                                              .withContainerServiceName("rc-name.2")
-                                              .withUseFixedInstances(true)
-                                              .withFixedInstances(3)
-                                              .withInstanceCount(3)
-                                              .withInstanceUnitType(COUNT)
-                                              .build();
 
-    CommandExecutionContext context = contextBuilder.but().withContainerResizeParams(resizeParams).build();
-    CommandExecutionStatus status = kubernetesResizeCommandUnit.execute(context);
-    ResizeCommandUnitExecutionData executionData = (ResizeCommandUnitExecutionData) context.getCommandExecutionData();
+    ResizeCommandUnitExecutionData executionData = execute(activeServiceCounts, 0, "rc-name.2", true, 0, 3, 3, COUNT);
 
-    assertThat(status).isEqualTo(CommandExecutionStatus.SUCCESS);
-
+    assertThat(executionData.getContainerInfos().size()).isEqualTo(3);
     assertThat(executionData.getNewInstanceData().size()).isEqualTo(1);
     ContainerServiceData contextNewServiceData = executionData.getNewInstanceData().get(0);
     assertThat(contextNewServiceData.getPreviousCount()).isEqualTo(0);
@@ -274,26 +209,12 @@ public class KubernetesResizeCommandUnitTest extends WingsBaseTest {
 
   @Test
   public void shouldCapCountAtFixed() {
-    when(kubernetesContainerService.getControllerPodCount(eq(kubernetesConfig), any(), anyString()))
-        .thenReturn(Optional.of(0));
     LinkedHashMap<String, Integer> activeServiceCounts = new LinkedHashMap<>();
     activeServiceCounts.put("rc-name.0", 3);
-    when(kubernetesContainerService.getActiveServiceCounts(eq(kubernetesConfig), any(), anyString()))
-        .thenReturn(activeServiceCounts);
-    KubernetesResizeParams resizeParams = resizeParamsBuilder.but()
-                                              .withContainerServiceName("rc-name.1")
-                                              .withUseFixedInstances(true)
-                                              .withFixedInstances(3)
-                                              .withInstanceCount(5)
-                                              .withInstanceUnitType(COUNT)
-                                              .build();
 
-    CommandExecutionContext context = contextBuilder.but().withContainerResizeParams(resizeParams).build();
-    CommandExecutionStatus status = kubernetesResizeCommandUnit.execute(context);
-    ResizeCommandUnitExecutionData executionData = (ResizeCommandUnitExecutionData) context.getCommandExecutionData();
+    ResizeCommandUnitExecutionData executionData = execute(activeServiceCounts, 0, "rc-name.1", true, 0, 3, 5, COUNT);
 
-    assertThat(status).isEqualTo(CommandExecutionStatus.SUCCESS);
-
+    assertThat(executionData.getContainerInfos().size()).isEqualTo(3);
     assertThat(executionData.getNewInstanceData().size()).isEqualTo(1);
     ContainerServiceData contextNewServiceData = executionData.getNewInstanceData().get(0);
     assertThat(contextNewServiceData.getPreviousCount()).isEqualTo(0);
@@ -308,27 +229,14 @@ public class KubernetesResizeCommandUnitTest extends WingsBaseTest {
 
   @Test
   public void shouldUseFixedInstancesWithPercentage() {
-    when(kubernetesContainerService.getControllerPodCount(eq(kubernetesConfig), any(), anyString()))
-        .thenReturn(Optional.of(0));
     LinkedHashMap<String, Integer> activeServiceCounts = new LinkedHashMap<>();
     activeServiceCounts.put("rc-name.0", 2);
     activeServiceCounts.put("rc-name.1", 2);
-    when(kubernetesContainerService.getActiveServiceCounts(eq(kubernetesConfig), any(), anyString()))
-        .thenReturn(activeServiceCounts);
-    KubernetesResizeParams resizeParams = resizeParamsBuilder.but()
-                                              .withContainerServiceName("rc-name.2")
-                                              .withUseFixedInstances(true)
-                                              .withFixedInstances(3)
-                                              .withInstanceCount(100)
-                                              .withInstanceUnitType(PERCENTAGE)
-                                              .build();
 
-    CommandExecutionContext context = contextBuilder.but().withContainerResizeParams(resizeParams).build();
-    CommandExecutionStatus status = kubernetesResizeCommandUnit.execute(context);
-    ResizeCommandUnitExecutionData executionData = (ResizeCommandUnitExecutionData) context.getCommandExecutionData();
+    ResizeCommandUnitExecutionData executionData =
+        execute(activeServiceCounts, 0, "rc-name.2", true, 0, 3, 100, PERCENTAGE);
 
-    assertThat(status).isEqualTo(CommandExecutionStatus.SUCCESS);
-
+    assertThat(executionData.getContainerInfos().size()).isEqualTo(3);
     assertThat(executionData.getNewInstanceData().size()).isEqualTo(1);
     ContainerServiceData contextNewServiceData = executionData.getNewInstanceData().get(0);
     assertThat(contextNewServiceData.getPreviousCount()).isEqualTo(0);
@@ -347,26 +255,13 @@ public class KubernetesResizeCommandUnitTest extends WingsBaseTest {
 
   @Test
   public void shouldNotUseMaxInstancesWhenAlreadyRunningWithPercentage() {
-    when(kubernetesContainerService.getControllerPodCount(eq(kubernetesConfig), any(), anyString()))
-        .thenReturn(Optional.of(0));
     LinkedHashMap<String, Integer> activeServiceCounts = new LinkedHashMap<>();
     activeServiceCounts.put("rc-name.0", 10);
-    when(kubernetesContainerService.getActiveServiceCounts(eq(kubernetesConfig), any(), anyString()))
-        .thenReturn(activeServiceCounts);
-    KubernetesResizeParams resizeParams = resizeParamsBuilder.but()
-                                              .withContainerServiceName("rc-name.1")
-                                              .withUseFixedInstances(false)
-                                              .withMaxInstances(5)
-                                              .withInstanceCount(100)
-                                              .withInstanceUnitType(PERCENTAGE)
-                                              .build();
 
-    CommandExecutionContext context = contextBuilder.but().withContainerResizeParams(resizeParams).build();
-    CommandExecutionStatus status = kubernetesResizeCommandUnit.execute(context);
-    ResizeCommandUnitExecutionData executionData = (ResizeCommandUnitExecutionData) context.getCommandExecutionData();
+    ResizeCommandUnitExecutionData executionData =
+        execute(activeServiceCounts, 0, "rc-name.1", false, 5, 0, 100, PERCENTAGE);
 
-    assertThat(status).isEqualTo(CommandExecutionStatus.SUCCESS);
-
+    assertThat(executionData.getContainerInfos().size()).isEqualTo(10);
     assertThat(executionData.getNewInstanceData().size()).isEqualTo(1);
     ContainerServiceData contextNewServiceData = executionData.getNewInstanceData().get(0);
     assertThat(contextNewServiceData.getPreviousCount()).isEqualTo(0);
@@ -381,26 +276,13 @@ public class KubernetesResizeCommandUnitTest extends WingsBaseTest {
 
   @Test
   public void shouldNotUseMaxInstancesWhenAlreadyRunningLessThanMaxWithPercentage() {
-    when(kubernetesContainerService.getControllerPodCount(eq(kubernetesConfig), any(), anyString()))
-        .thenReturn(Optional.of(0));
     LinkedHashMap<String, Integer> activeServiceCounts = new LinkedHashMap<>();
     activeServiceCounts.put("rc-name.0", 3);
-    when(kubernetesContainerService.getActiveServiceCounts(eq(kubernetesConfig), any(), anyString()))
-        .thenReturn(activeServiceCounts);
-    KubernetesResizeParams resizeParams = resizeParamsBuilder.but()
-                                              .withContainerServiceName("rc-name.1")
-                                              .withUseFixedInstances(false)
-                                              .withMaxInstances(5)
-                                              .withInstanceCount(100)
-                                              .withInstanceUnitType(PERCENTAGE)
-                                              .build();
 
-    CommandExecutionContext context = contextBuilder.but().withContainerResizeParams(resizeParams).build();
-    CommandExecutionStatus status = kubernetesResizeCommandUnit.execute(context);
-    ResizeCommandUnitExecutionData executionData = (ResizeCommandUnitExecutionData) context.getCommandExecutionData();
+    ResizeCommandUnitExecutionData executionData =
+        execute(activeServiceCounts, 0, "rc-name.1", false, 5, 0, 100, PERCENTAGE);
 
-    assertThat(status).isEqualTo(CommandExecutionStatus.SUCCESS);
-
+    assertThat(executionData.getContainerInfos().size()).isEqualTo(3);
     assertThat(executionData.getNewInstanceData().size()).isEqualTo(1);
     ContainerServiceData contextNewServiceData = executionData.getNewInstanceData().get(0);
     assertThat(contextNewServiceData.getPreviousCount()).isEqualTo(0);
@@ -411,5 +293,29 @@ public class KubernetesResizeCommandUnitTest extends WingsBaseTest {
     assertThat(contextOldServiceData.getName()).isEqualTo("rc-name.0");
     assertThat(contextOldServiceData.getPreviousCount()).isEqualTo(3);
     assertThat(contextOldServiceData.getDesiredCount()).isEqualTo(0);
+  }
+
+  private ResizeCommandUnitExecutionData execute(LinkedHashMap<String, Integer> activeServiceCounts,
+      int controllerPodCount, String controllerName, boolean useFixedInstances, int maxInstances, int fixedInstances,
+      int instanceCount, InstanceUnitType instanceUnitType) {
+    when(kubernetesContainerService.getControllerPodCount(eq(kubernetesConfig), any(), anyString()))
+        .thenReturn(Optional.of(controllerPodCount));
+    when(kubernetesContainerService.getActiveServiceCounts(eq(kubernetesConfig), any(), anyString()))
+        .thenReturn(activeServiceCounts);
+    KubernetesResizeParams resizeParams = resizeParamsBuilder.but()
+                                              .withContainerServiceName(controllerName)
+                                              .withUseFixedInstances(useFixedInstances)
+                                              .withInstanceCount(instanceCount)
+                                              .withInstanceUnitType(instanceUnitType)
+                                              .withFixedInstances(fixedInstances)
+                                              .withMaxInstances(maxInstances)
+                                              .build();
+
+    CommandExecutionContext context = contextBuilder.but().withContainerResizeParams(resizeParams).build();
+    CommandExecutionStatus status = kubernetesResizeCommandUnit.execute(context);
+    ResizeCommandUnitExecutionData executionData = (ResizeCommandUnitExecutionData) context.getCommandExecutionData();
+
+    assertThat(status).isEqualTo(CommandExecutionStatus.SUCCESS);
+    return executionData;
   }
 }
