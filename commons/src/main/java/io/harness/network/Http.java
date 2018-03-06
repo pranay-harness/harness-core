@@ -141,7 +141,7 @@ public class Http {
       if (isNotEmpty(httpProxyHost)) {
         proxyHost = httpProxyHost;
         if (isNotEmpty(httpProxyPort)) {
-          proxyPort = Integer.valueOf(httpProxyPort);
+          proxyPort = Integer.parseInt(httpProxyPort);
         }
         proxyScheme = "http";
       }
@@ -151,7 +151,7 @@ public class Http {
       if (isNotEmpty(httpsProxyHost)) {
         proxyHost = httpsProxyHost;
         if (isNotEmpty(httpsProxyHost)) {
-          proxyPort = Integer.valueOf(httpsProxyPort);
+          proxyPort = Integer.parseInt(httpsProxyPort);
         }
         proxyScheme = "https";
       }
