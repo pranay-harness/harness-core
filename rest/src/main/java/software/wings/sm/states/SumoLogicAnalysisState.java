@@ -98,13 +98,6 @@ public class SumoLogicAnalysisState extends AbstractLogAnalysisState {
   }
 
   @Override
-  @Attributes(title = "Auto Baseline")
-  @DefaultValue("true")
-  public boolean getAutoBaseline() {
-    return autoBaseline;
-  }
-
-  @Override
   public void setAnalysisServerConfigId(String analysisServerConfigId) {
     this.analysisServerConfigId = analysisServerConfigId;
   }

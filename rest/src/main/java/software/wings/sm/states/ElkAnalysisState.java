@@ -78,13 +78,6 @@ public class ElkAnalysisState extends AbstractLogAnalysisState {
   @DefaultValue("yyyy-MM-dd'T'HH:mm:ss.SSS'Z'")
   private String timestampFormat;
 
-  @Override
-  @Attributes(title = "Auto Baseline")
-  @DefaultValue("true")
-  public boolean getAutoBaseline() {
-    return autoBaseline;
-  }
-
   public ElkAnalysisState(String name) {
     super(name, StateType.ELK.getType());
   }

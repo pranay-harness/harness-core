@@ -1,5 +1,0 @@
-{
-  "ui:order" : [
-    "analysisServerConfigId", "applicationId", "timeDuration", "autoBaseline"
-  ]
-}

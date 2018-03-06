@@ -444,13 +444,13 @@ public class LogMLAnalysisServiceTest extends WingsBaseTest {
   @Test
   public void testIsBaseLineCreatedWithCurrentStrategy() throws Exception {
     assertTrue(analysisService.isBaselineCreated(
-        AnalysisComparisonStrategy.COMPARE_WITH_CURRENT, null, null, null, null, null));
+        AnalysisComparisonStrategy.COMPARE_WITH_CURRENT, null, null, null, null, null, null));
   }
 
   @Test
   public void testIsBaseLineCreatedNoWorkFlowExecutions() throws Exception {
     assertFalse(analysisService.isBaselineCreated(AnalysisComparisonStrategy.COMPARE_WITH_PREVIOUS, StateType.SPLUNKV2,
-        appId, workflowId, workflowExecutionId, serviceId));
+        appId, workflowId, workflowExecutionId, serviceId, null));
   }
 
   @Test
@@ -469,7 +469,7 @@ public class LogMLAnalysisServiceTest extends WingsBaseTest {
     stateMachine.setUuid(workflowExecution.getStateMachineId());
     wingsPersistence.save(stateMachine);
     assertFalse(analysisService.isBaselineCreated(AnalysisComparisonStrategy.COMPARE_WITH_PREVIOUS, StateType.SPLUNKV2,
-        appId, workflowId, workflowExecutionId, serviceId));
+        appId, workflowId, workflowExecutionId, serviceId, null));
   }
 
   @Test
@@ -501,7 +501,7 @@ public class LogMLAnalysisServiceTest extends WingsBaseTest {
         serviceId, ClusterLevel.L1, delegateTaskId, logElements);
 
     assertFalse(analysisService.isBaselineCreated(AnalysisComparisonStrategy.COMPARE_WITH_PREVIOUS, StateType.SPLUNKV2,
-        appId, workflowId, workflowExecutionId, serviceId));
+        appId, workflowId, workflowExecutionId, serviceId, null));
   }
 
   @Test
@@ -547,7 +547,7 @@ public class LogMLAnalysisServiceTest extends WingsBaseTest {
         workflowExecutionId, serviceId, ClusterLevel.L2, delegateTaskId, logElements));
 
     assertTrue(analysisService.isBaselineCreated(AnalysisComparisonStrategy.COMPARE_WITH_PREVIOUS, StateType.SPLUNKV2,
-        appId, workflowId, workflowExecutionId, serviceId));
+        appId, workflowId, workflowExecutionId, serviceId, query));
   }
 
   @Test

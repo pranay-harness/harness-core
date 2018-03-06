@@ -90,8 +90,7 @@ public interface LogAnalysisResource {
       @QueryParam("applicationId") String applicationId, @QueryParam("stateExecutionId") String stateExecutionId,
       @QueryParam("logCollectionMinute") Integer logCollectionMinute,
       @QueryParam("isBaselineCreated") boolean isBaselineCreated, @QueryParam("taskId") String taskId,
-      @QueryParam("baseLineExecutionId") String baseLineExecutionId, LogMLAnalysisRecord mlAnalysisResponse)
-      throws IOException;
+      LogMLAnalysisRecord mlAnalysisResponse) throws IOException;
 
   RestResponse<LogMLAnalysisRecord> getLogMLAnalysisRecords(
       @QueryParam("accountId") String accountId, LogMLAnalysisRequest mlAnalysisRequest) throws IOException;

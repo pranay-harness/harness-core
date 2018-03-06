@@ -29,12 +29,10 @@ import software.wings.service.impl.analysis.LogAnalysisResponse;
 import software.wings.service.impl.analysis.LogMLAnalysisSummary;
 import software.wings.service.intfc.analysis.AnalysisService;
 import software.wings.service.intfc.analysis.LogAnalysisResource;
-import software.wings.sm.ContextElementType;
 import software.wings.sm.ExecutionContext;
 import software.wings.sm.ExecutionResponse;
 import software.wings.sm.ExecutionStatus;
 import software.wings.sm.StateType;
-import software.wings.sm.WorkflowStandardParams;
 import software.wings.stencils.DefaultValue;
 import software.wings.utils.JsonUtils;
 import software.wings.waitnotify.NotifyResponseData;
@@ -76,7 +74,7 @@ public abstract class AbstractLogAnalysisState extends AbstractAnalysisState {
 
   @Override
   public ExecutionResponse execute(ExecutionContext executionContext) {
-    getLogger().info("Executing {} state, id: {} ", getStateType(), executionContext.getStateExecutionInstanceId());
+    getLogger().debug("Executing analysis state");
 
     AnalysisContext context = getLogAnalysisContext(executionContext, UUID.randomUUID().toString());
 
@@ -96,27 +94,6 @@ public abstract class AbstractLogAnalysisState extends AbstractAnalysisState {
 
       getLogger().warn("It seems that there is no successful run for this workflow yet. "
           + "Log data will be collected to be analyzed for next deployment run");
-    }
-
-    if (getComparisonStrategy() == AnalysisComparisonStrategy.COMPARE_WITH_PREVIOUS) {
-      if (!autoBaseline) {
-        WorkflowStandardParams workflowStandardParams = executionContext.getContextElement(ContextElementType.STANDARD);
-        String baselineWorkflowExecutionId = workflowExecutionBaselineService.getBaselineExecutionId(
-            context.getWorkflowId(), workflowStandardParams.getEnv().getUuid(), context.getServiceId());
-        if (isEmpty(baselineWorkflowExecutionId)) {
-          getLogger().error("Auto baseline is turned off but no baseline was set for the workflow");
-          return generateAnalysisResponse(context, ExecutionStatus.FAILED,
-              "Auto baseline is turned off but no baseline was set for the workflow. Either mark a pipeline to be a baseline or turn on Auto baseline");
-        }
-        context.setPrevWorkflowExecutionId(baselineWorkflowExecutionId);
-      } else {
-        String prevWorkflowExecutionId = analysisService.getLastSuccessfulWorkflowExecutionIdWithLogs(
-            context.getStateType(), context.getAppId(), context.getServiceId(), context.getWorkflowId());
-        if (prevWorkflowExecutionId == null) {
-          getLogger().warn("No previous execution found. This will be the baseline run");
-        }
-        context.setPrevWorkflowExecutionId(prevWorkflowExecutionId);
-      }
     }
 
     final LogAnalysisExecutionData executionData =

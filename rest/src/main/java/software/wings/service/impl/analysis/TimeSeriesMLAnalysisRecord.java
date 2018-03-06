@@ -34,7 +34,5 @@ public class TimeSeriesMLAnalysisRecord extends Base {
 
   @NotEmpty @Indexed private int analysisMinute;
 
-  private String baseLineExecutionId;
-
   private Map<String, TimeSeriesMLTxnSummary> transactions;
 }

@@ -603,7 +603,7 @@ public class NewRelicIntegrationTest extends BaseIntegrationTest {
             .stateBaseUrl("newrelic")
             .authToken(AbstractAnalysisState.generateAuthToken("nhUmut2NMcUnsR01OgOz0e51MZ51AqUwrOATJ3fJ"))
             .correlationId(UUID.randomUUID().toString())
-            .prevWorkflowExecutionId(prevWorkflowExecutionID)
+            .prevWorkflowExecutionId(prevWorkflowExecutionID == null ? "-1" : prevWorkflowExecutionID)
             .build();
     JobExecutionContext jobExecutionContext = mock(JobExecutionContext.class);
     JobDataMap jobDataMap = mock(JobDataMap.class);

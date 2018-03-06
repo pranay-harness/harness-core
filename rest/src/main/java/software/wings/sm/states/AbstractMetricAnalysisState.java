@@ -23,12 +23,10 @@ import software.wings.service.impl.newrelic.MetricAnalysisExecutionData;
 import software.wings.service.impl.newrelic.MetricAnalysisJob;
 import software.wings.service.impl.newrelic.NewRelicMetricAnalysisRecord;
 import software.wings.service.intfc.MetricDataAnalysisService;
-import software.wings.sm.ContextElementType;
 import software.wings.sm.ExecutionContext;
 import software.wings.sm.ExecutionResponse;
 import software.wings.sm.ExecutionStatus;
 import software.wings.sm.StateType;
-import software.wings.sm.WorkflowStandardParams;
 import software.wings.utils.JsonUtils;
 import software.wings.waitnotify.NotifyResponseData;
 
@@ -60,7 +58,7 @@ public abstract class AbstractMetricAnalysisState extends AbstractAnalysisState 
 
   @Override
   public ExecutionResponse execute(ExecutionContext context) {
-    getLogger().info("Executing {} state, id: {} ", getStateType(), context.getStateExecutionInstanceId());
+    getLogger().debug("Executing {} state", getStateType());
     AnalysisContext analysisContext = getAnalysisContext(context, UUID.randomUUID().toString());
 
     Set<String> canaryNewHostNames = analysisContext.getTestNodes();
@@ -89,24 +87,13 @@ public abstract class AbstractMetricAnalysisState extends AbstractAnalysisState 
     }
 
     if (getComparisonStrategy() == AnalysisComparisonStrategy.COMPARE_WITH_PREVIOUS) {
-      if (!autoBaseline) {
-        WorkflowStandardParams workflowStandardParams = context.getContextElement(ContextElementType.STANDARD);
-        String baselineWorkflowExecutionId = workflowExecutionBaselineService.getBaselineExecutionId(
-            context.getWorkflowId(), workflowStandardParams.getEnv().getUuid(), analysisContext.getServiceId());
-        if (isEmpty(baselineWorkflowExecutionId)) {
-          getLogger().error("Auto baseline is turned off but no baseline was set for the workflow");
-          return generateAnalysisResponse(context, ExecutionStatus.FAILED,
-              "Auto baseline is turned off but no baseline was set for the workflow. Either mark a pipeline to be a baseline or turn on Auto baseline");
-        }
-        analysisContext.setPrevWorkflowExecutionId(baselineWorkflowExecutionId);
-      } else {
-        String prevWorkflowExecutionId = metricAnalysisService.getLastSuccessfulWorkflowExecutionIdWithData(
-            analysisContext.getStateType(), analysisContext.getWorkflowId(), analysisContext.getServiceId());
-        if (prevWorkflowExecutionId == null) {
-          getLogger().warn("No previous execution found. This will be the baseline run");
-        }
-        analysisContext.setPrevWorkflowExecutionId(prevWorkflowExecutionId);
+      String prevWorkflowExecutionId = metricAnalysisService.getLastSuccessfulWorkflowExecutionIdWithData(
+          analysisContext.getStateType(), analysisContext.getWorkflowId(), analysisContext.getServiceId());
+      if (prevWorkflowExecutionId == null) {
+        getLogger().warn("No previous execution found. This will be the baseline run");
+        prevWorkflowExecutionId = "-1";
       }
+      analysisContext.setPrevWorkflowExecutionId(prevWorkflowExecutionId);
     }
 
     final MetricAnalysisExecutionData executionData =
