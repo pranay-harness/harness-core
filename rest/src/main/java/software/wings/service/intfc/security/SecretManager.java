@@ -70,4 +70,6 @@ public interface SecretManager {
   List<EncryptedData> listSecrets(String accountId, SettingVariableTypes type) throws IllegalAccessException;
 
   List<UuidAware> getSecretUsage(String accountId, String secretTextId);
+
+  String saveSecretUsingLocalMode(String accountId, String name, String value);
 }

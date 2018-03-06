@@ -191,10 +191,25 @@ public class SecretTextTest extends WingsBaseTest {
   }
 
   @Test
-  public void saveSecret() throws IOException, IllegalAccessException {
+  public void saveSecret() throws IllegalAccessException {
     String secretName = UUID.randomUUID().toString();
     String secretValue = UUID.randomUUID().toString();
     String secretId = secretManager.saveSecret(accountId, secretName, secretValue);
+    testSaveSecret(secretName, secretValue, secretId);
+  }
+
+  @Test
+  public void saveSecretUsingLocalMode() throws IllegalAccessException {
+    if (encryptionType != EncryptionType.LOCAL) {
+      return;
+    }
+    String secretName = UUID.randomUUID().toString();
+    String secretValue = UUID.randomUUID().toString();
+    String secretId = secretManager.saveSecretUsingLocalMode(accountId, secretName, secretValue);
+    testSaveSecret(secretName, secretValue, secretId);
+  }
+
+  private void testSaveSecret(String secretName, String secretValue, String secretId) throws IllegalAccessException {
     Query<EncryptedData> query = wingsPersistence.createQuery(EncryptedData.class).field("type").equal(SECRET_TEXT);
     List<EncryptedData> encryptedDataList = query.asList();
     assertEquals(1, encryptedDataList.size());
