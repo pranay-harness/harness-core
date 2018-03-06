@@ -360,13 +360,9 @@ public class WatcherServiceImpl implements WatcherService {
         String newDelegateProcess = null;
 
         if (newDelegate.getProcess().isAlive()) {
-          List<Message> newDelegateMessages =
-              messageService.waitForMessages(NEW_DELEGATE, TimeUnit.MINUTES.toMillis(5), TimeUnit.SECONDS.toMillis(5));
-          if (isNotEmpty(newDelegateMessages)) {
-            for (int i = 0; i < newDelegateMessages.size() - 1; i++) {
-              shutdownDelegate(newDelegateMessages.get(i).getParams().get(0));
-            }
-            newDelegateProcess = newDelegateMessages.get(newDelegateMessages.size() - 1).getParams().get(0);
+          Message message = messageService.waitForMessage(NEW_DELEGATE, TimeUnit.MINUTES.toMillis(4));
+          if (message != null) {
+            newDelegateProcess = message.getParams().get(0);
             logger.info("Got process ID from new delegate: " + newDelegateProcess);
             Map<String, Object> delegateData = new HashMap<>();
             delegateData.put(DELEGATE_IS_NEW, true);
@@ -376,8 +372,7 @@ public class WatcherServiceImpl implements WatcherService {
               runningDelegates.add(newDelegateProcess);
               messageService.putData(WATCHER_DATA, RUNNING_DELEGATES, runningDelegates);
             }
-            Message message =
-                messageService.readMessageFromChannel(DELEGATE, newDelegateProcess, TimeUnit.MINUTES.toMillis(2));
+            message = messageService.readMessageFromChannel(DELEGATE, newDelegateProcess, TimeUnit.MINUTES.toMillis(2));
             if (message != null && message.getMessage().equals(DELEGATE_STARTED)) {
               logger.info("Retrieved delegate-started message from new delegate {}", newDelegateProcess);
               oldDelegateProcesses.forEach(oldDelegateProcess -> {
@@ -579,17 +574,12 @@ public class WatcherServiceImpl implements WatcherService {
       boolean success = false;
 
       if (process.getProcess().isAlive()) {
-        List<Message> newWatcherMessages =
-            messageService.waitForMessages(NEW_WATCHER, TimeUnit.MINUTES.toMillis(5), TimeUnit.SECONDS.toMillis(5));
-        if (isNotEmpty(newWatcherMessages)) {
-          for (int i = 0; i < newWatcherMessages.size() - 1; i++) {
-            shutdownWatcher(newWatcherMessages.get(i).getParams().get(0));
-          }
-          String newWatcherProcess = newWatcherMessages.get(newWatcherMessages.size() - 1).getParams().get(0);
+        Message message = messageService.waitForMessage(NEW_WATCHER, TimeUnit.MINUTES.toMillis(3));
+        if (message != null) {
+          String newWatcherProcess = message.getParams().get(0);
           logger.info("[Old] Got process ID from new watcher: " + newWatcherProcess);
           messageService.putData(WATCHER_DATA, NEXT_WATCHER, newWatcherProcess);
-          Message message =
-              messageService.readMessageFromChannel(WATCHER, newWatcherProcess, TimeUnit.MINUTES.toMillis(2));
+          message = messageService.readMessageFromChannel(WATCHER, newWatcherProcess, TimeUnit.MINUTES.toMillis(2));
           if (message != null && message.getMessage().equals(WATCHER_STARTED)) {
             logger.info(
                 "[Old] Retrieved watcher-started message from new watcher {}. Sending go-ahead", newWatcherProcess);
