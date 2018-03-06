@@ -59,6 +59,7 @@ import org.mockito.Mock;
 import org.mongodb.morphia.Key;
 import software.wings.WingsBaseTest;
 import software.wings.api.ContainerServiceElement;
+import software.wings.api.ContainerServiceElement.ContainerServiceElementBuilder;
 import software.wings.api.DeploymentType;
 import software.wings.api.PhaseElement;
 import software.wings.api.ServiceElement;
@@ -291,37 +292,7 @@ public class EcsServiceSetupTest extends WingsBaseTest {
 
   @Test
   public void shouldBuildContainerServiceElement() {
-    EcsSetupParams setupParams = EcsSetupParamsBuilder.anEcsSetupParams().build();
-    StateExecutionInstance stateExecutionInstance =
-        aStateExecutionInstance()
-            .withStateName(STATE_NAME)
-            .addContextElement(workflowStandardParams)
-            .addContextElement(phaseElement)
-            .addContextElement(ContainerServiceElement.builder()
-                                   .uuid(serviceElement.getUuid())
-                                   .maxInstances(10)
-                                   .clusterName(CLUSTER_NAME)
-                                   .namespace("default")
-                                   .name(ECS_SERVICE_NAME)
-                                   .resizeStrategy(RESIZE_NEW_FIRST)
-                                   .infraMappingId(INFRA_MAPPING_ID)
-                                   .deploymentType(DeploymentType.ECS)
-                                   .build())
-            .addStateExecutionData(aCommandStateExecutionData().withContainerSetupParams(setupParams).build())
-            .build();
-    ExecutionContext context = new ExecutionContextImpl(stateExecutionInstance);
-    on(context).set("variableProcessor", variableProcessor);
-    on(context).set("evaluator", evaluator);
-    CommandExecutionResult result =
-        aCommandExecutionResult()
-            .withCommandExecutionData(
-                ContainerSetupCommandUnitExecutionData.builder().containerServiceName(ECS_SERVICE_NAME).build())
-            .build();
-
-    ecsServiceSetup.setMaxInstances("10");
-    ecsServiceSetup.setFixedInstances("5");
-    ContainerServiceElement containerServiceElement =
-        ecsServiceSetup.buildContainerServiceElement(context, result, ExecutionStatus.SUCCESS);
+    ContainerServiceElement containerServiceElement = buildContainerServiceElement("10", "5");
 
     assertThat(containerServiceElement.getName()).isEqualTo(ECS_SERVICE_NAME);
     assertThat(containerServiceElement.getMaxInstances()).isEqualTo(10);
@@ -330,37 +301,7 @@ public class EcsServiceSetupTest extends WingsBaseTest {
 
   @Test
   public void shouldBuildContainerServiceElementEmptyValues() {
-    EcsSetupParams setupParams = EcsSetupParamsBuilder.anEcsSetupParams().build();
-    StateExecutionInstance stateExecutionInstance =
-        aStateExecutionInstance()
-            .withStateName(STATE_NAME)
-            .addContextElement(workflowStandardParams)
-            .addContextElement(phaseElement)
-            .addContextElement(ContainerServiceElement.builder()
-                                   .uuid(serviceElement.getUuid())
-                                   .maxInstances(10)
-                                   .clusterName(CLUSTER_NAME)
-                                   .namespace("default")
-                                   .name(ECS_SERVICE_NAME)
-                                   .resizeStrategy(RESIZE_NEW_FIRST)
-                                   .infraMappingId(INFRA_MAPPING_ID)
-                                   .deploymentType(DeploymentType.ECS)
-                                   .build())
-            .addStateExecutionData(aCommandStateExecutionData().withContainerSetupParams(setupParams).build())
-            .build();
-    ExecutionContext context = new ExecutionContextImpl(stateExecutionInstance);
-    on(context).set("variableProcessor", variableProcessor);
-    on(context).set("evaluator", evaluator);
-    CommandExecutionResult result =
-        aCommandExecutionResult()
-            .withCommandExecutionData(
-                ContainerSetupCommandUnitExecutionData.builder().containerServiceName(ECS_SERVICE_NAME).build())
-            .build();
-
-    ecsServiceSetup.setMaxInstances(null);
-    ecsServiceSetup.setFixedInstances(null);
-    ContainerServiceElement containerServiceElement =
-        ecsServiceSetup.buildContainerServiceElement(context, result, ExecutionStatus.SUCCESS);
+    ContainerServiceElement containerServiceElement = buildContainerServiceElement(null, null);
 
     assertThat(containerServiceElement.getName()).isEqualTo(ECS_SERVICE_NAME);
     assertThat(containerServiceElement.getMaxInstances()).isEqualTo(DEFAULT_MAX);
@@ -369,37 +310,7 @@ public class EcsServiceSetupTest extends WingsBaseTest {
 
   @Test
   public void shouldBuildContainerServiceElementEmptyFixed() {
-    EcsSetupParams setupParams = EcsSetupParamsBuilder.anEcsSetupParams().build();
-    StateExecutionInstance stateExecutionInstance =
-        aStateExecutionInstance()
-            .withStateName(STATE_NAME)
-            .addContextElement(workflowStandardParams)
-            .addContextElement(phaseElement)
-            .addContextElement(ContainerServiceElement.builder()
-                                   .uuid(serviceElement.getUuid())
-                                   .maxInstances(10)
-                                   .clusterName(CLUSTER_NAME)
-                                   .namespace("default")
-                                   .name(ECS_SERVICE_NAME)
-                                   .resizeStrategy(RESIZE_NEW_FIRST)
-                                   .infraMappingId(INFRA_MAPPING_ID)
-                                   .deploymentType(DeploymentType.ECS)
-                                   .build())
-            .addStateExecutionData(aCommandStateExecutionData().withContainerSetupParams(setupParams).build())
-            .build();
-    ExecutionContext context = new ExecutionContextImpl(stateExecutionInstance);
-    on(context).set("variableProcessor", variableProcessor);
-    on(context).set("evaluator", evaluator);
-    CommandExecutionResult result =
-        aCommandExecutionResult()
-            .withCommandExecutionData(
-                ContainerSetupCommandUnitExecutionData.builder().containerServiceName(ECS_SERVICE_NAME).build())
-            .build();
-
-    ecsServiceSetup.setMaxInstances("10");
-    ecsServiceSetup.setFixedInstances(null);
-    ContainerServiceElement containerServiceElement =
-        ecsServiceSetup.buildContainerServiceElement(context, result, ExecutionStatus.SUCCESS);
+    ContainerServiceElement containerServiceElement = buildContainerServiceElement("10", null);
 
     assertThat(containerServiceElement.getName()).isEqualTo(ECS_SERVICE_NAME);
     assertThat(containerServiceElement.getMaxInstances()).isEqualTo(10);
@@ -408,22 +319,35 @@ public class EcsServiceSetupTest extends WingsBaseTest {
 
   @Test
   public void shouldBuildContainerServiceElementZero() {
+    ContainerServiceElement containerServiceElement = buildContainerServiceElement("0", "0");
+
+    assertThat(containerServiceElement.getName()).isEqualTo(ECS_SERVICE_NAME);
+    assertThat(containerServiceElement.getMaxInstances()).isEqualTo(DEFAULT_MAX);
+    assertThat(containerServiceElement.getFixedInstances()).isEqualTo(DEFAULT_MAX);
+  }
+
+  private ContainerServiceElement buildContainerServiceElement(String maxInstances, String fixedInstances) {
     EcsSetupParams setupParams = EcsSetupParamsBuilder.anEcsSetupParams().build();
+    ContainerServiceElementBuilder serviceElementBuilder = ContainerServiceElement.builder()
+                                                               .uuid(serviceElement.getUuid())
+                                                               .clusterName(CLUSTER_NAME)
+                                                               .namespace("default")
+                                                               .name(ECS_SERVICE_NAME)
+                                                               .resizeStrategy(RESIZE_NEW_FIRST)
+                                                               .infraMappingId(INFRA_MAPPING_ID)
+                                                               .deploymentType(DeploymentType.ECS);
+    if (maxInstances != null) {
+      serviceElementBuilder.maxInstances(Integer.valueOf(maxInstances));
+    }
+    if (fixedInstances != null) {
+      serviceElementBuilder.maxInstances(Integer.valueOf(fixedInstances));
+    }
     StateExecutionInstance stateExecutionInstance =
         aStateExecutionInstance()
             .withStateName(STATE_NAME)
             .addContextElement(workflowStandardParams)
             .addContextElement(phaseElement)
-            .addContextElement(ContainerServiceElement.builder()
-                                   .uuid(serviceElement.getUuid())
-                                   .maxInstances(10)
-                                   .clusterName(CLUSTER_NAME)
-                                   .namespace("default")
-                                   .name(ECS_SERVICE_NAME)
-                                   .resizeStrategy(RESIZE_NEW_FIRST)
-                                   .infraMappingId(INFRA_MAPPING_ID)
-                                   .deploymentType(DeploymentType.ECS)
-                                   .build())
+            .addContextElement(serviceElementBuilder.build())
             .addStateExecutionData(aCommandStateExecutionData().withContainerSetupParams(setupParams).build())
             .build();
     ExecutionContext context = new ExecutionContextImpl(stateExecutionInstance);
@@ -435,13 +359,8 @@ public class EcsServiceSetupTest extends WingsBaseTest {
                 ContainerSetupCommandUnitExecutionData.builder().containerServiceName(ECS_SERVICE_NAME).build())
             .build();
 
-    ecsServiceSetup.setMaxInstances("0");
-    ecsServiceSetup.setFixedInstances("0");
-    ContainerServiceElement containerServiceElement =
-        ecsServiceSetup.buildContainerServiceElement(context, result, ExecutionStatus.SUCCESS);
-
-    assertThat(containerServiceElement.getName()).isEqualTo(ECS_SERVICE_NAME);
-    assertThat(containerServiceElement.getMaxInstances()).isEqualTo(DEFAULT_MAX);
-    assertThat(containerServiceElement.getFixedInstances()).isEqualTo(DEFAULT_MAX);
+    ecsServiceSetup.setMaxInstances(maxInstances);
+    ecsServiceSetup.setFixedInstances(fixedInstances);
+    return ecsServiceSetup.buildContainerServiceElement(context, result, ExecutionStatus.SUCCESS);
   }
 }

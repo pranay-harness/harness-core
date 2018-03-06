@@ -1,6 +1,7 @@
 package software.wings.beans.command;
 
 import static io.harness.data.structure.EmptyPredicate.isNotEmpty;
+import static java.util.stream.Collectors.toList;
 import static software.wings.beans.InstanceUnitType.PERCENTAGE;
 import static software.wings.beans.ResizeStrategy.RESIZE_NEW_FIRST;
 
@@ -27,7 +28,6 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
 import java.util.Optional;
-import java.util.stream.Collectors;
 
 public abstract class ContainerResizeCommandUnit extends AbstractCommandUnit {
   private static final Logger logger = LoggerFactory.getLogger(ContainerResizeCommandUnit.class);
@@ -85,33 +85,34 @@ public abstract class ContainerResizeCommandUnit extends AbstractCommandUnit {
     }
   }
 
-  private boolean resizeInstances(ContextData contextData, List<ContainerServiceData> instanceDataList,
+  private boolean resizeInstances(ContextData contextData, List<ContainerServiceData> instanceData,
       ResizeCommandUnitExecutionDataBuilder executionDataBuilder, ExecutionLogCallback executionLogCallback,
       boolean isUpsize) {
-    boolean executionSucceeded;
-    if (isNotEmpty(instanceDataList)) {
-      List<ContainerInfo> containerInfos = executeResize(contextData, instanceDataList, executionLogCallback);
-      executionSucceeded = allContainersSuccess(containerInfos, instanceDataList, executionLogCallback);
+    if (isNotEmpty(instanceData)) {
+      int totalDesiredCount = instanceData.stream().mapToInt(ContainerServiceData::getDesiredCount).sum();
+      List<ContainerInfo> containerInfos =
+          instanceData.stream()
+              .flatMap(data -> executeResize(contextData, totalDesiredCount, data, executionLogCallback).stream())
+              .collect(toList());
       if (isUpsize) {
         executionDataBuilder.containerInfos(containerInfos);
       }
+      return allContainersSuccess(containerInfos, totalDesiredCount, executionLogCallback);
     } else {
-      executionSucceeded = true;
+      return true;
     }
-    return executionSucceeded;
   }
 
-  private boolean allContainersSuccess(List<ContainerInfo> containerInfos, List<ContainerServiceData> desiredCounts,
-      ExecutionLogCallback executionLogCallback) {
+  private boolean allContainersSuccess(
+      List<ContainerInfo> containerInfos, int totalDesiredCount, ExecutionLogCallback executionLogCallback) {
     boolean success = false;
     boolean allContainersSuccess =
         containerInfos.stream().allMatch(info -> info.getStatus() == ContainerInfo.Status.SUCCESS);
-    int totalDesiredCount = desiredCounts.stream().mapToInt(ContainerServiceData::getDesiredCount).sum();
     if (containerInfos.size() == totalDesiredCount && allContainersSuccess) {
       success = true;
       logger.info("Successfully completed resize operation");
       executionLogCallback.saveExecutionLog(
-          String.format("Completed resize operation.\n%s\n", DASH_STRING), LogLevel.INFO);
+          String.format("Completed resize operation\n%s\n", DASH_STRING), LogLevel.INFO);
     } else {
       if (containerInfos.size() != totalDesiredCount) {
         executionLogCallback.saveExecutionLog(
@@ -120,17 +121,16 @@ public abstract class ContainerResizeCommandUnit extends AbstractCommandUnit {
             LogLevel.ERROR);
       }
       if (!allContainersSuccess) {
-        List<ContainerInfo> failed = containerInfos.stream()
-                                         .filter(info -> info.getStatus() != ContainerInfo.Status.SUCCESS)
-                                         .collect(Collectors.toList());
+        List<ContainerInfo> failed =
+            containerInfos.stream().filter(info -> info.getStatus() != ContainerInfo.Status.SUCCESS).collect(toList());
         executionLogCallback.saveExecutionLog(
             String.format("The following container%s did not have success status: %s", failed.size() == 1 ? "" : "s",
-                failed.stream().map(ContainerInfo::getContainerId).collect(Collectors.toList())),
+                failed.stream().map(ContainerInfo::getContainerId).collect(toList())),
             LogLevel.ERROR);
       }
       logger.error("Completed operation with errors");
       executionLogCallback.saveExecutionLog(
-          String.format("Completed operation with errors.\n%s\n", DASH_STRING), LogLevel.ERROR);
+          String.format("Completed operation with errors\n%s\n", DASH_STRING), LogLevel.ERROR);
     }
     return success;
   }
@@ -208,22 +208,12 @@ public abstract class ContainerResizeCommandUnit extends AbstractCommandUnit {
     return desiredCounts;
   }
 
-  private List<ContainerInfo> executeResize(
-      ContextData contextData, List<ContainerServiceData> desiredCounts, ExecutionLogCallback executionLogCallback) {
-    List<ContainerInfo> containerInfos = new ArrayList<>();
-    desiredCounts.forEach(containerServiceData
-        -> containerInfos.addAll(
-            executeInternal(contextData, desiredCounts, containerServiceData, executionLogCallback)));
-    return containerInfos;
-  }
-
   protected abstract Map<String, Integer> getActiveServiceCounts(ContextData contextData);
 
   protected abstract Optional<Integer> getServiceDesiredCount(ContextData contextData);
 
-  protected abstract List<ContainerInfo> executeInternal(ContextData contextData,
-      List<ContainerServiceData> desiredCounts, ContainerServiceData containerServiceData,
-      ExecutionLogCallback executionLogCallback);
+  protected abstract List<ContainerInfo> executeResize(ContextData contextData, int totalDesiredCount,
+      ContainerServiceData containerServiceData, ExecutionLogCallback executionLogCallback);
 
   @Data
   @EqualsAndHashCode(callSuper = true)

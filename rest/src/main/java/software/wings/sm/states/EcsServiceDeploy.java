@@ -10,9 +10,6 @@ import software.wings.sm.StateType;
 import software.wings.stencils.DefaultValue;
 import software.wings.stencils.EnumData;
 
-/**
- * Created by rishi on 2/8/17.
- */
 public class EcsServiceDeploy extends ContainerServiceDeploy {
   @Attributes(title = "Desired Instances (cumulative)") private String instanceCount;
 
@@ -59,7 +56,7 @@ public class EcsServiceDeploy extends ContainerServiceDeploy {
         .withClusterName(contextData.containerElement.getClusterName())
         .withRegion(contextData.region)
         .withServiceSteadyStateTimeout(contextData.containerElement.getServiceSteadyStateTimeout())
-        .withRollback(isRollback())
+        .withRollback(false)
         .withInstanceCount(contextData.instanceCount)
         .withInstanceUnitType(getInstanceUnitType())
         .withContainerServiceName(contextData.containerElement.getName())

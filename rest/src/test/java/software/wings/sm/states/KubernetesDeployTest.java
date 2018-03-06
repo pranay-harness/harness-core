@@ -75,7 +75,7 @@ import software.wings.beans.SettingAttribute;
 import software.wings.beans.command.CommandExecutionContext;
 import software.wings.beans.command.CommandExecutionResult.CommandExecutionStatus;
 import software.wings.beans.command.CommandType;
-import software.wings.beans.command.ContainerResizeParams;
+import software.wings.beans.command.KubernetesResizeParams;
 import software.wings.beans.command.ServiceCommand;
 import software.wings.common.VariableProcessor;
 import software.wings.delegatetasks.DelegateProxyFactory;
@@ -107,7 +107,7 @@ import java.util.Map;
  * Created by brett on 3/10/17
  */
 public class KubernetesDeployTest extends WingsBaseTest {
-  private static final String KUBERNETES_REPLICATION_CONTROLLER_NAME = "kubernetes-rc-name.1";
+  private static final String KUBERNETES_CONTROLLER_NAME = "kubernetes-rc-name.1";
 
   @Mock private SettingsService settingsService;
   @Mock private DelegateService delegateService;
@@ -159,7 +159,7 @@ public class KubernetesDeployTest extends WingsBaseTest {
                                  .maxInstances(10)
                                  .clusterName(CLUSTER_NAME)
                                  .namespace("default")
-                                 .name(KUBERNETES_REPLICATION_CONTROLLER_NAME)
+                                 .name(KUBERNETES_CONTROLLER_NAME)
                                  .resizeStrategy(RESIZE_NEW_FIRST)
                                  .infraMappingId(INFRA_MAPPING_ID)
                                  .deploymentType(DeploymentType.KUBERNETES)
@@ -240,11 +240,13 @@ public class KubernetesDeployTest extends WingsBaseTest {
     verify(delegateService).queueTask(captor.capture());
     DelegateTask delegateTask = captor.getValue();
     CommandExecutionContext executionContext = (CommandExecutionContext) delegateTask.getParameters()[1];
-    ContainerResizeParams params = executionContext.getContainerResizeParams();
-    //        assertThat(params.getDesiredCounts().size()).isEqualTo(1);
-    //        ContainerServiceData taskParamsServiceData = params.getDesiredCounts().get(0);
-    //        assertThat(taskParamsServiceData.getPreviousCount()).isEqualTo(0);
-    //        assertThat(taskParamsServiceData.getDesiredCount()).isEqualTo(1);
+    KubernetesResizeParams params = (KubernetesResizeParams) executionContext.getContainerResizeParams();
+    assertThat(params.getInstanceCount()).isEqualTo(1);
+    assertThat(params.getContainerServiceName()).isEqualTo(KUBERNETES_CONTROLLER_NAME);
+    assertThat(params.getNamespace()).isEqualTo("default");
+    assertThat(params.getMaxInstances()).isEqualTo(10);
+    assertThat(params.getResizeStrategy()).isEqualTo(RESIZE_NEW_FIRST);
+    assertThat(params.getClusterName()).isEqualTo(CLUSTER_NAME);
   }
 
   @Test

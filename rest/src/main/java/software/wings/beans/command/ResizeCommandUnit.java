@@ -18,7 +18,7 @@ import java.util.Map;
 import java.util.Optional;
 
 public class ResizeCommandUnit extends ContainerResizeCommandUnit {
-  @Inject @Transient protected transient AwsClusterService awsClusterService;
+  @Inject @Transient private transient AwsClusterService awsClusterService;
 
   public ResizeCommandUnit() {
     super(CommandUnitType.RESIZE);
@@ -26,7 +26,7 @@ public class ResizeCommandUnit extends ContainerResizeCommandUnit {
   }
 
   @Override
-  protected List<ContainerInfo> executeInternal(ContextData contextData, List<ContainerServiceData> desiredCounts,
+  protected List<ContainerInfo> executeResize(ContextData contextData, int totalDesiredCount,
       ContainerServiceData containerServiceData, ExecutionLogCallback executionLogCallback) {
     EcsResizeParams resizeParams = (EcsResizeParams) contextData.resizeParams;
     return awsClusterService.resizeCluster(resizeParams.getRegion(), contextData.settingAttribute,

@@ -48,17 +48,18 @@ public class KubernetesResizeCommandUnit extends ContainerResizeCommandUnit {
   }
 
   @Override
-  protected List<ContainerInfo> executeInternal(ContextData contextData, List<ContainerServiceData> desiredCounts,
+  protected List<ContainerInfo> executeResize(ContextData contextData, int totalDesiredCount,
       ContainerServiceData containerServiceData, ExecutionLogCallback executionLogCallback) {
     KubernetesResizeParams resizeParams = (KubernetesResizeParams) contextData.resizeParams;
     List<EncryptedDataDetail> encryptedDataDetails = new ArrayList<>();
     KubernetesConfig kubernetesConfig = getKubernetesConfig(contextData, encryptedDataDetails);
+    String controllerName = containerServiceData.getName();
 
-    if (resizeParams.isRollbackAutoscaler() && resizeParams.isUseAutoscaler()) {
+    if (resizeParams.isUseAutoscaler() && resizeParams.isRollback()) {
       HorizontalPodAutoscaler autoscaler = kubernetesContainerService.getAutoscaler(
-          kubernetesConfig, encryptedDataDetails, containerServiceData.getName(), resizeParams.getApiVersion());
-      if (containerServiceData.getName().equals(autoscaler.getSpec().getScaleTargetRef().getName())) {
-        executionLogCallback.saveExecutionLog("Disabling autoscaler " + containerServiceData.getName(), LogLevel.INFO);
+          kubernetesConfig, encryptedDataDetails, controllerName, resizeParams.getApiVersion());
+      if (autoscaler != null && controllerName.equals(autoscaler.getSpec().getScaleTargetRef().getName())) {
+        executionLogCallback.saveExecutionLog("Disabling autoscaler " + controllerName, LogLevel.INFO);
         /*
          * Ideally we should be sending resizeParams.getApiVersion(), so we use "v2beta1" when we are dealing with
          * customMetricHPA, but there is a bug in fabric8 library in HasMetadataOperation.replace() method. For
@@ -68,22 +69,20 @@ public class KubernetesResizeCommandUnit extends ContainerResizeCommandUnit {
          * gets fixed. (customMetricConfig is preserved as annotations in version_v1 HPA object, and that path is
          * working fine)
          * */
-        kubernetesContainerService.disableAutoscaler(kubernetesConfig, encryptedDataDetails,
-            containerServiceData.getName(), ContainerApiVersions.KUBERNETES_V1.getVersionName());
+        kubernetesContainerService.disableAutoscaler(kubernetesConfig, encryptedDataDetails, controllerName,
+            ContainerApiVersions.KUBERNETES_V1.getVersionName());
       }
     }
 
-    List<ContainerInfo> containerInfos =
-        kubernetesContainerService.setControllerPodCount(kubernetesConfig, encryptedDataDetails,
-            resizeParams.getClusterName(), containerServiceData.getName(), containerServiceData.getPreviousCount(),
-            containerServiceData.getDesiredCount(), resizeParams.getServiceSteadyStateTimeout(), executionLogCallback);
+    List<ContainerInfo> containerInfos = kubernetesContainerService.setControllerPodCount(kubernetesConfig,
+        encryptedDataDetails, resizeParams.getClusterName(), controllerName, containerServiceData.getPreviousCount(),
+        containerServiceData.getDesiredCount(), resizeParams.getServiceSteadyStateTimeout(), executionLogCallback);
 
     boolean allContainersSuccess = containerInfos.stream().allMatch(info -> info.getStatus() == SUCCESS);
-    int totalDesiredCount = desiredCounts.stream().mapToInt(ContainerServiceData::getDesiredCount).sum();
     if (totalDesiredCount > 0 && containerInfos.size() == totalDesiredCount && allContainersSuccess
         && contextData.deployingToHundredPercent) {
       if (resizeParams.isUseAutoscaler()) {
-        executionLogCallback.saveExecutionLog("Enabling autoscaler " + containerServiceData.getName(), LogLevel.INFO);
+        executionLogCallback.saveExecutionLog("Enabling autoscaler " + controllerName, LogLevel.INFO);
         /*
          * Ideally we should be sending resizeParams.getApiVersion(), so we use "v2beta1" when we are dealing with
          * customMetricHPA, but there is a bug in fabric8 library in HasMetadataOperation.replace() method. For
@@ -93,14 +92,13 @@ public class KubernetesResizeCommandUnit extends ContainerResizeCommandUnit {
          * gets fixed. (customMetricConfig is preserved as annotations in version_v1 HPA object, and that path is
          * working fine)
          * */
-        kubernetesContainerService.enableAutoscaler(kubernetesConfig, encryptedDataDetails,
-            containerServiceData.getName(), ContainerApiVersions.KUBERNETES_V1.getVersionName());
+        kubernetesContainerService.enableAutoscaler(kubernetesConfig, encryptedDataDetails, controllerName,
+            ContainerApiVersions.KUBERNETES_V1.getVersionName());
       }
     }
 
     // Edit weights for Istio route rule if applicable
     if (resizeParams.isUseIstioRouteRule()) {
-      String controllerName = desiredCounts.get(0).getName();
       Map<String, Integer> activeControllers =
           kubernetesContainerService.getActiveServiceCounts(kubernetesConfig, encryptedDataDetails, controllerName);
       kubernetesContainerService.createOrReplaceRouteRule(kubernetesConfig, encryptedDataDetails,
