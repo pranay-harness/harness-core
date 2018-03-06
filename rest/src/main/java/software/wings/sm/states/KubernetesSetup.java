@@ -165,9 +165,11 @@ public class KubernetesSetup extends ContainerServiceSetup {
       ExecutionContext context, CommandExecutionResult executionResult, ExecutionStatus status) {
     CommandStateExecutionData executionData = (CommandStateExecutionData) context.getStateExecutionData();
     KubernetesSetupParams setupParams = (KubernetesSetupParams) executionData.getContainerSetupParams();
-    int evaluatedMaxInstances = Integer.valueOf(context.renderExpression(getMaxInstances()));
+    int evaluatedMaxInstances =
+        isNotBlank(getMaxInstances()) ? Integer.valueOf(context.renderExpression(getMaxInstances())) : DEFAULT_MAX;
     int maxInstances = evaluatedMaxInstances == 0 ? DEFAULT_MAX : evaluatedMaxInstances;
-    int evaluatedFixedInstances = Integer.valueOf(context.renderExpression(getFixedInstances()));
+    int evaluatedFixedInstances =
+        isNotBlank(getFixedInstances()) ? Integer.valueOf(context.renderExpression(getFixedInstances())) : maxInstances;
     int fixedInstances = evaluatedFixedInstances == 0 ? maxInstances : evaluatedFixedInstances;
     ResizeStrategy resizeStrategy = getResizeStrategy() == null ? RESIZE_NEW_FIRST : getResizeStrategy();
     int serviceSteadyStateTimeout =
