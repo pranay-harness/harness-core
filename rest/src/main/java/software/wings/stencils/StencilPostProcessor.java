@@ -1,5 +1,6 @@
 package software.wings.stencils;
 
+import static io.harness.data.structure.EmptyPredicate.isEmpty;
 import static io.harness.data.structure.EmptyPredicate.isNotEmpty;
 import static java.util.Arrays.stream;
 import static java.util.stream.Collectors.toList;
@@ -165,6 +166,9 @@ public class StencilPostProcessor {
         }
         OverridingStencil overridingStencil = stencil.getOverridingStencil();
         overridingStencil.setOverridingJsonSchema(jsonSchema);
+        if (isEmpty(overridingStencil.getOverridingName())) {
+          overridingStencil.setOverridingName(stencil.getName());
+        }
         return overridingStencil;
       }
     } catch (Exception e) {

@@ -7,14 +7,12 @@ import software.wings.beans.InstanceUnitType;
 import software.wings.beans.command.ContainerResizeParams;
 import software.wings.sm.StateType;
 import software.wings.stencils.DefaultValue;
-import software.wings.stencils.EnumData;
 
 /**
  * Created by brett on 3/24/17
  */
 public class EcsServiceRollback extends ContainerServiceDeploy {
   @Attributes(title = "Command")
-  @EnumData(enumDataProvider = CommandStateEnumDataProvider.class)
   @DefaultValue("Resize Service Cluster")
   private String commandName = "Resize Service Cluster";
 

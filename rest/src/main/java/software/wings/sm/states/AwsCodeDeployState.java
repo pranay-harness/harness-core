@@ -102,10 +102,7 @@ public class AwsCodeDeployState extends State {
   @Attributes(title = "Content options")
   private String fileExistsBehavior;
 
-  @Attributes(title = "Command")
-  @EnumData(enumDataProvider = CommandStateEnumDataProvider.class)
-  @DefaultValue("Amazon Code Deploy")
-  private String commandName = "Amazon Code Deploy";
+  @Attributes(title = "Command") @DefaultValue("Amazon Code Deploy") private String commandName = "Amazon Code Deploy";
 
   @Inject @Transient protected transient AwsCodeDeployService awsCodeDeployService;
 

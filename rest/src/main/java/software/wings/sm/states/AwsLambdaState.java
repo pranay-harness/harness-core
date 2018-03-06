@@ -77,7 +77,6 @@ import software.wings.sm.StateExecutionException;
 import software.wings.sm.StateType;
 import software.wings.sm.WorkflowStandardParams;
 import software.wings.stencils.DefaultValue;
-import software.wings.stencils.EnumData;
 import software.wings.utils.LambdaConvention;
 
 import java.util.ArrayList;
@@ -125,7 +124,6 @@ public class AwsLambdaState extends State {
   @Inject @Transient private transient EncryptionService encryptionService;
 
   @Attributes(title = "Command")
-  @EnumData(enumDataProvider = CommandStateEnumDataProvider.class)
   @DefaultValue(Constants.AWS_LAMBDA_COMMAND_NAME)
   private String commandName = Constants.AWS_LAMBDA_COMMAND_NAME;
 

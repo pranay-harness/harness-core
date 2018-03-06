@@ -23,10 +23,7 @@ public class KubernetesDeploy extends ContainerServiceDeploy {
   @DefaultValue("COUNT")
   private InstanceUnitType instanceUnitType = InstanceUnitType.COUNT;
 
-  @Attributes(title = "Command")
-  @EnumData(enumDataProvider = CommandStateEnumDataProvider.class)
-  @DefaultValue("Resize Replication Controller")
-  private String commandName;
+  @Attributes(title = "Command") @DefaultValue("Resize Replication Controller") private String commandName;
 
   public KubernetesDeploy(String name) {
     super(name, KUBERNETES_DEPLOY.name());
