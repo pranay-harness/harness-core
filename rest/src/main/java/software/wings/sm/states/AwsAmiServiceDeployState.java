@@ -105,10 +105,7 @@ public class AwsAmiServiceDeployState extends State {
   @DefaultValue("COUNT")
   private InstanceUnitType instanceUnitType = InstanceUnitType.COUNT;
 
-  @Attributes(title = "Command")
-  @EnumData(enumDataProvider = CommandStateEnumDataProvider.class)
-  @DefaultValue(ASG_COMMAND_NAME)
-  private String commandName = ASG_COMMAND_NAME;
+  @Attributes(title = "Command") @DefaultValue(ASG_COMMAND_NAME) private String commandName = ASG_COMMAND_NAME;
 
   @Inject @Transient protected transient AwsHelperService awsHelperService;
   @Inject @Transient protected transient SettingsService settingsService;

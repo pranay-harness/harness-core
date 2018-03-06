@@ -7,14 +7,12 @@ import com.github.reinert.jjschema.Attributes;
 import software.wings.beans.InstanceUnitType;
 import software.wings.beans.command.ContainerResizeParams;
 import software.wings.stencils.DefaultValue;
-import software.wings.stencils.EnumData;
 
 /**
  * Created by brett on 4/24/17
  */
 public class KubernetesDeployRollback extends ContainerServiceDeploy {
   @Attributes(title = "Command")
-  @EnumData(enumDataProvider = CommandStateEnumDataProvider.class)
   @DefaultValue("Resize Replication Controller")
   private String commandName = "Resize Replication Controller";
 

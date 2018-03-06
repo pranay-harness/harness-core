@@ -21,10 +21,7 @@ public class EcsServiceDeploy extends ContainerServiceDeploy {
   @DefaultValue("COUNT")
   private InstanceUnitType instanceUnitType = InstanceUnitType.COUNT;
 
-  @Attributes(title = "Command")
-  @EnumData(enumDataProvider = CommandStateEnumDataProvider.class)
-  @DefaultValue("Resize Service Cluster")
-  private String commandName;
+  @Attributes(title = "Command") @DefaultValue("Resize Service Cluster") private String commandName;
 
   public EcsServiceDeploy(String name) {
     super(name, StateType.ECS_SERVICE_DEPLOY.name());
