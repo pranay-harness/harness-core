@@ -35,6 +35,7 @@ public class PhaseElement implements ContextElement {
   @Transient @Inject private transient InfrastructureMappingService infrastructureMappingService;
 
   private String uuid;
+  private String phaseName;
   private ServiceElement serviceElement;
   private String appId;
   private String infraMappingId;
@@ -67,6 +68,14 @@ public class PhaseElement implements ContextElement {
 
   public void setServiceElement(ServiceElement serviceElement) {
     this.serviceElement = serviceElement;
+  }
+
+  public String getPhaseName() {
+    return phaseName;
+  }
+
+  public void setPhaseName(String phaseName) {
+    this.phaseName = phaseName;
   }
 
   @Override
@@ -150,6 +159,7 @@ public class PhaseElement implements ContextElement {
     private String infraMappingId;
     private String deploymentType;
     private String phaseNameForRollback;
+    private String phaseName;
 
     private PhaseElementBuilder() {}
 
@@ -169,6 +179,11 @@ public class PhaseElement implements ContextElement {
 
     public PhaseElementBuilder withAppId(String appId) {
       this.appId = appId;
+      return this;
+    }
+
+    public PhaseElementBuilder withPhaseName(String phaseName) {
+      this.phaseName = phaseName;
       return this;
     }
 
@@ -194,7 +209,8 @@ public class PhaseElement implements ContextElement {
           .withAppId(appId)
           .withInfraMappingId(infraMappingId)
           .withDeploymentType(deploymentType)
-          .withPhaseNameForRollback(phaseNameForRollback);
+          .withPhaseNameForRollback(phaseNameForRollback)
+          .withPhaseName(phaseName);
     }
 
     public PhaseElement build() {
@@ -205,6 +221,7 @@ public class PhaseElement implements ContextElement {
       phaseElement.setInfraMappingId(infraMappingId);
       phaseElement.setDeploymentType(deploymentType);
       phaseElement.setPhaseNameForRollback(phaseNameForRollback);
+      phaseElement.setPhaseName(phaseName);
       return phaseElement;
     }
   }

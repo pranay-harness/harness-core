@@ -53,6 +53,7 @@ import org.mockito.Mock;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import software.wings.WingsBaseTest;
+import software.wings.api.PhaseElement;
 import software.wings.app.StaticConfiguration;
 import software.wings.beans.Account;
 import software.wings.beans.Application;
@@ -89,6 +90,7 @@ import software.wings.beans.artifact.Artifact;
 import software.wings.beans.infrastructure.Host;
 import software.wings.common.Constants;
 import software.wings.dl.PageRequest;
+import software.wings.dl.PageRequest.PageRequestBuilder;
 import software.wings.dl.PageResponse;
 import software.wings.dl.WingsPersistence;
 import software.wings.exception.WingsException;
@@ -101,10 +103,12 @@ import software.wings.service.intfc.PipelineService;
 import software.wings.service.intfc.ServiceInstanceService;
 import software.wings.service.intfc.WorkflowExecutionService;
 import software.wings.service.intfc.WorkflowService;
+import software.wings.sm.ContextElement;
 import software.wings.sm.ContextElementType;
 import software.wings.sm.ExecutionInterrupt;
 import software.wings.sm.ExecutionInterruptType;
 import software.wings.sm.ExecutionStatus;
+import software.wings.sm.StateExecutionInstance;
 import software.wings.sm.StateMachine;
 import software.wings.sm.StateType;
 import software.wings.utils.JsonUtils;
@@ -1852,6 +1856,25 @@ public class WorkflowExecutionServiceImplTest extends WingsBaseTest {
         .isNotNull()
         .extracting(WorkflowExecution::getUuid, WorkflowExecution::getStatus)
         .containsExactly(executionId, ExecutionStatus.SUCCESS);
+
+    List<StateExecutionInstance> response = wingsPersistence
+                                                .query(StateExecutionInstance.class,
+                                                    PageRequestBuilder.aPageRequest()
+                                                        .addFilter("executionUuid", Operator.EQ, execution.getUuid())
+                                                        .addFilter("stateType", Operator.EQ, "EMAIL")
+                                                        .build())
+                                                .getResponse();
+    assertThat(response).isNotNull().isNotEmpty();
+    List<ContextElement> elements = response.get(0)
+                                        .getContextElements()
+                                        .stream()
+                                        .filter(contextElement
+                                            -> contextElement.getElementType() == ContextElementType.PARAM
+                                                && contextElement.getName() == Constants.PHASE_PARAM)
+                                        .collect(Collectors.toList());
+    assertThat(elements).isNotNull().isNotEmpty();
+    assertThat(elements.get(0)).isInstanceOf(PhaseElement.class);
+    assertThat(((PhaseElement) elements.get(0)).getPhaseName()).isNotEmpty();
     return executionId;
   }
   /**
