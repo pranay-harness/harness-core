@@ -272,9 +272,9 @@ public class AnalysisServiceImpl implements AnalysisService {
 
   @Override
   public boolean saveFeedback(LogMLFeedback feedback, StateType stateType) {
-    if (!isEmpty(feedback.getLogMlFeedbackId())) {
+    if (!isEmpty(feedback.getLogMLFeedbackId())) {
       Query<LogMLFeedbackRecord> query =
-          wingsPersistence.createQuery(LogMLFeedbackRecord.class).field("_id").equal(feedback.getLogMlFeedbackId());
+          wingsPersistence.createQuery(LogMLFeedbackRecord.class).field("_id").equal(feedback.getLogMLFeedbackId());
 
       wingsPersistence.delete(query);
     }

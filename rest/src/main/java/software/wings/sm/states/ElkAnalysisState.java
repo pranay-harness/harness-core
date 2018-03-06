@@ -30,6 +30,7 @@ import software.wings.service.impl.analysis.AnalysisToleranceProvider;
 import software.wings.service.impl.analysis.DataCollectionCallback;
 import software.wings.service.impl.elk.ElkDataCollectionInfo;
 import software.wings.service.impl.elk.ElkIndexTemplate;
+import software.wings.service.impl.elk.ElkLogFetchRequest;
 import software.wings.service.impl.elk.ElkSettingProvider;
 import software.wings.service.intfc.elk.ElkAnalysisService;
 import software.wings.sm.ContextElementType;
@@ -42,6 +43,7 @@ import software.wings.time.WingsTimeUtils;
 import software.wings.utils.JsonUtils;
 
 import java.util.ArrayList;
+import java.util.HashMap;
 import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
@@ -245,6 +247,20 @@ public class ElkAnalysisState extends AbstractLogAnalysisState {
   @Override
   public void setAnalysisServerConfigId(String analysisServerConfigId) {
     this.analysisServerConfigId = analysisServerConfigId;
+  }
+
+  @Override
+  public Map<String, String> validateFields() {
+    Map<String, String> invalidFields = new HashMap<>();
+    try {
+      new ElkLogFetchRequest(query, "logstash-*", "beat.hostname", "message", "@timestamp",
+          Sets.newHashSet("ip-172-31-8-144", "ip-172-31-12-79", "ip-172-31-13-153"),
+          1518724315175L - TimeUnit.MINUTES.toMillis(1), 1518724315175L)
+          .toElasticSearchJsonObject();
+    } catch (Exception ex) {
+      invalidFields.put("query", "Error parsing query. Supported operators are 'or', 'and'");
+    }
+    return invalidFields;
   }
 
   @Override
