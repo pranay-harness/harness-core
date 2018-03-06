@@ -18,7 +18,7 @@ echo "remove existing image"
 docker rmi le_local
 set -e
 echo "build docker image in background"
-nohup sh -c 'cd python/splunk_intelligence && make init && make dist && docker build -t le_local .' > docker_container_build.log &
+nohup sh -c 'cd python/splunk_intelligence && make init && make dist && docker build --rm -t le_local .' > docker_container_build.log &
 docker_container_build_pid=$!
 
 if [[ -z "${SERVER_BUILD_DIR}" ]]; then
