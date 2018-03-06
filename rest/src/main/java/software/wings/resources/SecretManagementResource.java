@@ -104,6 +104,16 @@ public class SecretManagementResource {
   }
 
   @POST
+  @Path("/add-local-secret")
+  @Timed
+  @ExceptionMetered
+  public RestResponse<String> addLocalSecret(
+      @QueryParam("accountId") final String accountId, @Body SecretText secretText) {
+    return new RestResponse<>(
+        secretManager.saveSecretUsingLocalMode(accountId, secretText.getName(), secretText.getValue()));
+  }
+
+  @POST
   @Path("/update-secret")
   @Timed
   @ExceptionMetered

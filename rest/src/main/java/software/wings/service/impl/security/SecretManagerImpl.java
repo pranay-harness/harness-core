@@ -470,8 +470,13 @@ public class SecretManagerImpl implements SecretManager {
 
   @Override
   public String saveSecret(String accountId, String name, String value) {
-    EncryptedData encryptedData = encrypt(
-        getEncryptionType(accountId), accountId, SettingVariableTypes.SECRET_TEXT, value.toCharArray(), null, name);
+    EncryptionType encryptionType = getEncryptionType(accountId);
+    return processEncryption(accountId, name, value, encryptionType);
+  }
+
+  private String processEncryption(String accountId, String name, String value, EncryptionType encryptionType) {
+    EncryptedData encryptedData =
+        encrypt(encryptionType, accountId, SettingVariableTypes.SECRET_TEXT, value.toCharArray(), null, name);
     String encryptedDataId;
     try {
       encryptedDataId = wingsPersistence.save(encryptedData);
@@ -494,6 +499,11 @@ public class SecretManagerImpl implements SecretManager {
     }
 
     return encryptedDataId;
+  }
+
+  @Override
+  public String saveSecretUsingLocalMode(String accountId, String name, String value) {
+    return processEncryption(accountId, name, value, EncryptionType.LOCAL);
   }
 
   @Override
