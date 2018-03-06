@@ -2,6 +2,7 @@ package software.wings.resources;
 
 import static io.harness.data.structure.EmptyPredicate.isEmpty;
 
+import com.google.common.collect.Sets;
 import com.google.inject.Inject;
 
 import com.codahale.metrics.annotation.ExceptionMetered;
@@ -24,6 +25,7 @@ import software.wings.service.impl.analysis.LogMLAnalysisSummary;
 import software.wings.service.impl.analysis.LogMLFeedback;
 import software.wings.service.impl.analysis.LogRequest;
 import software.wings.service.impl.elk.ElkIndexTemplate;
+import software.wings.service.impl.elk.ElkLogFetchRequest;
 import software.wings.service.intfc.analysis.ClusterLevel;
 import software.wings.service.intfc.analysis.LogAnalysisResource;
 import software.wings.service.intfc.elk.ElkAnalysisService;
@@ -33,6 +35,7 @@ import java.io.IOException;
 import java.util.List;
 import java.util.Map;
 import java.util.Optional;
+import java.util.concurrent.TimeUnit;
 import javax.ws.rs.GET;
 import javax.ws.rs.POST;
 import javax.ws.rs.PUT;
@@ -190,6 +193,10 @@ public class ElkResource implements LogAnalysisResource {
   @ExceptionMetered
   public RestResponse<Boolean> validateQuery(@QueryParam("accountId") String accountId, String query)
       throws IOException {
+    new ElkLogFetchRequest(query, "logstash-*", "beat.hostname", "message", "@timestamp",
+        Sets.newHashSet("ip-172-31-8-144", "ip-172-31-12-79", "ip-172-31-13-153"),
+        1518724315175L - TimeUnit.MINUTES.toMillis(1), 1518724315175L)
+        .toElasticSearchJsonObject();
     return new RestResponse<>(true);
   }
 }

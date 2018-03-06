@@ -139,9 +139,11 @@ public class ElkAnalysisState extends AbstractLogAnalysisState {
     return AnalysisTolerance.valueOf(tolerance);
   }
 
-  @Attributes(required = true, title = "Search Keywords")
+  @Attributes(
+      required = true, title = "Search Keywords", description = "Wildcarded queries with '*' can affect cluster health")
   @DefaultValue("error")
-  public String getQuery() {
+  public String
+  getQuery() {
     return query;
   }
 
