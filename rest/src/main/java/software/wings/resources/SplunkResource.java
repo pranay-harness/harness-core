@@ -126,7 +126,7 @@ public class SplunkResource implements LogAnalysisResource {
   @Override
   public RestResponse<Boolean> createUserFeedback(@QueryParam("accountId") String accountId, LogMLFeedback feedback)
       throws IOException {
-    if (!isEmpty(feedback.getLogMlFeedbackId())) {
+    if (!isEmpty(feedback.getLogMLFeedbackId())) {
       throw new WingsException("feedback id should not be set in POST call. to update feedback use PUT");
     }
     return new RestResponse<>(analysisService.saveFeedback(feedback, StateType.SPLUNKV2));
@@ -139,9 +139,9 @@ public class SplunkResource implements LogAnalysisResource {
   @Override
   public RestResponse<Boolean> updateUserFeedback(@QueryParam("accountId") String accountId, LogMLFeedback feedback)
       throws IOException {
-    if (isEmpty(feedback.getLogMlFeedbackId())) {
+    if (isEmpty(feedback.getLogMLFeedbackId())) {
       throw new WingsException("logMlFeedBackId should be set for update");
     }
-    return new RestResponse<>(analysisService.saveFeedback(feedback, StateType.ELK));
+    return new RestResponse<>(analysisService.saveFeedback(feedback, StateType.SPLUNKV2));
   }
 }
