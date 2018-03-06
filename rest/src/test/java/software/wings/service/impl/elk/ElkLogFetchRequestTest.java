@@ -88,6 +88,16 @@ public class ElkLogFetchRequestTest {
         JsonUtils.asJson(elkLogFetchRequest.toElasticSearchJsonObject()));
   }
 
+  @Test
+  public void multimessageterms() {
+    ElkLogFetchRequest elkLogFetchRequest = getElkLogFetchRequest(
+        "((.*exception.* or error) or warn) ors source:/home/ubuntu/Harness/Manager/Manager/runtime/portal.log");
+    JSONObject jsonObject = elkLogFetchRequest.eval();
+    assertEquals(
+        "{\"size\":10000,\"query\":{\"bool\":{\"filter\":[{\"bool\":{\"should\":[{\"term\":{\"beat.hostname\":\"ip-172-31-13-153\"}},{\"term\":{\"beat.hostname\":\"ip-172-31-12-79\"}},{\"term\":{\"beat.hostname\":\"ip-172-31-8-144\"}}]}},{\"range\":{\"@timestamp\":{\"lt\":1518724315175,\"format\":\"epoch_millis\",\"gte\":1518724255175}}},{\"bool\":{\"must\":[{\"term\":{\"source\":\"/home/ubuntu/Harness/Manager/Manager/runtime/portal.log\"}},{\"regexp\":{\"message\":{\"value\":\"ors\"}}},{\"bool\":{\"should\":[{\"bool\":{\"should\":[{\"regexp\":{\"message\":{\"value\":\".*exception.*\"}}},{\"regexp\":{\"message\":{\"value\":\"error\"}}}]}},{\"regexp\":{\"message\":{\"value\":\"warn\"}}}]}}]}}]}}}",
+        JsonUtils.asJson(elkLogFetchRequest.toElasticSearchJsonObject()));
+  }
+
   private ElkLogFetchRequest getElkLogFetchRequest(String query) {
     return new ElkLogFetchRequest(query, "logstash-*", "beat.hostname", "message", "@timestamp",
         Sets.newHashSet("ip-172-31-8-144", "ip-172-31-12-79", "ip-172-31-13-153"),

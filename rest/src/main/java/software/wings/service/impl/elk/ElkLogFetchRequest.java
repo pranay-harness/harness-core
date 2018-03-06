@@ -114,7 +114,15 @@ public class ElkLogFetchRequest {
         operandStack.push(eval(lval, rval, operator));
       }
 
+      if (operandStack.size() > 1) {
+        List<JSONObject> mustObjectList = new ArrayList<>();
+        while (!operandStack.isEmpty()) {
+          mustObjectList.add(operandStack.pop());
+        }
+        return new JSONObject().put("bool", new JSONObject().put("must", mustObjectList));
+      }
       return operandStack.pop();
+
     } catch (Exception ex) {
       throw new WingsException(
           "Malformed Query. Braces should be matching. Only supported operators are 'or' and 'and' ");

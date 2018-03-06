@@ -258,7 +258,7 @@ public class ElkAnalysisState extends AbstractLogAnalysisState {
           1518724315175L - TimeUnit.MINUTES.toMillis(1), 1518724315175L)
           .toElasticSearchJsonObject();
     } catch (Exception ex) {
-      invalidFields.put("query", "Error parsing query. Supported operators are 'or', 'and'");
+      invalidFields.put("query", ex.getMessage());
     }
     return invalidFields;
   }
