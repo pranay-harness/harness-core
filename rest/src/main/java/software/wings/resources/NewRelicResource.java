@@ -183,10 +183,11 @@ public class NewRelicResource implements MetricAnalysisResource {
       @QueryParam("workflowExecutionId") final String workflowExecutionId,
       @QueryParam("workflowId") final String workflowId, @QueryParam("serviceId") final String serviceId,
       @QueryParam("analysisMinute") Integer analysisMinute, @QueryParam("taskId") String taskId,
-      TimeSeriesMLAnalysisRecord mlAnalysisResponse) throws IOException {
-    return new RestResponse<>(
-        metricDataAnalysisService.saveAnalysisRecordsML(StateType.NEW_RELIC, accountId, applicationId, stateExecutionId,
-            workflowExecutionId, workflowId, serviceId, analysisMinute, taskId, mlAnalysisResponse));
+      @QueryParam("baseLineExecutionId") String baseLineExecutionId, TimeSeriesMLAnalysisRecord mlAnalysisResponse)
+      throws IOException {
+    return new RestResponse<>(metricDataAnalysisService.saveAnalysisRecordsML(StateType.NEW_RELIC, accountId,
+        applicationId, stateExecutionId, workflowExecutionId, workflowId, serviceId, analysisMinute, taskId,
+        baseLineExecutionId, mlAnalysisResponse));
   }
 
   @Produces({"application/json", "application/v1+json"})

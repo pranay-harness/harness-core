@@ -3,7 +3,7 @@
   "ui:order" :
       [
         "analysisServerConfigId", "serviceMethods", "timeDuration",
-        "comparisonStrategy", "analysisTolerance"
+        "comparisonStrategy", "analysisTolerance", "*", "autoBaseline"
       ],
       "serviceMethods" : {
     "ui:widget" : "textarea"

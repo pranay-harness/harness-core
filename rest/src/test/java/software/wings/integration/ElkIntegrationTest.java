@@ -366,12 +366,16 @@ public class ElkIntegrationTest extends BaseIntegrationTest {
     analysisService.saveLogData(StateType.SPLUNKV2, accountId, appId, stateExecutionId, workflowId, workflowExecutionId,
         serviceId, ClusterLevel.L1, delegateTaskId, logElements);
 
+    final String lastWorkflowExecutionId =
+        analysisService.getLastSuccessfulWorkflowExecutionIdWithLogs(StateType.SPLUNKV2, appId, serviceId, workflowId);
+
     AnalysisContext analysisContext =
         AnalysisContext.builder()
             .accountId(accountId)
             .appId(appId)
             .workflowId(workflowId)
             .workflowExecutionId(workflowExecutionId)
+            .prevWorkflowExecutionId(lastWorkflowExecutionId)
             .stateExecutionId(stateExecutionId)
             .serviceId(serviceId)
             .controlNodes(com.google.common.collect.Sets.newHashSet(host))

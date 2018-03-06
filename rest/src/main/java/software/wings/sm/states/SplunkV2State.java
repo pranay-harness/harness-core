@@ -89,6 +89,13 @@ public class SplunkV2State extends AbstractLogAnalysisState {
   }
 
   @Override
+  @Attributes(title = "Auto Baseline")
+  @DefaultValue("true")
+  public boolean getAutoBaseline() {
+    return autoBaseline;
+  }
+
+  @Override
   protected String triggerAnalysisDataCollection(ExecutionContext context, String correlationID, Set<String> hosts) {
     WorkflowStandardParams workflowStandardParams = context.getContextElement(ContextElementType.STANDARD);
     String envId = workflowStandardParams == null ? null : workflowStandardParams.getEnv().getUuid();
