@@ -23,7 +23,7 @@ docker_container_build_pid=$!
 
 if [[ -z "${SERVER_BUILD_DIR}" ]]; then
   echo "SERVER_BUILD_DIR not set, building server code"
-  mvn clean install -DskipTests=true
+  mvn clean install -DskipTests=true -DskipIntegrationTests=true
   java -Xms1024m -Xmx4096m -XX:+HeapDumpOnOutOfMemoryError -XX:+PrintGCDetails -XX:+PrintGCDateStamps \
        -Xloggc:portal-gc-logs.gc -XX:+UseParallelGC -XX:MaxGCPauseMillis=500 \
        -Xbootclasspath/p:$HOME/.m2/repository/org/mortbay/jetty/alpn/alpn-boot/8.1.11.v20170118/alpn-boot-8.1.11.v20170118.jar \
@@ -46,7 +46,7 @@ status=$?
 count=1
 while [[ $status == 7 && $count -lt 60 ]]
 do
-  sleep 2
+  sleep 5
   output=$(curl -sSk https://localhost:9090/api/version)
   status=$?
   count=`expr $count + 1`
@@ -58,20 +58,22 @@ then
   exit 1
 fi
 
+echo "server started, going to run DataGen util"
 set -e
 
-#run data gen to load test data
-mvn test -pl rest -Dtest=software.wings.integration.DataGenUtil
+# run data gen to load test data
+mvn failsafe:integration-test -pl rest -Dit.test=DataGenUtil -P datagen -P integration-coverage
 datagen_status=$?
 if [[ $datagen_status -ne 0 ]] ; then
   echo 'Datagen failed';
   exit $datagen_status
 fi
-
-
-mvn test -pl rest -Dtest=software.wings.integration.JenkinsIntegrationTest
+echo "datagen finished"
+# specifying -DfailIfNoTests=false flag b/c we are using surefire on integration dir
+mvn test -pl rest -Dtest=software.wings.integration.JenkinsIntegrationTest -DfailIfNoTests=false
 
 jenkins_overwrite_status=$?
+echo "JenkinsIntegrationTest finished with status $jenkins_overwrite_status"
 if [[ jenkins_overwrite_status -ne 0 ]] ; then
   echo 'jenkins overwrite failed';
   exit $jenkins_overwrite_status
@@ -80,7 +82,7 @@ fi
 #Delegate integration test. Don't run with UI integration tests
 if [ "$TEST_SUITE" != "UI_INTEGRATION" ] ;
 then
-  mvn test -pl rest -Dtest=software.wings.integration.DelegateIntegrationTest
+  mvn test -pl rest -Dtest=software.wings.integration.DelegateIntegrationTest -DfailIfNoTests=false
   delegateIntegrationTestResult=$?
   if [[ $delegateIntegrationTestResult -ne 0 ]] ;
   then
@@ -104,7 +106,7 @@ fi
 echo 'wait for delegate to start'
 
 #wait for delegate to start
-mvn test -pl rest -Dtest=software.wings.integration.DelegateRegistrationIntegrationTest#shouldWaitForADelegateToRegister
+mvn test -pl rest -Dtest=software.wings.integration.DelegateRegistrationIntegrationTest#shouldWaitForADelegateToRegister -DfailIfNoTests=false
 foundRegisteredDelegate=$?
 if [[ $foundRegisteredDelegate -ne 0 ]] ; then
   echo 'Delegate registration failed';
@@ -122,4 +124,7 @@ echo $serviceSecret
 server_url=https://$HOSTNAME:9090
 echo $server_url
 docker run -d -e server_url=$server_url -e service_secret=$serviceSecret -e https_port=10800  -e learning_env=integration-tests le_local
+
+# listing containers after le_local was launched
+docker ps
 

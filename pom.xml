@@ -48,6 +48,11 @@
         <artifactory.javaclient.version>2.5.0</artifactory.javaclient.version>
         <morphia.version>1.3.2</morphia.version>
         <argLine>-Xmx1024m -XX:MaxPermSize=512m</argLine>
+        <!-- datagen is tricky - it lives in integration/ dir and is treated as integration but does not follow the xxIT naming convention
+            so we have to jump through some hoops to get it included -->
+        <skip.integration.tests>true</skip.integration.tests>
+        <datagen.exclude>**/DataGenUtil.java</datagen.exclude>
+        <datagen.include/>
     </properties>
 
     <pluginRepositories>
@@ -113,10 +118,10 @@
             </dependency>
 
             <dependency>
-    	        <groupId>com.google.guava</groupId>
-	    	    <artifactId>guava</artifactId>
-		        <version>21.0</version>
-	        </dependency>
+                <groupId>com.google.guava</groupId>
+                <artifactId>guava</artifactId>
+                <version>21.0</version>
+            </dependency>
 
             <dependency>
                 <groupId>io.dropwizard</groupId>
@@ -296,12 +301,12 @@
                     </exclusion>
                 </exclusions>
             </dependency>
-          <!-- For Nexus Integration -->
-           <dependency>
-            <groupId>org.sonatype.nexus.plugins</groupId>
-            <artifactId>nexus-restlet1x-model</artifactId>
-            <version>${nexus.version}</version>
-          </dependency>
+            <!-- For Nexus Integration -->
+            <dependency>
+                <groupId>org.sonatype.nexus.plugins</groupId>
+                <artifactId>nexus-restlet1x-model</artifactId>
+                <version>${nexus.version}</version>
+            </dependency>
             <dependency>
                 <groupId>org.apache.maven</groupId>
                 <artifactId>maven-artifact</artifactId>
@@ -1047,7 +1052,6 @@
                     <artifactId>maven-surefire-plugin</artifactId>
                     <version>2.20</version>
                     <configuration>
-                        <skip>true</skip>
                         <forkCount>6</forkCount>
                         <reuseForks>true</reuseForks>
                     </configuration>
@@ -1061,11 +1065,16 @@
                             <configuration>
                                 <skip>false</skip>
                                 <excludes>
+                                    <exclude>**/*IT*.java</exclude>
                                     <exclude>**/*IntegrationTest.java</exclude>
                                     <exclude>**/IntegrationTest*.java</exclude>
-                                    <exclude>**/DataGenUtil.java</exclude>
+                                    <exclude>${datagen.exclude}</exclude>
+                                    <exclude>**/integration/*</exclude>
                                     <exclude>**/JenkinsSettingOverWriteTest.java</exclude>
                                 </excludes>
+                                <includes>
+                                    <include>${datagen.include}</include>
+                                </includes>
                                 <forkCount>6</forkCount>
                                 <reuseForks>true</reuseForks>
                             </configuration>
@@ -1094,9 +1103,10 @@
                         <includes>
                             <include>**/IntegrationTest*.java</include>
                             <include>**/*IntegrationTest.java</include>
+                            <include>${datagen.include}</include>
                         </includes>
                         <excludes>
-                            <exclude>**/DataGenUtil.java</exclude>
+                            <exclude>${datagen.exclude}</exclude>
                             <exclude>**/DelegateIntegrationTest</exclude>
                             <exclude>**/JenkinsSettingOverWriteTest.java</exclude>
                         </excludes>
@@ -1198,6 +1208,78 @@
                 </plugin>
             </plugins>
         </pluginManagement>
+        <plugins>
+            <plugin>
+                <groupId>org.jacoco</groupId>
+                <artifactId>jacoco-maven-plugin</artifactId>
+                <version>0.8.0</version>
+                <executions>
+                    <execution>
+                        <id>default-prepare-agent</id>
+                        <goals>
+                            <goal>prepare-agent</goal>
+                        </goals>
+                    </execution>
+                    <execution>
+                        <id>default-prepare-agent-integration</id>
+                        <goals>
+                            <goal>prepare-agent-integration</goal>
+                        </goals>
+                    </execution>
+                    <execution>
+                        <id>default-report</id>
+                        <goals>
+                            <goal>report</goal>
+                        </goals>
+                    </execution>
+                    <execution>
+                        <id>default-report-integration</id>
+                        <goals>
+                            <goal>report-integration</goal>
+                        </goals>
+                    </execution>
+                    <execution>
+                        <id>default-check</id>
+                        <goals>
+                            <goal>check</goal>
+                        </goals>
+                        <configuration>
+                            <rules>
+                                <!--  implementation is needed only for Maven 2  -->
+                                <rule implementation="org.jacoco.maven.RuleConfiguration">
+                                    <element>BUNDLE</element>
+                                    <!--
+                                                                        <limits>
+                                                                            &lt;!&ndash;  implementation is needed only for Maven 2  &ndash;&gt;
+                                                                            <limit implementation="org.jacoco.report.check.Limit">
+                                                                                <counter>COMPLEXITY</counter>
+                                                                                <value>COVEREDRATIO</value>
+                                                                                <minimum>0.60</minimum>
+                                                                            </limit>
+                                                                        </limits>
+                                    -->
+                                </rule>
+                            </rules>
+                        </configuration>
+                    </execution>
+                </executions>
+            </plugin>
+            <plugin>
+                <groupId>org.apache.maven.plugins</groupId>
+                <artifactId>maven-surefire-plugin</artifactId>
+                <version>2.20</version>
+                <configuration>
+                    <excludes>
+                        <exclude>**/*IT*.java</exclude>
+                        <exclude>**/*IntegrationTest.java</exclude>
+                        <exclude>**/IntegrationTest*.java</exclude>
+                        <exclude>${datagen.exclude}</exclude>
+                        <exclude>**/integration/*</exclude>
+                        <exclude>**/JenkinsSettingOverWriteTest.java</exclude>
+                    </excludes>
+                </configuration>
+            </plugin>
+        </plugins>
     </build>
 
     <reporting>
@@ -1276,5 +1358,23 @@
             </plugin>
         </plugins>
     </reporting>
+    <profiles>
+        <profile>
+            <!-- we want to run only integration tests, so disable unit tests -->
+            <id>integration-coverage</id>
+            <properties>
+                <skip.integration.tests>false</skip.integration.tests>
+            </properties>
+        </profile>
+        <profile>
+            <id>datagen</id>
+            <properties>
+                <!-- don't exclude datagen -->
+                <datagen.exclude/>
+                <datagen.include>**/DataGenUtil.java</datagen.include>
+            </properties>
+        </profile>
+
+    </profiles>
 </project>
 
