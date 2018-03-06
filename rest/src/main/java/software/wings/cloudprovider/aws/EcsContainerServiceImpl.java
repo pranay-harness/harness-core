@@ -5,6 +5,7 @@ import static io.harness.threading.Morpheus.sleep;
 import static java.time.Duration.ofSeconds;
 import static java.util.Arrays.asList;
 import static java.util.Collections.emptyList;
+import static java.util.stream.Collectors.toList;
 import static software.wings.beans.ErrorCode.INIT_TIMEOUT;
 import static software.wings.beans.ErrorCode.INVALID_REQUEST;
 
@@ -69,8 +70,8 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
 import java.util.Objects;
+import java.util.Optional;
 import java.util.concurrent.TimeUnit;
-import java.util.stream.Collectors;
 import java.util.stream.IntStream;
 
 /**
@@ -986,19 +987,10 @@ public class EcsContainerServiceImpl implements EcsContainerService {
         }
       }
 
-      ListTasksRequest listTasksRequest = new ListTasksRequest().withCluster(clusterName).withServiceName(serviceName);
-      List<String> taskArns = new ArrayList<>(
-          awsHelperService.listTasks(region, awsConfig, encryptedDataDetails, listTasksRequest).getTaskArns());
-      timeLimiter.callWithTimeout(() -> {
-        while (taskArns.size() != desiredCount) {
-          sleep(ofSeconds(5L));
-          taskArns.clear();
-          taskArns.addAll(
-              awsHelperService.listTasks(region, awsConfig, encryptedDataDetails, listTasksRequest).getTaskArns());
-        }
-        return true;
-      }, 30L, TimeUnit.SECONDS, true);
-
+      List<String> taskArns = awsHelperService
+                                  .listTasks(region, awsConfig, encryptedDataDetails,
+                                      new ListTasksRequest().withCluster(clusterName).withServiceName(serviceName))
+                                  .getTaskArns();
       if (isEmpty(taskArns)) {
         logger.info("No task arns.");
         return emptyList();
@@ -1009,7 +1001,7 @@ public class EcsContainerServiceImpl implements EcsContainerService {
                              .describeTasks(region, awsConfig, encryptedDataDetails,
                                  new DescribeTasksRequest().withCluster(clusterName).withTasks(taskArns))
                              .getTasks();
-      List<String> containerInstances = tasks.stream().map(Task::getContainerInstanceArn).collect(Collectors.toList());
+      List<String> containerInstances = tasks.stream().map(Task::getContainerInstanceArn).collect(toList());
       logger.info("Container Instances = " + containerInstances);
 
       List<ContainerInstance> containerInstanceList =
@@ -1039,24 +1031,34 @@ public class EcsContainerServiceImpl implements EcsContainerService {
                 -> JsonUtils.asObject(CharStreams.toString(new InputStreamReader(response.getEntity().getContent())),
                     TaskMetadata.class));
 
-            taskMetadata.getTasks()
-                .stream()
-                .filter(task -> taskArns.contains(task.getArn()))
-                .findFirst()
-                .ifPresent(task -> {
-                  String containerId = StringUtils.substring(task.getContainers().get(0).getDockerId(), 0, 12);
-                  ContainerInfo containerInfo = ContainerInfo.builder()
-                                                    .hostName(containerId)
-                                                    .containerId(containerId)
-                                                    .ec2Instance(ec2Instance)
-                                                    .status(Status.SUCCESS)
-                                                    .build();
-                  containerInfos.add(containerInfo);
-                  executionLogCallback.saveExecutionLog(
-                      "Container docker ID: " + containerInfo.getContainerId(), LogLevel.INFO);
+            Optional<TaskMetadata.Task> optionalTask =
+                taskMetadata.getTasks().stream().filter(task -> taskArns.contains(task.getArn())).findFirst();
 
-                });
-            logger.info("TaskMetadata = " + taskMetadata);
+            if (optionalTask.isPresent()) {
+              String containerId =
+                  StringUtils.substring(optionalTask.get().getContainers().get(0).getDockerId(), 0, 12);
+              ContainerInfo containerInfo = ContainerInfo.builder()
+                                                .hostName(containerId)
+                                                .containerId(containerId)
+                                                .ec2Instance(ec2Instance)
+                                                .status(Status.SUCCESS)
+                                                .build();
+              containerInfos.add(containerInfo);
+              executionLogCallback.saveExecutionLog(
+                  "Container docker ID: " + containerInfo.getContainerId(), LogLevel.INFO);
+            } else {
+              logger.warn("Metadata tasks {} not found in taskArns {}",
+                  taskMetadata.getTasks().stream().map(TaskMetadata.Task::getArn).collect(toList()), taskArns);
+              executionLogCallback.saveExecutionLog(
+                  "Could not find container meta data. Verification steps using containerId may not work",
+                  LogLevel.WARN);
+              containerInfos.add(ContainerInfo.builder()
+                                     .hostName(ipAddress)
+                                     .containerId(ipAddress)
+                                     .ec2Instance(ec2Instance)
+                                     .status(Status.SUCCESS)
+                                     .build());
+            }
           } catch (IOException ex) {
             executionLogCallback.saveExecutionLog(
                 "Could not fetch container meta data. Verification steps using containerId may not work",
