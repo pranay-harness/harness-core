@@ -1,4 +1,6 @@
-
 {
-  "ui:order": ["analysisServerConfigId", "applicationId", "tierId", "timeDuration","*"]
+  "ui:order" : [
+    "analysisServerConfigId", "applicationId", "tierId", "timeDuration", "*",
+    "autoBaseline"
+  ]
 }

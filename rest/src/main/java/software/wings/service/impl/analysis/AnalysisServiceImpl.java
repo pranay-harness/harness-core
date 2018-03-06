@@ -371,17 +371,16 @@ public class AnalysisServiceImpl implements AnalysisService {
 
   @Override
   public boolean isBaselineCreated(AnalysisComparisonStrategy comparisonStrategy, StateType stateType,
-      String applicationId, String workflowId, String workflowExecutionId, String serviceId, String query) {
+      String applicationId, String workflowId, String workflowExecutionId, String serviceId) {
     if (comparisonStrategy == AnalysisComparisonStrategy.COMPARE_WITH_CURRENT) {
       return true;
     }
-    return !getLastSuccessfulWorkflowExecutionIdWithLogs(stateType, applicationId, serviceId, query, workflowId)
-                .equals("-1");
+    return getLastSuccessfulWorkflowExecutionIdWithLogs(stateType, applicationId, serviceId, workflowId) != null;
   }
 
   @Override
   public String getLastSuccessfulWorkflowExecutionIdWithLogs(
-      StateType stateType, String appId, String serviceId, String query, String workflowId) {
+      StateType stateType, String appId, String serviceId, String workflowId) {
     // TODO should we limit the number of executions to search in ??
     List<String> successfulExecutions = getLastSuccessfulWorkflowExecutionIds(appId, workflowId);
     for (String successfulExecution : successfulExecutions) {
@@ -394,8 +393,6 @@ public class AnalysisServiceImpl implements AnalysisService {
                                                            .equal(successfulExecution)
                                                            .field("serviceId")
                                                            .equal(serviceId)
-                                                           .field("query")
-                                                           .equal(query)
                                                            .field("clusterLevel")
                                                            .equal(ClusterLevel.L2)
                                                            .limit(1);
@@ -406,7 +403,7 @@ public class AnalysisServiceImpl implements AnalysisService {
       }
     }
     logger.warn("Could not get a successful workflow to find control nodes");
-    return "-1";
+    return null;
   }
 
   private List<String> getLastSuccessfulWorkflowExecutionIds(String appId, String workflowId) {
@@ -768,6 +765,7 @@ public class AnalysisServiceImpl implements AnalysisService {
     final LogMLAnalysisSummary analysisSummary = new LogMLAnalysisSummary();
     analysisSummary.setQuery(analysisRecord.getQuery());
     analysisSummary.setScore(analysisRecord.getScore() * 100);
+    analysisSummary.setBaseLineExecutionId(analysisRecord.getBaseLineExecutionId());
     analysisSummary.setControlClusters(
         computeCluster(analysisRecord.getControl_clusters(), Collections.emptyMap(), CLUSTER_TYPE.CONTROL));
     LogMLClusterScores logMLClusterScores =

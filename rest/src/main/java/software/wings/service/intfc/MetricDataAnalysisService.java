@@ -42,7 +42,7 @@ public interface MetricDataAnalysisService {
   @ValidationGroups(Create.class)
   boolean saveAnalysisRecordsML(@NotNull StateType stateType, @NotNull String accountId, @NotNull String applicationId,
       @NotNull String stateExecutionId, @NotNull String workflowExecutionId, @NotNull String workflowId,
-      @NotNull String serviceId, @NotNull Integer analysisMinute, @NotNull String taskId,
+      @NotNull String serviceId, @NotNull Integer analysisMinute, @NotNull String taskId, String baseLineExecutionId,
       @Valid TimeSeriesMLAnalysisRecord mlAnalysisResponse);
 
   @ValidationGroups(Create.class) void saveTimeSeriesMLScores(TimeSeriesMLScores scores);

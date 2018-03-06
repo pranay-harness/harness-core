@@ -1,5 +1,6 @@
 package software.wings.service.impl.analysis;
 
+import static io.harness.data.structure.EmptyPredicate.isEmpty;
 import static io.harness.data.structure.UUIDGenerator.generateUuid;
 
 import com.google.common.collect.Lists;
@@ -77,11 +78,10 @@ public class LogMLAnalysisGenerator implements Runnable {
           continue;
         }
 
-        final String lastWorkflowExecutionId = analysisService.getLastSuccessfulWorkflowExecutionIdWithLogs(
-            context.getStateType(), applicationId, serviceId, query, workflowId);
+        final String lastWorkflowExecutionId = context.getPrevWorkflowExecutionId();
         final boolean isBaselineCreated =
             context.getComparisonStrategy() == AnalysisComparisonStrategy.COMPARE_WITH_CURRENT
-            || !lastWorkflowExecutionId.equals("-1");
+            || !isEmpty(lastWorkflowExecutionId);
 
         String testInputUrl = "/api/" + context.getStateBaseUrl() + LogAnalysisResource.ANALYSIS_STATE_GET_LOG_URL
             + "?accountId=" + accountId + "&clusterLevel=" + ClusterLevel.L2.name()
@@ -99,11 +99,15 @@ public class LogMLAnalysisGenerator implements Runnable {
               + "&workflowExecutionId=" + lastWorkflowExecutionId + "&compareCurrent=false";
         }
 
-        final String logAnalysisSaveUrl = "/api/" + context.getStateBaseUrl()
+        String logAnalysisSaveUrl = "/api/" + context.getStateBaseUrl()
             + LogAnalysisResource.ANALYSIS_STATE_SAVE_ANALYSIS_RECORDS_URL + "?accountId=" + accountId
             + "&applicationId=" + applicationId + "&stateExecutionId=" + context.getStateExecutionId()
             + "&logCollectionMinute=" + logAnalysisMinute + "&isBaselineCreated=" + isBaselineCreated
             + "&taskId=" + uuid;
+
+        if (!isEmpty(context.getPrevWorkflowExecutionId())) {
+          logAnalysisSaveUrl += "&baseLineExecutionId=" + context.getPrevWorkflowExecutionId();
+        }
 
         final String logAnalysisGetUrl = "/api/" + context.getStateBaseUrl()
             + LogAnalysisResource.ANALYSIS_STATE_GET_ANALYSIS_RECORDS_URL + "?accountId=" + accountId;

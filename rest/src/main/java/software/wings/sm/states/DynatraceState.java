@@ -91,6 +91,13 @@ public class DynatraceState extends AbstractMetricAnalysisState {
   }
 
   @Override
+  @Attributes(title = "Auto Baseline")
+  @DefaultValue("true")
+  public boolean getAutoBaseline() {
+    return autoBaseline;
+  }
+
+  @Override
   public Logger getLogger() {
     return logger;
   }
