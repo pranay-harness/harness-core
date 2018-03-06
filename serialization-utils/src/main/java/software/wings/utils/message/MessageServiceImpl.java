@@ -343,7 +343,7 @@ public class MessageServiceImpl implements MessageService {
           logger.error("Failed to release lock {}", file.getPath());
         }
       }
-    } catch (Exception e) {
+    } catch (IOException e) {
       logger.error("Error writing data to {}. Couldn't store {}", name, dataToWrite);
     }
   }
@@ -416,7 +416,7 @@ public class MessageServiceImpl implements MessageService {
           logger.error("Failed to release lock {}", file.getPath());
         }
       }
-    } catch (Exception e) {
+    } catch (IOException e) {
       logger.error("Error removing data from {}. Couldn't remove {}", name, key);
     }
   }
