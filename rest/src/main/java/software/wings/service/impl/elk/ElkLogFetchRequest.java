@@ -93,9 +93,13 @@ public class ElkLogFetchRequest {
         if (")".equals(token)) {
           Stack<JSONObject> result = new Stack<>();
           while (!(rval = operandStack.pop()).toString().equals("{\"term\":{\"(\":\"(\"}}")) {
-            lval = operandStack.pop();
-            operator = operatorStack.pop();
-            result.push(eval(lval, rval, operator));
+            if (operatorStack.isEmpty()) {
+              result.push(rval);
+            } else {
+              lval = operandStack.pop();
+              operator = operatorStack.pop();
+              result.push(eval(lval, rval, operator));
+            }
           }
           result.stream().forEach(op -> operandStack.push(op));
         } else {
