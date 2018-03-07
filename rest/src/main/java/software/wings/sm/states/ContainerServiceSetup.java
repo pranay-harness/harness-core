@@ -38,7 +38,6 @@ import software.wings.beans.ContainerInfrastructureMapping;
 import software.wings.beans.DeploymentExecutionContext;
 import software.wings.beans.DirectKubernetesInfrastructureMapping;
 import software.wings.beans.DockerConfig;
-import software.wings.beans.EcrConfig;
 import software.wings.beans.EcsInfrastructureMapping;
 import software.wings.beans.Environment;
 import software.wings.beans.ErrorCode;
@@ -69,7 +68,6 @@ import software.wings.beans.container.ImageDetails.ImageDetailsBuilder;
 import software.wings.common.Constants;
 import software.wings.exception.WingsException;
 import software.wings.helpers.ext.azure.AzureHelperService;
-import software.wings.helpers.ext.ecr.EcrClassicService;
 import software.wings.helpers.ext.ecr.EcrService;
 import software.wings.security.encryption.EncryptedDataDetail;
 import software.wings.service.impl.AwsHelperService;
@@ -115,7 +113,6 @@ public abstract class ContainerServiceSetup extends State {
   private ResizeStrategy resizeStrategy;
   private int serviceSteadyStateTimeout; // Minutes
   @Inject @Transient private transient EcrService ecrService;
-  @Inject @Transient private transient EcrClassicService ecrClassicService;
   @Inject @Transient private transient AwsHelperService awsHelperService;
   @Inject @Transient private transient AzureHelperService azureHelperService;
   @Inject @Transient protected transient SettingsService settingsService;
@@ -379,12 +376,6 @@ public abstract class ContainerServiceSetup extends State {
             secretManager.getEncryptionDetails(awsConfig, context.getAppId(), context.getWorkflowExecutionId()));
         imageDetails.password(awsHelperService.getAmazonEcrAuthToken(imageUrl.substring(0, imageUrl.indexOf('.')),
             ecrArtifactStream.getRegion(), awsConfig.getAccessKey(), awsConfig.getSecretKey()));
-      } else {
-        // There is a point when old ECR artifact streams would be using the old ECR Artifact Server definition until
-        // migration happens. The deployment code handles both the cases.
-        EcrConfig ecrConfig = (EcrConfig) settingsService.get(settingId).getValue();
-        imageDetails.password(awsHelperService.getAmazonEcrAuthToken(ecrConfig,
-            secretManager.getEncryptionDetails(ecrConfig, context.getAppId(), context.getWorkflowExecutionId())));
       }
     } else if (artifactStream.getArtifactStreamType().equals(GCR.name())) {
       GcrArtifactStream gcrArtifactStream = (GcrArtifactStream) artifactStream;
@@ -461,15 +452,10 @@ public abstract class ContainerServiceSetup extends State {
   private String getImageUrl(EcrArtifactStream ecrArtifactStream, ExecutionContext context) {
     SettingAttribute settingAttribute = settingsService.get(ecrArtifactStream.getSettingId());
     SettingValue value = settingAttribute.getValue();
-    if (SettingVariableTypes.AWS.name().equals(value.getType())) {
-      AwsConfig awsConfig = (AwsConfig) value;
-      return ecrService.getEcrImageUrl(awsConfig,
-          secretManager.getEncryptionDetails(awsConfig, context.getAppId(), context.getWorkflowExecutionId()),
-          ecrArtifactStream.getRegion(), ecrArtifactStream);
-    } else {
-      EcrConfig ecrConfig = (EcrConfig) value;
-      return ecrClassicService.getEcrImageUrl(ecrConfig, ecrArtifactStream);
-    }
+    AwsConfig awsConfig = (AwsConfig) value;
+    return ecrService.getEcrImageUrl(awsConfig,
+        secretManager.getEncryptionDetails(awsConfig, context.getAppId(), context.getWorkflowExecutionId()),
+        ecrArtifactStream.getRegion(), ecrArtifactStream);
   }
 
   private Activity buildActivity(
