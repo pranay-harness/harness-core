@@ -319,7 +319,7 @@ public class SecretTextTest extends WingsBaseTest {
   }
 
   @Test
-  public void updateSecretRef() throws IOException, IllegalAccessException {
+  public void updateSecretRef() {
     String secretName1 = "s1";
     String secretValue1 = "v2";
     String secretId1 = secretManager.saveSecret(accountId, secretName1, secretValue1);
