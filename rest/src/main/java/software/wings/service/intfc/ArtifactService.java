@@ -7,7 +7,6 @@ import software.wings.beans.artifact.ArtifactFile;
 import software.wings.dl.PageRequest;
 import software.wings.dl.PageResponse;
 import software.wings.service.intfc.ownership.OwnedByApplication;
-import software.wings.utils.ArtifactType;
 
 import java.io.File;
 import java.util.List;
@@ -34,20 +33,12 @@ public interface ArtifactService extends OwnedByApplication {
   PageResponse<Artifact> listSortByBuildNo(PageRequest<Artifact> pageRequest);
 
   /**
-   * Creates the.
-   *
-   * @param artifact the artifact
-   * @return the artifact
-   */
-  Artifact create(@Valid Artifact artifact);
-
-  /**
    * Creates the artifact and validates artifact type
    *
    * @param artifact the artifact
    * @return the artifact
    */
-  Artifact create(@Valid Artifact artifact, ArtifactType artifactType);
+  Artifact create(@Valid Artifact artifact);
 
   /**
    * Update.

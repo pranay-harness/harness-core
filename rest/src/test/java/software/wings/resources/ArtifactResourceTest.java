@@ -4,6 +4,7 @@ import static javax.ws.rs.client.Entity.entity;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.mockito.Matchers.any;
 import static org.mockito.Matchers.eq;
+import static org.mockito.Mockito.RETURNS_DEEP_STUBS;
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.reset;
 import static org.mockito.Mockito.verify;
@@ -12,7 +13,9 @@ import static org.mockito.Mockito.when;
 import static software.wings.beans.artifact.Artifact.Builder.anArtifact;
 import static software.wings.utils.WingsTestConstants.APP_ID;
 import static software.wings.utils.WingsTestConstants.ARTIFACT_ID;
+import static software.wings.utils.WingsTestConstants.ARTIFACT_STREAM_ID;
 
+import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.Lists;
 import com.google.common.io.ByteStreams;
 import com.google.common.io.Files;
@@ -31,6 +34,7 @@ import software.wings.dl.PageResponse;
 import software.wings.exception.ConstraintViolationExceptionMapper;
 import software.wings.exception.WingsExceptionMapper;
 import software.wings.service.intfc.ArtifactService;
+import software.wings.service.intfc.ArtifactStreamService;
 import software.wings.utils.ResourceTestRule;
 
 import java.io.ByteArrayInputStream;
@@ -49,16 +53,19 @@ public class ArtifactResourceTest {
    * The constant ARTIFACT_SERVICE.
    */
   public static final ArtifactService ARTIFACT_SERVICE = mock(ArtifactService.class);
+  public static final ArtifactStreamService ARTIFACT_STREAM_SERVICE =
+      mock(ArtifactStreamService.class, RETURNS_DEEP_STUBS);
 
   /**
    * The constant RESOURCES.
    */
   @ClassRule
-  public static final ResourceTestRule RESOURCES = ResourceTestRule.builder()
-                                                       .addResource(new ArtifactResource(ARTIFACT_SERVICE))
-                                                       .addProvider(ConstraintViolationExceptionMapper.class)
-                                                       .addProvider(WingsExceptionMapper.class)
-                                                       .build();
+  public static final ResourceTestRule RESOURCES =
+      ResourceTestRule.builder()
+          .addResource(new ArtifactResource(ARTIFACT_SERVICE, ARTIFACT_STREAM_SERVICE))
+          .addProvider(ConstraintViolationExceptionMapper.class)
+          .addProvider(WingsExceptionMapper.class)
+          .build();
 
   /**
    * The constant ACTUAL.
@@ -110,7 +117,13 @@ public class ArtifactResourceTest {
    */
   @Test
   public void shouldCreateNewArtifact() {
-    Artifact artifact = anArtifact().withAppId(APP_ID).build();
+    Artifact artifact = anArtifact()
+                            .withAppId(APP_ID)
+                            .withArtifactStreamId(ARTIFACT_STREAM_ID)
+                            .withMetadata(ImmutableMap.of("BUILD_NO", "5"))
+                            .build();
+    when(ARTIFACT_STREAM_SERVICE.get(APP_ID, ARTIFACT_STREAM_ID).getArtifactDisplayName("5"))
+        .thenReturn("DISPLAY_NAME");
 
     RestResponse<Artifact> restResponse =
         RESOURCES.client()

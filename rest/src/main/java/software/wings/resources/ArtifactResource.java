@@ -9,11 +9,13 @@ import com.codahale.metrics.annotation.Timed;
 import io.swagger.annotations.Api;
 import software.wings.beans.RestResponse;
 import software.wings.beans.artifact.Artifact;
+import software.wings.beans.artifact.ArtifactStream;
 import software.wings.dl.PageRequest;
 import software.wings.dl.PageResponse;
 import software.wings.security.PermissionAttribute.ResourceType;
 import software.wings.security.annotations.AuthRule;
 import software.wings.service.intfc.ArtifactService;
+import software.wings.service.intfc.ArtifactStreamService;
 
 import java.io.File;
 import java.io.IOException;
@@ -43,15 +45,18 @@ import javax.ws.rs.core.Response.ResponseBuilder;
 @AuthRule(ResourceType.APPLICATION)
 public class ArtifactResource {
   private ArtifactService artifactService;
+  private ArtifactStreamService artifactStreamService;
 
   /**
    * Instantiates a new artifact resource.
    *
    * @param artifactService the artifact service
+   * @param artifactStreamService
    */
   @Inject
-  public ArtifactResource(ArtifactService artifactService) {
+  public ArtifactResource(ArtifactService artifactService, ArtifactStreamService artifactStreamService) {
     this.artifactService = artifactService;
+    this.artifactStreamService = artifactStreamService;
   }
 
   /**
@@ -97,6 +102,8 @@ public class ArtifactResource {
   @ExceptionMetered
   public RestResponse<Artifact> save(@QueryParam("appId") String appId, Artifact artifact) {
     artifact.setAppId(appId);
+    ArtifactStream artifactStream = artifactStreamService.get(appId, artifact.getArtifactStreamId());
+    artifact.setDisplayName(artifactStream.getArtifactDisplayName(artifact.getBuildNo()));
     return new RestResponse<>(artifactService.create(artifact));
   }
 
