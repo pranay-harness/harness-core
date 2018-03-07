@@ -208,7 +208,6 @@ import software.wings.api.HostElement;
 import software.wings.beans.AwsConfig;
 import software.wings.beans.AwsInfrastructureMapping;
 import software.wings.beans.AwsInstanceFilter;
-import software.wings.beans.EcrConfig;
 import software.wings.beans.ErrorCode;
 import software.wings.beans.SettingAttribute;
 import software.wings.beans.command.CommandExecutionResult.CommandExecutionStatus;
@@ -302,38 +301,6 @@ public class AwsHelperService {
         .withCredentials(new AWSStaticCredentialsProvider(
             new BasicAWSCredentials(awsConfig.getAccessKey(), new String(awsConfig.getSecretKey()))))
         .build();
-  }
-
-  public AmazonECRClient getAmazonEcrClient(EcrConfig ecrConfig, List<EncryptedDataDetail> encryptedDataDetails) {
-    encryptionService.decrypt(ecrConfig, encryptedDataDetails);
-    return (AmazonECRClient) AmazonECRClientBuilder.standard()
-        .withRegion(ecrConfig.getRegion())
-        .withCredentials(new AWSStaticCredentialsProvider(
-            new BasicAWSCredentials(ecrConfig.getAccessKey(), new String(ecrConfig.getSecretKey()))))
-        .build();
-  }
-
-  /**
-   * Gets amazon ecr client.
-   *
-   * @return the auth token
-   */
-  public String getAmazonEcrAuthToken(EcrConfig ecrConfig, List<EncryptedDataDetail> encryptedDataDetails) {
-    encryptionService.decrypt(ecrConfig, encryptedDataDetails);
-    AmazonECRClient ecrClient = (AmazonECRClient) AmazonECRClientBuilder.standard()
-                                    .withRegion(ecrConfig.getRegion())
-                                    .withCredentials(new AWSStaticCredentialsProvider(new BasicAWSCredentials(
-                                        ecrConfig.getAccessKey(), new String(ecrConfig.getSecretKey()))))
-                                    .build();
-
-    String url = ecrConfig.getEcrUrl();
-    // Example: https://830767422336.dkr.ecr.us-east-1.amazonaws.com/
-    String awsAccount = url.substring(8, url.indexOf('.'));
-    return ecrClient
-        .getAuthorizationToken(new GetAuthorizationTokenRequest().withRegistryIds(singletonList(awsAccount)))
-        .getAuthorizationData()
-        .get(0)
-        .getAuthorizationToken();
   }
 
   public String getAmazonEcrAuthToken(String awsAccount, String region, String accessKey, char[] secretKey) {
@@ -1150,26 +1117,6 @@ public class AwsHelperService {
       handleAmazonServiceException(amazonServiceException);
     }
     return new ListImagesResult();
-  }
-
-  public ListImagesResult listEcrImages(
-      EcrConfig ecrConfig, List<EncryptedDataDetail> encryptedDataDetails, ListImagesRequest listImagesRequest) {
-    try {
-      return getAmazonEcrClient(ecrConfig, encryptedDataDetails).listImages(listImagesRequest);
-    } catch (AmazonServiceException amazonServiceException) {
-      handleAmazonServiceException(amazonServiceException);
-    }
-    return new ListImagesResult();
-  }
-
-  public DescribeRepositoriesResult listRepositories(EcrConfig ecrConfig,
-      List<EncryptedDataDetail> encryptedDataDetails, DescribeRepositoriesRequest describeRepositoriesRequest) {
-    try {
-      return getAmazonEcrClient(ecrConfig, encryptedDataDetails).describeRepositories(describeRepositoriesRequest);
-    } catch (AmazonServiceException amazonServiceException) {
-      handleAmazonServiceException(amazonServiceException);
-    }
-    return new DescribeRepositoriesResult();
   }
 
   public DescribeRepositoriesResult listRepositories(AwsConfig awsConfig, List<EncryptedDataDetail> encryptionDetails,
