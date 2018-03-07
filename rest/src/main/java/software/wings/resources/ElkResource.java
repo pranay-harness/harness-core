@@ -10,6 +10,7 @@ import com.codahale.metrics.annotation.Timed;
 import io.swagger.annotations.Api;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import software.wings.beans.ErrorCode;
 import software.wings.beans.RestResponse;
 import software.wings.exception.WingsException;
 import software.wings.security.PermissionAttribute.ResourceType;
@@ -187,16 +188,20 @@ public class ElkResource implements LogAnalysisResource {
     return new RestResponse<>(analysisService.saveFeedback(feedback, StateType.ELK));
   }
 
-  @POST
+  @GET
   @Path(LogAnalysisResource.ELK_VALIDATE_QUERY)
   @Timed
   @ExceptionMetered
-  public RestResponse<Boolean> validateQuery(@QueryParam("accountId") String accountId, String query)
-      throws IOException {
-    new ElkLogFetchRequest(query, "logstash-*", "beat.hostname", "message", "@timestamp",
-        Sets.newHashSet("ip-172-31-8-144", "ip-172-31-12-79", "ip-172-31-13-153"),
-        1518724315175L - TimeUnit.MINUTES.toMillis(1), 1518724315175L)
-        .toElasticSearchJsonObject();
-    return new RestResponse<>(true);
+  public RestResponse<Boolean> validateQuery(
+      @QueryParam("accountId") String accountId, @QueryParam("query") String query) throws IOException {
+    try {
+      new ElkLogFetchRequest(query, "logstash-*", "beat.hostname", "message", "@timestamp",
+          Sets.newHashSet("ip-172-31-8-144", "ip-172-31-12-79", "ip-172-31-13-153"),
+          1518724315175L - TimeUnit.MINUTES.toMillis(1), 1518724315175L)
+          .toElasticSearchJsonObject();
+      return new RestResponse<>(true);
+    } catch (Exception ex) {
+      throw new WingsException(ErrorCode.ELK_CONFIGURATION_ERROR).addParam("reason", ex.getMessage());
+    }
   }
 }
