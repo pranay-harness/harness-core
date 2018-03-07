@@ -10,7 +10,6 @@ import org.quartz.Job;
 import org.quartz.JobBuilder;
 import org.quartz.JobDetail;
 import org.quartz.JobExecutionContext;
-import org.quartz.JobExecutionException;
 import org.quartz.TriggerBuilder;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -54,11 +53,10 @@ public class ScheduledTriggerJob implements Job {
   }
 
   @Override
-  public void execute(JobExecutionContext jobExecutionContext) throws JobExecutionException {
+  public void execute(JobExecutionContext jobExecutionContext) {
     String triggerId = jobExecutionContext.getMergedJobDataMap().getString(TRIGGER_ID_KEY);
     String appId = jobExecutionContext.getMergedJobDataMap().getString(APP_ID_KEY);
 
-    logger.info("Triggering scheduled job for appId {} and triggerId {}", appId, triggerId);
     Trigger trigger = wingsPersistence.get(Trigger.class, appId, triggerId);
     if (trigger == null || !trigger.getCondition().getConditionType().equals(SCHEDULED)) {
       logger.info("Trigger not found or wrong type. Deleting job associated to it");
