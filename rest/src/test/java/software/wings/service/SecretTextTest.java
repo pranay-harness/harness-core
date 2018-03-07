@@ -342,7 +342,7 @@ public class SecretTextTest extends WingsBaseTest {
                                                 .instances(Collections.singletonList(UUID.randomUUID().toString()))
                                                 .expression(UUID.randomUUID().toString())
                                                 .accountId(accountId)
-                                                .name("service_var")
+                                                .name("service_var" + System.currentTimeMillis())
                                                 .value(secretId1.toCharArray())
                                                 .type(Type.ENCRYPTED_TEXT)
                                                 .build();
@@ -382,7 +382,7 @@ public class SecretTextTest extends WingsBaseTest {
     encryptedData = wingsPersistence.createQuery(EncryptedData.class).field("name").equal(secretName3).asList().get(0);
     assertNull(encryptedData.getParentIds());
 
-    String updatedName = "updatedName";
+    String updatedName = "updatedName" + System.currentTimeMillis();
     String updatedAppId = UUID.randomUUID().toString();
     final Map<String, Object> keyValuePairs = new HashMap<>();
     keyValuePairs.put("name", updatedName);
