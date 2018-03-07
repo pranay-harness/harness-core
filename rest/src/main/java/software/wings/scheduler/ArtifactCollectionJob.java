@@ -321,7 +321,7 @@ public class ArtifactCollectionJob implements Job {
                                 .withMetadata(ImmutableMap.of(BUILD_NO, latestVersion.getNumber()))
                                 .withRevision(latestVersion.getRevision())
                                 .build();
-        newArtifacts.add(artifactService.create(artifact, artifactType));
+        newArtifacts.add(artifactService.create(artifact));
       }
     }
   }
@@ -346,7 +346,7 @@ public class ArtifactCollectionJob implements Job {
                     .withMetadata(ImmutableMap.of(ARTIFACT_PATH, buildDetails.getArtifactPath(), ARTIFACT_FILE_NAME,
                         buildDetails.getNumber(), BUILD_NO, buildDetails.getNumber()))
                     .build();
-            newArtifacts.add(artifactService.create(artifact, ArtifactType.RPM));
+            newArtifacts.add(artifactService.create(artifact));
           }
         });
       }
@@ -449,7 +449,7 @@ public class ArtifactCollectionJob implements Job {
                     .withMetadata(ImmutableMap.of(BUILD_NO, buildDetails1.getNumber()))
                     .withRevision(buildDetails1.getRevision())
                     .build();
-            newArtifacts.add(artifactService.create(newArtifact, ArtifactType.DOCKER));
+            newArtifacts.add(artifactService.create(newArtifact));
           }
         });
       }

@@ -130,18 +130,9 @@ public class ArtifactServiceImpl implements ArtifactService {
     return pageResponse;
   }
 
-  /* (non-Javadoc)
-   * @see software.wings.service.intfc.ArtifactService#create(software.wings.beans.artifact.Artifact)
-   */
   @Override
   @ValidationGroups(Create.class)
   public Artifact create(@Valid Artifact artifact) {
-    return create(artifact, null);
-  }
-
-  @Override
-  @ValidationGroups(Create.class)
-  public Artifact create(@Valid Artifact artifact, ArtifactType artifactType) {
     if (!appService.exist(artifact.getAppId())) {
       throw new WingsException(ErrorCode.INVALID_ARGUMENT)
           .addParam("args", "App does not exist: " + artifact.getAppId());
@@ -152,9 +143,6 @@ public class ArtifactServiceImpl implements ArtifactService {
     artifact.setArtifactSourceName(artifactStream.getSourceName());
     artifact.setServiceIds(asList(artifactStream.getServiceId()));
     Status status = getArtifactStatus(artifactStream);
-    if (artifactType != null) {
-      status = getArtifactStatus(artifactStream, artifactType);
-    }
     artifact.setStatus(status);
 
     String key = wingsPersistence.save(artifact);
@@ -171,6 +159,16 @@ public class ArtifactServiceImpl implements ArtifactService {
     if (artifactStream.isMetadataOnly()) {
       return APPROVED;
     }
+
+    if (ARTIFACTORY.name().equals(artifactStream.getArtifactStreamType())
+        || NEXUS.name().equals(artifactStream.getArtifactStreamType())) {
+      ArtifactType artifactType =
+          serviceResourceService.get(artifactStream.getAppId(), artifactStream.getServiceId(), false).getArtifactType();
+      if (artifactType.equals(ArtifactType.DOCKER)) {
+        return APPROVED;
+      }
+    }
+
     return (DOCKER.name().equals(artifactStream.getArtifactStreamType())
                || ECR.name().equals(artifactStream.getArtifactStreamType())
                || GCR.name().equals(artifactStream.getArtifactStreamType())
@@ -178,19 +176,6 @@ public class ArtifactServiceImpl implements ArtifactService {
                || ARTIFACTORY.name().equals(artifactStream.getArtifactStreamType()))
         ? (artifactStream.isAutoApproveForProduction() ? APPROVED : READY)
         : QUEUED;
-  }
-
-  private Status getArtifactStatus(ArtifactStream artifactStream, ArtifactType artifactType) {
-    if (artifactStream.isMetadataOnly()) {
-      return APPROVED;
-    }
-    if (ARTIFACTORY.name().equals(artifactStream.getArtifactStreamType())
-        || NEXUS.name().equals(artifactStream.getArtifactStreamType())) {
-      if (artifactType.equals(ArtifactType.DOCKER)) {
-        return APPROVED;
-      }
-    }
-    return QUEUED;
   }
 
   /* (non-Javadoc)
