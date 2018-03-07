@@ -77,6 +77,8 @@ import software.wings.dl.PageRequest;
 import software.wings.dl.PageResponse;
 import software.wings.dl.WingsPersistence;
 import software.wings.exception.WingsException;
+import software.wings.lock.AcquiredLock;
+import software.wings.lock.PersistentLocker;
 import software.wings.scheduler.QuartzScheduler;
 import software.wings.scheduler.ScheduledTriggerJob;
 import software.wings.service.intfc.ArtifactService;
@@ -90,6 +92,7 @@ import software.wings.service.intfc.WorkflowService;
 import software.wings.utils.CryptoUtil;
 import software.wings.utils.Validator;
 
+import java.time.Duration;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.HashMap;
@@ -111,6 +114,7 @@ import javax.validation.executable.ValidateOnExecution;
 @ValidateOnExecution
 public class TriggerServiceImpl implements TriggerService {
   private static final Logger logger = LoggerFactory.getLogger(TriggerServiceImpl.class);
+  public static final Duration timeout = Duration.ofSeconds(60);
 
   @Inject private WingsPersistence wingsPersistence;
   @Inject private ExecutorService executorService;
@@ -121,7 +125,7 @@ public class TriggerServiceImpl implements TriggerService {
   @Inject private ServiceResourceService serviceResourceService;
   @Inject private WorkflowService workflowService;
   @Inject private InfrastructureMappingService infrastructureMappingService;
-
+  @Inject private PersistentLocker persistentLocker;
   @Inject @Named("JobScheduler") private QuartzScheduler jobScheduler;
 
   @Override
@@ -534,43 +538,46 @@ public class TriggerServiceImpl implements TriggerService {
   }
 
   private void triggerScheduledExecution(Trigger trigger) {
-    logger.info("Received scheduled trigger for appId {} and Trigger Id {}", trigger.getAppId(), trigger.getUuid());
-    List<Artifact> lastDeployedArtifacts =
-        getLastDeployedArtifacts(trigger.getAppId(), trigger.getWorkflowId(), trigger.getWorkflowType(), null);
+    try (AcquiredLock lock = persistentLocker.acquireLock(Trigger.class, trigger.getUuid(), timeout)) {
+      logger.info("Received scheduled trigger for appId {} and Trigger Id {}", trigger.getAppId(), trigger.getUuid());
+      List<Artifact> lastDeployedArtifacts =
+          getLastDeployedArtifacts(trigger.getAppId(), trigger.getWorkflowId(), trigger.getWorkflowType(), null);
 
-    ScheduledTriggerCondition scheduledTriggerCondition = (ScheduledTriggerCondition) trigger.getCondition();
-    List<ArtifactSelection> artifactSelections = trigger.getArtifactSelections();
-    if (isEmpty(artifactSelections)) {
-      logger.info("No artifactSelection configuration setup found. Executing pipeline {}", trigger.getWorkflowId());
-      if (isNotEmpty(lastDeployedArtifacts)) {
-        triggerExecution(lastDeployedArtifacts, trigger, null);
-      } else {
-        logger.info(
-            "No last deployed artifacts found. Triggering execution {} without artifacts", trigger.getWorkflowId());
-        triggerExecution(lastDeployedArtifacts, trigger, null);
-      }
-    } else {
-      List<Artifact> artifacts = new ArrayList<>();
-      addArtifactsFromSelections(trigger.getAppId(), trigger, artifacts);
-      if (isNotEmpty(artifacts)) {
-        if (!scheduledTriggerCondition.isOnNewArtifactOnly()) {
-          triggerExecution(artifacts, trigger);
+      ScheduledTriggerCondition scheduledTriggerCondition = (ScheduledTriggerCondition) trigger.getCondition();
+      List<ArtifactSelection> artifactSelections = trigger.getArtifactSelections();
+      if (isEmpty(artifactSelections)) {
+        logger.info("No artifactSelection configuration setup found. Executing pipeline {}", trigger.getWorkflowId());
+        if (isNotEmpty(lastDeployedArtifacts)) {
+          triggerExecution(lastDeployedArtifacts, trigger, null);
         } else {
-          List<String> lastDeployedArtifactIds =
-              lastDeployedArtifacts.stream().map(Artifact::getUuid).distinct().collect(toList());
-          List<String> artifactIds = artifacts.stream().map(Artifact::getUuid).distinct().collect(toList());
-          if (!lastDeployedArtifactIds.containsAll(artifactIds)) {
-            logger.info(
-                "New version of artifacts found from the last successful execution of pipeline/ workflow {}. So, triggering  execution",
-                trigger.getWorkflowId());
+          logger.info(
+              "No last deployed artifacts found. Triggering execution {} without artifacts", trigger.getWorkflowId());
+          triggerExecution(lastDeployedArtifacts, trigger, null);
+        }
+      } else {
+        List<Artifact> artifacts = new ArrayList<>();
+        addArtifactsFromSelections(trigger.getAppId(), trigger, artifacts);
+        if (isNotEmpty(artifacts)) {
+          if (!scheduledTriggerCondition.isOnNewArtifactOnly()) {
             triggerExecution(artifacts, trigger);
           } else {
-            logger.info(
-                "No new version of artifacts found from the last successful execution of pipeline/ workflow {}. So, not triggering execution",
-                trigger.getWorkflowId());
+            List<String> lastDeployedArtifactIds =
+                lastDeployedArtifacts.stream().map(Artifact::getUuid).distinct().collect(toList());
+            List<String> artifactIds = artifacts.stream().map(Artifact::getUuid).distinct().collect(toList());
+            if (!lastDeployedArtifactIds.containsAll(artifactIds)) {
+              logger.info(
+                  "New version of artifacts found from the last successful execution of pipeline/ workflow {}. So, triggering  execution",
+                  trigger.getWorkflowId());
+              triggerExecution(artifacts, trigger);
+            } else {
+              logger.info(
+                  "No new version of artifacts found from the last successful execution of pipeline/ workflow {}. So, not triggering execution",
+                  trigger.getWorkflowId());
+            }
           }
         }
       }
+      logger.info("Scheduled trigger for appId {} and Trigger Id {} complete", trigger.getAppId(), trigger.getUuid());
     }
   }
 

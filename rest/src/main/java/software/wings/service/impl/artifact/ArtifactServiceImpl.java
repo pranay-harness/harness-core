@@ -411,11 +411,14 @@ public class ArtifactServiceImpl implements ArtifactService {
         }
       }
       if (!artifactFileUuids.isEmpty()) {
+        Object[] artifactIds = toBeDeletedArtifacts.stream().map(Artifact::getUuid).toArray();
+        logger.info("Deleting artifactIds of artifacts {}", artifactIds);
         wingsPersistence.getCollection("artifacts")
-            .remove(new BasicDBObject(
-                "_id", new BasicDBObject("$in", toBeDeletedArtifacts.stream().map(Artifact::getUuid).toArray())));
+            .remove(new BasicDBObject("_id", new BasicDBObject("$in", artifactIds)));
+        logger.info("Deleting artifactFileUuids of artifacts.files {}", artifactFileUuids.toArray());
         wingsPersistence.getCollection("artifacts.files")
             .remove(new BasicDBObject("_id", new BasicDBObject("$in", artifactFileUuids.toArray())));
+        logger.info("Deleting files_id of artifacts {}", artifactFileUuids.toArray());
         wingsPersistence.getCollection("artifacts.chunks")
             .remove(new BasicDBObject("files_id", new BasicDBObject("$in", artifactFileUuids.toArray())));
       }
