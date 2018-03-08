@@ -144,6 +144,7 @@ public class WingsRule implements MethodRule {
       }
     };
   }
+
   /**
    * Gets datastore.
    *
@@ -382,8 +383,13 @@ public class WingsRule implements MethodRule {
     if (mongoServer != null) {
       mongoServer.shutdown();
     }
-    if (mongodExecutable != null) {
-      mongodExecutable.stop();
+    try {
+      if (mongodExecutable != null) {
+        mongodExecutable.stop();
+      }
+    } catch (IllegalStateException ise) {
+      // we are   swallowing this - couldn't kill the embedded mongod process, but we don't care
+      log().info("Had issues stopping embedded mongod: {}", ise.getMessage());
     }
 
     log().info("Stopped Mongo server...");
