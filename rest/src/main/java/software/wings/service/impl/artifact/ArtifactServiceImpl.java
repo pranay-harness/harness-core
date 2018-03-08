@@ -12,6 +12,7 @@ import static software.wings.beans.artifact.Artifact.Status.REJECTED;
 import static software.wings.beans.artifact.Artifact.Status.RUNNING;
 import static software.wings.beans.artifact.Artifact.Status.WAITING;
 import static software.wings.beans.artifact.ArtifactStreamType.ACR;
+import static software.wings.beans.artifact.ArtifactStreamType.AMI;
 import static software.wings.beans.artifact.ArtifactStreamType.ARTIFACTORY;
 import static software.wings.beans.artifact.ArtifactStreamType.DOCKER;
 import static software.wings.beans.artifact.ArtifactStreamType.ECR;
@@ -160,22 +161,25 @@ public class ArtifactServiceImpl implements ArtifactService {
       return APPROVED;
     }
 
-    if (ARTIFACTORY.name().equals(artifactStream.getArtifactStreamType())
-        || NEXUS.name().equals(artifactStream.getArtifactStreamType())) {
-      ArtifactType artifactType =
-          serviceResourceService.get(artifactStream.getAppId(), artifactStream.getServiceId(), false).getArtifactType();
-      if (artifactType.equals(ArtifactType.DOCKER)) {
-        return APPROVED;
-      }
+    if (DOCKER.name().equals(artifactStream.getArtifactStreamType())
+        || ECR.name().equals(artifactStream.getArtifactStreamType())
+        || GCR.name().equals(artifactStream.getArtifactStreamType())
+        || ACR.name().equals(artifactStream.getArtifactStreamType())) {
+      return APPROVED;
     }
 
-    return (DOCKER.name().equals(artifactStream.getArtifactStreamType())
-               || ECR.name().equals(artifactStream.getArtifactStreamType())
-               || GCR.name().equals(artifactStream.getArtifactStreamType())
-               || ACR.name().equals(artifactStream.getArtifactStreamType())
-               || ARTIFACTORY.name().equals(artifactStream.getArtifactStreamType()))
-        ? (artifactStream.isAutoApproveForProduction() ? APPROVED : READY)
-        : QUEUED;
+    if (AMI.name().equals(artifactStream.getArtifactStreamType())) {
+      return APPROVED;
+    }
+
+    if (ARTIFACTORY.name().equals(artifactStream.getArtifactStreamType())
+        || NEXUS.name().equals(artifactStream.getArtifactStreamType())) {
+      ArtifactType serviceArtifactType =
+          serviceResourceService.get(artifactStream.getAppId(), artifactStream.getServiceId(), false).getArtifactType();
+      return serviceArtifactType.equals(ArtifactType.DOCKER) ? APPROVED : QUEUED;
+    }
+
+    return QUEUED;
   }
 
   /* (non-Javadoc)

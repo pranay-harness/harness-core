@@ -2,9 +2,15 @@ package software.wings.scheduler;
 
 import static io.harness.data.structure.EmptyPredicate.isEmpty;
 import static io.harness.data.structure.EmptyPredicate.isNotEmpty;
+import static java.util.Arrays.asList;
 import static software.wings.beans.artifact.Artifact.Builder.anArtifact;
 import static software.wings.beans.artifact.Artifact.Status.APPROVED;
+import static software.wings.beans.artifact.Artifact.Status.FAILED;
+import static software.wings.beans.artifact.Artifact.Status.QUEUED;
 import static software.wings.beans.artifact.Artifact.Status.READY;
+import static software.wings.beans.artifact.Artifact.Status.REJECTED;
+import static software.wings.beans.artifact.Artifact.Status.RUNNING;
+import static software.wings.beans.artifact.Artifact.Status.WAITING;
 import static software.wings.beans.artifact.ArtifactStreamType.ACR;
 import static software.wings.beans.artifact.ArtifactStreamType.AMAZON_S3;
 import static software.wings.beans.artifact.ArtifactStreamType.AMI;
@@ -286,12 +292,12 @@ public class ArtifactCollectionJob implements Job {
         || !artifactStream.getArtifactStreamAttributes().getRepositoryType().equals("maven")) {
       collectArtifactoryGenericArtifacts(appId, artifactStream, newArtifacts);
     } else {
-      collectArtifactoryMavenArtifacts(appId, artifactStream, newArtifacts, artifactType);
+      collectArtifactoryMavenArtifacts(appId, artifactStream, newArtifacts);
     }
   }
 
   private void collectArtifactoryMavenArtifacts(
-      String appId, ArtifactStream artifactStream, List<Artifact> newArtifacts, ArtifactType artifactType) {
+      String appId, ArtifactStream artifactStream, List<Artifact> newArtifacts) {
     String artifactStreamId = artifactStream.getUuid();
     try (AcquiredLock lock = persistentLocker.acquireLock(ArtifactStream.class, artifactStreamId, timeout)) {
       logger.info("Collecting Artifact for artifact stream id {} type {} and source name {} ", artifactStreamId,
@@ -520,6 +526,8 @@ public class ArtifactCollectionJob implements Job {
                               .equal(appId)
                               .field("artifactStreamId")
                               .equal(artifactStreamId)
+                              .field("status")
+                              .hasAnyOf(asList(QUEUED, RUNNING, REJECTED, WAITING, READY, APPROVED, FAILED))
                               .disableValidation();
     final MorphiaIterator<Artifact, Artifact> iterator = artifactQuery.fetch();
     while (iterator.hasNext()) {
