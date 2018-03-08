@@ -2,7 +2,9 @@ package software.wings.service.impl;
 
 import static io.harness.data.structure.UUIDGenerator.generateUuid;
 import static io.harness.threading.Puller.pullFor;
+import static java.time.Duration.ofSeconds;
 import static java.util.Arrays.asList;
+import static java.util.stream.Collectors.toList;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.failBecauseExceptionWasNotThrown;
 import static org.mockito.Matchers.any;
@@ -31,6 +33,7 @@ import static software.wings.dl.PageRequest.PageRequestBuilder.aPageRequest;
 import static software.wings.dl.PageResponse.PageResponseBuilder.aPageResponse;
 import static software.wings.settings.SettingValue.SettingVariableTypes.PHYSICAL_DATA_CENTER;
 import static software.wings.sm.ExecutionInterrupt.ExecutionInterruptBuilder.anExecutionInterrupt;
+import static software.wings.sm.ExecutionStatus.WAITING;
 import static software.wings.utils.WingsTestConstants.ACCOUNT_NAME;
 import static software.wings.utils.WingsTestConstants.APP_NAME;
 import static software.wings.utils.WingsTestConstants.ARTIFACT_NAME;
@@ -45,6 +48,7 @@ import com.google.inject.Injector;
 import com.google.inject.name.Named;
 
 import io.harness.rule.RepeatRule.Repeat;
+import io.harness.threading.Puller;
 import org.junit.Before;
 import org.junit.Ignore;
 import org.junit.Test;
@@ -115,11 +119,10 @@ import software.wings.utils.JsonUtils;
 import software.wings.waitnotify.NotifyEventListener;
 import software.wings.waitnotify.WaitNotifyEngine;
 
-import java.time.Duration;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Objects;
 import java.util.concurrent.ScheduledExecutorService;
-import java.util.stream.Collectors;
 
 /**
  * The type Workflow service impl test.
@@ -567,11 +570,11 @@ public class WorkflowExecutionServiceImplTest extends WingsBaseTest {
     assertThat(svcElements).isNotNull().hasSize(2).extracting("name").contains(service1.getName(), service2.getName());
     assertThat(svcElements).extracting("type").contains("ELEMENT", "ELEMENT");
 
-    List<GraphNode> svcRepeatWaits = svcElements.stream().map(GraphNode::getNext).collect(Collectors.toList());
+    List<GraphNode> svcRepeatWaits = svcElements.stream().map(GraphNode::getNext).collect(toList());
     assertThat(svcRepeatWaits).isNotNull().hasSize(2).extracting("name").contains("svcRepeatWait", "svcRepeatWait");
     assertThat(svcRepeatWaits).extracting("type").contains("WAIT", "WAIT");
 
-    List<GraphNode> repeatInstance = svcRepeatWaits.stream().map(GraphNode::getNext).collect(Collectors.toList());
+    List<GraphNode> repeatInstance = svcRepeatWaits.stream().map(GraphNode::getNext).collect(toList());
     assertThat(repeatInstance)
         .isNotNull()
         .hasSize(2)
@@ -579,7 +582,7 @@ public class WorkflowExecutionServiceImplTest extends WingsBaseTest {
         .contains("RepeatByInstances", "RepeatByInstances");
     assertThat(repeatInstance).extracting("type").contains("REPEAT", "REPEAT");
 
-    List<GraphNode> instSuccessWait = repeatInstance.stream().map(GraphNode::getNext).collect(Collectors.toList());
+    List<GraphNode> instSuccessWait = repeatInstance.stream().map(GraphNode::getNext).collect(toList());
     assertThat(instSuccessWait)
         .isNotNull()
         .hasSize(2)
@@ -590,10 +593,10 @@ public class WorkflowExecutionServiceImplTest extends WingsBaseTest {
     List<GraphNode> instRepeatElements = repeatInstance.stream()
                                              .map(GraphNode::getGroup)
                                              .flatMap(group -> group.getElements().stream())
-                                             .collect(Collectors.toList());
+                                             .collect(toList());
     assertThat(instRepeatElements).extracting("type").contains("ELEMENT", "ELEMENT", "ELEMENT", "ELEMENT");
 
-    List<GraphNode> instRepeatWait = instRepeatElements.stream().map(GraphNode::getNext).collect(Collectors.toList());
+    List<GraphNode> instRepeatWait = instRepeatElements.stream().map(GraphNode::getNext).collect(toList());
     assertThat(instRepeatWait)
         .isNotNull()
         .hasSize(4)
@@ -954,7 +957,7 @@ public class WorkflowExecutionServiceImplTest extends WingsBaseTest {
     logger.debug("Workflow executionId: {}", executionId);
     assertThat(executionId).isNotNull();
 
-    pullFor(Duration.ofSeconds(10), () -> {
+    pullFor(ofSeconds(10), () -> {
       final WorkflowExecution pull = workflowExecutionService.getExecutionDetails(app.getUuid(), executionId);
       return pull.getStatus() == ExecutionStatus.PAUSED;
     });
@@ -1064,7 +1067,7 @@ public class WorkflowExecutionServiceImplTest extends WingsBaseTest {
     logger.debug("Workflow executionId: {}", executionId);
     assertThat(executionId).isNotNull();
 
-    pullFor(Duration.ofSeconds(3), () -> {
+    pullFor(ofSeconds(3), () -> {
       final WorkflowExecution pull = workflowExecutionService.getExecutionDetails(app.getUuid(), executionId);
       return pull.getStatus() == ExecutionStatus.RUNNING;
     });
@@ -1078,7 +1081,7 @@ public class WorkflowExecutionServiceImplTest extends WingsBaseTest {
     executionInterrupt = workflowExecutionService.triggerExecutionInterrupt(executionInterrupt);
     assertThat(executionInterrupt).isNotNull().hasFieldOrProperty("uuid");
 
-    pullFor(Duration.ofSeconds(15), () -> {
+    pullFor(ofSeconds(15), () -> {
       final WorkflowExecution pull = workflowExecutionService.getExecutionDetails(app.getUuid(), executionId);
       return pull.getStatus() == ExecutionStatus.PAUSED && pull.getExecutionNode().getGroup() != null;
     });
@@ -1091,9 +1094,9 @@ public class WorkflowExecutionServiceImplTest extends WingsBaseTest {
                                     .stream()
                                     .filter(n -> n.getNext() != null)
                                     .map(GraphNode::getNext)
-                                    .collect(Collectors.toList());
+                                    .collect(toList());
     List<GraphNode> wait2List =
-        wait1List.stream().filter(n -> n.getNext() != null).map(GraphNode::getNext).collect(Collectors.toList());
+        wait1List.stream().filter(n -> n.getNext() != null).map(GraphNode::getNext).collect(toList());
 
     assertThat(execution).isNotNull().extracting("uuid", "status").containsExactly(executionId, ExecutionStatus.PAUSED);
     assertThat(execution.getExecutionNode())
@@ -1131,9 +1134,8 @@ public class WorkflowExecutionServiceImplTest extends WingsBaseTest {
                     .stream()
                     .filter(n -> n.getNext() != null)
                     .map(GraphNode::getNext)
-                    .collect(Collectors.toList());
-    wait2List =
-        wait1List.stream().filter(n -> n.getNext() != null).map(GraphNode::getNext).collect(Collectors.toList());
+                    .collect(toList());
+    wait2List = wait1List.stream().filter(n -> n.getNext() != null).map(GraphNode::getNext).collect(toList());
 
     assertThat(execution.getExecutionNode())
         .extracting("name", "type", "status")
@@ -1228,7 +1230,7 @@ public class WorkflowExecutionServiceImplTest extends WingsBaseTest {
     logger.debug("Workflow executionId: {}", executionId);
     assertThat(executionId).isNotNull();
 
-    pullFor(Duration.ofSeconds(10), () -> {
+    pullFor(ofSeconds(10), () -> {
       final WorkflowExecution pull = workflowExecutionService.getExecutionDetails(app.getUuid(), executionId);
       return pull.getStatus() == ExecutionStatus.PAUSED;
     });
@@ -1333,7 +1335,7 @@ public class WorkflowExecutionServiceImplTest extends WingsBaseTest {
     logger.debug("Workflow executionId: {}", executionId);
     assertThat(executionId).isNotNull();
 
-    pullFor(Duration.ofSeconds(5), () -> {
+    pullFor(ofSeconds(5), () -> {
       final WorkflowExecution pull = workflowExecutionService.getExecutionDetails(app.getUuid(), executionId);
       return pull.getStatus() == ExecutionStatus.RUNNING;
     });
@@ -1347,7 +1349,7 @@ public class WorkflowExecutionServiceImplTest extends WingsBaseTest {
     executionInterrupt = workflowExecutionService.triggerExecutionInterrupt(executionInterrupt);
     assertThat(executionInterrupt).isNotNull().hasFieldOrProperty("uuid");
 
-    pullFor(Duration.ofSeconds(15), () -> {
+    pullFor(ofSeconds(15), () -> {
       final WorkflowExecution pull = workflowExecutionService.getExecutionDetails(app.getUuid(), executionId);
       return pull.getStatus() == ExecutionStatus.ABORTED;
     });
@@ -1472,14 +1474,14 @@ public class WorkflowExecutionServiceImplTest extends WingsBaseTest {
     assertThat(execution)
         .isNotNull()
         .hasFieldOrPropertyWithValue("uuid", executionId)
-        .hasFieldOrPropertyWithValue("status", ExecutionStatus.WAITING);
+        .hasFieldOrPropertyWithValue("status", WAITING);
     assertThat(installNodes)
         .isNotNull()
         .doesNotContainNull()
         .filteredOn("name", "install")
         .hasSize(1)
         .extracting("status")
-        .containsExactly(ExecutionStatus.WAITING.name());
+        .containsExactly(WAITING.name());
 
     GraphNode installNode = installNodes.get(0);
     ExecutionInterrupt executionInterrupt = anExecutionInterrupt()
@@ -1496,18 +1498,18 @@ public class WorkflowExecutionServiceImplTest extends WingsBaseTest {
     assertThat(execution)
         .isNotNull()
         .hasFieldOrPropertyWithValue("uuid", executionId)
-        .hasFieldOrPropertyWithValue("status", ExecutionStatus.WAITING);
+        .hasFieldOrPropertyWithValue("status", WAITING);
     assertThat(installNodes)
         .isNotNull()
         .doesNotContainNull()
         .filteredOn("name", "install")
         .hasSize(2)
         .extracting("status")
-        .contains(ExecutionStatus.SUCCESS.name(), ExecutionStatus.WAITING.name());
+        .contains(ExecutionStatus.SUCCESS.name(), WAITING.name());
 
     installNode = installNodes.stream()
-                      .filter(n -> n.getStatus() != null && n.getStatus().equals(ExecutionStatus.WAITING.name()))
-                      .collect(Collectors.toList())
+                      .filter(n -> n.getStatus() != null && n.getStatus().equals(WAITING.name()))
+                      .collect(toList())
                       .get(0);
     executionInterrupt = anExecutionInterrupt()
                              .withAppId(app.getUuid())
@@ -1536,7 +1538,7 @@ public class WorkflowExecutionServiceImplTest extends WingsBaseTest {
                        .flatMap(group -> group.getElements().stream())
                        .filter(node -> node.getNext() != null)
                        .map(GraphNode::getNext)
-                       .collect(Collectors.toList());
+                       .collect(toList());
     assertThat(installNodes)
         .isNotNull()
         .doesNotContainNull()
@@ -1546,39 +1548,42 @@ public class WorkflowExecutionServiceImplTest extends WingsBaseTest {
         .containsExactly(ExecutionStatus.SUCCESS.name(), ExecutionStatus.FAILED.name());
   }
 
-  private List<GraphNode> getNodes(String executionId) throws InterruptedException {
-    WorkflowExecution execution;
-    int i = 0;
-    List<GraphNode> installNodes = null;
-    boolean paused = false;
-    do {
-      i++;
-      Thread.sleep(1000);
-      execution = workflowExecutionService.getExecutionDetails(app.getUuid(), executionId);
+  private List<GraphNode> installNodes(WorkflowExecution execution) {
+    return execution.getExecutionNode()
+        .getGroup()
+        .getElements()
+        .stream()
+        .map(GraphNode::getNext)
+        .filter(Objects::nonNull)
+        .map(GraphNode::getGroup)
+        .filter(Objects::nonNull)
+        .filter(group -> group.getElements() != null)
+        .flatMap(group -> group.getElements().stream())
+        .map(GraphNode::getNext)
+        .filter(Objects::nonNull)
+        .collect(toList());
+  }
 
-      if (execution.getExecutionNode() == null || execution.getExecutionNode().getGroup() == null
-          || execution.getExecutionNode().getGroup().getElements() == null) {
-        continue;
+  private List<GraphNode> getNodes(String executionId) throws InterruptedException {
+    List<GraphNode> installNodes;
+
+    Puller.pullFor(ofSeconds(10), () -> {
+      WorkflowExecution execution = workflowExecutionService.getExecutionDetails(app.getUuid(), executionId);
+      if (execution.getExecutionNode() == null) {
+        return false;
       }
-      installNodes = execution.getExecutionNode()
-                         .getGroup()
-                         .getElements()
-                         .stream()
-                         .filter(node -> node.getNext() != null)
-                         .map(GraphNode::getNext)
-                         .filter(node -> node.getGroup() != null)
-                         .map(GraphNode::getGroup)
-                         .filter(group -> group.getElements() != null)
-                         .flatMap(group -> group.getElements().stream())
-                         .filter(node -> node.getNext() != null)
-                         .map(GraphNode::getNext)
-                         .collect(Collectors.toList());
-      paused = !installNodes.stream()
-                    .filter(n -> n.getStatus() != null && n.getStatus().equals(ExecutionStatus.WAITING.name()))
-                    .collect(Collectors.toList())
-                    .isEmpty();
-    } while (!paused && i < 5);
-    return installNodes;
+      if (execution.getExecutionNode().getGroup() == null) {
+        return false;
+      }
+      if (execution.getExecutionNode().getGroup().getElements() == null) {
+        return false;
+      }
+
+      return installNodes(execution).stream().anyMatch(
+          n -> n.getStatus() != null && n.getStatus().equals(WAITING.name()));
+    });
+
+    return installNodes(workflowExecutionService.getExecutionDetails(app.getUuid(), executionId));
   }
 
   /**
@@ -1587,7 +1592,7 @@ public class WorkflowExecutionServiceImplTest extends WingsBaseTest {
    * @throws InterruptedException the interrupted exception
    */
   @Test
-  @Repeat(times = 3, successes = 1)
+  @Repeat(times = 6, successes = 1)
   public void shouldRetryOnError() throws InterruptedException {
     Host host1 = wingsPersistence.saveAndGet(
         Host.class, aHost().withAppId(app.getUuid()).withEnvId(env.getUuid()).withHostName("host1").build());
@@ -1669,7 +1674,7 @@ public class WorkflowExecutionServiceImplTest extends WingsBaseTest {
     assertThat(execution)
         .isNotNull()
         .hasFieldOrPropertyWithValue("uuid", executionId)
-        .hasFieldOrPropertyWithValue("status", ExecutionStatus.WAITING);
+        .hasFieldOrPropertyWithValue("status", WAITING);
 
     assertThat(installNodes)
         .isNotNull()
@@ -1677,7 +1682,7 @@ public class WorkflowExecutionServiceImplTest extends WingsBaseTest {
         .filteredOn("name", "install")
         .hasSize(1)
         .extracting("status")
-        .containsExactly(ExecutionStatus.WAITING.name());
+        .containsExactly(WAITING.name());
 
     GraphNode installNode = installNodes.get(0);
     ExecutionInterrupt executionInterrupt = anExecutionInterrupt()
@@ -1694,14 +1699,14 @@ public class WorkflowExecutionServiceImplTest extends WingsBaseTest {
     assertThat(execution)
         .isNotNull()
         .hasFieldOrPropertyWithValue("uuid", executionId)
-        .hasFieldOrPropertyWithValue("status", ExecutionStatus.WAITING);
+        .hasFieldOrPropertyWithValue("status", WAITING);
     assertThat(installNodes)
         .isNotNull()
         .doesNotContainNull()
         .filteredOn("name", "install")
         .hasSize(1)
         .extracting("status")
-        .containsExactly(ExecutionStatus.WAITING.name());
+        .containsExactly(WAITING.name());
 
     installNode = installNodes.get(0);
     executionInterrupt = anExecutionInterrupt()
@@ -1732,7 +1737,7 @@ public class WorkflowExecutionServiceImplTest extends WingsBaseTest {
                        .flatMap(group -> group.getElements().stream())
                        .filter(node -> node.getNext() != null)
                        .map(GraphNode::getNext)
-                       .collect(Collectors.toList());
+                       .collect(toList());
     assertThat(installNodes)
         .isNotNull()
         .doesNotContainNull()
@@ -1871,7 +1876,7 @@ public class WorkflowExecutionServiceImplTest extends WingsBaseTest {
                                         .filter(contextElement
                                             -> contextElement.getElementType() == ContextElementType.PARAM
                                                 && contextElement.getName() == Constants.PHASE_PARAM)
-                                        .collect(Collectors.toList());
+                                        .collect(toList());
     assertThat(elements).isNotNull().isNotEmpty();
     assertThat(elements.get(0)).isInstanceOf(PhaseElement.class);
     assertThat(((PhaseElement) elements.get(0)).getPhaseName()).isNotEmpty();
@@ -1956,7 +1961,7 @@ public class WorkflowExecutionServiceImplTest extends WingsBaseTest {
     PhaseStep deployPhaseStep = workflowPhase.getPhaseSteps()
                                     .stream()
                                     .filter(ps -> ps.getPhaseStepType() == PhaseStepType.DEPLOY_SERVICE)
-                                    .collect(Collectors.toList())
+                                    .collect(toList())
                                     .get(0);
 
     deployPhaseStep.getSteps().add(
@@ -2050,7 +2055,7 @@ public class WorkflowExecutionServiceImplTest extends WingsBaseTest {
     PhaseStep deployPhaseStep = workflowPhase.getPhaseSteps()
                                     .stream()
                                     .filter(ps -> ps.getPhaseStepType() == PhaseStepType.DEPLOY_SERVICE)
-                                    .collect(Collectors.toList())
+                                    .collect(toList())
                                     .get(0);
 
     deployPhaseStep.getSteps().add(
