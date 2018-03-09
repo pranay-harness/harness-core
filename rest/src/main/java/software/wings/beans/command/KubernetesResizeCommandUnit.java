@@ -20,6 +20,7 @@ import software.wings.api.DeploymentType;
 import software.wings.beans.AzureConfig;
 import software.wings.beans.ErrorCode;
 import software.wings.beans.GcpConfig;
+import software.wings.beans.KubernetesClusterConfig;
 import software.wings.beans.KubernetesConfig;
 import software.wings.beans.Log.LogLevel;
 import software.wings.cloudprovider.ContainerInfo;
@@ -116,6 +117,9 @@ public class KubernetesResizeCommandUnit extends ContainerResizeCommandUnit {
     KubernetesConfig kubernetesConfig;
     if (contextData.settingAttribute.getValue() instanceof KubernetesConfig) {
       kubernetesConfig = (KubernetesConfig) contextData.settingAttribute.getValue();
+      encryptedDataDetails.addAll(contextData.encryptedDataDetails);
+    } else if (contextData.settingAttribute.getValue() instanceof KubernetesClusterConfig) {
+      kubernetesConfig = ((KubernetesClusterConfig) contextData.settingAttribute.getValue()).createKubernetesConfig();
       encryptedDataDetails.addAll(contextData.encryptedDataDetails);
     } else if (contextData.settingAttribute.getValue() instanceof AzureConfig) {
       AzureConfig azureConfig = (AzureConfig) contextData.settingAttribute.getValue();

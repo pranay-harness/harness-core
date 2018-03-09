@@ -2944,7 +2944,7 @@ public class KmsTest extends WingsBaseTest {
             .withEnvId(UUID.randomUUID().toString())
             .withServiceTemplateId(serviceTemplateId)
             .withServiceId(serviceId)
-            .withComputeProviderType(UUID.randomUUID().toString())
+            .withComputeProviderType(SettingVariableTypes.DIRECT.name())
             .withInfraMappingType(UUID.randomUUID().toString())
             .withDeploymentType(UUID.randomUUID().toString())
             .withAccountId(accountId)

@@ -31,6 +31,7 @@ import software.wings.beans.ElkConfig;
 import software.wings.beans.GcpConfig;
 import software.wings.beans.HostConnectionAttributes;
 import software.wings.beans.JenkinsConfig;
+import software.wings.beans.KubernetesClusterConfig;
 import software.wings.beans.NewRelicConfig;
 import software.wings.beans.PhysicalDataCenterConfig;
 import software.wings.beans.SlackConfig;
@@ -215,6 +216,15 @@ public class PluginServiceImpl implements PluginService {
             .withType("PHYSICAL_DATA_CENTER")
             .withPluginCategories(asList(CloudProvider))
             .withUiSchema(readUiSchema("PHYSICAL_DATA_CENTER"))
+            .build(),
+        anAccountPlugin()
+            .withSettingClass(KubernetesClusterConfig.class)
+            .withAccountId(accountId)
+            .withIsEnabled(true)
+            .withDisplayName("Kubernetes Cluster")
+            .withType("KUBERNETES_CLUSTER")
+            .withPluginCategories(asList(CloudProvider))
+            .withUiSchema(readUiSchema("KUBERNETES_CLUSTER"))
             .build(),
         anAccountPlugin()
             .withSettingClass(HostConnectionAttributes.class)

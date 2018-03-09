@@ -5,13 +5,12 @@ import com.github.reinert.jjschema.SchemaIgnore;
 import lombok.Data;
 import lombok.EqualsAndHashCode;
 import lombok.NoArgsConstructor;
-import org.hibernate.validator.constraints.NotEmpty;
 
 /**
  * Created by rishi on 5/18/17.
  */
 public abstract class ContainerInfrastructureMapping extends InfrastructureMapping {
-  @Attributes(title = "Cluster Name", required = true) @NotEmpty private String clusterName;
+  @Attributes(title = "Cluster Name") private String clusterName;
 
   /**
    * Instantiates a new Infrastructure mapping.

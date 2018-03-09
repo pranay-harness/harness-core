@@ -342,6 +342,7 @@ public class YamlResourceServiceImpl implements YamlResourceService {
       case AWS:
       case GCP:
       case AZURE:
+      case KUBERNETES_CLUSTER:
       case PHYSICAL_DATA_CENTER:
         return yamlHandlerFactory.getYamlHandler(YamlType.CLOUD_PROVIDER, settingVariableType.name());
 
@@ -388,8 +389,8 @@ public class YamlResourceServiceImpl implements YamlResourceService {
       case CONFIG_FILE:
       case SSH_SESSION_CONFIG:
       case YAML_GIT_SYNC:
-      case DIRECT:
       case KUBERNETES:
+      case DIRECT:
       case STRING:
         break;
       default:

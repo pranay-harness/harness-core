@@ -64,6 +64,7 @@ import software.wings.service.intfc.ServiceResourceService;
 import software.wings.service.intfc.ServiceTemplateService;
 import software.wings.service.intfc.SettingsService;
 import software.wings.service.intfc.security.SecretManager;
+import software.wings.settings.SettingValue.SettingVariableTypes;
 import software.wings.sm.ContextElementType;
 import software.wings.sm.ExecutionContext;
 import software.wings.sm.ExecutionResponse;
@@ -329,6 +330,7 @@ public abstract class ContainerServiceDeploy extends State {
           workflowStandardParams.getAppId(), phaseElement.getInfraMappingId());
       infrastructureMappingId = infrastructureMapping.getUuid();
       settingAttribute = infrastructureMapping instanceof DirectKubernetesInfrastructureMapping
+              && infrastructureMapping.getComputeProviderType().equals(SettingVariableTypes.DIRECT.name())
           ? aSettingAttribute()
                 .withValue(((DirectKubernetesInfrastructureMapping) infrastructureMapping).createKubernetesConfig())
                 .build()
