@@ -650,6 +650,8 @@ public class YamlDirectoryServiceImpl implements YamlDirectoryService {
     doCloudProviderType(accountId, cloudProvidersFolder, SettingVariableTypes.GCP, directoryPath.clone());
     doCloudProviderType(accountId, cloudProvidersFolder, SettingVariableTypes.AZURE, directoryPath.clone());
     doCloudProviderType(
+        accountId, cloudProvidersFolder, SettingVariableTypes.KUBERNETES_CLUSTER, directoryPath.clone());
+    doCloudProviderType(
         accountId, cloudProvidersFolder, SettingVariableTypes.PHYSICAL_DATA_CENTER, directoryPath.clone());
 
     return cloudProvidersFolder;
@@ -919,6 +921,7 @@ public class YamlDirectoryServiceImpl implements YamlDirectoryService {
       case AWS:
       case GCP:
       case AZURE:
+      case KUBERNETES_CLUSTER:
       case PHYSICAL_DATA_CENTER:
         sb.append(CLOUD_PROVIDERS_FOLDER);
         break;
@@ -969,8 +972,8 @@ public class YamlDirectoryServiceImpl implements YamlDirectoryService {
       case CONFIG_FILE:
       case SSH_SESSION_CONFIG:
       case YAML_GIT_SYNC:
-      case DIRECT:
       case KUBERNETES:
+      case DIRECT:
         break;
       case STRING:
         String path = getRootPathByDefaultVariable(settingAttribute);

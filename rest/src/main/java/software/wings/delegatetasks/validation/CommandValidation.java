@@ -18,6 +18,7 @@ import software.wings.beans.AzureConfig;
 import software.wings.beans.DelegateTask;
 import software.wings.beans.ErrorCode;
 import software.wings.beans.GcpConfig;
+import software.wings.beans.KubernetesClusterConfig;
 import software.wings.beans.KubernetesConfig;
 import software.wings.beans.SettingAttribute;
 import software.wings.beans.command.Command;
@@ -149,6 +150,8 @@ public class CommandValidation extends AbstractDelegateValidateTask {
         AzureConfig azureConfig = (AzureConfig) value;
         kubernetesConfig = azureHelperService.getKubernetesClusterConfig(
             azureConfig, edd, subscriptionId, resourceGroup, clusterName, namespace);
+      } else if (value instanceof KubernetesClusterConfig) {
+        kubernetesConfig = ((KubernetesClusterConfig) value).createKubernetesConfig();
       } else {
         throw new WingsException(ErrorCode.INVALID_ARGUMENT)
             .addParam("args", "Unknown kubernetes cloud provider setting value: " + value.getType());

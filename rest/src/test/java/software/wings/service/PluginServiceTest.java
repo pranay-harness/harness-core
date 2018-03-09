@@ -28,6 +28,7 @@ import software.wings.beans.ElkConfig;
 import software.wings.beans.GcpConfig;
 import software.wings.beans.HostConnectionAttributes;
 import software.wings.beans.JenkinsConfig;
+import software.wings.beans.KubernetesClusterConfig;
 import software.wings.beans.NewRelicConfig;
 import software.wings.beans.PhysicalDataCenterConfig;
 import software.wings.beans.SlackConfig;
@@ -67,7 +68,7 @@ public class PluginServiceTest {
   @Test
   public void shouldGetInstalledPlugins() throws Exception {
     assertThat(pluginService.getInstalledPlugins(accountId))
-        .hasSize(19)
+        .hasSize(20)
         .containsExactly(anAccountPlugin()
                              .withSettingClass(JenkinsConfig.class)
                              .withAccountId(accountId)
@@ -205,6 +206,14 @@ public class PluginServiceTest {
                 .withPluginCategories(asList(CloudProvider))
                 .build(),
             anAccountPlugin()
+                .withSettingClass(KubernetesClusterConfig.class)
+                .withAccountId(accountId)
+                .withIsEnabled(true)
+                .withDisplayName("Kubernetes Cluster")
+                .withType("KUBERNETES_CLUSTER")
+                .withPluginCategories(asList(CloudProvider))
+                .build(),
+            anAccountPlugin()
                 .withSettingClass(HostConnectionAttributes.class)
                 .withAccountId(accountId)
                 .withIsEnabled(false)
@@ -222,7 +231,7 @@ public class PluginServiceTest {
                 .build());
 
     assertThat(pluginService.getInstalledPlugins(azureEnabledAccountId))
-        .hasSize(20)
+        .hasSize(21)
         .contains(anAccountPlugin()
                       .withSettingClass(AzureConfig.class)
                       .withAccountId(azureEnabledAccountId)
@@ -236,15 +245,15 @@ public class PluginServiceTest {
   @Test
   public void shouldGetPluginSettingSchema() throws Exception {
     assertThat(pluginService.getPluginSettingSchema(accountId))
-        .hasSize(19)
-        .containsOnlyKeys("APP_DYNAMICS", "NEW_RELIC", "DYNA_TRACE", "JENKINS", "BAMBOO", "SMTP", "SLACK", "SPLUNK",
-            "ELK", "LOGZ", "SUMO", "AWS", "GCP", "PHYSICAL_DATA_CENTER", "DOCKER", "HOST_CONNECTION_ATTRIBUTES", "ELB",
-            "NEXUS", "ARTIFACTORY");
-
-    assertThat(pluginService.getPluginSettingSchema(azureEnabledAccountId))
         .hasSize(20)
         .containsOnlyKeys("APP_DYNAMICS", "NEW_RELIC", "DYNA_TRACE", "JENKINS", "BAMBOO", "SMTP", "SLACK", "SPLUNK",
-            "ELK", "LOGZ", "SUMO", "AWS", "GCP", "AZURE", "PHYSICAL_DATA_CENTER", "DOCKER",
+            "ELK", "LOGZ", "SUMO", "AWS", "GCP", "PHYSICAL_DATA_CENTER", "KUBERNETES_CLUSTER", "DOCKER",
+            "HOST_CONNECTION_ATTRIBUTES", "ELB", "NEXUS", "ARTIFACTORY");
+
+    assertThat(pluginService.getPluginSettingSchema(azureEnabledAccountId))
+        .hasSize(21)
+        .containsOnlyKeys("APP_DYNAMICS", "NEW_RELIC", "DYNA_TRACE", "JENKINS", "BAMBOO", "SMTP", "SLACK", "SPLUNK",
+            "ELK", "LOGZ", "SUMO", "AWS", "GCP", "AZURE", "PHYSICAL_DATA_CENTER", "KUBERNETES_CLUSTER", "DOCKER",
             "HOST_CONNECTION_ATTRIBUTES", "ELB", "NEXUS", "ARTIFACTORY");
   }
 }

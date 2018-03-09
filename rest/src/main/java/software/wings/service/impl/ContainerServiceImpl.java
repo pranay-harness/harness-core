@@ -18,6 +18,7 @@ import software.wings.beans.AwsConfig;
 import software.wings.beans.AzureConfig;
 import software.wings.beans.ErrorCode;
 import software.wings.beans.GcpConfig;
+import software.wings.beans.KubernetesClusterConfig;
 import software.wings.beans.KubernetesConfig;
 import software.wings.beans.ResponseMessage;
 import software.wings.beans.infrastructure.instance.info.ContainerInfo;
@@ -46,7 +47,8 @@ public class ContainerServiceImpl implements ContainerService {
   @Inject private AzureHelperService azureHelperService;
 
   private boolean isKubernetesClusterConfig(SettingValue value) {
-    return value instanceof AzureConfig || value instanceof GcpConfig || value instanceof KubernetesConfig;
+    return value instanceof AzureConfig || value instanceof GcpConfig || value instanceof KubernetesConfig
+        || value instanceof KubernetesClusterConfig;
   }
 
   @Override
@@ -79,6 +81,10 @@ public class ContainerServiceImpl implements ContainerService {
               containerServiceParams.getSubscriptionId(), containerServiceParams.getResourceGroup(),
               containerServiceParams.getClusterName(), containerServiceParams.getNamespace());
       kubernetesConfig.setDecrypted(true);
+    } else if (containerServiceParams.getSettingAttribute().getValue() instanceof KubernetesClusterConfig) {
+      KubernetesClusterConfig kubernetesClusterConfig =
+          (KubernetesClusterConfig) containerServiceParams.getSettingAttribute().getValue();
+      kubernetesConfig = kubernetesClusterConfig.createKubernetesConfig();
     } else {
       kubernetesConfig = (KubernetesConfig) containerServiceParams.getSettingAttribute().getValue();
     }
@@ -200,6 +206,11 @@ public class ContainerServiceImpl implements ContainerService {
       } else {
         throw new WingsException(ErrorCode.INVALID_ARGUMENT, "Invalid Argument: Not a valid AKS cluster");
       }
+    } else if (value instanceof KubernetesClusterConfig) {
+      KubernetesClusterConfig kubernetesClusterConfig = (KubernetesClusterConfig) value;
+      KubernetesConfig kubernetesConfig = kubernetesClusterConfig.createKubernetesConfig();
+      kubernetesContainerService.listControllers(kubernetesConfig, containerServiceParams.getEncryptionDetails());
+      return true;
     } else if (isKubernetesClusterConfig(value)) {
       KubernetesConfig kubernetesConfig = getKubernetesConfig(containerServiceParams);
       kubernetesContainerService.listControllers(kubernetesConfig, containerServiceParams.getEncryptionDetails());

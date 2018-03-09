@@ -187,6 +187,7 @@ public abstract class ContainerServiceSetup extends State {
       Activity activity = buildActivity(context, app, env, service, command);
 
       SettingAttribute settingAttribute = infrastructureMapping instanceof DirectKubernetesInfrastructureMapping
+              && infrastructureMapping.getComputeProviderType().equals(SettingVariableTypes.DIRECT.name())
           ? aSettingAttribute()
                 .withValue(((DirectKubernetesInfrastructureMapping) infrastructureMapping).createKubernetesConfig())
                 .build()

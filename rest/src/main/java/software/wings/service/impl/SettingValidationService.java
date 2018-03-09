@@ -1,5 +1,8 @@
 package software.wings.service.impl;
 
+import static java.util.Collections.emptyList;
+import static software.wings.beans.DelegateTask.SyncTaskContext.Builder.aContext;
+import static software.wings.beans.ErrorCode.INVALID_REQUEST;
 import static software.wings.beans.FeatureName.AZURE_SUPPORT;
 import static software.wings.utils.WingsReflectionUtils.getEncryptedRefField;
 
@@ -16,12 +19,14 @@ import software.wings.beans.AwsConfig;
 import software.wings.beans.AzureConfig;
 import software.wings.beans.BambooConfig;
 import software.wings.beans.Base;
+import software.wings.beans.DelegateTask.SyncTaskContext;
 import software.wings.beans.DockerConfig;
 import software.wings.beans.DynaTraceConfig;
 import software.wings.beans.ElkConfig;
 import software.wings.beans.ErrorCode;
 import software.wings.beans.GcpConfig;
 import software.wings.beans.JenkinsConfig;
+import software.wings.beans.KubernetesClusterConfig;
 import software.wings.beans.NewRelicConfig;
 import software.wings.beans.SettingAttribute;
 import software.wings.beans.SplunkConfig;
@@ -29,17 +34,22 @@ import software.wings.beans.SumoConfig;
 import software.wings.beans.config.ArtifactoryConfig;
 import software.wings.beans.config.LogzConfig;
 import software.wings.beans.config.NexusConfig;
+import software.wings.delegatetasks.DelegateProxyFactory;
 import software.wings.dl.WingsPersistence;
 import software.wings.exception.WingsException;
+import software.wings.exception.WingsException.ReportTarget;
 import software.wings.helpers.ext.azure.AzureHelperService;
 import software.wings.service.impl.analysis.ElkConnector;
+import software.wings.service.intfc.AppService;
 import software.wings.service.intfc.BuildSourceService;
+import software.wings.service.intfc.ContainerService;
 import software.wings.service.intfc.FeatureFlagService;
 import software.wings.service.intfc.analysis.AnalysisService;
 import software.wings.service.intfc.elk.ElkAnalysisService;
 import software.wings.service.intfc.newrelic.NewRelicService;
 import software.wings.settings.SettingValue;
 import software.wings.sm.StateType;
+import software.wings.utils.Misc;
 import software.wings.utils.WingsReflectionUtils;
 
 import java.lang.reflect.Field;
@@ -53,6 +63,8 @@ import java.util.List;
 public class SettingValidationService {
   private static final Logger logger = LoggerFactory.getLogger(SettingValidationService.class);
 
+  @Inject private AppService appService;
+  @Inject private DelegateProxyFactory delegateProxyFactory;
   @Inject private AwsHelperService awsHelperService;
   @Inject private GcpHelperService gcpHelperService;
   @Inject private AzureHelperService azureHelperService;
@@ -97,6 +109,8 @@ public class SettingValidationService {
     } else if (settingValue instanceof AwsConfig) {
       awsHelperService.validateAwsAccountCredential(
           ((AwsConfig) settingValue).getAccessKey(), ((AwsConfig) settingValue).getSecretKey());
+    } else if (settingValue instanceof KubernetesClusterConfig) {
+      validateKubernetesClusterConfig(settingAttribute);
     } else if (settingValue instanceof JenkinsConfig || settingValue instanceof BambooConfig
         || settingValue instanceof NexusConfig || settingValue instanceof DockerConfig
         || settingValue instanceof ArtifactoryConfig) {
@@ -144,5 +158,22 @@ public class SettingValidationService {
     }
 
     return true;
+  }
+
+  private void validateKubernetesClusterConfig(SettingAttribute settingAttribute) {
+    String namespace = "default";
+
+    SyncTaskContext syncTaskContext = aContext().withAccountId(settingAttribute.getAccountId()).build();
+    ContainerServiceParams containerServiceParams = ContainerServiceParams.builder()
+                                                        .settingAttribute(settingAttribute)
+                                                        .encryptionDetails(emptyList())
+                                                        .namespace(namespace)
+                                                        .build();
+    try {
+      delegateProxyFactory.get(ContainerService.class, syncTaskContext).validate(containerServiceParams);
+    } catch (Exception e) {
+      logger.warn(Misc.getMessage(e), e);
+      throw new WingsException(INVALID_REQUEST, ReportTarget.USER).addParam("message", Misc.getMessage(e));
+    }
   }
 }

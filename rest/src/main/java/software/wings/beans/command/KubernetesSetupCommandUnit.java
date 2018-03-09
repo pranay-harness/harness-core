@@ -66,6 +66,7 @@ import org.slf4j.LoggerFactory;
 import software.wings.api.DeploymentType;
 import software.wings.beans.AzureConfig;
 import software.wings.beans.ErrorCode;
+import software.wings.beans.KubernetesClusterConfig;
 import software.wings.beans.KubernetesConfig;
 import software.wings.beans.Log.LogLevel;
 import software.wings.beans.SettingAttribute;
@@ -128,6 +129,9 @@ public class KubernetesSetupCommandUnit extends ContainerSetupCommandUnit {
     List<EncryptedDataDetail> encryptedDataDetails;
     if (cloudProviderSetting.getValue() instanceof KubernetesConfig) {
       kubernetesConfig = (KubernetesConfig) cloudProviderSetting.getValue();
+      encryptedDataDetails = edd;
+    } else if (cloudProviderSetting.getValue() instanceof KubernetesClusterConfig) {
+      kubernetesConfig = ((KubernetesClusterConfig) cloudProviderSetting.getValue()).createKubernetesConfig();
       encryptedDataDetails = edd;
     } else if (cloudProviderSetting.getValue() instanceof AzureConfig) {
       AzureConfig azureConfig = (AzureConfig) cloudProviderSetting.getValue();

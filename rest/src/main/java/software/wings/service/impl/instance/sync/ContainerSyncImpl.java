@@ -32,6 +32,7 @@ import software.wings.service.intfc.ContainerService;
 import software.wings.service.intfc.InfrastructureMappingService;
 import software.wings.service.intfc.SettingsService;
 import software.wings.service.intfc.security.SecretManager;
+import software.wings.settings.SettingValue.SettingVariableTypes;
 import software.wings.utils.Validator;
 
 import java.util.List;
@@ -73,7 +74,9 @@ public class ContainerSyncImpl implements ContainerSync {
         if (containerInfraMapping instanceof DirectKubernetesInfrastructureMapping) {
           DirectKubernetesInfrastructureMapping directInfraMapping =
               (DirectKubernetesInfrastructureMapping) containerInfraMapping;
-          settingAttribute = aSettingAttribute().withValue(directInfraMapping.createKubernetesConfig()).build();
+          settingAttribute = (directInfraMapping.getComputeProviderType().equals(SettingVariableTypes.DIRECT.name()))
+              ? aSettingAttribute().withValue(directInfraMapping.createKubernetesConfig()).build()
+              : settingsService.get(directInfraMapping.getComputeProviderSettingId());
           namespace = directInfraMapping.getNamespace();
         } else {
           settingAttribute = settingsService.get(infrastructureMapping.getComputeProviderSettingId());
@@ -135,7 +138,9 @@ public class ContainerSyncImpl implements ContainerSync {
         if (containerInfraMapping instanceof DirectKubernetesInfrastructureMapping) {
           DirectKubernetesInfrastructureMapping directInfraMapping =
               (DirectKubernetesInfrastructureMapping) containerInfraMapping;
-          settingAttribute = aSettingAttribute().withValue(directInfraMapping.createKubernetesConfig()).build();
+          settingAttribute = (directInfraMapping.getComputeProviderType().equals(SettingVariableTypes.DIRECT.name()))
+              ? aSettingAttribute().withValue(directInfraMapping.createKubernetesConfig()).build()
+              : settingsService.get(directInfraMapping.getComputeProviderSettingId());
           namespace = directInfraMapping.getNamespace();
         } else {
           settingAttribute = settingsService.get(containerInfraMapping.getComputeProviderSettingId());

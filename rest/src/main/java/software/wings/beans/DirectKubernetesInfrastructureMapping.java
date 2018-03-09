@@ -11,7 +11,6 @@ import com.github.reinert.jjschema.SchemaIgnore;
 import lombok.Data;
 import lombok.EqualsAndHashCode;
 import lombok.NoArgsConstructor;
-import org.hibernate.validator.constraints.NotEmpty;
 import org.mongodb.morphia.annotations.Transient;
 import software.wings.annotation.Encryptable;
 import software.wings.annotation.Encrypted;
@@ -29,7 +28,7 @@ import java.net.URL;
 @Data
 @EqualsAndHashCode(callSuper = true)
 public class DirectKubernetesInfrastructureMapping extends ContainerInfrastructureMapping implements Encryptable {
-  @Attributes(title = "Master URL", required = true) @NotEmpty private String masterUrl;
+  @Attributes(title = "Master URL") private String masterUrl;
   @Attributes(title = "User Name") private String username;
   @Encrypted @Attributes(title = "Password") private char[] password;
   @Encrypted @Attributes(title = "CA Certificate") private char[] caCert;
@@ -417,7 +416,7 @@ public class DirectKubernetesInfrastructureMapping extends ContainerInfrastructu
   @Data
   @EqualsAndHashCode(callSuper = true)
   @NoArgsConstructor
-  public static class Yaml extends ContainerInfrastructureMapping.Yaml {
+  public static class Yaml extends YamlWithComputeProvider {
     private String masterUrl;
     private String username;
     private String password;
@@ -429,10 +428,12 @@ public class DirectKubernetesInfrastructureMapping extends ContainerInfrastructu
     private String namespace;
 
     @lombok.Builder
-    public Yaml(String type, String harnessApiVersion, String serviceName, String infraMappingType,
-        String deploymentType, String cluster, String masterUrl, String username, String password, String caCert,
-        String clientCert, String clientKey, String clientKeyPassphrase, String clientKeyAlgo, String namespace) {
-      super(type, harnessApiVersion, serviceName, infraMappingType, deploymentType, cluster);
+    public Yaml(String type, String harnessApiVersion, String computeProviderType, String serviceName,
+        String infraMappingType, String deploymentType, String computeProviderName, String cluster, String masterUrl,
+        String username, String password, String caCert, String clientCert, String clientKey,
+        String clientKeyPassphrase, String clientKeyAlgo, String namespace) {
+      super(type, harnessApiVersion, computeProviderType, serviceName, infraMappingType, deploymentType,
+          computeProviderName, cluster);
       this.masterUrl = masterUrl;
       this.username = username;
       this.password = password;

@@ -290,6 +290,8 @@ CLOUD_PROVIDERS:
       value: PHYSICAL_DATA_CENTER
     - name: Direct Kubernetes
       value: DIRECT
+    - name: Kubernetes Cluster
+      value: KUBERNETES_CLUSTER
 
 FORM_FIELD_TO_ENTITY_TYPE:
     - name: envId

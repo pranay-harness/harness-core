@@ -18,6 +18,7 @@ import static software.wings.settings.SettingValue.SettingVariableTypes.GCP;
 import static software.wings.settings.SettingValue.SettingVariableTypes.GCR;
 import static software.wings.settings.SettingValue.SettingVariableTypes.HOST_CONNECTION_ATTRIBUTES;
 import static software.wings.settings.SettingValue.SettingVariableTypes.JENKINS;
+import static software.wings.settings.SettingValue.SettingVariableTypes.KUBERNETES_CLUSTER;
 import static software.wings.settings.SettingValue.SettingVariableTypes.LOGZ;
 import static software.wings.settings.SettingValue.SettingVariableTypes.NEW_RELIC;
 import static software.wings.settings.SettingValue.SettingVariableTypes.NEXUS;
@@ -72,7 +73,7 @@ public class SettingAttribute extends Base {
   @SchemaIgnore @Transient private transient String encryptedBy;
 
   public enum Category {
-    CLOUD_PROVIDER(Lists.newArrayList(PHYSICAL_DATA_CENTER, AWS, AZURE, GCP, DIRECT)),
+    CLOUD_PROVIDER(Lists.newArrayList(PHYSICAL_DATA_CENTER, AWS, AZURE, GCP, DIRECT, KUBERNETES_CLUSTER)),
 
     CONNECTOR(Lists.newArrayList(SMTP, JENKINS, BAMBOO, SPLUNK, ELK, LOGZ, SUMO, APP_DYNAMICS, NEW_RELIC, DYNA_TRACE,
         ELB, SLACK, DOCKER, ECR, GCR, NEXUS, ARTIFACTORY, AMAZON_S3)),

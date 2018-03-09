@@ -189,6 +189,11 @@ public abstract class SettingValue implements ExtensionPoint {
     DIRECT("Direct Kubernetes"),
 
     /**
+     * Kubernetes Cluster setting variable types.
+     */
+    KUBERNETES_CLUSTER("Kubernetes Cluster"),
+
+    /**
      * Docker registry setting variable types.
      */
     DOCKER("Docker Registry"),

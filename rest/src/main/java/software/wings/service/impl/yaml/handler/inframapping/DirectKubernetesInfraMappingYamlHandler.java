@@ -22,7 +22,7 @@ import java.util.List;
  */
 @Singleton
 public class DirectKubernetesInfraMappingYamlHandler
-    extends InfraMappingYamlHandler<Yaml, DirectKubernetesInfrastructureMapping> {
+    extends InfraMappingYamlWithComputeProviderHandler<Yaml, DirectKubernetesInfrastructureMapping> {
   private static final Logger logger = LoggerFactory.getLogger(DirectKubernetesInfraMappingYamlHandler.class);
   @Inject SecretManager secretManager;
 
@@ -74,15 +74,18 @@ public class DirectKubernetesInfraMappingYamlHandler
       ChangeContext<Yaml> changeContext, List<ChangeContext> changeSetContext) throws HarnessException {
     Yaml infraMappingYaml = changeContext.getYaml();
     String yamlFilePath = changeContext.getChange().getFilePath();
+    String accountId = changeContext.getChange().getAccountId();
     String appId = yamlHelper.getAppId(changeContext.getChange().getAccountId(), yamlFilePath);
     Validator.notNullCheck("Couldn't retrieve app from yaml:" + yamlFilePath, appId);
     String envId = yamlHelper.getEnvironmentId(appId, yamlFilePath);
     Validator.notNullCheck("Couldn't retrieve environment from yaml:" + yamlFilePath, envId);
+    String computeProviderId = getSettingId(accountId, appId, infraMappingYaml.getComputeProviderName());
+    Validator.notNullCheck("Couldn't retrieve compute provider from yaml:" + yamlFilePath, computeProviderId);
     String serviceId = getServiceId(appId, infraMappingYaml.getServiceName());
     Validator.notNullCheck("Couldn't retrieve service from yaml:" + yamlFilePath, serviceId);
 
     DirectKubernetesInfrastructureMapping current = new DirectKubernetesInfrastructureMapping();
-    toBean(current, changeContext, appId, envId, serviceId);
+    toBean(current, changeContext, appId, envId, computeProviderId, serviceId);
 
     String name = yamlHelper.getNameFromYamlFilePath(changeContext.getChange().getFilePath());
     DirectKubernetesInfrastructureMapping previous =
@@ -97,17 +100,14 @@ public class DirectKubernetesInfraMappingYamlHandler
   }
 
   private void toBean(DirectKubernetesInfrastructureMapping bean, ChangeContext<Yaml> changeContext, String appId,
-      String envId, String serviceId) throws HarnessException {
+      String envId, String computeProviderId, String serviceId) throws HarnessException {
     Yaml infraMappingYaml = changeContext.getYaml();
 
     super.toBean(changeContext, bean, appId, envId, serviceId);
+    super.toBean(changeContext, bean, appId, envId, computeProviderId, serviceId);
     bean.setMasterUrl(infraMappingYaml.getMasterUrl());
     bean.setUsername(infraMappingYaml.getUsername());
     bean.setNamespace(infraMappingYaml.getNamespace());
-
-    // We need to set these fields for save / update to go through.
-    bean.setComputeProviderSettingId("DIRECT");
-    bean.setComputeProviderType("DIRECT");
 
     bean.setEncryptedPassword(infraMappingYaml.getPassword());
     bean.setEncryptedCaCert(infraMappingYaml.getCaCert());

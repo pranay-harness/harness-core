@@ -388,14 +388,22 @@ public class InfrastructureMappingServiceImpl implements InfrastructureMappingSe
   }
 
   private void validateDirectKubernetesInfraMapping(DirectKubernetesInfrastructureMapping infraMapping) {
-    SettingAttribute settingAttribute = aSettingAttribute().withValue(infraMapping.createKubernetesConfig()).build();
+    SettingAttribute settingAttribute =
+        (infraMapping.getComputeProviderType().equals(SettingVariableTypes.DIRECT.name()))
+        ? aSettingAttribute().withValue(infraMapping.createKubernetesConfig()).build()
+        : settingsService.get(infraMapping.getComputeProviderSettingId());
     String namespace = infraMapping.getNamespace();
+
+    List<EncryptedDataDetail> encryptionDetails =
+        (infraMapping.getComputeProviderType().equals(SettingVariableTypes.DIRECT.name()))
+        ? emptyList()
+        : secretManager.getEncryptionDetails((Encryptable) settingAttribute.getValue(), null, null);
 
     Application app = appService.get(infraMapping.getAppId());
     SyncTaskContext syncTaskContext = aContext().withAccountId(app.getAccountId()).withAppId(app.getUuid()).build();
     ContainerServiceParams containerServiceParams = ContainerServiceParams.builder()
                                                         .settingAttribute(settingAttribute)
-                                                        .encryptionDetails(emptyList())
+                                                        .encryptionDetails(encryptionDetails)
                                                         .namespace(namespace)
                                                         .build();
     try {
@@ -1176,7 +1184,9 @@ public class InfrastructureMappingServiceImpl implements InfrastructureMappingSe
     if (containerInfraMapping instanceof DirectKubernetesInfrastructureMapping) {
       DirectKubernetesInfrastructureMapping directInfraMapping =
           (DirectKubernetesInfrastructureMapping) containerInfraMapping;
-      settingAttribute = aSettingAttribute().withValue(directInfraMapping.createKubernetesConfig()).build();
+      settingAttribute = (directInfraMapping.getComputeProviderType().equals(SettingVariableTypes.DIRECT.name()))
+          ? aSettingAttribute().withValue(directInfraMapping.createKubernetesConfig()).build()
+          : settingsService.get(directInfraMapping.getComputeProviderSettingId());
       namespace = directInfraMapping.getNamespace();
       containerServiceName =
           (isNotBlank(serviceNameExpression)
@@ -1288,10 +1298,12 @@ public class InfrastructureMappingServiceImpl implements InfrastructureMappingSe
       infraTypes.put(ECS, asList(SettingVariableTypes.AWS));
       String accountId = appService.getAccountIdByAppId(appId);
       if (featureFlagService.isEnabled(AZURE_SUPPORT, accountId)) {
-        infraTypes.put(
-            KUBERNETES, asList(SettingVariableTypes.GCP, SettingVariableTypes.DIRECT, SettingVariableTypes.AZURE));
+        infraTypes.put(KUBERNETES,
+            asList(SettingVariableTypes.GCP, SettingVariableTypes.AZURE, SettingVariableTypes.DIRECT,
+                SettingVariableTypes.KUBERNETES_CLUSTER));
       } else {
-        infraTypes.put(KUBERNETES, asList(SettingVariableTypes.GCP, SettingVariableTypes.DIRECT));
+        infraTypes.put(KUBERNETES,
+            asList(SettingVariableTypes.GCP, SettingVariableTypes.DIRECT, SettingVariableTypes.KUBERNETES_CLUSTER));
       }
     } else if (artifactType == ArtifactType.AWS_CODEDEPLOY) {
       infraTypes.put(AWS_CODEDEPLOY, asList(SettingVariableTypes.AWS));
