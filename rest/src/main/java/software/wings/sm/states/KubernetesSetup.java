@@ -8,6 +8,7 @@ import static org.apache.commons.lang3.StringUtils.isNotBlank;
 import static software.wings.beans.ResizeStrategy.RESIZE_NEW_FIRST;
 import static software.wings.beans.command.KubernetesSetupParams.KubernetesSetupParamsBuilder.aKubernetesSetupParams;
 import static software.wings.common.Constants.DEFAULT_STEADY_STATE_TIMEOUT;
+import static software.wings.service.impl.KubernetesHelperService.trimYaml;
 import static software.wings.sm.StateType.KUBERNETES_SETUP;
 
 import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
@@ -367,7 +368,7 @@ public class KubernetesSetup extends ContainerServiceSetup {
   }
 
   public void setCustomMetricYamlConfig(String customMetricYamlConfig) {
-    this.customMetricYamlConfig = customMetricYamlConfig;
+    this.customMetricYamlConfig = trimYaml(customMetricYamlConfig);
   }
 
   public boolean isUseIngress() {
@@ -383,7 +384,7 @@ public class KubernetesSetup extends ContainerServiceSetup {
   }
 
   public void setIngressYaml(String ingressYaml) {
-    this.ingressYaml = ingressYaml;
+    this.ingressYaml = trimYaml(ingressYaml);
   }
 
   public boolean isUseIstioRouteRule() {

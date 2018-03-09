@@ -1,5 +1,7 @@
 package software.wings.beans.container;
 
+import static software.wings.service.impl.KubernetesHelperService.trimYaml;
+
 import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
 import com.fasterxml.jackson.annotation.JsonTypeInfo;
 import com.github.reinert.jjschema.SchemaIgnore;
@@ -70,7 +72,7 @@ public abstract class ContainerTask extends DeploymentSpecification {
   }
 
   public void setAdvancedConfig(String advancedConfig) {
-    this.advancedConfig = advancedConfig;
+    this.advancedConfig = trimYaml(advancedConfig);
   }
 
   @SchemaIgnore

@@ -7,6 +7,7 @@ import static io.harness.network.Http.getOkHttpClientBuilder;
 import static okhttp3.ConnectionSpec.CLEARTEXT;
 import static org.apache.commons.lang3.StringUtils.isNotBlank;
 
+import com.google.common.base.Joiner;
 import com.google.inject.Inject;
 import com.google.inject.Singleton;
 
@@ -299,6 +300,16 @@ public class KubernetesHelperService {
     return new ObjectMapper(new YAMLFactory().configure(WRITE_DOC_START_MARKER, false))
         .setSerializationInclusion(NON_EMPTY)
         .writeValueAsString(entity);
+  }
+
+  public static String trimYaml(String yamlString) {
+    if (yamlString == null) {
+      return null;
+    }
+    if (!yamlString.contains("\n")) {
+      return yamlString;
+    }
+    return Joiner.on("\n").join(yamlString.split("\\s*\\n"));
   }
 
   public NonNamespaceOperation<HorizontalPodAutoscaler, HorizontalPodAutoscalerList, DoneableHorizontalPodAutoscaler,
