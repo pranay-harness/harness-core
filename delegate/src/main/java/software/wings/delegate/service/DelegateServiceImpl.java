@@ -384,7 +384,7 @@ public class DelegateServiceImpl implements DelegateService {
             getDurationString(lastHeartbeatSentAt.get(), now), getDurationString(lastHeartbeatReceivedAt.get(), now));
         lastHeartbeatReceivedAt.set(now);
       } else {
-        logger.info("Heartbeat response for another delegate received: {}", delegateId, receivedId);
+        logger.info("Heartbeat response for another delegate: {} received: {}", delegateId, receivedId);
       }
     } else if (!StringUtils.equals(message, "X")) {
       logger.info("Executing: Event:{}, message:[{}]", Event.MESSAGE.name(), message);
