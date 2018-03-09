@@ -81,7 +81,6 @@ import java.io.IOException;
 import java.net.UnknownHostException;
 import java.security.KeyManagementException;
 import java.security.NoSuchAlgorithmException;
-import java.security.cert.CertificateException;
 import java.security.cert.X509Certificate;
 import java.util.Arrays;
 import java.util.Date;
@@ -146,255 +145,253 @@ public abstract class BaseIntegrationTest extends WingsBaseTest {
     ClientConfig config = new ClientConfig(new JacksonJsonProvider().configure(FAIL_ON_UNKNOWN_PROPERTIES, false));
     config.register(MultiPartWriter.class);
     SSLContext sslcontext = SSLContext.getInstance("TLS");
-    sslcontext.init(null, new TrustManager[] {new X509TrustManager() {
-      public void checkClientTrusted(X509Certificate[] arg0, String arg1) throws CertificateException {
-      }
+    X509TrustManager x509TrustManager = new X509TrustManager() {
+      public void checkClientTrusted(X509Certificate[] arg0, String arg1) {}
 
-      public void checkServerTrusted(X509Certificate[] arg0, String arg1) throws CertificateException {
-      }
+      public void checkServerTrusted(X509Certificate[] arg0, String arg1) {}
 
       public X509Certificate[] getAcceptedIssuers() {
         return new X509Certificate[0];
-  }
-}
-}, new java.security.SecureRandom());
-
-ObjectMapper objectMapper = new ObjectMapper();
-objectMapper.configure(DeserializationFeature.FAIL_ON_UNKNOWN_PROPERTIES, false);
-objectMapper.setSubtypeResolver(new JsonSubtypeResolver(objectMapper.getSubtypeResolver()));
-JacksonJaxbJsonProvider jacksonProvider = new JacksonJaxbJsonProvider();
-jacksonProvider.setMapper(objectMapper);
-
-client = ClientBuilder.newBuilder()
-             .sslContext(sslcontext)
-             .hostnameVerifier((s1, s2) -> true)
-             .register(MultiPartFeature.class)
-             .register(jacksonProvider)
-             .build();
-}
-
-@Before
-public void setUp() throws Exception {
-  when(delegateProxyFactory.get(anyObject(), any(SyncTaskContext.class)))
-      .thenReturn(new SecretManagementDelegateServiceImpl());
-  setInternalState(kmsService, "delegateProxyFactory", delegateProxyFactory);
-  setInternalState(secretManager, "kmsService", kmsService);
-  setInternalState(wingsPersistence, "secretManager", secretManager);
-}
-
-protected String loginUser(final String userName, final String password) {
-  String basicAuthValue = "Basic " + encodeBase64String(format("%s:%s", userName, password).getBytes());
-  RestResponse<User> response;
-  response = client.target(API_BASE + "/users/login")
-                 .request()
-                 .header("Authorization", basicAuthValue)
-                 .get(new GenericType<RestResponse<User>>() {});
-  if (response.getResource() != null) {
-    User loggedInUser = response.getResource();
-    userToken = loggedInUser.getToken();
-    accountId = loggedInUser.getAccounts().get(0).getUuid();
-  }
-  return userToken;
-}
-
-protected void loginAdminUser() {
-  loginUser(adminUserName, new String(adminPassword));
-}
-
-protected Builder getRequestBuilderWithAuthHeader(WebTarget target) {
-  return target.request().header("Authorization", "Bearer " + userToken);
-}
-
-protected Builder getDelegateRequestBuilderWithAuthHeader(WebTarget target) throws UnknownHostException {
-  return target.request().header("Authorization", "Delegate " + getDelegateToken());
-}
-
-protected Builder getRequestBuilder(WebTarget target) {
-  return target.request();
-}
-
-protected void dropDBAndEnsureIndexes() throws IOException, ClassNotFoundException {
-  wingsPersistence.getDatastore().getDB().dropDatabase();
-  Morphia morphia = new Morphia();
-  morphia.getMapper().getOptions().setMapSubPackages(true);
-  morphia.mapPackage("software.wings");
-  ensureIndex(morphia, wingsPersistence.getDatastore());
-}
-
-protected void deleteAllDocuments(List<Class> classes) {
-  classes.forEach(cls -> wingsPersistence.getDatastore().delete(wingsPersistence.createQuery(cls)));
-}
-
-protected void ensureIndex(Morphia morphia, Datastore primaryDatastore) {
-  /*
-  Morphia auto creates embedded/nested Entity indexes with the parent Entity indexes.
-  There is no way to override this behavior.
-  https://github.com/mongodb/morphia/issues/706
-   */
-
-  morphia.getMapper().getMappedClasses().forEach(mc -> {
-    if (mc.getEntityAnnotation() != null && !mc.isAbstract()) {
-      // Read Entity level "Indexes" annotation
-      List<Indexes> indexesAnnotations = mc.getAnnotations(Indexes.class);
-      if (indexesAnnotations != null) {
-        indexesAnnotations.stream().flatMap(indexes -> Arrays.stream(indexes.value())).forEach(index -> {
-          DatabaseModule.reportDeprecatedUnique(index);
-
-          BasicDBObject keys = new BasicDBObject();
-          Arrays.stream(index.fields()).forEach(field -> keys.append(field.value(), 1));
-          primaryDatastore.getCollection(mc.getClazz())
-              .createIndex(keys, index.options().name(), index.options().unique());
-        });
       }
+    };
+    sslcontext.init(null, new TrustManager[] {x509TrustManager}, new java.security.SecureRandom());
 
-      // Read field level "Indexed" annotation
-      for (final MappedField mf : mc.getPersistenceFields()) {
-        if (mf.hasAnnotation(Indexed.class)) {
-          final Indexed indexed = mf.getAnnotation(Indexed.class);
-          DatabaseModule.reportDeprecatedUnique(indexed);
+    ObjectMapper objectMapper = new ObjectMapper();
+    objectMapper.configure(DeserializationFeature.FAIL_ON_UNKNOWN_PROPERTIES, false);
+    objectMapper.setSubtypeResolver(new JsonSubtypeResolver(objectMapper.getSubtypeResolver()));
+    JacksonJaxbJsonProvider jacksonProvider = new JacksonJaxbJsonProvider();
+    jacksonProvider.setMapper(objectMapper);
 
-          try {
+    client = ClientBuilder.newBuilder()
+                 .sslContext(sslcontext)
+                 .hostnameVerifier((s1, s2) -> true)
+                 .register(MultiPartFeature.class)
+                 .register(jacksonProvider)
+                 .build();
+  }
+
+  @Before
+  public void setUp() throws Exception {
+    when(delegateProxyFactory.get(anyObject(), any(SyncTaskContext.class)))
+        .thenReturn(new SecretManagementDelegateServiceImpl());
+    setInternalState(kmsService, "delegateProxyFactory", delegateProxyFactory);
+    setInternalState(secretManager, "kmsService", kmsService);
+    setInternalState(wingsPersistence, "secretManager", secretManager);
+  }
+
+  protected String loginUser(final String userName, final String password) {
+    String basicAuthValue = "Basic " + encodeBase64String(format("%s:%s", userName, password).getBytes());
+    RestResponse<User> response;
+    response = client.target(API_BASE + "/users/login")
+                   .request()
+                   .header("Authorization", basicAuthValue)
+                   .get(new GenericType<RestResponse<User>>() {});
+    if (response.getResource() != null) {
+      User loggedInUser = response.getResource();
+      userToken = loggedInUser.getToken();
+      accountId = loggedInUser.getAccounts().get(0).getUuid();
+    }
+    return userToken;
+  }
+
+  protected void loginAdminUser() {
+    loginUser(adminUserName, new String(adminPassword));
+  }
+
+  protected Builder getRequestBuilderWithAuthHeader(WebTarget target) {
+    return target.request().header("Authorization", "Bearer " + userToken);
+  }
+
+  protected Builder getDelegateRequestBuilderWithAuthHeader(WebTarget target) throws UnknownHostException {
+    return target.request().header("Authorization", "Delegate " + getDelegateToken());
+  }
+
+  protected Builder getRequestBuilder(WebTarget target) {
+    return target.request();
+  }
+
+  protected void dropDBAndEnsureIndexes() throws IOException, ClassNotFoundException {
+    wingsPersistence.getDatastore().getDB().dropDatabase();
+    Morphia morphia = new Morphia();
+    morphia.getMapper().getOptions().setMapSubPackages(true);
+    morphia.mapPackage("software.wings");
+    ensureIndex(morphia, wingsPersistence.getDatastore());
+  }
+
+  protected void deleteAllDocuments(List<Class> classes) {
+    classes.forEach(cls -> wingsPersistence.getDatastore().delete(wingsPersistence.createQuery(cls)));
+  }
+
+  protected void ensureIndex(Morphia morphia, Datastore primaryDatastore) {
+    /*
+    Morphia auto creates embedded/nested Entity indexes with the parent Entity indexes.
+    There is no way to override this behavior.
+    https://github.com/mongodb/morphia/issues/706
+     */
+
+    morphia.getMapper().getMappedClasses().forEach(mc -> {
+      if (mc.getEntityAnnotation() != null && !mc.isAbstract()) {
+        // Read Entity level "Indexes" annotation
+        List<Indexes> indexesAnnotations = mc.getAnnotations(Indexes.class);
+        if (indexesAnnotations != null) {
+          indexesAnnotations.stream().flatMap(indexes -> Arrays.stream(indexes.value())).forEach(index -> {
+            DatabaseModule.reportDeprecatedUnique(index);
+
+            BasicDBObject keys = new BasicDBObject();
+            Arrays.stream(index.fields()).forEach(field -> keys.append(field.value(), 1));
             primaryDatastore.getCollection(mc.getClazz())
-                .createIndex(new BasicDBObject().append(mf.getNameToStore(), 1), null, indexed.options().unique());
-          } catch (MongoCommandException mex) {
-            logger.error("Index creation failed for class {}", mc.getClazz().getCanonicalName());
-            throw mex;
+                .createIndex(keys, index.options().name(), index.options().unique());
+          });
+        }
+
+        // Read field level "Indexed" annotation
+        for (final MappedField mf : mc.getPersistenceFields()) {
+          if (mf.hasAnnotation(Indexed.class)) {
+            final Indexed indexed = mf.getAnnotation(Indexed.class);
+            DatabaseModule.reportDeprecatedUnique(indexed);
+
+            try {
+              primaryDatastore.getCollection(mc.getClazz())
+                  .createIndex(new BasicDBObject().append(mf.getNameToStore(), 1), null, indexed.options().unique());
+            } catch (MongoCommandException mex) {
+              logger.error("Index creation failed for class {}", mc.getClazz().getCanonicalName());
+              throw mex;
+            }
           }
         }
       }
+    });
+  }
+
+  protected void createLicenseAndDefaultUser() {
+    License license =
+        aLicense().withName("Trial").withExpiryDuration(TimeUnit.DAYS.toMillis(365)).withIsActive(true).build();
+    wingsPersistence.save(license);
+    addAdminUser();
+    Account account = wingsPersistence.executeGetOneQuery(wingsPersistence.createQuery(Account.class));
+    String oldAccountId = account.getUuid();
+    String accountKey = "2f6b0988b6fb3370073c3d0505baee59";
+    account.setAccountKey(accountKey);
+    account.setLicenseExpiryTime(-1);
+
+    account.setUuid("kmpySmUISimoRrJL6NL73w");
+    accountId = "kmpySmUISimoRrJL6NL73w";
+    accountService.delete(oldAccountId);
+    accountService.save(account);
+    // wingsPersistence.save(account);
+    // Update account key to make delegate works
+    UpdateOperations<Account> accountUpdateOperations = wingsPersistence.createUpdateOperations(Account.class);
+    accountUpdateOperations.set("accountKey", accountKey);
+    wingsPersistence.update(wingsPersistence.createQuery(Account.class), accountUpdateOperations);
+
+    UpdateOperations<User> userUpdateOperations = wingsPersistence.createUpdateOperations(User.class);
+    userUpdateOperations.set("accounts", Lists.newArrayList(account));
+    wingsPersistence.update(wingsPersistence.createQuery(User.class), userUpdateOperations);
+
+    UpdateOperations<Role> roleUpdateOperations = wingsPersistence.createUpdateOperations(Role.class);
+    roleUpdateOperations.set("accountId", "kmpySmUISimoRrJL6NL73w");
+    wingsPersistence.update(wingsPersistence.createQuery(Role.class), roleUpdateOperations);
+    loginAdminUser();
+  }
+
+  private void addAdminUser() {
+    WebTarget target = client.target(API_BASE + "/users/");
+    RestResponse<User> response = target.request().post(
+        entity(anUser()
+                   .withName("Admin")
+                   .withEmail(adminUserName)
+                   .withPassword(adminPassword)
+                   .withRoles(wingsPersistence
+                                  .query(Role.class,
+                                      aPageRequest().addFilter("roleType", Operator.EQ, RoleType.ACCOUNT_ADMIN).build())
+                                  .getResponse())
+                   .withAccountName(HARNESS_NAME)
+                   .withCompanyName(HARNESS_NAME)
+                   .build(),
+            APPLICATION_JSON),
+        new GenericType<RestResponse<User>>() {});
+    assertThat(response.getResource()).isInstanceOf(User.class);
+    wingsPersistence.updateFields(User.class, response.getResource().getUuid(), ImmutableMap.of("emailVerified", true));
+  }
+
+  protected Application createApp(String appName) {
+    WebTarget target = client.target(API_BASE + "/apps?accountId=" + accountId);
+    RestResponse<Application> response = getRequestBuilderWithAuthHeader(target).post(
+        entity(anApplication().withName(appName).withDescription(appName).withAccountId(accountId).build(),
+            APPLICATION_JSON),
+        new GenericType<RestResponse<Application>>() {});
+    assertThat(response.getResource()).isInstanceOf(Application.class);
+    assertThat(response.getResource().getName()).isEqualTo(appName);
+    return response.getResource();
+  }
+
+  protected Service createService(String appId, Map<String, Object> serviceMap) {
+    WebTarget target = client.target(API_BASE + "/services/?appId=" + appId);
+
+    RestResponse<Service> response = getRequestBuilderWithAuthHeader(target).post(
+        entity(serviceMap, APPLICATION_JSON), new GenericType<RestResponse<Service>>() {});
+    assertThat(response.getResource()).isInstanceOf(Service.class);
+    String serviceId = response.getResource().getUuid();
+    Service service = wingsPersistence.get(Service.class, serviceId);
+    assertThat(service).isNotNull();
+    assertThat(service.getUuid()).isNotNull();
+    return service;
+  }
+
+  protected void deleteApp(String appId) {
+    WebTarget target = client.target(API_BASE + "/artifactstreams/?appId=" + appId);
+    RestResponse response = getRequestBuilderWithAuthHeader(target).delete(new GenericType<RestResponse>() {
+
+    });
+    assertThat(response).isNotNull();
+  }
+
+  protected void deleteService(String serviceId) {
+    WebTarget target = client.target(API_BASE + "/services/?appId=" + serviceId);
+    RestResponse response = getRequestBuilderWithAuthHeader(target).delete(new GenericType<RestResponse>() {
+
+    });
+    assertThat(response).isNotNull();
+  }
+
+  protected String randomText(int length) { // TODO: choose words start to word end boundary
+    int low = randomInt(50);
+    int high = length + low > randomSeedString.length() ? randomSeedString.length() - low : length + low;
+    return randomSeedString.substring(low, high);
+  }
+
+  public String getDelegateToken() {
+    JWTClaimsSet jwtClaims = new JWTClaimsSet.Builder()
+                                 .issuer(getLocalHostName())
+                                 .subject(accountId)
+                                 .audience("https://localhost:9090")
+                                 .expirationTime(new Date(System.currentTimeMillis() + TimeUnit.MINUTES.toMillis(5)))
+                                 .notBeforeTime(new Date())
+                                 .issueTime(new Date())
+                                 .jwtID(UUID.randomUUID().toString())
+                                 .build();
+
+    JWEHeader header = new JWEHeader(JWEAlgorithm.DIR, EncryptionMethod.A128GCM);
+    EncryptedJWT jwt = new EncryptedJWT(header, jwtClaims);
+    DirectEncrypter directEncrypter = null;
+    byte[] encodedKey = new byte[0];
+    try {
+      encodedKey = Hex.decodeHex(delegateAccountSecret.toCharArray());
+    } catch (DecoderException e) {
+      logger.error("", e);
     }
-  });
-}
+    try {
+      directEncrypter = new DirectEncrypter(new SecretKeySpec(encodedKey, 0, encodedKey.length, "AES"));
+    } catch (KeyLengthException e) {
+      logger.error("", e);
+    }
 
-protected void createLicenseAndDefaultUser() {
-  License license =
-      aLicense().withName("Trial").withExpiryDuration(TimeUnit.DAYS.toMillis(365)).withIsActive(true).build();
-  wingsPersistence.save(license);
-  addAdminUser();
-  Account account = wingsPersistence.executeGetOneQuery(wingsPersistence.createQuery(Account.class));
-  String oldAccountId = account.getUuid();
-  String accountKey = "2f6b0988b6fb3370073c3d0505baee59";
-  account.setAccountKey(accountKey);
-  account.setLicenseExpiryTime(-1);
+    try {
+      jwt.encrypt(directEncrypter);
+    } catch (JOSEException e) {
+      logger.error("", e);
+    }
 
-  account.setUuid("kmpySmUISimoRrJL6NL73w");
-  accountId = "kmpySmUISimoRrJL6NL73w";
-  accountService.delete(oldAccountId);
-  accountService.save(account);
-  // wingsPersistence.save(account);
-  // Update account key to make delegate works
-  UpdateOperations<Account> accountUpdateOperations = wingsPersistence.createUpdateOperations(Account.class);
-  accountUpdateOperations.set("accountKey", accountKey);
-  wingsPersistence.update(wingsPersistence.createQuery(Account.class), accountUpdateOperations);
-
-  UpdateOperations<User> userUpdateOperations = wingsPersistence.createUpdateOperations(User.class);
-  userUpdateOperations.set("accounts", Lists.newArrayList(account));
-  wingsPersistence.update(wingsPersistence.createQuery(User.class), userUpdateOperations);
-
-  UpdateOperations<Role> roleUpdateOperations = wingsPersistence.createUpdateOperations(Role.class);
-  roleUpdateOperations.set("accountId", "kmpySmUISimoRrJL6NL73w");
-  wingsPersistence.update(wingsPersistence.createQuery(Role.class), roleUpdateOperations);
-  loginAdminUser();
-}
-
-private void addAdminUser() {
-  WebTarget target = client.target(API_BASE + "/users/");
-  RestResponse<User> response = target.request().post(
-      entity(anUser()
-                 .withName("Admin")
-                 .withEmail(adminUserName)
-                 .withPassword(adminPassword)
-                 .withRoles(wingsPersistence
-                                .query(Role.class,
-                                    aPageRequest().addFilter("roleType", Operator.EQ, RoleType.ACCOUNT_ADMIN).build())
-                                .getResponse())
-                 .withAccountName(HARNESS_NAME)
-                 .withCompanyName(HARNESS_NAME)
-                 .build(),
-          APPLICATION_JSON),
-      new GenericType<RestResponse<User>>() {});
-  assertThat(response.getResource()).isInstanceOf(User.class);
-  wingsPersistence.updateFields(User.class, response.getResource().getUuid(), ImmutableMap.of("emailVerified", true));
-}
-
-protected Application createApp(String appName) {
-  WebTarget target = client.target(API_BASE + "/apps?accountId=" + accountId);
-  RestResponse<Application> response = getRequestBuilderWithAuthHeader(target).post(
-      entity(anApplication().withName(appName).withDescription(appName).withAccountId(accountId).build(),
-          APPLICATION_JSON),
-      new GenericType<RestResponse<Application>>() {});
-  assertThat(response.getResource()).isInstanceOf(Application.class);
-  assertThat(response.getResource().getName()).isEqualTo(appName);
-  return response.getResource();
-}
-
-protected Service createService(String appId, Map<String, Object> serviceMap) {
-  WebTarget target = client.target(API_BASE + "/services/?appId=" + appId);
-
-  RestResponse<Service> response = getRequestBuilderWithAuthHeader(target).post(
-      entity(serviceMap, APPLICATION_JSON), new GenericType<RestResponse<Service>>() {});
-  assertThat(response.getResource()).isInstanceOf(Service.class);
-  String serviceId = response.getResource().getUuid();
-  Service service = wingsPersistence.get(Service.class, serviceId);
-  assertThat(service).isNotNull();
-  assertThat(service.getUuid()).isNotNull();
-  return service;
-}
-
-protected void deleteApp(String appId) {
-  WebTarget target = client.target(API_BASE + "/artifactstreams/?appId=" + appId);
-  RestResponse response = getRequestBuilderWithAuthHeader(target).delete(new GenericType<RestResponse>() {
-
-  });
-  assertThat(response).isNotNull();
-}
-
-protected void deleteService(String serviceId) {
-  WebTarget target = client.target(API_BASE + "/services/?appId=" + serviceId);
-  RestResponse response = getRequestBuilderWithAuthHeader(target).delete(new GenericType<RestResponse>() {
-
-  });
-  assertThat(response).isNotNull();
-}
-
-protected String randomText(int length) { // TODO: choose words start to word end boundary
-  int low = randomInt(50);
-  int high = length + low > randomSeedString.length() ? randomSeedString.length() - low : length + low;
-  return randomSeedString.substring(low, high);
-}
-
-public String getDelegateToken() {
-  JWTClaimsSet jwtClaims = new JWTClaimsSet.Builder()
-                               .issuer(getLocalHostName())
-                               .subject(accountId)
-                               .audience("https://localhost:9090")
-                               .expirationTime(new Date(System.currentTimeMillis() + TimeUnit.MINUTES.toMillis(5)))
-                               .notBeforeTime(new Date())
-                               .issueTime(new Date())
-                               .jwtID(UUID.randomUUID().toString())
-                               .build();
-
-  JWEHeader header = new JWEHeader(JWEAlgorithm.DIR, EncryptionMethod.A128GCM);
-  EncryptedJWT jwt = new EncryptedJWT(header, jwtClaims);
-  DirectEncrypter directEncrypter = null;
-  byte[] encodedKey = new byte[0];
-  try {
-    encodedKey = Hex.decodeHex(delegateAccountSecret.toCharArray());
-  } catch (DecoderException e) {
-    logger.error("", e);
+    return jwt.serialize();
   }
-  try {
-    directEncrypter = new DirectEncrypter(new SecretKeySpec(encodedKey, 0, encodedKey.length, "AES"));
-  } catch (KeyLengthException e) {
-    logger.error("", e);
-  }
-
-  try {
-    jwt.encrypt(directEncrypter);
-  } catch (JOSEException e) {
-    logger.error("", e);
-  }
-
-  return jwt.serialize();
-}
 }

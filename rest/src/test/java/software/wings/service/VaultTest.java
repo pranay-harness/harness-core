@@ -43,8 +43,6 @@ import software.wings.beans.ConfigFile.ConfigOverrideType;
 import software.wings.beans.DelegateTask.SyncTaskContext;
 import software.wings.beans.EntityType;
 import software.wings.beans.ErrorCode;
-import software.wings.beans.FeatureFlag;
-import software.wings.beans.FeatureName;
 import software.wings.beans.KmsConfig;
 import software.wings.beans.Service;
 import software.wings.beans.ServiceTemplate;
@@ -156,7 +154,6 @@ public class VaultTest extends WingsBaseTest {
     UserThreadLocal.set(user);
 
     accountId = UUID.randomUUID().toString();
-    enableKmsFeatureFlag();
     numOfEncRecords = numOfEncryptedValsForVault;
     if (isKmsEnabled) {
       final KmsConfig kmsConfig = getKmsConfig();
@@ -1483,12 +1480,6 @@ public class VaultTest extends WingsBaseTest {
     kmsConfig.setAccessKey("AKIAJLEKM45P4PO5QUFQ");
     kmsConfig.setSecretKey("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");
     return kmsConfig;
-  }
-
-  private void enableKmsFeatureFlag() {
-    FeatureFlag kmsFeatureFlag =
-        FeatureFlag.builder().name(FeatureName.KMS.name()).enabled(true).obsolete(false).build();
-    wingsPersistence.save(kmsFeatureFlag);
   }
 
   private Thread startTransitionListener() {

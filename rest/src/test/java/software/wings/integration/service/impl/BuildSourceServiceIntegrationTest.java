@@ -34,8 +34,6 @@ import software.wings.beans.AwsConfig;
 import software.wings.beans.BambooConfig;
 import software.wings.beans.DelegateTask.SyncTaskContext;
 import software.wings.beans.DockerConfig;
-import software.wings.beans.FeatureFlag;
-import software.wings.beans.FeatureName;
 import software.wings.beans.JenkinsConfig;
 import software.wings.beans.KmsConfig;
 import software.wings.beans.Service;
@@ -171,7 +169,6 @@ public class BuildSourceServiceIntegrationTest extends WingsBaseTest {
     if (isKmsEnabled) {
       final KmsConfig kmsConfig = getKmsConfig();
       kmsService.saveKmsConfig(accountId, kmsConfig);
-      enableKmsFeatureFlag();
     }
     Service service =
         Service.Builder.aService().withAppId(appId).withArtifactType(artifactType).withName("Some service").build();
@@ -478,11 +475,5 @@ public class BuildSourceServiceIntegrationTest extends WingsBaseTest {
     kmsConfig.setAccessKey("AKIAJLEKM45P4PO5QUFQ");
     kmsConfig.setSecretKey("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");
     return kmsConfig;
-  }
-
-  private void enableKmsFeatureFlag() {
-    FeatureFlag kmsFeatureFlag =
-        FeatureFlag.builder().name(FeatureName.KMS.name()).enabled(true).obsolete(false).build();
-    wingsPersistence.save(kmsFeatureFlag);
   }
 }
