@@ -2377,7 +2377,8 @@ public class KmsTest extends WingsBaseTest {
     for (int i = 0; i < numOfAccess; i++) {
       configService.downloadForActivity(randomAppId, configFileId, activity.getUuid());
     }
-    List<SecretUsageLog> usageLogs = secretManager.getUsageLogs(encryptedUuid, SettingVariableTypes.CONFIG_FILE);
+    List<SecretUsageLog> usageLogs =
+        secretManager.getUsageLogs(aPageRequest().build(), encryptedUuid, SettingVariableTypes.CONFIG_FILE);
     assertEquals(numOfAccess, usageLogs.size());
 
     for (SecretUsageLog usageLog : usageLogs) {
@@ -2816,12 +2817,13 @@ public class KmsTest extends WingsBaseTest {
 
     String savedAttributeId = wingsPersistence.save(serviceVariable);
     List<SecretUsageLog> usageLogs =
-        secretManager.getUsageLogs(savedAttributeId, SettingVariableTypes.SERVICE_VARIABLE);
+        secretManager.getUsageLogs(aPageRequest().build(), savedAttributeId, SettingVariableTypes.SERVICE_VARIABLE);
     assertEquals(0, usageLogs.size());
 
     ServiceVariable savedAttribute = wingsPersistence.get(ServiceVariable.class, savedAttributeId);
     secretManager.getEncryptionDetails(savedAttribute, appId, workflowExecutionId);
-    usageLogs = secretManager.getUsageLogs(savedAttributeId, SettingVariableTypes.SERVICE_VARIABLE);
+    usageLogs =
+        secretManager.getUsageLogs(aPageRequest().build(), savedAttributeId, SettingVariableTypes.SERVICE_VARIABLE);
     assertEquals(1, usageLogs.size());
     assertEquals(workflowName, usageLogs.get(0).getWorkflowExecutionName());
     assertEquals(accountId, usageLogs.get(0).getAccountId());
@@ -2830,7 +2832,8 @@ public class KmsTest extends WingsBaseTest {
 
     secretManager.getEncryptionDetails(savedAttribute, appId, workflowExecutionId);
     secretManager.getEncryptionDetails(savedAttribute, appId, workflowExecutionId);
-    usageLogs = secretManager.getUsageLogs(savedAttributeId, SettingVariableTypes.SERVICE_VARIABLE);
+    usageLogs =
+        secretManager.getUsageLogs(aPageRequest().build(), savedAttributeId, SettingVariableTypes.SERVICE_VARIABLE);
     assertEquals(3, usageLogs.size());
 
     final AppDynamicsConfig appDynamicsConfig = AppDynamicsConfig.builder()
@@ -2851,13 +2854,13 @@ public class KmsTest extends WingsBaseTest {
                                          .build();
 
     String appDAttributeId = wingsPersistence.save(appDAttribute);
-    usageLogs = secretManager.getUsageLogs(appDAttributeId, SettingVariableTypes.APP_DYNAMICS);
+    usageLogs = secretManager.getUsageLogs(aPageRequest().build(), appDAttributeId, SettingVariableTypes.APP_DYNAMICS);
     assertEquals(0, usageLogs.size());
     int numOfAccess = 13;
     for (int i = 0; i < numOfAccess; i++) {
       secretManager.getEncryptionDetails((Encryptable) appDAttribute.getValue(), appId, workflowExecutionId);
     }
-    usageLogs = secretManager.getUsageLogs(appDAttributeId, SettingVariableTypes.APP_DYNAMICS);
+    usageLogs = secretManager.getUsageLogs(aPageRequest().build(), appDAttributeId, SettingVariableTypes.APP_DYNAMICS);
     assertEquals(numOfAccess, usageLogs.size());
     for (SecretUsageLog usageLog : usageLogs) {
       assertEquals(workflowName, usageLog.getWorkflowExecutionName());

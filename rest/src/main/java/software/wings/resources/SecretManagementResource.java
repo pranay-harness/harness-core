@@ -12,6 +12,8 @@ import retrofit2.http.Body;
 import software.wings.app.MainConfiguration;
 import software.wings.beans.RestResponse;
 import software.wings.beans.UuidAware;
+import software.wings.dl.PageRequest;
+import software.wings.dl.PageResponse;
 import software.wings.exception.WingsException;
 import software.wings.security.EncryptionType;
 import software.wings.security.PermissionAttribute.ResourceType;
@@ -28,6 +30,7 @@ import software.wings.utils.BoundedInputStream;
 import java.io.InputStream;
 import java.util.Collection;
 import java.util.List;
+import javax.ws.rs.BeanParam;
 import javax.ws.rs.Consumes;
 import javax.ws.rs.DELETE;
 import javax.ws.rs.GET;
@@ -52,10 +55,10 @@ public class SecretManagementResource {
   @Path("/usage")
   @Timed
   @ExceptionMetered
-  public RestResponse<List<SecretUsageLog>> getUsageLogs(@QueryParam("accountId") final String accountId,
+  public RestResponse<PageResponse<SecretUsageLog>> getUsageLogs(@BeanParam PageRequest<SecretUsageLog> pageRequest,
       @QueryParam("entityId") final String entityId, @QueryParam("type") final SettingVariableTypes variableType)
       throws IllegalAccessException {
-    return new RestResponse<>(secretManager.getUsageLogs(entityId, variableType));
+    return new RestResponse<>(secretManager.getUsageLogs(pageRequest, entityId, variableType));
   }
 
   @GET
