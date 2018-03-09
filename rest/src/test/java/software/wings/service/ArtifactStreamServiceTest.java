@@ -40,6 +40,7 @@ import software.wings.dl.PageResponse;
 import software.wings.dl.WingsPersistence;
 import software.wings.scheduler.JobScheduler;
 import software.wings.service.impl.ArtifactStreamServiceImpl;
+import software.wings.service.impl.yaml.YamlChangeSetHelper;
 import software.wings.service.intfc.AppService;
 import software.wings.service.intfc.ArtifactService;
 import software.wings.service.intfc.ArtifactStreamService;
@@ -47,7 +48,6 @@ import software.wings.service.intfc.BuildSourceService;
 import software.wings.service.intfc.EnvironmentService;
 import software.wings.service.intfc.WorkflowService;
 import software.wings.service.intfc.yaml.EntityUpdateService;
-import software.wings.service.intfc.yaml.YamlDirectoryService;
 
 /**
  * Created by anubhaw on 11/4/16.
@@ -64,7 +64,7 @@ public class ArtifactStreamServiceTest extends WingsBaseTest {
   @Mock private ArtifactService artifactService;
   @Mock private EntityUpdateService entityUpdateService;
   @Mock private AppService appService;
-  @Mock private YamlDirectoryService yamlDirectoryService;
+  @Mock private YamlChangeSetHelper yamlChangeSetHelper;
 
   @Inject @InjectMocks private ArtifactStreamService artifactStreamService;
 

@@ -96,6 +96,7 @@ import software.wings.scheduler.JobScheduler;
 import software.wings.service.impl.AwsInfrastructureProvider;
 import software.wings.service.impl.ContainerServiceParams;
 import software.wings.service.impl.StaticInfrastructureProvider;
+import software.wings.service.impl.yaml.YamlChangeSetHelper;
 import software.wings.service.intfc.AppService;
 import software.wings.service.intfc.ContainerService;
 import software.wings.service.intfc.EnvironmentService;
@@ -107,6 +108,7 @@ import software.wings.service.intfc.ServiceTemplateService;
 import software.wings.service.intfc.SettingsService;
 import software.wings.service.intfc.WorkflowService;
 import software.wings.service.intfc.security.SecretManager;
+import software.wings.service.intfc.yaml.YamlDirectoryService;
 import software.wings.settings.SettingValue.SettingVariableTypes;
 import software.wings.utils.WingsTestConstants;
 
@@ -135,6 +137,8 @@ public class InfrastructureMappingServiceTest extends WingsBaseTest {
   @Mock private WorkflowService workflowService;
   @Mock private JobScheduler jobScheduler;
   @Mock private DelegateProxyFactory delegateProxyFactory;
+  @Mock private YamlDirectoryService yamlDirectoryService;
+  @Mock private YamlChangeSetHelper yamlChangeSetHelper;
 
   @Inject @InjectMocks private InfrastructureMappingService infrastructureMappingService;
 

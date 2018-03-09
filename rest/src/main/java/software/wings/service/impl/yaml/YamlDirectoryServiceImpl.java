@@ -2,7 +2,6 @@ package software.wings.service.impl.yaml;
 
 import static software.wings.beans.Base.GLOBAL_APP_ID;
 import static software.wings.beans.ConfigFile.DEFAULT_TEMPLATE_ID;
-import static software.wings.beans.FeatureName.GIT_SYNC;
 import static software.wings.beans.yaml.YamlConstants.APPLICATIONS_FOLDER;
 import static software.wings.beans.yaml.YamlConstants.ARTIFACT_SOURCES_FOLDER;
 import static software.wings.beans.yaml.YamlConstants.CLOUD_PROVIDERS_FOLDER;
@@ -60,7 +59,6 @@ import software.wings.service.intfc.AppService;
 import software.wings.service.intfc.ArtifactStreamService;
 import software.wings.service.intfc.ConfigService;
 import software.wings.service.intfc.EnvironmentService;
-import software.wings.service.intfc.FeatureFlagService;
 import software.wings.service.intfc.InfrastructureMappingService;
 import software.wings.service.intfc.NotificationSetupService;
 import software.wings.service.intfc.PipelineService;
@@ -117,17 +115,11 @@ public class YamlDirectoryServiceImpl implements YamlDirectoryService {
   @Inject private AppYamlResourceService appYamlResourceService;
   @Inject private YamlResourceService yamlResourceService;
   @Inject private YamlChangeSetHelper yamlChangeSetHelper;
-  @Inject private FeatureFlagService featureFlagService;
   @Inject private ConfigService configService;
   @Inject private NotificationSetupService notificationSetupService;
 
   @Override
   public YamlGitConfig weNeedToPushChanges(String accountId) {
-    // check Git Sync feature flag
-    if (!featureFlagService.isEnabled(GIT_SYNC, accountId)) {
-      return null;
-    }
-
     // for now, we are only checking the top level (full tree/directory)
     YamlGitConfig ygs = yamlGitSyncService.get(accountId, SETUP_FOLDER);
 

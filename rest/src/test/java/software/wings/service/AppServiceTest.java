@@ -51,6 +51,7 @@ import software.wings.dl.PageResponse;
 import software.wings.dl.WingsPersistence;
 import software.wings.exception.WingsException;
 import software.wings.scheduler.JobScheduler;
+import software.wings.service.impl.yaml.YamlChangeSetHelper;
 import software.wings.service.intfc.AlertService;
 import software.wings.service.intfc.AppContainerService;
 import software.wings.service.intfc.AppService;
@@ -89,6 +90,7 @@ public class AppServiceTest extends WingsBaseTest {
   @Mock UpdateOperations<Application> updateOperations;
 
   @Mock private WingsPersistence wingsPersistence;
+  @Mock private YamlChangeSetHelper yamlChangeSetHelper;
 
   @Inject @InjectMocks AppService appService;
 
@@ -260,8 +262,8 @@ public class AppServiceTest extends WingsBaseTest {
    */
   @Test
   public void shouldUpdateApplication() {
-    when(wingsPersistence.get(Application.class, APP_ID))
-        .thenReturn(anApplication().withUuid(APP_ID).withName(APP_NAME).build());
+    Application application = anApplication().withUuid(APP_ID).withName(APP_NAME).build();
+    when(wingsPersistence.get(Application.class, APP_ID)).thenReturn(application);
     appService.update(anApplication().withUuid(APP_ID).withName("App_Name").withDescription("Description").build());
     verify(query).field(ID_KEY);
     verify(end).equal(APP_ID);
@@ -269,7 +271,8 @@ public class AppServiceTest extends WingsBaseTest {
     verify(updateOperations).set("description", "Description");
     verify(updateOperations).set("keywords", asList("App_Name".toLowerCase(), "Description".toLowerCase()));
     verify(wingsPersistence).update(query, updateOperations);
-    verify(wingsPersistence, times(3)).get(Application.class, APP_ID);
+    verify(wingsPersistence, times(2)).get(Application.class, APP_ID);
+    verify(yamlChangeSetHelper).applicationUpdateYamlChangeAsync(application, application);
   }
 
   /**

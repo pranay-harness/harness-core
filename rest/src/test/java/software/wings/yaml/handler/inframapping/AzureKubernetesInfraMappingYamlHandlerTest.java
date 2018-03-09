@@ -51,6 +51,7 @@ import software.wings.service.intfc.InfrastructureMappingService;
 import software.wings.service.intfc.ServiceResourceService;
 import software.wings.service.intfc.ServiceTemplateService;
 import software.wings.service.intfc.SettingsService;
+import software.wings.service.intfc.yaml.YamlDirectoryService;
 import software.wings.utils.ArtifactType;
 import software.wings.yaml.BaseYaml;
 import software.wings.yaml.handler.BaseYamlHandlerTest;
@@ -67,6 +68,8 @@ public class AzureKubernetesInfraMappingYamlHandlerTest extends BaseYamlHandlerT
   @Mock private DelegateProxyFactory delegateProxyFactory;
   @Mock private ContainerService containerService;
   @Mock @Named("JobScheduler") private QuartzScheduler jobScheduler;
+  @Mock private YamlDirectoryService yamlDirectoryService;
+
   @InjectMocks @Inject protected YamlHelper yamlHelper;
   @InjectMocks @Inject protected InfrastructureMappingService infrastructureMappingService;
   @InjectMocks @Inject protected AzureKubernetesInfraMappingYamlHandler azureKubernetesInfraMappingYamlHandler;

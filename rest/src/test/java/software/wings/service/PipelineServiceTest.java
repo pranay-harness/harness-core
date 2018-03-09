@@ -63,6 +63,7 @@ import software.wings.service.intfc.PipelineService;
 import software.wings.service.intfc.ServiceResourceService;
 import software.wings.service.intfc.TriggerService;
 import software.wings.service.intfc.WorkflowService;
+import software.wings.service.intfc.yaml.YamlDirectoryService;
 import software.wings.sm.ExecutionStatus;
 import software.wings.sm.StateMachine;
 import software.wings.sm.StateType;
@@ -90,6 +91,7 @@ public class PipelineServiceTest extends WingsBaseTest {
   @Mock private FieldEnd end;
 
   @Mock private JobScheduler jobScheduler;
+  @Mock private YamlDirectoryService yamlDirectoryService;
 
   @Inject @InjectMocks private PipelineService pipelineService;
 
