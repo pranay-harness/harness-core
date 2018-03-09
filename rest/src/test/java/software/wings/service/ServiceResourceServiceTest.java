@@ -85,6 +85,9 @@ import software.wings.beans.Workflow.WorkflowBuilder;
 import software.wings.beans.command.Command;
 import software.wings.beans.command.CommandUnitType;
 import software.wings.beans.command.ServiceCommand;
+import software.wings.beans.container.ContainerAdvancedPayload;
+import software.wings.beans.container.ContainerTask;
+import software.wings.beans.container.KubernetesContainerTask;
 import software.wings.dl.PageRequest;
 import software.wings.dl.PageResponse;
 import software.wings.dl.WingsPersistence;
@@ -193,6 +196,7 @@ public class ServiceResourceServiceTest extends WingsBaseTest {
     when(wingsPersistence.createQuery(Service.class)).thenReturn(datastore.createQuery(Service.class));
     when(wingsPersistence.createQuery(ServiceCommand.class)).thenReturn(datastore.createQuery(ServiceCommand.class));
     when(wingsPersistence.createQuery(Command.class)).thenReturn(datastore.createQuery(Command.class));
+    when(wingsPersistence.createQuery(ContainerTask.class)).thenReturn(datastore.createQuery(ContainerTask.class));
 
     PageRequest<ServiceCommand> serviceCommandPageRequest = aPageRequest()
                                                                 .withLimit(PageRequest.UNLIMITED)
@@ -361,13 +365,12 @@ public class ServiceResourceServiceTest extends WingsBaseTest {
   @Test
   public void shouldThrowExceptionOnReferencedServiceDelete() {
     when(workflowService.listWorkflows(any(PageRequest.class)))
-        .thenReturn(
-            aPageResponse()
-                .withResponse(asList(WorkflowBuilder.aWorkflow()
-                                         .withName(WORKFLOW_NAME)
-                                         .withServices(asList(Service.Builder.aService().withUuid(SERVICE_ID).build()))
-                                         .build()))
-                .build());
+        .thenReturn(aPageResponse()
+                        .withResponse(asList(WorkflowBuilder.aWorkflow()
+                                                 .withName(WORKFLOW_NAME)
+                                                 .withServices(asList(aService().withUuid(SERVICE_ID).build()))
+                                                 .build()))
+                        .build());
     assertThatThrownBy(() -> srs.delete(APP_ID, SERVICE_ID))
         .isInstanceOf(WingsException.class)
         .hasMessage(ErrorCode.INVALID_REQUEST.name());
@@ -834,7 +837,7 @@ public class ServiceResourceServiceTest extends WingsBaseTest {
                         .withResponse(asList(
                             WorkflowBuilder.aWorkflow()
                                 .withName(WORKFLOW_NAME)
-                                .withServices(asList(Service.Builder.aService()
+                                .withServices(asList(aService()
                                                          .withUuid(SERVICE_ID)
                                                          .withAppId(APP_ID)
                                                          .withCommands(asList(serviceCommand))
@@ -870,7 +873,7 @@ public class ServiceResourceServiceTest extends WingsBaseTest {
                         .withResponse(asList(
                             WorkflowBuilder.aWorkflow()
                                 .withName(WORKFLOW_NAME)
-                                .withServices(asList(Service.Builder.aService()
+                                .withServices(asList(aService()
                                                          .withUuid(SERVICE_ID_CHANGED)
                                                          .withAppId(APP_ID)
                                                          .withCommands(asList(serviceCommand))
@@ -1057,7 +1060,7 @@ public class ServiceResourceServiceTest extends WingsBaseTest {
                               .functions(Arrays.asList(functionSpecification, functionSpecification2))
                               .build();
     lambdaSpecification.setAppId("TestAppID");
-    Mockito.when(wingsPersistence.saveAndGet(Mockito.any(Class.class), Mockito.any(LambdaSpecification.class)))
+    when(wingsPersistence.saveAndGet(Mockito.any(Class.class), Mockito.any(LambdaSpecification.class)))
         .thenReturn(lambdaSpecification);
 
     try {
@@ -1065,5 +1068,42 @@ public class ServiceResourceServiceTest extends WingsBaseTest {
     } catch (WingsException e) {
       fail("Should not have thrown a wingsException", e);
     }
+  }
+
+  @Test
+  public void shouldUpdateContainerTaskAdvanced() {
+    datastore.save(aService().withUuid(SERVICE_ID).withAppId(APP_ID).build());
+    KubernetesContainerTask containerTask = new KubernetesContainerTask();
+    containerTask.setAppId(APP_ID);
+    containerTask.setServiceId(SERVICE_ID);
+    containerTask.setUuid("TASK_ID");
+    datastore.save(containerTask);
+    ContainerAdvancedPayload payload = new ContainerAdvancedPayload();
+
+    when(wingsPersistence.saveAndGet(ContainerTask.class, containerTask)).thenAnswer(t -> t.getArguments()[1]);
+
+    payload.setAdvancedConfig(null);
+    KubernetesContainerTask result =
+        (KubernetesContainerTask) srs.updateContainerTaskAdvanced(APP_ID, SERVICE_ID, "TASK_ID", payload, false);
+    assertThat(result.getAdvancedConfig()).isNull();
+
+    payload.setAdvancedConfig("one line");
+    result = (KubernetesContainerTask) srs.updateContainerTaskAdvanced(APP_ID, SERVICE_ID, "TASK_ID", payload, false);
+    assertThat(result.getAdvancedConfig()).isEqualTo("one line");
+
+    payload.setAdvancedConfig("a\nb");
+    result = (KubernetesContainerTask) srs.updateContainerTaskAdvanced(APP_ID, SERVICE_ID, "TASK_ID", payload, false);
+    assertThat(result.getAdvancedConfig()).isEqualTo("a\nb");
+
+    payload.setAdvancedConfig("a \nb");
+    result = (KubernetesContainerTask) srs.updateContainerTaskAdvanced(APP_ID, SERVICE_ID, "TASK_ID", payload, false);
+    assertThat(result.getAdvancedConfig()).isEqualTo("a\nb");
+
+    payload.setAdvancedConfig("a    \n b   \n  c");
+    result = (KubernetesContainerTask) srs.updateContainerTaskAdvanced(APP_ID, SERVICE_ID, "TASK_ID", payload, false);
+    assertThat(result.getAdvancedConfig()).isEqualTo("a\n b\n  c");
+
+    result = (KubernetesContainerTask) srs.updateContainerTaskAdvanced(APP_ID, SERVICE_ID, "TASK_ID", null, true);
+    assertThat(result.getAdvancedConfig()).isNull();
   }
 }

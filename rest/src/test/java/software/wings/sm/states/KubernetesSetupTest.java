@@ -289,6 +289,42 @@ public class KubernetesSetupTest extends WingsBaseTest {
   }
 
   @Test
+  public void shouldTrimIngressYaml() {
+    kubernetesSetup.setIngressYaml(null);
+    assertThat(kubernetesSetup.getIngressYaml()).isNull();
+
+    kubernetesSetup.setIngressYaml("one line");
+    assertThat(kubernetesSetup.getIngressYaml()).isEqualTo("one line");
+
+    kubernetesSetup.setIngressYaml("a\nb");
+    assertThat(kubernetesSetup.getIngressYaml()).isEqualTo("a\nb");
+
+    kubernetesSetup.setIngressYaml("a \nb");
+    assertThat(kubernetesSetup.getIngressYaml()).isEqualTo("a\nb");
+
+    kubernetesSetup.setIngressYaml("a    \n b   \n  c");
+    assertThat(kubernetesSetup.getIngressYaml()).isEqualTo("a\n b\n  c");
+  }
+
+  @Test
+  public void shouldTrimCustomMetricYaml() {
+    kubernetesSetup.setCustomMetricYamlConfig(null);
+    assertThat(kubernetesSetup.getCustomMetricYamlConfig()).isNull();
+
+    kubernetesSetup.setCustomMetricYamlConfig("one line");
+    assertThat(kubernetesSetup.getCustomMetricYamlConfig()).isEqualTo("one line");
+
+    kubernetesSetup.setCustomMetricYamlConfig("a\nb");
+    assertThat(kubernetesSetup.getCustomMetricYamlConfig()).isEqualTo("a\nb");
+
+    kubernetesSetup.setCustomMetricYamlConfig("a \nb");
+    assertThat(kubernetesSetup.getCustomMetricYamlConfig()).isEqualTo("a\nb");
+
+    kubernetesSetup.setCustomMetricYamlConfig("a    \n b   \n  c");
+    assertThat(kubernetesSetup.getCustomMetricYamlConfig()).isEqualTo("a\n b\n  c");
+  }
+
+  @Test
   public void shouldBuildContainerServiceElement() {
     ContainerServiceElement containerServiceElement = buildContainerServiceElement("10", "5");
 
