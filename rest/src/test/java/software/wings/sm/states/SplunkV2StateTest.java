@@ -52,6 +52,7 @@ import software.wings.service.impl.splunk.SplunkDataCollectionInfo;
 import software.wings.service.intfc.AppService;
 import software.wings.service.intfc.DelegateService;
 import software.wings.service.intfc.SettingsService;
+import software.wings.service.intfc.WorkflowExecutionBaselineService;
 import software.wings.service.intfc.WorkflowExecutionService;
 import software.wings.service.intfc.analysis.AnalysisService;
 import software.wings.service.intfc.elk.ElkAnalysisService;
@@ -62,6 +63,7 @@ import software.wings.sm.ExecutionResponse;
 import software.wings.sm.ExecutionStatus;
 import software.wings.sm.StateExecutionInstance;
 import software.wings.sm.StateType;
+import software.wings.sm.WorkflowStandardParams;
 import software.wings.waitnotify.NotifyResponseData;
 import software.wings.waitnotify.WaitNotifyEngine;
 
@@ -92,6 +94,7 @@ public class SplunkV2StateTest extends WingsBaseTest {
 
   @Mock private DelegateProxyFactory delegateProxyFactory;
   @Mock private BroadcasterFactory broadcasterFactory;
+  @Mock private WorkflowStandardParams workflowStandardParams;
   @Inject private AnalysisService analysisService;
   @Inject private WingsPersistence wingsPersistence;
   @Inject private AppService appService;
@@ -101,6 +104,7 @@ public class SplunkV2StateTest extends WingsBaseTest {
   @Inject private MainConfiguration configuration;
   @Inject private SecretManager secretManager;
   @Inject private ContinuousVerificationService continuousVerificationService;
+  @Inject private WorkflowExecutionBaselineService workflowExecutionBaselineService;
 
   @Inject private WorkflowExecutionService workflowExecutionService;
   @Mock private PhaseElement phaseElement;
@@ -170,6 +174,7 @@ public class SplunkV2StateTest extends WingsBaseTest {
     setInternalState(splunkState, "secretManager", secretManager);
     setInternalState(splunkState, "workflowExecutionService", workflowExecutionService);
     setInternalState(splunkState, "continuousVerificationService", continuousVerificationService);
+    setInternalState(splunkState, "workflowExecutionBaselineService", workflowExecutionBaselineService);
   }
 
   @Test
@@ -269,10 +274,15 @@ public class SplunkV2StateTest extends WingsBaseTest {
     doReturn(Collections.singleton("control")).when(spyState).getLastExecutionNodes(executionContext);
     doReturn(workflowId).when(spyState).getWorkflowId(executionContext);
     doReturn(serviceId).when(spyState).getPhaseServiceId(executionContext);
+    when(workflowStandardParams.getEnv())
+        .thenReturn(Environment.Builder.anEnvironment().withUuid(UUID.randomUUID().toString()).build());
+    when(executionContext.getContextElement(ContextElementType.STANDARD)).thenReturn(workflowStandardParams);
 
     ExecutionResponse response = spyState.execute(executionContext);
     assertEquals(ExecutionStatus.RUNNING, response.getExecutionStatus());
-    assertEquals("Log Verification running", response.getErrorMessage());
+    assertEquals(
+        "No baseline was set for the workflow. Workflow running with auto baseline. No previous execution found. This will be the baseline run.",
+        response.getErrorMessage());
 
     List<DelegateTask> tasks = wingsPersistence.createQuery(DelegateTask.class).asList();
     assertEquals(1, tasks.size());

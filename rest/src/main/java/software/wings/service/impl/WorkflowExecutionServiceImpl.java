@@ -57,7 +57,9 @@ import static software.wings.sm.StateType.APPROVAL;
 import static software.wings.sm.StateType.ENV_STATE;
 import static software.wings.utils.Validator.notNullCheck;
 
+import com.google.common.base.Preconditions;
 import com.google.common.collect.ImmutableMap;
+import com.google.common.collect.Lists;
 import com.google.common.collect.Maps;
 import com.google.inject.Inject;
 import com.google.inject.Singleton;
@@ -2101,71 +2103,106 @@ public class WorkflowExecutionServiceImpl implements WorkflowExecutionService {
   }
 
   @Override
-  public Set<WorkflowExecutionBaseline> markAsBaseline(String appId, String workflowExecutionId) {
+  public Set<WorkflowExecutionBaseline> markBaseline(String appId, String workflowExecutionId, boolean isBaseline) {
     WorkflowExecution workflowExecution = wingsPersistence.get(WorkflowExecution.class, appId, workflowExecutionId);
     if (workflowExecution == null) {
       throw new WingsException(ErrorCode.BASELINE_CONFIGURATION_ERROR,
           "No workflow execution found with id: " + workflowExecutionId + " appId: " + appId);
     }
-    if (workflowExecution.getWorkflowType() != WorkflowType.PIPELINE) {
-      throw new WingsException(ErrorCode.BASELINE_CONFIGURATION_ERROR, "Only pipelines can be marked as baseline.");
-    }
+    List<WorkflowExecution> workflowExecutions = new ArrayList<>();
+    switch (workflowExecution.getWorkflowType()) {
+      case PIPELINE:
+        PipelineExecution pipelineExecution = workflowExecution.getPipelineExecution();
+        if (pipelineExecution == null) {
+          throw new WingsException(ErrorCode.BASELINE_CONFIGURATION_ERROR, "Pipeline has not been executed.")
+              .addParam("message", "Pipeline has not been executed.");
+        }
 
-    PipelineExecution pipelineExecution = workflowExecution.getPipelineExecution();
-    if (pipelineExecution == null) {
-      throw new WingsException(ErrorCode.BASELINE_CONFIGURATION_ERROR, "Pipeline has not been executed.");
-    }
+        List<PipelineStageExecution> pipelineStageExecutions = pipelineExecution.getPipelineStageExecutions();
+        if (isEmpty(pipelineStageExecutions)) {
+          throw new WingsException(
+              ErrorCode.BASELINE_CONFIGURATION_ERROR, "No workflows have been executed for this pipeline.")
+              .addParam("message", "No workflows have been executed for this pipeline.");
+        }
+        pipelineStageExecutions.forEach(
+            pipelineStageExecution -> workflowExecutions.addAll(pipelineStageExecution.getWorkflowExecutions()));
+        break;
 
-    List<PipelineStageExecution> pipelineStageExecutions = pipelineExecution.getPipelineStageExecutions();
-    if (isEmpty(pipelineStageExecutions)) {
-      throw new WingsException(
-          ErrorCode.BASELINE_CONFIGURATION_ERROR, "No workflows have been executed for this pipeline.");
+      case SIMPLE:
+      case ORCHESTRATION:
+        workflowExecutions.add(workflowExecution);
+        break;
+      default:
+        throw new WingsException(
+            ErrorCode.BASELINE_CONFIGURATION_ERROR, "Invalid workflow type: " + workflowExecution.getWorkflowType())
+            .addParam("message", "Invalid workflow type: " + workflowExecution.getWorkflowType());
     }
 
     final Set<WorkflowExecutionBaseline> baselines = new HashSet<>();
 
-    pipelineStageExecutions.forEach(pipelineStageExecution -> {
-      List<WorkflowExecution> workflowExecutions = pipelineStageExecution.getWorkflowExecutions();
-      if (!isEmpty(workflowExecutions)) {
-        workflowExecutions.forEach(stageExecution -> {
-          String executionUuid = stageExecution.getUuid();
-          List<StateExecutionInstance> stateExecutionInstances =
-              wingsPersistence.createQuery(StateExecutionInstance.class)
-                  .field("executionUuid")
-                  .equal(executionUuid)
-                  .asList();
+    if (!isEmpty(workflowExecutions)) {
+      workflowExecutions.forEach(stageExecution -> {
+        String executionUuid = stageExecution.getUuid();
+        List<StateExecutionInstance> stateExecutionInstances =
+            wingsPersistence.createQuery(StateExecutionInstance.class)
+                .field("executionUuid")
+                .equal(executionUuid)
+                .asList();
 
-          boolean containsVerificationState = false;
-          for (StateExecutionInstance stateExecutionInstance : stateExecutionInstances) {
-            StateType stateType = StateType.valueOf(stateExecutionInstance.getStateType());
-            if (stateType.isVerificationState()) {
-              containsVerificationState = true;
-              break;
-            }
+        boolean containsVerificationState = false;
+        for (StateExecutionInstance stateExecutionInstance : stateExecutionInstances) {
+          StateType stateType = StateType.valueOf(stateExecutionInstance.getStateType());
+          if (stateType.isVerificationState()) {
+            containsVerificationState = true;
+            break;
           }
+        }
 
-          if (containsVerificationState) {
-            for (String serviceId : stageExecution.getServiceIds()) {
-              WorkflowExecutionBaseline executionBaseline = WorkflowExecutionBaseline.builder()
-                                                                .workflowId(stageExecution.getWorkflowId())
-                                                                .workflowExecutionId(executionUuid)
-                                                                .envId(stageExecution.getEnvId())
-                                                                .serviceId(serviceId)
-                                                                .build();
-              executionBaseline.setAppId(stageExecution.getAppId());
-              baselines.add(executionBaseline);
+        if (containsVerificationState) {
+          for (String serviceId : stageExecution.getServiceIds()) {
+            WorkflowExecutionBaseline executionBaseline = WorkflowExecutionBaseline.builder()
+                                                              .workflowId(stageExecution.getWorkflowId())
+                                                              .workflowExecutionId(executionUuid)
+                                                              .envId(stageExecution.getEnvId())
+                                                              .serviceId(serviceId)
+                                                              .build();
+            executionBaseline.setAppId(stageExecution.getAppId());
+            if (workflowExecution.getWorkflowType() == WorkflowType.PIPELINE) {
+              executionBaseline.setPipelineExecutionId(workflowExecutionId);
             }
+            baselines.add(executionBaseline);
           }
-        });
-      }
-    });
+        }
+      });
+    }
 
     if (isEmpty(baselines)) {
       throw new WingsException(ErrorCode.BASELINE_CONFIGURATION_ERROR,
-          "There is no workflow execution in this pipeline with verification steps.");
+          "Either there is no workflow execution with verification steps or verification steps haven't been executed for the workflow.")
+          .addParam("message",
+              "Either there is no workflow execution with verification steps or verification steps haven't been executed for the workflow.");
     }
 
-    workflowExecutionBaselineService.markBaseline(newArrayList(baselines));
+    workflowExecutionBaselineService.markBaseline(Lists.newArrayList(baselines), workflowExecutionId, isBaseline);
     return baselines;
+  }
+
+  @Override
+  public WorkflowExecutionBaseline getBaselineDetails(String appId, String workflowExecutionId) {
+    PageRequest<WorkflowExecutionBaseline> pageRequest =
+        aPageRequest()
+            .addFilter("workflowExecutionId", Operator.EQ, workflowExecutionId)
+            .addFilter("appId", Operator.EQ, appId)
+            .build();
+    PageResponse<WorkflowExecutionBaseline> pageResponse =
+        wingsPersistence.query(WorkflowExecutionBaseline.class, pageRequest);
+    Preconditions.checkState(
+        pageResponse.size() <= 1, "workflowExecutionId " + workflowExecutionId + " exists in more than one baselines");
+
+    if (isEmpty(pageResponse.getResponse())) {
+      return null;
+    }
+
+    return pageResponse.getResponse().get(0);
   }
 }

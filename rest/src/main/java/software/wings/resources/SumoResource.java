@@ -91,11 +91,13 @@ public class SumoResource implements LogAnalysisResource {
       @QueryParam("applicationId") String applicationId, @QueryParam("stateExecutionId") String stateExecutionId,
       @QueryParam("logCollectionMinute") Integer logCollectionMinute,
       @QueryParam("isBaselineCreated") boolean isBaselineCreated, @QueryParam("taskId") String taskId,
-      LogMLAnalysisRecord mlAnalysisResponse) throws IOException {
+      @QueryParam("baseLineExecutionId") String baseLineExecutionId, LogMLAnalysisRecord mlAnalysisResponse)
+      throws IOException {
     mlAnalysisResponse.setApplicationId(applicationId);
     mlAnalysisResponse.setStateExecutionId(stateExecutionId);
     mlAnalysisResponse.setLogCollectionMinute(logCollectionMinute);
     mlAnalysisResponse.setBaseLineCreated(isBaselineCreated);
+    mlAnalysisResponse.setBaseLineExecutionId(baseLineExecutionId);
     return new RestResponse<>(
         analysisService.saveLogAnalysisRecords(mlAnalysisResponse, StateType.SUMO, Optional.of(taskId)));
   }

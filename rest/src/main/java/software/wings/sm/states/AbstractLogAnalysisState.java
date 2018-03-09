@@ -29,10 +29,12 @@ import software.wings.service.impl.analysis.LogAnalysisResponse;
 import software.wings.service.impl.analysis.LogMLAnalysisSummary;
 import software.wings.service.intfc.analysis.AnalysisService;
 import software.wings.service.intfc.analysis.LogAnalysisResource;
+import software.wings.sm.ContextElementType;
 import software.wings.sm.ExecutionContext;
 import software.wings.sm.ExecutionResponse;
 import software.wings.sm.ExecutionStatus;
 import software.wings.sm.StateType;
+import software.wings.sm.WorkflowStandardParams;
 import software.wings.stencils.DefaultValue;
 import software.wings.utils.JsonUtils;
 import software.wings.waitnotify.NotifyResponseData;
@@ -78,7 +80,7 @@ public abstract class AbstractLogAnalysisState extends AbstractAnalysisState {
 
   @Override
   public ExecutionResponse execute(ExecutionContext executionContext) {
-    getLogger().debug("Executing analysis state");
+    getLogger().info("Executing {} state, id: {} ", getStateType(), executionContext.getStateExecutionInstanceId());
     cleanUpForRetry(executionContext);
     AnalysisContext context = getLogAnalysisContext(executionContext, UUID.randomUUID().toString());
 
@@ -100,6 +102,27 @@ public abstract class AbstractLogAnalysisState extends AbstractAnalysisState {
           + "Log data will be collected to be analyzed for next deployment run");
     }
 
+    String responseMessage = "Log Verification running.";
+    if (getComparisonStrategy() == AnalysisComparisonStrategy.COMPARE_WITH_PREVIOUS) {
+      WorkflowStandardParams workflowStandardParams = executionContext.getContextElement(ContextElementType.STANDARD);
+      String baselineWorkflowExecutionId = workflowExecutionBaselineService.getBaselineExecutionId(
+          context.getWorkflowId(), workflowStandardParams.getEnv().getUuid(), context.getServiceId());
+      if (isEmpty(baselineWorkflowExecutionId)) {
+        responseMessage = "No baseline was set for the workflow. Workflow running with auto baseline.";
+        getLogger().info(responseMessage);
+        baselineWorkflowExecutionId = analysisService.getLastSuccessfulWorkflowExecutionIdWithLogs(
+            context.getStateType(), context.getAppId(), context.getServiceId(), context.getWorkflowId());
+      } else {
+        responseMessage = "Baseline is pinned for the workflow. Analyzing against pinned baseline.";
+        getLogger().info("Baseline execution for {} is {}", context.getStateExecutionId(), baselineWorkflowExecutionId);
+      }
+      if (baselineWorkflowExecutionId == null) {
+        responseMessage += " No previous execution found. This will be the baseline run.";
+        getLogger().warn("No previous execution found. This will be the baseline run");
+      }
+      context.setPrevWorkflowExecutionId(baselineWorkflowExecutionId);
+    }
+
     final LogAnalysisExecutionData executionData =
         LogAnalysisExecutionData.Builder.anLogAnanlysisExecutionData()
             .withStateExecutionInstanceId(context.getStateExecutionId())
@@ -110,6 +133,7 @@ public abstract class AbstractLogAnalysisState extends AbstractAnalysisState {
             .withCanaryNewHostNames(canaryNewHostNames)
             .withLastExecutionNodes(lastExecutionNodes == null ? new HashSet<>() : new HashSet<>(lastExecutionNodes))
             .withCorrelationId(context.getCorrelationId())
+            .withErrorMsg(responseMessage)
             .build();
 
     Set<String> hostsToBeCollected = new HashSet<>();
@@ -129,7 +153,7 @@ public abstract class AbstractLogAnalysisState extends AbstractAnalysisState {
           .withAsync(true)
           .withCorrelationIds(Collections.singletonList(context.getCorrelationId()))
           .withExecutionStatus(ExecutionStatus.RUNNING)
-          .withErrorMessage("Log Verification running")
+          .withErrorMessage(responseMessage)
           .withStateExecutionData(executionData)
           .build();
     } catch (Exception ex) {

@@ -23,10 +23,12 @@ import software.wings.service.impl.newrelic.MetricAnalysisExecutionData;
 import software.wings.service.impl.newrelic.MetricAnalysisJob;
 import software.wings.service.impl.newrelic.NewRelicMetricAnalysisRecord;
 import software.wings.service.intfc.MetricDataAnalysisService;
+import software.wings.sm.ContextElementType;
 import software.wings.sm.ExecutionContext;
 import software.wings.sm.ExecutionResponse;
 import software.wings.sm.ExecutionStatus;
 import software.wings.sm.StateType;
+import software.wings.sm.WorkflowStandardParams;
 import software.wings.utils.JsonUtils;
 import software.wings.waitnotify.NotifyResponseData;
 
@@ -62,7 +64,7 @@ public abstract class AbstractMetricAnalysisState extends AbstractAnalysisState 
 
   @Override
   public ExecutionResponse execute(ExecutionContext context) {
-    getLogger().debug("Executing {} state", getStateType());
+    getLogger().info("Executing {} state, id: {} ", getStateType(), context.getStateExecutionInstanceId());
     cleanUpForRetry(context);
     AnalysisContext analysisContext = getAnalysisContext(context, UUID.randomUUID().toString());
 
@@ -91,14 +93,26 @@ public abstract class AbstractMetricAnalysisState extends AbstractAnalysisState 
           "Skipping analysis due to lack of baseline data (Minimum two phases are required).");
     }
 
+    String responseMessage = "Log Verification running";
     if (getComparisonStrategy() == AnalysisComparisonStrategy.COMPARE_WITH_PREVIOUS) {
-      String prevWorkflowExecutionId = metricAnalysisService.getLastSuccessfulWorkflowExecutionIdWithData(
-          analysisContext.getStateType(), analysisContext.getWorkflowId(), analysisContext.getServiceId());
-      if (prevWorkflowExecutionId == null) {
-        getLogger().warn("No previous execution found. This will be the baseline run");
-        prevWorkflowExecutionId = "-1";
+      WorkflowStandardParams workflowStandardParams = context.getContextElement(ContextElementType.STANDARD);
+      String baselineWorkflowExecutionId = workflowExecutionBaselineService.getBaselineExecutionId(
+          context.getWorkflowId(), workflowStandardParams.getEnv().getUuid(), analysisContext.getServiceId());
+      if (isEmpty(baselineWorkflowExecutionId)) {
+        responseMessage = "No baseline was set for the workflow. Workflow running with auto baseline.";
+        getLogger().info(responseMessage);
+        baselineWorkflowExecutionId = metricAnalysisService.getLastSuccessfulWorkflowExecutionIdWithData(
+            analysisContext.getStateType(), analysisContext.getWorkflowId(), analysisContext.getServiceId());
+      } else {
+        responseMessage = "Baseline is fixed for the workflow. Analyzing against fixed baseline.";
+        getLogger().info(
+            "Baseline execution for {} is {}", analysisContext.getStateExecutionId(), baselineWorkflowExecutionId);
       }
-      analysisContext.setPrevWorkflowExecutionId(prevWorkflowExecutionId);
+      if (baselineWorkflowExecutionId == null) {
+        responseMessage += " No previous execution found. This will be the baseline run";
+        getLogger().warn("No previous execution found. This will be the baseline run");
+      }
+      analysisContext.setPrevWorkflowExecutionId(baselineWorkflowExecutionId);
     }
 
     final MetricAnalysisExecutionData executionData =
@@ -111,6 +125,7 @@ public abstract class AbstractMetricAnalysisState extends AbstractAnalysisState 
             .lastExecutionNodes(lastExecutionNodes == null ? new HashSet<>() : new HashSet<>(lastExecutionNodes))
             .correlationId(analysisContext.getCorrelationId())
             .build();
+    executionData.setErrorMsg(responseMessage);
     executionData.setStatus(ExecutionStatus.RUNNING);
     Set<String> hostsToCollect = new HashSet<>();
     if (getComparisonStrategy() == AnalysisComparisonStrategy.COMPARE_WITH_PREVIOUS) {

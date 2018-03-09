@@ -277,5 +277,7 @@ public interface WorkflowExecutionService {
   void refreshBuildExecutionSummary(
       String appId, String workflowExecutionId, BuildExecutionSummary buildExecutionSummary);
 
-  Set<WorkflowExecutionBaseline> markAsBaseline(String appId, String workflowExecutionId);
+  Set<WorkflowExecutionBaseline> markBaseline(String appId, String workflowExecutionId, boolean isBaseline);
+
+  WorkflowExecutionBaseline getBaselineDetails(String appId, String workflowExecutionId);
 }

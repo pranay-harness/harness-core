@@ -40,6 +40,7 @@ import software.wings.service.intfc.AppService;
 import software.wings.service.intfc.DelegateService;
 import software.wings.service.intfc.InfrastructureMappingService;
 import software.wings.service.intfc.SettingsService;
+import software.wings.service.intfc.WorkflowExecutionBaselineService;
 import software.wings.service.intfc.WorkflowExecutionService;
 import software.wings.service.intfc.security.SecretManager;
 import software.wings.sm.ContextElementType;
@@ -91,6 +92,8 @@ public abstract class AbstractAnalysisState extends State {
   @Transient @Inject @SchemaIgnore protected InfrastructureMappingService infraMappingService;
 
   @Transient @Inject protected TemplateExpressionProcessor templateExpressionProcessor;
+
+  @Transient @Inject @SchemaIgnore protected WorkflowExecutionBaselineService workflowExecutionBaselineService;
 
   @Transient @Inject @SchemaIgnore protected ContinuousVerificationService continuousVerificationService;
 
