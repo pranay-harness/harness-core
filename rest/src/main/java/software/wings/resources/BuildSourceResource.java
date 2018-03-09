@@ -1,5 +1,6 @@
 package software.wings.resources;
 
+import static java.util.stream.Collectors.toList;
 import static org.apache.commons.lang3.StringUtils.isBlank;
 
 import com.google.inject.Inject;
@@ -8,6 +9,7 @@ import com.codahale.metrics.annotation.ExceptionMetered;
 import com.codahale.metrics.annotation.Timed;
 import io.swagger.annotations.Api;
 import software.wings.beans.RestResponse;
+import software.wings.common.BuildDetailsComparator;
 import software.wings.helpers.ext.jenkins.BuildDetails;
 import software.wings.helpers.ext.jenkins.JobDetails;
 import software.wings.security.PermissionAttribute.ResourceType;
@@ -114,7 +116,9 @@ public class BuildSourceResource {
   @ExceptionMetered
   public RestResponse<List<BuildDetails>> getBuilds(@QueryParam("appId") String appId,
       @QueryParam("artifactStreamId") String artifactStreamId, @QueryParam("settingId") String settingId) {
-    return new RestResponse<>(buildSourceService.getBuilds(appId, artifactStreamId, settingId));
+    List<BuildDetails> buildDetails = buildSourceService.getBuilds(appId, artifactStreamId, settingId);
+    buildDetails = buildDetails.stream().sorted(new BuildDetailsComparator()).collect(toList());
+    return new RestResponse<>(buildDetails);
   }
 
   @GET
