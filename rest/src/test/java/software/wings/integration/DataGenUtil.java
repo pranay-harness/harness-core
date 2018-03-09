@@ -30,8 +30,6 @@ import org.junit.Rule;
 import org.junit.Test;
 import org.junit.rules.TemporaryFolder;
 import org.junit.runner.JUnitCore;
-import org.mongodb.morphia.query.Query;
-import org.mongodb.morphia.query.UpdateOperations;
 import software.wings.app.MainConfiguration;
 import software.wings.beans.AppContainer;
 import software.wings.beans.AppDynamicsConfig;
@@ -41,8 +39,6 @@ import software.wings.beans.Base;
 import software.wings.beans.DockerConfig;
 import software.wings.beans.EntityType;
 import software.wings.beans.Environment;
-import software.wings.beans.FeatureFlag;
-import software.wings.beans.FeatureName;
 import software.wings.beans.InfrastructureMappingType;
 import software.wings.beans.JenkinsConfig;
 import software.wings.beans.KmsConfig;
@@ -513,11 +509,6 @@ public class DataGenUtil extends BaseIntegrationTest {
             .secretKey("7E/PobSOEI6eiNW8TUS1YEcvQe5F4k2yGlobCZVS")
             .kmsArn("arn:aws:kms:us-east-1:830767422336:key/6b64906a-b7ab-4f69-8159-e20fef1f204d")
             .build());
-    Query<FeatureFlag> kmsFlagQuery =
-        wingsPersistence.createQuery(FeatureFlag.class).field("name").equal(FeatureName.KMS.name());
-    UpdateOperations<FeatureFlag> updateOperations = wingsPersistence.createUpdateOperations(FeatureFlag.class);
-    updateOperations.set("enabled", true);
-    wingsPersistence.update(kmsFlagQuery, updateOperations);
   }
 
   /**

@@ -29,7 +29,6 @@ import software.wings.beans.ConfigFile;
 import software.wings.beans.EmbeddedUser;
 import software.wings.beans.EntityType;
 import software.wings.beans.ErrorCode;
-import software.wings.beans.FeatureName;
 import software.wings.beans.KmsConfig;
 import software.wings.beans.SearchFilter.Operator;
 import software.wings.beans.ServiceTemplate;
@@ -99,10 +98,6 @@ public class SecretManagerImpl implements SecretManager {
 
   @Override
   public EncryptionType getEncryptionType(String accountId) {
-    if (!featureFlagService.isEnabled(FeatureName.KMS, accountId)) {
-      return LOCAL;
-    }
-
     if (vaultService.getSecretConfig(accountId) != null) {
       return EncryptionType.VAULT;
     }

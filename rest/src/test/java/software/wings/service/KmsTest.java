@@ -46,8 +46,6 @@ import software.wings.beans.DelegateTask.SyncTaskContext;
 import software.wings.beans.DirectKubernetesInfrastructureMapping;
 import software.wings.beans.EntityType;
 import software.wings.beans.ErrorCode;
-import software.wings.beans.FeatureFlag;
-import software.wings.beans.FeatureName;
 import software.wings.beans.InfrastructureMapping;
 import software.wings.beans.KmsConfig;
 import software.wings.beans.Service;
@@ -434,7 +432,6 @@ public class KmsTest extends WingsBaseTest {
     assertNull(((AppDynamicsConfig) savedAttribute.getValue()).getPassword());
     assertEquals(appDynamicsConfig, savedAttribute.getValue());
     assertFalse(isBlank(((AppDynamicsConfig) savedAttribute.getValue()).getEncryptedPassword()));
-    enableKmsFeatureFlag();
     encryptionService.decrypt((Encryptable) savedAttribute.getValue(),
         secretManager.getEncryptionDetails((Encryptable) savedAttribute.getValue(), workflowExecutionId, appId));
     assertEquals(password, new String(((AppDynamicsConfig) savedAttribute.getValue()).getPassword()));
@@ -445,7 +442,6 @@ public class KmsTest extends WingsBaseTest {
     final String accountId = UUID.randomUUID().toString();
     final KmsConfig kmsConfig = getKmsConfig();
     kmsService.saveKmsConfig(accountId, kmsConfig);
-    enableKmsFeatureFlag();
 
     final AppDynamicsConfig appDynamicsConfig = AppDynamicsConfig.builder()
                                                     .accountId(accountId)
@@ -494,7 +490,6 @@ public class KmsTest extends WingsBaseTest {
     final String accountId = UUID.randomUUID().toString();
     final KmsConfig kmsConfig = getKmsConfig();
     kmsService.saveKmsConfig(accountId, kmsConfig);
-    enableKmsFeatureFlag();
 
     final AppDynamicsConfig appDynamicsConfig = AppDynamicsConfig.builder()
                                                     .accountId(accountId)
@@ -536,7 +531,6 @@ public class KmsTest extends WingsBaseTest {
     final String accountId = UUID.randomUUID().toString();
     final KmsConfig kmsConfig = getKmsConfig();
     kmsService.saveKmsConfig(accountId, kmsConfig);
-    enableKmsFeatureFlag();
 
     int numOfSettingAttributes = 5;
     List<SettingAttribute> settingAttributes = new ArrayList<>();
@@ -591,7 +585,6 @@ public class KmsTest extends WingsBaseTest {
     final String accountId1 = UUID.randomUUID().toString();
     final KmsConfig kmsConfig = getKmsConfig();
     kmsService.saveGlobalKmsConfig(accountId1, kmsConfig);
-    enableKmsFeatureFlag();
 
     int numOfSettingAttributes1 = 5;
     List<SettingAttribute> settingAttributes = new ArrayList<>();
@@ -858,7 +851,6 @@ public class KmsTest extends WingsBaseTest {
     final String accountId = UUID.randomUUID().toString();
     final KmsConfig kmsConfig = getKmsConfig();
     kmsService.saveKmsConfig(accountId, kmsConfig);
-    enableKmsFeatureFlag();
 
     final AppDynamicsConfig appDynamicsConfig = AppDynamicsConfig.builder()
                                                     .accountId(accountId)
@@ -986,7 +978,6 @@ public class KmsTest extends WingsBaseTest {
     final String accountId = UUID.randomUUID().toString();
     final KmsConfig kmsConfig = getKmsConfig();
     kmsService.saveKmsConfig(accountId, kmsConfig);
-    enableKmsFeatureFlag();
 
     final AppDynamicsConfig appDynamicsConfig = AppDynamicsConfig.builder()
                                                     .accountId(accountId)
@@ -1162,7 +1153,6 @@ public class KmsTest extends WingsBaseTest {
 
     final KmsConfig kmsConfig = getKmsConfig();
     kmsService.saveKmsConfig(accountId, kmsConfig);
-    enableKmsFeatureFlag();
 
     final String newPassWord = UUID.randomUUID().toString();
     final AppDynamicsConfig newAppDynamicsConfig = AppDynamicsConfig.builder()
@@ -1259,7 +1249,6 @@ public class KmsTest extends WingsBaseTest {
     final String accountId = UUID.randomUUID().toString();
     final KmsConfig kmsConfig = getKmsConfig();
     kmsService.saveKmsConfig(accountId, kmsConfig);
-    enableKmsFeatureFlag();
 
     String value = UUID.randomUUID().toString();
     final ServiceVariable serviceVariable = ServiceVariable.builder()
@@ -1324,7 +1313,6 @@ public class KmsTest extends WingsBaseTest {
     final String accountId = UUID.randomUUID().toString();
     final KmsConfig kmsConfig = getKmsConfig();
     kmsService.saveKmsConfig(accountId, kmsConfig);
-    enableKmsFeatureFlag();
 
     String secretName = UUID.randomUUID().toString();
     String secretValue = UUID.randomUUID().toString();
@@ -1387,7 +1375,6 @@ public class KmsTest extends WingsBaseTest {
     final String accountId = UUID.randomUUID().toString();
     final KmsConfig kmsConfig = getKmsConfig();
     kmsService.saveKmsConfig(accountId, kmsConfig);
-    enableKmsFeatureFlag();
 
     String secretName = UUID.randomUUID().toString();
     String secretValue = UUID.randomUUID().toString();
@@ -1429,7 +1416,6 @@ public class KmsTest extends WingsBaseTest {
     final String accountId = UUID.randomUUID().toString();
     final KmsConfig kmsConfig = getKmsConfig();
     kmsService.saveKmsConfig(accountId, kmsConfig);
-    enableKmsFeatureFlag();
 
     String secretName = UUID.randomUUID().toString();
     String secretValue = UUID.randomUUID().toString();
@@ -1495,7 +1481,6 @@ public class KmsTest extends WingsBaseTest {
     final String accountId = UUID.randomUUID().toString();
     final KmsConfig kmsConfig = getKmsConfig();
     kmsService.saveKmsConfig(accountId, kmsConfig);
-    enableKmsFeatureFlag();
 
     int numOfSettingAttributes = 5;
     List<SettingAttribute> settingAttributes = new ArrayList<>();
@@ -1538,7 +1523,6 @@ public class KmsTest extends WingsBaseTest {
     final String accountId = UUID.randomUUID().toString();
     final KmsConfig kmsConfig = getKmsConfig();
     kmsService.saveKmsConfig(accountId, kmsConfig);
-    enableKmsFeatureFlag();
 
     int numOfSettingAttributes = 5;
     List<SettingAttribute> settingAttributes = new ArrayList<>();
@@ -1596,7 +1580,6 @@ public class KmsTest extends WingsBaseTest {
     final String accountId = UUID.randomUUID().toString();
     final KmsConfig kmsConfig = getKmsConfig();
     kmsService.saveKmsConfig(accountId, kmsConfig);
-    enableKmsFeatureFlag();
 
     int numOfSettingAttributes = 5;
     List<SettingAttribute> settingAttributes = new ArrayList<>();
@@ -1669,7 +1652,6 @@ public class KmsTest extends WingsBaseTest {
     final String accountId = UUID.randomUUID().toString();
     KmsConfig kmsConfig = getKmsConfig();
     kmsService.saveKmsConfig(accountId, kmsConfig);
-    enableKmsFeatureFlag();
 
     int numOfSettingAttributes = 5;
     List<Object> encryptedEntities = new ArrayList<>();
@@ -1994,7 +1976,6 @@ public class KmsTest extends WingsBaseTest {
       final String accountId = UUID.randomUUID().toString();
       KmsConfig fromConfig = getKmsConfig();
       kmsService.saveKmsConfig(accountId, fromConfig);
-      enableKmsFeatureFlag();
 
       int numOfSettingAttributes = 5;
       Map<String, SettingAttribute> encryptedEntities = new HashMap<>();
@@ -2076,7 +2057,6 @@ public class KmsTest extends WingsBaseTest {
       final String accountId = UUID.randomUUID().toString();
       KmsConfig fromConfig = getKmsConfig();
       kmsService.saveKmsConfig(accountId, fromConfig);
-      enableKmsFeatureFlag();
 
       int numOfSettingAttributes = 5;
       Map<String, SettingAttribute> encryptedEntities = new HashMap<>();
@@ -2137,7 +2117,6 @@ public class KmsTest extends WingsBaseTest {
     final String accountId = UUID.randomUUID().toString();
     KmsConfig fromConfig = getKmsConfig();
     kmsService.saveKmsConfig(accountId, fromConfig);
-    enableKmsFeatureFlag();
 
     int numOfSettingAttributes = 5;
     Map<String, SettingAttribute> encryptedEntities = new HashMap<>();
@@ -2275,7 +2254,6 @@ public class KmsTest extends WingsBaseTest {
     final String renameAppId = UUID.randomUUID().toString();
     KmsConfig fromConfig = getKmsConfig();
     kmsService.saveKmsConfig(renameAccountId, fromConfig);
-    enableKmsFeatureFlag();
 
     Service service = Service.Builder.aService().withName(UUID.randomUUID().toString()).withAppId(renameAppId).build();
     wingsPersistence.save(service);
@@ -2323,7 +2301,6 @@ public class KmsTest extends WingsBaseTest {
     final String randomAppId = UUID.randomUUID().toString();
     KmsConfig fromConfig = getKmsConfig();
     kmsService.saveKmsConfig(randomAccountId, fromConfig);
-    enableKmsFeatureFlag();
 
     Service service = Service.Builder.aService().withName(UUID.randomUUID().toString()).withAppId(randomAppId).build();
     wingsPersistence.save(service);
@@ -2439,7 +2416,6 @@ public class KmsTest extends WingsBaseTest {
     final String renameAppId = UUID.randomUUID().toString();
     KmsConfig fromConfig = getKmsConfig();
     kmsService.saveKmsConfig(renameAccountId, fromConfig);
-    enableKmsFeatureFlag();
 
     Service service = Service.Builder.aService().withName(UUID.randomUUID().toString()).build();
     service.setAppId(renameAppId);
@@ -2652,7 +2628,6 @@ public class KmsTest extends WingsBaseTest {
     final String accountId = UUID.randomUUID().toString();
     KmsConfig fromConfig = getKmsConfig();
     kmsService.saveKmsConfig(accountId, fromConfig);
-    enableKmsFeatureFlag();
 
     int numOfSettingAttributes = 5;
     String password = "password";
@@ -2757,7 +2732,6 @@ public class KmsTest extends WingsBaseTest {
     final String accountId = UUID.randomUUID().toString();
     KmsConfig fromConfig = getKmsConfig();
     kmsService.saveKmsConfig(accountId, fromConfig);
-    enableKmsFeatureFlag();
 
     String password = "password";
     Set<String> attributeIds = new HashSet<>();
@@ -2820,7 +2794,6 @@ public class KmsTest extends WingsBaseTest {
     final String accountId = UUID.randomUUID().toString();
     final KmsConfig kmsConfig = getKmsConfig();
     kmsService.saveKmsConfig(accountId, kmsConfig);
-    enableKmsFeatureFlag();
 
     String secretName = UUID.randomUUID().toString();
     String secretValue = UUID.randomUUID().toString();
@@ -2899,7 +2872,6 @@ public class KmsTest extends WingsBaseTest {
     final String accountId = UUID.randomUUID().toString();
     final KmsConfig kmsConfig = getKmsConfig();
     kmsService.saveKmsConfig(accountId, kmsConfig);
-    enableKmsFeatureFlag();
 
     final AppDynamicsConfig appDynamicsConfig = AppDynamicsConfig.builder()
                                                     .accountId(accountId)
@@ -2946,7 +2918,6 @@ public class KmsTest extends WingsBaseTest {
     final String accountId = UUID.randomUUID().toString();
     final KmsConfig kmsConfig = getKmsConfig();
     kmsService.saveKmsConfig(accountId, kmsConfig);
-    enableKmsFeatureFlag();
 
     String appId = wingsPersistence.save(anApplication().withUuid(UUID.randomUUID().toString()).build());
 
@@ -3132,12 +3103,6 @@ public class KmsTest extends WingsBaseTest {
     Thread eventListenerThread = new Thread(() -> transitionEventListener.run());
     eventListenerThread.start();
     return eventListenerThread;
-  }
-
-  private void enableKmsFeatureFlag() {
-    FeatureFlag kmsFeatureFlag =
-        FeatureFlag.builder().name(FeatureName.KMS.name()).enabled(true).obsolete(false).build();
-    wingsPersistence.save(kmsFeatureFlag);
   }
 
   private void stopTransitionListener(Thread thread) throws InterruptedException {
