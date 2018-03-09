@@ -156,12 +156,14 @@ public class MetricDataAnalysisServiceImpl implements MetricDataAnalysisService 
   @Override
   public boolean saveAnalysisRecordsML(StateType stateType, String accountId, String applicationId,
       String stateExecutionId, final String workflowExecutionId, final String workflowId, String serviceId,
-      Integer analysisMinute, String taskId, TimeSeriesMLAnalysisRecord mlAnalysisResponse) {
+      Integer analysisMinute, String taskId, String baseLineExecutionId,
+      TimeSeriesMLAnalysisRecord mlAnalysisResponse) {
     mlAnalysisResponse.setStateType(stateType);
     mlAnalysisResponse.setApplicationId(applicationId);
     mlAnalysisResponse.setWorkflowExecutionId(workflowExecutionId);
     mlAnalysisResponse.setStateExecutionId(stateExecutionId);
     mlAnalysisResponse.setAnalysisMinute(analysisMinute);
+    mlAnalysisResponse.setBaseLineExecutionId(baseLineExecutionId);
 
     TimeSeriesMLScores timeSeriesMLScores = TimeSeriesMLScores.builder()
                                                 .applicationId(applicationId)
@@ -539,6 +541,7 @@ public class MetricDataAnalysisServiceImpl implements MetricDataAnalysisService 
                            .metricAnalyses(metricAnalysisList)
                            .stateExecutionId(timeSeriesMLAnalysisRecord.getStateExecutionId())
                            .workflowExecutionId(timeSeriesMLAnalysisRecord.getWorkflowExecutionId())
+                           .baseLineExecutionId(timeSeriesMLAnalysisRecord.getBaseLineExecutionId())
                            .showTimeSeries(true)
                            .build();
 

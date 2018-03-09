@@ -298,8 +298,23 @@ public class ExecutionResource {
   @Path("{workflowExecutionId}/mark-baseline")
   @Timed
   @ExceptionMetered
-  public RestResponse<Set<WorkflowExecutionBaseline>> markAsBaseline(
+  public RestResponse<Set<WorkflowExecutionBaseline>> markAsBaseline(@QueryParam("appId") String appId,
+      @QueryParam("isBaseline") boolean isBaseline, @PathParam("workflowExecutionId") String workflowExecutionId) {
+    return new RestResponse<>(workflowExecutionService.markBaseline(appId, workflowExecutionId, isBaseline));
+  }
+
+  /**
+   * gets the details for baseline execution
+   * @param appId
+   * @param workflowExecutionId
+   * @return
+   */
+  @GET
+  @Path("{workflowExecutionId}/get-baseline")
+  @Timed
+  @ExceptionMetered
+  public RestResponse<WorkflowExecutionBaseline> getBaselineDetails(
       @QueryParam("appId") String appId, @PathParam("workflowExecutionId") String workflowExecutionId) {
-    return new RestResponse<>(workflowExecutionService.markAsBaseline(appId, workflowExecutionId));
+    return new RestResponse<>(workflowExecutionService.getBaselineDetails(appId, workflowExecutionId));
   }
 }

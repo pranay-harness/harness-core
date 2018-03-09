@@ -44,6 +44,7 @@ import software.wings.service.intfc.AppService;
 import software.wings.service.intfc.DelegateService;
 import software.wings.service.intfc.MetricDataAnalysisService;
 import software.wings.service.intfc.SettingsService;
+import software.wings.service.intfc.WorkflowExecutionBaselineService;
 import software.wings.service.intfc.WorkflowExecutionService;
 import software.wings.service.intfc.security.SecretManager;
 import software.wings.sm.ContextElementType;
@@ -52,6 +53,7 @@ import software.wings.sm.ExecutionResponse;
 import software.wings.sm.ExecutionStatus;
 import software.wings.sm.StateExecutionInstance;
 import software.wings.sm.StateType;
+import software.wings.sm.WorkflowStandardParams;
 import software.wings.waitnotify.WaitNotifyEngine;
 
 import java.text.ParseException;
@@ -77,6 +79,7 @@ public class AppDynamicsStateTest extends WingsBaseTest {
   @Mock private ExecutionContextImpl executionContext;
 
   @Mock private BroadcasterFactory broadcasterFactory;
+  @Mock private WorkflowStandardParams workflowStandardParams;
   @Inject private WingsPersistence wingsPersistence;
   @Inject private AppService appService;
   @Inject private SettingsService settingsService;
@@ -87,6 +90,7 @@ public class AppDynamicsStateTest extends WingsBaseTest {
   @Inject private TemplateExpressionProcessor templateExpressionProcessor;
   @Inject private WorkflowExecutionService workflowExecutionService;
   @Inject private ContinuousVerificationService continuousVerificationService;
+  @Inject private WorkflowExecutionBaselineService workflowExecutionBaselineService;
   @Mock private MetricDataAnalysisService metricAnalysisService;
   @Mock private QuartzScheduler jobScheduler;
   @Mock private PhaseElement phaseElement;
@@ -157,6 +161,7 @@ public class AppDynamicsStateTest extends WingsBaseTest {
     setInternalState(appDynamicsState, "templateExpressionProcessor", templateExpressionProcessor);
     setInternalState(appDynamicsState, "workflowExecutionService", workflowExecutionService);
     setInternalState(appDynamicsState, "continuousVerificationService", continuousVerificationService);
+    setInternalState(appDynamicsState, "workflowExecutionBaselineService", workflowExecutionBaselineService);
   }
 
   @Test
@@ -180,6 +185,9 @@ public class AppDynamicsStateTest extends WingsBaseTest {
     doReturn(Collections.singleton("control")).when(spyAppDynamicsState).getLastExecutionNodes(executionContext);
     doReturn(workflowId).when(spyAppDynamicsState).getWorkflowId(executionContext);
     doReturn(serviceId).when(spyAppDynamicsState).getPhaseServiceId(executionContext);
+    when(workflowStandardParams.getEnv())
+        .thenReturn(Environment.Builder.anEnvironment().withUuid(UUID.randomUUID().toString()).build());
+    when(executionContext.getContextElement(ContextElementType.STANDARD)).thenReturn(workflowStandardParams);
 
     when(metricAnalysisService.getLastSuccessfulWorkflowExecutionIdWithData(
              StateType.APP_DYNAMICS, workflowId, serviceId))
@@ -234,6 +242,9 @@ public class AppDynamicsStateTest extends WingsBaseTest {
         .thenReturn(settingAttribute.getUuid());
     when(executionContext.renderExpression("${workflow.variables.AppDynamics_App}")).thenReturn("30444");
     when(executionContext.renderExpression("${workflow.variables.AppDynamics_Tier}")).thenReturn("30889");
+    when(workflowStandardParams.getEnv())
+        .thenReturn(Environment.Builder.anEnvironment().withUuid(UUID.randomUUID().toString()).build());
+    when(executionContext.getContextElement(ContextElementType.STANDARD)).thenReturn(workflowStandardParams);
     ExecutionResponse executionResponse = spyAppDynamicsState.execute(executionContext);
     assertEquals(ExecutionStatus.RUNNING, executionResponse.getExecutionStatus());
     Map<Long, TreeMap<String, Map<String, Map<String, Map<String, List<ContinuousVerificationExecutionMetaData>>>>>>
