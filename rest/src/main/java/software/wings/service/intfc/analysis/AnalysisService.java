@@ -84,4 +84,8 @@ public interface AnalysisService {
 
   boolean saveExperimentalLogAnalysisRecords(
       ExperimentalLogMLAnalysisRecord mlAnalysisResponse, StateType stateType, Optional<String> taskId);
+
+  void cleanUpForLogRetry(String stateExecutionId);
+
+  boolean deleteFeedback(LogMLFeedback feedback) throws IOException;
 }

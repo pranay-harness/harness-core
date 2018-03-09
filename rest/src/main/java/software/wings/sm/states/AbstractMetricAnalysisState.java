@@ -56,9 +56,14 @@ public abstract class AbstractMetricAnalysisState extends AbstractAnalysisState 
     super(name, stateType.name());
   }
 
+  private void cleanUpForRetry(ExecutionContext executionContext) {
+    metricAnalysisService.cleanUpForMetricRetry(executionContext.getStateExecutionInstanceId());
+  }
+
   @Override
   public ExecutionResponse execute(ExecutionContext context) {
     getLogger().debug("Executing {} state", getStateType());
+    cleanUpForRetry(context);
     AnalysisContext analysisContext = getAnalysisContext(context, UUID.randomUUID().toString());
 
     Set<String> canaryNewHostNames = analysisContext.getTestNodes();

@@ -85,4 +85,6 @@ public interface MetricDataAnalysisService {
 
   NewRelicMetricDataRecord getAnalysisMinute(
       StateType stateType, String stateExecutionId, String workflowExecutionId, String serviceId);
+
+  void cleanUpForMetricRetry(String stateExecutionId);
 }

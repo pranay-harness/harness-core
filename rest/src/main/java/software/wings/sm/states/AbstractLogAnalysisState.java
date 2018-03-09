@@ -72,10 +72,14 @@ public abstract class AbstractLogAnalysisState extends AbstractAnalysisState {
     this.query = query;
   }
 
+  private void cleanUpForRetry(ExecutionContext executionContext) {
+    analysisService.cleanUpForLogRetry(executionContext.getStateExecutionInstanceId());
+  }
+
   @Override
   public ExecutionResponse execute(ExecutionContext executionContext) {
     getLogger().debug("Executing analysis state");
-
+    cleanUpForRetry(executionContext);
     AnalysisContext context = getLogAnalysisContext(executionContext, UUID.randomUUID().toString());
 
     Set<String> canaryNewHostNames = context.getTestNodes();

@@ -2,7 +2,6 @@ package software.wings.sm.states;
 
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertNotNull;
-import static org.junit.Assert.assertNull;
 import static org.junit.Assert.assertTrue;
 import static org.mockito.Matchers.anyBoolean;
 import static org.mockito.Matchers.anyObject;
@@ -305,7 +304,7 @@ public class SplunkV2StateTest extends WingsBaseTest {
             .get(0);
     assertEquals(continuousVerificationExecutionMetaData1.getAccountId(), accountId);
     assertEquals(continuousVerificationExecutionMetaData1.getArtifactName(), "dummy artifact");
-    assertNull(continuousVerificationExecutionMetaData1.getExecutionStatus());
+    assertEquals(ExecutionStatus.RUNNING, continuousVerificationExecutionMetaData1.getExecutionStatus());
 
     LogAnalysisExecutionData logAnalysisExecutionData = new LogAnalysisExecutionData();
     LogAnalysisResponse logAnalysisResponse = LogAnalysisResponse.Builder.aLogAnalysisResponse()
@@ -326,7 +325,7 @@ public class SplunkV2StateTest extends WingsBaseTest {
                                                    .next()
                                                    .get("BASIC")
                                                    .get(0);
-    assertNotNull(continuousVerificationExecutionMetaData1.getExecutionStatus());
+    assertEquals(ExecutionStatus.ERROR, continuousVerificationExecutionMetaData1.getExecutionStatus());
   }
 
   @Test

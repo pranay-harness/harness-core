@@ -104,4 +104,7 @@ public interface LogAnalysisResource {
 
   RestResponse<Boolean> updateUserFeedback(@QueryParam("accountId") String accountId, LogMLFeedback feedback)
       throws IOException;
+
+  RestResponse<Boolean> deleteUserFeedback(@QueryParam("accountId") String accountId, LogMLFeedback feedback)
+      throws IOException;
 }

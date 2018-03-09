@@ -1,25 +1,25 @@
-import threading
-import sys
-import time
 import argparse
-import signal
-import TimeSeriesML
-import SplunkIntelOptimized
-import ClusterInput
 import os
-from core.util.lelogging import get_log
-
-from sources.HarnessLoader import HarnessLoader
+import sys
+import threading
+import time
 from BaseHTTPServer import HTTPServer, BaseHTTPRequestHandler
-from collections import namedtuple
+
 import newrelic.agent
 
+import ClusterInput
+import SplunkIntelOptimized
+import TimeSeriesML
+from core.util.lelogging import get_log
+from sources.HarnessLoader import HarnessLoader
 
-if str(os.environ.get('learning_env')).lower() == 'prod':
-    newrelic_ini_file = 'newrelic_prod.ini'
-else:
-    newrelic_ini_file = 'newrelic.ini'
-newrelic.agent.initialize(newrelic_ini_file)
+if os.environ.get('learning_env'):
+    if os.environ.get('learning_env') == 'prod':
+        newrelic_ini_file = 'newrelic_prod.ini'
+    else:
+        newrelic_ini_file = 'newrelic.ini'
+    newrelic.agent.initialize(newrelic_ini_file)
+
 logger = get_log(__name__)
 process = False
 VERSIONFILEPATH = 'service_version.properties'

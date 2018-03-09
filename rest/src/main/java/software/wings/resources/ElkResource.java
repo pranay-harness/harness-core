@@ -37,6 +37,7 @@ import java.util.List;
 import java.util.Map;
 import java.util.Optional;
 import java.util.concurrent.TimeUnit;
+import javax.ws.rs.DELETE;
 import javax.ws.rs.GET;
 import javax.ws.rs.POST;
 import javax.ws.rs.PUT;
@@ -186,6 +187,16 @@ public class ElkResource implements LogAnalysisResource {
       throw new WingsException("logMlFeedBackId should be set for update");
     }
     return new RestResponse<>(analysisService.saveFeedback(feedback, StateType.ELK));
+  }
+
+  @DELETE
+  @Path(LogAnalysisResource.ANALYSIS_USER_FEEDBACK)
+  @Timed
+  @ExceptionMetered
+  @Override
+  public RestResponse<Boolean> deleteUserFeedback(@QueryParam("accountId") String accountId, LogMLFeedback feedback)
+      throws IOException {
+    return new RestResponse<>(analysisService.deleteFeedback(feedback));
   }
 
   @GET

@@ -24,6 +24,7 @@ import software.wings.metrics.RiskLevel;
 import software.wings.metrics.TimeSeriesMetricDefinition;
 import software.wings.service.impl.DelegateServiceImpl;
 import software.wings.service.impl.dynatrace.DynaTraceTimeSeries;
+import software.wings.service.impl.newrelic.LearningEngineAnalysisTask;
 import software.wings.service.impl.newrelic.NewRelicMetricAnalysisRecord;
 import software.wings.service.impl.newrelic.NewRelicMetricAnalysisRecord.NewRelicMetricAnalysis;
 import software.wings.service.impl.newrelic.NewRelicMetricAnalysisRecord.NewRelicMetricAnalysisValue;
@@ -697,5 +698,36 @@ public class MetricDataAnalysisServiceImpl implements MetricDataAnalysisService 
         query, wingsPersistence.createUpdateOperations(NewRelicMetricDataRecord.class).set("level", ClusterLevel.HF));
     logger.info("bumpCollectionMinuteToProcess updated results size {}, for stateExecutionId {} ",
         updateResults.getUpdatedCount(), stateExecutionId);
+  }
+
+  @Override
+  public void cleanUpForMetricRetry(String stateExecutionId) {
+    // delete new relic metric records
+    wingsPersistence.delete(
+        wingsPersistence.createQuery(NewRelicMetricDataRecord.class).field("stateExecutionId").equal(stateExecutionId));
+
+    // delete new relic analysis records
+    wingsPersistence.delete(wingsPersistence.createQuery(NewRelicMetricAnalysisRecord.class)
+                                .field("stateExecutionId")
+                                .equal(stateExecutionId));
+
+    // delete time series analysis records
+    wingsPersistence.delete(wingsPersistence.createQuery(TimeSeriesMLAnalysisRecord.class)
+                                .field("stateExecutionId")
+                                .equal(stateExecutionId));
+
+    // delete time series scores records
+    wingsPersistence.delete(
+        wingsPersistence.createQuery(TimeSeriesMLScores.class).field("stateExecutionId").equal(stateExecutionId));
+
+    // delete cv dashboard execution data
+    wingsPersistence.delete(wingsPersistence.createQuery(ContinuousVerificationExecutionMetaData.class)
+                                .field("stateExecutionId")
+                                .equal(stateExecutionId));
+
+    // delete learning engine tasks
+    wingsPersistence.delete(wingsPersistence.createQuery(LearningEngineAnalysisTask.class)
+                                .field("state_execution_id")
+                                .equal(stateExecutionId));
   }
 }
