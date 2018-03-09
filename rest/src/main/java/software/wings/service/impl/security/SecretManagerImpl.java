@@ -241,18 +241,19 @@ public class SecretManagerImpl implements SecretManager {
   }
 
   @Override
-  public PageResponse<SecretUsageLog> getUsageLogs(String entityId, SettingVariableTypes variableType)
-      throws IllegalAccessException {
+  public PageResponse<SecretUsageLog> getUsageLogs(PageRequest<SecretUsageLog> pageRequest, String entityId,
+      SettingVariableTypes variableType) throws IllegalAccessException {
     final List<String> secretIds = getSecretIds(entityId, variableType);
 
-    final PageRequest<SecretUsageLog> request =
-        aPageRequest().addFilter("encryptedDataId", Operator.IN, secretIds.toArray()).build();
-    PageResponse<SecretUsageLog> response = wingsPersistence.query(SecretUsageLog.class, request);
+    pageRequest.addFilter("encryptedDataId", Operator.IN, secretIds.toArray());
+    PageResponse<SecretUsageLog> response = wingsPersistence.query(SecretUsageLog.class, pageRequest);
     response.getResponse().forEach(secretUsageLog -> {
       if (isNotBlank(secretUsageLog.getWorkflowExecutionId())) {
         WorkflowExecution workflowExecution =
             wingsPersistence.get(WorkflowExecution.class, secretUsageLog.getWorkflowExecutionId());
-        secretUsageLog.setWorkflowExecutionName(workflowExecution.getName());
+        if (workflowExecution != null) {
+          secretUsageLog.setWorkflowExecutionName(workflowExecution.getName());
+        }
       }
     });
     return response;
