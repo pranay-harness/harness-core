@@ -146,6 +146,7 @@ public abstract class AbstractAnalysisState extends State {
               .stateStartTs(((ExecutionContextImpl) executionContext).getStateExecutionInstance().getStartTs())
               .phaseName(getPhaseName(executionContext))
               .phaseId(getPhaseId(executionContext))
+              .executionStatus(ExecutionStatus.RUNNING)
               .envId(((ExecutionContextImpl) executionContext).getEnv().getUuid());
 
       if (workflowExecution.getPipelineExecution() != null) {

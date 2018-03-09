@@ -39,6 +39,8 @@ import software.wings.exception.WingsException;
 import software.wings.metrics.RiskLevel;
 import software.wings.security.encryption.EncryptedDataDetail;
 import software.wings.service.impl.DelegateServiceImpl;
+import software.wings.service.impl.newrelic.LearningEngineAnalysisTask;
+import software.wings.service.impl.newrelic.LearningEngineExperimentalAnalysisTask;
 import software.wings.service.impl.splunk.LogMLClusterScores;
 import software.wings.service.impl.splunk.LogMLClusterScores.LogMLScore;
 import software.wings.service.impl.splunk.SplunkAnalysisCluster;
@@ -138,6 +140,37 @@ public class AnalysisServiceImpl implements AnalysisService {
       query = query.field("host").in(host);
     }
     wingsPersistence.delete(query);
+  }
+
+  @Override
+  public void cleanUpForLogRetry(String stateExecutionId) {
+    // delete log data records
+    wingsPersistence.delete(
+        wingsPersistence.createQuery(LogDataRecord.class).field("stateExecutionId").equal(stateExecutionId));
+
+    // delete log analysis records
+    wingsPersistence.delete(
+        wingsPersistence.createQuery(LogMLAnalysisRecord.class).field("stateExecutionId").equal(stateExecutionId));
+
+    // delete cv dashboard execution data
+    wingsPersistence.delete(wingsPersistence.createQuery(ContinuousVerificationExecutionMetaData.class)
+                                .field("stateExecutionId")
+                                .equal(stateExecutionId));
+
+    // delete learning engine tasks
+    wingsPersistence.delete(wingsPersistence.createQuery(LearningEngineAnalysisTask.class)
+                                .field("state_execution_id")
+                                .equal(stateExecutionId));
+
+    // delete experimental learning engine tasks
+    wingsPersistence.delete(wingsPersistence.createQuery(LearningEngineExperimentalAnalysisTask.class)
+                                .field("state_execution_id")
+                                .equal(stateExecutionId));
+
+    // delete experimental log analysis records
+    wingsPersistence.delete(wingsPersistence.createQuery(ExperimentalLogMLAnalysisRecord.class)
+                                .field("stateExecutionId")
+                                .equal(stateExecutionId));
   }
 
   @Override
@@ -270,13 +303,27 @@ public class AnalysisServiceImpl implements AnalysisService {
     return records;
   }
 
+  private boolean deleteFeedbackHelper(LogMLFeedback feedback) {
+    Query<LogMLFeedbackRecord> query =
+        wingsPersistence.createQuery(LogMLFeedbackRecord.class).field("_id").equal(feedback.getLogMLFeedbackId());
+
+    wingsPersistence.delete(query);
+    return true;
+  }
+
+  @Override
+  public boolean deleteFeedback(LogMLFeedback feedback) {
+    if (isEmpty(feedback.getLogMLFeedbackId())) {
+      throw new WingsException("no feedback id set " + feedback);
+    }
+
+    return deleteFeedbackHelper(feedback);
+  }
+
   @Override
   public boolean saveFeedback(LogMLFeedback feedback, StateType stateType) {
     if (!isEmpty(feedback.getLogMLFeedbackId())) {
-      Query<LogMLFeedbackRecord> query =
-          wingsPersistence.createQuery(LogMLFeedbackRecord.class).field("_id").equal(feedback.getLogMLFeedbackId());
-
-      wingsPersistence.delete(query);
+      deleteFeedbackHelper(feedback);
     }
 
     StateExecutionInstance stateExecutionInstance =
@@ -1273,6 +1320,7 @@ public class AnalysisServiceImpl implements AnalysisService {
     DISMISS,
     PRIORITIZE,
     THUMBS_UP,
-    THUMBS_DOWN
+    THUMBS_DOWN,
+    UNDO_IGNORE
   }
 }
