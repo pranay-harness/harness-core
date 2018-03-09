@@ -21,6 +21,7 @@ import software.wings.beans.artifact.JenkinsArtifactStream;
 import software.wings.dl.PageRequest;
 import software.wings.scheduler.JobScheduler;
 import software.wings.service.intfc.ArtifactStreamService;
+import software.wings.service.intfc.yaml.YamlDirectoryService;
 
 import java.util.List;
 
@@ -38,6 +39,8 @@ public class ArtifactStreamResourceServiceTest extends WingsBaseTest {
                                                                   .build();
 
   @Mock private JobScheduler jobScheduler;
+  @Mock private YamlDirectoryService yamlDirectoryService;
+
   @InjectMocks @Inject private ArtifactStreamService artifactStreamService;
 
   /**
