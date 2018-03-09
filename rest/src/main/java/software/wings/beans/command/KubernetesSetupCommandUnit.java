@@ -239,19 +239,20 @@ public class KubernetesSetupCommandUnit extends ContainerSetupCommandUnit {
     }
 
     // Setup ingress
-    Ingress ingress =
-        kubernetesContainerService.getIngress(kubernetesConfig, encryptedDataDetails, kubernetesServiceName);
+    Ingress ingress = null;
     if (setupParams.isUseIngress() && service != null) {
+      ingress = kubernetesContainerService.createOrReplaceIngress(kubernetesConfig, encryptedDataDetails,
+          createIngressDefinition(setupParams, service, kubernetesServiceName, executionLogCallback));
+    } else {
       try {
-        Ingress ingressDefinition = createIngressDefinition(setupParams, service, kubernetesServiceName);
-        ingress = kubernetesContainerService.createOrReplaceIngress(
-            kubernetesConfig, encryptedDataDetails, ingressDefinition);
-      } catch (IOException e) {
+        ingress = kubernetesContainerService.getIngress(kubernetesConfig, encryptedDataDetails, kubernetesServiceName);
+        if (ingress != null) {
+          kubernetesContainerService.deleteIngress(kubernetesConfig, encryptedDataDetails, kubernetesServiceName);
+          ingress = null;
+        }
+      } catch (Exception e) {
         Misc.logAllMessages(e, executionLogCallback);
       }
-    } else if (ingress != null) {
-      kubernetesContainerService.deleteIngress(kubernetesConfig, encryptedDataDetails, kubernetesServiceName);
-      ingress = null;
     }
 
     // Setup route rule
@@ -358,6 +359,23 @@ public class KubernetesSetupCommandUnit extends ContainerSetupCommandUnit {
     return null;
   }
 
+  private Ingress createIngressDefinition(KubernetesSetupParams setupParams, Service service,
+      String kubernetesServiceName, ExecutionLogCallback executionLogCallback) {
+    int port = isNotEmpty(service.getSpec().getPorts()) ? service.getSpec().getPorts().get(0).getPort() : 80;
+    try {
+      Ingress ingress =
+          KubernetesHelper.loadYaml(setupParams.getIngressYaml()
+                                        .replaceAll(SERVICE_NAME_PLACEHOLDER_REGEX, kubernetesServiceName)
+                                        .replaceAll(SERVICE_PORT_PLACEHOLDER_REGEX, Integer.toString(port)));
+      ingress.getMetadata().setName(kubernetesServiceName);
+      return ingress;
+    } catch (IOException e) {
+      executionLogCallback.saveExecutionLog(
+          "Error reading Ingress from yaml: " + kubernetesServiceName, LogLevel.ERROR);
+    }
+    return null;
+  }
+
   private List<String> getActiveAutoscalers(
       KubernetesConfig kubernetesConfig, List<EncryptedDataDetail> encryptedDataDetails, String containerServiceName) {
     String controllerNamePrefix = KubernetesConvention.getPrefixFromControllerName(containerServiceName);
@@ -369,24 +387,13 @@ public class KubernetesSetupCommandUnit extends ContainerSetupCommandUnit {
         .collect(toList());
   }
 
-  private Ingress createIngressDefinition(
-      KubernetesSetupParams setupParams, Service service, String kubernetesServiceName) throws IOException {
-    int port = isNotEmpty(service.getSpec().getPorts()) ? service.getSpec().getPorts().get(0).getPort() : 80;
-    Ingress ingress =
-        KubernetesHelper.loadYaml(setupParams.getIngressYaml()
-                                      .replaceAll(SERVICE_NAME_PLACEHOLDER_REGEX, kubernetesServiceName)
-                                      .replaceAll(SERVICE_PORT_PLACEHOLDER_REGEX, Integer.toString(port)));
-    ingress.getMetadata().setName(kubernetesServiceName);
-    return ingress;
-  }
-
   private HorizontalPodAutoscaler createAutoscaler(String autoscalerName, String namespace,
       Map<String, String> serviceLabels, KubernetesSetupParams setupParams, ExecutionLogCallback executionLogCallback) {
     HorizontalPodAutoscaler horizontalPodAutoscaler = null;
 
     if (StringUtils.isNotEmpty(setupParams.getCustomMetricYamlConfig())) {
       executionLogCallback.saveExecutionLog(
-          String.format("Setting autoscaler with custom metric config: ", setupParams.getCustomMetricYamlConfig()),
+          String.format("Setting autoscaler with custom metric config: %s", setupParams.getCustomMetricYamlConfig()),
           LogLevel.INFO);
       horizontalPodAutoscaler =
           getCustomMetricHorizontalPodAutoscalar(autoscalerName, namespace, serviceLabels, setupParams);
@@ -407,7 +414,7 @@ public class KubernetesSetupCommandUnit extends ContainerSetupCommandUnit {
       String autoscalerName, String namespace, Map<String, String> serviceLabels, KubernetesSetupParams setupParams) {
     try {
       HorizontalPodAutoscaler horizontalPodAutoscaler =
-          (HorizontalPodAutoscaler) KubernetesHelper.loadYaml(setupParams.getCustomMetricYamlConfig());
+          KubernetesHelper.loadYaml(setupParams.getCustomMetricYamlConfig());
 
       // set kind/name to none
       horizontalPodAutoscaler.getSpec().getScaleTargetRef().setName(NONE);
@@ -427,7 +434,7 @@ public class KubernetesSetupCommandUnit extends ContainerSetupCommandUnit {
 
       return horizontalPodAutoscaler;
     } catch (IOException e) {
-      throw new WingsException("Error while loading customMetricYaml for horizontal pod autoscaling");
+      throw new WingsException("Error while loading customMetricYaml for horizontal pod autoscaling", e);
     }
   }
 
