@@ -59,9 +59,9 @@ import software.wings.waitnotify.WaitNotifyEngine;
 import java.text.ParseException;
 import java.util.Collections;
 import java.util.Date;
+import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
-import java.util.TreeMap;
 import java.util.UUID;
 
 /**
@@ -247,7 +247,10 @@ public class AppDynamicsStateTest extends WingsBaseTest {
     when(executionContext.getContextElement(ContextElementType.STANDARD)).thenReturn(workflowStandardParams);
     ExecutionResponse executionResponse = spyAppDynamicsState.execute(executionContext);
     assertEquals(ExecutionStatus.RUNNING, executionResponse.getExecutionStatus());
-    Map<Long, TreeMap<String, Map<String, Map<String, Map<String, List<ContinuousVerificationExecutionMetaData>>>>>>
+    Map<Long,
+        LinkedHashMap<String,
+            LinkedHashMap<String,
+                LinkedHashMap<String, LinkedHashMap<String, List<ContinuousVerificationExecutionMetaData>>>>>>
         cvExecutionMetaData =
             continuousVerificationService.getCVExecutionMetaData(accountId, 1519200000000L, 1519200000001L);
     assertNotNull(cvExecutionMetaData);
