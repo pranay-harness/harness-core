@@ -18,7 +18,6 @@ import java.util.Arrays;
 import java.util.HashSet;
 import java.util.Objects;
 import java.util.Set;
-import javax.validation.constraints.NotNull;
 
 /**
  * Created by peeyushaggarwal on 12/5/16.
@@ -26,7 +25,8 @@ import javax.validation.constraints.NotNull;
 @Entity(value = "delegateTasks", noClassnameStored = true)
 @Converters(Converter.class)
 public class DelegateTask extends Base {
-  @NotNull private TaskType taskType;
+  private TaskType taskType;
+  private String taskTypeName;
   private Object[] parameters;
   private String tag;
   @NotEmpty private String accountId;
@@ -54,6 +54,14 @@ public class DelegateTask extends Base {
 
   public void setTaskType(TaskType taskType) {
     this.taskType = taskType;
+  }
+
+  public String getTaskTypeName() {
+    return taskTypeName;
+  }
+
+  public void setTaskTypeName(String taskTypeName) {
+    this.taskTypeName = taskTypeName;
   }
 
   public Object[] getParameters() {
@@ -189,7 +197,9 @@ public class DelegateTask extends Base {
     }
     DelegateTask that = (DelegateTask) o;
     return timeout == that.timeout && async == that.async && taskType == that.taskType
-        && Arrays.equals(parameters, that.parameters) && Objects.equals(tag, that.tag)
+        && Arrays.equals(parameters, that.parameters)
+        && Objects.equals(tag, that.tag)
+        // TODO        && Objects.equals(taskTypeName, that.taskTypeName)
         && Objects.equals(accountId, that.accountId) && Objects.equals(waitId, that.waitId)
         && Objects.equals(queueName, that.queueName) && status == that.status
         && Objects.equals(delegateId, that.delegateId) && Objects.equals(envId, that.envId)
@@ -199,12 +209,14 @@ public class DelegateTask extends Base {
 
   @Override
   public int hashCode() {
+    // TODO taskTypeName
     return Objects.hash(super.hashCode(), taskType, parameters, tag, accountId, waitId, queueName, status, delegateId,
         timeout, async, envId, infrastructureMappingId, delegateRunnableTask);
   }
 
   @Override
   public String toString() {
+    // TODO taskTypeName
     return "DelegateTask{"
         + "taskType=" + taskType + ", parameters=" + Arrays.toString(parameters) + ", tag='" + tag + '\''
         + ", accountId='" + accountId + '\'' + ", waitId='" + waitId + '\'' + ", queueName='" + queueName + '\''
@@ -302,6 +314,7 @@ public class DelegateTask extends Base {
 
   public static final class Builder {
     private TaskType taskType;
+    private String taskTypeName;
     private Object[] parameters;
     private String tag;
     private String accountId;
@@ -328,6 +341,7 @@ public class DelegateTask extends Base {
 
     public Builder withTaskType(TaskType taskType) {
       this.taskType = taskType;
+      this.taskTypeName = taskType.name();
       return this;
     }
 
@@ -441,6 +455,7 @@ public class DelegateTask extends Base {
     public DelegateTask build() {
       DelegateTask delegateTask = new DelegateTask();
       delegateTask.setTaskType(taskType);
+      delegateTask.setTaskTypeName(taskTypeName);
       delegateTask.setParameters(parameters);
       delegateTask.setTag(tag);
       delegateTask.setAccountId(accountId);
