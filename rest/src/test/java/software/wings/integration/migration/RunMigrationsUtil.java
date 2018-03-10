@@ -4,7 +4,6 @@ import com.google.inject.Inject;
 import com.google.inject.Injector;
 
 import migrations.BaseMigration;
-import migrations.all.AddIsDefaultToExistingNotificationGroups;
 import org.junit.Ignore;
 import org.junit.Test;
 import software.wings.WingsBaseTest;
@@ -29,6 +28,5 @@ public class RunMigrationsUtil extends WingsBaseTest {
   public void runSpecificMigration() {
     // Temporarily change this to any Migration class to execute it directly
     injector.getInstance(BaseMigration.class).migrate();
-    injector.getInstance(AddIsDefaultToExistingNotificationGroups.class).migrate();
   }
 }

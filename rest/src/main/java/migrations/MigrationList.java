@@ -4,6 +4,7 @@ import com.google.common.collect.ImmutableList;
 
 import migrations.all.AddIsDefaultToExistingNotificationGroups;
 import migrations.all.AddVerifyToRollbackWorkflows;
+import migrations.all.SetDaemonSetInWorkflowPhase;
 import migrations.all.TrimYamlMigration;
 import migrations.all.VerifyStepWorkflowOrder;
 import org.apache.commons.lang3.tuple.Pair;
@@ -23,6 +24,7 @@ public class MigrationList {
         .add(Pair.of(107, VerifyStepWorkflowOrder.class))
         .add(Pair.of(108, AddIsDefaultToExistingNotificationGroups.class))
         .add(Pair.of(109, TrimYamlMigration.class))
+        .add(Pair.of(110, SetDaemonSetInWorkflowPhase.class))
         .build();
   }
 }

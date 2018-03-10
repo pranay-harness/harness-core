@@ -128,6 +128,7 @@ public class WorkflowPhaseYamlHandler extends BaseYamlHandler<WorkflowPhase.Yaml
         .withServiceId(serviceId)
         .withRollback(isRollback)
         .withTemplateExpressions(templateExpressions)
+        .withDaemonSet(yaml.isDaemonSet())
         .build();
     return phase.build();
   }
