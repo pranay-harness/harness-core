@@ -625,10 +625,27 @@ public class InfrastructureMappingServiceImpl implements InfrastructureMappingSe
 
     saveYamlChangeSet(infrastructureMapping, ChangeType.DELETE);
 
+    prune(appId, infraMappingId);
+  }
+
+  private void prune(String appId, String infraMappingId) {
     PruneEntityJob.addDefaultJob(
         jobScheduler, InfrastructureMapping.class, appId, infraMappingId, Duration.ofSeconds(5));
 
-    wingsPersistence.delete(infrastructureMapping);
+    wingsPersistence.delete(InfrastructureMapping.class, appId, infraMappingId);
+  }
+
+  @Override
+  public void pruneByEnvironment(String appId, String envId) {
+    List<Key<InfrastructureMapping>> keys = wingsPersistence.createQuery(InfrastructureMapping.class)
+                                                .field(InfrastructureMapping.APP_ID_KEY)
+                                                .equal(appId)
+                                                .field("envId")
+                                                .equal(envId)
+                                                .asKeyList();
+    for (Key<InfrastructureMapping> key : keys) {
+      prune(appId, (String) key.getId());
+    }
   }
 
   @Override
