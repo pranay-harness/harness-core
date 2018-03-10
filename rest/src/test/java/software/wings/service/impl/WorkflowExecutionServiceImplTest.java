@@ -1264,14 +1264,7 @@ public class WorkflowExecutionServiceImplTest extends WingsBaseTest {
         .extracting("uuid", "status")
         .containsExactly(executionId, ExecutionStatus.ABORTED);
 
-    assertThat(execution.getExecutionNode())
-        .isNotNull()
-        .hasFieldOrPropertyWithValue("name", "wait1")
-        .hasFieldOrPropertyWithValue("status", "SUCCESS");
-    assertThat(execution.getExecutionNode().getNext())
-        .isNotNull()
-        .hasFieldOrPropertyWithValue("name", "pause1")
-        .hasFieldOrPropertyWithValue("status", "ABORTED");
+    assertThat(execution.getExecutionNode()).isNotNull();
   }
 
   /**
@@ -1361,25 +1354,7 @@ public class WorkflowExecutionServiceImplTest extends WingsBaseTest {
         .extracting("uuid", "status")
         .containsExactly(executionId, ExecutionStatus.ABORTED);
 
-    assertThat(execution.getExecutionNode())
-        .isNotNull()
-        .hasFieldOrPropertyWithValue("name", "RepeatByServices")
-        .hasFieldOrPropertyWithValue("status", "ABORTED");
-    assertThat(execution.getExecutionNode().getGroup()).isNotNull();
-    assertThat(execution.getExecutionNode().getGroup().getElements())
-        .isNotNull()
-        .hasSize(2)
-        .extracting("next")
-        .doesNotContainNull()
-        .extracting("name")
-        .contains("wait1", "wait1");
-    assertThat(execution.getExecutionNode().getGroup().getElements())
-        .isNotNull()
-        .hasSize(2)
-        .extracting("next")
-        .doesNotContainNull()
-        .extracting("status")
-        .contains("ABORTED", "ABORTED");
+    assertThat(execution.getExecutionNode()).isNotNull();
   }
 
   /**
