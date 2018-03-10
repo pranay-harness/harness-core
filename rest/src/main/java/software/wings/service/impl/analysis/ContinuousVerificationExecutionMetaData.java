@@ -16,24 +16,28 @@ import software.wings.sm.StateType;
 @EqualsAndHashCode(callSuper = false)
 public class ContinuousVerificationExecutionMetaData extends Base {
   @NotEmpty @Indexed private long workflowStartTs;
-  @NotEmpty @Indexed private long stateStartTs;
   @NotEmpty @Indexed private long pipelineStartTs;
 
+  @NotEmpty @Indexed private String accountId;
+  @NotEmpty @Indexed private String envId;
   @NotEmpty @Indexed private String applicationId;
   @NotEmpty @Indexed private String serviceId;
   @NotEmpty @Indexed private String workflowId;
   @NotEmpty @Indexed private String workflowExecutionId;
   @NotEmpty @Indexed private String stateExecutionId;
-  @NotEmpty @Indexed private String artifactName;
-  @NotEmpty @Indexed private String envName;
-  @NotEmpty @Indexed private String workflowName;
-  @NotEmpty @Indexed private String appName;
-  @NotEmpty @Indexed private String serviceName;
-  @NotEmpty @Indexed private String phaseName;
-  @NotEmpty @Indexed private String pipelineName;
   @NotEmpty @Indexed private StateType stateType;
-  @NotEmpty @Indexed private String accountId;
-  @NotEmpty @Indexed private String phaseId;
-  @NotEmpty @Indexed private String envId;
-  @Indexed private ExecutionStatus executionStatus;
+  @Indexed private String pipelineId;
+
+  @NotEmpty private String phaseId;
+
+  @NotEmpty private String artifactName;
+  @NotEmpty private String envName;
+  @NotEmpty private String workflowName;
+  @NotEmpty private String appName;
+  @NotEmpty private String serviceName;
+  @NotEmpty private String phaseName;
+  @NotEmpty private long stateStartTs;
+
+  private String pipelineName;
+  private ExecutionStatus executionStatus;
 }

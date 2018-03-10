@@ -74,9 +74,9 @@ import java.text.SimpleDateFormat;
 import java.util.Collections;
 import java.util.Date;
 import java.util.HashMap;
+import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
-import java.util.TreeMap;
 import java.util.UUID;
 
 /**
@@ -299,7 +299,10 @@ public class SplunkV2StateTest extends WingsBaseTest {
     assertEquals(accountId, task.getAccountId());
     assertEquals(Status.QUEUED, task.getStatus());
     assertEquals(appId, task.getAppId());
-    Map<Long, TreeMap<String, Map<String, Map<String, Map<String, List<ContinuousVerificationExecutionMetaData>>>>>>
+    Map<Long,
+        LinkedHashMap<String,
+            LinkedHashMap<String,
+                LinkedHashMap<String, LinkedHashMap<String, List<ContinuousVerificationExecutionMetaData>>>>>>
         cvExecutionMetaData =
             continuousVerificationService.getCVExecutionMetaData(accountId, 1519200000000L, 1519200000001L);
     assertNotNull(cvExecutionMetaData);

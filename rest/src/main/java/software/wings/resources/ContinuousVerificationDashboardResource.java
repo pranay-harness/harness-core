@@ -14,9 +14,8 @@ import software.wings.service.impl.analysis.ContinuousVerificationExecutionMetaD
 import software.wings.service.impl.analysis.ContinuousVerificationService;
 
 import java.text.ParseException;
+import java.util.LinkedHashMap;
 import java.util.List;
-import java.util.Map;
-import java.util.TreeMap;
 import javax.ws.rs.GET;
 import javax.ws.rs.Path;
 import javax.ws.rs.Produces;
@@ -33,8 +32,10 @@ public class ContinuousVerificationDashboardResource {
   @Path("/get-records")
   @Timed
   @ExceptionMetered
-  public RestResponse<
-      Map<Long, TreeMap<String, Map<String, Map<String, Map<String, List<ContinuousVerificationExecutionMetaData>>>>>>>
+  public RestResponse<LinkedHashMap<Long,
+      LinkedHashMap<String,
+          LinkedHashMap<String,
+              LinkedHashMap<String, LinkedHashMap<String, List<ContinuousVerificationExecutionMetaData>>>>>>>
   getCVExecutionRecords(@QueryParam("accountId") String accountId, @QueryParam("beginEpochTs") long beginEpochTs,
       @QueryParam("endEpochTs") long endEpochTs) throws ParseException {
     return new RestResponse<>(
