@@ -35,6 +35,7 @@ public class BuildWorkflowYamlHandlerTest extends BaseWorkflowYamlHandlerTest {
       + "      - Account Administrator\n"
       + "phases:\n"
       + "  - type: KUBERNETES\n"
+      + "    daemonSet: false\n"
       + "    infraMappingName: direct_Kubernetes\n"
       + "    name: Phase 1\n"
       + "    phaseSteps:\n"

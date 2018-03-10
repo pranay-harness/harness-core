@@ -32,6 +32,7 @@ public class WorkflowPhase implements UuidAware {
   private String uuid = generateUuid();
   private String name;
   private String serviceId;
+  private boolean daemonSet;
 
   private String infraMappingId;
 
@@ -74,6 +75,14 @@ public class WorkflowPhase implements UuidAware {
 
   public void setServiceId(String serviceId) {
     this.serviceId = serviceId;
+  }
+
+  public boolean isDaemonSet() {
+    return daemonSet;
+  }
+
+  public void setDaemonSet(boolean daemonSet) {
+    this.daemonSet = daemonSet;
   }
 
   public String getComputeProviderId() {
@@ -267,6 +276,7 @@ public class WorkflowPhase implements UuidAware {
                                             .withValid(isValid())
                                             .withValidationMessage(getValidationMessage())
                                             .withTemplateExpressions(getTemplateExpressions())
+                                            .withDaemonSet(isDaemonSet())
                                             .build();
     List<PhaseStep> phaseSteps = getPhaseSteps();
     List<PhaseStep> clonedPhaseSteps = new ArrayList<>();
@@ -312,6 +322,7 @@ public class WorkflowPhase implements UuidAware {
     private String phaseNameForRollback;
     private boolean valid = true;
     private String validationMessage;
+    private boolean daemonSet;
     private List<PhaseStep> phaseSteps = new ArrayList<>();
     private List<TemplateExpression> templateExpressions;
 
@@ -391,6 +402,11 @@ public class WorkflowPhase implements UuidAware {
       return this;
     }
 
+    public WorkflowPhaseBuilder withDaemonSet(boolean daemonSet) {
+      this.daemonSet = daemonSet;
+      return this;
+    }
+
     public WorkflowPhase build() {
       WorkflowPhase workflowPhase = new WorkflowPhase();
       workflowPhase.setUuid(uuid);
@@ -406,6 +422,7 @@ public class WorkflowPhase implements UuidAware {
       workflowPhase.setValidationMessage(validationMessage);
       workflowPhase.setPhaseSteps(phaseSteps);
       workflowPhase.setTemplateExpressions(templateExpressions);
+      workflowPhase.setDaemonSet(daemonSet);
       return workflowPhase;
     }
   }
@@ -419,6 +436,7 @@ public class WorkflowPhase implements UuidAware {
     private String serviceName;
     private String computeProviderName;
     private boolean provisionNodes;
+    private boolean daemonSet;
     private String phaseNameForRollback;
     private List<TemplateExpression.Yaml> templateExpressions;
     private List<PhaseStep.Yaml> phaseSteps = new ArrayList<>();
@@ -427,7 +445,7 @@ public class WorkflowPhase implements UuidAware {
     @lombok.Builder
     public Yaml(String type, String name, String infraMappingName, String serviceName, String computeProviderName,
         boolean provisionNodes, String phaseNameForRollback, List<TemplateExpression.Yaml> templateExpressions,
-        List<PhaseStep.Yaml> phaseSteps) {
+        List<PhaseStep.Yaml> phaseSteps, boolean daemonSet) {
       super(type);
       this.name = name;
       this.infraMappingName = infraMappingName;
@@ -437,6 +455,7 @@ public class WorkflowPhase implements UuidAware {
       this.phaseNameForRollback = phaseNameForRollback;
       this.templateExpressions = templateExpressions;
       this.phaseSteps = phaseSteps;
+      this.daemonSet = daemonSet;
     }
   }
 }

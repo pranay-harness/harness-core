@@ -525,6 +525,7 @@ public class WorkflowServiceImpl implements WorkflowService, DataProvider {
           workflowPhase = aWorkflowPhase()
                               .withInfraMappingId(workflow.getInfraMappingId())
                               .withServiceId(workflow.getServiceId())
+                              .withDaemonSet(isDaemonSet(workflow.getAppId(), workflow.getServiceId()))
                               .build();
           attachWorkflowPhase(workflow, workflowPhase);
         }
@@ -1451,6 +1452,7 @@ public class WorkflowServiceImpl implements WorkflowService, DataProvider {
 
     notNullCheck("orchestrationWorkflow", orchestrationWorkflow);
 
+    workflowPhase.setDaemonSet(isDaemonSet(appId, workflowPhase.getServiceId()));
     attachWorkflowPhase(workflow, workflowPhase);
 
     orchestrationWorkflow =
@@ -2260,10 +2262,7 @@ public class WorkflowServiceImpl implements WorkflowService, DataProvider {
                                      .build());
     }
 
-    KubernetesContainerTask containerTask =
-        (KubernetesContainerTask) serviceResourceService.getContainerTaskByDeploymentType(
-            appId, workflowPhase.getServiceId(), DeploymentType.KUBERNETES.name());
-    if (containerTask == null || !containerTask.checkDaemonSet()) {
+    if (!workflowPhase.isDaemonSet()) {
       workflowPhase.addPhaseStep(aPhaseStep(CONTAINER_DEPLOY, Constants.DEPLOY_CONTAINERS)
                                      .addStep(aGraphNode()
                                                   .withId(generateUuid())
@@ -2588,10 +2587,7 @@ public class WorkflowServiceImpl implements WorkflowService, DataProvider {
 
   private WorkflowPhase generateRollbackWorkflowPhaseForKubernetes(
       WorkflowPhase workflowPhase, String appId, boolean serviceSetupRequired) {
-    KubernetesContainerTask containerTask =
-        (KubernetesContainerTask) serviceResourceService.getContainerTaskByDeploymentType(
-            appId, workflowPhase.getServiceId(), DeploymentType.KUBERNETES.name());
-    if (containerTask != null && containerTask.checkDaemonSet()) {
+    if (workflowPhase.isDaemonSet()) {
       return generateRollbackWorkflowPhaseForDaemonSets(workflowPhase);
     } else {
       WorkflowPhaseBuilder workflowPhaseBuilder =
@@ -2641,10 +2637,18 @@ public class WorkflowServiceImpl implements WorkflowService, DataProvider {
     }
   }
 
+  private boolean isDaemonSet(String appId, String serviceId) {
+    KubernetesContainerTask containerTask =
+        (KubernetesContainerTask) serviceResourceService.getContainerTaskByDeploymentType(
+            appId, serviceId, DeploymentType.KUBERNETES.name());
+    return containerTask != null && containerTask.checkDaemonSet();
+  }
+
   private WorkflowPhase generateRollbackWorkflowPhaseForDaemonSets(WorkflowPhase workflowPhase) {
     return aWorkflowPhase()
         .withName(Constants.ROLLBACK_PREFIX + workflowPhase.getName())
         .withRollback(true)
+        .withDaemonSet(true)
         .withServiceId(workflowPhase.getServiceId())
         .withComputeProviderId(workflowPhase.getComputeProviderId())
         .withInfraMappingName(workflowPhase.getInfraMappingName())
