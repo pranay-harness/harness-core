@@ -105,7 +105,7 @@ public class ExecutionInterruptManagerTest extends WingsBaseTest {
         wingsPersistence.saveAndGet(Environment.class, Builder.anEnvironment().withAppId(app.getUuid()).build());
     StateExecutionInstance stateExecutionInstance = StateExecutionInstance.Builder.aStateExecutionInstance()
                                                         .withAppId(app.getUuid())
-                                                        .withStateName("state1")
+                                                        .withDisplayName("state1")
                                                         .build();
     stateExecutionInstance = wingsPersistence.saveAndGet(StateExecutionInstance.class, stateExecutionInstance);
     ExecutionInterrupt executionInterrupt = anExecutionInterrupt()
@@ -134,7 +134,7 @@ public class ExecutionInterruptManagerTest extends WingsBaseTest {
         wingsPersistence.saveAndGet(Environment.class, Builder.anEnvironment().withAppId(app.getUuid()).build());
     StateExecutionInstance stateExecutionInstance = StateExecutionInstance.Builder.aStateExecutionInstance()
                                                         .withAppId(app.getUuid())
-                                                        .withStateName("state1")
+                                                        .withDisplayName("state1")
                                                         .build();
     stateExecutionInstance = wingsPersistence.saveAndGet(StateExecutionInstance.class, stateExecutionInstance);
     ExecutionInterrupt executionInterrupt = anExecutionInterrupt()
@@ -163,7 +163,7 @@ public class ExecutionInterruptManagerTest extends WingsBaseTest {
         wingsPersistence.saveAndGet(Environment.class, Builder.anEnvironment().withAppId(app.getUuid()).build());
     StateExecutionInstance stateExecutionInstance = StateExecutionInstance.Builder.aStateExecutionInstance()
                                                         .withAppId(app.getUuid())
-                                                        .withStateName("state1")
+                                                        .withDisplayName("state1")
                                                         .withStatus(ExecutionStatus.SUCCESS)
                                                         .build();
     stateExecutionInstance = wingsPersistence.saveAndGet(StateExecutionInstance.class, stateExecutionInstance);
@@ -193,7 +193,7 @@ public class ExecutionInterruptManagerTest extends WingsBaseTest {
         wingsPersistence.saveAndGet(Environment.class, Builder.anEnvironment().withAppId(app.getUuid()).build());
     StateExecutionInstance stateExecutionInstance = StateExecutionInstance.Builder.aStateExecutionInstance()
                                                         .withAppId(app.getUuid())
-                                                        .withStateName("state1")
+                                                        .withDisplayName("state1")
                                                         .withStatus(ExecutionStatus.SUCCESS)
                                                         .build();
     stateExecutionInstance = wingsPersistence.saveAndGet(StateExecutionInstance.class, stateExecutionInstance);

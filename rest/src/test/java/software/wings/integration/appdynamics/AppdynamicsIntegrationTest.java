@@ -34,7 +34,7 @@ import javax.ws.rs.core.GenericType;
  * Created by rsingh on 5/11/17.
  */
 public class AppdynamicsIntegrationTest extends BaseIntegrationTest {
-  final String ACCOUNT_ID = "kmpySmUISimoRrJL6NL73w";
+  final String ACCOUNT_ID = defaultAccountId;
   @Inject private AppdynamicsDelegateService appdynamicsDelegateService;
 
   private String appdynamicsSettingId;

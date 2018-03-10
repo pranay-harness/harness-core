@@ -13,6 +13,7 @@ import static software.wings.beans.OrchestrationWorkflowType.BASIC;
 import static software.wings.beans.OrchestrationWorkflowType.BUILD;
 import static software.wings.beans.OrchestrationWorkflowType.CANARY;
 import static software.wings.beans.OrchestrationWorkflowType.MULTI_SERVICE;
+import static software.wings.beans.OrchestrationWorkflowType.ROLLING;
 import static software.wings.beans.artifact.ArtifactStreamType.ACR;
 import static software.wings.beans.artifact.ArtifactStreamType.AMAZON_S3;
 import static software.wings.beans.artifact.ArtifactStreamType.AMI;
@@ -127,6 +128,7 @@ import software.wings.service.impl.yaml.handler.workflow.BasicWorkflowYamlHandle
 import software.wings.service.impl.yaml.handler.workflow.BuildWorkflowYamlHandler;
 import software.wings.service.impl.yaml.handler.workflow.CanaryWorkflowYamlHandler;
 import software.wings.service.impl.yaml.handler.workflow.MultiServiceWorkflowYamlHandler;
+import software.wings.service.impl.yaml.handler.workflow.RollingWorkflowYamlHandler;
 import software.wings.service.impl.yaml.handler.workflow.WorkflowYamlHandler;
 import software.wings.service.impl.yaml.service.YamlServiceImpl;
 import software.wings.service.intfc.yaml.AppYamlResourceService;
@@ -246,6 +248,7 @@ public class YamlModule extends AbstractModule {
     MapBinder<String, WorkflowYamlHandler> workflowYamlHelperMapBinder =
         MapBinder.newMapBinder(binder(), String.class, WorkflowYamlHandler.class);
     workflowYamlHelperMapBinder.addBinding(BASIC.name()).to(BasicWorkflowYamlHandler.class);
+    workflowYamlHelperMapBinder.addBinding(ROLLING.name()).to(RollingWorkflowYamlHandler.class);
     workflowYamlHelperMapBinder.addBinding(BUILD.name()).to(BuildWorkflowYamlHandler.class);
     workflowYamlHelperMapBinder.addBinding(CANARY.name()).to(CanaryWorkflowYamlHandler.class);
     workflowYamlHelperMapBinder.addBinding(MULTI_SERVICE.name()).to(MultiServiceWorkflowYamlHandler.class);

@@ -172,7 +172,7 @@ public class StateMachineExecutionSimulator {
       return;
     }
     StateExecutionInstance stateExecutionInstance = context.getStateExecutionInstance();
-    stateExecutionInstance.setStateName(state.getName());
+    stateExecutionInstance.setDisplayName(state.getName());
 
     String path = getKeyName(parentPath, stateExecutionInstance);
 
@@ -187,6 +187,7 @@ public class StateMachineExecutionSimulator {
       repeatElements.forEach(repeatElement -> {
         StateExecutionInstance cloned = KryoUtils.clone(stateExecutionInstance);
         cloned.setStateParams(null);
+        cloned.setDisplayName(repeat.getName());
         cloned.setStateName(repeat.getName());
         cloned.setContextElement(repeatElement);
         ExecutionContextImpl childContext =
@@ -200,7 +201,7 @@ public class StateMachineExecutionSimulator {
         State child = stateMachine.getState(null, childStateName);
         StateExecutionInstance cloned = KryoUtils.clone(stateExecutionInstance);
         cloned.setStateParams(null);
-        cloned.setStateName(child.getName());
+        cloned.setDisplayName(child.getName());
         cloned.setContextElement(
             aForkElement().withStateName(childStateName).withParentId(stateExecutionInstance.getUuid()).build());
         ExecutionContextImpl childContext =
@@ -285,10 +286,10 @@ public class StateMachineExecutionSimulator {
   private String getKeyName(String parentPath, StateExecutionInstance stateExecutionInstance) {
     if (stateExecutionInstance.getContextElement() == null
         || isBlank(stateExecutionInstance.getContextElement().getName())) {
-      return parentPath + "__" + stateExecutionInstance.getStateName();
+      return parentPath + "__" + stateExecutionInstance.getDisplayName();
     } else {
       return parentPath + "__" + stateExecutionInstance.getContextElement().getName() + "__"
-          + stateExecutionInstance.getStateName();
+          + stateExecutionInstance.getDisplayName();
     }
   }
 

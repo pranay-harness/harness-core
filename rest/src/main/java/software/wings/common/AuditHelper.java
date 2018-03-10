@@ -1,5 +1,7 @@
 package software.wings.common;
 
+import static java.util.Arrays.asList;
+
 import com.google.inject.Inject;
 import com.google.inject.Singleton;
 
@@ -7,6 +9,7 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import software.wings.audit.AuditHeader;
 import software.wings.audit.AuditHeader.RequestType;
+import software.wings.beans.HttpMethod;
 import software.wings.service.intfc.AuditService;
 
 import java.io.InputStream;
@@ -79,5 +82,9 @@ public class AuditHelper {
   public void finalizeAudit(AuditHeader header, byte[] payload) {
     auditService.finalize(header, payload);
     auditThreadLocal.remove();
+  }
+
+  public boolean isAuditExemptedHttpMethod(String method) {
+    return asList(HttpMethod.GET.name(), HttpMethod.OPTIONS.name(), HttpMethod.HEAD.name()).contains(method);
   }
 }

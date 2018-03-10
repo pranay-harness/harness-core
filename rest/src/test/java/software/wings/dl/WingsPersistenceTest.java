@@ -11,6 +11,7 @@ import static org.mockito.Mockito.when;
 import static org.mongodb.morphia.mapping.Mapper.ID_KEY;
 import static software.wings.beans.SearchFilter.Builder.aSearchFilter;
 import static software.wings.dl.PageRequest.PageRequestBuilder.aPageRequest;
+import static software.wings.utils.WingsIntegrationTestConstants.delegateAccountSecret;
 import static software.wings.utils.WingsTestConstants.ENV_ID;
 import static software.wings.utils.WingsTestConstants.TEMPLATE_ID;
 
@@ -569,12 +570,12 @@ public class WingsPersistenceTest extends WingsBaseTest {
     String password = "06b13aea6f5f13ec69577689a899bbaad69eeb2f";
     JenkinsConfig jenkinsConfig = JenkinsConfig.builder()
                                       .jenkinsUrl("https://jenkins.wings.software")
-                                      .accountId("kmpySmUISimoRrJL6NL73w")
+                                      .accountId(delegateAccountSecret)
                                       .username("wingsbuild")
                                       .password(password.toCharArray())
                                       .build();
     SettingAttribute settingAttribute = SettingAttribute.Builder.aSettingAttribute()
-                                            .withAccountId("kmpySmUISimoRrJL6NL73w")
+                                            .withAccountId(delegateAccountSecret)
                                             .withCategory(Category.CONNECTOR)
                                             .withName("Jenkins Config" + rand)
                                             .withValue(jenkinsConfig)
@@ -599,12 +600,12 @@ public class WingsPersistenceTest extends WingsBaseTest {
     String originalPassword = "06b13aea6f5f13ec69577689a899bbaad69eeb2f";
     JenkinsConfig jenkinsConfig = JenkinsConfig.builder()
                                       .jenkinsUrl("https://jenkins.wings.software")
-                                      .accountId("kmpySmUISimoRrJL6NL73w")
+                                      .accountId(delegateAccountSecret)
                                       .username("wingsbuild")
                                       .password(originalPassword.toCharArray())
                                       .build();
     SettingAttribute settingAttribute = SettingAttribute.Builder.aSettingAttribute()
-                                            .withAccountId("kmpySmUISimoRrJL6NL73w")
+                                            .withAccountId(delegateAccountSecret)
                                             .withCategory(Category.CONNECTOR)
                                             .withName("Jenkins Config" + rand)
                                             .withValue(jenkinsConfig)
@@ -631,7 +632,7 @@ public class WingsPersistenceTest extends WingsBaseTest {
     String rand = String.valueOf(Math.random());
     char[] password = "bar".toCharArray();
     ServiceVariable serviceVariable = ServiceVariable.builder()
-                                          .accountId("kmpySmUISimoRrJL6NL73w")
+                                          .accountId(delegateAccountSecret)
                                           .templateId(TEMPLATE_ID)
                                           .envId(ENV_ID)
                                           .entityType(EntityType.SERVICE)
@@ -652,7 +653,7 @@ public class WingsPersistenceTest extends WingsBaseTest {
     String rand = String.valueOf(Math.random());
     char[] password = "bar".toCharArray();
     ServiceVariable serviceVariable = ServiceVariable.builder()
-                                          .accountId("kmpySmUISimoRrJL6NL73w")
+                                          .accountId(delegateAccountSecret)
                                           .templateId(TEMPLATE_ID)
                                           .envId(ENV_ID)
                                           .entityType(EntityType.SERVICE)

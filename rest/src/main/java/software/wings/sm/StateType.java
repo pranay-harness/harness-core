@@ -85,6 +85,7 @@ import software.wings.sm.states.PauseState;
 import software.wings.sm.states.PhaseStepSubWorkflow;
 import software.wings.sm.states.PhaseSubWorkflow;
 import software.wings.sm.states.RepeatState;
+import software.wings.sm.states.RollingNodeSelectState;
 import software.wings.sm.states.ShellScriptState;
 import software.wings.sm.states.SplunkState;
 import software.wings.sm.states.SplunkV2State;
@@ -258,6 +259,11 @@ public enum StateType implements StateTypeDescriptor {
   DC_NODE_SELECT(DcNodeSelectState.class, CLOUD, Lists.newArrayList(InfrastructureMappingType.PHYSICAL_DATA_CENTER_SSH),
       asList(SELECT_NODE), ORCHESTRATION_STENCILS),
 
+  ROLLING_NODE_SELECT(RollingNodeSelectState.class, CLOUD, asList(), asList(SELECT_NODE), ORCHESTRATION_STENCILS),
+
+  /**
+   * Phase state type.
+   */
   PHASE(PhaseSubWorkflow.class, StencilCategory.SUB_WORKFLOW, asList(), NONE),
 
   PHASE_STEP(PhaseStepSubWorkflow.class, StencilCategory.SUB_WORKFLOW, asList(), NONE),

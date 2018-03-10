@@ -4,6 +4,8 @@ import static java.util.Arrays.asList;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.awaitility.Awaitility.await;
 
+import com.google.inject.Inject;
+
 import org.apache.http.client.fluent.Executor;
 import org.apache.http.client.fluent.Request;
 import org.apache.http.conn.ssl.NoopHostnameVerifier;
@@ -18,6 +20,7 @@ import org.junit.Ignore;
 import org.junit.Test;
 import org.zeroturnaround.exec.ProcessExecutor;
 import software.wings.beans.Delegate;
+import software.wings.dl.WingsPersistence;
 
 import java.io.File;
 import java.io.IOException;
@@ -37,11 +40,16 @@ import javax.net.ssl.X509TrustManager;
  * Created by anubhaw on 6/21/17.
  */
 public class DelegateIntegrationTest extends BaseIntegrationTest {
+  @Inject private WingsPersistence wingsPersistence;
+  @Inject private UserResourceRestClient userResourceRestClient;
   private Executor httpRequestExecutor;
+  private String accountId;
+  private String userToken;
 
   @Before
   public void setUp() throws Exception {
-    loginAdminUser();
+    userToken = userResourceRestClient.getUserToken(client);
+    accountId = userResourceRestClient.getSeedAccount(client).getUuid();
     initializeRequestExecutor();
   }
 

@@ -128,6 +128,7 @@ import java.util.Set;
 import java.util.concurrent.ExecutorService;
 import java.util.function.Function;
 import java.util.regex.Pattern;
+import java.util.stream.Stream;
 import javax.validation.Valid;
 import javax.validation.executable.ValidateOnExecution;
 
@@ -248,7 +249,8 @@ public class InfrastructureMappingServiceImpl implements InfrastructureMappingSe
     }
 
     if (infraMapping instanceof PhysicalInfrastructureMapping) {
-      validatePyInfraMapping((PhysicalInfrastructureMapping) infraMapping);
+      PhysicalInfrastructureMapping physicalInfrastructureMapping = (PhysicalInfrastructureMapping) infraMapping;
+      physicalInfrastructureMapping.setHostNames(getUniqueHostNames(physicalInfrastructureMapping));
     }
 
     InfrastructureMapping savedInfraMapping = duplicateCheck(
@@ -257,6 +259,18 @@ public class InfrastructureMappingServiceImpl implements InfrastructureMappingSe
     return savedInfraMapping;
   }
 
+  private List<String> getUniqueHostNames(PhysicalInfrastructureMapping physicalInfrastructureMapping) {
+    List<String> hostNames = physicalInfrastructureMapping.getHostNames()
+                                 .stream()
+                                 .map(String::trim)
+                                 .filter(StringUtils::isNotEmpty)
+                                 .distinct()
+                                 .collect(toList());
+    if (hostNames.isEmpty()) {
+      throw new WingsException(ErrorCode.INVALID_ARGUMENT).addParam("args", "Host names must not be empty");
+    }
+    return hostNames;
+  }
   private void saveYamlChangeSet(InfrastructureMapping infraMapping, ChangeType crudType) {
     String accountId = appService.getAccountIdByAppId(infraMapping.getAppId());
     YamlGitConfig ygs = yamlDirectoryService.weNeedToPushChanges(accountId);
@@ -549,9 +563,9 @@ public class InfrastructureMappingServiceImpl implements InfrastructureMappingSe
       }
       keyValuePairs.put("role", lambdaInfraStructureMapping.getRole());
     } else if (infrastructureMapping instanceof PhysicalInfrastructureMapping) {
-      validatePyInfraMapping((PhysicalInfrastructureMapping) infrastructureMapping);
+      List<String> uniqueHostNames = getUniqueHostNames((PhysicalInfrastructureMapping) infrastructureMapping);
       keyValuePairs.put("loadBalancerId", ((PhysicalInfrastructureMapping) infrastructureMapping).getLoadBalancerId());
-      keyValuePairs.put("hostNames", ((PhysicalInfrastructureMapping) infrastructureMapping).getHostNames());
+      keyValuePairs.put("hostNames", uniqueHostNames);
     } else if (infrastructureMapping instanceof CodeDeployInfrastructureMapping) {
       CodeDeployInfrastructureMapping codeDeployInfrastructureMapping =
           (CodeDeployInfrastructureMapping) infrastructureMapping;
@@ -580,18 +594,6 @@ public class InfrastructureMappingServiceImpl implements InfrastructureMappingSe
     InfrastructureMapping updatedInfraMapping = get(infrastructureMapping.getAppId(), infrastructureMapping.getUuid());
     yamlChangeSetHelper.updateYamlChangeAsync(updatedInfraMapping, savedInfraMapping, savedInfraMapping.getAccountId());
     return updatedInfraMapping;
-  }
-
-  private void validatePyInfraMapping(PhysicalInfrastructureMapping pyInfraMapping) {
-    List<String> hostNames = pyInfraMapping.getHostNames()
-                                 .stream()
-                                 .map(String::trim)
-                                 .filter(StringUtils::isNotEmpty)
-                                 .distinct()
-                                 .collect(toList());
-    if (hostNames.size() != pyInfraMapping.getHostNames().size()) {
-      throw new WingsException(ErrorCode.INVALID_ARGUMENT).addParam("args", "Host names must be unique");
-    }
   }
 
   private void validateAwsLambdaInfrastructureMapping(AwsLambdaInfraStructureMapping lambdaInfraStructureMapping) {
@@ -706,14 +708,16 @@ public class InfrastructureMappingServiceImpl implements InfrastructureMappingSe
                   .collect(toList());
     }
 
-    int count =
-        selectionParams.isSelectSpecificHosts() ? selectionParams.getHostNames().size() : selectionParams.getCount();
     List<String> excludedServiceInstanceIds = selectionParams.getExcludedServiceInstanceIds();
-    return syncHostsAndUpdateInstances(infrastructureMapping, hosts)
-        .stream()
-        .filter(serviceInstance -> !excludedServiceInstanceIds.contains(serviceInstance.getUuid()))
-        .limit(count)
-        .collect(toList());
+    Stream<ServiceInstance> serviceInstancesStream =
+        syncHostsAndUpdateInstances(infrastructureMapping, hosts)
+            .stream()
+            .filter(serviceInstance -> !excludedServiceInstanceIds.contains(serviceInstance.getUuid()));
+
+    if (selectionParams.getCount() != null && selectionParams.getCount() > 0) {
+      serviceInstancesStream = serviceInstancesStream.limit(selectionParams.getCount());
+    }
+    return serviceInstancesStream.collect(toList());
   }
 
   private List<Host> listHosts(InfrastructureMapping infrastructureMapping) {

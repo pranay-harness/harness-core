@@ -223,6 +223,7 @@ public class RepeatState extends State {
     StateExecutionInstance childStateExecutionInstance = KryoUtils.clone(stateExecutionInstance);
     childStateExecutionInstance.setStateParams(null);
     childStateExecutionInstance.setStateName(repeatTransitionStateName);
+    childStateExecutionInstance.setDisplayName(repeatTransitionStateName);
     childStateExecutionInstance.setNotifyId(notifyId);
     childStateExecutionInstance.setPrevInstanceId(null);
 
