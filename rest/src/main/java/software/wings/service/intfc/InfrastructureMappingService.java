@@ -11,6 +11,7 @@ import software.wings.beans.ServiceInstanceSelectionParams;
 import software.wings.beans.infrastructure.Host;
 import software.wings.dl.PageRequest;
 import software.wings.dl.PageResponse;
+import software.wings.service.intfc.ownership.OwnedByEnvironment;
 import software.wings.settings.SettingValue.SettingVariableTypes;
 import software.wings.utils.validation.Create;
 import software.wings.utils.validation.Update;
@@ -24,7 +25,7 @@ import javax.validation.constraints.NotNull;
 /**
  * Created by anubhaw on 1/10/17.
  */
-public interface InfrastructureMappingService {
+public interface InfrastructureMappingService extends OwnedByEnvironment {
   PageResponse<InfrastructureMapping> list(PageRequest<InfrastructureMapping> pageRequest);
 
   PageResponse<InfrastructureMapping> list(PageRequest<InfrastructureMapping> pageRequest, boolean disableValidation);
