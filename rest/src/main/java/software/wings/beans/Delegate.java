@@ -1,8 +1,5 @@
 package software.wings.beans;
 
-import static io.harness.data.structure.EmptyPredicate.isNotEmpty;
-import static java.util.stream.Collectors.toList;
-
 import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
 import lombok.Data;
 import lombok.EqualsAndHashCode;
@@ -30,7 +27,6 @@ public class Delegate extends Base {
   private long lastHeartBeat;
   private String version;
   private List<TaskType> supportedTaskTypes;
-  private List<String> supportedTaskTypeNames;
 
   @Transient private List<DelegateTask> currentlyExecutingDelegateTasks;
 
@@ -48,7 +44,6 @@ public class Delegate extends Base {
     private long lastHeartBeat;
     private String version;
     private List<TaskType> supportedTaskTypes;
-    private List<String> supportedTaskTypeNames;
     private List<DelegateScope> includeScopes;
     private List<DelegateScope> excludeScopes;
     private List<DelegateTask> currentlyExecutingDelegateTasks;
@@ -102,9 +97,6 @@ public class Delegate extends Base {
 
     public Builder withSupportedTaskTypes(List<TaskType> supportedTaskTypes) {
       this.supportedTaskTypes = supportedTaskTypes;
-      if (isNotEmpty(supportedTaskTypes)) {
-        this.supportedTaskTypeNames = supportedTaskTypes.stream().map(Enum::name).collect(toList());
-      }
       return this;
     }
 
@@ -184,7 +176,6 @@ public class Delegate extends Base {
       delegate.setLastHeartBeat(lastHeartBeat);
       delegate.setVersion(version);
       delegate.setSupportedTaskTypes(supportedTaskTypes);
-      delegate.setSupportedTaskTypeNames(supportedTaskTypeNames);
       delegate.setIncludeScopes(includeScopes);
       delegate.setExcludeScopes(excludeScopes);
       delegate.setCurrentlyExecutingDelegateTasks(currentlyExecutingDelegateTasks);
