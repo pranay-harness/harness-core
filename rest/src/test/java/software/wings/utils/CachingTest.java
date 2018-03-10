@@ -19,7 +19,7 @@ public class CachingTest extends WingsBaseTest {
   @Inject private CacheableService cacheableService;
 
   /**
-   * Should cache repeated calls.
+   * Should seedCache repeated calls.
    */
   @Test
   public void shouldCacheRepeatedCalls() {
@@ -30,7 +30,7 @@ public class CachingTest extends WingsBaseTest {
   }
 
   /**
-   * Should not cache when key is different.
+   * Should not seedCache when key is different.
    */
   @Test
   public void shouldNotCacheWhenKeyIsDifferent() {

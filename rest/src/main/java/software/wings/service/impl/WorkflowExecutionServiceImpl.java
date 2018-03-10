@@ -21,6 +21,7 @@ import static software.wings.api.ServiceElement.Builder.aServiceElement;
 import static software.wings.api.WorkflowElement.WorkflowElementBuilder.aWorkflowElement;
 import static software.wings.beans.ApprovalDetails.Action.APPROVE;
 import static software.wings.beans.ApprovalDetails.Action.REJECT;
+import static software.wings.beans.CountsByStatuses.Builder.aCountsByStatuses;
 import static software.wings.beans.ElementExecutionSummary.ElementExecutionSummaryBuilder.anElementExecutionSummary;
 import static software.wings.beans.EntityType.ARTIFACT;
 import static software.wings.beans.EntityType.INFRASTRUCTURE_MAPPING;
@@ -406,7 +407,7 @@ public class WorkflowExecutionServiceImpl implements WorkflowExecutionService {
             PipelineStageExecution stageExecution = aPipelineStageExecution()
                                                         .withStateType(stateExecutionInstance.getStateType())
                                                         .withStatus(stateExecutionInstance.getStatus())
-                                                        .withStateName(stateExecutionInstance.getStateName())
+                                                        .withStateName(stateExecutionInstance.getDisplayName())
                                                         .withStartTs(stateExecutionInstance.getStartTs())
                                                         .withEndTs(stateExecutionInstance.getEndTs())
                                                         .build();
@@ -525,7 +526,7 @@ public class WorkflowExecutionServiceImpl implements WorkflowExecutionService {
   private ImmutableMap<String, StateExecutionInstance> getStateExecutionInstanceMap(
       WorkflowExecution workflowExecution) {
     List<StateExecutionInstance> stateExecutionInstances = getStateExecutionInstances(workflowExecution);
-    return Maps.uniqueIndex(stateExecutionInstances, v -> v.getStateName());
+    return Maps.uniqueIndex(stateExecutionInstances, v -> v.getDisplayName());
   }
 
   private List<StateExecutionInstance> getStateExecutionInstances(WorkflowExecution workflowExecution) {
@@ -640,10 +641,10 @@ public class WorkflowExecutionServiceImpl implements WorkflowExecutionService {
       if (includeGraph) {
         String initialStateName;
         if (workflowExecution.getStatus() == NEW || workflowExecution.getStatus() == QUEUED) {
-          initialStateName = allInstances.get(0).getStateName();
+          initialStateName = allInstances.get(0).getDisplayName();
         } else {
           StateExecutionInstance stateExecutionInstance = getEarliestInstance(allInstances);
-          initialStateName = stateExecutionInstance.getStateName();
+          initialStateName = stateExecutionInstance.getDisplayName();
         }
         workflowExecution.setExecutionNode(graphRenderer.generateHierarchyNode(allInstancesIdMap, initialStateName));
       }
@@ -841,6 +842,7 @@ public class WorkflowExecutionServiceImpl implements WorkflowExecutionService {
     WorkflowStandardParams stdParams;
     if (workflow.getOrchestrationWorkflow().getOrchestrationWorkflowType() == OrchestrationWorkflowType.CANARY
         || workflow.getOrchestrationWorkflow().getOrchestrationWorkflowType() == OrchestrationWorkflowType.BASIC
+        || workflow.getOrchestrationWorkflow().getOrchestrationWorkflowType() == OrchestrationWorkflowType.ROLLING
         || workflow.getOrchestrationWorkflow().getOrchestrationWorkflowType() == OrchestrationWorkflowType.MULTI_SERVICE
         || workflow.getOrchestrationWorkflow().getOrchestrationWorkflowType() == OrchestrationWorkflowType.BUILD) {
       stdParams = new CanaryWorkflowStandardParams();
@@ -1534,13 +1536,13 @@ public class WorkflowExecutionServiceImpl implements WorkflowExecutionService {
 
   @Override
   public List<StateExecutionInstance> getStateExecutionData(String appId, String executionUuid, String serviceId,
-      String infraMappingId, StateType stateType, String stateName) {
+      String infraMappingId, StateType stateType, String displayName) {
     PageRequest<StateExecutionInstance> pageRequest =
         aPageRequest()
             .addFilter("appId", EQ, appId)
             .addFilter("executionUuid", EQ, executionUuid)
             .addFilter("stateType", EQ, stateType)
-            .addFilter("stateName", EQ, stateName)
+            .addFilter("displayName", EQ, displayName)
             .addFilter("contextElement.serviceElement.uuid", EQ, serviceId)
             .addFilter("contextElement.infraMappingId", EQ, infraMappingId)
             .build();
@@ -1832,24 +1834,33 @@ public class WorkflowExecutionServiceImpl implements WorkflowExecutionService {
         && workflowExecution.getBreakdown() != null) {
       return;
     }
-    StateMachine sm =
-        wingsPersistence.get(StateMachine.class, workflowExecution.getAppId(), workflowExecution.getStateMachineId());
-    PageRequest<StateExecutionInstance> req =
-        aPageRequest()
-            .withReadPref(CRITICAL)
-            .withLimit(PageRequest.UNLIMITED)
-            .addFilter("appId", EQ, workflowExecution.getAppId())
-            .addFilter("executionUuid", EQ, workflowExecution.getUuid())
-            .addFilter("createdAt", GE, workflowExecution.getCreatedAt())
-            .addFieldsIncluded("uuid", "stateName", "contextElement", "parentInstanceId", "status")
-            .build();
+    CountsByStatuses breakdown = null;
+    int total;
 
-    List<StateExecutionInstance> allStateExecutionInstances = getAllStateExecutionInstances(req);
+    // TODO: done for rolling - needs revisit
+    if (workflowExecution.getOrchestrationType() == OrchestrationWorkflowType.ROLLING
+        && workflowExecution.getStatus() == ExecutionStatus.SUCCESS) {
+      breakdown = aCountsByStatuses().withSuccess(1).build();
+      total = 1;
+    } else {
+      StateMachine sm =
+          wingsPersistence.get(StateMachine.class, workflowExecution.getAppId(), workflowExecution.getStateMachineId());
+      PageRequest<StateExecutionInstance> req =
+          aPageRequest()
+              .withReadPref(CRITICAL)
+              .withLimit(PageRequest.UNLIMITED)
+              .addFilter("appId", EQ, workflowExecution.getAppId())
+              .addFilter("executionUuid", EQ, workflowExecution.getUuid())
+              .addFilter("createdAt", GE, workflowExecution.getCreatedAt())
+              .addFieldsIncluded("uuid", "displayName", "contextElement", "parentInstanceId", "status")
+              .build();
 
-    CountsByStatuses breakdown = stateMachineExecutionSimulator.getStatusBreakdown(
-        workflowExecution.getAppId(), workflowExecution.getEnvId(), sm, allStateExecutionInstances);
-    int total = breakdown.getFailed() + breakdown.getSuccess() + breakdown.getInprogress() + breakdown.getQueued();
+      List<StateExecutionInstance> allStateExecutionInstances = getAllStateExecutionInstances(req);
 
+      breakdown = stateMachineExecutionSimulator.getStatusBreakdown(
+          workflowExecution.getAppId(), workflowExecution.getEnvId(), sm, allStateExecutionInstances);
+      total = breakdown.getFailed() + breakdown.getSuccess() + breakdown.getInprogress() + breakdown.getQueued();
+    }
     workflowExecution.setBreakdown(breakdown);
     workflowExecution.setTotal(total);
     logger.info("Got the breakdown workflowExecution: {}, status: {}, breakdown: {}", workflowExecution.getUuid(),
@@ -1992,7 +2003,7 @@ public class WorkflowExecutionServiceImpl implements WorkflowExecutionService {
             .addFilter("parentInstanceId", Operator.IN, stateExecutionInstanceId)
             .addFilter("stateType", EQ, StateType.PHASE_STEP.name())
             .addFieldsIncluded(
-                "uuid", "parentInstanceId", "contextElement", "status", "stateType", "stateName", "stateExecutionMap")
+                "uuid", "parentInstanceId", "contextElement", "status", "stateType", "displayName", "stateExecutionMap")
             .build();
 
     List<StateExecutionInstance> allStateExecutionInstances = getAllStateExecutionInstances(pageRequest);
@@ -2005,7 +2016,7 @@ public class WorkflowExecutionServiceImpl implements WorkflowExecutionService {
       if (stateExecutionData instanceof PhaseStepExecutionData) {
         PhaseStepExecutionData phaseStepExecutionData = (PhaseStepExecutionData) stateExecutionData;
         phaseExecutionSummary.getPhaseStepExecutionSummaryMap().put(
-            instance.getStateName(), phaseStepExecutionData.getPhaseStepExecutionSummary());
+            instance.getDisplayName(), phaseStepExecutionData.getPhaseStepExecutionSummary());
       }
     });
 
@@ -2027,8 +2038,8 @@ public class WorkflowExecutionServiceImpl implements WorkflowExecutionService {
               .addFilter("appId", EQ, appId)
               .addFilter("executionUuid", EQ, executionUuid)
               .addFilter("parentInstanceId", Operator.IN, parentInstanceIds.toArray())
-              .addFieldsIncluded(
-                  "uuid", "parentInstanceId", "contextElement", "status", "stateType", "stateName", "stateExecutionMap")
+              .addFieldsIncluded("uuid", "parentInstanceId", "contextElement", "status", "stateType", "displayName",
+                  "stateExecutionMap")
               .build();
 
       List<StateExecutionInstance> allStateExecutionInstances = getAllStateExecutionInstances(pageRequest);

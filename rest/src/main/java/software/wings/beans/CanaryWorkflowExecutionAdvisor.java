@@ -4,6 +4,9 @@ import static io.harness.data.structure.EmptyPredicate.isEmpty;
 import static io.harness.data.structure.EmptyPredicate.isNotEmpty;
 import static java.util.stream.Collectors.toList;
 import static software.wings.beans.FailureStrategy.FailureStrategyBuilder.aFailureStrategy;
+import static software.wings.beans.OrchestrationWorkflowType.ROLLING;
+import static software.wings.beans.ServiceInstanceSelectionParams.Builder.aServiceInstanceSelectionParams;
+import static software.wings.common.Constants.ROLLING_PHASE_PREFIX;
 import static software.wings.sm.ExecutionEventAdvice.ExecutionEventAdviceBuilder.anExecutionEventAdvice;
 import static software.wings.sm.ExecutionInterruptType.ABORT_ALL;
 import static software.wings.sm.ExecutionInterruptType.ROLLBACK;
@@ -26,6 +29,7 @@ import software.wings.api.PhaseElement;
 import software.wings.common.Constants;
 import software.wings.service.impl.WorkflowNotificationHelper;
 import software.wings.service.impl.instance.InstanceHelper;
+import software.wings.service.intfc.InfrastructureMappingService;
 import software.wings.service.intfc.WorkflowExecutionService;
 import software.wings.service.intfc.WorkflowService;
 import software.wings.sm.ContextElementType;
@@ -39,13 +43,16 @@ import software.wings.sm.ExecutionInterruptManager;
 import software.wings.sm.ExecutionInterruptType;
 import software.wings.sm.State;
 import software.wings.sm.StateExecutionData;
+import software.wings.sm.StateExecutionInstance;
 import software.wings.sm.StateType;
 import software.wings.sm.WorkflowStandardParams;
+import software.wings.sm.states.CanaryUtils;
 import software.wings.sm.states.PhaseSubWorkflow;
 
 import java.util.List;
 import java.util.Map;
 import java.util.Optional;
+import java.util.stream.Collectors;
 
 /**
  * Created by rishi on 1/24/17.
@@ -62,6 +69,7 @@ public class CanaryWorkflowExecutionAdvisor implements ExecutionEventAdvisor {
   @Inject @Transient private transient ExecutionInterruptManager executionInterruptManager;
 
   @Inject @Transient private transient InstanceHelper instanceHelper;
+  @Inject @Transient private transient InfrastructureMappingService infrastructureMappingService;
 
   @Override
   public ExecutionEventAdvice onExecutionEvent(ExecutionEvent executionEvent) {
@@ -75,6 +83,8 @@ public class CanaryWorkflowExecutionAdvisor implements ExecutionEventAdvisor {
 
     State state = executionEvent.getState();
     PhaseSubWorkflow phaseSubWorkflow = null;
+    PhaseElement phaseElement = context.getContextElement(ContextElementType.PARAM, Constants.PHASE_PARAM);
+
     WorkflowExecution workflowExecution =
         workflowExecutionService.getWorkflowExecution(context.getAppId(), context.getWorkflowExecutionId());
     if (state.getStateType().equals(StateType.PHASE.name()) && state instanceof PhaseSubWorkflow) {
@@ -87,6 +97,31 @@ public class CanaryWorkflowExecutionAdvisor implements ExecutionEventAdvisor {
         WorkflowStandardParams workflowStandardParams = context.getContextElement(ContextElementType.STANDARD);
         instanceHelper.extractInstanceOrContainerInfoBaseOnType(context.getStateExecutionInstanceId(),
             context.getStateExecutionData(), workflowStandardParams, context.getAppId(), workflowExecution);
+      }
+
+      //
+      if (!phaseSubWorkflow.isRollback() && executionEvent.getExecutionStatus() == SUCCESS) {
+        StateExecutionInstance stateExecutionInstance = ((ExecutionContextImpl) context).getStateExecutionInstance();
+        if (stateExecutionInstance.getOrchestrationWorkflowType() != ROLLING
+            || !PHASE.name().equals(stateExecutionInstance.getStateType())) {
+          return null;
+        }
+        List<ServiceInstance> hostExclusionList = CanaryUtils.getHostExclusionList(context, phaseElement);
+        String infraMappingId = ((PhaseSubWorkflow) state).getInfraMappingId();
+        ServiceInstanceSelectionParams.Builder selectionParams =
+            aServiceInstanceSelectionParams().withExcludedServiceInstanceIds(
+                hostExclusionList.stream().map(ServiceInstance::getUuid).distinct().collect(toList()));
+        List<ServiceInstance> serviceInstances = infrastructureMappingService.selectServiceInstances(
+            context.getAppId(), infraMappingId, context.getWorkflowExecutionId(), selectionParams.build());
+
+        if (isEmpty(serviceInstances)) {
+          return null;
+        }
+        return anExecutionEventAdvice()
+            .withExecutionInterruptType(ExecutionInterruptType.NEXT_STEP)
+            .withNextStateName(stateExecutionInstance.getStateName())
+            .withNextChildStateMachineId(stateExecutionInstance.getChildStateMachineId())
+            .build();
       }
 
       // nothing to do for regular phase with non-error
@@ -136,7 +171,6 @@ public class CanaryWorkflowExecutionAdvisor implements ExecutionEventAdvisor {
       } else if (state.getParentId().equals(orchestrationWorkflow.getPostDeploymentSteps().getUuid())) {
         phaseStep = orchestrationWorkflow.getPostDeploymentSteps();
       } else {
-        PhaseElement phaseElement = context.getContextElement(ContextElementType.PARAM, Constants.PHASE_PARAM);
         WorkflowPhase phase = orchestrationWorkflow.getWorkflowPhaseIdMap().get(phaseElement.getUuid());
         if (phase != null) {
           Optional<PhaseStep> phaseStep1 = phase.getPhaseSteps()
@@ -156,6 +190,19 @@ public class CanaryWorkflowExecutionAdvisor implements ExecutionEventAdvisor {
     FailureStrategy failureStrategy = rollbackStrategy(orchestrationWorkflow.getFailureStrategies(), state);
 
     return getExecutionEventAdvice(orchestrationWorkflow, failureStrategy, executionEvent, phaseSubWorkflow, state);
+  }
+
+  @Override
+  public void onSave(StateExecutionInstance stateExecutionInstance) {
+    if (stateExecutionInstance.getOrchestrationWorkflowType() == ROLLING
+        && PHASE.name().equals(stateExecutionInstance.getStateType()) && !stateExecutionInstance.isRollback()) {
+      List<String> phaseNames = stateExecutionInstance.getStateExecutionMap()
+                                    .keySet()
+                                    .stream()
+                                    .filter(key -> key.startsWith(ROLLING_PHASE_PREFIX))
+                                    .collect(Collectors.toList());
+      stateExecutionInstance.setDisplayName(ROLLING_PHASE_PREFIX + (phaseNames.size() + 1));
+    }
   }
 
   private ExecutionEventAdvice getExecutionEventAdvice(CanaryOrchestrationWorkflow orchestrationWorkflow,

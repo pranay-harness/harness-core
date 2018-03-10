@@ -200,7 +200,7 @@ public class WorkflowNotificationHelper {
                                                           .equal(workflowExecution.getUuid())
                                                           .field("stateType")
                                                           .equal(PHASE.name())
-                                                          .field("stateName")
+                                                          .field("displayName")
                                                           .equal(phaseSubWorkflow.getName())
                                                           .get();
       if (stateExecutionInstance != null) {

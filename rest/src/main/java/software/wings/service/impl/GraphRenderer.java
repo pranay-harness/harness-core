@@ -218,10 +218,16 @@ public class GraphRenderer {
   GraphNode convertToNode(StateExecutionInstance instance) {
     GraphNodeBuilder builder = aGraphNode()
                                    .withId(instance.getUuid())
-                                   .withName(instance.getStateName())
                                    .withType(instance.getStateType())
                                    .withRollback(instance.isRollback())
                                    .withStatus(String.valueOf(instance.getStatus()).toUpperCase());
+
+    // To take care of old deployment display
+    if (instance.getDisplayName() == null) {
+      builder.withName(instance.getStateName());
+    } else {
+      builder.withName(instance.getDisplayName());
+    }
 
     if (instance.getStateExecutionDataHistory() != null) {
       builder.withExecutionHistoryCount(instance.getStateExecutionDataHistory().size());

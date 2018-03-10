@@ -175,6 +175,7 @@ public class StateMachineExecutor {
     if (stateExecutionInstance.getStateName() == null) {
       stateExecutionInstance.setStateName(sm.getInitialStateName());
     }
+
     if (executionEventAdvisor != null) {
       stateExecutionInstance.setExecutionEventAdvisors(asList(executionEventAdvisor));
     }
@@ -227,7 +228,11 @@ public class StateMachineExecutor {
   private StateExecutionInstance saveStateExecutionInstance(
       StateMachine stateMachine, StateExecutionInstance stateExecutionInstance) {
     if (stateExecutionInstance.getStateName() == null) {
-      throw new WingsException(INVALID_ARGUMENT).addParam(ErrorCode.ARGS, "stateName");
+      throw new WingsException(INVALID_ARGUMENT).addParam(ErrorCode.ARGS, "displayName");
+    }
+
+    if (stateExecutionInstance.getDisplayName() == null) {
+      stateExecutionInstance.setDisplayName(stateExecutionInstance.getStateName());
     }
 
     stateExecutionInstance.setAppId(stateMachine.getAppId());
@@ -249,6 +254,10 @@ public class StateMachineExecutor {
       timeout += state.getWaitInterval() * 1000;
     }
     stateExecutionInstance.setExpiryTs(System.currentTimeMillis() + timeout);
+    if (stateExecutionInstance.getExecutionEventAdvisors() != null) {
+      stateExecutionInstance.getExecutionEventAdvisors().forEach(
+          executionEventAdvisor -> executionEventAdvisor.onSave(stateExecutionInstance));
+    }
     return wingsPersistence.saveAndGet(StateExecutionInstance.class, stateExecutionInstance);
   }
 
@@ -410,7 +419,7 @@ public class StateMachineExecutor {
       executionResponse = currentState.execute(context);
     } catch (Exception exception) {
       logger.warn(
-          "Error in {} execution: {}", stateExecutionInstance.getStateName(), Misc.getMessage(exception), exception);
+          "Error in {} execution: {}", stateExecutionInstance.getDisplayName(), Misc.getMessage(exception), exception);
       ex = exception;
     }
 
@@ -599,6 +608,14 @@ public class StateMachineExecutor {
         endTransition(context, stateExecutionInstance, status, null);
         break;
       }
+      case NEXT_STEP: {
+        if (executionEventAdvice.getNextChildStateMachineId() != null
+            || executionEventAdvice.getNextStateName() != null) {
+          executionEventAdviceTransition(context, executionEventAdvice);
+          break;
+        }
+        throw new WingsException(INVALID_ARGUMENT).addParam("args", "nextStateMachineId or nextStateName");
+      }
       default: {
         throw new WingsException(INVALID_ARGUMENT)
             .addParam("args",
@@ -735,16 +752,16 @@ public class StateMachineExecutor {
       ErrorStrategy errorStrategy = context.getErrorStrategy();
       if (errorStrategy == null || errorStrategy == ErrorStrategy.FAIL) {
         logger.info("Ending execution  - currentState : {}, stateExecutionInstanceId: {}",
-            stateExecutionInstance.getStateName(), stateExecutionInstance.getUuid());
+            stateExecutionInstance.getDisplayName(), stateExecutionInstance.getUuid());
         endTransition(context, stateExecutionInstance, FAILED, exception);
       } else if (errorStrategy == ErrorStrategy.PAUSE) {
         logger.info("Pausing execution  - currentState : {}, stateExecutionInstanceId: {}",
-            stateExecutionInstance.getStateName(), stateExecutionInstance.getUuid());
+            stateExecutionInstance.getDisplayName(), stateExecutionInstance.getUuid());
         updateStatus(stateExecutionInstance, WAITING, Lists.newArrayList(FAILED), null);
       } else {
         // TODO: handle more strategy
         logger.info("Unhandled error strategy for the state: {}, stateExecutionInstanceId: {}, errorStrategy: {}",
-            stateExecutionInstance.getStateName(), stateExecutionInstance.getUuid(), errorStrategy);
+            stateExecutionInstance.getDisplayName(), stateExecutionInstance.getUuid(), errorStrategy);
       }
     } else {
       StateExecutionInstance cloned = clone(stateExecutionInstance, nextState);
@@ -777,7 +794,7 @@ public class StateMachineExecutor {
     boolean updated = updateStatus(stateExecutionInstance, ABORTING, executionStatuses, null);
     if (!updated) {
       throw new WingsException(STATE_NOT_FOR_TYPE)
-          .addParam("stateName", stateExecutionInstance.getStateName())
+          .addParam("displayName", stateExecutionInstance.getDisplayName())
           .addParam("type", ABORTING.name())
           .addParam("status", stateExecutionInstance.getStatus().name())
           .addParam("statuses", executionStatuses);
@@ -811,7 +828,7 @@ public class StateMachineExecutor {
     }
     if (!updated) {
       throw new WingsException(ErrorCode.STATE_ABORT_FAILED)
-          .addParam("stateName", stateExecutionInstance.getStateName());
+          .addParam("displayName", stateExecutionInstance.getDisplayName());
     }
   }
 
@@ -874,6 +891,7 @@ public class StateMachineExecutor {
     cloned.setUuid(null);
     cloned.setStateParams(null);
     cloned.setStateName(nextState.getName());
+    cloned.setDisplayName(nextState.getName());
     cloned.setPrevInstanceId(stateExecutionInstance.getUuid());
     cloned.setContextTransition(false);
     cloned.setStatus(NEW);
@@ -967,15 +985,15 @@ public class StateMachineExecutor {
     }
 
     if (stateExecutionData == null) {
-      stateExecutionData = stateExecutionMap.get(stateExecutionInstance.getStateName());
+      stateExecutionData = stateExecutionMap.get(stateExecutionInstance.getDisplayName());
       if (stateExecutionData == null) {
         stateExecutionData = new StateExecutionData();
       }
     }
 
-    stateExecutionData.setStateName(stateExecutionInstance.getStateName());
+    stateExecutionData.setStateName(stateExecutionInstance.getDisplayName());
     stateExecutionData.setStateType(stateExecutionInstance.getStateType());
-    stateExecutionMap.put(stateExecutionInstance.getStateName(), stateExecutionData);
+    stateExecutionMap.put(stateExecutionInstance.getDisplayName(), stateExecutionData);
 
     UpdateOperations<StateExecutionInstance> ops =
         wingsPersistence.createUpdateOperations(StateExecutionInstance.class);
@@ -1256,11 +1274,11 @@ public class StateMachineExecutor {
     UpdateOperations<StateExecutionInstance> ops =
         wingsPersistence.createUpdateOperations(StateExecutionInstance.class);
 
-    StateExecutionData stateExecutionData = stateExecutionMap.get(stateExecutionInstance.getStateName());
+    StateExecutionData stateExecutionData = stateExecutionMap.get(stateExecutionInstance.getDisplayName());
     ops.addToSet("stateExecutionDataHistory", stateExecutionData);
     stateExecutionInstance.getStateExecutionDataHistory().add(stateExecutionData);
 
-    stateExecutionMap.remove(stateExecutionInstance.getStateName());
+    stateExecutionMap.remove(stateExecutionInstance.getDisplayName());
     ops.set("stateExecutionMap", stateExecutionInstance.getStateExecutionMap());
 
     if (stateParams != null) {
@@ -1286,7 +1304,7 @@ public class StateMachineExecutor {
       logger.warn("clearStateExecutionData could not be completed for the stateExecutionInstance: {}",
           stateExecutionInstance.getUuid());
 
-      throw new WingsException(ErrorCode.RETRY_FAILED).addParam("stateName", stateExecutionInstance.getStateName());
+      throw new WingsException(ErrorCode.RETRY_FAILED).addParam("displayName", stateExecutionInstance.getDisplayName());
     }
   }
 
