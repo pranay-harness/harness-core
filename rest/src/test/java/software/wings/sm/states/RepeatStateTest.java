@@ -115,7 +115,7 @@ public class RepeatStateTest {
   private ExecutionContextImpl prepareExecutionContext(String stateName, List<ContextElement> repeatElements) {
     StateExecutionInstance stateExecutionInstance = new StateExecutionInstance();
     stateExecutionInstance.setUuid(generateUuid());
-    stateExecutionInstance.setDisplayName(stateName);
+    stateExecutionInstance.setStateName(stateName);
 
     ExecutionContextImpl context = mock(ExecutionContextImpl.class);
     when(context.evaluateExpression("services()")).thenReturn(repeatElements);

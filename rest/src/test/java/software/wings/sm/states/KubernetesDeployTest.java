@@ -151,7 +151,6 @@ public class KubernetesDeployTest extends WingsBaseTest {
                                           .build();
   private StateExecutionInstance stateExecutionInstance =
       aStateExecutionInstance()
-          .withDisplayName(STATE_NAME)
           .withStateName(STATE_NAME)
           .addContextElement(workflowStandardParams)
           .addContextElement(phaseElement)
@@ -258,7 +257,7 @@ public class KubernetesDeployTest extends WingsBaseTest {
     notifyResponse.put("key", aCommandExecutionResult().withStatus(CommandExecutionStatus.SUCCESS).build());
 
     stateExecutionInstance.getStateExecutionMap().put(
-        stateExecutionInstance.getDisplayName(), aCommandStateExecutionData().build());
+        stateExecutionInstance.getStateName(), aCommandStateExecutionData().build());
 
     ExecutionResponse response = kubernetesDeploy.handleAsyncResponse(context, notifyResponse);
     assertThat(response)

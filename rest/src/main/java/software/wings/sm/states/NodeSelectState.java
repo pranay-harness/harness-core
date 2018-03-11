@@ -27,7 +27,6 @@ import software.wings.beans.ErrorCode;
 import software.wings.beans.InfrastructureMapping;
 import software.wings.beans.InfrastructureMappingType;
 import software.wings.beans.InstanceUnitType;
-import software.wings.beans.OrchestrationWorkflowType;
 import software.wings.beans.ServiceInstance;
 import software.wings.beans.ServiceInstanceSelectionParams;
 import software.wings.beans.artifact.Artifact;
@@ -93,28 +92,22 @@ public abstract class NodeSelectState extends State {
       ServiceInstanceSelectionParams.Builder selectionParams =
           aServiceInstanceSelectionParams()
               .withExcludedServiceInstanceIds(excludedServiceInstanceIds)
-              .withSelectSpecificHosts(isSpecificHosts());
+              .withSelectSpecificHosts(specificHosts);
       int totalAvailableInstances =
           infrastructureMappingService.listHostDisplayNames(appId, infraMappingId, context.getWorkflowExecutionId())
               .size();
       int instancesToAdd;
-      if (isSpecificHosts()) {
+      if (specificHosts) {
         if (infrastructureMapping instanceof AwsInfrastructureMapping
             && ((AwsInfrastructureMapping) infrastructureMapping).isProvisionInstances()) {
           throw new WingsException(ErrorCode.INVALID_ARGUMENT)
               .addParam("args", "Cannot specify hosts when using an auto scale group");
         }
-        selectionParams.withHostNames(getHostNames());
-        instancesToAdd = getHostNames().size();
-        logger.info("Selecting specific hosts: {}", getHostNames());
+        selectionParams.withHostNames(hostNames);
+        instancesToAdd = hostNames.size();
+        logger.info("Selecting specific hosts: {}", hostNames);
       } else {
-        int instanceCountTotal = getCount(totalAvailableInstances);
-        if (((ExecutionContextImpl) context).getStateExecutionInstance().getOrchestrationWorkflowType()
-            == OrchestrationWorkflowType.ROLLING) {
-          instancesToAdd = instanceCountTotal;
-        } else {
-          instancesToAdd = instanceCountTotal - hostExclusionList.size();
-        }
+        instancesToAdd = getCumulativeTotal(totalAvailableInstances) - hostExclusionList.size();
       }
       selectionParams.withCount(instancesToAdd);
 
@@ -153,7 +146,7 @@ public abstract class NodeSelectState extends State {
                                                                       .withPublicDns(serviceInstance.getPublicDns())
                                                                       .build())
                                                            .collect(toList()));
-      selectedNodeExecutionData.setExcludeSelectedHostsFromFuturePhases(getExcludeSelectedHostsFromFuturePhases());
+      selectedNodeExecutionData.setExcludeSelectedHostsFromFuturePhases(excludeSelectedHostsFromFuturePhases);
       List<String> serviceInstancesIds = serviceInstances.stream().map(ServiceInstance::getUuid).collect(toList());
       ContextElement serviceIdParamElement =
           aServiceInstanceIdsParam().withInstanceIds(serviceInstancesIds).withServiceId(serviceId).build();
@@ -177,7 +170,7 @@ public abstract class NodeSelectState extends State {
     }
   }
 
-  private int getCount(int maxInstances) {
+  private int getCumulativeTotal(int maxInstances) {
     if (instanceUnitType == PERCENTAGE) {
       int percent = Math.min(instanceCount, 100);
       int percentInstanceCount = (int) Math.round(percent * maxInstances / 100.0);
@@ -198,12 +191,12 @@ public abstract class NodeSelectState extends State {
     if (isEmpty(serviceInstances)) {
       StringBuilder msg = new StringBuilder(256);
       msg.append("No nodes were selected. ");
-      if (isSpecificHosts()) {
+      if (specificHosts) {
         msg.append("'Use Specific Hosts' was chosen ");
-        if (isEmpty(getHostNames())) {
+        if (isEmpty(hostNames)) {
           msg.append("but no host names were specified. ");
         } else {
-          msg.append("with these host names: ").append(getHostNames()).append(". ");
+          msg.append("with these host names: ").append(hostNames).append(". ");
         }
       } else {
         if (instanceUnitType == PERCENTAGE) {
@@ -229,7 +222,7 @@ public abstract class NodeSelectState extends State {
           .append(totalAvailableInstances == 1 ? "" : "s")
           .append(" available. ");
 
-      if (isSpecificHosts()) {
+      if (specificHosts) {
         msg.append("\n\nCheck whether you've selected a unique set of host names for each phase. ");
       } else if (infraMapping instanceof AwsInfrastructureMapping) {
         AwsInfrastructureMapping awsInfrastructureMapping = (AwsInfrastructureMapping) infraMapping;
@@ -286,8 +279,8 @@ public abstract class NodeSelectState extends State {
   @Override
   public Map<String, String> validateFields() {
     Map<String, String> invalidFieldMessages = new HashMap<>();
-    if (isSpecificHosts()) {
-      if (isEmpty(getHostNames())) {
+    if (specificHosts) {
+      if (isEmpty(hostNames)) {
         invalidFieldMessages.put(Constants.SELECT_NODE_NAME, "Hostnames must be specified");
       }
     } else {

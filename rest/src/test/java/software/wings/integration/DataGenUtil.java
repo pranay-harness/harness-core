@@ -4,11 +4,7 @@ import static java.lang.String.format;
 import static javax.ws.rs.client.Entity.entity;
 import static javax.ws.rs.core.MediaType.APPLICATION_JSON;
 import static org.assertj.core.api.Assertions.assertThat;
-import static org.mockito.Matchers.any;
-import static org.mockito.Matchers.anyObject;
-import static org.mockito.Mockito.when;
 import static org.mockito.MockitoAnnotations.initMocks;
-import static org.mockito.internal.util.reflection.Whitebox.setInternalState;
 import static software.wings.beans.Application.Builder.anApplication;
 import static software.wings.beans.Base.GLOBAL_APP_ID;
 import static software.wings.beans.Base.GLOBAL_ENV_ID;
@@ -22,14 +18,11 @@ import static software.wings.beans.SettingAttribute.Builder.aSettingAttribute;
 import static software.wings.integration.IntegrationTestUtil.randomInt;
 import static software.wings.integration.SeedData.containerNames;
 import static software.wings.integration.SeedData.envNames;
-import static software.wings.integration.SeedData.randomText;
 import static software.wings.integration.SeedData.seedNames;
 import static software.wings.utils.ArtifactType.WAR;
 
 import com.google.inject.Inject;
 
-import com.mongodb.BasicDBObject;
-import com.mongodb.MongoCommandException;
 import org.glassfish.jersey.media.multipart.FormDataMultiPart;
 import org.glassfish.jersey.media.multipart.file.FileDataBodyPart;
 import org.junit.Before;
@@ -37,20 +30,12 @@ import org.junit.Rule;
 import org.junit.Test;
 import org.junit.rules.TemporaryFolder;
 import org.junit.runner.JUnitCore;
-import org.mockito.Mock;
-import org.mongodb.morphia.Datastore;
-import org.mongodb.morphia.Morphia;
-import org.mongodb.morphia.annotations.Indexed;
-import org.mongodb.morphia.annotations.Indexes;
-import org.mongodb.morphia.mapping.MappedField;
-import software.wings.app.DatabaseModule;
 import software.wings.app.MainConfiguration;
 import software.wings.beans.AppContainer;
 import software.wings.beans.AppDynamicsConfig;
 import software.wings.beans.Application;
 import software.wings.beans.BambooConfig;
 import software.wings.beans.Base;
-import software.wings.beans.DelegateTask.SyncTaskContext;
 import software.wings.beans.DockerConfig;
 import software.wings.beans.EntityType;
 import software.wings.beans.Environment;
@@ -65,25 +50,19 @@ import software.wings.beans.SettingAttribute.Category;
 import software.wings.beans.SplunkConfig;
 import software.wings.beans.config.ArtifactoryConfig;
 import software.wings.beans.config.NexusConfig;
-import software.wings.delegatetasks.DelegateProxyFactory;
 import software.wings.dl.PageResponse;
-import software.wings.dl.WingsPersistence;
 import software.wings.helpers.ext.mail.SmtpConfig;
 import software.wings.rules.SetupScheduler;
-import software.wings.service.impl.security.SecretManagementDelegateServiceImpl;
 import software.wings.service.intfc.FeatureFlagService;
-import software.wings.service.intfc.LearningEngineService;
 import software.wings.service.intfc.SystemCatalogService;
 import software.wings.service.intfc.WorkflowExecutionService;
 import software.wings.service.intfc.WorkflowService;
-import software.wings.service.intfc.security.KmsService;
 
 import java.io.BufferedWriter;
 import java.io.File;
 import java.io.FileWriter;
 import java.io.IOException;
 import java.util.ArrayList;
-import java.util.Arrays;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
@@ -124,11 +103,6 @@ public class DataGenUtil extends BaseIntegrationTest {
   @Inject private MainConfiguration configuration;
   @Inject private SystemCatalogService systemCatalogService;
   @Inject private FeatureFlagService featureFlagService;
-  @Inject private KmsService kmsService;
-  @Inject private WingsPersistence wingsPersistence;
-  @Inject private LearningEngineService learningEngineService;
-  @Mock private DelegateProxyFactory delegateProxyFactory;
-  private String accountId;
 
   /**
    * Generated Data for across the API use.
@@ -148,61 +122,6 @@ public class DataGenUtil extends BaseIntegrationTest {
     assertThat(TAG_HIERARCHY_DEPTH).isBetween(1, 10);
 
     dropDBAndEnsureIndexes();
-    userResourceRestClient.clearCache();
-    when(delegateProxyFactory.get(anyObject(), any(SyncTaskContext.class)))
-        .thenReturn(new SecretManagementDelegateServiceImpl());
-    setInternalState(kmsService, "delegateProxyFactory", delegateProxyFactory);
-
-    accountId = userResourceRestClient.getSeedAccount(client).getUuid();
-  }
-
-  protected void dropDBAndEnsureIndexes() throws IOException, ClassNotFoundException {
-    wingsPersistence.getDatastore().getDB().dropDatabase();
-    Morphia morphia = new Morphia();
-    morphia.getMapper().getOptions().setMapSubPackages(true);
-    morphia.mapPackage("software.wings");
-    ensureIndex(morphia, wingsPersistence.getDatastore());
-  }
-
-  protected void ensureIndex(Morphia morphia, Datastore primaryDatastore) {
-    /*
-    Morphia auto creates embedded/nested Entity indexes with the parent Entity indexes.
-    There is no way to override this behavior.
-    https://github.com/mongodb/morphia/issues/706
-     */
-
-    morphia.getMapper().getMappedClasses().forEach(mc -> {
-      if (mc.getEntityAnnotation() != null && !mc.isAbstract()) {
-        // Read Entity level "Indexes" annotation
-        List<Indexes> indexesAnnotations = mc.getAnnotations(Indexes.class);
-        if (indexesAnnotations != null) {
-          indexesAnnotations.stream().flatMap(indexes -> Arrays.stream(indexes.value())).forEach(index -> {
-            DatabaseModule.reportDeprecatedUnique(index);
-
-            BasicDBObject keys = new BasicDBObject();
-            Arrays.stream(index.fields()).forEach(field -> keys.append(field.value(), 1));
-            primaryDatastore.getCollection(mc.getClazz())
-                .createIndex(keys, index.options().name(), index.options().unique());
-          });
-        }
-
-        // Read field level "Indexed" annotation
-        for (final MappedField mf : mc.getPersistenceFields()) {
-          if (mf.hasAnnotation(Indexed.class)) {
-            final Indexed indexed = mf.getAnnotation(Indexed.class);
-            DatabaseModule.reportDeprecatedUnique(indexed);
-
-            try {
-              primaryDatastore.getCollection(mc.getClazz())
-                  .createIndex(new BasicDBObject().append(mf.getNameToStore(), 1), null, indexed.options().unique());
-            } catch (MongoCommandException mex) {
-              logger.error("Index creation failed for class {}", mc.getClazz().getCanonicalName());
-              throw mex;
-            }
-          }
-        }
-      }
-    });
   }
 
   /**
@@ -212,6 +131,7 @@ public class DataGenUtil extends BaseIntegrationTest {
    */
   @Test
   public void populateData() throws IOException {
+    createLicenseAndDefaultUser();
     createGlobalSettings();
 
     List<Application> apps = createApplications();
@@ -596,7 +516,7 @@ public class DataGenUtil extends BaseIntegrationTest {
    * @param args
    */
   public static void main(String[] args) {
-    System.out.println("Running tests!");
+    logger.info("Running tests!");
     JUnitCore.main("software.wings.integration.DataGenUtil");
   }
 }

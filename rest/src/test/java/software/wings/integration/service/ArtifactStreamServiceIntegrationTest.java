@@ -6,11 +6,13 @@ import static javax.ws.rs.core.MediaType.APPLICATION_JSON;
 import static org.assertj.core.api.Assertions.assertThat;
 import static software.wings.beans.artifact.DockerArtifactStream.Builder.aDockerArtifactStream;
 import static software.wings.beans.artifact.JenkinsArtifactStream.Builder.aJenkinsArtifactStream;
+import static software.wings.utils.ArtifactType.WAR;
 import static software.wings.utils.WingsTestConstants.APP_ID;
 import static software.wings.utils.WingsTestConstants.ARTIFACT_STREAM_ID;
 import static software.wings.utils.WingsTestConstants.SERVICE_ID;
 import static software.wings.utils.WingsTestConstants.SETTING_ID;
 
+import com.google.common.collect.ImmutableMap;
 import com.google.inject.Inject;
 
 import org.junit.Ignore;
@@ -23,8 +25,7 @@ import software.wings.beans.artifact.ArtifactStream;
 import software.wings.beans.artifact.DockerArtifactStream;
 import software.wings.beans.artifact.JenkinsArtifactStream;
 import software.wings.integration.BaseIntegrationTest;
-import software.wings.integration.setup.rest.AppResourceRestClient;
-import software.wings.integration.setup.rest.ServiceResourceRestClient;
+import software.wings.service.intfc.ServiceResourceService;
 
 import javax.ws.rs.client.WebTarget;
 import javax.ws.rs.core.GenericType;
@@ -34,8 +35,7 @@ import javax.ws.rs.core.GenericType;
  */
 @Ignore
 public class ArtifactStreamServiceIntegrationTest extends BaseIntegrationTest {
-  @Inject private AppResourceRestClient appResourceRestClient;
-  @Inject private ServiceResourceRestClient serviceResourceRestClient;
+  @Inject ServiceResourceService serviceResourceService;
 
   private static final String APP_NAME = "APP_NAME_ARTIFACT";
   private static final String SERVICE_NAME = "SERVICE_NAME_SERVICE";
@@ -59,8 +59,11 @@ public class ArtifactStreamServiceIntegrationTest extends BaseIntegrationTest {
 
   @Test
   public void testAddArtifactStream() {
-    Application app = appResourceRestClient.getSeedApplication(client);
-    Service service = serviceResourceRestClient.getSeedWarService(client);
+    loginAdminUser();
+    Application app = createApp(APP_NAME);
+    Service service = createService(app.getAppId(),
+        ImmutableMap.of(
+            "name", SERVICE_NAME, "description", randomText(40), "appId", app.getUuid(), "artifactType", WAR.name()));
     addArtifactStream(app.getAppId(), service.getUuid());
   }
 

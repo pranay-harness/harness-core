@@ -157,7 +157,7 @@ public class EcsServiceSetupTest extends WingsBaseTest {
 
   private StateExecutionInstance stateExecutionInstance =
       aStateExecutionInstance()
-          .withDisplayName(STATE_NAME)
+          .withStateName(STATE_NAME)
           .addContextElement(workflowStandardParams)
           .addContextElement(phaseElement)
           .addContextElement(ContainerServiceElement.builder()
@@ -344,7 +344,7 @@ public class EcsServiceSetupTest extends WingsBaseTest {
     }
     StateExecutionInstance stateExecutionInstance =
         aStateExecutionInstance()
-            .withDisplayName(STATE_NAME)
+            .withStateName(STATE_NAME)
             .addContextElement(workflowStandardParams)
             .addContextElement(phaseElement)
             .addContextElement(serviceElementBuilder.build())

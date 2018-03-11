@@ -589,5 +589,4 @@ public interface Constants {
 
   String APP_ID = "appId";
   String UUID = ID_KEY;
-  String ROLLING_PHASE_PREFIX = "Rolling Phase";
 }

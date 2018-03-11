@@ -10,6 +10,6 @@ public enum OrchestrationWorkflowType {
   CANARY,
   MULTI_SERVICE,
   BLUE_GREEN,
-  ROLLING,
+  ROLLING_UPGRADE,
   CUSTOM
 }

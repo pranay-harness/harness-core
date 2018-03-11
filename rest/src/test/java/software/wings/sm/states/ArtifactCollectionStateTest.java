@@ -87,7 +87,7 @@ public class ArtifactCollectionStateTest {
                   .build())
           .build();
   private StateExecutionInstance stateExecutionInstance = aStateExecutionInstance()
-                                                              .withDisplayName(StateType.ARTIFACT_COLLECTION.name())
+                                                              .withStateName(StateType.ARTIFACT_COLLECTION.name())
                                                               .withOrchestrationWorkflowType(BUILD)
                                                               .addContextElement(workflowStandardParams)
                                                               .build();

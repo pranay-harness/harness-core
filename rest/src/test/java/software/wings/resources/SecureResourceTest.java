@@ -22,7 +22,6 @@ import static software.wings.security.PermissionAttribute.Action.READ;
 import static software.wings.security.PermissionAttribute.Action.UPDATE;
 import static software.wings.security.PermissionAttribute.PermissionScope.APP;
 import static software.wings.security.PermissionAttribute.PermissionScope.ENV;
-import static software.wings.utils.WingsIntegrationTestConstants.delegateAccountSecret;
 import static software.wings.utils.WingsTestConstants.ACCOUNT_ID;
 import static software.wings.utils.WingsTestConstants.APP_ID;
 import static software.wings.utils.WingsTestConstants.ENV_ID;
@@ -139,7 +138,8 @@ public class SecureResourceTest {
   public static final ResourceTestRule resources =
       ResourceTestRule.builder().addResource(new SecureResource()).addProvider(authRuleFilter).build();
 
-  private String accountKey = delegateAccountSecret;
+  private String accountKey = "2f6b0988b6fb3370073c3d0505baee59";
+
   private final Role appAllResourceReadActionRole =
       aRole()
           .withAppId(GLOBAL_APP_ID)

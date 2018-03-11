@@ -51,7 +51,6 @@ public class AwsInfrastructureProviderIntegrationTest extends BaseIntegrationTes
   private AwsConfig awsConfig;
   private AwsInfrastructureMapping awsInfrastructureMapping;
   SettingAttribute computeProviderSetting;
-  private String accountId;
 
   @Before
   public void setUp() throws Exception {

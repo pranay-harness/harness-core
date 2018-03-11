@@ -11,7 +11,6 @@ import static software.wings.beans.EntityType.ENVIRONMENT;
 import static software.wings.beans.EntityType.INFRASTRUCTURE_MAPPING;
 import static software.wings.beans.EntityType.SERVICE;
 import static software.wings.beans.OrchestrationWorkflowType.BASIC;
-import static software.wings.beans.OrchestrationWorkflowType.ROLLING;
 import static software.wings.beans.Variable.VariableBuilder.aVariable;
 import static software.wings.beans.VariableType.ENTITY;
 import static software.wings.beans.VariableType.TEXT;
@@ -46,7 +45,6 @@ import java.util.regex.Matcher;
   @JsonSubTypes.Type(value = CanaryOrchestrationWorkflow.class, name = "CANARY")
   , @JsonSubTypes.Type(value = CustomOrchestrationWorkflow.class, name = "CUSTOM"),
       @JsonSubTypes.Type(value = BasicOrchestrationWorkflow.class, name = "BASIC"),
-      @JsonSubTypes.Type(value = RollingOrchestrationWorkflow.class, name = "ROLLING"),
       @JsonSubTypes.Type(value = MultiServiceOrchestrationWorkflow.class, name = "MULTI_SERVICE"),
       @JsonSubTypes.Type(value = BuildWorkflow.class, name = "BUILD"),
 })
@@ -291,14 +289,14 @@ public abstract class OrchestrationWorkflow {
       if (entityType.equals(ENVIRONMENT)) {
         variable.setDescription("Variable for Environment entity");
       } else if (entityType.equals(SERVICE)) {
-        if (getOrchestrationWorkflowType().equals(BASIC) || getOrchestrationWorkflowType().equals(ROLLING)) {
+        if (getOrchestrationWorkflowType().equals(BASIC)) {
           variable.setDescription("Variable for Service entity");
         } else {
           variable.setDescription("Variable for Service entity in " + stateName);
         }
       } else if (entityType.equals(INFRASTRUCTURE_MAPPING)) {
-        if (getOrchestrationWorkflowType().equals(BASIC) || getOrchestrationWorkflowType().equals(ROLLING)) {
-          variable.setDescription("Variable for Service Infra-strucuture entity");
+        if (getOrchestrationWorkflowType().equals(BASIC)) {
+          variable.setDescription("Variable for Service Infra-structure entity");
         } else {
           variable.setDescription("Variable for Service Infra-structure entity " + stateName);
         }
