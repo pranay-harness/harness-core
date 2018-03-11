@@ -45,7 +45,7 @@ public class PauseState extends EmailState {
 
   @DefaultValue(
       value =
-          "${workflow.name} execution paused at manual step: ${displayName}. Please click on the link below to resume :\n ${workflow.url}")
+          "${workflow.name} execution paused at manual step: ${stateName}. Please click on the link below to resume :\n ${workflow.url}")
   @Attributes(title = "Body")
   @Override
   public String

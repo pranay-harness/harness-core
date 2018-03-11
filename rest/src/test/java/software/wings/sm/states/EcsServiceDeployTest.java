@@ -139,7 +139,7 @@ public class EcsServiceDeployTest extends WingsBaseTest {
                                           .withDeploymentType(DeploymentType.ECS.name())
                                           .build();
   private StateExecutionInstance stateExecutionInstance = aStateExecutionInstance()
-                                                              .withDisplayName(STATE_NAME)
+                                                              .withStateName(STATE_NAME)
                                                               .addContextElement(workflowStandardParams)
                                                               .addContextElement(phaseElement)
                                                               .addContextElement(ContainerServiceElement.builder()
@@ -231,7 +231,7 @@ public class EcsServiceDeployTest extends WingsBaseTest {
     notifyResponse.put("key", aCommandExecutionResult().withStatus(CommandExecutionStatus.SUCCESS).build());
 
     stateExecutionInstance.getStateExecutionMap().put(
-        stateExecutionInstance.getDisplayName(), aCommandStateExecutionData().build());
+        stateExecutionInstance.getStateName(), aCommandStateExecutionData().build());
 
     ExecutionResponse response = ecsServiceDeploy.handleAsyncResponse(context, notifyResponse);
     assertThat(response)
@@ -247,7 +247,7 @@ public class EcsServiceDeployTest extends WingsBaseTest {
     Map<String, NotifyResponseData> notifyResponse = new HashMap<>();
     notifyResponse.put("key", aCommandExecutionResult().withStatus(CommandExecutionStatus.SUCCESS).build());
     stateExecutionInstance.getStateExecutionMap().put(
-        stateExecutionInstance.getDisplayName(), aCommandStateExecutionData().build());
+        stateExecutionInstance.getStateName(), aCommandStateExecutionData().build());
 
     ExecutionResponse response = ecsServiceDeploy.handleAsyncResponse(context, notifyResponse);
     assertThat(response)

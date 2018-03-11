@@ -251,16 +251,16 @@ public class ServiceTemplateServiceTest extends WingsBaseTest {
     configFile1.setName("app.properties");
     configFile1.setUuid("FILE_ID_1");
 
-    ConfigFile configFile2 = ConfigFile.builder().relativeFilePath("seedCache.xml").build();
-    configFile2.setName("seedCache.xml");
+    ConfigFile configFile2 = ConfigFile.builder().relativeFilePath("cache.xml").build();
+    configFile2.setName("cache.xml");
     configFile2.setUuid("FILE_ID_2");
 
     ConfigFile configFile3 = ConfigFile.builder().relativeFilePath("app.properties").build();
     configFile3.setName("app.properties");
     configFile3.setUuid("FILE_ID_3");
 
-    ConfigFile configFile4 = ConfigFile.builder().relativeFilePath("seedCache.xml").build();
-    configFile4.setName("seedCache.xml");
+    ConfigFile configFile4 = ConfigFile.builder().relativeFilePath("cache.xml").build();
+    configFile4.setName("cache.xml");
     configFile4.setUuid("FILE_ID_4");
     List<ConfigFile> existingFiles = asList(configFile1, configFile2);
 

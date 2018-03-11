@@ -1,7 +1,6 @@
 package software.wings.integration;
 
 import static java.util.Arrays.asList;
-import static software.wings.integration.IntegrationTestUtil.randomInt;
 
 import java.util.List;
 
@@ -143,10 +142,4 @@ public class SeedData {
       "Venus", "Veritas", "Verminus", "Vertumnus", "Vesta", "Vica Pota", "Victoria", "Vidar", "Viduus", "Virbius",
       "Virtus", "Volturnus", "Voluptas", "Vulcan", "Vulcanus", "Xanthos", "Xanthus", "Zelos", "Zelus", "Zephyros",
       "Zephyrs", "Zephyrus", "Zetes", "Zethes", "Zethus", "Zeus");
-
-  public static String randomText(int length) { // TODO: choose words start to word end boundary
-    int low = randomInt(50);
-    int high = length + low > randomSeedString.length() ? randomSeedString.length() - low : length + low;
-    return randomSeedString.substring(low, high);
-  }
 }

@@ -348,7 +348,7 @@ public class InstanceExpressionProcessorTest extends WingsBaseTest {
   @Test
   public void shouldRenderExpressionFromInstanceElement() {
     StateExecutionInstance stateExecutionInstance = new StateExecutionInstance();
-    stateExecutionInstance.setDisplayName("abc");
+    stateExecutionInstance.setStateName("abc");
     ExecutionContextImpl context = new ExecutionContextImpl(stateExecutionInstance);
     injector.injectMembers(context);
 
@@ -447,7 +447,7 @@ public class InstanceExpressionProcessorTest extends WingsBaseTest {
 
     ServiceInstance instance1 = serviceInstanceService.save(builder.withHost(applicationHost).build());
     StateExecutionInstance stateExecutionInstance = new StateExecutionInstance();
-    stateExecutionInstance.setDisplayName("abc");
+    stateExecutionInstance.setStateName("abc");
     ExecutionContextImpl context = new ExecutionContextImpl(stateExecutionInstance);
     injector.injectMembers(context);
 

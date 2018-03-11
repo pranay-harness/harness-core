@@ -47,7 +47,7 @@ public class GraphRendererTest extends WingsBaseTest {
   @Test
   public void testSanity() {
     List<StateExecutionInstance> stateExecutionInstances = asList(aStateExecutionInstance()
-                                                                      .withDisplayName("origin")
+                                                                      .withStateName("origin")
                                                                       .withUuid(generateUuid())
                                                                       .withStateType("PHASE")
                                                                       .withStatus(SUCCESS)
@@ -62,7 +62,7 @@ public class GraphRendererTest extends WingsBaseTest {
   @Test
   public void testGenerateHierarchyNode() {
     final StateExecutionInstance parent = aStateExecutionInstance()
-                                              .withDisplayName("Deploy Service")
+                                              .withStateName("Deploy Service")
                                               .withUuid("deploy")
                                               .withStateType(PHASE.name())
                                               .withContextTransition(true)
@@ -70,7 +70,7 @@ public class GraphRendererTest extends WingsBaseTest {
                                               .build();
 
     final StateExecutionInstance repeat = aStateExecutionInstance()
-                                              .withDisplayName("Repeat deploy on hosts")
+                                              .withStateName("Repeat deploy on hosts")
                                               .withUuid("repeat")
                                               .withStateType(REPEAT.name())
                                               .withContextTransition(true)
@@ -79,7 +79,7 @@ public class GraphRendererTest extends WingsBaseTest {
                                               .build();
 
     final StateExecutionInstance host1 = aStateExecutionInstance()
-                                             .withDisplayName("install on host1")
+                                             .withStateName("install on host1")
                                              .withUuid("host1")
                                              .withStateType(COMMAND.name())
                                              .withContextElement(aHostElement().withHostName("host1").build())
@@ -89,7 +89,7 @@ public class GraphRendererTest extends WingsBaseTest {
                                              .build();
 
     final StateExecutionInstance host2 = aStateExecutionInstance()
-                                             .withDisplayName("install on host 2")
+                                             .withStateName("install on host 2")
                                              .withUuid("host2")
                                              .withStateType(COMMAND.name())
                                              .withContextElement(aHostElement().withHostName("host2").build())
@@ -102,16 +102,16 @@ public class GraphRendererTest extends WingsBaseTest {
     Map<String, StateExecutionInstance> stateExecutionInstanceMap =
         stateExecutionInstances.stream().collect(toMap(StateExecutionInstance::getUuid, identity()));
 
-    final GraphNode node = graphRenderer.generateHierarchyNode(stateExecutionInstanceMap, parent.getDisplayName());
+    final GraphNode node = graphRenderer.generateHierarchyNode(stateExecutionInstanceMap, parent.getStateName());
     assertThat(node).isNotNull();
-    assertThat(node.getName()).isEqualTo(parent.getDisplayName());
+    assertThat(node.getName()).isEqualTo(parent.getStateName());
 
     final GraphGroup deployGroup = node.getGroup();
     assertThat(deployGroup).isNotNull();
 
     final List<GraphNode> deployChildElements = deployGroup.getElements();
     assertThat(deployChildElements.size()).isEqualTo(1);
-    assertThat(deployChildElements.get(0).getName()).isEqualTo(repeat.getDisplayName());
+    assertThat(deployChildElements.get(0).getName()).isEqualTo(repeat.getStateName());
 
     final GraphGroup repeatGroup = deployChildElements.get(0).getGroup();
     assertThat(repeatGroup).isNotNull();
@@ -121,13 +121,13 @@ public class GraphRendererTest extends WingsBaseTest {
     assertThat(repeatChildElements.get(0).getName()).isEqualTo("host1");
     assertThat(repeatChildElements.get(1).getName()).isEqualTo("host2");
 
-    assertThat(repeatChildElements.get(0).getNext().getName()).isEqualTo(host1.getDisplayName());
-    assertThat(repeatChildElements.get(1).getNext().getName()).isEqualTo(host2.getDisplayName());
+    assertThat(repeatChildElements.get(0).getNext().getName()).isEqualTo(host1.getStateName());
+    assertThat(repeatChildElements.get(1).getNext().getName()).isEqualTo(host2.getStateName());
   }
 
   private GraphNode getProvisionNode() {
     final StateExecutionInstance provision = aStateExecutionInstance()
-                                                 .withDisplayName(Constants.PROVISION_NODE_NAME)
+                                                 .withStateName(Constants.PROVISION_NODE_NAME)
                                                  .withUuid("provision")
                                                  .withStateType(PHASE_STEP.name())
                                                  .withContextTransition(true)
@@ -135,7 +135,7 @@ public class GraphRendererTest extends WingsBaseTest {
                                                  .build();
 
     final StateExecutionInstance element = aStateExecutionInstance()
-                                               .withDisplayName("first")
+                                               .withStateName("first")
                                                .withUuid("first")
                                                .withStateType(COMMAND.name())
                                                .withContextTransition(true)
@@ -147,7 +147,7 @@ public class GraphRendererTest extends WingsBaseTest {
     Map<String, StateExecutionInstance> stateExecutionInstanceMap =
         stateExecutionInstances.stream().collect(toMap(StateExecutionInstance::getUuid, identity()));
 
-    return graphRenderer.generateHierarchyNode(stateExecutionInstanceMap, provision.getDisplayName());
+    return graphRenderer.generateHierarchyNode(stateExecutionInstanceMap, provision.getStateName());
   }
 
   @Test
@@ -195,7 +195,7 @@ public class GraphRendererTest extends WingsBaseTest {
   @Test
   public void testConvertToNode() {
     final StateExecutionInstance instance = aStateExecutionInstance()
-                                                .withDisplayName("state name")
+                                                .withStateName("state name")
                                                 .withUuid("uuid")
                                                 .withStateType(PHASE_STEP.name())
                                                 .withContextTransition(true)
@@ -207,7 +207,7 @@ public class GraphRendererTest extends WingsBaseTest {
     GraphNode node = graphRenderer.convertToNode(instance);
 
     assertThat(node.getId()).isEqualTo(instance.getUuid());
-    assertThat(node.getName()).isEqualTo(instance.getDisplayName());
+    assertThat(node.getName()).isEqualTo(instance.getStateName());
     assertThat(node.getType()).isEqualTo(instance.getStateType());
     assertThat(node.isRollback()).isEqualTo(instance.isRollback());
     assertThat(node.getStatus()).isEqualTo(instance.getStatus().name());

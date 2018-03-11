@@ -540,9 +540,6 @@ public class StateMachineExecutorTest extends WingsBaseTest {
       return null;
     }
 
-    @Override
-    public void onSave(StateExecutionInstance stateExecutionInstance) {}
-
     public ExecutionInterruptType getExecutionInterruptType() {
       return executionInterruptType;
     }

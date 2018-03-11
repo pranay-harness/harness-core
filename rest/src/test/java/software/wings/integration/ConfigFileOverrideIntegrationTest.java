@@ -191,7 +191,7 @@ public class ConfigFileOverrideIntegrationTest extends WingsBaseTest {
 
   private void attacheConfigFileToEntity(String entityId, EntityType entityType) throws IOException {
     saveConfigFile(entityId, entityType, "app.properties");
-    saveConfigFile(entityId, entityType, "seedCache.xml");
+    saveConfigFile(entityId, entityType, "cache.xml");
   }
 
   private void saveConfigFile(String entityId, EntityType entityType, String fileName) throws IOException {

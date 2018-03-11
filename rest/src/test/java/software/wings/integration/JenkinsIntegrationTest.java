@@ -21,13 +21,11 @@ import java.util.Optional;
  */
 public class JenkinsIntegrationTest extends BaseIntegrationTest {
   @Inject private JenkinsBuildService jenkinsBuildService;
-  private String accountId;
 
   @Test
   public void testSettingsOverwrite() throws Exception {
     super.setUp();
     loginAdminUser();
-    accountId = userResourceRestClient.getSeedAccount(client).getUuid();
     wingsPersistence.delete(
         wingsPersistence.createQuery(SettingAttribute.class).field("name").equal("Harness Jenkins"));
     SettingAttribute jenkinsSettingAttribute =

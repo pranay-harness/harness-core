@@ -3,6 +3,7 @@ package software.wings.filter;
 import static io.harness.data.structure.EmptyPredicate.isEmpty;
 import static io.harness.network.Localhost.getLocalHostAddress;
 import static io.harness.network.Localhost.getLocalHostName;
+import static java.util.Arrays.asList;
 import static software.wings.common.Constants.FILE_CONTENT_NOT_STORED;
 
 import com.google.inject.Inject;
@@ -56,7 +57,7 @@ public class AuditRequestFilter implements ContainerRequestFilter {
    */
   @Override
   public void filter(ContainerRequestContext requestContext) throws IOException {
-    if (auditHelper.isAuditExemptedHttpMethod(requestContext.getMethod()) || isAuditExemptedResource()) {
+    if (isAuditExemptedHttpMethod(requestContext) || isAuditExemptedResource()) {
       // do not audit idempotent HttpMethod until we have finer control auditing.
       return;
     }
@@ -104,6 +105,11 @@ public class AuditRequestFilter implements ContainerRequestFilter {
 
   private boolean isAuditExemptedResource() {
     return resourceInfo.getResourceMethod().getAnnotation(DelegateAuth.class) != null;
+  }
+
+  private boolean isAuditExemptedHttpMethod(ContainerRequestContext requestContext) {
+    return asList(HttpMethod.GET.name(), HttpMethod.OPTIONS.name(), HttpMethod.HEAD.name())
+        .contains(requestContext.getMethod());
   }
 
   private String getHeaderString(MultivaluedMap<String, String> headers) {

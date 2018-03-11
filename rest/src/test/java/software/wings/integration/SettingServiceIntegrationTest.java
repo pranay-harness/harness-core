@@ -8,8 +8,6 @@ import static software.wings.beans.ResponseMessage.Level.ERROR;
 import static software.wings.beans.ResponseMessage.aResponseMessage;
 import static software.wings.beans.SettingAttribute.Builder.aSettingAttribute;
 
-import com.google.inject.Inject;
-
 import io.harness.rule.RepeatRule.Repeat;
 import org.junit.Before;
 import org.junit.Ignore;
@@ -31,8 +29,6 @@ import javax.ws.rs.core.Response;
  * Created by anubhaw on 5/3/17.
  */
 public class SettingServiceIntegrationTest extends BaseIntegrationTest {
-  @Inject private UserResourceRestClient userResourceRestClient;
-
   @Before
   public void setUp() throws Exception {
     super.setUp();

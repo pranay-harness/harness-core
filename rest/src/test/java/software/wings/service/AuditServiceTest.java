@@ -55,7 +55,7 @@ public class AuditServiceTest extends WingsBaseTest {
             .withResourcePath("catalogs")
             .withRequestMethod(HttpMethod.GET)
             .withHeaderString(
-                "Cache-Control=;no-seedCache,Accept=;*/*,Connection=;keep-alive,User-Agent=;Mozilla/5.0 (Macintosh; Intel Mac OS X 10_11_5) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/50.0.2661.102 Safari/537.36,Host=;localhost:9090,Postman-Token=;bdd7280e-bfac-b0f1-9603-c7b0e55a74af,Accept-Encoding=;gzip, deflate, sdch,Accept-Language=;en-US,en;q=0.8,Content-Type=;application/json")
+                "Cache-Control=;no-cache,Accept=;*/*,Connection=;keep-alive,User-Agent=;Mozilla/5.0 (Macintosh; Intel Mac OS X 10_11_5) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/50.0.2661.102 Safari/537.36,Host=;localhost:9090,Postman-Token=;bdd7280e-bfac-b0f1-9603-c7b0e55a74af,Accept-Encoding=;gzip, deflate, sdch,Accept-Language=;en-US,en;q=0.8,Content-Type=;application/json")
             .withRemoteHostName("0:0:0:0:0:0:0:1")
             .withRemoteHostPort(555555)
             .withRemoteIpAddress("0:0:0:0:0:0:0:1")

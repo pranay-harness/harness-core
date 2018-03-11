@@ -8,7 +8,6 @@ import static software.wings.beans.Application.Builder.anApplication;
 import static software.wings.beans.Environment.Builder.anEnvironment;
 import static software.wings.beans.Role.Builder.aRole;
 import static software.wings.beans.User.Builder.anUser;
-import static software.wings.utils.WingsIntegrationTestConstants.delegateAccountSecret;
 import static software.wings.utils.WingsTestConstants.ACCOUNT_ID;
 import static software.wings.utils.WingsTestConstants.APP_ID;
 import static software.wings.utils.WingsTestConstants.ENV_ID;
@@ -68,7 +67,7 @@ public class AuthServiceTest extends WingsBaseTest {
   @Inject @InjectMocks private AuthService authService;
   private Builder userBuilder =
       anUser().withAppId(APP_ID).withEmail(USER_EMAIL).withName(USER_NAME).withPassword(PASSWORD);
-  private String accountKey = delegateAccountSecret;
+  private String accountKey = "2f6b0988b6fb3370073c3d0505baee59";
 
   /**
    * Sets up.

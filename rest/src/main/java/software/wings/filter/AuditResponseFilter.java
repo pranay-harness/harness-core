@@ -42,11 +42,6 @@ public class AuditResponseFilter implements Filter {
   @Override
   public void doFilter(ServletRequest request, ServletResponse response, FilterChain chain)
       throws ServletException, IOException {
-    HttpServletRequest httpServletRequest = (HttpServletRequest) request;
-    if (auditHelper.isAuditExemptedHttpMethod(httpServletRequest.getMethod())) {
-      chain.doFilter(request, response);
-      return;
-    }
     AuditHeader header = auditHelper.get();
     if (header != null) {
       String path = ((HttpServletRequest) request).getPathInfo();

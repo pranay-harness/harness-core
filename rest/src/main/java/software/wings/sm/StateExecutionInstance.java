@@ -30,7 +30,6 @@ public class StateExecutionInstance extends Base {
   private String stateMachineId;
   private String childStateMachineId;
   private String stateName;
-  private String displayName;
   @Indexed private String stateType;
   private ContextElement contextElement;
   private boolean contextTransition;
@@ -76,7 +75,7 @@ public class StateExecutionInstance extends Base {
   private OrchestrationWorkflowType orchestrationWorkflowType;
 
   public StateExecutionData getStateExecutionData() {
-    return stateExecutionMap.get(displayName);
+    return stateExecutionMap.get(stateName);
   }
 
   @Override
@@ -93,7 +92,6 @@ public class StateExecutionInstance extends Base {
   public static final class Builder {
     private String stateMachineId;
     private String childStateMachineId;
-    private String displayName;
     private String stateName;
     private String stateType;
     private ContextElement contextElement;
@@ -145,17 +143,6 @@ public class StateExecutionInstance extends Base {
 
     public Builder withStateMachineId(String stateMachineId) {
       this.stateMachineId = stateMachineId;
-      return this;
-    }
-
-    /**
-     * With state name builder.
-     *
-     * @param displayName the display name
-     * @return the builder
-     */
-    public Builder withDisplayName(String displayName) {
-      this.displayName = displayName;
       return this;
     }
 
@@ -228,12 +215,12 @@ public class StateExecutionInstance extends Base {
     /**
      * With state execution map builder.
      *
-     * @param displayName the state name
+     * @param stateName the state name
      * @param stateExecutionData the state execution data
      * @return the builder
      */
-    public Builder addStateExecutionData(String displayName, StateExecutionData stateExecutionData) {
-      this.stateExecutionMap.put(displayName, stateExecutionData);
+    public Builder addStateExecutionData(String stateName, StateExecutionData stateExecutionData) {
+      this.stateExecutionMap.put(stateName, stateExecutionData);
       return this;
     }
 
@@ -255,7 +242,7 @@ public class StateExecutionInstance extends Base {
      * @return the builder
      */
     public Builder addStateExecutionData(StateExecutionData stateExecutionData) {
-      this.stateExecutionMap.put(displayName, stateExecutionData);
+      this.stateExecutionMap.put(stateName, stateExecutionData);
       return this;
     }
 
@@ -487,7 +474,6 @@ public class StateExecutionInstance extends Base {
     public Builder but() {
       return aStateExecutionInstance()
           .withStateMachineId(stateMachineId)
-          .withDisplayName(displayName)
           .withStateName(stateName)
           .withStateType(stateType)
           .withContextElement(contextElement)
@@ -525,7 +511,6 @@ public class StateExecutionInstance extends Base {
       StateExecutionInstance stateExecutionInstance = new StateExecutionInstance();
       stateExecutionInstance.setStateMachineId(stateMachineId);
       stateExecutionInstance.setChildStateMachineId(childStateMachineId);
-      stateExecutionInstance.setDisplayName(displayName);
       stateExecutionInstance.setStateName(stateName);
       stateExecutionInstance.setStateType(stateType);
       stateExecutionInstance.setContextElement(contextElement);
