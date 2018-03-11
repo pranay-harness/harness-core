@@ -105,8 +105,7 @@ public class LogServiceImpl implements LogService {
   public File exportLogs(String appId, String activityId) {
     File file = new File(
         Files.createTempDir(), format("ActivityLogs_%s.txt", dateFormatter.format(new Date(currentTimeMillis()))));
-    try {
-      OutputStreamWriter fileWriter = new OutputStreamWriter(new FileOutputStream(file), UTF_8);
+    try (OutputStreamWriter fileWriter = new OutputStreamWriter(new FileOutputStream(file), UTF_8)) {
       List<Log> logList = wingsPersistence.createQuery(Log.class)
                               .field("appId")
                               .equal(appId)
@@ -115,9 +114,8 @@ public class LogServiceImpl implements LogService {
                               .asList();
       for (Log log : logList) {
         fileWriter.write(format(
-            "%s   %s   %s\n", log.getLogLevel(), dateFormatter.format(new Date(log.getCreatedAt())), log.getLogLine()));
+            "%s   %s   %s%n", log.getLogLevel(), dateFormatter.format(new Date(log.getCreatedAt())), log.getLogLine()));
       }
-      fileWriter.close();
       return file;
     } catch (IOException ex) {
       throw new WingsException("Error in creating log file", ex);

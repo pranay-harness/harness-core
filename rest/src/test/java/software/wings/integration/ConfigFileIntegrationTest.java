@@ -189,9 +189,9 @@ public class ConfigFileIntegrationTest extends BaseIntegrationTest {
 
   private File createRandomFile(String fileName) throws IOException {
     File file = testFolder.newFile(fileName == null ? "randomfile " + randomInt() : fileName);
-    BufferedWriter out = new BufferedWriter(new FileWriter(file));
-    out.write("RandomText " + randomInt());
-    out.close();
+    try (BufferedWriter out = new BufferedWriter(new FileWriter(file))) {
+      out.write("RandomText " + randomInt());
+    }
     return file;
   }
 }

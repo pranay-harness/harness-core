@@ -22,12 +22,19 @@ public class ThreadDumpRule extends TestWatcher {
       String cmd = "killall -3 java";
       Runtime run = Runtime.getRuntime();
       Process pr = run.exec(cmd);
-      pr.waitFor();
-      BufferedReader buf = new BufferedReader(new InputStreamReader(pr.getInputStream()));
-      String line = "";
-      while ((line = buf.readLine()) != null) {
-        logger.info(line);
+      try {
+        pr.waitFor();
+        try (InputStreamReader reader = new InputStreamReader(pr.getInputStream())) {
+          BufferedReader buf = new BufferedReader(reader);
+          String line = "";
+          while ((line = buf.readLine()) != null) {
+            logger.info(line);
+          }
+        }
+      } finally {
+        pr.destroy();
       }
+
     } catch (Exception ex) {
       logger.error("", ex);
     }

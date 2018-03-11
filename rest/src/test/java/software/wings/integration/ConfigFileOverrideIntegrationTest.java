@@ -244,9 +244,9 @@ public class ConfigFileOverrideIntegrationTest extends WingsBaseTest {
 
   private File createRandomFile() throws IOException {
     File file = testFolder.newFile("randomfile " + randomInt());
-    BufferedWriter out = new BufferedWriter(new FileWriter(file));
-    out.write("RandomText " + randomInt());
-    out.close();
+    try (BufferedWriter out = new BufferedWriter(new FileWriter(file))) {
+      out.write("RandomText " + randomInt());
+    }
     return file;
   }
 }
