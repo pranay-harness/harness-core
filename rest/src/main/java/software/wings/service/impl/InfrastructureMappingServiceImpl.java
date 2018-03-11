@@ -450,7 +450,11 @@ public class InfrastructureMappingServiceImpl implements InfrastructureMappingSe
       DirectKubernetesInfrastructureMapping directKubernetesInfrastructureMapping =
           (DirectKubernetesInfrastructureMapping) infrastructureMapping;
       validateDirectKubernetesInfraMapping(directKubernetesInfrastructureMapping);
-      keyValuePairs.put("masterUrl", directKubernetesInfrastructureMapping.getMasterUrl());
+      if (directKubernetesInfrastructureMapping.getMasterUrl() != null) {
+        keyValuePairs.put("masterUrl", directKubernetesInfrastructureMapping.getMasterUrl());
+      } else {
+        fieldsToRemove.add("masterUrl");
+      }
       if (directKubernetesInfrastructureMapping.getUsername() != null) {
         keyValuePairs.put("username", directKubernetesInfrastructureMapping.getUsername());
       } else {
@@ -492,7 +496,11 @@ public class InfrastructureMappingServiceImpl implements InfrastructureMappingSe
         directKubernetesInfrastructureMapping.setNamespace("default");
         keyValuePairs.put("namespace", "default");
       }
-      keyValuePairs.put("clusterName", directKubernetesInfrastructureMapping.getClusterName());
+      if (directKubernetesInfrastructureMapping.getClusterName() != null) {
+        keyValuePairs.put("clusterName", directKubernetesInfrastructureMapping.getClusterName());
+      } else {
+        fieldsToRemove.add("clusterName");
+      }
     } else if (infrastructureMapping instanceof GcpKubernetesInfrastructureMapping) {
       GcpKubernetesInfrastructureMapping gcpKubernetesInfrastructureMapping =
           (GcpKubernetesInfrastructureMapping) infrastructureMapping;
