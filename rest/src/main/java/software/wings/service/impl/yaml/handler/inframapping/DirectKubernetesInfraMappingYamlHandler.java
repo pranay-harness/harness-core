@@ -12,6 +12,7 @@ import software.wings.beans.yaml.ChangeContext;
 import software.wings.exception.HarnessException;
 import software.wings.exception.WingsException;
 import software.wings.service.intfc.security.SecretManager;
+import software.wings.settings.SettingValue.SettingVariableTypes;
 import software.wings.utils.Validator;
 
 import java.io.IOException;
@@ -79,7 +80,9 @@ public class DirectKubernetesInfraMappingYamlHandler
     Validator.notNullCheck("Couldn't retrieve app from yaml:" + yamlFilePath, appId);
     String envId = yamlHelper.getEnvironmentId(appId, yamlFilePath);
     Validator.notNullCheck("Couldn't retrieve environment from yaml:" + yamlFilePath, envId);
-    String computeProviderId = getSettingId(accountId, appId, infraMappingYaml.getComputeProviderName());
+    String computeProviderId = infraMappingYaml.getComputeProviderName().equals(SettingVariableTypes.DIRECT.name())
+        ? SettingVariableTypes.DIRECT.name()
+        : getSettingId(accountId, appId, infraMappingYaml.getComputeProviderName());
     Validator.notNullCheck("Couldn't retrieve compute provider from yaml:" + yamlFilePath, computeProviderId);
     String serviceId = getServiceId(appId, infraMappingYaml.getServiceName());
     Validator.notNullCheck("Couldn't retrieve service from yaml:" + yamlFilePath, serviceId);
