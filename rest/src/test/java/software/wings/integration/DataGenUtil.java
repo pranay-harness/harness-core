@@ -414,13 +414,14 @@ public class DataGenUtil extends BaseIntegrationTest {
         appId, entityId, entityType, templateId));
     File file = getTestFile(getName(configFileNames) + ".properties");
     FileDataBodyPart filePart = new FileDataBodyPart("file", file);
-    FormDataMultiPart multiPart = new FormDataMultiPart()
-                                      .field("fileName", file.getName())
-                                      .field("name", file.getName())
-                                      .field("relativeFilePath", "configs/" + file.getName());
-    multiPart.bodyPart(filePart);
-    Response response = getRequestBuilderWithAuthHeader(target).post(entity(multiPart, multiPart.getMediaType()));
-    return response.getStatus() == 200;
+    try (FormDataMultiPart multiPart = new FormDataMultiPart()) {
+      multiPart.field("fileName", file.getName())
+          .field("name", file.getName())
+          .field("relativeFilePath", "configs/" + file.getName());
+      multiPart.bodyPart(filePart);
+      Response response = getRequestBuilderWithAuthHeader(target).post(entity(multiPart, multiPart.getMediaType()));
+      return response.getStatus() == 200;
+    }
   }
 
   private List<AppContainer> addAppContainers(String appId) {
@@ -449,15 +450,17 @@ public class DataGenUtil extends BaseIntegrationTest {
     try {
       File file = getTestFile(name);
       FileDataBodyPart filePart = new FileDataBodyPart("file", file);
-      FormDataMultiPart multiPart = new FormDataMultiPart()
-                                        .field("name", name)
-                                        .field("version", version)
-                                        .field("description", randomText(20))
-                                        .field("sourceType", "FILE_UPLOAD")
-                                        .field("standard", "false");
-      multiPart.bodyPart(filePart);
-      Response response = getRequestBuilderWithAuthHeader(target).post(entity(multiPart, multiPart.getMediaType()));
-      return response.getStatus() == 200;
+      try (FormDataMultiPart multiPart = new FormDataMultiPart()) {
+        multiPart.field("name", name)
+            .field("version", version)
+            .field("description", randomText(20))
+            .field("sourceType", "FILE_UPLOAD")
+            .field("standard", "false");
+        multiPart.bodyPart(filePart);
+
+        Response response = getRequestBuilderWithAuthHeader(target).post(entity(multiPart, multiPart.getMediaType()));
+        return response.getStatus() == 200;
+      }
     } catch (IOException e) {
       log().info("Error occurred in uploading app container", e);
     }
@@ -486,9 +489,9 @@ public class DataGenUtil extends BaseIntegrationTest {
     if (!file.isFile()) {
       file = testFolder.newFile(name);
     }
-    BufferedWriter out = new BufferedWriter(new FileWriter(file));
-    out.write(randomText(100));
-    out.close();
+    try (BufferedWriter out = new BufferedWriter(new FileWriter(file))) {
+      out.write(randomText(100));
+    }
     return file;
   }
 

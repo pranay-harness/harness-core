@@ -183,10 +183,11 @@ public class AppContainerServiceImpl implements AppContainerService {
     fileService.download(fileId, tempFile, fileBucket);
 
     Misc.ignoreException(() -> {
-      BufferedInputStream bufferedInputStream = new BufferedInputStream(new FileInputStream(tempFile));
-      FileType fileType = FileTypeDetector.detectType(bufferedInputStream);
-      appContainer.setFileType(fileType);
-      appContainer.setStackRootDirectory(fileType.getRoot(bufferedInputStream));
+      try (BufferedInputStream bufferedInputStream = new BufferedInputStream(new FileInputStream(tempFile))) {
+        FileType fileType = FileTypeDetector.detectType(bufferedInputStream);
+        appContainer.setFileType(fileType);
+        appContainer.setStackRootDirectory(fileType.getRoot(bufferedInputStream));
+      }
     });
   }
 

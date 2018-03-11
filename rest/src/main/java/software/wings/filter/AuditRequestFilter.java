@@ -93,10 +93,11 @@ public class AuditRequestFilter implements ContainerRequestFilter {
         auditHelper.create(
             header, RequestType.REQUEST, IOUtils.toInputStream(FILE_CONTENT_NOT_STORED, Charset.defaultCharset()));
       } else {
-        BoundedInputStream inputStream = new BoundedInputStream(
-            requestContext.getEntityStream(), configuration.getFileUploadLimits().getAppContainerLimit());
-        String fileId = auditHelper.create(header, RequestType.REQUEST, inputStream);
-        requestContext.setEntityStream(fileService.openDownloadStream(fileId, FileBucket.AUDITS));
+        try (BoundedInputStream inputStream = new BoundedInputStream(
+                 requestContext.getEntityStream(), configuration.getFileUploadLimits().getAppContainerLimit())) {
+          String fileId = auditHelper.create(header, RequestType.REQUEST, inputStream);
+          requestContext.setEntityStream(fileService.openDownloadStream(fileId, FileBucket.AUDITS));
+        }
       }
     } catch (Exception exception) {
       throw new WingsException(exception);

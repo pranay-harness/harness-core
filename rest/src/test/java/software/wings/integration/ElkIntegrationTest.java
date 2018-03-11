@@ -197,19 +197,20 @@ public class ElkIntegrationTest extends BaseIntegrationTest {
   }
 
   private List<LogDataRecord> readLogDataRecordsFromFile(File file, String appId, String workflowId,
-      String workflowExecutionId, String stateExecutionId) throws FileNotFoundException {
+      String workflowExecutionId, String stateExecutionId) throws IOException, FileNotFoundException {
     final Gson gson = new Gson();
-    BufferedReader br = new BufferedReader(new FileReader(file));
-    Type type = new TypeToken<List<LogDataRecord>>() {}.getType();
-    List<LogDataRecord> rv = gson.fromJson(br, type);
-    rv.forEach(logDataRecord -> {
-      logDataRecord.setAppId(appId);
-      logDataRecord.setApplicationId(appId);
-      logDataRecord.setWorkflowId(workflowId);
-      logDataRecord.setWorkflowExecutionId(workflowExecutionId);
-      logDataRecord.setStateExecutionId(stateExecutionId);
-    });
-    return rv;
+    try (BufferedReader br = new BufferedReader(new FileReader(file))) {
+      Type type = new TypeToken<List<LogDataRecord>>() {}.getType();
+      List<LogDataRecord> rv = gson.fromJson(br, type);
+      rv.forEach(logDataRecord -> {
+        logDataRecord.setAppId(appId);
+        logDataRecord.setApplicationId(appId);
+        logDataRecord.setWorkflowId(workflowId);
+        logDataRecord.setWorkflowExecutionId(workflowExecutionId);
+        logDataRecord.setStateExecutionId(stateExecutionId);
+      });
+      return rv;
+    }
   }
 
   // TODO Disabled test. Enable when purge is revisited

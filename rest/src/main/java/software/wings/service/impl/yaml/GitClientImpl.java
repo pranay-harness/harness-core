@@ -147,13 +147,15 @@ public class GitClientImpl implements GitClient {
       ObjectId headCommitId = repository.resolve("HEAD");
       diffResult.setCommitId(headCommitId.getName());
 
-      if (startCommitId == null) { // Find oldest commit
-        RevWalk revWalk = new RevWalk(repository);
-        RevCommit headRevCommit = revWalk.parseCommit(headCommitId);
-        revWalk.sort(RevSort.REVERSE);
-        revWalk.markStart(headRevCommit);
-        RevCommit firstCommit = revWalk.next();
-        startCommitId = firstCommit.getName();
+      // Find oldest commit
+      if (startCommitId == null) {
+        try (RevWalk revWalk = new RevWalk(repository)) {
+          RevCommit headRevCommit = revWalk.parseCommit(headCommitId);
+          revWalk.sort(RevSort.REVERSE);
+          revWalk.markStart(headRevCommit);
+          RevCommit firstCommit = revWalk.next();
+          startCommitId = firstCommit.getName();
+        }
       }
 
       ObjectId head = repository.resolve("HEAD^{tree}");

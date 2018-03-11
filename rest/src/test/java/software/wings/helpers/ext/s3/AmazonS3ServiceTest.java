@@ -91,17 +91,18 @@ public class AmazonS3ServiceTest extends WingsBaseTest {
       ObjectMetadata objectMetadata = new ObjectMetadata();
       objectMetadata.setLastModified(new Date());
 
-      S3Object s3Object = new S3Object();
-      s3Object.setBucketName("bucket1");
-      s3Object.setKey("key1");
-      s3Object.setObjectMetadata(objectMetadata);
+      try (S3Object s3Object = new S3Object()) {
+        s3Object.setBucketName("bucket1");
+        s3Object.setKey("key1");
+        s3Object.setObjectMetadata(objectMetadata);
 
-      DelegateFile delegateFile = new DelegateFile();
-      delegateFile.setFileId(UUID.randomUUID().toString());
+        DelegateFile delegateFile = new DelegateFile();
+        delegateFile.setFileId(UUID.randomUUID().toString());
 
-      s3Object.setObjectContent(new FileInputStream(file));
-      when(awsHelperService.getObjectFromS3(any(AwsConfig.class), any(), any(), any())).thenReturn(s3Object);
-      when(delegateFileManager.upload(any(), any())).thenReturn(delegateFile);
+        s3Object.setObjectContent(new FileInputStream(file));
+        when(awsHelperService.getObjectFromS3(any(AwsConfig.class), any(), any(), any())).thenReturn(s3Object);
+        when(delegateFileManager.upload(any(), any())).thenReturn(delegateFile);
+      }
 
       ListNotifyResponseData listNotifyResponseData =
           amazonS3Service.downloadArtifacts(awsConfig, null, "bucket1", Lists.newArrayList("key1"), null, null, null);

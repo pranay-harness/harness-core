@@ -66,10 +66,11 @@ public class SystemCatalogSeviceImpl implements SystemCatalogService {
     fileService.download(fileId, tempFile, fileBucket);
 
     Misc.ignoreException(() -> {
-      BufferedInputStream bufferedInputStream = new BufferedInputStream(new FileInputStream(tempFile));
-      FileType fileType = FileTypeDetector.detectType(bufferedInputStream);
-      systemCatalog.setFileType(fileType);
-      systemCatalog.setStackRootDirectory(fileType.getRoot(bufferedInputStream));
+      try (BufferedInputStream bufferedInputStream = new BufferedInputStream(new FileInputStream(tempFile))) {
+        FileType fileType = FileTypeDetector.detectType(bufferedInputStream);
+        systemCatalog.setFileType(fileType);
+        systemCatalog.setStackRootDirectory(fileType.getRoot(bufferedInputStream));
+      }
     });
 
     tempFile.delete();

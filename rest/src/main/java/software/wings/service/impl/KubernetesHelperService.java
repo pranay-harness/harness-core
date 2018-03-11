@@ -122,7 +122,9 @@ public class KubernetesHelperService {
 
     Config config = configBuilder.build();
     OkHttpClient okHttpClient = createHttpClientWithProxySetting(config);
-    return new DefaultKubernetesClient(okHttpClient, config).inNamespace(namespace);
+    try (DefaultKubernetesClient client = new DefaultKubernetesClient(okHttpClient, config)) {
+      return client.inNamespace(namespace);
+    }
   }
 
   public IstioClient getIstioClient(KubernetesConfig kubernetesConfig, List<EncryptedDataDetail> encryptedDataDetails) {
