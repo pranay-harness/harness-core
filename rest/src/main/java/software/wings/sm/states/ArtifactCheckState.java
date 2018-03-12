@@ -5,9 +5,12 @@ import static software.wings.sm.ExecutionResponse.Builder.anExecutionResponse;
 
 import com.google.inject.Inject;
 
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import software.wings.beans.ErrorCode;
 import software.wings.beans.artifact.Artifact;
 import software.wings.beans.artifact.Artifact.ContentStatus;
+import software.wings.beans.artifact.Artifact.Status;
 import software.wings.beans.artifact.ArtifactStream;
 import software.wings.common.Constants;
 import software.wings.exception.WingsException;
@@ -17,6 +20,7 @@ import software.wings.service.intfc.ArtifactStreamService;
 import software.wings.sm.ContextElementType;
 import software.wings.sm.ExecutionContext;
 import software.wings.sm.ExecutionResponse;
+import software.wings.sm.ExecutionStatus;
 import software.wings.sm.State;
 import software.wings.sm.StateType;
 import software.wings.sm.WorkflowStandardParams;
@@ -29,6 +33,8 @@ import java.util.Map;
 import java.util.stream.Collectors;
 
 public class ArtifactCheckState extends State {
+  private static final Logger logger = LoggerFactory.getLogger(ArtifactCheckState.class);
+
   @Inject private ArtifactStreamService artifactStreamService;
 
   @Inject private ArtifactService artifactService;
@@ -46,6 +52,20 @@ public class ArtifactCheckState extends State {
     if (isEmpty(artifacts)) {
       return anExecutionResponse().withErrorMessage("Artifacts are not required.").build();
     }
+    List<Artifact> failedArtifacts =
+        artifacts.stream()
+            .filter(artifact
+                -> artifact.getStatus() == Status.FAILED || artifact.getStatus() == Status.ERROR
+                    || artifact.getContentStatus() == ContentStatus.FAILED)
+            .collect(Collectors.toList());
+
+    if (!isEmpty(failedArtifacts)) {
+      return anExecutionResponse()
+          .withExecutionStatus(ExecutionStatus.FAILED)
+          .withErrorMessage("One or more artifacts: " + failedArtifacts + " are in failed status")
+          .build();
+    }
+
     List<Artifact> missingContents = new ArrayList<>();
     artifacts.forEach(artifact -> {
       if (artifact.getContentStatus() == ContentStatus.DOWNLOADED) {
@@ -89,6 +109,9 @@ public class ArtifactCheckState extends State {
           .build();
     }
 
+    logger.info("startArtifactCollection requested - artifactNamesForDownload: {}", artifactNamesForDownload);
+    logger.info("Asynch correlationIds: {}", correlationIds);
+
     return anExecutionResponse()
         .withAsync(true)
         .withCorrelationIds(correlationIds)
@@ -100,7 +123,9 @@ public class ArtifactCheckState extends State {
   public ExecutionResponse handleAsyncResponse(ExecutionContext context, Map<String, NotifyResponseData> response) {
     List<String> artifactNamesForDownload = new ArrayList<>();
     List<String> correlationIds = new ArrayList<>();
+    List<Artifact> failedArtifacts = new ArrayList<>();
 
+    logger.info("Received handleAsyncResponse - response: {}", response);
     response.values().forEach(notifyResponseData -> {
       ReminderNotifyResponse reminderNotifyResponse = (ReminderNotifyResponse) notifyResponseData;
       String artifactId = reminderNotifyResponse.getParameters().get("artifactId");
@@ -108,10 +133,23 @@ public class ArtifactCheckState extends State {
       if (artifact.getContentStatus() == ContentStatus.DOWNLOADED) {
         return;
       }
+      if (artifact.getContentStatus() == ContentStatus.FAILED) {
+        failedArtifacts.add(artifact);
+        return;
+      }
 
       correlationIds.add(cronUtil.scheduleReminder(60 * 1000, "artifactId", artifact.getUuid()));
       artifactNamesForDownload.add(artifact.getDisplayName());
     });
+
+    if (!isEmpty(failedArtifacts)) {
+      return anExecutionResponse()
+          .withExecutionStatus(ExecutionStatus.FAILED)
+          .withErrorMessage("One or more artifacts: "
+              + failedArtifacts.stream().map(Artifact::getDisplayName).collect(Collectors.toList())
+              + " are in failed status")
+          .build();
+    }
 
     if (artifactNamesForDownload.isEmpty()) {
       WorkflowStandardParams workflowStandardParams = context.getContextElement(ContextElementType.STANDARD);

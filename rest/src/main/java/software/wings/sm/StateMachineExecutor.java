@@ -465,8 +465,8 @@ public class StateMachineExecutor {
       }
 
       boolean updated = updateStateExecutionData(stateExecutionInstance, executionResponse.getStateExecutionData(),
-          status, null, executionResponse.getContextElements(), executionResponse.getNotifyElements(),
-          executionResponse.getDelegateTaskId());
+          status, executionResponse.getErrorMessage(), executionResponse.getContextElements(),
+          executionResponse.getNotifyElements(), executionResponse.getDelegateTaskId());
       if (!updated) {
         throw new WingsException("updateStateExecutionData failed");
       }
