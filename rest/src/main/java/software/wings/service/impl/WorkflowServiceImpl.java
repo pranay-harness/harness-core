@@ -556,6 +556,8 @@ public class WorkflowServiceImpl implements WorkflowService, DataProvider {
           createDefaultFailureStrategy(workflow);
         }
       }
+      ensureArtifactCheck(workflow.getAppId(), orchestrationWorkflow);
+
       orchestrationWorkflow.onSave();
       updateRequiredEntityTypes(workflow.getAppId(), orchestrationWorkflow);
       StateMachine stateMachine = new StateMachine(workflow, workflow.getDefaultVersion(),
@@ -583,6 +585,44 @@ public class WorkflowServiceImpl implements WorkflowService, DataProvider {
     });
 
     return newWorkflow;
+  }
+
+  @Override
+  public boolean ensureArtifactCheck(String appId, OrchestrationWorkflow orchestrationWorkflow) {
+    if (orchestrationWorkflow.getOrchestrationWorkflowType() == BUILD) {
+      return false;
+    }
+    if (!(orchestrationWorkflow instanceof CanaryOrchestrationWorkflow)) {
+      return false;
+    }
+    CanaryOrchestrationWorkflow canaryOrchestrationWorkflow = (CanaryOrchestrationWorkflow) orchestrationWorkflow;
+    if (canaryOrchestrationWorkflow.getWorkflowPhases() == null) {
+      return false;
+    }
+    if (workflowHasSshInfraMapping(appId, canaryOrchestrationWorkflow)) {
+      return ensureArtifactCheckInPreDeployment(canaryOrchestrationWorkflow);
+    }
+    return false;
+  }
+
+  private boolean ensureArtifactCheckInPreDeployment(CanaryOrchestrationWorkflow canaryOrchestrationWorkflow) {
+    PhaseStep preDeploymentSteps = canaryOrchestrationWorkflow.getPreDeploymentSteps();
+    if (preDeploymentSteps == null) {
+      preDeploymentSteps = new PhaseStep();
+      canaryOrchestrationWorkflow.setPreDeploymentSteps(preDeploymentSteps);
+    }
+    if (preDeploymentSteps.getSteps() == null) {
+      preDeploymentSteps.setSteps(new ArrayList<>());
+    }
+    boolean artifactCheckFound = preDeploymentSteps.getSteps().stream().anyMatch(
+        graphNode -> StateType.ARTIFACT_CHECK.name().equals(graphNode.getType()));
+    if (artifactCheckFound) {
+      return false;
+    } else {
+      preDeploymentSteps.getSteps().add(
+          GraphNodeBuilder.aGraphNode().withType(StateType.ARTIFACT_CHECK.name()).withName("Artifact Check").build());
+      return true;
+    }
   }
 
   private void updateKeywords(Workflow workflow) {
@@ -1455,6 +1495,11 @@ public class WorkflowServiceImpl implements WorkflowService, DataProvider {
     workflowPhase.setDaemonSet(isDaemonSet(appId, workflowPhase.getServiceId()));
     attachWorkflowPhase(workflow, workflowPhase);
 
+    if (workflowPhase.getDeploymentType() == DeploymentType.SSH
+        && orchestrationWorkflow.getOrchestrationWorkflowType() != BUILD) {
+      ensureArtifactCheckInPreDeployment((CanaryOrchestrationWorkflow) workflow.getOrchestrationWorkflow());
+    }
+
     orchestrationWorkflow =
         (CanaryOrchestrationWorkflow) updateWorkflow(workflow, orchestrationWorkflow).getOrchestrationWorkflow();
     return orchestrationWorkflow.getWorkflowPhaseIdMap().get(workflowPhase.getUuid());
@@ -1597,24 +1642,30 @@ public class WorkflowServiceImpl implements WorkflowService, DataProvider {
     List<String> infraMappingIds = new ArrayList<>();
     if (orchestrationWorkflow instanceof CanaryOrchestrationWorkflow) {
       CanaryOrchestrationWorkflow canaryOrchestrationWorkflow = (CanaryOrchestrationWorkflow) orchestrationWorkflow;
-      List<WorkflowPhase> workflowPhases = canaryOrchestrationWorkflow.getWorkflowPhases();
-      if (workflowPhases != null) {
-        infraMappingIds = workflowPhases.stream()
-                              .filter(workflowPhase -> workflowPhase.getInfraMappingId() != null)
-                              .map(WorkflowPhase::getInfraMappingId)
-                              .collect(Collectors.toList());
-        if (infraMappingIds.size() != 0) {
-          List<InfrastructureMapping> infrastructureMappings = wingsPersistence.createQuery(InfrastructureMapping.class)
-                                                                   .field("appId")
-                                                                   .equal(workflow.getAppId())
-                                                                   .field("uuid")
-                                                                   .in(infraMappingIds)
-                                                                   .asList();
-          return infrastructureMappings.stream().anyMatch((InfrastructureMapping infra) -> {
-            return AWS_SSH.name().equals(infra.getInfraMappingType())
-                || PHYSICAL_DATA_CENTER_SSH.name().equals(infra.getInfraMappingType());
-          });
-        }
+      return workflowHasSshInfraMapping(workflow.getAppId(), canaryOrchestrationWorkflow);
+    }
+    return false;
+  }
+
+  private boolean workflowHasSshInfraMapping(String appId, CanaryOrchestrationWorkflow canaryOrchestrationWorkflow) {
+    List<String> infraMappingIds = new ArrayList<>();
+    List<WorkflowPhase> workflowPhases = canaryOrchestrationWorkflow.getWorkflowPhases();
+    if (workflowPhases != null) {
+      infraMappingIds = workflowPhases.stream()
+                            .filter(workflowPhase -> workflowPhase.getInfraMappingId() != null)
+                            .map(WorkflowPhase::getInfraMappingId)
+                            .collect(Collectors.toList());
+      if (infraMappingIds.size() != 0) {
+        List<InfrastructureMapping> infrastructureMappings = wingsPersistence.createQuery(InfrastructureMapping.class)
+                                                                 .field("appId")
+                                                                 .equal(appId)
+                                                                 .field("uuid")
+                                                                 .in(infraMappingIds)
+                                                                 .asList();
+        return infrastructureMappings.stream().anyMatch((InfrastructureMapping infra) -> {
+          return AWS_SSH.name().equals(infra.getInfraMappingType())
+              || PHYSICAL_DATA_CENTER_SSH.name().equals(infra.getInfraMappingType());
+        });
       }
     }
     return false;

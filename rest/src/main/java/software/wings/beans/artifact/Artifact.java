@@ -51,6 +51,7 @@ public class Artifact extends Base {
   @Indexed private Status status;
   private String description;
   private String errorMessage;
+  @Indexed private ContentStatus contentStatus;
 
   /**
    * Gets buildNo.
@@ -183,218 +184,177 @@ public class Artifact extends Base {
   }
 
   /**
-   * The type Builder.
+   * The Enum Status.
    */
+  public enum ContentStatus {
+    /***
+     * METADATA ONLY
+     */
+    METADATA_ONLY,
+    /**
+     * New status.
+     */
+    NOT_DOWNLOADED,
+    /**
+     * Downloading status.
+     */
+    DOWNLOADING,
+    /**
+     * Downloaded status.
+     */
+    DOWNLOADED(true),
+    /**
+     * Waiting status.
+     */
+    DELETED(true),
+
+    /**
+     * Failed status
+     *
+     */
+    FAILED(true);
+
+    ContentStatus() {}
+
+    ContentStatus(boolean finalStatus) {
+      this.finalStatus = finalStatus;
+    }
+
+    public boolean isFinalStatus() {
+      return finalStatus;
+    }
+
+    private boolean finalStatus;
+  }
+
   public static final class Builder {
+    public transient String entityYamlPath; // TODO:: remove it with changeSet batching
+    protected String appId;
     private String artifactStreamId;
     private String artifactSourceName;
     private Map<String, String> metadata = Maps.newHashMap();
     private String displayName;
     private String revision;
     private List<String> serviceIds = new ArrayList<>();
+    private String uuid;
     private List<Service> services;
     private List<ArtifactFile> artifactFiles = Lists.newArrayList();
-    private Status status;
-    private String description;
-    private String uuid;
-    private String appId;
     private EmbeddedUser createdBy;
     private long createdAt;
+    private Status status;
+    private String description;
     private EmbeddedUser lastUpdatedBy;
+    private String errorMessage;
     private long lastUpdatedAt;
+    private ContentStatus contentStatus;
+    private List<String> keywords;
 
     private Builder() {}
 
-    /**
-     * An artifact builder.
-     *
-     * @return the builder
-     */
     public static Builder anArtifact() {
       return new Builder();
     }
 
-    /**
-     * With artifact stream id builder.
-     *
-     * @param artifactStreamId the artifact stream id
-     * @return the builder
-     */
     public Builder withArtifactStreamId(String artifactStreamId) {
       this.artifactStreamId = artifactStreamId;
       return this;
     }
 
-    /**
-     * With artifact source name builder.
-     *
-     * @param artifactSourceName the artifact source name
-     * @return the builder
-     */
     public Builder withArtifactSourceName(String artifactSourceName) {
       this.artifactSourceName = artifactSourceName;
       return this;
     }
 
-    /**
-     * With metadata builder.
-     *
-     * @param metadata the metadata
-     * @return the builder
-     */
     public Builder withMetadata(Map<String, String> metadata) {
       this.metadata = metadata;
       return this;
     }
 
-    /**
-     * With display name builder.
-     *
-     * @param displayName the display name
-     * @return the builder
-     */
     public Builder withDisplayName(String displayName) {
       this.displayName = displayName;
       return this;
     }
 
-    /**
-     * With revision builder.
-     *
-     * @param revision the revision
-     * @return the builder
-     */
     public Builder withRevision(String revision) {
       this.revision = revision;
       return this;
     }
 
-    /**
-     * With service ids builder.
-     *
-     * @param serviceIds the service ids
-     * @return the builder
-     */
     public Builder withServiceIds(List<String> serviceIds) {
       this.serviceIds = serviceIds;
       return this;
     }
 
-    /**
-     * With services builder.
-     *
-     * @param services the services
-     * @return the builder
-     */
-    public Builder withServices(List<Service> services) {
-      this.services = services;
-      return this;
-    }
-
-    /**
-     * With artifact files builder.
-     *
-     * @param artifactFiles the artifact files
-     * @return the builder
-     */
-    public Builder withArtifactFiles(List<ArtifactFile> artifactFiles) {
-      this.artifactFiles = artifactFiles;
-      return this;
-    }
-
-    /**
-     * With status builder.
-     *
-     * @param status the status
-     * @return the builder
-     */
-    public Builder withStatus(Status status) {
-      this.status = status;
-      return this;
-    }
-
-    /**
-     * With description builder.
-     *
-     * @param description the description
-     * @return the builder
-     */
-    public Builder withDescription(String description) {
-      this.description = description;
-      return this;
-    }
-
-    /**
-     * With uuid builder.
-     *
-     * @param uuid the uuid
-     * @return the builder
-     */
     public Builder withUuid(String uuid) {
       this.uuid = uuid;
       return this;
     }
 
-    /**
-     * With app id builder.
-     *
-     * @param appId the app id
-     * @return the builder
-     */
     public Builder withAppId(String appId) {
       this.appId = appId;
       return this;
     }
 
-    /**
-     * With created by builder.
-     *
-     * @param createdBy the created by
-     * @return the builder
-     */
+    public Builder withServices(List<Service> services) {
+      this.services = services;
+      return this;
+    }
+
+    public Builder withArtifactFiles(List<ArtifactFile> artifactFiles) {
+      this.artifactFiles = artifactFiles;
+      return this;
+    }
+
     public Builder withCreatedBy(EmbeddedUser createdBy) {
       this.createdBy = createdBy;
       return this;
     }
 
-    /**
-     * With created at builder.
-     *
-     * @param createdAt the created at
-     * @return the builder
-     */
     public Builder withCreatedAt(long createdAt) {
       this.createdAt = createdAt;
       return this;
     }
 
-    /**
-     * With last updated by builder.
-     *
-     * @param lastUpdatedBy the last updated by
-     * @return the builder
-     */
+    public Builder withStatus(Status status) {
+      this.status = status;
+      return this;
+    }
+
+    public Builder withDescription(String description) {
+      this.description = description;
+      return this;
+    }
+
     public Builder withLastUpdatedBy(EmbeddedUser lastUpdatedBy) {
       this.lastUpdatedBy = lastUpdatedBy;
       return this;
     }
 
-    /**
-     * With last updated at builder.
-     *
-     * @param lastUpdatedAt the last updated at
-     * @return the builder
-     */
+    public Builder withErrorMessage(String errorMessage) {
+      this.errorMessage = errorMessage;
+      return this;
+    }
+
     public Builder withLastUpdatedAt(long lastUpdatedAt) {
       this.lastUpdatedAt = lastUpdatedAt;
       return this;
     }
 
-    /**
-     * But builder.
-     *
-     * @return the builder
-     */
+    public Builder withContentStatus(ContentStatus contentStatus) {
+      this.contentStatus = contentStatus;
+      return this;
+    }
+
+    public Builder withKeywords(List<String> keywords) {
+      this.keywords = keywords;
+      return this;
+    }
+
+    public Builder withEntityYamlPath(String entityYamlPath) {
+      this.entityYamlPath = entityYamlPath;
+      return this;
+    }
+
     public Builder but() {
       return anArtifact()
           .withArtifactStreamId(artifactStreamId)
@@ -403,23 +363,22 @@ public class Artifact extends Base {
           .withDisplayName(displayName)
           .withRevision(revision)
           .withServiceIds(serviceIds)
-          .withServices(services)
-          .withArtifactFiles(artifactFiles)
-          .withStatus(status)
-          .withDescription(description)
           .withUuid(uuid)
           .withAppId(appId)
+          .withServices(services)
+          .withArtifactFiles(artifactFiles)
           .withCreatedBy(createdBy)
           .withCreatedAt(createdAt)
+          .withStatus(status)
+          .withDescription(description)
           .withLastUpdatedBy(lastUpdatedBy)
-          .withLastUpdatedAt(lastUpdatedAt);
+          .withErrorMessage(errorMessage)
+          .withLastUpdatedAt(lastUpdatedAt)
+          .withContentStatus(contentStatus)
+          .withKeywords(keywords)
+          .withEntityYamlPath(entityYamlPath);
     }
 
-    /**
-     * Build artifact.
-     *
-     * @return the artifact
-     */
     public Artifact build() {
       Artifact artifact = new Artifact();
       artifact.setArtifactStreamId(artifactStreamId);
@@ -428,16 +387,20 @@ public class Artifact extends Base {
       artifact.setDisplayName(displayName);
       artifact.setRevision(revision);
       artifact.setServiceIds(serviceIds);
-      artifact.setServices(services);
-      artifact.setArtifactFiles(artifactFiles);
-      artifact.setStatus(status);
-      artifact.setDescription(description);
       artifact.setUuid(uuid);
       artifact.setAppId(appId);
+      artifact.setServices(services);
+      artifact.setArtifactFiles(artifactFiles);
       artifact.setCreatedBy(createdBy);
       artifact.setCreatedAt(createdAt);
+      artifact.setStatus(status);
+      artifact.setDescription(description);
       artifact.setLastUpdatedBy(lastUpdatedBy);
+      artifact.setErrorMessage(errorMessage);
       artifact.setLastUpdatedAt(lastUpdatedAt);
+      artifact.setContentStatus(contentStatus);
+      artifact.setKeywords(keywords);
+      artifact.setEntityYamlPath(entityYamlPath);
       return artifact;
     }
   }

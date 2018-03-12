@@ -1,7 +1,15 @@
 package software.wings.common;
 
+import static java.util.Arrays.asList;
 import static org.mongodb.morphia.mapping.Mapper.ID_KEY;
+import static software.wings.beans.artifact.ArtifactStreamType.ACR;
+import static software.wings.beans.artifact.ArtifactStreamType.AMAZON_S3;
+import static software.wings.beans.artifact.ArtifactStreamType.ARTIFACTORYDOCKER;
+import static software.wings.beans.artifact.ArtifactStreamType.DOCKER;
+import static software.wings.beans.artifact.ArtifactStreamType.ECR;
+import static software.wings.beans.artifact.ArtifactStreamType.GCR;
 
+import java.util.List;
 import java.util.regex.Pattern;
 
 /**
@@ -341,6 +349,11 @@ public interface Constants {
   String WAIT_RESUME_GROUP = "WAIT_RESUME_GROUP";
 
   /**
+   * The constant ONE_TIME_REMINDER.
+   */
+  String ONE_TIME_REMINDER = "ONE_TIME_REMINDER";
+
+  /**
    * The constant DEFAULT_STATE_TIMEOUT_MILLIS.
    */
   Integer DEFAULT_STATE_TIMEOUT_MILLIS = 60 * 60 * 1000; // 60 minutes
@@ -589,4 +602,9 @@ public interface Constants {
 
   String APP_ID = "appId";
   String UUID = ID_KEY;
+
+  String CORRELATION_ID = "correlationId";
+
+  List<String> autoDownloaded =
+      asList(DOCKER.name(), ECR.name(), GCR.name(), ACR.name(), AMAZON_S3.name(), ARTIFACTORYDOCKER.name());
 }

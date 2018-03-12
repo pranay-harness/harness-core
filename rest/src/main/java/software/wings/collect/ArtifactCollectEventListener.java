@@ -19,6 +19,7 @@ import software.wings.beans.SettingAttribute;
 import software.wings.beans.TaskType;
 import software.wings.beans.artifact.AmazonS3ArtifactStream;
 import software.wings.beans.artifact.Artifact;
+import software.wings.beans.artifact.Artifact.ContentStatus;
 import software.wings.beans.artifact.Artifact.Status;
 import software.wings.beans.artifact.ArtifactStream;
 import software.wings.beans.artifact.ArtifactStreamType;
@@ -65,7 +66,7 @@ public class ArtifactCollectEventListener extends AbstractQueueListener<CollectE
   protected void onMessage(CollectEvent message) {
     Artifact artifact = message.getArtifact();
     try {
-      artifactService.updateStatus(artifact.getUuid(), artifact.getAppId(), Status.RUNNING);
+      artifactService.updateStatus(artifact.getUuid(), artifact.getAppId(), Status.RUNNING, ContentStatus.DOWNLOADING);
       eventEmitter.send(Channel.ARTIFACTS,
           anEvent().withType(Type.UPDATE).withUuid(artifact.getUuid()).withAppId(artifact.getAppId()).build());
 
@@ -78,7 +79,7 @@ public class ArtifactCollectEventListener extends AbstractQueueListener<CollectE
       delegateService.queueTask(delegateTask);
     } catch (Exception ex) {
       logger.error(ex.getMessage(), ex);
-      artifactService.updateStatus(artifact.getUuid(), artifact.getAppId(), Status.FAILED);
+      artifactService.updateStatus(artifact.getUuid(), artifact.getAppId(), Status.FAILED, ContentStatus.FAILED);
       eventEmitter.send(Channel.ARTIFACTS,
           anEvent().withType(Type.UPDATE).withUuid(artifact.getUuid()).withAppId(artifact.getAppId()).build());
     }

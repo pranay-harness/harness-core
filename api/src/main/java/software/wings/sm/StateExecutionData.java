@@ -215,8 +215,8 @@ public class StateExecutionData {
   public Map<String, ExecutionDataValue> getExecutionDetails() {
     Map<String, ExecutionDataValue> executionDetails = Maps.newLinkedHashMap();
 
-    putNotNull(executionDetails, "errorMsg",
-        anExecutionDataValue().withValue(errorMsg).withDisplayName("Error Message").build());
+    putNotNull(
+        executionDetails, "errorMsg", anExecutionDataValue().withValue(errorMsg).withDisplayName("Message").build());
     putNotNull(
         executionDetails, "startTs", anExecutionDataValue().withValue(startTs).withDisplayName("Started At").build());
     putNotNull(executionDetails, "endTs", anExecutionDataValue().withValue(endTs).withDisplayName("Ended At").build());

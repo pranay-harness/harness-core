@@ -6,12 +6,23 @@ import static org.assertj.core.api.Assertions.assertThatExceptionOfType;
 import static org.mockito.Matchers.any;
 import static org.mockito.Matchers.anyObject;
 import static org.mockito.Matchers.anyString;
+import static org.mockito.Mockito.times;
 import static org.mockito.Mockito.when;
 import static software.wings.beans.Service.Builder.aService;
 import static software.wings.beans.artifact.Artifact.Builder.anArtifact;
+import static software.wings.beans.artifact.Artifact.ContentStatus.DOWNLOADED;
+import static software.wings.beans.artifact.Artifact.ContentStatus.DOWNLOADING;
+import static software.wings.beans.artifact.Artifact.ContentStatus.METADATA_ONLY;
+import static software.wings.beans.artifact.Artifact.ContentStatus.NOT_DOWNLOADED;
+import static software.wings.beans.artifact.Artifact.Status.APPROVED;
+import static software.wings.beans.artifact.Artifact.Status.FAILED;
+import static software.wings.beans.artifact.Artifact.Status.QUEUED;
+import static software.wings.beans.artifact.Artifact.Status.READY;
+import static software.wings.beans.artifact.Artifact.Status.RUNNING;
 import static software.wings.beans.artifact.ArtifactFile.Builder.anArtifactFile;
 import static software.wings.beans.artifact.JenkinsArtifactStream.Builder.aJenkinsArtifactStream;
 import static software.wings.utils.WingsTestConstants.APP_ID;
+import static software.wings.utils.WingsTestConstants.ARTIFACT_ID;
 import static software.wings.utils.WingsTestConstants.ARTIFACT_STREAM_ID;
 import static software.wings.utils.WingsTestConstants.SERVICE_ID;
 
@@ -25,6 +36,7 @@ import org.junit.Ignore;
 import org.junit.Test;
 import org.mockito.InjectMocks;
 import org.mockito.Mock;
+import org.mockito.Mockito;
 import org.mockito.Spy;
 import org.mongodb.morphia.Key;
 import org.mongodb.morphia.query.FieldEnd;
@@ -34,11 +46,12 @@ import software.wings.beans.Application;
 import software.wings.beans.EmbeddedUser;
 import software.wings.beans.artifact.Artifact;
 import software.wings.beans.artifact.Artifact.Builder;
-import software.wings.beans.artifact.Artifact.Status;
 import software.wings.beans.artifact.ArtifactFile;
 import software.wings.beans.artifact.ArtifactStream;
 import software.wings.beans.artifact.JenkinsArtifactStream;
+import software.wings.collect.CollectEvent;
 import software.wings.common.Constants;
+import software.wings.core.queue.Queue;
 import software.wings.dl.PageRequest;
 import software.wings.dl.WingsPersistence;
 import software.wings.exception.WingsException;
@@ -67,6 +80,7 @@ public class ArtifactServiceTest extends WingsBaseTest {
   @Mock private Query<Application> appQuery;
   @Mock private Query<ArtifactStream> artifactStreamQuery;
   @Mock private FieldEnd fieldEnd;
+  @Mock private Queue<CollectEvent> collectQueue;
 
   @InjectMocks @Inject private ArtifactService artifactService;
 
@@ -182,7 +196,7 @@ public class ArtifactServiceTest extends WingsBaseTest {
           anArtifactFile().withAppId(APP_ID).withName("test-artifact.war").withUuid("TEST_FILE_ID").build();
       wingsRule.getDatastore().save(artifactFile);
       savedArtifact.setArtifactFiles(Lists.newArrayList(artifactFile));
-      savedArtifact.setStatus(Status.READY);
+      savedArtifact.setStatus(READY);
       wingsRule.getDatastore().save(savedArtifact);
       when(fileService.download(anyString(), any(File.class), any(FileBucket.class))).thenAnswer(invocation -> {
         File inputFile = invocation.getArgumentAt(1, File.class);
@@ -282,7 +296,7 @@ public class ArtifactServiceTest extends WingsBaseTest {
                                     .build();
     wingsRule.getDatastore().save(artifactFile);
     savedArtifact.setArtifactFiles(Lists.newArrayList(artifactFile));
-    savedArtifact.setStatus(Status.READY);
+    savedArtifact.setStatus(READY);
     wingsRule.getDatastore().save(savedArtifact);
     artifactService.deleteArtifacts(0);
     assertThat(artifactService.list(new PageRequest<>(), false)).hasSize(0);
@@ -306,7 +320,7 @@ public class ArtifactServiceTest extends WingsBaseTest {
                                     .build();
     wingsRule.getDatastore().save(artifactFile);
     savedArtifact.setArtifactFiles(Lists.newArrayList(artifactFile));
-    savedArtifact.setStatus(Status.FAILED);
+    savedArtifact.setStatus(FAILED);
     wingsRule.getDatastore().save(savedArtifact);
     artifactService.deleteArtifacts(0);
     assertThat(artifactService.list(new PageRequest<>(), false)).hasSize(1);
@@ -330,9 +344,68 @@ public class ArtifactServiceTest extends WingsBaseTest {
                                     .build();
     wingsRule.getDatastore().save(artifactFile);
     savedArtifact.setArtifactFiles(Lists.newArrayList(artifactFile));
-    savedArtifact.setStatus(Status.READY);
+    savedArtifact.setStatus(READY);
     wingsRule.getDatastore().save(savedArtifact);
     artifactService.deleteArtifacts(1);
     assertThat(artifactService.list(new PageRequest<>(), false)).hasSize(1);
+  }
+
+  @Test(expected = WingsException.class)
+  public void shouldStartArtifactCollectionNoArtifact() {
+    artifactService.startArtifactCollection(APP_ID, ARTIFACT_ID);
+  }
+
+  @Test
+  public void shouldNotCollectArtifactAlreadyQueued() {
+    when(wingsPersistence.get(Artifact.class, APP_ID, ARTIFACT_ID))
+        .thenReturn(artifactBuilder.withStatus(QUEUED).build());
+    Artifact artifact = artifactService.startArtifactCollection(APP_ID, ARTIFACT_ID);
+    assertThat(artifact.getStatus()).isEqualTo(QUEUED);
+    Mockito.verify(collectQueue, times(0)).send(any());
+  }
+
+  @Test
+  public void shouldNotCollectArtifactAlreadyRunning() {
+    when(wingsPersistence.get(Artifact.class, APP_ID, ARTIFACT_ID))
+        .thenReturn(artifactBuilder.withStatus(RUNNING).build());
+    Artifact artifact = artifactService.startArtifactCollection(APP_ID, ARTIFACT_ID);
+    assertThat(artifact.getStatus()).isEqualTo(RUNNING);
+    Mockito.verify(collectQueue, times(0)).send(any());
+  }
+
+  @Test
+  public void shouldNotCollectArtifactWhenContentStatusMetadata() {
+    when(wingsPersistence.get(Artifact.class, APP_ID, ARTIFACT_ID))
+        .thenReturn(artifactBuilder.withStatus(APPROVED).withContentStatus(METADATA_ONLY).build());
+    Artifact artifact = artifactService.startArtifactCollection(APP_ID, ARTIFACT_ID);
+    assertThat(artifact.getStatus()).isEqualTo(APPROVED);
+    Mockito.verify(collectQueue, times(0)).send(any());
+  }
+
+  @Test
+  public void shouldNotCollectArtifactWhenContentStatusDOWNLOADING() {
+    when(wingsPersistence.get(Artifact.class, APP_ID, ARTIFACT_ID))
+        .thenReturn(artifactBuilder.withStatus(APPROVED).withContentStatus(DOWNLOADING).build());
+    Artifact artifact = artifactService.startArtifactCollection(APP_ID, ARTIFACT_ID);
+    assertThat(artifact.getStatus()).isEqualTo(APPROVED);
+    Mockito.verify(collectQueue, times(0)).send(any());
+  }
+
+  @Test
+  public void shouldNotCollectArtifactWhenContentStatusDOWNLOADED() {
+    when(wingsPersistence.get(Artifact.class, APP_ID, ARTIFACT_ID))
+        .thenReturn(artifactBuilder.withStatus(APPROVED).withContentStatus(DOWNLOADED).build());
+    Artifact artifact = artifactService.startArtifactCollection(APP_ID, ARTIFACT_ID);
+    assertThat(artifact.getContentStatus()).isEqualTo(DOWNLOADED);
+    Mockito.verify(collectQueue, times(0)).send(any());
+  }
+
+  @Test
+  public void shouldCollectArtifact() {
+    when(wingsPersistence.get(Artifact.class, APP_ID, ARTIFACT_ID))
+        .thenReturn(artifactBuilder.withStatus(APPROVED).withContentStatus(NOT_DOWNLOADED).build());
+    Artifact artifact = artifactService.startArtifactCollection(APP_ID, ARTIFACT_ID);
+    assertThat(artifact.getContentStatus()).isEqualTo(NOT_DOWNLOADED);
+    Mockito.verify(collectQueue).send(any());
   }
 }

@@ -18,8 +18,6 @@ import software.wings.service.intfc.ArtifactService;
 import software.wings.service.intfc.ArtifactStreamService;
 
 import java.io.File;
-import java.io.IOException;
-import java.security.GeneralSecurityException;
 import javax.ws.rs.BeanParam;
 import javax.ws.rs.DELETE;
 import javax.ws.rs.Encoded;
@@ -148,19 +146,30 @@ public class ArtifactResource {
    * @param appId      the app id
    * @param artifactId the artifact id
    * @return the response
-   * @throws IOException              Signals that an I/O exception has occurred.
-   * @throws GeneralSecurityException the general security exception
    */
   @GET
   @Path("{artifactId}/artifactFile")
   @Encoded
   @Timed
   @ExceptionMetered
-  public Response download(@QueryParam("appId") String appId, @PathParam("artifactId") String artifactId)
-      throws IOException, GeneralSecurityException {
+  public Response download(@QueryParam("appId") String appId, @PathParam("artifactId") String artifactId) {
     File artifactFile = artifactService.download(appId, artifactId);
     ResponseBuilder response = Response.ok(artifactFile, MediaType.APPLICATION_OCTET_STREAM);
     response.header("Content-Disposition", "attachment; filename=" + artifactFile.getName());
     return response.build();
+  }
+
+  /**
+   * Save.
+   * @param appId    the app id
+   * @param artifact the artifact
+   * @return the rest response
+   */
+  @PUT
+  @Timed
+  @ExceptionMetered
+  public RestResponse<Artifact> collectArtifactContent(@QueryParam("appId") String appId, Artifact artifact) {
+    artifact.setAppId(appId);
+    return new RestResponse<>(artifactService.startArtifactCollection(appId, artifact.getUuid()));
   }
 }

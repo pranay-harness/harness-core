@@ -81,7 +81,7 @@ public class ArtifactCollectionJob implements Job {
   private static final String APP_ID_KEY = "appId";
   private static final String ARTIFACT_STREAM_ID_KEY = "artifactStreamId";
 
-  public static final Duration timeout = Duration.ofHours(1);
+  public static final Duration timeout = Duration.ofMinutes(10);
 
   @Inject private ArtifactService artifactService;
   @Inject private ArtifactStreamService artifactStreamService;
@@ -325,7 +325,6 @@ public class ArtifactCollectionJob implements Job {
                                 .withArtifactSourceName(artifactStream.getSourceName())
                                 .withDisplayName(artifactStream.getArtifactDisplayName(latestVersion.getNumber()))
                                 .withMetadata(ImmutableMap.of(BUILD_NO, latestVersion.getNumber()))
-                                .withRevision(latestVersion.getRevision())
                                 .build();
         newArtifacts.add(artifactService.create(artifact));
       }
@@ -403,32 +402,26 @@ public class ArtifactCollectionJob implements Job {
     try (AcquiredLock lock = persistentLocker.acquireLock(ArtifactStream.class, artifactStreamId, timeout)) {
       logger.info("Collecting artifact for artifact stream id {} type {} and source name {} ", artifactStreamId,
           artifactStream.getArtifactStreamType(), artifactStream.getSourceName());
-
-      BuildDetails latestVersion =
-          buildSourceService.getLastSuccessfulBuild(appId, artifactStreamId, artifactStream.getSettingId());
-      if (latestVersion == null) {
-        return;
-      }
-      logger.debug("Latest version in Nexus server {}", latestVersion);
-      Artifact lastCollectedArtifact =
-          artifactService.fetchLatestArtifactForArtifactStream(appId, artifactStreamId, artifactStream.getSourceName());
-      String buildNo = (lastCollectedArtifact != null && lastCollectedArtifact.getMetadata().get(BUILD_NO) != null)
-          ? lastCollectedArtifact.getMetadata().get(BUILD_NO)
-          : "";
-      logger.debug("Last collected Nexus artifact version {} ", buildNo);
-      if (buildNo.isEmpty() || versionCompare(latestVersion.getNumber(), buildNo) > 0) {
-        logger.info(
-            "Existing version no {} is older than new version number {}. Collect new Artifact for ArtifactStream {}",
-            buildNo, latestVersion.getNumber(), artifactStreamId);
-        Artifact artifact = anArtifact()
-                                .withAppId(appId)
-                                .withArtifactStreamId(artifactStreamId)
-                                .withArtifactSourceName(artifactStream.getSourceName())
-                                .withDisplayName(artifactStream.getArtifactDisplayName(latestVersion.getNumber()))
-                                .withMetadata(ImmutableMap.of(BUILD_NO, latestVersion.getNumber()))
-                                .withRevision(latestVersion.getRevision())
-                                .build();
-        newArtifacts.add(artifactService.create(artifact));
+      List<BuildDetails> versions =
+          buildSourceService.getBuilds(appId, artifactStreamId, artifactStream.getSettingId());
+      if (!isEmpty(versions)) {
+        Set<String> newBuildNumbers = getNewBuildNumbers(appId, artifactStream, versions);
+        versions.forEach((BuildDetails buildDetails1) -> {
+          if (newBuildNumbers.contains(buildDetails1.getNumber())) {
+            logger.info("New Artifact version [{}] found for Artifact stream [type: {}, uuid: {}]. "
+                    + "Add entry in Artifact collection",
+                buildDetails1.getNumber(), artifactStream.getArtifactStreamType(), artifactStream.getUuid());
+            Artifact newArtifact =
+                anArtifact()
+                    .withAppId(appId)
+                    .withArtifactStreamId(artifactStreamId)
+                    .withArtifactSourceName(artifactStream.getSourceName())
+                    .withDisplayName(artifactStream.getArtifactDisplayName(buildDetails1.getNumber()))
+                    .withMetadata(ImmutableMap.of(BUILD_NO, buildDetails1.getNumber()))
+                    .build();
+            newArtifacts.add(artifactService.create(newArtifact));
+          }
+        });
       }
     }
   }
@@ -508,6 +501,8 @@ public class ArtifactCollectionJob implements Job {
                               .equal(artifactStream.getUuid())
                               .field("artifactSourceName")
                               .equal(artifactStream.getSourceName())
+                              .field("status")
+                              .hasAnyOf(asList(QUEUED, RUNNING, REJECTED, WAITING, READY, APPROVED, FAILED))
                               .disableValidation();
 
     final MorphiaIterator<Artifact, Artifact> iterator = artifactQuery.fetch();
