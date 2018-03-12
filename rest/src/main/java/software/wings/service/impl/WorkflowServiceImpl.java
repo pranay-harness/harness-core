@@ -589,6 +589,9 @@ public class WorkflowServiceImpl implements WorkflowService, DataProvider {
 
   @Override
   public boolean ensureArtifactCheck(String appId, OrchestrationWorkflow orchestrationWorkflow) {
+    if (orchestrationWorkflow == null) {
+      return false;
+    }
     if (orchestrationWorkflow.getOrchestrationWorkflowType() == BUILD) {
       return false;
     }
