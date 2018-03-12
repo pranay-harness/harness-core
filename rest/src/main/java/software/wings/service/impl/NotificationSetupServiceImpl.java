@@ -8,7 +8,6 @@ import com.google.common.base.Joiner;
 import com.google.inject.Inject;
 import com.google.inject.Singleton;
 
-import org.apache.commons.collections.CollectionUtils;
 import software.wings.beans.Base;
 import software.wings.beans.CanaryOrchestrationWorkflow;
 import software.wings.beans.NotificationChannelType;
@@ -193,8 +192,7 @@ public class NotificationSetupServiceImpl implements NotificationSetupService {
   private void checkIfChangeInDefaultNotificationGroup(NotificationGroup notificationGroup) {
     List<NotificationGroup> notificationGroups = null;
     if (notificationGroup.isDefaultNotificationGroupForAccount()
-        && CollectionUtils.isNotEmpty(
-               notificationGroups = listDefaultNotificationGroup(notificationGroup.getAccountId()))) {
+        && isNotEmpty(notificationGroups = listDefaultNotificationGroup(notificationGroup.getAccountId()))) {
       NotificationGroup previousDefaultNotificationGroup = notificationGroups.get(0);
       // make sure, previous and current one being saved/updated is not the same
       if (!previousDefaultNotificationGroup.getName().equals(notificationGroup.getName())) {

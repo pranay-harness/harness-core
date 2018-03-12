@@ -11,7 +11,6 @@ import static software.wings.sm.states.RepeatState.Builder.aRepeatState;
 
 import com.google.common.collect.Lists;
 
-import org.apache.commons.collections.MapUtils;
 import org.mongodb.morphia.annotations.Embedded;
 import org.mongodb.morphia.annotations.Entity;
 import org.mongodb.morphia.annotations.Indexed;
@@ -477,7 +476,7 @@ public class StateMachine extends Base {
    * @return map to state to stateNames.
    */
   public Map<String, State> getStatesMap() {
-    if (MapUtils.isNotEmpty(cachedStatesMap)) {
+    if (isNotEmpty(cachedStatesMap)) {
       return cachedStatesMap;
     }
     Map<String, State> statesMap = new HashMap<>();
@@ -579,7 +578,7 @@ public class StateMachine extends Base {
    * @return a transition flow map describing transition types to list of states.
    */
   public Map<String, Map<TransitionType, List<State>>> getTransitionFlowMap() {
-    if (MapUtils.isNotEmpty(cachedTransitionFlowMap)) {
+    if (isNotEmpty(cachedTransitionFlowMap)) {
       return cachedTransitionFlowMap;
     }
 

@@ -3,6 +3,7 @@ package software.wings.cloudprovider.aws;
 import static com.amazonaws.services.codedeploy.model.DeploymentStatus.Failed;
 import static com.amazonaws.services.codedeploy.model.DeploymentStatus.Stopped;
 import static com.amazonaws.services.codedeploy.model.DeploymentStatus.Succeeded;
+import static io.harness.data.structure.EmptyPredicate.isNotEmpty;
 import static io.harness.threading.Morpheus.sleep;
 import static java.time.Duration.ofSeconds;
 import static software.wings.beans.ErrorCode.INIT_TIMEOUT;
@@ -33,7 +34,6 @@ import com.amazonaws.services.codedeploy.model.ListDeploymentInstancesResult;
 import com.amazonaws.services.codedeploy.model.RevisionLocation;
 import com.amazonaws.services.ec2.model.DescribeInstancesRequest;
 import com.amazonaws.services.ec2.model.Instance;
-import org.apache.commons.collections.CollectionUtils;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import software.wings.beans.AwsConfig;
@@ -177,7 +177,7 @@ public class AwsCodeDeployServiceImpl implements AwsCodeDeployService {
     List<String> instanceIds = fetchAllDeploymentInstances(
         awsConfig, encryptedDataDetails, region, deploymentId, Arrays.asList(InstanceStatus.Succeeded.name()));
 
-    if (CollectionUtils.isNotEmpty(instanceIds)) {
+    if (isNotEmpty(instanceIds)) {
       DescribeInstancesRequest describeInstancesRequest =
           awsHelperService.getDescribeInstancesRequestWithRunningFilter().withInstanceIds(instanceIds);
 
@@ -209,7 +209,7 @@ public class AwsCodeDeployServiceImpl implements AwsCodeDeployService {
     ListDeploymentInstancesResult listDeploymentInstancesResult;
     ListDeploymentInstancesRequest listDeploymentInstancesRequest =
         new ListDeploymentInstancesRequest().withDeploymentId(deploymentId);
-    if (CollectionUtils.isNotEmpty(instanceStatusList)) {
+    if (isNotEmpty(instanceStatusList)) {
       listDeploymentInstancesRequest.withInstanceStatusFilter(instanceStatusList);
     }
 

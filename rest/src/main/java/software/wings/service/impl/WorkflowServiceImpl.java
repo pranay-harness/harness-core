@@ -81,7 +81,6 @@ import com.google.inject.Singleton;
 import com.google.inject.name.Named;
 
 import org.apache.commons.collections.CollectionUtils;
-import org.apache.commons.collections.MapUtils;
 import org.mongodb.morphia.Key;
 import org.mongodb.morphia.query.UpdateOperations;
 import org.slf4j.Logger;
@@ -2229,7 +2228,7 @@ public class WorkflowServiceImpl implements WorkflowService, DataProvider {
     Map<String, String> stateDefaults = getStateDefaults(appId, service.getUuid(), AWS_CODEDEPLOY_STATE);
     GraphNodeBuilder node =
         aGraphNode().withId(generateUuid()).withType(AWS_CODEDEPLOY_STATE.name()).withName(Constants.AWS_CODE_DEPLOY);
-    if (MapUtils.isNotEmpty(stateDefaults)) {
+    if (isNotEmpty(stateDefaults)) {
       if (isNotBlank(stateDefaults.get("bucket"))) {
         node.addProperty("bucket", stateDefaults.get("bucket"));
       }

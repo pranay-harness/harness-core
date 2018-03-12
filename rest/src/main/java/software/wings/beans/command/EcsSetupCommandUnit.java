@@ -1,5 +1,6 @@
 package software.wings.beans.command;
 
+import static io.harness.data.structure.EmptyPredicate.isNotEmpty;
 import static java.util.Collections.emptyList;
 import static java.util.stream.Collectors.toList;
 import static org.apache.commons.lang3.StringUtils.isNotBlank;
@@ -20,7 +21,6 @@ import com.fasterxml.jackson.annotation.JsonTypeName;
 import lombok.Builder;
 import lombok.Data;
 import lombok.EqualsAndHashCode;
-import org.apache.commons.collections.MapUtils;
 import org.mongodb.morphia.annotations.Transient;
 import software.wings.api.DeploymentType;
 import software.wings.beans.Log.LogLevel;
@@ -137,8 +137,8 @@ public class EcsSetupCommandUnit extends ContainerSetupCommandUnit {
     taskDefinition.setFamily(taskFamily);
 
     // Set service variables as environment variables
-    if (MapUtils.isNotEmpty(serviceVariables)) {
-      if (MapUtils.isNotEmpty(safeDisplayServiceVariables)) {
+    if (isNotEmpty(serviceVariables)) {
+      if (isNotEmpty(safeDisplayServiceVariables)) {
         executionLogCallback.saveExecutionLog("Setting environment variables in container definition", LogLevel.INFO);
         for (String key : safeDisplayServiceVariables.keySet()) {
           executionLogCallback.saveExecutionLog(key + "=" + safeDisplayServiceVariables.get(key), LogLevel.INFO);

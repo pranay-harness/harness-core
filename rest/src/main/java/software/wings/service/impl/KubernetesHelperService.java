@@ -3,6 +3,7 @@ package software.wings.service.impl;
 import static com.fasterxml.jackson.annotation.JsonInclude.Include.NON_EMPTY;
 import static com.fasterxml.jackson.dataformat.yaml.YAMLGenerator.Feature.WRITE_DOC_START_MARKER;
 import static io.fabric8.kubernetes.client.utils.Utils.isNotNullOrEmpty;
+import static io.harness.data.structure.EmptyPredicate.isNotEmpty;
 import static io.harness.network.Http.getOkHttpClientBuilder;
 import static okhttp3.ConnectionSpec.CLEARTEXT;
 import static org.apache.commons.lang3.StringUtils.isNotBlank;
@@ -116,7 +117,7 @@ public class KubernetesHelperService {
       configBuilder.withClientKeyAlgo(kubernetesConfig.getClientKeyAlgo().trim());
     }
 
-    if (StringUtils.isNotEmpty(apiVersion)) {
+    if (isNotEmpty(apiVersion)) {
       configBuilder.withApiVersion(apiVersion);
     }
 
@@ -248,7 +249,7 @@ public class KubernetesHelperService {
         }
       }
 
-      if (StringUtils.isNotEmpty(config.getUserAgent())) {
+      if (isNotEmpty(config.getUserAgent())) {
         httpClientBuilder.addNetworkInterceptor(new Interceptor() {
           @Override
           public Response intercept(Chain chain) throws IOException {

@@ -45,7 +45,6 @@ import com.google.inject.Inject;
 import com.google.inject.Singleton;
 import com.google.inject.name.Named;
 
-import org.apache.commons.collections.MapUtils;
 import org.apache.commons.io.FileUtils;
 import org.apache.commons.io.filefilter.FileFilterUtils;
 import org.apache.commons.lang3.StringUtils;
@@ -242,7 +241,7 @@ public class WatcherServiceImpl implements WatcherService {
         synchronized (runningDelegates) {
           for (String delegateProcess : runningDelegates) {
             Map<String, Object> delegateData = messageService.getAllData(DELEGATE_DASH + delegateProcess);
-            if (MapUtils.isNotEmpty(delegateData)) {
+            if (isNotEmpty(delegateData)) {
               String delegateVersion = (String) delegateData.get(DELEGATE_VERSION);
               Integer delegateMinorVersion = getMinorVersion(delegateVersion);
 

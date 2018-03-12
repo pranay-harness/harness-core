@@ -42,7 +42,6 @@ import com.mongodb.BasicDBObject;
 import freemarker.cache.ClassTemplateLoader;
 import freemarker.template.Configuration;
 import freemarker.template.TemplateException;
-import org.apache.commons.collections.MapUtils;
 import org.apache.commons.compress.archivers.zip.AsiExtraField;
 import org.apache.commons.compress.archivers.zip.ZipArchiveEntry;
 import org.apache.commons.compress.archivers.zip.ZipArchiveOutputStream;
@@ -230,7 +229,7 @@ public class DelegateServiceImpl implements DelegateService {
     delegateScripts.setDelegateId(delegateId);
     delegateScripts.setVersion(version);
     delegateScripts.setDoUpgrade(false);
-    if (MapUtils.isNotEmpty(scriptParams)) {
+    if (isNotEmpty(scriptParams)) {
       logger.info("Upgrading delegate to version: {}", scriptParams.get("upgradeVersion"));
       delegateScripts.setDoUpgrade(true);
       delegateScripts.setVersion((String) scriptParams.get("upgradeVersion"));

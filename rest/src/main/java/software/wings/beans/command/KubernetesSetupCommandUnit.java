@@ -58,7 +58,6 @@ import lombok.EqualsAndHashCode;
 import me.snowdrop.istio.api.model.IstioResource;
 import me.snowdrop.istio.api.model.IstioResourceBuilder;
 import me.snowdrop.istio.api.model.IstioResourceFluent.RouteRuleSpecNested;
-import org.apache.commons.collections.MapUtils;
 import org.apache.commons.lang3.StringUtils;
 import org.mongodb.morphia.annotations.Transient;
 import org.slf4j.Logger;
@@ -395,7 +394,7 @@ public class KubernetesSetupCommandUnit extends ContainerSetupCommandUnit {
       Map<String, String> serviceLabels, KubernetesSetupParams setupParams, ExecutionLogCallback executionLogCallback) {
     HorizontalPodAutoscaler horizontalPodAutoscaler = null;
 
-    if (StringUtils.isNotEmpty(setupParams.getCustomMetricYamlConfig())) {
+    if (isNotEmpty(setupParams.getCustomMetricYamlConfig())) {
       executionLogCallback.saveExecutionLog(
           String.format("Setting autoscaler with custom metric config: %s", setupParams.getCustomMetricYamlConfig()),
           LogLevel.INFO);
@@ -728,8 +727,8 @@ public class KubernetesSetupCommandUnit extends ContainerSetupCommandUnit {
 
     if (podSpec != null) {
       // Set service variables as environment variables
-      if (MapUtils.isNotEmpty(serviceVariables)) {
-        if (MapUtils.isNotEmpty(safeDisplayServiceVariables)) {
+      if (isNotEmpty(serviceVariables)) {
+        if (isNotEmpty(safeDisplayServiceVariables)) {
           executionLogCallback.saveExecutionLog("Setting environment variables in container definition", LogLevel.INFO);
           for (String key : safeDisplayServiceVariables.keySet()) {
             executionLogCallback.saveExecutionLog(key + "=" + safeDisplayServiceVariables.get(key), LogLevel.INFO);
