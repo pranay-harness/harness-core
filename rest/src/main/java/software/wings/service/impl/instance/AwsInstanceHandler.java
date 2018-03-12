@@ -1,5 +1,6 @@
 package software.wings.service.impl.instance;
 
+import static io.harness.data.structure.EmptyPredicate.isNotEmpty;
 import static java.util.stream.Collectors.toSet;
 
 import com.google.common.collect.ArrayListMultimap;
@@ -10,7 +11,6 @@ import com.google.common.collect.Sets.SetView;
 import com.google.inject.Inject;
 import com.google.inject.Singleton;
 
-import org.apache.commons.collections.CollectionUtils;
 import org.apache.commons.lang3.StringUtils;
 import software.wings.annotation.Encryptable;
 import software.wings.api.AwsAutoScalingGroupDeploymentInfo;
@@ -139,7 +139,7 @@ public class AwsInstanceHandler extends InstanceHandler {
         Map<String, Instance> instancesInDBMap = Maps.newHashMap();
 
         // If there are prior instances in db already
-        if (CollectionUtils.isNotEmpty(instancesInDB)) {
+        if (isNotEmpty(instancesInDB)) {
           instancesInDB.stream().forEach(instance -> {
             if (instance != null) {
               instancesInDBMap.put(getEc2InstanceId(instance), instance);
@@ -278,7 +278,7 @@ public class AwsInstanceHandler extends InstanceHandler {
                                              .map(entry -> entry.getValue().getUuid())
                                              .collect(Collectors.toSet());
 
-    if (CollectionUtils.isNotEmpty(instanceIdsToBeDeleted)) {
+    if (isNotEmpty(instanceIdsToBeDeleted)) {
       logger.info(new StringBuilder()
                       .append("Total no of Ec2 instances to be deleted for InfraMappingId: ")
                       .append(ec2instance.getInfraMappingId())
@@ -305,7 +305,7 @@ public class AwsInstanceHandler extends InstanceHandler {
       }
     });
 
-    if (CollectionUtils.isNotEmpty(instanceIdsToBeDeleted)) {
+    if (isNotEmpty(instanceIdsToBeDeleted)) {
       instanceService.delete(instanceIdsToBeDeleted);
     }
   }

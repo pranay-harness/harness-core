@@ -40,7 +40,6 @@ import com.google.inject.name.Named;
 import net.redhogs.cronparser.DescriptionTypeEnum;
 import net.redhogs.cronparser.I18nMessages;
 import net.redhogs.cronparser.Options;
-import org.apache.commons.collections.MapUtils;
 import org.apache.commons.lang3.StringUtils;
 import org.mongodb.morphia.query.FindOptions;
 import org.mongodb.morphia.query.Sort;
@@ -274,7 +273,7 @@ public class TriggerServiceImpl implements TriggerService {
       Workflow workflow = validateWorkflow(trigger.getAppId(), trigger.getWorkflowId());
       services = workflow.getServices();
       Map<String, String> workflowVariables = trigger.getWorkflowVariables();
-      if (MapUtils.isNotEmpty(workflowVariables)) {
+      if (isNotEmpty(workflowVariables)) {
         if (!BUILD.equals(workflow.getOrchestrationWorkflow().getOrchestrationWorkflowType())) {
           if (workflow.getOrchestrationWorkflow().isServiceTemplatized()) {
             services = workflowService.resolveServices(workflow, workflowVariables);

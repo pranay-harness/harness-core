@@ -1,5 +1,6 @@
 package software.wings.helpers.ext.ami;
 
+import static io.harness.data.structure.EmptyPredicate.isNotEmpty;
 import static org.apache.commons.lang3.StringUtils.isNotBlank;
 import static software.wings.helpers.ext.jenkins.BuildDetails.Builder.aBuildDetails;
 
@@ -10,7 +11,6 @@ import com.amazonaws.services.ec2.model.DescribeImagesRequest;
 import com.amazonaws.services.ec2.model.DescribeImagesResult;
 import com.amazonaws.services.ec2.model.Filter;
 import com.amazonaws.services.ec2.model.Image;
-import org.apache.commons.collections.MapUtils;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import software.wings.beans.AwsConfig;
@@ -63,11 +63,11 @@ public class AmiServiceImpl implements AmiService {
     filters.add(new Filter("is-public").withValues("false"));
     filters.add(new Filter("state").withValues("available"));
 
-    if (MapUtils.isNotEmpty(tags)) {
+    if (isNotEmpty(tags)) {
       tags.keySet().forEach(key -> filters.add(new Filter("tag:" + key, new ArrayList<>(tags.get(key)))));
     }
 
-    if (MapUtils.isNotEmpty(filterMap)) {
+    if (isNotEmpty(filterMap)) {
       filterMap.entrySet()
           .stream()
           .filter(entry -> isNotBlank(entry.getKey()))

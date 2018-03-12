@@ -1,5 +1,6 @@
 package software.wings.service.impl.yaml.handler.notification;
 
+import static io.harness.data.structure.EmptyPredicate.isNotEmpty;
 import static io.harness.data.structure.UUIDGenerator.generateUuid;
 import static software.wings.beans.NotificationGroup.NotificationGroupBuilder.aNotificationGroup;
 
@@ -7,7 +8,6 @@ import com.google.common.collect.Lists;
 import com.google.inject.Inject;
 import com.google.inject.Singleton;
 
-import org.apache.commons.collections.CollectionUtils;
 import software.wings.beans.ErrorCode;
 import software.wings.beans.ExecutionScope;
 import software.wings.beans.NotificationGroup;
@@ -40,7 +40,7 @@ public class NotificationRulesYamlHandler extends BaseYamlHandler<NotificationRu
     ExecutionScope executionScope = Util.getEnumFromString(ExecutionScope.class, yaml.getExecutionScope());
 
     List<NotificationGroup> notificationGroups = Lists.newArrayList();
-    if (CollectionUtils.isNotEmpty(yaml.getNotificationGroups())) {
+    if (isNotEmpty(yaml.getNotificationGroups())) {
       notificationGroups =
           yaml.getNotificationGroups()
               .stream()

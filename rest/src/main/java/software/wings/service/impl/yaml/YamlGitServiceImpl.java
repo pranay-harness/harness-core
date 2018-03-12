@@ -1,6 +1,7 @@
 package software.wings.service.impl.yaml;
 
 import static io.harness.data.structure.EmptyPredicate.isEmpty;
+import static io.harness.data.structure.EmptyPredicate.isNotEmpty;
 import static io.harness.data.structure.UUIDGenerator.generateUuid;
 import static software.wings.beans.Base.GLOBAL_APP_ID;
 import static software.wings.beans.DelegateTask.Builder.aDelegateTask;
@@ -10,7 +11,6 @@ import static software.wings.dl.PageRequest.PageRequestBuilder.aPageRequest;
 import com.google.common.collect.Lists;
 import com.google.inject.Inject;
 
-import org.apache.commons.lang3.StringUtils;
 import org.mongodb.morphia.query.Query;
 import org.mongodb.morphia.query.UpdateOperations;
 import org.slf4j.Logger;
@@ -265,7 +265,7 @@ public class YamlGitServiceImpl implements YamlGitService {
   private void checkForValidNameSyntax(List<GitFileChange> gitFileChanges) {
     // Get all yamlTypes having non-empty filepath prefixes (these yaml types represent different file paths)
     List<YamlType> folderYamlTypes = Arrays.stream(YamlType.values())
-                                         .filter(yamlType -> StringUtils.isNotEmpty(yamlType.getPathExpression()))
+                                         .filter(yamlType -> isNotEmpty(yamlType.getPathExpression()))
                                          .collect(Collectors.toList());
 
     // make sure, all filepaths to be synced with git are in proper format

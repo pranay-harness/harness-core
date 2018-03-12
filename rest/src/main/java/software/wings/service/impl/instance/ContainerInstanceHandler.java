@@ -1,5 +1,7 @@
 package software.wings.service.impl.instance;
 
+import static io.harness.data.structure.EmptyPredicate.isNotEmpty;
+
 import com.google.common.collect.ArrayListMultimap;
 import com.google.common.collect.Maps;
 import com.google.common.collect.Multimap;
@@ -8,7 +10,6 @@ import com.google.common.collect.Sets.SetView;
 import com.google.inject.Inject;
 import com.google.inject.Singleton;
 
-import org.apache.commons.collections.CollectionUtils;
 import software.wings.api.ContainerDeploymentInfo;
 import software.wings.api.DeploymentInfo;
 import software.wings.beans.ContainerInfrastructureMapping;
@@ -95,7 +96,7 @@ public class ContainerInstanceHandler extends InstanceHandler {
         Map<String, Instance> instancesInDBMap = Maps.newHashMap();
 
         // If there are prior instances in db already
-        if (CollectionUtils.isNotEmpty(instancesInDB)) {
+        if (isNotEmpty(instancesInDB)) {
           instancesInDB.stream().forEach(instance -> {
             if (instance != null) {
               instancesInDBMap.put(instance.getContainerInstanceKey().getContainerId(), instance);
@@ -145,11 +146,11 @@ public class ContainerInstanceHandler extends InstanceHandler {
                         .append(instanceIdsToBeDeleted.size())
                         .toString());
 
-        if (CollectionUtils.isNotEmpty(instanceIdsToBeDeleted)) {
+        if (isNotEmpty(instanceIdsToBeDeleted)) {
           instanceService.delete(instanceIdsToBeDeleted);
         }
 
-        if (CollectionUtils.isNotEmpty(instancesToBeAdded)) {
+        if (isNotEmpty(instancesToBeAdded)) {
           instancesToBeAdded.stream().forEach(containerId -> {
             ContainerInfo containerInfo = latestContainerInfoMap.get(containerId);
             Instance instance = containerInstanceHelper.buildInstanceFromContainerInfo(

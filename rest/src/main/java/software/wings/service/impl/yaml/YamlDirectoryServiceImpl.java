@@ -1,5 +1,6 @@
 package software.wings.service.impl.yaml;
 
+import static io.harness.data.structure.EmptyPredicate.isNotEmpty;
 import static software.wings.beans.Base.GLOBAL_APP_ID;
 import static software.wings.beans.ConfigFile.DEFAULT_TEMPLATE_ID;
 import static software.wings.beans.yaml.YamlConstants.APPLICATIONS_FOLDER;
@@ -27,7 +28,6 @@ import static software.wings.dl.PageRequest.PageRequestBuilder.aPageRequest;
 import com.google.inject.Inject;
 import com.google.inject.Singleton;
 
-import org.apache.commons.collections.CollectionUtils;
 import org.hibernate.validator.constraints.NotEmpty;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -769,7 +769,7 @@ public class YamlDirectoryServiceImpl implements YamlDirectoryService {
 
     List<NotificationGroup> notificationGroups = notificationSetupService.listNotificationGroups(accountId);
 
-    if (CollectionUtils.isNotEmpty(notificationGroups)) {
+    if (isNotEmpty(notificationGroups)) {
       // iterate over notification groups
       notificationGroups.stream().forEach(notificationGroup -> {
         DirectoryPath notificationGroupPath = directoryPath.clone();
