@@ -509,6 +509,7 @@ public class ArtifactServiceImpl implements ArtifactService {
 
   @Override
   public Artifact startArtifactCollection(String appId, String artifactId) {
+    logger.info("Start collecting artifact {} of appId {}", artifactId, appId);
     Artifact artifact = wingsPersistence.get(Artifact.class, appId, artifactId);
     if (artifact == null) {
       throw new WingsException("Artifact [" + artifactId + "] for the appId [" + appId + "] does not exist", USER);
@@ -519,6 +520,13 @@ public class ArtifactServiceImpl implements ArtifactService {
       return artifact;
     }
 
+    if (artifact.getContentStatus() == null && !isEmpty(artifact.getArtifactFiles())) {
+      logger.info(
+          "Artifact {} content status empty. It means it is already downloaded. Updating artifact content status as DOWNLOADED",
+          artifactId);
+      updateStatus(artifactId, appId, APPROVED, DOWNLOADED);
+      return artifact;
+    }
     if ((METADATA_ONLY == artifact.getContentStatus()) || (DOWNLOADING == artifact.getContentStatus())
         || (DOWNLOADED == artifact.getContentStatus())) {
       logger.info("Artifact content for artifactId {} of the appId {} is either downloaded or in progress. Returning.",
