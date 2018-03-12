@@ -10,6 +10,7 @@ import software.wings.service.impl.analysis.LogMLAnalysisRecord;
 import software.wings.service.impl.analysis.LogMLAnalysisSummary;
 import software.wings.service.impl.analysis.LogMLExpAnalysisInfo;
 import software.wings.service.impl.analysis.LogMLFeedback;
+import software.wings.service.impl.analysis.LogMLFeedbackRecord;
 import software.wings.service.impl.analysis.LogRequest;
 import software.wings.sm.StateType;
 import software.wings.utils.validation.Create;
@@ -84,6 +85,8 @@ public interface AnalysisService {
 
   boolean saveExperimentalLogAnalysisRecords(
       ExperimentalLogMLAnalysisRecord mlAnalysisResponse, StateType stateType, Optional<String> taskId);
+
+  List<LogMLFeedbackRecord> getMLFeedback(String serviceId, String workflowId, String workflowExecutionId);
 
   void cleanUpForLogRetry(String stateExecutionId);
 

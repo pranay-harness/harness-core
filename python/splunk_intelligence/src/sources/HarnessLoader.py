@@ -56,7 +56,7 @@ class HarnessLoader(object):
                     time.sleep(sleep_time)
                     sleep_time = sleep_time * 2
 
-        raise Exception(str(max_retries) + 'is tried, but unable to get request from' + url)
+        raise Exception(str(max_retries) + ' is tried, but unable to get request from ' + url)
 
 
 
@@ -80,7 +80,7 @@ class HarnessLoader(object):
                     time.sleep(sleep_time)
                     sleep_time = sleep_time * 2
 
-        raise Exception(str(max_retries) + 'is tried, but unable to post request to ' + url)
+        raise Exception(str(max_retries) + ' is tried, but unable to post request to ' + url)
 
 
 
@@ -112,7 +112,16 @@ class HarnessLoader(object):
                     status_code) + ' for ' + json.dumps(
                     payload))
         return json.loads(text)['resource']
+    @staticmethod
+    def load_feedback_output_from_harness(url, version_file_path, service_secret):
+        logger.info('Starting Fetching feedback data from Harness Manager')
+        text, status_code = HarnessLoader.get_request(url, version_file_path, service_secret, max_retries=3)
 
+        if status_code != 200:
+            raise Exception(
+                "Failed to fetch feedback data from Harness manager. Got status_code = " + str(
+                    status_code))
+        return text['resource']
     @staticmethod
     def load_from_harness_raw(url, app_id, workflow_id, state_execution_id, service_id,
                               log_collection_minute, nodes, query, version_file_path, service_secret):

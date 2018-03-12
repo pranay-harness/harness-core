@@ -112,6 +112,14 @@ public class LogMLAnalysisGenerator implements Runnable {
         final String logAnalysisGetUrl = "/api/" + context.getStateBaseUrl()
             + LogAnalysisResource.ANALYSIS_STATE_GET_ANALYSIS_RECORDS_URL + "?accountId=" + accountId;
 
+        String feedback_url = "";
+
+        if (logAnalysisMinute == 0) {
+          feedback_url = "/api/" + context.getStateBaseUrl() + LogAnalysisResource.ANALYSIS_USER_FEEDBACK
+              + "?accountId=" + accountId + "&serviceId=" + serviceId + "&workflowId=" + workflowId
+              + "&workflowExecutionId=" + context.getWorkflowExecutionId();
+        }
+
         if (createExperiment) {
           final String experimentalLogAnalysisSaveUrl = "/api/learning-exp"
               + LogAnalysisResource.ANALYSIS_STATE_SAVE_ANALYSIS_RECORDS_URL + "?accountId=" + accountId
@@ -136,6 +144,9 @@ public class LogMLAnalysisGenerator implements Runnable {
                   .ml_analysis_type(MLAnalysisType.LOG_ML)
                   .stateType(context.getStateType());
 
+          if (!isEmpty(feedback_url)) {
+            experimentalAnalysisTaskBuilder.feedback_url(feedback_url);
+          }
           if (isBaselineCreated) {
             experimentalAnalysisTaskBuilder.control_input_url(controlInputUrl)
                 .test_input_url(testInputUrl)
@@ -169,6 +180,10 @@ public class LogMLAnalysisGenerator implements Runnable {
                 .log_analysis_get_url(logAnalysisGetUrl)
                 .ml_analysis_type(MLAnalysisType.LOG_ML)
                 .stateType(context.getStateType());
+
+        if (!isEmpty(feedback_url)) {
+          analysisTaskBuilder.feedback_url(feedback_url);
+        }
 
         if (isBaselineCreated) {
           analysisTaskBuilder.control_input_url(controlInputUrl)
