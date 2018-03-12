@@ -14,6 +14,7 @@ import org.slf4j.LoggerFactory;
 import software.wings.beans.EntityType;
 import software.wings.beans.Event.Type;
 import software.wings.beans.artifact.Artifact;
+import software.wings.beans.artifact.Artifact.ContentStatus;
 import software.wings.service.impl.EventEmitter;
 import software.wings.service.impl.EventEmitter.Channel;
 import software.wings.service.intfc.ArtifactService;
@@ -55,12 +56,12 @@ public class ArtifactCollectionCallback implements NotifyCallback {
 
     if (isEmpty(responseData.getData())) { // Error in Downloading artifact file
       logger.error("Artifact file collection failed for artifactId: [{}], appId: [{}]", artifactId, appId);
-      artifactService.updateStatus(artifactId, appId, FAILED, "Failed to download artifact file");
+      artifactService.updateStatus(artifactId, appId, FAILED, ContentStatus.FAILED, "Failed to download artifact file");
     } else {
       Artifact artifact = artifactService.get(appId, artifactId);
       logger.info("Artifact collection completed - artifactId : {}", artifact.getUuid());
       artifactService.addArtifactFile(artifact.getUuid(), artifact.getAppId(), responseData.getData());
-      artifactService.updateStatus(artifact.getUuid(), artifact.getAppId(), APPROVED);
+      artifactService.updateStatus(artifact.getUuid(), artifact.getAppId(), APPROVED, ContentStatus.DOWNLOADED);
 
       artifact = artifactService.get(appId, artifactId);
 

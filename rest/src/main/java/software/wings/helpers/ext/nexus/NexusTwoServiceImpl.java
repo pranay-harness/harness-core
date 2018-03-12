@@ -1,7 +1,11 @@
 package software.wings.helpers.ext.nexus;
 
 import static io.harness.data.structure.EmptyPredicate.isEmpty;
+import static io.harness.data.structure.EmptyPredicate.isNotEmpty;
+import static io.harness.threading.Morpheus.quietSleep;
+import static java.time.Duration.ofMillis;
 import static java.util.Collections.emptyMap;
+import static java.util.stream.Collectors.toList;
 import static org.apache.commons.lang3.StringUtils.isBlank;
 import static software.wings.beans.ErrorCode.INVALID_REQUEST;
 import static software.wings.beans.ResponseMessage.Level.ERROR;
@@ -9,7 +13,6 @@ import static software.wings.beans.ResponseMessage.aResponseMessage;
 import static software.wings.helpers.ext.jenkins.BuildDetails.Builder.aBuildDetails;
 import static software.wings.helpers.ext.nexus.NexusServiceImpl.getBaseUrl;
 import static software.wings.helpers.ext.nexus.NexusServiceImpl.getRetrofit;
-import static software.wings.helpers.ext.nexus.NexusServiceImpl.handleException;
 import static software.wings.helpers.ext.nexus.NexusServiceImpl.isSuccessful;
 
 import com.google.inject.Inject;
@@ -26,7 +29,9 @@ import retrofit2.Call;
 import retrofit2.Response;
 import retrofit2.converter.simplexml.SimpleXmlConverterFactory;
 import software.wings.beans.config.NexusConfig;
+import software.wings.common.AlphanumComparator;
 import software.wings.exception.WingsException;
+import software.wings.helpers.ext.artifactory.FolderPath;
 import software.wings.helpers.ext.jenkins.BuildDetails;
 import software.wings.helpers.ext.nexus.model.IndexBrowserTreeNode;
 import software.wings.helpers.ext.nexus.model.IndexBrowserTreeViewResponse;
@@ -40,10 +45,18 @@ import java.net.Authenticator;
 import java.net.PasswordAuthentication;
 import java.net.URL;
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.HashMap;
 import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.Queue;
+import java.util.Stack;
+import java.util.concurrent.Callable;
+import java.util.concurrent.ConcurrentLinkedQueue;
+import java.util.concurrent.ExecutionException;
+import java.util.concurrent.ExecutorService;
+import java.util.concurrent.Future;
 import java.util.stream.Collectors;
 /**
  * Created by sgurubelli on 11/18/17.
@@ -53,6 +66,7 @@ public class NexusTwoServiceImpl {
   private static final Logger logger = LoggerFactory.getLogger(NexusTwoServiceImpl.class);
 
   @Inject EncryptionService encryptionService;
+  @Inject private ExecutorService executorService;
 
   public Map<String, String> getRepositories(NexusConfig nexusConfig, List<EncryptedDataDetail> encryptionDetails)
       throws IOException {
@@ -74,8 +88,9 @@ public class NexusTwoServiceImpl {
       String path, List<String> groupIds) {
     logger.info("Retrieving groupId paths");
     try {
+      NexusRestClient nexusRestClient = getRestClient(nexusConfig, encryptionDetails);
       Response<IndexBrowserTreeViewResponse> response = getIndexBrowserTreeViewResponseResponse(
-          nexusConfig, encryptionDetails, getIndexContentPathUrl(nexusConfig, repoId, path));
+          nexusRestClient, nexusConfig, getIndexContentPathUrl(nexusConfig, repoId, path));
       if (isSuccessful(response)) {
         List<IndexBrowserTreeNode> treeNodes = response.body().getData().getChildren();
         treeNodes.forEach(treeNode -> {
@@ -98,37 +113,77 @@ public class NexusTwoServiceImpl {
     logger.info("Retrieving groupId paths success");
   }
 
-  public List<String> getGroupIdPaths(
-      NexusConfig nexusConfig, List<EncryptedDataDetail> encryptionDetails, String repoId) {
-    logger.info("Retrieving groupId paths");
+  public List<String> getGroupIdPaths(NexusConfig nexusConfig, List<EncryptedDataDetail> encryptionDetails,
+      String repoId) throws ExecutionException, InterruptedException {
+    return getGroupIdPathsAsync(nexusConfig, encryptionDetails, repoId);
+    /*
+    logger.info("Retrieving groupId paths for the repoId {}", repoId);
     List<String> groupIds = new ArrayList<>();
-    try {
-      final Call<IndexBrowserTreeViewResponse> request =
-          getRestClient(nexusConfig, encryptionDetails)
-              .getIndexContent(
-                  Credentials.basic(nexusConfig.getUsername(), new String(nexusConfig.getPassword())), repoId);
-      final Response<IndexBrowserTreeViewResponse> response = request.execute();
-      if (isSuccessful(response)) {
-        final List<IndexBrowserTreeNode> treeNodes = response.body().getData().getChildren();
-        if (isEmpty(treeNodes)) {
-          return groupIds;
-        }
-        treeNodes.forEach(treeNode -> {
-          if (treeNode.getType().equals("G")) {
-            String groupId = treeNode.getPath().replace("/", ".");
-            groupIds.add(groupId.substring(1, groupId.length() - 1));
-            getGroupIdPaths(nexusConfig, encryptionDetails, repoId, treeNode.getPath(), groupIds);
+     try {
+       final Call<IndexBrowserTreeViewResponse> request =
+           getRestClient(nexusConfig, encryptionDetails)
+               .getIndexContent(
+                   Credentials.basic(nexusConfig.getUsername(), new String(nexusConfig.getPassword())), repoId);
+       final Response<IndexBrowserTreeViewResponse> response = request.execute();
+       if (isSuccessful(response)) {
+         final List<IndexBrowserTreeNode> treeNodes = response.body().getData().getChildren();
+         if (isEmpty(treeNodes)) {
+           return groupIds;
+         }
+         treeNodes.forEach(treeNode -> {
+           if (treeNode.getType().equals("G")) {
+             String groupId = treeNode.getPath().replace("/", ".");
+             groupIds.add(groupId.substring(1, groupId.length() - 1));
+             getGroupIdPaths(nexusConfig, encryptionDetails, repoId, treeNode.getPath(), groupIds);
+           }
+         });
+       }
+     } catch (final IOException e) {
+       logger.error("Error occurred while retrieving Repository Group Ids from Nexus server " +
+     nexusConfig.getNexusUrl()
+               + " for Repository " + repoId,
+           e);
+       handleException(e);
+     }
+     logger.info("Retrieving groupId paths success");
+     return groupIds;*/
+  }
+
+  private List<String> getGroupIdPathsAsync(NexusConfig nexusConfig, List<EncryptedDataDetail> encryptionDetails,
+      String repoKey) throws ExecutionException, InterruptedException {
+    List<String> groupIds = new ArrayList<>();
+    NexusRestClient nexusRestClient = getRestClient(nexusConfig, encryptionDetails);
+    Queue<Future> futures = new ConcurrentLinkedQueue<>();
+    Stack<FolderPath> paths = new Stack<>();
+    paths.addAll(getFolderPaths(nexusRestClient, nexusConfig, repoKey, ""));
+    while (isNotEmpty(paths) || isNotEmpty(futures)) {
+      while (isNotEmpty(paths)) {
+        FolderPath folderPath = paths.pop();
+        String path = folderPath.getPath();
+        if (folderPath.isFolder()) {
+          traverseInParallel(nexusRestClient, nexusConfig, repoKey, path, futures, paths);
+        } else {
+          // Strip out the version
+          String[] pathElems = folderPath.getPath().substring(1).split("/");
+          if (pathElems.length >= 1) {
+            groupIds.add(getGroupId(Arrays.stream(pathElems).limit(pathElems.length - 1).collect(Collectors.toList())));
           }
-        });
+        }
       }
-    } catch (final IOException e) {
-      logger.error("Error occurred while retrieving Repository Group Ids from Nexus server " + nexusConfig.getNexusUrl()
-              + " for Repository " + repoId,
-          e);
-      handleException(e);
+      while (!futures.isEmpty() && futures.peek().isDone()) {
+        futures.poll().get();
+      }
+      quietSleep(ofMillis(20)); // avoid busy wait
     }
-    logger.info("Retrieving groupId paths success");
     return groupIds;
+  }
+
+  private void traverseInParallel(NexusRestClient nexusRestClient, NexusConfig nexusConfig, String repoKey, String path,
+      Queue<Future> futures, Stack<FolderPath> paths) {
+    futures.add(executorService.submit((Callable<Void>) () -> {
+      paths.addAll(getFolderPaths(nexusRestClient, nexusConfig, repoKey, path));
+      return null;
+    }));
   }
 
   public List<String> getArtifactNames(NexusConfig nexusConfig, List<EncryptedDataDetail> encryptionDetails,
@@ -137,7 +192,7 @@ public class NexusTwoServiceImpl {
     final List<String> artifactNames = new ArrayList<>();
     final String url = getIndexContentPathUrl(nexusConfig, repoId, getGroupId(path));
     final Response<IndexBrowserTreeViewResponse> response =
-        getIndexBrowserTreeViewResponseResponse(nexusConfig, encryptionDetails, url);
+        getIndexBrowserTreeViewResponseResponse(getRestClient(nexusConfig, encryptionDetails), nexusConfig, url);
     if (isSuccessful(response)) {
       final List<IndexBrowserTreeNode> treeNodes = response.body().getData().getChildren();
       if (treeNodes != null) {
@@ -182,29 +237,30 @@ public class NexusTwoServiceImpl {
 
   public List<BuildDetails> getVersions(NexusConfig nexusConfig, List<EncryptedDataDetail> encryptionDetails,
       String repoId, String groupId, String artifactName) throws IOException {
-    logger.info("Retrieving versions");
+    logger.info("Retrieving versions for repoId {} groupId {} and artifactName {}", repoId, groupId, artifactName);
     String url = getIndexContentPathUrl(nexusConfig, repoId, getGroupId(groupId)) + artifactName + "/";
     final Response<IndexBrowserTreeViewResponse> response =
-        getIndexBrowserTreeViewResponseResponse(nexusConfig, encryptionDetails, url);
-    List<BuildDetails> buildDetails = new ArrayList<>();
+        getIndexBrowserTreeViewResponseResponse(getRestClient(nexusConfig, encryptionDetails), nexusConfig, url);
+    List<String> versions = new ArrayList<>();
     if (isSuccessful(response)) {
       final List<IndexBrowserTreeNode> treeNodes = response.body().getData().getChildren();
       if (treeNodes != null) {
-        treeNodes.forEach(treeNode -> {
+        for (IndexBrowserTreeNode treeNode : treeNodes) {
           if (treeNode.getType().equals("A")) {
             List<IndexBrowserTreeNode> children = treeNode.getChildren();
             for (IndexBrowserTreeNode child : children) {
               if (child.getType().equals("V")) {
-                buildDetails.add(
-                    aBuildDetails().withNumber(child.getNodeName()).withRevision(child.getNodeName()).build());
+                versions.add(child.getNodeName());
               }
             }
           }
-        });
+        }
       }
     }
-    logger.info("Retrieving versions success");
-    return buildDetails;
+    logger.info("Versions come from nexus server {}", versions);
+    versions = versions.stream().sorted(new AlphanumComparator()).collect(Collectors.toList());
+    logger.info("After sorting alphanumerically versions {}", versions);
+    return versions.stream().map(version -> aBuildDetails().withNumber(version).build()).collect(toList());
   }
 
   public BuildDetails getLatestVersion(NexusConfig nexusConfig, List<EncryptedDataDetail> encryptionDetails,
@@ -227,7 +283,7 @@ public class NexusTwoServiceImpl {
     final String url = getIndexContentPathUrl(nexusConfig, repoType, relativePath);
     logger.info("Url {}", url);
     final Response<IndexBrowserTreeViewResponse> response =
-        getIndexBrowserTreeViewResponseResponse(nexusConfig, encryptionDetails, url);
+        getIndexBrowserTreeViewResponseResponse(getRestClient(nexusConfig, encryptionDetails), nexusConfig, url);
     if (isSuccessful(response)) {
       final List<IndexBrowserTreeNode> treeNodes = response.body().getData().getChildren();
       return getUrlInputStream(nexusConfig, encryptionDetails, project, treeNodes, repoType);
@@ -296,11 +352,9 @@ public class NexusTwoServiceImpl {
   }
 
   private Response<IndexBrowserTreeViewResponse> getIndexBrowserTreeViewResponseResponse(
-      NexusConfig nexusConfig, List<EncryptedDataDetail> encryptionDetails, String url) throws IOException {
-    final Call<IndexBrowserTreeViewResponse> request =
-        getRestClient(nexusConfig, encryptionDetails)
-            .getIndexContentByUrl(
-                Credentials.basic(nexusConfig.getUsername(), new String(nexusConfig.getPassword())), url);
+      NexusRestClient nexusRestClient, NexusConfig nexusConfig, String url) throws IOException {
+    final Call<IndexBrowserTreeViewResponse> request = nexusRestClient.getIndexContentByUrl(
+        Credentials.basic(nexusConfig.getUsername(), new String(nexusConfig.getPassword())), url);
     return request.execute();
   }
 
@@ -313,8 +367,55 @@ public class NexusTwoServiceImpl {
         .toString();
   }
 
+  private List<FolderPath> getFolderPaths(
+      NexusRestClient nexusRestClient, NexusConfig nexusConfig, String repoKey, String repoPath) {
+    // Add first level paths
+    List<FolderPath> folderPaths = new ArrayList<>();
+    try {
+      Response<IndexBrowserTreeViewResponse> response;
+      if (isEmpty(repoPath)) {
+        final Call<IndexBrowserTreeViewResponse> request = nexusRestClient.getIndexContent(
+            Credentials.basic(nexusConfig.getUsername(), new String(nexusConfig.getPassword())), repoKey);
+        response = request.execute();
+      } else {
+        response = getIndexBrowserTreeViewResponseResponse(
+            nexusRestClient, nexusConfig, getIndexContentPathUrl(nexusConfig, repoKey, repoPath));
+      }
+      if (isSuccessful(response)) {
+        List<IndexBrowserTreeNode> treeNodes = response.body().getData().getChildren();
+        if (treeNodes != null) {
+          treeNodes.forEach(treeNode -> {
+            if (treeNode.getType().equals("G")) {
+              folderPaths.add(FolderPath.builder().repo(repoKey).path(treeNode.getPath()).folder(true).build());
+            } else {
+              folderPaths.add(FolderPath.builder().repo(repoKey).path(treeNode.getPath()).folder(false).build());
+            }
+          });
+        }
+      }
+    } catch (final IOException e) {
+      logger.error("Error occurred while retrieving Repository Group Ids from Nexus server " + nexusConfig.getNexusUrl()
+              + " for repository " + repoKey + " under path " + repoPath,
+          e);
+      throw new WingsException(
+          aResponseMessage().code(INVALID_REQUEST).level(ERROR).message(e.getMessage()).build(), e);
+    }
+    return folderPaths;
+  }
+
   private String getGroupId(String path) {
     return "/" + path.replace(".", "/") + "/";
+  }
+
+  private String getGroupId(List<String> pathElems) {
+    StringBuilder groupIdBuilder = new StringBuilder();
+    for (int i = 0; i < pathElems.size(); i++) {
+      groupIdBuilder.append(pathElems.get(i));
+      if (i != pathElems.size() - 1) {
+        groupIdBuilder.append('.');
+      }
+    }
+    return groupIdBuilder.toString();
   }
 
   private NexusRestClient getRestClient(final NexusConfig nexusConfig, List<EncryptedDataDetail> encryptionDetails) {

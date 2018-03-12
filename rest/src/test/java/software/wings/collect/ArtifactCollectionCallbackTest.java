@@ -4,6 +4,7 @@ import static java.util.Arrays.asList;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 import static software.wings.beans.artifact.Artifact.Builder.anArtifact;
+import static software.wings.beans.artifact.Artifact.ContentStatus.DOWNLOADED;
 import static software.wings.beans.artifact.ArtifactFile.Builder.anArtifactFile;
 import static software.wings.beans.artifact.JenkinsArtifactStream.Builder.aJenkinsArtifactStream;
 import static software.wings.utils.WingsTestConstants.APP_ID;
@@ -86,7 +87,7 @@ public class ArtifactCollectionCallbackTest extends WingsBaseTest {
   @Test
   public void shouldNotify() {
     artifactCollectionCallback.notify(Maps.newHashMap("", aListNotifyResponseData().addData(ARTIFACT_FILE).build()));
-    verify(artifactService).updateStatus(ARTIFACT_ID, APP_ID, Status.APPROVED);
+    verify(artifactService).updateStatus(ARTIFACT_ID, APP_ID, Status.APPROVED, DOWNLOADED);
     verify(artifactService).addArtifactFile(ARTIFACT_ID, APP_ID, Lists.newArrayList(ARTIFACT_FILE));
   }
 }

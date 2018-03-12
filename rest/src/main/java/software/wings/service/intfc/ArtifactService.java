@@ -3,6 +3,7 @@ package software.wings.service.intfc;
 import static software.wings.beans.artifact.Artifact.Status;
 
 import software.wings.beans.artifact.Artifact;
+import software.wings.beans.artifact.Artifact.ContentStatus;
 import software.wings.beans.artifact.ArtifactFile;
 import software.wings.dl.PageRequest;
 import software.wings.dl.PageResponse;
@@ -65,6 +66,25 @@ public interface ArtifactService extends OwnedByApplication {
    * @param status     the status
    */
   void updateStatus(String artifactId, String appId, Status status, String errorMessage);
+
+  /***
+   * Update status and content status
+   * @param artifactId
+   * @param appId
+   * @param status
+   * @param contentStatus
+   */
+  void updateStatus(String artifactId, String appId, Status status, ContentStatus contentStatus);
+
+  /***
+   * Update status
+   * @param artifactId
+   * @param appId
+   * @param status
+   * @param contentStatus
+   * @param errorMessage
+   */
+  void updateStatus(String artifactId, String appId, Status status, ContentStatus contentStatus, String errorMessage);
 
   /**
    * Adds the artifact file.
@@ -164,4 +184,11 @@ public interface ArtifactService extends OwnedByApplication {
    * @return the artifact by build number
    */
   Artifact getArtifactByBuildNumber(String appId, String artifactStreamId, String artifactSource, String buildNumber);
+
+  /**
+   * Starts Artifact collection and returns
+   * @param appId
+   * @param artifactId
+   */
+  Artifact startArtifactCollection(String appId, String artifactId);
 }

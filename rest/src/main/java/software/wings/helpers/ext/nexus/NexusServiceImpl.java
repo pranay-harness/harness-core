@@ -2,8 +2,6 @@ package software.wings.helpers.ext.nexus;
 
 import static java.lang.String.format;
 import static software.wings.beans.ErrorCode.INVALID_ARTIFACT_SERVER;
-import static software.wings.beans.ResponseMessage.Level.ERROR;
-import static software.wings.beans.ResponseMessage.aResponseMessage;
 import static software.wings.exception.WingsException.ReportTarget.USER;
 import static software.wings.utils.ArtifactType.DOCKER;
 import static software.wings.utils.ArtifactType.WAR;
@@ -48,8 +46,7 @@ public class NexusServiceImpl implements NexusService {
   @Inject private TimeLimiter timeLimiter;
 
   public static void handleException(IOException e) {
-    throw new WingsException(
-        aResponseMessage().code(INVALID_ARTIFACT_SERVER).level(ERROR).message(e.getMessage()).build(), e);
+    throw new WingsException(INVALID_ARTIFACT_SERVER, USER).addParam("message", e.getMessage());
   }
 
   public static boolean isSuccessful(Response<?> response) {

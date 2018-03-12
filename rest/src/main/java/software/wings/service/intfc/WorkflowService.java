@@ -70,6 +70,8 @@ public interface WorkflowService extends OwnedByApplication, OwnedByEnvironment 
    */
   Workflow createWorkflow(@Valid Workflow workflow);
 
+  boolean ensureArtifactCheck(String appId, OrchestrationWorkflow orchestrationWorkflow);
+
   /**
    * Update workflow.
    *

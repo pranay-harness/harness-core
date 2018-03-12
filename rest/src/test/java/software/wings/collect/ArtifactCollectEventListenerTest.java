@@ -9,6 +9,9 @@ import static software.wings.beans.SettingAttribute.Builder.aSettingAttribute;
 import static software.wings.beans.TaskType.BAMBOO_COLLECTION;
 import static software.wings.beans.TaskType.JENKINS_COLLECTION;
 import static software.wings.beans.artifact.Artifact.Builder.anArtifact;
+import static software.wings.beans.artifact.Artifact.ContentStatus.DOWNLOADING;
+import static software.wings.beans.artifact.Artifact.Status.FAILED;
+import static software.wings.beans.artifact.Artifact.Status.RUNNING;
 import static software.wings.beans.artifact.BambooArtifactStream.Builder.aBambooArtifactStream;
 import static software.wings.beans.artifact.JenkinsArtifactStream.Builder.aJenkinsArtifactStream;
 import static software.wings.collect.CollectEvent.Builder.aCollectEvent;
@@ -37,7 +40,7 @@ import software.wings.beans.BambooConfig;
 import software.wings.beans.DelegateTask;
 import software.wings.beans.JenkinsConfig;
 import software.wings.beans.SettingAttribute;
-import software.wings.beans.artifact.Artifact.Status;
+import software.wings.beans.artifact.Artifact;
 import software.wings.beans.artifact.ArtifactStream;
 import software.wings.service.impl.EventEmitter;
 import software.wings.service.intfc.AppService;
@@ -109,7 +112,7 @@ public class ArtifactCollectEventListenerTest extends WingsBaseTest {
                 anArtifact().withUuid(ARTIFACT_ID).withAppId(APP_ID).withArtifactStreamId(ARTIFACT_STREAM_ID).build())
             .build());
 
-    verify(artifactService).updateStatus(ARTIFACT_ID, APP_ID, Status.RUNNING);
+    verify(artifactService).updateStatus(ARTIFACT_ID, APP_ID, RUNNING, DOWNLOADING);
 
     ArgumentCaptor<DelegateTask> delegateTaskArgumentCaptor = ArgumentCaptor.forClass(DelegateTask.class);
     verify(delegateService).queueTask(delegateTaskArgumentCaptor.capture());
@@ -148,7 +151,7 @@ public class ArtifactCollectEventListenerTest extends WingsBaseTest {
                 anArtifact().withUuid(ARTIFACT_ID).withAppId(APP_ID).withArtifactStreamId(ARTIFACT_STREAM_ID).build())
             .build());
 
-    verify(artifactService).updateStatus(ARTIFACT_ID, APP_ID, Status.RUNNING);
+    verify(artifactService).updateStatus(ARTIFACT_ID, APP_ID, RUNNING, DOWNLOADING);
 
     ArgumentCaptor<DelegateTask> delegateTaskArgumentCaptor = ArgumentCaptor.forClass(DelegateTask.class);
     verify(delegateService).queueTask(delegateTaskArgumentCaptor.capture());
@@ -168,7 +171,7 @@ public class ArtifactCollectEventListenerTest extends WingsBaseTest {
     artifactCollectEventListener.onMessage(
         aCollectEvent().withArtifact(anArtifact().withUuid(ARTIFACT_ID).withAppId(APP_ID).build()).build());
 
-    verify(artifactService).updateStatus(ARTIFACT_ID, APP_ID, Status.RUNNING);
-    verify(artifactService).updateStatus(ARTIFACT_ID, APP_ID, Status.FAILED);
+    verify(artifactService).updateStatus(ARTIFACT_ID, APP_ID, RUNNING, DOWNLOADING);
+    verify(artifactService).updateStatus(ARTIFACT_ID, APP_ID, FAILED, Artifact.ContentStatus.FAILED);
   }
 }
