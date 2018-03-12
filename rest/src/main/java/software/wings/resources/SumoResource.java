@@ -19,6 +19,7 @@ import software.wings.service.impl.analysis.LogMLAnalysisRecord;
 import software.wings.service.impl.analysis.LogMLAnalysisRequest;
 import software.wings.service.impl.analysis.LogMLAnalysisSummary;
 import software.wings.service.impl.analysis.LogMLFeedback;
+import software.wings.service.impl.analysis.LogMLFeedbackRecord;
 import software.wings.service.impl.analysis.LogRequest;
 import software.wings.service.intfc.analysis.AnalysisService;
 import software.wings.service.intfc.analysis.ClusterLevel;
@@ -151,6 +152,18 @@ public class SumoResource implements LogAnalysisResource {
       throw new WingsException("logMlFeedBackId should be set for update");
     }
     return new RestResponse<>(analysisService.saveFeedback(feedback, StateType.SUMO));
+  }
+
+  @GET
+  @Produces({"application/json", "application/v1+json"})
+  @Path(LogAnalysisResource.ANALYSIS_USER_FEEDBACK)
+  @Timed
+  @ExceptionMetered
+  @LearningEngineAuth
+  public RestResponse<List<LogMLFeedbackRecord>> getFeedback(@QueryParam("accountId") String accountId,
+      @QueryParam("serviceId") String serviceId, @QueryParam("workflowId") String workflowId,
+      @QueryParam("workflowExecutionId") String workflowExecutionId) {
+    return new RestResponse<>(analysisService.getMLFeedback(serviceId, workflowId, workflowExecutionId));
   }
 
   @DELETE
