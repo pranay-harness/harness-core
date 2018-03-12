@@ -169,7 +169,8 @@ public class ArtifactCollectionState extends State {
 
   private Artifact getLastCollectedArtifact(ExecutionContext context, String artifactStreamId, String sourceName) {
     if (isBlank(buildNo) || buildNo.equalsIgnoreCase(LATEST)) {
-      return artifactService.fetchLatestArtifactForArtifactStream(context.getAppId(), artifactStreamId, sourceName);
+      return artifactService.fetchLastCollectedArtifactForArtifactStream(
+          context.getAppId(), artifactStreamId, sourceName);
     } else {
       return artifactService.getArtifactByBuildNumber(
           context.getAppId(), artifactStreamId, sourceName, context.renderExpression(buildNo));

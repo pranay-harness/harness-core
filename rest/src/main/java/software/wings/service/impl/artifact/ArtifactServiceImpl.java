@@ -521,7 +521,8 @@ public class ArtifactServiceImpl implements ArtifactService {
 
     if ((METADATA_ONLY == artifact.getContentStatus()) || (DOWNLOADING == artifact.getContentStatus())
         || (DOWNLOADED == artifact.getContentStatus())) {
-      logger.info("Artifact content for artifactId {} of the appId {} is either downloaded or in progress. Returning.");
+      logger.info("Artifact content for artifactId {} of the appId {} is either downloaded or in progress. Returning.",
+          artifactId, appId);
       return artifact;
     }
 
