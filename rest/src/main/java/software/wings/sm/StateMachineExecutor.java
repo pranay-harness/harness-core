@@ -1132,7 +1132,6 @@ public class StateMachineExecutor {
             workflowExecutionInterrupt.getExecutionUuid(), workflowExecutionInterrupt.getStateExecutionInstanceId());
 
         retryStateExecutionInstance(stateExecutionInstance, workflowExecutionInterrupt.getProperties());
-
         break;
       }
 
@@ -1149,7 +1148,7 @@ public class StateMachineExecutor {
       }
       case ABORT_ALL: {
         abortInstancesByStatus(
-            workflowExecutionInterrupt, workflowExecution, NEW, RUNNING, STARTING, PAUSED, PAUSING, WAITING);
+            workflowExecutionInterrupt, workflowExecution, NEW, QUEUED, RUNNING, STARTING, PAUSED, PAUSING, WAITING);
         break;
       }
       case END_EXECUTION:
