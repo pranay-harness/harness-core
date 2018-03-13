@@ -56,7 +56,8 @@ public class EnvironmentYamlHandler extends BaseYamlHandler<Environment.Yaml, En
   @Override
   public Environment.Yaml toYaml(Environment environment, String appId) {
     List<ServiceVariable> serviceVariableList = getAllVariableOverridesForEnv(environment);
-    List<VariableOverrideYaml> variableOverrideYamlList = convertToVariableOverrideYaml(serviceVariableList);
+    List<VariableOverrideYaml> variableOverrideYamlList =
+        convertToVariableOverrideYaml(serviceVariableList, environment.getName());
     return Environment.Yaml.builder()
         .description(environment.getDescription())
         .environmentType(environment.getEnvironmentType().name())
@@ -82,7 +83,8 @@ public class EnvironmentYamlHandler extends BaseYamlHandler<Environment.Yaml, En
     return serviceVariableList;
   }
 
-  private List<VariableOverrideYaml> convertToVariableOverrideYaml(List<ServiceVariable> serviceVariables) {
+  private List<VariableOverrideYaml> convertToVariableOverrideYaml(
+      List<ServiceVariable> serviceVariables, String envName) {
     if (serviceVariables == null) {
       return Lists.newArrayList();
     }
@@ -90,7 +92,7 @@ public class EnvironmentYamlHandler extends BaseYamlHandler<Environment.Yaml, En
     return serviceVariables.stream()
         .map(serviceVariable -> {
           Type variableType = serviceVariable.getType();
-          String value = null;
+          String value;
           if (Type.ENCRYPTED_TEXT == variableType) {
             try {
               value = secretManager.getEncryptedYamlRef(serviceVariable);
@@ -100,7 +102,10 @@ public class EnvironmentYamlHandler extends BaseYamlHandler<Environment.Yaml, En
           } else if (Type.TEXT == variableType) {
             value = String.valueOf(serviceVariable.getValue());
           } else {
-            logger.warn("Value type LB not supported, skipping the processing of value");
+            String msg = "Invalid value type: " + variableType + ". for variable: " + serviceVariable.getName()
+                + " in env: " + envName;
+            logger.warn(msg);
+            throw new WingsException(msg);
           }
 
           String parentServiceName;
@@ -177,7 +182,9 @@ public class EnvironmentYamlHandler extends BaseYamlHandler<Environment.Yaml, En
 
   @Override
   public Environment get(String accountId, String yamlFilePath) {
-    return yamlHelper.getEnvironment(accountId, yamlFilePath);
+    String appId = yamlHelper.getAppId(accountId, yamlFilePath);
+    Validator.notNullCheck("appId null for given yaml file:" + yamlFilePath, appId);
+    return yamlHelper.getEnvironment(appId, yamlFilePath);
   }
 
   @Override

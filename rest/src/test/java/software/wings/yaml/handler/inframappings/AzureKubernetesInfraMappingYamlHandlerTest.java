@@ -1,4 +1,4 @@
-package software.wings.yaml.handler.inframapping;
+package software.wings.yaml.handler.inframappings;
 
 import static java.util.Arrays.asList;
 import static org.assertj.core.api.Fail.failBecauseExceptionWasNotThrown;
@@ -28,8 +28,8 @@ import org.mockito.MockitoAnnotations;
 import org.mongodb.morphia.Key;
 import software.wings.beans.Application;
 import software.wings.beans.AzureConfig;
+import software.wings.beans.AzureKubernetesInfrastructureMapping;
 import software.wings.beans.DelegateTask.SyncTaskContext;
-import software.wings.beans.DirectKubernetesInfrastructureMapping;
 import software.wings.beans.Environment;
 import software.wings.beans.InfrastructureMapping;
 import software.wings.beans.Service;
@@ -42,7 +42,7 @@ import software.wings.delegatetasks.DelegateProxyFactory;
 import software.wings.exception.HarnessException;
 import software.wings.scheduler.QuartzScheduler;
 import software.wings.service.impl.yaml.handler.BaseYamlHandler;
-import software.wings.service.impl.yaml.handler.inframapping.DirectKubernetesInfraMappingYamlHandler;
+import software.wings.service.impl.yaml.handler.inframapping.AzureKubernetesInfraMappingYamlHandler;
 import software.wings.service.impl.yaml.service.YamlHelper;
 import software.wings.service.intfc.AppService;
 import software.wings.service.intfc.ContainerService;
@@ -51,7 +51,6 @@ import software.wings.service.intfc.InfrastructureMappingService;
 import software.wings.service.intfc.ServiceResourceService;
 import software.wings.service.intfc.ServiceTemplateService;
 import software.wings.service.intfc.SettingsService;
-import software.wings.service.intfc.security.SecretManager;
 import software.wings.service.intfc.yaml.YamlDirectoryService;
 import software.wings.utils.ArtifactType;
 import software.wings.yaml.BaseYaml;
@@ -60,7 +59,7 @@ import software.wings.yaml.handler.BaseYamlHandlerTest;
 import java.io.IOException;
 import java.util.Arrays;
 
-public class DirectKubernetesInfraMappingYamlHandlerTest extends BaseYamlHandlerTest {
+public class AzureKubernetesInfraMappingYamlHandlerTest extends BaseYamlHandlerTest {
   @Mock protected SettingsService settingsService;
   @Mock protected ServiceResourceService serviceResourceService;
   @Mock protected ServiceTemplateService serviceTemplateService;
@@ -70,42 +69,51 @@ public class DirectKubernetesInfraMappingYamlHandlerTest extends BaseYamlHandler
   @Mock private ContainerService containerService;
   @Mock @Named("JobScheduler") private QuartzScheduler jobScheduler;
   @Mock private YamlDirectoryService yamlDirectoryService;
-  @Mock private SecretManager secretManager;
 
   @InjectMocks @Inject protected YamlHelper yamlHelper;
   @InjectMocks @Inject protected InfrastructureMappingService infrastructureMappingService;
-  @InjectMocks @Inject protected DirectKubernetesInfraMappingYamlHandler directKubernetesInfraMappingYamlHandler;
+  @InjectMocks @Inject protected AzureKubernetesInfraMappingYamlHandler azureKubernetesInfraMappingYamlHandler;
 
-  private String validYamlContentWithKubernetesClusterCloudProvider = "harnessApiVersion: '1.0'\n"
-      + "type: DIRECT_KUBERNETES\n"
-      + "computeProviderName: kubernetes_cluster\n"
-      + "computeProviderType: KUBERNETES_CLUSTER\n"
+  private String validYamlContent = "harnessApiVersion: '1.0'\n"
+      + "type: AZURE_KUBERNETES\n"
+      + "cluster: test-aks\n"
+      + "computeProviderName: azure-infra\n"
+      + "computeProviderType: AZURE\n"
       + "deploymentType: KUBERNETES\n"
-      + "infraMappingType: DIRECT_KUBERNETES\n"
+      + "infraMappingType: AZURE_KUBERNETES\n"
       + "namespace: default\n"
-      + "serviceName: dockersvc";
+      + "resourceGroup: test-aks\n"
+      + "serviceName: dockersvc\n"
+      + "subscriptionId: 52d2db62-5aa9-471d-84bb-faa489b3e319";
 
-  private String invalidYamlContent = "harnessApiVersion: '1.0'\n"
-      + "type: DIRECT_KUBERNETES\n"
-      + "computeProviderName: kubernetes_cluster\n"
-      + "computeProviderType: KUBERNETES_CLUSTER\n"
+  private String invalidYamlContent = "invalidSubscriptionId: 52d2db62-5aa9-471d-84bb-faa489b3e319\n"
+      + "resourceGroup: test-aks\n"
+      + "namespace: default\n"
+      + "cluster: test-aks\n"
+      + "computeProviderType: AZURE\n"
+      + "computeProviderName: azure-infra\n"
+      + "serviceName: dockersvc\n"
+      + "infraMappingType: AZURE_KUBERNETES\n"
       + "deploymentType: KUBERNETES\n"
-      + "infraMappingType: DIRECT_KUBERNETES\n"
-      + "namespace_1: default\n"
-      + "serviceName: dockersvc";
+      + "harnessApiVersion: '1.0'\n"
+      + "type: AZURE_KUBERNETES";
 
   private String validYamlFilePath =
-      "Setup/Applications/APP_NAME/Environments/ENVIRONMENT_NAME/Service Infrastructure/direct_kubernetes.yaml";
-  private String infraMappingName = "direct_kubernetes";
+      "Setup/Applications/APP_NAME/Environments/ENVIRONMENT_NAME/Service Infrastructure/azure_kubernetes.yaml";
+  private String infraMappingName = "azure_kubernetes";
   private String serviceName = "dockersvc";
-  private String computeProviderName = "kubernetes_cluster";
+  private String computeProviderName = "azure-infra";
   private ServiceTemplate serviceTemplate =
       ServiceTemplate.Builder.aServiceTemplate().withUuid("uuid").withName("name").build();
   private SettingAttribute settingAttribute = getSettingAttribute();
 
-  @InjectMocks @Inject private DirectKubernetesInfraMappingYamlHandler yamlHandler;
+  @InjectMocks @Inject private AzureKubernetesInfraMappingYamlHandler yamlHandler;
   @Before
-  public void setup() throws Exception {
+  public void runBeforeTest() {
+    setup();
+  }
+
+  private void setup() {
     MockitoAnnotations.initMocks(this);
 
     when(settingsService.getByName(anyString(), anyString(), anyString())).thenReturn(settingAttribute);
@@ -153,30 +161,30 @@ public class DirectKubernetesInfraMappingYamlHandlerTest extends BaseYamlHandler
 
   @Test
   public void testCRUDAndGet() throws HarnessException, IOException {
-    ChangeContext<DirectKubernetesInfrastructureMapping.Yaml> changeContext =
-        getChangeContext(validYamlContentWithKubernetesClusterCloudProvider, validYamlFilePath, yamlHandler);
+    ChangeContext<AzureKubernetesInfrastructureMapping.Yaml> changeContext =
+        getChangeContext(validYamlContent, validYamlFilePath, yamlHandler);
 
-    DirectKubernetesInfrastructureMapping.Yaml yamlObject = (DirectKubernetesInfrastructureMapping.Yaml) getYaml(
-        validYamlContentWithKubernetesClusterCloudProvider, DirectKubernetesInfrastructureMapping.Yaml.class, false);
+    AzureKubernetesInfrastructureMapping.Yaml yamlObject = (AzureKubernetesInfrastructureMapping.Yaml) getYaml(
+        validYamlContent, AzureKubernetesInfrastructureMapping.Yaml.class, false);
     changeContext.setYaml(yamlObject);
 
-    DirectKubernetesInfrastructureMapping infraMapping =
+    AzureKubernetesInfrastructureMapping azureInfraMapping =
         yamlHandler.upsertFromYaml(changeContext, Arrays.asList(changeContext));
-    assertNotNull(infraMapping);
-    assertEquals(infraMapping.getName(), infraMappingName);
+    assertNotNull(azureInfraMapping);
+    assertEquals(azureInfraMapping.getName(), infraMappingName);
 
-    DirectKubernetesInfrastructureMapping.Yaml yaml = yamlHandler.toYaml(infraMapping, APP_ID);
+    AzureKubernetesInfrastructureMapping.Yaml yaml = yamlHandler.toYaml(azureInfraMapping, APP_ID);
     assertNotNull(yaml);
-    assertEquals("DIRECT_KUBERNETES", yaml.getType());
+    assertEquals("AZURE_KUBERNETES", yaml.getType());
 
     String yamlContent = getYamlContent(yaml);
     assertNotNull(yamlContent);
     yamlContent = yamlContent.substring(0, yamlContent.length() - 1);
-    assertEquals(validYamlContentWithKubernetesClusterCloudProvider, yamlContent);
+    assertEquals(validYamlContent, yamlContent);
 
-    InfrastructureMapping infraMapping1 = yamlHandler.get(ACCOUNT_ID, validYamlFilePath);
-    assertNotNull(infraMapping1);
-    assertEquals(infraMapping1.getName(), infraMappingName);
+    InfrastructureMapping infraMapping = yamlHandler.get(ACCOUNT_ID, validYamlFilePath);
+    assertNotNull(infraMapping);
+    assertEquals(infraMapping.getName(), infraMappingName);
 
     yamlHandler.delete(changeContext);
 
@@ -186,16 +194,16 @@ public class DirectKubernetesInfraMappingYamlHandlerTest extends BaseYamlHandler
 
   @Test
   public void testFailures() throws HarnessException, IOException {
-    ChangeContext<DirectKubernetesInfrastructureMapping.Yaml> changeContext =
+    ChangeContext<AzureKubernetesInfrastructureMapping.Yaml> changeContext =
         getChangeContext(invalidYamlContent, validYamlFilePath, yamlHandler);
 
-    DirectKubernetesInfrastructureMapping.Yaml yamlObject = (DirectKubernetesInfrastructureMapping.Yaml) getYaml(
-        validYamlContentWithKubernetesClusterCloudProvider, DirectKubernetesInfrastructureMapping.Yaml.class, false);
+    AzureKubernetesInfrastructureMapping.Yaml yamlObject = (AzureKubernetesInfrastructureMapping.Yaml) getYaml(
+        validYamlContent, AzureKubernetesInfrastructureMapping.Yaml.class, false);
     changeContext.setYaml(yamlObject);
 
     try {
-      yamlObject = (DirectKubernetesInfrastructureMapping.Yaml) getYaml(
-          invalidYamlContent, DirectKubernetesInfrastructureMapping.Yaml.class, false);
+      yamlObject = (AzureKubernetesInfrastructureMapping.Yaml) getYaml(
+          invalidYamlContent, AzureKubernetesInfrastructureMapping.Yaml.class, false);
       changeContext.setYaml(yamlObject);
 
       yamlHandler.upsertFromYaml(changeContext, Arrays.asList(changeContext));
@@ -207,6 +215,7 @@ public class DirectKubernetesInfraMappingYamlHandlerTest extends BaseYamlHandler
 
   protected <Y extends BaseYaml, H extends BaseYamlHandler> ChangeContext<Y> getChangeContext(
       String yamlContent, String yamlFilePath, H yamlHandler) {
+    // Invalid yaml path
     GitFileChange gitFileChange = GitFileChange.Builder.aGitFileChange()
                                       .withAccountId(ACCOUNT_ID)
                                       .withFilePath(yamlFilePath)
