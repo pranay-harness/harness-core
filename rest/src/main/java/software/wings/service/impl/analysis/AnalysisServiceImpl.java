@@ -321,15 +321,6 @@ public class AnalysisServiceImpl implements AnalysisService {
   }
 
   @Override
-  public List<LogMLFeedbackRecord> getMLFeedback(String serviceId, String workflowId, String workflowExecutionId) {
-    Query<LogMLFeedbackRecord> query = wingsPersistence.createQuery(LogMLFeedbackRecord.class);
-    query.or(query.criteria("serviceId").equal(serviceId), query.criteria("workflowId").equal(workflowId),
-        query.criteria("workflowExecutionId").equal(workflowExecutionId));
-
-    return query.asList();
-  }
-
-  @Override
   public boolean saveFeedback(LogMLFeedback feedback, StateType stateType) {
     if (!isEmpty(feedback.getLogMLFeedbackId())) {
       deleteFeedbackHelper(feedback);

@@ -24,7 +24,6 @@ import software.wings.service.impl.analysis.LogMLAnalysisRecord;
 import software.wings.service.impl.analysis.LogMLAnalysisRequest;
 import software.wings.service.impl.analysis.LogMLAnalysisSummary;
 import software.wings.service.impl.analysis.LogMLFeedback;
-import software.wings.service.impl.analysis.LogMLFeedbackRecord;
 import software.wings.service.impl.analysis.LogRequest;
 import software.wings.service.impl.elk.ElkIndexTemplate;
 import software.wings.service.impl.elk.ElkLogFetchRequest;
@@ -217,17 +216,5 @@ public class ElkResource implements LogAnalysisResource {
     } catch (Exception ex) {
       throw new WingsException(ErrorCode.ELK_CONFIGURATION_ERROR).addParam("reason", ex.getMessage());
     }
-  }
-
-  @GET
-  @Produces({"application/json", "application/v1+json"})
-  @Path(LogAnalysisResource.ANALYSIS_USER_FEEDBACK)
-  @Timed
-  @ExceptionMetered
-  @LearningEngineAuth
-  public RestResponse<List<LogMLFeedbackRecord>> getFeedback(@QueryParam("accountId") String accountId,
-      @QueryParam("serviceId") String serviceId, @QueryParam("workflowId") String workflowId,
-      @QueryParam("workflowExecutionId") String workflowExecutionId) {
-    return new RestResponse<>(analysisService.getMLFeedback(serviceId, workflowId, workflowExecutionId));
   }
 }

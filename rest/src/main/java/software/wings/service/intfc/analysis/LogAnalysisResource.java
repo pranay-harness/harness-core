@@ -7,7 +7,6 @@ import software.wings.service.impl.analysis.LogMLAnalysisRecord;
 import software.wings.service.impl.analysis.LogMLAnalysisRequest;
 import software.wings.service.impl.analysis.LogMLAnalysisSummary;
 import software.wings.service.impl.analysis.LogMLFeedback;
-import software.wings.service.impl.analysis.LogMLFeedbackRecord;
 import software.wings.service.impl.analysis.LogRequest;
 
 import java.io.IOException;
@@ -106,10 +105,6 @@ public interface LogAnalysisResource {
 
   RestResponse<Boolean> updateUserFeedback(@QueryParam("accountId") String accountId, LogMLFeedback feedback)
       throws IOException;
-
-  RestResponse<List<LogMLFeedbackRecord>> getFeedback(@QueryParam("accountId") String accountId,
-      @QueryParam("serviceId") String serviceId, @QueryParam("workflowId") String workflowId,
-      @QueryParam("workflowExecutionId") String workflowExecutionId);
 
   RestResponse<Boolean> deleteUserFeedback(@QueryParam("accountId") String accountId, LogMLFeedback feedback)
       throws IOException;

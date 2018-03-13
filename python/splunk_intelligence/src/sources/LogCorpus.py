@@ -1,5 +1,9 @@
 import json
+import logging
+import sys
+
 import numpy as np
+from sklearn.metrics.pairwise import cosine_similarity
 
 from FileLoader import FileLoader
 from HarnessLoader import HarnessLoader
@@ -17,7 +21,6 @@ class LogCorpus(object):
         self.test_clusters = {}
         self.anomalies = []
         self.anom_clusters = {}
-        self.ignore_clusters = {}
         self.new_data = True
         self.score = 0.0
         self.cluster_scores = {'unknown': {}, 'test': {}}
@@ -79,15 +82,6 @@ class LogCorpus(object):
             self.test_events[label].append(
                 dict(cluster_label=event['cluster_label'], text=event.get('text'),
                      message_frequencies=event.get('message_frequencies')))
-        elif event_type == 'user_feedback':
-            label = 20000 + event['cluster_label']
-            if label not in self.control_events:
-                self.control_events[label] = []
-            self.control_events[label].append(
-                dict(cluster_label=event['cluster_label'], text=event.get('logMessage'),
-                      feedback_id=event.get('uuid')))
-
-
 
     def save_to_harness(self, url, payload, version_file_path, service_secret):
         HarnessLoader.post_to_wings_server(url, payload, version_file_path, service_secret)
@@ -158,15 +152,6 @@ class LogCorpus(object):
                 for key, events in prev_state.get('test_events').items():
                     for event in events:
                         self.add_event(event, 'test_prev')
-        if hasattr(options, 'feedback_url'):
-            feedback_state = HarnessLoader.load_feedback_output_from_harness(options.feedback_url, options.version_file_path, options.service_secret)
-            if feedback_state is not None:
-                idx = 0
-                for event in feedback_state:
-
-                    event['cluster_label'] = idx
-                    self.add_event(event, 'user_feedback')
-                    idx += 1
 
     # Used in SplunkAnomalyLegacy: legacy files that are not grouped by host
     def load_legacy_file(self, file_name, control_window, test_window, prev_out_file=None):
@@ -394,106 +379,84 @@ class LogCorpus(object):
     def create_clusters(self, clusters, centroids,
                         feature_names,
                         predictions):
-        ignore_dict = {}
         for index, (key, value) in enumerate(self.control_events.items()):
             for val in value:
                 val['cluster_label'] = clusters[index]
+                if val.get('cluster_label') not in self.control_clusters:
+                    self.control_clusters[val.get('cluster_label')] = {}
 
-                if val.get('feedback_id'):
-                    ignore_dict[val.get('cluster_label')] = val.get('feedback_id')
+                host = val.get('message_frequencies')[0].get('host')
+                if host not in self.control_clusters[val.get('cluster_label')]:
+                    self.control_clusters[val.get('cluster_label')][host] = dict(text=val.get('text'),
+                                                                                 cluster_label=val.get('cluster_label'),
+                                                                                 message_frequencies=[],
+                                                                                 tags=self.get_cluster_tags(
+                                                                                     val.get('cluster_label'),
+                                                                                     centroids,
+                                                                                     feature_names,
+                                                                                     5))
+                self.control_clusters[val.get('cluster_label')][host].get('message_frequencies').extend(
+                    val.get('message_frequencies'))
 
-                else:
-                    if val.get('cluster_label') not in self.control_clusters:
-                        self.control_clusters[val.get('cluster_label')] = {}
-                    host = val.get('message_frequencies')[0].get('host')
-                    if host not in self.control_clusters[val.get('cluster_label')]:
-                        self.control_clusters[val.get('cluster_label')][host] = dict(text=val.get('text'),
-                                                                                     cluster_label=val.get('cluster_label'),
-                                                                                     message_frequencies=[],
-                                                                                     tags=self.get_cluster_tags(
-                                                                                         val.get('cluster_label'),
-                                                                                         centroids,
-                                                                                         feature_names,
-                                                                                         5))
-                    self.control_clusters[val.get('cluster_label')][host].get('message_frequencies').extend(
-                        val.get('message_frequencies'))
-        # remove ignore control from control cluster and move to ignore_cluster
-        for label in ignore_dict.keys():
-            # get the control events that were in the same cluster as ignore events
-            if label in self.control_clusters:
-                if label not in self.ignore_clusters:
-                    self.ignore_clusters[label] = {}
-                # add control event to self.ignore_cluster
-                for key, event in self.control_clusters[label].items():
+        anomaly_index = 1000000
 
-                    event['feedback_id'] = ignore_dict[label]
-                self.ignore_clusters[label].update(self.control_clusters[label])
-                # remove control event that should be ignored from control cluster
-                del self.control_clusters[label]
         for index, (key, value) in enumerate(self.test_events.items()):
             anomal = []
             for val in value:
                 val['test_score'] = predictions[index].get('score')
                 val['control_score'] = predictions[index].get('cluster_score')
-                test_label = predictions[index].get('cluster_label')
-                ## adding ignore test to ignore cluster
-                if test_label in ignore_dict.keys():
-                    if test_label not in self.ignore_clusters:
-                        self.ignore_clusters[test_label] = {}
-                    host = val.get('message_frequencies')[0].get('host')
-                    if host not in self.ignore_clusters[test_label]:
-                        self.ignore_clusters[test_label][host] = dict(text=val.get('text'),
-                                                                     cluster_label=test_label,
-                                                                     message_frequencies=[],
-                                                                     feedback_id=ignore_dict[test_label],
-                                                                     tags=self.get_cluster_tags(
-                                                                         test_label,
-                                                                         centroids,
-                                                                         feature_names,
-                                                                         5))
 
-                elif predictions[index].get('anomaly') == 1:
-                    if test_label not in self.test_clusters:
-                        self.test_clusters[test_label] = {}
+                if predictions[index].get('anomaly') == 1:
+                    val['cluster_label'] = predictions[index].get('cluster_label')
+                else:
+                    val['cluster_label'] = anomaly_index
+                    anomaly_index = anomaly_index + 1
+
+                # TODO make this a class constant
+                if val.get('cluster_label') < 1000000:
+                    if val.get('cluster_label') not in self.test_clusters:
+                        self.test_clusters[val.get('cluster_label')] = {}
 
                     host = val.get('message_frequencies')[0].get('host')
-                    if host not in self.test_clusters[test_label]:
-                        self.test_clusters[test_label][host] = dict(
+                    if host not in self.test_clusters[val.get('cluster_label')]:
+                        self.test_clusters[val.get('cluster_label')][host] = dict(
                             text=val.get('text'),
-                            cluster_label=test_label,
+                            cluster_label=val.get('cluster_label'),
                             message_frequencies=[],
                             anomalous_counts=[],
                             unexpected_freq=False,
-                            control_score=test_label,
+                            control_score=val.get('control_score'),
                             test_score=val.get('test_score'),
                             freq_score=0.0,
                             tags=self.get_cluster_tags(
-                                test_label,
+                                val.get('cluster_label'),
                                 centroids,
                                 feature_names,
                                 5))
 
-                    self.test_clusters[test_label][host].get('message_frequencies').extend(
+                    self.test_clusters[val.get('cluster_label')][host].get('message_frequencies').extend(
                         val.get('message_frequencies'))
+
                 else:
                     anomal.append(dict(text=val.get('text'),
-                                       cluster_label=test_label,
+                                       cluster_label=predictions[index].get('cluster_label'),
                                        message_frequencies=val.get('message_frequencies'),
                                        control_score=val.get('control_score'),
                                        test_score=val.get('test_score')))
-
             if len(anomal) > 0:
                 self.anomalies.append(anomal)
 
     def get_output_as_json(self, options):
-
-        return json.dumps(dict(query=options.query, control_events=self.control_events, test_events=self.test_events,
-                               unknown_events=self.anomalies, ignore_clusters=self.ignore_clusters,
+        out_dict = dict(query=options.query, control_events=self.control_events, test_events=self.test_events,
+                               unknown_events=self.anomalies,
                                control_clusters=self.control_clusters, test_clusters=self.test_clusters,
                                unknown_clusters=self.anom_clusters,
                                cluster_scores=self.cluster_scores,
                                score=self.score
-                               ))
+                               )
+        if hasattr(options, 'experiment_name'):
+            out_dict['experiment_name'] = options.experiment_name
+        return json.dumps(out_dict)
 
     @property
     def get_output_for_notebook_as_json(self):
