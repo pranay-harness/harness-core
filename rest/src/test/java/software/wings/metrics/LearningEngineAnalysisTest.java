@@ -3,10 +3,12 @@ package software.wings.metrics;
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertNull;
 import static org.junit.Assert.assertTrue;
+import static software.wings.service.impl.newrelic.LearningEngineAnalysisTask.TIME_SERIES_ANALYSIS_TASK_TIME_OUT;
 
 import com.google.inject.Inject;
 
 import org.junit.After;
+import org.junit.Assert;
 import org.junit.Before;
 import org.junit.Ignore;
 import org.junit.Test;
@@ -15,6 +17,7 @@ import software.wings.beans.ServiceSecretKey;
 import software.wings.beans.ServiceSecretKey.ServiceApiVersion;
 import software.wings.beans.ServiceSecretKey.ServiceType;
 import software.wings.dl.WingsPersistence;
+import software.wings.exception.WingsException;
 import software.wings.service.impl.newrelic.LearningEngineAnalysisTask;
 import software.wings.service.intfc.LearningEngineService;
 import software.wings.sm.ExecutionStatus;
@@ -38,8 +41,6 @@ public class LearningEngineAnalysisTest extends WingsBaseTest {
   public void setup() {
     workflowExecutionId = UUID.randomUUID().toString();
     stateExecutionId = UUID.randomUUID().toString();
-
-    LearningEngineAnalysisTask.TIME_SERIES_ANALYSIS_TASK_TIME_OUT = TimeUnit.SECONDS.toMillis(1);
   }
 
   @After
@@ -48,7 +49,6 @@ public class LearningEngineAnalysisTest extends WingsBaseTest {
   }
 
   @Test
-  @Ignore
   public void testQueueWithStatus() {
     int numOfTasks = 100;
     for (int i = 0; i < numOfTasks; i++) {
@@ -94,11 +94,12 @@ public class LearningEngineAnalysisTest extends WingsBaseTest {
   public void testAlreadyQueued() {
     int numOfTasks = 5;
     for (int i = 0; i < numOfTasks; i++) {
+      System.out.println("loop " + i);
       LearningEngineAnalysisTask learningEngineAnalysisTask = LearningEngineAnalysisTask.builder()
                                                                   .state_execution_id(stateExecutionId)
                                                                   .workflow_execution_id(workflowExecutionId)
                                                                   .executionStatus(ExecutionStatus.QUEUED)
-                                                                  .analysis_minute(i)
+                                                                  .analysis_minute(0)
                                                                   .build();
       learningEngineService.addLearningEngineAnalysisTask(learningEngineAnalysisTask);
     }
@@ -111,6 +112,31 @@ public class LearningEngineAnalysisTest extends WingsBaseTest {
     assertEquals(stateExecutionId, analysisTask.getState_execution_id());
     assertEquals(0, analysisTask.getAnalysis_minute());
     assertEquals(0, analysisTask.getRetry());
+  }
+
+  @Test
+  public void testAlreadyQueuedForMinute() {
+    LearningEngineAnalysisTask learningEngineAnalysisTask = LearningEngineAnalysisTask.builder()
+                                                                .state_execution_id(stateExecutionId)
+                                                                .workflow_execution_id(workflowExecutionId)
+                                                                .executionStatus(ExecutionStatus.QUEUED)
+                                                                .analysis_minute(0)
+                                                                .build();
+    learningEngineService.addLearningEngineAnalysisTask(learningEngineAnalysisTask);
+
+    learningEngineAnalysisTask =
+        LearningEngineAnalysisTask.builder()
+            .state_execution_id(stateExecutionId)
+            .workflow_execution_id(workflowExecutionId)
+            .executionStatus(ExecutionStatus.QUEUED)
+            .analysis_minute((int) (TimeUnit.MILLISECONDS.toMinutes(TIME_SERIES_ANALYSIS_TASK_TIME_OUT)))
+            .build();
+    try {
+      learningEngineService.addLearningEngineAnalysisTask(learningEngineAnalysisTask);
+      Assert.fail("Was able to add a task wrongly");
+    } catch (WingsException e) {
+      // expected
+    }
   }
 
   @Test
@@ -127,10 +153,10 @@ public class LearningEngineAnalysisTest extends WingsBaseTest {
   }
 
   @Test
-  @Ignore
   public void testQueueWithTimeOut() throws InterruptedException {
+    LearningEngineAnalysisTask.TIME_SERIES_ANALYSIS_TASK_TIME_OUT = TimeUnit.SECONDS.toMillis(5);
     long startTime = System.currentTimeMillis();
-    int numOfTasks = 100;
+    int numOfTasks = 10;
     for (int i = 0; i < numOfTasks; i++) {
       workflowExecutionId = UUID.randomUUID().toString();
       stateExecutionId = UUID.randomUUID().toString();

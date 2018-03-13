@@ -34,39 +34,35 @@ public class LogMLClusterGenerator implements Runnable {
 
   @Override
   public void run() {
-    try {
-      final String inputLogsUrl = "/api/" + context.getStateBaseUrl() + LogAnalysisResource.ANALYSIS_STATE_GET_LOG_URL
-          + "?accountId=" + context.getAccountId() + "&workflowExecutionId=" + context.getWorkflowExecutionId()
-          + "&compareCurrent=true&clusterLevel=" + fromLevel.name();
-      String clusteredLogSaveUrl = "/api/" + context.getStateBaseUrl() + LogAnalysisResource.ANALYSIS_STATE_SAVE_LOG_URL
-          + "?accountId=" + context.getAccountId() + "&stateExecutionId=" + context.getStateExecutionId()
-          + "&workflowId=" + context.getWorkflowId() + "&workflowExecutionId=" + context.getWorkflowExecutionId()
-          + "&serviceId=" + context.getServiceId() + "&appId=" + context.getAppId() + "&clusterLevel=" + toLevel.name();
+    final String inputLogsUrl = "/api/" + context.getStateBaseUrl() + LogAnalysisResource.ANALYSIS_STATE_GET_LOG_URL
+        + "?accountId=" + context.getAccountId() + "&workflowExecutionId=" + context.getWorkflowExecutionId()
+        + "&compareCurrent=true&clusterLevel=" + fromLevel.name();
+    String clusteredLogSaveUrl = "/api/" + context.getStateBaseUrl() + LogAnalysisResource.ANALYSIS_STATE_SAVE_LOG_URL
+        + "?accountId=" + context.getAccountId() + "&stateExecutionId=" + context.getStateExecutionId()
+        + "&workflowId=" + context.getWorkflowId() + "&workflowExecutionId=" + context.getWorkflowExecutionId()
+        + "&serviceId=" + context.getServiceId() + "&appId=" + context.getAppId() + "&clusterLevel=" + toLevel.name();
 
-      LearningEngineAnalysisTask analysisTask = LearningEngineAnalysisTask.builder()
-                                                    .ml_shell_file_name(CLUSTER_ML_SHELL_FILE_NAME)
-                                                    .control_input_url(inputLogsUrl)
-                                                    .analysis_save_url(clusteredLogSaveUrl)
-                                                    .workflow_id(context.getWorkflowId())
-                                                    .workflow_execution_id(context.getWorkflowExecutionId())
-                                                    .state_execution_id(context.getStateExecutionId())
-                                                    .service_id(context.getServiceId())
-                                                    .control_nodes(logRequest.getNodes())
-                                                    .sim_threshold(0.99)
-                                                    .analysis_minute(logRequest.getLogCollectionMinute())
-                                                    .cluster_level(toLevel.getLevel())
-                                                    .ml_analysis_type(MLAnalysisType.LOG_CLUSTER)
-                                                    .stateType(context.getStateType())
-                                                    .query(Lists.newArrayList(logRequest.getQuery().split(" ")))
-                                                    .build();
-      analysisTask.setAppId(context.getAppId());
+    LearningEngineAnalysisTask analysisTask = LearningEngineAnalysisTask.builder()
+                                                  .ml_shell_file_name(CLUSTER_ML_SHELL_FILE_NAME)
+                                                  .control_input_url(inputLogsUrl)
+                                                  .analysis_save_url(clusteredLogSaveUrl)
+                                                  .workflow_id(context.getWorkflowId())
+                                                  .workflow_execution_id(context.getWorkflowExecutionId())
+                                                  .state_execution_id(context.getStateExecutionId())
+                                                  .service_id(context.getServiceId())
+                                                  .control_nodes(logRequest.getNodes())
+                                                  .sim_threshold(0.99)
+                                                  .analysis_minute(logRequest.getLogCollectionMinute())
+                                                  .cluster_level(toLevel.getLevel())
+                                                  .ml_analysis_type(MLAnalysisType.LOG_CLUSTER)
+                                                  .stateType(context.getStateType())
+                                                  .query(Lists.newArrayList(logRequest.getQuery().split(" ")))
+                                                  .build();
+    analysisTask.setAppId(context.getAppId());
 
-      final boolean taskQueued = learningEngineService.addLearningEngineAnalysisTask(analysisTask);
-      if (taskQueued) {
-        logger.info("Clustering queued for {}", logRequest);
-      }
-    } catch (Exception e) {
-      throw new RuntimeException("First level clustering failed for " + logRequest, e);
+    final boolean taskQueued = learningEngineService.addLearningEngineAnalysisTask(analysisTask);
+    if (taskQueued) {
+      logger.info("Clustering queued for {}", logRequest);
     }
   }
 }
