@@ -219,6 +219,8 @@ public abstract class AbstractLogAnalysisState extends AbstractAnalysisState {
 
   @Override
   public void handleAbortEvent(ExecutionContext executionContext) {
+    continuousVerificationService.setMetaDataExecutionStatus(
+        executionContext.getStateExecutionInstanceId(), ExecutionStatus.ABORTED);
     AnalysisContext context = getLogAnalysisContext(executionContext, UUID.randomUUID().toString());
 
     final LogMLAnalysisSummary analysisSummary = analysisService.getAnalysisSummary(
