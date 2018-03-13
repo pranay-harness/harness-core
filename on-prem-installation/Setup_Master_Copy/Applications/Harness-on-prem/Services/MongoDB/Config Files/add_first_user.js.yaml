@@ -1,0 +1,8 @@
+harnessApiVersion: '1.0'
+type: CONFIG_FILE
+checksum: d95b4cf571a3ca5b64dd916a07eca27e
+checksumType: MD5
+encrypted: false
+fileName: add_first_user.js
+targetFilePath: add_first_user.js
+targetToAllEnv: true

@@ -1,0 +1,12 @@
+harnessApiVersion: '1.0'
+type: PHYSICAL_DATA_CENTER_SSH
+computeProviderName: on-prem-datacenter
+computeProviderType: PHYSICAL_DATA_CENTER
+connection: amazonkey-nonprod
+deploymentType: SSH
+hostNames:
+  - <HOST3_PLACEHOLDER>
+  - <HOST1_PLACEHOLDER>
+  - <HOST2_PLACEHOLDER>
+infraMappingType: PHYSICAL_DATA_CENTER_SSH
+serviceName: UI

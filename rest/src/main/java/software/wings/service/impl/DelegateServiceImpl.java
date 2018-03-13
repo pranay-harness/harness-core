@@ -46,6 +46,7 @@ import org.apache.commons.compress.archivers.zip.AsiExtraField;
 import org.apache.commons.compress.archivers.zip.ZipArchiveEntry;
 import org.apache.commons.compress.archivers.zip.ZipArchiveOutputStream;
 import org.apache.commons.io.IOUtils;
+import org.apache.commons.lang3.StringUtils;
 import org.apache.http.client.fluent.Request;
 import org.atmosphere.cpr.BroadcasterFactory;
 import org.mongodb.morphia.Key;
@@ -244,7 +245,7 @@ public class DelegateServiceImpl implements DelegateService {
       }
 
       try (StringWriter stringWriter = new StringWriter()) {
-        cfg.getTemplate("stop.sh.ftl").process(null, stringWriter);
+        cfg.getTemplate("stop.sh.ftl").process(scriptParams, stringWriter);
         delegateScripts.setStopScript(stringWriter.toString());
       }
     }
@@ -273,9 +274,16 @@ public class DelegateServiceImpl implements DelegateService {
     String jarRelativePath;
     String delegateJarDownloadUrl = null;
     boolean jarFileExists = false;
+    String harnessApiUrl = "https://api.harness.io";
+
+    String apiUrl = mainConfiguration.getApiUrl();
+    if (!StringUtils.isEmpty(apiUrl)) {
+      harnessApiUrl = apiUrl;
+    }
 
     try {
       String delegateMetadataUrl = mainConfiguration.getDelegateMetadataUrl().trim();
+      logger.info("Delegate metaData URL is " + delegateMetadataUrl);
       String delegateMatadata = Request.Get(delegateMetadataUrl)
                                     .connectTimeout(10000)
                                     .socketTimeout(10000)
@@ -345,6 +353,8 @@ public class DelegateServiceImpl implements DelegateService {
           .put("watcherJarUrl", watcherJarDownloadUrl)
           .put("watcherUpgradeVersion", watcherLatestVersion)
           .put("watcherCheckLocation", watcherMetadataUrl)
+          .put("harnessApiUrl", harnessApiUrl)
+          .put("deployMode", mainConfiguration.getDeployMode())
           .build();
     }
     return null;
@@ -394,7 +404,7 @@ public class DelegateServiceImpl implements DelegateService {
 
     File stop = File.createTempFile("stop", ".sh");
     try (OutputStreamWriter fileWriter = new OutputStreamWriter(new FileOutputStream(stop))) {
-      cfg.getTemplate("stop.sh.ftl").process(null, fileWriter);
+      cfg.getTemplate("stop.sh.ftl").process(scriptParams, fileWriter);
     }
     stop = new File(stop.getAbsolutePath());
     ZipArchiveEntry stopZipArchiveEntry = new ZipArchiveEntry(stop, Constants.DELEGATE_DIR + "/stop.sh");

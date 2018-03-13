@@ -1,0 +1,109 @@
+harnessApiVersion: '1.0'
+type: ENVIRONMENT
+environmentType: PROD
+variableOverrides:
+  - name: learning_env
+    serviceName: Learning Engine
+    value: ${serviceVariable.DEPLOY_MODE}
+    valueType: TEXT
+  - name: server_url
+    serviceName: Learning Engine
+    value: ${serviceVariable.LOAD_BALANCER_URL}
+    valueType: TEXT
+  - name: docker_image_tag
+    serviceName: Proxy
+    value: on_prem_8
+    valueType: TEXT
+  - name: MANAGER3
+    serviceName: Proxy
+    value: ${serviceVariable.HOST3}:9090
+    valueType: TEXT
+  - name: MANAGER2
+    serviceName: Proxy
+    value: ${serviceVariable.HOST2}:9090
+    valueType: TEXT
+  - name: MANAGER1
+    serviceName: Proxy
+    value: ${serviceVariable.HOST1}:9090
+    valueType: TEXT
+  - name: UI3
+    serviceName: Proxy
+    value: ${serviceVariable.HOST3}:8000
+    valueType: TEXT
+  - name: UI2
+    serviceName: Proxy
+    value: ${serviceVariable.HOST2}:8000
+    valueType: TEXT
+  - name: UI1
+    serviceName: Proxy
+    value: ${serviceVariable.HOST1}:8000
+    valueType: TEXT
+  - name: harness_manager_tag
+    serviceName: Manager
+    value: on_prem_10
+    valueType: TEXT
+  - name: TCP_HOSTS_DETAILS
+    serviceName: Manager
+    value: ${serviceVariable.HOST1}:5701,${serviceVariable.HOST2}:5701,${serviceVariable.HOST3}:5701
+    valueType: TEXT
+  - name: MONGO_URI
+    serviceName: Manager
+    value: mongodb://${serviceVariable.admin_user}:${serviceVariable.admin_pass}@${serviceVariable.HOST1}:27017,${serviceVariable.HOST2}:27017,${serviceVariable.HOST3}:27017/harness?replicaSet=rs0
+    valueType: TEXT
+  - name: MANCENTER_URL
+    serviceName: Manager
+    value: http://ec2-52-37-254-107.us-west-2.compute.amazonaws.com/mancenter
+    valueType: TEXT
+  - name: HZ_CLUSTER_NAME
+    serviceName: Manager
+    value: docker-manager-onprem
+    valueType: TEXT
+  - name: DELEGATE_METADATA_URL
+    serviceName: Manager
+    value: ${serviceVariable.LOAD_BALANCER_URL}/storage/wingsdelegates/delegateprod.txt
+    valueType: TEXT
+  - name: ALLOWED_ORIGINS
+    serviceName: Manager
+    value: ${serviceVariable.LOAD_BALANCER_URL}
+    valueType: TEXT
+  - name: WATCHER_METADATA_URL
+    serviceName: Manager
+    value: ${serviceVariable.LOAD_BALANCER_URL}/storage/wingswatchers/watcherprod.txt
+    valueType: TEXT
+  - name: API_URL
+    value: ${serviceVariable.LOAD_BALANCER_URL}
+    valueType: TEXT
+  - name: LOAD_BALANCER_URL
+    value: <LOAD_BALANCER_URL_PLACEHOLDER>
+    valueType: TEXT
+  - name: CIDR
+    serviceName: Manager
+    value: <CIDR_PLACEHOLDER>
+    valueType: TEXT
+  - name: COMPANYNAME
+    value: BigBank
+    valueType: TEXT
+  - name: ACCOUNTNAME
+    value: BigBankAdmin
+    valueType: TEXT
+  - name: EMAIL
+    value: testaccount@bigbank.com
+    valueType: TEXT
+  - name: HOST1
+    value: <HOST2_PLACEHOLDER>
+    valueType: TEXT
+  - name: admin_pass
+    value: <MONGODB_PASSWORD_PLACEHOLDER>
+    valueType: ENCRYPTED_TEXT
+  - name: admin_user
+    value: <MONGODB_USERNAME_PLACEHOLDER>
+    valueType: ENCRYPTED_TEXT
+  - name: DEPLOY_MODE
+    value: ONPREM
+    valueType: TEXT
+  - name: HOST3
+    value: <HOST3_PLACEHOLDER>
+    valueType: TEXT
+  - name: HOST2
+    value: <HOST1_PLACEHOLDER>
+    valueType: TEXT

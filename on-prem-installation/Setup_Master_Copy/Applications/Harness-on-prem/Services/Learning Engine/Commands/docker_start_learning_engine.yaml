@@ -1,0 +1,33 @@
+harnessApiVersion: '1.0'
+type: OTHER
+commandUnitType: COMMAND
+commandUnits:
+  - command: |2-
+
+        # Execute as root and pass environment variables
+        # su -p -
+
+        # Execute as root via user credentials (with root privileges)
+        # sudo -E su -p -
+
+        # The following variables are absolute paths defined as:
+        # ${HOME}/${appName}/${serviceName}/${serviceTemplateName}/[runtime|backup|staging]
+
+        mkdir -p "$WINGS_RUNTIME_PATH"
+        mkdir -p "$WINGS_BACKUP_PATH"
+        mkdir -p "$WINGS_STAGING_PATH"
+    commandUnitType: SETUP_ENV
+    deploymentType: SSH
+    name: Setup Env
+  - command: sudo docker run -d --rm --name learningEngine -e learning_env=${serviceVariable.learning_env} -e https_port=${serviceVariable.https_port} -e server_url=${serviceVariable.server_url} -e service_secret=${serviceVariable.service_secret} harness/learning-engine:${workflow.variables.LEARNING_ENGINE_VERSION}
+    commandUnitType: EXEC
+    deploymentType: SSH
+    name: Start learning-engine-docker
+    workingDirectory: ${WINGS_RUNTIME_PATH}
+  - command: |-
+        sleep 10
+        sudo docker inspect -f {{.State.Running}} learningEngine
+    commandUnitType: PROCESS_CHECK_RUNNING
+    deploymentType: SSH
+    name: Verify process running
+targetToAllEnv: true

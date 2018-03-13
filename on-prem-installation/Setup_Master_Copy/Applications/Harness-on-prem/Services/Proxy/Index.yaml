@@ -1,0 +1,37 @@
+harnessApiVersion: '1.0'
+type: SERVICE
+artifactType: OTHER
+configVariables:
+  - name: WWW_DIR_LOCATION
+    value: /data/proxy/www
+    valueType: TEXT
+  - name: STORAGE_DIR_LOCATION
+    value: ${serviceVariable.WWW_DIR_LOCATION}/data/storage
+    valueType: TEXT
+  - name: UI3
+    value: ui3-address
+    valueType: TEXT
+  - name: UI2
+    value: ui2-address
+    valueType: TEXT
+  - name: UI1
+    value: ui1-address
+    valueType: TEXT
+  - name: MANAGER1
+    value: manager1-address
+    valueType: TEXT
+  - name: MANAGER2
+    value: manager2-address
+    valueType: TEXT
+  - name: MANAGER3
+    value: manager-3-address
+    valueType: TEXT
+  - name: docker_image_tag
+    value: on_prem_5
+    valueType: TEXT
+  - name: docker_login_username
+    value: harnesshub
+    valueType: TEXT
+  - name: docker_login_password
+    value: <DOCKER_LOGIN_PASSWORD_PLACEHOLDER>
+    valueType: ENCRYPTED_TEXT

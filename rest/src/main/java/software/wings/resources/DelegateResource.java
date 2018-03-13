@@ -12,9 +12,11 @@ import freemarker.template.TemplateException;
 import io.swagger.annotations.Api;
 import io.swagger.annotations.ApiImplicitParam;
 import io.swagger.annotations.ApiImplicitParams;
+import org.apache.commons.lang3.StringUtils;
 import org.hibernate.validator.constraints.NotEmpty;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import software.wings.app.MainConfiguration;
 import software.wings.beans.Base;
 import software.wings.beans.Delegate;
 import software.wings.beans.DelegateScripts;
@@ -66,12 +68,14 @@ public class DelegateResource {
   private DownloadTokenService downloadTokenService;
   private static final Logger logger = LoggerFactory.getLogger(DelegateResource.class);
 
+  private MainConfiguration mainConfiguration;
   @Inject
   public DelegateResource(DelegateService delegateService, DelegateScopeService delegateScopeService,
-      DownloadTokenService downloadTokenService) {
+      DownloadTokenService downloadTokenService, MainConfiguration mainConfiguration) {
     this.delegateService = delegateService;
     this.delegateScopeService = delegateScopeService;
     this.downloadTokenService = downloadTokenService;
+    this.mainConfiguration = mainConfiguration;
   }
 
   @GET
@@ -213,9 +217,12 @@ public class DelegateResource {
   @ExceptionMetered
   public RestResponse<Map<String, String>> downloadUrl(@Context HttpServletRequest request,
       @QueryParam("accountId") @NotEmpty String accountId) throws IOException, TemplateException {
+    String url = mainConfiguration.getApiUrl() == null
+        ? request.getScheme() + "://" + request.getServerName() + ":" + request.getServerPort()
+        : mainConfiguration.getApiUrl();
+
     return new RestResponse<>(ImmutableMap.of("downloadUrl",
-        request.getScheme() + "://" + request.getServerName() + ":" + request.getServerPort()
-            + request.getRequestURI().replace("downloadUrl", "download") + "?accountId=" + accountId
+        url + request.getRequestURI().replace("downloadUrl", "download") + "?accountId=" + accountId
             + "&token=" + downloadTokenService.createDownloadToken("delegate." + accountId)));
   }
 
@@ -227,12 +234,24 @@ public class DelegateResource {
   public Response download(@Context HttpServletRequest request, @QueryParam("accountId") @NotEmpty String accountId,
       @QueryParam("token") @NotEmpty String token) throws IOException, TemplateException {
     downloadTokenService.validateDownloadToken("delegate." + accountId, token);
-    File delegateFile = delegateService.download(request.getServerName() + ":" + request.getServerPort(), accountId);
+    File delegateFile = delegateService.download(getManagerUrl(request), accountId);
     return Response.ok(delegateFile)
         .header("Content-Transfer-Encoding", "binary")
         .type("application/zip; charset=binary")
         .header("Content-Disposition", "attachment; filename=" + Constants.DELEGATE_DIR + ".zip")
         .build();
+  }
+
+  private String getManagerUrl(HttpServletRequest request) {
+    String apiUrl = mainConfiguration.getApiUrl();
+    if (!StringUtils.isEmpty(apiUrl)) {
+      if (apiUrl.startsWith("http://")) {
+        apiUrl = apiUrl.substring(7);
+      } else if (apiUrl.startsWith("https://")) {
+        apiUrl = apiUrl.substring(8);
+      }
+    }
+    return !StringUtils.isEmpty(apiUrl) ? apiUrl : request.getServerName() + ":" + request.getServerPort();
   }
 
   @DelegateAuth
@@ -309,8 +328,7 @@ public class DelegateResource {
   public RestResponse<DelegateScripts> checkForUpgrade(@Context HttpServletRequest request,
       @HeaderParam("Version") String version, @PathParam("delegateId") @NotEmpty String delegateId,
       @QueryParam("accountId") @NotEmpty String accountId) throws IOException, TemplateException {
-    return new RestResponse<>(delegateService.checkForUpgrade(
-        accountId, delegateId, version, request.getServerName() + ":" + request.getServerPort()));
+    return new RestResponse<>(delegateService.checkForUpgrade(accountId, delegateId, version, getManagerUrl(request)));
   }
 
   @DelegateAuth

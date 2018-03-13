@@ -1,0 +1,67 @@
+harnessApiVersion: '1.0'
+type: SERVICE
+artifactType: OTHER
+configVariables:
+  - name: STORAGE_DIR
+    value: /data/proxy/www/data/storage
+    valueType: TEXT
+  - name: jre_version
+    value: 8u131
+    valueType: TEXT
+  - name: docker_login_username
+    value: harnesshub
+    valueType: TEXT
+  - name: docker_login_password
+    value: <DOCKER_LOGIN_PASSWORD_PLACEHOLDER>
+    valueType: ENCRYPTED_TEXT
+  - name: UI_SERVER_URL
+    value: https://localhost:8000
+    valueType: TEXT
+  - name: SERVER_PORT
+    value: '9090'
+    valueType: TEXT
+  - name: HZ_CLUSTER_NAME
+    value: docker-manager-test
+    valueType: TEXT
+  - name: MANCENTER_URL
+    value: http://localhost:8080/mancenter
+    valueType: TEXT
+  - name: GRAPHITE_SERVER
+    value: carbon.hostedgraphite.com
+    valueType: TEXT
+  - name: GRAPHITE_PREFIX
+    value: server
+    valueType: TEXT
+  - name: DELEGATE_METADATA_URL
+    value: http://wingsdelegates.s3-website-us-east-1.amazonaws.com/delegateci.txt
+    valueType: TEXT
+  - name: NEWRELIC_ENV
+    value: development
+    valueType: TEXT
+  - name: CAPSULE_JAR
+    value: rest-0.0.1-SNAPSHOT-capsule.jar
+    valueType: TEXT
+  - name: ALLOWED_ORIGINS
+    value: https://localhost:8000
+    valueType: TEXT
+  - name: NEWRELIC_LICENSE_KEY
+    value: <NEWRELIC_LICENSE_KEY_PLACEHOLDER>
+    valueType: ENCRYPTED_TEXT
+  - name: WATCHER_METADATA_URL
+    value: http://wingswatchers.s3-website-us-east-1.amazonaws.com/watcherci.txt
+    valueType: TEXT
+  - name: MEMORY
+    value: '4096'
+    valueType: TEXT
+  - name: LOGGING_LEVEL
+    value: INFO
+    valueType: TEXT
+  - name: harness_manager_tag
+    value: on_prem_7
+    valueType: TEXT
+  - name: DEPLOY_MODE
+    value: ONPREM
+    valueType: TEXT
+  - name: CIDR
+    value: 172.31.*.*
+    valueType: TEXT

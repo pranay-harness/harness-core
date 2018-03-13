@@ -1,0 +1,34 @@
+harnessApiVersion: '1.0'
+type: SERVICE
+artifactType: OTHER
+configVariables:
+  - name: ACCOUNT_SECRET_KEY
+    value: <ACCOUNT_SECRET_KEY_PLACEHOLDER>
+    valueType: ENCRYPTED_TEXT
+  - name: LEARNING_ENGINE_SECRET
+    value: <LEARNING_ENGINE_SECRET_KEY_PLACEHOLDER>
+    valueType: ENCRYPTED_TEXT
+  - name: mongodb_port
+    value: '27017'
+    valueType: TEXT
+  - name: replicaset_name
+    value: rs0
+    valueType: TEXT
+  - name: mongodb_sys_log_file
+    value: mongod.log
+    valueType: TEXT
+  - name: mongodb_sys_log_dir
+    value: mongolog
+    valueType: TEXT
+  - name: mongodb_data_dir
+    value: /data/db
+    valueType: TEXT
+  - name: harness_application_db
+    value: harness
+    valueType: TEXT
+  - name: admin_db
+    value: admin
+    valueType: TEXT
+  - name: admin_user_role
+    value: root
+    valueType: TEXT
