@@ -6,6 +6,8 @@ package software.wings.api;
 
 import static software.wings.api.InstanceElement.Builder.anInstanceElement;
 
+import com.google.common.base.Objects;
+
 import software.wings.sm.ContextElement;
 import software.wings.sm.ContextElementType;
 import software.wings.sm.ExecutionContext;
@@ -140,6 +142,29 @@ public class InstanceElement implements ContextElement {
       instanceElement.setHost((HostElement) host.cloneMin());
     }
     return instanceElement;
+  }
+
+  @Override
+  public boolean equals(Object o) {
+    if (this == o) {
+      return true;
+    }
+
+    if (o == null || getClass() != o.getClass()) {
+      return false;
+    }
+
+    InstanceElement that = (InstanceElement) o;
+    return Objects.equal(getUuid(), that.getUuid()) && Objects.equal(getDisplayName(), that.getDisplayName())
+        && Objects.equal(getHostName(), that.getHostName()) && Objects.equal(getDockerId(), that.getDockerId())
+        && Objects.equal(getHost(), that.getHost())
+        && Objects.equal(getServiceTemplateElement(), that.getServiceTemplateElement());
+  }
+
+  @Override
+  public int hashCode() {
+    return Objects.hashCode(
+        getUuid(), getDisplayName(), getHostName(), getDockerId(), getHost(), getServiceTemplateElement());
   }
 
   @Override

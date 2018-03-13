@@ -99,6 +99,7 @@ public class StateExecutionInstance extends Base {
     private WingsDeque<ContextElement> contextElements = new WingsDeque<>();
     private Map<String, StateExecutionData> stateExecutionMap = new HashMap<>();
     private List<StateExecutionData> stateExecutionDataHistory = new ArrayList<>();
+    private List<ContextElement> notifyElements;
     private StateMachineExecutionCallback callback;
     private String executionName;
     private WorkflowType executionType;
@@ -257,12 +258,11 @@ public class StateExecutionInstance extends Base {
       return this;
     }
 
-    /**
-     * With callback builder.
-     *
-     * @param callback the callback
-     * @return the builder
-     */
+    public Builder withNotifyElements(List<ContextElement> notifyElements) {
+      this.notifyElements = notifyElements;
+      return this;
+    }
+
     public Builder withCallback(StateMachineExecutionCallback callback) {
       this.callback = callback;
       return this;
@@ -481,6 +481,7 @@ public class StateExecutionInstance extends Base {
           .withContextElements(contextElements)
           .withStateExecutionMap(stateExecutionMap)
           .withStateExecutionDataHistory(stateExecutionDataHistory)
+          .withNotifyElements(notifyElements)
           .withCallback(callback)
           .withExecutionName(executionName)
           .withExecutionType(executionType)
@@ -518,6 +519,7 @@ public class StateExecutionInstance extends Base {
       stateExecutionInstance.setContextElements(contextElements);
       stateExecutionInstance.setStateExecutionMap(stateExecutionMap);
       stateExecutionInstance.setStateExecutionDataHistory(stateExecutionDataHistory);
+      stateExecutionInstance.setNotifyElements(notifyElements);
       stateExecutionInstance.setCallback(callback);
       stateExecutionInstance.setExecutionName(executionName);
       stateExecutionInstance.setExecutionType(executionType);

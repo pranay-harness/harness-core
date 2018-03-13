@@ -1,9 +1,14 @@
 package software.wings.sm;
 
 import static io.harness.data.structure.UUIDGenerator.generateUuid;
+import static java.util.Arrays.asList;
 import static org.apache.commons.lang3.RandomUtils.nextInt;
 import static org.assertj.core.api.Assertions.assertThat;
+import static software.wings.api.InstanceElement.Builder.anInstanceElement;
 import static software.wings.sm.ExecutionEventAdvice.ExecutionEventAdviceBuilder.anExecutionEventAdvice;
+import static software.wings.sm.ExecutionStatus.FAILED;
+import static software.wings.sm.ExecutionStatus.NEW;
+import static software.wings.sm.StateExecutionInstance.Builder.aStateExecutionInstance;
 
 import com.google.inject.Inject;
 
@@ -12,6 +17,7 @@ import org.junit.Test;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import software.wings.WingsBaseTest;
+import software.wings.dl.WingsPersistence;
 import software.wings.rules.Listeners;
 import software.wings.service.StaticMap;
 import software.wings.service.intfc.WorkflowService;
@@ -21,6 +27,7 @@ import software.wings.sm.states.ForkState;
 import software.wings.waitnotify.NotifyEventListener;
 
 import java.util.ArrayList;
+import java.util.HashMap;
 import java.util.List;
 import java.util.Random;
 
@@ -31,6 +38,7 @@ import java.util.Random;
 public class StateMachineExecutorTest extends WingsBaseTest {
   private static final Logger logger = LoggerFactory.getLogger(StateMachineExecutorTest.class);
 
+  @Inject WingsPersistence wingsPersistence;
   @Inject StateMachineExecutor stateMachineExecutor;
 
   @Inject private WorkflowService workflowService;
@@ -532,6 +540,7 @@ public class StateMachineExecutorTest extends WingsBaseTest {
     public CustomeExecutionEventAdvisor(ExecutionInterruptType executionInterruptType) {
       this.executionInterruptType = executionInterruptType;
     }
+
     @Override
     public ExecutionEventAdvice onExecutionEvent(ExecutionEvent executionEvent) {
       if (executionEvent.getExecutionStatus() == ExecutionStatus.FAILED) {
@@ -766,5 +775,40 @@ public class StateMachineExecutorTest extends WingsBaseTest {
     StateMachineExecutionCallbackMock callback = new StateMachineExecutionCallbackMock();
     stateMachineExecutor.execute(appId, smId, executionUuid, executionUuid, null, callback);
     callback.await();
+  }
+
+  @Test
+  public void shouldCleanForRetry() {
+    List<ContextElement> originalNotifyElements = asList(anInstanceElement().withDisplayName("foo").build());
+
+    String prevStateExecutionInstanceId = wingsPersistence.save(aStateExecutionInstance()
+                                                                    .withAppId("appId")
+                                                                    .withStateName("state0")
+                                                                    .withNotifyElements(originalNotifyElements)
+                                                                    .build());
+
+    HashMap<String, StateExecutionData> stateExecutionMap = new HashMap<>();
+    stateExecutionMap.put("state0", new StateExecutionData());
+    stateExecutionMap.put("state1", new StateExecutionData());
+
+    List<ContextElement> notifyElements =
+        asList(anInstanceElement().withDisplayName("bar").build(), originalNotifyElements.get(0));
+
+    StateExecutionInstance stateExecutionInstance = aStateExecutionInstance()
+                                                        .withAppId("appId")
+                                                        .withStateName("state1")
+                                                        .withStateExecutionMap(stateExecutionMap)
+                                                        .withPrevInstanceId(prevStateExecutionInstanceId)
+                                                        .withStatus(FAILED)
+                                                        .build();
+
+    stateExecutionInstance = wingsPersistence.saveAndGet(StateExecutionInstance.class, stateExecutionInstance);
+    stateMachineExecutor.clearStateExecutionData(stateExecutionInstance, null);
+
+    stateExecutionInstance = wingsPersistence.get(StateExecutionInstance.class, stateExecutionInstance.getUuid());
+
+    // TODO: add more checks
+    assertThat(stateExecutionInstance.getStatus()).isEqualTo(NEW);
+    assertThat(stateExecutionInstance.getNotifyElements()).isEqualTo(originalNotifyElements);
   }
 }

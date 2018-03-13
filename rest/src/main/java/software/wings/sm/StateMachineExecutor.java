@@ -38,6 +38,7 @@ import static software.wings.sm.ExecutionStatus.WAITING;
 import static software.wings.sm.StateExecutionData.StateExecutionDataBuilder.aStateExecutionData;
 
 import com.google.common.base.Joiner;
+import com.google.common.base.Preconditions;
 import com.google.common.collect.Lists;
 import com.google.inject.Inject;
 import com.google.inject.Injector;
@@ -1246,7 +1247,8 @@ public class StateMachineExecutor {
     executorService.execute(new SmExecutionDispatcher(context, this));
   }
 
-  private void clearStateExecutionData(StateExecutionInstance stateExecutionInstance, Map<String, Object> stateParams) {
+  protected void clearStateExecutionData(
+      StateExecutionInstance stateExecutionInstance, Map<String, Object> stateParams) {
     Map<String, StateExecutionData> stateExecutionMap = stateExecutionInstance.getStateExecutionMap();
     if (stateExecutionMap == null) {
       return;
@@ -1260,7 +1262,17 @@ public class StateMachineExecutor {
     stateExecutionInstance.getStateExecutionDataHistory().add(stateExecutionData);
 
     stateExecutionMap.remove(stateExecutionInstance.getStateName());
-    ops.set("stateExecutionMap", stateExecutionInstance.getStateExecutionMap());
+    ops.set("stateExecutionMap", stateExecutionMap);
+
+    List<ContextElement> notifyElements = new ArrayList<>();
+    final String prevInstanceId = stateExecutionInstance.getPrevInstanceId();
+    if (prevInstanceId != null) {
+      final StateExecutionInstance prevStateExecutionInstance =
+          wingsPersistence.get(StateExecutionInstance.class, prevInstanceId);
+      Preconditions.checkNotNull(prevStateExecutionInstance);
+      notifyElements = prevStateExecutionInstance.getNotifyElements();
+    }
+    ops.set("notifyElements", notifyElements);
 
     if (stateParams != null) {
       ops.set("stateParams", stateParams);
@@ -1282,9 +1294,6 @@ public class StateMachineExecutor {
 
     UpdateResults updateResult = wingsPersistence.update(query, ops);
     if (updateResult == null || updateResult.getWriteResult() == null || updateResult.getWriteResult().getN() != 1) {
-      logger.warn("clearStateExecutionData could not be completed for the stateExecutionInstance: {}",
-          stateExecutionInstance.getUuid());
-
       throw new WingsException(ErrorCode.RETRY_FAILED).addParam("stateName", stateExecutionInstance.getStateName());
     }
   }
