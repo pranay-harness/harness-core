@@ -151,11 +151,8 @@ public class ArtifactCollectionJob implements Job {
       logger.info("[{}] new artifacts collected", artifacts.size());
       artifacts.forEach(artifact -> logger.info(artifact.toString()));
       Artifact latestArtifact = artifacts.get(artifacts.size() - 1);
-      if (latestArtifact.getStatus().equals(READY) || latestArtifact.getStatus().equals(APPROVED)) {
-        triggerService.triggerExecutionPostArtifactCollectionAsync(latestArtifact);
-      } else {
-        logger.info("Artifact is not yet READY to trigger post artifact collection deployment");
-      }
+      logger.info("Calling trigger execution if any for new artifact id {}", latestArtifact.getUuid());
+      triggerService.triggerExecutionPostArtifactCollectionAsync(latestArtifact);
     }
   }
 

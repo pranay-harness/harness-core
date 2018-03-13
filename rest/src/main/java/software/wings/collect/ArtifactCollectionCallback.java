@@ -18,9 +18,7 @@ import software.wings.beans.artifact.Artifact.ContentStatus;
 import software.wings.service.impl.EventEmitter;
 import software.wings.service.impl.EventEmitter.Channel;
 import software.wings.service.intfc.ArtifactService;
-import software.wings.service.intfc.ArtifactStreamService;
 import software.wings.service.intfc.NotificationService;
-import software.wings.service.intfc.TriggerService;
 import software.wings.waitnotify.ListNotifyResponseData;
 import software.wings.waitnotify.NotifyCallback;
 import software.wings.waitnotify.NotifyResponseData;
@@ -34,10 +32,8 @@ public class ArtifactCollectionCallback implements NotifyCallback {
   private static final Logger logger = LoggerFactory.getLogger(ArtifactCollectionCallback.class);
 
   @Inject private ArtifactService artifactService;
-  @Inject private ArtifactStreamService artifactStreamService;
   @Inject private EventEmitter eventEmitter;
   @Inject private NotificationService notificationService;
-  @Inject private TriggerService triggerService;
 
   private String appId;
   private String artifactId;
@@ -58,14 +54,21 @@ public class ArtifactCollectionCallback implements NotifyCallback {
       logger.error("Artifact file collection failed for artifactId: [{}], appId: [{}]", artifactId, appId);
       artifactService.updateStatus(artifactId, appId, FAILED, ContentStatus.FAILED, "Failed to download artifact file");
     } else {
+      logger.info("Artifact collection completed - artifactId : {}", artifactId);
       Artifact artifact = artifactService.get(appId, artifactId);
-      logger.info("Artifact collection completed - artifactId : {}", artifact.getUuid());
+      if (artifact == null) {
+        logger.info("Artifact Id {} was deleted - nothing to do", artifactId);
+        return;
+      }
       artifactService.addArtifactFile(artifact.getUuid(), artifact.getAppId(), responseData.getData());
       artifactService.updateStatus(artifact.getUuid(), artifact.getAppId(), APPROVED, ContentStatus.DOWNLOADED);
 
       artifact = artifactService.get(appId, artifactId);
 
-      triggerService.triggerExecutionPostArtifactCollectionAsync(artifact);
+      if (artifact == null) {
+        logger.info("Artifact Id {} was deleted - nothing to do", artifactId);
+        return;
+      }
       notificationService.sendNotificationAsync(anApprovalNotification()
                                                     .withAppId(artifact.getAppId())
                                                     .withEntityId(artifact.getUuid())
@@ -79,7 +82,12 @@ public class ArtifactCollectionCallback implements NotifyCallback {
 
   @Override
   public void notifyError(Map<String, NotifyResponseData> response) {
+    logger.info("Error occurred while collecting content of artifact id {}", artifactId);
     Artifact artifact = artifactService.get(appId, artifactId);
+    if (artifact == null) {
+      logger.info("Artifact Id {} was deleted - nothing to do", artifactId);
+      return;
+    }
     artifactService.updateStatus(artifact.getUuid(), artifact.getAppId(), ERROR);
     eventEmitter.send(Channel.ARTIFACTS,
         anEvent().withType(Type.UPDATE).withUuid(artifact.getUuid()).withAppId(artifact.getAppId()).build());

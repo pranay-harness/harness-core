@@ -143,6 +143,7 @@ public class FileServiceImpl implements FileService {
    */
   @Override
   public String saveFile(FileMetadata fileMetadata, InputStream in, FileBucket fileBucket) {
+    logger.info("Saving file {} ", fileMetadata);
     Document metadata = new Document();
 
     if (isNotBlank(fileMetadata.getChecksum()) && fileMetadata.getChecksumType() != null) {
@@ -163,6 +164,7 @@ public class FileServiceImpl implements FileService {
 
     ObjectId fileId =
         fileBucketHelper.getOrCreateFileBucket(fileBucket).uploadFromStream(fileMetadata.getFileName(), in, options);
+    logger.info("Saved file {}. Returning fileId {}", fileMetadata.getFileName(), fileId.toHexString());
     return fileId.toHexString();
   }
 

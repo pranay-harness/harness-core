@@ -457,6 +457,7 @@ public class JenkinsImpl implements Jenkins {
   @Override
   public Pair<String, InputStream> downloadArtifact(String jobname, String buildNo, String artifactpathRegex)
       throws IOException, URISyntaxException {
+    logger.info("Downloading artifactpathRegex {}, buildNo {} and jobname {}", artifactpathRegex, buildNo, jobname);
     JobWithDetails jobDetails = getJob(jobname);
     if (jobDetails == null) {
       return null;

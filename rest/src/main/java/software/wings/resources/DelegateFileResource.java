@@ -66,8 +66,8 @@ public class DelegateFileResource {
       @PathParam("taskId") String taskId, @QueryParam("accountId") @NotEmpty String accountId,
       @FormDataParam("file") InputStream uploadedInputStream,
       @FormDataParam("file") FormDataContentDisposition fileDetail) {
-    logger.debug(
-        "delegateId : {}, taskId: {}, accountId: {}, fileDetail: {}", delegateId, taskId, accountId, fileDetail);
+    logger.info("Received save artifact request for delegateId : {}, taskId: {}, accountId: {}, fileDetail: {}",
+        delegateId, taskId, accountId, fileDetail);
 
     // TODO: Do more check, so one delegate does not overload system
 
@@ -76,7 +76,7 @@ public class DelegateFileResource {
     String fileId = fileService.saveFile(fileMetadata,
         new BoundedInputStream(uploadedInputStream, configuration.getFileUploadLimits().getAppContainerLimit()),
         ARTIFACTS);
-    logger.debug("fileId: {}", fileId);
+    logger.info("fileId: {} and fileName {}", fileId, fileMetadata.getFileName());
     return new RestResponse<>(fileId);
   }
 

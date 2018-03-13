@@ -66,6 +66,8 @@ public class ArtifactCollectEventListener extends AbstractQueueListener<CollectE
   protected void onMessage(CollectEvent message) {
     Artifact artifact = message.getArtifact();
     try {
+      logger.info("Received artifact collection event for artifactId {} and of appId {}", artifact.getUuid(),
+          artifact.getAppId());
       artifactService.updateStatus(artifact.getUuid(), artifact.getAppId(), Status.RUNNING, ContentStatus.DOWNLOADING);
       eventEmitter.send(Channel.ARTIFACTS,
           anEvent().withType(Type.UPDATE).withUuid(artifact.getUuid()).withAppId(artifact.getAppId()).build());
@@ -75,10 +77,14 @@ public class ArtifactCollectEventListener extends AbstractQueueListener<CollectE
       String waitId = generateUuid();
 
       DelegateTask delegateTask = createDelegateTask(accountId, artifactStream, artifact, waitId);
+      logger.info("Registering callback for the artifact artifactId {} with waitId {}", artifact.getUuid(), waitId);
       waitNotifyEngine.waitForAll(new ArtifactCollectionCallback(artifact.getAppId(), artifact.getUuid()), waitId);
+      logger.info("Queuing delegate task {} for artifactId {} of arifactSourceName {} ", delegateTask,
+          artifact.getUuid(), artifact.getArtifactSourceName());
       delegateService.queueTask(delegateTask);
+
     } catch (Exception ex) {
-      logger.error(ex.getMessage(), ex);
+      logger.error("Failed to collect artifact. Reason {}", ex.getMessage(), ex);
       artifactService.updateStatus(artifact.getUuid(), artifact.getAppId(), Status.FAILED, ContentStatus.FAILED);
       eventEmitter.send(Channel.ARTIFACTS,
           anEvent().withType(Type.UPDATE).withUuid(artifact.getUuid()).withAppId(artifact.getAppId()).build());
