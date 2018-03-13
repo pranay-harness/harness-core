@@ -41,7 +41,7 @@ public class KubernetesConvention {
     return noDot(normalize(rcNamePrefix));
   }
 
-  public static String getKubernetesSecretName(ImageDetails imageDetails) {
+  public static String getKubernetesRegistrySecretName(ImageDetails imageDetails) {
     String regName = imageDetails.getRegistryUrl().substring(imageDetails.getRegistryUrl().indexOf("://") + 3);
     if (regName.endsWith("/")) {
       regName = regName.substring(0, regName.length() - 1);

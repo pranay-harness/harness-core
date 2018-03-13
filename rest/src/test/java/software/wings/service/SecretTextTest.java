@@ -13,7 +13,7 @@ import static org.mockito.Matchers.eq;
 import static org.mockito.Mockito.when;
 import static org.mockito.MockitoAnnotations.initMocks;
 import static org.mockito.internal.util.reflection.Whitebox.setInternalState;
-import static software.wings.service.impl.security.KmsServiceImpl.SECRET_MASK;
+import static software.wings.common.Constants.SECRET_MASK;
 import static software.wings.service.impl.security.SecretManagerImpl.HARNESS_DEFAULT_SECRET_MANAGER;
 import static software.wings.settings.SettingValue.SettingVariableTypes.CONFIG_FILE;
 import static software.wings.settings.SettingValue.SettingVariableTypes.SECRET_TEXT;

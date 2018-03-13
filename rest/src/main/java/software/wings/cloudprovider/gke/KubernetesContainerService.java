@@ -93,6 +93,8 @@ public interface KubernetesContainerService {
   ConfigMap createOrReplaceConfigMap(
       KubernetesConfig kubernetesConfig, List<EncryptedDataDetail> encryptedDataDetails, ConfigMap definition);
 
+  void deleteConfigMap(KubernetesConfig kubernetesConfig, List<EncryptedDataDetail> encryptedDataDetails, String name);
+
   IstioResource createOrReplaceRouteRule(
       KubernetesConfig kubernetesConfig, List<EncryptedDataDetail> encryptedDataDetails, IstioResource definition);
 
@@ -100,6 +102,8 @@ public interface KubernetesContainerService {
 
   Secret getSecret(
       KubernetesConfig kubernetesConfig, List<EncryptedDataDetail> encryptedDataDetails, String secretName);
+
+  void deleteSecret(KubernetesConfig kubernetesConfig, List<EncryptedDataDetail> encryptedDataDetails, String name);
 
   Secret createOrReplaceSecret(
       KubernetesConfig kubernetesConfig, List<EncryptedDataDetail> encryptedDataDetails, Secret secret);

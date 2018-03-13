@@ -8,13 +8,13 @@ import static io.harness.network.Http.getOkHttpClientBuilder;
 import static okhttp3.ConnectionSpec.CLEARTEXT;
 import static org.apache.commons.lang3.StringUtils.isNotBlank;
 
-import com.google.common.base.Joiner;
 import com.google.inject.Inject;
 import com.google.inject.Singleton;
 
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.dataformat.yaml.YAMLFactory;
+import com.fasterxml.jackson.dataformat.yaml.snakeyaml.Yaml;
 import io.fabric8.kubernetes.api.model.DoneableHorizontalPodAutoscaler;
 import io.fabric8.kubernetes.api.model.HorizontalPodAutoscaler;
 import io.fabric8.kubernetes.api.model.HorizontalPodAutoscalerList;
@@ -47,6 +47,8 @@ import org.slf4j.LoggerFactory;
 import software.wings.beans.KubernetesConfig;
 import software.wings.security.encryption.EncryptedDataDetail;
 import software.wings.service.intfc.security.EncryptionService;
+import software.wings.yaml.YamlHelper;
+import software.wings.yaml.YamlRepresenter;
 
 import java.io.IOException;
 import java.net.InetSocketAddress;
@@ -305,14 +307,9 @@ public class KubernetesHelperService {
         .writeValueAsString(entity);
   }
 
-  public static String trimYaml(String yamlString) {
-    if (yamlString == null) {
-      return null;
-    }
-    if (!yamlString.contains("\n")) {
-      return yamlString;
-    }
-    return Joiner.on("\n").join(yamlString.split("\\s*\\n"));
+  public static String toDisplayYaml(Object entity) {
+    Yaml yaml = new Yaml(new YamlRepresenter(true), YamlHelper.getDumperOptions());
+    return YamlHelper.cleanupYaml(yaml.dump(entity));
   }
 
   public NonNamespaceOperation<HorizontalPodAutoscaler, HorizontalPodAutoscalerList, DoneableHorizontalPodAutoscaler,

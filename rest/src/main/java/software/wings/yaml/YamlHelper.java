@@ -236,10 +236,9 @@ public class YamlHelper {
 
   public static <E> List<E> findDifferenceBetweenLists(List<E> itemsA, List<E> itemsB) {
     // we need to make a copy of itemsA, because we don't want to modify itemsA!
-    List<E> diffList = new ArrayList<>();
-    diffList.addAll(itemsA);
+    List<E> diffList = new ArrayList<>(itemsA);
 
-    if (diffList != null && itemsB != null) {
+    if (itemsB != null) {
       diffList.removeAll(itemsB);
     }
 
@@ -305,5 +304,9 @@ public class YamlHelper {
     }
 
     return null;
+  }
+
+  public static String trimYaml(String yamlString) {
+    return yamlString == null ? null : yamlString.replaceAll("\\s*\\n", "\n");
   }
 }

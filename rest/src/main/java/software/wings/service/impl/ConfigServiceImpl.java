@@ -14,6 +14,7 @@ import static software.wings.dl.PageRequest.PageRequestBuilder.aPageRequest;
 import static software.wings.service.intfc.FileService.FileBucket.CONFIGS;
 
 import com.google.common.base.Preconditions;
+import com.google.common.io.ByteStreams;
 import com.google.common.io.Files;
 import com.google.inject.Inject;
 import com.google.inject.Singleton;
@@ -40,8 +41,8 @@ import software.wings.service.intfc.ActivityService;
 import software.wings.service.intfc.ConfigService;
 import software.wings.service.intfc.EntityVersionService;
 import software.wings.service.intfc.EnvironmentService;
-import software.wings.service.intfc.FeatureFlagService;
 import software.wings.service.intfc.FileService;
+import software.wings.service.intfc.FileService.FileBucket;
 import software.wings.service.intfc.HostService;
 import software.wings.service.intfc.ServiceResourceService;
 import software.wings.service.intfc.ServiceTemplateService;
@@ -49,7 +50,11 @@ import software.wings.service.intfc.security.SecretManager;
 import software.wings.utils.BoundedInputStream;
 import software.wings.utils.Validator;
 
+import java.io.ByteArrayOutputStream;
 import java.io.File;
+import java.io.IOException;
+import java.io.InputStream;
+import java.io.OutputStream;
 import java.nio.file.InvalidPathException;
 import java.nio.file.Path;
 import java.nio.file.Paths;
@@ -78,7 +83,6 @@ public class ConfigServiceImpl implements ConfigService {
   @Inject private EntityVersionService entityVersionService;
   @Inject private EnvironmentService environmentService;
   @Inject private SecretManager secretManager;
-  @Inject private FeatureFlagService featureFlagService;
   @Inject private ActivityService activityService;
   @Inject private YamlChangeSetHelper yamlChangeSetHelper;
 
@@ -260,6 +264,26 @@ public class ConfigServiceImpl implements ConfigService {
       fileService.download(configFile.getFileUuid(), file, CONFIGS);
     }
     return file;
+  }
+
+  @Override
+  public String getFileContent(String appId, String configId) {
+    ConfigFile configFile = get(appId, configId);
+    OutputStream outputStream = new ByteArrayOutputStream();
+    InputStream inputStream = fileService.openDownloadStream(configFile.getFileUuid(), FileBucket.CONFIGS);
+    if (configFile.isEncrypted()) {
+      // TODO
+      return null;
+    } else {
+      try {
+        outputStream.write(ByteStreams.toByteArray(inputStream));
+        outputStream.flush();
+      } catch (IOException e) {
+        throw new WingsException(INVALID_ARGUMENT, e)
+            .addParam("args", "Failed to get configFile content: " + configFile.getName());
+      }
+    }
+    return outputStream.toString();
   }
 
   private File getDecryptedFile(ConfigFile configFile, File file, String appId, String activityId) {

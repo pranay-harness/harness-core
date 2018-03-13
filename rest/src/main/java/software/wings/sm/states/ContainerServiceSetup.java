@@ -197,7 +197,7 @@ public abstract class ContainerServiceSetup extends State {
           (Encryptable) settingAttribute.getValue(), context.getAppId(), context.getWorkflowExecutionId());
 
       ContainerSetupParams containerSetupParams = buildContainerSetupParams(context, service.getName(), imageDetails,
-          app, env, containerInfrastructureMapping, containerTask, clusterName);
+          app, env, service, containerInfrastructureMapping, containerTask, clusterName);
 
       CommandStateExecutionData executionData = aCommandStateExecutionData()
                                                     .withServiceId(service.getUuid())
@@ -518,8 +518,8 @@ public abstract class ContainerServiceSetup extends State {
   public abstract String getCommandName();
 
   protected abstract ContainerSetupParams buildContainerSetupParams(ExecutionContext context, String serviceName,
-      ImageDetails imageDetails, Application app, Environment env, ContainerInfrastructureMapping infrastructureMapping,
-      ContainerTask containerTask, String clusterName);
+      ImageDetails imageDetails, Application app, Environment env, Service service,
+      ContainerInfrastructureMapping infrastructureMapping, ContainerTask containerTask, String clusterName);
 
   protected abstract boolean isValidInfraMapping(InfrastructureMapping infrastructureMapping);
 

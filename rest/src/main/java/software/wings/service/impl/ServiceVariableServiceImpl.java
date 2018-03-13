@@ -7,8 +7,8 @@ import static software.wings.beans.EntityType.ENVIRONMENT;
 import static software.wings.beans.EntityType.SERVICE;
 import static software.wings.beans.ErrorCode.INVALID_ARGUMENT;
 import static software.wings.beans.ServiceVariable.Type.ENCRYPTED_TEXT;
+import static software.wings.common.Constants.SECRET_MASK;
 import static software.wings.dl.PageRequest.PageRequestBuilder.aPageRequest;
-import static software.wings.service.impl.security.KmsServiceImpl.SECRET_MASK;
 
 import com.google.common.base.Preconditions;
 import com.google.common.collect.ImmutableMap;

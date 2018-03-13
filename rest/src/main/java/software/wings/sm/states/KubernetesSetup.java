@@ -3,27 +3,33 @@ package software.wings.sm.states;
 import static io.harness.data.structure.EmptyPredicate.isNotEmpty;
 import static io.harness.govern.Switch.unhandled;
 import static java.util.stream.Collectors.toList;
+import static java.util.stream.Collectors.toMap;
 import static org.apache.commons.lang3.StringUtils.isBlank;
 import static org.apache.commons.lang3.StringUtils.isNotBlank;
 import static software.wings.beans.ResizeStrategy.RESIZE_NEW_FIRST;
 import static software.wings.beans.command.KubernetesSetupParams.KubernetesSetupParamsBuilder.aKubernetesSetupParams;
 import static software.wings.common.Constants.DEFAULT_STEADY_STATE_TIMEOUT;
-import static software.wings.service.impl.KubernetesHelperService.trimYaml;
 import static software.wings.sm.StateType.KUBERNETES_SETUP;
+import static software.wings.yaml.YamlHelper.trimYaml;
+
+import com.google.inject.Inject;
 
 import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
+import org.mongodb.morphia.annotations.Transient;
 import software.wings.api.CommandStateExecutionData;
 import software.wings.api.ContainerServiceElement;
 import software.wings.api.ContainerServiceElement.ContainerServiceElementBuilder;
 import software.wings.api.DeploymentType;
 import software.wings.beans.Application;
 import software.wings.beans.AzureKubernetesInfrastructureMapping;
+import software.wings.beans.ConfigFile;
 import software.wings.beans.ContainerInfrastructureMapping;
 import software.wings.beans.DirectKubernetesInfrastructureMapping;
 import software.wings.beans.Environment;
 import software.wings.beans.GcpKubernetesInfrastructureMapping;
 import software.wings.beans.InfrastructureMapping;
 import software.wings.beans.ResizeStrategy;
+import software.wings.beans.Service;
 import software.wings.beans.command.CommandExecutionResult;
 import software.wings.beans.command.ContainerSetupCommandUnitExecutionData;
 import software.wings.beans.command.ContainerSetupParams;
@@ -33,9 +39,14 @@ import software.wings.beans.container.ImageDetails;
 import software.wings.beans.container.KubernetesContainerTask;
 import software.wings.beans.container.KubernetesPortProtocol;
 import software.wings.beans.container.KubernetesServiceType;
+import software.wings.service.intfc.ConfigService;
 import software.wings.sm.ExecutionContext;
 import software.wings.sm.ExecutionStatus;
 import software.wings.utils.KubernetesConvention;
+
+import java.util.HashMap;
+import java.util.List;
+import java.util.Map;
 
 /**
  * Created by brett on 3/1/17
@@ -43,6 +54,8 @@ import software.wings.utils.KubernetesConvention;
 @JsonIgnoreProperties(ignoreUnknown = true)
 public class KubernetesSetup extends ContainerServiceSetup {
   // *** Note: UI Schema specified in wingsui/src/containers/WorkflowEditor/custom/KubernetesRepCtrlSetup.js
+
+  @Transient @Inject private transient ConfigService configService;
 
   private String replicationControllerName;
   private KubernetesServiceType serviceType;
@@ -72,8 +85,33 @@ public class KubernetesSetup extends ContainerServiceSetup {
 
   @Override
   protected ContainerSetupParams buildContainerSetupParams(ExecutionContext context, String serviceName,
-      ImageDetails imageDetails, Application app, Environment env, ContainerInfrastructureMapping infrastructureMapping,
-      ContainerTask containerTask, String clusterName) {
+      ImageDetails imageDetails, Application app, Environment env, Service service,
+      ContainerInfrastructureMapping infrastructureMapping, ContainerTask containerTask, String clusterName) {
+    Map<String, String> configFiles = new HashMap<>();
+
+    Map<String, String> configFilesService = getConfigFileContent(app, service.getConfigFiles());
+    if (isNotEmpty(configFilesService)) {
+      configFiles.putAll(configFilesService);
+    }
+
+    Map<String, String> configFilesFromEnv =
+        getConfigFileContent(app, configService.getConfigFileOverridesForEnv(app.getUuid(), env.getUuid()));
+    if (isNotEmpty(configFilesFromEnv)) {
+      configFiles.putAll(configFilesFromEnv);
+    }
+
+    String configMapYaml = null;
+    // TODO(brett)
+    //    String configMapYaml = service.getConfigMapYaml();
+    //    if (isNotBlank(env.getConfigMapYaml())) {
+    //      configMapYaml = env.getConfigMapYaml();
+    //    }
+
+    String configMapYamlEvaluated = null;
+    if (isNotBlank(configMapYaml)) {
+      configMapYamlEvaluated = context.renderExpression(configMapYaml);
+    }
+
     String controllerNamePrefix = isNotBlank(replicationControllerName)
         ? KubernetesConvention.normalize(context.renderExpression(replicationControllerName))
         : KubernetesConvention.getControllerNamePrefix(app.getName(), serviceName, env.getName());
@@ -158,7 +196,15 @@ public class KubernetesSetup extends ContainerServiceSetup {
         .withUseIngress(useIngress)
         .withIngressYaml(ingressYamlEvaluated)
         .withUseIstioRouteRule(useIstioRouteRule)
+        .withConfigFiles(configFiles)
+        .withConfigMapYaml(configMapYamlEvaluated)
         .build();
+  }
+
+  private Map<String, String> getConfigFileContent(Application app, List<ConfigFile> configFiles) {
+    return configFiles.stream().collect(toMap(cf
+        -> cf.getFileName().replaceAll("\\.", "_"),
+        cf -> configService.getFileContent(app.getUuid(), cf.getUuid())));
   }
 
   @Override

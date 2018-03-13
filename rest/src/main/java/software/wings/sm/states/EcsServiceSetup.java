@@ -19,6 +19,7 @@ import software.wings.beans.EcsInfrastructureMapping;
 import software.wings.beans.Environment;
 import software.wings.beans.InfrastructureMapping;
 import software.wings.beans.ResizeStrategy;
+import software.wings.beans.Service;
 import software.wings.beans.command.CommandExecutionResult;
 import software.wings.beans.command.ContainerSetupCommandUnitExecutionData;
 import software.wings.beans.command.ContainerSetupParams;
@@ -56,8 +57,8 @@ public class EcsServiceSetup extends ContainerServiceSetup {
 
   @Override
   protected ContainerSetupParams buildContainerSetupParams(ExecutionContext context, String serviceName,
-      ImageDetails imageDetails, Application app, Environment env, ContainerInfrastructureMapping infrastructureMapping,
-      ContainerTask containerTask, String clusterName) {
+      ImageDetails imageDetails, Application app, Environment env, Service service,
+      ContainerInfrastructureMapping infrastructureMapping, ContainerTask containerTask, String clusterName) {
     String taskFamily = isNotBlank(ecsServiceName)
         ? Misc.normalizeExpression(context.renderExpression(ecsServiceName))
         : EcsConvention.getTaskFamily(app.getName(), serviceName, env.getName());

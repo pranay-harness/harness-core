@@ -17,6 +17,7 @@ import software.wings.beans.DirectKubernetesInfrastructureMapping;
 import software.wings.beans.Environment;
 import software.wings.beans.GcpKubernetesInfrastructureMapping;
 import software.wings.beans.InfrastructureMapping;
+import software.wings.beans.Service;
 import software.wings.beans.command.CommandExecutionResult;
 import software.wings.beans.command.ContainerSetupCommandUnitExecutionData;
 import software.wings.beans.command.ContainerSetupParams;
@@ -41,8 +42,8 @@ public class KubernetesSetupRollback extends ContainerServiceSetup {
 
   @Override
   protected ContainerSetupParams buildContainerSetupParams(ExecutionContext context, String serviceName,
-      ImageDetails imageDetails, Application app, Environment env, ContainerInfrastructureMapping infrastructureMapping,
-      ContainerTask containerTask, String clusterName) {
+      ImageDetails imageDetails, Application app, Environment env, Service service,
+      ContainerInfrastructureMapping infrastructureMapping, ContainerTask containerTask, String clusterName) {
     ContainerRollbackRequestElement rollbackElement =
         context.getContextElement(ContextElementType.PARAM, Constants.CONTAINER_ROLLBACK_REQUEST_PARAM);
 
@@ -65,7 +66,7 @@ public class KubernetesSetupRollback extends ContainerServiceSetup {
         .withControllerNamePrefix(rollbackElement.getControllerNamePrefix())
         .withInfraMappingId(infrastructureMapping.getUuid())
         .withPreviousDaemonSetYaml(rollbackElement.getPreviousDaemonSetYaml())
-        .withActiveAutoscalers(rollbackElement.getPreviousActiveAutoscalers())
+        .withPreviousActiveAutoscalers(rollbackElement.getPreviousActiveAutoscalers())
         .withServiceSteadyStateTimeout(serviceSteadyStateTimeout)
         .withRollback(true)
         .withSubscriptionId(subscriptionId)
