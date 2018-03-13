@@ -235,7 +235,11 @@ public class KubernetesSetupCommandUnit extends ContainerSetupCommandUnit {
       configMap.setData(data);
     }
 
-    if (configMap != null && isNotEmpty(configMap.getData())) {
+    if (configMap != null && isEmpty(configMap.getData())) {
+      configMap = null;
+    }
+
+    if (configMap != null) {
       executionLogCallback.saveExecutionLog("Creating config map:\n\n" + toDisplayYaml(configMap), LogLevel.INFO);
       kubernetesContainerService.createOrReplaceConfigMap(kubernetesConfig, encryptedDataDetails, configMap);
     }
