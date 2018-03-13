@@ -184,10 +184,10 @@ public class LogMLAnalysisGenerator implements Runnable {
         analysisTask.setUuid(uuid);
         learningEngineService.addLearningEngineAnalysisTask(analysisTask);
       }
-
     } catch (Exception e) {
-      throw new RuntimeException(
-          "Log analysis failed for " + context.getStateExecutionId() + " for minute " + logAnalysisMinute, e);
+      throw new RuntimeException("Log analysis failed for " + context.getStateExecutionId() + " for minute "
+              + logAnalysisMinute + ", reason: " + e.getMessage(),
+          e);
     }
   }
 }

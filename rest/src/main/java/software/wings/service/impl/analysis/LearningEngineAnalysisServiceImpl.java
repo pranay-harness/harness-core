@@ -1,6 +1,5 @@
 package software.wings.service.impl.analysis;
 
-import static software.wings.delegatetasks.NewRelicDataCollectionTask.COLLECTION_PERIOD_MINS;
 import static software.wings.service.impl.newrelic.LearningEngineAnalysisTask.TIME_SERIES_ANALYSIS_TASK_TIME_OUT;
 import static software.wings.utils.Misc.generateSecretKey;
 
@@ -107,7 +106,9 @@ public class LearningEngineAnalysisServiceImpl implements LearningEngineService 
 
     // task has been sitting for a while without being executed
     if (analysisTask.getAnalysis_minute() - learningEngineAnalysisTask.getAnalysis_minute()
-        >= COLLECTION_PERIOD_MINS + TimeUnit.MILLISECONDS.toMinutes(TIME_SERIES_ANALYSIS_TASK_TIME_OUT)) {
+            >= TimeUnit.MILLISECONDS.toMinutes(TIME_SERIES_ANALYSIS_TASK_TIME_OUT)
+        || learningEngineAnalysisTask.getCreatedAt()
+            < System.currentTimeMillis() - TIME_SERIES_ANALYSIS_TASK_TIME_OUT) {
       throw new WingsException(
           ErrorCode.NEWRELIC_ERROR, "Analysis timed out for minute " + learningEngineAnalysisTask.getAnalysis_minute());
     }

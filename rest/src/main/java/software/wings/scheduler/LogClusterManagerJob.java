@@ -97,47 +97,42 @@ public class LogClusterManagerJob implements Job {
           analysisService
               .getHearbeatRecordForL0(context.getAppId(), context.getStateExecutionId(), context.getStateType(), node)
               .map(log -> {
-                try {
-                  /**
-                   * Process L0 records.
-                   */
-                  boolean hasDataRecords = analysisService.hasDataRecords(log.getQuery(), context.getAppId(),
-                      context.getStateExecutionId(), context.getStateType(), Sets.newHashSet(log.getHost()),
-                      ClusterLevel.L0, log.getLogCollectionMinute());
+                /**
+                 * Process L0 records.
+                 */
+                boolean hasDataRecords = analysisService.hasDataRecords(log.getQuery(), context.getAppId(),
+                    context.getStateExecutionId(), context.getStateType(), Sets.newHashSet(log.getHost()),
+                    ClusterLevel.L0, log.getLogCollectionMinute());
 
-                  final LogRequest logRequest = new LogRequest(log.getQuery(), context.getAppId(),
-                      context.getStateExecutionId(), context.getWorkflowId(), context.getServiceId(),
-                      Collections.singleton(log.getHost()), log.getLogCollectionMinute());
+                final LogRequest logRequest = new LogRequest(log.getQuery(), context.getAppId(),
+                    context.getStateExecutionId(), context.getWorkflowId(), context.getServiceId(),
+                    Collections.singleton(log.getHost()), log.getLogCollectionMinute());
 
-                  if (hasDataRecords) {
-                    logger.info("Running cluster task for " + context.getStateExecutionId() + " , minute "
-                        + logRequest.getLogCollectionMinute());
-                    new LogMLClusterGenerator(learningEngineService, context.getClusterContext(), ClusterLevel.L0,
-                        ClusterLevel.L1, logRequest)
-                        .run();
-                    logger.info(" queued cluster task for " + context.getStateExecutionId() + " , minute "
-                        + logRequest.getLogCollectionMinute());
+                if (hasDataRecords) {
+                  logger.info("Running cluster task for " + context.getStateExecutionId() + " , minute "
+                      + logRequest.getLogCollectionMinute());
+                  new LogMLClusterGenerator(
+                      learningEngineService, context.getClusterContext(), ClusterLevel.L0, ClusterLevel.L1, logRequest)
+                      .run();
+                  logger.info(" queued cluster task for " + context.getStateExecutionId() + " , minute "
+                      + logRequest.getLogCollectionMinute());
 
-                  } else {
-                    logger.info(" skipping cluster task no data found. for " + context.getStateExecutionId()
-                        + " , minute " + logRequest.getLogCollectionMinute());
-                    analysisService.bumpClusterLevel(context.getStateType(), context.getStateExecutionId(),
-                        context.getAppId(), logRequest.getQuery(), logRequest.getNodes(),
-                        logRequest.getLogCollectionMinute(), ClusterLevel.getHeartBeatLevel(ClusterLevel.L0),
-                        ClusterLevel.getHeartBeatLevel(ClusterLevel.L0).next());
-                  }
-
-                  return true;
-                } catch (Exception ex) {
-                  logger.error("Unknown error in log ml cluster", ex);
-                  return false;
+                } else {
+                  logger.info(" skipping cluster task no data found. for " + context.getStateExecutionId()
+                      + " , minute " + logRequest.getLogCollectionMinute());
+                  analysisService.bumpClusterLevel(context.getStateType(), context.getStateExecutionId(),
+                      context.getAppId(), logRequest.getQuery(), logRequest.getNodes(),
+                      logRequest.getLogCollectionMinute(), ClusterLevel.getHeartBeatLevel(ClusterLevel.L0),
+                      ClusterLevel.getHeartBeatLevel(ClusterLevel.L0).next());
                 }
+
+                return true;
               })
               .orElse(false);
         }
       } catch (Exception ex) {
         completeCron = true;
-        throw new RuntimeException("Verification L0 => L1 cluster failed", ex);
+        throw new RuntimeException("Verification L0 => L1 cluster failed, " + ex.getMessage(), ex);
       } finally {
         // Delete cron.
         try {
