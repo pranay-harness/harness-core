@@ -168,24 +168,24 @@ public class DelegateFileManagerImpl implements DelegateFileManager {
 
   private void upload(DelegateFile delegateFile, File content) throws IOException {
     RequestBody filename = RequestBody.create(MediaType.parse(MULTIPART_FORM_DATA), "file");
-
+    logger.info("Uploading file name {} ", filename);
     // create RequestBody instance from file
     RequestBody requestFile = RequestBody.create(MediaType.parse(MULTIPART_FORM_DATA), content);
 
     // MultipartBody.Part is used to send also the actual file name
     Part part = Part.createFormData("file", delegateFile.getFileName(), requestFile);
-
     Response<RestResponse<String>> response =
         managerClient
             .uploadFile(delegateFile.getDelegateId(), delegateFile.getTaskId(), delegateFile.getAccountId(), part)
             .execute();
     delegateFile.setFileId(response.body().getResource());
+    logger.info("Uploaded delegate file id {} ", delegateFile.getFileId());
   }
 
   @Override
   public DelegateFile upload(DelegateFile delegateFile, InputStream contentSource) {
     File file = new File(delegateConfiguration.getLocalDiskPath(), generateUuid());
-    logger.info("File {} created", file.getName());
+    logger.info("File local name {} for delegate file id {} created", file.getName(), delegateFile.getFileId());
     try {
       FileOutputStream fout = new FileOutputStream(file);
       IOUtils.copy(contentSource, fout);

@@ -100,6 +100,7 @@ public class PruneEntityJob implements Job {
     boolean succeeded = true;
     for (T descending : descendingServices) {
       try {
+        logger.info("Pruning descending entities for {} ", descending.getClass());
         lambda.accept(descending);
       } catch (WingsException exception) {
         succeeded = false;
@@ -115,6 +116,7 @@ public class PruneEntityJob implements Job {
   }
 
   private boolean prune(String className, String appId, String entityId) {
+    logger.info("Pruning Entity {} {} for appId {}", className, entityId, appId);
     if (className.equals(Application.class.getCanonicalName())) {
       if (!appId.equals(entityId)) {
         throw new WingsException("Prune job is incorrectly initialized with entityId: " + entityId

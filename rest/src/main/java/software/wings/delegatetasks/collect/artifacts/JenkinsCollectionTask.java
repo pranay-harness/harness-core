@@ -56,6 +56,7 @@ public class JenkinsCollectionTask extends AbstractDelegateRunnableTask {
           jenkinsConfig.getJenkinsUrl(), jenkinsConfig.getUsername(), jenkinsConfig.getPassword());
 
       for (String artifactPath : artifactPaths) {
+        logger.info("Collecting artifact {} of job {}", artifactPath, jobName);
         Pair<String, InputStream> fileInfo = jenkins.downloadArtifact(jobName, arguments.get(BUILD_NO), artifactPath);
         artifactCollectionTaskHelper.addDataToResponse(
             fileInfo, artifactPath, res, getDelegateId(), getTaskId(), getAccountId());

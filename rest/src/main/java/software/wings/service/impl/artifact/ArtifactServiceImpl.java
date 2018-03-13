@@ -268,6 +268,7 @@ public class ArtifactServiceImpl implements ArtifactService {
    */
   @Override
   public void addArtifactFile(String artifactId, String appId, List<ArtifactFile> artifactFile) {
+    logger.info("Adding artifactFiles for artifactId {} and appId {}", artifactId, appId);
     Query<Artifact> query =
         wingsPersistence.createQuery(Artifact.class).field(ID_KEY).equal(artifactId).field("appId").equal(appId);
     UpdateOperations<Artifact> ops =
