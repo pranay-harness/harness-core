@@ -289,6 +289,7 @@ public class KubernetesSetupCommandUnit extends ContainerSetupCommandUnit {
     // Setup service
     Service service =
         kubernetesContainerService.getService(kubernetesConfig, encryptedDataDetails, kubernetesServiceName);
+
     if (setupParams.getServiceType() != null && setupParams.getServiceType() != KubernetesServiceType.None) {
       Service serviceDefinition =
           createServiceDefinition(kubernetesServiceName, kubernetesConfig.getNamespace(), serviceLabels, setupParams);
@@ -312,11 +313,13 @@ public class KubernetesSetupCommandUnit extends ContainerSetupCommandUnit {
             kubernetesConfig, encryptedDataDetails, service, setupParams.getLoadBalancerIP(), executionLogCallback);
       }
 
-    } else if (service != null) {
-      executionLogCallback.saveExecutionLog(
-          "Kubernetes service type set to 'None'. Deleting existing service " + kubernetesServiceName, LogLevel.INFO);
-      kubernetesContainerService.deleteService(kubernetesConfig, encryptedDataDetails, kubernetesServiceName);
-      service = null;
+    } else {
+      executionLogCallback.saveExecutionLog("Kubernetes service type set to 'None'", LogLevel.INFO);
+      if (service != null) {
+        executionLogCallback.saveExecutionLog("Deleting existing service " + kubernetesServiceName, LogLevel.INFO);
+        kubernetesContainerService.deleteService(kubernetesConfig, encryptedDataDetails, kubernetesServiceName);
+        service = null;
+      }
     }
 
     // Setup ingress
@@ -392,7 +395,9 @@ public class KubernetesSetupCommandUnit extends ContainerSetupCommandUnit {
     executionLogCallback.saveExecutionLog("Cluster Name: " + setupParams.getClusterName(), LogLevel.INFO);
     executionLogCallback.saveExecutionLog("Controller Name: " + containerServiceName, LogLevel.INFO);
     executionLogCallback.saveExecutionLog("Docker Image Name: " + dockerImageName, LogLevel.INFO);
-    executionLogCallback.saveExecutionLog("Service Name: " + kubernetesServiceName, LogLevel.INFO);
+    if (service != null) {
+      executionLogCallback.saveExecutionLog("Service Name: " + kubernetesServiceName, LogLevel.INFO);
+    }
     if (isNotBlank(serviceClusterIP)) {
       executionLogCallback.saveExecutionLog("Service Cluster IP: " + serviceClusterIP, LogLevel.INFO);
     }
