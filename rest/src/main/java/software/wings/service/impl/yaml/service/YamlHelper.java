@@ -114,6 +114,14 @@ public class YamlHelper {
     return environmentService.getEnvironmentByName(appId, envName);
   }
 
+  public Environment getEnvironmentFromAccount(String accountId, String yamlFilePath) {
+    String appId = getAppId(accountId, yamlFilePath);
+    Validator.notNullCheck("App null in the given yaml file: " + yamlFilePath, appId);
+    String envName = extractParentEntityName(YamlType.ENVIRONMENT.getPrefixExpression(), yamlFilePath, PATH_DELIMITER);
+    Validator.notNullCheck("Environment name null in the given yaml file: " + yamlFilePath, envName);
+    return environmentService.getEnvironmentByName(appId, envName);
+  }
+
   public String getEnvironmentName(String yamlFilePath) {
     return extractParentEntityName(YamlType.ENVIRONMENT.getPrefixExpression(), yamlFilePath, PATH_DELIMITER);
   }
