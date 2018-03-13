@@ -717,7 +717,8 @@ def main(options):
                        stateExecutionId=options.state_execution_id,
                        serviceId=options.service_id,
                        analysisMinute=options.analysis_minute)
-        raise Exception(str(e) + ' for '+ json.dumps(payload))
+        logger.exception(e)
+        raise Exception('Analysis failed for ' + json.dumps(payload))
 
 
 if __name__ == "__main__":
