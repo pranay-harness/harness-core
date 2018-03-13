@@ -6,39 +6,64 @@ import com.google.inject.Inject;
 
 import io.github.benas.randombeans.EnhancedRandomBuilder;
 import io.github.benas.randombeans.api.EnhancedRandom;
-import software.wings.beans.Application;
-import software.wings.beans.OrchestrationWorkflow;
 import software.wings.beans.Workflow;
-import software.wings.beans.WorkflowType;
-import software.wings.dl.WingsPersistence;
+import software.wings.beans.Workflow.WorkflowBuilder;
+import software.wings.service.intfc.WorkflowService;
 
 public class WorkflowGenerator {
-  @Inject WingsPersistence wingsPersistence;
+  @Inject WorkflowService workflowService;
 
   @Inject ApplicationGenerator applicationGenerator;
   @Inject OrchestrationWorkflowGenerator orchestrationWorkflowGenerator;
 
-  public Workflow createWorkflow(long seed, Application application, OrchestrationWorkflow orchestrationWorkflow) {
-    if (application == null) {
-      application = applicationGenerator.createApplication(seed);
-    }
-
-    if (orchestrationWorkflow == null) {
-      orchestrationWorkflow = orchestrationWorkflowGenerator.createOrchestrationWorkflow(seed);
-    }
-
+  public Workflow createWorkflow(long seed, Workflow workflow) {
     EnhancedRandom random =
         EnhancedRandomBuilder.aNewEnhancedRandomBuilder().seed(seed).scanClasspathForConcreteTypes(true).build();
 
-    Workflow workflow = aWorkflow()
-                            .withAppId(application.getAppId())
-                            .withName(random.nextObject(String.class))
-                            .withDescription(random.nextObject(String.class))
-                            .withWorkflowType(WorkflowType.ORCHESTRATION)
-                            .withOrchestrationWorkflow(orchestrationWorkflow)
-                            .build();
+    WorkflowBuilder builder = aWorkflow();
 
-    wingsPersistence.save(workflow);
-    return workflow;
+    if (workflow != null && workflow.getAppId() != null) {
+      builder.withAppId(workflow.getAppId());
+    } else {
+      throw new UnsupportedOperationException();
+    }
+
+    if (workflow != null && workflow.getEnvId() != null) {
+      builder.withEnvId(workflow.getEnvId());
+    } else {
+      throw new UnsupportedOperationException();
+    }
+
+    if (workflow != null && workflow.getName() != null) {
+      builder.withName(workflow.getName());
+    } else {
+      throw new UnsupportedOperationException();
+    }
+
+    if (workflow != null && workflow.getWorkflowType() != null) {
+      builder.withWorkflowType(workflow.getWorkflowType());
+    } else {
+      throw new UnsupportedOperationException();
+    }
+
+    if (workflow != null && workflow.getOrchestrationWorkflow() != null) {
+      builder.withOrchestrationWorkflow(workflow.getOrchestrationWorkflow());
+    } else {
+      throw new UnsupportedOperationException();
+    }
+
+    if (workflow != null && workflow.getServiceId() != null) {
+      builder.withServiceId(workflow.getServiceId());
+    } else {
+      throw new UnsupportedOperationException();
+    }
+
+    if (workflow != null && workflow.getInfraMappingId() != null) {
+      builder.withInfraMappingId(workflow.getInfraMappingId());
+    } else {
+      throw new UnsupportedOperationException();
+    }
+
+    return workflowService.createWorkflow(builder.build());
   }
 }

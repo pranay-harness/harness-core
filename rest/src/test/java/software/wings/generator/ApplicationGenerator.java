@@ -7,17 +7,29 @@ import com.google.inject.Inject;
 import io.github.benas.randombeans.EnhancedRandomBuilder;
 import io.github.benas.randombeans.api.EnhancedRandom;
 import software.wings.beans.Application;
-import software.wings.dl.WingsPersistence;
+import software.wings.beans.Application.Builder;
+import software.wings.service.intfc.AppService;
 
 public class ApplicationGenerator {
-  @Inject WingsPersistence wingsPersistence;
+  @Inject AppService applicationService;
 
-  public Application createApplication(long seed) {
+  public Application createApplication(long seed, Application application) {
     EnhancedRandom random =
         EnhancedRandomBuilder.aNewEnhancedRandomBuilder().seed(seed).scanClasspathForConcreteTypes(true).build();
 
-    final Application application = anApplication().withName(random.nextObject(String.class)).build();
-    wingsPersistence.save(application);
-    return application;
+    final Builder builder = anApplication();
+
+    if (application != null && application.getAccountId() != null) {
+      builder.withAccountId(application.getAccountId());
+    } else {
+      throw new UnsupportedOperationException();
+    }
+
+    if (application != null && application.getName() != null) {
+      builder.withName(application.getName());
+    } else {
+      builder.withName(random.nextObject(String.class));
+    }
+    return applicationService.save(builder.build());
   }
 }

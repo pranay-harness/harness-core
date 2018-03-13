@@ -6,6 +6,7 @@ import com.google.inject.Singleton;
 import software.wings.beans.AwsInfrastructureMapping;
 import software.wings.beans.AwsInfrastructureMapping.Yaml;
 import software.wings.beans.AwsInstanceFilter;
+import software.wings.beans.AwsInstanceFilter.AwsInstanceFilterBuilder;
 import software.wings.beans.AwsInstanceFilter.Tag;
 import software.wings.beans.InfrastructureMappingType;
 import software.wings.beans.NameValuePair;
@@ -102,12 +103,7 @@ public class AwsInfraMappingYamlHandler
 
   private List<Tag> getTags(List<NameValuePair.Yaml> tagYamlList) {
     return tagYamlList.stream()
-        .map(tagYaml -> {
-          Tag tag = new Tag();
-          tag.setKey(tagYaml.getName());
-          tag.setValue(tagYaml.getValue());
-          return tag;
-        })
+        .map(tagYaml -> Tag.builder().key(tagYaml.getName()).value(tagYaml.getValue()).build())
         .collect(Collectors.toList());
   }
 
@@ -115,12 +111,12 @@ public class AwsInfraMappingYamlHandler
       String computeProviderId, String serviceId) throws HarnessException {
     Yaml yaml = changeContext.getYaml();
 
-    AwsInstanceFilter awsInstanceFilter = new AwsInstanceFilter();
-    awsInstanceFilter.setSecurityGroupIds(yaml.getSecurityGroupIds());
-    awsInstanceFilter.setSubnetIds(yaml.getSubnetIds());
-    awsInstanceFilter.setVpcIds(yaml.getVpcs());
+    AwsInstanceFilterBuilder builder = AwsInstanceFilter.builder()
+                                           .securityGroupIds(yaml.getSecurityGroupIds())
+                                           .subnetIds(yaml.getSubnetIds())
+                                           .vpcIds(yaml.getVpcs());
     if (yaml.getTags() != null) {
-      awsInstanceFilter.setTags(getTags(yaml.getTags()));
+      builder.tags(getTags(yaml.getTags()));
     }
 
     super.toBean(changeContext, bean, appId, envId, computeProviderId, serviceId);
@@ -140,7 +136,7 @@ public class AwsInfraMappingYamlHandler
     bean.setProvisionInstances(yaml.isProvisionInstances());
     bean.setAutoScalingGroupName(yaml.getAutoScalingGroup());
     bean.setDesiredCapacity(yaml.getDesiredCapacity());
-    bean.setAwsInstanceFilter(awsInstanceFilter);
+    bean.setAwsInstanceFilter(builder.build());
     bean.setHostNameConvention(yaml.getHostNameConvention());
   }
 

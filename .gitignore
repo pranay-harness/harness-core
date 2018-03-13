@@ -35,5 +35,11 @@ target
 wingsui
 node_modules/
 package-lock.json
-terraform/
-infer-out/
+
+# The Terraform code in this app is just an example, so ignore any files that may store Terraform state from a real
+# deployment. You may want to remove these gitignore entries for a real app.
+**/terraform.tfvars
+**/.terraform
+**/*.tfstate
+**/*.tfstate.backup
+**/tfplan

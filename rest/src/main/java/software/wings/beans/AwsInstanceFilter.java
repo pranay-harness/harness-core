@@ -1,10 +1,12 @@
 package software.wings.beans;
 
 import com.github.reinert.jjschema.Attributes;
+import lombok.Builder;
 
 import java.util.ArrayList;
 import java.util.List;
 
+@Builder
 public class AwsInstanceFilter {
   @Attributes(title = "VPC") private List<String> vpcIds = new ArrayList<>();
   @Attributes(title = "Subnets") private List<String> subnetIds = new ArrayList<>();
@@ -73,6 +75,7 @@ public class AwsInstanceFilter {
     this.tags = tags;
   }
 
+  @Builder
   public static class Tag {
     private String key;
     private String value;
