@@ -111,8 +111,6 @@ def run_learning_engine(parameters): #
                         options.input_url = options_dict['control_input_url']
                         options.output_url = options.analysis_save_url
                         options.nodes = options.control_nodes
-
-
                         ClusterInput.main(options)
                     else:
                         logger.error(options_dict['ml_analysis_type'], ' analysis method is not defined ')
