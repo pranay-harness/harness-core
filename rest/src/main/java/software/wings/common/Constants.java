@@ -603,6 +603,8 @@ public interface Constants {
   String APP_ID = "appId";
   String UUID = ID_KEY;
 
+  String SECRET_MASK = "**************";
+
   String CORRELATION_ID = "correlationId";
 
   List<String> autoDownloaded =

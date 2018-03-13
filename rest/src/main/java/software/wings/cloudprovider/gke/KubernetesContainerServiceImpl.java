@@ -602,6 +602,16 @@ public class KubernetesContainerServiceImpl implements KubernetesContainerServic
   }
 
   @Override
+  public void deleteConfigMap(
+      KubernetesConfig kubernetesConfig, List<EncryptedDataDetail> encryptedDataDetails, String name) {
+    kubernetesHelperService.getKubernetesClient(kubernetesConfig, encryptedDataDetails)
+        .configMaps()
+        .inNamespace(kubernetesConfig.getNamespace())
+        .withName(name)
+        .delete();
+  }
+
+  @Override
   public IstioResource createOrReplaceRouteRule(
       KubernetesConfig kubernetesConfig, List<EncryptedDataDetail> encryptedDataDetails, IstioResource definition) {
     String name = definition.getMetadata().getName();
@@ -639,6 +649,16 @@ public class KubernetesContainerServiceImpl implements KubernetesContainerServic
                                         .withName(secretName)
                                         .get()
                                   : null;
+  }
+
+  @Override
+  public void deleteSecret(
+      KubernetesConfig kubernetesConfig, List<EncryptedDataDetail> encryptedDataDetails, String secretName) {
+    kubernetesHelperService.getKubernetesClient(kubernetesConfig, encryptedDataDetails)
+        .secrets()
+        .inNamespace(kubernetesConfig.getNamespace())
+        .withName(secretName)
+        .delete();
   }
 
   @Override

@@ -93,6 +93,7 @@ import software.wings.service.intfc.ActivityService;
 import software.wings.service.intfc.AppService;
 import software.wings.service.intfc.ArtifactService;
 import software.wings.service.intfc.ArtifactStreamService;
+import software.wings.service.intfc.ConfigService;
 import software.wings.service.intfc.DelegateService;
 import software.wings.service.intfc.EnvironmentService;
 import software.wings.service.intfc.InfrastructureMappingService;
@@ -131,6 +132,7 @@ public class KubernetesSetupTest extends WingsBaseTest {
   @Mock private EncryptionService encryptionService;
   @Mock private VariableProcessor variableProcessor;
   @Mock private ExpressionEvaluator evaluator;
+  @Mock private ConfigService configService;
 
   @InjectMocks private KubernetesSetup kubernetesSetup = new KubernetesSetup("name");
 

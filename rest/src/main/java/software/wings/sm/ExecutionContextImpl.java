@@ -20,6 +20,7 @@ import software.wings.beans.Application;
 import software.wings.beans.DeploymentExecutionContext;
 import software.wings.beans.Environment;
 import software.wings.beans.ErrorStrategy;
+import software.wings.beans.NameValuePair;
 import software.wings.beans.OrchestrationWorkflowType;
 import software.wings.beans.ServiceTemplate;
 import software.wings.beans.ServiceVariable;
@@ -428,6 +429,7 @@ public class ExecutionContextImpl implements DeploymentExecutionContext {
     return matcher.replaceAll("__");
   }
 
+  @SuppressWarnings("unchecked")
   private Map<String, Object> prepareContext(Map<String, Object> context) {
     // add state execution data
     stateExecutionInstance.getStateExecutionMap().forEach((key, value) -> context.put(normalizeStateName(key), value));
@@ -450,7 +452,7 @@ public class ExecutionContextImpl implements DeploymentExecutionContext {
         map = new HashMap<>();
       }
       map.putAll(phaseElement.getVariableOverrides().stream().collect(
-          Collectors.toMap(nv -> nv.getName(), nv -> nv.getValue())));
+          Collectors.toMap(NameValuePair::getName, NameValuePair::getValue)));
       context.put(ContextElement.SERVICE_VARIABLE, map);
     }
 

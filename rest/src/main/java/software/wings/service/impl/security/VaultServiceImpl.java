@@ -3,8 +3,8 @@ package software.wings.service.impl.security;
 import static org.apache.commons.lang3.StringUtils.isNotBlank;
 import static software.wings.beans.DelegateTask.SyncTaskContext.Builder.aContext;
 import static software.wings.beans.ErrorCode.DEFAULT_ERROR_CODE;
+import static software.wings.common.Constants.SECRET_MASK;
 import static software.wings.security.encryption.SimpleEncryption.CHARSET;
-import static software.wings.service.impl.security.KmsServiceImpl.SECRET_MASK;
 
 import com.google.common.base.Preconditions;
 import com.google.common.io.ByteStreams;

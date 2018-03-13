@@ -20,6 +20,7 @@ import software.wings.beans.DelegateTask.SyncTaskContext;
 import software.wings.beans.ErrorCode;
 import software.wings.beans.KmsConfig;
 import software.wings.beans.VaultConfig;
+import software.wings.common.Constants;
 import software.wings.exception.WingsException;
 import software.wings.security.EncryptionType;
 import software.wings.security.encryption.EncryptedData;
@@ -45,8 +46,6 @@ import java.util.UUID;
  * Created by rsingh on 9/29/17.
  */
 public class KmsServiceImpl extends AbstractSecretServiceImpl implements KmsService {
-  public static final String SECRET_MASK = "**************";
-
   @Inject private FileService fileService;
 
   @Override
@@ -277,7 +276,7 @@ public class KmsServiceImpl extends AbstractSecretServiceImpl implements KmsServ
       kmsConfig.setKmsArn(new String(decrypt(arnData, null, null)));
 
       if (maskSecret) {
-        kmsConfig.setSecretKey(SECRET_MASK);
+        kmsConfig.setSecretKey(Constants.SECRET_MASK);
       } else {
         EncryptedData secretData = wingsPersistence.get(EncryptedData.class, kmsConfig.getSecretKey());
         Preconditions.checkNotNull(secretData, "encrypted secret key can't be null for " + kmsConfig);

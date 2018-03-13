@@ -2,10 +2,10 @@ package software.wings.service.impl.security;
 
 import static org.apache.commons.lang3.StringUtils.isBlank;
 import static org.apache.commons.lang3.StringUtils.isNotBlank;
+import static software.wings.common.Constants.SECRET_MASK;
 import static software.wings.dl.PageRequest.PageRequestBuilder.aPageRequest;
 import static software.wings.security.EncryptionType.LOCAL;
 import static software.wings.security.encryption.SimpleEncryption.CHARSET;
-import static software.wings.service.impl.security.KmsServiceImpl.SECRET_MASK;
 import static software.wings.service.impl.security.VaultServiceImpl.VAULT_VAILDATION_URL;
 import static software.wings.service.intfc.FileService.FileBucket.CONFIGS;
 import static software.wings.utils.WingsReflectionUtils.getEncryptedFields;
@@ -54,7 +54,6 @@ import software.wings.security.encryption.SecretUsageLog;
 import software.wings.security.encryption.SimpleEncryption;
 import software.wings.service.intfc.AccountService;
 import software.wings.service.intfc.AlertService;
-import software.wings.service.intfc.FeatureFlagService;
 import software.wings.service.intfc.FileService;
 import software.wings.service.intfc.security.EncryptionConfig;
 import software.wings.service.intfc.security.EncryptionService;
@@ -87,7 +86,6 @@ public class SecretManagerImpl implements SecretManager {
   protected static final Logger logger = LoggerFactory.getLogger(SecretManagerImpl.class);
 
   @Inject private WingsPersistence wingsPersistence;
-  @Inject private FeatureFlagService featureFlagService;
   @Inject private KmsService kmsService;
   @Inject private VaultService vaultService;
   @Inject private EncryptionService encryptionService;

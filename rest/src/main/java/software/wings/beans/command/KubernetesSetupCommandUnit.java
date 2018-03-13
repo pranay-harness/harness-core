@@ -6,12 +6,16 @@ import static io.harness.threading.Morpheus.sleep;
 import static java.time.Duration.ofSeconds;
 import static java.util.Collections.emptyList;
 import static java.util.stream.Collectors.toList;
+import static java.util.stream.Collectors.toMap;
 import static org.apache.commons.lang3.StringUtils.isNotBlank;
+import static software.wings.common.Constants.SECRET_MASK;
+import static software.wings.service.impl.KubernetesHelperService.toDisplayYaml;
 import static software.wings.service.impl.KubernetesHelperService.toYaml;
-import static software.wings.utils.KubernetesConvention.getKubernetesSecretName;
+import static software.wings.utils.KubernetesConvention.getKubernetesRegistrySecretName;
 import static software.wings.utils.KubernetesConvention.getKubernetesServiceName;
 import static software.wings.utils.KubernetesConvention.getRevisionFromControllerName;
 
+import com.google.common.base.Joiner;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.Lists;
@@ -21,9 +25,14 @@ import com.google.inject.Inject;
 
 import com.fasterxml.jackson.annotation.JsonTypeName;
 import io.fabric8.kubernetes.api.KubernetesHelper;
+import io.fabric8.kubernetes.api.model.ConfigMap;
+import io.fabric8.kubernetes.api.model.ConfigMapBuilder;
 import io.fabric8.kubernetes.api.model.Container;
+import io.fabric8.kubernetes.api.model.EnvFromSource;
+import io.fabric8.kubernetes.api.model.EnvFromSourceBuilder;
 import io.fabric8.kubernetes.api.model.EnvVar;
 import io.fabric8.kubernetes.api.model.EnvVarBuilder;
+import io.fabric8.kubernetes.api.model.EnvVarSourceBuilder;
 import io.fabric8.kubernetes.api.model.HasMetadata;
 import io.fabric8.kubernetes.api.model.HorizontalPodAutoscaler;
 import io.fabric8.kubernetes.api.model.HorizontalPodAutoscalerBuilder;
@@ -89,10 +98,10 @@ import java.util.Base64;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.Map.Entry;
 import java.util.Optional;
 import java.util.concurrent.TimeUnit;
 import java.util.concurrent.atomic.AtomicInteger;
-import java.util.stream.Collectors;
 
 /**
  * Created by brett on 3/3/17
@@ -167,10 +176,10 @@ public class KubernetesSetupCommandUnit extends ContainerSetupCommandUnit {
 
     kubernetesContainerService.createNamespaceIfNotExist(kubernetesConfig, encryptedDataDetails);
 
-    String secretName = getKubernetesSecretName(setupParams.getImageDetails());
-    kubernetesContainerService.createOrReplaceSecret(kubernetesConfig, encryptedDataDetails,
-        createRegistrySecret(
-            secretName, kubernetesConfig.getNamespace(), setupParams.getImageDetails(), executionLogCallback));
+    String registrySecretName = getKubernetesRegistrySecretName(setupParams.getImageDetails());
+    Secret registrySecret = createRegistrySecret(
+        registrySecretName, kubernetesConfig.getNamespace(), setupParams.getImageDetails(), executionLogCallback);
+    kubernetesContainerService.createOrReplaceSecret(kubernetesConfig, encryptedDataDetails, registrySecret);
 
     KubernetesContainerTask kubernetesContainerTask = (KubernetesContainerTask) setupParams.getContainerTask();
     if (kubernetesContainerTask == null) {
@@ -188,6 +197,49 @@ public class KubernetesSetupCommandUnit extends ContainerSetupCommandUnit {
     List<String> previousActiveAutoscalers =
         isDaemonSet ? null : getActiveAutoscalers(kubernetesConfig, encryptedDataDetails, containerServiceName);
 
+    // Setup config map
+    ConfigMap configMap;
+    if (isNotBlank(setupParams.getConfigMapYaml())) {
+      try {
+        configMap = KubernetesHelper.loadYaml(setupParams.getConfigMapYaml());
+        ObjectMeta configMapMeta = Optional.ofNullable(configMap.getMetadata()).orElse(new ObjectMeta());
+        configMapMeta.setName(containerServiceName);
+        configMapMeta.setNamespace(kubernetesConfig.getNamespace());
+        configMap.setMetadata(configMapMeta);
+      } catch (IOException e) {
+        throw new WingsException("Error while loading configMap yaml", e);
+      }
+    } else {
+      configMap = new ConfigMapBuilder()
+                      .withNewMetadata()
+                      .withName(containerServiceName)
+                      .withNamespace(kubernetesConfig.getNamespace())
+                      .endMetadata()
+                      .build();
+    }
+
+    Map<String, String> unencryptedServiceVars = safeDisplayServiceVariables.entrySet()
+                                                     .stream()
+                                                     .filter(entry -> !SECRET_MASK.equals(entry.getValue()))
+                                                     .collect(toMap(Map.Entry::getKey, Map.Entry::getValue));
+
+    if (isNotEmpty(unencryptedServiceVars)) {
+      Map<String, String> data = Optional.ofNullable(configMap.getData()).orElse(new HashMap<>());
+      data.putAll(unencryptedServiceVars);
+      configMap.setData(data);
+    }
+
+    if (isNotEmpty(setupParams.getConfigFiles())) {
+      Map<String, String> data = Optional.ofNullable(configMap.getData()).orElse(new HashMap<>());
+      data.putAll(setupParams.getConfigFiles());
+      configMap.setData(data);
+    }
+
+    if (configMap != null && isNotEmpty(configMap.getData())) {
+      executionLogCallback.saveExecutionLog("Creating config map:\n\n" + toDisplayYaml(configMap), LogLevel.INFO);
+      kubernetesContainerService.createOrReplaceConfigMap(kubernetesConfig, encryptedDataDetails, configMap);
+    }
+
     Map<String, String> serviceLabels =
         ImmutableMap.<String, String>builder()
             .put("app", KubernetesConvention.getLabelValue(setupParams.getAppName()))
@@ -195,15 +247,37 @@ public class KubernetesSetupCommandUnit extends ContainerSetupCommandUnit {
             .put("env", KubernetesConvention.getLabelValue(setupParams.getEnvName()))
             .build();
 
+    // Setup secrets
+    Map<String, String> encryptedServiceVars =
+        safeDisplayServiceVariables.entrySet()
+            .stream()
+            .filter(entry -> SECRET_MASK.equals(entry.getValue()))
+            .collect(toMap(Entry::getKey, entry -> serviceVariables.get(entry.getKey())));
+
+    Secret secret = null;
+    if (isNotEmpty(encryptedServiceVars)) {
+      executionLogCallback.saveExecutionLog("Setting secrets: " + containerServiceName + "\n"
+          + Joiner.on("\n").join(
+                encryptedServiceVars.keySet().stream().map(var -> "   " + var + ": " + SECRET_MASK).collect(toList()))
+          + "\n");
+      secret = new SecretBuilder()
+                   .withNewMetadata()
+                   .withName(containerServiceName)
+                   .endMetadata()
+                   .withStringData(encryptedServiceVars)
+                   .build();
+      kubernetesContainerService.createOrReplaceSecret(kubernetesConfig, encryptedDataDetails, secret);
+    }
+
+    // Setup controller
     Map<String, String> controllerLabels = ImmutableMap.<String, String>builder()
                                                .putAll(serviceLabels)
                                                .put("revision", isDaemonSet ? "ds" : Integer.toString(revision))
                                                .build();
 
-    HasMetadata controllerDefinition = createKubernetesControllerDefinition(kubernetesContainerTask,
-        containerServiceName, controllerLabels, kubernetesConfig.getNamespace(), setupParams.getImageDetails(),
-        secretName, serviceVariables, safeDisplayServiceVariables, executionLogCallback);
-    kubernetesContainerService.createController(kubernetesConfig, encryptedDataDetails, controllerDefinition);
+    kubernetesContainerService.createController(kubernetesConfig, encryptedDataDetails,
+        createKubernetesControllerDefinition(kubernetesContainerTask, containerServiceName, controllerLabels,
+            kubernetesConfig.getNamespace(), setupParams.getImageDetails(), registrySecretName, configMap, secret));
 
     String serviceClusterIP = null;
     String serviceLoadBalancerEndpoint = null;
@@ -339,7 +413,7 @@ public class KubernetesSetupCommandUnit extends ContainerSetupCommandUnit {
           executionLogCallback, kubernetesConfig, containerServiceName);
     } else {
       executionLogCallback.saveExecutionLog("Cleaning up old versions", LogLevel.INFO);
-      cleanup(kubernetesConfig, encryptedDataDetails, containerServiceName);
+      cleanup(kubernetesConfig, encryptedDataDetails, containerServiceName, executionLogCallback);
     }
     return ContainerSetupCommandUnitExecutionData.builder()
         .containerServiceName(containerServiceName)
@@ -392,7 +466,7 @@ public class KubernetesSetupCommandUnit extends ContainerSetupCommandUnit {
 
   private HorizontalPodAutoscaler createAutoscaler(String autoscalerName, String namespace,
       Map<String, String> serviceLabels, KubernetesSetupParams setupParams, ExecutionLogCallback executionLogCallback) {
-    HorizontalPodAutoscaler horizontalPodAutoscaler = null;
+    HorizontalPodAutoscaler horizontalPodAutoscaler;
 
     if (isNotEmpty(setupParams.getCustomMetricYamlConfig())) {
       executionLogCallback.saveExecutionLog(
@@ -584,17 +658,18 @@ public class KubernetesSetupCommandUnit extends ContainerSetupCommandUnit {
 
   private Secret createRegistrySecret(
       String secretName, String namespace, ImageDetails imageDetails, ExecutionLogCallback executionLogCallback) {
+    executionLogCallback.saveExecutionLog("Setting image pull secret " + secretName, LogLevel.INFO);
     String credentialData = String.format(DOCKER_REGISTRY_CREDENTIAL_TEMPLATE, imageDetails.getRegistryUrl(),
         imageDetails.getUsername(), imageDetails.getPassword());
-    executionLogCallback.saveExecutionLog("Setting image pull secret " + secretName, LogLevel.INFO);
+    Map<String, String> data =
+        ImmutableMap.of(".dockercfg", new String(Base64.getEncoder().encode(credentialData.getBytes())));
     return new SecretBuilder()
-        .withData(ImmutableMap.of(".dockercfg", new String(Base64.getEncoder().encode(credentialData.getBytes()))))
         .withNewMetadata()
         .withName(secretName)
         .withNamespace(namespace)
         .endMetadata()
         .withType("kubernetes.io/dockercfg")
-        .withKind("Secret")
+        .withData(data)
         .build();
   }
 
@@ -664,26 +739,24 @@ public class KubernetesSetupCommandUnit extends ContainerSetupCommandUnit {
 
   private HasMetadata createKubernetesControllerDefinition(KubernetesContainerTask kubernetesContainerTask,
       String replicationControllerName, Map<String, String> controllerLabels, String namespace,
-      ImageDetails imageDetails, String secretName, Map<String, String> serviceVariables,
-      Map<String, String> safeDisplayServiceVariables, ExecutionLogCallback executionLogCallback) {
+      ImageDetails imageDetails, String registrySecretName, ConfigMap configMap, Secret secret) {
     String containerName = KubernetesConvention.getContainerName(imageDetails.getName());
     String imageNameTag = imageDetails.getName() + ":" + imageDetails.getTag();
 
-    HasMetadata kubernetesObj = kubernetesContainerTask.createController(containerName, imageNameTag, secretName);
+    HasMetadata kubernetesObj =
+        kubernetesContainerTask.createController(containerName, imageNameTag, registrySecretName);
 
     KubernetesHelper.setName(kubernetesObj, replicationControllerName);
     KubernetesHelper.setNamespace(kubernetesObj, namespace);
     KubernetesHelper.getOrCreateLabels(kubernetesObj).putAll(controllerLabels);
 
-    configureTypeSpecificSpecs(
-        controllerLabels, kubernetesObj, serviceVariables, safeDisplayServiceVariables, executionLogCallback);
+    configureTypeSpecificSpecs(controllerLabels, kubernetesObj, configMap, secret);
 
     return kubernetesObj;
   }
 
-  private void configureTypeSpecificSpecs(Map<String, String> controllerLabels, HasMetadata kubernetesObj,
-      Map<String, String> serviceVariables, Map<String, String> safeDisplayServiceVariables,
-      ExecutionLogCallback executionLogCallback) {
+  private void configureTypeSpecificSpecs(
+      Map<String, String> controllerLabels, HasMetadata kubernetesObj, ConfigMap configMap, Secret secret) {
     ObjectMeta objectMeta = null;
     PodSpec podSpec = null;
     if (kubernetesObj instanceof ReplicationController) {
@@ -726,24 +799,39 @@ public class KubernetesSetupCommandUnit extends ContainerSetupCommandUnit {
     }
 
     if (podSpec != null) {
-      // Set service variables as environment variables
-      if (isNotEmpty(serviceVariables)) {
-        if (isNotEmpty(safeDisplayServiceVariables)) {
-          executionLogCallback.saveExecutionLog("Setting environment variables in container definition", LogLevel.INFO);
-          for (String key : safeDisplayServiceVariables.keySet()) {
-            executionLogCallback.saveExecutionLog(key + "=" + safeDisplayServiceVariables.get(key), LogLevel.INFO);
+      Map<String, EnvVar> secretEnvVars = secret == null
+          ? null
+          : secret.getStringData().entrySet().stream().collect(toMap(Map.Entry::getKey,
+                entry
+                -> new EnvVarBuilder()
+                       .withName(entry.getKey())
+                       .withValueFrom(new EnvVarSourceBuilder()
+                                          .withNewSecretKeyRef()
+                                          .withName(secret.getMetadata().getName())
+                                          .withKey(entry.getKey())
+                                          .endSecretKeyRef()
+                                          .build())
+                       .build()));
+      for (Container container : podSpec.getContainers()) {
+        if (configMap != null) {
+          List<EnvFromSource> envSourceList = new ArrayList<>();
+          if (container.getEnvFrom() != null) {
+            envSourceList.addAll(container.getEnvFrom());
           }
+          envSourceList.add(new EnvFromSourceBuilder()
+                                .withNewConfigMapRef()
+                                .withName(configMap.getMetadata().getName())
+                                .endConfigMapRef()
+                                .build());
+          container.setEnvFrom(envSourceList);
         }
-        Map<String, EnvVar> serviceEnvVars =
-            serviceVariables.entrySet().stream().collect(Collectors.toMap(Map.Entry::getKey,
-                entry -> new EnvVarBuilder().withName(entry.getKey()).withValue(entry.getValue()).build()));
-        for (Container container : podSpec.getContainers()) {
-          Map<String, EnvVar> envVarsMap = new HashMap<>();
+        if (secretEnvVars != null) {
+          Map<String, EnvVar> containerEnvVars = new HashMap<>();
           if (container.getEnv() != null) {
-            container.getEnv().forEach(envVar -> envVarsMap.put(envVar.getName(), envVar));
+            container.getEnv().forEach(envVar -> containerEnvVars.put(envVar.getName(), envVar));
           }
-          envVarsMap.putAll(serviceEnvVars);
-          container.setEnv(new ArrayList<>(envVarsMap.values()));
+          containerEnvVars.putAll(secretEnvVars);
+          container.setEnv(new ArrayList<>(containerEnvVars.values()));
         }
       }
     }
@@ -794,8 +882,8 @@ public class KubernetesSetupCommandUnit extends ContainerSetupCommandUnit {
         .build();
   }
 
-  private void cleanup(
-      KubernetesConfig kubernetesConfig, List<EncryptedDataDetail> encryptedDataDetails, String containerServiceName) {
+  private void cleanup(KubernetesConfig kubernetesConfig, List<EncryptedDataDetail> encryptedDataDetails,
+      String containerServiceName, ExecutionLogCallback executionLogCallback) {
     Optional<Integer> revision = getRevisionFromControllerName(containerServiceName);
     if (revision.isPresent() && revision.get() >= KEEP_N_REVISIONS) {
       int minRevisionToKeep = revision.get() - KEEP_N_REVISIONS + 1;
@@ -809,8 +897,14 @@ public class KubernetesSetupCommandUnit extends ContainerSetupCommandUnit {
             Optional<Integer> ctrlRevision = getRevisionFromControllerName(controllerName);
             if (ctrlRevision.isPresent() && ctrlRevision.get() < minRevisionToKeep) {
               logger.info("Deleting old version: " + controllerName);
-              kubernetesContainerService.deleteController(kubernetesConfig, encryptedDataDetails, controllerName);
-              kubernetesContainerService.deleteAutoscaler(kubernetesConfig, encryptedDataDetails, controllerName);
+              try {
+                kubernetesContainerService.deleteController(kubernetesConfig, encryptedDataDetails, controllerName);
+                kubernetesContainerService.deleteAutoscaler(kubernetesConfig, encryptedDataDetails, controllerName);
+                kubernetesContainerService.deleteConfigMap(kubernetesConfig, encryptedDataDetails, controllerName);
+                kubernetesContainerService.deleteSecret(kubernetesConfig, encryptedDataDetails, controllerName);
+              } catch (Exception e) {
+                Misc.logAllMessages(e, executionLogCallback);
+              }
             }
           });
     }

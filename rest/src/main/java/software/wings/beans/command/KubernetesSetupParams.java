@@ -9,6 +9,7 @@ import software.wings.beans.container.KubernetesPortProtocol;
 import software.wings.beans.container.KubernetesServiceType;
 
 import java.util.List;
+import java.util.Map;
 
 @JsonIgnoreProperties(ignoreUnknown = true)
 @Data
@@ -40,6 +41,8 @@ public class KubernetesSetupParams extends ContainerSetupParams {
   private boolean useIngress;
   private String ingressYaml;
   private boolean useIstioRouteRule;
+  private String configMapYaml;
+  private Map<String, String> configFiles;
 
   public static final class KubernetesSetupParamsBuilder {
     private String serviceName;
@@ -62,7 +65,7 @@ public class KubernetesSetupParams extends ContainerSetupParams {
     private String namespace;
     private String controllerNamePrefix;
     private String previousDaemonSetYaml;
-    private List<String> activeAutoscalers;
+    private List<String> previousActiveAutoscalers;
     private boolean rollback;
     private int serviceSteadyStateTimeout;
     private boolean useAutoscaler;
@@ -75,6 +78,8 @@ public class KubernetesSetupParams extends ContainerSetupParams {
     private boolean useIngress;
     private String ingressYaml;
     private boolean useIstioRouteRule;
+    private String configMapYaml;
+    private Map<String, String> configFiles;
 
     private KubernetesSetupParamsBuilder() {}
 
@@ -182,8 +187,8 @@ public class KubernetesSetupParams extends ContainerSetupParams {
       return this;
     }
 
-    public KubernetesSetupParamsBuilder withActiveAutoscalers(List<String> activeAutoscalers) {
-      this.activeAutoscalers = activeAutoscalers;
+    public KubernetesSetupParamsBuilder withPreviousActiveAutoscalers(List<String> previousActiveAutoscalers) {
+      this.previousActiveAutoscalers = previousActiveAutoscalers;
       return this;
     }
 
@@ -247,6 +252,16 @@ public class KubernetesSetupParams extends ContainerSetupParams {
       return this;
     }
 
+    public KubernetesSetupParamsBuilder withConfigMapYaml(String configMapYaml) {
+      this.configMapYaml = configMapYaml;
+      return this;
+    }
+
+    public KubernetesSetupParamsBuilder withConfigFiles(Map<String, String> configFiles) {
+      this.configFiles = configFiles;
+      return this;
+    }
+
     public KubernetesSetupParamsBuilder but() {
       return aKubernetesSetupParams()
           .withServiceName(serviceName)
@@ -269,7 +284,7 @@ public class KubernetesSetupParams extends ContainerSetupParams {
           .withNamespace(namespace)
           .withControllerNamePrefix(controllerNamePrefix)
           .withPreviousDaemonSetYaml(previousDaemonSetYaml)
-          .withActiveAutoscalers(activeAutoscalers)
+          .withPreviousActiveAutoscalers(previousActiveAutoscalers)
           .withRollback(rollback)
           .withServiceSteadyStateTimeout(serviceSteadyStateTimeout)
           .withUseAutoscaler(useAutoscaler)
@@ -281,7 +296,9 @@ public class KubernetesSetupParams extends ContainerSetupParams {
           .withResourceGroup(resourceGroup)
           .withUseIngress(useIngress)
           .withIngressYaml(ingressYaml)
-          .withUseIstioRouteRule(useIstioRouteRule);
+          .withUseIstioRouteRule(useIstioRouteRule)
+          .withConfigMapYaml(configMapYaml)
+          .withConfigFiles(configFiles);
     }
 
     public KubernetesSetupParams build() {
@@ -306,7 +323,7 @@ public class KubernetesSetupParams extends ContainerSetupParams {
       kubernetesSetupParams.setNamespace(namespace);
       kubernetesSetupParams.setControllerNamePrefix(controllerNamePrefix);
       kubernetesSetupParams.setPreviousDaemonSetYaml(previousDaemonSetYaml);
-      kubernetesSetupParams.setPreviousActiveAutoscalers(activeAutoscalers);
+      kubernetesSetupParams.setPreviousActiveAutoscalers(previousActiveAutoscalers);
       kubernetesSetupParams.setRollback(rollback);
       kubernetesSetupParams.setServiceSteadyStateTimeout(serviceSteadyStateTimeout);
       kubernetesSetupParams.setUseAutoscaler(useAutoscaler);
@@ -319,6 +336,8 @@ public class KubernetesSetupParams extends ContainerSetupParams {
       kubernetesSetupParams.setUseIngress(useIngress);
       kubernetesSetupParams.setIngressYaml(ingressYaml);
       kubernetesSetupParams.setUseIstioRouteRule(useIstioRouteRule);
+      kubernetesSetupParams.setConfigMapYaml(configMapYaml);
+      kubernetesSetupParams.setConfigFiles(configFiles);
       return kubernetesSetupParams;
     }
   }

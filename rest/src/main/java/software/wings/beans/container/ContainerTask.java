@@ -1,6 +1,6 @@
 package software.wings.beans.container;
 
-import static software.wings.service.impl.KubernetesHelperService.trimYaml;
+import static software.wings.yaml.YamlHelper.trimYaml;
 
 import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
 import com.fasterxml.jackson.annotation.JsonTypeInfo;
