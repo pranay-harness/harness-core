@@ -46,6 +46,7 @@ fi
 
 REMOTE_DELEGATE_URL=${delegateJarUrl}
 REMOTE_DELEGATE_VERSION=${upgradeVersion}
+DEPLOY_MODE=${deployMode}
 
 if [ ! -e delegate.jar ]
 then
@@ -72,7 +73,11 @@ then
   echo "localDiskPath: /tmp" >> config-delegate.yml
   echo "maxCachedArtifacts: 2" >> config-delegate.yml
   echo "proxy: false" >> config-delegate.yml
-  echo "pollForTasks: false" >> config-delegate.yml
+  if [ "$DEPLOY_MODE" == "ONPREM" ]; then
+      echo "pollForTasks: true" >> config-delegate.yml
+  else
+      echo "pollForTasks: false" >> config-delegate.yml
+  fi
 fi
 
 export HOSTNAME

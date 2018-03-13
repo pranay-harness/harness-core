@@ -46,6 +46,7 @@ import org.junit.Test;
 import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import software.wings.WingsBaseTest;
+import software.wings.app.DeployMode;
 import software.wings.app.MainConfiguration;
 import software.wings.beans.Base;
 import software.wings.beans.Delegate;
@@ -107,6 +108,7 @@ public class DelegateServiceTest extends WingsBaseTest {
   @Before
   public void setUp() {
     when(mainConfiguration.getDelegateMetadataUrl()).thenReturn("http://localhost:8888/delegateci.txt");
+    when(mainConfiguration.getDeployMode()).thenReturn(DeployMode.AWS);
     wireMockRule.stubFor(get(urlEqualTo("/delegateci.txt"))
                              .willReturn(aResponse()
                                              .withStatus(200)

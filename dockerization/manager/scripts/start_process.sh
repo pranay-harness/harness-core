@@ -20,5 +20,5 @@ fi
 
 echo "Using new relic env " $NEWRELIC_ENV
 
-java -Xms${MEMORY}m -Xmx${MEMORY}m -XX:+HeapDumpOnOutOfMemoryError -XX:+PrintGCDetails -XX:+PrintGCDateStamps -Xloggc:mygclogfilename.gc -XX:+UseParallelGC -XX:MaxGCPauseMillis=500 -Dnewrelic.environment=$NEWRELIC_ENV -Dfile.encoding=UTF-8 -jar $CAPSULE_JAR /opt/harness/config.yml > portal.log 2>&1
+java -Xms${MEMORY}m -Xmx${MEMORY}m -XX:+HeapDumpOnOutOfMemoryError -XX:+PrintGCDetails -XX:+PrintGCDateStamps -Xloggc:mygclogfilename.gc -XX:+UseParallelGC -XX:MaxGCPauseMillis=500 -Dnewrelic.environment=$NEWRELIC_ENV -Dfile.encoding=UTF-8 -jar $CAPSULE_JAR /opt/harness/config.yml > /opt/harness/logs/portal.log 2>&1
 

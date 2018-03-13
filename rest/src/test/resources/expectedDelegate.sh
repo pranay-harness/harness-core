@@ -86,6 +86,7 @@ fi
 
 REMOTE_DELEGATE_URL=http://localhost:8888/jobs/delegateci/9/delegate.jar
 REMOTE_DELEGATE_VERSION=9.9.9
+DEPLOY_MODE=AWS
 
 if [ ! -e delegate.jar ]
 then
@@ -112,7 +113,11 @@ then
   echo "localDiskPath: /tmp" >> config-delegate.yml
   echo "maxCachedArtifacts: 2" >> config-delegate.yml
   echo "proxy: false" >> config-delegate.yml
-  echo "pollForTasks: false" >> config-delegate.yml
+  if [ "$DEPLOY_MODE" == "ONPREM" ]; then
+      echo "pollForTasks: true" >> config-delegate.yml
+  else
+      echo "pollForTasks: false" >> config-delegate.yml
+  fi
 fi
 
 export HOSTNAME

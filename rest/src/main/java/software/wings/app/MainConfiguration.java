@@ -52,7 +52,9 @@ public class MainConfiguration extends Configuration implements AssetsBundleConf
   @JsonProperty("awsInstanceTypes") private List<String> awsInstanceTypes;
   @JsonProperty("awsRegionIdToName") private Map<String, String> awsRegionIdToName;
   @JsonProperty("hazelcast") private HazelcastConfiguration hazelcast;
+  @JsonProperty("apiUrl") private String apiUrl;
   @JsonProperty("smtp") private SmtpConfig smtpConfig;
+  @JsonProperty(defaultValue = "AWS") private DeployMode deployMode = DeployMode.AWS;
   private int applicationPort;
   private boolean sslEnabled;
 
@@ -223,6 +225,22 @@ public class MainConfiguration extends Configuration implements AssetsBundleConf
 
   public void setWatcherMetadataUrl(String watcherMetadataUrl) {
     this.watcherMetadataUrl = watcherMetadataUrl;
+  }
+
+  public String getApiUrl() {
+    return apiUrl;
+  }
+
+  public void setApiUrl(String apiUrl) {
+    this.apiUrl = apiUrl;
+  }
+
+  public DeployMode getDeployMode() {
+    return deployMode;
+  }
+
+  public void setDeployMode(DeployMode deployMode) {
+    this.deployMode = deployMode;
   }
 
   private ConnectorFactory getDefaultAdminConnectorFactory() {

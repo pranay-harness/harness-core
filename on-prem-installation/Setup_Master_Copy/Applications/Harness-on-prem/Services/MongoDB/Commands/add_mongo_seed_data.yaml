@@ -1,0 +1,18 @@
+harnessApiVersion: '1.0'
+type: OTHER
+commandUnitType: COMMAND
+commandUnits:
+  - command: |-
+        sudo docker exec mongoContainer mongo admin --eval "db.createUser({user: '${serviceVariable.admin_user}', pwd: '${serviceVariable.admin_pass}', roles:[{role:'${serviceVariable.admin_user_role}',db:'admin'}]});"
+
+        sudo docker exec mongoContainer bash -c "mongo  mongodb://${serviceVariable.HOST1}:${serviceVariable.mongodb_port},${serviceVariable.HOST2}:${serviceVariable.mongodb_port},${serviceVariable.HOST3}:${serviceVariable.mongodb_port}/${serviceVariable.admin_db}?replicaSet=${serviceVariable.replicaset_name} -u ${serviceVariable.admin_user} -p ${serviceVariable.admin_pass} < /scripts/add_first_user.js"
+    commandUnitType: EXEC
+    deploymentType: SSH
+    name: Add Users
+    workingDirectory: ${WINGS_RUNTIME_PATH}
+  - command: sudo docker exec mongoContainer bash -c "mongo  mongodb://${serviceVariable.HOST1}:${serviceVariable.mongodb_port},${serviceVariable.HOST2}:${serviceVariable.mongodb_port},${serviceVariable.HOST3}:${serviceVariable.mongodb_port}/${serviceVariable.admin_db}?replicaSet=${serviceVariable.replicaset_name} -u ${serviceVariable.admin_user} -p ${serviceVariable.admin_pass} < /scripts/add_learning_engine_secret.js"
+    commandUnitType: EXEC
+    deploymentType: SSH
+    name: Add Learning Engine secrets
+    workingDirectory: ${WINGS_RUNTIME_PATH}
+targetToAllEnv: true

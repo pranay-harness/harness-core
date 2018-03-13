@@ -1,0 +1,104 @@
+harnessApiVersion: '1.0'
+type: OTHER
+commandUnitType: COMMAND
+commandUnits:
+  - command: |2-
+                    # Execute as root and pass environment variables
+                    # su -p -
+                    # Execute as root via user credentials (with root privileges)
+                    # sudo -E su -p -
+                    # The following variables are absolute paths defined as:
+                    # ${HOME}/${appName}/${serviceName}/${serviceTemplateName}/[runtime|backup|staging]
+                    mkdir -p "$WINGS_RUNTIME_PATH"
+                    mkdir -p "$WINGS_BACKUP_PATH"
+                    mkdir -p "$WINGS_STAGING_PATH"
+    commandUnitType: SETUP_ENV
+    deploymentType: SSH
+    name: Setup Env-3
+  - command: sudo rm -rf *
+    commandUnitType: EXEC
+    deploymentType: SSH
+    name: Cleanup runtime dir
+    workingDirectory: ${WINGS_RUNTIME_PATH}
+  - commandUnitType: COPY_CONFIGS
+    deploymentType: SSH
+    destinationParentPath: $WINGS_RUNTIME_PATH
+    name: Copy Configs
+  - command: |2
+                    sed -i.bak 's/replicaset_name/${serviceVariable.replicaset_name}/' initialize_replica_set.js
+                    sed -i.bak 's/host1/${serviceVariable.HOST1}/' initialize_replica_set.js
+                    sed -i.bak 's/host2/${serviceVariable.HOST2}/' initialize_replica_set.js
+                    sed -i.bak 's/host3/${serviceVariable.HOST3}/' initialize_replica_set.js
+                    sed -i.bak 's/mongodb_port/${serviceVariable.mongodb_port}/' initialize_replica_set.js
+                    sed -i.bak 's/mongodb_port/${serviceVariable.mongodb_port}/' mongod.conf
+                    sed -i.bak 's/replicaset_name/${serviceVariable.replicaset_name}/' mongod.conf
+
+          sed -i.bak 's/HARNESSDB/${serviceVariable.harness_application_db}/' add_first_user.js
+
+        sed -i.bak 's/COMPANYNAME/${serviceVariable.COMPANYNAME}/' add_first_user.js
+
+        sed -i.bak 's/ACCOUNTNAME/${serviceVariable.ACCOUNTNAME}/' add_first_user.js
+
+        sed -i.bak  's/ACCOUNT_SECRET_KEY/${serviceVariable.ACCOUNT_SECRET_KEY}/' add_first_user.js
+
+        sed -i.bak 's/EMAIL/${serviceVariable.EMAIL}/' add_first_user.js
+
+        sed -i.bak 's/HARNESSDB/${serviceVariable.harness_application_db}/' add_learning_engine_secret.js
+
+        sed -i.bak 's/LEARNING_ENGINE_SECRET/${serviceVariable.LEARNING_ENGINE_SECRET}/' add_learning_engine_secret.js
+
+        rm -f add_learning_engine_secret.js.bak
+        rm -f mongod.conf.bak
+        rm -f initialize_replica_set.js.bak
+        rm -f add_first_user.js.bak
+
+        #echo "########## initialize_replica_set START ################"
+        #cat initialize_replica_set.js
+        #echo "########## initialize_replica_set END ################"
+
+        #echo "########## mongod.conf START ################"
+        #cat mongod.conf
+        #echo "########## mongod.conf END ################"
+
+        #echo "########## add_first_user START ################"
+        #cat add_first_user.js
+        #echo "########## add_first_user END ################"
+
+        #echo "########## initialize_replica_set START ################"
+        #cat initialize_replica_set.js
+        #echo "########## initialize_replica_set END ################"
+
+        echo "########## add_learning_engine_secret START ################"
+        cat add_learning_engine_secret.js
+        echo "########## add_learning_engine_secret END ################"
+    commandUnitType: EXEC
+    deploymentType: SSH
+    name: Replace Service variables Config Files
+    workingDirectory: ${WINGS_RUNTIME_PATH}
+  - command: |-
+        #cp -f ${serviceVariable.mount_volume_dir}/* .
+        sudo chmod 666 mongod.conf
+        sudo chmod 600 mongokeyfile
+        sudo chmod 666 initialize_replica_set.js
+        sudo chmod 666 add_first_user.js
+        sudo chmod 666 add_learning_engine_secret.js
+
+
+        mkdir -p ${serviceVariable.mongodb_data_dir}
+        sudo chmod 777 -R ${serviceVariable.mongodb_data_dir}
+        mkdir -p ${serviceVariable.mongodb_sys_log_dir}
+        touch ${serviceVariable.mongodb_sys_log_dir}/${serviceVariable.mongodb_sys_log_file}
+        chmod -R 666 ${serviceVariable.mongodb_sys_log_dir}
+        sudo chown 999 mongod.conf
+        sudo chown 999 mongokeyfile
+        sudo chown 999 initialize_replica_set.js
+        sudo chown 999 add_first_user.js
+        sudo chown 999 add_learning_engine_secret.js
+
+        sudo chown -R 999 ${serviceVariable.mongodb_data_dir}
+        sudo chown -R 999 ${serviceVariable.mongodb_sys_log_dir}
+    commandUnitType: EXEC
+    deploymentType: SSH
+    name: Set Permissions Create Directories
+    workingDirectory: ${WINGS_RUNTIME_PATH}
+targetToAllEnv: true

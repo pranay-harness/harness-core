@@ -80,6 +80,8 @@ metrics:
 
 watcherMetadataUrl: http://wingswatchers.s3-website-us-east-1.amazonaws.com/watcherci.txt
 delegateMetadataUrl: http://wingsdelegates.s3-website-us-east-1.amazonaws.com/delegateci.txt
+apiUrl:
+deployMode: AWS
 
 portal:
   url: https://localhost:8000
