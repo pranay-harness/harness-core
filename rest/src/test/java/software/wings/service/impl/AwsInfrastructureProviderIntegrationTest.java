@@ -86,7 +86,7 @@ public class AwsInfrastructureProviderIntegrationTest extends BaseIntegrationTes
     /**
      * Testing with no AWSInstanceFilter . This should return all the available instances
      */
-    AwsInstanceFilter awsInstanceFilter = new AwsInstanceFilter();
+    AwsInstanceFilter awsInstanceFilter = AwsInstanceFilter.builder().build();
     awsInfrastructureMapping.setAwsInstanceFilter(awsInstanceFilter);
 
     PageResponse<Host> result =
@@ -97,7 +97,7 @@ public class AwsInfrastructureProviderIntegrationTest extends BaseIntegrationTes
 
   @Test
   public void testListFilteredHostOneSecurityGroupIDFilter() {
-    AwsInstanceFilter awsInstanceFilter = new AwsInstanceFilter();
+    AwsInstanceFilter awsInstanceFilter = AwsInstanceFilter.builder().build();
     awsInstanceFilter.getSecurityGroupIds().add(securityGroupID);
     awsInfrastructureMapping.setAwsInstanceFilter(awsInstanceFilter);
     PageResponse<Host> result =
@@ -109,7 +109,7 @@ public class AwsInfrastructureProviderIntegrationTest extends BaseIntegrationTes
 
   @Test
   public void testListFilteredHostOneVpcIDFilter() {
-    AwsInstanceFilter awsInstanceFilter = new AwsInstanceFilter();
+    AwsInstanceFilter awsInstanceFilter = AwsInstanceFilter.builder().build();
     awsInstanceFilter.getVpcIds().add(vpcID);
     awsInfrastructureMapping.setAwsInstanceFilter(awsInstanceFilter);
     PageResponse result =
@@ -120,7 +120,7 @@ public class AwsInfrastructureProviderIntegrationTest extends BaseIntegrationTes
 
   @Test
   public void testListFilteredHostOneSecurityGroupIDAndVpcIDFilter() {
-    AwsInstanceFilter awsInstanceFilter = new AwsInstanceFilter();
+    AwsInstanceFilter awsInstanceFilter = AwsInstanceFilter.builder().build();
     awsInstanceFilter.getSecurityGroupIds().add(securityGroupID);
     awsInstanceFilter.getVpcIds().add(vpcID);
     awsInfrastructureMapping.setAwsInstanceFilter(awsInstanceFilter);
@@ -133,7 +133,7 @@ public class AwsInfrastructureProviderIntegrationTest extends BaseIntegrationTes
 
   @Test
   public void testListFilteredHostIncorrectFilter() {
-    AwsInstanceFilter awsInstanceFilter = new AwsInstanceFilter();
+    AwsInstanceFilter awsInstanceFilter = AwsInstanceFilter.builder().build();
     awsInstanceFilter.getSecurityGroupIds().add("FakeFake");
     awsInfrastructureMapping.setAwsInstanceFilter(awsInstanceFilter);
     PageResponse<Host> result =

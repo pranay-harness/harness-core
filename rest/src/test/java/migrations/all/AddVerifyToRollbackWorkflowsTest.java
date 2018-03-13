@@ -14,8 +14,6 @@ public class AddVerifyToRollbackWorkflowsTest extends WingsBaseTest {
 
   @Test
   public void shouldMigrate() {
-    workflowGenerator.createWorkflow(100L, null, null);
-
     migrator.migrate();
   }
 }

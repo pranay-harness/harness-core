@@ -1,20 +1,32 @@
 package software.wings.integration;
 
 import static java.lang.String.format;
+import static java.util.Arrays.asList;
 import static javax.ws.rs.client.Entity.entity;
 import static javax.ws.rs.core.MediaType.APPLICATION_JSON;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.mockito.MockitoAnnotations.initMocks;
 import static software.wings.beans.Application.Builder.anApplication;
+import static software.wings.beans.AwsInfrastructureMapping.Builder.anAwsInfrastructureMapping;
 import static software.wings.beans.Base.GLOBAL_APP_ID;
 import static software.wings.beans.Base.GLOBAL_ENV_ID;
+import static software.wings.beans.BasicOrchestrationWorkflow.BasicOrchestrationWorkflowBuilder.aBasicOrchestrationWorkflow;
 import static software.wings.beans.ConfigFile.DEFAULT_TEMPLATE_ID;
 import static software.wings.beans.EntityType.SERVICE;
 import static software.wings.beans.Environment.Builder.anEnvironment;
+import static software.wings.beans.Environment.EnvironmentType.NON_PROD;
 import static software.wings.beans.HostConnectionAttributes.AccessType.KEY;
 import static software.wings.beans.HostConnectionAttributes.Builder.aHostConnectionAttributes;
 import static software.wings.beans.HostConnectionAttributes.ConnectionType.SSH;
+import static software.wings.beans.InfrastructureMappingType.AWS_SSH;
+import static software.wings.beans.PhaseStep.PhaseStepBuilder.aPhaseStep;
+import static software.wings.beans.PhaseStepType.POST_DEPLOYMENT;
+import static software.wings.beans.PhaseStepType.PRE_DEPLOYMENT;
+import static software.wings.beans.Service.Builder.aService;
+import static software.wings.beans.ServiceTemplate.Builder.aServiceTemplate;
 import static software.wings.beans.SettingAttribute.Builder.aSettingAttribute;
+import static software.wings.beans.Workflow.WorkflowBuilder.aWorkflow;
+import static software.wings.beans.artifact.JenkinsArtifactStream.Builder.aJenkinsArtifactStream;
 import static software.wings.integration.IntegrationTestUtil.randomInt;
 import static software.wings.integration.SeedData.containerNames;
 import static software.wings.integration.SeedData.envNames;
@@ -30,33 +42,54 @@ import org.junit.Rule;
 import org.junit.Test;
 import org.junit.rules.TemporaryFolder;
 import org.junit.runner.JUnitCore;
+import software.wings.api.DeploymentType;
 import software.wings.app.MainConfiguration;
+import software.wings.beans.Account;
 import software.wings.beans.AppContainer;
 import software.wings.beans.AppDynamicsConfig;
 import software.wings.beans.Application;
+import software.wings.beans.AwsConfig;
+import software.wings.beans.AwsInstanceFilter;
 import software.wings.beans.BambooConfig;
 import software.wings.beans.Base;
 import software.wings.beans.DockerConfig;
 import software.wings.beans.EntityType;
 import software.wings.beans.Environment;
-import software.wings.beans.InfrastructureMappingType;
+import software.wings.beans.GitConfig;
+import software.wings.beans.InfrastructureMapping;
 import software.wings.beans.JenkinsConfig;
 import software.wings.beans.KmsConfig;
 import software.wings.beans.NewRelicConfig;
 import software.wings.beans.RestResponse;
 import software.wings.beans.Service;
+import software.wings.beans.ServiceTemplate;
 import software.wings.beans.SettingAttribute;
 import software.wings.beans.SettingAttribute.Category;
 import software.wings.beans.SplunkConfig;
+import software.wings.beans.Workflow;
+import software.wings.beans.WorkflowType;
+import software.wings.beans.artifact.ArtifactStream;
 import software.wings.beans.config.ArtifactoryConfig;
 import software.wings.beans.config.NexusConfig;
+import software.wings.common.Constants;
 import software.wings.dl.PageResponse;
+import software.wings.generator.ApplicationGenerator;
+import software.wings.generator.ArtifactStreamGenerator;
+import software.wings.generator.EnvironmentGenerator;
+import software.wings.generator.InfrastructureMappingGenerator;
+import software.wings.generator.ServiceGenerator;
+import software.wings.generator.ServiceTemplateGenerator;
+import software.wings.generator.WorkflowGenerator;
 import software.wings.helpers.ext.mail.SmtpConfig;
 import software.wings.rules.SetupScheduler;
+import software.wings.service.intfc.EnvironmentService;
 import software.wings.service.intfc.FeatureFlagService;
+import software.wings.service.intfc.SettingsService;
 import software.wings.service.intfc.SystemCatalogService;
 import software.wings.service.intfc.WorkflowExecutionService;
 import software.wings.service.intfc.WorkflowService;
+import software.wings.settings.SettingValue.SettingVariableTypes;
+import software.wings.utils.ArtifactType;
 
 import java.io.BufferedWriter;
 import java.io.File;
@@ -66,7 +99,6 @@ import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
-import javax.ws.rs.BadRequestException;
 import javax.ws.rs.client.WebTarget;
 import javax.ws.rs.core.GenericType;
 import javax.ws.rs.core.Response;
@@ -88,6 +120,13 @@ public class DataGenUtil extends BaseIntegrationTest {
   public static final String HARNESS_ARTIFACTORY = "Harness Artifactory";
   public static final String HARNESS_BAMBOO_SERVICE = "Harness BambooService";
   public static final String HARNESS_DOCKER_REGISTRY = "Harness Docker Registry";
+  public static final String TESTING_ENVIRONMENT = "Testing Environment";
+  public static final String TERRAFORM_TEST_SCRIPTS = "Terraform test scripts";
+  public static final String GIT_REPO_TERRAFORM_TEST = "Git Repo terraform test";
+  public static final String AWS_NON_PROD = "Aws non-prod";
+  public static final String AWS_TEST = "Aws test";
+  public static final String WINGS_KEY = "Wings Key";
+  public static final String DEV_KEY = "Dev Test Key";
 
   /**
    * The Test folder.
@@ -102,7 +141,17 @@ public class DataGenUtil extends BaseIntegrationTest {
   @Inject private WorkflowExecutionService workflowExecutionService;
   @Inject private MainConfiguration configuration;
   @Inject private SystemCatalogService systemCatalogService;
+  @Inject private SettingsService settingsService;
+  @Inject private EnvironmentService environmentService;
   @Inject private FeatureFlagService featureFlagService;
+
+  @Inject private ApplicationGenerator applicationGenerator;
+  @Inject private ArtifactStreamGenerator artifactStreamGenerator;
+  @Inject private EnvironmentGenerator environmentGenerator;
+  @Inject private InfrastructureMappingGenerator infrastructureMappingGenerator;
+  @Inject private ServiceGenerator serviceGenerator;
+  @Inject private ServiceTemplateGenerator serviceTemplateGenerator;
+  @Inject private WorkflowGenerator workflowGenerator;
 
   /**
    * Generated Data for across the API use.
@@ -131,7 +180,7 @@ public class DataGenUtil extends BaseIntegrationTest {
    */
   @Test
   public void populateData() throws IOException {
-    createLicenseAndDefaultUser();
+    Account account = createLicenseAndDefaultUser();
     createGlobalSettings();
 
     List<Application> apps = createApplications();
@@ -142,32 +191,14 @@ public class DataGenUtil extends BaseIntegrationTest {
     for (Application application : apps) {
       appEnvs.put(application.getUuid(), addEnvs(application.getUuid()));
       containers.put(application.getUuid(), addAppContainers(application.getUuid()));
-      services.put(application.getUuid(), addServices(application.getUuid(), containers.get(GLOBAL_APP_ID)));
-      createAppSettings(application.getAccountId());
+      services.put(application.getUuid(),
+          addServices(application.getAccountId(), application.getUuid(), containers.get(GLOBAL_APP_ID)));
     }
-    verifyAccountAndApplicationSetup(apps);
     featureFlagService.initializeFeatureFlags();
     addAndEnableKms();
     learningEngineService.initializeServiceSecretKeys();
-  }
 
-  private void verifyAccountAndApplicationSetup(List<Application> apps) {
-    Application application = apps.get(0);
-    Map<String, Object> stencilsRestResponse = getRequestBuilderWithAuthHeader(
-        client.target(String.format("%s/infrastructure-mappings/stencils?appId=%s", API_BASE, application.getUuid())))
-                                                   .get(new GenericType<RestResponse<Map<String, Object>>>() {})
-                                                   .getResource(); // TODO: find a way use Stencil object directly
-
-    List<String> names =
-        (List<String>) ((Map) ((Map) (((Map) ((Map) stencilsRestResponse.get(
-                                                  InfrastructureMappingType.PHYSICAL_DATA_CENTER_SSH.name()))
-                                           .get("jsonSchema"))
-                                          .get("properties")))
-                            .get("hostConnectionAttrs"))
-            .get("enumNames");
-    //    assertThat(names).hasSize(4).containsExactly("Wings Key", "User/Password", "User/Password :: sudo -
-    //    <app-account>", "User/Password :: su - <app-account>");
-    assertThat(names).hasSize(2).containsExactly("Wings Key", "User/Password");
+    createTestApplication(account);
   }
 
   private void createGlobalSettings() {
@@ -183,7 +214,7 @@ public class DataGenUtil extends BaseIntegrationTest {
                            .password("06b13aea6f5f13ec69577689a899bbaad69eeb2f".toCharArray())
                            .build())
             .build();
-    wingsPersistence.saveAndGet(SettingAttribute.class, jenkinsSettingAttribute);
+    wingsPersistence.save(jenkinsSettingAttribute);
 
     SettingAttribute nexusSettingAttribute = aSettingAttribute()
                                                  .withName(HARNESS_NEXUS)
@@ -196,7 +227,7 @@ public class DataGenUtil extends BaseIntegrationTest {
                                                                 .password("wings123!".toCharArray())
                                                                 .build())
                                                  .build();
-    wingsPersistence.saveAndGet(SettingAttribute.class, nexusSettingAttribute);
+    wingsPersistence.save(nexusSettingAttribute);
 
     SettingAttribute artifactorySettingAttribute =
         aSettingAttribute()
@@ -210,7 +241,7 @@ public class DataGenUtil extends BaseIntegrationTest {
                            .password("harness123!".toCharArray())
                            .build())
             .build();
-    wingsPersistence.saveAndGet(SettingAttribute.class, artifactorySettingAttribute);
+    wingsPersistence.save(artifactorySettingAttribute);
 
     SettingAttribute bambooSettingAttribute =
         aSettingAttribute()
@@ -224,7 +255,7 @@ public class DataGenUtil extends BaseIntegrationTest {
                            .password("0db28aa0f4fc0685df9a216fc7af0ca96254b7c2".toCharArray())
                            .build())
             .build();
-    wingsPersistence.saveAndGet(SettingAttribute.class, bambooSettingAttribute);
+    wingsPersistence.save(bambooSettingAttribute);
 
     SettingAttribute dockerSettingAttribute =
         aSettingAttribute()
@@ -238,7 +269,7 @@ public class DataGenUtil extends BaseIntegrationTest {
                            .password("W!ngs@DockerHub".toCharArray())
                            .build())
             .build();
-    wingsPersistence.saveAndGet(SettingAttribute.class, dockerSettingAttribute);
+    wingsPersistence.save(dockerSettingAttribute);
 
     SettingAttribute smtpSettingAttribute = aSettingAttribute()
                                                 .withCategory(Category.CONNECTOR)
@@ -254,7 +285,7 @@ public class DataGenUtil extends BaseIntegrationTest {
                                                                .useSSL(true)
                                                                .build())
                                                 .build();
-    wingsPersistence.saveAndGet(SettingAttribute.class, smtpSettingAttribute);
+    wingsPersistence.save(smtpSettingAttribute);
 
     SettingAttribute splunkSettingAttribute =
         aSettingAttribute()
@@ -268,7 +299,7 @@ public class DataGenUtil extends BaseIntegrationTest {
                            .username("admin")
                            .build())
             .build();
-    wingsPersistence.saveAndGet(SettingAttribute.class, splunkSettingAttribute);
+    wingsPersistence.save(splunkSettingAttribute);
 
     SettingAttribute appdSettingAttribute =
         aSettingAttribute()
@@ -283,7 +314,8 @@ public class DataGenUtil extends BaseIntegrationTest {
                            .password("cbm411sjesma".toCharArray())
                            .build())
             .build();
-    wingsPersistence.saveAndGet(SettingAttribute.class, appdSettingAttribute);
+    wingsPersistence.save(appdSettingAttribute);
+
     SettingAttribute newRelicSettingAttribute =
         aSettingAttribute()
             .withCategory(Category.CONNECTOR)
@@ -295,62 +327,216 @@ public class DataGenUtil extends BaseIntegrationTest {
                            .apiKey("5ed76b50ebcfda54b77cd1daaabe635bd7f2e13dc6c5b11".toCharArray())
                            .build())
             .build();
-    wingsPersistence.saveAndGet(SettingAttribute.class, newRelicSettingAttribute);
 
-    /*
-    getRequestBuilderWithAuthHeader(target).post(Entity.entity(aSettingAttribute().withAccountId(accountId).withName("AWS_CREDENTIALS")
-        .withValue(anAwsInfrastructureProviderConfig().withSecretKey("AKIAI6IK4KYQQQEEWEVA").withSecretKey("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").build())
-        .build(), APPLICATION_JSON), new GenericType<RestResponse<SettingAttribute>>() {
-    });
-    */
+    wingsPersistence.save(newRelicSettingAttribute);
+
+    SettingAttribute terraformGitRepoAttribute =
+        aSettingAttribute()
+            .withCategory(Category.CONNECTOR)
+            .withName(GIT_REPO_TERRAFORM_TEST)
+            .withAppId(GLOBAL_APP_ID)
+            .withEnvId(GLOBAL_ENV_ID)
+            .withAccountId(accountId)
+            .withValue(GitConfig.builder()
+                           .repoUrl("https://github.com/wings-software/terraform-test.git")
+                           .branch("master")
+                           .accountId(accountId)
+                           .build())
+            .build();
+    wingsPersistence.save(terraformGitRepoAttribute);
+
+    SettingAttribute awsNonProdAttribute =
+        aSettingAttribute()
+            .withCategory(Category.CLOUD_PROVIDER)
+            .withName(AWS_NON_PROD)
+            .withAppId(GLOBAL_APP_ID)
+            .withEnvId(GLOBAL_ENV_ID)
+            .withAccountId(accountId)
+            .withValue(AwsConfig.builder()
+                           .accessKey("AKIAIVRKRUMJ3LAVBMSQ")
+                           .secretKey("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".toCharArray())
+                           .accountId(accountId)
+                           .build())
+            .build();
+    wingsPersistence.save(awsNonProdAttribute);
+
+    SettingAttribute awsTestAttribute =
+        aSettingAttribute()
+            .withCategory(Category.CLOUD_PROVIDER)
+            .withName(AWS_TEST)
+            .withAppId(GLOBAL_APP_ID)
+            .withEnvId(GLOBAL_ENV_ID)
+            .withAccountId(accountId)
+            .withValue(AwsConfig.builder()
+                           .accessKey("AKIAJJUEMEKQBYHZCQSA")
+                           .secretKey("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".toCharArray())
+                           .accountId(accountId)
+                           .build())
+            .build();
+    wingsPersistence.save(awsTestAttribute);
+
+    final SettingAttribute hostConnection =
+        aSettingAttribute()
+            .withAccountId(accountId)
+            .withAppId(GLOBAL_APP_ID)
+            .withEnvId(GLOBAL_ENV_ID)
+            .withName(WINGS_KEY)
+            .withValue(aHostConnectionAttributes()
+                           .withConnectionType(SSH)
+                           .withAccessType(KEY)
+                           .withAccountId(accountId)
+                           .withUserName("ubuntu")
+                           .withKey(("-----BEGIN RSA PRIVATE KEY-----\n"
+                               + "MIIEogIBAAKCAQEArCtMvZebz8vGCUah4C4kThYOAEjrdgaGe8M8w+66jPKEnX1GDXj4mrlIxRxO\n"
+                               + "ErJTwNirPLhIhw/8mGojcsbc5iY7wK6TThJI0uyzUtPfZ1g8zzcQxh7aMOYso/Nxoz6YtO6HRQhd\n"
+                               + "rxiFuadVo+RuVUeBvVBiQauZMoESh1vGZ2r1eTuXKrSiStaafSfVzSEfvtJYNWnPguqcuGlrX3yv\n"
+                               + "sNOlIWzU3YETk0bMG3bejChGAKh35AhZdDO+U4g7zH8NI5KjT9IH7MyKAFxiCPYkNm7Y2Bw8j2eL\n"
+                               + "DIkqIA1YX0VxXBiCC2Vg78o7TxJ7Df7f3V+Q+Xhtj4rRtYCFw1pqBwIDAQABAoIBAGA//LDpNuQe\n"
+                               + "SWIaKJkJcqZs0fr6yRe8YiaCaVAoAAaX9eeNh0I05NaqyrHXNxZgt03SUzio1XMcTtxuSc76ube4\n"
+                               + "nCMF9bfppOi2BzJA3F4MCELXx/raeKRpqX8ms9rNPdW4m8rN+IHQtcGqeMgdBkmKpk9NxwBrjEOd\n"
+                               + "wNwHRI2/Y/ZCApkQDhRPXfEJXnY65SJJ8Vh1NAm6RuiKXv9+8J1//OHAeRfIXTJI4KiwP2EFHeXF\n"
+                               + "6K0EBVEb/M2kg81bh7iq2OoDxBVrF1Uozg4KUK2EMoCe5OidcSdD1G8ICTsRQlb9iW5e/c2UeCrb\n"
+                               + "HGkcmQyvDniyfFmVVymyr0vJTnECgYEA6FsPq4T+M0Cj6yUqsIdijqgpY31iX2BAibrLTOFUYhj3\n"
+                               + "oPpy2bciREXffMGpqiAY8czy3aEroNDC5c7lcwS1HuMgNls0nKuaPLaSg0rSXX9wRn0mYpasBEZ8\n"
+                               + "5pxFX44FnqTDa37Y7MqKykoMpEB71s1DtG9Ug1cMRuPftZZQ5qsCgYEAvbBcEiPFyKf5g2QRVA/k\n"
+                               + "FDQcX9hVm7cvDTo6+Qq6XUwrQ2cm9ZJ+zf+Jak+NSN88GNTzAPCWzd8zbZ2D7q4qAyDcSSy0PR3K\n"
+                               + "bHpLFZnYYOIkSfYcM3CwDhIFTnb9uvG8mypfMFGZ2qUZY/jbI0/cCctsUaXt03g4cM4Q04peehUC\n"
+                               + "gYAcsWoM9z5g2+GiHxPXetB75149D/W+62bs2ylR1B2Ug5rIwUS/h/LuVWaUxGGMRaxu560yGz4E\n"
+                               + "/OKkeFkzS+iF6OxIahjkI/jG+JC9L9csfplByyCbWhnh6UZxP+j9NM+S2KvdMWveSeC7vEs1WVUx\n"
+                               + "oGV0+a6JDY3Rj0BH70kMQwKBgD1ZaK3FPBalnSFNn/0cFpwiLnshMK7oFCOnDaO2QIgkNmnaVtNd\n"
+                               + "yf0+BGeJyxwidwFg/ibzqRJ0eeGd7Cmp0pSocBaKitCpbeqfsuENnNnYyfvRyVUpwQcL9QNnoLBx\n"
+                               + "tppInfi2q5f3hbq7pcRJ89SHIkVV8RFP9JEnVHHWcq/xAoGAJNbaYQMmLOpGRVwt7bdK5FXXV5OX\n"
+                               + "uzSUPICQJsflhj4KPxJ7sdthiFNLslAOyNYEP+mRy90ANbI1x7XildsB2wqBmqiXaQsyHBXRh37j\n"
+                               + "dMX4iYY1mW7JjS9Y2jy7xbxIBYDpwnqHLTMPSKFQpwsi7thP+0DRthj62sCjM/YB7Es=\n"
+                               + "-----END RSA PRIVATE KEY-----")
+                                        .toCharArray())
+                           .build())
+            .build();
+    wingsPersistence.save(hostConnection);
+
+    final SettingAttribute devTestKey =
+        aSettingAttribute()
+            .withAccountId(accountId)
+            .withAppId(GLOBAL_APP_ID)
+            .withEnvId(GLOBAL_ENV_ID)
+            .withName(DEV_KEY)
+            .withValue(aHostConnectionAttributes()
+                           .withConnectionType(SSH)
+                           .withAccessType(KEY)
+                           .withAccountId(accountId)
+                           .withUserName("ubuntu")
+                           .withKey(("-----BEGIN RSA PRIVATE KEY-----\n"
+                               + "MIIEpQIBAAKCAQEA1Bxs1dMQSD25VBrTVvMvTFwTagL+N9qKAptxdBBRvxFm9Kfv\n"
+                               + "TsZAibtfFgXa71gy7id+uMDPGQEHtIeXXvzkYPq/MPltVooWhouadGzrOr1hVDHM\n"
+                               + "UGwDGQrpy7XyZPfHKjjGmNUd+B27zDon5RtOZbCbRCvevoPnCvTtItfSFLiF/mE+\n"
+                               + "q///1jpyf6jLPz/vpARLr2VoZDNvxhU/RdJOSXQVkxEQKzDUMTsgCTZkh1xc9Nb1\n"
+                               + "gfDvd1BfJv6l+2nh2sWmRSy72lbupxDcUG5CUPD4V/ka9duVfGKmylo9QooiW5ER\n"
+                               + "0qa0lCHGbzil8xRZwR4gqAct7YU8da1FEBWGlQIDAQABAoIBAQCWz8MeYRxRkPll\n"
+                               + "cFFVoEC/9TOki44/HjZEVktbb4L/7Bqc146SHumiREP+P5mD1d0YcaJrMEPPjmjx\n"
+                               + "FfstgXfL8FziMGZqQnJzpWzjXNH/iMlb+LBBehrVwmmq+qnm2jmUrpud7OGLGXD+\n"
+                               + "a1cUUc7zBJfQ57RPFy++HZlBzdvD+IcPuVqyyQoS6f0PzGrC3nuqsqYKjmAoOJsx\n"
+                               + "kLuKS59QJ/HXEGJtduw0UvjfQS4l3qebbFAcImIldZ0kVumhIlxcpes6kqZw8dfH\n"
+                               + "dZOndMujWYaJIxRhLHwla+myE6p3eneVg15EcBj9PGKHZkXrmk7Jlt+2j6PVQikw\n"
+                               + "Z7HJDwThAoGBAPW1dGbR5ml1wYQnqwLUp9TtMmZqFMC3gMgNXd3NIJkyK1vM0rZs\n"
+                               + "qokZB2SxyXwCHw+FjUG9WT/Jahy/Pk1D4cBxGgO5CqK+GjON27tn+HcSjt20ZUnl\n"
+                               + "dRhsEIyau034ecIR6zsyHXxJxcU1+yfMp1DD8u0n1wq8OWo3HRH6pn+JAoGBANz+\n"
+                               + "ukC8TAF/WnTXaLrYR2KB9KmbD9KmdUT0289xafFIlF8WFdz6baZCXIXmo/oiOURv\n"
+                               + "bPnJEqZHsowfdky6m8CHC3zsH6GZDrRP03qj1rHxgu5LP5Na4dHXRB03/dg5nZSV\n"
+                               + "mfkFI3swI+9nC0g49g0djT/aqleLbezPUrdRcd+tAoGBAIVtzVFMqOgaF0Vx2S8H\n"
+                               + "VkCNsnHlJ3Hj9J4ujAu3qf0nPl5yovaHmjArFFW9KiIacM2YA7ZwYbf+443K2MVS\n"
+                               + "mJRNlwfwg3MO8uGOJoXllwrqXATPQrXXUjg57t674/0actxNqMUTmOl2klxezQ22\n"
+                               + "2CFG13Orz943iqJAXZv21lWpAoGBAI6+LdnAhit1ch0EQg5lwn4bSMgAc1Dx2c9H\n"
+                               + "hW9RZ0fFRKjCYC7Sxt5cAN0wY3wefPT6L96LhPNIXkhpzgSziATsdXwkHC5J6ZiH\n"
+                               + "8yZFC1j2kUaP7imkyzW6ILHqx5jRZjpiAwk4y3k3WA67dSsaN7uy+dhjyiEv2znZ\n"
+                               + "lCj6f14lAoGAWGMSz05Ugzk7W7XWDkbM+I3K1nCRX7Dws32dWmyPNoEGy+x8sCcu\n"
+                               + "9XdXmwNc7akrF8jG8Zk/0qwlfvYh4kSRQr037sdQpB1HrSAP4LeVSeJZFohi1QZG\n"
+                               + "lcqQrz6/ZvrHFG/VTrr1JOGSNlKmmptsk9IQAm0nedOh+rWx63w+kJQ=\n"
+                               + "-----END RSA PRIVATE KEY-----\n")
+                                        .toCharArray())
+                           .build())
+            .build();
+    wingsPersistence.save(devTestKey);
   }
 
-  private void createAppSettings(String accountId) {
-    WebTarget target = client.target(API_BASE + "/settings/?accountId=" + accountId);
-    try {
-      RestResponse<SettingAttribute> response = getRequestBuilderWithAuthHeader(target).post(
-          entity(
-              aSettingAttribute()
-                  .withAccountId(accountId)
-                  .withAppId(GLOBAL_APP_ID)
-                  .withEnvId(GLOBAL_ENV_ID)
-                  .withName("Wings Key")
-                  .withValue(aHostConnectionAttributes()
-                                 .withConnectionType(SSH)
-                                 .withAccessType(KEY)
-                                 .withAccountId(accountId)
-                                 .withUserName("ubuntu")
-                                 .withKey(("-----BEGIN RSA PRIVATE KEY-----\n"
-                                     + "MIIEogIBAAKCAQEArCtMvZebz8vGCUah4C4kThYOAEjrdgaGe8M8w+66jPKEnX1GDXj4mrlIxRxO\n"
-                                     + "ErJTwNirPLhIhw/8mGojcsbc5iY7wK6TThJI0uyzUtPfZ1g8zzcQxh7aMOYso/Nxoz6YtO6HRQhd\n"
-                                     + "rxiFuadVo+RuVUeBvVBiQauZMoESh1vGZ2r1eTuXKrSiStaafSfVzSEfvtJYNWnPguqcuGlrX3yv\n"
-                                     + "sNOlIWzU3YETk0bMG3bejChGAKh35AhZdDO+U4g7zH8NI5KjT9IH7MyKAFxiCPYkNm7Y2Bw8j2eL\n"
-                                     + "DIkqIA1YX0VxXBiCC2Vg78o7TxJ7Df7f3V+Q+Xhtj4rRtYCFw1pqBwIDAQABAoIBAGA//LDpNuQe\n"
-                                     + "SWIaKJkJcqZs0fr6yRe8YiaCaVAoAAaX9eeNh0I05NaqyrHXNxZgt03SUzio1XMcTtxuSc76ube4\n"
-                                     + "nCMF9bfppOi2BzJA3F4MCELXx/raeKRpqX8ms9rNPdW4m8rN+IHQtcGqeMgdBkmKpk9NxwBrjEOd\n"
-                                     + "wNwHRI2/Y/ZCApkQDhRPXfEJXnY65SJJ8Vh1NAm6RuiKXv9+8J1//OHAeRfIXTJI4KiwP2EFHeXF\n"
-                                     + "6K0EBVEb/M2kg81bh7iq2OoDxBVrF1Uozg4KUK2EMoCe5OidcSdD1G8ICTsRQlb9iW5e/c2UeCrb\n"
-                                     + "HGkcmQyvDniyfFmVVymyr0vJTnECgYEA6FsPq4T+M0Cj6yUqsIdijqgpY31iX2BAibrLTOFUYhj3\n"
-                                     + "oPpy2bciREXffMGpqiAY8czy3aEroNDC5c7lcwS1HuMgNls0nKuaPLaSg0rSXX9wRn0mYpasBEZ8\n"
-                                     + "5pxFX44FnqTDa37Y7MqKykoMpEB71s1DtG9Ug1cMRuPftZZQ5qsCgYEAvbBcEiPFyKf5g2QRVA/k\n"
-                                     + "FDQcX9hVm7cvDTo6+Qq6XUwrQ2cm9ZJ+zf+Jak+NSN88GNTzAPCWzd8zbZ2D7q4qAyDcSSy0PR3K\n"
-                                     + "bHpLFZnYYOIkSfYcM3CwDhIFTnb9uvG8mypfMFGZ2qUZY/jbI0/cCctsUaXt03g4cM4Q04peehUC\n"
-                                     + "gYAcsWoM9z5g2+GiHxPXetB75149D/W+62bs2ylR1B2Ug5rIwUS/h/LuVWaUxGGMRaxu560yGz4E\n"
-                                     + "/OKkeFkzS+iF6OxIahjkI/jG+JC9L9csfplByyCbWhnh6UZxP+j9NM+S2KvdMWveSeC7vEs1WVUx\n"
-                                     + "oGV0+a6JDY3Rj0BH70kMQwKBgD1ZaK3FPBalnSFNn/0cFpwiLnshMK7oFCOnDaO2QIgkNmnaVtNd\n"
-                                     + "yf0+BGeJyxwidwFg/ibzqRJ0eeGd7Cmp0pSocBaKitCpbeqfsuENnNnYyfvRyVUpwQcL9QNnoLBx\n"
-                                     + "tppInfi2q5f3hbq7pcRJ89SHIkVV8RFP9JEnVHHWcq/xAoGAJNbaYQMmLOpGRVwt7bdK5FXXV5OX\n"
-                                     + "uzSUPICQJsflhj4KPxJ7sdthiFNLslAOyNYEP+mRy90ANbI1x7XildsB2wqBmqiXaQsyHBXRh37j\n"
-                                     + "dMX4iYY1mW7JjS9Y2jy7xbxIBYDpwnqHLTMPSKFQpwsi7thP+0DRthj62sCjM/YB7Es=\n"
-                                     + "-----END RSA PRIVATE KEY-----")
-                                              .toCharArray())
-                                 .build())
-                  .build(),
-              APPLICATION_JSON),
-          new GenericType<RestResponse<SettingAttribute>>() {});
-    } catch (BadRequestException bre) {
-      throw bre;
-    }
+  private void createTestApplication(Account account) {
+    int seed = 0;
+
+    Application application = applicationGenerator.createApplication(
+        seed, anApplication().withAccountId(account.getUuid()).withName("Test Application").build());
+
+    Environment environment = environmentGenerator.createEnvironment(seed,
+        anEnvironment()
+            .withAppId(application.getUuid())
+            .withName("Test Environment")
+            .withEnvironmentType(NON_PROD)
+            .build());
+
+    Service service = serviceGenerator.createService(seed,
+        aService()
+            .withAppId(application.getUuid())
+            .withName("Test Service")
+            .withArtifactType(ArtifactType.WAR)
+            .build());
+
+    ServiceTemplate serviceTemplate = serviceTemplateGenerator.createServiceTemplate(seed,
+        aServiceTemplate()
+            .withAppId(application.getUuid())
+            .withEnvId(environment.getUuid())
+            .withServiceId(service.getUuid())
+            .withName("Test Service template")
+            .build());
+
+    final SettingAttribute awsTest = settingsService.getByName(accountId, GLOBAL_APP_ID, AWS_TEST);
+    final SettingAttribute devKey = settingsService.getByName(accountId, GLOBAL_APP_ID, DEV_KEY);
+    final SettingAttribute terraformTest = settingsService.getByName(accountId, GLOBAL_APP_ID, GIT_REPO_TERRAFORM_TEST);
+
+    InfrastructureMapping infrastructureMapping = infrastructureMappingGenerator.createInfrastructureMapping(seed,
+        anAwsInfrastructureMapping()
+            .withName("Aws non prod - ssh workflow test")
+            .withAutoPopulate(false)
+            .withInfraMappingType(AWS_SSH.name())
+            .withAccountId(account.getUuid())
+            .withAppId(application.getUuid())
+            .withServiceTemplateId(serviceTemplate.getUuid())
+            .withEnvId(environment.getUuid())
+            .withDeploymentType(DeploymentType.SSH.name())
+            .withComputeProviderType(SettingVariableTypes.AWS.name())
+            .withComputeProviderSettingId(awsTest.getUuid())
+            .withHostConnectionAttrs(devKey.getUuid())
+            .withUsePublicDns(true)
+            .withRegion("us-east-1")
+            .withAwsInstanceFilter(
+                AwsInstanceFilter.builder()
+                    .tags(asList(AwsInstanceFilter.Tag.builder().key("Name").value("example").build()))
+                    .build())
+            .build());
+
+    final SettingAttribute jenkins = settingsService.getByName(accountId, GLOBAL_APP_ID, HARNESS_JENKINS);
+
+    ArtifactStream artifactStream = artifactStreamGenerator.createArtifactStream(seed,
+        aJenkinsArtifactStream()
+            .withAppId(application.getUuid())
+            .withServiceId(service.getUuid())
+            .withSourceName(HARNESS_JENKINS)
+            .withJobname("harness-samples")
+            .withArtifactPaths(asList("echo/target/echo.war"))
+            .withSettingId(jenkins.getUuid())
+            .build());
+
+    Workflow workflow = workflowGenerator.createWorkflow(seed,
+        aWorkflow()
+            .withName("Basic")
+            .withAppId(application.getAppId())
+            .withEnvId(environment.getUuid())
+            .withWorkflowType(WorkflowType.ORCHESTRATION)
+            .withServiceId(service.getUuid())
+            .withInfraMappingId(infrastructureMapping.getUuid())
+            .withOrchestrationWorkflow(
+                aBasicOrchestrationWorkflow()
+                    .withPreDeploymentSteps(aPhaseStep(PRE_DEPLOYMENT, Constants.PRE_DEPLOYMENT).build())
+                    .withPostDeploymentSteps(aPhaseStep(POST_DEPLOYMENT, Constants.POST_DEPLOYMENT).build())
+                    .build())
+            .build());
   }
 
   private List<Application> createApplications() {
@@ -370,7 +556,8 @@ public class DataGenUtil extends BaseIntegrationTest {
     return apps;
   }
 
-  private List<Service> addServices(String appId, List<AppContainer> appContainers) throws IOException {
+  private List<Service> addServices(String accountId, String appId, List<AppContainer> appContainers)
+      throws IOException {
     serviceNames = new ArrayList<>(seedNames);
     WebTarget target = client.target(API_BASE + "/services/?appId=" + appId);
     List<Service> services = new ArrayList<>();
@@ -389,7 +576,11 @@ public class DataGenUtil extends BaseIntegrationTest {
           });
       assertThat(response.getResource()).isInstanceOf(Service.class);
       String serviceId = response.getResource().getUuid();
+
+      final Environment environment = environmentService.getEnvironmentByName(appId, TESTING_ENVIRONMENT);
+
       Service service = wingsPersistence.get(Service.class, serviceId);
+
       services.add(service);
       assertThat(service).isNotNull();
 
@@ -414,14 +605,13 @@ public class DataGenUtil extends BaseIntegrationTest {
         appId, entityId, entityType, templateId));
     File file = getTestFile(getName(configFileNames) + ".properties");
     FileDataBodyPart filePart = new FileDataBodyPart("file", file);
-    try (FormDataMultiPart multiPart = new FormDataMultiPart()) {
-      multiPart.field("fileName", file.getName())
-          .field("name", file.getName())
-          .field("relativeFilePath", "configs/" + file.getName());
-      multiPart.bodyPart(filePart);
-      Response response = getRequestBuilderWithAuthHeader(target).post(entity(multiPart, multiPart.getMediaType()));
-      return response.getStatus() == 200;
-    }
+    FormDataMultiPart multiPart = new FormDataMultiPart()
+                                      .field("fileName", file.getName())
+                                      .field("name", file.getName())
+                                      .field("relativeFilePath", "configs/" + file.getName());
+    multiPart.bodyPart(filePart);
+    Response response = getRequestBuilderWithAuthHeader(target).post(entity(multiPart, multiPart.getMediaType()));
+    return response.getStatus() == 200;
   }
 
   private List<AppContainer> addAppContainers(String appId) {
@@ -450,17 +640,15 @@ public class DataGenUtil extends BaseIntegrationTest {
     try {
       File file = getTestFile(name);
       FileDataBodyPart filePart = new FileDataBodyPart("file", file);
-      try (FormDataMultiPart multiPart = new FormDataMultiPart()) {
-        multiPart.field("name", name)
-            .field("version", version)
-            .field("description", randomText(20))
-            .field("sourceType", "FILE_UPLOAD")
-            .field("standard", "false");
-        multiPart.bodyPart(filePart);
-
-        Response response = getRequestBuilderWithAuthHeader(target).post(entity(multiPart, multiPart.getMediaType()));
-        return response.getStatus() == 200;
-      }
+      FormDataMultiPart multiPart = new FormDataMultiPart()
+                                        .field("name", name)
+                                        .field("version", version)
+                                        .field("description", randomText(20))
+                                        .field("sourceType", "FILE_UPLOAD")
+                                        .field("standard", "false");
+      multiPart.bodyPart(filePart);
+      Response response = getRequestBuilderWithAuthHeader(target).post(entity(multiPart, multiPart.getMediaType()));
+      return response.getStatus() == 200;
     } catch (IOException e) {
       log().info("Error occurred in uploading app container", e);
     }
@@ -489,9 +677,9 @@ public class DataGenUtil extends BaseIntegrationTest {
     if (!file.isFile()) {
       file = testFolder.newFile(name);
     }
-    try (BufferedWriter out = new BufferedWriter(new FileWriter(file))) {
-      out.write(randomText(100));
-    }
+    BufferedWriter out = new BufferedWriter(new FileWriter(file));
+    out.write(randomText(100));
+    out.close();
     return file;
   }
 

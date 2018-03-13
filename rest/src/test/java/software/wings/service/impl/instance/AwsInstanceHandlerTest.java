@@ -9,6 +9,7 @@ import static org.mockito.Matchers.anyString;
 import static org.mockito.Mockito.doReturn;
 import static org.mockito.Mockito.never;
 import static org.mockito.Mockito.verify;
+import static software.wings.beans.AwsInfrastructureMapping.Builder.anAwsInfrastructureMapping;
 import static software.wings.service.impl.instance.InstanceSyncTestConstants.ACCOUNT_ID;
 import static software.wings.service.impl.instance.InstanceSyncTestConstants.APP_ID;
 import static software.wings.service.impl.instance.InstanceSyncTestConstants.APP_NAME;
@@ -49,7 +50,6 @@ import org.mockito.Spy;
 import software.wings.WingsBaseTest;
 import software.wings.beans.Application;
 import software.wings.beans.AwsConfig;
-import software.wings.beans.AwsInfrastructureMapping;
 import software.wings.beans.AwsInstanceFilter;
 import software.wings.beans.Environment;
 import software.wings.beans.Environment.EnvironmentType;
@@ -116,7 +116,7 @@ public class AwsInstanceHandlerTest extends WingsBaseTest {
     instance3.setPublicDnsName(PUBLIC_DNS_3);
     instance3.setInstanceId(INSTANCE_3_ID);
 
-    doReturn(AwsInfrastructureMapping.Builder.anAwsInfrastructureMapping()
+    doReturn(anAwsInfrastructureMapping()
                  .withUuid(INFRA_MAPPING_ID)
                  .withAccountId(ACCOUNT_ID)
                  .withAppId(APP_ID)
@@ -124,7 +124,7 @@ public class AwsInstanceHandlerTest extends WingsBaseTest {
                  .withComputeProviderSettingId(COMPUTE_PROVIDER_SETTING_ID)
                  .withRegion(US_EAST)
                  .withServiceId(SERVICE_ID)
-                 .withAwsInstanceFilter(new AwsInstanceFilter())
+                 .withAwsInstanceFilter(AwsInstanceFilter.builder().build())
                  .build())
         .when(infraMappingService)
         .get(anyString(), anyString());

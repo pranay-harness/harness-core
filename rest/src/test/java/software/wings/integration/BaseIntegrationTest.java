@@ -263,7 +263,7 @@ public abstract class BaseIntegrationTest extends WingsBaseTest {
     });
   }
 
-  protected void createLicenseAndDefaultUser() {
+  protected Account createLicenseAndDefaultUser() {
     License license =
         aLicense().withName("Trial").withExpiryDuration(TimeUnit.DAYS.toMillis(365)).withIsActive(true).build();
     wingsPersistence.save(license);
@@ -292,6 +292,8 @@ public abstract class BaseIntegrationTest extends WingsBaseTest {
     roleUpdateOperations.set("accountId", "kmpySmUISimoRrJL6NL73w");
     wingsPersistence.update(wingsPersistence.createQuery(Role.class), roleUpdateOperations);
     loginAdminUser();
+
+    return account;
   }
 
   private void addAdminUser() {
