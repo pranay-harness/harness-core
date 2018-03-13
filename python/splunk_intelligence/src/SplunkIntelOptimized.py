@@ -116,7 +116,7 @@ class SplunkIntelOptimized(object):
         for idx, group in test_clusters.items():
             values = []
             for host, data in control_clusters[idx].items():
-                    values.extend(np.array([freq.get('count') for freq in data.get('message_frequencies')]))
+                values.extend(np.array([freq.get('count') for freq in data.get('message_frequencies')]))
 
             # print(idx)
             # print(values)

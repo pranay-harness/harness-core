@@ -18,7 +18,6 @@ public class SplunkAnalysisCluster {
   private String text;
   private double x;
   private double y;
-  private String feedback_id;
   private List<String> diff_tags;
   private double alert_score;
   private double test_score;

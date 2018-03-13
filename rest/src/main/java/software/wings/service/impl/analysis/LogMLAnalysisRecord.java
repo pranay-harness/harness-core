@@ -48,6 +48,5 @@ public class LogMLAnalysisRecord extends Base {
   private Map<String, Map<String, SplunkAnalysisCluster>> control_clusters;
   private Map<String, Map<String, SplunkAnalysisCluster>> unknown_clusters;
   private Map<String, Map<String, SplunkAnalysisCluster>> test_clusters;
-  private Map<String, Map<String, SplunkAnalysisCluster>> ignore_clusters;
   private LogMLClusterScores cluster_scores;
 }

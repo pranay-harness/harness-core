@@ -63,7 +63,6 @@ public class LearningEngineExperimentalAnalysisTask extends Base {
   private StateType stateType;
   private MLAnalysisType ml_analysis_type;
   private String experiment_name;
-  private String feedback_url;
   private @Indexed ExecutionStatus executionStatus;
 
   @Builder.Default
