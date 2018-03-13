@@ -223,7 +223,10 @@ public abstract class AbstractMetricAnalysisState extends AbstractAnalysisState 
   }
 
   @Override
-  public void handleAbortEvent(ExecutionContext context) {}
+  public void handleAbortEvent(ExecutionContext context) {
+    continuousVerificationService.setMetaDataExecutionStatus(
+        context.getStateExecutionInstanceId(), ExecutionStatus.ABORTED);
+  }
 
   protected ExecutionResponse generateAnalysisResponse(
       ExecutionContext context, ExecutionStatus status, String message) {
