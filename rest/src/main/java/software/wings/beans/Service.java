@@ -2,6 +2,7 @@ package software.wings.beans;
 
 import static java.util.Arrays.asList;
 import static software.wings.beans.Service.Builder.aService;
+import static software.wings.yaml.YamlHelper.trimYaml;
 
 import com.google.common.base.MoreObjects;
 import com.google.common.collect.Lists;
@@ -40,6 +41,7 @@ public class Service extends Base {
   private String name;
   private String description;
   private ArtifactType artifactType;
+  private String configMapYaml;
 
   @Version private long version;
 
@@ -60,6 +62,7 @@ public class Service extends Base {
         .withName(getName())
         .withDescription(getDescription())
         .withArtifactType(getArtifactType())
+        .withConfigMapYaml(getConfigMapYaml())
         .withAppContainer(getAppContainer())
         .build();
   }
@@ -116,6 +119,14 @@ public class Service extends Base {
    */
   public void setArtifactType(ArtifactType artifactType) {
     this.artifactType = artifactType;
+  }
+
+  public String getConfigMapYaml() {
+    return configMapYaml;
+  }
+
+  public void setConfigMapYaml(String configMapYaml) {
+    this.configMapYaml = trimYaml(configMapYaml);
   }
 
   /**
@@ -266,8 +277,8 @@ public class Service extends Base {
   @Override
   public int hashCode() {
     return 31 * super.hashCode()
-        + Objects.hash(name, description, artifactType, appContainer, configFiles, lastDeploymentActivity,
-              lastProdDeploymentActivity);
+        + Objects.hash(name, description, artifactType, configMapYaml, appContainer, configFiles,
+              lastDeploymentActivity, lastProdDeploymentActivity);
   }
 
   /**
@@ -287,6 +298,7 @@ public class Service extends Base {
     final Service other = (Service) obj;
     return Objects.equals(this.name, other.name) && Objects.equals(this.description, other.description)
         && Objects.equals(this.artifactType, other.artifactType)
+        && Objects.equals(this.configMapYaml, other.configMapYaml)
         && Objects.equals(this.appContainer, other.appContainer) && Objects.equals(this.configFiles, other.configFiles)
         && Objects.equals(this.lastDeploymentActivity, other.lastDeploymentActivity)
         && Objects.equals(this.lastProdDeploymentActivity, other.lastProdDeploymentActivity);
@@ -301,6 +313,7 @@ public class Service extends Base {
         .add("name", name)
         .add("description", description)
         .add("artifactType", artifactType)
+        .add("configMapYaml", configMapYaml)
         .add("appContainer", appContainer)
         .add("configFiles", configFiles)
         .add("lastDeploymentActivity", lastDeploymentActivity)
@@ -342,6 +355,7 @@ public class Service extends Base {
     private String name;
     private String description;
     private ArtifactType artifactType;
+    private String configMapYaml;
     private List<ServiceCommand> serviceCommands = Lists.newArrayList();
     private long version;
     private AppContainer appContainer;
@@ -397,6 +411,11 @@ public class Service extends Base {
      */
     public Builder withArtifactType(ArtifactType artifactType) {
       this.artifactType = artifactType;
+      return this;
+    }
+
+    public Builder withConfigMapYaml(String configMapYaml) {
+      this.configMapYaml = configMapYaml;
       return this;
     }
 
@@ -564,6 +583,7 @@ public class Service extends Base {
           .withName(name)
           .withDescription(description)
           .withArtifactType(artifactType)
+          .withConfigMapYaml(configMapYaml)
           .withCommands(Lists.newArrayList(serviceCommands))
           .withVersion(version)
           .withAppContainer(appContainer)
@@ -589,6 +609,7 @@ public class Service extends Base {
       service.setName(name);
       service.setDescription(description);
       service.setArtifactType(artifactType);
+      service.setConfigMapYaml(configMapYaml);
       service.setVersion(version);
       service.setAppContainer(appContainer);
       service.setConfigFiles(configFiles);
@@ -612,15 +633,17 @@ public class Service extends Base {
   public static final class Yaml extends BaseEntityYaml {
     private String description;
     private String artifactType;
+    private String configMapYaml;
     private String applicationStack;
     private List<NameValuePair.Yaml> configVariables = new ArrayList<>();
 
     @lombok.Builder
-    public Yaml(String harnessApiVersion, String description, String artifactType, String applicationStack,
-        List<NameValuePair.Yaml> configVariables) {
+    public Yaml(String harnessApiVersion, String description, String artifactType, String configMapYaml,
+        String applicationStack, List<NameValuePair.Yaml> configVariables) {
       super(EntityType.SERVICE.name(), harnessApiVersion);
       this.description = description;
       this.artifactType = artifactType;
+      this.configMapYaml = configMapYaml;
       this.applicationStack = applicationStack;
       this.configVariables = configVariables;
     }

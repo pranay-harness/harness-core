@@ -24,6 +24,7 @@ import static software.wings.beans.command.ServiceCommand.Builder.aServiceComman
 import static software.wings.dl.MongoHelper.setUnset;
 import static software.wings.dl.PageRequest.PageRequestBuilder.aPageRequest;
 import static software.wings.dl.PageRequest.UNLIMITED;
+import static software.wings.yaml.YamlHelper.trimYaml;
 
 import com.google.common.base.Joiner;
 import com.google.common.collect.ImmutableMap;
@@ -62,9 +63,9 @@ import software.wings.beans.command.Command;
 import software.wings.beans.command.CommandUnit;
 import software.wings.beans.command.CommandUnitType;
 import software.wings.beans.command.ServiceCommand;
-import software.wings.beans.container.ContainerAdvancedPayload;
 import software.wings.beans.container.ContainerTask;
 import software.wings.beans.container.ContainerTaskType;
+import software.wings.beans.container.KubernetesPayload;
 import software.wings.beans.container.UserDataSpecification;
 import software.wings.beans.yaml.Change.ChangeType;
 import software.wings.common.NotificationMessageResolver.NotificationMessageType;
@@ -407,7 +408,7 @@ public class ServiceResourceServiceImpl implements ServiceResourceService, DataP
     UpdateOperations<Service> updateOperations =
         wingsPersistence.createUpdateOperations(Service.class)
             .set("name", service.getName().trim())
-            .set("description", service.getDescription() == null ? "" : service.getDescription())
+            .set("description", Optional.ofNullable(service.getDescription()).orElse(""))
             .set("keywords", keywords);
 
     wingsPersistence.update(savedService, updateOperations);
@@ -684,7 +685,7 @@ public class ServiceResourceServiceImpl implements ServiceResourceService, DataP
 
   @Override
   public ContainerTask updateContainerTaskAdvanced(
-      String appId, String serviceId, String taskId, ContainerAdvancedPayload advancedPayload, boolean reset) {
+      String appId, String serviceId, String taskId, KubernetesPayload kubernetesPayload, boolean reset) {
     ContainerTask containerTask = wingsPersistence.createQuery(ContainerTask.class)
                                       .field("appId")
                                       .equal(appId)
@@ -696,7 +697,7 @@ public class ServiceResourceServiceImpl implements ServiceResourceService, DataP
     if (reset) {
       containerTask.convertFromAdvanced();
     } else {
-      containerTask.setAdvancedConfig(advancedPayload.getAdvancedConfig());
+      containerTask.setAdvancedConfig(kubernetesPayload.getAdvancedConfig());
       // Disabling advanced validation since it doesn't work when service variable expressions are used.
       // containerTask.validateAdvanced();
     }
@@ -1079,5 +1080,19 @@ public class ServiceResourceServiceImpl implements ServiceResourceService, DataP
               commandService.getCommand(appId, serviceCommand.getUuid(), serviceCommand.getDefaultVersion())));
     }
     return serviceCommands;
+  }
+
+  @Override
+  public Service setConfigMapYaml(String appId, String serviceId, KubernetesPayload kubernetesPayload) {
+    String configMapYaml = Optional.ofNullable(trimYaml(kubernetesPayload.getAdvancedConfig())).orElse("");
+    Service savedService = get(appId, serviceId, false);
+    Validator.notNullCheck("Service", savedService);
+
+    UpdateOperations<Service> updateOperations =
+        wingsPersistence.createUpdateOperations(Service.class).set("configMapYaml", configMapYaml);
+
+    wingsPersistence.update(savedService, updateOperations);
+
+    return get(appId, serviceId, false);
   }
 }

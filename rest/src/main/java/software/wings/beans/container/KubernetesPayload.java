@@ -8,6 +8,6 @@ import lombok.Data;
  */
 @JsonIgnoreProperties(ignoreUnknown = true)
 @Data
-public class ContainerAdvancedPayload {
+public class KubernetesPayload {
   private String advancedConfig;
 }

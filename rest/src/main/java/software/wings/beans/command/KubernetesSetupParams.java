@@ -9,7 +9,6 @@ import software.wings.beans.container.KubernetesPortProtocol;
 import software.wings.beans.container.KubernetesServiceType;
 
 import java.util.List;
-import java.util.Map;
 
 @JsonIgnoreProperties(ignoreUnknown = true)
 @Data
@@ -42,7 +41,7 @@ public class KubernetesSetupParams extends ContainerSetupParams {
   private String ingressYaml;
   private boolean useIstioRouteRule;
   private String configMapYaml;
-  private Map<String, String> configFiles;
+  private List<String[]> configFiles;
 
   public static final class KubernetesSetupParamsBuilder {
     private String serviceName;
@@ -79,7 +78,7 @@ public class KubernetesSetupParams extends ContainerSetupParams {
     private String ingressYaml;
     private boolean useIstioRouteRule;
     private String configMapYaml;
-    private Map<String, String> configFiles;
+    private List<String[]> configFiles;
 
     private KubernetesSetupParamsBuilder() {}
 
@@ -257,7 +256,7 @@ public class KubernetesSetupParams extends ContainerSetupParams {
       return this;
     }
 
-    public KubernetesSetupParamsBuilder withConfigFiles(Map<String, String> configFiles) {
+    public KubernetesSetupParamsBuilder withConfigFiles(List<String[]> configFiles) {
       this.configFiles = configFiles;
       return this;
     }

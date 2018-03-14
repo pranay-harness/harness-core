@@ -5,6 +5,7 @@ import ru.vyarus.guice.validator.group.annotation.ValidationGroups;
 import software.wings.beans.Environment;
 import software.wings.beans.Service;
 import software.wings.beans.Setup.SetupStatus;
+import software.wings.beans.container.KubernetesPayload;
 import software.wings.beans.stats.CloneMetadata;
 import software.wings.dl.PageRequest;
 import software.wings.dl.PageResponse;
@@ -123,4 +124,6 @@ public interface EnvironmentService extends OwnedByApplication {
    * @return
    */
   List<Service> getServicesWithOverrides(@NotEmpty String appId, @NotEmpty String envId);
+
+  Environment setConfigMapYaml(String appId, String envId, KubernetesPayload kubernetesPayload);
 }

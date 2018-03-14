@@ -53,7 +53,8 @@ import java.util.Map;
  */
 @JsonIgnoreProperties(ignoreUnknown = true)
 public class KubernetesSetup extends ContainerServiceSetup {
-  // *** Note: UI Schema specified in wingsui/src/containers/WorkflowEditor/custom/KubernetesRepCtrlSetup.js
+  // *** Note: UI Schema specified in
+  // wingsui/src/containers/WorkflowEditor/custom/ServiceSetup/KubernetesSetup/KubernetesSetup.js
 
   @Transient @Inject private transient ConfigService configService;
 
@@ -87,25 +88,28 @@ public class KubernetesSetup extends ContainerServiceSetup {
   protected ContainerSetupParams buildContainerSetupParams(ExecutionContext context, String serviceName,
       ImageDetails imageDetails, Application app, Environment env, Service service,
       ContainerInfrastructureMapping infrastructureMapping, ContainerTask containerTask, String clusterName) {
-    Map<String, String> configFiles = new HashMap<>();
+    Map<String, String> configFilesMap = new HashMap<>();
 
     Map<String, String> configFilesService = getConfigFileContent(app, service.getConfigFiles());
     if (isNotEmpty(configFilesService)) {
-      configFiles.putAll(configFilesService);
+      configFilesMap.putAll(configFilesService);
     }
 
     Map<String, String> configFilesFromEnv =
         getConfigFileContent(app, configService.getConfigFileOverridesForEnv(app.getUuid(), env.getUuid()));
     if (isNotEmpty(configFilesFromEnv)) {
-      configFiles.putAll(configFilesFromEnv);
+      configFilesMap.putAll(configFilesFromEnv);
     }
 
-    String configMapYaml = null;
-    // TODO(brett)
-    //    String configMapYaml = service.getConfigMapYaml();
-    //    if (isNotBlank(env.getConfigMapYaml())) {
-    //      configMapYaml = env.getConfigMapYaml();
-    //    }
+    List<String[]> configFiles = configFilesMap.entrySet()
+                                     .stream()
+                                     .map(entrySet -> new String[] {entrySet.getKey(), entrySet.getValue()})
+                                     .collect(toList());
+
+    String configMapYaml = service.getConfigMapYaml();
+    if (isNotBlank(env.getConfigMapYaml())) {
+      configMapYaml = env.getConfigMapYaml();
+    }
 
     String configMapYamlEvaluated = null;
     if (isNotBlank(configMapYaml)) {
@@ -203,7 +207,7 @@ public class KubernetesSetup extends ContainerServiceSetup {
 
   private Map<String, String> getConfigFileContent(Application app, List<ConfigFile> configFiles) {
     return configFiles.stream().collect(toMap(cf
-        -> cf.getFileName().replaceAll("\\.", "_"),
+        -> isNotBlank(cf.getRelativeFilePath()) ? cf.getRelativeFilePath() : cf.getFileName(),
         cf -> configService.getFileContent(app.getUuid(), cf.getUuid())));
   }
 

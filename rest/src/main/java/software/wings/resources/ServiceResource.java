@@ -14,8 +14,8 @@ import software.wings.beans.RestResponse;
 import software.wings.beans.Service;
 import software.wings.beans.Setup.SetupStatus;
 import software.wings.beans.command.ServiceCommand;
-import software.wings.beans.container.ContainerAdvancedPayload;
 import software.wings.beans.container.ContainerTask;
+import software.wings.beans.container.KubernetesPayload;
 import software.wings.beans.container.UserDataSpecification;
 import software.wings.dl.PageRequest;
 import software.wings.dl.PageResponse;
@@ -284,9 +284,9 @@ public class ServiceResource {
   @ExceptionMetered
   public RestResponse<ContainerTask> createContainerTaskAdvanced(@QueryParam("appId") String appId,
       @QueryParam("reset") boolean reset, @PathParam("serviceId") String serviceId, @PathParam("taskId") String taskId,
-      ContainerAdvancedPayload advancedPayload) {
+      KubernetesPayload kubernetesPayload) {
     return new RestResponse<>(
-        serviceResourceService.updateContainerTaskAdvanced(appId, serviceId, taskId, advancedPayload, reset));
+        serviceResourceService.updateContainerTaskAdvanced(appId, serviceId, taskId, kubernetesPayload, reset));
   }
 
   @GET
@@ -366,5 +366,16 @@ public class ServiceResource {
     pageRequest.addFilter("appId", EQ, appId);
     pageRequest.addFilter("serviceId", EQ, serviceId);
     return new RestResponse<>(serviceResourceService.listUserDataSpecification(pageRequest));
+  }
+
+  @POST
+  @Path("{serviceId}/config-map-yaml")
+  @Timed
+  @ExceptionMetered
+  public RestResponse<Service> setConfigMapYaml(
+      @ApiParam(name = "appId", required = true) @QueryParam("appId") String appId,
+      @ApiParam(name = "serviceId", required = true) @PathParam("serviceId") String serviceId,
+      KubernetesPayload kubernetesPayload) {
+    return new RestResponse<>(serviceResourceService.setConfigMapYaml(appId, serviceId, kubernetesPayload));
   }
 }

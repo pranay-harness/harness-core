@@ -7,8 +7,8 @@ import software.wings.beans.Service;
 import software.wings.beans.Setup.SetupStatus;
 import software.wings.beans.command.CommandUnit;
 import software.wings.beans.command.ServiceCommand;
-import software.wings.beans.container.ContainerAdvancedPayload;
 import software.wings.beans.container.ContainerTask;
+import software.wings.beans.container.KubernetesPayload;
 import software.wings.beans.container.UserDataSpecification;
 import software.wings.dl.PageRequest;
 import software.wings.dl.PageResponse;
@@ -258,12 +258,12 @@ public interface ServiceResourceService extends OwnedByApplication {
    * @param appId           the app id
    * @param serviceId       the service id
    * @param taskId          the task id
-   * @param advancedPayload the advanced payload
+   * @param kubernetesPayload the advanced payload
    * @param reset           the reset
    * @return the container task
    */
   ContainerTask updateContainerTaskAdvanced(
-      String appId, String serviceId, String taskId, ContainerAdvancedPayload advancedPayload, boolean reset);
+      String appId, String serviceId, String taskId, KubernetesPayload kubernetesPayload, boolean reset);
 
   /**
    * List container tasks page response.
@@ -400,4 +400,6 @@ public interface ServiceResourceService extends OwnedByApplication {
   PageResponse<UserDataSpecification> listUserDataSpecification(PageRequest<UserDataSpecification> pageRequest);
 
   UserDataSpecification getUserDataSpecification(String appId, String serviceId);
+
+  Service setConfigMapYaml(String appId, String serviceId, KubernetesPayload kubernetesPayload);
 }

@@ -192,10 +192,23 @@ public class KubernetesSetupCommandUnit extends ContainerSetupCommandUnit {
     String containerServiceName = isDaemonSet
         ? setupParams.getControllerNamePrefix()
         : KubernetesConvention.getControllerName(setupParams.getControllerNamePrefix(), revision);
+
     String previousDaemonSetYaml =
         isDaemonSet ? getDaemonSetYaml(kubernetesConfig, encryptedDataDetails, containerServiceName) : null;
     List<String> previousActiveAutoscalers =
         isDaemonSet ? null : getActiveAutoscalers(kubernetesConfig, encryptedDataDetails, containerServiceName);
+
+    Map<String, String> serviceLabels =
+        ImmutableMap.<String, String>builder()
+            .put("app", KubernetesConvention.getLabelValue(setupParams.getAppName()))
+            .put("service", KubernetesConvention.getLabelValue(setupParams.getServiceName()))
+            .put("env", KubernetesConvention.getLabelValue(setupParams.getEnvName()))
+            .build();
+
+    Map<String, String> controllerLabels = ImmutableMap.<String, String>builder()
+                                               .putAll(serviceLabels)
+                                               .put("revision", isDaemonSet ? "ds" : Integer.toString(revision))
+                                               .build();
 
     // Setup config map
     ConfigMap configMap;
@@ -205,6 +218,12 @@ public class KubernetesSetupCommandUnit extends ContainerSetupCommandUnit {
         ObjectMeta configMapMeta = Optional.ofNullable(configMap.getMetadata()).orElse(new ObjectMeta());
         configMapMeta.setName(containerServiceName);
         configMapMeta.setNamespace(kubernetesConfig.getNamespace());
+        Map<String, String> configMapLabels = new HashMap<>();
+        if (isNotEmpty(configMapMeta.getLabels())) {
+          configMapLabels.putAll(configMapMeta.getLabels());
+        }
+        configMapLabels.putAll(controllerLabels);
+        configMapMeta.setLabels(configMapLabels);
         configMap.setMetadata(configMapMeta);
       } catch (IOException e) {
         throw new WingsException("Error while loading configMap yaml", e);
@@ -214,24 +233,22 @@ public class KubernetesSetupCommandUnit extends ContainerSetupCommandUnit {
                       .withNewMetadata()
                       .withName(containerServiceName)
                       .withNamespace(kubernetesConfig.getNamespace())
+                      .withLabels(controllerLabels)
                       .endMetadata()
                       .build();
-    }
 
-    Map<String, String> unencryptedServiceVars = safeDisplayServiceVariables.entrySet()
-                                                     .stream()
-                                                     .filter(entry -> !SECRET_MASK.equals(entry.getValue()))
-                                                     .collect(toMap(Map.Entry::getKey, Map.Entry::getValue));
+      Map<String, String> data = new HashMap<>();
 
-    if (isNotEmpty(unencryptedServiceVars)) {
-      Map<String, String> data = Optional.ofNullable(configMap.getData()).orElse(new HashMap<>());
-      data.putAll(unencryptedServiceVars);
-      configMap.setData(data);
-    }
+      if (isNotEmpty(safeDisplayServiceVariables)) {
+        data.putAll(safeDisplayServiceVariables.entrySet()
+                        .stream()
+                        .filter(entry -> !SECRET_MASK.equals(entry.getValue()))
+                        .collect(toMap(Map.Entry::getKey, Map.Entry::getValue)));
+      }
 
-    if (isNotEmpty(setupParams.getConfigFiles())) {
-      Map<String, String> data = Optional.ofNullable(configMap.getData()).orElse(new HashMap<>());
-      data.putAll(setupParams.getConfigFiles());
+      if (isNotEmpty(setupParams.getConfigFiles())) {
+        data.putAll(setupParams.getConfigFiles().stream().collect(toMap(sa -> sa[0], sa -> sa[1])));
+      }
       configMap.setData(data);
     }
 
@@ -243,13 +260,6 @@ public class KubernetesSetupCommandUnit extends ContainerSetupCommandUnit {
       executionLogCallback.saveExecutionLog("Creating config map:\n\n" + toDisplayYaml(configMap), LogLevel.INFO);
       kubernetesContainerService.createOrReplaceConfigMap(kubernetesConfig, encryptedDataDetails, configMap);
     }
-
-    Map<String, String> serviceLabels =
-        ImmutableMap.<String, String>builder()
-            .put("app", KubernetesConvention.getLabelValue(setupParams.getAppName()))
-            .put("service", KubernetesConvention.getLabelValue(setupParams.getServiceName()))
-            .put("env", KubernetesConvention.getLabelValue(setupParams.getEnvName()))
-            .build();
 
     // Setup secrets
     Map<String, String> encryptedServiceVars =
@@ -274,10 +284,6 @@ public class KubernetesSetupCommandUnit extends ContainerSetupCommandUnit {
     }
 
     // Setup controller
-    Map<String, String> controllerLabels = ImmutableMap.<String, String>builder()
-                                               .putAll(serviceLabels)
-                                               .put("revision", isDaemonSet ? "ds" : Integer.toString(revision))
-                                               .build();
 
     kubernetesContainerService.createController(kubernetesConfig, encryptedDataDetails,
         createKubernetesControllerDefinition(kubernetesContainerTask, containerServiceName, controllerLabels,
