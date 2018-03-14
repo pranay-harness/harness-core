@@ -1084,12 +1084,16 @@ public class ServiceResourceServiceImpl implements ServiceResourceService, DataP
 
   @Override
   public Service setConfigMapYaml(String appId, String serviceId, KubernetesPayload kubernetesPayload) {
-    String configMapYaml = Optional.ofNullable(trimYaml(kubernetesPayload.getAdvancedConfig())).orElse("");
     Service savedService = get(appId, serviceId, false);
     Validator.notNullCheck("Service", savedService);
 
-    UpdateOperations<Service> updateOperations =
-        wingsPersistence.createUpdateOperations(Service.class).set("configMapYaml", configMapYaml);
+    String configMapYaml = trimYaml(kubernetesPayload.getAdvancedConfig());
+    UpdateOperations<Service> updateOperations;
+    if (isNotBlank(configMapYaml)) {
+      updateOperations = wingsPersistence.createUpdateOperations(Service.class).set("configMapYaml", configMapYaml);
+    } else {
+      updateOperations = wingsPersistence.createUpdateOperations(Service.class).unset("configMapYaml");
+    }
 
     wingsPersistence.update(savedService, updateOperations);
 
