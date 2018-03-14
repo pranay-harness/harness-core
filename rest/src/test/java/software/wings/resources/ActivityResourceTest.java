@@ -14,6 +14,7 @@ import static software.wings.utils.WingsTestConstants.ACTIVITY_ID;
 import static software.wings.utils.WingsTestConstants.APP_ID;
 import static software.wings.utils.WingsTestConstants.COMMAND_UNIT_NAME;
 import static software.wings.utils.WingsTestConstants.ENV_ID;
+import static software.wings.utils.WingsTestConstants.LOG_ID;
 
 import com.google.common.collect.Lists;
 
@@ -109,7 +110,7 @@ public class ActivityResourceTest {
     PageResponse<Log> logPageResponse = new PageResponse<>();
     logPageResponse.setResponse(Lists.newArrayList(ACTUAL_LOG));
     logPageResponse.setTotal(1l);
-    when(LOG_SERVICE.list(anyString(), anyString(), anyString(), any(PageRequest.class))).thenReturn(logPageResponse);
+    when(LOG_SERVICE.list(any(PageRequest.class))).thenReturn(logPageResponse);
   }
 
   /**
@@ -166,6 +167,32 @@ public class ActivityResourceTest {
     assertThat(restResponse.getResource().get(0)).isInstanceOf(CommandUnitDetails.class);
     assertThat(restResponse.getResource().get(0).getCommandUnitType()).isEqualTo(CommandUnitType.COMMAND);
     verify(ACTIVITY_SERVICE).getCommandUnits(APP_ID, ACTIVITY_ID);
+  }
+
+  @Test
+  public void shouldListCommandUnitLogs() {
+    PageResponse<Log> pageResponse = new PageResponse<>();
+    pageResponse.setResponse(Lists.newArrayList(Log.Builder.aLog()
+                                                    .withUuid(LOG_ID)
+                                                    .withAppId(APP_ID)
+                                                    .withActivityId(ACTIVITY_ID)
+                                                    .withCommandUnitName(COMMAND_UNIT_NAME)
+                                                    .build()));
+    pageResponse.setTotal(1l);
+    when(LOG_SERVICE.list(any(PageRequest.class))).thenReturn(pageResponse);
+
+    RestResponse<PageResponse<Log>> restResponse =
+        RESOURCES.client()
+            .target(String.format("/activities/%s/logs?appId=%s&unitName=%s", ACTIVITY_ID, APP_ID, COMMAND_UNIT_NAME))
+            .request()
+            .get(new GenericType<RestResponse<PageResponse<Log>>>() {});
+
+    assertThat(restResponse.getResource()).isInstanceOf(List.class);
+    assertThat(restResponse.getResource().size()).isEqualTo(1);
+    assertThat(restResponse.getResource().get(0)).isInstanceOf(Log.class);
+    assertThat(restResponse.getResource().get(0).getActivityId()).isEqualTo(ACTIVITY_ID);
+    assertThat(restResponse.getResource().get(0).getCommandUnitName()).isEqualTo(COMMAND_UNIT_NAME);
+    verify(LOG_SERVICE).list(any(PageRequest.class));
   }
 
   /**

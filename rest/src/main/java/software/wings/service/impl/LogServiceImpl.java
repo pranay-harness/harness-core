@@ -8,7 +8,6 @@ import static java.util.Collections.singletonList;
 import static java.util.stream.Collectors.groupingBy;
 import static java.util.stream.Collectors.toList;
 import static java.util.stream.Collectors.toMap;
-import static software.wings.beans.SearchFilter.Operator.EQ;
 import static software.wings.beans.command.CommandExecutionResult.CommandExecutionStatus.RUNNING;
 
 import com.google.common.io.Files;
@@ -23,7 +22,6 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import software.wings.beans.Activity;
 import software.wings.beans.Log;
-import software.wings.beans.SortOrder.OrderType;
 import software.wings.beans.command.CommandExecutionResult.CommandExecutionStatus;
 import software.wings.dl.PageRequest;
 import software.wings.dl.PageResponse;
@@ -39,7 +37,6 @@ import java.io.IOException;
 import java.io.OutputStreamWriter;
 import java.text.SimpleDateFormat;
 import java.util.ArrayList;
-import java.util.Collections;
 import java.util.Date;
 import java.util.List;
 import java.util.Map;
@@ -53,6 +50,8 @@ import javax.validation.executable.ValidateOnExecution;
 @Singleton
 @ValidateOnExecution
 public class LogServiceImpl implements LogService {
+  public static final String MAX_NUMBER_OF_LOGS_RECORDS_IN_ONE_REQUEST = "10";
+  public static final int MAX_LOG_ROWS_PER_ACTIVITY = 1000;
   private final SimpleDateFormat dateFormatter = new SimpleDateFormat("yyyy-MM-dd'T'HH:mm:ss.SSSZ");
   public static final int NUM_OF_LOGS_TO_KEEP = 200;
   @Inject private WingsPersistence wingsPersistence;
@@ -63,18 +62,8 @@ public class LogServiceImpl implements LogService {
    * @see software.wings.service.intfc.LogService#list(software.wings.dl.PageRequest)
    */
   @Override
-  public PageResponse<Log> list(String appId, String activityId, String unitName, PageRequest<Log> pageRequest) {
-    pageRequest.addFilter("appId", EQ, appId);
-    pageRequest.addFilter("activityId", EQ, activityId);
-    pageRequest.addFilter("commandUnitName", EQ, unitName);
-    pageRequest.addOrder("createdAt", OrderType.DESC);
-    pageRequest.setLimit(String.valueOf(NUM_OF_LOGS_TO_KEEP));
-    PageResponse<Log> response = wingsPersistence.query(Log.class, pageRequest);
-
-    if (response != null) {
-      Collections.reverse(response.getResponse());
-    }
-    return response;
+  public PageResponse<Log> list(PageRequest<Log> pageRequest) {
+    return wingsPersistence.query(Log.class, pageRequest);
   }
 
   /* (non-Javadoc)
@@ -205,6 +194,18 @@ public class LogServiceImpl implements LogService {
 
   @Override
   public String batchedSaveCommandUnitLogs(String activityId, String unitName, Log log) {
+    long count = wingsPersistence.createQuery(Log.class)
+                     .field("appId")
+                     .equal(log.getAppId())
+                     .field("activityId")
+                     .equal(activityId)
+                     .count();
+    if (count > MAX_LOG_ROWS_PER_ACTIVITY) {
+      logger.error(
+          "Number of log rows per activity threshold [{}] crossed. [{}] log lines truncated for activityId: [{}], commandUnitName: [{}]",
+          MAX_LOG_ROWS_PER_ACTIVITY, log.getLinesCount(), log.getActivityId(), log.getCommandUnitName());
+      return null;
+    }
     String logId = wingsPersistence.save(log);
     activityService.updateCommandUnitStatus(log.getAppId(), activityId, unitName, log.getCommandExecutionStatus());
     return logId;
