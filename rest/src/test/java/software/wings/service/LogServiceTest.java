@@ -20,11 +20,13 @@ import com.google.inject.Inject;
 import com.google.inject.name.Named;
 
 import com.mongodb.BasicDBObject;
+import org.junit.Before;
 import org.junit.Ignore;
 import org.junit.Test;
 import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mongodb.morphia.AdvancedDatastore;
+import org.mongodb.morphia.query.FieldEnd;
 import org.mongodb.morphia.query.Query;
 import software.wings.WingsBaseTest;
 import software.wings.beans.Log;
@@ -32,12 +34,12 @@ import software.wings.beans.Log.Builder;
 import software.wings.beans.command.CommandExecutionResult.CommandExecutionStatus;
 import software.wings.dl.PageRequest;
 import software.wings.dl.WingsPersistence;
+import software.wings.service.impl.LogServiceImpl;
 import software.wings.service.intfc.ActivityService;
 import software.wings.service.intfc.LogService;
 
 import java.util.List;
 import java.util.Map;
-import java.util.UUID;
 
 /**
  * Created by peeyushaggarwal on 5/27/16.
@@ -58,9 +60,16 @@ public class LogServiceTest extends WingsBaseTest {
 
   @Inject @Named("primaryDatastore") private AdvancedDatastore datastore;
 
-  private String appId = UUID.randomUUID().toString();
-  private String activityId = UUID.randomUUID().toString();
-  private String unitName = UUID.randomUUID().toString();
+  @Mock Query<Log> query;
+  @Mock FieldEnd end;
+
+  @Before
+  public void setUp() throws Exception {
+    when(wingsPersistence.createQuery(Log.class)).thenReturn(query);
+    when(query.field(any())).thenReturn(end);
+    when(end.equal(any())).thenReturn(query);
+  }
+
   /**
    * Should list logs.
    */
@@ -71,7 +80,7 @@ public class LogServiceTest extends WingsBaseTest {
                                   .addFilter("activityId", EQ, ACTIVITY_ID)
                                   .addFilter("commandUnitName", EQ, COMMAND_UNIT_NAME)
                                   .build();
-    logService.list(appId, activityId, unitName, pageRequest);
+    logService.list(pageRequest);
     verify(wingsPersistence).query(eq(Log.class), eq(pageRequest));
   }
 
@@ -99,5 +108,18 @@ public class LogServiceTest extends WingsBaseTest {
     assertThat(logQuery.getQueryObject().get("activityId")).isEqualTo(ACTIVITY_ID);
     assertThat(logQuery.getQueryObject().get("commandExecutionStatus")).isEqualTo(new BasicDBObject("$exists", true));
     assertThat(logQuery.getSortObject().get("lastUpdatedAt")).isEqualTo(-1);
+  }
+
+  @Test
+  public void shouldIgnoreLogsOverMaximumLogThreshold() {
+    when(query.count()).thenReturn((long) (LogServiceImpl.MAX_LOG_ROWS_PER_ACTIVITY + 1));
+    when(wingsPersistence.save(any(Log.class))).thenReturn(LOG_ID);
+    String logId = logService.batchedSaveCommandUnitLogs(ACTIVITY_ID, COMMAND_UNIT_NAME, BUILDER.build());
+    assertThat(logId).isEqualTo(null);
+    verify(query).field("appId");
+    verify(end).equal(APP_ID);
+    verify(query).field("activityId");
+    verify(end).equal(ACTIVITY_ID);
+    verify(query).count();
   }
 }

@@ -20,13 +20,10 @@ public interface LogService extends OwnedByActivity {
   /**
    * List.
    *
-   * @param appId       the app id
-   * @param activityId  the activity id
-   * @param unitName    the unit name
    * @param pageRequest the page request  @return the page response
    * @return the page response
    */
-  PageResponse<Log> list(String appId, String activityId, String unitName, PageRequest<Log> pageRequest);
+  PageResponse<Log> list(PageRequest<Log> pageRequest);
 
   /**
    * Save.

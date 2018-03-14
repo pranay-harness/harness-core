@@ -60,9 +60,6 @@ public interface ManagerClient {
       @Query("accountId") String accountId, @Query("appId") String appId, @Query("envId") String envId,
       @Query("hostId") String hostId);
 
-  @POST("logs/batched")
-  Call<RestResponse<List<String>>> batchedSaveLogs(@Query("accountId") String accountId, @Body List<Log> logs);
-
   @POST("logs/activity/{activityId}/unit/{unitName}/batched")
   Call<RestResponse> saveCommandUnitLogs(@Path("activityId") String activityId, @Path("unitName") String unitName,
       @Query("accountId") String accountId, @Body Log log);
