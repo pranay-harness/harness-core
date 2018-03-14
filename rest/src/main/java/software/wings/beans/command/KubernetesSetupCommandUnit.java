@@ -195,8 +195,9 @@ public class KubernetesSetupCommandUnit extends ContainerSetupCommandUnit {
 
     String previousDaemonSetYaml =
         isDaemonSet ? getDaemonSetYaml(kubernetesConfig, encryptedDataDetails, containerServiceName) : null;
-    List<String> previousActiveAutoscalers =
-        isDaemonSet ? null : getActiveAutoscalers(kubernetesConfig, encryptedDataDetails, containerServiceName);
+    List<String> previousActiveAutoscalers = isDaemonSet
+        ? null
+        : getActiveAutoscalers(kubernetesConfig, encryptedDataDetails, containerServiceName, executionLogCallback);
 
     Map<String, String> serviceLabels =
         ImmutableMap.<String, String>builder()
@@ -468,15 +469,21 @@ public class KubernetesSetupCommandUnit extends ContainerSetupCommandUnit {
     return null;
   }
 
-  private List<String> getActiveAutoscalers(
-      KubernetesConfig kubernetesConfig, List<EncryptedDataDetail> encryptedDataDetails, String containerServiceName) {
+  private List<String> getActiveAutoscalers(KubernetesConfig kubernetesConfig,
+      List<EncryptedDataDetail> encryptedDataDetails, String containerServiceName,
+      ExecutionLogCallback executionLogCallback) {
     String controllerNamePrefix = KubernetesConvention.getPrefixFromControllerName(containerServiceName);
-    return kubernetesContainerService.listAutoscalers(kubernetesConfig, encryptedDataDetails)
-        .stream()
-        .filter(autoscaler -> autoscaler.getMetadata().getName().startsWith(controllerNamePrefix))
-        .filter(autoscaler -> !"none".equals(autoscaler.getSpec().getScaleTargetRef().getName()))
-        .map(autoscaler -> autoscaler.getMetadata().getName())
-        .collect(toList());
+    try {
+      return kubernetesContainerService.listAutoscalers(kubernetesConfig, encryptedDataDetails)
+          .stream()
+          .filter(autoscaler -> autoscaler.getMetadata().getName().startsWith(controllerNamePrefix))
+          .filter(autoscaler -> !"none".equals(autoscaler.getSpec().getScaleTargetRef().getName()))
+          .map(autoscaler -> autoscaler.getMetadata().getName())
+          .collect(toList());
+    } catch (Exception e) {
+      Misc.logAllMessages(e, executionLogCallback);
+    }
+    return emptyList();
   }
 
   private HorizontalPodAutoscaler createAutoscaler(String autoscalerName, String namespace,
