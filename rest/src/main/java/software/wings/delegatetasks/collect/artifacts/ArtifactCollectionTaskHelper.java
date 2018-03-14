@@ -31,7 +31,7 @@ public class ArtifactCollectionTaskHelper {
       throw new FileNotFoundException("Unable to get artifact for path " + artifactPath);
     }
     InputStream in = fileInfo.getValue();
-    logger.info("Uploading the file {} for artifactPath", fileInfo.getKey(), artifactPath);
+    logger.info("Uploading the file {} for artifactPath {}", fileInfo.getKey(), artifactPath);
     DelegateFile delegateFile = aDelegateFile()
                                     .withFileName(fileInfo.getKey())
                                     .withDelegateId(delegateId)
