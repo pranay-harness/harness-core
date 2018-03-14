@@ -47,7 +47,7 @@
         <nexus.version>2.14.3-02</nexus.version>
         <artifactory.javaclient.version>2.5.0</artifactory.javaclient.version>
         <morphia.version>1.3.2</morphia.version>
-        <argLine>-Xmx1024m -XX:MaxPermSize=512m</argLine>
+        <argLine>-Xmx1024m</argLine>
         <!-- datagen is tricky - it lives in integration/ dir and is treated as integration but does not follow the xxIT naming convention
             so we have to jump through some hoops to get it included -->
         <skip.integration.tests>true</skip.integration.tests>
