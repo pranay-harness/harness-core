@@ -68,7 +68,7 @@ public class Validator {
     try {
       runnable.run();
     } catch (DuplicateKeyException e) {
-      throw prepareWingsException(GENERAL_ERROR, "arg", "Duplicate " + field + " " + value);
+      throw prepareWingsException(GENERAL_ERROR, "args", "Duplicate " + field + " " + value);
     }
   }
 

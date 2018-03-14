@@ -60,6 +60,7 @@ public class EnvironmentYamlHandler extends BaseYamlHandler<Environment.Yaml, En
         convertToVariableOverrideYaml(serviceVariableList, environment.getName());
     return Environment.Yaml.builder()
         .description(environment.getDescription())
+        .configMapYaml(environment.getConfigMapYaml())
         .environmentType(environment.getEnvironmentType().name())
         .variableOverrides(variableOverrideYamlList)
         .harnessApiVersion(getHarnessApiVersion())
@@ -155,6 +156,7 @@ public class EnvironmentYamlHandler extends BaseYamlHandler<Environment.Yaml, En
                               .withAppId(appId)
                               .withName(environmentName)
                               .withDescription(yaml.getDescription())
+                              .withConfigMapYaml(yaml.getConfigMapYaml())
                               .withEnvironmentType(EnvironmentType.valueOf(yaml.getEnvironmentType()))
                               .build();
 
@@ -206,9 +208,7 @@ public class EnvironmentYamlHandler extends BaseYamlHandler<Environment.Yaml, En
     // ----------- START VARIABLE OVERRIDES SECTION ---------------
     if (latestVariableOverrideList != null) {
       // initialize the config vars to add from the after
-      for (VariableOverrideYaml cv : latestVariableOverrideList) {
-        configVarsToAdd.add(cv);
-      }
+      configVarsToAdd.addAll(latestVariableOverrideList);
     }
 
     if (previousVariableOverrideList != null) {
@@ -232,7 +232,7 @@ public class EnvironmentYamlHandler extends BaseYamlHandler<Environment.Yaml, En
               break;
             }
           }
-          if (!cv.getValue().equals(beforeCV.getValue())) {
+          if (beforeCV != null && !cv.getValue().equals(beforeCV.getValue())) {
             configVarsToUpdate.add(cv);
           }
         }
@@ -240,10 +240,10 @@ public class EnvironmentYamlHandler extends BaseYamlHandler<Environment.Yaml, En
     }
 
     Map<String, ServiceVariable> variableMap =
-        currentVariables.stream().collect(Collectors.toMap(var -> var.getName(), serviceVar -> serviceVar));
+        currentVariables.stream().collect(Collectors.toMap(ServiceVariable::getName, serviceVar -> serviceVar));
 
     // do deletions
-    configVarsToDelete.stream().forEach(configVar -> {
+    configVarsToDelete.forEach(configVar -> {
       if (variableMap.containsKey(configVar.getName())) {
         serviceVariableService.delete(appId, variableMap.get(configVar.getName()).getUuid());
       }
@@ -256,13 +256,13 @@ public class EnvironmentYamlHandler extends BaseYamlHandler<Environment.Yaml, En
 
     try {
       // update the existing variables
-      configVarsToUpdate.stream().forEach(configVar -> {
+      configVarsToUpdate.forEach(configVar -> {
         ServiceVariable serviceVar = variableMap.get(configVar.getName());
         if (serviceVar != null) {
           String value = configVar.getValue();
           if (serviceVar.getType() == Type.ENCRYPTED_TEXT) {
             serviceVar.setValue(value != null ? value.toCharArray() : null);
-            serviceVar.setEncryptedValue(value != null ? value : null);
+            serviceVar.setEncryptedValue(value);
           } else if (serviceVar.getType() == Type.TEXT) {
             serviceVar.setValue(value != null ? value.toCharArray() : null);
           } else {

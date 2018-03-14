@@ -21,6 +21,7 @@ import static software.wings.beans.SearchFilter.Operator.IN;
 import static software.wings.beans.ServiceVariable.DEFAULT_TEMPLATE_ID;
 import static software.wings.beans.ServiceVariable.Type.ENCRYPTED_TEXT;
 import static software.wings.dl.PageRequest.PageRequestBuilder.aPageRequest;
+import static software.wings.yaml.YamlHelper.trimYaml;
 
 import com.google.common.base.Joiner;
 import com.google.common.collect.ImmutableMap;
@@ -29,6 +30,7 @@ import com.google.inject.Singleton;
 import com.google.inject.name.Named;
 
 import org.hibernate.validator.constraints.NotEmpty;
+import org.mongodb.morphia.query.UpdateOperations;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import software.wings.beans.Application;
@@ -41,6 +43,7 @@ import software.wings.beans.Service;
 import software.wings.beans.ServiceTemplate;
 import software.wings.beans.ServiceVariable;
 import software.wings.beans.Setup.SetupStatus;
+import software.wings.beans.container.KubernetesPayload;
 import software.wings.beans.stats.CloneMetadata;
 import software.wings.beans.yaml.Change.ChangeType;
 import software.wings.common.Constants;
@@ -657,5 +660,19 @@ public class EnvironmentServiceImpl implements EnvironmentService, DataProvider 
         }
       }
     }
+  }
+
+  @Override
+  public Environment setConfigMapYaml(String appId, String envId, KubernetesPayload kubernetesPayload) {
+    String configMapYaml = Optional.ofNullable(trimYaml(kubernetesPayload.getAdvancedConfig())).orElse("");
+    Environment savedEnv = get(appId, envId, false);
+    Validator.notNullCheck("Environment", savedEnv);
+
+    UpdateOperations<Environment> updateOperations =
+        wingsPersistence.createUpdateOperations(Environment.class).set("configMapYaml", configMapYaml);
+
+    wingsPersistence.update(savedEnv, updateOperations);
+
+    return get(appId, envId, false);
   }
 }

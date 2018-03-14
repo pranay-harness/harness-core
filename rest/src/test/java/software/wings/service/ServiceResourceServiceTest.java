@@ -85,9 +85,9 @@ import software.wings.beans.Workflow.WorkflowBuilder;
 import software.wings.beans.command.Command;
 import software.wings.beans.command.CommandUnitType;
 import software.wings.beans.command.ServiceCommand;
-import software.wings.beans.container.ContainerAdvancedPayload;
 import software.wings.beans.container.ContainerTask;
 import software.wings.beans.container.KubernetesContainerTask;
+import software.wings.beans.container.KubernetesPayload;
 import software.wings.dl.PageRequest;
 import software.wings.dl.PageResponse;
 import software.wings.dl.WingsPersistence;
@@ -1078,7 +1078,7 @@ public class ServiceResourceServiceTest extends WingsBaseTest {
     containerTask.setServiceId(SERVICE_ID);
     containerTask.setUuid("TASK_ID");
     datastore.save(containerTask);
-    ContainerAdvancedPayload payload = new ContainerAdvancedPayload();
+    KubernetesPayload payload = new KubernetesPayload();
 
     when(wingsPersistence.saveAndGet(ContainerTask.class, containerTask)).thenAnswer(t -> t.getArguments()[1]);
 

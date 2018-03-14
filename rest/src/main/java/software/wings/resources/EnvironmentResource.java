@@ -8,10 +8,12 @@ import com.google.inject.Inject;
 import com.codahale.metrics.annotation.ExceptionMetered;
 import com.codahale.metrics.annotation.Timed;
 import io.swagger.annotations.Api;
+import io.swagger.annotations.ApiParam;
 import software.wings.beans.Environment;
 import software.wings.beans.RestResponse;
 import software.wings.beans.Service;
 import software.wings.beans.Setup.SetupStatus;
+import software.wings.beans.container.KubernetesPayload;
 import software.wings.beans.stats.CloneMetadata;
 import software.wings.dl.PageRequest;
 import software.wings.dl.PageResponse;
@@ -161,5 +163,16 @@ public class EnvironmentResource {
   public RestResponse<Environment> cloneEnvironment(
       @QueryParam("appId") String appId, @PathParam("envId") String envId, CloneMetadata cloneMetadata) {
     return new RestResponse<>(envService.cloneEnvironment(appId, envId, cloneMetadata));
+  }
+
+  @POST
+  @Path("{envId}/config-map-yaml")
+  @Timed
+  @ExceptionMetered
+  public RestResponse<Environment> setConfigMapYaml(
+      @ApiParam(name = "appId", required = true) @QueryParam("appId") String appId,
+      @ApiParam(name = "envId", required = true) @PathParam("envId") String envId,
+      KubernetesPayload kubernetesPayload) {
+    return new RestResponse<>(envService.setConfigMapYaml(appId, envId, kubernetesPayload));
   }
 }

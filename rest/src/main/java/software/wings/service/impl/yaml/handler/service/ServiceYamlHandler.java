@@ -57,6 +57,7 @@ public class ServiceYamlHandler extends BaseYamlHandler<Yaml, Service> {
         .harnessApiVersion(getHarnessApiVersion())
         .description(service.getDescription())
         .artifactType(service.getArtifactType().name())
+        .configMapYaml(service.getConfigMapYaml())
         .configVariables(nameValuePairList)
         .applicationStack(applicationStack)
         .build();
@@ -103,8 +104,11 @@ public class ServiceYamlHandler extends BaseYamlHandler<Yaml, Service> {
     String serviceName = yamlHelper.getServiceName(yamlFilePath);
 
     Yaml yaml = changeContext.getYaml();
-    Service.Builder currentBuilder =
-        aService().withAppId(appId).withName(serviceName).withDescription(yaml.getDescription());
+    Service.Builder currentBuilder = aService()
+                                         .withAppId(appId)
+                                         .withName(serviceName)
+                                         .withDescription(yaml.getDescription())
+                                         .withConfigMapYaml(yaml.getConfigMapYaml());
 
     String applicationStack = yaml.getApplicationStack();
     if (StringUtils.isNotBlank(applicationStack)) {
@@ -160,9 +164,7 @@ public class ServiceYamlHandler extends BaseYamlHandler<Yaml, Service> {
 
     if (configVars != null) {
       // initialize the config vars to add from the after
-      for (NameValuePair.Yaml cv : configVars) {
-        configVarsToAdd.add(cv);
-      }
+      configVarsToAdd.addAll(configVars);
     }
 
     if (beforeConfigVars != null) {
@@ -186,36 +188,36 @@ public class ServiceYamlHandler extends BaseYamlHandler<Yaml, Service> {
               break;
             }
           }
-          if (!cv.getValue().equals(beforeCV.getValue())) {
+          if (beforeCV != null && !cv.getValue().equals(beforeCV.getValue())) {
             configVarsToUpdate.add(cv);
           }
         }
       }
     }
 
-    Map<String, ServiceVariable> serviceVariableMap = previousServiceVariables.stream().collect(
-        Collectors.toMap(serviceVar -> serviceVar.getName(), serviceVar -> serviceVar));
+    Map<String, ServiceVariable> serviceVariableMap =
+        previousServiceVariables.stream().collect(Collectors.toMap(ServiceVariable::getName, serviceVar -> serviceVar));
 
     // do deletions
-    configVarsToDelete.stream().forEach(configVar -> {
+    configVarsToDelete.forEach(configVar -> {
       if (serviceVariableMap.containsKey(configVar.getName())) {
         serviceVariableService.delete(appId, serviceVariableMap.get(configVar.getName()).getUuid());
       }
     });
 
     // save the new variables
-    configVarsToAdd.stream().forEach(
+    configVarsToAdd.forEach(
         configVar -> serviceVariableService.save(createNewServiceVariable(appId, serviceId, configVar)));
 
     try {
       // update the existing variables
-      configVarsToUpdate.stream().forEach(configVar -> {
+      configVarsToUpdate.forEach(configVar -> {
         ServiceVariable serviceVar = serviceVariableMap.get(configVar.getName());
         if (serviceVar != null) {
           String value = configVar.getValue();
           if (serviceVar.getType() == Type.ENCRYPTED_TEXT) {
             serviceVar.setValue(value != null ? value.toCharArray() : null);
-            serviceVar.setEncryptedValue(value != null ? value : null);
+            serviceVar.setEncryptedValue(value);
           } else if (serviceVar.getType() == Type.TEXT) {
             serviceVar.setValue(value != null ? value.toCharArray() : null);
           } else {
