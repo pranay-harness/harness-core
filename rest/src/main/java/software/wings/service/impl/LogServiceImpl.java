@@ -194,20 +194,24 @@ public class LogServiceImpl implements LogService {
 
   @Override
   public String batchedSaveCommandUnitLogs(String activityId, String unitName, Log log) {
-    long count = wingsPersistence.createQuery(Log.class)
-                     .field("appId")
-                     .equal(log.getAppId())
-                     .field("activityId")
-                     .equal(activityId)
-                     .count();
-    String logId = null;
-    if (count > MAX_LOG_ROWS_PER_ACTIVITY) {
-      logger.error(
-          "Number of log rows per activity threshold [{}] crossed. [{}] log lines truncated for activityId: [{}], commandUnitName: [{}]",
-          MAX_LOG_ROWS_PER_ACTIVITY, log.getLinesCount(), log.getActivityId(), log.getCommandUnitName());
-    } else {
-      logId = wingsPersistence.save(log);
+    if (log.getCommandExecutionStatus().equals(RUNNING)) {
+      // only RUNNING status will be counted for  MAX_LOG_ROWS_PER_ACTIVITY threshold
+      long count = wingsPersistence.createQuery(Log.class)
+                       .field("appId")
+                       .equal(log.getAppId())
+                       .field("activityId")
+                       .equal(activityId)
+                       .count();
+      if (count > MAX_LOG_ROWS_PER_ACTIVITY) {
+        logger.error(
+            "Number of log rows per activity threshold [{}] crossed. [{}] log lines truncated for activityId: [{}], commandUnitName: [{}]",
+            MAX_LOG_ROWS_PER_ACTIVITY, log.getLinesCount(), log.getActivityId(), log.getCommandUnitName());
+        activityService.updateCommandUnitStatus(log.getAppId(), activityId, unitName, log.getCommandExecutionStatus());
+        return null;
+      }
     }
+
+    String logId = wingsPersistence.save(log);
     activityService.updateCommandUnitStatus(log.getAppId(), activityId, unitName, log.getCommandExecutionStatus());
     return logId;
   }
