@@ -20,6 +20,7 @@ import software.wings.utils.Util;
 
 import java.net.MalformedURLException;
 import java.net.URL;
+import java.util.Optional;
 
 /**
  * Created by brett on 2/27/17
@@ -75,27 +76,34 @@ public class DirectKubernetesInfrastructureMapping extends ContainerInfrastructu
   @SchemaIgnore
   @Override
   public String getDefaultName() {
-    StringBuilder nameBuilder = new StringBuilder(128);
-    try {
-      URL url = new URL(getMasterUrl());
-      if (url.getHost() != null) {
-        String hostName = url.getHost().replace('.', '_');
-        nameBuilder.append(hostName);
-      } else {
+    if (getComputeProviderType().equals(SettingVariableTypes.DIRECT.name())) {
+      StringBuilder nameBuilder = new StringBuilder(128);
+      try {
+        URL url = new URL(getMasterUrl());
+        if (url.getHost() != null) {
+          String hostName = url.getHost().replace('.', '_');
+          nameBuilder.append(hostName);
+        } else {
+          nameBuilder.append(getMasterUrl());
+        }
+      } catch (MalformedURLException e) {
         nameBuilder.append(getMasterUrl());
       }
-    } catch (MalformedURLException e) {
-      nameBuilder.append(getMasterUrl());
+
+      if (getUsername() != null) {
+        nameBuilder.append('_');
+        nameBuilder.append(getUsername());
+      }
+
+      nameBuilder.append(" (Direct Kubernetes)");
+      return Util.normalize(nameBuilder.toString());
+    } else {
+      return Util.normalize(String.format("%s_DIRECT_Kubernetes_%s",
+          Optional.ofNullable(this.getComputeProviderName())
+              .orElse(this.getComputeProviderType().toLowerCase())
+              .replace(':', '_'),
+          Optional.ofNullable(this.getNamespace()).orElse("default")));
     }
-
-    if (getUsername() != null) {
-      nameBuilder.append('_');
-      nameBuilder.append(getUsername());
-    }
-
-    nameBuilder.append(" (Direct Kubernetes)");
-
-    return Util.normalize(nameBuilder.toString());
   }
 
   @SchemaIgnore
