@@ -5,6 +5,7 @@ import static io.harness.data.structure.EmptyPredicate.isNotEmpty;
 import static io.harness.data.structure.ListUtil.trimList;
 import static java.util.Arrays.asList;
 import static java.util.stream.Collectors.toMap;
+import static org.apache.commons.lang3.StringUtils.isNotBlank;
 import static org.mongodb.morphia.mapping.Mapper.ID_KEY;
 import static software.wings.beans.Base.GLOBAL_ENV_ID;
 import static software.wings.beans.EntityType.ENVIRONMENT;
@@ -664,12 +665,16 @@ public class EnvironmentServiceImpl implements EnvironmentService, DataProvider 
 
   @Override
   public Environment setConfigMapYaml(String appId, String envId, KubernetesPayload kubernetesPayload) {
-    String configMapYaml = Optional.ofNullable(trimYaml(kubernetesPayload.getAdvancedConfig())).orElse("");
     Environment savedEnv = get(appId, envId, false);
     Validator.notNullCheck("Environment", savedEnv);
 
-    UpdateOperations<Environment> updateOperations =
-        wingsPersistence.createUpdateOperations(Environment.class).set("configMapYaml", configMapYaml);
+    String configMapYaml = trimYaml(kubernetesPayload.getAdvancedConfig());
+    UpdateOperations<Environment> updateOperations;
+    if (isNotBlank(configMapYaml)) {
+      updateOperations = wingsPersistence.createUpdateOperations(Environment.class).set("configMapYaml", configMapYaml);
+    } else {
+      updateOperations = wingsPersistence.createUpdateOperations(Environment.class).unset("configMapYaml");
+    }
 
     wingsPersistence.update(savedEnv, updateOperations);
 

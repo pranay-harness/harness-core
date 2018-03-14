@@ -378,4 +378,25 @@ public class ServiceResource {
       KubernetesPayload kubernetesPayload) {
     return new RestResponse<>(serviceResourceService.setConfigMapYaml(appId, serviceId, kubernetesPayload));
   }
+
+  @PUT
+  @Path("{serviceId}/config-map-yaml")
+  @Timed
+  @ExceptionMetered
+  public RestResponse<Service> updateConfigMapYaml(
+      @ApiParam(name = "appId", required = true) @QueryParam("appId") String appId,
+      @ApiParam(name = "serviceId", required = true) @PathParam("serviceId") String serviceId,
+      KubernetesPayload kubernetesPayload) {
+    return new RestResponse<>(serviceResourceService.setConfigMapYaml(appId, serviceId, kubernetesPayload));
+  }
+
+  @DELETE
+  @Path("{serviceId}/config-map-yaml")
+  @Timed
+  @ExceptionMetered
+  public RestResponse<Service> deleteConfigMapYaml(
+      @ApiParam(name = "appId", required = true) @QueryParam("appId") String appId,
+      @ApiParam(name = "serviceId", required = true) @PathParam("serviceId") String serviceId) {
+    return new RestResponse<>(serviceResourceService.setConfigMapYaml(appId, serviceId, new KubernetesPayload()));
+  }
 }
