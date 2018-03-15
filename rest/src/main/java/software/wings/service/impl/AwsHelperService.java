@@ -204,7 +204,6 @@ import org.apache.http.util.EntityUtils;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import software.wings.annotation.Encryptable;
-import software.wings.api.HostElement;
 import software.wings.beans.AwsConfig;
 import software.wings.beans.AwsInfrastructureMapping;
 import software.wings.beans.AwsInstanceFilter;
@@ -483,17 +482,11 @@ public class AwsHelperService {
    * @param hostNameConvention the host name convention
    * @return the hostname from dns name
    */
-  public String getHostnameFromConvention(HostElement hostElement, String hostNameConvention) {
+  public String getHostnameFromConvention(Map<String, Object> context, String hostNameConvention) {
     if (isEmpty(hostNameConvention)) {
       hostNameConvention = Constants.DEFAULT_AWS_HOST_NAME_CONVENTION;
     }
-    String hostName;
-    try {
-      hostName = (String) expressionEvaluator.evaluate(hostNameConvention, "host", hostElement);
-    } catch (Exception e) {
-      hostName = getHostnameFromPrivateDnsName(hostElement.getEc2Instance().getPrivateDnsName());
-    }
-    return hostName;
+    return expressionEvaluator.substitute(hostNameConvention, context);
   }
 
   /**

@@ -416,6 +416,13 @@ public class ExecutionContextImpl implements DeploymentExecutionContext {
     return context;
   }
 
+  @Override
+  public Map<String, Object> asMap() {
+    Map<String, Object> context = new HashMap<>();
+    context.putAll(prepareContext());
+    return context;
+  }
+
   private Map<String, Object> prepareContext() {
     Map<String, Object> context = new HashMap<>();
     if (contextMap == null) {

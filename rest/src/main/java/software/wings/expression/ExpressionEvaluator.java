@@ -35,6 +35,8 @@ public class ExpressionEvaluator {
 
   private JexlEngine engine = new JexlBuilder().logger(new NoOpLog()).create();
   private RegexFunctor regexFunctor = new RegexFunctor();
+  private AwsFunctor awsFunctor = new AwsFunctor();
+
   private static int EXPANSION_LIMIT = 100 * 1024;
   private static int EXPANSION_MULTIPLIER_LIMIT = 10;
   private static int DEPTH_LIMIT = 10;
@@ -176,6 +178,7 @@ public class ExpressionEvaluator {
     }
 
     jc.set("regex", regexFunctor);
+    jc.set("aws", awsFunctor);
     return jc;
   }
 }

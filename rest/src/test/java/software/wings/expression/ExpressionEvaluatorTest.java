@@ -7,9 +7,11 @@ package software.wings.expression;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThatThrownBy;
 
+import com.google.common.collect.ImmutableMap;
 import com.google.inject.Inject;
 
 import com.amazonaws.services.ec2.model.Instance;
+import com.amazonaws.services.ec2.model.Tag;
 import lombok.Builder;
 import lombok.Value;
 import org.junit.Test;
@@ -18,6 +20,7 @@ import software.wings.api.HostElement;
 import software.wings.beans.infrastructure.Host;
 import software.wings.exception.WingsException;
 
+import java.util.Arrays;
 import java.util.HashMap;
 import java.util.Map;
 
@@ -104,14 +107,12 @@ public class ExpressionEvaluatorTest extends WingsBaseTest {
   public void shouldEvaluateRecursively() {
     Host host = new Host();
     host.setHostName("${HOST}.$DOMAIN.${COM}");
-    Map<String, Object> context = new HashMap<String, Object>() {
-      {
-        put("host", host);
-        put("COM", "io");
-        put("name", "bob");
-        put("bob", bob);
-      }
-    };
+    Map<String, Object> context = ImmutableMap.<String, Object>builder()
+                                      .put("host", host)
+                                      .put("COM", "io")
+                                      .put("name", "bob")
+                                      .put("bob", bob)
+                                      .build();
     String retValue = expressionEvaluator.substitute("http://${host.hostName}:${PORT}/health/status", context);
     assertThat(retValue).isEqualTo("http://${HOST}.$DOMAIN.io:${PORT}/health/status");
 
@@ -122,12 +123,8 @@ public class ExpressionEvaluatorTest extends WingsBaseTest {
   public void shouldNotHangForCircle() {
     Host host = new Host();
     host.setHostName("${HOST}.$DOMAIN.${COM}");
-    Map<String, Object> context = new HashMap<String, Object>() {
-      {
-        put("host", host);
-        put("COM", "${host.hostName}");
-      }
-    };
+    Map<String, Object> context =
+        ImmutableMap.<String, Object>builder().put("host", host).put("COM", "${host.hostName}").build();
     assertThatThrownBy(() -> expressionEvaluator.substitute("http://${host.hostName}:${PORT}/health/status", context))
         .isInstanceOf(WingsException.class);
   }
@@ -236,54 +233,57 @@ public class ExpressionEvaluatorTest extends WingsBaseTest {
   }
 
   @Test
-  public void shouldEvaluate() {
+  public void shouldEvaluateEc2Instance() {
     Instance ec2 = new Instance();
     ec2.setPrivateDnsName("ip-172-31-24-237.ec2.internal");
     ec2.setInstanceId("1qazxsw2");
-    HostElement host = HostElement.Builder.aHostElement().withEc2Instance(ec2).build();
-    Map<String, Object> map = new HashMap<String, Object>() {
-      { put("host", host); }
-    };
+    Tag tag1 = new Tag();
+    tag1.setKey("name");
+    tag1.setValue("foo");
+    Tag tag2 = new Tag();
+    tag2.setKey("type");
+    tag2.setValue("bar");
+    ec2.setTags(Arrays.asList(tag1, tag2));
 
-    assertThat(expressionEvaluator.evaluate("${host.ec2Instance.privateDnsName}.split('\\.')[0]", map))
+    HostElement host = HostElement.Builder.aHostElement().withEc2Instance(ec2).build();
+    Map<String, Object> map = ImmutableMap.<String, Object>builder().put("host", host).build();
+
+    assertThat(expressionEvaluator.substitute("${host.ec2Instance.privateDnsName.split('\\.')[0]}", map))
         .isEqualTo("ip-172-31-24-237");
-    assertThat(expressionEvaluator.evaluate("'abc-' + ${host.ec2Instance.instanceId} + '-def'", map))
+    assertThat(expressionEvaluator.substitute("abc-${host.ec2Instance.instanceId}-def", map))
         .isEqualTo("abc-1qazxsw2-def");
+
+    assertThat(expressionEvaluator.substitute("${aws.tags.find(host.ec2Instance.tags, 'name')}", map)).isEqualTo("foo");
+    assertThat(expressionEvaluator.substitute("${aws.tags.find(host.ec2Instance.tags, 'type')}", map)).isEqualTo("bar");
+
+    assertThat(expressionEvaluator.substitute("${aws.tags.find(host.ec2Instance.tags, 'missing')}", map)).isEqualTo("");
   }
 
   @Test
   public void shouldNotCollideVars() {
-    Map<String, Object> context = new HashMap<String, Object>() {
-      {
-        put("BA1BA", "${AC1AC}");
-        put("AC1AC", "${AB1AB}");
-        put("AB1AB", "abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ");
-      }
-    };
+    Map<String, Object> context = ImmutableMap.<String, Object>builder()
+                                      .put("BA1BA", "${AC1AC}")
+                                      .put("AC1AC", "${AB1AB}")
+                                      .put("AB1AB", "abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ")
+                                      .build();
     assertThat(expressionEvaluator.substitute("${BA1BA}", context))
         .isEqualTo("abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ");
   }
 
   @Test
   public void shouldBeOkWithSameVarsFromDifferentIterations() {
-    Map<String, Object> context = new HashMap<String, Object>() {
-      {
-        put("A", "${B}");
-        put("B", "${C}");
-        put("C", "done");
-      }
-    };
+    Map<String, Object> context =
+        ImmutableMap.<String, Object>builder().put("A", "${B}").put("B", "${C}").put("C", "done").build();
     assertThat(expressionEvaluator.substitute("${A}, ${B}", context)).isEqualTo("done, done");
   }
 
   @Test
   public void shouldDetectExponentialGrowth() {
-    Map<String, Object> context = new HashMap<String, Object>() {
-      {
-        put("B", "${A} ${A} ${A} ${A} ${A} ${A} ${A} ${A} ${A} ${A} ${A} ${A} ${A} ${A} ${A} ${A} ${A} ${A} ${A} ${A}");
-        put("A", "${B} ${B} ${B} ${B} ${B} ${B} ${B} ${B} ${B} ${B} ${B} ${B} ${B} ${B} ${B} ${B} ${B} ${B} ${B} ${B}");
-      }
-    };
+    Map<String, Object> context =
+        ImmutableMap.<String, Object>builder()
+            .put("B", "${A} ${A} ${A} ${A} ${A} ${A} ${A} ${A} ${A} ${A} ${A} ${A} ${A} ${A} ${A} ${A} ${A} ${A} ${A}")
+            .put("A", "${B} ${B} ${B} ${B} ${B} ${B} ${B} ${B} ${B} ${B} ${B} ${B} ${B} ${B} ${B} ${B} ${B} ${B} ${B}")
+            .build();
     assertThatThrownBy(() -> expressionEvaluator.substitute("${A}", context)).isInstanceOf(WingsException.class);
   }
 }

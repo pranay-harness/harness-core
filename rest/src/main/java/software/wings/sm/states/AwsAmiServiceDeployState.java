@@ -417,7 +417,10 @@ public class AwsAmiServiceDeployState extends State {
                                             .withEc2Instance(instance)
                                             .withInstanceId(instance.getInstanceId())
                                             .build();
-              String hostName = awsHelperService.getHostnameFromConvention(hostElement, "");
+
+              final Map<String, Object> contextMap = context.asMap();
+              contextMap.put("host", hostElement);
+              String hostName = awsHelperService.getHostnameFromConvention(contextMap, "");
               hostElement.setHostName(hostName);
               return anInstanceElement()
                   .withUuid(instance.getInstanceId())
