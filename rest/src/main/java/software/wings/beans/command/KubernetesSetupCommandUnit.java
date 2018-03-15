@@ -78,6 +78,8 @@ import software.wings.beans.KubernetesClusterConfig;
 import software.wings.beans.KubernetesConfig;
 import software.wings.beans.Log.LogLevel;
 import software.wings.beans.SettingAttribute;
+import software.wings.beans.command.CommandExecutionResult.CommandExecutionStatus;
+import software.wings.beans.command.ContainerSetupCommandUnitExecutionData.ContainerSetupCommandUnitExecutionDataBuilder;
 import software.wings.beans.container.ContainerDefinition;
 import software.wings.beans.container.ImageDetails;
 import software.wings.beans.container.KubernetesContainerTask;
@@ -128,314 +130,331 @@ public class KubernetesSetupCommandUnit extends ContainerSetupCommandUnit {
   }
 
   @Override
-  protected ContainerSetupCommandUnitExecutionData executeInternal(SettingAttribute cloudProviderSetting,
-      List<EncryptedDataDetail> edd, ContainerSetupParams containerSetupParams, Map<String, String> serviceVariables,
-      Map<String, String> safeDisplayServiceVariables, ExecutionLogCallback executionLogCallback) {
-    KubernetesSetupParams setupParams = (KubernetesSetupParams) containerSetupParams;
+  protected CommandExecutionStatus executeInternal(CommandExecutionContext context,
+      SettingAttribute cloudProviderSetting, List<EncryptedDataDetail> edd, ContainerSetupParams containerSetupParams,
+      Map<String, String> serviceVariables, Map<String, String> safeDisplayServiceVariables,
+      ExecutionLogCallback executionLogCallback) {
+    ContainerSetupCommandUnitExecutionDataBuilder commandExecutionDataBuilder =
+        ContainerSetupCommandUnitExecutionData.builder();
 
-    KubernetesConfig kubernetesConfig;
-    List<EncryptedDataDetail> encryptedDataDetails;
-    if (cloudProviderSetting.getValue() instanceof KubernetesConfig) {
-      kubernetesConfig = (KubernetesConfig) cloudProviderSetting.getValue();
-      encryptedDataDetails = edd;
-    } else if (cloudProviderSetting.getValue() instanceof KubernetesClusterConfig) {
-      kubernetesConfig = ((KubernetesClusterConfig) cloudProviderSetting.getValue()).createKubernetesConfig();
-      encryptedDataDetails = edd;
-    } else if (cloudProviderSetting.getValue() instanceof AzureConfig) {
-      AzureConfig azureConfig = (AzureConfig) cloudProviderSetting.getValue();
-      kubernetesConfig =
-          azureHelperService.getKubernetesClusterConfig(azureConfig, edd, setupParams.getSubscriptionId(),
-              setupParams.getResourceGroup(), setupParams.getClusterName(), setupParams.getNamespace());
-      kubernetesConfig.setDecrypted(true);
-      encryptedDataDetails = emptyList();
-    } else {
-      kubernetesConfig = gkeClusterService.getCluster(
-          cloudProviderSetting, edd, setupParams.getClusterName(), setupParams.getNamespace());
-      kubernetesConfig.setDecrypted(true);
-      encryptedDataDetails = emptyList();
-    }
+    try {
+      KubernetesSetupParams setupParams = (KubernetesSetupParams) containerSetupParams;
 
-    String lastCtrlName = lastController(kubernetesConfig, encryptedDataDetails, setupParams.getControllerNamePrefix());
-    int revision = getRevisionFromControllerName(lastCtrlName).orElse(-1) + 1;
-
-    String kubernetesServiceName = getKubernetesServiceName(setupParams.getControllerNamePrefix());
-
-    if (setupParams.isRollback()) {
-      executionLogCallback.saveExecutionLog("Rolling back setup", LogLevel.INFO);
-      if (isNotBlank(setupParams.getPreviousDaemonSetYaml())) {
-        performDaemonSetRollback(encryptedDataDetails, executionLogCallback, setupParams, kubernetesConfig);
+      KubernetesConfig kubernetesConfig;
+      List<EncryptedDataDetail> encryptedDataDetails;
+      if (cloudProviderSetting.getValue() instanceof KubernetesConfig) {
+        kubernetesConfig = (KubernetesConfig) cloudProviderSetting.getValue();
+        encryptedDataDetails = edd;
+      } else if (cloudProviderSetting.getValue() instanceof KubernetesClusterConfig) {
+        kubernetesConfig = ((KubernetesClusterConfig) cloudProviderSetting.getValue()).createKubernetesConfig();
+        encryptedDataDetails = edd;
+      } else if (cloudProviderSetting.getValue() instanceof AzureConfig) {
+        AzureConfig azureConfig = (AzureConfig) cloudProviderSetting.getValue();
+        kubernetesConfig =
+            azureHelperService.getKubernetesClusterConfig(azureConfig, edd, setupParams.getSubscriptionId(),
+                setupParams.getResourceGroup(), setupParams.getClusterName(), setupParams.getNamespace());
+        kubernetesConfig.setDecrypted(true);
+        encryptedDataDetails = emptyList();
+      } else {
+        kubernetesConfig = gkeClusterService.getCluster(
+            cloudProviderSetting, edd, setupParams.getClusterName(), setupParams.getNamespace());
+        kubernetesConfig.setDecrypted(true);
+        encryptedDataDetails = emptyList();
       }
-      if (isNotEmpty(setupParams.getPreviousActiveAutoscalers())) {
-        performAutoscalerRollback(encryptedDataDetails, executionLogCallback, setupParams, kubernetesConfig);
-      }
-      executionLogCallback.saveExecutionLog("Rollback complete", LogLevel.INFO);
-      return ContainerSetupCommandUnitExecutionData.builder()
-          .containerServiceName(setupParams.getControllerNamePrefix())
-          .build();
-    }
 
-    kubernetesContainerService.createNamespaceIfNotExist(kubernetesConfig, encryptedDataDetails);
+      String lastCtrlName =
+          lastController(kubernetesConfig, encryptedDataDetails, setupParams.getControllerNamePrefix());
+      int revision = getRevisionFromControllerName(lastCtrlName).orElse(-1) + 1;
 
-    String registrySecretName = getKubernetesRegistrySecretName(setupParams.getImageDetails());
-    Secret registrySecret = createRegistrySecret(
-        registrySecretName, kubernetesConfig.getNamespace(), setupParams.getImageDetails(), executionLogCallback);
-    kubernetesContainerService.createOrReplaceSecret(kubernetesConfig, encryptedDataDetails, registrySecret);
+      String kubernetesServiceName = getKubernetesServiceName(setupParams.getControllerNamePrefix());
 
-    KubernetesContainerTask kubernetesContainerTask = (KubernetesContainerTask) setupParams.getContainerTask();
-    if (kubernetesContainerTask == null) {
-      kubernetesContainerTask = new KubernetesContainerTask();
-      ContainerDefinition containerDefinition = ContainerDefinition.builder().memory(256).cpu(1).build();
-      kubernetesContainerTask.setContainerDefinitions(Lists.newArrayList(containerDefinition));
-    }
-
-    boolean isDaemonSet = kubernetesContainerTask.checkDaemonSet();
-    String containerServiceName = isDaemonSet
-        ? setupParams.getControllerNamePrefix()
-        : KubernetesConvention.getControllerName(setupParams.getControllerNamePrefix(), revision);
-
-    String previousDaemonSetYaml =
-        isDaemonSet ? getDaemonSetYaml(kubernetesConfig, encryptedDataDetails, containerServiceName) : null;
-    List<String> previousActiveAutoscalers = isDaemonSet
-        ? null
-        : getActiveAutoscalers(kubernetesConfig, encryptedDataDetails, containerServiceName, executionLogCallback);
-
-    Map<String, String> serviceLabels =
-        ImmutableMap.<String, String>builder()
-            .put("app", KubernetesConvention.getLabelValue(setupParams.getAppName()))
-            .put("service", KubernetesConvention.getLabelValue(setupParams.getServiceName()))
-            .put("env", KubernetesConvention.getLabelValue(setupParams.getEnvName()))
-            .build();
-
-    Map<String, String> controllerLabels = ImmutableMap.<String, String>builder()
-                                               .putAll(serviceLabels)
-                                               .put("revision", isDaemonSet ? "ds" : Integer.toString(revision))
-                                               .build();
-
-    // Setup config map
-    ConfigMap configMap;
-    if (isNotBlank(setupParams.getConfigMapYaml())) {
-      try {
-        configMap = KubernetesHelper.loadYaml(setupParams.getConfigMapYaml());
-        ObjectMeta configMapMeta = Optional.ofNullable(configMap.getMetadata()).orElse(new ObjectMeta());
-        configMapMeta.setName(containerServiceName);
-        configMapMeta.setNamespace(kubernetesConfig.getNamespace());
-        Map<String, String> configMapLabels = new HashMap<>();
-        if (isNotEmpty(configMapMeta.getLabels())) {
-          configMapLabels.putAll(configMapMeta.getLabels());
+      if (setupParams.isRollback()) {
+        executionLogCallback.saveExecutionLog("Rolling back setup", LogLevel.INFO);
+        if (isNotBlank(setupParams.getPreviousDaemonSetYaml())) {
+          performDaemonSetRollback(encryptedDataDetails, executionLogCallback, setupParams, kubernetesConfig);
         }
-        configMapLabels.putAll(controllerLabels);
-        configMapMeta.setLabels(configMapLabels);
-        configMap.setMetadata(configMapMeta);
-      } catch (IOException e) {
-        throw new WingsException("Error while loading configMap yaml", e);
-      }
-    } else {
-      configMap = new ConfigMapBuilder()
-                      .withNewMetadata()
-                      .withName(containerServiceName)
-                      .withNamespace(kubernetesConfig.getNamespace())
-                      .withLabels(controllerLabels)
-                      .endMetadata()
-                      .build();
+        if (isNotEmpty(setupParams.getPreviousActiveAutoscalers())) {
+          performAutoscalerRollback(encryptedDataDetails, executionLogCallback, setupParams, kubernetesConfig);
+        }
+        executionLogCallback.saveExecutionLog("Rollback complete", LogLevel.INFO);
 
-      Map<String, String> data = new HashMap<>();
+        context.setCommandExecutionData(
+            commandExecutionDataBuilder.containerServiceName(setupParams.getControllerNamePrefix()).build());
 
-      if (isNotEmpty(safeDisplayServiceVariables)) {
-        data.putAll(safeDisplayServiceVariables.entrySet()
-                        .stream()
-                        .filter(entry -> !SECRET_MASK.equals(entry.getValue()))
-                        .collect(toMap(Map.Entry::getKey, Map.Entry::getValue)));
+        return CommandExecutionStatus.SUCCESS;
       }
 
-      if (isNotEmpty(setupParams.getConfigFiles())) {
-        data.putAll(setupParams.getConfigFiles().stream().collect(toMap(sa -> sa[0], sa -> sa[1])));
+      kubernetesContainerService.createNamespaceIfNotExist(kubernetesConfig, encryptedDataDetails);
+
+      String registrySecretName = getKubernetesRegistrySecretName(setupParams.getImageDetails());
+      Secret registrySecret = createRegistrySecret(
+          registrySecretName, kubernetesConfig.getNamespace(), setupParams.getImageDetails(), executionLogCallback);
+      kubernetesContainerService.createOrReplaceSecret(kubernetesConfig, encryptedDataDetails, registrySecret);
+
+      KubernetesContainerTask kubernetesContainerTask = (KubernetesContainerTask) setupParams.getContainerTask();
+      if (kubernetesContainerTask == null) {
+        kubernetesContainerTask = new KubernetesContainerTask();
+        ContainerDefinition containerDefinition = ContainerDefinition.builder().memory(256).cpu(1).build();
+        kubernetesContainerTask.setContainerDefinitions(Lists.newArrayList(containerDefinition));
       }
-      configMap.setData(data);
-    }
 
-    if (configMap != null && isEmpty(configMap.getData())) {
-      configMap = null;
-    }
+      boolean isDaemonSet = kubernetesContainerTask.checkDaemonSet();
+      String containerServiceName = isDaemonSet
+          ? setupParams.getControllerNamePrefix()
+          : KubernetesConvention.getControllerName(setupParams.getControllerNamePrefix(), revision);
 
-    if (configMap != null) {
-      executionLogCallback.saveExecutionLog("Creating config map:\n\n" + toDisplayYaml(configMap), LogLevel.INFO);
-      kubernetesContainerService.createOrReplaceConfigMap(kubernetesConfig, encryptedDataDetails, configMap);
-    }
+      String previousDaemonSetYaml =
+          isDaemonSet ? getDaemonSetYaml(kubernetesConfig, encryptedDataDetails, containerServiceName) : null;
+      List<String> previousActiveAutoscalers = isDaemonSet
+          ? null
+          : getActiveAutoscalers(kubernetesConfig, encryptedDataDetails, containerServiceName, executionLogCallback);
 
-    // Setup secrets
-    Map<String, String> encryptedServiceVars =
-        safeDisplayServiceVariables.entrySet()
-            .stream()
-            .filter(entry -> SECRET_MASK.equals(entry.getValue()))
-            .collect(toMap(Entry::getKey, entry -> serviceVariables.get(entry.getKey())));
+      commandExecutionDataBuilder.containerServiceName(containerServiceName)
+          .previousDaemonSetYaml(previousDaemonSetYaml)
+          .previousActiveAutoscalers(previousActiveAutoscalers);
 
-    Secret secret = null;
-    if (isNotEmpty(encryptedServiceVars)) {
-      executionLogCallback.saveExecutionLog("Setting secrets: " + containerServiceName + "\n"
-          + Joiner.on("\n").join(
-                encryptedServiceVars.keySet().stream().map(var -> "   " + var + ": " + SECRET_MASK).collect(toList()))
-          + "\n");
-      secret = new SecretBuilder()
-                   .withNewMetadata()
-                   .withName(containerServiceName)
-                   .endMetadata()
-                   .withStringData(encryptedServiceVars)
-                   .build();
-      kubernetesContainerService.createOrReplaceSecret(kubernetesConfig, encryptedDataDetails, secret);
-    }
+      Map<String, String> serviceLabels =
+          ImmutableMap.<String, String>builder()
+              .put("app", KubernetesConvention.getLabelValue(setupParams.getAppName()))
+              .put("service", KubernetesConvention.getLabelValue(setupParams.getServiceName()))
+              .put("env", KubernetesConvention.getLabelValue(setupParams.getEnvName()))
+              .build();
 
-    // Setup controller
+      Map<String, String> controllerLabels = ImmutableMap.<String, String>builder()
+                                                 .putAll(serviceLabels)
+                                                 .put("revision", isDaemonSet ? "ds" : Integer.toString(revision))
+                                                 .build();
 
-    kubernetesContainerService.createController(kubernetesConfig, encryptedDataDetails,
-        createKubernetesControllerDefinition(kubernetesContainerTask, containerServiceName, controllerLabels,
-            kubernetesConfig.getNamespace(), setupParams.getImageDetails(), registrySecretName, configMap, secret));
+      // Setup config map
+      ConfigMap configMap;
+      if (isNotBlank(setupParams.getConfigMapYaml())) {
+        try {
+          configMap = KubernetesHelper.loadYaml(setupParams.getConfigMapYaml());
+          ObjectMeta configMapMeta = Optional.ofNullable(configMap.getMetadata()).orElse(new ObjectMeta());
+          configMapMeta.setName(containerServiceName);
+          configMapMeta.setNamespace(kubernetesConfig.getNamespace());
+          Map<String, String> configMapLabels = new HashMap<>();
+          if (isNotEmpty(configMapMeta.getLabels())) {
+            configMapLabels.putAll(configMapMeta.getLabels());
+          }
+          configMapLabels.putAll(controllerLabels);
+          configMapMeta.setLabels(configMapLabels);
+          configMap.setMetadata(configMapMeta);
+        } catch (IOException e) {
+          throw new WingsException("Error while loading configMap yaml", e);
+        }
+      } else {
+        configMap = new ConfigMapBuilder()
+                        .withNewMetadata()
+                        .withName(containerServiceName)
+                        .withNamespace(kubernetesConfig.getNamespace())
+                        .withLabels(controllerLabels)
+                        .endMetadata()
+                        .build();
 
-    String serviceClusterIP = null;
-    String serviceLoadBalancerEndpoint = null;
+        Map<String, String> data = new HashMap<>();
 
-    // Setup service
-    Service service =
-        kubernetesContainerService.getService(kubernetesConfig, encryptedDataDetails, kubernetesServiceName);
+        if (isNotEmpty(safeDisplayServiceVariables)) {
+          data.putAll(safeDisplayServiceVariables.entrySet()
+                          .stream()
+                          .filter(entry -> !SECRET_MASK.equals(entry.getValue()))
+                          .collect(toMap(Map.Entry::getKey, Map.Entry::getValue)));
+        }
 
-    if (setupParams.getServiceType() != null && setupParams.getServiceType() != KubernetesServiceType.None) {
-      Service serviceDefinition =
-          createServiceDefinition(kubernetesServiceName, kubernetesConfig.getNamespace(), serviceLabels, setupParams);
-      if (service != null) {
-        // Keep the previous load balancer IP if it exists and a new one was not specified
-        LoadBalancerStatus loadBalancer = service.getStatus().getLoadBalancer();
-        if (setupParams.getServiceType() == KubernetesServiceType.LoadBalancer
-            && isEmpty(setupParams.getLoadBalancerIP()) && loadBalancer != null
-            && !loadBalancer.getIngress().isEmpty()) {
-          setupParams.setLoadBalancerIP(loadBalancer.getIngress().get(0).getIp());
-          serviceDefinition = createServiceDefinition(
-              kubernetesServiceName, kubernetesConfig.getNamespace(), serviceLabels, setupParams);
+        if (isNotEmpty(setupParams.getConfigFiles())) {
+          data.putAll(setupParams.getConfigFiles().stream().collect(toMap(sa -> sa[0], sa -> sa[1])));
+        }
+        configMap.setData(data);
+      }
+
+      if (configMap != null && isEmpty(configMap.getData())) {
+        configMap = null;
+      }
+
+      if (configMap != null) {
+        executionLogCallback.saveExecutionLog("Creating config map:\n\n" + toDisplayYaml(configMap), LogLevel.INFO);
+        kubernetesContainerService.createOrReplaceConfigMap(kubernetesConfig, encryptedDataDetails, configMap);
+      }
+
+      // Setup secrets
+      Map<String, String> encryptedServiceVars =
+          safeDisplayServiceVariables.entrySet()
+              .stream()
+              .filter(entry -> SECRET_MASK.equals(entry.getValue()))
+              .collect(toMap(Entry::getKey, entry -> serviceVariables.get(entry.getKey())));
+
+      Secret secret = null;
+      if (isNotEmpty(encryptedServiceVars)) {
+        executionLogCallback.saveExecutionLog("Setting secrets: " + containerServiceName + "\n"
+            + Joiner.on("\n").join(
+                  encryptedServiceVars.keySet().stream().map(var -> "   " + var + ": " + SECRET_MASK).collect(toList()))
+            + "\n");
+        secret = new SecretBuilder()
+                     .withNewMetadata()
+                     .withName(containerServiceName)
+                     .endMetadata()
+                     .withStringData(encryptedServiceVars)
+                     .build();
+        kubernetesContainerService.createOrReplaceSecret(kubernetesConfig, encryptedDataDetails, secret);
+      }
+
+      // Setup controller
+
+      kubernetesContainerService.createController(kubernetesConfig, encryptedDataDetails,
+          createKubernetesControllerDefinition(kubernetesContainerTask, containerServiceName, controllerLabels,
+              kubernetesConfig.getNamespace(), setupParams.getImageDetails(), registrySecretName, configMap, secret));
+
+      String serviceClusterIP = null;
+      String serviceLoadBalancerEndpoint = null;
+
+      // Setup service
+      Service service =
+          kubernetesContainerService.getService(kubernetesConfig, encryptedDataDetails, kubernetesServiceName);
+
+      if (setupParams.getServiceType() != null && setupParams.getServiceType() != KubernetesServiceType.None) {
+        Service serviceDefinition =
+            createServiceDefinition(kubernetesServiceName, kubernetesConfig.getNamespace(), serviceLabels, setupParams);
+        if (service != null) {
+          // Keep the previous load balancer IP if it exists and a new one was not specified
+          LoadBalancerStatus loadBalancer = service.getStatus().getLoadBalancer();
+          if (setupParams.getServiceType() == KubernetesServiceType.LoadBalancer
+              && isEmpty(setupParams.getLoadBalancerIP()) && loadBalancer != null
+              && !loadBalancer.getIngress().isEmpty()) {
+            setupParams.setLoadBalancerIP(loadBalancer.getIngress().get(0).getIp());
+            serviceDefinition = createServiceDefinition(
+                kubernetesServiceName, kubernetesConfig.getNamespace(), serviceLabels, setupParams);
+          }
+        }
+        service = kubernetesContainerService.createOrReplaceService(
+            kubernetesConfig, encryptedDataDetails, serviceDefinition);
+        serviceClusterIP = service.getSpec().getClusterIP();
+
+        if (setupParams.getServiceType() == KubernetesServiceType.LoadBalancer) {
+          serviceLoadBalancerEndpoint = waitForLoadBalancerEndpoint(
+              kubernetesConfig, encryptedDataDetails, service, setupParams.getLoadBalancerIP(), executionLogCallback);
+        }
+
+      } else {
+        executionLogCallback.saveExecutionLog("Kubernetes service type set to 'None'", LogLevel.INFO);
+        if (service != null) {
+          executionLogCallback.saveExecutionLog("Deleting existing service " + kubernetesServiceName, LogLevel.INFO);
+          kubernetesContainerService.deleteService(kubernetesConfig, encryptedDataDetails, kubernetesServiceName);
+          service = null;
         }
       }
-      service =
-          kubernetesContainerService.createOrReplaceService(kubernetesConfig, encryptedDataDetails, serviceDefinition);
-      serviceClusterIP = service.getSpec().getClusterIP();
 
-      if (setupParams.getServiceType() == KubernetesServiceType.LoadBalancer) {
-        serviceLoadBalancerEndpoint = waitForLoadBalancerEndpoint(
-            kubernetesConfig, encryptedDataDetails, service, setupParams.getLoadBalancerIP(), executionLogCallback);
-      }
-
-    } else {
-      executionLogCallback.saveExecutionLog("Kubernetes service type set to 'None'", LogLevel.INFO);
-      if (service != null) {
-        executionLogCallback.saveExecutionLog("Deleting existing service " + kubernetesServiceName, LogLevel.INFO);
-        kubernetesContainerService.deleteService(kubernetesConfig, encryptedDataDetails, kubernetesServiceName);
-        service = null;
-      }
-    }
-
-    // Setup ingress
-    Ingress ingress = null;
-    if (setupParams.isUseIngress() && service != null) {
-      ingress = kubernetesContainerService.createOrReplaceIngress(kubernetesConfig, encryptedDataDetails,
-          createIngressDefinition(setupParams, service, kubernetesServiceName, executionLogCallback));
-    } else {
-      try {
-        ingress = kubernetesContainerService.getIngress(kubernetesConfig, encryptedDataDetails, kubernetesServiceName);
-        if (ingress != null) {
-          kubernetesContainerService.deleteIngress(kubernetesConfig, encryptedDataDetails, kubernetesServiceName);
-          ingress = null;
+      // Setup ingress
+      Ingress ingress = null;
+      if (setupParams.isUseIngress() && service != null) {
+        ingress = kubernetesContainerService.createOrReplaceIngress(kubernetesConfig, encryptedDataDetails,
+            createIngressDefinition(setupParams, service, kubernetesServiceName, executionLogCallback));
+      } else {
+        try {
+          ingress =
+              kubernetesContainerService.getIngress(kubernetesConfig, encryptedDataDetails, kubernetesServiceName);
+          if (ingress != null) {
+            kubernetesContainerService.deleteIngress(kubernetesConfig, encryptedDataDetails, kubernetesServiceName);
+            ingress = null;
+          }
+        } catch (Exception e) {
+          Misc.logAllMessages(e, executionLogCallback);
         }
-      } catch (Exception e) {
-        Misc.logAllMessages(e, executionLogCallback);
       }
-    }
 
-    // Setup route rule
-    IstioResource routeRule = null;
-    Map<String, Integer> activeControllers = null;
-    int totalInstances = 0;
-    if (setupParams.isUseIstioRouteRule()) {
-      activeControllers = kubernetesContainerService.getActiveServiceCounts(
-          kubernetesConfig, encryptedDataDetails, containerServiceName);
-      totalInstances = activeControllers.values().stream().mapToInt(Integer::intValue).sum();
-      executionLogCallback.saveExecutionLog(
-          String.format("Setting Istio route rule %s - 100%% of traffic %s initially", kubernetesServiceName,
-              isNotEmpty(activeControllers) ? "to "
-                      + (activeControllers.size() == 1 ? activeControllers.keySet().iterator().next()
-                                                       : activeControllers.size() + " previous controllers")
-                                            : "disabled"),
-          LogLevel.INFO);
-      routeRule = kubernetesContainerService.createOrReplaceRouteRule(kubernetesConfig, encryptedDataDetails,
-          createRouteRuleDefinition(setupParams, kubernetesServiceName, activeControllers));
-    }
-
-    // Disable previous autoscalers
-    if (isNotEmpty(previousActiveAutoscalers)) {
-      previousActiveAutoscalers.forEach(autoscaler -> {
-        executionLogCallback.saveExecutionLog("Disabling autoscaler " + autoscaler, LogLevel.INFO);
-        /*
-         * Ideally we should be sending apiVersion as "v2beta1" when we are dealing with
-         * customMetricHPA, but there is a bug in fabric8 library in HasMetadataOperation.replace() method. For
-         * customMetricHPA, metric config info resides in HPA.Spec.additionalProperties map. but during execution of
-         * replace(), due to build() method in HorizontalPodAutoscalerSpecBuilder, this map goes away, and replace()
-         * call actually removes all metricConfig from autoScalar. So currently use v1 version only, till this issue
-         * gets fixed. (customMetricConfig is preserved as annotations in version_v1 HPA object, and that path is
-         * working fine)
-         * */
-        kubernetesContainerService.disableAutoscaler(
-            kubernetesConfig, encryptedDataDetails, autoscaler, ContainerApiVersions.KUBERNETES_V1.getVersionName());
-      });
-    }
-
-    // Create new autoscaler
-    if (setupParams.isUseAutoscaler()) {
-      HorizontalPodAutoscaler autoscalerDefinition = createAutoscaler(
-          containerServiceName, kubernetesConfig.getNamespace(), controllerLabels, setupParams, executionLogCallback);
-
-      if (autoscalerDefinition != null) {
+      // Setup route rule
+      IstioResource routeRule = null;
+      Map<String, Integer> activeControllers = null;
+      int totalInstances = 0;
+      if (setupParams.isUseIstioRouteRule()) {
+        activeControllers = kubernetesContainerService.getActiveServiceCounts(
+            kubernetesConfig, encryptedDataDetails, containerServiceName);
+        totalInstances = activeControllers.values().stream().mapToInt(Integer::intValue).sum();
         executionLogCallback.saveExecutionLog(
-            String.format("Creating autoscaler %s - disabled until 100%% deployed", containerServiceName),
+            String.format("Setting Istio route rule %s - 100%% of traffic %s initially", kubernetesServiceName,
+                isNotEmpty(activeControllers) ? "to "
+                        + (activeControllers.size() == 1 ? activeControllers.keySet().iterator().next()
+                                                         : activeControllers.size() + " previous controllers")
+                                              : "disabled"),
             LogLevel.INFO);
-
-        kubernetesContainerService.createAutoscaler(kubernetesConfig, encryptedDataDetails, autoscalerDefinition);
+        routeRule = kubernetesContainerService.createOrReplaceRouteRule(kubernetesConfig, encryptedDataDetails,
+            createRouteRuleDefinition(setupParams, kubernetesServiceName, activeControllers));
       }
-    }
 
-    String dockerImageName = setupParams.getImageDetails().getName() + ":" + setupParams.getImageDetails().getTag();
-
-    executionLogCallback.saveExecutionLog("Cluster Name: " + setupParams.getClusterName(), LogLevel.INFO);
-    executionLogCallback.saveExecutionLog("Controller Name: " + containerServiceName, LogLevel.INFO);
-    executionLogCallback.saveExecutionLog("Docker Image Name: " + dockerImageName, LogLevel.INFO);
-    if (service != null) {
-      executionLogCallback.saveExecutionLog("Service Name: " + kubernetesServiceName, LogLevel.INFO);
-    }
-    if (isNotBlank(serviceClusterIP)) {
-      executionLogCallback.saveExecutionLog("Service Cluster IP: " + serviceClusterIP, LogLevel.INFO);
-    }
-    if (isNotBlank(serviceLoadBalancerEndpoint)) {
-      executionLogCallback.saveExecutionLog("Load Balancer Endpoint: " + serviceLoadBalancerEndpoint, LogLevel.INFO);
-    }
-    if (ingress != null) {
-      executionLogCallback.saveExecutionLog("Ingress Name: " + kubernetesServiceName, LogLevel.INFO);
-      executionLogCallback.saveExecutionLog("Ingress Rule: " + getIngressRuleString(ingress), LogLevel.INFO);
-    }
-    if (routeRule != null) {
-      executionLogCallback.saveExecutionLog(
-          "Istio route rule weights:" + (isEmpty(activeControllers) ? " disabled initially" : ""));
-      for (String controller : activeControllers.keySet()) {
-        int weight = (int) Math.round((activeControllers.get(controller) * 100.0) / totalInstances);
-        executionLogCallback.saveExecutionLog("   " + controller + ": " + weight + "%");
+      // Disable previous autoscalers
+      if (isNotEmpty(previousActiveAutoscalers)) {
+        previousActiveAutoscalers.forEach(autoscaler -> {
+          executionLogCallback.saveExecutionLog("Disabling autoscaler " + autoscaler, LogLevel.INFO);
+          /*
+           * Ideally we should be sending apiVersion as "v2beta1" when we are dealing with
+           * customMetricHPA, but there is a bug in fabric8 library in HasMetadataOperation.replace() method. For
+           * customMetricHPA, metric config info resides in HPA.Spec.additionalProperties map. but during execution of
+           * replace(), due to build() method in HorizontalPodAutoscalerSpecBuilder, this map goes away, and replace()
+           * call actually removes all metricConfig from autoScalar. So currently use v1 version only, till this issue
+           * gets fixed. (customMetricConfig is preserved as annotations in version_v1 HPA object, and that path is
+           * working fine)
+           * */
+          kubernetesContainerService.disableAutoscaler(
+              kubernetesConfig, encryptedDataDetails, autoscaler, ContainerApiVersions.KUBERNETES_V1.getVersionName());
+        });
       }
-    }
 
-    if (isDaemonSet) {
-      listContainerInfosWhenReady(encryptedDataDetails, setupParams.getServiceSteadyStateTimeout(),
-          executionLogCallback, kubernetesConfig, containerServiceName);
-    } else {
-      executionLogCallback.saveExecutionLog("Cleaning up old versions", LogLevel.INFO);
-      cleanup(kubernetesConfig, encryptedDataDetails, containerServiceName, executionLogCallback);
+      // Create new autoscaler
+      if (setupParams.isUseAutoscaler()) {
+        HorizontalPodAutoscaler autoscalerDefinition = createAutoscaler(
+            containerServiceName, kubernetesConfig.getNamespace(), controllerLabels, setupParams, executionLogCallback);
+
+        if (autoscalerDefinition != null) {
+          executionLogCallback.saveExecutionLog(
+              String.format("Creating autoscaler %s - disabled until 100%% deployed", containerServiceName),
+              LogLevel.INFO);
+
+          kubernetesContainerService.createAutoscaler(kubernetesConfig, encryptedDataDetails, autoscalerDefinition);
+        }
+      }
+
+      String dockerImageName = setupParams.getImageDetails().getName() + ":" + setupParams.getImageDetails().getTag();
+
+      executionLogCallback.saveExecutionLog("Cluster Name: " + setupParams.getClusterName(), LogLevel.INFO);
+      executionLogCallback.saveExecutionLog("Controller Name: " + containerServiceName, LogLevel.INFO);
+      executionLogCallback.saveExecutionLog("Docker Image Name: " + dockerImageName, LogLevel.INFO);
+      if (service != null) {
+        executionLogCallback.saveExecutionLog("Service Name: " + kubernetesServiceName, LogLevel.INFO);
+      }
+      if (isNotBlank(serviceClusterIP)) {
+        executionLogCallback.saveExecutionLog("Service Cluster IP: " + serviceClusterIP, LogLevel.INFO);
+      }
+      if (isNotBlank(serviceLoadBalancerEndpoint)) {
+        executionLogCallback.saveExecutionLog("Load Balancer Endpoint: " + serviceLoadBalancerEndpoint, LogLevel.INFO);
+      }
+      if (ingress != null) {
+        executionLogCallback.saveExecutionLog("Ingress Name: " + kubernetesServiceName, LogLevel.INFO);
+        executionLogCallback.saveExecutionLog("Ingress Rule: " + getIngressRuleString(ingress), LogLevel.INFO);
+      }
+      if (routeRule != null) {
+        executionLogCallback.saveExecutionLog(
+            "Istio route rule weights:" + (isEmpty(activeControllers) ? " disabled initially" : ""));
+        for (String controller : activeControllers.keySet()) {
+          int weight = (int) Math.round((activeControllers.get(controller) * 100.0) / totalInstances);
+          executionLogCallback.saveExecutionLog("   " + controller + ": " + weight + "%");
+        }
+      }
+
+      if (isDaemonSet) {
+        listContainerInfosWhenReady(encryptedDataDetails, setupParams.getServiceSteadyStateTimeout(),
+            executionLogCallback, kubernetesConfig, containerServiceName);
+      } else {
+        executionLogCallback.saveExecutionLog("Cleaning up old versions", LogLevel.INFO);
+        cleanup(kubernetesConfig, encryptedDataDetails, containerServiceName, executionLogCallback);
+      }
+
+      return CommandExecutionStatus.SUCCESS;
+    } catch (Exception ex) {
+      logger.error(ex.getMessage(), ex);
+      Misc.logAllMessages(ex, executionLogCallback);
+      return CommandExecutionStatus.FAILURE;
+    } finally {
+      context.setCommandExecutionData(commandExecutionDataBuilder.build());
     }
-    return ContainerSetupCommandUnitExecutionData.builder()
-        .containerServiceName(containerServiceName)
-        .previousDaemonSetYaml(previousDaemonSetYaml)
-        .previousActiveAutoscalers(previousActiveAutoscalers)
-        .build();
   }
 
   private String getDaemonSetYaml(
