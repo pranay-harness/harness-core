@@ -361,7 +361,7 @@ public interface Constants {
   /**
    * The constant DEFAULT_STATE_TIMEOUT_MILLIS.
    */
-  Integer DEFAULT_ARTIFACT_COLLECTION_STATE_TIMEOUT_MILLIS = 30 * 60 * 1000; // 30 minutes
+  long DEFAULT_ARTIFACT_COLLECTION_STATE_TIMEOUT_MILLIS = 5 * 60 * 1000; // 5 minutes
 
   /**
    * O
