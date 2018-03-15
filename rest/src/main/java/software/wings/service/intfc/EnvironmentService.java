@@ -126,4 +126,7 @@ public interface EnvironmentService extends OwnedByApplication {
   List<Service> getServicesWithOverrides(@NotEmpty String appId, @NotEmpty String envId);
 
   Environment setConfigMapYaml(String appId, String envId, KubernetesPayload kubernetesPayload);
+
+  Environment setConfigMapYamlForService(
+      String appId, String envId, String serviceTemplateId, KubernetesPayload kubernetesPayload);
 }

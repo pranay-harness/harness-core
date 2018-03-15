@@ -40,11 +40,11 @@ import software.wings.beans.container.KubernetesContainerTask;
 import software.wings.beans.container.KubernetesPortProtocol;
 import software.wings.beans.container.KubernetesServiceType;
 import software.wings.service.intfc.ConfigService;
+import software.wings.service.intfc.ServiceTemplateService;
 import software.wings.sm.ExecutionContext;
 import software.wings.sm.ExecutionStatus;
 import software.wings.utils.KubernetesConvention;
 
-import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
@@ -57,6 +57,7 @@ public class KubernetesSetup extends ContainerServiceSetup {
   // wingsui/src/containers/WorkflowEditor/custom/ServiceSetup/KubernetesSetup/KubernetesSetup.js
 
   @Transient @Inject private transient ConfigService configService;
+  @Transient @Inject private transient ServiceTemplateService serviceTemplateService;
 
   private String replicationControllerName;
   private KubernetesServiceType serviceType;
@@ -88,28 +89,25 @@ public class KubernetesSetup extends ContainerServiceSetup {
   protected ContainerSetupParams buildContainerSetupParams(ExecutionContext context, String serviceName,
       ImageDetails imageDetails, Application app, Environment env, Service service,
       ContainerInfrastructureMapping infrastructureMapping, ContainerTask containerTask, String clusterName) {
-    Map<String, String> configFilesMap = new HashMap<>();
+    String serviceTemplateId =
+        (String) serviceTemplateService.getTemplateRefKeysByService(app.getUuid(), service.getUuid(), env.getUuid())
+            .get(0)
+            .getId();
 
-    Map<String, String> configFilesService = getConfigFileContent(app, service.getConfigFiles());
-    if (isNotEmpty(configFilesService)) {
-      configFilesMap.putAll(configFilesService);
+    List<ConfigFile> computedConfigFiles =
+        serviceTemplateService.computedConfigFiles(app.getUuid(), env.getUuid(), serviceTemplateId);
+
+    List<String[]> configFiles = null;
+    if (isNotEmpty(computedConfigFiles)) {
+      Map<String, String> configFilesService = getConfigFileContent(app, computedConfigFiles);
+
+      configFiles = configFilesService.entrySet()
+                        .stream()
+                        .map(entrySet -> new String[] {entrySet.getKey(), entrySet.getValue()})
+                        .collect(toList());
     }
 
-    Map<String, String> configFilesFromEnv =
-        getConfigFileContent(app, configService.getConfigFileOverridesForEnv(app.getUuid(), env.getUuid()));
-    if (isNotEmpty(configFilesFromEnv)) {
-      configFilesMap.putAll(configFilesFromEnv);
-    }
-
-    List<String[]> configFiles = configFilesMap.entrySet()
-                                     .stream()
-                                     .map(entrySet -> new String[] {entrySet.getKey(), entrySet.getValue()})
-                                     .collect(toList());
-
-    String configMapYaml = service.getConfigMapYaml();
-    if (isNotBlank(env.getConfigMapYaml())) {
-      configMapYaml = env.getConfigMapYaml();
-    }
+    String configMapYaml = serviceTemplateService.computeConfigMapYaml(app.getUuid(), env.getUuid(), serviceTemplateId);
 
     String configMapYamlEvaluated = null;
     if (isNotBlank(configMapYaml)) {

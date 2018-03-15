@@ -454,7 +454,8 @@ public class EnvironmentServiceTest extends WingsBaseTest {
     assertThat(services).isNotNull().size().isEqualTo(0);
 
     verify(serviceVariableService).getServiceVariablesByTemplate(APP_ID, ENV_ID, serviceTemplate, true);
-    verify(configService).getConfigFileByTemplate(environment.getAppId(), environment.getUuid(), serviceTemplate);
+    verify(configService)
+        .getConfigFileByTemplate(environment.getAppId(), environment.getUuid(), serviceTemplate.getUuid());
   }
 
   @Test
@@ -521,6 +522,6 @@ public class EnvironmentServiceTest extends WingsBaseTest {
     assertThat(services).isNotNull().size().isEqualTo(1);
     verify(serviceVariableService).getServiceVariablesByTemplate(APP_ID, ENV_ID, serviceTemplate, true);
     verify(configService, times(0))
-        .getConfigFileByTemplate(environment.getAppId(), environment.getUuid(), serviceTemplate);
+        .getConfigFileByTemplate(environment.getAppId(), environment.getUuid(), serviceTemplate.getUuid());
   }
 }

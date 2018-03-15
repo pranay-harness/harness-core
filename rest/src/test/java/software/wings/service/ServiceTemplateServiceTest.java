@@ -17,7 +17,6 @@ import static software.wings.dl.PageRequest.PageRequestBuilder.aPageRequest;
 import static software.wings.dl.PageResponse.PageResponseBuilder.aPageResponse;
 import static software.wings.utils.WingsTestConstants.APP_ID;
 import static software.wings.utils.WingsTestConstants.ENV_ID;
-import static software.wings.utils.WingsTestConstants.HOST_ID;
 import static software.wings.utils.WingsTestConstants.SERVICE_ID;
 import static software.wings.utils.WingsTestConstants.SERVICE_NAME;
 import static software.wings.utils.WingsTestConstants.TEMPLATE_DESCRIPTION;
@@ -178,6 +177,7 @@ public class ServiceTemplateServiceTest extends WingsBaseTest {
     ServiceTemplate template = builder.build();
     when(wingsPersistence.get(ServiceTemplate.class, APP_ID, TEMPLATE_ID)).thenReturn(template);
     when(infrastructureMappingService.list(any(PageRequest.class))).thenReturn(aPageResponse().build());
+    when(environmentService.get(APP_ID, ENV_ID, false)).thenReturn(anEnvironment().build());
     templateService.update(template);
     verify(wingsPersistence)
         .updateFields(
@@ -286,7 +286,7 @@ public class ServiceTemplateServiceTest extends WingsBaseTest {
     configFile1.setUuid("FILE_ID_3");
     when(configService.getConfigFilesForEntity(APP_ID, "TEMPLATE_ID", "HOST_ID_1")).thenReturn(asList(configFile2));
 
-    List<ConfigFile> hostConfigFiles = templateService.computedConfigFiles(APP_ID, ENV_ID, TEMPLATE_ID, HOST_ID);
+    List<ConfigFile> hostConfigFiles = templateService.computedConfigFiles(APP_ID, ENV_ID, TEMPLATE_ID);
     assertThat(hostConfigFiles).isEqualTo(asList(configFile2));
   }
 }

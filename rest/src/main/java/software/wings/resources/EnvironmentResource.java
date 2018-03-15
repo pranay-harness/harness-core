@@ -196,4 +196,39 @@ public class EnvironmentResource {
       @ApiParam(name = "envId", required = true) @PathParam("envId") String envId) {
     return new RestResponse<>(envService.setConfigMapYaml(appId, envId, new KubernetesPayload()));
   }
+
+  @POST
+  @Path("{envId}/config-map-yaml/{templateId}")
+  @Timed
+  @ExceptionMetered
+  public RestResponse<Environment> setConfigMapYamlForService(
+      @ApiParam(name = "appId", required = true) @QueryParam("appId") String appId,
+      @ApiParam(name = "envId", required = true) @PathParam("envId") String envId,
+      @ApiParam(name = "templateId", required = true) @PathParam("templateId") String templateId,
+      KubernetesPayload kubernetesPayload) {
+    return new RestResponse<>(envService.setConfigMapYamlForService(appId, envId, templateId, kubernetesPayload));
+  }
+
+  @PUT
+  @Path("{envId}/config-map-yaml/{templateId}")
+  @Timed
+  @ExceptionMetered
+  public RestResponse<Environment> updateConfigMapYamlForService(
+      @ApiParam(name = "appId", required = true) @QueryParam("appId") String appId,
+      @ApiParam(name = "envId", required = true) @PathParam("envId") String envId,
+      @ApiParam(name = "templateId", required = true) @PathParam("templateId") String templateId,
+      KubernetesPayload kubernetesPayload) {
+    return new RestResponse<>(envService.setConfigMapYamlForService(appId, envId, templateId, kubernetesPayload));
+  }
+
+  @DELETE
+  @Path("{envId}/config-map-yaml/{templateId}")
+  @Timed
+  @ExceptionMetered
+  public RestResponse<Environment> deleteConfigMapYamlForService(
+      @ApiParam(name = "appId", required = true) @QueryParam("appId") String appId,
+      @ApiParam(name = "envId", required = true) @PathParam("envId") String envId,
+      @ApiParam(name = "templateId", required = true) @PathParam("templateId") String templateId) {
+    return new RestResponse<>(envService.setConfigMapYamlForService(appId, envId, templateId, new KubernetesPayload()));
+  }
 }

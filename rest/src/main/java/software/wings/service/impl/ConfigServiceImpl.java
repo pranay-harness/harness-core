@@ -19,6 +19,7 @@ import com.google.common.io.Files;
 import com.google.inject.Inject;
 import com.google.inject.Singleton;
 
+import org.mongodb.morphia.Key;
 import org.mongodb.morphia.query.Query;
 import org.mongodb.morphia.query.UpdateOperations;
 import software.wings.beans.Activity;
@@ -27,7 +28,6 @@ import software.wings.beans.EntityType;
 import software.wings.beans.EntityVersion;
 import software.wings.beans.EntityVersion.ChangeType;
 import software.wings.beans.SearchFilter.Operator;
-import software.wings.beans.ServiceTemplate;
 import software.wings.dl.PageRequest;
 import software.wings.dl.PageRequest.PageRequestBuilder;
 import software.wings.dl.PageResponse;
@@ -196,9 +196,10 @@ public class ConfigServiceImpl implements ConfigService {
   }
 
   @Override
+  @SuppressWarnings("unchecked")
   public ConfigFile get(String appId, String entityId, EntityType entityType, String relativeFilePath) {
     PageRequestBuilder builder = aPageRequest();
-    String columnName = null;
+    String columnName;
     if (EntityType.SERVICE.equals(entityType)) {
       columnName = "entityId";
       builder.addFilter("entityType", Operator.EQ, entityType.name());
@@ -216,14 +217,14 @@ public class ConfigServiceImpl implements ConfigService {
   }
 
   @Override
-  public List<ConfigFile> getConfigFileByTemplate(String appId, String envId, ServiceTemplate serviceTemplate) {
+  public List<ConfigFile> getConfigFileByTemplate(String appId, String envId, String serviceTemplateId) {
     return wingsPersistence.createQuery(ConfigFile.class)
         .field("appId")
         .equal(appId)
         .field("envId")
         .equal(envId)
         .field("templateId")
-        .equal(serviceTemplate.getUuid())
+        .equal(serviceTemplateId)
         .asList();
   }
 
@@ -272,7 +273,7 @@ public class ConfigServiceImpl implements ConfigService {
     OutputStream outputStream = new ByteArrayOutputStream();
     InputStream inputStream = fileService.openDownloadStream(configFile.getFileUuid(), FileBucket.CONFIGS);
     if (configFile.isEncrypted()) {
-      // TODO
+      // TODO(brett) - Handle encrypted
       return null;
     } else {
       try {
@@ -391,7 +392,7 @@ public class ConfigServiceImpl implements ConfigService {
    * @param existingConfigFile  the existing config file
    * @param newRelativeFilePath the new relative file path
    */
-  public void updateRelativeFilePathForServiceAndAllOverrideFiles(
+  private void updateRelativeFilePathForServiceAndAllOverrideFiles(
       ConfigFile existingConfigFile, String newRelativeFilePath) {
     String resolvedFilePath = validateAndResolveFilePath(newRelativeFilePath);
 
@@ -399,7 +400,7 @@ public class ConfigServiceImpl implements ConfigService {
         serviceTemplateService
             .getTemplateRefKeysByService(existingConfigFile.getAppId(), existingConfigFile.getEntityId(), null)
             .stream()
-            .map(serviceTemplateKey -> serviceTemplateKey.getId())
+            .map(Key::getId)
             .collect(Collectors.toList());
 
     Query<ConfigFile> query = wingsPersistence.createQuery(ConfigFile.class)
@@ -458,6 +459,7 @@ public class ConfigServiceImpl implements ConfigService {
   }
 
   @Override
+  @SuppressWarnings("unchecked")
   public void delete(String appId, String entityId, EntityType entityType, String configFileName) {
     PageRequest<ConfigFile> pageRequest = aPageRequest()
                                               .addFilter("appId", Operator.EQ, appId)
@@ -475,13 +477,14 @@ public class ConfigServiceImpl implements ConfigService {
                                               .field("parentConfigFileId")
                                               .equal(configFile.getUuid())
                                               .asList();
-      childConfigFiles.stream().forEach(childConfigFile -> delete(appId, childConfigFile.getUuid()));
+      childConfigFiles.forEach(childConfigFile -> delete(appId, childConfigFile.getUuid()));
 
       executorService.submit(() -> fileService.deleteAllFilesForEntity(configFile.getUuid(), CONFIGS));
     }
   }
 
   @Override
+  @SuppressWarnings("unchecked")
   public List<ConfigFile> getConfigFilesForEntity(String appId, String templateId, String entityId) {
     return list(aPageRequest()
                     .addFilter("appId", Operator.EQ, appId)
@@ -495,6 +498,7 @@ public class ConfigServiceImpl implements ConfigService {
    * @see software.wings.service.intfc.ConfigService#getConfigFilesForEntity(java.lang.String, java.lang.String)
    */
   @Override
+  @SuppressWarnings("unchecked")
   public List<ConfigFile> getConfigFilesForEntity(String appId, String templateId, String entityId, String envId) {
     return list(aPageRequest()
                     .addFilter("appId", Operator.EQ, appId)
@@ -506,6 +510,7 @@ public class ConfigServiceImpl implements ConfigService {
   }
 
   @Override
+  @SuppressWarnings("unchecked")
   public List<ConfigFile> getConfigFileOverridesForEnv(String appId, String envId) {
     // All service overrides
     List allServiceOverrideList = list(aPageRequest()

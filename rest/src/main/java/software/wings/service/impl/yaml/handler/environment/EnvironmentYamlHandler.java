@@ -61,6 +61,7 @@ public class EnvironmentYamlHandler extends BaseYamlHandler<Environment.Yaml, En
     return Environment.Yaml.builder()
         .description(environment.getDescription())
         .configMapYaml(environment.getConfigMapYaml())
+        .configMapYamlByServiceTemplateId(environment.getConfigMapYamlByServiceTemplateId())
         .environmentType(environment.getEnvironmentType().name())
         .variableOverrides(variableOverrideYamlList)
         .harnessApiVersion(getHarnessApiVersion())
@@ -157,6 +158,7 @@ public class EnvironmentYamlHandler extends BaseYamlHandler<Environment.Yaml, En
                               .withName(environmentName)
                               .withDescription(yaml.getDescription())
                               .withConfigMapYaml(yaml.getConfigMapYaml())
+                              .withConfigMapYamlByServiceTemplateId(yaml.getConfigMapYamlByServiceTemplateId())
                               .withEnvironmentType(EnvironmentType.valueOf(yaml.getEnvironmentType()))
                               .build();
 

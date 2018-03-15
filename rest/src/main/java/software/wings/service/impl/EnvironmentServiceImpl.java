@@ -3,6 +3,7 @@ package software.wings.service.impl;
 import static io.harness.data.structure.EmptyPredicate.isEmpty;
 import static io.harness.data.structure.EmptyPredicate.isNotEmpty;
 import static io.harness.data.structure.ListUtil.trimList;
+import static java.time.Duration.ofSeconds;
 import static java.util.Arrays.asList;
 import static java.util.stream.Collectors.toMap;
 import static org.apache.commons.lang3.StringUtils.isNotBlank;
@@ -54,6 +55,8 @@ import software.wings.dl.PageResponse;
 import software.wings.dl.WingsPersistence;
 import software.wings.exception.WingsException;
 import software.wings.exception.WingsException.ReportTarget;
+import software.wings.lock.AcquiredLock;
+import software.wings.lock.PersistentLocker;
 import software.wings.scheduler.PruneEntityJob;
 import software.wings.scheduler.QuartzScheduler;
 import software.wings.service.impl.yaml.YamlChangeSetHelper;
@@ -71,8 +74,6 @@ import software.wings.service.intfc.SetupService;
 import software.wings.service.intfc.WorkflowService;
 import software.wings.service.intfc.ownership.OwnedByEnvironment;
 import software.wings.service.intfc.yaml.EntityUpdateService;
-import software.wings.service.intfc.yaml.YamlChangeSetService;
-import software.wings.service.intfc.yaml.YamlDirectoryService;
 import software.wings.stencils.DataProvider;
 import software.wings.utils.BoundedInputStream;
 import software.wings.utils.Validator;
@@ -82,6 +83,7 @@ import java.io.FileInputStream;
 import java.io.FileNotFoundException;
 import java.time.Duration;
 import java.util.ArrayList;
+import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Optional;
@@ -114,8 +116,7 @@ public class EnvironmentServiceImpl implements EnvironmentService, DataProvider 
   @Inject private SetupService setupService;
   @Inject private WorkflowService workflowService;
   @Inject private YamlChangeSetHelper yamlChangeSetHelper;
-  @Inject private YamlChangeSetService yamlChangeSetService;
-  @Inject private YamlDirectoryService yamlDirectoryService;
+  @Inject private PersistentLocker persistentLocker;
 
   @Inject @Named("JobScheduler") private QuartzScheduler jobScheduler;
 
@@ -289,10 +290,10 @@ public class EnvironmentServiceImpl implements EnvironmentService, DataProvider 
       }
       if (!includeServiceId) {
         // For each service template id check if it has service or config overrides
-        List<ConfigFile> overrideConfigFiles =
-            configService.getConfigFileByTemplate(environment.getAppId(), environment.getUuid(), serviceTemplate);
+        List<ConfigFile> overrideConfigFiles = configService.getConfigFileByTemplate(
+            environment.getAppId(), environment.getUuid(), serviceTemplate.getUuid());
         if (isNotEmpty(overrideConfigFiles)) {
-          // This service template has at least on service overrides
+          // This service template has at least one service overrides
           includeServiceId = true;
         }
       }
@@ -677,6 +678,41 @@ public class EnvironmentServiceImpl implements EnvironmentService, DataProvider 
     }
 
     wingsPersistence.update(savedEnv, updateOperations);
+
+    return get(appId, envId, false);
+  }
+
+  @Override
+  public Environment setConfigMapYamlForService(
+      String appId, String envId, String serviceTemplateId, KubernetesPayload kubernetesPayload) {
+    try (
+        AcquiredLock lock = persistentLocker.waitToAcquireLock(Environment.class, envId, ofSeconds(5), ofSeconds(10))) {
+      if (lock == null) {
+        throw new WingsException(ErrorCode.GENERAL_ERROR).addParam("args", "The persistent lock was not acquired.");
+      }
+      Environment savedEnv = get(appId, envId, false);
+      Validator.notNullCheck("Environment", savedEnv);
+
+      String configMapYaml = trimYaml(kubernetesPayload.getAdvancedConfig());
+      Map<String, String> configMapYamls =
+          Optional.ofNullable(savedEnv.getConfigMapYamlByServiceTemplateId()).orElse(new HashMap<>());
+
+      if (isNotBlank(configMapYaml)) {
+        configMapYamls.put(serviceTemplateId, configMapYaml);
+      } else {
+        configMapYamls.remove(serviceTemplateId);
+      }
+      UpdateOperations<Environment> updateOperations;
+      if (isNotEmpty(configMapYamls)) {
+        updateOperations = wingsPersistence.createUpdateOperations(Environment.class)
+                               .set("configMapYamlByServiceTemplateId", configMapYamls);
+      } else {
+        updateOperations =
+            wingsPersistence.createUpdateOperations(Environment.class).unset("configMapYamlByServiceTemplateId");
+      }
+
+      wingsPersistence.update(savedEnv, updateOperations);
+    }
 
     return get(appId, envId, false);
   }
