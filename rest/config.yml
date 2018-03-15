@@ -27,21 +27,6 @@ xxxxxxxx
         key: 9a3e6eac4dcdbdc41a93ca99100537df
         programName: manager-saas-accesslogs
 
-hazelcast:
-  awsConfig:
-    enabled: false
-    accessKey: ACCESS_KEY
-    secretKey: SECRET_KEY
-    region: us-east-1
-    securityGroupName: wingsmachine
-    tagKey: type
-    tagValue: sznodes
-  tcpIpConfig:
-    enabled: false
-    members:
-      - 127.0.0.1
-    requiredMember: 127.0.0.1
-
 smtp:
   type: SMTP
   host: smtp.gmail.com
@@ -71,13 +56,6 @@ logging:
 mongo:
   uri: mongodb://localhost:27017/harness
 
-metrics:
-  reporters:
-  - type: graphite
-    host: carbon.hostedgraphite.com
-    port: 2003
-    prefix: server
-
 watcherMetadataUrl: http://wingswatchers.s3-website-us-east-1.amazonaws.com/watcherci.txt
 delegateMetadataUrl: http://wingsdelegates.s3-website-us-east-1.amazonaws.com/delegateci.txt
 apiUrl:
@@ -92,19 +70,6 @@ portal:
   jwtPasswordSecret: a8SGF1CQMHN6pnCJgz32kLn1tebrXnw6MtWto8xI
   jwtExternalServiceSecret: nhUmut2NMcUnsR01OgOz0e51MZ51AqUwrOATJ3fJ
   jwtZendeskSecret: RdL7j9ZdCz6TVSHO7obJRS6ywYLJjH8tdfPP39i4MbevKjVo
-
-awsEcsAMIByRegion:
-  us-east-1: ami-b2df2ca4
-  us-east-2: ami-832b0ee6
-  us-west-1: ami-dd104dbd
-  us-west-2: ami-022b9262
-  eu-west-1: ami-a7f2acc1
-  eu-west-2: ami-3fb6bc5b
-  eu-central-1: ami-ec2be583
-  ap-northeast-1: ami-c393d6a4
-  ap-southeast-1: ami-a88530cb
-  ap-southeast-2: ami-8af8ffe9
-  ca-central-1: ami-ead5688e
 
 awsRegionIdToName:
   us-east-1: US East (N. Virginia)

@@ -58,8 +58,6 @@ public interface InfrastructureMappingService extends OwnedByEnvironment {
 
   List<String> listClusters(String appId, String deploymentType, String computeProviderId, String region);
 
-  List<String> listImages(String appId, String deploymentType, String computeProviderId, String region);
-
   List<String> listRegions(String appId, String deploymentType, String computeProviderId);
 
   List<String> listInstanceTypes(String appId, String deploymentType, String computeProviderId);

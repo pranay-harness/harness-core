@@ -48,7 +48,6 @@ public class MainConfiguration extends Configuration implements AssetsBundleConf
   @JsonProperty("scheduler") private SchedulerConfig schedulerConfig = new SchedulerConfig();
   @JsonProperty("watcherMetadataUrl") private String watcherMetadataUrl;
   @JsonProperty("delegateMetadataUrl") private String delegateMetadataUrl;
-  @JsonProperty("awsEcsAMIByRegion") private Map<String, String> awsEcsAMIByRegion;
   @JsonProperty("awsInstanceTypes") private List<String> awsInstanceTypes;
   @JsonProperty("awsRegionIdToName") private Map<String, String> awsRegionIdToName;
   @JsonProperty("hazelcast") private HazelcastConfiguration hazelcast;
@@ -273,14 +272,6 @@ public class MainConfiguration extends Configuration implements AssetsBundleConf
 
   public void setSchedulerConfig(SchedulerConfig schedulerConfig) {
     this.schedulerConfig = schedulerConfig;
-  }
-
-  public Map<String, String> getAwsEcsAMIByRegion() {
-    return awsEcsAMIByRegion;
-  }
-
-  public void setAwsEcsAMIByRegion(Map<String, String> awsEcsAMIByRegion) {
-    this.awsEcsAMIByRegion = awsEcsAMIByRegion;
   }
 
   public List<String> getAwsInstanceTypes() {
