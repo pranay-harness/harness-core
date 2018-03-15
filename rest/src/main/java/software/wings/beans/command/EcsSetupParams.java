@@ -14,6 +14,12 @@ public class EcsSetupParams extends ContainerSetupParams {
   private String targetGroupArn;
   private String loadBalancerName;
   private String region;
+  private String vpcId;
+  private String[] subnetIds;
+  private String[] securityGroupIds;
+  private boolean assignPublicIps;
+  private String executionRoleArn;
+  private String launchType;
 
   public static final class EcsSetupParamsBuilder {
     private String taskFamily;
@@ -29,6 +35,12 @@ public class EcsSetupParams extends ContainerSetupParams {
     private String region;
     private ContainerTask containerTask;
     private String infraMappingId;
+    private String vpcId;
+    private String[] subnetIds;
+    private String[] securityGroupIds;
+    private boolean assignPublicIps;
+    private String executionRoleArn;
+    private String launchType;
 
     private EcsSetupParamsBuilder() {}
 
@@ -101,6 +113,36 @@ public class EcsSetupParams extends ContainerSetupParams {
       return this;
     }
 
+    public EcsSetupParamsBuilder withVpcId(String vpcId) {
+      this.vpcId = vpcId;
+      return this;
+    }
+
+    public EcsSetupParamsBuilder withSubnetIds(String[] subnetIds) {
+      this.subnetIds = subnetIds;
+      return this;
+    }
+
+    public EcsSetupParamsBuilder withSecurityGroupIds(String[] securityGroupIds) {
+      this.securityGroupIds = securityGroupIds;
+      return this;
+    }
+
+    public EcsSetupParamsBuilder withAssignPublicIps(boolean assignPublicIps) {
+      this.assignPublicIps = assignPublicIps;
+      return this;
+    }
+
+    public EcsSetupParamsBuilder withExecutionRoleArn(String executionRoleArn) {
+      this.executionRoleArn = executionRoleArn;
+      return this;
+    }
+
+    public EcsSetupParamsBuilder withLaunchType(String launchType) {
+      this.launchType = launchType;
+      return this;
+    }
+
     public EcsSetupParamsBuilder but() {
       return anEcsSetupParams()
           .withTaskFamily(taskFamily)
@@ -115,7 +157,13 @@ public class EcsSetupParams extends ContainerSetupParams {
           .withImageDetails(imageDetails)
           .withRegion(region)
           .withContainerTask(containerTask)
-          .withInfraMappingId(infraMappingId);
+          .withInfraMappingId(infraMappingId)
+          .withVpcId(vpcId)
+          .withSubnetIds(subnetIds)
+          .withSecurityGroupIds(securityGroupIds)
+          .withAssignPublicIps(assignPublicIps)
+          .withExecutionRoleArn(executionRoleArn)
+          .withLaunchType(launchType);
     }
 
     public EcsSetupParams build() {
@@ -133,6 +181,12 @@ public class EcsSetupParams extends ContainerSetupParams {
       ecsSetupParams.setRegion(region);
       ecsSetupParams.setContainerTask(containerTask);
       ecsSetupParams.setInfraMappingId(infraMappingId);
+      ecsSetupParams.setVpcId(vpcId);
+      ecsSetupParams.setSubnetIds(subnetIds);
+      ecsSetupParams.setSecurityGroupIds(securityGroupIds);
+      ecsSetupParams.setAssignPublicIps(assignPublicIps);
+      ecsSetupParams.setExecutionRoleArn(executionRoleArn);
+      ecsSetupParams.setLaunchType(launchType);
       return ecsSetupParams;
     }
   }
