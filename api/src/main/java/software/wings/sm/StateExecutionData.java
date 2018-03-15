@@ -11,6 +11,7 @@ import software.wings.api.ExecutionDataValue;
 import software.wings.beans.CountsByStatuses;
 
 import java.util.Map;
+import java.util.stream.Collectors;
 
 /**
  * Represents state machine execution data.
@@ -242,6 +243,13 @@ public class StateExecutionData {
     if (value != null && value.getValue() != null) {
       orderedMap.put(name, value);
     }
+  }
+
+  protected Map<String, String> removeNullValues(Map<String, String> map) {
+    return map.entrySet()
+        .stream()
+        .filter(e -> e.getValue() != null)
+        .collect(Collectors.toMap(p -> p.getKey(), p -> p.getValue()));
   }
 
   @JsonIgnore
