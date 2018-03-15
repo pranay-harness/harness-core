@@ -16,11 +16,9 @@ import com.amazonaws.AmazonServiceException;
 import com.amazonaws.services.autoscaling.model.AutoScalingGroup;
 import com.amazonaws.services.codedeploy.model.AmazonCodeDeployException;
 import com.amazonaws.services.ec2.model.AmazonEC2Exception;
-import com.amazonaws.services.ec2.model.DescribeImagesRequest;
 import com.amazonaws.services.ec2.model.DescribeInstancesRequest;
 import com.amazonaws.services.ec2.model.DescribeInstancesResult;
 import com.amazonaws.services.ec2.model.Filter;
-import com.amazonaws.services.ec2.model.Image;
 import com.amazonaws.services.ec2.model.Instance;
 import com.amazonaws.services.ec2.model.Reservation;
 import com.amazonaws.services.ecs.model.AmazonECSException;
@@ -200,29 +198,6 @@ public class AwsInfrastructureProvider implements InfrastructureProvider {
       ListClustersResult listClustersResult =
           awsHelperService.listClusters(region, awsConfig, encryptionDetails, new ListClustersRequest());
       return listClustersResult.getClusterArns().stream().map(awsHelperService::getIdFromArn).collect(toList());
-    } catch (AmazonServiceException amazonServiceException) {
-      handleAmazonServiceException(amazonServiceException);
-    }
-    return new ArrayList<>();
-  }
-
-  public List<String> listAMIs(SettingAttribute computeProviderSetting, String region) {
-    AwsConfig awsConfig = validateAndGetAwsConfig(computeProviderSetting);
-    try {
-      List<String> imageIds = Lists.newArrayList(mainConfiguration.getAwsEcsAMIByRegion().get(region));
-      imageIds.addAll(
-          Lists
-              .newArrayList(
-                  awsHelperService
-                      .decribeEc2Images(awsConfig, secretManager.getEncryptionDetails(awsConfig, null, null), region,
-                          new DescribeImagesRequest().withFilters(new Filter("is-public").withValues("false"),
-                              new Filter("state").withValues("available"),
-                              new Filter("virtualization-type").withValues("hvm")))
-                      .getImages())
-              .stream()
-              .map(Image::getImageId)
-              .collect(toList()));
-      return imageIds;
     } catch (AmazonServiceException amazonServiceException) {
       handleAmazonServiceException(amazonServiceException);
     }

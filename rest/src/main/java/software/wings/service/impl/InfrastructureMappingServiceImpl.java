@@ -817,19 +817,6 @@ public class InfrastructureMappingServiceImpl implements InfrastructureMappingSe
   }
 
   @Override
-  public List<String> listImages(String appId, String deploymentType, String computeProviderId, String region) {
-    SettingAttribute computeProviderSetting = settingsService.get(computeProviderId);
-    notNullCheck("Compute Provider", computeProviderSetting);
-
-    if (AWS.name().equals(computeProviderSetting.getValue().getType())) {
-      AwsInfrastructureProvider infrastructureProvider =
-          (AwsInfrastructureProvider) getInfrastructureProviderByComputeProviderType(AWS.name());
-      return infrastructureProvider.listAMIs(computeProviderSetting, region);
-    }
-    return emptyList();
-  }
-
-  @Override
   public List<String> listRegions(String appId, String deploymentType, String computeProviderId) {
     SettingAttribute computeProviderSetting = settingsService.get(computeProviderId);
     notNullCheck("Compute Provider", computeProviderSetting);

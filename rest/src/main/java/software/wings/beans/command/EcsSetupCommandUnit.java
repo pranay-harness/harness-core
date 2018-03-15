@@ -276,7 +276,7 @@ public class EcsSetupCommandUnit extends ContainerSetupCommandUnit {
    * @return
    */
   private String isValidateSetupParamasForECS(TaskDefinition taskDefinition, EcsSetupParams ecsSetupParams) {
-    StringBuilder errorMessage = new StringBuilder();
+    StringBuilder errorMessage = new StringBuilder(64);
     if (LaunchType.FARGATE.name().equals(ecsSetupParams.getLaunchType())) {
       if (isEmptyOrBlank(ecsSetupParams.getVpcId())) {
         errorMessage.append("VPC Id is required for fargate task");

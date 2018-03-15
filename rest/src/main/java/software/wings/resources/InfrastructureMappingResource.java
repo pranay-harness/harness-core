@@ -166,17 +166,6 @@ public class InfrastructureMappingResource {
   }
 
   @GET
-  @Path("compute-providers/{computeProviderId}/images")
-  @Timed
-  @ExceptionMetered
-  public RestResponse<List<String>> getImages(@QueryParam("appId") String appId,
-      @QueryParam("deploymentType") String deploymentType, @PathParam("computeProviderId") String computeProviderId,
-      @QueryParam("region") String region) {
-    return new RestResponse<>(
-        infrastructureMappingService.listImages(appId, deploymentType, computeProviderId, region));
-  }
-
-  @GET
   @Path("compute-providers/{computeProviderId}/instanceTypes")
   @Timed
   @ExceptionMetered
