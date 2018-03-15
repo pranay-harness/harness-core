@@ -30,6 +30,7 @@ public class ElkConfigYamlHandler extends VerificationProviderYamlHandler<Yaml, 
         .username(config.getUsername())
         .password(getEncryptedValue(config, "password", false))
         .connectorType(connectorType)
+        .validationType(config.getValidationType())
         .build();
   }
 
@@ -42,6 +43,7 @@ public class ElkConfigYamlHandler extends VerificationProviderYamlHandler<Yaml, 
     config.setAccountId(accountId);
     config.setElkUrl(yaml.getElkUrl());
     config.setEncryptedPassword(yaml.getPassword());
+    config.setElkValidationType(yaml.getValidationType());
 
     char[] decryptedPassword;
     try {

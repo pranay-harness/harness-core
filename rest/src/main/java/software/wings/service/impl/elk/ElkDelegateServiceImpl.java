@@ -23,6 +23,7 @@ import software.wings.helpers.ext.elk.ElkRestClient;
 import software.wings.helpers.ext.elk.KibanaRestClient;
 import software.wings.security.encryption.EncryptedDataDetail;
 import software.wings.service.impl.analysis.ElkConnector;
+import software.wings.service.impl.analysis.ElkValidationType;
 import software.wings.service.intfc.elk.ElkDelegateService;
 import software.wings.service.intfc.security.EncryptionService;
 
@@ -187,12 +188,17 @@ public class ElkDelegateServiceImpl implements ElkDelegateService {
           Request original = chain.request();
 
           boolean shouldAuthenticate = isNotBlank(elkConfig.getUsername()) && elkConfig.getPassword() != null;
+          boolean usePassword = elkConfig.getValidationType() == ElkValidationType.PASSWORD;
           boolean isKibana = elkConfig.getElkConnector() == ElkConnector.KIBANA_SERVER;
           Request.Builder builder = shouldAuthenticate
-              ? original.newBuilder()
-                    .header("Accept", "application/json")
-                    .header("Content-Type", "application/json")
-                    .header("Authorization", getHeaderWithCredentials(elkConfig, encryptedDataDetails))
+              ? usePassword ? original.newBuilder()
+                                  .header("Accept", "application/json")
+                                  .header("Content-Type", "application/json")
+                                  .header("Authorization", getHeaderWithCredentials(elkConfig, encryptedDataDetails))
+                            : original.newBuilder()
+                                  .header("Accept", "application/json")
+                                  .header("Content-Type", "application/json")
+                                  .header(elkConfig.getUsername(), getAPIToken(elkConfig, encryptedDataDetails))
               : original.newBuilder().header("Accept", "application/json").header("Content-Type", "application/json");
 
           if (isKibana) {
@@ -224,6 +230,11 @@ public class ElkDelegateServiceImpl implements ElkDelegateService {
     return "Basic "
         + Base64.encodeBase64String(String.format("%s:%s", elkConfig.getUsername(), new String(elkConfig.getPassword()))
                                         .getBytes(StandardCharsets.UTF_8));
+  }
+
+  private String getAPIToken(ElkConfig elkConfig, List<EncryptedDataDetail> encryptedDataDetails) {
+    encryptionService.decrypt(elkConfig, encryptedDataDetails);
+    return String.valueOf(elkConfig.getPassword());
   }
 
   private static OkHttpClient.Builder getUnsafeOkHttpClient() {

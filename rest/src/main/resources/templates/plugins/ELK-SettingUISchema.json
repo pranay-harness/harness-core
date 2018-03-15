@@ -3,5 +3,11 @@
   "type": { "ui:widget": "hidden" },
   "kibanaVersion": { "ui:widget": "hidden" },
   "custom:encryptedFields": [ "password" ],
-  "ui:order": [ "type", "elkConnector", "elkUrl",  "username", "password", "kibanaVersion" ]
+  "validationType": {
+    "ui:widget": "radio",
+    "ui:options": {
+      "inline": true
+    }
+  },
+  "ui:order": [ "type", "elkConnector", "elkUrl",  "validationType", "username", "password", "kibanaVersion" ]
 }

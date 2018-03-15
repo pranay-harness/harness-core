@@ -14,8 +14,11 @@ import software.wings.annotation.Encryptable;
 import software.wings.annotation.Encrypted;
 import software.wings.jersey.JsonViews;
 import software.wings.service.impl.analysis.ElkConnector;
+import software.wings.service.impl.analysis.ElkValidationType;
+import software.wings.service.impl.analysis.ElkValidationTypeProvider;
 import software.wings.settings.SettingValue;
 import software.wings.stencils.DefaultValue;
+import software.wings.stencils.EnumData;
 import software.wings.yaml.setting.VerificationProviderYaml;
 
 /**
@@ -42,6 +45,22 @@ public class ElkConfig extends SettingValue implements Encryptable {
 
   @SchemaIgnore private String encryptedPassword;
 
+  private ElkValidationType validationType;
+
+  @Attributes(required = true, title = "Authentication")
+  @DefaultValue("PASSWORD")
+  @EnumData(enumDataProvider = ElkValidationTypeProvider.class)
+  public ElkValidationType getValidationType() {
+    if (validationType == null) {
+      return ElkValidationType.PASSWORD;
+    }
+
+    return validationType;
+  }
+
+  public void setElkValidationType(ElkValidationType validationType) {
+    this.validationType = validationType;
+  }
   /**
    * Instantiates a new Elk config.
    */
@@ -61,12 +80,14 @@ public class ElkConfig extends SettingValue implements Encryptable {
     private String username;
     private String password;
     private String connectorType;
+    private ElkValidationType validationType;
 
     @Builder
-    public Yaml(
-        String type, String harnessApiVersion, String elkUrl, String username, String password, String connectorType) {
+    public Yaml(String type, String harnessApiVersion, String elkUrl, ElkValidationType validationType, String username,
+        String password, String connectorType) {
       super(type, harnessApiVersion);
       this.elkUrl = elkUrl;
+      this.validationType = validationType;
       this.username = username;
       this.password = password;
       this.connectorType = connectorType;
