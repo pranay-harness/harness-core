@@ -356,7 +356,8 @@ public class Command extends Base implements CommandUnit {
   }
 
   public Command clone() {
-    Command clonnedCommand = aCommand().withName(getName()).withGraph(getGraph()).build();
+    Command clonnedCommand =
+        aCommand().withName(getName()).withGraph(getGraph()).withCommandUnits(commandUnits).build();
     clonnedCommand.setCommandUnitType(getCommandUnitType());
     return clonnedCommand;
   }
