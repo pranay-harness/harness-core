@@ -84,69 +84,9 @@ public class NexusTwoServiceImpl {
     return emptyMap();
   }
 
-  public void getGroupIdPaths(NexusConfig nexusConfig, List<EncryptedDataDetail> encryptionDetails, String repoId,
-      String path, List<String> groupIds) {
-    logger.info("Retrieving groupId paths");
-    try {
-      NexusRestClient nexusRestClient = getRestClient(nexusConfig, encryptionDetails);
-      Response<IndexBrowserTreeViewResponse> response = getIndexBrowserTreeViewResponseResponse(
-          nexusRestClient, nexusConfig, getIndexContentPathUrl(nexusConfig, repoId, path));
-      if (isSuccessful(response)) {
-        List<IndexBrowserTreeNode> treeNodes = response.body().getData().getChildren();
-        treeNodes.forEach(treeNode -> {
-          if (treeNode.getType().equals("G")) {
-            String groupId = treeNode.getPath().replace("/", ".");
-            groupIds.add(groupId.substring(1, groupId.length() - 1));
-            getGroupIdPaths(nexusConfig, encryptionDetails, repoId, treeNode.getPath(), groupIds);
-          } else {
-            return;
-          }
-        });
-      }
-    } catch (final IOException e) {
-      logger.error("Error occurred while retrieving Repository Group Ids from Nexus server " + nexusConfig.getNexusUrl()
-              + " for repository " + repoId + " under path " + path,
-          e);
-      throw new WingsException(
-          aResponseMessage().code(INVALID_REQUEST).level(ERROR).message(e.getMessage()).build(), e);
-    }
-    logger.info("Retrieving groupId paths success");
-  }
-
   public List<String> getGroupIdPaths(NexusConfig nexusConfig, List<EncryptedDataDetail> encryptionDetails,
       String repoId) throws ExecutionException, InterruptedException {
     return getGroupIdPathsAsync(nexusConfig, encryptionDetails, repoId);
-    /*
-    logger.info("Retrieving groupId paths for the repoId {}", repoId);
-    List<String> groupIds = new ArrayList<>();
-     try {
-       final Call<IndexBrowserTreeViewResponse> request =
-           getRestClient(nexusConfig, encryptionDetails)
-               .getIndexContent(
-                   Credentials.basic(nexusConfig.getUsername(), new String(nexusConfig.getPassword())), repoId);
-       final Response<IndexBrowserTreeViewResponse> response = request.execute();
-       if (isSuccessful(response)) {
-         final List<IndexBrowserTreeNode> treeNodes = response.body().getData().getChildren();
-         if (isEmpty(treeNodes)) {
-           return groupIds;
-         }
-         treeNodes.forEach(treeNode -> {
-           if (treeNode.getType().equals("G")) {
-             String groupId = treeNode.getPath().replace("/", ".");
-             groupIds.add(groupId.substring(1, groupId.length() - 1));
-             getGroupIdPaths(nexusConfig, encryptionDetails, repoId, treeNode.getPath(), groupIds);
-           }
-         });
-       }
-     } catch (final IOException e) {
-       logger.error("Error occurred while retrieving Repository Group Ids from Nexus server " +
-     nexusConfig.getNexusUrl()
-               + " for Repository " + repoId,
-           e);
-       handleException(e);
-     }
-     logger.info("Retrieving groupId paths success");
-     return groupIds;*/
   }
 
   private List<String> getGroupIdPathsAsync(NexusConfig nexusConfig, List<EncryptedDataDetail> encryptionDetails,
@@ -260,7 +200,9 @@ public class NexusTwoServiceImpl {
     logger.info("Versions come from nexus server {}", versions);
     versions = versions.stream().sorted(new AlphanumComparator()).collect(Collectors.toList());
     logger.info("After sorting alphanumerically versions {}", versions);
-    return versions.stream().map(version -> aBuildDetails().withNumber(version).build()).collect(toList());
+    return versions.stream()
+        .map(version -> aBuildDetails().withNumber(version).withRevision(version).build())
+        .collect(toList());
   }
 
   public BuildDetails getLatestVersion(NexusConfig nexusConfig, List<EncryptedDataDetail> encryptionDetails,

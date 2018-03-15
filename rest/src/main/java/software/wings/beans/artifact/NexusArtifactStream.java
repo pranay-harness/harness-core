@@ -412,6 +412,7 @@ public class NexusArtifactStream extends ArtifactStream {
       nexusArtifactStream.setArtifactPaths(artifactPaths);
       nexusArtifactStream.setSourceName(sourceName);
       nexusArtifactStream.setSettingId(settingId);
+      nexusArtifactStream.setServiceId(serviceId);
       nexusArtifactStream.setUuid(uuid);
       nexusArtifactStream.setAppId(appId);
       nexusArtifactStream.setCreatedBy(createdBy);

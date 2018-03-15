@@ -9,6 +9,7 @@ import com.codahale.metrics.annotation.ExceptionMetered;
 import com.codahale.metrics.annotation.Timed;
 import io.swagger.annotations.Api;
 import software.wings.beans.RestResponse;
+import software.wings.beans.artifact.Artifact;
 import software.wings.common.BuildDetailsComparator;
 import software.wings.helpers.ext.jenkins.BuildDetails;
 import software.wings.helpers.ext.jenkins.JobDetails;
@@ -20,6 +21,7 @@ import java.util.List;
 import java.util.Map;
 import java.util.Set;
 import javax.ws.rs.GET;
+import javax.ws.rs.POST;
 import javax.ws.rs.Path;
 import javax.ws.rs.PathParam;
 import javax.ws.rs.Produces;
@@ -128,5 +130,20 @@ public class BuildSourceResource {
   public RestResponse<JobDetails> getJob(@QueryParam("appId") String appId, @QueryParam("settingId") String settingId,
       @PathParam("jobName") String jobName) {
     return new RestResponse<>(buildSourceService.getJob(appId, settingId, jobName));
+  }
+
+  /***
+   * Collects an artifact
+   * @param appId
+   * @param artifactStreamId
+   * @param buildDetails
+   * @return
+   */
+  @POST
+  @Timed
+  @ExceptionMetered
+  public RestResponse<Artifact> collectArtifact(@QueryParam("appId") String appId,
+      @QueryParam("artifactStreamId") String artifactStreamId, BuildDetails buildDetails) {
+    return new RestResponse<>(buildSourceService.collectArtifact(appId, artifactStreamId, buildDetails));
   }
 }

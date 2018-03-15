@@ -9,6 +9,8 @@ import static org.mockito.Matchers.anyString;
 import static org.mockito.Mockito.times;
 import static org.mockito.Mockito.when;
 import static software.wings.beans.Service.Builder.aService;
+import static software.wings.beans.artifact.AmazonS3ArtifactStream.Builder.anAmazonS3ArtifactStream;
+import static software.wings.beans.artifact.AmiArtifactStream.AmiArtifactStreamBuilder.anAmiArtifactStream;
 import static software.wings.beans.artifact.Artifact.Builder.anArtifact;
 import static software.wings.beans.artifact.Artifact.ContentStatus.DOWNLOADED;
 import static software.wings.beans.artifact.Artifact.ContentStatus.DOWNLOADING;
@@ -20,7 +22,13 @@ import static software.wings.beans.artifact.Artifact.Status.QUEUED;
 import static software.wings.beans.artifact.Artifact.Status.READY;
 import static software.wings.beans.artifact.Artifact.Status.RUNNING;
 import static software.wings.beans.artifact.ArtifactFile.Builder.anArtifactFile;
+import static software.wings.beans.artifact.ArtifactoryArtifactStream.Builder.anArtifactoryArtifactStream;
+import static software.wings.beans.artifact.BambooArtifactStream.Builder.aBambooArtifactStream;
+import static software.wings.beans.artifact.DockerArtifactStream.Builder.aDockerArtifactStream;
+import static software.wings.beans.artifact.EcrArtifactStream.Builder.anEcrArtifactStream;
+import static software.wings.beans.artifact.GcrArtifactStream.Builder.aGcrArtifactStream;
 import static software.wings.beans.artifact.JenkinsArtifactStream.Builder.aJenkinsArtifactStream;
+import static software.wings.beans.artifact.NexusArtifactStream.Builder.aNexusArtifactStream;
 import static software.wings.utils.WingsTestConstants.APP_ID;
 import static software.wings.utils.WingsTestConstants.ARTIFACT_ID;
 import static software.wings.utils.WingsTestConstants.ARTIFACT_STREAM_ID;
@@ -46,6 +54,7 @@ import software.wings.beans.Application;
 import software.wings.beans.EmbeddedUser;
 import software.wings.beans.artifact.Artifact;
 import software.wings.beans.artifact.Artifact.Builder;
+import software.wings.beans.artifact.Artifact.ContentStatus;
 import software.wings.beans.artifact.ArtifactFile;
 import software.wings.beans.artifact.ArtifactStream;
 import software.wings.beans.artifact.JenkinsArtifactStream;
@@ -61,6 +70,7 @@ import software.wings.service.intfc.ArtifactService;
 import software.wings.service.intfc.ArtifactStreamService;
 import software.wings.service.intfc.FileService;
 import software.wings.service.intfc.FileService.FileBucket;
+import software.wings.service.intfc.ServiceResourceService;
 import software.wings.utils.ArtifactType;
 
 import java.io.File;
@@ -81,6 +91,7 @@ public class ArtifactServiceTest extends WingsBaseTest {
   @Mock private Query<ArtifactStream> artifactStreamQuery;
   @Mock private FieldEnd fieldEnd;
   @Mock private Queue<CollectEvent> collectQueue;
+  @Mock private ServiceResourceService serviceResourceService;
 
   @InjectMocks @Inject private ArtifactService artifactService;
 
@@ -92,6 +103,8 @@ public class ArtifactServiceTest extends WingsBaseTest {
                                         .withCreatedAt(System.currentTimeMillis())
                                         .withCreatedBy(EmbeddedUser.builder().uuid("USER_ID").build())
                                         .withServiceIds(asList(SERVICE_ID));
+
+  private Artifact artifact = artifactBuilder.build();
 
   JenkinsArtifactStream jenkinsArtifactStream = aJenkinsArtifactStream()
                                                     .withUuid(ARTIFACT_STREAM_ID)
@@ -112,6 +125,7 @@ public class ArtifactServiceTest extends WingsBaseTest {
 
     when(appService.exist(APP_ID)).thenReturn(true);
     when(artifactStreamService.get(APP_ID, ARTIFACT_STREAM_ID)).thenReturn(jenkinsArtifactStream);
+    when(wingsPersistence.get(Artifact.class, APP_ID, ARTIFACT_ID)).thenReturn(artifact);
   }
 
   /**
@@ -352,6 +366,7 @@ public class ArtifactServiceTest extends WingsBaseTest {
 
   @Test(expected = WingsException.class)
   public void shouldStartArtifactCollectionNoArtifact() {
+    when(wingsPersistence.get(Artifact.class, APP_ID, ARTIFACT_ID)).thenReturn(null);
     artifactService.startArtifactCollection(APP_ID, ARTIFACT_ID);
   }
 
@@ -407,5 +422,171 @@ public class ArtifactServiceTest extends WingsBaseTest {
     Artifact artifact = artifactService.startArtifactCollection(APP_ID, ARTIFACT_ID);
     assertThat(artifact.getContentStatus()).isEqualTo(NOT_DOWNLOADED);
     Mockito.verify(collectQueue).send(any());
+  }
+
+  @Test
+  public void shouldGetArtifactContentStatus() {
+    Artifact artifact = artifactBuilder.withStatus(APPROVED).withContentStatus(NOT_DOWNLOADED).build();
+    when(wingsPersistence.get(Artifact.class, APP_ID, ARTIFACT_ID)).thenReturn(artifact);
+    ContentStatus contentStatus = artifactService.getArtifactContentStatus(artifact);
+    assertThat(contentStatus).isEqualTo(NOT_DOWNLOADED);
+  }
+
+  @Test
+  public void shouldGetArtifactStatusForDockerStream() {
+    when(artifactStreamService.get(APP_ID, ARTIFACT_STREAM_ID))
+        .thenReturn(aDockerArtifactStream()
+                        .withUuid(ARTIFACT_STREAM_ID)
+                        .withAppId(APP_ID)
+                        .withSourceName("ARTIFACT_SOURCE")
+                        .withServiceId(SERVICE_ID)
+                        .build());
+    assertThat(artifactService.getArtifactContentStatus(artifact)).isEqualTo(METADATA_ONLY);
+    assertThat(artifact.getStatus()).isEqualTo(APPROVED);
+  }
+
+  @Test
+  public void shouldGetArtifactStatusForEcrStream() {
+    when(artifactStreamService.get(APP_ID, ARTIFACT_STREAM_ID))
+        .thenReturn(anEcrArtifactStream()
+                        .withUuid(ARTIFACT_STREAM_ID)
+                        .withAppId(APP_ID)
+                        .withSourceName("ARTIFACT_SOURCE")
+                        .withServiceId(SERVICE_ID)
+                        .build());
+    assertThat(artifactService.getArtifactContentStatus(artifact)).isEqualTo(METADATA_ONLY);
+    assertThat(artifact.getStatus()).isEqualTo(APPROVED);
+  }
+
+  @Test
+  public void shouldGetArtifactStatusForGcrStream() {
+    when(artifactStreamService.get(APP_ID, ARTIFACT_STREAM_ID))
+        .thenReturn(aGcrArtifactStream()
+                        .withUuid(ARTIFACT_STREAM_ID)
+                        .withAppId(APP_ID)
+                        .withSourceName("ARTIFACT_SOURCE")
+                        .withServiceId(SERVICE_ID)
+                        .build());
+    assertThat(artifactService.getArtifactContentStatus(artifact)).isEqualTo(METADATA_ONLY);
+    assertThat(artifact.getStatus()).isEqualTo(APPROVED);
+  }
+
+  @Test
+  public void shouldGetArtifactStatusForAcrStream() {
+    when(artifactStreamService.get(APP_ID, ARTIFACT_STREAM_ID))
+        .thenReturn(aGcrArtifactStream()
+                        .withUuid(ARTIFACT_STREAM_ID)
+                        .withAppId(APP_ID)
+                        .withSourceName("ARTIFACT_SOURCE")
+                        .withServiceId(SERVICE_ID)
+                        .build());
+    assertThat(artifactService.getArtifactContentStatus(artifact)).isEqualTo(METADATA_ONLY);
+    assertThat(artifact.getStatus()).isEqualTo(APPROVED);
+  }
+
+  @Test
+  public void shouldGetArtifactStatusForAmiStream() {
+    when(artifactStreamService.get(APP_ID, ARTIFACT_STREAM_ID))
+        .thenReturn(anAmiArtifactStream()
+                        .withUuid(ARTIFACT_STREAM_ID)
+                        .withAppId(APP_ID)
+                        .withSourceName("ARTIFACT_SOURCE")
+                        .withServiceId(SERVICE_ID)
+                        .build());
+    assertThat(artifactService.getArtifactContentStatus(artifact)).isEqualTo(METADATA_ONLY);
+    assertThat(artifact.getStatus()).isEqualTo(APPROVED);
+  }
+
+  @Test
+  public void shouldGetArtifactStatusForS3Stream() {
+    when(artifactStreamService.get(APP_ID, ARTIFACT_STREAM_ID))
+        .thenReturn(anAmazonS3ArtifactStream()
+                        .withUuid(ARTIFACT_STREAM_ID)
+                        .withAppId(APP_ID)
+                        .withSourceName("ARTIFACT_SOURCE")
+                        .withServiceId(SERVICE_ID)
+                        .build());
+    assertThat(artifactService.getArtifactContentStatus(artifact)).isEqualTo(METADATA_ONLY);
+    assertThat(artifact.getStatus()).isEqualTo(APPROVED);
+  }
+
+  @Test
+  public void shouldGetArtifactStatusForNexusDockerStream() {
+    when(serviceResourceService.get(APP_ID, SERVICE_ID, false))
+        .thenReturn(aService().withUuid(SERVICE_ID).withArtifactType(ArtifactType.DOCKER).build());
+    when(artifactStreamService.get(APP_ID, ARTIFACT_STREAM_ID))
+        .thenReturn(aNexusArtifactStream()
+                        .withUuid(ARTIFACT_STREAM_ID)
+                        .withAppId(APP_ID)
+                        .withSourceName("ARTIFACT_SOURCE")
+                        .withServiceId(SERVICE_ID)
+                        .build());
+    assertThat(artifactService.getArtifactContentStatus(artifact)).isEqualTo(METADATA_ONLY);
+    assertThat(artifact.getStatus()).isEqualTo(APPROVED);
+  }
+
+  @Test
+  public void shouldGetArtifactStatusForNexusStream() {
+    when(serviceResourceService.get(APP_ID, SERVICE_ID, false))
+        .thenReturn(aService().withUuid(SERVICE_ID).withArtifactType(ArtifactType.WAR).build());
+    when(artifactStreamService.get(APP_ID, ARTIFACT_STREAM_ID))
+        .thenReturn(aNexusArtifactStream()
+                        .withUuid(ARTIFACT_STREAM_ID)
+                        .withAppId(APP_ID)
+                        .withSourceName("ARTIFACT_SOURCE")
+                        .withServiceId(SERVICE_ID)
+                        .build());
+    assertThat(artifactService.getArtifactContentStatus(artifact)).isEqualTo(NOT_DOWNLOADED);
+    assertThat(artifact.getStatus()).isEqualTo(APPROVED);
+  }
+
+  @Test
+  public void shouldGetArtifactStatusForArtifactoryDockerStream() {
+    when(serviceResourceService.get(APP_ID, SERVICE_ID, false))
+        .thenReturn(aService().withUuid(SERVICE_ID).withArtifactType(ArtifactType.DOCKER).build());
+    when(artifactStreamService.get(APP_ID, ARTIFACT_STREAM_ID))
+        .thenReturn(anArtifactoryArtifactStream()
+                        .withUuid(ARTIFACT_STREAM_ID)
+                        .withAppId(APP_ID)
+                        .withSourceName("ARTIFACT_SOURCE")
+                        .withServiceId(SERVICE_ID)
+                        .build());
+    assertThat(artifactService.getArtifactContentStatus(artifact)).isEqualTo(METADATA_ONLY);
+    assertThat(artifact.getStatus()).isEqualTo(APPROVED);
+  }
+
+  @Test
+  public void shouldGetArtifactStatusForArtifactoryStream() {
+    when(serviceResourceService.get(APP_ID, SERVICE_ID, false))
+        .thenReturn(aService().withUuid(SERVICE_ID).withArtifactType(ArtifactType.RPM).build());
+    when(artifactStreamService.get(APP_ID, ARTIFACT_STREAM_ID))
+        .thenReturn(anArtifactoryArtifactStream()
+                        .withUuid(ARTIFACT_STREAM_ID)
+                        .withAppId(APP_ID)
+                        .withSourceName("ARTIFACT_SOURCE")
+                        .withServiceId(SERVICE_ID)
+                        .build());
+    assertThat(artifactService.getArtifactContentStatus(artifact)).isEqualTo(null);
+    assertThat(artifact.getStatus()).isEqualTo(QUEUED);
+  }
+
+  @Test
+  public void shouldGetArtifactStatusForJenkinsStream() {
+    when(wingsPersistence.get(Artifact.class, APP_ID, ARTIFACT_ID)).thenReturn(artifactBuilder.build());
+    assertThat(artifactService.getArtifactContentStatus(artifact)).isEqualTo(null);
+    assertThat(artifact.getStatus()).isEqualTo(QUEUED);
+  }
+
+  @Test
+  public void shouldGetArtifactStatusForBambooStream() {
+    when(artifactStreamService.get(APP_ID, ARTIFACT_STREAM_ID))
+        .thenReturn(aBambooArtifactStream()
+                        .withUuid(ARTIFACT_STREAM_ID)
+                        .withAppId(APP_ID)
+                        .withSourceName("ARTIFACT_SOURCE")
+                        .withServiceId(SERVICE_ID)
+                        .build());
+    assertThat(artifactService.getArtifactContentStatus(artifact)).isEqualTo(null);
+    assertThat(artifact.getStatus()).isEqualTo(QUEUED);
   }
 }
