@@ -40,14 +40,17 @@ import com.fasterxml.jackson.dataformat.yaml.YAMLFactory;
 import com.fasterxml.jackson.dataformat.yaml.snakeyaml.Yaml;
 import com.fasterxml.jackson.dataformat.yaml.snakeyaml.error.Mark;
 import com.fasterxml.jackson.dataformat.yaml.snakeyaml.scanner.ScannerException;
+import org.apache.commons.io.IOUtils;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import software.wings.beans.Application;
 import software.wings.beans.Base;
 import software.wings.beans.ErrorCode;
 import software.wings.beans.InfrastructureMapping;
+import software.wings.beans.ResponseMessage;
 import software.wings.beans.ResponseMessage.Level;
 import software.wings.beans.RestResponse;
+import software.wings.beans.RestResponse.Builder;
 import software.wings.beans.SearchFilter.Operator;
 import software.wings.beans.Workflow;
 import software.wings.beans.artifact.ArtifactStream;
@@ -66,6 +69,7 @@ import software.wings.exception.YamlProcessingException;
 import software.wings.service.impl.yaml.handler.BaseYamlHandler;
 import software.wings.service.impl.yaml.handler.YamlHandlerFactory;
 import software.wings.service.impl.yaml.handler.app.ApplicationYamlHandler;
+import software.wings.service.intfc.AlertService;
 import software.wings.service.intfc.yaml.YamlGitService;
 import software.wings.service.intfc.yaml.sync.YamlService;
 import software.wings.utils.Misc;
@@ -73,14 +77,23 @@ import software.wings.utils.Validator;
 import software.wings.yaml.BaseYaml;
 import software.wings.yaml.YamlPayload;
 
+import java.io.File;
+import java.io.FileOutputStream;
 import java.io.IOException;
+import java.io.InputStream;
+import java.io.OutputStream;
+import java.io.StringWriter;
+import java.util.Arrays;
 import java.util.Collections;
 import java.util.Comparator;
+import java.util.Enumeration;
 import java.util.List;
 import java.util.Map;
 import java.util.Optional;
 import java.util.concurrent.atomic.AtomicInteger;
 import java.util.regex.Pattern;
+import java.util.zip.ZipEntry;
+import java.util.zip.ZipFile;
 
 /**
  * @author rktummala on 10/16/17
@@ -93,6 +106,7 @@ public class YamlServiceImpl<Y extends BaseYaml, B extends Base> implements Yaml
   @Inject private YamlHelper yamlHelper;
   @Inject private WingsPersistence wingsPersistence;
   @Inject private transient YamlGitService yamlGitService;
+  @Inject private AlertService alertService;
 
   private final List<YamlType> yamlProcessingOrder = getEntityProcessingOrder();
 
@@ -148,6 +162,74 @@ public class YamlServiceImpl<Y extends BaseYaml, B extends Base> implements Yaml
     }
 
     return rr;
+  }
+
+  @Override
+  public RestResponse processYamlFilesAsZip(String accountId, InputStream fileInputStream, String yamlPath)
+      throws IOException {
+    try {
+      List changeList = getChangesForZipFile(accountId, fileInputStream, yamlPath);
+
+      List<ChangeContext> changeSets = processChangeSet(changeList);
+      Map<String, Object> metaDataMap = Maps.newHashMap();
+      metaDataMap.put("yamlFilesProcessed", changeSets.size());
+      return RestResponse.Builder.aRestResponse().withMetaData(metaDataMap).build();
+    } catch (YamlProcessingException ex) {
+      logger.warn("Unable to process zip upload for account {}. ", accountId, ex);
+      yamlGitService.processFailedChanges(accountId, ex.getFailedChangeErrorMsgMap());
+    }
+    return Builder.aRestResponse()
+        .withResponseMessages(Arrays.asList(
+            new ResponseMessage[] {ResponseMessage.aResponseMessage().code(ErrorCode.DEFAULT_ERROR_CODE).build()}))
+        .build();
+  }
+
+  protected List<GitFileChange> getChangesForZipFile(String accountId, InputStream fileInputStream, String yamlPath)
+      throws IOException {
+    List<GitFileChange> changeList = Lists.newArrayList();
+    File tempFile = File.createTempFile(accountId + "_" + System.currentTimeMillis() + "_yaml", ".tmp");
+    ZipFile zipFile = null;
+    try {
+      OutputStream outputStream = new FileOutputStream(tempFile);
+      IOUtils.copy(fileInputStream, outputStream);
+      outputStream.close();
+
+      zipFile = new ZipFile(tempFile.getAbsoluteFile());
+
+      Enumeration<? extends ZipEntry> entries = zipFile.entries();
+
+      while (entries.hasMoreElements()) {
+        ZipEntry entry = entries.nextElement();
+        File currFile = new File(entry.getName());
+        try {
+          if (!currFile.isHidden() && !entry.isDirectory()
+              && (entry.getName().endsWith(YAML_EXTENSION)
+                     || entry.getName().contains(YamlConstants.CONFIG_FILES_FOLDER))) {
+            InputStream stream = zipFile.getInputStream(entry);
+            StringWriter writer = new StringWriter();
+            IOUtils.copy(stream, writer, "UTF-8");
+            GitFileChange change =
+                GitFileChange.Builder.aGitFileChange()
+                    .withAccountId(accountId)
+                    .withChangeType(ChangeType.ADD)
+                    .withFileContent(writer.toString())
+                    .withFilePath((yamlPath != null ? yamlPath + File.separatorChar : "") + entry.getName())
+                    .build();
+            changeList.add(change);
+          }
+        } finally {
+          if (currFile != null) {
+            currFile.delete();
+          }
+        }
+      }
+    } finally {
+      if (zipFile != null) {
+        zipFile.close();
+      }
+      tempFile.delete();
+    }
+    return changeList;
   }
 
   @Override
