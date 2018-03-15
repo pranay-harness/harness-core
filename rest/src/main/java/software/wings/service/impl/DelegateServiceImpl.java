@@ -364,73 +364,72 @@ public class DelegateServiceImpl implements DelegateService {
   public File download(String managerHost, String accountId) throws IOException, TemplateException {
     File delegateFile = File.createTempFile(Constants.DELEGATE_DIR, ".zip");
 
-    ZipArchiveOutputStream out = new ZipArchiveOutputStream(delegateFile);
-    out.putArchiveEntry(new ZipArchiveEntry(Constants.DELEGATE_DIR + "/"));
-    out.closeArchiveEntry();
+    try (ZipArchiveOutputStream out = new ZipArchiveOutputStream(delegateFile)) {
+      out.putArchiveEntry(new ZipArchiveEntry(Constants.DELEGATE_DIR + "/"));
+      out.closeArchiveEntry();
 
-    Map scriptParams = getJarAndScriptRunTimeParamMap(accountId, "0.0.0", managerHost); // first version is 0.0.0
+      Map scriptParams = getJarAndScriptRunTimeParamMap(accountId, "0.0.0", managerHost); // first version is 0.0.0
 
-    File start = File.createTempFile("start", ".sh");
-    try (OutputStreamWriter fileWriter = new OutputStreamWriter(new FileOutputStream(start))) {
-      cfg.getTemplate("start.sh.ftl").process(scriptParams, fileWriter);
-    }
-    start = new File(start.getAbsolutePath());
-    ZipArchiveEntry startZipArchiveEntry = new ZipArchiveEntry(start, Constants.DELEGATE_DIR + "/start.sh");
-    startZipArchiveEntry.setUnixMode(0755 << 16L);
-    AsiExtraField permissions = new AsiExtraField();
-    permissions.setMode(0755);
-    startZipArchiveEntry.addExtraField(permissions);
-    out.putArchiveEntry(startZipArchiveEntry);
-    try (FileInputStream fis = new FileInputStream(start)) {
-      IOUtils.copy(fis, out);
-    }
-    out.closeArchiveEntry();
+      File start = File.createTempFile("start", ".sh");
+      try (OutputStreamWriter fileWriter = new OutputStreamWriter(new FileOutputStream(start))) {
+        cfg.getTemplate("start.sh.ftl").process(scriptParams, fileWriter);
+      }
+      start = new File(start.getAbsolutePath());
+      ZipArchiveEntry startZipArchiveEntry = new ZipArchiveEntry(start, Constants.DELEGATE_DIR + "/start.sh");
+      startZipArchiveEntry.setUnixMode(0755 << 16L);
+      AsiExtraField permissions = new AsiExtraField();
+      permissions.setMode(0755);
+      startZipArchiveEntry.addExtraField(permissions);
+      out.putArchiveEntry(startZipArchiveEntry);
+      try (FileInputStream fis = new FileInputStream(start)) {
+        IOUtils.copy(fis, out);
+      }
+      out.closeArchiveEntry();
 
-    File delegate = File.createTempFile("delegate", ".sh");
-    try (OutputStreamWriter fileWriter = new OutputStreamWriter(new FileOutputStream(delegate))) {
-      cfg.getTemplate("delegate.sh.ftl").process(scriptParams, fileWriter);
-    }
-    delegate = new File(delegate.getAbsolutePath());
-    ZipArchiveEntry delegateZipArchiveEntry = new ZipArchiveEntry(delegate, Constants.DELEGATE_DIR + "/delegate.sh");
-    delegateZipArchiveEntry.setUnixMode(0755 << 16L);
-    permissions = new AsiExtraField();
-    permissions.setMode(0755);
-    delegateZipArchiveEntry.addExtraField(permissions);
-    out.putArchiveEntry(delegateZipArchiveEntry);
-    try (FileInputStream fis = new FileInputStream(delegate)) {
-      IOUtils.copy(fis, out);
-    }
-    out.closeArchiveEntry();
+      File delegate = File.createTempFile("delegate", ".sh");
+      try (OutputStreamWriter fileWriter = new OutputStreamWriter(new FileOutputStream(delegate))) {
+        cfg.getTemplate("delegate.sh.ftl").process(scriptParams, fileWriter);
+      }
+      delegate = new File(delegate.getAbsolutePath());
+      ZipArchiveEntry delegateZipArchiveEntry = new ZipArchiveEntry(delegate, Constants.DELEGATE_DIR + "/delegate.sh");
+      delegateZipArchiveEntry.setUnixMode(0755 << 16L);
+      permissions = new AsiExtraField();
+      permissions.setMode(0755);
+      delegateZipArchiveEntry.addExtraField(permissions);
+      out.putArchiveEntry(delegateZipArchiveEntry);
+      try (FileInputStream fis = new FileInputStream(delegate)) {
+        IOUtils.copy(fis, out);
+      }
+      out.closeArchiveEntry();
 
-    File stop = File.createTempFile("stop", ".sh");
-    try (OutputStreamWriter fileWriter = new OutputStreamWriter(new FileOutputStream(stop))) {
-      cfg.getTemplate("stop.sh.ftl").process(scriptParams, fileWriter);
-    }
-    stop = new File(stop.getAbsolutePath());
-    ZipArchiveEntry stopZipArchiveEntry = new ZipArchiveEntry(stop, Constants.DELEGATE_DIR + "/stop.sh");
-    stopZipArchiveEntry.setUnixMode(0755 << 16L);
-    permissions = new AsiExtraField();
-    permissions.setMode(0755);
-    stopZipArchiveEntry.addExtraField(permissions);
-    out.putArchiveEntry(stopZipArchiveEntry);
-    try (FileInputStream fis = new FileInputStream(stop)) {
-      IOUtils.copy(fis, out);
-    }
-    out.closeArchiveEntry();
+      File stop = File.createTempFile("stop", ".sh");
+      try (OutputStreamWriter fileWriter = new OutputStreamWriter(new FileOutputStream(stop))) {
+        cfg.getTemplate("stop.sh.ftl").process(scriptParams, fileWriter);
+      }
+      stop = new File(stop.getAbsolutePath());
+      ZipArchiveEntry stopZipArchiveEntry = new ZipArchiveEntry(stop, Constants.DELEGATE_DIR + "/stop.sh");
+      stopZipArchiveEntry.setUnixMode(0755 << 16L);
+      permissions = new AsiExtraField();
+      permissions.setMode(0755);
+      stopZipArchiveEntry.addExtraField(permissions);
+      out.putArchiveEntry(stopZipArchiveEntry);
+      try (FileInputStream fis = new FileInputStream(stop)) {
+        IOUtils.copy(fis, out);
+      }
+      out.closeArchiveEntry();
 
-    File readme = File.createTempFile("README", ".txt");
-    try (OutputStreamWriter fileWriter = new OutputStreamWriter(new FileOutputStream(readme))) {
-      cfg.getTemplate("readme.txt.ftl").process(ImmutableMap.of("startScript", "start.sh"), fileWriter);
+      File readme = File.createTempFile("README", ".txt");
+      try (OutputStreamWriter fileWriter = new OutputStreamWriter(new FileOutputStream(readme))) {
+        cfg.getTemplate("readme.txt.ftl").process(ImmutableMap.of("startScript", "start.sh"), fileWriter);
+      }
+      readme = new File(readme.getAbsolutePath());
+      ZipArchiveEntry readmeZipArchiveEntry = new ZipArchiveEntry(readme, Constants.DELEGATE_DIR + "/README.txt");
+      out.putArchiveEntry(readmeZipArchiveEntry);
+      try (FileInputStream fis = new FileInputStream(readme)) {
+        IOUtils.copy(fis, out);
+      }
+      out.closeArchiveEntry();
     }
-    readme = new File(readme.getAbsolutePath());
-    ZipArchiveEntry readmeZipArchiveEntry = new ZipArchiveEntry(readme, Constants.DELEGATE_DIR + "/README.txt");
-    out.putArchiveEntry(readmeZipArchiveEntry);
-    try (FileInputStream fis = new FileInputStream(readme)) {
-      IOUtils.copy(fis, out);
-    }
-    out.closeArchiveEntry();
-
-    out.close();
     return delegateFile;
   }
 
