@@ -294,7 +294,7 @@ public class SecretManagerImpl implements SecretManager {
             .fetch();
     while (query.hasNext()) {
       EncryptedData data = query.next();
-      if (data.getType() != SettingVariableTypes.KMS) {
+      if (data.getParentIds() != null && data.getType() != SettingVariableTypes.KMS) {
         for (String parentId : data.getParentIds()) {
           UuidAware parent =
               fetchParent(data.getType(), accountId, parentId, data.getKmsId(), data.getEncryptionType());

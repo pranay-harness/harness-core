@@ -8,6 +8,8 @@ import software.wings.exception.YamlProcessingException;
 import software.wings.yaml.BaseYaml;
 import software.wings.yaml.YamlPayload;
 
+import java.io.IOException;
+import java.io.InputStream;
 import java.util.List;
 
 /**
@@ -29,4 +31,6 @@ public interface YamlService<Y extends BaseYaml, B extends Base> {
   RestResponse<B> update(YamlPayload yamlPayload, String accountId);
 
   RestResponse<Y> getYaml(String accountId, String yamlFilePath);
+
+  RestResponse processYamlFilesAsZip(String accountId, InputStream fileInputStream, String yamlPath) throws IOException;
 }

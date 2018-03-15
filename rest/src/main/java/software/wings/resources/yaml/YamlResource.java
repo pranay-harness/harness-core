@@ -1,14 +1,20 @@
 package software.wings.resources.yaml;
 
 import static javax.ws.rs.core.MediaType.APPLICATION_JSON;
+import static javax.ws.rs.core.MediaType.MULTIPART_FORM_DATA;
 
 import com.google.inject.Inject;
 
 import com.codahale.metrics.annotation.ExceptionMetered;
 import com.codahale.metrics.annotation.Timed;
 import io.swagger.annotations.Api;
+import org.glassfish.jersey.media.multipart.FormDataContentDisposition;
+import org.glassfish.jersey.media.multipart.FormDataParam;
+import org.hibernate.validator.constraints.NotEmpty;
+import org.jvnet.hk2.annotations.Optional;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import software.wings.app.MainConfiguration;
 import software.wings.beans.Application;
 import software.wings.beans.Base;
 import software.wings.beans.ConfigFile;
@@ -20,6 +26,7 @@ import software.wings.beans.SettingAttribute;
 import software.wings.beans.Workflow;
 import software.wings.beans.artifact.ArtifactStream;
 import software.wings.beans.command.ServiceCommand;
+import software.wings.exception.YamlProcessingException;
 import software.wings.security.PermissionAttribute.ResourceType;
 import software.wings.security.annotations.AuthRule;
 import software.wings.security.annotations.PublicApi;
@@ -31,6 +38,7 @@ import software.wings.service.intfc.yaml.YamlDirectoryService;
 import software.wings.service.intfc.yaml.YamlGitService;
 import software.wings.service.intfc.yaml.YamlResourceService;
 import software.wings.service.intfc.yaml.sync.YamlService;
+import software.wings.utils.BoundedInputStream;
 import software.wings.yaml.BaseYaml;
 import software.wings.yaml.YamlPayload;
 import software.wings.yaml.directory.DirectoryNode;
@@ -38,9 +46,12 @@ import software.wings.yaml.errorhandling.GitSyncError;
 import software.wings.yaml.gitSync.GitSyncWebhook;
 import software.wings.yaml.gitSync.YamlGitConfig;
 
+import java.io.IOException;
+import java.io.InputStream;
 import java.io.UnsupportedEncodingException;
 import java.net.URLDecoder;
 import java.util.List;
+import javax.ws.rs.Consumes;
 import javax.ws.rs.DefaultValue;
 import javax.ws.rs.GET;
 import javax.ws.rs.POST;
@@ -67,6 +78,7 @@ public class YamlResource {
   private YamlDirectoryService yamlDirectoryService;
   private YamlGitService yamlGitService;
   private AuthService authService;
+  @Inject private MainConfiguration configuration;
 
   /**
    * Instantiates a new service resource.
@@ -738,5 +750,20 @@ public class YamlResource {
   public RestResponse discardGitSyncError(
       @QueryParam("accountId") String accountId, @QueryParam("yamlFilePath") String yamlFilePath) {
     return yamlGitService.discardGitSyncError(accountId, yamlFilePath);
+  }
+
+  @POST
+  @Path("yaml-as-zip")
+  @Consumes(MULTIPART_FORM_DATA)
+  @Timed
+  @ExceptionMetered
+  public RestResponse<String> saveArtifact(@QueryParam("accountId") @NotEmpty String accountId,
+      @QueryParam("yamlPath") @Optional String yamlPath, @FormDataParam("file") InputStream uploadedInputStream,
+      @FormDataParam("file") FormDataContentDisposition fileDetail) throws IOException, YamlProcessingException {
+    logger.debug("accountId: {}, fileDetail: {}, yamlPath: {}", accountId, fileDetail, yamlPath);
+
+    return yamlService.processYamlFilesAsZip(accountId,
+        new BoundedInputStream(uploadedInputStream, configuration.getFileUploadLimits().getAppContainerLimit()),
+        yamlPath);
   }
 }
