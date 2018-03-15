@@ -99,6 +99,12 @@ public class ServiceTemplateServiceImpl implements ServiceTemplateService {
           logger.error("Failed to populate the service and service variable overrides for service template {} ",
               serviceTemplate, e);
         }
+        try {
+          populateServiceAndOverrideConfigMapYamls(serviceTemplate);
+        } catch (Exception e) {
+          logger.error("Failed to populate the service and override config map yamls for service template {} ",
+              serviceTemplate, e);
+        }
       });
     }
 
@@ -168,6 +174,7 @@ public class ServiceTemplateServiceImpl implements ServiceTemplateService {
       if (withDetails) {
         populateServiceAndOverrideConfigFiles(serviceTemplate);
         populateServiceAndOverrideServiceVariables(serviceTemplate, maskEncryptedFields);
+        populateServiceAndOverrideConfigMapYamls(serviceTemplate);
       }
     }
     return serviceTemplate;
@@ -225,7 +232,7 @@ public class ServiceTemplateServiceImpl implements ServiceTemplateService {
     template.setServiceConfigFiles(serviceConfigFiles);
 
     List<ConfigFile> overrideConfigFiles =
-        configService.getConfigFileByTemplate(template.getAppId(), template.getEnvId(), template);
+        configService.getConfigFileByTemplate(template.getAppId(), template.getEnvId(), template.getUuid());
 
     ImmutableMap<String, ConfigFile> serviceConfigFilesMap = Maps.uniqueIndex(serviceConfigFiles, ConfigFile::getUuid);
 
@@ -257,6 +264,14 @@ public class ServiceTemplateServiceImpl implements ServiceTemplateService {
       }
     });
     template.setServiceVariablesOverrides(overrideServiceVariables);
+  }
+
+  private void populateServiceAndOverrideConfigMapYamls(ServiceTemplate template) {
+    Environment env = environmentService.get(template.getAppId(), template.getEnvId(), false);
+    Map<String, String> envConfigMaps = env.getConfigMapYamlByServiceTemplateId();
+    if (isNotEmpty(envConfigMaps) && isNotBlank(envConfigMaps.get(template.getUuid()))) {
+      template.setConfigMapYamlOverride(envConfigMaps.get(template.getUuid()));
+    }
   }
 
   /* (non-Javadoc)
@@ -333,13 +348,13 @@ public class ServiceTemplateServiceImpl implements ServiceTemplateService {
    * java.lang.String)
    */
   @Override
-  public List<ConfigFile> computedConfigFiles(String appId, String envId, String templateId, String hostId) {
+  public List<ConfigFile> computedConfigFiles(String appId, String envId, String templateId) {
     ServiceTemplate serviceTemplate = get(appId, envId, templateId, false, false);
     if (serviceTemplate == null) {
       return new ArrayList<>();
     }
 
-    /* override order(left to right): Service -> [Tag Hierarchy] -> Host */
+    /* override order(left to right): Service -> Env: All Services -> Env: Service Template */
 
     List<ConfigFile> serviceConfigFiles =
         configService.getConfigFilesForEntity(appId, DEFAULT_TEMPLATE_ID, serviceTemplate.getServiceId(), envId);
@@ -373,6 +388,30 @@ public class ServiceTemplateServiceImpl implements ServiceTemplateService {
     return overrideServiceSettings(
         overrideServiceSettings(serviceVariables, allServiceVariables, appId, workflowExecutionId, maskEncryptedFields),
         templateServiceVariables, appId, workflowExecutionId, maskEncryptedFields);
+  }
+
+  @Override
+  public String computeConfigMapYaml(String appId, String envId, String templateId) {
+    ServiceTemplate serviceTemplate = get(appId, envId, templateId, false, false);
+    if (serviceTemplate == null) {
+      return null;
+    }
+
+    Service service = serviceResourceService.get(appId, serviceTemplate.getServiceId());
+    Environment env = environmentService.get(appId, envId, false);
+
+    String configMapYaml = service.getConfigMapYaml();
+
+    if (isNotBlank(env.getConfigMapYaml())) {
+      configMapYaml = env.getConfigMapYaml();
+    }
+
+    Map<String, String> envConfigMaps = env.getConfigMapYamlByServiceTemplateId();
+    if (isNotEmpty(envConfigMaps) && isNotBlank(envConfigMaps.get(templateId))) {
+      configMapYaml = envConfigMaps.get(templateId);
+    }
+
+    return configMapYaml;
   }
 
   /* (non-Javadoc)

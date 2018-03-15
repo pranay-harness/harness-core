@@ -35,6 +35,7 @@ public class ServiceTemplate extends Base {
   @Transient private ArtifactType serviceArtifactType;
   @Transient private List<ConfigFile> configFilesOverrides = new ArrayList<>();
   @Transient private List<ServiceVariable> serviceVariablesOverrides = new ArrayList<>();
+  @Transient private String configMapYamlOverride;
   @Transient private List<InfrastructureMapping> infrastructureMappings = new ArrayList<>();
   private boolean defaultServiceTemplate;
 
@@ -119,6 +120,14 @@ public class ServiceTemplate extends Base {
    */
   public void setConfigFilesOverrides(List<ConfigFile> configFilesOverrides) {
     this.configFilesOverrides = configFilesOverrides;
+  }
+
+  public String getConfigMapYamlOverride() {
+    return configMapYamlOverride;
+  }
+
+  public void setConfigMapYamlOverride(String configMapYamlOverride) {
+    this.configMapYamlOverride = configMapYamlOverride;
   }
 
   /**
@@ -234,6 +243,7 @@ public class ServiceTemplate extends Base {
         && Objects.equals(this.description, other.description) && Objects.equals(this.serviceId, other.serviceId)
         && Objects.equals(this.configFilesOverrides, other.configFilesOverrides)
         && Objects.equals(this.serviceVariablesOverrides, other.serviceVariablesOverrides)
+        && Objects.equals(this.configMapYamlOverride, other.configMapYamlOverride)
         && Objects.equals(this.defaultServiceTemplate, other.defaultServiceTemplate);
   }
 
@@ -246,6 +256,7 @@ public class ServiceTemplate extends Base {
         .add(SERVICE_ID_KEY, serviceId)
         .add("configFilesOverrides", configFilesOverrides)
         .add("serviceVariablesOverrides", serviceVariablesOverrides)
+        .add("configMapYamlOverride", configMapYamlOverride)
         .add("defaultServiceTemplate", defaultServiceTemplate)
         .toString();
   }
@@ -298,6 +309,7 @@ public class ServiceTemplate extends Base {
     private List<ServiceVariable> serviceVariables = new ArrayList<>();
     private List<ConfigFile> configFilesOverrides = new ArrayList<>();
     private List<ServiceVariable> serviceVariablesOverrides = new ArrayList<>();
+    private String configMapYamlOverride;
     private String uuid;
     private List<InfrastructureMapping> infrastructureMappings = new ArrayList<>();
     private String appId;
@@ -406,6 +418,11 @@ public class ServiceTemplate extends Base {
       return this;
     }
 
+    public Builder withConfigMapYamlOverride(String configMapYamlOverride) {
+      this.configMapYamlOverride = configMapYamlOverride;
+      return this;
+    }
+
     /**
      * With uuid builder.
      *
@@ -509,6 +526,7 @@ public class ServiceTemplate extends Base {
           .withServiceVariables(serviceVariables)
           .withConfigFilesOverrides(configFilesOverrides)
           .withServiceVariablesOverrides(serviceVariablesOverrides)
+          .withConfigMapYamlOverride(configMapYamlOverride)
           .withUuid(uuid)
           .withInfrastructureMappings(infrastructureMappings)
           .withAppId(appId)
@@ -534,6 +552,7 @@ public class ServiceTemplate extends Base {
       serviceTemplate.setServiceVariables(serviceVariables);
       serviceTemplate.setConfigFilesOverrides(configFilesOverrides);
       serviceTemplate.setServiceVariablesOverrides(serviceVariablesOverrides);
+      serviceTemplate.setConfigMapYamlOverride(configMapYamlOverride);
       serviceTemplate.setUuid(uuid);
       serviceTemplate.setInfrastructureMappings(infrastructureMappings);
       serviceTemplate.setAppId(appId);

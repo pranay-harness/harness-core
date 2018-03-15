@@ -18,6 +18,7 @@ import software.wings.yaml.BaseEntityYaml;
 
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Map;
 import java.util.Objects;
 import javax.validation.constraints.NotNull;
 
@@ -33,6 +34,7 @@ public class Environment extends Base {
   @NotEmpty private String name;
   private String description;
   private String configMapYaml;
+  private Map<String, String> configMapYamlByServiceTemplateId;
   @NotNull private EnvironmentType environmentType = NON_PROD;
   @Transient private List<ServiceTemplate> serviceTemplates;
   @Transient private List<ConfigFile> configFiles;
@@ -81,6 +83,14 @@ public class Environment extends Base {
 
   public void setConfigMapYaml(String configMapYaml) {
     this.configMapYaml = trimYaml(configMapYaml);
+  }
+
+  public Map<String, String> getConfigMapYamlByServiceTemplateId() {
+    return configMapYamlByServiceTemplateId;
+  }
+
+  public void setConfigMapYamlByServiceTemplateId(Map<String, String> configMapYamlByServiceTemplateId) {
+    this.configMapYamlByServiceTemplateId = configMapYamlByServiceTemplateId;
   }
 
   /**
@@ -178,12 +188,15 @@ public class Environment extends Base {
         .withAppId(getAppId())
         .withDescription(getDescription())
         .withConfigMapYaml(getConfigMapYaml())
+        .withConfigMapYamlByServiceTemplateId(getConfigMapYamlByServiceTemplateId())
         .withEnvironmentType(getEnvironmentType())
         .build();
   }
   @Override
   public int hashCode() {
-    return 31 * super.hashCode() + Objects.hash(name, description, configMapYaml, environmentType, configFiles);
+    return 31 * super.hashCode()
+        + Objects.hash(
+              name, description, configMapYaml, configMapYamlByServiceTemplateId, environmentType, configFiles);
   }
 
   @Override
@@ -200,6 +213,7 @@ public class Environment extends Base {
     final Environment other = (Environment) obj;
     return Objects.equals(this.name, other.name) && Objects.equals(this.description, other.description)
         && Objects.equals(this.configMapYaml, other.configMapYaml)
+        && Objects.equals(this.configMapYamlByServiceTemplateId, other.configMapYamlByServiceTemplateId)
         && Objects.equals(this.environmentType, other.environmentType)
         && Objects.equals(this.configFiles, other.configFiles);
   }
@@ -209,6 +223,7 @@ public class Environment extends Base {
         .withName(getName())
         .withDescription(getDescription())
         .withConfigMapYaml(getConfigMapYaml())
+        .withConfigMapYamlByServiceTemplateId(getConfigMapYamlByServiceTemplateId())
         .withEnvironmentType(getEnvironmentType())
         .withConfigFiles(getConfigFiles())
         .withUuid(getUuid())
@@ -244,6 +259,7 @@ public class Environment extends Base {
     private String name;
     private String description;
     private String configMapYaml;
+    private Map<String, String> configMapYamlByServiceTemplateId;
     private EnvironmentType environmentType = NON_PROD;
     private List<ConfigFile> configFiles;
     private String uuid;
@@ -290,6 +306,12 @@ public class Environment extends Base {
       this.configMapYaml = configMapYaml;
       return this;
     }
+
+    public Builder withConfigMapYamlByServiceTemplateId(Map<String, String> configMapYamlByServiceTemplateId) {
+      this.configMapYamlByServiceTemplateId = configMapYamlByServiceTemplateId;
+      return this;
+    }
+
     /**
      * With environment type builder.
      *
@@ -388,6 +410,7 @@ public class Environment extends Base {
           .withName(name)
           .withDescription(description)
           .withConfigMapYaml(configMapYaml)
+          .withConfigMapYamlByServiceTemplateId(configMapYamlByServiceTemplateId)
           .withEnvironmentType(environmentType)
           .withConfigFiles(configFiles)
           .withUuid(uuid)
@@ -408,6 +431,7 @@ public class Environment extends Base {
       environment.setName(name);
       environment.setDescription(description);
       environment.setConfigMapYaml(configMapYaml);
+      environment.setConfigMapYamlByServiceTemplateId(configMapYamlByServiceTemplateId);
       environment.setEnvironmentType(environmentType);
       environment.setConfigFiles(configFiles);
       environment.setUuid(uuid);
@@ -426,15 +450,18 @@ public class Environment extends Base {
   public static final class Yaml extends BaseEntityYaml {
     private String description;
     private String configMapYaml;
+    private Map<String, String> configMapYamlByServiceTemplateId;
     private String environmentType = "NON_PROD";
     private List<VariableOverrideYaml> variableOverrides = new ArrayList<>();
 
     @lombok.Builder
-    public Yaml(String harnessApiVersion, String description, String configMapYaml, String environmentType,
+    public Yaml(String harnessApiVersion, String description, String configMapYaml,
+        Map<String, String> configMapYamlByServiceTemplateId, String environmentType,
         List<VariableOverrideYaml> variableOverrides) {
       super(EntityType.ENVIRONMENT.name(), harnessApiVersion);
       this.description = description;
       this.configMapYaml = configMapYaml;
+      this.configMapYamlByServiceTemplateId = configMapYamlByServiceTemplateId;
       this.environmentType = environmentType;
       this.variableOverrides = variableOverrides;
     }

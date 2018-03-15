@@ -4,7 +4,6 @@ import org.hibernate.validator.constraints.NotEmpty;
 import ru.vyarus.guice.validator.group.annotation.ValidationGroups;
 import software.wings.beans.ConfigFile;
 import software.wings.beans.EntityType;
-import software.wings.beans.ServiceTemplate;
 import software.wings.dl.PageRequest;
 import software.wings.dl.PageResponse;
 import software.wings.service.intfc.ownership.OwnedByHost;
@@ -138,10 +137,10 @@ public interface ConfigService extends OwnedByService, OwnedByHost {
    *
    * @param appId           the app id
    * @param envId           the env id
-   * @param serviceTemplate the service template
+   * @param serviceTemplateId the service template
    * @return the config file by template
    */
-  List<ConfigFile> getConfigFileByTemplate(String appId, String envId, ServiceTemplate serviceTemplate);
+  List<ConfigFile> getConfigFileByTemplate(String appId, String envId, String serviceTemplateId);
 
   /**
    * Download file.

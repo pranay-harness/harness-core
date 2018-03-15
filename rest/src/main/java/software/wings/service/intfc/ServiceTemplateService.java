@@ -59,6 +59,8 @@ public interface ServiceTemplateService extends OwnedByEnvironment, OwnedByServi
   List<ServiceVariable> computeServiceVariables(
       String appId, String envId, String templateId, String workflowExecutionId, boolean maskEncryptedFields);
 
+  String computeConfigMapYaml(String appId, String envId, String templateId);
+
   /**
    * Override config files.
    *
@@ -74,10 +76,9 @@ public interface ServiceTemplateService extends OwnedByEnvironment, OwnedByServi
    * @param appId      the app id
    * @param envId      the env id
    * @param templateId the template id
-   * @param hostId     the host id
    * @return the map
    */
-  List<ConfigFile> computedConfigFiles(String appId, String envId, String templateId, String hostId);
+  List<ConfigFile> computedConfigFiles(String appId, String envId, String templateId);
 
   /**
    * Delete.

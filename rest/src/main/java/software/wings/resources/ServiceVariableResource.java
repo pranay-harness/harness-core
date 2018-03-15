@@ -1,6 +1,7 @@
 package software.wings.resources;
 
 import static software.wings.beans.ServiceVariable.Type.ENCRYPTED_TEXT;
+import static software.wings.common.Constants.SECRET_MASK;
 
 import com.google.inject.Inject;
 
@@ -65,11 +66,11 @@ public class ServiceVariableResource {
     serviceVariable.setAccountId(appService.get(appId).getAccountId());
     ServiceVariable savedServiceVariable = serviceVariablesService.save(serviceVariable);
     if (savedServiceVariable.getType().equals(ENCRYPTED_TEXT)) {
-      serviceVariable.setValue("******".toCharArray());
+      serviceVariable.setValue(SECRET_MASK.toCharArray());
     }
     if (savedServiceVariable.getOverriddenServiceVariable() != null
         && savedServiceVariable.getOverriddenServiceVariable().getType().equals(ENCRYPTED_TEXT)) {
-      savedServiceVariable.getOverriddenServiceVariable().setValue("******".toCharArray());
+      savedServiceVariable.getOverriddenServiceVariable().setValue(SECRET_MASK.toCharArray());
     }
     return new RestResponse<>(savedServiceVariable);
   }
@@ -109,11 +110,11 @@ public class ServiceVariableResource {
     serviceVariable.setAppId(appId);
     ServiceVariable savedServiceVariable = serviceVariablesService.update(serviceVariable);
     if (savedServiceVariable.getType().equals(ENCRYPTED_TEXT)) {
-      serviceVariable.setValue("******".toCharArray());
+      serviceVariable.setValue(SECRET_MASK.toCharArray());
     }
     if (savedServiceVariable.getOverriddenServiceVariable() != null
         && savedServiceVariable.getOverriddenServiceVariable().getType().equals(ENCRYPTED_TEXT)) {
-      savedServiceVariable.getOverriddenServiceVariable().setValue("******".toCharArray());
+      savedServiceVariable.getOverriddenServiceVariable().setValue(SECRET_MASK.toCharArray());
     }
     return new RestResponse<>(savedServiceVariable);
   }

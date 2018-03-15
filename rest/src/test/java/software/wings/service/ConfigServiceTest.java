@@ -202,7 +202,7 @@ public class ConfigServiceTest extends WingsBaseTest {
 
     when(query.asList()).thenReturn(asList(configFile));
     when(wingsPersistence.get(ConfigFile.class, APP_ID, FILE_ID)).thenReturn(configFile);
-    List<ConfigFile> configFiles = configService.getConfigFileByTemplate(APP_ID, ENV_ID, serviceTemplate);
+    List<ConfigFile> configFiles = configService.getConfigFileByTemplate(APP_ID, ENV_ID, serviceTemplate.getUuid());
 
     verify(query).field("appId");
     verify(end).equal(APP_ID);
