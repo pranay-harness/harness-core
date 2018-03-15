@@ -312,7 +312,9 @@ public class ServiceResourceServiceImpl implements ServiceResourceService, DataP
                                            .findFirst()
                                            .orElse(null);
     ServiceCommand clonedServiceCommand = oldServiceCommand.clone();
-    clonedServiceCommand.getCommand().getGraph().setGraphName(command.getName());
+    if (clonedServiceCommand.getCommand().getGraph() != null) {
+      clonedServiceCommand.getCommand().getGraph().setGraphName(command.getName());
+    }
     return addCommand(appId, serviceId, clonedServiceCommand, true);
   }
 
@@ -717,33 +719,38 @@ public class ServiceResourceServiceImpl implements ServiceResourceService, DataP
     Service service = wingsPersistence.get(Service.class, appId, serviceId);
     Validator.notNullCheck("service", service);
 
-    if (!isLinearCommandGraph(serviceCommand)) {
-      WingsException wingsException =
-          new WingsException(ErrorCode.INVALID_PIPELINE, new IllegalArgumentException("Graph is not a pipeline"));
-      wingsException.addParam("message", "Graph is not a linear pipeline");
-      throw wingsException;
-    }
-
     serviceCommand.setDefaultVersion(1);
     serviceCommand.setServiceId(serviceId);
     serviceCommand.setAppId(appId);
-    serviceCommand.setName(serviceCommand.getCommand().getGraph().getGraphName());
-
-    Command command = serviceCommand.getCommand();
     String notes = serviceCommand.getNotes();
+    Command command = serviceCommand.getCommand();
+
+    if (serviceCommand.getCommand().getGraph() != null) {
+      if (!isLinearCommandGraph(serviceCommand)) {
+        WingsException wingsException =
+            new WingsException(ErrorCode.INVALID_PIPELINE, new IllegalArgumentException("Graph is not a pipeline"));
+        wingsException.addParam("message", "Graph is not a linear pipeline");
+        throw wingsException;
+      }
+      serviceCommand.setName(serviceCommand.getCommand().getGraph().getGraphName());
+      command.transformGraph();
+    } else {
+      if (isEmpty(serviceCommand.getName())) {
+        serviceCommand.setName(serviceCommand.getCommand().getName());
+      }
+    }
 
     serviceCommand = wingsPersistence.saveAndGet(ServiceCommand.class, serviceCommand);
     entityVersionService.newEntityVersion(appId, EntityType.COMMAND, serviceCommand.getUuid(), serviceId,
         serviceCommand.getName(), EntityVersion.ChangeType.CREATED, notes);
 
-    command.transformGraph();
     command.setVersion(1L);
     command.setOriginEntityId(serviceCommand.getUuid());
     command.setAppId(appId);
     if (isNotEmpty(command.getCommandUnits())) {
       command.setDeploymentType(command.getCommandUnits().get(0).getDeploymentType());
     }
-
+    // TODO: Set the graph to null after backward compatible change
     commandService.save(command, pushToYaml);
     service.getServiceCommands().add(serviceCommand);
 
@@ -770,47 +777,55 @@ public class ServiceResourceServiceImpl implements ServiceResourceService, DataP
 
     UpdateOperations<ServiceCommand> updateOperation = wingsPersistence.createUpdateOperations(ServiceCommand.class);
 
-    if (serviceCommand.getCommand() != null) {
+    EntityVersion lastEntityVersion =
+        entityVersionService.lastEntityVersion(appId, EntityType.COMMAND, serviceCommand.getUuid(), serviceId);
+
+    Command command = aCommand().build();
+    if (serviceCommand.getCommand().getGraph() != null) {
       if (!isLinearCommandGraph(serviceCommand)) {
         WingsException wingsException =
             new WingsException(ErrorCode.INVALID_PIPELINE, new IllegalArgumentException("Graph is not a pipeline"));
         wingsException.addParam("message", "Graph is not a linear pipeline");
         throw wingsException;
       }
-
-      EntityVersion lastEntityVersion =
-          entityVersionService.lastEntityVersion(appId, EntityType.COMMAND, serviceCommand.getUuid(), serviceId);
-      Command command = aCommand().withGraph(serviceCommand.getCommand().getGraph()).build();
+      command.setGraph(serviceCommand.getCommand().getGraph());
       command.transformGraph();
-      command.setOriginEntityId(serviceCommand.getUuid());
-      command.setAppId(appId);
-      command.setUuid(null);
+    } else {
+      command.setCommandUnits(serviceCommand.getCommand().getCommandUnits());
+    }
 
-      Command oldCommand = commandService.getCommand(appId, serviceCommand.getUuid(), lastEntityVersion.getVersion());
+    command.setOriginEntityId(serviceCommand.getUuid());
+    command.setAppId(appId);
+    command.setUuid(null);
 
-      DiffNode commandUnitDiff =
-          ObjectDifferBuilder.buildDefault().compare(command.getCommandUnits(), oldCommand.getCommandUnits());
-      ObjectDifferBuilder builder = ObjectDifferBuilder.startBuilding();
-      builder.inclusion().exclude().node(NodePath.with("linearGraphIterator"));
-      DiffNode graphDiff = builder.build().compare(command.getGraph(), oldCommand.getGraph());
+    Command oldCommand = commandService.getCommand(appId, serviceCommand.getUuid(), lastEntityVersion.getVersion());
 
-      if (commandUnitDiff.hasChanges()) {
-        EntityVersion entityVersion =
-            entityVersionService.newEntityVersion(appId, EntityType.COMMAND, serviceCommand.getUuid(), serviceId,
-                serviceCommand.getName(), EntityVersion.ChangeType.UPDATED, serviceCommand.getNotes());
-        command.setVersion(Long.valueOf(entityVersion.getVersion().intValue()));
-        // Copy the old command values
-        command.setDeploymentType(oldCommand.getDeploymentType());
-        command.setCommandType(oldCommand.getCommandType());
-        command.setArtifactType(oldCommand.getArtifactType());
-        commandService.save(command, true);
+    DiffNode commandUnitDiff =
+        ObjectDifferBuilder.buildDefault().compare(command.getCommandUnits(), oldCommand.getCommandUnits());
 
-        if (serviceCommand.getSetAsDefault()) {
-          serviceCommand.setDefaultVersion(entityVersion.getVersion());
+    if (commandUnitDiff.hasChanges()) {
+      EntityVersion entityVersion =
+          entityVersionService.newEntityVersion(appId, EntityType.COMMAND, serviceCommand.getUuid(), serviceId,
+              serviceCommand.getName(), EntityVersion.ChangeType.UPDATED, serviceCommand.getNotes());
+      command.setVersion(Long.valueOf(entityVersion.getVersion().intValue()));
+      // Copy the old command values
+      command.setDeploymentType(oldCommand.getDeploymentType());
+      command.setCommandType(oldCommand.getCommandType());
+      command.setArtifactType(oldCommand.getArtifactType());
+      commandService.save(command, true);
+
+      if (serviceCommand.getSetAsDefault()) {
+        serviceCommand.setDefaultVersion(entityVersion.getVersion());
+      }
+    } else {
+      if (serviceCommand.getCommand().getGraph() != null) {
+        ObjectDifferBuilder builder = ObjectDifferBuilder.startBuilding();
+        builder.inclusion().exclude().node(NodePath.with("linearGraphIterator"));
+        DiffNode graphDiff = builder.build().compare(command.getGraph(), oldCommand.getGraph());
+        if (graphDiff.hasChanges()) {
+          oldCommand.setGraph(command.getGraph());
+          commandService.update(oldCommand);
         }
-      } else if (graphDiff.hasChanges()) {
-        oldCommand.setGraph(command.getGraph());
-        commandService.update(oldCommand);
       }
     }
 
