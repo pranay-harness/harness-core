@@ -3,6 +3,7 @@ package software.wings.service.impl.instance;
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertFalse;
 import static org.junit.Assert.assertNotNull;
+import static org.junit.Assert.assertNull;
 import static org.junit.Assert.assertTrue;
 import static org.mockito.Matchers.any;
 import static org.mockito.Matchers.anyList;
@@ -11,6 +12,7 @@ import static org.mockito.Mockito.doNothing;
 import static org.mockito.Mockito.doReturn;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
+import static software.wings.api.PhaseExecutionData.PhaseExecutionDataBuilder.aPhaseExecutionData;
 
 import com.google.inject.Inject;
 
@@ -54,6 +56,7 @@ import software.wings.service.intfc.ArtifactService;
 import software.wings.service.intfc.HostService;
 import software.wings.service.intfc.InfrastructureMappingService;
 import software.wings.service.intfc.instance.InstanceService;
+import software.wings.sm.PhaseExecutionSummary;
 import software.wings.sm.StateExecutionData;
 import software.wings.sm.WorkflowStandardParams;
 
@@ -460,6 +463,20 @@ public class InstanceHelperTest extends WingsBaseTest {
     privateDnsName = null;
     name = (String) MethodUtils.invokeMethod(instanceHelper, true, "getPrivateDnsName", new Object[] {privateDnsName});
     assertEquals(StringUtils.EMPTY, name);
+  }
+
+  @Test
+  public void testGetDeployPhaseStep_NPE() throws Exception {
+    assertNull(MethodUtils.invokeMethod(instanceHelper, true, "getDeployPhaseStep", new Object[] {null, "stepName"}));
+    assertNull(MethodUtils.invokeMethod(instanceHelper, true, "getDeployPhaseStep",
+        new Object[] {aPhaseExecutionData().withPhaseExecutionSummary(null).build(), "stepName"}));
+
+    PhaseExecutionSummary phaseExecutionSummary = new PhaseExecutionSummary();
+    phaseExecutionSummary.setPhaseStepExecutionSummaryMap(null);
+    assertNull(MethodUtils.invokeMethod(instanceHelper, true, "getDeployPhaseStep",
+        new Object[] {aPhaseExecutionData().withPhaseExecutionSummary(phaseExecutionSummary).build(), "stepName"}));
+    assertNull(MethodUtils.invokeMethod(instanceHelper, true, "getDeployPhaseStep",
+        new Object[] {aPhaseExecutionData().withPhaseExecutionSummary(null).build(), "stepName"}));
   }
 
   private void assertDeploymentInfoObject(DeploymentInfo deploymentInfo) {
