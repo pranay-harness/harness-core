@@ -3,6 +3,7 @@ package software.wings.utils;
 import static io.harness.data.structure.EmptyPredicate.isEmpty;
 import static io.harness.data.structure.EmptyPredicate.isNotEmpty;
 import static org.apache.commons.lang3.StringUtils.isNotBlank;
+import static org.apache.commons.lang3.StringUtils.trim;
 
 import org.apache.commons.codec.binary.Hex;
 import org.apache.commons.lang3.StringUtils;
@@ -50,7 +51,7 @@ public class Misc {
    * @return the string
    */
   public static String normalizeExpression(String expression, String replacement) {
-    Matcher matcher = wildCharPattern.matcher(expression);
+    Matcher matcher = wildCharPattern.matcher(trim(expression));
     return matcher.replaceAll(replacement);
   }
 

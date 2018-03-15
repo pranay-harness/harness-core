@@ -1,6 +1,7 @@
 package software.wings.utils;
 
 import static org.apache.commons.lang3.StringUtils.isNotBlank;
+import static org.apache.commons.lang3.StringUtils.trim;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -88,7 +89,7 @@ public class KubernetesConvention {
   }
 
   public static String normalize(String expression) {
-    return wildCharPattern.matcher(expression).replaceAll(DASH).toLowerCase();
+    return wildCharPattern.matcher(trim(expression)).replaceAll(DASH).toLowerCase();
   }
 
   private static String noDot(String str) {
