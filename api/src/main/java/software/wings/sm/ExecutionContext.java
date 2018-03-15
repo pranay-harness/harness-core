@@ -24,6 +24,8 @@ public interface ExecutionContext {
 
   StateExecutionData getStateExecutionData();
 
+  Map<String, Object> asMap();
+
   String renderExpression(String expression);
 
   String renderExpression(String expression, List<ContextElement> contextElements);

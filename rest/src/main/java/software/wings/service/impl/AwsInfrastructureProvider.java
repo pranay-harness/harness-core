@@ -46,6 +46,7 @@ import software.wings.service.intfc.security.SecretManager;
 import software.wings.sm.states.ManagerExecutionLogCallback;
 
 import java.util.ArrayList;
+import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
@@ -89,8 +90,11 @@ public class AwsInfrastructureProvider implements InfrastructureProvider {
           && !awsInfrastructureMapping.getHostNameConvention().equals(Constants.DEFAULT_AWS_HOST_NAME_CONVENTION)) {
         awsHosts.stream().forEach(h -> {
           HostElement hostElement = aHostElement().withEc2Instance(h.getEc2Instance()).build();
-          h.setHostName(awsHelperService.getHostnameFromConvention(
-              hostElement, awsInfrastructureMapping.getHostNameConvention()));
+
+          final Map<String, Object> contextMap = new HashMap();
+          contextMap.put("host", hostElement);
+          h.setHostName(
+              awsHelperService.getHostnameFromConvention(contextMap, awsInfrastructureMapping.getHostNameConvention()));
         });
       }
       return aPageResponse().withResponse(awsHosts).build();

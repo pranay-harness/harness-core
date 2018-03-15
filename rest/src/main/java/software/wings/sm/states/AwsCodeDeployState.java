@@ -300,8 +300,12 @@ public class AwsCodeDeployState extends State {
                                       .withEc2Instance(instance)
                                       .withInstanceId(instance.getInstanceId())
                                       .build();
+
+        final Map<String, Object> contextMap = context.asMap();
+        contextMap.put("host", hostElement);
         String hostName =
-            awsHelperService.getHostnameFromConvention(hostElement, infrastructureMapping.getHostNameConvention());
+            awsHelperService.getHostnameFromConvention(contextMap, infrastructureMapping.getHostNameConvention());
+
         hostElement.setHostName(hostName);
         InstanceElement instanceElement =
             anInstanceElement()
