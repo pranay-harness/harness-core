@@ -26,12 +26,12 @@ public class EcsInfrastructureMapping extends ContainerInfrastructureMapping {
   @DefaultValue("us-east-1")
   @EnumData(enumDataProvider = AwsRegionDataProvider.class)
   private String region;
-
-  @SchemaIgnore private String vpc;
-
-  @SchemaIgnore private List<String> subnet;
-
-  @SchemaIgnore private String securityGroup;
+  private String vpcId;
+  private List<String> subnetIds;
+  private List<String> securityGroupIds;
+  private boolean assignPublicIp;
+  private String executionRole;
+  private String launchType;
 
   @SchemaIgnore private String type;
 
@@ -78,57 +78,57 @@ public class EcsInfrastructureMapping extends ContainerInfrastructureMapping {
   }
 
   /**
-   * Getter for property 'vpc'.
+   * Getter for property 'vpcId'.
    *
-   * @return Value for property 'vpc'.
+   * @return Value for property 'vpcId'.
    */
-  public String getVpc() {
-    return vpc;
+  public String getVpcId() {
+    return vpcId;
   }
 
   /**
-   * Setter for property 'vpc'.
+   * Setter for property 'vpcId'.
    *
-   * @param vpc Value to set for property 'vpc'.
+   * @param vpcId Value to set for property 'vpcId'.
    */
-  public void setVpc(String vpc) {
-    this.vpc = vpc;
+  public void setVpcId(String vpcId) {
+    this.vpcId = vpcId;
   }
 
   /**
-   * Getter for property 'subnet'.
+   * Getter for property 'subnetIds'.
    *
-   * @return Value for property 'subnet'.
+   * @return Value for property 'subnetIds'.
    */
-  public List<String> getSubnet() {
-    return subnet;
+  public List<String> getSubnetIds() {
+    return subnetIds;
   }
 
   /**
-   * Setter for property 'subnet'.
+   * Setter for property 'subnetIds'.
    *
-   * @param subnet Value to set for property 'subnet'.
+   * @param subnetIds Value to set for property 'subnetIds'.
    */
-  public void setSubnet(List<String> subnet) {
-    this.subnet = subnet;
+  public void setSubnetIds(List<String> subnetIds) {
+    this.subnetIds = subnetIds;
   }
 
   /**
-   * Getter for property 'securityGroup'.
+   * Getter for property 'securityGroupIds'.
    *
-   * @return Value for property 'securityGroup'.
+   * @return Value for property 'securityGroupIds'.
    */
-  public String getSecurityGroup() {
-    return securityGroup;
+  public List<String> getSecurityGroupIds() {
+    return securityGroupIds;
   }
 
   /**
-   * Setter for property 'securityGroup'.
+   * Setter for property 'securityGroupIds'.
    *
-   * @param securityGroup Value to set for property 'securityGroup'.
+   * @param securityGroupIds Value to set for property 'securityGroupIds'.
    */
-  public void setSecurityGroup(String securityGroup) {
-    this.securityGroup = securityGroup;
+  public void setSecurityGroupIds(List<String> securityGroupIds) {
+    this.securityGroupIds = securityGroupIds;
   }
 
   /**
@@ -221,13 +221,39 @@ public class EcsInfrastructureMapping extends ContainerInfrastructureMapping {
     this.numberOfNodes = numberOfNodes;
   }
 
+  public boolean isAssignPublicIp() {
+    return assignPublicIp;
+  }
+
+  public void setAssignPublicIp(boolean assignPublicIp) {
+    this.assignPublicIp = assignPublicIp;
+  }
+
+  public String getExecutionRole() {
+    return executionRole;
+  }
+
+  public void setExecutionRole(String executionRole) {
+    this.executionRole = executionRole;
+  }
+
+  public String getLaunchType() {
+    return launchType;
+  }
+
+  public void setLaunchType(String launchType) {
+    this.launchType = launchType;
+  }
+
   public Builder deepClone() {
     return anEcsInfrastructureMapping()
         .withClusterName(getClusterName())
         .withRegion(getRegion())
-        .withVpc(getVpc())
-        .withSubnet(getSubnet())
-        .withSecurityGroup(getSecurityGroup())
+        .withVpcId(getVpcId())
+        .withSubnetIds(getSubnetIds())
+        .withSecurityGroupIds(getSecurityGroupIds())
+        .withLaunchType(getLaunchType())
+        .withExecutionRole(getExecutionRole())
         .withType(getType())
         .withRole(getRole())
         .withDiskSize(getDiskSize())
@@ -257,9 +283,9 @@ public class EcsInfrastructureMapping extends ContainerInfrastructureMapping {
     private String accountId;
     private String clusterName;
     private String region;
-    private String vpc;
-    private List<String> subnet;
-    private String securityGroup;
+    private String vpcId;
+    private List<String> subnetIds;
+    private List<String> securityGroupIds;
     private String type;
     private String role;
     private int diskSize;
@@ -281,6 +307,9 @@ public class EcsInfrastructureMapping extends ContainerInfrastructureMapping {
     private String name;
     // auto populate name
     private boolean autoPopulate = true;
+    private boolean assignPublicIp;
+    private String executionRole;
+    private String launchType;
 
     private Builder() {}
 
@@ -298,18 +327,18 @@ public class EcsInfrastructureMapping extends ContainerInfrastructureMapping {
       return this;
     }
 
-    public Builder withVpc(String vpc) {
-      this.vpc = vpc;
+    public Builder withVpcId(String vpcId) {
+      this.vpcId = vpcId;
       return this;
     }
 
-    public Builder withSubnet(List<String> subnet) {
-      this.subnet = subnet;
+    public Builder withSubnetIds(List<String> subnetIds) {
+      this.subnetIds = subnetIds;
       return this;
     }
 
-    public Builder withSecurityGroup(String securityGroup) {
-      this.securityGroup = securityGroup;
+    public Builder withSecurityGroupIds(List<String> securityGroupIds) {
+      this.securityGroupIds = securityGroupIds;
       return this;
     }
 
@@ -428,13 +457,28 @@ public class EcsInfrastructureMapping extends ContainerInfrastructureMapping {
       return this;
     }
 
+    public Builder withAssignPublicIp(boolean assignPublicIp) {
+      this.assignPublicIp = assignPublicIp;
+      return this;
+    }
+
+    public Builder withExecutionRole(String executionRole) {
+      this.executionRole = executionRole;
+      return this;
+    }
+
+    public Builder withLaunchType(String launchType) {
+      this.launchType = launchType;
+      return this;
+    }
+
     public Builder but() {
       return anEcsInfrastructureMapping()
           .withClusterName(clusterName)
           .withRegion(region)
-          .withVpc(vpc)
-          .withSubnet(subnet)
-          .withSecurityGroup(securityGroup)
+          .withVpcId(vpcId)
+          .withSubnetIds(subnetIds)
+          .withSecurityGroupIds(securityGroupIds)
           .withType(type)
           .withRole(role)
           .withDiskSize(diskSize)
@@ -457,16 +501,19 @@ public class EcsInfrastructureMapping extends ContainerInfrastructureMapping {
           .withDeploymentType(deploymentType)
           .withComputeProviderName(computeProviderName)
           .withName(name)
-          .withAutoPopulate(autoPopulate);
+          .withAutoPopulate(autoPopulate)
+          .withAssignPublicIp(assignPublicIp)
+          .withExecutionRole(executionRole)
+          .withLaunchType(launchType);
     }
 
     public EcsInfrastructureMapping build() {
       EcsInfrastructureMapping ecsInfrastructureMapping = new EcsInfrastructureMapping();
       ecsInfrastructureMapping.setClusterName(clusterName);
       ecsInfrastructureMapping.setRegion(region);
-      ecsInfrastructureMapping.setVpc(vpc);
-      ecsInfrastructureMapping.setSubnet(subnet);
-      ecsInfrastructureMapping.setSecurityGroup(securityGroup);
+      ecsInfrastructureMapping.setVpcId(vpcId);
+      ecsInfrastructureMapping.setSubnetIds(subnetIds);
+      ecsInfrastructureMapping.setSecurityGroupIds(securityGroupIds);
       ecsInfrastructureMapping.setType(type);
       ecsInfrastructureMapping.setRole(role);
       ecsInfrastructureMapping.setDiskSize(diskSize);
@@ -490,6 +537,9 @@ public class EcsInfrastructureMapping extends ContainerInfrastructureMapping {
       ecsInfrastructureMapping.setName(name);
       ecsInfrastructureMapping.setAutoPopulate(autoPopulate);
       ecsInfrastructureMapping.setAccountId(accountId);
+      ecsInfrastructureMapping.setAssignPublicIp(assignPublicIp);
+      ecsInfrastructureMapping.setLaunchType(launchType);
+      ecsInfrastructureMapping.setExecutionRole(executionRole);
       return ecsInfrastructureMapping;
     }
   }

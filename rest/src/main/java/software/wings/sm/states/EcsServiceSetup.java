@@ -9,6 +9,7 @@ import static software.wings.common.Constants.DEFAULT_STEADY_STATE_TIMEOUT;
 import static software.wings.sm.StateType.ECS_SERVICE_SETUP;
 
 import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
+import org.apache.commons.collections.CollectionUtils;
 import software.wings.api.CommandStateExecutionData;
 import software.wings.api.ContainerServiceElement;
 import software.wings.api.ContainerServiceElement.ContainerServiceElementBuilder;
@@ -31,6 +32,8 @@ import software.wings.sm.ExecutionContext;
 import software.wings.sm.ExecutionStatus;
 import software.wings.utils.EcsConvention;
 import software.wings.utils.Misc;
+
+import java.util.List;
 
 /**
  * Created by peeyushaggarwal on 2/3/17.
@@ -76,6 +79,7 @@ public class EcsServiceSetup extends ContainerServiceSetup {
       }
     }
 
+    EcsInfrastructureMapping ecsInfrastructureMapping = (EcsInfrastructureMapping) infrastructureMapping;
     return anEcsSetupParams()
         .withAppName(app.getName())
         .withEnvName(env.getName())
@@ -89,8 +93,22 @@ public class EcsServiceSetup extends ContainerServiceSetup {
         .withTargetGroupArn(targetGroupArn)
         .withTaskFamily(taskFamily)
         .withUseLoadBalancer(useLoadBalancer)
-        .withRegion(((EcsInfrastructureMapping) infrastructureMapping).getRegion())
+        .withRegion(ecsInfrastructureMapping.getRegion())
+        .withVpcId(ecsInfrastructureMapping.getVpcId())
+        .withSubnetIds(getSubnetArray(ecsInfrastructureMapping.getSubnetIds()))
+        .withSecurityGroupIds(getSubnetArray(ecsInfrastructureMapping.getSecurityGroupIds()))
+        .withAssignPublicIps(ecsInfrastructureMapping.isAssignPublicIp())
+        .withExecutionRoleArn(ecsInfrastructureMapping.getExecutionRole())
+        .withLaunchType(ecsInfrastructureMapping.getLaunchType())
         .build();
+  }
+
+  private String[] getSubnetArray(List<String> input) {
+    if (CollectionUtils.isEmpty(input)) {
+      return new String[0];
+    } else {
+      return input.toArray(new String[input.size()]);
+    }
   }
 
   @Override

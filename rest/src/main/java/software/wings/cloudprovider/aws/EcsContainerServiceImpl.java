@@ -35,6 +35,7 @@ import com.amazonaws.services.ecs.model.DescribeClustersRequest;
 import com.amazonaws.services.ecs.model.DescribeContainerInstancesRequest;
 import com.amazonaws.services.ecs.model.DescribeServicesRequest;
 import com.amazonaws.services.ecs.model.DescribeTasksRequest;
+import com.amazonaws.services.ecs.model.LaunchType;
 import com.amazonaws.services.ecs.model.ListServicesRequest;
 import com.amazonaws.services.ecs.model.ListServicesResult;
 import com.amazonaws.services.ecs.model.ListTasksRequest;
@@ -48,6 +49,7 @@ import com.amazonaws.services.ecs.model.UpdateServiceResult;
 import com.fasterxml.jackson.databind.DeserializationFeature;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import io.harness.network.Http;
+import org.apache.commons.collections.CollectionUtils;
 import org.apache.commons.lang3.StringUtils;
 import org.apache.http.client.fluent.Request;
 import org.slf4j.Logger;
@@ -1001,7 +1003,65 @@ public class EcsContainerServiceImpl implements EcsContainerService {
                              .describeTasks(region, awsConfig, encryptedDataDetails,
                                  new DescribeTasksRequest().withCluster(clusterName).withTasks(taskArns))
                              .getTasks();
+
+      List<ContainerInfo> containerInfos = null;
+      if (CollectionUtils.isNotEmpty(tasks)) {
+        containerInfos = generateContainerInfos(
+            tasks, clusterName, region, encryptedDataDetails, executionLogCallback, awsConfig, taskArns);
+      } else {
+        logger.warn("Could not fetched tasks, aws.describeTasks returned 0 tasks");
+      }
+
+      logger.info("Docker container ids = " + containerInfos);
+      return containerInfos;
+    } catch (Exception ex) {
+      throw new WingsException(INVALID_REQUEST, ex).addParam("message", ex.getMessage());
+    }
+  }
+
+  private List<ContainerInfo> generateContainerInfos(List<Task> tasks, String clusterName, String region,
+      List<EncryptedDataDetail> encryptedDataDetails, ExecutionLogCallback executionLogCallback, AwsConfig awsConfig,
+      List<String> taskArns) {
+    List<ContainerInfo> containerInfos = new ArrayList<>();
+
+    List<Task> ec2Tasks =
+        tasks.stream().filter(task -> !LaunchType.FARGATE.name().equals(task.getLaunchType())).collect(toList());
+
+    List<Task> fargateTasks =
+        tasks.stream().filter(task -> LaunchType.FARGATE.name().equals(task.getLaunchType())).collect(toList());
+
+    // Handle fargate tasks
+    if (CollectionUtils.isNotEmpty(fargateTasks)) {
+      logger.warn("For Fargate tasks, AWS does not expose Container instances and EC2 instances, "
+          + "so there is no way to fetch dockerContainerId. Verification steps using containerId may not work");
+
+      tasks.forEach(ecsTask -> {
+        ecsTask.getContainers().stream().forEach(container -> {
+
+          // Read private Ip of ENI (all container will have same private IP as all containers within task use same
+          // ENI)
+          String privateIpv4AddressForENI = container.getNetworkInterfaces()
+                                                .stream()
+                                                .findFirst()
+                                                .map(networkInterface -> networkInterface.getPrivateIpv4Address())
+                                                .orElse(StringUtils.EMPTY);
+
+          ContainerInfo containerInfo = ContainerInfo.builder()
+                                            .status(Status.SUCCESS)
+                                            .containerId(container.getContainerArn())
+                                            .hostName(privateIpv4AddressForENI)
+                                            .build();
+          containerInfos.add(containerInfo);
+        });
+
+      });
+    }
+
+    // Handle EC2 tasks
+    if (CollectionUtils.isNotEmpty(ec2Tasks)) {
       List<String> containerInstances = tasks.stream().map(Task::getContainerInstanceArn).collect(toList());
+      containerInstances =
+          containerInstances.stream().filter(containerInstance -> containerInstance != null).collect(toList());
       logger.info("Container Instances = " + containerInstances);
 
       List<ContainerInstance> containerInstanceList =
@@ -1011,7 +1071,7 @@ public class EcsContainerServiceImpl implements EcsContainerService {
                       .withCluster(clusterName)
                       .withContainerInstances(containerInstances))
               .getContainerInstances();
-      List<ContainerInfo> containerInfos = new ArrayList<>();
+
       containerInstanceList.forEach(containerInstance -> {
         com.amazonaws.services.ec2.model.Instance ec2Instance =
             awsHelperService
@@ -1021,8 +1081,10 @@ public class EcsContainerServiceImpl implements EcsContainerService {
                 .get(0)
                 .getInstances()
                 .get(0);
-        String ipAddress = ec2Instance.getPrivateIpAddress();
-        String uri = "http://" + ipAddress + ":51678/v1/tasks";
+
+        String ipAddress = ec2Instance.getPublicIpAddress();
+
+        String uri = generateTaskMetadataEndpointUrl(ipAddress);
         if (Http.connectableHttpUrl(uri)) {
           try {
             executionLogCallback.saveExecutionLog("Fetching container meta data from " + uri, LogLevel.INFO);
@@ -1087,11 +1149,18 @@ public class EcsContainerServiceImpl implements EcsContainerService {
                                  .build());
         }
       });
-      logger.info("Docker container ids = " + containerInfos);
-      return containerInfos;
-    } catch (Exception ex) {
-      throw new WingsException(INVALID_REQUEST, ex).addParam("message", ex.getMessage());
     }
+
+    return containerInfos;
+  }
+
+  /**
+   * https://docs.aws.amazon.com/AmazonECS/latest/developerguide/ecs-agent-introspection.html
+   * @param ipAddress
+   * @return
+   */
+  private String generateTaskMetadataEndpointUrl(String ipAddress) {
+    return new StringBuilder("http://").append(ipAddress).append(":51678/v1/tasks").toString();
   }
 
   private void waitForServiceToReachSteadyState(String latestExcludedEventId, String region, AwsConfig awsConfig,

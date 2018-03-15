@@ -446,6 +446,12 @@ public class InfrastructureMappingServiceImpl implements InfrastructureMappingSe
       validateEcsInfraMapping(ecsInfrastructureMapping, computeProviderSetting);
       keyValuePairs.put("clusterName", ecsInfrastructureMapping.getClusterName());
       keyValuePairs.put("region", ecsInfrastructureMapping.getRegion());
+      keyValuePairs.put("vpcId", ecsInfrastructureMapping.getVpcId());
+      keyValuePairs.put("subnetIds", ecsInfrastructureMapping.getSubnetIds());
+      keyValuePairs.put("securityGroupIds", ecsInfrastructureMapping.getSecurityGroupIds());
+      keyValuePairs.put("assignPublicIp", ecsInfrastructureMapping.isAssignPublicIp());
+      keyValuePairs.put("launchType", ecsInfrastructureMapping.getLaunchType());
+      keyValuePairs.put("executionRole", ecsInfrastructureMapping.getExecutionRole());
     } else if (infrastructureMapping instanceof DirectKubernetesInfrastructureMapping) {
       DirectKubernetesInfrastructureMapping directKubernetesInfrastructureMapping =
           (DirectKubernetesInfrastructureMapping) infrastructureMapping;

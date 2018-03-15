@@ -40,6 +40,8 @@ import java.util.regex.Pattern;
 @JsonIgnoreProperties(ignoreUnknown = true)
 @JsonTypeName("ECS")
 public class EcsContainerTask extends ContainerTask {
+  static final String DUMMY_EXECUTION_ROLE_ARN = "hv--execution-role--hv";
+  static final String EXECUTION_ROLE_PLACEHOLDER_REGEX = "\\$\\{EXECUTION_ROLE}";
   private static final Pattern commentPattern = Pattern.compile("^#.*$");
 
   @EnumData(enumDataProvider = ArtifactEnumDataProvider.class) private String artifactName;
@@ -72,6 +74,9 @@ public class EcsContainerTask extends ContainerTask {
         + "#\n"
         + "# Optional: ${CONTAINER_NAME}\n"
         + "#   - Replaced with a container name based on the image name\n"
+        + "#\n"
+        + "# Required For Fargate: ${EXECUTION_ROLE}\n"
+        + "#   - Replaced with execution role arn\n"
         + "#\n"
         + "# Harness will set the task family of the task definition.\n"
         + "#\n"
@@ -108,7 +113,8 @@ public class EcsContainerTask extends ContainerTask {
       try {
         String advancedConfig = fetchAdvancedConfigNoComments()
                                     .replaceAll(DOCKER_IMAGE_NAME_PLACEHOLDER_REGEX, DUMMY_DOCKER_IMAGE_NAME)
-                                    .replaceAll(CONTAINER_NAME_PLACEHOLDER_REGEX, DUMMY_CONTAINER_NAME);
+                                    .replaceAll(CONTAINER_NAME_PLACEHOLDER_REGEX, DUMMY_CONTAINER_NAME)
+                                    .replaceAll(EXECUTION_ROLE_PLACEHOLDER_REGEX, DUMMY_EXECUTION_ROLE_ARN);
         TaskDefinition taskDefinition = JsonUtils.asObject(advancedConfig, TaskDefinition.class);
 
         boolean containerHasDockerPlaceholder = taskDefinition.getContainerDefinitions().stream().anyMatch(
@@ -131,7 +137,7 @@ public class EcsContainerTask extends ContainerTask {
     }
   }
 
-  public TaskDefinition createTaskDefinition(String containerName, String imageName) {
+  public TaskDefinition createTaskDefinition(String containerName, String imageName, String executionRole) {
     String configTemplate;
     if (isNotEmpty(getAdvancedConfig())) {
       configTemplate = fetchAdvancedConfigNoComments();
@@ -139,8 +145,14 @@ public class EcsContainerTask extends ContainerTask {
       configTemplate = fetchJsonConfig();
     }
 
+    if (executionRole == null) {
+      executionRole = "null";
+    }
+
     String config = configTemplate.replaceAll(DOCKER_IMAGE_NAME_PLACEHOLDER_REGEX, imageName)
-                        .replaceAll(CONTAINER_NAME_PLACEHOLDER_REGEX, containerName);
+                        .replaceAll(CONTAINER_NAME_PLACEHOLDER_REGEX, containerName)
+                        .replaceAll(EXECUTION_ROLE_PLACEHOLDER_REGEX, executionRole);
+
     return JsonUtils.asObject(config, TaskDefinition.class);
   }
 
@@ -148,7 +160,8 @@ public class EcsContainerTask extends ContainerTask {
     try {
       return JsonUtils.asPrettyJson(createTaskDefinition())
           .replaceAll(DUMMY_DOCKER_IMAGE_NAME, DOCKER_IMAGE_NAME_PLACEHOLDER_REGEX)
-          .replaceAll(DUMMY_CONTAINER_NAME, CONTAINER_NAME_PLACEHOLDER_REGEX);
+          .replaceAll(DUMMY_CONTAINER_NAME, CONTAINER_NAME_PLACEHOLDER_REGEX)
+          .replaceAll(DUMMY_EXECUTION_ROLE_ARN, EXECUTION_ROLE_PLACEHOLDER_REGEX);
     } catch (Exception e) {
       throw new WingsException(ErrorCode.INVALID_ARGUMENT, e).addParam("args", e.getMessage());
     }
@@ -179,7 +192,10 @@ public class EcsContainerTask extends ContainerTask {
                 .map(containerDefinition
                     -> createContainerDefinition(DUMMY_DOCKER_IMAGE_NAME, DUMMY_CONTAINER_NAME, containerDefinition))
                 .collect(toList()))
-        .withVolumes(volumeMap.values());
+        .withExecutionRoleArn(DUMMY_EXECUTION_ROLE_ARN)
+        .withVolumes(volumeMap.values())
+        .withCpu(getContainerDefinitions().stream().findFirst().orElse(null).getCpu().toString())
+        .withMemory(getContainerDefinitions().stream().findFirst().orElse(null).getMemory().toString());
   }
 
   public com.amazonaws.services.ecs.model.ContainerDefinition createContainerDefinition(
