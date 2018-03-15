@@ -1,5 +1,7 @@
 package software.wings.utils;
 
+import static org.apache.commons.lang3.StringUtils.trim;
+
 import java.util.regex.Pattern;
 
 /**
@@ -16,7 +18,7 @@ public class EcsConvention {
   }
 
   public static String getServiceName(String family, Integer revision) {
-    return family + DELIMITER + revision;
+    return trim(family) + DELIMITER + revision;
   }
 
   public static String getServiceNamePrefixFromServiceName(String serviceName) {
