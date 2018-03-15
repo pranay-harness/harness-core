@@ -45,6 +45,7 @@ public abstract class ContainerResizeCommandUnit extends AbstractCommandUnit {
   public CommandExecutionStatus execute(CommandExecutionContext context) {
     ExecutionLogCallback executionLogCallback = new ExecutionLogCallback(context, getName());
     executionLogCallback.setLogService(logService);
+    ResizeCommandUnitExecutionDataBuilder executionDataBuilder = ResizeCommandUnitExecutionData.builder();
 
     try {
       ContextData contextData = new ContextData(context);
@@ -61,9 +62,7 @@ public abstract class ContainerResizeCommandUnit extends AbstractCommandUnit {
         oldInstanceDataList = contextData.resizeParams.getOldInstanceData();
       }
 
-      ResizeCommandUnitExecutionDataBuilder executionDataBuilder = ResizeCommandUnitExecutionData.builder()
-                                                                       .newInstanceData(newInstanceDataList)
-                                                                       .oldInstanceData(oldInstanceDataList);
+      executionDataBuilder.newInstanceData(newInstanceDataList).oldInstanceData(oldInstanceDataList);
 
       boolean resizeNewFirst = contextData.resizeParams.getResizeStrategy() == RESIZE_NEW_FIRST;
       List<ContainerServiceData> firstDataList = resizeNewFirst ? newInstanceDataList : oldInstanceDataList;
@@ -73,15 +72,13 @@ public abstract class ContainerResizeCommandUnit extends AbstractCommandUnit {
           resizeInstances(contextData, firstDataList, executionDataBuilder, executionLogCallback, resizeNewFirst)
           && resizeInstances(contextData, secondDataList, executionDataBuilder, executionLogCallback, !resizeNewFirst);
 
-      context.setCommandExecutionData(executionDataBuilder.build());
       return executionSucceeded ? CommandExecutionStatus.SUCCESS : CommandExecutionStatus.FAILURE;
     } catch (Exception ex) {
       logger.error(ex.getMessage(), ex);
       Misc.logAllMessages(ex, executionLogCallback);
-      if (ex instanceof WingsException) {
-        throw ex;
-      }
-      throw new WingsException(ErrorCode.UNKNOWN_ERROR, ex.getMessage(), ex);
+      return CommandExecutionStatus.FAILURE;
+    } finally {
+      context.setCommandExecutionData(executionDataBuilder.build());
     }
   }
 

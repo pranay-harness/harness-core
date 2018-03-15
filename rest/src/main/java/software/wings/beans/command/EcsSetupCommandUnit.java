@@ -22,13 +22,18 @@ import lombok.Builder;
 import lombok.Data;
 import lombok.EqualsAndHashCode;
 import org.mongodb.morphia.annotations.Transient;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import software.wings.api.DeploymentType;
 import software.wings.beans.Log.LogLevel;
 import software.wings.beans.SettingAttribute;
+import software.wings.beans.command.CommandExecutionResult.CommandExecutionStatus;
+import software.wings.beans.command.ContainerSetupCommandUnitExecutionData.ContainerSetupCommandUnitExecutionDataBuilder;
 import software.wings.beans.container.EcsContainerTask;
 import software.wings.cloudprovider.aws.AwsClusterService;
 import software.wings.security.encryption.EncryptedDataDetail;
 import software.wings.utils.EcsConvention;
+import software.wings.utils.Misc;
 
 import java.util.ArrayList;
 import java.util.HashMap;
@@ -41,7 +46,9 @@ import java.util.stream.Collectors;
  * Created by brett on 11/18/17
  */
 public class EcsSetupCommandUnit extends ContainerSetupCommandUnit {
-  @Inject @Transient protected transient AwsClusterService awsClusterService;
+  @Transient private static final Logger logger = LoggerFactory.getLogger(EcsSetupCommandUnit.class);
+
+  @Inject @Transient private transient AwsClusterService awsClusterService;
 
   public EcsSetupCommandUnit() {
     super(CommandUnitType.ECS_SETUP);
@@ -49,84 +56,97 @@ public class EcsSetupCommandUnit extends ContainerSetupCommandUnit {
   }
 
   @Override
-  protected ContainerSetupCommandUnitExecutionData executeInternal(SettingAttribute cloudProviderSetting,
-      List<EncryptedDataDetail> encryptedDataDetails, ContainerSetupParams containerSetupParams,
-      Map<String, String> serviceVariables, Map<String, String> safeDisplayServiceVariables,
-      ExecutionLogCallback executionLogCallback) {
-    EcsSetupParams setupParams = (EcsSetupParams) containerSetupParams;
-    executionLogCallback.saveExecutionLog(
-        "Create ECS service in cluster " + setupParams.getClusterName(), LogLevel.INFO);
+  protected CommandExecutionStatus executeInternal(CommandExecutionContext context,
+      SettingAttribute cloudProviderSetting, List<EncryptedDataDetail> encryptedDataDetails,
+      ContainerSetupParams containerSetupParams, Map<String, String> serviceVariables,
+      Map<String, String> safeDisplayServiceVariables, ExecutionLogCallback executionLogCallback) {
+    ContainerSetupCommandUnitExecutionDataBuilder commandExecutionDataBuilder =
+        ContainerSetupCommandUnitExecutionData.builder();
 
-    String dockerImageName = setupParams.getImageDetails().getName() + ":" + setupParams.getImageDetails().getTag();
-    String containerName = EcsConvention.getContainerName(dockerImageName);
+    try {
+      EcsSetupParams setupParams = (EcsSetupParams) containerSetupParams;
+      executionLogCallback.saveExecutionLog(
+          "Create ECS service in cluster " + setupParams.getClusterName(), LogLevel.INFO);
 
-    EcsContainerTask ecsContainerTask = (EcsContainerTask) setupParams.getContainerTask();
-    if (ecsContainerTask == null) {
-      ecsContainerTask = new EcsContainerTask();
-      software.wings.beans.container.ContainerDefinition containerDefinition =
-          software.wings.beans.container.ContainerDefinition.builder()
-              .memory(256)
-              .cpu(1)
-              .portMappings(emptyList())
-              .build();
-      ecsContainerTask.setContainerDefinitions(Lists.newArrayList(containerDefinition));
-    }
+      String dockerImageName = setupParams.getImageDetails().getName() + ":" + setupParams.getImageDetails().getTag();
+      String containerName = EcsConvention.getContainerName(dockerImageName);
 
-    TaskDefinition taskDefinition = createTaskDefinition(ecsContainerTask, containerName, dockerImageName,
-        setupParams.getTaskFamily(), setupParams.getRegion(), cloudProviderSetting, serviceVariables,
-        safeDisplayServiceVariables, encryptedDataDetails, executionLogCallback);
-
-    String containerServiceName =
-        EcsConvention.getServiceName(setupParams.getTaskFamily(), taskDefinition.getRevision());
-
-    CreateServiceRequest createServiceRequest =
-        new CreateServiceRequest()
-            .withServiceName(containerServiceName)
-            .withCluster(setupParams.getClusterName())
-            .withDesiredCount(0)
-            .withDeploymentConfiguration(
-                new DeploymentConfiguration().withMaximumPercent(200).withMinimumHealthyPercent(100))
-            .withTaskDefinition(taskDefinition.getFamily() + ":" + taskDefinition.getRevision());
-
-    if (setupParams.isUseLoadBalancer()) {
-      List<LoadBalancer> loadBalancers =
-          taskDefinition.getContainerDefinitions()
-              .stream()
-              .flatMap(containerDefinition
-                  -> Optional.ofNullable(containerDefinition.getPortMappings())
-                         .orElse(emptyList())
-                         .stream()
-                         .map(portMapping
-                             -> new LoadBalancer()
-                                    .withContainerName(containerDefinition.getName())
-                                    .withContainerPort(portMapping.getContainerPort())
-                                    .withTargetGroupArn(setupParams.getTargetGroupArn())))
-              .collect(toList());
-      createServiceRequest.withLoadBalancers(loadBalancers).withRole(setupParams.getRoleArn());
-    }
-
-    executionLogCallback.saveExecutionLog(
-        String.format("Creating ECS service %s in cluster %s", containerServiceName, setupParams.getClusterName()),
-        LogLevel.INFO);
-    awsClusterService.createService(
-        setupParams.getRegion(), cloudProviderSetting, encryptedDataDetails, createServiceRequest);
-
-    executionLogCallback.saveExecutionLog("Cleaning up old versions", LogLevel.INFO);
-    cleanup(cloudProviderSetting, setupParams.getRegion(), containerServiceName, setupParams.getClusterName(),
-        encryptedDataDetails, executionLogCallback);
-
-    executionLogCallback.saveExecutionLog("Cluster Name: " + setupParams.getClusterName(), LogLevel.INFO);
-    executionLogCallback.saveExecutionLog("ECS Service Name: " + containerServiceName, LogLevel.INFO);
-    executionLogCallback.saveExecutionLog("Docker Image Name: " + dockerImageName, LogLevel.INFO);
-    if (setupParams.isUseLoadBalancer()) {
-      executionLogCallback.saveExecutionLog("Load Balancer Name: " + setupParams.getLoadBalancerName(), LogLevel.INFO);
-      executionLogCallback.saveExecutionLog("Target Group ARN: " + setupParams.getTargetGroupArn(), LogLevel.INFO);
-      if (isNotBlank(setupParams.getRoleArn())) {
-        executionLogCallback.saveExecutionLog("Role ARN: " + setupParams.getRoleArn(), LogLevel.INFO);
+      EcsContainerTask ecsContainerTask = (EcsContainerTask) setupParams.getContainerTask();
+      if (ecsContainerTask == null) {
+        ecsContainerTask = new EcsContainerTask();
+        software.wings.beans.container.ContainerDefinition containerDefinition =
+            software.wings.beans.container.ContainerDefinition.builder()
+                .memory(256)
+                .cpu(1)
+                .portMappings(emptyList())
+                .build();
+        ecsContainerTask.setContainerDefinitions(Lists.newArrayList(containerDefinition));
       }
-    }
 
-    return ContainerSetupCommandUnitExecutionData.builder().containerServiceName(containerServiceName).build();
+      TaskDefinition taskDefinition = createTaskDefinition(ecsContainerTask, containerName, dockerImageName,
+          setupParams.getTaskFamily(), setupParams.getRegion(), cloudProviderSetting, serviceVariables,
+          safeDisplayServiceVariables, encryptedDataDetails, executionLogCallback);
+
+      String containerServiceName =
+          EcsConvention.getServiceName(setupParams.getTaskFamily(), taskDefinition.getRevision());
+
+      commandExecutionDataBuilder.containerServiceName(containerServiceName).build();
+
+      CreateServiceRequest createServiceRequest =
+          new CreateServiceRequest()
+              .withServiceName(containerServiceName)
+              .withCluster(setupParams.getClusterName())
+              .withDesiredCount(0)
+              .withDeploymentConfiguration(
+                  new DeploymentConfiguration().withMaximumPercent(200).withMinimumHealthyPercent(100))
+              .withTaskDefinition(taskDefinition.getFamily() + ":" + taskDefinition.getRevision());
+
+      if (setupParams.isUseLoadBalancer()) {
+        List<LoadBalancer> loadBalancers =
+            taskDefinition.getContainerDefinitions()
+                .stream()
+                .flatMap(containerDefinition
+                    -> Optional.ofNullable(containerDefinition.getPortMappings())
+                           .orElse(emptyList())
+                           .stream()
+                           .map(portMapping
+                               -> new LoadBalancer()
+                                      .withContainerName(containerDefinition.getName())
+                                      .withContainerPort(portMapping.getContainerPort())
+                                      .withTargetGroupArn(setupParams.getTargetGroupArn())))
+                .collect(toList());
+        createServiceRequest.withLoadBalancers(loadBalancers).withRole(setupParams.getRoleArn());
+      }
+
+      executionLogCallback.saveExecutionLog(
+          String.format("Creating ECS service %s in cluster %s", containerServiceName, setupParams.getClusterName()),
+          LogLevel.INFO);
+      awsClusterService.createService(
+          setupParams.getRegion(), cloudProviderSetting, encryptedDataDetails, createServiceRequest);
+
+      executionLogCallback.saveExecutionLog("Cleaning up old versions", LogLevel.INFO);
+      cleanup(cloudProviderSetting, setupParams.getRegion(), containerServiceName, setupParams.getClusterName(),
+          encryptedDataDetails, executionLogCallback);
+
+      executionLogCallback.saveExecutionLog("Cluster Name: " + setupParams.getClusterName(), LogLevel.INFO);
+      executionLogCallback.saveExecutionLog("ECS Service Name: " + containerServiceName, LogLevel.INFO);
+      executionLogCallback.saveExecutionLog("Docker Image Name: " + dockerImageName, LogLevel.INFO);
+      if (setupParams.isUseLoadBalancer()) {
+        executionLogCallback.saveExecutionLog(
+            "Load Balancer Name: " + setupParams.getLoadBalancerName(), LogLevel.INFO);
+        executionLogCallback.saveExecutionLog("Target Group ARN: " + setupParams.getTargetGroupArn(), LogLevel.INFO);
+        if (isNotBlank(setupParams.getRoleArn())) {
+          executionLogCallback.saveExecutionLog("Role ARN: " + setupParams.getRoleArn(), LogLevel.INFO);
+        }
+      }
+      return CommandExecutionStatus.SUCCESS;
+    } catch (Exception ex) {
+      logger.error(ex.getMessage(), ex);
+      Misc.logAllMessages(ex, executionLogCallback);
+      return CommandExecutionStatus.FAILURE;
+    } finally {
+      context.setCommandExecutionData(commandExecutionDataBuilder.build());
+    }
   }
 
   private TaskDefinition createTaskDefinition(EcsContainerTask ecsContainerTask, String containerName,

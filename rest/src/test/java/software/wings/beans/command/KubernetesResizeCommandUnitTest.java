@@ -2,7 +2,6 @@ package software.wings.beans.command;
 
 import static java.util.Collections.emptyList;
 import static org.assertj.core.api.Assertions.assertThat;
-import static org.assertj.core.api.Assertions.failBecauseExceptionWasNotThrown;
 import static org.mockito.Matchers.any;
 import static org.mockito.Matchers.anyInt;
 import static org.mockito.Matchers.anyString;
@@ -21,7 +20,6 @@ import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import software.wings.WingsBaseTest;
 import software.wings.api.ContainerServiceData;
-import software.wings.beans.ErrorCode;
 import software.wings.beans.GcpConfig;
 import software.wings.beans.InstanceUnitType;
 import software.wings.beans.KubernetesConfig;
@@ -33,7 +31,6 @@ import software.wings.cloudprovider.ContainerInfo;
 import software.wings.cloudprovider.ContainerInfo.Status;
 import software.wings.cloudprovider.gke.GkeClusterService;
 import software.wings.cloudprovider.gke.KubernetesContainerService;
-import software.wings.exception.WingsException;
 
 import java.util.ArrayList;
 import java.util.LinkedHashMap;
@@ -84,26 +81,20 @@ public class KubernetesResizeCommandUnitTest extends WingsBaseTest {
   }
 
   @Test
-  public void shouldExecuteThrowInvalidRequest() {
+  public void shouldExecuteFail() {
     when(kubernetesContainerService.getControllerPodCount(eq(kubernetesConfig), any(), anyString()))
         .thenReturn(Optional.empty());
-    try {
-      KubernetesResizeParams resizeParams = resizeParamsBuilder.but()
-                                                .withContainerServiceName("rc-name.0")
-                                                .withUseFixedInstances(false)
-                                                .withMaxInstances(5)
-                                                .withInstanceCount(100)
-                                                .withInstanceUnitType(PERCENTAGE)
-                                                .build();
+    KubernetesResizeParams resizeParams = resizeParamsBuilder.but()
+                                              .withContainerServiceName("rc-name.0")
+                                              .withUseFixedInstances(false)
+                                              .withMaxInstances(5)
+                                              .withInstanceCount(100)
+                                              .withInstanceUnitType(PERCENTAGE)
+                                              .build();
 
-      CommandExecutionContext context = contextBuilder.but().withContainerResizeParams(resizeParams).build();
-      kubernetesResizeCommandUnit.execute(context);
-      failBecauseExceptionWasNotThrown(WingsException.class);
-    } catch (WingsException exception) {
-      assertThat(exception).hasMessage(ErrorCode.INVALID_REQUEST.getCode());
-      assertThat(exception.getParams()).hasSize(1).containsKey("message");
-      assertThat(exception.getParams().get("message")).asString().contains("Service setup not done, service name:");
-    }
+    CommandExecutionContext context = contextBuilder.but().withContainerResizeParams(resizeParams).build();
+    CommandExecutionStatus status = kubernetesResizeCommandUnit.execute(context);
+    assertThat(status).isEqualTo(CommandExecutionStatus.FAILURE);
   }
 
   @Test
