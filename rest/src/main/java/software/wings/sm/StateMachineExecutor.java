@@ -1270,7 +1270,9 @@ public class StateMachineExecutor {
       final StateExecutionInstance prevStateExecutionInstance =
           wingsPersistence.get(StateExecutionInstance.class, prevInstanceId);
       Preconditions.checkNotNull(prevStateExecutionInstance);
-      notifyElements = prevStateExecutionInstance.getNotifyElements();
+      if (prevStateExecutionInstance.getNotifyElements() != null) {
+        notifyElements = prevStateExecutionInstance.getNotifyElements();
+      }
     }
     ops.set("notifyElements", notifyElements);
 
