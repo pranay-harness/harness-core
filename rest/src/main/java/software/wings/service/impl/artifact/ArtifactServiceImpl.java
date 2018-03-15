@@ -15,14 +15,10 @@ import static software.wings.beans.artifact.Artifact.Status.READY;
 import static software.wings.beans.artifact.Artifact.Status.REJECTED;
 import static software.wings.beans.artifact.Artifact.Status.RUNNING;
 import static software.wings.beans.artifact.Artifact.Status.WAITING;
-import static software.wings.beans.artifact.ArtifactStreamType.ACR;
-import static software.wings.beans.artifact.ArtifactStreamType.AMI;
 import static software.wings.beans.artifact.ArtifactStreamType.ARTIFACTORY;
-import static software.wings.beans.artifact.ArtifactStreamType.DOCKER;
-import static software.wings.beans.artifact.ArtifactStreamType.ECR;
-import static software.wings.beans.artifact.ArtifactStreamType.GCR;
 import static software.wings.beans.artifact.ArtifactStreamType.NEXUS;
 import static software.wings.collect.CollectEvent.Builder.aCollectEvent;
+import static software.wings.common.Constants.autoDownloaded;
 import static software.wings.dl.MongoHelper.setUnset;
 import static software.wings.exception.WingsException.ReportTarget.USER;
 import static software.wings.service.intfc.FileService.FileBucket.ARTIFACTS;
@@ -47,6 +43,7 @@ import software.wings.beans.Application;
 import software.wings.beans.ErrorCode;
 import software.wings.beans.Service;
 import software.wings.beans.artifact.Artifact;
+import software.wings.beans.artifact.Artifact.ContentStatus;
 import software.wings.beans.artifact.Artifact.Status;
 import software.wings.beans.artifact.ArtifactFile;
 import software.wings.beans.artifact.ArtifactStream;
@@ -148,50 +145,42 @@ public class ArtifactServiceImpl implements ArtifactService {
 
     artifact.setArtifactSourceName(artifactStream.getSourceName());
     artifact.setServiceIds(asList(artifactStream.getServiceId()));
-    Status status = getArtifactStatus(artifact, artifactStream);
 
-    artifact.setStatus(status);
+    setArtifactStatus(artifact, artifactStream);
 
     String key = wingsPersistence.save(artifact);
 
     Artifact savedArtifact = wingsPersistence.get(Artifact.class, artifact.getAppId(), key);
-    if (status.equals(QUEUED)) {
+    if (savedArtifact.getStatus().equals(QUEUED)) {
       logger.info("Sending event to collect artifact {} ", savedArtifact);
       collectQueue.send(aCollectEvent().withArtifact(savedArtifact).build());
     }
     return savedArtifact;
   }
 
-  private Status getArtifactStatus(Artifact artifact, ArtifactStream artifactStream) {
-    if (artifactStream.isMetadataOnly()) {
+  private void setArtifactStatus(Artifact artifact, ArtifactStream artifactStream) {
+    if (artifactStream.isMetadataOnly() || autoDownloaded.contains(artifactStream.getArtifactStreamType())) {
       artifact.setContentStatus(METADATA_ONLY);
-      return APPROVED;
+      artifact.setStatus(APPROVED);
+      return;
     }
-
-    if (DOCKER.name().equals(artifactStream.getArtifactStreamType())
-        || ECR.name().equals(artifactStream.getArtifactStreamType())
-        || GCR.name().equals(artifactStream.getArtifactStreamType())
-        || ACR.name().equals(artifactStream.getArtifactStreamType())) {
-      artifact.setContentStatus(METADATA_ONLY);
-      return APPROVED;
-    }
-
-    if (AMI.name().equals(artifactStream.getArtifactStreamType())) {
-      artifact.setContentStatus(METADATA_ONLY);
-      return APPROVED;
-    }
-
     if (NEXUS.name().equals(artifactStream.getArtifactStreamType())) {
       artifact.setContentStatus(
           getArtifactType(artifactStream).equals(ArtifactType.DOCKER) ? METADATA_ONLY : NOT_DOWNLOADED);
-      return APPROVED;
+      artifact.setStatus(APPROVED);
+      return;
     }
 
     if (ARTIFACTORY.name().equals(artifactStream.getArtifactStreamType())) {
-      return getArtifactType(artifactStream).equals(ArtifactType.DOCKER) ? APPROVED : QUEUED;
+      if (getArtifactType(artifactStream).equals(ArtifactType.DOCKER)) {
+        artifact.setContentStatus(METADATA_ONLY);
+        artifact.setStatus(APPROVED);
+        return;
+      }
+      artifact.setStatus(QUEUED);
+      return;
     }
-
-    return QUEUED;
+    artifact.setStatus(QUEUED);
   }
 
   private ArtifactType getArtifactType(ArtifactStream artifactStream) {
@@ -242,7 +231,7 @@ public class ArtifactServiceImpl implements ArtifactService {
   }
 
   @Override
-  public void updateStatus(String artifactId, String appId, Status status, Artifact.ContentStatus contentStatus) {
+  public void updateStatus(String artifactId, String appId, Status status, ContentStatus contentStatus) {
     Query<Artifact> query =
         wingsPersistence.createQuery(Artifact.class).field(ID_KEY).equal(artifactId).field("appId").equal(appId);
     UpdateOperations<Artifact> ops = wingsPersistence.createUpdateOperations(Artifact.class);
@@ -253,7 +242,7 @@ public class ArtifactServiceImpl implements ArtifactService {
 
   @Override
   public void updateStatus(
-      String artifactId, String appId, Status status, Artifact.ContentStatus contentStatus, String errorMessage) {
+      String artifactId, String appId, Status status, ContentStatus contentStatus, String errorMessage) {
     Query<Artifact> query =
         wingsPersistence.createQuery(Artifact.class).field(ID_KEY).equal(artifactId).field("appId").equal(appId);
     UpdateOperations<Artifact> ops = wingsPersistence.createUpdateOperations(Artifact.class);
@@ -528,6 +517,7 @@ public class ArtifactServiceImpl implements ArtifactService {
       updateStatus(artifactId, appId, APPROVED, DOWNLOADED);
       return artifact;
     }
+
     if ((METADATA_ONLY == artifact.getContentStatus()) || (DOWNLOADING == artifact.getContentStatus())
         || (DOWNLOADED == artifact.getContentStatus())) {
       logger.info("Artifact content for artifactId {} of the appId {} is either downloaded or in progress. Returning.",
@@ -539,5 +529,19 @@ public class ArtifactServiceImpl implements ArtifactService {
     collectQueue.send(aCollectEvent().withArtifact(artifact).build());
 
     return artifact;
+  }
+
+  @Override
+  public ContentStatus getArtifactContentStatus(Artifact artifact) {
+    if (artifact.getContentStatus() != null) {
+      return artifact.getContentStatus();
+    }
+    ArtifactStream artifactStream = artifactStreamService.get(artifact.getAppId(), artifact.getArtifactStreamId());
+    if (artifactStream == null) {
+      logger.info("ArtifactStream of artifact {} was deleted", artifact.getUuid());
+      return artifact.getContentStatus();
+    }
+    setArtifactStatus(artifact, artifactStream);
+    return artifact.getContentStatus();
   }
 }

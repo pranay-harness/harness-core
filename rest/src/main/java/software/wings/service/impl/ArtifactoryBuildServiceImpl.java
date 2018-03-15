@@ -45,19 +45,20 @@ public class ArtifactoryBuildServiceImpl implements ArtifactoryBuildService {
   public List<BuildDetails> getBuilds(String appId, ArtifactStreamAttributes artifactStreamAttributes,
       ArtifactoryConfig artifactoryConfig, List<EncryptedDataDetail> encryptionDetails) {
     equalCheck(artifactStreamAttributes.getArtifactStreamType(), ArtifactStreamType.ARTIFACTORY.name());
+    return getBuilds(appId, artifactStreamAttributes, artifactoryConfig, encryptionDetails, 200);
+  }
+
+  @Override
+  public List<BuildDetails> getBuilds(String appId, ArtifactStreamAttributes artifactStreamAttributes,
+      ArtifactoryConfig artifactoryConfig, List<EncryptedDataDetail> encryptionDetails, int limit) {
+    equalCheck(artifactStreamAttributes.getArtifactStreamType(), ArtifactStreamType.ARTIFACTORY.name());
     if (artifactStreamAttributes.getArtifactType().equals(DOCKER)) {
       return artifactoryService.getBuilds(artifactoryConfig, encryptionDetails, artifactStreamAttributes.getJobName(),
-          artifactStreamAttributes.getImageName(), 50);
+          artifactStreamAttributes.getImageName(), limit == -1 ? 1000 : limit);
     } else {
-      if (artifactStreamAttributes.isMetadataOnly()) {
-        return artifactoryService.getFilePaths(artifactoryConfig, encryptionDetails,
-            artifactStreamAttributes.getJobName(), artifactStreamAttributes.getArtifactPattern(),
-            artifactStreamAttributes.getRepositoryType(), 25);
-      } else {
-        return artifactoryService.getFilePaths(artifactoryConfig, encryptionDetails,
-            artifactStreamAttributes.getJobName(), artifactStreamAttributes.getArtifactPattern(),
-            artifactStreamAttributes.getRepositoryType(), 25);
-      }
+      return artifactoryService.getFilePaths(artifactoryConfig, encryptionDetails,
+          artifactStreamAttributes.getJobName(), artifactStreamAttributes.getArtifactPattern(),
+          artifactStreamAttributes.getRepositoryType(), limit == -1 ? 25 : limit);
     }
   }
 

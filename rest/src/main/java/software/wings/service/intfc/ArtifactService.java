@@ -191,4 +191,11 @@ public interface ArtifactService extends OwnedByApplication {
    * @param artifactId
    */
   Artifact startArtifactCollection(String appId, String artifactId);
+
+  /**
+   * Gets content status if artifact does not have content status
+   * @param artifact
+   * @return
+   */
+  ContentStatus getArtifactContentStatus(Artifact artifact);
 }

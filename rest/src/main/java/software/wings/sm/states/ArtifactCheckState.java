@@ -91,8 +91,8 @@ public class ArtifactCheckState extends State {
       }
 
       // TODO : auto downloaded is not done well in artifact stream - temporarily using Constants
-      if (artifactStream.isMetadataOnly()
-          || Constants.autoDownloaded.contains(artifactStream.getArtifactStreamType())) {
+      if (artifactStream.isMetadataOnly() || Constants.autoDownloaded.contains(artifactStream.getArtifactStreamType())
+          || artifactService.getArtifactContentStatus(artifact).equals(ContentStatus.METADATA_ONLY)) {
         return;
       }
 

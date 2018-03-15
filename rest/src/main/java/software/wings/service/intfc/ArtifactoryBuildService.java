@@ -17,17 +17,13 @@ import java.util.Optional;
  * Created by sgurubelli on 6/20/17.
  */
 public interface ArtifactoryBuildService extends BuildService<ArtifactoryConfig> {
-  /**
-   * Gets builds.
-   *
-   * @param appId                    the app id
-   * @param artifactStreamAttributes the artifact stream attributes
-   * @param artifactoryConfig        the artifactory config
-   * @return the builds
-   */
   @DelegateTaskType(TaskType.ARTIFACTORY_GET_BUILDS)
   List<BuildDetails> getBuilds(String appId, ArtifactStreamAttributes artifactStreamAttributes,
       ArtifactoryConfig artifactoryConfig, List<EncryptedDataDetail> encryptionDetails);
+
+  @DelegateTaskType(TaskType.ARTIFACTORY_GET_BUILDS)
+  List<BuildDetails> getBuilds(String appId, ArtifactStreamAttributes artifactStreamAttributes,
+      ArtifactoryConfig artifactoryConfig, List<EncryptedDataDetail> encryptionDetails, int limit);
 
   @DelegateTaskType(TaskType.ARTIFACTORY_GET_JOBS)
   List<JobDetails> getJobs(

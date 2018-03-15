@@ -460,7 +460,7 @@ public class NexusServiceTest extends WingsBaseTest {
     assertThat(buildDetails)
         .hasSize(2)
         .extracting(BuildDetails::getNumber, BuildDetails::getRevision)
-        .containsExactly(tuple("3.0", null), tuple("3.1.2", null));
+        .containsExactly(tuple("3.0", "3.0"), tuple("3.1.2", "3.1.2"));
   }
 
   @Test

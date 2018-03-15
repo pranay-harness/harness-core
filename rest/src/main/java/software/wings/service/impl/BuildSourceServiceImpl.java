@@ -3,6 +3,7 @@ package software.wings.service.impl;
 import static software.wings.beans.DelegateTask.SyncTaskContext.Builder.aContext;
 import static software.wings.beans.artifact.ArtifactStreamType.AMAZON_S3;
 import static software.wings.beans.artifact.ArtifactStreamType.AMI;
+import static software.wings.beans.artifact.ArtifactStreamType.ARTIFACTORY;
 import static software.wings.utils.Validator.notNullCheck;
 
 import com.google.common.collect.Sets;
@@ -13,13 +14,17 @@ import software.wings.annotation.Encryptable;
 import software.wings.beans.DelegateTask.SyncTaskContext;
 import software.wings.beans.Service;
 import software.wings.beans.SettingAttribute;
+import software.wings.beans.artifact.Artifact;
 import software.wings.beans.artifact.ArtifactStream;
 import software.wings.beans.artifact.ArtifactStreamAttributes;
 import software.wings.beans.artifact.ArtifactStreamType;
 import software.wings.delegatetasks.DelegateProxyFactory;
+import software.wings.exception.WingsException;
+import software.wings.exception.WingsException.ReportTarget;
 import software.wings.helpers.ext.jenkins.BuildDetails;
 import software.wings.helpers.ext.jenkins.JobDetails;
 import software.wings.security.encryption.EncryptedDataDetail;
+import software.wings.service.intfc.ArtifactCollectionService;
 import software.wings.service.intfc.ArtifactStreamService;
 import software.wings.service.intfc.BuildService;
 import software.wings.service.intfc.BuildSourceService;
@@ -49,6 +54,7 @@ public class BuildSourceServiceImpl implements BuildSourceService {
   @Inject private ServiceResourceService serviceResourceService;
   @Inject private ServiceClassLocator serviceLocator;
   @Inject private SecretManager secretManager;
+  @Inject private ArtifactCollectionService artifactCollectionService;
 
   @Override
   public Set<JobDetails> getJobs(String appId, String settingId, String parentJobName) {
@@ -100,12 +106,11 @@ public class BuildSourceServiceImpl implements BuildSourceService {
     SettingValue settingValue = getSettingValue(settingAttribute);
     List<EncryptedDataDetail> encryptedDataDetails = getEncryptedDataDetails((Encryptable) settingValue);
 
-    ArtifactStream artifactStream = artifactStreamService.get(appId, artifactStreamId);
-    notNullCheck("Artifact Stream", artifactStream);
-    Service service = serviceResourceService.get(appId, artifactStream.getServiceId(), false);
-    ArtifactStreamAttributes artifactStreamAttributes = artifactStream.getArtifactStreamAttributes();
-    artifactStreamAttributes.setArtifactType(service.getArtifactType());
+    ArtifactStream artifactStream = getArtifactStream(appId, artifactStreamId);
+    Service service = getService(appId, artifactStream);
     String artifactStreamType = artifactStream.getArtifactStreamType();
+
+    ArtifactStreamAttributes artifactStreamAttributes = getArtifactStreamAttributes(artifactStream, service);
 
     if (AMAZON_S3.getName().equals(artifactStreamType) || AMI.getName().equals(artifactStreamType)) {
       return getBuildService(settingAttribute, appId, artifactStreamType)
@@ -117,25 +122,62 @@ public class BuildSourceServiceImpl implements BuildSourceService {
   }
 
   @Override
+  public List getBuilds(String appId, String artifactStreamId, String settingId, int limit) {
+    SettingAttribute settingAttribute = settingsService.get(settingId);
+    SettingValue settingValue = getSettingValue(settingAttribute);
+    List<EncryptedDataDetail> encryptedDataDetails = getEncryptedDataDetails((Encryptable) settingValue);
+
+    ArtifactStream artifactStream = getArtifactStream(appId, artifactStreamId);
+    Service service = getService(appId, artifactStream);
+    String artifactStreamType = artifactStream.getArtifactStreamType();
+
+    ArtifactStreamAttributes artifactStreamAttributes = getArtifactStreamAttributes(artifactStream, service);
+    // TODO: The limit supported only for Artifactory for now
+    if (ARTIFACTORY.getName().equals(artifactStreamType)) {
+      return getBuildService(settingAttribute, appId)
+          .getBuilds(appId, artifactStreamAttributes, settingValue, encryptedDataDetails, limit);
+    } else {
+      return getBuilds(appId, artifactStreamId, settingId);
+    }
+  }
+
+  private ArtifactStreamAttributes getArtifactStreamAttributes(ArtifactStream artifactStream, Service service) {
+    ArtifactStreamAttributes artifactStreamAttributes = artifactStream.getArtifactStreamAttributes();
+    artifactStreamAttributes.setArtifactType(service.getArtifactType());
+    return artifactStreamAttributes;
+  }
+
+  @Override
   public BuildDetails getLastSuccessfulBuild(String appId, String artifactStreamId, String settingId) {
     SettingAttribute settingAttribute = settingsService.get(settingId);
     SettingValue settingValue = getSettingValue(settingAttribute);
     List<EncryptedDataDetail> encryptedDataDetails = getEncryptedDataDetails((Encryptable) settingValue);
 
-    ArtifactStream artifactStream = artifactStreamService.get(appId, artifactStreamId);
-    notNullCheck("Artifact Stream", artifactStream);
-    Service service = serviceResourceService.get(appId, artifactStream.getServiceId());
-    ArtifactStreamAttributes artifactStreamAttributes = artifactStream.getArtifactStreamAttributes();
-    artifactStreamAttributes.setArtifactType(service.getArtifactType());
-    String artifactStreamType = artifactStream.getArtifactStreamType();
+    ArtifactStream artifactStream = getArtifactStream(appId, artifactStreamId);
 
-    if (AMAZON_S3.getName().equals(artifactStreamType)) {
-      return getBuildService(settingAttribute, appId, artifactStreamType)
+    Service service = getService(appId, artifactStream);
+
+    ArtifactStreamAttributes artifactStreamAttributes = getArtifactStreamAttributes(artifactStream, service);
+
+    if (AMAZON_S3.getName().equals(artifactStream.getArtifactStreamType())) {
+      return getBuildService(settingAttribute, appId, artifactStream.getArtifactStreamType())
           .getLastSuccessfulBuild(appId, artifactStreamAttributes, settingValue, encryptedDataDetails);
     } else {
       return getBuildService(settingAttribute, appId)
           .getLastSuccessfulBuild(appId, artifactStreamAttributes, settingValue, encryptedDataDetails);
     }
+  }
+
+  private ArtifactStream getArtifactStream(String appId, String artifactStreamId) {
+    ArtifactStream artifactStream = artifactStreamService.get(appId, artifactStreamId);
+    notNullCheck("Artifact Stream", artifactStream);
+    return artifactStream;
+  }
+
+  private Service getService(String appId, ArtifactStream artifactStream) {
+    Service service = serviceResourceService.get(appId, artifactStream.getServiceId(), false);
+    notNullCheck("Service", service);
+    return service;
   }
 
   @Override
@@ -178,6 +220,14 @@ public class BuildSourceServiceImpl implements BuildSourceService {
       syncTaskContext.setTimeout(120 * 1000);
     }
     return delegateProxyFactory.get(buildServiceMap.get(settingAttribute.getValue().getClass()), syncTaskContext);
+  }
+
+  @Override
+  public Artifact collectArtifact(String appId, String artifactStreamId, BuildDetails buildDetails) {
+    if (buildDetails == null) {
+      throw new WingsException("Build deatails can not null", ReportTarget.USER);
+    }
+    return artifactCollectionService.collectArtifact(appId, artifactStreamId, buildDetails);
   }
 
   private BuildService getBuildService(SettingAttribute settingAttribute, String appId, String artifactStreamType) {

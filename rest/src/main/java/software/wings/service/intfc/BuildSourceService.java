@@ -2,6 +2,7 @@ package software.wings.service.intfc;
 
 import org.hibernate.validator.constraints.NotEmpty;
 import software.wings.beans.SettingAttribute;
+import software.wings.beans.artifact.Artifact;
 import software.wings.beans.artifact.ArtifactStreamAttributes;
 import software.wings.helpers.ext.jenkins.BuildDetails;
 import software.wings.helpers.ext.jenkins.JobDetails;
@@ -69,6 +70,16 @@ public interface BuildSourceService {
    */
   List getBuilds(String appId, String artifactStreamId, String settingId);
 
+  /***
+   * Gets builds with the limit
+   * @param appId
+   * @param artifactStreamId
+   * @param settingId
+   * @param limit
+   * @return
+   */
+  List getBuilds(String appId, String artifactStreamId, String settingId, int limit);
+
   /**
    * Gets last successful build.
    *
@@ -118,4 +129,13 @@ public interface BuildSourceService {
    * @return the build service
    */
   BuildService getBuildService(SettingAttribute settingAttribute, String appId);
+
+  /***
+   * Collects an artifact
+   * @param appId
+   * @param artifactStreamId
+   * @param buildDetails
+   * @return
+   */
+  Artifact collectArtifact(String appId, String artifactStreamId, BuildDetails buildDetails);
 }
