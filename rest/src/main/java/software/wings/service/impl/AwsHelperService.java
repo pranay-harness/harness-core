@@ -922,10 +922,9 @@ public class AwsHelperService {
           amazonAutoScalingClient.describeAutoScalingGroups(new DescribeAutoScalingGroupsRequest().withMaxRecords(100));
       List<AutoScalingGroup> result = new ArrayList<>(describeAutoScalingGroupsResult.getAutoScalingGroups());
       while (isNotEmpty(describeAutoScalingGroupsResult.getNextToken())) {
-        describeAutoScalingGroupsResult =
-            amazonAutoScalingClient
-                .describeAutoScalingGroups(new DescribeAutoScalingGroupsRequest().withMaxRecords(100))
-                .withNextToken(describeAutoScalingGroupsResult.getNextToken());
+        describeAutoScalingGroupsResult = amazonAutoScalingClient.describeAutoScalingGroups(
+            new DescribeAutoScalingGroupsRequest().withMaxRecords(100).withNextToken(
+                describeAutoScalingGroupsResult.getNextToken()));
         result.addAll(describeAutoScalingGroupsResult.getAutoScalingGroups());
       }
       return result;
@@ -947,10 +946,9 @@ public class AwsHelperService {
               new DescribeLaunchConfigurationsRequest().withMaxRecords(100));
       List<LaunchConfiguration> result = new ArrayList<>(describeLaunchConfigurationsResult.getLaunchConfigurations());
       while (isNotEmpty(describeLaunchConfigurationsResult.getNextToken())) {
-        describeLaunchConfigurationsResult =
-            amazonAutoScalingClient
-                .describeLaunchConfigurations(new DescribeLaunchConfigurationsRequest().withMaxRecords(100))
-                .withNextToken(describeLaunchConfigurationsResult.getNextToken());
+        describeLaunchConfigurationsResult = amazonAutoScalingClient.describeLaunchConfigurations(
+            new DescribeLaunchConfigurationsRequest().withMaxRecords(100).withNextToken(
+                describeLaunchConfigurationsResult.getNextToken()));
         result.addAll(describeLaunchConfigurationsResult.getLaunchConfigurations());
       }
       return result;
