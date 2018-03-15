@@ -11,6 +11,7 @@ import software.wings.waitnotify.NotifyResponseData;
 
 import java.util.List;
 import java.util.Map;
+import java.util.Objects;
 
 /**
  * Created by peeyushaggarwal on 10/24/16.
@@ -46,8 +47,15 @@ public class JenkinsExecutionData extends StateExecutionData implements NotifyRe
   private void setExecutionData(Map<String, ExecutionDataValue> executionDetails) {
     putNotNull(
         executionDetails, "jobName", anExecutionDataValue().withValue(jobName).withDisplayName("Job Name").build());
-    putNotNull(executionDetails, "jobParameters",
-        anExecutionDataValue().withValue(jobParameters).withDisplayName("Job Parameters").build());
+
+    if (jobParameters != null) {
+      putNotNull(executionDetails, "jobParameters",
+          anExecutionDataValue()
+              .withValue(String.valueOf(jobParameters.values().removeIf(Objects::isNull)))
+              .withDisplayName("Job Parameters")
+              .build());
+    }
+
     putNotNull(executionDetails, "fileAssertionData",
         anExecutionDataValue().withValue(filePathAssertionMap).withDisplayName("Assertion Data").build());
     putNotNull(executionDetails, "jobStatus",
@@ -55,12 +63,15 @@ public class JenkinsExecutionData extends StateExecutionData implements NotifyRe
     putNotNull(executionDetails, "buildNumber",
         anExecutionDataValue().withValue(buildNumber).withDisplayName("Build Number").build());
     putNotNull(executionDetails, "description",
-        anExecutionDataValue().withValue(buildNumber).withDisplayName("Description").build());
+        anExecutionDataValue().withValue(description).withDisplayName("Description").build());
     putNotNull(
         executionDetails, "build", anExecutionDataValue().withValue(buildUrl).withDisplayName("Build Url").build());
     if (metadata != null) {
       putNotNull(executionDetails, "metadata",
-          anExecutionDataValue().withValue(String.valueOf(metadata)).withDisplayName("Meta-Data").build());
+          anExecutionDataValue()
+              .withValue(String.valueOf(metadata.values().removeIf(Objects::isNull)))
+              .withDisplayName("Meta-Data")
+              .build());
     }
     putNotNull(executionDetails, "activityId",
         anExecutionDataValue().withValue(activityId).withDisplayName("Activity Id").build());

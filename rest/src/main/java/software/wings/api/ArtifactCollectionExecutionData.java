@@ -9,6 +9,7 @@ import software.wings.sm.StateExecutionData;
 import software.wings.waitnotify.NotifyResponseData;
 
 import java.util.Map;
+import java.util.Objects;
 
 /**
  * Created by sgurubelli on 11/20/17.
@@ -26,30 +27,21 @@ public class ArtifactCollectionExecutionData extends StateExecutionData implemen
   private Map<String, String> metadata;
   private String artifactStreamId;
   private String artifactId;
+  private String message;
 
   @Override
   public Map<String, ExecutionDataValue> getExecutionSummary() {
     Map<String, ExecutionDataValue> executionDetails = super.getExecutionSummary();
-    putNotNull(executionDetails, "artifactSource",
-        anExecutionDataValue().withValue(artifactSource).withDisplayName("Artifact Source").build());
-    putNotNull(
-        executionDetails, "status", anExecutionDataValue().withValue(artifactStatus).withDisplayName("Status").build());
-    putNotNull(
-        executionDetails, "jobName", anExecutionDataValue().withValue(jobName).withDisplayName("Job Name").build());
-    putNotNull(
-        executionDetails, "buildNo", anExecutionDataValue().withValue(buildNo).withDisplayName("Build / Tag").build());
-    putNotNull(
-        executionDetails, "revision", anExecutionDataValue().withValue(revision).withDisplayName("Revision").build());
-    if (metadata != null) {
-      putNotNull(executionDetails, "metadata",
-          anExecutionDataValue().withValue(String.valueOf(metadata)).withDisplayName("Meta-Data").build());
-    }
-    return executionDetails;
+    return setExecutionData(executionDetails);
   }
 
   @Override
   public Map<String, ExecutionDataValue> getExecutionDetails() {
     Map<String, ExecutionDataValue> executionDetails = super.getExecutionDetails();
+    return setExecutionData(executionDetails);
+  }
+
+  private Map<String, ExecutionDataValue> setExecutionData(Map<String, ExecutionDataValue> executionDetails) {
     putNotNull(executionDetails, "artifactSource",
         anExecutionDataValue().withValue(artifactSource).withDisplayName("Artifact Source").build());
     putNotNull(
@@ -62,8 +54,13 @@ public class ArtifactCollectionExecutionData extends StateExecutionData implemen
         executionDetails, "revision", anExecutionDataValue().withValue(revision).withDisplayName("Revision").build());
     if (metadata != null) {
       putNotNull(executionDetails, "metadata",
-          anExecutionDataValue().withValue(String.valueOf(metadata)).withDisplayName("Meta-Data").build());
+          anExecutionDataValue()
+              .withValue(String.valueOf(metadata.values().removeIf(Objects::isNull)))
+              .withDisplayName("Meta-Data")
+              .build());
     }
+    putNotNull(
+        executionDetails, "message", anExecutionDataValue().withValue(message).withDisplayName("Message").build());
     return executionDetails;
   }
 }

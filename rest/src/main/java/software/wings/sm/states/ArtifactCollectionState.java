@@ -8,6 +8,7 @@ import static software.wings.common.Constants.DEFAULT_ARTIFACT_COLLECTION_STATE_
 import static software.wings.common.Constants.URL;
 import static software.wings.common.Constants.WAIT_RESUME_GROUP;
 import static software.wings.sm.ExecutionResponse.Builder.anExecutionResponse;
+import static software.wings.sm.ExecutionStatus.SUCCESS;
 import static software.wings.sm.StateType.ARTIFACT_COLLECTION;
 import static software.wings.utils.Validator.notNullCheck;
 
@@ -15,7 +16,6 @@ import com.google.inject.Inject;
 import com.google.inject.name.Named;
 
 import com.github.reinert.jjschema.Attributes;
-import com.github.reinert.jjschema.SchemaIgnore;
 import org.hibernate.validator.constraints.NotEmpty;
 import org.mongodb.morphia.annotations.Transient;
 import org.quartz.JobBuilder;
@@ -36,8 +36,8 @@ import software.wings.service.intfc.ArtifactStreamService;
 import software.wings.service.intfc.WorkflowExecutionService;
 import software.wings.sm.ExecutionContext;
 import software.wings.sm.ExecutionResponse;
-import software.wings.sm.ExecutionStatus;
 import software.wings.sm.State;
+import software.wings.stencils.DefaultValue;
 import software.wings.stencils.EnumData;
 import software.wings.waitnotify.NotifyResponseData;
 
@@ -70,8 +70,16 @@ public class ArtifactCollectionState extends State {
   public ExecutionResponse execute(ExecutionContext context) {
     ArtifactStream artifactStream = artifactStreamService.get(context.getAppId(), artifactStreamId);
     notNullCheck("ArtifactStream", artifactStream);
+
+    String evaluatedBuildNo = getEvaluatedBuildNo(context);
     ArtifactCollectionExecutionData artifactCollectionExecutionData =
-        ArtifactCollectionExecutionData.builder().artifactSource(artifactStream.getSourceName()).build();
+        ArtifactCollectionExecutionData.builder()
+            .artifactSource(artifactStream.getSourceName())
+            .buildNo(evaluatedBuildNo)
+            .message("Waiting for [" + evaluatedBuildNo + "] to be collected from ["
+                + artifactStream.getArtifactStreamType() + "] repository")
+            .build();
+
     return anExecutionResponse()
         .withAsync(true)
         .withCorrelationIds(asList(scheduleWaitNotify()))
@@ -83,18 +91,32 @@ public class ArtifactCollectionState extends State {
   public ExecutionResponse handleAsyncResponse(ExecutionContext context, Map<String, NotifyResponseData> response) {
     ArtifactCollectionExecutionData artifactCollectionExecutionData =
         (ArtifactCollectionExecutionData) response.values().iterator().next();
+
     ArtifactStream artifactStream = artifactStreamService.get(context.getAppId(), artifactStreamId);
     notNullCheck("ArtifactStream", artifactStream);
+
+    String evaluatedBuildNo = getEvaluatedBuildNo(context);
     Artifact lastCollectedArtifact =
-        getLastCollectedArtifact(context, artifactStream.getUuid(), artifactStream.getSourceName());
+        getLastCollectedArtifact(context, artifactStream.getUuid(), artifactStream.getSourceName(), evaluatedBuildNo);
+
+    artifactCollectionExecutionData.setArtifactSource(artifactStream.getSourceName());
+
     if (lastCollectedArtifact == null || !lastCollectedArtifact.getStatus().isFinalStatus()) {
+      String message = "Waiting for [" + evaluatedBuildNo + "] to be collected from ["
+          + artifactStream.getArtifactStreamType() + "] repository";
+      logger.info(message);
+
+      artifactCollectionExecutionData.setMessage(message);
+      artifactCollectionExecutionData.setBuildNo(evaluatedBuildNo);
+
       return anExecutionResponse()
           .withAsync(true)
           .withCorrelationIds(asList(scheduleWaitNotify()))
           .withStateExecutionData(artifactCollectionExecutionData)
           .build();
     }
-    artifactCollectionExecutionData.setArtifactSource(lastCollectedArtifact.getArtifactSourceName());
+    logger.info("Build/Tag {} collected of Artifact Source {}", evaluatedBuildNo, artifactStream.getSourceName());
+
     artifactCollectionExecutionData.setRevision(lastCollectedArtifact.getRevision());
     artifactCollectionExecutionData.setBuildNo(lastCollectedArtifact.getBuildNo());
     artifactCollectionExecutionData.setMetadata(lastCollectedArtifact.getMetadata());
@@ -103,8 +125,18 @@ public class ArtifactCollectionState extends State {
     addBuildExecutionSummary(context, artifactCollectionExecutionData, artifactStream);
     return anExecutionResponse()
         .withStateExecutionData(artifactCollectionExecutionData)
-        .withExecutionStatus(ExecutionStatus.SUCCESS)
+        .withExecutionStatus(SUCCESS)
         .build();
+  }
+
+  private String getEvaluatedBuildNo(ExecutionContext context) {
+    String evaluatedBuildNo;
+    if (isBlank(buildNo) || buildNo.equalsIgnoreCase(LATEST)) {
+      evaluatedBuildNo = buildNo;
+    } else {
+      evaluatedBuildNo = context.renderExpression(buildNo);
+    }
+    return evaluatedBuildNo;
   }
 
   private void addBuildExecutionSummary(ExecutionContext context,
@@ -132,7 +164,13 @@ public class ArtifactCollectionState extends State {
   }
 
   @Override
-  public void handleAbortEvent(ExecutionContext context) {}
+  public void handleAbortEvent(ExecutionContext context) {
+    logger.info("Action aborted either due to timeout or manual user abort");
+    ArtifactCollectionExecutionData artifactCollectionExecutionData =
+        (ArtifactCollectionExecutionData) context.getStateExecutionData();
+    artifactCollectionExecutionData.setMessage("Failed to collect artifact from Artifact Server. Please verify tag ["
+        + artifactCollectionExecutionData.getBuildNo() + "] exists");
+  }
 
   private String scheduleWaitNotify() {
     String resumeId = generateUuid();
@@ -161,19 +199,20 @@ public class ArtifactCollectionState extends State {
     return invalidFields;
   }
 
-  @SchemaIgnore
+  @Attributes(title = "Timeout (ms)")
+  @DefaultValue("" + DEFAULT_ARTIFACT_COLLECTION_STATE_TIMEOUT_MILLIS)
   @Override
   public Integer getTimeoutMillis() {
-    return DEFAULT_ARTIFACT_COLLECTION_STATE_TIMEOUT_MILLIS;
+    return super.getTimeoutMillis();
   }
 
-  private Artifact getLastCollectedArtifact(ExecutionContext context, String artifactStreamId, String sourceName) {
+  private Artifact getLastCollectedArtifact(
+      ExecutionContext context, String artifactStreamId, String sourceName, String buildNo) {
     if (isBlank(buildNo) || buildNo.equalsIgnoreCase(LATEST)) {
       return artifactService.fetchLastCollectedArtifactForArtifactStream(
           context.getAppId(), artifactStreamId, sourceName);
     } else {
-      return artifactService.getArtifactByBuildNumber(
-          context.getAppId(), artifactStreamId, sourceName, context.renderExpression(buildNo));
+      return artifactService.getArtifactByBuildNumber(context.getAppId(), artifactStreamId, sourceName, buildNo);
     }
   }
 
