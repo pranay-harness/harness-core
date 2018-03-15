@@ -9,7 +9,6 @@ import software.wings.sm.StateExecutionData;
 import software.wings.waitnotify.NotifyResponseData;
 
 import java.util.Map;
-import java.util.Objects;
 
 /**
  * Created by sgurubelli on 11/20/17.
@@ -54,10 +53,7 @@ public class ArtifactCollectionExecutionData extends StateExecutionData implemen
         executionDetails, "revision", anExecutionDataValue().withValue(revision).withDisplayName("Revision").build());
     if (metadata != null) {
       putNotNull(executionDetails, "metadata",
-          anExecutionDataValue()
-              .withValue(String.valueOf(metadata.values().removeIf(Objects::isNull)))
-              .withDisplayName("Meta-Data")
-              .build());
+          anExecutionDataValue().withValue(removeNullValues(metadata)).withDisplayName("Meta-Data").build());
     }
     putNotNull(
         executionDetails, "message", anExecutionDataValue().withValue(message).withDisplayName("Message").build());

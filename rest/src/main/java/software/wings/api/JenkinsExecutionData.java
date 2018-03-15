@@ -11,7 +11,6 @@ import software.wings.waitnotify.NotifyResponseData;
 
 import java.util.List;
 import java.util.Map;
-import java.util.Objects;
 
 /**
  * Created by peeyushaggarwal on 10/24/16.
@@ -50,10 +49,7 @@ public class JenkinsExecutionData extends StateExecutionData implements NotifyRe
 
     if (jobParameters != null) {
       putNotNull(executionDetails, "jobParameters",
-          anExecutionDataValue()
-              .withValue(String.valueOf(jobParameters.values().removeIf(Objects::isNull)))
-              .withDisplayName("Job Parameters")
-              .build());
+          anExecutionDataValue().withValue(removeNullValues(jobParameters)).withDisplayName("Job Parameters").build());
     }
 
     putNotNull(executionDetails, "fileAssertionData",
@@ -68,10 +64,7 @@ public class JenkinsExecutionData extends StateExecutionData implements NotifyRe
         executionDetails, "build", anExecutionDataValue().withValue(buildUrl).withDisplayName("Build Url").build());
     if (metadata != null) {
       putNotNull(executionDetails, "metadata",
-          anExecutionDataValue()
-              .withValue(String.valueOf(metadata.values().removeIf(Objects::isNull)))
-              .withDisplayName("Meta-Data")
-              .build());
+          anExecutionDataValue().withValue(removeNullValues(jobParameters)).withDisplayName("Meta-Data").build());
     }
     putNotNull(executionDetails, "activityId",
         anExecutionDataValue().withValue(activityId).withDisplayName("Activity Id").build());
