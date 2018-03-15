@@ -81,6 +81,7 @@ import java.util.stream.Collectors;
 /**
  * Both the normal instance and container instance are handled here.
  * Once it finds the deployment is of type container, it hands off the request to ContainerInstanceHelper.
+ *
  * @author rktummala on 09/11/17
  */
 public class InstanceHelper {
@@ -103,9 +104,8 @@ public class InstanceHelper {
   @Inject private InstanceHandlerFactory instanceHandlerFactory;
 
   /**
-   *   The phaseExecutionData is used to process the instance information that is used by the service and infra
+   * The phaseExecutionData is used to process the instance information that is used by the service and infra
    * dashboards. The instance processing happens asynchronously.
-   *
    */
   public void extractInstanceOrContainerInfoBaseOnType(String stateExecutionInstanceId,
       StateExecutionData stateExecutionData, WorkflowStandardParams workflowStandardParams, String appId,
@@ -183,6 +183,21 @@ public class InstanceHelper {
           List<Instance> instanceList = Lists.newArrayList();
           PhaseStepExecutionSummary phaseStepExecutionSummary =
               getDeployPhaseStep(phaseExecutionData, Constants.DEPLOY_SERVICE);
+
+          if (phaseStepExecutionSummary == null) {
+            logger.warn(new StringBuilder()
+                            .append("phaseStepExecutionSummary is null for InfraMappingType")
+                            .append(infrastructureMapping.getInfraMappingType())
+                            .append(", appId: ")
+                            .append(appId)
+                            .append(", WorkflowExecution<Name, Id> :<")
+                            .append(workflowExecution.getName())
+                            .append(",")
+                            .append(workflowExecution.getWorkflowId())
+                            .append(">")
+                            .toString());
+            return;
+          }
           if (phaseStepExecutionSummary != null) {
             boolean failed = checkIfAnyStepsFailed(phaseStepExecutionSummary);
             if (failed) {
@@ -270,6 +285,18 @@ public class InstanceHelper {
   }
 
   private PhaseStepExecutionSummary getDeployPhaseStep(PhaseExecutionData phaseExecutionData, String phaseStepName) {
+    if (phaseExecutionData == null || phaseExecutionData.getPhaseExecutionSummary() == null
+        || phaseExecutionData.getPhaseExecutionSummary().getPhaseStepExecutionSummaryMap() == null) {
+      logger.warn(new StringBuilder()
+                      .append("Not able to get PhaseStepExecutionSummary for phaseStepName: ")
+                      .append(phaseStepName)
+                      .append(", as phaseExecutionData= ")
+                      .append(phaseExecutionData)
+                      .toString());
+
+      return null;
+    }
+
     return phaseExecutionData.getPhaseExecutionSummary().getPhaseStepExecutionSummaryMap().get(phaseStepName);
   }
 
