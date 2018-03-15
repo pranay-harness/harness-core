@@ -1268,7 +1268,7 @@ public class InfrastructureMappingServiceImpl implements InfrastructureMappingSe
       return Integer.toString(activeServiceCounts.values().stream().mapToInt(Integer::intValue).sum());
     } catch (Exception e) {
       logger.warn(Misc.getMessage(e), e);
-      throw new WingsException(INVALID_REQUEST, ReportTarget.USER).addParam("message", e.getMessage());
+      return "0";
     }
   }
 
