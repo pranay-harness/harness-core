@@ -15,7 +15,7 @@ mongo harness --eval "db.dropDatabase();"
 #build python docker image in parrallel
 set +e
 echo "remove existing image"
-docker rmi le_local
+docker rmi le_local || true
 set -e
 echo "build docker image in background"
 nohup sh -c 'cd python/splunk_intelligence && make init && make dist && docker build --rm -t le_local .' > docker_container_build.log &
@@ -38,8 +38,6 @@ else
 fi
 
 echo 'sleep for server to start'
-#wait for server to start
-
 set +e
 output=$(curl -sSk https://localhost:9090/api/version)
 status=$?
@@ -102,10 +100,9 @@ else
          -XX:MaxGCPauseMillis=500 -jar $SERVER_BUILD_DIR/delegate/target/delegate-0.0.1-SNAPSHOT-capsule.jar delegate/config-delegate.yml > delgate.out 2>&1 &
 fi
 
-#wait for delegate to start
+# wait for delegate to start
 echo 'wait for delegate to start'
 
-#wait for delegate to start
 mvn test -pl rest -Dtest=software.wings.integration.DelegateRegistrationIntegrationTest#shouldWaitForADelegateToRegister -DfailIfNoTests=false
 foundRegisteredDelegate=$?
 if [[ $foundRegisteredDelegate -ne 0 ]] ; then
@@ -115,16 +112,17 @@ fi
 
 #build and start learning engine
 export HOSTNAME
-echo $HOSTNAME
+echo "host is $HOSTNAME"
 #wait for docker container to finish
 echo "waiting for docker image to build"
 wait $docker_container_build_pid
+echo "finished waiting for docker image to build"
 serviceSecret=`mongo harness --eval "db.serviceSecrets.find({ }, { serviceSecret: 1, _id: 0})"| grep serviceSecret | awk '{print $4}' | tr -d '"'`
 echo $serviceSecret
 server_url=https://$HOSTNAME:9090
 echo $server_url
 docker run -d -e server_url=$server_url -e service_secret=$serviceSecret -e https_port=10800  -e learning_env=integration-tests le_local
 
-# listing containers after le_local was launched
+echo "listing containers after le_local was launched"
 docker ps
 
