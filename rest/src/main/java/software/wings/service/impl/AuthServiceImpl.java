@@ -460,11 +460,11 @@ public class AuthServiceImpl implements AuthService {
   }
 
   @Override
-  public void evictAccountUserPermissionInfoCache(String accountId, List<User> members) {
+  public void evictAccountUserPermissionInfoCache(String accountId, List<String> memberIds) {
     Cache<String, UserPermissionInfo> cache = cacheHelper.getUserPermissionInfoCache();
-    if (cache != null && isNotEmpty(members)) {
+    if (cache != null && isNotEmpty(memberIds)) {
       Set<String> keys =
-          members.stream().map(user -> getUserPermissionInfoCacheKey(accountId, user.getUuid())).collect(toSet());
+          memberIds.stream().map(userId -> getUserPermissionInfoCacheKey(accountId, userId)).collect(toSet());
       cache.removeAll(keys);
     }
   }

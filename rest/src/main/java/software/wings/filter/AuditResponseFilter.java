@@ -112,9 +112,8 @@ public class AuditResponseFilter implements Filter {
 
         accountId = isEmpty(accountId) ? appService.getAccountIdByAppId(appId) : accountId;
         String finalAccountId = accountId;
-        executorService.submit(() -> authService.evictAccountUserPermissionInfoCache(finalAccountId));
+        authService.evictAccountUserPermissionInfoCache(finalAccountId);
       }
-
     } catch (Exception ex) {
       logger.error("Cache eviction failed", ex);
     }

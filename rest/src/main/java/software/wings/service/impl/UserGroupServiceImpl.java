@@ -156,6 +156,6 @@ public class UserGroupServiceImpl implements UserGroupService {
   }
 
   private void evictUserPermissionInfoCacheForUserGroup(UserGroup userGroup) {
-    authService.evictAccountUserPermissionInfoCache(userGroup.getAccountId(), userGroup.getMembers());
+    authService.evictAccountUserPermissionInfoCache(userGroup.getAccountId(), userGroup.getMemberIds());
   }
 }
