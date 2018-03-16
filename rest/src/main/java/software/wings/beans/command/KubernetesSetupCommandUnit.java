@@ -48,6 +48,7 @@ import io.fabric8.kubernetes.api.model.Secret;
 import io.fabric8.kubernetes.api.model.SecretBuilder;
 import io.fabric8.kubernetes.api.model.Service;
 import io.fabric8.kubernetes.api.model.ServiceBuilder;
+import io.fabric8.kubernetes.api.model.ServicePort;
 import io.fabric8.kubernetes.api.model.ServicePortBuilder;
 import io.fabric8.kubernetes.api.model.ServiceSpecBuilder;
 import io.fabric8.kubernetes.api.model.extensions.DaemonSet;
@@ -306,6 +307,7 @@ public class KubernetesSetupCommandUnit extends ContainerSetupCommandUnit {
 
       String serviceClusterIP = null;
       String serviceLoadBalancerEndpoint = null;
+      String nodePort = null;
 
       // Setup service
       Service service =
@@ -332,6 +334,9 @@ public class KubernetesSetupCommandUnit extends ContainerSetupCommandUnit {
         if (setupParams.getServiceType() == KubernetesServiceType.LoadBalancer) {
           serviceLoadBalancerEndpoint = waitForLoadBalancerEndpoint(
               kubernetesConfig, encryptedDataDetails, service, setupParams.getLoadBalancerIP(), executionLogCallback);
+        } else if (setupParams.getServiceType() == KubernetesServiceType.NodePort) {
+          nodePort = Joiner.on(',').join(
+              service.getSpec().getPorts().stream().map(ServicePort::getNodePort).collect(toList()));
         }
 
       } else {
@@ -425,6 +430,9 @@ public class KubernetesSetupCommandUnit extends ContainerSetupCommandUnit {
       }
       if (isNotBlank(serviceLoadBalancerEndpoint)) {
         executionLogCallback.saveExecutionLog("Load Balancer Endpoint: " + serviceLoadBalancerEndpoint, LogLevel.INFO);
+      }
+      if (isNotBlank(nodePort)) {
+        executionLogCallback.saveExecutionLog("Node Port: " + nodePort, LogLevel.INFO);
       }
       if (ingress != null) {
         executionLogCallback.saveExecutionLog("Ingress Name: " + kubernetesServiceName, LogLevel.INFO);
@@ -784,8 +792,10 @@ public class KubernetesSetupCommandUnit extends ContainerSetupCommandUnit {
     String containerName = KubernetesConvention.getContainerName(imageDetails.getName());
     String imageNameTag = imageDetails.getName() + ":" + imageDetails.getTag();
 
+    String configMapName = configMap != null ? configMap.getMetadata().getName() : "no-config-map";
+
     HasMetadata kubernetesObj =
-        kubernetesContainerTask.createController(containerName, imageNameTag, registrySecretName);
+        kubernetesContainerTask.createController(containerName, imageNameTag, registrySecretName, configMapName);
 
     KubernetesHelper.setName(kubernetesObj, replicationControllerName);
     KubernetesHelper.setNamespace(kubernetesObj, namespace);
