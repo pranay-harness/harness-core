@@ -977,7 +977,7 @@ public class KubernetesSetupCommandUnit extends ContainerSetupCommandUnit {
       logger.error("Couldn't get path from ingress rule.", e);
       return "ERROR - " + Misc.getMessage(e);
     }
-    return (isNotBlank(host) ? host : "") + ":" + port + path + " -> " + serviceName;
+    return (isNotBlank(host) ? host : "") + ":" + port + path + " → " + serviceName;
   }
 
   @Data
