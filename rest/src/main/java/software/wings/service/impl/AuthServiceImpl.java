@@ -38,6 +38,7 @@ import software.wings.beans.Application;
 import software.wings.beans.AuthToken;
 import software.wings.beans.Environment;
 import software.wings.beans.Environment.EnvironmentType;
+import software.wings.beans.FeatureName;
 import software.wings.beans.Permission;
 import software.wings.beans.Role;
 import software.wings.beans.SearchFilter.Operator;
@@ -60,6 +61,7 @@ import software.wings.security.UserRequestInfo;
 import software.wings.service.impl.security.auth.AuthHandler;
 import software.wings.service.intfc.AuthService;
 import software.wings.service.intfc.EnvironmentService;
+import software.wings.service.intfc.FeatureFlagService;
 import software.wings.service.intfc.LearningEngineService;
 import software.wings.service.intfc.UserGroupService;
 import software.wings.service.intfc.UserService;
@@ -91,13 +93,14 @@ public class AuthServiceImpl implements AuthService {
   private CacheHelper cacheHelper;
   private MainConfiguration configuration;
   private LearningEngineService learningEngineService;
+  private FeatureFlagService featureFlagService;
   private AuthHandler authHandler;
 
   @Inject
   public AuthServiceImpl(GenericDbCache dbCache, WingsPersistence wingsPersistence, UserService userService,
       UserGroupService userGroupService, WorkflowService workflowService, EnvironmentService environmentService,
       CacheHelper cacheHelper, MainConfiguration configuration, LearningEngineService learningEngineService,
-      AuthHandler authHandler) {
+      AuthHandler authHandler, FeatureFlagService featureFlagService) {
     this.dbCache = dbCache;
     this.wingsPersistence = wingsPersistence;
     this.userService = userService;
@@ -108,6 +111,7 @@ public class AuthServiceImpl implements AuthService {
     this.configuration = configuration;
     this.learningEngineService = learningEngineService;
     this.authHandler = authHandler;
+    this.featureFlagService = featureFlagService;
   }
 
   @Override
@@ -446,6 +450,11 @@ public class AuthServiceImpl implements AuthService {
 
   @Override
   public void evictAccountUserPermissionInfoCache(String accountId) {
+    boolean rbacEnabled = featureFlagService.isEnabled(FeatureName.RBAC, accountId);
+    if (!rbacEnabled) {
+      return;
+    }
+
     Cache<String, UserPermissionInfo> cache = cacheHelper.getUserPermissionInfoCache();
     Set<String> keys = new HashSet<>();
     if (cache != null) {
@@ -461,6 +470,12 @@ public class AuthServiceImpl implements AuthService {
 
   @Override
   public void evictAccountUserPermissionInfoCache(String accountId, List<String> memberIds) {
+
+    boolean rbacEnabled = featureFlagService.isEnabled(FeatureName.RBAC, accountId);
+    if (!rbacEnabled) {
+      return;
+    }
+
     Cache<String, UserPermissionInfo> cache = cacheHelper.getUserPermissionInfoCache();
     if (cache != null && isNotEmpty(memberIds)) {
       Set<String> keys =

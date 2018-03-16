@@ -136,7 +136,7 @@ public class SecureResourceTest {
   private static FeatureFlagService featureFlagService = mock(FeatureFlagService.class);
 
   private static AuthService authService = new AuthServiceImpl(genericDbCache, wingsPersistence, userService,
-      userGroupService, workflowService, envService, cacheHelper, configuration, learningEngineService, authHandler);
+      userGroupService, workflowService, envService, cacheHelper, configuration, learningEngineService, authHandler, featureFlagService);
 
   private static AuthRuleFilter authRuleFilter = new AuthRuleFilter(
       auditService, auditHelper, authService, authHandler, appService, userService, featureFlagService);
