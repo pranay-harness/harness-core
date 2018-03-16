@@ -10,6 +10,12 @@ variableOverrides:
     serviceName: Learning Engine
     value: ${serviceVariable.LOAD_BALANCER_URL}
     valueType: TEXT
+  - name: HAZELCAST_PORT
+    value: '7145'
+    valueType: TEXT
+  - name: MONGODB_PORT
+    value: '7144'
+    valueType: TEXT
   - name: docker_image_tag
     serviceName: Proxy
     value: on_prem_8
@@ -44,15 +50,11 @@ variableOverrides:
     valueType: TEXT
   - name: TCP_HOSTS_DETAILS
     serviceName: Manager
-    value: ${serviceVariable.HOST1}:5701,${serviceVariable.HOST2}:5701,${serviceVariable.HOST3}:5701
+    value: ${serviceVariable.HOST1}:${serviceVariable.HAZELCAST_PORT},${serviceVariable.HOST2}:${serviceVariable.HAZELCAST_PORT},${serviceVariable.HOST3}:${serviceVariable.HAZELCAST_PORT}
     valueType: TEXT
   - name: MONGO_URI
     serviceName: Manager
-    value: mongodb://${serviceVariable.admin_user}:${serviceVariable.admin_pass}@${serviceVariable.HOST1}:27017,${serviceVariable.HOST2}:27017,${serviceVariable.HOST3}:27017/harness?replicaSet=rs0
-    valueType: TEXT
-  - name: MANCENTER_URL
-    serviceName: Manager
-    value: http://ec2-52-37-254-107.us-west-2.compute.amazonaws.com/mancenter
+    value: mongodb://${serviceVariable.admin_user}:${serviceVariable.admin_pass}@${serviceVariable.HOST1}:${serviceVariable.MONGODB_PORT},${serviceVariable.HOST2}:${serviceVariable.MONGODB_PORT},${serviceVariable.HOST3}:${serviceVariable.MONGODB_PORT}/harness?replicaSet=rs0\\&authSource=admin
     valueType: TEXT
   - name: HZ_CLUSTER_NAME
     serviceName: Manager
@@ -90,7 +92,7 @@ variableOverrides:
     value: testaccount@bigbank.com
     valueType: TEXT
   - name: HOST1
-    value: <HOST2_PLACEHOLDER>
+    value: <HOST1_PLACEHOLDER>
     valueType: TEXT
   - name: admin_pass
     value: <MONGODB_PASSWORD_PLACEHOLDER>
@@ -105,5 +107,5 @@ variableOverrides:
     value: <HOST3_PLACEHOLDER>
     valueType: TEXT
   - name: HOST2
-    value: <HOST1_PLACEHOLDER>
+    value: <HOST2_PLACEHOLDER>
     valueType: TEXT

@@ -2,7 +2,7 @@ harnessApiVersion: '1.0'
 type: OTHER
 commandUnitType: COMMAND
 commandUnits:
-  - command: sudo docker run -p 27017:27017 --name mongoContainer -v /data/db:/data/db -v "${WINGS_RUNTIME_PATH}/mongod.conf":/etc/mongod.conf -v "${WINGS_RUNTIME_PATH}/mongolog/mongod.log":/var/log/mongodb/mongod.log -v "${WINGS_RUNTIME_PATH}/initialize_replica_set.js":/scripts/initialize_replica_set.js -v "${WINGS_RUNTIME_PATH}/mongokeyfile":/etc/mongokeyfile -v  "${WINGS_RUNTIME_PATH}/add_first_user.js":/scripts/add_first_user.js -v "${WINGS_RUNTIME_PATH}/add_learning_engine_secret.js":/scripts/add_learning_engine_secret.js -d --rm mongo:3.4 -f /etc/mongod.conf
+  - command: sudo docker run -p ${serviceVariable.MONGODB_PORT}:${serviceVariable.MONGODB_PORT} --name mongoContainer -v /data/db:/data/db -v "${WINGS_RUNTIME_PATH}/mongod.conf":/etc/mongod.conf -v "${WINGS_RUNTIME_PATH}/mongolog/mongod.log":/var/log/mongodb/mongod.log -v "${WINGS_RUNTIME_PATH}/initialize_replica_set.js":/scripts/initialize_replica_set.js -v "${WINGS_RUNTIME_PATH}/mongokeyfile":/etc/mongokeyfile -v  "${WINGS_RUNTIME_PATH}/add_first_user.js":/scripts/add_first_user.js -v "${WINGS_RUNTIME_PATH}/add_learning_engine_secret.js":/scripts/add_learning_engine_secret.js -d --rm mongo:3.4 -f /etc/mongod.conf
     commandUnitType: EXEC
     deploymentType: SSH
     name: Start mongo
