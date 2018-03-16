@@ -1,10 +1,12 @@
 package software.wings.utils;
 
 import static software.wings.common.Constants.USER_CACHE;
+import static software.wings.common.Constants.USER_PERMISSION_CACHE;
 
 import com.google.inject.Singleton;
 
 import software.wings.beans.User;
+import software.wings.security.UserPermissionInfo;
 
 import java.util.Optional;
 import javax.cache.Cache;
@@ -37,5 +39,10 @@ public class CacheHelper {
 
   public Cache<String, User> getUserCache() {
     return getCache(USER_CACHE, String.class, User.class, AccessedExpiryPolicy.factoryOf(Duration.THIRTY_MINUTES));
+  }
+
+  public Cache<String, UserPermissionInfo> getUserPermissionInfoCache() {
+    return getCache(USER_PERMISSION_CACHE, String.class, UserPermissionInfo.class,
+        AccessedExpiryPolicy.factoryOf(Duration.ONE_HOUR));
   }
 }

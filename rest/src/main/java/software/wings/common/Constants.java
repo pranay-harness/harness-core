@@ -204,7 +204,13 @@ public interface Constants {
    * The constant ECS_SERVICE_SETUP.
    */
   String ECS_SERVICE_SETUP = "ECS Service Setup";
+  /**
+   * The constant KUBERNETES_SERVICE_SETUP.
+   */
   String KUBERNETES_SERVICE_SETUP = "Kubernetes Service Setup";
+  /**
+   * The constant ROLLBACK_KUBERNETES_SETUP.
+   */
   String ROLLBACK_KUBERNETES_SETUP = "Rollback Kubernetes Setup";
   /**
    * The constant PREPARE_STEPS.
@@ -402,12 +408,24 @@ public interface Constants {
    */
   String DELEGATE_NAME = "Harness delegate";
 
+  /**
+   * The constant MAX_DELEGATE_LAST_HEARTBEAT.
+   */
   long MAX_DELEGATE_LAST_HEARTBEAT = (3 * 60 * 1000) + (15 * 1000); // 3 minutes 15 seconds
 
+  /**
+   * The constant DEFAULT_SYNC_CALL_TIMEOUT.
+   */
   long DEFAULT_SYNC_CALL_TIMEOUT = 60 * 1000; // 1 minute
 
+  /**
+   * The constant DEFAULT_ASYNC_CALL_TIMEOUT.
+   */
   long DEFAULT_ASYNC_CALL_TIMEOUT = 10 * 60 * 1000; // 10 minutes
 
+  /**
+   * The constant DEFAULT_STEADY_STATE_TIMEOUT.
+   */
   int DEFAULT_STEADY_STATE_TIMEOUT = 10;
 
   /**
@@ -459,6 +477,11 @@ public interface Constants {
    * The constant USER_CACHE.
    */
   String USER_CACHE = "userCache";
+
+  /**
+   * The constant USER_PERMISSION_CACHE.
+   */
+  String USER_PERMISSION_CACHE = "userPermissionCache";
 
   /**
    * Template expression constants
@@ -569,8 +592,17 @@ public interface Constants {
    */
   String ASG_COMMAND_NAME = "Resize AutoScaling Group";
 
+  /**
+   * The constant DEFAULT_RUNTIME_PATH.
+   */
   String DEFAULT_RUNTIME_PATH = "$HOME/${app.name}/${service.name}/${env.name}/runtime";
+  /**
+   * The constant DEFAULT_BACKUP_PATH.
+   */
   String DEFAULT_BACKUP_PATH = "$HOME/${app.name}/${service.name}/${env.name}/backup/${timestampId}";
+  /**
+   * The constant DEFAULT_STAGING_PATH.
+   */
   String DEFAULT_STAGING_PATH = "$HOME/${app.name}/${service.name}/${env.name}/staging/${timestampId}";
 
   /**
@@ -586,27 +618,75 @@ public interface Constants {
    */
   String STAGING_PATH = "STAGING_PATH";
 
+  /**
+   * The constant ACTIVITY_ID.
+   */
   String ACTIVITY_ID = "activityId";
 
+  /**
+   * The constant RESUMED_COLOR.
+   */
   String RESUMED_COLOR = "#1DAEE2";
+  /**
+   * The constant COMPLETED_COLOR.
+   */
   String COMPLETED_COLOR = "#5CB04D";
+  /**
+   * The constant FAILED_COLOR.
+   */
   String FAILED_COLOR = "#EC372E";
+  /**
+   * The constant PAUSED_COLOR.
+   */
   String PAUSED_COLOR = "#FBB731";
+  /**
+   * The constant ABORTED_COLOR.
+   */
   String ABORTED_COLOR = "#77787B";
+  /**
+   * The constant WHITE_COLOR.
+   */
   String WHITE_COLOR = "#FFFFFF";
+  /**
+   * The constant LINK_COLOR.
+   */
   String LINK_COLOR = "#1A89BF";
 
+  /**
+   * The constant HARNESS_NAME.
+   */
   String HARNESS_NAME = "Harness";
 
+  /**
+   * The constant DEFAULT_AWS_HOST_NAME_CONVENTION.
+   */
   String DEFAULT_AWS_HOST_NAME_CONVENTION = "${host.ec2Instance.privateDnsName.split('\\.')[0]}";
 
+  /**
+   * The constant APP_ID.
+   */
   String APP_ID = "appId";
+  /**
+   * The constant UUID.
+   */
   String UUID = ID_KEY;
 
+  /**
+   * The constant SECRET_MASK.
+   */
   String SECRET_MASK = "**************";
 
+  /**
+   * The constant CORRELATION_ID.
+   */
   String CORRELATION_ID = "correlationId";
 
+  /**
+   * The Auto downloaded.
+   */
   List<String> autoDownloaded = asList(DOCKER.name(), ECR.name(), GCR.name(), ACR.name(), AMAZON_S3.name(), AMI.name());
+  /**
+   * The constant DEPLOYMENT.
+   */
   String DEPLOYMENT = "DEPLOYMENT";
 }
