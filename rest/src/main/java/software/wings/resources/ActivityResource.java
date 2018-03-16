@@ -2,6 +2,7 @@ package software.wings.resources;
 
 import static io.harness.data.structure.EmptyPredicate.isNotEmpty;
 import static software.wings.beans.SearchFilter.Operator.EQ;
+import static software.wings.security.PermissionAttribute.ResourceType.APPLICATION;
 
 import com.google.inject.Inject;
 
@@ -15,8 +16,7 @@ import software.wings.beans.command.CommandUnitDetails;
 import software.wings.common.Constants;
 import software.wings.dl.PageRequest;
 import software.wings.dl.PageResponse;
-import software.wings.security.PermissionAttribute.ResourceType;
-import software.wings.security.annotations.AuthRule;
+import software.wings.security.annotations.Scope;
 import software.wings.service.intfc.ActivityService;
 import software.wings.service.intfc.AppService;
 import software.wings.service.intfc.LogService;
@@ -39,7 +39,7 @@ import javax.ws.rs.core.Response.ResponseBuilder;
 @Api("activities")
 @Path("/activities")
 @Produces("application/json")
-@AuthRule(ResourceType.APPLICATION)
+@Scope(APPLICATION)
 public class ActivityResource {
   private AppService appService;
   private ActivityService activityService;

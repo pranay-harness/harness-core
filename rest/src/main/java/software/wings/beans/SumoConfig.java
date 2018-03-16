@@ -14,6 +14,7 @@ import software.wings.annotation.Encryptable;
 import software.wings.annotation.Encrypted;
 import software.wings.jersey.JsonViews;
 import software.wings.settings.SettingValue;
+import software.wings.settings.UsageRestrictions;
 import software.wings.yaml.setting.VerificationProviderYaml;
 
 /**
@@ -57,8 +58,9 @@ public class SumoConfig extends SettingValue implements Encryptable {
     private String accessKey;
 
     @Builder
-    public Yaml(String type, String harnessApiVersion, String sumoUrl, String accessId, String accessKey) {
-      super(type, harnessApiVersion);
+    public Yaml(String type, String harnessApiVersion, String sumoUrl, String accessId, String accessKey,
+        UsageRestrictions usageRestrictions) {
+      super(type, harnessApiVersion, usageRestrictions);
       this.sumoUrl = sumoUrl;
       this.accessId = accessId;
       this.accessKey = accessKey;

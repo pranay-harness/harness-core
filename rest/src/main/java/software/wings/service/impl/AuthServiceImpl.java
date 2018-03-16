@@ -11,6 +11,7 @@ import static software.wings.beans.ErrorCode.INVALID_TOKEN;
 import static software.wings.beans.ErrorCode.USER_DOES_NOT_EXIST;
 import static software.wings.exception.WingsException.ALERTING;
 
+import com.google.common.collect.Multimap;
 import com.google.inject.Inject;
 import com.google.inject.Singleton;
 
@@ -25,6 +26,7 @@ import com.nimbusds.jose.crypto.DirectDecrypter;
 import com.nimbusds.jwt.EncryptedJWT;
 import org.apache.commons.codec.DecoderException;
 import org.apache.commons.codec.binary.Hex;
+import org.apache.commons.collections.CollectionUtils;
 import org.apache.commons.lang3.StringUtils;
 import org.mongodb.morphia.Key;
 import org.slf4j.Logger;
@@ -37,24 +39,36 @@ import software.wings.beans.Environment;
 import software.wings.beans.Environment.EnvironmentType;
 import software.wings.beans.Permission;
 import software.wings.beans.Role;
+import software.wings.beans.SearchFilter.Operator;
 import software.wings.beans.ServiceSecretKey.ServiceType;
 import software.wings.beans.User;
+import software.wings.beans.security.UserGroup;
 import software.wings.dl.GenericDbCache;
+import software.wings.dl.PageRequest;
+import software.wings.dl.PageRequest.PageRequestBuilder;
+import software.wings.dl.PageResponse;
 import software.wings.dl.WingsPersistence;
 import software.wings.exception.WingsException;
+import software.wings.security.AppPermissionSummary;
 import software.wings.security.PermissionAttribute;
 import software.wings.security.PermissionAttribute.Action;
-import software.wings.security.PermissionAttribute.PermissionScope;
-import software.wings.security.PermissionAttribute.ResourceType;
+import software.wings.security.PermissionAttribute.PermissionType;
+import software.wings.security.UserPermissionInfo;
+import software.wings.security.UserRequestContext;
 import software.wings.security.UserRequestInfo;
-import software.wings.service.intfc.AccountService;
+import software.wings.service.impl.security.auth.AuthHandler;
 import software.wings.service.intfc.AuthService;
+import software.wings.service.intfc.EnvironmentService;
 import software.wings.service.intfc.LearningEngineService;
+import software.wings.service.intfc.UserGroupService;
 import software.wings.service.intfc.UserService;
+import software.wings.service.intfc.WorkflowService;
 import software.wings.utils.CacheHelper;
 
 import java.text.ParseException;
+import java.util.Collection;
 import java.util.List;
+import java.util.Map;
 import javax.cache.Cache;
 import javax.crypto.spec.SecretKeySpec;
 
@@ -63,34 +77,34 @@ import javax.crypto.spec.SecretKeySpec;
  */
 @Singleton
 public class AuthServiceImpl implements AuthService {
-  private GenericDbCache dbCache;
-  private AccountService accountService;
-  private WingsPersistence wingsPersistence;
-  private UserService userService;
-  private CacheHelper cacheHelper;
-  private MainConfiguration configuration;
-  @Inject private LearningEngineService learningEngineService;
-
   private static final Logger logger = LoggerFactory.getLogger(AuthServiceImpl.class);
 
-  /**
-   * Instantiates a new Auth service.
-   *
-   * @param dbCache          the db cache
-   * @param accountService   the account service
-   * @param wingsPersistence the wings persistence
-   * @param userService      the user service
-   * @param cacheHelper      the cache helper
-   */
+  private GenericDbCache dbCache;
+  private WingsPersistence wingsPersistence;
+  private UserService userService;
+  private UserGroupService userGroupService;
+  private WorkflowService workflowService;
+  private EnvironmentService environmentService;
+  private CacheHelper cacheHelper;
+  private MainConfiguration configuration;
+  private LearningEngineService learningEngineService;
+  private AuthHandler authHandler;
+
   @Inject
-  public AuthServiceImpl(GenericDbCache dbCache, AccountService accountService, WingsPersistence wingsPersistence,
-      UserService userService, CacheHelper cacheHelper, MainConfiguration configuration) {
+  public AuthServiceImpl(GenericDbCache dbCache, WingsPersistence wingsPersistence, UserService userService,
+      UserGroupService userGroupService, WorkflowService workflowService, EnvironmentService environmentService,
+      CacheHelper cacheHelper, MainConfiguration configuration, LearningEngineService learningEngineService,
+      AuthHandler authHandler) {
     this.dbCache = dbCache;
-    this.accountService = accountService;
     this.wingsPersistence = wingsPersistence;
     this.userService = userService;
+    this.userGroupService = userGroupService;
+    this.workflowService = workflowService;
+    this.environmentService = environmentService;
     this.cacheHelper = cacheHelper;
     this.configuration = configuration;
+    this.learningEngineService = learningEngineService;
+    this.authHandler = authHandler;
   }
 
   @Override
@@ -183,6 +197,74 @@ public class AuthServiceImpl implements AuthService {
     if (appIds != null) {
       for (String appId : appIds) {
         authorize(accountId, appId, envId, user, permissionAttributes, userRequestInfo, false);
+      }
+    }
+  }
+  private void authorize(String accountId, String appId, String entityId, User user,
+      List<PermissionAttribute> permissionAttributes, boolean accountNullCheck) {
+    if (!accountNullCheck) {
+      if (accountId == null || dbCache.get(Account.class, accountId) == null) {
+        logger.error("Auth Failure: non-existing accountId: {}", accountId);
+        throw new WingsException(ACCESS_DENIED);
+      }
+    }
+
+    if (appId != null && dbCache.get(Application.class, appId) == null) {
+      logger.error("Auth Failure: non-existing appId: {}", appId);
+      throw new WingsException(ACCESS_DENIED);
+    }
+
+    if (user == null) {
+      logger.error("No user context for authorization request for app: {}", appId);
+      throw new WingsException(ACCESS_DENIED);
+    }
+
+    UserRequestContext userRequestContext = user.getUserRequestContext();
+    if (userRequestContext == null) {
+      logger.error("User Request Context null for User {}", user.getName());
+      throw new WingsException(ACCESS_DENIED);
+    }
+
+    UserPermissionInfo userPermissionInfo = userRequestContext.getUserPermissionInfo();
+    if (userPermissionInfo == null) {
+      logger.error("User permission info null for User {}", user.getName());
+      throw new WingsException(ACCESS_DENIED);
+    }
+
+    for (PermissionAttribute permissionAttribute : permissionAttributes) {
+      if (!authorizeAccessType(appId, entityId, permissionAttribute, userPermissionInfo)) {
+        logger.error("User {} not authorized to access requested resource: {}", user.getName(), entityId);
+        throw new WingsException(ACCESS_DENIED);
+      }
+    }
+  }
+
+  private List<UserGroup> getUserGroupsByAccountId(String accountId, User user) {
+    PageRequest<UserGroup> pageRequest = PageRequestBuilder.aPageRequest()
+                                             .addFilter("accountId", Operator.EQ, accountId)
+                                             .addFilter("memberIds", Operator.HAS, user.getUuid())
+                                             .build();
+    PageResponse<UserGroup> pageResponse = userGroupService.list(accountId, pageRequest);
+    return pageResponse.getResponse();
+  }
+
+  @Override
+  public void authorize(
+      String accountId, String appId, String entityId, User user, List<PermissionAttribute> permissionAttributes) {
+    authorize(accountId, appId, entityId, user, permissionAttributes, true);
+  }
+
+  @Override
+  public void authorize(String accountId, List<String> appIds, String entityId, User user,
+      List<PermissionAttribute> permissionAttributes) {
+    if (accountId == null || dbCache.get(Account.class, accountId) == null) {
+      logger.error("Auth Failure: non-existing accountId: {}", accountId);
+      throw new WingsException(ACCESS_DENIED);
+    }
+
+    if (appIds != null) {
+      for (String appId : appIds) {
+        authorize(accountId, appId, entityId, user, permissionAttributes, false);
       }
     }
   }
@@ -294,16 +376,15 @@ public class AuthServiceImpl implements AuthService {
       return false;
     }
 
-    ResourceType reqResourceType = permissionAttribute.getResourceType();
     Action reqAction = permissionAttribute.getAction();
-    PermissionScope permissionScope = permissionAttribute.getScope();
+    PermissionType permissionType = permissionAttribute.getPermissionType();
 
     for (Permission permission : role.getPermissions()) {
-      if (permission.getPermissionScope() != permissionScope
+      if (permission.getPermissionScope() != permissionType
           || (permission.getAction() != Action.ALL && reqAction != permission.getAction())) {
         continue;
       }
-      if (permissionScope == PermissionScope.APP) {
+      if (permissionType == PermissionType.APP) {
         if (userRequestInfo != null
             && (userRequestInfo.isAllAppsAllowed() || userRequestInfo.getAllowedAppIds().contains(appId))) {
           return true;
@@ -312,7 +393,7 @@ public class AuthServiceImpl implements AuthService {
             && (permission.getAppId().equals(GLOBAL_APP_ID) || permission.getAppId().equals(appId))) {
           return true;
         }
-      } else if (permissionScope == PermissionScope.ENV) {
+      } else if (permissionType == PermissionType.ENV) {
         if (userRequestInfo != null
             && (userRequestInfo.isAllEnvironmentsAllowed() || userRequestInfo.getAllowedEnvIds().contains(envId))) {
           return true;
@@ -330,5 +411,73 @@ public class AuthServiceImpl implements AuthService {
     }
 
     return false;
+  }
+
+  @Override
+  public UserPermissionInfo getUserPermissionInfo(String accountId, User user) {
+    List<UserGroup> userGroups = getUserGroupsByAccountId(accountId, user);
+    return authHandler.getUserPermissionInfo(accountId, userGroups);
+  }
+
+  private boolean authorizeAccessType(String appId, String entityId, PermissionAttribute requiredPermissionAttribute,
+      UserPermissionInfo userPermissionInfo) {
+    if (requiredPermissionAttribute.isSkipAuth()) {
+      return true;
+    }
+
+    Action requiredAction = requiredPermissionAttribute.getAction();
+    PermissionType requiredPermissionType = requiredPermissionAttribute.getPermissionType();
+
+    Map<String, AppPermissionSummary> appPermissionMap = userPermissionInfo.getAppPermissionMapInternal();
+    AppPermissionSummary appPermissionSummary = appPermissionMap.get(appId);
+
+    if (appPermissionSummary == null) {
+      return false;
+    }
+
+    if (Action.CREATE == requiredAction) {
+      if (requiredPermissionType == PermissionType.SERVICE) {
+        return appPermissionSummary.isCanCreateService();
+      } else if (requiredPermissionType == PermissionType.ENV) {
+        return appPermissionSummary.isCanCreateEnvironment();
+      } else if (requiredPermissionType == PermissionType.WORKFLOW) {
+        return appPermissionSummary.isCanCreateWorkflow();
+      } else if (requiredPermissionType == PermissionType.PIPELINE) {
+        return appPermissionSummary.isCanCreatePipeline();
+      } else {
+        String msg = "Unsupported app permission entity type: " + requiredPermissionType;
+        logger.error(msg);
+        throw new WingsException(msg);
+      }
+    }
+
+    Multimap<Action, String> actionEntityIdMap;
+
+    if (requiredPermissionType == PermissionType.SERVICE) {
+      actionEntityIdMap = appPermissionSummary.getServicePermissions();
+    } else if (requiredPermissionType == PermissionType.ENV) {
+      actionEntityIdMap = appPermissionSummary.getEnvPermissions();
+    } else if (requiredPermissionType == PermissionType.WORKFLOW) {
+      actionEntityIdMap = appPermissionSummary.getWorkflowPermissions();
+    } else if (requiredPermissionType == PermissionType.PIPELINE) {
+      actionEntityIdMap = appPermissionSummary.getPipelinePermissions();
+    } else if (requiredPermissionType == PermissionType.DEPLOYMENT) {
+      actionEntityIdMap = appPermissionSummary.getDeploymentPermissions();
+    } else {
+      String msg = "Unsupported app permission entity type: " + requiredPermissionType;
+      logger.error(msg);
+      throw new WingsException(msg);
+    }
+
+    if (actionEntityIdMap == null) {
+      return false;
+    }
+
+    Collection<String> entityIds = actionEntityIdMap.get(requiredAction);
+    if (CollectionUtils.isEmpty(entityIds)) {
+      return false;
+    }
+
+    return entityIds.contains(entityId);
   }
 }

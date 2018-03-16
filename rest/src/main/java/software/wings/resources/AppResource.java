@@ -13,8 +13,10 @@ import software.wings.beans.RestResponse;
 import software.wings.beans.Setup.SetupStatus;
 import software.wings.dl.PageRequest;
 import software.wings.dl.PageResponse;
+import software.wings.security.PermissionAttribute.PermissionType;
 import software.wings.security.annotations.AuthRule;
 import software.wings.security.annotations.ListAPI;
+import software.wings.security.annotations.Scope;
 import software.wings.service.intfc.AppService;
 
 import java.util.List;
@@ -37,7 +39,7 @@ import javax.ws.rs.QueryParam;
 @Api("/apps")
 @Path("/apps")
 @Produces("application/json")
-@AuthRule(APPLICATION)
+@Scope(APPLICATION)
 public class AppResource {
   private AppService appService;
 
@@ -80,6 +82,7 @@ public class AppResource {
   @POST
   @Timed
   @ExceptionMetered
+  @AuthRule(permissionType = PermissionType.APPLICATION_CREATE_DELETE)
   public RestResponse<Application> save(@QueryParam("accountId") String accountId, Application app) {
     app.setAccountId(accountId);
     return new RestResponse<>(appService.save(app));
@@ -132,6 +135,7 @@ public class AppResource {
   @Path("{appId}")
   @Timed
   @ExceptionMetered
+  @AuthRule(permissionType = PermissionType.APPLICATION_CREATE_DELETE)
   public RestResponse delete(@PathParam("appId") String appId) {
     appService.delete(appId);
     return new RestResponse();

@@ -11,5 +11,6 @@ import lombok.Data;
 @Builder
 public class EntityReference {
   private String id;
+  private String appId;
   private String entityType;
 }

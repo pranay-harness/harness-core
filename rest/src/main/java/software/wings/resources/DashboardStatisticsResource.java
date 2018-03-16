@@ -11,7 +11,7 @@ import software.wings.beans.instance.dashboard.InstanceStatsByService;
 import software.wings.beans.instance.dashboard.InstanceSummaryStats;
 import software.wings.beans.instance.dashboard.service.ServiceInstanceDashboard;
 import software.wings.security.PermissionAttribute.ResourceType;
-import software.wings.security.annotations.AuthRule;
+import software.wings.security.annotations.Scope;
 import software.wings.service.intfc.instance.DashboardStatisticsService;
 
 import java.util.List;
@@ -26,7 +26,7 @@ import javax.ws.rs.QueryParam;
 @Api("dash-stats")
 @Path("/dash-stats")
 @Produces("application/json")
-@AuthRule(ResourceType.APPLICATION)
+@Scope(ResourceType.APPLICATION)
 public class DashboardStatisticsResource {
   @Inject private DashboardStatisticsService dashboardStatsService;
 

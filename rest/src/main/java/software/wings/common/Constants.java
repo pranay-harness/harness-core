@@ -608,4 +608,5 @@ public interface Constants {
   String CORRELATION_ID = "correlationId";
 
   List<String> autoDownloaded = asList(DOCKER.name(), ECR.name(), GCR.name(), ACR.name(), AMAZON_S3.name(), AMI.name());
+  String DEPLOYMENT = "DEPLOYMENT";
 }

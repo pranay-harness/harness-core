@@ -3,7 +3,7 @@ package software.wings.beans;
 import org.mongodb.morphia.annotations.Embedded;
 import software.wings.beans.Environment.EnvironmentType;
 import software.wings.security.PermissionAttribute.Action;
-import software.wings.security.PermissionAttribute.PermissionScope;
+import software.wings.security.PermissionAttribute.PermissionType;
 import software.wings.security.PermissionAttribute.ResourceType;
 
 /**
@@ -17,7 +17,7 @@ public class Permission {
   private String appId;
   private String accountId;
   private EnvironmentType environmentType;
-  private PermissionScope permissionScope;
+  private PermissionType permissionScope;
 
   /**
    * Gets resource type.
@@ -122,7 +122,7 @@ public class Permission {
    *
    * @return the permission type
    */
-  public PermissionScope getPermissionScope() {
+  public PermissionType getPermissionScope() {
     return permissionScope;
   }
 
@@ -131,7 +131,7 @@ public class Permission {
    *
    * @param permissionScope the permission type
    */
-  public void setPermissionScope(PermissionScope permissionScope) {
+  public void setPermissionScope(PermissionType permissionScope) {
     this.permissionScope = permissionScope;
   }
 
@@ -144,7 +144,7 @@ public class Permission {
     private String envId;
     private String appId;
     private EnvironmentType environmentType;
-    private PermissionScope permissionScope;
+    private PermissionType permissionScope;
 
     private Builder() {}
 
@@ -218,7 +218,7 @@ public class Permission {
      * @param permissionScope the permission scope
      * @return the builder
      */
-    public Builder withPermissionScope(PermissionScope permissionScope) {
+    public Builder withPermissionScope(PermissionType permissionScope) {
       this.permissionScope = permissionScope;
       return this;
     }

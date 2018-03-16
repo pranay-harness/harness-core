@@ -8,9 +8,9 @@ import io.swagger.annotations.Api;
 import software.wings.beans.RestResponse;
 import software.wings.metrics.TimeSeriesMetricDefinition;
 import software.wings.security.PermissionAttribute.ResourceType;
-import software.wings.security.annotations.AuthRule;
 import software.wings.security.annotations.DelegateAuth;
 import software.wings.security.annotations.LearningEngineAuth;
+import software.wings.security.annotations.Scope;
 import software.wings.service.impl.analysis.TSRequest;
 import software.wings.service.impl.analysis.TimeSeriesMLAnalysisRecord;
 import software.wings.service.impl.analysis.TimeSeriesMLScores;
@@ -65,7 +65,7 @@ import javax.ws.rs.QueryParam;
 @Api("newrelic")
 @Path("/newrelic")
 @Produces("application/json")
-@AuthRule(ResourceType.SETTING)
+@Scope(ResourceType.SETTING)
 public class NewRelicResource implements MetricAnalysisResource {
   @Inject private NewRelicService newRelicService;
 

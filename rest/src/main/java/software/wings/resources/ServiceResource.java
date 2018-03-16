@@ -19,8 +19,12 @@ import software.wings.beans.container.KubernetesPayload;
 import software.wings.beans.container.UserDataSpecification;
 import software.wings.dl.PageRequest;
 import software.wings.dl.PageResponse;
+import software.wings.security.PermissionAttribute.Action;
+import software.wings.security.PermissionAttribute.PermissionType;
 import software.wings.security.PermissionAttribute.ResourceType;
 import software.wings.security.annotations.AuthRule;
+import software.wings.security.annotations.ListAPI;
+import software.wings.security.annotations.Scope;
 import software.wings.service.intfc.ServiceResourceService;
 import software.wings.stencils.Stencil;
 
@@ -44,7 +48,8 @@ import javax.ws.rs.QueryParam;
 @Path("services")
 @Consumes(APPLICATION_JSON)
 @Produces(APPLICATION_JSON)
-@AuthRule(ResourceType.APPLICATION)
+@Scope(ResourceType.APPLICATION)
+@AuthRule(permissionType = PermissionType.SERVICE)
 public class ServiceResource {
   private ServiceResourceService serviceResourceService;
 
@@ -68,6 +73,7 @@ public class ServiceResource {
   @GET
   @Timed
   @ExceptionMetered
+  @ListAPI(ResourceType.SERVICE)
   public RestResponse<PageResponse<Service>> list(
       @QueryParam("appId") String appId, @BeanParam PageRequest<Service> pageRequest) {
     pageRequest.addFilter("appId", EQ, appId);
@@ -166,6 +172,7 @@ public class ServiceResource {
   @Path("{serviceId}/commands")
   @Timed
   @ExceptionMetered
+  @AuthRule(permissionType = PermissionType.SERVICE, action = Action.UPDATE)
   public RestResponse<Service> saveCommand(@ApiParam(name = "appId", required = true) @QueryParam("appId") String appId,
       @ApiParam(name = "serviceId", required = true) @PathParam("serviceId") String serviceId,
       @ApiParam(name = "command", required = true) ServiceCommand command) {
@@ -204,6 +211,7 @@ public class ServiceResource {
   @Path("{serviceId}/commands/{commandName}/clone")
   @Timed
   @ExceptionMetered
+  @AuthRule(permissionType = PermissionType.SERVICE, action = Action.UPDATE)
   public RestResponse<Service> cloneCommand(@QueryParam("appId") String appId, @PathParam("serviceId") String serviceId,
       @PathParam("commandName") String commandName, ServiceCommand command) {
     return new RestResponse<>(serviceResourceService.cloneCommand(appId, serviceId, commandName, command));
@@ -221,6 +229,7 @@ public class ServiceResource {
   @Path("{serviceId}/commands/{serviceCommandId}")
   @Timed
   @ExceptionMetered
+  @AuthRule(permissionType = PermissionType.SERVICE, action = Action.UPDATE)
   public RestResponse<Service> deleteCommand(@QueryParam("appId") String appId,
       @PathParam("serviceId") String serviceId, @PathParam("serviceCommandId") String serviceCommandId) {
     return new RestResponse<>(serviceResourceService.deleteCommand(appId, serviceId, serviceCommandId));
@@ -238,6 +247,7 @@ public class ServiceResource {
   @Path("{serviceId}/commands/stencils")
   @Timed
   @ExceptionMetered
+  @AuthRule(permissionType = PermissionType.LOGGED_IN)
   public RestResponse<List<Stencil>> stencils(@QueryParam("appId") String appId,
       @PathParam("serviceId") String serviceId, @QueryParam("filterCommand") String commandName) {
     return new RestResponse<>(serviceResourceService.getCommandStencils(appId, serviceId, commandName));
@@ -247,6 +257,7 @@ public class ServiceResource {
   @Path("{serviceId}/containers/tasks")
   @Timed
   @ExceptionMetered
+  @AuthRule(permissionType = PermissionType.SERVICE, action = Action.UPDATE)
   public RestResponse<ContainerTask> createContainerTask(@QueryParam("appId") String appId,
       @QueryParam("advanced") boolean advanced, @PathParam("serviceId") String serviceId, ContainerTask containerTask) {
     containerTask.setAppId(appId);
@@ -293,6 +304,7 @@ public class ServiceResource {
   @Path("{serviceId}/containers/tasks/stencils")
   @Timed
   @ExceptionMetered
+  @AuthRule(permissionType = PermissionType.LOGGED_IN)
   public RestResponse<List<Stencil>> listTaskStencils(
       @QueryParam("appId") String appId, @PathParam("serviceId") String serviceId) {
     return new RestResponse<>(serviceResourceService.getContainerTaskStencils(appId, serviceId));
@@ -302,6 +314,7 @@ public class ServiceResource {
   @Path("{serviceId}/lambda-specifications")
   @Timed
   @ExceptionMetered
+  @AuthRule(permissionType = PermissionType.SERVICE, action = Action.UPDATE)
   public RestResponse<LambdaSpecification> createLambdaSpecification(@QueryParam("appId") String appId,
       @PathParam("serviceId") String serviceId, LambdaSpecification lambdaSpecification) {
     lambdaSpecification.setAppId(appId);
@@ -337,6 +350,7 @@ public class ServiceResource {
   @Path("{serviceId}/user-data-specifications")
   @Timed
   @ExceptionMetered
+  @AuthRule(permissionType = PermissionType.SERVICE, action = Action.UPDATE)
   public RestResponse<UserDataSpecification> createUserDataSpecification(@QueryParam("appId") String appId,
       @PathParam("serviceId") String serviceId, @NotNull UserDataSpecification userDataSpecification) {
     userDataSpecification.setAppId(appId);

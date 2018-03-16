@@ -1,104 +1,105 @@
 package software.wings.security;
 
-import static software.wings.security.PermissionAttribute.PermissionScope.ACCOUNT;
-import static software.wings.security.PermissionAttribute.PermissionScope.APP;
-import static software.wings.security.PermissionAttribute.PermissionScope.ENV;
-import static software.wings.security.PermissionAttribute.PermissionScope.NONE;
+import static software.wings.security.PermissionAttribute.PermissionType.ACCOUNT;
+import static software.wings.security.PermissionAttribute.PermissionType.APP;
+import static software.wings.security.PermissionAttribute.PermissionType.ENV;
+import static software.wings.security.PermissionAttribute.PermissionType.NONE;
 
 import com.google.common.collect.ImmutableMap;
+
+import lombok.Data;
+import software.wings.exception.WingsException;
 
 import java.util.Map;
 
 /**
  * Created by anubhaw on 3/10/16.
  */
+@Data
 public class PermissionAttribute {
   private static final Map<String, Action> methodActionMap =
       ImmutableMap.of("GET", Action.READ, "PUT", Action.UPDATE, "POST", Action.CREATE, "DELETE", Action.DELETE);
   private ResourceType resourceType;
   private Action action;
-  private PermissionScope scope;
+  private PermissionType permissionType;
+
+  // If the query / path parameter has a different name other than the default name for the permission type.
+  private String parameterName;
+  private String dbFieldName;
+  private String dbCollectionName;
+  private boolean skipAuth;
 
   /**
-   * Instantiates a new Permission attribute.
-   *
-   * @param resourceType the resource type
-   * @param action       the action
+   * This constructor is used by old rbac code
+   * @param resourceType
+   * @param action
    */
   public PermissionAttribute(ResourceType resourceType, Action action) {
     this.resourceType = resourceType;
     this.action = action;
-    this.scope = resourceType.getActionPermissionScopeMap().get(action);
+    this.permissionType = resourceType.getActionPermissionScopeMap().get(action);
+  }
+
+  /**
+   * This constructor is used by old rbac code
+   * @param resourceType
+   * @param permissionType
+   * @param method
+   */
+  public PermissionAttribute(ResourceType resourceType, PermissionType permissionType, String method) {
+    this.resourceType = resourceType;
+    this.action = methodActionMap.get(method);
+    this.permissionType = permissionType;
+    if (permissionType == null || permissionType == NONE) {
+      this.permissionType = resourceType.getActionPermissionScopeMap().get(action);
+    }
+  }
+
+  public PermissionAttribute(PermissionType permissionType, Action action) {
+    this(null, permissionType, action, null, null, null, null, false);
+  }
+
+  public PermissionAttribute(ResourceType resourceType, PermissionType permissionType, Action action) {
+    this(resourceType, permissionType, action, null, null, null, null, false);
+  }
+
+  /**
+   *
+   * @param resourceType
+   * @param permissionType
+   * @param action
+   */
+  public PermissionAttribute(ResourceType resourceType, PermissionType permissionType, Action action, String method) {
+    this(resourceType, permissionType, action, method, null, null, null, false);
   }
 
   /**
    * Instantiates a new Permission attribute.
    *
-   * @param permission the permission
-   * @param scope      the scope
+   * @param resourceType the resource type
+   * @param permissionType      the permissionType
    * @param method     the method
    */
-  public PermissionAttribute(ResourceType permission, PermissionScope scope, String method) {
-    resourceType = permission;
-    this.action = methodActionMap.get(method);
-    this.scope = scope;
-    if (scope == null || scope == NONE) {
-      this.scope = resourceType.getActionPermissionScopeMap().get(action);
-    }
-  }
-
-  /**
-   * Gets resource type.
-   *
-   * @return the resource type
-   */
-  public ResourceType getResourceType() {
-    return resourceType;
-  }
-
-  /**
-   * Sets resource type.
-   *
-   * @param resourceType the resource type
-   */
-  public void setResourceType(ResourceType resourceType) {
+  public PermissionAttribute(ResourceType resourceType, PermissionType permissionType, Action action, String method,
+      String parameterName, String dbFieldName, String dbCollectionName, boolean skipAuth) {
     this.resourceType = resourceType;
-  }
+    this.permissionType = permissionType;
+    if (permissionType != null && permissionType != NONE) {
+      if (action != null) {
+        this.action = action;
+      } else {
+        if (method != null) {
+          this.action = methodActionMap.get(method);
+        } else {
+          throw new WingsException("Either action or method has to be specified if permission type is specified");
+        }
+      }
+    }
 
-  /**
-   * Gets action.
-   *
-   * @return the action
-   */
-  public Action getAction() {
-    return action;
-  }
-
-  /**
-   * Sets action.
-   *
-   * @param action the action
-   */
-  public void setAction(Action action) {
-    this.action = action;
-  }
-
-  /**
-   * Gets scope.
-   *
-   * @return the scope
-   */
-  public PermissionScope getScope() {
-    return scope;
-  }
-
-  /**
-   * Sets scope.
-   *
-   * @param scope the scope
-   */
-  public void setScope(PermissionScope scope) {
-    this.scope = scope;
+    this.parameterName = parameterName;
+    this.dbFieldName = dbFieldName;
+    this.dbCollectionName = dbCollectionName;
+    this.skipAuth = skipAuth;
   }
 
   /**
@@ -173,34 +174,34 @@ public class PermissionAttribute {
     /**
      * Delegate resource type.
      */
-    DELEGATE(PermissionScope.DELEGATE),
+    DELEGATE(PermissionType.DELEGATE),
     /**
      * Delegate Scope resource type.
      */
-    DELEGATE_SCOPE(PermissionScope.DELEGATE);
+    DELEGATE_SCOPE(PermissionType.DELEGATE);
 
-    private ImmutableMap<Action, PermissionScope> actionPermissionScopeMap;
+    private ImmutableMap<Action, PermissionType> actionPermissionScopeMap;
 
-    ResourceType(PermissionScope permissionScope) {
+    ResourceType(PermissionType permissionScope) {
       this(permissionScope, permissionScope);
     }
 
-    ResourceType(PermissionScope readPermissionScope, PermissionScope writePermissionScope) {
+    ResourceType(PermissionType readPermissionScope, PermissionType writePermissionScope) {
       this(writePermissionScope, readPermissionScope, writePermissionScope, writePermissionScope);
     }
 
-    ResourceType(PermissionScope createPermissionScope, PermissionScope readPermissionScope,
-        PermissionScope updatePermissionScope, PermissionScope deletePermissionScope) {
+    ResourceType(PermissionType createPermissionScope, PermissionType readPermissionScope,
+        PermissionType updatePermissionScope, PermissionType deletePermissionScope) {
       actionPermissionScopeMap = ImmutableMap.of(Action.CREATE, createPermissionScope, Action.READ, readPermissionScope,
           Action.UPDATE, updatePermissionScope, Action.DELETE, deletePermissionScope);
     }
 
     /**
-     * Gets action permission scope map.
+     * Gets action permission permissionType map.
      *
-     * @return the action permission scope map
+     * @return the action permission permissionType map
      */
-    public ImmutableMap<Action, PermissionScope> getActionPermissionScopeMap() {
+    public ImmutableMap<Action, PermissionType> getActionPermissionScopeMap() {
       return actionPermissionScopeMap;
     }
   }
@@ -228,25 +229,25 @@ public class PermissionAttribute {
     /**
      * Delete action.
      */
-    DELETE
+    DELETE,
+    /**
+     * Delete action.
+     */
+    EXECUTE,
+    /**
+     * default action.
+     */
+    DEFAULT
   }
 
   /**
    * The enum Permission type.
    */
-  public enum PermissionScope {
+  public enum PermissionType {
     /**
      * Account permission type.
      */
     ACCOUNT,
-    /**
-     * Multiple App permission type.
-     */
-    APP,
-    /**
-     * Env permission type.
-     */
-    ENV,
     /**
      * Logged In permission type.
      */
@@ -255,10 +256,49 @@ public class PermissionAttribute {
      * Delegate In permission type.
      */
     DELEGATE,
-
     /**
-     * None permission scope.
+     * None permission permissionType.
      */
-    NONE
+    NONE,
+    /**
+     * App permission type.
+     */
+    APP,
+    /**
+     * All App permission types.
+     */
+    ALL_APP_ENTITIES,
+    /**
+     * Env permission type.
+     */
+    ENV,
+    /**
+     * Service permission permissionType
+     */
+    SERVICE,
+    /**
+     * Workflow permission permissionType
+     */
+    WORKFLOW,
+    /**
+     * Pipeline permission permissionType
+     */
+    PIPELINE,
+    /**
+     * Deployment permission permissionType
+     */
+    DEPLOYMENT,
+    /**
+     * Account permission type.
+     */
+    APPLICATION_CREATE_DELETE,
+    /**
+     * Account permission type.
+     */
+    USER_PERMISSION_MANAGEMENT,
+    /**
+     * Account permission type.
+     */
+    ACCOUNT_MANAGEMENT
   }
 }

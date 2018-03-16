@@ -2,6 +2,9 @@ package software.wings.resources;
 
 import static software.wings.beans.RestResponse.Builder.aRestResponse;
 import static software.wings.beans.SearchFilter.Operator.EQ;
+import static software.wings.security.PermissionAttribute.PermissionType.LOGGED_IN;
+import static software.wings.security.PermissionAttribute.PermissionType.SERVICE;
+import static software.wings.security.PermissionAttribute.ResourceType.APPLICATION;
 
 import com.google.inject.Inject;
 
@@ -12,8 +15,8 @@ import software.wings.beans.RestResponse;
 import software.wings.beans.artifact.ArtifactStream;
 import software.wings.dl.PageRequest;
 import software.wings.dl.PageResponse;
-import software.wings.security.PermissionAttribute.ResourceType;
 import software.wings.security.annotations.AuthRule;
+import software.wings.security.annotations.Scope;
 import software.wings.service.intfc.AppService;
 import software.wings.service.intfc.ArtifactStreamService;
 import software.wings.stencils.Stencil;
@@ -41,7 +44,8 @@ import javax.ws.rs.QueryParam;
 @Path("/artifactstreams")
 @Produces("application/json")
 @Consumes("application/json")
-@AuthRule(ResourceType.APPLICATION)
+@Scope(APPLICATION)
+@AuthRule(permissionType = SERVICE)
 public class ArtifactStreamResource {
   private ArtifactStreamService artifactStreamService;
 
@@ -171,6 +175,7 @@ public class ArtifactStreamResource {
   @Path("stencils")
   @Timed
   @ExceptionMetered
+  @AuthRule(permissionType = LOGGED_IN)
   public RestResponse<List<Stencil>> installedPluginSettingSchema(
       @QueryParam("appId") String appId, @QueryParam("serviceId") String serviceId) {
     return aRestResponse().withResource(artifactStreamService.getArtifactStreamSchema(appId, serviceId)).build();

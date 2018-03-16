@@ -9,7 +9,7 @@ import com.codahale.metrics.annotation.ExceptionMetered;
 import com.codahale.metrics.annotation.Timed;
 import io.swagger.annotations.Api;
 import software.wings.beans.RestResponse;
-import software.wings.security.annotations.AuthRule;
+import software.wings.security.annotations.Scope;
 import software.wings.service.intfc.AwsHelperResourceService;
 
 import java.util.Map;
@@ -27,7 +27,7 @@ import javax.ws.rs.QueryParam;
 @Path("/awshelper")
 @Consumes(APPLICATION_JSON)
 @Produces(APPLICATION_JSON)
-@AuthRule(SETTING)
+@Scope(SETTING)
 public class AwsHelperResource {
   @Inject private AwsHelperResourceService awsHelperResourceService;
 

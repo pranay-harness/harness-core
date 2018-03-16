@@ -20,8 +20,8 @@ import software.wings.beans.Environment.EnvironmentType;
 import software.wings.beans.ExecutionCredential.ExecutionType;
 import software.wings.beans.RestResponse;
 import software.wings.security.PermissionAttribute.ResourceType;
-import software.wings.security.annotations.AuthRule;
 import software.wings.security.annotations.PublicApi;
+import software.wings.security.annotations.Scope;
 import software.wings.service.intfc.CatalogService;
 import software.wings.service.intfc.SettingsService;
 import software.wings.settings.SettingValue.SettingVariableTypes;
@@ -104,7 +104,7 @@ public class CatalogResource {
   @Path("app-catalogs")
   @Timed
   @ExceptionMetered
-  @AuthRule(ResourceType.APPLICATION)
+  @Scope(ResourceType.APPLICATION)
   public RestResponse<Map<String, Object>> listForApp(
       @QueryParam("catalogType") List<String> catalogTypes, @Context UriInfo uriInfo) throws IOException {
     Map<String, Object> catalogs = getCatalogs(catalogTypes, uriInfo.getQueryParameters().getFirst(APP_ID));

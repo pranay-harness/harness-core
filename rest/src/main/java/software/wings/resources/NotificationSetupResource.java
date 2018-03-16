@@ -13,7 +13,7 @@ import software.wings.beans.NotificationGroup;
 import software.wings.beans.RestResponse;
 import software.wings.dl.PageRequest;
 import software.wings.dl.PageResponse;
-import software.wings.security.annotations.AuthRule;
+import software.wings.security.annotations.Scope;
 import software.wings.service.intfc.NotificationSetupService;
 
 import javax.ws.rs.BeanParam;
@@ -32,7 +32,7 @@ import javax.ws.rs.QueryParam;
 @Api("/notification-setup")
 @Path("/notification-setup")
 @Produces("application/json")
-@AuthRule(NOTIFICATION_GROUP)
+@Scope(NOTIFICATION_GROUP)
 public class NotificationSetupResource {
   private NotificationSetupService notificationSetupService;
 

@@ -17,7 +17,7 @@ import software.wings.dl.PageResponse;
 import software.wings.exception.WingsException;
 import software.wings.security.EncryptionType;
 import software.wings.security.PermissionAttribute.ResourceType;
-import software.wings.security.annotations.AuthRule;
+import software.wings.security.annotations.Scope;
 import software.wings.security.encryption.EncryptedData;
 import software.wings.security.encryption.SecretChangeLog;
 import software.wings.security.encryption.SecretUsageLog;
@@ -46,7 +46,7 @@ import javax.ws.rs.QueryParam;
 @Path("/secrets")
 @Produces("application/json")
 @Consumes("application/json")
-@AuthRule(ResourceType.SETTING)
+@Scope(ResourceType.SETTING)
 public class SecretManagementResource {
   @Inject private SecretManager secretManager;
   @Inject private MainConfiguration configuration;

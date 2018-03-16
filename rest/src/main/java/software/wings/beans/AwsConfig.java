@@ -12,6 +12,7 @@ import org.hibernate.validator.constraints.NotEmpty;
 import software.wings.annotation.Encryptable;
 import software.wings.annotation.Encrypted;
 import software.wings.settings.SettingValue;
+import software.wings.settings.UsageRestrictions;
 import software.wings.yaml.setting.CloudProviderYaml;
 
 /**
@@ -53,8 +54,9 @@ public class AwsConfig extends SettingValue implements Encryptable {
     private String secretKey;
 
     @Builder
-    public Yaml(String type, String harnessApiVersion, String accessKey, String secretKey) {
-      super(type, harnessApiVersion);
+    public Yaml(String type, String harnessApiVersion, String accessKey, String secretKey,
+        UsageRestrictions usageRestrictions) {
+      super(type, harnessApiVersion, usageRestrictions);
       this.accessKey = accessKey;
       this.secretKey = secretKey;
     }

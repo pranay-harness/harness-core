@@ -12,7 +12,7 @@ import software.wings.beans.EntityType;
 import software.wings.beans.ErrorCode;
 import software.wings.beans.RestResponse;
 import software.wings.exception.WingsException;
-import software.wings.security.annotations.AuthRule;
+import software.wings.security.annotations.Scope;
 import software.wings.service.intfc.expression.ExpressionBuilderService;
 import software.wings.sm.StateType;
 
@@ -30,7 +30,7 @@ import javax.ws.rs.QueryParam;
 @Path("/expression-builder")
 @Produces("application/json")
 @Consumes("application/json")
-@AuthRule(APPLICATION)
+@Scope(APPLICATION)
 public class ExpressionBuilderResource {
   @Inject private ExpressionBuilderService expressionBuilderService;
 

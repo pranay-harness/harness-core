@@ -2,6 +2,7 @@ package software.wings.resources.yaml;
 
 import static javax.ws.rs.core.MediaType.APPLICATION_JSON;
 import static javax.ws.rs.core.MediaType.MULTIPART_FORM_DATA;
+import static software.wings.security.PermissionAttribute.ResourceType.SETTING;
 
 import com.google.inject.Inject;
 
@@ -27,9 +28,10 @@ import software.wings.beans.Workflow;
 import software.wings.beans.artifact.ArtifactStream;
 import software.wings.beans.command.ServiceCommand;
 import software.wings.exception.YamlProcessingException;
-import software.wings.security.PermissionAttribute.ResourceType;
+import software.wings.security.PermissionAttribute.PermissionType;
 import software.wings.security.annotations.AuthRule;
 import software.wings.security.annotations.PublicApi;
+import software.wings.security.annotations.Scope;
 import software.wings.service.impl.yaml.YamlWebHookPayload;
 import software.wings.service.intfc.AuthService;
 import software.wings.service.intfc.yaml.AppYamlResourceService;
@@ -67,7 +69,7 @@ import javax.ws.rs.QueryParam;
 @Api("setup-as-code/yaml")
 @Path("setup-as-code/yaml")
 @Produces(APPLICATION_JSON)
-@AuthRule(ResourceType.SETTING)
+@Scope(SETTING)
 public class YamlResource {
   private static final Logger logger = LoggerFactory.getLogger(YamlResource.class);
 
@@ -629,6 +631,7 @@ public class YamlResource {
   @Path("git-config")
   @Timed
   @ExceptionMetered
+  @AuthRule(permissionType = PermissionType.ACCOUNT_MANAGEMENT)
   public RestResponse<YamlGitConfig> saveGitConfig(
       @QueryParam("accountId") String accountId, YamlGitConfig yamlGitSync) {
     yamlGitSync.setAccountId(accountId);
@@ -663,6 +666,7 @@ public class YamlResource {
   @Path("git-config/{entityId}")
   @Timed
   @ExceptionMetered
+  @AuthRule(permissionType = PermissionType.ACCOUNT_MANAGEMENT)
   public RestResponse<YamlGitConfig> updateGitConfig(
       @QueryParam("accountId") String accountId, YamlGitConfig yamlGitSync) {
     yamlGitSync.setAccountId(accountId);

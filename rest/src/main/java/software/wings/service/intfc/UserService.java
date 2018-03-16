@@ -8,6 +8,7 @@ import software.wings.beans.ApplicationRole;
 import software.wings.beans.User;
 import software.wings.beans.UserInvite;
 import software.wings.beans.ZendeskSsoLoginResponse;
+import software.wings.beans.security.UserGroup;
 import software.wings.dl.PageRequest;
 import software.wings.dl.PageResponse;
 import software.wings.utils.validation.Create;
@@ -232,4 +233,6 @@ public interface UserService {
    * @return the zendesk sso login response
    */
   ZendeskSsoLoginResponse generateZendeskSsoJwt(String returnToUrl);
+
+  User addUserGroups(User user, List<UserGroup> userGroups);
 }

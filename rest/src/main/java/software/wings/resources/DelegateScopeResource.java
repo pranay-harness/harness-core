@@ -1,5 +1,8 @@
 package software.wings.resources;
 
+import static software.wings.security.PermissionAttribute.PermissionType.LOGGED_IN;
+import static software.wings.security.PermissionAttribute.ResourceType.DELEGATE_SCOPE;
+
 import com.google.inject.Inject;
 
 import com.codahale.metrics.annotation.ExceptionMetered;
@@ -12,9 +15,9 @@ import software.wings.beans.DelegateScope;
 import software.wings.beans.RestResponse;
 import software.wings.dl.PageRequest;
 import software.wings.dl.PageResponse;
-import software.wings.security.PermissionAttribute.ResourceType;
 import software.wings.security.annotations.AuthRule;
 import software.wings.security.annotations.DelegateAuth;
+import software.wings.security.annotations.Scope;
 import software.wings.service.intfc.DelegateScopeService;
 
 import javax.ws.rs.BeanParam;
@@ -33,7 +36,8 @@ import javax.ws.rs.QueryParam;
 @Api("delegate-scopes")
 @Path("/delegate-scopes")
 @Produces("application/json")
-@AuthRule(ResourceType.DELEGATE_SCOPE)
+@Scope(DELEGATE_SCOPE)
+@AuthRule(permissionType = LOGGED_IN)
 public class DelegateScopeResource {
   private DelegateScopeService delegateScopeService;
 

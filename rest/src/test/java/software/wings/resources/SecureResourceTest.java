@@ -20,8 +20,8 @@ import static software.wings.security.PermissionAttribute.Action.ALL;
 import static software.wings.security.PermissionAttribute.Action.CREATE;
 import static software.wings.security.PermissionAttribute.Action.READ;
 import static software.wings.security.PermissionAttribute.Action.UPDATE;
-import static software.wings.security.PermissionAttribute.PermissionScope.APP;
-import static software.wings.security.PermissionAttribute.PermissionScope.ENV;
+import static software.wings.security.PermissionAttribute.PermissionType.APP;
+import static software.wings.security.PermissionAttribute.PermissionType.ENV;
 import static software.wings.utils.WingsTestConstants.ACCOUNT_ID;
 import static software.wings.utils.WingsTestConstants.APP_ID;
 import static software.wings.utils.WingsTestConstants.ENV_ID;
@@ -75,11 +75,17 @@ import software.wings.security.AuthRuleFilter;
 import software.wings.security.PermissionAttribute.ResourceType;
 import software.wings.security.UserThreadLocal;
 import software.wings.service.impl.AuthServiceImpl;
+import software.wings.service.impl.security.auth.AuthHandler;
 import software.wings.service.intfc.AccountService;
 import software.wings.service.intfc.AppService;
 import software.wings.service.intfc.AuditService;
 import software.wings.service.intfc.AuthService;
+import software.wings.service.intfc.EnvironmentService;
+import software.wings.service.intfc.FeatureFlagService;
+import software.wings.service.intfc.LearningEngineService;
+import software.wings.service.intfc.UserGroupService;
 import software.wings.service.intfc.UserService;
+import software.wings.service.intfc.WorkflowService;
 import software.wings.utils.CacheHelper;
 import software.wings.utils.ResourceTestRule;
 
@@ -121,13 +127,19 @@ public class SecureResourceTest {
 
   private static AppService appService = mock(AppService.class);
   private static UserService userService = mock(UserService.class);
+  private static WorkflowService workflowService = mock(WorkflowService.class);
+  private static UserGroupService userGroupService = mock(UserGroupService.class);
+  private static EnvironmentService envService = mock(EnvironmentService.class);
+  private static LearningEngineService learningEngineService = mock(LearningEngineService.class);
   private static MainConfiguration configuration = mock(MainConfiguration.class);
+  private static AuthHandler authHandler = mock(AuthHandler.class);
+  private static FeatureFlagService featureFlagService = mock(FeatureFlagService.class);
 
-  private static AuthService authService =
-      new AuthServiceImpl(genericDbCache, accountService, wingsPersistence, userService, cacheHelper, configuration);
+  private static AuthService authService = new AuthServiceImpl(genericDbCache, wingsPersistence, userService,
+      userGroupService, workflowService, envService, cacheHelper, configuration, learningEngineService, authHandler);
 
-  private static AuthRuleFilter authRuleFilter =
-      new AuthRuleFilter(auditService, auditHelper, authService, appService, userService);
+  private static AuthRuleFilter authRuleFilter = new AuthRuleFilter(
+      auditService, auditHelper, authService, authHandler, appService, userService, featureFlagService);
 
   Cache<String, User> cache = Mockito.mock(Cache.class);
 

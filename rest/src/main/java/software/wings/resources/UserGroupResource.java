@@ -7,11 +7,13 @@ import com.codahale.metrics.annotation.Timed;
 import io.swagger.annotations.Api;
 import org.hibernate.validator.constraints.NotEmpty;
 import software.wings.beans.RestResponse;
-import software.wings.beans.UserGroup;
+import software.wings.beans.security.UserGroup;
 import software.wings.dl.PageRequest;
 import software.wings.dl.PageResponse;
+import software.wings.security.PermissionAttribute.PermissionType;
 import software.wings.security.PermissionAttribute.ResourceType;
 import software.wings.security.annotations.AuthRule;
+import software.wings.security.annotations.Scope;
 import software.wings.service.intfc.UserGroupService;
 
 import javax.ws.rs.BeanParam;
@@ -35,7 +37,8 @@ import javax.ws.rs.core.MediaType;
 @Path("/userGroups")
 @Consumes(MediaType.APPLICATION_JSON)
 @Produces(MediaType.APPLICATION_JSON)
-@AuthRule(ResourceType.USER)
+@Scope(ResourceType.USER)
+@AuthRule(permissionType = PermissionType.USER_PERMISSION_MANAGEMENT)
 public class UserGroupResource {
   private UserGroupService userGroupService;
 
@@ -59,6 +62,7 @@ public class UserGroupResource {
   @GET
   @Timed
   @ExceptionMetered
+  @AuthRule(permissionType = PermissionType.USER_PERMISSION_MANAGEMENT)
   public RestResponse<PageResponse<UserGroup>> list(
       @BeanParam PageRequest<UserGroup> pageRequest, @QueryParam("accountId") @NotEmpty String accountId) {
     PageResponse<UserGroup> pageResponse = userGroupService.list(accountId, pageRequest);

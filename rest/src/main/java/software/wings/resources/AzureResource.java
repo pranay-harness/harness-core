@@ -10,7 +10,7 @@ import com.codahale.metrics.annotation.Timed;
 import io.swagger.annotations.Api;
 import software.wings.beans.AzureKubernetesCluster;
 import software.wings.beans.RestResponse;
-import software.wings.security.annotations.AuthRule;
+import software.wings.security.annotations.Scope;
 import software.wings.service.intfc.AzureResourceService;
 
 import java.util.List;
@@ -26,7 +26,7 @@ import javax.ws.rs.QueryParam;
 @Path("/azure")
 @Consumes(APPLICATION_JSON)
 @Produces(APPLICATION_JSON)
-@AuthRule(SETTING)
+@Scope(SETTING)
 public class AzureResource {
   @Inject private AzureResourceService azureResourceService;
 

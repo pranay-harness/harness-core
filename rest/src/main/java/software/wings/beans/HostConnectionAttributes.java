@@ -13,6 +13,7 @@ import software.wings.annotation.Encryptable;
 import software.wings.annotation.Encrypted;
 import software.wings.jersey.JsonViews;
 import software.wings.settings.SettingValue;
+import software.wings.settings.UsageRestrictions;
 
 import javax.validation.constraints.NotNull;
 
@@ -212,9 +213,9 @@ public class HostConnectionAttributes extends SettingValue implements Encryptabl
     private String key;
 
     @lombok.Builder
-    public Yaml(
-        String type, String harnessApiVersion, String connectionType, String accessType, String userName, String key) {
-      super(type, harnessApiVersion);
+    public Yaml(String type, String harnessApiVersion, String connectionType, String accessType, String userName,
+        String key, UsageRestrictions usageRestrictions) {
+      super(type, harnessApiVersion, usageRestrictions);
       this.connectionType = connectionType;
       this.accessType = accessType;
       this.userName = userName;

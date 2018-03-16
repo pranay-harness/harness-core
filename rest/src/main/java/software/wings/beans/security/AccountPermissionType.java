@@ -1,9 +1,8 @@
-package software.wings.beans;
+package software.wings.beans.security;
 
 public enum AccountPermissionType {
   APPLICATION_CREATE_DELETE,
   USER_PERMISSION_MANAGEMENT,
-  HARNESS_INSTALL,
-  ACCOUNT_DEFAULT,
-  LICENSE_BILLING;
+  MANAGE_DELEGATES,
+  MANAGE_YAML
 }

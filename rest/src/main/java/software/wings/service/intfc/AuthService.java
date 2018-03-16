@@ -3,6 +3,7 @@ package software.wings.service.intfc;
 import software.wings.beans.AuthToken;
 import software.wings.beans.User;
 import software.wings.security.PermissionAttribute;
+import software.wings.security.UserPermissionInfo;
 import software.wings.security.UserRequestInfo;
 
 import java.util.List;
@@ -43,6 +44,28 @@ public interface AuthService {
   void authorize(String accountId, List<String> appIds, String envId, User user,
       List<PermissionAttribute> permissionAttributes, UserRequestInfo userRequestInfo);
 
+  /**
+   * Authorize.
+   * @param accountId
+   * @param appId                the app id
+   * @param entityId             the entity id
+   * @param user                 the user
+   * @param permissionAttributes the permission attributes
+   */
+  void authorize(
+      String accountId, String appId, String entityId, User user, List<PermissionAttribute> permissionAttributes);
+
+  /**
+   * Authorize.
+   * @param accountId
+   * @param appIds               list of app ids
+   * @param entityId             the entity id
+   * @param user                 the user
+   * @param permissionAttributes the permission attributes
+   */
+  void authorize(String accountId, List<String> appIds, String entityId, User user,
+      List<PermissionAttribute> permissionAttributes);
+
   void validateDelegateToken(String accountId, String tokenString);
 
   void invalidateAllTokensForUser(String userId);
@@ -50,4 +73,6 @@ public interface AuthService {
   void validateExternalServiceToken(String accountId, String tokenString);
 
   void validateLearningEngineServiceToken(String learningEngineServiceToken);
+
+  UserPermissionInfo getUserPermissionInfo(String accountId, User user);
 }

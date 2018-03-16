@@ -1,4 +1,4 @@
-package software.wings.beans;
+package software.wings.beans.security;
 
 import static com.fasterxml.jackson.annotation.JsonInclude.Include.NON_EMPTY;
 
@@ -12,8 +12,11 @@ import org.hibernate.validator.constraints.NotEmpty;
 import org.mongodb.morphia.annotations.Entity;
 import org.mongodb.morphia.annotations.Indexed;
 import org.mongodb.morphia.annotations.Transient;
+import software.wings.beans.Base;
+import software.wings.beans.User;
 
 import java.util.List;
+import java.util.Set;
 
 /**
  * User bean class.
@@ -35,6 +38,6 @@ public class UserGroup extends Base {
   @Indexed private List<String> memberIds;
   @Transient private List<User> members;
 
-  private List<AppPermission> appPermissions;
-  private List<AccountPermissionType> accountPermissionTypes;
+  private Set<AppPermission> appPermissions;
+  private AccountPermissions accountPermissions;
 }

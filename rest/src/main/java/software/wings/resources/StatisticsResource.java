@@ -13,7 +13,7 @@ import software.wings.beans.stats.ServiceInstanceStatistics;
 import software.wings.beans.stats.UserStatistics;
 import software.wings.beans.stats.WingsStatistics;
 import software.wings.security.PermissionAttribute.ResourceType;
-import software.wings.security.annotations.AuthRule;
+import software.wings.security.annotations.Scope;
 import software.wings.service.intfc.StatisticsService;
 
 import java.util.List;
@@ -30,7 +30,7 @@ import javax.ws.rs.QueryParam;
 @Api("/statistics")
 @Path("/statistics")
 @Produces("application/json")
-@AuthRule(ResourceType.APPLICATION)
+@Scope(ResourceType.APPLICATION)
 public class StatisticsResource {
   @Inject private StatisticsService statisticsService;
 

@@ -15,6 +15,7 @@ import software.wings.annotation.Encryptable;
 import software.wings.annotation.Encrypted;
 import software.wings.jersey.JsonViews;
 import software.wings.settings.SettingValue;
+import software.wings.settings.UsageRestrictions;
 import software.wings.sm.StateType;
 import software.wings.yaml.setting.VerificationProviderYaml;
 
@@ -59,8 +60,9 @@ public class DynaTraceConfig extends SettingValue implements Encryptable {
     private String dynaTraceUrl;
 
     @Builder
-    public DynaTraceYaml(String type, String harnessApiVersion, String dynaTraceUrl, String apiToken) {
-      super(type, harnessApiVersion);
+    public DynaTraceYaml(String type, String harnessApiVersion, String dynaTraceUrl, String apiToken,
+        UsageRestrictions usageRestrictions) {
+      super(type, harnessApiVersion, usageRestrictions);
       this.dynaTraceUrl = dynaTraceUrl;
       this.apiToken = apiToken;
     }

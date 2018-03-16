@@ -45,6 +45,10 @@ import software.wings.scheduler.InstanceSyncJob;
 import software.wings.scheduler.PruneEntityJob;
 import software.wings.scheduler.QuartzScheduler;
 import software.wings.scheduler.StateMachineExecutionCleanupJob;
+import software.wings.security.PermissionAttribute;
+import software.wings.security.PermissionAttribute.Action;
+import software.wings.security.PermissionAttribute.PermissionType;
+import software.wings.service.impl.security.auth.AuthHandler;
 import software.wings.service.impl.yaml.YamlChangeSetHelper;
 import software.wings.service.intfc.AlertService;
 import software.wings.service.intfc.AppService;
@@ -67,6 +71,7 @@ import software.wings.utils.Validator;
 
 import java.time.Duration;
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.List;
 import java.util.Map;
 import java.util.concurrent.ExecutorService;
@@ -85,6 +90,7 @@ public class AppServiceImpl implements AppService {
 
   @Inject private AlertService alertService;
   @Inject private ArtifactService artifactService;
+  @Inject private AuthHandler authHandler;
   @Inject private EnvironmentService environmentService;
   @Inject private ExecutorService executorService;
   @Inject private InstanceService instanceService;
@@ -177,15 +183,26 @@ public class AppServiceImpl implements AppService {
       PageRequest<Application> req, boolean overview, int numberOfExecutions, int overviewDays) {
     PageResponse<Application> response = wingsPersistence.query(Application.class, req);
 
+    List<Application> applicationList = response.getResponse();
+    List<String> appIdList =
+        applicationList.parallelStream().map(application -> application.getUuid()).collect(Collectors.toList());
+
     if (overview) { // TODO: merge both overview block make service/env population part of overview option
-      Map<String, AppKeyStatistics> applicationKeyStats = statisticsService.getApplicationKeyStats(
-          response.stream().map(Application::getUuid).collect(Collectors.toList()), overviewDays);
-      response.forEach(application -> {
-        application.setAppKeyStatistics(
-            applicationKeyStats.computeIfAbsent(application.getUuid(), s -> new AppKeyStatistics()));
-      });
+      Map<String, AppKeyStatistics> applicationKeyStats =
+          statisticsService.getApplicationKeyStats(appIdList, overviewDays);
+      applicationList.forEach(application
+          -> application.setAppKeyStatistics(
+              applicationKeyStats.computeIfAbsent(application.getUuid(), s -> new AppKeyStatistics())));
     }
-    response.getResponse().parallelStream().forEach(application -> {
+
+    PermissionAttribute svcPermissionAttribute = new PermissionAttribute(PermissionType.SERVICE, Action.READ);
+    authHandler.setEntityIdFilterIfUserAction(Arrays.asList(svcPermissionAttribute), appIdList);
+
+    PermissionAttribute envPermissionAttribute = new PermissionAttribute(PermissionType.ENV, Action.READ);
+    authHandler.setEntityIdFilterIfUserAction(Arrays.asList(envPermissionAttribute), appIdList);
+
+    // Had to change the parallel stream to normal stream since we want
+    applicationList.stream().forEach(application -> {
       try {
         application.setEnvironments(environmentService.getEnvByApp(application.getUuid()));
       } catch (Exception e) {
@@ -371,6 +388,14 @@ public class AppServiceImpl implements AppService {
   @Override
   public Application get(String appId, SetupStatus status, boolean overview, int overviewDays) {
     Application application = get(appId);
+
+    List<String> appIdAsList = Arrays.asList(appId);
+    PermissionAttribute svcPermissionAttribute = new PermissionAttribute(PermissionType.SERVICE, Action.READ);
+    authHandler.setEntityIdFilterIfUserAction(Arrays.asList(svcPermissionAttribute), appIdAsList);
+
+    PermissionAttribute envPermissionAttribute = new PermissionAttribute(PermissionType.ENV, Action.READ);
+    authHandler.setEntityIdFilterIfUserAction(Arrays.asList(envPermissionAttribute), appIdAsList);
+
     application.setEnvironments(environmentService.getEnvByApp(application.getUuid()));
     application.setServices(serviceResourceService.findServicesByApp(application.getUuid()));
 

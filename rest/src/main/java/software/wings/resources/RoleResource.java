@@ -11,7 +11,7 @@ import software.wings.beans.Role;
 import software.wings.dl.PageRequest;
 import software.wings.dl.PageResponse;
 import software.wings.security.PermissionAttribute.ResourceType;
-import software.wings.security.annotations.AuthRule;
+import software.wings.security.annotations.Scope;
 import software.wings.service.intfc.RoleService;
 
 import javax.ws.rs.BeanParam;
@@ -33,7 +33,7 @@ import javax.ws.rs.core.MediaType;
 @Path("/roles")
 @Consumes(MediaType.APPLICATION_JSON)
 @Produces(MediaType.APPLICATION_JSON)
-@AuthRule(ResourceType.ROLE)
+@Scope(ResourceType.ROLE)
 public class RoleResource {
   @Inject private RoleService roleService;
 

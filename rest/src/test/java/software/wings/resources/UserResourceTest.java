@@ -19,6 +19,7 @@ import software.wings.dl.PageRequest;
 import software.wings.dl.PageResponse;
 import software.wings.exception.WingsExceptionMapper;
 import software.wings.service.intfc.AccountService;
+import software.wings.service.intfc.AuthService;
 import software.wings.service.intfc.UserService;
 import software.wings.utils.ResourceTestRule;
 
@@ -31,16 +32,18 @@ import javax.ws.rs.core.GenericType;
  */
 public class UserResourceTest {
   public static final UserService USER_SERVICE = mock(UserService.class);
+  public static final AuthService AUTH_SERVICE = mock(AuthService.class);
   public static final AccountService ACCOUNT_SERVICE = mock(AccountService.class);
 
   /**
    * The constant RESOURCES.
    */
   @ClassRule
-  public static final ResourceTestRule RESOURCES = ResourceTestRule.builder()
-                                                       .addResource(new UserResource(USER_SERVICE, ACCOUNT_SERVICE))
-                                                       .addProvider(WingsExceptionMapper.class)
-                                                       .build();
+  public static final ResourceTestRule RESOURCES =
+      ResourceTestRule.builder()
+          .addResource(new UserResource(USER_SERVICE, AUTH_SERVICE, ACCOUNT_SERVICE))
+          .addProvider(WingsExceptionMapper.class)
+          .build();
 
   /**
    * Sets the up.

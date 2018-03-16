@@ -11,6 +11,7 @@ import org.mongodb.morphia.annotations.IndexOptions;
 import org.mongodb.morphia.annotations.Indexed;
 import org.mongodb.morphia.annotations.Reference;
 import org.mongodb.morphia.annotations.Transient;
+import software.wings.security.UserRequestContext;
 import software.wings.security.UserRequestInfo;
 
 import java.security.Principal;
@@ -57,6 +58,8 @@ public class User extends Base implements Principal {
   @JsonIgnore private long passwordChangedAt;
 
   @JsonIgnore @Transient private UserRequestInfo userRequestInfo;
+  @JsonIgnore @Transient private UserRequestContext userRequestContext;
+  @JsonIgnore @Transient private boolean useNewRbac;
 
   /**
    * Return partial user object without sensitive information.
@@ -410,6 +413,22 @@ public class User extends Base implements Principal {
 
   public void setPasswordChangedAt(long passwordChangedAt) {
     this.passwordChangedAt = passwordChangedAt;
+  }
+
+  public UserRequestContext getUserRequestContext() {
+    return userRequestContext;
+  }
+
+  public void setUserRequestContext(UserRequestContext userRequestContext) {
+    this.userRequestContext = userRequestContext;
+  }
+
+  public boolean isUseNewRbac() {
+    return useNewRbac;
+  }
+
+  public void setUseNewRbac(boolean useNewRbac) {
+    this.useNewRbac = useNewRbac;
   }
 
   public static final class Builder {

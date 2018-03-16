@@ -16,6 +16,7 @@ import software.wings.annotation.Encryptable;
 import software.wings.annotation.Encrypted;
 import software.wings.jersey.JsonViews;
 import software.wings.settings.SettingValue;
+import software.wings.settings.UsageRestrictions;
 import software.wings.yaml.setting.ArtifactServerYaml;
 import software.wings.yaml.setting.VerificationProviderYaml;
 
@@ -60,8 +61,9 @@ public class JenkinsConfig extends SettingValue implements Encryptable {
   @NoArgsConstructor
   public static final class Yaml extends ArtifactServerYaml {
     @Builder
-    public Yaml(String type, String harnessApiVersion, String url, String username, String password) {
-      super(type, harnessApiVersion, url, username, password);
+    public Yaml(String type, String harnessApiVersion, String url, String username, String password,
+        UsageRestrictions usageRestrictions) {
+      super(type, harnessApiVersion, url, username, password, usageRestrictions);
     }
   }
 
@@ -74,8 +76,9 @@ public class JenkinsConfig extends SettingValue implements Encryptable {
     private String password = ENCRYPTED_VALUE_STR;
 
     @Builder
-    public VerificationYaml(String type, String harnessApiVersion, String url, String username, String password) {
-      super(type, harnessApiVersion);
+    public VerificationYaml(String type, String harnessApiVersion, String url, String username, String password,
+        UsageRestrictions usageRestrictions) {
+      super(type, harnessApiVersion, usageRestrictions);
       this.url = url;
       this.username = username;
       this.password = password;

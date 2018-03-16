@@ -24,12 +24,15 @@ import software.wings.dl.PageRequest;
 import software.wings.dl.PageResponse;
 import software.wings.exception.WingsException;
 import software.wings.exception.WingsException.ReportTarget;
-import software.wings.security.PermissionAttribute.PermissionScope;
+import software.wings.security.PermissionAttribute.PermissionType;
 import software.wings.security.PermissionAttribute.ResourceType;
+import software.wings.security.UserPermissionInfo;
 import software.wings.security.UserThreadLocal;
 import software.wings.security.annotations.AuthRule;
 import software.wings.security.annotations.PublicApi;
+import software.wings.security.annotations.Scope;
 import software.wings.service.intfc.AccountService;
+import software.wings.service.intfc.AuthService;
 import software.wings.service.intfc.UserService;
 
 import java.net.URISyntaxException;
@@ -57,9 +60,11 @@ import javax.ws.rs.core.MediaType;
 @Path("/users")
 @Consumes(MediaType.APPLICATION_JSON)
 @Produces(MediaType.APPLICATION_JSON)
-@AuthRule(ResourceType.USER)
+@Scope(ResourceType.USER)
+@AuthRule(permissionType = PermissionType.LOGGED_IN)
 public class UserResource {
   private UserService userService;
+  private AuthService authService;
   private AccountService accountService;
 
   /**
@@ -69,8 +74,9 @@ public class UserResource {
    * @param accountService the account service
    */
   @Inject
-  public UserResource(UserService userService, AccountService accountService) {
+  public UserResource(UserService userService, AuthService authService, AccountService accountService) {
     this.userService = userService;
+    this.authService = authService;
     this.accountService = accountService;
   }
 
@@ -84,6 +90,7 @@ public class UserResource {
   @GET
   @Timed
   @ExceptionMetered
+  @AuthRule(permissionType = PermissionType.USER_PERMISSION_MANAGEMENT)
   public RestResponse<PageResponse<User>> list(
       @BeanParam PageRequest<User> pageRequest, @QueryParam("accountId") @NotEmpty String accountId) {
     Account account = accountService.get(accountId);
@@ -131,7 +138,7 @@ public class UserResource {
   @Path("account")
   @Timed
   @ExceptionMetered
-  @AuthRule(value = ResourceType.USER, scope = PermissionScope.LOGGED_IN)
+  @Scope(value = ResourceType.USER, scope = PermissionType.LOGGED_IN)
   public RestResponse<Account> addAccount(Account account) {
     User existingUser = UserThreadLocal.get();
     if (existingUser == null) {
@@ -149,9 +156,10 @@ public class UserResource {
    */
   @PUT
   @Path("{userId}")
-  @AuthRule(value = ResourceType.USER, scope = PermissionScope.LOGGED_IN)
+  @Scope(value = ResourceType.USER, scope = PermissionType.LOGGED_IN)
   @Timed
   @ExceptionMetered
+  @AuthRule(permissionType = PermissionType.USER_PERMISSION_MANAGEMENT)
   public RestResponse<User> update(@PathParam("userId") String userId, User user) {
     User authUser = UserThreadLocal.get();
     if (!authUser.getUuid().equals(userId)) {
@@ -172,6 +180,7 @@ public class UserResource {
   @Path("{userId}")
   @Timed
   @ExceptionMetered
+  @AuthRule(permissionType = PermissionType.USER_PERMISSION_MANAGEMENT)
   public RestResponse delete(@QueryParam("accountId") @NotEmpty String accountId, @PathParam("userId") String userId) {
     userService.delete(accountId, userId);
     return new RestResponse();
@@ -232,9 +241,10 @@ public class UserResource {
    */
   @GET
   @Path("user")
-  @AuthRule(value = ResourceType.USER, scope = PermissionScope.LOGGED_IN)
+  @Scope(value = ResourceType.USER, scope = PermissionType.LOGGED_IN)
   @Timed
   @ExceptionMetered
+  @AuthRule(permissionType = PermissionType.LOGGED_IN)
   public RestResponse<User> get() {
     return new RestResponse<>(UserThreadLocal.get().getPublicUser());
   }
@@ -247,12 +257,21 @@ public class UserResource {
    */
   @GET
   @Path("account-roles/{accountId}")
-  @AuthRule(value = ResourceType.USER, scope = PermissionScope.LOGGED_IN)
+  @Scope(value = ResourceType.USER, scope = PermissionType.LOGGED_IN)
   @Timed
   @ExceptionMetered
   public RestResponse<AccountRole> getAccountRole(@PathParam("accountId") String accountId) {
     return new RestResponse<>(
         userService.getUserAccountRole(UserThreadLocal.get().getPublicUser().getUuid(), accountId));
+  }
+
+  @GET
+  @Path("user-permissions/{accountId}")
+  @Scope(value = ResourceType.USER, scope = PermissionType.LOGGED_IN)
+  @Timed
+  @ExceptionMetered
+  public RestResponse<UserPermissionInfo> getUserPermissionInfo(@PathParam("accountId") String accountId) {
+    return new RestResponse<>(authService.getUserPermissionInfo(accountId, UserThreadLocal.get().getPublicUser()));
   }
 
   /**
@@ -263,7 +282,7 @@ public class UserResource {
    */
   @GET
   @Path("application-roles/{appId}")
-  @AuthRule(value = ResourceType.USER, scope = PermissionScope.LOGGED_IN)
+  @Scope(value = ResourceType.USER, scope = PermissionType.LOGGED_IN)
   @Timed
   @ExceptionMetered
   public RestResponse<ApplicationRole> getApplicationRole(@PathParam("appId") String appId) {
@@ -282,6 +301,7 @@ public class UserResource {
   @PublicApi
   @Timed
   @ExceptionMetered
+  @AuthRule(permissionType = PermissionType.LOGGED_IN, skipAuth = true)
   public RestResponse<User> login(@Auth User user) {
     return new RestResponse<>(user);
   }
@@ -294,7 +314,7 @@ public class UserResource {
    */
   @POST
   @Path("{userId}/logout")
-  @AuthRule(value = ResourceType.USER, scope = PermissionScope.LOGGED_IN)
+  @Scope(value = ResourceType.USER, scope = PermissionType.LOGGED_IN)
   @Timed
   @ExceptionMetered
   public RestResponse logout(@PathParam("userId") String userId) {
@@ -399,6 +419,7 @@ public class UserResource {
   @Path("invites")
   @Timed
   @ExceptionMetered
+  @AuthRule(permissionType = PermissionType.USER_PERMISSION_MANAGEMENT)
   public RestResponse<PageResponse<UserInvite>> listInvites(
       @QueryParam("accountId") @NotEmpty String accountId, @BeanParam PageRequest<UserInvite> pageRequest) {
     return new RestResponse<>(userService.listInvites(pageRequest));
@@ -431,6 +452,7 @@ public class UserResource {
   @Path("invites")
   @Timed
   @ExceptionMetered
+  @AuthRule(permissionType = PermissionType.USER_PERMISSION_MANAGEMENT)
   public RestResponse<List<UserInvite>> inviteUsers(
       @QueryParam("accountId") @NotEmpty String accountId, @NotNull UserInvite userInvite) {
     userInvite.setAccountId(accountId);
@@ -469,6 +491,7 @@ public class UserResource {
   @Path("invites/{inviteId}")
   @Timed
   @ExceptionMetered
+  @AuthRule(permissionType = PermissionType.USER_PERMISSION_MANAGEMENT)
   public RestResponse<UserInvite> deleteInvite(
       @PathParam("inviteId") @NotEmpty String inviteId, @QueryParam("accountId") @NotEmpty String accountId) {
     return new RestResponse<>(userService.deleteInvite(accountId, inviteId));
@@ -476,7 +499,6 @@ public class UserResource {
 
   @POST
   @Path("sso/zendesk")
-  @AuthRule(value = ResourceType.USER, scope = PermissionScope.LOGGED_IN)
   public RestResponse<ZendeskSsoLoginResponse> zendDesk(@QueryParam("returnTo") @NotEmpty String returnTo) {
     return new RestResponse(userService.generateZendeskSsoJwt(returnTo));
   }
