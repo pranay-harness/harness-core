@@ -405,7 +405,7 @@ public class AuthHandler {
                           pipelineStage.getPipelineStageElements().stream().forEach(pipelineStageElement -> {
 
                             // The stage type is called ENV_STATE in pipeline. The other stage type is Approval stage.
-                            if (pipelineStageElement.getType().equals(StateType.ENV_STATE)) {
+                            if (pipelineStageElement.getType().equals(StateType.ENV_STATE.name())) {
                               envStageCount.incrementAndGet();
                             }
 
