@@ -1,11 +1,12 @@
 package software.wings.security;
 
-import com.google.common.collect.Multimap;
-
 import lombok.Builder;
 import lombok.Data;
 import lombok.NoArgsConstructor;
 import software.wings.security.PermissionAttribute.Action;
+
+import java.util.Map;
+import java.util.Set;
 
 /**
  * This class has the derived app permission summary.
@@ -21,17 +22,17 @@ public class AppPermissionSummary {
   private boolean canCreatePipeline;
 
   // Key - entityId, Value - set of actions
-  private Multimap<Action, String> servicePermissions;
-  private Multimap<Action, String> envPermissions;
-  private Multimap<Action, String> workflowPermissions;
-  private Multimap<Action, String> deploymentPermissions;
-  private Multimap<Action, String> pipelinePermissions;
+  private Map<Action, Set<String>> servicePermissions;
+  private Map<Action, Set<String>> envPermissions;
+  private Map<Action, Set<String>> workflowPermissions;
+  private Map<Action, Set<String>> deploymentPermissions;
+  private Map<Action, Set<String>> pipelinePermissions;
 
   @Builder
   public AppPermissionSummary(boolean canCreateService, boolean canCreateEnvironment, boolean canCreateWorkflow,
-      boolean canCreatePipeline, Multimap<Action, String> servicePermissions, Multimap<Action, String> envPermissions,
-      Multimap<Action, String> workflowPermissions, Multimap<Action, String> deploymentPermissions,
-      Multimap<Action, String> pipelinePermissions) {
+      boolean canCreatePipeline, Map<Action, Set<String>> servicePermissions, Map<Action, Set<String>> envPermissions,
+      Map<Action, Set<String>> workflowPermissions, Map<Action, Set<String>> deploymentPermissions,
+      Map<Action, Set<String>> pipelinePermissions) {
     this.canCreateService = canCreateService;
     this.canCreateEnvironment = canCreateEnvironment;
     this.canCreateWorkflow = canCreateWorkflow;

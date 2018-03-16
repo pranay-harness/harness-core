@@ -4,9 +4,7 @@ import static software.wings.dl.PageRequest.PageRequestBuilder.aPageRequest;
 import static software.wings.security.GenericEntityFilter.FilterType.SELECTED;
 import static software.wings.security.UserRequestContext.EntityInfo;
 
-import com.google.common.collect.HashMultimap;
 import com.google.common.collect.ImmutableList;
-import com.google.common.collect.Multimap;
 import com.google.common.collect.Sets;
 import com.google.inject.Inject;
 import com.google.inject.Singleton;
@@ -239,7 +237,7 @@ public class AuthHandler {
         PermissionType permissionType = permissionAttribute.getPermissionType();
         Action action = permissionAttribute.getAction();
 
-        Multimap<Action, String> entityPermissions = null;
+        Map<Action, Set<String>> entityPermissions = null;
         if (permissionType == PermissionType.SERVICE) {
           entityPermissions = appPermissionSummary.getServicePermissions();
         } else if (permissionType == PermissionType.ENV) {
@@ -256,7 +254,7 @@ public class AuthHandler {
           continue;
         }
 
-        Collection<String> entityIdCollection = entityPermissions.get(action);
+        Set<String> entityIdCollection = entityPermissions.get(action);
         if (CollectionUtils.isNotEmpty(entityIdCollection)) {
           entityIds.addAll(entityIdCollection);
         }
@@ -273,56 +271,6 @@ public class AuthHandler {
                                                      }
 
                                                      return "_id";
-                                                     //                                                     PermissionType
-                                                     //                                                     permissionType
-                                                     //                                                     =
-                                                     //                                                         permissionAttribute.getPermissionType();
-                                                     //
-                                                     //                                                     String
-                                                     //                                                     fieldName;
-                                                     //                                                     if
-                                                     //                                                     (permissionType
-                                                     //                                                     ==
-                                                     //                                                     PermissionType.SERVICE)
-                                                     //                                                     {
-                                                     //                                                       fieldName
-                                                     //                                                       =
-                                                     //                                                       "serviceId";
-                                                     //                                                     } else if
-                                                     //                                                     (permissionType
-                                                     //                                                     ==
-                                                     //                                                     PermissionType.ENV)
-                                                     //                                                     {
-                                                     //                                                       fieldName
-                                                     //                                                       = "envId";
-                                                     //                                                     } else if
-                                                     //                                                     (permissionType
-                                                     //                                                     ==
-                                                     //                                                     PermissionType.WORKFLOW)
-                                                     //                                                     {
-                                                     //                                                       fieldName
-                                                     //                                                       =
-                                                     //                                                       "workflowId";
-                                                     //                                                     } else if
-                                                     //                                                     (permissionType
-                                                     //                                                     ==
-                                                     //                                                     PermissionType.PIPELINE)
-                                                     //                                                     {
-                                                     //                                                       fieldName
-                                                     //                                                       =
-                                                     //                                                       "pipelineId";
-                                                     //                                                     } else if
-                                                     //                                                     (permissionType
-                                                     //                                                     ==
-                                                     //                                                     PermissionType.DEPLOYMENT)
-                                                     //                                                     {
-                                                     //                                                       fieldName
-                                                     //                                                       =
-                                                     //                                                       "workflowId";
-                                                     //                                                     }
-
-                                                     //                                                     return
-                                                     //                                                     fieldName;
                                                    })
                                                    .findFirst();
 
@@ -681,15 +629,15 @@ public class AuthHandler {
     return toAppPermissionSummaryBuilder.build();
   }
 
-  private Multimap<Action, String> convertToInternal(Map<String, Set<Action>> fromMap) {
-    Multimap<Action, String> toMap = HashMultimap.create();
+  private Map<Action, Set<String>> convertToInternal(Map<String, Set<Action>> fromMap) {
+    Map<Action, Set<String>> toMap = new HashMap<>();
     final Set<String> readSet = new HashSet<>();
     final Set<String> updateSet = new HashSet<>();
     final Set<String> deleteSet = new HashSet<>();
     final Set<String> executeSet = new HashSet<>();
 
     if (fromMap == null) {
-      return HashMultimap.create();
+      return new HashMap<>();
     }
 
     fromMap.entrySet().stream().forEach(entry -> {
@@ -710,10 +658,10 @@ public class AuthHandler {
       }
     });
 
-    toMap.putAll(Action.READ, readSet);
-    toMap.putAll(Action.UPDATE, updateSet);
-    toMap.putAll(Action.DELETE, deleteSet);
-    toMap.putAll(Action.EXECUTE, executeSet);
+    toMap.put(Action.READ, readSet);
+    toMap.put(Action.UPDATE, updateSet);
+    toMap.put(Action.DELETE, deleteSet);
+    toMap.put(Action.EXECUTE, executeSet);
     return toMap;
   }
 }

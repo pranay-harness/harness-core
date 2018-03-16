@@ -264,14 +264,12 @@ public class AuthRuleFilter implements ContainerRequestFilter {
           }
         } else {
           // Handle delete and update methods
+          String entityId = getEntityIdFromRequest(requiredPermissionAttributes, pathParameters, queryParameters);
           if (requestContext.getRequest().getMethod().equals(HttpMethod.PUT.name())
-              || requestContext.getMethod().equals(HttpMethod.DELETE.name())) {
-            String entityId = getEntityIdFromRequest(requiredPermissionAttributes, pathParameters, queryParameters);
+              || requestContext.getMethod().equals(HttpMethod.DELETE.name())
+              || requestContext.getMethod().equals(HttpMethod.POST.name())) {
             authService.authorize(accountId, appIdsFromRequest, entityId, user, requiredPermissionAttributes);
-          } else if (requestContext.getMethod().equals(HttpMethod.POST.name())) {
-            authService.authorize(accountId, appIdsFromRequest, null, user, requiredPermissionAttributes);
           } else if (requestContext.getMethod().equals(HttpMethod.GET.name())) {
-            String entityId = getEntityIdFromRequest(requiredPermissionAttributes, pathParameters, queryParameters);
             // In case of list api, the entityId would be null, we enforce restrictions in WingsMongoPersistence
             if (entityId != null) {
               // get api

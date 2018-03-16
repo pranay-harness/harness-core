@@ -11,7 +11,6 @@ import static software.wings.beans.ErrorCode.INVALID_TOKEN;
 import static software.wings.beans.ErrorCode.USER_DOES_NOT_EXIST;
 import static software.wings.exception.WingsException.ALERTING;
 
-import com.google.common.collect.Multimap;
 import com.google.inject.Inject;
 import com.google.inject.Singleton;
 
@@ -69,6 +68,7 @@ import java.text.ParseException;
 import java.util.Collection;
 import java.util.List;
 import java.util.Map;
+import java.util.Set;
 import javax.cache.Cache;
 import javax.crypto.spec.SecretKeySpec;
 
@@ -451,7 +451,7 @@ public class AuthServiceImpl implements AuthService {
       }
     }
 
-    Multimap<Action, String> actionEntityIdMap;
+    Map<Action, Set<String>> actionEntityIdMap;
 
     if (requiredPermissionType == PermissionType.SERVICE) {
       actionEntityIdMap = appPermissionSummary.getServicePermissions();
