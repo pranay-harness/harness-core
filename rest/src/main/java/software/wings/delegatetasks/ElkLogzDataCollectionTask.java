@@ -28,7 +28,9 @@ import java.text.DateFormat;
 import java.text.SimpleDateFormat;
 import java.util.ArrayList;
 import java.util.Collections;
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
 import java.util.concurrent.TimeUnit;
 import java.util.function.Consumer;
 import java.util.function.Supplier;
@@ -100,6 +102,7 @@ public class ElkLogzDataCollectionTask extends AbstractDelegateDataCollectionTas
             int retry = 0;
             while (!completed.get() && retry < RETRIES) {
               try {
+                Map<String, LogElement> heartBeatMap = new HashMap<>();
                 Object searchResponse;
                 String hostnameField;
                 String messageField;

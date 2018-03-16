@@ -7,11 +7,14 @@ import static org.junit.Assert.assertFalse;
 import static org.junit.Assert.assertNotNull;
 import static org.junit.Assert.assertNull;
 import static org.junit.Assert.assertTrue;
+import static org.junit.Assert.fail;
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.when;
 import static software.wings.beans.Workflow.WorkflowBuilder.aWorkflow;
 import static software.wings.beans.WorkflowExecution.WorkflowExecutionBuilder.aWorkflowExecution;
 
+import com.google.common.collect.Lists;
+import com.google.common.collect.TreeBasedTable;
 import com.google.gson.Gson;
 import com.google.gson.reflect.TypeToken;
 import com.google.inject.Inject;
@@ -52,9 +55,11 @@ import software.wings.service.intfc.analysis.ClusterLevel;
 import software.wings.service.intfc.analysis.LogAnalysisResource;
 import software.wings.sm.ExecutionStatus;
 import software.wings.sm.StateExecutionInstance;
+import software.wings.sm.StateMachine;
 import software.wings.sm.StateType;
 import software.wings.sm.states.AbstractAnalysisState;
 import software.wings.sm.states.AbstractLogAnalysisState;
+import software.wings.sm.states.ApprovalState;
 import software.wings.utils.JsonUtils;
 import software.wings.waitnotify.WaitNotifyEngine;
 
@@ -71,16 +76,18 @@ import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
 import java.util.Map.Entry;
+import java.util.Random;
 import java.util.Set;
 import java.util.UUID;
 import java.util.concurrent.TimeUnit;
+import javax.ws.rs.BadRequestException;
 import javax.ws.rs.client.WebTarget;
 import javax.ws.rs.core.GenericType;
 
 /**
  * Created by rsingh on 8/17/17.
  */
-public class ElkIntegrationTest extends BaseIntegrationTest {
+public class LogMLIntegrationTest extends BaseIntegrationTest {
   private Set<String> hosts = new HashSet<>();
   @Inject private AnalysisService analysisService;
   @Inject private LogAnalysisManagerJob logAnalysisManagerJob;
@@ -161,9 +168,10 @@ public class ElkIntegrationTest extends BaseIntegrationTest {
         final LogRequest logRequest = new LogRequest(
             query, appId, stateExecutionId, workflowId, serviceId, Collections.singleton(host), logCollectionMinute);
 
-        WebTarget getTarget = client.target(API_BASE + "/" + LogAnalysisResource.ELK_RESOURCE_BASE_URL
-            + LogAnalysisResource.ANALYSIS_STATE_GET_LOG_URL + "?accountId=" + accountId + "&clusterLevel="
-            + ClusterLevel.L1.name() + "&compareCurrent=true&workflowExecutionId=" + workflowExecutionId);
+        WebTarget getTarget = client.target(API_BASE + "/" + LogAnalysisResource.LOG_ANALYSIS
+            + LogAnalysisResource.ANALYSIS_STATE_GET_LOG_URL + "?accountId=" + accountId
+            + "&clusterLevel=" + ClusterLevel.L1.name()
+            + "&compareCurrent=true&workflowExecutionId=" + workflowExecutionId + "&stateType=" + StateType.ELK);
         boolean succeess = false;
         for (int i = 0; i < 10; i++) {
           RestResponse<List<LogDataRecord>> restResponse = getRequestBuilderWithAuthHeader(getTarget).post(
@@ -658,6 +666,330 @@ public class ElkIntegrationTest extends BaseIntegrationTest {
     LogMLAnalysisRecord logAnalysisRecord =
         analysisService.getLogAnalysisRecords(appId, stateExecutionId, query, StateType.ELK, logCollectionMinute);
     assertNotNull(logAnalysisRecord);
+  }
+
+  @Test
+  public void withControlAndTest() throws IOException, JobExecutionException, InterruptedException {
+    StateExecutionInstance stateExecutionInstance = new StateExecutionInstance();
+    String prevStateExecutionId = UUID.randomUUID().toString();
+    stateExecutionInstance.setAppId(appId);
+    stateExecutionInstance.setUuid(prevStateExecutionId);
+    stateExecutionInstance.setStatus(ExecutionStatus.RUNNING);
+    wingsPersistence.save(stateExecutionInstance);
+
+    WorkflowExecution workflowExecution =
+        aWorkflowExecution()
+            .withWorkflowId(workflowId)
+            .withAppId(appId)
+            .withName(workflowId + "-execution-" + 0)
+            .withStatus(ExecutionStatus.SUCCESS)
+            .withBreakdown(CountsByStatuses.Builder.aCountsByStatuses().withSuccess(1).build())
+            .build();
+    String prevWorkFlowExecutionId = wingsPersistence.save(workflowExecution);
+
+    List<LogElement> logElements = new ArrayList<>();
+
+    final String query = UUID.randomUUID().toString();
+    List<String> hosts = new ArrayList<>();
+
+    for (int i = 0; i < 5; i++) {
+      hosts.add(UUID.randomUUID().toString());
+    }
+
+    for (int i = 0; i < 5; i++) {
+      for (int j = 0; j < 5; j++) {
+        LogElement splunkHeartBeatElement = new LogElement();
+        splunkHeartBeatElement.setQuery(query);
+        splunkHeartBeatElement.setClusterLabel("-3");
+        splunkHeartBeatElement.setHost(hosts.get(j));
+        splunkHeartBeatElement.setCount(0);
+        splunkHeartBeatElement.setLogMessage("");
+        splunkHeartBeatElement.setTimeStamp(0);
+        splunkHeartBeatElement.setLogCollectionMinute(i);
+
+        logElements.add(splunkHeartBeatElement);
+        LogElement logElement = new LogElement(query, "0", hosts.get(j), 0, 1, "Hello World " + i, i);
+        logElements.add(logElement);
+      }
+    }
+
+    analysisService.saveLogData(StateType.SUMO, accountId, appId, prevStateExecutionId, workflowId,
+        prevWorkFlowExecutionId, serviceId, ClusterLevel.L2, delegateTaskId, logElements);
+
+    stateExecutionInstance.setStatus(ExecutionStatus.SUCCESS);
+    wingsPersistence.save(stateExecutionInstance);
+
+    stateExecutionInstance = new StateExecutionInstance();
+    stateExecutionInstance.setAppId(appId);
+    stateExecutionInstance.setUuid(stateExecutionId);
+    stateExecutionInstance.setStatus(ExecutionStatus.RUNNING);
+    stateExecutionInstance.getContextElements().push(
+        PhaseElementBuilder.aPhaseElement()
+            .withServiceElement(ServiceElement.Builder.aServiceElement().withUuid(serviceId).build())
+            .build());
+    wingsPersistence.save(stateExecutionInstance);
+
+    workflowExecution = aWorkflowExecution()
+                            .withUuid(workflowExecutionId)
+                            .withWorkflowId(workflowId)
+                            .withAppId(appId)
+                            .withName(workflowId + "-execution-" + 0)
+                            .withStatus(ExecutionStatus.RUNNING)
+                            .build();
+    wingsPersistence.save(workflowExecution);
+
+    logElements = new ArrayList<>();
+    for (int i = 0; i < 5; i++) {
+      for (int j = 0; j < 5; ++j) {
+        LogElement splunkHeartBeatElement = new LogElement();
+        splunkHeartBeatElement.setQuery(query);
+        splunkHeartBeatElement.setClusterLabel("-3");
+        splunkHeartBeatElement.setHost(hosts.get(j));
+        splunkHeartBeatElement.setCount(0);
+        splunkHeartBeatElement.setLogMessage("");
+        splunkHeartBeatElement.setTimeStamp(0);
+        splunkHeartBeatElement.setLogCollectionMinute(i);
+        logElements.add(splunkHeartBeatElement);
+
+        LogElement logElement = new LogElement(query, "0", hosts.get(j), 0, 1, "Hello World", i);
+        logElements.add(logElement);
+      }
+    }
+
+    analysisService.saveLogData(StateType.SUMO, accountId, appId, stateExecutionId, workflowId, workflowExecutionId,
+        serviceId, ClusterLevel.L1, delegateTaskId, logElements);
+
+    AnalysisContext analysisContext =
+        AnalysisContext.builder()
+            .accountId(accountId)
+            .appId(appId)
+            .workflowId(workflowId)
+            .workflowExecutionId(workflowExecutionId)
+            .stateExecutionId(stateExecutionId)
+            .serviceId(serviceId)
+            .controlNodes(Sets.newHashSet(hosts))
+            .testNodes(Sets.newHashSet(hosts))
+            .queries(com.google.common.collect.Sets.newHashSet(query.split(",")))
+            .isSSL(true)
+            .appPort(9090)
+            .comparisonStrategy(AnalysisComparisonStrategy.COMPARE_WITH_PREVIOUS)
+            .timeDuration(5)
+            .stateType(StateType.SUMO)
+            .stateBaseUrl(LogAnalysisResource.SUMO_RESOURCE_BASE_URL)
+            .authToken(AbstractAnalysisState.generateAuthToken("nhUmut2NMcUnsR01OgOz0e51MZ51AqUwrOATJ3fJ"))
+            .correlationId(UUID.randomUUID().toString())
+            .prevWorkflowExecutionId(prevWorkFlowExecutionId)
+            .build();
+    JobExecutionContext jobExecutionContext = mock(JobExecutionContext.class);
+    JobDataMap jobDataMap = mock(JobDataMap.class);
+    when(jobDataMap.getLong("timestamp")).thenReturn(System.currentTimeMillis());
+    when(jobDataMap.getString("jobParams")).thenReturn(JsonUtils.asJson(analysisContext));
+    when(jobDataMap.getString("delegateTaskId")).thenReturn(UUID.randomUUID().toString());
+    when(jobExecutionContext.getMergedJobDataMap()).thenReturn(jobDataMap);
+    when(jobExecutionContext.getScheduler()).thenReturn(mock(Scheduler.class));
+    when(jobExecutionContext.getJobDetail()).thenReturn(mock(JobDetail.class));
+
+    for (int i = 0; i < 5; ++i) {
+      new LogAnalysisTestJob(analysisService, waitNotifyEngine, delegateService, analysisContext, jobExecutionContext,
+          delegateTaskId, learningEngineService)
+          .run();
+      Thread.sleep(TimeUnit.SECONDS.toMillis(10));
+    }
+    LogMLAnalysisSummary logMLAnalysisSummary =
+        analysisService.getAnalysisSummary(stateExecutionId, appId, StateType.SUMO);
+    assertEquals(1, logMLAnalysisSummary.getControlClusters().size());
+    assertEquals(1, logMLAnalysisSummary.getTestClusters().size());
+    assertEquals(0, logMLAnalysisSummary.getUnknownClusters().size());
+    assertEquals(5, logMLAnalysisSummary.getControlClusters().get(0).getHostSummary().size());
+    assertEquals(5, logMLAnalysisSummary.getTestClusters().get(0).getHostSummary().size());
+    assertEquals(
+        5, logMLAnalysisSummary.getControlClusters().get(0).getHostSummary().values().iterator().next().getCount());
+    assertEquals(
+        5, logMLAnalysisSummary.getControlClusters().get(0).getHostSummary().values().iterator().next().getCount());
+  }
+  @Test
+  public void validateQuery() {
+    WebTarget getTarget = client.target(API_BASE + "/" + LogAnalysisResource.ELK_RESOURCE_BASE_URL
+        + LogAnalysisResource.ELK_VALIDATE_QUERY + "?accountId=" + accountId + "&query=(.*exception.*)");
+
+    RestResponse<Boolean> restResponse =
+        getRequestBuilderWithAuthHeader(getTarget).get(new GenericType<RestResponse<Boolean>>() {});
+    assertTrue(restResponse.getResource());
+  }
+
+  @Test
+  public void validateQueryFail() {
+    WebTarget getTarget = client.target(API_BASE + "/" + LogAnalysisResource.ELK_RESOURCE_BASE_URL
+        + LogAnalysisResource.ELK_VALIDATE_QUERY + "?accountId=" + accountId + "&query=(.*exception.*))");
+
+    try {
+      getRequestBuilderWithAuthHeader(getTarget).get(new GenericType<RestResponse<Boolean>>() {});
+      fail();
+    } catch (BadRequestException e) {
+    }
+  }
+
+  @Test
+  public void testGetCurrentExecutionLogs() throws Exception {
+    final Random r = new Random();
+    final int numOfExecutions = 4;
+    final int numOfHosts = 3;
+    final int numOfMinutes = 3;
+    final int numOfRecords = 5;
+
+    final String workflowId = "some-workflow";
+    final String query = "some-query";
+    final String applicationId = "some-application";
+    final String serviceId = "some-service";
+    final TreeBasedTable<Integer, Integer, List<LogDataRecord>> addedMessages = TreeBasedTable.create();
+    final Set<String> hosts = new HashSet<>();
+
+    WorkflowExecution workflowExecution = aWorkflowExecution()
+                                              .withStatus(ExecutionStatus.SUCCESS)
+                                              .withWorkflowId(workflowId)
+                                              .withAppId(applicationId)
+                                              .build();
+    wingsPersistence.save(workflowExecution);
+    for (int executionNumber = 1; executionNumber <= numOfExecutions; executionNumber++) {
+      final String stateExecutionId = "se" + executionNumber;
+      for (int hostNumber = 0; hostNumber < numOfHosts; hostNumber++) {
+        final String host = "host" + hostNumber;
+        hosts.add(host);
+        for (int logCollectionMinute = 0; logCollectionMinute < numOfMinutes; logCollectionMinute++) {
+          final long timeStamp = System.currentTimeMillis();
+          for (int recordNumber = 0; recordNumber < numOfRecords; recordNumber++) {
+            final int count = r.nextInt();
+            final String logMessage = "lmsg" + recordNumber;
+            final String logMD5Hash = "lmsgHash" + recordNumber;
+            final String clusterLabel = "cluster" + recordNumber;
+
+            final LogDataRecord logDataRecord = new LogDataRecord();
+            logDataRecord.setStateType(StateType.SPLUNKV2);
+            logDataRecord.setWorkflowId(workflowId);
+            logDataRecord.setWorkflowExecutionId(workflowExecution.getUuid());
+            logDataRecord.setStateExecutionId(stateExecutionId);
+            logDataRecord.setQuery(query);
+            logDataRecord.setApplicationId(applicationId);
+            logDataRecord.setClusterLabel(clusterLabel);
+            logDataRecord.setHost(host);
+            logDataRecord.setTimeStamp(timeStamp);
+            logDataRecord.setCount(count);
+            logDataRecord.setLogMessage(logMessage);
+            logDataRecord.setLogMD5Hash(logMD5Hash);
+            logDataRecord.setClusterLevel(ClusterLevel.L0);
+            logDataRecord.setLogCollectionMinute(logCollectionMinute);
+            logDataRecord.setCreatedAt(timeStamp);
+            logDataRecord.setServiceId(serviceId);
+
+            wingsPersistence.save(logDataRecord);
+
+            if (addedMessages.get(executionNumber, logCollectionMinute) == null) {
+              addedMessages.put(executionNumber, logCollectionMinute, new ArrayList<>());
+            }
+
+            addedMessages.get(executionNumber, logCollectionMinute).add(logDataRecord);
+          }
+          Thread.sleep(10);
+        }
+      }
+    }
+
+    for (int collectionMinute = 0; collectionMinute < numOfMinutes; collectionMinute++) {
+      WebTarget target = client.target(API_BASE + "/" + LogAnalysisResource.LOG_ANALYSIS + "/get-logs?accountId="
+          + accountId + "&clusterLevel=" + ClusterLevel.L0.name() + "&compareCurrent=true&workflowExecutionId="
+          + workflowExecution.getUuid() + "&stateType=" + StateType.SPLUNKV2);
+      final LogRequest logRequest =
+          new LogRequest(query, applicationId, "se2", workflowId, serviceId, hosts, collectionMinute);
+      RestResponse<List<LogDataRecord>> restResponse = getRequestBuilderWithAuthHeader(target).post(
+          entity(logRequest, APPLICATION_JSON), new GenericType<RestResponse<List<LogDataRecord>>>() {});
+      assertEquals(
+          "failed for minute " + collectionMinute, addedMessages.get(2, collectionMinute), restResponse.getResource());
+    }
+  }
+
+  @Test
+  public void testGetLastExecutionLogs() throws Exception {
+    final Random r = new Random();
+    final int numOfExecutions = 1;
+    final int numOfHosts = 1 + r.nextInt(5);
+    final int numOfMinutes = 1 + r.nextInt(10);
+    final int numOfRecords = 1 + r.nextInt(10);
+
+    final String workflowId = "some-workflow";
+    final String query = "some-query";
+    final String applicationId = "some-application";
+    final String serviceId = "some-service";
+    final TreeBasedTable<Integer, Integer, List<LogDataRecord>> addedMessages = TreeBasedTable.create();
+
+    WorkflowExecution workflowExecution = aWorkflowExecution()
+                                              .withStatus(ExecutionStatus.SUCCESS)
+                                              .withWorkflowId(workflowId)
+                                              .withAppId(applicationId)
+                                              .withStateMachineId(UUID.randomUUID().toString())
+                                              .build();
+    wingsPersistence.save(workflowExecution);
+    StateMachine stateMachine = new StateMachine();
+    stateMachine.setInitialStateName("some-state");
+    stateMachine.setStates(Lists.newArrayList(new ApprovalState(stateMachine.getInitialStateName())));
+    stateMachine.setUuid(workflowExecution.getStateMachineId());
+    stateMachine.setAppId(applicationId);
+    wingsPersistence.save(stateMachine);
+    Set<String> hosts = new HashSet<>();
+
+    for (int executionNumber = 1; executionNumber <= numOfExecutions; executionNumber++) {
+      final String stateExecutionId = "se" + executionNumber;
+      for (int hostNumber = 0; hostNumber < numOfHosts; hostNumber++) {
+        final String host = "host" + hostNumber;
+        hosts.add(host);
+        for (int logCollectionMinute = 0; logCollectionMinute < numOfMinutes; logCollectionMinute++) {
+          final long timeStamp = System.currentTimeMillis();
+          for (int recordNumber = 0; recordNumber < numOfRecords; recordNumber++) {
+            final int count = r.nextInt();
+            final String logMessage = UUID.randomUUID().toString();
+            final String logMD5Hash = UUID.randomUUID().toString();
+            final String clusterLabel = UUID.randomUUID().toString();
+
+            final LogDataRecord logDataRecord = new LogDataRecord();
+            logDataRecord.setStateType(StateType.SPLUNKV2);
+            logDataRecord.setWorkflowId(workflowId);
+            logDataRecord.setStateExecutionId(stateExecutionId);
+            logDataRecord.setQuery(query);
+            logDataRecord.setApplicationId(applicationId);
+            logDataRecord.setClusterLabel(clusterLabel);
+            logDataRecord.setHost(host);
+            logDataRecord.setTimeStamp(timeStamp);
+            logDataRecord.setCount(count);
+            logDataRecord.setLogMessage(logMessage);
+            logDataRecord.setLogMD5Hash(logMD5Hash);
+            logDataRecord.setClusterLevel(ClusterLevel.L0);
+            logDataRecord.setLogCollectionMinute(logCollectionMinute);
+            logDataRecord.setCreatedAt(timeStamp);
+            logDataRecord.setServiceId(serviceId);
+            logDataRecord.setWorkflowExecutionId(workflowExecution.getUuid());
+            wingsPersistence.save(logDataRecord);
+
+            if (addedMessages.get(executionNumber, logCollectionMinute) == null) {
+              addedMessages.put(executionNumber, logCollectionMinute, new ArrayList<>());
+            }
+
+            addedMessages.get(executionNumber, logCollectionMinute).add(logDataRecord);
+          }
+          Thread.sleep(10);
+        }
+      }
+    }
+
+    for (int collectionMinute = 0; collectionMinute < numOfMinutes; collectionMinute++) {
+      WebTarget target = client.target(API_BASE + "/" + LogAnalysisResource.LOG_ANALYSIS + "/get-logs?accountId="
+          + accountId + "&clusterLevel=" + ClusterLevel.L0.name() + "&compareCurrent=false&workflowExecutionId="
+          + workflowExecution.getUuid() + "&stateType=" + StateType.SPLUNKV2);
+      final LogRequest logRequest = new LogRequest(
+          query, applicationId, UUID.randomUUID().toString(), workflowId, serviceId, hosts, collectionMinute);
+      RestResponse<List<LogDataRecord>> restResponse = getRequestBuilderWithAuthHeader(target).post(
+          entity(logRequest, APPLICATION_JSON), new GenericType<RestResponse<List<LogDataRecord>>>() {});
+      assertEquals("failed for minute " + collectionMinute, addedMessages.get(numOfExecutions, collectionMinute),
+          restResponse.getResource());
+    }
   }
 
   private static class LogAnalysisTestJob extends LogAnalysisTask {

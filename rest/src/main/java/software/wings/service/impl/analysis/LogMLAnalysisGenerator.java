@@ -83,34 +83,36 @@ public class LogMLAnalysisGenerator implements Runnable {
             context.getComparisonStrategy() == AnalysisComparisonStrategy.COMPARE_WITH_CURRENT
             || !isEmpty(lastWorkflowExecutionId);
 
-        String testInputUrl = "/api/" + context.getStateBaseUrl() + LogAnalysisResource.ANALYSIS_STATE_GET_LOG_URL
-            + "?accountId=" + accountId + "&clusterLevel=" + ClusterLevel.L2.name()
-            + "&workflowExecutionId=" + context.getWorkflowExecutionId() + "&compareCurrent=true";
+        String testInputUrl = "/api/" + LogAnalysisResource.LOG_ANALYSIS
+            + LogAnalysisResource.ANALYSIS_STATE_GET_LOG_URL + "?accountId=" + accountId
+            + "&clusterLevel=" + ClusterLevel.L2.name() + "&workflowExecutionId=" + context.getWorkflowExecutionId()
+            + "&compareCurrent=true&stateType=" + context.getStateType();
 
         String controlInputUrl;
 
         if (context.getComparisonStrategy() == AnalysisComparisonStrategy.COMPARE_WITH_CURRENT) {
-          controlInputUrl = "/api/" + context.getStateBaseUrl() + LogAnalysisResource.ANALYSIS_STATE_GET_LOG_URL
-              + "?accountId=" + accountId + "&clusterLevel=" + ClusterLevel.L2.name()
-              + "&workflowExecutionId=" + context.getWorkflowExecutionId() + "&compareCurrent=true";
+          controlInputUrl = "/api/" + LogAnalysisResource.LOG_ANALYSIS + LogAnalysisResource.ANALYSIS_STATE_GET_LOG_URL
+              + "?accountId=" + accountId + "&clusterLevel=" + ClusterLevel.L2.name() + "&workflowExecutionId="
+              + context.getWorkflowExecutionId() + "&compareCurrent=true&stateType=" + context.getStateType();
         } else {
-          controlInputUrl = "/api/" + context.getStateBaseUrl() + LogAnalysisResource.ANALYSIS_STATE_GET_LOG_URL
-              + "?accountId=" + accountId + "&clusterLevel=" + ClusterLevel.L2.name()
-              + "&workflowExecutionId=" + lastWorkflowExecutionId + "&compareCurrent=false";
+          controlInputUrl = "/api/" + LogAnalysisResource.LOG_ANALYSIS + LogAnalysisResource.ANALYSIS_STATE_GET_LOG_URL
+              + "?accountId=" + accountId + "&clusterLevel=" + ClusterLevel.L2.name() + "&workflowExecutionId="
+              + lastWorkflowExecutionId + "&compareCurrent=false&stateType=" + context.getStateType();
         }
 
-        String logAnalysisSaveUrl = "/api/" + context.getStateBaseUrl()
+        String logAnalysisSaveUrl = "/api/" + LogAnalysisResource.LOG_ANALYSIS
             + LogAnalysisResource.ANALYSIS_STATE_SAVE_ANALYSIS_RECORDS_URL + "?accountId=" + accountId
             + "&applicationId=" + applicationId + "&stateExecutionId=" + context.getStateExecutionId()
             + "&logCollectionMinute=" + logAnalysisMinute + "&isBaselineCreated=" + isBaselineCreated
-            + "&taskId=" + uuid;
+            + "&taskId=" + uuid + "&stateType=" + context.getStateType();
 
         if (!isEmpty(context.getPrevWorkflowExecutionId())) {
           logAnalysisSaveUrl += "&baseLineExecutionId=" + context.getPrevWorkflowExecutionId();
         }
 
-        final String logAnalysisGetUrl = "/api/" + context.getStateBaseUrl()
-            + LogAnalysisResource.ANALYSIS_STATE_GET_ANALYSIS_RECORDS_URL + "?accountId=" + accountId;
+        final String logAnalysisGetUrl = "/api/" + LogAnalysisResource.LOG_ANALYSIS
+            + LogAnalysisResource.ANALYSIS_STATE_GET_ANALYSIS_RECORDS_URL + "?accountId=" + accountId
+            + "&stateType=" + context.getStateType();
 
         if (createExperiment) {
           final String experimentalLogAnalysisSaveUrl = "/api/learning-exp"
