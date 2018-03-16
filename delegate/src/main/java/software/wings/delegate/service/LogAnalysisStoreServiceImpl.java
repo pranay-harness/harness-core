@@ -26,20 +26,20 @@ public class LogAnalysisStoreServiceImpl implements LogAnalysisStoreService {
       String workflowExecutionId, String serviceId, String delegateTaskId, List<LogElement> logs) throws IOException {
     switch (stateType) {
       case SPLUNKV2:
-        return execute(managerClient.saveSplunkLogs(accountId, appId, stateExecutionId, workflowId, workflowExecutionId,
-                           serviceId, ClusterLevel.L2, delegateTaskId, logs))
+        return execute(managerClient.saveLogs(accountId, appId, stateExecutionId, workflowId, workflowExecutionId,
+                           serviceId, ClusterLevel.L2, delegateTaskId, StateType.SPLUNKV2, logs))
             .getResource();
       case SUMO:
-        return execute(managerClient.saveSumoLogs(accountId, appId, stateExecutionId, workflowId, workflowExecutionId,
-                           serviceId, ClusterLevel.L0, delegateTaskId, logs))
+        return execute(managerClient.saveLogs(accountId, appId, stateExecutionId, workflowId, workflowExecutionId,
+                           serviceId, ClusterLevel.L0, delegateTaskId, StateType.SUMO, logs))
             .getResource();
       case ELK:
-        return execute(managerClient.saveElkLogs(accountId, appId, stateExecutionId, workflowId, workflowExecutionId,
-                           serviceId, ClusterLevel.L0, delegateTaskId, logs))
+        return execute(managerClient.saveLogs(accountId, appId, stateExecutionId, workflowId, workflowExecutionId,
+                           serviceId, ClusterLevel.L0, delegateTaskId, StateType.ELK, logs))
             .getResource();
       case LOGZ:
-        return execute(managerClient.saveLogzLogs(accountId, appId, stateExecutionId, workflowId, workflowExecutionId,
-                           serviceId, ClusterLevel.L0, delegateTaskId, logs))
+        return execute(managerClient.saveLogs(accountId, appId, stateExecutionId, workflowId, workflowExecutionId,
+                           serviceId, ClusterLevel.L0, delegateTaskId, StateType.LOGZ, logs))
             .getResource();
       default:
         throw new IllegalStateException("Invalid state: " + stateType);

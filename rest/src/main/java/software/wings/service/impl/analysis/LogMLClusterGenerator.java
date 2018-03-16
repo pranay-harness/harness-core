@@ -34,13 +34,15 @@ public class LogMLClusterGenerator implements Runnable {
 
   @Override
   public void run() {
-    final String inputLogsUrl = "/api/" + context.getStateBaseUrl() + LogAnalysisResource.ANALYSIS_STATE_GET_LOG_URL
-        + "?accountId=" + context.getAccountId() + "&workflowExecutionId=" + context.getWorkflowExecutionId()
-        + "&compareCurrent=true&clusterLevel=" + fromLevel.name();
-    String clusteredLogSaveUrl = "/api/" + context.getStateBaseUrl() + LogAnalysisResource.ANALYSIS_STATE_SAVE_LOG_URL
-        + "?accountId=" + context.getAccountId() + "&stateExecutionId=" + context.getStateExecutionId()
-        + "&workflowId=" + context.getWorkflowId() + "&workflowExecutionId=" + context.getWorkflowExecutionId()
-        + "&serviceId=" + context.getServiceId() + "&appId=" + context.getAppId() + "&clusterLevel=" + toLevel.name();
+    final String inputLogsUrl = "/api/" + LogAnalysisResource.LOG_ANALYSIS
+        + LogAnalysisResource.ANALYSIS_STATE_GET_LOG_URL + "?accountId=" + context.getAccountId()
+        + "&workflowExecutionId=" + context.getWorkflowExecutionId()
+        + "&compareCurrent=true&clusterLevel=" + fromLevel.name() + "&stateType=" + context.getStateType();
+    String clusteredLogSaveUrl = "/api/" + LogAnalysisResource.LOG_ANALYSIS
+        + LogAnalysisResource.ANALYSIS_STATE_SAVE_LOG_URL + "?accountId=" + context.getAccountId()
+        + "&stateExecutionId=" + context.getStateExecutionId() + "&workflowId=" + context.getWorkflowId()
+        + "&workflowExecutionId=" + context.getWorkflowExecutionId() + "&serviceId=" + context.getServiceId()
+        + "&appId=" + context.getAppId() + "&clusterLevel=" + toLevel.name() + "&stateType=" + context.getStateType();
 
     LearningEngineAnalysisTask analysisTask = LearningEngineAnalysisTask.builder()
                                                   .ml_shell_file_name(CLUSTER_ML_SHELL_FILE_NAME)
