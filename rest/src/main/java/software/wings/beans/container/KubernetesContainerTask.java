@@ -100,6 +100,9 @@ public class KubernetesContainerTask extends ContainerTask {
         + "# Optional: ${CONTAINER_NAME}\n"
         + "#   - Replaced with a container name based on the image name\n"
         + "#\n"
+        + "# Optional: ${CONFIG_MAP_NAME}\n"
+        + "#   - Replaced with the ConfigMap name\n"
+        + "#\n"
         + "# Optional: ${SECRET_NAME}\n"
         + "#   - Replaced with the name of the generated image pull\n"
         + "#     secret when pulling from a private Docker registry\n"
@@ -130,7 +133,8 @@ public class KubernetesContainerTask extends ContainerTask {
             KubernetesHelper.loadYaml(getAdvancedConfig()
                                           .replaceAll(DOCKER_IMAGE_NAME_PLACEHOLDER_REGEX, DUMMY_DOCKER_IMAGE_NAME)
                                           .replaceAll(CONTAINER_NAME_PLACEHOLDER_REGEX, DUMMY_CONTAINER_NAME)
-                                          .replaceAll(SECRET_NAME_PLACEHOLDER_REGEX, DUMMY_SECRET_NAME));
+                                          .replaceAll(SECRET_NAME_PLACEHOLDER_REGEX, DUMMY_SECRET_NAME)
+                                          .replaceAll(CONFIG_MAP_NAME_PLACEHOLDER_REGEX, DUMMY_CONFIG_MAP_NAME));
 
         PodTemplateSpec podTemplateSpec = null;
 
@@ -179,12 +183,14 @@ public class KubernetesContainerTask extends ContainerTask {
     return isNotBlank(getAdvancedConfig()) && DAEMON_SET_PATTERN.matcher(getAdvancedConfig()).find();
   }
 
-  public HasMetadata createController(String containerName, String imageNameTag, String secretName) {
+  public HasMetadata createController(
+      String containerName, String imageNameTag, String secretName, String configMapName) {
     try {
       String configTemplate = isNotBlank(getAdvancedConfig()) ? getAdvancedConfig() : fetchYamlConfig();
       return KubernetesHelper.loadYaml(configTemplate.replaceAll(DOCKER_IMAGE_NAME_PLACEHOLDER_REGEX, imageNameTag)
                                            .replaceAll(CONTAINER_NAME_PLACEHOLDER_REGEX, containerName)
-                                           .replaceAll(SECRET_NAME_PLACEHOLDER_REGEX, secretName));
+                                           .replaceAll(SECRET_NAME_PLACEHOLDER_REGEX, secretName)
+                                           .replaceAll(CONFIG_MAP_NAME_PLACEHOLDER_REGEX, configMapName));
     } catch (Exception e) {
       throw new WingsException(ErrorCode.INVALID_ARGUMENT, e).addParam("args", e.getMessage());
     }
