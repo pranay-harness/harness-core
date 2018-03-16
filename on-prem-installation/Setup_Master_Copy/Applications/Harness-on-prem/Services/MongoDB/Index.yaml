@@ -9,7 +9,7 @@ configVariables:
     value: <LEARNING_ENGINE_SECRET_KEY_PLACEHOLDER>
     valueType: ENCRYPTED_TEXT
   - name: mongodb_port
-    value: '27017'
+    value: ${serviceVariable.MONGODB_PORT}
     valueType: TEXT
   - name: replicaset_name
     value: rs0

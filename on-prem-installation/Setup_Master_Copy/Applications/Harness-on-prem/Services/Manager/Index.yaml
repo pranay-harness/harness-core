@@ -23,15 +23,6 @@ configVariables:
   - name: HZ_CLUSTER_NAME
     value: docker-manager-test
     valueType: TEXT
-  - name: MANCENTER_URL
-    value: http://localhost:8080/mancenter
-    valueType: TEXT
-  - name: GRAPHITE_SERVER
-    value: carbon.hostedgraphite.com
-    valueType: TEXT
-  - name: GRAPHITE_PREFIX
-    value: server
-    valueType: TEXT
   - name: DELEGATE_METADATA_URL
     value: http://wingsdelegates.s3-website-us-east-1.amazonaws.com/delegateci.txt
     valueType: TEXT

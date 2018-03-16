@@ -11,7 +11,6 @@ if [[ -v "MANCENTER_URL" ]]; then
     sed -i "s|<management-center enabled=\"false\">http://localhost:8080/mancenter|<management-center enabled=\"true\">${MANCENTER_URL}|" /opt/harness/hazelcast.xml
 fi
 
-sed -i "s|<port auto-increment=\"true\" port-count=\"100\"|<port auto-increment=\"false\" port-count=\"1\"|" /opt/harness/hazelcast.xml
 
 if [[ "${DEPLOY_MODE}" == "AWS" ]]; then
     sed -i "s|<property name=\"hazelcast.discovery.enabled\">false|<property name=\"hazelcast.discovery.enabled\">true|" /opt/harness/hazelcast.xml

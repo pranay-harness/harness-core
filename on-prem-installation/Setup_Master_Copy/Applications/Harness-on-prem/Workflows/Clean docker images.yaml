@@ -16,7 +16,7 @@ notificationRules:
 phases:
   - type: SSH
     computeProviderName: on-prem-datacenter
-    infraMappingName: 'Physical Data Center: on-prem-datacenter (Data Center_SSH).5'
+    infraMappingName: 'Physical Data Center on-prem-datacenter (Data Center_SSH).5'
     name: Phase 1
     phaseSteps:
       - type: PROVISION_NODE
