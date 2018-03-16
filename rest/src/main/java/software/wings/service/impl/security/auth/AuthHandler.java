@@ -1,7 +1,11 @@
 package software.wings.service.impl.security.auth;
 
-import static software.wings.dl.PageRequest.PageRequestBuilder.aPageRequest;
+import static software.wings.beans.SearchFilter.Operator.EQ;
+import static software.wings.common.Constants.DEFAULT_USER_GROUP_NAME;
 import static software.wings.security.GenericEntityFilter.FilterType.SELECTED;
+import static software.wings.security.PermissionAttribute.PermissionType.ACCOUNT_MANAGEMENT;
+import static software.wings.security.PermissionAttribute.PermissionType.APPLICATION_CREATE_DELETE;
+import static software.wings.security.PermissionAttribute.PermissionType.USER_PERMISSION_MANAGEMENT;
 import static software.wings.security.UserRequestContext.EntityInfo;
 
 import com.google.common.collect.ImmutableList;
@@ -14,6 +18,7 @@ import org.apache.commons.collections.MapUtils;
 import org.apache.commons.lang3.StringUtils;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import software.wings.beans.Account;
 import software.wings.beans.Environment;
 import software.wings.beans.FeatureName;
 import software.wings.beans.HttpMethod;
@@ -27,6 +32,8 @@ import software.wings.beans.WorkflowExecution;
 import software.wings.beans.security.AccountPermissions;
 import software.wings.beans.security.AppPermission;
 import software.wings.beans.security.UserGroup;
+import software.wings.beans.security.UserGroup.UserGroupBuilder;
+import software.wings.common.Constants;
 import software.wings.dl.PageRequest;
 import software.wings.dl.PageRequest.PageRequestBuilder;
 import software.wings.dl.PageResponse;
@@ -53,9 +60,12 @@ import software.wings.service.intfc.EnvironmentService;
 import software.wings.service.intfc.FeatureFlagService;
 import software.wings.service.intfc.PipelineService;
 import software.wings.service.intfc.ServiceResourceService;
+import software.wings.service.intfc.UserGroupService;
 import software.wings.service.intfc.WorkflowService;
 import software.wings.sm.StateType;
 
+import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.Collection;
 import java.util.HashMap;
 import java.util.HashSet;
@@ -79,6 +89,7 @@ public class AuthHandler {
   @Inject private EnvironmentService environmentService;
   @Inject private WorkflowService workflowService;
   @Inject private FeatureFlagService featureFlagService;
+  @Inject private UserGroupService userGroupService;
 
   public UserPermissionInfo getUserPermissionInfo(String accountId, List<UserGroup> userGroups) {
     Map<String, AppPermissionSummaryForUI> appPermissionMap = new HashMap<>();
@@ -325,7 +336,7 @@ public class AuthHandler {
 
     if (FilterType.ALL.equals(serviceFilter.getFilterType())) {
       PageRequest<Service> pageRequest =
-          aPageRequest().addFilter("appId", Operator.EQ, appId).addFieldsIncluded("_id").build();
+          PageRequest.PageRequestBuilder.aPageRequest().addFilter("appId", Operator.EQ, appId).addFieldsIncluded("_id").build();
       PageResponse<Service> pageResponse = serviceResourceService.list(pageRequest, false, false);
       List<Service> serviceList = pageResponse.getResponse();
       return serviceList.stream().map(service -> service.getUuid()).collect(Collectors.toSet());
@@ -379,7 +390,7 @@ public class AuthHandler {
     Set<String> pipelineIds;
     Set<String> envIds = getEnvIdsByFilter(appId, envFilter);
 
-    PageRequest<Pipeline> pageRequest = aPageRequest().addFilter("appId", Operator.EQ, appId).build();
+    PageRequest<Pipeline> pageRequest = PageRequest.PageRequestBuilder.aPageRequest().addFilter("appId", Operator.EQ, appId).build();
     PageResponse<Pipeline> pageResponse = pipelineService.listPipelines(pageRequest);
     List<Pipeline> pipelineList = pageResponse.getResponse();
     final Set<String> envIdsFinal = envIds;
@@ -426,7 +437,7 @@ public class AuthHandler {
       return new HashSet<>();
     }
 
-    PageRequestBuilder pageRequestBuilder = aPageRequest()
+    PageRequestBuilder pageRequestBuilder = PageRequest.PageRequestBuilder.aPageRequest()
                                                 .addFilter("appId", Operator.EQ, appId)
                                                 .addFieldsIncluded("_id", "templateExpressions")
                                                 .addFilter("envId", Operator.IN, envIds.toArray());
@@ -455,7 +466,7 @@ public class AuthHandler {
       return new HashSet<>();
     }
 
-    PageRequestBuilder pageRequestBuilder = aPageRequest().addFilter("appId", Operator.EQ, appId);
+    PageRequestBuilder pageRequestBuilder = PageRequest.PageRequestBuilder.aPageRequest().addFilter("appId", Operator.EQ, appId);
     if (CollectionUtils.isNotEmpty(envIds)) {
       pageRequestBuilder.addFilter("envId", Operator.IN, envIds.toArray());
     }
@@ -663,5 +674,91 @@ public class AuthHandler {
     toMap.put(Action.DELETE, deleteSet);
     toMap.put(Action.EXECUTE, executeSet);
     return toMap;
+  }
+
+  public UserGroup buildDefaultAdminUserGroup(String accountId, User user) {
+    AccountPermissions accountPermissions = AccountPermissions.builder().permissions(getAllAccountPermissions()).build();
+
+    Set<AppPermission> appPermissions = Sets.newHashSet();
+    AppPermission appPermission = AppPermission.builder()
+                                      .actions(getAllActions())
+                                      .appFilter(GenericEntityFilter.builder().filterType(FilterType.ALL).build())
+                                      .permissionType(PermissionType.ALL_APP_ENTITIES)
+                                      .build();
+    appPermissions.add(appPermission);
+
+    UserGroupBuilder userGroupBuilder = UserGroup.builder()
+                                            .accountId(accountId)
+                                            .name(DEFAULT_USER_GROUP_NAME)
+                                            .accountPermissions(accountPermissions)
+                                            .appPermissions(appPermissions)
+                                            .description("Default account admin user group");
+    if (user != null) {
+      userGroupBuilder.memberIds(Arrays.asList(user.getUuid()));
+    }
+
+    return userGroupBuilder.build();
+  }
+
+  private Set<PermissionType> getAllAccountPermissions() {
+    return Sets.newHashSet(USER_PERMISSION_MANAGEMENT, ACCOUNT_MANAGEMENT, APPLICATION_CREATE_DELETE);
+  }
+
+  private Set<Action> getAllActions() {
+    return Sets.newHashSet(Action.CREATE, Action.READ, Action.UPDATE, Action.DELETE, Action.EXECUTE);
+  }
+
+  public void addUserToUserGroup(User user, Account account) {
+    if (account == null) {
+      logger.info("account is null, continuing....");
+      return;
+    }
+
+    String accountId = account.getUuid();
+
+    PageRequest<UserGroup> pageRequest = PageRequest.PageRequestBuilder.aPageRequest()
+                                             .addFilter("accountId", EQ, accountId)
+                                             .addFilter("name", EQ, Constants.DEFAULT_USER_GROUP_NAME)
+                                             .build();
+    PageResponse<UserGroup> userGroups = userGroupService.list(accountId, pageRequest);
+    UserGroup userGroup = null;
+    if (CollectionUtils.isNotEmpty(userGroups)) {
+      userGroup = userGroups.get(0);
+    }
+
+    if (userGroup == null) {
+      logger.info("UserGroup doesn't exist in account {}", accountId);
+      userGroup = buildDefaultAdminUserGroup(accountId, user);
+
+      UserGroup savedUserGroup = userGroupService.save(userGroup);
+      logger.info("Created default user group {} for account {}", savedUserGroup.getUuid(), accountId);
+    } else {
+      logger.info("UserGroup already exists in account {}", accountId);
+      logger.info(
+          "Checking if user {} exists in user group {} in account {}", user.getName(), userGroup.getUuid(), accountId);
+
+      List<String> memberIds = userGroup.getMemberIds();
+      boolean userMemberOfGroup;
+      if (CollectionUtils.isEmpty(memberIds)) {
+        userMemberOfGroup = false;
+      } else {
+        userMemberOfGroup = memberIds.contains(user.getUuid());
+      }
+
+      if (!userMemberOfGroup) {
+        logger.info("User {} is not part of the user group in account {}, adding now ", user.getName(), accountId);
+        List<User> members = userGroup.getMembers();
+        if (members == null) {
+          members = new ArrayList<>();
+        }
+
+        members.add(user);
+        userGroup.setMembers(members);
+
+        userGroupService.updateMembers(userGroup);
+
+        logger.info("User {} is added to the user group in account {}", user.getName(), accountId);
+      }
+    }
   }
 }

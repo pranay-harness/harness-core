@@ -689,4 +689,5 @@ public interface Constants {
    * The constant DEPLOYMENT.
    */
   String DEPLOYMENT = "DEPLOYMENT";
+  String DEFAULT_USER_GROUP_NAME = "ADMIN";
 }
