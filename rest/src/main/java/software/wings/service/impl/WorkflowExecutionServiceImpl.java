@@ -32,7 +32,6 @@ import static software.wings.beans.PipelineStageExecution.Builder.aPipelineStage
 import static software.wings.beans.ReadPref.CRITICAL;
 import static software.wings.beans.SearchFilter.Operator.EQ;
 import static software.wings.beans.SearchFilter.Operator.GE;
-import static software.wings.beans.SearchFilter.Operator.GT;
 import static software.wings.beans.SearchFilter.Operator.IN;
 import static software.wings.beans.WorkflowType.ORCHESTRATION;
 import static software.wings.beans.WorkflowType.PIPELINE;
@@ -533,7 +532,7 @@ public class WorkflowExecutionServiceImpl implements WorkflowExecutionService {
                                                   .withLimit(UNLIMITED)
                                                   .addFilter("appId", EQ, workflowExecution.getAppId())
                                                   .addFilter("executionUuid", EQ, workflowExecution.getUuid())
-                                                  .addFilter("createdAt", GT, workflowExecution.getCreatedAt())
+                                                  .addFilter("createdAt", GE, workflowExecution.getCreatedAt())
                                                   .build();
     return wingsPersistence.query(StateExecutionInstance.class, req).getResponse();
   }
@@ -609,7 +608,7 @@ public class WorkflowExecutionServiceImpl implements WorkflowExecutionService {
                                                     .withLimit(PageRequest.UNLIMITED)
                                                     .addFilter("appId", EQ, workflowExecution.getAppId())
                                                     .addFilter("executionUuid", EQ, workflowExecution.getUuid())
-                                                    .addFilter("createdAt", GT, workflowExecution.getCreatedAt())
+                                                    .addFilter("createdAt", GE, workflowExecution.getCreatedAt())
                                                     .addFieldsExcluded("contextElements", "callback")
                                                     .build();
       List<StateExecutionInstance> allInstances = getAllStateExecutionInstances(req);
@@ -1743,7 +1742,7 @@ public class WorkflowExecutionServiceImpl implements WorkflowExecutionService {
             .addFilter("stateType", Operator.IN, StateType.REPEAT.name(), StateType.FORK.name(),
                 StateType.SUB_WORKFLOW.name(), StateType.PHASE.name(), StateType.PHASE_STEP.name())
             .addFilter("parentInstanceId", Operator.NOT_EXISTS)
-            .addFilter("createdAt", GT, workflowExecution.getCreatedAt())
+            .addFilter("createdAt", GE, workflowExecution.getCreatedAt())
             .addOrder("createdAt", OrderType.ASC)
             .build();
 

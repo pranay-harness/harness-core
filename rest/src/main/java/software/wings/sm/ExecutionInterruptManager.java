@@ -14,7 +14,7 @@ import static software.wings.beans.ErrorCode.RESUME_ALL_ALREADY;
 import static software.wings.beans.ErrorCode.ROLLBACK_ALREADY;
 import static software.wings.beans.ErrorCode.STATE_NOT_FOR_TYPE;
 import static software.wings.beans.SearchFilter.Operator.EQ;
-import static software.wings.beans.SearchFilter.Operator.GT;
+import static software.wings.beans.SearchFilter.Operator.GE;
 import static software.wings.beans.SearchFilter.Operator.IN;
 import static software.wings.beans.alert.AlertType.ManualInterventionNeeded;
 import static software.wings.dl.PageRequest.PageRequestBuilder.aPageRequest;
@@ -236,7 +236,7 @@ public class ExecutionInterruptManager {
               .withLimit("1")
               .addFilter("appId", EQ, executionInterrupt.getAppId())
               .addFilter("executionUuid", EQ, executionInterrupt.getExecutionUuid())
-              .addFilter("createdAt", GT, workflowExecution.getCreatedAt())
+              .addFilter("createdAt", GE, workflowExecution.getCreatedAt())
               .addOrder("createdAt", OrderType.DESC)
               .withReadPref(ReadPref.CRITICAL)
               .build();

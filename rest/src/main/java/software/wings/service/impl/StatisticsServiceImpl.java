@@ -11,7 +11,7 @@ import static software.wings.beans.Environment.EnvironmentType.ALL;
 import static software.wings.beans.Environment.EnvironmentType.NON_PROD;
 import static software.wings.beans.Environment.EnvironmentType.PROD;
 import static software.wings.beans.SearchFilter.Operator.EQ;
-import static software.wings.beans.SearchFilter.Operator.GT;
+import static software.wings.beans.SearchFilter.Operator.GE;
 import static software.wings.beans.SearchFilter.Operator.IN;
 import static software.wings.beans.SearchFilter.Operator.NOT_EXISTS;
 import static software.wings.beans.WorkflowType.ORCHESTRATION;
@@ -139,7 +139,7 @@ public class StatisticsServiceImpl implements StatisticsService {
 
     PageRequest pageRequest = aPageRequest()
                                   .withLimit(UNLIMITED)
-                                  .addFilter("createdAt", GT, fromDateEpochMilli)
+                                  .addFilter("createdAt", GE, fromDateEpochMilli)
                                   .addFilter("workflowType", IN, ORCHESTRATION, SIMPLE, PIPELINE)
                                   .addFilter("pipelineExecutionId", NOT_EXISTS)
                                   .addFilter("appId", IN, appIds.toArray())
@@ -236,7 +236,7 @@ public class StatisticsServiceImpl implements StatisticsService {
 
     PageRequest pageRequest = aPageRequest()
                                   .withLimit(UNLIMITED)
-                                  .addFilter("createdAt", GT, statsFetchedOn)
+                                  .addFilter("createdAt", GE, statsFetchedOn)
                                   .addFilter("workflowType", IN, ORCHESTRATION, SIMPLE, PIPELINE)
                                   .addFilter("pipelineExecutionId", NOT_EXISTS)
                                   .addFilter("appId", IN, authorizedAppIds.toArray())
@@ -282,7 +282,7 @@ public class StatisticsServiceImpl implements StatisticsService {
 
     PageRequest pageRequest = aPageRequest()
                                   .withLimit(UNLIMITED)
-                                  .addFilter("createdAt", GT, fromDateEpochMilli)
+                                  .addFilter("createdAt", GE, fromDateEpochMilli)
                                   .addFilter("workflowType", IN, ORCHESTRATION, SIMPLE, PIPELINE)
                                   .addFilter("pipelineExecutionId", NOT_EXISTS)
                                   .addOrder("createdAt", OrderType.DESC)
@@ -325,7 +325,7 @@ public class StatisticsServiceImpl implements StatisticsService {
 
     PageRequest pageRequest = aPageRequest()
                                   .withLimit(UNLIMITED)
-                                  .addFilter("createdAt", GT, fromDateEpochMilli)
+                                  .addFilter("createdAt", GE, fromDateEpochMilli)
                                   .addFilter("workflowType", IN, ORCHESTRATION, SIMPLE, PIPELINE)
                                   .addFilter("pipelineExecutionId", NOT_EXISTS)
                                   .addOrder("createdAt", OrderType.DESC)
@@ -389,12 +389,12 @@ public class StatisticsServiceImpl implements StatisticsService {
 
     PageRequest nonActionableNotificationRequest = aPageRequest()
                                                        .addFilter("accountId", EQ, accountId)
-                                                       .addFilter("createdAt", GT, queryStartEpoch)
+                                                       .addFilter("createdAt", GE, queryStartEpoch)
                                                        .addFilter("actionable", EQ, false)
                                                        .build();
 
     PageRequest failureRequest = aPageRequest()
-                                     .addFilter("createdAt", GT, queryStartEpoch)
+                                     .addFilter("createdAt", GE, queryStartEpoch)
                                      .addFilter("status", EQ, FAILED)
                                      .addFieldsIncluded("appId")
                                      .build();
@@ -535,7 +535,7 @@ public class StatisticsServiceImpl implements StatisticsService {
     List<TopConsumer> topConsumers = new ArrayList<>();
     PageRequest pageRequest = aPageRequest()
                                   .withLimit(UNLIMITED)
-                                  .addFilter("createdAt", GT, epochMilli)
+                                  .addFilter("createdAt", GE, epochMilli)
                                   .addFilter("workflowType", IN, ORCHESTRATION, SIMPLE, PIPELINE)
                                   .addFilter("pipelineExecutionId", NOT_EXISTS)
                                   .addFilter("appId", IN, appIdMap.keySet().toArray())

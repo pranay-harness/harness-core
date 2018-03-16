@@ -13,7 +13,7 @@ import static software.wings.beans.ErrorCode.INVALID_ARGUMENT;
 import static software.wings.beans.ErrorCode.STATE_NOT_FOR_TYPE;
 import static software.wings.beans.ReadPref.CRITICAL;
 import static software.wings.beans.SearchFilter.Operator.EQ;
-import static software.wings.beans.SearchFilter.Operator.GT;
+import static software.wings.beans.SearchFilter.Operator.GE;
 import static software.wings.beans.SearchFilter.Operator.IN;
 import static software.wings.beans.alert.AlertType.ManualInterventionNeeded;
 import static software.wings.dl.PageRequest.PageRequestBuilder.aPageRequest;
@@ -1178,7 +1178,7 @@ public class StateMachineExecutor {
             .addFilter("appId", EQ, workflowExecutionInterrupt.getAppId())
             .addFilter("executionUuid", EQ, workflowExecutionInterrupt.getExecutionUuid())
             .addFilter("status", IN, WAITING)
-            .addFilter("createdAt", GT, workflowExecution.getCreatedAt())
+            .addFilter("createdAt", GE, workflowExecution.getCreatedAt())
             .build();
 
     List<StateExecutionInstance> allStateExecutionInstances = getAllStateExecutionInstances(pageRequest);
@@ -1203,7 +1203,7 @@ public class StateMachineExecutor {
               .addFilter("appId", EQ, workflowExecutionInterrupt.getAppId())
               .addFilter("executionUuid", EQ, workflowExecutionInterrupt.getExecutionUuid())
               .addFilter("status", IN, ABORTING)
-              .addFilter("createdAt", GT, workflowExecution.getCreatedAt())
+              .addFilter("createdAt", GE, workflowExecution.getCreatedAt())
               .build();
 
       List<StateExecutionInstance> allStateExecutionInstances = getAllStateExecutionInstances(pageRequest);
@@ -1314,7 +1314,7 @@ public class StateMachineExecutor {
             .addFilter("appId", EQ, workflowExecutionInterrupt.getAppId())
             .addFilter("executionUuid", EQ, workflowExecutionInterrupt.getExecutionUuid())
             .addFilter("status", IN, Arrays.copyOf(statuses, statuses.length, Object[].class))
-            .addFilter("createdAt", GT, workflowExecution.getCreatedAt())
+            .addFilter("createdAt", GE, workflowExecution.getCreatedAt())
             .addFieldsIncluded("uuid", "stateType")
             .build();
 
@@ -1386,7 +1386,7 @@ public class StateMachineExecutor {
             .addFilter("executionUuid", EQ, workflowExecutionInterrupt.getExecutionUuid())
             .addFilter("parentInstanceId", IN, parentInstanceIds.toArray())
             .addFilter("status", IN, NEW, QUEUED, STARTING, RUNNING, PAUSED, PAUSING, WAITING)
-            .addFilter("createdAt", GT, workflowExecution.getCreatedAt())
+            .addFilter("createdAt", GE, workflowExecution.getCreatedAt())
             .build();
 
     List<StateExecutionInstance> childInstances = getAllStateExecutionInstances(pageRequest);

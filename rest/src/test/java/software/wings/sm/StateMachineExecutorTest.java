@@ -12,7 +12,6 @@ import static software.wings.sm.StateExecutionInstance.Builder.aStateExecutionIn
 
 import com.google.inject.Inject;
 
-import io.harness.rule.RepeatRule.Repeat;
 import org.junit.Test;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -564,7 +563,6 @@ public class StateMachineExecutorTest extends WingsBaseTest {
    * @throws InterruptedException the interrupted exception
    */
   @Test
-  @Repeat(times = 2, successes = 1)
   public void shouldTriggerAndFailAsync() throws InterruptedException {
     String appId = generateUuid();
     StateMachine sm = new StateMachine();
