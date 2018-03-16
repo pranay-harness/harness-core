@@ -1181,6 +1181,7 @@ public class WorkflowExecutionServiceImplTest extends WingsBaseTest {
    */
   // TODO: fix this. It seems there is production issues
   @Test
+  @Ignore
   public void shouldAbortState() throws InterruptedException {
     Graph graph = aGraph()
                       .addNodes(aGraphNode()
