@@ -28,11 +28,13 @@ import software.wings.beans.Role;
 import software.wings.beans.RoleType;
 import software.wings.beans.SearchFilter.Operator;
 import software.wings.beans.SystemCatalog;
+import software.wings.beans.security.UserGroup;
 import software.wings.dl.PageRequest;
 import software.wings.dl.WingsPersistence;
 import software.wings.licensing.LicenseManager;
 import software.wings.scheduler.AlertCheckJob;
 import software.wings.scheduler.QuartzScheduler;
+import software.wings.service.impl.security.auth.AuthHandler;
 import software.wings.service.intfc.AccountService;
 import software.wings.service.intfc.AlertService;
 import software.wings.service.intfc.AppContainerService;
@@ -41,6 +43,7 @@ import software.wings.service.intfc.NotificationSetupService;
 import software.wings.service.intfc.RoleService;
 import software.wings.service.intfc.SettingsService;
 import software.wings.service.intfc.SystemCatalogService;
+import software.wings.service.intfc.UserGroupService;
 import software.wings.service.intfc.ownership.OwnedByAccount;
 
 import java.lang.reflect.Field;
@@ -60,6 +63,8 @@ public class AccountServiceImpl implements AccountService {
 
   @Inject private WingsPersistence wingsPersistence;
   @Inject private RoleService roleService;
+  @Inject private UserGroupService userGroupService;
+  @Inject private AuthHandler authHandler;
   @Inject private LicenseManager licenseManager;
   @Inject private NotificationSetupService notificationSetupService;
   @Inject private SettingsService settingsService;
@@ -87,6 +92,12 @@ public class AccountServiceImpl implements AccountService {
         .filter(role -> RoleType.ACCOUNT_ADMIN.equals(role.getRoleType()))
         .forEach(role -> createDefaultNotificationGroup(account, role));
     createSystemAppContainers(account);
+    createDefaultUserGroups(account);
+  }
+
+  private void createDefaultUserGroups(Account account) {
+    UserGroup userGroup = authHandler.buildDefaultAdminUserGroup(account.getUuid(), null);
+    userGroupService.save(userGroup);
   }
 
   List<Role> createDefaultRoles(Account account) {

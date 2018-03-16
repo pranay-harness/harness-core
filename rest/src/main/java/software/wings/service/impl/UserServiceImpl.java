@@ -83,11 +83,13 @@ import software.wings.helpers.ext.mail.EmailData;
 import software.wings.security.PermissionAttribute.Action;
 import software.wings.security.PermissionAttribute.ResourceType;
 import software.wings.security.UserThreadLocal;
+import software.wings.service.impl.security.auth.AuthHandler;
 import software.wings.service.intfc.AccountService;
 import software.wings.service.intfc.AppService;
 import software.wings.service.intfc.AuthService;
 import software.wings.service.intfc.EmailNotificationService;
 import software.wings.service.intfc.RoleService;
+import software.wings.service.intfc.UserGroupService;
 import software.wings.service.intfc.UserService;
 import software.wings.utils.CacheHelper;
 import software.wings.utils.KryoUtils;
@@ -127,8 +129,10 @@ public class UserServiceImpl implements UserService {
   @Inject private RoleService roleService;
   @Inject private AccountService accountService;
   @Inject private AuthService authService;
+  @Inject private UserGroupService userGroupService;
   @Inject private AppService appService;
   @Inject private CacheHelper cacheHelper;
+  @Inject private AuthHandler authHandler;
 
   /* (non-Javadoc)
    * @see software.wings.service.intfc.UserService#register(software.wings.beans.User)
@@ -174,9 +178,14 @@ public class UserServiceImpl implements UserService {
 
     account = setupAccount(account.getAccountName(), account.getCompanyName());
     addAccountAdminRole(user, account);
+    addUserToUserGroup(account, user);
     sendSuccessfullyAddedToNewAccountEmail(user, account);
     evictUserFromCache(user.getUuid());
     return account;
+  }
+
+  private void addUserToUserGroup(Account account, User user) {
+    authHandler.addUserToUserGroup(user, account);
   }
 
   private void sendSuccessfullyAddedToNewAccountEmail(User user, Account account) {

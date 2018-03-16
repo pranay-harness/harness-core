@@ -5,6 +5,7 @@ import com.google.common.collect.ImmutableList;
 import migrations.all.AddArtifactCheck;
 import migrations.all.AddIsDefaultToExistingNotificationGroups;
 import migrations.all.AddVerifyToRollbackWorkflows;
+import migrations.all.CreateDefaultUserGroupsAndAddToExistingUsers;
 import migrations.all.SetDaemonSetInWorkflowPhase;
 import migrations.all.TrimYamlMigration;
 import migrations.all.VerifyStepWorkflowOrder;
@@ -27,6 +28,7 @@ public class MigrationList {
         .add(Pair.of(109, TrimYamlMigration.class))
         .add(Pair.of(110, SetDaemonSetInWorkflowPhase.class))
         .add(Pair.of(111, AddArtifactCheck.class))
+        .add(Pair.of(112, CreateDefaultUserGroupsAndAddToExistingUsers.class))
         .build();
   }
 }
