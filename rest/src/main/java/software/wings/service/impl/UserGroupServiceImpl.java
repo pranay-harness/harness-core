@@ -9,6 +9,7 @@ import com.google.inject.Singleton;
 
 import org.mongodb.morphia.query.Query;
 import org.mongodb.morphia.query.UpdateOperations;
+import org.mongodb.morphia.query.UpdateResults;
 import software.wings.beans.Account;
 import software.wings.beans.SearchFilter.Operator;
 import software.wings.beans.User;
@@ -18,6 +19,7 @@ import software.wings.dl.PageResponse;
 import software.wings.dl.WingsPersistence;
 import software.wings.service.intfc.AccountService;
 import software.wings.service.intfc.AppService;
+import software.wings.service.intfc.AuthService;
 import software.wings.service.intfc.ServiceResourceService;
 import software.wings.service.intfc.UserGroupService;
 import software.wings.service.intfc.UserService;
@@ -38,12 +40,15 @@ public class UserGroupServiceImpl implements UserGroupService {
   @Inject private AccountService accountService;
   @Inject private AppService appService;
   @Inject private ServiceResourceService serviceResourceService;
+  @Inject private AuthService authService;
 
   @Override
   public UserGroup save(UserGroup userGroup) {
     Validator.notNullCheck("accountId", userGroup.getAccountId());
-    return Validator.duplicateCheck(
+    UserGroup savedUserGroup = Validator.duplicateCheck(
         () -> wingsPersistence.saveAndGet(UserGroup.class, userGroup), "name", userGroup.getName());
+    evictUserPermissionInfoCacheForUserGroup(savedUserGroup);
+    return savedUserGroup;
   }
 
   @Override
@@ -104,7 +109,9 @@ public class UserGroupServiceImpl implements UserGroupService {
     }
     UpdateOperations<UserGroup> operations = wingsPersistence.createUpdateOperations(UserGroup.class);
     setUnset(operations, "memberIds", memberIds);
-    return update(userGroup, operations);
+    UserGroup updatedUserGroup = update(userGroup, operations);
+    evictUserPermissionInfoCacheForUserGroup(updatedUserGroup);
+    return updatedUserGroup;
   }
 
   @Override
@@ -112,7 +119,9 @@ public class UserGroupServiceImpl implements UserGroupService {
     UpdateOperations<UserGroup> operations = wingsPersistence.createUpdateOperations(UserGroup.class);
     setUnset(operations, "appPermissions", userGroup.getAppPermissions());
     setUnset(operations, "accountPermissions", userGroup.getAccountPermissions());
-    return update(userGroup, operations);
+    UserGroup updatedUserGroup = update(userGroup, operations);
+    evictUserPermissionInfoCacheForUserGroup(updatedUserGroup);
+    return updatedUserGroup;
   }
 
   private UserGroup update(UserGroup userGroup, UpdateOperations<UserGroup> operations) {
@@ -123,7 +132,10 @@ public class UserGroupServiceImpl implements UserGroupService {
                                  .equal(userGroup.getUuid())
                                  .field("accountId")
                                  .equal(userGroup.getAccountId());
-    wingsPersistence.update(query, operations);
+    UpdateResults updateResults = wingsPersistence.update(query, operations);
+    if (updateResults.getUpdatedCount() > 0) {
+      evictUserPermissionInfoCacheForUserGroup(userGroup);
+    }
     return get(userGroup.getAccountId(), userGroup.getUuid());
   }
 
@@ -136,6 +148,14 @@ public class UserGroupServiceImpl implements UserGroupService {
                                           .equal(accountId)
                                           .field(ID_KEY)
                                           .equal(userGroupId);
-    return wingsPersistence.delete(userGroupQuery);
+    boolean deleted = wingsPersistence.delete(userGroupQuery);
+    if (deleted) {
+      evictUserPermissionInfoCacheForUserGroup(userGroup);
+    }
+    return deleted;
+  }
+
+  private void evictUserPermissionInfoCacheForUserGroup(UserGroup userGroup) {
+    authService.evictAccountUserPermissionInfoCache(userGroup.getAccountId(), userGroup.getMembers());
   }
 }

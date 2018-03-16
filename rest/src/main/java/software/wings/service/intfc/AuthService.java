@@ -77,4 +77,6 @@ public interface AuthService {
   UserPermissionInfo getUserPermissionInfo(String accountId, User user);
 
   void evictAccountUserPermissionInfoCache(String accountId);
+
+  void evictAccountUserPermissionInfoCache(String accountId, List<User> members);
 }
