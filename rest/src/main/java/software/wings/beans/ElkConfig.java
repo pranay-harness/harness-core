@@ -45,10 +45,12 @@ public class ElkConfig extends SettingValue implements Encryptable {
 
   @SchemaIgnore private String encryptedPassword;
 
+  @Attributes(required = true, title = "Authentication")
+  @DefaultValue("Password")
   private ElkValidationType validationType;
 
   @Attributes(required = true, title = "Authentication")
-  @DefaultValue("PASSWORD")
+  @DefaultValue("Password")
   @EnumData(enumDataProvider = ElkValidationTypeProvider.class)
   public ElkValidationType getValidationType() {
     if (validationType == null) {
