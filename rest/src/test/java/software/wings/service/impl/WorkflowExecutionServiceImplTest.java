@@ -47,7 +47,6 @@ import com.google.inject.Inject;
 import com.google.inject.Injector;
 import com.google.inject.name.Named;
 
-import io.harness.rule.RepeatRule.Repeat;
 import io.harness.threading.Puller;
 import org.junit.Before;
 import org.junit.Ignore;
@@ -181,7 +180,6 @@ public class WorkflowExecutionServiceImplTest extends WingsBaseTest {
   }
 
   @Test
-  @Repeat(times = 3, successes = 1)
   public void shouldTriggerSimpleWorkflow() throws InterruptedException {
     Graph graph =
         aGraph()
@@ -765,7 +763,6 @@ public class WorkflowExecutionServiceImplTest extends WingsBaseTest {
    * @throws InterruptedException the interrupted exception
    */
   @Test
-  @Repeat(times = 3, successes = 1)
   public void shouldGetNodeDetails() throws InterruptedException {
     String appId = app.getUuid();
 
@@ -908,7 +905,6 @@ public class WorkflowExecutionServiceImplTest extends WingsBaseTest {
    * @throws InterruptedException the interrupted exception
    */
   @Test
-  @Repeat(times = 3, successes = 1)
   public void shouldPauseAndResumeState() throws InterruptedException {
     Graph graph = aGraph()
                       .addNodes(aGraphNode()
@@ -1181,7 +1177,6 @@ public class WorkflowExecutionServiceImplTest extends WingsBaseTest {
    */
   // TODO: fix this. It seems there is production issues
   @Test
-  @Ignore
   public void shouldAbortState() throws InterruptedException {
     Graph graph = aGraph()
                       .addNodes(aGraphNode()
@@ -1268,7 +1263,6 @@ public class WorkflowExecutionServiceImplTest extends WingsBaseTest {
    * @throws InterruptedException the interrupted exception
    */
   @Test
-  @Repeat(times = 3, successes = 1)
   public void shouldAbortAllStates() {
     Service service1 = wingsPersistence.saveAndGet(
         Service.class, aService().withUuid(generateUuid()).withName("svc1").withAppId(app.getUuid()).build());
@@ -1358,7 +1352,6 @@ public class WorkflowExecutionServiceImplTest extends WingsBaseTest {
    * @throws InterruptedException the interrupted exception
    */
   @Test
-  @Repeat(times = 3, successes = 1)
   public void shouldWaitOnError() throws InterruptedException {
     Host applicationHost1 = wingsPersistence.saveAndGet(
         Host.class, aHost().withAppId(app.getAppId()).withEnvId(env.getUuid()).withHostName("host1").build());
@@ -1562,7 +1555,6 @@ public class WorkflowExecutionServiceImplTest extends WingsBaseTest {
    * @throws InterruptedException the interrupted exception
    */
   @Test
-  @Repeat(times = 6, successes = 1)
   public void shouldRetryOnError() throws InterruptedException {
     Host host1 = wingsPersistence.saveAndGet(
         Host.class, aHost().withAppId(app.getUuid()).withEnvId(env.getUuid()).withHostName("host1").build());
