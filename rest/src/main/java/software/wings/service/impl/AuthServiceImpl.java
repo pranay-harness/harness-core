@@ -418,24 +418,24 @@ public class AuthServiceImpl implements AuthService {
 
   @Override
   public UserPermissionInfo getUserPermissionInfo(String accountId, User user) {
-    Cache<String, UserPermissionInfo> cache = cacheHelper.getUserPermissionInfoCache();
-    if (cache == null) {
-      logger.error("UserInfoCache is null. This should not happen. Fall back to DB");
-      return getUserPermissionInfoFromDB(accountId, user);
-    }
-
-    String key = getUserPermissionInfoCacheKey(accountId, user.getUuid());
-    UserPermissionInfo value = null;
-    try {
-      value = cache.get(key);
-      if (value == null) {
-        value = getUserPermissionInfoFromDB(accountId, user);
-        cache.put(key, value);
-      }
-      return value;
-    } catch (Exception ignored) {
-      logger.error("Error in fetching user UserPermissionInfo from Cache for key:" + key, ignored);
-    }
+//    Cache<String, UserPermissionInfo> cache = cacheHelper.getUserPermissionInfoCache();
+//    if (cache == null) {
+//      logger.error("UserInfoCache is null. This should not happen. Fall back to DB");
+//      return getUserPermissionInfoFromDB(accountId, user);
+//    }
+//
+//    String key = getUserPermissionInfoCacheKey(accountId, user.getUuid());
+//    UserPermissionInfo value = null;
+//    try {
+//      value = cache.get(key);
+//      if (value == null) {
+//        value = getUserPermissionInfoFromDB(accountId, user);
+//        cache.put(key, value);
+//      }
+//      return value;
+//    } catch (Exception ignored) {
+//      logger.error("Error in fetching user UserPermissionInfo from Cache for key:" + key, ignored);
+//    }
     // not found in cache. cache write through failed as well. rebuild anyway
     return getUserPermissionInfoFromDB(accountId, user);
   }
