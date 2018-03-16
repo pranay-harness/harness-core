@@ -75,4 +75,6 @@ public interface AuthService {
   void validateLearningEngineServiceToken(String learningEngineServiceToken);
 
   UserPermissionInfo getUserPermissionInfo(String accountId, User user);
+
+  void evictAccountUserPermissionInfoCache(String accountId);
 }

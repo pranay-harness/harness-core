@@ -1,6 +1,7 @@
 package software.wings.service.impl;
 
 import static org.apache.commons.lang3.StringUtils.isBlank;
+import static org.apache.commons.lang3.StringUtils.isNotEmpty;
 import static software.wings.beans.Base.GLOBAL_APP_ID;
 import static software.wings.beans.Base.GLOBAL_ENV_ID;
 import static software.wings.beans.ErrorCode.ACCESS_DENIED;
@@ -66,6 +67,7 @@ import software.wings.utils.CacheHelper;
 
 import java.text.ParseException;
 import java.util.Collection;
+import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
@@ -415,6 +417,44 @@ public class AuthServiceImpl implements AuthService {
 
   @Override
   public UserPermissionInfo getUserPermissionInfo(String accountId, User user) {
+    Cache<String, UserPermissionInfo> cache = cacheHelper.getUserPermissionInfoCache();
+    if (cache == null) {
+      logger.error("UserInfoCache is null. This should not happen. Fall back to DB");
+      return getUserPermissionInfoFromDB(accountId, user);
+    }
+
+    String key = accountId + "~" + user.getUuid();
+    UserPermissionInfo value = null;
+    try {
+      value = cache.get(key);
+      if (value == null) {
+        value = getUserPermissionInfoFromDB(accountId, user);
+        cache.put(key, value);
+      }
+      return value;
+    } catch (Exception ignored) {
+      logger.error("Error in fetching user UserPermissionInfo from Cache for key:" + key, ignored);
+    }
+    // not found in cache. cache write through failed as well. rebuild anyway
+    return getUserPermissionInfoFromDB(accountId, user);
+  }
+
+  @Override
+  public void evictAccountUserPermissionInfoCache(String accountId) {
+    Cache<String, UserPermissionInfo> cache = cacheHelper.getUserPermissionInfoCache();
+    Set<String> keys = new HashSet<>();
+    if (cache != null) {
+      cache.iterator().forEachRemaining(stringUserPermissionInfoEntry -> {
+        String key = stringUserPermissionInfoEntry.getKey();
+        if (isNotEmpty(key) && key.startsWith(accountId)) {
+          keys.add(key);
+        }
+      });
+      cache.removeAll(keys);
+    }
+  }
+
+  private UserPermissionInfo getUserPermissionInfoFromDB(String accountId, User user) {
     List<UserGroup> userGroups = getUserGroupsByAccountId(accountId, user);
     return authHandler.getUserPermissionInfo(accountId, userGroups);
   }
