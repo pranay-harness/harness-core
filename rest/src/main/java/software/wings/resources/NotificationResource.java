@@ -20,7 +20,7 @@ import software.wings.beans.RestResponse;
 import software.wings.dl.PageRequest;
 import software.wings.dl.PageResponse;
 import software.wings.security.PermissionAttribute.ResourceType;
-import software.wings.security.annotations.AuthRule;
+import software.wings.security.annotations.Scope;
 import software.wings.service.intfc.NotificationService;
 
 import javax.ws.rs.BeanParam;
@@ -38,7 +38,7 @@ import javax.ws.rs.QueryParam;
 @Api("/notifications")
 @Path("/notifications")
 @Produces("application/json")
-@AuthRule(ResourceType.APPLICATION)
+@Scope(ResourceType.APPLICATION)
 public class NotificationResource {
   @Inject private NotificationService notificationService;
 

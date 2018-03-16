@@ -1,6 +1,8 @@
 package software.wings.resources;
 
 import static software.wings.beans.SearchFilter.Operator.EQ;
+import static software.wings.security.PermissionAttribute.PermissionType.SERVICE;
+import static software.wings.security.PermissionAttribute.ResourceType.APPLICATION;
 
 import com.google.inject.Inject;
 
@@ -12,8 +14,10 @@ import software.wings.beans.artifact.Artifact;
 import software.wings.beans.artifact.ArtifactStream;
 import software.wings.dl.PageRequest;
 import software.wings.dl.PageResponse;
-import software.wings.security.PermissionAttribute.ResourceType;
+import software.wings.security.PermissionAttribute.Action;
+import software.wings.security.PermissionAttribute.PermissionType;
 import software.wings.security.annotations.AuthRule;
+import software.wings.security.annotations.Scope;
 import software.wings.service.intfc.ArtifactService;
 import software.wings.service.intfc.ArtifactStreamService;
 
@@ -40,7 +44,8 @@ import javax.ws.rs.core.Response.ResponseBuilder;
 @Api("artifacts")
 @Path("/artifacts")
 @Produces("application/json")
-@AuthRule(ResourceType.APPLICATION)
+@Scope(APPLICATION)
+@AuthRule(permissionType = SERVICE)
 public class ArtifactResource {
   private ArtifactService artifactService;
   private ArtifactStreamService artifactStreamService;
@@ -67,6 +72,7 @@ public class ArtifactResource {
   @GET
   @Timed
   @ExceptionMetered
+  @AuthRule(permissionType = PermissionType.SERVICE, action = Action.READ, dbFieldName = "serviceIds")
   public RestResponse<PageResponse<Artifact>> list(
       @QueryParam("appId") String appId, @BeanParam PageRequest<Artifact> pageRequest) {
     pageRequest.addFilter("appId", EQ, appId);
@@ -84,6 +90,7 @@ public class ArtifactResource {
   @Path("{artifactId}")
   @Timed
   @ExceptionMetered
+  @AuthRule(permissionType = PermissionType.SERVICE, action = Action.READ, skipAuth = true)
   public RestResponse<Artifact> get(@QueryParam("appId") String appId, @PathParam("artifactId") String artifactId) {
     return new RestResponse<>(artifactService.get(appId, artifactId, true));
   }
@@ -117,6 +124,7 @@ public class ArtifactResource {
   @Path("{artifactId}")
   @Timed
   @ExceptionMetered
+  @AuthRule(permissionType = PermissionType.SERVICE, action = Action.READ, skipAuth = true)
   public RestResponse<Artifact> update(
       @QueryParam("appId") String appId, @PathParam("artifactId") String artifactId, Artifact artifact) {
     artifact.setUuid(artifactId);
@@ -152,6 +160,7 @@ public class ArtifactResource {
   @Encoded
   @Timed
   @ExceptionMetered
+  @AuthRule(skipAuth = true)
   public Response download(@QueryParam("appId") String appId, @PathParam("artifactId") String artifactId) {
     File artifactFile = artifactService.download(appId, artifactId);
     ResponseBuilder response = Response.ok(artifactFile, MediaType.APPLICATION_OCTET_STREAM);

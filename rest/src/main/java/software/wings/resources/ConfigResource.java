@@ -21,7 +21,7 @@ import software.wings.beans.RestResponse;
 import software.wings.dl.PageRequest;
 import software.wings.dl.PageResponse;
 import software.wings.security.PermissionAttribute.ResourceType;
-import software.wings.security.annotations.AuthRule;
+import software.wings.security.annotations.Scope;
 import software.wings.service.intfc.AppService;
 import software.wings.service.intfc.ConfigService;
 import software.wings.utils.BoundedInputStream;
@@ -54,7 +54,9 @@ import javax.ws.rs.core.Response.ResponseBuilder;
 @Api("configs")
 @Path("/configs")
 @Produces("application/json")
-@AuthRule(ResourceType.APPLICATION)
+@Scope(ResourceType.APPLICATION)
+// ToBeRevisited, this resource would be used from both service and env overrides ui.
+// Need to find out which auth rule to apply since its only determined at runtime
 public class ConfigResource {
   @Inject private ConfigService configService;
   @Inject private MainConfiguration configuration;
@@ -69,6 +71,7 @@ public class ConfigResource {
   @GET
   @Timed
   @ExceptionMetered
+
   public RestResponse<PageResponse<ConfigFile>> list(@BeanParam PageRequest<ConfigFile> pageRequest) {
     return new RestResponse<>(configService.list(pageRequest));
   }

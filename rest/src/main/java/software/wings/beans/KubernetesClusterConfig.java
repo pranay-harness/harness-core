@@ -15,6 +15,7 @@ import software.wings.annotation.Encryptable;
 import software.wings.annotation.Encrypted;
 import software.wings.beans.KubernetesConfig.KubernetesConfigBuilder;
 import software.wings.settings.SettingValue;
+import software.wings.settings.UsageRestrictions;
 import software.wings.yaml.setting.CloudProviderYaml;
 
 @JsonTypeName("KUBERNETES_CLUSTER")
@@ -122,8 +123,9 @@ public class KubernetesClusterConfig extends SettingValue implements Encryptable
 
     @lombok.Builder
     public Yaml(String type, String harnessApiVersion, String masterUrl, String username, String password,
-        String caCert, String clientCert, String clientKey, String clientKeyPassphrase, String clientKeyAlgo) {
-      super(type, harnessApiVersion);
+        String caCert, String clientCert, String clientKey, String clientKeyPassphrase, String clientKeyAlgo,
+        UsageRestrictions usageRestrictions) {
+      super(type, harnessApiVersion, usageRestrictions);
       this.masterUrl = masterUrl;
       this.username = username;
       this.password = password;

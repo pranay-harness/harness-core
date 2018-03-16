@@ -388,7 +388,8 @@ public class EnvironmentServiceImpl implements EnvironmentService, DataProvider 
 
   @Override
   public List<Environment> getEnvByApp(String appId) {
-    return wingsPersistence.createQuery(Environment.class).field("appId").equal(appId).asList();
+    PageRequest<Environment> pageRequest = aPageRequest().addFilter("appId", EQ, appId).build();
+    return wingsPersistence.query(Environment.class, pageRequest).getResponse();
   }
 
   @Override

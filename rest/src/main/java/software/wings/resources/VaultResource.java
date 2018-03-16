@@ -8,7 +8,7 @@ import io.swagger.annotations.Api;
 import software.wings.beans.RestResponse;
 import software.wings.beans.VaultConfig;
 import software.wings.security.PermissionAttribute.ResourceType;
-import software.wings.security.annotations.AuthRule;
+import software.wings.security.annotations.Scope;
 import software.wings.service.intfc.security.VaultService;
 
 import javax.ws.rs.DELETE;
@@ -23,7 +23,7 @@ import javax.ws.rs.QueryParam;
 @Api("vault")
 @Path("/vault")
 @Produces("application/json")
-@AuthRule(ResourceType.SETTING)
+@Scope(ResourceType.SETTING)
 public class VaultResource {
   @Inject private VaultService vaultService;
 

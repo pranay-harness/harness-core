@@ -8,7 +8,7 @@ import io.swagger.annotations.Api;
 import software.wings.beans.KmsConfig;
 import software.wings.beans.RestResponse;
 import software.wings.security.PermissionAttribute.ResourceType;
-import software.wings.security.annotations.AuthRule;
+import software.wings.security.annotations.Scope;
 import software.wings.service.intfc.security.KmsService;
 
 import javax.ws.rs.GET;
@@ -23,7 +23,7 @@ import javax.ws.rs.QueryParam;
 @Api("kms")
 @Path("/kms")
 @Produces("application/json")
-@AuthRule(ResourceType.SETTING)
+@Scope(ResourceType.SETTING)
 public class KmsResource {
   @Inject private KmsService kmsService;
 

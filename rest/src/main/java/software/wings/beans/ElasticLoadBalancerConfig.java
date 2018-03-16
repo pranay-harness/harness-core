@@ -14,6 +14,7 @@ import software.wings.annotation.Encryptable;
 import software.wings.annotation.Encrypted;
 import software.wings.api.LoadBalancerConfig;
 import software.wings.beans.AwsInfrastructureMapping.AwsRegionDataProvider;
+import software.wings.settings.UsageRestrictions;
 import software.wings.stencils.DefaultValue;
 import software.wings.stencils.EnumData;
 import software.wings.yaml.setting.LoadBalancerProviderYaml;
@@ -71,8 +72,8 @@ public class ElasticLoadBalancerConfig extends LoadBalancerConfig implements Enc
 
     @Builder
     public Yaml(String type, String harnessApiVersion, String region, String loadBalancerName, String accessKey,
-        String secretKey) {
-      super(type, harnessApiVersion);
+        String secretKey, UsageRestrictions usageRestrictions) {
+      super(type, harnessApiVersion, usageRestrictions);
       this.region = region;
       this.loadBalancerName = loadBalancerName;
       this.accessKey = accessKey;

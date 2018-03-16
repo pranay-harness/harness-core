@@ -13,6 +13,7 @@ import org.hibernate.validator.constraints.NotEmpty;
 import software.wings.annotation.Encryptable;
 import software.wings.annotation.Encrypted;
 import software.wings.settings.SettingValue;
+import software.wings.settings.UsageRestrictions;
 import software.wings.yaml.setting.CloudProviderYaml;
 
 /**
@@ -48,8 +49,9 @@ public class GcpConfig extends SettingValue implements Encryptable {
     private String serviceAccountKeyFileContent;
 
     @Builder
-    public Yaml(String type, String harnessApiVersion, String serviceAccountKeyFileContent) {
-      super(type, harnessApiVersion);
+    public Yaml(String type, String harnessApiVersion, String serviceAccountKeyFileContent,
+        UsageRestrictions usageRestrictions) {
+      super(type, harnessApiVersion, usageRestrictions);
       this.serviceAccountKeyFileContent = serviceAccountKeyFileContent;
     }
   }

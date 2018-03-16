@@ -5,6 +5,9 @@
 package software.wings.resources;
 
 import static io.harness.data.structure.EmptyPredicate.isEmpty;
+import static software.wings.security.PermissionAttribute.Action.UPDATE;
+import static software.wings.security.PermissionAttribute.PermissionType.LOGGED_IN;
+import static software.wings.security.PermissionAttribute.PermissionType.WORKFLOW;
 import static software.wings.utils.Validator.validateUuid;
 
 import com.google.inject.Inject;
@@ -26,8 +29,11 @@ import software.wings.beans.WorkflowType;
 import software.wings.beans.stats.CloneMetadata;
 import software.wings.dl.PageRequest;
 import software.wings.dl.PageResponse;
+import software.wings.security.PermissionAttribute.Action;
+import software.wings.security.PermissionAttribute.PermissionType;
 import software.wings.security.PermissionAttribute.ResourceType;
 import software.wings.security.annotations.AuthRule;
+import software.wings.security.annotations.Scope;
 import software.wings.service.intfc.WorkflowService;
 import software.wings.sm.StateType;
 import software.wings.sm.StateTypeScope;
@@ -52,7 +58,8 @@ import javax.ws.rs.QueryParam;
 @Api("workflows")
 @Path("/workflows")
 @Produces("application/json")
-@AuthRule(ResourceType.APPLICATION)
+@Scope(ResourceType.APPLICATION)
+@AuthRule(permissionType = WORKFLOW)
 public class WorkflowResource {
   private WorkflowService workflowService;
 
@@ -78,6 +85,7 @@ public class WorkflowResource {
   @GET
   @Timed
   @ExceptionMetered
+  @AuthRule(permissionType = PermissionType.WORKFLOW, action = Action.READ)
   public RestResponse<PageResponse<Workflow>> list(@QueryParam("appId") String appId,
       @BeanParam PageRequest<Workflow> pageRequest,
       @QueryParam("previousExecutionsCount") Integer previousExecutionsCount,
@@ -266,6 +274,7 @@ public class WorkflowResource {
   @Path("{workflowId}/phases")
   @Timed
   @ExceptionMetered
+  @AuthRule(permissionType = WORKFLOW, action = UPDATE)
   public RestResponse<WorkflowPhase> create(
       @QueryParam("appId") String appId, @PathParam("workflowId") String workflowId, WorkflowPhase workflowPhase) {
     return new RestResponse<>(workflowService.createWorkflowPhase(appId, workflowId, workflowPhase));
@@ -283,6 +292,7 @@ public class WorkflowResource {
   @Path("{workflowId}/phases/clone")
   @Timed
   @ExceptionMetered
+  @AuthRule(permissionType = WORKFLOW, action = UPDATE)
   public RestResponse<WorkflowPhase> clone(
       @QueryParam("appId") String appId, @PathParam("workflowId") String workflowId, WorkflowPhase workflowPhase) {
     return new RestResponse<>(workflowService.cloneWorkflowPhase(appId, workflowId, workflowPhase));
@@ -339,6 +349,7 @@ public class WorkflowResource {
   @Path("{workflowId}/phases/{phaseId}")
   @Timed
   @ExceptionMetered
+  @AuthRule(permissionType = WORKFLOW, action = UPDATE)
   public RestResponse<WorkflowPhase> deletePhase(@QueryParam("appId") String appId,
       @PathParam("workflowId") String workflowId, @PathParam("phaseId") String phaseId) {
     workflowService.deleteWorkflowPhase(appId, workflowId, phaseId);
@@ -430,6 +441,7 @@ public class WorkflowResource {
   @Path("stencils")
   @Timed
   @ExceptionMetered
+  @AuthRule(permissionType = LOGGED_IN)
   public RestResponse<List<Stencil>> stencils(@QueryParam("appId") String appId, @QueryParam("envId") String envId,
       @QueryParam("workflowId") String workflowId, @QueryParam("phaseId") String phaseId) {
     return new RestResponse<>(

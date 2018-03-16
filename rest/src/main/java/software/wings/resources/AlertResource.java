@@ -11,7 +11,7 @@ import software.wings.beans.RestResponse;
 import software.wings.beans.alert.Alert;
 import software.wings.dl.PageRequest;
 import software.wings.dl.PageResponse;
-import software.wings.security.annotations.AuthRule;
+import software.wings.security.annotations.Scope;
 import software.wings.service.intfc.AlertService;
 
 import javax.ws.rs.BeanParam;
@@ -26,7 +26,7 @@ import javax.ws.rs.QueryParam;
 @Api("alerts")
 @Path("/alerts")
 @Produces("application/json")
-@AuthRule(ROLE)
+@Scope(ROLE)
 public class AlertResource {
   private AlertService alertService;
 

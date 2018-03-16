@@ -16,6 +16,7 @@ import software.wings.annotation.Encrypted;
 import software.wings.jersey.JsonViews;
 import software.wings.service.impl.newrelic.NewRelicUrlProvider;
 import software.wings.settings.SettingValue;
+import software.wings.settings.UsageRestrictions;
 import software.wings.sm.StateType;
 import software.wings.stencils.DefaultValue;
 import software.wings.stencils.EnumData;
@@ -65,8 +66,8 @@ public class NewRelicConfig extends SettingValue implements Encryptable {
     private String apiKey;
 
     @Builder
-    public Yaml(String type, String harnessApiVersion, String apiKey) {
-      super(type, harnessApiVersion);
+    public Yaml(String type, String harnessApiVersion, String apiKey, UsageRestrictions usageRestrictions) {
+      super(type, harnessApiVersion, usageRestrictions);
       this.apiKey = apiKey;
     }
   }

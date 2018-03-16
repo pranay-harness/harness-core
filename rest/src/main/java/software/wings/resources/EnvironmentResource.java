@@ -1,6 +1,8 @@
 package software.wings.resources;
 
 import static software.wings.beans.SearchFilter.Operator.EQ;
+import static software.wings.security.PermissionAttribute.PermissionType.ENV;
+import static software.wings.security.PermissionAttribute.ResourceType.APPLICATION;
 import static software.wings.security.PermissionAttribute.ResourceType.ENVIRONMENT;
 
 import com.google.inject.Inject;
@@ -17,9 +19,9 @@ import software.wings.beans.container.KubernetesPayload;
 import software.wings.beans.stats.CloneMetadata;
 import software.wings.dl.PageRequest;
 import software.wings.dl.PageResponse;
-import software.wings.security.PermissionAttribute.ResourceType;
 import software.wings.security.annotations.AuthRule;
 import software.wings.security.annotations.ListAPI;
+import software.wings.security.annotations.Scope;
 import software.wings.service.intfc.EnvironmentService;
 
 import java.util.List;
@@ -41,7 +43,8 @@ import javax.ws.rs.QueryParam;
 @Path("/environments")
 @Produces("application/json")
 @Consumes("application/json")
-@AuthRule(ResourceType.APPLICATION)
+@Scope(APPLICATION)
+@AuthRule(permissionType = ENV)
 public class EnvironmentResource {
   @Inject private EnvironmentService envService;
 

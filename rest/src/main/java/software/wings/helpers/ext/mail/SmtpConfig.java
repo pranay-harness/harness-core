@@ -15,6 +15,7 @@ import software.wings.annotation.Encryptable;
 import software.wings.annotation.Encrypted;
 import software.wings.jersey.JsonViews;
 import software.wings.settings.SettingValue;
+import software.wings.settings.UsageRestrictions;
 import software.wings.stencils.DefaultValue;
 import software.wings.yaml.setting.CollaborationProviderYaml;
 
@@ -69,8 +70,8 @@ public class SmtpConfig extends SettingValue implements Encryptable {
 
     @Builder
     public Yaml(String type, String harnessApiVersion, String host, int port, String fromAddress, boolean useSSL,
-        String username, String password) {
-      super(type, harnessApiVersion);
+        String username, String password, UsageRestrictions usageRestrictions) {
+      super(type, harnessApiVersion, usageRestrictions);
       this.host = host;
       this.port = port;
       this.fromAddress = fromAddress;

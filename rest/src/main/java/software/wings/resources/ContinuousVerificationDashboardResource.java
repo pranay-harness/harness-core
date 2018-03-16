@@ -1,5 +1,7 @@
 package software.wings.resources;
 
+import static software.wings.security.PermissionAttribute.ResourceType.SERVICE;
+
 import com.google.inject.Inject;
 
 import com.codahale.metrics.annotation.ExceptionMetered;
@@ -8,8 +10,7 @@ import com.github.reinert.jjschema.SchemaIgnore;
 import io.swagger.annotations.Api;
 import org.mongodb.morphia.annotations.Transient;
 import software.wings.beans.RestResponse;
-import software.wings.security.PermissionAttribute;
-import software.wings.security.annotations.AuthRule;
+import software.wings.security.annotations.Scope;
 import software.wings.service.impl.analysis.ContinuousVerificationExecutionMetaData;
 import software.wings.service.impl.analysis.ContinuousVerificationService;
 
@@ -24,7 +25,7 @@ import javax.ws.rs.QueryParam;
 @Api("cvdash")
 @Path("/cvdash")
 @Produces("application/json")
-@AuthRule(PermissionAttribute.ResourceType.SERVICE)
+@Scope(SERVICE)
 public class ContinuousVerificationDashboardResource {
   @Transient @Inject @SchemaIgnore protected ContinuousVerificationService continuousVerificationService;
 

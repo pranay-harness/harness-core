@@ -10,7 +10,7 @@ import io.swagger.annotations.Api;
 import software.wings.beans.AccountPlugin;
 import software.wings.beans.RestResponse;
 import software.wings.security.PermissionAttribute.ResourceType;
-import software.wings.security.annotations.AuthRule;
+import software.wings.security.annotations.Scope;
 import software.wings.service.intfc.PluginService;
 
 import java.util.List;
@@ -29,7 +29,7 @@ import javax.ws.rs.core.MediaType;
 @Path("/plugins")
 @Consumes(MediaType.APPLICATION_JSON)
 @Produces(MediaType.APPLICATION_JSON)
-@AuthRule(ResourceType.SETTING)
+@Scope(ResourceType.SETTING)
 public class PluginResource {
   private PluginService pluginService;
 

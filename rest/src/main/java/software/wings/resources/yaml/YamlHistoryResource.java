@@ -10,7 +10,7 @@ import io.swagger.annotations.Api;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import software.wings.beans.RestResponse;
-import software.wings.security.annotations.AuthRule;
+import software.wings.security.annotations.Scope;
 import software.wings.service.intfc.yaml.YamlHistoryService;
 import software.wings.yaml.YamlHistory;
 import software.wings.yaml.YamlVersion;
@@ -33,7 +33,7 @@ import javax.ws.rs.QueryParam;
 @Api("/yaml-history")
 @Path("/yaml-history")
 @Produces("application/json")
-@AuthRule(APPLICATION)
+@Scope(APPLICATION)
 public class YamlHistoryResource {
   private YamlHistoryService yamlHistoryService;
 

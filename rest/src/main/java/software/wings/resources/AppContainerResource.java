@@ -1,6 +1,7 @@
 package software.wings.resources;
 
 import static javax.ws.rs.core.MediaType.MULTIPART_FORM_DATA;
+import static software.wings.security.PermissionAttribute.ResourceType.APP_STACK;
 import static software.wings.service.intfc.FileService.FileBucket.PLATFORMS;
 
 import com.google.inject.Inject;
@@ -17,8 +18,7 @@ import software.wings.beans.Base;
 import software.wings.beans.RestResponse;
 import software.wings.dl.PageRequest;
 import software.wings.dl.PageResponse;
-import software.wings.security.PermissionAttribute.ResourceType;
-import software.wings.security.annotations.AuthRule;
+import software.wings.security.annotations.Scope;
 import software.wings.service.intfc.AppContainerService;
 import software.wings.utils.BoundedInputStream;
 
@@ -45,7 +45,7 @@ import javax.ws.rs.core.Response.ResponseBuilder;
 @Api("app-containers")
 @Path("/app-containers")
 @Produces("application/json")
-@AuthRule(ResourceType.APP_STACK)
+@Scope(APP_STACK)
 public class AppContainerResource {
   @Inject private AppContainerService appContainerService;
   @Inject private MainConfiguration configuration;

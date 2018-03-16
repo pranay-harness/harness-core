@@ -12,11 +12,13 @@ import org.mongodb.morphia.query.UpdateOperations;
 import software.wings.beans.Account;
 import software.wings.beans.SearchFilter.Operator;
 import software.wings.beans.User;
-import software.wings.beans.UserGroup;
+import software.wings.beans.security.UserGroup;
 import software.wings.dl.PageRequest;
 import software.wings.dl.PageResponse;
 import software.wings.dl.WingsPersistence;
 import software.wings.service.intfc.AccountService;
+import software.wings.service.intfc.AppService;
+import software.wings.service.intfc.ServiceResourceService;
 import software.wings.service.intfc.UserGroupService;
 import software.wings.service.intfc.UserService;
 import software.wings.utils.Validator;
@@ -34,6 +36,8 @@ public class UserGroupServiceImpl implements UserGroupService {
   @Inject private WingsPersistence wingsPersistence;
   @Inject private UserService userService;
   @Inject private AccountService accountService;
+  @Inject private AppService appService;
+  @Inject private ServiceResourceService serviceResourceService;
 
   @Override
   public UserGroup save(UserGroup userGroup) {
@@ -64,10 +68,11 @@ public class UserGroupServiceImpl implements UserGroupService {
                                      .addFilter(ID_KEY, Operator.EQ, userGroupId)
                                      .build();
     UserGroup userGroup = wingsPersistence.get(UserGroup.class, req);
-    if (loadUsers) {
+    if (loadUsers && userGroup != null) {
       Account account = accountService.get(accountId);
       loadUsers(userGroup, account);
     }
+
     return userGroup;
   }
 
@@ -106,7 +111,7 @@ public class UserGroupServiceImpl implements UserGroupService {
   public UserGroup updatePermissions(UserGroup userGroup) {
     UpdateOperations<UserGroup> operations = wingsPersistence.createUpdateOperations(UserGroup.class);
     setUnset(operations, "appPermissions", userGroup.getAppPermissions());
-    setUnset(operations, "accountPermissionTypes", userGroup.getAccountPermissionTypes());
+    setUnset(operations, "accountPermissions", userGroup.getAccountPermissions());
     return update(userGroup, operations);
   }
 

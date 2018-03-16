@@ -1,6 +1,8 @@
 package software.wings.resources;
 
 import static javax.ws.rs.core.MediaType.MULTIPART_FORM_DATA;
+import static software.wings.security.PermissionAttribute.PermissionType.ENV;
+import static software.wings.security.PermissionAttribute.ResourceType.APPLICATION;
 
 import com.google.inject.Inject;
 
@@ -14,8 +16,9 @@ import software.wings.beans.RestResponse;
 import software.wings.beans.infrastructure.Host;
 import software.wings.dl.PageRequest;
 import software.wings.dl.PageResponse;
-import software.wings.security.PermissionAttribute.ResourceType;
+import software.wings.security.PermissionAttribute.Action;
 import software.wings.security.annotations.AuthRule;
+import software.wings.security.annotations.Scope;
 import software.wings.service.intfc.HostService;
 import software.wings.utils.BoundedInputStream;
 
@@ -40,7 +43,8 @@ import javax.ws.rs.core.Response;
 @Path("/hosts")
 @Produces("application/json")
 @Consumes("application/json")
-@AuthRule(ResourceType.APPLICATION)
+@Scope(APPLICATION)
+@AuthRule(permissionType = ENV)
 public class HostResource {
   private HostService hostService;
   private MainConfiguration configuration;
@@ -119,6 +123,7 @@ public class HostResource {
   @Path("{hostId}")
   @Timed
   @ExceptionMetered
+  @AuthRule(permissionType = ENV, action = Action.UPDATE)
   public RestResponse delete(
       @QueryParam("appId") String appId, @QueryParam("envId") String envId, @PathParam("hostId") String hostId) {
     hostService.delete(appId, envId, hostId);
@@ -140,6 +145,7 @@ public class HostResource {
   @Consumes(MULTIPART_FORM_DATA)
   @Timed
   @ExceptionMetered
+  @AuthRule(permissionType = ENV, action = Action.UPDATE)
   public RestResponse importHosts(@QueryParam("appId") String appId, @QueryParam("infraId") String infraId,
       @QueryParam("envId") String envId, @FormDataParam("file") InputStream uploadedInputStream,
       @FormDataParam("file") FormDataContentDisposition fileDetail) {
@@ -161,6 +167,7 @@ public class HostResource {
   @Encoded
   @Timed
   @ExceptionMetered
+  @AuthRule(permissionType = ENV, action = Action.UPDATE)
   public Response exportHosts(
       @QueryParam("appId") String appId, @QueryParam("infraId") String infraId, @QueryParam("envId") String envId) {
     //    File hostsFile = hostService.exportHosts(appId);

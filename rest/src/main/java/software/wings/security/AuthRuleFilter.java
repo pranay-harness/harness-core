@@ -13,36 +13,53 @@ import static software.wings.beans.ErrorCode.INVALID_REQUEST;
 import static software.wings.beans.ErrorCode.INVALID_TOKEN;
 import static software.wings.exception.WingsException.ALERTING;
 import static software.wings.exception.WingsException.HARMLESS;
-import static software.wings.security.UserRequestInfo.UserRequestInfoBuilder.anUserRequestInfo;
 
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.Lists;
+import com.google.common.collect.Maps;
 import com.google.inject.Inject;
 import com.google.inject.Singleton;
 
+import org.apache.commons.collections.CollectionUtils;
+import org.apache.commons.collections.MapUtils;
+import org.apache.commons.lang3.StringUtils;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import software.wings.beans.AccountRole;
 import software.wings.beans.ApplicationRole;
 import software.wings.beans.AuthToken;
 import software.wings.beans.EnvironmentRole;
+import software.wings.beans.FeatureName;
+import software.wings.beans.HttpMethod;
 import software.wings.beans.User;
 import software.wings.common.AuditHelper;
 import software.wings.exception.WingsException;
-import software.wings.security.PermissionAttribute.PermissionScope;
+import software.wings.security.PermissionAttribute.Action;
+import software.wings.security.PermissionAttribute.PermissionType;
+import software.wings.security.PermissionAttribute.ResourceType;
+import software.wings.security.UserRequestContext.UserRequestContextBuilder;
 import software.wings.security.UserRequestInfo.UserRequestInfoBuilder;
 import software.wings.security.annotations.AuthRule;
 import software.wings.security.annotations.DelegateAuth;
 import software.wings.security.annotations.LearningEngineAuth;
+import software.wings.security.annotations.ListAPI;
 import software.wings.security.annotations.PublicApi;
+import software.wings.security.annotations.Scope;
+import software.wings.service.impl.security.auth.AuthHandler;
 import software.wings.service.intfc.AppService;
 import software.wings.service.intfc.AuditService;
 import software.wings.service.intfc.AuthService;
+import software.wings.service.intfc.FeatureFlagService;
 import software.wings.service.intfc.UserService;
 
 import java.lang.reflect.Method;
 import java.util.ArrayList;
+import java.util.Arrays;
+import java.util.HashSet;
 import java.util.List;
+import java.util.Map;
+import java.util.Optional;
+import java.util.Set;
 import java.util.stream.Collectors;
 import java.util.stream.Stream;
 import javax.annotation.Priority;
@@ -65,8 +82,10 @@ public class AuthRuleFilter implements ContainerRequestFilter {
   private AuditService auditService;
   private AuditHelper auditHelper;
   private AuthService authService;
+  private AuthHandler authHandler;
   private UserService userService;
   private AppService appService;
+  private FeatureFlagService featureFlagService;
 
   /**
    * Instantiates a new Auth rule filter.
@@ -79,12 +98,14 @@ public class AuthRuleFilter implements ContainerRequestFilter {
    */
   @Inject
   public AuthRuleFilter(AuditService auditService, AuditHelper auditHelper, AuthService authService,
-      AppService appService, UserService userService) {
+      AuthHandler authHandler, AppService appService, UserService userService, FeatureFlagService featureFlagService) {
     this.auditService = auditService;
     this.auditHelper = auditHelper;
     this.authService = authService;
+    this.authHandler = authHandler;
     this.appService = appService;
     this.userService = userService;
+    this.featureFlagService = featureFlagService;
   }
 
   /* (non-Javadoc)
@@ -94,11 +115,6 @@ public class AuthRuleFilter implements ContainerRequestFilter {
   public void filter(ContainerRequestContext requestContext) {
     if (authorizationExemptedRequest(requestContext)) {
       return; // do nothing
-    }
-    List<PermissionAttribute> requiredPermissionAttributes = getAllRequiredPermissionAttributes(requestContext);
-    if (isEmpty(requiredPermissionAttributes)) {
-      logger.error("Requested Resource: {}", requestContext.getUriInfo().getPath());
-      throw new WingsException(ACCESS_DENIED);
     }
 
     MultivaluedMap<String, String> pathParameters = requestContext.getUriInfo().getPathParameters();
@@ -139,10 +155,6 @@ public class AuthRuleFilter implements ContainerRequestFilter {
       UserThreadLocal.set(user);
     }
 
-    if (allLoggedInScope(requiredPermissionAttributes)) {
-      return;
-    }
-
     String accountId = getRequestParamFromContext("accountId", pathParameters, queryParameters);
     List<String> appIdsFromRequest = getRequestParamsFromContext("appId", pathParameters, queryParameters);
     boolean emptyAppIdsInReq = isEmpty(appIdsFromRequest);
@@ -154,6 +166,53 @@ public class AuthRuleFilter implements ContainerRequestFilter {
       accountId = appService.get(appIdsFromRequest.get(0)).getAccountId();
     }
 
+    if (accountId == null && requestContext.getUriInfo().getPath().startsWith("users/user")) {
+      return;
+    }
+
+    boolean rbacEnabledForAccount = isRbacEnabledForAccount(accountId);
+
+    if (user != null) {
+      user.setUseNewRbac(rbacEnabledForAccount);
+    }
+
+    List<PermissionAttribute> requiredPermissionAttributes;
+    List<String> appIdsOfAccount = getValidAppsFromAccount(accountId, appIdsFromRequest, emptyAppIdsInReq);
+
+    if (rbacEnabledForAccount) {
+      requiredPermissionAttributes = getAllRequiredPermissionAttributes(requestContext);
+
+      if (isEmpty(requiredPermissionAttributes)) {
+        if (user != null) {
+          UserRequestContextBuilder userRequestContextBuilder =
+              UserRequestContext.builder().accountId(accountId).entityInfoMap(Maps.newHashMap());
+
+          UserPermissionInfo userPermissionInfo = authService.getUserPermissionInfo(accountId, user);
+          userRequestContextBuilder.userPermissionInfo(userPermissionInfo);
+
+          Set<String> allowedAppIds = getAllowedAppIds(userPermissionInfo);
+          setAppIdFilterInUserRequestContext(userRequestContextBuilder, emptyAppIdsInReq, allowedAppIds);
+
+          user.setUserRequestContext(userRequestContextBuilder.build());
+        }
+
+        logger.info("No permission attribute is required for request: {}", requestContext.getUriInfo().getPath());
+        return;
+      }
+
+    } else {
+      requiredPermissionAttributes = getAllRequiredPermissionAttrFromScope(requestContext);
+
+      if (isEmpty(requiredPermissionAttributes)) {
+        logger.error("Requested Resource is not authorized: {}", requestContext.getUriInfo().getPath());
+        throw new WingsException(ACCESS_DENIED);
+      }
+    }
+
+    if (allLoggedInScope(requiredPermissionAttributes)) {
+      return;
+    }
+
     if (accountId == null) {
       if (emptyAppIdsInReq) {
         throw new WingsException(INVALID_REQUEST).addParam("message", "appId not specified");
@@ -163,27 +222,157 @@ public class AuthRuleFilter implements ContainerRequestFilter {
 
     if (user != null) {
       final String accountIdFinal = accountId;
-      if (user.getAccounts().stream().filter(account -> account.getUuid().equals(accountIdFinal)).count() != 1) {
+      if (!user.getAccounts()
+               .stream()
+               .filter(account -> account.getUuid().equals(accountIdFinal))
+               .findFirst()
+               .isPresent()) {
         throw new WingsException(INVALID_REQUEST, HARMLESS)
             .addParam("message", "User not authorized to access the given account");
       }
     }
 
-    List<String> appIdsOfAccount = getValidAppsFromAccount(accountId, appIdsFromRequest, emptyAppIdsInReq);
-    UserRequestInfoBuilder userRequestInfoBuilder =
-        anUserRequestInfo()
-            .withAccountId(accountId)
-            .withAppIds(appIdsFromRequest)
-            .withEnvId(envId)
-            .withPermissionAttributes(ImmutableList.copyOf(requiredPermissionAttributes));
+    if (rbacEnabledForAccount) {
+      boolean skipAuth = skipAuth(requiredPermissionAttributes);
+      boolean accountLevelPermissions = isAccountLevelPermissions(requiredPermissionAttributes);
 
-    setUserRequestInfoBasedOnRole(requiredPermissionAttributes, appIdsOfAccount, userRequestInfoBuilder, user,
-        accountId, appIdsFromRequest, emptyAppIdsInReq);
+      UserRequestContext userRequestContext = buildUserRequestContext(requiredPermissionAttributes, user, accountId,
+          emptyAppIdsInReq, requestContext.getMethod(), appIdsFromRequest, skipAuth, accountLevelPermissions);
+      user.setUserRequestContext(userRequestContext);
 
-    UserRequestInfo userRequestInfo = userRequestInfoBuilder.build();
-    user.setUserRequestInfo(userRequestInfo);
+      if (!skipAuth) {
+        if (accountLevelPermissions) {
+          UserPermissionInfo userPermissionInfo = userRequestContext.getUserPermissionInfo();
+          if (userPermissionInfo == null) {
+            throw new WingsException(INVALID_REQUEST, HARMLESS).addParam("message", "User not authorized");
+          }
 
-    authService.authorize(accountId, appIdsFromRequest, envId, user, requiredPermissionAttributes, userRequestInfo);
+          AccountPermissionSummary accountPermissionSummary = userPermissionInfo.getAccountPermissionSummary();
+          if (accountPermissionSummary == null) {
+            throw new WingsException(INVALID_REQUEST, HARMLESS).addParam("message", "User not authorized");
+          }
+
+          Set<PermissionType> accountPermissions = accountPermissionSummary.getPermissions();
+          if (accountPermissions == null) {
+            throw new WingsException(INVALID_REQUEST, HARMLESS).addParam("message", "User not authorized");
+          }
+
+          if (isAuthorized(requiredPermissionAttributes, accountPermissions)) {
+            return;
+          } else {
+            throw new WingsException(INVALID_REQUEST, HARMLESS).addParam("message", "User not authorized");
+          }
+        } else {
+          // Handle delete and update methods
+          if (requestContext.getRequest().getMethod().equals(HttpMethod.PUT.name())
+              || requestContext.getMethod().equals(HttpMethod.DELETE.name())) {
+            String entityId = getEntityIdFromRequest(requiredPermissionAttributes, pathParameters, queryParameters);
+            authService.authorize(accountId, appIdsFromRequest, entityId, user, requiredPermissionAttributes);
+          } else if (requestContext.getMethod().equals(HttpMethod.POST.name())) {
+            authService.authorize(accountId, appIdsFromRequest, null, user, requiredPermissionAttributes);
+          } else if (requestContext.getMethod().equals(HttpMethod.GET.name())) {
+            String entityId = getEntityIdFromRequest(requiredPermissionAttributes, pathParameters, queryParameters);
+            // In case of list api, the entityId would be null, we enforce restrictions in WingsMongoPersistence
+            if (entityId != null) {
+              // get api
+              authService.authorize(accountId, appIdsFromRequest, entityId, user, requiredPermissionAttributes);
+            }
+          }
+        }
+      }
+
+    } else {
+      UserRequestInfoBuilder userRequestInfoBuilder =
+          UserRequestInfo.builder()
+              .accountId(accountId)
+              .appIds(appIdsFromRequest)
+              .permissionAttributes(ImmutableList.copyOf(requiredPermissionAttributes));
+
+      setUserRequestInfoBasedOnRole(
+          userRequestInfoBuilder, user, accountId, appIdsFromRequest, emptyAppIdsInReq, appIdsOfAccount);
+
+      UserRequestInfo userRequestInfo = userRequestInfoBuilder.build();
+      user.setUserRequestInfo(userRequestInfo);
+
+      authService.authorize(accountId, appIdsFromRequest, envId, user, requiredPermissionAttributes, userRequestInfo);
+    }
+  }
+
+  private boolean isAuthorized(List<PermissionAttribute> permissionAttributes, Set<PermissionType> accountPermissions) {
+    return permissionAttributes.stream()
+        .filter(permissionAttribute -> accountPermissions.contains(permissionAttribute.getPermissionType()))
+        .findFirst()
+        .isPresent();
+  }
+
+  private boolean isAccountLevelPermissions(List<PermissionAttribute> permissionAttributes) {
+    return permissionAttributes.stream()
+        .filter(permissionAttribute -> isAccountLevelPermissions(permissionAttribute.getPermissionType()))
+        .findFirst()
+        .isPresent();
+  }
+
+  private boolean isAccountLevelPermissions(PermissionType permissionType) {
+    return PermissionType.APPLICATION_CREATE_DELETE == permissionType
+        || PermissionType.USER_PERMISSION_MANAGEMENT == permissionType
+        || PermissionType.ACCOUNT_MANAGEMENT == permissionType;
+  }
+
+  private boolean isRbacEnabledForAccount(String accountId) {
+    return featureFlagService.isEnabled(FeatureName.RBAC, accountId);
+  }
+
+  private String getEntityIdFromRequest(List<PermissionAttribute> permissionAttributes,
+      MultivaluedMap<String, String> pathParameters, MultivaluedMap<String, String> queryParameters) {
+    String parameterName = getParameterName(permissionAttributes);
+    if (parameterName != null) {
+      return getEntityId(pathParameters, queryParameters, parameterName);
+    }
+
+    return null;
+  }
+
+  private String getParameterName(List<PermissionAttribute> permissionAttributes) {
+    Optional<String> entityFieldNameOptional =
+        permissionAttributes.stream()
+            .map(permissionAttribute -> {
+              if (StringUtils.isNotBlank(permissionAttribute.getParameterName())) {
+                return permissionAttribute.getParameterName();
+              }
+
+              PermissionType permissionType = permissionAttribute.getPermissionType();
+
+              String fieldName = null;
+              if (permissionType == PermissionType.SERVICE) {
+                fieldName = "serviceId";
+              } else if (permissionType == PermissionType.ENV) {
+                fieldName = "envId";
+              } else if (permissionType == PermissionType.WORKFLOW) {
+                fieldName = "workflowId";
+              } else if (permissionType == PermissionType.PIPELINE) {
+                fieldName = "pipelineId";
+              } else if (permissionType == PermissionType.DEPLOYMENT) {
+                fieldName = "workflowId";
+              }
+
+              return fieldName;
+            })
+            .findFirst();
+
+    if (entityFieldNameOptional.isPresent()) {
+      return entityFieldNameOptional.get();
+    }
+
+    return null;
+  }
+
+  private String getEntityId(MultivaluedMap<String, String> pathParameters,
+      MultivaluedMap<String, String> queryParameters, String parameterName) {
+    String entityId = queryParameters.getFirst(parameterName);
+    if (entityId == null) {
+      return pathParameters.getFirst(parameterName);
+    }
+    return entityId;
   }
 
   private List<String> getValidAppsFromAccount(
@@ -208,13 +397,76 @@ public class AuthRuleFilter implements ContainerRequestFilter {
     return appIdsOfAccount;
   }
 
-  private void setUserRequestInfoBasedOnRole(List<PermissionAttribute> requiredPermissionAttributes,
-      List<String> appIdsOfAccount, UserRequestInfoBuilder userRequestInfoBuilder, User user, String accountId,
-      List<String> appIds, boolean emptyAppIdsInReq) {
+  private Set<String> getAllowedAppIds(UserPermissionInfo userPermissionInfo) {
+    Set<String> allowedAppIds;
+
+    Map<String, AppPermissionSummaryForUI> appPermissionMap = userPermissionInfo.getAppPermissionMap();
+
+    if (MapUtils.isNotEmpty(appPermissionMap)) {
+      allowedAppIds = appPermissionMap.keySet();
+    } else {
+      allowedAppIds = new HashSet<>();
+    }
+    return allowedAppIds;
+  }
+
+  private UserRequestContext buildUserRequestContext(List<PermissionAttribute> requiredPermissionAttributes, User user,
+      String accountId, boolean emptyAppIdsInReq, String httpMethod, List<String> appIdsFromRequest, boolean skipAuth,
+      boolean accountLevelPermissions) {
+    UserRequestContextBuilder userRequestContextBuilder =
+        UserRequestContext.builder().accountId(accountId).entityInfoMap(Maps.newHashMap());
+
+    UserPermissionInfo userPermissionInfo = authService.getUserPermissionInfo(accountId, user);
+    userRequestContextBuilder.userPermissionInfo(userPermissionInfo);
+
+    Set<String> allowedAppIds = getAllowedAppIds(userPermissionInfo);
+
+    boolean appIdFilterRequired =
+        setAppIdFilterInUserRequestContext(userRequestContextBuilder, emptyAppIdsInReq, allowedAppIds);
+
+    UserRequestContext userRequestContext = userRequestContextBuilder.build();
+
+    if (!accountLevelPermissions) {
+      authHandler.setEntityIdFilterIfGet(httpMethod, skipAuth, requiredPermissionAttributes, userRequestContext,
+          appIdFilterRequired, allowedAppIds, appIdsFromRequest);
+    }
+    return userRequestContext;
+  }
+
+  private boolean skipAuth(List<PermissionAttribute> requiredPermissionAttributes) {
+    if (CollectionUtils.isEmpty(requiredPermissionAttributes)) {
+      return false;
+    }
+
+    return requiredPermissionAttributes.stream()
+        .filter(permissionAttribute -> permissionAttribute.isSkipAuth())
+        .findFirst()
+        .isPresent();
+  }
+
+  private boolean setAppIdFilterInUserRequestContext(
+      UserRequestContextBuilder userRequestContextBuilder, boolean emptyAppIdsInReq, Set<String> allowedAppIds) {
+    if (!emptyAppIdsInReq) {
+      return false;
+    }
+
+    List<ResourceType> requiredResourceTypes = getAllResourceTypes();
+    if (isPresent(requiredResourceTypes, ResourceType.APPLICATION)) {
+      userRequestContextBuilder.appIdFilterRequired(true);
+      userRequestContextBuilder.appIds(allowedAppIds);
+      return true;
+    }
+
+    return false;
+  }
+
+  private void setUserRequestInfoBasedOnRole(UserRequestInfoBuilder userRequestInfoBuilder, User user, String accountId,
+      List<String> appIdsFromRequest, boolean emptyAppIdsInReq, List<String> appIdsOfAccount) {
     if (user.isAccountAdmin(accountId) || user.isAllAppAdmin(accountId)) {
-      userRequestInfoBuilder.withAllAppsAllowed(true).withAllEnvironmentsAllowed(true);
-      if (emptyAppIdsInReq && isPresent(requiredPermissionAttributes, PermissionScope.APP)) {
-        userRequestInfoBuilder.withAppIdFilterRequired(true).withAllowedAppIds(ImmutableList.copyOf(appIdsOfAccount));
+      userRequestInfoBuilder.allAppsAllowed(true).allEnvironmentsAllowed(true);
+      List<ResourceType> requiredResourceTypes = getAllResourceTypes();
+      if (emptyAppIdsInReq && isPresent(requiredResourceTypes, ResourceType.APPLICATION)) {
+        userRequestInfoBuilder.appIdFilterRequired(true).allowedAppIds(ImmutableList.copyOf(appIdsOfAccount));
       }
     } else {
       // TODO:
@@ -234,9 +486,9 @@ public class AuthRuleFilter implements ContainerRequestFilter {
       }
 
       if (!emptyAppIdsInReq) {
-        for (String appId : appIds) {
+        for (String appId : appIdsFromRequest) {
           if (user.isAppAdmin(accountId, appId)) {
-            userRequestInfoBuilder.withAllEnvironmentsAllowed(true);
+            userRequestInfoBuilder.allEnvironmentsAllowed(true);
           } else {
             ApplicationRole applicationRole = userService.getUserApplicationRole(user.getUuid(), appId);
             if (applicationRole != null) {
@@ -244,35 +496,33 @@ public class AuthRuleFilter implements ContainerRequestFilter {
               if (environmentRoles != null) {
                 ImmutableList<String> envIds = copyOf(
                     environmentRoles.stream().map(EnvironmentRole::getEnvId).distinct().collect(Collectors.toList()));
-                userRequestInfoBuilder.withAllEnvironmentsAllowed(false).withAllowedEnvIds(envIds);
+                userRequestInfoBuilder.allEnvironmentsAllowed(false).allowedEnvIds(envIds);
               } else {
-                userRequestInfoBuilder.withAllEnvironmentsAllowed(false).withAllowedEnvIds(
+                userRequestInfoBuilder.allEnvironmentsAllowed(false).allowedEnvIds(
                     ImmutableList.<String>builder().build());
               }
             } else {
-              userRequestInfoBuilder.withAllEnvironmentsAllowed(false).withAllowedEnvIds(
+              userRequestInfoBuilder.allEnvironmentsAllowed(false).allowedEnvIds(
                   ImmutableList.<String>builder().build());
             }
           }
         }
       }
 
-      userRequestInfoBuilder.withAllAppsAllowed(false).withAllowedAppIds(allowedAppIds);
+      userRequestInfoBuilder.allAppsAllowed(false).allowedAppIds(allowedAppIds);
     }
   }
 
-  private boolean isPresent(List<PermissionAttribute> requiredPermissionAttributes, PermissionScope permissionScope) {
-    for (PermissionAttribute permissionAttribute : requiredPermissionAttributes) {
-      if (permissionAttribute.getScope() == permissionScope) {
-        return true;
-      }
-    }
-    return false;
+  private boolean isPresent(List<ResourceType> requiredResourceTypes, ResourceType resourceType) {
+    return requiredResourceTypes.stream()
+        .filter(requiredResourceType -> requiredResourceType == resourceType)
+        .findFirst()
+        .isPresent();
   }
 
   private boolean allLoggedInScope(List<PermissionAttribute> requiredPermissionAttributes) {
     return !requiredPermissionAttributes.parallelStream()
-                .filter(permissionAttribute -> permissionAttribute.getScope() != PermissionScope.LOGGED_IN)
+                .filter(permissionAttribute -> permissionAttribute.getPermissionType() != PermissionType.LOGGED_IN)
                 .findFirst()
                 .isPresent();
   }
@@ -327,12 +577,95 @@ public class AuthRuleFilter implements ContainerRequestFilter {
         || resourceClass.getAnnotation(LearningEngineAuth.class) != null;
   }
 
+  private boolean listAPI() {
+    Class<?> resourceClass = resourceInfo.getResourceClass();
+    Method resourceMethod = resourceInfo.getResourceMethod();
+
+    return resourceMethod.getAnnotation(ListAPI.class) != null || resourceClass.getAnnotation(ListAPI.class) != null;
+  }
+
   private List<PermissionAttribute> getAllRequiredPermissionAttributes(ContainerRequestContext requestContext) {
     List<PermissionAttribute> methodPermissionAttributes = new ArrayList<>();
     List<PermissionAttribute> classPermissionAttributes = new ArrayList<>();
 
     Method resourceMethod = resourceInfo.getResourceMethod();
     AuthRule methodAnnotations = resourceMethod.getAnnotation(AuthRule.class);
+    if (null != methodAnnotations) {
+      methodPermissionAttributes.add(new PermissionAttribute(null, methodAnnotations.permissionType(),
+          getAction(methodAnnotations, requestContext.getMethod()), requestContext.getMethod(),
+          methodAnnotations.parameterName(), methodAnnotations.dbFieldName(), methodAnnotations.dbCollectionName(),
+          methodAnnotations.skipAuth()));
+    }
+
+    Class<?> resourceClass = resourceInfo.getResourceClass();
+    AuthRule classAnnotations = resourceClass.getAnnotation(AuthRule.class);
+    if (null != classAnnotations) {
+      classPermissionAttributes.add(new PermissionAttribute(null, classAnnotations.permissionType(),
+          getAction(classAnnotations, requestContext.getMethod()), requestContext.getMethod(),
+          classAnnotations.parameterName(), classAnnotations.dbFieldName(), classAnnotations.dbCollectionName(),
+          classAnnotations.skipAuth()));
+    }
+
+    if (methodPermissionAttributes.isEmpty()) {
+      return classPermissionAttributes;
+    } else {
+      return methodPermissionAttributes;
+    }
+  }
+
+  private Action getAction(AuthRule authRule, String method) {
+    Action action;
+    if (authRule.action() == Action.DEFAULT) {
+      action = getDefaultAction(method);
+    } else {
+      action = authRule.action();
+    }
+    return action;
+  }
+
+  private Action getDefaultAction(String method) {
+    if (HttpMethod.GET.name().equals(method)) {
+      return Action.READ;
+    } else if (HttpMethod.PUT.name().equals(method)) {
+      return Action.UPDATE;
+    } else if (HttpMethod.POST.name().equals(method)) {
+      return Action.CREATE;
+    } else if (HttpMethod.DELETE.name().equals(method)) {
+      return Action.DELETE;
+    }
+
+    return Action.READ;
+  }
+
+  private List<ResourceType> getAllResourceTypes() {
+    List<ResourceType> methodResourceTypes = new ArrayList<>();
+    List<ResourceType> classResourceTypes = new ArrayList<>();
+
+    Method resourceMethod = resourceInfo.getResourceMethod();
+    Scope methodAnnotations = resourceMethod.getAnnotation(Scope.class);
+    if (null != methodAnnotations) {
+      methodResourceTypes = Arrays.asList(methodAnnotations.value());
+    }
+
+    Class<?> resourceClass = resourceInfo.getResourceClass();
+    Scope classAnnotations = resourceClass.getAnnotation(Scope.class);
+    if (null != classAnnotations) {
+      classResourceTypes = Arrays.asList(classAnnotations.value());
+    }
+
+    if (methodResourceTypes.isEmpty()) {
+      return classResourceTypes;
+    } else {
+      return methodResourceTypes;
+    }
+  }
+
+  private List<PermissionAttribute> getAllRequiredPermissionAttrFromScope(ContainerRequestContext requestContext) {
+    List<PermissionAttribute> methodPermissionAttributes = new ArrayList<>();
+    List<PermissionAttribute> classPermissionAttributes = new ArrayList<>();
+
+    Method resourceMethod = resourceInfo.getResourceMethod();
+    Scope methodAnnotations = resourceMethod.getAnnotation(Scope.class);
     if (null != methodAnnotations) {
       Stream.of(methodAnnotations.value())
           .forEach(s
@@ -341,7 +674,7 @@ public class AuthRuleFilter implements ContainerRequestFilter {
     }
 
     Class<?> resourceClass = resourceInfo.getResourceClass();
-    AuthRule classAnnotations = resourceClass.getAnnotation(AuthRule.class);
+    Scope classAnnotations = resourceClass.getAnnotation(Scope.class);
     if (null != classAnnotations) {
       Stream.of(classAnnotations.value())
           .forEach(s

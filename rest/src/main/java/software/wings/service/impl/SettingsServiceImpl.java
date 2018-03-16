@@ -166,6 +166,11 @@ public class SettingsServiceImpl implements SettingsService {
 
     ImmutableMap.Builder<String, Object> fields =
         ImmutableMap.<String, Object>builder().put("name", settingAttribute.getName());
+
+    if (settingAttribute.getUsageRestrictions() != null) {
+      fields.put("usageRestrictions", settingAttribute.getUsageRestrictions());
+    }
+
     if (settingAttribute.getValue() != null) {
       if (settingAttribute.getValue() instanceof Encryptable) {
         ((Encryptable) settingAttribute.getValue()).setAccountId(settingAttribute.getAccountId());

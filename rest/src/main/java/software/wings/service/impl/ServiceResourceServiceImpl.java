@@ -634,7 +634,8 @@ public class ServiceResourceServiceImpl implements ServiceResourceService, DataP
 
   @Override
   public List<Service> findServicesByApp(String appId) {
-    return wingsPersistence.createQuery(Service.class).field("appId").equal(appId).asList();
+    PageRequest<Service> pageRequest = aPageRequest().addFilter("appId", EQ, appId).build();
+    return wingsPersistence.query(Service.class, pageRequest).getResponse();
   }
 
   @Override

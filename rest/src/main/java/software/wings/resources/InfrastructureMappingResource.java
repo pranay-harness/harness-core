@@ -1,5 +1,11 @@
 package software.wings.resources;
 
+import static software.wings.security.PermissionAttribute.Action.READ;
+import static software.wings.security.PermissionAttribute.Action.UPDATE;
+import static software.wings.security.PermissionAttribute.PermissionType.ENV;
+import static software.wings.security.PermissionAttribute.PermissionType.LOGGED_IN;
+import static software.wings.security.PermissionAttribute.ResourceType.APPLICATION;
+
 import com.google.inject.Inject;
 
 import com.codahale.metrics.annotation.ExceptionMetered;
@@ -12,8 +18,8 @@ import software.wings.beans.InfrastructureMapping;
 import software.wings.beans.RestResponse;
 import software.wings.dl.PageRequest;
 import software.wings.dl.PageResponse;
-import software.wings.security.PermissionAttribute.ResourceType;
 import software.wings.security.annotations.AuthRule;
+import software.wings.security.annotations.Scope;
 import software.wings.service.intfc.AppService;
 import software.wings.service.intfc.InfrastructureMappingService;
 import software.wings.settings.SettingValue.SettingVariableTypes;
@@ -40,7 +46,7 @@ import javax.ws.rs.QueryParam;
 @Path("infrastructure-mappings")
 @Produces("application/json")
 @Consumes("application/json")
-@AuthRule(ResourceType.APPLICATION)
+@Scope(APPLICATION)
 public class InfrastructureMappingResource {
   @Inject private InfrastructureMappingService infrastructureMappingService;
   @Inject private AppService appService;
@@ -48,6 +54,7 @@ public class InfrastructureMappingResource {
   @GET
   @Timed
   @ExceptionMetered
+  @AuthRule(permissionType = ENV, action = READ)
   public RestResponse<PageResponse<InfrastructureMapping>> list(
       @BeanParam PageRequest<InfrastructureMapping> pageRequest) {
     return new RestResponse<>(infrastructureMappingService.list(pageRequest));
@@ -56,6 +63,7 @@ public class InfrastructureMappingResource {
   @POST
   @Timed
   @ExceptionMetered
+  @AuthRule(permissionType = ENV, action = UPDATE)
   public RestResponse<InfrastructureMapping> save(@QueryParam("appId") String appId, @QueryParam("envId") String envId,
       InfrastructureMapping infrastructureMapping) {
     infrastructureMapping.setAppId(appId);
@@ -68,6 +76,7 @@ public class InfrastructureMappingResource {
   @Path("{infraMappingId}")
   @Timed
   @ExceptionMetered
+  @AuthRule(permissionType = ENV, action = READ)
   public RestResponse<InfrastructureMapping> get(@QueryParam("appId") String appId, @QueryParam("envId") String envId,
       @PathParam("infraMappingId") String infraMappingId) {
     return new RestResponse<>(infrastructureMappingService.get(appId, infraMappingId));
@@ -77,6 +86,7 @@ public class InfrastructureMappingResource {
   @Path("compute-providers/{computeProviderId}/hosts")
   @Timed
   @ExceptionMetered
+  @AuthRule(permissionType = ENV, action = READ)
   public RestResponse<List<String>> listComputeProviderHosts(@QueryParam("appId") String appId,
       @QueryParam("envId") String envId, @QueryParam("serviceId") String serviceId,
       @PathParam("computeProviderId") String computeProviderId) {
@@ -88,6 +98,7 @@ public class InfrastructureMappingResource {
   @Path("{infraMappingId}/hosts")
   @Timed
   @ExceptionMetered
+  @AuthRule(permissionType = ENV, action = READ, skipAuth = true)
   public RestResponse<List<String>> listHosts(
       @QueryParam("appId") String appId, @PathParam("infraMappingId") String infraMappingId) {
     return new RestResponse<>(infrastructureMappingService.listHostDisplayNames(appId, infraMappingId, null));
@@ -97,6 +108,7 @@ public class InfrastructureMappingResource {
   @Path("{infraMappingId}/containers")
   @Timed
   @ExceptionMetered
+  @AuthRule(permissionType = ENV, action = READ, skipAuth = true)
   public RestResponse<String> getRunningContainerCount(@QueryParam("appId") String appId,
       @QueryParam("serviceNameExpr") String serviceNameExpr, @PathParam("infraMappingId") String infraMappingId) {
     return new RestResponse<>(
@@ -107,6 +119,7 @@ public class InfrastructureMappingResource {
   @Path("{infraMappingId}")
   @Timed
   @ExceptionMetered
+  @AuthRule(permissionType = ENV, action = UPDATE)
   public RestResponse<InfrastructureMapping> update(@QueryParam("appId") String appId,
       @QueryParam("envId") String envId, @PathParam("infraMappingId") String infraMappingId,
       InfrastructureMapping infrastructureMapping) {
@@ -120,6 +133,7 @@ public class InfrastructureMappingResource {
   @Path("{infraMappingId}")
   @Timed
   @ExceptionMetered
+  @AuthRule(permissionType = ENV, action = UPDATE)
   public RestResponse delete(@QueryParam("appId") String appId, @QueryParam("envId") String envId,
       @PathParam("infraMappingId") String infraMappingId) {
     infrastructureMappingService.delete(appId, infraMappingId);
@@ -130,6 +144,7 @@ public class InfrastructureMappingResource {
   @Path("stencils")
   @Timed
   @ExceptionMetered
+  @AuthRule(permissionType = LOGGED_IN)
   public RestResponse<Map<String, Object>> infrastructureMappingSchema(@QueryParam("appId") String appId) {
     return new RestResponse<>(infrastructureMappingService.getInfraMappingStencils(appId));
   }
@@ -138,6 +153,7 @@ public class InfrastructureMappingResource {
   @Path("infra-types")
   @Timed
   @ExceptionMetered
+  @AuthRule(permissionType = ENV, action = READ)
   public RestResponse<Map<DeploymentType, List<SettingVariableTypes>>> infrastructureTypes(
       @QueryParam("appId") String appId, @QueryParam("envId") String envId, @QueryParam("serviceId") String serviceId) {
     return new RestResponse<>(infrastructureMappingService.listInfraTypes(appId, envId, serviceId));
@@ -147,6 +163,7 @@ public class InfrastructureMappingResource {
   @Path("compute-providers/{computeProviderId}/clusters")
   @Timed
   @ExceptionMetered
+  @AuthRule(permissionType = ENV, action = READ, skipAuth = true)
   public RestResponse<List<String>> getClusterNames(@QueryParam("appId") String appId,
       @QueryParam("deploymentType") String deploymentType, @QueryParam("region") String region,
       @PathParam("computeProviderId") String computeProviderId) {
@@ -158,6 +175,7 @@ public class InfrastructureMappingResource {
   @Path("validate-hosts")
   @Timed
   @ExceptionMetered
+  @AuthRule(permissionType = ENV, action = UPDATE)
   public RestResponse<List<HostValidationResponse>> get(
       @QueryParam("appId") String appId, @QueryParam("envId") String envId, HostValidationRequest validationRequest) {
     validationRequest.setAppId(appId);
@@ -169,6 +187,7 @@ public class InfrastructureMappingResource {
   @Path("compute-providers/{computeProviderId}/instanceTypes")
   @Timed
   @ExceptionMetered
+  @AuthRule(permissionType = ENV, action = READ, skipAuth = true)
   public RestResponse<List<String>> getInstanceTypes(@QueryParam("appId") String appId,
       @QueryParam("deploymentType") String deploymentType, @PathParam("computeProviderId") String computeProviderId) {
     return new RestResponse<>(infrastructureMappingService.listInstanceTypes(appId, deploymentType, computeProviderId));
@@ -178,6 +197,7 @@ public class InfrastructureMappingResource {
   @Path("compute-providers/{computeProviderId}/regions")
   @Timed
   @ExceptionMetered
+  @AuthRule(permissionType = ENV, action = READ, skipAuth = true)
   public RestResponse<List<String>> getRegions(@QueryParam("appId") String appId,
       @QueryParam("deploymentType") String deploymentType, @PathParam("computeProviderId") String computeProviderId) {
     return new RestResponse<>(infrastructureMappingService.listRegions(appId, deploymentType, computeProviderId));
@@ -187,6 +207,7 @@ public class InfrastructureMappingResource {
   @Path("compute-providers/{computeProviderId}/instance-roles")
   @Timed
   @ExceptionMetered
+  @AuthRule(permissionType = ENV, action = READ, skipAuth = true)
   public RestResponse<List<String>> getInstanceRoles(@QueryParam("appId") String appId,
       @QueryParam("deploymentType") String deploymentType, @PathParam("computeProviderId") String computeProviderId) {
     return new RestResponse<>(infrastructureMappingService.listInstanceRoles(appId, deploymentType, computeProviderId));
@@ -196,6 +217,7 @@ public class InfrastructureMappingResource {
   @Path("compute-providers/{computeProviderId}/vpcs")
   @Timed
   @ExceptionMetered
+  @AuthRule(permissionType = ENV, action = READ, skipAuth = true)
   public RestResponse<List<String>> listVpcs(@QueryParam("appId") String appId, @QueryParam("region") String region,
       @PathParam("computeProviderId") String computeProviderId) {
     return new RestResponse<>(infrastructureMappingService.listVPC(appId, computeProviderId, region));
@@ -205,6 +227,7 @@ public class InfrastructureMappingResource {
   @Path("compute-providers/{computeProviderId}/security-groups")
   @Timed
   @ExceptionMetered
+  @AuthRule(permissionType = ENV, action = READ, skipAuth = true)
   public RestResponse<List<String>> listSecurityGroups(@QueryParam("appId") String appId,
       @QueryParam("region") String region, @QueryParam("vpcIds") @NotNull List<String> vpcIds,
       @PathParam("computeProviderId") String computeProviderId) {
@@ -216,6 +239,7 @@ public class InfrastructureMappingResource {
   @Path("compute-providers/{computeProviderId}/subnets")
   @Timed
   @ExceptionMetered
+  @AuthRule(permissionType = ENV, action = READ, skipAuth = true)
   public RestResponse<List<String>> listSubnets(@QueryParam("appId") String appId, @QueryParam("region") String region,
       @QueryParam("vpcIds") @NotNull List<String> vpcIds, @PathParam("computeProviderId") String computeProviderId) {
     return new RestResponse<>(infrastructureMappingService.listSubnets(appId, computeProviderId, region, vpcIds));
@@ -225,6 +249,7 @@ public class InfrastructureMappingResource {
   @Path("compute-providers/{computeProviderId}/tags")
   @Timed
   @ExceptionMetered
+  @AuthRule(permissionType = ENV, action = READ, skipAuth = true)
   public RestResponse<Set<String>> listTags(@QueryParam("appId") String appId, @QueryParam("region") String region,
       @PathParam("computeProviderId") String computeProviderId) {
     return new RestResponse<>(infrastructureMappingService.listTags(appId, computeProviderId, region));
@@ -234,6 +259,7 @@ public class InfrastructureMappingResource {
   @Path("compute-providers/{computeProviderId}/auto-scaling-groups")
   @Timed
   @ExceptionMetered
+  @AuthRule(permissionType = ENV, action = READ, skipAuth = true)
   public RestResponse<List<String>> listAutoScalingGroups(@QueryParam("appId") String appId,
       @QueryParam("region") String region, @PathParam("computeProviderId") String computeProviderId) {
     return new RestResponse<>(infrastructureMappingService.listAutoScalingGroups(appId, computeProviderId, region));
@@ -243,6 +269,7 @@ public class InfrastructureMappingResource {
   @Path("{infraMappingId}/iam-roles")
   @Timed
   @ExceptionMetered
+  @AuthRule(permissionType = ENV, action = READ, skipAuth = true)
   public RestResponse<Map<String, String>> getInstanceRoles(
       @QueryParam("appId") String appId, @PathParam("infraMappingId") String infraMappingId) {
     return new RestResponse<>(infrastructureMappingService.listAwsIamRoles(appId, infraMappingId));
@@ -252,6 +279,7 @@ public class InfrastructureMappingResource {
   @Path("compute-providers/{computeProviderId}/roles")
   @Timed
   @ExceptionMetered
+  @AuthRule(permissionType = ENV, action = READ, skipAuth = true)
   public RestResponse<Map<String, String>> getRoles(@QueryParam("appId") String appId,
       @QueryParam("deploymentType") String deploymentType, @PathParam("computeProviderId") String computeProviderId) {
     return new RestResponse<>(infrastructureMappingService.listAllRoles(appId, computeProviderId));
@@ -261,6 +289,7 @@ public class InfrastructureMappingResource {
   @Path("{infraMappingId}/load-balancers")
   @Timed
   @ExceptionMetered
+  @AuthRule(permissionType = ENV, action = READ, skipAuth = true)
   public RestResponse<Map<String, String>> getLoadBalancers(
       @QueryParam("appId") String appId, @PathParam("infraMappingId") String infraMappingId) {
     return new RestResponse<>(infrastructureMappingService.listLoadBalancers(appId, infraMappingId));
@@ -270,6 +299,7 @@ public class InfrastructureMappingResource {
   @Path("{infraMappingId}/load-balancers/{loadbalancerName}/target-groups")
   @Timed
   @ExceptionMetered
+  @AuthRule(permissionType = ENV, action = READ, skipAuth = true)
   public RestResponse<Map<String, String>> getTargetGroups(@QueryParam("appId") String appId,
       @PathParam("infraMappingId") String infraMappingId, @PathParam("loadbalancerName") String loadbalancerName) {
     return new RestResponse<>(infrastructureMappingService.listTargetGroups(appId, infraMappingId, loadbalancerName));
@@ -279,6 +309,7 @@ public class InfrastructureMappingResource {
   @Path("compute-providers/{computeProviderId}/load-balancers")
   @Timed
   @ExceptionMetered
+  @AuthRule(permissionType = ENV, action = READ, skipAuth = true)
   public RestResponse<Map<String, String>> getLoadBalancers(@QueryParam("appId") String appId,
       @QueryParam("deploymentType") String deploymentType, @PathParam("computeProviderId") String computeProviderId) {
     return new RestResponse<>(infrastructureMappingService.listLoadBalancers(appId, deploymentType, computeProviderId));
@@ -288,6 +319,7 @@ public class InfrastructureMappingResource {
   @Path("compute-providers/{computeProviderId}/classic-load-balancers")
   @Timed
   @ExceptionMetered
+  @AuthRule(permissionType = ENV, action = READ, skipAuth = true)
   public RestResponse<List<String>> getClassicLoadBalancers(@QueryParam("appId") String appId,
       @QueryParam("region") String region, @PathParam("computeProviderId") String computeProviderId) {
     return new RestResponse<>(infrastructureMappingService.listClassicLoadBalancers(appId, computeProviderId, region));
@@ -297,6 +329,7 @@ public class InfrastructureMappingResource {
   @Path("compute-providers/{computeProviderId}/load-balancer/{loadbalancerName}/target-groups")
   @Timed
   @ExceptionMetered
+  @AuthRule(permissionType = ENV, action = READ, skipAuth = true)
   public RestResponse<Map<String, String>> getTargetGroups(@QueryParam("appId") String appId,
       @QueryParam("deploymentType") String deploymentType, @PathParam("computeProviderId") String computeProviderId,
       @PathParam("loadbalancerName") String loadbalancerName) {
@@ -308,6 +341,7 @@ public class InfrastructureMappingResource {
   @Path("elastic-load-balancers")
   @Timed
   @ExceptionMetered
+  @AuthRule(permissionType = ENV, action = READ, skipAuth = true)
   public RestResponse<List<String>> getElasticLoadBalancers(@QueryParam("accountId") String accountId,
       @QueryParam("accessKey") String accessKey, @QueryParam("secretKey") String secretKey,
       @QueryParam("region") String region) {
@@ -319,6 +353,7 @@ public class InfrastructureMappingResource {
   @Path("compute-providers/{computeProviderId}/target-groups")
   @Timed
   @ExceptionMetered
+  @AuthRule(permissionType = ENV, action = READ, skipAuth = true)
   public RestResponse<Map<String, String>> getAlbTargetGroups(@QueryParam("appId") String appId,
       @QueryParam("region") String region, @PathParam("computeProviderId") String computeProviderId) {
     return new RestResponse<>(infrastructureMappingService.listAlbTargetGroups(appId, computeProviderId, region));
@@ -328,6 +363,7 @@ public class InfrastructureMappingResource {
   @Path("compute-providers/{computeProviderId}/codedeploy/application-names")
   @Timed
   @ExceptionMetered
+  @AuthRule(permissionType = ENV, action = READ, skipAuth = true)
   public RestResponse<List<String>> getCodeDeployApplicationNames(@QueryParam("appId") String appId,
       @QueryParam("region") String region, @PathParam("computeProviderId") String computeProviderId) {
     return new RestResponse<>(infrastructureMappingService.listCodeDeployApplicationNames(computeProviderId, region));
@@ -337,6 +373,7 @@ public class InfrastructureMappingResource {
   @Path("compute-providers/{computeProviderId}/codedeploy/deployment-groups")
   @Timed
   @ExceptionMetered
+  @AuthRule(permissionType = ENV, action = READ, skipAuth = true)
   public RestResponse<List<String>> getCodeDeployDeploymentGroups(@QueryParam("appId") String appId,
       @QueryParam("region") String region, @QueryParam("applicationName") String applicationName,
       @PathParam("computeProviderId") String computeProviderId) {
@@ -348,6 +385,7 @@ public class InfrastructureMappingResource {
   @Path("compute-providers/{computeProviderId}/codedeploy/deployment-configs")
   @Timed
   @ExceptionMetered
+  @AuthRule(permissionType = ENV, action = READ, skipAuth = true)
   public RestResponse<List<String>> getCodeDeployDeploymentConfigs(@QueryParam("appId") String appId,
       @QueryParam("region") String region, @PathParam("computeProviderId") String computeProviderId) {
     return new RestResponse<>(infrastructureMappingService.listCodeDeployDeploymentConfigs(computeProviderId, region));

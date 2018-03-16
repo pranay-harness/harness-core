@@ -12,6 +12,7 @@ import org.hibernate.validator.constraints.NotEmpty;
 import software.wings.annotation.Encryptable;
 import software.wings.annotation.Encrypted;
 import software.wings.settings.SettingValue;
+import software.wings.settings.UsageRestrictions;
 import software.wings.yaml.setting.CloudProviderYaml;
 
 @JsonTypeName("AZURE")
@@ -55,8 +56,9 @@ public class AzureConfig extends SettingValue implements Encryptable {
     private String key;
 
     @Builder
-    public Yaml(String type, String harnessApiVersion, String clientId, String tenantId, String key) {
-      super(type, harnessApiVersion);
+    public Yaml(String type, String harnessApiVersion, String clientId, String tenantId, String key,
+        UsageRestrictions usageRestrictions) {
+      super(type, harnessApiVersion, usageRestrictions);
       this.clientId = clientId;
       this.tenantId = tenantId;
       this.key = key;

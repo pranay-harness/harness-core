@@ -3,6 +3,7 @@ package software.wings.resources;
 import static io.harness.data.structure.UUIDGenerator.generateUuid;
 import static javax.ws.rs.core.MediaType.MULTIPART_FORM_DATA;
 import static software.wings.delegatetasks.DelegateFile.Builder.aDelegateFile;
+import static software.wings.security.PermissionAttribute.ResourceType.DELEGATE;
 import static software.wings.service.intfc.FileService.FileBucket.ARTIFACTS;
 
 import com.google.common.io.Files;
@@ -21,9 +22,8 @@ import software.wings.app.MainConfiguration;
 import software.wings.beans.FileMetadata;
 import software.wings.beans.RestResponse;
 import software.wings.delegatetasks.DelegateFile;
-import software.wings.security.PermissionAttribute.ResourceType;
-import software.wings.security.annotations.AuthRule;
 import software.wings.security.annotations.DelegateAuth;
+import software.wings.security.annotations.Scope;
 import software.wings.security.encryption.EncryptionUtils;
 import software.wings.service.intfc.ConfigService;
 import software.wings.service.intfc.FileService;
@@ -48,7 +48,7 @@ import javax.ws.rs.core.StreamingOutput;
 @Api("delegateFiles")
 @Path("/delegateFiles")
 @Produces("application/json")
-@AuthRule(ResourceType.DELEGATE)
+@Scope(DELEGATE)
 public class DelegateFileResource {
   private static final Logger logger = LoggerFactory.getLogger(DelegateFileResource.class);
 

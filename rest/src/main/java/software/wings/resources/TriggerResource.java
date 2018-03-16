@@ -15,7 +15,7 @@ import software.wings.beans.trigger.Trigger;
 import software.wings.beans.trigger.WebhookParameters;
 import software.wings.dl.PageRequest;
 import software.wings.dl.PageResponse;
-import software.wings.security.annotations.AuthRule;
+import software.wings.security.annotations.Scope;
 import software.wings.service.intfc.TriggerService;
 import software.wings.utils.Validator;
 
@@ -38,7 +38,7 @@ import javax.ws.rs.QueryParam;
 @Path("/triggers")
 @Produces("application/json")
 @Consumes("application/json")
-@AuthRule(APPLICATION)
+@Scope(APPLICATION)
 public class TriggerResource {
   private TriggerService triggerService;
 

@@ -4,9 +4,9 @@ import software.wings.beans.RestResponse;
 import software.wings.beans.User;
 import software.wings.security.PermissionAttribute.ResourceType;
 import software.wings.security.UserThreadLocal;
-import software.wings.security.annotations.AuthRule;
 import software.wings.security.annotations.DelegateAuth;
 import software.wings.security.annotations.PublicApi;
+import software.wings.security.annotations.Scope;
 
 import javax.ws.rs.GET;
 import javax.ws.rs.POST;
@@ -39,7 +39,7 @@ public class SecureResource {
    */
   @GET
   @Path("NonPublicApi")
-  @AuthRule(ResourceType.APPLICATION)
+  @Scope(ResourceType.APPLICATION)
   public RestResponse<User> NonPublicApi() {
     return new RestResponse<>(UserThreadLocal.get());
   }
@@ -51,7 +51,7 @@ public class SecureResource {
    */
   @GET
   @Path("appResourceReadActionOnAppScope")
-  @AuthRule(ResourceType.APPLICATION)
+  @Scope(ResourceType.APPLICATION)
   public RestResponse<User> appResourceReadActionOnAppScope() {
     return new RestResponse<>(UserThreadLocal.get());
   }
@@ -63,7 +63,7 @@ public class SecureResource {
    */
   @POST
   @Path("appResourceWriteActionOnAppScope")
-  @AuthRule(ResourceType.APPLICATION)
+  @Scope(ResourceType.APPLICATION)
   public RestResponse<User> appResourceWriteActionOnAppScope() {
     return new RestResponse<>(UserThreadLocal.get());
   }
@@ -75,7 +75,7 @@ public class SecureResource {
    */
   @GET
   @Path("envResourceReadActionOnEnvScope")
-  @AuthRule(ResourceType.ENVIRONMENT)
+  @Scope(ResourceType.ENVIRONMENT)
   public RestResponse<User> envResourceReadActionOnEnvScope() {
     return new RestResponse<>(UserThreadLocal.get());
   }
@@ -87,14 +87,14 @@ public class SecureResource {
    */
   @POST
   @Path("envResourceWriteActionOnEnvScope")
-  @AuthRule(value = ResourceType.ENVIRONMENT)
+  @Scope(ResourceType.ENVIRONMENT)
   public RestResponse<User> envResourceWriteActionOnEnvScope() {
     return new RestResponse<>(UserThreadLocal.get());
   }
 
   @GET
   @Path("delegateAuth")
-  @AuthRule(ResourceType.DELEGATE)
+  @Scope(ResourceType.DELEGATE)
   @DelegateAuth
   public RestResponse<String> delegateAuth() {
     return new RestResponse<>("test");

@@ -2,6 +2,7 @@ package software.wings.resources;
 
 import static java.util.stream.Collectors.toList;
 import static org.apache.commons.lang3.StringUtils.isBlank;
+import static software.wings.security.PermissionAttribute.ResourceType.APPLICATION;
 
 import com.google.inject.Inject;
 
@@ -13,8 +14,7 @@ import software.wings.beans.artifact.Artifact;
 import software.wings.common.BuildDetailsComparator;
 import software.wings.helpers.ext.jenkins.BuildDetails;
 import software.wings.helpers.ext.jenkins.JobDetails;
-import software.wings.security.PermissionAttribute.ResourceType;
-import software.wings.security.annotations.AuthRule;
+import software.wings.security.annotations.Scope;
 import software.wings.service.intfc.BuildSourceService;
 
 import java.util.List;
@@ -33,7 +33,9 @@ import javax.ws.rs.QueryParam;
 @Api("build-sources")
 @Path("/build-sources")
 @Produces("application/json")
-@AuthRule(ResourceType.APPLICATION)
+// ToBeRevisited, this resource would be used from both artifact stream and verification step ui.
+// Need to find out which auth rule to apply since its only determined at runtime
+@Scope(APPLICATION)
 public class BuildSourceResource {
   @Inject private BuildSourceService buildSourceService;
 

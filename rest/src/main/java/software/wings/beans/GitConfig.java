@@ -14,6 +14,7 @@ import software.wings.annotation.Encryptable;
 import software.wings.annotation.Encrypted;
 import software.wings.jersey.JsonViews;
 import software.wings.settings.SettingValue;
+import software.wings.settings.UsageRestrictions;
 import software.wings.yaml.setting.ArtifactServerYaml;
 
 @JsonTypeName("GIT")
@@ -60,8 +61,9 @@ public class GitConfig extends SettingValue implements Encryptable {
     private String branch;
 
     @Builder
-    public Yaml(String type, String harnessApiVersion, String url, String username, String password, String branch) {
-      super(type, harnessApiVersion, url, username, password);
+    public Yaml(String type, String harnessApiVersion, String url, String username, String password, String branch,
+        UsageRestrictions usageRestrictions) {
+      super(type, harnessApiVersion, url, username, password, usageRestrictions);
       this.branch = branch;
     }
   }

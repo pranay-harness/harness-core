@@ -27,7 +27,7 @@ import software.wings.dl.PageRequest;
 import software.wings.dl.PageResponse;
 import software.wings.exception.WingsException;
 import software.wings.security.PermissionAttribute.ResourceType;
-import software.wings.security.annotations.AuthRule;
+import software.wings.security.annotations.Scope;
 import software.wings.service.intfc.SettingsService;
 import software.wings.settings.SettingValue;
 import software.wings.settings.SettingValue.SettingVariableTypes;
@@ -55,7 +55,7 @@ import javax.ws.rs.QueryParam;
 @Path("/settings")
 @Consumes(APPLICATION_JSON)
 @Produces(APPLICATION_JSON)
-@AuthRule(ResourceType.SETTING)
+@Scope(ResourceType.SETTING)
 public class SettingResource {
   @Inject private SettingsService attributeService;
 

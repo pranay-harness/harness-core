@@ -1,7 +1,7 @@
 package software.wings.service.intfc;
 
 import org.hibernate.validator.constraints.NotEmpty;
-import software.wings.beans.UserGroup;
+import software.wings.beans.security.UserGroup;
 import software.wings.dl.PageRequest;
 import software.wings.dl.PageResponse;
 

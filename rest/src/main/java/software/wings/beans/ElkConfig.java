@@ -17,6 +17,7 @@ import software.wings.service.impl.analysis.ElkConnector;
 import software.wings.service.impl.analysis.ElkValidationType;
 import software.wings.service.impl.analysis.ElkValidationTypeProvider;
 import software.wings.settings.SettingValue;
+import software.wings.settings.UsageRestrictions;
 import software.wings.stencils.DefaultValue;
 import software.wings.stencils.EnumData;
 import software.wings.yaml.setting.VerificationProviderYaml;
@@ -86,8 +87,8 @@ public class ElkConfig extends SettingValue implements Encryptable {
 
     @Builder
     public Yaml(String type, String harnessApiVersion, String elkUrl, ElkValidationType validationType, String username,
-        String password, String connectorType) {
-      super(type, harnessApiVersion);
+        String password, String connectorType, UsageRestrictions usageRestrictions) {
+      super(type, harnessApiVersion, usageRestrictions);
       this.elkUrl = elkUrl;
       this.validationType = validationType;
       this.username = username;

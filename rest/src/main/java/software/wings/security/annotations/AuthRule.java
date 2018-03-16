@@ -1,8 +1,7 @@
 package software.wings.security.annotations;
 
-import software.wings.security.PermissionAttribute;
-import software.wings.security.PermissionAttribute.PermissionScope;
-import software.wings.security.PermissionAttribute.ResourceType;
+import software.wings.security.PermissionAttribute.Action;
+import software.wings.security.PermissionAttribute.PermissionType;
 
 import java.lang.annotation.ElementType;
 import java.lang.annotation.Retention;
@@ -18,16 +17,23 @@ import javax.ws.rs.NameBinding;
 @NameBinding
 public @interface AuthRule {
   /**
-   * Value string.
+   * Scope permission permissionType.
    *
-   * @return the string
+   * @return the permission permissionType
    */
-  ResourceType[] value() default {}; /* Resource */
+  PermissionType permissionType() default PermissionType.NONE;
+
+  Action action() default Action.DEFAULT;
 
   /**
-   * Scope permission scope.
-   *
-   * @return the permission scope
+   * If the query / path parameter has a different name other than the default name for the permission type.
+   * @return
    */
-  PermissionScope scope() default PermissionAttribute.PermissionScope.NONE;
+  String parameterName() default "";
+
+  boolean skipAuth() default false;
+
+  String dbFieldName() default "";
+
+  String dbCollectionName() default "";
 }

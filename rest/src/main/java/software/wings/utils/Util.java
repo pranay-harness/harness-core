@@ -8,6 +8,8 @@ import software.wings.beans.NameValuePair;
 import software.wings.exception.WingsException;
 import software.wings.service.impl.yaml.handler.NameValuePairYamlHandler;
 
+import java.lang.reflect.ParameterizedType;
+import java.lang.reflect.Type;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
@@ -117,5 +119,13 @@ public class Util {
       }
     }
     return name;
+  }
+
+  public static Type[] getParameterizedTypes(Object object) {
+    Type superclassType = object.getClass().getGenericSuperclass();
+    if (!ParameterizedType.class.isAssignableFrom(superclassType.getClass())) {
+      return null;
+    }
+    return ((ParameterizedType) superclassType).getActualTypeArguments();
   }
 }

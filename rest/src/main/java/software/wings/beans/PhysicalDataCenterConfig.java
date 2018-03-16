@@ -5,6 +5,7 @@ import lombok.Data;
 import lombok.EqualsAndHashCode;
 import lombok.NoArgsConstructor;
 import software.wings.settings.SettingValue;
+import software.wings.settings.UsageRestrictions;
 import software.wings.yaml.setting.CloudProviderYaml;
 
 /**
@@ -73,8 +74,8 @@ public class PhysicalDataCenterConfig extends SettingValue {
   @NoArgsConstructor
   public static final class Yaml extends CloudProviderYaml {
     @lombok.Builder
-    public Yaml(String type, String harnessApiVersion) {
-      super(type, harnessApiVersion);
+    public Yaml(String type, String harnessApiVersion, UsageRestrictions usageRestrictions) {
+      super(type, harnessApiVersion, usageRestrictions);
     }
   }
 }

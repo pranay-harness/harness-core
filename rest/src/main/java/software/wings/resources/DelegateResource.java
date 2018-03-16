@@ -2,6 +2,7 @@ package software.wings.resources;
 
 import static io.harness.data.structure.EmptyPredicate.isNotEmpty;
 import static java.util.stream.Collectors.toList;
+import static software.wings.security.PermissionAttribute.ResourceType.DELEGATE;
 
 import com.google.common.collect.ImmutableMap;
 import com.google.inject.Inject;
@@ -28,10 +29,9 @@ import software.wings.common.Constants;
 import software.wings.delegatetasks.validation.DelegateConnectionResult;
 import software.wings.dl.PageRequest;
 import software.wings.dl.PageResponse;
-import software.wings.security.PermissionAttribute.ResourceType;
-import software.wings.security.annotations.AuthRule;
 import software.wings.security.annotations.DelegateAuth;
 import software.wings.security.annotations.PublicApi;
+import software.wings.security.annotations.Scope;
 import software.wings.service.intfc.DelegateScopeService;
 import software.wings.service.intfc.DelegateService;
 import software.wings.service.intfc.DownloadTokenService;
@@ -61,7 +61,7 @@ import javax.ws.rs.core.Response;
 @Api("delegates")
 @Path("/delegates")
 @Produces("application/json")
-@AuthRule(ResourceType.DELEGATE)
+@Scope(DELEGATE)
 public class DelegateResource {
   private DelegateService delegateService;
   private DelegateScopeService delegateScopeService;

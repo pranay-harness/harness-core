@@ -14,9 +14,9 @@ import software.wings.beans.ErrorCode;
 import software.wings.beans.RestResponse;
 import software.wings.exception.WingsException;
 import software.wings.security.PermissionAttribute.ResourceType;
-import software.wings.security.annotations.AuthRule;
 import software.wings.security.annotations.DelegateAuth;
 import software.wings.security.annotations.LearningEngineAuth;
+import software.wings.security.annotations.Scope;
 import software.wings.service.impl.analysis.AnalysisServiceImpl;
 import software.wings.service.impl.analysis.LogDataRecord;
 import software.wings.service.impl.analysis.LogElement;
@@ -53,7 +53,7 @@ import javax.ws.rs.QueryParam;
 @Api(LogAnalysisResource.ELK_RESOURCE_BASE_URL)
 @Path("/" + LogAnalysisResource.ELK_RESOURCE_BASE_URL)
 @Produces("application/json")
-@AuthRule(ResourceType.SETTING)
+@Scope(ResourceType.SETTING)
 public class ElkResource implements LogAnalysisResource {
   private static final Logger logger = LoggerFactory.getLogger(AnalysisServiceImpl.class);
 

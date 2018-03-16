@@ -8,7 +8,7 @@ import com.google.inject.Singleton;
 import org.atmosphere.cpr.BroadcasterFactory;
 import software.wings.beans.Application;
 import software.wings.beans.Event;
-import software.wings.security.PermissionAttribute.PermissionScope;
+import software.wings.security.PermissionAttribute.PermissionType;
 import software.wings.security.PermissionAttribute.ResourceType;
 import software.wings.service.intfc.AppService;
 
@@ -64,7 +64,7 @@ public class EventEmitter {
     private String channelName;
     private ResourceType permission;
     private String target;
-    private PermissionScope scope = PermissionScope.APP;
+    private PermissionType scope = PermissionType.APP;
 
     Channel(String channelName, String target, ResourceType permission) {
       this.channelName = channelName;
@@ -72,7 +72,7 @@ public class EventEmitter {
       this.target = target;
     }
 
-    Channel(String channelName, String target, ResourceType permission, PermissionScope scope) {
+    Channel(String channelName, String target, ResourceType permission, PermissionType scope) {
       this.channelName = channelName;
       this.permission = permission;
       this.scope = scope;
@@ -126,7 +126,7 @@ public class EventEmitter {
      *
      * @return the scope
      */
-    public PermissionScope getScope() {
+    public PermissionType getScope() {
       return scope;
     }
 

@@ -7,8 +7,8 @@ import com.codahale.metrics.annotation.Timed;
 import io.swagger.annotations.Api;
 import software.wings.beans.RestResponse;
 import software.wings.security.PermissionAttribute.ResourceType;
-import software.wings.security.annotations.AuthRule;
 import software.wings.security.annotations.LearningEngineAuth;
+import software.wings.security.annotations.Scope;
 import software.wings.service.impl.analysis.ExperimentalLogMLAnalysisRecord;
 import software.wings.service.impl.analysis.LogMLAnalysisSummary;
 import software.wings.service.impl.analysis.LogMLExpAnalysisInfo;
@@ -29,7 +29,7 @@ import javax.ws.rs.QueryParam;
 @Api("learning-exp")
 @Path("/learning-exp")
 @Produces("application/json")
-@AuthRule(ResourceType.SETTING)
+@Scope(ResourceType.SETTING)
 public class ExperimentalLogAnalysisResourceImpl implements ExperimentalLogAnalysisResource {
   @Inject private AnalysisService analysisService;
   @Inject private LearningEngineService learningEngineService;

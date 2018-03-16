@@ -45,6 +45,7 @@ import org.mongodb.morphia.annotations.Transient;
 import software.wings.security.EncryptionType;
 import software.wings.settings.SettingValue;
 import software.wings.settings.SettingValue.SettingVariableTypes;
+import software.wings.settings.UsageRestrictions;
 import software.wings.yaml.BaseYaml;
 
 import java.util.List;
@@ -67,6 +68,7 @@ public class SettingAttribute extends Base {
   @Valid private SettingValue value;
   private Category category = Category.SETTING;
   private List<String> appIds;
+  private UsageRestrictions usageRestrictions;
 
   @SchemaIgnore @Transient private transient EncryptionType encryptionType;
 
@@ -107,6 +109,7 @@ public class SettingAttribute extends Base {
     private long createdAt;
     private EmbeddedUser lastUpdatedBy;
     private long lastUpdatedAt;
+    private UsageRestrictions usageRestrictions;
 
     private Builder() {}
 
@@ -174,6 +177,11 @@ public class SettingAttribute extends Base {
       return this;
     }
 
+    public Builder withUsageRestrictions(UsageRestrictions usageRestrictions) {
+      this.usageRestrictions = usageRestrictions;
+      return this;
+    }
+
     public Builder but() {
       return aSettingAttribute()
           .withEnvId(envId)
@@ -187,7 +195,8 @@ public class SettingAttribute extends Base {
           .withCreatedBy(createdBy)
           .withCreatedAt(createdAt)
           .withLastUpdatedBy(lastUpdatedBy)
-          .withLastUpdatedAt(lastUpdatedAt);
+          .withLastUpdatedAt(lastUpdatedAt)
+          .withUsageRestrictions(usageRestrictions);
     }
 
     public SettingAttribute build() {
@@ -204,6 +213,7 @@ public class SettingAttribute extends Base {
       settingAttribute.setCreatedAt(createdAt);
       settingAttribute.setLastUpdatedBy(lastUpdatedBy);
       settingAttribute.setLastUpdatedAt(lastUpdatedAt);
+      settingAttribute.setUsageRestrictions(usageRestrictions);
       return settingAttribute;
     }
   }

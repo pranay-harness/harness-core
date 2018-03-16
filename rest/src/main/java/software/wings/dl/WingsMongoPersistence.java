@@ -28,6 +28,7 @@ import com.mongodb.WriteResult;
 import com.mongodb.client.gridfs.GridFSBucket;
 import com.mongodb.client.gridfs.GridFSBuckets;
 import io.dropwizard.lifecycle.Managed;
+import org.apache.commons.collections.CollectionUtils;
 import org.mongodb.morphia.AdvancedDatastore;
 import org.mongodb.morphia.FindAndModifyOptions;
 import org.mongodb.morphia.InsertOptions;
@@ -49,6 +50,8 @@ import software.wings.beans.SettingAttribute;
 import software.wings.beans.User;
 import software.wings.exception.WingsException;
 import software.wings.security.EncryptionType;
+import software.wings.security.UserRequestContext;
+import software.wings.security.UserRequestContext.EntityInfo;
 import software.wings.security.UserRequestInfo;
 import software.wings.security.UserThreadLocal;
 import software.wings.security.encryption.EncryptedData;
@@ -509,7 +512,7 @@ public class WingsMongoPersistence implements WingsPersistence, Managed {
    */
   @Override
   public <T> PageResponse<T> query(Class<T> cls, PageRequest<T> req, ReadPref readPref) {
-    if (!authFilters(req)) {
+    if (!authFilters(req, cls)) {
       return aPageResponse().withTotal(0).build();
     }
     if (readPref == ReadPref.NORMAL && req.getReadPref() == ReadPref.CRITICAL) {
@@ -531,7 +534,7 @@ public class WingsMongoPersistence implements WingsPersistence, Managed {
    */
   @Override
   public <T> PageResponse<T> query(Class<T> cls, PageRequest<T> req, ReadPref readPref, boolean disableValidation) {
-    if (!authFilters(req)) {
+    if (!authFilters(req, cls)) {
       return aPageResponse().withTotal(0).build();
     }
     return MongoHelper.queryPageRequest(datastoreMap.get(readPref), cls, req, disableValidation);
@@ -610,55 +613,133 @@ public class WingsMongoPersistence implements WingsPersistence, Managed {
     close();
   }
 
-  private boolean authFilters(PageRequest pageRequest) {
-    if (UserThreadLocal.get() == null || UserThreadLocal.get().getUserRequestInfo() == null) {
+  private <T> boolean authFilters(PageRequest<T> pageRequest, Class<T> beanClass) {
+    User user = UserThreadLocal.get();
+    // If its not a user operation, return
+    if (user == null) {
       return true;
     }
-    UserRequestInfo userRequestInfo = UserThreadLocal.get().getUserRequestInfo();
-    if (userRequestInfo.isAppIdFilterRequired()) {
-      // TODO: field name should be dynamic
-      boolean emptyAppIdsInUserReq = isEmpty(userRequestInfo.getAppIds());
-      if (emptyAppIdsInUserReq) {
-        if (isEmpty(userRequestInfo.getAllowedAppIds())) {
-          return false;
-        } else {
-          pageRequest.addFilter("appId", Operator.IN, userRequestInfo.getAllowedAppIds().toArray());
+
+    if (user.isUseNewRbac()) {
+      UserRequestContext userRequestContext = user.getUserRequestContext();
+
+      // No user request context set by the filter.
+      if (userRequestContext == null) {
+        return true;
+      }
+
+      if (userRequestContext.isAppIdFilterRequired()) {
+        if (CollectionUtils.isNotEmpty(userRequestContext.getAppIds())) {
+          pageRequest.addFilter("appId", Operator.IN, userRequestContext.getAppIds().toArray());
         }
-      } else {
-        pageRequest.addFilter("appId", Operator.IN, userRequestInfo.getAppIds().toArray());
+      }
+
+      if (userRequestContext.isEntityIdFilterRequired()) {
+        String beanClassName = beanClass.getName();
+
+        EntityInfo entityInfo = userRequestContext.getEntityInfoMap().get(beanClassName);
+
+        if (entityInfo == null) {
+          return true;
+        }
+
+        if (CollectionUtils.isNotEmpty(entityInfo.getEntityIds())) {
+          pageRequest.addFilter(entityInfo.getEntityFieldName(), Operator.IN, entityInfo.getEntityIds().toArray());
+        } else {
+          return false;
+        }
+      }
+
+    } else {
+      UserRequestInfo userRequestInfo = user.getUserRequestInfo();
+
+      // No user request info set by the filter.
+      if (userRequestInfo == null) {
+        return true;
+      }
+
+      if (userRequestInfo.isAppIdFilterRequired()) {
+        // TODO: field name should be dynamic
+        boolean emptyAppIdsInUserReq = isEmpty(userRequestInfo.getAppIds());
+        if (emptyAppIdsInUserReq) {
+          if (isEmpty(userRequestInfo.getAllowedAppIds())) {
+            return false;
+          } else {
+            pageRequest.addFilter("appId", Operator.IN, userRequestInfo.getAllowedAppIds().toArray());
+          }
+        } else {
+          pageRequest.addFilter("appId", Operator.IN, userRequestInfo.getAppIds().toArray());
+        }
       }
     }
-    // TODO: else if (userRequestInfo.isEnvIdFilterRequired())
+
     return true;
   }
 
-  private boolean authFilters(Query query) {
-    if (UserThreadLocal.get() == null || UserThreadLocal.get().getUserRequestInfo() == null) {
+  private <T> boolean authFilters(Query query, Class<T> beanClass) {
+    User user = UserThreadLocal.get();
+    // If its not a user operation, return
+    if (user == null) {
       return true;
     }
-    UserRequestInfo userRequestInfo = UserThreadLocal.get().getUserRequestInfo();
-    if (userRequestInfo.isAppIdFilterRequired()) {
-      // TODO: field name should be dynamic
-      boolean emptyAppIdsInUserReq = isEmpty(userRequestInfo.getAppIds());
 
-      if (emptyAppIdsInUserReq) {
-        if (isEmpty(userRequestInfo.getAllowedAppIds())) {
-          return false;
-        } else {
-          query.field("appId").in(userRequestInfo.getAllowedAppIds());
+    if (user.isUseNewRbac()) {
+      UserRequestContext userRequestContext = user.getUserRequestContext();
+
+      // No user request context set by the filter.
+      if (userRequestContext == null) {
+        return true;
+      }
+
+      if (userRequestContext.isAppIdFilterRequired()) {
+        if (CollectionUtils.isNotEmpty(userRequestContext.getAppIds())) {
+          query.field("appId").in(userRequestContext.getAppIds());
         }
-      } else {
-        query.field("appId").in(userRequestInfo.getAppIds());
+      }
+
+      if (userRequestContext.isEntityIdFilterRequired()) {
+        String beanClassName = beanClass.getName();
+
+        EntityInfo entityInfo = userRequestContext.getEntityInfoMap().get(beanClassName);
+
+        if (entityInfo == null) {
+          return true;
+        }
+
+        if (CollectionUtils.isNotEmpty(entityInfo.getEntityIds())) {
+          query.field(entityInfo.getEntityFieldName()).in(entityInfo.getEntityIds());
+        } else {
+          return false;
+        }
+      }
+
+    } else {
+      if (user.getUserRequestInfo() == null) {
+        return true;
+      }
+      UserRequestInfo userRequestInfo = UserThreadLocal.get().getUserRequestInfo();
+      if (userRequestInfo.isAppIdFilterRequired()) {
+        // TODO: field name should be dynamic
+        boolean emptyAppIdsInUserReq = isEmpty(userRequestInfo.getAppIds());
+
+        if (emptyAppIdsInUserReq) {
+          if (isEmpty(userRequestInfo.getAllowedAppIds())) {
+            return false;
+          } else {
+            query.field("appId").in(userRequestInfo.getAllowedAppIds());
+          }
+        } else {
+          query.field("appId").in(userRequestInfo.getAppIds());
+        }
       }
     }
-
     return true;
   }
 
   @Override
   public Query createAuthorizedQuery(Class collectionClass) {
     Query query = createQuery(collectionClass);
-    if (authFilters(query)) {
+    if (authFilters(query, collectionClass)) {
       return query;
     }
     throw new WingsException(getExceptionMsgWithUserContext(), HARMLESS);
@@ -670,7 +751,7 @@ public class WingsMongoPersistence implements WingsPersistence, Managed {
     if (disableValidation) {
       query.disableValidation();
     }
-    if (authFilters(query)) {
+    if (authFilters(query, collectionClass)) {
       return query;
     }
     throw new WingsException(getExceptionMsgWithUserContext(), HARMLESS);

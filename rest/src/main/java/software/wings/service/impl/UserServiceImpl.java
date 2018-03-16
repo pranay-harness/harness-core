@@ -73,6 +73,7 @@ import software.wings.beans.SearchFilter.Operator;
 import software.wings.beans.User;
 import software.wings.beans.UserInvite;
 import software.wings.beans.ZendeskSsoLoginResponse;
+import software.wings.beans.security.UserGroup;
 import software.wings.common.Constants;
 import software.wings.dl.PageRequest;
 import software.wings.dl.PageResponse;
@@ -815,6 +816,17 @@ public class UserServiceImpl implements UserService {
       }
     }
     return ZendeskSsoLoginResponse.builder().redirectUrl(redirectUrl).userId(user.getUuid()).build();
+  }
+
+  @Override
+  public User addUserGroups(User user, List<UserGroup> userGroups) {
+    UpdateResults updated = wingsPersistence.update(wingsPersistence.createQuery(User.class)
+                                                        .field("email")
+                                                        .equal(user.getEmail())
+                                                        .field("appId")
+                                                        .equal(user.getAppId()),
+        wingsPersistence.createUpdateOperations(User.class).addToSet("userGroups", userGroups));
+    return user;
   }
 
   private Role ensureRolePresent(String roleId) {

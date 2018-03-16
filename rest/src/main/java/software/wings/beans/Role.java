@@ -8,7 +8,7 @@ import org.mongodb.morphia.annotations.Entity;
 import org.mongodb.morphia.annotations.Indexed;
 import org.mongodb.morphia.annotations.PostLoad;
 import software.wings.beans.Environment.EnvironmentType;
-import software.wings.security.PermissionAttribute.PermissionScope;
+import software.wings.security.PermissionAttribute.PermissionType;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -206,9 +206,9 @@ public class Role extends Base {
         permissions.forEach(permission -> {
           permission.setAccountId(getAccountId());
           permission.setAppId(getAppId());
-          if (permission.getPermissionScope() == PermissionScope.ENV && roleType == RoleType.PROD_SUPPORT) {
+          if (permission.getPermissionScope() == PermissionType.ENV && roleType == RoleType.PROD_SUPPORT) {
             permission.setEnvironmentType(EnvironmentType.PROD);
-          } else if (permission.getPermissionScope() == PermissionScope.ENV && roleType == RoleType.NON_PROD_SUPPORT) {
+          } else if (permission.getPermissionScope() == PermissionType.ENV && roleType == RoleType.NON_PROD_SUPPORT) {
             permission.setEnvironmentType(EnvironmentType.NON_PROD);
           }
         });

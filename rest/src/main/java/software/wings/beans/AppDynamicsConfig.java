@@ -15,6 +15,7 @@ import software.wings.annotation.Encryptable;
 import software.wings.annotation.Encrypted;
 import software.wings.jersey.JsonViews;
 import software.wings.settings.SettingValue;
+import software.wings.settings.UsageRestrictions;
 import software.wings.sm.StateType;
 import software.wings.yaml.setting.VerificationProviderYaml;
 
@@ -69,8 +70,8 @@ public class AppDynamicsConfig extends SettingValue implements Encryptable {
 
     @Builder
     public Yaml(String type, String harnessApiVersion, String username, String password, String accountName,
-        String controllerUrl) {
-      super(type, harnessApiVersion);
+        String controllerUrl, UsageRestrictions usageRestrictions) {
+      super(type, harnessApiVersion, usageRestrictions);
       this.username = username;
       this.password = password;
       this.accountName = accountName;

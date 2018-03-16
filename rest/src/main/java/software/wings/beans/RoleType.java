@@ -4,7 +4,7 @@ import static software.wings.beans.Permission.Builder.aPermission;
 
 import software.wings.beans.Environment.EnvironmentType;
 import software.wings.security.PermissionAttribute.Action;
-import software.wings.security.PermissionAttribute.PermissionScope;
+import software.wings.security.PermissionAttribute.PermissionType;
 
 /**
  * Created by rishi on 3/13/17.
@@ -13,24 +13,24 @@ public enum RoleType {
   ACCOUNT_ADMIN("Account Administrator", "Account Adminitrator members have all the access within account"),
   APPLICATION_ADMIN("Application Administrator",
       "Application Administrator members have access to setup application(service, environment/infrastructure, workflows) and do deployments within application",
-      aPermission().withAction(Action.ALL).withPermissionScope(PermissionScope.APP).build(),
-      aPermission().withAction(Action.ALL).withPermissionScope(PermissionScope.ENV).build()),
+      aPermission().withAction(Action.ALL).withPermissionScope(PermissionType.APP).build(),
+      aPermission().withAction(Action.ALL).withPermissionScope(PermissionType.ENV).build()),
   PROD_SUPPORT("Production Support",
       "Production Support members have access to override configuration, setup infrastructure and setup/execute deployment workflows within PROD environments",
       aPermission()
           .withAction(Action.ALL)
-          .withPermissionScope(PermissionScope.ENV)
+          .withPermissionScope(PermissionType.ENV)
           .withEnvironmentType(EnvironmentType.PROD)
           .build(),
-      aPermission().withAction(Action.READ).withPermissionScope(PermissionScope.APP).build()),
+      aPermission().withAction(Action.READ).withPermissionScope(PermissionType.APP).build()),
   NON_PROD_SUPPORT("Non-production Support",
       "Non-production Support members have access to override configuration, setup infrastructure and setup/execute deployment workflows within NON_PROD environments",
       aPermission()
           .withAction(Action.ALL)
-          .withPermissionScope(PermissionScope.ENV)
+          .withPermissionScope(PermissionType.ENV)
           .withEnvironmentType(EnvironmentType.NON_PROD)
           .build(),
-      aPermission().withAction(Action.READ).withPermissionScope(PermissionScope.APP).build()),
+      aPermission().withAction(Action.READ).withPermissionScope(PermissionType.APP).build()),
   CUSTOM("Custom", "Custom Role");
 
   private final String displayName;

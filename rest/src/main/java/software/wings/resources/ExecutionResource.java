@@ -4,6 +4,9 @@ import static io.harness.data.structure.EmptyPredicate.isEmpty;
 import static io.harness.data.structure.EmptyPredicate.isNotEmpty;
 import static org.apache.commons.lang3.StringUtils.isNotBlank;
 import static software.wings.dl.PageRequest.PageRequestBuilder.aPageRequest;
+import static software.wings.security.PermissionAttribute.Action.EXECUTE;
+import static software.wings.security.PermissionAttribute.Action.READ;
+import static software.wings.security.PermissionAttribute.PermissionType.DEPLOYMENT;
 
 import com.google.inject.Inject;
 
@@ -26,6 +29,7 @@ import software.wings.dl.PageRequest;
 import software.wings.dl.PageResponse;
 import software.wings.security.PermissionAttribute.ResourceType;
 import software.wings.security.annotations.AuthRule;
+import software.wings.security.annotations.Scope;
 import software.wings.service.intfc.AppService;
 import software.wings.service.intfc.WorkflowExecutionService;
 import software.wings.sm.ExecutionInterrupt;
@@ -48,7 +52,7 @@ import javax.ws.rs.QueryParam;
  */
 @Api("executions")
 @Path("/executions")
-@AuthRule(ResourceType.APPLICATION)
+@Scope(ResourceType.APPLICATION)
 @Produces("application/json")
 public class ExecutionResource {
   private AppService appService;
@@ -79,9 +83,12 @@ public class ExecutionResource {
   @GET
   @Timed
   @ExceptionMetered
-  public RestResponse<PageResponse<WorkflowExecution>> listExecutions(@QueryParam("accountId") String accountId,
-      @QueryParam("appId") List<String> appIds, @QueryParam("envId") String envId,
-      @QueryParam("orchestrationId") String orchestrationId, @BeanParam PageRequest<WorkflowExecution> pageRequest,
+  @AuthRule(permissionType = DEPLOYMENT, action = READ, parameterName = "orchestrationId", dbFieldName = "workflowId",
+      dbCollectionName = "software.wings.beans.WorkflowExecution")
+  public RestResponse<PageResponse<WorkflowExecution>>
+  listExecutions(@QueryParam("accountId") String accountId, @QueryParam("appId") List<String> appIds,
+      @QueryParam("envId") String envId, @QueryParam("orchestrationId") String orchestrationId,
+      @BeanParam PageRequest<WorkflowExecution> pageRequest,
       @DefaultValue("false") @QueryParam("includeGraph") boolean includeGraph,
       @QueryParam("workflowType") List<String> workflowTypes,
       @DefaultValue("false") @QueryParam("includeIndirectExecutions") boolean includeIndirectExecutions) {
@@ -128,13 +135,13 @@ public class ExecutionResource {
    * @param appId               the app id
    * @param envId               the env id
    * @param workflowExecutionId the workflow execution id
-   * @param expandedGroupIds    the expanded group ids
    * @return the execution details
    */
   @GET
   @Path("{workflowExecutionId}")
   @Timed
   @ExceptionMetered
+  @AuthRule(permissionType = DEPLOYMENT, action = READ)
   public RestResponse<WorkflowExecution> getExecutionDetails(@QueryParam("appId") String appId,
       @QueryParam("envId") String envId, @PathParam("workflowExecutionId") String workflowExecutionId) {
     return new RestResponse<>(workflowExecutionService.getExecutionDetails(appId, workflowExecutionId));
@@ -151,6 +158,7 @@ public class ExecutionResource {
   @POST
   @Timed
   @ExceptionMetered
+  @AuthRule(permissionType = DEPLOYMENT, action = EXECUTE)
   public RestResponse<WorkflowExecution> triggerExecution(@QueryParam("appId") String appId,
       @QueryParam("envId") String envId, @QueryParam("pipelineId") String pipelineId, ExecutionArgs executionArgs) {
     if (pipelineId != null && executionArgs.getWorkflowType() == WorkflowType.PIPELINE) {
@@ -171,6 +179,7 @@ public class ExecutionResource {
   @Path("{workflowExecutionId}")
   @Timed
   @ExceptionMetered
+  @AuthRule(permissionType = DEPLOYMENT, action = EXECUTE)
   public RestResponse<ExecutionInterrupt> triggerWorkflowExecutionInterrupt(@QueryParam("appId") String appId,
       @PathParam("workflowExecutionId") String workflowExecutionId, ExecutionInterrupt executionInterrupt) {
     executionInterrupt.setAppId(appId);
@@ -191,6 +200,7 @@ public class ExecutionResource {
   @Path("{workflowExecutionId}/notes")
   @Timed
   @ExceptionMetered
+  @AuthRule(permissionType = DEPLOYMENT, action = EXECUTE)
   public RestResponse<Boolean> approveOrRejectExecution(@QueryParam("appId") String appId,
       @PathParam("workflowExecutionId") String workflowExecutionId, ExecutionArgs executionArgs) {
     return new RestResponse<>(workflowExecutionService.updateNotes(appId, workflowExecutionId, executionArgs));
@@ -208,6 +218,7 @@ public class ExecutionResource {
   @Path("{workflowExecutionId}/approval")
   @Timed
   @ExceptionMetered
+  @AuthRule(permissionType = DEPLOYMENT, action = EXECUTE)
   public RestResponse approveOrRejectExecution(@QueryParam("appId") String appId,
       @PathParam("workflowExecutionId") String workflowExecutionId, ApprovalDetails approvalDetails) {
     return new RestResponse<>(
@@ -226,6 +237,7 @@ public class ExecutionResource {
   @Path("required-args")
   @Timed
   @ExceptionMetered
+  @AuthRule(permissionType = DEPLOYMENT, action = READ)
   public RestResponse<RequiredExecutionArgs> requiredArgs(
       @QueryParam("appId") String appId, @QueryParam("envId") String envId, ExecutionArgs executionArgs) {
     return new RestResponse<>(workflowExecutionService.getRequiredExecutionArgs(appId, envId, executionArgs));
@@ -244,6 +256,7 @@ public class ExecutionResource {
   @Path("{workflowExecutionId}/node/{stateExecutionInstanceId}")
   @Timed
   @ExceptionMetered
+  @AuthRule(permissionType = DEPLOYMENT, action = READ)
   public RestResponse<GraphNode> getExecutionNodeDetails(@QueryParam("appId") String appId,
       @QueryParam("envId") String envId, @PathParam("workflowExecutionId") String workflowExecutionId,
       @PathParam("stateExecutionInstanceId") String stateExecutionInstanceId) {
@@ -263,6 +276,7 @@ public class ExecutionResource {
   @Path("{workflowExecutionId}/history/{stateExecutionInstanceId}")
   @Timed
   @ExceptionMetered
+  @AuthRule(permissionType = DEPLOYMENT, action = READ)
   public RestResponse<List<StateExecutionData>> getExecutionHistory(@QueryParam("appId") String appId,
       @PathParam("workflowExecutionId") String workflowExecutionId,
       @PathParam("stateExecutionInstanceId") String stateExecutionInstanceId) {
@@ -282,6 +296,7 @@ public class ExecutionResource {
   @Path("{workflowExecutionId}/interruption/{stateExecutionInstanceId}")
   @Timed
   @ExceptionMetered
+  @AuthRule(permissionType = DEPLOYMENT, action = READ)
   public RestResponse<List<StateExecutionInterrupt>> getExecutionInterrupt(@QueryParam("appId") String appId,
       @PathParam("workflowExecutionId") String workflowExecutionId,
       @PathParam("stateExecutionInstanceId") String stateExecutionInstanceId) {
@@ -298,6 +313,7 @@ public class ExecutionResource {
   @Path("{workflowExecutionId}/mark-baseline")
   @Timed
   @ExceptionMetered
+  @AuthRule(permissionType = DEPLOYMENT, action = EXECUTE)
   public RestResponse<Set<WorkflowExecutionBaseline>> markAsBaseline(@QueryParam("appId") String appId,
       @QueryParam("isBaseline") boolean isBaseline, @PathParam("workflowExecutionId") String workflowExecutionId) {
     return new RestResponse<>(workflowExecutionService.markBaseline(appId, workflowExecutionId, isBaseline));
@@ -313,6 +329,7 @@ public class ExecutionResource {
   @Path("{workflowExecutionId}/get-baseline")
   @Timed
   @ExceptionMetered
+  @AuthRule(permissionType = DEPLOYMENT, action = READ)
   public RestResponse<WorkflowExecutionBaseline> getBaselineDetails(
       @QueryParam("appId") String appId, @PathParam("workflowExecutionId") String workflowExecutionId) {
     return new RestResponse<>(workflowExecutionService.getBaselineDetails(appId, workflowExecutionId));

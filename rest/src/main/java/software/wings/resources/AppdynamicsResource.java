@@ -1,5 +1,7 @@
 package software.wings.resources;
 
+import static software.wings.security.PermissionAttribute.ResourceType.SETTING;
+
 import com.google.inject.Inject;
 
 import com.codahale.metrics.annotation.ExceptionMetered;
@@ -7,10 +9,9 @@ import com.codahale.metrics.annotation.Timed;
 import io.swagger.annotations.Api;
 import software.wings.beans.RestResponse;
 import software.wings.metrics.TimeSeriesMetricDefinition;
-import software.wings.security.PermissionAttribute.ResourceType;
-import software.wings.security.annotations.AuthRule;
 import software.wings.security.annotations.DelegateAuth;
 import software.wings.security.annotations.LearningEngineAuth;
+import software.wings.security.annotations.Scope;
 import software.wings.service.impl.analysis.TSRequest;
 import software.wings.service.impl.analysis.TimeSeriesMLAnalysisRecord;
 import software.wings.service.impl.appdynamics.AppdynamicsTier;
@@ -43,7 +44,7 @@ import javax.ws.rs.QueryParam;
 @Api("appdynamics")
 @Path("/appdynamics")
 @Produces("application/json")
-@AuthRule(ResourceType.SETTING)
+@Scope(SETTING)
 public class AppdynamicsResource implements MetricAnalysisResource {
   @Inject private AppdynamicsService appdynamicsService;
 
