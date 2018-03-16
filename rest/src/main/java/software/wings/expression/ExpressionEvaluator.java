@@ -45,7 +45,7 @@ public class ExpressionEvaluator {
    * The constant wingsVariablePattern.
    */
   public static final Pattern wingsVariablePattern = Pattern.compile("\\$\\{[^{}]*}");
-  public static final Pattern variableNamePattern = Pattern.compile("^[_a-zA-Z][_\\w]*$");
+  public static final Pattern variableNamePattern = Pattern.compile("^[-_a-zA-Z][-_\\w]*$");
 
   public Object evaluate(String expression, String name, Object value) {
     Map<String, Object> context = new SingletonMap(name, value);
