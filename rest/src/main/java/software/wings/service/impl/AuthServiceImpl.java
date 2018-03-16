@@ -1,6 +1,7 @@
 package software.wings.service.impl;
 
 import static io.harness.data.structure.EmptyPredicate.isNotEmpty;
+import static java.util.stream.Collectors.toSet;
 import static org.apache.commons.lang3.StringUtils.isBlank;
 import static software.wings.beans.Base.GLOBAL_APP_ID;
 import static software.wings.beans.Base.GLOBAL_ENV_ID;
@@ -423,7 +424,7 @@ public class AuthServiceImpl implements AuthService {
       return getUserPermissionInfoFromDB(accountId, user);
     }
 
-    String key = accountId + "~" + user.getUuid();
+    String key = getUserPermissionInfoCacheKey(accountId, user.getUuid());
     UserPermissionInfo value = null;
     try {
       value = cache.get(key);
@@ -439,6 +440,10 @@ public class AuthServiceImpl implements AuthService {
     return getUserPermissionInfoFromDB(accountId, user);
   }
 
+  private String getUserPermissionInfoCacheKey(String accountId, String userId) {
+    return accountId + "~" + userId;
+  }
+
   @Override
   public void evictAccountUserPermissionInfoCache(String accountId) {
     Cache<String, UserPermissionInfo> cache = cacheHelper.getUserPermissionInfoCache();
@@ -450,6 +455,16 @@ public class AuthServiceImpl implements AuthService {
           keys.add(key);
         }
       });
+      cache.removeAll(keys);
+    }
+  }
+
+  @Override
+  public void evictAccountUserPermissionInfoCache(String accountId, List<User> members) {
+    Cache<String, UserPermissionInfo> cache = cacheHelper.getUserPermissionInfoCache();
+    if (cache != null) {
+      Set<String> keys =
+          members.stream().map(user -> getUserPermissionInfoCacheKey(accountId, user.getUuid())).collect(toSet());
       cache.removeAll(keys);
     }
   }
