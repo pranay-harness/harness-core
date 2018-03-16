@@ -335,8 +335,10 @@ public class AuthHandler {
     }
 
     if (FilterType.ALL.equals(serviceFilter.getFilterType())) {
-      PageRequest<Service> pageRequest =
-          PageRequest.PageRequestBuilder.aPageRequest().addFilter("appId", Operator.EQ, appId).addFieldsIncluded("_id").build();
+      PageRequest<Service> pageRequest = PageRequest.PageRequestBuilder.aPageRequest()
+                                             .addFilter("appId", Operator.EQ, appId)
+                                             .addFieldsIncluded("_id")
+                                             .build();
       PageResponse<Service> pageResponse = serviceResourceService.list(pageRequest, false, false);
       List<Service> serviceList = pageResponse.getResponse();
       return serviceList.stream().map(service -> service.getUuid()).collect(Collectors.toSet());
@@ -390,7 +392,8 @@ public class AuthHandler {
     Set<String> pipelineIds;
     Set<String> envIds = getEnvIdsByFilter(appId, envFilter);
 
-    PageRequest<Pipeline> pageRequest = PageRequest.PageRequestBuilder.aPageRequest().addFilter("appId", Operator.EQ, appId).build();
+    PageRequest<Pipeline> pageRequest =
+        PageRequest.PageRequestBuilder.aPageRequest().addFilter("appId", Operator.EQ, appId).build();
     PageResponse<Pipeline> pageResponse = pipelineService.listPipelines(pageRequest);
     List<Pipeline> pipelineList = pageResponse.getResponse();
     final Set<String> envIdsFinal = envIds;
@@ -466,7 +469,8 @@ public class AuthHandler {
       return new HashSet<>();
     }
 
-    PageRequestBuilder pageRequestBuilder = PageRequest.PageRequestBuilder.aPageRequest().addFilter("appId", Operator.EQ, appId);
+    PageRequestBuilder pageRequestBuilder =
+        PageRequest.PageRequestBuilder.aPageRequest().addFilter("appId", Operator.EQ, appId);
     if (CollectionUtils.isNotEmpty(envIds)) {
       pageRequestBuilder.addFilter("envId", Operator.IN, envIds.toArray());
     }
@@ -677,7 +681,8 @@ public class AuthHandler {
   }
 
   public UserGroup buildDefaultAdminUserGroup(String accountId, User user) {
-    AccountPermissions accountPermissions = AccountPermissions.builder().permissions(getAllAccountPermissions()).build();
+    AccountPermissions accountPermissions =
+        AccountPermissions.builder().permissions(getAllAccountPermissions()).build();
 
     Set<AppPermission> appPermissions = Sets.newHashSet();
     AppPermission appPermission = AppPermission.builder()
