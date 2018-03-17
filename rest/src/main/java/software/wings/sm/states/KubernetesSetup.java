@@ -3,6 +3,7 @@ package software.wings.sm.states;
 import static io.harness.data.structure.EmptyPredicate.isNotEmpty;
 import static io.harness.govern.Switch.unhandled;
 import static java.util.stream.Collectors.toList;
+import static java.util.stream.Collectors.toMap;
 import static org.apache.commons.lang3.StringUtils.isBlank;
 import static org.apache.commons.lang3.StringUtils.isNotBlank;
 import static software.wings.beans.ResizeStrategy.RESIZE_NEW_FIRST;
@@ -45,6 +46,7 @@ import software.wings.sm.ExecutionStatus;
 import software.wings.utils.KubernetesConvention;
 
 import java.util.List;
+import java.util.Map;
 
 /**
  * Created by brett on 3/1/17
@@ -94,19 +96,15 @@ public class KubernetesSetup extends ContainerServiceSetup {
 
     List<ConfigFile> computedConfigFiles =
         serviceTemplateService.computedConfigFiles(app.getUuid(), env.getUuid(), serviceTemplateId);
-    List<ConfigFile> plainConfigFileList =
-        computedConfigFiles.stream().filter(configFile -> !configFile.isEncrypted()).collect(toList());
-    List<ConfigFile> encryptedConfigFileList =
-        computedConfigFiles.stream().filter(ConfigFile::isEncrypted).collect(toList());
 
-    List<String[]> plainConfigFiles = null;
-    if (isNotEmpty(plainConfigFileList)) {
-      plainConfigFiles = getConfigFileContent(app, plainConfigFileList);
-    }
+    List<String[]> configFiles = null;
+    if (isNotEmpty(computedConfigFiles)) {
+      Map<String, String> configFilesService = getConfigFileContent(app, computedConfigFiles);
 
-    List<String[]> encryptedConfigFiles = null;
-    if (isNotEmpty(encryptedConfigFileList)) {
-      encryptedConfigFiles = getConfigFileContent(app, encryptedConfigFileList);
+      configFiles = configFilesService.entrySet()
+                        .stream()
+                        .map(entrySet -> new String[] {entrySet.getKey(), entrySet.getValue()})
+                        .collect(toList());
     }
 
     String configMapYaml = serviceTemplateService.computeConfigMapYaml(app.getUuid(), env.getUuid(), serviceTemplateId);
@@ -200,18 +198,15 @@ public class KubernetesSetup extends ContainerServiceSetup {
         .withUseIngress(useIngress)
         .withIngressYaml(ingressYamlEvaluated)
         .withUseIstioRouteRule(useIstioRouteRule)
-        .withPlainConfigFiles(plainConfigFiles)
-        .withEncryptedConfigFiles(encryptedConfigFiles)
+        .withConfigFiles(configFiles)
         .withConfigMapYaml(configMapYamlEvaluated)
         .build();
   }
 
-  private List<String[]> getConfigFileContent(Application app, List<ConfigFile> configFiles) {
-    return configFiles.stream()
-        .map(cf
-            -> new String[] {isNotBlank(cf.getRelativeFilePath()) ? cf.getRelativeFilePath() : cf.getFileName(),
-                configService.getFileContent(app.getUuid(), cf)})
-        .collect(toList());
+  private Map<String, String> getConfigFileContent(Application app, List<ConfigFile> configFiles) {
+    return configFiles.stream().collect(toMap(cf
+        -> isNotBlank(cf.getRelativeFilePath()) ? cf.getRelativeFilePath() : cf.getFileName(),
+        cf -> configService.getFileContent(app.getUuid(), cf.getUuid())));
   }
 
   @Override

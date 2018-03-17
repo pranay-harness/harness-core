@@ -30,7 +30,6 @@ import software.wings.utils.BoundedInputStream;
 
 import java.io.File;
 import java.io.IOException;
-import java.io.OutputStream;
 import java.nio.ByteBuffer;
 import java.nio.CharBuffer;
 import java.util.ArrayList;
@@ -266,20 +265,6 @@ public class VaultServiceImpl extends AbstractSecretServiceImpl implements Vault
       char[] decrypt = decrypt(encryptedData, accountId, vaultConfig);
       Files.write(CHARSET.encode(CharBuffer.wrap(decrypt)).array(), file);
       return file;
-    } catch (IOException ioe) {
-      throw new WingsException(DEFAULT_ERROR_CODE, ioe);
-    }
-  }
-
-  @Override
-  public void decryptToStream(String accountId, EncryptedData encryptedData, OutputStream output) {
-    try {
-      VaultConfig vaultConfig = getSecretConfig(accountId);
-      Preconditions.checkNotNull(vaultConfig);
-      Preconditions.checkNotNull(encryptedData);
-      char[] decrypt = decrypt(encryptedData, accountId, vaultConfig);
-      output.write(CHARSET.encode(CharBuffer.wrap(decrypt)).array(), 0, decrypt.length);
-      output.flush();
     } catch (IOException ioe) {
       throw new WingsException(DEFAULT_ERROR_CODE, ioe);
     }

@@ -151,7 +151,7 @@ public interface ConfigService extends OwnedByService, OwnedByHost {
    */
   File download(String appId, String configId);
 
-  String getFileContent(String appId, ConfigFile configFile);
+  String getFileContent(String appId, String configId);
 
   /**
    * Delete by entity id.
