@@ -2,6 +2,7 @@ package software.wings.service.impl.security;
 
 import static org.apache.commons.lang3.StringUtils.isBlank;
 import static org.apache.commons.lang3.StringUtils.isNotBlank;
+import static software.wings.beans.ErrorCode.INVALID_ARGUMENT;
 import static software.wings.common.Constants.SECRET_MASK;
 import static software.wings.dl.PageRequest.PageRequestBuilder.aPageRequest;
 import static software.wings.security.EncryptionType.LOCAL;
@@ -64,8 +65,10 @@ import software.wings.settings.SettingValue.SettingVariableTypes;
 import software.wings.utils.BoundedInputStream;
 
 import java.io.ByteArrayInputStream;
+import java.io.ByteArrayOutputStream;
 import java.io.File;
 import java.io.IOException;
+import java.io.OutputStream;
 import java.lang.reflect.Field;
 import java.nio.CharBuffer;
 import java.util.ArrayList;
@@ -544,12 +547,12 @@ public class SecretManagerImpl implements SecretManager {
                                                  .equal(uuId)
                                                  .asList();
     if (!serviceVariables.isEmpty()) {
-      String errorMessage = "Being used by ";
+      StringBuilder errorMessage = new StringBuilder("Being used by ");
       for (ServiceVariable serviceVariable : serviceVariables) {
-        errorMessage += serviceVariable.getName() + ", ";
+        errorMessage.append(serviceVariable.getName()).append(", ");
       }
 
-      throw new WingsException(ErrorCode.KMS_OPERATION_ERROR).addParam("reason", errorMessage);
+      throw new WingsException(ErrorCode.KMS_OPERATION_ERROR).addParam("reason", errorMessage.toString());
     }
 
     return wingsPersistence.delete(EncryptedData.class, uuId);
@@ -630,6 +633,41 @@ public class SecretManagerImpl implements SecretManager {
   }
 
   @Override
+  public String getFileContents(String accountId, String uuid) {
+    EncryptedData encryptedData = wingsPersistence.get(EncryptedData.class, uuid);
+    Preconditions.checkNotNull(encryptedData, "could not find file with id " + uuid);
+    EncryptionType encryptionType = encryptedData.getEncryptionType();
+    try {
+      OutputStream output = new ByteArrayOutputStream();
+      OutputStream os = new ByteArrayOutputStream();
+      switch (encryptionType) {
+        case LOCAL:
+          fileService.downloadToStream(String.valueOf(encryptedData.getEncryptedValue()), os, CONFIGS);
+          os.flush();
+          EncryptionUtils.decryptToStream(os.toString().getBytes(), encryptedData.getEncryptionKey(), output);
+          break;
+
+        case KMS:
+          fileService.downloadToStream(String.valueOf(encryptedData.getEncryptedValue()), os, CONFIGS);
+          os.flush();
+          kmsService.decryptToStream(os.toString().getBytes(), accountId, encryptedData, output);
+          break;
+
+        case VAULT:
+          vaultService.decryptToStream(accountId, encryptedData, output);
+          break;
+
+        default:
+          throw new IllegalArgumentException("Invalid type " + encryptionType);
+      }
+      output.flush();
+      return output.toString();
+    } catch (IOException e) {
+      throw new WingsException(INVALID_ARGUMENT, e).addParam("args", "Failed to get content");
+    }
+  }
+
+  @Override
   public boolean updateFile(String accountId, String name, String uuid, BoundedInputStream inputStream) {
     EncryptedData encryptedData = wingsPersistence.get(EncryptedData.class, uuid);
     String oldName = encryptedData.getName();
@@ -673,7 +711,9 @@ public class SecretManagerImpl implements SecretManager {
     for (String parentId : encryptedData.getParentIds()) {
       ConfigFile configFile = (ConfigFile) fetchParent(SettingVariableTypes.CONFIG_FILE, encryptedData.getAccountId(),
           parentId, encryptedData.getKmsId(), encryptionType);
-      configFile.setSize(inputStream.getTotalBytesRead());
+      if (configFile != null) {
+        configFile.setSize(inputStream.getTotalBytesRead());
+      }
       wingsPersistence.save(configFile);
     }
 
