@@ -27,6 +27,7 @@ public class ArtifactCollectionExecutionData extends StateExecutionData implemen
   private String artifactStreamId;
   private String artifactId;
   private String message;
+  private String timeout;
 
   @Override
   public Map<String, ExecutionDataValue> getExecutionSummary() {
@@ -41,6 +42,8 @@ public class ArtifactCollectionExecutionData extends StateExecutionData implemen
   }
 
   private Map<String, ExecutionDataValue> setExecutionData(Map<String, ExecutionDataValue> executionDetails) {
+    putNotNull(
+        executionDetails, "timeout", anExecutionDataValue().withValue(timeout).withDisplayName("Timeout (ms)").build());
     putNotNull(executionDetails, "artifactSource",
         anExecutionDataValue().withValue(artifactSource).withDisplayName("Artifact Source").build());
     putNotNull(
@@ -57,6 +60,7 @@ public class ArtifactCollectionExecutionData extends StateExecutionData implemen
     }
     putNotNull(
         executionDetails, "message", anExecutionDataValue().withValue(message).withDisplayName("Message").build());
+
     return executionDetails;
   }
 }
