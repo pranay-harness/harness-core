@@ -146,9 +146,8 @@
                       value="STATIC###SPECIAL_IMPORTS###THIRD_PARTY_PACKAGE###STANDARD_JAVA_PACKAGE"/>
         </module>
 
-        <!-- Avoiding using repetitive names improves the readability of the code.
+        <!-- Avoiding using repetitive names improves the readability of the code. -->
         <module name="io.harness.checks.RepetitiveNameCheck"/>
-        -->
 
         <!-- LOMBOK -->
 
