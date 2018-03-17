@@ -1,5 +1,6 @@
 package migrations.all;
 
+import static software.wings.dl.PageRequest.PageRequestBuilder.aPageRequest;
 import static software.wings.dl.PageRequest.UNLIMITED;
 
 import com.google.inject.Inject;
@@ -30,7 +31,7 @@ public class CreateDefaultUserGroupsAndAddToExistingUsers implements Migration {
 
   @Override
   public void migrate() {
-    PageRequest<User> userPageRequest = PageRequest.PageRequestBuilder.aPageRequest().withLimit(UNLIMITED).build();
+    PageRequest<User> userPageRequest = aPageRequest().withLimit(UNLIMITED).build();
     PageResponse<User> userPageResponse = userService.list(userPageRequest);
     List<User> userList = userPageResponse.getResponse();
 
