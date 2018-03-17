@@ -23,7 +23,7 @@ docker_container_build_pid=$!
 
 if [[ -z "${SERVER_BUILD_DIR}" ]]; then
   echo "SERVER_BUILD_DIR not set, building server code"
-  mvn clean install -DskipTests=true -DskipIntegrationTests=true
+  mvn -B clean install -DskipTests=true -DskipIntegrationTests=true
   java -Xms1024m -Xmx4096m -XX:+HeapDumpOnOutOfMemoryError -XX:+PrintGCDetails -XX:+PrintGCDateStamps \
        -Xloggc:portal-gc-logs.gc -XX:+UseParallelGC -XX:MaxGCPauseMillis=500 \
        -Xbootclasspath/p:$HOME/.m2/repository/org/mortbay/jetty/alpn/alpn-boot/8.1.11.v20170118/alpn-boot-8.1.11.v20170118.jar \
@@ -60,7 +60,7 @@ echo "server started, going to run DataGen util"
 set -e
 
 # run data gen to load test data
-mvn failsafe:integration-test -pl rest -Dit.test=DataGenUtil -P datagen -P integration-coverage
+mvn -B failsafe:integration-test -pl rest -Dit.test=DataGenUtil -P datagen -P integration-coverage
 datagen_status=$?
 if [[ $datagen_status -ne 0 ]] ; then
   echo 'Datagen failed';
@@ -68,7 +68,7 @@ if [[ $datagen_status -ne 0 ]] ; then
 fi
 echo "datagen finished"
 # specifying -DfailIfNoTests=false flag b/c we are using surefire on integration dir
-mvn test -pl rest -Dtest=software.wings.integration.JenkinsIntegrationTest -DfailIfNoTests=false
+mvn -B test -pl rest -Dtest=software.wings.integration.JenkinsIntegrationTest -DfailIfNoTests=false
 
 jenkins_overwrite_status=$?
 echo "JenkinsIntegrationTest finished with status $jenkins_overwrite_status"
@@ -80,7 +80,7 @@ fi
 #Delegate integration test. Don't run with UI integration tests
 if [ "$TEST_SUITE" != "UI_INTEGRATION" ] ;
 then
-  mvn test -pl rest -Dtest=software.wings.integration.DelegateIntegrationTest -DfailIfNoTests=false
+  mvn -B test -pl rest -Dtest=software.wings.integration.DelegateIntegrationTest -DfailIfNoTests=false
   delegateIntegrationTestResult=$?
   if [[ $delegateIntegrationTestResult -ne 0 ]] ;
   then
@@ -103,7 +103,7 @@ fi
 # wait for delegate to start
 echo 'wait for delegate to start'
 
-mvn test -pl rest -Dtest=software.wings.integration.DelegateRegistrationIntegrationTest#shouldWaitForADelegateToRegister -DfailIfNoTests=false
+mvn -B test -pl rest -Dtest=software.wings.integration.DelegateRegistrationIntegrationTest#shouldWaitForADelegateToRegister -DfailIfNoTests=false
 foundRegisteredDelegate=$?
 if [[ $foundRegisteredDelegate -ne 0 ]] ; then
   echo 'Delegate registration failed';
