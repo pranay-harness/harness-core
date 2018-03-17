@@ -81,4 +81,15 @@ public class EncryptionUtils {
       throw new WingsException(DEFAULT_ERROR_CODE, ioe);
     }
   }
+
+  public static void decryptToStream(byte[] input, String containerId, OutputStream output) {
+    try {
+      SimpleEncryption encryption = new SimpleEncryption(containerId);
+      byte[] outputBytes = encryption.decrypt(input);
+      output.write(outputBytes, 0, outputBytes.length);
+      output.flush();
+    } catch (IOException ioe) {
+      throw new WingsException(DEFAULT_ERROR_CODE, ioe);
+    }
+  }
 }

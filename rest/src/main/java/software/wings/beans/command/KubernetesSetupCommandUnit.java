@@ -262,13 +262,13 @@ public class KubernetesSetupCommandUnit extends ContainerSetupCommandUnit {
                           .collect(toMap(Map.Entry::getKey, Map.Entry::getValue)));
         }
 
-        if (isNotEmpty(setupParams.getConfigFiles())) {
-          data.putAll(setupParams.getConfigFiles().stream().collect(toMap(sa -> sa[0], sa -> sa[1])));
+        if (isNotEmpty(setupParams.getPlainConfigFiles())) {
+          data.putAll(setupParams.getPlainConfigFiles().stream().collect(toMap(sa -> sa[0], sa -> sa[1])));
         }
         configMap.setData(data);
       }
 
-      if (configMap != null && isEmpty(configMap.getData())) {
+      if (isEmpty(configMap.getData())) {
         configMap = null;
       }
 
@@ -278,29 +278,41 @@ public class KubernetesSetupCommandUnit extends ContainerSetupCommandUnit {
       }
 
       // Setup secrets
+      Secret secret = new SecretBuilder().withNewMetadata().withName(containerServiceName).endMetadata().build();
+
+      Map<String, String> secretData = new HashMap<>();
+
       Map<String, String> encryptedServiceVars =
           safeDisplayServiceVariables.entrySet()
               .stream()
               .filter(entry -> SECRET_MASK.equals(entry.getValue()))
               .collect(toMap(Entry::getKey, entry -> serviceVariables.get(entry.getKey())));
 
-      Secret secret = null;
       if (isNotEmpty(encryptedServiceVars)) {
-        executionLogCallback.saveExecutionLog("Setting secrets: " + containerServiceName + "\n"
-            + Joiner.on("\n").join(
-                  encryptedServiceVars.keySet().stream().map(var -> "   " + var + ": " + SECRET_MASK).collect(toList()))
-            + "\n");
-        secret = new SecretBuilder()
-                     .withNewMetadata()
-                     .withName(containerServiceName)
-                     .endMetadata()
-                     .withStringData(encryptedServiceVars)
-                     .build();
+        secretData.putAll(encryptedServiceVars);
+      }
+
+      if (isNotEmpty(setupParams.getEncryptedConfigFiles())) {
+        secretData.putAll(setupParams.getEncryptedConfigFiles().stream().collect(toMap(sa -> sa[0], sa -> sa[1])));
+      }
+
+      if (isEmpty(secretData)) {
+        secret = null;
+      }
+
+      if (secret != null) {
+        executionLogCallback.saveExecutionLog("Creating secret map:\n\n"
+                + toDisplayYaml(new SecretBuilder()
+                                    .withMetadata(secret.getMetadata())
+                                    .withStringData(secretData.entrySet().stream().collect(
+                                        toMap(Entry::getKey, entry -> SECRET_MASK)))
+                                    .build()),
+            LogLevel.INFO);
+        secret.setStringData(secretData);
         kubernetesContainerService.createOrReplaceSecret(kubernetesConfig, encryptedDataDetails, secret);
       }
 
       // Setup controller
-
       kubernetesContainerService.createController(kubernetesConfig, encryptedDataDetails,
           createKubernetesControllerDefinition(kubernetesContainerTask, containerServiceName, controllerLabels,
               kubernetesConfig.getNamespace(), setupParams.getImageDetails(), registrySecretName, configMap, secret));
