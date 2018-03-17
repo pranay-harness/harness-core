@@ -29,6 +29,8 @@ import software.wings.scheduler.JobScheduler;
 import software.wings.service.intfc.AppService;
 import software.wings.service.intfc.security.EncryptionService;
 
+import java.util.Collections;
+
 public class AwsInfrastructureProviderIntegrationTest extends BaseIntegrationTest {
   @Mock private JobScheduler jobScheduler;
   @Inject @InjectMocks private AppService appService;
@@ -97,8 +99,8 @@ public class AwsInfrastructureProviderIntegrationTest extends BaseIntegrationTes
 
   @Test
   public void testListFilteredHostOneSecurityGroupIDFilter() {
-    AwsInstanceFilter awsInstanceFilter = AwsInstanceFilter.builder().build();
-    awsInstanceFilter.getSecurityGroupIds().add(securityGroupID);
+    AwsInstanceFilter awsInstanceFilter =
+        AwsInstanceFilter.builder().securityGroupIds(Collections.singletonList(securityGroupID)).build();
     awsInfrastructureMapping.setAwsInstanceFilter(awsInstanceFilter);
     PageResponse<Host> result =
         infrastructureProvider.listHosts(awsInfrastructureMapping, computeProviderSetting, null, null);
@@ -109,8 +111,7 @@ public class AwsInfrastructureProviderIntegrationTest extends BaseIntegrationTes
 
   @Test
   public void testListFilteredHostOneVpcIDFilter() {
-    AwsInstanceFilter awsInstanceFilter = AwsInstanceFilter.builder().build();
-    awsInstanceFilter.getVpcIds().add(vpcID);
+    AwsInstanceFilter awsInstanceFilter = AwsInstanceFilter.builder().vpcIds(Collections.singletonList(vpcID)).build();
     awsInfrastructureMapping.setAwsInstanceFilter(awsInstanceFilter);
     PageResponse result =
         infrastructureProvider.listHosts(awsInfrastructureMapping, computeProviderSetting, null, null);
@@ -120,9 +121,10 @@ public class AwsInfrastructureProviderIntegrationTest extends BaseIntegrationTes
 
   @Test
   public void testListFilteredHostOneSecurityGroupIDAndVpcIDFilter() {
-    AwsInstanceFilter awsInstanceFilter = AwsInstanceFilter.builder().build();
-    awsInstanceFilter.getSecurityGroupIds().add(securityGroupID);
-    awsInstanceFilter.getVpcIds().add(vpcID);
+    AwsInstanceFilter awsInstanceFilter = AwsInstanceFilter.builder()
+                                              .vpcIds(Collections.singletonList(vpcID))
+                                              .securityGroupIds(Collections.singletonList(securityGroupID))
+                                              .build();
     awsInfrastructureMapping.setAwsInstanceFilter(awsInstanceFilter);
     PageResponse<Host> result =
         infrastructureProvider.listHosts(awsInfrastructureMapping, computeProviderSetting, null, null);
@@ -133,8 +135,8 @@ public class AwsInfrastructureProviderIntegrationTest extends BaseIntegrationTes
 
   @Test
   public void testListFilteredHostIncorrectFilter() {
-    AwsInstanceFilter awsInstanceFilter = AwsInstanceFilter.builder().build();
-    awsInstanceFilter.getSecurityGroupIds().add("FakeFake");
+    AwsInstanceFilter awsInstanceFilter =
+        AwsInstanceFilter.builder().securityGroupIds(Collections.singletonList("FakeFake")).build();
     awsInfrastructureMapping.setAwsInstanceFilter(awsInstanceFilter);
     PageResponse<Host> result =
         infrastructureProvider.listHosts(awsInfrastructureMapping, computeProviderSetting, null, null);
