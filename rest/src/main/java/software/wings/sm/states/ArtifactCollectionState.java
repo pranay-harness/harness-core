@@ -1,6 +1,7 @@
 package software.wings.sm.states;
 
 import static io.harness.data.structure.UUIDGenerator.generateUuid;
+import static java.lang.String.valueOf;
 import static java.util.Arrays.asList;
 import static org.apache.commons.lang3.StringUtils.isBlank;
 import static software.wings.common.Constants.BUILD_NO;
@@ -37,7 +38,6 @@ import software.wings.service.intfc.WorkflowExecutionService;
 import software.wings.sm.ExecutionContext;
 import software.wings.sm.ExecutionResponse;
 import software.wings.sm.State;
-import software.wings.stencils.DefaultValue;
 import software.wings.stencils.EnumData;
 import software.wings.waitnotify.NotifyResponseData;
 
@@ -74,6 +74,7 @@ public class ArtifactCollectionState extends State {
     String evaluatedBuildNo = getEvaluatedBuildNo(context);
     ArtifactCollectionExecutionData artifactCollectionExecutionData =
         ArtifactCollectionExecutionData.builder()
+            .timeout(valueOf(getTimeoutMillis()))
             .artifactSource(artifactStream.getSourceName())
             .buildNo(evaluatedBuildNo)
             .message("Waiting for [" + evaluatedBuildNo + "] to be collected from ["
@@ -99,6 +100,7 @@ public class ArtifactCollectionState extends State {
     Artifact lastCollectedArtifact =
         getLastCollectedArtifact(context, artifactStream.getUuid(), artifactStream.getSourceName(), evaluatedBuildNo);
 
+    artifactCollectionExecutionData.setTimeout(valueOf(getTimeoutMillis()));
     artifactCollectionExecutionData.setArtifactSource(artifactStream.getSourceName());
 
     if (lastCollectedArtifact == null || !lastCollectedArtifact.getStatus().isFinalStatus()) {
@@ -132,7 +134,7 @@ public class ArtifactCollectionState extends State {
   private String getEvaluatedBuildNo(ExecutionContext context) {
     String evaluatedBuildNo;
     if (isBlank(buildNo) || buildNo.equalsIgnoreCase(LATEST)) {
-      evaluatedBuildNo = buildNo;
+      evaluatedBuildNo = LATEST;
     } else {
       evaluatedBuildNo = context.renderExpression(buildNo);
     }
@@ -200,9 +202,11 @@ public class ArtifactCollectionState extends State {
   }
 
   @Attributes(title = "Timeout (ms)")
-  @DefaultValue("" + DEFAULT_ARTIFACT_COLLECTION_STATE_TIMEOUT_MILLIS)
   @Override
   public Integer getTimeoutMillis() {
+    if (super.getTimeoutMillis() == null) {
+      return DEFAULT_ARTIFACT_COLLECTION_STATE_TIMEOUT_MILLIS;
+    }
     return super.getTimeoutMillis();
   }
 
