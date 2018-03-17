@@ -43,3 +43,5 @@ package-lock.json
 **/*.tfstate
 **/*.tfstate.backup
 **/tfplan
+**/*.lock.info
+
