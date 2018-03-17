@@ -49,6 +49,7 @@ import com.nimbusds.jose.Payload;
 import com.nimbusds.jose.crypto.MACSigner;
 import com.nimbusds.jwt.JWTClaimsSet;
 import freemarker.template.TemplateException;
+import org.apache.commons.collections.CollectionUtils;
 import org.apache.commons.lang3.StringUtils;
 import org.apache.commons.lang3.tuple.ImmutablePair;
 import org.apache.commons.mail.EmailException;
@@ -98,6 +99,7 @@ import java.io.IOException;
 import java.io.UnsupportedEncodingException;
 import java.net.URISyntaxException;
 import java.nio.charset.Charset;
+import java.util.Arrays;
 import java.util.Collections;
 import java.util.Date;
 import java.util.HashMap;
@@ -345,6 +347,14 @@ public class UserServiceImpl implements UserService {
   private UserInvite inviteUser(UserInvite userInvite) {
     Account account = accountService.get(userInvite.getAccountId());
     String inviteId = wingsPersistence.save(userInvite);
+
+    if (CollectionUtils.isEmpty(userInvite.getRoles())) {
+      Role accountAdminRole = roleService.getAccountAdminRole(userInvite.getAccountId());
+      if (accountAdminRole != null) {
+        List<Role> roleList = Arrays.asList(accountAdminRole);
+        userInvite.setRoles(roleList);
+      }
+    }
 
     User user = getUserByEmail(userInvite.getEmail());
     if (user == null) {
