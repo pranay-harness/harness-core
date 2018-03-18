@@ -94,7 +94,6 @@ public class LearningEngineAnalysisTest extends WingsBaseTest {
   public void testAlreadyQueued() {
     int numOfTasks = 5;
     for (int i = 0; i < numOfTasks; i++) {
-      System.out.println("loop " + i);
       LearningEngineAnalysisTask learningEngineAnalysisTask = LearningEngineAnalysisTask.builder()
                                                                   .state_execution_id(stateExecutionId)
                                                                   .workflow_execution_id(workflowExecutionId)

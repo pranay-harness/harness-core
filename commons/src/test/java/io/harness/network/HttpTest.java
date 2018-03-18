@@ -4,6 +4,8 @@ import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertFalse;
 import static org.junit.Assert.assertTrue;
 
+import io.harness.threading.Concurrent;
+import okhttp3.OkHttpClient;
 import org.junit.Test;
 
 public class HttpTest {
@@ -44,5 +46,10 @@ public class HttpTest {
     assertEquals("localhost.com", Http.getDomain("https://localhost.com/temp"));
     assertEquals("localhost.com", Http.getDomain("localhost.com:8080/temp"));
     assertEquals("localhost.com", Http.getDomain("localhost.com:8080"));
+  }
+
+  @Test
+  public void concurrencyTest() throws InterruptedException {
+    Concurrent.test(5, () -> { final OkHttpClient client = Http.getUnsafeOkHttpClient("https://harness.io"); });
   }
 }

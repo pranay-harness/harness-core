@@ -74,7 +74,7 @@ public class DelegateResourceTest {
 
   private static @Mock MainConfiguration mainConfiguration = mock(MainConfiguration.class);
 
-  public @Parameter String apiUrl = null;
+  public @Parameter String apiUrl;
 
   @Parameters
   public static String[] data() {

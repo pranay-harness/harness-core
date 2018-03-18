@@ -92,7 +92,7 @@ public class Http {
       sc = SSLContext.getInstance("SSL");
       sc.init(null, trustAllCerts, new java.security.SecureRandom());
     } catch (NoSuchAlgorithmException | KeyManagementException e) {
-      logger.warn("Error while initializing the SSL context");
+      logger.error("Error while initializing the SSL context", e);
     }
     return sc;
   }
@@ -102,16 +102,22 @@ public class Http {
       return new java.security.cert.X509Certificate[] {};
     }
 
-    public void checkClientTrusted(java.security.cert.X509Certificate[] certs, String authType) {}
+    @Override
+    public void checkClientTrusted(java.security.cert.X509Certificate[] certs, String authType) {
+      // do nothing
+    }
 
-    public void checkServerTrusted(java.security.cert.X509Certificate[] certs, String authType) {}
+    @Override
+    public void checkServerTrusted(java.security.cert.X509Certificate[] certs, String authType) {
+      // do nothing
+    }
   }
 
   public static TrustManager[] getTrustManagers() {
     return new TrustManager[] {new SslTrustManager()};
   }
 
-  public static OkHttpClient getUnsafeOkHttpClient(String url) {
+  public static synchronized OkHttpClient getUnsafeOkHttpClient(String url) {
     try {
       return getOkHttpClientBuilder()
           .sslSocketFactory(Http.getSslContext().getSocketFactory())
