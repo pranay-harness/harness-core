@@ -41,7 +41,8 @@ public class KubernetesSetupParams extends ContainerSetupParams {
   private String ingressYaml;
   private boolean useIstioRouteRule;
   private String configMapYaml;
-  private List<String[]> configFiles;
+  private List<String[]> plainConfigFiles;
+  private List<String[]> encryptedConfigFiles;
 
   public static final class KubernetesSetupParamsBuilder {
     private String serviceName;
@@ -78,7 +79,8 @@ public class KubernetesSetupParams extends ContainerSetupParams {
     private String ingressYaml;
     private boolean useIstioRouteRule;
     private String configMapYaml;
-    private List<String[]> configFiles;
+    private List<String[]> plainConfigFiles;
+    private List<String[]> encryptedConfigFiles;
 
     private KubernetesSetupParamsBuilder() {}
 
@@ -256,8 +258,13 @@ public class KubernetesSetupParams extends ContainerSetupParams {
       return this;
     }
 
-    public KubernetesSetupParamsBuilder withConfigFiles(List<String[]> configFiles) {
-      this.configFiles = configFiles;
+    public KubernetesSetupParamsBuilder withPlainConfigFiles(List<String[]> plainConfigFiles) {
+      this.plainConfigFiles = plainConfigFiles;
+      return this;
+    }
+
+    public KubernetesSetupParamsBuilder withEncryptedConfigFiles(List<String[]> encryptedConfigFiles) {
+      this.encryptedConfigFiles = encryptedConfigFiles;
       return this;
     }
 
@@ -297,7 +304,8 @@ public class KubernetesSetupParams extends ContainerSetupParams {
           .withIngressYaml(ingressYaml)
           .withUseIstioRouteRule(useIstioRouteRule)
           .withConfigMapYaml(configMapYaml)
-          .withConfigFiles(configFiles);
+          .withPlainConfigFiles(plainConfigFiles)
+          .withEncryptedConfigFiles(encryptedConfigFiles);
     }
 
     public KubernetesSetupParams build() {
@@ -336,7 +344,8 @@ public class KubernetesSetupParams extends ContainerSetupParams {
       kubernetesSetupParams.setIngressYaml(ingressYaml);
       kubernetesSetupParams.setUseIstioRouteRule(useIstioRouteRule);
       kubernetesSetupParams.setConfigMapYaml(configMapYaml);
-      kubernetesSetupParams.setConfigFiles(configFiles);
+      kubernetesSetupParams.setPlainConfigFiles(plainConfigFiles);
+      kubernetesSetupParams.setEncryptedConfigFiles(encryptedConfigFiles);
       return kubernetesSetupParams;
     }
   }

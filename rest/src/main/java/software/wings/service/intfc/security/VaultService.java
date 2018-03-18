@@ -6,6 +6,7 @@ import software.wings.settings.SettingValue.SettingVariableTypes;
 import software.wings.utils.BoundedInputStream;
 
 import java.io.File;
+import java.io.OutputStream;
 import java.util.Collection;
 
 /**
@@ -31,6 +32,8 @@ public interface VaultService {
       String accountId, String name, BoundedInputStream inputStream, EncryptedData savedEncryptedData);
 
   File decryptFile(File file, String accountId, EncryptedData encryptedData);
+
+  void decryptToStream(String accountId, EncryptedData encryptedData, OutputStream output);
 
   void deleteSecret(String accountId, String path, VaultConfig vaultConfig);
 }

@@ -5,6 +5,7 @@ import software.wings.security.encryption.EncryptedData;
 import software.wings.utils.BoundedInputStream;
 
 import java.io.File;
+import java.io.OutputStream;
 import java.util.Collection;
 
 /**
@@ -30,4 +31,6 @@ public interface KmsService {
   EncryptedData encryptFile(String accountId, String name, BoundedInputStream inputStream);
 
   File decryptFile(File file, String accountId, EncryptedData encryptedData);
+
+  void decryptToStream(File file, String accountId, EncryptedData encryptedData, OutputStream output);
 }

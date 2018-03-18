@@ -34,6 +34,7 @@ import software.wings.utils.BoundedInputStream;
 import java.io.ByteArrayInputStream;
 import java.io.File;
 import java.io.IOException;
+import java.io.OutputStream;
 import java.nio.ByteBuffer;
 import java.nio.CharBuffer;
 import java.util.ArrayList;
@@ -326,6 +327,22 @@ public class KmsServiceImpl extends AbstractSecretServiceImpl implements KmsServ
       char[] decrypt = decrypt(encryptedData, accountId, kmsConfig);
       Files.write(CHARSET.encode(CharBuffer.wrap(decrypt)).array(), file);
       return file;
+    } catch (IOException ioe) {
+      throw new WingsException(DEFAULT_ERROR_CODE, ioe);
+    }
+  }
+
+  @Override
+  public void decryptToStream(File file, String accountId, EncryptedData encryptedData, OutputStream output) {
+    try {
+      KmsConfig kmsConfig = getSecretConfig(accountId);
+      Preconditions.checkNotNull(kmsConfig);
+      Preconditions.checkNotNull(encryptedData);
+      byte[] bytes = Files.toByteArray(file);
+      encryptedData.setEncryptedValue(CHARSET.decode(ByteBuffer.wrap(bytes)).array());
+      char[] decrypt = decrypt(encryptedData, accountId, kmsConfig);
+      output.write(CHARSET.encode(CharBuffer.wrap(decrypt)).array(), 0, decrypt.length);
+      output.flush();
     } catch (IOException ioe) {
       throw new WingsException(DEFAULT_ERROR_CODE, ioe);
     }

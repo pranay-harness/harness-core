@@ -30,13 +30,9 @@ import java.util.List;
 public abstract class ContainerTask extends DeploymentSpecification {
   static final String DOCKER_IMAGE_NAME_PLACEHOLDER_REGEX = "\\$\\{DOCKER_IMAGE_NAME}";
   static final String CONTAINER_NAME_PLACEHOLDER_REGEX = "\\$\\{CONTAINER_NAME}";
-  static final String SECRET_NAME_PLACEHOLDER_REGEX = "\\$\\{SECRET_NAME}";
-  static final String CONFIG_MAP_NAME_PLACEHOLDER_REGEX = "\\$\\{CONFIG_MAP_NAME}";
 
   static final String DUMMY_DOCKER_IMAGE_NAME = "hv--docker-image-name--hv";
   static final String DUMMY_CONTAINER_NAME = "hv--container-name--hv";
-  static final String DUMMY_SECRET_NAME = "hv--secret-name--hv";
-  static final String DUMMY_CONFIG_MAP_NAME = "hv--config-map-name--hv";
 
   @NotEmpty private String deploymentType;
   @SchemaIgnore @NotEmpty private String serviceId;
