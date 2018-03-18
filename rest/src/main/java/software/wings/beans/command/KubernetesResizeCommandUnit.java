@@ -172,7 +172,9 @@ public class KubernetesResizeCommandUnit extends ContainerResizeCommandUnit {
       int revision = getRevisionFromControllerName(controller).orElse(-1);
       int weight = (int) Math.round((activeControllers.get(controller) * 100.0) / totalInstances);
       executionLogCallback.saveExecutionLog("   " + controller + ": " + weight + "%");
-      routeRuleSpecNested.addNewRoute()
+      routeRuleSpecNested
+          .addNewRoute()
+          // TODO(brett) - Switch to "harness-revision" after 3/26/18
           .addToLabels("revision", Integer.toString(revision))
           .withWeight(weight)
           .endRoute();
