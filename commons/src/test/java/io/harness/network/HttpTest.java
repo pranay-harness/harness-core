@@ -49,7 +49,7 @@ public class HttpTest {
   }
 
   @Test
-  public void concurrencyTest() throws InterruptedException {
-    Concurrent.test(5, () -> { final OkHttpClient client = Http.getUnsafeOkHttpClient("https://harness.io"); });
+  public void concurrencyTest() {
+    Concurrent.test(5, i -> { final OkHttpClient client = Http.getUnsafeOkHttpClient("https://harness.io"); });
   }
 }

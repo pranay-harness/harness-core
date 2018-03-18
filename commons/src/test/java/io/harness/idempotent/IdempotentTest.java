@@ -62,12 +62,13 @@ public class IdempotentTest {
     }
   }
 
-  public void concurrencyTest(IdempotentRegistry idempotentRegistry) throws InterruptedException {
+  public void concurrencyTest(IdempotentRegistry idempotentRegistry) {
     final ArrayList<Integer> integers = new ArrayList<>();
     SecureRandom random = new SecureRandom();
 
-    Concurrent.test(10, () -> {
-      if (random.nextBoolean()) {
+    Concurrent.test(10, i -> {
+      // We need at least one thread to execute positive scenario, else the test will fail
+      if (i == 0 || random.nextBoolean()) {
         try (IdempotentLock idempotent = IdempotentLock.create(id, idempotentRegistry)) {
           if (idempotent == null) {
             return;
