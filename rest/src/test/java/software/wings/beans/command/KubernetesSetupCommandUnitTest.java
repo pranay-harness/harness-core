@@ -145,6 +145,7 @@ public class KubernetesSetupCommandUnitTest extends WingsBaseTest {
                                                                     .addToLabels("tier", "backend")
                                                                     .endMetadata()
                                                                     .withNewSpec()
+                                                                    .withType("LoadBalancer")
                                                                     .addNewPort()
                                                                     .withPort(80)
                                                                     .withNewTargetPort()

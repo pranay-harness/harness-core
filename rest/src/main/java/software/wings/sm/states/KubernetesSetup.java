@@ -68,6 +68,7 @@ public class KubernetesSetup extends ContainerServiceSetup {
   private String loadBalancerIP;
   private Integer nodePort;
   private String externalName;
+  private String serviceYaml;
   private boolean useAutoscaler;
   private int minAutoscaleInstances;
   private int maxAutoscaleInstances;
@@ -169,6 +170,11 @@ public class KubernetesSetup extends ContainerServiceSetup {
       namespace = "default";
     }
 
+    String serviceYamlEvaluated = null;
+    if (serviceType == KubernetesServiceType.Yaml && isNotBlank(serviceYaml)) {
+      serviceYamlEvaluated = context.renderExpression(serviceYaml);
+    }
+
     return aKubernetesSetupParams()
         .withAppName(app.getName())
         .withEnvName(env.getName())
@@ -180,6 +186,7 @@ public class KubernetesSetup extends ContainerServiceSetup {
         .withContainerTask(containerTask)
         .withExternalIPs(externalIPs)
         .withExternalName(externalName)
+        .withServiceYaml(serviceYamlEvaluated)
         .withInfraMappingId(infrastructureMapping.getUuid())
         .withLoadBalancerIP(loadBalancerIP)
         .withNodePort(nodePort)
