@@ -51,6 +51,14 @@ import java.util.regex.Pattern;
 public class KubernetesContainerTask extends ContainerTask {
   private static final Logger logger = LoggerFactory.getLogger(KubernetesContainerTask.class);
 
+  private static final String SECRET_NAME_PLACEHOLDER_REGEX = "\\$\\{SECRET_NAME}";
+  private static final String CONFIG_MAP_NAME_PLACEHOLDER_REGEX = "\\$\\{CONFIG_MAP_NAME}";
+  private static final String SECRET_MAP_NAME_PLACEHOLDER_REGEX = "\\$\\{SECRET_MAP_NAME}";
+
+  private static final String DUMMY_SECRET_NAME = "hv--secret-name--hv";
+  private static final String DUMMY_CONFIG_MAP_NAME = "hv--config-map-name--hv";
+  private static final String DUMMY_SECRET_MAP_NAME = "hv--secret-map-name--hv";
+
   private static final Pattern DAEMON_SET_PATTERN = Pattern.compile("kind:\\s*\"?DaemonSet");
 
   @Attributes(title = "LABELS") private List<Label> labels;
@@ -101,7 +109,15 @@ public class KubernetesContainerTask extends ContainerTask {
         + "#   - Replaced with a container name based on the image name\n"
         + "#\n"
         + "# Optional: ${CONFIG_MAP_NAME}\n"
-        + "#   - Replaced with the ConfigMap name\n"
+        + "#   - Replaced with the ConfigMap name (same as controller name)\n"
+        + "#     Config map contains all unencrypted service variables and\n"
+        + "#     all unencrypted config files, unless a custom\n"
+        + "#     config map is provided\n"
+        + "#\n"
+        + "# Optional: ${SECRET_MAP_NAME}\n"
+        + "#   - Replaced with the Secret name (same as controller name)\n"
+        + "#     Secret map contains all encrypted service variables and\n"
+        + "#     all encrypted config files\n"
         + "#\n"
         + "# Optional: ${SECRET_NAME}\n"
         + "#   - Replaced with the name of the generated image pull\n"
@@ -134,7 +150,8 @@ public class KubernetesContainerTask extends ContainerTask {
                                           .replaceAll(DOCKER_IMAGE_NAME_PLACEHOLDER_REGEX, DUMMY_DOCKER_IMAGE_NAME)
                                           .replaceAll(CONTAINER_NAME_PLACEHOLDER_REGEX, DUMMY_CONTAINER_NAME)
                                           .replaceAll(SECRET_NAME_PLACEHOLDER_REGEX, DUMMY_SECRET_NAME)
-                                          .replaceAll(CONFIG_MAP_NAME_PLACEHOLDER_REGEX, DUMMY_CONFIG_MAP_NAME));
+                                          .replaceAll(CONFIG_MAP_NAME_PLACEHOLDER_REGEX, DUMMY_CONFIG_MAP_NAME)
+                                          .replaceAll(SECRET_MAP_NAME_PLACEHOLDER_REGEX, DUMMY_SECRET_MAP_NAME));
 
         PodTemplateSpec podTemplateSpec = null;
 
@@ -184,13 +201,14 @@ public class KubernetesContainerTask extends ContainerTask {
   }
 
   public HasMetadata createController(
-      String containerName, String imageNameTag, String secretName, String configMapName) {
+      String containerName, String imageNameTag, String secretName, String configMapName, String secretMapName) {
     try {
       String configTemplate = isNotBlank(getAdvancedConfig()) ? getAdvancedConfig() : fetchYamlConfig();
       return KubernetesHelper.loadYaml(configTemplate.replaceAll(DOCKER_IMAGE_NAME_PLACEHOLDER_REGEX, imageNameTag)
                                            .replaceAll(CONTAINER_NAME_PLACEHOLDER_REGEX, containerName)
                                            .replaceAll(SECRET_NAME_PLACEHOLDER_REGEX, secretName)
-                                           .replaceAll(CONFIG_MAP_NAME_PLACEHOLDER_REGEX, configMapName));
+                                           .replaceAll(CONFIG_MAP_NAME_PLACEHOLDER_REGEX, configMapName)
+                                           .replaceAll(SECRET_MAP_NAME_PLACEHOLDER_REGEX, secretMapName));
     } catch (Exception e) {
       throw new WingsException(ErrorCode.INVALID_ARGUMENT, e).addParam("args", e.getMessage());
     }

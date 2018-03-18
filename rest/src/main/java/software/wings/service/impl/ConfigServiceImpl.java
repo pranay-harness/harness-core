@@ -268,14 +268,12 @@ public class ConfigServiceImpl implements ConfigService {
   }
 
   @Override
-  public String getFileContent(String appId, String configId) {
-    ConfigFile configFile = get(appId, configId);
-    OutputStream outputStream = new ByteArrayOutputStream();
-    InputStream inputStream = fileService.openDownloadStream(configFile.getFileUuid(), FileBucket.CONFIGS);
+  public String getFileContent(String appId, ConfigFile configFile) {
     if (configFile.isEncrypted()) {
-      // TODO(brett) - Handle encrypted
-      return null;
+      return secretManager.getFileContents(configFile.getAccountId(), configFile.getEncryptedFileId());
     } else {
+      OutputStream outputStream = new ByteArrayOutputStream();
+      InputStream inputStream = fileService.openDownloadStream(configFile.getFileUuid(), FileBucket.CONFIGS);
       try {
         outputStream.write(ByteStreams.toByteArray(inputStream));
         outputStream.flush();
@@ -283,8 +281,8 @@ public class ConfigServiceImpl implements ConfigService {
         throw new WingsException(INVALID_ARGUMENT, e)
             .addParam("args", "Failed to get configFile content: " + configFile.getName());
       }
+      return outputStream.toString();
     }
-    return outputStream.toString();
   }
 
   private File getDecryptedFile(ConfigFile configFile, File file, String appId, String activityId) {

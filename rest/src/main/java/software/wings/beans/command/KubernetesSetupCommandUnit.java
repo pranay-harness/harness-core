@@ -32,6 +32,7 @@ import io.fabric8.kubernetes.api.model.EnvFromSource;
 import io.fabric8.kubernetes.api.model.EnvFromSourceBuilder;
 import io.fabric8.kubernetes.api.model.EnvVar;
 import io.fabric8.kubernetes.api.model.EnvVarBuilder;
+import io.fabric8.kubernetes.api.model.EnvVarSource;
 import io.fabric8.kubernetes.api.model.EnvVarSourceBuilder;
 import io.fabric8.kubernetes.api.model.HasMetadata;
 import io.fabric8.kubernetes.api.model.HorizontalPodAutoscaler;
@@ -105,6 +106,7 @@ import java.util.Map.Entry;
 import java.util.Optional;
 import java.util.concurrent.TimeUnit;
 import java.util.concurrent.atomic.AtomicInteger;
+import java.util.regex.Pattern;
 
 /**
  * Created by brett on 3/3/17
@@ -112,10 +114,11 @@ import java.util.concurrent.atomic.AtomicInteger;
 public class KubernetesSetupCommandUnit extends ContainerSetupCommandUnit {
   @Transient private static final Logger logger = LoggerFactory.getLogger(KubernetesSetupCommandUnit.class);
 
+  @Transient private static final Pattern envVarPattern = Pattern.compile("^[A-Za-z_][A-Za-z0-9_]*$");
   @Transient
   private static final String DOCKER_REGISTRY_CREDENTIAL_TEMPLATE =
       "{\"%s\":{\"username\":\"%s\",\"password\":\"%s\"}}";
-  public static final String NONE = "none";
+  @Transient public static final String NONE = "none";
 
   @Transient private static final String SERVICE_NAME_PLACEHOLDER_REGEX = "\\$\\{SERVICE_NAME}";
   @Transient private static final String SERVICE_PORT_PLACEHOLDER_REGEX = "\\$\\{SERVICE_PORT}";
@@ -262,13 +265,13 @@ public class KubernetesSetupCommandUnit extends ContainerSetupCommandUnit {
                           .collect(toMap(Map.Entry::getKey, Map.Entry::getValue)));
         }
 
-        if (isNotEmpty(setupParams.getConfigFiles())) {
-          data.putAll(setupParams.getConfigFiles().stream().collect(toMap(sa -> sa[0], sa -> sa[1])));
+        if (isNotEmpty(setupParams.getPlainConfigFiles())) {
+          data.putAll(setupParams.getPlainConfigFiles().stream().collect(toMap(sa -> sa[0], sa -> sa[1])));
         }
         configMap.setData(data);
       }
 
-      if (configMap != null && isEmpty(configMap.getData())) {
+      if (isEmpty(configMap.getData())) {
         configMap = null;
       }
 
@@ -278,32 +281,50 @@ public class KubernetesSetupCommandUnit extends ContainerSetupCommandUnit {
       }
 
       // Setup secrets
+      Secret secret = new SecretBuilder()
+                          .withNewMetadata()
+                          .withName(containerServiceName)
+                          .withNamespace(kubernetesConfig.getNamespace())
+                          .endMetadata()
+                          .build();
+
+      Map<String, String> secretData = new HashMap<>();
+
       Map<String, String> encryptedServiceVars =
           safeDisplayServiceVariables.entrySet()
               .stream()
               .filter(entry -> SECRET_MASK.equals(entry.getValue()))
               .collect(toMap(Entry::getKey, entry -> serviceVariables.get(entry.getKey())));
 
-      Secret secret = null;
       if (isNotEmpty(encryptedServiceVars)) {
-        executionLogCallback.saveExecutionLog("Setting secrets: " + containerServiceName + "\n"
-            + Joiner.on("\n").join(
-                  encryptedServiceVars.keySet().stream().map(var -> "   " + var + ": " + SECRET_MASK).collect(toList()))
-            + "\n");
-        secret = new SecretBuilder()
-                     .withNewMetadata()
-                     .withName(containerServiceName)
-                     .endMetadata()
-                     .withStringData(encryptedServiceVars)
-                     .build();
+        secretData.putAll(encryptedServiceVars);
+      }
+
+      if (isNotEmpty(setupParams.getEncryptedConfigFiles())) {
+        secretData.putAll(setupParams.getEncryptedConfigFiles().stream().collect(toMap(sa -> sa[0], sa -> sa[1])));
+      }
+
+      if (isEmpty(secretData)) {
+        secret = null;
+      }
+
+      if (secret != null) {
+        executionLogCallback.saveExecutionLog("Creating secret map:\n\n"
+                + toDisplayYaml(new SecretBuilder()
+                                    .withMetadata(secret.getMetadata())
+                                    .withStringData(secretData.entrySet().stream().collect(
+                                        toMap(Entry::getKey, entry -> SECRET_MASK)))
+                                    .build()),
+            LogLevel.INFO);
+        secret.setStringData(secretData);
         kubernetesContainerService.createOrReplaceSecret(kubernetesConfig, encryptedDataDetails, secret);
       }
 
       // Setup controller
-
       kubernetesContainerService.createController(kubernetesConfig, encryptedDataDetails,
           createKubernetesControllerDefinition(kubernetesContainerTask, containerServiceName, controllerLabels,
-              kubernetesConfig.getNamespace(), setupParams.getImageDetails(), registrySecretName, configMap, secret));
+              kubernetesConfig.getNamespace(), setupParams.getImageDetails(), registrySecretName, configMap, secret,
+              executionLogCallback));
 
       String serviceClusterIP = null;
       String serviceLoadBalancerEndpoint = null;
@@ -788,26 +809,28 @@ public class KubernetesSetupCommandUnit extends ContainerSetupCommandUnit {
 
   private HasMetadata createKubernetesControllerDefinition(KubernetesContainerTask kubernetesContainerTask,
       String replicationControllerName, Map<String, String> controllerLabels, String namespace,
-      ImageDetails imageDetails, String registrySecretName, ConfigMap configMap, Secret secret) {
+      ImageDetails imageDetails, String registrySecretName, ConfigMap configMap, Secret secretMap,
+      ExecutionLogCallback executionLogCallback) {
     String containerName = KubernetesConvention.getContainerName(imageDetails.getName());
     String imageNameTag = imageDetails.getName() + ":" + imageDetails.getTag();
 
     String configMapName = configMap != null ? configMap.getMetadata().getName() : "no-config-map";
+    String secretMapName = secretMap != null ? secretMap.getMetadata().getName() : "no-secret-map";
 
-    HasMetadata kubernetesObj =
-        kubernetesContainerTask.createController(containerName, imageNameTag, registrySecretName, configMapName);
+    HasMetadata kubernetesObj = kubernetesContainerTask.createController(
+        containerName, imageNameTag, registrySecretName, configMapName, secretMapName);
 
     KubernetesHelper.setName(kubernetesObj, replicationControllerName);
     KubernetesHelper.setNamespace(kubernetesObj, namespace);
     KubernetesHelper.getOrCreateLabels(kubernetesObj).putAll(controllerLabels);
 
-    configureTypeSpecificSpecs(controllerLabels, kubernetesObj, configMap, secret);
+    configureTypeSpecificSpecs(controllerLabels, kubernetesObj, configMap, secretMap, executionLogCallback);
 
     return kubernetesObj;
   }
 
-  private void configureTypeSpecificSpecs(
-      Map<String, String> controllerLabels, HasMetadata kubernetesObj, ConfigMap configMap, Secret secret) {
+  private void configureTypeSpecificSpecs(Map<String, String> controllerLabels, HasMetadata kubernetesObj,
+      ConfigMap configMap, Secret secretMap, ExecutionLogCallback executionLogCallback) {
     ObjectMeta objectMeta = null;
     PodSpec podSpec = null;
     if (kubernetesObj instanceof ReplicationController) {
@@ -850,19 +873,26 @@ public class KubernetesSetupCommandUnit extends ContainerSetupCommandUnit {
     }
 
     if (podSpec != null) {
-      Map<String, EnvVar> secretEnvVars = secret == null
-          ? null
-          : secret.getStringData().entrySet().stream().collect(toMap(Map.Entry::getKey,
-                entry
-                -> new EnvVarBuilder()
-                       .withName(entry.getKey())
-                       .withValueFrom(new EnvVarSourceBuilder()
-                                          .withNewSecretKeyRef()
-                                          .withName(secret.getMetadata().getName())
-                                          .withKey(entry.getKey())
-                                          .endSecretKeyRef()
-                                          .build())
-                       .build()));
+      Map<String, EnvVar> secretEnvVars = new HashMap<>();
+
+      if (secretMap != null) {
+        for (String key : secretMap.getStringData().keySet()) {
+          if (envVarPattern.matcher(key).matches()) {
+            EnvVarSource varSource = new EnvVarSourceBuilder()
+                                         .withNewSecretKeyRef()
+                                         .withName(secretMap.getMetadata().getName())
+                                         .withKey(key)
+                                         .endSecretKeyRef()
+                                         .build();
+            secretEnvVars.put(key, new EnvVarBuilder().withName(key).withValueFrom(varSource).build());
+          } else {
+            String msg = String.format(
+                "Key name [%s] from secret map is not a valid environment variable name. Skipping...", key);
+            executionLogCallback.saveExecutionLog(msg, LogLevel.WARN);
+          }
+        }
+      }
+
       for (Container container : podSpec.getContainers()) {
         if (configMap != null) {
           List<EnvFromSource> envSourceList = new ArrayList<>();
@@ -876,7 +906,7 @@ public class KubernetesSetupCommandUnit extends ContainerSetupCommandUnit {
                                 .build());
           container.setEnvFrom(envSourceList);
         }
-        if (secretEnvVars != null) {
+        if (isNotEmpty(secretEnvVars)) {
           Map<String, EnvVar> containerEnvVars = new HashMap<>();
           if (container.getEnv() != null) {
             container.getEnv().forEach(envVar -> containerEnvVars.put(envVar.getName(), envVar));
