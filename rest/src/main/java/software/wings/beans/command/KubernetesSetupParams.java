@@ -24,6 +24,7 @@ public class KubernetesSetupParams extends ContainerSetupParams {
   private String loadBalancerIP;
   private Integer nodePort;
   private String externalName;
+  private String serviceYaml;
   private String namespace;
   private String controllerNamePrefix;
   private String previousDaemonSetYaml;
@@ -62,6 +63,7 @@ public class KubernetesSetupParams extends ContainerSetupParams {
     private String loadBalancerIP;
     private Integer nodePort;
     private String externalName;
+    private String serviceYaml;
     private String namespace;
     private String controllerNamePrefix;
     private String previousDaemonSetYaml;
@@ -170,6 +172,11 @@ public class KubernetesSetupParams extends ContainerSetupParams {
 
     public KubernetesSetupParamsBuilder withExternalName(String externalName) {
       this.externalName = externalName;
+      return this;
+    }
+
+    public KubernetesSetupParamsBuilder withServiceYaml(String serviceYaml) {
+      this.serviceYaml = serviceYaml;
       return this;
     }
 
@@ -287,6 +294,7 @@ public class KubernetesSetupParams extends ContainerSetupParams {
           .withLoadBalancerIP(loadBalancerIP)
           .withNodePort(nodePort)
           .withExternalName(externalName)
+          .withServiceYaml(serviceYaml)
           .withNamespace(namespace)
           .withControllerNamePrefix(controllerNamePrefix)
           .withPreviousDaemonSetYaml(previousDaemonSetYaml)
@@ -327,6 +335,7 @@ public class KubernetesSetupParams extends ContainerSetupParams {
       kubernetesSetupParams.setLoadBalancerIP(loadBalancerIP);
       kubernetesSetupParams.setNodePort(nodePort);
       kubernetesSetupParams.setExternalName(externalName);
+      kubernetesSetupParams.setServiceYaml(serviceYaml);
       kubernetesSetupParams.setNamespace(namespace);
       kubernetesSetupParams.setControllerNamePrefix(controllerNamePrefix);
       kubernetesSetupParams.setPreviousDaemonSetYaml(previousDaemonSetYaml);

@@ -118,7 +118,9 @@ public class KubernetesSetupCommandUnit extends ContainerSetupCommandUnit {
   @Transient
   private static final String DOCKER_REGISTRY_CREDENTIAL_TEMPLATE =
       "{\"%s\":{\"username\":\"%s\",\"password\":\"%s\"}}";
-  @Transient public static final String NONE = "none";
+  @Transient private static final String NONE = "none";
+  @Transient private static final String LOAD_BALANCER = "LoadBalancer";
+  @Transient private static final String NODE_PORT = "NodePort";
 
   @Transient private static final String SERVICE_NAME_PLACEHOLDER_REGEX = "\\$\\{SERVICE_NAME}";
   @Transient private static final String SERVICE_PORT_PLACEHOLDER_REGEX = "\\$\\{SERVICE_PORT}";
@@ -192,7 +194,7 @@ public class KubernetesSetupCommandUnit extends ContainerSetupCommandUnit {
 
       String registrySecretName = getKubernetesRegistrySecretName(setupParams.getImageDetails());
       Secret registrySecret = createRegistrySecret(
-          registrySecretName, kubernetesConfig.getNamespace(), setupParams.getImageDetails(), executionLogCallback);
+          registrySecretName, setupParams.getNamespace(), setupParams.getImageDetails(), executionLogCallback);
       kubernetesContainerService.createOrReplaceSecret(kubernetesConfig, encryptedDataDetails, registrySecret);
 
       KubernetesContainerTask kubernetesContainerTask = (KubernetesContainerTask) setupParams.getContainerTask();
@@ -236,7 +238,7 @@ public class KubernetesSetupCommandUnit extends ContainerSetupCommandUnit {
           configMap = KubernetesHelper.loadYaml(setupParams.getConfigMapYaml());
           ObjectMeta configMapMeta = Optional.ofNullable(configMap.getMetadata()).orElse(new ObjectMeta());
           configMapMeta.setName(containerServiceName);
-          configMapMeta.setNamespace(kubernetesConfig.getNamespace());
+          configMapMeta.setNamespace(setupParams.getNamespace());
           Map<String, String> configMapLabels = new HashMap<>();
           if (isNotEmpty(configMapMeta.getLabels())) {
             configMapLabels.putAll(configMapMeta.getLabels());
@@ -251,7 +253,7 @@ public class KubernetesSetupCommandUnit extends ContainerSetupCommandUnit {
         configMap = new ConfigMapBuilder()
                         .withNewMetadata()
                         .withName(containerServiceName)
-                        .withNamespace(kubernetesConfig.getNamespace())
+                        .withNamespace(setupParams.getNamespace())
                         .withLabels(controllerLabels)
                         .endMetadata()
                         .build();
@@ -284,7 +286,7 @@ public class KubernetesSetupCommandUnit extends ContainerSetupCommandUnit {
       Secret secret = new SecretBuilder()
                           .withNewMetadata()
                           .withName(containerServiceName)
-                          .withNamespace(kubernetesConfig.getNamespace())
+                          .withNamespace(setupParams.getNamespace())
                           .endMetadata()
                           .build();
 
@@ -323,7 +325,7 @@ public class KubernetesSetupCommandUnit extends ContainerSetupCommandUnit {
       // Setup controller
       kubernetesContainerService.createController(kubernetesConfig, encryptedDataDetails,
           createKubernetesControllerDefinition(kubernetesContainerTask, containerServiceName, controllerLabels,
-              kubernetesConfig.getNamespace(), setupParams.getImageDetails(), registrySecretName, configMap, secret,
+              setupParams.getNamespace(), setupParams.getImageDetails(), registrySecretName, configMap, secret,
               executionLogCallback));
 
       String serviceClusterIP = null;
@@ -331,31 +333,36 @@ public class KubernetesSetupCommandUnit extends ContainerSetupCommandUnit {
       String nodePort = null;
 
       // Setup service
-      Service service =
-          kubernetesContainerService.getService(kubernetesConfig, encryptedDataDetails, kubernetesServiceName);
+      Service service = null;
+
+      try {
+        service = kubernetesContainerService.getService(kubernetesConfig, encryptedDataDetails, kubernetesServiceName);
+      } catch (Exception e) {
+        Misc.logAllMessages(e, executionLogCallback);
+      }
 
       if (setupParams.getServiceType() != null && setupParams.getServiceType() != KubernetesServiceType.None) {
-        Service serviceDefinition =
-            createServiceDefinition(kubernetesServiceName, kubernetesConfig.getNamespace(), serviceLabels, setupParams);
+        Service serviceDefinition = setupParams.getServiceType() == KubernetesServiceType.Yaml
+            ? createdServiceDefinitionFromYaml(
+                  kubernetesServiceName, setupParams.getNamespace(), serviceLabels, setupParams)
+            : createServiceDefinition(kubernetesServiceName, setupParams.getNamespace(), serviceLabels, setupParams);
         if (service != null) {
           // Keep the previous load balancer IP if it exists and a new one was not specified
           LoadBalancerStatus loadBalancer = service.getStatus().getLoadBalancer();
-          if (setupParams.getServiceType() == KubernetesServiceType.LoadBalancer
-              && isEmpty(setupParams.getLoadBalancerIP()) && loadBalancer != null
+          if (serviceDefinition.getSpec().getType().equals(LOAD_BALANCER)
+              && isEmpty(serviceDefinition.getSpec().getLoadBalancerIP()) && loadBalancer != null
               && !loadBalancer.getIngress().isEmpty()) {
-            setupParams.setLoadBalancerIP(loadBalancer.getIngress().get(0).getIp());
-            serviceDefinition = createServiceDefinition(
-                kubernetesServiceName, kubernetesConfig.getNamespace(), serviceLabels, setupParams);
+            serviceDefinition.getSpec().setLoadBalancerIP(loadBalancer.getIngress().get(0).getIp());
           }
         }
         service = kubernetesContainerService.createOrReplaceService(
             kubernetesConfig, encryptedDataDetails, serviceDefinition);
         serviceClusterIP = service.getSpec().getClusterIP();
 
-        if (setupParams.getServiceType() == KubernetesServiceType.LoadBalancer) {
+        if (service.getSpec().getType().equals(LOAD_BALANCER)) {
           serviceLoadBalancerEndpoint = waitForLoadBalancerEndpoint(
               kubernetesConfig, encryptedDataDetails, service, setupParams.getLoadBalancerIP(), executionLogCallback);
-        } else if (setupParams.getServiceType() == KubernetesServiceType.NodePort) {
+        } else if (service.getSpec().getType().equals(NODE_PORT)) {
           nodePort = Joiner.on(',').join(
               service.getSpec().getPorts().stream().map(ServicePort::getNodePort).collect(toList()));
         }
@@ -387,11 +394,11 @@ public class KubernetesSetupCommandUnit extends ContainerSetupCommandUnit {
         }
       }
 
-      // Setup route rule
+      // Setup Istio route rule
       IstioResource routeRule = null;
       Map<String, Integer> activeControllers = null;
       int totalInstances = 0;
-      if (setupParams.isUseIstioRouteRule()) {
+      if (setupParams.isUseIstioRouteRule() && service != null) {
         activeControllers = kubernetesContainerService.getActiveServiceCounts(
             kubernetesConfig, encryptedDataDetails, containerServiceName);
         totalInstances = activeControllers.values().stream().mapToInt(Integer::intValue).sum();
@@ -404,6 +411,13 @@ public class KubernetesSetupCommandUnit extends ContainerSetupCommandUnit {
             LogLevel.INFO);
         routeRule = kubernetesContainerService.createOrReplaceRouteRule(kubernetesConfig, encryptedDataDetails,
             createRouteRuleDefinition(setupParams, kubernetesServiceName, activeControllers));
+      } else {
+        try {
+          kubernetesContainerService.deleteRouteRule(kubernetesConfig, encryptedDataDetails, kubernetesServiceName);
+          routeRule = null;
+        } catch (Exception e) {
+          Misc.logAllMessages(e, executionLogCallback);
+        }
       }
 
       // Disable previous autoscalers
@@ -427,7 +441,7 @@ public class KubernetesSetupCommandUnit extends ContainerSetupCommandUnit {
       // Create new autoscaler
       if (setupParams.isUseAutoscaler()) {
         HorizontalPodAutoscaler autoscalerDefinition = createAutoscaler(
-            containerServiceName, kubernetesConfig.getNamespace(), controllerLabels, setupParams, executionLogCallback);
+            containerServiceName, setupParams.getNamespace(), controllerLabels, setupParams, executionLogCallback);
 
         if (autoscalerDefinition != null) {
           executionLogCallback.saveExecutionLog(
@@ -935,7 +949,7 @@ public class KubernetesSetupCommandUnit extends ContainerSetupCommandUnit {
       if (setupParams.getServiceType() == KubernetesServiceType.NodePort && setupParams.getNodePort() != null) {
         servicePort.withNodePort(setupParams.getNodePort());
       }
-      spec.withPorts(ImmutableList.of(servicePort.build())); // TODO:: Allow more than one port
+      spec.withPorts(ImmutableList.of(servicePort.build()));
 
       if (setupParams.getServiceType() == KubernetesServiceType.LoadBalancer
           && isNotEmpty(setupParams.getLoadBalancerIP())) {
@@ -961,6 +975,20 @@ public class KubernetesSetupCommandUnit extends ContainerSetupCommandUnit {
         .endMetadata()
         .withSpec(spec.build())
         .build();
+  }
+
+  private io.fabric8.kubernetes.api.model.Service createdServiceDefinitionFromYaml(
+      String serviceName, String namespace, Map<String, String> serviceLabels, KubernetesSetupParams setupParams) {
+    try {
+      Service service = KubernetesHelper.loadYaml(setupParams.getServiceYaml());
+      service.getMetadata().setLabels(serviceLabels);
+      service.getMetadata().setName(serviceName);
+      service.getMetadata().setNamespace(namespace);
+      service.getSpec().setSelector(serviceLabels);
+      return service;
+    } catch (IOException e) {
+      throw new WingsException(ErrorCode.INVALID_ARGUMENT, e).addParam("args", e.getMessage());
+    }
   }
 
   private void cleanup(KubernetesConfig kubernetesConfig, List<EncryptedDataDetail> encryptedDataDetails,

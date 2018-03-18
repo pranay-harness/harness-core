@@ -98,6 +98,8 @@ public interface KubernetesContainerService {
   IstioResource createOrReplaceRouteRule(
       KubernetesConfig kubernetesConfig, List<EncryptedDataDetail> encryptedDataDetails, IstioResource definition);
 
+  void deleteRouteRule(KubernetesConfig kubernetesConfig, List<EncryptedDataDetail> encryptedDataDetails, String name);
+
   void createNamespaceIfNotExist(KubernetesConfig kubernetesConfig, List<EncryptedDataDetail> encryptedDataDetails);
 
   Secret getSecret(

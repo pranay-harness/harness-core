@@ -57,6 +57,7 @@ import io.fabric8.kubernetes.client.dsl.Resource;
 import io.fabric8.kubernetes.client.dsl.RollableScalableResource;
 import io.fabric8.kubernetes.client.dsl.ScalableResource;
 import me.snowdrop.istio.api.model.IstioResource;
+import me.snowdrop.istio.api.model.IstioResourceBuilder;
 import me.snowdrop.istio.client.IstioClient;
 import org.apache.commons.lang3.StringUtils;
 import org.slf4j.Logger;
@@ -623,6 +624,22 @@ public class KubernetesContainerServiceImpl implements KubernetesContainerServic
       // Do nothing
     }
     return istioClient.registerCustomResource(definition);
+  }
+
+  @Override
+  public void deleteRouteRule(
+      KubernetesConfig kubernetesConfig, List<EncryptedDataDetail> encryptedDataDetails, String name) {
+    IstioClient istioClient = kubernetesHelperService.getIstioClient(kubernetesConfig, encryptedDataDetails);
+    try {
+      istioClient.unregisterCustomResource(new IstioResourceBuilder()
+                                               .withNewMetadata()
+                                               .withName(name)
+                                               .withNamespace(kubernetesConfig.getNamespace())
+                                               .endMetadata()
+                                               .build());
+    } catch (Exception e) {
+      // Do nothing
+    }
   }
 
   @Override
