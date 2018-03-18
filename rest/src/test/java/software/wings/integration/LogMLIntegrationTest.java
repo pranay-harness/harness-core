@@ -826,6 +826,7 @@ public class LogMLIntegrationTest extends BaseIntegrationTest {
       getRequestBuilderWithAuthHeader(getTarget).get(new GenericType<RestResponse<Boolean>>() {});
       fail();
     } catch (BadRequestException e) {
+      // ignore
     }
   }
 
