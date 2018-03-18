@@ -226,10 +226,28 @@ public class KubernetesSetupCommandUnit extends ContainerSetupCommandUnit {
               .put("env", KubernetesConvention.getLabelValue(setupParams.getEnvName()))
               .build();
 
-      Map<String, String> controllerLabels = ImmutableMap.<String, String>builder()
-                                                 .putAll(serviceLabels)
-                                                 .put("revision", isDaemonSet ? "ds" : Integer.toString(revision))
-                                                 .build();
+      // TODO(brett) - To switch to these new labels we need to set them on the controller for awhile first
+      // After 3/26/18 the new labels will have been in the controllers for a week and we can switch the services
+      // over to the new labels and stop setting the old labels in the controller.
+
+      Map<String, String> futureServiceLabels =
+          ImmutableMap.<String, String>builder()
+              .put("harness-app", KubernetesConvention.getLabelValue(setupParams.getAppName()))
+              .put("harness-service", KubernetesConvention.getLabelValue(setupParams.getServiceName()))
+              .put("harness-env", KubernetesConvention.getLabelValue(setupParams.getEnvName()))
+              .build();
+
+      Map<String, String> controllerLabels =
+          ImmutableMap
+              .<String, String>builder()
+              // TODO(brett) - Set both old and new service labels for now. After 3/26/18 when service
+              // switches to new then only new needs to be set
+              .putAll(serviceLabels)
+              .putAll(futureServiceLabels)
+              // TODO(brett) - Set only "harness-revision" after 3/26/18
+              .put("revision", isDaemonSet ? "ds" : Integer.toString(revision))
+              .put("harness-revision", isDaemonSet ? "ds" : Integer.toString(revision))
+              .build();
 
       // Setup config map
       ConfigMap configMap;
@@ -635,7 +653,9 @@ public class KubernetesSetupCommandUnit extends ContainerSetupCommandUnit {
     int totalInstances = activeControllers.values().stream().mapToInt(Integer::intValue).sum();
     for (String controller : activeControllers.keySet()) {
       int revision = getRevisionFromControllerName(controller).orElse(-1);
-      routeRuleSpecNested.addNewRoute()
+      routeRuleSpecNested
+          .addNewRoute()
+          // TODO(brett) - Switch to "harness-revision" after 3/26/18
           .addToLabels("revision", Integer.toString(revision))
           .withWeight((int) Math.round((activeControllers.get(controller) * 100.0) / totalInstances))
           .endRoute();
