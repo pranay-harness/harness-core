@@ -33,6 +33,10 @@ public class HostConnectionAttributes extends SettingValue implements Encryptabl
 
   @SchemaIgnore private String encryptedKey;
 
+  private boolean keyless;
+
+  private String keyPath;
+
   /**
    * Instantiates a new host connection attributes.
    */
@@ -89,116 +93,84 @@ public class HostConnectionAttributes extends SettingValue implements Encryptabl
     SSH
   }
 
-  /**
-   * The Class Builder.
-   */
   public static final class Builder {
     private ConnectionType connectionType;
     private AccessType accessType;
     private char[] key;
-    private String encryptedKey;
-    private String userName;
     private String accountId;
+    private String userName;
+    private String encryptedKey;
+    private boolean keyless;
+    private String keyPath;
 
     private Builder() {}
 
-    /**
-     * A host connection attributes.
-     *
-     * @return the host connection attributes builder
-     */
     public static Builder aHostConnectionAttributes() {
       return new Builder();
     }
 
-    /**
-     * With connection type.
-     *
-     * @param connectionType the connection type
-     * @return the host connection attributes builder
-     */
     public Builder withConnectionType(ConnectionType connectionType) {
       this.connectionType = connectionType;
       return this;
     }
 
-    /**
-     * With access type.
-     *
-     * @param accessType the access type
-     * @return the host connection attributes builder
-     */
     public Builder withAccessType(AccessType accessType) {
       this.accessType = accessType;
       return this;
     }
 
-    /**
-     * With key.
-     *
-     * @param key the key
-     * @return the host connection attributes builder
-     */
-    public Builder withKey(char[] key) {
-      this.key = key;
-      return this;
-    }
-
-    /**
-     * With user name.
-     *
-     * @param userName the user name
-     * @return the host connection attributes builder
-     */
     public Builder withUserName(String userName) {
       this.userName = userName;
       return this;
     }
 
-    /**
-     * With accountId.
-     *
-     * @param accountId the accountId
-     * @return the builder
-     */
+    public Builder withKey(char[] key) {
+      this.key = key;
+      return this;
+    }
+
     public Builder withAccountId(String accountId) {
       this.accountId = accountId;
       return this;
     }
 
-    public Builder withEncyptedKey(String encryptedKey) {
+    public Builder withEncryptedKey(String encryptedKey) {
       this.encryptedKey = encryptedKey;
       return this;
     }
 
-    /**
-     * But.
-     *
-     * @return the host connection attributes builder
-     */
+    public Builder withKeyless(boolean keyless) {
+      this.keyless = keyless;
+      return this;
+    }
+
+    public Builder withKeyPath(String keyPath) {
+      this.keyPath = keyPath;
+      return this;
+    }
+
     public Builder but() {
       return aHostConnectionAttributes()
           .withConnectionType(connectionType)
           .withAccessType(accessType)
-          .withKey(key)
-          .withEncyptedKey(encryptedKey)
           .withUserName(userName)
-          .withAccountId(accountId);
+          .withKey(key)
+          .withAccountId(accountId)
+          .withEncryptedKey(encryptedKey)
+          .withKeyless(keyless)
+          .withKeyPath(keyPath);
     }
 
-    /**
-     * Builds the.
-     *
-     * @return the host connection attributes
-     */
     public HostConnectionAttributes build() {
       HostConnectionAttributes hostConnectionAttributes = new HostConnectionAttributes();
       hostConnectionAttributes.setConnectionType(connectionType);
       hostConnectionAttributes.setAccessType(accessType);
-      hostConnectionAttributes.setKey(key);
-      hostConnectionAttributes.setEncryptedKey(encryptedKey);
       hostConnectionAttributes.setUserName(userName);
+      hostConnectionAttributes.setKey(key);
       hostConnectionAttributes.setAccountId(accountId);
+      hostConnectionAttributes.setEncryptedKey(encryptedKey);
+      hostConnectionAttributes.setKeyless(keyless);
+      hostConnectionAttributes.setKeyPath(keyPath);
       return hostConnectionAttributes;
     }
   }

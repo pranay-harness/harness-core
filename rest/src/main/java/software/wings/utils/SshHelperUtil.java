@@ -131,7 +131,9 @@ public class SshHelperUtil {
       builder.withKey(hostConnectionAttributes.getKey())
           .withUserName(hostConnectionAttributes.getUserName())
           .withKeyName(settingAttribute.getUuid())
-          .withPassword(null);
+          .withPassword(null)
+          .withKeyLess(hostConnectionAttributes.isKeyless())
+          .withKeyPath(hostConnectionAttributes.getKeyPath());
     }
 
     if (context.getBastionConnectionAttributes() != null) {
