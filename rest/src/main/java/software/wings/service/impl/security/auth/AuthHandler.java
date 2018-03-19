@@ -1,5 +1,6 @@
 package software.wings.service.impl.security.auth;
 
+import static software.wings.beans.FeatureName.RBAC;
 import static software.wings.beans.SearchFilter.Operator.EQ;
 import static software.wings.common.Constants.DEFAULT_USER_GROUP_NAME;
 import static software.wings.dl.PageRequest.PageRequestBuilder.aPageRequest;
@@ -21,7 +22,6 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import software.wings.beans.Account;
 import software.wings.beans.Environment;
-import software.wings.beans.FeatureName;
 import software.wings.beans.HttpMethod;
 import software.wings.beans.Pipeline;
 import software.wings.beans.SearchFilter.Operator;
@@ -57,6 +57,7 @@ import software.wings.security.UserRequestContext;
 import software.wings.security.UserThreadLocal;
 import software.wings.security.WorkflowFilter;
 import software.wings.service.intfc.AppService;
+import software.wings.service.intfc.AuthService;
 import software.wings.service.intfc.EnvironmentService;
 import software.wings.service.intfc.FeatureFlagService;
 import software.wings.service.intfc.PipelineService;
@@ -91,13 +92,14 @@ public class AuthHandler {
   @Inject private WorkflowService workflowService;
   @Inject private FeatureFlagService featureFlagService;
   @Inject private UserGroupService userGroupService;
+  @Inject private AuthService authService;
 
   public UserPermissionInfo getUserPermissionInfo(String accountId, List<UserGroup> userGroups) {
     Map<String, AppPermissionSummaryForUI> appPermissionMap = new HashMap<>();
     UserPermissionInfoBuilder userPermissionInfoBuilder =
         UserPermissionInfo.builder().accountId(accountId).appPermissionMap(appPermissionMap);
 
-    boolean enabled = featureFlagService.isEnabled(FeatureName.RBAC, accountId);
+    boolean enabled = featureFlagService.isEnabled(RBAC, accountId);
     userPermissionInfoBuilder.isRbacEnabled(enabled);
 
     Set<PermissionType> accountPermissionSet = new HashSet<>();
@@ -179,7 +181,7 @@ public class AuthHandler {
     return userPermissionInfo;
   }
 
-  private Set<String> getAppIdsByFilter(String accountId, GenericEntityFilter appFilter) {
+  public Set<String> getAppIdsByFilter(String accountId, GenericEntityFilter appFilter) {
     if (appFilter == null) {
       appFilter = GenericEntityFilter.builder().filterType(FilterType.ALL).build();
     }
@@ -202,6 +204,17 @@ public class AuthHandler {
     if (user != null && user.getUserRequestContext() != null) {
       setEntityIdFilter(requiredPermissionAttributes, user.getUserRequestContext(), appIds);
     }
+  }
+
+  public boolean authorize(
+      List<PermissionAttribute> requiredPermissionAttributes, List<String> appIds, String entityId) {
+    User user = UserThreadLocal.get();
+    // UserRequestContext is null if rbac enabled is false
+    UserRequestContext userRequestContext = user.getUserRequestContext();
+    if (user != null && userRequestContext != null) {
+      authService.authorize(userRequestContext.getAccountId(), appIds, entityId, user, requiredPermissionAttributes);
+    }
+    return true;
   }
 
   public void setEntityIdFilter(List<PermissionAttribute> requiredPermissionAttributes,
@@ -395,31 +408,31 @@ public class AuthHandler {
     PageResponse<Pipeline> pageResponse = pipelineService.listPipelines(pageRequest);
     List<Pipeline> pipelineList = pageResponse.getResponse();
     final Set<String> envIdsFinal = envIds;
-    pipelineIds = pipelineList.stream()
-                      .filter(pipeline -> {
-                        final AtomicInteger envStageCount = new AtomicInteger();
-                        final AtomicInteger envCount = new AtomicInteger();
-                        pipeline.getPipelineStages().stream().forEach(pipelineStage -> {
-                          pipelineStage.getPipelineStageElements().stream().forEach(pipelineStageElement -> {
+    pipelineIds =
+        pipelineList.stream()
+            .filter(pipeline -> {
+              final AtomicInteger envStageCount = new AtomicInteger();
+              final AtomicInteger envCount = new AtomicInteger();
+              pipeline.getPipelineStages().stream().forEach(
+                  pipelineStage -> pipelineStage.getPipelineStageElements().stream().forEach(pipelineStageElement -> {
 
-                            // The stage type is called ENV_STATE in pipeline. The other stage type is Approval stage.
-                            if (pipelineStageElement.getType().equals(StateType.ENV_STATE.name())) {
-                              envStageCount.incrementAndGet();
-                            }
+                    // The stage type is called ENV_STATE in pipeline. The other stage type is Approval stage.
+                    if (pipelineStageElement.getType().equals(StateType.ENV_STATE.name())) {
+                      envStageCount.incrementAndGet();
+                    }
 
-                            Map<String, Object> properties = pipelineStageElement.getProperties();
-                            if (properties != null) {
-                              String envId = (String) properties.get("envId");
-                              if (envIdsFinal.contains(envId)) {
-                                envCount.incrementAndGet();
-                              }
-                            }
-                          });
-                        });
-                        return envStageCount == envCount;
-                      })
-                      .map(pipeline -> pipeline.getUuid())
-                      .collect(Collectors.toSet());
+                    Map<String, Object> properties = pipelineStageElement.getProperties();
+                    if (properties != null) {
+                      String envId = (String) properties.get("envId");
+                      if (envIdsFinal.contains(envId)) {
+                        envCount.incrementAndGet();
+                      }
+                    }
+                  }));
+              return envStageCount.get() == envCount.get();
+            })
+            .map(pipeline -> pipeline.getUuid())
+            .collect(Collectors.toSet());
 
     return pipelineIds;
   }
@@ -461,22 +474,45 @@ public class AuthHandler {
   }
 
   private Set<String> getDeploymentIdsByFilter(String appId, EnvFilter envFilter) {
+    WorkflowFilter workflowFilter = getWorkflowFilterFromEnvFilter(envFilter);
+
     Set<String> envIds = getEnvIdsByFilter(appId, envFilter);
     if (CollectionUtils.isEmpty(envIds)) {
       logger.info("No environments matched the filter for app {}. Returning empty set of deployments", appId);
       return new HashSet<>();
     }
 
-    PageRequestBuilder pageRequestBuilder = aPageRequest().addFilter("appId", Operator.EQ, appId);
-    if (CollectionUtils.isNotEmpty(envIds)) {
-      pageRequestBuilder.addFilter("envId", Operator.IN, envIds.toArray());
+    Set<String> workflowIds = getWorkflowIdsByFilter(appId, workflowFilter);
+    Set<String> pipelineIds = getPipelineIdsByFilter(appId, envFilter);
+
+    if (CollectionUtils.isNotEmpty(pipelineIds)) {
+      workflowIds.addAll(pipelineIds);
     }
 
-    PageRequest<Workflow> pageRequest = pageRequestBuilder.build();
-    PageResponse<Workflow> pageResponse = workflowService.listWorkflows(pageRequest);
-    List<Workflow> workflowList = pageResponse.getResponse();
+    return workflowIds;
+  }
 
-    return workflowList.stream().map(workflow -> workflow.getUuid()).collect(Collectors.toSet());
+  private WorkflowFilter getWorkflowFilterFromEnvFilter(EnvFilter envFilter) {
+    envFilter = getDefaultEnvFilterIfNull(envFilter);
+
+    // Construct workflow filter since we also want to include templates to deployments
+    WorkflowFilter workflowFilter = new WorkflowFilter();
+
+    Set<String> workflowFilterTypes = Sets.newHashSet();
+
+    final EnvFilter envFilterFinal = envFilter;
+
+    envFilter.getFilterTypes().forEach(filterType -> {
+      workflowFilterTypes.add(filterType);
+      if (filterType.equals(EnvFilter.FilterType.SELECTED)) {
+        workflowFilter.setIds(envFilterFinal.getIds());
+      }
+    });
+
+    workflowFilterTypes.add(WorkflowFilter.FilterType.TEMPLATES);
+    workflowFilter.setFilterTypes(workflowFilterTypes);
+
+    return workflowFilter;
   }
 
   private boolean isEnvType(String filterType) {

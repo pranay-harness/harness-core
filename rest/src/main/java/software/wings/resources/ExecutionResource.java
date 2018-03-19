@@ -27,14 +27,19 @@ import software.wings.beans.baseline.WorkflowExecutionBaseline;
 import software.wings.common.Constants;
 import software.wings.dl.PageRequest;
 import software.wings.dl.PageResponse;
+import software.wings.security.PermissionAttribute;
+import software.wings.security.PermissionAttribute.Action;
+import software.wings.security.PermissionAttribute.PermissionType;
 import software.wings.security.PermissionAttribute.ResourceType;
 import software.wings.security.annotations.AuthRule;
 import software.wings.security.annotations.Scope;
+import software.wings.service.impl.security.auth.AuthHandler;
 import software.wings.service.intfc.AppService;
 import software.wings.service.intfc.WorkflowExecutionService;
 import software.wings.sm.ExecutionInterrupt;
 import software.wings.sm.StateExecutionData;
 
+import java.util.Arrays;
 import java.util.List;
 import java.util.Set;
 import java.util.stream.Collectors;
@@ -57,6 +62,7 @@ import javax.ws.rs.QueryParam;
 public class ExecutionResource {
   private AppService appService;
   private WorkflowExecutionService workflowExecutionService;
+  private AuthHandler authHandler;
 
   /**
    * Instantiates a new execution resource.
@@ -65,9 +71,11 @@ public class ExecutionResource {
    * @param workflowExecutionService the workflow service
    */
   @Inject
-  public ExecutionResource(AppService appService, WorkflowExecutionService workflowExecutionService) {
+  public ExecutionResource(
+      AppService appService, WorkflowExecutionService workflowExecutionService, AuthHandler authHandler) {
     this.appService = appService;
     this.workflowExecutionService = workflowExecutionService;
+    this.authHandler = authHandler;
   }
 
   /**
@@ -158,12 +166,25 @@ public class ExecutionResource {
   @POST
   @Timed
   @ExceptionMetered
-  @AuthRule(permissionType = DEPLOYMENT, action = EXECUTE)
+  // We are handling the check programmatically for now, since we don't have enough info in the query / path parameters
+  @AuthRule(permissionType = DEPLOYMENT, action = EXECUTE, skipAuth = true)
   public RestResponse<WorkflowExecution> triggerExecution(@QueryParam("appId") String appId,
       @QueryParam("envId") String envId, @QueryParam("pipelineId") String pipelineId, ExecutionArgs executionArgs) {
+    PermissionAttribute permissionAttribute = new PermissionAttribute(PermissionType.DEPLOYMENT, Action.EXECUTE);
+    List<PermissionAttribute> permissionAttributeList = Arrays.asList(permissionAttribute);
     if (pipelineId != null && executionArgs.getWorkflowType() == WorkflowType.PIPELINE) {
       executionArgs.setPipelineId(pipelineId);
+      authHandler.authorize(permissionAttributeList, Arrays.asList(appId), pipelineId);
+    } else {
+      if (executionArgs != null) {
+        if (executionArgs.getOrchestrationId() != null) {
+          authHandler.authorize(permissionAttributeList, Arrays.asList(appId), executionArgs.getOrchestrationId());
+        } else if (executionArgs.getPipelineId() != null) {
+          authHandler.authorize(permissionAttributeList, Arrays.asList(appId), executionArgs.getPipelineId());
+        }
+      }
     }
+
     return new RestResponse<>(workflowExecutionService.triggerEnvExecution(appId, envId, executionArgs));
   }
 

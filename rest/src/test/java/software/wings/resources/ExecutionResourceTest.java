@@ -21,6 +21,7 @@ import software.wings.beans.RestResponse;
 import software.wings.beans.WorkflowExecution;
 import software.wings.dl.PageRequest;
 import software.wings.dl.PageResponse;
+import software.wings.service.impl.security.auth.AuthHandler;
 import software.wings.service.intfc.AppService;
 import software.wings.service.intfc.WorkflowExecutionService;
 import software.wings.utils.ResourceTestRule;
@@ -33,13 +34,16 @@ import javax.ws.rs.core.GenericType;
 public class ExecutionResourceTest {
   private static final AppService appService = mock(AppService.class);
   private static final WorkflowExecutionService workflowExecutionService = mock(WorkflowExecutionService.class);
+  private static final AuthHandler authHandler = mock(AuthHandler.class);
 
   /**
    * The constant resources.
    */
   @ClassRule
   public static final ResourceTestRule resources =
-      ResourceTestRule.builder().addResource(new ExecutionResource(appService, workflowExecutionService)).build();
+      ResourceTestRule.builder()
+          .addResource(new ExecutionResource(appService, workflowExecutionService, authHandler))
+          .build();
 
   /**
    * Tear down.

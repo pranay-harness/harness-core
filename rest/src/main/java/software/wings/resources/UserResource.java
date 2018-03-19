@@ -317,6 +317,7 @@ public class UserResource {
   @Scope(value = ResourceType.USER, scope = PermissionType.LOGGED_IN)
   @Timed
   @ExceptionMetered
+  @AuthRule(permissionType = PermissionType.LOGGED_IN, skipAuth = true)
   public RestResponse logout(@PathParam("userId") String userId) {
     userService.logout(userId);
     return new RestResponse();
