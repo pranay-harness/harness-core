@@ -444,7 +444,7 @@ public class AuthHandler {
                                                 .addFilter("envId", Operator.IN, envIds.toArray());
 
     PageRequest<Workflow> pageRequest = pageRequestBuilder.build();
-    PageResponse<Workflow> pageResponse = workflowService.listWorkflows(pageRequest);
+    PageResponse<Workflow> pageResponse = workflowService.listWorkflowsWithoutOrchestration(pageRequest);
     List<Workflow> workflowList = pageResponse.getResponse();
 
     Set<String> workflowIdSet = workflowList.stream().map(workflow -> workflow.getUuid()).collect(Collectors.toSet());
