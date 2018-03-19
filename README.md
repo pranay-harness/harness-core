@@ -217,9 +217,9 @@ The admin username and password are in BaseIntegrationTest.java.
 
    `mvn clean compile exec:java`
 
-### Common problems:
-
+### Common problems: 
 * If you get an error about missing build.properties when you start the server, do a mvn clean install.
+* If you get a SupportedEllipticCurvesExtension NoClassDefFoundError, Its likely that jsse.jar in /Library/Java/JavaVirtualMachines/<JDK Version>/Contents/Home/jre/lib folder does not have this class definition. Copy this file from a Team member. 
 * If you go to https://localhost:8000/#/login and don't see content, go to https://localhost:8181/#/login to enable the certificate then try again.
 * If still face not able to login then got to https://localhost:9090/api/version and enable certificate and try again.
 
