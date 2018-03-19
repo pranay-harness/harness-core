@@ -194,8 +194,18 @@ public class EcsContainerTask extends ContainerTask {
                 .collect(toList()))
         .withExecutionRoleArn(DUMMY_EXECUTION_ROLE_ARN)
         .withVolumes(volumeMap.values())
-        .withCpu(getContainerDefinitions().stream().map(cd -> cd.getCpu().toString()).findFirst().orElse(null))
-        .withMemory(getContainerDefinitions().stream().map(cd -> cd.getMemory().toString()).findFirst().orElse(null));
+        .withCpu(getContainerDefinitions()
+                     .stream()
+                     .filter(def -> def.getCpu() != null)
+                     .findFirst()
+                     .map(cd -> cd.getCpu().toString())
+                     .orElse(null))
+        .withMemory(getContainerDefinitions()
+                        .stream()
+                        .filter(def -> def.getMemory() != null)
+                        .findFirst()
+                        .map(cd -> cd.getMemory().toString())
+                        .orElse(null));
   }
 
   public com.amazonaws.services.ecs.model.ContainerDefinition createContainerDefinition(

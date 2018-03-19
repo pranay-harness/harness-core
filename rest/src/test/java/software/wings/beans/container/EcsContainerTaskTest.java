@@ -64,5 +64,14 @@ public class EcsContainerTaskTest {
     assertNotNull(containerDefinitionAws.getPortMappings());
     assertEquals(1, containerDefinitionAws.getPortMappings().size());
     assertEquals(80, containerDefinitionAws.getPortMappings().iterator().next().getContainerPort().intValue());
+
+    containerDefinition = ContainerDefinition.builder()
+                              .portMappings(Arrays.asList(portMapping))
+                              .logConfiguration(LogConfiguration.builder().logDriver("awslog").build())
+                              .build();
+
+    ecsContainerTask.setContainerDefinitions(Arrays.asList(containerDefinition));
+    taskDefinition = ecsContainerTask.createTaskDefinition(CONTAINER_NAME, IMAGE_NAME, EXEC_ROLE);
+    assertNotNull(taskDefinition);
   }
 }

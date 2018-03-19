@@ -3,6 +3,7 @@ package software.wings.beans;
 import static com.amazonaws.util.StringUtils.isNullOrEmpty;
 import static software.wings.beans.EcsInfrastructureMapping.Builder.anEcsInfrastructureMapping;
 
+import com.amazonaws.services.ecs.model.LaunchType;
 import com.fasterxml.jackson.annotation.JsonTypeName;
 import com.github.reinert.jjschema.Attributes;
 import com.github.reinert.jjschema.SchemaIgnore;
@@ -549,13 +550,24 @@ public class EcsInfrastructureMapping extends ContainerInfrastructureMapping {
   @NoArgsConstructor
   public static final class Yaml extends ContainerInfrastructureMapping.YamlWithComputeProvider {
     private String region = "us-east-1";
+    private String vpcId;
+    private String subnetIds;
+    private String securityGroupIds;
+    private String launchType = LaunchType.EC2.name();
+    private boolean assignPublicIp;
 
     @lombok.Builder
     public Yaml(String type, String harnessApiVersion, String computeProviderType, String serviceName,
-        String infraMappingType, String deploymentType, String computeProviderName, String cluster, String region) {
+        String infraMappingType, String deploymentType, String computeProviderName, String cluster, String region,
+        String vpcId, String subnetIds, String securityGroupIds, String launchType, boolean assignPublicIp) {
       super(type, harnessApiVersion, computeProviderType, serviceName, infraMappingType, deploymentType,
           computeProviderName, cluster);
       this.region = region;
+      this.vpcId = vpcId;
+      this.subnetIds = subnetIds;
+      this.securityGroupIds = securityGroupIds;
+      this.launchType = launchType;
+      this.assignPublicIp = assignPublicIp;
     }
   }
 }
