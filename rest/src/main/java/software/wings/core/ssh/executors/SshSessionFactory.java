@@ -12,6 +12,7 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import software.wings.security.encryption.EncryptionUtils;
 
+import java.io.File;
 import java.util.Map;
 
 /**
@@ -57,7 +58,11 @@ public class SshSessionFactory {
     //    JSch.setLogger(new jschLogger());
 
     Session session = null;
-    if (config.getKey() != null && config.getKey().length > 0) {
+    if (config.isKeyLess()) {
+      String keyPath = getKeyPath(config);
+      jsch.addIdentity(keyPath);
+      session = jsch.getSession(config.getUserName(), config.getHost(), config.getPort());
+    } else if (config.getKey() != null && config.getKey().length > 0) {
       if (null == config.getKeyPassphrase()) {
         jsch.addIdentity(config.getKeyName(), EncryptionUtils.toBytes(config.getKey(), Charsets.UTF_8), null, null);
       } else {
@@ -78,6 +83,14 @@ public class SshSessionFactory {
     session.connect(config.getSshConnectionTimeout());
 
     return session;
+  }
+
+  protected static String getKeyPath(SshSessionConfig config) {
+    String keyPath = System.getProperty("user.home") + File.separator + ".ssh" + File.separator + "id_rsa";
+    if (config.getKeyPath() != null) {
+      keyPath = config.getKeyPath();
+    }
+    return keyPath;
   }
 
   /**
