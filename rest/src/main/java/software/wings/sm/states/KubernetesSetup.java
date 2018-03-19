@@ -353,6 +353,14 @@ public class KubernetesSetup extends ContainerServiceSetup {
     }
   }
 
+  public String getServiceYaml() {
+    return serviceYaml;
+  }
+
+  public void setServiceYaml(String serviceYaml) {
+    this.serviceYaml = serviceYaml;
+  }
+
   public String getClusterIP() {
     return clusterIP;
   }
