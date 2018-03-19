@@ -39,6 +39,8 @@ public interface WorkflowService extends OwnedByApplication, OwnedByEnvironment 
    */
   PageResponse<Workflow> listWorkflows(PageRequest<Workflow> pageRequest);
 
+  PageResponse<Workflow> listWorkflowsWithoutOrchestration(PageRequest<Workflow> pageRequest);
+
   PageResponse<Workflow> listWorkflows(PageRequest<Workflow> pageRequest, Integer previousExecutionsCount);
 
   /**

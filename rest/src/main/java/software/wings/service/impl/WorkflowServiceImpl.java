@@ -390,6 +390,14 @@ public class WorkflowServiceImpl implements WorkflowService, DataProvider {
    * {@inheritDoc}
    */
   @Override
+  public PageResponse<Workflow> listWorkflowsWithoutOrchestration(PageRequest<Workflow> pageRequest) {
+    return wingsPersistence.query(Workflow.class, pageRequest);
+  }
+
+  /**
+   * {@inheritDoc}
+   */
+  @Override
   public PageResponse<Workflow> listWorkflows(PageRequest<Workflow> pageRequest) {
     return listWorkflows(pageRequest, 0);
   }
@@ -406,7 +414,7 @@ public class WorkflowServiceImpl implements WorkflowService, DataProvider {
    */
   @Override
   public PageResponse<Workflow> listWorkflows(PageRequest<Workflow> pageRequest, Integer previousExecutionsCount) {
-    PageResponse<Workflow> workflows = wingsPersistence.query(Workflow.class, pageRequest);
+    PageResponse<Workflow> workflows = listWorkflowsWithoutOrchestration(pageRequest);
     if (workflows != null && workflows.getResponse() != null) {
       for (Workflow workflow : workflows.getResponse()) {
         try {
