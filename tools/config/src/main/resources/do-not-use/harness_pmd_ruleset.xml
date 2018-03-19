@@ -42,7 +42,6 @@
     <rule ref="category/java/design.xml/AvoidThrowingRawExceptionTypes"/>
     <rule ref="category/java/design.xml/ExceptionAsFlowControl"/>
     <rule ref="category/java/design.xml/SignatureDeclareThrowsException"/>
-    <rule ref="category/java/errorprone.xml/DoNotThrowExceptionInFinally"/>
     <rule ref="category/java/performance.xml/UseStringBufferForStringAppends"/>
     -->
 
@@ -79,6 +78,7 @@
     <rule ref="category/java/errorprone.xml/BrokenNullCheck"/>
     <rule ref="category/java/errorprone.xml/CheckSkipResult"/>
     <rule ref="category/java/errorprone.xml/ClassCastExceptionWithToArray"/>
+    <rule ref="category/java/errorprone.xml/DoNotThrowExceptionInFinally"/>
     <rule ref="category/java/errorprone.xml/DontUseFloatTypeForLoopIndices"/>
     <rule ref="category/java/errorprone.xml/EmptyFinallyBlock"/>
     <rule ref="category/java/errorprone.xml/EmptyIfStmt"/>
