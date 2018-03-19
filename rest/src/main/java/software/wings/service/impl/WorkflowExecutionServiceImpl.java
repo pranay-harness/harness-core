@@ -136,6 +136,7 @@ import software.wings.service.intfc.WorkflowExecutionService;
 import software.wings.service.intfc.WorkflowService;
 import software.wings.sm.ContextElement;
 import software.wings.sm.ContextElementType;
+import software.wings.sm.ExecutionContext;
 import software.wings.sm.ExecutionEventAdvisor;
 import software.wings.sm.ExecutionInterrupt;
 import software.wings.sm.ExecutionInterruptEffect;
@@ -2187,10 +2188,19 @@ public class WorkflowExecutionServiceImpl implements WorkflowExecutionService {
   }
 
   @Override
-  public WorkflowExecutionBaseline getBaselineDetails(String appId, String workflowExecutionId) {
+  public WorkflowExecutionBaseline getBaselineDetails(
+      String appId, String workflowExecutionId, String stateExecutionId, String currentExecId) {
+    ExecutionContext executionContext =
+        stateMachineExecutor.getExecutionContext(appId, currentExecId, stateExecutionId);
+    WorkflowStandardParams workflowStandardParams = executionContext.getContextElement(ContextElementType.STANDARD);
+    String envId = workflowStandardParams.getEnv().getUuid();
+    PhaseElement phaseElement = executionContext.getContextElement(ContextElementType.PARAM, Constants.PHASE_PARAM);
+    String serviceId = phaseElement.getServiceElement().getUuid();
     PageRequest<WorkflowExecutionBaseline> pageRequest =
         aPageRequest()
             .addFilter("workflowExecutionId", Operator.EQ, workflowExecutionId)
+            .addFilter("envId", Operator.EQ, envId)
+            .addFilter("serviceId", Operator.EQ, serviceId)
             .addFilter("appId", Operator.EQ, appId)
             .build();
     PageResponse<WorkflowExecutionBaseline> pageResponse =

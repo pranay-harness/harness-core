@@ -343,7 +343,7 @@ public class ExecutionResource {
   /**
    * gets the details for baseline execution
    * @param appId
-   * @param workflowExecutionId
+   * @param baselineExecutionId
    * @return
    */
   @GET
@@ -351,8 +351,10 @@ public class ExecutionResource {
   @Timed
   @ExceptionMetered
   @AuthRule(permissionType = DEPLOYMENT, action = READ)
-  public RestResponse<WorkflowExecutionBaseline> getBaselineDetails(
-      @QueryParam("appId") String appId, @PathParam("workflowExecutionId") String workflowExecutionId) {
-    return new RestResponse<>(workflowExecutionService.getBaselineDetails(appId, workflowExecutionId));
+  public RestResponse<WorkflowExecutionBaseline> getBaselineDetails(@QueryParam("appId") String appId,
+      @PathParam("workflowExecutionId") String baselineExecutionId,
+      @QueryParam("stateExecutionId") String stateExecutionId, @QueryParam("currentExecId") String currentExecId) {
+    return new RestResponse<>(
+        workflowExecutionService.getBaselineDetails(appId, baselineExecutionId, stateExecutionId, currentExecId));
   }
 }

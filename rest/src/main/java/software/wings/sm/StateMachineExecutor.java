@@ -12,6 +12,7 @@ import static org.mongodb.morphia.mapping.Mapper.ID_KEY;
 import static software.wings.beans.ErrorCode.INVALID_ARGUMENT;
 import static software.wings.beans.ErrorCode.STATE_NOT_FOR_TYPE;
 import static software.wings.beans.ReadPref.CRITICAL;
+import static software.wings.beans.ReadPref.NORMAL;
 import static software.wings.beans.SearchFilter.Operator.EQ;
 import static software.wings.beans.SearchFilter.Operator.GE;
 import static software.wings.beans.SearchFilter.Operator.IN;
@@ -1166,6 +1167,14 @@ public class StateMachineExecutor {
       default:
         unhandled(type);
     }
+  }
+
+  public ExecutionContext getExecutionContext(String appId, String executionUuid, String stateExecutionInstanceId) {
+    StateExecutionInstance stateExecutionInstance =
+        getStateExecutionInstance(appId, executionUuid, stateExecutionInstanceId);
+    StateMachine sm =
+        wingsPersistence.get(StateMachine.class, appId, stateExecutionInstance.getStateMachineId(), NORMAL);
+    return new ExecutionContextImpl(stateExecutionInstance, sm, injector);
   }
 
   private void endExecution(ExecutionInterrupt workflowExecutionInterrupt, WorkflowExecution workflowExecution) {

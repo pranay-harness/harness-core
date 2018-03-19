@@ -6,6 +6,11 @@ import static org.junit.Assert.assertNotNull;
 import static org.junit.Assert.assertNull;
 import static org.junit.Assert.assertTrue;
 import static org.junit.Assert.fail;
+import static org.mockito.Mockito.when;
+import static org.mockito.internal.util.reflection.Whitebox.setInternalState;
+import static software.wings.api.PhaseElement.PhaseElementBuilder.aPhaseElement;
+import static software.wings.api.ServiceElement.Builder.aServiceElement;
+import static software.wings.beans.Environment.Builder.anEnvironment;
 import static software.wings.beans.WorkflowExecution.WorkflowExecutionBuilder.aWorkflowExecution;
 import static software.wings.sm.StateExecutionInstance.Builder.aStateExecutionInstance;
 
@@ -14,6 +19,7 @@ import com.google.inject.Inject;
 
 import org.junit.Before;
 import org.junit.Test;
+import org.mockito.Mockito;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import software.wings.WingsBaseTest;
@@ -24,12 +30,17 @@ import software.wings.beans.User;
 import software.wings.beans.WorkflowExecution;
 import software.wings.beans.WorkflowType;
 import software.wings.beans.baseline.WorkflowExecutionBaseline;
+import software.wings.common.Constants;
 import software.wings.dl.WingsPersistence;
 import software.wings.exception.WingsException;
 import software.wings.security.UserThreadLocal;
 import software.wings.service.intfc.WorkflowExecutionService;
+import software.wings.sm.ContextElementType;
+import software.wings.sm.ExecutionContext;
 import software.wings.sm.StateExecutionInstance;
+import software.wings.sm.StateMachineExecutor;
 import software.wings.sm.StateType;
+import software.wings.sm.WorkflowStandardParams;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -605,10 +616,12 @@ public class WorkflowExecutionBaselineServiceTest extends WingsBaseTest {
 
   @Test
   public void testGetBaselineDetails() {
+    StateMachineExecutor stateMachineExecutor = Mockito.mock(StateMachineExecutor.class);
     int numOfWorkflowExecutions = 10;
     List<String> envIds = new ArrayList<>();
     List<String> serviceIds = new ArrayList<>();
     List<String> workflowExecutionIds = new ArrayList<>();
+    List<String> stateExecutionIds = new ArrayList<>();
     List<WorkflowExecution> workflowExecutions = new ArrayList<>();
     String pipelineExecutionId = UUID.randomUUID().toString();
 
@@ -634,15 +647,28 @@ public class WorkflowExecutionBaselineServiceTest extends WingsBaseTest {
                                                           .withStateType(StateType.DYNA_TRACE.name())
                                                           .build();
       stateExecutionInstance.setAppId(appId);
-      wingsPersistence.save(stateExecutionInstance);
+      String stateExecutionId = wingsPersistence.save(stateExecutionInstance);
+      stateExecutionIds.add(stateExecutionId);
+
+      ExecutionContext executionContext = Mockito.mock(ExecutionContext.class);
+      WorkflowStandardParams workflowStandardParams = Mockito.mock(WorkflowStandardParams.class);
+      when(workflowStandardParams.getEnv()).thenReturn(anEnvironment().withUuid(envId).build());
+      when(executionContext.getContextElement(ContextElementType.STANDARD)).thenReturn(workflowStandardParams);
+      when(executionContext.getContextElement(ContextElementType.PARAM, Constants.PHASE_PARAM))
+          .thenReturn(aPhaseElement().withServiceElement(aServiceElement().withUuid(serviceId).build()).build());
+      when(stateMachineExecutor.getExecutionContext(appId, workflowExecutionId, stateExecutionId))
+          .thenReturn(executionContext);
     }
 
-    for (String workflowExecutionId : workflowExecutionIds) {
-      WorkflowExecution workflowExecution = wingsPersistence.get(WorkflowExecution.class, appId, workflowExecutionId);
+    setInternalState(workflowExecutionService, "stateMachineExecutor", stateMachineExecutor);
+
+    for (int i = 0; i < numOfWorkflowExecutions; i++) {
+      WorkflowExecution workflowExecution =
+          wingsPersistence.get(WorkflowExecution.class, appId, workflowExecutionIds.get(i));
       assertFalse(workflowExecution.isBaseline());
 
-      WorkflowExecutionBaseline baselineDetails =
-          workflowExecutionService.getBaselineDetails(appId, workflowExecutionId);
+      WorkflowExecutionBaseline baselineDetails = workflowExecutionService.getBaselineDetails(
+          appId, workflowExecutionIds.get(i), stateExecutionIds.get(i), workflowExecutionIds.get(i));
       assertNull(baselineDetails);
     }
 
@@ -675,10 +701,12 @@ public class WorkflowExecutionBaselineServiceTest extends WingsBaseTest {
       assertTrue(workflowExecutionIds.contains(baseline.getWorkflowExecutionId()));
     }
 
-    for (String executionId : workflowExecutionIds) {
-      WorkflowExecution workflowExecution1 = wingsPersistence.get(WorkflowExecution.class, appId, executionId);
+    for (int i = 0; i < numOfWorkflowExecutions; i++) {
+      WorkflowExecution workflowExecution1 =
+          wingsPersistence.get(WorkflowExecution.class, appId, workflowExecutionIds.get(i));
       assertTrue(workflowExecution1.isBaseline());
-      WorkflowExecutionBaseline baselineDetails = workflowExecutionService.getBaselineDetails(appId, executionId);
+      WorkflowExecutionBaseline baselineDetails = workflowExecutionService.getBaselineDetails(
+          appId, workflowExecutionIds.get(i), stateExecutionIds.get(i), workflowExecutionIds.get(i));
       assertNotNull(baselineDetails);
       assertEquals(userEmail, baselineDetails.getCreatedBy().getEmail());
       assertEquals(userName, baselineDetails.getCreatedBy().getName());
