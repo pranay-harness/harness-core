@@ -139,8 +139,8 @@ public class LogClusterManagerJob implements Job {
           if (completeCron || !analysisService.isStateValid(context.getAppId(), context.getStateExecutionId())) {
             jobExecutionContext.getScheduler().deleteJob(jobExecutionContext.getJobDetail().getKey());
           }
-        } catch (Exception ex) {
-          throw new RuntimeException("Verification unable to delete cluster cron", ex);
+        } catch (SchedulerException e) {
+          logger.error("", e);
         }
       }
     }
