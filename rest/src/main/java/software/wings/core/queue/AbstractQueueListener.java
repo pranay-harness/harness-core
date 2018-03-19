@@ -87,9 +87,8 @@ public abstract class AbstractQueueListener<T extends Queuable> implements Runna
    * On message.
    *
    * @param message the message
-   * @throws Exception the exception
    */
-  protected abstract void onMessage(T message) throws Exception;
+  protected abstract void onMessage(T message);
 
   /**
    * On exception.

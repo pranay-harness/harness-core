@@ -13,7 +13,7 @@ public class KmsTransitionEventListener extends AbstractQueueListener<KmsTransit
   @Inject private SecretManager secretManager;
 
   @Override
-  protected void onMessage(KmsTransitionEvent message) throws Exception {
+  protected void onMessage(KmsTransitionEvent message) {
     secretManager.changeSecretManager(message.getAccountId(), message.getEntityId(), message.getFromEncryptionType(),
         message.getFromKmsId(), message.getToEncryptionType(), message.getToKmsId());
   }

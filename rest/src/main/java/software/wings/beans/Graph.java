@@ -178,11 +178,7 @@ public class Graph {
     Map<String, GraphNode> nodesMap = getNodesMap();
     Map<String, GraphLink> linkMap = null;
 
-    try {
-      linkMap = getLinks().stream().collect(toMap(GraphLink::getFrom, identity()));
-    } catch (Exception e) {
-      throw e;
-    }
+    linkMap = getLinks().stream().collect(toMap(GraphLink::getFrom, identity()));
 
     Map<String, GraphLink> finalLinkMap = linkMap;
     return new Iterator<GraphNode>() {

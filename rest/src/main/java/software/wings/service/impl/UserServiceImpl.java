@@ -48,11 +48,9 @@ import com.nimbusds.jose.JWSSigner;
 import com.nimbusds.jose.Payload;
 import com.nimbusds.jose.crypto.MACSigner;
 import com.nimbusds.jwt.JWTClaimsSet;
-import freemarker.template.TemplateException;
 import org.apache.commons.collections.CollectionUtils;
 import org.apache.commons.lang3.StringUtils;
 import org.apache.commons.lang3.tuple.ImmutablePair;
-import org.apache.commons.mail.EmailException;
 import org.apache.commons.validator.routines.EmailValidator;
 import org.apache.http.client.utils.URIBuilder;
 import org.mindrot.jbcrypt.BCrypt;
@@ -95,7 +93,6 @@ import software.wings.service.intfc.UserService;
 import software.wings.utils.CacheHelper;
 import software.wings.utils.KryoUtils;
 
-import java.io.IOException;
 import java.io.UnsupportedEncodingException;
 import java.net.URISyntaxException;
 import java.nio.charset.Charset;
@@ -205,7 +202,7 @@ public class UserServiceImpl implements UserService {
       emailData.setCc(Collections.emptyList());
       emailData.setRetries(2);
       emailNotificationService.send(emailData);
-    } catch (EmailException | TemplateException | IOException | URISyntaxException e) {
+    } catch (URISyntaxException e) {
       logger.error("Add account email couldn't be sent", e);
     }
   }
@@ -258,7 +255,7 @@ public class UserServiceImpl implements UserService {
       emailData.setRetries(2);
 
       emailNotificationService.send(emailData);
-    } catch (EmailException | TemplateException | IOException | URISyntaxException e) {
+    } catch (URISyntaxException e) {
       logger.error("Verification email couldn't be sent", e);
     }
   }
@@ -402,7 +399,7 @@ public class UserServiceImpl implements UserService {
       emailData.setRetries(2);
 
       emailNotificationService.send(emailData);
-    } catch (EmailException | TemplateException | IOException | URISyntaxException e) {
+    } catch (URISyntaxException e) {
       logger.error("Invitation email couldn't be sent ", e);
     }
   }
@@ -423,7 +420,7 @@ public class UserServiceImpl implements UserService {
       emailData.setRetries(2);
 
       emailNotificationService.send(emailData);
-    } catch (EmailException | TemplateException | IOException | URISyntaxException e) {
+    } catch (URISyntaxException e) {
       logger.error("Add account email couldn't be sent", e);
     }
   }
@@ -569,7 +566,7 @@ public class UserServiceImpl implements UserService {
       emailData.setRetries(2);
 
       emailNotificationService.send(emailData);
-    } catch (EmailException | TemplateException | IOException | URISyntaxException e) {
+    } catch (URISyntaxException e) {
       logger.error("Reset password email couldn't be sent", e);
     }
   }

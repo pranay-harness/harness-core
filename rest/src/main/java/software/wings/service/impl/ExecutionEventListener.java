@@ -41,7 +41,7 @@ public class ExecutionEventListener extends AbstractQueueListener<ExecutionEvent
   @Inject private StateMachineExecutor stateMachineExecutor;
 
   @Override
-  protected void onMessage(ExecutionEvent message) throws Exception {
+  protected void onMessage(ExecutionEvent message) {
     try (AcquiredLock lock =
              persistentLocker.tryToAcquireLock(Workflow.class, message.getWorkflowId(), Duration.ofMinutes(1))) {
       if (lock == null) {
