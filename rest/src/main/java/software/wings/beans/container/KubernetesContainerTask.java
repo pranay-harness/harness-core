@@ -51,9 +51,10 @@ import java.util.regex.Pattern;
 public class KubernetesContainerTask extends ContainerTask {
   private static final Logger logger = LoggerFactory.getLogger(KubernetesContainerTask.class);
 
+  public static final String CONFIG_MAP_NAME_PLACEHOLDER_REGEX = "\\$\\{CONFIG_MAP_NAME}";
+  public static final String SECRET_MAP_NAME_PLACEHOLDER_REGEX = "\\$\\{SECRET_MAP_NAME}";
+
   private static final String SECRET_NAME_PLACEHOLDER_REGEX = "\\$\\{SECRET_NAME}";
-  private static final String CONFIG_MAP_NAME_PLACEHOLDER_REGEX = "\\$\\{CONFIG_MAP_NAME}";
-  private static final String SECRET_MAP_NAME_PLACEHOLDER_REGEX = "\\$\\{SECRET_MAP_NAME}";
 
   private static final String DUMMY_SECRET_NAME = "hv--secret-name--hv";
   private static final String DUMMY_CONFIG_MAP_NAME = "hv--config-map-name--hv";

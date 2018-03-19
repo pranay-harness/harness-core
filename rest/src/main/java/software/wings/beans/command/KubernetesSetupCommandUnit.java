@@ -8,6 +8,8 @@ import static java.util.Collections.emptyList;
 import static java.util.stream.Collectors.toList;
 import static java.util.stream.Collectors.toMap;
 import static org.apache.commons.lang3.StringUtils.isNotBlank;
+import static software.wings.beans.container.KubernetesContainerTask.CONFIG_MAP_NAME_PLACEHOLDER_REGEX;
+import static software.wings.beans.container.KubernetesContainerTask.SECRET_MAP_NAME_PLACEHOLDER_REGEX;
 import static software.wings.common.Constants.SECRET_MASK;
 import static software.wings.service.impl.KubernetesHelperService.toDisplayYaml;
 import static software.wings.service.impl.KubernetesHelperService.toYaml;
@@ -398,7 +400,8 @@ public class KubernetesSetupCommandUnit extends ContainerSetupCommandUnit {
       Ingress ingress = null;
       if (setupParams.isUseIngress() && service != null) {
         ingress = kubernetesContainerService.createOrReplaceIngress(kubernetesConfig, encryptedDataDetails,
-            createIngressDefinition(setupParams, service, kubernetesServiceName, executionLogCallback));
+            createIngressDefinition(
+                setupParams, service, kubernetesServiceName, containerServiceName, executionLogCallback));
       } else {
         try {
           ingress =
@@ -533,13 +536,15 @@ public class KubernetesSetupCommandUnit extends ContainerSetupCommandUnit {
   }
 
   private Ingress createIngressDefinition(KubernetesSetupParams setupParams, Service service,
-      String kubernetesServiceName, ExecutionLogCallback executionLogCallback) {
+      String kubernetesServiceName, String containerServiceName, ExecutionLogCallback executionLogCallback) {
     int port = isNotEmpty(service.getSpec().getPorts()) ? service.getSpec().getPorts().get(0).getPort() : 80;
     try {
       Ingress ingress =
           KubernetesHelper.loadYaml(setupParams.getIngressYaml()
                                         .replaceAll(SERVICE_NAME_PLACEHOLDER_REGEX, kubernetesServiceName)
-                                        .replaceAll(SERVICE_PORT_PLACEHOLDER_REGEX, Integer.toString(port)));
+                                        .replaceAll(SERVICE_PORT_PLACEHOLDER_REGEX, Integer.toString(port))
+                                        .replaceAll(CONFIG_MAP_NAME_PLACEHOLDER_REGEX, containerServiceName)
+                                        .replaceAll(SECRET_MAP_NAME_PLACEHOLDER_REGEX, containerServiceName));
       ingress.getMetadata().setName(kubernetesServiceName);
       return ingress;
     } catch (IOException e) {
