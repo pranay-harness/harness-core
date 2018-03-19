@@ -1,5 +1,6 @@
 package software.wings.service.impl;
 
+import static io.harness.data.structure.EmptyPredicate.isNotEmpty;
 import static org.mongodb.morphia.mapping.Mapper.ID_KEY;
 import static software.wings.dl.MongoHelper.setUnset;
 import static software.wings.dl.PageRequest.PageRequestBuilder.aPageRequest;
@@ -9,7 +10,6 @@ import com.google.inject.Singleton;
 
 import org.mongodb.morphia.query.Query;
 import org.mongodb.morphia.query.UpdateOperations;
-import org.mongodb.morphia.query.UpdateResults;
 import software.wings.beans.Account;
 import software.wings.beans.SearchFilter.Operator;
 import software.wings.beans.User;
@@ -25,6 +25,7 @@ import software.wings.service.intfc.UserGroupService;
 import software.wings.service.intfc.UserService;
 import software.wings.utils.Validator;
 
+import java.util.ArrayList;
 import java.util.List;
 import java.util.stream.Collectors;
 import javax.validation.executable.ValidateOnExecution;
@@ -103,14 +104,20 @@ public class UserGroupServiceImpl implements UserGroupService {
 
   @Override
   public UserGroup updateMembers(UserGroup userGroup) {
-    List<String> memberIds = null;
+    List<String> memberIds = new ArrayList<>();
     if (userGroup.getMembers() != null) {
       memberIds = userGroup.getMembers().stream().map(User::getUuid).collect(Collectors.toList());
     }
+    UserGroup existingUserGroup = get(userGroup.getAccountId(), userGroup.getUuid());
+
     UpdateOperations<UserGroup> operations = wingsPersistence.createUpdateOperations(UserGroup.class);
     setUnset(operations, "memberIds", memberIds);
     UserGroup updatedUserGroup = update(userGroup, operations);
-    evictUserPermissionInfoCacheForUserGroup(updatedUserGroup);
+    if (isNotEmpty(memberIds) || isNotEmpty(existingUserGroup.getMemberIds())) {
+      memberIds.addAll(existingUserGroup.getMemberIds());
+      evictUserPermissionInfoCacheForUserGroup(
+          userGroup.getAccountId(), memberIds.stream().distinct().collect(Collectors.toList()));
+    }
     return updatedUserGroup;
   }
 
@@ -132,10 +139,7 @@ public class UserGroupServiceImpl implements UserGroupService {
                                  .equal(userGroup.getUuid())
                                  .field("accountId")
                                  .equal(userGroup.getAccountId());
-    UpdateResults updateResults = wingsPersistence.update(query, operations);
-    if (updateResults.getUpdatedCount() > 0) {
-      evictUserPermissionInfoCacheForUserGroup(userGroup);
-    }
+    wingsPersistence.update(query, operations);
     return get(userGroup.getAccountId(), userGroup.getUuid());
   }
 
@@ -157,5 +161,9 @@ public class UserGroupServiceImpl implements UserGroupService {
 
   private void evictUserPermissionInfoCacheForUserGroup(UserGroup userGroup) {
     authService.evictAccountUserPermissionInfoCache(userGroup.getAccountId(), userGroup.getMemberIds());
+  }
+
+  private void evictUserPermissionInfoCacheForUserGroup(String accountId, List<String> memberIds) {
+    authService.evictAccountUserPermissionInfoCache(accountId, memberIds);
   }
 }
