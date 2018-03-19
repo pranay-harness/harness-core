@@ -169,6 +169,7 @@ public class AuthRuleFilter implements ContainerRequestFilter {
     if (accountId == null
         && (requestContext.getUriInfo().getPath().startsWith("users/user")
                || requestContext.getUriInfo().getPath().startsWith("users/sso/zendesk")
+               || requestContext.getUriInfo().getPath().startsWith("users/account")
                || requestContext.getUriInfo().getPath().endsWith("/logout"))) {
       return;
     }

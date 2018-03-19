@@ -105,7 +105,7 @@ public class UserGroupServiceImpl implements UserGroupService {
   @Override
   public UserGroup updateMembers(UserGroup userGroup) {
     List<String> memberIds = new ArrayList<>();
-    if (userGroup.getMembers() != null) {
+    if (isNotEmpty(userGroup.getMembers())) {
       memberIds = userGroup.getMembers().stream().map(User::getUuid).collect(Collectors.toList());
     }
     UserGroup existingUserGroup = get(userGroup.getAccountId(), userGroup.getUuid());
@@ -113,8 +113,11 @@ public class UserGroupServiceImpl implements UserGroupService {
     UpdateOperations<UserGroup> operations = wingsPersistence.createUpdateOperations(UserGroup.class);
     setUnset(operations, "memberIds", memberIds);
     UserGroup updatedUserGroup = update(userGroup, operations);
-    if (isNotEmpty(memberIds) || isNotEmpty(existingUserGroup.getMemberIds())) {
+    if (isNotEmpty(existingUserGroup.getMemberIds())) {
       memberIds.addAll(existingUserGroup.getMemberIds());
+    }
+
+    if (isNotEmpty(memberIds)) {
       evictUserPermissionInfoCacheForUserGroup(
           userGroup.getAccountId(), memberIds.stream().distinct().collect(Collectors.toList()));
     }
