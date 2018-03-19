@@ -12,6 +12,7 @@ import ch.qos.logback.classic.spi.ILoggingEvent;
 import ch.qos.logback.core.AppenderBase;
 import ch.qos.logback.core.Layout;
 import com.fasterxml.jackson.databind.JsonNode;
+import io.harness.network.Http;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import retrofit2.Response;
@@ -80,7 +81,7 @@ public class RestLogAppender<E> extends AppenderBase<E> {
       Retrofit retrofit = new Retrofit.Builder()
                               .baseUrl(LOGDNA_HOST)
                               .addConverterFactory(JacksonConverterFactory.create())
-                              .client(HttpUtil.getUnsafeOkHttpClient(LOGDNA_HOST))
+                              .client(Http.getUnsafeOkHttpClient(LOGDNA_HOST))
                               .build();
       Response<JsonNode> execute =
           retrofit.create(LogdnaRestClient.class).postLogs(getAuthHeader(), localhostName, logLines).execute();
