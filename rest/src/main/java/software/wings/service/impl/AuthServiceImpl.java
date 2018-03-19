@@ -424,7 +424,7 @@ public class AuthServiceImpl implements AuthService {
   @Override
   public UserPermissionInfo getUserPermissionInfo(String accountId, User user) {
     if (!featureFlagService.isEnabled(FeatureName.RBAC, accountId)) {
-      return getUserPermissionInfoFromDB(accountId, user);
+      return UserPermissionInfo.builder().accountId(accountId).isRbacEnabled(false).build();
     }
 
     Cache<String, UserPermissionInfo> cache = cacheHelper.getUserPermissionInfoCache();
@@ -445,6 +445,7 @@ public class AuthServiceImpl implements AuthService {
     } catch (Exception ignored) {
       logger.error("Error in fetching user UserPermissionInfo from Cache for key:" + key, ignored);
     }
+
     // not found in cache. cache write through failed as well. rebuild anyway
     return getUserPermissionInfoFromDB(accountId, user);
   }
