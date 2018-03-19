@@ -18,7 +18,7 @@ public class EmailNotificationListener extends AbstractQueueListener<EmailData> 
    * @see software.wings.core.queue.AbstractQueueListener#onMessage(software.wings.core.queue.Queuable)
    */
   @Override
-  protected void onMessage(EmailData message) throws Exception {
+  protected void onMessage(EmailData message) {
     emailNotificationService.send(message);
   }
 }

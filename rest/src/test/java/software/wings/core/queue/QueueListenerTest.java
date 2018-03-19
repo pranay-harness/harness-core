@@ -58,7 +58,7 @@ public class QueueListenerTest extends WingsBaseTest {
    */
   @Test
   @Ignore
-  public void shouldProcessWhenRecievedMessageFromQueue() throws Exception {
+  public void shouldProcessWhenRecievedMessageFromQueue() {
     QueuableObject message = new QueuableObject(1);
     queue.send(message);
     assertThat(queue.count()).isEqualTo(1);
@@ -205,9 +205,9 @@ public class QueueListenerTest extends WingsBaseTest {
     }
 
     @Override
-    protected void onMessage(QueuableObject message) throws Exception {
+    protected void onMessage(QueuableObject message) {
       if (throwException) {
-        throw new Exception("Expected Exception In Test.");
+        throw new RuntimeException("Expected Exception In Test.");
       }
     }
   }
