@@ -100,7 +100,7 @@ public class EcsInfraMappingYamlHandler
 
   private void validateNetworkParamateres(Yaml yaml, EcsInfrastructureMapping bean) {
     if (isBlank(yaml.getVpcId()) || isBlank(yaml.getSubnetIds()) || isBlank(yaml.getSecurityGroupIds())) {
-      StringBuilder builder = new StringBuilder();
+      StringBuilder builder = new StringBuilder(128);
       builder.append("Failed to parse yaml for EcsInfraMapping: ")
           .append(bean.getName())
           .append(", App: ")
