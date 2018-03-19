@@ -279,5 +279,6 @@ public interface WorkflowExecutionService {
 
   Set<WorkflowExecutionBaseline> markBaseline(String appId, String workflowExecutionId, boolean isBaseline);
 
-  WorkflowExecutionBaseline getBaselineDetails(String appId, String workflowExecutionId);
+  WorkflowExecutionBaseline getBaselineDetails(
+      String appId, String workflowExecutionId, String stateExecutionId, String currentExecId);
 }
