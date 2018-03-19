@@ -372,7 +372,7 @@ public class AuthHandler {
     return envFilter;
   }
 
-  private Set<String> getEnvIdsByFilter(String appId, EnvFilter envFilter) {
+  public Set<String> getEnvIdsByFilter(String appId, EnvFilter envFilter) {
     envFilter = getDefaultEnvFilterIfNull(envFilter);
 
     Set<String> filterTypes = envFilter.getFilterTypes();

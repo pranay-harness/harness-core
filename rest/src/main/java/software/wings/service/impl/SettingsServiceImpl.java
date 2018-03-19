@@ -1,5 +1,7 @@
 package software.wings.service.impl;
 
+import static io.harness.data.structure.EmptyPredicate.isEmpty;
+import static io.harness.data.structure.EmptyPredicate.isNotEmpty;
 import static java.util.Arrays.asList;
 import static org.mongodb.morphia.mapping.Mapper.ID_KEY;
 import static software.wings.beans.Base.GLOBAL_APP_ID;
@@ -20,9 +22,14 @@ import static software.wings.common.Constants.DEFAULT_STAGING_PATH;
 import static software.wings.common.Constants.RUNTIME_PATH;
 import static software.wings.common.Constants.STAGING_PATH;
 import static software.wings.dl.PageRequest.PageRequestBuilder.aPageRequest;
+import static software.wings.dl.PageResponse.PageResponseBuilder.aPageResponse;
 
 import com.google.common.base.Joiner;
+import com.google.common.collect.HashMultimap;
 import com.google.common.collect.ImmutableMap;
+import com.google.common.collect.Multimap;
+import com.google.common.collect.Sets;
+import com.google.common.collect.Sets.SetView;
 import com.google.inject.Inject;
 import com.google.inject.Singleton;
 
@@ -34,6 +41,7 @@ import software.wings.beans.ErrorCode;
 import software.wings.beans.InfrastructureMapping;
 import software.wings.beans.SettingAttribute;
 import software.wings.beans.SettingAttribute.Category;
+import software.wings.beans.User;
 import software.wings.beans.artifact.ArtifactStream;
 import software.wings.beans.yaml.Change.ChangeType;
 import software.wings.dl.PageRequest;
@@ -41,15 +49,26 @@ import software.wings.dl.PageResponse;
 import software.wings.dl.WingsPersistence;
 import software.wings.exception.WingsException;
 import software.wings.exception.WingsException.ReportTarget;
+import software.wings.security.AppPermissionSummaryForUI;
+import software.wings.security.EnvFilter;
+import software.wings.security.GenericEntityFilter;
+import software.wings.security.UserPermissionInfo;
+import software.wings.security.UserRequestContext;
+import software.wings.security.UserThreadLocal;
+import software.wings.service.impl.security.auth.AuthHandler;
 import software.wings.service.impl.yaml.YamlChangeSetHelper;
 import software.wings.service.intfc.AppService;
 import software.wings.service.intfc.ArtifactStreamService;
 import software.wings.service.intfc.InfrastructureMappingService;
 import software.wings.service.intfc.SettingsService;
 import software.wings.settings.SettingValue.SettingVariableTypes;
+import software.wings.settings.UsageRestrictions;
+import software.wings.settings.UsageRestrictions.AppEnvRestriction;
 import software.wings.utils.Validator;
 
 import java.util.List;
+import java.util.Map;
+import java.util.Set;
 import java.util.stream.Collectors;
 import javax.validation.executable.ValidateOnExecution;
 
@@ -67,6 +86,7 @@ public class SettingsServiceImpl implements SettingsService {
   @Inject private ArtifactStreamService artifactStreamService;
   @Inject private InfrastructureMappingService infrastructureMappingService;
   @Inject private YamlChangeSetHelper yamlChangeSetHelper;
+  @Inject private AuthHandler authHandler;
 
   /* (non-Javadoc)
    * @see software.wings.service.intfc.SettingsService#list(software.wings.dl.PageRequest)
@@ -74,7 +94,109 @@ public class SettingsServiceImpl implements SettingsService {
   @Override
   public PageResponse<SettingAttribute> list(PageRequest<SettingAttribute> req) {
     try {
-      return wingsPersistence.query(SettingAttribute.class, req);
+      PageResponse<SettingAttribute> pageResponse = wingsPersistence.query(SettingAttribute.class, req);
+      List<SettingAttribute> settingAttributes = pageResponse.getResponse();
+
+      User user = UserThreadLocal.get();
+
+      if (user == null) {
+        return pageResponse;
+      }
+
+      UserRequestContext userRequestContext = user.getUserRequestContext();
+
+      if (userRequestContext == null) {
+        return pageResponse;
+      }
+
+      UserPermissionInfo userPermissionInfo = userRequestContext.getUserPermissionInfo();
+      if (userPermissionInfo == null) {
+        return pageResponse;
+      }
+
+      if (isNotEmpty(settingAttributes)) {
+        List<SettingAttribute> settingAttributeList =
+            settingAttributes.stream()
+                .filter(settingAttribute -> {
+                  UsageRestrictions usageRestrictions = settingAttribute.getUsageRestrictions();
+                  if (usageRestrictions == null) {
+                    return true;
+                  }
+
+                  Set<AppEnvRestriction> appEnvRestrictions = usageRestrictions.getAppEnvRestrictions();
+
+                  if (isEmpty(appEnvRestrictions)) {
+                    return true;
+                  }
+
+                  Multimap<String, String> appEnvMap = HashMultimap.create();
+
+                  appEnvRestrictions.stream().forEach(appEnvRestriction -> {
+                    GenericEntityFilter appFilter = appEnvRestriction.getAppFilter();
+                    Set<String> appIds = authHandler.getAppIdsByFilter(settingAttribute.getAccountId(), appFilter);
+                    if (isEmpty(appIds)) {
+                      return;
+                    }
+
+                    EnvFilter envFilter = appEnvRestriction.getEnvFilter();
+                    appIds.stream().forEach(appId -> {
+                      Set<String> envIds = authHandler.getEnvIdsByFilter(appId, envFilter);
+                      appEnvMap.putAll(appId, envIds);
+                    });
+                  });
+
+                  Map<String, AppPermissionSummaryForUI> appPermissionMap = userPermissionInfo.getAppPermissionMap();
+
+                  Set<String> appsFromUserPermissions = appPermissionMap.keySet();
+                  Set<String> appsFromRestrictions = appEnvMap.keySet();
+
+                  SetView<String> commonAppIds = Sets.intersection(appsFromUserPermissions, appsFromRestrictions);
+
+                  if (isEmpty(commonAppIds)) {
+                    return false;
+                  } else {
+                    return true;
+                    //            return commonAppIds.stream().filter(appId -> {
+                    //              AppPermissionSummaryForUI appPermissionSummaryForUI = appPermissionMap.get(appId);
+                    //              Map<String, Set<Action>> envPermissionMap =
+                    //              appPermissionSummaryForUI.getEnvPermissions(); Set<String> envsFromUserPermissions =
+                    //              envPermissionMap.keySet(); Collection<String> envsFromRestrictions =
+                    //              appEnvMap.get(appId); boolean emptyEnvsInPermissions =
+                    //              isEmpty(envsFromUserPermissions); boolean emptyEnvsInRestrictions =
+                    //              isEmpty(envsFromRestrictions);
+                    //
+                    //              if (emptyEnvsInPermissions && emptyEnvsInRestrictions) {
+                    //                return true;
+                    //              }
+                    //
+                    //              if (!emptyEnvsInRestrictions) {
+                    //                if (!emptyEnvsInPermissions) {
+                    //                  Set<String> envsFromRestrictionSet = Sets.newHashSet(envsFromUserPermissions);
+                    //                  SetView<String> commonEnvIds = Sets.intersection(envsFromUserPermissions,
+                    //                  envsFromRestrictionSet); if (isEmpty(commonEnvIds)) {
+                    //                    return false;
+                    //                  } else {
+                    //                    return true;
+                    //                  }
+                    //                } else {
+                    //                  return false;
+                    //                }
+                    //              } else {
+                    //                if (!emptyEnvsInPermissions) {
+                    //                  return false;
+                    //                } else {
+                    //                  return true;
+                    //                }
+                    //              }
+                    //            }).findFirst().isPresent();
+                  }
+                })
+                .collect(Collectors.toList());
+
+        return aPageResponse().withResponse(settingAttributeList).withTotal(settingAttributeList.size()).build();
+      } else {
+        return pageResponse;
+      }
     } catch (Exception e) {
       logger.error("Error getting setting attributes. " + e.getMessage(), e);
       throw new WingsException(ErrorCode.INVALID_REQUEST, e).addParam("message", e.getMessage());
