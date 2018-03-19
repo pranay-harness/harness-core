@@ -279,3 +279,8 @@ software.wings.service.impl.newrelic.NewRelicMarkerExecutionData, 5243
 software.wings.beans.KubernetesClusterConfig, 5244
 software.wings.service.impl.analysis.ElkValidationType, 5245
 java.lang.NoSuchMethodException, 5246
+software.wings.settings.UsageRestrictions, 5247
+software.wings.settings.UsageRestrictions$AppEnvRestriction, 5248
+software.wings.security.GenericEntityFilter, 5249
+software.wings.security.EnvFilter, 5250
+software.wings.security.WorkflowFilter, 5251
