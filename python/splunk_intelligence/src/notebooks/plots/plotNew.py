@@ -3,6 +3,7 @@ from random import randint
 import pandas as pd
 import plotly as py
 from plotly.graph_objs import Scatter, Scatter3d, Layout, Figure, Marker, Histogram
+from plotly import tools
 
 
 def split(input, length, size):
@@ -96,3 +97,27 @@ def scatter_plot_groups_4d(xy_matrix, labels, clusters, tooltips, cc=None):
         'data': data,
         'layout': Layout(hovermode='closest')
     }, show_link=False, filename='123')
+
+
+def get_scatter_trace(xy_matrix, labels, tooltips, legends, cc ):
+    colors = [cc[label] for label in labels]
+    all_legends = [legends[label] for label in labels]
+    sizes = [10 for i in range(xy_matrix.shape[0])]
+    # if fig is None:
+    #     fig = tools.make_subplots(rows=1, cols=2, subplot_titles=('A', 'B'))
+    text = [split(s[0], min(100, len(s[0])), 100) + '<br> id = ' + str(s[1]) for s in tooltips]
+    trace = Scatter(x=xy_matrix[:, 0], y=xy_matrix[:, 1], text=text, mode='markers', name ='ll', marker=Marker(color=colors, size=sizes), showlegend=True)
+    return trace
+
+
+def plot_AB(traces, subtitle_names):
+    fig = tools.make_subplots(rows=1, cols=2, subplot_titles=subtitle_names)
+    fig.append_trace(traces[0], 1, 1)
+    fig.append_trace(traces[1], 1, 2)
+    fig['layout'].update(showlegend=False)
+    py.offline.iplot(fig, filename='123')
+
+
+
+
+
