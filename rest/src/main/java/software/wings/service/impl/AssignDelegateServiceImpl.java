@@ -11,6 +11,7 @@ import com.google.inject.Inject;
 import com.google.inject.Injector;
 import com.google.inject.Singleton;
 
+import com.mongodb.DuplicateKeyException;
 import org.mongodb.morphia.Key;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -186,7 +187,11 @@ public class AssignDelegateServiceImpl implements AssignDelegateService {
         wingsPersistence.updateField(
             DelegateConnectionResult.class, existingResultKey.getId().toString(), "validated", result.isValidated());
       } else {
-        wingsPersistence.save(result);
+        try {
+          wingsPersistence.save(result);
+        } catch (DuplicateKeyException e) {
+          logger.warn("Result has already been saved. ", e);
+        }
       }
     }
   }
