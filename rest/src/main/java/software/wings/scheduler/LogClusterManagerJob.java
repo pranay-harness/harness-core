@@ -165,11 +165,9 @@ public class LogClusterManagerJob implements Job {
         try {
           logger.error("Verification L0 => L1 cluster failed", ex);
           if (analysisService.isStateValid(context.getAppId(), context.getStateExecutionId())) {
-            final LogAnalysisExecutionData executionData =
-                LogAnalysisExecutionData.Builder.anLogAnanlysisExecutionData()
-                    .withStatus(ExecutionStatus.ERROR)
-                    .withErrorMsg(ex.getMessage())
-                    .build();
+            final LogAnalysisExecutionData executionData = LogAnalysisExecutionData.builder().build();
+            executionData.setStatus(ExecutionStatus.ERROR);
+            executionData.setErrorMsg(ex.getMessage());
             logger.info(
                 "Notifying state id: {} , corr id: {}", context.getStateExecutionId(), context.getCorrelationId());
             waitNotifyEngine.notify(context.getCorrelationId(),

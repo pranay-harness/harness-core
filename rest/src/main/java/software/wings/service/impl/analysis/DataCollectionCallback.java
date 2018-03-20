@@ -42,10 +42,9 @@ public class DataCollectionCallback implements NotifyCallback {
     logger.info("data collection result for app " + appId + " is: " + result);
     if (result.getStatus() == DataCollectionTaskStatus.FAILURE) {
       if (isLogCollection) {
-        final LogAnalysisExecutionData executionData = LogAnalysisExecutionData.Builder.anLogAnanlysisExecutionData()
-                                                           .withStatus(ExecutionStatus.ERROR)
-                                                           .withErrorMsg(result.getErrorMessage())
-                                                           .build();
+        final LogAnalysisExecutionData executionData = LogAnalysisExecutionData.builder().build();
+        executionData.setStatus(ExecutionStatus.ERROR);
+        executionData.setErrorMsg(result.getErrorMessage());
         waitNotifyEngine.notify(correlationId,
             aLogAnalysisResponse()
                 .withLogAnalysisExecutionData(executionData)

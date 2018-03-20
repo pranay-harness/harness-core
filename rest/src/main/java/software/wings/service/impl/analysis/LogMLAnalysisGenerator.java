@@ -37,7 +37,7 @@ public class LogMLAnalysisGenerator implements Runnable {
   private final String serviceId;
   private final Set<String> testNodes;
   private final Set<String> controlNodes;
-  private final Set<String> queries;
+  private final String query;
   private final boolean createExperiment;
   private int logAnalysisMinute;
   private AnalysisService analysisService;
@@ -53,7 +53,7 @@ public class LogMLAnalysisGenerator implements Runnable {
     this.serviceId = context.getServiceId();
     this.testNodes = context.getTestNodes();
     this.controlNodes = context.getControlNodes();
-    this.queries = context.getQueries();
+    this.query = context.getQuery();
     this.logAnalysisMinute = logAnalysisMinute;
     this.learningEngineService = learningEngineService;
     this.createExperiment = createExperiment;
@@ -67,109 +67,70 @@ public class LogMLAnalysisGenerator implements Runnable {
 
   private void generateAnalysis() {
     try {
-      for (String query : queries) {
-        String uuid = generateUuid();
-        // TODO fix this
-        if (context.getComparisonStrategy() == AnalysisComparisonStrategy.COMPARE_WITH_CURRENT
-            && !analysisService.isLogDataCollected(
-                   applicationId, context.getStateExecutionId(), query, logAnalysisMinute, context.getStateType())) {
-          logger.warn("No data collected for minute " + logAnalysisMinute + " for application: " + applicationId
-              + " stateExecution: " + context.getStateExecutionId() + ". No ML analysis will be run this minute");
-          continue;
-        }
+      String uuid = generateUuid();
+      // TODO fix this
+      if (context.getComparisonStrategy() == AnalysisComparisonStrategy.COMPARE_WITH_CURRENT
+          && !analysisService.isLogDataCollected(
+                 applicationId, context.getStateExecutionId(), query, logAnalysisMinute, context.getStateType())) {
+        logger.warn("No data collected for minute " + logAnalysisMinute + " for application: " + applicationId
+            + " stateExecution: " + context.getStateExecutionId() + ". No ML analysis will be run this minute");
+        return;
+      }
 
-        final String lastWorkflowExecutionId = context.getPrevWorkflowExecutionId();
-        final boolean isBaselineCreated =
-            context.getComparisonStrategy() == AnalysisComparisonStrategy.COMPARE_WITH_CURRENT
-            || !isEmpty(lastWorkflowExecutionId);
+      final String lastWorkflowExecutionId = context.getPrevWorkflowExecutionId();
+      final boolean isBaselineCreated =
+          context.getComparisonStrategy() == AnalysisComparisonStrategy.COMPARE_WITH_CURRENT
+          || !isEmpty(lastWorkflowExecutionId);
 
-        String testInputUrl = "/api/" + LogAnalysisResource.LOG_ANALYSIS
-            + LogAnalysisResource.ANALYSIS_STATE_GET_LOG_URL + "?accountId=" + accountId
-            + "&clusterLevel=" + ClusterLevel.L2.name() + "&workflowExecutionId=" + context.getWorkflowExecutionId()
-            + "&compareCurrent=true&stateType=" + context.getStateType();
+      String testInputUrl = "/api/" + LogAnalysisResource.LOG_ANALYSIS + LogAnalysisResource.ANALYSIS_STATE_GET_LOG_URL
+          + "?accountId=" + accountId + "&clusterLevel=" + ClusterLevel.L2.name() + "&workflowExecutionId="
+          + context.getWorkflowExecutionId() + "&compareCurrent=true&stateType=" + context.getStateType();
 
-        String controlInputUrl;
+      String controlInputUrl;
 
-        if (context.getComparisonStrategy() == AnalysisComparisonStrategy.COMPARE_WITH_CURRENT) {
-          controlInputUrl = "/api/" + LogAnalysisResource.LOG_ANALYSIS + LogAnalysisResource.ANALYSIS_STATE_GET_LOG_URL
-              + "?accountId=" + accountId + "&clusterLevel=" + ClusterLevel.L2.name() + "&workflowExecutionId="
-              + context.getWorkflowExecutionId() + "&compareCurrent=true&stateType=" + context.getStateType();
-        } else {
-          controlInputUrl = "/api/" + LogAnalysisResource.LOG_ANALYSIS + LogAnalysisResource.ANALYSIS_STATE_GET_LOG_URL
-              + "?accountId=" + accountId + "&clusterLevel=" + ClusterLevel.L2.name() + "&workflowExecutionId="
-              + lastWorkflowExecutionId + "&compareCurrent=false&stateType=" + context.getStateType();
-        }
+      if (context.getComparisonStrategy() == AnalysisComparisonStrategy.COMPARE_WITH_CURRENT) {
+        controlInputUrl = "/api/" + LogAnalysisResource.LOG_ANALYSIS + LogAnalysisResource.ANALYSIS_STATE_GET_LOG_URL
+            + "?accountId=" + accountId + "&clusterLevel=" + ClusterLevel.L2.name() + "&workflowExecutionId="
+            + context.getWorkflowExecutionId() + "&compareCurrent=true&stateType=" + context.getStateType();
+      } else {
+        controlInputUrl = "/api/" + LogAnalysisResource.LOG_ANALYSIS + LogAnalysisResource.ANALYSIS_STATE_GET_LOG_URL
+            + "?accountId=" + accountId + "&clusterLevel=" + ClusterLevel.L2.name() + "&workflowExecutionId="
+            + lastWorkflowExecutionId + "&compareCurrent=false&stateType=" + context.getStateType();
+      }
 
-        String logAnalysisSaveUrl = "/api/" + LogAnalysisResource.LOG_ANALYSIS
+      String logAnalysisSaveUrl = "/api/" + LogAnalysisResource.LOG_ANALYSIS
+          + LogAnalysisResource.ANALYSIS_STATE_SAVE_ANALYSIS_RECORDS_URL + "?accountId=" + accountId
+          + "&applicationId=" + applicationId + "&stateExecutionId=" + context.getStateExecutionId()
+          + "&logCollectionMinute=" + logAnalysisMinute + "&isBaselineCreated=" + isBaselineCreated + "&taskId=" + uuid
+          + "&stateType=" + context.getStateType();
+
+      if (!isEmpty(context.getPrevWorkflowExecutionId())) {
+        logAnalysisSaveUrl += "&baseLineExecutionId=" + context.getPrevWorkflowExecutionId();
+      }
+
+      final String logAnalysisGetUrl = "/api/" + LogAnalysisResource.LOG_ANALYSIS
+          + LogAnalysisResource.ANALYSIS_STATE_GET_ANALYSIS_RECORDS_URL + "?accountId=" + accountId
+          + "&stateType=" + context.getStateType();
+
+      String feedback_url = "";
+
+      if (logAnalysisMinute == 0) {
+        feedback_url = "/api/" + LogAnalysisResource.LOG_ANALYSIS + LogAnalysisResource.ANALYSIS_USER_FEEDBACK
+            + "?accountId=" + accountId + "&serviceId=" + serviceId + "&workflowId=" + workflowId
+            + "&workflowExecutionId=" + context.getWorkflowExecutionId();
+      }
+
+      if (createExperiment) {
+        final String experimentalLogAnalysisSaveUrl = "/api/learning-exp"
             + LogAnalysisResource.ANALYSIS_STATE_SAVE_ANALYSIS_RECORDS_URL + "?accountId=" + accountId
             + "&applicationId=" + applicationId + "&stateExecutionId=" + context.getStateExecutionId()
             + "&logCollectionMinute=" + logAnalysisMinute + "&isBaselineCreated=" + isBaselineCreated
             + "&taskId=" + uuid + "&stateType=" + context.getStateType();
 
-        if (!isEmpty(context.getPrevWorkflowExecutionId())) {
-          logAnalysisSaveUrl += "&baseLineExecutionId=" + context.getPrevWorkflowExecutionId();
-        }
+        List<MLExperiments> experiments = learningEngineService.getExperiments(MLAnalysisType.LOG_ML);
 
-        final String logAnalysisGetUrl = "/api/" + LogAnalysisResource.LOG_ANALYSIS
-            + LogAnalysisResource.ANALYSIS_STATE_GET_ANALYSIS_RECORDS_URL + "?accountId=" + accountId
-            + "&stateType=" + context.getStateType();
-
-        String feedback_url = "";
-
-        if (logAnalysisMinute == 0) {
-          feedback_url = "/api/" + LogAnalysisResource.LOG_ANALYSIS + LogAnalysisResource.ANALYSIS_USER_FEEDBACK
-              + "?accountId=" + accountId + "&serviceId=" + serviceId + "&workflowId=" + workflowId
-              + "&workflowExecutionId=" + context.getWorkflowExecutionId();
-        }
-
-        if (createExperiment) {
-          final String experimentalLogAnalysisSaveUrl = "/api/learning-exp"
-              + LogAnalysisResource.ANALYSIS_STATE_SAVE_ANALYSIS_RECORDS_URL + "?accountId=" + accountId
-              + "&applicationId=" + applicationId + "&stateExecutionId=" + context.getStateExecutionId()
-              + "&logCollectionMinute=" + logAnalysisMinute + "&isBaselineCreated=" + isBaselineCreated
-              + "&taskId=" + uuid + "&stateType=" + context.getStateType();
-
-          List<MLExperiments> experiments = learningEngineService.getExperiments(MLAnalysisType.LOG_ML);
-
-          LearningEngineExperimentalAnalysisTaskBuilder experimentalAnalysisTaskBuilder =
-              LearningEngineExperimentalAnalysisTask.builder()
-                  .ml_shell_file_name(LOG_ML_SHELL_FILE_NAME)
-                  .query(Lists.newArrayList(query.split(" ")))
-                  .workflow_id(context.getWorkflowId())
-                  .workflow_execution_id(context.getWorkflowExecutionId())
-                  .state_execution_id(context.getStateExecutionId())
-                  .service_id(context.getServiceId())
-                  .sim_threshold(0.9)
-                  .analysis_minute(logAnalysisMinute)
-                  .analysis_save_url(experimentalLogAnalysisSaveUrl)
-                  .log_analysis_get_url(logAnalysisGetUrl)
-                  .ml_analysis_type(MLAnalysisType.LOG_ML)
-                  .stateType(context.getStateType());
-
-          if (!isEmpty(feedback_url)) {
-            experimentalAnalysisTaskBuilder.feedback_url(feedback_url);
-          }
-          if (isBaselineCreated) {
-            experimentalAnalysisTaskBuilder.control_input_url(controlInputUrl)
-                .test_input_url(testInputUrl)
-                .control_nodes(controlNodes)
-                .test_nodes(testNodes);
-          } else {
-            experimentalAnalysisTaskBuilder.control_input_url(testInputUrl).control_nodes(testNodes);
-          }
-
-          LearningEngineExperimentalAnalysisTask experimentalAnalysisTask;
-          for (MLExperiments experiment : experiments) {
-            experimentalAnalysisTask =
-                experimentalAnalysisTaskBuilder.experiment_name(experiment.getExperimentName()).build();
-            experimentalAnalysisTask.setAppId(applicationId);
-            experimentalAnalysisTask.setUuid(uuid);
-            learningEngineService.addLearningEngineExperimentalAnalysisTask(experimentalAnalysisTask);
-          }
-        }
-
-        LearningEngineAnalysisTaskBuilder analysisTaskBuilder =
-            LearningEngineAnalysisTask.builder()
+        LearningEngineExperimentalAnalysisTaskBuilder experimentalAnalysisTaskBuilder =
+            LearningEngineExperimentalAnalysisTask.builder()
                 .ml_shell_file_name(LOG_ML_SHELL_FILE_NAME)
                 .query(Lists.newArrayList(query.split(" ")))
                 .workflow_id(context.getWorkflowId())
@@ -178,29 +139,66 @@ public class LogMLAnalysisGenerator implements Runnable {
                 .service_id(context.getServiceId())
                 .sim_threshold(0.9)
                 .analysis_minute(logAnalysisMinute)
-                .analysis_save_url(logAnalysisSaveUrl)
+                .analysis_save_url(experimentalLogAnalysisSaveUrl)
                 .log_analysis_get_url(logAnalysisGetUrl)
                 .ml_analysis_type(MLAnalysisType.LOG_ML)
                 .stateType(context.getStateType());
 
         if (!isEmpty(feedback_url)) {
-          analysisTaskBuilder.feedback_url(feedback_url);
+          experimentalAnalysisTaskBuilder.feedback_url(feedback_url);
         }
-
         if (isBaselineCreated) {
-          analysisTaskBuilder.control_input_url(controlInputUrl)
+          experimentalAnalysisTaskBuilder.control_input_url(controlInputUrl)
               .test_input_url(testInputUrl)
               .control_nodes(controlNodes)
               .test_nodes(testNodes);
         } else {
-          analysisTaskBuilder.control_input_url(testInputUrl).control_nodes(testNodes);
+          experimentalAnalysisTaskBuilder.control_input_url(testInputUrl).control_nodes(testNodes);
         }
 
-        LearningEngineAnalysisTask analysisTask = analysisTaskBuilder.build();
-        analysisTask.setAppId(applicationId);
-        analysisTask.setUuid(uuid);
-        learningEngineService.addLearningEngineAnalysisTask(analysisTask);
+        LearningEngineExperimentalAnalysisTask experimentalAnalysisTask;
+        for (MLExperiments experiment : experiments) {
+          experimentalAnalysisTask =
+              experimentalAnalysisTaskBuilder.experiment_name(experiment.getExperimentName()).build();
+          experimentalAnalysisTask.setAppId(applicationId);
+          experimentalAnalysisTask.setUuid(uuid);
+          learningEngineService.addLearningEngineExperimentalAnalysisTask(experimentalAnalysisTask);
+        }
       }
+
+      LearningEngineAnalysisTaskBuilder analysisTaskBuilder =
+          LearningEngineAnalysisTask.builder()
+              .ml_shell_file_name(LOG_ML_SHELL_FILE_NAME)
+              .query(Lists.newArrayList(query.split(" ")))
+              .workflow_id(context.getWorkflowId())
+              .workflow_execution_id(context.getWorkflowExecutionId())
+              .state_execution_id(context.getStateExecutionId())
+              .service_id(context.getServiceId())
+              .sim_threshold(0.9)
+              .analysis_minute(logAnalysisMinute)
+              .analysis_save_url(logAnalysisSaveUrl)
+              .log_analysis_get_url(logAnalysisGetUrl)
+              .ml_analysis_type(MLAnalysisType.LOG_ML)
+              .stateType(context.getStateType());
+
+      if (!isEmpty(feedback_url)) {
+        analysisTaskBuilder.feedback_url(feedback_url);
+      }
+
+      if (isBaselineCreated) {
+        analysisTaskBuilder.control_input_url(controlInputUrl)
+            .test_input_url(testInputUrl)
+            .control_nodes(controlNodes)
+            .test_nodes(testNodes);
+      } else {
+        analysisTaskBuilder.control_input_url(testInputUrl).control_nodes(testNodes);
+      }
+
+      LearningEngineAnalysisTask analysisTask = analysisTaskBuilder.build();
+      analysisTask.setAppId(applicationId);
+      analysisTask.setUuid(uuid);
+      learningEngineService.addLearningEngineAnalysisTask(analysisTask);
+
     } catch (Exception e) {
       throw new RuntimeException("Log analysis failed for " + context.getStateExecutionId() + " for minute "
               + logAnalysisMinute + ", reason: " + e.getMessage(),

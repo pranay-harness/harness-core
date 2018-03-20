@@ -24,7 +24,7 @@ public class LogClusterContext {
   private String serviceId;
   private Set<String> controlNodes;
   private Set<String> testNodes;
-  private Set<String> queries;
+  private String query;
   private boolean isSSL;
   private int appPort;
   private StateType stateType;
