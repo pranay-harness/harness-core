@@ -83,6 +83,7 @@ public abstract class AbstractLogAnalysisState extends AbstractAnalysisState {
     getLogger().info("Executing {} state, id: {} ", getStateType(), executionContext.getStateExecutionInstanceId());
     cleanUpForRetry(executionContext);
     AnalysisContext context = getLogAnalysisContext(executionContext, UUID.randomUUID().toString());
+    saveMetaDataForDashboard(context.getAccountId(), executionContext);
 
     Set<String> canaryNewHostNames = context.getTestNodes();
     if (isEmpty(canaryNewHostNames)) {
@@ -148,7 +149,6 @@ public abstract class AbstractLogAnalysisState extends AbstractAnalysisState {
       scheduleClusterCronJob(context, delegateTaskId);
       scheduleAnalysisCronJob(context, delegateTaskId);
 
-      saveMetaDataForDashboard(context.getAccountId(), executionContext);
       return anExecutionResponse()
           .withAsync(true)
           .withCorrelationIds(Collections.singletonList(context.getCorrelationId()))
@@ -173,11 +173,10 @@ public abstract class AbstractLogAnalysisState extends AbstractAnalysisState {
       ExecutionContext executionContext, Map<String, NotifyResponseData> response) {
     LogAnalysisResponse executionResponse = (LogAnalysisResponse) response.values().iterator().next();
 
-    continuousVerificationService.setMetaDataExecutionStatus(
-        executionContext.getStateExecutionInstanceId(), executionResponse.getExecutionStatus());
-
     if (executionResponse.getExecutionStatus() == ExecutionStatus.ERROR
         || executionResponse.getExecutionStatus() == ExecutionStatus.FAILED) {
+      continuousVerificationService.setMetaDataExecutionStatus(
+          executionContext.getStateExecutionInstanceId(), ExecutionStatus.FAILED);
       return anExecutionResponse()
           .withExecutionStatus(ExecutionStatus.ERROR)
           .withStateExecutionData(executionResponse.getLogAnalysisExecutionData())
@@ -190,6 +189,8 @@ public abstract class AbstractLogAnalysisState extends AbstractAnalysisState {
           context.getStateExecutionId(), context.getAppId(), StateType.valueOf(getStateType()));
       if (analysisSummary == null) {
         getLogger().warn("No analysis summary. This can happen if there is no data with the given queries");
+        continuousVerificationService.setMetaDataExecutionStatus(
+            executionContext.getStateExecutionInstanceId(), ExecutionStatus.SUCCESS);
         return generateAnalysisResponse(
             context, ExecutionStatus.SUCCESS, "No data found with given queries. Skipped Analysis");
       }
@@ -209,7 +210,8 @@ public abstract class AbstractLogAnalysisState extends AbstractAnalysisState {
       }
 
       executionResponse.getLogAnalysisExecutionData().setStatus(executionStatus);
-
+      continuousVerificationService.setMetaDataExecutionStatus(
+          executionContext.getStateExecutionInstanceId(), executionStatus);
       return anExecutionResponse()
           .withExecutionStatus(executionStatus)
           .withStateExecutionData(executionResponse.getLogAnalysisExecutionData())
@@ -290,7 +292,7 @@ public abstract class AbstractLogAnalysisState extends AbstractAnalysisState {
                                                  .withStatus(status)
                                                  .withCorrelationId(context.getCorrelationId())
                                                  .build();
-
+    continuousVerificationService.setMetaDataExecutionStatus(context.getStateExecutionId(), status);
     return anExecutionResponse()
         .withAsync(false)
         .withExecutionStatus(status)

@@ -67,6 +67,7 @@ public abstract class AbstractMetricAnalysisState extends AbstractAnalysisState 
     getLogger().info("Executing {} state, id: {} ", getStateType(), context.getStateExecutionInstanceId());
     cleanUpForRetry(context);
     AnalysisContext analysisContext = getAnalysisContext(context, UUID.randomUUID().toString());
+    saveMetaDataForDashboard(analysisContext.getAccountId(), context);
 
     Set<String> canaryNewHostNames = analysisContext.getTestNodes();
     if (isEmpty(canaryNewHostNames)) {
@@ -142,7 +143,6 @@ public abstract class AbstractMetricAnalysisState extends AbstractAnalysisState 
           MetricDataAnalysisResponse.builder().stateExecutionData(executionData).build();
       response.setExecutionStatus(ExecutionStatus.RUNNING);
       scheduleAnalysisCronJob(analysisContext, delegateTaskId);
-      saveMetaDataForDashboard(analysisContext.getAccountId(), context);
       return anExecutionResponse()
           .withAsync(true)
           .withCorrelationIds(Collections.singletonList(executionData.getCorrelationId()))
@@ -192,11 +192,10 @@ public abstract class AbstractMetricAnalysisState extends AbstractAnalysisState 
     ExecutionStatus executionStatus = ExecutionStatus.SUCCESS;
     MetricDataAnalysisResponse executionResponse = (MetricDataAnalysisResponse) response.values().iterator().next();
 
-    continuousVerificationService.setMetaDataExecutionStatus(
-        context.getStateExecutionInstanceId(), executionResponse.getExecutionStatus());
-
     if (executionResponse.getExecutionStatus() == ExecutionStatus.ERROR
         || executionResponse.getExecutionStatus() == ExecutionStatus.FAILED) {
+      continuousVerificationService.setMetaDataExecutionStatus(
+          context.getStateExecutionInstanceId(), ExecutionStatus.FAILED);
       return anExecutionResponse()
           .withExecutionStatus(ExecutionStatus.ERROR)
           .withStateExecutionData(executionResponse.getStateExecutionData())
@@ -207,6 +206,8 @@ public abstract class AbstractMetricAnalysisState extends AbstractAnalysisState 
     NewRelicMetricAnalysisRecord metricsAnalysis = metricAnalysisService.getMetricsAnalysis(
         StateType.valueOf(getStateType()), context.getStateExecutionInstanceId(), context.getWorkflowExecutionId());
     if (metricsAnalysis == null) {
+      continuousVerificationService.setMetaDataExecutionStatus(
+          context.getStateExecutionInstanceId(), ExecutionStatus.SUCCESS);
       return generateAnalysisResponse(
           context, ExecutionStatus.SUCCESS, "No data found for comparison. Skipping analysis.");
     }
@@ -216,6 +217,7 @@ public abstract class AbstractMetricAnalysisState extends AbstractAnalysisState 
 
     executionResponse.getStateExecutionData().setStatus(executionStatus);
     getLogger().info("State done with status {}, id: {}", executionStatus, context.getStateExecutionInstanceId());
+    continuousVerificationService.setMetaDataExecutionStatus(context.getStateExecutionInstanceId(), executionStatus);
     return anExecutionResponse()
         .withExecutionStatus(executionStatus)
         .withStateExecutionData(executionResponse.getStateExecutionData())
@@ -237,7 +239,7 @@ public abstract class AbstractMetricAnalysisState extends AbstractAnalysisState 
             .timeDuration(Integer.parseInt(timeDuration))
             .correlationId(UUID.randomUUID().toString())
             .build();
-    executionData.setStatus(ExecutionStatus.RUNNING);
+    executionData.setStatus(status);
     NewRelicMetricAnalysisRecord metricAnalysisRecord = NewRelicMetricAnalysisRecord.builder()
                                                             .message(message)
                                                             .stateType(StateType.valueOf(getStateType()))
@@ -246,6 +248,7 @@ public abstract class AbstractMetricAnalysisState extends AbstractAnalysisState 
                                                             .workflowId(getWorkflowId(context))
                                                             .build();
     metricAnalysisService.saveAnalysisRecords(metricAnalysisRecord);
+    continuousVerificationService.setMetaDataExecutionStatus(context.getStateExecutionInstanceId(), status);
 
     return anExecutionResponse()
         .withAsync(false)
