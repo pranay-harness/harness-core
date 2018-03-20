@@ -112,7 +112,7 @@ public class InstanceSyncJob implements Job {
             instanceHandler.syncInstances(appIdFinal, infraMappingId);
             logger.info("Instance sync completed for [{}]", infraMappingId);
           } catch (Exception ex) {
-            logger.error("Instance sync failed for infraMappingId [{}] with error [{}]", infraMappingId, ex);
+            logger.warn("Instance sync failed for infraMappingId [{}]", infraMappingId, ex);
           }
         } catch (Exception ex) {
           logger.error(
