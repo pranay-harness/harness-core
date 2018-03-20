@@ -98,7 +98,7 @@ public class InstanceSyncJob implements Job {
       // Response only contains id
       List<InfrastructureMapping> infraMappingList = response.getResponse();
 
-      infraMappingList.stream().forEach(infraMapping -> {
+      infraMappingList.forEach(infraMapping -> {
         String infraMappingId = infraMapping.getUuid();
         InfrastructureMappingType infraMappingType =
             Util.getEnumFromString(InfrastructureMappingType.class, infraMapping.getInfraMappingType());
@@ -111,8 +111,9 @@ public class InstanceSyncJob implements Job {
               return;
             }
             instanceHandler.syncInstances(appIdFinal, infraMappingId);
+            logger.info("Instance sync completed for [{}]", infraMappingId);
           } catch (WingsException ex) {
-            // TODO: why we ignoring this exception?
+            logger.error("Instance sync failed for infraMappingId [{}] with error [{}]", infraMappingId, ex);
           }
         } catch (HarnessException ex) {
           logger.error(
