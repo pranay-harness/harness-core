@@ -69,12 +69,13 @@ import software.wings.utils.JsonUtils;
 import java.io.IOException;
 import java.io.InputStreamReader;
 import java.util.ArrayList;
+import java.util.Collections;
+import java.util.Comparator;
 import java.util.List;
 import java.util.Map;
 import java.util.Objects;
 import java.util.Optional;
 import java.util.concurrent.TimeUnit;
-import java.util.stream.IntStream;
 
 /**
  * Created by anubhaw on 12/28/16.
@@ -1177,20 +1178,19 @@ public class EcsContainerServiceImpl implements EcsContainerService {
                                 .getServices()
                                 .get(0);
           List<ServiceEvent> events = service.getEvents();
-          int excludedEndIndex = IntStream.range(0, events.size())
-                                     .filter(idx -> events.get(idx).getId().equals(excludedEventId[0]))
-                                     .findFirst()
-                                     .orElse(events.size());
 
-          for (int i = excludedEndIndex - 1; i >= 0; i--) {
-            executionLogCallback.saveExecutionLog("EVENT: " + events.get(i).getMessage(), LogLevel.INFO);
-            if (events.get(i).getMessage().endsWith("has reached a steady state.")) {
-              executionLogCallback.saveExecutionLog("Service has reached a steady state", LogLevel.INFO);
-              return true;
+          // AWS returns events in descending order of createdTime, but its safer to sort on our own rather than
+          // depending on their API.
+          Collections.sort(events, new Comparator<ServiceEvent>() {
+            @Override
+            public int compare(ServiceEvent o1, ServiceEvent o2) {
+              return o2.getCreatedAt().compareTo(o1.getCreatedAt());
             }
-          }
-          if (!events.isEmpty()) {
-            excludedEventId[0] = events.get(0).getId();
+          });
+
+          if (events.get(0).getMessage().endsWith("has reached a steady state.")) {
+            executionLogCallback.saveExecutionLog("Service has reached a steady state", LogLevel.INFO);
+            return true;
           }
           sleep(ofSeconds(10));
         }
