@@ -446,7 +446,7 @@ public class UserServiceImpl implements UserService {
       return existingInvite;
     }
     if (userInvite.getName() == null || userInvite.getPassword() == null) {
-      throw new WingsException(ErrorCode.INVALID_REQUEST).addParam("args", "User name/password");
+      throw new WingsException(ErrorCode.INVALID_REQUEST).addParam("message", "User name/password");
     }
 
     Account account = accountService.get(existingInvite.getAccountId());

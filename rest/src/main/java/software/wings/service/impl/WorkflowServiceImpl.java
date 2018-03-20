@@ -1893,7 +1893,7 @@ public class WorkflowServiceImpl implements WorkflowService, DataProvider {
     }
 
     if (!found) {
-      throw new WingsException(INVALID_REQUEST).addParam("args", "node");
+      throw new WingsException(INVALID_REQUEST).addParam("message", "node not found");
     }
 
     orchestrationWorkflow =
