@@ -117,6 +117,7 @@ public class YamlResource {
   @Path("/workflows/{workflowId}")
   @Timed
   @ExceptionMetered
+  @AuthRule(permissionType = PermissionType.WORKFLOW, action = Action.READ)
   public RestResponse<YamlPayload> getWorkflow(
       @QueryParam("appId") String appId, @PathParam("workflowId") String workflowId) {
     return yamlResourceService.getWorkflow(appId, workflowId);
@@ -167,6 +168,7 @@ public class YamlResource {
   @Path("/pipelines/{pipelineId}")
   @Timed
   @ExceptionMetered
+  @AuthRule(permissionType = PermissionType.PIPELINE, action = Action.READ)
   public RestResponse<YamlPayload> getPipeline(
       @QueryParam("appId") String appId, @PathParam("pipelineId") String pipelineId) {
     return yamlResourceService.getPipeline(appId, pipelineId);
@@ -242,7 +244,7 @@ public class YamlResource {
   @Path("/service-commands/{serviceCommandId}")
   @Timed
   @ExceptionMetered
-  @AuthRule(permissionType = PermissionType.SERVICE, action = Action.UPDATE)
+  @AuthRule(permissionType = PermissionType.SERVICE, action = Action.UPDATE, skipAuth = true)
   public RestResponse<ServiceCommand> updateServiceCommand(
       @QueryParam("accountId") String accountId, YamlPayload yamlPayload) {
     return yamlService.update(yamlPayload, accountId);
@@ -259,6 +261,7 @@ public class YamlResource {
   @Path("/settings")
   @Timed
   @ExceptionMetered
+  @AuthRule(permissionType = PermissionType.ACCOUNT_MANAGEMENT)
   public RestResponse<YamlPayload> getSettingAttributesList(
       @QueryParam("accountId") String accountId, @QueryParam("type") String type) {
     return yamlResourceService.getGlobalSettingAttributesList(accountId, type);
@@ -275,6 +278,7 @@ public class YamlResource {
   @Path("/settings/{uuid}")
   @Timed
   @ExceptionMetered
+  @AuthRule(permissionType = PermissionType.ACCOUNT_MANAGEMENT)
   public RestResponse<YamlPayload> getSettingAttribute(
       @QueryParam("accountId") String accountId, @PathParam("uuid") String uuid) {
     return yamlResourceService.getSettingAttribute(accountId, uuid);
@@ -291,6 +295,7 @@ public class YamlResource {
   @Path("/defaults/{uuid}")
   @Timed
   @ExceptionMetered
+  @AuthRule(permissionType = PermissionType.ACCOUNT_MANAGEMENT)
   public RestResponse<YamlPayload> getDefaults(
       @QueryParam("accountId") String accountId, @PathParam("uuid") String uuid) {
     return yamlResourceService.getDefaultVariables(accountId, uuid);
@@ -327,6 +332,7 @@ public class YamlResource {
   @Path("/settings/{uuid}")
   @Timed
   @ExceptionMetered
+  @AuthRule(permissionType = PermissionType.ACCOUNT_MANAGEMENT)
   public RestResponse<SettingAttribute> updateSettingAttribute(@QueryParam("accountId") String accountId,
       @PathParam("uuid") String uuid, @QueryParam("type") String type, YamlPayload yamlPayload,
       @QueryParam("deleteEnabled") @DefaultValue("false") boolean deleteEnabled) {
@@ -344,6 +350,7 @@ public class YamlResource {
   @Path("/environments/{envId}")
   @Timed
   @ExceptionMetered
+  @AuthRule(permissionType = PermissionType.ENV, action = Action.READ)
   public RestResponse<YamlPayload> getEnvironment(@QueryParam("appId") String appId, @PathParam("envId") String envId) {
     return yamlResourceService.getEnvironment(appId, envId);
   }
@@ -369,7 +376,7 @@ public class YamlResource {
   @Path("/environments/{envId}")
   @Timed
   @ExceptionMetered
-  @AuthRule(permissionType = PermissionType.ENV, action = Action.UPDATE)
+  @AuthRule(permissionType = PermissionType.ENV, action = Action.UPDATE, skipAuth = true)
   public RestResponse<Environment> updateEnvironment(
       @QueryParam("accountId") String accountId, @QueryParam("appId") String appId, YamlPayload yamlPayload) {
     return yamlService.update(yamlPayload, accountId);
@@ -386,6 +393,7 @@ public class YamlResource {
   @Path("/services/{serviceId}")
   @Timed
   @ExceptionMetered
+  @AuthRule(permissionType = PermissionType.SERVICE, action = Action.READ)
   public RestResponse<YamlPayload> getService(
       @QueryParam("appId") String appId, @PathParam("serviceId") String serviceId) {
     return yamlResourceService.getService(appId, serviceId);
@@ -421,7 +429,7 @@ public class YamlResource {
   @Path("/configs/{configId}")
   @Timed
   @ExceptionMetered
-  @AuthRule(permissionType = PermissionType.SERVICE, action = Action.UPDATE)
+  @AuthRule(permissionType = PermissionType.SERVICE, action = Action.UPDATE, skipAuth = true)
   public RestResponse<ConfigFile> updateConfigFile(@QueryParam("accountId") String accountId,
       @QueryParam("appId") String appId, @PathParam("configId") String configId, YamlPayload yamlPayload,
       @QueryParam("deleteEnabled") @DefaultValue("false") boolean deleteEnabled) {
@@ -517,7 +525,7 @@ public class YamlResource {
   @Path("/artifact-streams/{artifactStreamId}")
   @Timed
   @ExceptionMetered
-  @AuthRule(permissionType = PermissionType.SERVICE, action = Action.UPDATE)
+  @AuthRule(permissionType = PermissionType.SERVICE, action = Action.UPDATE, skipAuth = true)
   public RestResponse<Base> updateArtifactStream(@QueryParam("appId") String appId,
       @PathParam("artifactStreamId") String artifactStreamId, YamlPayload yamlPayload,
       @QueryParam("deleteEnabled") @DefaultValue("false") boolean deleteEnabled) {
@@ -537,7 +545,7 @@ public class YamlResource {
   @Path("/infrastructuremappings/{infraMappingId}")
   @Timed
   @ExceptionMetered
-  @AuthRule(permissionType = PermissionType.ENV, action = Action.UPDATE)
+  @AuthRule(permissionType = PermissionType.ENV, action = Action.UPDATE, skipAuth = true)
   public RestResponse<Base> updateInfraMapping(@QueryParam("appId") String appId,
       @QueryParam("accountId") String accountId, YamlPayload yamlPayload,
       @QueryParam("deleteEnabled") @DefaultValue("false") boolean deleteEnabled) {
@@ -557,7 +565,7 @@ public class YamlResource {
   @Path("/container-tasks/{containerTaskId}")
   @Timed
   @ExceptionMetered
-  @AuthRule(permissionType = PermissionType.SERVICE, action = Action.UPDATE)
+  @AuthRule(permissionType = PermissionType.SERVICE, action = Action.UPDATE, skipAuth = true)
   public RestResponse<Base> updateContainerTask(@QueryParam("appId") String appId,
       @QueryParam("accountId") String accountId, YamlPayload yamlPayload,
       @QueryParam("deleteEnabled") @DefaultValue("false") boolean deleteEnabled) {
@@ -597,7 +605,7 @@ public class YamlResource {
   @Path("/lambda-specs/{lambdaSpecId}")
   @Timed
   @ExceptionMetered
-  @AuthRule(permissionType = PermissionType.SERVICE, action = Action.UPDATE)
+  @AuthRule(permissionType = PermissionType.SERVICE, action = Action.UPDATE, skipAuth = true)
   public RestResponse<Base> updateLambdaSpec(@QueryParam("appId") String appId,
       @QueryParam("accountId") String accountId, YamlPayload yamlPayload,
       @QueryParam("deleteEnabled") @DefaultValue("false") boolean deleteEnabled) {

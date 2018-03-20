@@ -171,7 +171,7 @@ public class YamlGitServiceImpl implements YamlGitService {
     YamlGitConfig yamlGitConfig = yamlDirectoryService.weNeedToPushChanges(accountId);
     if (yamlGitConfig != null) {
       try {
-        FolderNode top = yamlDirectoryService.getDirectory(accountId, SETUP_ENTITY_ID);
+        FolderNode top = yamlDirectoryService.getDirectory(accountId, SETUP_ENTITY_ID, false, null);
         List<GitFileChange> gitFileChanges = new ArrayList<>();
         gitFileChanges = yamlDirectoryService.traverseDirectory(gitFileChanges, accountId, top, "", true);
         syncFiles(accountId, gitFileChanges, true);
@@ -206,7 +206,7 @@ public class YamlGitServiceImpl implements YamlGitService {
   public List<GitFileChange> performFullSyncDryRun(String accountId) {
     try {
       logger.info("Performing full-sync dry-run for account {}", accountId);
-      FolderNode top = yamlDirectoryService.getDirectory(accountId, SETUP_ENTITY_ID);
+      FolderNode top = yamlDirectoryService.getDirectory(accountId, SETUP_ENTITY_ID, false, null);
       List<GitFileChange> gitFileChanges = new ArrayList<>();
       yamlDirectoryService.traverseDirectory(gitFileChanges, accountId, top, "", false);
       logger.info("Performed full-sync dry-run for account {}", accountId);
