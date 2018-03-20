@@ -69,13 +69,13 @@ public class KubernetesClusterConfig extends SettingValue implements Encryptable
   }
 
   @SchemaIgnore
-  public KubernetesConfig createKubernetesConfig() {
+  public KubernetesConfig createKubernetesConfig(String namespace) {
     KubernetesConfigBuilder kubernetesConfig = KubernetesConfig.builder()
                                                    .accountId(getAccountId())
                                                    .masterUrl(masterUrl)
                                                    .username(username)
                                                    .clientKeyAlgo(clientKeyAlgo)
-                                                   .namespace("default");
+                                                   .namespace(isNotBlank(namespace) ? namespace : "default");
     if (isNotBlank(encryptedPassword)) {
       kubernetesConfig.encryptedPassword(encryptedPassword);
     } else {

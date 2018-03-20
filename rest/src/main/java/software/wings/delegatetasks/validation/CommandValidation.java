@@ -151,7 +151,7 @@ public class CommandValidation extends AbstractDelegateValidateTask {
         kubernetesConfig = azureHelperService.getKubernetesClusterConfig(
             azureConfig, edd, subscriptionId, resourceGroup, clusterName, namespace);
       } else if (value instanceof KubernetesClusterConfig) {
-        kubernetesConfig = ((KubernetesClusterConfig) value).createKubernetesConfig();
+        kubernetesConfig = ((KubernetesClusterConfig) value).createKubernetesConfig(namespace);
       } else {
         throw new WingsException(ErrorCode.INVALID_ARGUMENT)
             .addParam("args", "Unknown kubernetes cloud provider setting value: " + value.getType());

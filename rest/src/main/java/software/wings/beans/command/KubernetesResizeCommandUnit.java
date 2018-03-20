@@ -119,7 +119,8 @@ public class KubernetesResizeCommandUnit extends ContainerResizeCommandUnit {
       kubernetesConfig = (KubernetesConfig) contextData.settingAttribute.getValue();
       encryptedDataDetails.addAll(contextData.encryptedDataDetails);
     } else if (contextData.settingAttribute.getValue() instanceof KubernetesClusterConfig) {
-      kubernetesConfig = ((KubernetesClusterConfig) contextData.settingAttribute.getValue()).createKubernetesConfig();
+      kubernetesConfig = ((KubernetesClusterConfig) contextData.settingAttribute.getValue())
+                             .createKubernetesConfig(resizeParams.getNamespace());
       encryptedDataDetails.addAll(contextData.encryptedDataDetails);
     } else if (contextData.settingAttribute.getValue() instanceof AzureConfig) {
       AzureConfig azureConfig = (AzureConfig) contextData.settingAttribute.getValue();
