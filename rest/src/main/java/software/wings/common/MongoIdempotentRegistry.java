@@ -16,14 +16,10 @@ import io.harness.idempotence.IdempotentRegistry;
 import org.mongodb.morphia.FindAndModifyOptions;
 import org.mongodb.morphia.query.Query;
 import org.mongodb.morphia.query.UpdateOperations;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
 import software.wings.beans.Idempotent;
 import software.wings.dl.WingsPersistence;
 
 public class MongoIdempotentRegistry<T> implements IdempotentRegistry<T> {
-  private static final Logger logger = LoggerFactory.getLogger(MongoIdempotentRegistry.class);
-
   public static final FindAndModifyOptions registerOptions =
       new FindAndModifyOptions().returnNew(false).upsert(true).writeConcern(new WriteConcern("majority"));
   public static final FindAndModifyOptions unregisterOptions =

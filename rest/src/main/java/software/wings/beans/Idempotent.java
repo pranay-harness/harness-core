@@ -5,7 +5,7 @@ import org.mongodb.morphia.annotations.Entity;
 
 import java.util.List;
 
-@Entity(value = "idempotent")
+@Entity(value = "idempotent_locks", noClassnameStored = true)
 @Data
 public class Idempotent extends Base {
   public static final String TENTATIVE = "tentative";
