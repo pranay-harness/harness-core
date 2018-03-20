@@ -20,7 +20,6 @@ import software.wings.beans.SearchFilter.Operator;
 import software.wings.dl.PageRequest;
 import software.wings.dl.PageResponse;
 import software.wings.dl.WingsPersistence;
-import software.wings.exception.HarnessException;
 import software.wings.exception.WingsException;
 import software.wings.lock.AcquiredLock;
 import software.wings.lock.PersistentLocker;
@@ -112,10 +111,10 @@ public class InstanceSyncJob implements Job {
             }
             instanceHandler.syncInstances(appIdFinal, infraMappingId);
             logger.info("Instance sync completed for [{}]", infraMappingId);
-          } catch (WingsException ex) {
+          } catch (Exception ex) {
             logger.error("Instance sync failed for infraMappingId [{}] with error [{}]", infraMappingId, ex);
           }
-        } catch (HarnessException ex) {
+        } catch (Exception ex) {
           logger.error(
               "Error while syncing instances for app: {} and infra mapping id: {}", appIdFinal, infraMappingId, ex);
         }
