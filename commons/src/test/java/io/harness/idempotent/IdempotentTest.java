@@ -2,7 +2,7 @@ package io.harness.idempotent;
 
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertNotNull;
-import static org.junit.Assert.assertNull;
+import static org.junit.Assert.assertTrue;
 import static org.mockito.Matchers.any;
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.verify;
@@ -24,11 +24,16 @@ import java.util.ArrayList;
 public class IdempotentTest {
   IdempotentId id = new IdempotentId("foo");
 
+  private static IdempotentRegistry.Response<Boolean> newResponse =
+      IdempotentRegistry.Response.<Boolean>builder().state(State.NEW).build();
+  private static IdempotentRegistry.Response<Boolean> doneResponse =
+      IdempotentRegistry.Response.<Boolean>builder().state(State.DONE).result(Boolean.TRUE).build();
+
   @Test
   public void testNewIdempotentFailed() throws UnableToRegisterIdempotentOperationException {
     final IdempotentRegistry mockIdempotentRegistry = mock(IdempotentRegistry.class);
 
-    when(mockIdempotentRegistry.register(any())).thenReturn(State.NEW);
+    when(mockIdempotentRegistry.register(any())).thenReturn(newResponse);
 
     try (IdempotentLock idempotent = IdempotentLock.create(id, mockIdempotentRegistry)) {
       assertNotNull(idempotent);
@@ -41,24 +46,26 @@ public class IdempotentTest {
   public void testNewIdempotentSucceeded() throws UnableToRegisterIdempotentOperationException {
     final IdempotentRegistry mockIdempotentRegistry = mock(IdempotentRegistry.class);
 
-    when(mockIdempotentRegistry.register(any())).thenReturn(State.NEW);
+    when(mockIdempotentRegistry.register(any())).thenReturn(newResponse);
 
     try (IdempotentLock idempotent = IdempotentLock.create(id, mockIdempotentRegistry)) {
       assertNotNull(idempotent);
-      idempotent.succeeded();
+      idempotent.succeeded(Boolean.TRUE);
     }
 
-    verify(mockIdempotentRegistry).finish(id);
+    verify(mockIdempotentRegistry).finish(id, Boolean.TRUE);
   }
 
   @Test
   public void testFinishedIdempotent() throws UnableToRegisterIdempotentOperationException {
     final IdempotentRegistry mockIdempotentRegistry = mock(IdempotentRegistry.class);
 
-    when(mockIdempotentRegistry.register(any())).thenReturn(State.DONE);
+    when(mockIdempotentRegistry.register(any())).thenReturn(doneResponse);
 
-    try (IdempotentLock idempotent = IdempotentLock.create(id, mockIdempotentRegistry)) {
-      assertNull(idempotent);
+    try (IdempotentLock<Boolean> idempotent = IdempotentLock.create(id, mockIdempotentRegistry)) {
+      assertNotNull(idempotent);
+      assertTrue(idempotent.alreadyExecuted());
+      assertTrue(idempotent.getResult());
     }
   }
 
@@ -70,11 +77,11 @@ public class IdempotentTest {
       // We need at least one thread to execute positive scenario, else the test will fail
       if (i == 0 || random.nextBoolean()) {
         try (IdempotentLock idempotent = IdempotentLock.create(id, idempotentRegistry)) {
-          if (idempotent == null) {
+          if (idempotent.alreadyExecuted()) {
             return;
           }
           integers.add(1);
-          idempotent.succeeded();
+          idempotent.succeeded(Boolean.TRUE);
         } catch (UnableToRegisterIdempotentOperationException e) {
           // do nothing
         }

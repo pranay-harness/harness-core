@@ -4,11 +4,11 @@ import static io.harness.govern.Switch.unhandled;
 import static java.time.Duration.ofMillis;
 
 import io.harness.exception.UnableToRegisterIdempotentOperationException;
-import io.harness.idempotence.IdempotentRegistry.State;
 import io.harness.threading.Morpheus;
 import lombok.Builder;
 
 import java.time.Duration;
+import java.util.Optional;
 
 /*
  * IdempotentLock allows for using try-resource java feature to lock non-idempotent operation and
@@ -16,43 +16,55 @@ import java.time.Duration;
  */
 
 @Builder
-public class IdempotentLock implements AutoCloseable {
-  private static Duration pullingInterval = ofMillis(100);
+public class IdempotentLock<T> implements AutoCloseable {
+  private static Duration pollingInterval = ofMillis(100);
   private IdempotentId id;
   private IdempotentRegistry registry;
-  private boolean succeeded;
+  private Optional<T> resultData;
 
   public static IdempotentLock create(IdempotentId id, IdempotentRegistry registry)
       throws UnableToRegisterIdempotentOperationException {
     for (;;) {
-      final State status = registry.register(id);
-      switch (status) {
+      IdempotentRegistry.Response response = registry.register(id);
+      switch (response.getState()) {
         case NEW:
-          return builder().id(id).registry(registry).build();
+          return builder().id(id).registry(registry).resultData(Optional.empty()).build();
         case RUNNING:
-          Morpheus.sleep(pullingInterval);
+          Morpheus.sleep(pollingInterval);
           continue;
         case DONE:
-          return null;
+          return builder().id(id).resultData(Optional.of(response.getResult())).build();
         default:
-          unhandled(status);
+          unhandled(response.getState());
       }
     }
+  }
+
+  public boolean alreadyExecuted() {
+    return resultData.isPresent();
+  }
+
+  public T getResult() {
+    return resultData.orElseGet(null);
   }
 
   /*
    * Sets the operation as succeeded.
    */
-  public void succeeded() {
-    succeeded = true;
+  public void succeeded(T data) {
+    resultData = Optional.of(data);
   }
 
   /*
    * Close will register the id as finished if the operation was successful and will unregister it if it was not.
    */
   public void close() {
-    if (succeeded) {
-      registry.finish(id);
+    if (registry == null) {
+      return;
+    }
+
+    if (resultData.isPresent()) {
+      registry.finish(id, resultData.get());
     } else {
       registry.unregister(id);
     }

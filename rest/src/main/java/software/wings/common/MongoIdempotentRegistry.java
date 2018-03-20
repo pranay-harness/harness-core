@@ -2,7 +2,7 @@ package software.wings.common;
 
 import static io.harness.idempotence.IdempotentRegistry.State.DONE;
 import static io.harness.idempotence.IdempotentRegistry.State.NEW;
-import static io.harness.idempotence.IdempotentRegistry.State.RUNNING;
+import static java.util.Arrays.asList;
 import static software.wings.beans.Idempotent.SUCCEEDED;
 import static software.wings.beans.Idempotent.TENTATIVE;
 
@@ -21,7 +21,7 @@ import org.slf4j.LoggerFactory;
 import software.wings.beans.Idempotent;
 import software.wings.dl.WingsPersistence;
 
-public class MongoIdempotentRegistry implements IdempotentRegistry {
+public class MongoIdempotentRegistry<T> implements IdempotentRegistry<T> {
   private static final Logger logger = LoggerFactory.getLogger(MongoIdempotentRegistry.class);
 
   public static final FindAndModifyOptions registerOptions =
@@ -46,7 +46,7 @@ public class MongoIdempotentRegistry implements IdempotentRegistry {
   }
 
   @Override
-  public State register(IdempotentId id) throws UnableToRegisterIdempotentOperationException {
+  public Response register(IdempotentId id) throws UnableToRegisterIdempotentOperationException {
     try {
       // Insert new record in the idempotent collection with a tentative state
       final Idempotent idempotent =
@@ -54,12 +54,13 @@ public class MongoIdempotentRegistry implements IdempotentRegistry {
 
       // If there was no record from before, we are the first to handle this operation
       if (idempotent == null) {
-        return NEW;
+        return Response.builder().state(NEW).build();
       }
     } catch (MongoCommandException exception) {
       // If we failed with duplicate key - there is already successful operation in the db
       if (exception.getMessage().contains("E11000 ")) {
-        return DONE;
+        Idempotent idempotent = wingsPersistence.get(Idempotent.class, id.getValue());
+        return Response.builder().state(DONE).result((T) idempotent.getResult().get(0)).build();
       }
       throw new UnableToRegisterIdempotentOperationException(exception);
     } catch (RuntimeException exception) {
@@ -67,7 +68,7 @@ public class MongoIdempotentRegistry implements IdempotentRegistry {
     }
 
     // If there was already record, but it was not successful, it is still tentative
-    return RUNNING;
+    return Response.builder().state(NEW).build();
   }
 
   @Override
@@ -77,10 +78,11 @@ public class MongoIdempotentRegistry implements IdempotentRegistry {
   }
 
   @Override
-  public void finish(IdempotentId id) {
+  public void finish(IdempotentId id, T data) {
     Idempotent newIdempotent = new Idempotent();
     newIdempotent.setUuid(id.getValue());
     newIdempotent.setState(SUCCEEDED);
+    newIdempotent.setResult(asList((Object) data));
     wingsPersistence.save(newIdempotent);
   }
 }

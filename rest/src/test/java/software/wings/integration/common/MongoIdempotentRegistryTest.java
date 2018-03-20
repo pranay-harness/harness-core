@@ -27,9 +27,10 @@ import java.util.ArrayList;
 @Integration
 public class MongoIdempotentRegistryTest extends WingsBaseTest {
   @Inject WingsPersistence wingsPersistence;
-  @Inject MongoIdempotentRegistry idempotentRegistry;
+  @Inject MongoIdempotentRegistry<String> idempotentRegistry;
 
   IdempotentId id = new IdempotentId("foo");
+  IdempotentId dataId = new IdempotentId("data");
 
   public void concurrencyTest(IdempotentRegistry idempotentRegistry) {
     final ArrayList<Integer> integers = new ArrayList<>();
@@ -39,11 +40,11 @@ public class MongoIdempotentRegistryTest extends WingsBaseTest {
       // We need at least one thread to execute positive scenario, else the test will fail
       if (i == 0 || random.nextBoolean()) {
         try (IdempotentLock idempotent = IdempotentLock.create(id, idempotentRegistry)) {
-          if (idempotent == null) {
+          if (idempotent.alreadyExecuted()) {
             return;
           }
           integers.add(1);
-          idempotent.succeeded();
+          idempotent.succeeded("foo");
         } catch (UnableToRegisterIdempotentOperationException e) {
           // do nothing
         }
@@ -137,5 +138,26 @@ public class MongoIdempotentRegistryTest extends WingsBaseTest {
   public void testConcurrency() throws InterruptedException {
     wingsPersistence.delete(Idempotent.class, id.getValue());
     concurrencyTest(idempotentRegistry);
+  }
+
+  int index = 0;
+
+  public String operation(IdempotentId id) throws UnableToRegisterIdempotentOperationException {
+    try (IdempotentLock<String> idempotent = IdempotentLock.create(id, idempotentRegistry)) {
+      if (idempotent.alreadyExecuted()) {
+        return idempotent.getResult();
+      }
+
+      String result = id.getValue() + ": result " + ++index;
+      idempotent.succeeded(result);
+      return result;
+    }
+  }
+
+  @Test
+  public void testResult() throws InterruptedException, UnableToRegisterIdempotentOperationException {
+    wingsPersistence.delete(Idempotent.class, dataId.getValue());
+    assertEquals("data: result 1", operation(dataId));
+    assertEquals("data: result 1", operation(dataId));
   }
 }
