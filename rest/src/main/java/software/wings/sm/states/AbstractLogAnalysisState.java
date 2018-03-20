@@ -3,13 +3,11 @@ package software.wings.sm.states;
 import static io.harness.data.structure.EmptyPredicate.isEmpty;
 import static software.wings.sm.ExecutionResponse.Builder.anExecutionResponse;
 
-import com.google.common.collect.Sets;
 import com.google.inject.Inject;
 import com.google.inject.name.Named;
 
 import com.github.reinert.jjschema.Attributes;
 import com.github.reinert.jjschema.SchemaIgnore;
-import org.apache.commons.lang3.StringUtils;
 import org.mongodb.morphia.annotations.Transient;
 import org.quartz.JobBuilder;
 import org.quartz.JobDetail;
@@ -125,17 +123,18 @@ public abstract class AbstractLogAnalysisState extends AbstractAnalysisState {
     }
 
     final LogAnalysisExecutionData executionData =
-        LogAnalysisExecutionData.Builder.anLogAnanlysisExecutionData()
-            .withStateExecutionInstanceId(context.getStateExecutionId())
-            .withServerConfigID(getAnalysisServerConfigId())
-            .withQueries(Sets.newHashSet(query.split(",")))
-            .withAnalysisDuration(Integer.parseInt(timeDuration))
-            .withStatus(ExecutionStatus.RUNNING)
-            .withCanaryNewHostNames(canaryNewHostNames)
-            .withLastExecutionNodes(lastExecutionNodes == null ? new HashSet<>() : new HashSet<>(lastExecutionNodes))
-            .withCorrelationId(context.getCorrelationId())
-            .withErrorMsg(responseMessage)
+        LogAnalysisExecutionData.builder()
+            .stateExecutionInstanceId(context.getStateExecutionId())
+            .serverConfigId(getAnalysisServerConfigId())
+            .query(query)
+            .timeDuration(Integer.parseInt(timeDuration))
+            .canaryNewHostNames(canaryNewHostNames)
+            .lastExecutionNodes(lastExecutionNodes == null ? new HashSet<>() : new HashSet<>(lastExecutionNodes))
+            .correlationId(context.getCorrelationId())
             .build();
+
+    executionData.setStatus(ExecutionStatus.RUNNING);
+    executionData.setErrorMsg(responseMessage);
 
     Set<String> hostsToBeCollected = new HashSet<>();
     if (getComparisonStrategy() == AnalysisComparisonStrategy.COMPARE_WITH_CURRENT && lastExecutionNodes != null) {
@@ -281,17 +280,17 @@ public abstract class AbstractLogAnalysisState extends AbstractAnalysisState {
 
   protected ExecutionResponse generateAnalysisResponse(
       AnalysisContext context, ExecutionStatus status, String message) {
-    analysisService.createAndSaveSummary(context.getStateType(), context.getAppId(), context.getStateExecutionId(),
-        StringUtils.join(context.getQueries(), ","), message);
+    analysisService.createAndSaveSummary(
+        context.getStateType(), context.getAppId(), context.getStateExecutionId(), context.getQuery(), message);
 
-    LogAnalysisExecutionData executionData = LogAnalysisExecutionData.Builder.anLogAnanlysisExecutionData()
-                                                 .withStateExecutionInstanceId(context.getStateExecutionId())
-                                                 .withServerConfigID(context.getAnalysisServerConfigId())
-                                                 .withQueries(context.getQueries())
-                                                 .withAnalysisDuration(context.getTimeDuration())
-                                                 .withStatus(status)
-                                                 .withCorrelationId(context.getCorrelationId())
+    LogAnalysisExecutionData executionData = LogAnalysisExecutionData.builder()
+                                                 .stateExecutionInstanceId(context.getStateExecutionId())
+                                                 .serverConfigId(context.getAnalysisServerConfigId())
+                                                 .query(context.getQuery())
+                                                 .timeDuration(context.getTimeDuration())
+                                                 .correlationId(context.getCorrelationId())
                                                  .build();
+    executionData.setStatus(status);
     continuousVerificationService.setMetaDataExecutionStatus(context.getStateExecutionId(), status);
     return anExecutionResponse()
         .withAsync(false)
@@ -334,7 +333,7 @@ public abstract class AbstractLogAnalysisState extends AbstractAnalysisState {
           .serviceId(getPhaseServiceId(context))
           .controlNodes(controlNodes)
           .testNodes(testNodes)
-          .queries(Sets.newHashSet(query))
+          .query(query)
           .isSSL(this.configuration.isSslEnabled())
           .appPort(this.configuration.getApplicationPort())
           .comparisonStrategy(getComparisonStrategy())

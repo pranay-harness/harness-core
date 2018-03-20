@@ -6,7 +6,6 @@ import com.google.common.collect.Sets;
 import com.google.inject.Inject;
 
 import lombok.AllArgsConstructor;
-import org.apache.commons.lang3.StringUtils;
 import org.mongodb.morphia.annotations.Transient;
 import org.quartz.DisallowConcurrentExecution;
 import org.quartz.Job;
@@ -136,31 +135,29 @@ public class LogAnalysisManagerJob implements Job {
           return;
         }
 
-        if (analysisService.isProcessingComplete(context.getQueries().iterator().next(), context.getAppId(),
-                context.getStateExecutionId(), context.getStateType(), context.getTimeDuration())) {
+        if (analysisService.isProcessingComplete(context.getQuery(), context.getAppId(), context.getStateExecutionId(),
+                context.getStateType(), context.getTimeDuration())) {
           completeCron = true;
         } else {
           int logAnalysisClusteringTestMinute =
-              analysisService.getCollectionMinuteForLevel(context.getQueries().iterator().next(), context.getAppId(),
+              analysisService.getCollectionMinuteForLevel(context.getQuery(), context.getAppId(),
                   context.getStateExecutionId(), context.getStateType(), ClusterLevel.L1, getCollectedNodes());
           if (logAnalysisClusteringTestMinute != -1) {
-            boolean hasTestRecords = analysisService.hasDataRecords(context.getQueries().iterator().next(),
-                context.getAppId(), context.getStateExecutionId(), context.getStateType(), getCollectedNodes(),
-                ClusterLevel.L1, logAnalysisClusteringTestMinute);
+            boolean hasTestRecords =
+                analysisService.hasDataRecords(context.getQuery(), context.getAppId(), context.getStateExecutionId(),
+                    context.getStateType(), getCollectedNodes(), ClusterLevel.L1, logAnalysisClusteringTestMinute);
 
             if (hasTestRecords) {
-              preProcess(logAnalysisClusteringTestMinute, context.getQueries().iterator().next(), getCollectedNodes());
+              preProcess(logAnalysisClusteringTestMinute, context.getQuery(), getCollectedNodes());
             } else {
               analysisService.bumpClusterLevel(context.getStateType(), context.getStateExecutionId(),
-                  context.getAppId(), context.getQueries().iterator().next(), getCollectedNodes(),
-                  logAnalysisClusteringTestMinute, ClusterLevel.getHeartBeatLevel(ClusterLevel.L1),
-                  ClusterLevel.getHeartBeatLevel(ClusterLevel.L2));
+                  context.getAppId(), context.getQuery(), getCollectedNodes(), logAnalysisClusteringTestMinute,
+                  ClusterLevel.getHeartBeatLevel(ClusterLevel.L1), ClusterLevel.getHeartBeatLevel(ClusterLevel.L2));
             }
           }
 
-          int logAnalysisMinute =
-              analysisService.getCollectionMinuteForLevel(context.getQueries().iterator().next(), context.getAppId(),
-                  context.getStateExecutionId(), context.getStateType(), ClusterLevel.L2, getCollectedNodes());
+          int logAnalysisMinute = analysisService.getCollectionMinuteForLevel(context.getQuery(), context.getAppId(),
+              context.getStateExecutionId(), context.getStateType(), ClusterLevel.L2, getCollectedNodes());
           if (logAnalysisMinute != -1) {
             if (learningEngineService.hasAnalysisTimedOut(
                     context.getWorkflowExecutionId(), context.getStateExecutionId())) {
@@ -191,8 +188,7 @@ public class LogAnalysisManagerJob implements Job {
             context.getStateExecutionId(), context.getAppId(), context.getStateType());
         if (analysisSummary == null) {
           analysisService.createAndSaveSummary(context.getStateType(), context.getAppId(),
-              context.getStateExecutionId(), StringUtils.join(context.getQueries(), ","),
-              "No data found for the given queries.");
+              context.getStateExecutionId(), context.getQuery(), "No data found for the given queries.");
         }
 
       } catch (Exception ex) {
@@ -234,24 +230,27 @@ public class LogAnalysisManagerJob implements Job {
       if (analysisService.isStateValid(context.getAppId(), context.getStateExecutionId())) {
         final ExecutionStatus status = error ? ExecutionStatus.ERROR : ExecutionStatus.SUCCESS;
 
-        LogAnalysisExecutionData.Builder logAnalysisExecutionDataBuilder =
-            LogAnalysisExecutionData.Builder.anLogAnanlysisExecutionData()
-                .withStateExecutionInstanceId(context.getStateExecutionId())
-                .withServerConfigID(context.getAnalysisServerConfigId())
-                .withQueries(context.getQueries())
-                .withAnalysisDuration(context.getTimeDuration())
-                .withStatus(status)
-                .withCanaryNewHostNames(context.getTestNodes())
-                .withLastExecutionNodes(context.getControlNodes() == null ? new HashSet<>() : context.getControlNodes())
-                .withCorrelationId(context.getCorrelationId());
+        LogAnalysisExecutionData logAnalysisExecutionData =
+            LogAnalysisExecutionData.builder()
+                .stateExecutionInstanceId(context.getStateExecutionId())
+                .serverConfigId(context.getAnalysisServerConfigId())
+                .query(context.getQuery())
+                .timeDuration(context.getTimeDuration())
+                .canaryNewHostNames(context.getTestNodes())
+                .lastExecutionNodes(context.getControlNodes() == null ? new HashSet<>() : context.getControlNodes())
+                .correlationId(context.getCorrelationId())
+                .build();
+
+        logAnalysisExecutionData.setStatus(status);
 
         if (error) {
-          logAnalysisExecutionDataBuilder.withErrorMsg(errorMsg);
+          logAnalysisExecutionData.setErrorMsg(errorMsg);
         }
 
-        final LogAnalysisExecutionData executionData = logAnalysisExecutionDataBuilder.build();
-        final LogAnalysisResponse response =
-            aLogAnalysisResponse().withLogAnalysisExecutionData(executionData).withExecutionStatus(status).build();
+        final LogAnalysisResponse response = aLogAnalysisResponse()
+                                                 .withLogAnalysisExecutionData(logAnalysisExecutionData)
+                                                 .withExecutionStatus(status)
+                                                 .build();
         logger.info("Notifying state id: {} , corr id: {}", context.getStateExecutionId(), context.getCorrelationId());
         waitNotifyEngine.notify(response.getLogAnalysisExecutionData().getCorrelationId(), response);
       }

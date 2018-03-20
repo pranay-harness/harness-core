@@ -319,7 +319,7 @@ public class SplunkV2StateTest extends WingsBaseTest {
     assertEquals(continuousVerificationExecutionMetaData1.getArtifactName(), "dummy artifact");
     assertEquals(ExecutionStatus.RUNNING, continuousVerificationExecutionMetaData1.getExecutionStatus());
 
-    LogAnalysisExecutionData logAnalysisExecutionData = new LogAnalysisExecutionData();
+    LogAnalysisExecutionData logAnalysisExecutionData = LogAnalysisExecutionData.builder().build();
     LogAnalysisResponse logAnalysisResponse = LogAnalysisResponse.Builder.aLogAnalysisResponse()
                                                   .withExecutionStatus(ExecutionStatus.ERROR)
                                                   .withLogAnalysisExecutionData(logAnalysisExecutionData)
@@ -343,14 +343,17 @@ public class SplunkV2StateTest extends WingsBaseTest {
 
   @Test
   public void handleAsyncSummaryFail() {
-    LogAnalysisExecutionData logAnalysisExecutionData = new LogAnalysisExecutionData();
-    logAnalysisExecutionData.setCorrelationId(UUID.randomUUID().toString());
-    logAnalysisExecutionData.setStateExecutionInstanceId(stateExecutionId);
-    logAnalysisExecutionData.setServerConfigId(UUID.randomUUID().toString());
-    logAnalysisExecutionData.setQueries(Sets.newHashSet(splunkState.getQuery().split(",")));
-    logAnalysisExecutionData.setTimeDuration(Integer.parseInt(splunkState.getTimeDuration()));
-    logAnalysisExecutionData.setCanaryNewHostNames(Sets.newHashSet("test1", "test2"));
-    logAnalysisExecutionData.setLastExecutionNodes(Sets.newHashSet("control1", "control2", "control3"));
+    LogAnalysisExecutionData logAnalysisExecutionData =
+        LogAnalysisExecutionData.builder()
+            .correlationId(UUID.randomUUID().toString())
+            .stateExecutionInstanceId(stateExecutionId)
+            .serverConfigId(UUID.randomUUID().toString())
+            .query(splunkState.getQuery())
+            .timeDuration(Integer.parseInt(splunkState.getTimeDuration()))
+            .canaryNewHostNames(Sets.newHashSet("test1", "test2"))
+            .lastExecutionNodes(Sets.newHashSet("control1", "control2", "control3"))
+            .build();
+
     logAnalysisExecutionData.setErrorMsg(UUID.randomUUID().toString());
 
     LogAnalysisResponse response = LogAnalysisResponse.Builder.aLogAnalysisResponse()
@@ -369,14 +372,17 @@ public class SplunkV2StateTest extends WingsBaseTest {
 
   @Test
   public void handleAsyncSummaryPassNoData() {
-    LogAnalysisExecutionData logAnalysisExecutionData = new LogAnalysisExecutionData();
-    logAnalysisExecutionData.setCorrelationId(UUID.randomUUID().toString());
-    logAnalysisExecutionData.setStateExecutionInstanceId(stateExecutionId);
-    logAnalysisExecutionData.setServerConfigId(UUID.randomUUID().toString());
-    logAnalysisExecutionData.setQueries(Sets.newHashSet(splunkState.getQuery().split(",")));
-    logAnalysisExecutionData.setTimeDuration(Integer.parseInt(splunkState.getTimeDuration()));
-    logAnalysisExecutionData.setCanaryNewHostNames(Sets.newHashSet("test1", "test2"));
-    logAnalysisExecutionData.setLastExecutionNodes(Sets.newHashSet("control1", "control2", "control3"));
+    LogAnalysisExecutionData logAnalysisExecutionData =
+        LogAnalysisExecutionData.builder()
+            .correlationId(UUID.randomUUID().toString())
+            .stateExecutionInstanceId(stateExecutionId)
+            .serverConfigId(UUID.randomUUID().toString())
+            .query(splunkState.getQuery())
+            .timeDuration(Integer.parseInt(splunkState.getTimeDuration()))
+            .canaryNewHostNames(Sets.newHashSet("test1", "test2"))
+            .lastExecutionNodes(Sets.newHashSet("control1", "control2", "control3"))
+            .build();
+
     logAnalysisExecutionData.setErrorMsg(UUID.randomUUID().toString());
 
     LogAnalysisResponse response = LogAnalysisResponse.Builder.aLogAnalysisResponse()
