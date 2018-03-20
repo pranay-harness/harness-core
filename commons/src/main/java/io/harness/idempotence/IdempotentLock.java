@@ -1,7 +1,9 @@
 package io.harness.idempotence;
 
 import static io.harness.govern.Switch.unhandled;
+import static java.lang.String.format;
 import static java.time.Duration.ofMillis;
+import static java.time.Duration.ofMinutes;
 
 import io.harness.exception.UnableToRegisterIdempotentOperationException;
 import io.harness.threading.Morpheus;
@@ -18,13 +20,16 @@ import java.util.Optional;
 @Builder
 public class IdempotentLock<T> implements AutoCloseable {
   private static Duration pollingInterval = ofMillis(100);
+  private static Duration timeout = ofMinutes(3);
   private IdempotentId id;
   private IdempotentRegistry registry;
   private Optional<T> resultData;
 
   public static IdempotentLock create(IdempotentId id, IdempotentRegistry registry)
       throws UnableToRegisterIdempotentOperationException {
-    for (;;) {
+    long systemTimeMillis = System.currentTimeMillis();
+
+    do {
       IdempotentRegistry.Response response = registry.register(id);
       switch (response.getState()) {
         case NEW:
@@ -37,7 +42,10 @@ public class IdempotentLock<T> implements AutoCloseable {
         default:
           unhandled(response.getState());
       }
-    }
+    } while (System.currentTimeMillis() - systemTimeMillis < timeout.toMillis());
+
+    throw new UnableToRegisterIdempotentOperationException(format(
+        "Acquiring idempotent lock for operation %s timed out after %d seconds", id.getValue(), timeout.getSeconds()));
   }
 
   public boolean alreadyExecuted() {
