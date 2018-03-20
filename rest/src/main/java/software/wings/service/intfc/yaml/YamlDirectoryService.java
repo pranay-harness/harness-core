@@ -15,6 +15,7 @@ import software.wings.beans.command.ServiceCommand;
 import software.wings.beans.container.ContainerTask;
 import software.wings.beans.container.UserDataSpecification;
 import software.wings.beans.yaml.GitFileChange;
+import software.wings.security.UserPermissionInfo;
 import software.wings.settings.SettingValue.SettingVariableTypes;
 import software.wings.yaml.directory.DirectoryNode;
 import software.wings.yaml.directory.FolderNode;
@@ -42,9 +43,12 @@ public interface YamlDirectoryService {
    *
    * @param accountId the account id
    * @param entityId the entity id
+   * @param applyPermissions
+   * @param userPermissionInfo user permission info
    * @return the directory node (top of the requested "tree")
    */
-  FolderNode getDirectory(@NotEmpty String accountId, String entityId);
+  FolderNode getDirectory(
+      @NotEmpty String accountId, String entityId, boolean applyPermissions, UserPermissionInfo userPermissionInfo);
 
   YamlGitConfig weNeedToPushChanges(String accountId);
 
