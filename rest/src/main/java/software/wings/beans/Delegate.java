@@ -21,6 +21,7 @@ public class Delegate extends Base {
 
   @NotEmpty private String accountId;
   private Status status = Status.ENABLED;
+  private String description;
   private boolean connected;
   private String ip;
   private String hostName;
@@ -40,6 +41,7 @@ public class Delegate extends Base {
     private Status status = Status.ENABLED;
     private boolean connected;
     private String ip;
+    private String description;
     private String hostName;
     private long lastHeartBeat;
     private String version;
@@ -67,6 +69,11 @@ public class Delegate extends Base {
 
     public Builder withStatus(Status status) {
       this.status = status;
+      return this;
+    }
+
+    public Builder withDescription(String description) {
+      this.description = description;
       return this;
     }
 
@@ -149,6 +156,7 @@ public class Delegate extends Base {
       return aDelegate()
           .withAccountId(accountId)
           .withStatus(status)
+          .withDescription(description)
           .withConnected(connected)
           .withIp(ip)
           .withHostName(hostName)
@@ -170,6 +178,7 @@ public class Delegate extends Base {
       Delegate delegate = new Delegate();
       delegate.setAccountId(accountId);
       delegate.setStatus(status);
+      delegate.setDescription(description);
       delegate.setConnected(connected);
       delegate.setIp(ip);
       delegate.setHostName(hostName);
