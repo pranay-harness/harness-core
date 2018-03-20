@@ -154,7 +154,8 @@ public class KubernetesSetupCommandUnit extends ContainerSetupCommandUnit {
         kubernetesConfig = (KubernetesConfig) cloudProviderSetting.getValue();
         encryptedDataDetails = edd;
       } else if (cloudProviderSetting.getValue() instanceof KubernetesClusterConfig) {
-        kubernetesConfig = ((KubernetesClusterConfig) cloudProviderSetting.getValue()).createKubernetesConfig();
+        kubernetesConfig = ((KubernetesClusterConfig) cloudProviderSetting.getValue())
+                               .createKubernetesConfig(setupParams.getNamespace());
         encryptedDataDetails = edd;
       } else if (cloudProviderSetting.getValue() instanceof AzureConfig) {
         AzureConfig azureConfig = (AzureConfig) cloudProviderSetting.getValue();

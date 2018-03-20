@@ -84,7 +84,7 @@ public class ContainerServiceImpl implements ContainerService {
     } else if (containerServiceParams.getSettingAttribute().getValue() instanceof KubernetesClusterConfig) {
       KubernetesClusterConfig kubernetesClusterConfig =
           (KubernetesClusterConfig) containerServiceParams.getSettingAttribute().getValue();
-      kubernetesConfig = kubernetesClusterConfig.createKubernetesConfig();
+      kubernetesConfig = kubernetesClusterConfig.createKubernetesConfig(containerServiceParams.getNamespace());
     } else {
       kubernetesConfig = (KubernetesConfig) containerServiceParams.getSettingAttribute().getValue();
     }
@@ -208,7 +208,8 @@ public class ContainerServiceImpl implements ContainerService {
       }
     } else if (value instanceof KubernetesClusterConfig) {
       KubernetesClusterConfig kubernetesClusterConfig = (KubernetesClusterConfig) value;
-      KubernetesConfig kubernetesConfig = kubernetesClusterConfig.createKubernetesConfig();
+      KubernetesConfig kubernetesConfig =
+          kubernetesClusterConfig.createKubernetesConfig(containerServiceParams.getNamespace());
       kubernetesContainerService.listControllers(kubernetesConfig, containerServiceParams.getEncryptionDetails());
       return true;
     } else if (isKubernetesClusterConfig(value)) {
