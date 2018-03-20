@@ -92,7 +92,8 @@ def run_learning_engine(parameters): #
                             corpus.load_from_harness(options, experimental_prev_state)
                             splunk_intel = SplunkIntelOptimized(corpus, options)
                             result = splunk_intel.run()
-                            experimental_prev_state = output_to_dict(result, options)
+                            if len(result.control_events) != 0:
+                                experimental_prev_state = output_to_dict(result, options)
                             del corpus
                         except Exception as e:
                             payload = dict(applicationId=options.application_id,
