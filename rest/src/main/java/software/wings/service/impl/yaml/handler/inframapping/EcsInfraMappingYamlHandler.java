@@ -80,7 +80,7 @@ public class EcsInfraMappingYamlHandler
     }
 
     if (LaunchType.FARGATE.name().equals(yaml.getLaunchType())) {
-      validateNetworkParamateres(yaml, bean);
+      validateNetworkParameters(yaml, bean);
     }
 
     bean.setVpcId(yaml.getVpcId());
@@ -98,7 +98,7 @@ public class EcsInfraMappingYamlHandler
     return Arrays.asList(idArr);
   }
 
-  private void validateNetworkParamateres(Yaml yaml, EcsInfrastructureMapping bean) {
+  private static void validateNetworkParameters(Yaml yaml, EcsInfrastructureMapping bean) {
     if (isBlank(yaml.getVpcId()) || isBlank(yaml.getSubnetIds()) || isBlank(yaml.getSecurityGroupIds())) {
       StringBuilder builder = new StringBuilder(128);
       builder.append("Failed to parse yaml for EcsInfraMapping: ")

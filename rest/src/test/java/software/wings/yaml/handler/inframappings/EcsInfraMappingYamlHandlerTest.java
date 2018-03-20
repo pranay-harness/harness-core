@@ -158,7 +158,7 @@ public class EcsInfraMappingYamlHandlerTest extends BaseYamlHandlerTest {
   }
 
   @Test
-  public void tesValidateNetworkParamateres() throws Exception {
+  public void tbsValidateNetworkParameters() throws Exception {
     Yaml yaml = Yaml.builder()
                     .assignPublicIp(true)
                     .cluster(CLUSTER_NAME)
@@ -171,7 +171,7 @@ public class EcsInfraMappingYamlHandlerTest extends BaseYamlHandlerTest {
     String errorMsg = "";
     try {
       errorMsg = (String) MethodUtils.invokeMethod(
-          yamlHandler, true, "validateNetworkParamateres", new Object[] {yaml, ecsInfrastructureMapping});
+          yamlHandler, true, "validateNetworkParameters", new Object[] {yaml, ecsInfrastructureMapping});
     } catch (Exception e) {
       assertEquals(((InvocationTargetException) e).getTargetException().getMessage(),
           new StringBuilder()

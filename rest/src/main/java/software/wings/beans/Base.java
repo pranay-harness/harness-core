@@ -35,6 +35,7 @@ import javax.validation.constraints.NotNull;
 @AllArgsConstructor
 @NoArgsConstructor
 public class Base implements UuidAware {
+  public static final String ID_KEY = "_id";
   public static final String APP_ID_KEY = "appId";
   public static final String ACCOUNT_ID_KEY = "accountId";
 
