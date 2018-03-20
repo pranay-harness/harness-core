@@ -38,7 +38,9 @@ public class JenkinsConfigVerificationYamlHandler
     char[] decryptedPassword;
     try {
       decryptedPassword = secretManager.decryptYamlRef(yaml.getPassword());
-    } catch (IllegalAccessException | IOException e) {
+    } catch (IllegalAccessException | IOException | NullPointerException e) {
+      // decryptYamlRef uses Preconditions.checkNotNull(encryptedData) library call that throws NPE
+      // So catching NPE in order to propogate useful error message upwards
       throw new HarnessException("Exception while decrypting the password ref:" + yaml.getPassword());
     }
 
