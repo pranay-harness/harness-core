@@ -12,6 +12,9 @@ import com.google.inject.Inject;
 import com.codahale.metrics.annotation.ExceptionMetered;
 import com.codahale.metrics.annotation.Timed;
 import com.mongodb.client.gridfs.model.GridFSFile;
+import io.harness.exception.UnableToRegisterIdempotentOperationException;
+import io.harness.idempotence.IdempotentId;
+import io.harness.idempotence.IdempotentLock;
 import io.swagger.annotations.Api;
 import org.glassfish.jersey.media.multipart.FormDataContentDisposition;
 import org.glassfish.jersey.media.multipart.FormDataParam;
@@ -21,6 +24,7 @@ import org.slf4j.LoggerFactory;
 import software.wings.app.MainConfiguration;
 import software.wings.beans.FileMetadata;
 import software.wings.beans.RestResponse;
+import software.wings.common.MongoIdempotentRegistry;
 import software.wings.delegatetasks.DelegateFile;
 import software.wings.security.annotations.DelegateAuth;
 import software.wings.security.annotations.Scope;
@@ -56,28 +60,40 @@ public class DelegateFileResource {
   @Inject private MainConfiguration configuration;
   @Inject private ConfigService configService;
 
+  @Inject MongoIdempotentRegistry<String> idempotentRegistry;
+
   @DelegateAuth
   @POST
   @Path("{delegateId}/tasks/{taskId}")
   @Consumes(MULTIPART_FORM_DATA)
   @Timed
   @ExceptionMetered
-  public RestResponse<String> saveArtifact(@PathParam("delegateId") String delegateId,
-      @PathParam("taskId") String taskId, @QueryParam("accountId") @NotEmpty String accountId,
-      @FormDataParam("file") InputStream uploadedInputStream,
-      @FormDataParam("file") FormDataContentDisposition fileDetail) {
+  public RestResponse<String> saveFile(@PathParam("delegateId") String delegateId, @PathParam("taskId") String taskId,
+      @QueryParam("accountId") @NotEmpty String accountId, @FormDataParam("file") InputStream uploadedInputStream,
+      @FormDataParam("file") FormDataContentDisposition fileDetail)
+      throws UnableToRegisterIdempotentOperationException {
     logger.info("Received save artifact request for delegateId : {}, taskId: {}, accountId: {}, fileDetail: {}",
         delegateId, taskId, accountId, fileDetail);
 
     // TODO: Do more check, so one delegate does not overload system
 
-    FileMetadata fileMetadata = new FileMetadata();
-    fileMetadata.setFileName(new File(fileDetail.getFileName()).getName());
-    String fileId = fileService.saveFile(fileMetadata,
-        new BoundedInputStream(uploadedInputStream, configuration.getFileUploadLimits().getAppContainerLimit()),
-        ARTIFACTS);
-    logger.info("fileId: {} and fileName {}", fileId, fileMetadata.getFileName());
-    return new RestResponse<>(fileId);
+    IdempotentId idempotentid = new IdempotentId(taskId + ":" + fileDetail.getFileName());
+
+    try (IdempotentLock<String> idempotent = IdempotentLock.create(idempotentid, idempotentRegistry)) {
+      if (idempotent.alreadyExecuted()) {
+        return new RestResponse<>(idempotent.getResult());
+      }
+
+      FileMetadata fileMetadata = new FileMetadata();
+      fileMetadata.setFileName(new File(fileDetail.getFileName()).getName());
+      String fileId = fileService.saveFile(fileMetadata,
+          new BoundedInputStream(uploadedInputStream, configuration.getFileUploadLimits().getAppContainerLimit()),
+          ARTIFACTS);
+      logger.info("fileId: {} and fileName {}", fileId, fileMetadata.getFileName());
+
+      idempotent.succeeded(fileId);
+      return new RestResponse<>(fileId);
+    }
   }
 
   @DelegateAuth
