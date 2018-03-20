@@ -1,19 +1,46 @@
 package software.wings.service.impl;
 
 import static org.junit.Assert.assertTrue;
+import static org.junit.Assert.fail;
+import static org.mockito.Matchers.any;
+import static org.mockito.Mockito.doNothing;
+import static org.mockito.Mockito.doReturn;
 import static org.mockito.Mockito.spy;
+import static org.mockito.Mockito.times;
+import static org.mockito.Mockito.verify;
 
+import org.apache.commons.lang3.StringUtils;
 import org.apache.commons.lang3.reflect.MethodUtils;
+import org.junit.Before;
 import org.junit.Test;
+import org.mockito.InjectMocks;
+import org.mockito.Mock;
+import org.mockito.MockitoAnnotations;
+import software.wings.beans.GitConfig;
+import software.wings.beans.yaml.GitCommandExecutionResponse;
+import software.wings.beans.yaml.GitCommandExecutionResponse.GitCommandStatus;
 import software.wings.beans.yaml.GitFileChange;
 import software.wings.exception.WingsException;
 import software.wings.service.impl.yaml.YamlGitServiceImpl;
+import software.wings.service.intfc.AlertService;
+import software.wings.service.intfc.DelegateService;
+import software.wings.service.intfc.security.SecretManager;
 
 import java.lang.reflect.InvocationTargetException;
 import java.util.ArrayList;
 import java.util.List;
 
 public class YamlGitServiceImplTest {
+  private @InjectMocks YamlGitServiceImpl yamlGitService = spy(YamlGitServiceImpl.class);
+  private @Mock DelegateService delegateService;
+  private @Mock AlertService alertService;
+  private @Mock SecretManager secretManager;
+
+  @Before
+  public void setup() {
+    MockitoAnnotations.initMocks(this);
+  }
+
   @Test
   public void testCheckForValidNameSyntax() throws Exception {
     List<GitFileChange> gitFileChanges = new ArrayList<>();
@@ -31,7 +58,6 @@ public class YamlGitServiceImplTest {
     gitFileChanges.add(GitFileChange.Builder.aGitFileChange().withFilePath("Setup/Applications/app1/Services").build());
     gitFileChanges.add(GitFileChange.Builder.aGitFileChange().withFilePath("Setup/Verification Providers").build());
 
-    YamlGitServiceImpl yamlGitService = spy(YamlGitServiceImpl.class);
     MethodUtils.invokeMethod(yamlGitService, true, "checkForValidNameSyntax", gitFileChanges);
 
     gitFileChanges.add(GitFileChange.Builder.aGitFileChange()
@@ -45,5 +71,38 @@ public class YamlGitServiceImplTest {
       assertTrue(ex.getTargetException().getMessage().contains(
           "Invalid entity name, entity can not contain / in the name. Caused invalid file path:"));
     }
+  }
+
+  @Test
+  public void testValidateGit() throws Exception {
+    doReturn(GitCommandExecutionResponse.builder()
+                 .gitCommandStatus(GitCommandStatus.FAILURE)
+                 .errorMessage("Invalid Repo")
+                 .build())
+        .doReturn(GitCommandExecutionResponse.builder()
+                      .gitCommandStatus(GitCommandStatus.SUCCESS)
+                      .errorMessage(StringUtils.EMPTY)
+                      .build())
+        .when(delegateService)
+        .executeTask(any());
+
+    doReturn(null).when(alertService).openAlert(any(), any(), any(), any());
+    doNothing().when(alertService).closeAlert(any(), any(), any(), any());
+    doReturn(null).when(secretManager).getEncryptionDetails(any(), any(), any());
+
+    try {
+      MethodUtils.invokeMethod(
+          yamlGitService, true, "validateGit", new Object[] {GitConfig.builder().accountId("ACCOUNT_ID").build()});
+      fail("Was Expected to fail");
+    } catch (Exception e) {
+      assertTrue((((InvocationTargetException) e).getTargetException()) instanceof WingsException);
+    }
+
+    verify(alertService).openAlert(any(), any(), any(), any());
+    verify(alertService, times(0)).closeAlert(any(), any(), any(), any());
+    MethodUtils.invokeMethod(
+        yamlGitService, true, "validateGit", new Object[] {GitConfig.builder().accountId("ACCOUNT_ID").build()});
+
+    verify(alertService).closeAlert(any(), any(), any(), any());
   }
 }
