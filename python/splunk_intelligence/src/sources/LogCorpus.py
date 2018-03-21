@@ -307,6 +307,9 @@ class LogCorpus(object):
         for key, value in self.anom_clusters.items():
             texts.append(value.values()[0].get('text'))
 
+        for key, value in self.ignore_clusters.items():
+            texts.append(value.values()[0].get('text'))
+
         return texts
 
     def get_control_clusters(self):
@@ -349,6 +352,12 @@ class LogCorpus(object):
             index = index + 1
 
         for key, value in self.anom_clusters.items():
+            for host, val in value.items():
+                val['x'] = dist_matrix[index, 0]
+                val['y'] = dist_matrix[index, 1]
+            index = index + 1
+
+        for key, value in self.ignore_clusters.items():
             for host, val in value.items():
                 val['x'] = dist_matrix[index, 0]
                 val['y'] = dist_matrix[index, 1]
