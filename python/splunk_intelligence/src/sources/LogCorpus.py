@@ -21,6 +21,7 @@ class LogCorpus(object):
         self.new_data = True
         self.score = 0.0
         self.cluster_scores = {'unknown': {}, 'test': {}}
+        self.feedback_clusters = {}
 
     def add_event(self, event, event_type):
 
@@ -166,17 +167,16 @@ class LogCorpus(object):
                     for event in events:
                         self.add_event(event, 'test_prev')
 
-        if bool(self.control_events):
-            if hasattr(options, 'feedback_url'):
-                if options.feedback_url:
-                    feedback_state = HarnessLoader.load_feedback_output_from_harness(options.feedback_url, options.version_file_path, options.service_secret)
-                    if feedback_state is not None:
-                        idx = 0
-                        for event in feedback_state:
+        if hasattr(options, 'feedback_url'):
+            if options.feedback_url:
+                feedback_state = HarnessLoader.load_feedback_output_from_harness(options.feedback_url, options.version_file_path, options.service_secret)
+                if feedback_state is not None:
+                    idx = 0
+                    for event in feedback_state:
 
-                            event['cluster_label'] = idx
-                            self.add_event(event, 'user_feedback')
-                            idx += 1
+                        event['cluster_label'] = idx
+                        self.add_event(event, 'user_feedback')
+                        idx += 1
 
     # Used in SplunkAnomalyLegacy: legacy files that are not grouped by host
     def load_legacy_file(self, file_name, control_window, test_window, prev_out_file=None):
@@ -393,6 +393,9 @@ class LogCorpus(object):
     def get_anom_clusters(self):
         return self.anom_clusters
 
+    def get_feedback_clusters(self):
+        return self.feedback_clusters
+
     def score_unknown_events(self):
         for cluster_index, anom_cluster in self.anom_clusters.items():
             max_deviation = 0.0
@@ -423,6 +426,8 @@ class LogCorpus(object):
 
                 if val.get('feedback_id'):
                     ignore_dict[val.get('cluster_label')] = val.get('feedback_id')
+                    if val.get('cluster_label') not in self.feedback_clusters:
+                        self.feedback_clusters[val.get('cluster_label')] = val
 
                 else:
                     if val.get('cluster_label') not in self.control_clusters:
@@ -452,6 +457,7 @@ class LogCorpus(object):
                 self.ignore_clusters[label].update(self.control_clusters[label])
                 # remove control event that should be ignored from control cluster
                 del self.control_clusters[label]
+        anomaly_index = 1000000
         for index, (key, value) in enumerate(self.test_events.items()):
             anomal = []
             for val in value:
@@ -460,6 +466,7 @@ class LogCorpus(object):
                 test_label = predictions[index].get('cluster_label')
                 ## adding ignore test to ignore cluster
                 if test_label in ignore_dict.keys() and predictions[index].get('anomaly') == 1:
+                    val['cluster_label'] = test_label
                     if test_label not in self.ignore_clusters:
                         self.ignore_clusters[test_label] = {}
                     host = val.get('message_frequencies')[0].get('host')
@@ -475,6 +482,7 @@ class LogCorpus(object):
                                                                          5))
 
                 elif predictions[index].get('anomaly') == 1:
+                    val['cluster_label'] = test_label
                     if test_label not in self.test_clusters:
                         self.test_clusters[test_label] = {}
 
@@ -498,6 +506,8 @@ class LogCorpus(object):
                     self.test_clusters[test_label][host].get('message_frequencies').extend(
                         val.get('message_frequencies'))
                 else:
+                    val['cluster_label'] = anomaly_index
+                    anomaly_index = anomaly_index + 1
                     anomal.append(dict(text=val.get('text'),
                                        cluster_label=test_label,
                                        message_frequencies=val.get('message_frequencies'),
