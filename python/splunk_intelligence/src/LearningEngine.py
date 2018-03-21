@@ -3,6 +3,7 @@ import os
 import sys
 import threading
 import time
+import json
 from BaseHTTPServer import HTTPServer, BaseHTTPRequestHandler
 
 import newrelic.agent
@@ -77,8 +78,8 @@ def run_learning_engine(parameters): #
                 logger.info('url is ' + str(learning_api_url) + ' and header is ' + str(version))
                 if (status_code == 200) and text.get('resource'):
                     # get task
-                    logger.info('A new task is pulled')
                     options_dict = text.get('resource')
+                    logger.info('A new task is pulled for ' + json.dumps(options_dict))
                     if not options_dict.get('max_nodes_threshold'):
                         options_dict['max_nodes_threshold'] = 19
                     options_dict['service_secret'] = parameters.service_secret
