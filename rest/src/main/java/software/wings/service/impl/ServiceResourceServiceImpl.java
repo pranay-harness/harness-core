@@ -6,6 +6,7 @@ import static io.harness.data.structure.ListUtil.trimList;
 import static java.util.Arrays.asList;
 import static java.util.Collections.emptyList;
 import static java.util.Collections.emptyMap;
+import static java.util.Comparator.comparingDouble;
 import static java.util.stream.Collectors.toList;
 import static java.util.stream.Collectors.toMap;
 import static org.apache.commons.lang3.StringUtils.equalsIgnoreCase;
@@ -59,6 +60,9 @@ import software.wings.beans.Setup.SetupStatus;
 import software.wings.beans.Workflow;
 import software.wings.beans.WorkflowPhase;
 import software.wings.beans.artifact.ArtifactStream;
+import software.wings.beans.command.AmiCommandUnit;
+import software.wings.beans.command.AwsLambdaCommandUnit;
+import software.wings.beans.command.CodeDeployCommandUnit;
 import software.wings.beans.command.Command;
 import software.wings.beans.command.CommandUnit;
 import software.wings.beans.command.CommandUnitType;
@@ -92,6 +96,7 @@ import software.wings.service.intfc.WorkflowService;
 import software.wings.service.intfc.ownership.OwnedByService;
 import software.wings.stencils.DataProvider;
 import software.wings.stencils.Stencil;
+import software.wings.stencils.StencilCategory;
 import software.wings.stencils.StencilPostProcessor;
 import software.wings.utils.ArtifactType;
 import software.wings.utils.BoundedInputStream;
@@ -109,6 +114,7 @@ import java.util.Map.Entry;
 import java.util.Optional;
 import java.util.concurrent.ExecutorService;
 import java.util.function.Function;
+import java.util.function.Predicate;
 import java.util.stream.Collectors;
 import java.util.stream.Stream;
 import javax.validation.executable.ValidateOnExecution;
@@ -165,6 +171,7 @@ public class ServiceResourceServiceImpl implements ServiceResourceService, DataP
             if (serviceToServiceCommandMap != null) {
               List<ServiceCommand> serviceCommands = serviceToServiceCommandMap.get(service.getUuid());
               if (serviceCommands != null) {
+                serviceCommands = getServiceCommandsByOrder(serviceCommands);
                 serviceCommands.forEach(serviceCommand
                     -> serviceCommand.setCommand(commandService.getCommand(
                         serviceCommand.getAppId(), serviceCommand.getUuid(), serviceCommand.getDefaultVersion())));
@@ -199,6 +206,11 @@ public class ServiceResourceServiceImpl implements ServiceResourceService, DataP
       }
     }
     return pageResponse;
+  }
+
+  private List<ServiceCommand> getServiceCommandsByOrder(List<ServiceCommand> serviceCommands) {
+    serviceCommands = serviceCommands.stream().sorted(comparingDouble(ServiceCommand::getOrder)).collect(toList());
+    return serviceCommands;
   }
 
   /**
@@ -720,6 +732,34 @@ public class ServiceResourceServiceImpl implements ServiceResourceService, DataP
     Service service = wingsPersistence.get(Service.class, appId, serviceId);
     Validator.notNullCheck("service", service);
 
+    addServiceCommand(appId, serviceId, serviceCommand, pushToYaml, service);
+
+    wingsPersistence.save(service);
+    return get(appId, serviceId);
+  }
+
+  @Override
+  public Service updateCommands(String appId, String serviceId, List<ServiceCommand> serviceCommands) {
+    Service service = wingsPersistence.get(Service.class, appId, serviceId);
+    Validator.notNullCheck("service", service);
+    if (isEmpty(serviceCommands)) {
+      return service;
+    }
+    // Get the old service commands
+    UpdateOperations<ServiceCommand> updateOperation = wingsPersistence.createUpdateOperations(ServiceCommand.class);
+
+    double i = 0.0;
+    for (ServiceCommand serviceCommand : serviceCommands) {
+      setUnset(updateOperation, "order", i++);
+      wingsPersistence.update(
+          wingsPersistence.createQuery(ServiceCommand.class).field(ID_KEY).equal(serviceCommand.getUuid()),
+          updateOperation);
+    }
+    return get(appId, serviceId);
+  }
+
+  private void addServiceCommand(
+      String appId, String serviceId, ServiceCommand serviceCommand, boolean pushToYaml, Service service) {
     serviceCommand.setDefaultVersion(1);
     serviceCommand.setServiceId(serviceId);
     serviceCommand.setAppId(appId);
@@ -754,9 +794,6 @@ public class ServiceResourceServiceImpl implements ServiceResourceService, DataP
     // TODO: Set the graph to null after backward compatible change
     commandService.save(command, pushToYaml);
     service.getServiceCommands().add(serviceCommand);
-
-    wingsPersistence.save(service);
-    return get(appId, serviceId);
   }
 
   private boolean isLinearCommandGraph(ServiceCommand serviceCommand) {
@@ -793,6 +830,11 @@ public class ServiceResourceServiceImpl implements ServiceResourceService, DataP
       command.transformGraph();
     } else {
       command.setCommandUnits(serviceCommand.getCommand().getCommandUnits());
+      command.setName(serviceCommand.getCommand().getName());
+      command.setCommandType(serviceCommand.getCommand().getCommandType());
+      if (isEmpty(serviceCommand.getName())) {
+        serviceCommand.setName(serviceCommand.getCommand().getName());
+      }
     }
 
     command.setOriginEntityId(serviceCommand.getUuid());
@@ -827,11 +869,23 @@ public class ServiceResourceServiceImpl implements ServiceResourceService, DataP
           oldCommand.setGraph(command.getGraph());
           commandService.update(oldCommand);
         }
+      } else {
+        // Check if Name and CommandType changes
+        if (!oldCommand.getName().equals(command.getName())
+            || !oldCommand.getCommandType().equals(command.getCommandType())) {
+          UpdateOperations<Command> commandUpdateOperations = wingsPersistence.createUpdateOperations(Command.class);
+          setUnset(commandUpdateOperations, "name", command.getName());
+          setUnset(commandUpdateOperations, "commandType", command.getCommandType());
+          wingsPersistence.update(wingsPersistence.createQuery(Command.class).field(ID_KEY).equal(oldCommand.getUuid()),
+              commandUpdateOperations);
+        }
       }
     }
 
     setUnset(updateOperation, "envIdVersionMap", serviceCommand.getEnvIdVersionMap());
     setUnset(updateOperation, "defaultVersion", serviceCommand.getDefaultVersion());
+    setUnset(updateOperation, "name", serviceCommand.getName());
+
     wingsPersistence.update(
         wingsPersistence.createQuery(ServiceCommand.class).field(ID_KEY).equal(serviceCommand.getUuid()),
         updateOperation);
@@ -952,6 +1006,25 @@ public class ServiceResourceServiceImpl implements ServiceResourceService, DataP
   @Override
   public List<Stencil> getCommandStencils(@NotEmpty String appId, @NotEmpty String serviceId, String commandName) {
     return stencilPostProcessor.postProcess(asList(CommandUnitType.values()), appId, serviceId, commandName);
+  }
+
+  @Override
+  public List<Stencil> getCommandStencils(
+      String appId, String serviceId, String commandName, boolean onlyScriptCommands) {
+    List<Stencil> stencils =
+        stencilPostProcessor.postProcess(asList(CommandUnitType.values()), appId, serviceId, commandName);
+    if (onlyScriptCommands) {
+      // Suppress Container commands
+      Predicate<Stencil> predicate = stencil -> stencil.getStencilCategory() != StencilCategory.CONTAINERS;
+      stencils = stencils.stream().filter(predicate).collect(toList());
+      // Suppress CodeDeployCommands
+      predicate = stencil
+          -> !stencil.getTypeClass().isAssignableFrom(CodeDeployCommandUnit.class)
+          && !stencil.getTypeClass().isAssignableFrom(AwsLambdaCommandUnit.class)
+          && !stencil.getTypeClass().isAssignableFrom(AmiCommandUnit.class);
+      stencils = stencils.stream().filter(predicate).collect(toList());
+    }
+    return stencils;
   }
 
   @Override
@@ -1095,7 +1168,7 @@ public class ServiceResourceServiceImpl implements ServiceResourceService, DataP
           -> serviceCommand.setCommand(
               commandService.getCommand(appId, serviceCommand.getUuid(), serviceCommand.getDefaultVersion())));
     }
-    return serviceCommands;
+    return getServiceCommandsByOrder(serviceCommands);
   }
 
   @Override

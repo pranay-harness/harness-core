@@ -38,6 +38,8 @@ public class ServiceCommand extends Base {
 
   @Transient private String notes;
 
+  @JsonIgnore private double order;
+
   /**
    * Getter for property 'name'.
    *
@@ -184,6 +186,14 @@ public class ServiceCommand extends Base {
    */
   public void setTargetToAllEnv(boolean targetToAllEnv) {
     this.targetToAllEnv = targetToAllEnv;
+  }
+
+  public double getOrder() {
+    return order;
+  }
+
+  public void setOrder(double order) {
+    this.order = order;
   }
 
   @Override
