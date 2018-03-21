@@ -444,14 +444,8 @@ public class InfrastructureMappingServiceImpl implements InfrastructureMappingSe
     if (infrastructureMapping instanceof EcsInfrastructureMapping) {
       EcsInfrastructureMapping ecsInfrastructureMapping = (EcsInfrastructureMapping) infrastructureMapping;
       validateEcsInfraMapping(ecsInfrastructureMapping, computeProviderSetting);
-      keyValuePairs.put("clusterName", ecsInfrastructureMapping.getClusterName());
-      keyValuePairs.put("region", ecsInfrastructureMapping.getRegion());
-      keyValuePairs.put("vpcId", ecsInfrastructureMapping.getVpcId());
-      keyValuePairs.put("subnetIds", ecsInfrastructureMapping.getSubnetIds());
-      keyValuePairs.put("securityGroupIds", ecsInfrastructureMapping.getSecurityGroupIds());
-      keyValuePairs.put("assignPublicIp", ecsInfrastructureMapping.isAssignPublicIp());
-      keyValuePairs.put("launchType", ecsInfrastructureMapping.getLaunchType());
-      keyValuePairs.put("executionRole", ecsInfrastructureMapping.getExecutionRole());
+      handleEcsInfraMapping(keyValuePairs, ecsInfrastructureMapping);
+
     } else if (infrastructureMapping instanceof DirectKubernetesInfrastructureMapping) {
       DirectKubernetesInfrastructureMapping directKubernetesInfrastructureMapping =
           (DirectKubernetesInfrastructureMapping) infrastructureMapping;
@@ -594,6 +588,25 @@ public class InfrastructureMappingServiceImpl implements InfrastructureMappingSe
     InfrastructureMapping updatedInfraMapping = get(infrastructureMapping.getAppId(), infrastructureMapping.getUuid());
     yamlChangeSetHelper.updateYamlChangeAsync(updatedInfraMapping, savedInfraMapping, savedInfraMapping.getAccountId());
     return updatedInfraMapping;
+  }
+
+  private void handleEcsInfraMapping(
+      Map<String, Object> keyValuePairs, EcsInfrastructureMapping ecsInfrastructureMapping) {
+    keyValuePairs.put("clusterName", ecsInfrastructureMapping.getClusterName());
+    keyValuePairs.put("region", ecsInfrastructureMapping.getRegion());
+    keyValuePairs.put("assignPublicIp", ecsInfrastructureMapping.isAssignPublicIp());
+    keyValuePairs.put("launchType", ecsInfrastructureMapping.getLaunchType());
+    keyValuePairs.put(
+        "vpcId", ecsInfrastructureMapping.getVpcId() == null ? StringUtils.EMPTY : ecsInfrastructureMapping.getVpcId());
+    keyValuePairs.put("subnetIds",
+        ecsInfrastructureMapping.getSubnetIds() == null ? Collections.EMPTY_LIST
+                                                        : ecsInfrastructureMapping.getSubnetIds());
+    keyValuePairs.put("securityGroupIds",
+        ecsInfrastructureMapping.getSecurityGroupIds() == null ? Collections.EMPTY_LIST
+                                                               : ecsInfrastructureMapping.getSecurityGroupIds());
+    keyValuePairs.put("executionRole",
+        ecsInfrastructureMapping.getExecutionRole() == null ? StringUtils.EMPTY
+                                                            : ecsInfrastructureMapping.getExecutionRole());
   }
 
   private void validatePyInfraMapping(PhysicalInfrastructureMapping pyInfraMapping) {

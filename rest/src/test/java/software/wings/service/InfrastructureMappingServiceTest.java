@@ -5,6 +5,8 @@ import static java.util.Collections.emptyList;
 import static java.util.Collections.singletonList;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThatThrownBy;
+import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertNotNull;
 import static org.mockito.Matchers.any;
 import static org.mockito.Matchers.anyObject;
 import static org.mockito.Matchers.anyString;
@@ -36,6 +38,7 @@ import static software.wings.settings.SettingValue.SettingVariableTypes.PHYSICAL
 import static software.wings.utils.WingsTestConstants.ACCOUNT_ID;
 import static software.wings.utils.WingsTestConstants.APP_ID;
 import static software.wings.utils.WingsTestConstants.APP_NAME;
+import static software.wings.utils.WingsTestConstants.CLUSTER_NAME;
 import static software.wings.utils.WingsTestConstants.COMPUTE_PROVIDER_ID;
 import static software.wings.utils.WingsTestConstants.COMPUTE_PROVIDER_ID_CHANGED;
 import static software.wings.utils.WingsTestConstants.ENV_ID;
@@ -56,6 +59,9 @@ import com.google.inject.Inject;
 import com.amazonaws.regions.Regions;
 import com.amazonaws.services.ec2.model.Instance;
 import com.amazonaws.services.ec2.model.Tag;
+import com.amazonaws.services.ecs.model.LaunchType;
+import org.apache.commons.lang3.StringUtils;
+import org.apache.commons.lang3.reflect.MethodUtils;
 import org.junit.Before;
 import org.junit.Test;
 import org.mockito.ArgumentCaptor;
@@ -95,6 +101,7 @@ import software.wings.exception.WingsException;
 import software.wings.scheduler.JobScheduler;
 import software.wings.service.impl.AwsInfrastructureProvider;
 import software.wings.service.impl.ContainerServiceParams;
+import software.wings.service.impl.InfrastructureMappingServiceImpl;
 import software.wings.service.impl.StaticInfrastructureProvider;
 import software.wings.service.impl.yaml.YamlChangeSetHelper;
 import software.wings.service.intfc.AppService;
@@ -113,6 +120,7 @@ import software.wings.settings.SettingValue.SettingVariableTypes;
 import software.wings.utils.WingsTestConstants;
 
 import java.util.Collections;
+import java.util.HashMap;
 import java.util.HashSet;
 import java.util.LinkedHashMap;
 import java.util.List;
@@ -763,5 +771,39 @@ public class InfrastructureMappingServiceTest extends WingsBaseTest {
         APP_ID, INFRA_MAPPING_ID, "${app.name}__${service.name}__${env.name}");
     assertThat(result).isEqualTo("5");
     assertThat(captor.getValue().getContainerServiceName()).isEqualTo("APP_NAME__SERVICE_NAME__ENV_NAME__0");
+  }
+
+  @Test
+  public void testHandleEcsInfraMapping() throws Exception {
+    InfrastructureMappingServiceImpl serviceImpl = (InfrastructureMappingServiceImpl) infrastructureMappingService;
+
+    Map<String, Object> keyValuePairs = new HashMap<>();
+
+    MethodUtils.invokeMethod(serviceImpl, true, "handleEcsInfraMapping",
+        new Object[] {keyValuePairs,
+            anEcsInfrastructureMapping()
+                .withClusterName(CLUSTER_NAME)
+                .withRegion("us-east-1")
+                .withVpcId(null)
+                .withSubnetIds(null)
+                .withSecurityGroupIds(null)
+                .withExecutionRole(null)
+                .withLaunchType(LaunchType.EC2.name())
+                .build()});
+
+    // map should not contains any null values as that cause db.update to fail
+    assertEquals(8, keyValuePairs.size());
+    assertEquals(keyValuePairs.get("clusterName"), CLUSTER_NAME);
+    assertEquals(keyValuePairs.get("region"), "us-east-1");
+    assertEquals(keyValuePairs.get("assignPublicIp"), false);
+    assertEquals(keyValuePairs.get("launchType"), LaunchType.EC2.name());
+    assertEquals(keyValuePairs.get("executionRole"), StringUtils.EMPTY);
+    assertEquals(keyValuePairs.get("vpcId"), StringUtils.EMPTY);
+
+    assertNotNull(keyValuePairs.get("subnetIds"));
+    assertEquals(0, ((List) keyValuePairs.get("subnetIds")).size());
+
+    assertNotNull(keyValuePairs.get("securityGroupIds"));
+    assertEquals(0, ((List) keyValuePairs.get("securityGroupIds")).size());
   }
 }
