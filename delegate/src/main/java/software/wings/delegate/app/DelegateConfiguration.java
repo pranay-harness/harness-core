@@ -24,4 +24,6 @@ public class DelegateConfiguration {
   private boolean proxy;
 
   private boolean pollForTasks;
+
+  private String description;
 }

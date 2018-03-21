@@ -70,6 +70,7 @@ then
   echo "managerUrl: https://${managerHostAndPort}/api/" >> config-delegate.yml
   echo "heartbeatIntervalMs: 60000" >> config-delegate.yml
   echo "doUpgrade: true" >> config-delegate.yml
+  echo "description: description here" >> config-delegate.yml
   echo "localDiskPath: /tmp" >> config-delegate.yml
   echo "maxCachedArtifacts: 2" >> config-delegate.yml
   echo "proxy: false" >> config-delegate.yml
