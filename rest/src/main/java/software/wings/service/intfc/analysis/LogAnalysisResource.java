@@ -2,7 +2,6 @@ package software.wings.service.intfc.analysis;
 
 import software.wings.beans.RestResponse;
 import software.wings.service.impl.analysis.LogMLAnalysisSummary;
-import software.wings.service.impl.analysis.LogMLFeedback;
 
 import java.io.IOException;
 import javax.ws.rs.QueryParam;
@@ -73,14 +72,5 @@ public interface LogAnalysisResource {
 
   RestResponse<LogMLAnalysisSummary> getLogAnalysisSummary(@QueryParam("accountId") String accountId,
       @QueryParam("applicationId") String applicationId, @QueryParam("stateExecutionId") String stateExecutionId)
-      throws IOException;
-
-  RestResponse<Boolean> createUserFeedback(@QueryParam("accountId") String accountId, LogMLFeedback feedback)
-      throws IOException;
-
-  RestResponse<Boolean> updateUserFeedback(@QueryParam("accountId") String accountId, LogMLFeedback feedback)
-      throws IOException;
-
-  RestResponse<Boolean> deleteUserFeedback(@QueryParam("accountId") String accountId, LogMLFeedback feedback)
       throws IOException;
 }

@@ -550,8 +550,8 @@ public class LogMLIntegrationTest extends BaseIntegrationTest {
                                    .clusterLabel(0)
                                    .appId(appId)
                                    .build();
-    WebTarget getTarget = client.target(API_BASE + "/" + LogAnalysisResource.SUMO_RESOURCE_BASE_URL
-        + LogAnalysisResource.ANALYSIS_USER_FEEDBACK + "?accountId=" + accountId);
+    WebTarget getTarget = client.target(API_BASE + "/" + LogAnalysisResource.LOG_ANALYSIS
+        + LogAnalysisResource.ANALYSIS_USER_FEEDBACK + "?accountId=" + accountId + "&stateType=" + StateType.SUMO);
     RestResponse<Boolean> restResponse = getRequestBuilderWithAuthHeader(getTarget).post(
         entity(mlFeedback, APPLICATION_JSON), new GenericType<RestResponse<Boolean>>() {});
     assertTrue(restResponse.getResource());

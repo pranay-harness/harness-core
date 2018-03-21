@@ -2,6 +2,7 @@ package software.wings.service.impl.analysis;
 
 import lombok.Data;
 import software.wings.metrics.RiskLevel;
+import software.wings.sm.StateType;
 
 import java.util.List;
 
@@ -22,4 +23,5 @@ public class LogMLAnalysisSummary {
   private List<LogMLClusterSummary> controlClusters;
   private List<LogMLClusterSummary> testClusters;
   private List<LogMLClusterSummary> unknownClusters;
+  private StateType stateType;
 }
