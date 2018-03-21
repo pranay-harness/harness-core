@@ -157,6 +157,25 @@ public class WingsException extends WingsApiException {
     return this;
   }
 
+  public void excludeReportTarget(ErrorCode code, ReportTarget target) {
+    if (responseMessage.getCode() == code) {
+      reportTargets = ArrayUtils.removeElement(reportTargets, target);
+    }
+
+    Throwable cause = getCause();
+
+    while (cause != null) {
+      if (cause instanceof WingsException) {
+        ((WingsException) cause).excludeReportTarget(code, target);
+
+        // the cause exception will take care of its cause exception. There is no need for this function to keep going.
+        break;
+      }
+
+      cause = cause.getCause();
+    }
+  }
+
   public void logProcessedMessages(Logger logger) {
     final List<ResponseMessage> responseMessages = getResponseMessageList(HARNESS_ENGINEER);
 
