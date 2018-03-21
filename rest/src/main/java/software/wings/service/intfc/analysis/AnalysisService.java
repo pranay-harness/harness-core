@@ -90,5 +90,5 @@ public interface AnalysisService {
 
   void cleanUpForLogRetry(String stateExecutionId);
 
-  boolean deleteFeedback(LogMLFeedback feedback) throws IOException;
+  boolean deleteFeedback(String feedbackId) throws IOException;
 }

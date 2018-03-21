@@ -34,6 +34,7 @@ import javax.ws.rs.GET;
 import javax.ws.rs.POST;
 import javax.ws.rs.PUT;
 import javax.ws.rs.Path;
+import javax.ws.rs.PathParam;
 import javax.ws.rs.Produces;
 import javax.ws.rs.QueryParam;
 
@@ -144,12 +145,12 @@ public class LogMLResource {
   }
 
   @DELETE
-  @Path(LogAnalysisResource.ANALYSIS_USER_FEEDBACK)
+  @Path(LogAnalysisResource.ANALYSIS_USER_FEEDBACK + "/{feedbackId}")
   @Timed
   @ExceptionMetered
-  public RestResponse<Boolean> deleteUserFeedback(@QueryParam("accountId") String accountId, LogMLFeedback feedback)
-      throws IOException {
-    return new RestResponse<>(analysisService.deleteFeedback(feedback));
+  public RestResponse<Boolean> deleteUserFeedback(
+      @QueryParam("accountId") String accountId, @PathParam("feedbackId") String feedbackId) throws IOException {
+    return new RestResponse<>(analysisService.deleteFeedback(feedbackId));
   }
 
   @GET

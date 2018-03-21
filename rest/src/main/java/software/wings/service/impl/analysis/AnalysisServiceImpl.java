@@ -303,21 +303,21 @@ public class AnalysisServiceImpl implements AnalysisService {
     return records;
   }
 
-  private boolean deleteFeedbackHelper(LogMLFeedback feedback) {
+  private boolean deleteFeedbackHelper(String feedbackId) {
     Query<LogMLFeedbackRecord> query =
-        wingsPersistence.createQuery(LogMLFeedbackRecord.class).field("_id").equal(feedback.getLogMLFeedbackId());
+        wingsPersistence.createQuery(LogMLFeedbackRecord.class).field("_id").equal(feedbackId);
 
     wingsPersistence.delete(query);
     return true;
   }
 
   @Override
-  public boolean deleteFeedback(LogMLFeedback feedback) {
-    if (isEmpty(feedback.getLogMLFeedbackId())) {
-      throw new WingsException("no feedback id set " + feedback);
+  public boolean deleteFeedback(String feedbackId) {
+    if (isEmpty(feedbackId)) {
+      throw new WingsException("empty or null feedback id set ");
     }
 
-    return deleteFeedbackHelper(feedback);
+    return deleteFeedbackHelper(feedbackId);
   }
 
   @Override
@@ -332,7 +332,7 @@ public class AnalysisServiceImpl implements AnalysisService {
   @Override
   public boolean saveFeedback(LogMLFeedback feedback, StateType stateType) {
     if (!isEmpty(feedback.getLogMLFeedbackId())) {
-      deleteFeedbackHelper(feedback);
+      deleteFeedbackHelper(feedback.getLogMLFeedbackId());
     }
 
     StateExecutionInstance stateExecutionInstance =
@@ -888,6 +888,7 @@ public class AnalysisServiceImpl implements AnalysisService {
 
     analysisSummary.setRiskLevel(riskLevel);
     analysisSummary.setAnalysisSummaryMessage(analysisSummaryMsg);
+    analysisSummary.setStateType(stateType);
     return analysisSummary;
   }
 
