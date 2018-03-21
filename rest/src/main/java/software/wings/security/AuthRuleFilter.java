@@ -4,14 +4,11 @@ import static com.google.common.collect.ImmutableList.copyOf;
 import static io.harness.data.structure.EmptyPredicate.isEmpty;
 import static io.harness.data.structure.EmptyPredicate.isNotEmpty;
 import static javax.ws.rs.HttpMethod.OPTIONS;
-import static javax.ws.rs.Priorities.AUTHENTICATION;
+import static javax.ws.rs.Priorities.AUTHORIZATION;
 import static org.apache.commons.lang3.StringUtils.startsWith;
-import static org.apache.commons.lang3.StringUtils.substringAfter;
 import static software.wings.beans.ErrorCode.ACCESS_DENIED;
 import static software.wings.beans.ErrorCode.INVALID_ARGUMENT;
 import static software.wings.beans.ErrorCode.INVALID_REQUEST;
-import static software.wings.beans.ErrorCode.INVALID_TOKEN;
-import static software.wings.exception.WingsException.ALERTING;
 import static software.wings.exception.WingsException.HARMLESS;
 
 import com.google.common.collect.ImmutableList;
@@ -27,7 +24,6 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import software.wings.beans.AccountRole;
 import software.wings.beans.ApplicationRole;
-import software.wings.beans.AuthToken;
 import software.wings.beans.EnvironmentRole;
 import software.wings.beans.FeatureName;
 import software.wings.beans.HttpMethod;
@@ -73,7 +69,7 @@ import javax.ws.rs.core.MultivaluedMap;
  * Created by anubhaw on 3/11/16.
  */
 @Singleton
-@Priority(AUTHENTICATION)
+@Priority(AUTHORIZATION)
 public class AuthRuleFilter implements ContainerRequestFilter {
   private static final Logger logger = LoggerFactory.getLogger(AuthRuleFilter.class);
 
@@ -120,40 +116,11 @@ public class AuthRuleFilter implements ContainerRequestFilter {
     MultivaluedMap<String, String> pathParameters = requestContext.getUriInfo().getPathParameters();
     MultivaluedMap<String, String> queryParameters = requestContext.getUriInfo().getQueryParameters();
 
-    if (isDelegateRequest(requestContext)) {
-      String accountId = getRequestParamFromContext("accountId", pathParameters, queryParameters);
-      String header = requestContext.getHeaderString(HttpHeaders.AUTHORIZATION);
-      if (header.contains("Delegate")) {
-        authService.validateDelegateToken(
-            accountId, substringAfter(requestContext.getHeaderString(HttpHeaders.AUTHORIZATION), "Delegate "));
-      } else {
-        throw new IllegalStateException("Invalid header:" + header);
-      }
-
+    if (isDelegateRequest(requestContext) || isLearningEngineServiceRequest(requestContext)) {
       return;
     }
 
-    if (isDelegateRequest(requestContext)) {
-      String accountId = getRequestParamFromContext("accountId", pathParameters, queryParameters);
-      authService.validateDelegateToken(
-          accountId, substringAfter(requestContext.getHeaderString(HttpHeaders.AUTHORIZATION), "Delegate "));
-      return; // do nothing
-    }
-
-    if (isLearningEngineServiceRequest(requestContext)) {
-      authService.validateLearningEngineServiceToken(
-          substringAfter(requestContext.getHeaderString(HttpHeaders.AUTHORIZATION), "LearningEngine "));
-      return; // do nothing
-    }
-
-    String tokenString = extractToken(requestContext);
-    AuthToken authToken = authService.validateToken(tokenString);
-    User user = authToken.getUser();
-    if (user != null) {
-      requestContext.setProperty("USER", user);
-      updateUserInAuditRecord(user); // FIXME: find better place
-      UserThreadLocal.set(user);
-    }
+    User user = UserThreadLocal.get();
 
     String accountId = getRequestParamFromContext("accountId", pathParameters, queryParameters);
     List<String> appIdsFromRequest = getRequestParamsFromContext("appId", pathParameters, queryParameters);
@@ -689,17 +656,5 @@ public class AuthRuleFilter implements ContainerRequestFilter {
     } else {
       return methodPermissionAttributes;
     }
-  }
-
-  private void updateUserInAuditRecord(User user) {
-    auditService.updateUser(auditHelper.get(), user.getPublicUser());
-  }
-
-  private String extractToken(ContainerRequestContext requestContext) {
-    String authorizationHeader = requestContext.getHeaderString(HttpHeaders.AUTHORIZATION);
-    if (authorizationHeader == null || !authorizationHeader.startsWith("Bearer ")) {
-      throw new WingsException(INVALID_TOKEN, ALERTING);
-    }
-    return authorizationHeader.substring("Bearer".length()).trim();
   }
 }

@@ -273,6 +273,7 @@ public class SecureResourceTest {
                                                                    .withEnvironmentType(EnvironmentType.PROD)
                                                                    .build()))
                         .build());
+    UserThreadLocal.set(user);
   }
 
   /**
@@ -301,7 +302,7 @@ public class SecureResourceTest {
   public void shouldDenyAccessForNonPublicResourceWithoutValidToken() {
     Assertions.assertThatThrownBy(() -> resources.client().target("/secure-resources/NonPublicApi").request().get())
         .hasCauseInstanceOf(WingsException.class)
-        .hasStackTraceContaining(ErrorCode.INVALID_TOKEN.name());
+        .hasStackTraceContaining(ErrorCode.INVALID_REQUEST.name());
   }
 
   /**
