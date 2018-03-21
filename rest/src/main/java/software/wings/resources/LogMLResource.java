@@ -32,7 +32,6 @@ import java.util.Optional;
 import javax.ws.rs.DELETE;
 import javax.ws.rs.GET;
 import javax.ws.rs.POST;
-import javax.ws.rs.PUT;
 import javax.ws.rs.Path;
 import javax.ws.rs.PathParam;
 import javax.ws.rs.Produces;
@@ -128,18 +127,6 @@ public class LogMLResource {
       @QueryParam("stateType") StateType stateType, LogMLFeedback feedback) throws IOException {
     if (!isEmpty(feedback.getLogMLFeedbackId())) {
       throw new WingsException("feedback id should not be set in POST call. to update feedback use PUT");
-    }
-    return new RestResponse<>(analysisService.saveFeedback(feedback, stateType));
-  }
-
-  @PUT
-  @Path(LogAnalysisResource.ANALYSIS_USER_FEEDBACK)
-  @Timed
-  @ExceptionMetered
-  public RestResponse<Boolean> updateUserFeedback(@QueryParam("accountId") String accountId,
-      @QueryParam("stateType") StateType stateType, LogMLFeedback feedback) throws IOException {
-    if (isEmpty(feedback.getLogMLFeedbackId())) {
-      throw new WingsException("logMlFeedBackId should be set for update");
     }
     return new RestResponse<>(analysisService.saveFeedback(feedback, stateType));
   }

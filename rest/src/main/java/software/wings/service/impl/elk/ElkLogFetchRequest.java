@@ -121,6 +121,9 @@ public class ElkLogFetchRequest {
       if (operandStack.size() > 1) {
         List<JSONObject> mustObjectList = new ArrayList<>();
         while (!operandStack.isEmpty()) {
+          if (operandStack.peek().toString().equals("{\"term\":{\"(\":\"(\"}}")) {
+            throw new WingsException("Unmatched open braces `(`");
+          }
           mustObjectList.add(operandStack.pop());
         }
         return new JSONObject().put("bool", new JSONObject().put("must", mustObjectList));
