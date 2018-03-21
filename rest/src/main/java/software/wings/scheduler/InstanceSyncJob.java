@@ -114,9 +114,6 @@ public class InstanceSyncJob implements Job {
           } catch (Exception ex) {
             logger.warn("Instance sync failed for infraMappingId [{}]", infraMappingId, ex);
           }
-        } catch (Exception ex) {
-          logger.error(
-              "Error while syncing instances for app: {} and infra mapping id: {}", appIdFinal, infraMappingId, ex);
         }
       });
 
