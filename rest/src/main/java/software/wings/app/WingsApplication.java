@@ -22,9 +22,7 @@ import com.hazelcast.core.HazelcastInstance;
 import com.palantir.versioninfo.VersionInfoBundle;
 import com.palominolabs.metrics.guice.MetricsInstrumentationModule;
 import io.dropwizard.Application;
-import io.dropwizard.auth.AuthDynamicFeature;
 import io.dropwizard.auth.AuthValueFactoryProvider;
-import io.dropwizard.auth.basic.BasicCredentialAuthFilter;
 import io.dropwizard.bundles.assets.AssetsConfiguration;
 import io.dropwizard.bundles.assets.ConfiguredAssetsBundle;
 import io.dropwizard.configuration.EnvironmentVariableSubstitutor;
@@ -71,7 +69,7 @@ import software.wings.scheduler.QuartzScheduler;
 import software.wings.scheduler.ZombieHunterJob;
 import software.wings.security.AuthResponseFilter;
 import software.wings.security.AuthRuleFilter;
-import software.wings.security.BasicAuthAuthenticator;
+import software.wings.security.AuthenticationFilter;
 import software.wings.service.intfc.FeatureFlagService;
 import software.wings.service.intfc.LearningEngineService;
 import software.wings.service.intfc.MigrationService;
@@ -364,13 +362,10 @@ public class WingsApplication extends Application<MainConfiguration> {
 
   private void registerAuthFilters(MainConfiguration configuration, Environment environment, Injector injector) {
     if (configuration.isEnableAuth()) {
-      environment.jersey().register(
-          new AuthDynamicFeature(new BasicCredentialAuthFilter.Builder<User>()
-                                     .setAuthenticator(injector.getInstance(BasicAuthAuthenticator.class))
-                                     .buildAuthFilter()));
       environment.jersey().register(new AuthValueFactoryProvider.Binder<>(User.class));
       environment.jersey().register(injector.getInstance(AuthRuleFilter.class));
       environment.jersey().register(injector.getInstance(AuthResponseFilter.class));
+      environment.jersey().register(injector.getInstance(AuthenticationFilter.class));
     }
   }
 
