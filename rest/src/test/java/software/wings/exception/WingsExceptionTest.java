@@ -20,9 +20,23 @@ public class WingsExceptionTest extends CategoryTest {
   }
 
   @Test
-  public void collectResponseMessages() {
+  public void testCollectResponseMessages() {
     final WingsException exception =
         new WingsException(DEFAULT_ERROR_CODE, new Exception(new WingsException(DEFAULT_ERROR_CODE)));
     assertThat(exception.getResponseMessageList(ReportTarget.USER).size()).isEqualTo(2);
+  }
+
+  @Test
+  public void testExcludeReportTarget() {
+    final WingsException exception =
+        new WingsException(DEFAULT_ERROR_CODE, new Exception(new WingsException(DEFAULT_ERROR_CODE)));
+
+    assertThat(exception.getReportTargets()).contains(ReportTarget.USER);
+    assertThat(((WingsException) exception.getCause().getCause()).getReportTargets()).contains(ReportTarget.USER);
+
+    exception.excludeReportTarget(DEFAULT_ERROR_CODE, ReportTarget.USER);
+
+    assertThat(exception.getReportTargets()).doesNotContain(ReportTarget.USER);
+    assertThat(((WingsException) exception.getCause().getCause()).getReportTargets()).doesNotContain(ReportTarget.USER);
   }
 }

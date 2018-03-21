@@ -4,6 +4,7 @@
 
 package software.wings.resources;
 
+import static software.wings.beans.ErrorCode.DUPLICATE_STATE_NAMES;
 import static software.wings.security.PermissionAttribute.ResourceType.APPLICATION;
 
 import com.google.inject.Inject;
@@ -17,6 +18,8 @@ import software.wings.beans.Pipeline;
 import software.wings.beans.RestResponse;
 import software.wings.dl.PageRequest;
 import software.wings.dl.PageResponse;
+import software.wings.exception.WingsException;
+import software.wings.exception.WingsException.ReportTarget;
 import software.wings.security.PermissionAttribute.PermissionType;
 import software.wings.security.annotations.AuthRule;
 import software.wings.security.annotations.Scope;
@@ -125,7 +128,13 @@ public class PipelineResource {
       @QueryParam("appId") String appId, @PathParam("pipelineId") String pipelineId, Pipeline pipeline) {
     pipeline.setAppId(appId);
     pipeline.setUuid(pipelineId);
-    return new RestResponse<>(pipelineService.updatePipeline(pipeline));
+    try {
+      return new RestResponse<>(pipelineService.updatePipeline(pipeline));
+    } catch (WingsException exception) {
+      // When the pipeline update is coming from the user there is no harness enginner wrong doing to alerted for
+      exception.excludeReportTarget(DUPLICATE_STATE_NAMES, ReportTarget.HARNESS_ENGINEER);
+      throw exception;
+    }
   }
 
   /**
