@@ -64,8 +64,9 @@ public class DirectKubernetesInfrastructureMapping extends ContainerInfrastructu
   @SchemaIgnore
   @Override
   public String getClusterName() {
-    return super.getClusterName();
+    return isNotBlank(super.getClusterName()) ? super.getClusterName() : getComputeProviderName();
   }
+
   @SchemaIgnore
   @Override
   @Attributes(title = "Connection Type")
@@ -99,10 +100,10 @@ public class DirectKubernetesInfrastructureMapping extends ContainerInfrastructu
       return Util.normalize(nameBuilder.toString());
     } else {
       return Util.normalize(String.format("%s_DIRECT_Kubernetes_%s",
-          Optional.ofNullable(this.getComputeProviderName())
-              .orElse(this.getComputeProviderType().toLowerCase())
+          Optional.ofNullable(getComputeProviderName())
+              .orElse(getComputeProviderType().toLowerCase())
               .replace(':', '_'),
-          Optional.ofNullable(this.getNamespace()).orElse("default")));
+          Optional.ofNullable(getNamespace()).orElse("default")));
     }
   }
 
