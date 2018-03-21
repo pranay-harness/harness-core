@@ -308,6 +308,7 @@ public class KubernetesSetupCommandUnit extends ContainerSetupCommandUnit {
                           .withNewMetadata()
                           .withName(containerServiceName)
                           .withNamespace(setupParams.getNamespace())
+                          .withLabels(controllerLabels)
                           .endMetadata()
                           .build();
 
