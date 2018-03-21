@@ -23,7 +23,6 @@ public interface MessageConstants {
   // Delegate data fields
   String DELEGATE_VERSION = "version";
   String DELEGATE_HEARTBEAT = "heartbeat";
-  String DELEGATE_DESCRIPTION = "description";
   String DELEGATE_IS_NEW = "newDelegate";
   String DELEGATE_RESTART_NEEDED = "restartNeeded";
   String DELEGATE_UPGRADE_NEEDED = "upgradeNeeded";

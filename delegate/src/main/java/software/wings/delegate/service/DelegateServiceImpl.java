@@ -19,7 +19,6 @@ import static software.wings.managerclient.ManagerClientFactory.TRUST_ALL_CERTS;
 import static software.wings.managerclient.SafeHttpCall.execute;
 import static software.wings.utils.Misc.getDurationString;
 import static software.wings.utils.message.MessageConstants.DELEGATE_DASH;
-import static software.wings.utils.message.MessageConstants.DELEGATE_DESCRIPTION;
 import static software.wings.utils.message.MessageConstants.DELEGATE_GO_AHEAD;
 import static software.wings.utils.message.MessageConstants.DELEGATE_HEARTBEAT;
 import static software.wings.utils.message.MessageConstants.DELEGATE_IS_NEW;
@@ -215,7 +214,7 @@ public class DelegateServiceImpl implements DelegateService {
                                      .withIp(getLocalHostAddress())
                                      .withAccountId(accountId)
                                      .withHostName(hostName)
-                                     .withDescription(getDescription())
+                                     .withDescription(delegateConfiguration.getDescription())
                                      .withVersion(getVersion())
                                      .withSupportedTaskTypes(getSupportedTaskTypes())
                                      .withIncludeScopes(new ArrayList<>())
@@ -603,7 +602,6 @@ public class DelegateServiceImpl implements DelegateService {
       Map<String, Object> statusData = new HashMap<>();
       statusData.put(DELEGATE_HEARTBEAT, clock.millis());
       statusData.put(DELEGATE_VERSION, getVersion());
-      statusData.put(DELEGATE_DESCRIPTION, getDescription());
       statusData.put(DELEGATE_IS_NEW, false);
       statusData.put(DELEGATE_RESTART_NEEDED, doRestartDelegate());
       statusData.put(DELEGATE_UPGRADE_NEEDED, upgradeNeeded.get());
@@ -949,9 +947,5 @@ public class DelegateServiceImpl implements DelegateService {
 
   private String getVersion() {
     return System.getProperty("version", "1.0.0-DEV");
-  }
-
-  private String getDescription() {
-    return System.getProperty("description", "General purpose delegate");
   }
 }

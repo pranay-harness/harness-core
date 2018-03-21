@@ -4,3 +4,4 @@ managerUrl: https://localhost:9090/api/
 heartbeatIntervalMs: 60000
 localDiskPath: /tmp
 doUpgrade: false
+description: description here
