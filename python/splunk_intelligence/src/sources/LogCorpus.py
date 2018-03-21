@@ -165,16 +165,18 @@ class LogCorpus(object):
                 for key, events in prev_state.get('test_events').items():
                     for event in events:
                         self.add_event(event, 'test_prev')
-        if hasattr(options, 'feedback_url'):
-            if options.feedback_url:
-                feedback_state = HarnessLoader.load_feedback_output_from_harness(options.feedback_url, options.version_file_path, options.service_secret)
-                if feedback_state is not None:
-                    idx = 0
-                    for event in feedback_state:
 
-                        event['cluster_label'] = idx
-                        self.add_event(event, 'user_feedback')
-                        idx += 1
+        if bool(self.control_events):
+            if hasattr(options, 'feedback_url'):
+                if options.feedback_url:
+                    feedback_state = HarnessLoader.load_feedback_output_from_harness(options.feedback_url, options.version_file_path, options.service_secret)
+                    if feedback_state is not None:
+                        idx = 0
+                        for event in feedback_state:
+
+                            event['cluster_label'] = idx
+                            self.add_event(event, 'user_feedback')
+                            idx += 1
 
     # Used in SplunkAnomalyLegacy: legacy files that are not grouped by host
     def load_legacy_file(self, file_name, control_window, test_window, prev_out_file=None):
