@@ -145,6 +145,16 @@ public interface ServiceResourceService extends OwnedByApplication {
       @NotEmpty String appId, @NotEmpty String serviceId, ServiceCommand serviceCommand, boolean pushToYaml);
 
   /**
+   * Adds the command.
+   *
+   * @param appId            the app id
+   * @param serviceId        the service id
+   * @param serviceCommands   the service commands
+   * @return the service
+   */
+  Service updateCommands(@NotEmpty String appId, @NotEmpty String serviceId, List<ServiceCommand> serviceCommands);
+
+  /**
    * Update command service.
    *
    * @param appId          the app id
@@ -207,6 +217,17 @@ public interface ServiceResourceService extends OwnedByApplication {
    * @return the command stencils
    */
   List<Stencil> getCommandStencils(@NotEmpty String appId, @NotEmpty String serviceId, String commandName);
+
+  /**
+   * Gets command stencils. It suppresses the container and AWS Lamda and AMI Stencils
+   *
+   * @param appId       the app id
+   * @param serviceId   the service id
+   * @param commandName the command name
+   * @return the command stencils
+   */
+  List<Stencil> getCommandStencils(
+      @NotEmpty String appId, @NotEmpty String serviceId, String commandName, boolean onlyScriptCommands);
 
   /**
    * Find services by app list.

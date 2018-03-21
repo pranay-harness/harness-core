@@ -179,6 +179,24 @@ public class ServiceResource {
     return new RestResponse<>(serviceResourceService.addCommand(appId, serviceId, command, true));
   }
 
+  /**
+   * Save command.
+   *
+   * @param appId     the app id
+   * @param serviceId the service id
+   * @return the rest response
+   */
+  @PUT
+  @Path("{serviceId}/commands")
+  @Timed
+  @ExceptionMetered
+  public RestResponse<Service> updateCommands(
+      @ApiParam(name = "appId", required = true) @QueryParam("appId") String appId,
+      @ApiParam(name = "serviceId", required = true) @PathParam("serviceId") String serviceId,
+      @ApiParam(name = "command", required = true) List<ServiceCommand> commands) {
+    return new RestResponse<>(serviceResourceService.updateCommands(appId, serviceId, commands));
+  }
+
   @GET
   @Path("{serviceId}/commands/{commandName}")
   @Timed
@@ -250,7 +268,7 @@ public class ServiceResource {
   @AuthRule(permissionType = PermissionType.LOGGED_IN)
   public RestResponse<List<Stencil>> stencils(@QueryParam("appId") String appId,
       @PathParam("serviceId") String serviceId, @QueryParam("filterCommand") String commandName) {
-    return new RestResponse<>(serviceResourceService.getCommandStencils(appId, serviceId, commandName));
+    return new RestResponse<>(serviceResourceService.getCommandStencils(appId, serviceId, commandName, true));
   }
 
   @POST

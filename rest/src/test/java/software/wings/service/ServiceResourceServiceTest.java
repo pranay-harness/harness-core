@@ -31,6 +31,7 @@ import static software.wings.beans.command.ExecCommandUnit.Builder.anExecCommand
 import static software.wings.beans.command.ServiceCommand.Builder.aServiceCommand;
 import static software.wings.dl.PageRequest.PageRequestBuilder.aPageRequest;
 import static software.wings.dl.PageResponse.PageResponseBuilder.aPageResponse;
+import static software.wings.stencils.StencilCategory.CONTAINERS;
 import static software.wings.utils.ArtifactType.JAR;
 import static software.wings.utils.ArtifactType.WAR;
 import static software.wings.utils.WingsTestConstants.ACCOUNT_ID;
@@ -82,7 +83,11 @@ import software.wings.beans.ServiceVariable;
 import software.wings.beans.Setup;
 import software.wings.beans.Setup.SetupStatus;
 import software.wings.beans.Workflow.WorkflowBuilder;
+import software.wings.beans.command.AmiCommandUnit;
+import software.wings.beans.command.AwsLambdaCommandUnit;
+import software.wings.beans.command.CodeDeployCommandUnit;
 import software.wings.beans.command.Command;
+import software.wings.beans.command.CommandType;
 import software.wings.beans.command.CommandUnitType;
 import software.wings.beans.command.ServiceCommand;
 import software.wings.beans.container.ContainerTask;
@@ -129,14 +134,9 @@ public class ServiceResourceServiceTest extends WingsBaseTest {
                                                                           .withAppId(APP_ID)
                                                                           .withName("START")
                                                                           .withCommand(commandBuilder.but().build());
-  private static final Builder serviceBuilder =
-      aService()
-          .withUuid(SERVICE_ID)
-          .withAppId(APP_ID)
-          .withName("SERVICE_NAME")
-          .withDescription("SERVICE_DESC")
-          .withArtifactType(JAR)
-          .withAppContainer(anAppContainer().withUuid("APP_CONTAINER_ID").build());
+  private static final Builder serviceBuilder = getServiceBuilder();
+
+  PageRequest<ServiceCommand> serviceCommandPageRequest = getServiceCommandPageRequest();
 
   @Inject @Named("primaryDatastore") private AdvancedDatastore datastore;
 
@@ -175,6 +175,15 @@ public class ServiceResourceServiceTest extends WingsBaseTest {
 
   @Mock private UpdateOperations<Service> updateOperations;
 
+  private static Builder getServiceBuilder() {
+    return aService()
+        .withUuid(SERVICE_ID)
+        .withAppId(APP_ID)
+        .withName("SERVICE_NAME")
+        .withDescription("SERVICE_DESC")
+        .withArtifactType(JAR)
+        .withAppContainer(anAppContainer().withUuid("APP_CONTAINER_ID").build());
+  }
   /**
    * Sets the up.
    *
@@ -198,11 +207,7 @@ public class ServiceResourceServiceTest extends WingsBaseTest {
     when(wingsPersistence.createQuery(Command.class)).thenReturn(datastore.createQuery(Command.class));
     when(wingsPersistence.createQuery(ContainerTask.class)).thenReturn(datastore.createQuery(ContainerTask.class));
 
-    PageRequest<ServiceCommand> serviceCommandPageRequest = aPageRequest()
-                                                                .withLimit(PageRequest.UNLIMITED)
-                                                                .addFilter("appId", EQ, APP_ID)
-                                                                .addFilter("serviceId", EQ, SERVICE_ID)
-                                                                .build();
+    PageRequest<ServiceCommand> serviceCommandPageRequest = getServiceCommandPageRequest();
 
     when(wingsPersistence.query(ServiceCommand.class, serviceCommandPageRequest))
         .thenReturn(aPageResponse()
@@ -380,11 +385,7 @@ public class ServiceResourceServiceTest extends WingsBaseTest {
 
   @Test
   public void shouldCloneService() throws IOException {
-    PageRequest<ServiceCommand> serviceCommandPageRequest = aPageRequest()
-                                                                .withLimit(PageRequest.UNLIMITED)
-                                                                .addFilter("appId", EQ, APP_ID)
-                                                                .addFilter("serviceId", EQ, SERVICE_ID)
-                                                                .build();
+    PageRequest<ServiceCommand> serviceCommandPageRequest = getServiceCommandPageRequest();
 
     when(wingsPersistence.saveAndGet(eq(ServiceCommand.class), any(ServiceCommand.class))).thenAnswer(invocation -> {
       ServiceCommand command = invocation.getArgumentAt(1, ServiceCommand.class);
@@ -612,11 +613,7 @@ public class ServiceResourceServiceTest extends WingsBaseTest {
     oldCommand.setVersion(1L);
     oldCommand.setDeploymentType(DeploymentType.SSH.name());
 
-    PageRequest<ServiceCommand> serviceCommandPageRequest = aPageRequest()
-                                                                .withLimit(PageRequest.UNLIMITED)
-                                                                .addFilter("appId", EQ, APP_ID)
-                                                                .addFilter("serviceId", EQ, SERVICE_ID)
-                                                                .build();
+    PageRequest<ServiceCommand> serviceCommandPageRequest = getServiceCommandPageRequest();
 
     when(wingsPersistence.query(ServiceCommand.class, serviceCommandPageRequest))
         .thenReturn(aPageResponse()
@@ -942,6 +939,215 @@ public class ServiceResourceServiceTest extends WingsBaseTest {
   }
 
   /**
+   * Should not update command nothing changed.
+   */
+  @Test
+  public void shouldUpdateCommandNameAndTypeChanged() {
+    Graph oldCommandGraph = aGraph()
+                                .withGraphName("START")
+                                .addNodes(aGraphNode()
+                                              .withId("1")
+                                              .withOrigin(true)
+                                              .withType("EXEC")
+                                              .addProperty("commandPath", "/home/xxx/tomcat")
+                                              .addProperty("commandString", "bin/startup.sh")
+                                              .build())
+                                .build();
+
+    Command oldCommand = aCommand().withGraph(oldCommandGraph).build();
+    oldCommand.transformGraph();
+    oldCommand.setVersion(1L);
+    oldCommand.setGraph(null);
+    oldCommand.setName("START");
+    oldCommand.setCommandType(CommandType.START);
+
+    when(wingsPersistence.createUpdateOperations(ServiceCommand.class))
+        .thenReturn(datastore.createUpdateOperations(ServiceCommand.class));
+    when(wingsPersistence.createQuery(ServiceCommand.class)).thenReturn(datastore.createQuery(ServiceCommand.class));
+
+    when(wingsPersistence.createUpdateOperations(Command.class))
+        .thenReturn(datastore.createUpdateOperations(Command.class));
+    when(wingsPersistence.createQuery(Command.class)).thenReturn(datastore.createQuery(Command.class));
+
+    when(wingsPersistence.get(Service.class, APP_ID, SERVICE_ID))
+        .thenReturn(serviceBuilder.but()
+                        .addCommands(aServiceCommand()
+                                         .withName("START")
+                                         .withTargetToAllEnv(true)
+                                         .withUuid(ID_KEY)
+                                         .withAppId(APP_ID)
+                                         .withServiceId(SERVICE_ID)
+                                         .withDefaultVersion(1)
+                                         .withCommand(oldCommand)
+                                         .build())
+                        .build());
+
+    when(entityVersionService.newEntityVersion(
+             APP_ID, EntityType.COMMAND, ID_KEY, SERVICE_ID, "START", ChangeType.UPDATED, null))
+        .thenReturn(anEntityVersion().withVersion(2).build());
+
+    when(commandService.getCommand(APP_ID, ID_KEY, 1)).thenReturn(oldCommand);
+
+    when(entityVersionService.lastEntityVersion(APP_ID, EntityType.COMMAND, ID_KEY, SERVICE_ID))
+        .thenReturn(anEntityVersion().withVersion(1).build());
+
+    Graph commandGraph = aGraph()
+                             .withGraphName("START")
+                             .addNodes(aGraphNode()
+                                           .withId("1")
+                                           .withOrigin(true)
+                                           .withType("EXEC")
+                                           .addProperty("commandPath", "/home/xxx/tomcat")
+                                           .addProperty("commandString", "bin/startup.sh")
+                                           .build())
+                             .build();
+
+    Command expectedCommand = aCommand().withGraph(commandGraph).build();
+    expectedCommand.transformGraph();
+    expectedCommand.setVersion(2L);
+    expectedCommand.setGraph(null);
+    expectedCommand.setName("STOP");
+    expectedCommand.setCommandType(CommandType.STOP);
+
+    srs.updateCommand(APP_ID, SERVICE_ID,
+        aServiceCommand()
+            .withTargetToAllEnv(true)
+            .withUuid(ID_KEY)
+            .withName("STOP")
+            .withCommand(expectedCommand)
+            .build());
+
+    verify(wingsPersistence, times(2)).get(Service.class, APP_ID, SERVICE_ID);
+
+    verify(wingsPersistence).createUpdateOperations(ServiceCommand.class);
+
+    verify(wingsPersistence).createUpdateOperations(Command.class);
+
+    verify(wingsPersistence, times(2)).update(any(Query.class), any(UpdateOperations.class));
+
+    verify(wingsPersistence).createQuery(ServiceCommand.class);
+
+    verify(commandService, never()).save(any(Command.class), eq(true));
+
+    verify(configService).getConfigFilesForEntity(APP_ID, DEFAULT_TEMPLATE_ID, SERVICE_ID);
+  }
+
+  @Test
+  public void shouldUpdateCommandsOrder() {
+    Graph oldCommandGraph = aGraph()
+                                .withGraphName("START")
+                                .addNodes(aGraphNode()
+                                              .withId("1")
+                                              .withOrigin(true)
+                                              .withType("EXEC")
+                                              .withRollback(true)
+                                              .addProperty("commandPath", "/home/xxx/tomcat")
+                                              .addProperty("commandString", "bin/startup.sh")
+                                              .build())
+                                .build();
+
+    Command oldCommand = aCommand().withGraph(oldCommandGraph).build();
+    oldCommand.transformGraph();
+    oldCommand.setVersion(1L);
+    oldCommand.setGraph(null);
+
+    Graph commandGraph = aGraph()
+                             .withGraphName("START")
+                             .addNodes(aGraphNode()
+                                           .withId("1")
+                                           .withOrigin(true)
+                                           .withType("EXEC")
+                                           .withRollback(false)
+                                           .addProperty("commandPath", "/home/xxx/tomcat")
+                                           .addProperty("commandString", "bin/startup2.sh")
+                                           .build())
+                             .build();
+
+    Command expectedCommand = aCommand().withGraph(commandGraph).build();
+    expectedCommand.transformGraph();
+    expectedCommand.setVersion(2L);
+    expectedCommand.setGraph(null);
+
+    when(wingsPersistence.createUpdateOperations(ServiceCommand.class))
+        .thenReturn(datastore.createUpdateOperations(ServiceCommand.class));
+    when(wingsPersistence.createQuery(ServiceCommand.class)).thenReturn(datastore.createQuery(ServiceCommand.class));
+
+    List<ServiceCommand> serviceCommands = asList(aServiceCommand()
+                                                      .withTargetToAllEnv(true)
+                                                      .withUuid(ID_KEY)
+                                                      .withName("EXEC")
+                                                      .withAppId(APP_ID)
+                                                      .withServiceId(SERVICE_ID)
+                                                      .withDefaultVersion(1)
+                                                      .withCommand(oldCommand)
+                                                      .build(),
+        aServiceCommand()
+            .withTargetToAllEnv(true)
+            .withUuid(ID_KEY)
+            .withName("START")
+            .withAppId(APP_ID)
+            .withServiceId(SERVICE_ID)
+            .withDefaultVersion(1)
+            .withCommand(aCommand().withCommandUnits(expectedCommand.getCommandUnits()).build())
+            .build());
+
+    PageRequest<ServiceCommand> serviceCommandPageRequest = getServiceCommandPageRequest();
+
+    when(wingsPersistence.query(ServiceCommand.class, serviceCommandPageRequest))
+        .thenReturn(aPageResponse().withResponse(serviceCommands).build());
+
+    Service service = aService().withUuid(SERVICE_ID).withAppId(APP_ID).withCommands(serviceCommands).build();
+    when(wingsPersistence.get(Service.class, APP_ID, SERVICE_ID)).thenReturn(service);
+
+    when(entityVersionService.newEntityVersion(
+             APP_ID, EntityType.COMMAND, ID_KEY, SERVICE_ID, "START", ChangeType.UPDATED, null))
+        .thenReturn(anEntityVersion().withVersion(2).build());
+
+    when(commandService.getCommand(APP_ID, ID_KEY, 1)).thenReturn(oldCommand);
+
+    when(entityVersionService.lastEntityVersion(APP_ID, EntityType.COMMAND, ID_KEY, SERVICE_ID))
+        .thenReturn(anEntityVersion().withVersion(1).build());
+
+    service = srs.updateCommands(APP_ID, SERVICE_ID, serviceCommands);
+
+    verify(wingsPersistence).createUpdateOperations(ServiceCommand.class);
+
+    verify(wingsPersistence, times(2)).createQuery(ServiceCommand.class);
+
+    verify(wingsPersistence, times(2)).get(Service.class, APP_ID, SERVICE_ID);
+
+    verify(configService).getConfigFilesForEntity(APP_ID, DEFAULT_TEMPLATE_ID, SERVICE_ID);
+
+    assertThat(service.getServiceCommands()).extracting(ServiceCommand::getName).containsSequence("EXEC", "START");
+    assertThat(service.getServiceCommands()).extracting(ServiceCommand::getOrder).containsSequence(0.0, 0.0);
+
+    serviceCommands = asList(aServiceCommand()
+                                 .withTargetToAllEnv(true)
+                                 .withUuid(ID_KEY)
+                                 .withName("START")
+                                 .withAppId(APP_ID)
+                                 .withServiceId(SERVICE_ID)
+                                 .withDefaultVersion(1)
+                                 .withCommand(aCommand().withCommandUnits(expectedCommand.getCommandUnits()).build())
+                                 .build(),
+        aServiceCommand()
+            .withTargetToAllEnv(true)
+            .withUuid(ID_KEY)
+            .withName("EXEC")
+            .withAppId(APP_ID)
+            .withServiceId(SERVICE_ID)
+            .withDefaultVersion(1)
+            .withCommand(oldCommand)
+            .build());
+
+    service = srs.updateCommands(APP_ID, SERVICE_ID, serviceCommands);
+
+    assertThat(service.getServiceCommands()).extracting(ServiceCommand::getName).containsSequence("EXEC", "START");
+
+    verify(wingsPersistence, times(4)).update(any(Query.class), any(UpdateOperations.class));
+  }
+
+  /**
    * Should delete command state.
    */
   @Test
@@ -1044,6 +1250,40 @@ public class ServiceResourceServiceTest extends WingsBaseTest {
    */
   @Test
   public void shouldGetCommandStencils() {
+    stencilsMock();
+    List<Stencil> commandStencils = srs.getCommandStencils(APP_ID, SERVICE_ID, null);
+
+    assertThat(commandStencils)
+        .isNotNull()
+        .hasSize(CommandUnitType.values().length + 1)
+        .extracting(Stencil::getName)
+        .contains("START", "START2");
+
+    verify(wingsPersistence, times(2)).get(Service.class, APP_ID, SERVICE_ID);
+  }
+
+  /**
+   * Should get command stencils.
+   */
+  @Test
+  public void shouldGetScriptCommandStencilsOnly() {
+    stencilsMock();
+
+    List<Stencil> commandStencils = srs.getCommandStencils(APP_ID, SERVICE_ID, null, true);
+
+    assertThat(commandStencils).isNotNull().extracting(Stencil::getName).contains("START", "START2");
+
+    assertThat(commandStencils)
+        .isNotNull()
+        .extracting(Stencil::getTypeClass)
+        .isNotOfAnyClassIn(CodeDeployCommandUnit.class, AwsLambdaCommandUnit.class, AmiCommandUnit.class);
+
+    assertThat(commandStencils).isNotNull().extracting(Stencil::getStencilCategory).doesNotContain(CONTAINERS);
+
+    verify(wingsPersistence, times(2)).get(Service.class, APP_ID, SERVICE_ID);
+  }
+
+  private void stencilsMock() {
     when(wingsPersistence.get(eq(Service.class), anyString(), anyString()))
         .thenReturn(serviceBuilder.but()
                         .addCommands(aServiceCommand()
@@ -1058,11 +1298,7 @@ public class ServiceResourceServiceTest extends WingsBaseTest {
                                 .build())
                         .build());
 
-    PageRequest<ServiceCommand> serviceCommandPageRequest = aPageRequest()
-                                                                .withLimit(PageRequest.UNLIMITED)
-                                                                .addFilter("appId", EQ, APP_ID)
-                                                                .addFilter("serviceId", EQ, SERVICE_ID)
-                                                                .build();
+    PageRequest<ServiceCommand> serviceCommandPageRequest = getServiceCommandPageRequest();
 
     when(wingsPersistence.query(ServiceCommand.class, serviceCommandPageRequest))
         .thenReturn(aPageResponse()
@@ -1077,15 +1313,6 @@ public class ServiceResourceServiceTest extends WingsBaseTest {
                                 .withCommand(commandBuilder.but().withName("START2").build())
                                 .build()))
                         .build());
-    List<Stencil> commandStencils = srs.getCommandStencils(APP_ID, SERVICE_ID, null);
-
-    assertThat(commandStencils)
-        .isNotNull()
-        .hasSize(CommandUnitType.values().length + 1)
-        .extracting(Stencil::getName)
-        .contains("START", "START2");
-
-    verify(wingsPersistence, times(2)).get(Service.class, APP_ID, SERVICE_ID);
   }
 
   /**
@@ -1142,12 +1369,6 @@ public class ServiceResourceServiceTest extends WingsBaseTest {
 
   @Test
   public void shouldGetCommandByNameAndEnvForSpecificEnvNotTargetted() {
-    PageRequest<ServiceCommand> serviceCommandPageRequest = aPageRequest()
-                                                                .withLimit(PageRequest.UNLIMITED)
-                                                                .addFilter("appId", EQ, APP_ID)
-                                                                .addFilter("serviceId", EQ, SERVICE_ID)
-                                                                .build();
-
     when(wingsPersistence.query(ServiceCommand.class, serviceCommandPageRequest))
         .thenReturn(aPageResponse()
                         .withResponse(asList(aServiceCommand()
@@ -1237,5 +1458,13 @@ public class ServiceResourceServiceTest extends WingsBaseTest {
 
     result = (KubernetesContainerTask) srs.updateContainerTaskAdvanced(APP_ID, SERVICE_ID, "TASK_ID", null, true);
     assertThat(result.getAdvancedConfig()).isNull();
+  }
+
+  private PageRequest getServiceCommandPageRequest() {
+    return aPageRequest()
+        .withLimit(PageRequest.UNLIMITED)
+        .addFilter("appId", EQ, APP_ID)
+        .addFilter("serviceId", EQ, SERVICE_ID)
+        .build();
   }
 }
