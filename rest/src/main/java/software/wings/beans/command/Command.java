@@ -350,14 +350,15 @@ public class Command extends Base implements CommandUnit {
   public String toString() {
     return MoreObjects.toStringHelper(this)
         .add("referenceId", referenceId)
-        .add("graph", graph)
         .add("commandUnits", commandUnits)
         .toString();
   }
 
   public Command clone() {
-    Command clonnedCommand =
-        aCommand().withName(getName()).withGraph(getGraph()).withCommandUnits(commandUnits).build();
+    Command clonnedCommand = aCommand().withName(getName()).withGraph(getGraph()).build();
+    if (getGraph() == null) {
+      clonnedCommand.setCommandUnits(getCommandUnits());
+    }
     clonnedCommand.setCommandUnitType(getCommandUnitType());
     return clonnedCommand;
   }
