@@ -8,7 +8,6 @@ import software.wings.beans.SettingAttribute;
 import software.wings.beans.yaml.ChangeContext;
 import software.wings.exception.HarnessException;
 
-import java.io.IOException;
 import java.util.List;
 
 /**
@@ -38,10 +37,9 @@ public class JenkinsConfigYamlHandler extends ArtifactServerYamlHandler<Yaml, Je
     char[] decryptedPassword;
     try {
       decryptedPassword = secretManager.decryptYamlRef(yaml.getPassword());
-    } catch (IllegalAccessException | IOException | NullPointerException e) {
-      // decryptYamlRef uses Preconditions.checkNotNull(encryptedData) library call that throws NPE
-      // So catching NPE in order to propogate useful error message upwards
-      throw new HarnessException("Exception while decrypting the password ref:" + yaml.getPassword());
+    } catch (Exception e) {
+      throw new HarnessException(
+          "Exception while decrypting the password ref:" + yaml.getPassword() + ", " + e.getMessage());
     }
 
     JenkinsConfig config = JenkinsConfig.builder()

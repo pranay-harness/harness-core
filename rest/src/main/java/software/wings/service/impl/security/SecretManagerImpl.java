@@ -47,6 +47,7 @@ import software.wings.dl.PageRequest;
 import software.wings.dl.PageResponse;
 import software.wings.dl.WingsPersistence;
 import software.wings.exception.WingsException;
+import software.wings.exception.WingsException.ReportTarget;
 import software.wings.security.EncryptionType;
 import software.wings.security.UserThreadLocal;
 import software.wings.security.encryption.EncryptedData;
@@ -394,7 +395,9 @@ public class SecretManagerImpl implements SecretManager {
 
   public char[] decryptYamlRef(String encryptedYamlRef) throws IllegalAccessException, IOException {
     EncryptedData encryptedData = getEncryptedDataFromYamlRef(encryptedYamlRef);
-    Preconditions.checkNotNull(encryptedData);
+    if (encryptedData == null) {
+      throw new WingsException("encryptedData is null", ReportTarget.USER);
+    }
 
     EncryptionConfig encryptionConfig =
         getEncryptionConfig(encryptedData.getAccountId(), encryptedData.getKmsId(), encryptedData.getEncryptionType());

@@ -1,23 +1,32 @@
 package software.wings.yaml.handler.connectors.configyamlhandlers;
 
 import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertTrue;
+import static org.junit.Assert.fail;
 import static org.mockito.Matchers.any;
 import static org.mockito.Mockito.when;
 import static software.wings.beans.SettingAttribute.Builder.aSettingAttribute;
+import static software.wings.beans.yaml.ChangeContext.Builder.aChangeContext;
 import static software.wings.utils.WingsTestConstants.ACCOUNT_ID;
 
 import com.google.inject.Inject;
 
+import org.apache.commons.lang3.reflect.MethodUtils;
 import org.junit.Before;
 import org.junit.Test;
 import org.mockito.InjectMocks;
 import software.wings.beans.JenkinsConfig;
+import software.wings.beans.JenkinsConfig.VerificationYaml;
 import software.wings.beans.SettingAttribute;
 import software.wings.beans.SettingAttribute.Category;
+import software.wings.beans.yaml.Change;
+import software.wings.beans.yaml.ChangeContext;
 import software.wings.exception.HarnessException;
 import software.wings.service.impl.yaml.handler.setting.verificationprovider.JenkinsConfigVerificationYamlHandler;
 
 import java.io.IOException;
+import java.lang.reflect.InvocationTargetException;
+import java.util.Collections;
 
 public class JenkinsConfigVerificationYamlHandlerTest extends BaseSettingValueConfigYamlHandlerTest {
   @InjectMocks @Inject private JenkinsConfigVerificationYamlHandler yamlHandler;
@@ -46,6 +55,38 @@ public class JenkinsConfigVerificationYamlHandlerTest extends BaseSettingValueCo
     // 1. Create jenkins verification provider record
     SettingAttribute settingAttributeSaved = createJenkinsVerificationProvider(jenkinsProviderName);
     testFailureScenario(generateSettingValueYamlConfig(jenkinsProviderName, settingAttributeSaved));
+  }
+
+  @Test
+  public void testToBeanForNullPassword() throws Exception {
+    ChangeContext<VerificationYaml> changeContext =
+        aChangeContext()
+            .withYaml(VerificationYaml.builder().password(null).build())
+            .withChange(Change.Builder.aFileChange().withAccountId("ACCOUNT_ID").build())
+            .build();
+    try {
+      MethodUtils.invokeMethod(yamlHandler, true, "toBean",
+          new Object[] {aSettingAttribute().build(), changeContext, Collections.EMPTY_LIST});
+      fail("Exception expected");
+    } catch (Exception e) {
+      assertTrue(((InvocationTargetException) e).getTargetException() instanceof HarnessException);
+    }
+  }
+
+  @Test
+  public void testToBeanForInvalidPassword() throws Exception {
+    ChangeContext<VerificationYaml> changeContext =
+        aChangeContext()
+            .withYaml(VerificationYaml.builder().password("t:t").build())
+            .withChange(Change.Builder.aFileChange().withAccountId("ACCOUNT_ID").build())
+            .build();
+    try {
+      MethodUtils.invokeMethod(yamlHandler, true, "toBean",
+          new Object[] {aSettingAttribute().build(), changeContext, Collections.EMPTY_LIST});
+      fail("Exception expected");
+    } catch (Exception e) {
+      assertTrue(((InvocationTargetException) e).getTargetException() instanceof HarnessException);
+    }
   }
 
   private SettingAttribute createJenkinsVerificationProvider(String jenkinsProviderName) {
