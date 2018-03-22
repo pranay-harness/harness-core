@@ -54,9 +54,7 @@ public class ArtifactCheckState extends State {
     }
     List<Artifact> failedArtifacts =
         artifacts.stream()
-            .filter(artifact
-                -> artifact.getStatus() == Status.FAILED || artifact.getStatus() == Status.ERROR
-                    || artifact.getContentStatus() == ContentStatus.FAILED)
+            .filter(artifact -> artifact.getStatus() == Status.FAILED || artifact.getStatus() == Status.ERROR)
             .collect(Collectors.toList());
 
     if (!isEmpty(failedArtifacts)) {
