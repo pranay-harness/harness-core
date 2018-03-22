@@ -69,7 +69,7 @@ public class AuthenticationFilter implements ContainerRequestFilter {
 
     String authorization = containerRequestContext.getHeaderString(HttpHeaders.AUTHORIZATION);
     if (authorization == null) {
-      throw new WingsException(INVALID_TOKEN);
+      throw new WingsException(INVALID_TOKEN, HARMLESS);
     }
 
     if (isDelegateRequest(containerRequestContext)) {
