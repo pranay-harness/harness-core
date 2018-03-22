@@ -689,5 +689,14 @@ public interface Constants {
    * The constant DEPLOYMENT.
    */
   String DEPLOYMENT = "DEPLOYMENT";
-  String DEFAULT_USER_GROUP_NAME = "ADMIN";
+  String DEFAULT_OLD_USER_GROUP_NAME = "ADMIN";
+  String DEFAULT_ACCOUNT_ADMIN_USER_GROUP_NAME = "Account Administrator";
+  String DEFAULT_PROD_SUPPORT_USER_GROUP_NAME = "Production Support";
+  String DEFAULT_PROD_SUPPORT_USER_GROUP_DESCRIPTION =
+      "Production Support members have access to override configuration, "
+      + "setup infrastructure and setup/execute deployment workflows within PROD environments";
+  String DEFAULT_NON_PROD_SUPPORT_USER_GROUP_NAME = "Non-Production Support";
+  String DEFAULT_NON_PROD_SUPPORT_USER_GROUP_DESCRIPTION =
+      "Non-production Support members have access to override configuration, "
+      + "setup infrastructure and setup/execute deployment workflows within NON_PROD environments";
 }

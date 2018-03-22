@@ -177,14 +177,10 @@ public class UserServiceImpl implements UserService {
 
     account = setupAccount(account.getAccountName(), account.getCompanyName());
     addAccountAdminRole(user, account);
-    addUserToUserGroup(account, user);
+    authHandler.addUserToDefaultAccountAdminUserGroup(user, account);
     sendSuccessfullyAddedToNewAccountEmail(user, account);
     evictUserFromCache(user.getUuid());
     return account;
-  }
-
-  private void addUserToUserGroup(Account account, User user) {
-    authHandler.addUserToUserGroup(user, account);
   }
 
   private void sendSuccessfullyAddedToNewAccountEmail(User user, Account account) {
