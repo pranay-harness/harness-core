@@ -76,12 +76,6 @@ public class Validator {
     try {
       return runnable.call();
     } catch (DuplicateKeyException e) {
-      /*List<ResponseMessage> responseMessages = new ArrayList<>();
-      responseMessages.add(prepareResponseMessage(INVALID_ARGUMENT, WARN, "hello"));
-      Map<String, Object> params = new HashMap();
-      params.put("args", "hello");
-      throw new WingsException(responseMessages, "hello", params);*/
-      //      throw new WingsException(ErrorCode.INVALID_ARGUMENT, "args", "Duplicate " + field + " " + value);
       throw prepareWingsException(GENERAL_ERROR, "args", "Duplicate " + field + " " + value);
     } catch (Exception e) {
       if (e.getCause() != null && e.getCause() instanceof DuplicateKeyException) {

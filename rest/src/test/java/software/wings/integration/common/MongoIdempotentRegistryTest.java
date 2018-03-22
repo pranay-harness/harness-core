@@ -1,5 +1,6 @@
 package software.wings.integration.common;
 
+import static java.time.Duration.ofMillis;
 import static org.assertj.core.api.Assertions.assertThatThrownBy;
 import static org.junit.Assert.assertEquals;
 import static software.wings.beans.Idempotent.SUCCEEDED;
@@ -159,5 +160,13 @@ public class MongoIdempotentRegistryTest extends WingsBaseTest {
     wingsPersistence.delete(Idempotent.class, dataId.getValue());
     assertEquals("data: result 1", operation(dataId));
     assertEquals("data: result 1", operation(dataId));
+  }
+
+  @Test
+  public void testTimeout() throws InterruptedException, UnableToRegisterIdempotentOperationException {
+    wingsPersistence.delete(Idempotent.class, id.getValue());
+    IdempotentLock<String> idempotentLock = IdempotentLock.create(id, idempotentRegistry);
+    assertThatThrownBy(() -> IdempotentLock.create(id, idempotentRegistry, ofMillis(200)));
+    idempotentLock.close();
   }
 }
