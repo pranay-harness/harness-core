@@ -4,6 +4,7 @@ import static org.apache.commons.lang3.StringUtils.isNotBlank;
 import static org.mongodb.morphia.mapping.Mapper.ID_KEY;
 import static software.wings.beans.ErrorCode.INVALID_ARGUMENT;
 import static software.wings.beans.Event.Builder.anEvent;
+import static software.wings.exception.WingsException.ReportTarget.USER_ADMIN;
 import static software.wings.sm.states.JenkinsState.COMMAND_UNIT_NAME;
 
 import com.google.inject.Inject;
@@ -68,7 +69,7 @@ public class ActivityServiceImpl implements ActivityService {
   public Activity get(String id, String appId) {
     Activity activity = wingsPersistence.get(Activity.class, appId, id);
     if (activity == null) {
-      throw new WingsException(INVALID_ARGUMENT).addParam("args", "Activity doesn't exist");
+      throw new WingsException(INVALID_ARGUMENT, USER_ADMIN).addParam("args", "Activity doesn't exist");
     }
     return activity;
   }
