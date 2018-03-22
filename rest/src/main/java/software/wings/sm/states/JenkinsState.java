@@ -285,9 +285,8 @@ public class JenkinsState extends State {
 
   @Override
   public void handleAbortEvent(ExecutionContext context) {
-    context.getStateExecutionData().setErrorMsg("Job did not complete within timeout [" + (getTimeoutMillis() / 1000)
-        + " secs"
-        + "] or manually aborted");
+    context.getStateExecutionData().setErrorMsg(
+        "Job did not complete within timeout [" + (getTimeoutMillis() / 1000) + " (s)");
   }
 
   @Attributes(title = "Timeout (ms)")

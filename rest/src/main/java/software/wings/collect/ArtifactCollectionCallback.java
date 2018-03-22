@@ -3,9 +3,10 @@ package software.wings.collect;
 import static io.harness.data.structure.EmptyPredicate.isEmpty;
 import static software.wings.beans.ApprovalNotification.Builder.anApprovalNotification;
 import static software.wings.beans.Event.Builder.anEvent;
+import static software.wings.beans.artifact.Artifact.ContentStatus.DOWNLOADED;
+import static software.wings.beans.artifact.Artifact.ContentStatus.FAILED;
 import static software.wings.beans.artifact.Artifact.Status.APPROVED;
 import static software.wings.beans.artifact.Artifact.Status.ERROR;
-import static software.wings.beans.artifact.Artifact.Status.FAILED;
 
 import com.google.inject.Inject;
 
@@ -14,7 +15,6 @@ import org.slf4j.LoggerFactory;
 import software.wings.beans.EntityType;
 import software.wings.beans.Event.Type;
 import software.wings.beans.artifact.Artifact;
-import software.wings.beans.artifact.Artifact.ContentStatus;
 import software.wings.service.impl.EventEmitter;
 import software.wings.service.impl.EventEmitter.Channel;
 import software.wings.service.intfc.ArtifactService;
@@ -51,8 +51,10 @@ public class ArtifactCollectionCallback implements NotifyCallback {
     ListNotifyResponseData responseData = (ListNotifyResponseData) response.values().iterator().next();
 
     if (isEmpty(responseData.getData())) { // Error in Downloading artifact file
-      logger.error("Artifact file collection failed for artifactId: [{}], appId: [{}]", artifactId, appId);
-      artifactService.updateStatus(artifactId, appId, FAILED, ContentStatus.FAILED, "Failed to download artifact file");
+      logger.warn(
+          "Artifact file collection failed for artifactId: [{}], appId: [{}]. Marking content status as NOT_DOWNLOADED to retry next artifac check",
+          artifactId, appId);
+      artifactService.updateStatus(artifactId, appId, APPROVED, FAILED, "Failed to download artifact file");
     } else {
       logger.info("Artifact collection completed - artifactId : {}", artifactId);
       Artifact artifact = artifactService.get(appId, artifactId);
@@ -61,14 +63,8 @@ public class ArtifactCollectionCallback implements NotifyCallback {
         return;
       }
       artifactService.addArtifactFile(artifact.getUuid(), artifact.getAppId(), responseData.getData());
-      artifactService.updateStatus(artifact.getUuid(), artifact.getAppId(), APPROVED, ContentStatus.DOWNLOADED);
+      artifactService.updateStatus(artifact.getUuid(), artifact.getAppId(), APPROVED, DOWNLOADED);
 
-      artifact = artifactService.get(appId, artifactId);
-
-      if (artifact == null) {
-        logger.info("Artifact Id {} was deleted - nothing to do", artifactId);
-        return;
-      }
       notificationService.sendNotificationAsync(anApprovalNotification()
                                                     .withAppId(artifact.getAppId())
                                                     .withEntityId(artifact.getUuid())
@@ -88,7 +84,7 @@ public class ArtifactCollectionCallback implements NotifyCallback {
       logger.info("Artifact Id {} was deleted - nothing to do", artifactId);
       return;
     }
-    artifactService.updateStatus(artifact.getUuid(), artifact.getAppId(), ERROR);
+    artifactService.updateStatus(artifact.getUuid(), artifact.getAppId(), ERROR, FAILED);
     eventEmitter.send(Channel.ARTIFACTS,
         anEvent().withType(Type.UPDATE).withUuid(artifact.getUuid()).withAppId(artifact.getAppId()).build());
   }
