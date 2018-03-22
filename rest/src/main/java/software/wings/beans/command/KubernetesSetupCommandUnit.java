@@ -18,6 +18,7 @@ import static software.wings.utils.KubernetesConvention.getKubernetesServiceName
 import static software.wings.utils.KubernetesConvention.getRevisionFromControllerName;
 
 import com.google.common.base.Joiner;
+import com.google.common.base.Preconditions;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.Lists;
@@ -44,7 +45,7 @@ import io.fabric8.kubernetes.api.model.LabelSelectorBuilder;
 import io.fabric8.kubernetes.api.model.LoadBalancerIngress;
 import io.fabric8.kubernetes.api.model.LoadBalancerStatus;
 import io.fabric8.kubernetes.api.model.ObjectMeta;
-import io.fabric8.kubernetes.api.model.PodSpec;
+import io.fabric8.kubernetes.api.model.PodTemplateSpec;
 import io.fabric8.kubernetes.api.model.ReplicationController;
 import io.fabric8.kubernetes.api.model.ReplicationControllerSpec;
 import io.fabric8.kubernetes.api.model.Secret;
@@ -849,112 +850,105 @@ public class KubernetesSetupCommandUnit extends ContainerSetupCommandUnit {
   }
 
   private HasMetadata createKubernetesControllerDefinition(KubernetesContainerTask kubernetesContainerTask,
-      String replicationControllerName, Map<String, String> controllerLabels, String namespace,
-      ImageDetails imageDetails, String registrySecretName, ConfigMap configMap, Secret secretMap,
-      ExecutionLogCallback executionLogCallback) {
+      String controllerName, Map<String, String> controllerLabels, String namespace, ImageDetails imageDetails,
+      String registrySecretName, ConfigMap configMap, Secret secretMap, ExecutionLogCallback executionLogCallback) {
     String containerName = KubernetesConvention.getContainerName(imageDetails.getName());
     String imageNameTag = imageDetails.getName() + ":" + imageDetails.getTag();
 
     String configMapName = configMap != null ? configMap.getMetadata().getName() : "no-config-map";
     String secretMapName = secretMap != null ? secretMap.getMetadata().getName() : "no-secret-map";
 
-    HasMetadata kubernetesObj = kubernetesContainerTask.createController(
+    HasMetadata controller = kubernetesContainerTask.createController(
         containerName, imageNameTag, registrySecretName, configMapName, secretMapName);
 
-    KubernetesHelper.setName(kubernetesObj, replicationControllerName);
-    KubernetesHelper.setNamespace(kubernetesObj, namespace);
-    KubernetesHelper.getOrCreateLabels(kubernetesObj).putAll(controllerLabels);
+    KubernetesHelper.setName(controller, controllerName);
+    KubernetesHelper.setNamespace(controller, namespace);
+    KubernetesHelper.getOrCreateLabels(controller).putAll(controllerLabels);
 
-    configureTypeSpecificSpecs(controllerLabels, kubernetesObj, configMap, secretMap, executionLogCallback);
+    configureTypeSpecificSpecs(controllerLabels, controller, configMap, secretMap, executionLogCallback);
 
-    return kubernetesObj;
+    return controller;
   }
 
   private void configureTypeSpecificSpecs(Map<String, String> controllerLabels, HasMetadata kubernetesObj,
       ConfigMap configMap, Secret secretMap, ExecutionLogCallback executionLogCallback) {
-    ObjectMeta objectMeta = null;
-    PodSpec podSpec = null;
+    PodTemplateSpec podTemplateSpec = null;
     if (kubernetesObj instanceof ReplicationController) {
       ReplicationControllerSpec rcSpec = ((ReplicationController) kubernetesObj).getSpec();
       rcSpec.setSelector(controllerLabels);
       rcSpec.setReplicas(0);
-      objectMeta = rcSpec.getTemplate().getMetadata();
-      podSpec = rcSpec.getTemplate().getSpec();
+      podTemplateSpec = rcSpec.getTemplate();
     } else if (kubernetesObj instanceof Deployment) {
       DeploymentSpec depSpec = ((Deployment) kubernetesObj).getSpec();
       depSpec.setSelector(new LabelSelectorBuilder().withMatchLabels(controllerLabels).build());
       depSpec.setReplicas(0);
-      objectMeta = depSpec.getTemplate().getMetadata();
-      podSpec = depSpec.getTemplate().getSpec();
+      podTemplateSpec = depSpec.getTemplate();
     } else if (kubernetesObj instanceof DaemonSet) {
       DaemonSetSpec dsSpec = ((DaemonSet) kubernetesObj).getSpec();
       dsSpec.setSelector(new LabelSelectorBuilder().withMatchLabels(controllerLabels).build());
-      objectMeta = dsSpec.getTemplate().getMetadata();
-      podSpec = dsSpec.getTemplate().getSpec();
+      podTemplateSpec = dsSpec.getTemplate();
     } else if (kubernetesObj instanceof ReplicaSet) {
       ReplicaSetSpec repSetSpec = ((ReplicaSet) kubernetesObj).getSpec();
       repSetSpec.setSelector(new LabelSelectorBuilder().withMatchLabels(controllerLabels).build());
       repSetSpec.setReplicas(0);
-      objectMeta = repSetSpec.getTemplate().getMetadata();
-      podSpec = repSetSpec.getTemplate().getSpec();
+      podTemplateSpec = repSetSpec.getTemplate();
     } else if (kubernetesObj instanceof StatefulSet) {
       StatefulSetSpec stateSetSpec = ((StatefulSet) kubernetesObj).getSpec();
       stateSetSpec.setSelector(new LabelSelectorBuilder().withMatchLabels(controllerLabels).build());
       stateSetSpec.setReplicas(0);
-      objectMeta = stateSetSpec.getTemplate().getMetadata();
-      podSpec = stateSetSpec.getTemplate().getSpec();
+      podTemplateSpec = stateSetSpec.getTemplate();
     }
-    if (objectMeta != null) {
-      Map<String, String> labels = objectMeta.getLabels();
-      if (labels == null) {
-        labels = new HashMap<>();
-        objectMeta.setLabels(labels);
+    Preconditions.checkNotNull(podTemplateSpec);
+    Preconditions.checkNotNull(podTemplateSpec.getMetadata());
+    Preconditions.checkNotNull(podTemplateSpec.getSpec());
+
+    Map<String, String> labels = podTemplateSpec.getMetadata().getLabels();
+    if (labels == null) {
+      labels = new HashMap<>();
+      podTemplateSpec.getMetadata().setLabels(labels);
+    }
+    podTemplateSpec.getMetadata().getLabels().putAll(controllerLabels);
+
+    Map<String, EnvVar> secretEnvVars = new HashMap<>();
+
+    if (secretMap != null) {
+      for (String key : secretMap.getStringData().keySet()) {
+        if (envVarPattern.matcher(key).matches()) {
+          EnvVarSource varSource = new EnvVarSourceBuilder()
+                                       .withNewSecretKeyRef()
+                                       .withName(secretMap.getMetadata().getName())
+                                       .withKey(key)
+                                       .endSecretKeyRef()
+                                       .build();
+          secretEnvVars.put(key, new EnvVarBuilder().withName(key).withValueFrom(varSource).build());
+        } else {
+          String msg =
+              String.format("Key name [%s] from secret map is not a valid environment variable name. Skipping...", key);
+          executionLogCallback.saveExecutionLog(msg, LogLevel.WARN);
+        }
       }
-      objectMeta.getLabels().putAll(controllerLabels);
     }
 
-    if (podSpec != null) {
-      Map<String, EnvVar> secretEnvVars = new HashMap<>();
-
-      if (secretMap != null) {
-        for (String key : secretMap.getStringData().keySet()) {
-          if (envVarPattern.matcher(key).matches()) {
-            EnvVarSource varSource = new EnvVarSourceBuilder()
-                                         .withNewSecretKeyRef()
-                                         .withName(secretMap.getMetadata().getName())
-                                         .withKey(key)
-                                         .endSecretKeyRef()
-                                         .build();
-            secretEnvVars.put(key, new EnvVarBuilder().withName(key).withValueFrom(varSource).build());
-          } else {
-            String msg = String.format(
-                "Key name [%s] from secret map is not a valid environment variable name. Skipping...", key);
-            executionLogCallback.saveExecutionLog(msg, LogLevel.WARN);
-          }
+    for (Container container : podTemplateSpec.getSpec().getContainers()) {
+      if (configMap != null) {
+        List<EnvFromSource> envSourceList = new ArrayList<>();
+        if (container.getEnvFrom() != null) {
+          envSourceList.addAll(container.getEnvFrom());
         }
+        envSourceList.add(new EnvFromSourceBuilder()
+                              .withNewConfigMapRef()
+                              .withName(configMap.getMetadata().getName())
+                              .endConfigMapRef()
+                              .build());
+        container.setEnvFrom(envSourceList);
       }
-
-      for (Container container : podSpec.getContainers()) {
-        if (configMap != null) {
-          List<EnvFromSource> envSourceList = new ArrayList<>();
-          if (container.getEnvFrom() != null) {
-            envSourceList.addAll(container.getEnvFrom());
-          }
-          envSourceList.add(new EnvFromSourceBuilder()
-                                .withNewConfigMapRef()
-                                .withName(configMap.getMetadata().getName())
-                                .endConfigMapRef()
-                                .build());
-          container.setEnvFrom(envSourceList);
+      if (isNotEmpty(secretEnvVars)) {
+        Map<String, EnvVar> containerEnvVars = new HashMap<>();
+        if (container.getEnv() != null) {
+          container.getEnv().forEach(envVar -> containerEnvVars.put(envVar.getName(), envVar));
         }
-        if (isNotEmpty(secretEnvVars)) {
-          Map<String, EnvVar> containerEnvVars = new HashMap<>();
-          if (container.getEnv() != null) {
-            container.getEnv().forEach(envVar -> containerEnvVars.put(envVar.getName(), envVar));
-          }
-          containerEnvVars.putAll(secretEnvVars);
-          container.setEnv(new ArrayList<>(containerEnvVars.values()));
-        }
+        containerEnvVars.putAll(secretEnvVars);
+        container.setEnv(new ArrayList<>(containerEnvVars.values()));
       }
     }
   }

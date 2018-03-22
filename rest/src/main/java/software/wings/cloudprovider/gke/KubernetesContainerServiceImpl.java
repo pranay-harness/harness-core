@@ -445,6 +445,22 @@ public class KubernetesContainerServiceImpl implements KubernetesContainerServic
     return null;
   }
 
+  private PodTemplateSpec getPodTemplateSpec(HasMetadata controller) {
+    PodTemplateSpec podTemplateSpec = null;
+    if (controller instanceof ReplicationController) {
+      podTemplateSpec = ((ReplicationController) controller).getSpec().getTemplate();
+    } else if (controller instanceof Deployment) {
+      podTemplateSpec = ((Deployment) controller).getSpec().getTemplate();
+    } else if (controller instanceof DaemonSet) {
+      podTemplateSpec = ((DaemonSet) controller).getSpec().getTemplate();
+    } else if (controller instanceof ReplicaSet) {
+      podTemplateSpec = ((ReplicaSet) controller).getSpec().getTemplate();
+    } else if (controller instanceof StatefulSet) {
+      podTemplateSpec = ((StatefulSet) controller).getSpec().getTemplate();
+    }
+    return podTemplateSpec;
+  }
+
   private NonNamespaceOperation<ReplicationController, ReplicationControllerList, DoneableReplicationController,
       RollableScalableResource<ReplicationController, DoneableReplicationController>>
   rcOperations(KubernetesConfig kubernetesConfig, List<EncryptedDataDetail> encryptedDataDetails) {
@@ -741,7 +757,7 @@ public class KubernetesContainerServiceImpl implements KubernetesContainerServic
       int serviceSteadyStateTimeout, ExecutionLogCallback executionLogCallback) {
     HasMetadata controller = getController(kubernetesConfig, encryptedDataDetails, controllerName);
     Set<String> images = getControllerImages(controller);
-    Map<String, String> labels = controller.getMetadata().getLabels();
+    Map<String, String> labels = getPodTemplateSpec(controller).getMetadata().getLabels();
     KubernetesClient kubernetesClient =
         kubernetesHelperService.getKubernetesClient(kubernetesConfig, encryptedDataDetails);
     logger.info("Waiting for pods to be ready...");
