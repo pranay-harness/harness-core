@@ -2,8 +2,14 @@ package software.wings.service.impl.security.auth;
 
 import static software.wings.beans.FeatureName.RBAC;
 import static software.wings.beans.SearchFilter.Operator.EQ;
-import static software.wings.common.Constants.DEFAULT_USER_GROUP_NAME;
+import static software.wings.common.Constants.DEFAULT_ACCOUNT_ADMIN_USER_GROUP_NAME;
+import static software.wings.common.Constants.DEFAULT_NON_PROD_SUPPORT_USER_GROUP_DESCRIPTION;
+import static software.wings.common.Constants.DEFAULT_NON_PROD_SUPPORT_USER_GROUP_NAME;
+import static software.wings.common.Constants.DEFAULT_PROD_SUPPORT_USER_GROUP_DESCRIPTION;
+import static software.wings.common.Constants.DEFAULT_PROD_SUPPORT_USER_GROUP_NAME;
 import static software.wings.dl.PageRequest.PageRequestBuilder.aPageRequest;
+import static software.wings.security.EnvFilter.FilterType.NON_PROD;
+import static software.wings.security.EnvFilter.FilterType.PROD;
 import static software.wings.security.GenericEntityFilter.FilterType.SELECTED;
 import static software.wings.security.PermissionAttribute.PermissionType.ACCOUNT_MANAGEMENT;
 import static software.wings.security.PermissionAttribute.PermissionType.APPLICATION_CREATE_DELETE;
@@ -34,7 +40,6 @@ import software.wings.beans.security.AccountPermissions;
 import software.wings.beans.security.AppPermission;
 import software.wings.beans.security.UserGroup;
 import software.wings.beans.security.UserGroup.UserGroupBuilder;
-import software.wings.common.Constants;
 import software.wings.dl.PageRequest;
 import software.wings.dl.PageRequest.PageRequestBuilder;
 import software.wings.dl.PageResponse;
@@ -367,7 +372,7 @@ public class AuthHandler {
   private EnvFilter getDefaultEnvFilterIfNull(EnvFilter envFilter) {
     if (envFilter == null || CollectionUtils.isEmpty(envFilter.getFilterTypes())) {
       envFilter = new EnvFilter();
-      envFilter.setFilterTypes(Sets.newHashSet(EnvFilter.FilterType.PROD, EnvFilter.FilterType.NON_PROD));
+      envFilter.setFilterTypes(Sets.newHashSet(PROD, NON_PROD));
     }
     return envFilter;
   }
@@ -440,8 +445,7 @@ public class AuthHandler {
   private Set<String> getWorkflowIdsByFilter(String appId, WorkflowFilter workflowFilter) {
     if (workflowFilter == null || CollectionUtils.isEmpty(workflowFilter.getFilterTypes())) {
       workflowFilter = new WorkflowFilter();
-      workflowFilter.setFilterTypes(Sets.newHashSet(
-          WorkflowFilter.FilterType.PROD, WorkflowFilter.FilterType.NON_PROD, WorkflowFilter.FilterType.TEMPLATES));
+      workflowFilter.setFilterTypes(Sets.newHashSet(PROD, NON_PROD, WorkflowFilter.FilterType.TEMPLATES));
     }
 
     Set<String> envIds = getEnvIdsByFilter(appId, workflowFilter);
@@ -516,7 +520,7 @@ public class AuthHandler {
   }
 
   private boolean isEnvType(String filterType) {
-    return EnvFilter.FilterType.PROD.equals(filterType) || EnvFilter.FilterType.NON_PROD.equals(filterType);
+    return PROD.equals(filterType) || NON_PROD.equals(filterType);
   }
 
   private boolean hasTemplateFilterType(Set<String> workflowFilterTypes) {
@@ -531,14 +535,10 @@ public class AuthHandler {
   }
 
   private boolean isAllEnv(Set<String> envFilterTypes) {
-    boolean prodPresent = envFilterTypes.stream()
-                              .filter(envFilterType -> EnvFilter.FilterType.PROD.equals(envFilterType))
-                              .findFirst()
-                              .isPresent();
-    boolean nonProdPresent = envFilterTypes.stream()
-                                 .filter(envFilterType -> EnvFilter.FilterType.NON_PROD.equals(envFilterType))
-                                 .findFirst()
-                                 .isPresent();
+    boolean prodPresent =
+        envFilterTypes.stream().filter(envFilterType -> PROD.equals(envFilterType)).findFirst().isPresent();
+    boolean nonProdPresent =
+        envFilterTypes.stream().filter(envFilterType -> NON_PROD.equals(envFilterType)).findFirst().isPresent();
     return prodPresent && nonProdPresent;
   }
 
@@ -727,7 +727,7 @@ public class AuthHandler {
 
     UserGroupBuilder userGroupBuilder = UserGroup.builder()
                                             .accountId(accountId)
-                                            .name(DEFAULT_USER_GROUP_NAME)
+                                            .name(DEFAULT_ACCOUNT_ADMIN_USER_GROUP_NAME)
                                             .accountPermissions(accountPermissions)
                                             .appPermissions(appPermissions)
                                             .description("Default account admin user group");
@@ -738,6 +738,71 @@ public class AuthHandler {
     return userGroupBuilder.build();
   }
 
+  private UserGroup buildSupportUserGroup(
+      String accountId, String envFilterType, String userGroupName, String description) {
+    Set<Action> actions = getAllNonDeploymentActions();
+    Set<AppPermission> appPermissions = Sets.newHashSet();
+    AppPermission svcPermission = AppPermission.builder()
+                                      .actions(actions)
+                                      .appFilter(GenericEntityFilter.builder().filterType(FilterType.ALL).build())
+                                      .entityFilter(GenericEntityFilter.builder().filterType(FilterType.ALL).build())
+                                      .permissionType(PermissionType.SERVICE)
+                                      .build();
+    appPermissions.add(svcPermission);
+
+    AppPermission envPermission = AppPermission.builder()
+                                      .actions(actions)
+                                      .appFilter(GenericEntityFilter.builder().filterType(FilterType.ALL).build())
+                                      .entityFilter(new EnvFilter(null, Sets.newHashSet(envFilterType)))
+                                      .permissionType(PermissionType.ENV)
+                                      .build();
+    appPermissions.add(envPermission);
+
+    AppPermission workflowPermission =
+        AppPermission.builder()
+            .actions(actions)
+            .appFilter(GenericEntityFilter.builder().filterType(FilterType.ALL).build())
+            .entityFilter(new WorkflowFilter(null, Sets.newHashSet(envFilterType, WorkflowFilter.FilterType.TEMPLATES)))
+            .permissionType(PermissionType.WORKFLOW)
+            .build();
+    appPermissions.add(workflowPermission);
+
+    AppPermission deploymentPermission =
+        AppPermission.builder()
+            .actions(Sets.newHashSet(Action.READ, Action.EXECUTE))
+            .appFilter(GenericEntityFilter.builder().filterType(FilterType.ALL).build())
+            .entityFilter(new EnvFilter(null, Sets.newHashSet(envFilterType)))
+            .permissionType(PermissionType.DEPLOYMENT)
+            .build();
+    appPermissions.add(deploymentPermission);
+
+    AppPermission pipelinePermission = AppPermission.builder()
+                                           .actions(actions)
+                                           .appFilter(GenericEntityFilter.builder().filterType(FilterType.ALL).build())
+                                           .entityFilter(new EnvFilter(null, Sets.newHashSet(envFilterType)))
+                                           .permissionType(PermissionType.PIPELINE)
+                                           .build();
+    appPermissions.add(pipelinePermission);
+
+    UserGroupBuilder userGroupBuilder = UserGroup.builder()
+                                            .accountId(accountId)
+                                            .name(userGroupName)
+                                            .appPermissions(appPermissions)
+                                            .description(description);
+
+    return userGroupBuilder.build();
+  }
+
+  public UserGroup buildProdSupportUserGroup(String accountId) {
+    return buildSupportUserGroup(
+        accountId, PROD, DEFAULT_PROD_SUPPORT_USER_GROUP_NAME, DEFAULT_PROD_SUPPORT_USER_GROUP_DESCRIPTION);
+  }
+
+  public UserGroup buildNonProdSupportUserGroup(String accountId) {
+    return buildSupportUserGroup(
+        accountId, NON_PROD, DEFAULT_NON_PROD_SUPPORT_USER_GROUP_NAME, DEFAULT_NON_PROD_SUPPORT_USER_GROUP_DESCRIPTION);
+  }
+
   private Set<PermissionType> getAllAccountPermissions() {
     return Sets.newHashSet(USER_PERMISSION_MANAGEMENT, ACCOUNT_MANAGEMENT, APPLICATION_CREATE_DELETE);
   }
@@ -746,7 +811,11 @@ public class AuthHandler {
     return Sets.newHashSet(Action.CREATE, Action.READ, Action.UPDATE, Action.DELETE, Action.EXECUTE);
   }
 
-  public void addUserToUserGroup(User user, Account account) {
+  private Set<Action> getAllNonDeploymentActions() {
+    return Sets.newHashSet(Action.CREATE, Action.READ, Action.UPDATE, Action.DELETE);
+  }
+
+  public void addUserToDefaultAccountAdminUserGroup(User user, Account account) {
     if (account == null) {
       logger.info("account is null, continuing....");
       return;
@@ -756,7 +825,7 @@ public class AuthHandler {
 
     PageRequest<UserGroup> pageRequest = aPageRequest()
                                              .addFilter("accountId", EQ, accountId)
-                                             .addFilter("name", EQ, Constants.DEFAULT_USER_GROUP_NAME)
+                                             .addFilter("name", EQ, DEFAULT_ACCOUNT_ADMIN_USER_GROUP_NAME)
                                              .build();
     PageResponse<UserGroup> userGroups = userGroupService.list(accountId, pageRequest);
     UserGroup userGroup = null;
@@ -798,5 +867,16 @@ public class AuthHandler {
         logger.info("User {} is added to the user group in account {}", user.getName(), accountId);
       }
     }
+  }
+
+  public void createDefaultUserGroups(Account account, User user) {
+    UserGroup defaultAdminUserGroup = buildDefaultAdminUserGroup(account.getUuid(), user);
+    userGroupService.save(defaultAdminUserGroup);
+
+    // By default, we don't associate any users to the support groups
+    UserGroup prodSupportUserGroup = buildProdSupportUserGroup(account.getUuid());
+    userGroupService.save(prodSupportUserGroup);
+    UserGroup nonProdSupportUserGroup = buildNonProdSupportUserGroup(account.getUuid());
+    userGroupService.save(nonProdSupportUserGroup);
   }
 }

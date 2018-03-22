@@ -43,7 +43,7 @@ public class CreateDefaultUserGroupsAndAddToExistingUsers implements Migration {
           return;
         }
 
-        accounts.stream().forEach(account -> { authHandler.addUserToUserGroup(user, account); });
+        accounts.stream().forEach(account -> authHandler.addUserToDefaultAccountAdminUserGroup(user, account));
       });
     }
   }

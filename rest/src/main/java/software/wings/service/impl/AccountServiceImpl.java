@@ -28,7 +28,6 @@ import software.wings.beans.Role;
 import software.wings.beans.RoleType;
 import software.wings.beans.SearchFilter.Operator;
 import software.wings.beans.SystemCatalog;
-import software.wings.beans.security.UserGroup;
 import software.wings.dl.PageRequest;
 import software.wings.dl.WingsPersistence;
 import software.wings.licensing.LicenseManager;
@@ -92,12 +91,7 @@ public class AccountServiceImpl implements AccountService {
         .filter(role -> RoleType.ACCOUNT_ADMIN.equals(role.getRoleType()))
         .forEach(role -> createDefaultNotificationGroup(account, role));
     createSystemAppContainers(account);
-    createDefaultUserGroups(account);
-  }
-
-  private void createDefaultUserGroups(Account account) {
-    UserGroup userGroup = authHandler.buildDefaultAdminUserGroup(account.getUuid(), null);
-    userGroupService.save(userGroup);
+    authHandler.createDefaultUserGroups(account, null);
   }
 
   List<Role> createDefaultRoles(Account account) {
