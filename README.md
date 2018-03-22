@@ -115,7 +115,7 @@ helper shell scripts:
 5. Change settings to mark injected fields as assigned. (Settings > Editor > Inspections > Java > Declaration Redundancy > Unused Declarations>Entry Points >
    Annotations > Mark field as implicitly written if annotated by) Click add, then search for "Inject". Add both google and javax annotations.
 6. Setup code style. Preferences > Code Style > Scheme > Gear icon > Import > IntelliJ XML.
-   Select portal/tools/config/src/main/resources/do-not-use/intellij-java-google-style.xml
+   Select portal/tools/config/src/main/resources/intellij-java-google-style.xml
 7. Setup your imports settings. From Preferences | Editor > Code Style > Java | Imports make sure that your limits are big enough to not take affect
 
 ![config image](img/imports_limits.png)
