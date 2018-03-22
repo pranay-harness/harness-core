@@ -1149,7 +1149,7 @@
                         <logViolationsToConsole>true</logViolationsToConsole>
                         <failOnViolation>true</failOnViolation>
                         <failsOnError>true</failsOnError>
-                        <configLocation>do-not-use/harness_checks.xml</configLocation>
+                        <configLocation>harness_checks.xml</configLocation>
                         <includeTestSourceDirectory>true</includeTestSourceDirectory>
                     </configuration>
                     <dependencies>
@@ -1194,7 +1194,7 @@
                     <artifactId>maven-pmd-plugin</artifactId>
                     <version>3.9.0</version>
                     <configuration>
-                        <rulesets>do-not-use/harness_pmd_ruleset.xml</rulesets>
+                        <rulesets>harness_pmd_ruleset.xml</rulesets>
                         <analysisCache>true</analysisCache>
                         <analysisCacheLocation>${project.build.directory}/pmd/pmd.cache</analysisCacheLocation>
                     </configuration>
