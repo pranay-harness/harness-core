@@ -11,6 +11,12 @@ import static java.util.stream.Collectors.toList;
 import static java.util.stream.Collectors.toMap;
 import static org.apache.commons.lang3.StringUtils.isNotBlank;
 import static org.mongodb.morphia.mapping.Mapper.ID_KEY;
+import static software.wings.api.DeploymentType.AMI;
+import static software.wings.api.DeploymentType.AWS_CODEDEPLOY;
+import static software.wings.api.DeploymentType.AWS_LAMBDA;
+import static software.wings.api.DeploymentType.ECS;
+import static software.wings.api.DeploymentType.KUBERNETES;
+import static software.wings.api.DeploymentType.SSH;
 import static software.wings.beans.EntityType.ARTIFACT;
 import static software.wings.beans.EntityType.INFRASTRUCTURE_MAPPING;
 import static software.wings.beans.EntityType.SERVICE;
@@ -52,6 +58,7 @@ import static software.wings.common.Constants.ENTITY_TYPE;
 import static software.wings.common.Constants.WORKFLOW_INFRAMAPPING_VALIDATION_MESSAGE;
 import static software.wings.dl.MongoHelper.setUnset;
 import static software.wings.dl.PageRequest.PageRequestBuilder.aPageRequest;
+import static software.wings.exception.WingsException.ReportTarget.USER;
 import static software.wings.sm.StateMachineExecutionSimulator.populateRequiredEntityTypesByAccessType;
 import static software.wings.sm.StateType.ARTIFACT_COLLECTION;
 import static software.wings.sm.StateType.AWS_AMI_SERVICE_DEPLOY;
@@ -142,7 +149,6 @@ import software.wings.dl.PageRequest;
 import software.wings.dl.PageResponse;
 import software.wings.dl.WingsPersistence;
 import software.wings.exception.WingsException;
-import software.wings.exception.WingsException.ReportTarget;
 import software.wings.expression.ExpressionEvaluator;
 import software.wings.scheduler.PruneEntityJob;
 import software.wings.scheduler.QuartzScheduler;
@@ -179,7 +185,6 @@ import software.wings.stencils.DataProvider;
 import software.wings.stencils.Stencil;
 import software.wings.stencils.StencilCategory;
 import software.wings.stencils.StencilPostProcessor;
-import software.wings.utils.Validator;
 import software.wings.yaml.gitSync.YamlGitConfig;
 
 import java.time.Duration;
@@ -290,12 +295,19 @@ public class WorkflowServiceImpl implements WorkflowService, DataProvider {
     WorkflowPhase workflowPhase = null;
     if (filterForWorkflow) {
       workflow = readWorkflow(appId, workflowId);
+      if (workflow == null) {
+        throw new WingsException("Worflow [" + workflowId + "] does not exist.", USER);
+      }
       if (filterForPhase) {
         if (workflow != null) {
           OrchestrationWorkflow orchestrationWorkflow = workflow.getOrchestrationWorkflow();
           if (orchestrationWorkflow instanceof CanaryOrchestrationWorkflow) {
             workflowPhase = ((CanaryOrchestrationWorkflow) orchestrationWorkflow).getWorkflowPhaseIdMap().get(phaseId);
           }
+        }
+        if (workflowPhase == null) {
+          throw new WingsException(
+              "Worflow Phase [" + phaseId + "] not associated with Workflow [" + workflow.getName() + "]", USER);
         }
         String serviceId = workflowPhase.getServiceId();
         if (serviceId != null) {
@@ -364,7 +376,7 @@ public class WorkflowServiceImpl implements WorkflowService, DataProvider {
     Map<StateTypeScope, List<StateTypeDescriptor>> mapByScope = new HashMap<>();
     for (StateTypeDescriptor sd : stencils) {
       if (mapByType.get(sd.getType()) != null) {
-        throw new WingsException("Duplicate implementation for the stencil: " + sd.getType());
+        throw new WingsException("Duplicate implementation for the stencil: " + sd.getType(), USER);
       }
       mapByType.put(sd.getType(), sd);
       sd.getScopes().forEach(scope -> mapByScope.computeIfAbsent(scope, k -> new ArrayList<>()).add(sd));
@@ -1043,17 +1055,17 @@ public class WorkflowServiceImpl implements WorkflowService, DataProvider {
         }
       }
       DeploymentType deploymentType = workflowPhase.getDeploymentType();
-      if (deploymentType.equals(DeploymentType.SSH)) {
+      if (SSH.equals(deploymentType)) {
         expression = expression + "_SSH";
-      } else if (deploymentType.equals(DeploymentType.AWS_CODEDEPLOY)) {
+      } else if (AWS_CODEDEPLOY.equals(deploymentType)) {
         expression = expression + "_AWS_CodeDeploy";
-      } else if (deploymentType.equals(DeploymentType.ECS)) {
+      } else if (ECS.equals(deploymentType)) {
         expression = expression + "_ECS";
-      } else if (deploymentType.equals(DeploymentType.KUBERNETES)) {
+      } else if (KUBERNETES.equals(deploymentType)) {
         expression = expression + "_Kubernetes";
-      } else if (deploymentType.equals(DeploymentType.AWS_LAMBDA)) {
+      } else if (AWS_LAMBDA.equals(deploymentType)) {
         expression = expression + "_AWS_Lambda";
-      } else if (deploymentType.equals(DeploymentType.AMI)) {
+      } else if (AMI.equals(deploymentType)) {
         expression = expression + "_AMI";
       }
       if (i != 1) {
@@ -1188,14 +1200,14 @@ public class WorkflowServiceImpl implements WorkflowService, DataProvider {
     // Infra not present
     envExpression.ifPresent(templateExpression -> {
       if (!infraExpression.isPresent()) {
-        throw new WingsException(INVALID_REQUEST)
+        throw new WingsException(INVALID_REQUEST, USER)
             .addParam("message", "Service Infrastructure cannot be de-templatized because Environment is templatized");
       }
     });
     // Infra not present
     serviceExpression.ifPresent(templateExpression -> {
       if (!infraExpression.isPresent()) {
-        throw new WingsException(INVALID_REQUEST)
+        throw new WingsException(INVALID_REQUEST, USER)
             .addParam("message", "Service Infrastructure cannot be de-templatized because Service is templatized");
       }
     });
@@ -1302,12 +1314,12 @@ public class WorkflowServiceImpl implements WorkflowService, DataProvider {
       List<String> pipelineNames = pipelines.stream().map(Pipeline::getName).collect(Collectors.toList());
       String message = String.format("Workflow is referenced by %s pipeline%s [%s].", pipelines.size(),
           pipelines.size() == 1 ? "" : "s", Joiner.on(", ").join(pipelineNames));
-      throw new WingsException(INVALID_REQUEST, ReportTarget.USER).addParam("message", message);
+      throw new WingsException(INVALID_REQUEST, USER).addParam("message", message);
     }
 
     if (workflowExecutionService.workflowExecutionsRunning(
             workflow.getWorkflowType(), workflow.getAppId(), workflow.getUuid())) {
-      throw new WingsException(WORKFLOW_EXECUTION_IN_PROGRESS, ReportTarget.USER)
+      throw new WingsException(WORKFLOW_EXECUTION_IN_PROGRESS, USER)
           .addParam("message", String.format("Workflow: [%s] couldn't be deleted", workflow.getName()));
     }
 
@@ -1317,7 +1329,7 @@ public class WorkflowServiceImpl implements WorkflowService, DataProvider {
     }
     List<String> triggerNames = triggers.stream().map(Trigger::getName).collect(Collectors.toList());
 
-    throw new WingsException(INVALID_REQUEST, ReportTarget.USER)
+    throw new WingsException(INVALID_REQUEST, USER)
         .addParam("message",
             String.format(
                 "Workflow associated as a trigger action to triggers [%s]", Joiner.on(", ").join(triggerNames)));
@@ -1505,8 +1517,7 @@ public class WorkflowServiceImpl implements WorkflowService, DataProvider {
     workflowPhase.setDaemonSet(isDaemonSet(appId, workflowPhase.getServiceId()));
     attachWorkflowPhase(workflow, workflowPhase);
 
-    if (workflowPhase.getDeploymentType() == DeploymentType.SSH
-        && orchestrationWorkflow.getOrchestrationWorkflowType() != BUILD) {
+    if (workflowPhase.getDeploymentType() == SSH && orchestrationWorkflow.getOrchestrationWorkflowType() != BUILD) {
       ensureArtifactCheckInPreDeployment((CanaryOrchestrationWorkflow) workflow.getOrchestrationWorkflow());
     }
 
@@ -1646,9 +1657,9 @@ public class WorkflowServiceImpl implements WorkflowService, DataProvider {
   @Override
   public boolean workflowHasSshInfraMapping(String appId, String workflowId) {
     Workflow workflow = readWorkflow(appId, workflowId);
-    Validator.notNullCheck("Workflow", workflow);
+    notNullCheck("Workflow", workflow);
     OrchestrationWorkflow orchestrationWorkflow = workflow.getOrchestrationWorkflow();
-    Validator.notNullCheck("OrchestrationWorkflow", orchestrationWorkflow);
+    notNullCheck("OrchestrationWorkflow", orchestrationWorkflow);
     List<String> infraMappingIds = new ArrayList<>();
     if (orchestrationWorkflow instanceof CanaryOrchestrationWorkflow) {
       CanaryOrchestrationWorkflow canaryOrchestrationWorkflow = (CanaryOrchestrationWorkflow) orchestrationWorkflow;
@@ -1755,19 +1766,19 @@ public class WorkflowServiceImpl implements WorkflowService, DataProvider {
     if (!orchestrationWorkflow.getOrchestrationWorkflowType().equals(BUILD)) {
       Service service = serviceResourceService.get(appId, workflowPhase.getServiceId(), false);
       if (service == null) {
-        throw new WingsException(INVALID_REQUEST)
+        throw new WingsException(INVALID_REQUEST, USER)
             .addParam("message", "Service [" + workflowPhase.getServiceId() + "] does not exist");
       }
       InfrastructureMapping infrastructureMapping = null;
       if (!workflowPhase.checkInfraTemplatized()) {
         if (infraMappingId == null) {
-          throw new WingsException(INVALID_REQUEST)
+          throw new WingsException(INVALID_REQUEST, USER)
               .addParam("message", String.format(WORKFLOW_INFRAMAPPING_VALIDATION_MESSAGE, workflowPhase.getName()));
         }
         infrastructureMapping = infrastructureMappingService.get(appId, infraMappingId);
-        Validator.notNullCheck("InfraMapping", infrastructureMapping);
+        notNullCheck("InfraMapping", infrastructureMapping);
         if (!service.getUuid().equals(infrastructureMapping.getServiceId())) {
-          throw new WingsException(INVALID_REQUEST)
+          throw new WingsException(INVALID_REQUEST, USER)
               .addParam("message",
                   "Service Infrastructure [" + infrastructureMapping.getName() + "] not mapped to Service ["
                       + service.getName() + "]");
@@ -1830,7 +1841,7 @@ public class WorkflowServiceImpl implements WorkflowService, DataProvider {
     }
 
     if (!found) {
-      throw new WingsException(INVALID_REQUEST).addParam("message", "No matching Workflow Phase");
+      throw new WingsException(INVALID_REQUEST, USER).addParam("message", "No matching Workflow Phase");
     }
 
     orchestrationWorkflow =
@@ -1959,7 +1970,7 @@ public class WorkflowServiceImpl implements WorkflowService, DataProvider {
    */
   private void validateServiceMapping(String appId, String targetAppId, Map<String, String> serviceMapping) {
     if (serviceMapping == null) {
-      throw new WingsException(INVALID_REQUEST)
+      throw new WingsException(INVALID_REQUEST, USER)
           .addParam("message", "At least one service mapping required to clone across applications");
     }
     Set<String> serviceIds = serviceMapping.keySet();
@@ -1972,7 +1983,7 @@ public class WorkflowServiceImpl implements WorkflowService, DataProvider {
         notNullCheck("targetService", newService);
         if (oldService.getArtifactType() != null
             && !oldService.getArtifactType().equals(newService.getArtifactType())) {
-          throw new WingsException(INVALID_REQUEST)
+          throw new WingsException(INVALID_REQUEST, USER)
               .addParam("message",
                   "Target service  [" + oldService.getName() + " ] is not compatible with service ["
                       + newService.getName() + "]");
@@ -2098,10 +2109,7 @@ public class WorkflowServiceImpl implements WorkflowService, DataProvider {
       return requiredEntityTypes;
     }
 
-    if (Arrays
-            .asList(DeploymentType.ECS, DeploymentType.KUBERNETES, DeploymentType.AWS_CODEDEPLOY,
-                DeploymentType.AWS_LAMBDA, DeploymentType.AMI)
-            .contains(workflowPhase.getDeploymentType())) {
+    if (Arrays.asList(ECS, KUBERNETES, AWS_CODEDEPLOY, AWS_LAMBDA, AMI).contains(workflowPhase.getDeploymentType())) {
       requiredEntityTypes.add(ARTIFACT);
       return requiredEntityTypes;
     }
@@ -2142,15 +2150,15 @@ public class WorkflowServiceImpl implements WorkflowService, DataProvider {
   private void generateNewWorkflowPhaseSteps(
       String appId, String envId, WorkflowPhase workflowPhase, boolean serviceRepeat) {
     DeploymentType deploymentType = workflowPhase.getDeploymentType();
-    if (deploymentType == DeploymentType.ECS) {
+    if (deploymentType == ECS) {
       generateNewWorkflowPhaseStepsForECS(appId, workflowPhase, !serviceRepeat);
-    } else if (deploymentType == DeploymentType.KUBERNETES) {
+    } else if (deploymentType == KUBERNETES) {
       generateNewWorkflowPhaseStepsForKubernetes(appId, workflowPhase, !serviceRepeat);
-    } else if (deploymentType == DeploymentType.AWS_CODEDEPLOY) {
+    } else if (deploymentType == AWS_CODEDEPLOY) {
       generateNewWorkflowPhaseStepsForAWSCodeDeploy(appId, workflowPhase);
-    } else if (deploymentType == DeploymentType.AWS_LAMBDA) {
+    } else if (deploymentType == AWS_LAMBDA) {
       generateNewWorkflowPhaseStepsForAWSLambda(appId, envId, workflowPhase);
-    } else if (deploymentType == DeploymentType.AMI) {
+    } else if (deploymentType == AMI) {
       generateNewWorkflowPhaseStepsForAWSAmi(appId, envId, workflowPhase, !serviceRepeat);
     } else {
       generateNewWorkflowPhaseStepsForSSH(appId, workflowPhase);
@@ -2349,7 +2357,7 @@ public class WorkflowServiceImpl implements WorkflowService, DataProvider {
         : AWS_NODE_SELECT;
 
     if (!asList(DC_NODE_SELECT, AWS_NODE_SELECT).contains(stateType)) {
-      throw new WingsException(INVALID_REQUEST).addParam("message", "Unsupported state type: " + stateType);
+      throw new WingsException(INVALID_REQUEST, USER).addParam("message", "Unsupported state type: " + stateType);
     }
 
     Service service = serviceResourceService.get(appId, workflowPhase.getServiceId());
@@ -2411,15 +2419,15 @@ public class WorkflowServiceImpl implements WorkflowService, DataProvider {
   private WorkflowPhase generateRollbackWorkflowPhase(
       String appId, WorkflowPhase workflowPhase, boolean serviceSetupRequired) {
     DeploymentType deploymentType = workflowPhase.getDeploymentType();
-    if (deploymentType == DeploymentType.ECS) {
+    if (deploymentType == ECS) {
       return generateRollbackWorkflowPhaseForEcs(workflowPhase);
-    } else if (deploymentType == DeploymentType.KUBERNETES) {
+    } else if (deploymentType == KUBERNETES) {
       return generateRollbackWorkflowPhaseForKubernetes(workflowPhase, appId, serviceSetupRequired);
-    } else if (deploymentType == DeploymentType.AWS_CODEDEPLOY) {
+    } else if (deploymentType == AWS_CODEDEPLOY) {
       return generateRollbackWorkflowPhaseForAwsCodeDeploy(workflowPhase);
-    } else if (deploymentType == DeploymentType.AWS_LAMBDA) {
+    } else if (deploymentType == AWS_LAMBDA) {
       return generateRollbackWorkflowPhaseForAwsLambda(workflowPhase);
-    } else if (deploymentType == DeploymentType.AMI) {
+    } else if (deploymentType == AMI) {
       return generateRollbackWorkflowPhaseForAwsAmi(workflowPhase);
     } else {
       return generateRollbackWorkflowPhaseForSSH(appId, workflowPhase);
@@ -2701,7 +2709,7 @@ public class WorkflowServiceImpl implements WorkflowService, DataProvider {
   private boolean isDaemonSet(String appId, String serviceId) {
     KubernetesContainerTask containerTask =
         (KubernetesContainerTask) serviceResourceService.getContainerTaskByDeploymentType(
-            appId, serviceId, DeploymentType.KUBERNETES.name());
+            appId, serviceId, KUBERNETES.name());
     return containerTask != null && containerTask.checkDaemonSet();
   }
 

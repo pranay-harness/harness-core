@@ -121,7 +121,7 @@ public class InstanceSyncJob implements Job {
     } catch (WingsException exception) {
       exception.logProcessedMessages(logger);
     } catch (Exception ex) {
-      logger.error("Error while syncing instances for app: {}", appId, ex);
+      logger.warn("Error while syncing instances for app: {}", appId, ex);
     }
   }
 }
