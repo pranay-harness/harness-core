@@ -2,6 +2,7 @@ package software.wings.common;
 
 import static io.harness.idempotence.IdempotentRegistry.State.DONE;
 import static io.harness.idempotence.IdempotentRegistry.State.NEW;
+import static io.harness.idempotence.IdempotentRegistry.State.RUNNING;
 import static java.util.Arrays.asList;
 import static software.wings.beans.Idempotent.SUCCEEDED;
 import static software.wings.beans.Idempotent.TENTATIVE;
@@ -63,8 +64,8 @@ public class MongoIdempotentRegistry<T> implements IdempotentRegistry<T> {
       throw new UnableToRegisterIdempotentOperationException(exception);
     }
 
-    // If there was already record, but it was not successful, it is still tentative
-    return Response.builder().state(NEW).build();
+    // If there was already record, but it was not successful, it is still running
+    return Response.builder().state(RUNNING).build();
   }
 
   @Override
