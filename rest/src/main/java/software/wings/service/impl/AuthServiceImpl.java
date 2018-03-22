@@ -12,6 +12,7 @@ import static software.wings.beans.ErrorCode.INVALID_REQUEST;
 import static software.wings.beans.ErrorCode.INVALID_TOKEN;
 import static software.wings.beans.ErrorCode.USER_DOES_NOT_EXIST;
 import static software.wings.exception.WingsException.ALERTING;
+import static software.wings.exception.WingsException.HARMLESS;
 
 import com.google.inject.Inject;
 import com.google.inject.Singleton;
@@ -119,9 +120,9 @@ public class AuthServiceImpl implements AuthService {
     AuthToken authToken = dbCache.get(AuthToken.class, tokenString);
 
     if (authToken == null) {
-      throw new WingsException(INVALID_TOKEN, ALERTING);
+      throw new WingsException(INVALID_TOKEN, HARMLESS);
     } else if (authToken.getExpireAt() <= System.currentTimeMillis()) {
-      throw new WingsException(EXPIRED_TOKEN, ALERTING);
+      throw new WingsException(EXPIRED_TOKEN, HARMLESS);
     }
     User user = getUserFromCacheOrDB(authToken);
     if (user == null) {
