@@ -296,32 +296,17 @@ public class YamlDirectoryServiceImpl implements YamlDirectoryService {
     completionService.submit(
         () -> doApplications(accountId, directoryPath.clone(), applyPermissions, appPermissionMapFinal));
 
-    AccountPermissionSummary accountPermissionSummary = null;
-    if (userPermissionInfo != null) {
-      accountPermissionSummary = userPermissionInfo.getAccountPermissionSummary();
-    }
+    completionService.submit(() -> doCloudProviders(accountId, directoryPath.clone()));
 
-    AccountPermissionSummary accountPermissionSummaryFinal = accountPermissionSummary;
+    completionService.submit(() -> doArtifactServers(accountId, directoryPath.clone()));
 
-    completionService.submit(
-        () -> doCloudProviders(accountId, directoryPath.clone(), applyPermissions, accountPermissionSummaryFinal));
+    completionService.submit(() -> doCollaborationProviders(accountId, directoryPath.clone()));
 
-    completionService.submit(
-        () -> doArtifactServers(accountId, directoryPath.clone(), applyPermissions, accountPermissionSummaryFinal));
+    completionService.submit(() -> doLoadBalancers(accountId, directoryPath.clone()));
 
-    completionService.submit(()
-                                 -> doCollaborationProviders(accountId, directoryPath.clone(), applyPermissions,
-                                     accountPermissionSummaryFinal));
+    completionService.submit(() -> doVerificationProviders(accountId, directoryPath.clone()));
 
-    completionService.submit(
-        () -> doLoadBalancers(accountId, directoryPath.clone(), applyPermissions, accountPermissionSummaryFinal));
-
-    completionService.submit(()
-                                 -> doVerificationProviders(accountId, directoryPath.clone(), applyPermissions,
-                                     accountPermissionSummaryFinal));
-
-    completionService.submit(
-        () -> doNotificationGroups(accountId, directoryPath.clone(), applyPermissions, accountPermissionSummaryFinal));
+    completionService.submit(() -> doNotificationGroups(accountId, directoryPath.clone()));
 
     // collect results to this map so we can rebuild the correct order
     Map<String, FolderNode> map = new HashMap<>();
@@ -793,15 +778,10 @@ public class YamlDirectoryServiceImpl implements YamlDirectoryService {
     return true;
   }
 
-  private FolderNode doCloudProviders(String accountId, DirectoryPath directoryPath, boolean applyPermissions,
-      AccountPermissionSummary accountPermissionSummary) {
+  private FolderNode doCloudProviders(String accountId, DirectoryPath directoryPath) {
     // create cloud providers (and physical data centers)
     FolderNode cloudProvidersFolder = new FolderNode(accountId, CLOUD_PROVIDERS_FOLDER, SettingAttribute.class,
         directoryPath.add(YamlConstants.CLOUD_PROVIDERS_FOLDER), yamlGitSyncService);
-
-    if (!shouldLoadSettingAttributes(applyPermissions, accountPermissionSummary)) {
-      return cloudProvidersFolder;
-    }
 
     // TODO - should these use AwsConfig GcpConfig, etc. instead?
     doCloudProviderType(accountId, cloudProvidersFolder, SettingVariableTypes.AWS, directoryPath.clone());
@@ -835,15 +815,10 @@ public class YamlDirectoryServiceImpl implements YamlDirectoryService {
     return settingAttribute.getName() + YAML_EXTENSION;
   }
 
-  private FolderNode doArtifactServers(String accountId, DirectoryPath directoryPath, boolean applyPermissions,
-      AccountPermissionSummary accountPermissionSummary) {
+  private FolderNode doArtifactServers(String accountId, DirectoryPath directoryPath) {
     // create artifact servers
     FolderNode artifactServersFolder = new FolderNode(accountId, ARTIFACT_SOURCES_FOLDER, SettingAttribute.class,
         directoryPath.add(YamlConstants.ARTIFACT_SERVERS_FOLDER), yamlGitSyncService);
-
-    if (!shouldLoadSettingAttributes(applyPermissions, accountPermissionSummary)) {
-      return artifactServersFolder;
-    }
 
     doArtifactServerType(accountId, artifactServersFolder, SettingVariableTypes.JENKINS, directoryPath.clone());
     doArtifactServerType(accountId, artifactServersFolder, SettingVariableTypes.BAMBOO, directoryPath.clone());
@@ -870,15 +845,10 @@ public class YamlDirectoryServiceImpl implements YamlDirectoryService {
     }
   }
 
-  private FolderNode doCollaborationProviders(String accountId, DirectoryPath directoryPath, boolean applyPermissions,
-      AccountPermissionSummary accountPermissionSummary) {
+  private FolderNode doCollaborationProviders(String accountId, DirectoryPath directoryPath) {
     // create collaboration providers
     FolderNode collaborationProvidersFolder = new FolderNode(accountId, COLLABORATION_PROVIDERS_FOLDER,
         SettingAttribute.class, directoryPath.add(YamlConstants.COLLABORATION_PROVIDERS_FOLDER), yamlGitSyncService);
-
-    if (!shouldLoadSettingAttributes(applyPermissions, accountPermissionSummary)) {
-      return collaborationProvidersFolder;
-    }
 
     doCollaborationProviderType(
         accountId, collaborationProvidersFolder, SettingVariableTypes.SMTP, directoryPath.clone());
@@ -904,15 +874,10 @@ public class YamlDirectoryServiceImpl implements YamlDirectoryService {
     }
   }
 
-  private FolderNode doLoadBalancers(String accountId, DirectoryPath directoryPath, boolean applyPermissions,
-      AccountPermissionSummary accountPermissionSummary) {
+  private FolderNode doLoadBalancers(String accountId, DirectoryPath directoryPath) {
     // create load balancers
     FolderNode loadBalancersFolder = new FolderNode(accountId, LOAD_BALANCERS_FOLDER, SettingAttribute.class,
         directoryPath.add(YamlConstants.LOAD_BALANCERS_FOLDER), yamlGitSyncService);
-
-    if (!shouldLoadSettingAttributes(applyPermissions, accountPermissionSummary)) {
-      return loadBalancersFolder;
-    }
 
     doLoadBalancerType(accountId, loadBalancersFolder, SettingVariableTypes.ELB, directoryPath.clone());
 
@@ -935,15 +900,10 @@ public class YamlDirectoryServiceImpl implements YamlDirectoryService {
     }
   }
 
-  private FolderNode doNotificationGroups(String accountId, DirectoryPath directoryPath, boolean applyPermissions,
-      AccountPermissionSummary accountPermissionSummary) {
+  private FolderNode doNotificationGroups(String accountId, DirectoryPath directoryPath) {
     // create notification groups
     FolderNode notificationGroupsFolder = new FolderNode(accountId, NOTIFICATION_GROUPS_FOLDER, NotificationGroup.class,
         directoryPath.add(NOTIFICATION_GROUPS_FOLDER), yamlGitSyncService);
-
-    if (!shouldLoadSettingAttributes(applyPermissions, accountPermissionSummary)) {
-      return notificationGroupsFolder;
-    }
 
     List<NotificationGroup> notificationGroups = notificationSetupService.listNotificationGroups(accountId);
 
@@ -961,15 +921,10 @@ public class YamlDirectoryServiceImpl implements YamlDirectoryService {
     return notificationGroupsFolder;
   }
 
-  private FolderNode doVerificationProviders(String accountId, DirectoryPath directoryPath, boolean applyPermissions,
-      AccountPermissionSummary accountPermissionSummary) {
+  private FolderNode doVerificationProviders(String accountId, DirectoryPath directoryPath) {
     // create verification providers
     FolderNode verificationProvidersFolder = new FolderNode(accountId, VERIFICATION_PROVIDERS_FOLDER,
         SettingAttribute.class, directoryPath.add(YamlConstants.VERIFICATION_PROVIDERS_FOLDER), yamlGitSyncService);
-
-    if (!shouldLoadSettingAttributes(applyPermissions, accountPermissionSummary)) {
-      return verificationProvidersFolder;
-    }
 
     doVerificationProviderType(
         accountId, verificationProvidersFolder, SettingVariableTypes.JENKINS, directoryPath.clone());
