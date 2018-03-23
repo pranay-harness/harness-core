@@ -2,6 +2,8 @@ package software.wings.waitnotify;
 
 import static java.util.Arrays.asList;
 
+import com.fasterxml.jackson.annotation.JsonIgnore;
+import com.github.reinert.jjschema.SchemaIgnore;
 import org.mongodb.morphia.annotations.Entity;
 import org.mongodb.morphia.annotations.IndexOptions;
 import org.mongodb.morphia.annotations.Indexed;
@@ -28,6 +30,8 @@ public class WaitInstance extends Base {
 
   private ExecutionStatus status = ExecutionStatus.NEW;
 
+  @SchemaIgnore
+  @JsonIgnore
   @Indexed(options = @IndexOptions(expireAfterSeconds = 0))
   private Date validUntil = Date.from(OffsetDateTime.now().plusMonths(1).toInstant());
 
