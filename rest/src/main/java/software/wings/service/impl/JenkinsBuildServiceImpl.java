@@ -2,7 +2,11 @@ package software.wings.service.impl;
 
 import static io.harness.network.Http.connectableHttpUrl;
 import static io.harness.network.Http.validUrl;
+import static software.wings.beans.ErrorCode.INVALID_ARTIFACT_SERVER;
+import static software.wings.beans.ErrorCode.INVALID_REQUEST;
 import static software.wings.exception.WingsException.ALERTING;
+import static software.wings.exception.WingsException.ReportTarget.HARNESS_ENGINEER;
+import static software.wings.exception.WingsException.ReportTarget.USER;
 import static software.wings.helpers.ext.jenkins.JobDetails.JobParameter;
 import static software.wings.helpers.ext.jenkins.model.ParamPropertyType.BooleanParameterDefinition;
 import static software.wings.utils.Validator.equalCheck;
@@ -15,7 +19,6 @@ import com.offbytwo.jenkins.model.Artifact;
 import com.offbytwo.jenkins.model.JobWithDetails;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-import software.wings.beans.ErrorCode;
 import software.wings.beans.JenkinsConfig;
 import software.wings.beans.artifact.ArtifactStreamAttributes;
 import software.wings.beans.artifact.ArtifactStreamType;
@@ -69,36 +72,41 @@ public class JenkinsBuildServiceImpl implements JenkinsBuildService {
 
   private List<BuildDetails> getBuildDetails(ArtifactStreamAttributes artifactStreamAttributes, String appId,
       JenkinsConfig jenkinsConfig, List<EncryptedDataDetail> encryptionDetails) {
-    equalCheck(artifactStreamAttributes.getArtifactStreamType(), ArtifactStreamType.JENKINS.name());
-
-    encryptionService.decrypt(jenkinsConfig, encryptionDetails);
-    Jenkins jenkins =
-        jenkinsFactory.create(jenkinsConfig.getJenkinsUrl(), jenkinsConfig.getUsername(), jenkinsConfig.getPassword());
     try {
+      equalCheck(artifactStreamAttributes.getArtifactStreamType(), ArtifactStreamType.JENKINS.name());
+
+      encryptionService.decrypt(jenkinsConfig, encryptionDetails);
+      Jenkins jenkins = getJenkins(jenkinsConfig);
       return jenkins.getBuildsForJob(artifactStreamAttributes.getJobName(), 50);
+    } catch (WingsException e) {
+      throw e;
     } catch (IOException ex) {
-      throw new WingsException(ErrorCode.UNKNOWN_ERROR, ex)
-          .addParam("message", "Error in fetching builds from jenkins server");
+      throw new WingsException(INVALID_REQUEST, ALERTING)
+          .addParam("message", "Failed to fetch build details jenkins server. Reason:" + ex.getMessage());
     }
+  }
+
+  private Jenkins getJenkins(JenkinsConfig jenkinsConfig) {
+    return jenkinsFactory.create(
+        jenkinsConfig.getJenkinsUrl(), jenkinsConfig.getUsername(), jenkinsConfig.getPassword());
   }
 
   @Override
   public List<JobDetails> getJobs(
       JenkinsConfig jenkinsConfig, List<EncryptedDataDetail> encryptionDetails, Optional<String> parentJobName) {
-    encryptionService.decrypt(jenkinsConfig, encryptionDetails);
-    Jenkins jenkins =
-        jenkinsFactory.create(jenkinsConfig.getJenkinsUrl(), jenkinsConfig.getUsername(), jenkinsConfig.getPassword());
     try {
+      encryptionService.decrypt(jenkinsConfig, encryptionDetails);
+      Jenkins jenkins = getJenkins(jenkinsConfig);
       // Just in case, some one passes null instead of Optional.empty()
       if (parentJobName == null) {
         return jenkins.getJobs(null);
       }
       return jenkins.getJobs(parentJobName.orElse(null));
+    } catch (WingsException e) {
+      throw e;
     } catch (IOException e) {
-      final WingsException wingsException = new WingsException(ErrorCode.JENKINS_ERROR, e);
-      wingsException.addParam("message", "Error in fetching jobs from jenkins server");
-      wingsException.addParam("jenkinsResponse", e.getMessage());
-      throw wingsException;
+      throw new WingsException(INVALID_ARTIFACT_SERVER, USER)
+          .addParam("message", "Failed to fetch Jobs. Reason:" + e.getMessage());
     }
   }
 
@@ -106,9 +114,7 @@ public class JenkinsBuildServiceImpl implements JenkinsBuildService {
   public List<String> getArtifactPaths(
       String jobName, String groupId, JenkinsConfig jenkinsConfig, List<EncryptedDataDetail> encryptionDetails) {
     encryptionService.decrypt(jenkinsConfig, encryptionDetails);
-    Jenkins jenkins =
-        jenkinsFactory.create(jenkinsConfig.getJenkinsUrl(), jenkinsConfig.getUsername(), jenkinsConfig.getPassword());
-    List<String> artifactPaths = new ArrayList<>();
+    Jenkins jenkins = getJenkins(jenkinsConfig);
     try {
       JobWithDetails job = jenkins.getJob(jobName);
       return Lists.newArrayList(job.getLastSuccessfulBuild()
@@ -118,10 +124,12 @@ public class JenkinsBuildServiceImpl implements JenkinsBuildService {
                                     .map(Artifact::getRelativePath)
                                     .distinct()
                                     .collect(Collectors.toList()));
+    } catch (WingsException e) {
+      throw e;
     } catch (Exception ex) {
-      logger.error("Exception in generating artifact path suggestions for " + jobName, ex);
+      throw new WingsException(INVALID_ARTIFACT_SERVER, USER)
+          .addParam("message", "Error in artifact paths from jenkins server. Reason:" + ex.getMessage());
     }
-    return artifactPaths;
   }
 
   @Override
@@ -130,13 +138,14 @@ public class JenkinsBuildServiceImpl implements JenkinsBuildService {
     equalCheck(artifactStreamAttributes.getArtifactStreamType(), ArtifactStreamType.JENKINS.name());
 
     encryptionService.decrypt(jenkinsConfig, encryptionDetails);
-    Jenkins jenkins =
-        jenkinsFactory.create(jenkinsConfig.getJenkinsUrl(), jenkinsConfig.getUsername(), jenkinsConfig.getPassword());
+    Jenkins jenkins = getJenkins(jenkinsConfig);
     try {
       return jenkins.getLastSuccessfulBuildForJob(artifactStreamAttributes.getJobName());
+    } catch (WingsException e) {
+      throw e;
     } catch (IOException ex) {
-      throw new WingsException(ErrorCode.UNKNOWN_ERROR, ex)
-          .addParam("message", "Error in fetching build from jenkins server");
+      throw new WingsException(INVALID_ARTIFACT_SERVER, ALERTING)
+          .addParam("message", "Error in fetching build from jenkins server. Reason:" + ex.getMessage());
     }
   }
 
@@ -159,52 +168,57 @@ public class JenkinsBuildServiceImpl implements JenkinsBuildService {
   @Override
   public List<String> getGroupIds(
       String jobName, JenkinsConfig jenkinsConfig, List<EncryptedDataDetail> encryptionDetails) {
-    throw new WingsException(ErrorCode.INVALID_REQUEST)
+    throw new WingsException(INVALID_REQUEST, HARNESS_ENGINEER)
         .addParam("message", "Operation not supported by Jenkins Artifact Stream");
   }
 
   @Override
   public boolean validateArtifactServer(JenkinsConfig jenkinsConfig) {
     if (!validUrl(jenkinsConfig.getJenkinsUrl())) {
-      throw new WingsException(ErrorCode.INVALID_ARTIFACT_SERVER, ALERTING)
+      throw new WingsException(INVALID_ARTIFACT_SERVER, ALERTING)
           .addParam("message", "Jenkins URL must be a valid URL");
     }
 
     if (!connectableHttpUrl(jenkinsConfig.getJenkinsUrl())) {
-      throw new WingsException(ErrorCode.INVALID_ARTIFACT_SERVER, ALERTING)
+      throw new WingsException(INVALID_ARTIFACT_SERVER, ALERTING)
           .addParam("message", "Could not reach Jenkins Server at : " + jenkinsConfig.getJenkinsUrl());
     }
     encryptionService.decrypt(jenkinsConfig, Collections.emptyList());
-    Jenkins jenkins =
-        jenkinsFactory.create(jenkinsConfig.getJenkinsUrl(), jenkinsConfig.getUsername(), jenkinsConfig.getPassword());
+    Jenkins jenkins = getJenkins(jenkinsConfig);
 
     return jenkins.isRunning();
   }
 
   @Override
   public JobDetails getJob(String jobName, JenkinsConfig jenkinsConfig, List<EncryptedDataDetail> encryptionDetails) {
-    logger.info("Retrieving Job with details for Job: {}", jobName);
-    encryptionService.decrypt(jenkinsConfig, encryptionDetails);
-    Jenkins jenkins =
-        jenkinsFactory.create(jenkinsConfig.getJenkinsUrl(), jenkinsConfig.getUsername(), jenkinsConfig.getPassword());
-    JobWithDetails jobWithDetails = jenkins.getJob(jobName);
-    List<JobParameter> parameters = new ArrayList<>();
-    if (jobWithDetails != null) {
-      JobWithExtendedDetails jobWithExtendedDetails = (JobWithExtendedDetails) jobWithDetails;
-      List<JobProperty> properties = jobWithExtendedDetails.getProperties();
-      if (properties != null) {
-        properties.stream()
-            .map(JobProperty::getParameterDefinitions)
-            .filter(Objects::nonNull)
-            .forEach((List<ParametersDefinitionProperty> pds) -> {
-              logger.info("Job Properties definitions {}", pds.toArray());
-              pds.forEach((ParametersDefinitionProperty pdProperty) -> parameters.add(getJobParameter(pdProperty)));
-            });
+    try {
+      logger.info("Retrieving Job with details for Job: {}", jobName);
+      encryptionService.decrypt(jenkinsConfig, encryptionDetails);
+      Jenkins jenkins = getJenkins(jenkinsConfig);
+      JobWithDetails jobWithDetails = jenkins.getJob(jobName);
+      List<JobParameter> parameters = new ArrayList<>();
+      if (jobWithDetails != null) {
+        JobWithExtendedDetails jobWithExtendedDetails = (JobWithExtendedDetails) jobWithDetails;
+        List<JobProperty> properties = jobWithExtendedDetails.getProperties();
+        if (properties != null) {
+          properties.stream()
+              .map(JobProperty::getParameterDefinitions)
+              .filter(Objects::nonNull)
+              .forEach((List<ParametersDefinitionProperty> pds) -> {
+                logger.info("Job Properties definitions {}", pds.toArray());
+                pds.forEach((ParametersDefinitionProperty pdProperty) -> parameters.add(getJobParameter(pdProperty)));
+              });
+        }
+        logger.info("Retrieving Job with details for Job: {} success", jobName);
+        return new JobDetails(jobWithDetails.getName(), jobWithDetails.getUrl(), parameters);
       }
-      logger.info("Retrieving Job with details for Job: {} success", jobName);
-      return new JobDetails(jobWithDetails.getName(), jobWithDetails.getUrl(), parameters);
+      return null;
+    } catch (WingsException e) {
+      throw e;
+    } catch (Exception ex) {
+      throw new WingsException(INVALID_ARTIFACT_SERVER, USER)
+          .addParam("message", "Error in fetching builds from jenkins server. Reason:" + ex.getMessage());
     }
-    return null;
   }
 
   private JobParameter getJobParameter(ParametersDefinitionProperty pdProperty) {

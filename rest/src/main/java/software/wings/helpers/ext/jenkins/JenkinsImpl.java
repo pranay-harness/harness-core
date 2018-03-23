@@ -162,20 +162,23 @@ public class JenkinsImpl implements Jenkins {
         }
       }, 120L, TimeUnit.SECONDS, true);
     } catch (UncheckedTimeoutException e) {
-      logger.warn("Jenkins server request did not succeed within 25 secs even after 5 retries", e);
-      WingsException wingsException = new WingsException(ErrorCode.JENKINS_ERROR);
-      wingsException.addParam("message", "Failed to get job details for " + jobname);
-      wingsException.addParam("jenkinsResponse", "Server Error");
+      logger.warn("Jenkins server request did not succeed within 120 secs even after 5 retries", e);
+      WingsException wingsException = getWingsException(jobname);
       throw wingsException;
     } catch (WingsException e) {
       throw e;
     } catch (Exception e) {
       logger.warn("Jenkins server request failed", e);
-      WingsException wingsException = new WingsException(ErrorCode.JENKINS_ERROR, e);
-      wingsException.addParam("message", "Failed to get job details for " + jobname);
-      wingsException.addParam("jenkinsResponse", "Server Error");
+      WingsException wingsException = getWingsException(jobname);
       throw wingsException;
     }
+  }
+
+  private WingsException getWingsException(String jobname) {
+    WingsException wingsException = new WingsException(ErrorCode.JENKINS_ERROR, USER);
+    wingsException.addParam("message", "Failed to get job details for " + jobname);
+    wingsException.addParam("jenkinsResponse", "Server Error");
+    return wingsException;
   }
 
   private String constructParentJobUrl(String[] jobNameSplit) {
