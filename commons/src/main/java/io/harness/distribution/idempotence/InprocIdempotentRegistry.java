@@ -1,14 +1,13 @@
-package io.harness.idempotence;
+package io.harness.distribution.idempotence;
 
+import static io.harness.distribution.idempotence.IdempotentRegistry.State.DONE;
+import static io.harness.distribution.idempotence.IdempotentRegistry.State.NEW;
+import static io.harness.distribution.idempotence.IdempotentRegistry.State.RUNNING;
 import static io.harness.govern.Switch.unhandled;
-import static io.harness.idempotence.IdempotentRegistry.State.DONE;
-import static io.harness.idempotence.IdempotentRegistry.State.NEW;
-import static io.harness.idempotence.IdempotentRegistry.State.RUNNING;
 import static java.util.Collections.synchronizedMap;
 
-import io.harness.exception.UnableToRegisterIdempotentOperationException;
+import io.harness.distribution.idempotence.Record.InternalState;
 import io.harness.exception.UnexpectedException;
-import io.harness.idempotence.Record.InternalState;
 import lombok.Builder;
 import lombok.Value;
 import org.apache.commons.collections.map.LRUMap;

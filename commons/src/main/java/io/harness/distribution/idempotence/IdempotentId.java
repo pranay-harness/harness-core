@@ -1,4 +1,4 @@
-package io.harness.idempotence;
+package io.harness.distribution.idempotence;
 
 import lombok.AllArgsConstructor;
 import lombok.Value;

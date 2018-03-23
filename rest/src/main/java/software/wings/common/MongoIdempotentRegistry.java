@@ -1,8 +1,8 @@
 package software.wings.common;
 
-import static io.harness.idempotence.IdempotentRegistry.State.DONE;
-import static io.harness.idempotence.IdempotentRegistry.State.NEW;
-import static io.harness.idempotence.IdempotentRegistry.State.RUNNING;
+import static io.harness.distribution.idempotence.IdempotentRegistry.State.DONE;
+import static io.harness.distribution.idempotence.IdempotentRegistry.State.NEW;
+import static io.harness.distribution.idempotence.IdempotentRegistry.State.RUNNING;
 import static java.util.Arrays.asList;
 import static software.wings.beans.Idempotent.SUCCEEDED;
 import static software.wings.beans.Idempotent.TENTATIVE;
@@ -11,9 +11,9 @@ import com.google.inject.Inject;
 
 import com.mongodb.MongoCommandException;
 import com.mongodb.WriteConcern;
-import io.harness.exception.UnableToRegisterIdempotentOperationException;
-import io.harness.idempotence.IdempotentId;
-import io.harness.idempotence.IdempotentRegistry;
+import io.harness.distribution.idempotence.IdempotentId;
+import io.harness.distribution.idempotence.IdempotentRegistry;
+import io.harness.distribution.idempotence.UnableToRegisterIdempotentOperationException;
 import org.mongodb.morphia.FindAndModifyOptions;
 import org.mongodb.morphia.query.Query;
 import org.mongodb.morphia.query.UpdateOperations;

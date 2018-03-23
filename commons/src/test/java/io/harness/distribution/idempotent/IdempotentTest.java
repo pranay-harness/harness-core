@@ -1,4 +1,4 @@
-package io.harness.idempotent;
+package io.harness.distribution.idempotent;
 
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertNotNull;
@@ -8,12 +8,12 @@ import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 
-import io.harness.exception.UnableToRegisterIdempotentOperationException;
-import io.harness.idempotence.IdempotentId;
-import io.harness.idempotence.IdempotentLock;
-import io.harness.idempotence.IdempotentRegistry;
-import io.harness.idempotence.IdempotentRegistry.State;
-import io.harness.idempotence.InprocIdempotentRegistry;
+import io.harness.distribution.idempotence.IdempotentId;
+import io.harness.distribution.idempotence.IdempotentLock;
+import io.harness.distribution.idempotence.IdempotentRegistry;
+import io.harness.distribution.idempotence.IdempotentRegistry.State;
+import io.harness.distribution.idempotence.InprocIdempotentRegistry;
+import io.harness.distribution.idempotence.UnableToRegisterIdempotentOperationException;
 import io.harness.rule.RepeatRule.Repeat;
 import io.harness.threading.Concurrent;
 import org.junit.Test;

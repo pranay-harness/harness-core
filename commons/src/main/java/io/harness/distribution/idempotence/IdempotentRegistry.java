@@ -1,6 +1,5 @@
-package io.harness.idempotence;
+package io.harness.distribution.idempotence;
 
-import io.harness.exception.UnableToRegisterIdempotentOperationException;
 import lombok.Builder;
 import lombok.Value;
 
