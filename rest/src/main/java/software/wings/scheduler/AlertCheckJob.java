@@ -121,7 +121,7 @@ public class AlertCheckJob implements Job {
                                            -> DelegatesDownAlert.builder()
                                                   .accountId(accountId)
                                                   .hostName(delegate.getHostName())
-                                                  .delegateId(delegate.getUuid())
+                                                  .ip(delegate.getIp())
                                                   .build())
                                        .collect(Collectors.toList());
       alertService.openAlerts(accountId, GLOBAL_APP_ID, AlertType.DelegatesDown, alertDatas);
@@ -130,12 +130,12 @@ public class AlertCheckJob implements Job {
     if (CollectionUtils.isNotEmpty(delegatesUp)) {
       // close if any alert is open
       if (CollectionUtils.isNotEmpty(delegatesUp)) {
-        delegatesUp.stream().forEach(delegate
+        delegatesUp.forEach(delegate
             -> alertService.closeAlert(accountId, GLOBAL_APP_ID, AlertType.DelegatesDown,
                 DelegatesDownAlert.builder()
                     .accountId(accountId)
                     .hostName(delegate.getHostName())
-                    .delegateId(delegate.getUuid())
+                    .ip(delegate.getIp())
                     .build()));
       }
     }
