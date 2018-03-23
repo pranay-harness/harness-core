@@ -25,8 +25,10 @@ public class EcsResizeParams extends ContainerResizeParams {
     private int fixedInstances;
     private List<ContainerServiceData> newInstanceData;
     private List<ContainerServiceData> oldInstanceData;
-    private int instanceCount;
+    private Integer instanceCount;
     private InstanceUnitType instanceUnitType;
+    private Integer downsizeInstanceCount;
+    private InstanceUnitType downsizeInstanceUnitType;
 
     private EcsResizeParamsBuilder() {}
 
@@ -89,13 +91,23 @@ public class EcsResizeParams extends ContainerResizeParams {
       return this;
     }
 
-    public EcsResizeParamsBuilder withInstanceCount(int instanceCount) {
+    public EcsResizeParamsBuilder withInstanceCount(Integer instanceCount) {
       this.instanceCount = instanceCount;
       return this;
     }
 
     public EcsResizeParamsBuilder withInstanceUnitType(InstanceUnitType instanceUnitType) {
       this.instanceUnitType = instanceUnitType;
+      return this;
+    }
+
+    public EcsResizeParamsBuilder withDownsizeInstanceCount(Integer downsizeInstanceCount) {
+      this.downsizeInstanceCount = downsizeInstanceCount;
+      return this;
+    }
+
+    public EcsResizeParamsBuilder withDownsizeInstanceUnitType(InstanceUnitType downsizeInstanceUnitType) {
+      this.downsizeInstanceUnitType = downsizeInstanceUnitType;
       return this;
     }
 
@@ -113,7 +125,9 @@ public class EcsResizeParams extends ContainerResizeParams {
           .withNewInstanceData(newInstanceData)
           .withOldInstanceData(oldInstanceData)
           .withInstanceCount(instanceCount)
-          .withInstanceUnitType(instanceUnitType);
+          .withInstanceUnitType(instanceUnitType)
+          .withDownsizeInstanceCount(downsizeInstanceCount)
+          .withDownsizeInstanceUnitType(downsizeInstanceUnitType);
     }
 
     public EcsResizeParams build() {
@@ -131,6 +145,8 @@ public class EcsResizeParams extends ContainerResizeParams {
       ecsResizeParams.setOldInstanceData(oldInstanceData);
       ecsResizeParams.setInstanceCount(instanceCount);
       ecsResizeParams.setInstanceUnitType(instanceUnitType);
+      ecsResizeParams.setDownsizeInstanceCount(downsizeInstanceCount);
+      ecsResizeParams.setDownsizeInstanceUnitType(downsizeInstanceUnitType);
       return ecsResizeParams;
     }
   }

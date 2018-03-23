@@ -19,6 +19,8 @@ public class ContainerResizeParams {
   private int fixedInstances;
   private List<ContainerServiceData> newInstanceData;
   private List<ContainerServiceData> oldInstanceData;
-  private int instanceCount;
+  private Integer instanceCount;
   private InstanceUnitType instanceUnitType;
+  private Integer downsizeInstanceCount;
+  private InstanceUnitType downsizeInstanceUnitType;
 }

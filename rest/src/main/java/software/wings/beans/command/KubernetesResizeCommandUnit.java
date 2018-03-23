@@ -1,8 +1,9 @@
 package software.wings.beans.command;
 
 import static software.wings.cloudprovider.ContainerInfo.Status.SUCCESS;
-import static software.wings.utils.KubernetesConvention.DOT;
+import static software.wings.utils.KubernetesConvention.getPrefixFromControllerName;
 import static software.wings.utils.KubernetesConvention.getRevisionFromControllerName;
+import static software.wings.utils.KubernetesConvention.getServiceNameFromControllerName;
 
 import com.google.inject.Inject;
 
@@ -14,6 +15,8 @@ import lombok.EqualsAndHashCode;
 import me.snowdrop.istio.api.model.IstioResource;
 import me.snowdrop.istio.api.model.IstioResourceBuilder;
 import me.snowdrop.istio.api.model.IstioResourceFluent.RouteRuleSpecNested;
+import me.snowdrop.istio.api.model.v1.routing.DestinationWeight;
+import me.snowdrop.istio.api.model.v1.routing.RouteRule;
 import org.mongodb.morphia.annotations.Transient;
 import software.wings.api.ContainerServiceData;
 import software.wings.api.DeploymentType;
@@ -60,18 +63,7 @@ public class KubernetesResizeCommandUnit extends ContainerResizeCommandUnit {
       HorizontalPodAutoscaler autoscaler = kubernetesContainerService.getAutoscaler(
           kubernetesConfig, encryptedDataDetails, controllerName, resizeParams.getApiVersion());
       if (autoscaler != null && controllerName.equals(autoscaler.getSpec().getScaleTargetRef().getName())) {
-        executionLogCallback.saveExecutionLog("Disabling autoscaler " + controllerName, LogLevel.INFO);
-        /*
-         * Ideally we should be sending resizeParams.getApiVersion(), so we use "v2beta1" when we are dealing with
-         * customMetricHPA, but there is a bug in fabric8 library in HasMetadataOperation.replace() method. For
-         * customMetricHPA, metric config info resides in HPA.Spec.additionalProperties map. but during execution of
-         * replace(), due to build() method in HorizontalPodAutoscalerSpecBuilder, this map goes away, and replace()
-         * call actually removes all metricConfig from autoScalar. So currently use v1 version only, till this issue
-         * gets fixed. (customMetricConfig is preserved as annotations in version_v1 HPA object, and that path is
-         * working fine)
-         * */
-        kubernetesContainerService.disableAutoscaler(kubernetesConfig, encryptedDataDetails, controllerName,
-            ContainerApiVersions.KUBERNETES_V1.getVersionName());
+        disableAutoscaler(kubernetesConfig, encryptedDataDetails, controllerName, executionLogCallback);
       }
     }
 
@@ -83,32 +75,24 @@ public class KubernetesResizeCommandUnit extends ContainerResizeCommandUnit {
     if (totalDesiredCount > 0 && containerInfos.size() == totalDesiredCount && allContainersSuccess
         && contextData.deployingToHundredPercent) {
       if (resizeParams.isUseAutoscaler()) {
-        executionLogCallback.saveExecutionLog("Enabling autoscaler " + controllerName, LogLevel.INFO);
-        /*
-         * Ideally we should be sending resizeParams.getApiVersion(), so we use "v2beta1" when we are dealing with
-         * customMetricHPA, but there is a bug in fabric8 library in HasMetadataOperation.replace() method. For
-         * customMetricHPA, metric config info resides in HPA.Spec.additionalProperties map. but during execution of
-         * replace(), due to build() method in HorizontalPodAutoscalerSpecBuilder, this map goes away, and replace()
-         * call actually removes all metricConfig from autoScalar. So currently use v1 version only, till this issue
-         * gets fixed. (customMetricConfig is preserved as annotations in version_v1 HPA object, and that path is
-         * working fine)
-         * */
-        kubernetesContainerService.enableAutoscaler(kubernetesConfig, encryptedDataDetails, controllerName,
-            ContainerApiVersions.KUBERNETES_V1.getVersionName());
+        enableAutoscaler(kubernetesConfig, encryptedDataDetails, controllerName, executionLogCallback);
       }
     }
 
+    return containerInfos;
+  }
+
+  protected void postExecution(
+      ContextData contextData, List<ContainerServiceData> allData, ExecutionLogCallback executionLogCallback) {
+    KubernetesResizeParams resizeParams = (KubernetesResizeParams) contextData.resizeParams;
     // Edit weights for Istio route rule if applicable
     if (resizeParams.isUseIstioRouteRule()) {
-      Map<String, Integer> activeControllers =
-          kubernetesContainerService.getActiveServiceCounts(kubernetesConfig, encryptedDataDetails, controllerName);
+      List<EncryptedDataDetail> encryptedDataDetails = new ArrayList<>();
+      KubernetesConfig kubernetesConfig = getKubernetesConfig(contextData, encryptedDataDetails);
       kubernetesContainerService.createOrReplaceRouteRule(kubernetesConfig, encryptedDataDetails,
-          createRouteRuleDefinition(resizeParams.getNamespace(),
-              controllerName.substring(0, controllerName.lastIndexOf(DOT)).replaceAll("\\.", "-"), activeControllers,
-              executionLogCallback));
+          createRouteRuleDefinition(contextData, allData, executionLogCallback));
+      executionLogCallback.saveExecutionLog(DASH_STRING + "\n");
     }
-
-    return containerInfos;
   }
 
   private KubernetesConfig getKubernetesConfig(
@@ -156,8 +140,33 @@ public class KubernetesResizeCommandUnit extends ContainerResizeCommandUnit {
         kubernetesConfig, encryptedDataDetails, contextData.resizeParams.getContainerServiceName());
   }
 
-  private IstioResource createRouteRuleDefinition(String namespace, String kubernetesServiceName,
-      Map<String, Integer> activeControllers, ExecutionLogCallback executionLogCallback) {
+  @Override
+  protected Map<String, Integer> getTrafficWeights(ContextData contextData) {
+    List<EncryptedDataDetail> encryptedDataDetails = new ArrayList<>();
+    KubernetesConfig kubernetesConfig = getKubernetesConfig(contextData, encryptedDataDetails);
+    return kubernetesContainerService.getTrafficWeights(
+        kubernetesConfig, encryptedDataDetails, contextData.resizeParams.getContainerServiceName());
+  }
+
+  @Override
+  protected int getPreviousTrafficPercent(ContextData contextData) {
+    List<EncryptedDataDetail> encryptedDataDetails = new ArrayList<>();
+    KubernetesConfig kubernetesConfig = getKubernetesConfig(contextData, encryptedDataDetails);
+    return kubernetesContainerService.getTrafficPercent(
+        kubernetesConfig, encryptedDataDetails, contextData.resizeParams.getContainerServiceName());
+  }
+
+  @Override
+  protected Integer getDesiredTrafficPercent(ContextData contextData) {
+    return ((KubernetesResizeParams) contextData.resizeParams).getTrafficPercent();
+  }
+
+  private IstioResource createRouteRuleDefinition(
+      ContextData contextData, List<ContainerServiceData> allData, ExecutionLogCallback executionLogCallback) {
+    KubernetesResizeParams resizeParams = (KubernetesResizeParams) contextData.resizeParams;
+    String kubernetesServiceName = getServiceNameFromControllerName(allData.get(0).getName());
+    String prefix = getPrefixFromControllerName(allData.get(0).getName());
+
     RouteRuleSpecNested<IstioResourceBuilder> routeRuleSpecNested = new IstioResourceBuilder()
                                                                         .withNewMetadata()
                                                                         .withName(kubernetesServiceName)
@@ -165,23 +174,65 @@ public class KubernetesResizeCommandUnit extends ContainerResizeCommandUnit {
                                                                         .withNewRouteRuleSpec()
                                                                         .withNewDestination()
                                                                         .withName(kubernetesServiceName)
-                                                                        .withNamespace(namespace)
+                                                                        .withNamespace(resizeParams.getNamespace())
                                                                         .endDestination();
-    int totalInstances = activeControllers.values().stream().mapToInt(Integer::intValue).sum();
-    executionLogCallback.saveExecutionLog("Setting Istio RouteRule weights:");
-    for (String controller : activeControllers.keySet()) {
-      int revision = getRevisionFromControllerName(controller).orElse(-1);
-      int weight = (int) Math.round((activeControllers.get(controller) * 100.0) / totalInstances);
-      executionLogCallback.saveExecutionLog("   " + controller + ": " + weight + "%");
-      routeRuleSpecNested
-          .addNewRoute()
-          // TODO(brett) - Switch to "harness-revision" after 3/26/18
-          .addToLabels("revision", Integer.toString(revision))
-          .withWeight(weight)
-          .endRoute();
+
+    for (ContainerServiceData containerServiceData : allData) {
+      int revision = getRevisionFromControllerName(containerServiceData.getName()).orElse(-1);
+      int weight = containerServiceData.getDesiredTraffic();
+      if (weight > 0) {
+        routeRuleSpecNested
+            .addNewRoute()
+            // TODO(brett) - Switch to "harness-revision" after 3/26/18
+            .addToLabels("revision", Integer.toString(revision))
+            .withWeight(weight)
+            .endRoute();
+      }
     }
 
-    return routeRuleSpecNested.endRouteRuleSpec().build();
+    IstioResource routeRule = routeRuleSpecNested.endRouteRuleSpec().build();
+    executionLogCallback.saveExecutionLog("Setting Istio route rule weights:");
+    RouteRule routeRuleSpec = (RouteRule) routeRule.getSpec();
+    for (DestinationWeight destinationWeight : routeRuleSpec.getRoute()) {
+      int weight = destinationWeight.getWeight();
+      // TODO(brett) - Switch to "harness-revision" after 3/26/18
+      String rev = destinationWeight.getLabels().get("revision");
+      executionLogCallback.saveExecutionLog(String.format("   %s%s: %d%%", prefix, rev, weight));
+    }
+
+    return routeRule;
+  }
+
+  private void enableAutoscaler(KubernetesConfig kubernetesConfig, List<EncryptedDataDetail> encryptedDataDetails,
+      String name, ExecutionLogCallback executionLogCallback) {
+    executionLogCallback.saveExecutionLog("Enabling autoscaler " + name, LogLevel.INFO);
+    /*
+     * Ideally we should be sending resizeParams.getApiVersion(), so we use "v2beta1" when we are dealing with
+     * customMetricHPA, but there is a bug in fabric8 library in HasMetadataOperation.replace() method. For
+     * customMetricHPA, metric config info resides in HPA.Spec.additionalProperties map. but during execution of
+     * replace(), due to build() method in HorizontalPodAutoscalerSpecBuilder, this map goes away, and replace()
+     * call actually removes all metricConfig from autoScalar. So currently use v1 version only, till this issue
+     * gets fixed. (customMetricConfig is preserved as annotations in version_v1 HPA object, and that path is
+     * working fine)
+     * */
+    kubernetesContainerService.enableAutoscaler(
+        kubernetesConfig, encryptedDataDetails, name, ContainerApiVersions.KUBERNETES_V1.getVersionName());
+  }
+
+  private void disableAutoscaler(KubernetesConfig kubernetesConfig, List<EncryptedDataDetail> encryptedDataDetails,
+      String name, ExecutionLogCallback executionLogCallback) {
+    executionLogCallback.saveExecutionLog("Disabling autoscaler " + name, LogLevel.INFO);
+    /*
+     * Ideally we should be sending resizeParams.getApiVersion(), so we use "v2beta1" when we are dealing with
+     * customMetricHPA, but there is a bug in fabric8 library in HasMetadataOperation.replace() method. For
+     * customMetricHPA, metric config info resides in HPA.Spec.additionalProperties map. but during execution of
+     * replace(), due to build() method in HorizontalPodAutoscalerSpecBuilder, this map goes away, and replace()
+     * call actually removes all metricConfig from autoScalar. So currently use v1 version only, till this issue
+     * gets fixed. (customMetricConfig is preserved as annotations in version_v1 HPA object, and that path is
+     * working fine)
+     * */
+    kubernetesContainerService.disableAutoscaler(
+        kubernetesConfig, encryptedDataDetails, name, ContainerApiVersions.KUBERNETES_V1.getVersionName());
   }
 
   @Data

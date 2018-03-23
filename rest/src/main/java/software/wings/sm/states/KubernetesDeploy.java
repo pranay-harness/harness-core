@@ -1,5 +1,6 @@
 package software.wings.sm.states;
 
+import static org.apache.commons.lang3.StringUtils.isNotBlank;
 import static software.wings.beans.command.KubernetesResizeParams.KubernetesResizeParamsBuilder.aKubernetesResizeParams;
 import static software.wings.sm.StateType.KUBERNETES_DEPLOY;
 
@@ -9,6 +10,7 @@ import software.wings.beans.InstanceUnitType;
 import software.wings.beans.command.ContainerApiVersions;
 import software.wings.beans.command.ContainerResizeParams;
 import software.wings.sm.ContextElementType;
+import software.wings.sm.ExecutionContext;
 import software.wings.stencils.DefaultValue;
 import software.wings.stencils.EnumData;
 
@@ -17,11 +19,18 @@ import software.wings.stencils.EnumData;
  */
 public class KubernetesDeploy extends ContainerServiceDeploy {
   @Attributes(title = "Desired Instances (cumulative)") private String instanceCount;
+  @Attributes(title = "Desired Old Instances (cumulative)") private String downsizeInstanceCount;
+  @Attributes(title = "Traffic Percent to New Instances") private String trafficPercent;
 
   @Attributes(title = "Instance Unit Type (Count/Percent)")
   @EnumData(enumDataProvider = InstanceUnitTypeDataProvider.class)
-  @DefaultValue("COUNT")
-  private InstanceUnitType instanceUnitType = InstanceUnitType.COUNT;
+  @DefaultValue("PERCENTAGE")
+  private InstanceUnitType instanceUnitType = InstanceUnitType.PERCENTAGE;
+
+  @Attributes(title = "Downsize Instance Unit Type (Count/Percent)")
+  @EnumData(enumDataProvider = InstanceUnitTypeDataProvider.class)
+  @DefaultValue("PERCENTAGE")
+  private InstanceUnitType downsizeInstanceUnitType = InstanceUnitType.PERCENTAGE;
 
   @Attributes(title = "Command") @DefaultValue("Resize Replication Controller") private String commandName;
 
@@ -48,6 +57,15 @@ public class KubernetesDeploy extends ContainerServiceDeploy {
   }
 
   @Override
+  public String getDownsizeInstanceCount() {
+    return downsizeInstanceCount;
+  }
+
+  public void setDownsizeInstanceCount(String downsizeInstanceCount) {
+    this.downsizeInstanceCount = downsizeInstanceCount;
+  }
+
+  @Override
   public InstanceUnitType getInstanceUnitType() {
     return instanceUnitType;
   }
@@ -57,24 +75,47 @@ public class KubernetesDeploy extends ContainerServiceDeploy {
   }
 
   @Override
-  protected ContainerResizeParams buildContainerResizeParams(ContextData contextData) {
+  public InstanceUnitType getDownsizeInstanceUnitType() {
+    return downsizeInstanceUnitType;
+  }
+
+  public void setDownsizeInstanceUnitType(InstanceUnitType downsizeInstanceUnitType) {
+    this.downsizeInstanceUnitType = downsizeInstanceUnitType;
+  }
+
+  public String getTrafficPercent() {
+    return trafficPercent;
+  }
+
+  public void setTrafficPercent(String trafficPercent) {
+    this.trafficPercent = trafficPercent;
+  }
+
+  @Override
+  protected ContainerResizeParams buildContainerResizeParams(ExecutionContext context, ContextData contextData) {
+    Integer trafficPercent =
+        isNotBlank(getTrafficPercent()) ? Integer.valueOf(context.renderExpression(getTrafficPercent())) : null;
+
     return aKubernetesResizeParams()
         .withClusterName(contextData.containerElement.getClusterName())
         .withNamespace(contextData.containerElement.getNamespace())
-        .withServiceSteadyStateTimeout(contextData.containerElement.getServiceSteadyStateTimeout())
-        .withUseAutoscaler(contextData.containerElement.isUseAutoscaler())
         .withSubscriptionId(contextData.subscriptionId)
         .withResourceGroup(contextData.resourceGroup)
+        .withServiceSteadyStateTimeout(contextData.containerElement.getServiceSteadyStateTimeout())
+        .withUseAutoscaler(contextData.containerElement.isUseAutoscaler())
         .withApiVersion(getApiVersion(contextData))
         .withUseIstioRouteRule(contextData.containerElement.isUseIstioRouteRule())
-        .withRollback(false)
-        .withInstanceCount(contextData.instanceCount)
-        .withInstanceUnitType(getInstanceUnitType())
         .withContainerServiceName(contextData.containerElement.getName())
         .withResizeStrategy(contextData.containerElement.getResizeStrategy())
         .withUseFixedInstances(contextData.containerElement.isUseFixedInstances())
         .withMaxInstances(contextData.containerElement.getMaxInstances())
         .withFixedInstances(contextData.containerElement.getFixedInstances())
+        .withRollback(false)
+        .withInstanceCount(contextData.instanceCount)
+        .withInstanceUnitType(getInstanceUnitType())
+        .withDownsizeInstanceCount(contextData.downsizeInstanceCount)
+        .withDownsizeInstanceUnitType(getDownsizeInstanceUnitType())
+        .withTrafficPercent(trafficPercent)
         .build();
   }
 

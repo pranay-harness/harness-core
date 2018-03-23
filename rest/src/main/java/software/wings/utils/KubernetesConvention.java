@@ -38,6 +38,10 @@ public class KubernetesConvention {
     return controllerName.substring(0, controllerName.lastIndexOf(DOT) + DOT.length());
   }
 
+  public static String getServiceNameFromControllerName(String controllerName) {
+    return noDot(controllerName.substring(0, controllerName.lastIndexOf(DOT)));
+  }
+
   public static String getKubernetesServiceName(String rcNamePrefix) {
     return noDot(normalize(rcNamePrefix));
   }

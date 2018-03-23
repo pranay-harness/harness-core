@@ -19,6 +19,7 @@ public class KubernetesResizeParams extends ContainerResizeParams {
   private String subscriptionId;
   private String resourceGroup;
   private boolean useIstioRouteRule;
+  private Integer trafficPercent;
 
   public static final class KubernetesResizeParamsBuilder {
     private String clusterName;
@@ -28,17 +29,20 @@ public class KubernetesResizeParams extends ContainerResizeParams {
     private boolean useAutoscaler;
     private String containerServiceName;
     private String apiVersion;
-    private ResizeStrategy resizeStrategy;
     private String subscriptionId;
-    private boolean useFixedInstances;
+    private ResizeStrategy resizeStrategy;
     private String resourceGroup;
-    private int maxInstances;
+    private boolean useFixedInstances;
     private boolean useIstioRouteRule;
+    private int maxInstances;
+    private Integer trafficPercent;
     private int fixedInstances;
     private List<ContainerServiceData> newInstanceData;
     private List<ContainerServiceData> oldInstanceData;
-    private int instanceCount;
+    private Integer instanceCount;
     private InstanceUnitType instanceUnitType;
+    private Integer downsizeInstanceCount;
+    private InstanceUnitType downsizeInstanceUnitType;
 
     private KubernetesResizeParamsBuilder() {}
 
@@ -81,18 +85,13 @@ public class KubernetesResizeParams extends ContainerResizeParams {
       return this;
     }
 
-    public KubernetesResizeParamsBuilder withResizeStrategy(ResizeStrategy resizeStrategy) {
-      this.resizeStrategy = resizeStrategy;
-      return this;
-    }
-
     public KubernetesResizeParamsBuilder withSubscriptionId(String subscriptionId) {
       this.subscriptionId = subscriptionId;
       return this;
     }
 
-    public KubernetesResizeParamsBuilder withUseFixedInstances(boolean useFixedInstances) {
-      this.useFixedInstances = useFixedInstances;
+    public KubernetesResizeParamsBuilder withResizeStrategy(ResizeStrategy resizeStrategy) {
+      this.resizeStrategy = resizeStrategy;
       return this;
     }
 
@@ -101,13 +100,23 @@ public class KubernetesResizeParams extends ContainerResizeParams {
       return this;
     }
 
-    public KubernetesResizeParamsBuilder withMaxInstances(int maxInstances) {
-      this.maxInstances = maxInstances;
+    public KubernetesResizeParamsBuilder withUseFixedInstances(boolean useFixedInstances) {
+      this.useFixedInstances = useFixedInstances;
       return this;
     }
 
     public KubernetesResizeParamsBuilder withUseIstioRouteRule(boolean useIstioRouteRule) {
       this.useIstioRouteRule = useIstioRouteRule;
+      return this;
+    }
+
+    public KubernetesResizeParamsBuilder withMaxInstances(int maxInstances) {
+      this.maxInstances = maxInstances;
+      return this;
+    }
+
+    public KubernetesResizeParamsBuilder withTrafficPercent(Integer trafficPercent) {
+      this.trafficPercent = trafficPercent;
       return this;
     }
 
@@ -126,13 +135,23 @@ public class KubernetesResizeParams extends ContainerResizeParams {
       return this;
     }
 
-    public KubernetesResizeParamsBuilder withInstanceCount(int instanceCount) {
+    public KubernetesResizeParamsBuilder withInstanceCount(Integer instanceCount) {
       this.instanceCount = instanceCount;
       return this;
     }
 
     public KubernetesResizeParamsBuilder withInstanceUnitType(InstanceUnitType instanceUnitType) {
       this.instanceUnitType = instanceUnitType;
+      return this;
+    }
+
+    public KubernetesResizeParamsBuilder withDownsizeInstanceCount(Integer downsizeInstanceCount) {
+      this.downsizeInstanceCount = downsizeInstanceCount;
+      return this;
+    }
+
+    public KubernetesResizeParamsBuilder withDownsizeInstanceUnitType(InstanceUnitType downsizeInstanceUnitType) {
+      this.downsizeInstanceUnitType = downsizeInstanceUnitType;
       return this;
     }
 
@@ -145,17 +164,20 @@ public class KubernetesResizeParams extends ContainerResizeParams {
           .withUseAutoscaler(useAutoscaler)
           .withContainerServiceName(containerServiceName)
           .withApiVersion(apiVersion)
-          .withResizeStrategy(resizeStrategy)
           .withSubscriptionId(subscriptionId)
-          .withUseFixedInstances(useFixedInstances)
+          .withResizeStrategy(resizeStrategy)
           .withResourceGroup(resourceGroup)
-          .withMaxInstances(maxInstances)
+          .withUseFixedInstances(useFixedInstances)
           .withUseIstioRouteRule(useIstioRouteRule)
+          .withMaxInstances(maxInstances)
+          .withTrafficPercent(trafficPercent)
           .withFixedInstances(fixedInstances)
           .withNewInstanceData(newInstanceData)
           .withOldInstanceData(oldInstanceData)
           .withInstanceCount(instanceCount)
-          .withInstanceUnitType(instanceUnitType);
+          .withInstanceUnitType(instanceUnitType)
+          .withDownsizeInstanceCount(downsizeInstanceCount)
+          .withDownsizeInstanceUnitType(downsizeInstanceUnitType);
     }
 
     public KubernetesResizeParams build() {
@@ -167,17 +189,20 @@ public class KubernetesResizeParams extends ContainerResizeParams {
       kubernetesResizeParams.setUseAutoscaler(useAutoscaler);
       kubernetesResizeParams.setContainerServiceName(containerServiceName);
       kubernetesResizeParams.setApiVersion(apiVersion);
-      kubernetesResizeParams.setResizeStrategy(resizeStrategy);
       kubernetesResizeParams.setSubscriptionId(subscriptionId);
-      kubernetesResizeParams.setUseFixedInstances(useFixedInstances);
+      kubernetesResizeParams.setResizeStrategy(resizeStrategy);
       kubernetesResizeParams.setResourceGroup(resourceGroup);
-      kubernetesResizeParams.setMaxInstances(maxInstances);
+      kubernetesResizeParams.setUseFixedInstances(useFixedInstances);
       kubernetesResizeParams.setUseIstioRouteRule(useIstioRouteRule);
+      kubernetesResizeParams.setMaxInstances(maxInstances);
+      kubernetesResizeParams.setTrafficPercent(trafficPercent);
       kubernetesResizeParams.setFixedInstances(fixedInstances);
       kubernetesResizeParams.setNewInstanceData(newInstanceData);
       kubernetesResizeParams.setOldInstanceData(oldInstanceData);
       kubernetesResizeParams.setInstanceCount(instanceCount);
       kubernetesResizeParams.setInstanceUnitType(instanceUnitType);
+      kubernetesResizeParams.setDownsizeInstanceCount(downsizeInstanceCount);
+      kubernetesResizeParams.setDownsizeInstanceUnitType(downsizeInstanceUnitType);
       return kubernetesResizeParams;
     }
   }

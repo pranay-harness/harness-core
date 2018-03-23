@@ -5,6 +5,7 @@ import static java.util.stream.Collectors.toList;
 import static software.wings.beans.InstanceUnitType.PERCENTAGE;
 import static software.wings.beans.ResizeStrategy.RESIZE_NEW_FIRST;
 
+import com.google.common.base.Preconditions;
 import com.google.inject.Inject;
 
 import lombok.Data;
@@ -32,7 +33,7 @@ import java.util.Optional;
 public abstract class ContainerResizeCommandUnit extends AbstractCommandUnit {
   private static final Logger logger = LoggerFactory.getLogger(ContainerResizeCommandUnit.class);
 
-  private static final String DASH_STRING = "----------";
+  protected static final String DASH_STRING = "----------";
 
   @Inject @Transient private transient DelegateLogService logService;
 
@@ -46,6 +47,7 @@ public abstract class ContainerResizeCommandUnit extends AbstractCommandUnit {
     ExecutionLogCallback executionLogCallback = new ExecutionLogCallback(context, getName());
     executionLogCallback.setLogService(logService);
     ResizeCommandUnitExecutionDataBuilder executionDataBuilder = ResizeCommandUnitExecutionData.builder();
+    CommandExecutionStatus status = CommandExecutionStatus.FAILURE;
 
     try {
       ContextData contextData = new ContextData(context);
@@ -72,14 +74,25 @@ public abstract class ContainerResizeCommandUnit extends AbstractCommandUnit {
           resizeInstances(contextData, firstDataList, executionDataBuilder, executionLogCallback, resizeNewFirst)
           && resizeInstances(contextData, secondDataList, executionDataBuilder, executionLogCallback, !resizeNewFirst);
 
-      return executionSucceeded ? CommandExecutionStatus.SUCCESS : CommandExecutionStatus.FAILURE;
+      if (executionSucceeded) {
+        List<ContainerServiceData> allData = new ArrayList<>();
+        if (isNotEmpty(firstDataList)) {
+          allData.addAll(firstDataList);
+        }
+        if (isNotEmpty(secondDataList)) {
+          allData.addAll(secondDataList);
+        }
+        postExecution(contextData, allData, executionLogCallback);
+        status = CommandExecutionStatus.SUCCESS;
+      }
     } catch (Exception ex) {
       logger.error(ex.getMessage(), ex);
       Misc.logAllMessages(ex, executionLogCallback);
-      return CommandExecutionStatus.FAILURE;
     } finally {
       context.setCommandExecutionData(executionDataBuilder.build());
     }
+
+    return status;
   }
 
   private boolean resizeInstances(ContextData contextData, List<ContainerServiceData> instanceData,
@@ -108,8 +121,7 @@ public abstract class ContainerResizeCommandUnit extends AbstractCommandUnit {
     if (containerInfos.size() == totalDesiredCount && allContainersSuccess) {
       success = true;
       logger.info("Successfully completed resize operation");
-      executionLogCallback.saveExecutionLog(
-          String.format("Completed resize operation\n%s\n", DASH_STRING), LogLevel.INFO);
+      executionLogCallback.saveExecutionLog(String.format("Completed operation\n%s\n", DASH_STRING));
     } else {
       if (containerInfos.size() != totalDesiredCount) {
         executionLogCallback.saveExecutionLog(
@@ -143,6 +155,16 @@ public abstract class ContainerResizeCommandUnit extends AbstractCommandUnit {
 
     int previousCount = previousDesiredCount.get();
     int desiredCount = getNewInstancesDesiredCount(contextData);
+    int previousTrafficPercent = getPreviousTrafficPercent(contextData);
+    Integer desiredTrafficPercent = getDesiredTrafficPercent(contextData);
+    if (desiredTrafficPercent == null) {
+      Map<String, Integer> activeOtherControllers = getActiveServiceCounts(contextData);
+      activeOtherControllers.remove(contextData.resizeParams.getContainerServiceName());
+      int totalOtherInstances = activeOtherControllers.values().stream().mapToInt(Integer::intValue).sum();
+      int downsizeCount = getDownsizeByAmount(contextData, totalOtherInstances, desiredCount, previousCount);
+      int totalInstances = totalOtherInstances - downsizeCount + desiredCount;
+      desiredTrafficPercent = (int) Math.round((desiredCount * 100.0) / totalInstances);
+    }
 
     if (desiredCount < previousCount) {
       String msg = "Desired instance count must be greater than or equal to the current instance count: {current: "
@@ -155,59 +177,84 @@ public abstract class ContainerResizeCommandUnit extends AbstractCommandUnit {
         .name(contextData.resizeParams.getContainerServiceName())
         .previousCount(previousCount)
         .desiredCount(desiredCount)
+        .previousTraffic(previousTrafficPercent)
+        .desiredTraffic(desiredTrafficPercent)
         .build();
   }
 
   private int getNewInstancesDesiredCount(ContextData contextData) {
+    Preconditions.checkNotNull(contextData.resizeParams.getInstanceCount());
     int instanceCount = contextData.resizeParams.getInstanceCount();
-    if (contextData.resizeParams.getInstanceUnitType() == PERCENTAGE) {
-      int totalInstancesAvailable;
-      if (contextData.resizeParams.isUseFixedInstances()) {
-        totalInstancesAvailable = contextData.resizeParams.getFixedInstances();
-      } else {
-        totalInstancesAvailable =
-            getActiveServiceCounts(contextData).values().stream().mapToInt(Integer::intValue).sum();
-        if (totalInstancesAvailable == 0) {
-          return contextData.resizeParams.getMaxInstances();
-        }
-      }
-      return (int) Math.round(Math.min(instanceCount, 100) * totalInstancesAvailable / 100.0);
+    int totalTargetInstances = contextData.resizeParams.isUseFixedInstances()
+        ? contextData.resizeParams.getFixedInstances()
+        : contextData.resizeParams.getMaxInstances();
+    return contextData.resizeParams.getInstanceUnitType() == PERCENTAGE
+        ? (int) Math.round(Math.min(instanceCount, 100) * totalTargetInstances / 100.0)
+        : Math.min(instanceCount, totalTargetInstances);
+  }
+
+  private int getDownsizeByAmount(
+      ContextData contextData, int totalOtherInstances, int upsizeDesiredCount, int upsizePreviousCount) {
+    Integer downsizeDesiredCount = contextData.resizeParams.getDownsizeInstanceCount();
+    if (downsizeDesiredCount != null) {
+      int downsizeInstanceCount = contextData.resizeParams.getDownsizeInstanceCount();
+      int totalTargetInstances = contextData.resizeParams.isUseFixedInstances()
+          ? contextData.resizeParams.getFixedInstances()
+          : contextData.resizeParams.getMaxInstances();
+      int downsizeToCount = contextData.resizeParams.getDownsizeInstanceUnitType() == PERCENTAGE
+          ? (int) Math.round(Math.min(downsizeInstanceCount, 100) * totalTargetInstances / 100.0)
+          : Math.min(downsizeInstanceCount, totalTargetInstances);
+      return Math.max(totalOtherInstances - downsizeToCount, 0);
     } else {
-      if (contextData.resizeParams.isUseFixedInstances()) {
-        return Math.min(instanceCount, contextData.resizeParams.getFixedInstances());
-      } else {
-        return instanceCount;
-      }
+      return contextData.deployingToHundredPercent ? totalOtherInstances
+                                                   : Math.max(upsizeDesiredCount - upsizePreviousCount, 0);
     }
   }
 
   private List<ContainerServiceData> getOldInstanceData(ContextData contextData, ContainerServiceData newServiceData) {
-    List<ContainerServiceData> desiredCounts = new ArrayList<>();
+    List<ContainerServiceData> oldInstanceData = new ArrayList<>();
     Map<String, Integer> previousCounts = getActiveServiceCounts(contextData);
     previousCounts.remove(newServiceData.getName());
+    Map<String, Integer> previousTrafficWeights = getTrafficWeights(contextData);
+    previousTrafficWeights.remove(newServiceData.getName());
 
-    int downsizeCount = contextData.deployingToHundredPercent
-        ? previousCounts.values().stream().mapToInt(Integer::intValue).sum()
-        : Math.max(newServiceData.getDesiredCount() - newServiceData.getPreviousCount(), 0);
+    int downsizeCount =
+        getDownsizeByAmount(contextData, previousCounts.values().stream().mapToInt(Integer::intValue).sum(),
+            newServiceData.getDesiredCount(), newServiceData.getPreviousCount());
+    int runningOldInstances = previousCounts.values().stream().mapToInt(Integer::intValue).sum();
+    int targetOldInstances = runningOldInstances - downsizeCount;
+    double oldInstanceTrafficShare = 100.0 - newServiceData.getDesiredTraffic();
 
     for (String serviceName : previousCounts.keySet()) {
       int previousCount = previousCounts.get(serviceName);
       int desiredCount = Math.max(previousCount - downsizeCount, 0);
-      if (previousCount != desiredCount) {
-        desiredCounts.add(ContainerServiceData.builder()
+      int previousTraffic = Optional.ofNullable(previousTrafficWeights.get(serviceName)).orElse(0);
+      int desiredTraffic = (int) Math.round((desiredCount * oldInstanceTrafficShare) / targetOldInstances);
+
+      oldInstanceData.add(ContainerServiceData.builder()
                               .name(serviceName)
                               .previousCount(previousCount)
                               .desiredCount(desiredCount)
+                              .previousTraffic(previousTraffic)
+                              .desiredTraffic(desiredTraffic)
                               .build());
-      }
       downsizeCount -= previousCount - desiredCount;
     }
-    return desiredCounts;
+    return oldInstanceData;
   }
+
+  protected void postExecution(
+      ContextData contextData, List<ContainerServiceData> allData, ExecutionLogCallback executionLogCallback) {}
 
   protected abstract Map<String, Integer> getActiveServiceCounts(ContextData contextData);
 
+  protected abstract Map<String, Integer> getTrafficWeights(ContextData contextData);
+
   protected abstract Optional<Integer> getServiceDesiredCount(ContextData contextData);
+
+  protected abstract int getPreviousTrafficPercent(ContextData contextData);
+
+  protected abstract Integer getDesiredTrafficPercent(ContextData contextData);
 
   protected abstract List<ContainerInfo> executeResize(ContextData contextData, int totalDesiredCount,
       ContainerServiceData containerServiceData, ExecutionLogCallback executionLogCallback);
@@ -235,9 +282,12 @@ public abstract class ContainerResizeCommandUnit extends AbstractCommandUnit {
       encryptedDataDetails = context.getCloudProviderCredentials();
       resizeParams = context.getContainerResizeParams();
 
+      Preconditions.checkNotNull(resizeParams.getInstanceCount());
       deployingToHundredPercent = resizeParams.getInstanceUnitType() == PERCENTAGE
           ? resizeParams.getInstanceCount() >= 100
-          : resizeParams.isUseFixedInstances() && resizeParams.getInstanceCount() >= resizeParams.getFixedInstances();
+          : (resizeParams.isUseFixedInstances() && resizeParams.getInstanceCount() >= resizeParams.getFixedInstances())
+              || (!resizeParams.isUseFixedInstances()
+                     && resizeParams.getInstanceCount() >= resizeParams.getMaxInstances());
     }
   }
 }

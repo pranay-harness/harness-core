@@ -14,7 +14,6 @@ import com.amazonaws.services.ecs.model.Service;
 import com.amazonaws.services.ecs.model.TaskDefinition;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-import software.wings.beans.Log.LogLevel;
 import software.wings.beans.SettingAttribute;
 import software.wings.beans.command.ExecutionLogCallback;
 import software.wings.beans.command.LogCallback;
@@ -59,9 +58,13 @@ public class AwsClusterServiceImpl implements AwsClusterService {
   public List<ContainerInfo> resizeCluster(String region, SettingAttribute cloudProviderSetting,
       List<EncryptedDataDetail> encryptedDataDetails, String clusterName, String serviceName, int previousCount,
       int desiredCount, int serviceSteadyStateTimeout, ExecutionLogCallback executionLogCallback) {
-    executionLogCallback.saveExecutionLog(String.format("Resize service [%s] in cluster [%s] from %s to %s instances",
-                                              serviceName, clusterName, previousCount, desiredCount),
-        LogLevel.INFO);
+    if (previousCount != desiredCount) {
+      executionLogCallback.saveExecutionLog(String.format("Resize service [%s] in cluster [%s] from %s to %s instances",
+          serviceName, clusterName, previousCount, desiredCount));
+    } else {
+      executionLogCallback.saveExecutionLog(
+          String.format("Service [%s] in cluster [%s] stays at %s instances", serviceName, clusterName, previousCount));
+    }
     return ecsContainerService.provisionTasks(region, cloudProviderSetting, encryptedDataDetails, clusterName,
         serviceName, previousCount, desiredCount, serviceSteadyStateTimeout, executionLogCallback);
   }

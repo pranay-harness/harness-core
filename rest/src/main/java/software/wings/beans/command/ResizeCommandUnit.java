@@ -13,6 +13,7 @@ import software.wings.api.DeploymentType;
 import software.wings.cloudprovider.ContainerInfo;
 import software.wings.cloudprovider.aws.AwsClusterService;
 
+import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Optional;
@@ -52,6 +53,21 @@ public class ResizeCommandUnit extends ContainerResizeCommandUnit {
                                     .filter(svc -> svc.getServiceName().equals(resizeParams.getContainerServiceName()))
                                     .findFirst();
     return service.map(Service::getDesiredCount);
+  }
+
+  @Override
+  protected Map<String, Integer> getTrafficWeights(ContextData contextData) {
+    return new HashMap<>();
+  }
+
+  @Override
+  protected int getPreviousTrafficPercent(ContextData contextData) {
+    return 0;
+  }
+
+  @Override
+  protected Integer getDesiredTrafficPercent(ContextData contextData) {
+    return 0;
   }
 
   @Data

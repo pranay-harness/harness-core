@@ -92,7 +92,10 @@ public class EcsSetupCommandUnit extends ContainerSetupCommandUnit {
       String containerServiceName =
           EcsConvention.getServiceName(setupParams.getTaskFamily(), taskDefinition.getRevision());
 
-      commandExecutionDataBuilder.containerServiceName(containerServiceName).build();
+      int activeServiceCount = getActiveServiceCount(setupParams.getRegion(), setupParams.getClusterName(),
+          cloudProviderSetting, encryptedDataDetails, containerServiceName);
+
+      commandExecutionDataBuilder.containerServiceName(containerServiceName).activeServiceCount(activeServiceCount);
 
       CreateServiceRequest createServiceRequest =
           getCreateServiceRequest(setupParams, taskDefinition, containerServiceName);
@@ -128,6 +131,16 @@ public class EcsSetupCommandUnit extends ContainerSetupCommandUnit {
     } finally {
       context.setCommandExecutionData(commandExecutionDataBuilder.build());
     }
+  }
+
+  private int getActiveServiceCount(String region, String clusterName, SettingAttribute computeProvider,
+      List<EncryptedDataDetail> encryptedDataDetails, String containerServiceName) {
+    return awsClusterService
+        .getActiveServiceCounts(region, computeProvider, encryptedDataDetails, clusterName, containerServiceName)
+        .values()
+        .stream()
+        .mapToInt(Integer::intValue)
+        .sum();
   }
 
   private CreateServiceRequest getCreateServiceRequest(

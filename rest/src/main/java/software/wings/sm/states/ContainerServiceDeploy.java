@@ -4,6 +4,7 @@ import static io.harness.data.structure.EmptyPredicate.isNotEmpty;
 import static java.util.Collections.singletonList;
 import static java.util.stream.Collectors.toList;
 import static org.apache.commons.lang3.StringUtils.isBlank;
+import static org.apache.commons.lang3.StringUtils.isNotBlank;
 import static software.wings.api.CommandStateExecutionData.Builder.aCommandStateExecutionData;
 import static software.wings.api.HostElement.Builder.aHostElement;
 import static software.wings.api.InstanceElement.Builder.anInstanceElement;
@@ -15,6 +16,7 @@ import static software.wings.beans.command.CommandExecutionContext.Builder.aComm
 import static software.wings.sm.ExecutionResponse.Builder.anExecutionResponse;
 import static software.wings.sm.InstanceStatusSummary.InstanceStatusSummaryBuilder.anInstanceStatusSummary;
 
+import com.google.common.base.Preconditions;
 import com.google.inject.Inject;
 
 import org.mongodb.morphia.Key;
@@ -144,7 +146,7 @@ public abstract class ContainerServiceDeploy extends State {
 
       CommandStateExecutionData executionData = executionDataBuilder.build();
 
-      ContainerResizeParams params = buildContainerResizeParams(contextData);
+      ContainerResizeParams params = buildContainerResizeParams(context, contextData);
       CommandExecutionContext commandExecutionContext =
           aCommandExecutionContext()
               .withAccountId(contextData.app.getAccountId())
@@ -231,9 +233,14 @@ public abstract class ContainerServiceDeploy extends State {
 
   public abstract InstanceUnitType getInstanceUnitType();
 
+  public abstract String getDownsizeInstanceCount();
+
+  public abstract InstanceUnitType getDownsizeInstanceUnitType();
+
   public abstract String getCommandName();
 
-  protected abstract ContainerResizeParams buildContainerResizeParams(ContextData contextData);
+  protected abstract ContainerResizeParams buildContainerResizeParams(
+      ExecutionContext context, ContextData contextData);
 
   private ExecutionResponse buildEndStateExecution(
       CommandStateExecutionData executionData, CommandExecutionResult executionResult, ExecutionStatus status) {
@@ -311,9 +318,10 @@ public abstract class ContainerServiceDeploy extends State {
     final String serviceId;
     final String region;
     final String infrastructureMappingId;
-    final int instanceCount;
     final String subscriptionId;
     final String resourceGroup;
+    final Integer instanceCount;
+    final Integer downsizeInstanceCount;
 
     ContextData(ExecutionContext context, ContainerServiceDeploy containerServiceDeploy) {
       PhaseElement phaseElement = context.getContextElement(ContextElementType.PARAM, Constants.PHASE_PARAM);
@@ -354,7 +362,12 @@ public abstract class ContainerServiceDeploy extends State {
       resourceGroup = infrastructureMapping instanceof AzureKubernetesInfrastructureMapping
           ? ((AzureKubernetesInfrastructureMapping) infrastructureMapping).getResourceGroup()
           : null;
+      Preconditions.checkState(isNotBlank(containerServiceDeploy.getInstanceCount()));
       instanceCount = Integer.valueOf(context.renderExpression(containerServiceDeploy.getInstanceCount()));
+
+      downsizeInstanceCount = isNotBlank(containerServiceDeploy.getDownsizeInstanceCount())
+          ? Integer.valueOf(context.renderExpression(containerServiceDeploy.getDownsizeInstanceCount()))
+          : null;
     }
   }
 }

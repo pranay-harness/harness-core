@@ -141,6 +141,9 @@ public class EcsServiceSetup extends ContainerServiceSetup {
           (ContainerSetupCommandUnitExecutionData) executionResult.getCommandExecutionData();
       if (setupExecutionData != null) {
         containerServiceElementBuilder.name(setupExecutionData.getContainerServiceName());
+        if (setupExecutionData.getActiveServiceCount() > 0) {
+          containerServiceElementBuilder.maxInstances(setupExecutionData.getActiveServiceCount());
+        }
       }
     }
     return containerServiceElementBuilder.build();

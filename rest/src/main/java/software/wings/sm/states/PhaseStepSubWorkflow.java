@@ -6,6 +6,7 @@ import static io.harness.govern.Switch.noop;
 import static io.harness.govern.Switch.unhandled;
 import static java.util.Arrays.asList;
 import static java.util.Collections.singletonList;
+import static java.util.stream.Collectors.toList;
 import static software.wings.api.AwsCodeDeployRequestElement.AwsCodeDeployRequestElementBuilder.anAwsCodeDeployRequestElement;
 import static software.wings.api.PhaseStepExecutionData.PhaseStepExecutionDataBuilder.aPhaseStepExecutionData;
 import static software.wings.api.ServiceInstanceIdsParam.ServiceInstanceIdsParamBuilder.aServiceInstanceIdsParam;
@@ -64,7 +65,6 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
 import java.util.Optional;
-import java.util.stream.Collectors;
 
 /**
  * Created by rishi on 1/12/17.
@@ -153,7 +153,7 @@ public class PhaseStepSubWorkflow extends SubWorkflowState {
                                               .filter(s -> s.getElement() != null)
                                               .map(s -> s.getElement().getUuid())
                                               .distinct()
-                                              .collect(Collectors.toList());
+                                              .collect(toList());
 
         List<ContextElement> contextParams =
             Lists.newArrayList(aServiceInstanceIdsParam().withInstanceIds(serviceInstanceIds).build());
@@ -234,8 +234,10 @@ public class PhaseStepSubWorkflow extends SubWorkflowState {
                    .name(sc.getName())
                    .previousCount(sc.getDesiredCount())
                    .desiredCount(sc.getPreviousCount())
+                   .previousTraffic(sc.getDesiredTraffic())
+                   .desiredTraffic(sc.getPreviousTraffic())
                    .build())
-        .collect(Collectors.toList());
+        .collect(toList());
   }
 
   private ServiceInstanceArtifactParam buildInstanceArtifactParam(
