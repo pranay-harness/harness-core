@@ -1,6 +1,7 @@
 package software.wings.metrics;
 
 import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertFalse;
 import static org.junit.Assert.assertNull;
 import static org.junit.Assert.assertTrue;
 import static software.wings.service.impl.newrelic.LearningEngineAnalysisTask.TIME_SERIES_ANALYSIS_TASK_TIME_OUT;
@@ -19,8 +20,10 @@ import software.wings.beans.ServiceSecretKey.ServiceType;
 import software.wings.dl.WingsPersistence;
 import software.wings.exception.WingsException;
 import software.wings.service.impl.newrelic.LearningEngineAnalysisTask;
+import software.wings.service.impl.newrelic.LearningEngineExperimentalAnalysisTask;
 import software.wings.service.intfc.LearningEngineService;
 import software.wings.sm.ExecutionStatus;
+import software.wings.sm.StateType;
 import software.wings.utils.Misc;
 
 import java.util.List;
@@ -232,5 +235,26 @@ public class LearningEngineAnalysisTest extends WingsBaseTest {
       String headerString = "application/" + serviceApiVersion.name().toLowerCase() + "+json, application/json";
       assertEquals(serviceApiVersion, Misc.parseApisVersion(headerString));
     }
+  }
+
+  @Test
+  public void testUniqueIndexExperimentalTask() {
+    assertTrue(
+        learningEngineService.addLearningEngineExperimentalAnalysisTask(LearningEngineExperimentalAnalysisTask.builder()
+                                                                            .state_execution_id(stateExecutionId)
+                                                                            .workflow_execution_id(workflowExecutionId)
+                                                                            .stateType(StateType.ELK)
+                                                                            .executionStatus(ExecutionStatus.QUEUED)
+                                                                            .analysis_minute(14)
+                                                                            .build()));
+
+    assertFalse(
+        learningEngineService.addLearningEngineExperimentalAnalysisTask(LearningEngineExperimentalAnalysisTask.builder()
+                                                                            .state_execution_id(stateExecutionId)
+                                                                            .workflow_execution_id(workflowExecutionId)
+                                                                            .stateType(StateType.ELK)
+                                                                            .executionStatus(ExecutionStatus.QUEUED)
+                                                                            .analysis_minute(14)
+                                                                            .build()));
   }
 }

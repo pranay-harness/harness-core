@@ -119,6 +119,15 @@ public class LearningEngineAnalysisServiceImpl implements LearningEngineService 
 
   @Override
   public boolean addLearningEngineExperimentalAnalysisTask(LearningEngineExperimentalAnalysisTask analysisTask) {
+    LearningEngineExperimentalAnalysisTask experimentalAnalysisTask =
+        wingsPersistence.createQuery(LearningEngineExperimentalAnalysisTask.class)
+            .field("state_execution_id")
+            .equal(analysisTask.getState_execution_id())
+            .get();
+    if (experimentalAnalysisTask != null) {
+      logger.info("task already queued for experiment {}", analysisTask.getState_execution_id());
+      return false;
+    }
     analysisTask.setVersion(learningEngineApiVersion);
     analysisTask.setExecutionStatus(ExecutionStatus.QUEUED);
     analysisTask.setRetry(0);

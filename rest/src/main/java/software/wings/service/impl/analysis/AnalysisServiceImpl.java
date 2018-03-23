@@ -727,7 +727,8 @@ public class AnalysisServiceImpl implements AnalysisService {
   public List<LogMLExpAnalysisInfo> getExpAnalysisInfoList() {
     PageRequest<ExperimentalLogMLAnalysisRecord> pageRequest =
         aPageRequest()
-            .addFieldsIncluded("stateExecutionId", "applicationId", "stateType", "experiment_name", "createdAt")
+            .addFieldsIncluded("stateExecutionId", "applicationId", "stateType", "experiment_name", "createdAt",
+                "envId", "workflowExecutionId")
             .build();
     List<ExperimentalLogMLAnalysisRecord> experimentalLogMLAnalysisRecords =
         wingsPersistence.queryAll(ExperimentalLogMLAnalysisRecord.class, pageRequest);
