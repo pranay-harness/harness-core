@@ -1,5 +1,6 @@
 package software.wings.common;
 
+import static com.mongodb.ErrorCategory.DUPLICATE_KEY;
 import static io.harness.distribution.idempotence.IdempotentRegistry.State.DONE;
 import static io.harness.distribution.idempotence.IdempotentRegistry.State.NEW;
 import static io.harness.distribution.idempotence.IdempotentRegistry.State.RUNNING;
@@ -9,6 +10,7 @@ import static software.wings.beans.Idempotent.TENTATIVE;
 
 import com.google.inject.Inject;
 
+import com.mongodb.ErrorCategory;
 import com.mongodb.MongoCommandException;
 import com.mongodb.WriteConcern;
 import io.harness.distribution.idempotence.IdempotentId;
@@ -55,7 +57,7 @@ public class MongoIdempotentRegistry<T> implements IdempotentRegistry<T> {
       }
     } catch (MongoCommandException exception) {
       // If we failed with duplicate key - there is already successful operation in the db
-      if (exception.getMessage().contains("E11000 ")) {
+      if (ErrorCategory.fromErrorCode(exception.getErrorCode()) == DUPLICATE_KEY) {
         Idempotent idempotent = wingsPersistence.get(Idempotent.class, id.getValue());
         return Response.builder().state(DONE).result((T) idempotent.getResult().get(0)).build();
       }
