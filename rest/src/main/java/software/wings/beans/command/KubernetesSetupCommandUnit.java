@@ -622,10 +622,9 @@ public class KubernetesSetupCommandUnit extends ContainerSetupCommandUnit {
 
     if (isNotEmpty(setupParams.getCustomMetricYamlConfig())) {
       executionLogCallback.saveExecutionLog(
-          String.format("Setting autoscaler with custom metric config: %s", setupParams.getCustomMetricYamlConfig()),
-          LogLevel.INFO);
+          "Creating autoscaler with custom metrics:\n\n" + setupParams.getCustomMetricYamlConfig() + "\n");
       horizontalPodAutoscaler =
-          getCustomMetricHorizontalPodAutoscalar(autoscalerName, namespace, serviceLabels, setupParams);
+          getCustomMetricHorizontalPodAutoscaler(autoscalerName, namespace, serviceLabels, setupParams);
     } else {
       executionLogCallback.saveExecutionLog(
           String.format("Setting autoscaler min instances %d, max instances %d, with target CPU utilization %d%%",
@@ -655,7 +654,7 @@ public class KubernetesSetupCommandUnit extends ContainerSetupCommandUnit {
         kubernetesConfig, encryptedDataDetails, autoscaler, ContainerApiVersions.KUBERNETES_V1.getVersionName());
   }
 
-  private HorizontalPodAutoscaler getCustomMetricHorizontalPodAutoscalar(
+  private HorizontalPodAutoscaler getCustomMetricHorizontalPodAutoscaler(
       String autoscalerName, String namespace, Map<String, String> serviceLabels, KubernetesSetupParams setupParams) {
     try {
       HorizontalPodAutoscaler horizontalPodAutoscaler =
