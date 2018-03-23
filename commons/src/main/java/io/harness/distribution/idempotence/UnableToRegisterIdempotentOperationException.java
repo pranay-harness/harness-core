@@ -1,4 +1,4 @@
-package io.harness.exception;
+package io.harness.distribution.idempotence;
 
 public class UnableToRegisterIdempotentOperationException extends Exception {
   public UnableToRegisterIdempotentOperationException(String message) {

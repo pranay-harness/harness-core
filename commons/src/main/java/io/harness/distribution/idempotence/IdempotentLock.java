@@ -1,11 +1,10 @@
-package io.harness.idempotence;
+package io.harness.distribution.idempotence;
 
 import static io.harness.govern.Switch.unhandled;
 import static java.lang.String.format;
 import static java.time.Duration.ofMillis;
 import static java.time.Duration.ofMinutes;
 
-import io.harness.exception.UnableToRegisterIdempotentOperationException;
 import io.harness.threading.Morpheus;
 import lombok.Builder;
 

@@ -9,10 +9,10 @@ import static software.wings.beans.Idempotent.TENTATIVE;
 import com.google.inject.Inject;
 
 import com.mongodb.MongoCommandException;
-import io.harness.exception.UnableToRegisterIdempotentOperationException;
-import io.harness.idempotence.IdempotentId;
-import io.harness.idempotence.IdempotentLock;
-import io.harness.idempotence.IdempotentRegistry;
+import io.harness.distribution.idempotence.IdempotentId;
+import io.harness.distribution.idempotence.IdempotentLock;
+import io.harness.distribution.idempotence.IdempotentRegistry;
+import io.harness.distribution.idempotence.UnableToRegisterIdempotentOperationException;
 import io.harness.rule.RepeatRule.Repeat;
 import io.harness.threading.Concurrent;
 import org.junit.Test;
