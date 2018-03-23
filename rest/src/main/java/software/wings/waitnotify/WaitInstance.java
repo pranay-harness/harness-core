@@ -3,9 +3,13 @@ package software.wings.waitnotify;
 import static java.util.Arrays.asList;
 
 import org.mongodb.morphia.annotations.Entity;
+import org.mongodb.morphia.annotations.IndexOptions;
+import org.mongodb.morphia.annotations.Indexed;
 import software.wings.beans.Base;
 import software.wings.sm.ExecutionStatus;
 
+import java.time.OffsetDateTime;
+import java.util.Date;
 import java.util.List;
 import java.util.Objects;
 
@@ -23,6 +27,9 @@ public class WaitInstance extends Base {
   private long timeoutMsec;
 
   private ExecutionStatus status = ExecutionStatus.NEW;
+
+  @Indexed(options = @IndexOptions(expireAfterSeconds = 0))
+  private Date validUntil = Date.from(OffsetDateTime.now().plusMonths(1).toInstant());
 
   /**
    * Instantiates a new wait instance.

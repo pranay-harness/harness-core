@@ -9,6 +9,7 @@ import com.deftlabs.lock.mongo.DistributedLockSvc;
 import com.deftlabs.lock.mongo.DistributedLockSvcFactory;
 import com.deftlabs.lock.mongo.DistributedLockSvcOptions;
 import com.mongodb.BasicDBObject;
+import com.mongodb.DBObject;
 import com.mongodb.MongoClient;
 import com.mongodb.MongoClientOptions;
 import com.mongodb.MongoClientOptions.Builder;
@@ -141,16 +142,24 @@ public class DatabaseModule extends AbstractModule {
             reportDeprecatedUnique(indexed);
 
             BasicDBObject dbObject = new BasicDBObject().append(mf.getNameToStore(), 1);
+
+            DBObject options = new BasicDBObject();
+            if (indexed.options().unique()) {
+              options.put("unique", Boolean.TRUE);
+            }
+            if (indexed.options().expireAfterSeconds() != -1) {
+              options.put("expireAfterSeconds", indexed.options().expireAfterSeconds());
+            }
+
             try {
-              this.primaryDatastore.getCollection(mc.getClazz())
-                  .createIndex(dbObject, null, indexed.options().unique());
+              this.primaryDatastore.getCollection(mc.getClazz()).createIndex(dbObject, options);
             } catch (MongoCommandException mex) {
-              if (mex.getErrorCode() == 85) { // When Index creation fails due to changed options drop it and recreate.
+              // When Index creation fails due to changed options drop it and recreate.
+              if (mex.getErrorCode() == 85) {
                 this.primaryDatastore.getCollection(mc.getClazz())
                     .dropIndex(new BasicDBObject().append(mf.getNameToStore(), 1));
                 try {
-                  this.primaryDatastore.getCollection(mc.getClazz())
-                      .createIndex(dbObject, null, indexed.options().unique());
+                  this.primaryDatastore.getCollection(mc.getClazz()).createIndex(dbObject, options);
                 } catch (MongoCommandException mex1) {
                   logger.error("Index creation failed for class " + mc.getClazz().getCanonicalName(), mex1);
                   throw mex1;
