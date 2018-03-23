@@ -7,6 +7,7 @@ import static io.harness.data.structure.EmptyPredicate.isNotEmpty;
 import static io.harness.network.Http.getOkHttpClientBuilder;
 import static okhttp3.ConnectionSpec.CLEARTEXT;
 import static org.apache.commons.lang3.StringUtils.isNotBlank;
+import static software.wings.common.Constants.HARNESS_REVISION;
 
 import com.google.inject.Inject;
 import com.google.inject.Singleton;
@@ -29,6 +30,9 @@ import io.fabric8.kubernetes.client.dsl.Resource;
 import io.fabric8.kubernetes.client.dsl.internal.HorizontalPodAutoscalerOperationsImpl;
 import io.fabric8.kubernetes.client.internal.SSLUtils;
 import io.harness.network.Http;
+import me.snowdrop.istio.api.model.IstioResource;
+import me.snowdrop.istio.api.model.v1.routing.DestinationWeight;
+import me.snowdrop.istio.api.model.v1.routing.RouteRule;
 import me.snowdrop.istio.client.IstioClient;
 import me.snowdrop.istio.client.KubernetesAdapter;
 import okhttp3.Authenticator;
@@ -45,6 +49,7 @@ import org.apache.commons.lang3.StringUtils;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import software.wings.beans.KubernetesConfig;
+import software.wings.beans.command.ExecutionLogCallback;
 import software.wings.security.encryption.EncryptedDataDetail;
 import software.wings.service.intfc.security.EncryptionService;
 import software.wings.yaml.YamlHelper;
@@ -56,8 +61,10 @@ import java.net.MalformedURLException;
 import java.net.Proxy;
 import java.net.URL;
 import java.security.GeneralSecurityException;
+import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Base64;
+import java.util.Comparator;
 import java.util.List;
 import java.util.TreeMap;
 import java.util.concurrent.TimeUnit;
@@ -132,6 +139,18 @@ public class KubernetesHelperService {
 
   public IstioClient getIstioClient(KubernetesConfig kubernetesConfig, List<EncryptedDataDetail> encryptedDataDetails) {
     return new IstioClient(new KubernetesAdapter(getKubernetesClient(kubernetesConfig, encryptedDataDetails)));
+  }
+
+  public static void printRouteRuleWeights(
+      IstioResource routeRule, String controllerPrefix, ExecutionLogCallback executionLogCallback) {
+    RouteRule routeRuleSpec = (RouteRule) routeRule.getSpec();
+    List<DestinationWeight> sorted = new ArrayList<>(routeRuleSpec.getRoute());
+    sorted.sort(Comparator.comparing(a -> Integer.valueOf(a.getLabels().get(HARNESS_REVISION))));
+    for (DestinationWeight destinationWeight : sorted) {
+      int weight = destinationWeight.getWeight();
+      String rev = destinationWeight.getLabels().get(HARNESS_REVISION);
+      executionLogCallback.saveExecutionLog(String.format("   %s%s: %d%%", controllerPrefix, rev, weight));
+    }
   }
 
   /**

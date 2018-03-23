@@ -2,6 +2,7 @@ package software.wings.beans.command;
 
 import static software.wings.cloudprovider.ContainerInfo.Status.SUCCESS;
 import static software.wings.common.Constants.HARNESS_REVISION;
+import static software.wings.service.impl.KubernetesHelperService.printRouteRuleWeights;
 import static software.wings.utils.KubernetesConvention.getPrefixFromControllerName;
 import static software.wings.utils.KubernetesConvention.getRevisionFromControllerName;
 import static software.wings.utils.KubernetesConvention.getServiceNameFromControllerName;
@@ -35,6 +36,7 @@ import software.wings.helpers.ext.azure.AzureHelperService;
 import software.wings.security.encryption.EncryptedDataDetail;
 
 import java.util.ArrayList;
+import java.util.Comparator;
 import java.util.List;
 import java.util.Map;
 import java.util.Optional;
@@ -90,10 +92,53 @@ public class KubernetesResizeCommandUnit extends ContainerResizeCommandUnit {
     if (resizeParams.isUseIstioRouteRule()) {
       List<EncryptedDataDetail> encryptedDataDetails = new ArrayList<>();
       KubernetesConfig kubernetesConfig = getKubernetesConfig(contextData, encryptedDataDetails);
-      kubernetesContainerService.createOrReplaceRouteRule(kubernetesConfig, encryptedDataDetails,
-          createRouteRuleDefinition(contextData, allData, executionLogCallback));
+      String kubernetesServiceName = getServiceNameFromControllerName(allData.get(0).getName());
+      String controllerPrefix = getPrefixFromControllerName(resizeParams.getContainerServiceName());
+      IstioResource routeRuleDefinition = createRouteRuleDefinition(contextData, allData, kubernetesServiceName);
+      IstioResource existingRouteRule =
+          kubernetesContainerService.getRouteRule(kubernetesConfig, encryptedDataDetails, kubernetesServiceName);
+      if (!routeRuleMatchesExisting(existingRouteRule, routeRuleDefinition)) {
+        executionLogCallback.saveExecutionLog("Setting Istio route rule weights:");
+        printRouteRuleWeights(routeRuleDefinition, controllerPrefix, executionLogCallback);
+        kubernetesContainerService.createOrReplaceRouteRule(
+            kubernetesConfig, encryptedDataDetails, routeRuleDefinition);
+      } else {
+        executionLogCallback.saveExecutionLog("No change to Istio route rule:");
+        printRouteRuleWeights(existingRouteRule, controllerPrefix, executionLogCallback);
+      }
       executionLogCallback.saveExecutionLog(DASH_STRING + "\n");
     }
+  }
+
+  private boolean routeRuleMatchesExisting(IstioResource existingRouteRule, IstioResource routeRule) {
+    if (existingRouteRule == null) {
+      return false;
+    }
+
+    RouteRule routeRuleSpec = (RouteRule) routeRule.getSpec();
+    RouteRule existingRouteRuleSpec = (RouteRule) existingRouteRule.getSpec();
+
+    if (routeRuleSpec.getRoute().size() != existingRouteRuleSpec.getRoute().size()) {
+      return false;
+    }
+
+    List<DestinationWeight> sorted = new ArrayList<>(routeRuleSpec.getRoute());
+    List<DestinationWeight> existingSorted = new ArrayList<>(existingRouteRuleSpec.getRoute());
+    Comparator<DestinationWeight> comparator =
+        Comparator.comparing(a -> Integer.valueOf(a.getLabels().get(HARNESS_REVISION)));
+    sorted.sort(comparator);
+    existingSorted.sort(comparator);
+
+    for (int i = 0; i < sorted.size(); i++) {
+      DestinationWeight dw1 = sorted.get(i);
+      DestinationWeight dw2 = existingSorted.get(i);
+      if (!dw1.getLabels().get(HARNESS_REVISION).equals(dw2.getLabels().get(HARNESS_REVISION))
+          || !dw1.getWeight().equals(dw2.getWeight())) {
+        return false;
+      }
+    }
+
+    return true;
   }
 
   private KubernetesConfig getKubernetesConfig(
@@ -163,10 +208,8 @@ public class KubernetesResizeCommandUnit extends ContainerResizeCommandUnit {
   }
 
   private IstioResource createRouteRuleDefinition(
-      ContextData contextData, List<ContainerServiceData> allData, ExecutionLogCallback executionLogCallback) {
+      ContextData contextData, List<ContainerServiceData> allData, String kubernetesServiceName) {
     KubernetesResizeParams resizeParams = (KubernetesResizeParams) contextData.resizeParams;
-    String kubernetesServiceName = getServiceNameFromControllerName(allData.get(0).getName());
-    String prefix = getPrefixFromControllerName(allData.get(0).getName());
 
     RouteRuleSpecNested<IstioResourceBuilder> routeRuleSpecNested = new IstioResourceBuilder()
                                                                         .withNewMetadata()
@@ -189,16 +232,7 @@ public class KubernetesResizeCommandUnit extends ContainerResizeCommandUnit {
       }
     }
 
-    IstioResource routeRule = routeRuleSpecNested.endRouteRuleSpec().build();
-    executionLogCallback.saveExecutionLog("Setting Istio route rule weights:");
-    RouteRule routeRuleSpec = (RouteRule) routeRule.getSpec();
-    for (DestinationWeight destinationWeight : routeRuleSpec.getRoute()) {
-      int weight = destinationWeight.getWeight();
-      String rev = destinationWeight.getLabels().get(HARNESS_REVISION);
-      executionLogCallback.saveExecutionLog(String.format("   %s%s: %d%%", prefix, rev, weight));
-    }
-
-    return routeRule;
+    return routeRuleSpecNested.endRouteRuleSpec().build();
   }
 
   private void enableAutoscaler(KubernetesConfig kubernetesConfig, List<EncryptedDataDetail> encryptedDataDetails,
