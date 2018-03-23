@@ -1,6 +1,7 @@
 package software.wings.beans.command;
 
 import static software.wings.cloudprovider.ContainerInfo.Status.SUCCESS;
+import static software.wings.common.Constants.HARNESS_REVISION;
 import static software.wings.utils.KubernetesConvention.getPrefixFromControllerName;
 import static software.wings.utils.KubernetesConvention.getRevisionFromControllerName;
 import static software.wings.utils.KubernetesConvention.getServiceNameFromControllerName;
@@ -181,10 +182,8 @@ public class KubernetesResizeCommandUnit extends ContainerResizeCommandUnit {
       int revision = getRevisionFromControllerName(containerServiceData.getName()).orElse(-1);
       int weight = containerServiceData.getDesiredTraffic();
       if (weight > 0) {
-        routeRuleSpecNested
-            .addNewRoute()
-            // TODO(brett) - Switch to "harness-revision" after 3/26/18
-            .addToLabels("revision", Integer.toString(revision))
+        routeRuleSpecNested.addNewRoute()
+            .addToLabels(HARNESS_REVISION, Integer.toString(revision))
             .withWeight(weight)
             .endRoute();
       }
@@ -195,8 +194,7 @@ public class KubernetesResizeCommandUnit extends ContainerResizeCommandUnit {
     RouteRule routeRuleSpec = (RouteRule) routeRule.getSpec();
     for (DestinationWeight destinationWeight : routeRuleSpec.getRoute()) {
       int weight = destinationWeight.getWeight();
-      // TODO(brett) - Switch to "harness-revision" after 3/26/18
-      String rev = destinationWeight.getLabels().get("revision");
+      String rev = destinationWeight.getLabels().get(HARNESS_REVISION);
       executionLogCallback.saveExecutionLog(String.format("   %s%s: %d%%", prefix, rev, weight));
     }
 
