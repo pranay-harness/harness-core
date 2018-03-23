@@ -220,13 +220,17 @@ public class KubernetesSetupCommandUnit extends ContainerSetupCommandUnit {
           ? setupParams.getControllerNamePrefix()
           : KubernetesConvention.getControllerName(setupParams.getControllerNamePrefix(), revision);
 
-      String previousDaemonSetYaml =
-          isDaemonSet ? getDaemonSetYaml(kubernetesConfig, encryptedDataDetails, containerServiceName) : null;
-      List<String> previousActiveAutoscalers = isDaemonSet
-          ? null
-          : getActiveAutoscalers(kubernetesConfig, encryptedDataDetails, containerServiceName, executionLogCallback);
+      String previousDaemonSetYaml = null;
+      List<String> previousActiveAutoscalers = null;
+      int activeServiceCount = 0;
 
-      int activeServiceCount = getPodCount(kubernetesConfig, encryptedDataDetails, containerServiceName);
+      if (isDaemonSet) {
+        previousDaemonSetYaml = getDaemonSetYaml(kubernetesConfig, encryptedDataDetails, containerServiceName);
+      } else {
+        previousActiveAutoscalers =
+            getActiveAutoscalers(kubernetesConfig, encryptedDataDetails, containerServiceName, executionLogCallback);
+        activeServiceCount = getPodCount(kubernetesConfig, encryptedDataDetails, containerServiceName);
+      }
 
       commandExecutionDataBuilder.containerServiceName(containerServiceName)
           .previousDaemonSetYaml(previousDaemonSetYaml)
