@@ -1,5 +1,6 @@
 package software.wings.beans;
 
+import lombok.Builder;
 import lombok.Data;
 import lombok.EqualsAndHashCode;
 import lombok.NoArgsConstructor;
@@ -22,7 +23,7 @@ public class FailureStrategy {
   private int retryCount;
   private List<Integer> retryIntervals;
   private RepairActionCode repairActionCodeAfterRetry;
-  private List<String> specificSteps;
+  private List<String> specificSteps = new ArrayList<>();
   @Valid private FailureCriteria failureCriteria;
 
   @Data
@@ -36,79 +37,20 @@ public class FailureStrategy {
     private List<Integer> retryIntervals;
     private String repairActionCodeAfterRetry;
     private FailureCriteria failureCriteria;
+    private List<String> specificSteps = new ArrayList<>();
 
-    public static final class Builder {
-      private List<String> failureTypes = new ArrayList<>();
-      private String executionScope;
-      private String repairActionCode;
-      private int retryCount;
-      private List<Integer> retryIntervals;
-      private String repairActionCodeAfterRetry;
-      private FailureCriteria failureCriteria;
-
-      private Builder() {}
-
-      public static Builder anYaml() {
-        return new Builder();
-      }
-
-      public Builder withFailureTypes(List<String> failureTypes) {
-        this.failureTypes = failureTypes;
-        return this;
-      }
-
-      public Builder withExecutionScope(String executionScope) {
-        this.executionScope = executionScope;
-        return this;
-      }
-
-      public Builder withRepairActionCode(String repairActionCode) {
-        this.repairActionCode = repairActionCode;
-        return this;
-      }
-
-      public Builder withRetryCount(int retryCount) {
-        this.retryCount = retryCount;
-        return this;
-      }
-
-      public Builder withRetryIntervals(List<Integer> retryIntervals) {
-        this.retryIntervals = retryIntervals;
-        return this;
-      }
-
-      public Builder withRepairActionCodeAfterRetry(String repairActionCodeAfterRetry) {
-        this.repairActionCodeAfterRetry = repairActionCodeAfterRetry;
-        return this;
-      }
-
-      public Builder withFailureCriteria(FailureCriteria failureCriteria) {
-        this.failureCriteria = failureCriteria;
-        return this;
-      }
-
-      public Builder but() {
-        return anYaml()
-            .withFailureTypes(failureTypes)
-            .withExecutionScope(executionScope)
-            .withRepairActionCode(repairActionCode)
-            .withRetryCount(retryCount)
-            .withRetryIntervals(retryIntervals)
-            .withRepairActionCodeAfterRetry(repairActionCodeAfterRetry)
-            .withFailureCriteria(failureCriteria);
-      }
-
-      public Yaml build() {
-        Yaml yaml = new Yaml();
-        yaml.setFailureTypes(failureTypes);
-        yaml.setExecutionScope(executionScope);
-        yaml.setRepairActionCode(repairActionCode);
-        yaml.setRetryCount(retryCount);
-        yaml.setRetryIntervals(retryIntervals);
-        yaml.setRepairActionCodeAfterRetry(repairActionCodeAfterRetry);
-        yaml.setFailureCriteria(failureCriteria);
-        return yaml;
-      }
+    @Builder
+    public Yaml(List<String> failureTypes, String executionScope, String repairActionCode, int retryCount,
+        List<Integer> retryIntervals, String repairActionCodeAfterRetry, FailureCriteria failureCriteria,
+        List<String> specificSteps) {
+      this.failureTypes = failureTypes;
+      this.executionScope = executionScope;
+      this.repairActionCode = repairActionCode;
+      this.retryCount = retryCount;
+      this.retryIntervals = retryIntervals;
+      this.repairActionCodeAfterRetry = repairActionCodeAfterRetry;
+      this.failureCriteria = failureCriteria;
+      this.specificSteps = specificSteps;
     }
   }
 
@@ -236,6 +178,7 @@ public class FailureStrategy {
     private List<Integer> retryIntervals;
     private RepairActionCode repairActionCodeAfterRetry;
     private FailureCriteria failureCriteria;
+    private List<String> specificSteps = new ArrayList<>();
 
     private FailureStrategyBuilder() {}
 
@@ -245,6 +188,11 @@ public class FailureStrategy {
 
     public FailureStrategyBuilder addFailureTypes(FailureType failureType) {
       failureTypes.add(failureType);
+      return this;
+    }
+
+    public FailureStrategyBuilder addSpecificSteps(String step) {
+      specificSteps.add(step);
       return this;
     }
 
@@ -287,6 +235,7 @@ public class FailureStrategy {
       failureStrategy.setRetryIntervals(retryIntervals);
       failureStrategy.setRepairActionCodeAfterRetry(repairActionCodeAfterRetry);
       failureStrategy.setFailureCriteria(failureCriteria);
+      failureStrategy.setSpecificSteps(specificSteps);
       return failureStrategy;
     }
   }
