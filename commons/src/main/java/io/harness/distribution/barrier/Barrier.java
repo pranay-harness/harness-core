@@ -13,6 +13,28 @@ import java.util.ArrayDeque;
 import java.util.Deque;
 import java.util.List;
 
+/*
+ * Distributed Barrier is designed to provide a very well known inproc pattern of waiting until every thread hits a
+ * certain point and then unblocks all of them together, but in distributed environment. This obviously creates set of
+ * challenges that do not face the inproc scenario.
+ *
+ *
+ * Before we get in details lets put a small glossary:
+ * * down condition - condition that determines when the barrier is pushed down
+ * * forcer - an agent that applies force on the barrier.
+ * * barrier - system that blocks the progress of forcers until a down condition is met
+ * * barrier registry - a storage where the barrier can be persisted in a distributed way
+ * * force proctor - a system that interacts with the real live forcers to determine their state
+ *
+ * The Barrier is a Combining Tree Polling Barrier that can be used in distributed environment with
+ * unreliable forcers. This means that it will allow to provide the necessary unblocking even if
+ * forcers are unavailable to push their change of state.
+ *
+ * The combining tree allows for reducing the number of request to every individual forcers and also
+ * eliminates the need of every single one to be executed. Only the top level forcer is critical for the
+ * barrier behavior.
+ */
+
 @Value
 @Builder
 public class Barrier {
@@ -57,7 +79,7 @@ public class Barrier {
           // If the forcer is still running the barrier is not down. It might be standing
           state = STANDS;
 
-          final List<Forcer> children = forcer.getChildren();
+          final List<Forcer> children = firstForcer.getChildren();
 
           // Running parent suggests that there might be children that are in progress, but some of them
           // might failed. We need to check the children about that.
