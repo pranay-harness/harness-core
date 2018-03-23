@@ -7,6 +7,7 @@ import static java.util.Comparator.comparingInt;
 import static java.util.stream.Collectors.toList;
 import static java.util.stream.Collectors.toMap;
 import static org.apache.commons.lang3.StringUtils.isNotBlank;
+import static software.wings.common.Constants.HARNESS_REVISION;
 import static software.wings.utils.KubernetesConvention.getPrefixFromControllerName;
 import static software.wings.utils.KubernetesConvention.getRevisionFromControllerName;
 import static software.wings.utils.KubernetesConvention.getServiceNameFromControllerName;
@@ -725,8 +726,7 @@ public class KubernetesContainerServiceImpl implements KubernetesContainerServic
     RouteRule routeRuleSpec = (RouteRule) routeRule.getSpec();
     return routeRuleSpec.getRoute()
         .stream()
-        // TODO(brett) - Switch to "harness-revision" after 3/26/18
-        .filter(dw -> Integer.toString(revision.get()).equals(dw.getLabels().get("revision")))
+        .filter(dw -> Integer.toString(revision.get()).equals(dw.getLabels().get(HARNESS_REVISION)))
         .map(DestinationWeight::getWeight)
         .findFirst()
         .orElse(0);
@@ -743,8 +743,7 @@ public class KubernetesContainerServiceImpl implements KubernetesContainerServic
     }
     RouteRule routeRuleSpec = (RouteRule) routeRule.getSpec();
     return routeRuleSpec.getRoute().stream().collect(
-        // TODO(brett) - Switch to "harness-revision" after 3/26/18
-        toMap(dw -> controllerNamePrefix + dw.getLabels().get("revision"), DestinationWeight::getWeight));
+        toMap(dw -> controllerNamePrefix + dw.getLabels().get(HARNESS_REVISION), DestinationWeight::getWeight));
   }
 
   @Override

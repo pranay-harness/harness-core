@@ -10,6 +10,10 @@ import static java.util.stream.Collectors.toMap;
 import static org.apache.commons.lang3.StringUtils.isNotBlank;
 import static software.wings.beans.container.KubernetesContainerTask.CONFIG_MAP_NAME_PLACEHOLDER_REGEX;
 import static software.wings.beans.container.KubernetesContainerTask.SECRET_MAP_NAME_PLACEHOLDER_REGEX;
+import static software.wings.common.Constants.HARNESS_APP;
+import static software.wings.common.Constants.HARNESS_ENV;
+import static software.wings.common.Constants.HARNESS_REVISION;
+import static software.wings.common.Constants.HARNESS_SERVICE;
 import static software.wings.common.Constants.SECRET_MASK;
 import static software.wings.service.impl.KubernetesHelperService.toDisplayYaml;
 import static software.wings.service.impl.KubernetesHelperService.toYaml;
@@ -231,33 +235,15 @@ public class KubernetesSetupCommandUnit extends ContainerSetupCommandUnit {
 
       Map<String, String> serviceLabels =
           ImmutableMap.<String, String>builder()
-              .put("app", KubernetesConvention.getLabelValue(setupParams.getAppName()))
-              .put("service", KubernetesConvention.getLabelValue(setupParams.getServiceName()))
-              .put("env", KubernetesConvention.getLabelValue(setupParams.getEnvName()))
+              .put(HARNESS_APP, KubernetesConvention.getLabelValue(setupParams.getAppName()))
+              .put(HARNESS_SERVICE, KubernetesConvention.getLabelValue(setupParams.getServiceName()))
+              .put(HARNESS_ENV, KubernetesConvention.getLabelValue(setupParams.getEnvName()))
               .build();
 
-      // TODO(brett) - To switch to these new labels we need to set them on the controller for awhile first
-      // After 3/26/18 the new labels will have been in the controllers for a week and we can switch the services
-      // over to the new labels and stop setting the old labels in the controller.
-
-      Map<String, String> futureServiceLabels =
-          ImmutableMap.<String, String>builder()
-              .put("harness-app", KubernetesConvention.getLabelValue(setupParams.getAppName()))
-              .put("harness-service", KubernetesConvention.getLabelValue(setupParams.getServiceName()))
-              .put("harness-env", KubernetesConvention.getLabelValue(setupParams.getEnvName()))
-              .build();
-
-      Map<String, String> controllerLabels =
-          ImmutableMap
-              .<String, String>builder()
-              // TODO(brett) - Set both old and new service labels for now. After 3/26/18 when service
-              // switches to new then only new needs to be set
-              .putAll(serviceLabels)
-              .putAll(futureServiceLabels)
-              // TODO(brett) - Set only "harness-revision" after 3/26/18
-              .put("revision", isDaemonSet ? "ds" : Integer.toString(revision))
-              .put("harness-revision", isDaemonSet ? "ds" : Integer.toString(revision))
-              .build();
+      Map<String, String> controllerLabels = ImmutableMap.<String, String>builder()
+                                                 .putAll(serviceLabels)
+                                                 .put(HARNESS_REVISION, isDaemonSet ? "ds" : Integer.toString(revision))
+                                                 .build();
 
       // Setup config map
       ConfigMap configMap = prepareConfigMap(kubernetesConfig, encryptedDataDetails, setupParams, containerServiceName,
@@ -397,8 +383,7 @@ public class KubernetesSetupCommandUnit extends ContainerSetupCommandUnit {
       IstioResource routeRule, String controllerName, ExecutionLogCallback executionLogCallback) {
     RouteRule routeRuleSpec = (RouteRule) routeRule.getSpec();
     for (DestinationWeight destinationWeight : routeRuleSpec.getRoute()) {
-      // TODO(brett) - Switch to "harness-revision" after 3/26/18
-      String rev = destinationWeight.getLabels().get("revision");
+      String rev = destinationWeight.getLabels().get(HARNESS_REVISION);
       int weight = destinationWeight.getWeight();
       executionLogCallback.saveExecutionLog(
           String.format("   %s%s: %d%%", getPrefixFromControllerName(controllerName), rev, weight));
@@ -743,10 +728,8 @@ public class KubernetesSetupCommandUnit extends ContainerSetupCommandUnit {
       if (revision.isPresent()) {
         int weight = (int) Math.round((activeControllers.get(controller) * 100.0) / totalInstances);
         if (weight > 0) {
-          routeRuleSpecNested
-              .addNewRoute()
-              // TODO(brett) - Switch to "harness-revision" after 3/26/18
-              .addToLabels("revision", revision.get().toString())
+          routeRuleSpecNested.addNewRoute()
+              .addToLabels(HARNESS_REVISION, revision.get().toString())
               .withWeight(weight)
               .endRoute();
         }

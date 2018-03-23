@@ -657,6 +657,11 @@ public interface Constants {
    */
   String HARNESS_NAME = "Harness";
 
+  String HARNESS_APP = "harness-app";
+  String HARNESS_SERVICE = "harness-service";
+  String HARNESS_ENV = "harness-env";
+  String HARNESS_REVISION = "harness-revision";
+
   /**
    * The constant DEFAULT_AWS_HOST_NAME_CONVENTION.
    */
