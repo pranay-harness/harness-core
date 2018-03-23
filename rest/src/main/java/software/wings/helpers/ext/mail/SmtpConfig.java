@@ -32,10 +32,10 @@ public class SmtpConfig extends SettingValue implements Encryptable {
   @DefaultValue("wings") @Attributes(title = "From Address") private String fromAddress;
   @DefaultValue("true") @Attributes(title = "SSL") private boolean useSSL;
   @Attributes(title = "Username") private String username;
-  @JsonView(JsonViews.Internal.class) @Attributes(title = "Password") @Encrypted private char[] password;
+  @Attributes(title = "Password") @Encrypted private char[] password;
   @SchemaIgnore @NotEmpty private String accountId;
 
-  @SchemaIgnore private String encryptedPassword;
+  @JsonView(JsonViews.Internal.class) @SchemaIgnore private String encryptedPassword;
 
   /**
    * Instantiates a new smtp config.

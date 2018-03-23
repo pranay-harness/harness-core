@@ -66,6 +66,7 @@ import software.wings.service.intfc.security.SecretManager;
 import software.wings.service.intfc.security.VaultService;
 import software.wings.settings.SettingValue.SettingVariableTypes;
 import software.wings.utils.BoundedInputStream;
+import software.wings.utils.Validator;
 
 import java.io.ByteArrayInputStream;
 import java.io.ByteArrayOutputStream;
@@ -89,6 +90,7 @@ import java.util.UUID;
  */
 public class SecretManagerImpl implements SecretManager {
   public static final String HARNESS_DEFAULT_SECRET_MANAGER = "Harness Manager";
+  public static final char[] ENCRYPTED_FIELD_MASK = "*******".toCharArray();
   protected static final Logger logger = LoggerFactory.getLogger(SecretManagerImpl.class);
 
   @Inject private WingsPersistence wingsPersistence;
@@ -242,6 +244,36 @@ public class SecretManagerImpl implements SecretManager {
     }
 
     return encryptedDataDetails;
+  }
+
+  @Override
+  public void maskEncryptedFields(Encryptable object) {
+    List<Field> encryptedFields = object.getEncryptedFields();
+    try {
+      for (Field f : encryptedFields) {
+        f.setAccessible(true);
+        f.set(object, ENCRYPTED_FIELD_MASK);
+      }
+    } catch (IllegalAccessException e) {
+      throw new WingsException(e);
+    }
+  }
+
+  @Override
+  public void resetUnchangedEncryptedFields(Encryptable sourceObject, Encryptable destinationObject) {
+    Validator.equalCheck(sourceObject.getClass().getName(), destinationObject.getClass().getName());
+
+    List<Field> encryptedFields = sourceObject.getEncryptedFields();
+    try {
+      for (Field f : encryptedFields) {
+        f.setAccessible(true);
+        if (java.util.Arrays.equals((char[]) f.get(destinationObject), ENCRYPTED_FIELD_MASK)) {
+          f.set(destinationObject, f.get(sourceObject));
+        }
+      }
+    } catch (IllegalAccessException e) {
+      throw new WingsException(e);
+    }
   }
 
   @Override

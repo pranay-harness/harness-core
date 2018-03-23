@@ -31,7 +31,6 @@ import software.wings.yaml.setting.VerificationProviderYaml;
 public class AppDynamicsConfig extends SettingValue implements Encryptable {
   @Attributes(title = "User Name", required = true) @NotEmpty private String username;
   @Attributes(title = "Account Name", required = true) @NotEmpty private String accountname;
-  @JsonView(JsonViews.Internal.class)
   @Attributes(title = "Password", required = true)
 
   @Encrypted
@@ -39,7 +38,7 @@ public class AppDynamicsConfig extends SettingValue implements Encryptable {
   @Attributes(title = "Controller URL", required = true) @NotEmpty private String controllerUrl;
   @SchemaIgnore @NotEmpty private String accountId;
 
-  @SchemaIgnore private String encryptedPassword;
+  @JsonView(JsonViews.Internal.class) @SchemaIgnore private String encryptedPassword;
 
   /**
    * Instantiates a new App dynamics config.

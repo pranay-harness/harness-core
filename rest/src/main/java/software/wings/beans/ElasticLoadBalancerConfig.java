@@ -2,6 +2,7 @@ package software.wings.beans;
 
 import com.amazonaws.regions.Regions;
 import com.fasterxml.jackson.annotation.JsonTypeName;
+import com.fasterxml.jackson.annotation.JsonView;
 import com.github.reinert.jjschema.Attributes;
 import com.github.reinert.jjschema.SchemaIgnore;
 import lombok.Builder;
@@ -14,6 +15,7 @@ import software.wings.annotation.Encryptable;
 import software.wings.annotation.Encrypted;
 import software.wings.api.LoadBalancerConfig;
 import software.wings.beans.AwsInfrastructureMapping.AwsRegionDataProvider;
+import software.wings.jersey.JsonViews;
 import software.wings.settings.UsageRestrictions;
 import software.wings.stencils.DefaultValue;
 import software.wings.stencils.EnumData;
@@ -41,7 +43,7 @@ public class ElasticLoadBalancerConfig extends LoadBalancerConfig implements Enc
 
   @SchemaIgnore @NotEmpty private String accountId;
 
-  @SchemaIgnore private String encryptedSecretKey;
+  @JsonView(JsonViews.Internal.class) @SchemaIgnore private String encryptedSecretKey;
 
   /**
    * Instantiates a new Elastic load balancer config.

@@ -30,14 +30,11 @@ public class SplunkConfig extends SettingValue implements Encryptable {
 
   @NotEmpty @Attributes(title = "User Name", required = true) private String username;
 
-  @JsonView(JsonViews.Internal.class)
-  @Attributes(title = "Password", required = true)
-  @Encrypted
-  private char[] password;
+  @Attributes(title = "Password", required = true) @Encrypted private char[] password;
 
   @SchemaIgnore @NotEmpty private String accountId;
 
-  @SchemaIgnore private String encryptedPassword;
+  @JsonView(JsonViews.Internal.class) @SchemaIgnore private String encryptedPassword;
 
   /**
    * Instantiates a new Splunk config.

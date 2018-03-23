@@ -38,11 +38,11 @@ public class NewRelicConfig extends SettingValue implements Encryptable {
   @DefaultValue("https://api.newrelic.com")
   private String newRelicUrl = "https://api.newrelic.com";
 
-  @Attributes(title = "API key", required = true) @Encrypted @JsonView(JsonViews.Internal.class) private char[] apiKey;
+  @Attributes(title = "API key", required = true) @Encrypted private char[] apiKey;
 
   @SchemaIgnore @NotEmpty private String accountId;
 
-  @SchemaIgnore private String encryptedApiKey;
+  @JsonView(JsonViews.Internal.class) @SchemaIgnore private String encryptedApiKey;
 
   /**
    * Instantiates a new New Relic dynamics config.

@@ -27,11 +27,11 @@ import software.wings.yaml.setting.VerificationProviderYaml;
 public class LogzConfig extends SettingValue implements Encryptable {
   @Attributes(title = "Logz.io URL", required = true) @NotEmpty private String logzUrl;
 
-  @JsonView(JsonViews.Internal.class) @Attributes(title = "Token", required = true) @Encrypted private char[] token;
+  @Attributes(title = "Token", required = true) @Encrypted private char[] token;
 
   @SchemaIgnore @NotEmpty private String accountId;
 
-  @SchemaIgnore private String encryptedToken;
+  @JsonView(JsonViews.Internal.class) @SchemaIgnore private String encryptedToken;
   /**
    * Instantiates a new Splunk config.
    */

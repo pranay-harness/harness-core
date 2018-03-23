@@ -7,6 +7,7 @@ import static software.wings.beans.Base.GLOBAL_APP_ID;
 import static software.wings.beans.SearchFilter.Operator.EQ;
 import static software.wings.beans.SearchFilter.Operator.IN;
 import static software.wings.beans.SettingAttribute.Builder.aSettingAttribute;
+import static software.wings.service.impl.security.SecretManagerImpl.ENCRYPTED_FIELD_MASK;
 import static software.wings.settings.SettingValue.SettingVariableTypes.GCP;
 
 import com.google.inject.Inject;
@@ -29,6 +30,7 @@ import software.wings.exception.WingsException;
 import software.wings.security.PermissionAttribute.ResourceType;
 import software.wings.security.annotations.Scope;
 import software.wings.service.intfc.SettingsService;
+import software.wings.service.intfc.security.SecretManager;
 import software.wings.settings.SettingValue;
 import software.wings.settings.SettingValue.SettingVariableTypes;
 
@@ -58,6 +60,7 @@ import javax.ws.rs.QueryParam;
 @Scope(ResourceType.SETTING)
 public class SettingResource {
   @Inject private SettingsService attributeService;
+  @Inject private SecretManager secretManager;
 
   /**
    * List.
@@ -78,7 +81,17 @@ public class SettingResource {
       pageRequest.addFilter("value.type", IN, settingVariableTypes.toArray());
     }
     pageRequest.addFilter("appId", EQ, appId);
-    return new RestResponse<>(attributeService.list(pageRequest));
+
+    PageResponse<SettingAttribute> result = attributeService.list(pageRequest);
+    result.stream().forEach(settingAttribute -> maskEncryptedFields(settingAttribute));
+    return new RestResponse<>(result);
+  }
+
+  private void maskEncryptedFields(SettingAttribute settingAttribute) {
+    SettingValue settingValue = settingAttribute.getValue();
+    if (settingValue instanceof Encryptable) {
+      secretManager.maskEncryptedFields((Encryptable) settingValue);
+    }
   }
 
   /**
@@ -159,7 +172,9 @@ public class SettingResource {
   @ExceptionMetered
   public RestResponse<SettingAttribute> get(
       @DefaultValue(GLOBAL_APP_ID) @QueryParam("appId") String appId, @PathParam("attrId") String attrId) {
-    return new RestResponse<>(attributeService.get(appId, attrId));
+    SettingAttribute result = attributeService.get(appId, attrId);
+    maskEncryptedFields(result);
+    return new RestResponse<>(result);
   }
 
   /**
@@ -196,17 +211,23 @@ public class SettingResource {
   @Consumes(MULTIPART_FORM_DATA)
   @Timed
   @ExceptionMetered
-  public RestResponse<SettingAttribute> update(@PathParam("attrId") String attrId, @QueryParam("appId") String appId,
-      @QueryParam("accountId") String accountId, @FormDataParam("type") String type, @FormDataParam("name") String name,
+  public RestResponse<SettingAttribute> update(@PathParam("attrId") String attrId,
+      @DefaultValue(GLOBAL_APP_ID) @QueryParam("appId") String appId, @QueryParam("accountId") String accountId,
+      @FormDataParam("type") String type, @FormDataParam("name") String name,
       @FormDataParam("file") InputStream uploadedInputStream,
       @FormDataParam("file") FormDataContentDisposition fileDetail) throws IOException {
     char[] credentials = IOUtils.toString(uploadedInputStream, Charset.defaultCharset()).toCharArray();
     SettingValue value = null;
-    if (GCP.name().equals(type) && credentials != null && credentials.length > 0) {
-      value = GcpConfig.builder().serviceAccountKeyFileContent(credentials).build();
+    if (GCP.name().equals(type)) {
+      if (credentials != null && credentials.length > 0) {
+        value = GcpConfig.builder().serviceAccountKeyFileContent(credentials).build();
+      } else {
+        value = GcpConfig.builder().serviceAccountKeyFileContent(ENCRYPTED_FIELD_MASK).build();
+      }
     }
     SettingAttribute.Builder settingAttribute =
-        aSettingAttribute().withUuid(attrId).withName(name).withAccountId(accountId);
+        aSettingAttribute().withUuid(attrId).withName(name).withAccountId(accountId).withAppId(appId).withCategory(
+            Category.getCategory(SettingVariableTypes.valueOf(type)));
     if (value != null) {
       if (value instanceof Encryptable) {
         ((Encryptable) value).setAccountId(accountId);

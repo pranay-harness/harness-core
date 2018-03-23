@@ -38,13 +38,13 @@ public class ElkConfig extends SettingValue implements Encryptable {
 
   @Attributes(title = "Username") private String username;
 
-  @JsonView(JsonViews.Internal.class) @Attributes(title = "Password") @Encrypted private char[] password;
+  @Attributes(title = "Password") @Encrypted private char[] password;
 
   @SchemaIgnore @NotEmpty private String accountId;
 
   private String kibanaVersion = "0";
 
-  @SchemaIgnore private String encryptedPassword;
+  @JsonView(JsonViews.Internal.class) @SchemaIgnore private String encryptedPassword;
 
   @Attributes(required = true, title = "Authentication")
   @DefaultValue("Password")

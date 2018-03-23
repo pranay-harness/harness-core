@@ -33,6 +33,7 @@ import com.google.common.collect.Sets.SetView;
 import com.google.inject.Inject;
 import com.google.inject.Singleton;
 
+import org.mongodb.morphia.annotations.Transient;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import software.wings.annotation.Encryptable;
@@ -55,12 +56,15 @@ import software.wings.security.GenericEntityFilter;
 import software.wings.security.UserPermissionInfo;
 import software.wings.security.UserRequestContext;
 import software.wings.security.UserThreadLocal;
+import software.wings.security.encryption.EncryptedDataDetail;
 import software.wings.service.impl.security.auth.AuthHandler;
 import software.wings.service.impl.yaml.YamlChangeSetHelper;
 import software.wings.service.intfc.AppService;
 import software.wings.service.intfc.ArtifactStreamService;
 import software.wings.service.intfc.InfrastructureMappingService;
 import software.wings.service.intfc.SettingsService;
+import software.wings.service.intfc.security.EncryptionService;
+import software.wings.service.intfc.security.SecretManager;
 import software.wings.settings.SettingValue.SettingVariableTypes;
 import software.wings.settings.UsageRestrictions;
 import software.wings.settings.UsageRestrictions.AppEnvRestriction;
@@ -87,6 +91,8 @@ public class SettingsServiceImpl implements SettingsService {
   @Inject private InfrastructureMappingService infrastructureMappingService;
   @Inject private YamlChangeSetHelper yamlChangeSetHelper;
   @Inject private AuthHandler authHandler;
+  @Transient @Inject private SecretManager secretManager;
+  @Inject private EncryptionService encryptionService;
 
   /* (non-Javadoc)
    * @see software.wings.service.intfc.SettingsService#list(software.wings.dl.PageRequest)
@@ -275,12 +281,34 @@ public class SettingsServiceImpl implements SettingsService {
     return wingsPersistence.createQuery(SettingAttribute.class).field("name").equal(settingAttributeName).get();
   }
 
+  private void resetUnchangedEncryptedFields(
+      SettingAttribute existingSettingAttribute, SettingAttribute newSettingAttribute) {
+    if (existingSettingAttribute.getValue() instanceof Encryptable) {
+      secretManager.resetUnchangedEncryptedFields(
+          (Encryptable) existingSettingAttribute.getValue(), (Encryptable) newSettingAttribute.getValue());
+    }
+  }
+
   @Override
   public SettingAttribute update(SettingAttribute settingAttribute, boolean pushToGit) {
     SettingAttribute existingSetting = get(settingAttribute.getAppId(), settingAttribute.getUuid());
+
     Validator.notNullCheck("Setting", existingSetting);
+    Validator.notNullCheck("settingValue", settingAttribute.getValue());
+    Validator.equalCheck(existingSetting.getValue().getType(), settingAttribute.getValue().getType());
+
     settingAttribute.setAccountId(existingSetting.getAccountId());
     settingAttribute.setAppId(existingSetting.getAppId());
+
+    if (Encryptable.class.isInstance(existingSetting.getValue())) {
+      Encryptable object = (Encryptable) existingSetting.getValue();
+      object.setDecrypted(false);
+      List<EncryptedDataDetail> encryptionDetails =
+          secretManager.getEncryptionDetails(object, settingAttribute.getAppId(), null);
+      encryptionService.decrypt(object, encryptionDetails);
+    }
+
+    resetUnchangedEncryptedFields(existingSetting, settingAttribute);
 
     settingValidationService.validate(settingAttribute);
 

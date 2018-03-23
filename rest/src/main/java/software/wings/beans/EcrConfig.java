@@ -33,17 +33,14 @@ import software.wings.stencils.EnumData;
 public class EcrConfig extends SettingValue implements Encryptable {
   @Attributes(title = "Amazon ECR Registry URL", required = true) @NotEmpty private String ecrUrl;
   @Attributes(title = "Access Key", required = true) @NotEmpty private String accessKey;
-  @JsonView(JsonViews.Internal.class)
-  @Attributes(title = "Secret Key", required = true)
-  @Encrypted
-  private char[] secretKey;
+  @Attributes(title = "Secret Key", required = true) @Encrypted private char[] secretKey;
   @Attributes(title = "Region", required = true)
   @DefaultValue("us-east-1")
   @EnumData(enumDataProvider = AwsRegionDataProvider.class)
   private String region;
   @SchemaIgnore @NotEmpty private String accountId;
 
-  @SchemaIgnore private String encryptedSecretKey;
+  @JsonView(JsonViews.Internal.class) @SchemaIgnore private String encryptedSecretKey;
 
   /**
    * Instantiates a new ECR registry config.
