@@ -114,17 +114,17 @@ public class KubernetesResizeCommandUnitTest extends WingsBaseTest {
   }
 
   @Test
-  public void shouldUseMaxInstancesWithAnyPercentage() {
+  public void shouldUsePercentageOfMaxInstances() {
     LinkedHashMap<String, Integer> activeServiceCounts = new LinkedHashMap<>();
 
     ResizeCommandUnitExecutionData executionData =
         execute(activeServiceCounts, 0, "rc-name.0", false, 5, 0, 20, PERCENTAGE);
 
-    assertThat(executionData.getContainerInfos().size()).isEqualTo(5);
+    assertThat(executionData.getContainerInfos().size()).isEqualTo(1);
     assertThat(executionData.getNewInstanceData().size()).isEqualTo(1);
     ContainerServiceData contextNewServiceData = executionData.getNewInstanceData().get(0);
     assertThat(contextNewServiceData.getPreviousCount()).isEqualTo(0);
-    assertThat(contextNewServiceData.getDesiredCount()).isEqualTo(5);
+    assertThat(contextNewServiceData.getDesiredCount()).isEqualTo(1);
 
     assertThat(executionData.getOldInstanceData().size()).isEqualTo(0);
   }
@@ -134,7 +134,7 @@ public class KubernetesResizeCommandUnitTest extends WingsBaseTest {
     LinkedHashMap<String, Integer> activeServiceCounts = new LinkedHashMap<>();
     activeServiceCounts.put("rc-name.0", 1);
 
-    ResizeCommandUnitExecutionData executionData = execute(activeServiceCounts, 1, "rc-name.1", false, 0, 0, 2, COUNT);
+    ResizeCommandUnitExecutionData executionData = execute(activeServiceCounts, 1, "rc-name.1", false, 2, 0, 2, COUNT);
 
     assertThat(executionData.getContainerInfos().size()).isEqualTo(2);
     assertThat(executionData.getNewInstanceData().size()).isEqualTo(1);
@@ -154,7 +154,7 @@ public class KubernetesResizeCommandUnitTest extends WingsBaseTest {
     activeServiceCounts.put("rc-name.0", 1);
     activeServiceCounts.put("rc-name.1", 2);
 
-    ResizeCommandUnitExecutionData executionData = execute(activeServiceCounts, 0, "rc-name.2", false, 0, 0, 3, COUNT);
+    ResizeCommandUnitExecutionData executionData = execute(activeServiceCounts, 0, "rc-name.2", false, 3, 0, 3, COUNT);
 
     assertThat(executionData.getContainerInfos().size()).isEqualTo(3);
     assertThat(executionData.getNewInstanceData().size()).isEqualTo(1);
@@ -241,48 +241,6 @@ public class KubernetesResizeCommandUnitTest extends WingsBaseTest {
     contextOldServiceData = executionData.getOldInstanceData().get(1);
     assertThat(contextOldServiceData.getName()).isEqualTo("rc-name.1");
     assertThat(contextOldServiceData.getPreviousCount()).isEqualTo(2);
-    assertThat(contextOldServiceData.getDesiredCount()).isEqualTo(0);
-  }
-
-  @Test
-  public void shouldNotUseMaxInstancesWhenAlreadyRunningWithPercentage() {
-    LinkedHashMap<String, Integer> activeServiceCounts = new LinkedHashMap<>();
-    activeServiceCounts.put("rc-name.0", 10);
-
-    ResizeCommandUnitExecutionData executionData =
-        execute(activeServiceCounts, 0, "rc-name.1", false, 5, 0, 100, PERCENTAGE);
-
-    assertThat(executionData.getContainerInfos().size()).isEqualTo(10);
-    assertThat(executionData.getNewInstanceData().size()).isEqualTo(1);
-    ContainerServiceData contextNewServiceData = executionData.getNewInstanceData().get(0);
-    assertThat(contextNewServiceData.getPreviousCount()).isEqualTo(0);
-    assertThat(contextNewServiceData.getDesiredCount()).isEqualTo(10);
-
-    assertThat(executionData.getOldInstanceData().size()).isEqualTo(1);
-    ContainerServiceData contextOldServiceData = executionData.getOldInstanceData().get(0);
-    assertThat(contextOldServiceData.getName()).isEqualTo("rc-name.0");
-    assertThat(contextOldServiceData.getPreviousCount()).isEqualTo(10);
-    assertThat(contextOldServiceData.getDesiredCount()).isEqualTo(0);
-  }
-
-  @Test
-  public void shouldNotUseMaxInstancesWhenAlreadyRunningLessThanMaxWithPercentage() {
-    LinkedHashMap<String, Integer> activeServiceCounts = new LinkedHashMap<>();
-    activeServiceCounts.put("rc-name.0", 3);
-
-    ResizeCommandUnitExecutionData executionData =
-        execute(activeServiceCounts, 0, "rc-name.1", false, 5, 0, 100, PERCENTAGE);
-
-    assertThat(executionData.getContainerInfos().size()).isEqualTo(3);
-    assertThat(executionData.getNewInstanceData().size()).isEqualTo(1);
-    ContainerServiceData contextNewServiceData = executionData.getNewInstanceData().get(0);
-    assertThat(contextNewServiceData.getPreviousCount()).isEqualTo(0);
-    assertThat(contextNewServiceData.getDesiredCount()).isEqualTo(3);
-
-    assertThat(executionData.getOldInstanceData().size()).isEqualTo(1);
-    ContainerServiceData contextOldServiceData = executionData.getOldInstanceData().get(0);
-    assertThat(contextOldServiceData.getName()).isEqualTo("rc-name.0");
-    assertThat(contextOldServiceData.getPreviousCount()).isEqualTo(3);
     assertThat(contextOldServiceData.getDesiredCount()).isEqualTo(0);
   }
 

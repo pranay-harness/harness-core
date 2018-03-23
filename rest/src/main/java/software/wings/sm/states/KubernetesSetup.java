@@ -258,6 +258,9 @@ public class KubernetesSetup extends ContainerServiceSetup {
         containerServiceElementBuilder.name(setupExecutionData.getContainerServiceName())
             .previousDaemonSetYaml(setupExecutionData.getPreviousDaemonSetYaml())
             .previousActiveAutoscalers(setupExecutionData.getPreviousActiveAutoscalers());
+        if (setupExecutionData.getActiveServiceCount() > 0) {
+          containerServiceElementBuilder.maxInstances(setupExecutionData.getActiveServiceCount());
+        }
       }
     }
 

@@ -5,6 +5,7 @@ import static software.wings.beans.command.EcsResizeParams.EcsResizeParamsBuilde
 import com.github.reinert.jjschema.Attributes;
 import software.wings.beans.InstanceUnitType;
 import software.wings.beans.command.ContainerResizeParams;
+import software.wings.sm.ExecutionContext;
 import software.wings.sm.StateType;
 import software.wings.stencils.DefaultValue;
 
@@ -40,7 +41,17 @@ public class EcsServiceRollback extends ContainerServiceDeploy {
   }
 
   @Override
-  protected ContainerResizeParams buildContainerResizeParams(ContextData contextData) {
+  public String getDownsizeInstanceCount() {
+    return null;
+  }
+
+  @Override
+  public InstanceUnitType getDownsizeInstanceUnitType() {
+    return null;
+  }
+
+  @Override
+  protected ContainerResizeParams buildContainerResizeParams(ExecutionContext context, ContextData contextData) {
     return anEcsResizeParams()
         .withClusterName(contextData.containerElement.getClusterName())
         .withRegion(contextData.region)
@@ -48,6 +59,8 @@ public class EcsServiceRollback extends ContainerServiceDeploy {
         .withRollback(true)
         .withInstanceCount(contextData.instanceCount)
         .withInstanceUnitType(getInstanceUnitType())
+        .withDownsizeInstanceCount(contextData.downsizeInstanceCount)
+        .withDownsizeInstanceUnitType(getDownsizeInstanceUnitType())
         .withContainerServiceName(contextData.containerElement.getName())
         .withResizeStrategy(contextData.containerElement.getResizeStrategy())
         .withUseFixedInstances(contextData.containerElement.isUseFixedInstances())

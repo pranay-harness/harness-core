@@ -3,12 +3,13 @@ package software.wings.cloudprovider.gke;
 import static io.harness.data.structure.EmptyPredicate.isNotEmpty;
 import static io.harness.threading.Morpheus.sleep;
 import static java.time.Duration.ofSeconds;
-import static java.util.Collections.emptySet;
 import static java.util.Comparator.comparingInt;
 import static java.util.stream.Collectors.toList;
+import static java.util.stream.Collectors.toMap;
 import static org.apache.commons.lang3.StringUtils.isNotBlank;
 import static software.wings.utils.KubernetesConvention.getPrefixFromControllerName;
 import static software.wings.utils.KubernetesConvention.getRevisionFromControllerName;
+import static software.wings.utils.KubernetesConvention.getServiceNameFromControllerName;
 
 import com.google.common.base.Joiner;
 import com.google.common.util.concurrent.TimeLimiter;
@@ -26,6 +27,7 @@ import io.fabric8.kubernetes.api.model.CrossVersionObjectReferenceBuilder;
 import io.fabric8.kubernetes.api.model.DoneableReplicationController;
 import io.fabric8.kubernetes.api.model.HasMetadata;
 import io.fabric8.kubernetes.api.model.HorizontalPodAutoscaler;
+import io.fabric8.kubernetes.api.model.KubernetesResourceList;
 import io.fabric8.kubernetes.api.model.NamespaceBuilder;
 import io.fabric8.kubernetes.api.model.NamespaceList;
 import io.fabric8.kubernetes.api.model.NodeList;
@@ -38,6 +40,7 @@ import io.fabric8.kubernetes.api.model.ReplicationControllerList;
 import io.fabric8.kubernetes.api.model.Secret;
 import io.fabric8.kubernetes.api.model.Service;
 import io.fabric8.kubernetes.api.model.ServiceList;
+import io.fabric8.kubernetes.api.model.apiextensions.CustomResourceDefinition;
 import io.fabric8.kubernetes.api.model.extensions.DaemonSet;
 import io.fabric8.kubernetes.api.model.extensions.DaemonSetList;
 import io.fabric8.kubernetes.api.model.extensions.Deployment;
@@ -56,8 +59,12 @@ import io.fabric8.kubernetes.client.dsl.NonNamespaceOperation;
 import io.fabric8.kubernetes.client.dsl.Resource;
 import io.fabric8.kubernetes.client.dsl.RollableScalableResource;
 import io.fabric8.kubernetes.client.dsl.ScalableResource;
+import me.snowdrop.istio.api.internal.IstioSpecRegistry;
+import me.snowdrop.istio.api.model.DoneableIstioResource;
 import me.snowdrop.istio.api.model.IstioResource;
 import me.snowdrop.istio.api.model.IstioResourceBuilder;
+import me.snowdrop.istio.api.model.v1.routing.DestinationWeight;
+import me.snowdrop.istio.api.model.v1.routing.RouteRule;
 import me.snowdrop.istio.client.IstioClient;
 import org.apache.commons.lang3.StringUtils;
 import org.slf4j.Logger;
@@ -75,6 +82,7 @@ import software.wings.security.encryption.EncryptedDataDetail;
 import software.wings.service.impl.KubernetesHelperService;
 
 import java.util.ArrayList;
+import java.util.HashMap;
 import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
@@ -258,11 +266,11 @@ public class KubernetesContainerServiceImpl implements KubernetesContainerServic
   public List<ContainerInfo> setControllerPodCount(KubernetesConfig kubernetesConfig,
       List<EncryptedDataDetail> encryptedDataDetails, String clusterName, String controllerName, int previousCount,
       int desiredCount, int serviceSteadyStateTimeout, ExecutionLogCallback executionLogCallback) {
-    executionLogCallback.saveExecutionLog(String.format("Resize service [%s] in cluster [%s] from %s to %s instances",
-                                              controllerName, clusterName, previousCount, desiredCount),
-        LogLevel.INFO);
-
-    if (previousCount != desiredCount) {
+    boolean sizeChanged = previousCount != desiredCount;
+    if (sizeChanged) {
+      executionLogCallback.saveExecutionLog(
+          String.format("Resizing controller [%s] in cluster [%s] from %s to %s instances", controllerName, clusterName,
+              previousCount, desiredCount));
       HasMetadata controller = getController(kubernetesConfig, encryptedDataDetails, controllerName);
       if (controller instanceof ReplicationController) {
         rcOperations(kubernetesConfig, encryptedDataDetails).withName(controllerName).scale(desiredCount);
@@ -279,17 +287,21 @@ public class KubernetesContainerServiceImpl implements KubernetesContainerServic
 
       logger.info("Scaled controller {} in cluster {} from {} to {} instances", controllerName, clusterName,
           previousCount, desiredCount);
+    } else {
+      executionLogCallback.saveExecutionLog(String.format(
+          "Controller [%s] in cluster [%s] stays at %s instances", controllerName, clusterName, previousCount));
     }
     return getContainerInfosWhenReady(kubernetesConfig, encryptedDataDetails, controllerName, previousCount,
-        desiredCount, serviceSteadyStateTimeout, executionLogCallback);
+        desiredCount, serviceSteadyStateTimeout, executionLogCallback, sizeChanged);
   }
 
   @Override
   public List<ContainerInfo> getContainerInfosWhenReady(KubernetesConfig kubernetesConfig,
       List<EncryptedDataDetail> encryptedDataDetails, String controllerName, int previousCount, int desiredCount,
-      int serviceSteadyStateTimeout, ExecutionLogCallback executionLogCallback) {
-    List<Pod> pods = waitForPodsToBeRunning(kubernetesConfig, encryptedDataDetails, controllerName, previousCount,
-        desiredCount, serviceSteadyStateTimeout, executionLogCallback);
+      int serviceSteadyStateTimeout, ExecutionLogCallback executionLogCallback, boolean wait) {
+    List<Pod> pods = wait ? waitForPodsToBeRunning(kubernetesConfig, encryptedDataDetails, controllerName,
+                                previousCount, desiredCount, serviceSteadyStateTimeout, executionLogCallback)
+                          : getRunningPods(kubernetesConfig, encryptedDataDetails, controllerName);
     List<ContainerInfo> containerInfos = new ArrayList<>();
     boolean hasErrors = false;
     if (pods.size() != desiredCount) {
@@ -304,7 +316,8 @@ public class KubernetesContainerServiceImpl implements KubernetesContainerServic
           ? StringUtils.substring(pod.getStatus().getContainerStatuses().get(0).getContainerID(), 9, 21)
           : "";
       ContainerInfoBuilder containerInfoBuilder = ContainerInfo.builder().hostName(podName).containerId(containerId);
-      Set<String> images = getControllerImages(getController(kubernetesConfig, encryptedDataDetails, controllerName));
+      Set<String> images = getControllerImages(
+          getPodTemplateSpec(getController(kubernetesConfig, encryptedDataDetails, controllerName)));
 
       if (desiredCount > 0 && !podHasImages(pod, images)) {
         hasErrors = true;
@@ -333,8 +346,7 @@ public class KubernetesContainerServiceImpl implements KubernetesContainerServic
         containerInfoBuilder.status(Status.SUCCESS);
         logger.info("Pod {} started successfully", podName);
         executionLogCallback.saveExecutionLog(String.format("Pod [%s] is running. Host IP: %s. Pod IP: %s", podName,
-                                                  pod.getStatus().getHostIP(), pod.getStatus().getPodIP()),
-            LogLevel.INFO);
+            pod.getStatus().getHostIP(), pod.getStatus().getPodIP()));
       } else {
         containerInfoBuilder.status(Status.FAILURE);
         String containerMessage = Joiner.on("], [").join(
@@ -619,6 +631,20 @@ public class KubernetesContainerServiceImpl implements KubernetesContainerServic
   }
 
   @Override
+  public ConfigMap getConfigMap(
+      KubernetesConfig kubernetesConfig, List<EncryptedDataDetail> encryptedDataDetails, String name) {
+    try {
+      return kubernetesHelperService.getKubernetesClient(kubernetesConfig, encryptedDataDetails)
+          .configMaps()
+          .inNamespace(kubernetesConfig.getNamespace())
+          .withName(name)
+          .get();
+    } catch (Exception e) {
+      return null;
+    }
+  }
+
+  @Override
   public void deleteConfigMap(
       KubernetesConfig kubernetesConfig, List<EncryptedDataDetail> encryptedDataDetails, String name) {
     kubernetesHelperService.getKubernetesClient(kubernetesConfig, encryptedDataDetails)
@@ -643,6 +669,35 @@ public class KubernetesContainerServiceImpl implements KubernetesContainerServic
   }
 
   @Override
+  public IstioResource getRouteRule(
+      KubernetesConfig kubernetesConfig, List<EncryptedDataDetail> encryptedDataDetails, String name) {
+    KubernetesClient kubernetesClient =
+        kubernetesHelperService.getKubernetesClient(kubernetesConfig, encryptedDataDetails);
+    try {
+      return kubernetesClient
+          .customResources(
+              getCustomResourceDefinition(kubernetesClient, new IstioResourceBuilder().withKind("RouteRule").build()),
+              IstioResource.class, KubernetesResourceList.class, DoneableIstioResource.class)
+          .inNamespace(kubernetesConfig.getNamespace())
+          .withName(name)
+          .get();
+    } catch (Exception e) {
+      return null;
+    }
+  }
+
+  private CustomResourceDefinition getCustomResourceDefinition(KubernetesClient client, IstioResource resource) {
+    final String crdName = IstioSpecRegistry.getCRDNameFor(resource.getKind());
+    final CustomResourceDefinition customResourceDefinition =
+        client.customResourceDefinitions().withName(crdName).get();
+    if (customResourceDefinition == null) {
+      throw new IllegalArgumentException(
+          String.format("Custom Resource Definition %s is not found in cluster %s", crdName, client.getMasterUrl()));
+    }
+    return customResourceDefinition;
+  }
+
+  @Override
   public void deleteRouteRule(
       KubernetesConfig kubernetesConfig, List<EncryptedDataDetail> encryptedDataDetails, String name) {
     IstioClient istioClient = kubernetesHelperService.getIstioClient(kubernetesConfig, encryptedDataDetails);
@@ -656,6 +711,40 @@ public class KubernetesContainerServiceImpl implements KubernetesContainerServic
     } catch (Exception e) {
       // Do nothing
     }
+  }
+
+  @Override
+  public int getTrafficPercent(
+      KubernetesConfig kubernetesConfig, List<EncryptedDataDetail> encryptedDataDetails, String controllerName) {
+    String serviceName = getServiceNameFromControllerName(controllerName);
+    IstioResource routeRule = getRouteRule(kubernetesConfig, encryptedDataDetails, serviceName);
+    Optional<Integer> revision = getRevisionFromControllerName(controllerName);
+    if (routeRule == null || !revision.isPresent()) {
+      return 0;
+    }
+    RouteRule routeRuleSpec = (RouteRule) routeRule.getSpec();
+    return routeRuleSpec.getRoute()
+        .stream()
+        // TODO(brett) - Switch to "harness-revision" after 3/26/18
+        .filter(dw -> Integer.toString(revision.get()).equals(dw.getLabels().get("revision")))
+        .map(DestinationWeight::getWeight)
+        .findFirst()
+        .orElse(0);
+  }
+
+  @Override
+  public Map<String, Integer> getTrafficWeights(
+      KubernetesConfig kubernetesConfig, List<EncryptedDataDetail> encryptedDataDetails, String controllerName) {
+    String serviceName = getServiceNameFromControllerName(controllerName);
+    String controllerNamePrefix = getPrefixFromControllerName(controllerName);
+    IstioResource routeRule = getRouteRule(kubernetesConfig, encryptedDataDetails, serviceName);
+    if (routeRule == null) {
+      return new HashMap<>();
+    }
+    RouteRule routeRuleSpec = (RouteRule) routeRule.getSpec();
+    return routeRuleSpec.getRoute().stream().collect(
+        // TODO(brett) - Switch to "harness-revision" after 3/26/18
+        toMap(dw -> controllerNamePrefix + dw.getLabels().get("revision"), DestinationWeight::getWeight));
   }
 
   @Override
@@ -728,7 +817,7 @@ public class KubernetesContainerServiceImpl implements KubernetesContainerServic
     try {
       timeLimiter.callWithTimeout(() -> {
         while (true) {
-          executionLogCallback.saveExecutionLog(waitingMsg, LogLevel.INFO);
+          executionLogCallback.saveExecutionLog(waitingMsg);
           int size = kubernetesClient.pods()
                          .inNamespace(kubernetesConfig.getNamespace())
                          .withLabels(labels)
@@ -756,8 +845,9 @@ public class KubernetesContainerServiceImpl implements KubernetesContainerServic
       List<EncryptedDataDetail> encryptedDataDetails, String controllerName, int previousCount, int desiredCount,
       int serviceSteadyStateTimeout, ExecutionLogCallback executionLogCallback) {
     HasMetadata controller = getController(kubernetesConfig, encryptedDataDetails, controllerName);
-    Set<String> images = getControllerImages(controller);
-    Map<String, String> labels = getPodTemplateSpec(controller).getMetadata().getLabels();
+    PodTemplateSpec podTemplateSpec = getPodTemplateSpec(controller);
+    Set<String> images = getControllerImages(podTemplateSpec);
+    Map<String, String> labels = podTemplateSpec.getMetadata().getLabels();
     KubernetesClient kubernetesClient =
         kubernetesHelperService.getKubernetesClient(kubernetesConfig, encryptedDataDetails);
     logger.info("Waiting for pods to be ready...");
@@ -781,13 +871,13 @@ public class KubernetesContainerServiceImpl implements KubernetesContainerServic
 
           if (pods.size() != desiredCount) {
             executionLogCallback.saveExecutionLog(
-                String.format("Waiting for desired number of pods [%d/%d]", pods.size(), desiredCount), LogLevel.INFO);
+                String.format("Waiting for desired number of pods [%d/%d]", pods.size(), desiredCount));
             sleep(ofSeconds(5));
             continue;
           }
           if (!countReached.getAndSet(true)) {
             executionLogCallback.saveExecutionLog(
-                String.format("Desired number of pods reached [%d/%d]", pods.size(), desiredCount), LogLevel.INFO);
+                String.format("Desired number of pods reached [%d/%d]", pods.size(), desiredCount));
           }
 
           if (desiredCount > 0) {
@@ -811,13 +901,12 @@ public class KubernetesContainerServiceImpl implements KubernetesContainerServic
             int running = (int) pods.stream().filter(this ::isRunning).count();
             if (running != desiredCount) {
               executionLogCallback.saveExecutionLog(
-                  String.format("Waiting for pods to be running [%d/%d]", running, desiredCount), LogLevel.INFO);
+                  String.format("Waiting for pods to be running [%d/%d]", running, desiredCount));
               sleep(ofSeconds(10));
               continue;
             }
             if (!runningCountReached.getAndSet(true)) {
-              executionLogCallback.saveExecutionLog(
-                  String.format("Pods are running [%d/%d]", running, desiredCount), LogLevel.INFO);
+              executionLogCallback.saveExecutionLog(String.format("Pods are running [%d/%d]", running, desiredCount));
             }
 
             int steadyState = (int) pods.stream().filter(this ::inSteadyState).count();
@@ -830,7 +919,7 @@ public class KubernetesContainerServiceImpl implements KubernetesContainerServic
             }
             if (!steadyStateCountReached.getAndSet(true)) {
               executionLogCallback.saveExecutionLog(
-                  String.format("Pods have reached steady state [%d/%d]", steadyState, desiredCount), LogLevel.INFO);
+                  String.format("Pods have reached steady state [%d/%d]", steadyState, desiredCount));
             }
           }
           return pods;
@@ -850,23 +939,21 @@ public class KubernetesContainerServiceImpl implements KubernetesContainerServic
     return kubernetesClient.pods().inNamespace(kubernetesConfig.getNamespace()).withLabels(labels).list().getItems();
   }
 
-  private Set<String> getControllerImages(HasMetadata controller) {
-    PodTemplateSpec template = null;
-    if (controller instanceof ReplicationController) {
-      template = ((ReplicationController) controller).getSpec().getTemplate();
-    } else if (controller instanceof Deployment) {
-      template = ((Deployment) controller).getSpec().getTemplate();
-    } else if (controller instanceof ReplicaSet) {
-      template = ((ReplicaSet) controller).getSpec().getTemplate();
-    } else if (controller instanceof StatefulSet) {
-      template = ((StatefulSet) controller).getSpec().getTemplate();
-    } else if (controller instanceof DaemonSet) {
-      template = ((DaemonSet) controller).getSpec().getTemplate();
-    }
+  private List<Pod> getRunningPods(
+      KubernetesConfig kubernetesConfig, List<EncryptedDataDetail> encryptedDataDetails, String controllerName) {
+    HasMetadata controller = getController(kubernetesConfig, encryptedDataDetails, controllerName);
+    PodTemplateSpec podTemplateSpec = getPodTemplateSpec(controller);
+    Map<String, String> labels = podTemplateSpec.getMetadata().getLabels();
+    return kubernetesHelperService.getKubernetesClient(kubernetesConfig, encryptedDataDetails)
+        .pods()
+        .inNamespace(kubernetesConfig.getNamespace())
+        .withLabels(labels)
+        .list()
+        .getItems();
+  }
 
-    return template != null
-        ? template.getSpec().getContainers().stream().map(Container::getImage).collect(Collectors.toSet())
-        : emptySet();
+  private Set<String> getControllerImages(PodTemplateSpec template) {
+    return template.getSpec().getContainers().stream().map(Container::getImage).collect(Collectors.toSet());
   }
 
   public void checkStatus(KubernetesConfig kubernetesConfig, List<EncryptedDataDetail> encryptedDataDetails,

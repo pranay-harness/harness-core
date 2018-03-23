@@ -12,4 +12,6 @@ public class ContainerServiceData {
   private String name;
   private int previousCount;
   private int desiredCount;
+  private int previousTraffic;
+  private int desiredTraffic;
 }

@@ -6,17 +6,24 @@ import com.github.reinert.jjschema.Attributes;
 import software.wings.beans.InstanceUnitType;
 import software.wings.beans.command.ContainerResizeParams;
 import software.wings.sm.ContextElementType;
+import software.wings.sm.ExecutionContext;
 import software.wings.sm.StateType;
 import software.wings.stencils.DefaultValue;
 import software.wings.stencils.EnumData;
 
 public class EcsServiceDeploy extends ContainerServiceDeploy {
   @Attributes(title = "Desired Instances (cumulative)") private String instanceCount;
+  @Attributes(title = "Desired Old Instances (cumulative)") private String downsizeInstanceCount;
 
   @Attributes(title = "Instance Unit Type (Count/Percent)")
   @EnumData(enumDataProvider = InstanceUnitTypeDataProvider.class)
-  @DefaultValue("COUNT")
-  private InstanceUnitType instanceUnitType = InstanceUnitType.COUNT;
+  @DefaultValue("PERCENTAGE")
+  private InstanceUnitType instanceUnitType = InstanceUnitType.PERCENTAGE;
+
+  @Attributes(title = "Downsize Instance Unit Type (Count/Percent)")
+  @EnumData(enumDataProvider = InstanceUnitTypeDataProvider.class)
+  @DefaultValue("PERCENTAGE")
+  private InstanceUnitType downsizeInstanceUnitType = InstanceUnitType.PERCENTAGE;
 
   @Attributes(title = "Command") @DefaultValue("Resize Service Cluster") private String commandName;
 
@@ -33,6 +40,7 @@ public class EcsServiceDeploy extends ContainerServiceDeploy {
     this.commandName = commandName;
   }
 
+  @Override
   public String getInstanceCount() {
     return instanceCount;
   }
@@ -51,7 +59,25 @@ public class EcsServiceDeploy extends ContainerServiceDeploy {
   }
 
   @Override
-  protected ContainerResizeParams buildContainerResizeParams(ContextData contextData) {
+  public String getDownsizeInstanceCount() {
+    return downsizeInstanceCount;
+  }
+
+  public void setDownsizeInstanceCount(String downsizeInstanceCount) {
+    this.downsizeInstanceCount = downsizeInstanceCount;
+  }
+
+  @Override
+  public InstanceUnitType getDownsizeInstanceUnitType() {
+    return downsizeInstanceUnitType;
+  }
+
+  public void setDownsizeInstanceUnitType(InstanceUnitType downsizeInstanceUnitType) {
+    this.downsizeInstanceUnitType = downsizeInstanceUnitType;
+  }
+
+  @Override
+  protected ContainerResizeParams buildContainerResizeParams(ExecutionContext context, ContextData contextData) {
     return anEcsResizeParams()
         .withClusterName(contextData.containerElement.getClusterName())
         .withRegion(contextData.region)
@@ -59,6 +85,8 @@ public class EcsServiceDeploy extends ContainerServiceDeploy {
         .withRollback(false)
         .withInstanceCount(contextData.instanceCount)
         .withInstanceUnitType(getInstanceUnitType())
+        .withDownsizeInstanceCount(contextData.downsizeInstanceCount)
+        .withDownsizeInstanceUnitType(getDownsizeInstanceUnitType())
         .withContainerServiceName(contextData.containerElement.getName())
         .withResizeStrategy(contextData.containerElement.getResizeStrategy())
         .withUseFixedInstances(contextData.containerElement.isUseFixedInstances())

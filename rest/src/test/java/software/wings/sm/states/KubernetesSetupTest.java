@@ -328,7 +328,7 @@ public class KubernetesSetupTest extends WingsBaseTest {
 
   @Test
   public void shouldBuildContainerServiceElement() {
-    ContainerServiceElement containerServiceElement = buildContainerServiceElement("10", "5");
+    ContainerServiceElement containerServiceElement = buildContainerServiceElement("10", "5", 0);
 
     assertThat(containerServiceElement.getName()).isEqualTo(KUBERNETES_CONTROLLER_NAME);
     assertThat(containerServiceElement.getMaxInstances()).isEqualTo(10);
@@ -337,7 +337,7 @@ public class KubernetesSetupTest extends WingsBaseTest {
 
   @Test
   public void shouldBuildContainerServiceElementEmptyValues() {
-    ContainerServiceElement containerServiceElement = buildContainerServiceElement(null, null);
+    ContainerServiceElement containerServiceElement = buildContainerServiceElement(null, null, 0);
 
     assertThat(containerServiceElement.getName()).isEqualTo(KUBERNETES_CONTROLLER_NAME);
     assertThat(containerServiceElement.getMaxInstances()).isEqualTo(DEFAULT_MAX);
@@ -346,7 +346,7 @@ public class KubernetesSetupTest extends WingsBaseTest {
 
   @Test
   public void shouldBuildContainerServiceElementEmptyValuesEmptyFixed() {
-    ContainerServiceElement containerServiceElement = buildContainerServiceElement("10", null);
+    ContainerServiceElement containerServiceElement = buildContainerServiceElement("10", null, 0);
 
     assertThat(containerServiceElement.getName()).isEqualTo(KUBERNETES_CONTROLLER_NAME);
     assertThat(containerServiceElement.getMaxInstances()).isEqualTo(10);
@@ -355,14 +355,33 @@ public class KubernetesSetupTest extends WingsBaseTest {
 
   @Test
   public void shouldBuildContainerServiceElementZero() {
-    ContainerServiceElement containerServiceElement = buildContainerServiceElement("0", "0");
+    ContainerServiceElement containerServiceElement = buildContainerServiceElement("0", "0", 0);
 
     assertThat(containerServiceElement.getName()).isEqualTo(KUBERNETES_CONTROLLER_NAME);
     assertThat(containerServiceElement.getMaxInstances()).isEqualTo(DEFAULT_MAX);
     assertThat(containerServiceElement.getFixedInstances()).isEqualTo(DEFAULT_MAX);
   }
 
-  private ContainerServiceElement buildContainerServiceElement(String maxInstances, String fixedInstances) {
+  @Test
+  public void shouldBuildContainerServiceElementMoreActive() {
+    ContainerServiceElement containerServiceElement = buildContainerServiceElement("5", "5", 10);
+
+    assertThat(containerServiceElement.getName()).isEqualTo(KUBERNETES_CONTROLLER_NAME);
+    assertThat(containerServiceElement.getMaxInstances()).isEqualTo(10);
+    assertThat(containerServiceElement.getFixedInstances()).isEqualTo(5);
+  }
+
+  @Test
+  public void shouldBuildContainerServiceElementFewerActive() {
+    ContainerServiceElement containerServiceElement = buildContainerServiceElement("5", "5", 3);
+
+    assertThat(containerServiceElement.getName()).isEqualTo(KUBERNETES_CONTROLLER_NAME);
+    assertThat(containerServiceElement.getMaxInstances()).isEqualTo(3);
+    assertThat(containerServiceElement.getFixedInstances()).isEqualTo(5);
+  }
+
+  private ContainerServiceElement buildContainerServiceElement(
+      String maxInstances, String fixedInstances, int activeServiceCount) {
     KubernetesSetupParams setupParams = aKubernetesSetupParams().build();
     ContainerServiceElementBuilder serviceElementBuilder = ContainerServiceElement.builder()
                                                                .uuid(serviceElement.getUuid())
@@ -392,6 +411,7 @@ public class KubernetesSetupTest extends WingsBaseTest {
     CommandExecutionResult result = aCommandExecutionResult()
                                         .withCommandExecutionData(ContainerSetupCommandUnitExecutionData.builder()
                                                                       .containerServiceName(KUBERNETES_CONTROLLER_NAME)
+                                                                      .activeServiceCount(activeServiceCount)
                                                                       .build())
                                         .build();
 
