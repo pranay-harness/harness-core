@@ -59,7 +59,7 @@ public class Barrier {
 
           final List<Forcer> children = forcer.getChildren();
 
-          // Running parent suggests that the might be children that are in progress, but some of them
+          // Running parent suggests that there might be children that are in progress, but some of them
           // might failed. We need to check the children about that.
           if (isNotEmpty(children)) {
             children.forEach(deque::addLast);
@@ -71,7 +71,7 @@ public class Barrier {
           break;
 
         case FAILED:
-          // If any of the forcers failed, there is nothing else to check - the barrier outstands the forcers.
+          // If any of the forcers failed, there is nothing else to check - the barrier outlasts the forcers.
           return OUTLAST;
 
         default:
