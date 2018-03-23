@@ -106,7 +106,7 @@ def test_run_4():
     run_analysis(options_var, 'resources/ts/nr_control_live_4.json', 'resources/ts/nr_test_live_4.json', 'resources/ts/nr_out_live_4.json')
 
 def main(args):
-    test_run_4()
+    test_run_2()
     #test_max_threshold_node()
 
 

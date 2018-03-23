@@ -6,6 +6,7 @@ import com.codahale.metrics.annotation.ExceptionMetered;
 import com.codahale.metrics.annotation.Timed;
 import io.swagger.annotations.Api;
 import software.wings.beans.RestResponse;
+import software.wings.beans.WorkflowExecution;
 import software.wings.security.PermissionAttribute.ResourceType;
 import software.wings.security.annotations.LearningEngineAuth;
 import software.wings.security.annotations.Scope;
@@ -13,8 +14,10 @@ import software.wings.service.impl.analysis.ExperimentalLogMLAnalysisRecord;
 import software.wings.service.impl.analysis.LogMLAnalysisSummary;
 import software.wings.service.impl.analysis.LogMLExpAnalysisInfo;
 import software.wings.service.intfc.LearningEngineService;
+import software.wings.service.intfc.WorkflowExecutionService;
 import software.wings.service.intfc.analysis.AnalysisService;
 import software.wings.service.intfc.analysis.ExperimentalLogAnalysisResource;
+import software.wings.sm.StateExecutionInstance;
 import software.wings.sm.StateType;
 
 import java.io.IOException;
@@ -33,6 +36,7 @@ import javax.ws.rs.QueryParam;
 public class ExperimentalLogAnalysisResourceImpl implements ExperimentalLogAnalysisResource {
   @Inject private AnalysisService analysisService;
   @Inject private LearningEngineService learningEngineService;
+  @Inject private WorkflowExecutionService workflowExecutionService;
 
   @POST
   @Path(ExperimentalLogAnalysisResource.ANALYSIS_STATE_SAVE_ANALYSIS_RECORDS_URL)
@@ -50,6 +54,16 @@ public class ExperimentalLogAnalysisResourceImpl implements ExperimentalLogAnaly
       learningEngineService.markExpTaskCompleted(taskId);
       return new RestResponse<>(true);
     } else {
+      StateExecutionInstance stateExecutionData =
+          workflowExecutionService.getStateExecutionData(applicationId, stateExecutionId);
+      mlAnalysisResponse.setWorkflowExecutionId(stateExecutionData.getExecutionUuid());
+      WorkflowExecution workflowExecution =
+          workflowExecutionService.getWorkflowExecution(applicationId, stateExecutionData.getExecutionUuid());
+      if (workflowExecution.getEnvId() == null) {
+        mlAnalysisResponse.setEnvId("build-workflow");
+      } else {
+        mlAnalysisResponse.setEnvId(workflowExecution.getEnvId());
+      }
       mlAnalysisResponse.setApplicationId(applicationId);
       mlAnalysisResponse.setStateExecutionId(stateExecutionId);
       mlAnalysisResponse.setLogCollectionMinute(logCollectionMinute);
