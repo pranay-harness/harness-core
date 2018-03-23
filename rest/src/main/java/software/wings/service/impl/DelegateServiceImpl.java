@@ -69,6 +69,7 @@ import software.wings.beans.DelegateTaskResponse;
 import software.wings.beans.ErrorCode;
 import software.wings.beans.Event.Type;
 import software.wings.beans.alert.AlertType;
+import software.wings.beans.alert.DelegatesDownAlert;
 import software.wings.beans.alert.NoActiveDelegatesAlert;
 import software.wings.common.Constants;
 import software.wings.delegatetasks.validation.DelegateConnectionResult;
@@ -446,6 +447,10 @@ public class DelegateServiceImpl implements DelegateService {
   @Override
   public void delete(String accountId, String delegateId) {
     logger.info("Deleting delegate: {}", delegateId);
+    // before deleting delegate, check if any alert is open for delegate, if yes, close it.
+    alertService.closeAlert(accountId, GLOBAL_APP_ID, AlertType.DelegatesDown,
+        DelegatesDownAlert.builder().accountId(accountId).delegateId(delegateId).build());
+
     wingsPersistence.delete(wingsPersistence.createQuery(Delegate.class)
                                 .field("accountId")
                                 .equal(accountId)
