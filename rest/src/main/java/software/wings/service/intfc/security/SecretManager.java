@@ -25,6 +25,10 @@ public interface SecretManager {
 
   EncryptionType getEncryptionType(String accountId);
 
+  void maskEncryptedFields(Encryptable object);
+
+  void resetUnchangedEncryptedFields(Encryptable sourceObject, Encryptable destinationObject);
+
   PageResponse<SecretUsageLog> getUsageLogs(PageRequest<SecretUsageLog> pageRequest, String entityId,
       SettingVariableTypes variableType) throws IllegalAccessException;
 

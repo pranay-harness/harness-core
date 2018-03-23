@@ -27,21 +27,15 @@ import software.wings.yaml.setting.VerificationProviderYaml;
 public class SumoConfig extends SettingValue implements Encryptable {
   @Attributes(title = "Sumo Logic API Server URL", required = true) @NotEmpty private String sumoUrl;
 
-  @JsonView(JsonViews.Internal.class)
-  @Attributes(title = "Access ID", required = true)
-  @Encrypted
-  private char[] accessId;
+  @Attributes(title = "Access ID", required = true) @Encrypted private char[] accessId;
 
-  @JsonView(JsonViews.Internal.class)
-  @Attributes(title = "Access Key", required = true)
-  @Encrypted
-  private char[] accessKey;
+  @Attributes(title = "Access Key", required = true) @Encrypted private char[] accessKey;
 
   @SchemaIgnore @NotEmpty private String accountId;
 
-  @SchemaIgnore private String encryptedAccessId;
+  @JsonView(JsonViews.Internal.class) @SchemaIgnore private String encryptedAccessId;
 
-  @SchemaIgnore private String encryptedAccessKey;
+  @JsonView(JsonViews.Internal.class) @SchemaIgnore private String encryptedAccessKey;
   /**
    * Instantiates a new setting value.
    **/

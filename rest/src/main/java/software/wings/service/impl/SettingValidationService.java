@@ -76,8 +76,6 @@ public class SettingValidationService {
   @Inject @Transient private transient FeatureFlagService featureFlagService;
 
   public boolean validate(SettingAttribute settingAttribute) {
-    SettingValue settingValue = settingAttribute.getValue();
-
     if (wingsPersistence.createQuery(SettingAttribute.class)
             .field("accountId")
             .equal(settingAttribute.getAccountId())
@@ -89,13 +87,16 @@ public class SettingValidationService {
             .notEqual(settingAttribute.getUuid())
             .field("name")
             .equal(settingAttribute.getName())
-            .field("value.type")
-            .equal(settingValue.getType())
+            .field("category")
+            .equal(settingAttribute.getCategory())
             .get()
         != null) {
       throw new WingsException(ErrorCode.INVALID_ARGUMENT)
-          .addParam("args", "The name " + settingAttribute.getName() + " already exists.");
+          .addParam("args",
+              "The name " + settingAttribute.getName() + " already exists in " + settingAttribute.getCategory() + ".");
     }
+
+    SettingValue settingValue = settingAttribute.getValue();
 
     if (settingValue instanceof GcpConfig) {
       gcpHelperService.validateCredential((GcpConfig) settingValue);

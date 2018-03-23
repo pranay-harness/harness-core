@@ -31,6 +31,7 @@ import static software.wings.settings.SettingValue.SettingVariableTypes.SUMO;
 
 import com.google.common.collect.Lists;
 
+import com.fasterxml.jackson.annotation.JsonView;
 import com.github.reinert.jjschema.SchemaIgnore;
 import lombok.Data;
 import lombok.EqualsAndHashCode;
@@ -42,6 +43,7 @@ import org.mongodb.morphia.annotations.Index;
 import org.mongodb.morphia.annotations.IndexOptions;
 import org.mongodb.morphia.annotations.Indexes;
 import org.mongodb.morphia.annotations.Transient;
+import software.wings.jersey.JsonViews;
 import software.wings.security.EncryptionType;
 import software.wings.settings.SettingValue;
 import software.wings.settings.SettingValue.SettingVariableTypes;
@@ -70,9 +72,9 @@ public class SettingAttribute extends Base {
   private List<String> appIds;
   private UsageRestrictions usageRestrictions;
 
-  @SchemaIgnore @Transient private transient EncryptionType encryptionType;
+  @JsonView(JsonViews.Internal.class) @SchemaIgnore @Transient private transient EncryptionType encryptionType;
 
-  @SchemaIgnore @Transient private transient String encryptedBy;
+  @JsonView(JsonViews.Internal.class) @SchemaIgnore @Transient private transient String encryptedBy;
 
   public enum Category {
     CLOUD_PROVIDER(Lists.newArrayList(PHYSICAL_DATA_CENTER, AWS, AZURE, GCP, DIRECT, KUBERNETES_CLUSTER)),

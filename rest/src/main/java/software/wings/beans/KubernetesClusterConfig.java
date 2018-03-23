@@ -3,6 +3,7 @@ package software.wings.beans;
 import static org.apache.commons.lang3.StringUtils.isNotBlank;
 
 import com.fasterxml.jackson.annotation.JsonTypeName;
+import com.fasterxml.jackson.annotation.JsonView;
 import com.github.reinert.jjschema.Attributes;
 import com.github.reinert.jjschema.SchemaIgnore;
 import lombok.Builder;
@@ -14,6 +15,7 @@ import org.mongodb.morphia.annotations.Transient;
 import software.wings.annotation.Encryptable;
 import software.wings.annotation.Encrypted;
 import software.wings.beans.KubernetesConfig.KubernetesConfigBuilder;
+import software.wings.jersey.JsonViews;
 import software.wings.settings.SettingValue;
 import software.wings.settings.UsageRestrictions;
 import software.wings.yaml.setting.CloudProviderYaml;
@@ -32,11 +34,11 @@ public class KubernetesClusterConfig extends SettingValue implements Encryptable
   @Encrypted @Attributes(title = "Client Key Passphrase") private char[] clientKeyPassphrase;
   @Attributes(title = "Client Key Algorithm") private String clientKeyAlgo;
 
-  @SchemaIgnore private String encryptedPassword;
-  @SchemaIgnore private String encryptedCaCert;
-  @SchemaIgnore private String encryptedClientCert;
-  @SchemaIgnore private String encryptedClientKey;
-  @SchemaIgnore private String encryptedClientKeyPassphrase;
+  @JsonView(JsonViews.Internal.class) @SchemaIgnore private String encryptedPassword;
+  @JsonView(JsonViews.Internal.class) @SchemaIgnore private String encryptedCaCert;
+  @JsonView(JsonViews.Internal.class) @SchemaIgnore private String encryptedClientCert;
+  @JsonView(JsonViews.Internal.class) @SchemaIgnore private String encryptedClientKey;
+  @JsonView(JsonViews.Internal.class) @SchemaIgnore private String encryptedClientKeyPassphrase;
 
   @SchemaIgnore @NotEmpty private String accountId;
 

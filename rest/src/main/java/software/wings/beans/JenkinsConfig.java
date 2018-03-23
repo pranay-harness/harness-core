@@ -31,13 +31,10 @@ import software.wings.yaml.setting.VerificationProviderYaml;
 public class JenkinsConfig extends SettingValue implements Encryptable {
   @Attributes(title = "Jenkins URL", required = true) @NotEmpty private String jenkinsUrl;
   @Attributes(title = "Username", required = true) @NotEmpty private String username;
-  @JsonView(JsonViews.Internal.class)
-  @Attributes(title = "Password", required = true)
-  @Encrypted
-  private char[] password;
+  @Attributes(title = "Password", required = true) @Encrypted private char[] password;
   @SchemaIgnore @NotEmpty private String accountId;
 
-  @SchemaIgnore private String encryptedPassword;
+  @JsonView(JsonViews.Internal.class) @SchemaIgnore private String encryptedPassword;
 
   /**
    * Instantiates a new jenkins config.

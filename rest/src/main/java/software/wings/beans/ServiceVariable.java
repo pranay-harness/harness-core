@@ -1,6 +1,7 @@
 package software.wings.beans;
 
 import com.fasterxml.jackson.annotation.JsonIgnore;
+import com.fasterxml.jackson.annotation.JsonView;
 import com.github.reinert.jjschema.SchemaIgnore;
 import lombok.AllArgsConstructor;
 import lombok.Builder;
@@ -16,6 +17,7 @@ import org.mongodb.morphia.annotations.Indexes;
 import org.mongodb.morphia.annotations.Transient;
 import software.wings.annotation.Encryptable;
 import software.wings.annotation.Encrypted;
+import software.wings.jersey.JsonViews;
 import software.wings.security.EncryptionType;
 import software.wings.settings.SettingValue.SettingVariableTypes;
 import software.wings.utils.WingsReflectionUtils;
@@ -72,7 +74,7 @@ public class ServiceVariable extends Base implements Encryptable {
 
   private Type type;
 
-  @SchemaIgnore private String encryptedValue;
+  @JsonView(JsonViews.Internal.class) @SchemaIgnore private String encryptedValue;
 
   @SchemaIgnore @Transient private String secretTextName;
 

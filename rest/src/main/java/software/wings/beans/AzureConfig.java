@@ -1,6 +1,7 @@
 package software.wings.beans;
 
 import com.fasterxml.jackson.annotation.JsonTypeName;
+import com.fasterxml.jackson.annotation.JsonView;
 import com.github.reinert.jjschema.Attributes;
 import com.github.reinert.jjschema.SchemaIgnore;
 import lombok.Builder;
@@ -11,6 +12,7 @@ import lombok.ToString;
 import org.hibernate.validator.constraints.NotEmpty;
 import software.wings.annotation.Encryptable;
 import software.wings.annotation.Encrypted;
+import software.wings.jersey.JsonViews;
 import software.wings.settings.SettingValue;
 import software.wings.settings.UsageRestrictions;
 import software.wings.yaml.setting.CloudProviderYaml;
@@ -29,7 +31,7 @@ public class AzureConfig extends SettingValue implements Encryptable {
 
   @SchemaIgnore @NotEmpty private String accountId;
 
-  @SchemaIgnore private String encryptedKey;
+  @JsonView(JsonViews.Internal.class) @SchemaIgnore private String encryptedKey;
 
   /**
    * Instantiates a new Azure config.

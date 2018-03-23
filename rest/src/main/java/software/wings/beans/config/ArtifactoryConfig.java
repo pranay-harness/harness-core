@@ -30,11 +30,11 @@ public class ArtifactoryConfig extends SettingValue implements Encryptable {
 
   @Attributes(title = "User Name") private String username;
 
-  @JsonView(JsonViews.Internal.class) @Attributes(title = "Password") @Encrypted private char[] password;
+  @Attributes(title = "Password") @Encrypted private char[] password;
 
   @SchemaIgnore @NotEmpty private String accountId;
 
-  @SchemaIgnore private String encryptedPassword;
+  @JsonView(JsonViews.Internal.class) @SchemaIgnore private String encryptedPassword;
 
   public ArtifactoryConfig() {
     super(SettingVariableTypes.ARTIFACTORY.name());

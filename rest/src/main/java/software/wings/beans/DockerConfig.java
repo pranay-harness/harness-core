@@ -28,13 +28,10 @@ import software.wings.yaml.setting.ArtifactServerYaml;
 public class DockerConfig extends SettingValue implements Encryptable {
   @Attributes(title = "Docker Registry URL", required = true) @NotEmpty private String dockerRegistryUrl;
   @Attributes(title = "Username", required = true) @NotEmpty private String username;
-  @JsonView(JsonViews.Internal.class)
-  @Attributes(title = "Password", required = true)
-  @Encrypted
-  private char[] password;
+  @Attributes(title = "Password", required = true) @Encrypted private char[] password;
   @SchemaIgnore @NotEmpty private String accountId;
 
-  @SchemaIgnore private String encryptedPassword;
+  @JsonView(JsonViews.Internal.class) @SchemaIgnore private String encryptedPassword;
 
   /**
    * Instantiates a new Docker registry config.

@@ -4,6 +4,7 @@ import static software.wings.settings.SettingValue.SettingVariableTypes.GCP;
 
 import com.fasterxml.jackson.annotation.JsonIgnore;
 import com.fasterxml.jackson.annotation.JsonTypeName;
+import com.fasterxml.jackson.annotation.JsonView;
 import com.github.reinert.jjschema.SchemaIgnore;
 import lombok.Builder;
 import lombok.Data;
@@ -12,6 +13,7 @@ import lombok.NoArgsConstructor;
 import org.hibernate.validator.constraints.NotEmpty;
 import software.wings.annotation.Encryptable;
 import software.wings.annotation.Encrypted;
+import software.wings.jersey.JsonViews;
 import software.wings.settings.SettingValue;
 import software.wings.settings.UsageRestrictions;
 import software.wings.yaml.setting.CloudProviderYaml;
@@ -28,7 +30,7 @@ public class GcpConfig extends SettingValue implements Encryptable {
 
   @SchemaIgnore @NotEmpty private String accountId;
 
-  @SchemaIgnore private String encryptedServiceAccountKeyFileContent;
+  @JsonView(JsonViews.Internal.class) @SchemaIgnore private String encryptedServiceAccountKeyFileContent;
 
   public GcpConfig() {
     super(GCP.name());

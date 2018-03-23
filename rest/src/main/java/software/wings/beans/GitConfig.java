@@ -25,17 +25,14 @@ import software.wings.yaml.setting.ArtifactServerYaml;
 public class GitConfig extends SettingValue implements Encryptable {
   @NotEmpty @Attributes(title = "Username", required = true) private String username;
 
-  @Attributes(title = "Password", required = true)
-  @Encrypted
-  @JsonView(JsonViews.Internal.class)
-  private char[] password;
+  @Attributes(title = "Password", required = true) @Encrypted private char[] password;
   @NotEmpty @Attributes(title = "Git Repo Url", required = true) private String repoUrl;
 
   @NotEmpty @Attributes(title = "Git Branch", required = true) private String branch;
 
   @SchemaIgnore @NotEmpty private String accountId;
 
-  @SchemaIgnore private String encryptedPassword;
+  @JsonView(JsonViews.Internal.class) @SchemaIgnore private String encryptedPassword;
   /**
    * Instantiates a new setting value.
    */

@@ -31,14 +31,11 @@ import software.wings.yaml.setting.VerificationProviderYaml;
 public class DynaTraceConfig extends SettingValue implements Encryptable {
   @Attributes(title = "URL", required = true) private String dynaTraceUrl;
 
-  @Attributes(title = "API Token", required = true)
-  @Encrypted
-  @JsonView(JsonViews.Internal.class)
-  private char[] apiToken;
+  @Attributes(title = "API Token", required = true) @Encrypted private char[] apiToken;
 
   @SchemaIgnore @NotEmpty private String accountId;
 
-  @SchemaIgnore private String encryptedApiToken;
+  @JsonView(JsonViews.Internal.class) @SchemaIgnore private String encryptedApiToken;
 
   public DynaTraceConfig() {
     super(StateType.DYNA_TRACE.name());

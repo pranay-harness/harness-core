@@ -28,10 +28,10 @@ public class HostConnectionAttributes extends SettingValue implements Encryptabl
   @Attributes(title = "Access Type", required = true) @NotNull private AccessType accessType;
 
   @Attributes(title = "User Name") private String userName;
-  @JsonView(JsonViews.Internal.class) @Attributes(title = "Key") @Encrypted private char[] key;
+  @Attributes(title = "Key") @Encrypted private char[] key;
   @SchemaIgnore @NotNull private String accountId;
 
-  @SchemaIgnore private String encryptedKey;
+  @JsonView(JsonViews.Internal.class) @SchemaIgnore private String encryptedKey;
 
   private boolean keyless;
 
