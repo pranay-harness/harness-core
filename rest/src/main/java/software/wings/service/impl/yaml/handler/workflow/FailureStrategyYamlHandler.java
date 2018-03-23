@@ -45,6 +45,11 @@ public class FailureStrategyYamlHandler extends BaseYamlHandler<FailureStrategy.
         failureStrategyBuilder.addFailureTypes(failureType);
       });
     }
+
+    if (isNotEmpty(yaml.getSpecificSteps())) {
+      yaml.getSpecificSteps().stream().forEach(step -> failureStrategyBuilder.addSpecificSteps(step));
+    }
+
     return failureStrategyBuilder.build();
   }
 
@@ -56,13 +61,14 @@ public class FailureStrategyYamlHandler extends BaseYamlHandler<FailureStrategy.
     String repairActionCodeAfterRetry = Util.getStringFromEnum(bean.getRepairActionCodeAfterRetry());
     String executionScope = Util.getStringFromEnum(bean.getExecutionScope());
 
-    return FailureStrategy.Yaml.Builder.anYaml()
-        .withExecutionScope(executionScope)
-        .withFailureTypes(failureTypeList)
-        .withRepairActionCode(repairActionCode)
-        .withRepairActionCodeAfterRetry(repairActionCodeAfterRetry)
-        .withRetryCount(bean.getRetryCount())
-        .withRetryIntervals(bean.getRetryIntervals())
+    return FailureStrategy.Yaml.builder()
+        .executionScope(executionScope)
+        .failureTypes(failureTypeList)
+        .repairActionCode(repairActionCode)
+        .repairActionCodeAfterRetry(repairActionCodeAfterRetry)
+        .retryCount(bean.getRetryCount())
+        .retryIntervals(bean.getRetryIntervals())
+        .specificSteps(bean.getSpecificSteps())
         .build();
   }
 
