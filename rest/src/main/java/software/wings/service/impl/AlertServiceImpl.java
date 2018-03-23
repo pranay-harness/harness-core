@@ -70,6 +70,21 @@ public class AlertServiceImpl implements AlertService {
     return executorService.submit(() -> openInternal(accountId, appId, alertType, alertData));
   }
 
+  /**
+   * This method opens multiple alerts of the same type.
+   * E.g. there can be multiple delegates down at a time (not all but multiple),
+   * in this scenario, we want to create 1 alert per delegate of the type "DelegateDown".
+   * @param accountId
+   * @param appId
+   * @param alertType
+   * @param alertData
+   * @return
+   */
+  @Override
+  public Future openAlerts(String accountId, String appId, AlertType alertType, List<AlertData> alertData) {
+    return executorService.submit(() -> openAlertsInternal(accountId, appId, alertType, alertData));
+  }
+
   @Override
   public void closeAlert(String accountId, String appId, AlertType alertType, AlertData alertData) {
     executorService.submit(() -> findExistingAlert(accountId, appId, alertType, alertData).ifPresent(this ::close));
@@ -85,6 +100,9 @@ public class AlertServiceImpl implements AlertService {
     executorService.submit(() -> deploymentCompletedInternal(appId, executionId));
   }
 
+  private void openAlertsInternal(String accountId, String appId, AlertType alertType, List<AlertData> alertData) {
+    alertData.stream().forEach(data -> openInternal(accountId, appId, alertType, data));
+  }
   private void openInternal(String accountId, String appId, AlertType alertType, AlertData alertData) {
     String lockName = alertType.name() + "-" + (appId == null || appId.equals(GLOBAL_APP_ID) ? accountId : appId);
     try (AcquiredLock lock = persistentLocker.acquireLock(AlertType.class, lockName, Duration.ofMinutes(1))) {

@@ -6,6 +6,7 @@ import static software.wings.beans.Base.GLOBAL_APP_ID;
 import com.google.inject.Inject;
 import com.google.inject.name.Named;
 
+import org.apache.commons.collections.CollectionUtils;
 import org.quartz.Job;
 import org.quartz.JobBuilder;
 import org.quartz.JobDetail;
@@ -17,7 +18,9 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import software.wings.beans.Account;
 import software.wings.beans.Delegate;
+import software.wings.beans.alert.AlertData;
 import software.wings.beans.alert.AlertType;
+import software.wings.beans.alert.DelegatesDownAlert;
 import software.wings.beans.alert.NoActiveDelegatesAlert;
 import software.wings.dl.WingsPersistence;
 import software.wings.service.intfc.AlertService;
@@ -25,6 +28,7 @@ import software.wings.service.intfc.AlertService;
 import java.util.List;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.TimeUnit;
+import java.util.stream.Collectors;
 
 /**
  * @author brett on 10/17/17
@@ -71,8 +75,7 @@ public class AlertCheckJob implements Job {
 
   private void executeInternal(String accountId) {
     logger.info("Checking account " + accountId + " for alert conditions.");
-    List<Delegate> delegates =
-        wingsPersistence.createQuery(Delegate.class).field(Delegate.ACCOUNT_ID_KEY).equal(accountId).asList();
+    List<Delegate> delegates = getDelegatesForAccount(accountId);
 
     if (isEmpty(delegates)) {
       Account account = wingsPersistence.get(Account.class, accountId);
@@ -86,6 +89,55 @@ public class AlertCheckJob implements Job {
                delegate -> System.currentTimeMillis() - delegate.getLastHeartBeat() > MAX_HB_TIMEOUT)) {
       alertService.openAlert(accountId, GLOBAL_APP_ID, AlertType.NoActiveDelegates,
           NoActiveDelegatesAlert.builder().accountId(accountId).build());
+    } else {
+      checkIfAnyDelegatesAreDown(accountId, delegates);
+    }
+  }
+
+  List<Delegate> getDelegatesForAccount(String accountId) {
+    return wingsPersistence.createQuery(Delegate.class).field(Delegate.ACCOUNT_ID_KEY).equal(accountId).asList();
+  }
+
+  /**
+   * If any delegate hasn't sent heartbeat for last MAX_HB_TIMEOUT (5 mins currently),
+   * raise a dashboard alert
+   * @param accountId
+   * @param delegates
+   */
+  private void checkIfAnyDelegatesAreDown(String accountId, List<Delegate> delegates) {
+    List<Delegate> delegatesDown =
+        delegates.stream()
+            .filter(delegate -> System.currentTimeMillis() - delegate.getLastHeartBeat() > MAX_HB_TIMEOUT)
+            .collect(Collectors.toList());
+
+    List<Delegate> delegatesUp =
+        delegates.stream()
+            .filter(delegate -> System.currentTimeMillis() - delegate.getLastHeartBeat() <= MAX_HB_TIMEOUT)
+            .collect(Collectors.toList());
+
+    if (CollectionUtils.isNotEmpty(delegatesDown)) {
+      List<AlertData> alertDatas = delegatesDown.stream()
+                                       .map(delegate
+                                           -> DelegatesDownAlert.builder()
+                                                  .accountId(accountId)
+                                                  .hostName(delegate.getHostName())
+                                                  .delegateId(delegate.getUuid())
+                                                  .build())
+                                       .collect(Collectors.toList());
+      alertService.openAlerts(accountId, GLOBAL_APP_ID, AlertType.DelegatesDown, alertDatas);
+    }
+
+    if (CollectionUtils.isNotEmpty(delegatesUp)) {
+      // close if any alert is open
+      if (CollectionUtils.isNotEmpty(delegatesUp)) {
+        delegatesUp.stream().forEach(delegate
+            -> alertService.closeAlert(accountId, GLOBAL_APP_ID, AlertType.DelegatesDown,
+                DelegatesDownAlert.builder()
+                    .accountId(accountId)
+                    .hostName(delegate.getHostName())
+                    .delegateId(delegate.getUuid())
+                    .build()));
+      }
     }
   }
 }

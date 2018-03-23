@@ -13,6 +13,7 @@ public enum AlertType {
   ApprovalNeeded(Approval, Warning, ApprovalNeededAlert.class),
   ManualInterventionNeeded(ManualIntervention, Warning, ManualInterventionNeededAlert.class),
   NoActiveDelegates(Setup, Error, NoActiveDelegatesAlert.class),
+  DelegatesDown(Setup, Error, DelegatesDownAlert.class),
   NoEligibleDelegates(Setup, Error, NoEligibleDelegatesAlert.class),
   InvalidKMS(Setup, Error, KmsSetupAlert.class),
   GitSyncError(Setup, Error, GitSyncErrorAlert.class),
