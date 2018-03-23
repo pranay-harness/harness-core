@@ -15,6 +15,7 @@ import static software.wings.common.Constants.HARNESS_ENV;
 import static software.wings.common.Constants.HARNESS_REVISION;
 import static software.wings.common.Constants.HARNESS_SERVICE;
 import static software.wings.common.Constants.SECRET_MASK;
+import static software.wings.service.impl.KubernetesHelperService.printRouteRuleWeights;
 import static software.wings.service.impl.KubernetesHelperService.toDisplayYaml;
 import static software.wings.service.impl.KubernetesHelperService.toYaml;
 import static software.wings.utils.KubernetesConvention.getKubernetesRegistrySecretName;
@@ -77,7 +78,6 @@ import lombok.EqualsAndHashCode;
 import me.snowdrop.istio.api.model.IstioResource;
 import me.snowdrop.istio.api.model.IstioResourceBuilder;
 import me.snowdrop.istio.api.model.IstioResourceFluent.RouteRuleSpecNested;
-import me.snowdrop.istio.api.model.v1.routing.DestinationWeight;
 import me.snowdrop.istio.api.model.v1.routing.RouteRule;
 import org.apache.commons.lang3.StringUtils;
 import org.mongodb.morphia.annotations.Transient;
@@ -362,7 +362,7 @@ public class KubernetesSetupCommandUnit extends ContainerSetupCommandUnit {
       }
       if (routeRule != null) {
         executionLogCallback.saveExecutionLog("Istio route rule: " + routeRule.getMetadata().getName());
-        printRouteRuleWeights(routeRule, containerServiceName, executionLogCallback);
+        printRouteRuleWeights(routeRule, getPrefixFromControllerName(containerServiceName), executionLogCallback);
       }
 
       if (isDaemonSet) {
@@ -380,17 +380,6 @@ public class KubernetesSetupCommandUnit extends ContainerSetupCommandUnit {
       return CommandExecutionStatus.FAILURE;
     } finally {
       context.setCommandExecutionData(commandExecutionDataBuilder.build());
-    }
-  }
-
-  private void printRouteRuleWeights(
-      IstioResource routeRule, String controllerName, ExecutionLogCallback executionLogCallback) {
-    RouteRule routeRuleSpec = (RouteRule) routeRule.getSpec();
-    for (DestinationWeight destinationWeight : routeRuleSpec.getRoute()) {
-      String rev = destinationWeight.getLabels().get(HARNESS_REVISION);
-      int weight = destinationWeight.getWeight();
-      executionLogCallback.saveExecutionLog(
-          String.format("   %s%s: %d%%", getPrefixFromControllerName(controllerName), rev, weight));
     }
   }
 
@@ -423,7 +412,8 @@ public class KubernetesSetupCommandUnit extends ContainerSetupCommandUnit {
     }
 
     if (setupParams.isUseIstioRouteRule() && service != null) {
-      if (routeRule == null) {
+      if (routeRule == null || routeRule.getSpec() == null || isEmpty(((RouteRule) routeRule.getSpec()).getRoute())
+          || !((RouteRule) routeRule.getSpec()).getRoute().get(0).getLabels().containsKey(HARNESS_REVISION)) {
         Map<String, Integer> activeControllers = kubernetesContainerService.getActiveServiceCounts(
             kubernetesConfig, encryptedDataDetails, containerServiceName);
         IstioResource routeRuleDefinition = createRouteRuleDefinition(setupParams, routeRuleName, activeControllers);
