@@ -445,11 +445,25 @@ public class DelegateServiceImpl implements DelegateService {
   }
 
   @Override
+  @SuppressWarnings("unchecked")
   public void delete(String accountId, String delegateId) {
     logger.info("Deleting delegate: {}", delegateId);
-    // before deleting delegate, check if any alert is open for delegate, if yes, close it.
-    alertService.closeAlert(accountId, GLOBAL_APP_ID, AlertType.DelegatesDown,
-        DelegatesDownAlert.builder().accountId(accountId).delegateId(delegateId).build());
+    Delegate existingDelegate = wingsPersistence.get(Delegate.class,
+        aPageRequest()
+            .addFilter("accountId", EQ, accountId)
+            .addFilter(ID_KEY, EQ, delegateId)
+            .addFieldsExcluded("supportedTaskTypes")
+            .build());
+
+    if (existingDelegate != null) {
+      // before deleting delegate, check if any alert is open for delegate, if yes, close it.
+      alertService.closeAlert(accountId, GLOBAL_APP_ID, AlertType.DelegatesDown,
+          DelegatesDownAlert.builder()
+              .accountId(accountId)
+              .ip(existingDelegate.getIp())
+              .hostName(existingDelegate.getHostName())
+              .build());
+    }
 
     wingsPersistence.delete(wingsPersistence.createQuery(Delegate.class)
                                 .field("accountId")
@@ -459,6 +473,7 @@ public class DelegateServiceImpl implements DelegateService {
   }
 
   @Override
+  @SuppressWarnings("unchecked")
   public Delegate register(Delegate delegate) {
     logger.info("Registering delegate for account {}: Hostname: {} IP: {}", delegate.getAccountId(),
         delegate.getHostName(), delegate.getIp());
