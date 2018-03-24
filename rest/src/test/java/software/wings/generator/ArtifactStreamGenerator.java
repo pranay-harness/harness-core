@@ -3,6 +3,7 @@ package software.wings.generator;
 import static software.wings.beans.artifact.JenkinsArtifactStream.Builder.aJenkinsArtifactStream;
 
 import com.google.inject.Inject;
+import com.google.inject.Singleton;
 
 import io.github.benas.randombeans.EnhancedRandomBuilder;
 import io.github.benas.randombeans.api.EnhancedRandom;
@@ -11,6 +12,7 @@ import software.wings.beans.artifact.ArtifactStreamType;
 import software.wings.beans.artifact.JenkinsArtifactStream;
 import software.wings.service.intfc.ArtifactStreamService;
 
+@Singleton
 public class ArtifactStreamGenerator {
   @Inject ArtifactStreamService artifactStreamService;
 

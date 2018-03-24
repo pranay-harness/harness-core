@@ -5,12 +5,15 @@ import static software.wings.beans.Graph.Builder.aGraph;
 import static software.wings.beans.GraphLink.Builder.aLink;
 import static software.wings.beans.GraphNode.GraphNodeBuilder.aGraphNode;
 
+import com.google.inject.Singleton;
+
 import io.github.benas.randombeans.EnhancedRandomBuilder;
 import io.github.benas.randombeans.api.EnhancedRandom;
 import software.wings.beans.Graph;
 import software.wings.beans.OrchestrationWorkflow;
 import software.wings.sm.StateType;
 
+@Singleton
 public class OrchestrationWorkflowGenerator {
   public OrchestrationWorkflow createOrchestrationWorkflow(long seed) {
     EnhancedRandom random =

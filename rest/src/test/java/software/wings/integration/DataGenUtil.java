@@ -50,12 +50,15 @@ import software.wings.beans.AppDynamicsConfig;
 import software.wings.beans.Application;
 import software.wings.beans.AwsConfig;
 import software.wings.beans.AwsInstanceFilter;
+import software.wings.beans.AwsInstanceFilter.Tag;
 import software.wings.beans.BambooConfig;
 import software.wings.beans.Base;
+import software.wings.beans.BasicOrchestrationWorkflow;
 import software.wings.beans.DockerConfig;
 import software.wings.beans.EntityType;
 import software.wings.beans.Environment;
 import software.wings.beans.GitConfig;
+import software.wings.beans.GraphNode;
 import software.wings.beans.InfrastructureMapping;
 import software.wings.beans.JenkinsConfig;
 import software.wings.beans.KmsConfig;
@@ -73,6 +76,7 @@ import software.wings.beans.config.ArtifactoryConfig;
 import software.wings.beans.config.NexusConfig;
 import software.wings.common.Constants;
 import software.wings.dl.PageResponse;
+import software.wings.generator.AccountGenerator;
 import software.wings.generator.ApplicationGenerator;
 import software.wings.generator.ArtifactStreamGenerator;
 import software.wings.generator.EnvironmentGenerator;
@@ -145,6 +149,7 @@ public class DataGenUtil extends BaseIntegrationTest {
   @Inject private EnvironmentService environmentService;
   @Inject private FeatureFlagService featureFlagService;
 
+  @Inject private AccountGenerator accountGenerator;
   @Inject private ApplicationGenerator applicationGenerator;
   @Inject private ArtifactStreamGenerator artifactStreamGenerator;
   @Inject private EnvironmentGenerator environmentGenerator;
@@ -181,6 +186,7 @@ public class DataGenUtil extends BaseIntegrationTest {
   @Test
   public void populateData() throws IOException {
     Account account = createLicenseAndDefaultUser();
+    accountGenerator.setAccount(account);
     createGlobalSettings();
 
     List<Application> apps = createApplications();
@@ -461,26 +467,19 @@ public class DataGenUtil extends BaseIntegrationTest {
   private void createTestApplication(Account account) {
     int seed = 0;
 
-    Application application = applicationGenerator.createApplication(
-        seed, anApplication().withAccountId(account.getUuid()).withName("Test Application").build());
-
-    Environment environment = environmentGenerator.createEnvironment(seed,
-        anEnvironment()
-            .withAppId(application.getUuid())
-            .withName("Test Environment")
-            .withEnvironmentType(NON_PROD)
-            .build());
+    Environment environment = environmentGenerator.createEnvironment(
+        seed, anEnvironment().withName("Test Environment").withEnvironmentType(NON_PROD).build());
 
     Service service = serviceGenerator.createService(seed,
         aService()
-            .withAppId(application.getUuid())
+            .withAppId(environment.getAppId())
             .withName("Test Service")
             .withArtifactType(ArtifactType.WAR)
             .build());
 
     ServiceTemplate serviceTemplate = serviceTemplateGenerator.createServiceTemplate(seed,
         aServiceTemplate()
-            .withAppId(application.getUuid())
+            .withAppId(service.getAppId())
             .withEnvId(environment.getUuid())
             .withServiceId(service.getUuid())
             .withName("Test Service template")
@@ -490,13 +489,16 @@ public class DataGenUtil extends BaseIntegrationTest {
     final SettingAttribute devKey = settingsService.getByName(accountId, GLOBAL_APP_ID, DEV_KEY);
     final SettingAttribute terraformTest = settingsService.getByName(accountId, GLOBAL_APP_ID, GIT_REPO_TERRAFORM_TEST);
 
+    final List<Tag> tags = asList(Tag.builder().key("Purpose").value("test").build(),
+        Tag.builder().key("User").value(System.getProperty("user.name")).build());
+
     InfrastructureMapping infrastructureMapping = infrastructureMappingGenerator.createInfrastructureMapping(seed,
         anAwsInfrastructureMapping()
             .withName("Aws non prod - ssh workflow test")
             .withAutoPopulate(false)
             .withInfraMappingType(AWS_SSH.name())
             .withAccountId(account.getUuid())
-            .withAppId(application.getUuid())
+            .withAppId(environment.getAppId())
             .withServiceTemplateId(serviceTemplate.getUuid())
             .withEnvId(environment.getUuid())
             .withDeploymentType(DeploymentType.SSH.name())
@@ -505,17 +507,14 @@ public class DataGenUtil extends BaseIntegrationTest {
             .withHostConnectionAttrs(devKey.getUuid())
             .withUsePublicDns(true)
             .withRegion("us-east-1")
-            .withAwsInstanceFilter(
-                AwsInstanceFilter.builder()
-                    .tags(asList(AwsInstanceFilter.Tag.builder().key("Name").value("example").build()))
-                    .build())
+            .withAwsInstanceFilter(AwsInstanceFilter.builder().tags(tags).build())
             .build());
 
     final SettingAttribute jenkins = settingsService.getByName(accountId, GLOBAL_APP_ID, HARNESS_JENKINS);
 
     ArtifactStream artifactStream = artifactStreamGenerator.createArtifactStream(seed,
         aJenkinsArtifactStream()
-            .withAppId(application.getUuid())
+            .withAppId(environment.getAppId())
             .withServiceId(service.getUuid())
             .withSourceName(HARNESS_JENKINS)
             .withJobname("harness-samples")
@@ -523,10 +522,10 @@ public class DataGenUtil extends BaseIntegrationTest {
             .withSettingId(jenkins.getUuid())
             .build());
 
-    Workflow workflow = workflowGenerator.createWorkflow(seed,
+    Workflow workflow1 = workflowGenerator.createWorkflow(seed,
         aWorkflow()
-            .withName("Basic")
-            .withAppId(application.getAppId())
+            .withName("Basic - simplest")
+            .withAppId(environment.getAppId())
             .withEnvId(environment.getUuid())
             .withWorkflowType(WorkflowType.ORCHESTRATION)
             .withServiceId(service.getUuid())
@@ -537,6 +536,38 @@ public class DataGenUtil extends BaseIntegrationTest {
                     .withPostDeploymentSteps(aPhaseStep(POST_DEPLOYMENT, Constants.POST_DEPLOYMENT).build())
                     .build())
             .build());
+
+    Workflow workflow2 = workflowGenerator.createWorkflow(seed,
+        aWorkflow()
+            .withName("Basic - 5 nodes")
+            .withAppId(environment.getAppId())
+            .withEnvId(environment.getUuid())
+            .withWorkflowType(WorkflowType.ORCHESTRATION)
+            .withServiceId(service.getUuid())
+            .withInfraMappingId(infrastructureMapping.getUuid())
+            .withOrchestrationWorkflow(
+                aBasicOrchestrationWorkflow()
+                    .withPreDeploymentSteps(aPhaseStep(PRE_DEPLOYMENT, Constants.PRE_DEPLOYMENT).build())
+                    .withPostDeploymentSteps(aPhaseStep(POST_DEPLOYMENT, Constants.POST_DEPLOYMENT).build())
+                    .build())
+            .build());
+
+    workflow2.getInfraMappingId();
+
+    final GraphNode selectNodes = ((BasicOrchestrationWorkflow) workflow2.getOrchestrationWorkflow())
+                                      .getGraph()
+                                      .getSubworkflows()
+                                      .entrySet()
+                                      .stream()
+                                      .filter(entry -> "Provision Nodes".equals(entry.getValue().getGraphName()))
+                                      .findFirst()
+                                      .get()
+                                      .getValue()
+                                      .getNodes()
+                                      .get(0);
+
+    selectNodes.getProperties().put("instanceCount", "5");
+    workflowService.updateWorkflow(workflow2);
   }
 
   private List<Application> createApplications() {

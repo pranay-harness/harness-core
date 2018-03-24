@@ -3,6 +3,7 @@ package software.wings.generator;
 import static software.wings.beans.Workflow.WorkflowBuilder.aWorkflow;
 
 import com.google.inject.Inject;
+import com.google.inject.Singleton;
 
 import io.github.benas.randombeans.EnhancedRandomBuilder;
 import io.github.benas.randombeans.api.EnhancedRandom;
@@ -10,6 +11,7 @@ import software.wings.beans.Workflow;
 import software.wings.beans.Workflow.WorkflowBuilder;
 import software.wings.service.intfc.WorkflowService;
 
+@Singleton
 public class WorkflowGenerator {
   @Inject WorkflowService workflowService;
 
