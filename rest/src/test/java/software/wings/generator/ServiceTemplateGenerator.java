@@ -3,12 +3,14 @@ package software.wings.generator;
 import static software.wings.beans.ServiceTemplate.Builder.aServiceTemplate;
 
 import com.google.inject.Inject;
+import com.google.inject.Singleton;
 
 import io.github.benas.randombeans.EnhancedRandomBuilder;
 import io.github.benas.randombeans.api.EnhancedRandom;
 import software.wings.beans.ServiceTemplate;
 import software.wings.service.intfc.ServiceTemplateService;
 
+@Singleton
 public class ServiceTemplateGenerator {
   @Inject ServiceTemplateService serviceTemplateService;
 

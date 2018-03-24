@@ -3,6 +3,7 @@ package software.wings.generator;
 import static software.wings.beans.Service.Builder.aService;
 
 import com.google.inject.Inject;
+import com.google.inject.Singleton;
 
 import io.github.benas.randombeans.EnhancedRandomBuilder;
 import io.github.benas.randombeans.api.EnhancedRandom;
@@ -10,6 +11,7 @@ import software.wings.beans.Service;
 import software.wings.service.intfc.ServiceResourceService;
 import software.wings.utils.ArtifactType;
 
+@Singleton
 public class ServiceGenerator {
   @Inject ServiceResourceService serviceResourceService;
 

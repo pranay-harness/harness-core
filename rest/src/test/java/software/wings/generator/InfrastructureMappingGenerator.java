@@ -4,6 +4,7 @@ import static io.harness.govern.Switch.unhandled;
 import static software.wings.beans.AwsInfrastructureMapping.Builder.anAwsInfrastructureMapping;
 
 import com.google.inject.Inject;
+import com.google.inject.Singleton;
 
 import io.github.benas.randombeans.EnhancedRandomBuilder;
 import io.github.benas.randombeans.api.EnhancedRandom;
@@ -12,6 +13,7 @@ import software.wings.beans.InfrastructureMapping;
 import software.wings.beans.InfrastructureMappingType;
 import software.wings.service.intfc.InfrastructureMappingService;
 
+@Singleton
 public class InfrastructureMappingGenerator {
   @Inject InfrastructureMappingService infrastructureMappingService;
 
