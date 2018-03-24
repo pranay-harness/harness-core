@@ -203,7 +203,8 @@ public class UserServiceImpl implements UserService {
     }
   }
 
-  private User registerNewUser(User user, Account account) {
+  @Override
+  public User registerNewUser(User user, Account account) {
     User existingUser = getUserByEmail(user.getEmail());
     if (existingUser == null) {
       user.setAppId(Base.GLOBAL_APP_ID);

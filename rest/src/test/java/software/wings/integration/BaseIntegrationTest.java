@@ -66,13 +66,20 @@ import software.wings.beans.RoleType;
 import software.wings.beans.SearchFilter.Operator;
 import software.wings.beans.Service;
 import software.wings.beans.User;
+import software.wings.beans.security.UserGroup;
+import software.wings.common.Constants;
 import software.wings.delegatetasks.DelegateProxyFactory;
+import software.wings.dl.PageRequest;
+import software.wings.dl.PageResponse;
 import software.wings.dl.WingsPersistence;
 import software.wings.service.impl.security.SecretManagementDelegateServiceImpl;
+import software.wings.service.impl.security.auth.AuthHandler;
 import software.wings.service.intfc.AccountService;
 import software.wings.service.intfc.AppService;
 import software.wings.service.intfc.LearningEngineService;
 import software.wings.service.intfc.SettingsService;
+import software.wings.service.intfc.UserGroupService;
+import software.wings.service.intfc.UserService;
 import software.wings.service.intfc.security.KmsService;
 import software.wings.service.intfc.security.SecretManager;
 import software.wings.utils.JsonSubtypeResolver;
@@ -106,8 +113,18 @@ public abstract class BaseIntegrationTest extends WingsBaseTest {
   protected static final String API_BASE = StringUtils.isBlank(System.getenv().get("BASE_HTTP"))
       ? "https://localhost:9090/api"
       : "http://localhost:9090/api";
-  protected static final String adminUserName = "admin@harness.io";
+  protected static final String adminUserName = "Admin";
+  protected static final String adminEmail = "admin@harness.io";
   protected static final char[] adminPassword = "admin".toCharArray();
+
+  protected static final String readOnlyUserName = "readonlyuser";
+  protected static final String readOnlyEmail = "readonlyuser@harness.io";
+  protected static final char[] readOnlyPassword = "readonlyuser".toCharArray();
+
+  protected static final String defaultUserName = "default";
+  protected static final String defaultEmail = "default@harness.io";
+  protected static final char[] defaultPassword = "default".toCharArray();
+
   protected static final String delegateAccountSecret = "2f6b0988b6fb3370073c3d0505baee59";
 
   protected static String accountId = "INVALID_ID";
@@ -116,11 +133,14 @@ public abstract class BaseIntegrationTest extends WingsBaseTest {
   protected static final Logger logger = LoggerFactory.getLogger(BaseIntegrationTest.class);
   @Inject protected WingsPersistence wingsPersistence;
   @Inject private AccountService accountService;
+  @Inject private UserGroupService userGroupService;
+  @Inject private UserService userService;
   @Inject protected SettingsService settingsService;
   @Inject protected AppService appService;
   @Inject protected LearningEngineService learningEngineService;
   @Inject protected KmsService kmsService;
   @Inject protected SecretManager secretManager;
+  @Inject protected AuthHandler authHandler;
   @Mock private DelegateProxyFactory delegateProxyFactory;
 
   protected static final char[] JENKINS_PASSWORD = "admin".toCharArray();
@@ -177,6 +197,7 @@ public abstract class BaseIntegrationTest extends WingsBaseTest {
     setInternalState(kmsService, "delegateProxyFactory", delegateProxyFactory);
     setInternalState(secretManager, "kmsService", kmsService);
     setInternalState(wingsPersistence, "secretManager", secretManager);
+    //    setInternalState(wingsPersistence, "featureFlagService", featureFlagService);
   }
 
   protected String loginUser(final String userName, final String password) {
@@ -195,7 +216,7 @@ public abstract class BaseIntegrationTest extends WingsBaseTest {
   }
 
   protected void loginAdminUser() {
-    loginUser(adminUserName, new String(adminPassword));
+    loginUser(adminEmail, new String(adminPassword));
   }
 
   protected Builder getRequestBuilderWithAuthHeader(WebTarget target) {
@@ -263,21 +284,34 @@ public abstract class BaseIntegrationTest extends WingsBaseTest {
     });
   }
 
-  protected Account createLicenseAndDefaultUser() {
+  protected Account createLicenseAndDefaultUsers() {
     License license =
         aLicense().withName("Trial").withExpiryDuration(TimeUnit.DAYS.toMillis(365)).withIsActive(true).build();
     wingsPersistence.save(license);
-    addAdminUser();
+
     Account account = wingsPersistence.executeGetOneQuery(wingsPersistence.createQuery(Account.class));
-    String oldAccountId = account.getUuid();
+    boolean oldAccountExists = false;
+    if (account == null) {
+      account = Account.Builder.anAccount().build();
+      account.setCompanyName("Harness");
+      account.setAccountName("Harness");
+    } else {
+      oldAccountExists = true;
+    }
+
+    //    String oldAccountId = account.getUuid();
     String accountKey = "2f6b0988b6fb3370073c3d0505baee59";
     account.setAccountKey(accountKey);
     account.setLicenseExpiryTime(-1);
 
     account.setUuid("kmpySmUISimoRrJL6NL73w");
     accountId = "kmpySmUISimoRrJL6NL73w";
-    accountService.delete(oldAccountId);
+    if (oldAccountExists) {
+      accountService.delete(account.getUuid());
+    }
+
     accountService.save(account);
+
     // wingsPersistence.save(account);
     // Update account key to make delegate works
     UpdateOperations<Account> accountUpdateOperations = wingsPersistence.createUpdateOperations(Account.class);
@@ -291,29 +325,55 @@ public abstract class BaseIntegrationTest extends WingsBaseTest {
     UpdateOperations<Role> roleUpdateOperations = wingsPersistence.createUpdateOperations(Role.class);
     roleUpdateOperations.set("accountId", "kmpySmUISimoRrJL6NL73w");
     wingsPersistence.update(wingsPersistence.createQuery(Role.class), roleUpdateOperations);
+
+    User adminUser = addUser(adminUserName, adminEmail, adminPassword, account);
+    addUser(defaultUserName, defaultEmail, defaultPassword, account);
+    User readOnlyUser = addUser(readOnlyUserName, readOnlyEmail, readOnlyPassword, account);
+
+    addUserToUserGroup(adminUser, accountId, Constants.DEFAULT_ACCOUNT_ADMIN_USER_GROUP_NAME);
+    UserGroup readOnlyUserGroup = authHandler.buildReadOnlyUserGroup(accountId, readOnlyUser, "ReadOnlyUserGroup");
+    readOnlyUserGroup = wingsPersistence.saveAndGet(UserGroup.class, readOnlyUserGroup);
+
+    addUserToUserGroup(readOnlyUser, readOnlyUserGroup);
+
     loginAdminUser();
 
     return account;
   }
 
-  private void addAdminUser() {
-    WebTarget target = client.target(API_BASE + "/users/");
-    RestResponse<User> response = target.request().post(
-        entity(anUser()
-                   .withName("Admin")
-                   .withEmail(adminUserName)
-                   .withPassword(adminPassword)
-                   .withRoles(wingsPersistence
-                                  .query(Role.class,
-                                      aPageRequest().addFilter("roleType", Operator.EQ, RoleType.ACCOUNT_ADMIN).build())
-                                  .getResponse())
-                   .withAccountName(HARNESS_NAME)
-                   .withCompanyName(HARNESS_NAME)
-                   .build(),
-            APPLICATION_JSON),
-        new GenericType<RestResponse<User>>() {});
-    assertThat(response.getResource()).isInstanceOf(User.class);
-    wingsPersistence.updateFields(User.class, response.getResource().getUuid(), ImmutableMap.of("emailVerified", true));
+  private void addUserToUserGroup(User user, String accountId, String userGroupName) {
+    PageRequest<UserGroup> pageRequest = aPageRequest()
+                                             .addFilter("accountId", Operator.EQ, accountId)
+                                             .addFilter("name", Operator.EQ, userGroupName)
+                                             .build();
+    PageResponse<UserGroup> pageResponse = userGroupService.list(accountId, pageRequest);
+    UserGroup userGroup = pageResponse.get(0);
+    userGroup.setMembers(Arrays.asList(user));
+    userGroupService.updateMembers(userGroup);
+  }
+
+  private void addUserToUserGroup(User user, UserGroup userGroup) {
+    userGroup.setMembers(Arrays.asList(user));
+    userGroupService.updateMembers(userGroup);
+  }
+
+  private User addUser(String userName, String email, char[] password, Account account) {
+    User user =
+        anUser()
+            .withName(userName)
+            .withEmail(email)
+            .withPassword(password)
+            .withRoles(wingsPersistence
+                           .query(Role.class,
+                               aPageRequest().addFilter("roleType", Operator.EQ, RoleType.ACCOUNT_ADMIN).build())
+                           .getResponse())
+            .withAccountName(HARNESS_NAME)
+            .withCompanyName(HARNESS_NAME)
+            .build();
+    User newUser = userService.registerNewUser(user, account);
+    wingsPersistence.updateFields(User.class, newUser.getUuid(), ImmutableMap.of("emailVerified", true));
+
+    return wingsPersistence.get(User.class, newUser.getUuid());
   }
 
   protected Application createApp(String appName) {

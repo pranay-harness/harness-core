@@ -738,6 +738,27 @@ public class AuthHandler {
     return userGroupBuilder.build();
   }
 
+  public UserGroup buildReadOnlyUserGroup(String accountId, User user, String userGroupName) {
+    Set<AppPermission> appPermissions = Sets.newHashSet();
+    AppPermission appPermission = AppPermission.builder()
+                                      .actions(Sets.newHashSet(Action.READ))
+                                      .appFilter(GenericEntityFilter.builder().filterType(FilterType.ALL).build())
+                                      .permissionType(PermissionType.ALL_APP_ENTITIES)
+                                      .build();
+    appPermissions.add(appPermission);
+
+    UserGroupBuilder userGroupBuilder = UserGroup.builder()
+                                            .accountId(accountId)
+                                            .name(userGroupName)
+                                            .appPermissions(appPermissions)
+                                            .description("Default account admin user group");
+    if (user != null) {
+      userGroupBuilder.memberIds(Arrays.asList(user.getUuid()));
+    }
+
+    return userGroupBuilder.build();
+  }
+
   private UserGroup buildSupportUserGroup(
       String accountId, String envFilterType, String userGroupName, String description) {
     Set<Action> actions = getAllNonDeploymentActions();

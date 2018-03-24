@@ -57,6 +57,8 @@ import software.wings.beans.BasicOrchestrationWorkflow;
 import software.wings.beans.DockerConfig;
 import software.wings.beans.EntityType;
 import software.wings.beans.Environment;
+import software.wings.beans.FeatureFlag;
+import software.wings.beans.FeatureName;
 import software.wings.beans.GitConfig;
 import software.wings.beans.GraphNode;
 import software.wings.beans.InfrastructureMapping;
@@ -185,7 +187,7 @@ public class DataGenUtil extends BaseIntegrationTest {
    */
   @Test
   public void populateData() throws IOException {
-    Account account = createLicenseAndDefaultUser();
+    Account account = createLicenseAndDefaultUsers();
     accountGenerator.setAccount(account);
     createGlobalSettings();
 
@@ -202,9 +204,23 @@ public class DataGenUtil extends BaseIntegrationTest {
     }
     featureFlagService.initializeFeatureFlags();
     addAndEnableKms();
+    enableRbac();
     learningEngineService.initializeServiceSecretKeys();
 
     createTestApplication(account);
+  }
+
+  private void enableRbac() {
+    FeatureFlag featureFlag =
+        wingsPersistence.createQuery(FeatureFlag.class).field("name").equal(FeatureName.RBAC.name()).get();
+
+    if (featureFlag == null) {
+      featureFlag = FeatureFlag.builder().name(FeatureName.RBAC.name()).enabled(true).obsolete(false).build();
+    } else {
+      featureFlag.setEnabled(true);
+      featureFlag.setObsolete(false);
+    }
+    wingsPersistence.save(featureFlag);
   }
 
   private void createGlobalSettings() {

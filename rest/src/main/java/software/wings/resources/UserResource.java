@@ -292,7 +292,6 @@ public class UserResource {
   /**
    * Login.
    *
-   * @param user the user
    * @return the rest response
    */
   @GET

@@ -112,6 +112,8 @@ public interface UserService {
    */
   Account addAccount(Account account, User user);
 
+  User registerNewUser(User user, Account account);
+
   /**
    * Verify registered or allowed.
    *
