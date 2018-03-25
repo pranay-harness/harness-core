@@ -28,7 +28,6 @@ import software.wings.waitnotify.NotifyEventListener;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
-import java.util.Random;
 
 /**
  * Created by rishi on 2/25/17.
@@ -53,11 +52,11 @@ public class StateMachineExecutorTest extends WingsBaseTest {
 
     StateMachine sm = new StateMachine();
     sm.setAppId(appId);
-    State stateA = new StateSync("stateA" + new Random().nextInt(10000));
+    State stateA = new StateSync("stateA" + StaticMap.getUnique());
     sm.addState(stateA);
-    StateSync stateB = new StateSync("stateB" + new Random().nextInt(10000));
+    StateSync stateB = new StateSync("stateB" + StaticMap.getUnique());
     sm.addState(stateB);
-    StateSync stateC = new StateSync("stateC" + new Random().nextInt(10000));
+    StateSync stateC = new StateSync("stateC" + StaticMap.getUnique());
     sm.addState(stateC);
     sm.setInitialStateName(stateA.getName());
 
@@ -106,13 +105,13 @@ public class StateMachineExecutorTest extends WingsBaseTest {
     String appId = generateUuid();
     StateMachine sm = new StateMachine();
     sm.setAppId(appId);
-    State stateA = new StateSync("stateA" + new Random().nextInt(10000));
+    State stateA = new StateSync("stateA" + StaticMap.getUnique());
     sm.addState(stateA);
-    StateSync stateB = new StateSync("stateB" + new Random().nextInt(10000), true);
+    StateSync stateB = new StateSync("stateB" + StaticMap.getUnique(), true);
     sm.addState(stateB);
-    StateSync stateC = new StateSync("stateC" + new Random().nextInt(10000));
+    StateSync stateC = new StateSync("stateC" + StaticMap.getUnique());
     sm.addState(stateC);
-    StateSync stateD = new StateSync("stateD" + new Random().nextInt(10000));
+    StateSync stateD = new StateSync("stateD" + StaticMap.getUnique());
     sm.addState(stateD);
     sm.setInitialStateName(stateA.getName());
 
@@ -168,13 +167,13 @@ public class StateMachineExecutorTest extends WingsBaseTest {
     String appId = generateUuid();
     StateMachine sm = new StateMachine();
     sm.setAppId(appId);
-    State stateA = new StateMachineTest.StateSync("stateA" + new Random().nextInt(10000));
+    State stateA = new StateMachineTest.StateSync("stateA" + StaticMap.getUnique());
     sm.addState(stateA);
-    StateMachineTest.StateSync stateB = new StateMachineTest.StateSync("stateB" + new Random().nextInt(10000), true);
+    StateMachineTest.StateSync stateB = new StateMachineTest.StateSync("stateB" + StaticMap.getUnique(), true);
     sm.addState(stateB);
-    StateMachineTest.StateSync stateC = new StateMachineTest.StateSync("stateC" + new Random().nextInt(10000));
+    StateMachineTest.StateSync stateC = new StateMachineTest.StateSync("stateC" + StaticMap.getUnique());
     sm.addState(stateC);
-    StateMachineTest.StateSync stateD = new StateMachineTest.StateSync("stateD" + new Random().nextInt(10000));
+    StateMachineTest.StateSync stateD = new StateMachineTest.StateSync("stateD" + StaticMap.getUnique());
     sm.addState(stateD);
     sm.setInitialStateName(stateA.getName());
 
@@ -297,14 +296,14 @@ public class StateMachineExecutorTest extends WingsBaseTest {
     String appId = generateUuid();
     StateMachine sm = new StateMachine();
     sm.setAppId(appId);
-    State stateA = new StateSync("stateA" + new Random().nextInt(10000));
+    State stateA = new StateSync("stateA" + StaticMap.getUnique());
     sm.addState(stateA);
-    StateSync stateB = new StateSync("stateB" + new Random().nextInt(10000));
+    StateSync stateB = new StateSync("stateB" + StaticMap.getUnique());
     sm.addState(stateB);
-    StateSync stateC = new StateSync("stateC" + new Random().nextInt(10000));
+    StateSync stateC = new StateSync("stateC" + StaticMap.getUnique());
     sm.addState(stateC);
 
-    State stateAB = new StateAsync("StateAB" + new Random().nextInt(10000), 600, true);
+    State stateAB = new StateAsync("StateAB" + StaticMap.getUnique(), 600, true);
     sm.addState(stateAB);
 
     sm.setInitialStateName(stateA.getName());
@@ -358,14 +357,14 @@ public class StateMachineExecutorTest extends WingsBaseTest {
     String appId = generateUuid();
     StateMachine sm = new StateMachine();
     sm.setAppId(appId);
-    State stateA = new StateSync("stateA" + new Random().nextInt(10000));
+    State stateA = new StateSync("stateA" + StaticMap.getUnique());
     sm.addState(stateA);
-    StateSync stateB = new StateSync("stateB" + new Random().nextInt(10000));
+    StateSync stateB = new StateSync("stateB" + StaticMap.getUnique());
     sm.addState(stateB);
-    StateSync stateC = new StateSync("stateC" + new Random().nextInt(10000));
+    StateSync stateC = new StateSync("stateC" + StaticMap.getUnique());
     sm.addState(stateC);
 
-    State stateAB = new StateAsync("StateAB" + new Random().nextInt(10000), 100, true);
+    State stateAB = new StateAsync("StateAB" + StaticMap.getUnique(), 100, true);
     sm.addState(stateAB);
 
     sm.setInitialStateName(stateA.getName());
@@ -420,14 +419,14 @@ public class StateMachineExecutorTest extends WingsBaseTest {
     String appId = generateUuid();
     StateMachine sm = new StateMachine();
     sm.setAppId(appId);
-    State stateA = new StateSync("stateA" + new Random().nextInt(10000));
+    State stateA = new StateSync("stateA" + StaticMap.getUnique());
     sm.addState(stateA);
-    StateSync stateB = new StateSync("stateB" + new Random().nextInt(10000));
+    StateSync stateB = new StateSync("stateB" + StaticMap.getUnique());
     sm.addState(stateB);
-    StateSync stateC = new StateSync("stateC" + new Random().nextInt(10000));
+    StateSync stateC = new StateSync("stateC" + StaticMap.getUnique());
     sm.addState(stateC);
 
-    State stateAB = new StateAsync("StateAB" + new Random().nextInt(10000), 100, true);
+    State stateAB = new StateAsync("StateAB" + StaticMap.getUnique(), 100, true);
     sm.addState(stateAB);
 
     sm.setInitialStateName(stateA.getName());
@@ -482,14 +481,14 @@ public class StateMachineExecutorTest extends WingsBaseTest {
     String appId = generateUuid();
     StateMachine sm = new StateMachine();
     sm.setAppId(appId);
-    State stateA = new StateSync("stateA" + new Random().nextInt(10000));
+    State stateA = new StateSync("stateA" + StaticMap.getUnique());
     sm.addState(stateA);
-    StateSync stateB = new StateSync("stateB" + new Random().nextInt(10000));
+    StateSync stateB = new StateSync("stateB" + StaticMap.getUnique());
     sm.addState(stateB);
-    StateSync stateC = new StateSync("stateC" + new Random().nextInt(10000));
+    StateSync stateC = new StateSync("stateC" + StaticMap.getUnique());
     sm.addState(stateC);
 
-    State stateAB = new StateAsync("StateAB" + new Random().nextInt(10000), 100, true);
+    State stateAB = new StateAsync("StateAB" + StaticMap.getUnique(), 100, true);
     sm.addState(stateAB);
 
     sm.setInitialStateName(stateA.getName());
@@ -567,14 +566,14 @@ public class StateMachineExecutorTest extends WingsBaseTest {
     String appId = generateUuid();
     StateMachine sm = new StateMachine();
     sm.setAppId(appId);
-    State stateA = new StateMachineTest.StateSync("stateA" + new Random().nextInt(10000));
+    State stateA = new StateMachineTest.StateSync("stateA" + StaticMap.getUnique());
     sm.addState(stateA);
-    StateMachineTest.StateSync stateB = new StateMachineTest.StateSync("stateB" + new Random().nextInt(10000));
+    StateMachineTest.StateSync stateB = new StateMachineTest.StateSync("stateB" + StaticMap.getUnique());
     sm.addState(stateB);
-    StateMachineTest.StateSync stateC = new StateMachineTest.StateSync("stateC" + new Random().nextInt(10000));
+    StateMachineTest.StateSync stateC = new StateMachineTest.StateSync("stateC" + StaticMap.getUnique());
     sm.addState(stateC);
 
-    State stateAB = new StateMachineTest.StateAsync("StateAB" + new Random().nextInt(10000), 500, true);
+    State stateAB = new StateMachineTest.StateAsync("StateAB" + StaticMap.getUnique(), 500, true);
     sm.addState(stateAB);
 
     sm.setInitialStateName(stateA.getName());
@@ -625,14 +624,14 @@ public class StateMachineExecutorTest extends WingsBaseTest {
     String appId = generateUuid();
     StateMachine sm = new StateMachine();
     sm.setAppId(appId);
-    State stateA = new StateMachineTest.StateSync("stateA" + new Random().nextInt(10000));
+    State stateA = new StateMachineTest.StateSync("stateA" + StaticMap.getUnique());
     sm.addState(stateA);
-    StateMachineTest.StateSync stateB = new StateMachineTest.StateSync("stateB" + new Random().nextInt(10000));
+    StateMachineTest.StateSync stateB = new StateMachineTest.StateSync("stateB" + StaticMap.getUnique());
     sm.addState(stateB);
-    StateMachineTest.StateSync stateC = new StateMachineTest.StateSync("stateC" + new Random().nextInt(10000));
+    StateMachineTest.StateSync stateC = new StateMachineTest.StateSync("stateC" + StaticMap.getUnique());
     sm.addState(stateC);
 
-    State stateAB = new StateMachineTest.StateAsync("StateAB" + new Random().nextInt(10000), 500, false, true);
+    State stateAB = new StateMachineTest.StateAsync("StateAB" + StaticMap.getUnique(), 500, false, true);
     sm.addState(stateAB);
 
     sm.setInitialStateName(stateA.getName());
@@ -683,11 +682,11 @@ public class StateMachineExecutorTest extends WingsBaseTest {
     String appId = generateUuid();
     StateMachine sm = new StateMachine();
     sm.setAppId(appId);
-    State stateA = new StateSync("stateA" + new Random().nextInt(10000));
+    State stateA = new StateSync("stateA" + StaticMap.getUnique());
     sm.addState(stateA);
-    StateSync stateB = new StateSync("stateB" + new Random().nextInt(10000));
+    StateSync stateB = new StateSync("stateB" + StaticMap.getUnique());
     sm.addState(stateB);
-    StateSync stateC = new StateSync("stateC" + new Random().nextInt(10000));
+    StateSync stateC = new StateSync("stateC" + StaticMap.getUnique());
     sm.addState(stateC);
 
     ForkState fork1 = new ForkState("fork1");
@@ -726,11 +725,11 @@ public class StateMachineExecutorTest extends WingsBaseTest {
     String appId = generateUuid();
     StateMachine sm = new StateMachine();
     sm.setAppId(appId);
-    State stateA = new StateSync("stateA" + new Random().nextInt(10000));
+    State stateA = new StateSync("stateA" + StaticMap.getUnique());
     sm.addState(stateA);
-    StateSync stateB = new StateSync("stateB" + new Random().nextInt(10000));
+    StateSync stateB = new StateSync("stateB" + StaticMap.getUnique());
     sm.addState(stateB);
-    StateSync stateC = new StateSync("stateC" + new Random().nextInt(10000));
+    StateSync stateC = new StateSync("stateC" + StaticMap.getUnique());
     sm.addState(stateC);
 
     State stateAB = new StateAsync("StateAB", 1000);
