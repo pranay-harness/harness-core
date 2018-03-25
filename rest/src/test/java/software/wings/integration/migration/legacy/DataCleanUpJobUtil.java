@@ -152,8 +152,6 @@ public class DataCleanUpJobUtil extends WingsBaseTest {
       if (!appIds.contains(s)) {
         orphanAppIds.add(s);
         logger.info("AppId " + s + " does not exist anymore");
-      } else {
-        //        logger.info("AppId " + s + " exists");
       }
     });
 
@@ -197,8 +195,6 @@ public class DataCleanUpJobUtil extends WingsBaseTest {
       if (!steamIds.contains(s)) {
         orphanStreamIds.add(s);
         logger.info("ArtifactStreamId " + s + " does not exist anymore");
-      } else {
-        //        logger.info("ServiceId " + s + " exists");
       }
     });
     logger.info("Orphan ArtifactSteam Ids " + orphanStreamIds.size());
@@ -226,8 +222,6 @@ public class DataCleanUpJobUtil extends WingsBaseTest {
         logger.info("ArtifactStream ServiceId " + artifactStreamServiceId + " does not exist anymore");
         wingsPersistence.getCollection("artifactStream")
             .remove(new BasicDBObject("serviceId", new BasicDBObject("$eq", artifactStreamServiceId)));
-      } else {
-        //        logger.info("ServiceId " + s + " exists");
       }
     }
     logger.info("Orphan artifact stream ids size = " + orphanStreamServiceIds.size());

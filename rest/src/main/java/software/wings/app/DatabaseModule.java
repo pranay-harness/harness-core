@@ -15,6 +15,7 @@ import com.mongodb.MongoClientOptions;
 import com.mongodb.MongoClientOptions.Builder;
 import com.mongodb.MongoClientURI;
 import com.mongodb.MongoCommandException;
+import io.harness.exception.UnexpectedException;
 import org.mongodb.morphia.AdvancedDatastore;
 import org.mongodb.morphia.Morphia;
 import org.mongodb.morphia.annotations.Index;
@@ -102,14 +103,14 @@ public class DatabaseModule extends AbstractModule {
   @SuppressWarnings("deprecation")
   public static void reportDeprecatedUnique(final Index index) {
     if (index.unique()) {
-      throw new RuntimeException("Someone still uses deprecated unique annotation");
+      throw new UnexpectedException("Someone still uses deprecated unique annotation");
     }
   }
 
   @SuppressWarnings("deprecation")
   public static void reportDeprecatedUnique(final Indexed indexed) {
     if (indexed.unique()) {
-      throw new RuntimeException("Someone still uses deprecated unique annotation");
+      throw new UnexpectedException("Someone still uses deprecated unique annotation");
     }
   }
 

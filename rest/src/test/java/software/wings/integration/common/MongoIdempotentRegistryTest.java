@@ -141,7 +141,7 @@ public class MongoIdempotentRegistryTest extends WingsBaseTest {
     concurrencyTest(idempotentRegistry);
   }
 
-  int index = 0;
+  int index;
 
   public String operation(IdempotentId id) throws UnableToRegisterIdempotentOperationException {
     try (IdempotentLock<String> idempotent = IdempotentLock.create(id, idempotentRegistry)) {

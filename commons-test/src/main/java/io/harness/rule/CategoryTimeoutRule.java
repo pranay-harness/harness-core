@@ -4,6 +4,8 @@ import io.harness.category.element.IntegrationTests;
 import io.harness.category.element.UnitTests;
 import io.harness.category.speed.FastTests;
 import io.harness.category.speed.SlowTests;
+import io.harness.exception.CategoryConfigException;
+import io.harness.exception.ImpossibleException;
 import org.junit.experimental.categories.Category;
 import org.junit.internal.runners.statements.FailOnTimeout;
 import org.junit.rules.Timeout;
@@ -27,29 +29,30 @@ public class CategoryTimeoutRule extends Timeout {
       return statement;
     }
 
-    boolean isDebug = ManagementFactory.getRuntimeMXBean().getInputArguments().toString().indexOf("-agentlib:jdwp") > 0;
+    boolean isDebug =
+        ManagementFactory.getRuntimeMXBean().getInputArguments().toString().indexOf("-agentlib:jdwp") >= 0;
 
     // Do not timeout when someone is debugging
     if (isDebug) {
       // This provides proof that in running mode we did not wrongfully detect a debugging mode
-      if (Arrays.stream(category.value()).anyMatch(cls -> RunMode.class.isAssignableFrom(cls))) {
-        throw new RuntimeException("You should not be debugging the running test");
+      if (Arrays.stream(category.value()).anyMatch(RunMode.class ::isAssignableFrom)) {
+        throw new ImpossibleException("You should not be debugging the running test");
       }
 
       return statement;
     }
 
-    boolean fast = Arrays.stream(category.value()).anyMatch(cls -> FastTests.class.isAssignableFrom(cls));
-    boolean slow = Arrays.stream(category.value()).anyMatch(cls -> SlowTests.class.isAssignableFrom(cls));
+    boolean fast = Arrays.stream(category.value()).anyMatch(FastTests.class ::isAssignableFrom);
+    boolean slow = Arrays.stream(category.value()).anyMatch(SlowTests.class ::isAssignableFrom);
     if (fast && slow) {
-      throw new RuntimeException("A test cannot be fast and slow at the same time");
+      throw new CategoryConfigException("A test cannot be fast and slow at the same time");
     }
 
-    boolean unit = Arrays.stream(category.value()).anyMatch(cls -> UnitTests.class.isAssignableFrom(cls));
-    boolean integration = Arrays.stream(category.value()).anyMatch(cls -> IntegrationTests.class.isAssignableFrom(cls));
+    boolean unit = Arrays.stream(category.value()).anyMatch(UnitTests.class ::isAssignableFrom);
+    boolean integration = Arrays.stream(category.value()).anyMatch(IntegrationTests.class ::isAssignableFrom);
 
     if (!unit && !integration) {
-      throw new RuntimeException("A test should belong to at least one type category");
+      throw new CategoryConfigException("A test should belong to at least one type category");
     }
 
     // There should not be categorized test to exceed execution of 10 minutes.
