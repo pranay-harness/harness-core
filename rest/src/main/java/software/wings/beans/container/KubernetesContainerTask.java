@@ -14,20 +14,16 @@ import io.fabric8.kubernetes.api.model.Container;
 import io.fabric8.kubernetes.api.model.ContainerBuilder;
 import io.fabric8.kubernetes.api.model.HasMetadata;
 import io.fabric8.kubernetes.api.model.HostPathVolumeSource;
-import io.fabric8.kubernetes.api.model.PodTemplateSpec;
 import io.fabric8.kubernetes.api.model.Quantity;
-import io.fabric8.kubernetes.api.model.ReplicationController;
 import io.fabric8.kubernetes.api.model.Volume;
 import io.fabric8.kubernetes.api.model.VolumeBuilder;
-import io.fabric8.kubernetes.api.model.extensions.DaemonSet;
 import io.fabric8.kubernetes.api.model.extensions.Deployment;
 import io.fabric8.kubernetes.api.model.extensions.DeploymentBuilder;
-import io.fabric8.kubernetes.api.model.extensions.ReplicaSet;
-import io.fabric8.kubernetes.api.model.extensions.StatefulSet;
 import lombok.Builder;
 import lombok.Data;
 import lombok.EqualsAndHashCode;
 import lombok.NoArgsConstructor;
+import org.apache.commons.io.LineIterator;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import software.wings.api.DeploymentType;
@@ -38,6 +34,7 @@ import software.wings.stencils.EnumData;
 import software.wings.utils.KubernetesConvention;
 
 import java.io.IOException;
+import java.io.StringReader;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
@@ -144,56 +141,29 @@ public class KubernetesContainerTask extends ContainerTask {
 
   @Override
   public void validateAdvanced() {
+    // Instantiating doesn't work when service variable expressions are used so only check for placeholder
     if (isNotEmpty(getAdvancedConfig())) {
-      try {
-        HasMetadata controller =
-            KubernetesHelper.loadYaml(getAdvancedConfig()
-                                          .replaceAll(DOCKER_IMAGE_NAME_PLACEHOLDER_REGEX, DUMMY_DOCKER_IMAGE_NAME)
-                                          .replaceAll(CONTAINER_NAME_PLACEHOLDER_REGEX, DUMMY_CONTAINER_NAME)
-                                          .replaceAll(SECRET_NAME_PLACEHOLDER_REGEX, DUMMY_SECRET_NAME)
-                                          .replaceAll(CONFIG_MAP_NAME_PLACEHOLDER_REGEX, DUMMY_CONFIG_MAP_NAME)
-                                          .replaceAll(SECRET_MAP_NAME_PLACEHOLDER_REGEX, DUMMY_SECRET_MAP_NAME));
+      boolean foundImagePlaceholder = false;
 
-        PodTemplateSpec podTemplateSpec = null;
-
-        if (controller instanceof ReplicationController) {
-          podTemplateSpec = ((ReplicationController) controller).getSpec().getTemplate();
-        } else if (controller instanceof Deployment) {
-          podTemplateSpec = ((Deployment) controller).getSpec().getTemplate();
-        } else if (controller instanceof ReplicaSet) {
-          podTemplateSpec = ((ReplicaSet) controller).getSpec().getTemplate();
-        } else if (controller instanceof StatefulSet) {
-          podTemplateSpec = ((StatefulSet) controller).getSpec().getTemplate();
-        } else if (controller instanceof DaemonSet) {
-          podTemplateSpec = ((DaemonSet) controller).getSpec().getTemplate();
+      LineIterator lineIterator = new LineIterator(new StringReader(getAdvancedConfig()));
+      while (lineIterator.hasNext()) {
+        String line = lineIterator.nextLine();
+        if (line.trim().charAt(0) == '#') {
+          continue;
         }
-
-        if (podTemplateSpec == null || podTemplateSpec.getMetadata() == null) {
-          throw new WingsException(ErrorCode.INVALID_ARGUMENT).addParam("args", "Missing valid pod template.");
+        if (line.contains("${DOCKER_IMAGE_NAME}")) {
+          foundImagePlaceholder = true;
         }
-
-        boolean containerHasDockerPlaceholder = false;
-        try {
-          containerHasDockerPlaceholder = podTemplateSpec.getSpec().getContainers().stream().anyMatch(
-              container -> DUMMY_DOCKER_IMAGE_NAME.equals(container.getImage()));
-        } catch (Exception e) {
-          logger.error("Controller spec must have a container definition with ${DOCKER_IMAGE_NAME} placeholder.", e);
-        }
-        if (!containerHasDockerPlaceholder) {
-          throw new WingsException(ErrorCode.INVALID_ARGUMENT)
-              .addParam("args",
-                  "Controller spec must have a container definition with "
-                      + "${DOCKER_IMAGE_NAME} placeholder.");
-        }
-      } catch (Exception e) {
-        if (e instanceof WingsException) {
-          throw(WingsException) e;
-        }
-        throw new WingsException(ErrorCode.INVALID_ARGUMENT, e)
-            .addParam("args", "Cannot create controller: " + e.getMessage());
+      }
+      if (!foundImagePlaceholder) {
+        throw new WingsException(ErrorCode.INVALID_ARGUMENT)
+            .addParam("args",
+                "Controller spec must have a container definition with "
+                    + "${DOCKER_IMAGE_NAME} placeholder.");
       }
     } else {
-      throw new WingsException(ErrorCode.INVALID_ARGUMENT).addParam("args", "Configuration is empty.");
+      throw new WingsException(ErrorCode.INVALID_ARGUMENT)
+          .addParam("args", "Kubernetes advanced configuration is empty.");
     }
   }
 

@@ -713,8 +713,7 @@ public class ServiceResourceServiceImpl implements ServiceResourceService, DataP
       containerTask.convertFromAdvanced();
     } else {
       containerTask.setAdvancedConfig(kubernetesPayload.getAdvancedConfig());
-      // Disabling advanced validation since it doesn't work when service variable expressions are used.
-      // containerTask.validateAdvanced();
+      containerTask.validateAdvanced();
     }
     return upsertContainerTask(containerTask, false, false);
   }

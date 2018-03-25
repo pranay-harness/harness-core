@@ -1435,26 +1435,22 @@ public class ServiceResourceServiceTest extends WingsBaseTest {
 
     when(wingsPersistence.saveAndGet(ContainerTask.class, containerTask)).thenAnswer(t -> t.getArguments()[1]);
 
-    payload.setAdvancedConfig(null);
+    payload.setAdvancedConfig("${DOCKER_IMAGE_NAME}");
     KubernetesContainerTask result =
         (KubernetesContainerTask) srs.updateContainerTaskAdvanced(APP_ID, SERVICE_ID, "TASK_ID", payload, false);
-    assertThat(result.getAdvancedConfig()).isNull();
+    assertThat(result.getAdvancedConfig()).isEqualTo("${DOCKER_IMAGE_NAME}");
 
-    payload.setAdvancedConfig("one line");
+    payload.setAdvancedConfig("a\n${DOCKER_IMAGE_NAME}");
     result = (KubernetesContainerTask) srs.updateContainerTaskAdvanced(APP_ID, SERVICE_ID, "TASK_ID", payload, false);
-    assertThat(result.getAdvancedConfig()).isEqualTo("one line");
+    assertThat(result.getAdvancedConfig()).isEqualTo("a\n${DOCKER_IMAGE_NAME}");
 
-    payload.setAdvancedConfig("a\nb");
+    payload.setAdvancedConfig("a \n${DOCKER_IMAGE_NAME}");
     result = (KubernetesContainerTask) srs.updateContainerTaskAdvanced(APP_ID, SERVICE_ID, "TASK_ID", payload, false);
-    assertThat(result.getAdvancedConfig()).isEqualTo("a\nb");
+    assertThat(result.getAdvancedConfig()).isEqualTo("a\n${DOCKER_IMAGE_NAME}");
 
-    payload.setAdvancedConfig("a \nb");
+    payload.setAdvancedConfig("a    \n b   \n  ${DOCKER_IMAGE_NAME}");
     result = (KubernetesContainerTask) srs.updateContainerTaskAdvanced(APP_ID, SERVICE_ID, "TASK_ID", payload, false);
-    assertThat(result.getAdvancedConfig()).isEqualTo("a\nb");
-
-    payload.setAdvancedConfig("a    \n b   \n  c");
-    result = (KubernetesContainerTask) srs.updateContainerTaskAdvanced(APP_ID, SERVICE_ID, "TASK_ID", payload, false);
-    assertThat(result.getAdvancedConfig()).isEqualTo("a\n b\n  c");
+    assertThat(result.getAdvancedConfig()).isEqualTo("a\n b\n  ${DOCKER_IMAGE_NAME}");
 
     result = (KubernetesContainerTask) srs.updateContainerTaskAdvanced(APP_ID, SERVICE_ID, "TASK_ID", null, true);
     assertThat(result.getAdvancedConfig()).isNull();
