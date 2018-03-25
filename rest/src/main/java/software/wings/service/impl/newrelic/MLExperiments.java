@@ -2,6 +2,7 @@ package software.wings.service.impl.newrelic;
 
 import lombok.Builder;
 import lombok.Data;
+import lombok.EqualsAndHashCode;
 import org.mongodb.morphia.annotations.Entity;
 import org.mongodb.morphia.annotations.Field;
 import org.mongodb.morphia.annotations.Index;
@@ -18,6 +19,7 @@ import software.wings.service.impl.analysis.MLAnalysisType;
 })
 @Data
 @Builder
+@EqualsAndHashCode(callSuper = false)
 public class MLExperiments extends Base {
   private MLAnalysisType ml_analysis_type;
   private String experimentName;

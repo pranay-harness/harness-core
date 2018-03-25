@@ -3,6 +3,7 @@ package software.wings.beans;
 import com.fasterxml.jackson.annotation.JsonIgnore;
 import com.github.reinert.jjschema.SchemaIgnore;
 import lombok.Data;
+import lombok.EqualsAndHashCode;
 import org.mongodb.morphia.annotations.Entity;
 import org.mongodb.morphia.annotations.IndexOptions;
 import org.mongodb.morphia.annotations.Indexed;
@@ -13,6 +14,7 @@ import java.util.List;
 
 @Entity(value = "idempotent_locks", noClassnameStored = true)
 @Data
+@EqualsAndHashCode(callSuper = false)
 public class Idempotent extends Base {
   public static final String TENTATIVE = "tentative";
   public static final String SUCCEEDED = "succeeded";

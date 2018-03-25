@@ -113,6 +113,7 @@ public class KubernetesClusterConfig extends SettingValue implements Encryptable
 
   @Data
   @NoArgsConstructor
+  @EqualsAndHashCode(callSuper = false)
   public static class Yaml extends CloudProviderYaml {
     private String masterUrl;
     private String username;

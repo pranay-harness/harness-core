@@ -53,6 +53,8 @@ import software.wings.beans.SettingAttribute;
 import software.wings.beans.command.ExecutionLogCallback;
 import software.wings.service.impl.AwsHelperService;
 
+import java.time.OffsetDateTime;
+import java.time.ZoneOffset;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.Date;
@@ -181,11 +183,25 @@ public class EcsContainerServiceImplTest extends WingsBaseTest {
 
     EcsContainerServiceImpl ecsContainerServiceImpl = (EcsContainerServiceImpl) ecsContainerService;
 
+    final OffsetDateTime startDate = OffsetDateTime.of(2018, 02, 02, 02, 10, 0, 0, ZoneOffset.UTC);
+
     List<ServiceEvent> events = new ArrayList<>();
-    events.add(new ServiceEvent().withCreatedAt(new Date(2018, 02, 02, 02, 10)).withId("E1").withMessage("message"));
-    events.add(new ServiceEvent().withCreatedAt(new Date(2018, 02, 02, 02, 17)).withId("E3").withMessage("message"));
-    events.add(new ServiceEvent().withCreatedAt(new Date(2018, 02, 02, 02, 19)).withId("E4").withMessage("message"));
-    events.add(new ServiceEvent().withCreatedAt(new Date(2018, 02, 02, 02, 14)).withId("E2").withMessage("message"));
+    events.add(new ServiceEvent()
+                   .withCreatedAt(Date.from(startDate.plusMinutes(0).toInstant()))
+                   .withId("E1")
+                   .withMessage("message"));
+    events.add(new ServiceEvent()
+                   .withCreatedAt(Date.from(startDate.plusMinutes(7).toInstant()))
+                   .withId("E3")
+                   .withMessage("message"));
+    events.add(new ServiceEvent()
+                   .withCreatedAt(Date.from(startDate.plusMinutes(9).toInstant()))
+                   .withId("E4")
+                   .withMessage("message"));
+    events.add(new ServiceEvent()
+                   .withCreatedAt(Date.from(startDate.plusMinutes(4).toInstant()))
+                   .withId("E2")
+                   .withMessage("message"));
 
     Service service = new Service()
                           .withDesiredCount(DESIRED_COUNT)
@@ -194,12 +210,24 @@ public class EcsContainerServiceImplTest extends WingsBaseTest {
                           .withEvents(events);
 
     List<ServiceEvent> events1 = new ArrayList<>();
-    events1.add(new ServiceEvent().withCreatedAt(new Date(2018, 02, 02, 02, 10)).withId("E1").withMessage("message"));
-    events1.add(new ServiceEvent().withCreatedAt(new Date(2018, 02, 02, 02, 17)).withId("E3").withMessage("message"));
-    events1.add(new ServiceEvent().withCreatedAt(new Date(2018, 02, 02, 02, 19)).withId("E4").withMessage("message"));
-    events1.add(new ServiceEvent().withCreatedAt(new Date(2018, 02, 02, 02, 14)).withId("E2").withMessage("message"));
     events1.add(new ServiceEvent()
-                    .withCreatedAt(new Date(2018, 02, 02, 02, 20))
+                    .withCreatedAt(Date.from(startDate.plusMinutes(0).toInstant()))
+                    .withId("E1")
+                    .withMessage("message"));
+    events1.add(new ServiceEvent()
+                    .withCreatedAt(Date.from(startDate.plusMinutes(7).toInstant()))
+                    .withId("E3")
+                    .withMessage("message"));
+    events1.add(new ServiceEvent()
+                    .withCreatedAt(Date.from(startDate.plusMinutes(9).toInstant()))
+                    .withId("E4")
+                    .withMessage("message"));
+    events1.add(new ServiceEvent()
+                    .withCreatedAt(Date.from(startDate.plusMinutes(4).toInstant()))
+                    .withId("E2")
+                    .withMessage("message"));
+    events1.add(new ServiceEvent()
+                    .withCreatedAt(Date.from(startDate.plusMinutes(10).toInstant()))
                     .withId("E5")
                     .withMessage("has reached a steady state."));
 

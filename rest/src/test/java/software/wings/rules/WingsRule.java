@@ -287,13 +287,13 @@ public class WingsRule implements MethodRule {
     // FreeServerPort releases the port before it returns it. This creates a race between the moment it is obtain again
     // and reserved for mongo. In rare cases this can cause the function to fail with port already in use exception.
     //
-    // There is no good way to eleminate the race, since the port must be free mongo to be able to grab it.
+    // There is no good way to eliminate the race, since the port must be free mongo to be able to grab it.
     //
     // Lets retry a number of times to reduce the likelihood almost to zero.
     for (int i = 0; i < 5; i++) {
       int port = Network.getFreeServerPort();
       IMongodConfig mongodConfig = new MongodConfigBuilder()
-                                       .version(Main.V3_2)
+                                       .version(Main.V3_4)
                                        .net(new Net("127.0.0.1", port, Network.localhostIsIPv6()))
                                        .build();
       mongodExecutable = starter.prepare(mongodConfig);
