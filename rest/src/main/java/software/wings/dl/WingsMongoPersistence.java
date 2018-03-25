@@ -849,16 +849,16 @@ public class WingsMongoPersistence implements WingsPersistence, Managed {
     return encryptedId;
   }
 
-  private boolean isReferencedSecretText(Encryptable object, Field encryptedField) throws IllegalAccessException {
-    if (ServiceVariable.class.isInstance(object)) {
-      ServiceVariable serviceVariable = (ServiceVariable) object;
-      if (isNotBlank(serviceVariable.getUuid())) {
-        Field decryptedField = getDecryptedField(encryptedField, object);
-        deleteEncryptionReference(object, Sets.newHashSet(decryptedField.getName()), serviceVariable.getUuid());
-      }
-      return true;
+  private boolean isReferencedSecretText(Encryptable object, Field encryptedField) {
+    if (!ServiceVariable.class.isInstance(object)) {
+      return false;
     }
-    return false;
+    ServiceVariable serviceVariable = (ServiceVariable) object;
+    if (isNotBlank(serviceVariable.getUuid())) {
+      Field decryptedField = getDecryptedField(encryptedField, object);
+      deleteEncryptionReference(object, Sets.newHashSet(decryptedField.getName()), serviceVariable.getUuid());
+    }
+    return true;
   }
 
   private void updateParent(Encryptable object, String parentId) {
@@ -893,31 +893,32 @@ public class WingsMongoPersistence implements WingsPersistence, Managed {
   private void deleteEncryptionReference(Encryptable object, Set<String> fieldNames, String parentId) {
     List<Field> fieldsToEncrypt = object.getEncryptedFields();
     for (Field f : fieldsToEncrypt) {
-      if (fieldNames == null || fieldNames.contains(f.getName())) {
-        Field encryptedField = getEncryptedRefField(f, object);
-        encryptedField.setAccessible(true);
-        String encryptedId;
-        try {
-          encryptedId = (String) encryptedField.get(object);
-        } catch (IllegalAccessException e) {
-          throw new WingsException("Could not deleter referenced record", e);
-        }
+      if (fieldNames != null && !fieldNames.contains(f.getName())) {
+        continue;
+      }
 
-        if (isBlank(encryptedId)) {
-          continue;
-        }
+      Field encryptedField = getEncryptedRefField(f, object);
+      encryptedField.setAccessible(true);
+      String encryptedId;
+      try {
+        encryptedId = (String) encryptedField.get(object);
+      } catch (IllegalAccessException e) {
+        throw new WingsException("Could not delete referenced record", e);
+      }
 
-        EncryptedData encryptedData = get(EncryptedData.class, encryptedId);
-        if (encryptedData == null) {
-          continue;
-        }
-        encryptedData.removeParentId(parentId);
-        if (encryptedData.getParentIds() != null && encryptedData.getParentIds().isEmpty()
-            && encryptedData.getType() != SettingVariableTypes.SECRET_TEXT) {
-          delete(encryptedData);
-        } else {
-          save(encryptedData);
-        }
+      if (isBlank(encryptedId)) {
+        continue;
+      }
+
+      EncryptedData encryptedData = get(EncryptedData.class, encryptedId);
+      if (encryptedData == null) {
+        continue;
+      }
+      encryptedData.removeParentId(parentId);
+      if (isEmpty(encryptedData.getParentIds()) && encryptedData.getType() != SettingVariableTypes.SECRET_TEXT) {
+        delete(encryptedData);
+      } else {
+        save(encryptedData);
       }
     }
   }
