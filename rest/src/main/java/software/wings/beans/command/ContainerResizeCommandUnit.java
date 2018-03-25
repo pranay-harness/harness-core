@@ -155,7 +155,6 @@ public abstract class ContainerResizeCommandUnit extends AbstractCommandUnit {
 
     int previousCount = previousDesiredCount.get();
     int desiredCount = getNewInstancesDesiredCount(contextData);
-    int previousTrafficPercent = getPreviousTrafficPercent(contextData);
     Integer desiredTrafficPercent = getDesiredTrafficPercent(contextData);
     if (desiredTrafficPercent == null) {
       Map<String, Integer> activeOtherControllers = getActiveServiceCounts(contextData);
@@ -177,7 +176,7 @@ public abstract class ContainerResizeCommandUnit extends AbstractCommandUnit {
         .name(contextData.resizeParams.getContainerServiceName())
         .previousCount(previousCount)
         .desiredCount(desiredCount)
-        .previousTraffic(previousTrafficPercent)
+        .previousTraffic(getPreviousTrafficPercent(contextData))
         .desiredTraffic(desiredTrafficPercent)
         .build();
   }
