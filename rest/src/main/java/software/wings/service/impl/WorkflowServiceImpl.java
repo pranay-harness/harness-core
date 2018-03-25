@@ -23,7 +23,6 @@ import static software.wings.beans.EntityType.SERVICE;
 import static software.wings.beans.EntityType.WORKFLOW;
 import static software.wings.beans.ErrorCode.INVALID_REQUEST;
 import static software.wings.beans.ErrorCode.WORKFLOW_EXECUTION_IN_PROGRESS;
-import static software.wings.beans.FailureStrategy.FailureStrategyBuilder.aFailureStrategy;
 import static software.wings.beans.GraphNode.GraphNodeBuilder.aGraphNode;
 import static software.wings.beans.InfrastructureMappingType.AWS_SSH;
 import static software.wings.beans.InfrastructureMappingType.PHYSICAL_DATA_CENTER_SSH;
@@ -2826,10 +2825,10 @@ public class WorkflowServiceImpl implements WorkflowService, DataProvider {
 
   private void createDefaultFailureStrategy(Workflow workflow) {
     List<FailureStrategy> failureStrategies = new ArrayList<>();
-    failureStrategies.add(aFailureStrategy()
-                              .addFailureTypes(FailureType.APPLICATION_ERROR)
-                              .withExecutionScope(ExecutionScope.WORKFLOW)
-                              .withRepairActionCode(RepairActionCode.ROLLBACK_WORKFLOW)
+    failureStrategies.add(FailureStrategy.builder()
+                              .failureTypes(asList(FailureType.APPLICATION_ERROR))
+                              .executionScope(ExecutionScope.WORKFLOW)
+                              .repairActionCode(RepairActionCode.ROLLBACK_WORKFLOW)
                               .build());
     OrchestrationWorkflow orchestrationWorkflow = workflow.getOrchestrationWorkflow();
     if (orchestrationWorkflow.getOrchestrationWorkflowType().equals(CANARY)) {

@@ -1,13 +1,13 @@
 package software.wings.beans;
 
 import lombok.Builder;
-import lombok.Data;
 import lombok.EqualsAndHashCode;
+import lombok.Value;
 
 import javax.validation.constraints.Max;
 import javax.validation.constraints.Min;
 
-@Data
+@Value
 @EqualsAndHashCode
 @Builder
 public class FailureCriteria {
