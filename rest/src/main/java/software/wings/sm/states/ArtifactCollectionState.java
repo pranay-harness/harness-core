@@ -38,6 +38,7 @@ import software.wings.service.intfc.WorkflowExecutionService;
 import software.wings.sm.ExecutionContext;
 import software.wings.sm.ExecutionResponse;
 import software.wings.sm.State;
+import software.wings.stencils.DefaultValue;
 import software.wings.stencils.EnumData;
 import software.wings.waitnotify.NotifyResponseData;
 
@@ -202,11 +203,9 @@ public class ArtifactCollectionState extends State {
   }
 
   @Attributes(title = "Timeout (ms)")
+  @DefaultValue("" + DEFAULT_ARTIFACT_COLLECTION_STATE_TIMEOUT_MILLIS)
   @Override
   public Integer getTimeoutMillis() {
-    if (super.getTimeoutMillis() == null) {
-      return DEFAULT_ARTIFACT_COLLECTION_STATE_TIMEOUT_MILLIS;
-    }
     return super.getTimeoutMillis();
   }
 

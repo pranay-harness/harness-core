@@ -5,6 +5,10 @@ import static org.assertj.core.api.Assertions.tuple;
 import static org.joor.Reflect.on;
 import static org.mockito.Mockito.when;
 import static software.wings.utils.WingsTestConstants.APP_ID;
+import static software.wings.utils.WingsTestConstants.DOUBLE_DEFAULT_VALUE;
+import static software.wings.utils.WingsTestConstants.FLOAT_DEFAULT_VALUE;
+import static software.wings.utils.WingsTestConstants.INTEGER_DEFAULT_VALUE;
+import static software.wings.utils.WingsTestConstants.LONG_DEFAULT_VALUE;
 
 import com.google.common.collect.ImmutableMap;
 import com.google.inject.Inject;
@@ -12,6 +16,7 @@ import com.google.inject.Injector;
 import com.google.inject.Singleton;
 
 import com.fasterxml.jackson.databind.JsonNode;
+import lombok.Value;
 import org.junit.Before;
 import org.junit.Test;
 import org.mockito.InjectMocks;
@@ -33,23 +38,26 @@ public class StencilPostProcessorTest extends WingsBaseTest {
 
   @InjectMocks @Inject private StencilPostProcessor stencilPostProcessor;
 
+  private static void accept(JsonNode propertiesNode) {
+    assertThat(propertiesNode.get("doubleTimeout").get("default").doubleValue()).isEqualTo(DOUBLE_DEFAULT_VALUE);
+    assertThat(propertiesNode.get("integerTimeout").get("default").intValue()).isEqualTo(INTEGER_DEFAULT_VALUE);
+    assertThat(propertiesNode.get("floatTimeout").get("default").floatValue()).isEqualTo(FLOAT_DEFAULT_VALUE);
+    assertThat(propertiesNode.get("longTimeout").get("default").longValue()).isEqualTo(LONG_DEFAULT_VALUE);
+    assertThat(propertiesNode.get("enumField").get("default").textValue()).isEqualTo("hello");
+  }
+
   /**
    * Sets up mocks.
    *
    * @throws Exception the exception
    */
   @Before
-  public void setUpMocks() throws Exception {
+  public void setUpMocks() {
     when(injector.getInstance(TestDataProvider.class)).thenReturn(new TestDataProvider());
   }
 
-  /**
-   * Should expand stencil on post process.
-   *
-   * @throws Exception the exception
-   */
   @Test
-  public void shouldExpandStencilOnPostProcess() throws Exception {
+  public void shouldExpandStencilOnPostProcess() {
     List<Stencil> processedStencils =
         stencilPostProcessor.postProcess(Collections.singletonList(new StencilType(ExpandStencilObject.class)), APP_ID);
 
@@ -72,13 +80,8 @@ public class StencilPostProcessorTest extends WingsBaseTest {
                 "TYPE"));
   }
 
-  /**
-   * Should not expand for stencil enum on post process.
-   *
-   * @throws Exception the exception
-   */
   @Test
-  public void shouldNotExpandForStencilEnumOnPostProcess() throws Exception {
+  public void shouldNotExpandForStencilEnumOnPostProcess() {
     List<Stencil> processedStencils =
         stencilPostProcessor.postProcess(Collections.singletonList(new StencilType(EnumStencilObject.class)), APP_ID);
 
@@ -91,13 +94,8 @@ public class StencilPostProcessorTest extends WingsBaseTest {
             "TYPE"));
   }
 
-  /**
-   * Should not expand for stencil enum on post process.
-   *
-   * @throws Exception the exception
-   */
   @Test
-  public void shouldSetDefaultValueForTheField() throws Exception {
+  public void shouldSetDefaultValueForTheField() {
     List<Stencil> processedStencils = stencilPostProcessor.postProcess(
         Collections.singletonList(new StencilType(DefaultStencilObject.class)), APP_ID);
 
@@ -109,24 +107,15 @@ public class StencilPostProcessorTest extends WingsBaseTest {
                 "{\"type\":\"object\",\"properties\":{\"enumField\":{\"type\":\"string\",\"default\":\"hello\"}}}"),
             "TYPE"));
   }
-
-  /**
-   * Should set default value for the accessor method.
-   *
-   * @throws Exception the exception
-   */
   @Test
-  public void shouldSetDefaultValueForTheAccessorMethod() throws Exception {
+  public void shouldSetDefaultValueForTheAccessorMethod() {
     List<Stencil> processedStencils = stencilPostProcessor.postProcess(
         Collections.singletonList(new StencilType(DefaultMethodStencilObject.class)), APP_ID);
 
-    assertThat(processedStencils)
-        .hasSize(1)
-        .extracting(Stencil::getName, Stencil::getJsonSchema, Stencil::getType)
-        .contains(tuple("NAME",
-            JsonUtils.readTree(
-                "{\"type\":\"object\",\"properties\":{\"enumField\":{\"type\":\"string\",\"default\":\"hello\"}}}"),
-            "TYPE"));
+    processedStencils.stream()
+        .map(stencil -> stencil.getJsonSchema())
+        .map(inputNode -> inputNode.get("properties"))
+        .forEach(StencilPostProcessorTest::accept);
   }
 
   /**
@@ -148,103 +137,63 @@ public class StencilPostProcessorTest extends WingsBaseTest {
   /**
    * The type Expand stencil object.
    */
+  @Value
   public static class ExpandStencilObject implements StencilObject {
     @EnumData(enumDataProvider = TestDataProvider.class)
     @Expand(dataProvider = TestDataProvider.class)
     private String expand;
-
-    /**
-     * Getter for property 'expand'.
-     *
-     * @return Value for property 'expand'.
-     */
-    public String getExpand() {
-      return expand;
-    }
-
-    /**
-     * Setter for property 'expand'.
-     *
-     * @param expand Value to set for property 'expand'.
-     */
-    public void setExpand(String expand) {
-      this.expand = expand;
-    }
   }
 
   /**
    * The type Enum stencil object.
    */
+  @Value
   public static class EnumStencilObject implements StencilObject {
     @EnumData(enumDataProvider = TestDataProvider.class) private String enumField;
-
-    /**
-     * Getter for property 'enumField'.
-     *
-     * @return Value for property 'enumField'.
-     */
-    public String getEnumField() {
-      return enumField;
-    }
-
-    /**
-     * Setter for property 'enumField'.
-     *
-     * @param enumField Value to set for property 'enumField'.
-     */
-    public void setEnumField(String enumField) {
-      this.enumField = enumField;
-    }
   }
 
   /**
    * The type Enum stencil object.
    */
+  @Value
   public static class DefaultStencilObject implements StencilObject {
     @DefaultValue("hello") private String enumField;
-
-    /**
-     * Getter for property 'enumField'.
-     *
-     * @return Value for property 'enumField'.
-     */
-    public String getEnumField() {
-      return enumField;
-    }
-
-    /**
-     * Setter for property 'enumField'.
-     *
-     * @param enumField Value to set for property 'enumField'.
-     */
-    public void setEnumField(String enumField) {
-      this.enumField = enumField;
-    }
   }
 
   /**
    * The type Enum stencil object.
    */
+  @Value
   public static class DefaultMethodStencilObject implements StencilObject {
     private String enumField;
+    private Integer integerTimeout;
+    private Long longTimeout;
+    private Float floatTimeout;
+    private Double doubleTimeout;
 
-    /**
-     * Getter for property 'enumField'.
-     *
-     * @return Value for property 'enumField'.
-     */
+    @DefaultValue("" + INTEGER_DEFAULT_VALUE)
+    public Integer getIntegerTimeout() {
+      return integerTimeout;
+    }
+
+    @DefaultValue("" + LONG_DEFAULT_VALUE)
+    public long getLongTimeout() {
+      return longTimeout;
+    }
+
+    @DefaultValue("" + FLOAT_DEFAULT_VALUE)
+    public Float getFloatTimeout() {
+      return floatTimeout;
+    }
+
+    @DefaultValue("" + DOUBLE_DEFAULT_VALUE)
+    public Double getDoubleTimeout() {
+      return doubleTimeout;
+    }
+
     @DefaultValue("hello")
     public String getEnumField() {
       return enumField;
-    }
-
-    /**
-     * Setter for property 'enumField'.
-     *
-     * @param enumField Value to set for property 'enumField'.
-     */
-    public void setEnumField(String enumField) {
-      this.enumField = enumField;
     }
   }
 

@@ -11,6 +11,8 @@ import com.google.inject.Injector;
 import com.google.inject.Singleton;
 
 import com.fasterxml.jackson.databind.JsonNode;
+import com.fasterxml.jackson.databind.node.DoubleNode;
+import com.fasterxml.jackson.databind.node.LongNode;
 import com.fasterxml.jackson.databind.node.ObjectNode;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -161,9 +163,7 @@ public class StencilPostProcessor {
       if (value != null) {
         JsonNode jsonSchema = stencil.getJsonSchema();
         ObjectNode jsonSchemaField = (ObjectNode) jsonSchema.get("properties").get(fieldName);
-        if (jsonSchemaField != null) {
-          jsonSchemaField.set("default", JsonUtils.asTree(value));
-        }
+        setDefaultValue(value, jsonSchemaField);
         OverridingStencil overridingStencil = stencil.getOverridingStencil();
         overridingStencil.setOverridingJsonSchema(jsonSchema);
         if (isEmpty(overridingStencil.getOverridingName())) {
@@ -177,6 +177,21 @@ public class StencilPostProcessor {
           e);
     }
     return stencil;
+  }
+
+  private void setDefaultValue(String value, ObjectNode jsonSchemaField) {
+    if (jsonSchemaField != null) {
+      JsonNode jsonNode = JsonUtils.asTree(value);
+      if (jsonSchemaField.has("type")) {
+        String type = jsonSchemaField.get("type").asText();
+        if ("integer".equals(type)) {
+          jsonNode = new LongNode(Long.parseLong(value));
+        } else if ("number".equals(type)) {
+          jsonNode = new DoubleNode(Double.parseDouble(value));
+        }
+      }
+      jsonSchemaField.set("default", jsonNode);
+    }
   }
 
   private <T extends Stencil> Stream<Stencil> expandBasedOnData(T t, Map<String, String> data, String fieldName) {
