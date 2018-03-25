@@ -1,5 +1,7 @@
 package software.wings.service.impl;
 
+import static io.harness.data.structure.EmptyPredicate.isNotEmpty;
+
 import com.google.api.client.googleapis.auth.oauth2.GoogleCredential;
 import com.google.api.client.googleapis.javanet.GoogleNetHttpTransport;
 import com.google.api.client.http.javanet.NetHttpTransport;
@@ -77,7 +79,9 @@ public class GcpHelperService {
 
   public GoogleCredential getGoogleCredential(GcpConfig gcpConfig, List<EncryptedDataDetail> encryptedDataDetails)
       throws IOException {
-    encryptionService.decrypt(gcpConfig, encryptedDataDetails);
+    if (isNotEmpty(encryptedDataDetails)) {
+      encryptionService.decrypt(gcpConfig, encryptedDataDetails);
+    }
     GoogleCredential credential = GoogleCredential.fromStream(
         IOUtils.toInputStream(String.valueOf(gcpConfig.getServiceAccountKeyFileContent()), Charset.defaultCharset()));
     if (credential.createScopedRequired()) {

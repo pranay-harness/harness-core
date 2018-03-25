@@ -18,6 +18,7 @@ import lombok.Builder;
 import lombok.Data;
 import lombok.EqualsAndHashCode;
 import lombok.NoArgsConstructor;
+import org.apache.commons.io.LineIterator;
 import org.apache.commons.lang3.StringUtils;
 import software.wings.api.DeploymentType;
 import software.wings.beans.ErrorCode;
@@ -27,6 +28,7 @@ import software.wings.stencils.EnumData;
 import software.wings.utils.EcsConvention;
 import software.wings.utils.JsonUtils;
 
+import java.io.StringReader;
 import java.util.Arrays;
 import java.util.HashMap;
 import java.util.List;
@@ -109,28 +111,25 @@ public class EcsContainerTask extends ContainerTask {
 
   @Override
   public void validateAdvanced() {
+    // Instantiating doesn't work when service variable expressions are used so only check for placeholder
     if (isNotEmpty(getAdvancedConfig())) {
-      try {
-        String advancedConfig = fetchAdvancedConfigNoComments()
-                                    .replaceAll(DOCKER_IMAGE_NAME_PLACEHOLDER_REGEX, DUMMY_DOCKER_IMAGE_NAME)
-                                    .replaceAll(CONTAINER_NAME_PLACEHOLDER_REGEX, DUMMY_CONTAINER_NAME)
-                                    .replaceAll(EXECUTION_ROLE_PLACEHOLDER_REGEX, DUMMY_EXECUTION_ROLE_ARN);
-        TaskDefinition taskDefinition = JsonUtils.asObject(advancedConfig, TaskDefinition.class);
+      boolean foundImagePlaceholder = false;
 
-        boolean containerHasDockerPlaceholder = taskDefinition.getContainerDefinitions().stream().anyMatch(
-            cd -> DUMMY_DOCKER_IMAGE_NAME.equals(cd.getImage()));
-        if (!containerHasDockerPlaceholder) {
-          throw new WingsException(ErrorCode.INVALID_ARGUMENT)
-              .addParam("args",
-                  "Task definition spec must have a container definition with "
-                      + "${DOCKER_IMAGE_NAME} placeholder.");
+      LineIterator lineIterator = new LineIterator(new StringReader(getAdvancedConfig()));
+      while (lineIterator.hasNext()) {
+        String line = lineIterator.nextLine();
+        if (line.trim().charAt(0) == '#') {
+          continue;
         }
-      } catch (Exception e) {
-        if (e instanceof WingsException) {
-          throw(WingsException) e;
+        if (line.contains("${DOCKER_IMAGE_NAME}")) {
+          foundImagePlaceholder = true;
         }
-        throw new WingsException(ErrorCode.INVALID_ARGUMENT, e)
-            .addParam("args", "Cannot create task definition from JSON: " + e.getMessage());
+      }
+      if (!foundImagePlaceholder) {
+        throw new WingsException(ErrorCode.INVALID_ARGUMENT)
+            .addParam("args",
+                "Task definition spec must have a container definition with "
+                    + "${DOCKER_IMAGE_NAME} placeholder.");
       }
     } else {
       throw new WingsException(ErrorCode.INVALID_ARGUMENT).addParam("args", "ECS advanced configuration is empty.");
