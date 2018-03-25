@@ -1,5 +1,6 @@
-package software.wings.service;
+package software.wings.integration;
 
+import static io.harness.data.structure.UUIDGenerator.generateUuid;
 import static java.util.Arrays.asList;
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertNotNull;
@@ -79,12 +80,12 @@ import java.util.List;
 import java.util.Map;
 import java.util.Random;
 import java.util.Set;
-import java.util.UUID;
 
 /**
  * Created by rsingh on 11/3/17.
  */
 @RunWith(Parameterized.class)
+@RealMongo
 public class SecretTextTest extends WingsBaseTest {
   private static final Logger logger = LoggerFactory.getLogger(SecretTextTest.class);
 
@@ -120,9 +121,9 @@ public class SecretTextTest extends WingsBaseTest {
   @Before
   public void setup() throws IOException {
     initMocks(this);
-    appId = UUID.randomUUID().toString();
-    workflowName = UUID.randomUUID().toString();
-    envId = UUID.randomUUID().toString();
+    appId = generateUuid();
+    workflowName = generateUuid();
+    envId = generateUuid();
     workflowExecutionId = wingsPersistence.save(
         WorkflowExecutionBuilder.aWorkflowExecution().withName(workflowName).withEnvId(envId).build());
     when(secretManagementDelegateService.encrypt(anyString(), anyObject(), any(KmsConfig.class))).then(invocation -> {
@@ -162,7 +163,7 @@ public class SecretTextTest extends WingsBaseTest {
     wingsPersistence.save(user);
     UserThreadLocal.set(user);
 
-    accountId = UUID.randomUUID().toString();
+    accountId = generateUuid();
     switch (encryptionType) {
       case LOCAL:
         kmsId = null;
@@ -188,8 +189,8 @@ public class SecretTextTest extends WingsBaseTest {
 
   @Test
   public void saveSecret() throws IllegalAccessException {
-    String secretName = UUID.randomUUID().toString();
-    String secretValue = UUID.randomUUID().toString();
+    String secretName = generateUuid();
+    String secretValue = generateUuid();
     String secretId = secretManager.saveSecret(accountId, secretName, secretValue);
     testSaveSecret(secretName, secretValue, secretId);
   }
@@ -199,8 +200,8 @@ public class SecretTextTest extends WingsBaseTest {
     if (encryptionType != EncryptionType.LOCAL) {
       return;
     }
-    String secretName = UUID.randomUUID().toString();
-    String secretValue = UUID.randomUUID().toString();
+    String secretName = generateUuid();
+    String secretValue = generateUuid();
     String secretId = secretManager.saveSecretUsingLocalMode(accountId, secretName, secretValue);
     testSaveSecret(secretName, secretValue, secretId);
   }
@@ -221,16 +222,16 @@ public class SecretTextTest extends WingsBaseTest {
     assertEquals(SECRET_TEXT, encryptedData.getType());
 
     final ServiceVariable serviceVariable = ServiceVariable.builder()
-                                                .templateId(UUID.randomUUID().toString())
-                                                .envId(UUID.randomUUID().toString())
+                                                .templateId(generateUuid())
+                                                .envId(generateUuid())
                                                 .entityType(EntityType.APPLICATION)
-                                                .entityId(UUID.randomUUID().toString())
-                                                .parentServiceVariableId(UUID.randomUUID().toString())
+                                                .entityId(generateUuid())
+                                                .parentServiceVariableId(generateUuid())
                                                 .overrideType(OverrideType.ALL)
-                                                .instances(Collections.singletonList(UUID.randomUUID().toString()))
-                                                .expression(UUID.randomUUID().toString())
+                                                .instances(Collections.singletonList(generateUuid()))
+                                                .expression(generateUuid())
                                                 .accountId(accountId)
-                                                .name(UUID.randomUUID().toString())
+                                                .name(generateUuid())
                                                 .value(secretId.toCharArray())
                                                 .encryptedValue(secretId)
                                                 .type(Type.ENCRYPTED_TEXT)
@@ -269,8 +270,8 @@ public class SecretTextTest extends WingsBaseTest {
     assertEquals(userName, secretChangeLog.getUser().getName());
     assertEquals(userEmail, secretChangeLog.getUser().getEmail());
 
-    String newSecretName = UUID.randomUUID().toString();
-    String newSecretValue = UUID.randomUUID().toString();
+    String newSecretName = generateUuid();
+    String newSecretValue = generateUuid();
     secretManager.updateSecret(accountId, secretId, newSecretName, newSecretValue);
 
     changeLogs = secretManager.getChangeLogs(secretId, SECRET_TEXT);
@@ -316,29 +317,29 @@ public class SecretTextTest extends WingsBaseTest {
 
   @Test
   public void updateSecretRef() {
-    String secretName1 = "s1";
+    String secretName1 = "s1" + generateUuid();
     String secretValue1 = "v2";
     String secretId1 = secretManager.saveSecret(accountId, secretName1, secretValue1);
 
-    String secretName2 = "s2";
+    String secretName2 = "s2" + generateUuid();
     String secretValue2 = "v2";
     String secretId2 = secretManager.saveSecret(accountId, secretName2, secretValue2);
 
-    String secretName3 = "s3";
+    String secretName3 = "s3" + generateUuid();
     String secretValue3 = "v3";
     String secretId3 = secretManager.saveSecret(accountId, secretName3, secretValue3);
 
     final ServiceVariable serviceVariable = ServiceVariable.builder()
-                                                .templateId(UUID.randomUUID().toString())
-                                                .envId(UUID.randomUUID().toString())
+                                                .templateId(generateUuid())
+                                                .envId(generateUuid())
                                                 .entityType(EntityType.APPLICATION)
-                                                .entityId(UUID.randomUUID().toString())
-                                                .parentServiceVariableId(UUID.randomUUID().toString())
+                                                .entityId(generateUuid())
+                                                .parentServiceVariableId(generateUuid())
                                                 .overrideType(OverrideType.ALL)
-                                                .instances(Collections.singletonList(UUID.randomUUID().toString()))
-                                                .expression(UUID.randomUUID().toString())
+                                                .instances(Collections.singletonList(generateUuid()))
+                                                .expression(generateUuid())
                                                 .accountId(accountId)
-                                                .name("service_var" + System.currentTimeMillis())
+                                                .name("service_var" + generateUuid())
                                                 .value(secretId1.toCharArray())
                                                 .type(Type.ENCRYPTED_TEXT)
                                                 .build();
@@ -378,8 +379,8 @@ public class SecretTextTest extends WingsBaseTest {
     encryptedData = wingsPersistence.createQuery(EncryptedData.class).field("name").equal(secretName3).asList().get(0);
     assertNull(encryptedData.getParentIds());
 
-    String updatedName = "updatedName" + System.currentTimeMillis();
-    String updatedAppId = UUID.randomUUID().toString();
+    String updatedName = "updatedName" + generateUuid();
+    String updatedAppId = generateUuid();
     final Map<String, Object> keyValuePairs = new HashMap<>();
     keyValuePairs.put("name", updatedName);
     keyValuePairs.put("appId", updatedAppId);
@@ -423,9 +424,9 @@ public class SecretTextTest extends WingsBaseTest {
   }
 
   @Test
-  public void multipleVariableRefrence() throws IOException, IllegalAccessException {
-    String secretName = UUID.randomUUID().toString();
-    String secretValue = UUID.randomUUID().toString();
+  public void multipleVariableReference() throws IOException, IllegalAccessException {
+    String secretName = generateUuid();
+    String secretValue = generateUuid();
     String secretId = secretManager.saveSecret(accountId, secretName, secretValue);
 
     Query<EncryptedData> query = wingsPersistence.createQuery(EncryptedData.class).field("type").equal(SECRET_TEXT);
@@ -446,16 +447,16 @@ public class SecretTextTest extends WingsBaseTest {
     Set<String> variableIds = new HashSet<>();
     for (int i = 0; i < numOfVariable; i++) {
       final ServiceVariable serviceVariable = ServiceVariable.builder()
-                                                  .templateId(UUID.randomUUID().toString())
-                                                  .envId(UUID.randomUUID().toString())
+                                                  .templateId(generateUuid())
+                                                  .envId(generateUuid())
                                                   .entityType(EntityType.APPLICATION)
-                                                  .entityId(UUID.randomUUID().toString())
-                                                  .parentServiceVariableId(UUID.randomUUID().toString())
+                                                  .entityId(generateUuid())
+                                                  .parentServiceVariableId(generateUuid())
                                                   .overrideType(OverrideType.ALL)
-                                                  .instances(Collections.singletonList(UUID.randomUUID().toString()))
-                                                  .expression(UUID.randomUUID().toString())
+                                                  .instances(Collections.singletonList(generateUuid()))
+                                                  .expression(generateUuid())
                                                   .accountId(accountId)
-                                                  .name(UUID.randomUUID().toString())
+                                                  .name(generateUuid())
                                                   .value(secretId.toCharArray())
                                                   .type(Type.ENCRYPTED_TEXT)
                                                   .build();
@@ -521,8 +522,8 @@ public class SecretTextTest extends WingsBaseTest {
 
   @Test
   public void deleteSecret() throws IOException, IllegalAccessException {
-    String secretName = UUID.randomUUID().toString();
-    String secretValue = UUID.randomUUID().toString();
+    String secretName = generateUuid();
+    String secretValue = generateUuid();
     String secretId = secretManager.saveSecret(accountId, secretName, secretValue);
     Query<EncryptedData> query = wingsPersistence.createQuery(EncryptedData.class).field("type").equal(SECRET_TEXT);
     List<EncryptedData> encryptedDataList = query.asList();
@@ -542,16 +543,16 @@ public class SecretTextTest extends WingsBaseTest {
     Set<String> variableIds = new HashSet<>();
     for (int i = 0; i < numOfVariable; i++) {
       final ServiceVariable serviceVariable = ServiceVariable.builder()
-                                                  .templateId(UUID.randomUUID().toString())
-                                                  .envId(UUID.randomUUID().toString())
+                                                  .templateId(generateUuid())
+                                                  .envId(generateUuid())
                                                   .entityType(EntityType.APPLICATION)
-                                                  .entityId(UUID.randomUUID().toString())
-                                                  .parentServiceVariableId(UUID.randomUUID().toString())
+                                                  .entityId(generateUuid())
+                                                  .parentServiceVariableId(generateUuid())
                                                   .overrideType(OverrideType.ALL)
-                                                  .instances(Collections.singletonList(UUID.randomUUID().toString()))
-                                                  .expression(UUID.randomUUID().toString())
+                                                  .instances(Collections.singletonList(generateUuid()))
+                                                  .expression(generateUuid())
                                                   .accountId(accountId)
-                                                  .name(UUID.randomUUID().toString())
+                                                  .name(generateUuid())
                                                   .value(secretId.toCharArray())
                                                   .type(Type.ENCRYPTED_TEXT)
                                                   .build();
@@ -607,22 +608,22 @@ public class SecretTextTest extends WingsBaseTest {
     List<EncryptedData> secrets = secretManager.listSecrets(accountId, SECRET_TEXT);
     assertTrue(secrets.isEmpty());
     for (int i = 0; i < numOfSecrets; i++) {
-      String secretName = UUID.randomUUID().toString();
-      String secretValue = UUID.randomUUID().toString();
+      String secretName = generateUuid();
+      String secretValue = generateUuid();
       String secretId = secretManager.saveSecret(accountId, secretName, secretValue);
 
       for (int j = 0; j < numOfVariable; j++) {
         final ServiceVariable serviceVariable = ServiceVariable.builder()
-                                                    .templateId(UUID.randomUUID().toString())
-                                                    .envId(UUID.randomUUID().toString())
+                                                    .templateId(generateUuid())
+                                                    .envId(generateUuid())
                                                     .entityType(EntityType.APPLICATION)
-                                                    .entityId(UUID.randomUUID().toString())
-                                                    .parentServiceVariableId(UUID.randomUUID().toString())
+                                                    .entityId(generateUuid())
+                                                    .parentServiceVariableId(generateUuid())
                                                     .overrideType(OverrideType.ALL)
-                                                    .instances(Collections.singletonList(UUID.randomUUID().toString()))
-                                                    .expression(UUID.randomUUID().toString())
+                                                    .instances(Collections.singletonList(generateUuid()))
+                                                    .expression(generateUuid())
                                                     .accountId(accountId)
-                                                    .name(UUID.randomUUID().toString())
+                                                    .name(generateUuid())
                                                     .value(secretId.toCharArray())
                                                     .type(Type.ENCRYPTED_TEXT)
                                                     .build();
@@ -633,7 +634,7 @@ public class SecretTextTest extends WingsBaseTest {
         }
 
         for (int l = 0; l < numOfUpdates; l++) {
-          secretManager.updateSecret(accountId, secretId, UUID.randomUUID().toString(), UUID.randomUUID().toString());
+          secretManager.updateSecret(accountId, secretId, generateUuid(), generateUuid());
         }
       }
 
@@ -662,24 +663,24 @@ public class SecretTextTest extends WingsBaseTest {
 
   @Test
   public void secretTextUsage() throws IOException, IllegalAccessException {
-    String secretName = UUID.randomUUID().toString();
-    String secretValue = UUID.randomUUID().toString();
+    String secretName = generateUuid();
+    String secretValue = generateUuid();
     String secretId = secretManager.saveSecret(accountId, secretName, secretValue);
 
     int numOfVariable = 10;
     Set<ServiceVariable> serviceVariables = new HashSet<>();
     for (int i = 0; i < numOfVariable; i++) {
       final ServiceVariable serviceVariable = ServiceVariable.builder()
-                                                  .templateId(UUID.randomUUID().toString())
-                                                  .envId(UUID.randomUUID().toString())
+                                                  .templateId(generateUuid())
+                                                  .envId(generateUuid())
                                                   .entityType(EntityType.APPLICATION)
-                                                  .entityId(UUID.randomUUID().toString())
-                                                  .parentServiceVariableId(UUID.randomUUID().toString())
+                                                  .entityId(generateUuid())
+                                                  .parentServiceVariableId(generateUuid())
                                                   .overrideType(OverrideType.ALL)
-                                                  .instances(Collections.singletonList(UUID.randomUUID().toString()))
-                                                  .expression(UUID.randomUUID().toString())
+                                                  .instances(Collections.singletonList(generateUuid()))
+                                                  .expression(generateUuid())
                                                   .accountId(accountId)
-                                                  .name(UUID.randomUUID().toString())
+                                                  .name(generateUuid())
                                                   .value(secretId.toCharArray())
                                                   .type(Type.ENCRYPTED_TEXT)
                                                   .build();
@@ -718,13 +719,12 @@ public class SecretTextTest extends WingsBaseTest {
   }
 
   @Test
-  @RealMongo
   public void saveAndUpdateFile() throws IOException, IllegalAccessException {
     final long seed = System.currentTimeMillis();
     logger.info("seed: " + seed);
     Random r = new Random(seed);
 
-    String secretName = UUID.randomUUID().toString();
+    String secretName = generateUuid();
     File fileToSave = new File(getClass().getClassLoader().getResource("./encryption/file_to_encrypt.txt").getFile());
     String secretFileId =
         secretManager.saveFile(accountId, secretName, new BoundedInputStream(new FileInputStream(fileToSave)));
@@ -743,25 +743,25 @@ public class SecretTextTest extends WingsBaseTest {
     assertEquals(encryptionType, encryptedData.getEncryptionType());
     assertEquals(CONFIG_FILE, encryptedData.getType());
 
-    Service service = Service.Builder.aService().withName(UUID.randomUUID().toString()).withAppId(appId).build();
+    Service service = Service.Builder.aService().withName(generateUuid()).withAppId(appId).build();
     wingsPersistence.save(service);
 
     ConfigFile configFile = ConfigFile.builder()
-                                .templateId(UUID.randomUUID().toString())
-                                .envId(UUID.randomUUID().toString())
+                                .templateId(generateUuid())
+                                .envId(generateUuid())
                                 .entityType(EntityType.SERVICE)
                                 .entityId(service.getUuid())
-                                .description(UUID.randomUUID().toString())
-                                .parentConfigFileId(UUID.randomUUID().toString())
-                                .relativeFilePath(UUID.randomUUID().toString())
+                                .description(generateUuid())
+                                .parentConfigFileId(generateUuid())
+                                .relativeFilePath(generateUuid())
                                 .targetToAllEnv(r.nextBoolean())
                                 .defaultVersion(r.nextInt())
-                                .envIdVersionMapString(UUID.randomUUID().toString())
+                                .envIdVersionMapString(generateUuid())
                                 .setAsDefault(r.nextBoolean())
-                                .notes(UUID.randomUUID().toString())
-                                .overridePath(UUID.randomUUID().toString())
+                                .notes(generateUuid())
+                                .overridePath(generateUuid())
                                 .configOverrideType(ConfigOverrideType.CUSTOM)
-                                .configOverrideExpression(UUID.randomUUID().toString())
+                                .configOverrideExpression(generateUuid())
                                 .accountId(accountId)
                                 .encryptedFileId(secretFileId)
                                 .encrypted(true)
@@ -799,7 +799,7 @@ public class SecretTextTest extends WingsBaseTest {
     assertEquals(userName, secretChangeLog.getUser().getName());
     assertEquals(userEmail, secretChangeLog.getUser().getEmail());
 
-    String newSecretName = UUID.randomUUID().toString();
+    String newSecretName = generateUuid();
     File fileToUpdate = new File(getClass().getClassLoader().getResource("./encryption/file_to_update.txt").getFile());
     secretManager.updateFile(
         accountId, newSecretName, encryptedUuid, new BoundedInputStream(new FileInputStream(fileToUpdate)));
@@ -852,13 +852,12 @@ public class SecretTextTest extends WingsBaseTest {
   }
 
   @Test
-  @RealMongo
   public void multipleFileRefrence() throws IOException, IllegalAccessException {
     final long seed = System.currentTimeMillis();
     logger.info("seed: " + seed);
     Random r = new Random(seed);
 
-    String secretName = UUID.randomUUID().toString();
+    String secretName = generateUuid();
     File fileToSave = new File(getClass().getClassLoader().getResource("./encryption/file_to_encrypt.txt").getFile());
     String secretFileId =
         secretManager.saveFile(accountId, secretName, new BoundedInputStream(new FileInputStream(fileToSave)));
@@ -881,25 +880,25 @@ public class SecretTextTest extends WingsBaseTest {
     int numOfVariable = 10;
     Set<String> variableIds = new HashSet<>();
     for (int i = 0; i < numOfVariable; i++) {
-      Service service = Service.Builder.aService().withName(UUID.randomUUID().toString()).withAppId(appId).build();
+      Service service = Service.Builder.aService().withName(generateUuid()).withAppId(appId).build();
       wingsPersistence.save(service);
 
       ConfigFile configFile = ConfigFile.builder()
-                                  .templateId(UUID.randomUUID().toString())
-                                  .envId(UUID.randomUUID().toString())
+                                  .templateId(generateUuid())
+                                  .envId(generateUuid())
                                   .entityType(EntityType.SERVICE)
                                   .entityId(service.getUuid())
-                                  .description(UUID.randomUUID().toString())
-                                  .parentConfigFileId(UUID.randomUUID().toString())
-                                  .relativeFilePath(UUID.randomUUID().toString())
+                                  .description(generateUuid())
+                                  .parentConfigFileId(generateUuid())
+                                  .relativeFilePath(generateUuid())
                                   .targetToAllEnv(r.nextBoolean())
                                   .defaultVersion(r.nextInt())
-                                  .envIdVersionMapString(UUID.randomUUID().toString())
+                                  .envIdVersionMapString(generateUuid())
                                   .setAsDefault(r.nextBoolean())
-                                  .notes(UUID.randomUUID().toString())
-                                  .overridePath(UUID.randomUUID().toString())
+                                  .notes(generateUuid())
+                                  .overridePath(generateUuid())
                                   .configOverrideType(ConfigOverrideType.CUSTOM)
-                                  .configOverrideExpression(UUID.randomUUID().toString())
+                                  .configOverrideExpression(generateUuid())
                                   .accountId(accountId)
                                   .encryptedFileId(secretFileId)
                                   .encrypted(true)
@@ -966,13 +965,12 @@ public class SecretTextTest extends WingsBaseTest {
   }
 
   @Test
-  @RealMongo
   public void deleteSecretFile() throws IOException, IllegalAccessException, InterruptedException {
     final long seed = System.currentTimeMillis();
     logger.info("seed: " + seed);
     Random r = new Random(seed);
 
-    String secretName = UUID.randomUUID().toString();
+    String secretName = generateUuid();
     File fileToSave = new File(getClass().getClassLoader().getResource("./encryption/file_to_encrypt.txt").getFile());
     String secretFileId =
         secretManager.saveFile(accountId, secretName, new BoundedInputStream(new FileInputStream(fileToSave)));
@@ -995,25 +993,25 @@ public class SecretTextTest extends WingsBaseTest {
     int numOfVariable = 10;
     Set<String> variableIds = new HashSet<>();
     for (int i = 0; i < numOfVariable; i++) {
-      Service service = Service.Builder.aService().withName(UUID.randomUUID().toString()).withAppId(appId).build();
+      Service service = Service.Builder.aService().withName(generateUuid()).withAppId(appId).build();
       wingsPersistence.save(service);
 
       ConfigFile configFile = ConfigFile.builder()
-                                  .templateId(UUID.randomUUID().toString())
-                                  .envId(UUID.randomUUID().toString())
+                                  .templateId(generateUuid())
+                                  .envId(generateUuid())
                                   .entityType(EntityType.SERVICE)
                                   .entityId(service.getUuid())
-                                  .description(UUID.randomUUID().toString())
-                                  .parentConfigFileId(UUID.randomUUID().toString())
-                                  .relativeFilePath(UUID.randomUUID().toString())
+                                  .description(generateUuid())
+                                  .parentConfigFileId(generateUuid())
+                                  .relativeFilePath(generateUuid())
                                   .targetToAllEnv(r.nextBoolean())
                                   .defaultVersion(r.nextInt())
-                                  .envIdVersionMapString(UUID.randomUUID().toString())
+                                  .envIdVersionMapString(generateUuid())
                                   .setAsDefault(r.nextBoolean())
-                                  .notes(UUID.randomUUID().toString())
-                                  .overridePath(UUID.randomUUID().toString())
+                                  .notes(generateUuid())
+                                  .overridePath(generateUuid())
                                   .configOverrideType(ConfigOverrideType.CUSTOM)
-                                  .configOverrideExpression(UUID.randomUUID().toString())
+                                  .configOverrideExpression(generateUuid())
                                   .accountId(accountId)
                                   .encryptedFileId(secretFileId)
                                   .encrypted(true)
@@ -1065,13 +1063,12 @@ public class SecretTextTest extends WingsBaseTest {
   }
 
   @Test
-  @RealMongo
   public void deleteEncryptedConfigFile() throws IOException, IllegalAccessException, InterruptedException {
     final long seed = System.currentTimeMillis();
     logger.info("seed: " + seed);
     Random r = new Random(seed);
 
-    String secretName = UUID.randomUUID().toString();
+    String secretName = generateUuid();
     File fileToSave = new File(getClass().getClassLoader().getResource("./encryption/file_to_encrypt.txt").getFile());
     String secretFileId =
         secretManager.saveFile(accountId, secretName, new BoundedInputStream(new FileInputStream(fileToSave)));
@@ -1091,25 +1088,25 @@ public class SecretTextTest extends WingsBaseTest {
     assertEquals(CONFIG_FILE, encryptedData.getType());
     assertEquals(secretFileId, encryptedData.getUuid());
 
-    Service service = Service.Builder.aService().withName(UUID.randomUUID().toString()).withAppId(appId).build();
+    Service service = Service.Builder.aService().withName(generateUuid()).withAppId(appId).build();
     wingsPersistence.save(service);
 
     ConfigFile configFile = ConfigFile.builder()
-                                .templateId(UUID.randomUUID().toString())
-                                .envId(UUID.randomUUID().toString())
+                                .templateId(generateUuid())
+                                .envId(generateUuid())
                                 .entityType(EntityType.SERVICE)
                                 .entityId(service.getUuid())
-                                .description(UUID.randomUUID().toString())
-                                .parentConfigFileId(UUID.randomUUID().toString())
-                                .relativeFilePath(UUID.randomUUID().toString())
+                                .description(generateUuid())
+                                .parentConfigFileId(generateUuid())
+                                .relativeFilePath(generateUuid())
                                 .targetToAllEnv(r.nextBoolean())
                                 .defaultVersion(r.nextInt())
-                                .envIdVersionMapString(UUID.randomUUID().toString())
+                                .envIdVersionMapString(generateUuid())
                                 .setAsDefault(r.nextBoolean())
-                                .notes(UUID.randomUUID().toString())
-                                .overridePath(UUID.randomUUID().toString())
+                                .notes(generateUuid())
+                                .overridePath(generateUuid())
                                 .configOverrideType(ConfigOverrideType.CUSTOM)
-                                .configOverrideExpression(UUID.randomUUID().toString())
+                                .configOverrideExpression(generateUuid())
                                 .accountId(accountId)
                                 .encryptedFileId(secretFileId)
                                 .encrypted(true)
@@ -1147,26 +1144,26 @@ public class SecretTextTest extends WingsBaseTest {
 
   @Test
   public void yamlPasswordDecryption() throws IOException, IllegalAccessException {
-    final String accountId = UUID.randomUUID().toString();
+    final String accountId = generateUuid();
     KmsConfig fromConfig = getKmsConfig();
     kmsService.saveKmsConfig(accountId, fromConfig);
 
-    String password = UUID.randomUUID().toString();
+    String password = generateUuid();
     AppDynamicsConfig appDynamicsConfig = AppDynamicsConfig.builder()
                                               .accountId(accountId)
-                                              .controllerUrl(UUID.randomUUID().toString())
-                                              .username(UUID.randomUUID().toString())
+                                              .controllerUrl(generateUuid())
+                                              .username(generateUuid())
                                               .password(password.toCharArray())
-                                              .accountname(UUID.randomUUID().toString())
+                                              .accountname(generateUuid())
                                               .build();
 
     SettingAttribute settingAttribute = SettingAttribute.Builder.aSettingAttribute()
                                             .withAccountId(accountId)
                                             .withValue(appDynamicsConfig)
-                                            .withAppId(UUID.randomUUID().toString())
+                                            .withAppId(generateUuid())
                                             .withCategory(Category.CONNECTOR)
-                                            .withEnvId(UUID.randomUUID().toString())
-                                            .withName(UUID.randomUUID().toString())
+                                            .withEnvId(generateUuid())
+                                            .withName(generateUuid())
                                             .build();
     wingsPersistence.save(settingAttribute);
 
@@ -1179,7 +1176,7 @@ public class SecretTextTest extends WingsBaseTest {
   private VaultConfig getVaultConfig() throws IOException {
     return VaultConfig.builder()
         .vaultUrl("http://127.0.0.1:8200")
-        .authToken(UUID.randomUUID().toString())
+        .authToken(generateUuid())
         .name("myVault")
         .isDefault(true)
         .build();
