@@ -284,3 +284,4 @@ software.wings.settings.UsageRestrictions$AppEnvRestriction, 5248
 software.wings.security.GenericEntityFilter, 5249
 software.wings.security.EnvFilter, 5250
 software.wings.security.WorkflowFilter, 5251
+software.wings.api.ArtifactCollectionExecutionData, 5252
