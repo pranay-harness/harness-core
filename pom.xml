@@ -792,7 +792,8 @@
             <dependency>
                 <groupId>de.bwaldvogel</groupId>
                 <artifactId>mongo-java-server</artifactId>
-                <version>1.7.0</version>
+                <!-- do not move to 1.7.0 - it seems to create intermittent issues with AuditServiceTests -->
+                <version>1.6.0</version>
                 <scope>test</scope>
             </dependency>
 
