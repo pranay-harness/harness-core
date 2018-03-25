@@ -1,13 +1,12 @@
 package software.wings.service.impl.yaml.handler.workflow;
 
-import static io.harness.data.structure.EmptyPredicate.isNotEmpty;
+import static java.util.stream.Collectors.toList;
 
 import com.google.inject.Singleton;
 
 import software.wings.beans.ErrorCode;
 import software.wings.beans.ExecutionScope;
 import software.wings.beans.FailureStrategy;
-import software.wings.beans.FailureStrategy.FailureStrategyBuilder;
 import software.wings.beans.FailureStrategy.Yaml;
 import software.wings.beans.FailureType;
 import software.wings.beans.RepairActionCode;
@@ -18,7 +17,6 @@ import software.wings.service.impl.yaml.handler.BaseYamlHandler;
 import software.wings.utils.Util;
 
 import java.util.List;
-import java.util.stream.Collectors;
 
 /**
  * @author rktummala on 10/28/17
@@ -32,31 +30,24 @@ public class FailureStrategyYamlHandler extends BaseYamlHandler<FailureStrategy.
     RepairActionCode repairActionCodeAfterRetry =
         Util.getEnumFromString(RepairActionCode.class, yaml.getRepairActionCodeAfterRetry());
 
-    FailureStrategyBuilder failureStrategyBuilder = FailureStrategyBuilder.aFailureStrategy()
-                                                        .withExecutionScope(executionScope)
-                                                        .withRepairActionCode(repairActionCode)
-                                                        .withRepairActionCodeAfterRetry(repairActionCodeAfterRetry)
-                                                        .withRetryCount(yaml.getRetryCount())
-                                                        .withRetryIntervals(yaml.getRetryIntervals());
-
-    if (isNotEmpty(yaml.getFailureTypes())) {
-      yaml.getFailureTypes().stream().forEach(failureTypeString -> {
-        FailureType failureType = Util.getEnumFromString(FailureType.class, failureTypeString);
-        failureStrategyBuilder.addFailureTypes(failureType);
-      });
-    }
-
-    if (isNotEmpty(yaml.getSpecificSteps())) {
-      yaml.getSpecificSteps().stream().forEach(step -> failureStrategyBuilder.addSpecificSteps(step));
-    }
-
-    return failureStrategyBuilder.build();
+    return FailureStrategy.builder()
+        .executionScope(executionScope)
+        .repairActionCode(repairActionCode)
+        .repairActionCodeAfterRetry(repairActionCodeAfterRetry)
+        .retryCount(yaml.getRetryCount())
+        .retryIntervals(yaml.getRetryIntervals())
+        .failureTypes(yaml.getFailureTypes()
+                          .stream()
+                          .map(failureTypeString -> Util.getEnumFromString(FailureType.class, failureTypeString))
+                          .collect(toList()))
+        .specificSteps(yaml.getSpecificSteps())
+        .build();
   }
 
   @Override
   public Yaml toYaml(FailureStrategy bean, String appId) {
     List<String> failureTypeList =
-        bean.getFailureTypes().stream().map(failureType -> failureType.name()).collect(Collectors.toList());
+        bean.getFailureTypes().stream().map(failureType -> failureType.name()).collect(toList());
     String repairActionCode = Util.getStringFromEnum(bean.getRepairActionCode());
     String repairActionCodeAfterRetry = Util.getStringFromEnum(bean.getRepairActionCodeAfterRetry());
     String executionScope = Util.getStringFromEnum(bean.getExecutionScope());

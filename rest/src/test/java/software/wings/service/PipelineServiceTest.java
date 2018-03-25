@@ -12,7 +12,6 @@ import static org.mockito.Mockito.when;
 import static software.wings.beans.Application.Builder.anApplication;
 import static software.wings.beans.CanaryOrchestrationWorkflow.CanaryOrchestrationWorkflowBuilder.aCanaryOrchestrationWorkflow;
 import static software.wings.beans.EntityType.SERVICE;
-import static software.wings.beans.FailureStrategy.FailureStrategyBuilder.aFailureStrategy;
 import static software.wings.beans.PhaseStep.PhaseStepBuilder.aPhaseStep;
 import static software.wings.beans.PhaseStepType.POST_DEPLOYMENT;
 import static software.wings.beans.PhaseStepType.PRE_DEPLOYMENT;
@@ -191,7 +190,7 @@ public class PipelineServiceTest extends WingsBaseTest {
     pipelineStage.setName("STAGE1");
 
     FailureStrategy failureStrategy =
-        aFailureStrategy().withRepairActionCode(RepairActionCode.MANUAL_INTERVENTION).build();
+        FailureStrategy.builder().repairActionCode(RepairActionCode.MANUAL_INTERVENTION).build();
     Pipeline pipeline = aPipeline()
                             .withName("pipeline1")
                             .withAppId(APP_ID)

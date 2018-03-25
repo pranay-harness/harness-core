@@ -3,7 +3,6 @@ package software.wings.beans;
 import static io.harness.data.structure.EmptyPredicate.isEmpty;
 import static io.harness.data.structure.EmptyPredicate.isNotEmpty;
 import static java.util.stream.Collectors.toList;
-import static software.wings.beans.FailureStrategy.FailureStrategyBuilder.aFailureStrategy;
 import static software.wings.sm.ExecutionEventAdvice.ExecutionEventAdviceBuilder.anExecutionEventAdvice;
 import static software.wings.sm.ExecutionInterruptType.ABORT_ALL;
 import static software.wings.sm.ExecutionInterruptType.ROLLBACK;
@@ -220,7 +219,7 @@ public class CanaryWorkflowExecutionAdvisor implements ExecutionEventAdvisor {
             || stateType.equals(REPEAT.name())) {
           // Retry is only at the leaf node
           FailureStrategy failureStrategyAfterRetry =
-              aFailureStrategy().withRepairActionCode(failureStrategy.getRepairActionCodeAfterRetry()).build();
+              FailureStrategy.builder().repairActionCode(failureStrategy.getRepairActionCodeAfterRetry()).build();
           return getExecutionEventAdvice(
               orchestrationWorkflow, failureStrategyAfterRetry, executionEvent, phaseSubWorkflow, state);
         }
@@ -246,7 +245,7 @@ public class CanaryWorkflowExecutionAdvisor implements ExecutionEventAdvisor {
               .build();
         } else {
           FailureStrategy failureStrategyAfterRetry =
-              aFailureStrategy().withRepairActionCode(failureStrategy.getRepairActionCodeAfterRetry()).build();
+              FailureStrategy.builder().repairActionCode(failureStrategy.getRepairActionCodeAfterRetry()).build();
           return getExecutionEventAdvice(
               orchestrationWorkflow, failureStrategyAfterRetry, executionEvent, phaseSubWorkflow, state);
         }

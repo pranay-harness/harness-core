@@ -26,7 +26,6 @@ import static software.wings.beans.EntityType.ELK_INDICES;
 import static software.wings.beans.EntityType.ENVIRONMENT;
 import static software.wings.beans.EntityType.INFRASTRUCTURE_MAPPING;
 import static software.wings.beans.EntityType.SERVICE;
-import static software.wings.beans.FailureStrategy.FailureStrategyBuilder.aFailureStrategy;
 import static software.wings.beans.Graph.Builder.aGraph;
 import static software.wings.beans.GraphLink.Builder.aLink;
 import static software.wings.beans.GraphNode.GraphNodeBuilder.aGraphNode;
@@ -2186,7 +2185,7 @@ public class WorkflowServiceTest extends WingsBaseTest {
     Workflow workflow1 = createCanaryWorkflow();
 
     List<FailureStrategy> failureStrategies =
-        newArrayList(aFailureStrategy().addFailureTypes(FailureType.VERIFICATION_FAILURE).build());
+        newArrayList(FailureStrategy.builder().failureTypes(asList(FailureType.VERIFICATION_FAILURE)).build());
     List<FailureStrategy> updated =
         workflowService.updateFailureStrategies(workflow1.getAppId(), workflow1.getUuid(), failureStrategies);
 
@@ -2202,7 +2201,7 @@ public class WorkflowServiceTest extends WingsBaseTest {
     try {
       Workflow workflow1 = createCanaryWorkflow();
 
-      List<FailureStrategy> failureStrategies = newArrayList(aFailureStrategy().build());
+      List<FailureStrategy> failureStrategies = newArrayList(FailureStrategy.builder().build());
       List<FailureStrategy> updated =
           workflowService.updateFailureStrategies(workflow1.getAppId(), workflow1.getUuid(), failureStrategies);
       fail("No Constraint violation detected");
@@ -2214,9 +2213,9 @@ public class WorkflowServiceTest extends WingsBaseTest {
       Workflow workflow1 = createCanaryWorkflow();
 
       List<FailureStrategy> failureStrategies =
-          newArrayList(aFailureStrategy()
-                           .addFailureTypes(FailureType.VERIFICATION_FAILURE)
-                           .withFailureCriteria(FailureCriteria.builder().failureThresholdPercentage(-1).build())
+          newArrayList(FailureStrategy.builder()
+                           .failureTypes(asList(FailureType.VERIFICATION_FAILURE))
+                           .failureCriteria(FailureCriteria.builder().failureThresholdPercentage(-1).build())
                            .build());
       List<FailureStrategy> updated =
           workflowService.updateFailureStrategies(workflow1.getAppId(), workflow1.getUuid(), failureStrategies);
@@ -2229,9 +2228,9 @@ public class WorkflowServiceTest extends WingsBaseTest {
       Workflow workflow1 = createCanaryWorkflow();
 
       List<FailureStrategy> failureStrategies =
-          newArrayList(aFailureStrategy()
-                           .addFailureTypes(FailureType.VERIFICATION_FAILURE)
-                           .withFailureCriteria(FailureCriteria.builder().failureThresholdPercentage(101).build())
+          newArrayList(FailureStrategy.builder()
+                           .failureTypes(asList(FailureType.VERIFICATION_FAILURE))
+                           .failureCriteria(FailureCriteria.builder().failureThresholdPercentage(101).build())
                            .build());
       List<FailureStrategy> updated =
           workflowService.updateFailureStrategies(workflow1.getAppId(), workflow1.getUuid(), failureStrategies);
@@ -2244,17 +2243,17 @@ public class WorkflowServiceTest extends WingsBaseTest {
       Workflow workflow1 = createCanaryWorkflow();
 
       List<FailureStrategy> failureStrategies =
-          newArrayList(aFailureStrategy()
-                           .addFailureTypes(FailureType.VERIFICATION_FAILURE)
-                           .withFailureCriteria(FailureCriteria.builder().failureThresholdPercentage(100).build())
+          newArrayList(FailureStrategy.builder()
+                           .failureTypes(asList(FailureType.VERIFICATION_FAILURE))
+                           .failureCriteria(FailureCriteria.builder().failureThresholdPercentage(100).build())
                            .build());
       List<FailureStrategy> updated =
           workflowService.updateFailureStrategies(workflow1.getAppId(), workflow1.getUuid(), failureStrategies);
 
       failureStrategies =
-          newArrayList(aFailureStrategy()
-                           .addFailureTypes(FailureType.VERIFICATION_FAILURE)
-                           .withFailureCriteria(FailureCriteria.builder().failureThresholdPercentage(100).build())
+          newArrayList(FailureStrategy.builder()
+                           .failureTypes(asList(FailureType.VERIFICATION_FAILURE))
+                           .failureCriteria(FailureCriteria.builder().failureThresholdPercentage(100).build())
                            .build());
       updated = workflowService.updateFailureStrategies(workflow1.getAppId(), workflow1.getUuid(), failureStrategies);
     } catch (Exception e) {

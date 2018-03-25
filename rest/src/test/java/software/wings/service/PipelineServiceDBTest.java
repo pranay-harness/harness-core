@@ -5,7 +5,6 @@ import static org.assertj.core.api.Assertions.assertThat;
 import static software.wings.beans.Account.Builder.anAccount;
 import static software.wings.beans.Application.Builder.anApplication;
 import static software.wings.beans.BuildWorkflow.BuildOrchestrationWorkflowBuilder.aBuildOrchestrationWorkflow;
-import static software.wings.beans.FailureStrategy.FailureStrategyBuilder.aFailureStrategy;
 import static software.wings.beans.Graph.Builder.aGraph;
 import static software.wings.beans.GraphLink.Builder.aLink;
 import static software.wings.beans.GraphNode.GraphNodeBuilder.aGraphNode;
@@ -109,7 +108,7 @@ public class PipelineServiceDBTest extends WingsBaseTest {
     pipelineService.createPipeline(pipeline);
 
     List<FailureStrategy> failureStrategies =
-        asList(aFailureStrategy().withRepairActionCode(RepairActionCode.MANUAL_INTERVENTION).build());
+        asList(FailureStrategy.builder().repairActionCode(RepairActionCode.MANUAL_INTERVENTION).build());
 
     pipelineService.updateFailureStrategies(application.getUuid(), pipeline.getUuid(), failureStrategies);
 
