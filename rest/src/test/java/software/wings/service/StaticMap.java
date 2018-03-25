@@ -6,6 +6,7 @@ package software.wings.service;
 
 import java.util.HashMap;
 import java.util.Map;
+import java.util.concurrent.atomic.AtomicLong;
 
 /**
  * The Class StaticMap.
@@ -13,6 +14,8 @@ import java.util.Map;
  * @author Rishi
  */
 public class StaticMap {
+  private static AtomicLong unique = new AtomicLong();
+
   private static Map<String, Object> map = new HashMap<>();
 
   /**
@@ -33,5 +36,9 @@ public class StaticMap {
    */
   public static Object getValue(String key) {
     return map.get(key);
+  }
+
+  public static long getUnique() {
+    return unique.addAndGet(1);
   }
 }

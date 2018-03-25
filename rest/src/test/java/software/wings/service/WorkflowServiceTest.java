@@ -177,7 +177,6 @@ import software.wings.waitnotify.NotifyEventListener;
 
 import java.util.List;
 import java.util.Map;
-import java.util.Random;
 import java.util.stream.Collectors;
 import javax.validation.ConstraintViolationException;
 
@@ -256,11 +255,11 @@ public class WorkflowServiceTest extends WingsBaseTest {
   public void shouldSaveAndRead() throws InterruptedException {
     StateMachine sm = new StateMachine();
     sm.setAppId(APP_ID);
-    State stateA = new StateSync("stateA" + new Random().nextInt(10000));
+    State stateA = new StateSync("stateA" + StaticMap.getUnique());
     sm.addState(stateA);
-    StateSync stateB = new StateSync("stateB" + new Random().nextInt(10000));
+    StateSync stateB = new StateSync("stateB" + StaticMap.getUnique());
     sm.addState(stateB);
-    StateSync stateC = new StateSync("stateC" + new Random().nextInt(10000));
+    StateSync stateC = new StateSync("stateC" + StaticMap.getUnique());
     sm.addState(stateC);
     sm.setInitialStateName(stateA.getName());
 
