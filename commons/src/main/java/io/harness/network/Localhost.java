@@ -12,7 +12,6 @@ import java.io.IOException;
 import java.net.InetAddress;
 import java.net.NetworkInterface;
 import java.net.SocketException;
-import java.net.UnknownHostException;
 import java.util.Enumeration;
 import java.util.concurrent.ExecutionException;
 import java.util.concurrent.TimeUnit;
@@ -22,18 +21,27 @@ public class Localhost {
 
   public static String getLocalHostAddress() {
     try {
-      String hostIP = InetAddress.getLocalHost().getHostAddress();
-      if (!hostIP.startsWith("127.")) {
-        return hostIP;
-      }
-
       String address = getAddress();
       if (address != null) {
         return address;
+      } else {
+        logger.warn("Didn't find network interface with IPV4 address that is not in 127.0.0.0/8");
       }
     } catch (Exception e) {
-      logger.error("Couldn't get host address", e);
+      logger.warn("Exception getting IP address from network interfaces", e);
     }
+
+    try {
+      String hostIp = InetAddress.getLocalHost().getHostAddress();
+      if (isNotBlank(hostIp) && !hostIp.startsWith("127.")) {
+        return hostIp;
+      } else {
+        logger.warn("InetAddress host address was blank or was in the 127.0.0.0/8 range");
+      }
+    } catch (Exception e) {
+      logger.error("Exception getting InetAddress host address", e);
+    }
+
     return "0.0.0.0";
   }
 
@@ -42,15 +50,25 @@ public class Localhost {
       String hostname = executeHostname();
       if (isNotBlank(hostname)) {
         return hostname;
+      } else {
+        logger.warn("hostname command returned empty");
       }
     } catch (Exception ex) {
-      logger.error("Couldn't get hostname", ex);
+      logger.warn("hostname command threw exception", ex);
     }
+
     try {
-      return InetAddress.getLocalHost().getCanonicalHostName();
-    } catch (UnknownHostException e) {
-      return "ip-" + getLocalHostAddress().replaceAll("\\.", "-");
+      String hostname = InetAddress.getLocalHost().getCanonicalHostName();
+      if (isNotBlank(hostname) && !"localhost".equals(hostname)) {
+        return hostname;
+      } else {
+        logger.warn("InetAddress hostname was blank or 'localhost'");
+      }
+    } catch (Exception e) {
+      logger.warn("InetAddress hostname threw exception", e);
     }
+
+    return "ip-" + getLocalHostAddress().replaceAll("\\.", "-") + ".unknown";
   }
 
   @VisibleForTesting
