@@ -18,12 +18,12 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import software.wings.beans.Account;
 import software.wings.beans.Delegate;
-import software.wings.beans.alert.AlertData;
 import software.wings.beans.alert.AlertType;
 import software.wings.beans.alert.DelegatesDownAlert;
 import software.wings.beans.alert.NoActiveDelegatesAlert;
 import software.wings.dl.WingsPersistence;
 import software.wings.service.intfc.AlertService;
+import software.wings.service.intfc.DelegateService;
 
 import java.util.List;
 import java.util.concurrent.ExecutorService;
@@ -45,6 +45,7 @@ public class AlertCheckJob implements Job {
 
   @Inject private AlertService alertService;
   @Inject private WingsPersistence wingsPersistence;
+  @Inject DelegateService delegateService;
 
   @Inject @Named("JobScheduler") private QuartzScheduler jobScheduler;
 
@@ -116,15 +117,7 @@ public class AlertCheckJob implements Job {
             .collect(Collectors.toList());
 
     if (CollectionUtils.isNotEmpty(delegatesDown)) {
-      List<AlertData> alertDatas = delegatesDown.stream()
-                                       .map(delegate
-                                           -> DelegatesDownAlert.builder()
-                                                  .accountId(accountId)
-                                                  .hostName(delegate.getHostName())
-                                                  .ip(delegate.getIp())
-                                                  .build())
-                                       .collect(Collectors.toList());
-      alertService.openAlerts(accountId, GLOBAL_APP_ID, AlertType.DelegatesDown, alertDatas);
+      delegateService.sendAlertNotificationsForDownDelegates(accountId, delegatesDown);
     }
 
     if (CollectionUtils.isNotEmpty(delegatesUp)) {

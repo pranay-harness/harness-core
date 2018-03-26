@@ -163,7 +163,7 @@ public class AlertServiceImpl implements AlertService {
         .forEach(this ::close);
   }
 
-  private Optional<Alert> findExistingAlert(String accountId, String appId, AlertType alertType, AlertData alertData) {
+  public Optional<Alert> findExistingAlert(String accountId, String appId, AlertType alertType, AlertData alertData) {
     if (!alertType.getAlertDataClass().isAssignableFrom(alertData.getClass())) {
       String errorMsg = String.format("Alert type %s requires alert data of class %s but was %s", alertType.name(),
           alertType.getAlertDataClass().getName(), alertData.getClass().getName());

@@ -20,6 +20,8 @@ import static software.wings.beans.DelegateTaskAbortEvent.Builder.aDelegateTaskA
 import static software.wings.beans.DelegateTaskEvent.DelegateTaskEventBuilder.aDelegateTaskEvent;
 import static software.wings.beans.ErrorCode.UNAVAILABLE_DELEGATES;
 import static software.wings.beans.Event.Builder.anEvent;
+import static software.wings.beans.InformationNotification.Builder.anInformationNotification;
+import static software.wings.beans.NotificationRule.NotificationRuleBuilder.aNotificationRule;
 import static software.wings.beans.SearchFilter.Operator.EQ;
 import static software.wings.beans.SearchFilter.Operator.IN;
 import static software.wings.beans.alert.AlertType.NoEligibleDelegates;
@@ -42,6 +44,7 @@ import com.mongodb.BasicDBObject;
 import freemarker.cache.ClassTemplateLoader;
 import freemarker.template.Configuration;
 import freemarker.template.TemplateException;
+import org.apache.commons.collections.CollectionUtils;
 import org.apache.commons.compress.archivers.zip.AsiExtraField;
 import org.apache.commons.compress.archivers.zip.ZipArchiveEntry;
 import org.apache.commons.compress.archivers.zip.ZipArchiveOutputStream;
@@ -49,6 +52,7 @@ import org.apache.commons.io.IOUtils;
 import org.apache.commons.lang3.StringUtils;
 import org.apache.http.client.fluent.Request;
 import org.atmosphere.cpr.BroadcasterFactory;
+import org.atteo.evo.inflector.English;
 import org.mongodb.morphia.Key;
 import org.mongodb.morphia.mapping.Mapper;
 import org.mongodb.morphia.query.FindOptions;
@@ -68,10 +72,13 @@ import software.wings.beans.DelegateTaskEvent;
 import software.wings.beans.DelegateTaskResponse;
 import software.wings.beans.ErrorCode;
 import software.wings.beans.Event.Type;
+import software.wings.beans.NotificationRule;
+import software.wings.beans.alert.AlertData;
 import software.wings.beans.alert.AlertType;
 import software.wings.beans.alert.DelegatesDownAlert;
 import software.wings.beans.alert.NoActiveDelegatesAlert;
 import software.wings.common.Constants;
+import software.wings.common.NotificationMessageResolver.NotificationMessageType;
 import software.wings.delegatetasks.validation.DelegateConnectionResult;
 import software.wings.dl.PageRequest;
 import software.wings.dl.PageResponse;
@@ -82,6 +89,8 @@ import software.wings.service.intfc.AccountService;
 import software.wings.service.intfc.AlertService;
 import software.wings.service.intfc.AssignDelegateService;
 import software.wings.service.intfc.DelegateService;
+import software.wings.service.intfc.NotificationService;
+import software.wings.service.intfc.NotificationSetupService;
 import software.wings.utils.CacheHelper;
 import software.wings.waitnotify.NotifyResponseData;
 import software.wings.waitnotify.WaitNotifyEngine;
@@ -94,6 +103,7 @@ import java.io.OutputStreamWriter;
 import java.io.StringWriter;
 import java.time.Clock;
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.HashSet;
 import java.util.Iterator;
 import java.util.List;
@@ -101,6 +111,7 @@ import java.util.Map;
 import java.util.Optional;
 import java.util.Set;
 import java.util.concurrent.TimeUnit;
+import java.util.stream.Collectors;
 import javax.cache.Cache;
 import javax.cache.Caching;
 import javax.validation.executable.ValidateOnExecution;
@@ -128,6 +139,8 @@ public class DelegateServiceImpl implements DelegateService {
   @Inject private CacheHelper cacheHelper;
   @Inject private AssignDelegateService assignDelegateService;
   @Inject private AlertService alertService;
+  @Inject private NotificationService notificationService;
+  @Inject private NotificationSetupService notificationSetupService;
   @Inject private TimeLimiter timeLimiter;
   @Inject private Clock clock;
 
@@ -1051,5 +1064,65 @@ public class DelegateServiceImpl implements DelegateService {
       logger.warn("Failed to delete delegate tasks older than {} hours within 10 minutes.", hours, ex);
     }
     logger.info("Deleted delegate tasks older than {} hours", hours);
+  }
+
+  @Override
+  public void sendAlertNotificationsForDownDelegates(String accountId, List<Delegate> delegatesDown) {
+    if (CollectionUtils.isNotEmpty(delegatesDown)) {
+      List<AlertData> alertDatas = delegatesDown.stream()
+                                       .map(delegate
+                                           -> DelegatesDownAlert.builder()
+                                                  .accountId(accountId)
+                                                  .hostName(delegate.getHostName())
+                                                  .ip(delegate.getIp())
+                                                  .build())
+                                       .collect(Collectors.toList());
+
+      // Find out new Alerts to be created
+      List<AlertData> alertsToBeCreated = new ArrayList<>();
+      for (AlertData alertData : alertDatas) {
+        if (!alertService.findExistingAlert(accountId, GLOBAL_APP_ID, AlertType.DelegatesDown, alertData).isPresent()) {
+          alertsToBeCreated.add(alertData);
+        }
+      }
+
+      if (CollectionUtils.isNotEmpty(alertsToBeCreated)) {
+        // create dashboard alerts
+        alertService.openAlerts(accountId, GLOBAL_APP_ID, AlertType.DelegatesDown, alertsToBeCreated);
+        sendDelegateDownNotification(accountId, alertsToBeCreated);
+      }
+    }
+  }
+
+  private void sendDelegateDownNotification(String accountId, List<AlertData> alertsToBeCreated) {
+    // send slack/email notification
+    String hostNamesForDownDelegates = new StringBuilder()
+                                           .append("\n")
+                                           .append(alertsToBeCreated.stream()
+                                                       .map(alertData -> ((DelegatesDownAlert) alertData).getHostName())
+                                                       .collect(Collectors.joining("\n ")))
+                                           .toString();
+
+    StringBuilder hostNamesForDownDelegatesHtml = new StringBuilder().append("<br />");
+    alertsToBeCreated.stream().forEach(alertData
+        -> hostNamesForDownDelegatesHtml.append(((DelegatesDownAlert) alertData).getHostName()).append("<br />"));
+
+    NotificationRule notificationRule =
+        aNotificationRule()
+            .withNotificationGroups(notificationSetupService.listDefaultNotificationGroup(accountId))
+            .build();
+
+    notificationService.sendNotificationAsync(
+        anInformationNotification()
+            .withAppId(GLOBAL_APP_ID)
+            .withAccountId(accountId)
+            .withNotificationTemplateId(NotificationMessageType.DELEGATE_STATE_NOTIFICATION.name())
+            .withNotificationTemplateVariables(ImmutableMap.of("HOST_NAMES", hostNamesForDownDelegates,
+                "HOST_NAMES_HTML", hostNamesForDownDelegatesHtml.toString(), "ENTITY_AFFECTED",
+                English.plural("Delegate", alertsToBeCreated.size()), "DESCRIPTION_FIELD",
+                English.plural("hostname", alertsToBeCreated.size()), "COUNT",
+                Integer.toString(alertsToBeCreated.size())))
+            .build(),
+        Arrays.asList(notificationRule));
   }
 }
