@@ -47,4 +47,12 @@ public class KmsConfig extends Base implements EncryptionConfig {
   @SchemaIgnore @Transient private int numOfEncryptedValue;
 
   @SchemaIgnore @Transient private EncryptionType encryptionType;
+
+  @Override
+  public String toString() {
+    return "KmsConfig{"
+        + "name='" + name + '\'' + ", accessKey='" + accessKey + '\'' + ", isDefault=" + isDefault + ", accountId='"
+        + accountId + '\'' + ", encryptionType=" + encryptionType + ", appId='" + appId + '\'' + ", entityYamlPath='"
+        + entityYamlPath + '\'' + "} " + super.toString();
+  }
 }
