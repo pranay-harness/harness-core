@@ -80,6 +80,7 @@ public class Localhost {
         .getFuture()
         .get()
         .getOutput()
-        .getString();
+        .getLines()
+        .get(0);
   }
 }
