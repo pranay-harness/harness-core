@@ -1,4 +1,4 @@
-FROM harness-learning-engine:latest
+FROM harness/learning-engine:latest
 
 COPY . dist/splunk_pyml/service_version.properties requirements-test.txt /home/harness/
 WORKDIR /home/harness/
