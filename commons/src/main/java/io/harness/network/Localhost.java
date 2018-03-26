@@ -37,6 +37,22 @@ public class Localhost {
     return "0.0.0.0";
   }
 
+  public static String getLocalHostName() {
+    try {
+      String hostname = executeHostname();
+      if (isNotBlank(hostname)) {
+        return hostname;
+      }
+    } catch (Exception ex) {
+      logger.error("Couldn't get hostname", ex);
+    }
+    try {
+      return InetAddress.getLocalHost().getCanonicalHostName();
+    } catch (UnknownHostException e) {
+      return "ip-" + getLocalHostAddress().replaceAll("\\.", "-");
+    }
+  }
+
   @VisibleForTesting
   static String getAddress() throws SocketException {
     Enumeration<NetworkInterface> nInterfaces = NetworkInterface.getNetworkInterfaces();
@@ -54,26 +70,10 @@ public class Localhost {
     return null;
   }
 
-  public static String getLocalHostName() {
-    try {
-      return InetAddress.getLocalHost().getCanonicalHostName();
-    } catch (UnknownHostException e) {
-      try {
-        String hostname = executeHostname();
-        if (isNotBlank(hostname)) {
-          return hostname;
-        }
-      } catch (Exception ex) {
-        logger.error("Couldn't get hostname", e);
-      }
-    }
-    return "ip-" + getLocalHostAddress().replaceAll("\\.", "-");
-  }
-
   @VisibleForTesting
   static String executeHostname() throws IOException, InterruptedException, ExecutionException {
     return new ProcessExecutor()
-        .timeout(5, TimeUnit.SECONDS)
+        .timeout(2, TimeUnit.SECONDS)
         .command("hostname", "-f")
         .readOutput(true)
         .start()
