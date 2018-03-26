@@ -30,6 +30,7 @@ import software.wings.api.DeploymentType;
 import software.wings.beans.ErrorCode;
 import software.wings.beans.artifact.ArtifactEnumDataProvider;
 import software.wings.exception.WingsException;
+import software.wings.exception.WingsException.ReportTarget;
 import software.wings.stencils.EnumData;
 import software.wings.utils.KubernetesConvention;
 
@@ -156,13 +157,13 @@ public class KubernetesContainerTask extends ContainerTask {
         }
       }
       if (!foundImagePlaceholder) {
-        throw new WingsException(ErrorCode.INVALID_ARGUMENT)
+        throw new WingsException(ErrorCode.INVALID_ARGUMENT, ReportTarget.USER)
             .addParam("args",
                 "Controller spec must have a container definition with "
                     + "${DOCKER_IMAGE_NAME} placeholder.");
       }
     } else {
-      throw new WingsException(ErrorCode.INVALID_ARGUMENT)
+      throw new WingsException(ErrorCode.INVALID_ARGUMENT, ReportTarget.USER)
           .addParam("args", "Kubernetes advanced configuration is empty.");
     }
   }
