@@ -24,6 +24,7 @@ import software.wings.api.DeploymentType;
 import software.wings.beans.ErrorCode;
 import software.wings.beans.artifact.ArtifactEnumDataProvider;
 import software.wings.exception.WingsException;
+import software.wings.exception.WingsException.ReportTarget;
 import software.wings.stencils.EnumData;
 import software.wings.utils.EcsConvention;
 import software.wings.utils.JsonUtils;
@@ -126,13 +127,14 @@ public class EcsContainerTask extends ContainerTask {
         }
       }
       if (!foundImagePlaceholder) {
-        throw new WingsException(ErrorCode.INVALID_ARGUMENT)
+        throw new WingsException(ErrorCode.INVALID_ARGUMENT, ReportTarget.USER)
             .addParam("args",
                 "Task definition spec must have a container definition with "
                     + "${DOCKER_IMAGE_NAME} placeholder.");
       }
     } else {
-      throw new WingsException(ErrorCode.INVALID_ARGUMENT).addParam("args", "ECS advanced configuration is empty.");
+      throw new WingsException(ErrorCode.INVALID_ARGUMENT, ReportTarget.USER)
+          .addParam("args", "ECS advanced configuration is empty.");
     }
   }
 
