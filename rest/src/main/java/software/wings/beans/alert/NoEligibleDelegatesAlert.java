@@ -6,6 +6,8 @@ import static software.wings.beans.Base.GLOBAL_APP_ID;
 import com.google.inject.Inject;
 
 import com.github.reinert.jjschema.SchemaIgnore;
+import lombok.Getter;
+import lombok.Setter;
 import org.apache.commons.lang3.StringUtils;
 import org.mongodb.morphia.annotations.Transient;
 import software.wings.beans.Application;
@@ -18,6 +20,7 @@ import software.wings.service.intfc.CatalogService;
 import software.wings.service.intfc.EnvironmentService;
 import software.wings.service.intfc.InfrastructureMappingService;
 
+import java.util.ArrayList;
 import java.util.List;
 import java.util.Optional;
 
@@ -34,6 +37,7 @@ public class NoEligibleDelegatesAlert implements AlertData {
   private String envId;
   private String infraMappingId;
   private TaskGroup taskGroup;
+  @Getter @Setter private List<String> tags = new ArrayList<>();
 
   @Override
   public boolean matches(AlertData alertData) {
@@ -149,12 +153,18 @@ public class NoEligibleDelegatesAlert implements AlertData {
       return this;
     }
 
+    public NoEligibleDelegatesAlertBuilder withTags(List<String> tags) {
+      noEligibleDelegatesAlert.setTags(tags);
+      return this;
+    }
+
     public NoEligibleDelegatesAlertBuilder but() {
       return aNoEligibleDelegatesAlert()
           .withAppId(noEligibleDelegatesAlert.getAppId())
           .withEnvId(noEligibleDelegatesAlert.getEnvId())
           .withInfraMappingId(noEligibleDelegatesAlert.getInfraMappingId())
-          .withTaskGroup(noEligibleDelegatesAlert.getTaskGroup());
+          .withTaskGroup(noEligibleDelegatesAlert.getTaskGroup())
+          .withTags(noEligibleDelegatesAlert.getTags());
     }
 
     public NoEligibleDelegatesAlert build() {

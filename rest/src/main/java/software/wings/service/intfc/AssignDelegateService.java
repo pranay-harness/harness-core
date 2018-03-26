@@ -12,8 +12,8 @@ import java.util.List;
 public interface AssignDelegateService {
   boolean canAssign(String delegateId, DelegateTask task);
 
-  boolean canAssign(
-      String delegateId, String accountId, String appId, String envId, String infraMappingId, TaskGroup taskGroup);
+  boolean canAssign(String delegateId, String accountId, String appId, String envId, String infraMappingId,
+      TaskGroup taskGroup, List<String> tags);
 
   boolean isWhitelisted(DelegateTask task, String delegateId);
 

@@ -47,12 +47,13 @@ public class AssignDelegateServiceImpl implements AssignDelegateService {
   @Override
   public boolean canAssign(String delegateId, DelegateTask task) {
     return canAssign(delegateId, task.getAccountId(), task.getAppId(), task.getEnvId(),
-        task.getInfrastructureMappingId(), task.getTaskType() != null ? task.getTaskType().getTaskGroup() : null);
+        task.getInfrastructureMappingId(), task.getTaskType() != null ? task.getTaskType().getTaskGroup() : null,
+        task.getTags());
   }
 
   @Override
-  public boolean canAssign(
-      String delegateId, String accountId, String appId, String envId, String infraMappingId, TaskGroup taskGroup) {
+  public boolean canAssign(String delegateId, String accountId, String appId, String envId, String infraMappingId,
+      TaskGroup taskGroup, List<String> tags) {
     Delegate delegate = delegateService.get(accountId, delegateId);
     if (delegate == null) {
       return false;
@@ -60,7 +61,7 @@ public class AssignDelegateServiceImpl implements AssignDelegateService {
     boolean assign = isEmpty(delegate.getIncludeScopes());
     if (delegate.getIncludeScopes() != null) {
       for (DelegateScope delegateScope : delegate.getIncludeScopes()) {
-        if (scopeMatch(delegateScope, appId, envId, infraMappingId, taskGroup)) {
+        if (scopeMatch(delegateScope, appId, envId, infraMappingId, taskGroup, tags)) {
           assign = true;
           break;
         }
@@ -68,7 +69,7 @@ public class AssignDelegateServiceImpl implements AssignDelegateService {
     }
     if (assign && delegate.getExcludeScopes() != null) {
       for (DelegateScope delegateScope : delegate.getExcludeScopes()) {
-        if (scopeMatch(delegateScope, appId, envId, infraMappingId, taskGroup)) {
+        if (scopeMatch(delegateScope, appId, envId, infraMappingId, taskGroup, tags)) {
           assign = false;
           break;
         }
@@ -77,8 +78,8 @@ public class AssignDelegateServiceImpl implements AssignDelegateService {
     return assign;
   }
 
-  private boolean scopeMatch(
-      DelegateScope delegateScope, String appId, String envId, String infraMappingId, TaskGroup taskGroup) {
+  private boolean scopeMatch(DelegateScope delegateScope, String appId, String envId, String infraMappingId,
+      TaskGroup taskGroup, List<String> tags) {
     if (!delegateScope.isValid()) {
       logger.error("Delegate scope cannot be empty.");
       throw new WingsException(ErrorCode.INVALID_ARGUMENT).addParam("args", "Delegate scope cannot be empty.");
@@ -101,6 +102,9 @@ public class AssignDelegateServiceImpl implements AssignDelegateService {
     }
     if (match && isNotEmpty(delegateScope.getServiceInfrastructures())) {
       match = isNotBlank(infraMappingId) && delegateScope.getServiceInfrastructures().contains(infraMappingId);
+    }
+    if (match && isNotEmpty(tags)) {
+      match = isNotEmpty(tags) && tags.stream().allMatch(tag -> tags.contains(delegateScope.getTags()));
     }
 
     return match;

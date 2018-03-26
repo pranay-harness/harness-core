@@ -140,8 +140,8 @@ public class AlertServiceImpl implements AlertService {
         .stream()
         .filter(alert -> {
           NoEligibleDelegatesAlert data = (NoEligibleDelegatesAlert) alert.getAlertData();
-          return assignDelegateService.canAssign(
-              delegateId, accountId, data.getAppId(), data.getEnvId(), data.getInfraMappingId(), data.getTaskGroup());
+          return assignDelegateService.canAssign(delegateId, accountId, data.getAppId(), data.getEnvId(),
+              data.getInfraMappingId(), data.getTaskGroup(), data.getTags());
         })
         .forEach(this ::close);
   }
