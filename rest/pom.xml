@@ -646,6 +646,11 @@
             <scope>test</scope>
         </dependency>
 
+        <dependency>
+            <groupId>org.atteo</groupId>
+            <artifactId>evo-inflector</artifactId>
+        </dependency>
+
     </dependencies>
 
     <build>

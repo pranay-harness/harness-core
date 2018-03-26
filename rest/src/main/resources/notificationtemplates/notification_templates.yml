@@ -32,3 +32,10 @@ WORKFLOW_NOTIFICATION:
       email:
           subject: ${PHASE_NAME}${WORKFLOW_NAME} ${VERB}
           body: <<top-div>>${PHASE_NAME}<b><<a>>href="${WORKFLOW_URL}" target="_blank">${WORKFLOW_NAME}</a></b> ${VERB} for <b>${ARTIFACTS}</b> in <b>${ENV_NAME}</b>, triggered by <b>${USER_NAME}</b>${PIPELINE} in <b>${APP_NAME}</b> application</div><<bottom-div>><<${VERB}-color>><i>Started ${START_DATE} and ${VERB} at ${END_DATE}</i><<img-path>>${VERB}<<img-suffix>>${DURATION}</span></div></div>
+
+DELEGATE_STATE_NOTIFICATION:
+      web: ${COUNT} ${ENTITY_AFFECTED} down with following ${DESCRIPTION_FIELD} <b>${HOST_NAMES}</b>
+      slack: ${COUNT} ${ENTITY_AFFECTED} down with following ${DESCRIPTION_FIELD} ${HOST_NAMES}
+      email:
+          subject: ${COUNT} ${ENTITY_AFFECTED} down.
+          body: ${COUNT} ${ENTITY_AFFECTED} down with ${DESCRIPTION_FIELD} ${HOST_NAMES_HTML}

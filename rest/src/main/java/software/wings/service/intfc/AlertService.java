@@ -9,6 +9,7 @@ import software.wings.service.intfc.ownership.OwnedByAccount;
 import software.wings.service.intfc.ownership.OwnedByApplication;
 
 import java.util.List;
+import java.util.Optional;
 import java.util.concurrent.Future;
 
 public interface AlertService extends OwnedByAccount, OwnedByApplication {
@@ -27,4 +28,6 @@ public interface AlertService extends OwnedByAccount, OwnedByApplication {
   void deleteByAccountId(String accountId);
 
   void deleteOldAlerts(long retentionMillis);
+
+  Optional<Alert> findExistingAlert(String accountId, String appId, AlertType alertType, AlertData alertData);
 }

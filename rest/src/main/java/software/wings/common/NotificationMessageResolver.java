@@ -34,7 +34,8 @@ public class NotificationMessageResolver {
     ENTITY_DELETE_NOTIFICATION,
     ARTIFACT_APPROVAL_NOTIFICATION,
     ARTIFACT_APPROVAL_NOTIFICATION_STATUS,
-    WORKFLOW_NOTIFICATION
+    WORKFLOW_NOTIFICATION,
+    DELEGATE_STATE_NOTIFICATION
   }
 
   private static Pattern placeHolderPattern = Pattern.compile("\\$\\{.+?}");
