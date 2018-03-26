@@ -88,7 +88,6 @@ import software.wings.utils.NoDefaultConstructorMorphiaObjectFactory;
 import software.wings.utils.ThreadContext;
 import software.wings.waitnotify.Notifier;
 
-import java.io.IOException;
 import java.lang.annotation.Annotation;
 import java.lang.reflect.InvocationHandler;
 import java.net.InetSocketAddress;
@@ -281,8 +280,8 @@ public class WingsRule implements MethodRule {
     registerScheduledJobs(injector);
   }
 
-  private MongoClient getRandomPortMongoClient() throws IOException {
-    IOException persistent = null;
+  private MongoClient getRandomPortMongoClient() throws Exception {
+    Exception persistent = null;
 
     // FreeServerPort releases the port before it returns it. This creates a race between the moment it is obtain again
     // and reserved for mongo. In rare cases this can cause the function to fail with port already in use exception.
@@ -296,11 +295,12 @@ public class WingsRule implements MethodRule {
                                        .version(Main.V3_4)
                                        .net(new Net("127.0.0.1", port, Network.localhostIsIPv6()))
                                        .build();
-      mongodExecutable = starter.prepare(mongodConfig);
       try {
+        mongodExecutable = starter.prepare(mongodConfig);
         mongodExecutable.start();
         return new MongoClient("localhost", port);
-      } catch (IOException e) {
+      } catch (Exception e) {
+        Thread.sleep(100);
         persistent = e;
       }
     }
