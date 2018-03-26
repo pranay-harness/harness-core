@@ -169,7 +169,6 @@ public class SshCommandUnitExecutorServiceImpl implements CommandUnitExecutorSer
         throw new WingsException(ErrorCode.UNKNOWN_ERROR, e);
       }
     } catch (Exception e) {
-      logger.error("Error while executing command", e);
       logService.save(context.getAccountId(),
           aLog()
               .withAppId(context.getAppId())

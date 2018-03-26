@@ -52,7 +52,6 @@ public class SplunkDelegateServiceImpl implements SplunkDelegateService {
     } catch (MalformedURLException exception) {
       throw new WingsException(splunkConfig.getSplunkUrl() + " is not a valid url", exception);
     } catch (Exception exception) {
-      logger.error("Error connecting to splunk ", exception);
       throw new WingsException("Error connecting to Splunk " + exception.getMessage(), exception);
     }
   }

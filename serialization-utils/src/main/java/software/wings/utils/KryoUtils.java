@@ -193,7 +193,6 @@ public class KryoUtils {
       output.flush();
       return baos.toByteArray();
     } catch (Exception exception) {
-      logger.error(exception.getMessage(), exception);
       throw new RuntimeException(exception);
     }
   }
@@ -207,7 +206,6 @@ public class KryoUtils {
       });
       output.flush();
     } catch (Exception exception) {
-      logger.error(exception.getMessage(), exception);
       throw new RuntimeException(exception);
     }
   }

@@ -146,7 +146,6 @@ public class StateMachine extends Base {
     try {
       transformPipeline(pipeline, stencilMap);
     } catch (WingsException e) {
-      logger.error(e.getLocalizedMessage(), e);
       throw e;
     } catch (Exception e) {
       logger.error(e.getLocalizedMessage(), e);

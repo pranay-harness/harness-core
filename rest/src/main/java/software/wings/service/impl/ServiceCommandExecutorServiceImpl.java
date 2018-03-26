@@ -78,7 +78,6 @@ public class ServiceCommandExecutorServiceImpl implements ServiceCommandExecutor
       commandUnitExecutorService.cleanup(context.getActivityId(), context.getHost());
       return commandExecutionStatus;
     } catch (Exception ex) {
-      logger.error("", ex);
       commandUnitExecutorService.cleanup(context.getActivityId(), context.getHost());
       throw ex;
     }

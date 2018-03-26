@@ -182,7 +182,6 @@ public class BambooServiceImpl implements BambooService {
     } catch (WingsException e) {
       throw e;
     } catch (Exception e) {
-      logger.error("Error getting artifact path from Bamboo server", e);
       throw new WingsException(ErrorCode.UNKNOWN_ERROR, e.getMessage(), e);
     }
   }
@@ -247,7 +246,6 @@ public class BambooServiceImpl implements BambooService {
     } catch (WingsException e) {
       throw e;
     } catch (Exception e) {
-      logger.error("Error getting artifact path from Bamboo server", e);
       throw new WingsException(ErrorCode.UNKNOWN_ERROR, e.getMessage(), e);
     }
   }
@@ -276,7 +274,6 @@ public class BambooServiceImpl implements BambooService {
     } catch (WingsException e) {
       throw e;
     } catch (Exception e) {
-      logger.error("Error getting artifact path from Bamboo server", e);
       throw new WingsException(ErrorCode.UNKNOWN_ERROR, e.getMessage(), e);
     }
   }
@@ -524,8 +521,8 @@ public class BambooServiceImpl implements BambooService {
       logger.info("Retrieving artifacts from plan {} and build number {} success", planKey, buildNumber);
       return artifactPathMap;
     } catch (IOException e) {
-      logger.info("Retrieving artifacts from plan {} and build number {} failed", planKey, buildNumber, e);
-      throw new WingsException(ErrorCode.ARTIFACT_SERVER_ERROR, "Failed to download artifact", e);
+      throw new WingsException(ErrorCode.ARTIFACT_SERVER_ERROR,
+          String.format("Retrieving artifacts from plan %s and build number %s failed", planKey, buildNumber), e);
     }
   }
 

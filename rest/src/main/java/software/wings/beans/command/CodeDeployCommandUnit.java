@@ -121,7 +121,6 @@ public class CodeDeployCommandUnit extends AbstractCommandUnit {
                                           .withDeploymentId(codeDeployDeploymentInfo.getDeploymentId())
                                           .build());
     } catch (Exception ex) {
-      logger.error(ex.getMessage(), ex);
       Misc.logAllMessages(ex, executionLogCallback);
       if (ex instanceof WingsException) {
         throw ex;
