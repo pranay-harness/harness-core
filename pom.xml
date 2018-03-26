@@ -1117,7 +1117,7 @@
                             <exclude>**/DelegateIntegrationTest</exclude>
                             <exclude>**/JenkinsSettingOverWriteTest.java</exclude>
                         </excludes>
-                        <forkCount>4</forkCount>
+                        <forkCount>6</forkCount>
                         <reuseForks>true</reuseForks>
                     </configuration>
                 </plugin>
