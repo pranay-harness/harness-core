@@ -11,5 +11,7 @@ public class LogMLExpAnalysisInfo {
   private String applicationId;
   private StateType stateType;
   private String expName;
+  private String envId;
+  private String workflowExecutionId;
   private long createdAt;
 }
