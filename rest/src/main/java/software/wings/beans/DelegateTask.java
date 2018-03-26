@@ -14,8 +14,10 @@ import software.wings.beans.DelegateTask.Converter;
 import software.wings.delegatetasks.DelegateRunnableTask;
 import software.wings.utils.KryoUtils;
 
+import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.HashSet;
+import java.util.List;
 import java.util.Objects;
 import java.util.Set;
 import javax.validation.constraints.NotNull;
@@ -28,7 +30,7 @@ import javax.validation.constraints.NotNull;
 public class DelegateTask extends Base {
   @NotNull private TaskType taskType;
   private Object[] parameters;
-  private String tag;
+  private List<String> tags = new ArrayList<>();
   @NotEmpty private String accountId;
   private String waitId;
   @AlsoLoad("topicName") private String queueName;
@@ -64,12 +66,12 @@ public class DelegateTask extends Base {
     this.parameters = parameters;
   }
 
-  public String getTag() {
-    return tag;
+  public List<String> getTags() {
+    return tags;
   }
 
-  public void setTag(String tag) {
-    this.tag = tag;
+  public void setTags(List<String> tags) {
+    this.tags = tags;
   }
 
   public String getAccountId() {
@@ -189,7 +191,7 @@ public class DelegateTask extends Base {
     }
     DelegateTask that = (DelegateTask) o;
     return timeout == that.timeout && async == that.async && taskType == that.taskType
-        && Arrays.equals(parameters, that.parameters) && Objects.equals(tag, that.tag)
+        && Arrays.equals(parameters, that.parameters) && Objects.equals(tags, that.tags)
         && Objects.equals(accountId, that.accountId) && Objects.equals(waitId, that.waitId)
         && Objects.equals(queueName, that.queueName) && status == that.status
         && Objects.equals(delegateId, that.delegateId) && Objects.equals(envId, that.envId)
@@ -199,14 +201,14 @@ public class DelegateTask extends Base {
 
   @Override
   public int hashCode() {
-    return Objects.hash(super.hashCode(), taskType, parameters, tag, accountId, waitId, queueName, status, delegateId,
+    return Objects.hash(super.hashCode(), taskType, parameters, tags, accountId, waitId, queueName, status, delegateId,
         timeout, async, envId, infrastructureMappingId, delegateRunnableTask);
   }
 
   @Override
   public String toString() {
     return "DelegateTask{"
-        + "taskType=" + taskType + ", parameters=" + Arrays.toString(parameters) + ", tag='" + tag + '\''
+        + "taskType=" + taskType + ", parameters=" + Arrays.toString(parameters) + ", tag='" + tags + '\''
         + ", accountId='" + accountId + '\'' + ", waitId='" + waitId + '\'' + ", queueName='" + queueName + '\''
         + ", status=" + status + ", delegateId='" + delegateId + '\'' + ", timeout=" + timeout + ", async=" + async
         + ", envId='" + envId + '\'' + ", infrastructureMappingId='" + infrastructureMappingId + '\''
@@ -303,7 +305,7 @@ public class DelegateTask extends Base {
   public static final class Builder {
     private TaskType taskType;
     private Object[] parameters;
-    private String tag;
+    private List<String> tags;
     private String accountId;
     private String waitId;
     private String queueName;
@@ -336,8 +338,8 @@ public class DelegateTask extends Base {
       return this;
     }
 
-    public Builder withTag(String tag) {
-      this.tag = tag;
+    public Builder withTags(List<String> tags) {
+      this.tags = tags;
       return this;
     }
 
@@ -420,7 +422,7 @@ public class DelegateTask extends Base {
       return aDelegateTask()
           .withTaskType(taskType)
           .withParameters(parameters)
-          .withTag(tag)
+          .withTags(tags)
           .withAccountId(accountId)
           .withWaitId(waitId)
           .withQueueName(queueName)
@@ -442,7 +444,7 @@ public class DelegateTask extends Base {
       DelegateTask delegateTask = new DelegateTask();
       delegateTask.setTaskType(taskType);
       delegateTask.setParameters(parameters);
-      delegateTask.setTag(tag);
+      delegateTask.setTags(tags);
       delegateTask.setAccountId(accountId);
       delegateTask.setWaitId(waitId);
       delegateTask.setQueueName(queueName);

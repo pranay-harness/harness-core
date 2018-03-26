@@ -71,6 +71,7 @@ import java.io.File;
 import java.io.FileInputStream;
 import java.io.IOException;
 import java.io.InputStreamReader;
+import java.util.ArrayList;
 import java.util.List;
 
 /**
@@ -190,6 +191,7 @@ public class DelegateServiceTest extends WingsBaseTest {
                                     .withTaskType(TaskType.HTTP)
                                     .withAppId(APP_ID)
                                     .withParameters(new Object[] {})
+                                    .withTags(new ArrayList<>())
                                     .build();
     wingsPersistence.save(delegateTask);
     assertThat(delegateService.getDelegateTasks(ACCOUNT_ID, generateUuid())).hasSize(1).containsExactly(delegateTask);
@@ -203,6 +205,7 @@ public class DelegateServiceTest extends WingsBaseTest {
                                     .withTaskType(TaskType.HTTP)
                                     .withAppId(APP_ID)
                                     .withParameters(new Object[] {})
+                                    .withTags(new ArrayList<>())
                                     .build();
     delegateService.queueTask(delegateTask);
     assertThat(wingsPersistence.get(DelegateTask.class, aPageRequest().build())).isEqualTo(delegateTask);
@@ -216,6 +219,7 @@ public class DelegateServiceTest extends WingsBaseTest {
                                     .withTaskType(TaskType.HTTP)
                                     .withAppId(APP_ID)
                                     .withParameters(new Object[] {})
+                                    .withTags(new ArrayList<>())
                                     .build();
     wingsPersistence.save(delegateTask);
     delegateService.processDelegateResponse(
@@ -236,6 +240,7 @@ public class DelegateServiceTest extends WingsBaseTest {
                                     .withTaskType(TaskType.HTTP)
                                     .withAppId(APP_ID)
                                     .withParameters(new Object[] {})
+                                    .withTags(new ArrayList<>())
                                     .build();
     wingsPersistence.save(delegateTask);
     delegateService.processDelegateResponse(
@@ -255,6 +260,7 @@ public class DelegateServiceTest extends WingsBaseTest {
                                     .withTaskType(TaskType.HTTP)
                                     .withAppId(APP_ID)
                                     .withParameters(new Object[] {})
+                                    .withTags(new ArrayList<>())
                                     .withAsync(false)
                                     .withQueueName("queue")
                                     .build();
@@ -349,6 +355,7 @@ public class DelegateServiceTest extends WingsBaseTest {
                                     .withTaskType(TaskType.HTTP)
                                     .withAppId(APP_ID)
                                     .withParameters(new Object[] {})
+                                    .withTags(new ArrayList<>())
                                     .build();
     wingsPersistence.save(delegateTask);
     assertThat(delegateService.acquireDelegateTask(ACCOUNT_ID, DELEGATE_ID, delegateTask.getUuid())).isNotNull();
@@ -364,6 +371,7 @@ public class DelegateServiceTest extends WingsBaseTest {
                                     .withTaskType(TaskType.HTTP)
                                     .withAppId(APP_ID)
                                     .withParameters(new Object[] {})
+                                    .withTags(new ArrayList<>())
                                     .withDelegateId(DELEGATE_ID + "1")
                                     .withStatus(DelegateTask.Status.STARTED)
                                     .build();
@@ -380,6 +388,7 @@ public class DelegateServiceTest extends WingsBaseTest {
                                     .withTaskType(TaskType.HTTP)
                                     .withAppId(APP_ID)
                                     .withParameters(new Object[] {})
+                                    .withTags(new ArrayList<>())
                                     .build();
     wingsPersistence.save(delegateTask);
     assertThat(delegateService.filter(DELEGATE_ID, delegateTask)).isFalse();
@@ -395,6 +404,7 @@ public class DelegateServiceTest extends WingsBaseTest {
                                     .withTaskType(TaskType.HTTP)
                                     .withAppId(APP_ID)
                                     .withParameters(new Object[] {})
+                                    .withTags(new ArrayList<>())
                                     .withDelegateId(DELEGATE_ID)
                                     .withStatus(DelegateTask.Status.STARTED)
                                     .build();
@@ -411,6 +421,7 @@ public class DelegateServiceTest extends WingsBaseTest {
                                     .withTaskType(TaskType.HTTP)
                                     .withAppId(APP_ID)
                                     .withParameters(new Object[] {})
+                                    .withTags(new ArrayList<>())
                                     .build();
     wingsPersistence.save(delegateTask);
     assertThat(delegateService.filter(DELEGATE_ID, delegateTask)).isTrue();
@@ -426,6 +437,7 @@ public class DelegateServiceTest extends WingsBaseTest {
                                     .withTaskType(TaskType.COMMAND)
                                     .withAppId(APP_ID)
                                     .withParameters(new Object[] {})
+                                    .withTags(new ArrayList<>())
                                     .withDelegateId(DELEGATE_ID)
                                     .withStatus(DelegateTask.Status.STARTED)
                                     .build();

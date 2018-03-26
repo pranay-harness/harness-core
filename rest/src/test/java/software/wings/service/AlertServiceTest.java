@@ -182,7 +182,7 @@ public class AlertServiceTest extends WingsBaseTest {
   @Test
   public void shouldCloseAlertsWhenDelegateUpdated() {
     when(query.asList()).thenReturn(singletonList(noActive)).thenReturn(singletonList(noEligible));
-    when(assignDelegateService.canAssign(eq(DELEGATE_ID), any(), any(), any(), any(), any())).thenReturn(true);
+    when(assignDelegateService.canAssign(eq(DELEGATE_ID), any(), any(), any(), any(), any(), any())).thenReturn(true);
 
     alertService.activeDelegateUpdated(ACCOUNT_ID, DELEGATE_ID);
 
