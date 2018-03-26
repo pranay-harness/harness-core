@@ -191,7 +191,6 @@ public class JsonUtils {
       // No filters used in this.
       return objectMapper.writer(filterProvider).writeValueAsString(obj);
     } catch (Exception exception) {
-      logger.error(exception.getMessage(), exception);
       throw new RuntimeException(exception);
     }
   }
@@ -223,7 +222,6 @@ public class JsonUtils {
     try {
       return objectMapper.readValue(jsonString, classToConvert);
     } catch (Exception exception) {
-      logger.error(exception.getMessage(), exception);
       throw new RuntimeException(exception);
     }
   }
@@ -255,7 +253,6 @@ public class JsonUtils {
     try {
       return objectMapper.readValue(jsonString, valueTypeRef);
     } catch (Exception exception) {
-      logger.error(exception.getMessage(), exception);
       throw new RuntimeException(exception);
     }
   }
@@ -273,7 +270,6 @@ public class JsonUtils {
     try {
       return mapper.readValue(jsonString, valueTypeRef);
     } catch (Exception exception) {
-      logger.error(exception.getMessage(), exception);
       throw new RuntimeException(exception);
     }
   }
@@ -347,12 +343,7 @@ public class JsonUtils {
    * @return the json node
    */
   public static JsonNode asTree(ObjectMapper objectMapper, Object object) {
-    try {
-      return objectMapper.valueToTree(object);
-    } catch (Exception e) {
-      logger.error(e.getMessage(), e);
-      throw e;
-    }
+    return objectMapper.valueToTree(object);
   }
 
   /**
@@ -376,7 +367,6 @@ public class JsonUtils {
     try {
       return objectMapper.readTree(json);
     } catch (Exception e) {
-      logger.error(e.getMessage(), e);
       Arrays.stream(e.getStackTrace()).forEach(elem -> logger.error("Trace: {}", elem));
       throw new RuntimeException(e);
     }
@@ -399,7 +389,6 @@ public class JsonUtils {
       return mapper.readValue(
           jsonString, mapper.getTypeFactory().constructCollectionType(collectionType, classToConvert));
     } catch (Exception exception) {
-      logger.error(exception.getMessage(), exception);
       throw new RuntimeException(exception);
     }
   }

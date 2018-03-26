@@ -181,11 +181,11 @@
         subsystem. If it is responsible to do so, this means that no one else should do it. This is why log and
         rethrow pattern will either duplicate the logging or it is needed because the handler needs to be fixed.
         In both cases having tis pattern in the code should be removed.
+        -->
         <module name="com.github.sevntu.checkstyle.checks.coding.EitherLogOrThrowCheck">
             <property name="loggerFullyQualifiedClassName" value="org.slf4j.Logger"/>
             <property name="loggingMethodNames" value="error, warn, info, debug"/>
         </module>
-        -->
 
 
         <!-- *** -->

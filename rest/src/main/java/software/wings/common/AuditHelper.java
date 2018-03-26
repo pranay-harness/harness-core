@@ -40,15 +40,10 @@ public class AuditHelper {
    * @return AuditHeader after saving.
    */
   public AuditHeader create(AuditHeader header) {
-    try {
-      header = auditService.create(header);
-      logger.debug("Saving auditHeader to thread local");
-      auditThreadLocal.set(header);
-      return header;
-    } catch (RuntimeException exception) {
-      logger.error("Exception occurred while trying to save HttpAuditHeader", exception);
-      throw exception;
-    }
+    header = auditService.create(header);
+    logger.debug("Saving auditHeader to thread local");
+    auditThreadLocal.set(header);
+    return header;
   }
 
   /**
@@ -60,14 +55,7 @@ public class AuditHelper {
    * @return the string
    */
   public String create(AuditHeader header, RequestType requestType, InputStream inputStream) {
-    try {
-      return auditService.create(header, requestType, inputStream);
-    } catch (RuntimeException exception) {
-      logger.error(
-          "Exception occurred while trying to save payload - headerId" + (header != null ? header.getUuid() : null),
-          exception);
-      throw exception;
-    }
+    return auditService.create(header, requestType, inputStream);
   }
 
   /**

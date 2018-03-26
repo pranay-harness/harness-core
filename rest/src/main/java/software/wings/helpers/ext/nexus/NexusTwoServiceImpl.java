@@ -336,11 +336,14 @@ public class NexusTwoServiceImpl {
         }
       }
     } catch (final IOException e) {
-      logger.error("Error occurred while retrieving Repository Group Ids from Nexus server " + nexusConfig.getNexusUrl()
-              + " for repository " + repoKey + " under path " + repoPath,
-          e);
       throw new WingsException(
-          aResponseMessage().code(INVALID_REQUEST).level(ERROR).message(e.getMessage()).build(), e);
+          aResponseMessage()
+              .code(INVALID_REQUEST)
+              .level(ERROR)
+              .message("Error occurred while retrieving Repository Group Ids from Nexus server "
+                  + nexusConfig.getNexusUrl() + " for repository " + repoKey + " under path " + repoPath)
+              .build(),
+          e);
     }
     return folderPaths;
   }

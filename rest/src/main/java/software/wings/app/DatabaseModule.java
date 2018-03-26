@@ -153,22 +153,16 @@ public class DatabaseModule extends AbstractModule {
             }
 
             try {
-              this.primaryDatastore.getCollection(mc.getClazz()).createIndex(dbObject, options);
+              primaryDatastore.getCollection(mc.getClazz()).createIndex(dbObject, options);
             } catch (MongoCommandException mex) {
-              // When Index creation fails due to changed options drop it and recreate.
-              if (mex.getErrorCode() == 85) {
-                this.primaryDatastore.getCollection(mc.getClazz())
-                    .dropIndex(new BasicDBObject().append(mf.getNameToStore(), 1));
-                try {
-                  this.primaryDatastore.getCollection(mc.getClazz()).createIndex(dbObject, options);
-                } catch (MongoCommandException mex1) {
-                  logger.error("Index creation failed for class " + mc.getClazz().getCanonicalName(), mex1);
-                  throw mex1;
-                }
-              } else {
-                logger.error("Index creation failed for class " + mc.getClazz().getCanonicalName(), mex);
+              if (mex.getErrorCode() != 85) {
                 throw mex;
               }
+
+              // When Index creation fails due to changed options drop it and recreate.
+              primaryDatastore.getCollection(mc.getClazz())
+                  .dropIndex(new BasicDBObject().append(mf.getNameToStore(), 1));
+              primaryDatastore.getCollection(mc.getClazz()).createIndex(dbObject, options);
             }
           }
         }

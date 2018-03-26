@@ -3,6 +3,7 @@ package software.wings.helpers.ext.artifactory;
 import static io.harness.data.structure.EmptyPredicate.isEmpty;
 import static io.harness.data.structure.EmptyPredicate.isNotEmpty;
 import static io.harness.threading.Morpheus.quietSleep;
+import static java.lang.String.format;
 import static java.time.Duration.ofMillis;
 import static java.util.stream.Collectors.toList;
 import static org.apache.commons.lang3.StringUtils.isBlank;
@@ -204,8 +205,8 @@ public class ArtifactoryServiceImpl implements ArtifactoryService {
         logger.info("Retrieving images from artifactory url {} and repo key {} success", artifactory.getUri(), repoKey);
       }
     } catch (Exception e) {
-      logger.error(String.format("Error occurred while listing docker images from artifactory %s for Repo %s",
-                       artifactory, repoKey),
+      logger.error(
+          format("Error occurred while listing docker images from artifactory %s for Repo %s", artifactory, repoKey),
           e);
       handleException(e, USER);
     }
@@ -645,9 +646,9 @@ public class ArtifactoryServiceImpl implements ArtifactoryService {
         }
       }
     } catch (Exception e) {
-      logger.error("Failed to fetch the latest snap version for url {} repoId {} groupId {} and artifactId {} ",
-          artifactory.getUri(), repoId, groupId, artifactId, e);
-      throw e;
+      throw new WingsException(
+          format("Failed to fetch the latest snap version for url %s repoId %s groupId %s and artifactId %s",
+              artifactory.getUri(), repoId, groupId, artifactId));
     }
     return null;
   }

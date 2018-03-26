@@ -178,10 +178,8 @@ public abstract class ContainerServiceDeploy extends State {
           .withDelegateTaskId(delegateTaskId)
           .build();
     } catch (WingsException e) {
-      logger.warn(e.getMessage(), e);
       throw e;
     } catch (Exception e) {
-      logger.warn(e.getMessage(), e);
       throw new WingsException(ErrorCode.INVALID_REQUEST, e).addParam("message", e.getMessage());
     }
   }

@@ -4,6 +4,7 @@ import static io.harness.data.structure.EmptyPredicate.isEmpty;
 import static io.harness.data.structure.EmptyPredicate.isNotEmpty;
 import static io.harness.threading.Morpheus.quietSleep;
 import static io.harness.threading.Morpheus.sleep;
+import static java.lang.String.format;
 import static java.time.Duration.ofMillis;
 import static java.time.Duration.ofSeconds;
 import static java.util.Collections.emptyList;
@@ -150,7 +151,7 @@ public class JenkinsImpl implements Jenkins {
             jobWithDetails = jenkinsServer.getJob(folderJob, childJobName);
           } catch (HttpResponseException e) {
             if (e.getStatusCode() == 500 || e.getMessage().contains("Server Error")) {
-              logger.warn(String.format("Error occurred while retrieving job %s. Retrying ", jobname), e);
+              logger.warn(format("Error occurred while retrieving job %s. Retrying ", jobname), e);
               sleep(ofSeconds(1L));
               continue;
             } else {
@@ -265,7 +266,7 @@ public class JenkinsImpl implements Jenkins {
         return URLDecoder.decode(jobName, Charset.defaultCharset().name());
       }
     } catch (UnsupportedEncodingException e) {
-      logger.warn(String.format("Failed to decode jobName %s", jobName), e);
+      logger.warn(format("Failed to decode jobName %s", jobName), e);
     }
     return jobName;
   }
@@ -397,12 +398,9 @@ public class JenkinsImpl implements Jenkins {
       logger.info("Triggering job {} success ", jobWithDetails.getUrl());
       return queueReference;
     } catch (HttpResponseException e) {
-      logger.error("Failed to trigger job {} with url {}. Status code {} ", jobname, jobWithDetails.getUrl(),
-          e.getStatusCode(), e);
       throw e;
     } catch (IOException e) {
-      logger.error("Failed to trigger job {} with url {} ", jobname, jobWithDetails.getUrl(), e);
-      throw e;
+      throw new IOException(format("Failed to trigger job %s with url %s", jobname, jobWithDetails.getUrl()), e);
     }
   }
 

@@ -102,7 +102,6 @@ public class RepeatState extends State {
         }
       }
     } catch (Exception ex) {
-      logger.error("Error in getting repeat elements", ex);
       throw new WingsException(ex);
     }
 

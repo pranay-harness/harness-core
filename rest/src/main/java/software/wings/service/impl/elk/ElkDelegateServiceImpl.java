@@ -162,7 +162,6 @@ public class ElkDelegateServiceImpl implements ElkDelegateService {
         final Response<Object> response = request.execute();
         return response.headers().get("kbn-version");
       } catch (Exception ex) {
-        logger.warn("Unable to get Kibana version", ex);
         throw new WingsException("Unable to get version. Check url : " + ex.getMessage(), ex);
       }
     } else {
