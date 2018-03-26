@@ -740,6 +740,8 @@ public class AnalysisServiceImpl implements AnalysisService {
                      .stateType(record.getStateType())
                      .createdAt(record.getCreatedAt())
                      .expName(record.getExperiment_name())
+                     .envId(record.getEnvId())
+                     .workflowExecutionId(record.getWorkflowExecutionId())
                      .build());
     });
 
