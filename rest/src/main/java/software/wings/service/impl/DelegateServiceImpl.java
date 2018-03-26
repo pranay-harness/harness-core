@@ -473,21 +473,19 @@ public class DelegateServiceImpl implements DelegateService {
   }
 
   @Override
-  @SuppressWarnings("unchecked")
   public Delegate register(Delegate delegate) {
     logger.info("Registering delegate for account {}: Hostname: {} IP: {}", delegate.getAccountId(),
         delegate.getHostName(), delegate.getIp());
-    // Please do not remove Fields Excluded
-    Delegate existingDelegate = wingsPersistence.get(Delegate.class,
-        aPageRequest()
-            .addFilter("ip", EQ, delegate.getIp())
-            .addFilter("hostName", EQ, delegate.getHostName())
-            .addFilter("accountId", EQ, delegate.getAccountId())
-            .addFieldsExcluded("supportedTaskTypes")
-            .build());
+    Delegate existingDelegate = wingsPersistence.createQuery(Delegate.class)
+                                    .filter("accountId", delegate.getAccountId())
+                                    .filter("ip", delegate.getIp())
+                                    .filter("hostName", delegate.getHostName())
+                                    .project("status", true)
+                                    .get();
     Delegate registeredDelegate;
     if (existingDelegate == null) {
-      logger.info("No existing delegate, adding: {}", delegate.getUuid());
+      logger.info("No existing delegate, adding for account {}: Hostname: {} IP: {}", delegate.getAccountId(),
+          delegate.getHostName(), delegate.getIp());
       registeredDelegate = add(delegate);
     } else {
       logger.info("Delegate exists, updating: {}", delegate.getUuid());
@@ -502,6 +500,7 @@ public class DelegateServiceImpl implements DelegateService {
   }
 
   @Override
+  @SuppressWarnings("unchecked")
   public PageResponse<DelegateTask> getDelegateTasks(String accountId, String delegateId) {
     return wingsPersistence.query(DelegateTask.class, aPageRequest().addFilter("accountId", EQ, accountId).build());
   }
