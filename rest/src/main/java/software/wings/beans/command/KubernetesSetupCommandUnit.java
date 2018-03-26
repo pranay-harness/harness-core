@@ -305,8 +305,14 @@ public class KubernetesSetupCommandUnit extends ContainerSetupCommandUnit {
       } else {
         executionLogCallback.saveExecutionLog("Kubernetes service type set to 'None'");
         if (service != null) {
-          executionLogCallback.saveExecutionLog("Deleting existing service " + kubernetesServiceName);
-          kubernetesContainerService.deleteService(kubernetesConfig, encryptedDataDetails, kubernetesServiceName);
+          try {
+            if (service.getSpec().getSelector().containsKey(HARNESS_APP)) {
+              executionLogCallback.saveExecutionLog("Deleting existing service " + kubernetesServiceName);
+              kubernetesContainerService.deleteService(kubernetesConfig, encryptedDataDetails, kubernetesServiceName);
+            }
+          } catch (Exception e) {
+            logger.error("Couldn't delete service {}", e);
+          }
           service = null;
         }
       }
@@ -416,7 +422,8 @@ public class KubernetesSetupCommandUnit extends ContainerSetupCommandUnit {
           || !((RouteRule) routeRule.getSpec()).getRoute().get(0).getLabels().containsKey(HARNESS_REVISION)) {
         Map<String, Integer> activeControllers = kubernetesContainerService.getActiveServiceCounts(
             kubernetesConfig, encryptedDataDetails, containerServiceName);
-        IstioResource routeRuleDefinition = createRouteRuleDefinition(setupParams, routeRuleName, activeControllers);
+        IstioResource routeRuleDefinition =
+            createRouteRuleDefinition(setupParams, routeRuleName, service.getSpec().getSelector(), activeControllers);
         executionLogCallback.saveExecutionLog("Creating Istio route rule " + routeRuleName);
         routeRule = kubernetesContainerService.createOrReplaceRouteRule(
             kubernetesConfig, encryptedDataDetails, routeRuleDefinition);
@@ -425,12 +432,14 @@ public class KubernetesSetupCommandUnit extends ContainerSetupCommandUnit {
       }
     } else if (routeRule != null) {
       try {
-        executionLogCallback.saveExecutionLog("Deleting Istio route rule " + routeRuleName);
-        kubernetesContainerService.deleteRouteRule(kubernetesConfig, encryptedDataDetails, routeRuleName);
-        routeRule = null;
+        if (routeRule.getMetadata().getLabels().containsKey(HARNESS_APP)) {
+          executionLogCallback.saveExecutionLog("Deleting Istio route rule " + routeRuleName);
+          kubernetesContainerService.deleteRouteRule(kubernetesConfig, encryptedDataDetails, routeRuleName);
+        }
       } catch (Exception e) {
         Misc.logAllMessages(e, executionLogCallback);
       }
+      routeRule = null;
     }
     return routeRule;
   }
@@ -438,20 +447,20 @@ public class KubernetesSetupCommandUnit extends ContainerSetupCommandUnit {
   private Ingress prepareIngress(KubernetesConfig kubernetesConfig, List<EncryptedDataDetail> encryptedDataDetails,
       KubernetesSetupParams setupParams, String ingressName, String containerServiceName, Service service,
       ExecutionLogCallback executionLogCallback) {
-    Ingress ingress = null;
+    Ingress ingress;
     if (setupParams.isUseIngress() && service != null) {
       ingress = kubernetesContainerService.createOrReplaceIngress(kubernetesConfig, encryptedDataDetails,
           createIngressDefinition(setupParams, service, ingressName, containerServiceName, executionLogCallback));
     } else {
       try {
         ingress = kubernetesContainerService.getIngress(kubernetesConfig, encryptedDataDetails, ingressName);
-        if (ingress != null) {
+        if (ingress != null && ingress.getMetadata().getLabels().containsKey(HARNESS_APP)) {
           kubernetesContainerService.deleteIngress(kubernetesConfig, encryptedDataDetails, ingressName);
-          ingress = null;
         }
       } catch (Exception e) {
         Misc.logAllMessages(e, executionLogCallback);
       }
+      ingress = null;
     }
     return ingress;
   }
@@ -591,6 +600,12 @@ public class KubernetesSetupCommandUnit extends ContainerSetupCommandUnit {
                                         .replaceAll(CONFIG_MAP_NAME_PLACEHOLDER_REGEX, containerServiceName)
                                         .replaceAll(SECRET_MAP_NAME_PLACEHOLDER_REGEX, containerServiceName));
       ingress.getMetadata().setName(kubernetesServiceName);
+      Map<String, String> labels = ingress.getMetadata().getLabels();
+      if (labels == null) {
+        labels = new HashMap<>();
+      }
+      labels.putAll(service.getSpec().getSelector());
+      ingress.getMetadata().setLabels(labels);
       return ingress;
     } catch (IOException e) {
       executionLogCallback.saveExecutionLog(
@@ -703,12 +718,13 @@ public class KubernetesSetupCommandUnit extends ContainerSetupCommandUnit {
         .build();
   }
 
-  private IstioResource createRouteRuleDefinition(
-      KubernetesSetupParams setupParams, String kubernetesServiceName, Map<String, Integer> activeControllers) {
+  private IstioResource createRouteRuleDefinition(KubernetesSetupParams setupParams, String kubernetesServiceName,
+      Map<String, String> serviceLabels, Map<String, Integer> activeControllers) {
     RouteRuleSpecNested<IstioResourceBuilder> routeRuleSpecNested = new IstioResourceBuilder()
                                                                         .withNewMetadata()
                                                                         .withName(kubernetesServiceName)
                                                                         .withNamespace(setupParams.getNamespace())
+                                                                        .withLabels(serviceLabels)
                                                                         .endMetadata()
                                                                         .withNewRouteRuleSpec()
                                                                         .withNewDestination()
