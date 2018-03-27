@@ -50,8 +50,8 @@ public class Localhost {
     try {
       String hostname = executeHostname();
       if (isBlank(hostname)) {
-        logger.warn("hostname command returned empty");
-      } else if (hostname.contains(" ")) {
+        logger.warn("hostname command result was empty");
+      } else if (hostname.contains(" ") || hostname.equals("localhost")) {
         logger.warn("hostname command returned: " + hostname);
       } else {
         return hostname;
@@ -62,10 +62,12 @@ public class Localhost {
 
     try {
       String hostname = InetAddress.getLocalHost().getCanonicalHostName();
-      if (isNotBlank(hostname) && !"localhost".equals(hostname)) {
-        return hostname;
+      if (isBlank(hostname)) {
+        logger.warn("InetAddress hostname was empty");
+      } else if (hostname.equals("localhost")) {
+        logger.warn("InetAddress hostname was 'localhost'");
       } else {
-        logger.warn("InetAddress hostname was blank or 'localhost'");
+        return hostname;
       }
     } catch (Exception e) {
       logger.warn("InetAddress hostname threw exception", e);
