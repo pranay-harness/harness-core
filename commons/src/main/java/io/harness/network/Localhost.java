@@ -1,5 +1,6 @@
 package io.harness.network;
 
+import static org.apache.commons.lang3.StringUtils.isBlank;
 import static org.apache.commons.lang3.StringUtils.isNotBlank;
 
 import com.google.common.annotations.VisibleForTesting;
@@ -48,10 +49,12 @@ public class Localhost {
   public static String getLocalHostName() {
     try {
       String hostname = executeHostname();
-      if (isNotBlank(hostname)) {
-        return hostname;
-      } else {
+      if (isBlank(hostname)) {
         logger.warn("hostname command returned empty");
+      } else if (hostname.contains(" ")) {
+        logger.warn("hostname command returned: " + hostname);
+      } else {
+        return hostname;
       }
     } catch (Exception ex) {
       logger.warn("hostname command threw exception", ex);

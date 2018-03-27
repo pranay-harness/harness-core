@@ -73,7 +73,7 @@ public abstract class ContainerResizeCommandUnit extends AbstractCommandUnit {
         if (Objects.equals(getActiveServiceCounts(contextData), originalServiceCounts)
             && Objects.equals(getTrafficWeights(contextData), originalTrafficWeights)) {
           // Already rolled back
-          executionLogCallback.saveExecutionLog("Rollback already complete\n");
+          executionLogCallback.saveExecutionLog("** Rollback already complete **\n");
           executionDataBuilder.newInstanceData(emptyList()).oldInstanceData(emptyList());
           return CommandExecutionStatus.SUCCESS;
         }
@@ -83,7 +83,7 @@ public abstract class ContainerResizeCommandUnit extends AbstractCommandUnit {
 
         if (contextData.resizeParams.isRollbackAllPhases()) {
           // Roll back to original counts
-          executionLogCallback.saveExecutionLog("Rolling back all phases at once");
+          executionLogCallback.saveExecutionLog("** Rolling back all phases at once **\n");
           setDesiredToOriginal(newInstanceDataList, originalServiceCounts, originalTrafficWeights);
           setDesiredToOriginal(oldInstanceDataList, originalServiceCounts, originalTrafficWeights);
         }
