@@ -124,6 +124,7 @@ public class PhaseStepSubWorkflow extends SubWorkflowState {
   private List<ContextElement> getRollbackRequiredParam(
       PhaseStepType phaseStepType, PhaseElement phaseElement, ExecutionContext contextIntf) {
     ExecutionContextImpl context = (ExecutionContextImpl) contextIntf;
+
     PhaseExecutionData stateExecutionData =
         (PhaseExecutionData) context.getStateExecutionData(phaseElement.getPhaseNameForRollback());
     if (stateExecutionData == null) {

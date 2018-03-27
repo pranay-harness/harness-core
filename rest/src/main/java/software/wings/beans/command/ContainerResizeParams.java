@@ -12,6 +12,7 @@ public class ContainerResizeParams {
   private String clusterName;
   private int serviceSteadyStateTimeout;
   private boolean rollback;
+  private boolean rollbackAllPhases;
   private String containerServiceName;
   private ResizeStrategy resizeStrategy;
   private boolean useFixedInstances;
@@ -23,4 +24,6 @@ public class ContainerResizeParams {
   private InstanceUnitType instanceUnitType;
   private Integer downsizeInstanceCount;
   private InstanceUnitType downsizeInstanceUnitType;
+  private List<String[]> originalServiceCounts;
+  private List<String[]> originalTrafficWeights;
 }

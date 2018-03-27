@@ -1,5 +1,7 @@
 package software.wings.beans.command;
 
+import static java.util.stream.Collectors.toList;
+
 import com.google.inject.Inject;
 
 import lombok.Data;
@@ -20,6 +22,13 @@ public abstract class ContainerSetupCommandUnit extends AbstractCommandUnit {
   static final int KEEP_N_REVISIONS = 3;
 
   @Inject @Transient private transient DelegateLogService logService;
+
+  static List<String[]> mapToListOfStringArray(Map<String, Integer> activeServiceCounts) {
+    return activeServiceCounts.entrySet()
+        .stream()
+        .map(entry -> new String[] {entry.getKey(), entry.getValue().toString()})
+        .collect(toList());
+  }
 
   public ContainerSetupCommandUnit(CommandUnitType commandUnitType) {
     super(commandUnitType);

@@ -18,6 +18,7 @@ public class EcsResizeParams extends ContainerResizeParams {
     private String clusterName;
     private int serviceSteadyStateTimeout;
     private boolean rollback;
+    private boolean rollbackAllPhases;
     private String containerServiceName;
     private ResizeStrategy resizeStrategy;
     private boolean useFixedInstances;
@@ -29,6 +30,8 @@ public class EcsResizeParams extends ContainerResizeParams {
     private InstanceUnitType instanceUnitType;
     private Integer downsizeInstanceCount;
     private InstanceUnitType downsizeInstanceUnitType;
+    private List<String[]> originalServiceCounts;
+    private List<String[]> originalTrafficWeights;
 
     private EcsResizeParamsBuilder() {}
 
@@ -53,6 +56,11 @@ public class EcsResizeParams extends ContainerResizeParams {
 
     public EcsResizeParamsBuilder withRollback(boolean rollback) {
       this.rollback = rollback;
+      return this;
+    }
+
+    public EcsResizeParamsBuilder withRollbackAllPhases(boolean rollbackAllPhases) {
+      this.rollbackAllPhases = rollbackAllPhases;
       return this;
     }
 
@@ -111,12 +119,23 @@ public class EcsResizeParams extends ContainerResizeParams {
       return this;
     }
 
+    public EcsResizeParamsBuilder withOriginalServiceCounts(List<String[]> originalServiceCounts) {
+      this.originalServiceCounts = originalServiceCounts;
+      return this;
+    }
+
+    public EcsResizeParamsBuilder withOriginalTrafficWeights(List<String[]> originalTrafficWeights) {
+      this.originalTrafficWeights = originalTrafficWeights;
+      return this;
+    }
+
     public EcsResizeParamsBuilder but() {
       return anEcsResizeParams()
           .withRegion(region)
           .withClusterName(clusterName)
           .withServiceSteadyStateTimeout(serviceSteadyStateTimeout)
           .withRollback(rollback)
+          .withRollbackAllPhases(rollbackAllPhases)
           .withContainerServiceName(containerServiceName)
           .withResizeStrategy(resizeStrategy)
           .withUseFixedInstances(useFixedInstances)
@@ -127,7 +146,9 @@ public class EcsResizeParams extends ContainerResizeParams {
           .withInstanceCount(instanceCount)
           .withInstanceUnitType(instanceUnitType)
           .withDownsizeInstanceCount(downsizeInstanceCount)
-          .withDownsizeInstanceUnitType(downsizeInstanceUnitType);
+          .withDownsizeInstanceUnitType(downsizeInstanceUnitType)
+          .withOriginalServiceCounts(originalServiceCounts)
+          .withOriginalTrafficWeights(originalTrafficWeights);
     }
 
     public EcsResizeParams build() {
@@ -136,6 +157,7 @@ public class EcsResizeParams extends ContainerResizeParams {
       ecsResizeParams.setClusterName(clusterName);
       ecsResizeParams.setServiceSteadyStateTimeout(serviceSteadyStateTimeout);
       ecsResizeParams.setRollback(rollback);
+      ecsResizeParams.setRollbackAllPhases(rollbackAllPhases);
       ecsResizeParams.setContainerServiceName(containerServiceName);
       ecsResizeParams.setResizeStrategy(resizeStrategy);
       ecsResizeParams.setUseFixedInstances(useFixedInstances);
@@ -147,6 +169,8 @@ public class EcsResizeParams extends ContainerResizeParams {
       ecsResizeParams.setInstanceUnitType(instanceUnitType);
       ecsResizeParams.setDownsizeInstanceCount(downsizeInstanceCount);
       ecsResizeParams.setDownsizeInstanceUnitType(downsizeInstanceUnitType);
+      ecsResizeParams.setOriginalServiceCounts(originalServiceCounts);
+      ecsResizeParams.setOriginalTrafficWeights(originalTrafficWeights);
       return ecsResizeParams;
     }
   }

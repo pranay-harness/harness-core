@@ -1,0 +1,9 @@
+{
+  "commandName": { "ui:widget": "hidden" },
+  "instanceCount": { "ui:widget": "hidden" },
+  "instanceUnitType": { "ui:widget": "hidden" },
+  "downsizeInstanceCount": { "ui:widget": "hidden" },
+  "downsizeInstanceUnitType": { "ui:widget": "hidden" },
+  "trafficPercent": { "ui:widget": "hidden" },
+  "ui:order": ["rollbackAllPhases", "commandName", "instanceCount", "instanceUnitType", "downsizeInstanceCount", "downsizeInstanceUnitType", "trafficPercent"]
+}

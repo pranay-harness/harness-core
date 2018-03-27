@@ -39,6 +39,8 @@ public class ContainerServiceElement implements ContextElement {
   private boolean useIstioRouteRule;
   private String previousDaemonSetYaml;
   private List<String> previousActiveAutoscalers;
+  private List<String[]> activeServiceCounts;
+  private List<String[]> trafficWeights;
 
   @Override
   public ContextElementType getElementType() {

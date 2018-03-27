@@ -44,7 +44,9 @@ import software.wings.sm.ExecutionContext;
 import software.wings.sm.ExecutionStatus;
 import software.wings.utils.KubernetesConvention;
 
+import java.util.ArrayList;
 import java.util.List;
+import java.util.Optional;
 
 /**
  * Created by brett on 3/1/17
@@ -257,9 +259,16 @@ public class KubernetesSetup extends ContainerServiceSetup {
       if (setupExecutionData != null) {
         containerServiceElementBuilder.name(setupExecutionData.getContainerServiceName())
             .previousDaemonSetYaml(setupExecutionData.getPreviousDaemonSetYaml())
-            .previousActiveAutoscalers(setupExecutionData.getPreviousActiveAutoscalers());
-        if (setupExecutionData.getActiveServiceCount() > 0) {
-          containerServiceElementBuilder.maxInstances(setupExecutionData.getActiveServiceCount());
+            .previousActiveAutoscalers(setupExecutionData.getPreviousActiveAutoscalers())
+            .activeServiceCounts(setupExecutionData.getActiveServiceCounts())
+            .trafficWeights(setupExecutionData.getTrafficWeights());
+        int totalActiveServiceCount = Optional.ofNullable(setupExecutionData.getActiveServiceCounts())
+                                          .orElse(new ArrayList<>())
+                                          .stream()
+                                          .mapToInt(item -> Integer.valueOf(item[1]))
+                                          .sum();
+        if (totalActiveServiceCount > 0) {
+          containerServiceElementBuilder.maxInstances(totalActiveServiceCount);
         }
       }
     }

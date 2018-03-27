@@ -222,20 +222,25 @@ public class KubernetesSetupCommandUnit extends ContainerSetupCommandUnit {
 
       String previousDaemonSetYaml = null;
       List<String> previousActiveAutoscalers = null;
-      int activeServiceCount = 0;
+      Map<String, Integer> activeServiceCounts = new HashMap<>();
+      Map<String, Integer> trafficWeights = new HashMap<>();
 
       if (isDaemonSet) {
         previousDaemonSetYaml = getDaemonSetYaml(kubernetesConfig, encryptedDataDetails, containerServiceName);
       } else {
         previousActiveAutoscalers =
             getActiveAutoscalers(kubernetesConfig, encryptedDataDetails, containerServiceName, executionLogCallback);
-        activeServiceCount = getPodCount(kubernetesConfig, encryptedDataDetails, containerServiceName);
+        activeServiceCounts = kubernetesContainerService.getActiveServiceCounts(
+            kubernetesConfig, encryptedDataDetails, containerServiceName);
+        trafficWeights =
+            kubernetesContainerService.getTrafficWeights(kubernetesConfig, encryptedDataDetails, containerServiceName);
       }
 
       commandExecutionDataBuilder.containerServiceName(containerServiceName)
           .previousDaemonSetYaml(previousDaemonSetYaml)
           .previousActiveAutoscalers(previousActiveAutoscalers)
-          .activeServiceCount(activeServiceCount);
+          .activeServiceCounts(mapToListOfStringArray(activeServiceCounts))
+          .trafficWeights(mapToListOfStringArray(trafficWeights));
 
       Map<String, String> serviceLabels =
           ImmutableMap.<String, String>builder()
@@ -323,7 +328,7 @@ public class KubernetesSetupCommandUnit extends ContainerSetupCommandUnit {
 
       // Setup Istio route rule
       IstioResource routeRule = prepareRouteRule(encryptedDataDetails, kubernetesConfig, setupParams,
-          kubernetesServiceName, containerServiceName, service, executionLogCallback);
+          kubernetesServiceName, service, activeServiceCounts, executionLogCallback);
 
       // Disable previous autoscalers
       if (isNotEmpty(previousActiveAutoscalers)) {
@@ -408,8 +413,8 @@ public class KubernetesSetupCommandUnit extends ContainerSetupCommandUnit {
   }
 
   private IstioResource prepareRouteRule(List<EncryptedDataDetail> encryptedDataDetails,
-      KubernetesConfig kubernetesConfig, KubernetesSetupParams setupParams, String routeRuleName,
-      String containerServiceName, Service service, ExecutionLogCallback executionLogCallback) {
+      KubernetesConfig kubernetesConfig, KubernetesSetupParams setupParams, String routeRuleName, Service service,
+      Map<String, Integer> activeControllers, ExecutionLogCallback executionLogCallback) {
     IstioResource routeRule = null;
     try {
       routeRule = kubernetesContainerService.getRouteRule(kubernetesConfig, encryptedDataDetails, routeRuleName);
@@ -420,8 +425,6 @@ public class KubernetesSetupCommandUnit extends ContainerSetupCommandUnit {
     if (setupParams.isUseIstioRouteRule() && service != null) {
       if (routeRule == null || routeRule.getSpec() == null || isEmpty(((RouteRule) routeRule.getSpec()).getRoute())
           || !((RouteRule) routeRule.getSpec()).getRoute().get(0).getLabels().containsKey(HARNESS_REVISION)) {
-        Map<String, Integer> activeControllers = kubernetesContainerService.getActiveServiceCounts(
-            kubernetesConfig, encryptedDataDetails, containerServiceName);
         IstioResource routeRuleDefinition =
             createRouteRuleDefinition(setupParams, routeRuleName, service.getSpec().getSelector(), activeControllers);
         executionLogCallback.saveExecutionLog("Creating Istio route rule " + routeRuleName);
@@ -563,16 +566,6 @@ public class KubernetesSetupCommandUnit extends ContainerSetupCommandUnit {
       kubernetesContainerService.createOrReplaceConfigMap(kubernetesConfig, encryptedDataDetails, configMap);
     }
     return configMap;
-  }
-
-  private int getPodCount(
-      KubernetesConfig kubernetesConfig, List<EncryptedDataDetail> encryptedDataDetails, String containerServiceName) {
-    return kubernetesContainerService
-        .getActiveServiceCounts(kubernetesConfig, encryptedDataDetails, containerServiceName)
-        .values()
-        .stream()
-        .mapToInt(Integer::intValue)
-        .sum();
   }
 
   private String getDaemonSetYaml(

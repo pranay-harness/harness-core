@@ -92,7 +92,8 @@ public class KubernetesResizeCommandUnit extends ContainerResizeCommandUnit {
     if (resizeParams.isUseIstioRouteRule()) {
       List<EncryptedDataDetail> encryptedDataDetails = new ArrayList<>();
       KubernetesConfig kubernetesConfig = getKubernetesConfig(contextData, encryptedDataDetails);
-      String kubernetesServiceName = getServiceNameFromControllerName(allData.get(0).getName());
+      String kubernetesServiceName =
+          getServiceNameFromControllerName(contextData.resizeParams.getContainerServiceName());
       String controllerPrefix = getPrefixFromControllerName(resizeParams.getContainerServiceName());
       IstioResource routeRuleDefinition = createRouteRuleDefinition(contextData, allData, kubernetesServiceName);
       IstioResource existingRouteRule =

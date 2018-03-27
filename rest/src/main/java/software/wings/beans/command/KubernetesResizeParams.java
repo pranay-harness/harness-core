@@ -27,15 +27,16 @@ public class KubernetesResizeParams extends ContainerResizeParams {
     private String namespace;
     private boolean rollback;
     private boolean useAutoscaler;
-    private String containerServiceName;
+    private boolean rollbackAllPhases;
     private String apiVersion;
     private String subscriptionId;
-    private ResizeStrategy resizeStrategy;
+    private String containerServiceName;
     private String resourceGroup;
-    private boolean useFixedInstances;
+    private ResizeStrategy resizeStrategy;
     private boolean useIstioRouteRule;
-    private int maxInstances;
+    private boolean useFixedInstances;
     private Integer trafficPercent;
+    private int maxInstances;
     private int fixedInstances;
     private List<ContainerServiceData> newInstanceData;
     private List<ContainerServiceData> oldInstanceData;
@@ -43,6 +44,8 @@ public class KubernetesResizeParams extends ContainerResizeParams {
     private InstanceUnitType instanceUnitType;
     private Integer downsizeInstanceCount;
     private InstanceUnitType downsizeInstanceUnitType;
+    private List<String[]> originalServiceCounts;
+    private List<String[]> originalTrafficWeights;
 
     private KubernetesResizeParamsBuilder() {}
 
@@ -75,8 +78,8 @@ public class KubernetesResizeParams extends ContainerResizeParams {
       return this;
     }
 
-    public KubernetesResizeParamsBuilder withContainerServiceName(String containerServiceName) {
-      this.containerServiceName = containerServiceName;
+    public KubernetesResizeParamsBuilder withRollbackAllPhases(boolean rollbackAllPhases) {
+      this.rollbackAllPhases = rollbackAllPhases;
       return this;
     }
 
@@ -90,8 +93,8 @@ public class KubernetesResizeParams extends ContainerResizeParams {
       return this;
     }
 
-    public KubernetesResizeParamsBuilder withResizeStrategy(ResizeStrategy resizeStrategy) {
-      this.resizeStrategy = resizeStrategy;
+    public KubernetesResizeParamsBuilder withContainerServiceName(String containerServiceName) {
+      this.containerServiceName = containerServiceName;
       return this;
     }
 
@@ -100,8 +103,8 @@ public class KubernetesResizeParams extends ContainerResizeParams {
       return this;
     }
 
-    public KubernetesResizeParamsBuilder withUseFixedInstances(boolean useFixedInstances) {
-      this.useFixedInstances = useFixedInstances;
+    public KubernetesResizeParamsBuilder withResizeStrategy(ResizeStrategy resizeStrategy) {
+      this.resizeStrategy = resizeStrategy;
       return this;
     }
 
@@ -110,13 +113,18 @@ public class KubernetesResizeParams extends ContainerResizeParams {
       return this;
     }
 
-    public KubernetesResizeParamsBuilder withMaxInstances(int maxInstances) {
-      this.maxInstances = maxInstances;
+    public KubernetesResizeParamsBuilder withUseFixedInstances(boolean useFixedInstances) {
+      this.useFixedInstances = useFixedInstances;
       return this;
     }
 
     public KubernetesResizeParamsBuilder withTrafficPercent(Integer trafficPercent) {
       this.trafficPercent = trafficPercent;
+      return this;
+    }
+
+    public KubernetesResizeParamsBuilder withMaxInstances(int maxInstances) {
+      this.maxInstances = maxInstances;
       return this;
     }
 
@@ -155,6 +163,16 @@ public class KubernetesResizeParams extends ContainerResizeParams {
       return this;
     }
 
+    public KubernetesResizeParamsBuilder withOriginalServiceCounts(List<String[]> originalServiceCounts) {
+      this.originalServiceCounts = originalServiceCounts;
+      return this;
+    }
+
+    public KubernetesResizeParamsBuilder withOriginalTrafficWeights(List<String[]> originalTrafficWeights) {
+      this.originalTrafficWeights = originalTrafficWeights;
+      return this;
+    }
+
     public KubernetesResizeParamsBuilder but() {
       return aKubernetesResizeParams()
           .withClusterName(clusterName)
@@ -162,22 +180,25 @@ public class KubernetesResizeParams extends ContainerResizeParams {
           .withNamespace(namespace)
           .withRollback(rollback)
           .withUseAutoscaler(useAutoscaler)
-          .withContainerServiceName(containerServiceName)
+          .withRollbackAllPhases(rollbackAllPhases)
           .withApiVersion(apiVersion)
           .withSubscriptionId(subscriptionId)
-          .withResizeStrategy(resizeStrategy)
+          .withContainerServiceName(containerServiceName)
           .withResourceGroup(resourceGroup)
-          .withUseFixedInstances(useFixedInstances)
+          .withResizeStrategy(resizeStrategy)
           .withUseIstioRouteRule(useIstioRouteRule)
-          .withMaxInstances(maxInstances)
+          .withUseFixedInstances(useFixedInstances)
           .withTrafficPercent(trafficPercent)
+          .withMaxInstances(maxInstances)
           .withFixedInstances(fixedInstances)
           .withNewInstanceData(newInstanceData)
           .withOldInstanceData(oldInstanceData)
           .withInstanceCount(instanceCount)
           .withInstanceUnitType(instanceUnitType)
           .withDownsizeInstanceCount(downsizeInstanceCount)
-          .withDownsizeInstanceUnitType(downsizeInstanceUnitType);
+          .withDownsizeInstanceUnitType(downsizeInstanceUnitType)
+          .withOriginalServiceCounts(originalServiceCounts)
+          .withOriginalTrafficWeights(originalTrafficWeights);
     }
 
     public KubernetesResizeParams build() {
@@ -187,15 +208,16 @@ public class KubernetesResizeParams extends ContainerResizeParams {
       kubernetesResizeParams.setNamespace(namespace);
       kubernetesResizeParams.setRollback(rollback);
       kubernetesResizeParams.setUseAutoscaler(useAutoscaler);
-      kubernetesResizeParams.setContainerServiceName(containerServiceName);
+      kubernetesResizeParams.setRollbackAllPhases(rollbackAllPhases);
       kubernetesResizeParams.setApiVersion(apiVersion);
       kubernetesResizeParams.setSubscriptionId(subscriptionId);
-      kubernetesResizeParams.setResizeStrategy(resizeStrategy);
+      kubernetesResizeParams.setContainerServiceName(containerServiceName);
       kubernetesResizeParams.setResourceGroup(resourceGroup);
-      kubernetesResizeParams.setUseFixedInstances(useFixedInstances);
+      kubernetesResizeParams.setResizeStrategy(resizeStrategy);
       kubernetesResizeParams.setUseIstioRouteRule(useIstioRouteRule);
-      kubernetesResizeParams.setMaxInstances(maxInstances);
+      kubernetesResizeParams.setUseFixedInstances(useFixedInstances);
       kubernetesResizeParams.setTrafficPercent(trafficPercent);
+      kubernetesResizeParams.setMaxInstances(maxInstances);
       kubernetesResizeParams.setFixedInstances(fixedInstances);
       kubernetesResizeParams.setNewInstanceData(newInstanceData);
       kubernetesResizeParams.setOldInstanceData(oldInstanceData);
@@ -203,6 +225,8 @@ public class KubernetesResizeParams extends ContainerResizeParams {
       kubernetesResizeParams.setInstanceUnitType(instanceUnitType);
       kubernetesResizeParams.setDownsizeInstanceCount(downsizeInstanceCount);
       kubernetesResizeParams.setDownsizeInstanceUnitType(downsizeInstanceUnitType);
+      kubernetesResizeParams.setOriginalServiceCounts(originalServiceCounts);
+      kubernetesResizeParams.setOriginalTrafficWeights(originalTrafficWeights);
       return kubernetesResizeParams;
     }
   }

@@ -144,12 +144,16 @@ public class KubernetesHelperService {
   public static void printRouteRuleWeights(
       IstioResource routeRule, String controllerPrefix, ExecutionLogCallback executionLogCallback) {
     RouteRule routeRuleSpec = (RouteRule) routeRule.getSpec();
-    List<DestinationWeight> sorted = new ArrayList<>(routeRuleSpec.getRoute());
-    sorted.sort(Comparator.comparing(a -> Integer.valueOf(a.getLabels().get(HARNESS_REVISION))));
-    for (DestinationWeight destinationWeight : sorted) {
-      int weight = destinationWeight.getWeight();
-      String rev = destinationWeight.getLabels().get(HARNESS_REVISION);
-      executionLogCallback.saveExecutionLog(String.format("   %s%s: %d%%", controllerPrefix, rev, weight));
+    if (isNotEmpty(routeRuleSpec.getRoute())) {
+      List<DestinationWeight> sorted = new ArrayList<>(routeRuleSpec.getRoute());
+      sorted.sort(Comparator.comparing(a -> Integer.valueOf(a.getLabels().get(HARNESS_REVISION))));
+      for (DestinationWeight destinationWeight : sorted) {
+        int weight = destinationWeight.getWeight();
+        String rev = destinationWeight.getLabels().get(HARNESS_REVISION);
+        executionLogCallback.saveExecutionLog(String.format("   %s%s: %d%%", controllerPrefix, rev, weight));
+      }
+    } else {
+      executionLogCallback.saveExecutionLog("   None specified");
     }
   }
 
