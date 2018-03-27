@@ -5,6 +5,7 @@
 package software.wings.resources;
 
 import static io.harness.data.structure.EmptyPredicate.isEmpty;
+import static software.wings.beans.ErrorCode.DUPLICATE_STATE_NAMES;
 import static software.wings.security.PermissionAttribute.Action.UPDATE;
 import static software.wings.security.PermissionAttribute.PermissionType.LOGGED_IN;
 import static software.wings.security.PermissionAttribute.PermissionType.WORKFLOW;
@@ -29,6 +30,8 @@ import software.wings.beans.WorkflowType;
 import software.wings.beans.stats.CloneMetadata;
 import software.wings.dl.PageRequest;
 import software.wings.dl.PageResponse;
+import software.wings.exception.WingsException;
+import software.wings.exception.WingsException.ReportTarget;
 import software.wings.security.PermissionAttribute.Action;
 import software.wings.security.PermissionAttribute.PermissionType;
 import software.wings.security.PermissionAttribute.ResourceType;
@@ -314,7 +317,14 @@ public class WorkflowResource {
   public RestResponse<WorkflowPhase> update(@QueryParam("appId") String appId,
       @PathParam("workflowId") String workflowId, @PathParam("phaseId") String phaseId, WorkflowPhase workflowPhase) {
     validateUuid(workflowPhase, "phaseId", phaseId);
-    return new RestResponse<>(workflowService.updateWorkflowPhase(appId, workflowId, workflowPhase));
+
+    try {
+      return new RestResponse<>(workflowService.updateWorkflowPhase(appId, workflowId, workflowPhase));
+    } catch (WingsException exception) {
+      // When the workflow update is coming from the user there is no harness engineer wrong doing to alerted for
+      exception.excludeReportTarget(DUPLICATE_STATE_NAMES, ReportTarget.HARNESS_ENGINEER);
+      throw exception;
+    }
   }
 
   /**
