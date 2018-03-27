@@ -48,4 +48,16 @@ public class LocalhostTest {
       e.printStackTrace();
     }
   }
+
+  @Test
+  public void shouldGetSuffix() {
+    String suffix = Localhost.getSuffix("10.58.0.233");
+    assertThat(suffix).isEqualTo(".kgaz");
+
+    suffix = Localhost.getSuffix("0.0.0.0");
+    assertThat(suffix).isEqualTo(".aaaa");
+
+    suffix = Localhost.getSuffix("foo");
+    assertThat(suffix).isEqualTo(".unknown");
+  }
 }

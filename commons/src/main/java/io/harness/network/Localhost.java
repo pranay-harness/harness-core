@@ -48,6 +48,35 @@ public class Localhost {
 
   public static String getLocalHostName() {
     try {
+      String hostname = InetAddress.getLocalHost().getCanonicalHostName();
+      if (isBlank(hostname)) {
+        logger.warn("InetAddress canonical hostname was empty");
+      } else if (hostname.equals("localhost")) {
+        logger.warn("InetAddress canonical hostname was 'localhost'");
+      } else {
+        return hostname;
+      }
+    } catch (Exception e) {
+      logger.warn("InetAddress canonical hostname threw exception", e);
+    }
+
+    String ipAddress = getLocalHostAddress();
+    String suffix = getSuffix(ipAddress);
+
+    try {
+      String hostname = InetAddress.getLocalHost().getHostName();
+      if (isBlank(hostname)) {
+        logger.warn("InetAddress short hostname was empty");
+      } else if (hostname.equals("localhost")) {
+        logger.warn("InetAddress short hostname was 'localhost'");
+      } else {
+        return hostname + suffix;
+      }
+    } catch (Exception e) {
+      logger.warn("InetAddress short hostname threw exception", e);
+    }
+
+    try {
       String hostname = executeHostname();
       if (isBlank(hostname)) {
         logger.warn("hostname -f command result was empty");
@@ -67,39 +96,31 @@ public class Localhost {
       } else if (hostname.contains(" ") || hostname.equals("localhost")) {
         logger.warn("hostname -s command returned: " + hostname);
       } else {
-        return hostname;
+        return hostname + suffix;
       }
     } catch (Exception ex) {
       logger.warn("hostname -s command threw exception", ex);
     }
 
-    try {
-      String hostname = InetAddress.getLocalHost().getCanonicalHostName();
-      if (isBlank(hostname)) {
-        logger.warn("InetAddress canonical hostname was empty");
-      } else if (hostname.equals("localhost")) {
-        logger.warn("InetAddress canonical hostname was 'localhost'");
-      } else {
-        return hostname;
-      }
-    } catch (Exception e) {
-      logger.warn("InetAddress canonical hostname threw exception", e);
-    }
+    return "ip-" + ipAddress.replaceAll("\\.", "-") + suffix;
+  }
 
+  @VisibleForTesting
+  static String getSuffix(String ipAddress) {
+    String suffix;
     try {
-      String hostname = InetAddress.getLocalHost().getHostName();
-      if (isBlank(hostname)) {
-        logger.warn("InetAddress short hostname was empty");
-      } else if (hostname.equals("localhost")) {
-        logger.warn("InetAddress short hostname was 'localhost'");
-      } else {
-        return hostname;
+      StringBuilder sb = new StringBuilder();
+      for (String ipPart : ipAddress.split("\\.")) {
+        int num = Integer.valueOf(ipPart);
+        char c = (char) ((num % 26) + ((int) 'a'));
+        sb.append(c);
       }
+      suffix = "." + sb.toString();
     } catch (Exception e) {
-      logger.warn("InetAddress short hostname threw exception", e);
+      logger.warn("Error building suffix", e);
+      suffix = ".unknown";
     }
-
-    return "ip-" + getLocalHostAddress().replaceAll("\\.", "-") + ".unknown";
+    return suffix;
   }
 
   @VisibleForTesting
