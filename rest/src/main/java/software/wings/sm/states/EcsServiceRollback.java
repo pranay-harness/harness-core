@@ -2,6 +2,7 @@ package software.wings.sm.states;
 
 import static software.wings.beans.command.EcsResizeParams.EcsResizeParamsBuilder.anEcsResizeParams;
 
+import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
 import com.github.reinert.jjschema.Attributes;
 import software.wings.beans.InstanceUnitType;
 import software.wings.beans.command.ContainerResizeParams;
@@ -11,6 +12,7 @@ import software.wings.sm.StateType;
 /**
  * Created by brett on 3/24/17
  */
+@JsonIgnoreProperties(ignoreUnknown = true)
 public class EcsServiceRollback extends ContainerServiceDeploy {
   @Attributes(title = "Rollback all phases at once") private boolean rollbackAllPhases;
 
