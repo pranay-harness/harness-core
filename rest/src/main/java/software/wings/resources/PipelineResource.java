@@ -131,7 +131,7 @@ public class PipelineResource {
     try {
       return new RestResponse<>(pipelineService.updatePipeline(pipeline));
     } catch (WingsException exception) {
-      // When the pipeline update is coming from the user there is no harness enginner wrong doing to alerted for
+      // When the pipeline update is coming from the user there is no harness engineer wrong doing to alerted for
       exception.excludeReportTarget(DUPLICATE_STATE_NAMES, ReportTarget.HARNESS_ENGINEER);
       throw exception;
     }
