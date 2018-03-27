@@ -1,7 +1,6 @@
 package io.harness.network;
 
 import static org.apache.commons.lang3.StringUtils.isBlank;
-import static org.apache.commons.lang3.StringUtils.isNotBlank;
 
 import com.google.common.annotations.VisibleForTesting;
 
@@ -22,25 +21,27 @@ public class Localhost {
 
   public static String getLocalHostAddress() {
     try {
-      String address = getAddress();
-      if (address != null) {
-        return address;
+      String hostIp = InetAddress.getLocalHost().getHostAddress();
+      if (isBlank(hostIp)) {
+        logger.warn("InetAddress host address was empty");
+      } else if (hostIp.startsWith("127.")) {
+        logger.warn("InetAddress host address was in the 127.0.0.0/8 range");
       } else {
-        logger.warn("Didn't find network interface with IPV4 address that is not in 127.0.0.0/8");
+        return hostIp;
       }
     } catch (Exception e) {
-      logger.warn("Exception getting IP address from network interfaces", e);
+      logger.warn("Exception getting InetAddress host address", e);
     }
 
     try {
-      String hostIp = InetAddress.getLocalHost().getHostAddress();
-      if (isNotBlank(hostIp) && !hostIp.startsWith("127.")) {
-        return hostIp;
+      String address = getAddress();
+      if (address == null) {
+        logger.warn("Didn't find network interface with IPV4 address that is not in 127.0.0.0/8");
       } else {
-        logger.warn("InetAddress host address was blank or was in the 127.0.0.0/8 range");
+        return address;
       }
     } catch (Exception e) {
-      logger.error("Exception getting InetAddress host address", e);
+      logger.warn("Exception getting IP address from network interfaces", e);
     }
 
     return "0.0.0.0";
