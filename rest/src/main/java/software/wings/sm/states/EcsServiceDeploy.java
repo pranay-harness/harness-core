@@ -2,30 +2,18 @@ package software.wings.sm.states;
 
 import static software.wings.beans.command.EcsResizeParams.EcsResizeParamsBuilder.anEcsResizeParams;
 
-import com.github.reinert.jjschema.Attributes;
 import software.wings.beans.InstanceUnitType;
 import software.wings.beans.command.ContainerResizeParams;
 import software.wings.sm.ContextElementType;
 import software.wings.sm.ExecutionContext;
 import software.wings.sm.StateType;
-import software.wings.stencils.DefaultValue;
-import software.wings.stencils.EnumData;
 
 public class EcsServiceDeploy extends ContainerServiceDeploy {
-  @Attributes(title = "Desired Instances (cumulative)") private String instanceCount;
-  @Attributes(title = "Desired Old Instances (cumulative)") private String downsizeInstanceCount;
-
-  @Attributes(title = "Instance Unit Type (Count/Percent)")
-  @EnumData(enumDataProvider = InstanceUnitTypeDataProvider.class)
-  @DefaultValue("PERCENTAGE")
+  private String instanceCount;
+  private String downsizeInstanceCount;
   private InstanceUnitType instanceUnitType = InstanceUnitType.PERCENTAGE;
-
-  @Attributes(title = "Downsize Instance Unit Type (Count/Percent)")
-  @EnumData(enumDataProvider = InstanceUnitTypeDataProvider.class)
-  @DefaultValue("PERCENTAGE")
   private InstanceUnitType downsizeInstanceUnitType = InstanceUnitType.PERCENTAGE;
-
-  @Attributes(title = "Command") @DefaultValue("Resize Service Cluster") private String commandName;
+  private String commandName;
 
   public EcsServiceDeploy(String name) {
     super(name, StateType.ECS_SERVICE_DEPLOY.name());
@@ -92,6 +80,7 @@ public class EcsServiceDeploy extends ContainerServiceDeploy {
         .withUseFixedInstances(contextData.containerElement.isUseFixedInstances())
         .withMaxInstances(contextData.containerElement.getMaxInstances())
         .withFixedInstances(contextData.containerElement.getFixedInstances())
+        .withOriginalServiceCounts(contextData.containerElement.getActiveServiceCounts())
         .build();
   }
 

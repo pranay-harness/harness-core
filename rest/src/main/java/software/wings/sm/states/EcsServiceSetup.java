@@ -33,7 +33,9 @@ import software.wings.sm.ExecutionStatus;
 import software.wings.utils.EcsConvention;
 import software.wings.utils.Misc;
 
+import java.util.ArrayList;
 import java.util.List;
+import java.util.Optional;
 
 /**
  * Created by peeyushaggarwal on 2/3/17.
@@ -140,9 +142,15 @@ public class EcsServiceSetup extends ContainerServiceSetup {
       ContainerSetupCommandUnitExecutionData setupExecutionData =
           (ContainerSetupCommandUnitExecutionData) executionResult.getCommandExecutionData();
       if (setupExecutionData != null) {
-        containerServiceElementBuilder.name(setupExecutionData.getContainerServiceName());
-        if (setupExecutionData.getActiveServiceCount() > 0) {
-          containerServiceElementBuilder.maxInstances(setupExecutionData.getActiveServiceCount());
+        containerServiceElementBuilder.name(setupExecutionData.getContainerServiceName())
+            .activeServiceCounts(setupExecutionData.getActiveServiceCounts());
+        int totalActiveServiceCount = Optional.ofNullable(setupExecutionData.getActiveServiceCounts())
+                                          .orElse(new ArrayList<>())
+                                          .stream()
+                                          .mapToInt(item -> Integer.valueOf(item[1]))
+                                          .sum();
+        if (totalActiveServiceCount > 0) {
+          containerServiceElementBuilder.maxInstances(totalActiveServiceCount);
         }
       }
     }

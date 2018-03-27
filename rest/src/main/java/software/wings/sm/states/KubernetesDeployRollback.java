@@ -8,20 +8,27 @@ import com.github.reinert.jjschema.Attributes;
 import software.wings.beans.InstanceUnitType;
 import software.wings.beans.command.ContainerResizeParams;
 import software.wings.sm.ExecutionContext;
-import software.wings.stencils.DefaultValue;
 
 /**
  * Created by brett on 4/24/17
  */
 public class KubernetesDeployRollback extends ContainerServiceDeploy {
-  @Attributes(title = "Traffic Percent to New Instances") private String trafficPercent;
+  @Attributes(title = "Rollback all phases at once") private boolean rollbackAllPhases;
 
-  @Attributes(title = "Command")
-  @DefaultValue("Resize Replication Controller")
+  private String trafficPercent;
+
   private String commandName = "Resize Replication Controller";
 
   public KubernetesDeployRollback(String name) {
     super(name, KUBERNETES_DEPLOY_ROLLBACK.name());
+  }
+
+  public boolean isRollbackAllPhases() {
+    return rollbackAllPhases;
+  }
+
+  public void setRollbackAllPhases(boolean rollbackAllPhases) {
+    this.rollbackAllPhases = rollbackAllPhases;
   }
 
   @Override
@@ -81,7 +88,10 @@ public class KubernetesDeployRollback extends ContainerServiceDeploy {
         .withFixedInstances(contextData.containerElement.getFixedInstances())
         .withNewInstanceData(contextData.rollbackElement.getNewInstanceData())
         .withOldInstanceData(contextData.rollbackElement.getOldInstanceData())
+        .withOriginalServiceCounts(contextData.containerElement.getActiveServiceCounts())
+        .withOriginalTrafficWeights(contextData.containerElement.getTrafficWeights())
         .withRollback(true)
+        .withRollbackAllPhases(rollbackAllPhases)
         .withInstanceCount(contextData.instanceCount)
         .withInstanceUnitType(getInstanceUnitType())
         .withDownsizeInstanceCount(contextData.downsizeInstanceCount)

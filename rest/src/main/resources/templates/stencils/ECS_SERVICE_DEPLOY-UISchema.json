@@ -1,6 +1,0 @@
-{
-  "commandName": { "ui:widget": "hidden" },
-  "downsizeInstanceCount": { "ui:widget": "hidden" },
-  "downsizeInstanceUnitType": { "ui:widget": "hidden" },
-  "ui:order": ["commandName", "instanceCount", "instanceUnitType", "downsizeInstanceCount", "downsizeInstanceUnitType"]
-}

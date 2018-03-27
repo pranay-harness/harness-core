@@ -4,35 +4,23 @@ import static org.apache.commons.lang3.StringUtils.isNotBlank;
 import static software.wings.beans.command.KubernetesResizeParams.KubernetesResizeParamsBuilder.aKubernetesResizeParams;
 import static software.wings.sm.StateType.KUBERNETES_DEPLOY;
 
-import com.github.reinert.jjschema.Attributes;
 import org.apache.commons.lang3.StringUtils;
 import software.wings.beans.InstanceUnitType;
 import software.wings.beans.command.ContainerApiVersions;
 import software.wings.beans.command.ContainerResizeParams;
 import software.wings.sm.ContextElementType;
 import software.wings.sm.ExecutionContext;
-import software.wings.stencils.DefaultValue;
-import software.wings.stencils.EnumData;
 
 /**
  * Created by brett on 3/1/17
  */
 public class KubernetesDeploy extends ContainerServiceDeploy {
-  @Attributes(title = "Desired Instances (cumulative)") private String instanceCount;
-  @Attributes(title = "Desired Old Instances (cumulative)") private String downsizeInstanceCount;
-  @Attributes(title = "Traffic Percent to New Instances") private String trafficPercent;
-
-  @Attributes(title = "Instance Unit Type (Count/Percent)")
-  @EnumData(enumDataProvider = InstanceUnitTypeDataProvider.class)
-  @DefaultValue("PERCENTAGE")
+  private String instanceCount;
+  private String downsizeInstanceCount;
+  private String trafficPercent;
   private InstanceUnitType instanceUnitType = InstanceUnitType.PERCENTAGE;
-
-  @Attributes(title = "Downsize Instance Unit Type (Count/Percent)")
-  @EnumData(enumDataProvider = InstanceUnitTypeDataProvider.class)
-  @DefaultValue("PERCENTAGE")
   private InstanceUnitType downsizeInstanceUnitType = InstanceUnitType.PERCENTAGE;
-
-  @Attributes(title = "Command") @DefaultValue("Resize Replication Controller") private String commandName;
+  private String commandName;
 
   public KubernetesDeploy(String name) {
     super(name, KUBERNETES_DEPLOY.name());
@@ -110,6 +98,8 @@ public class KubernetesDeploy extends ContainerServiceDeploy {
         .withUseFixedInstances(contextData.containerElement.isUseFixedInstances())
         .withMaxInstances(contextData.containerElement.getMaxInstances())
         .withFixedInstances(contextData.containerElement.getFixedInstances())
+        .withOriginalServiceCounts(contextData.containerElement.getActiveServiceCounts())
+        .withOriginalTrafficWeights(contextData.containerElement.getTrafficWeights())
         .withRollback(false)
         .withInstanceCount(contextData.instanceCount)
         .withInstanceUnitType(getInstanceUnitType())

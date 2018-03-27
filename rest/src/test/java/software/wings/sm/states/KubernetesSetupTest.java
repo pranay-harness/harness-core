@@ -48,6 +48,7 @@ import static software.wings.utils.WingsTestConstants.SERVICE_NAME;
 import static software.wings.utils.WingsTestConstants.STATE_NAME;
 import static software.wings.utils.WingsTestConstants.TEMPLATE_ID;
 
+import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.Lists;
 
@@ -408,12 +409,14 @@ public class KubernetesSetupTest extends WingsBaseTest {
     ExecutionContext context = new ExecutionContextImpl(stateExecutionInstance);
     on(context).set("variableProcessor", variableProcessor);
     on(context).set("evaluator", evaluator);
-    CommandExecutionResult result = aCommandExecutionResult()
-                                        .withCommandExecutionData(ContainerSetupCommandUnitExecutionData.builder()
-                                                                      .containerServiceName(KUBERNETES_CONTROLLER_NAME)
-                                                                      .activeServiceCount(activeServiceCount)
-                                                                      .build())
-                                        .build();
+    CommandExecutionResult result =
+        aCommandExecutionResult()
+            .withCommandExecutionData(ContainerSetupCommandUnitExecutionData.builder()
+                                          .containerServiceName(KUBERNETES_CONTROLLER_NAME)
+                                          .activeServiceCounts(ImmutableList.of(
+                                              new String[] {"old-service", Integer.toString(activeServiceCount)}))
+                                          .build())
+            .build();
 
     kubernetesSetup.setMaxInstances(maxInstances);
     kubernetesSetup.setFixedInstances(fixedInstances);

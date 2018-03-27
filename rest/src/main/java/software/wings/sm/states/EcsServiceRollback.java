@@ -7,18 +7,25 @@ import software.wings.beans.InstanceUnitType;
 import software.wings.beans.command.ContainerResizeParams;
 import software.wings.sm.ExecutionContext;
 import software.wings.sm.StateType;
-import software.wings.stencils.DefaultValue;
 
 /**
  * Created by brett on 3/24/17
  */
 public class EcsServiceRollback extends ContainerServiceDeploy {
-  @Attributes(title = "Command")
-  @DefaultValue("Resize Service Cluster")
+  @Attributes(title = "Rollback all phases at once") private boolean rollbackAllPhases;
+
   private String commandName = "Resize Service Cluster";
 
   public EcsServiceRollback(String name) {
     super(name, StateType.ECS_SERVICE_ROLLBACK.name());
+  }
+
+  public boolean isRollbackAllPhases() {
+    return rollbackAllPhases;
+  }
+
+  public void setRollbackAllPhases(boolean rollbackAllPhases) {
+    this.rollbackAllPhases = rollbackAllPhases;
   }
 
   @Override
@@ -57,6 +64,7 @@ public class EcsServiceRollback extends ContainerServiceDeploy {
         .withRegion(contextData.region)
         .withServiceSteadyStateTimeout(contextData.containerElement.getServiceSteadyStateTimeout())
         .withRollback(true)
+        .withRollbackAllPhases(rollbackAllPhases)
         .withInstanceCount(contextData.instanceCount)
         .withInstanceUnitType(getInstanceUnitType())
         .withDownsizeInstanceCount(contextData.downsizeInstanceCount)
@@ -68,6 +76,7 @@ public class EcsServiceRollback extends ContainerServiceDeploy {
         .withFixedInstances(contextData.containerElement.getFixedInstances())
         .withNewInstanceData(contextData.rollbackElement.getNewInstanceData())
         .withOldInstanceData(contextData.rollbackElement.getOldInstanceData())
+        .withOriginalServiceCounts(contextData.containerElement.getActiveServiceCounts())
         .build();
   }
 }

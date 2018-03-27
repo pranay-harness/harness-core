@@ -50,7 +50,7 @@ public class ContainerCommandUnitExecutorServiceImpl implements CommandUnitExecu
             .withActivityId(activityId)
             .withLogLevel(INFO)
             .withCommandUnitName(commandUnit.getName())
-            .withLogLine(format("Begin execution of command: %s", commandUnit.getName()))
+            .withLogLine(format("Begin execution of command: %s\n", commandUnit.getName()))
             .withExecutionResult(RUNNING)
             .build());
 

@@ -1,6 +1,7 @@
 package software.wings.beans.command;
 
 import static io.harness.data.structure.EmptyPredicate.isNotEmpty;
+import static java.util.Collections.emptyList;
 import static java.util.stream.Collectors.toList;
 import static software.wings.beans.InstanceUnitType.PERCENTAGE;
 import static software.wings.beans.ResizeStrategy.RESIZE_NEW_FIRST;
@@ -28,7 +29,9 @@ import software.wings.utils.Misc;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
+import java.util.Objects;
 import java.util.Optional;
+import java.util.stream.Collectors;
 
 public abstract class ContainerResizeCommandUnit extends AbstractCommandUnit {
   private static final Logger logger = LoggerFactory.getLogger(ContainerResizeCommandUnit.class);
@@ -54,14 +57,36 @@ public abstract class ContainerResizeCommandUnit extends AbstractCommandUnit {
 
       List<ContainerServiceData> newInstanceDataList;
       List<ContainerServiceData> oldInstanceDataList;
+
       if (!contextData.resizeParams.isRollback()) {
         newInstanceDataList = new ArrayList<>();
         ContainerServiceData newInstanceData = getNewInstanceData(contextData);
         newInstanceDataList.add(newInstanceData);
         oldInstanceDataList = getOldInstanceData(contextData, newInstanceData);
       } else {
+        // Rollback
+        Map<String, Integer> originalServiceCounts =
+            listOfStringArrayToMap(contextData.resizeParams.getOriginalServiceCounts());
+        Map<String, Integer> originalTrafficWeights =
+            listOfStringArrayToMap(contextData.resizeParams.getOriginalTrafficWeights());
+
+        if (Objects.equals(getActiveServiceCounts(contextData), originalServiceCounts)
+            && Objects.equals(getTrafficWeights(contextData), originalTrafficWeights)) {
+          // Already rolled back
+          executionLogCallback.saveExecutionLog("Rollback already complete\n");
+          executionDataBuilder.newInstanceData(emptyList()).oldInstanceData(emptyList());
+          return CommandExecutionStatus.SUCCESS;
+        }
+
         newInstanceDataList = contextData.resizeParams.getNewInstanceData();
         oldInstanceDataList = contextData.resizeParams.getOldInstanceData();
+
+        if (contextData.resizeParams.isRollbackAllPhases()) {
+          // Roll back to original counts
+          executionLogCallback.saveExecutionLog("Rolling back all phases at once");
+          setDesiredToOriginal(newInstanceDataList, originalServiceCounts, originalTrafficWeights);
+          setDesiredToOriginal(oldInstanceDataList, originalServiceCounts, originalTrafficWeights);
+        }
       }
 
       executionDataBuilder.newInstanceData(newInstanceDataList).oldInstanceData(oldInstanceDataList);
@@ -93,6 +118,23 @@ public abstract class ContainerResizeCommandUnit extends AbstractCommandUnit {
     }
 
     return status;
+  }
+
+  private static Map<String, Integer> listOfStringArrayToMap(List<String[]> listOfStringArray) {
+    return Optional.ofNullable(listOfStringArray)
+        .orElse(new ArrayList<>())
+        .stream()
+        .collect(Collectors.toMap(item -> item[0], item -> Integer.valueOf(item[1])));
+  }
+
+  private void setDesiredToOriginal(List<ContainerServiceData> newInstanceDataList,
+      Map<String, Integer> originalServiceCounts, Map<String, Integer> originalTrafficWeights) {
+    for (ContainerServiceData containerServiceData : newInstanceDataList) {
+      containerServiceData.setDesiredCount(
+          Optional.ofNullable(originalServiceCounts.get(containerServiceData.getName())).orElse(0));
+      containerServiceData.setDesiredTraffic(
+          Optional.ofNullable(originalTrafficWeights.get(containerServiceData.getName())).orElse(0));
+    }
   }
 
   private boolean resizeInstances(ContextData contextData, List<ContainerServiceData> instanceData,
@@ -147,10 +189,10 @@ public abstract class ContainerResizeCommandUnit extends AbstractCommandUnit {
   private ContainerServiceData getNewInstanceData(ContextData contextData) {
     Optional<Integer> previousDesiredCount = getServiceDesiredCount(contextData);
 
+    String containerServiceName = contextData.resizeParams.getContainerServiceName();
     if (!previousDesiredCount.isPresent()) {
       throw new WingsException(ErrorCode.INVALID_REQUEST)
-          .addParam(
-              "message", "Service setup not done, service name: " + contextData.resizeParams.getContainerServiceName());
+          .addParam("message", "Service setup not done, service name: " + containerServiceName);
     }
 
     int previousCount = previousDesiredCount.get();
@@ -158,7 +200,7 @@ public abstract class ContainerResizeCommandUnit extends AbstractCommandUnit {
     Integer desiredTrafficPercent = getDesiredTrafficPercent(contextData);
     if (desiredTrafficPercent == null) {
       Map<String, Integer> activeOtherControllers = getActiveServiceCounts(contextData);
-      activeOtherControllers.remove(contextData.resizeParams.getContainerServiceName());
+      activeOtherControllers.remove(containerServiceName);
       int totalOtherInstances = activeOtherControllers.values().stream().mapToInt(Integer::intValue).sum();
       int downsizeCount = getDownsizeByAmount(contextData, totalOtherInstances, desiredCount, previousCount);
       int totalInstances = totalOtherInstances - downsizeCount + desiredCount;
@@ -173,7 +215,7 @@ public abstract class ContainerResizeCommandUnit extends AbstractCommandUnit {
     }
 
     return ContainerServiceData.builder()
-        .name(contextData.resizeParams.getContainerServiceName())
+        .name(containerServiceName)
         .previousCount(previousCount)
         .desiredCount(desiredCount)
         .previousTraffic(getPreviousTrafficPercent(contextData))
