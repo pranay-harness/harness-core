@@ -49,19 +49,6 @@ public class Localhost {
 
   public static String getLocalHostName() {
     try {
-      String hostname = InetAddress.getLocalHost().getCanonicalHostName();
-      if (isBlank(hostname)) {
-        logger.warn("InetAddress canonical hostname was empty");
-      } else if (hostname.equals("localhost")) {
-        logger.warn("InetAddress canonical hostname was 'localhost'");
-      } else {
-        return hostname;
-      }
-    } catch (Exception e) {
-      logger.warn("InetAddress canonical hostname threw exception", e);
-    }
-
-    try {
       String hostname = executeHostname();
       if (isBlank(hostname)) {
         logger.warn("hostname -f command result was empty");
@@ -74,21 +61,21 @@ public class Localhost {
       logger.warn("hostname -f command threw exception", ex);
     }
 
-    String ipAddress = getLocalHostAddress();
-    String suffix = getSuffix(ipAddress);
-
     try {
-      String hostname = InetAddress.getLocalHost().getHostName();
+      String hostname = InetAddress.getLocalHost().getCanonicalHostName();
       if (isBlank(hostname)) {
-        logger.warn("InetAddress short hostname was empty");
+        logger.warn("InetAddress canonical hostname was empty");
       } else if (hostname.equals("localhost")) {
-        logger.warn("InetAddress short hostname was 'localhost'");
+        logger.warn("InetAddress canonical hostname was 'localhost'");
       } else {
-        return hostname + suffix;
+        return hostname;
       }
     } catch (Exception e) {
-      logger.warn("InetAddress short hostname threw exception", e);
+      logger.warn("InetAddress canonical hostname threw exception", e);
     }
+
+    String ipAddress = getLocalHostAddress();
+    String suffix = getSuffix(ipAddress);
 
     try {
       String hostname = executeHostnameShort();
@@ -101,6 +88,19 @@ public class Localhost {
       }
     } catch (Exception ex) {
       logger.warn("hostname -s command threw exception", ex);
+    }
+
+    try {
+      String hostname = InetAddress.getLocalHost().getHostName();
+      if (isBlank(hostname)) {
+        logger.warn("InetAddress short hostname was empty");
+      } else if (hostname.equals("localhost")) {
+        logger.warn("InetAddress short hostname was 'localhost'");
+      } else {
+        return hostname + suffix;
+      }
+    } catch (Exception e) {
+      logger.warn("InetAddress short hostname threw exception", e);
     }
 
     return "ip-" + ipAddress.replaceAll("\\.", "-") + suffix;
