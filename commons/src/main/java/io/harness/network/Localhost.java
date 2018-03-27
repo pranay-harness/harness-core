@@ -61,6 +61,19 @@ public class Localhost {
       logger.warn("InetAddress canonical hostname threw exception", e);
     }
 
+    try {
+      String hostname = executeHostname();
+      if (isBlank(hostname)) {
+        logger.warn("hostname -f command result was empty");
+      } else if (hostname.contains(" ") || hostname.equals("localhost")) {
+        logger.warn("hostname -f command returned: " + hostname);
+      } else {
+        return hostname;
+      }
+    } catch (Exception ex) {
+      logger.warn("hostname -f command threw exception", ex);
+    }
+
     String ipAddress = getLocalHostAddress();
     String suffix = getSuffix(ipAddress);
 
@@ -75,19 +88,6 @@ public class Localhost {
       }
     } catch (Exception e) {
       logger.warn("InetAddress short hostname threw exception", e);
-    }
-
-    try {
-      String hostname = executeHostname();
-      if (isBlank(hostname)) {
-        logger.warn("hostname -f command result was empty");
-      } else if (hostname.contains(" ") || hostname.equals("localhost")) {
-        logger.warn("hostname -f command returned: " + hostname);
-      } else {
-        return hostname;
-      }
-    } catch (Exception ex) {
-      logger.warn("hostname -f command threw exception", ex);
     }
 
     try {
@@ -133,7 +133,11 @@ public class Localhost {
       while (inetAddresses.hasMoreElements()) {
         InetAddress inetAddress = inetAddresses.nextElement();
         String address = inetAddress.getHostAddress();
-        if (inetAddress.getAddress().length == 4 && !address.startsWith("127.")) {
+        if (inetAddress.getAddress().length != 4) {
+          logger.warn("Enumerated inet address is not length 4: " + address);
+        } else if (address.startsWith("127.")) {
+          logger.warn("Enumerated inet address was in the 127.0.0.0/8 range: " + address);
+        } else {
           return address;
         }
       }
