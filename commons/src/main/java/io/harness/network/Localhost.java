@@ -13,6 +13,7 @@ import java.io.IOException;
 import java.net.InetAddress;
 import java.net.NetworkInterface;
 import java.net.SocketException;
+import java.net.UnknownHostException;
 import java.util.Enumeration;
 import java.util.concurrent.ExecutionException;
 import java.util.concurrent.TimeUnit;
@@ -50,14 +51,27 @@ public class Localhost {
     try {
       String hostname = executeHostname();
       if (isBlank(hostname)) {
-        logger.warn("hostname command result was empty");
+        logger.warn("hostname -f command result was empty");
       } else if (hostname.contains(" ") || hostname.equals("localhost")) {
-        logger.warn("hostname command returned: " + hostname);
+        logger.warn("hostname -f command returned: " + hostname);
       } else {
         return hostname;
       }
     } catch (Exception ex) {
-      logger.warn("hostname command threw exception", ex);
+      logger.warn("hostname -f command threw exception", ex);
+    }
+
+    try {
+      String hostname = executeHostnameShort();
+      if (isBlank(hostname)) {
+        logger.warn("hostname -s command result was empty");
+      } else if (hostname.contains(" ") || hostname.equals("localhost")) {
+        logger.warn("hostname -s command returned: " + hostname);
+      } else {
+        return hostname;
+      }
+    } catch (Exception ex) {
+      logger.warn("hostname -s command threw exception", ex);
     }
 
     try {
@@ -68,6 +82,23 @@ public class Localhost {
         logger.warn("InetAddress hostname was 'localhost'");
       } else {
         return hostname;
+      }
+    } catch (UnknownHostException e) {
+      if (e.getMessage().contains("failure in name resolution")) {
+        logger.warn("Failure in name resolution");
+        String[] split = e.getMessage().split(":");
+        if (split.length > 0) {
+          String hostname = split[0].trim();
+          if (isBlank(hostname)) {
+            logger.warn("Unresolved name was empty");
+          } else if (hostname.contains(" ") || hostname.equals("localhost")) {
+            logger.warn("Unresolved name: " + hostname);
+          } else {
+            return hostname;
+          }
+        }
+      } else {
+        logger.warn("InetAddress hostname threw unknown host exception", e);
       }
     } catch (Exception e) {
       logger.warn("InetAddress hostname threw exception", e);
@@ -98,6 +129,20 @@ public class Localhost {
     return new ProcessExecutor()
         .timeout(2, TimeUnit.SECONDS)
         .command("hostname", "-f")
+        .readOutput(true)
+        .start()
+        .getFuture()
+        .get()
+        .getOutput()
+        .getLines()
+        .get(0);
+  }
+
+  @VisibleForTesting
+  static String executeHostnameShort() throws IOException, InterruptedException, ExecutionException {
+    return new ProcessExecutor()
+        .timeout(2, TimeUnit.SECONDS)
+        .command("hostname", "-s")
         .readOutput(true)
         .start()
         .getFuture()
