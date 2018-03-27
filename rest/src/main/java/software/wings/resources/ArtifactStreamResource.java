@@ -45,7 +45,7 @@ import javax.ws.rs.QueryParam;
 @Produces("application/json")
 @Consumes("application/json")
 @Scope(APPLICATION)
-@AuthRule(permissionType = SERVICE)
+@AuthRule(permissionType = SERVICE, skipAuth = true)
 public class ArtifactStreamResource {
   private ArtifactStreamService artifactStreamService;
 
