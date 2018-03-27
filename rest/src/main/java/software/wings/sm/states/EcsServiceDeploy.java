@@ -2,12 +2,14 @@ package software.wings.sm.states;
 
 import static software.wings.beans.command.EcsResizeParams.EcsResizeParamsBuilder.anEcsResizeParams;
 
+import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
 import software.wings.beans.InstanceUnitType;
 import software.wings.beans.command.ContainerResizeParams;
 import software.wings.sm.ContextElementType;
 import software.wings.sm.ExecutionContext;
 import software.wings.sm.StateType;
 
+@JsonIgnoreProperties(ignoreUnknown = true)
 public class EcsServiceDeploy extends ContainerServiceDeploy {
   private String instanceCount;
   private String downsizeInstanceCount;
