@@ -24,6 +24,16 @@ public class LocalhostTest {
   }
 
   @Test
+  public void shouldExecuteHostnameShort() {
+    try {
+      String hostname = Localhost.executeHostnameShort();
+      assertThat(hostname).isNotNull();
+    } catch (Exception e) {
+      e.printStackTrace();
+    }
+  }
+
+  @Test
   public void shouldGetLocalHostName() {
     String hostname = Localhost.getLocalHostName();
     assertThat(hostname).isNotNull();
