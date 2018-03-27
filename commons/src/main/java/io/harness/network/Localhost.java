@@ -13,7 +13,6 @@ import java.io.IOException;
 import java.net.InetAddress;
 import java.net.NetworkInterface;
 import java.net.SocketException;
-import java.net.UnknownHostException;
 import java.util.Enumeration;
 import java.util.concurrent.ExecutionException;
 import java.util.concurrent.TimeUnit;
@@ -77,31 +76,27 @@ public class Localhost {
     try {
       String hostname = InetAddress.getLocalHost().getCanonicalHostName();
       if (isBlank(hostname)) {
-        logger.warn("InetAddress hostname was empty");
+        logger.warn("InetAddress canonical hostname was empty");
       } else if (hostname.equals("localhost")) {
-        logger.warn("InetAddress hostname was 'localhost'");
+        logger.warn("InetAddress canonical hostname was 'localhost'");
       } else {
         return hostname;
       }
-    } catch (UnknownHostException e) {
-      if (e.getMessage().contains("failure in name resolution")) {
-        logger.warn("Failure in name resolution");
-        String[] split = e.getMessage().split(":");
-        if (split.length > 0) {
-          String hostname = split[0].trim();
-          if (isBlank(hostname)) {
-            logger.warn("Unresolved name was empty");
-          } else if (hostname.contains(" ") || hostname.equals("localhost")) {
-            logger.warn("Unresolved name: " + hostname);
-          } else {
-            return hostname;
-          }
-        }
+    } catch (Exception e) {
+      logger.warn("InetAddress canonical hostname threw exception", e);
+    }
+
+    try {
+      String hostname = InetAddress.getLocalHost().getHostName();
+      if (isBlank(hostname)) {
+        logger.warn("InetAddress short hostname was empty");
+      } else if (hostname.equals("localhost")) {
+        logger.warn("InetAddress short hostname was 'localhost'");
       } else {
-        logger.warn("InetAddress hostname threw unknown host exception", e);
+        return hostname;
       }
     } catch (Exception e) {
-      logger.warn("InetAddress hostname threw exception", e);
+      logger.warn("InetAddress short hostname threw exception", e);
     }
 
     return "ip-" + getLocalHostAddress().replaceAll("\\.", "-") + ".unknown";
