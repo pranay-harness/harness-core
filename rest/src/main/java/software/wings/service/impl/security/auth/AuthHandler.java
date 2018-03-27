@@ -587,13 +587,21 @@ public class AuthHandler {
     boolean hasCreatePermission = hasCreateAction(actions);
 
     if (permissionType == PermissionType.SERVICE) {
-      appPermissionSummary.setCanCreateService(hasCreatePermission);
+      if (!appPermissionSummary.isCanCreateService()) {
+        appPermissionSummary.setCanCreateService(hasCreatePermission);
+      }
     } else if (permissionType == PermissionType.ENV) {
-      appPermissionSummary.setCanCreateEnvironment(hasCreatePermission);
+      if (!appPermissionSummary.isCanCreateEnvironment()) {
+        appPermissionSummary.setCanCreateEnvironment(hasCreatePermission);
+      }
     } else if (permissionType == PermissionType.WORKFLOW) {
-      appPermissionSummary.setCanCreateWorkflow(hasCreatePermission);
+      if (!appPermissionSummary.isCanCreateWorkflow()) {
+        appPermissionSummary.setCanCreateWorkflow(hasCreatePermission);
+      }
     } else if (permissionType == PermissionType.PIPELINE) {
-      appPermissionSummary.setCanCreatePipeline(hasCreatePermission);
+      if (!appPermissionSummary.isCanCreatePipeline()) {
+        appPermissionSummary.setCanCreatePipeline(hasCreatePermission);
+      }
     } else if (permissionType != PermissionType.DEPLOYMENT) {
       String msg = "Unsupported app permission entity type: " + permissionType;
       logger.error(msg);
