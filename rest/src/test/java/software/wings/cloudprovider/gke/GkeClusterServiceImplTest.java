@@ -2,6 +2,7 @@ package software.wings.cloudprovider.gke;
 
 import static junit.framework.TestCase.fail;
 import static org.assertj.core.api.Assertions.assertThat;
+import static org.assertj.core.api.Assertions.failBecauseExceptionWasNotThrown;
 import static org.joor.Reflect.on;
 import static org.mockito.Matchers.any;
 import static org.mockito.Matchers.anyString;
@@ -39,6 +40,7 @@ import software.wings.WingsBaseTest;
 import software.wings.beans.GcpConfig;
 import software.wings.beans.KubernetesConfig;
 import software.wings.beans.SettingAttribute;
+import software.wings.exception.WingsException;
 import software.wings.service.impl.GcpHelperService;
 
 import java.io.IOException;
@@ -260,22 +262,28 @@ public class GkeClusterServiceImplTest extends WingsBaseTest {
   public void shouldNotGetClusterIfNotExists() throws Exception {
     when(clustersGet.execute()).thenThrow(notFoundException);
 
-    KubernetesConfig config =
-        gkeClusterService.getCluster(COMPUTE_PROVIDER_SETTING, Collections.emptyList(), ZONE_CLUSTER, "default");
+    try {
+      gkeClusterService.getCluster(COMPUTE_PROVIDER_SETTING, Collections.emptyList(), ZONE_CLUSTER, "default");
+      failBecauseExceptionWasNotThrown(WingsException.class);
+    } catch (WingsException e) {
+      // Expected
+    }
 
     verify(clusters).get(anyString(), anyString(), anyString());
-    assertThat(config).isNull();
   }
 
   @Test
   public void shouldNotGetClusterIfError() throws Exception {
     when(clustersGet.execute()).thenThrow(new IOException());
 
-    KubernetesConfig config =
-        gkeClusterService.getCluster(COMPUTE_PROVIDER_SETTING, Collections.emptyList(), ZONE_CLUSTER, "default");
+    try {
+      gkeClusterService.getCluster(COMPUTE_PROVIDER_SETTING, Collections.emptyList(), ZONE_CLUSTER, "default");
+      failBecauseExceptionWasNotThrown(WingsException.class);
+    } catch (WingsException e) {
+      // Expected
+    }
 
     verify(clusters).get(anyString(), anyString(), anyString());
-    assertThat(config).isNull();
   }
 
   @Test
@@ -287,11 +295,14 @@ public class GkeClusterServiceImplTest extends WingsBaseTest {
             new HttpResponseException.Builder(HttpStatusCodes.STATUS_CODE_FORBIDDEN, "forbidden", httpHeaders),
             googleJsonError));
 
-    KubernetesConfig config =
-        gkeClusterService.getCluster(COMPUTE_PROVIDER_SETTING, Collections.emptyList(), ZONE_CLUSTER, "default");
+    try {
+      gkeClusterService.getCluster(COMPUTE_PROVIDER_SETTING, Collections.emptyList(), ZONE_CLUSTER, "default");
+      failBecauseExceptionWasNotThrown(WingsException.class);
+    } catch (WingsException e) {
+      // Expected
+    }
 
     verify(clusters).get(anyString(), anyString(), anyString());
-    assertThat(config).isNull();
   }
 
   @Test

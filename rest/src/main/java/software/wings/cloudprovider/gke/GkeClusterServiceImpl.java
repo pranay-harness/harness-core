@@ -3,6 +3,7 @@ package software.wings.cloudprovider.gke;
 import static io.harness.threading.Morpheus.sleep;
 import static java.time.Duration.ofSeconds;
 import static org.apache.commons.lang3.StringUtils.isNotBlank;
+import static software.wings.beans.ErrorCode.ARGS;
 import static software.wings.beans.ErrorCode.INVALID_ARGUMENT;
 import static software.wings.service.impl.GcpHelperService.ALL_ZONES;
 import static software.wings.service.impl.GcpHelperService.ZONE_DELIMITER;
@@ -200,8 +201,10 @@ public class GkeClusterServiceImpl implements GkeClusterService {
       return configFromCluster(cluster, namespace);
     } catch (IOException e) {
       logNotFoundOrError(e, projectId, zone, clusterName, "getting");
+      throw new WingsException(INVALID_ARGUMENT, e)
+          .addParam(
+              ARGS, String.format("Error getting cluster %s in zone %s for project %s", clusterName, zone, projectId));
     }
-    return null;
   }
 
   @Override
