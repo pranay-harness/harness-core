@@ -148,10 +148,13 @@ public class PipelineServiceTest extends WingsBaseTest {
       Map<String, Object> properties = new HashMap<>();
       properties.put("envId", generateUuid());
       properties.put("workflowId", uuid);
-      PipelineStage pipelineStage = new PipelineStage(asList(
-          PipelineStageElement.builder().name("SE" + index).type(ENV_STATE.name()).properties(properties).build()));
-      pipelineStage.setName("STAGE" + index);
-
+      PipelineStage pipelineStage = PipelineStage.builder()
+                                        .pipelineStageElements(asList(PipelineStageElement.builder()
+                                                                          .name("STAGE" + index)
+                                                                          .type(ENV_STATE.name())
+                                                                          .properties(properties)
+                                                                          .build()))
+                                        .build();
       if (index % 16 == 0) {
         pipelineStage.setParallel(false);
       } else {
@@ -186,9 +189,11 @@ public class PipelineServiceTest extends WingsBaseTest {
     Map<String, Object> properties = new HashMap<>();
     properties.put("envId", ENV_ID);
     properties.put("workflowId", WORKFLOW_ID);
-    PipelineStage pipelineStage = new PipelineStage(
-        asList(PipelineStageElement.builder().name("SE").type(ENV_STATE.name()).properties(properties).build()));
-    pipelineStage.setName("STAGE1");
+    PipelineStage pipelineStage =
+        PipelineStage.builder()
+            .pipelineStageElements(asList(
+                PipelineStageElement.builder().name("STAGE1").type(ENV_STATE.name()).properties(properties).build()))
+            .build();
 
     FailureStrategy failureStrategy =
         FailureStrategy.builder().repairActionCode(RepairActionCode.MANUAL_INTERVENTION).build();
@@ -225,12 +230,15 @@ public class PipelineServiceTest extends WingsBaseTest {
         .thenReturn(aPipeline()
                         .withAppId(APP_ID)
                         .withUuid(PIPELINE_ID)
-                        .withPipelineStages(asList(new PipelineStage(
-                            asList(PipelineStageElement.builder()
-                                       .name("SE")
-                                       .type(ENV_STATE.name())
-                                       .properties(ImmutableMap.of("envId", ENV_ID, "workflowId", WORKFLOW_ID))
-                                       .build()))))
+                        .withPipelineStages(
+                            asList(PipelineStage.builder()
+                                       .pipelineStageElements(asList(
+                                           PipelineStageElement.builder()
+                                               .name("SE")
+                                               .type(ENV_STATE.name())
+                                               .properties(ImmutableMap.of("envId", ENV_ID, "workflowId", WORKFLOW_ID))
+                                               .build()))
+                                       .build()))
                         .build());
 
     Pipeline pipeline = pipelineService.readPipeline(APP_ID, PIPELINE_ID, false);
@@ -244,12 +252,15 @@ public class PipelineServiceTest extends WingsBaseTest {
         .thenReturn(aPipeline()
                         .withAppId(APP_ID)
                         .withUuid(PIPELINE_ID)
-                        .withPipelineStages(asList(new PipelineStage(
-                            asList(PipelineStageElement.builder()
-                                       .name("SE")
-                                       .type(ENV_STATE.name())
-                                       .properties(ImmutableMap.of("envId", ENV_ID, "workflowId", WORKFLOW_ID))
-                                       .build()))))
+                        .withPipelineStages(
+                            asList(PipelineStage.builder()
+                                       .pipelineStageElements(asList(
+                                           PipelineStageElement.builder()
+                                               .name("SE")
+                                               .type(ENV_STATE.name())
+                                               .properties(ImmutableMap.of("envId", ENV_ID, "workflowId", WORKFLOW_ID))
+                                               .build()))
+                                       .build()))
                         .build());
 
     when(workflowService.readWorkflow(APP_ID, WORKFLOW_ID))
@@ -264,17 +275,21 @@ public class PipelineServiceTest extends WingsBaseTest {
   @Test
   public void shouldGetPipelineWithTemplatizedServices() {
     when(wingsPersistence.get(Pipeline.class, APP_ID, PIPELINE_ID))
-        .thenReturn(aPipeline()
-                        .withAppId(APP_ID)
-                        .withUuid(PIPELINE_ID)
-                        .withPipelineStages(asList(new PipelineStage(
-                            asList(PipelineStageElement.builder()
+        .thenReturn(
+            aPipeline()
+                .withAppId(APP_ID)
+                .withUuid(PIPELINE_ID)
+                .withPipelineStages(
+                    asList(PipelineStage.builder()
+                               .pipelineStageElements(asList(
+                                   PipelineStageElement.builder()
                                        .name("SE")
                                        .type(ENV_STATE.name())
                                        .properties(ImmutableMap.of("envId", ENV_ID, "workflowId", WORKFLOW_ID))
                                        .workflowVariables(ImmutableMap.of("Environment", ENV_ID, "Service", SERVICE_ID))
-                                       .build()))))
-                        .build());
+                                       .build()))
+                               .build()))
+                .build());
 
     when(serviceResourceService.list(any(), anyBoolean(), anyBoolean()))
         .thenReturn(aPageResponse().withResponse(asList(aService().withUuid(SERVICE_ID).build())).build());
@@ -304,12 +319,15 @@ public class PipelineServiceTest extends WingsBaseTest {
         .thenReturn(aPipeline()
                         .withAppId(APP_ID)
                         .withUuid(PIPELINE_ID)
-                        .withPipelineStages(asList(new PipelineStage(
-                            asList(PipelineStageElement.builder()
-                                       .name("SE")
-                                       .type(ENV_STATE.name())
-                                       .properties(ImmutableMap.of("envId", ENV_ID, "workflowId", WORKFLOW_ID))
-                                       .build()))))
+                        .withPipelineStages(
+                            asList(PipelineStage.builder()
+                                       .pipelineStageElements(asList(
+                                           PipelineStageElement.builder()
+                                               .name("SE")
+                                               .type(ENV_STATE.name())
+                                               .properties(ImmutableMap.of("envId", ENV_ID, "workflowId", WORKFLOW_ID))
+                                               .build()))
+                                       .build()))
                         .build());
     when(wingsPersistence.delete(Pipeline.class, APP_ID, PIPELINE_ID)).thenReturn(true);
 
@@ -322,12 +340,15 @@ public class PipelineServiceTest extends WingsBaseTest {
         .thenReturn(aPipeline()
                         .withAppId(APP_ID)
                         .withUuid(PIPELINE_ID)
-                        .withPipelineStages(asList(new PipelineStage(
-                            asList(PipelineStageElement.builder()
-                                       .name("SE")
-                                       .type(ENV_STATE.name())
-                                       .properties(ImmutableMap.of("envId", ENV_ID, "workflowId", WORKFLOW_ID))
-                                       .build()))))
+                        .withPipelineStages(
+                            asList(PipelineStage.builder()
+                                       .pipelineStageElements(asList(
+                                           PipelineStageElement.builder()
+                                               .name("SE")
+                                               .type(ENV_STATE.name())
+                                               .properties(ImmutableMap.of("envId", ENV_ID, "workflowId", WORKFLOW_ID))
+                                               .build()))
+                                       .build()))
                         .build());
     PipelineExecution pipelineExecution = aPipelineExecution().withStatus(ExecutionStatus.RUNNING).build();
     PageResponse pageResponse = aPageResponse().withResponse(asList(pipelineExecution)).build();

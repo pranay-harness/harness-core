@@ -548,15 +548,18 @@ public class WorkflowServiceTest extends WingsBaseTest {
   public void shouldThrowExceptionOnReferencedWorkflowDelete() {
     Workflow workflow = createWorkflow();
     String uuid = workflow.getUuid();
-    Pipeline pipeline = aPipeline()
-                            .withName("PIPELINE_NAME")
-                            .withPipelineStages(asList(
-                                new PipelineStage(asList(PipelineStageElement.builder()
+    Pipeline pipeline =
+        aPipeline()
+            .withName("PIPELINE_NAME")
+            .withPipelineStages(
+                asList(PipelineStage.builder()
+                           .pipelineStageElements(asList(PipelineStageElement.builder()
                                                              .name("STAGE")
                                                              .type(ENV_STATE.name())
                                                              .properties(ImmutableMap.of("workflowId", workflowId))
-                                                             .build()))))
-                            .build();
+                                                             .build()))
+                           .build()))
+            .build();
     when(pipelineService.listPipelines(any(PageRequest.class)))
         .thenReturn(aPageResponse().withResponse(asList(pipeline)).build());
     assertThatThrownBy(() -> workflowService.deleteWorkflow(APP_ID, uuid))
