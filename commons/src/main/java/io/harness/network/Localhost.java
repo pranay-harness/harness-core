@@ -74,9 +74,6 @@ public class Localhost {
       logger.warn("InetAddress canonical hostname threw exception", e);
     }
 
-    String ipAddress = getLocalHostAddress();
-    String suffix = getSuffix(ipAddress);
-
     try {
       String hostname = executeHostnameShort();
       if (isBlank(hostname)) {
@@ -84,7 +81,7 @@ public class Localhost {
       } else if (hostname.contains(" ") || hostname.equals("localhost")) {
         logger.warn("hostname -s command returned: " + hostname);
       } else {
-        return hostname + suffix;
+        return hostname;
       }
     } catch (Exception ex) {
       logger.warn("hostname -s command threw exception", ex);
@@ -97,31 +94,13 @@ public class Localhost {
       } else if (hostname.equals("localhost")) {
         logger.warn("InetAddress short hostname was 'localhost'");
       } else {
-        return hostname + suffix;
+        return hostname;
       }
     } catch (Exception e) {
       logger.warn("InetAddress short hostname threw exception", e);
     }
 
-    return "ip-" + ipAddress.replaceAll("\\.", "-") + suffix;
-  }
-
-  @VisibleForTesting
-  static String getSuffix(String ipAddress) {
-    String suffix;
-    try {
-      StringBuilder sb = new StringBuilder();
-      for (String ipPart : ipAddress.split("\\.")) {
-        int num = Integer.valueOf(ipPart);
-        char c = (char) ((num % 26) + ((int) 'a'));
-        sb.append(c);
-      }
-      suffix = "." + sb.toString();
-    } catch (Exception e) {
-      logger.warn("Error building suffix", e);
-      suffix = ".unknown";
-    }
-    return suffix;
+    return "ip-" + getLocalHostAddress().replaceAll("\\.", "-") + ".unknown";
   }
 
   @VisibleForTesting
