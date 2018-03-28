@@ -13,6 +13,7 @@ import static software.wings.beans.yaml.YamlConstants.CONFIG_FILES_FOLDER;
 import static software.wings.beans.yaml.YamlConstants.DEFAULTS_YAML;
 import static software.wings.beans.yaml.YamlConstants.DEPLOYMENT_SPECIFICATION_FOLDER;
 import static software.wings.beans.yaml.YamlConstants.ENVIRONMENTS_FOLDER;
+import static software.wings.beans.yaml.YamlConstants.GIT_YAML_LOG_PREFIX;
 import static software.wings.beans.yaml.YamlConstants.INDEX_YAML;
 import static software.wings.beans.yaml.YamlConstants.INFRA_MAPPING_FOLDER;
 import static software.wings.beans.yaml.YamlConstants.LOAD_BALANCERS_FOLDER;
@@ -37,6 +38,7 @@ import software.wings.beans.Account;
 import software.wings.beans.Application;
 import software.wings.beans.ConfigFile;
 import software.wings.beans.Environment;
+import software.wings.beans.ErrorCode;
 import software.wings.beans.FeatureName;
 import software.wings.beans.InfrastructureMapping;
 import software.wings.beans.LambdaSpecification;
@@ -47,6 +49,8 @@ import software.wings.beans.Service;
 import software.wings.beans.SettingAttribute;
 import software.wings.beans.User;
 import software.wings.beans.Workflow;
+import software.wings.beans.alert.AlertType;
+import software.wings.beans.alert.GitSyncErrorAlert;
 import software.wings.beans.artifact.ArtifactStream;
 import software.wings.beans.command.ServiceCommand;
 import software.wings.beans.container.ContainerTask;
@@ -58,6 +62,7 @@ import software.wings.beans.yaml.GitFileChange.Builder;
 import software.wings.beans.yaml.YamlConstants;
 import software.wings.dl.PageRequest;
 import software.wings.dl.PageResponse;
+import software.wings.exception.WingsException;
 import software.wings.security.AccountPermissionSummary;
 import software.wings.security.AppPermissionSummary;
 import software.wings.security.PermissionAttribute.Action;
@@ -65,6 +70,7 @@ import software.wings.security.PermissionAttribute.PermissionType;
 import software.wings.security.UserPermissionInfo;
 import software.wings.security.UserRequestContext;
 import software.wings.security.UserThreadLocal;
+import software.wings.service.intfc.AlertService;
 import software.wings.service.intfc.AppService;
 import software.wings.service.intfc.ArtifactStreamService;
 import software.wings.service.intfc.ConfigService;
@@ -126,6 +132,8 @@ public class YamlDirectoryServiceImpl implements YamlDirectoryService {
   @Inject private YamlGitService yamlGitSyncService;
   @Inject private AppYamlResourceService appYamlResourceService;
   @Inject private YamlResourceService yamlResourceService;
+  @Inject private YamlGitService yamlGitService;
+  @Inject private AlertService alertService;
   @Inject private YamlChangeSetHelper yamlChangeSetHelper;
   @Inject private ConfigService configService;
   @Inject private NotificationSetupService notificationSetupService;
@@ -150,88 +158,111 @@ public class YamlDirectoryServiceImpl implements YamlDirectoryService {
       logger.info("Traverse Directory: " + (dn.getName() == null ? dn.getName() : path + "/" + dn.getName()));
 
       boolean addToFileChangeList = true;
+      boolean exceptionOccured = false;
       if (dn instanceof YamlNode) {
         String entityId = ((YamlNode) dn).getUuid();
         String yaml = "";
         String appId = "";
 
-        switch (dn.getShortClassName()) {
-          case "Application":
-            yaml = appYamlResourceService.getApp(entityId).getResource().getYaml();
-            break;
-          case "Service":
-            appId = ((AppLevelYamlNode) dn).getAppId();
-            yaml = yamlResourceService.getService(appId, entityId).getResource().getYaml();
-            break;
-          case "Environment":
-            appId = ((AppLevelYamlNode) dn).getAppId();
-            yaml = yamlResourceService.getEnvironment(appId, entityId).getResource().getYaml();
-            break;
-          case "InfrastructureMapping":
-            appId = ((AppLevelYamlNode) dn).getAppId();
-            yaml = yamlResourceService.getInfraMapping(accountId, appId, entityId).getResource().getYaml();
-            break;
-          case "ServiceCommand":
-            appId = ((ServiceLevelYamlNode) dn).getAppId();
-            yaml = yamlResourceService.getServiceCommand(appId, entityId).getResource().getYaml();
-            break;
-          case "ArtifactStream":
-            appId = ((AppLevelYamlNode) dn).getAppId();
-            yaml = yamlArtifactStreamService.getArtifactStreamYamlString(appId, entityId);
-            break;
-          case "Defaults":
-            if (dn instanceof AppLevelYamlNode) {
+        try {
+          switch (dn.getShortClassName()) {
+            case "Application":
+              yaml = appYamlResourceService.getApp(entityId).getResource().getYaml();
+              break;
+            case "Service":
               appId = ((AppLevelYamlNode) dn).getAppId();
-            } else {
-              appId = GLOBAL_APP_ID;
-            }
-            yaml = yamlResourceService.getDefaultVariables(accountId, appId).getResource().getYaml();
-            break;
-          case "ConfigFile":
-            if (dn instanceof ServiceLevelYamlNode) {
+              yaml = yamlResourceService.getService(appId, entityId).getResource().getYaml();
+              break;
+            case "Environment":
+              appId = ((AppLevelYamlNode) dn).getAppId();
+              yaml = yamlResourceService.getEnvironment(appId, entityId).getResource().getYaml();
+              break;
+            case "InfrastructureMapping":
+              appId = ((AppLevelYamlNode) dn).getAppId();
+              yaml = yamlResourceService.getInfraMapping(accountId, appId, entityId).getResource().getYaml();
+              break;
+            case "ServiceCommand":
               appId = ((ServiceLevelYamlNode) dn).getAppId();
-            } else if (dn instanceof EnvLevelYamlNode) {
-              appId = ((EnvLevelYamlNode) dn).getAppId();
-            }
+              yaml = yamlResourceService.getServiceCommand(appId, entityId).getResource().getYaml();
+              break;
+            case "ArtifactStream":
+              appId = ((AppLevelYamlNode) dn).getAppId();
+              yaml = yamlArtifactStreamService.getArtifactStreamYamlString(appId, entityId);
+              break;
+            case "Defaults":
+              if (dn instanceof AppLevelYamlNode) {
+                appId = ((AppLevelYamlNode) dn).getAppId();
+              } else {
+                appId = GLOBAL_APP_ID;
+              }
+              yaml = yamlResourceService.getDefaultVariables(accountId, appId).getResource().getYaml();
+              break;
+            case "ConfigFile":
+              if (dn instanceof ServiceLevelYamlNode) {
+                appId = ((ServiceLevelYamlNode) dn).getAppId();
+              } else if (dn instanceof EnvLevelYamlNode) {
+                appId = ((EnvLevelYamlNode) dn).getAppId();
+              }
 
-            if (includeFiles) {
-              ConfigFile configFile = configService.get(appId, entityId);
-              List<GitFileChange> gitChangeSet =
-                  yamlChangeSetHelper.getConfigFileGitChangeSet(configFile, ChangeType.ADD);
-              gitFileChanges.addAll(gitChangeSet);
-              addToFileChangeList = false;
-            } else {
-              yaml = yamlResourceService.getConfigFileYaml(accountId, appId, entityId).getResource().getYaml();
-            }
-            break;
-          case "Workflow":
-            appId = ((AppLevelYamlNode) dn).getAppId();
-            yaml = yamlResourceService.getWorkflow(appId, entityId).getResource().getYaml();
-            break;
-          case "Pipeline":
-            appId = ((AppLevelYamlNode) dn).getAppId();
-            yaml = yamlResourceService.getPipeline(appId, entityId).getResource().getYaml();
-            break;
-          case "NotificationGroup":
-            yaml = yamlResourceService.getNotificationGroup(accountId, entityId).getResource().getYaml();
-            break;
-          case "SettingAttribute":
-            yaml = yamlResourceService.getSettingAttribute(accountId, entityId).getResource().getYaml();
-            break;
-          case "ContainerTask":
-            appId = ((ServiceLevelYamlNode) dn).getAppId();
-            yaml = yamlResourceService.getContainerTask(accountId, appId, entityId).getResource().getYaml();
-            break;
-          case "LambdaSpecification":
-            appId = ((ServiceLevelYamlNode) dn).getAppId();
-            yaml = yamlResourceService.getLambdaSpec(accountId, appId, entityId).getResource().getYaml();
-            break;
-          case "UserDataSpecification":
-            appId = ((ServiceLevelYamlNode) dn).getAppId();
-            yaml = yamlResourceService.getUserDataSpec(accountId, appId, entityId).getResource().getYaml();
-            break;
-          default:
-            logger.warn("No toYaml for entity[{}, {}]", dn.getShortClassName(), entityId);
+              if (includeFiles) {
+                ConfigFile configFile = configService.get(appId, entityId);
+                List<GitFileChange> gitChangeSet =
+                    yamlChangeSetHelper.getConfigFileGitChangeSet(configFile, ChangeType.ADD);
+                gitFileChanges.addAll(gitChangeSet);
+                addToFileChangeList = false;
+              } else {
+                yaml = yamlResourceService.getConfigFileYaml(accountId, appId, entityId).getResource().getYaml();
+              }
+              break;
+            case "Workflow":
+              appId = ((AppLevelYamlNode) dn).getAppId();
+              yaml = yamlResourceService.getWorkflow(appId, entityId).getResource().getYaml();
+              break;
+            case "Pipeline":
+              appId = ((AppLevelYamlNode) dn).getAppId();
+              yaml = yamlResourceService.getPipeline(appId, entityId).getResource().getYaml();
+              break;
+            case "NotificationGroup":
+              yaml = yamlResourceService.getNotificationGroup(accountId, entityId).getResource().getYaml();
+              break;
+            case "SettingAttribute":
+              yaml = yamlResourceService.getSettingAttribute(accountId, entityId).getResource().getYaml();
+              break;
+            case "ContainerTask":
+              appId = ((ServiceLevelYamlNode) dn).getAppId();
+              yaml = yamlResourceService.getContainerTask(accountId, appId, entityId).getResource().getYaml();
+              break;
+            case "LambdaSpecification":
+              appId = ((ServiceLevelYamlNode) dn).getAppId();
+              yaml = yamlResourceService.getLambdaSpec(accountId, appId, entityId).getResource().getYaml();
+              break;
+            case "UserDataSpecification":
+              appId = ((ServiceLevelYamlNode) dn).getAppId();
+              yaml = yamlResourceService.getUserDataSpec(accountId, appId, entityId).getResource().getYaml();
+              break;
+            default:
+              logger.warn("No toYaml for entity[{}, {}]", dn.getShortClassName(), entityId);
+          }
+        } catch (Exception e) {
+          String fileName = dn.getName() == null ? dn.getName() : path + "/" + dn.getName();
+          String message = "Failed in yaml conversion during Harness to Git full sync for file:" + fileName;
+          logger.warn(GIT_YAML_LOG_PREFIX + message + ", " + e);
+
+          // Add GitSyncError record
+          GitFileChange gitFileChange =
+              Builder.aGitFileChange()
+                  .withAccountId(accountId)
+                  .withFilePath(dn.getName() == null ? dn.getName() : path + "/" + dn.getName())
+                  .withFileContent(yaml)
+                  .withChangeType(ChangeType.ADD)
+                  .build();
+
+          yamlGitService.upsertGitSyncErrors(gitFileChange, message, true);
+
+          // createAlert of type HarnessToGitFullSyncError
+          alertService.openAlert(accountId, GLOBAL_APP_ID, AlertType.GitSyncError,
+              GitSyncErrorAlert.builder().accountId(accountId).message(message).gitToHarness(false).build());
+          throw new WingsException(ErrorCode.GENERAL_ERROR).addParam("args", message);
         }
 
         if (addToFileChangeList) {

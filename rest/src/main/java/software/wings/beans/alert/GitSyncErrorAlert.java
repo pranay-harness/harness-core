@@ -11,10 +11,12 @@ import lombok.Data;
 public class GitSyncErrorAlert implements AlertData {
   private String accountId;
   private String message;
+  private boolean gitToHarness;
 
   @Override
   public boolean matches(AlertData alertData) {
-    return accountId.equals(((GitSyncErrorAlert) alertData).accountId);
+    return accountId.equals(((GitSyncErrorAlert) alertData).accountId)
+        && (gitToHarness == ((GitSyncErrorAlert) alertData).gitToHarness);
   }
 
   @Override

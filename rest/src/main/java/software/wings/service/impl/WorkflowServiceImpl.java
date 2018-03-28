@@ -2847,9 +2847,12 @@ public class WorkflowServiceImpl implements WorkflowService, DataProvider {
   private void validateBasicWorkflow(Workflow workflow) {
     OrchestrationWorkflow orchestrationWorkflow = workflow.getOrchestrationWorkflow();
     if (orchestrationWorkflow != null && orchestrationWorkflow.getOrchestrationWorkflowType().equals(BASIC)) {
-      // Create Single Phase
-      notNullCheck("Invalid inframappingId", workflow.getInfraMappingId());
-      notNullCheck("Invalid serviceId", workflow.getServiceId());
+      if (!orchestrationWorkflow.isInfraMappingTemplatized()) {
+        notNullCheck("Invalid inframappingId", workflow.getInfraMappingId());
+      }
+      if (!orchestrationWorkflow.isServiceTemplatized()) {
+        notNullCheck("Invalid serviceId", workflow.getServiceId());
+      }
     }
   }
 }

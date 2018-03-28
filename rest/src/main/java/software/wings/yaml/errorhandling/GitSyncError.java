@@ -26,15 +26,17 @@ public class GitSyncError extends Base {
   private String gitCommitId;
   private String changeType;
   private String failureReason;
+  private boolean fullSyncPath;
 
   @Builder
   public GitSyncError(String accountId, String yamlFilePath, String yamlContent, String gitCommitId, String changeType,
-      String failureReason) {
+      String failureReason, boolean fullSyncPath) {
     this.accountId = accountId;
     this.yamlFilePath = yamlFilePath;
     this.yamlContent = yamlContent;
     this.gitCommitId = gitCommitId;
     this.changeType = changeType;
     this.failureReason = failureReason;
+    this.fullSyncPath = fullSyncPath;
   }
 }

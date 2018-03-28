@@ -23,6 +23,7 @@ import software.wings.beans.yaml.YamlConstants;
 import software.wings.beans.yaml.YamlType;
 import software.wings.exception.HarnessException;
 import software.wings.exception.WingsException;
+import software.wings.exception.WingsException.ReportTarget;
 import software.wings.service.impl.yaml.handler.BaseYamlHandler;
 import software.wings.service.impl.yaml.handler.YamlHandlerFactory;
 import software.wings.service.impl.yaml.handler.template.TemplateExpressionYamlHandler;
@@ -175,8 +176,23 @@ public class WorkflowPhaseYamlHandler extends BaseYamlHandler<WorkflowPhase.Yaml
     String infraMappingId = bean.getInfraMappingId();
     if (isNotEmpty(infraMappingId)) {
       InfrastructureMapping infrastructureMapping = infraMappingService.get(appId, infraMappingId);
-      Validator.notNullCheck("Infra mapping not found for given id:" + infraMappingId, infrastructureMapping);
-      infraMappingName = infrastructureMapping.getName();
+
+      if (infrastructureMapping != null) {
+        infraMappingName = infrastructureMapping.getName();
+      }
+
+      // when templatized infraMappings used, we do expect infraMapping can be null, so dint perform this check
+      if (infrastructureMapping == null && !bean.checkInfraTemplatized()) {
+        String message = new StringBuilder()
+                             .append("Infra-mapping:")
+                             .append(infraMappingId)
+                             .append(" could not be found for workflowPhase:")
+                             .append(bean.getName())
+                             .append(", for app:")
+                             .append(appId)
+                             .toString();
+        throw new WingsException(ErrorCode.GENERAL_ERROR, ReportTarget.USER).addParam("args", message);
+      }
     }
 
     return Yaml.builder()

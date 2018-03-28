@@ -35,6 +35,7 @@ import software.wings.beans.yaml.GitFileChange;
 import software.wings.beans.yaml.YamlType;
 import software.wings.exception.HarnessException;
 import software.wings.service.impl.yaml.handler.BaseYamlHandler;
+import software.wings.service.impl.yaml.handler.NameValuePairYamlHandler;
 import software.wings.service.impl.yaml.handler.YamlHandlerFactory;
 import software.wings.service.impl.yaml.handler.notification.NotificationRulesYamlHandler;
 import software.wings.service.impl.yaml.handler.template.TemplateExpressionYamlHandler;
@@ -91,6 +92,7 @@ public abstract class BaseWorkflowYamlHandlerTest extends BaseYamlHandlerTest {
   @InjectMocks @Inject protected NotificationRulesYamlHandler notificationRulesYamlHandler;
   @InjectMocks @Inject protected TemplateExpressionYamlHandler templateExpressionYamlHandler;
   @InjectMocks @Inject protected VariableYamlHandler variableYamlHandler;
+  @InjectMocks @Inject protected NameValuePairYamlHandler nameValuePairYamlHandler;
 
   protected void setup(String yamlFilePath, String workflowName) {
     when(appService.getAppByName(anyString(), anyString()))
@@ -126,6 +128,7 @@ public abstract class BaseWorkflowYamlHandlerTest extends BaseYamlHandlerTest {
     when(yamlHandlerFactory.getYamlHandler(YamlType.NOTIFICATION_RULE)).thenReturn(notificationRulesYamlHandler);
 
     when(yamlHandlerFactory.getYamlHandler(YamlType.VARIABLE)).thenReturn(variableYamlHandler);
+    when(yamlHandlerFactory.getYamlHandler(YamlType.NAME_VALUE_PAIR)).thenReturn(nameValuePairYamlHandler);
   }
 
   private InfrastructureMapping getInfraMapping() {
