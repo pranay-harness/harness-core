@@ -1,8 +1,8 @@
 package io.harness.distribution.barrier;
 
 import static io.harness.distribution.barrier.Barrier.State.DOWN;
-import static io.harness.distribution.barrier.Barrier.State.OUTLAST;
-import static io.harness.distribution.barrier.Barrier.State.STANDS;
+import static io.harness.distribution.barrier.Barrier.State.ENDURE;
+import static io.harness.distribution.barrier.Barrier.State.STANDING;
 import static java.util.Arrays.asList;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.mockito.Matchers.any;
@@ -56,13 +56,13 @@ public class BarrierTest {
 
     Barrier barrier = Barrier.create(id, forcerTree, registry);
 
-    when(proctor.getForcerState(topId)).thenReturn(Forcer.State.RUNNING);
-    when(proctor.getForcerState(child1Id)).thenReturn(Forcer.State.RUNNING);
-    when(proctor.getForcerState(child2Id)).thenReturn(Forcer.State.SUCCEEDED);
-    when(proctor.getForcerState(child3Id)).thenReturn(Forcer.State.RUNNING);
+    when(proctor.getForcerState(topId)).thenReturn(Forcer.State.APPROACHING);
+    when(proctor.getForcerState(child1Id)).thenReturn(Forcer.State.APPROACHING);
+    when(proctor.getForcerState(child2Id)).thenReturn(Forcer.State.ARRIVED);
+    when(proctor.getForcerState(child3Id)).thenReturn(Forcer.State.APPROACHING);
     final State state = barrier.pushDown(proctor);
 
-    assertThat(state).isEqualTo(STANDS);
+    assertThat(state).isEqualTo(STANDING);
   }
 
   @Test
@@ -72,13 +72,13 @@ public class BarrierTest {
 
     Barrier barrier = Barrier.create(id, forcerTree, registry);
 
-    when(proctor.getForcerState(topId)).thenReturn(Forcer.State.RUNNING);
-    when(proctor.getForcerState(child1Id)).thenReturn(Forcer.State.SUCCEEDED);
-    when(proctor.getForcerState(child2Id)).thenReturn(Forcer.State.FAILED);
-    when(proctor.getForcerState(child3Id)).thenReturn(Forcer.State.RUNNING);
+    when(proctor.getForcerState(topId)).thenReturn(Forcer.State.APPROACHING);
+    when(proctor.getForcerState(child1Id)).thenReturn(Forcer.State.ARRIVED);
+    when(proctor.getForcerState(child2Id)).thenReturn(Forcer.State.ABANDONED);
+    when(proctor.getForcerState(child3Id)).thenReturn(Forcer.State.APPROACHING);
     final State state = barrier.pushDown(proctor);
 
-    assertThat(state).isEqualTo(OUTLAST);
+    assertThat(state).isEqualTo(ENDURE);
   }
 
   @Test
@@ -88,13 +88,28 @@ public class BarrierTest {
 
     Barrier barrier = Barrier.create(id, forcerTree, registry);
 
-    when(proctor.getForcerState(topId)).thenReturn(Forcer.State.RUNNING);
-    when(proctor.getForcerState(child1Id)).thenReturn(Forcer.State.RUNNING);
-    when(proctor.getForcerState(child2Id)).thenReturn(Forcer.State.SUCCEEDED);
-    when(proctor.getForcerState(child3Id)).thenReturn(Forcer.State.RUNNING);
+    when(proctor.getForcerState(topId)).thenReturn(Forcer.State.APPROACHING);
+    when(proctor.getForcerState(child1Id)).thenReturn(Forcer.State.APPROACHING);
+    when(proctor.getForcerState(child2Id)).thenReturn(Forcer.State.ARRIVED);
+    when(proctor.getForcerState(child3Id)).thenReturn(Forcer.State.APPROACHING);
     final State state = barrier.pushDown(proctor);
 
-    assertThat(state).isEqualTo(STANDS);
+    assertThat(state).isEqualTo(STANDING);
+  }
+
+  @Test
+  public void testTopAbsentForcer() throws UnableToSaveBarrierException, UnableToLoadBarrierException {
+    BarrierRegistry registry = new InprocBarrierRegistry();
+    ForceProctor proctor = mock(ForceProctor.class);
+
+    Barrier barrier = Barrier.create(id, forcerTree, registry);
+
+    when(proctor.getForcerState(topId)).thenReturn(Forcer.State.ABSENT);
+    final State state = barrier.pushDown(proctor);
+
+    verify(proctor, times(1)).getForcerState(any());
+
+    assertThat(state).isEqualTo(STANDING);
   }
 
   @Test
@@ -104,7 +119,7 @@ public class BarrierTest {
 
     Barrier barrier = Barrier.create(id, forcerTree, registry);
 
-    when(proctor.getForcerState(topId)).thenReturn(Forcer.State.SUCCEEDED);
+    when(proctor.getForcerState(topId)).thenReturn(Forcer.State.ARRIVED);
     final State state = barrier.pushDown(proctor);
 
     verify(proctor, times(1)).getForcerState(any());
@@ -113,17 +128,17 @@ public class BarrierTest {
   }
 
   @Test
-  public void testFailedForcer() throws UnableToSaveBarrierException, UnableToLoadBarrierException {
+  public void testAbandonedForcer() throws UnableToSaveBarrierException, UnableToLoadBarrierException {
     BarrierRegistry registry = new InprocBarrierRegistry();
     ForceProctor proctor = mock(ForceProctor.class);
 
     Barrier barrier = Barrier.create(id, forcerTree, registry);
 
-    when(proctor.getForcerState(topId)).thenReturn(Forcer.State.FAILED);
+    when(proctor.getForcerState(topId)).thenReturn(Forcer.State.ABANDONED);
     final State state = barrier.pushDown(proctor);
 
     verify(proctor, times(1)).getForcerState(any());
 
-    assertThat(state).isEqualTo(OUTLAST);
+    assertThat(state).isEqualTo(ENDURE);
   }
 }

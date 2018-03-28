@@ -2,8 +2,8 @@ package io.harness.distribution.barrier;
 
 import static io.harness.data.structure.EmptyPredicate.isNotEmpty;
 import static io.harness.distribution.barrier.Barrier.State.DOWN;
-import static io.harness.distribution.barrier.Barrier.State.OUTLAST;
-import static io.harness.distribution.barrier.Barrier.State.STANDS;
+import static io.harness.distribution.barrier.Barrier.State.ENDURE;
+import static io.harness.distribution.barrier.Barrier.State.STANDING;
 import static io.harness.govern.Switch.unhandled;
 
 import lombok.Builder;
@@ -42,15 +42,16 @@ public class Barrier {
   private Forcer forcer;
 
   enum State {
-    // Stands state is when the barrier is standing because not all of the forcers are inline.
-    STANDS,
+    // Standing when the barrier is standing because not all of the forcers are inline.
+    STANDING,
+
     // Down when all the forcers lined up to push the barrier.
     DOWN,
-    // Outlast indicates that at least one of the forcers failed to rich the barrier. The barrier
-    // will stay forever.
-    OUTLAST,
+
+    // The barrier endure when at least one of the forcers abandoned arriving to the barrier.
+    ENDURE,
   }
-  @Builder.Default private State state = STANDS;
+  @Builder.Default private State state = STANDING;
 
   public static Barrier create(BarrierId id, Forcer forcer, BarrierRegistry registry)
       throws UnableToSaveBarrierException {
@@ -69,15 +70,20 @@ public class Barrier {
     deque.add(forcer);
 
     // By default we assume that all forcers already succeeded
-    State state = DOWN;
+    State result = DOWN;
 
     while (!deque.isEmpty()) {
       Forcer firstForcer = deque.removeFirst();
       final Forcer.State forcerState = proctor.getForcerState(firstForcer.getId());
       switch (forcerState) {
-        case RUNNING:
+        case ABSENT:
+          // If the forcer is absent, the barrier stands, but there is no reason to check the children
+          result = STANDING;
+          break;
+
+        case APPROACHING:
           // If the forcer is still running the barrier is not down. It might be standing
-          state = STANDS;
+          result = STANDING;
 
           final List<Forcer> children = firstForcer.getChildren();
 
@@ -88,20 +94,20 @@ public class Barrier {
           }
           break;
 
-        case SUCCEEDED:
+        case ARRIVED:
           // If the parent succeeded, assume that all children succeeded too.
           break;
 
-        case FAILED:
+        case ABANDONED:
           // If any of the forcers failed, there is nothing else to check - the barrier outlasts the forcers.
-          return OUTLAST;
+          return ENDURE;
 
         default:
           unhandled(forcerState);
       }
     }
 
-    return state;
+    return result;
   }
 
   /*
@@ -109,7 +115,7 @@ public class Barrier {
    * still processing
    */
   public State pushDown(ForceProctor proctor) {
-    if (state != STANDS) {
+    if (state != STANDING) {
       return state;
     }
     return calculateState(proctor);
