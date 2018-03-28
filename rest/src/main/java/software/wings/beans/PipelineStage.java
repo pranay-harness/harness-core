@@ -2,6 +2,7 @@ package software.wings.beans;
 
 import com.google.common.collect.Lists;
 
+import lombok.AllArgsConstructor;
 import lombok.Builder;
 import lombok.Data;
 import lombok.EqualsAndHashCode;
@@ -16,80 +17,25 @@ import java.util.Map;
 /**
  * Created by anubhaw on 11/17/16.
  */
+@Data
+@EqualsAndHashCode(callSuper = false)
+@AllArgsConstructor
+@NoArgsConstructor
+@Builder
 public class PipelineStage {
   private String name;
   private boolean parallel;
   private List<PipelineStageElement> pipelineStageElements = new ArrayList<>();
   private boolean valid = true;
   private String validationMessage;
-  /**
-   * Instantiates a new Pipeline stage.
-   */
-  public PipelineStage() {}
-
-  public String getName() {
-    return name;
-  }
-
-  public void setName(String name) {
-    this.name = name;
-  }
-
-  public boolean isParallel() {
-    return parallel;
-  }
-
-  public void setParallel(boolean parallel) {
-    this.parallel = parallel;
-  }
-
-  /**
-   * Instantiates a new Pipeline stage.
-   *
-   * @param pipelineStageElements the pipeline stage elements
-   */
-  public PipelineStage(List<PipelineStageElement> pipelineStageElements) {
-    this.pipelineStageElements = pipelineStageElements;
-  }
-
-  /**
-   * Gets pipeline stage elements.
-   *
-   * @return the pipeline stage elements
-   */
-  public List<PipelineStageElement> getPipelineStageElements() {
-    return pipelineStageElements;
-  }
-
-  /**
-   * Sets pipeline stage elements.
-   *
-   * @param pipelineStageElements the pipeline stage elements
-   */
-  public void setPipelineStageElements(List<PipelineStageElement> pipelineStageElements) {
-    this.pipelineStageElements = pipelineStageElements;
-  }
-
-  public boolean isValid() {
-    return valid;
-  }
-
-  public void setValid(boolean valid) {
-    this.valid = valid;
-  }
-
-  public String getValidationMessage() {
-    return validationMessage;
-  }
-
-  public void setValidationMessage(String validationMessage) {
-    this.validationMessage = validationMessage;
-  }
 
   /**
    * The type Pipeline stage element.
    */
   @Data
+  @EqualsAndHashCode(callSuper = false)
+  @AllArgsConstructor
+  @NoArgsConstructor
   @Builder
   public static class PipelineStageElement {
     private String uuid;
