@@ -8,7 +8,8 @@
 
    `/usr/bin/ruby -e "$(curl -fsSL https://raw.githubusercontent.com/Homebrew/install/master/install)"`
 
-2. Install Java 8 download :
+2. Install Java 8 download : 
+NOTE: Brew will download and install latest version of JDK/JRE, its recommended to install JDK/JRE_1.8.0_152 to be in sync with version everyone is using in the team.
 
    `brew tap caskroom/versions && brew cask install java8`
 
@@ -29,6 +30,7 @@ Install & use RoboMongo client to test MongoDB connection.
 6. **Set up JAVA_HOME: create or add this to your bash profile `~/.bash_profile` file and add following line:**
 
 ```
+   ulimit -u 8192
    export JAVA_HOME=$(/usr/libexec/java_home -v1.8)
   
 ```
@@ -45,6 +47,13 @@ If you are under Ubuntu:
 sudo add-apt-repository ppa:webupd8team/java
 sudo apt update
 sudo apt install oracle-java8-unlimited-jce-policy
+```
+
+8. Update /etc/hosts to reflect your hostname
+```
+255.255.255.255	broadcasthost
+127.0.0.1  <your hostname>
+::1        <your hostname>
 ```
 
 ### Build
