@@ -10,6 +10,9 @@ import static software.wings.sm.StateType.ECS_SERVICE_SETUP;
 
 import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
 import org.apache.commons.collections.CollectionUtils;
+import org.mongodb.morphia.annotations.Transient;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import software.wings.api.CommandStateExecutionData;
 import software.wings.api.ContainerServiceElement;
 import software.wings.api.ContainerServiceElement.ContainerServiceElementBuilder;
@@ -43,6 +46,8 @@ import java.util.Optional;
 @JsonIgnoreProperties(ignoreUnknown = true)
 public class EcsServiceSetup extends ContainerServiceSetup {
   // *** Note: UI Schema specified in wingsui/src/containers/WorkflowEditor/custom/ECSLoadBalancerModal.js
+
+  @Transient private static final Logger logger = LoggerFactory.getLogger(EcsServiceSetup.class);
 
   private String ecsServiceName;
   private boolean useLoadBalancer;
@@ -118,8 +123,15 @@ public class EcsServiceSetup extends ContainerServiceSetup {
       ExecutionContext context, CommandExecutionResult executionResult, ExecutionStatus status) {
     CommandStateExecutionData executionData = (CommandStateExecutionData) context.getStateExecutionData();
     EcsSetupParams setupParams = (EcsSetupParams) executionData.getContainerSetupParams();
-    int evaluatedMaxInstances =
-        isNotBlank(getMaxInstances()) ? Integer.valueOf(context.renderExpression(getMaxInstances())) : DEFAULT_MAX;
+    Integer maxVal = null;
+    if (isNotBlank(getMaxInstances())) {
+      try {
+        maxVal = Integer.valueOf(context.renderExpression(getMaxInstances()));
+      } catch (NumberFormatException e) {
+        logger.error("Invalid number format for max instances: {}", context.renderExpression(getMaxInstances()), e);
+      }
+    }
+    int evaluatedMaxInstances = maxVal != null ? maxVal : DEFAULT_MAX;
     int maxInstances = evaluatedMaxInstances == 0 ? DEFAULT_MAX : evaluatedMaxInstances;
     int evaluatedFixedInstances =
         isNotBlank(getFixedInstances()) ? Integer.valueOf(context.renderExpression(getFixedInstances())) : maxInstances;
