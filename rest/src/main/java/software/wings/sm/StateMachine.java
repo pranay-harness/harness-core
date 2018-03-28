@@ -240,6 +240,7 @@ public class StateMachine extends Base {
     Map<String, Object> properties = pipelineStageElement.getProperties();
 
     properties.put("pipelineId", pipeline.getUuid());
+    properties.put("pipelineStateElementId", pipelineStageElement.getUuid());
 
     if (pipelineStageElement.getWorkflowVariables() != null) {
       properties.put("workflowVariables", pipelineStageElement.getWorkflowVariables());

@@ -93,8 +93,8 @@ public class PipelineServiceDBTest extends WingsBaseTest {
     Map<String, Object> properties = new HashMap<>();
     properties.put("workflowId", workflow.getUuid());
 
-    PipelineStage pipelineStage =
-        new PipelineStage(asList(new PipelineStageElement("SE", ENV_STATE.name(), properties)));
+    PipelineStage pipelineStage = new PipelineStage(
+        asList(PipelineStageElement.builder().name("SE").type(ENV_STATE.name()).properties(properties).build()));
 
     pipelineStage.setName("STAGE1");
 

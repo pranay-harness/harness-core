@@ -5,6 +5,7 @@ import static com.google.common.collect.Lists.newArrayList;
 import static io.harness.data.structure.EmptyPredicate.isEmpty;
 import static io.harness.data.structure.EmptyPredicate.isNotEmpty;
 import static io.harness.data.structure.ListUtil.trimList;
+import static io.harness.data.structure.UUIDGenerator.generateUuid;
 import static java.util.stream.Collectors.toList;
 import static java.util.stream.Collectors.toSet;
 import static org.mongodb.morphia.mapping.Mapper.ID_KEY;
@@ -184,6 +185,17 @@ public class PipelineServiceImpl implements PipelineService {
     notNullCheck("Pipeline", savedPipeline);
 
     List<Object> keywords = newArrayList(pipeline.getName(), pipeline.getDescription(), WorkflowType.PIPELINE);
+
+    // The UI or other agents my try to update the pipeline with new stages without uuids. This makes sure that
+    // they all will have one.
+    pipeline.getPipelineStages()
+        .stream()
+        .flatMap(stage -> stage.getPipelineStageElements().stream())
+        .forEach(element -> {
+          if (element.getUuid() == null) {
+            element.setUuid(generateUuid());
+          }
+        });
 
     validatePipeline(pipeline, keywords);
     UpdateOperations<Pipeline> ops = wingsPersistence.createUpdateOperations(Pipeline.class);
