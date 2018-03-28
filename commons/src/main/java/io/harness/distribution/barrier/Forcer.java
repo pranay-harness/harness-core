@@ -10,8 +10,17 @@ import java.util.List;
 public class Forcer {
   private ForcerId id;
   private List<Forcer> children;
+  enum State {
+    // The forcer is absent for the barrier purposes
+    ABSENT,
 
-  enum State { RUNNING, SUCCEEDED, FAILED }
+    // The forcer is moving forward towards the barrier
+    APPROACHING,
 
-  State state;
+    // The forcer arrived at the barrier and apples pushing force to it
+    ARRIVED,
+
+    // The forcer abandoned the effort to push the barrier
+    ABANDONED
+  }
 }
