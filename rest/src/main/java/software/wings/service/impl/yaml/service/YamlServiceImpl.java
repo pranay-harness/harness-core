@@ -150,7 +150,7 @@ public class YamlServiceImpl<Y extends BaseYaml, B extends Base> implements Yaml
         Object base = changeContext.getYamlSyncHandler().get(
             changeContext.getChange().getAccountId(), changeContext.getChange().getFilePath());
         rr.setResource(base);
-        yamlGitService.removeGitSyncErrors(accountId, gitFileChangeList);
+        yamlGitService.removeGitSyncErrors(accountId, gitFileChangeList, false);
 
       } else {
         software.wings.yaml.YamlHelper.addResponseMessage(
@@ -176,7 +176,8 @@ public class YamlServiceImpl<Y extends BaseYaml, B extends Base> implements Yaml
       return RestResponse.Builder.aRestResponse().withMetaData(metaDataMap).build();
     } catch (YamlProcessingException ex) {
       logger.warn("Unable to process zip upload for account {}. ", accountId, ex);
-      yamlGitService.processFailedChanges(accountId, ex.getFailedChangeErrorMsgMap());
+      // gitToHarness is false, as this is not initiated from git
+      yamlGitService.processFailedChanges(accountId, ex.getFailedChangeErrorMsgMap(), false);
     }
     return Builder.aRestResponse()
         .withResponseMessages(Arrays.asList(

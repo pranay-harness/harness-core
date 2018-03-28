@@ -98,7 +98,7 @@ public class GitCommandCallback implements NotifyCallback {
                                           .gitCommandResult(gitCommitAndPushResult)
                                           .build());
           }
-          yamlGitService.removeGitSyncErrors(accountId, yamlChangeSet.getGitFileChanges());
+          yamlGitService.removeGitSyncErrors(accountId, yamlChangeSet.getGitFileChanges(), false);
         }
       } else if (gitCommandResult.getGitCommandType().equals(GitCommandType.DIFF)) {
         GitDiffResult gitDiffResult = (GitDiffResult) gitCommandResult;
@@ -129,10 +129,14 @@ public class GitCommandCallback implements NotifyCallback {
                                         .commitId(gitDiffResult.getCommitId())
                                         .gitCommandResult(gitDiffResult)
                                         .build());
-          yamlGitService.removeGitSyncErrors(accountId, gitFileChangeList);
+          // this is for GitCommandType.DIFF, where we set gitToHarness = true explicitly as we are responding to
+          // webhook invocation
+          yamlGitService.removeGitSyncErrors(accountId, gitFileChangeList, true);
         } catch (YamlProcessingException ex) {
           logger.warn("Unable to process git commit {} for account {}. ", gitDiffResult.getCommitId(), accountId, ex);
-          yamlGitService.processFailedChanges(accountId, ex.getFailedChangeErrorMsgMap());
+          // this is for GitCommandType.DIFF, where we set gitToHarness = true explicitly as we are responding to
+          // webhook invocation
+          yamlGitService.processFailedChanges(accountId, ex.getFailedChangeErrorMsgMap(), true);
         }
       } else {
         logger.warn("Unexpected commandType result: [{}] for changeSetId [{}] for account {}",

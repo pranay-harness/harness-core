@@ -122,7 +122,7 @@ public interface YamlGitService {
    * @param accountId
    * @param failedChangeErrorMsgMap
    */
-  void processFailedChanges(String accountId, Map<Change, String> failedChangeErrorMsgMap);
+  void processFailedChanges(String accountId, Map<Change, String> failedChangeErrorMsgMap, boolean gitToHarness);
 
   /**
    * Remove git sync errors.
@@ -130,7 +130,7 @@ public interface YamlGitService {
    * @param accountId         the account id
    * @param gitFileChangeList the git file change list
    */
-  void removeGitSyncErrors(String accountId, List<GitFileChange> gitFileChangeList);
+  void removeGitSyncErrors(String accountId, List<GitFileChange> gitFileChangeList, boolean gitToHarness);
 
   /**
    * List git sync errors rest response.
@@ -170,4 +170,8 @@ public interface YamlGitService {
   void raiseAlertForGitFailure(String accountId, String appId, ErrorCode errorCode, String message);
 
   void closeAlertForGitFailureIfOpen(String accountId, String appId, AlertType alertType, AlertData alertData);
+
+  <T extends Change> void upsertGitSyncErrors(T failedChange, String errorMessage, boolean fullSyncPath);
+
+  RestResponse discardGitSyncErrorForFullSync(String accountId);
 }

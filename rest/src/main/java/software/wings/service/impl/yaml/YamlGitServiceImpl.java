@@ -179,6 +179,8 @@ public class YamlGitServiceImpl implements YamlGitService {
         FolderNode top = yamlDirectoryService.getDirectory(accountId, SETUP_ENTITY_ID, false, null);
         List<GitFileChange> gitFileChanges = new ArrayList<>();
         gitFileChanges = yamlDirectoryService.traverseDirectory(gitFileChanges, accountId, top, "", true);
+        discardGitSyncErrorForFullSync(accountId);
+        // if everything goes fine, close any alert if open
         syncFiles(accountId, gitFileChanges, true);
         logger.info(GIT_YAML_LOG_PREFIX + "Performed git full-sync for account {} successfully" + accountId);
       } catch (Exception ex) {
@@ -384,12 +386,14 @@ public class YamlGitServiceImpl implements YamlGitService {
   }
 
   @Override
-  public void processFailedChanges(String accountId, Map<Change, String> failedChangeErrorMsgMap) {
+  public void processFailedChanges(
+      String accountId, Map<Change, String> failedChangeErrorMsgMap, boolean gitToHarness) {
     if (failedChangeErrorMsgMap.size() > 0) {
       failedChangeErrorMsgMap.entrySet().stream().forEach(
-          entry -> upsertGitSyncErrors(entry.getKey(), entry.getValue()));
+          entry -> upsertGitSyncErrors(entry.getKey(), entry.getValue(), false));
 
-      alertService.openAlert(accountId, GLOBAL_APP_ID, AlertType.GitSyncError, getGitSyncErrorAlert(accountId));
+      alertService.openAlert(
+          accountId, GLOBAL_APP_ID, AlertType.GitSyncError, getGitSyncErrorAlert(accountId, gitToHarness));
     }
   }
 
@@ -406,15 +410,19 @@ public class YamlGitServiceImpl implements YamlGitService {
     alertService.closeAlert(accountId, appId, alertType, alertData);
   }
 
-  private GitSyncErrorAlert getGitSyncErrorAlert(String accountId) {
-    return GitSyncErrorAlert.builder().accountId(accountId).message("Unable to process changes from Git").build();
+  private GitSyncErrorAlert getGitSyncErrorAlert(String accountId, boolean gitToHarness) {
+    return GitSyncErrorAlert.builder()
+        .accountId(accountId)
+        .message("Unable to process changes from Git")
+        .gitToHarness(gitToHarness)
+        .build();
   }
 
   private GitConnectionErrorAlert getGitConnectionErrorAlert(String accountId, String message) {
     return GitConnectionErrorAlert.builder().accountId(accountId).message(message).build();
   }
 
-  private <T extends Change> void upsertGitSyncErrors(T failedChange, String errorMessage) {
+  public <T extends Change> void upsertGitSyncErrors(T failedChange, String errorMessage, boolean fullSyncPath) {
     Query<GitSyncError> failedQuery = wingsPersistence.createQuery(GitSyncError.class)
                                           .field("accountId")
                                           .equal(failedChange.getAccountId())
@@ -430,19 +438,21 @@ public class YamlGitServiceImpl implements YamlGitService {
             .set("gitCommitId", failedCommitId)
             .set("changeType", failedChange.getChangeType().name())
             .set("failureReason",
-                errorMessage != null ? errorMessage : "Reason could not be captured. Logs might have some info");
+                errorMessage != null ? errorMessage : "Reason could not be captured. Logs might have some info")
+            .set("fullSyncPath", fullSyncPath);
+
     wingsPersistence.upsert(failedQuery, failedUpdateOperations);
   }
 
   @Override
-  public void removeGitSyncErrors(String accountId, List<GitFileChange> gitFileChangeList) {
+  public void removeGitSyncErrors(String accountId, List<GitFileChange> gitFileChangeList, boolean gitToHarness) {
     List<String> yamlFilePathList =
         gitFileChangeList.stream().map(GitFileChange::getFilePath).collect(Collectors.toList());
     Query query = wingsPersistence.createAuthorizedQuery(GitSyncError.class);
     query.field("accountId").equal(accountId);
     query.field("yamlFilePath").in(yamlFilePathList);
     wingsPersistence.delete(query);
-    closeAlertIfApplicable(accountId);
+    closeAlertIfApplicable(accountId, gitToHarness);
   }
 
   @Override
@@ -468,13 +478,24 @@ public class YamlGitServiceImpl implements YamlGitService {
     query.field("accountId").equal(accountId);
     query.field("yamlFilePath").equal(yamlFilePath);
     wingsPersistence.delete(query);
-    closeAlertIfApplicable(accountId);
+    closeAlertIfApplicable(accountId, false);
     return RestResponse.Builder.aRestResponse().build();
   }
 
-  private void closeAlertIfApplicable(String accountId) {
+  @Override
+  public RestResponse discardGitSyncErrorForFullSync(String accountId) {
+    Query query = wingsPersistence.createAuthorizedQuery(GitSyncError.class);
+    query.field("accountId").equal(accountId);
+    query.field("fullSyncPath").equal(true);
+    wingsPersistence.delete(query);
+    closeAlertIfApplicable(accountId, false);
+    return RestResponse.Builder.aRestResponse().build();
+  }
+
+  private void closeAlertIfApplicable(String accountId, boolean gitToHarness) {
     if (getGitSyncErrorCount(accountId) == 0) {
-      alertService.closeAlert(accountId, GLOBAL_APP_ID, AlertType.GitSyncError, getGitSyncErrorAlert(accountId));
+      alertService.closeAlert(
+          accountId, GLOBAL_APP_ID, AlertType.GitSyncError, getGitSyncErrorAlert(accountId, gitToHarness));
     }
   }
 
@@ -512,10 +533,11 @@ public class YamlGitServiceImpl implements YamlGitService {
     try {
       List<ChangeContext> fileChangeContexts = yamlService.processChangeSet(gitFileChangeList);
       logger.info(GIT_YAML_LOG_PREFIX + "Processed ChangeSet: [{}]", fileChangeContexts);
-      removeGitSyncErrors(accountId, gitFileChangeList);
+      removeGitSyncErrors(accountId, gitFileChangeList, false);
     } catch (YamlProcessingException ex) {
       logger.error(GIT_YAML_LOG_PREFIX + "Unable to process Git sync errors for account {}", accountId, ex);
-      processFailedChanges(accountId, ex.getFailedChangeErrorMsgMap());
+      // gitToHarness is false, as this action is initiated from UI
+      processFailedChanges(accountId, ex.getFailedChangeErrorMsgMap(), false);
     }
 
     return RestResponse.Builder.aRestResponse().build();
