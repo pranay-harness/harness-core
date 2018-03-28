@@ -89,7 +89,10 @@ public class PipelineStage {
   /**
    * The type Pipeline stage element.
    */
+  @Data
+  @Builder
   public static class PipelineStageElement {
+    private String uuid;
     private String name;
     private String type;
     private Map<String, Object> properties = new HashMap<>();
@@ -97,141 +100,23 @@ public class PipelineStage {
 
     private boolean valid = true;
     private String validationMessage;
-
-    /**
-     * Instantiates a new Pipeline stage element.
-     */
-    public PipelineStageElement() {}
-
-    /**
-     * Instantiates a new Pipeline stage element.
-     *
-     * @param name       the name
-     * @param type       the type
-     * @param properties the properties
-     */
-    public PipelineStageElement(String name, String type, Map<String, Object> properties) {
-      this.name = name;
-      this.type = type;
-      this.properties = properties;
-    }
-
-    /**
-     * Instantiates a new Pipeline stage element.
-     *
-     * @param name       the name
-     * @param type       the type
-     * @param properties the properties
-     */
-    public PipelineStageElement(
-        String name, String type, Map<String, Object> properties, Map<String, String> workflowVariables) {
-      this.name = name;
-      this.type = type;
-      this.properties = properties;
-      this.workflowVariables = workflowVariables;
-    }
-    /**
-     * Gets name.
-     *
-     * @return the name
-     */
-    public String getName() {
-      return name;
-    }
-
-    /**
-     * Sets name.
-     *
-     * @param name the name
-     */
-    public void setName(String name) {
-      this.name = name;
-    }
-
-    /**
-     * Gets type.
-     *
-     * @return the type
-     */
-    public String getType() {
-      return type;
-    }
-
-    /**
-     * Sets type.
-     *
-     * @param type the type
-     */
-    public void setType(String type) {
-      this.type = type;
-    }
-
-    /**
-     * Gets properties.
-     *
-     * @return the properties
-     */
-    public Map<String, Object> getProperties() {
-      return properties;
-    }
-
-    /**
-     * Sets properties.
-     *
-     * @param properties the properties
-     */
-    public void setProperties(Map<String, Object> properties) {
-      this.properties = properties;
-    }
-
-    /**
-     * Get workflow variables
-     *
-     * @return
-     */
-    public Map<String, String> getWorkflowVariables() {
-      return workflowVariables;
-    }
-
-    /**
-     * Set workflow variables
-     *
-     * @param workflowVariables
-     */
-    public void setWorkflowVariables(Map<String, String> workflowVariables) {
-      this.workflowVariables = workflowVariables;
-    }
-
-    public boolean isValid() {
-      return valid;
-    }
-
-    public void setValid(boolean valid) {
-      this.valid = valid;
-    }
-
-    public String getValidationMessage() {
-      return validationMessage;
-    }
-
-    public void setValidationMessage(String validationMessage) {
-      this.validationMessage = validationMessage;
-    }
   }
 
   @Data
   @EqualsAndHashCode(callSuper = true)
   @NoArgsConstructor
   public static final class Yaml extends BaseYamlWithType {
+    private String uuid;
     private String name;
     private boolean parallel;
     private String workflowName;
     private List<NameValuePair.Yaml> workflowVariables = Lists.newArrayList();
 
     @Builder
-    public Yaml(
-        String type, String name, boolean parallel, String workflowName, List<NameValuePair.Yaml> workflowVariables) {
+    public Yaml(String type, String uuid, String name, boolean parallel, String workflowName,
+        List<NameValuePair.Yaml> workflowVariables) {
       super(type);
+      this.uuid = uuid;
       this.name = name;
       this.parallel = parallel;
       this.workflowName = workflowName;

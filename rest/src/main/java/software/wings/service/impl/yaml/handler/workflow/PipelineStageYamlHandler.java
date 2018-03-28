@@ -50,9 +50,6 @@ public class PipelineStageYamlHandler extends BaseYamlHandler<Yaml, PipelineStag
     stage.setName(yaml.getName());
     stage.setParallel(yaml.isParallel());
 
-    PipelineStageElement pipelineStageElement = new PipelineStageElement();
-    pipelineStageElement.setName(yaml.getName());
-    pipelineStageElement.setType(yaml.getType());
     Map<String, Object> properties = Maps.newHashMap();
     Map<String, String> workflowVariables = Maps.newHashMap();
 
@@ -62,15 +59,20 @@ public class PipelineStageYamlHandler extends BaseYamlHandler<Yaml, PipelineStag
 
       properties.put("envId", workflow.getEnvId());
       properties.put("workflowId", workflow.getUuid());
-      pipelineStageElement.setProperties(properties);
     }
 
     if (yaml.getWorkflowVariables() != null) {
       yaml.getWorkflowVariables().stream().forEach(
           variable -> workflowVariables.put(variable.getName(), variable.getValue()));
     }
+    PipelineStageElement pipelineStageElement = PipelineStageElement.builder()
+                                                    .uuid(yaml.getUuid())
+                                                    .name(yaml.getName())
+                                                    .type(yaml.getType())
+                                                    .properties(properties)
+                                                    .workflowVariables(workflowVariables)
+                                                    .build();
 
-    pipelineStageElement.setWorkflowVariables(workflowVariables);
     stage.setPipelineStageElements(Lists.newArrayList(pipelineStageElement));
 
     return stage;

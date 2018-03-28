@@ -71,6 +71,7 @@ public class StateExecutionInstance extends Base {
   @Indexed private Long expiryTs;
 
   @Transient private String workflowId;
+  @Transient private String pipelineStateElementId;
 
   private OrchestrationWorkflowType orchestrationWorkflowType;
 

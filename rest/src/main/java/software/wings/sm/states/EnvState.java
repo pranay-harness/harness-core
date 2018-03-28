@@ -61,6 +61,7 @@ public class EnvState extends State {
   private String workflowId;
 
   @SchemaIgnore private String pipelineId;
+  @SchemaIgnore private String pipelineStateElementId;
 
   @SchemaIgnore private Map<String, String> workflowVariables;
 
@@ -179,62 +180,36 @@ public class EnvState extends State {
     return executionResponse;
   }
 
-  /**
-   * Gets env id.
-   *
-   * @return the env id
-   */
   public String getEnvId() {
     return envId;
   }
 
-  /**
-   * Sets env id.
-   *
-   * @param envId the env id
-   */
   public void setEnvId(String envId) {
     this.envId = envId;
   }
 
-  /**
-   * Gets workflow id.
-   *
-   * @return the workflow id
-   */
   public String getWorkflowId() {
     return workflowId;
   }
 
-  /**
-   * Sets workflow id.
-   *
-   * @param workflowId the workflow id
-   */
   public void setWorkflowId(String workflowId) {
     this.workflowId = workflowId;
   }
 
-  /**
-   * Get PipelineId
-   * @return
-   */
   public String getPipelineId() {
     return pipelineId;
   }
-
-  /**
-   * Set PipelineId
-   * @param pipelineId
-   */
   public void setPipelineId(String pipelineId) {
     this.pipelineId = pipelineId;
   }
 
-  /**
-   * Get Workflow variables
-   * @return
-   */
+  public String getPipelineStateElementId() {
+    return pipelineStateElementId;
+  }
+  public void setPipelineStateElementId(String pipelineStateElementId) {
+    this.pipelineStateElementId = pipelineStateElementId;
+  }
+
   public Map<String, String> getWorkflowVariables() {
     return workflowVariables;
   }
@@ -245,10 +220,6 @@ public class EnvState extends State {
     return Constants.ENV_STATE_TIMEOUT_MILLIS;
   }
 
-  /**
-   * Set workflow variables
-   * @param workflowVariables
-   */
   public void setWorkflowVariables(Map<String, String> workflowVariables) {
     this.workflowVariables = workflowVariables;
   }

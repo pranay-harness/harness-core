@@ -60,6 +60,7 @@ import static software.wings.common.Constants.WORKFLOW_VALIDATION_MESSAGE;
 import static software.wings.dl.PageRequest.PageRequestBuilder.aPageRequest;
 import static software.wings.dl.PageResponse.PageResponseBuilder.aPageResponse;
 import static software.wings.sm.StateType.ECS_SERVICE_DEPLOY;
+import static software.wings.sm.StateType.ENV_STATE;
 import static software.wings.utils.ArtifactType.DOCKER;
 import static software.wings.utils.ArtifactType.WAR;
 import static software.wings.utils.WingsTestConstants.ACCOUNT_ID;
@@ -547,12 +548,15 @@ public class WorkflowServiceTest extends WingsBaseTest {
   public void shouldThrowExceptionOnReferencedWorkflowDelete() {
     Workflow workflow = createWorkflow();
     String uuid = workflow.getUuid();
-    Pipeline pipeline =
-        aPipeline()
-            .withName("PIPELINE_NAME")
-            .withPipelineStages(asList(new PipelineStage(
-                asList(new PipelineStageElement("STAGE", "ENV_STATE", ImmutableMap.of("workflowId", workflowId))))))
-            .build();
+    Pipeline pipeline = aPipeline()
+                            .withName("PIPELINE_NAME")
+                            .withPipelineStages(asList(
+                                new PipelineStage(asList(PipelineStageElement.builder()
+                                                             .name("STAGE")
+                                                             .type(ENV_STATE.name())
+                                                             .properties(ImmutableMap.of("workflowId", workflowId))
+                                                             .build()))))
+                            .build();
     when(pipelineService.listPipelines(any(PageRequest.class)))
         .thenReturn(aPageResponse().withResponse(asList(pipeline)).build());
     assertThatThrownBy(() -> workflowService.deleteWorkflow(APP_ID, uuid))

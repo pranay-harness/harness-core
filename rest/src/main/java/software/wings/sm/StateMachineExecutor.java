@@ -72,6 +72,7 @@ import software.wings.scheduler.QuartzScheduler;
 import software.wings.service.intfc.AlertService;
 import software.wings.service.intfc.DelegateService;
 import software.wings.sm.ExecutionEvent.ExecutionEventBuilder;
+import software.wings.sm.states.EnvState;
 import software.wings.utils.KryoUtils;
 import software.wings.utils.MapperUtils;
 import software.wings.utils.Misc;
@@ -238,6 +239,11 @@ public class StateMachineExecutor {
         stateMachine.getState(stateExecutionInstance.getChildStateMachineId(), stateExecutionInstance.getStateName());
     stateExecutionInstance.setRollback(state.isRollback());
     stateExecutionInstance.setStateType(state.getStateType());
+
+    if (state instanceof EnvState) {
+      stateExecutionInstance.setPipelineStateElementId(((EnvState) state).getPipelineStateElementId());
+    }
+
     if (stateExecutionInstance.getUuid() != null) {
       throw new WingsException(ErrorCode.INVALID_REQUEST)
           .addParam("message", "StateExecutionInstance was already created");

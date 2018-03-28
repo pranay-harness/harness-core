@@ -422,8 +422,14 @@ public class TriggerServiceTest extends WingsBaseTest {
     properties.put("workflowId", WORKFLOW_ID);
 
     List<PipelineStage> pipelineStages = new ArrayList<>();
-    PipelineStage pipelineStage = new PipelineStage(asList(new PipelineStageElement("SE ", ENV_STATE.name(), properties,
-        ImmutableMap.of("Environment", ENV_ID, "Service", SERVICE_ID, "ServiceInfraStructure", INFRA_MAPPING_ID))));
+    PipelineStage pipelineStage =
+        new PipelineStage(asList(PipelineStageElement.builder()
+                                     .name("SE")
+                                     .type(ENV_STATE.name())
+                                     .properties(properties)
+                                     .workflowVariables(ImmutableMap.of("Environment", ENV_ID, "Service", SERVICE_ID,
+                                         "ServiceInfraStructure", INFRA_MAPPING_ID))
+                                     .build()));
     pipelineStage.setName("STAGE " + 1);
     pipelineStages.add(pipelineStage);
 
