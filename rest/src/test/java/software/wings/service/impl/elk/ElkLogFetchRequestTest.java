@@ -105,6 +105,14 @@ public class ElkLogFetchRequestTest {
     JSONObject jsonObject = elkLogFetchRequest.eval();
   }
 
+  @Test
+  public void nonMessage() {
+    ElkLogFetchRequest elkLogFetchRequest = getElkLogFetchRequest("level:Error OR level:Warn");
+    assertEquals(
+        "{\"size\":10000,\"query\":{\"bool\":{\"filter\":[{\"bool\":{\"should\":[{\"term\":{\"beat.hostname\":\"ip-172-31-13-153\"}},{\"term\":{\"beat.hostname\":\"ip-172-31-12-79\"}},{\"term\":{\"beat.hostname\":\"ip-172-31-8-144\"}}]}},{\"range\":{\"@timestamp\":{\"lt\":1518724315175,\"format\":\"epoch_millis\",\"gte\":1518724255175}}},{\"bool\":{\"should\":[{\"term\":{\"level\":\"Error\"}},{\"term\":{\"level\":\"Warn\"}}]}}]}}}",
+        JsonUtils.asJson(elkLogFetchRequest.toElasticSearchJsonObject()));
+  }
+
   private ElkLogFetchRequest getElkLogFetchRequest(String query) {
     return new ElkLogFetchRequest(query, "logstash-*", "beat.hostname", "message", "@timestamp",
         Sets.newHashSet("ip-172-31-8-144", "ip-172-31-12-79", "ip-172-31-13-153"),
