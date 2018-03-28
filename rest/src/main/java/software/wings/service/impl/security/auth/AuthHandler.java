@@ -1,5 +1,6 @@
 package software.wings.service.impl.security.auth;
 
+import static io.harness.data.structure.EmptyPredicate.isEmpty;
 import static software.wings.beans.FeatureName.RBAC;
 import static software.wings.beans.SearchFilter.Operator.EQ;
 import static software.wings.common.Constants.DEFAULT_ACCOUNT_ADMIN_USER_GROUP_NAME;
@@ -455,26 +456,38 @@ public class AuthHandler {
       return new HashSet<>();
     }
 
-    PageRequestBuilder pageRequestBuilder = aPageRequest()
-                                                .addFilter("appId", Operator.EQ, appId)
-                                                .addFieldsIncluded("_id", "templateExpressions")
-                                                .addFilter("envId", Operator.IN, envIds.toArray());
+    PageRequestBuilder pageRequestBuilder =
+        aPageRequest().addFilter("appId", Operator.EQ, appId).addFieldsIncluded("_id", "envId", "templateExpressions");
 
     PageRequest<Workflow> pageRequest = pageRequestBuilder.build();
     PageResponse<Workflow> pageResponse = workflowService.listWorkflowsWithoutOrchestration(pageRequest);
     List<Workflow> workflowList = pageResponse.getResponse();
 
-    Set<String> workflowIdSet = workflowList.stream().map(workflow -> workflow.getUuid()).collect(Collectors.toSet());
-
-    if (!hasTemplateFilterType(workflowFilter.getFilterTypes())) {
-      Set<String> workflowIdsWithEnvTemplatized = workflowList.stream()
-                                                      .filter(workflow -> isEnvTemplatized(workflow))
-                                                      .map(workflow -> workflow.getUuid())
-                                                      .collect(Collectors.toSet());
-      workflowIdSet.removeAll(workflowIdsWithEnvTemplatized);
+    if (isEmpty(workflowList)) {
+      return new HashSet<>();
     }
 
-    return workflowIdSet;
+    boolean hasTemplateFilterType = hasTemplateFilterType(workflowFilter.getFilterTypes());
+
+    return workflowList.stream()
+        .filter(workflow -> {
+          if (isEnvTemplatized(workflow)) {
+            if (hasTemplateFilterType) {
+              return true;
+            } else {
+              return false;
+            }
+          }
+
+          if (workflow.getEnvId() == null) {
+            return true;
+          }
+
+          return envIds.contains(workflow.getEnvId());
+
+        })
+        .map(workflow -> workflow.getUuid())
+        .collect(Collectors.toSet());
   }
 
   private Set<String> getDeploymentIdsByFilter(String appId, EnvFilter envFilter) {
