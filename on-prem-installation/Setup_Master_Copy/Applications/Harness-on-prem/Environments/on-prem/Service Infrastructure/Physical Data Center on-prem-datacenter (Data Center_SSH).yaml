@@ -2,7 +2,7 @@ harnessApiVersion: '1.0'
 type: PHYSICAL_DATA_CENTER_SSH
 computeProviderName: on-prem-datacenter
 computeProviderType: PHYSICAL_DATA_CENTER
-connection: amazonkey-nonprod
+connection: onprem-key
 deploymentType: SSH
 hostNames:
   - <HOST3_PLACEHOLDER>
