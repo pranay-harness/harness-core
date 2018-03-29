@@ -36,21 +36,18 @@ if [[ "$OSTYPE" == "darwin"* ]]; then
         fi
 fi
 
-if [ "$#" -ne 5 ]; then
+if [ "$#" -ne 2 ]; then
     echo "Please enter the correct arguments for running the new account creation script"
-    echo "1: Account property file"
-    echo "2: Infra mapping property file"
-    echo "3: Config property file"
-    echo "4: API URL"
-    echo "5: Token"
+    echo "1: API URL"
+    echo "2: Token"
     exit 1
 fi
 
-ACCOUNT_PROPERTY_FILE=$1
-INFRA_PROPERTY_FILE=$2
-CONFIG_PROPERTY_FILE=$3
-API_URL=$4
-TOKEN=$5
+ACCOUNT_PROPERTY_FILE=accountdetails.properties
+INFRA_PROPERTY_FILE=inframapping.properties
+CONFIG_PROPERTY_FILE=config.properties
+API_URL=$1
+TOKEN=$2
 
 function getProperty () {
    FILENAME=$1
@@ -75,14 +72,13 @@ echo "Reading Infra mapping from $INFRA_PROPERTY_FILE"
 host1=$(getProperty "$INFRA_PROPERTY_FILE" "HOST1")
 host2=$(getProperty "$INFRA_PROPERTY_FILE" "HOST2")
 host3=$(getProperty "$INFRA_PROPERTY_FILE" "HOST3")
-cidr=$(getProperty "$INFRA_PROPERTY_FILE" "CIDR")
 loadbalancer=$(getProperty "$INFRA_PROPERTY_FILE" "LOAD_BALANCER_URL")
 
 echo "Reading config mapping from $CONFIG_PROPERTY_FILE"
-mongodbUserName=$(getProperty "$CONFIG_PROPERTY_FILE" "mongodbUserName")
-mongodbPassword=$(getProperty "$CONFIG_PROPERTY_FILE" "mongodbPassword")
-dockerPassword=$(getProperty "$CONFIG_PROPERTY_FILE" "dockerPassword")
-newreliclicensekey=$(getProperty "$CONFIG_PROPERTY_FILE" "newreliclicensekey")
+mongodbUserName=$(getProperty "$CONFIG_PROPERTY_FILE" "mongodbUserName" | base64 --decode)
+mongodbPassword=$(getProperty "$CONFIG_PROPERTY_FILE" "mongodbPassword" | base64 --decode)
+dockerPassword=$(getProperty "$CONFIG_PROPERTY_FILE" "dockerPassword"  | base64 --decode)
+newreliclicensekey=$(getProperty "$CONFIG_PROPERTY_FILE" "newreliclicensekey" | base64 --decode)
 
 echo "#######Account details#############"
 echo "AccountName="$accountName
@@ -92,11 +88,10 @@ echo "AdminEmail="$adminEmail
 
 printf "\n"
 
-echo "#######Infrastructure details#############"
+echo "#######Infrastructure details #############"
 echo "host1="$host1
 echo "host2="$host2
 echo "host3="$host3
-echo "cidr="$cidr
 echo "loadbalancer="$loadbalancer
 
 ###### ACCOUNT CREATION SECTION START ##################################
@@ -201,7 +196,6 @@ find Setup -type f -exec sed -i "s|<NEWRELIC_LICENSE_KEY_PLACEHOLDER>|safeharnes
 find Setup -type f -exec sed -i "s|<HOST1_PLACEHOLDER>|$sanitizedhost1|g" {} +
 find Setup -type f -exec sed -i "s|<HOST2_PLACEHOLDER>|$sanitizedhost2|g" {} +
 find Setup -type f -exec sed -i "s|<HOST3_PLACEHOLDER>|$sanitizedhost3|g" {} +
-find Setup -type f -exec sed -i "s|<CIDR_PLACEHOLDER>|$cidr|g" {} +
 find Setup -type f -exec sed -i "s|<LOAD_BALANCER_URL_PLACEHOLDER>|$loadbalancer|g" {} +
 
 zip -r Setup.zip Setup
@@ -225,6 +219,6 @@ if [[ $response = *"ERROR"* ]]; then
   echo "YAML Request Failed"
 else
   echo "YAML Request succeeded"
-  rm -rf Setup.zip
+#  rm -rf Setup.zip
   rm -rf Setup
 fi

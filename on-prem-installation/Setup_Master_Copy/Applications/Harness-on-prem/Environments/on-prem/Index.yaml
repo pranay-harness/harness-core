@@ -78,10 +78,6 @@ variableOverrides:
   - name: LOAD_BALANCER_URL
     value: <LOAD_BALANCER_URL_PLACEHOLDER>
     valueType: TEXT
-  - name: CIDR
-    serviceName: Manager
-    value: <CIDR_PLACEHOLDER>
-    valueType: TEXT
   - name: COMPANYNAME
     value: BigBank
     valueType: TEXT
