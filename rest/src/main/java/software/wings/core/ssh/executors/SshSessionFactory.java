@@ -13,6 +13,7 @@ import org.slf4j.LoggerFactory;
 import software.wings.security.encryption.EncryptionUtils;
 
 import java.io.File;
+import java.io.FileNotFoundException;
 import java.util.Map;
 
 /**
@@ -60,6 +61,9 @@ public class SshSessionFactory {
     Session session = null;
     if (config.isKeyLess()) {
       String keyPath = getKeyPath(config);
+      if (!new File(keyPath).isFile()) {
+        throw new JSchException("File at " + keyPath + " does not exist", new FileNotFoundException());
+      }
       jsch.addIdentity(keyPath);
       session = jsch.getSession(config.getUserName(), config.getHost(), config.getPort());
     } else if (config.getKey() != null && config.getKey().length > 0) {
@@ -86,9 +90,11 @@ public class SshSessionFactory {
   }
 
   protected static String getKeyPath(SshSessionConfig config) {
-    String keyPath = System.getProperty("user.home") + File.separator + ".ssh" + File.separator + "id_rsa";
+    String userhome = System.getProperty("user.home");
+    String keyPath = userhome + File.separator + ".ssh" + File.separator + "id_rsa";
     if (config.getKeyPath() != null) {
       keyPath = config.getKeyPath();
+      keyPath = keyPath.replace("$HOME", userhome);
     }
     return keyPath;
   }
