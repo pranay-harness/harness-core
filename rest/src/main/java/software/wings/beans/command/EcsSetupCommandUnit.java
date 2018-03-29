@@ -22,6 +22,7 @@ import com.amazonaws.services.ecs.model.NetworkConfiguration;
 import com.amazonaws.services.ecs.model.NetworkMode;
 import com.amazonaws.services.ecs.model.RegisterTaskDefinitionRequest;
 import com.amazonaws.services.ecs.model.TaskDefinition;
+import com.amazonaws.services.elasticloadbalancingv2.model.TargetGroup;
 import com.fasterxml.jackson.annotation.JsonTypeName;
 import lombok.Builder;
 import lombok.Data;
@@ -50,7 +51,6 @@ import java.util.Collections;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
-import java.util.Optional;
 import java.util.stream.Collectors;
 
 /**
@@ -98,8 +98,8 @@ public class EcsSetupCommandUnit extends ContainerSetupCommandUnit {
       commandExecutionDataBuilder.containerServiceName(containerServiceName)
           .activeServiceCounts(mapToListOfStringArray(activeServiceCounts));
 
-      CreateServiceRequest createServiceRequest =
-          getCreateServiceRequest(setupParams, taskDefinition, containerServiceName);
+      CreateServiceRequest createServiceRequest = getCreateServiceRequest(
+          cloudProviderSetting, encryptedDataDetails, setupParams, taskDefinition, containerServiceName);
 
       executionLogCallback.saveExecutionLog(
           String.format("Creating ECS service %s in cluster %s", containerServiceName, setupParams.getClusterName()),
@@ -134,8 +134,9 @@ public class EcsSetupCommandUnit extends ContainerSetupCommandUnit {
     }
   }
 
-  private CreateServiceRequest getCreateServiceRequest(
-      EcsSetupParams setupParams, TaskDefinition taskDefinition, String containerServiceName) {
+  private CreateServiceRequest getCreateServiceRequest(SettingAttribute cloudProviderSetting,
+      List<EncryptedDataDetail> encryptedDataDetails, EcsSetupParams setupParams, TaskDefinition taskDefinition,
+      String containerServiceName) {
     boolean isFargateTaskType = isFargateTaskLauchType(setupParams);
     CreateServiceRequest createServiceRequest =
         new CreateServiceRequest()
@@ -147,19 +148,23 @@ public class EcsSetupCommandUnit extends ContainerSetupCommandUnit {
             .withTaskDefinition(taskDefinition.getFamily() + ":" + taskDefinition.getRevision());
 
     if (setupParams.isUseLoadBalancer()) {
-      List<LoadBalancer> loadBalancers =
-          taskDefinition.getContainerDefinitions()
-              .stream()
-              .flatMap(containerDefinition
-                  -> Optional.ofNullable(containerDefinition.getPortMappings())
-                         .orElse(emptyList())
-                         .stream()
-                         .map(portMapping
-                             -> new LoadBalancer()
-                                    .withContainerName(containerDefinition.getName())
-                                    .withContainerPort(portMapping.getContainerPort())
-                                    .withTargetGroupArn(setupParams.getTargetGroupArn())))
-              .collect(toList());
+      TargetGroup targetGroup = awsClusterService.getTargetGroup(
+          setupParams.getRegion(), cloudProviderSetting, encryptedDataDetails, setupParams.getTargetGroupArn());
+      Integer targetGroupPort = null;
+      if (targetGroup != null) {
+        targetGroupPort = targetGroup.getPort();
+      }
+
+      Integer targetGroupPortFinal = targetGroupPort;
+
+      List<LoadBalancer> loadBalancers = taskDefinition.getContainerDefinitions()
+                                             .stream()
+                                             .map(containerDefinition
+                                                 -> new LoadBalancer()
+                                                        .withContainerName(containerDefinition.getName())
+                                                        .withContainerPort(targetGroupPortFinal)
+                                                        .withTargetGroupArn(setupParams.getTargetGroupArn()))
+                                             .collect(toList());
       createServiceRequest.withLoadBalancers(loadBalancers);
 
       // for Fargate, where network mode is "awsvpc", setting taskRole causes error.

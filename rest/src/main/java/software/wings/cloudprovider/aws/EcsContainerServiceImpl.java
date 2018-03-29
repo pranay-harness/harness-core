@@ -46,6 +46,7 @@ import com.amazonaws.services.ecs.model.Task;
 import com.amazonaws.services.ecs.model.TaskDefinition;
 import com.amazonaws.services.ecs.model.UpdateServiceRequest;
 import com.amazonaws.services.ecs.model.UpdateServiceResult;
+import com.amazonaws.services.elasticloadbalancingv2.model.TargetGroup;
 import com.fasterxml.jackson.databind.DeserializationFeature;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import io.harness.network.Http;
@@ -1283,5 +1284,12 @@ public class EcsContainerServiceImpl implements EcsContainerService {
     } while (listServicesResult.getNextToken() != null && listServicesResult.getServiceArns().size() == 10);
 
     return services;
+  }
+
+  @Override
+  public TargetGroup getTargetGroup(String region, SettingAttribute cloudProviderSetting,
+      List<EncryptedDataDetail> encryptedDataDetails, String targetGroupArn) {
+    AwsConfig awsConfig = awsHelperService.validateAndGetAwsConfig(cloudProviderSetting, encryptedDataDetails);
+    return awsHelperService.getTargetGroupForAlb(region, awsConfig, encryptedDataDetails, targetGroupArn);
   }
 }
