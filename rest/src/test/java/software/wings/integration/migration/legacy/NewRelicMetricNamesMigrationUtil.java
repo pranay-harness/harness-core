@@ -123,11 +123,9 @@ public class NewRelicMetricNamesMigrationUtil extends WingsBaseTest {
 
                          if (metricNames == null
                              || System.currentTimeMillis() - metricNames.getCreatedAt() > TimeUnit.DAYS.toMillis(1)) {
-                           metricDataAnalysisService.saveMetricNames(
-                               newRelicConfig.getAccountId(), newRelicMetricNames);
+                           metricDataAnalysisService.saveMetricNames(newRelicMetricNames);
                          } else {
-                           metricDataAnalysisService.addMetricNamesWorkflowInfo(
-                               newRelicConfig.getAccountId(), newRelicMetricNames);
+                           metricDataAnalysisService.addMetricNamesWorkflowInfo(newRelicMetricNames);
                          }
                        } catch (Exception ex) {
                          logger.error("", ex);

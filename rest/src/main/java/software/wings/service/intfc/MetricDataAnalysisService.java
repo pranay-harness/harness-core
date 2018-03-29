@@ -26,12 +26,11 @@ public interface MetricDataAnalysisService {
   boolean saveMetricData(@NotNull String accountId, String applicationId, String stateExecutionId,
       String delegateTaskId, @Valid List<NewRelicMetricDataRecord> metricData) throws IOException;
 
-  @ValidationGroups(Create.class)
-  boolean saveMetricNames(@NotNull String accountId, @Valid NewRelicMetricNames metricNames) throws IOException;
+  @ValidationGroups(Create.class) boolean saveMetricNames(@Valid NewRelicMetricNames metricNames) throws IOException;
 
-  boolean addMetricNamesWorkflowInfo(String accountId, NewRelicMetricNames metricNames) throws IOException;
+  boolean addMetricNamesWorkflowInfo(NewRelicMetricNames metricNames) throws IOException;
 
-  boolean updateMetricNames(String accountId, NewRelicMetricNames metricNames) throws IOException;
+  boolean updateMetricNames(NewRelicMetricNames metricNames) throws IOException;
 
   NewRelicMetricNames getMetricNames(String newRelicAppId, String newRelicServerConfigId) throws IOException;
 

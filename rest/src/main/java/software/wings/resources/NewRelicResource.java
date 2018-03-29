@@ -122,7 +122,7 @@ public class NewRelicResource implements MetricAnalysisResource {
   @ExceptionMetered
   public RestResponse<Boolean> saveMetricNames(
       @QueryParam("accountId") final String accountId, NewRelicMetricNames metricNames) throws IOException {
-    return new RestResponse<>(metricDataAnalysisService.updateMetricNames(accountId, metricNames));
+    return new RestResponse<>(metricDataAnalysisService.updateMetricNames(metricNames));
   }
 
   @POST

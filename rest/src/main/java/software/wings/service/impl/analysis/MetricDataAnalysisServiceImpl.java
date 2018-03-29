@@ -81,13 +81,13 @@ public class MetricDataAnalysisServiceImpl implements MetricDataAnalysisService 
   }
 
   @Override
-  public boolean saveMetricNames(String accountId, NewRelicMetricNames metricNames) throws IOException {
+  public boolean saveMetricNames(NewRelicMetricNames metricNames) throws IOException {
     wingsPersistence.save(metricNames);
     return true;
   }
 
   @Override
-  public boolean addMetricNamesWorkflowInfo(String accountId, NewRelicMetricNames metricNames) throws IOException {
+  public boolean addMetricNamesWorkflowInfo(NewRelicMetricNames metricNames) throws IOException {
     Query<NewRelicMetricNames> query = wingsPersistence.createQuery(NewRelicMetricNames.class)
                                            .field("newRelicAppId")
                                            .equal(metricNames.getNewRelicAppId())
@@ -100,7 +100,7 @@ public class MetricDataAnalysisServiceImpl implements MetricDataAnalysisService 
   }
 
   @Override
-  public boolean updateMetricNames(String accountId, NewRelicMetricNames metricNames) throws IOException {
+  public boolean updateMetricNames(NewRelicMetricNames metricNames) throws IOException {
     if (logger.isDebugEnabled()) {
       logger.debug("updating " + metricNames.getMetrics().size() + " pieces of new relic metric names for {}, {}",
           metricNames.getNewRelicAppId(), metricNames.getNewRelicConfigId());
