@@ -432,7 +432,6 @@ public class TriggerServiceTest extends WingsBaseTest {
                                                   SERVICE_ID, "ServiceInfraStructure", INFRA_MAPPING_ID))
                                               .build()))
             .build();
-
     pipelineStages.add(pipelineStage);
 
     pipeline.setPipelineStages(pipelineStages);

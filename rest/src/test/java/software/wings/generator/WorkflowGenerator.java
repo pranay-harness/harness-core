@@ -7,6 +7,10 @@ import com.google.inject.Singleton;
 
 import io.github.benas.randombeans.EnhancedRandomBuilder;
 import io.github.benas.randombeans.api.EnhancedRandom;
+import lombok.Builder;
+import lombok.Value;
+import software.wings.beans.BasicOrchestrationWorkflow;
+import software.wings.beans.GraphNode;
 import software.wings.beans.Workflow;
 import software.wings.beans.Workflow.WorkflowBuilder;
 import software.wings.service.intfc.WorkflowService;
@@ -67,5 +71,33 @@ public class WorkflowGenerator {
     }
 
     return workflowService.createWorkflow(builder.build());
+  }
+
+  @Value
+  @Builder
+  public static class PostProcessInfo {
+    private Integer selectNodeCount;
+  }
+
+  public Workflow postProcess(Workflow workflow, PostProcessInfo params) {
+    if (params.getSelectNodeCount() != null) {
+      if (workflow.getOrchestrationWorkflow() instanceof BasicOrchestrationWorkflow) {
+        final GraphNode selectNodes = ((BasicOrchestrationWorkflow) workflow.getOrchestrationWorkflow())
+                                          .getGraph()
+                                          .getSubworkflows()
+                                          .entrySet()
+                                          .stream()
+                                          .filter(entry -> "Provision Nodes".equals(entry.getValue().getGraphName()))
+                                          .findFirst()
+                                          .get()
+                                          .getValue()
+                                          .getNodes()
+                                          .get(0);
+
+        selectNodes.getProperties().put("instanceCount", params.getSelectNodeCount());
+      }
+    }
+
+    return workflowService.updateWorkflow(workflow);
   }
 }

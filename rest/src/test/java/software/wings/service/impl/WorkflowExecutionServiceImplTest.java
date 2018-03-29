@@ -34,6 +34,7 @@ import static software.wings.dl.PageResponse.PageResponseBuilder.aPageResponse;
 import static software.wings.settings.SettingValue.SettingVariableTypes.PHYSICAL_DATA_CENTER;
 import static software.wings.sm.ExecutionInterrupt.ExecutionInterruptBuilder.anExecutionInterrupt;
 import static software.wings.sm.ExecutionStatus.WAITING;
+import static software.wings.sm.StateType.ENV_STATE;
 import static software.wings.utils.WingsTestConstants.ACCOUNT_NAME;
 import static software.wings.utils.WingsTestConstants.APP_NAME;
 import static software.wings.utils.WingsTestConstants.ARTIFACT_NAME;
@@ -696,7 +697,7 @@ public class WorkflowExecutionServiceImplTest extends WingsBaseTest {
             .pipelineStageElements(
                 asList(PipelineStageElement.builder()
                            .name("DEV")
-                           .type(StateType.ENV_STATE.name())
+                           .type(ENV_STATE.name())
                            .properties(ImmutableMap.of("envId", env.getUuid(), "workflowId", workflow.getUuid()))
                            .build()))
             .build();
