@@ -46,7 +46,7 @@ public class PipelineStageYamlHandler extends BaseYamlHandler<Yaml, PipelineStag
     String appId = yamlHelper.getAppId(change.getAccountId(), change.getFilePath());
     Validator.notNullCheck("Could not retrieve valid app from path: " + change.getFilePath(), appId);
 
-    PipelineStage stage = new PipelineStage();
+    PipelineStage stage = PipelineStage.builder().build();
     stage.setName(yaml.getName());
     stage.setParallel(yaml.isParallel());
 

@@ -22,6 +22,7 @@ import static software.wings.beans.InfrastructureMappingType.AWS_SSH;
 import static software.wings.beans.PhaseStep.PhaseStepBuilder.aPhaseStep;
 import static software.wings.beans.PhaseStepType.POST_DEPLOYMENT;
 import static software.wings.beans.PhaseStepType.PRE_DEPLOYMENT;
+import static software.wings.beans.Pipeline.Builder.aPipeline;
 import static software.wings.beans.Service.Builder.aService;
 import static software.wings.beans.ServiceTemplate.Builder.aServiceTemplate;
 import static software.wings.beans.SettingAttribute.Builder.aSettingAttribute;
@@ -31,8 +32,10 @@ import static software.wings.integration.IntegrationTestUtil.randomInt;
 import static software.wings.integration.SeedData.containerNames;
 import static software.wings.integration.SeedData.envNames;
 import static software.wings.integration.SeedData.seedNames;
+import static software.wings.sm.StateType.ENV_STATE;
 import static software.wings.utils.ArtifactType.WAR;
 
+import com.google.common.collect.ImmutableMap;
 import com.google.inject.Inject;
 
 import org.glassfish.jersey.media.multipart.FormDataMultiPart;
@@ -53,18 +56,19 @@ import software.wings.beans.AwsInstanceFilter;
 import software.wings.beans.AwsInstanceFilter.Tag;
 import software.wings.beans.BambooConfig;
 import software.wings.beans.Base;
-import software.wings.beans.BasicOrchestrationWorkflow;
 import software.wings.beans.DockerConfig;
 import software.wings.beans.EntityType;
 import software.wings.beans.Environment;
 import software.wings.beans.FeatureFlag;
 import software.wings.beans.FeatureName;
 import software.wings.beans.GitConfig;
-import software.wings.beans.GraphNode;
 import software.wings.beans.InfrastructureMapping;
 import software.wings.beans.JenkinsConfig;
 import software.wings.beans.KmsConfig;
 import software.wings.beans.NewRelicConfig;
+import software.wings.beans.Pipeline;
+import software.wings.beans.PipelineStage;
+import software.wings.beans.PipelineStage.PipelineStageElement;
 import software.wings.beans.RestResponse;
 import software.wings.beans.Service;
 import software.wings.beans.ServiceTemplate;
@@ -83,9 +87,11 @@ import software.wings.generator.ApplicationGenerator;
 import software.wings.generator.ArtifactStreamGenerator;
 import software.wings.generator.EnvironmentGenerator;
 import software.wings.generator.InfrastructureMappingGenerator;
+import software.wings.generator.PipelineGenerator;
 import software.wings.generator.ServiceGenerator;
 import software.wings.generator.ServiceTemplateGenerator;
 import software.wings.generator.WorkflowGenerator;
+import software.wings.generator.WorkflowGenerator.PostProcessInfo;
 import software.wings.helpers.ext.mail.SmtpConfig;
 import software.wings.rules.SetupScheduler;
 import software.wings.service.intfc.EnvironmentService;
@@ -156,6 +162,7 @@ public class DataGenUtil extends BaseIntegrationTest {
   @Inject private ArtifactStreamGenerator artifactStreamGenerator;
   @Inject private EnvironmentGenerator environmentGenerator;
   @Inject private InfrastructureMappingGenerator infrastructureMappingGenerator;
+  @Inject private PipelineGenerator pipelineGenerator;
   @Inject private ServiceGenerator serviceGenerator;
   @Inject private ServiceTemplateGenerator serviceTemplateGenerator;
   @Inject private WorkflowGenerator workflowGenerator;
@@ -568,22 +575,31 @@ public class DataGenUtil extends BaseIntegrationTest {
                     .build())
             .build());
 
-    workflow2.getInfraMappingId();
+    workflow2 = workflowGenerator.postProcess(workflow2, PostProcessInfo.builder().selectNodeCount(5).build());
 
-    final GraphNode selectNodes = ((BasicOrchestrationWorkflow) workflow2.getOrchestrationWorkflow())
-                                      .getGraph()
-                                      .getSubworkflows()
-                                      .entrySet()
-                                      .stream()
-                                      .filter(entry -> "Provision Nodes".equals(entry.getValue().getGraphName()))
-                                      .findFirst()
-                                      .get()
-                                      .getValue()
-                                      .getNodes()
-                                      .get(0);
-
-    selectNodes.getProperties().put("instanceCount", "5");
-    workflowService.updateWorkflow(workflow2);
+    Pipeline pipeline = pipelineGenerator.createPipeline(seed,
+        aPipeline()
+            .withAppId(workflow1.getAppId())
+            .withName("Pipeline")
+            .withPipelineStages(
+                asList(PipelineStage.builder()
+                           .pipelineStageElements(asList(PipelineStageElement.builder()
+                                                             .name("Simple")
+                                                             .type(ENV_STATE.name())
+                                                             .properties(ImmutableMap.of("envId", workflow1.getEnvId(),
+                                                                 "workflowId", workflow1.getUuid()))
+                                                             .build()))
+                           .build(),
+                    PipelineStage.builder()
+                        .pipelineStageElements(
+                            asList(PipelineStageElement.builder()
+                                       .name("5 nodes")
+                                       .type(ENV_STATE.name())
+                                       .properties(ImmutableMap.of(
+                                           "envId", workflow2.getEnvId(), "workflowId", workflow2.getUuid()))
+                                       .build()))
+                        .build()))
+            .build());
   }
 
   private List<Application> createApplications() {
