@@ -98,6 +98,7 @@ public class NewRelicMetricNameCollectionJob implements Job {
                   > (TimeUnit.DAYS.toMillis(1) + TimeUnit.HOURS.toMillis(6))) {
                 logger.error("[learning-engine] NewRelic metric name collection task past due over 6 hours {} ",
                     dataCollectionInfo);
+                metricDataAnalysisService.updateMetricNames(metricNames);
               }
               String waitId = generateUuid();
               DelegateTask delegateTask =

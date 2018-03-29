@@ -734,7 +734,7 @@ public class WorkflowServiceImpl implements WorkflowService, DataProvider {
         NewRelicMetricNames metricNames = metricDataAnalysisService.getMetricNames(
             newRelicMetricNames.getNewRelicAppId(), newRelicMetricNames.getNewRelicConfigId());
         if (metricNames == null) {
-          metricDataAnalysisService.saveMetricNames(accountId, newRelicMetricNames);
+          metricDataAnalysisService.saveMetricNames(newRelicMetricNames);
           continue;
         }
         boolean foundWorkflowInfo = false;
@@ -746,7 +746,7 @@ public class WorkflowServiceImpl implements WorkflowService, DataProvider {
           }
         }
         if (!foundWorkflowInfo) {
-          metricDataAnalysisService.addMetricNamesWorkflowInfo(accountId, newRelicMetricNames);
+          metricDataAnalysisService.addMetricNamesWorkflowInfo(newRelicMetricNames);
         }
       }
     } catch (Exception ex) {
