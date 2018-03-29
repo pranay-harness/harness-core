@@ -35,13 +35,11 @@ import io.fabric8.kubernetes.api.model.NamespaceList;
 import io.fabric8.kubernetes.api.model.NodeList;
 import io.fabric8.kubernetes.api.model.Pod;
 import io.fabric8.kubernetes.api.model.PodCondition;
-import io.fabric8.kubernetes.api.model.PodList;
 import io.fabric8.kubernetes.api.model.PodTemplateSpec;
 import io.fabric8.kubernetes.api.model.ReplicationController;
 import io.fabric8.kubernetes.api.model.ReplicationControllerList;
 import io.fabric8.kubernetes.api.model.Secret;
 import io.fabric8.kubernetes.api.model.Service;
-import io.fabric8.kubernetes.api.model.ServiceList;
 import io.fabric8.kubernetes.api.model.apiextensions.CustomResourceDefinition;
 import io.fabric8.kubernetes.api.model.extensions.DaemonSet;
 import io.fabric8.kubernetes.api.model.extensions.DaemonSetList;
@@ -275,6 +273,7 @@ public class KubernetesContainerServiceImpl implements KubernetesContainerServic
       int desiredCount, int serviceSteadyStateTimeout, ExecutionLogCallback executionLogCallback) {
     boolean sizeChanged = previousCount != desiredCount;
     long startTime = clock.millis();
+    List<Pod> originalPods = getRunningPods(kubernetesConfig, encryptedDataDetails, controllerName);
     if (sizeChanged) {
       executionLogCallback.saveExecutionLog(
           String.format("Resizing controller [%s] in cluster [%s] from %s to %s instances", controllerName, clusterName,
@@ -300,16 +299,18 @@ public class KubernetesContainerServiceImpl implements KubernetesContainerServic
           "Controller [%s] in cluster [%s] stays at %s instances", controllerName, clusterName, previousCount));
     }
     return getContainerInfosWhenReady(kubernetesConfig, encryptedDataDetails, controllerName, previousCount,
-        desiredCount, serviceSteadyStateTimeout, executionLogCallback, sizeChanged, startTime);
+        desiredCount, serviceSteadyStateTimeout, originalPods, executionLogCallback, sizeChanged, startTime);
   }
 
   @Override
   public List<ContainerInfo> getContainerInfosWhenReady(KubernetesConfig kubernetesConfig,
       List<EncryptedDataDetail> encryptedDataDetails, String controllerName, int previousCount, int desiredCount,
-      int serviceSteadyStateTimeout, ExecutionLogCallback executionLogCallback, boolean wait, long startTime) {
-    List<Pod> pods = wait ? waitForPodsToBeRunning(kubernetesConfig, encryptedDataDetails, controllerName,
-                                previousCount, desiredCount, serviceSteadyStateTimeout, startTime, executionLogCallback)
-                          : getRunningPods(kubernetesConfig, encryptedDataDetails, controllerName);
+      int serviceSteadyStateTimeout, List<Pod> originalPods, ExecutionLogCallback executionLogCallback, boolean wait,
+      long startTime) {
+    List<Pod> pods = wait
+        ? waitForPodsToBeRunning(kubernetesConfig, encryptedDataDetails, controllerName, previousCount, desiredCount,
+              serviceSteadyStateTimeout, originalPods, startTime, executionLogCallback)
+        : originalPods;
     List<ContainerInfo> containerInfos = new ArrayList<>();
     boolean hasErrors = false;
     if (pods.size() != desiredCount) {
@@ -552,21 +553,23 @@ public class KubernetesContainerServiceImpl implements KubernetesContainerServic
   }
 
   @Override
-  public ServiceList getServices(
+  public List<Service> getServices(
       KubernetesConfig kubernetesConfig, List<EncryptedDataDetail> encryptedDataDetails, Map<String, String> labels) {
     return kubernetesHelperService.getKubernetesClient(kubernetesConfig, encryptedDataDetails)
         .services()
         .inNamespace(kubernetesConfig.getNamespace())
         .withLabels(labels)
-        .list();
+        .list()
+        .getItems();
   }
 
   @Override
-  public ServiceList listServices(KubernetesConfig kubernetesConfig, List<EncryptedDataDetail> encryptedDataDetails) {
+  public List<Service> listServices(KubernetesConfig kubernetesConfig, List<EncryptedDataDetail> encryptedDataDetails) {
     return kubernetesHelperService.getKubernetesClient(kubernetesConfig, encryptedDataDetails)
         .services()
         .inNamespace(kubernetesConfig.getNamespace())
-        .list();
+        .list()
+        .getItems();
   }
 
   @Override
@@ -799,13 +802,14 @@ public class KubernetesContainerServiceImpl implements KubernetesContainerServic
   }
 
   @Override
-  public PodList getPods(
+  public List<Pod> getPods(
       KubernetesConfig kubernetesConfig, List<EncryptedDataDetail> encryptedDataDetails, Map<String, String> labels) {
     return kubernetesHelperService.getKubernetesClient(kubernetesConfig, encryptedDataDetails)
         .pods()
         .inNamespace(kubernetesConfig.getNamespace())
         .withLabels(labels)
-        .list();
+        .list()
+        .getItems();
   }
 
   @Override
@@ -849,11 +853,14 @@ public class KubernetesContainerServiceImpl implements KubernetesContainerServic
 
   private List<Pod> waitForPodsToBeRunning(KubernetesConfig kubernetesConfig,
       List<EncryptedDataDetail> encryptedDataDetails, String controllerName, int previousCount, int desiredCount,
-      int serviceSteadyStateTimeout, long startTime, ExecutionLogCallback executionLogCallback) {
+      int serviceSteadyStateTimeout, List<Pod> originalPods, long startTime,
+      ExecutionLogCallback executionLogCallback) {
     HasMetadata controller = getController(kubernetesConfig, encryptedDataDetails, controllerName);
     PodTemplateSpec podTemplateSpec = getPodTemplateSpec(controller);
     Set<String> images = getControllerImages(podTemplateSpec);
     Map<String, String> labels = podTemplateSpec.getMetadata().getLabels();
+    Set<String> originalPodNames =
+        originalPods.stream().map(pod -> pod.getMetadata().getName()).collect(Collectors.toSet());
     KubernetesClient kubernetesClient =
         kubernetesHelperService.getKubernetesClient(kubernetesConfig, encryptedDataDetails);
     logger.info("Waiting for pods to be ready...");
@@ -881,6 +888,8 @@ public class KubernetesContainerServiceImpl implements KubernetesContainerServic
           // Show events
           try {
             Set<String> podNames = pods.stream().map(pod -> pod.getMetadata().getName()).collect(Collectors.toSet());
+            podNames.addAll(originalPodNames);
+
             List<Event> newEvents = kubernetesClient.events()
                                         .inNamespace(kubernetesConfig.getNamespace())
                                         .list()
@@ -981,7 +990,7 @@ public class KubernetesContainerServiceImpl implements KubernetesContainerServic
     return kubernetesClient.pods().inNamespace(kubernetesConfig.getNamespace()).withLabels(labels).list().getItems();
   }
 
-  private List<Pod> getRunningPods(
+  public List<Pod> getRunningPods(
       KubernetesConfig kubernetesConfig, List<EncryptedDataDetail> encryptedDataDetails, String controllerName) {
     HasMetadata controller = getController(kubernetesConfig, encryptedDataDetails, controllerName);
     PodTemplateSpec podTemplateSpec = getPodTemplateSpec(controller);
