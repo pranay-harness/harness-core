@@ -106,6 +106,7 @@ import software.wings.utils.KubernetesConvention;
 import software.wings.utils.Misc;
 
 import java.io.IOException;
+import java.time.Clock;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Base64;
@@ -138,6 +139,7 @@ public class KubernetesSetupCommandUnit extends ContainerSetupCommandUnit {
   @Inject @Transient private transient GkeClusterService gkeClusterService;
   @Inject @Transient private transient KubernetesContainerService kubernetesContainerService;
   @Inject @Transient private transient TimeLimiter timeLimiter;
+  @Inject @Transient private transient Clock clock;
   @Inject @Transient private transient AzureHelperService azureHelperService;
 
   public KubernetesSetupCommandUnit() {
@@ -224,6 +226,7 @@ public class KubernetesSetupCommandUnit extends ContainerSetupCommandUnit {
       List<String> previousActiveAutoscalers = null;
       Map<String, Integer> activeServiceCounts = new HashMap<>();
       Map<String, Integer> trafficWeights = new HashMap<>();
+      long startTime = clock.millis();
 
       if (isDaemonSet) {
         previousDaemonSetYaml = getDaemonSetYaml(kubernetesConfig, encryptedDataDetails, containerServiceName);
@@ -378,7 +381,7 @@ public class KubernetesSetupCommandUnit extends ContainerSetupCommandUnit {
 
       if (isDaemonSet) {
         listContainerInfosWhenReady(encryptedDataDetails, setupParams.getServiceSteadyStateTimeout(),
-            executionLogCallback, kubernetesConfig, containerServiceName);
+            executionLogCallback, kubernetesConfig, containerServiceName, startTime);
       } else {
         executionLogCallback.saveExecutionLog("Cleaning up old versions");
         cleanup(kubernetesConfig, encryptedDataDetails, containerServiceName, executionLogCallback);
@@ -743,15 +746,15 @@ public class KubernetesSetupCommandUnit extends ContainerSetupCommandUnit {
 
   private void listContainerInfosWhenReady(List<EncryptedDataDetail> encryptedDataDetails,
       int serviceSteadyStateTimeout, ExecutionLogCallback executionLogCallback, KubernetesConfig kubernetesConfig,
-      String containerServiceName) {
+      String containerServiceName, long startTime) {
     int desiredCount = kubernetesContainerService.getNodes(kubernetesConfig, encryptedDataDetails).getItems().size();
     int previousCount =
         kubernetesContainerService.getController(kubernetesConfig, encryptedDataDetails, containerServiceName) != null
         ? desiredCount
         : 0;
-    List<ContainerInfo> containerInfos =
-        kubernetesContainerService.getContainerInfosWhenReady(kubernetesConfig, encryptedDataDetails,
-            containerServiceName, previousCount, desiredCount, serviceSteadyStateTimeout, executionLogCallback, true);
+    List<ContainerInfo> containerInfos = kubernetesContainerService.getContainerInfosWhenReady(kubernetesConfig,
+        encryptedDataDetails, containerServiceName, previousCount, desiredCount, serviceSteadyStateTimeout,
+        executionLogCallback, true, startTime);
 
     boolean allContainersSuccess =
         containerInfos.stream().allMatch(info -> info.getStatus() == ContainerInfo.Status.SUCCESS);
@@ -779,6 +782,7 @@ public class KubernetesSetupCommandUnit extends ContainerSetupCommandUnit {
       ExecutionLogCallback executionLogCallback, KubernetesSetupParams setupParams, KubernetesConfig kubernetesConfig) {
     String daemonSetName = setupParams.getControllerNamePrefix();
     String daemonSetYaml = setupParams.getPreviousDaemonSetYaml();
+    long startTime = clock.millis();
     if (isNotBlank(daemonSetYaml)) {
       try {
         DaemonSet daemonSet = KubernetesHelper.loadYaml(daemonSetYaml);
@@ -794,7 +798,7 @@ public class KubernetesSetupCommandUnit extends ContainerSetupCommandUnit {
                       .collect(toList()),
             LogLevel.INFO);
         listContainerInfosWhenReady(encryptedDataDetails, setupParams.getServiceSteadyStateTimeout(),
-            executionLogCallback, kubernetesConfig, daemonSetName);
+            executionLogCallback, kubernetesConfig, daemonSetName, startTime);
       } catch (IOException e) {
         executionLogCallback.saveExecutionLog("Error reading DaemonSet from yaml: " + daemonSetName, LogLevel.ERROR);
       }
