@@ -246,6 +246,11 @@ public abstract class AbstractAnalysisState extends State {
   protected Set<String> getCanaryNewHostNames(ExecutionContext context) {
     CanaryWorkflowStandardParams canaryWorkflowStandardParams = context.getContextElement(ContextElementType.STANDARD);
     Set<String> rv = new HashSet<>();
+    if (isEmpty(canaryWorkflowStandardParams.getInstances())) {
+      getLogger().warn(
+          "No test nodes found for state: {}, id: {} ", getStateType(), context.getStateExecutionInstanceId());
+      return rv;
+    }
     for (InstanceElement instanceElement : canaryWorkflowStandardParams.getInstances()) {
       if (isEmpty(hostnameTemplate)) {
         rv.add(instanceElement.getHostName());
