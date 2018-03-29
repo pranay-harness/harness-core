@@ -19,7 +19,17 @@ import java.util.concurrent.TimeUnit;
 public class Localhost {
   private static final Logger logger = LoggerFactory.getLogger(Localhost.class);
 
+  private static String ipAddressCache;
+  private static String hostnameCache;
+
   public static String getLocalHostAddress() {
+    if (isBlank(ipAddressCache)) {
+      ipAddressCache = getIpAddress();
+    }
+    return ipAddressCache;
+  }
+
+  private static String getIpAddress() {
     try {
       String hostIp = InetAddress.getLocalHost().getHostAddress();
       if (isBlank(hostIp)) {
@@ -48,6 +58,13 @@ public class Localhost {
   }
 
   public static String getLocalHostName() {
+    if (isBlank(hostnameCache)) {
+      hostnameCache = getHostname();
+    }
+    return hostnameCache;
+  }
+
+  private static String getHostname() {
     try {
       String hostname = executeHostname();
       if (isBlank(hostname)) {
