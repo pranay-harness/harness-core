@@ -38,6 +38,7 @@ import com.amazonaws.services.ecs.model.NetworkMode;
 import com.amazonaws.services.ecs.model.PortMapping;
 import com.amazonaws.services.ecs.model.RegisterTaskDefinitionRequest;
 import com.amazonaws.services.ecs.model.TaskDefinition;
+import com.amazonaws.services.elasticloadbalancingv2.model.TargetGroup;
 import org.apache.commons.lang3.StringUtils;
 import org.apache.commons.lang3.reflect.MethodUtils;
 import org.junit.Before;
@@ -280,6 +281,7 @@ public class EcsSetupCommandUnitTest extends WingsBaseTest {
                                      .withClusterName(CLUSTER_NAME)
                                      .withTargetGroupArn(TARGET_GROUP_ARN)
                                      .withRoleArn(ROLE_ARN)
+                                     .withRegion(Regions.US_EAST_1.getName())
                                      .withAssignPublicIps(true)
                                      .withVpcId(VPC_ID)
                                      .withSecurityGroupIds(new String[] {SECURITY_GROUP_ID_1})
@@ -300,8 +302,18 @@ public class EcsSetupCommandUnitTest extends WingsBaseTest {
                     .withPortMappings(new PortMapping().withContainerPort(80).withProtocol("http"))
                     .withName(CONTAINER_NAME));
 
-    CreateServiceRequest createServiceRequest = (CreateServiceRequest) MethodUtils.invokeMethod(ecsSetupCommandUnit,
-        true, "getCreateServiceRequest", new Object[] {setupParams, taskDefinition, CONTAINER_SERVICE_NAME});
+    List<EncryptedDataDetail> encryptedDataDetails = new ArrayList<>();
+    TargetGroup targetGroup = new TargetGroup();
+    targetGroup.setPort(80);
+    targetGroup.setTargetGroupArn(TARGET_GROUP_ARN);
+
+    when(awsClusterService.getTargetGroup(
+             Regions.US_EAST_1.getName(), computeProvider, Collections.emptyList(), TARGET_GROUP_ARN))
+        .thenReturn(targetGroup);
+
+    CreateServiceRequest createServiceRequest =
+        (CreateServiceRequest) MethodUtils.invokeMethod(ecsSetupCommandUnit, true, "getCreateServiceRequest",
+            new Object[] {computeProvider, encryptedDataDetails, setupParams, taskDefinition, CONTAINER_SERVICE_NAME});
 
     assertNotNull(createServiceRequest);
 
@@ -344,6 +356,7 @@ public class EcsSetupCommandUnitTest extends WingsBaseTest {
                                      .withClusterName(CLUSTER_NAME)
                                      .withTargetGroupArn(TARGET_GROUP_ARN)
                                      .withRoleArn(ROLE_ARN)
+                                     .withRegion(Regions.US_EAST_1.getName())
                                      .withUseLoadBalancer(true)
                                      .build();
 
@@ -352,8 +365,19 @@ public class EcsSetupCommandUnitTest extends WingsBaseTest {
             .withPortMappings(new PortMapping().withContainerPort(80).withProtocol("http"))
             .withName(CONTAINER_NAME));
 
-    CreateServiceRequest createServiceRequest = (CreateServiceRequest) MethodUtils.invokeMethod(ecsSetupCommandUnit,
-        true, "getCreateServiceRequest", new Object[] {setupParams, taskDefinition, CONTAINER_SERVICE_NAME});
+    List<EncryptedDataDetail> encryptedDataDetails = new ArrayList<>();
+
+    TargetGroup targetGroup = new TargetGroup();
+    targetGroup.setPort(80);
+    targetGroup.setTargetGroupArn(TARGET_GROUP_ARN);
+
+    when(awsClusterService.getTargetGroup(
+             Regions.US_EAST_1.getName(), computeProvider, Collections.emptyList(), TARGET_GROUP_ARN))
+        .thenReturn(targetGroup);
+
+    CreateServiceRequest createServiceRequest =
+        (CreateServiceRequest) MethodUtils.invokeMethod(ecsSetupCommandUnit, true, "getCreateServiceRequest",
+            new Object[] {computeProvider, encryptedDataDetails, setupParams, taskDefinition, CONTAINER_SERVICE_NAME});
 
     assertNotNull(createServiceRequest);
 

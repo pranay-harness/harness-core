@@ -12,6 +12,7 @@ import com.amazonaws.services.ecs.model.CreateServiceRequest;
 import com.amazonaws.services.ecs.model.RegisterTaskDefinitionRequest;
 import com.amazonaws.services.ecs.model.Service;
 import com.amazonaws.services.ecs.model.TaskDefinition;
+import com.amazonaws.services.elasticloadbalancingv2.model.TargetGroup;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import software.wings.beans.SettingAttribute;
@@ -80,6 +81,12 @@ public class AwsClusterServiceImpl implements AwsClusterService {
   public List<Service> getServices(String region, SettingAttribute cloudProviderSetting,
       List<EncryptedDataDetail> encryptedDataDetails, String clusterName) {
     return ecsContainerService.getServices(region, cloudProviderSetting, encryptedDataDetails, clusterName);
+  }
+
+  @Override
+  public TargetGroup getTargetGroup(String region, SettingAttribute cloudProviderSetting,
+      List<EncryptedDataDetail> encryptedDataDetails, String targetGroupArn) {
+    return ecsContainerService.getTargetGroup(region, cloudProviderSetting, encryptedDataDetails, targetGroupArn);
   }
 
   @Override

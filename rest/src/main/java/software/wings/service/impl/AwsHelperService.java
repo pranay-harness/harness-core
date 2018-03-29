@@ -1231,6 +1231,29 @@ public class AwsHelperService {
     return emptyList();
   }
 
+  public TargetGroup getTargetGroupForAlb(
+      String region, AwsConfig awsConfig, List<EncryptedDataDetail> encryptionDetails, String targetGroupArn) {
+    try {
+      encryptionService.decrypt(awsConfig, encryptionDetails);
+      AmazonElasticLoadBalancingClient amazonElasticLoadBalancingClient = getAmazonElasticLoadBalancingClient(
+          Regions.fromName(region), awsConfig.getAccessKey(), awsConfig.getSecretKey());
+
+      DescribeTargetGroupsRequest describeTargetGroupsRequest = new DescribeTargetGroupsRequest().withPageSize(5);
+      describeTargetGroupsRequest.withTargetGroupArns(targetGroupArn);
+
+      List<TargetGroup> targetGroupList =
+          amazonElasticLoadBalancingClient.describeTargetGroups(describeTargetGroupsRequest).getTargetGroups();
+      if (isNotEmpty(targetGroupList)) {
+        return targetGroupList.get(0);
+      }
+
+    } catch (AmazonServiceException amazonServiceException) {
+      handleAmazonServiceException(amazonServiceException);
+    }
+
+    return null;
+  }
+
   public void setAutoScalingGroupCapacityAndWaitForInstancesReadyState(AwsConfig awsConfig,
       List<EncryptedDataDetail> encryptionDetails, String region, String autoScalingGroupName, Integer desiredCapacity,
       ManagerExecutionLogCallback executionLogCallback, Integer autoScalingSteadyStateTimeout) {
