@@ -18,10 +18,8 @@ import com.amazonaws.services.ecs.model.ListTasksResult;
 import com.amazonaws.services.ecs.model.Service;
 import io.fabric8.kubernetes.api.model.Pod;
 import io.fabric8.kubernetes.api.model.PodBuilder;
-import io.fabric8.kubernetes.api.model.PodList;
 import io.fabric8.kubernetes.api.model.ReplicationController;
 import io.fabric8.kubernetes.api.model.ReplicationControllerBuilder;
-import io.fabric8.kubernetes.api.model.ServiceList;
 import org.junit.Before;
 import org.junit.Test;
 import org.mockito.InjectMocks;
@@ -56,8 +54,6 @@ public class ContainerServiceTest extends WingsBaseTest {
 
   @InjectMocks private ContainerService containerService = new ContainerServiceImpl();
 
-  @Mock private ServiceList serviceList;
-  @Mock private PodList podList;
   @Mock private ListTasksResult listTasksResult;
 
   private KubernetesConfig kubernetesConfig = KubernetesConfig.builder()
@@ -139,10 +135,9 @@ public class ContainerServiceTest extends WingsBaseTest {
     when(kubernetesContainerService.getController(eq(kubernetesConfig), anyObject(), anyString()))
         .thenReturn(replicationController);
     when(kubernetesContainerService.getServices(eq(kubernetesConfig), anyObject(), anyObject()))
-        .thenReturn(serviceList);
-    when(serviceList.getItems()).thenReturn(singletonList(kubernetesService));
-    when(kubernetesContainerService.getPods(eq(kubernetesConfig), anyObject(), anyObject())).thenReturn(podList);
-    when(podList.getItems()).thenReturn(singletonList(pod));
+        .thenReturn(singletonList(kubernetesService));
+    when(kubernetesContainerService.getPods(eq(kubernetesConfig), anyObject(), anyObject()))
+        .thenReturn(singletonList(pod));
     when(kubernetesContainerService.getControllers(eq(kubernetesConfig), anyObject(), anyObject()))
         .thenReturn((List) singletonList(replicationController));
     when(kubernetesContainerService.getControllerPodCount(eq(kubernetesConfig), anyObject(), anyString()))

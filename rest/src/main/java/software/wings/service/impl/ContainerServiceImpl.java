@@ -104,14 +104,11 @@ public class ContainerServiceImpl implements ContainerService {
 
       if (controller != null) {
         Map<String, String> labels = controller.getMetadata().getLabels();
-        List<io.fabric8.kubernetes.api.model.Service> services =
-            kubernetesContainerService
-                .getServices(kubernetesConfig, containerServiceParams.getEncryptionDetails(), labels)
-                .getItems();
+        List<io.fabric8.kubernetes.api.model.Service> services = kubernetesContainerService.getServices(
+            kubernetesConfig, containerServiceParams.getEncryptionDetails(), labels);
         String serviceName = services.isEmpty() ? "None" : services.get(0).getMetadata().getName();
-        for (Pod pod :
-            kubernetesContainerService.getPods(kubernetesConfig, containerServiceParams.getEncryptionDetails(), labels)
-                .getItems()) {
+        for (Pod pod : kubernetesContainerService.getPods(
+                 kubernetesConfig, containerServiceParams.getEncryptionDetails(), labels)) {
           if (pod.getStatus().getPhase().equals("Running")) {
             result.add(aKubernetesContainerInfo()
                            .withClusterName(containerServiceParams.getClusterName())

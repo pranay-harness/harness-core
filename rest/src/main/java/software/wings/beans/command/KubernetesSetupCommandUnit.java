@@ -51,6 +51,7 @@ import io.fabric8.kubernetes.api.model.LabelSelectorBuilder;
 import io.fabric8.kubernetes.api.model.LoadBalancerIngress;
 import io.fabric8.kubernetes.api.model.LoadBalancerStatus;
 import io.fabric8.kubernetes.api.model.ObjectMeta;
+import io.fabric8.kubernetes.api.model.Pod;
 import io.fabric8.kubernetes.api.model.PodTemplateSpec;
 import io.fabric8.kubernetes.api.model.ReplicationController;
 import io.fabric8.kubernetes.api.model.ReplicationControllerSpec;
@@ -223,13 +224,15 @@ public class KubernetesSetupCommandUnit extends ContainerSetupCommandUnit {
           : KubernetesConvention.getControllerName(setupParams.getControllerNamePrefix(), revision);
 
       String previousDaemonSetYaml = null;
+      List<Pod> originalDaemonSetPods = null;
       List<String> previousActiveAutoscalers = null;
       Map<String, Integer> activeServiceCounts = new HashMap<>();
       Map<String, Integer> trafficWeights = new HashMap<>();
-      long startTime = clock.millis();
 
       if (isDaemonSet) {
         previousDaemonSetYaml = getDaemonSetYaml(kubernetesConfig, encryptedDataDetails, containerServiceName);
+        originalDaemonSetPods =
+            kubernetesContainerService.getRunningPods(kubernetesConfig, encryptedDataDetails, containerServiceName);
       } else {
         previousActiveAutoscalers =
             getActiveAutoscalers(kubernetesConfig, encryptedDataDetails, containerServiceName, executionLogCallback);
@@ -264,6 +267,8 @@ public class KubernetesSetupCommandUnit extends ContainerSetupCommandUnit {
       // Setup secret map
       Secret secretMap = prepareSecretMap(kubernetesConfig, encryptedDataDetails, setupParams, containerServiceName,
           controllerLabels, safeDisplayServiceVariables, serviceVariables, executionLogCallback);
+
+      long daemonSetStartTime = clock.millis();
 
       // Setup controller
       kubernetesContainerService.createController(kubernetesConfig, encryptedDataDetails,
@@ -381,7 +386,7 @@ public class KubernetesSetupCommandUnit extends ContainerSetupCommandUnit {
 
       if (isDaemonSet) {
         listContainerInfosWhenReady(encryptedDataDetails, setupParams.getServiceSteadyStateTimeout(),
-            executionLogCallback, kubernetesConfig, containerServiceName, startTime);
+            executionLogCallback, kubernetesConfig, containerServiceName, originalDaemonSetPods, daemonSetStartTime);
       } else {
         executionLogCallback.saveExecutionLog("Cleaning up old versions");
         cleanup(kubernetesConfig, encryptedDataDetails, containerServiceName, executionLogCallback);
@@ -746,7 +751,7 @@ public class KubernetesSetupCommandUnit extends ContainerSetupCommandUnit {
 
   private void listContainerInfosWhenReady(List<EncryptedDataDetail> encryptedDataDetails,
       int serviceSteadyStateTimeout, ExecutionLogCallback executionLogCallback, KubernetesConfig kubernetesConfig,
-      String containerServiceName, long startTime) {
+      String containerServiceName, List<Pod> originalPods, long startTime) {
     int desiredCount = kubernetesContainerService.getNodes(kubernetesConfig, encryptedDataDetails).getItems().size();
     int previousCount =
         kubernetesContainerService.getController(kubernetesConfig, encryptedDataDetails, containerServiceName) != null
@@ -754,7 +759,7 @@ public class KubernetesSetupCommandUnit extends ContainerSetupCommandUnit {
         : 0;
     List<ContainerInfo> containerInfos = kubernetesContainerService.getContainerInfosWhenReady(kubernetesConfig,
         encryptedDataDetails, containerServiceName, previousCount, desiredCount, serviceSteadyStateTimeout,
-        executionLogCallback, true, startTime);
+        originalPods, executionLogCallback, true, startTime);
 
     boolean allContainersSuccess =
         containerInfos.stream().allMatch(info -> info.getStatus() == ContainerInfo.Status.SUCCESS);
@@ -785,6 +790,8 @@ public class KubernetesSetupCommandUnit extends ContainerSetupCommandUnit {
     long startTime = clock.millis();
     if (isNotBlank(daemonSetYaml)) {
       try {
+        List<Pod> originalPods =
+            kubernetesContainerService.getRunningPods(kubernetesConfig, encryptedDataDetails, daemonSetName);
         DaemonSet daemonSet = KubernetesHelper.loadYaml(daemonSetYaml);
         executionLogCallback.saveExecutionLog("Rolling back DaemonSet " + daemonSetName);
         kubernetesContainerService.createController(kubernetesConfig, encryptedDataDetails, daemonSet);
@@ -798,7 +805,7 @@ public class KubernetesSetupCommandUnit extends ContainerSetupCommandUnit {
                       .collect(toList()),
             LogLevel.INFO);
         listContainerInfosWhenReady(encryptedDataDetails, setupParams.getServiceSteadyStateTimeout(),
-            executionLogCallback, kubernetesConfig, daemonSetName, startTime);
+            executionLogCallback, kubernetesConfig, daemonSetName, originalPods, startTime);
       } catch (IOException e) {
         executionLogCallback.saveExecutionLog("Error reading DaemonSet from yaml: " + daemonSetName, LogLevel.ERROR);
       }
