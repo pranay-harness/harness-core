@@ -48,6 +48,7 @@ import software.wings.cloudprovider.gke.GkeClusterService;
 import software.wings.cloudprovider.gke.KubernetesContainerService;
 import software.wings.utils.KubernetesConvention;
 
+import java.time.Clock;
 import java.util.Date;
 import java.util.HashMap;
 import java.util.List;
@@ -56,6 +57,7 @@ import java.util.Map;
 public class KubernetesSetupCommandUnitTest extends WingsBaseTest {
   @Mock private GkeClusterService gkeClusterService;
   @Mock private KubernetesContainerService kubernetesContainerService;
+  @Mock private Clock clock;
 
   @InjectMocks private KubernetesSetupCommandUnit kubernetesSetupCommandUnit = new KubernetesSetupCommandUnit();
 
