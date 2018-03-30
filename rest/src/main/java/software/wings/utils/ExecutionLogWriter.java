@@ -13,6 +13,7 @@ import java.io.Writer;
 @Builder
 public class ExecutionLogWriter extends Writer {
   private final DelegateLogService logService;
+  @SuppressWarnings("PMD.AvoidStringBufferField") // This buffer is getting cleared on every newline.
   private final StringBuilder stringBuilder;
   private final LogLevel logLevel;
   private final String accountId;
@@ -26,6 +27,21 @@ public class ExecutionLogWriter extends Writer {
     stringBuilder.append(cbuf, off, len);
     char lastChar = cbuf[off + len - 1];
     if (lastChar == '\n') {
+      logAndFlush();
+    }
+  }
+
+  @Override
+  public void flush() throws IOException {
+    logAndFlush();
+  }
+
+  @Override
+  public void close() throws IOException {}
+
+  private void logAndFlush() {
+    String logLine = stringBuilder.toString();
+    if (!logLine.isEmpty()) {
       logService.save(accountId,
           aLog()
               .withAppId(appId)
@@ -39,10 +55,4 @@ public class ExecutionLogWriter extends Writer {
       stringBuilder.setLength(0);
     }
   }
-
-  @Override
-  public void flush() throws IOException {}
-
-  @Override
-  public void close() throws IOException {}
 }
