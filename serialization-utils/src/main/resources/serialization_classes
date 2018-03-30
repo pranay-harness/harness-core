@@ -285,3 +285,7 @@ software.wings.security.GenericEntityFilter, 5249
 software.wings.security.EnvFilter, 5250
 software.wings.security.WorkflowFilter, 5251
 software.wings.api.ArtifactCollectionExecutionData, 5252
+software.wings.api.ScriptType, 5253
+software.wings.sm.states.ShellScriptState$ConnectionType, 5254
+software.wings.beans.WinRmConnectionAttributes, 5255
+software.wings.beans.WinRmConnectionAttributes$AuthenticationScheme, 5256

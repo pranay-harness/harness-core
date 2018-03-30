@@ -241,7 +241,8 @@ public class SettingsServiceImpl implements SettingsService {
     String type = settingAttribute.getValue().getType();
 
     boolean skip = SettingVariableTypes.HOST_CONNECTION_ATTRIBUTES.name().equals(type)
-        || SettingVariableTypes.BASTION_HOST_CONNECTION_ATTRIBUTES.name().equals(type);
+        || SettingVariableTypes.BASTION_HOST_CONNECTION_ATTRIBUTES.name().equals(type)
+        || SettingVariableTypes.WINRM_CONNECTION_ATTRIBUTES.name().equals(type);
 
     return pushToGit && !skip;
   }

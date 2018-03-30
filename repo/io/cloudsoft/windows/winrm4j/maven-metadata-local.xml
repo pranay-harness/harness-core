@@ -1,0 +1,11 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<metadata>
+  <groupId>io.cloudsoft.windows</groupId>
+  <artifactId>winrm4j</artifactId>
+  <versioning>
+    <versions>
+      <version>0.6.0-SNAPSHOT</version>
+    </versions>
+    <lastUpdated>20180329182852</lastUpdated>
+  </versioning>
+</metadata>

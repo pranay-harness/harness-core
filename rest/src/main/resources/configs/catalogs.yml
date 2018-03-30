@@ -213,6 +213,8 @@ DEPLOYMENT_TYPE:
       value: AWS_LAMBDA
     - name: AMI
       value: AMI
+    - name: Windows Remote Management (WinRM)
+      value: WINRM
 
 ENVIRONMENT_TYPE:
     - name: Production

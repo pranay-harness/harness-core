@@ -1,0 +1,7 @@
+#NOTE: This is a Maven Resolver internal implementation file, its format can be changed without prior notice.
+#Thu Mar 29 11:28:37 PDT 2018
+winrm4j-service-0.6.0-SNAPSHOT.wsdl>=
+winrm4j-service-0.6.0-SNAPSHOT-tests.jar>=
+winrm4j-service-0.6.0-SNAPSHOT.jar>=
+winrm4j-service-0.6.0-SNAPSHOT.WinRmService.wsdl>=
+winrm4j-service-0.6.0-SNAPSHOT.pom>=

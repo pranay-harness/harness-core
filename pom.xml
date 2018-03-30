@@ -987,6 +987,7 @@
                 <artifactId>evo-inflector</artifactId>
                 <version>1.2.2</version>
             </dependency>
+
         </dependencies>
     </dependencyManagement>
     <build>

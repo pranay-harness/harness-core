@@ -9,7 +9,8 @@ public enum DeploymentType {
   ECS("Amazon EC2 Container Services (ECS)"),
   KUBERNETES("Kubernetes"),
   AWS_LAMBDA("AWS Lambda"),
-  AMI("AMI");
+  AMI("AMI"),
+  WINRM("Windows Remote Management (WinRM)");
 
   private String displayName;
 

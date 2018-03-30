@@ -15,6 +15,7 @@ import com.github.reinert.jjschema.Attributes;
 import lombok.Getter;
 import lombok.Setter;
 import org.hibernate.validator.constraints.NotEmpty;
+import org.mongodb.morphia.annotations.Property;
 import org.mongodb.morphia.annotations.Transient;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -22,6 +23,7 @@ import software.wings.annotation.Encryptable;
 import software.wings.api.InstanceElement;
 import software.wings.api.PhaseElement;
 import software.wings.api.ScriptStateExecutionData;
+import software.wings.api.ScriptType;
 import software.wings.beans.Activity;
 import software.wings.beans.Activity.ActivityBuilder;
 import software.wings.beans.Application;
@@ -30,6 +32,7 @@ import software.wings.beans.Environment;
 import software.wings.beans.HostConnectionAttributes;
 import software.wings.beans.SettingAttribute;
 import software.wings.beans.TaskType;
+import software.wings.beans.WinRmConnectionAttributes;
 import software.wings.beans.command.Command;
 import software.wings.beans.command.CommandExecutionResult;
 import software.wings.beans.command.CommandType;
@@ -37,6 +40,7 @@ import software.wings.beans.delegation.ShellScriptParameters;
 import software.wings.common.Constants;
 import software.wings.exception.WingsException;
 import software.wings.security.encryption.EncryptedDataDetail;
+import software.wings.service.impl.ConnectionAttributesDataProvider;
 import software.wings.service.impl.SSHKeyDataProvider;
 import software.wings.service.intfc.ActivityService;
 import software.wings.service.intfc.DelegateService;
@@ -68,14 +72,28 @@ public class ShellScriptState extends State {
 
   @NotEmpty @Getter @Setter @Attributes(title = "Target Host") private String host;
 
+  public enum ConnectionType { SSH, WINRM }
+
+  @NotEmpty @Getter @Setter @Attributes(title = "Connection Type") private ConnectionType connectionType;
+
   @NotEmpty
   @Getter
   @Setter
   @Attributes(title = "SSH Key")
   @EnumData(enumDataProvider = SSHKeyDataProvider.class)
+  @Property("sshKeyRef")
   private String sshKeyRef;
 
+  @NotEmpty
+  @Getter
+  @Setter
+  @Attributes(title = "Connection Attributes")
+  @EnumData(enumDataProvider = ConnectionAttributesDataProvider.class)
+  private String connectionAttributes;
+
   @Getter @Setter @Attributes(title = "Working Directory") private String commandPath;
+
+  @NotEmpty @Getter @Setter @Attributes(title = "Script Type") private ScriptType scriptType;
 
   @NotEmpty @Getter @Setter @Attributes(title = "Script") private String scriptString;
 
@@ -165,11 +183,24 @@ public class ShellScriptState extends State {
 
     ExecutionContextImpl executionContext = (ExecutionContextImpl) context;
 
-    SettingAttribute keySettingAttribute = settingsService.get(sshKeyRef);
-    HostConnectionAttributes hostConnectionAttributes = (HostConnectionAttributes) keySettingAttribute.getValue();
+    String username = null;
+    WinRmConnectionAttributes winRmConnectionAttributes = null;
+    List<EncryptedDataDetail> winrmEdd = Collections.emptyList();
+    List<EncryptedDataDetail> keyEncryptionDetails = Collections.emptyList();
 
-    List<EncryptedDataDetail> keyEncryptionDetails = secretManager.getEncryptionDetails(
-        (Encryptable) keySettingAttribute.getValue(), context.getAppId(), context.getWorkflowExecutionId());
+    if (connectionType == ConnectionType.SSH) {
+      SettingAttribute keySettingAttribute = settingsService.get(sshKeyRef);
+      HostConnectionAttributes hostConnectionAttributes = (HostConnectionAttributes) keySettingAttribute.getValue();
+      username = hostConnectionAttributes.getUserName();
+      keyEncryptionDetails = secretManager.getEncryptionDetails(
+          (Encryptable) keySettingAttribute.getValue(), context.getAppId(), context.getWorkflowExecutionId());
+
+    } else if (connectionType == ConnectionType.WINRM) {
+      winRmConnectionAttributes = (WinRmConnectionAttributes) settingsService.get(connectionAttributes).getValue();
+      username = winRmConnectionAttributes.getUsername();
+      winrmEdd = secretManager.getEncryptionDetails(
+          winRmConnectionAttributes, context.getAppId(), context.getWorkflowExecutionId());
+    }
 
     DelegateTask delegateTask =
         aDelegateTask()
@@ -182,8 +213,13 @@ public class ShellScriptState extends State {
                                               .appId(executionContext.getAppId())
                                               .activityId(activityId)
                                               .host(host)
-                                              .userName(hostConnectionAttributes.getUserName())
+                                              .connectionType(connectionType)
+                                              .winrmConnectionAttributes(winRmConnectionAttributes)
+                                              .winrmConnectionEncryptedDataDetails(winrmEdd)
+                                              .userName(username)
                                               .keyEncryptedDataDetails(keyEncryptionDetails)
+                                              .workingDirectory(commandPath)
+                                              .scriptType(scriptType)
                                               .script(scriptString)
                                               .build()})
             .withEnvId(envId)
@@ -193,8 +229,8 @@ public class ShellScriptState extends State {
     if (getTimeoutMillis() != null) {
       delegateTask.setTimeout(getTimeoutMillis());
     }
-    String delegateTaskId = delegateService.queueTask(delegateTask);
 
+    String delegateTaskId = delegateService.queueTask(delegateTask);
     return anExecutionResponse()
         .withAsync(true)
         .withCorrelationIds(Collections.singletonList(activityId))
