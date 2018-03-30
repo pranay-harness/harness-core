@@ -631,6 +631,8 @@ public class WingsMongoPersistence implements WingsPersistence, Managed {
       if (userRequestContext.isAppIdFilterRequired()) {
         if (CollectionUtils.isNotEmpty(userRequestContext.getAppIds())) {
           pageRequest.addFilter("appId", Operator.IN, userRequestContext.getAppIds().toArray());
+        } else {
+          return false;
         }
       }
 
