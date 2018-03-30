@@ -4,7 +4,7 @@ import io.cloudsoft.winrm4j.client.ShellCommand;
 import io.cloudsoft.winrm4j.client.WinRmClient;
 import software.wings.beans.WinRmConnectionAttributes.AuthenticationScheme;
 
-import java.io.StringWriter;
+import java.io.Writer;
 
 public class WinRmSession implements AutoCloseable {
   private static final int operationTimeout = 30 * 60 * 1000;
@@ -26,7 +26,7 @@ public class WinRmSession implements AutoCloseable {
     shell = client.createShell();
   }
 
-  public int executeCommandString(String command, StringWriter output, StringWriter error) {
+  public int executeCommandString(String command, Writer output, Writer error) {
     try {
       return shell.execute(command, output, error);
     } catch (Exception e) {
