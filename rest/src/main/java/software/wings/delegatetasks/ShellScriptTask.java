@@ -1,6 +1,8 @@
 package software.wings.delegatetasks;
 
+import static io.harness.govern.Switch.unhandled;
 import static software.wings.beans.command.CommandExecutionResult.Builder.aCommandExecutionResult;
+import static software.wings.beans.command.CommandExecutionResult.CommandExecutionStatus.FAILURE;
 
 import com.google.inject.Inject;
 
@@ -14,6 +16,9 @@ import software.wings.core.ssh.executors.SshExecutor;
 import software.wings.core.ssh.executors.SshExecutor.ExecutorType;
 import software.wings.core.ssh.executors.SshExecutorFactory;
 import software.wings.core.ssh.executors.SshSessionConfig;
+import software.wings.core.winrm.executors.WinRmExecutor;
+import software.wings.core.winrm.executors.WinRmExecutorFactory;
+import software.wings.core.winrm.executors.WinRmSessionConfig;
 import software.wings.exception.WingsException;
 import software.wings.service.intfc.security.EncryptionService;
 import software.wings.waitnotify.NotifyResponseData;
@@ -26,6 +31,7 @@ public class ShellScriptTask extends AbstractDelegateRunnableTask {
   private static final Logger logger = LoggerFactory.getLogger(CommandTask.class);
 
   @Inject private SshExecutorFactory sshExecutorFactory;
+  @Inject private WinRmExecutorFactory winrmExecutorFactory;
   @Inject private EncryptionService encryptionService;
 
   public ShellScriptTask(String delegateId, DelegateTask delegateTask, Consumer<NotifyResponseData> postExecute,
@@ -39,17 +45,40 @@ public class ShellScriptTask extends AbstractDelegateRunnableTask {
   }
 
   private CommandExecutionResult run(ShellScriptParameters parameters) {
-    SshExecutor executor = sshExecutorFactory.getExecutor(ExecutorType.KEY_AUTH);
+    switch (parameters.getConnectionType()) {
+      case SSH: {
+        SshExecutor executor = sshExecutorFactory.getExecutor(ExecutorType.KEY_AUTH);
 
-    try {
-      SshSessionConfig expectedSshConfig = parameters.sshSessionConfig(encryptionService);
-      executor.init(expectedSshConfig);
+        try {
+          SshSessionConfig expectedSshConfig = parameters.sshSessionConfig(encryptionService);
+          executor.init(expectedSshConfig);
 
-      CommandExecutionStatus commandExecutionStatus = executor.executeCommandString(parameters.getScript());
+          CommandExecutionStatus commandExecutionStatus = executor.executeCommandString(parameters.getScript());
 
-      return aCommandExecutionResult().withStatus(commandExecutionStatus).build();
-    } catch (IOException e) {
-      throw new WingsException(e);
+          return aCommandExecutionResult().withStatus(commandExecutionStatus).build();
+        } catch (IOException e) {
+          throw new WingsException(e);
+        }
+      }
+      case WINRM: {
+        try {
+          WinRmSessionConfig winRmSessionConfig = parameters.winrmSessionConfig(encryptionService);
+          WinRmExecutor executor = winrmExecutorFactory.getExecutor(winRmSessionConfig);
+
+          CommandExecutionStatus commandExecutionStatus =
+              executor.executeCommandString(parameters.getScript(), new StringBuffer());
+
+          return aCommandExecutionResult().withStatus(commandExecutionStatus).build();
+        } catch (IOException e) {
+          throw new WingsException(e);
+        }
+      }
+      default:
+        unhandled(parameters.getConnectionType());
+        return aCommandExecutionResult()
+            .withStatus(FAILURE)
+            .withErrorMessage(String.format("Unsupported ConnectionType %s", parameters.getConnectionType()))
+            .build();
     }
   }
 }

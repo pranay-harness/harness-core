@@ -1,0 +1,402 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<wsdl:definitions name="WinRmService" targetNamespace="http://schemas.dmtf.org/wbem/wsman/1/wsman.xsd" xmlns:wsdl="http://schemas.xmlsoap.org/wsdl/" xmlns:wsaw="http://www.w3.org/2006/05/addressing/wsdl" xmlns:xsd="http://www.w3.org/2001/XMLSchema" xmlns:tns="http://schemas.dmtf.org/wbem/wsman/1/wsman.xsd" xmlns:soap12="http://schemas.xmlsoap.org/wsdl/soap12/" xmlns:ns2="http://schemas.xmlsoap.org/ws/2004/09/transfer" xmlns:ns1="http://schemas.microsoft.com/wbem/wsman/1/windows/shell" xmlns:wsam="http://www.w3.org/2007/05/addressing/metadata">
+  <wsdl:types>
+<xs:schema xmlns:xs="http://www.w3.org/2001/XMLSchema" targetNamespace="http://www.w3.org/XML/1998/namespace" version="1.0">
+
+  <xs:attribute name="lang" type="xs:string"/>
+
+</xs:schema>
+<xs:schema xmlns="http://schemas.xmlsoap.org/ws/2004/09/transfer" xmlns:xs="http://www.w3.org/2001/XMLSchema" attributeFormDefault="unqualified" elementFormDefault="unqualified" targetNamespace="http://schemas.xmlsoap.org/ws/2004/09/transfer">
+  <xs:complexType name="ResourceCreated">
+    <xs:sequence>
+      <xs:any maxOccurs="unbounded" minOccurs="0" namespace="##other" processContents="skip"/>
+    </xs:sequence>
+  </xs:complexType>
+  <xs:element name="ResourceCreated" nillable="true" type="ResourceCreated"/>
+</xs:schema>
+<xs:schema xmlns:ns0="http://schemas.dmtf.org/wbem/wsman/1/wsman.xsd" xmlns:tns="http://schemas.microsoft.com/wbem/wsman/1/windows/shell" xmlns:xs="http://www.w3.org/2001/XMLSchema" attributeFormDefault="unqualified" elementFormDefault="qualified" targetNamespace="http://schemas.microsoft.com/wbem/wsman/1/windows/shell">
+  <xs:import namespace="http://schemas.dmtf.org/wbem/wsman/1/wsman.xsd"/>
+  <xs:element name="Code" type="xs:string"/>
+  <xs:element name="CommandId" type="xs:string"/>
+  <xs:element name="CommandLine" type="tns:CommandLine"/>
+  <xs:complexType name="Receive">
+    <xs:sequence>
+      <xs:element name="DesiredStream" type="tns:DesiredStreamType"/>
+    </xs:sequence>
+  </xs:complexType>
+  <xs:complexType name="DesiredStreamType">
+    <xs:simpleContent>
+      <xs:extension base="xs:string">
+        <xs:attribute ref="tns:CommandId"/>
+      </xs:extension>
+    </xs:simpleContent>
+  </xs:complexType>
+  <xs:complexType name="ReceiveResponse">
+    <xs:sequence>
+      <xs:element maxOccurs="unbounded" name="Stream" type="tns:StreamType"/>
+      <xs:element minOccurs="0" name="CommandState" type="tns:CommandStateType"/>
+    </xs:sequence>
+    <xs:attribute ref="tns:SequenceID"/>
+  </xs:complexType>
+  <xs:complexType name="StreamType">
+    <xs:simpleContent>
+      <xs:extension base="xs:base64Binary">
+        <xs:attribute name="Name" type="xs:string" use="required"/>
+        <xs:attribute name="CommandId" type="xs:string"/>
+        <xs:attribute name="End" type="xs:boolean"/>
+        <xs:attribute name="Unit" type="xs:anyURI"/>
+        <xs:attribute name="EndUnit" type="xs:boolean"/>
+      </xs:extension>
+    </xs:simpleContent>
+  </xs:complexType>
+  <xs:complexType name="CommandStateType">
+    <xs:sequence>
+      <xs:element minOccurs="0" name="ExitCode" type="xs:integer"/>
+    </xs:sequence>
+    <xs:attribute name="CommandId" type="xs:string" use="required"/>
+    <xs:attribute name="State" type="xs:string"/>
+  </xs:complexType>
+  <xs:complexType name="CommandLine">
+    <xs:sequence>
+      <xs:element minOccurs="0" name="Command" type="xs:string"/>
+      <xs:element maxOccurs="unbounded" minOccurs="0" name="Arguments" type="xs:string"/>
+    </xs:sequence>
+  </xs:complexType>
+  <xs:complexType name="Shell">
+    <xs:sequence>
+      <xs:element minOccurs="0" name="ShellId" type="xs:anyURI"/>
+      <xs:element minOccurs="0" name="Environment" type="tns:EnvironmentVariableList"/>
+      <xs:element minOccurs="0" name="WorkingDirectory" type="xs:string"/>
+      <xs:element minOccurs="0" name="Lifetime" type="xs:duration"/>
+      <xs:element minOccurs="0" name="IdleTimeout" type="xs:duration"/>
+      <xs:element minOccurs="0" name="InputStreams">
+        <xs:simpleType>
+          <xs:list itemType="xs:string"/>
+        </xs:simpleType>
+      </xs:element>
+      <xs:element minOccurs="0" name="OutputStreams">
+        <xs:simpleType>
+          <xs:list itemType="xs:string"/>
+        </xs:simpleType>
+      </xs:element>
+      <xs:any maxOccurs="unbounded" minOccurs="0" namespace="##other" processContents="lax"/>
+    </xs:sequence>
+  </xs:complexType>
+  <xs:complexType name="EnvironmentVariableList">
+    <xs:sequence>
+      <xs:element maxOccurs="unbounded" name="Variable" type="tns:EnvironmentVariable"/>
+    </xs:sequence>
+  </xs:complexType>
+  <xs:complexType name="EnvironmentVariable">
+    <xs:simpleContent>
+      <xs:extension base="xs:string">
+        <xs:attribute name="Name" type="xs:string" use="required"/>
+      </xs:extension>
+    </xs:simpleContent>
+  </xs:complexType>
+  <xs:attribute name="CommandId" type="xs:string"/>
+  <xs:attribute name="SequenceID" type="xs:unsignedLong"/>
+  <xs:element name="Receive" nillable="true" type="tns:Receive"/>
+  <xs:element name="ReceiveResponse" nillable="true" type="tns:ReceiveResponse"/>
+  <xs:element name="Signal" nillable="true" type="ns0:Signal"/>
+  <xs:element name="Shell" nillable="true" type="tns:Shell"/>
+</xs:schema>
+<xs:schema xmlns:ns1="http://schemas.microsoft.com/wbem/wsman/1/windows/shell" xmlns:tns="http://schemas.dmtf.org/wbem/wsman/1/wsman.xsd" xmlns:xs="http://www.w3.org/2001/XMLSchema" attributeFormDefault="unqualified" elementFormDefault="unqualified" targetNamespace="http://schemas.dmtf.org/wbem/wsman/1/wsman.xsd">
+  <xs:import namespace="http://www.w3.org/XML/1998/namespace"/>
+  <xs:import namespace="http://schemas.microsoft.com/wbem/wsman/1/windows/shell"/>
+  <xs:element name="CommandResponse" type="tns:CommandResponse"/>
+  <xs:element name="Delete" type="tns:Delete"/>
+  <xs:element name="DeleteResponse" type="tns:DeleteResponse"/>
+  <xs:complexType name="Delete">
+    <xs:sequence/>
+  </xs:complexType>
+  <xs:complexType name="Locale">
+    <xs:sequence/>
+    <xs:attribute ref="xml:lang"/>
+  </xs:complexType>
+  <xs:complexType name="SelectorSetType">
+    <xs:sequence>
+      <xs:element form="qualified" maxOccurs="unbounded" minOccurs="0" name="Selector" type="tns:SelectorType"/>
+    </xs:sequence>
+    <xs:anyAttribute namespace="##other" processContents="skip"/>
+  </xs:complexType>
+  <xs:complexType mixed="true" name="SelectorType">
+    <xs:sequence>
+      <xs:any maxOccurs="unbounded" minOccurs="0" namespace="##other" processContents="lax"/>
+    </xs:sequence>
+    <xs:attribute name="Name" type="xs:token" use="required"/>
+    <xs:anyAttribute namespace="##other" processContents="skip"/>
+  </xs:complexType>
+  <xs:complexType name="DeleteResponse">
+    <xs:sequence/>
+  </xs:complexType>
+  <xs:complexType name="Signal">
+    <xs:sequence>
+      <xs:element ref="ns1:Code"/>
+    </xs:sequence>
+    <xs:attribute name="CommandId" type="xs:string"/>
+  </xs:complexType>
+  <xs:complexType name="SignalResponse">
+    <xs:sequence>
+      <xs:any maxOccurs="unbounded" minOccurs="0" namespace="##other" processContents="lax"/>
+    </xs:sequence>
+  </xs:complexType>
+  <xs:complexType name="OptionSetType">
+    <xs:sequence>
+      <xs:element form="qualified" maxOccurs="unbounded" minOccurs="0" name="Option" type="tns:OptionType"/>
+    </xs:sequence>
+    <xs:anyAttribute namespace="##other" processContents="skip"/>
+  </xs:complexType>
+  <xs:complexType name="OptionType">
+    <xs:simpleContent>
+      <xs:extension base="xs:string">
+        <xs:attribute name="Name" type="xs:token" use="required"/>
+        <xs:attribute name="MustComply" type="xs:boolean"/>
+        <xs:attribute name="Type" type="xs:QName"/>
+      </xs:extension>
+    </xs:simpleContent>
+  </xs:complexType>
+  <xs:complexType name="CommandResponse">
+    <xs:sequence>
+      <xs:element minOccurs="0" ref="ns1:CommandId"/>
+    </xs:sequence>
+  </xs:complexType>
+  <xs:element name="ResourceURI" nillable="true" type="xs:string"/>
+  <xs:element name="MaxEnvelopeSize" nillable="true" type="xs:int"/>
+  <xs:element name="OperationTimeout" nillable="true" type="xs:string"/>
+  <xs:element name="Locale" nillable="true" type="tns:Locale"/>
+  <xs:element name="SelectorSet" nillable="true" type="tns:SelectorSetType"/>
+  <xs:element name="OptionSet" nillable="true" type="tns:OptionSetType"/>
+  <xs:element name="SignalResponse" nillable="true" type="tns:SignalResponse"/>
+</xs:schema>
+  </wsdl:types>
+  <wsdl:message name="Delete">
+    <wsdl:part name="parameters" element="tns:Delete">
+    </wsdl:part>
+    <wsdl:part name="ResourceURI" element="tns:ResourceURI">
+    </wsdl:part>
+    <wsdl:part name="MaxEnvelopeSize" element="tns:MaxEnvelopeSize">
+    </wsdl:part>
+    <wsdl:part name="OperationTimeout" element="tns:OperationTimeout">
+    </wsdl:part>
+    <wsdl:part name="Locale" element="tns:Locale">
+    </wsdl:part>
+    <wsdl:part name="SelectorSet" element="tns:SelectorSet">
+    </wsdl:part>
+  </wsdl:message>
+  <wsdl:message name="SignalResponse">
+    <wsdl:part name="SignalResponse" element="tns:SignalResponse">
+    </wsdl:part>
+  </wsdl:message>
+  <wsdl:message name="Signal">
+    <wsdl:part name="Signal" element="ns1:Signal">
+    </wsdl:part>
+    <wsdl:part name="ResourceURI" element="tns:ResourceURI">
+    </wsdl:part>
+    <wsdl:part name="MaxEnvelopeSize" element="tns:MaxEnvelopeSize">
+    </wsdl:part>
+    <wsdl:part name="OperationTimeout" element="tns:OperationTimeout">
+    </wsdl:part>
+    <wsdl:part name="Locale" element="tns:Locale">
+    </wsdl:part>
+    <wsdl:part name="SelectorSet" element="tns:SelectorSet">
+    </wsdl:part>
+  </wsdl:message>
+  <wsdl:message name="DeleteResponse">
+    <wsdl:part name="result" element="tns:DeleteResponse">
+    </wsdl:part>
+  </wsdl:message>
+  <wsdl:message name="Command">
+    <wsdl:part name="body" element="ns1:CommandLine">
+    </wsdl:part>
+    <wsdl:part name="ResourceURI" element="tns:ResourceURI">
+    </wsdl:part>
+    <wsdl:part name="MaxEnvelopeSize" element="tns:MaxEnvelopeSize">
+    </wsdl:part>
+    <wsdl:part name="OperationTimeout" element="tns:OperationTimeout">
+    </wsdl:part>
+    <wsdl:part name="Locale" element="tns:Locale">
+    </wsdl:part>
+    <wsdl:part name="SelectorSet" element="tns:SelectorSet">
+    </wsdl:part>
+    <wsdl:part name="OptionSet" element="tns:OptionSet">
+    </wsdl:part>
+  </wsdl:message>
+  <wsdl:message name="Create">
+    <wsdl:part name="Shell" element="ns1:Shell">
+    </wsdl:part>
+    <wsdl:part name="ResourceURI" element="tns:ResourceURI">
+    </wsdl:part>
+    <wsdl:part name="MaxEnvelopeSize" element="tns:MaxEnvelopeSize">
+    </wsdl:part>
+    <wsdl:part name="OperationTimeout" element="tns:OperationTimeout">
+    </wsdl:part>
+    <wsdl:part name="Locale" element="tns:Locale">
+    </wsdl:part>
+    <wsdl:part name="OptionSet" element="tns:OptionSet">
+    </wsdl:part>
+  </wsdl:message>
+  <wsdl:message name="CreateResponse">
+    <wsdl:part name="ResourceCreated" element="ns2:ResourceCreated">
+    </wsdl:part>
+  </wsdl:message>
+  <wsdl:message name="ReceiveResponse">
+    <wsdl:part name="ReceiveResponse" element="ns1:ReceiveResponse">
+    </wsdl:part>
+  </wsdl:message>
+  <wsdl:message name="Receive">
+    <wsdl:part name="Receive" element="ns1:Receive">
+    </wsdl:part>
+    <wsdl:part name="ResourceURI" element="tns:ResourceURI">
+    </wsdl:part>
+    <wsdl:part name="MaxEnvelopeSize" element="tns:MaxEnvelopeSize">
+    </wsdl:part>
+    <wsdl:part name="OperationTimeout" element="tns:OperationTimeout">
+    </wsdl:part>
+    <wsdl:part name="Locale" element="tns:Locale">
+    </wsdl:part>
+    <wsdl:part name="SelectorSet" element="tns:SelectorSet">
+    </wsdl:part>
+  </wsdl:message>
+  <wsdl:message name="CommandResponse">
+    <wsdl:part name="parameters" element="tns:CommandResponse">
+    </wsdl:part>
+  </wsdl:message>
+  <wsdl:portType name="WinRm">
+    <wsdl:operation name="Delete">
+      <wsdl:input name="Delete" message="tns:Delete" wsam:Action="http://schemas.xmlsoap.org/ws/2004/09/transfer/Delete" wsaw:Action="http://schemas.xmlsoap.org/ws/2004/09/transfer/Delete">
+    </wsdl:input>
+      <wsdl:output name="DeleteResponse" message="tns:DeleteResponse" wsam:Action="http://schemas.xmlsoap.org/ws/2004/09/transfer/DeleteResponse" wsaw:Action="http://schemas.xmlsoap.org/ws/2004/09/transfer/DeleteResponse">
+    </wsdl:output>
+    </wsdl:operation>
+    <wsdl:operation name="Receive">
+      <wsdl:input name="Receive" message="tns:Receive" wsam:Action="http://schemas.microsoft.com/wbem/wsman/1/windows/shell/Receive" wsaw:Action="http://schemas.microsoft.com/wbem/wsman/1/windows/shell/Receive">
+    </wsdl:input>
+      <wsdl:output name="ReceiveResponse" message="tns:ReceiveResponse" wsam:Action="http://schemas.microsoft.com/wbem/wsman/1/windows/shell/ReceiveResponse" wsaw:Action="http://schemas.microsoft.com/wbem/wsman/1/windows/shell/ReceiveResponse">
+    </wsdl:output>
+    </wsdl:operation>
+    <wsdl:operation name="Signal">
+      <wsdl:input name="Signal" message="tns:Signal" wsam:Action="http://schemas.microsoft.com/wbem/wsman/1/windows/shell/Signal" wsaw:Action="http://schemas.microsoft.com/wbem/wsman/1/windows/shell/Signal">
+    </wsdl:input>
+      <wsdl:output name="SignalResponse" message="tns:SignalResponse" wsam:Action="http://schemas.microsoft.com/wbem/wsman/1/windows/shell/SignalResponse" wsaw:Action="http://schemas.microsoft.com/wbem/wsman/1/windows/shell/SignalResponse">
+    </wsdl:output>
+    </wsdl:operation>
+    <wsdl:operation name="Command">
+      <wsdl:input name="Command" message="tns:Command" wsam:Action="http://schemas.microsoft.com/wbem/wsman/1/windows/shell/Command" wsaw:Action="http://schemas.microsoft.com/wbem/wsman/1/windows/shell/Command">
+    </wsdl:input>
+      <wsdl:output name="CommandResponse" message="tns:CommandResponse" wsam:Action="http://schemas.microsoft.com/wbem/wsman/1/windows/shell/CommandResponse" wsaw:Action="http://schemas.microsoft.com/wbem/wsman/1/windows/shell/CommandResponse">
+    </wsdl:output>
+    </wsdl:operation>
+    <wsdl:operation name="Create">
+      <wsdl:input name="Create" message="tns:Create" wsam:Action="http://schemas.xmlsoap.org/ws/2004/09/transfer/Create" wsaw:Action="http://schemas.xmlsoap.org/ws/2004/09/transfer/Create">
+    </wsdl:input>
+      <wsdl:output name="CreateResponse" message="tns:CreateResponse" wsam:Action="http://schemas.xmlsoap.org/ws/2004/09/transfer/CreateResponse" wsaw:Action="http://schemas.xmlsoap.org/ws/2004/09/transfer/CreateResponse">
+    </wsdl:output>
+    </wsdl:operation>
+  </wsdl:portType>
+  <wsdl:binding name="WinRmServiceSoapBinding" type="tns:WinRm">
+    <soap12:binding style="document" transport="http://schemas.xmlsoap.org/soap/http"/>
+    <wsdl:operation name="Delete">
+      <soap12:operation soapAction="http://schemas.xmlsoap.org/ws/2004/09/transfer/Delete" style="document"/>
+      <wsdl:input name="Delete">
+        <soap12:header message="tns:Delete" part="ResourceURI" use="literal">
+        </soap12:header>
+        <soap12:header message="tns:Delete" part="MaxEnvelopeSize" use="literal">
+        </soap12:header>
+        <soap12:header message="tns:Delete" part="OperationTimeout" use="literal">
+        </soap12:header>
+        <soap12:header message="tns:Delete" part="Locale" use="literal">
+        </soap12:header>
+        <soap12:header message="tns:Delete" part="SelectorSet" use="literal">
+        </soap12:header>
+        <soap12:body parts="parameters" use="literal"/>
+      </wsdl:input>
+      <wsdl:output name="DeleteResponse">
+        <soap12:body use="literal"/>
+      </wsdl:output>
+    </wsdl:operation>
+    <wsdl:operation name="Receive">
+      <soap12:operation soapAction="http://schemas.microsoft.com/wbem/wsman/1/windows/shell/Receive" style="document"/>
+      <wsdl:input name="Receive">
+        <soap12:header message="tns:Receive" part="ResourceURI" use="literal">
+        </soap12:header>
+        <soap12:header message="tns:Receive" part="MaxEnvelopeSize" use="literal">
+        </soap12:header>
+        <soap12:header message="tns:Receive" part="OperationTimeout" use="literal">
+        </soap12:header>
+        <soap12:header message="tns:Receive" part="Locale" use="literal">
+        </soap12:header>
+        <soap12:header message="tns:Receive" part="SelectorSet" use="literal">
+        </soap12:header>
+        <soap12:body parts="Receive" use="literal"/>
+      </wsdl:input>
+      <wsdl:output name="ReceiveResponse">
+        <soap12:body use="literal"/>
+      </wsdl:output>
+    </wsdl:operation>
+    <wsdl:operation name="Signal">
+      <soap12:operation soapAction="http://schemas.microsoft.com/wbem/wsman/1/windows/shell/Signal" style="document"/>
+      <wsdl:input name="Signal">
+        <soap12:header message="tns:Signal" part="ResourceURI" use="literal">
+        </soap12:header>
+        <soap12:header message="tns:Signal" part="MaxEnvelopeSize" use="literal">
+        </soap12:header>
+        <soap12:header message="tns:Signal" part="OperationTimeout" use="literal">
+        </soap12:header>
+        <soap12:header message="tns:Signal" part="Locale" use="literal">
+        </soap12:header>
+        <soap12:header message="tns:Signal" part="SelectorSet" use="literal">
+        </soap12:header>
+        <soap12:body parts="Signal" use="literal"/>
+      </wsdl:input>
+      <wsdl:output name="SignalResponse">
+        <soap12:body use="literal"/>
+      </wsdl:output>
+    </wsdl:operation>
+    <wsdl:operation name="Command">
+      <soap12:operation soapAction="http://schemas.microsoft.com/wbem/wsman/1/windows/shell/Command" style="document"/>
+      <wsdl:input name="Command">
+        <soap12:header message="tns:Command" part="ResourceURI" use="literal">
+        </soap12:header>
+        <soap12:header message="tns:Command" part="MaxEnvelopeSize" use="literal">
+        </soap12:header>
+        <soap12:header message="tns:Command" part="OperationTimeout" use="literal">
+        </soap12:header>
+        <soap12:header message="tns:Command" part="Locale" use="literal">
+        </soap12:header>
+        <soap12:header message="tns:Command" part="SelectorSet" use="literal">
+        </soap12:header>
+        <soap12:header message="tns:Command" part="OptionSet" use="literal">
+        </soap12:header>
+        <soap12:body parts="body" use="literal"/>
+      </wsdl:input>
+      <wsdl:output name="CommandResponse">
+        <soap12:body use="literal"/>
+      </wsdl:output>
+    </wsdl:operation>
+    <wsdl:operation name="Create">
+      <soap12:operation soapAction="http://schemas.xmlsoap.org/ws/2004/09/transfer/Create" style="document"/>
+      <wsdl:input name="Create">
+        <soap12:header message="tns:Create" part="ResourceURI" use="literal">
+        </soap12:header>
+        <soap12:header message="tns:Create" part="MaxEnvelopeSize" use="literal">
+        </soap12:header>
+        <soap12:header message="tns:Create" part="OperationTimeout" use="literal">
+        </soap12:header>
+        <soap12:header message="tns:Create" part="Locale" use="literal">
+        </soap12:header>
+        <soap12:header message="tns:Create" part="OptionSet" use="literal">
+        </soap12:header>
+        <soap12:body parts="Shell" use="literal"/>
+      </wsdl:input>
+      <wsdl:output name="CreateResponse">
+        <soap12:body use="literal"/>
+      </wsdl:output>
+    </wsdl:operation>
+  </wsdl:binding>
+  <wsdl:service name="WinRmService">
+    <wsdl:port name="WinRmPort" binding="tns:WinRmServiceSoapBinding">
+      <soap12:address location="http://localhost:9090/WinRmPort"/>
+    </wsdl:port>
+  </wsdl:service>
+</wsdl:definitions>

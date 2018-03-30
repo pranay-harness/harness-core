@@ -14,11 +14,13 @@ import static software.wings.api.DeploymentType.AWS_LAMBDA;
 import static software.wings.api.DeploymentType.ECS;
 import static software.wings.api.DeploymentType.KUBERNETES;
 import static software.wings.api.DeploymentType.SSH;
+import static software.wings.api.DeploymentType.WINRM;
 import static software.wings.beans.DelegateTask.SyncTaskContext.Builder.aContext;
 import static software.wings.beans.ErrorCode.INVALID_REQUEST;
 import static software.wings.beans.FeatureName.AZURE_SUPPORT;
 import static software.wings.beans.FeatureName.ECS_CREATE_CLUSTER;
 import static software.wings.beans.FeatureName.KUBERNETES_CREATE_CLUSTER;
+import static software.wings.beans.FeatureName.WINRM_SUPPORT;
 import static software.wings.beans.SettingAttribute.Builder.aSettingAttribute;
 import static software.wings.beans.infrastructure.Host.Builder.aHost;
 import static software.wings.dl.PageRequest.PageRequestBuilder.aPageRequest;
@@ -1343,7 +1345,11 @@ public class InfrastructureMappingServiceImpl implements InfrastructureMappingSe
     } else if (artifactType == ArtifactType.AMI) {
       infraTypes.put(AMI, asList(SettingVariableTypes.AWS));
     } else {
+      String accountId = appService.getAccountIdByAppId(appId);
       infraTypes.put(SSH, asList(SettingVariableTypes.PHYSICAL_DATA_CENTER, SettingVariableTypes.AWS));
+      if (featureFlagService.isEnabled(WINRM_SUPPORT, accountId)) {
+        infraTypes.put(WINRM, asList(SettingVariableTypes.PHYSICAL_DATA_CENTER));
+      }
     }
     return infraTypes;
   }

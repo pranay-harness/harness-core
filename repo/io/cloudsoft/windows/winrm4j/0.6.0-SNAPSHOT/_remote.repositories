@@ -1,0 +1,7 @@
+#NOTE: This is a Maven Resolver internal implementation file, its format can be changed without prior notice.
+#Thu Mar 29 11:28:52 PDT 2018
+winrm4j-0.6.0-SNAPSHOT.jar>=
+winrm4j-0.6.0-SNAPSHOT.jar>localrepository=
+winrm4j-0.6.0-SNAPSHOT.pom>=
+winrm4j-0.6.0-SNAPSHOT-tests.jar>=
+winrm4j-0.6.0-SNAPSHOT.pom>localrepository=

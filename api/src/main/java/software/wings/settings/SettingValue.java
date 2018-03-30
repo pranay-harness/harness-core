@@ -266,7 +266,11 @@ public abstract class SettingValue implements ExtensionPoint {
 
     YAML_GIT_SYNC,
 
-    VAULT;
+    VAULT,
+
+    WINRM_CONNECTION_ATTRIBUTES("WinRm Connection Attributes"),
+
+    WINRM_SESSION_CONFIG;
 
     private String displayName;
 
