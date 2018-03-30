@@ -35,6 +35,7 @@ import software.wings.beans.ExecutionArgs;
 import software.wings.beans.Service;
 import software.wings.beans.SettingAttribute.Category;
 import software.wings.beans.SortOrder.OrderType;
+import software.wings.beans.User;
 import software.wings.beans.WorkflowExecution;
 import software.wings.beans.artifact.Artifact;
 import software.wings.beans.infrastructure.instance.Instance;
@@ -57,6 +58,8 @@ import software.wings.dl.PageRequest;
 import software.wings.dl.PageResponse;
 import software.wings.dl.WingsPersistence;
 import software.wings.exception.WingsException;
+import software.wings.security.UserRequestContext;
+import software.wings.security.UserThreadLocal;
 import software.wings.service.impl.instance.DashboardStatisticsServiceImpl.AggregationInfo.ArtifactInfo;
 import software.wings.service.impl.instance.DashboardStatisticsServiceImpl.AggregationInfo.EnvInfo;
 import software.wings.service.intfc.EnvironmentService;
@@ -763,8 +766,22 @@ public class DashboardStatisticsServiceImpl implements DashboardStatisticsServic
     if (isNotEmpty(appIds)) {
       query.field("appId").in(appIds);
     } else {
-      throw new WingsException(
-          "No appIds are assigned to the user or no apps exist in the account", WingsException.HARMLESS);
+      User user = UserThreadLocal.get();
+      if (user != null) {
+        if (user.isUseNewRbac()) {
+          UserRequestContext userRequestContext = user.getUserRequestContext();
+          if (userRequestContext.isAppIdFilterRequired()) {
+            Set<String> allowedAppIds = userRequestContext.getAppIds();
+            if (isNotEmpty(allowedAppIds)) {
+              query.field("appId").in(allowedAppIds);
+            } else {
+              throw new WingsException("No appIds are assigned to the user or no apps exist in the account", WingsException.HARMLESS);
+            }
+          }
+        }
+      } else {
+        throw new WingsException("No appIds are assigned to the user or no apps exist in the account", WingsException.HARMLESS);
+      }
     }
 
     return query;
