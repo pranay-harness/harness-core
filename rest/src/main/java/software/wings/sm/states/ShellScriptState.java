@@ -74,7 +74,12 @@ public class ShellScriptState extends State {
 
   public enum ConnectionType { SSH, WINRM }
 
-  @NotEmpty @Getter @Setter @Attributes(title = "Connection Type") private ConnectionType connectionType;
+  @NotEmpty
+  @Getter
+  @Setter
+  @DefaultValue("SSH")
+  @Attributes(title = "Connection Type")
+  private ConnectionType connectionType;
 
   @NotEmpty
   @Getter
@@ -93,7 +98,7 @@ public class ShellScriptState extends State {
 
   @Getter @Setter @Attributes(title = "Working Directory") private String commandPath;
 
-  @NotEmpty @Getter @Setter @Attributes(title = "Script Type") private ScriptType scriptType;
+  @NotEmpty @Getter @Setter @DefaultValue("BASH") @Attributes(title = "Script Type") private ScriptType scriptType;
 
   @NotEmpty @Getter @Setter @Attributes(title = "Script") private String scriptString;
 
@@ -187,6 +192,14 @@ public class ShellScriptState extends State {
     WinRmConnectionAttributes winRmConnectionAttributes = null;
     List<EncryptedDataDetail> winrmEdd = Collections.emptyList();
     List<EncryptedDataDetail> keyEncryptionDetails = Collections.emptyList();
+
+    if (connectionType == null) {
+      connectionType = ConnectionType.SSH;
+    }
+
+    if (scriptType == null) {
+      scriptType = ScriptType.BASH;
+    }
 
     if (connectionType == ConnectionType.SSH) {
       SettingAttribute keySettingAttribute = settingsService.get(sshKeyRef);
