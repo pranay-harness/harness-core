@@ -323,12 +323,17 @@ public abstract class ContainerResizeCommandUnit extends AbstractCommandUnit {
       encryptedDataDetails = context.getCloudProviderCredentials();
       resizeParams = context.getContainerResizeParams();
 
-      Preconditions.checkNotNull(resizeParams.getInstanceCount());
-      deployingToHundredPercent = resizeParams.getInstanceUnitType() == PERCENTAGE
-          ? resizeParams.getInstanceCount() >= 100
-          : (resizeParams.isUseFixedInstances() && resizeParams.getInstanceCount() >= resizeParams.getFixedInstances())
-              || (!resizeParams.isUseFixedInstances()
-                     && resizeParams.getInstanceCount() >= resizeParams.getMaxInstances());
+      if (!resizeParams.isRollback()) {
+        Preconditions.checkNotNull(resizeParams.getInstanceCount());
+        deployingToHundredPercent = resizeParams.getInstanceUnitType() == PERCENTAGE
+            ? resizeParams.getInstanceCount() >= 100
+            : (resizeParams.isUseFixedInstances()
+                  && resizeParams.getInstanceCount() >= resizeParams.getFixedInstances())
+                || (!resizeParams.isUseFixedInstances()
+                       && resizeParams.getInstanceCount() >= resizeParams.getMaxInstances());
+      } else {
+        deployingToHundredPercent = false;
+      }
     }
   }
 }

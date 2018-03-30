@@ -65,12 +65,6 @@ public class EcsServiceRollback extends ContainerServiceDeploy {
         .withClusterName(contextData.containerElement.getClusterName())
         .withRegion(contextData.region)
         .withServiceSteadyStateTimeout(contextData.containerElement.getServiceSteadyStateTimeout())
-        .withRollback(true)
-        .withRollbackAllPhases(rollbackAllPhases)
-        .withInstanceCount(contextData.instanceCount)
-        .withInstanceUnitType(getInstanceUnitType())
-        .withDownsizeInstanceCount(contextData.downsizeInstanceCount)
-        .withDownsizeInstanceUnitType(getDownsizeInstanceUnitType())
         .withContainerServiceName(contextData.containerElement.getName())
         .withResizeStrategy(contextData.containerElement.getResizeStrategy())
         .withUseFixedInstances(contextData.containerElement.isUseFixedInstances())
@@ -79,6 +73,8 @@ public class EcsServiceRollback extends ContainerServiceDeploy {
         .withNewInstanceData(contextData.rollbackElement.getNewInstanceData())
         .withOldInstanceData(contextData.rollbackElement.getOldInstanceData())
         .withOriginalServiceCounts(contextData.containerElement.getActiveServiceCounts())
+        .withRollback(true)
+        .withRollbackAllPhases(rollbackAllPhases)
         .build();
   }
 }
