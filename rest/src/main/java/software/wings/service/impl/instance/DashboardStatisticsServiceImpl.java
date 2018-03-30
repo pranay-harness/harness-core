@@ -763,7 +763,8 @@ public class DashboardStatisticsServiceImpl implements DashboardStatisticsServic
     if (isNotEmpty(appIds)) {
       query.field("appId").in(appIds);
     } else {
-      throw new WingsException("No appIds are assigned to the user or no apps exist in the account", WingsException.HARMLESS);
+      throw new WingsException(
+          "No appIds are assigned to the user or no apps exist in the account", WingsException.HARMLESS);
     }
 
     return query;
