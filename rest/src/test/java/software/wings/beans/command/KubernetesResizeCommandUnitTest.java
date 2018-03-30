@@ -75,7 +75,8 @@ public class KubernetesResizeCommandUnitTest extends WingsBaseTest {
   private List<ContainerInfo> buildContainerInfos(int count) {
     List<ContainerInfo> containerInfos = new ArrayList<>();
     for (int i = 0; i < count; i++) {
-      containerInfos.add(ContainerInfo.builder().status(Status.SUCCESS).build());
+      containerInfos.add(
+          ContainerInfo.builder().status(Status.SUCCESS).hostName("host" + i).containerId("c" + i).build());
     }
     return containerInfos;
   }

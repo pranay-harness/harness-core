@@ -1108,8 +1108,6 @@ public class EcsContainerServiceImpl implements EcsContainerService {
                                                 .status(Status.SUCCESS)
                                                 .build();
               containerInfos.add(containerInfo);
-              executionLogCallback.saveExecutionLog(
-                  "Container docker ID: " + containerInfo.getContainerId(), LogLevel.INFO);
             } else {
               logger.warn("Metadata tasks {} not found in taskArns {}",
                   taskMetadata.getTasks().stream().map(TaskMetadata.Task::getArn).collect(toList()), taskArns);

@@ -163,6 +163,13 @@ public abstract class ContainerResizeCommandUnit extends AbstractCommandUnit {
     if (containerInfos.size() == totalDesiredCount && allContainersSuccess) {
       success = true;
       logger.info("Successfully completed resize operation");
+      if (containerInfos.size() > 0) {
+        executionLogCallback.saveExecutionLog("\nContainer IDs:");
+        containerInfos.forEach(info
+            -> executionLogCallback.saveExecutionLog("  " + info.getHostName()
+                + (info.getHostName().equals(info.getContainerId()) ? "" : " - " + info.getContainerId())));
+        executionLogCallback.saveExecutionLog("");
+      }
       executionLogCallback.saveExecutionLog(String.format("Completed operation\n%s\n", DASH_STRING));
     } else {
       if (containerInfos.size() != totalDesiredCount) {

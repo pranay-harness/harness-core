@@ -7,6 +7,7 @@ import static java.util.Collections.emptyList;
 import static java.util.Comparator.comparingInt;
 import static java.util.stream.Collectors.toList;
 import static java.util.stream.Collectors.toMap;
+import static java.util.stream.Collectors.toSet;
 import static org.apache.commons.lang3.StringUtils.isNotBlank;
 import static software.wings.common.Constants.HARNESS_REVISION;
 import static software.wings.utils.KubernetesConvention.getPrefixFromControllerName;
@@ -89,13 +90,13 @@ import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.HashSet;
 import java.util.LinkedHashMap;
+import java.util.LinkedHashSet;
 import java.util.List;
 import java.util.Map;
 import java.util.Optional;
 import java.util.Set;
 import java.util.concurrent.TimeUnit;
 import java.util.concurrent.atomic.AtomicBoolean;
-import java.util.stream.Collectors;
 
 /**
  * Created by brett on 2/9/17
@@ -300,17 +301,17 @@ public class KubernetesContainerServiceImpl implements KubernetesContainerServic
           "Controller [%s] in cluster [%s] stays at %s instances", controllerName, clusterName, previousCount));
     }
     return getContainerInfosWhenReady(kubernetesConfig, encryptedDataDetails, controllerName, previousCount,
-        desiredCount, serviceSteadyStateTimeout, originalPods, executionLogCallback, sizeChanged, startTime);
+        desiredCount, serviceSteadyStateTimeout, originalPods, false, executionLogCallback, sizeChanged, startTime);
   }
 
   @Override
   public List<ContainerInfo> getContainerInfosWhenReady(KubernetesConfig kubernetesConfig,
       List<EncryptedDataDetail> encryptedDataDetails, String controllerName, int previousCount, int desiredCount,
-      int serviceSteadyStateTimeout, List<Pod> originalPods, ExecutionLogCallback executionLogCallback, boolean wait,
-      long startTime) {
+      int serviceSteadyStateTimeout, List<Pod> originalPods, boolean isDaemonSet,
+      ExecutionLogCallback executionLogCallback, boolean wait, long startTime) {
     List<Pod> pods = wait
         ? waitForPodsToBeRunning(kubernetesConfig, encryptedDataDetails, controllerName, previousCount, desiredCount,
-              serviceSteadyStateTimeout, originalPods, startTime, executionLogCallback)
+              serviceSteadyStateTimeout, originalPods, isDaemonSet, startTime, executionLogCallback)
         : originalPods;
     List<ContainerInfo> containerInfos = new ArrayList<>();
     boolean hasErrors = false;
@@ -336,7 +337,7 @@ public class KubernetesContainerServiceImpl implements KubernetesContainerServic
         executionLogCallback.saveExecutionLog(msg, LogLevel.ERROR);
       }
 
-      if (desiredCount > previousCount) {
+      if (isDaemonSet || desiredCount > previousCount) {
         if (!isRunning(pod)) {
           hasErrors = true;
           String msg = String.format("Pod %s failed to start", podName);
@@ -821,21 +822,23 @@ public class KubernetesContainerServiceImpl implements KubernetesContainerServic
 
   @Override
   public void waitForPodsToStop(KubernetesConfig kubernetesConfig, List<EncryptedDataDetail> encryptedDataDetails,
-      Map<String, String> labels, int serviceSteadyStateTimeout, ExecutionLogCallback executionLogCallback) {
+      Map<String, String> labels, int serviceSteadyStateTimeout, List<Pod> originalPods, long startTime,
+      ExecutionLogCallback executionLogCallback) {
     KubernetesClient kubernetesClient =
         kubernetesHelperService.getKubernetesClient(kubernetesConfig, encryptedDataDetails);
+    List<String> originalPodNames = originalPods.stream().map(pod -> pod.getMetadata().getName()).collect(toList());
+    String namespace = kubernetesConfig.getNamespace();
     String waitingMsg = "Waiting for pods to stop...";
     logger.info(waitingMsg);
     try {
       timeLimiter.callWithTimeout(() -> {
+        Set<String> seenEvents = new HashSet<>();
+
         while (true) {
           executionLogCallback.saveExecutionLog(waitingMsg);
-          int size = kubernetesClient.pods()
-                         .inNamespace(kubernetesConfig.getNamespace())
-                         .withLabels(labels)
-                         .list()
-                         .getItems()
-                         .size();
+          List<Pod> pods = kubernetesClient.pods().inNamespace(namespace).withLabels(labels).list().getItems();
+          int size = pods.size();
+          showEvents(kubernetesClient, namespace, pods, originalPodNames, seenEvents, startTime, executionLogCallback);
           if (size <= 0) {
             return true;
           }
@@ -855,14 +858,13 @@ public class KubernetesContainerServiceImpl implements KubernetesContainerServic
 
   private List<Pod> waitForPodsToBeRunning(KubernetesConfig kubernetesConfig,
       List<EncryptedDataDetail> encryptedDataDetails, String controllerName, int previousCount, int desiredCount,
-      int serviceSteadyStateTimeout, List<Pod> originalPods, long startTime,
+      int serviceSteadyStateTimeout, List<Pod> originalPods, boolean isDaemonSet, long startTime,
       ExecutionLogCallback executionLogCallback) {
     HasMetadata controller = getController(kubernetesConfig, encryptedDataDetails, controllerName);
     PodTemplateSpec podTemplateSpec = getPodTemplateSpec(controller);
     Set<String> images = getControllerImages(podTemplateSpec);
     Map<String, String> labels = podTemplateSpec.getMetadata().getLabels();
-    Set<String> originalPodNames =
-        originalPods.stream().map(pod -> pod.getMetadata().getName()).collect(Collectors.toSet());
+    List<String> originalPodNames = originalPods.stream().map(pod -> pod.getMetadata().getName()).collect(toList());
     KubernetesClient kubernetesClient =
         kubernetesHelperService.getKubernetesClient(kubernetesConfig, encryptedDataDetails);
     logger.info("Waiting for pods to be ready...");
@@ -870,56 +872,22 @@ public class KubernetesContainerServiceImpl implements KubernetesContainerServic
     AtomicBoolean haveImagesCountReached = new AtomicBoolean(false);
     AtomicBoolean runningCountReached = new AtomicBoolean(false);
     AtomicBoolean steadyStateCountReached = new AtomicBoolean(false);
+    String namespace = kubernetesConfig.getNamespace();
     try {
       return timeLimiter.callWithTimeout(() -> {
         Set<String> seenEvents = new HashSet<>();
 
         while (true) {
-          List<Pod> pods =
-              kubernetesClient.pods().inNamespace(kubernetesConfig.getNamespace()).withLabels(labels).list().getItems();
+          List<Pod> pods = kubernetesClient.pods().inNamespace(namespace).withLabels(labels).list().getItems();
 
           // Delete failed pods
           pods.stream()
               .filter(pod -> "Failed".equals(pod.getStatus().getPhase()))
-              .forEach(pod
-                  -> kubernetesClient.pods()
-                         .inNamespace(kubernetesConfig.getNamespace())
-                         .withName(pod.getMetadata().getName())
-                         .delete());
+              .forEach(
+                  pod -> kubernetesClient.pods().inNamespace(namespace).withName(pod.getMetadata().getName()).delete());
 
           // Show events
-          try {
-            Set<String> podNames = pods.stream().map(pod -> pod.getMetadata().getName()).collect(Collectors.toSet());
-            podNames.addAll(originalPodNames);
-
-            List<Event> newEvents = kubernetesClient.events()
-                                        .inNamespace(kubernetesConfig.getNamespace())
-                                        .list()
-                                        .getItems()
-                                        .stream()
-                                        .filter(evt -> !seenEvents.contains(evt.getMetadata().getName()))
-                                        .filter(evt -> podNames.contains(evt.getInvolvedObject().getName()))
-                                        .filter(evt -> DateTime.parse(evt.getLastTimestamp()).getMillis() > startTime)
-                                        .collect(toList());
-
-            if (isNotEmpty(newEvents)) {
-              executionLogCallback.saveExecutionLog("\n****  Kubernetes Events  ****");
-              podNames.forEach(podName -> {
-                List<Event> podEvents = newEvents.stream()
-                                            .filter(evt -> evt.getInvolvedObject().getName().equals(podName))
-                                            .collect(toList());
-                if (isNotEmpty(podEvents)) {
-                  executionLogCallback.saveExecutionLog("  Pod: " + podName);
-                  podEvents.forEach(evt -> executionLogCallback.saveExecutionLog("   - " + evt.getMessage()));
-                }
-              });
-              executionLogCallback.saveExecutionLog("");
-              seenEvents.addAll(newEvents.stream().map(evt -> evt.getMetadata().getName()).collect(toList()));
-            }
-          } catch (Exception e) {
-            Misc.logAllMessages(e, executionLogCallback);
-            logger.error("Failed to process kubernetes events", e);
-          }
+          showEvents(kubernetesClient, namespace, pods, originalPodNames, seenEvents, startTime, executionLogCallback);
 
           // Check current state
           if (pods.size() != desiredCount) {
@@ -950,7 +918,7 @@ public class KubernetesContainerServiceImpl implements KubernetesContainerServic
             }
           }
 
-          if (desiredCount > previousCount) {
+          if (isDaemonSet || desiredCount > previousCount) {
             int running = (int) pods.stream().filter(this ::isRunning).count();
             if (running != desiredCount) {
               executionLogCallback.saveExecutionLog(
@@ -989,7 +957,43 @@ public class KubernetesContainerServiceImpl implements KubernetesContainerServic
           .addParam("message", "Error while waiting for pods to be ready");
     }
 
-    return kubernetesClient.pods().inNamespace(kubernetesConfig.getNamespace()).withLabels(labels).list().getItems();
+    return kubernetesClient.pods().inNamespace(namespace).withLabels(labels).list().getItems();
+  }
+
+  private void showEvents(KubernetesClient kubernetesClient, String namespace, List<Pod> currentPods,
+      List<String> originalPodNames, Set<String> seenEvents, long startTime,
+      ExecutionLogCallback executionLogCallback) {
+    try {
+      Set<String> podNames = new LinkedHashSet<>(originalPodNames);
+      podNames.addAll(currentPods.stream().map(pod -> pod.getMetadata().getName()).collect(toList()));
+
+      List<Event> newEvents = kubernetesClient.events()
+                                  .inNamespace(namespace)
+                                  .list()
+                                  .getItems()
+                                  .stream()
+                                  .filter(evt -> !seenEvents.contains(evt.getMetadata().getName()))
+                                  .filter(evt -> podNames.contains(evt.getInvolvedObject().getName()))
+                                  .filter(evt -> DateTime.parse(evt.getLastTimestamp()).getMillis() > startTime)
+                                  .collect(toList());
+
+      if (isNotEmpty(newEvents)) {
+        executionLogCallback.saveExecutionLog("\n****  Kubernetes Events  ****");
+        podNames.forEach(podName -> {
+          List<Event> podEvents =
+              newEvents.stream().filter(evt -> evt.getInvolvedObject().getName().equals(podName)).collect(toList());
+          if (isNotEmpty(podEvents)) {
+            executionLogCallback.saveExecutionLog("  Pod: " + podName);
+            podEvents.forEach(evt -> executionLogCallback.saveExecutionLog("   - " + evt.getMessage()));
+          }
+        });
+        executionLogCallback.saveExecutionLog("");
+        seenEvents.addAll(newEvents.stream().map(evt -> evt.getMetadata().getName()).collect(toList()));
+      }
+    } catch (Exception e) {
+      Misc.logAllMessages(e, executionLogCallback);
+      logger.error("Failed to process kubernetes events", e);
+    }
   }
 
   public List<Pod> getRunningPods(
@@ -1009,7 +1013,7 @@ public class KubernetesContainerServiceImpl implements KubernetesContainerServic
   }
 
   private Set<String> getControllerImages(PodTemplateSpec template) {
-    return template.getSpec().getContainers().stream().map(Container::getImage).collect(Collectors.toSet());
+    return template.getSpec().getContainers().stream().map(Container::getImage).collect(toSet());
   }
 
   public void checkStatus(KubernetesConfig kubernetesConfig, List<EncryptedDataDetail> encryptedDataDetails,
