@@ -335,7 +335,7 @@ public class KubernetesContainerServiceImpl implements KubernetesContainerServic
         executionLogCallback.saveExecutionLog(msg, LogLevel.ERROR);
       }
 
-      if (desiredCount > 0 && desiredCount > previousCount) {
+      if (desiredCount > previousCount) {
         if (!isRunning(pod)) {
           hasErrors = true;
           String msg = String.format("Pod %s failed to start", podName);
@@ -377,6 +377,7 @@ public class KubernetesContainerServiceImpl implements KubernetesContainerServic
             reason, pod.getStatus().getPhase(), containerMessage, conditionMessage);
         logger.error(msg);
         executionLogCallback.saveExecutionLog(msg, LogLevel.ERROR);
+        executionLogCallback.saveExecutionLog("\nCheck Kubernetes console for more information");
       }
       containerInfos.add(containerInfoBuilder.build());
     }
@@ -948,7 +949,7 @@ public class KubernetesContainerServiceImpl implements KubernetesContainerServic
             }
           }
 
-          if (desiredCount > 0 && desiredCount > previousCount) {
+          if (desiredCount > previousCount) {
             int running = (int) pods.stream().filter(this ::isRunning).count();
             if (running != desiredCount) {
               executionLogCallback.saveExecutionLog(
