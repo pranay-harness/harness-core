@@ -84,70 +84,59 @@ public class ArtifactCollectionServiceImpl implements ArtifactCollectionService 
 
   @Override
   public List<Artifact> collectNewArtifacts(String appId, String artifactStreamId) {
-    List<Artifact> newArtifacts = new ArrayList<>();
-    ArtifactStream artifactStream = artifactStreamService.get(appId, artifactStreamId);
-    if (artifactStream == null) {
-      logger.info("Artifact Stream {} does not exist. Returning", artifactStreamId);
+    try (AcquiredLock lock = persistentLocker.acquireLock(ArtifactStream.class, artifactStreamId, timeout)) {
+      List<Artifact> newArtifacts = new ArrayList<>();
+      ArtifactStream artifactStream = artifactStreamService.get(appId, artifactStreamId);
+      if (artifactStream == null) {
+        logger.info("Artifact Stream {} does not exist. Returning", artifactStreamId);
+        return newArtifacts;
+      }
+      if (metadataOnlyStreams.contains(artifactStream.getArtifactStreamType())) {
+        collectMetaDataOnlyArtifacts(artifactStream, newArtifacts);
+      } else if (artifactStream.getArtifactStreamType().equals(ARTIFACTORY.name())) {
+        collectArtifactoryArtifacts(appId, artifactStream, newArtifacts);
+      } else if (artifactStream.getArtifactStreamType().equals(AMAZON_S3.name())) {
+        collectGenericArtifacts(appId, artifactStream, newArtifacts);
+      } else {
+        // Jenkins or Bamboo case
+        collectLatestArtifact(appId, artifactStream, newArtifacts);
+      }
       return newArtifacts;
     }
-    if (metadataOnlyStreams.contains(artifactStream.getArtifactStreamType())) {
-      collectMetaDataOnlyArtifacts(artifactStream, newArtifacts);
-    } else if (artifactStream.getArtifactStreamType().equals(ARTIFACTORY.name())) {
-      collectArtifactoryArtifacts(appId, artifactStream, newArtifacts);
-    } else if (artifactStream.getArtifactStreamType().equals(AMAZON_S3.name())) {
-      collectGenericArtifacts(appId, artifactStream, newArtifacts);
-    } else {
-      // Jenkins or Bamboo case
-      collectLatestArtifact(appId, artifactStream, newArtifacts);
-    }
-    return newArtifacts;
   }
 
   private void collectMetaDataOnlyArtifacts(ArtifactStream artifactStream, List<Artifact> newArtifacts) {
-    String artifactStreamId = artifactStream.getUuid();
-    String appId = artifactStream.getAppId();
-    try (AcquiredLock lock = persistentLocker.acquireLock(ArtifactStream.class, artifactStreamId, timeout)) {
-      logger.info("Collecting build details for artifact stream id {} type {} and source name {} ", artifactStreamId,
-          artifactStream.getArtifactStreamType(), artifactStream.getSourceName());
-      List<BuildDetails> builds = buildSourceService.getBuilds(appId, artifactStreamId, artifactStream.getSettingId());
-      if (!isEmpty(builds)) {
-        Set<String> newBuildNumbers = getNewBuildNumbers(artifactStream, builds);
-        builds.forEach((BuildDetails buildDetails1) -> {
-          if (newBuildNumbers.contains(buildDetails1.getNumber())) {
-            logger.info("New Artifact version [{}] found for Artifact stream [type: {}, uuid: {}]. "
-                    + "Add entry in Artifact collection",
-                buildDetails1.getNumber(), artifactStream.getArtifactStreamType(), artifactStreamId);
-            Artifact newArtifact = getArtifact(artifactStream, buildDetails1);
-            newArtifacts.add(artifactService.create(newArtifact));
-          }
-        });
-      }
+    logger.debug("Collecting build details for artifact stream id {} type {} and source name {} ",
+        artifactStream.getUuid(), artifactStream.getArtifactStreamType(), artifactStream.getSourceName());
+    List<BuildDetails> builds = buildSourceService.getBuilds(
+        artifactStream.getAppId(), artifactStream.getUuid(), artifactStream.getSettingId());
+    if (!isEmpty(builds)) {
+      Set<String> newBuildNumbers = getNewBuildNumbers(artifactStream, builds);
+      builds.forEach((BuildDetails buildDetails1) -> {
+        if (newBuildNumbers.contains(buildDetails1.getNumber())) {
+          logger.info("New Artifact version [{}] found for Artifact stream [type: {}, uuid: {}]. "
+                  + "Add entry in Artifact collection",
+              buildDetails1.getNumber(), artifactStream.getArtifactStreamType(), artifactStream.getUuid());
+          Artifact newArtifact = getArtifact(artifactStream, buildDetails1);
+          newArtifacts.add(artifactService.create(newArtifact));
+        }
+      });
     }
   }
 
   private void collectLatestArtifact(String appId, ArtifactStream artifactStream, List<Artifact> newArtifacts) {
-    String artifactStreamId = artifactStream.getUuid();
-    try (AcquiredLock lock = persistentLocker.acquireLock(ArtifactStream.class, artifactStreamId, timeout)) {
-      logger.info("Collecting Artifact for artifact stream id {} type {} and source name {} ", artifactStreamId,
-          artifactStream.getArtifactStreamType(), artifactStream.getSourceName());
-      BuildDetails lastSuccessfulBuild =
-          buildSourceService.getLastSuccessfulBuild(appId, artifactStreamId, artifactStream.getSettingId());
-      if (lastSuccessfulBuild == null) {
-        return;
-      }
-      Artifact lastCollectedArtifact =
-          artifactService.fetchLatestArtifactForArtifactStream(appId, artifactStreamId, artifactStream.getSourceName());
-      int buildNo = (lastCollectedArtifact != null && lastCollectedArtifact.getMetadata().get(BUILD_NO) != null)
-          ? Integer.parseInt(lastCollectedArtifact.getMetadata().get(BUILD_NO))
-          : 0;
-      if (Integer.parseInt(lastSuccessfulBuild.getNumber()) > buildNo) {
-        logger.info(
-            "Existing build no {} is older than new build number {}. Collect new Artifact for ArtifactStream {}",
-            buildNo, lastSuccessfulBuild.getNumber(), artifactStreamId);
-        newArtifacts.add(artifactService.create(getArtifact(artifactStream, lastSuccessfulBuild)));
-      } else {
-        logger.info("Artifact of the version {} already collected.", buildNo);
-      }
+    logger.debug("Collecting Artifact for artifact stream id {} type {} and source name {} ", artifactStream.getUuid(),
+        artifactStream.getArtifactStreamType(), artifactStream.getSourceName());
+    BuildDetails lastSuccessfulBuild = getLastSuccessfulBuild(appId, artifactStream, artifactStream.getUuid());
+    Artifact lastCollectedArtifact = artifactService.fetchLatestArtifactForArtifactStream(
+        appId, artifactStream.getUuid(), artifactStream.getSourceName());
+    int buildNo = (lastCollectedArtifact != null && lastCollectedArtifact.getMetadata().get(BUILD_NO) != null)
+        ? Integer.parseInt(lastCollectedArtifact.getMetadata().get(BUILD_NO))
+        : 0;
+    if (Integer.parseInt(lastSuccessfulBuild.getNumber()) > buildNo) {
+      logger.info("Existing build no {} is older than new build number {}. Collect new Artifact for ArtifactStream {}",
+          buildNo, lastSuccessfulBuild.getNumber(), artifactStream.getUuid());
+      newArtifacts.add(artifactService.create(getArtifact(artifactStream, lastSuccessfulBuild)));
     }
   }
 
@@ -164,50 +153,54 @@ public class ArtifactCollectionServiceImpl implements ArtifactCollectionService 
 
   private void collectGenericArtifacts(String appId, ArtifactStream artifactStream, List<Artifact> newArtifacts) {
     String artifactStreamId = artifactStream.getUuid();
-    try (AcquiredLock lock = persistentLocker.acquireLock(ArtifactStream.class, artifactStreamId, timeout)) {
-      logger.info("Collecting Artifacts for artifact stream id {} type {} and source name {} ", artifactStreamId,
-          artifactStream.getArtifactStreamType(), artifactStream.getSourceName());
-      List<BuildDetails> builds;
-      if (ARTIFACTORY.name().equals(artifactStream.getArtifactStreamType())) {
-        builds = buildSourceService.getBuilds(appId, artifactStreamId, artifactStream.getSettingId(), 25);
-      } else {
-        builds = buildSourceService.getBuilds(appId, artifactStreamId, artifactStream.getSettingId());
-      }
-      if (!isEmpty(builds)) {
-        Set<String> newArtifactPaths = getNewArtifactPaths(artifactStream, builds);
-        builds.forEach(buildDetails -> {
-          if (newArtifactPaths.contains(buildDetails.getArtifactPath())) {
-            newArtifacts.add(artifactService.create(getArtifact(artifactStream, buildDetails)));
-          }
-        });
-      }
+    logger.debug("Collecting Artifacts for artifact stream id {} type {} and source name {} ", artifactStreamId,
+        artifactStream.getArtifactStreamType(), artifactStream.getSourceName());
+    List<BuildDetails> builds;
+    if (ARTIFACTORY.name().equals(artifactStream.getArtifactStreamType())) {
+      builds = buildSourceService.getBuilds(appId, artifactStreamId, artifactStream.getSettingId(), 25);
+    } else {
+      builds = buildSourceService.getBuilds(appId, artifactStreamId, artifactStream.getSettingId());
+    }
+    if (!isEmpty(builds)) {
+      Set<String> newArtifactPaths = getNewArtifactPaths(artifactStream, builds);
+      builds.forEach(buildDetails -> {
+        if (newArtifactPaths.contains(buildDetails.getArtifactPath())) {
+          newArtifacts.add(artifactService.create(getArtifact(artifactStream, buildDetails)));
+        }
+      });
     }
   }
 
   private void collectMavenArtifacts(String appId, ArtifactStream artifactStream, List<Artifact> newArtifacts) {
     String artifactStreamId = artifactStream.getUuid();
-    try (AcquiredLock lock = persistentLocker.acquireLock(ArtifactStream.class, artifactStreamId, timeout)) {
-      logger.info("Collecting Artifact for artifact stream id {} type {} and source name {} ", artifactStreamId,
-          artifactStream.getArtifactStreamType(), artifactStream.getSourceName());
-      BuildDetails latestVersion =
-          buildSourceService.getLastSuccessfulBuild(appId, artifactStreamId, artifactStream.getSettingId());
-      if (latestVersion == null) {
-        return;
-      }
-      logger.info("Latest version in artifactory server {}", latestVersion);
-      Artifact lastCollectedArtifact =
-          artifactService.fetchLatestArtifactForArtifactStream(appId, artifactStreamId, artifactStream.getSourceName());
-      String buildNo = (lastCollectedArtifact != null && lastCollectedArtifact.getMetadata().get(BUILD_NO) != null)
-          ? lastCollectedArtifact.getMetadata().get(BUILD_NO)
-          : "";
-      logger.info("Last collected artifactory maven artifact version {} ", buildNo);
-      if (buildNo.isEmpty() || versionCompare(latestVersion.getNumber(), buildNo) > 0) {
-        logger.info(
-            "Existing version no {} is older than new version number {}. Collect new Artifact for ArtifactStream {}",
-            buildNo, latestVersion.getNumber(), artifactStreamId);
-        newArtifacts.add(artifactService.create(getArtifact(artifactStream, latestVersion)));
-      }
+    BuildDetails latestVersion = getLastSuccessfulBuild(appId, artifactStream, artifactStreamId);
+    if (latestVersion == null) {
+      return;
     }
+    logger.info("Latest version in artifactory server {}", latestVersion);
+    Artifact lastCollectedArtifact =
+        artifactService.fetchLatestArtifactForArtifactStream(appId, artifactStreamId, artifactStream.getSourceName());
+    String buildNo = (lastCollectedArtifact != null && lastCollectedArtifact.getMetadata().get(BUILD_NO) != null)
+        ? lastCollectedArtifact.getMetadata().get(BUILD_NO)
+        : "";
+    logger.info("Last collected artifactory maven artifact version {} ", buildNo);
+    if (buildNo.isEmpty() || versionCompare(latestVersion.getNumber(), buildNo) > 0) {
+      logger.info(
+          "Existing version no {} is older than new version number {}. Collect new Artifact for ArtifactStream {}",
+          buildNo, latestVersion.getNumber(), artifactStreamId);
+      newArtifacts.add(artifactService.create(getArtifact(artifactStream, latestVersion)));
+    }
+  }
+
+  private BuildDetails getLastSuccessfulBuild(String appId, ArtifactStream artifactStream, String artifactStreamId) {
+    logger.debug("Collecting Artifact for artifact stream id {} type {} and source name {} ", artifactStreamId,
+        artifactStream.getArtifactStreamType(), artifactStream.getSourceName());
+    BuildDetails latestVersion =
+        buildSourceService.getLastSuccessfulBuild(appId, artifactStreamId, artifactStream.getSettingId());
+    if (latestVersion == null) {
+      return null;
+    }
+    return latestVersion;
   }
 
   /**

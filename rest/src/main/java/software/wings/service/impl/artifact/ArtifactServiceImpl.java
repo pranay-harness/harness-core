@@ -539,6 +539,16 @@ public class ArtifactServiceImpl implements ArtifactService {
     ArtifactStream artifactStream = artifactStreamService.get(artifact.getAppId(), artifact.getArtifactStreamId());
     if (artifactStream == null) {
       logger.info("ArtifactStream of artifact {} was deleted", artifact.getUuid());
+      artifact = wingsPersistence.get(Artifact.class, artifact.getAppId(), artifact.getUuid());
+      if (artifact.getContentStatus() == null) {
+        if (!isEmpty(artifact.getArtifactFiles())) {
+          updateStatus(artifact.getUuid(), artifact.getAppId(), APPROVED, DOWNLOADED);
+          return DOWNLOADED;
+        } else {
+          updateStatus(artifact.getUuid(), artifact.getAppId(), APPROVED, METADATA_ONLY);
+          return METADATA_ONLY;
+        }
+      }
       return artifact.getContentStatus();
     }
     setArtifactStatus(artifact, artifactStream);

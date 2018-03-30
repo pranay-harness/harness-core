@@ -1,22 +1,20 @@
 package software.wings.sm.states;
 
 import static io.harness.data.structure.EmptyPredicate.isEmpty;
+import static software.wings.beans.artifact.Artifact.ContentStatus;
+import static software.wings.beans.artifact.Artifact.ContentStatus.DOWNLOADED;
+import static software.wings.beans.artifact.Artifact.ContentStatus.FAILED;
+import static software.wings.beans.artifact.Artifact.ContentStatus.METADATA_ONLY;
 import static software.wings.sm.ExecutionResponse.Builder.anExecutionResponse;
 
 import com.google.inject.Inject;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-import software.wings.beans.ErrorCode;
 import software.wings.beans.artifact.Artifact;
-import software.wings.beans.artifact.Artifact.ContentStatus;
 import software.wings.beans.artifact.Artifact.Status;
-import software.wings.beans.artifact.ArtifactStream;
-import software.wings.common.Constants;
-import software.wings.exception.WingsException;
 import software.wings.scheduler.ReminderNotifyResponse;
 import software.wings.service.intfc.ArtifactService;
-import software.wings.service.intfc.ArtifactStreamService;
 import software.wings.sm.ContextElementType;
 import software.wings.sm.ExecutionContext;
 import software.wings.sm.ExecutionResponse;
@@ -34,8 +32,6 @@ import java.util.stream.Collectors;
 
 public class ArtifactCheckState extends State {
   private static final Logger logger = LoggerFactory.getLogger(ArtifactCheckState.class);
-
-  @Inject private ArtifactStreamService artifactStreamService;
 
   @Inject private ArtifactService artifactService;
 
@@ -66,34 +62,23 @@ public class ArtifactCheckState extends State {
 
     List<Artifact> missingContents = new ArrayList<>();
     artifacts.forEach(artifact -> {
-      if (artifact.getContentStatus() == ContentStatus.DOWNLOADED) {
+      if (artifact.getContentStatus() == DOWNLOADED) {
         return;
       }
       missingContents.add(artifact);
     });
     if (missingContents.isEmpty()) {
-      return anExecutionResponse()
-          .withErrorMessage("All artifacts: "
-              + artifacts.stream().map(Artifact::getDisplayName).collect(Collectors.toList()) + " are available.")
-          .build();
+      return getExecutionResponse(artifacts);
     }
     List<String> artifactNamesForDownload = new ArrayList<>();
     List<String> correlationIds = new ArrayList<>();
 
     artifacts.forEach(artifact -> {
-      ArtifactStream artifactStream = artifactStreamService.get(context.getAppId(), artifact.getArtifactStreamId());
-      if (artifactStream == null) {
-        // mean artifact stream has already been deleted
-        throw new WingsException(ErrorCode.INVALID_ARGUMENT)
-            .addParam("args", "Artifact Source: " + artifact.getArtifactSourceName() + " has already been deleted");
-      }
-
       // TODO : auto downloaded is not done well in artifact stream - temporarily using Constants
-      if (artifactStream.isMetadataOnly() || Constants.autoDownloaded.contains(artifactStream.getArtifactStreamType())
-          || artifactService.getArtifactContentStatus(artifact).equals(ContentStatus.METADATA_ONLY)) {
+      ContentStatus artifactContentStatus = artifactService.getArtifactContentStatus(artifact);
+      if (DOWNLOADED == artifactContentStatus || METADATA_ONLY == artifactContentStatus) {
         return;
       }
-
       // Artifact needs to be downloaded now
       artifactService.startArtifactCollection(context.getAppId(), artifact.getUuid());
       correlationIds.add(cronUtil.scheduleReminder(60 * 1000, "artifactId", artifact.getUuid()));
@@ -101,10 +86,7 @@ public class ArtifactCheckState extends State {
     });
 
     if (artifactNamesForDownload.isEmpty()) {
-      return anExecutionResponse()
-          .withErrorMessage("All artifacts: "
-              + artifacts.stream().map(Artifact::getDisplayName).collect(Collectors.toList()) + " are available.")
-          .build();
+      return getExecutionResponse(artifacts);
     }
 
     logger.info("startArtifactCollection requested - artifactNamesForDownload: {}", artifactNamesForDownload);
@@ -114,6 +96,13 @@ public class ArtifactCheckState extends State {
         .withAsync(true)
         .withCorrelationIds(correlationIds)
         .withErrorMessage("Waiting for artifacts:" + artifactNamesForDownload + " to be downloaded")
+        .build();
+  }
+
+  private ExecutionResponse getExecutionResponse(List<Artifact> artifacts) {
+    return anExecutionResponse()
+        .withErrorMessage("All artifacts: "
+            + artifacts.stream().map(Artifact::getDisplayName).collect(Collectors.toList()) + " are available.")
         .build();
   }
 
@@ -128,10 +117,10 @@ public class ArtifactCheckState extends State {
       ReminderNotifyResponse reminderNotifyResponse = (ReminderNotifyResponse) notifyResponseData;
       String artifactId = reminderNotifyResponse.getParameters().get("artifactId");
       Artifact artifact = artifactService.get(context.getAppId(), artifactId);
-      if (artifact.getContentStatus() == ContentStatus.DOWNLOADED) {
+      if (artifact.getContentStatus() == DOWNLOADED) {
         return;
       }
-      if (artifact.getContentStatus() == ContentStatus.FAILED) {
+      if (artifact.getContentStatus() == FAILED) {
         failedArtifacts.add(artifact);
         return;
       }
@@ -152,10 +141,7 @@ public class ArtifactCheckState extends State {
     if (artifactNamesForDownload.isEmpty()) {
       WorkflowStandardParams workflowStandardParams = context.getContextElement(ContextElementType.STANDARD);
       List<Artifact> artifacts = workflowStandardParams.getArtifacts();
-      return anExecutionResponse()
-          .withErrorMessage("All artifacts: "
-              + artifacts.stream().map(Artifact::getDisplayName).collect(Collectors.toList()) + " are available.")
-          .build();
+      return getExecutionResponse(artifacts);
     }
 
     return anExecutionResponse()
