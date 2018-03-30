@@ -113,7 +113,7 @@ public class SumoDataCollectionTask extends AbstractDelegateDataCollectionTask {
             try {
               final List<LogElement> logElements = new ArrayList<>();
               for (String host : dataCollectionInfo.getHosts()) {
-                String hostStr = dataCollectionInfo.getHostnameField() + " = " + host;
+                String hostStr = dataCollectionInfo.getHostnameField() + " = \"" + host + "\" ";
 
                 /* Heart beat */
                 final LogElement sumoHeartBeatElement = new LogElement();
@@ -130,9 +130,9 @@ public class SumoDataCollectionTask extends AbstractDelegateDataCollectionTask {
                   throw new IllegalArgumentException("No hosts found for Sumo task " + dataCollectionInfo.toString());
                 }
 
-                hostStr = " (" + hostStr + ") ";
+                hostStr = " | where " + hostStr + " ";
 
-                String searchQuery = hostStr + query + " | timeslice 1m";
+                String searchQuery = query + hostStr + " | timeslice 1m";
 
                 final long endTime = collectionStartTime + TimeUnit.MINUTES.toMillis(1) - 1;
                 logger.info("triggering sumo query startTime: " + collectionStartTime + " endTime: " + endTime
