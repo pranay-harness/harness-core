@@ -3,6 +3,7 @@ package software.wings.cloudprovider.gke;
 import static io.harness.data.structure.EmptyPredicate.isNotEmpty;
 import static io.harness.threading.Morpheus.sleep;
 import static java.time.Duration.ofSeconds;
+import static java.util.Collections.emptyList;
 import static java.util.Comparator.comparingInt;
 import static java.util.stream.Collectors.toList;
 import static java.util.stream.Collectors.toMap;
@@ -995,6 +996,9 @@ public class KubernetesContainerServiceImpl implements KubernetesContainerServic
       KubernetesConfig kubernetesConfig, List<EncryptedDataDetail> encryptedDataDetails, String controllerName) {
     HasMetadata controller = getController(kubernetesConfig, encryptedDataDetails, controllerName);
     PodTemplateSpec podTemplateSpec = getPodTemplateSpec(controller);
+    if (podTemplateSpec == null) {
+      return emptyList();
+    }
     Map<String, String> labels = podTemplateSpec.getMetadata().getLabels();
     return kubernetesHelperService.getKubernetesClient(kubernetesConfig, encryptedDataDetails)
         .pods()
