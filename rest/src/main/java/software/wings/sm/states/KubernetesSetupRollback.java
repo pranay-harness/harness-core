@@ -63,6 +63,7 @@ public class KubernetesSetupRollback extends ContainerServiceSetup {
         .withServiceName(serviceName)
         .withClusterName(clusterName)
         .withImageDetails(imageDetails)
+        .withContainerTask(containerTask)
         .withControllerNamePrefix(rollbackElement.getControllerNamePrefix())
         .withInfraMappingId(infrastructureMapping.getUuid())
         .withPreviousDaemonSetYaml(rollbackElement.getPreviousDaemonSetYaml())

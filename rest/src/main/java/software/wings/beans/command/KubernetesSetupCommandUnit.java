@@ -8,6 +8,7 @@ import static java.util.Collections.emptyList;
 import static java.util.stream.Collectors.toList;
 import static java.util.stream.Collectors.toMap;
 import static org.apache.commons.lang3.StringUtils.isNotBlank;
+import static software.wings.beans.command.ContainerResizeCommandUnit.DASH_STRING;
 import static software.wings.beans.container.KubernetesContainerTask.CONFIG_MAP_NAME_PLACEHOLDER_REGEX;
 import static software.wings.beans.container.KubernetesContainerTask.SECRET_MAP_NAME_PLACEHOLDER_REGEX;
 import static software.wings.common.Constants.HARNESS_APP;
@@ -182,34 +183,13 @@ public class KubernetesSetupCommandUnit extends ContainerSetupCommandUnit {
         encryptedDataDetails = emptyList();
       }
 
+      kubernetesContainerService.createNamespaceIfNotExist(kubernetesConfig, encryptedDataDetails);
+
       String lastCtrlName =
           lastController(kubernetesConfig, encryptedDataDetails, setupParams.getControllerNamePrefix());
       int revision = getRevisionFromControllerName(lastCtrlName).orElse(-1) + 1;
 
       String kubernetesServiceName = getKubernetesServiceName(setupParams.getControllerNamePrefix());
-
-      if (setupParams.isRollback()) {
-        executionLogCallback.saveExecutionLog("Rolling back setup");
-        if (isNotBlank(setupParams.getPreviousDaemonSetYaml())) {
-          performDaemonSetRollback(encryptedDataDetails, executionLogCallback, setupParams, kubernetesConfig);
-        }
-        if (isNotEmpty(setupParams.getPreviousActiveAutoscalers())) {
-          performAutoscalerRollback(encryptedDataDetails, executionLogCallback, setupParams, kubernetesConfig);
-        }
-        executionLogCallback.saveExecutionLog("Rollback complete");
-
-        context.setCommandExecutionData(
-            commandExecutionDataBuilder.containerServiceName(setupParams.getControllerNamePrefix()).build());
-
-        return CommandExecutionStatus.SUCCESS;
-      }
-
-      kubernetesContainerService.createNamespaceIfNotExist(kubernetesConfig, encryptedDataDetails);
-
-      String registrySecretName = getKubernetesRegistrySecretName(setupParams.getImageDetails());
-      Secret registrySecret = createRegistrySecret(
-          registrySecretName, setupParams.getNamespace(), setupParams.getImageDetails(), executionLogCallback);
-      kubernetesContainerService.createOrReplaceSecret(kubernetesConfig, encryptedDataDetails, registrySecret);
 
       KubernetesContainerTask kubernetesContainerTask = (KubernetesContainerTask) setupParams.getContainerTask();
       if (kubernetesContainerTask == null) {
@@ -219,9 +199,32 @@ public class KubernetesSetupCommandUnit extends ContainerSetupCommandUnit {
       }
 
       boolean isDaemonSet = kubernetesContainerTask.checkDaemonSet();
+
       String containerServiceName = isDaemonSet
           ? setupParams.getControllerNamePrefix()
           : KubernetesConvention.getControllerName(setupParams.getControllerNamePrefix(), revision);
+
+      if (setupParams.isRollback()) {
+        executionLogCallback.saveExecutionLog("Rolling back setup");
+        if (isDaemonSet) {
+          performDaemonSetRollback(encryptedDataDetails, executionLogCallback, setupParams, kubernetesConfig);
+        }
+        if (isNotEmpty(setupParams.getPreviousActiveAutoscalers())) {
+          performAutoscalerRollback(encryptedDataDetails, executionLogCallback, setupParams, kubernetesConfig);
+        }
+        executionLogCallback.saveExecutionLog("Rollback complete");
+        executionLogCallback.saveExecutionLog(DASH_STRING + "\n");
+
+        context.setCommandExecutionData(
+            commandExecutionDataBuilder.containerServiceName(setupParams.getControllerNamePrefix()).build());
+
+        return CommandExecutionStatus.SUCCESS;
+      }
+
+      String registrySecretName = getKubernetesRegistrySecretName(setupParams.getImageDetails());
+      Secret registrySecret = createRegistrySecret(
+          registrySecretName, setupParams.getNamespace(), setupParams.getImageDetails(), executionLogCallback);
+      kubernetesContainerService.createOrReplaceSecret(kubernetesConfig, encryptedDataDetails, registrySecret);
 
       String previousDaemonSetYaml = null;
       List<Pod> originalDaemonSetPods = null;
@@ -385,8 +388,9 @@ public class KubernetesSetupCommandUnit extends ContainerSetupCommandUnit {
       }
 
       if (isDaemonSet) {
-        listContainerInfosWhenReady(encryptedDataDetails, setupParams.getServiceSteadyStateTimeout(),
-            executionLogCallback, kubernetesConfig, containerServiceName, originalDaemonSetPods, daemonSetStartTime);
+        listDaemonSetContainerInfosWhenReady(encryptedDataDetails, setupParams.getServiceSteadyStateTimeout(),
+            executionLogCallback, kubernetesConfig, containerServiceName, originalDaemonSetPods, daemonSetStartTime,
+            false);
       } else {
         executionLogCallback.saveExecutionLog("Cleaning up old versions");
         cleanup(kubernetesConfig, encryptedDataDetails, containerServiceName, executionLogCallback);
@@ -749,9 +753,9 @@ public class KubernetesSetupCommandUnit extends ContainerSetupCommandUnit {
     return routeRuleSpecNested.endRouteRuleSpec().build();
   }
 
-  private void listContainerInfosWhenReady(List<EncryptedDataDetail> encryptedDataDetails,
+  private void listDaemonSetContainerInfosWhenReady(List<EncryptedDataDetail> encryptedDataDetails,
       int serviceSteadyStateTimeout, ExecutionLogCallback executionLogCallback, KubernetesConfig kubernetesConfig,
-      String containerServiceName, List<Pod> originalPods, long startTime) {
+      String containerServiceName, List<Pod> originalPods, long startTime, boolean isRollback) {
     int desiredCount = kubernetesContainerService.getNodes(kubernetesConfig, encryptedDataDetails).getItems().size();
     int previousCount =
         kubernetesContainerService.getController(kubernetesConfig, encryptedDataDetails, containerServiceName) != null
@@ -759,7 +763,7 @@ public class KubernetesSetupCommandUnit extends ContainerSetupCommandUnit {
         : 0;
     List<ContainerInfo> containerInfos = kubernetesContainerService.getContainerInfosWhenReady(kubernetesConfig,
         encryptedDataDetails, containerServiceName, previousCount, desiredCount, serviceSteadyStateTimeout,
-        originalPods, executionLogCallback, true, startTime);
+        originalPods, true, executionLogCallback, true, startTime);
 
     boolean allContainersSuccess =
         containerInfos.stream().allMatch(info -> info.getStatus() == ContainerInfo.Status.SUCCESS);
@@ -776,11 +780,18 @@ public class KubernetesSetupCommandUnit extends ContainerSetupCommandUnit {
             failed.size() == 1 ? "" : "s", failed.stream().map(ContainerInfo::getContainerId).collect(toList()));
         executionLogCallback.saveExecutionLog(message, LogLevel.ERROR);
       }
+      executionLogCallback.saveExecutionLog(
+          String.format("Completed operation with errors\n%s\n", DASH_STRING), LogLevel.ERROR);
       throw new WingsException(ErrorCode.DEFAULT_ERROR_CODE)
           .addParam("message", "DaemonSet pods failed to reach desired count");
     }
+    executionLogCallback.saveExecutionLog("\nDaemonSet Container IDs:");
     containerInfos.forEach(
-        info -> executionLogCallback.saveExecutionLog("DaemonSet container ID: " + info.getContainerId()));
+        info -> executionLogCallback.saveExecutionLog("  " + info.getHostName() + " - " + info.getContainerId()));
+    executionLogCallback.saveExecutionLog("");
+    if (!isRollback) {
+      executionLogCallback.saveExecutionLog(String.format("Completed operation\n%s\n", DASH_STRING));
+    }
   }
 
   private void performDaemonSetRollback(List<EncryptedDataDetail> encryptedDataDetails,
@@ -788,10 +799,10 @@ public class KubernetesSetupCommandUnit extends ContainerSetupCommandUnit {
     String daemonSetName = setupParams.getControllerNamePrefix();
     String daemonSetYaml = setupParams.getPreviousDaemonSetYaml();
     long startTime = clock.millis();
+    List<Pod> originalPods =
+        kubernetesContainerService.getRunningPods(kubernetesConfig, encryptedDataDetails, daemonSetName);
     if (isNotBlank(daemonSetYaml)) {
       try {
-        List<Pod> originalPods =
-            kubernetesContainerService.getRunningPods(kubernetesConfig, encryptedDataDetails, daemonSetName);
         DaemonSet daemonSet = KubernetesHelper.loadYaml(daemonSetYaml);
         executionLogCallback.saveExecutionLog("Rolling back DaemonSet " + daemonSetName);
         kubernetesContainerService.createController(kubernetesConfig, encryptedDataDetails, daemonSet);
@@ -804,8 +815,8 @@ public class KubernetesSetupCommandUnit extends ContainerSetupCommandUnit {
                       .map(Container::getImage)
                       .collect(toList()),
             LogLevel.INFO);
-        listContainerInfosWhenReady(encryptedDataDetails, setupParams.getServiceSteadyStateTimeout(),
-            executionLogCallback, kubernetesConfig, daemonSetName, originalPods, startTime);
+        listDaemonSetContainerInfosWhenReady(encryptedDataDetails, setupParams.getServiceSteadyStateTimeout(),
+            executionLogCallback, kubernetesConfig, daemonSetName, originalPods, startTime, true);
       } catch (IOException e) {
         executionLogCallback.saveExecutionLog("Error reading DaemonSet from yaml: " + daemonSetName, LogLevel.ERROR);
       }
@@ -817,7 +828,7 @@ public class KubernetesSetupCommandUnit extends ContainerSetupCommandUnit {
       Map<String, String> labels = daemonSet.getMetadata().getLabels();
       kubernetesContainerService.deleteController(kubernetesConfig, encryptedDataDetails, daemonSetName);
       kubernetesContainerService.waitForPodsToStop(kubernetesConfig, encryptedDataDetails, labels,
-          setupParams.getServiceSteadyStateTimeout(), executionLogCallback);
+          setupParams.getServiceSteadyStateTimeout(), originalPods, startTime, executionLogCallback);
     }
   }
 
