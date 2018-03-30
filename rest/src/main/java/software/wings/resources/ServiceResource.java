@@ -76,7 +76,9 @@ public class ServiceResource {
   @ListAPI(ResourceType.SERVICE)
   public RestResponse<PageResponse<Service>> list(
       @QueryParam("appId") String appId, @BeanParam PageRequest<Service> pageRequest) {
-    pageRequest.addFilter("appId", EQ, appId);
+    if (appId != null) {
+      pageRequest.addFilter("appId", EQ, appId);
+    }
     return new RestResponse<>(serviceResourceService.list(pageRequest, true, true));
   }
 
