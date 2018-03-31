@@ -196,14 +196,14 @@ userVariables:
     fixed: false
     mandatory: true
     name: DELEGATE_VERSION
-    value: '452'
+    value: '494'
   - type: TEXT
     fixed: false
     mandatory: true
     name: WATCHER_VERSION
-    value: '46'
+    value: '48'
   - type: TEXT
     fixed: false
     mandatory: true
     name: MANAGER_VERSION
-    value: on_prem_10
+    value: hazelcast_cidr_test

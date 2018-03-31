@@ -36,5 +36,7 @@ elif [[ "${DEPLOY_MODE}" == "ONPREM" ]]; then
         sed -i "s|<tcp-ip enabled=\"false\">|<tcp-ip enabled=\"true\">|" /opt/harness/hazelcast.xml
         sed -i "s|<members>tcp-ip-members</members>|<members>${TCP_HOSTS_DETAILS}</members>|" /opt/harness/hazelcast.xml
         sed -i "s|<port auto-increment=\"true\" port-count=\"100\">5701</port>|<port auto-increment=\"true\" port-count=\"100\">${HAZELCAST_PORT}</port>|" /opt/harness/hazelcast.xml
+        sed -i "s|<interfaces enabled=\"false\">|<interfaces enabled=\"true\">|" /opt/harness/hazelcast.xml
+        sed -i "s|<interface>10.10.1.*</interface>|<interface>${CIDR}</interface>|" /opt/harness/hazelcast.xml
     fi
 fi
