@@ -44,10 +44,6 @@ variableOverrides:
     serviceName: Proxy
     value: ${serviceVariable.HOST1}:8000
     valueType: TEXT
-  - name: harness_manager_tag
-    serviceName: Manager
-    value: on_prem_10
-    valueType: TEXT
   - name: TCP_HOSTS_DETAILS
     serviceName: Manager
     value: ${serviceVariable.HOST1}:${serviceVariable.HAZELCAST_PORT},${serviceVariable.HOST2}:${serviceVariable.HAZELCAST_PORT},${serviceVariable.HOST3}:${serviceVariable.HAZELCAST_PORT}
@@ -79,13 +75,13 @@ variableOverrides:
     value: <LOAD_BALANCER_URL_PLACEHOLDER>
     valueType: TEXT
   - name: COMPANYNAME
-    value: BigBank
+    value: <COMPANYNAME_PLACEHOLDER>
     valueType: TEXT
   - name: ACCOUNTNAME
-    value: BigBankAdmin
+    value: <ACCOUNTNAME_PLACEHOLDER>
     valueType: TEXT
   - name: EMAIL
-    value: testaccount@bigbank.com
+    value: <EMAIL_PLACEHOLDER>
     valueType: TEXT
   - name: HOST1
     value: <HOST1_PLACEHOLDER>

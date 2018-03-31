@@ -47,9 +47,6 @@ configVariables:
   - name: LOGGING_LEVEL
     value: INFO
     valueType: TEXT
-  - name: harness_manager_tag
-    value: on_prem_7
-    valueType: TEXT
   - name: DEPLOY_MODE
     value: ONPREM
     valueType: TEXT

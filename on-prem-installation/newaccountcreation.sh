@@ -64,7 +64,6 @@ function generateRandomString(){
 echo "# Reading account details from $ACCOUNT_PROPERTY_FILE"
 accountName=$(getProperty "$ACCOUNT_PROPERTY_FILE" "AccountName")
 companyName=$(getProperty $ACCOUNT_PROPERTY_FILE "CompanyName")
-adminName=$(getProperty $ACCOUNT_PROPERTY_FILE "AdminName")
 adminEmail=$(getProperty $ACCOUNT_PROPERTY_FILE "AdminEmail")
 
 
@@ -73,6 +72,8 @@ host1=$(getProperty "$INFRA_PROPERTY_FILE" "HOST1")
 host2=$(getProperty "$INFRA_PROPERTY_FILE" "HOST2")
 host3=$(getProperty "$INFRA_PROPERTY_FILE" "HOST3")
 loadbalancer=$(getProperty "$INFRA_PROPERTY_FILE" "LOAD_BALANCER_URL")
+sshUser=$(getProperty $INFRA_PROPERTY_FILE "sshUser")
+sshKeyPath=$(getProperty $INFRA_PROPERTY_FILE "sshKeyPath")
 
 echo "Reading config mapping from $CONFIG_PROPERTY_FILE"
 mongodbUserName=$(getProperty "$CONFIG_PROPERTY_FILE" "mongodbUserName" | base64 --decode)
@@ -83,7 +84,6 @@ newreliclicensekey=$(getProperty "$CONFIG_PROPERTY_FILE" "newreliclicensekey" | 
 echo "#######Account details#############"
 echo "AccountName="$accountName
 echo "CompanyName="$companyName
-echo "AdminName="$adminName
 echo "AdminEmail="$adminEmail
 
 printf "\n"
@@ -93,6 +93,8 @@ echo "host1="$host1
 echo "host2="$host2
 echo "host3="$host3
 echo "loadbalancer="$loadbalancer
+echo "sshUser="$sshUser
+echo "sshKeyPath="$sshKeyPath
 
 ###### ACCOUNT CREATION SECTION START ##################################
 
@@ -182,6 +184,16 @@ sanitizedhost3="$(echo $host3 | sed -e 's|\.|\\.|g')"
 #ssh_key_response="$(eval $ssh_key_curl_statement)"
 #echo "SSH Key Response = " $ssh_key_response
 
+ssh_key_curl_statement="curl -X POST -k \
+  '$API_URL/api/settings?accountId=$accountId' \
+  -H 'Authorization: Bearer $TOKEN' \
+  -H 'Content-Type: application/json' \
+  -d '{\"value\":{\"type\":\"HOST_CONNECTION_ATTRIBUTES\",\"userName\":\"$sshUser\",\"keyless\":true,\"keyPath\":\"$sshKeyPath\",\"connectionType\":\"SSH\",\"accessType\":\"KEY\"},\"name\":\"onprem-key\",\"category\":\"SETTING\"}'"
+
+echo "Sending ssh key curl statement = " $ssh_key_curl_statement
+ssh_key_response="$(eval $ssh_key_curl_statement)"
+echo "SSH Key Response = " $ssh_key_response
+
 ## Copy master directory into working directory :
 
 rm -rf Setup
@@ -197,6 +209,9 @@ find Setup -type f -exec sed -i "s|<HOST1_PLACEHOLDER>|$sanitizedhost1|g" {} +
 find Setup -type f -exec sed -i "s|<HOST2_PLACEHOLDER>|$sanitizedhost2|g" {} +
 find Setup -type f -exec sed -i "s|<HOST3_PLACEHOLDER>|$sanitizedhost3|g" {} +
 find Setup -type f -exec sed -i "s|<LOAD_BALANCER_URL_PLACEHOLDER>|$loadbalancer|g" {} +
+find Setup -type f -exec sed -i "s|<COMPANYNAME_PLACEHOLDER>|$companyName|g" {} +
+find Setup -type f -exec sed -i "s|<ACCOUNTNAME_PLACEHOLDER>|$accountName|g" {} +
+find Setup -type f -exec sed -i "s|<EMAIL_PLACEHOLDER>|$adminEmail|g" {} +
 
 zip -r Setup.zip Setup
 
@@ -219,6 +234,6 @@ if [[ $response = *"ERROR"* ]]; then
   echo "YAML Request Failed"
 else
   echo "YAML Request succeeded"
-#  rm -rf Setup.zip
+  rm -rf Setup.zip
   rm -rf Setup
 fi

@@ -15,11 +15,11 @@ pipelineStages:
     workflowName: Install Manager
     workflowVariables:
       - name: DELEGATE_VERSION
-        value: '452'
+        value: '494'
       - name: WATCHER_VERSION
-        value: '46'
+        value: '48'
       - name: MANAGER_VERSION
-        value: on_prem_10
+        value: hazelcast_cidr_test
   - type: ENV_STATE
     name: Install UI
     parallel: true
