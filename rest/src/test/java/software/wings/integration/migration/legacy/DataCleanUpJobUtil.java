@@ -4,6 +4,7 @@ import com.google.inject.Inject;
 import com.google.inject.name.Named;
 
 import com.mongodb.BasicDBObject;
+import com.mongodb.DBCursor;
 import org.bson.types.ObjectId;
 import org.junit.Ignore;
 import org.junit.Test;
@@ -175,10 +176,14 @@ public class DataCleanUpJobUtil extends WingsBaseTest {
                                 .field("serviceIds")
                                 .equal(s)
                                 .disableValidation();
-      final MorphiaIterator<Artifact, Artifact> iterator = artifactQuery.fetch();
+
       List<Artifact> artifacts = new ArrayList<>();
-      while (iterator.hasNext()) {
-        artifacts.add(iterator.next());
+
+      final MorphiaIterator<Artifact, Artifact> iterator = artifactQuery.fetch();
+      try (DBCursor cursor = iterator.getCursor()) {
+        while (iterator.hasNext()) {
+          artifacts.add(iterator.next());
+        }
       }
       deleteArtifacts(artifacts);
       logger.info("artifacts = " + artifacts);
@@ -204,10 +209,13 @@ public class DataCleanUpJobUtil extends WingsBaseTest {
                                 .field("artifactStreamId")
                                 .equal(s)
                                 .disableValidation();
-      final MorphiaIterator<Artifact, Artifact> iterator = artifactQuery.fetch();
+
       List<Artifact> artifacts = new ArrayList<>();
-      while (iterator.hasNext()) {
-        artifacts.add(iterator.next());
+      final MorphiaIterator<Artifact, Artifact> iterator = artifactQuery.fetch();
+      try (DBCursor cursor = iterator.getCursor()) {
+        while (iterator.hasNext()) {
+          artifacts.add(iterator.next());
+        }
       }
       logger.info("artifacts to be deleted = " + artifacts);
       deleteArtifacts(artifacts);

@@ -12,7 +12,9 @@ import com.google.common.io.ByteStreams;
 import com.google.common.io.Files;
 import com.google.inject.Inject;
 
+import com.mongodb.DBCursor;
 import org.mongodb.morphia.query.FindOptions;
+import org.mongodb.morphia.query.MorphiaIterator;
 import org.mongodb.morphia.query.Query;
 import software.wings.beans.Base;
 import software.wings.beans.BaseFile;
@@ -39,7 +41,6 @@ import java.nio.ByteBuffer;
 import java.nio.CharBuffer;
 import java.util.ArrayList;
 import java.util.Collection;
-import java.util.Iterator;
 import java.util.List;
 import java.util.UUID;
 
@@ -81,23 +82,30 @@ public class KmsServiceImpl extends AbstractSecretServiceImpl implements KmsServ
   @Override
   public KmsConfig getSecretConfig(String accountId) {
     KmsConfig kmsConfig = null;
-    Iterator<KmsConfig> query = wingsPersistence.createQuery(KmsConfig.class)
-                                    .field("accountId")
-                                    .equal(accountId)
-                                    .field("isDefault")
-                                    .equal(true)
-                                    .fetch(new FindOptions().limit(1));
-    if (query.hasNext()) {
-      kmsConfig = query.next();
-    } else {
-      logger.info("No kms setup for account {}. Using harness's kms", accountId);
-      query = wingsPersistence.createQuery(KmsConfig.class)
-                  .field("accountId")
-                  .equal(Base.GLOBAL_ACCOUNT_ID)
-                  .fetch(new FindOptions().limit(1));
+    final MorphiaIterator<KmsConfig, KmsConfig> query1 = wingsPersistence.createQuery(KmsConfig.class)
+                                                             .field("accountId")
+                                                             .equal(accountId)
+                                                             .field("isDefault")
+                                                             .equal(true)
+                                                             .fetch(new FindOptions().limit(1));
 
-      if (query.hasNext()) {
-        kmsConfig = query.next();
+    try (DBCursor cursor = query1.getCursor()) {
+      if (query1.hasNext()) {
+        kmsConfig = query1.next();
+      }
+    }
+
+    if (kmsConfig == null) {
+      logger.info("No kms setup for account {}. Using harness's kms", accountId);
+      final MorphiaIterator<KmsConfig, KmsConfig> query2 = wingsPersistence.createQuery(KmsConfig.class)
+                                                               .field("accountId")
+                                                               .equal(Base.GLOBAL_ACCOUNT_ID)
+                                                               .fetch(new FindOptions().limit(1));
+
+      try (DBCursor cursor = query2.getCursor()) {
+        if (query2.hasNext()) {
+          kmsConfig = query2.next();
+        }
       }
     }
 
@@ -221,19 +229,21 @@ public class KmsServiceImpl extends AbstractSecretServiceImpl implements KmsServ
 
   @Override
   public boolean deleteKmsConfig(String accountId, String kmsConfigId) {
-    Iterator<EncryptedData> query = wingsPersistence.createQuery(EncryptedData.class)
-                                        .field("accountId")
-                                        .equal(accountId)
-                                        .field("kmsId")
-                                        .equal(kmsConfigId)
-                                        .field("encryptionType")
-                                        .equal(EncryptionType.KMS)
-                                        .fetch(new FindOptions().limit(1));
+    final MorphiaIterator<EncryptedData, EncryptedData> query = wingsPersistence.createQuery(EncryptedData.class)
+                                                                    .field("accountId")
+                                                                    .equal(accountId)
+                                                                    .field("kmsId")
+                                                                    .equal(kmsConfigId)
+                                                                    .field("encryptionType")
+                                                                    .equal(EncryptionType.KMS)
+                                                                    .fetch(new FindOptions().limit(1));
 
-    if (query.hasNext()) {
-      String message = "Can not delete the kms configuration since there are secrets encrypted with this. "
-          + "Please transition your secrets to a new kms and then try again";
-      throw new WingsException(ErrorCode.KMS_OPERATION_ERROR).addParam("reason", message);
+    try (DBCursor cursor = query.getCursor()) {
+      if (query.hasNext()) {
+        String message = "Can not delete the kms configuration since there are secrets encrypted with this. "
+            + "Please transition your secrets to a new kms and then try again";
+        throw new WingsException(ErrorCode.KMS_OPERATION_ERROR).addParam("reason", message);
+      }
     }
 
     wingsPersistence.delete(KmsConfig.class, kmsConfigId);
@@ -245,52 +255,54 @@ public class KmsServiceImpl extends AbstractSecretServiceImpl implements KmsServ
   @Override
   public Collection<KmsConfig> listKmsConfigs(String accountId, boolean maskSecret) {
     List<KmsConfig> rv = new ArrayList<>();
-    Iterator<KmsConfig> query = wingsPersistence.createQuery(KmsConfig.class)
-                                    .field("accountId")
-                                    .in(Lists.newArrayList(accountId, Base.GLOBAL_ACCOUNT_ID))
-                                    .order("-createdAt")
-                                    .fetch();
 
-    KmsConfig globalConfig = null;
-    boolean defaultSet = false;
-    while (query.hasNext()) {
-      KmsConfig kmsConfig = query.next();
-      Query<EncryptedData> encryptedDataQuery = wingsPersistence.createQuery(EncryptedData.class)
-                                                    .field("accountId")
-                                                    .equal(accountId)
-                                                    .field("kmsId")
-                                                    .equal(kmsConfig.getUuid());
-      kmsConfig.setNumOfEncryptedValue(encryptedDataQuery.asKeyList().size());
-      if (kmsConfig.isDefault()) {
-        defaultSet = true;
+    final MorphiaIterator<KmsConfig, KmsConfig> query = wingsPersistence.createQuery(KmsConfig.class)
+                                                            .field("accountId")
+                                                            .in(Lists.newArrayList(accountId, Base.GLOBAL_ACCOUNT_ID))
+                                                            .order("-createdAt")
+                                                            .fetch();
+    try (DBCursor cursor = query.getCursor()) {
+      KmsConfig globalConfig = null;
+      boolean defaultSet = false;
+      while (query.hasNext()) {
+        KmsConfig kmsConfig = query.next();
+        Query<EncryptedData> encryptedDataQuery = wingsPersistence.createQuery(EncryptedData.class)
+                                                      .field("accountId")
+                                                      .equal(accountId)
+                                                      .field("kmsId")
+                                                      .equal(kmsConfig.getUuid());
+        kmsConfig.setNumOfEncryptedValue(encryptedDataQuery.asKeyList().size());
+        if (kmsConfig.isDefault()) {
+          defaultSet = true;
+        }
+
+        if (kmsConfig.getAccountId().equals(Base.GLOBAL_ACCOUNT_ID)) {
+          globalConfig = kmsConfig;
+        }
+        EncryptedData accessKeyData = wingsPersistence.get(EncryptedData.class, kmsConfig.getAccessKey());
+        Preconditions.checkNotNull(accessKeyData, "encrypted accessKey can't be null for " + kmsConfig);
+        kmsConfig.setAccessKey(new String(decrypt(accessKeyData, null, null)));
+
+        EncryptedData arnData = wingsPersistence.get(EncryptedData.class, kmsConfig.getKmsArn());
+        Preconditions.checkNotNull(arnData, "encrypted arn can't be null for " + kmsConfig);
+        kmsConfig.setKmsArn(new String(decrypt(arnData, null, null)));
+
+        if (maskSecret) {
+          kmsConfig.setSecretKey(Constants.SECRET_MASK);
+        } else {
+          EncryptedData secretData = wingsPersistence.get(EncryptedData.class, kmsConfig.getSecretKey());
+          Preconditions.checkNotNull(secretData, "encrypted secret key can't be null for " + kmsConfig);
+          kmsConfig.setSecretKey(new String(decrypt(secretData, null, null)));
+        }
+        kmsConfig.setEncryptionType(EncryptionType.KMS);
+        rv.add(kmsConfig);
       }
 
-      if (kmsConfig.getAccountId().equals(Base.GLOBAL_ACCOUNT_ID)) {
-        globalConfig = kmsConfig;
+      if (!defaultSet && globalConfig != null) {
+        globalConfig.setDefault(true);
       }
-      EncryptedData accessKeyData = wingsPersistence.get(EncryptedData.class, kmsConfig.getAccessKey());
-      Preconditions.checkNotNull(accessKeyData, "encrypted accessKey can't be null for " + kmsConfig);
-      kmsConfig.setAccessKey(new String(decrypt(accessKeyData, null, null)));
-
-      EncryptedData arnData = wingsPersistence.get(EncryptedData.class, kmsConfig.getKmsArn());
-      Preconditions.checkNotNull(arnData, "encrypted arn can't be null for " + kmsConfig);
-      kmsConfig.setKmsArn(new String(decrypt(arnData, null, null)));
-
-      if (maskSecret) {
-        kmsConfig.setSecretKey(Constants.SECRET_MASK);
-      } else {
-        EncryptedData secretData = wingsPersistence.get(EncryptedData.class, kmsConfig.getSecretKey());
-        Preconditions.checkNotNull(secretData, "encrypted secret key can't be null for " + kmsConfig);
-        kmsConfig.setSecretKey(new String(decrypt(secretData, null, null)));
-      }
-      kmsConfig.setEncryptionType(EncryptionType.KMS);
-      rv.add(kmsConfig);
+      return rv;
     }
-
-    if (!defaultSet && globalConfig != null) {
-      globalConfig.setDefault(true);
-    }
-    return rv;
   }
 
   @Override
@@ -355,14 +367,16 @@ public class KmsServiceImpl extends AbstractSecretServiceImpl implements KmsServ
   @Override
   public KmsConfig getKmsConfig(String accountId, String entityId) {
     KmsConfig kmsConfig = null;
-    Iterator<KmsConfig> query = wingsPersistence.createQuery(KmsConfig.class)
-                                    .field("accountId")
-                                    .in(Lists.newArrayList(accountId, Base.GLOBAL_ACCOUNT_ID))
-                                    .field("_id")
-                                    .equal(entityId)
-                                    .fetch(new FindOptions().limit(1));
-    if (query.hasNext()) {
-      kmsConfig = query.next();
+    final MorphiaIterator<KmsConfig, KmsConfig> query = wingsPersistence.createQuery(KmsConfig.class)
+                                                            .field("accountId")
+                                                            .in(Lists.newArrayList(accountId, Base.GLOBAL_ACCOUNT_ID))
+                                                            .field("_id")
+                                                            .equal(entityId)
+                                                            .fetch(new FindOptions().limit(1));
+    try (DBCursor cursor = query.getCursor()) {
+      if (query.hasNext()) {
+        kmsConfig = query.next();
+      }
     }
 
     if (kmsConfig != null) {

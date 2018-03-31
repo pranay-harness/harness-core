@@ -7,6 +7,7 @@ import com.google.common.base.Preconditions;
 import com.google.common.collect.Lists;
 import com.google.inject.Inject;
 
+import com.mongodb.DBCursor;
 import org.apache.commons.lang3.StringUtils;
 import org.mongodb.morphia.FindAndModifyOptions;
 import org.mongodb.morphia.query.FindOptions;
@@ -226,11 +227,14 @@ public class LearningEngineAnalysisServiceImpl implements LearningEngineService 
             .equal(ExecutionStatus.QUEUED)
             .order("-createdAt")
             .fetch(new FindOptions().limit(1));
-    if (!task.hasNext()) {
-      return Optional.empty();
-    }
 
-    return Optional.of(task.next());
+    try (DBCursor cursor = task.getCursor()) {
+      if (!task.hasNext()) {
+        return Optional.empty();
+      }
+
+      return Optional.of(task.next());
+    }
   }
 
   @Override
