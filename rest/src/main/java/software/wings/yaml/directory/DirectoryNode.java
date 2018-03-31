@@ -42,6 +42,8 @@ public class DirectoryNode {
       this.restName = "artifact-streams";
     } else if (this.shortClassName.equals("ContainerTask")) {
       this.restName = "container-tasks";
+    } else if (this.shortClassName.equals("HelmChartSpecification")) {
+      this.restName = "helm-charts";
     } else if (this.shortClassName.equals("Defaults")) {
       this.restName = "defaults";
     } else if (this.shortClassName.equals("NotificationGroup")) {
