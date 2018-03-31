@@ -24,7 +24,7 @@ public class KubernetesConvention {
   private static final String SECRET_SUFFIX = "-hs";
   private static final String CONTAINER_PREFIX = "hs-";
   private static final String CONTAINER_SUFFIX = "-hs";
-  private static Pattern wildCharPattern = Pattern.compile("[_+*/\\\\ &$|\"':]");
+  private static Pattern wildCharPattern = Pattern.compile("[_+*/\\\\ &@$|\"':]");
 
   public static String getControllerName(String prefix, int revision) {
     return normalize(prefix) + DOT + revision;

@@ -55,8 +55,6 @@ public class KubernetesContainerTask extends ContainerTask {
   private static final String SECRET_NAME_PLACEHOLDER_REGEX = "\\$\\{SECRET_NAME}";
 
   private static final String DUMMY_SECRET_NAME = "hv--secret-name--hv";
-  private static final String DUMMY_CONFIG_MAP_NAME = "hv--config-map-name--hv";
-  private static final String DUMMY_SECRET_MAP_NAME = "hv--secret-map-name--hv";
 
   private static final Pattern DAEMON_SET_PATTERN = Pattern.compile("kind:\\s*\"?DaemonSet");
 
