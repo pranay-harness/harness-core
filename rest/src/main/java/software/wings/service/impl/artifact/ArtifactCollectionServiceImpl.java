@@ -24,6 +24,7 @@ import static software.wings.service.impl.artifact.ArtifactCollectionUtil.getArt
 import com.google.inject.Inject;
 import com.google.inject.Singleton;
 
+import com.mongodb.DBCursor;
 import org.mongodb.morphia.query.MorphiaIterator;
 import org.mongodb.morphia.query.Query;
 import org.slf4j.Logger;
@@ -213,8 +214,10 @@ public class ArtifactCollectionServiceImpl implements ArtifactCollectionService 
     Map<String, BuildDetails> buildDetails =
         builds.parallelStream().collect(Collectors.toMap(BuildDetails::getNumber, Function.identity()));
     final MorphiaIterator<Artifact, Artifact> iterator = getArtifactQuery(artifactStream).fetch();
-    while (iterator.hasNext()) {
-      buildDetails.remove(iterator.next().getBuildNo());
+    try (DBCursor cursor = iterator.getCursor()) {
+      while (iterator.hasNext()) {
+        buildDetails.remove(iterator.next().getBuildNo());
+      }
     }
     return buildDetails.keySet();
   }
@@ -223,8 +226,10 @@ public class ArtifactCollectionServiceImpl implements ArtifactCollectionService 
     Map<String, BuildDetails> buildDetails =
         builds.parallelStream().collect(Collectors.toMap(BuildDetails::getArtifactPath, Function.identity()));
     final MorphiaIterator<Artifact, Artifact> iterator = getArtifactQuery(artifactStream).fetch();
-    while (iterator.hasNext()) {
-      buildDetails.remove(iterator.next().getArtifactPath());
+    try (DBCursor cursor = iterator.getCursor()) {
+      while (iterator.hasNext()) {
+        buildDetails.remove(iterator.next().getArtifactPath());
+      }
     }
     return buildDetails.keySet();
   }

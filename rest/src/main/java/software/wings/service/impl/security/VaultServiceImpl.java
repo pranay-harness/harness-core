@@ -11,8 +11,10 @@ import com.google.common.io.ByteStreams;
 import com.google.common.io.Files;
 import com.google.inject.Inject;
 
+import com.mongodb.DBCursor;
 import com.mongodb.DuplicateKeyException;
 import org.mongodb.morphia.query.FindOptions;
+import org.mongodb.morphia.query.MorphiaIterator;
 import org.mongodb.morphia.query.Query;
 import software.wings.beans.Base;
 import software.wings.beans.DelegateTask.SyncTaskContext;
@@ -35,7 +37,6 @@ import java.nio.ByteBuffer;
 import java.nio.CharBuffer;
 import java.util.ArrayList;
 import java.util.Collection;
-import java.util.Iterator;
 import java.util.List;
 
 /**
@@ -71,14 +72,16 @@ public class VaultServiceImpl extends AbstractSecretServiceImpl implements Vault
   @Override
   public VaultConfig getSecretConfig(String accountId) {
     VaultConfig vaultConfig = null;
-    Iterator<VaultConfig> query = wingsPersistence.createQuery(VaultConfig.class)
-                                      .field("accountId")
-                                      .equal(accountId)
-                                      .field("isDefault")
-                                      .equal(true)
-                                      .fetch(new FindOptions().limit(1));
-    if (query.hasNext()) {
-      vaultConfig = query.next();
+    final MorphiaIterator<VaultConfig, VaultConfig> query = wingsPersistence.createQuery(VaultConfig.class)
+                                                                .field("accountId")
+                                                                .equal(accountId)
+                                                                .field("isDefault")
+                                                                .equal(true)
+                                                                .fetch(new FindOptions().limit(1));
+    try (DBCursor cursor = query.getCursor()) {
+      if (query.hasNext()) {
+        vaultConfig = query.next();
+      }
     }
 
     if (vaultConfig != null) {
@@ -96,14 +99,16 @@ public class VaultServiceImpl extends AbstractSecretServiceImpl implements Vault
   @Override
   public VaultConfig getVaultConfig(String accountId, String entityId) {
     VaultConfig vaultConfig = null;
-    Iterator<VaultConfig> query = wingsPersistence.createQuery(VaultConfig.class)
-                                      .field("accountId")
-                                      .equal(accountId)
-                                      .field("_id")
-                                      .equal(entityId)
-                                      .fetch(new FindOptions().limit(1));
-    if (query.hasNext()) {
-      vaultConfig = query.next();
+    final MorphiaIterator<VaultConfig, VaultConfig> query = wingsPersistence.createQuery(VaultConfig.class)
+                                                                .field("accountId")
+                                                                .equal(accountId)
+                                                                .field("_id")
+                                                                .equal(entityId)
+                                                                .fetch(new FindOptions().limit(1));
+    try (DBCursor cursor = query.getCursor()) {
+      if (query.hasNext()) {
+        vaultConfig = query.next();
+      }
     }
 
     if (vaultConfig != null) {
@@ -190,19 +195,21 @@ public class VaultServiceImpl extends AbstractSecretServiceImpl implements Vault
 
   @Override
   public boolean deleteVaultConfig(String accountId, String vaultConfigId) {
-    Iterator<EncryptedData> query = wingsPersistence.createQuery(EncryptedData.class)
-                                        .field("accountId")
-                                        .equal(accountId)
-                                        .field("kmsId")
-                                        .equal(vaultConfigId)
-                                        .field("encryptionType")
-                                        .equal(EncryptionType.VAULT)
-                                        .fetch(new FindOptions().limit(1));
+    final MorphiaIterator<EncryptedData, EncryptedData> query = wingsPersistence.createQuery(EncryptedData.class)
+                                                                    .field("accountId")
+                                                                    .equal(accountId)
+                                                                    .field("kmsId")
+                                                                    .equal(vaultConfigId)
+                                                                    .field("encryptionType")
+                                                                    .equal(EncryptionType.VAULT)
+                                                                    .fetch(new FindOptions().limit(1));
 
-    if (query.hasNext()) {
-      String message = "Can not delete the vault configuration since there are secrets encrypted with this. "
-          + "Please transition your secrets to a new kms and then try again";
-      throw new WingsException(ErrorCode.VAULT_OPERATION_ERROR).addParam("reason", message);
+    try (DBCursor cursor = query.getCursor()) {
+      if (query.hasNext()) {
+        String message = "Can not delete the vault configuration since there are secrets encrypted with this. "
+            + "Please transition your secrets to a new kms and then try again";
+        throw new WingsException(ErrorCode.VAULT_OPERATION_ERROR).addParam("reason", message);
+      }
     }
 
     VaultConfig vaultConfig = wingsPersistence.get(VaultConfig.class, vaultConfigId);
@@ -215,25 +222,28 @@ public class VaultServiceImpl extends AbstractSecretServiceImpl implements Vault
   @Override
   public Collection<VaultConfig> listVaultConfigs(String accountId, boolean maskSecret) {
     List<VaultConfig> rv = new ArrayList<>();
-    Iterator<VaultConfig> query =
+
+    final MorphiaIterator<VaultConfig, VaultConfig> query =
         wingsPersistence.createQuery(VaultConfig.class).field("accountId").equal(accountId).order("-createdAt").fetch();
 
-    while (query.hasNext()) {
-      VaultConfig vaultConfig = query.next();
-      Query<EncryptedData> encryptedDataQuery =
-          wingsPersistence.createQuery(EncryptedData.class).field("kmsId").equal(vaultConfig.getUuid());
-      vaultConfig.setNumOfEncryptedValue(encryptedDataQuery.asKeyList().size());
-      if (maskSecret) {
-        vaultConfig.setAuthToken(SECRET_MASK);
-      } else {
-        EncryptedData tokenData = wingsPersistence.get(EncryptedData.class, vaultConfig.getAuthToken());
-        Preconditions.checkNotNull(tokenData, "token data null for " + vaultConfig);
-        char[] decryptedToken =
-            kmsService.decrypt(tokenData, accountId, kmsService.getKmsConfig(accountId, tokenData.getKmsId()));
-        vaultConfig.setAuthToken(String.valueOf(decryptedToken));
+    try (DBCursor cursor = query.getCursor()) {
+      while (query.hasNext()) {
+        VaultConfig vaultConfig = query.next();
+        Query<EncryptedData> encryptedDataQuery =
+            wingsPersistence.createQuery(EncryptedData.class).field("kmsId").equal(vaultConfig.getUuid());
+        vaultConfig.setNumOfEncryptedValue(encryptedDataQuery.asKeyList().size());
+        if (maskSecret) {
+          vaultConfig.setAuthToken(SECRET_MASK);
+        } else {
+          EncryptedData tokenData = wingsPersistence.get(EncryptedData.class, vaultConfig.getAuthToken());
+          Preconditions.checkNotNull(tokenData, "token data null for " + vaultConfig);
+          char[] decryptedToken =
+              kmsService.decrypt(tokenData, accountId, kmsService.getKmsConfig(accountId, tokenData.getKmsId()));
+          vaultConfig.setAuthToken(String.valueOf(decryptedToken));
+        }
+        vaultConfig.setEncryptionType(EncryptionType.VAULT);
+        rv.add(vaultConfig);
       }
-      vaultConfig.setEncryptionType(EncryptionType.VAULT);
-      rv.add(vaultConfig);
     }
     return rv;
   }
