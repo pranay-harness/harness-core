@@ -129,4 +129,9 @@ public interface EnvironmentService extends OwnedByApplication {
 
   Environment setConfigMapYamlForService(
       String appId, String envId, String serviceTemplateId, KubernetesPayload kubernetesPayload);
+
+  Environment setHelmValueYaml(String appId, String envId, KubernetesPayload kubernetesPayload);
+
+  Environment setHelmValueYamlForService(
+      String appId, String envId, String serviceTemplateId, KubernetesPayload kubernetesPayload);
 }

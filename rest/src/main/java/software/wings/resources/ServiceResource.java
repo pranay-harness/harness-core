@@ -433,4 +433,36 @@ public class ServiceResource {
       @ApiParam(name = "serviceId", required = true) @PathParam("serviceId") String serviceId) {
     return new RestResponse<>(serviceResourceService.setConfigMapYaml(appId, serviceId, new KubernetesPayload()));
   }
+
+  @POST
+  @Path("{serviceId}/helm-value-yaml")
+  @Timed
+  @ExceptionMetered
+  public RestResponse<Service> setHelmValueYaml(
+      @ApiParam(name = "appId", required = true) @QueryParam("appId") String appId,
+      @ApiParam(name = "serviceId", required = true) @PathParam("serviceId") String serviceId,
+      KubernetesPayload kubernetesPayload) {
+    return new RestResponse<>(serviceResourceService.setHelmValueYaml(appId, serviceId, kubernetesPayload));
+  }
+
+  @PUT
+  @Path("{serviceId}/helm-value-yaml")
+  @Timed
+  @ExceptionMetered
+  public RestResponse<Service> updateHelmValueYaml(
+      @ApiParam(name = "appId", required = true) @QueryParam("appId") String appId,
+      @ApiParam(name = "serviceId", required = true) @PathParam("serviceId") String serviceId,
+      KubernetesPayload kubernetesPayload) {
+    return new RestResponse<>(serviceResourceService.setHelmValueYaml(appId, serviceId, kubernetesPayload));
+  }
+
+  @DELETE
+  @Path("{serviceId}/helm-value-yaml")
+  @Timed
+  @ExceptionMetered
+  public RestResponse<Service> deleteHelmValueYaml(
+      @ApiParam(name = "appId", required = true) @QueryParam("appId") String appId,
+      @ApiParam(name = "serviceId", required = true) @PathParam("serviceId") String serviceId) {
+    return new RestResponse<>(serviceResourceService.setHelmValueYaml(appId, serviceId, new KubernetesPayload()));
+  }
 }

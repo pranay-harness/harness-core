@@ -58,6 +58,7 @@ public class ServiceYamlHandler extends BaseYamlHandler<Yaml, Service> {
         .description(service.getDescription())
         .artifactType(service.getArtifactType().name())
         .configMapYaml(service.getConfigMapYaml())
+        .helmValueYaml(service.getHelmValueYaml())
         .configVariables(nameValuePairList)
         .applicationStack(applicationStack)
         .build();
@@ -108,7 +109,8 @@ public class ServiceYamlHandler extends BaseYamlHandler<Yaml, Service> {
                                          .withAppId(appId)
                                          .withName(serviceName)
                                          .withDescription(yaml.getDescription())
-                                         .withConfigMapYaml(yaml.getConfigMapYaml());
+                                         .withConfigMapYaml(yaml.getConfigMapYaml())
+                                         .withHelmValueYaml(yaml.getHelmValueYaml());
 
     String applicationStack = yaml.getApplicationStack();
     if (StringUtils.isNotBlank(applicationStack)) {

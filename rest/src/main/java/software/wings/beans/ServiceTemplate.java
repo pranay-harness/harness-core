@@ -36,6 +36,7 @@ public class ServiceTemplate extends Base {
   @Transient private List<ConfigFile> configFilesOverrides = new ArrayList<>();
   @Transient private List<ServiceVariable> serviceVariablesOverrides = new ArrayList<>();
   @Transient private String configMapYamlOverride;
+  @Transient private String helmValueYamlOverride;
   @Transient private List<InfrastructureMapping> infrastructureMappings = new ArrayList<>();
   private boolean defaultServiceTemplate;
 
@@ -128,6 +129,14 @@ public class ServiceTemplate extends Base {
 
   public void setConfigMapYamlOverride(String configMapYamlOverride) {
     this.configMapYamlOverride = configMapYamlOverride;
+  }
+
+  public String getHelmValueYamlOverride() {
+    return helmValueYamlOverride;
+  }
+
+  public void setHelmValueYamlOverride(String helmValueYamlOverride) {
+    this.helmValueYamlOverride = helmValueYamlOverride;
   }
 
   /**
@@ -244,6 +253,7 @@ public class ServiceTemplate extends Base {
         && Objects.equals(this.configFilesOverrides, other.configFilesOverrides)
         && Objects.equals(this.serviceVariablesOverrides, other.serviceVariablesOverrides)
         && Objects.equals(this.configMapYamlOverride, other.configMapYamlOverride)
+        && Objects.equals(this.helmValueYamlOverride, other.helmValueYamlOverride)
         && Objects.equals(this.defaultServiceTemplate, other.defaultServiceTemplate);
   }
 
@@ -257,6 +267,7 @@ public class ServiceTemplate extends Base {
         .add("configFilesOverrides", configFilesOverrides)
         .add("serviceVariablesOverrides", serviceVariablesOverrides)
         .add("configMapYamlOverride", configMapYamlOverride)
+        .add("helmValueYamlOverride", helmValueYamlOverride)
         .add("defaultServiceTemplate", defaultServiceTemplate)
         .toString();
   }
@@ -310,6 +321,7 @@ public class ServiceTemplate extends Base {
     private List<ConfigFile> configFilesOverrides = new ArrayList<>();
     private List<ServiceVariable> serviceVariablesOverrides = new ArrayList<>();
     private String configMapYamlOverride;
+    private String helmValueYamlOverride;
     private String uuid;
     private List<InfrastructureMapping> infrastructureMappings = new ArrayList<>();
     private String appId;
@@ -423,6 +435,11 @@ public class ServiceTemplate extends Base {
       return this;
     }
 
+    public Builder withHelmValueYamlOverride(String helmValueYamlOverride) {
+      this.helmValueYamlOverride = helmValueYamlOverride;
+      return this;
+    }
+
     /**
      * With uuid builder.
      *
@@ -527,6 +544,7 @@ public class ServiceTemplate extends Base {
           .withConfigFilesOverrides(configFilesOverrides)
           .withServiceVariablesOverrides(serviceVariablesOverrides)
           .withConfigMapYamlOverride(configMapYamlOverride)
+          .withHelmValueYamlOverride(helmValueYamlOverride)
           .withUuid(uuid)
           .withInfrastructureMappings(infrastructureMappings)
           .withAppId(appId)
@@ -553,6 +571,7 @@ public class ServiceTemplate extends Base {
       serviceTemplate.setConfigFilesOverrides(configFilesOverrides);
       serviceTemplate.setServiceVariablesOverrides(serviceVariablesOverrides);
       serviceTemplate.setConfigMapYamlOverride(configMapYamlOverride);
+      serviceTemplate.setHelmValueYamlOverride(helmValueYamlOverride);
       serviceTemplate.setUuid(uuid);
       serviceTemplate.setInfrastructureMappings(infrastructureMappings);
       serviceTemplate.setAppId(appId);

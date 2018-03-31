@@ -62,6 +62,8 @@ public class EnvironmentYamlHandler extends BaseYamlHandler<Environment.Yaml, En
         .description(environment.getDescription())
         .configMapYaml(environment.getConfigMapYaml())
         .configMapYamlByServiceTemplateId(environment.getConfigMapYamlByServiceTemplateId())
+        .helmValueYaml(environment.getHelmValueYaml())
+        .helmValueYamlByServiceTemplateId(environment.getHelmValueYamlByServiceTemplateId())
         .environmentType(environment.getEnvironmentType().name())
         .variableOverrides(variableOverrideYamlList)
         .harnessApiVersion(getHarnessApiVersion())
@@ -159,6 +161,8 @@ public class EnvironmentYamlHandler extends BaseYamlHandler<Environment.Yaml, En
                               .withDescription(yaml.getDescription())
                               .withConfigMapYaml(yaml.getConfigMapYaml())
                               .withConfigMapYamlByServiceTemplateId(yaml.getConfigMapYamlByServiceTemplateId())
+                              .withHelmValueYaml(yaml.getHelmValueYaml())
+                              .withHelmValueYamlByServiceTemplateId(yaml.getHelmValueYamlByServiceTemplateId())
                               .withEnvironmentType(EnvironmentType.valueOf(yaml.getEnvironmentType()))
                               .build();
 
