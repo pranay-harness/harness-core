@@ -988,9 +988,14 @@ public class KubernetesSetupCommandUnit extends ContainerSetupCommandUnit {
       stateSetSpec.setReplicas(0);
       podTemplateSpec = stateSetSpec.getTemplate();
     }
-    Preconditions.checkNotNull(podTemplateSpec);
-    Preconditions.checkNotNull(podTemplateSpec.getMetadata());
-    Preconditions.checkNotNull(podTemplateSpec.getSpec());
+
+    Preconditions.checkNotNull(podTemplateSpec, "Pod template spec is missing in controller definition");
+    Preconditions.checkNotNull(
+        podTemplateSpec.getSpec(), "Pod spec in pod template spec is missing in controller definition");
+
+    if (podTemplateSpec.getMetadata() == null) {
+      podTemplateSpec.setMetadata(new ObjectMeta());
+    }
 
     Map<String, String> labels = podTemplateSpec.getMetadata().getLabels();
     if (labels == null) {
