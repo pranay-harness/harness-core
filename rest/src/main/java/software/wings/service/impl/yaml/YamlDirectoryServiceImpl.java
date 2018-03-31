@@ -54,6 +54,7 @@ import software.wings.beans.alert.GitSyncErrorAlert;
 import software.wings.beans.artifact.ArtifactStream;
 import software.wings.beans.command.ServiceCommand;
 import software.wings.beans.container.ContainerTask;
+import software.wings.beans.container.HelmChartSpecification;
 import software.wings.beans.container.UserDataSpecification;
 import software.wings.beans.defaults.Defaults;
 import software.wings.beans.yaml.Change.ChangeType;
@@ -586,6 +587,15 @@ public class YamlDirectoryServiceImpl implements YamlDirectoryService {
                 ecsContainerTask.getAppId(), service.getUuid(), ecsSpecFileName, ContainerTask.class,
                 deploymentSpecsPath.clone().add(ecsSpecFileName), yamlGitSyncService, Type.DEPLOYMENT_SPEC));
           }
+
+          HelmChartSpecification helmChartSpecification =
+              serviceResourceService.getHelmChartSpecification(service.getAppId(), service.getUuid());
+          if (helmChartSpecification != null) {
+            String helmChartFileName = YamlConstants.HELM_CHART_YAML_FILE_NAME + YAML_EXTENSION;
+            deploymentSpecsFolder.addChild(new ServiceLevelYamlNode(accountId, helmChartSpecification.getUuid(),
+                helmChartSpecification.getAppId(), service.getUuid(), helmChartFileName, HelmChartSpecification.class,
+                deploymentSpecsPath.clone().add(helmChartFileName), yamlGitSyncService, Type.DEPLOYMENT_SPEC));
+          }
         } else if (service.getArtifactType() == ArtifactType.AWS_LAMBDA) {
           FolderNode deploymentSpecsFolder = new FolderNode(accountId, DEPLOYMENT_SPECIFICATION_FOLDER,
               LambdaSpecification.class, deploymentSpecsPath, service.getAppId(), yamlGitSyncService);
@@ -1020,6 +1030,11 @@ public class YamlDirectoryServiceImpl implements YamlDirectoryService {
 
   @Override
   public String getRootPathByContainerTask(Service service, ContainerTask containerTask) {
+    return getRootPathByService(service) + PATH_DELIMITER + DEPLOYMENT_SPECIFICATION_FOLDER;
+  }
+
+  @Override
+  public String getRootPathByHelmChartSpecification(Service service, HelmChartSpecification helmChartSpecification) {
     return getRootPathByService(service) + PATH_DELIMITER + DEPLOYMENT_SPECIFICATION_FOLDER;
   }
 

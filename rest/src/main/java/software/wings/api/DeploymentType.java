@@ -8,6 +8,7 @@ public enum DeploymentType {
   AWS_CODEDEPLOY("AWS CodeDeploy"),
   ECS("Amazon EC2 Container Services (ECS)"),
   KUBERNETES("Kubernetes"),
+  HELM("Helm"),
   AWS_LAMBDA("AWS Lambda"),
   AMI("AMI"),
   WINRM("Windows Remote Management (WinRM)");

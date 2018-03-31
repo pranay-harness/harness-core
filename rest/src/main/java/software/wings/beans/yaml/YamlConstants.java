@@ -49,6 +49,7 @@ public interface YamlConstants {
   String USER_DATA_SPEC_YAML_FILE_NAME = "UserData";
   String ECS_CONTAINER_TASK_YAML_FILE_NAME = "Ecs";
   String KUBERNETES_CONTAINER_TASK_YAML_FILE_NAME = "Kubernetes";
+  String HELM_CHART_YAML_FILE_NAME = "HelmChart";
 
   String LINK_PREFIX = "link";
   String NODE_PREFIX = "node";

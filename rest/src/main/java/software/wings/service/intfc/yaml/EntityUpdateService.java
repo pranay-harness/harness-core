@@ -13,6 +13,7 @@ import software.wings.beans.Workflow;
 import software.wings.beans.artifact.ArtifactStream;
 import software.wings.beans.command.ServiceCommand;
 import software.wings.beans.container.ContainerTask;
+import software.wings.beans.container.HelmChartSpecification;
 import software.wings.beans.container.UserDataSpecification;
 import software.wings.beans.yaml.Change.ChangeType;
 import software.wings.beans.yaml.GitFileChange;
@@ -39,6 +40,9 @@ public interface EntityUpdateService {
 
   GitFileChange getContainerTaskGitSyncFile(
       String accountId, Service service, ContainerTask containerTask, ChangeType changeType);
+
+  GitFileChange getHelmChartGitSyncFile(
+      String accountId, Service service, HelmChartSpecification helmChartSpecification, ChangeType changeType);
 
   GitFileChange getLamdbaSpecGitSyncFile(
       String accountId, Service service, LambdaSpecification lambdaSpec, ChangeType changeType);
