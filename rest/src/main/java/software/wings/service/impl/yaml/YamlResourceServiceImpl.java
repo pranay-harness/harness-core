@@ -294,8 +294,8 @@ public class YamlResourceServiceImpl implements YamlResourceService {
     String yamlFileName;
     yamlFileName = YamlConstants.HELM_CHART_YAML_FILE_NAME;
 
-    BaseYaml yaml =
-        yamlHandlerFactory.getYamlHandler(YamlType.DEPLOYMENT_SPECIFICATION).toYaml(helmChartSpecification, appId);
+    BaseYaml yaml = yamlHandlerFactory.getYamlHandler(YamlType.DEPLOYMENT_SPECIFICATION, DeploymentType.HELM.name())
+                        .toYaml(helmChartSpecification, appId);
     return YamlHelper.getYamlRestResponse(
         yamlGitSyncService, helmChartSpecification.getUuid(), accountId, yaml, yamlFileName + YAML_EXTENSION);
   }
