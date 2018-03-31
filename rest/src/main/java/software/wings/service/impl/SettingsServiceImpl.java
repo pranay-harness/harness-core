@@ -279,7 +279,12 @@ public class SettingsServiceImpl implements SettingsService {
 
   @Override
   public SettingAttribute getSettingAttributeByName(String accountId, String settingAttributeName) {
-    return wingsPersistence.createQuery(SettingAttribute.class).field("name").equal(settingAttributeName).get();
+    return wingsPersistence.createQuery(SettingAttribute.class)
+        .field("name")
+        .equal(settingAttributeName)
+        .field("accountId")
+        .equal(accountId)
+        .get();
   }
 
   private void resetUnchangedEncryptedFields(
