@@ -5,6 +5,14 @@ variable "region" {
   default = "us-east-1"
 }
 
+variable "workflow-generic" {
+  default = true
+}
+
+variable "workflow-barrier" {
+  default = false
+}
+
 provider "aws" {
     version = "~> 1.0"
 
@@ -13,14 +21,29 @@ provider "aws" {
     region     = "${var.region}"
 }
 
-module "shared" {
-  source  = "shared"
+module "workflow-generic" {
+  source  = "workflow-generic"
+
+  workflow-generic = "${var.workflow-generic}"
 }
 
-module "test-workflow" {
-  source  = "test-workflow"
+module "workflow-barrier" {
+  source  = "workflow-barrier"
+
+  workflow-barrier = "${var.workflow-barrier}"
+}
+
+locals {
+  generic-instances = "${distinct(concat(module.workflow-generic.generic_instances, module.workflow-barrier.generic_instances))}"
+}
+
+module "shared" {
+  source  = "shared"
 
   user = "${var.user}"
-  aws_key_pair_id = "${module.shared.aws_key_pair_id}"
-  aws_security_group_name = "${module.shared.aws_security_group_name}"
+  access_key = "${var.access_key}"
+  secret_key = "${var.secret_key}"
+  region = "${var.region}"
+
+  generic-instances = "${length(local.generic-instances)}"
 }
