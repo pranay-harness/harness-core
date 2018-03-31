@@ -426,6 +426,18 @@ public class ServiceResourceServiceImpl implements ServiceResourceService, DataP
             .set("description", Optional.ofNullable(service.getDescription()).orElse(""))
             .set("keywords", keywords);
 
+    if (isNotBlank(service.getConfigMapYaml())) {
+      updateOperations.set("configMapYaml", service.getConfigMapYaml());
+    } else {
+      updateOperations.unset("configMapYaml");
+    }
+
+    if (isNotBlank(service.getHelmValueYaml())) {
+      updateOperations.set("helmValueYaml", service.getHelmValueYaml());
+    } else {
+      updateOperations.unset("helmValueYaml");
+    }
+
     wingsPersistence.update(savedService, updateOperations);
     Service updatedService = get(service.getAppId(), service.getUuid(), false);
 
