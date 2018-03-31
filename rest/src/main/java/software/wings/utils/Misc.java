@@ -171,7 +171,7 @@ public class Misc {
         return "Failed with error " + t.getMessage();
       }
     } else {
-      return t.getClass().getSimpleName() + ": " + t.getMessage();
+      return t.getClass().getSimpleName() + (t.getMessage() == null ? "" : ": " + t.getMessage());
     }
   }
 
