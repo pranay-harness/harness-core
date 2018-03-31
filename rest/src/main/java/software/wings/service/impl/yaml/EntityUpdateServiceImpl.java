@@ -22,6 +22,7 @@ import software.wings.beans.Workflow;
 import software.wings.beans.artifact.ArtifactStream;
 import software.wings.beans.command.ServiceCommand;
 import software.wings.beans.container.ContainerTask;
+import software.wings.beans.container.HelmChartSpecification;
 import software.wings.beans.container.UserDataSpecification;
 import software.wings.beans.yaml.Change.ChangeType;
 import software.wings.beans.yaml.GitFileChange;
@@ -156,6 +157,25 @@ public class EntityUpdateServiceImpl implements EntityUpdateService {
 
     return createGitFileChange(accountId, yamlDirectoryService.getRootPathByContainerTask(service, containerTask), name,
         yaml, changeType, false);
+  }
+
+  @Override
+  public GitFileChange getHelmChartGitSyncFile(
+      String accountId, Service service, HelmChartSpecification helmChartSpecification, ChangeType changeType) {
+    String yaml = null;
+    if (!changeType.equals(ChangeType.DELETE)) {
+      yaml =
+          yamlResourceService
+              .getHelmChartSpecification(accountId, helmChartSpecification.getAppId(), helmChartSpecification.getUuid())
+              .getResource()
+              .getYaml();
+    }
+
+    String name = YamlConstants.HELM_CHART_YAML_FILE_NAME;
+
+    return createGitFileChange(accountId,
+        yamlDirectoryService.getRootPathByHelmChartSpecification(service, helmChartSpecification), name, yaml,
+        changeType, false);
   }
 
   @Override

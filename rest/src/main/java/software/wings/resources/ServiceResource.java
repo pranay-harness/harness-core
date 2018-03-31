@@ -15,6 +15,7 @@ import software.wings.beans.Service;
 import software.wings.beans.Setup.SetupStatus;
 import software.wings.beans.command.ServiceCommand;
 import software.wings.beans.container.ContainerTask;
+import software.wings.beans.container.HelmChartSpecification;
 import software.wings.beans.container.KubernetesPayload;
 import software.wings.beans.container.UserDataSpecification;
 import software.wings.dl.PageRequest;
@@ -328,6 +329,43 @@ public class ServiceResource {
   public RestResponse<List<Stencil>> listTaskStencils(
       @QueryParam("appId") String appId, @PathParam("serviceId") String serviceId) {
     return new RestResponse<>(serviceResourceService.getContainerTaskStencils(appId, serviceId));
+  }
+
+  @POST
+  @Path("{serviceId}/containers/charts")
+  @Timed
+  @ExceptionMetered
+  @AuthRule(permissionType = PermissionType.SERVICE, action = Action.UPDATE)
+  public RestResponse<HelmChartSpecification> createHelmChartSpecification(@QueryParam("appId") String appId,
+      @PathParam("serviceId") String serviceId, HelmChartSpecification helmChartSpecification) {
+    helmChartSpecification.setAppId(appId);
+    helmChartSpecification.setServiceId(serviceId);
+    return new RestResponse<>(serviceResourceService.createHelmChartSpecification(helmChartSpecification));
+  }
+
+  @GET
+  @Path("{serviceId}/containers/charts")
+  @Timed
+  @ExceptionMetered
+  public RestResponse<PageResponse<HelmChartSpecification>> listHelmChartSpecification(
+      @QueryParam("appId") String appId, @PathParam("serviceId") String serviceId,
+      @BeanParam PageRequest<HelmChartSpecification> pageRequest) {
+    pageRequest.addFilter("appId", EQ, appId);
+    pageRequest.addFilter("serviceId", EQ, serviceId);
+    return new RestResponse<>(serviceResourceService.listHelmChartSpecifications(pageRequest));
+  }
+
+  @PUT
+  @Path("{serviceId}/containers/charts/{taskId}")
+  @Timed
+  @ExceptionMetered
+  public RestResponse<HelmChartSpecification> createHelmChartSpecification(@QueryParam("appId") String appId,
+      @PathParam("serviceId") String serviceId, @PathParam("taskId") String taskId,
+      HelmChartSpecification helmChartSpecification) {
+    helmChartSpecification.setAppId(appId);
+    helmChartSpecification.setServiceId(serviceId);
+    helmChartSpecification.setUuid(taskId);
+    return new RestResponse<>(serviceResourceService.updateHelmChartSpecification(helmChartSpecification));
   }
 
   @POST

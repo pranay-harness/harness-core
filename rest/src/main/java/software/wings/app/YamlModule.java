@@ -85,6 +85,7 @@ import software.wings.service.impl.yaml.handler.command.ScpCommandUnitYamlHandle
 import software.wings.service.impl.yaml.handler.command.SetupEnvCommandUnitYamlHandler;
 import software.wings.service.impl.yaml.handler.deploymentspec.DeploymentSpecificationYamlHandler;
 import software.wings.service.impl.yaml.handler.deploymentspec.container.EcsContainerTaskYamlHandler;
+import software.wings.service.impl.yaml.handler.deploymentspec.container.HelmChartSpecificationYamlHandler;
 import software.wings.service.impl.yaml.handler.deploymentspec.container.KubernetesContainerTaskYamlHandler;
 import software.wings.service.impl.yaml.handler.deploymentspec.lambda.LambdaSpecificationYamlHandler;
 import software.wings.service.impl.yaml.handler.deploymentspec.userdata.UserDataSpecificationYamlHandler;
@@ -192,6 +193,8 @@ public class YamlModule extends AbstractModule {
     deploymentSpecYamlHelperMapBinder.addBinding(DeploymentType.ECS.name()).to(EcsContainerTaskYamlHandler.class);
     deploymentSpecYamlHelperMapBinder.addBinding(DeploymentType.KUBERNETES.name())
         .to(KubernetesContainerTaskYamlHandler.class);
+    deploymentSpecYamlHelperMapBinder.addBinding(DeploymentType.HELM.name())
+        .to(HelmChartSpecificationYamlHandler.class);
     deploymentSpecYamlHelperMapBinder.addBinding(DeploymentType.AWS_LAMBDA.name())
         .to(LambdaSpecificationYamlHandler.class);
     deploymentSpecYamlHelperMapBinder.addBinding(DeploymentType.AMI.name()).to(UserDataSpecificationYamlHandler.class);

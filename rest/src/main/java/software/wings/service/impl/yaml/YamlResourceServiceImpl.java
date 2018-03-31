@@ -29,6 +29,7 @@ import software.wings.beans.artifact.ArtifactStream;
 import software.wings.beans.command.Command;
 import software.wings.beans.command.ServiceCommand;
 import software.wings.beans.container.ContainerTask;
+import software.wings.beans.container.HelmChartSpecification;
 import software.wings.beans.container.UserDataSpecification;
 import software.wings.beans.yaml.YamlConstants;
 import software.wings.beans.yaml.YamlType;
@@ -283,6 +284,20 @@ public class YamlResourceServiceImpl implements YamlResourceService {
         yamlHandlerFactory.getYamlHandler(YamlType.DEPLOYMENT_SPECIFICATION, yamlSubType).toYaml(containerTask, appId);
     return YamlHelper.getYamlRestResponse(
         yamlGitSyncService, containerTask.getUuid(), accountId, yaml, yamlFileName + YAML_EXTENSION);
+  }
+
+  @Override
+  public RestResponse<YamlPayload> getHelmChartSpecification(
+      String accountId, String appId, String helmChartSpecificationId) {
+    HelmChartSpecification helmChartSpecification =
+        serviceResourceService.getHelmChartSpecificationById(appId, helmChartSpecificationId);
+    String yamlFileName;
+    yamlFileName = YamlConstants.HELM_CHART_YAML_FILE_NAME;
+
+    BaseYaml yaml =
+        yamlHandlerFactory.getYamlHandler(YamlType.DEPLOYMENT_SPECIFICATION).toYaml(helmChartSpecification, appId);
+    return YamlHelper.getYamlRestResponse(
+        yamlGitSyncService, helmChartSpecification.getUuid(), accountId, yaml, yamlFileName + YAML_EXTENSION);
   }
 
   @Override

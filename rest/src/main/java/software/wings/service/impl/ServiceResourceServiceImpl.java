@@ -69,6 +69,7 @@ import software.wings.beans.command.CommandUnitType;
 import software.wings.beans.command.ServiceCommand;
 import software.wings.beans.container.ContainerTask;
 import software.wings.beans.container.ContainerTaskType;
+import software.wings.beans.container.HelmChartSpecification;
 import software.wings.beans.container.KubernetesPayload;
 import software.wings.beans.container.UserDataSpecification;
 import software.wings.beans.yaml.Change.ChangeType;
@@ -723,6 +724,51 @@ public class ServiceResourceServiceImpl implements ServiceResourceService, DataP
     return wingsPersistence.query(ContainerTask.class, pageRequest);
   }
 
+  @Override
+  public HelmChartSpecification createHelmChartSpecification(HelmChartSpecification helmChartSpecification) {
+    return upsertHelmChartSpecification(helmChartSpecification, true);
+  }
+
+  private HelmChartSpecification upsertHelmChartSpecification(
+      HelmChartSpecification helmChartSpecification, boolean isCreate) {
+    boolean exist = exist(helmChartSpecification.getAppId(), helmChartSpecification.getServiceId());
+    if (!exist) {
+      throw new WingsException(INVALID_REQUEST).addParam("message", "Service doesn't exist");
+    }
+    HelmChartSpecification persistedHelmChartSpecification =
+        wingsPersistence.saveAndGet(HelmChartSpecification.class, helmChartSpecification);
+
+    String appId = persistedHelmChartSpecification.getAppId();
+    String accountId = appService.getAccountIdByAppId(appId);
+    Service service = get(appId, persistedHelmChartSpecification.getServiceId());
+
+    if (isCreate) {
+      yamlChangeSetHelper.helmChartSpecificationYamlChangeAsync(
+          accountId, service, persistedHelmChartSpecification, ChangeType.ADD);
+    } else {
+      yamlChangeSetHelper.helmChartSpecificationYamlChangeAsync(
+          accountId, service, persistedHelmChartSpecification, ChangeType.MODIFY);
+    }
+
+    return persistedHelmChartSpecification;
+  }
+
+  @Override
+  public void deleteHelmChartSpecification(String appId, String helmChartSpecificationId) {
+    wingsPersistence.delete(HelmChartSpecification.class, appId, helmChartSpecificationId);
+  }
+
+  @Override
+  public HelmChartSpecification updateHelmChartSpecification(HelmChartSpecification helmChartSpecification) {
+    return upsertHelmChartSpecification(helmChartSpecification, false);
+  }
+
+  @Override
+  public PageResponse<HelmChartSpecification> listHelmChartSpecifications(
+      PageRequest<HelmChartSpecification> pageRequest) {
+    return wingsPersistence.query(HelmChartSpecification.class, pageRequest);
+  }
+
   /**
    * {@inheritDoc}
    */
@@ -1046,6 +1092,21 @@ public class ServiceResourceServiceImpl implements ServiceResourceService, DataP
   @Override
   public ContainerTask getContainerTaskById(String appId, String containerTaskId) {
     return wingsPersistence.get(ContainerTask.class, appId, containerTaskId);
+  }
+
+  @Override
+  public HelmChartSpecification getHelmChartSpecification(String appId, String serviceId) {
+    return wingsPersistence.createQuery(HelmChartSpecification.class)
+        .field("appId")
+        .equal(appId)
+        .field("serviceId")
+        .equal(serviceId)
+        .get();
+  }
+
+  @Override
+  public HelmChartSpecification getHelmChartSpecificationById(String appId, String helmChartSpecificationId) {
+    return wingsPersistence.get(HelmChartSpecification.class, appId, helmChartSpecificationId);
   }
 
   @Override

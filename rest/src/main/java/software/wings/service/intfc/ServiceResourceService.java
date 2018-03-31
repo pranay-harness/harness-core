@@ -8,6 +8,7 @@ import software.wings.beans.Setup.SetupStatus;
 import software.wings.beans.command.CommandUnit;
 import software.wings.beans.command.ServiceCommand;
 import software.wings.beans.container.ContainerTask;
+import software.wings.beans.container.HelmChartSpecification;
 import software.wings.beans.container.KubernetesPayload;
 import software.wings.beans.container.UserDataSpecification;
 import software.wings.dl.PageRequest;
@@ -247,71 +248,34 @@ public interface ServiceResourceService extends OwnedByApplication {
    */
   Service get(String appId, String serviceId, SetupStatus status);
 
-  /**
-   * Create container task container task.
-   *
-   * @param containerTask the container task
-   * @param advanced      the advanced
-   * @return the container task
-   */
   ContainerTask createContainerTask(ContainerTask containerTask, boolean advanced);
 
-  /**
-   * Delete container task.
-   *
-   * @param appId           the app id
-   * @param containerTaskId the container task id
-   */
   void deleteContainerTask(String appId, String containerTaskId);
 
-  /**
-   * Update container task container task.
-   *
-   * @param containerTask the container task
-   * @param advanced      the advanced
-   * @return the container task
-   */
   ContainerTask updateContainerTask(ContainerTask containerTask, boolean advanced);
 
-  /**
-   * Update container task advanced container task.
-   *
-   * @param appId           the app id
-   * @param serviceId       the service id
-   * @param taskId          the task id
-   * @param kubernetesPayload the advanced payload
-   * @param reset           the reset
-   * @return the container task
-   */
   ContainerTask updateContainerTaskAdvanced(
       String appId, String serviceId, String taskId, KubernetesPayload kubernetesPayload, boolean reset);
 
-  /**
-   * List container tasks page response.
-   *
-   * @param pageRequest the page request
-   * @return the page response
-   */
   PageResponse<ContainerTask> listContainerTasks(PageRequest<ContainerTask> pageRequest);
 
-  /**
-   * Gets container task stencils.
-   *
-   * @param appId     the app id
-   * @param serviceId the service id
-   * @return the container task stencils
-   */
   List<Stencil> getContainerTaskStencils(@NotEmpty String appId, @NotEmpty String serviceId);
 
-  /**
-   * Gets container task by deployment type.
-   *
-   * @param appId          the app id
-   * @param serviceId      the service id
-   * @param deploymentType the deployment type
-   * @return the container task by deployment type
-   */
   ContainerTask getContainerTaskByDeploymentType(String appId, String serviceId, String deploymentType);
+
+  ContainerTask getContainerTaskById(String appId, String containerTaskId);
+
+  HelmChartSpecification createHelmChartSpecification(HelmChartSpecification helmChartSpecification);
+
+  void deleteHelmChartSpecification(String appId, String helmChartSpecificationId);
+
+  HelmChartSpecification updateHelmChartSpecification(HelmChartSpecification helmChartSpecification);
+
+  PageResponse<HelmChartSpecification> listHelmChartSpecifications(PageRequest<HelmChartSpecification> pageRequest);
+
+  HelmChartSpecification getHelmChartSpecification(String appId, String serviceId);
+
+  HelmChartSpecification getHelmChartSpecificationById(String appId, String helmChartSpecificationId);
 
   /**
    * Clone command service.
@@ -334,8 +298,6 @@ public interface ServiceResourceService extends OwnedByApplication {
    * @return the flatten command unit list
    */
   List<CommandUnit> getFlattenCommandUnitList(String appId, String serviceId, String envId, String commandName);
-
-  ContainerTask getContainerTaskById(String appId, String containerTaskId);
 
   LambdaSpecification getLambdaSpecificationById(String appId, String lambdaSpecificationId);
 

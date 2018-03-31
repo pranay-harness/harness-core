@@ -71,6 +71,8 @@ public interface YamlResourceService {
 
   RestResponse<YamlPayload> getContainerTask(String accountId, String appId, String containerTaskId);
 
+  RestResponse<YamlPayload> getHelmChartSpecification(String accountId, String appId, String helmChartSpecificationId);
+
   RestResponse<YamlPayload> getLambdaSpec(String accountId, String appId, String lambdaSpecId);
 
   RestResponse<YamlPayload> getUserDataSpec(String accountId, String appId, String userDataSpecId);

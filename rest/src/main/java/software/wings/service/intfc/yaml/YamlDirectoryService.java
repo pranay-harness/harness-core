@@ -13,6 +13,7 @@ import software.wings.beans.Workflow;
 import software.wings.beans.artifact.ArtifactStream;
 import software.wings.beans.command.ServiceCommand;
 import software.wings.beans.container.ContainerTask;
+import software.wings.beans.container.HelmChartSpecification;
 import software.wings.beans.container.UserDataSpecification;
 import software.wings.beans.yaml.GitFileChange;
 import software.wings.security.UserPermissionInfo;
@@ -66,6 +67,8 @@ public interface YamlDirectoryService {
   String getRootPathByServiceCommand(Service service, ServiceCommand serviceCommand);
 
   String getRootPathByContainerTask(Service service, ContainerTask containerTask);
+
+  String getRootPathByHelmChartSpecification(Service service, HelmChartSpecification helmChartSpecification);
 
   String getRootPathByLambdaSpec(Service service, LambdaSpecification lambdaSpecification);
 

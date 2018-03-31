@@ -573,6 +573,27 @@ public class YamlResource {
   }
 
   @GET
+  @Path("/helm-charts/{helmChartSpecificationId}")
+  @Timed
+  @ExceptionMetered
+  public RestResponse<YamlPayload> getHelmChartSpecification(@QueryParam("appId") String appId,
+      @QueryParam("accountId") String accountId,
+      @PathParam("helmChartSpecificationId") String helmChartSpecificationId) {
+    return yamlResourceService.getHelmChartSpecification(accountId, appId, helmChartSpecificationId);
+  }
+
+  @PUT
+  @Path("/helm-charts/{helmChartSpecificationId}")
+  @Timed
+  @ExceptionMetered
+  @AuthRule(permissionType = PermissionType.SERVICE, action = Action.UPDATE, skipAuth = true)
+  public RestResponse<Base> updateHelmChartSpecification(@QueryParam("appId") String appId,
+      @QueryParam("accountId") String accountId, YamlPayload yamlPayload,
+      @QueryParam("deleteEnabled") @DefaultValue("false") boolean deleteEnabled) {
+    return yamlService.update(yamlPayload, accountId);
+  }
+
+  @GET
   @Path("/lambda-specs/{lambdaSpecId}")
   @Timed
   @ExceptionMetered
