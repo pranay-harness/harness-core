@@ -53,6 +53,7 @@ import org.mockito.Spy;
 import org.mongodb.morphia.Key;
 import org.mongodb.morphia.query.FieldEnd;
 import org.mongodb.morphia.query.Query;
+import org.mongodb.morphia.query.UpdateOperations;
 import software.wings.WingsBaseTest;
 import software.wings.beans.Application;
 import software.wings.beans.Base;
@@ -95,14 +96,6 @@ import java.util.List;
  * Created by anubhaw on 6/28/16.
  */
 public class EnvironmentServiceTest extends WingsBaseTest {
-  /**
-   * The Query.
-   */
-  @Mock Query<Environment> query;
-  /**
-   * The End.
-   */
-  @Mock FieldEnd end;
   @Mock private Application application;
   @Mock private ActivityService activityService;
   @Mock private AppService appService;
@@ -123,6 +116,9 @@ public class EnvironmentServiceTest extends WingsBaseTest {
   @Spy @InjectMocks private EnvironmentService spyEnvService = new EnvironmentServiceImpl();
 
   @Mock private JobScheduler jobScheduler;
+  @Mock private Query<Environment> query;
+  @Mock private FieldEnd end;
+  @Mock private UpdateOperations<Environment> updateOperations;
 
   @Captor private ArgumentCaptor<Environment> environmentArgumentCaptor;
 
@@ -136,6 +132,9 @@ public class EnvironmentServiceTest extends WingsBaseTest {
     when(wingsPersistence.createQuery(Environment.class)).thenReturn(query);
     when(query.field(any())).thenReturn(end);
     when(end.equal(any())).thenReturn(query);
+    when(wingsPersistence.createUpdateOperations(Environment.class)).thenReturn(updateOperations);
+    when(updateOperations.set(any(), any())).thenReturn(updateOperations);
+    when(updateOperations.unset(any())).thenReturn(updateOperations);
     when(appService.get(TARGET_APP_ID))
         .thenReturn(Application.Builder.anApplication().withAccountId(ACCOUNT_ID).build());
     when(appService.get(APP_ID)).thenReturn(Application.Builder.anApplication().withAccountId(ACCOUNT_ID).build());
@@ -320,8 +319,8 @@ public class EnvironmentServiceTest extends WingsBaseTest {
    */
   @Test
   public void shouldUpdateEnvironment() {
-    when(wingsPersistence.get(Environment.class, APP_ID, ENV_ID))
-        .thenReturn(anEnvironment().withAppId(APP_ID).withUuid(ENV_ID).withName("PROD").build());
+    Environment savedEnv = anEnvironment().withAppId(APP_ID).withUuid(ENV_ID).withName("PROD").build();
+    when(wingsPersistence.get(Environment.class, APP_ID, ENV_ID)).thenReturn(savedEnv);
     Environment environment = anEnvironment()
                                   .withAppId(APP_ID)
                                   .withUuid(ENV_ID)
@@ -330,10 +329,7 @@ public class EnvironmentServiceTest extends WingsBaseTest {
                                   .withDescription(ENV_DESCRIPTION)
                                   .build();
     environmentService.update(environment);
-    verify(wingsPersistence)
-        .updateFields(Environment.class, ENV_ID,
-            ImmutableMap.of("name", ENV_NAME, "environmentType", PROD, "description", ENV_DESCRIPTION, "keywords",
-                asList(ENV_NAME.toLowerCase(), ENV_DESCRIPTION.toLowerCase(), PROD.name().toLowerCase())));
+    verify(wingsPersistence).update(savedEnv, updateOperations);
     verify(wingsPersistence, times(2)).get(Environment.class, APP_ID, ENV_ID);
   }
 

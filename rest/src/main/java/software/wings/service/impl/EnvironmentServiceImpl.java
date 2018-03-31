@@ -238,13 +238,41 @@ public class EnvironmentServiceImpl implements EnvironmentService, DataProvider 
     Environment savedEnvironment =
         wingsPersistence.get(Environment.class, environment.getAppId(), environment.getUuid());
 
-    String description = Optional.ofNullable(environment.getDescription()).orElse("");
     List<String> keywords =
         trimList(asList(environment.getName(), environment.getDescription(), environment.getEnvironmentType()));
-    ImmutableMap<String, Object> paramMap = ImmutableMap.of("name", environment.getName(), "environmentType",
-        environment.getEnvironmentType(), "description", description, "keywords", keywords);
 
-    wingsPersistence.updateFields(Environment.class, environment.getUuid(), paramMap);
+    UpdateOperations<Environment> updateOperations =
+        wingsPersistence.createUpdateOperations(Environment.class)
+            .set("name", environment.getName().trim())
+            .set("environmentType", environment.getEnvironmentType())
+            .set("description", Optional.ofNullable(environment.getDescription()).orElse(""))
+            .set("keywords", keywords);
+
+    if (isNotBlank(environment.getConfigMapYaml())) {
+      updateOperations.set("configMapYaml", environment.getConfigMapYaml());
+    } else {
+      updateOperations.unset("configMapYaml");
+    }
+
+    if (isNotEmpty(environment.getConfigMapYamlByServiceTemplateId())) {
+      updateOperations.set("configMapYamlByServiceTemplateId", environment.getConfigMapYamlByServiceTemplateId());
+    } else {
+      updateOperations.unset("configMapYamlByServiceTemplateId");
+    }
+
+    if (isNotBlank(environment.getHelmValueYaml())) {
+      updateOperations.set("helmValueYaml", environment.getHelmValueYaml());
+    } else {
+      updateOperations.unset("helmValueYaml");
+    }
+
+    if (isNotEmpty(environment.getHelmValueYamlByServiceTemplateId())) {
+      updateOperations.set("helmValueYamlByServiceTemplateId", environment.getHelmValueYamlByServiceTemplateId());
+    } else {
+      updateOperations.unset("helmValueYamlByServiceTemplateId");
+    }
+
+    wingsPersistence.update(savedEnvironment, updateOperations);
 
     Environment updatedEnvironment =
         wingsPersistence.get(Environment.class, environment.getAppId(), environment.getUuid());
