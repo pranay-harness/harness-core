@@ -1187,4 +1187,22 @@ public class ServiceResourceServiceImpl implements ServiceResourceService, DataP
 
     return get(appId, serviceId, false);
   }
+
+  @Override
+  public Service setHelmValueYaml(String appId, String serviceId, KubernetesPayload kubernetesPayload) {
+    Service savedService = get(appId, serviceId, false);
+    Validator.notNullCheck("Service", savedService);
+
+    String helmValueYaml = trimYaml(kubernetesPayload.getAdvancedConfig());
+    UpdateOperations<Service> updateOperations;
+    if (isNotBlank(helmValueYaml)) {
+      updateOperations = wingsPersistence.createUpdateOperations(Service.class).set("helmValueYaml", helmValueYaml);
+    } else {
+      updateOperations = wingsPersistence.createUpdateOperations(Service.class).unset("helmValueYaml");
+    }
+
+    wingsPersistence.update(savedService, updateOperations);
+
+    return get(appId, serviceId, false);
+  }
 }

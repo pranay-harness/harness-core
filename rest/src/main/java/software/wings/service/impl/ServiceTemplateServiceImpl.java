@@ -105,6 +105,12 @@ public class ServiceTemplateServiceImpl implements ServiceTemplateService {
           logger.error("Failed to populate the service and override config map yamls for service template {} ",
               serviceTemplate, e);
         }
+        try {
+          populateServiceAndOverrideHelmValueYamls(serviceTemplate);
+        } catch (Exception e) {
+          logger.error("Failed to populate the service and override helm value yamls for service template {} ",
+              serviceTemplate, e);
+        }
       });
     }
 
@@ -175,6 +181,7 @@ public class ServiceTemplateServiceImpl implements ServiceTemplateService {
         populateServiceAndOverrideConfigFiles(serviceTemplate);
         populateServiceAndOverrideServiceVariables(serviceTemplate, maskEncryptedFields);
         populateServiceAndOverrideConfigMapYamls(serviceTemplate);
+        populateServiceAndOverrideHelmValueYamls(serviceTemplate);
       }
     }
     return serviceTemplate;
@@ -271,6 +278,14 @@ public class ServiceTemplateServiceImpl implements ServiceTemplateService {
     Map<String, String> envConfigMaps = env.getConfigMapYamlByServiceTemplateId();
     if (isNotEmpty(envConfigMaps) && isNotBlank(envConfigMaps.get(template.getUuid()))) {
       template.setConfigMapYamlOverride(envConfigMaps.get(template.getUuid()));
+    }
+  }
+
+  private void populateServiceAndOverrideHelmValueYamls(ServiceTemplate template) {
+    Environment env = environmentService.get(template.getAppId(), template.getEnvId(), false);
+    Map<String, String> envHelmValues = env.getHelmValueYamlByServiceTemplateId();
+    if (isNotEmpty(envHelmValues) && isNotBlank(envHelmValues.get(template.getUuid()))) {
+      template.setHelmValueYamlOverride(envHelmValues.get(template.getUuid()));
     }
   }
 
@@ -412,6 +427,33 @@ public class ServiceTemplateServiceImpl implements ServiceTemplateService {
     }
 
     return configMapYaml;
+  }
+
+  @Override
+  public List<String> computeHelmValueYaml(String appId, String envId, String templateId) {
+    ServiceTemplate serviceTemplate = get(appId, envId, templateId, false, false);
+    if (serviceTemplate == null) {
+      return null;
+    }
+
+    List<String> result = new ArrayList<>();
+    Service service = serviceResourceService.get(appId, serviceTemplate.getServiceId());
+    Environment env = environmentService.get(appId, envId, false);
+
+    if (isNotBlank(service.getHelmValueYaml())) {
+      result.add(service.getHelmValueYaml());
+    }
+
+    if (isNotBlank(env.getHelmValueYaml())) {
+      result.add(env.getHelmValueYaml());
+    }
+
+    Map<String, String> envHelmValues = env.getHelmValueYamlByServiceTemplateId();
+    if (isNotEmpty(envHelmValues) && isNotBlank(envHelmValues.get(templateId))) {
+      result.add(envHelmValues.get(templateId));
+    }
+
+    return result;
   }
 
   /* (non-Javadoc)

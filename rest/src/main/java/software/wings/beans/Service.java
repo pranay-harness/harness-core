@@ -42,6 +42,7 @@ public class Service extends Base {
   private String description;
   private ArtifactType artifactType;
   private String configMapYaml;
+  private String helmValueYaml;
 
   @Version private long version;
 
@@ -63,6 +64,7 @@ public class Service extends Base {
         .withDescription(getDescription())
         .withArtifactType(getArtifactType())
         .withConfigMapYaml(getConfigMapYaml())
+        .withHelmValueYaml(getHelmValueYaml())
         .withAppContainer(getAppContainer())
         .build();
   }
@@ -127,6 +129,14 @@ public class Service extends Base {
 
   public void setConfigMapYaml(String configMapYaml) {
     this.configMapYaml = trimYaml(configMapYaml);
+  }
+
+  public String getHelmValueYaml() {
+    return helmValueYaml;
+  }
+
+  public void setHelmValueYaml(String helmValueYaml) {
+    this.helmValueYaml = helmValueYaml;
   }
 
   /**
@@ -277,7 +287,7 @@ public class Service extends Base {
   @Override
   public int hashCode() {
     return 31 * super.hashCode()
-        + Objects.hash(name, description, artifactType, configMapYaml, appContainer, configFiles,
+        + Objects.hash(name, description, artifactType, configMapYaml, helmValueYaml, appContainer, configFiles,
               lastDeploymentActivity, lastProdDeploymentActivity);
   }
 
@@ -299,6 +309,7 @@ public class Service extends Base {
     return Objects.equals(this.name, other.name) && Objects.equals(this.description, other.description)
         && Objects.equals(this.artifactType, other.artifactType)
         && Objects.equals(this.configMapYaml, other.configMapYaml)
+        && Objects.equals(this.helmValueYaml, other.helmValueYaml)
         && Objects.equals(this.appContainer, other.appContainer) && Objects.equals(this.configFiles, other.configFiles)
         && Objects.equals(this.lastDeploymentActivity, other.lastDeploymentActivity)
         && Objects.equals(this.lastProdDeploymentActivity, other.lastProdDeploymentActivity);
@@ -314,6 +325,7 @@ public class Service extends Base {
         .add("description", description)
         .add("artifactType", artifactType)
         .add("configMapYaml", configMapYaml)
+        .add("helmValueYaml", helmValueYaml)
         .add("appContainer", appContainer)
         .add("configFiles", configFiles)
         .add("lastDeploymentActivity", lastDeploymentActivity)
@@ -345,7 +357,9 @@ public class Service extends Base {
         .withCreatedBy(getCreatedBy())
         .withCreatedAt(getCreatedAt())
         .withLastUpdatedBy(getLastUpdatedBy())
-        .withLastUpdatedAt(getLastUpdatedAt());
+        .withLastUpdatedAt(getLastUpdatedAt())
+        .withConfigMapYaml(getConfigMapYaml())
+        .withHelmValueYaml(getHelmValueYaml());
   }
 
   /**
@@ -356,6 +370,7 @@ public class Service extends Base {
     private String description;
     private ArtifactType artifactType;
     private String configMapYaml;
+    private String helmValueYaml;
     private List<ServiceCommand> serviceCommands = Lists.newArrayList();
     private long version;
     private AppContainer appContainer;
@@ -416,6 +431,11 @@ public class Service extends Base {
 
     public Builder withConfigMapYaml(String configMapYaml) {
       this.configMapYaml = configMapYaml;
+      return this;
+    }
+
+    public Builder withHelmValueYaml(String helmValueYaml) {
+      this.helmValueYaml = helmValueYaml;
       return this;
     }
 
@@ -584,6 +604,7 @@ public class Service extends Base {
           .withDescription(description)
           .withArtifactType(artifactType)
           .withConfigMapYaml(configMapYaml)
+          .withHelmValueYaml(helmValueYaml)
           .withCommands(Lists.newArrayList(serviceCommands))
           .withVersion(version)
           .withAppContainer(appContainer)
@@ -610,6 +631,7 @@ public class Service extends Base {
       service.setDescription(description);
       service.setArtifactType(artifactType);
       service.setConfigMapYaml(configMapYaml);
+      service.setHelmValueYaml(helmValueYaml);
       service.setVersion(version);
       service.setAppContainer(appContainer);
       service.setConfigFiles(configFiles);
@@ -634,16 +656,18 @@ public class Service extends Base {
     private String description;
     private String artifactType;
     private String configMapYaml;
+    private String helmValueYaml;
     private String applicationStack;
     private List<NameValuePair.Yaml> configVariables = new ArrayList<>();
 
     @lombok.Builder
     public Yaml(String harnessApiVersion, String description, String artifactType, String configMapYaml,
-        String applicationStack, List<NameValuePair.Yaml> configVariables) {
+        String helmValueYaml, String applicationStack, List<NameValuePair.Yaml> configVariables) {
       super(EntityType.SERVICE.name(), harnessApiVersion);
       this.description = description;
       this.artifactType = artifactType;
       this.configMapYaml = configMapYaml;
+      this.helmValueYaml = helmValueYaml;
       this.applicationStack = applicationStack;
       this.configVariables = configVariables;
     }

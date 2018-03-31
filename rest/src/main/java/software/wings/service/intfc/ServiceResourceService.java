@@ -423,4 +423,6 @@ public interface ServiceResourceService extends OwnedByApplication {
   UserDataSpecification getUserDataSpecification(String appId, String serviceId);
 
   Service setConfigMapYaml(String appId, String serviceId, KubernetesPayload kubernetesPayload);
+
+  Service setHelmValueYaml(String appId, String serviceId, KubernetesPayload kubernetesPayload);
 }

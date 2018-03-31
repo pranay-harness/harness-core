@@ -236,4 +236,70 @@ public class EnvironmentResource {
       @ApiParam(name = "templateId", required = true) @PathParam("templateId") String templateId) {
     return new RestResponse<>(envService.setConfigMapYamlForService(appId, envId, templateId, new KubernetesPayload()));
   }
+  @POST
+  @Path("{envId}/helm-value-yaml")
+  @Timed
+  @ExceptionMetered
+  public RestResponse<Environment> setHelmValueYaml(
+      @ApiParam(name = "appId", required = true) @QueryParam("appId") String appId,
+      @ApiParam(name = "envId", required = true) @PathParam("envId") String envId,
+      KubernetesPayload kubernetesPayload) {
+    return new RestResponse<>(envService.setHelmValueYaml(appId, envId, kubernetesPayload));
+  }
+
+  @PUT
+  @Path("{envId}/helm-value-yaml")
+  @Timed
+  @ExceptionMetered
+  public RestResponse<Environment> updateHelmValueYaml(
+      @ApiParam(name = "appId", required = true) @QueryParam("appId") String appId,
+      @ApiParam(name = "envId", required = true) @PathParam("envId") String envId,
+      KubernetesPayload kubernetesPayload) {
+    return new RestResponse<>(envService.setHelmValueYaml(appId, envId, kubernetesPayload));
+  }
+
+  @DELETE
+  @Path("{envId}/helm-value-yaml")
+  @Timed
+  @ExceptionMetered
+  public RestResponse<Environment> deleteHelmValueYaml(
+      @ApiParam(name = "appId", required = true) @QueryParam("appId") String appId,
+      @ApiParam(name = "envId", required = true) @PathParam("envId") String envId) {
+    return new RestResponse<>(envService.setHelmValueYaml(appId, envId, new KubernetesPayload()));
+  }
+
+  @POST
+  @Path("{envId}/helm-value-yaml/{templateId}")
+  @Timed
+  @ExceptionMetered
+  public RestResponse<Environment> setHelmValueYamlForService(
+      @ApiParam(name = "appId", required = true) @QueryParam("appId") String appId,
+      @ApiParam(name = "envId", required = true) @PathParam("envId") String envId,
+      @ApiParam(name = "templateId", required = true) @PathParam("templateId") String templateId,
+      KubernetesPayload kubernetesPayload) {
+    return new RestResponse<>(envService.setHelmValueYamlForService(appId, envId, templateId, kubernetesPayload));
+  }
+
+  @PUT
+  @Path("{envId}/helm-value-yaml/{templateId}")
+  @Timed
+  @ExceptionMetered
+  public RestResponse<Environment> updateHelmValueYamlForService(
+      @ApiParam(name = "appId", required = true) @QueryParam("appId") String appId,
+      @ApiParam(name = "envId", required = true) @PathParam("envId") String envId,
+      @ApiParam(name = "templateId", required = true) @PathParam("templateId") String templateId,
+      KubernetesPayload kubernetesPayload) {
+    return new RestResponse<>(envService.setHelmValueYamlForService(appId, envId, templateId, kubernetesPayload));
+  }
+
+  @DELETE
+  @Path("{envId}/helm-value-yaml/{templateId}")
+  @Timed
+  @ExceptionMetered
+  public RestResponse<Environment> deleteHelmValueYamlForService(
+      @ApiParam(name = "appId", required = true) @QueryParam("appId") String appId,
+      @ApiParam(name = "envId", required = true) @PathParam("envId") String envId,
+      @ApiParam(name = "templateId", required = true) @PathParam("templateId") String templateId) {
+    return new RestResponse<>(envService.setHelmValueYamlForService(appId, envId, templateId, new KubernetesPayload()));
+  }
 }

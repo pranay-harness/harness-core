@@ -34,7 +34,9 @@ public class Environment extends Base {
   @NotEmpty private String name;
   private String description;
   private String configMapYaml;
+  private String helmValueYaml;
   private Map<String, String> configMapYamlByServiceTemplateId;
+  private Map<String, String> helmValueYamlByServiceTemplateId;
   @NotNull private EnvironmentType environmentType = NON_PROD;
   @Transient private List<ServiceTemplate> serviceTemplates;
   @Transient private List<ConfigFile> configFiles;
@@ -91,6 +93,22 @@ public class Environment extends Base {
 
   public void setConfigMapYamlByServiceTemplateId(Map<String, String> configMapYamlByServiceTemplateId) {
     this.configMapYamlByServiceTemplateId = configMapYamlByServiceTemplateId;
+  }
+
+  public String getHelmValueYaml() {
+    return helmValueYaml;
+  }
+
+  public void setHelmValueYaml(String helmValueYaml) {
+    this.helmValueYaml = helmValueYaml;
+  }
+
+  public Map<String, String> getHelmValueYamlByServiceTemplateId() {
+    return helmValueYamlByServiceTemplateId;
+  }
+
+  public void setHelmValueYamlByServiceTemplateId(Map<String, String> helmValueYamlByServiceTemplateId) {
+    this.helmValueYamlByServiceTemplateId = helmValueYamlByServiceTemplateId;
   }
 
   /**
@@ -189,14 +207,16 @@ public class Environment extends Base {
         .withDescription(getDescription())
         .withConfigMapYaml(getConfigMapYaml())
         .withConfigMapYamlByServiceTemplateId(getConfigMapYamlByServiceTemplateId())
+        .withHelmValueYaml(getHelmValueYaml())
+        .withHelmValueYamlByServiceTemplateId(getHelmValueYamlByServiceTemplateId())
         .withEnvironmentType(getEnvironmentType())
         .build();
   }
   @Override
   public int hashCode() {
     return 31 * super.hashCode()
-        + Objects.hash(
-              name, description, configMapYaml, configMapYamlByServiceTemplateId, environmentType, configFiles);
+        + Objects.hash(name, description, configMapYaml, configMapYamlByServiceTemplateId, helmValueYaml,
+              helmValueYamlByServiceTemplateId, environmentType, configFiles);
   }
 
   @Override
@@ -214,6 +234,8 @@ public class Environment extends Base {
     return Objects.equals(this.name, other.name) && Objects.equals(this.description, other.description)
         && Objects.equals(this.configMapYaml, other.configMapYaml)
         && Objects.equals(this.configMapYamlByServiceTemplateId, other.configMapYamlByServiceTemplateId)
+        && Objects.equals(this.helmValueYaml, other.helmValueYaml)
+        && Objects.equals(this.helmValueYamlByServiceTemplateId, other.helmValueYamlByServiceTemplateId)
         && Objects.equals(this.environmentType, other.environmentType)
         && Objects.equals(this.configFiles, other.configFiles);
   }
@@ -224,6 +246,8 @@ public class Environment extends Base {
         .withDescription(getDescription())
         .withConfigMapYaml(getConfigMapYaml())
         .withConfigMapYamlByServiceTemplateId(getConfigMapYamlByServiceTemplateId())
+        .withHelmValueYaml(getHelmValueYaml())
+        .withHelmValueYamlByServiceTemplateId(getHelmValueYamlByServiceTemplateId())
         .withEnvironmentType(getEnvironmentType())
         .withConfigFiles(getConfigFiles())
         .withUuid(getUuid())
@@ -260,6 +284,8 @@ public class Environment extends Base {
     private String description;
     private String configMapYaml;
     private Map<String, String> configMapYamlByServiceTemplateId;
+    private String helmValueYaml;
+    private Map<String, String> helmValueYamlByServiceTemplateId;
     private EnvironmentType environmentType = NON_PROD;
     private List<ConfigFile> configFiles;
     private String uuid;
@@ -309,6 +335,16 @@ public class Environment extends Base {
 
     public Builder withConfigMapYamlByServiceTemplateId(Map<String, String> configMapYamlByServiceTemplateId) {
       this.configMapYamlByServiceTemplateId = configMapYamlByServiceTemplateId;
+      return this;
+    }
+
+    public Builder withHelmValueYaml(String helmValueYaml) {
+      this.helmValueYaml = helmValueYaml;
+      return this;
+    }
+
+    public Builder withHelmValueYamlByServiceTemplateId(Map<String, String> helmValueYamlByServiceTemplateId) {
+      this.helmValueYamlByServiceTemplateId = helmValueYamlByServiceTemplateId;
       return this;
     }
 
@@ -411,6 +447,8 @@ public class Environment extends Base {
           .withDescription(description)
           .withConfigMapYaml(configMapYaml)
           .withConfigMapYamlByServiceTemplateId(configMapYamlByServiceTemplateId)
+          .withHelmValueYaml(helmValueYaml)
+          .withHelmValueYamlByServiceTemplateId(helmValueYamlByServiceTemplateId)
           .withEnvironmentType(environmentType)
           .withConfigFiles(configFiles)
           .withUuid(uuid)
@@ -432,6 +470,8 @@ public class Environment extends Base {
       environment.setDescription(description);
       environment.setConfigMapYaml(configMapYaml);
       environment.setConfigMapYamlByServiceTemplateId(configMapYamlByServiceTemplateId);
+      environment.setHelmValueYaml(helmValueYaml);
+      environment.setHelmValueYamlByServiceTemplateId(helmValueYamlByServiceTemplateId);
       environment.setEnvironmentType(environmentType);
       environment.setConfigFiles(configFiles);
       environment.setUuid(uuid);
@@ -451,17 +491,22 @@ public class Environment extends Base {
     private String description;
     private String configMapYaml;
     private Map<String, String> configMapYamlByServiceTemplateId;
+    private String helmValueYaml;
+    private Map<String, String> helmValueYamlByServiceTemplateId;
     private String environmentType = "NON_PROD";
     private List<VariableOverrideYaml> variableOverrides = new ArrayList<>();
 
     @lombok.Builder
     public Yaml(String harnessApiVersion, String description, String configMapYaml,
-        Map<String, String> configMapYamlByServiceTemplateId, String environmentType,
+        Map<String, String> configMapYamlByServiceTemplateId, String helmValueYaml,
+        Map<String, String> helmValueYamlByServiceTemplateId, String environmentType,
         List<VariableOverrideYaml> variableOverrides) {
       super(EntityType.ENVIRONMENT.name(), harnessApiVersion);
       this.description = description;
       this.configMapYaml = configMapYaml;
       this.configMapYamlByServiceTemplateId = configMapYamlByServiceTemplateId;
+      this.helmValueYaml = helmValueYaml;
+      this.helmValueYamlByServiceTemplateId = helmValueYamlByServiceTemplateId;
       this.environmentType = environmentType;
       this.variableOverrides = variableOverrides;
     }
