@@ -46,7 +46,7 @@ public class WatcherModule extends AbstractModule {
 
     int cores = Runtime.getRuntime().availableProcessors();
     bind(ExecutorService.class)
-        .toInstance(new ThreadPoolExecutor(2 * cores, 20, (long) 0, TimeUnit.MILLISECONDS, new LinkedBlockingQueue<>(),
+        .toInstance(new ThreadPoolExecutor(2 * cores, 200, (long) 0, TimeUnit.MILLISECONDS, new LinkedBlockingQueue<>(),
             new ThreadFactoryBuilder().setNameFormat("watcher-task-%d").build()));
     bind(MessageService.class)
         .toInstance(
