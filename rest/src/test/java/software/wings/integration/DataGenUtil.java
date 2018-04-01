@@ -24,7 +24,6 @@ import static software.wings.beans.PhaseStepType.POST_DEPLOYMENT;
 import static software.wings.beans.PhaseStepType.PRE_DEPLOYMENT;
 import static software.wings.beans.Pipeline.Builder.aPipeline;
 import static software.wings.beans.Service.Builder.aService;
-import static software.wings.beans.ServiceTemplate.Builder.aServiceTemplate;
 import static software.wings.beans.SettingAttribute.Builder.aSettingAttribute;
 import static software.wings.beans.Workflow.WorkflowBuilder.aWorkflow;
 import static software.wings.beans.artifact.JenkinsArtifactStream.Builder.aJenkinsArtifactStream;
@@ -500,13 +499,11 @@ public class DataGenUtil extends BaseIntegrationTest {
             .withArtifactType(ArtifactType.WAR)
             .build());
 
-    ServiceTemplate serviceTemplate = serviceTemplateGenerator.createServiceTemplate(seed,
-        aServiceTemplate()
-            .withAppId(service.getAppId())
-            .withEnvId(environment.getUuid())
-            .withServiceId(service.getUuid())
-            .withName("Test Service template")
-            .build());
+    ServiceTemplate serviceTemplate = wingsPersistence.createQuery(ServiceTemplate.class)
+                                          .filter("appId", service.getAppId())
+                                          .filter("serviceId", service.getUuid())
+                                          .filter("envId", environment.getUuid())
+                                          .get();
 
     final SettingAttribute awsTest = settingsService.getByName(accountId, GLOBAL_APP_ID, AWS_TEST);
     final SettingAttribute devKey = settingsService.getByName(accountId, GLOBAL_APP_ID, DEV_KEY);
@@ -639,8 +636,6 @@ public class DataGenUtil extends BaseIntegrationTest {
           });
       assertThat(response.getResource()).isInstanceOf(Service.class);
       String serviceId = response.getResource().getUuid();
-
-      final Environment environment = environmentService.getEnvironmentByName(appId, TESTING_ENVIRONMENT);
 
       Service service = wingsPersistence.get(Service.class, serviceId);
 
