@@ -1,6 +1,8 @@
 package software.wings.generator;
 
+import static io.harness.govern.Switch.unhandled;
 import static software.wings.beans.Environment.Builder.anEnvironment;
+import static software.wings.beans.Environment.EnvironmentType.NON_PROD;
 
 import com.google.inject.Inject;
 import com.google.inject.Singleton;
@@ -19,7 +21,41 @@ public class EnvironmentGenerator {
 
   @Inject EnvironmentService environmentService;
 
-  public Environment createEnvironment(long seed, Environment environment) {
+  public enum Environments {
+    GENERIC_TEST,
+  }
+
+  public Environment ensurePredefined(long seed, Environments predefined) {
+    switch (predefined) {
+      case GENERIC_TEST:
+        return ensureGenericTest(seed);
+      default:
+        unhandled(predefined);
+    }
+
+    return null;
+  }
+
+  private Environment ensureGenericTest(long seed) {
+    final Application application = applicationGenerator.ensurePredefined(seed, Applications.GENERIC_TEST);
+    return ensureEnvironment(seed,
+        anEnvironment()
+            .withAppId(application.getUuid())
+            .withName("Test Environment")
+            .withEnvironmentType(NON_PROD)
+            .build());
+  }
+
+  public Environment ensureRandom(long seed) {
+    EnhancedRandom random =
+        EnhancedRandomBuilder.aNewEnhancedRandomBuilder().seed(seed).scanClasspathForConcreteTypes(true).build();
+
+    Environments predefined = random.nextObject(Environments.class);
+
+    return ensurePredefined(seed, predefined);
+  }
+
+  public Environment ensureEnvironment(long seed, Environment environment) {
     EnhancedRandom random =
         EnhancedRandomBuilder.aNewEnhancedRandomBuilder().seed(seed).scanClasspathForConcreteTypes(true).build();
 
@@ -28,7 +64,7 @@ public class EnvironmentGenerator {
     if (environment != null && environment.getAppId() != null) {
       builder.withAppId(environment.getAppId());
     } else {
-      final Application application = applicationGenerator.ensurePredefined(seed, Applications.GENERIC_TEST);
+      final Application application = applicationGenerator.ensureRandom(seed);
       builder.withAppId(application.getUuid());
     }
 
