@@ -27,15 +27,6 @@
 #
 #- REST: Setup Yaml repo (branch) for this account
 
-if [[ "$OSTYPE" == "darwin"* ]]; then
-        output=$(sed --help | grep GNU)
-        if [[ $? -eq 1 ]]; then
-            echo "GNU Sed is required for running this script, the sed on Mac OSX may not work"
-            printf " Use these commands \n $ brew uninstall gnu-sed \n $ brew install gnu-sed --with-default-names \n \n"
-            exit 1
-        fi
-fi
-
 if [ "$#" -ne 2 ]; then
     echo "Please enter the correct arguments for running the new account creation script"
     echo "1: API URL"
@@ -61,6 +52,13 @@ function generateRandomString(){
    echo `openssl rand -base64 $LENGTH`
 }
 
+function replace() {
+        if [[ "$OSTYPE" == "darwin"* ]]; then
+                find Setup -type f -name "*.yaml" -exec sed -i '' -e "s|$1|$2|g" {} +
+        else
+                find Setup -type f -name "*.yaml" -exec sed -i "s|$1|$2|g" {} +
+        fi
+}
 echo "# Reading account details from $ACCOUNT_PROPERTY_FILE"
 accountName=$(getProperty "$ACCOUNT_PROPERTY_FILE" "AccountName")
 companyName=$(getProperty $ACCOUNT_PROPERTY_FILE "CompanyName")
@@ -199,19 +197,19 @@ echo "SSH Key Response = " $ssh_key_response
 rm -rf Setup
 cp -Rf Setup_Master_Copy Setup
 
-find Setup -type f -exec sed -i "s|<MONGODB_USERNAME_PLACEHOLDER>|safeharness:$mongodb_user_token|g" {} +
-find Setup -type f -exec sed -i "s|<MONGODB_PASSWORD_PLACEHOLDER>|safeharness:$mongodb_password_token|g" {} +
-find Setup -type f -exec sed -i "s|<LEARNING_ENGINE_SECRET_KEY_PLACEHOLDER>|safeharness:$learning_engine_secret_token|g" {} +
-find Setup -type f -exec sed -i "s|<ACCOUNT_SECRET_KEY_PLACEHOLDER>|safeharness:$account_secret_token|g" {} +
-find Setup -type f -exec sed -i "s|<DOCKER_LOGIN_PASSWORD_PLACEHOLDER>|safeharness:$docker_password_token|g" {} +
-find Setup -type f -exec sed -i "s|<NEWRELIC_LICENSE_KEY_PLACEHOLDER>|safeharness:$newrelic_license_token|g" {} +
-find Setup -type f -exec sed -i "s|<HOST1_PLACEHOLDER>|$sanitizedhost1|g" {} +
-find Setup -type f -exec sed -i "s|<HOST2_PLACEHOLDER>|$sanitizedhost2|g" {} +
-find Setup -type f -exec sed -i "s|<HOST3_PLACEHOLDER>|$sanitizedhost3|g" {} +
-find Setup -type f -exec sed -i "s|<LOAD_BALANCER_URL_PLACEHOLDER>|$loadbalancer|g" {} +
-find Setup -type f -exec sed -i "s|<COMPANYNAME_PLACEHOLDER>|$companyName|g" {} +
-find Setup -type f -exec sed -i "s|<ACCOUNTNAME_PLACEHOLDER>|$accountName|g" {} +
-find Setup -type f -exec sed -i "s|<EMAIL_PLACEHOLDER>|$adminEmail|g" {} +
+$(replace "<MONGODB_USERNAME_PLACEHOLDER>" "safeharness:$mongodb_user_token")
+$(replace "<MONGODB_PASSWORD_PLACEHOLDER>" "safeharness:$mongodb_password_token")
+$(replace "<LEARNING_ENGINE_SECRET_KEY_PLACEHOLDER>" "safeharness:$learning_engine_secret_token")
+$(replace "<ACCOUNT_SECRET_KEY_PLACEHOLDER>" "safeharness:$account_secret_token")
+$(replace "<DOCKER_LOGIN_PASSWORD_PLACEHOLDER>" "safeharness:$docker_password_token")
+$(replace "<NEWRELIC_LICENSE_KEY_PLACEHOLDER>" "safeharness:$newrelic_license_token")
+$(replace "<HOST1_PLACEHOLDER>" "$sanitizedhost1")
+$(replace "<HOST2_PLACEHOLDER>" "$sanitizedhost2")
+$(replace "<HOST3_PLACEHOLDER>" "$sanitizedhost3")
+$(replace "<LOAD_BALANCER_URL_PLACEHOLDER>" "$loadbalancer")
+$(replace "<COMPANYNAME_PLACEHOLDER>" "$companyName")
+$(replace "<ACCOUNTNAME_PLACEHOLDER>" "$accountName")
+$(replace "<EMAIL_PLACEHOLDER>" "$adminEmail")
 
 zip -r Setup.zip Setup
 
