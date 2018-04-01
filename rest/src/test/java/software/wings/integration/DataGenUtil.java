@@ -14,7 +14,6 @@ import static software.wings.beans.BasicOrchestrationWorkflow.BasicOrchestration
 import static software.wings.beans.ConfigFile.DEFAULT_TEMPLATE_ID;
 import static software.wings.beans.EntityType.SERVICE;
 import static software.wings.beans.Environment.Builder.anEnvironment;
-import static software.wings.beans.Environment.EnvironmentType.NON_PROD;
 import static software.wings.beans.HostConnectionAttributes.AccessType.KEY;
 import static software.wings.beans.HostConnectionAttributes.Builder.aHostConnectionAttributes;
 import static software.wings.beans.HostConnectionAttributes.ConnectionType.SSH;
@@ -85,6 +84,7 @@ import software.wings.generator.AccountGenerator;
 import software.wings.generator.ApplicationGenerator;
 import software.wings.generator.ArtifactStreamGenerator;
 import software.wings.generator.EnvironmentGenerator;
+import software.wings.generator.EnvironmentGenerator.Environments;
 import software.wings.generator.InfrastructureMappingGenerator;
 import software.wings.generator.PipelineGenerator;
 import software.wings.generator.ServiceGenerator;
@@ -489,8 +489,7 @@ public class DataGenUtil extends BaseIntegrationTest {
   private void createTestApplication(Account account) {
     int seed = 0;
 
-    Environment environment = environmentGenerator.createEnvironment(
-        seed, anEnvironment().withName("Test Environment").withEnvironmentType(NON_PROD).build());
+    Environment environment = environmentGenerator.ensurePredefined(seed, Environments.GENERIC_TEST);
 
     Service service = serviceGenerator.createService(seed,
         aService()
