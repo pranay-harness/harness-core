@@ -22,7 +22,7 @@ commandUnits:
     deploymentType: SSH
     name: Setup Env
   - command: |-
-        sudo mv ${serviceVariable.STORAGE_DIR}/* ${WINGS_BACKUP_PATH}
+        #sudo mv ${serviceVariable.STORAGE_DIR}/* ${WINGS_BACKUP_PATH}
 
         sudo rm -rf ${serviceVariable.STORAGE_DIR}/*
     commandUnitType: EXEC

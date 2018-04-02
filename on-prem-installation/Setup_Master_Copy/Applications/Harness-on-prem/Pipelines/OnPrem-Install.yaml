@@ -19,7 +19,7 @@ pipelineStages:
       - name: WATCHER_VERSION
         value: '59'
       - name: MANAGER_VERSION
-        value: 3885
+        value: '3893'
   - type: ENV_STATE
     name: Install UI
     parallel: true
