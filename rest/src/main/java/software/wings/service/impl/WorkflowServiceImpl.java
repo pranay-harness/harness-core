@@ -120,7 +120,7 @@ import software.wings.beans.NotificationGroup;
 import software.wings.beans.NotificationRule;
 import software.wings.beans.OrchestrationWorkflow;
 import software.wings.beans.PhaseStep;
-import software.wings.beans.PhysicalInfrastructureMapping;
+import software.wings.beans.PhysicalInfrastructureMappingBase;
 import software.wings.beans.Pipeline;
 import software.wings.beans.RepairActionCode;
 import software.wings.beans.RoleType;
@@ -2401,8 +2401,8 @@ public class WorkflowServiceImpl implements WorkflowService, DataProvider {
   }
 
   private boolean attachElbSteps(InfrastructureMapping infrastructureMapping) {
-    return (infrastructureMapping instanceof PhysicalInfrastructureMapping
-               && isNotBlank(((PhysicalInfrastructureMapping) infrastructureMapping).getLoadBalancerId()))
+    return (infrastructureMapping instanceof PhysicalInfrastructureMappingBase
+               && isNotBlank(((PhysicalInfrastructureMappingBase) infrastructureMapping).getLoadBalancerId()))
         || (infrastructureMapping instanceof AwsInfrastructureMapping
                && isNotBlank(((AwsInfrastructureMapping) infrastructureMapping).getLoadBalancerId()));
   }

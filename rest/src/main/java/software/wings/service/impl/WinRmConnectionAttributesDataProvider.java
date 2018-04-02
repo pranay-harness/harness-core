@@ -13,7 +13,7 @@ import java.util.Map;
 import java.util.stream.Collectors;
 
 @Singleton
-public class ConnectionAttributesDataProvider implements DataProvider {
+public class WinRmConnectionAttributesDataProvider implements DataProvider {
   @javax.inject.Inject private SettingsService settingsService;
   @javax.inject.Inject private AppService appService;
 

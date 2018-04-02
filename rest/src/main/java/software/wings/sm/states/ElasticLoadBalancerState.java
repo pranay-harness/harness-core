@@ -16,7 +16,7 @@ import software.wings.beans.AwsInfrastructureMapping;
 import software.wings.beans.ElasticLoadBalancerConfig;
 import software.wings.beans.ErrorCode;
 import software.wings.beans.InfrastructureMapping;
-import software.wings.beans.PhysicalInfrastructureMapping;
+import software.wings.beans.PhysicalInfrastructureMappingBase;
 import software.wings.beans.SettingAttribute;
 import software.wings.common.Constants;
 import software.wings.exception.WingsException;
@@ -78,9 +78,9 @@ public class ElasticLoadBalancerState extends State {
           secretManager.getEncryptionDetails(awsConfig, context.getAppId(), context.getWorkflowExecutionId()));
       return execute(
           context, loadBalancerName, Regions.fromName(region), awsConfig.getAccessKey(), awsConfig.getSecretKey());
-    } else if (infrastructureMapping instanceof PhysicalInfrastructureMapping) {
+    } else if (infrastructureMapping instanceof PhysicalInfrastructureMappingBase) {
       SettingAttribute elbSetting =
-          settingsService.get(((PhysicalInfrastructureMapping) infrastructureMapping).getLoadBalancerId());
+          settingsService.get(((PhysicalInfrastructureMappingBase) infrastructureMapping).getLoadBalancerId());
       ElasticLoadBalancerConfig loadBalancerConfig = (ElasticLoadBalancerConfig) elbSetting.getValue();
       encryptionService.decrypt(loadBalancerConfig,
           secretManager.getEncryptionDetails(loadBalancerConfig, context.getAppId(), context.getWorkflowExecutionId()));

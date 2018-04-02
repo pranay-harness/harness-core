@@ -129,6 +129,8 @@ public abstract class NodeSelectState extends State {
         excludeHostsWithSameArtifact = workflowStandardParams.isExcludeHostsWithSameArtifact();
         if (InfrastructureMappingType.AWS_SSH.name().equals(infrastructureMapping.getInfraMappingType())
             || InfrastructureMappingType.PHYSICAL_DATA_CENTER_SSH.name().equals(
+                   infrastructureMapping.getInfraMappingType())
+            || InfrastructureMappingType.PHYSICAL_DATA_CENTER_WINRM.name().equals(
                    infrastructureMapping.getInfraMappingType())) {
           if (excludeHostsWithSameArtifact) {
             serviceInstances =
