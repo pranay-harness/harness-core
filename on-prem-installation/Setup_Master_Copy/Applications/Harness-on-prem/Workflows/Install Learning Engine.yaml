@@ -16,7 +16,8 @@ notificationRules:
 phases:
   - type: SSH
     computeProviderName: on-prem-datacenter
-    infraMappingName: 'Physical Data Center on-prem-datacenter (Data Center_SSH).4'
+    daemonSet: false
+    infraMappingName: Physical Data Center on-prem-datacenter (Data Center_SSH).4
     name: Phase 1
     phaseSteps:
       - type: PROVISION_NODE
@@ -42,6 +43,11 @@ phases:
         name: Deploy Service
         steps:
           - type: COMMAND
+            name: Docker-login
+            properties:
+                commandName: Docker-login
+                timeoutMillis: 600000
+          - type: COMMAND
             name: docker_start_learning_engine
             properties:
                 commandName: docker_start_learning_engine
@@ -59,7 +65,8 @@ phases:
     serviceName: Learning Engine
   - type: SSH
     computeProviderName: on-prem-datacenter
-    infraMappingName: 'Physical Data Center on-prem-datacenter (Data Center_SSH).4'
+    daemonSet: false
+    infraMappingName: Physical Data Center on-prem-datacenter (Data Center_SSH).4
     name: Phase 2
     phaseSteps:
       - type: PROVISION_NODE
@@ -100,10 +107,14 @@ phases:
         stepsInParallel: false
     provisionNodes: false
     serviceName: Learning Engine
+preDeploymentSteps:
+  - type: ARTIFACT_CHECK
+    name: Artifact Check
 rollbackPhases:
   - type: SSH
     computeProviderName: on-prem-datacenter
-    infraMappingName: 'Physical Data Center on-prem-datacenter (Data Center_SSH).4'
+    daemonSet: false
+    infraMappingName: Physical Data Center on-prem-datacenter (Data Center_SSH).4
     name: Rollback Phase 1
     phaseNameForRollback: Phase 1
     phaseSteps:
@@ -139,7 +150,8 @@ rollbackPhases:
     serviceName: Learning Engine
   - type: SSH
     computeProviderName: on-prem-datacenter
-    infraMappingName: 'Physical Data Center on-prem-datacenter (Data Center_SSH).4'
+    daemonSet: false
+    infraMappingName: Physical Data Center on-prem-datacenter (Data Center_SSH).4
     name: Rollback Phase 2
     phaseNameForRollback: Phase 2
     phaseSteps:
