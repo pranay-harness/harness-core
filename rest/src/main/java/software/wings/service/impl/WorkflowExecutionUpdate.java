@@ -111,10 +111,8 @@ public class WorkflowExecutionUpdate implements StateMachineExecutionCallback {
   @Override
   public void callback(ExecutionContext context, ExecutionStatus status, Exception ex) {
     Query<WorkflowExecution> query = wingsPersistence.createQuery(WorkflowExecution.class)
-                                         .field("appId")
-                                         .equal(appId)
-                                         .field(ID_KEY)
-                                         .equal(workflowExecutionId)
+                                         .filter("appId", appId)
+                                         .filter(ID_KEY, workflowExecutionId)
                                          .field("status")
                                          .in(asList(NEW, QUEUED, STARTING, RUNNING));
 

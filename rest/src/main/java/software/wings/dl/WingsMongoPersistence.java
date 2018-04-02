@@ -139,7 +139,7 @@ public class WingsMongoPersistence implements WingsPersistence, Managed {
    */
   @Override
   public <T extends Base> T get(Class<T> cls, String appId, String id) {
-    return createQuery(cls).field("appId").equal(appId).field(ID_KEY).equal(id).get();
+    return createQuery(cls).filter("appId", appId).filter(ID_KEY, id).get();
   }
 
   /**
@@ -147,7 +147,7 @@ public class WingsMongoPersistence implements WingsPersistence, Managed {
    */
   @Override
   public <T extends Base> T get(Class<T> cls, String appId, String id, ReadPref readPref) {
-    return createQuery(cls, readPref).field("appId").equal(appId).field(ID_KEY).equal(id).get();
+    return createQuery(cls, readPref).filter("appId", appId).filter(ID_KEY, id).get();
   }
 
   /**
@@ -246,9 +246,9 @@ public class WingsMongoPersistence implements WingsPersistence, Managed {
   @Override
   public <T extends Base> T saveAndGet(Class<T> cls, T object) {
     Object id = save(object);
-    Query<T> query = createQuery(cls, ReadPref.CRITICAL).field(ID_KEY).equal(id);
+    Query<T> query = createQuery(cls, ReadPref.CRITICAL).filter(ID_KEY, id);
     if (object.getShardKeys() != null) {
-      object.getShardKeys().keySet().forEach(key -> query.field(key).equal(object.getShardKeys().get(key)));
+      object.getShardKeys().keySet().forEach(key -> query.filter(key, object.getShardKeys().get(key)));
     }
     return query.get();
   }
@@ -344,7 +344,7 @@ public class WingsMongoPersistence implements WingsPersistence, Managed {
   @Override
   public <T> void updateFields(
       Class<T> cls, String entityId, Map<String, Object> keyValuePairs, Set<String> fieldsToRemove) {
-    Query<T> query = primaryDatastore.createQuery(cls).field(ID_KEY).equal(entityId);
+    Query<T> query = primaryDatastore.createQuery(cls).filter(ID_KEY, entityId);
     UpdateOperations<T> operations = primaryDatastore.createUpdateOperations(cls);
     boolean encryptable = Encryptable.class.isAssignableFrom(cls);
     Object savedObject = datastoreMap.get(ReadPref.NORMAL).get(cls, entityId);
@@ -430,7 +430,7 @@ public class WingsMongoPersistence implements WingsPersistence, Managed {
   @Override
   public <T extends Base> boolean delete(Class<T> cls, String uuid) {
     if (cls.equals(SettingAttribute.class) || Encryptable.class.isAssignableFrom(cls)) {
-      Query<T> query = primaryDatastore.createQuery(cls).field(ID_KEY).equal(uuid);
+      Query<T> query = primaryDatastore.createQuery(cls).filter(ID_KEY, uuid);
       return delete(query);
     }
     WriteResult result = primaryDatastore.delete(cls, uuid);
@@ -442,7 +442,7 @@ public class WingsMongoPersistence implements WingsPersistence, Managed {
    */
   @Override
   public <T extends Base> boolean delete(Class<T> cls, String appId, String uuid) {
-    Query<T> query = primaryDatastore.createQuery(cls).field(ID_KEY).equal(uuid).field("appId").equal(appId);
+    Query<T> query = primaryDatastore.createQuery(cls).filter(ID_KEY, uuid).filter("appId", appId);
     return delete(query);
   }
 

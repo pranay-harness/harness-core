@@ -70,7 +70,7 @@ public class ArtifactStreamServiceIntegrationTest extends BaseIntegrationTest {
   private void addArtifactStream(String appId, String serviceId) {
     WebTarget target = client.target(API_BASE + "/artifactstreams/?appId=" + appId);
     SettingAttribute settingAttribute = wingsPersistence.executeGetOneQuery(
-        wingsPersistence.createQuery(SettingAttribute.class).field("name").equal("Harness Jenkins"));
+        wingsPersistence.createQuery(SettingAttribute.class).filter("name", "Harness Jenkins"));
 
     jenkinsArtifactStream = aJenkinsArtifactStream()
                                 .withAppId(APP_ID)

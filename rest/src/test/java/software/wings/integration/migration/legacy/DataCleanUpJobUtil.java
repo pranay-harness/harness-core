@@ -173,8 +173,7 @@ public class DataCleanUpJobUtil extends WingsBaseTest {
     orphanServiceIds.forEach(s -> {
       Query artifactQuery = wingsPersistence.createQuery(Artifact.class)
                                 .project("artifactFiles.fileUuid", true)
-                                .field("serviceIds")
-                                .equal(s)
+                                .filter("serviceIds", s)
                                 .disableValidation();
 
       List<Artifact> artifacts = new ArrayList<>();
@@ -206,8 +205,7 @@ public class DataCleanUpJobUtil extends WingsBaseTest {
     orphanStreamIds.forEach(s -> {
       Query artifactQuery = wingsPersistence.createQuery(Artifact.class)
                                 .project("artifactFiles.fileUuid", true)
-                                .field("artifactStreamId")
-                                .equal(s)
+                                .filter("artifactStreamId", s)
                                 .disableValidation();
 
       List<Artifact> artifacts = new ArrayList<>();

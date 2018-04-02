@@ -25,8 +25,8 @@ public class ArtifactSourceProvider implements DataProvider {
     List<ArtifactStream> artifactStreams = new ArrayList<>();
     List<Service> services = new ArrayList<>();
     if (appId != null) {
-      artifactStreams = wingsPersistence.createQuery(ArtifactStream.class).field("appId").equal(appId).asList();
-      services = wingsPersistence.createQuery(Service.class).field("appId").equal(appId).asList();
+      artifactStreams = wingsPersistence.createQuery(ArtifactStream.class).filter("appId", appId).asList();
+      services = wingsPersistence.createQuery(Service.class).filter("appId", appId).asList();
     }
     Map<String, String> serviceIdToName = services.stream().collect(toMap(Service::getUuid, Service::getName));
     return artifactStreams.stream().collect(

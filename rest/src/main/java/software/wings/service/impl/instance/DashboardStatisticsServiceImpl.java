@@ -180,7 +180,7 @@ public class DashboardStatisticsServiceImpl implements DashboardStatisticsServic
     List<EntitySummaryStats> entitySummaryStatsList = new ArrayList<>();
     Query<Instance> query = null;
     try {
-      query = getQuery(null).field("serviceId").equal(serviceId);
+      query = getQuery(null).filter("serviceId", serviceId);
     } catch (WingsException exception) {
       exception.logProcessedMessages(logger);
       return Lists.newArrayList();
@@ -250,7 +250,7 @@ public class DashboardStatisticsServiceImpl implements DashboardStatisticsServic
   public InstanceSummaryStats getServiceInstanceSummaryStats(String serviceId, List<String> groupByEntityTypes) {
     Query<Instance> query;
     try {
-      query = getQuery(null).field("serviceId").equal(serviceId);
+      query = getQuery(null).filter("serviceId", serviceId);
     } catch (WingsException exception) {
       exception.logProcessedMessages(logger);
       return anInstanceSummaryStats().withCountMap(null).withTotalCount(0).build();
@@ -545,7 +545,7 @@ public class DashboardStatisticsServiceImpl implements DashboardStatisticsServic
   private List<CurrentActiveInstances> getCurrentActiveInstances(String appId, String serviceId) {
     Query<Instance> query;
     try {
-      query = getQuery(null).field("serviceId").equal(serviceId);
+      query = getQuery(null).filter("serviceId", serviceId);
     } catch (WingsException exception) {
       exception.logProcessedMessages(logger);
       return Lists.newArrayList();

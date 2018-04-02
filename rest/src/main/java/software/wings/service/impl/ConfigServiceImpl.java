@@ -219,12 +219,9 @@ public class ConfigServiceImpl implements ConfigService {
   @Override
   public List<ConfigFile> getConfigFileByTemplate(String appId, String envId, String serviceTemplateId) {
     return wingsPersistence.createQuery(ConfigFile.class)
-        .field("appId")
-        .equal(appId)
-        .field("envId")
-        .equal(envId)
-        .field("templateId")
-        .equal(serviceTemplateId)
+        .filter("appId", appId)
+        .filter("envId", envId)
+        .filter("templateId", serviceTemplateId)
         .asList();
   }
 
@@ -402,10 +399,8 @@ public class ConfigServiceImpl implements ConfigService {
             .collect(Collectors.toList());
 
     Query<ConfigFile> query = wingsPersistence.createQuery(ConfigFile.class)
-                                  .field("appId")
-                                  .equal(existingConfigFile.getAppId())
-                                  .field("relativeFilePath")
-                                  .equal(existingConfigFile.getRelativeFilePath());
+                                  .filter("appId", existingConfigFile.getAppId())
+                                  .filter("relativeFilePath", existingConfigFile.getRelativeFilePath());
     query.or(query.criteria("entityId").equal(existingConfigFile.getEntityId()),
         query.criteria("templateId").in(templateIds));
 
@@ -421,11 +416,8 @@ public class ConfigServiceImpl implements ConfigService {
   public void delete(String appId, String configId) {
     // TODO: migrate to prune pattern
 
-    Query<ConfigFile> query = wingsPersistence.createQuery(ConfigFile.class)
-                                  .field(ConfigFile.APP_ID_KEY)
-                                  .equal(appId)
-                                  .field(ID_KEY)
-                                  .equal(configId);
+    Query<ConfigFile> query =
+        wingsPersistence.createQuery(ConfigFile.class).filter(ConfigFile.APP_ID_KEY, appId).filter(ID_KEY, configId);
     ConfigFile configFile = query.get();
     if (configFile == null) {
       return;
@@ -442,10 +434,8 @@ public class ConfigServiceImpl implements ConfigService {
       }
 
       List<ConfigFile> configFiles = wingsPersistence.createQuery(ConfigFile.class)
-                                         .field(ConfigFile.APP_ID_KEY)
-                                         .equal(appId)
-                                         .field("parentConfigFileId")
-                                         .equal(configId)
+                                         .filter(ConfigFile.APP_ID_KEY, appId)
+                                         .filter("parentConfigFileId", configId)
                                          .asList();
       if (!configFiles.isEmpty()) {
         configFiles.forEach(childConfigFile -> delete(appId, childConfigFile.getUuid()));
@@ -470,10 +460,8 @@ public class ConfigServiceImpl implements ConfigService {
     boolean deleted = wingsPersistence.delete(ConfigFile.class, configFile.getUuid());
     if (deleted) {
       List<ConfigFile> childConfigFiles = wingsPersistence.createQuery(ConfigFile.class)
-                                              .field("appId")
-                                              .equal(appId)
-                                              .field("parentConfigFileId")
-                                              .equal(configFile.getUuid())
+                                              .filter("appId", appId)
+                                              .filter("parentConfigFileId", configFile.getUuid())
                                               .asList();
       childConfigFiles.forEach(childConfigFile -> delete(appId, childConfigFile.getUuid()));
 
@@ -551,10 +539,8 @@ public class ConfigServiceImpl implements ConfigService {
   @Override
   public void deleteByTemplateId(String appId, String serviceTemplateId) {
     wingsPersistence.createQuery(ConfigFile.class)
-        .field("appId")
-        .equal(appId)
-        .field("templateId")
-        .equal(serviceTemplateId)
+        .filter("appId", appId)
+        .filter("templateId", serviceTemplateId)
         .asList()
         .forEach(configFile -> delete(appId, configFile.getUuid()));
   }
@@ -562,10 +548,8 @@ public class ConfigServiceImpl implements ConfigService {
   @Override
   public void deleteByEntityId(String appId, String entityId) {
     wingsPersistence.createQuery(ConfigFile.class)
-        .field("appId")
-        .equal(appId)
-        .field("entityId")
-        .equal(entityId)
+        .filter("appId", appId)
+        .filter("entityId", entityId)
         .asList()
         .forEach(configFile -> delete(appId, configFile.getUuid()));
   }

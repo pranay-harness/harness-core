@@ -84,8 +84,7 @@ public class ConfigServiceTest extends WingsBaseTest {
   public void setUp() throws IOException {
     inputStream = IOUtils.toInputStream("Some content", "UTF-8");
     when(wingsPersistence.createQuery(ConfigFile.class)).thenReturn(query);
-    when(query.field(any())).thenReturn(end);
-    when(end.equal(any())).thenReturn(query);
+    when(query.filter(any(), any())).thenReturn(query);
     when(query.get()).thenReturn(ConfigFile.builder().build());
   }
 
@@ -204,12 +203,9 @@ public class ConfigServiceTest extends WingsBaseTest {
     when(wingsPersistence.get(ConfigFile.class, APP_ID, FILE_ID)).thenReturn(configFile);
     List<ConfigFile> configFiles = configService.getConfigFileByTemplate(APP_ID, ENV_ID, serviceTemplate.getUuid());
 
-    verify(query).field("appId");
-    verify(end).equal(APP_ID);
-    verify(query).field("envId");
-    verify(end).equal(ENV_ID);
-    verify(query).field("templateId");
-    verify(end).equal(TEMPLATE_ID);
+    verify(query).filter("appId", APP_ID);
+    verify(query).filter("envId", ENV_ID);
+    verify(query).filter("templateId", TEMPLATE_ID);
     assertThat(configFiles.get(0)).isEqualTo(configFile);
   }
 

@@ -465,7 +465,7 @@ public class ServiceResourceServiceImpl implements ServiceResourceService, DataP
   @Override
   public Service getServiceByName(String appId, String serviceName) {
     Service service =
-        wingsPersistence.createQuery(Service.class).field("appId").equal(appId).field("name").equal(serviceName).get();
+        wingsPersistence.createQuery(Service.class).filter("appId", appId).filter("name", serviceName).get();
     if (service != null) {
       setServiceDetails(service, appId);
     }
@@ -489,12 +489,7 @@ public class ServiceResourceServiceImpl implements ServiceResourceService, DataP
 
   @Override
   public boolean exist(@NotEmpty String appId, @NotEmpty String serviceId) {
-    return wingsPersistence.createQuery(Service.class)
-               .field("appId")
-               .equal(appId)
-               .field(ID_KEY)
-               .equal(serviceId)
-               .getKey()
+    return wingsPersistence.createQuery(Service.class).filter("appId", appId).filter(ID_KEY, serviceId).getKey()
         != null;
   }
 
@@ -590,10 +585,8 @@ public class ServiceResourceServiceImpl implements ServiceResourceService, DataP
     boolean serviceCommandDeleted = wingsPersistence.delete(serviceCommand);
     if (serviceCommandDeleted) {
       boolean deleted = wingsPersistence.delete(wingsPersistence.createQuery(Command.class)
-                                                    .field("appId")
-                                                    .equal(service.getAppId())
-                                                    .field("originEntityId")
-                                                    .equal(serviceCommand.getUuid()));
+                                                    .filter("appId", service.getAppId())
+                                                    .filter("originEntityId", serviceCommand.getUuid()));
       if (deleted) {
         String accountId = appService.getAccountIdByAppId(service.getAppId());
         yamlChangeSetHelper.commandFileChange(accountId, service, serviceCommand, ChangeType.DELETE);
@@ -715,12 +708,9 @@ public class ServiceResourceServiceImpl implements ServiceResourceService, DataP
   public ContainerTask updateContainerTaskAdvanced(
       String appId, String serviceId, String taskId, KubernetesPayload kubernetesPayload, boolean reset) {
     ContainerTask containerTask = wingsPersistence.createQuery(ContainerTask.class)
-                                      .field("appId")
-                                      .equal(appId)
-                                      .field("serviceId")
-                                      .equal(serviceId)
-                                      .field(ID_KEY)
-                                      .equal(taskId)
+                                      .filter("appId", appId)
+                                      .filter("serviceId", serviceId)
+                                      .filter(ID_KEY, taskId)
                                       .get();
     if (reset) {
       containerTask.convertFromAdvanced();
@@ -809,8 +799,7 @@ public class ServiceResourceServiceImpl implements ServiceResourceService, DataP
     for (ServiceCommand serviceCommand : serviceCommands) {
       setUnset(updateOperation, "order", i++);
       wingsPersistence.update(
-          wingsPersistence.createQuery(ServiceCommand.class).field(ID_KEY).equal(serviceCommand.getUuid()),
-          updateOperation);
+          wingsPersistence.createQuery(ServiceCommand.class).filter(ID_KEY, serviceCommand.getUuid()), updateOperation);
     }
     return get(appId, serviceId);
   }
@@ -933,7 +922,7 @@ public class ServiceResourceServiceImpl implements ServiceResourceService, DataP
           UpdateOperations<Command> commandUpdateOperations = wingsPersistence.createUpdateOperations(Command.class);
           setUnset(commandUpdateOperations, "name", command.getName());
           setUnset(commandUpdateOperations, "commandType", command.getCommandType());
-          wingsPersistence.update(wingsPersistence.createQuery(Command.class).field(ID_KEY).equal(oldCommand.getUuid()),
+          wingsPersistence.update(wingsPersistence.createQuery(Command.class).filter(ID_KEY, oldCommand.getUuid()),
               commandUpdateOperations);
         }
       }
@@ -944,8 +933,7 @@ public class ServiceResourceServiceImpl implements ServiceResourceService, DataP
     setUnset(updateOperation, "name", serviceCommand.getName());
 
     wingsPersistence.update(
-        wingsPersistence.createQuery(ServiceCommand.class).field(ID_KEY).equal(serviceCommand.getUuid()),
-        updateOperation);
+        wingsPersistence.createQuery(ServiceCommand.class).filter(ID_KEY, serviceCommand.getUuid()), updateOperation);
 
     return get(appId, serviceId);
   }
@@ -1050,10 +1038,8 @@ public class ServiceResourceServiceImpl implements ServiceResourceService, DataP
   @Override
   public UserDataSpecification getUserDataSpecification(String appId, String serviceId) {
     return wingsPersistence.createQuery(UserDataSpecification.class)
-        .field("appId")
-        .equal(appId)
-        .field("serviceId")
-        .equal(serviceId)
+        .filter("appId", appId)
+        .filter("serviceId", serviceId)
         .get();
   }
 
@@ -1092,12 +1078,9 @@ public class ServiceResourceServiceImpl implements ServiceResourceService, DataP
   @Override
   public ContainerTask getContainerTaskByDeploymentType(String appId, String serviceId, String deploymentType) {
     return wingsPersistence.createQuery(ContainerTask.class)
-        .field("appId")
-        .equal(appId)
-        .field("serviceId")
-        .equal(serviceId)
-        .field("deploymentType")
-        .equal(deploymentType)
+        .filter("appId", appId)
+        .filter("serviceId", serviceId)
+        .filter("deploymentType", deploymentType)
         .get();
   }
 
@@ -1109,10 +1092,8 @@ public class ServiceResourceServiceImpl implements ServiceResourceService, DataP
   @Override
   public HelmChartSpecification getHelmChartSpecification(String appId, String serviceId) {
     return wingsPersistence.createQuery(HelmChartSpecification.class)
-        .field("appId")
-        .equal(appId)
-        .field("serviceId")
-        .equal(serviceId)
+        .filter("appId", appId)
+        .filter("serviceId", serviceId)
         .get();
   }
 
@@ -1207,10 +1188,8 @@ public class ServiceResourceServiceImpl implements ServiceResourceService, DataP
   @Override
   public LambdaSpecification getLambdaSpecification(String appId, String serviceId) {
     return wingsPersistence.createQuery(LambdaSpecification.class)
-        .field("appId")
-        .equal(appId)
-        .field("serviceId")
-        .equal(serviceId)
+        .filter("appId", appId)
+        .filter("serviceId", serviceId)
         .get();
   }
 

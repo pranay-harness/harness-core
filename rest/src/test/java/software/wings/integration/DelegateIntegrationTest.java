@@ -129,7 +129,7 @@ public void shouldRunDelegate() throws IOException, JSONException, TimeoutExcept
       .getLines()
       .forEach(logger::info);
 
-  assertThat(wingsPersistence.createQuery(Delegate.class).field("connected").equal(true).asList())
+  assertThat(wingsPersistence.createQuery(Delegate.class).filter("connected", true).asList())
       .hasSize(0); // no delegate registered
 
   int commandStatus = new ProcessExecutor()
@@ -150,7 +150,7 @@ public void shouldRunDelegate() throws IOException, JSONException, TimeoutExcept
       .getLines()
       .forEach(logger::info);
   waitForDelegateToDeregisterWithTimeout();
-  assertThat(wingsPersistence.createQuery(Delegate.class).field("connected").equal(true).asList())
+  assertThat(wingsPersistence.createQuery(Delegate.class).filter("connected", true).asList())
       .hasSize(0); // no delegate registered
 
   /* Delegate upgrade.
@@ -189,7 +189,7 @@ public void shouldRunDelegate() throws IOException, JSONException, TimeoutExcept
       .getLines()
       .forEach(logger::info);
   waitForDelegateToDeregisterWithTimeout();
-  assertThat(wingsPersistence.createQuery(Delegate.class).field("connected").equal(true).asList())
+  assertThat(wingsPersistence.createQuery(Delegate.class).filter("connected", true).asList())
       .hasSize(0); // no delegate registered
 }
 

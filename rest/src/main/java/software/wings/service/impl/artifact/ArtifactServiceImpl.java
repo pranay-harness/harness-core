@@ -195,10 +195,8 @@ public class ArtifactServiceImpl implements ArtifactService {
   @ValidationGroups(Update.class)
   public Artifact update(@Valid Artifact artifact) {
     wingsPersistence.update(wingsPersistence.createQuery(Artifact.class)
-                                .field("appId")
-                                .equal(artifact.getAppId())
-                                .field(ID_KEY)
-                                .equal(artifact.getUuid()),
+                                .filter("appId", artifact.getAppId())
+                                .filter(ID_KEY, artifact.getUuid()),
         wingsPersistence.createUpdateOperations(Artifact.class).set("displayName", artifact.getDisplayName()));
     return wingsPersistence.get(Artifact.class, artifact.getAppId(), artifact.getUuid());
   }
@@ -210,7 +208,7 @@ public class ArtifactServiceImpl implements ArtifactService {
   @Override
   public void updateStatus(String artifactId, String appId, Status status) {
     Query<Artifact> query =
-        wingsPersistence.createQuery(Artifact.class).field(ID_KEY).equal(artifactId).field("appId").equal(appId);
+        wingsPersistence.createQuery(Artifact.class).filter(ID_KEY, artifactId).filter("appId", appId);
     UpdateOperations<Artifact> ops = wingsPersistence.createUpdateOperations(Artifact.class);
     ops.set("status", status);
     wingsPersistence.update(query, ops);
@@ -223,7 +221,7 @@ public class ArtifactServiceImpl implements ArtifactService {
   @Override
   public void updateStatus(String artifactId, String appId, Status status, String errorMessage) {
     Query<Artifact> query =
-        wingsPersistence.createQuery(Artifact.class).field(ID_KEY).equal(artifactId).field("appId").equal(appId);
+        wingsPersistence.createQuery(Artifact.class).filter(ID_KEY, artifactId).filter("appId", appId);
     UpdateOperations<Artifact> ops = wingsPersistence.createUpdateOperations(Artifact.class);
     setUnset(ops, "status", status);
     setUnset(ops, "errorMessage", errorMessage);
@@ -233,7 +231,7 @@ public class ArtifactServiceImpl implements ArtifactService {
   @Override
   public void updateStatus(String artifactId, String appId, Status status, ContentStatus contentStatus) {
     Query<Artifact> query =
-        wingsPersistence.createQuery(Artifact.class).field(ID_KEY).equal(artifactId).field("appId").equal(appId);
+        wingsPersistence.createQuery(Artifact.class).filter(ID_KEY, artifactId).filter("appId", appId);
     UpdateOperations<Artifact> ops = wingsPersistence.createUpdateOperations(Artifact.class);
     setUnset(ops, "status", status);
     setUnset(ops, "contentStatus", contentStatus);
@@ -244,7 +242,7 @@ public class ArtifactServiceImpl implements ArtifactService {
   public void updateStatus(
       String artifactId, String appId, Status status, ContentStatus contentStatus, String errorMessage) {
     Query<Artifact> query =
-        wingsPersistence.createQuery(Artifact.class).field(ID_KEY).equal(artifactId).field("appId").equal(appId);
+        wingsPersistence.createQuery(Artifact.class).filter(ID_KEY, artifactId).filter("appId", appId);
     UpdateOperations<Artifact> ops = wingsPersistence.createUpdateOperations(Artifact.class);
     setUnset(ops, "status", status);
     setUnset(ops, "contentStatus", contentStatus);
@@ -259,7 +257,7 @@ public class ArtifactServiceImpl implements ArtifactService {
   public void addArtifactFile(String artifactId, String appId, List<ArtifactFile> artifactFile) {
     logger.info("Adding artifactFiles for artifactId {} and appId {}", artifactId, appId);
     Query<Artifact> query =
-        wingsPersistence.createQuery(Artifact.class).field(ID_KEY).equal(artifactId).field("appId").equal(appId);
+        wingsPersistence.createQuery(Artifact.class).filter(ID_KEY, artifactId).filter("appId", appId);
     UpdateOperations<Artifact> ops =
         wingsPersistence.createUpdateOperations(Artifact.class).addAll("artifactFiles", artifactFile, false);
     wingsPersistence.update(query, ops);
@@ -328,7 +326,7 @@ public class ArtifactServiceImpl implements ArtifactService {
   @Override
   public void pruneByApplication(String appId) {
     final MorphiaIterator<Artifact, Artifact> iterator =
-        wingsPersistence.createQuery(Artifact.class).field(Artifact.APP_ID_KEY).equal(appId).fetchEmptyEntities();
+        wingsPersistence.createQuery(Artifact.class).filter(Artifact.APP_ID_KEY, appId).fetchEmptyEntities();
 
     while (iterator.hasNext()) {
       prune(appId, iterator.next().getUuid());
@@ -339,12 +337,9 @@ public class ArtifactServiceImpl implements ArtifactService {
   public Artifact fetchLatestArtifactForArtifactStream(
       String appId, String artifactStreamId, String artifactSourceName) {
     return wingsPersistence.createQuery(Artifact.class)
-        .field("appId")
-        .equal(appId)
-        .field("artifactStreamId")
-        .equal(artifactStreamId)
-        .field("artifactSourceName")
-        .equal(artifactSourceName)
+        .filter("appId", appId)
+        .filter("artifactStreamId", artifactStreamId)
+        .filter("artifactSourceName", artifactSourceName)
         .order("-createdAt")
         .field("status")
         .hasAnyOf(asList(QUEUED, RUNNING, REJECTED, WAITING, READY, APPROVED, FAILED))
@@ -355,12 +350,9 @@ public class ArtifactServiceImpl implements ArtifactService {
   public Artifact fetchLastCollectedArtifactForArtifactStream(
       String appId, String artifactStreamId, String artifactSourceName) {
     return wingsPersistence.createQuery(Artifact.class)
-        .field("appId")
-        .equal(appId)
-        .field("artifactStreamId")
-        .equal(artifactStreamId)
-        .field("artifactSourceName")
-        .equal(artifactSourceName)
+        .filter("appId", appId)
+        .filter("artifactStreamId", artifactStreamId)
+        .filter("artifactSourceName", artifactSourceName)
         .order("-createdAt")
         .field("status")
         .hasAnyOf(asList(READY, APPROVED))
@@ -372,7 +364,7 @@ public class ArtifactServiceImpl implements ArtifactService {
     List<Key<Application>> appKeys = wingsPersistence.createQuery(Application.class).asKeyList();
     for (Key<Application> app : appKeys) {
       String appId = app.getId().toString();
-      List<Service> services = wingsPersistence.createQuery(Service.class).field("appId").equal(appId).asList();
+      List<Service> services = wingsPersistence.createQuery(Service.class).filter("appId", appId).asList();
       for (Service service : services) {
         if (ArtifactType.DOCKER.equals(service.getArtifactType())
             || ArtifactType.AMI.equals(service.getArtifactType())) {
@@ -381,10 +373,8 @@ public class ArtifactServiceImpl implements ArtifactService {
           continue;
         }
         List<ArtifactStream> artifactStreams = wingsPersistence.createQuery(ArtifactStream.class)
-                                                   .field("appId")
-                                                   .equal(appId)
-                                                   .field("serviceId")
-                                                   .equal(service.getUuid())
+                                                   .filter("appId", appId)
+                                                   .filter("serviceId", service.getUuid())
                                                    .asList();
         for (ArtifactStream artifactStream : artifactStreams) {
           if (artifactStream.isMetadataOnly()) {
@@ -393,10 +383,8 @@ public class ArtifactServiceImpl implements ArtifactService {
             continue;
           }
           List<Artifact> toBeDeletedArtifacts = wingsPersistence.createQuery(Artifact.class)
-                                                    .field("appId")
-                                                    .equal(appId)
-                                                    .field("artifactStreamId")
-                                                    .equal(artifactStream.getUuid())
+                                                    .filter("appId", appId)
+                                                    .filter("artifactStreamId", artifactStream.getUuid())
                                                     .field("status")
                                                     .in(asList(READY, APPROVED))
                                                     .order(Sort.descending("createdAt"))
@@ -472,12 +460,9 @@ public class ArtifactServiceImpl implements ArtifactService {
   @Override
   public Artifact getArtifactByBuildNumber(String appId, String artifactStreamId, String buildNumber) {
     return wingsPersistence.createQuery(Artifact.class)
-        .field("appId")
-        .equal(appId)
-        .field("artifactStreamId")
-        .equal(artifactStreamId)
-        .field("metadata.buildNo")
-        .equal(buildNumber)
+        .filter("appId", appId)
+        .filter("artifactStreamId", artifactStreamId)
+        .filter("metadata.buildNo", buildNumber)
         .get();
   }
 
@@ -485,14 +470,10 @@ public class ArtifactServiceImpl implements ArtifactService {
   public Artifact getArtifactByBuildNumber(
       String appId, String artifactStreamId, String artifactSource, String buildNumber) {
     return wingsPersistence.createQuery(Artifact.class)
-        .field("appId")
-        .equal(appId)
-        .field("artifactStreamId")
-        .equal(artifactStreamId)
-        .field("artifactSourceName")
-        .equal(artifactSource)
-        .field("metadata.buildNo")
-        .equal(buildNumber)
+        .filter("appId", appId)
+        .filter("artifactStreamId", artifactStreamId)
+        .filter("artifactSourceName", artifactSource)
+        .filter("metadata.buildNo", buildNumber)
         .disableValidation()
         .get();
   }

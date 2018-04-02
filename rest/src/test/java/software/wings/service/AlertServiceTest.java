@@ -117,8 +117,8 @@ public class AlertServiceTest extends WingsBaseTest {
     when(executorService.submit(runnableCaptor.capture())).then(executeRunnable(runnableCaptor));
     when(wingsPersistence.createUpdateOperations(Alert.class)).thenReturn(updateOperations);
     when(wingsPersistence.createQuery(Alert.class)).thenReturn(query);
+    when(query.filter(any(), any())).thenReturn(query);
     when(query.field(any())).thenReturn(end);
-    when(end.equal(any())).thenReturn(query);
     when(end.lessThan(any())).thenReturn(query);
     when(end.in(any())).thenReturn(query);
   }

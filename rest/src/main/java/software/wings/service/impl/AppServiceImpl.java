@@ -239,7 +239,7 @@ public class AppServiceImpl implements AppService {
 
   @Override
   public boolean exist(String appId) {
-    return wingsPersistence.createQuery(Application.class).field(ID_KEY).equal(appId).getKey() != null;
+    return wingsPersistence.createQuery(Application.class).filter(ID_KEY, appId).getKey() != null;
   }
 
   private List<Notification> getIncompleteActionableApplicationNotifications(String appId) {
@@ -266,12 +266,7 @@ public class AppServiceImpl implements AppService {
 
   @Override
   public Application getAppByName(String accountId, String appName) {
-    return wingsPersistence.createQuery(Application.class)
-        .field("accountId")
-        .equal(accountId)
-        .field("name")
-        .equal(appName)
-        .get();
+    return wingsPersistence.createQuery(Application.class).filter("accountId", accountId).filter("name", appName).get();
   }
 
   /* (non-Javadoc)
@@ -280,7 +275,7 @@ public class AppServiceImpl implements AppService {
   @Override
   public Application update(Application app) {
     Application savedApp = get(app.getUuid());
-    Query<Application> query = wingsPersistence.createQuery(Application.class).field(ID_KEY).equal(app.getUuid());
+    Query<Application> query = wingsPersistence.createQuery(Application.class).filter(ID_KEY, app.getUuid());
     UpdateOperations<Application> operations =
         wingsPersistence.createUpdateOperations(Application.class).set("name", app.getName());
 
@@ -350,15 +345,14 @@ public class AppServiceImpl implements AppService {
 
   @Override
   public List<Application> getAppsByAccountId(String accountId) {
-    return wingsPersistence.createQuery(Application.class).field("accountId").equal(accountId).asList();
+    return wingsPersistence.createQuery(Application.class).filter("accountId", accountId).asList();
   }
 
   @Override
   public List<String> getAppIdsByAccountId(String accountId) {
     List<String> appIdList = new ArrayList<>();
     wingsPersistence.createQuery(Application.class)
-        .field("accountId")
-        .equal(accountId)
+        .filter("accountId", accountId)
         .asKeyList()
         .forEach(applicationKey -> appIdList.add(applicationKey.getId().toString()));
     return appIdList;
@@ -369,8 +363,7 @@ public class AppServiceImpl implements AppService {
     List<String> appIdList = new ArrayList<>();
 
     wingsPersistence.createQuery(Application.class)
-        .field("accountId")
-        .equal(accountId)
+        .filter("accountId", accountId)
         .asList()
         .forEach(application -> appIdList.add(application.getName().toString()));
     return appIdList;
@@ -379,8 +372,7 @@ public class AppServiceImpl implements AppService {
   @Override
   public void deleteByAccountId(String accountId) {
     wingsPersistence.createQuery(SettingAttribute.class)
-        .field(SettingAttribute.ACCOUNT_ID_KEY)
-        .equal(accountId)
+        .filter(SettingAttribute.ACCOUNT_ID_KEY, accountId)
         .asKeyList()
         .forEach(key -> delete(key.getId().toString()));
   }

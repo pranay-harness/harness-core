@@ -9,7 +9,6 @@ import static org.assertj.core.util.Lists.newArrayList;
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertNotNull;
 import static org.mockito.Matchers.any;
-import static org.mockito.Matchers.anyObject;
 import static org.mockito.Matchers.anyString;
 import static org.mockito.Mockito.inOrder;
 import static org.mockito.Mockito.mock;
@@ -95,7 +94,6 @@ import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.stubbing.Answer;
 import org.mongodb.morphia.query.FieldEnd;
-import org.mongodb.morphia.query.Query;
 import org.mongodb.morphia.query.UpdateOperations;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -219,7 +217,6 @@ public class WorkflowServiceTest extends WingsBaseTest {
 
   @Mock private PluginManager pluginManager;
   @Mock private UpdateOperations<Workflow> updateOperations;
-  @Mock Query<Workflow> query;
 
   @Inject private EntityVersionService entityVersionService;
 
@@ -233,8 +230,6 @@ public class WorkflowServiceTest extends WingsBaseTest {
   public void setupMocks() {
     when(pluginManager.getExtensions(StateTypeDescriptor.class)).thenReturn(newArrayList());
 
-    when(query.field(anyString())).thenReturn(fieldEnd);
-    when(fieldEnd.equal(anyObject())).thenReturn(query);
     when(appService.get(APP_ID)).thenReturn(application);
     when(accountService.get(anyString())).thenReturn(account);
     when(workflowExecutionService.workflowExecutionsRunning(WorkflowType.ORCHESTRATION, APP_ID, WORKFLOW_ID))

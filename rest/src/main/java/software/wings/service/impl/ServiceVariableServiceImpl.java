@@ -148,10 +148,8 @@ public class ServiceVariableServiceImpl implements ServiceVariableService {
     savewServiceVariableYamlChangeSet(serviceVariable);
 
     wingsPersistence.delete(wingsPersistence.createQuery(ServiceVariable.class)
-                                .field(ServiceVariable.APP_ID_KEY)
-                                .equal(appId)
-                                .field(ID_KEY)
-                                .equal(settingId));
+                                .filter(ServiceVariable.APP_ID_KEY, appId)
+                                .filter(ID_KEY, settingId));
   }
 
   private void savewServiceVariableYamlChangeSet(ServiceVariable serviceVariable) {
@@ -194,19 +192,14 @@ public class ServiceVariableServiceImpl implements ServiceVariableService {
   @Override
   public void deleteByTemplateId(String appId, String serviceTemplateId) {
     wingsPersistence.delete(wingsPersistence.createQuery(ServiceVariable.class)
-                                .field("appId")
-                                .equal(appId)
-                                .field("templateId")
-                                .equal(serviceTemplateId));
+                                .filter("appId", appId)
+                                .filter("templateId", serviceTemplateId));
   }
 
   @Override
   public void pruneByService(String appId, String entityId) {
-    wingsPersistence.delete(wingsPersistence.createQuery(ServiceVariable.class)
-                                .field("appId")
-                                .equal(appId)
-                                .field("entityId")
-                                .equal(entityId));
+    wingsPersistence.delete(
+        wingsPersistence.createQuery(ServiceVariable.class).filter("appId", appId).filter("entityId", entityId));
   }
 
   private void processEncryptedServiceVariable(boolean maskEncryptedFields, ServiceVariable serviceVariable) {

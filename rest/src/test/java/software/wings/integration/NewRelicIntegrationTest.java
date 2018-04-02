@@ -188,9 +188,8 @@ public class NewRelicIntegrationTest extends BaseIntegrationTest {
           entity(metricDataRecords, APPLICATION_JSON), new GenericType<RestResponse<Boolean>>() {});
       assertTrue(restResponse.getResource());
 
-      Query<NewRelicMetricDataRecord> query = wingsPersistence.createQuery(NewRelicMetricDataRecord.class)
-                                                  .field("stateExecutionId")
-                                                  .equal(stateExecutionId);
+      Query<NewRelicMetricDataRecord> query =
+          wingsPersistence.createQuery(NewRelicMetricDataRecord.class).filter("stateExecutionId", stateExecutionId);
       assertEquals((batchNum + 1) * numOfMetricsPerBatch * hosts.size() * numOfMinutes, query.asList().size());
     }
   }

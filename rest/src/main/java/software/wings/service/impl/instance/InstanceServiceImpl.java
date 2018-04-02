@@ -146,7 +146,7 @@ public class InstanceServiceImpl implements InstanceService {
   @Override
   public Instance update(@Valid Instance instance) throws Exception {
     Query<Instance> query = wingsPersistence.createAuthorizedQuery(Instance.class);
-    query.field("_id").equal(instance.getUuid());
+    query.filter("_id", instance.getUuid());
     Instance existingInstance = query.get();
     if (existingInstance == null) {
       throw new Exception("No entity exists with the id:" + instance.getUuid());
@@ -160,14 +160,12 @@ public class InstanceServiceImpl implements InstanceService {
   private InstanceKey addInstanceKeyFilterToQuery(Query<Instance> query, Instance instance) {
     if (instance.getHostInstanceKey() != null) {
       HostInstanceKey hostInstanceKey = instance.getHostInstanceKey();
-      query.field("hostInstanceKey.hostName")
-          .equal(hostInstanceKey.getHostName())
-          .field("hostInstanceKey.infraMappingId")
-          .equal(hostInstanceKey.getInfraMappingId());
+      query.filter("hostInstanceKey.hostName", hostInstanceKey.getHostName())
+          .filter("hostInstanceKey.infraMappingId", hostInstanceKey.getInfraMappingId());
       return hostInstanceKey;
     } else if (instance.getContainerInstanceKey() != null) {
       ContainerInstanceKey containerInstanceKey = instance.getContainerInstanceKey();
-      query.field("containerInstanceKey.containerId").equal(containerInstanceKey.getContainerId());
+      query.filter("containerInstanceKey.containerId", containerInstanceKey.getContainerId());
       return containerInstanceKey;
     } else {
       String msg = "Either host or container instance key needs to be set";
@@ -189,7 +187,7 @@ public class InstanceServiceImpl implements InstanceService {
   @Override
   public void pruneByApplication(String appId) {
     Query<Instance> query = wingsPersistence.createAuthorizedQuery(Instance.class);
-    query.field("appId").equal(appId);
+    query.filter("appId", appId);
     wingsPersistence.delete(query);
   }
 
@@ -305,7 +303,7 @@ public class InstanceServiceImpl implements InstanceService {
     // query for the least recently visited 20 container service names (without revision)
     FindOptions findOptions = new FindOptions().limit(20);
     Query query = wingsPersistence.createAuthorizedQuery(ContainerDeploymentInfo.class);
-    query.field("appId").equal(appId);
+    query.filter("appId", appId);
     query.field("lastVisited").lessThan(lastSyncTimestamp);
     query.project("containerSvcNameNoRevision", true);
     query.order("lastVisited").order("containerSvcNameNoRevision");
@@ -318,7 +316,7 @@ public class InstanceServiceImpl implements InstanceService {
   public void deleteContainerDeploymentInfoAndInstances(
       Set<String> containerSvcNameSetToBeDeleted, InstanceType instanceType, String appId) {
     Query query = wingsPersistence.createAuthorizedQuery(ContainerDeploymentInfo.class);
-    query.field("appId").equal(appId);
+    query.filter("appId", appId);
     query.field("containerSvcName").in(containerSvcNameSetToBeDeleted);
     wingsPersistence.delete(query);
 
@@ -334,8 +332,8 @@ public class InstanceServiceImpl implements InstanceService {
     }
 
     query = wingsPersistence.createAuthorizedQuery(Instance.class).disableValidation();
-    query.field("appId").equal(appId);
-    query.field("instanceType").equal(instanceType);
+    query.filter("appId", appId);
+    query.filter("instanceType", instanceType);
     query.field(fieldName).in(containerSvcNameSetToBeDeleted);
     wingsPersistence.delete(query);
   }
@@ -343,7 +341,7 @@ public class InstanceServiceImpl implements InstanceService {
   @Override
   public void deleteInstancesOfAutoScalingGroups(List<String> autoScalingGroupList, String appId) {
     Query query = wingsPersistence.createAuthorizedQuery(Instance.class).disableValidation();
-    query.field("appId").equal(appId);
+    query.filter("appId", appId);
     query.field("instanceInfo.autoScalingGroupName").in(autoScalingGroupList);
     wingsPersistence.delete(query);
   }
@@ -391,12 +389,12 @@ public class InstanceServiceImpl implements InstanceService {
       InstanceType instanceType, String containerSvcNameNoRevision, String appId) {
     Query<Instance> query = wingsPersistence.createAuthorizedQuery(Instance.class).disableValidation();
     Map<InstanceKey, Instance> instanceMap;
-    query.field("appId").equal(appId);
+    query.filter("appId", appId);
     if (instanceType == KUBERNETES_CONTAINER_INSTANCE) {
-      query.field("instanceType").equal(KUBERNETES_CONTAINER_INSTANCE);
+      query.filter("instanceType", KUBERNETES_CONTAINER_INSTANCE);
       query.field("instanceInfo.controllerName").startsWith(containerSvcNameNoRevision);
     } else if (instanceType == ECS_CONTAINER_INSTANCE) {
-      query.field("instanceType").equal(ECS_CONTAINER_INSTANCE);
+      query.filter("instanceType", ECS_CONTAINER_INSTANCE);
       query.field("instanceInfo.serviceName").startsWith(containerSvcNameNoRevision);
     } else {
       String msg = "Unsupported container instanceType:" + instanceType;

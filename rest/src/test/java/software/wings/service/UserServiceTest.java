@@ -164,20 +164,18 @@ public class UserServiceTest extends WingsBaseTest {
     when(cacheHelper.getUserCache()).thenReturn(cache);
 
     when(wingsPersistence.createQuery(User.class)).thenReturn(query);
-    when(query.field(any())).thenReturn(end);
-    when(end.equal(any())).thenReturn(query);
+    when(query.filter(any(), any())).thenReturn(query);
+
     when(wingsPersistence.createUpdateOperations(User.class)).thenReturn(updateOperations);
     when(updateOperations.addToSet(any(), any())).thenReturn(updateOperations);
     when(updateOperations.set(any(), any())).thenReturn(updateOperations);
     when(updateOperations.addToSet(any(), any())).thenReturn(updateOperations);
 
     when(wingsPersistence.createQuery(EmailVerificationToken.class)).thenReturn(verificationQuery);
-    when(verificationQuery.field(any())).thenReturn(verificationQueryEnd);
-    when(verificationQueryEnd.equal(any())).thenReturn(verificationQuery);
+    when(verificationQuery.filter(any(), any())).thenReturn(verificationQuery);
 
     when(wingsPersistence.createQuery(UserInvite.class)).thenReturn(userInviteQuery);
-    when(userInviteQuery.field(any())).thenReturn(userInviteQueryEnd);
-    when(userInviteQueryEnd.equal(any())).thenReturn(userInviteQueryEnd);
+    when(userInviteQuery.filter(any(), any())).thenReturn(userInviteQuery);
   }
 
   /**
@@ -345,10 +343,8 @@ public class UserServiceTest extends WingsBaseTest {
 
     userService.verifyToken("TOKEN");
 
-    verify(verificationQuery).field("appId");
-    verify(verificationQueryEnd).equal(GLOBAL_APP_ID);
-    verify(verificationQuery).field("token");
-    verify(verificationQueryEnd).equal("TOKEN");
+    verify(verificationQuery).filter("appId", GLOBAL_APP_ID);
+    verify(verificationQuery).filter("token", "TOKEN");
     verify(wingsPersistence).updateFields(User.class, USER_ID, ImmutableMap.of("emailVerified", true));
     verify(wingsPersistence).delete(EmailVerificationToken.class, "TOKEN_ID");
   }
@@ -377,8 +373,7 @@ public class UserServiceTest extends WingsBaseTest {
     userService.addRole(USER_ID, ROLE_ID);
     verify(wingsPersistence, times(2)).get(User.class, USER_ID);
     verify(wingsPersistence).update(any(Query.class), any(UpdateOperations.class));
-    verify(query).field(Mapper.ID_KEY);
-    verify(end).equal(USER_ID);
+    verify(query).filter(Mapper.ID_KEY, USER_ID);
     verify(updateOperations).addToSet("roles", aRole().withUuid(ROLE_ID).withName(ROLE_NAME).build());
     verify(cache).remove(USER_ID);
   }
@@ -394,8 +389,7 @@ public class UserServiceTest extends WingsBaseTest {
     userService.revokeRole(USER_ID, ROLE_ID);
     verify(wingsPersistence, times(2)).get(User.class, USER_ID);
     verify(wingsPersistence).update(any(Query.class), any(UpdateOperations.class));
-    verify(query).field(Mapper.ID_KEY);
-    verify(end).equal(USER_ID);
+    verify(query).filter(Mapper.ID_KEY, USER_ID);
     verify(updateOperations).removeAll("roles", aRole().withUuid(ROLE_ID).withName(ROLE_NAME).build());
     verify(cache).remove(USER_ID);
   }
@@ -636,8 +630,7 @@ public class UserServiceTest extends WingsBaseTest {
 
     userService.updatePassword(token, USER_PASSWORD);
 
-    verify(query).field("email");
-    verify(end).equal(USER_EMAIL);
+    verify(query).filter("email", USER_EMAIL);
     verify(authService).invalidateAllTokensForUser(USER_ID);
     verify(wingsPersistence).update(eq(userBuilder.withUuid(USER_ID).build()), any(UpdateOperations.class));
     verify(updateOperations).set(eq("passwordHash"), anyString());

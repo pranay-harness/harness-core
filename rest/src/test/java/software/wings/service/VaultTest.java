@@ -299,7 +299,7 @@ public class VaultTest extends WingsBaseTest {
     assertEquals(vaultConfig, savedConfig);
     assertEquals(name, savedConfig.getName());
     List<EncryptedData> encryptedDataList =
-        wingsPersistence.createQuery(EncryptedData.class).field("type").equal(SettingVariableTypes.VAULT).asList();
+        wingsPersistence.createQuery(EncryptedData.class).filter("type", SettingVariableTypes.VAULT).asList();
     assertEquals(1, encryptedDataList.size());
     assertEquals(1, encryptedDataList.get(0).getParentIds().size());
     assertEquals(savedConfig.getUuid(), encryptedDataList.get(0).getParentIds().iterator().next());
@@ -311,7 +311,7 @@ public class VaultTest extends WingsBaseTest {
     savedConfig.setName(name);
     vaultService.saveVaultConfig(renameAccountId, savedConfig);
     encryptedDataList =
-        wingsPersistence.createQuery(EncryptedData.class).field("type").equal(SettingVariableTypes.VAULT).asList();
+        wingsPersistence.createQuery(EncryptedData.class).filter("type", SettingVariableTypes.VAULT).asList();
     assertEquals(1, encryptedDataList.size());
     assertEquals(1, encryptedDataList.get(0).getParentIds().size());
     assertEquals(savedConfig.getUuid(), encryptedDataList.get(0).getParentIds().iterator().next());
@@ -1210,7 +1210,7 @@ public class VaultTest extends WingsBaseTest {
       }
 
       Query<EncryptedData> query =
-          wingsPersistence.createQuery(EncryptedData.class).field("type").equal(SettingVariableTypes.APP_DYNAMICS);
+          wingsPersistence.createQuery(EncryptedData.class).filter("type", SettingVariableTypes.APP_DYNAMICS);
       assertEquals(numOfSettingAttributes, query.asList().size());
       for (EncryptedData data : query.asList()) {
         assertEquals(fromConfig.getUuid(), data.getKmsId());
@@ -1224,7 +1224,7 @@ public class VaultTest extends WingsBaseTest {
       secretManager.transitionSecrets(
           accountId, EncryptionType.KMS, fromConfig.getUuid(), EncryptionType.VAULT, toConfig.getUuid());
       Thread.sleep(TimeUnit.SECONDS.toMillis(10));
-      query = wingsPersistence.createQuery(EncryptedData.class).field("type").equal(SettingVariableTypes.APP_DYNAMICS);
+      query = wingsPersistence.createQuery(EncryptedData.class).filter("type", SettingVariableTypes.APP_DYNAMICS);
 
       assertEquals(numOfSettingAttributes, query.asList().size());
       for (EncryptedData data : query.asList()) {
@@ -1236,7 +1236,7 @@ public class VaultTest extends WingsBaseTest {
       secretManager.transitionSecrets(
           accountId, EncryptionType.VAULT, toConfig.getUuid(), EncryptionType.KMS, fromConfig.getUuid());
       Thread.sleep(TimeUnit.SECONDS.toMillis(10));
-      query = wingsPersistence.createQuery(EncryptedData.class).field("type").equal(SettingVariableTypes.APP_DYNAMICS);
+      query = wingsPersistence.createQuery(EncryptedData.class).filter("type", SettingVariableTypes.APP_DYNAMICS);
 
       assertEquals(numOfSettingAttributes, query.asList().size());
       for (EncryptedData data : query.asList()) {
@@ -1272,7 +1272,7 @@ public class VaultTest extends WingsBaseTest {
         secretManager.saveFile(accountId, secretName, new BoundedInputStream(new FileInputStream(fileToSave)));
 
     String encryptedUuid =
-        wingsPersistence.createQuery(EncryptedData.class).field("type").equal(CONFIG_FILE).asList().get(0).getUuid();
+        wingsPersistence.createQuery(EncryptedData.class).filter("type", CONFIG_FILE).asList().get(0).getUuid();
 
     Service service = Service.Builder.aService().withName(UUID.randomUUID().toString()).withAppId(appId).build();
     wingsPersistence.save(service);
@@ -1313,7 +1313,7 @@ public class VaultTest extends WingsBaseTest {
     assertEquals(numOfEncRecords + 1, wingsPersistence.createQuery(EncryptedData.class).asList().size());
 
     List<EncryptedData> encryptedFileData =
-        wingsPersistence.createQuery(EncryptedData.class).field("type").equal(CONFIG_FILE).asList();
+        wingsPersistence.createQuery(EncryptedData.class).filter("type", CONFIG_FILE).asList();
     assertEquals(1, encryptedFileData.size());
     assertFalse(encryptedFileData.get(0).getParentIds().isEmpty());
     // test update
@@ -1327,7 +1327,7 @@ public class VaultTest extends WingsBaseTest {
         FileUtils.readFileToString(download, Charset.defaultCharset()));
     assertEquals(numOfEncRecords + 1, wingsPersistence.createQuery(EncryptedData.class).asList().size());
 
-    encryptedFileData = wingsPersistence.createQuery(EncryptedData.class).field("type").equal(CONFIG_FILE).asList();
+    encryptedFileData = wingsPersistence.createQuery(EncryptedData.class).filter("type", CONFIG_FILE).asList();
     assertEquals(1, encryptedFileData.size());
     assertFalse(encryptedFileData.get(0).getParentIds().isEmpty());
 
@@ -1399,7 +1399,7 @@ public class VaultTest extends WingsBaseTest {
     assertEquals(numOfEncRecords + 1, wingsPersistence.createQuery(EncryptedData.class).asList().size());
 
     List<EncryptedData> encryptedDatas =
-        wingsPersistence.createQuery(EncryptedData.class).field("encryptionType").equal(EncryptionType.VAULT).asList();
+        wingsPersistence.createQuery(EncryptedData.class).filter("encryptionType", EncryptionType.VAULT).asList();
     assertEquals(1, encryptedDatas.size());
     EncryptedData encryptedData = encryptedDatas.get(0);
     assertEquals(EncryptionType.VAULT, encryptedData.getEncryptionType());
@@ -1428,10 +1428,8 @@ public class VaultTest extends WingsBaseTest {
     for (String attributeId : attributeIds) {
       wingsPersistence.delete(SettingAttribute.class, attributeId);
       remainingAttrs.remove(attributeId);
-      encryptedDatas = wingsPersistence.createQuery(EncryptedData.class)
-                           .field("encryptionType")
-                           .equal(EncryptionType.VAULT)
-                           .asList();
+      encryptedDatas =
+          wingsPersistence.createQuery(EncryptedData.class).filter("encryptionType", EncryptionType.VAULT).asList();
       if (i == numOfSettingAttributes - 1) {
         assertTrue(encryptedDatas.isEmpty());
       } else {

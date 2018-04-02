@@ -120,8 +120,7 @@ public class AppServiceTest extends WingsBaseTest {
   public void setUp() throws Exception {
     when(wingsPersistence.createQuery(Application.class)).thenReturn(query);
     when(wingsPersistence.createUpdateOperations(Application.class)).thenReturn(updateOperations);
-    when(query.field(any())).thenReturn(end);
-    when(end.equal(any())).thenReturn(query);
+    when(query.filter(any(), any())).thenReturn(query);
     when(updateOperations.set(any(), any())).thenReturn(updateOperations);
     when(updateOperations.addToSet(any(), any())).thenReturn(updateOperations);
     when(updateOperations.removeAll(any(), any(Service.class))).thenReturn(updateOperations);
@@ -227,8 +226,7 @@ public class AppServiceTest extends WingsBaseTest {
   public void shouldReturnTrueForExistingApplicationInExistApi() {
     when(query.getKey()).thenReturn(new Key<>(Application.class, "applications", APP_ID));
     assertThat(appService.exist(APP_ID)).isTrue();
-    verify(query).field(ID_KEY);
-    verify(end).equal(APP_ID);
+    verify(query).filter(ID_KEY, APP_ID);
   }
 
   @Test
@@ -265,8 +263,7 @@ public class AppServiceTest extends WingsBaseTest {
     Application application = anApplication().withUuid(APP_ID).withName(APP_NAME).build();
     when(wingsPersistence.get(Application.class, APP_ID)).thenReturn(application);
     appService.update(anApplication().withUuid(APP_ID).withName("App_Name").withDescription("Description").build());
-    verify(query).field(ID_KEY);
-    verify(end).equal(APP_ID);
+    verify(query).filter(ID_KEY, APP_ID);
     verify(updateOperations).set("name", "App_Name");
     verify(updateOperations).set("description", "Description");
     verify(updateOperations).set("keywords", asList("App_Name".toLowerCase(), "Description".toLowerCase()));

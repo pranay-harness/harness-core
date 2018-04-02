@@ -74,18 +74,14 @@ public class LearningEngineAnalysisTest extends WingsBaseTest {
 
       assertEquals(numOfTasks - i,
           wingsPersistence.createQuery(LearningEngineAnalysisTask.class)
-              .field("executionStatus")
-              .equal(ExecutionStatus.QUEUED)
-              .field("retry")
-              .equal(0)
+              .filter("executionStatus", ExecutionStatus.QUEUED)
+              .filter("retry", 0)
               .asList()
               .size());
       assertEquals(i,
           wingsPersistence.createQuery(LearningEngineAnalysisTask.class)
-              .field("executionStatus")
-              .equal(ExecutionStatus.RUNNING)
-              .field("retry")
-              .equal(1)
+              .filter("executionStatus", ExecutionStatus.RUNNING)
+              .filter("retry", 1)
               .asList()
               .size());
     }
@@ -182,16 +178,14 @@ public class LearningEngineAnalysisTest extends WingsBaseTest {
           wingsPersistence.createQuery(LearningEngineAnalysisTask.class)
               .field("lastUpdatedAt")
               .greaterThan(startTime)
-              .field("retry")
-              .equal(0)
+              .filter("retry", 0)
               .asList()
               .size());
       assertEquals(i,
           wingsPersistence.createQuery(LearningEngineAnalysisTask.class)
               .field("lastUpdatedAt")
               .greaterThan(startTime)
-              .field("retry")
-              .equal(1)
+              .filter("retry", 1)
               .asList()
               .size());
     }
@@ -205,8 +199,7 @@ public class LearningEngineAnalysisTest extends WingsBaseTest {
     assertTrue(wingsPersistence.createQuery(ServiceSecretKey.class).asList().isEmpty());
     learningEngineService.initializeServiceSecretKeys();
     List<ServiceSecretKey> serviceSecretKeys = wingsPersistence.createQuery(ServiceSecretKey.class)
-                                                   .field("serviceType")
-                                                   .equal(ServiceType.LEARNING_ENGINE)
+                                                   .filter("serviceType", ServiceType.LEARNING_ENGINE)
                                                    .asList();
     assertEquals(1, serviceSecretKeys.size());
 
@@ -218,8 +211,7 @@ public class LearningEngineAnalysisTest extends WingsBaseTest {
     }
 
     serviceSecretKeys = wingsPersistence.createQuery(ServiceSecretKey.class)
-                            .field("serviceType")
-                            .equal(ServiceType.LEARNING_ENGINE)
+                            .filter("serviceType", ServiceType.LEARNING_ENGINE)
                             .asList();
     assertEquals(1, serviceSecretKeys.size());
 

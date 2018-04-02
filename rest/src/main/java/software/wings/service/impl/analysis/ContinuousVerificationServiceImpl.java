@@ -29,8 +29,7 @@ public class ContinuousVerificationServiceImpl implements ContinuousVerification
   public void setMetaDataExecutionStatus(String stateExecutionId, ExecutionStatus status) {
     Query<ContinuousVerificationExecutionMetaData> query =
         wingsPersistence.createQuery(ContinuousVerificationExecutionMetaData.class)
-            .field("stateExecutionId")
-            .equal(stateExecutionId);
+            .filter("stateExecutionId", stateExecutionId);
 
     wingsPersistence.update(query,
         wingsPersistence.createUpdateOperations(ContinuousVerificationExecutionMetaData.class)
@@ -45,8 +44,7 @@ public class ContinuousVerificationServiceImpl implements ContinuousVerification
   getCVExecutionMetaData(String accountId, long beginEpochTs, long endEpochTs) throws ParseException {
     List<ContinuousVerificationExecutionMetaData> continuousVerificationExecutionMetaData =
         wingsPersistence.createQuery(ContinuousVerificationExecutionMetaData.class)
-            .field("accountId")
-            .equal(accountId)
+            .filter("accountId", accountId)
             .field("workflowStartTs")
             .greaterThanOrEq(beginEpochTs)
             .field("workflowStartTs")

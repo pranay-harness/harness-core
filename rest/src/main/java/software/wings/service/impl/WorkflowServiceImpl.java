@@ -472,12 +472,8 @@ public class WorkflowServiceImpl implements WorkflowService, DataProvider {
 
   @Override
   public Workflow readWorkflowByName(String appId, String workflowName) {
-    Workflow workflow = wingsPersistence.createQuery(Workflow.class)
-                            .field("appId")
-                            .equal(appId)
-                            .field("name")
-                            .equal(workflowName)
-                            .get();
+    Workflow workflow =
+        wingsPersistence.createQuery(Workflow.class).filter("appId", appId).filter("name", workflowName).get();
     if (workflow != null) {
       loadOrchestrationWorkflow(workflow, workflow.getDefaultVersion());
     }
@@ -667,10 +663,8 @@ public class WorkflowServiceImpl implements WorkflowService, DataProvider {
     }
 
     wingsPersistence.update(wingsPersistence.createQuery(Workflow.class)
-                                .field(Constants.APP_ID)
-                                .equal(workflow.getAppId())
-                                .field(Constants.UUID)
-                                .equal(workflow.getUuid()),
+                                .filter(Constants.APP_ID, workflow.getAppId())
+                                .filter(Constants.UUID, workflow.getUuid()),
         wingsPersistence.createUpdateOperations(Workflow.class).set("keywords", trimList(keywords)));
   }
 
@@ -827,10 +821,8 @@ public class WorkflowServiceImpl implements WorkflowService, DataProvider {
     }
 
     wingsPersistence.update(wingsPersistence.createQuery(Workflow.class)
-                                .field("appId")
-                                .equal(workflow.getAppId())
-                                .field(ID_KEY)
-                                .equal(workflow.getUuid()),
+                                .filter("appId", workflow.getAppId())
+                                .filter(ID_KEY, workflow.getUuid()),
         ops);
 
     workflow = readWorkflow(workflow.getAppId(), workflow.getUuid(), workflow.getDefaultVersion());
@@ -1420,23 +1412,20 @@ public class WorkflowServiceImpl implements WorkflowService, DataProvider {
   @Override
   public void pruneByApplication(String appId) {
     // prune workflows
-    List<Key<Workflow>> workflowKeys =
-        wingsPersistence.createQuery(Workflow.class).field("appId").equal(appId).asKeyList();
+    List<Key<Workflow>> workflowKeys = wingsPersistence.createQuery(Workflow.class).filter("appId", appId).asKeyList();
     for (Key key : workflowKeys) {
       pruneWorkflow(appId, (String) key.getId());
     }
 
     // prune state machines
-    wingsPersistence.delete(wingsPersistence.createQuery(StateMachine.class).field("appId").equal(appId));
+    wingsPersistence.delete(wingsPersistence.createQuery(StateMachine.class).filter("appId", appId));
   }
 
   @Override
   public void pruneByEnvironment(String appId, String envId) {
     wingsPersistence.createQuery(Workflow.class)
-        .field("appId")
-        .equal(appId)
-        .field("envId")
-        .equal(envId)
+        .filter("appId", appId)
+        .filter("envId", envId)
         .asKeyList()
         .forEach(key -> pruneWorkflow(appId, key.getId().toString()));
   }
@@ -1468,7 +1457,7 @@ public class WorkflowServiceImpl implements WorkflowService, DataProvider {
 
   @Override
   public Map<String, String> getData(String appId, String... params) {
-    List<Workflow> workflows = wingsPersistence.createQuery(Workflow.class).field("appId").equal(appId).asList();
+    List<Workflow> workflows = wingsPersistence.createQuery(Workflow.class).filter("appId", appId).asList();
     return workflows.stream().collect(toMap(Workflow::getUuid, o -> o.getName()));
   }
 
@@ -1677,8 +1666,7 @@ public class WorkflowServiceImpl implements WorkflowService, DataProvider {
                             .collect(Collectors.toList());
       if (infraMappingIds.size() != 0) {
         List<InfrastructureMapping> infrastructureMappings = wingsPersistence.createQuery(InfrastructureMapping.class)
-                                                                 .field("appId")
-                                                                 .equal(appId)
+                                                                 .filter("appId", appId)
                                                                  .field("uuid")
                                                                  .in(infraMappingIds)
                                                                  .asList();

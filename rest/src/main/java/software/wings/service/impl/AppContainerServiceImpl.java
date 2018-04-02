@@ -66,10 +66,8 @@ public class AppContainerServiceImpl implements AppContainerService {
   @Override
   public AppContainer get(String accountId, String platformId) {
     return wingsPersistence.createQuery(AppContainer.class)
-        .field("accountId")
-        .equal(accountId)
-        .field(Mapper.ID_KEY)
-        .equal(platformId)
+        .filter("accountId", accountId)
+        .filter(Mapper.ID_KEY, platformId)
         .get();
   }
 
@@ -79,10 +77,8 @@ public class AppContainerServiceImpl implements AppContainerService {
   @Override
   public AppContainer getByName(String accountId, String appContainerName) {
     return wingsPersistence.createQuery(AppContainer.class)
-        .field("accountId")
-        .equal(accountId)
-        .field("name")
-        .equal(appContainerName)
+        .filter("accountId", accountId)
+        .filter("name", appContainerName)
         .get();
   }
 

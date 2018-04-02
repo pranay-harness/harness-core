@@ -96,7 +96,7 @@ public class AlertCheckJob implements Job {
   }
 
   List<Delegate> getDelegatesForAccount(String accountId) {
-    return wingsPersistence.createQuery(Delegate.class).field(Delegate.ACCOUNT_ID_KEY).equal(accountId).asList();
+    return wingsPersistence.createQuery(Delegate.class).filter(Delegate.ACCOUNT_ID_KEY, accountId).asList();
   }
 
   /**

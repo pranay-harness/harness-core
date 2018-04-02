@@ -4,7 +4,6 @@ import static java.util.Arrays.asList;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.mockito.Matchers.any;
 import static org.mockito.Matchers.anyCollection;
-import static org.mockito.Matchers.anyObject;
 import static org.mockito.Matchers.anyString;
 import static org.mockito.Mockito.inOrder;
 import static org.mockito.Mockito.verify;
@@ -97,13 +96,12 @@ public class HostServiceTest extends WingsBaseTest {
     when(wingsPersistence.createUpdateOperations(Host.class)).thenReturn(updateOperations);
 
     when(wingsPersistence.createQuery(Host.class)).thenReturn(hostQuery);
+    when(hostQuery.filter(any(), any())).thenReturn(hostQuery);
+
     when(hostQuery.field(anyString())).thenReturn(hostQueryEnd);
-    when(hostQueryEnd.equal(anyObject())).thenReturn(hostQuery);
     when(hostQueryEnd.hasAnyOf(anyCollection())).thenReturn(hostQuery);
 
     when(wingsPersistence.createQuery(Host.class)).thenReturn(hostQuery);
-    when(hostQuery.field(anyString())).thenReturn(hostQueryEnd);
-    when(hostQueryEnd.equal(anyObject())).thenReturn(hostQuery);
   }
 
   /**
@@ -134,12 +132,9 @@ public class HostServiceTest extends WingsBaseTest {
     Host host = hostBuilder.build();
     when(hostQuery.get()).thenReturn(host);
     Host savedHost = hostService.get(APP_ID, ENV_ID, HOST_ID);
-    verify(hostQuery).field("appId");
-    verify(hostQueryEnd).equal(APP_ID);
-    verify(hostQuery).field("envId");
-    verify(hostQueryEnd).equal(ENV_ID);
-    verify(hostQuery).field(ID_KEY);
-    verify(hostQueryEnd).equal(HOST_ID);
+    verify(hostQuery).filter("appId", APP_ID);
+    verify(hostQuery).filter("envId", ENV_ID);
+    verify(hostQuery).filter(ID_KEY, HOST_ID);
     assertThat(savedHost).isNotNull();
     assertThat(savedHost).isInstanceOf(Host.class);
   }
@@ -167,12 +162,9 @@ public class HostServiceTest extends WingsBaseTest {
     when(wingsPersistence.delete(any(Host.class))).thenReturn(true);
     when(environmentService.get(APP_ID, ENV_ID, false)).thenReturn(anEnvironment().withName("PROD").build());
     hostService.delete(APP_ID, ENV_ID, HOST_ID);
-    verify(hostQuery).field("appId");
-    verify(hostQueryEnd).equal(APP_ID);
-    verify(hostQuery).field("envId");
-    verify(hostQueryEnd).equal(ENV_ID);
-    verify(hostQuery).field(ID_KEY);
-    verify(hostQueryEnd).equal(HOST_ID);
+    verify(hostQuery).filter("appId", APP_ID);
+    verify(hostQuery).filter("envId", ENV_ID);
+    verify(hostQuery).filter(ID_KEY, HOST_ID);
     verify(wingsPersistence).delete(host);
   }
 
@@ -193,10 +185,8 @@ public class HostServiceTest extends WingsBaseTest {
     List<Host> hosts = hostService.getHostsByHostIds(APP_ID, ENV_ID, asList(HOST_ID));
 
     verify(hostQuery).asList();
-    verify(hostQuery).field("appId");
-    verify(hostQueryEnd).equal(APP_ID);
-    verify(hostQuery).field("envId");
-    verify(hostQueryEnd).equal(ENV_ID);
+    verify(hostQuery).filter("appId", APP_ID);
+    verify(hostQuery).filter("envId", ENV_ID);
     verify(hostQuery).field(ID_KEY);
     verify(hostQueryEnd).hasAnyOf(asList(HOST_ID));
     assertThat(hosts.get(0)).isInstanceOf(Host.class);

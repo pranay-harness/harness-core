@@ -380,7 +380,7 @@ public class WingsPersistenceTest extends WingsBaseTest {
 
     TestEntity entity1 = wingsPersistence.get(TestEntity.class, entity.getUuid());
 
-    Query<TestEntity> query = wingsPersistence.createQuery(TestEntity.class).field(ID_KEY).equal(entity.getUuid());
+    Query<TestEntity> query = wingsPersistence.createQuery(TestEntity.class).filter(ID_KEY, entity.getUuid());
 
     UpdateOperations<TestEntity> operations = wingsPersistence.createUpdateOperations(TestEntity.class);
     operations.set("mapField.abc", "1234");

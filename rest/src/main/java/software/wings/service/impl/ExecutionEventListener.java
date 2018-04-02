@@ -84,10 +84,8 @@ public class ExecutionEventListener extends AbstractQueueListener<ExecutionEvent
 
       // TODO: findAndModify
       Query<WorkflowExecution> query = wingsPersistence.createQuery(WorkflowExecution.class)
-                                           .field("appId")
-                                           .equal(workflowExecution.getAppId())
-                                           .field(ID_KEY)
-                                           .equal(workflowExecution.getUuid())
+                                           .filter("appId", workflowExecution.getAppId())
+                                           .filter(ID_KEY, workflowExecution.getUuid())
                                            .field("status")
                                            .in(asList(NEW, QUEUED));
       UpdateOperations<WorkflowExecution> updateOps = wingsPersistence.createUpdateOperations(WorkflowExecution.class)

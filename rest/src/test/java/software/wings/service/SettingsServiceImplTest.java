@@ -12,6 +12,7 @@ import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 import static org.mongodb.morphia.mapping.Mapper.ID_KEY;
 import static software.wings.beans.AwsInfrastructureMapping.Builder.anAwsInfrastructureMapping;
+import static software.wings.beans.Base.GLOBAL_ENV_ID;
 import static software.wings.beans.HostConnectionAttributes.AccessType.USER_PASSWORD;
 import static software.wings.beans.HostConnectionAttributes.Builder.aHostConnectionAttributes;
 import static software.wings.beans.HostConnectionAttributes.ConnectionType.SSH;
@@ -150,9 +151,9 @@ public class SettingsServiceImplTest extends WingsBaseTest {
   public void shouldGetByAppId() {
     settingsService.get(APP_ID, SETTING_ID);
     verify(wingsPersistence).createQuery(eq(SettingAttribute.class));
-    verify(spyQuery).field("appId");
-    verify(spyQuery).field("envId");
-    verify(spyQuery).field(ID_KEY);
+    verify(spyQuery).filter("appId", APP_ID);
+    verify(spyQuery).filter("envId", GLOBAL_ENV_ID);
+    verify(spyQuery).filter(ID_KEY, SETTING_ID);
     verify(spyQuery).get();
   }
 
@@ -163,9 +164,9 @@ public class SettingsServiceImplTest extends WingsBaseTest {
   public void shouldGetByAppIdAndEnvId() {
     settingsService.get(APP_ID, ENV_ID, SETTING_ID);
     verify(wingsPersistence).createQuery(eq(SettingAttribute.class));
-    verify(spyQuery).field("appId");
-    verify(spyQuery).field("envId");
-    verify(spyQuery).field(ID_KEY);
+    verify(spyQuery).filter("appId", APP_ID);
+    verify(spyQuery).filter("envId", ENV_ID);
+    verify(spyQuery).filter(ID_KEY, SETTING_ID);
     verify(spyQuery).get();
   }
 
@@ -267,10 +268,10 @@ public class SettingsServiceImplTest extends WingsBaseTest {
   public void shouldGetByName() {
     settingsService.getByName(ACCOUNT_ID, APP_ID, "NAME");
     verify(wingsPersistence).createQuery(eq(SettingAttribute.class));
-    verify(spyQuery).field("accountId");
+    verify(spyQuery).filter("accountId", ACCOUNT_ID);
     verify(spyQuery).field("appId");
     verify(spyQuery).field("envId");
-    verify(spyQuery).field("name");
+    verify(spyQuery).filter("name", "NAME");
     verify(spyQuery).get();
   }
 

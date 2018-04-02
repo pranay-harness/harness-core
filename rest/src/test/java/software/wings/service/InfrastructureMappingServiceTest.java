@@ -165,8 +165,7 @@ public class InfrastructureMappingServiceTest extends WingsBaseTest {
     when(infrastructureProviders.get(PHYSICAL_DATA_CENTER.name())).thenReturn(staticInfrastructureProvider);
     when(wingsPersistence.createQuery(InfrastructureMapping.class)).thenReturn(query);
     when(wingsPersistence.createUpdateOperations(InfrastructureMapping.class)).thenReturn(updateOperations);
-    when(query.field(any())).thenReturn(end);
-    when(end.equal(any())).thenReturn(query);
+    when(query.filter(any(), any())).thenReturn(query);
     when(secretManager.getEncryptionDetails(anyObject(), anyString(), anyString())).thenReturn(Collections.emptyList());
     setInternalState(infrastructureMappingService, "secretManager", secretManager);
 

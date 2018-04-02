@@ -266,23 +266,23 @@ public class YamlHelper {
 
     switch (type) {
       case SETUP:
-        return wingsPersistence.createQuery(Account.class).field(ID_KEY).equal(entityId).get().getCreatedAt();
+        return wingsPersistence.createQuery(Account.class).filter(ID_KEY, entityId).get().getCreatedAt();
       case APP:
-        return wingsPersistence.createQuery(Application.class).field(ID_KEY).equal(entityId).get().getCreatedAt();
+        return wingsPersistence.createQuery(Application.class).filter(ID_KEY, entityId).get().getCreatedAt();
       case SERVICE:
-        return wingsPersistence.createQuery(Service.class).field(ID_KEY).equal(entityId).get().getCreatedAt();
+        return wingsPersistence.createQuery(Service.class).filter(ID_KEY, entityId).get().getCreatedAt();
       case SERVICE_COMMAND:
-        return wingsPersistence.createQuery(ServiceCommand.class).field(ID_KEY).equal(entityId).get().getCreatedAt();
+        return wingsPersistence.createQuery(ServiceCommand.class).filter(ID_KEY, entityId).get().getCreatedAt();
       case ENVIRONMENT:
-        return wingsPersistence.createQuery(Environment.class).field(ID_KEY).equal(entityId).get().getCreatedAt();
+        return wingsPersistence.createQuery(Environment.class).filter(ID_KEY, entityId).get().getCreatedAt();
       case SETTING:
-        return wingsPersistence.createQuery(SettingAttribute.class).field(ID_KEY).equal(entityId).get().getCreatedAt();
+        return wingsPersistence.createQuery(SettingAttribute.class).filter(ID_KEY, entityId).get().getCreatedAt();
       case WORKFLOW:
-        return wingsPersistence.createQuery(Workflow.class).field(ID_KEY).equal(entityId).get().getCreatedAt();
+        return wingsPersistence.createQuery(Workflow.class).filter(ID_KEY, entityId).get().getCreatedAt();
       case PIPELINE:
-        return wingsPersistence.createQuery(Pipeline.class).field(ID_KEY).equal(entityId).get().getCreatedAt();
+        return wingsPersistence.createQuery(Pipeline.class).filter(ID_KEY, entityId).get().getCreatedAt();
       case TRIGGER:
-        return wingsPersistence.createQuery(ArtifactStream.class).field(ID_KEY).equal(entityId).get().getCreatedAt();
+        return wingsPersistence.createQuery(ArtifactStream.class).filter(ID_KEY, entityId).get().getCreatedAt();
       default:
         // nothing to do
     }
@@ -293,10 +293,8 @@ public class YamlHelper {
   public static GitSyncWebhook verifyWebhookToken(
       WingsPersistence wingsPersistence, String accountId, String webhookToken) {
     GitSyncWebhook gsw = wingsPersistence.createQuery(GitSyncWebhook.class)
-                             .field("webhookToken")
-                             .equal(webhookToken)
-                             .field("accountId")
-                             .equal(accountId)
+                             .filter("webhookToken", webhookToken)
+                             .filter("accountId", accountId)
                              .get();
 
     if (gsw != null) {

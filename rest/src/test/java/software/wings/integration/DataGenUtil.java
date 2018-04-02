@@ -218,7 +218,7 @@ public class DataGenUtil extends BaseIntegrationTest {
 
   private void enableRbac() {
     FeatureFlag featureFlag =
-        wingsPersistence.createQuery(FeatureFlag.class).field("name").equal(FeatureName.RBAC.name()).get();
+        wingsPersistence.createQuery(FeatureFlag.class).filter("name", FeatureName.RBAC.name()).get();
 
     if (featureFlag == null) {
       featureFlag = FeatureFlag.builder().name(FeatureName.RBAC.name()).enabled(true).obsolete(false).build();
@@ -713,8 +713,7 @@ public class DataGenUtil extends BaseIntegrationTest {
   }
 
   private List<Environment> addEnvs(String appId) throws IOException {
-    List<Environment> environments =
-        wingsPersistence.createQuery(Environment.class).field("appId").equal(appId).asList();
+    List<Environment> environments = wingsPersistence.createQuery(Environment.class).filter("appId", appId).asList();
     WebTarget target = client.target(API_BASE + "/environments?appId=" + appId);
 
     for (int i = 0; i < NUM_ENV_PER_APP; i++) {

@@ -108,10 +108,8 @@ public class EntityVersionServiceImpl implements EntityVersionService {
   @Override
   public void updateEntityData(String appId, String entityVersionUuid, String entityData) {
     Query<EntityVersionCollection> query = wingsPersistence.createQuery(EntityVersionCollection.class)
-                                               .field("appId")
-                                               .equal(appId)
-                                               .field(ID_KEY)
-                                               .equal(entityVersionUuid);
+                                               .filter("appId", appId)
+                                               .filter(ID_KEY, entityVersionUuid);
     UpdateOperations<EntityVersionCollection> updateOps =
         wingsPersistence.createUpdateOperations(EntityVersionCollection.class);
     updateOps.set("entityData", entityData);

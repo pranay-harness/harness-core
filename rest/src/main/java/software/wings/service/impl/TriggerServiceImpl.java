@@ -187,8 +187,7 @@ public class TriggerServiceImpl implements TriggerService {
   @Override
   public void pruneByApplication(String appId) {
     wingsPersistence.createQuery(Trigger.class)
-        .field(Trigger.APP_ID_KEY)
-        .equal(appId)
+        .filter(Trigger.APP_ID_KEY, appId)
         .asList()
         .forEach(trigger -> delete(appId, trigger.getUuid()));
   }
@@ -196,10 +195,8 @@ public class TriggerServiceImpl implements TriggerService {
   @Override
   public void pruneByPipeline(String appId, String pipelineId) {
     List<Trigger> triggers = wingsPersistence.createQuery(Trigger.class)
-                                 .field(Trigger.APP_ID_KEY)
-                                 .equal(appId)
-                                 .field("workflowId")
-                                 .equal(pipelineId)
+                                 .filter(Trigger.APP_ID_KEY, appId)
+                                 .filter("workflowId", pipelineId)
                                  .asList();
     triggers.forEach(trigger -> deleteTrigger(trigger.getUuid()));
 
@@ -216,10 +213,8 @@ public class TriggerServiceImpl implements TriggerService {
   @Override
   public void pruneByWorkflow(String appId, String workflowId) {
     List<Trigger> triggers = wingsPersistence.createQuery(Trigger.class)
-                                 .field(Trigger.APP_ID_KEY)
-                                 .equal(appId)
-                                 .field("workflowId")
-                                 .equal(workflowId)
+                                 .filter(Trigger.APP_ID_KEY, appId)
+                                 .filter("workflowId", workflowId)
                                  .asList();
     triggers.forEach(trigger -> deleteTrigger(trigger.getUuid()));
   }
@@ -786,7 +781,7 @@ public class TriggerServiceImpl implements TriggerService {
   @Override
   public Trigger getTriggerByWebhookToken(String token) {
     return wingsPersistence.executeGetOneQuery(
-        wingsPersistence.createQuery(Trigger.class).field("webHookToken").equal(token));
+        wingsPersistence.createQuery(Trigger.class).filter("webHookToken", token));
   }
 
   @Override
@@ -874,14 +869,10 @@ public class TriggerServiceImpl implements TriggerService {
         logger.info("Retrieving the last workflow execution for workflowId {} and infraMappingId {}",
             serviceInfraWorkflow.getWorkflowId(), infraMappingId);
         WorkflowExecution workflowExecution = wingsPersistence.createQuery(WorkflowExecution.class)
-                                                  .field("workflowType")
-                                                  .equal(ORCHESTRATION)
-                                                  .field("workflowId")
-                                                  .equal(serviceInfraWorkflow.getWorkflowId())
-                                                  .field("appId")
-                                                  .equal(appId)
-                                                  .field("status")
-                                                  .equal(SUCCESS)
+                                                  .filter("workflowType", ORCHESTRATION)
+                                                  .filter("workflowId", serviceInfraWorkflow.getWorkflowId())
+                                                  .filter("appId", appId)
+                                                  .filter("status", SUCCESS)
                                                   .field("serviceIds")
                                                   .in(serviceIds)
                                                   .field("envIds")

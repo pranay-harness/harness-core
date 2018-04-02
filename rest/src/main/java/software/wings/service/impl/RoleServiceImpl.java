@@ -90,7 +90,7 @@ public class RoleServiceImpl implements RoleService {
     if (delete) {
       executorService.submit(() -> {
         List<User> users =
-            wingsPersistence.createQuery(User.class).disableValidation().field("roles").equal(roleId).asList();
+            wingsPersistence.createQuery(User.class).disableValidation().filter("roles", roleId).asList();
         for (User user : users) {
           userService.revokeRole(user.getUuid(), roleId);
         }
@@ -101,27 +101,22 @@ public class RoleServiceImpl implements RoleService {
   @Override
   public Role getAccountAdminRole(String accountId) {
     return wingsPersistence.createQuery(Role.class)
-        .field("roleType")
-        .equal(RoleType.ACCOUNT_ADMIN)
-        .field("accountId")
-        .equal(accountId)
+        .filter("roleType", RoleType.ACCOUNT_ADMIN)
+        .filter("accountId", accountId)
         .get();
   }
 
   @Override
   public List<Role> getAccountRoles(String accountId) {
-    return wingsPersistence.createQuery(Role.class).field("accountId").equal(accountId).asList();
+    return wingsPersistence.createQuery(Role.class).filter("accountId", accountId).asList();
   }
 
   @Override
   public Role getAppAdminRole(String accountId, String appId) {
     return wingsPersistence.createQuery(Role.class)
-        .field("roleType")
-        .equal(RoleType.APPLICATION_ADMIN)
-        .field("accountId")
-        .equal(accountId)
-        .field("appId")
-        .equal(appId)
+        .filter("roleType", RoleType.APPLICATION_ADMIN)
+        .filter("accountId", accountId)
+        .filter("appId", appId)
         .get();
   }
 }

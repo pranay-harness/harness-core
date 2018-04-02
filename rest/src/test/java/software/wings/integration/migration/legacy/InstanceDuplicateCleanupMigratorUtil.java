@@ -53,8 +53,7 @@ public class InstanceDuplicateCleanupMigratorUtil extends WingsBaseTest {
 
   private void deleteDuplicates(String serviceId) {
     Query<Instance> query = wingsPersistence.createQuery(Instance.class);
-    List<Instance> instances = query.field("serviceId")
-                                   .equal(serviceId)
+    List<Instance> instances = query.filter("serviceId", serviceId)
                                    .field("instanceType")
                                    .in(asList("KUBERNETES_CONTAINER_INSTANCE"))
                                    .project("containerInstanceKey.containerId", true)

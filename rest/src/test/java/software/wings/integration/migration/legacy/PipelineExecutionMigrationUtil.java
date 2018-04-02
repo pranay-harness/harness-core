@@ -61,10 +61,8 @@ public class PipelineExecutionMigrationUtil extends WingsBaseTest {
         logger.info("Updating pipeline execution  = " + pipelineExecution);
         setUnset(ops, "pipeline._id", generateUuid() + "_embedded");
         wingsPersistence.update(wingsPersistence.createQuery(PipelineExecution.class)
-                                    .field("appId")
-                                    .equal(application.getAppId())
-                                    .field(ID_KEY)
-                                    .equal(pipelineExecution.getUuid()),
+                                    .filter("appId", application.getAppId())
+                                    .filter(ID_KEY, pipelineExecution.getUuid()),
             ops);
 
       });

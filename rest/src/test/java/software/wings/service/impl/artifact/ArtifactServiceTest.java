@@ -120,8 +120,7 @@ public class ArtifactServiceTest extends WingsBaseTest {
   public void setUp() {
     wingsRule.getDatastore().save(
         aService().withAppId(APP_ID).withArtifactType(ArtifactType.WAR).withUuid(SERVICE_ID).build());
-    when(appQuery.field(anyString())).thenReturn(fieldEnd);
-    when(fieldEnd.equal(anyObject())).thenReturn(appQuery);
+    when(appQuery.filter(anyString(), anyObject())).thenReturn(appQuery);
 
     when(appService.exist(APP_ID)).thenReturn(true);
     when(artifactStreamService.get(APP_ID, ARTIFACT_STREAM_ID)).thenReturn(jenkinsArtifactStream);
@@ -283,8 +282,7 @@ public class ArtifactServiceTest extends WingsBaseTest {
     when(wingsPersistence.createQuery(Application.class)).thenReturn(appQuery);
     when(wingsPersistence.createQuery(ArtifactStream.class)).thenReturn(artifactStreamQuery);
     when(appQuery.asKeyList()).thenReturn(asList(new Key(Application.class, "applications", APP_ID)));
-    when(artifactStreamQuery.field(anyString())).thenReturn(fieldEnd);
-    when(fieldEnd.equal(anyObject())).thenReturn(artifactStreamQuery);
+    when(artifactStreamQuery.filter(anyString(), anyObject())).thenReturn(artifactStreamQuery);
     when(artifactStreamQuery.asList()).thenReturn(asList(jenkinsArtifactStream));
 
     artifactService.create(artifactBuilder.but().build());
@@ -297,8 +295,7 @@ public class ArtifactServiceTest extends WingsBaseTest {
     when(wingsPersistence.createQuery(Application.class)).thenReturn(appQuery);
     when(wingsPersistence.createQuery(ArtifactStream.class)).thenReturn(artifactStreamQuery);
     when(appQuery.asKeyList()).thenReturn(asList(new Key(Application.class, "applications", APP_ID)));
-    when(artifactStreamQuery.field(anyString())).thenReturn(fieldEnd);
-    when(fieldEnd.equal(anyObject())).thenReturn(artifactStreamQuery);
+    when(artifactStreamQuery.filter(anyString(), anyObject())).thenReturn(artifactStreamQuery);
     when(artifactStreamQuery.asList()).thenReturn(asList(jenkinsArtifactStream));
 
     Artifact savedArtifact = artifactService.create(artifactBuilder.but().build());
@@ -321,8 +318,7 @@ public class ArtifactServiceTest extends WingsBaseTest {
     when(wingsPersistence.createQuery(Application.class)).thenReturn(appQuery);
     when(wingsPersistence.createQuery(ArtifactStream.class)).thenReturn(artifactStreamQuery);
     when(appQuery.asKeyList()).thenReturn(asList(new Key(Application.class, "applications", APP_ID)));
-    when(artifactStreamQuery.field(anyString())).thenReturn(fieldEnd);
-    when(fieldEnd.equal(anyObject())).thenReturn(artifactStreamQuery);
+    when(artifactStreamQuery.filter(anyString(), anyObject())).thenReturn(artifactStreamQuery);
     when(artifactStreamQuery.asList()).thenReturn(asList(jenkinsArtifactStream));
 
     Artifact savedArtifact = artifactService.create(artifactBuilder.but().build());
@@ -345,8 +341,7 @@ public class ArtifactServiceTest extends WingsBaseTest {
     when(wingsPersistence.createQuery(Application.class)).thenReturn(appQuery);
     when(wingsPersistence.createQuery(ArtifactStream.class)).thenReturn(artifactStreamQuery);
     when(appQuery.asKeyList()).thenReturn(asList(new Key(Application.class, "applications", APP_ID)));
-    when(artifactStreamQuery.field(anyString())).thenReturn(fieldEnd);
-    when(fieldEnd.equal(anyObject())).thenReturn(artifactStreamQuery);
+    when(artifactStreamQuery.filter(anyString(), anyObject())).thenReturn(artifactStreamQuery);
     when(artifactStreamQuery.asList()).thenReturn(asList(jenkinsArtifactStream));
 
     Artifact savedArtifact = artifactService.create(artifactBuilder.but().build());

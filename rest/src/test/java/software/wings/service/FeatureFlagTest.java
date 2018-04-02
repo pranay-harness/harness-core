@@ -61,8 +61,7 @@ public class FeatureFlagTest extends WingsBaseTest {
   @Before
   public void setUp() throws Exception {
     when(wingsPersistence.createQuery(FeatureFlag.class)).thenReturn(query);
-    when(query.field("name")).thenReturn(end);
-    when(end.equal(FEATURE.name())).thenReturn(query);
+    when(query.filter("name", FEATURE.name())).thenReturn(query);
 
     ffPageRequest.addFilter("name", SearchFilter.Operator.EQ, FEATURE.name());
     ffPageRequestTypeNull.addFilter("name", SearchFilter.Operator.EQ);
