@@ -15,8 +15,7 @@ public class GitSyncErrorAlert implements AlertData {
 
   @Override
   public boolean matches(AlertData alertData) {
-    return accountId.equals(((GitSyncErrorAlert) alertData).accountId)
-        && (gitToHarness == ((GitSyncErrorAlert) alertData).gitToHarness);
+    return accountId.equals(((GitSyncErrorAlert) alertData).accountId);
   }
 
   @Override
