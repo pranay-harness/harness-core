@@ -56,7 +56,10 @@ public enum InfrastructureMappingType implements InfrastructureMappingDescriptor
   /**
    * Azure kubernetes [AKS] infra mapping type.
    */
-  AZURE_KUBERNETES(AzureKubernetesInfrastructureMapping.class, "AZURE_KUBERNETES", StencilCategory.OTHERS, 8);
+  AZURE_KUBERNETES(AzureKubernetesInfrastructureMapping.class, "AZURE_KUBERNETES", StencilCategory.OTHERS, 8),
+
+  PHYSICAL_DATA_CENTER_WINRM(
+      PhysicalInfrastructureMappingWinRm.class, "PHYSICAL_DATA_CENTER_WINRM", StencilCategory.OTHERS, 9);
 
   private static final String stencilsPath = "/templates/inframapping/";
   private static final String uiSchemaSuffix = "-InfraMappingUISchema.json";

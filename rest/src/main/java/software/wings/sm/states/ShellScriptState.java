@@ -40,8 +40,8 @@ import software.wings.beans.delegation.ShellScriptParameters;
 import software.wings.common.Constants;
 import software.wings.exception.WingsException;
 import software.wings.security.encryption.EncryptedDataDetail;
-import software.wings.service.impl.ConnectionAttributesDataProvider;
 import software.wings.service.impl.SSHKeyDataProvider;
+import software.wings.service.impl.WinRmConnectionAttributesDataProvider;
 import software.wings.service.intfc.ActivityService;
 import software.wings.service.intfc.DelegateService;
 import software.wings.service.intfc.SettingsService;
@@ -93,7 +93,7 @@ public class ShellScriptState extends State {
   @Getter
   @Setter
   @Attributes(title = "Connection Attributes")
-  @EnumData(enumDataProvider = ConnectionAttributesDataProvider.class)
+  @EnumData(enumDataProvider = WinRmConnectionAttributesDataProvider.class)
   private String connectionAttributes;
 
   @Getter @Setter @Attributes(title = "Working Directory") private String commandPath;

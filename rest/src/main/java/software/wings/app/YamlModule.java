@@ -9,6 +9,7 @@ import static software.wings.beans.InfrastructureMappingType.AZURE_KUBERNETES;
 import static software.wings.beans.InfrastructureMappingType.DIRECT_KUBERNETES;
 import static software.wings.beans.InfrastructureMappingType.GCP_KUBERNETES;
 import static software.wings.beans.InfrastructureMappingType.PHYSICAL_DATA_CENTER_SSH;
+import static software.wings.beans.InfrastructureMappingType.PHYSICAL_DATA_CENTER_WINRM;
 import static software.wings.beans.OrchestrationWorkflowType.BASIC;
 import static software.wings.beans.OrchestrationWorkflowType.BUILD;
 import static software.wings.beans.OrchestrationWorkflowType.CANARY;
@@ -98,6 +99,7 @@ import software.wings.service.impl.yaml.handler.inframapping.DirectKubernetesInf
 import software.wings.service.impl.yaml.handler.inframapping.EcsInfraMappingYamlHandler;
 import software.wings.service.impl.yaml.handler.inframapping.GcpKubernetesInfraMappingYamlHandler;
 import software.wings.service.impl.yaml.handler.inframapping.InfraMappingYamlHandler;
+import software.wings.service.impl.yaml.handler.inframapping.PhysicalInfraMappingWinRmYamlHandler;
 import software.wings.service.impl.yaml.handler.inframapping.PhysicalInfraMappingYamlHandler;
 import software.wings.service.impl.yaml.handler.setting.artifactserver.ArtifactServerYamlHandler;
 import software.wings.service.impl.yaml.handler.setting.artifactserver.ArtifactoryConfigYamlHandler;
@@ -187,6 +189,8 @@ public class YamlModule extends AbstractModule {
         .to(AzureKubernetesInfraMappingYamlHandler.class);
     infraMappingYamlHelperMapBinder.addBinding(PHYSICAL_DATA_CENTER_SSH.name())
         .to(PhysicalInfraMappingYamlHandler.class);
+    infraMappingYamlHelperMapBinder.addBinding(PHYSICAL_DATA_CENTER_WINRM.name())
+        .to(PhysicalInfraMappingWinRmYamlHandler.class);
 
     MapBinder<String, DeploymentSpecificationYamlHandler> deploymentSpecYamlHelperMapBinder =
         MapBinder.newMapBinder(binder(), String.class, DeploymentSpecificationYamlHandler.class);

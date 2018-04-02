@@ -422,7 +422,9 @@ public class InstanceHelperTest extends WingsBaseTest {
     assertFalse((Boolean) MethodUtils.invokeMethod(
         instanceHelper, true, "isSupported", new Object[] {InfrastructureMappingType.PHYSICAL_DATA_CENTER_SSH}));
     assertFalse((Boolean) MethodUtils.invokeMethod(
-        instanceHelper, true, "isSupported", new Object[] {InfrastructureMappingType.PHYSICAL_DATA_CENTER_SSH}));
+        instanceHelper, true, "isSupported", new Object[] {InfrastructureMappingType.PHYSICAL_DATA_CENTER_WINRM}));
+    assertFalse((Boolean) MethodUtils.invokeMethod(
+        instanceHelper, true, "isSupported", new Object[] {InfrastructureMappingType.AWS_AWS_LAMBDA}));
     assertTrue((Boolean) MethodUtils.invokeMethod(
         instanceHelper, true, "isSupported", new Object[] {InfrastructureMappingType.AWS_ECS}));
     assertTrue((Boolean) MethodUtils.invokeMethod(

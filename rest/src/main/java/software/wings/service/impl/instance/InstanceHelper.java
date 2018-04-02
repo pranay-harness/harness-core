@@ -179,6 +179,8 @@ public class InstanceHelper {
               phaseExecutionData, infrastructureMapping, artifact, deploymentInfo));
         } else if (InfrastructureMappingType.PHYSICAL_DATA_CENTER_SSH.getName().equals(
                        infrastructureMapping.getInfraMappingType())
+            || InfrastructureMappingType.PHYSICAL_DATA_CENTER_WINRM.getName().equals(
+                   infrastructureMapping.getInfraMappingType())
             || InfrastructureMappingType.AWS_SSH.getName().equals(infrastructureMapping.getInfraMappingType())) {
           List<Instance> instanceList = Lists.newArrayList();
           PhaseStepExecutionSummary phaseStepExecutionSummary =
@@ -525,7 +527,8 @@ public class InstanceHelper {
         HostInstanceKey.builder().hostName(host.getHostName()).infraMappingId(infraMappingId).build();
     builder.hostInstanceKey(hostInstanceKey);
 
-    if (InfrastructureMappingType.PHYSICAL_DATA_CENTER_SSH.getName().equals(infraMappingType)) {
+    if (InfrastructureMappingType.PHYSICAL_DATA_CENTER_SSH.getName().equals(infraMappingType)
+        || InfrastructureMappingType.PHYSICAL_DATA_CENTER_WINRM.getName().equals(infraMappingType)) {
       instanceInfo = PhysicalHostInstanceInfo.builder()
                          .hostPublicDns(host.getPublicDns())
                          .hostId(host.getUuid())
@@ -658,7 +661,8 @@ public class InstanceHelper {
 
   private boolean isSupported(InfrastructureMappingType infrastructureMappingType) {
     if (InfrastructureMappingType.AWS_AWS_LAMBDA.equals(infrastructureMappingType)
-        || InfrastructureMappingType.PHYSICAL_DATA_CENTER_SSH.equals(infrastructureMappingType)) {
+        || InfrastructureMappingType.PHYSICAL_DATA_CENTER_SSH.equals(infrastructureMappingType)
+        || InfrastructureMappingType.PHYSICAL_DATA_CENTER_WINRM.equals(infrastructureMappingType)) {
       return false;
     }
     return true;

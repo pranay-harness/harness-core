@@ -66,6 +66,8 @@ import software.wings.beans.HostValidationResponse;
 import software.wings.beans.InfrastructureMapping;
 import software.wings.beans.InfrastructureMappingType;
 import software.wings.beans.PhysicalInfrastructureMapping;
+import software.wings.beans.PhysicalInfrastructureMappingBase;
+import software.wings.beans.PhysicalInfrastructureMappingWinRm;
 import software.wings.beans.SearchFilter.Operator;
 import software.wings.beans.Service;
 import software.wings.beans.ServiceInstance;
@@ -190,11 +192,11 @@ public class InfrastructureMappingServiceImpl implements InfrastructureMappingSe
     if (infrastructureMapping instanceof AwsInfrastructureMapping) {
       ((AwsInfrastructureMapping) infrastructureMapping)
           .setLoadBalancerName(((AwsInfrastructureMapping) infrastructureMapping).getLoadBalancerId());
-    } else if (infrastructureMapping instanceof PhysicalInfrastructureMapping) {
+    } else if (infrastructureMapping instanceof PhysicalInfrastructureMappingBase) {
       SettingAttribute settingAttribute =
-          settingsService.get(((PhysicalInfrastructureMapping) infrastructureMapping).getLoadBalancerId());
+          settingsService.get(((PhysicalInfrastructureMappingBase) infrastructureMapping).getLoadBalancerId());
       if (settingAttribute != null) {
-        ((PhysicalInfrastructureMapping) infrastructureMapping).setLoadBalancerName(settingAttribute.getName());
+        ((PhysicalInfrastructureMappingBase) infrastructureMapping).setLoadBalancerName(settingAttribute.getName());
       }
     }
   }
@@ -251,6 +253,10 @@ public class InfrastructureMappingServiceImpl implements InfrastructureMappingSe
 
     if (infraMapping instanceof PhysicalInfrastructureMapping) {
       validatePyInfraMapping((PhysicalInfrastructureMapping) infraMapping);
+    }
+
+    if (infraMapping instanceof PhysicalInfrastructureMappingWinRm) {
+      validatePhysicalInfrastructureMappingWinRm((PhysicalInfrastructureMappingWinRm) infraMapping);
     }
 
     InfrastructureMapping savedInfraMapping = duplicateCheck(
@@ -562,6 +568,13 @@ public class InfrastructureMappingServiceImpl implements InfrastructureMappingSe
       validatePyInfraMapping((PhysicalInfrastructureMapping) infrastructureMapping);
       keyValuePairs.put("loadBalancerId", ((PhysicalInfrastructureMapping) infrastructureMapping).getLoadBalancerId());
       keyValuePairs.put("hostNames", ((PhysicalInfrastructureMapping) infrastructureMapping).getHostNames());
+    } else if (infrastructureMapping instanceof PhysicalInfrastructureMappingWinRm) {
+      validatePhysicalInfrastructureMappingWinRm((PhysicalInfrastructureMappingWinRm) infrastructureMapping);
+      keyValuePairs.put(
+          "loadBalancerId", ((PhysicalInfrastructureMappingWinRm) infrastructureMapping).getLoadBalancerId());
+      keyValuePairs.put("hostNames", ((PhysicalInfrastructureMappingWinRm) infrastructureMapping).getHostNames());
+      keyValuePairs.put("winRmConnectionAttributes",
+          ((PhysicalInfrastructureMappingWinRm) infrastructureMapping).getWinRmConnectionAttributes());
     } else if (infrastructureMapping instanceof CodeDeployInfrastructureMapping) {
       CodeDeployInfrastructureMapping codeDeployInfrastructureMapping =
           (CodeDeployInfrastructureMapping) infrastructureMapping;
@@ -621,6 +634,24 @@ public class InfrastructureMappingServiceImpl implements InfrastructureMappingSe
     if (hostNames.size() != pyInfraMapping.getHostNames().size()) {
       throw new WingsException(ErrorCode.INVALID_ARGUMENT).addParam("args", "Host names must be unique");
     }
+  }
+
+  private void validatePhysicalInfrastructureMappingWinRm(PhysicalInfrastructureMappingWinRm infraMapping) {
+    List<String> hostNames = infraMapping.getHostNames()
+                                 .stream()
+                                 .map(String::trim)
+                                 .filter(StringUtils::isNotEmpty)
+                                 .distinct()
+                                 .collect(toList());
+    if (hostNames.size() != infraMapping.getHostNames().size()) {
+      throw new WingsException(ErrorCode.INVALID_ARGUMENT).addParam("args", "Host names must be unique");
+    }
+
+    SettingAttribute settingAttribute = settingsService.get(infraMapping.getComputeProviderSettingId());
+    Validator.notNullCheck("ComputeProviderSettingAttribute", settingAttribute);
+
+    settingAttribute = settingsService.get(infraMapping.getWinRmConnectionAttributes());
+    Validator.notNullCheck("WinRmConnectionAttributes", settingAttribute);
   }
 
   private void validateAwsLambdaInfrastructureMapping(AwsLambdaInfraStructureMapping lambdaInfraStructureMapping) {
@@ -759,8 +790,8 @@ public class InfrastructureMappingServiceImpl implements InfrastructureMappingSe
   }
 
   private List<Host> listHosts(InfrastructureMapping infrastructureMapping) {
-    if (infrastructureMapping instanceof PhysicalInfrastructureMapping) {
-      PhysicalInfrastructureMapping pyInfraMapping = (PhysicalInfrastructureMapping) infrastructureMapping;
+    if (infrastructureMapping instanceof PhysicalInfrastructureMappingBase) {
+      PhysicalInfrastructureMappingBase pyInfraMapping = (PhysicalInfrastructureMappingBase) infrastructureMapping;
       List<String> hostNames = pyInfraMapping.getHostNames()
                                    .stream()
                                    .map(String::trim)
@@ -1146,8 +1177,8 @@ public class InfrastructureMappingServiceImpl implements InfrastructureMappingSe
 
   private List<String> getInfrastructureMappingHostDisplayNames(
       InfrastructureMapping infrastructureMapping, String appId, String workflowExecutionId) {
-    if (infrastructureMapping instanceof PhysicalInfrastructureMapping) {
-      return ((PhysicalInfrastructureMapping) infrastructureMapping).getHostNames();
+    if (infrastructureMapping instanceof PhysicalInfrastructureMappingBase) {
+      return ((PhysicalInfrastructureMappingBase) infrastructureMapping).getHostNames();
     } else if (infrastructureMapping instanceof AwsInfrastructureMapping) {
       AwsInfrastructureMapping awsInfrastructureMapping = (AwsInfrastructureMapping) infrastructureMapping;
       AwsInfrastructureProvider infrastructureProvider =

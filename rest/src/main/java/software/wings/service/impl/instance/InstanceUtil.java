@@ -33,7 +33,8 @@ public class InstanceUtil {
       instanceType = InstanceType.KUBERNETES_CONTAINER_INSTANCE;
     } else if (InfrastructureMappingType.AWS_ECS.name().equals(infraMappingType)) {
       instanceType = InstanceType.ECS_CONTAINER_INSTANCE;
-    } else if (InfrastructureMappingType.PHYSICAL_DATA_CENTER_SSH.name().equals(infraMappingType)) {
+    } else if (InfrastructureMappingType.PHYSICAL_DATA_CENTER_SSH.name().equals(infraMappingType)
+        || InfrastructureMappingType.PHYSICAL_DATA_CENTER_WINRM.name().equals(infraMappingType)) {
       instanceType = InstanceType.PHYSICAL_HOST_INSTANCE;
     } else if (InfrastructureMappingType.AWS_SSH.name().equals(infraMappingType)
         || InfrastructureMappingType.AWS_AWS_CODEDEPLOY.name().equals(infraMappingType)
