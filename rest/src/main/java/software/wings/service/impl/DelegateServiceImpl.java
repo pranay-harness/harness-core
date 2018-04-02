@@ -95,6 +95,7 @@ import software.wings.utils.CacheHelper;
 import software.wings.waitnotify.NotifyResponseData;
 import software.wings.waitnotify.WaitNotifyEngine;
 
+import java.io.BufferedWriter;
 import java.io.File;
 import java.io.FileInputStream;
 import java.io.FileOutputStream;
@@ -432,6 +433,29 @@ public class DelegateServiceImpl implements DelegateService {
       try (FileInputStream fis = new FileInputStream(readme)) {
         IOUtils.copy(fis, out);
       }
+
+      File proxyConfig = File.createTempFile("proxy", ".config");
+      try (BufferedWriter fileWriter = new BufferedWriter(new OutputStreamWriter(new FileOutputStream(proxyConfig)))) {
+        fileWriter.write("PROXY_HOST=");
+        fileWriter.newLine();
+        fileWriter.write("PROXY_PORT=");
+        fileWriter.newLine();
+        fileWriter.write("PROXY_SCHEME=");
+        fileWriter.newLine();
+        fileWriter.write("NO_PROXY=");
+      }
+
+      proxyConfig = new File(proxyConfig.getAbsolutePath());
+      ZipArchiveEntry proxyZipArchiveEntry = new ZipArchiveEntry(proxyConfig, Constants.DELEGATE_DIR + "/proxy.config");
+      proxyZipArchiveEntry.setUnixMode(0644 << 16L);
+      permissions = new AsiExtraField();
+      permissions.setMode(0644);
+      proxyZipArchiveEntry.addExtraField(permissions);
+      out.putArchiveEntry(proxyZipArchiveEntry);
+      try (FileInputStream fis = new FileInputStream(proxyConfig)) {
+        IOUtils.copy(fis, out);
+      }
+
       out.closeArchiveEntry();
     }
     return delegateFile;

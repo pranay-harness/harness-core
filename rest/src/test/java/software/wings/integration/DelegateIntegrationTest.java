@@ -103,7 +103,7 @@ public void shouldDownloadDelegateZipWithWatcher()
                              .stream()
                              .map(String::trim)
                              .collect(Collectors.toList());
-  assertThat(scripts).hasSize(4).containsOnly("README.txt", "start.sh", "stop.sh", "delegate.sh");
+  assertThat(scripts).hasSize(5).containsOnly("README.txt", "start.sh", "stop.sh", "delegate.sh", "proxy.config");
 }
 
 @Test
