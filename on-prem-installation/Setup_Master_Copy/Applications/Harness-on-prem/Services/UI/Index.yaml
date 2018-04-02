@@ -5,3 +5,9 @@ configVariables:
   - name: API_URL
     value: http://localhost:8080
     valueType: TEXT
+  - name: docker_login_username
+    value: harnesshub
+    valueType: TEXT
+  - name: docker_login_password
+    value: <DOCKER_LOGIN_PASSWORD_PLACEHOLDER>
+    valueType: ENCRYPTED_TEXT

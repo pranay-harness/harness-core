@@ -14,3 +14,10 @@ configVariables:
   - name: service_secret
     value: <LEARNING_ENGINE_SECRET_KEY_PLACEHOLDER>
     valueType: ENCRYPTED_TEXT
+  - name: docker_login_username
+    value: harnesshub
+    valueType: TEXT
+  - name: docker_login_password
+    value: <DOCKER_LOGIN_PASSWORD_PLACEHOLDER>
+    valueType: ENCRYPTED_TEXT
+

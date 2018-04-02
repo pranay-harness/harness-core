@@ -66,9 +66,9 @@ adminEmail=$(getProperty $ACCOUNT_PROPERTY_FILE "AdminEmail")
 
 
 echo "Reading Infra mapping from $INFRA_PROPERTY_FILE"
-host1=$(getProperty "$INFRA_PROPERTY_FILE" "HOST1")
-host2=$(getProperty "$INFRA_PROPERTY_FILE" "HOST2")
-host3=$(getProperty "$INFRA_PROPERTY_FILE" "HOST3")
+host1=$(getProperty "$INFRA_PROPERTY_FILE" "HOST1_IP_ADDRESS")
+host2=$(getProperty "$INFRA_PROPERTY_FILE" "HOST2_IP_ADDRESS")
+host3=$(getProperty "$INFRA_PROPERTY_FILE" "HOST3_IP_ADDRESS")
 loadbalancer=$(getProperty "$INFRA_PROPERTY_FILE" "LOAD_BALANCER_URL")
 sshUser=$(getProperty $INFRA_PROPERTY_FILE "sshUser")
 sshKeyPath=$(getProperty $INFRA_PROPERTY_FILE "sshKeyPath")
