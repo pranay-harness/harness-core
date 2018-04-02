@@ -320,6 +320,27 @@ public class DelegateServiceTest extends WingsBaseTest {
       IOUtils.read(zipArchiveInputStream, buffer);
       assertThat(new String(buffer))
           .isEqualTo(CharStreams.toString(new InputStreamReader(getClass().getResourceAsStream("/expectedStop.sh"))));
+
+      file = zipArchiveInputStream.getNextZipEntry();
+      assertThat(file).extracting(ZipArchiveEntry::getName).containsExactly(Constants.DELEGATE_DIR + "/README.txt");
+      buffer = new byte[(int) file.getSize()];
+      IOUtils.read(zipArchiveInputStream, buffer);
+      assertThat(new String(buffer))
+          .isEqualTo(
+              CharStreams.toString(new InputStreamReader(getClass().getResourceAsStream("/expectedReadme.txt"))));
+
+      file = zipArchiveInputStream.getNextZipEntry();
+      assertThat(file).extracting(ZipArchiveEntry::getName).containsExactly(Constants.DELEGATE_DIR + "/proxy.config");
+      assertThat(file)
+          .extracting(ZipArchiveEntry::getExtraFields)
+          .flatExtracting(input -> asList((ZipExtraField[]) input))
+          .extracting(o -> ((AsiExtraField) o).getMode())
+          .containsExactly(0644 | AsiExtraField.FILE_FLAG);
+      buffer = new byte[(int) file.getSize()];
+      IOUtils.read(zipArchiveInputStream, buffer);
+      assertThat(new String(buffer))
+          .isEqualTo(
+              CharStreams.toString(new InputStreamReader(getClass().getResourceAsStream("/expectedProxy.config"))));
     }
   }
 
