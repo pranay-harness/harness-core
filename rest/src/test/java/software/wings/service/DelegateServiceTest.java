@@ -277,7 +277,7 @@ public class DelegateServiceTest extends WingsBaseTest {
   public void shouldDownloadWatcher() throws IOException, TemplateException {
     when(accountService.get(ACCOUNT_ID))
         .thenReturn(anAccount().withAccountKey("ACCOUNT_KEY").withUuid(ACCOUNT_ID).build());
-    File zipFile = delegateService.download("localhost:9090", ACCOUNT_ID);
+    File zipFile = delegateService.download("https://localhost:9090", ACCOUNT_ID);
     try (ZipArchiveInputStream zipArchiveInputStream = new ZipArchiveInputStream(new FileInputStream(zipFile))) {
       assertThat(zipArchiveInputStream.getNextZipEntry().getName()).isEqualTo(Constants.DELEGATE_DIR + "/");
 
