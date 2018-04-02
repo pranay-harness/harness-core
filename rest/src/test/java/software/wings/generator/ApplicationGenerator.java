@@ -11,6 +11,7 @@ import io.github.benas.randombeans.api.EnhancedRandom;
 import software.wings.beans.Account;
 import software.wings.beans.Application;
 import software.wings.beans.Application.Builder;
+import software.wings.dl.WingsPersistence;
 import software.wings.service.intfc.AppService;
 
 @Singleton
@@ -18,6 +19,7 @@ public class ApplicationGenerator {
   @Inject AccountGenerator accountGenerator;
 
   @Inject AppService applicationService;
+  @Inject WingsPersistence wingsPersistence;
 
   public enum Applications {
     GENERIC_TEST,
@@ -47,6 +49,13 @@ public class ApplicationGenerator {
     return ensurePredefined(seed, predefined);
   }
 
+  public Application exists(Application application) {
+    return wingsPersistence.createQuery(Application.class)
+        .filter(Application.ACCOUNT_ID_KEY, application.getAccountId())
+        .filter(Application.NAME_KEY, application.getName())
+        .get();
+  }
+
   public Application ensureApplication(long seed, Application application) {
     EnhancedRandom random =
         EnhancedRandomBuilder.aNewEnhancedRandomBuilder().seed(seed).scanClasspathForConcreteTypes(true).build();
@@ -64,6 +73,11 @@ public class ApplicationGenerator {
       builder.withName(application.getName());
     } else {
       builder.withName(random.nextObject(String.class));
+    }
+
+    Application existing = exists(builder.build());
+    if (existing != null) {
+      return existing;
     }
 
     final Application newApplication = builder.build();

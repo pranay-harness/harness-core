@@ -22,7 +22,6 @@ import static software.wings.beans.PhaseStep.PhaseStepBuilder.aPhaseStep;
 import static software.wings.beans.PhaseStepType.POST_DEPLOYMENT;
 import static software.wings.beans.PhaseStepType.PRE_DEPLOYMENT;
 import static software.wings.beans.Pipeline.Builder.aPipeline;
-import static software.wings.beans.Service.Builder.aService;
 import static software.wings.beans.SettingAttribute.Builder.aSettingAttribute;
 import static software.wings.beans.Workflow.WorkflowBuilder.aWorkflow;
 import static software.wings.beans.artifact.JenkinsArtifactStream.Builder.aJenkinsArtifactStream;
@@ -88,6 +87,7 @@ import software.wings.generator.EnvironmentGenerator.Environments;
 import software.wings.generator.InfrastructureMappingGenerator;
 import software.wings.generator.PipelineGenerator;
 import software.wings.generator.ServiceGenerator;
+import software.wings.generator.ServiceGenerator.Services;
 import software.wings.generator.ServiceTemplateGenerator;
 import software.wings.generator.WorkflowGenerator;
 import software.wings.generator.WorkflowGenerator.PostProcessInfo;
@@ -95,12 +95,12 @@ import software.wings.helpers.ext.mail.SmtpConfig;
 import software.wings.rules.SetupScheduler;
 import software.wings.service.intfc.EnvironmentService;
 import software.wings.service.intfc.FeatureFlagService;
+import software.wings.service.intfc.ServiceTemplateService;
 import software.wings.service.intfc.SettingsService;
 import software.wings.service.intfc.SystemCatalogService;
 import software.wings.service.intfc.WorkflowExecutionService;
 import software.wings.service.intfc.WorkflowService;
 import software.wings.settings.SettingValue.SettingVariableTypes;
-import software.wings.utils.ArtifactType;
 
 import java.io.BufferedWriter;
 import java.io.File;
@@ -155,6 +155,7 @@ public class DataGenUtil extends BaseIntegrationTest {
   @Inject private SettingsService settingsService;
   @Inject private EnvironmentService environmentService;
   @Inject private FeatureFlagService featureFlagService;
+  @Inject private ServiceTemplateService serviceTemplateService;
 
   @Inject private AccountGenerator accountGenerator;
   @Inject private ApplicationGenerator applicationGenerator;
@@ -490,19 +491,9 @@ public class DataGenUtil extends BaseIntegrationTest {
     int seed = 0;
 
     Environment environment = environmentGenerator.ensurePredefined(seed, Environments.GENERIC_TEST);
-
-    Service service = serviceGenerator.createService(seed,
-        aService()
-            .withAppId(environment.getAppId())
-            .withName("Test Service")
-            .withArtifactType(ArtifactType.WAR)
-            .build());
-
-    ServiceTemplate serviceTemplate = wingsPersistence.createQuery(ServiceTemplate.class)
-                                          .filter("appId", service.getAppId())
-                                          .filter("serviceId", service.getUuid())
-                                          .filter("envId", environment.getUuid())
-                                          .get();
+    Service service = serviceGenerator.ensurePredefined(seed, Services.GENERIC_TEST);
+    ServiceTemplate serviceTemplate =
+        serviceTemplateService.get(service.getAppId(), service.getUuid(), environment.getUuid());
 
     final SettingAttribute awsTest = settingsService.getByName(accountId, GLOBAL_APP_ID, AWS_TEST);
     final SettingAttribute devKey = settingsService.getByName(accountId, GLOBAL_APP_ID, DEV_KEY);

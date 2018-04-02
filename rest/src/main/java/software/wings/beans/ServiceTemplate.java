@@ -25,6 +25,7 @@ import java.util.Objects;
                            , @Field("envId"), @Field("name") }, options = @IndexOptions(unique = true)))
 public class ServiceTemplate extends Base {
   public static final String SERVICE_ID_KEY = "serviceId";
+  public static final String ENVIRONMENT_ID_KEY = "envId";
 
   @NotEmpty private String envId;
   @NotEmpty private String name;
