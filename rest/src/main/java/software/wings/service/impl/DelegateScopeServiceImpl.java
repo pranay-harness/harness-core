@@ -67,18 +67,14 @@ public class DelegateScopeServiceImpl implements DelegateScopeService {
     setUnset(updateOperations, "serviceInfrastructures", delegateScope.getServiceInfrastructures());
 
     Query<DelegateScope> query = wingsPersistence.createQuery(DelegateScope.class)
-                                     .field("accountId")
-                                     .equal(delegateScope.getAccountId())
-                                     .field(ID_KEY)
-                                     .equal(delegateScope.getUuid());
+                                     .filter("accountId", delegateScope.getAccountId())
+                                     .filter(ID_KEY, delegateScope.getUuid());
     wingsPersistence.update(query, updateOperations);
     DelegateScope updatedDelegateScope = get(delegateScope.getAccountId(), delegateScope.getUuid());
     logger.info("Updated delegate scope: {}", updatedDelegateScope.getUuid());
 
-    List<Delegate> delegates = wingsPersistence.createQuery(Delegate.class)
-                                   .field("accountId")
-                                   .equal(updatedDelegateScope.getAccountId())
-                                   .asList();
+    List<Delegate> delegates =
+        wingsPersistence.createQuery(Delegate.class).filter("accountId", updatedDelegateScope.getAccountId()).asList();
     for (Delegate delegate : delegates) {
       boolean includeUpdated = replaceUpdatedScope(updatedDelegateScope, delegate.getIncludeScopes());
       boolean excludeUpdated = replaceUpdatedScope(updatedDelegateScope, delegate.getExcludeScopes());
@@ -125,10 +121,8 @@ public class DelegateScopeServiceImpl implements DelegateScopeService {
   @Override
   public void delete(String accountId, String delegateScopeId) {
     DelegateScope delegateScope = wingsPersistence.createQuery(DelegateScope.class)
-                                      .field("accountId")
-                                      .equal(accountId)
-                                      .field(ID_KEY)
-                                      .equal(delegateScopeId)
+                                      .filter("accountId", accountId)
+                                      .filter(ID_KEY, delegateScopeId)
                                       .get();
     if (delegateScope != null) {
       ensureScopeSafeToDelete(accountId, delegateScope);
@@ -139,8 +133,7 @@ public class DelegateScopeServiceImpl implements DelegateScopeService {
 
   private void ensureScopeSafeToDelete(String accountId, DelegateScope delegateScope) {
     String delegateScopeId = delegateScope.getUuid();
-    List<Delegate> delegates =
-        wingsPersistence.createQuery(Delegate.class).field("accountId").equal(accountId).asList();
+    List<Delegate> delegates = wingsPersistence.createQuery(Delegate.class).filter("accountId", accountId).asList();
     List<String> delegateNames = delegates.stream()
                                      .filter(delegate
                                          -> (isNotEmpty(delegate.getIncludeScopes())

@@ -27,8 +27,7 @@ public class FeatureFlagServiceImpl implements FeatureFlagService {
 
   @Override
   public boolean isEnabled(@NotNull FeatureName featureName, String accountId) {
-    FeatureFlag featureFlag =
-        wingsPersistence.createQuery(FeatureFlag.class).field("name").equal(featureName.name()).get();
+    FeatureFlag featureFlag = wingsPersistence.createQuery(FeatureFlag.class).filter("name", featureName.name()).get();
 
     if (featureFlag == null) {
       // we don't want to throw an exception - we just want to log the error

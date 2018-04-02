@@ -27,7 +27,7 @@ public class GcpConfigEncryptionUtil extends WingsBaseTest {
   @Test
   public void migrateGcpConfig() throws InterruptedException {
     List<SettingAttribute> gcpConfigs =
-        wingsPersistence.createQuery(SettingAttribute.class).field("value.type").equal("GCP").asList();
+        wingsPersistence.createQuery(SettingAttribute.class).filter("value.type", "GCP").asList();
 
     logger.info("will update " + gcpConfigs.size() + " records");
 

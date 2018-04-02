@@ -130,12 +130,9 @@ public class AlertServiceImpl implements AlertService {
         accountId, GLOBAL_APP_ID, NoActiveDelegates, NoActiveDelegatesAlert.builder().accountId(accountId).build())
         .ifPresent(this ::close);
     wingsPersistence.createQuery(Alert.class)
-        .field("accountId")
-        .equal(accountId)
-        .field("type")
-        .equal(NoEligibleDelegates)
-        .field("status")
-        .equal(Open)
+        .filter("accountId", accountId)
+        .filter("type", NoEligibleDelegates)
+        .filter("status", Open)
         .asList()
         .stream()
         .filter(alert -> {
@@ -148,12 +145,10 @@ public class AlertServiceImpl implements AlertService {
 
   private void deploymentCompletedInternal(String appId, String executionId) {
     wingsPersistence.createQuery(Alert.class)
-        .field(Alert.APP_ID_KEY)
-        .equal(appId)
+        .filter(Alert.APP_ID_KEY, appId)
         .field("type")
         .in(asList(ApprovalNeeded, ManualInterventionNeeded))
-        .field("status")
-        .equal(Open)
+        .filter("status", Open)
         .asList()
         .stream()
         .filter(alert
@@ -171,10 +166,9 @@ public class AlertServiceImpl implements AlertService {
       throw new WingsException(ErrorCode.INVALID_ARGUMENT).addParam("args", errorMsg);
     }
     injector.injectMembers(alertData);
-    Query<Alert> query =
-        wingsPersistence.createQuery(Alert.class).field("type").equal(alertType).field("status").equal(Open);
-    query = appId == null || appId.equals(GLOBAL_APP_ID) ? query.field("accountId").equal(accountId)
-                                                         : query.field(Alert.APP_ID_KEY).equal(appId);
+    Query<Alert> query = wingsPersistence.createQuery(Alert.class).filter("type", alertType).filter("status", Open);
+    query = appId == null || appId.equals(GLOBAL_APP_ID) ? query.filter("accountId", accountId)
+                                                         : query.filter(Alert.APP_ID_KEY, appId);
     return query.asList()
         .stream()
         .filter(alert -> {
@@ -189,23 +183,21 @@ public class AlertServiceImpl implements AlertService {
     alertUpdateOperations.set("status", Closed);
     alertUpdateOperations.set("closedAt", System.currentTimeMillis());
     wingsPersistence.update(wingsPersistence.createQuery(Alert.class)
-                                .field("accountId")
-                                .equal(alert.getAccountId())
-                                .field(ID_KEY)
-                                .equal(alert.getUuid()),
+                                .filter("accountId", alert.getAccountId())
+                                .filter(ID_KEY, alert.getUuid()),
         alertUpdateOperations);
     logger.info("Alert closed: {}", alert);
   }
 
   @Override
   public void deleteByAccountId(String accountId) {
-    List<Alert> alerts = wingsPersistence.createQuery(Alert.class).field("accountId").equal(accountId).asList();
+    List<Alert> alerts = wingsPersistence.createQuery(Alert.class).filter("accountId", accountId).asList();
     alerts.forEach(alert -> wingsPersistence.delete(alert));
   }
 
   @Override
   public void pruneByApplication(String appId) {
-    List<Alert> alerts = wingsPersistence.createQuery(Alert.class).field(Alert.APP_ID_KEY).equal(appId).asList();
+    List<Alert> alerts = wingsPersistence.createQuery(Alert.class).filter(Alert.APP_ID_KEY, appId).asList();
     alerts.forEach(alert -> wingsPersistence.delete(alert));
   }
 
@@ -221,8 +213,7 @@ public class AlertServiceImpl implements AlertService {
           List<Key<Alert>> alertKeys = new ArrayList<>();
           try {
             alertKeys.addAll(wingsPersistence.createQuery(Alert.class)
-                                 .field("status")
-                                 .equal(Closed)
+                                 .filter("status", Closed)
                                  .field("createdAt")
                                  .lessThan(System.currentTimeMillis() - retentionMillis)
                                  .asKeyList(new FindOptions().limit(limit).batchSize(batchSize)));

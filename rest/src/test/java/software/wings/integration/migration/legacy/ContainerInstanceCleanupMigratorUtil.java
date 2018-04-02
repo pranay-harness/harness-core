@@ -102,7 +102,7 @@ public class ContainerInstanceCleanupMigratorUtil extends WingsBaseTest {
     }
 
     Query query = wingsPersistence.createAuthorizedQuery(Instance.class).disableValidation();
-    query.field("instanceType").equal(instanceType);
+    query.filter("instanceType", instanceType);
     query.field(fieldName).in(containerSvcNameSetToBeDeleted);
     wingsPersistence.delete(query);
   }

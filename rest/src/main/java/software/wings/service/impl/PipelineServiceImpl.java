@@ -206,10 +206,8 @@ public class PipelineServiceImpl implements PipelineService {
     setUnset(ops, "keywords", keywords);
 
     wingsPersistence.update(wingsPersistence.createQuery(Pipeline.class)
-                                .field("appId")
-                                .equal(pipeline.getAppId())
-                                .field(ID_KEY)
-                                .equal(pipeline.getUuid()),
+                                .filter("appId", pipeline.getAppId())
+                                .filter(ID_KEY, pipeline.getUuid()),
         ops);
 
     wingsPersistence.saveAndGet(StateMachine.class, new StateMachine(pipeline, workflowService.stencilMap()));
@@ -315,7 +313,7 @@ public class PipelineServiceImpl implements PipelineService {
   @Override
   public void pruneByApplication(String appId) {
     List<Key<Pipeline>> pipelineKeys =
-        wingsPersistence.createQuery(Pipeline.class).field(Pipeline.APP_ID_KEY).equal(appId).asKeyList();
+        wingsPersistence.createQuery(Pipeline.class).filter(Pipeline.APP_ID_KEY, appId).asKeyList();
     for (Key key : pipelineKeys) {
       prunePipeline(appId, (String) key.getId());
     }
@@ -370,12 +368,7 @@ public class PipelineServiceImpl implements PipelineService {
 
   @Override
   public Pipeline getPipelineByName(String appId, String pipelineName) {
-    return wingsPersistence.createQuery(Pipeline.class)
-        .field("appId")
-        .equal(appId)
-        .field("name")
-        .equal(pipelineName)
-        .get();
+    return wingsPersistence.createQuery(Pipeline.class).filter("appId", appId).filter("name", pipelineName).get();
   }
 
   private void populateAssociatedWorkflowServices(Pipeline pipeline) {

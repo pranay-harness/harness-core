@@ -28,10 +28,10 @@ public class AwsInfrastructureMappingPublicDnsMigrationUtil extends WingsBaseTes
 
   @Test
   public void setAwsInfraMappingsUsePublicDns() {
-    List<InfrastructureMapping> awsInfraMappings = wingsPersistence.createQuery(InfrastructureMapping.class)
-                                                       .field("infraMappingType")
-                                                       .equal(InfrastructureMappingType.AWS_SSH.name())
-                                                       .asList();
+    List<InfrastructureMapping> awsInfraMappings =
+        wingsPersistence.createQuery(InfrastructureMapping.class)
+            .filter("infraMappingType", InfrastructureMappingType.AWS_SSH.name())
+            .asList();
     int updated = 0;
     for (InfrastructureMapping infraMapping : awsInfraMappings) {
       AwsInfrastructureMapping awsInfrastructureMapping = (AwsInfrastructureMapping) infraMapping;

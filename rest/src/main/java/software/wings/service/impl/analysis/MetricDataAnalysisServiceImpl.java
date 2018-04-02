@@ -89,10 +89,8 @@ public class MetricDataAnalysisServiceImpl implements MetricDataAnalysisService 
   @Override
   public boolean addMetricNamesWorkflowInfo(NewRelicMetricNames metricNames) throws IOException {
     Query<NewRelicMetricNames> query = wingsPersistence.createQuery(NewRelicMetricNames.class)
-                                           .field("newRelicAppId")
-                                           .equal(metricNames.getNewRelicAppId())
-                                           .field("newRelicConfigId")
-                                           .equal(metricNames.getNewRelicConfigId());
+                                           .filter("newRelicAppId", metricNames.getNewRelicAppId())
+                                           .filter("newRelicConfigId", metricNames.getNewRelicConfigId());
     wingsPersistence.update(query,
         wingsPersistence.createUpdateOperations(NewRelicMetricNames.class)
             .addToSet("registeredWorkflows", metricNames.getRegisteredWorkflows()));
@@ -106,10 +104,8 @@ public class MetricDataAnalysisServiceImpl implements MetricDataAnalysisService 
           metricNames.getNewRelicAppId(), metricNames.getNewRelicConfigId());
     }
     Query<NewRelicMetricNames> query = wingsPersistence.createQuery(NewRelicMetricNames.class)
-                                           .field("newRelicAppId")
-                                           .equal(metricNames.getNewRelicAppId())
-                                           .field("newRelicConfigId")
-                                           .equal(metricNames.getNewRelicConfigId());
+                                           .filter("newRelicAppId", metricNames.getNewRelicAppId())
+                                           .filter("newRelicConfigId", metricNames.getNewRelicConfigId());
     wingsPersistence.update(query,
         wingsPersistence.createUpdateOperations(NewRelicMetricNames.class)
             .set("metrics", metricNames.getMetrics())
@@ -120,10 +116,8 @@ public class MetricDataAnalysisServiceImpl implements MetricDataAnalysisService 
   @Override
   public NewRelicMetricNames getMetricNames(String newRelicAppId, String newRelicServerConfigId) throws IOException {
     return wingsPersistence.createQuery(NewRelicMetricNames.class)
-        .field("newRelicAppId")
-        .equal(newRelicAppId)
-        .field("newRelicConfigId")
-        .equal(newRelicServerConfigId)
+        .filter("newRelicAppId", newRelicAppId)
+        .filter("newRelicConfigId", newRelicServerConfigId)
         .get();
   }
 
@@ -139,10 +133,8 @@ public class MetricDataAnalysisServiceImpl implements MetricDataAnalysisService 
   @Override
   public boolean saveAnalysisRecords(NewRelicMetricAnalysisRecord metricAnalysisRecord) {
     wingsPersistence.delete(wingsPersistence.createQuery(NewRelicMetricAnalysisRecord.class)
-                                .field("workflowExecutionId")
-                                .equal(metricAnalysisRecord.getWorkflowExecutionId())
-                                .field("stateExecutionId")
-                                .equal(metricAnalysisRecord.getStateExecutionId()));
+                                .filter("workflowExecutionId", metricAnalysisRecord.getWorkflowExecutionId())
+                                .filter("stateExecutionId", metricAnalysisRecord.getStateExecutionId()));
 
     wingsPersistence.save(metricAnalysisRecord);
     if (logger.isDebugEnabled()) {
@@ -210,10 +202,8 @@ public class MetricDataAnalysisServiceImpl implements MetricDataAnalysisService 
     learningEngineService.markCompleted(taskId);
 
     wingsPersistence.delete(wingsPersistence.createQuery(TimeSeriesMLAnalysisRecord.class)
-                                .field("workflowExecutionId")
-                                .equal(workflowExecutionId)
-                                .field("stateExecutionId")
-                                .equal(stateExecutionId));
+                                .filter("workflowExecutionId", workflowExecutionId)
+                                .filter("stateExecutionId", stateExecutionId));
 
     wingsPersistence.save(mlAnalysisResponse);
     if (logger.isDebugEnabled()) {
@@ -229,12 +219,9 @@ public class MetricDataAnalysisServiceImpl implements MetricDataAnalysisService 
       String applicationId, String workflowId, int analysisMinute, int limit) {
     List<String> workflowExecutionIds = getLastSuccessfulWorkflowExecutionIds(workflowId);
     return wingsPersistence.createQuery(TimeSeriesMLScores.class)
-        .field("workflowId")
-        .equal(workflowId)
-        .field("applicationId")
-        .equal(applicationId)
-        .field("analysisMinute")
-        .equal(analysisMinute)
+        .filter("workflowId", workflowId)
+        .filter("applicationId", applicationId)
+        .filter("analysisMinute", analysisMinute)
         .field("workflowExecutionIds")
         .in(workflowExecutionIds)
         .order("-createdAt")
@@ -251,16 +238,11 @@ public class MetricDataAnalysisServiceImpl implements MetricDataAnalysisService 
       String stateExecutionId, String workflowId, String serviceId, Set<String> nodes, int analysisMinute,
       int analysisStartMinute) {
     Query<NewRelicMetricDataRecord> query = wingsPersistence.createQuery(NewRelicMetricDataRecord.class)
-                                                .field("stateType")
-                                                .equal(stateType)
-                                                .field("workflowId")
-                                                .equal(workflowId)
-                                                .field("workflowExecutionId")
-                                                .equal(workflowExecutionId)
-                                                .field("stateExecutionId")
-                                                .equal(stateExecutionId)
-                                                .field("serviceId")
-                                                .equal(serviceId)
+                                                .filter("stateType", stateType)
+                                                .filter("workflowId", workflowId)
+                                                .filter("workflowExecutionId", workflowExecutionId)
+                                                .filter("stateExecutionId", stateExecutionId)
+                                                .filter("serviceId", serviceId)
                                                 .field("host")
                                                 .hasAnyOf(nodes)
                                                 .field("level")
@@ -276,14 +258,10 @@ public class MetricDataAnalysisServiceImpl implements MetricDataAnalysisService 
   public List<NewRelicMetricDataRecord> getPreviousSuccessfulRecords(StateType stateType, String workflowId,
       String workflowExecutionID, String serviceId, int analysisMinute, int analysisStartMinute) {
     Query<NewRelicMetricDataRecord> query = wingsPersistence.createQuery(NewRelicMetricDataRecord.class)
-                                                .field("stateType")
-                                                .equal(stateType)
-                                                .field("workflowId")
-                                                .equal(workflowId)
-                                                .field("workflowExecutionId")
-                                                .equal(workflowExecutionID)
-                                                .field("serviceId")
-                                                .equal(serviceId)
+                                                .filter("stateType", stateType)
+                                                .filter("workflowId", workflowId)
+                                                .filter("workflowExecutionId", workflowExecutionID)
+                                                .filter("serviceId", serviceId)
                                                 .field("level")
                                                 .notIn(asList(ClusterLevel.H0, ClusterLevel.HF))
                                                 .field("dataCollectionMinute")
@@ -299,14 +277,10 @@ public class MetricDataAnalysisServiceImpl implements MetricDataAnalysisService 
     final String astSuccessfulWorkflowExecutionIdWithData =
         getLastSuccessfulWorkflowExecutionIdWithData(stateType, workflowId, serviceId);
     Query<NewRelicMetricDataRecord> query = wingsPersistence.createQuery(NewRelicMetricDataRecord.class)
-                                                .field("stateType")
-                                                .equal(stateType)
-                                                .field("workflowId")
-                                                .equal(workflowId)
-                                                .field("workflowExecutionId")
-                                                .equal(astSuccessfulWorkflowExecutionIdWithData)
-                                                .field("serviceId")
-                                                .equal(serviceId)
+                                                .filter("stateType", stateType)
+                                                .filter("workflowId", workflowId)
+                                                .filter("workflowExecutionId", astSuccessfulWorkflowExecutionIdWithData)
+                                                .filter("serviceId", serviceId)
                                                 .field("level")
                                                 .notIn(asList(ClusterLevel.H0, ClusterLevel.HF))
                                                 .field("dataCollectionMinute")
@@ -320,14 +294,10 @@ public class MetricDataAnalysisServiceImpl implements MetricDataAnalysisService 
   public int getMaxControlMinuteWithData(
       StateType stateType, String serviceId, String workflowId, String workflowExecutionId) {
     NewRelicMetricDataRecord newRelicMetricDataRecord = wingsPersistence.createQuery(NewRelicMetricDataRecord.class)
-                                                            .field("stateType")
-                                                            .equal(stateType)
-                                                            .field("workflowId")
-                                                            .equal(workflowId)
-                                                            .field("workflowExecutionId")
-                                                            .equal(workflowExecutionId)
-                                                            .field("serviceId")
-                                                            .equal(serviceId)
+                                                            .filter("stateType", stateType)
+                                                            .filter("workflowId", workflowId)
+                                                            .filter("workflowExecutionId", workflowExecutionId)
+                                                            .filter("serviceId", serviceId)
                                                             .field("level")
                                                             .notIn(asList(ClusterLevel.H0, ClusterLevel.HF))
                                                             .order("-dataCollectionMinute")
@@ -340,14 +310,10 @@ public class MetricDataAnalysisServiceImpl implements MetricDataAnalysisService 
   public int getMinControlMinuteWithData(
       StateType stateType, String serviceId, String workflowId, String workflowExecutionId) {
     NewRelicMetricDataRecord newRelicMetricDataRecord = wingsPersistence.createQuery(NewRelicMetricDataRecord.class)
-                                                            .field("stateType")
-                                                            .equal(stateType)
-                                                            .field("workflowId")
-                                                            .equal(workflowId)
-                                                            .field("workflowExecutionId")
-                                                            .equal(workflowExecutionId)
-                                                            .field("serviceId")
-                                                            .equal(serviceId)
+                                                            .filter("stateType", stateType)
+                                                            .filter("workflowId", workflowId)
+                                                            .filter("workflowExecutionId", workflowExecutionId)
+                                                            .filter("serviceId", serviceId)
                                                             .field("level")
                                                             .notIn(asList(ClusterLevel.H0, ClusterLevel.HF))
                                                             .order("dataCollectionMinute")
@@ -362,14 +328,10 @@ public class MetricDataAnalysisServiceImpl implements MetricDataAnalysisService 
     for (String successfulExecution : successfulExecutions) {
       List<NewRelicMetricDataRecord> lastSuccessfulRecords =
           wingsPersistence.createQuery(NewRelicMetricDataRecord.class)
-              .field("stateType")
-              .equal(stateType)
-              .field("workflowId")
-              .equal(workflowId)
-              .field("workflowExecutionId")
-              .equal(successfulExecution)
-              .field("serviceId")
-              .equal(serviceId)
+              .filter("stateType", stateType)
+              .filter("workflowId", workflowId)
+              .filter("workflowExecutionId", successfulExecution)
+              .filter("serviceId", serviceId)
               .field("level")
               .notIn(asList(ClusterLevel.H0, ClusterLevel.HF))
               .asList(new FindOptions().limit(1));
@@ -429,10 +391,8 @@ public class MetricDataAnalysisServiceImpl implements MetricDataAnalysisService 
        Fetch the latest */
     Query<TimeSeriesMLAnalysisRecord> timeSeriesMLAnalysisRecordQuery =
         wingsPersistence.createQuery(TimeSeriesMLAnalysisRecord.class)
-            .field("stateExecutionId")
-            .equal(stateExecutionId)
-            .field("workflowExecutionId")
-            .equal(workflowExecutionId)
+            .filter("stateExecutionId", stateExecutionId)
+            .filter("workflowExecutionId", workflowExecutionId)
             .order("-analysisMinute");
 
     TimeSeriesMLAnalysisRecord timeSeriesMLAnalysisRecord =
@@ -503,10 +463,8 @@ public class MetricDataAnalysisServiceImpl implements MetricDataAnalysisService 
 
     Query<TimeSeriesMLAnalysisRecord> timeSeriesMLAnalysisRecordQuery =
         wingsPersistence.createQuery(TimeSeriesMLAnalysisRecord.class)
-            .field("stateExecutionId")
-            .equal(stateExecutionId)
-            .field("workflowExecutionId")
-            .equal(workflowExecutionId);
+            .filter("stateExecutionId", stateExecutionId)
+            .filter("workflowExecutionId", workflowExecutionId);
 
     TimeSeriesMLAnalysisRecord timeSeriesMLAnalysisRecord =
         wingsPersistence.executeGetOneQuery(timeSeriesMLAnalysisRecordQuery);
@@ -548,10 +506,8 @@ public class MetricDataAnalysisServiceImpl implements MetricDataAnalysisService 
     } else {
       Query<NewRelicMetricAnalysisRecord> metricAnalysisRecordQuery =
           wingsPersistence.createQuery(NewRelicMetricAnalysisRecord.class)
-              .field("stateExecutionId")
-              .equal(stateExecutionId)
-              .field("workflowExecutionId")
-              .equal(workflowExecutionId);
+              .filter("stateExecutionId", stateExecutionId)
+              .filter("workflowExecutionId", workflowExecutionId);
 
       analysisRecord = wingsPersistence.executeGetOneQuery(metricAnalysisRecordQuery);
     }
@@ -630,14 +586,10 @@ public class MetricDataAnalysisServiceImpl implements MetricDataAnalysisService 
   public NewRelicMetricDataRecord getLastHeartBeat(
       StateType stateType, String stateExecutionId, String workflowExecutionId, String serviceId) {
     NewRelicMetricDataRecord newRelicMetricDataRecord = wingsPersistence.createQuery(NewRelicMetricDataRecord.class)
-                                                            .field("stateType")
-                                                            .equal(stateType)
-                                                            .field("workflowExecutionId")
-                                                            .equal(workflowExecutionId)
-                                                            .field("stateExecutionId")
-                                                            .equal(stateExecutionId)
-                                                            .field("serviceId")
-                                                            .equal(serviceId)
+                                                            .filter("stateType", stateType)
+                                                            .filter("workflowExecutionId", workflowExecutionId)
+                                                            .filter("stateExecutionId", stateExecutionId)
+                                                            .filter("serviceId", serviceId)
                                                             .field("level")
                                                             .in(Lists.newArrayList(ClusterLevel.HF))
                                                             .order("-dataCollectionMinute")
@@ -657,14 +609,10 @@ public class MetricDataAnalysisServiceImpl implements MetricDataAnalysisService 
   public NewRelicMetricDataRecord getAnalysisMinute(
       StateType stateType, String stateExecutionId, String workflowExecutionId, String serviceId) {
     NewRelicMetricDataRecord newRelicMetricDataRecord = wingsPersistence.createQuery(NewRelicMetricDataRecord.class)
-                                                            .field("stateType")
-                                                            .equal(stateType)
-                                                            .field("workflowExecutionId")
-                                                            .equal(workflowExecutionId)
-                                                            .field("stateExecutionId")
-                                                            .equal(stateExecutionId)
-                                                            .field("serviceId")
-                                                            .equal(serviceId)
+                                                            .filter("stateType", stateType)
+                                                            .filter("workflowExecutionId", workflowExecutionId)
+                                                            .filter("stateExecutionId", stateExecutionId)
+                                                            .filter("serviceId", serviceId)
                                                             .field("level")
                                                             .in(Lists.newArrayList(ClusterLevel.H0))
                                                             .order("-dataCollectionMinute")
@@ -684,16 +632,11 @@ public class MetricDataAnalysisServiceImpl implements MetricDataAnalysisService 
   public void bumpCollectionMinuteToProcess(
       StateType stateType, String stateExecutionId, String workflowExecutionId, String serviceId, int analysisMinute) {
     Query<NewRelicMetricDataRecord> query = wingsPersistence.createQuery(NewRelicMetricDataRecord.class)
-                                                .field("stateType")
-                                                .equal(stateType)
-                                                .field("workflowExecutionId")
-                                                .equal(workflowExecutionId)
-                                                .field("stateExecutionId")
-                                                .equal(stateExecutionId)
-                                                .field("serviceId")
-                                                .equal(serviceId)
-                                                .field("level")
-                                                .equal(ClusterLevel.H0)
+                                                .filter("stateType", stateType)
+                                                .filter("workflowExecutionId", workflowExecutionId)
+                                                .filter("stateExecutionId", stateExecutionId)
+                                                .filter("serviceId", serviceId)
+                                                .filter("level", ClusterLevel.H0)
                                                 .field("dataCollectionMinute")
                                                 .lessThanOrEq(analysisMinute);
 
@@ -707,30 +650,26 @@ public class MetricDataAnalysisServiceImpl implements MetricDataAnalysisService 
   public void cleanUpForMetricRetry(String stateExecutionId) {
     // delete new relic metric records
     wingsPersistence.delete(
-        wingsPersistence.createQuery(NewRelicMetricDataRecord.class).field("stateExecutionId").equal(stateExecutionId));
+        wingsPersistence.createQuery(NewRelicMetricDataRecord.class).filter("stateExecutionId", stateExecutionId));
 
     // delete new relic analysis records
-    wingsPersistence.delete(wingsPersistence.createQuery(NewRelicMetricAnalysisRecord.class)
-                                .field("stateExecutionId")
-                                .equal(stateExecutionId));
+    wingsPersistence.delete(
+        wingsPersistence.createQuery(NewRelicMetricAnalysisRecord.class).filter("stateExecutionId", stateExecutionId));
 
     // delete time series analysis records
-    wingsPersistence.delete(wingsPersistence.createQuery(TimeSeriesMLAnalysisRecord.class)
-                                .field("stateExecutionId")
-                                .equal(stateExecutionId));
+    wingsPersistence.delete(
+        wingsPersistence.createQuery(TimeSeriesMLAnalysisRecord.class).filter("stateExecutionId", stateExecutionId));
 
     // delete time series scores records
     wingsPersistence.delete(
-        wingsPersistence.createQuery(TimeSeriesMLScores.class).field("stateExecutionId").equal(stateExecutionId));
+        wingsPersistence.createQuery(TimeSeriesMLScores.class).filter("stateExecutionId", stateExecutionId));
 
     // delete cv dashboard execution data
     wingsPersistence.delete(wingsPersistence.createQuery(ContinuousVerificationExecutionMetaData.class)
-                                .field("stateExecutionId")
-                                .equal(stateExecutionId));
+                                .filter("stateExecutionId", stateExecutionId));
 
     // delete learning engine tasks
-    wingsPersistence.delete(wingsPersistence.createQuery(LearningEngineAnalysisTask.class)
-                                .field("state_execution_id")
-                                .equal(stateExecutionId));
+    wingsPersistence.delete(
+        wingsPersistence.createQuery(LearningEngineAnalysisTask.class).filter("state_execution_id", stateExecutionId));
   }
 }

@@ -93,7 +93,7 @@ public class ActivityServiceImpl implements ActivityService {
   @Override
   public void updateStatus(String activityId, String appId, ExecutionStatus status) {
     wingsPersistence.update(
-        wingsPersistence.createQuery(Activity.class).field(ID_KEY).equal(activityId).field("appId").equal(appId),
+        wingsPersistence.createQuery(Activity.class).filter(ID_KEY, activityId).filter("appId", appId),
         wingsPersistence.createUpdateOperations(Activity.class).set("status", status));
     Activity activity = get(activityId, appId);
     if (isNotBlank(activity.getServiceInstanceId())) {
@@ -136,23 +136,15 @@ public class ActivityServiceImpl implements ActivityService {
 
   @Override
   public Activity getLastActivityForService(String appId, String serviceId) {
-    return wingsPersistence.createQuery(Activity.class)
-        .field("appId")
-        .equal(appId)
-        .field("serviceId")
-        .equal(serviceId)
-        .get();
+    return wingsPersistence.createQuery(Activity.class).filter("appId", appId).filter("serviceId", serviceId).get();
   }
 
   @Override
   public Activity getLastProductionActivityForService(String appId, String serviceId) {
     return wingsPersistence.createQuery(Activity.class)
-        .field("appId")
-        .equal(appId)
-        .field("serviceId")
-        .equal(serviceId)
-        .field("environmentType")
-        .equal(EnvironmentType.PROD)
+        .filter("appId", appId)
+        .filter("serviceId", serviceId)
+        .filter("environmentType", EnvironmentType.PROD)
         .get();
   }
 
@@ -160,11 +152,8 @@ public class ActivityServiceImpl implements ActivityService {
   public boolean delete(String appId, String activityId) {
     PruneEntityJob.addDefaultJob(jobScheduler, Activity.class, appId, activityId, Duration.ofSeconds(5));
 
-    return wingsPersistence.delete(wingsPersistence.createQuery(Activity.class)
-                                       .field(Activity.APP_ID_KEY)
-                                       .equal(appId)
-                                       .field(ID_KEY)
-                                       .equal(activityId));
+    return wingsPersistence.delete(
+        wingsPersistence.createQuery(Activity.class).filter(Activity.APP_ID_KEY, appId).filter(ID_KEY, activityId));
   }
 
   @Override
@@ -177,10 +166,8 @@ public class ActivityServiceImpl implements ActivityService {
   @Override
   public void pruneByEnvironment(String appId, String envId) {
     wingsPersistence.createQuery(Activity.class)
-        .field(Activity.APP_ID_KEY)
-        .equal(appId)
-        .field("environmentId")
-        .equal(envId)
+        .filter(Activity.APP_ID_KEY, appId)
+        .filter("environmentId", envId)
         .asKeyList()
         .forEach(activityKey -> delete(appId, (String) activityKey.getId()));
   }
@@ -198,12 +185,10 @@ public class ActivityServiceImpl implements ActivityService {
     //        appId).disableValidation().filter("commandUnits.name",
     //            unitName);
     Query<Activity> query = wingsPersistence.createQuery(Activity.class)
-                                .field(Mapper.ID_KEY)
-                                .equal(activityId)
-                                .field("appId")
-                                .equal(appId)
+                                .filter(Mapper.ID_KEY, activityId)
+                                .filter("appId", appId)
                                 .field("commandUnits")
-                                .elemMatch(wingsPersistence.createQuery(Command.class).field("name").equal(unitName));
+                                .elemMatch(wingsPersistence.createQuery(Command.class).filter("name", unitName));
 
     UpdateOperations<Activity> updateOperations = wingsPersistence.createUpdateOperations(Activity.class)
                                                       .disableValidation()

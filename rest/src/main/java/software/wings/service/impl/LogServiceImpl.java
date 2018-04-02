@@ -77,12 +77,9 @@ public class LogServiceImpl implements LogService {
   @Override
   public CommandExecutionStatus getUnitExecutionResult(String appId, String activityId, String name) {
     Log log = wingsPersistence.createQuery(Log.class)
-                  .field("activityId")
-                  .equal(activityId)
-                  .field("appId")
-                  .equal(appId)
-                  .field("commandUnitName")
-                  .equal(name)
+                  .filter("activityId", activityId)
+                  .filter("appId", appId)
+                  .filter("commandUnitName", name)
                   .field("commandExecutionStatus")
                   .exists()
                   .order("-lastUpdatedAt")
@@ -95,12 +92,8 @@ public class LogServiceImpl implements LogService {
     File file = new File(
         Files.createTempDir(), format("ActivityLogs_%s.txt", dateFormatter.format(new Date(currentTimeMillis()))));
     try (OutputStreamWriter fileWriter = new OutputStreamWriter(new FileOutputStream(file), UTF_8)) {
-      List<Log> logList = wingsPersistence.createQuery(Log.class)
-                              .field("appId")
-                              .equal(appId)
-                              .field("activityId")
-                              .equal(activityId)
-                              .asList();
+      List<Log> logList =
+          wingsPersistence.createQuery(Log.class).filter("appId", appId).filter("activityId", activityId).asList();
       for (Log log : logList) {
         fileWriter.write(format(
             "%s   %s   %s%n", log.getLogLevel(), dateFormatter.format(new Date(log.getCreatedAt())), log.getLogLine()));
@@ -114,7 +107,7 @@ public class LogServiceImpl implements LogService {
   @Override
   public void pruneByActivity(String appId, String activityId) {
     wingsPersistence.delete(
-        wingsPersistence.createQuery(Log.class).field("appId").equal(appId).field("activityId").equal(activityId));
+        wingsPersistence.createQuery(Log.class).filter("appId", appId).filter("activityId", activityId));
   }
 
   @Override
@@ -157,8 +150,7 @@ public class LogServiceImpl implements LogService {
     logger.info("Purging activities Start time", startTime);
     List<Key<Activity>> nonPurgedActivities =
         wingsPersistence.createQuery(Activity.class)
-            .field("logPurged")
-            .equal(false)
+            .filter("logPurged", false)
             .field("createdAt")
             .greaterThan(System.currentTimeMillis() - DataCleanUpJob.LOGS_RETENTION_TIME)
             .asKeyList();
@@ -167,8 +159,7 @@ public class LogServiceImpl implements LogService {
       List<Object> idsToKeep = new ArrayList<>();
       startTime = System.currentTimeMillis();
       List<Key<Log>> logs = wingsPersistence.createQuery(Log.class)
-                                .field("activityId")
-                                .equal(activityKey.getId())
+                                .filter("activityId", activityKey.getId())
                                 .order("-createdAt")
                                 .asKeyList();
       logger.info("Fetching log keys  for activity {}  End time {}", activityKey.getId(),
@@ -182,8 +173,7 @@ public class LogServiceImpl implements LogService {
       startTime = System.currentTimeMillis();
       if (idsToKeep.size() != 0) {
         wingsPersistence.delete(wingsPersistence.createQuery(Log.class)
-                                    .field("activityId")
-                                    .equal(activityKey.getId())
+                                    .filter("activityId", activityKey.getId())
                                     .field("_id")
                                     .hasNoneOf(idsToKeep));
       }
@@ -197,10 +187,8 @@ public class LogServiceImpl implements LogService {
     if (log.getCommandExecutionStatus().equals(RUNNING)) {
       // only RUNNING status will be counted for  MAX_LOG_ROWS_PER_ACTIVITY threshold
       long count = wingsPersistence.createQuery(Log.class)
-                       .field("appId")
-                       .equal(log.getAppId())
-                       .field("activityId")
-                       .equal(activityId)
+                       .filter("appId", log.getAppId())
+                       .filter("activityId", activityId)
                        .count();
       if (count > MAX_LOG_ROWS_PER_ACTIVITY) {
         logger.error(

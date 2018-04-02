@@ -102,12 +102,9 @@ public class ArtifactStreamServiceImpl implements ArtifactStreamService, DataPro
   @Override
   public ArtifactStream getArtifactStreamByName(String appId, String serviceId, String artifactStreamName) {
     return wingsPersistence.createQuery(ArtifactStream.class)
-        .field("appId")
-        .equal(appId)
-        .field("serviceId")
-        .equal(serviceId)
-        .field("name")
-        .equal(artifactStreamName)
+        .filter("appId", appId)
+        .filter("serviceId", serviceId)
+        .filter("name", artifactStreamName)
         .get();
   }
 
@@ -318,10 +315,8 @@ public class ArtifactStreamServiceImpl implements ArtifactStreamService, DataPro
   @Override
   public void pruneByService(String appId, String serviceId) {
     wingsPersistence.createQuery(ArtifactStream.class)
-        .field(ArtifactStream.APP_ID_KEY)
-        .equal(appId)
-        .field("serviceId")
-        .equal(serviceId)
+        .filter(ArtifactStream.APP_ID_KEY, appId)
+        .filter("serviceId", serviceId)
         .asList()
         .forEach(artifactSource -> pruneArtifactStream((String) appId, (String) artifactSource.getUuid()));
   }

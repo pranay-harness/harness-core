@@ -77,18 +77,13 @@ public class SettingValidationService {
 
   public boolean validate(SettingAttribute settingAttribute) {
     if (wingsPersistence.createQuery(SettingAttribute.class)
-            .field("accountId")
-            .equal(settingAttribute.getAccountId())
-            .field("appId")
-            .equal(settingAttribute.getAppId())
-            .field("envId")
-            .equal(settingAttribute.getEnvId())
+            .filter("accountId", settingAttribute.getAccountId())
+            .filter("appId", settingAttribute.getAppId())
+            .filter("envId", settingAttribute.getEnvId())
             .field(Mapper.ID_KEY)
             .notEqual(settingAttribute.getUuid())
-            .field("name")
-            .equal(settingAttribute.getName())
-            .field("category")
-            .equal(settingAttribute.getCategory())
+            .filter("name", settingAttribute.getName())
+            .filter("category", settingAttribute.getCategory())
             .get()
         != null) {
       throw new WingsException(ErrorCode.INVALID_ARGUMENT)

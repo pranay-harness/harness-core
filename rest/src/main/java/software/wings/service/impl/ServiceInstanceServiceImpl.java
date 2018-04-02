@@ -51,12 +51,9 @@ public class ServiceInstanceServiceImpl implements ServiceInstanceService {
   @Override
   public ServiceInstance get(String appId, String envId, String instanceId) {
     return wingsPersistence.createQuery(ServiceInstance.class)
-        .field("appId")
-        .equal(appId)
-        .field("envId")
-        .equal(envId)
-        .field(ID_KEY)
-        .equal(instanceId)
+        .filter("appId", appId)
+        .filter("envId", envId)
+        .filter(ID_KEY, instanceId)
         .get();
   }
 
@@ -71,14 +68,10 @@ public class ServiceInstanceServiceImpl implements ServiceInstanceService {
     return hosts.stream()
         .map(host -> {
           ServiceInstance serviceInstance = wingsPersistence.createQuery(ServiceInstance.class)
-                                                .field("infraMappingId")
-                                                .equal(infraMapping.getUuid())
-                                                .field("hostId")
-                                                .equal(host.getUuid())
-                                                .field("hostName")
-                                                .equal(host.getHostName())
-                                                .field("publicDns")
-                                                .equal(host.getPublicDns())
+                                                .filter("infraMappingId", infraMapping.getUuid())
+                                                .filter("hostId", host.getUuid())
+                                                .filter("hostName", host.getHostName())
+                                                .filter("publicDns", host.getPublicDns())
                                                 .get();
           return serviceInstance != null ? serviceInstance
                                          : wingsPersistence.saveAndGet(ServiceInstance.class,
@@ -101,21 +94,16 @@ public class ServiceInstanceServiceImpl implements ServiceInstanceService {
   @Override
   public void delete(String appId, String envId, String instanceId) {
     wingsPersistence.delete(wingsPersistence.createQuery(ServiceInstance.class)
-                                .field("appId")
-                                .equal(appId)
-                                .field("envId")
-                                .equal(envId)
-                                .field(ID_KEY)
-                                .equal(instanceId));
+                                .filter("appId", appId)
+                                .filter("envId", envId)
+                                .filter(ID_KEY, instanceId));
   }
 
   @Override
   public void deleteByEnv(String appId, String envId) {
     wingsPersistence.createQuery(ServiceInstance.class)
-        .field(ServiceInstance.APP_ID_KEY)
-        .equal(appId)
-        .field("envId")
-        .equal(envId)
+        .filter(ServiceInstance.APP_ID_KEY, appId)
+        .filter("envId", envId)
         .asList()
         .forEach(serviceInstance -> delete(appId, envId, serviceInstance.getUuid()));
   }
@@ -123,12 +111,9 @@ public class ServiceInstanceServiceImpl implements ServiceInstanceService {
   @Override
   public void deleteByServiceTemplate(String appId, String envId, String templateId) {
     wingsPersistence.createQuery(ServiceInstance.class)
-        .field("appId")
-        .equal(appId)
-        .field("envId")
-        .equal(envId)
-        .field("serviceTemplate")
-        .equal(templateId)
+        .filter("appId", appId)
+        .filter("envId", envId)
+        .filter("serviceTemplate", templateId)
         .asList()
         .forEach(serviceInstance -> delete(appId, envId, serviceInstance.getUuid()));
   }
@@ -136,10 +121,8 @@ public class ServiceInstanceServiceImpl implements ServiceInstanceService {
   @Override
   public void updateActivity(Activity activity) {
     Query<ServiceInstance> query = wingsPersistence.createQuery(ServiceInstance.class)
-                                       .field("appId")
-                                       .equal(activity.getAppId())
-                                       .field(ID_KEY)
-                                       .equal(activity.getServiceInstanceId());
+                                       .filter("appId", activity.getAppId())
+                                       .filter(ID_KEY, activity.getServiceInstanceId());
     UpdateOperations<ServiceInstance> operations = wingsPersistence.createUpdateOperations(ServiceInstance.class);
 
     if (isNotBlank(activity.getArtifactId())) {
@@ -166,15 +149,13 @@ public class ServiceInstanceServiceImpl implements ServiceInstanceService {
   @Override
   public void pruneByInfrastructureMapping(String appId, String infraMappingId) {
     wingsPersistence.delete(wingsPersistence.createQuery(ServiceInstance.class)
-                                .field("appId")
-                                .equal(appId)
-                                .field("infraMappingId")
-                                .equal(infraMappingId));
+                                .filter("appId", appId)
+                                .filter("infraMappingId", infraMappingId));
   }
 
   @Override
   public void pruneByHost(String appId, String hostId) {
     wingsPersistence.delete(
-        wingsPersistence.createQuery(ServiceInstance.class).field("appId").equal(appId).field("hostId").equal(hostId));
+        wingsPersistence.createQuery(ServiceInstance.class).filter("appId", appId).filter("hostId", hostId));
   }
 }

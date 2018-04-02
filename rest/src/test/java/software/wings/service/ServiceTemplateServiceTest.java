@@ -93,8 +93,7 @@ public class ServiceTemplateServiceTest extends WingsBaseTest {
     when(serviceResourceService.get(APP_ID, SERVICE_ID))
         .thenReturn(aService().withAppId(APP_ID).withUuid(SERVICE_ID).withName(SERVICE_NAME).build());
     when(wingsPersistence.createQuery(ServiceTemplate.class)).thenReturn(query);
-    when(query.field(any())).thenReturn(end);
-    when(end.equal(any())).thenReturn(query);
+    when(query.filter(any(), any())).thenReturn(query);
   }
 
   /**
@@ -192,10 +191,8 @@ public class ServiceTemplateServiceTest extends WingsBaseTest {
     when(wingsPersistence.delete(any(Query.class))).thenReturn(true);
     templateService.delete(APP_ID, TEMPLATE_ID);
     verify(wingsPersistence).delete(query);
-    verify(query).field("appId");
-    verify(end).equal(APP_ID);
-    verify(query).field(ID_KEY);
-    verify(end).equal(TEMPLATE_ID);
+    verify(query).filter("appId", APP_ID);
+    verify(query).filter(ID_KEY, TEMPLATE_ID);
     verify(infrastructureMappingService).deleteByServiceTemplate(APP_ID, TEMPLATE_ID);
     verify(configService).deleteByTemplateId(APP_ID, TEMPLATE_ID);
     verify(serviceVariableService).deleteByTemplateId(APP_ID, TEMPLATE_ID);
@@ -215,10 +212,8 @@ public class ServiceTemplateServiceTest extends WingsBaseTest {
                                .build()));
     doNothing().when(spyTemplateService).delete(APP_ID, TEMPLATE_ID);
     spyTemplateService.pruneByEnvironment(APP_ID, ENV_ID);
-    verify(query).field("appId");
-    verify(end).equal(APP_ID);
-    verify(query).field("envId");
-    verify(end).equal(ENV_ID);
+    verify(query).filter("appId", APP_ID);
+    verify(query).filter("envId", ENV_ID);
   }
 
   /**
@@ -235,10 +230,8 @@ public class ServiceTemplateServiceTest extends WingsBaseTest {
                                .withName(TEMPLATE_NAME)
                                .build()));
     spyTemplateService.pruneByService(APP_ID, SERVICE_ID);
-    verify(query).field("appId");
-    verify(end).equal(APP_ID);
-    verify(query).field("serviceId");
-    verify(end).equal(SERVICE_ID);
+    verify(query).filter("appId", APP_ID);
+    verify(query).filter("serviceId", SERVICE_ID);
     verify(spyTemplateService).delete(APP_ID, TEMPLATE_ID);
   }
 

@@ -226,7 +226,7 @@ public class UserServiceImpl implements UserService {
 
   private User getUserByEmail(String email) {
     return isNotEmpty(email)
-        ? wingsPersistence.createQuery(User.class).field("email").equal(email.trim().toLowerCase()).get()
+        ? wingsPersistence.createQuery(User.class).filter("email", email.trim().toLowerCase()).get()
         : null;
   }
 
@@ -305,10 +305,8 @@ public class UserServiceImpl implements UserService {
   @Override
   public boolean verifyToken(String emailToken) {
     EmailVerificationToken verificationToken = wingsPersistence.createQuery(EmailVerificationToken.class)
-                                                   .field("appId")
-                                                   .equal(Base.GLOBAL_APP_ID)
-                                                   .field("token")
-                                                   .equal(emailToken)
+                                                   .filter("appId", Base.GLOBAL_APP_ID)
+                                                   .filter("token", emailToken)
                                                    .get();
 
     if (verificationToken == null) {
@@ -465,12 +463,8 @@ public class UserServiceImpl implements UserService {
 
   @Override
   public UserInvite deleteInvite(String accountId, String inviteId) {
-    UserInvite userInvite = wingsPersistence.createQuery(UserInvite.class)
-                                .field(ID_KEY)
-                                .equal(inviteId)
-                                .field("accountId")
-                                .equal(accountId)
-                                .get();
+    UserInvite userInvite =
+        wingsPersistence.createQuery(UserInvite.class).filter(ID_KEY, inviteId).filter("accountId", accountId).get();
     if (userInvite != null) {
       wingsPersistence.delete(userInvite);
     }
@@ -644,7 +638,7 @@ public class UserServiceImpl implements UserService {
     UpdateOperations<User> updateOp = wingsPersistence.createUpdateOperations(User.class)
                                           .set("roles", user.getRoles())
                                           .set("accounts", user.getAccounts());
-    Query<User> updateQuery = wingsPersistence.createQuery(User.class).field(ID_KEY).equal(userId);
+    Query<User> updateQuery = wingsPersistence.createQuery(User.class).filter(ID_KEY, userId);
     wingsPersistence.update(updateQuery, updateOp);
     evictUserFromCache(userId);
   }
@@ -698,7 +692,7 @@ public class UserServiceImpl implements UserService {
     Role role = ensureRolePresent(roleId);
 
     UpdateOperations<User> updateOp = wingsPersistence.createUpdateOperations(User.class).addToSet("roles", role);
-    Query<User> updateQuery = wingsPersistence.createQuery(User.class).field(ID_KEY).equal(userId);
+    Query<User> updateQuery = wingsPersistence.createQuery(User.class).filter(ID_KEY, userId);
     wingsPersistence.update(updateQuery, updateOp);
     evictUserFromCache(userId);
     return wingsPersistence.get(User.class, userId);
@@ -713,7 +707,7 @@ public class UserServiceImpl implements UserService {
     Role role = ensureRolePresent(roleId);
 
     UpdateOperations<User> updateOp = wingsPersistence.createUpdateOperations(User.class).removeAll("roles", role);
-    Query<User> updateQuery = wingsPersistence.createQuery(User.class).field(ID_KEY).equal(userId);
+    Query<User> updateQuery = wingsPersistence.createQuery(User.class).filter(ID_KEY, userId);
     wingsPersistence.update(updateQuery, updateOp);
     evictUserFromCache(userId);
     return wingsPersistence.get(User.class, userId);
@@ -833,11 +827,8 @@ public class UserServiceImpl implements UserService {
 
   @Override
   public User addUserGroups(User user, List<UserGroup> userGroups) {
-    UpdateResults updated = wingsPersistence.update(wingsPersistence.createQuery(User.class)
-                                                        .field("email")
-                                                        .equal(user.getEmail())
-                                                        .field("appId")
-                                                        .equal(user.getAppId()),
+    UpdateResults updated = wingsPersistence.update(
+        wingsPersistence.createQuery(User.class).filter("email", user.getEmail()).filter("appId", user.getAppId()),
         wingsPersistence.createUpdateOperations(User.class).addToSet("userGroups", userGroups));
     return user;
   }
@@ -864,20 +855,15 @@ public class UserServiceImpl implements UserService {
 
   private User addAccountRoles(User existingUser, Account account, List<Role> roles) {
     UpdateResults updated = wingsPersistence.update(wingsPersistence.createQuery(User.class)
-                                                        .field("email")
-                                                        .equal(existingUser.getEmail())
-                                                        .field("appId")
-                                                        .equal(existingUser.getAppId()),
+                                                        .filter("email", existingUser.getEmail())
+                                                        .filter("appId", existingUser.getAppId()),
         wingsPersistence.createUpdateOperations(User.class).addToSet("accounts", account).addToSet("roles", roles));
     return existingUser;
   }
 
   private User addRoles(User user, List<Role> roles) {
-    UpdateResults updated = wingsPersistence.update(wingsPersistence.createQuery(User.class)
-                                                        .field("email")
-                                                        .equal(user.getEmail())
-                                                        .field("appId")
-                                                        .equal(user.getAppId()),
+    UpdateResults updated = wingsPersistence.update(
+        wingsPersistence.createQuery(User.class).filter("email", user.getEmail()).filter("appId", user.getAppId()),
         wingsPersistence.createUpdateOperations(User.class).addToSet("roles", roles));
     return user;
   }

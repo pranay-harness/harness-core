@@ -116,8 +116,7 @@ public class AuditServiceImpl implements AuditService {
     if (header == null) {
       return;
     }
-    Query<AuditHeader> updateQuery =
-        wingsPersistence.createQuery(AuditHeader.class).field(ID_KEY).equal(header.getUuid());
+    Query<AuditHeader> updateQuery = wingsPersistence.createQuery(AuditHeader.class).filter(ID_KEY, header.getUuid());
     UpdateOperations<AuditHeader> updateOperations =
         wingsPersistence.createUpdateOperations(AuditHeader.class).set("remoteUser", user);
     wingsPersistence.update(updateQuery, updateOperations);

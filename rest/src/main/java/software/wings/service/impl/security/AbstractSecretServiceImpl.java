@@ -35,12 +35,9 @@ public abstract class AbstractSecretServiceImpl {
       case SERVICE_VARIABLE:
         final MorphiaIterator<ServiceVariable, ServiceVariable> serviceVaribaleQuery =
             wingsPersistence.createQuery(ServiceVariable.class)
-                .field("accountId")
-                .equal(accountId)
-                .field("appId")
-                .equal(appId)
-                .field("name")
-                .equal(entityName)
+                .filter("accountId", accountId)
+                .filter("appId", appId)
+                .filter("name", entityName)
                 .fetch(new FindOptions().limit(1));
         try (DBCursor cursor = serviceVaribaleQuery.getCursor()) {
           if (serviceVaribaleQuery.hasNext()) {
@@ -52,12 +49,9 @@ public abstract class AbstractSecretServiceImpl {
 
       case CONFIG_FILE:
         final MorphiaIterator<ConfigFile, ConfigFile> configFileQuery = wingsPersistence.createQuery(ConfigFile.class)
-                                                                            .field("accountId")
-                                                                            .equal(accountId)
-                                                                            .field("appId")
-                                                                            .equal(appId)
-                                                                            .field("name")
-                                                                            .equal(entityName)
+                                                                            .filter("accountId", accountId)
+                                                                            .filter("appId", appId)
+                                                                            .filter("name", entityName)
                                                                             .fetch(new FindOptions().limit(1));
         try (DBCursor cursor = configFileQuery.getCursor()) {
           if (configFileQuery.hasNext()) {
@@ -69,12 +63,9 @@ public abstract class AbstractSecretServiceImpl {
       default:
         final MorphiaIterator<SettingAttribute, SettingAttribute> settingAttributeQuery =
             wingsPersistence.createQuery(SettingAttribute.class)
-                .field("accountId")
-                .equal(accountId)
-                .field("name")
-                .equal(entityName)
-                .field("value.type")
-                .equal(variableType)
+                .filter("accountId", accountId)
+                .filter("name", entityName)
+                .filter("value.type", variableType)
                 .fetch(new FindOptions().limit(1));
         try (DBCursor cursor = settingAttributeQuery.getCursor()) {
           if (settingAttributeQuery.hasNext()) {

@@ -9,7 +9,6 @@ import static org.mockito.Matchers.anyObject;
 import static org.mockito.Matchers.anyString;
 import static org.mockito.Matchers.eq;
 import static org.mockito.Mockito.doNothing;
-import static org.mockito.Mockito.times;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 import static org.mongodb.morphia.mapping.Mapper.ID_KEY;
@@ -90,8 +89,8 @@ public class ServiceInstanceServiceTest extends WingsBaseTest {
   @Before
   public void setUp() throws Exception {
     when(wingsPersistence.createQuery(ServiceInstance.class)).thenReturn(query);
+    when(query.filter(any(), any())).thenReturn(query);
     when(query.field(anyString())).thenReturn(end);
-    when(end.equal(anyObject())).thenReturn(query);
     when(end.hasAnyOf(anyCollection())).thenReturn(query);
     when(wingsPersistence.createUpdateOperations(ServiceInstance.class)).thenReturn(updateOperations);
     when(updateOperations.set(anyString(), anyObject())).thenReturn(updateOperations);
@@ -152,10 +151,8 @@ public class ServiceInstanceServiceTest extends WingsBaseTest {
 
     verify(wingsPersistence).update(any(Query.class), any(UpdateOperations.class));
 
-    verify(query).field("appId");
-    verify(end).equal(APP_ID);
-    verify(query).field(ID_KEY);
-    verify(end).equal(SERVICE_INSTANCE_ID);
+    verify(query).filter("appId", APP_ID);
+    verify(query).filter(ID_KEY, SERVICE_INSTANCE_ID);
 
     verify(updateOperations).set("artifactId", ARTIFACT_ID);
     verify(updateOperations).set("artifactName", ARTIFACT_NAME);
@@ -181,12 +178,9 @@ public class ServiceInstanceServiceTest extends WingsBaseTest {
     assertThat(savedServiceInstance).isNotNull();
     assertThat(savedServiceInstance).isInstanceOf(ServiceInstance.class);
     verify(query).get();
-    verify(query).field("appId");
-    verify(end).equal(APP_ID);
-    verify(query).field("envId");
-    verify(end).equal(ENV_ID);
-    verify(query).field(ID_KEY);
-    verify(end).equal(SERVICE_INSTANCE_ID);
+    verify(query).filter("appId", APP_ID);
+    verify(query).filter("envId", ENV_ID);
+    verify(query).filter(ID_KEY, SERVICE_INSTANCE_ID);
   }
 
   /**
@@ -196,12 +190,9 @@ public class ServiceInstanceServiceTest extends WingsBaseTest {
   public void shouldDeleteServiceInstance() {
     serviceInstanceService.delete(APP_ID, ENV_ID, SERVICE_INSTANCE_ID);
     verify(wingsPersistence).delete(query);
-    verify(query).field("appId");
-    verify(end).equal(APP_ID);
-    verify(query).field("envId");
-    verify(end).equal(ENV_ID);
-    verify(query).field(ID_KEY);
-    verify(end).equal(SERVICE_INSTANCE_ID);
+    verify(query).filter("appId", APP_ID);
+    verify(query).filter("envId", ENV_ID);
+    verify(query).filter(ID_KEY, SERVICE_INSTANCE_ID);
   }
 
   /**
@@ -213,10 +204,8 @@ public class ServiceInstanceServiceTest extends WingsBaseTest {
     doNothing().when(spyInstanceService).delete(APP_ID, ENV_ID, SERVICE_INSTANCE_ID);
     spyInstanceService.deleteByEnv(APP_ID, ENV_ID);
     verify(spyInstanceService).delete(APP_ID, ENV_ID, SERVICE_INSTANCE_ID);
-    verify(query).field("appId");
-    verify(end).equal(APP_ID);
-    verify(query).field("envId");
-    verify(end).equal(ENV_ID);
+    verify(query).filter("appId", APP_ID);
+    verify(query).filter("envId", ENV_ID);
     verify(query).asList();
   }
 
@@ -229,12 +218,9 @@ public class ServiceInstanceServiceTest extends WingsBaseTest {
     doNothing().when(spyInstanceService).delete(APP_ID, ENV_ID, SERVICE_INSTANCE_ID);
     spyInstanceService.deleteByServiceTemplate(APP_ID, ENV_ID, TEMPLATE_ID);
     verify(spyInstanceService).delete(APP_ID, ENV_ID, SERVICE_INSTANCE_ID);
-    verify(query).field("appId");
-    verify(end).equal(APP_ID);
-    verify(query).field("envId");
-    verify(end).equal(ENV_ID);
-    verify(query).field("serviceTemplate");
-    verify(end).equal(TEMPLATE_ID);
+    verify(query).filter("appId", APP_ID);
+    verify(query).filter("envId", ENV_ID);
+    verify(query).filter("serviceTemplate", TEMPLATE_ID);
     verify(query).asList();
   }
 
@@ -254,13 +240,10 @@ public class ServiceInstanceServiceTest extends WingsBaseTest {
         aServiceTemplate().withAppId(APP_ID).withEnvId(ENV_ID).withUuid(TEMPLATE_ID).withServiceId(SERVICE_ID).build();
     serviceInstanceService.updateInstanceMappings(
         serviceTemplate, aPhysicalInfrastructureMapping().withUuid(INFRA_MAPPING_ID).build(), newHostList);
-    verify(query).field("infraMappingId");
-    verify(end).equal(INFRA_MAPPING_ID);
-    verify(query).field("hostId");
-    verify(end).equal("NEW_HOST_ID");
-    verify(query).field("hostName");
-    verify(query).field("publicDns");
-    verify(end, times(2)).equal(HOST_NAME);
+    verify(query).filter("infraMappingId", INFRA_MAPPING_ID);
+    verify(query).filter("hostId", "NEW_HOST_ID");
+    verify(query).filter("hostName", HOST_NAME);
+    verify(query).filter("publicDns", HOST_NAME);
     verify(wingsPersistence)
         .saveAndGet(ServiceInstance.class,
             aServiceInstance()

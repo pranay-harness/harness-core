@@ -43,10 +43,8 @@ public class YamlChangeSetServiceImpl implements YamlChangeSetService {
   @Override
   public YamlChangeSet get(String accountId, String changeSetId) {
     return wingsPersistence.createQuery(YamlChangeSet.class)
-        .field("accountId")
-        .equal(accountId)
-        .field(Mapper.ID_KEY)
-        .equal(changeSetId)
+        .filter("accountId", accountId)
+        .filter(Mapper.ID_KEY, changeSetId)
         .get();
   }
 
@@ -61,10 +59,8 @@ public class YamlChangeSetServiceImpl implements YamlChangeSetService {
   public synchronized YamlChangeSet getQueuedChangeSet(String accountId) {
     try (AcquiredLock lock = persistentLocker.acquireLock(YamlChangeSet.class, accountId, Duration.ofMinutes(1))) {
       Query<YamlChangeSet> findQuery = wingsPersistence.createQuery(YamlChangeSet.class)
-                                           .field("accountId")
-                                           .equal(accountId)
-                                           .field("status")
-                                           .equal(Status.QUEUED)
+                                           .filter("accountId", accountId)
+                                           .filter("status", Status.QUEUED)
                                            .order("createdAt");
       UpdateOperations<YamlChangeSet> updateOperations =
           wingsPersistence.createUpdateOperations(YamlChangeSet.class).set("status", Status.RUNNING);
@@ -98,10 +94,8 @@ public class YamlChangeSetServiceImpl implements YamlChangeSetService {
   @Override
   public boolean deleteChangeSet(String accountId, String changeSetId) {
     return wingsPersistence.delete(wingsPersistence.createQuery(YamlChangeSet.class)
-                                       .field("accountId")
-                                       .equal(accountId)
-                                       .field(Mapper.ID_KEY)
-                                       .equal(changeSetId));
+                                       .filter("accountId", accountId)
+                                       .filter(Mapper.ID_KEY, changeSetId));
   }
 
   @Override

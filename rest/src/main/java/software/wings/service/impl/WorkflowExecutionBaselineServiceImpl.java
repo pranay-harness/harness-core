@@ -36,14 +36,12 @@ public class WorkflowExecutionBaselineServiceImpl implements WorkflowExecutionBa
     Preconditions.checkState(!isEmpty(workflowExecutionBaselines));
 
     for (WorkflowExecutionBaseline workflowExecutionBaseline : workflowExecutionBaselines) {
-      List<WorkflowExecutionBaseline> existingBaselines = wingsPersistence.createQuery(WorkflowExecutionBaseline.class)
-                                                              .field("workflowId")
-                                                              .equal(workflowExecutionBaseline.getWorkflowId())
-                                                              .field("envId")
-                                                              .equal(workflowExecutionBaseline.getEnvId())
-                                                              .field("serviceId")
-                                                              .equal(workflowExecutionBaseline.getServiceId())
-                                                              .asList();
+      List<WorkflowExecutionBaseline> existingBaselines =
+          wingsPersistence.createQuery(WorkflowExecutionBaseline.class)
+              .filter("workflowId", workflowExecutionBaseline.getWorkflowId())
+              .filter("envId", workflowExecutionBaseline.getEnvId())
+              .filter("serviceId", workflowExecutionBaseline.getServiceId())
+              .asList();
       if (!isEmpty(existingBaselines)) {
         Preconditions.checkState(
             existingBaselines.size() == 1, "found more than 1 baselines for " + workflowExecutionBaseline);

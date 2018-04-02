@@ -118,8 +118,7 @@ public class WorkflowExecutionServiceTest extends WingsBaseTest {
   @Before
   public void setUp() {
     when(wingsPersistence.createQuery(eq(WorkflowExecution.class))).thenReturn(query);
-    when(query.field(any())).thenReturn(end);
-    when(end.equal(any())).thenReturn(query);
+    when(query.filter(any(), any())).thenReturn(query);
 
     when(wingsPersistence.createUpdateOperations(WorkflowExecution.class)).thenReturn(updateOperations);
     when(updateOperations.set(anyString(), any())).thenReturn(updateOperations);

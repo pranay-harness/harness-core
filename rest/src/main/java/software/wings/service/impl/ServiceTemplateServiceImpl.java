@@ -194,13 +194,10 @@ public class ServiceTemplateServiceImpl implements ServiceTemplateService {
 
   @Override
   public List<Key<ServiceTemplate>> getTemplateRefKeysByService(String appId, String serviceId, String envId) {
-    Query<ServiceTemplate> templateQuery = wingsPersistence.createQuery(ServiceTemplate.class)
-                                               .field("appId")
-                                               .equal(appId)
-                                               .field("serviceId")
-                                               .equal(serviceId);
+    Query<ServiceTemplate> templateQuery =
+        wingsPersistence.createQuery(ServiceTemplate.class).filter("appId", appId).filter("serviceId", serviceId);
     if (isNotBlank(envId)) {
-      templateQuery.field("envId").equal(envId);
+      templateQuery.filter("envId", envId);
     }
     return templateQuery.asKeyList();
   }
@@ -209,14 +206,10 @@ public class ServiceTemplateServiceImpl implements ServiceTemplateService {
   public void updateDefaultServiceTemplateName(
       String appId, String serviceId, String oldServiceName, String newServiceName) {
     Query<ServiceTemplate> query = wingsPersistence.createQuery(ServiceTemplate.class)
-                                       .field("appId")
-                                       .equal(appId)
-                                       .field("serviceId")
-                                       .equal(serviceId)
-                                       .field("defaultServiceTemplate")
-                                       .equal(true)
-                                       .field("name")
-                                       .equal(oldServiceName);
+                                       .filter("appId", appId)
+                                       .filter("serviceId", serviceId)
+                                       .filter("defaultServiceTemplate", true)
+                                       .filter("name", oldServiceName);
     UpdateOperations<ServiceTemplate> updateOperations =
         wingsPersistence.createUpdateOperations(ServiceTemplate.class).set("name", newServiceName);
     wingsPersistence.update(query, updateOperations);
@@ -225,10 +218,8 @@ public class ServiceTemplateServiceImpl implements ServiceTemplateService {
   @Override
   public boolean exist(String appId, String templateId) {
     return wingsPersistence.createQuery(ServiceTemplate.class)
-               .field("appId")
-               .equal(appId)
-               .field(ID_KEY)
-               .equal(templateId)
+               .filter("appId", appId)
+               .filter(ID_KEY, templateId)
                .getKey()
         != null;
   }
@@ -297,10 +288,8 @@ public class ServiceTemplateServiceImpl implements ServiceTemplateService {
   public void delete(String appId, String serviceTemplateId) {
     // TODO: move to the prune pattern
     boolean deleted = wingsPersistence.delete(wingsPersistence.createQuery(ServiceTemplate.class)
-                                                  .field(ServiceTemplate.APP_ID_KEY)
-                                                  .equal(appId)
-                                                  .field(ID_KEY)
-                                                  .equal(serviceTemplateId));
+                                                  .filter(ServiceTemplate.APP_ID_KEY, appId)
+                                                  .filter(ID_KEY, serviceTemplateId));
     if (deleted) {
       executorService.submit(() -> infrastructureMappingService.deleteByServiceTemplate(appId, serviceTemplateId));
       executorService.submit(() -> configService.deleteByTemplateId(appId, serviceTemplateId));
@@ -311,10 +300,8 @@ public class ServiceTemplateServiceImpl implements ServiceTemplateService {
   @Override
   public void pruneByEnvironment(String appId, String envId) {
     List<Key<ServiceTemplate>> keys = wingsPersistence.createQuery(ServiceTemplate.class)
-                                          .field(ServiceTemplate.APP_ID_KEY)
-                                          .equal(appId)
-                                          .field("envId")
-                                          .equal(envId)
+                                          .filter(ServiceTemplate.APP_ID_KEY, appId)
+                                          .filter("envId", envId)
                                           .asKeyList();
     for (Key<ServiceTemplate> key : keys) {
       delete(appId, (String) key.getId());
@@ -324,10 +311,8 @@ public class ServiceTemplateServiceImpl implements ServiceTemplateService {
   @Override
   public void pruneByService(String appId, String serviceId) {
     wingsPersistence.createQuery(ServiceTemplate.class)
-        .field(ServiceTemplate.APP_ID_KEY)
-        .equal(appId)
-        .field("serviceId")
-        .equal(serviceId)
+        .filter(ServiceTemplate.APP_ID_KEY, appId)
+        .filter("serviceId", serviceId)
         .asList()
         .forEach(serviceTemplate -> delete(serviceTemplate.getAppId(), serviceTemplate.getUuid()));
   }

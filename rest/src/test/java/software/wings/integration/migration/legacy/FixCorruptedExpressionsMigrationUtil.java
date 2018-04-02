@@ -74,10 +74,10 @@ public class FixCorruptedExpressionsMigrationUtil extends WingsBaseTest {
   }
 
   private void checkAwsInfraMappings() {
-    List<InfrastructureMapping> awsInfraMappings = wingsPersistence.createQuery(InfrastructureMapping.class)
-                                                       .field("infraMappingType")
-                                                       .equal(InfrastructureMappingType.AWS_SSH.name())
-                                                       .asList();
+    List<InfrastructureMapping> awsInfraMappings =
+        wingsPersistence.createQuery(InfrastructureMapping.class)
+            .filter("infraMappingType", InfrastructureMappingType.AWS_SSH.name())
+            .asList();
     for (InfrastructureMapping infraMapping : awsInfraMappings) {
       AwsInfrastructureMapping awsInfrastructureMapping = (AwsInfrastructureMapping) infraMapping;
       if (!awsInfrastructureMapping.isProvisionInstances() && awsInfrastructureMapping.getAwsInstanceFilter() != null) {

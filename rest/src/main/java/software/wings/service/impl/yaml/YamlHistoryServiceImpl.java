@@ -89,10 +89,8 @@ public class YamlHistoryServiceImpl implements YamlHistoryService {
   public List<YamlVersion> getList(String entityId, Type type) {
     List<YamlVersion> versions = new ArrayList<>();
     return wingsPersistence.createQuery(YamlVersion.class)
-        .field("entityId")
-        .equal(entityId)
-        .field("type")
-        .equal(type)
+        .filter("entityId", entityId)
+        .filter("type", type)
         .order("-version")
         .asList();
   }
@@ -100,10 +98,8 @@ public class YamlHistoryServiceImpl implements YamlHistoryService {
   @Override
   public YamlVersion getHighestVersion(String entityId, Type type) {
     List<YamlVersion> versions = wingsPersistence.createQuery(YamlVersion.class)
-                                     .field("entityId")
-                                     .equal(entityId)
-                                     .field("type")
-                                     .equal(type)
+                                     .filter("entityId", entityId)
+                                     .filter("type", type)
                                      .order("-version")
                                      .asList();
 

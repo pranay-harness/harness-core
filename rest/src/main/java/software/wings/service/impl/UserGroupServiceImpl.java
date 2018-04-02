@@ -138,10 +138,8 @@ public class UserGroupServiceImpl implements UserGroupService {
     Validator.notNullCheck("uuid", userGroup.getUuid());
     Validator.notNullCheck("accountId", userGroup.getAccountId());
     Query<UserGroup> query = wingsPersistence.createQuery(UserGroup.class)
-                                 .field(ID_KEY)
-                                 .equal(userGroup.getUuid())
-                                 .field("accountId")
-                                 .equal(userGroup.getAccountId());
+                                 .filter(ID_KEY, userGroup.getUuid())
+                                 .filter("accountId", userGroup.getAccountId());
     wingsPersistence.update(query, operations);
     return get(userGroup.getAccountId(), userGroup.getUuid());
   }
@@ -151,10 +149,8 @@ public class UserGroupServiceImpl implements UserGroupService {
     UserGroup userGroup = get(accountId, userGroupId, false);
     Validator.notNullCheck("userGroup", userGroup);
     Query<UserGroup> userGroupQuery = wingsPersistence.createQuery(UserGroup.class)
-                                          .field(UserGroup.ACCOUNT_ID_KEY)
-                                          .equal(accountId)
-                                          .field(ID_KEY)
-                                          .equal(userGroupId);
+                                          .filter(UserGroup.ACCOUNT_ID_KEY, accountId)
+                                          .filter(ID_KEY, userGroupId);
     boolean deleted = wingsPersistence.delete(userGroupQuery);
     if (deleted) {
       evictUserPermissionInfoCacheForUserGroup(userGroup);

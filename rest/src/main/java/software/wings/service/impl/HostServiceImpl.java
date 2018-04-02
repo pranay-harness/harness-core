@@ -64,12 +64,9 @@ public class HostServiceImpl implements HostService {
   @Override
   public Host get(String appId, String envId, String hostId) {
     Host host = wingsPersistence.createQuery(Host.class)
-                    .field(ID_KEY)
-                    .equal(hostId)
-                    .field("envId")
-                    .equal(envId)
-                    .field("appId")
-                    .equal(appId)
+                    .filter(ID_KEY, hostId)
+                    .filter("envId", envId)
+                    .filter("appId", appId)
                     .get();
     notNullCheck("Host", host);
     return host;
@@ -98,24 +95,18 @@ public class HostServiceImpl implements HostService {
   @Override
   public Host saveHost(Host appHost) {
     Host applicationHost = wingsPersistence.createQuery(Host.class)
-                               .field("serviceTemplateId")
-                               .equal(appHost.getServiceTemplateId())
-                               .field("hostName")
-                               .equal(appHost.getHostName())
-                               .field("publicDns")
-                               .equal(appHost.getPublicDns())
-                               .field("appId")
-                               .equal(appHost.getAppId())
-                               .field("envId")
-                               .equal(appHost.getEnvId())
+                               .filter("serviceTemplateId", appHost.getServiceTemplateId())
+                               .filter("hostName", appHost.getHostName())
+                               .filter("publicDns", appHost.getPublicDns())
+                               .filter("appId", appHost.getAppId())
+                               .filter("envId", appHost.getEnvId())
                                .get();
     return applicationHost != null ? applicationHost : wingsPersistence.saveAndGet(Host.class, appHost);
   }
 
   @Override
   public boolean exist(String appId, String hostId) {
-    return wingsPersistence.createQuery(Host.class).field(ID_KEY).equal(hostId).field("appId").equal(appId).getKey()
-        != null;
+    return wingsPersistence.createQuery(Host.class).filter(ID_KEY, hostId).filter("appId", appId).getKey() != null;
   }
 
   /* (non-Javadoc)
@@ -140,10 +131,8 @@ public class HostServiceImpl implements HostService {
   @Override
   public List<Host> getHostsByHostIds(String appId, String envId, List<String> hostUuids) {
     return wingsPersistence.createQuery(Host.class)
-        .field("appId")
-        .equal(appId)
-        .field("envId")
-        .equal(envId)
+        .filter("appId", appId)
+        .filter("envId", envId)
         .field(ID_KEY)
         .hasAnyOf(hostUuids)
         .asList();
@@ -151,18 +140,15 @@ public class HostServiceImpl implements HostService {
 
   @Override
   public List<Host> getHostsByEnv(String appId, String envId) {
-    return wingsPersistence.createQuery(Host.class).field("appId").equal(appId).field("envId").equal(envId).asList();
+    return wingsPersistence.createQuery(Host.class).filter("appId", appId).filter("envId", envId).asList();
   }
 
   @Override
   public Host getHostByEnv(String appId, String envId, String hostId) {
     return wingsPersistence.createQuery(Host.class)
-        .field("appId")
-        .equal(appId)
-        .field("envId")
-        .equal(envId)
-        .field(ID_KEY)
-        .equal(hostId)
+        .filter("appId", appId)
+        .filter("envId", envId)
+        .filter(ID_KEY, hostId)
         .get();
   }
 
@@ -190,10 +176,8 @@ public class HostServiceImpl implements HostService {
   @Override
   public void deleteByEnvironment(String appId, String envId) {
     wingsPersistence.createQuery(Host.class)
-        .field("appId")
-        .equal(appId)
-        .field("envId")
-        .equal(envId)
+        .filter("appId", appId)
+        .filter("envId", envId)
         .asList()
         .forEach(this ::delete);
   }
@@ -201,22 +185,16 @@ public class HostServiceImpl implements HostService {
   @Override
   public void deleteByDnsName(String appId, String infraMappingId, String dnsName) {
     wingsPersistence.delete(wingsPersistence.createQuery(Host.class)
-                                .field("appId")
-                                .equal(appId)
-                                .field("infraMappingId")
-                                .equal(infraMappingId)
-                                .field("publicDns")
-                                .equal(dnsName));
+                                .filter("appId", appId)
+                                .filter("infraMappingId", infraMappingId)
+                                .filter("publicDns", dnsName));
   }
 
   @Override
   public void updateHostConnectionAttrByInfraMappingId(
       String appId, String infraMappingId, String hostConnectionAttrs) {
-    Query<Host> query = wingsPersistence.createQuery(Host.class)
-                            .field("appId")
-                            .equal(appId)
-                            .field("infraMappingId")
-                            .equal(infraMappingId);
+    Query<Host> query =
+        wingsPersistence.createQuery(Host.class).filter("appId", appId).filter("infraMappingId", infraMappingId);
     UpdateOperations<Host> operations =
         wingsPersistence.createUpdateOperations(Host.class).set("hostConnAttr", hostConnectionAttrs);
     wingsPersistence.update(query, operations);
@@ -224,19 +202,13 @@ public class HostServiceImpl implements HostService {
 
   @Override
   public void pruneByInfrastructureMapping(String appId, String infraMappingId) {
-    wingsPersistence.delete(wingsPersistence.createQuery(Host.class)
-                                .field("appId")
-                                .equal(appId)
-                                .field("infraMappingId")
-                                .equal(infraMappingId));
+    wingsPersistence.delete(
+        wingsPersistence.createQuery(Host.class).filter("appId", appId).filter("infraMappingId", infraMappingId));
   }
 
   @Override
   public void deleteByService(String appId, String envId, String serviceTemplateId) {
-    wingsPersistence.delete(wingsPersistence.createQuery(Host.class)
-                                .field("appId")
-                                .equal(appId)
-                                .field("serviceTemplateId")
-                                .equal(serviceTemplateId));
+    wingsPersistence.delete(
+        wingsPersistence.createQuery(Host.class).filter("appId", appId).filter("serviceTemplateId", serviceTemplateId));
   }
 }

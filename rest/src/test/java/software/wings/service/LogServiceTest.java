@@ -66,8 +66,7 @@ public class LogServiceTest extends WingsBaseTest {
   @Before
   public void setUp() throws Exception {
     when(wingsPersistence.createQuery(Log.class)).thenReturn(query);
-    when(query.field(any())).thenReturn(end);
-    when(end.equal(any())).thenReturn(query);
+    when(query.filter(any(), any())).thenReturn(query);
   }
 
   /**
@@ -116,10 +115,8 @@ public class LogServiceTest extends WingsBaseTest {
     when(wingsPersistence.save(any(Log.class))).thenReturn(LOG_ID);
     String logId = logService.batchedSaveCommandUnitLogs(ACTIVITY_ID, COMMAND_UNIT_NAME, BUILDER.build());
     assertThat(logId).isEqualTo(null);
-    verify(query).field("appId");
-    verify(end).equal(APP_ID);
-    verify(query).field("activityId");
-    verify(end).equal(ACTIVITY_ID);
+    verify(query).filter("appId", APP_ID);
+    verify(query).filter("activityId", ACTIVITY_ID);
     verify(query).count();
   }
 }

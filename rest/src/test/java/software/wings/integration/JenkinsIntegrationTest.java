@@ -26,8 +26,7 @@ public class JenkinsIntegrationTest extends BaseIntegrationTest {
   public void testSettingsOverwrite() throws Exception {
     super.setUp();
     loginAdminUser();
-    wingsPersistence.delete(
-        wingsPersistence.createQuery(SettingAttribute.class).field("name").equal("Harness Jenkins"));
+    wingsPersistence.delete(wingsPersistence.createQuery(SettingAttribute.class).filter("name", "Harness Jenkins"));
     SettingAttribute jenkinsSettingAttribute =
         aSettingAttribute()
             .withName("Harness Jenkins")
@@ -44,8 +43,7 @@ public class JenkinsIntegrationTest extends BaseIntegrationTest {
 
     JenkinsConfig jenkinsConfig =
         (JenkinsConfig) wingsPersistence
-            .executeGetOneQuery(
-                wingsPersistence.createQuery(SettingAttribute.class).field("name").equal("Harness Jenkins"))
+            .executeGetOneQuery(wingsPersistence.createQuery(SettingAttribute.class).filter("name", "Harness Jenkins"))
             .getValue();
     assertEquals("http://ec2-34-207-79-21.compute-1.amazonaws.com:8080/", jenkinsConfig.getJenkinsUrl());
   }

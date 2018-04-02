@@ -83,10 +83,8 @@ public class KmsServiceImpl extends AbstractSecretServiceImpl implements KmsServ
   public KmsConfig getSecretConfig(String accountId) {
     KmsConfig kmsConfig = null;
     final MorphiaIterator<KmsConfig, KmsConfig> query1 = wingsPersistence.createQuery(KmsConfig.class)
-                                                             .field("accountId")
-                                                             .equal(accountId)
-                                                             .field("isDefault")
-                                                             .equal(true)
+                                                             .filter("accountId", accountId)
+                                                             .filter("isDefault", true)
                                                              .fetch(new FindOptions().limit(1));
 
     try (DBCursor cursor = query1.getCursor()) {
@@ -98,8 +96,7 @@ public class KmsServiceImpl extends AbstractSecretServiceImpl implements KmsServ
     if (kmsConfig == null) {
       logger.info("No kms setup for account {}. Using harness's kms", accountId);
       final MorphiaIterator<KmsConfig, KmsConfig> query2 = wingsPersistence.createQuery(KmsConfig.class)
-                                                               .field("accountId")
-                                                               .equal(Base.GLOBAL_ACCOUNT_ID)
+                                                               .filter("accountId", Base.GLOBAL_ACCOUNT_ID)
                                                                .fetch(new FindOptions().limit(1));
 
       try (DBCursor cursor = query2.getCursor()) {
@@ -143,10 +140,10 @@ public class KmsServiceImpl extends AbstractSecretServiceImpl implements KmsServ
 
   private String saveKmsConfigInternal(String accountId, KmsConfig kmsConfig) {
     kmsConfig.setAccountId(accountId);
-    Query<KmsConfig> query = wingsPersistence.createQuery(KmsConfig.class).field("accountId").equal(accountId);
+    Query<KmsConfig> query = wingsPersistence.createQuery(KmsConfig.class).filter("accountId", accountId);
     Collection<KmsConfig> savedConfigs = query.asList();
     Query<VaultConfig> vaultConfigQuery =
-        wingsPersistence.createQuery(VaultConfig.class).field("accountId").equal(accountId);
+        wingsPersistence.createQuery(VaultConfig.class).filter("accountId", accountId);
     List<VaultConfig> vaultConfigs = vaultConfigQuery.asList();
 
     EncryptedData accessKeyData = encrypt(kmsConfig.getAccessKey().toCharArray(), accountId, null);
@@ -230,12 +227,9 @@ public class KmsServiceImpl extends AbstractSecretServiceImpl implements KmsServ
   @Override
   public boolean deleteKmsConfig(String accountId, String kmsConfigId) {
     final MorphiaIterator<EncryptedData, EncryptedData> query = wingsPersistence.createQuery(EncryptedData.class)
-                                                                    .field("accountId")
-                                                                    .equal(accountId)
-                                                                    .field("kmsId")
-                                                                    .equal(kmsConfigId)
-                                                                    .field("encryptionType")
-                                                                    .equal(EncryptionType.KMS)
+                                                                    .filter("accountId", accountId)
+                                                                    .filter("kmsId", kmsConfigId)
+                                                                    .filter("encryptionType", EncryptionType.KMS)
                                                                     .fetch(new FindOptions().limit(1));
 
     try (DBCursor cursor = query.getCursor()) {
@@ -267,10 +261,8 @@ public class KmsServiceImpl extends AbstractSecretServiceImpl implements KmsServ
       while (query.hasNext()) {
         KmsConfig kmsConfig = query.next();
         Query<EncryptedData> encryptedDataQuery = wingsPersistence.createQuery(EncryptedData.class)
-                                                      .field("accountId")
-                                                      .equal(accountId)
-                                                      .field("kmsId")
-                                                      .equal(kmsConfig.getUuid());
+                                                      .filter("accountId", accountId)
+                                                      .filter("kmsId", kmsConfig.getUuid());
         kmsConfig.setNumOfEncryptedValue(encryptedDataQuery.asKeyList().size());
         if (kmsConfig.isDefault()) {
           defaultSet = true;
@@ -370,8 +362,7 @@ public class KmsServiceImpl extends AbstractSecretServiceImpl implements KmsServ
     final MorphiaIterator<KmsConfig, KmsConfig> query = wingsPersistence.createQuery(KmsConfig.class)
                                                             .field("accountId")
                                                             .in(Lists.newArrayList(accountId, Base.GLOBAL_ACCOUNT_ID))
-                                                            .field("_id")
-                                                            .equal(entityId)
+                                                            .filter("_id", entityId)
                                                             .fetch(new FindOptions().limit(1));
     try (DBCursor cursor = query.getCursor()) {
       if (query.hasNext()) {

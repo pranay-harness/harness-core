@@ -43,7 +43,7 @@ public class AwsListSecretKeysUtil extends WingsBaseTest {
         wingsPersistence.query(SettingAttribute.class, pageRequest).getResponse();
     //    List<SettingAttribute> settingAttributes =
     //    wingsPersistence.createQuery(SettingAttribute.class).field("category")
-    //        .equal("CLOUD_PROVIDER").field("value.type").equal("AWS").asList();
+    //        .equal("CLOUD_PROVIDER").filter("value.type", "AWS").asList();
     logger.info("found " + settingAttributes.size() + " records");
     for (SettingAttribute settingAttribute : settingAttributes) {
       AwsConfig awsConfig = (AwsConfig) settingAttribute.getValue();

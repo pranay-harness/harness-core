@@ -65,7 +65,7 @@ public class LogPurgeTest extends WingsBaseTest {
     for (int activityNum = 0; activityNum < numOfActivities; activityNum++) {
       String activityId = activityIds.get(activityNum);
       List<Log> logs =
-          wingsPersistence.createQuery(Log.class).field("activityId").equal(activityId).order("createdAt").asList();
+          wingsPersistence.createQuery(Log.class).filter("activityId", activityId).order("createdAt").asList();
       assertEquals(numOfLogLines, logs.size());
       for (int logLine = 0; logLine < numOfLogLines; logLine++) {
         String logMessage = "logMessage act: " + activityNum + " line: " + logLine;
@@ -80,7 +80,7 @@ public class LogPurgeTest extends WingsBaseTest {
     for (int activityNum = 0; activityNum < numOfActivities; activityNum++) {
       String activityId = activityIds.get(activityNum);
       List<Log> logs =
-          wingsPersistence.createQuery(Log.class).field("activityId").equal(activityId).order("createdAt").asList();
+          wingsPersistence.createQuery(Log.class).filter("activityId", activityId).order("createdAt").asList();
       assertEquals(NUM_OF_LOGS_TO_KEEP, logs.size());
       //      for(int logLine = 0; logLine < NUM_OF_LOGS_TO_KEEP; logLine++) {
       //        String logMessage = "logMessage act: " + activityNum + " line: " + (logsDeleted + logLine);

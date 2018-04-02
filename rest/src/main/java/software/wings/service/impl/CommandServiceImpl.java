@@ -39,12 +39,9 @@ public class CommandServiceImpl implements CommandService {
   @Override
   public Command getCommand(String appId, String originEntityId, int version) {
     return wingsPersistence.executeGetOneQuery(wingsPersistence.createQuery(Command.class)
-                                                   .field("appId")
-                                                   .equal(appId)
-                                                   .field("originEntityId")
-                                                   .equal(originEntityId)
-                                                   .field("version")
-                                                   .equal(version));
+                                                   .filter("appId", appId)
+                                                   .filter("originEntityId", originEntityId)
+                                                   .filter("version", version));
   }
 
   @Override
@@ -55,12 +52,9 @@ public class CommandServiceImpl implements CommandService {
   @Override
   public ServiceCommand getServiceCommandByName(String appId, String serviceId, String serviceCommandName) {
     return wingsPersistence.executeGetOneQuery(wingsPersistence.createQuery(ServiceCommand.class)
-                                                   .field("appId")
-                                                   .equal(appId)
-                                                   .field("serviceId")
-                                                   .equal(serviceId)
-                                                   .field("name")
-                                                   .equal(serviceCommandName));
+                                                   .filter("appId", appId)
+                                                   .filter("serviceId", serviceId)
+                                                   .filter("name", serviceCommandName));
   }
 
   @Override

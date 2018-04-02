@@ -552,10 +552,8 @@ public class StateMachineExecutor {
 
         List<ExecutionStatus> existingExecutionStatus = asList(FAILED);
         Query<StateExecutionInstance> query = wingsPersistence.createQuery(StateExecutionInstance.class)
-                                                  .field("appId")
-                                                  .equal(stateExecutionInstance.getAppId())
-                                                  .field(ID_KEY)
-                                                  .equal(stateExecutionInstance.getUuid())
+                                                  .filter("appId", stateExecutionInstance.getAppId())
+                                                  .filter(ID_KEY, stateExecutionInstance.getUuid())
                                                   .field("status")
                                                   .in(existingExecutionStatus);
         UpdateResults updateResult = wingsPersistence.update(query, ops);
@@ -934,10 +932,8 @@ public class StateMachineExecutor {
     }
 
     Query<StateExecutionInstance> query = wingsPersistence.createQuery(StateExecutionInstance.class)
-                                              .field("appId")
-                                              .equal(stateExecutionInstance.getAppId())
-                                              .field(ID_KEY)
-                                              .equal(stateExecutionInstance.getUuid())
+                                              .filter("appId", stateExecutionInstance.getAppId())
+                                              .filter(ID_KEY, stateExecutionInstance.getUuid())
                                               .field("status")
                                               .in(existingExecutionStatus);
     UpdateResults updateResult = wingsPersistence.update(query, ops);
@@ -1029,10 +1025,8 @@ public class StateMachineExecutor {
     }
 
     Query<StateExecutionInstance> query = wingsPersistence.createQuery(StateExecutionInstance.class)
-                                              .field("appId")
-                                              .equal(stateExecutionInstance.getAppId())
-                                              .field(ID_KEY)
-                                              .equal(stateExecutionInstance.getUuid())
+                                              .filter("appId", stateExecutionInstance.getAppId())
+                                              .filter(ID_KEY, stateExecutionInstance.getUuid())
                                               .field("status")
                                               .in(runningStatusLists);
 
@@ -1302,10 +1296,8 @@ public class StateMachineExecutor {
     ops.set("status", NEW);
 
     Query<StateExecutionInstance> query = wingsPersistence.createQuery(StateExecutionInstance.class)
-                                              .field("appId")
-                                              .equal(stateExecutionInstance.getAppId())
-                                              .field(ID_KEY)
-                                              .equal(stateExecutionInstance.getUuid())
+                                              .filter("appId", stateExecutionInstance.getAppId())
+                                              .filter(ID_KEY, stateExecutionInstance.getUuid())
                                               .field("status")
                                               .in(asList(WAITING, FAILED, ERROR));
 
@@ -1355,10 +1347,8 @@ public class StateMachineExecutor {
     }
 
     Query<StateExecutionInstance> query = wingsPersistence.createQuery(StateExecutionInstance.class)
-                                              .field("appId")
-                                              .equal(workflowExecutionInterrupt.getAppId())
-                                              .field("executionUuid")
-                                              .equal(workflowExecutionInterrupt.getExecutionUuid())
+                                              .filter("appId", workflowExecutionInterrupt.getAppId())
+                                              .filter("executionUuid", workflowExecutionInterrupt.getExecutionUuid())
                                               .field("uuid")
                                               .in(leafInstanceIds);
     // Set the status to ABORTING
@@ -1423,12 +1413,10 @@ public class StateMachineExecutor {
       String appId, String executionUuid, String stateExecutionInstanceId) {
     // TODO: convert this not to use Query directly after default createdAt sorting is taken off
     Query<StateExecutionInstance> query = wingsPersistence.createQuery(StateExecutionInstance.class, CRITICAL)
-                                              .field(ID_KEY)
-                                              .equal(stateExecutionInstanceId)
-                                              .field("appId")
-                                              .equal(appId);
+                                              .filter(ID_KEY, stateExecutionInstanceId)
+                                              .filter("appId", appId);
     if (executionUuid != null) {
-      query.field("executionUuid").equal(executionUuid);
+      query.filter("executionUuid", executionUuid);
     }
     return query.get();
   }

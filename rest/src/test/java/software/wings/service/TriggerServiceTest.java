@@ -231,8 +231,8 @@ public class TriggerServiceTest extends WingsBaseTest {
   public void setUp() {
     when(wingsPersistence.createQuery(Trigger.class)).thenReturn(query);
     when(wingsPersistence.createQuery(WorkflowExecution.class)).thenReturn(query);
+    when(query.filter(any(), any())).thenReturn(query);
     when(query.field(any())).thenReturn(end);
-    when(end.equal(any())).thenReturn(query);
     when(end.lessThan(any())).thenReturn(query);
     when(end.in(any())).thenReturn(query);
     when(query.order(any(Sort.class))).thenReturn(query);

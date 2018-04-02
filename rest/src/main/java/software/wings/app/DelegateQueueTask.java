@@ -67,8 +67,7 @@ public class DelegateQueueTask implements Runnable {
       // Release tasks acquired by delegate but not started execution. Introduce "ACQUIRED" status may be ?
       Query<DelegateTask> releaseLongQueuedTasks =
           wingsPersistence.createQuery(DelegateTask.class)
-              .field("status")
-              .equal(Status.QUEUED)
+              .filter("status", Status.QUEUED)
               .field("delegateId")
               .exists()
               .field("lastUpdatedAt")
@@ -80,8 +79,7 @@ public class DelegateQueueTask implements Runnable {
       List<DelegateTask> longRunningTimedOutTasks = new ArrayList<>();
       try {
         longRunningTimedOutTasks = wingsPersistence.createQuery(DelegateTask.class)
-                                       .field("status")
-                                       .equal(Status.STARTED)
+                                       .filter("status", Status.STARTED)
                                        .asList()
                                        .stream()
                                        .filter(DelegateTask::isTimedOut)
@@ -89,7 +87,7 @@ public class DelegateQueueTask implements Runnable {
       } catch (com.esotericsoftware.kryo.KryoException kryo) {
         logger.warn("Delegate task schema backwards incompatibility", kryo);
         for (Key<DelegateTask> key :
-            wingsPersistence.createQuery(DelegateTask.class).field("status").equal(Status.STARTED).asKeyList()) {
+            wingsPersistence.createQuery(DelegateTask.class).filter("status", Status.STARTED).asKeyList()) {
           try {
             wingsPersistence.get(DelegateTask.class, key.getId().toString());
           } catch (com.esotericsoftware.kryo.KryoException ex) {
@@ -102,10 +100,8 @@ public class DelegateQueueTask implements Runnable {
         logger.info("Found {} long running tasks, to be killed", longRunningTimedOutTasks.size());
         longRunningTimedOutTasks.forEach(delegateTask -> {
           Query<DelegateTask> updateQuery = wingsPersistence.createQuery(DelegateTask.class)
-                                                .field("status")
-                                                .equal(Status.STARTED)
-                                                .field(Mapper.ID_KEY)
-                                                .equal(delegateTask.getUuid());
+                                                .filter("status", Status.STARTED)
+                                                .filter(Mapper.ID_KEY, delegateTask.getUuid());
           UpdateOperations<DelegateTask> updateOperations =
               wingsPersistence.createUpdateOperations(DelegateTask.class).set("status", Status.ERROR);
 
@@ -132,8 +128,7 @@ public class DelegateQueueTask implements Runnable {
       try {
         queuedTimedOutTasks =
             wingsPersistence.createQuery(DelegateTask.class)
-                .field("status")
-                .equal(Status.QUEUED)
+                .filter("status", Status.QUEUED)
                 .asList()
                 .stream()
                 .filter(delegateTask -> clock.millis() - delegateTask.getLastUpdatedAt() > TimeUnit.HOURS.toMillis(1))
@@ -141,7 +136,7 @@ public class DelegateQueueTask implements Runnable {
       } catch (com.esotericsoftware.kryo.KryoException kryo) {
         logger.warn("Delegate task schema backwards incompatibility", kryo);
         for (Key<DelegateTask> key :
-            wingsPersistence.createQuery(DelegateTask.class).field("status").equal(Status.QUEUED).asKeyList()) {
+            wingsPersistence.createQuery(DelegateTask.class).filter("status", Status.QUEUED).asKeyList()) {
           try {
             wingsPersistence.get(DelegateTask.class, key.getId().toString());
           } catch (com.esotericsoftware.kryo.KryoException ex) {
@@ -154,10 +149,8 @@ public class DelegateQueueTask implements Runnable {
         logger.info("Found {} long queued tasks, to be killed", queuedTimedOutTasks.size());
         queuedTimedOutTasks.forEach(delegateTask -> {
           Query<DelegateTask> updateQuery = wingsPersistence.createQuery(DelegateTask.class)
-                                                .field("status")
-                                                .equal(Status.QUEUED)
-                                                .field(Mapper.ID_KEY)
-                                                .equal(delegateTask.getUuid());
+                                                .filter("status", Status.QUEUED)
+                                                .filter(Mapper.ID_KEY, delegateTask.getUuid());
           UpdateOperations<DelegateTask> updateOperations =
               wingsPersistence.createUpdateOperations(DelegateTask.class).set("status", Status.ERROR);
 
@@ -231,16 +224,14 @@ public class DelegateQueueTask implements Runnable {
       List<DelegateTask> unassignedTasks = null;
       try {
         unassignedTasks = wingsPersistence.createQuery(DelegateTask.class)
-                              .field("status")
-                              .equal(Status.QUEUED)
+                              .filter("status", Status.QUEUED)
                               .field("delegateId")
                               .doesNotExist()
                               .asList();
       } catch (com.esotericsoftware.kryo.KryoException kryo) {
         logger.warn("Delegate task schema backwards incompatibility", kryo);
         for (Key<DelegateTask> key : wingsPersistence.createQuery(DelegateTask.class)
-                                         .field("status")
-                                         .equal(Status.QUEUED)
+                                         .filter("status", Status.QUEUED)
                                          .field("delegateId")
                                          .doesNotExist()
                                          .asKeyList()) {

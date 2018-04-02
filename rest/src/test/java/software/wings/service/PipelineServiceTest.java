@@ -107,8 +107,6 @@ public class PipelineServiceTest extends WingsBaseTest {
   @Before
   public void setUp() throws Exception {
     when(wingsPersistence.createQuery(PipelineExecution.class)).thenReturn(query);
-    when(query.field(any())).thenReturn(end);
-    when(end.equal(any())).thenReturn(query);
     when(appService.get(APP_ID)).thenReturn(anApplication().withUuid(APP_ID).withName(APP_NAME).build());
   }
 

@@ -70,23 +70,17 @@ public class LearningEngineAnalysisServiceImpl implements LearningEngineService 
     }
     Query<LearningEngineAnalysisTask> query =
         wingsPersistence.createQuery(LearningEngineAnalysisTask.class)
-            .field("workflow_execution_id")
-            .equal(analysisTask.getWorkflow_execution_id())
-            .field("state_execution_id")
-            .equal(analysisTask.getState_execution_id())
+            .filter("workflow_execution_id", analysisTask.getWorkflow_execution_id())
+            .filter("state_execution_id", analysisTask.getState_execution_id())
             .field("analysis_minute")
             .lessThanOrEq(analysisTask.getAnalysis_minute())
-            .field("version")
-            .equal(learningEngineApiVersion)
+            .filter("version", learningEngineApiVersion)
             .field("executionStatus")
             .in(Lists.newArrayList(ExecutionStatus.RUNNING, ExecutionStatus.QUEUED, ExecutionStatus.SUCCESS))
-            .field("cluster_level")
-            .equal(analysisTask.getCluster_level())
-            .field("ml_analysis_type")
-            .equal(analysisTask.getMl_analysis_type())
+            .filter("cluster_level", analysisTask.getCluster_level())
+            .filter("ml_analysis_type", analysisTask.getMl_analysis_type())
             // TODO can control_nodes be empty ???
-            .field("control_nodes")
-            .equal(analysisTask.getControl_nodes())
+            .filter("control_nodes", analysisTask.getControl_nodes())
             .order("-createdAt");
     LearningEngineAnalysisTask learningEngineAnalysisTask = wingsPersistence.executeGetOneQuery(query);
 
@@ -122,8 +116,7 @@ public class LearningEngineAnalysisServiceImpl implements LearningEngineService 
   public boolean addLearningEngineExperimentalAnalysisTask(LearningEngineExperimentalAnalysisTask analysisTask) {
     LearningEngineExperimentalAnalysisTask experimentalAnalysisTask =
         wingsPersistence.createQuery(LearningEngineExperimentalAnalysisTask.class)
-            .field("state_execution_id")
-            .equal(analysisTask.getState_execution_id())
+            .filter("state_execution_id", analysisTask.getState_execution_id())
             .get();
     if (experimentalAnalysisTask != null) {
       logger.info("task already queued for experiment {}", analysisTask.getState_execution_id());
@@ -139,8 +132,7 @@ public class LearningEngineAnalysisServiceImpl implements LearningEngineService 
   @Override
   public LearningEngineAnalysisTask getNextLearningEngineAnalysisTask(ServiceApiVersion serviceApiVersion) {
     Query<LearningEngineAnalysisTask> query = wingsPersistence.createQuery(LearningEngineAnalysisTask.class)
-                                                  .field("version")
-                                                  .equal(serviceApiVersion)
+                                                  .filter("version", serviceApiVersion)
                                                   .field("retry")
                                                   .lessThan(LearningEngineAnalysisTask.RETRIES);
     query.or(query.criteria("executionStatus").equal(ExecutionStatus.QUEUED),
@@ -159,10 +151,8 @@ public class LearningEngineAnalysisServiceImpl implements LearningEngineService 
       String experimentName, ServiceApiVersion serviceApiVersion) {
     Query<LearningEngineExperimentalAnalysisTask> query =
         wingsPersistence.createQuery(LearningEngineExperimentalAnalysisTask.class)
-            .field("version")
-            .equal(serviceApiVersion)
-            .field("experiment_name")
-            .equal(experimentName)
+            .filter("version", serviceApiVersion)
+            .filter("experiment_name", experimentName)
             .field("retry")
             .lessThan(LearningEngineAnalysisTask.RETRIES);
     query.or(query.criteria("executionStatus").equal(ExecutionStatus.QUEUED),
@@ -179,12 +169,9 @@ public class LearningEngineAnalysisServiceImpl implements LearningEngineService 
   @Override
   public boolean hasAnalysisTimedOut(String workflowExecutionId, String stateExecutionId) {
     Query<LearningEngineAnalysisTask> query = wingsPersistence.createQuery(LearningEngineAnalysisTask.class)
-                                                  .field("workflow_execution_id")
-                                                  .equal(workflowExecutionId)
-                                                  .field("state_execution_id")
-                                                  .equal(stateExecutionId)
-                                                  .field("executionStatus")
-                                                  .equal(ExecutionStatus.RUNNING)
+                                                  .filter("workflow_execution_id", workflowExecutionId)
+                                                  .filter("state_execution_id", stateExecutionId)
+                                                  .filter("executionStatus", ExecutionStatus.RUNNING)
                                                   .field("retry")
                                                   .greaterThanOrEq(LearningEngineAnalysisTask.RETRIES);
     return !query.asList().isEmpty();
@@ -200,18 +187,12 @@ public class LearningEngineAnalysisServiceImpl implements LearningEngineService 
   public void markCompleted(String workflowExecutionId, String stateExecutionId, int analysisMinute,
       MLAnalysisType type, ClusterLevel level) {
     Query<LearningEngineAnalysisTask> query = wingsPersistence.createQuery(LearningEngineAnalysisTask.class)
-                                                  .field("workflow_execution_id")
-                                                  .equal(workflowExecutionId)
-                                                  .field("state_execution_id")
-                                                  .equal(stateExecutionId)
-                                                  .field("executionStatus")
-                                                  .equal(ExecutionStatus.RUNNING)
-                                                  .field("analysis_minute")
-                                                  .equal(analysisMinute)
-                                                  .field("ml_analysis_type")
-                                                  .equal(type)
-                                                  .field("cluster_level")
-                                                  .equal(level.getLevel());
+                                                  .filter("workflow_execution_id", workflowExecutionId)
+                                                  .filter("state_execution_id", stateExecutionId)
+                                                  .filter("executionStatus", ExecutionStatus.RUNNING)
+                                                  .filter("analysis_minute", analysisMinute)
+                                                  .filter("ml_analysis_type", type)
+                                                  .filter("cluster_level", level.getLevel());
     UpdateOperations<LearningEngineAnalysisTask> updateOperations =
         wingsPersistence.createUpdateOperations(LearningEngineAnalysisTask.class)
             .set("executionStatus", ExecutionStatus.SUCCESS);
@@ -223,8 +204,7 @@ public class LearningEngineAnalysisServiceImpl implements LearningEngineService 
   public Optional<LearningEngineAnalysisTask> earliestQueued() {
     MorphiaIterator<LearningEngineAnalysisTask, LearningEngineAnalysisTask> task =
         wingsPersistence.createQuery(LearningEngineAnalysisTask.class)
-            .field("executionStatus")
-            .equal(ExecutionStatus.QUEUED)
+            .filter("executionStatus", ExecutionStatus.QUEUED)
             .order("-createdAt")
             .fetch(new FindOptions().limit(1));
 
@@ -267,14 +247,10 @@ public class LearningEngineAnalysisServiceImpl implements LearningEngineService 
   public void markStatus(
       String workflowExecutionId, String stateExecutionId, int analysisMinute, ExecutionStatus executionStatus) {
     Query<LearningEngineAnalysisTask> query = wingsPersistence.createQuery(LearningEngineAnalysisTask.class)
-                                                  .field("workflow_execution_id")
-                                                  .equal(workflowExecutionId)
-                                                  .field("state_execution_id")
-                                                  .equal(stateExecutionId)
-                                                  .field("executionStatus")
-                                                  .equal(ExecutionStatus.RUNNING)
-                                                  .field("cluster_level")
-                                                  .equal(getDefaultClusterLevel())
+                                                  .filter("workflow_execution_id", workflowExecutionId)
+                                                  .filter("state_execution_id", stateExecutionId)
+                                                  .filter("executionStatus", ExecutionStatus.RUNNING)
+                                                  .filter("cluster_level", getDefaultClusterLevel())
                                                   .field("analysis_minute")
                                                   .lessThanOrEq(analysisMinute);
     UpdateOperations<LearningEngineAnalysisTask> updateOperations =
@@ -296,12 +272,12 @@ public class LearningEngineAnalysisServiceImpl implements LearningEngineService 
   public String getServiceSecretKey(ServiceType serviceType) {
     Preconditions.checkNotNull(serviceType);
     Query<ServiceSecretKey> query =
-        wingsPersistence.createQuery(ServiceSecretKey.class).field("serviceType").equal(serviceType);
+        wingsPersistence.createQuery(ServiceSecretKey.class).filter("serviceType", serviceType);
     return wingsPersistence.executeGetOneQuery(query).getServiceSecret();
   }
 
   @Override
   public List<MLExperiments> getExperiments(MLAnalysisType ml_analysis_type) {
-    return wingsPersistence.createQuery(MLExperiments.class).field("ml_analysis_type").equal(ml_analysis_type).asList();
+    return wingsPersistence.createQuery(MLExperiments.class).filter("ml_analysis_type", ml_analysis_type).asList();
   }
 }

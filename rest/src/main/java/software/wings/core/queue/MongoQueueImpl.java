@@ -73,12 +73,11 @@ public class MongoQueueImpl<T extends Queuable> implements Queue<T> {
   public T get(final int waitDuration, long pollDuration) {
     // reset stuck messages
     datastore.update(
-        datastore.createQuery(klass).field("running").equal(true).field("resetTimestamp").lessThanOrEq(new Date()),
+        datastore.createQuery(klass).filter("running", true).field("resetTimestamp").lessThanOrEq(new Date()),
         datastore.createUpdateOperations(klass).set("running", false));
 
     Query<T> query = datastore.createQuery(klass)
-                         .field("running")
-                         .equal(false)
+                         .filter("running", false)
                          .field("earliestGet")
                          .lessThanOrEq(new Date())
                          .order("priority")
@@ -119,12 +118,10 @@ public class MongoQueueImpl<T extends Queuable> implements Queue<T> {
     Objects.requireNonNull(message);
 
     Query<T> query = datastore.createQuery(klass)
-                         .field("_id")
-                         .equal(message.getId())
+                         .filter("_id", message.getId())
                          .field("resetTimestamp")
                          .greaterThan(new Date())
-                         .field("running")
-                         .equal(true);
+                         .filter("running", true);
 
     Date resetTimestamp = new Date(System.currentTimeMillis() + resetDurationMillis());
 
@@ -151,7 +148,7 @@ public class MongoQueueImpl<T extends Queuable> implements Queue<T> {
    */
   @Override
   public long count(final boolean running) {
-    return datastore.getCount(datastore.createQuery(klass).field("running").equal(running));
+    return datastore.getCount(datastore.createQuery(klass).filter("running", running));
   }
 
   /* (non-Javadoc)

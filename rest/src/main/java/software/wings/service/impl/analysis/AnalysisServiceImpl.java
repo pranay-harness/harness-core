@@ -101,18 +101,12 @@ public class AnalysisServiceImpl implements AnalysisService {
   public void bumpClusterLevel(StateType stateType, String stateExecutionId, String appId, String searchQuery,
       Set<String> host, int logCollectionMinute, ClusterLevel fromLevel, ClusterLevel toLevel) {
     Query<LogDataRecord> query = wingsPersistence.createQuery(LogDataRecord.class)
-                                     .field("stateType")
-                                     .equal(stateType)
-                                     .field("stateExecutionId")
-                                     .equal(stateExecutionId)
-                                     .field("applicationId")
-                                     .equal(appId)
-                                     .field("query")
-                                     .equal(searchQuery)
-                                     .field("logCollectionMinute")
-                                     .equal(logCollectionMinute)
-                                     .field("clusterLevel")
-                                     .equal(fromLevel);
+                                     .filter("stateType", stateType)
+                                     .filter("stateExecutionId", stateExecutionId)
+                                     .filter("applicationId", appId)
+                                     .filter("query", searchQuery)
+                                     .filter("logCollectionMinute", logCollectionMinute)
+                                     .filter("clusterLevel", fromLevel);
 
     if (isNotEmpty(host)) {
       query = query.field("host").in(host);
@@ -125,16 +119,11 @@ public class AnalysisServiceImpl implements AnalysisService {
   public void deleteClusterLevel(StateType stateType, String stateExecutionId, String appId, String searchQuery,
       Set<String> host, int logCollectionMinute, ClusterLevel... clusterLevels) {
     Query<LogDataRecord> query = wingsPersistence.createQuery(LogDataRecord.class)
-                                     .field("stateType")
-                                     .equal(stateType)
-                                     .field("stateExecutionId")
-                                     .equal(stateExecutionId)
-                                     .field("applicationId")
-                                     .equal(appId)
-                                     .field("query")
-                                     .equal(searchQuery)
-                                     .field("logCollectionMinute")
-                                     .equal(logCollectionMinute)
+                                     .filter("stateType", stateType)
+                                     .filter("stateExecutionId", stateExecutionId)
+                                     .filter("applicationId", appId)
+                                     .filter("query", searchQuery)
+                                     .filter("logCollectionMinute", logCollectionMinute)
                                      .field("clusterLevel")
                                      .in(asList(clusterLevels));
     if (isNotEmpty(host)) {
@@ -147,31 +136,27 @@ public class AnalysisServiceImpl implements AnalysisService {
   public void cleanUpForLogRetry(String stateExecutionId) {
     // delete log data records
     wingsPersistence.delete(
-        wingsPersistence.createQuery(LogDataRecord.class).field("stateExecutionId").equal(stateExecutionId));
+        wingsPersistence.createQuery(LogDataRecord.class).filter("stateExecutionId", stateExecutionId));
 
     // delete log analysis records
     wingsPersistence.delete(
-        wingsPersistence.createQuery(LogMLAnalysisRecord.class).field("stateExecutionId").equal(stateExecutionId));
+        wingsPersistence.createQuery(LogMLAnalysisRecord.class).filter("stateExecutionId", stateExecutionId));
 
     // delete cv dashboard execution data
     wingsPersistence.delete(wingsPersistence.createQuery(ContinuousVerificationExecutionMetaData.class)
-                                .field("stateExecutionId")
-                                .equal(stateExecutionId));
+                                .filter("stateExecutionId", stateExecutionId));
 
     // delete learning engine tasks
-    wingsPersistence.delete(wingsPersistence.createQuery(LearningEngineAnalysisTask.class)
-                                .field("state_execution_id")
-                                .equal(stateExecutionId));
+    wingsPersistence.delete(
+        wingsPersistence.createQuery(LearningEngineAnalysisTask.class).filter("state_execution_id", stateExecutionId));
 
     // delete experimental learning engine tasks
     wingsPersistence.delete(wingsPersistence.createQuery(LearningEngineExperimentalAnalysisTask.class)
-                                .field("state_execution_id")
-                                .equal(stateExecutionId));
+                                .filter("state_execution_id", stateExecutionId));
 
     // delete experimental log analysis records
     wingsPersistence.delete(wingsPersistence.createQuery(ExperimentalLogMLAnalysisRecord.class)
-                                .field("stateExecutionId")
-                                .equal(stateExecutionId));
+                                .filter("stateExecutionId", stateExecutionId));
   }
 
   @Override
@@ -259,42 +244,27 @@ public class AnalysisServiceImpl implements AnalysisService {
     List<LogDataRecord> records;
     if (compareCurrent) {
       records = wingsPersistence.createQuery(LogDataRecord.class)
-                    .field("stateType")
-                    .equal(stateType)
-                    .field("stateExecutionId")
-                    .equal(logRequest.getStateExecutionId())
-                    .field("workflowExecutionId")
-                    .equal(workflowExecutionId)
-                    .field("applicationId")
-                    .equal(logRequest.getApplicationId())
-                    .field("query")
-                    .equal(logRequest.getQuery())
-                    .field("serviceId")
-                    .equal(logRequest.getServiceId())
-                    .field("clusterLevel")
-                    .equal(clusterLevel)
-                    .field("logCollectionMinute")
-                    .equal(logRequest.getLogCollectionMinute())
+                    .filter("stateType", stateType)
+                    .filter("stateExecutionId", logRequest.getStateExecutionId())
+                    .filter("workflowExecutionId", workflowExecutionId)
+                    .filter("applicationId", logRequest.getApplicationId())
+                    .filter("query", logRequest.getQuery())
+                    .filter("serviceId", logRequest.getServiceId())
+                    .filter("clusterLevel", clusterLevel)
+                    .filter("logCollectionMinute", logRequest.getLogCollectionMinute())
                     .field("host")
                     .hasAnyOf(logRequest.getNodes())
                     .asList();
 
     } else {
       records = wingsPersistence.createQuery(LogDataRecord.class)
-                    .field("stateType")
-                    .equal(stateType)
-                    .field("workflowExecutionId")
-                    .equal(workflowExecutionId)
-                    .field("applicationId")
-                    .equal(logRequest.getApplicationId())
-                    .field("query")
-                    .equal(logRequest.getQuery())
-                    .field("serviceId")
-                    .equal(logRequest.getServiceId())
-                    .field("clusterLevel")
-                    .equal(clusterLevel)
-                    .field("logCollectionMinute")
-                    .equal(logRequest.getLogCollectionMinute())
+                    .filter("stateType", stateType)
+                    .filter("workflowExecutionId", workflowExecutionId)
+                    .filter("applicationId", logRequest.getApplicationId())
+                    .filter("query", logRequest.getQuery())
+                    .filter("serviceId", logRequest.getServiceId())
+                    .filter("clusterLevel", clusterLevel)
+                    .filter("logCollectionMinute", logRequest.getLogCollectionMinute())
                     .asList();
     }
 
@@ -306,7 +276,7 @@ public class AnalysisServiceImpl implements AnalysisService {
 
   private boolean deleteFeedbackHelper(String feedbackId) {
     Query<LogMLFeedbackRecord> query =
-        wingsPersistence.createQuery(LogMLFeedbackRecord.class).field("_id").equal(feedbackId);
+        wingsPersistence.createQuery(LogMLFeedbackRecord.class).filter("_id", feedbackId);
 
     wingsPersistence.delete(query);
     return true;
@@ -413,16 +383,11 @@ public class AnalysisServiceImpl implements AnalysisService {
   public boolean isLogDataCollected(
       String applicationId, String stateExecutionId, String query, int logCollectionMinute, StateType stateType) {
     Query<LogDataRecord> splunkLogDataRecordQuery = wingsPersistence.createQuery(LogDataRecord.class)
-                                                        .field("stateType")
-                                                        .equal(stateType)
-                                                        .field("stateExecutionId")
-                                                        .equal(stateExecutionId)
-                                                        .field("applicationId")
-                                                        .equal(applicationId)
-                                                        .field("query")
-                                                        .equal(query)
-                                                        .field("logCollectionMinute")
-                                                        .equal(logCollectionMinute);
+                                                        .filter("stateType", stateType)
+                                                        .filter("stateExecutionId", stateExecutionId)
+                                                        .filter("applicationId", applicationId)
+                                                        .filter("query", query)
+                                                        .filter("logCollectionMinute", logCollectionMinute);
     return !splunkLogDataRecordQuery.asList().isEmpty();
   }
 
@@ -442,16 +407,11 @@ public class AnalysisServiceImpl implements AnalysisService {
     List<String> successfulExecutions = getLastSuccessfulWorkflowExecutionIds(appId, workflowId);
     for (String successfulExecution : successfulExecutions) {
       Query<LogDataRecord> lastSuccessfulRecordQuery = wingsPersistence.createQuery(LogDataRecord.class)
-                                                           .field("stateType")
-                                                           .equal(stateType)
-                                                           .field("workflowId")
-                                                           .equal(workflowId)
-                                                           .field("workflowExecutionId")
-                                                           .equal(successfulExecution)
-                                                           .field("serviceId")
-                                                           .equal(serviceId)
-                                                           .field("clusterLevel")
-                                                           .equal(ClusterLevel.L2)
+                                                           .filter("stateType", stateType)
+                                                           .filter("workflowId", workflowId)
+                                                           .filter("workflowExecutionId", successfulExecution)
+                                                           .filter("serviceId", serviceId)
+                                                           .filter("clusterLevel", ClusterLevel.L2)
                                                            .limit(1);
 
       List<LogDataRecord> lastSuccessfulRecords = lastSuccessfulRecordQuery.asList();
@@ -618,14 +578,10 @@ public class AnalysisServiceImpl implements AnalysisService {
       String applicationId, String stateExecutionId, String query, StateType stateType, Integer logCollectionMinute) {
     final MorphiaIterator<LogMLAnalysisRecord, LogMLAnalysisRecord> iteratorAnalysisRecord =
         wingsPersistence.createQuery(LogMLAnalysisRecord.class)
-            .field("stateExecutionId")
-            .equal(stateExecutionId)
-            .field("applicationId")
-            .equal(applicationId)
-            .field("query")
-            .equal(query)
-            .field("stateType")
-            .equal(stateType)
+            .filter("stateExecutionId", stateExecutionId)
+            .filter("applicationId", applicationId)
+            .filter("query", query)
+            .filter("stateType", stateType)
             .field("logCollectionMinute")
             .lessThanOrEq(logCollectionMinute)
             .order("-logCollectionMinute")
@@ -641,14 +597,10 @@ public class AnalysisServiceImpl implements AnalysisService {
       String stateExecutionId, String applicationId, StateType stateType, String expName) {
     final MorphiaIterator<ExperimentalLogMLAnalysisRecord, ExperimentalLogMLAnalysisRecord> iteratorAnalysisRecord =
         wingsPersistence.createQuery(ExperimentalLogMLAnalysisRecord.class)
-            .field("stateExecutionId")
-            .equal(stateExecutionId)
-            .field("applicationId")
-            .equal(applicationId)
-            .field("stateType")
-            .equal(stateType)
-            .field("experiment_name")
-            .equal(expName)
+            .filter("stateExecutionId", stateExecutionId)
+            .filter("applicationId", applicationId)
+            .filter("stateType", stateType)
+            .filter("experiment_name", expName)
             .order("-logCollectionMinute")
             .fetch(new FindOptions().limit(1));
 
@@ -762,10 +714,8 @@ public class AnalysisServiceImpl implements AnalysisService {
     userFeedbackMap.put(CLUSTER_TYPE.UNKNOWN, new HashMap<>());
 
     List<LogMLFeedbackRecord> logMLFeedbackRecords = wingsPersistence.createQuery(LogMLFeedbackRecord.class)
-                                                         .field("stateExecutionId")
-                                                         .equal(stateExecutionId)
-                                                         .field("applicationId")
-                                                         .equal(applicationId)
+                                                         .filter("stateExecutionId", stateExecutionId)
+                                                         .filter("applicationId", applicationId)
                                                          .asList();
 
     if (logMLFeedbackRecords == null) {
@@ -811,12 +761,9 @@ public class AnalysisServiceImpl implements AnalysisService {
   public LogMLAnalysisSummary getAnalysisSummary(String stateExecutionId, String applicationId, StateType stateType) {
     final MorphiaIterator<LogMLAnalysisRecord, LogMLAnalysisRecord> iteratorAnalysisRecord =
         wingsPersistence.createQuery(LogMLAnalysisRecord.class)
-            .field("stateExecutionId")
-            .equal(stateExecutionId)
-            .field("applicationId")
-            .equal(applicationId)
-            .field("stateType")
-            .equal(stateType)
+            .filter("stateExecutionId", stateExecutionId)
+            .filter("applicationId", applicationId)
+            .filter("stateType", stateType)
             .order("-logCollectionMinute")
             .fetch(new FindOptions().limit(1));
 
@@ -1127,12 +1074,9 @@ public class AnalysisServiceImpl implements AnalysisService {
 
   private boolean logExist(StateType stateType, WorkflowExecution workflowExecution) {
     Query<LogDataRecord> lastSuccessfulRecords = wingsPersistence.createQuery(LogDataRecord.class)
-                                                     .field("stateType")
-                                                     .equal(stateType)
-                                                     .field("workflowId")
-                                                     .equal(workflowExecution.getWorkflowId())
-                                                     .field("workflowExecutionId")
-                                                     .equal(workflowExecution.getUuid())
+                                                     .filter("stateType", stateType)
+                                                     .filter("workflowId", workflowExecution.getWorkflowId())
+                                                     .filter("workflowExecutionId", workflowExecution.getUuid())
                                                      .limit(1);
 
     return !lastSuccessfulRecords.asList().isEmpty();
@@ -1140,10 +1084,8 @@ public class AnalysisServiceImpl implements AnalysisService {
 
   private void deleteNotRequiredLogs(StateType stateType, WorkflowExecution workflowExecution) {
     Query<LogDataRecord> deleteQuery = wingsPersistence.createQuery(LogDataRecord.class)
-                                           .field("stateType")
-                                           .equal(stateType)
-                                           .field("workflowId")
-                                           .equal(workflowExecution.getWorkflowId())
+                                           .filter("stateType", stateType)
+                                           .filter("workflowId", workflowExecution.getWorkflowId())
                                            .field("workflowExecutionId")
                                            .notEqual(workflowExecution.getUuid());
     logger.info("deleting " + stateType + " logs for workflow:" + workflowExecution.getWorkflowId()
@@ -1184,16 +1126,11 @@ public class AnalysisServiceImpl implements AnalysisService {
        */
       final MorphiaIterator<LogDataRecord, LogDataRecord> logHeartBeatRecordsIterator =
           wingsPersistence.createQuery(LogDataRecord.class)
-              .field("applicationId")
-              .equal(appdId)
-              .field("stateExecutionId")
-              .equal(stateExecutionId)
-              .field("stateType")
-              .equal(type)
-              .field("clusterLevel")
-              .equal(heartBeat)
-              .field("query")
-              .equal(query)
+              .filter("applicationId", appdId)
+              .filter("stateExecutionId", stateExecutionId)
+              .filter("stateType", type)
+              .filter("clusterLevel", heartBeat)
+              .filter("query", query)
               .field("host")
               .in(nodes)
               .order("logCollectionMinute")
@@ -1249,18 +1186,12 @@ public class AnalysisServiceImpl implements AnalysisService {
      */
     final MorphiaIterator<LogDataRecord, LogDataRecord> logDataRecordsIterator =
         wingsPersistence.createQuery(LogDataRecord.class)
-            .field("applicationId")
-            .equal(appdId)
-            .field("stateExecutionId")
-            .equal(stateExecutionId)
-            .field("stateType")
-            .equal(type)
-            .field("clusterLevel")
-            .equal(level)
-            .field("logCollectionMinute")
-            .equal(logCollectionMinute)
-            .field("query")
-            .equal(query)
+            .filter("applicationId", appdId)
+            .filter("stateExecutionId", stateExecutionId)
+            .filter("stateType", type)
+            .filter("clusterLevel", level)
+            .filter("logCollectionMinute", logCollectionMinute)
+            .filter("query", query)
             .field("host")
             .in(nodes)
             .fetch(new FindOptions().limit(1));
@@ -1277,18 +1208,14 @@ public class AnalysisServiceImpl implements AnalysisService {
      * Find heartbeat for L0 records. L0 heartbeat is H0.
      */
     Query<LogDataRecord> query = wingsPersistence.createQuery(LogDataRecord.class)
-                                     .field("applicationId")
-                                     .equal(appId)
-                                     .field("stateExecutionId")
-                                     .equal(stateExecutionId)
-                                     .field("stateType")
-                                     .equal(type)
-                                     .field("clusterLevel")
-                                     .equal(ClusterLevel.getHeartBeatLevel(ClusterLevel.L0))
+                                     .filter("applicationId", appId)
+                                     .filter("stateExecutionId", stateExecutionId)
+                                     .filter("stateType", type)
+                                     .filter("clusterLevel", ClusterLevel.getHeartBeatLevel(ClusterLevel.L0))
                                      .order("logCollectionMinute");
 
     if (isNotEmpty(host)) {
-      query = query.field("host").equal(host);
+      query = query.filter("host", host);
     }
 
     final MorphiaIterator<LogDataRecord, LogDataRecord> logDataRecordsIterator =
@@ -1307,16 +1234,11 @@ public class AnalysisServiceImpl implements AnalysisService {
   private int getLastProcessedMinute(String query, String appId, String stateExecutionId, StateType type) {
     final MorphiaIterator<LogDataRecord, LogDataRecord> logDataRecordsIterator =
         wingsPersistence.createQuery(LogDataRecord.class)
-            .field("applicationId")
-            .equal(appId)
-            .field("stateExecutionId")
-            .equal(stateExecutionId)
-            .field("stateType")
-            .equal(type)
-            .field("clusterLevel")
-            .equal(ClusterLevel.getFinal())
-            .field("query")
-            .equal(query)
+            .filter("applicationId", appId)
+            .filter("stateExecutionId", stateExecutionId)
+            .filter("stateType", type)
+            .filter("clusterLevel", ClusterLevel.getFinal())
+            .filter("query", query)
             .order("-logCollectionMinute")
             .fetch(new FindOptions().limit(1));
 

@@ -300,10 +300,8 @@ public class WorkflowExecutionServiceImpl implements WorkflowExecutionService {
 
     try {
       Query<WorkflowExecution> query = wingsPersistence.createQuery(WorkflowExecution.class)
-                                           .field("appId")
-                                           .equal(workflowExecution.getAppId())
-                                           .field(ID_KEY)
-                                           .equal(workflowExecution.getUuid());
+                                           .filter("appId", workflowExecution.getAppId())
+                                           .filter(ID_KEY, workflowExecution.getUuid());
       UpdateOperations<WorkflowExecution> updateOps = wingsPersistence.createUpdateOperations(WorkflowExecution.class)
                                                           .set("executionArgs.notes", executionArgs.getNotes());
       UpdateResults updateResults = wingsPersistence.update(query, updateOps);
@@ -463,10 +461,8 @@ public class WorkflowExecutionServiceImpl implements WorkflowExecutionService {
 
     try {
       Query<WorkflowExecution> query = wingsPersistence.createQuery(WorkflowExecution.class)
-                                           .field("appId")
-                                           .equal(workflowExecution.getAppId())
-                                           .field(ID_KEY)
-                                           .equal(workflowExecution.getUuid());
+                                           .filter("appId", workflowExecution.getAppId())
+                                           .filter(ID_KEY, workflowExecution.getUuid());
       UpdateOperations<WorkflowExecution> updateOps =
           wingsPersistence.createUpdateOperations(WorkflowExecution.class).set("pipelineExecution", pipelineExecution);
       wingsPersistence.update(query, updateOps);
@@ -507,10 +503,8 @@ public class WorkflowExecutionServiceImpl implements WorkflowExecutionService {
       }
     });
     wingsPersistence.update(wingsPersistence.createQuery(Pipeline.class)
-                                .field("appId")
-                                .equal(workflowExecution.getAppId())
-                                .field(ID_KEY)
-                                .equal(workflowExecution.getWorkflowId()),
+                                .filter("appId", workflowExecution.getAppId())
+                                .filter(ID_KEY, workflowExecution.getWorkflowId()),
         wingsPersistence.createUpdateOperations(Pipeline.class).set("stateEtaMap", newEstimates));
   }
 
@@ -1131,10 +1125,8 @@ public class WorkflowExecutionServiceImpl implements WorkflowExecutionService {
   private void updateStartStatus(WorkflowExecution workflowExecution, ExecutionStatus status) {
     // TODO: findAndModify
     Query<WorkflowExecution> query = wingsPersistence.createQuery(WorkflowExecution.class)
-                                         .field("appId")
-                                         .equal(workflowExecution.getAppId())
-                                         .field(ID_KEY)
-                                         .equal(workflowExecution.getUuid())
+                                         .filter("appId", workflowExecution.getAppId())
+                                         .filter(ID_KEY, workflowExecution.getUuid())
                                          .field("status")
                                          .in(asList(NEW, QUEUED));
     UpdateOperations<WorkflowExecution> updateOps = wingsPersistence.createUpdateOperations(WorkflowExecution.class)
@@ -1158,10 +1150,8 @@ public class WorkflowExecutionServiceImpl implements WorkflowExecutionService {
     UpdateOperations<WorkflowExecution> ops = wingsPersistence.createUpdateOperations(WorkflowExecution.class);
     ops.inc("breakdown.inprogress", inc);
     wingsPersistence.update(wingsPersistence.createQuery(WorkflowExecution.class)
-                                .field("appId")
-                                .equal(appId)
-                                .field(ID_KEY)
-                                .equal(workflowExecutionId),
+                                .filter("appId", appId)
+                                .filter(ID_KEY, workflowExecutionId),
         ops);
   }
 
@@ -1171,10 +1161,8 @@ public class WorkflowExecutionServiceImpl implements WorkflowExecutionService {
     ops.inc("breakdown.success", inc);
     ops.inc("breakdown.inprogress", -1 * inc);
     wingsPersistence.update(wingsPersistence.createQuery(WorkflowExecution.class)
-                                .field("appId")
-                                .equal(appId)
-                                .field(ID_KEY)
-                                .equal(workflowExecutionId),
+                                .filter("appId", appId)
+                                .filter(ID_KEY, workflowExecutionId),
         ops);
   }
 
@@ -1184,10 +1172,8 @@ public class WorkflowExecutionServiceImpl implements WorkflowExecutionService {
     ops.inc("breakdown.failed", inc);
     ops.inc("breakdown.inprogress", -1 * inc);
     wingsPersistence.update(wingsPersistence.createQuery(WorkflowExecution.class)
-                                .field("appId")
-                                .equal(appId)
-                                .field(ID_KEY)
-                                .equal(workflowExecutionId),
+                                .filter("appId", appId)
+                                .filter(ID_KEY, workflowExecutionId),
         ops);
   }
 
@@ -1486,8 +1472,7 @@ public class WorkflowExecutionServiceImpl implements WorkflowExecutionService {
   @Override
   public long getExecutionInterruptCount(String stateExecutionInstanceId) {
     return wingsPersistence.createQuery(ExecutionInterrupt.class)
-        .field("stateExecutionInstanceId")
-        .equal(stateExecutionInstanceId)
+        .filter("stateExecutionInstanceId", stateExecutionInstanceId)
         .count();
   }
 
@@ -1500,8 +1485,7 @@ public class WorkflowExecutionServiceImpl implements WorkflowExecutionService {
     stateExecutionInstance.getInterruptHistory().stream().forEach(effect -> map.put(effect.getInterruptId(), effect));
 
     List<StateExecutionInterrupt> interrupts = wingsPersistence.createQuery(ExecutionInterrupt.class)
-                                                   .field("stateExecutionInstanceId")
-                                                   .equal(stateExecutionInstanceId)
+                                                   .filter("stateExecutionInstanceId", stateExecutionInstanceId)
                                                    .asList()
                                                    .stream()
                                                    .map(interrupt
@@ -1553,25 +1537,19 @@ public class WorkflowExecutionServiceImpl implements WorkflowExecutionService {
   @Override
   public void deleteByWorkflow(String appId, String workflowId) {
     wingsPersistence.createQuery(WorkflowExecution.class)
-        .field("appId")
-        .equal(appId)
-        .field("workflowId")
-        .equal(workflowId)
+        .filter("appId", appId)
+        .filter("workflowId", workflowId)
         .asList()
         .forEach(workflowExecution -> {
           wingsPersistence.delete(workflowExecution);
           wingsPersistence.createQuery(StateExecutionInstance.class)
-              .field("appId")
-              .equal(appId)
-              .field("stateMachineId")
-              .equal(workflowExecution.getStateMachineId())
+              .filter("appId", appId)
+              .filter("stateMachineId", workflowExecution.getStateMachineId())
               .forEach(stateExecutionInstance -> {
                 wingsPersistence.delete(stateExecutionInstance);
                 wingsPersistence.delete(wingsPersistence.createQuery(ExecutionInterrupt.class)
-                                            .field("appId")
-                                            .equal(appId)
-                                            .field("stateExecutionInstanceId")
-                                            .equal(stateExecutionInstance.getUuid()));
+                                            .filter("appId", appId)
+                                            .filter("stateExecutionInstanceId", stateExecutionInstance.getUuid()));
               });
         });
   }
@@ -1863,10 +1841,8 @@ public class WorkflowExecutionServiceImpl implements WorkflowExecutionService {
           workflowExecution.getUuid(), workflowExecution.getStatus(), breakdown);
 
       Query<WorkflowExecution> query = wingsPersistence.createQuery(WorkflowExecution.class)
-                                           .field("appId")
-                                           .equal(workflowExecution.getAppId())
-                                           .field(ID_KEY)
-                                           .equal(workflowExecution.getUuid());
+                                           .filter("appId", workflowExecution.getAppId())
+                                           .filter(ID_KEY, workflowExecution.getUuid());
 
       UpdateOperations<WorkflowExecution> updateOps = wingsPersistence.createUpdateOperations(WorkflowExecution.class);
 
@@ -2144,10 +2120,7 @@ public class WorkflowExecutionServiceImpl implements WorkflowExecutionService {
       workflowExecutions.forEach(stageExecution -> {
         String executionUuid = stageExecution.getUuid();
         List<StateExecutionInstance> stateExecutionInstances =
-            wingsPersistence.createQuery(StateExecutionInstance.class)
-                .field("executionUuid")
-                .equal(executionUuid)
-                .asList();
+            wingsPersistence.createQuery(StateExecutionInstance.class).filter("executionUuid", executionUuid).asList();
 
         boolean containsVerificationState = false;
         for (StateExecutionInstance stateExecutionInstance : stateExecutionInstances) {

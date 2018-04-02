@@ -330,8 +330,7 @@ public class SecretManagerImpl implements SecretManager {
     Map<String, UuidAware> rv = new HashMap<>();
     final MorphiaIterator<EncryptedData, EncryptedData> query =
         wingsPersistence.createQuery(EncryptedData.class)
-            .field("accountId")
-            .equal(accountId)
+            .filter("accountId", accountId)
             .field("type")
             .hasNoneOf(Lists.newArrayList(SettingVariableTypes.SECRET_TEXT, SettingVariableTypes.CONFIG_FILE))
             .fetch();
@@ -407,11 +406,8 @@ public class SecretManagerImpl implements SecretManager {
     Preconditions.checkNotNull(toEncryptionType, "toEncryptionType can't be blank");
     Preconditions.checkState(isNotBlank(toSecretId), "toVaultId can't be blank");
 
-    Query<EncryptedData> query = wingsPersistence.createQuery(EncryptedData.class)
-                                     .field("accountId")
-                                     .equal(accountId)
-                                     .field("kmsId")
-                                     .equal(fromSecretId);
+    Query<EncryptedData> query =
+        wingsPersistence.createQuery(EncryptedData.class).filter("accountId", accountId).filter("kmsId", fromSecretId);
 
     if (toEncryptionType == EncryptionType.VAULT) {
       query = query.field("type").notEqual(SettingVariableTypes.VAULT);
@@ -587,10 +583,8 @@ public class SecretManagerImpl implements SecretManager {
   @Override
   public boolean deleteSecret(String accountId, String uuId) {
     List<ServiceVariable> serviceVariables = wingsPersistence.createQuery(ServiceVariable.class)
-                                                 .field("accountId")
-                                                 .equal(accountId)
-                                                 .field("encryptedValue")
-                                                 .equal(uuId)
+                                                 .filter("accountId", accountId)
+                                                 .filter("encryptedValue", uuId)
                                                  .asList();
     if (!serviceVariables.isEmpty()) {
       StringBuilder errorMessage = new StringBuilder("Being used by ");
@@ -787,10 +781,8 @@ public class SecretManagerImpl implements SecretManager {
     EncryptedData encryptedData = wingsPersistence.get(EncryptedData.class, uuId);
     Preconditions.checkNotNull("No encrypted record found with id " + uuId);
     List<ConfigFile> configFiles = wingsPersistence.createQuery(ConfigFile.class)
-                                       .field("accountId")
-                                       .equal(accountId)
-                                       .field("encryptedFileId")
-                                       .equal(uuId)
+                                       .filter("accountId", accountId)
+                                       .filter("encryptedFileId", uuId)
                                        .asList();
     if (!configFiles.isEmpty()) {
       String errorMessage = "Being used by ";
@@ -820,10 +812,8 @@ public class SecretManagerImpl implements SecretManager {
   public List<EncryptedData> listSecrets(String accountId, SettingVariableTypes type) throws IllegalAccessException {
     List<EncryptedData> rv = new ArrayList<>();
     final MorphiaIterator<EncryptedData, EncryptedData> iterator = wingsPersistence.createQuery(EncryptedData.class)
-                                                                       .field("accountId")
-                                                                       .equal(accountId)
-                                                                       .field("type")
-                                                                       .equal(type)
+                                                                       .filter("accountId", accountId)
+                                                                       .filter("type", type)
                                                                        .fetch(new FindOptions());
     try (DBCursor cursor = iterator.getCursor()) {
       while (iterator.hasNext()) {
@@ -881,8 +871,7 @@ public class SecretManagerImpl implements SecretManager {
       case SERVICE_VARIABLE:
         final MorphiaIterator<ServiceVariable, ServiceVariable> serviceVariableQuery =
             wingsPersistence.createQuery(ServiceVariable.class)
-                .field("_id")
-                .equal(entityId)
+                .filter("_id", entityId)
                 .fetch(new FindOptions().limit(1));
 
         try (DBCursor cursor = serviceVariableQuery.getCursor()) {
@@ -907,8 +896,7 @@ public class SecretManagerImpl implements SecretManager {
       default:
         final MorphiaIterator<SettingAttribute, SettingAttribute> settingAttributeQuery =
             wingsPersistence.createQuery(SettingAttribute.class)
-                .field("_id")
-                .equal(entityId)
+                .filter("_id", entityId)
                 .fetch(new FindOptions().limit(1));
 
         try (DBCursor cursor = settingAttributeQuery.getCursor()) {
@@ -938,8 +926,7 @@ public class SecretManagerImpl implements SecretManager {
       case SERVICE_VARIABLE:
         final MorphiaIterator<ServiceVariable, ServiceVariable> serviceVariableQuery =
             wingsPersistence.createQuery(ServiceVariable.class)
-                .field("_id")
-                .equal(parentId)
+                .filter("_id", parentId)
                 .fetch(new FindOptions().limit(1));
 
         try (DBCursor cursor = serviceVariableQuery.getCursor()) {
@@ -960,10 +947,8 @@ public class SecretManagerImpl implements SecretManager {
         return null;
 
       case CONFIG_FILE:
-        final MorphiaIterator<ConfigFile, ConfigFile> configFileQuery = wingsPersistence.createQuery(ConfigFile.class)
-                                                                            .field("_id")
-                                                                            .equal(parentId)
-                                                                            .fetch(new FindOptions().limit(1));
+        final MorphiaIterator<ConfigFile, ConfigFile> configFileQuery =
+            wingsPersistence.createQuery(ConfigFile.class).filter("_id", parentId).fetch(new FindOptions().limit(1));
 
         try (DBCursor cursor = configFileQuery.getCursor()) {
           if (configFileQuery.hasNext()) {
@@ -982,10 +967,7 @@ public class SecretManagerImpl implements SecretManager {
 
       case VAULT:
         final MorphiaIterator<VaultConfig, VaultConfig> vaultConfigIterator =
-            wingsPersistence.createQuery(VaultConfig.class)
-                .field("_id")
-                .equal(parentId)
-                .fetch(new FindOptions().limit(1));
+            wingsPersistence.createQuery(VaultConfig.class).filter("_id", parentId).fetch(new FindOptions().limit(1));
 
         try (DBCursor cursor = vaultConfigIterator.getCursor()) {
           if (vaultConfigIterator.hasNext()) {
@@ -1000,8 +982,7 @@ public class SecretManagerImpl implements SecretManager {
       default:
         final MorphiaIterator<SettingAttribute, SettingAttribute> settingAttributeQuery =
             wingsPersistence.createQuery(SettingAttribute.class)
-                .field("_id")
-                .equal(parentId)
+                .filter("_id", parentId)
                 .fetch(new FindOptions().limit(1));
 
         try (DBCursor cursor = settingAttributeQuery.getCursor()) {

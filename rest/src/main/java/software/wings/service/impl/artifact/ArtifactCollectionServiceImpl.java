@@ -237,12 +237,9 @@ public class ArtifactCollectionServiceImpl implements ArtifactCollectionService 
   private Query getArtifactQuery(ArtifactStream artifactStream) {
     return wingsPersistence.createQuery(Artifact.class)
         .project("metadata", true)
-        .field(Artifact.APP_ID_KEY)
-        .equal(artifactStream.getAppId())
-        .field("artifactStreamId")
-        .equal(artifactStream.getUuid())
-        .field("artifactSourceName")
-        .equal(artifactStream.getSourceName())
+        .filter(Artifact.APP_ID_KEY, artifactStream.getAppId())
+        .filter("artifactStreamId", artifactStream.getUuid())
+        .filter("artifactSourceName", artifactStream.getSourceName())
         .field("status")
         .hasAnyOf(asList(QUEUED, RUNNING, REJECTED, WAITING, READY, APPROVED, FAILED))
         .disableValidation();

@@ -90,10 +90,6 @@ public class ArtifactStreamServiceTest extends WingsBaseTest {
   @Before
   public void setUp() throws Exception {
     when(wingsPersistence.createQuery(ArtifactStream.class)).thenReturn(query);
-    when(query.field(any())).thenReturn(end);
-    when(end.equal(any())).thenReturn(query);
-    when(end.notEqual(any())).thenReturn(query);
-    when(end.equal(any())).thenReturn(query);
     when(wingsPersistence.createUpdateOperations(ArtifactStream.class)).thenReturn(updateOperations);
     when(updateOperations.addToSet(any(), any())).thenReturn(updateOperations);
     when(updateOperations.removeAll(any(String.class), any(ArtifactStreamAction.class))).thenReturn(updateOperations);

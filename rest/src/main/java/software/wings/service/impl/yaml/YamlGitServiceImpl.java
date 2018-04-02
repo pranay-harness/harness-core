@@ -99,7 +99,7 @@ public class YamlGitServiceImpl implements YamlGitService {
    */
   @Override
   public YamlGitConfig get(String accountId, String entityId) {
-    return wingsPersistence.createQuery(YamlGitConfig.class).field("accountId").equal(accountId).get();
+    return wingsPersistence.createQuery(YamlGitConfig.class).filter("accountId", accountId).get();
   }
 
   /**
@@ -301,10 +301,8 @@ public class YamlGitServiceImpl implements YamlGitService {
   public void processWebhookPost(String accountId, String webhookToken, YamlWebHookPayload yamlWebHookPayload) {
     try {
       YamlGitConfig yamlGitConfig = wingsPersistence.createQuery(YamlGitConfig.class)
-                                        .field("accountId")
-                                        .equal(accountId)
-                                        .field("webhookToken")
-                                        .equal(webhookToken)
+                                        .filter("accountId", accountId)
+                                        .filter("webhookToken", webhookToken)
                                         .get();
       if (yamlGitConfig == null) {
         logger.error(GIT_YAML_LOG_PREFIX + "Invalid git webhook request [{}]", webhookToken);
@@ -312,12 +310,9 @@ public class YamlGitServiceImpl implements YamlGitService {
       }
 
       GitCommit gitCommit = wingsPersistence.createQuery(GitCommit.class)
-                                .field("accountId")
-                                .equal(accountId)
-                                .field("yamlGitConfigId")
-                                .equal(yamlGitConfig.getUuid())
-                                .field("status")
-                                .equal(Status.COMPLETED)
+                                .filter("accountId", accountId)
+                                .filter("yamlGitConfigId", yamlGitConfig.getUuid())
+                                .filter("status", Status.COMPLETED)
                                 .order("-lastUpdatedAt")
                                 .get();
 
@@ -346,12 +341,9 @@ public class YamlGitServiceImpl implements YamlGitService {
   @Override
   public boolean isCommitAlreadyProcessed(String accountId, String headCommit) {
     GitCommit gitCommit = wingsPersistence.createQuery(GitCommit.class)
-                              .field("accountId")
-                              .equal(accountId)
-                              .field("commitId")
-                              .equal(headCommit)
-                              .field("status")
-                              .equal(Status.COMPLETED)
+                              .filter("accountId", accountId)
+                              .filter("commitId", headCommit)
+                              .filter("status", Status.COMPLETED)
                               .get();
     if (gitCommit != null) {
       logger.info(GIT_YAML_LOG_PREFIX + "Commit [id:{}] already processed [status:{}] on [date:{}] mode:[{}]",
@@ -364,10 +356,8 @@ public class YamlGitServiceImpl implements YamlGitService {
 
   public GitSyncWebhook getWebhook(String entityId, String accountId) {
     GitSyncWebhook gsw = wingsPersistence.createQuery(GitSyncWebhook.class)
-                             .field("entityId")
-                             .equal(entityId)
-                             .field("accountId")
-                             .equal(accountId)
+                             .filter("entityId", entityId)
+                             .filter("accountId", accountId)
                              .get();
 
     if (gsw != null) {
@@ -424,10 +414,8 @@ public class YamlGitServiceImpl implements YamlGitService {
 
   public <T extends Change> void upsertGitSyncErrors(T failedChange, String errorMessage, boolean fullSyncPath) {
     Query<GitSyncError> failedQuery = wingsPersistence.createQuery(GitSyncError.class)
-                                          .field("accountId")
-                                          .equal(failedChange.getAccountId())
-                                          .field("yamlFilePath")
-                                          .equal(failedChange.getFilePath());
+                                          .filter("accountId", failedChange.getAccountId())
+                                          .filter("yamlFilePath", failedChange.getFilePath());
     GitFileChange failedGitFileChange = (GitFileChange) failedChange;
     String failedCommitId = failedGitFileChange.getCommitId() != null ? failedGitFileChange.getCommitId() : "";
     UpdateOperations<GitSyncError> failedUpdateOperations =
@@ -449,7 +437,7 @@ public class YamlGitServiceImpl implements YamlGitService {
     List<String> yamlFilePathList =
         gitFileChangeList.stream().map(GitFileChange::getFilePath).collect(Collectors.toList());
     Query query = wingsPersistence.createAuthorizedQuery(GitSyncError.class);
-    query.field("accountId").equal(accountId);
+    query.filter("accountId", accountId);
     query.field("yamlFilePath").in(yamlFilePathList);
     wingsPersistence.delete(query);
     closeAlertIfApplicable(accountId, gitToHarness);
@@ -475,8 +463,8 @@ public class YamlGitServiceImpl implements YamlGitService {
   @Override
   public RestResponse discardGitSyncError(String accountId, String yamlFilePath) {
     Query query = wingsPersistence.createAuthorizedQuery(GitSyncError.class);
-    query.field("accountId").equal(accountId);
-    query.field("yamlFilePath").equal(yamlFilePath);
+    query.filter("accountId", accountId);
+    query.filter("yamlFilePath", yamlFilePath);
     wingsPersistence.delete(query);
     closeAlertIfApplicable(accountId, false);
     return RestResponse.Builder.aRestResponse().build();
@@ -485,8 +473,8 @@ public class YamlGitServiceImpl implements YamlGitService {
   @Override
   public RestResponse discardGitSyncErrorForFullSync(String accountId) {
     Query query = wingsPersistence.createAuthorizedQuery(GitSyncError.class);
-    query.field("accountId").equal(accountId);
-    query.field("fullSyncPath").equal(true);
+    query.filter("accountId", accountId);
+    query.filter("fullSyncPath", true);
     wingsPersistence.delete(query);
     closeAlertIfApplicable(accountId, false);
     return RestResponse.Builder.aRestResponse().build();

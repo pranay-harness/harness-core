@@ -167,12 +167,8 @@ public class EnvironmentServiceImpl implements EnvironmentService, DataProvider 
 
   @Override
   public Environment getEnvironmentByName(String appId, String environmentName) {
-    Environment environment = wingsPersistence.createQuery(Environment.class)
-                                  .field("appId")
-                                  .equal(appId)
-                                  .field("name")
-                                  .equal(environmentName)
-                                  .get();
+    Environment environment =
+        wingsPersistence.createQuery(Environment.class).filter("appId", appId).filter("name", environmentName).get();
     if (environment != null) {
       addServiceTemplates(environment);
     }
@@ -181,12 +177,7 @@ public class EnvironmentServiceImpl implements EnvironmentService, DataProvider 
 
   @Override
   public boolean exist(@NotEmpty String appId, @NotEmpty String envId) {
-    return wingsPersistence.createQuery(Environment.class)
-               .field("appId")
-               .equal(appId)
-               .field(ID_KEY)
-               .equal(envId)
-               .getKey()
+    return wingsPersistence.createQuery(Environment.class).filter("appId", appId).filter(ID_KEY, envId).getKey()
         != null;
   }
 
@@ -399,8 +390,7 @@ public class EnvironmentServiceImpl implements EnvironmentService, DataProvider 
 
   @Override
   public void pruneByApplication(String appId) {
-    List<Environment> environments =
-        wingsPersistence.createQuery(Environment.class).field("appId").equal(appId).asList();
+    List<Environment> environments = wingsPersistence.createQuery(Environment.class).filter("appId", appId).asList();
     environments.forEach(environment -> {
       wingsPersistence.delete(environment);
       pruneDescendingEntities(appId, environment.getUuid());

@@ -259,12 +259,9 @@ public class SettingsServiceImpl implements SettingsService {
   @Override
   public SettingAttribute get(String appId, String envId, String varId) {
     return wingsPersistence.createQuery(SettingAttribute.class)
-        .field("appId")
-        .equal(appId)
-        .field("envId")
-        .equal(envId)
-        .field(ID_KEY)
-        .equal(varId)
+        .filter("appId", appId)
+        .filter("envId", envId)
+        .filter(ID_KEY, varId)
         .get();
   }
 
@@ -280,10 +277,8 @@ public class SettingsServiceImpl implements SettingsService {
   @Override
   public SettingAttribute getSettingAttributeByName(String accountId, String settingAttributeName) {
     return wingsPersistence.createQuery(SettingAttribute.class)
-        .field("name")
-        .equal(settingAttributeName)
-        .field("accountId")
-        .equal(accountId)
+        .filter("name", settingAttributeName)
+        .filter("accountId", accountId)
         .get();
   }
 
@@ -476,14 +471,12 @@ public class SettingsServiceImpl implements SettingsService {
   @Override
   public SettingAttribute getByName(String accountId, String appId, String envId, String attributeName) {
     return wingsPersistence.createQuery(SettingAttribute.class)
-        .field("accountId")
-        .equal(accountId)
+        .filter("accountId", accountId)
         .field("appId")
         .in(asList(appId, GLOBAL_APP_ID))
         .field("envId")
         .in(asList(envId, GLOBAL_ENV_ID))
-        .field("name")
-        .equal(attributeName)
+        .filter("name", attributeName)
         .get();
   }
 
@@ -619,19 +612,15 @@ public class SettingsServiceImpl implements SettingsService {
 
   @Override
   public void deleteByAccountId(String accountId) {
-    wingsPersistence.delete(wingsPersistence.createQuery(SettingAttribute.class).field("accountId").equal(accountId));
+    wingsPersistence.delete(wingsPersistence.createQuery(SettingAttribute.class).filter("accountId", accountId));
   }
 
   @Override
   public void deleteSettingAttributesByType(String accountId, String appId, String envId, String type) {
     wingsPersistence.delete(wingsPersistence.createQuery(SettingAttribute.class)
-                                .field("accountId")
-                                .equal(accountId)
-                                .field("appId")
-                                .equal(appId)
-                                .field("envId")
-                                .equal(envId)
-                                .field("value.type")
-                                .equal(type));
+                                .filter("accountId", accountId)
+                                .filter("appId", appId)
+                                .filter("envId", envId)
+                                .filter("value.type", type));
   }
 }

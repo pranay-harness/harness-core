@@ -130,8 +130,7 @@ public class EnvironmentServiceTest extends WingsBaseTest {
   @Before
   public void setUp() throws Exception {
     when(wingsPersistence.createQuery(Environment.class)).thenReturn(query);
-    when(query.field(any())).thenReturn(end);
-    when(end.equal(any())).thenReturn(query);
+    when(query.filter(any(), any())).thenReturn(query);
     when(wingsPersistence.createUpdateOperations(Environment.class)).thenReturn(updateOperations);
     when(updateOperations.set(any(), any())).thenReturn(updateOperations);
     when(updateOperations.unset(any())).thenReturn(updateOperations);
@@ -182,10 +181,8 @@ public class EnvironmentServiceTest extends WingsBaseTest {
   public void shouldReturnTrueForExistingEnvironmentInExistApi() {
     when(query.getKey()).thenReturn(new Key<>(Environment.class, "environments", ENV_ID));
     assertThat(environmentService.exist(APP_ID, ENV_ID)).isTrue();
-    verify(query).field(ID_KEY);
-    verify(end).equal(ENV_ID);
-    verify(query).field("appId");
-    verify(end).equal(APP_ID);
+    verify(query).filter(ID_KEY, ENV_ID);
+    verify(query).filter("appId", APP_ID);
   }
 
   /**

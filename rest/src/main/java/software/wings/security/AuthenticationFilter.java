@@ -131,7 +131,7 @@ public class AuthenticationFilter implements ContainerRequestFilter {
   }
 
   protected User getUser(String userName) {
-    return wingsPersistence.createQuery(User.class).field("email").equal(userName.trim().toLowerCase()).get();
+    return wingsPersistence.createQuery(User.class).filter("email", userName.trim().toLowerCase()).get();
   }
 
   protected void validateLearningEngineRequest(ContainerRequestContext containerRequestContext) {
