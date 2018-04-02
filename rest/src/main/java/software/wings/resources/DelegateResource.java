@@ -217,9 +217,7 @@ public class DelegateResource {
   @ExceptionMetered
   public RestResponse<Map<String, String>> downloadUrl(@Context HttpServletRequest request,
       @QueryParam("accountId") @NotEmpty String accountId) throws IOException, TemplateException {
-    String url = mainConfiguration.getApiUrl() == null
-        ? request.getScheme() + "://" + request.getServerName() + ":" + request.getServerPort()
-        : mainConfiguration.getApiUrl();
+    String url = getManagerUrl(request);
 
     return new RestResponse<>(ImmutableMap.of("downloadUrl",
         url + request.getRequestURI().replace("downloadUrl", "download") + "?accountId=" + accountId
@@ -244,14 +242,9 @@ public class DelegateResource {
 
   private String getManagerUrl(HttpServletRequest request) {
     String apiUrl = mainConfiguration.getApiUrl();
-    if (!StringUtils.isEmpty(apiUrl)) {
-      if (apiUrl.startsWith("http://")) {
-        apiUrl = apiUrl.substring(7);
-      } else if (apiUrl.startsWith("https://")) {
-        apiUrl = apiUrl.substring(8);
-      }
-    }
-    return !StringUtils.isEmpty(apiUrl) ? apiUrl : request.getServerName() + ":" + request.getServerPort();
+    return !StringUtils.isEmpty(apiUrl)
+        ? apiUrl
+        : request.getScheme() + "://" + request.getServerName() + ":" + request.getServerPort();
   }
 
   @DelegateAuth
