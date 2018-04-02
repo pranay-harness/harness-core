@@ -206,4 +206,4 @@ userVariables:
     fixed: false
     mandatory: true
     name: MANAGER_VERSION
-    value: 3885
+    value: '3893'

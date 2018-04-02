@@ -49,7 +49,7 @@ function getProperty () {
 
 function generateRandomString(){
    LENGTH=$1
-   echo `openssl rand -base64 $LENGTH`
+   echo `hexdump -n 16 -e '4/4 "%08X" 1 "\n"' /dev/urandom`
 }
 
 function replace() {
