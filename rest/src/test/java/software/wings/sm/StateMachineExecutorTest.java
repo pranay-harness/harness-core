@@ -80,7 +80,7 @@ public class StateMachineExecutorTest extends WingsBaseTest {
 
     StateMachineExecutionCallbackMock callback = new StateMachineExecutionCallbackMock();
 
-    stateMachineExecutor.execute(appId, smId, executionUuid, executionUuid, null, callback);
+    stateMachineExecutor.execute(appId, smId, executionUuid, executionUuid, null, asList(callback));
     callback.await();
 
     assertThat(StaticMap.getValue(stateA.getName())).isNotNull();
@@ -140,7 +140,7 @@ public class StateMachineExecutorTest extends WingsBaseTest {
 
     StateMachineExecutionCallbackMock callback = new StateMachineExecutionCallbackMock();
 
-    stateMachineExecutor.execute(appId, smId, executionUuid, executionUuid, null, callback);
+    stateMachineExecutor.execute(appId, smId, executionUuid, executionUuid, null, asList(callback));
     callback.await();
 
     assertThat(StaticMap.getValue(stateA.getName())).isNotNull();
@@ -202,7 +202,7 @@ public class StateMachineExecutorTest extends WingsBaseTest {
 
     StateMachineExecutionCallbackMock callback = new StateMachineExecutionCallbackMock();
 
-    stateMachineExecutor.execute(appId, smId, executionUuid, executionUuid, null, callback);
+    stateMachineExecutor.execute(appId, smId, executionUuid, executionUuid, null, asList(callback));
     callback.await();
 
     assertThat(StaticMap.getValue(stateA.getName())).isNotNull();
@@ -269,7 +269,7 @@ public class StateMachineExecutorTest extends WingsBaseTest {
     String executionUuid = generateUuid();
 
     StateMachineExecutionCallbackMock callback = new StateMachineExecutionCallbackMock();
-    stateMachineExecutor.execute(appId, sm.getUuid(), executionUuid, executionUuid, null, callback);
+    stateMachineExecutor.execute(appId, sm.getUuid(), executionUuid, executionUuid, null, asList(callback));
     callback.await();
 
     assertThat((long) StaticMap.getValue(stateA.getName()) < (long) StaticMap.getValue(stateAB.getName()))
@@ -331,7 +331,7 @@ public class StateMachineExecutorTest extends WingsBaseTest {
     String executionUuid = generateUuid();
 
     StateMachineExecutionCallbackMock callback = new StateMachineExecutionCallbackMock();
-    stateMachineExecutor.execute(appId, sm.getUuid(), executionUuid, executionUuid, null, callback);
+    stateMachineExecutor.execute(appId, sm.getUuid(), executionUuid, executionUuid, null, asList(callback));
     callback.await();
 
     assertThat(StaticMap.getValue(stateA.getName())).isNotNull();
@@ -393,7 +393,7 @@ public class StateMachineExecutorTest extends WingsBaseTest {
 
     StateMachineExecutionCallbackMock callback = new StateMachineExecutionCallbackMock();
     CustomeExecutionEventAdvisor advisor = new CustomeExecutionEventAdvisor(ExecutionInterruptType.MARK_SUCCESS);
-    stateMachineExecutor.execute(appId, sm.getUuid(), executionUuid, executionUuid, null, callback, advisor);
+    stateMachineExecutor.execute(appId, sm.getUuid(), executionUuid, executionUuid, null, asList(callback), advisor);
     callback.await();
 
     assertThat(StaticMap.getValue(stateA.getName())).isNotNull();
@@ -455,7 +455,7 @@ public class StateMachineExecutorTest extends WingsBaseTest {
 
     StateMachineExecutionCallbackMock callback = new StateMachineExecutionCallbackMock();
     CustomeExecutionEventAdvisor advisor = new CustomeExecutionEventAdvisor(ExecutionInterruptType.MARK_FAILED);
-    stateMachineExecutor.execute(appId, sm.getUuid(), executionUuid, executionUuid, null, callback, advisor);
+    stateMachineExecutor.execute(appId, sm.getUuid(), executionUuid, executionUuid, null, asList(callback), advisor);
     callback.await();
 
     assertThat(StaticMap.getValue(stateA.getName())).isNotNull();
@@ -517,7 +517,7 @@ public class StateMachineExecutorTest extends WingsBaseTest {
 
     StateMachineExecutionCallbackMock callback = new StateMachineExecutionCallbackMock();
     CustomeExecutionEventAdvisor advisor = new CustomeExecutionEventAdvisor(ExecutionInterruptType.ABORT);
-    stateMachineExecutor.execute(appId, sm.getUuid(), executionUuid, executionUuid, null, callback, advisor);
+    stateMachineExecutor.execute(appId, sm.getUuid(), executionUuid, executionUuid, null, asList(callback), advisor);
     callback.await();
 
     assertThat(StaticMap.getValue(stateA.getName())).isNotNull();
@@ -601,7 +601,7 @@ public class StateMachineExecutorTest extends WingsBaseTest {
     String executionUuid = generateUuid();
 
     StateMachineExecutionCallbackMock callback = new StateMachineExecutionCallbackMock();
-    stateMachineExecutor.execute(appId, sm.getUuid(), executionUuid, executionUuid, null, callback);
+    stateMachineExecutor.execute(appId, sm.getUuid(), executionUuid, executionUuid, null, asList(callback));
     callback.await();
 
     assertThat(StaticMap.getValue(stateA.getName())).isNotNull();
@@ -659,7 +659,7 @@ public class StateMachineExecutorTest extends WingsBaseTest {
     String executionUuid = generateUuid();
 
     StateMachineExecutionCallbackMock callback = new StateMachineExecutionCallbackMock();
-    stateMachineExecutor.execute(appId, sm.getUuid(), executionUuid, executionUuid, null, callback);
+    stateMachineExecutor.execute(appId, sm.getUuid(), executionUuid, executionUuid, null, asList(callback));
     callback.await();
 
     assertThat(StaticMap.getValue(stateA.getName())).isNotNull();
@@ -711,7 +711,7 @@ public class StateMachineExecutorTest extends WingsBaseTest {
     String executionUuid = generateUuid();
 
     StateMachineExecutionCallbackMock callback = new StateMachineExecutionCallbackMock();
-    stateMachineExecutor.execute(appId, sm.getUuid(), executionUuid, executionUuid, null, callback);
+    stateMachineExecutor.execute(appId, sm.getUuid(), executionUuid, executionUuid, null, asList(callback));
     callback.await();
   }
 
@@ -770,7 +770,7 @@ public class StateMachineExecutorTest extends WingsBaseTest {
     String executionUuid = generateUuid();
 
     StateMachineExecutionCallbackMock callback = new StateMachineExecutionCallbackMock();
-    stateMachineExecutor.execute(appId, smId, executionUuid, executionUuid, null, callback);
+    stateMachineExecutor.execute(appId, smId, executionUuid, executionUuid, null, asList(callback));
     callback.await();
   }
 

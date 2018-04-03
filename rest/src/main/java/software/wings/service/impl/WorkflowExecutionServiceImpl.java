@@ -52,6 +52,8 @@ import static software.wings.sm.ExecutionStatus.SUCCESS;
 import static software.wings.sm.ExecutionStatus.WAITING;
 import static software.wings.sm.InfraMappingSummary.Builder.anInfraMappingSummary;
 import static software.wings.sm.InstanceStatusSummary.InstanceStatusSummaryBuilder.anInstanceStatusSummary;
+import static software.wings.sm.StateExecutionInstance.CALLBACKS_KEY;
+import static software.wings.sm.StateExecutionInstance.CALLBACK_KEY;
 import static software.wings.sm.StateType.APPROVAL;
 import static software.wings.sm.StateType.ENV_STATE;
 import static software.wings.utils.Validator.notNullCheck;
@@ -235,8 +237,8 @@ public class WorkflowExecutionServiceImpl implements WorkflowExecutionService {
    * @param callback       the callback
    */
   void trigger(String appId, String stateMachineId, String executionUuid, String executionName,
-      StateMachineExecutionCallback callback) {
-    stateMachineExecutor.execute(appId, stateMachineId, executionUuid, executionName, null, callback);
+      List<StateMachineExecutionCallback> callbacks) {
+    stateMachineExecutor.execute(appId, stateMachineId, executionUuid, executionName, null, callbacks);
   }
 
   /**
@@ -609,7 +611,7 @@ public class WorkflowExecutionServiceImpl implements WorkflowExecutionService {
                                                     .addFilter("appId", EQ, workflowExecution.getAppId())
                                                     .addFilter("executionUuid", EQ, workflowExecution.getUuid())
                                                     .addFilter("createdAt", GE, workflowExecution.getCreatedAt())
-                                                    .addFieldsExcluded("contextElements", "callback")
+                                                    .addFieldsExcluded("contextElements", CALLBACK_KEY, CALLBACKS_KEY)
                                                     .build();
       List<StateExecutionInstance> allInstances = getAllStateExecutionInstances(req);
       if (isEmpty(allInstances)) {
@@ -1085,7 +1087,7 @@ public class WorkflowExecutionServiceImpl implements WorkflowExecutionService {
     workflowExecutionUpdate.setWorkflowExecutionId(workflowExecution.getUuid());
     workflowExecutionUpdate.setNeedToNotifyPipeline(executionArgs.isTriggeredFromPipeline());
 
-    stateExecutionInstance.setCallback(workflowExecutionUpdate);
+    stateExecutionInstance.setCallbacks(asList(workflowExecutionUpdate));
     if (workflowExecutionAdvisor != null) {
       stateExecutionInstance.setExecutionEventAdvisors(asList(workflowExecutionAdvisor));
     }
