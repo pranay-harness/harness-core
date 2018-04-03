@@ -62,7 +62,7 @@ public enum StencilCategory {
   /**
    * Flow controls stencil category.
    */
-  FLOW_CONTROLS(9),
+  FLOW_CONTROLS("FLOW CONTROLS", 9),
   /**
    * Others stencil category.
    */
