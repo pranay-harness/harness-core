@@ -54,6 +54,8 @@ public class EcsServiceSetup extends ContainerServiceSetup {
   private String loadBalancerName;
   private String targetGroupArn;
   private String roleArn;
+  private String targetContainerName;
+  private String targetPort;
   private String commandName = "Setup Service Cluster";
 
   /**
@@ -107,6 +109,8 @@ public class EcsServiceSetup extends ContainerServiceSetup {
         .withAssignPublicIps(ecsInfrastructureMapping.isAssignPublicIp())
         .withExecutionRoleArn(ecsInfrastructureMapping.getExecutionRole())
         .withLaunchType(ecsInfrastructureMapping.getLaunchType())
+        .withTargetContainerName(targetContainerName)
+        .withTargetPort(targetPort)
         .build();
   }
 
@@ -270,5 +274,21 @@ public class EcsServiceSetup extends ContainerServiceSetup {
 
   public void setEcsServiceName(String ecsServiceName) {
     this.ecsServiceName = ecsServiceName;
+  }
+
+  public String getTargetContainerName() {
+    return targetContainerName;
+  }
+
+  public void setTargetContainerName(String targetContainerName) {
+    this.targetContainerName = targetContainerName;
+  }
+
+  public String getTargetPort() {
+    return targetPort;
+  }
+
+  public void setTargetPort(String targetPort) {
+    this.targetPort = targetPort;
   }
 }
