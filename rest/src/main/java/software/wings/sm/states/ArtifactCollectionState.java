@@ -75,7 +75,7 @@ public class ArtifactCollectionState extends State {
     String evaluatedBuildNo = getEvaluatedBuildNo(context);
     ArtifactCollectionExecutionData artifactCollectionExecutionData =
         ArtifactCollectionExecutionData.builder()
-            .timeout(valueOf(getTimeoutMillis()))
+            .timeout(getTimeoutMillis() != null ? valueOf(getTimeoutMillis()) : null)
             .artifactSource(artifactStream.getSourceName())
             .buildNo(evaluatedBuildNo)
             .message("Waiting for [" + evaluatedBuildNo + "] to be collected from ["
@@ -100,8 +100,9 @@ public class ArtifactCollectionState extends State {
     String evaluatedBuildNo = getEvaluatedBuildNo(context);
     Artifact lastCollectedArtifact =
         getLastCollectedArtifact(context, artifactStream.getUuid(), artifactStream.getSourceName(), evaluatedBuildNo);
-
-    artifactCollectionExecutionData.setTimeout(valueOf(getTimeoutMillis()));
+    if (getTimeoutMillis() != null) {
+      artifactCollectionExecutionData.setTimeout(valueOf(getTimeoutMillis()));
+    }
     artifactCollectionExecutionData.setArtifactSource(artifactStream.getSourceName());
 
     if (lastCollectedArtifact == null || !lastCollectedArtifact.getStatus().isFinalStatus()) {
