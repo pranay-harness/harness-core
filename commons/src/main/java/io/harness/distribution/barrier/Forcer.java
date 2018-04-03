@@ -4,13 +4,16 @@ import lombok.Builder;
 import lombok.Value;
 
 import java.util.List;
+import java.util.Map;
 
 @Value
 @Builder
 public class Forcer {
   private ForcerId id;
+  private Map<String, Object> metadata;
   private List<Forcer> children;
-  enum State {
+
+  public enum State {
     // The forcer is absent for the barrier purposes
     ABSENT,
 

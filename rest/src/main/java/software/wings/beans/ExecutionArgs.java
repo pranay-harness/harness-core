@@ -29,6 +29,7 @@ public class ExecutionArgs {
   private ErrorStrategy errorStrategy;
   private boolean triggeredFromPipeline;
   private String pipelineId;
+  private String pipelinePhaseElementId;
   private Map<String, String> workflowVariables;
   private String notes;
   private EmbeddedUser triggeredBy;
@@ -240,20 +241,20 @@ public class ExecutionArgs {
     this.triggeredFromPipeline = triggeredFromPipeline;
   }
 
-  /**
-   * Get PipelineId
-   * @return
-   */
   public String getPipelineId() {
     return pipelineId;
   }
 
-  /**
-   * Set PipelineId
-   * @param pipelineId
-   */
   public void setPipelineId(String pipelineId) {
     this.pipelineId = pipelineId;
+  }
+
+  public String getPipelinePhaseElementId() {
+    return pipelinePhaseElementId;
+  }
+
+  public void setPipelinePhaseElementId(String pipelinePhaseElementId) {
+    this.pipelinePhaseElementId = pipelinePhaseElementId;
   }
 
   public Map<String, String> getWorkflowVariables() {

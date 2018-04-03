@@ -6,7 +6,6 @@ import static java.util.stream.Collectors.toList;
 import static org.apache.commons.lang3.StringUtils.isBlank;
 import static software.wings.common.Constants.DELEGATE_SYNC_CACHE;
 import static software.wings.core.maintenance.MaintenanceController.isMaintenance;
-import static software.wings.waitnotify.ErrorNotifyResponseData.Builder.anErrorNotifyResponseData;
 
 import com.google.inject.Inject;
 
@@ -25,6 +24,7 @@ import software.wings.exception.WingsException;
 import software.wings.lock.AcquiredLock;
 import software.wings.lock.PersistentLocker;
 import software.wings.utils.CacheHelper;
+import software.wings.waitnotify.ErrorNotifyResponseData;
 import software.wings.waitnotify.WaitNotifyEngine;
 
 import java.time.Clock;
@@ -116,8 +116,8 @@ public class DelegateQueueTask implements Runnable {
           } else {
             logger.info("Long running delegate task {} is terminated", updatedDelegateTask.getUuid());
             waitNotifyEngine.notify(updatedDelegateTask.getWaitId(),
-                anErrorNotifyResponseData()
-                    .withErrorMessage("Delegate timeout. Delegate ID: " + updatedDelegateTask.getDelegateId())
+                ErrorNotifyResponseData.builder()
+                    .errorMessage("Delegate timeout. Delegate ID: " + updatedDelegateTask.getDelegateId())
                     .build());
           }
         });
@@ -165,7 +165,7 @@ public class DelegateQueueTask implements Runnable {
           } else {
             logger.info("Queued delegate task {} is terminated", updatedDelegateTask.getUuid());
             waitNotifyEngine.notify(updatedDelegateTask.getWaitId(),
-                anErrorNotifyResponseData().withErrorMessage("Task queued too log").build());
+                ErrorNotifyResponseData.builder().errorMessage("Task queued too log").build());
           }
         });
       }

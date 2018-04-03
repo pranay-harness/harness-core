@@ -29,6 +29,7 @@ import static software.wings.stencils.StencilCategory.COLLECTIONS;
 import static software.wings.stencils.StencilCategory.COMMANDS;
 import static software.wings.stencils.StencilCategory.CONTROLS;
 import static software.wings.stencils.StencilCategory.ENVIRONMENTS;
+import static software.wings.stencils.StencilCategory.FLOW_CONTROLS;
 import static software.wings.stencils.StencilCategory.OTHERS;
 import static software.wings.stencils.StencilCategory.VERIFICATIONS;
 
@@ -61,6 +62,7 @@ import software.wings.sm.states.AwsLambdaRollback;
 import software.wings.sm.states.AwsLambdaState;
 import software.wings.sm.states.AwsNodeSelectState;
 import software.wings.sm.states.BambooState;
+import software.wings.sm.states.BarrierState;
 import software.wings.sm.states.CloudWatchState;
 import software.wings.sm.states.CommandState;
 import software.wings.sm.states.DcNodeSelectState;
@@ -134,6 +136,11 @@ public enum StateType implements StateTypeDescriptor {
    * Pause state type.
    */
   PAUSE(PauseState.class, CONTROLS, 4, "Manual Step", asList(), ORCHESTRATION_STENCILS),
+
+  /**
+   * Barrier state type.
+   */
+  BARRIER(BarrierState.class, FLOW_CONTROLS, 0, "Barrier", asList(), ORCHESTRATION_STENCILS, COMMON),
 
   /**
    * Script state type.

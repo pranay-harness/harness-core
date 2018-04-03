@@ -202,6 +202,11 @@ public enum ErrorCode {
   STATES_WITH_DUP_TRANSITIONS("STATES_WITH_DUP_TRANSITIONS"),
 
   /**
+   * Barriers with the same identification, but are not going to run concurrently.
+   */
+  BARRIERS_NOT_RUNNING_CONCURRENTLY("BARRIERS_NOT_RUNNING_CONCURRENTLY"),
+
+  /**
    * Non fork states error codes.
    */
   NON_FORK_STATES("NON_FORK_STATES"),

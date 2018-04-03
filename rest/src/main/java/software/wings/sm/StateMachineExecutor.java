@@ -72,7 +72,9 @@ import software.wings.scheduler.QuartzScheduler;
 import software.wings.service.intfc.AlertService;
 import software.wings.service.intfc.DelegateService;
 import software.wings.sm.ExecutionEvent.ExecutionEventBuilder;
+import software.wings.sm.states.BarrierState;
 import software.wings.sm.states.EnvState;
+import software.wings.sm.states.PhaseSubWorkflow;
 import software.wings.utils.KryoUtils;
 import software.wings.utils.MapperUtils;
 import software.wings.utils.Misc;
@@ -243,6 +245,11 @@ public class StateMachineExecutor {
     if (state instanceof EnvState) {
       stateExecutionInstance.setPipelineStateElementId(((EnvState) state).getPipelineStateElementId());
     }
+
+    stateExecutionInstance.setPhaseSubWorkflowId(
+        state instanceof PhaseSubWorkflow ? ((PhaseSubWorkflow) state).getSubWorkflowId() : null);
+
+    stateExecutionInstance.setStepId(state instanceof BarrierState ? state.getId() : null);
 
     if (stateExecutionInstance.getUuid() != null) {
       throw new WingsException(ErrorCode.INVALID_REQUEST)
@@ -416,9 +423,11 @@ public class StateMachineExecutor {
       injector.injectMembers(currentState);
       invokeAdvisors(context, currentState);
       executionResponse = currentState.execute(context);
+    } catch (WingsException exception) {
+      exception.logProcessedMessages(logger);
+      ex = exception;
     } catch (Exception exception) {
-      logger.warn(
-          "Error in {} execution: {}", stateExecutionInstance.getStateName(), Misc.getMessage(exception), exception);
+      logger.error("Error in {} execution: {}", stateExecutionInstance.getStateName(), exception);
       ex = exception;
     }
 

@@ -99,6 +99,8 @@ import software.wings.beans.OrchestrationWorkflow;
 import software.wings.beans.OrchestrationWorkflowType;
 import software.wings.beans.Pipeline;
 import software.wings.beans.PipelineExecution;
+import software.wings.beans.PipelineStage;
+import software.wings.beans.PipelineStage.PipelineStageElement;
 import software.wings.beans.PipelineStageExecution;
 import software.wings.beans.RequiredExecutionArgs;
 import software.wings.beans.SearchFilter.Operator;
@@ -126,6 +128,8 @@ import software.wings.lock.PersistentLocker;
 import software.wings.security.UserThreadLocal;
 import software.wings.service.intfc.AppService;
 import software.wings.service.intfc.ArtifactService;
+import software.wings.service.intfc.BarrierService;
+import software.wings.service.intfc.BarrierService.OrchestrationWorkflowInfo;
 import software.wings.service.intfc.EnvironmentService;
 import software.wings.service.intfc.InfrastructureMappingService;
 import software.wings.service.intfc.PipelineService;
@@ -194,6 +198,7 @@ public class WorkflowExecutionServiceImpl implements WorkflowExecutionService {
 
   @Inject private MainConfiguration mainConfiguration;
   @Inject private WingsPersistence wingsPersistence;
+  @Inject private BarrierService barrierService;
   @Inject private StateMachineExecutor stateMachineExecutor;
   @Inject private EnvironmentService environmentService;
   @Inject private ExecutionInterruptManager executionInterruptManager;
@@ -669,6 +674,41 @@ public class WorkflowExecutionServiceImpl implements WorkflowExecutionService {
     return triggerPipelineExecution(appId, pipelineId, executionArgs, null);
   }
 
+  private void constructBarriers(Pipeline pipeline, String pipelineExecutionId) {
+    List<OrchestrationWorkflowInfo> orchestrationWorkflows = null;
+    for (PipelineStage stage : pipeline.getPipelineStages()) {
+      if (!stage.isParallel()) {
+        if (!isEmpty(orchestrationWorkflows)) {
+          barrierService.obtainInstances(pipeline.getAppId(), orchestrationWorkflows, pipelineExecutionId)
+              .forEach(barrier -> barrierService.save(barrier));
+        }
+        orchestrationWorkflows = new ArrayList<>();
+      }
+
+      // this array is legacy, we always have just one item
+      final PipelineStageElement element = stage.getPipelineStageElements().get(0);
+
+      if (!ENV_STATE.name().equals(element.getType())) {
+        continue;
+      }
+      Workflow workflow =
+          workflowService.readWorkflow(pipeline.getAppId(), (String) element.getProperties().get("workflowId"));
+
+      if (workflow.getOrchestrationWorkflow() != null) {
+        orchestrationWorkflows.add(OrchestrationWorkflowInfo.builder()
+                                       .workflowId(workflow.getUuid())
+                                       .pipelineStateId(element.getUuid())
+                                       .orchestrationWorkflow(workflow.getOrchestrationWorkflow())
+                                       .build());
+      }
+    }
+
+    if (!isEmpty(orchestrationWorkflows)) {
+      barrierService.obtainInstances(pipeline.getAppId(), orchestrationWorkflows, pipelineExecutionId)
+          .forEach(barrier -> barrierService.save(barrier));
+    }
+  }
+
   /**
    * Trigger pipeline execution workflow execution.
    *
@@ -701,11 +741,14 @@ public class WorkflowExecutionServiceImpl implements WorkflowExecutionService {
       throw new WingsException("No stateMachine associated with " + pipelineId);
     }
     WorkflowExecution workflowExecution = new WorkflowExecution();
+    workflowExecution.setUuid(generateUuid());
     workflowExecution.setAppId(appId);
     workflowExecution.setWorkflowId(pipelineId);
     workflowExecution.setWorkflowType(WorkflowType.PIPELINE);
     workflowExecution.setStateMachineId(stateMachine.getUuid());
     workflowExecution.setName(pipeline.getName());
+
+    constructBarriers(pipeline, workflowExecution.getUuid());
 
     // Do not remove this. Morphia referencing it by id and one object getting overridden by the other
     pipeline.setUuid(generateUuid() + "_embedded");
@@ -1033,6 +1076,7 @@ public class WorkflowExecutionServiceImpl implements WorkflowExecutionService {
     stateExecutionInstance.setExecutionType(workflowExecution.getWorkflowType());
     stateExecutionInstance.setOrchestrationWorkflowType(workflowExecution.getOrchestrationType());
     stateExecutionInstance.setWorkflowId(workflowExecution.getWorkflowId());
+    stateExecutionInstance.setPipelineStateElementId(executionArgs.getPipelinePhaseElementId());
 
     if (workflowExecutionUpdate == null) {
       workflowExecutionUpdate = new WorkflowExecutionUpdate();

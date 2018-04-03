@@ -28,6 +28,10 @@ import java.util.Map;
  */
 @Entity(value = "workflowExecutions", noClassnameStored = true)
 public class WorkflowExecution extends Base {
+  public static final String STATUS_KEY = "status";
+  public static final String WORKFLOW_ID_KEY = "workflowId";
+  public static final String PIPELINE_EXECUTION_ID_KEY = "pipelineExecutionId";
+
   @Indexed private String workflowId;
 
   private String stateMachineId;

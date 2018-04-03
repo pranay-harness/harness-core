@@ -25,6 +25,7 @@ import software.wings.core.queue.Queue;
 import software.wings.dl.WingsPersistence;
 import software.wings.exception.WingsException;
 import software.wings.service.intfc.AlertService;
+import software.wings.service.intfc.BarrierService;
 import software.wings.service.intfc.TriggerService;
 import software.wings.service.intfc.WorkflowExecutionService;
 import software.wings.sm.ExecutionContext;
@@ -51,6 +52,7 @@ public class WorkflowExecutionUpdate implements StateMachineExecutionCallback {
   @javax.inject.Inject private Queue<ExecutionEvent> executionEventQueue;
   @javax.inject.Inject private AlertService alertService;
   @Inject private TriggerService triggerService;
+  @Inject private BarrierService barrierService;
 
   /**
    * Instantiates a new workflow execution update.
@@ -110,6 +112,9 @@ public class WorkflowExecutionUpdate implements StateMachineExecutionCallback {
    */
   @Override
   public void callback(ExecutionContext context, ExecutionStatus status, Exception ex) {
+    // TODO: this is temporary. this should be part of its own callback and with more precise filter
+    barrierService.updateAllActiveBarriers(context.getAppId());
+
     Query<WorkflowExecution> query = wingsPersistence.createQuery(WorkflowExecution.class)
                                          .filter("appId", appId)
                                          .filter(ID_KEY, workflowExecutionId)
