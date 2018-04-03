@@ -675,7 +675,8 @@ public class WorkflowExecutionServiceImpl implements WorkflowExecutionService {
   }
 
   private void constructBarriers(Pipeline pipeline, String pipelineExecutionId) {
-    List<OrchestrationWorkflowInfo> orchestrationWorkflows = null;
+    // Initializing the list workarounds an issue with having the first stage having isParallel set.
+    List<OrchestrationWorkflowInfo> orchestrationWorkflows = new ArrayList<>();
     for (PipelineStage stage : pipeline.getPipelineStages()) {
       if (!stage.isParallel()) {
         if (!isEmpty(orchestrationWorkflows)) {
