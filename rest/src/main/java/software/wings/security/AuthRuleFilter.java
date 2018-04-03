@@ -150,6 +150,18 @@ public class AuthRuleFilter implements ContainerRequestFilter {
     List<PermissionAttribute> requiredPermissionAttributes;
     List<String> appIdsOfAccount = getValidAppsFromAccount(accountId, appIdsFromRequest, emptyAppIdsInReq);
 
+    if (user != null) {
+      final String accountIdFinal = accountId;
+      if (!user.getAccounts()
+               .stream()
+               .filter(account -> account.getUuid().equals(accountIdFinal))
+               .findFirst()
+               .isPresent()) {
+        throw new WingsException(INVALID_REQUEST, HARMLESS)
+            .addParam("message", "User not authorized to access the given account");
+      }
+    }
+
     if (rbacEnabledForAccount) {
       requiredPermissionAttributes = getAllRequiredPermissionAttributes(requestContext);
 
@@ -189,18 +201,6 @@ public class AuthRuleFilter implements ContainerRequestFilter {
         throw new WingsException(INVALID_REQUEST).addParam("message", "appId not specified");
       }
       throw new WingsException(INVALID_REQUEST).addParam("message", "accountId not specified");
-    }
-
-    if (user != null) {
-      final String accountIdFinal = accountId;
-      if (!user.getAccounts()
-               .stream()
-               .filter(account -> account.getUuid().equals(accountIdFinal))
-               .findFirst()
-               .isPresent()) {
-        throw new WingsException(INVALID_REQUEST, HARMLESS)
-            .addParam("message", "User not authorized to access the given account");
-      }
     }
 
     if (rbacEnabledForAccount) {
