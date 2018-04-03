@@ -864,66 +864,67 @@ public class ServiceResourceServiceImpl implements ServiceResourceService, DataP
     EntityVersion lastEntityVersion =
         entityVersionService.lastEntityVersion(appId, EntityType.COMMAND, serviceCommand.getUuid(), serviceId);
 
-    Command command = aCommand().build();
-    if (serviceCommand.getCommand().getGraph() != null) {
-      if (!isLinearCommandGraph(serviceCommand)) {
-        WingsException wingsException =
-            new WingsException(ErrorCode.INVALID_PIPELINE, new IllegalArgumentException("Graph is not a pipeline"));
-        wingsException.addParam("message", "Graph is not a linear pipeline");
-        throw wingsException;
-      }
-      command.setGraph(serviceCommand.getCommand().getGraph());
-      command.transformGraph();
-    } else {
-      command.setCommandUnits(serviceCommand.getCommand().getCommandUnits());
-      command.setName(serviceCommand.getCommand().getName());
-      command.setCommandType(serviceCommand.getCommand().getCommandType());
-      if (isEmpty(serviceCommand.getName())) {
-        serviceCommand.setName(serviceCommand.getCommand().getName());
-      }
-    }
-
-    command.setOriginEntityId(serviceCommand.getUuid());
-    command.setAppId(appId);
-    command.setUuid(null);
-
-    Command oldCommand = commandService.getCommand(appId, serviceCommand.getUuid(), lastEntityVersion.getVersion());
-
-    DiffNode commandUnitDiff =
-        ObjectDifferBuilder.buildDefault().compare(command.getCommandUnits(), oldCommand.getCommandUnits());
-
-    if (commandUnitDiff.hasChanges()) {
-      EntityVersion entityVersion =
-          entityVersionService.newEntityVersion(appId, EntityType.COMMAND, serviceCommand.getUuid(), serviceId,
-              serviceCommand.getName(), EntityVersion.ChangeType.UPDATED, serviceCommand.getNotes());
-      command.setVersion(Long.valueOf(entityVersion.getVersion().intValue()));
-      // Copy the old command values
-      command.setDeploymentType(oldCommand.getDeploymentType());
-      command.setCommandType(oldCommand.getCommandType());
-      command.setArtifactType(oldCommand.getArtifactType());
-      commandService.save(command, true);
-
-      if (serviceCommand.getSetAsDefault()) {
-        serviceCommand.setDefaultVersion(entityVersion.getVersion());
-      }
-    } else {
+    if (serviceCommand.getCommand() != null) {
+      Command command = aCommand().build();
       if (serviceCommand.getCommand().getGraph() != null) {
-        ObjectDifferBuilder builder = ObjectDifferBuilder.startBuilding();
-        builder.inclusion().exclude().node(NodePath.with("linearGraphIterator"));
-        DiffNode graphDiff = builder.build().compare(command.getGraph(), oldCommand.getGraph());
-        if (graphDiff.hasChanges()) {
-          oldCommand.setGraph(command.getGraph());
-          commandService.update(oldCommand);
+        if (!isLinearCommandGraph(serviceCommand)) {
+          WingsException wingsException =
+              new WingsException(ErrorCode.INVALID_PIPELINE, new IllegalArgumentException("Graph is not a pipeline"));
+          wingsException.addParam("message", "Graph is not a linear pipeline");
+          throw wingsException;
+        }
+        command.setGraph(serviceCommand.getCommand().getGraph());
+        command.transformGraph();
+      } else {
+        command.setCommandUnits(serviceCommand.getCommand().getCommandUnits());
+        command.setName(serviceCommand.getCommand().getName());
+        command.setCommandType(serviceCommand.getCommand().getCommandType());
+        if (isEmpty(serviceCommand.getName())) {
+          serviceCommand.setName(serviceCommand.getCommand().getName());
+        }
+      }
+      command.setOriginEntityId(serviceCommand.getUuid());
+      command.setAppId(appId);
+      command.setUuid(null);
+
+      Command oldCommand = commandService.getCommand(appId, serviceCommand.getUuid(), lastEntityVersion.getVersion());
+
+      DiffNode commandUnitDiff =
+          ObjectDifferBuilder.buildDefault().compare(command.getCommandUnits(), oldCommand.getCommandUnits());
+
+      if (commandUnitDiff.hasChanges()) {
+        EntityVersion entityVersion =
+            entityVersionService.newEntityVersion(appId, EntityType.COMMAND, serviceCommand.getUuid(), serviceId,
+                serviceCommand.getName(), EntityVersion.ChangeType.UPDATED, serviceCommand.getNotes());
+        command.setVersion(Long.valueOf(entityVersion.getVersion().intValue()));
+        // Copy the old command values
+        command.setDeploymentType(oldCommand.getDeploymentType());
+        command.setCommandType(oldCommand.getCommandType());
+        command.setArtifactType(oldCommand.getArtifactType());
+        commandService.save(command, true);
+
+        if (serviceCommand.getSetAsDefault()) {
+          serviceCommand.setDefaultVersion(entityVersion.getVersion());
         }
       } else {
-        // Check if Name and CommandType changes
-        if (!oldCommand.getName().equals(command.getName())
-            || !oldCommand.getCommandType().equals(command.getCommandType())) {
-          UpdateOperations<Command> commandUpdateOperations = wingsPersistence.createUpdateOperations(Command.class);
-          setUnset(commandUpdateOperations, "name", command.getName());
-          setUnset(commandUpdateOperations, "commandType", command.getCommandType());
-          wingsPersistence.update(wingsPersistence.createQuery(Command.class).filter(ID_KEY, oldCommand.getUuid()),
-              commandUpdateOperations);
+        if (serviceCommand.getCommand().getGraph() != null) {
+          ObjectDifferBuilder builder = ObjectDifferBuilder.startBuilding();
+          builder.inclusion().exclude().node(NodePath.with("linearGraphIterator"));
+          DiffNode graphDiff = builder.build().compare(command.getGraph(), oldCommand.getGraph());
+          if (graphDiff.hasChanges()) {
+            oldCommand.setGraph(command.getGraph());
+            commandService.update(oldCommand);
+          }
+        } else {
+          // Check if Name and CommandType changes
+          if (!oldCommand.getName().equals(command.getName())
+              || !oldCommand.getCommandType().equals(command.getCommandType())) {
+            UpdateOperations<Command> commandUpdateOperations = wingsPersistence.createUpdateOperations(Command.class);
+            setUnset(commandUpdateOperations, "name", command.getName());
+            setUnset(commandUpdateOperations, "commandType", command.getCommandType());
+            wingsPersistence.update(wingsPersistence.createQuery(Command.class).filter(ID_KEY, oldCommand.getUuid()),
+                commandUpdateOperations);
+          }
         }
       }
     }
