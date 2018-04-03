@@ -123,9 +123,9 @@ public class StateMachineExecutor {
    * @return the state execution instance
    */
   public StateExecutionInstance execute(String appId, String smId, String executionUuid, String executionName,
-      List<ContextElement> contextParams, List<StateMachineExecutionCallback> callbacks) {
+      List<ContextElement> contextParams, StateMachineExecutionCallback callback) {
     return execute(wingsPersistence.get(StateMachine.class, appId, smId, CRITICAL), executionUuid, executionName,
-        contextParams, callbacks, null);
+        contextParams, callback, null);
   }
 
   /**
@@ -141,10 +141,10 @@ public class StateMachineExecutor {
    * @return the state execution instance
    */
   public StateExecutionInstance execute(String appId, String smId, String executionUuid, String executionName,
-      List<ContextElement> contextParams, List<StateMachineExecutionCallback> callbacks,
+      List<ContextElement> contextParams, StateMachineExecutionCallback callback,
       ExecutionEventAdvisor executionEventAdvisor) {
     return execute(wingsPersistence.get(StateMachine.class, appId, smId, CRITICAL), executionUuid, executionName,
-        contextParams, callbacks, executionEventAdvisor);
+        contextParams, callback, executionEventAdvisor);
   }
 
   /**
@@ -158,7 +158,7 @@ public class StateMachineExecutor {
    * @return the state execution instance
    */
   public StateExecutionInstance execute(StateMachine sm, String executionUuid, String executionName,
-      List<ContextElement> contextParams, List<StateMachineExecutionCallback> callbacks,
+      List<ContextElement> contextParams, StateMachineExecutionCallback callback,
       ExecutionEventAdvisor executionEventAdvisor) {
     if (sm == null) {
       logger.error("StateMachine passed for execution is null");
@@ -175,7 +175,7 @@ public class StateMachineExecutor {
     }
     stateExecutionInstance.setContextElements(contextElements);
 
-    stateExecutionInstance.setCallbacks(callbacks);
+    stateExecutionInstance.setCallback(callback);
 
     if (stateExecutionInstance.getStateName() == null) {
       stateExecutionInstance.setStateName(sm.getInitialStateName());
@@ -770,31 +770,18 @@ public class StateMachineExecutor {
 
   private void endTransition(ExecutionContextImpl context, StateExecutionInstance stateExecutionInstance,
       ExecutionStatus status, Exception exception) {
-    if (stateExecutionInstance.getNotifyId() != null) {
+    StateMachineExecutionCallback callback = stateExecutionInstance.getCallback();
+    if (stateExecutionInstance.getNotifyId() == null) {
+      if (stateExecutionInstance.getCallback() != null) {
+        injector.injectMembers(callback);
+        callback.callback(context, status, exception);
+      } else {
+        logger.info("No callback for the stateMachine: {}, executionUuid: {}", context.getStateMachine().getName(),
+            stateExecutionInstance.getExecutionUuid());
+      }
+    } else {
       notify(stateExecutionInstance, status);
-      return;
     }
-
-    // TODO: eliminate all this complexity when callback is removed.
-    List<StateMachineExecutionCallback> callbacks = new ArrayList<>();
-    if (stateExecutionInstance.getCallback() != null) {
-      callbacks.add(stateExecutionInstance.getCallback());
-    }
-
-    if (isNotEmpty(stateExecutionInstance.getCallbacks())) {
-      callbacks.addAll(stateExecutionInstance.getCallbacks());
-    }
-
-    if (isEmpty(callbacks)) {
-      logger.info("No callback for the stateMachine: {}, executionUuid: {}", context.getStateMachine().getName(),
-          stateExecutionInstance.getExecutionUuid());
-      return;
-    }
-
-    callbacks.forEach(callback -> {
-      injector.injectMembers(callback);
-      callback.callback(context, status, exception);
-    });
   }
 
   private void abortExecution(ExecutionContextImpl context) {
