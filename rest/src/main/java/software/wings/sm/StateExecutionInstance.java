@@ -1,6 +1,7 @@
 package software.wings.sm;
 
 import com.fasterxml.jackson.annotation.JsonIgnore;
+import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
 import lombok.Data;
 import lombok.EqualsAndHashCode;
 import org.mongodb.morphia.annotations.Embedded;
@@ -26,6 +27,7 @@ import java.util.Map;
 @Entity(value = "stateExecutionInstances", noClassnameStored = true)
 @Data
 @EqualsAndHashCode(callSuper = false)
+@JsonIgnoreProperties(ignoreUnknown = true)
 public class StateExecutionInstance extends Base {
   public static final String STATUS_KEY = "status";
   public static final String WORKFLOW_ID_KEY = "workflowId";
