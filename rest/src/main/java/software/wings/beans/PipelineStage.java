@@ -9,6 +9,8 @@ import lombok.EqualsAndHashCode;
 import lombok.NoArgsConstructor;
 import software.wings.yaml.BaseYamlWithType;
 
+import java.util.ArrayList;
+import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
@@ -22,8 +24,8 @@ import java.util.Map;
 public class PipelineStage {
   private String name;
   private boolean parallel;
-  private List<PipelineStageElement> pipelineStageElements;
-  private boolean valid;
+  private List<PipelineStageElement> pipelineStageElements = new ArrayList<>();
+  private boolean valid = true;
   private String validationMessage;
 
   @Data
@@ -34,10 +36,10 @@ public class PipelineStage {
     private String uuid;
     private String name;
     private String type;
-    private Map<String, Object> properties;
-    private Map<String, String> workflowVariables;
+    private Map<String, Object> properties = new HashMap<>();
+    private Map<String, String> workflowVariables = new HashMap<>();
 
-    private boolean valid;
+    private boolean valid = true;
     private String validationMessage;
   }
 
