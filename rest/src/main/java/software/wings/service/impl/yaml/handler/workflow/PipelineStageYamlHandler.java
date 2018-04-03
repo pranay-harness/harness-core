@@ -119,6 +119,7 @@ public class PipelineStageYamlHandler extends BaseYamlHandler<Yaml, PipelineStag
     }
 
     return Yaml.builder()
+        .uuid(stageElement.getUuid())
         .name(stageElement.getName())
         .parallel(bean.isParallel())
         .type(stageElement.getType())
