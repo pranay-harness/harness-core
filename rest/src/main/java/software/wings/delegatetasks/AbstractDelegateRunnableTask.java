@@ -1,13 +1,12 @@
 package software.wings.delegatetasks;
 
-import static software.wings.waitnotify.ErrorNotifyResponseData.Builder.anErrorNotifyResponseData;
-
 import com.google.inject.Inject;
 import com.google.inject.name.Named;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import software.wings.beans.DelegateTask;
+import software.wings.waitnotify.ErrorNotifyResponseData;
 import software.wings.waitnotify.NotifyResponseData;
 
 import java.io.IOException;
@@ -61,12 +60,12 @@ public abstract class AbstractDelegateRunnableTask implements DelegateRunnableTa
         logger.info("Completed executing task {}", taskId);
       } catch (Exception exception) {
         logger.error("Unexpected error executing delegate task {}", taskId, exception);
-        result = anErrorNotifyResponseData().withErrorMessage(exception.getMessage()).build();
+        result = ErrorNotifyResponseData.builder().errorMessage(exception.getMessage()).build();
       } finally {
         if (consumer != null) {
           if (result == null) {
             logger.error("Null result executing delegate task {}", taskId);
-            result = anErrorNotifyResponseData().withErrorMessage("No response from delegate task " + taskId).build();
+            result = ErrorNotifyResponseData.builder().errorMessage("No response from delegate task " + taskId).build();
           }
           consumer.accept(result);
         }

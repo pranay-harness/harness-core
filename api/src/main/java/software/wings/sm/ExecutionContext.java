@@ -54,6 +54,8 @@ public interface ExecutionContext {
 
   String getStateExecutionInstanceId();
 
+  String getPipelineStateElementId();
+
   String getAppId();
 
   String getStateExecutionInstanceName();

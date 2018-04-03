@@ -1,3 +1,5 @@
 package io.harness.distribution.barrier;
 
-public interface ForceProctor { Forcer.State getForcerState(ForcerId forcerId); }
+import java.util.Map;
+
+public interface ForceProctor { Forcer.State getForcerState(ForcerId forcerId, Map<String, Object> metadata); }

@@ -185,17 +185,7 @@ public class PipelineServiceImpl implements PipelineService {
     notNullCheck("Pipeline", savedPipeline);
 
     List<Object> keywords = newArrayList(pipeline.getName(), pipeline.getDescription(), WorkflowType.PIPELINE);
-
-    // The UI or other agents my try to update the pipeline with new stages without uuids. This makes sure that
-    // they all will have one.
-    pipeline.getPipelineStages()
-        .stream()
-        .flatMap(stage -> stage.getPipelineStageElements().stream())
-        .forEach(element -> {
-          if (element.getUuid() == null) {
-            element.setUuid(generateUuid());
-          }
-        });
+    ensurePipelineStageUuids(pipeline);
 
     validatePipeline(pipeline, keywords);
     UpdateOperations<Pipeline> ops = wingsPersistence.createUpdateOperations(Pipeline.class);
@@ -228,6 +218,19 @@ public class PipelineServiceImpl implements PipelineService {
     });
 
     return pipeline;
+  }
+
+  private void ensurePipelineStageUuids(Pipeline pipeline) {
+    // The UI or other agents my try to update the pipeline with new stages without uuids. This makes sure that
+    // they all will have one.
+    pipeline.getPipelineStages()
+        .stream()
+        .flatMap(stage -> stage.getPipelineStageElements().stream())
+        .forEach(element -> {
+          if (element.getUuid() == null) {
+            element.setUuid(generateUuid());
+          }
+        });
   }
 
   @Override
@@ -478,6 +481,8 @@ public class PipelineServiceImpl implements PipelineService {
 
   @Override
   public Pipeline createPipeline(Pipeline pipeline) {
+    ensurePipelineStageUuids(pipeline);
+
     List<Object> keywords = newArrayList(pipeline.getName(), pipeline.getDescription(), WorkflowType.PIPELINE);
     validatePipeline(pipeline, keywords);
     pipeline.setKeywords(trimList(keywords));

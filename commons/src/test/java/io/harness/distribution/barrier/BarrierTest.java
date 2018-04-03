@@ -56,10 +56,10 @@ public class BarrierTest {
 
     Barrier barrier = Barrier.create(id, forcerTree, registry);
 
-    when(proctor.getForcerState(topId)).thenReturn(Forcer.State.APPROACHING);
-    when(proctor.getForcerState(child1Id)).thenReturn(Forcer.State.APPROACHING);
-    when(proctor.getForcerState(child2Id)).thenReturn(Forcer.State.ARRIVED);
-    when(proctor.getForcerState(child3Id)).thenReturn(Forcer.State.APPROACHING);
+    when(proctor.getForcerState(topId, null)).thenReturn(Forcer.State.APPROACHING);
+    when(proctor.getForcerState(child1Id, null)).thenReturn(Forcer.State.APPROACHING);
+    when(proctor.getForcerState(child2Id, null)).thenReturn(Forcer.State.ARRIVED);
+    when(proctor.getForcerState(child3Id, null)).thenReturn(Forcer.State.APPROACHING);
     final State state = barrier.pushDown(proctor);
 
     assertThat(state).isEqualTo(STANDING);
@@ -72,10 +72,10 @@ public class BarrierTest {
 
     Barrier barrier = Barrier.create(id, forcerTree, registry);
 
-    when(proctor.getForcerState(topId)).thenReturn(Forcer.State.APPROACHING);
-    when(proctor.getForcerState(child1Id)).thenReturn(Forcer.State.ARRIVED);
-    when(proctor.getForcerState(child2Id)).thenReturn(Forcer.State.ABANDONED);
-    when(proctor.getForcerState(child3Id)).thenReturn(Forcer.State.APPROACHING);
+    when(proctor.getForcerState(topId, null)).thenReturn(Forcer.State.APPROACHING);
+    when(proctor.getForcerState(child1Id, null)).thenReturn(Forcer.State.ARRIVED);
+    when(proctor.getForcerState(child2Id, null)).thenReturn(Forcer.State.ABANDONED);
+    when(proctor.getForcerState(child3Id, null)).thenReturn(Forcer.State.APPROACHING);
     final State state = barrier.pushDown(proctor);
 
     assertThat(state).isEqualTo(ENDURE);
@@ -88,10 +88,10 @@ public class BarrierTest {
 
     Barrier barrier = Barrier.create(id, forcerTree, registry);
 
-    when(proctor.getForcerState(topId)).thenReturn(Forcer.State.APPROACHING);
-    when(proctor.getForcerState(child1Id)).thenReturn(Forcer.State.APPROACHING);
-    when(proctor.getForcerState(child2Id)).thenReturn(Forcer.State.ARRIVED);
-    when(proctor.getForcerState(child3Id)).thenReturn(Forcer.State.APPROACHING);
+    when(proctor.getForcerState(topId, null)).thenReturn(Forcer.State.APPROACHING);
+    when(proctor.getForcerState(child1Id, null)).thenReturn(Forcer.State.APPROACHING);
+    when(proctor.getForcerState(child2Id, null)).thenReturn(Forcer.State.ARRIVED);
+    when(proctor.getForcerState(child3Id, null)).thenReturn(Forcer.State.APPROACHING);
     final State state = barrier.pushDown(proctor);
 
     assertThat(state).isEqualTo(STANDING);
@@ -104,10 +104,10 @@ public class BarrierTest {
 
     Barrier barrier = Barrier.create(id, forcerTree, registry);
 
-    when(proctor.getForcerState(topId)).thenReturn(Forcer.State.ABSENT);
+    when(proctor.getForcerState(topId, null)).thenReturn(Forcer.State.ABSENT);
     final State state = barrier.pushDown(proctor);
 
-    verify(proctor, times(1)).getForcerState(any());
+    verify(proctor, times(1)).getForcerState(any(), any());
 
     assertThat(state).isEqualTo(STANDING);
   }
@@ -119,10 +119,10 @@ public class BarrierTest {
 
     Barrier barrier = Barrier.create(id, forcerTree, registry);
 
-    when(proctor.getForcerState(topId)).thenReturn(Forcer.State.ARRIVED);
+    when(proctor.getForcerState(topId, null)).thenReturn(Forcer.State.ARRIVED);
     final State state = barrier.pushDown(proctor);
 
-    verify(proctor, times(1)).getForcerState(any());
+    verify(proctor, times(1)).getForcerState(any(), any());
 
     assertThat(state).isEqualTo(DOWN);
   }
@@ -134,10 +134,10 @@ public class BarrierTest {
 
     Barrier barrier = Barrier.create(id, forcerTree, registry);
 
-    when(proctor.getForcerState(topId)).thenReturn(Forcer.State.ABANDONED);
+    when(proctor.getForcerState(topId, null)).thenReturn(Forcer.State.ABANDONED);
     final State state = barrier.pushDown(proctor);
 
-    verify(proctor, times(1)).getForcerState(any());
+    verify(proctor, times(1)).getForcerState(any(), any());
 
     assertThat(state).isEqualTo(ENDURE);
   }

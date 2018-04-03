@@ -146,7 +146,8 @@ public class ZombieHunterJob implements Job {
         TriggerBuilder.newTrigger()
             .startAt(Date.from(nextHuntingExpedition(index).toInstant()))
             .withIdentity("" + index, GROUP)
-            .withSchedule(SimpleScheduleBuilder.simpleSchedule().withIntervalInHours(zombieTypes.size() * 24));
+            .withSchedule(
+                SimpleScheduleBuilder.simpleSchedule().withIntervalInHours(zombieTypes.size() * 24).repeatForever());
 
     return builder.build();
   }

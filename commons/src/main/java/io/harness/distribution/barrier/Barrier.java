@@ -1,6 +1,6 @@
 package io.harness.distribution.barrier;
 
-import static io.harness.data.structure.EmptyPredicate.isNotEmpty;
+import static io.harness.data.structure.EmptyPredicate.isEmpty;
 import static io.harness.distribution.barrier.Barrier.State.DOWN;
 import static io.harness.distribution.barrier.Barrier.State.ENDURE;
 import static io.harness.distribution.barrier.Barrier.State.STANDING;
@@ -41,7 +41,7 @@ public class Barrier {
   private BarrierId id;
   private Forcer forcer;
 
-  enum State {
+  public enum State {
     // Standing when the barrier is standing because not all of the forcers are inline.
     STANDING,
 
@@ -74,7 +74,12 @@ public class Barrier {
 
     while (!deque.isEmpty()) {
       Forcer firstForcer = deque.removeFirst();
-      final Forcer.State forcerState = proctor.getForcerState(firstForcer.getId());
+      if (firstForcer.getId() == null || firstForcer.getId().getValue() == null) {
+        result = STANDING;
+        continue;
+      }
+
+      final Forcer.State forcerState = proctor.getForcerState(firstForcer.getId(), firstForcer.getMetadata());
       switch (forcerState) {
         case ABSENT:
           // If the forcer is absent, the barrier stands, but there is no reason to check the children
@@ -82,20 +87,20 @@ public class Barrier {
           break;
 
         case APPROACHING:
-          // If the forcer is still running the barrier is not down. It might be standing
-          result = STANDING;
-
           final List<Forcer> children = firstForcer.getChildren();
 
           // Running parent suggests that there might be children that are in progress, but some of them
           // might failed. We need to check the children about that.
-          if (isNotEmpty(children)) {
+          if (isEmpty(children)) {
+            // If the forcer is still approaching the barrier and it has no children the barrier stands.
+            result = STANDING;
+          } else {
             children.forEach(deque::addLast);
           }
           break;
 
         case ARRIVED:
-          // If the parent succeeded, assume that all children succeeded too.
+          // If the parent arrived, assume that all children arrived too.
           break;
 
         case ABANDONED:

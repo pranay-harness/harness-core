@@ -60,6 +60,10 @@ public enum StencilCategory {
    */
   SUB_WORKFLOW(100),
   /**
+   * Flow controls stencil category.
+   */
+  FLOW_CONTROLS(9),
+  /**
    * Others stencil category.
    */
   OTHERS(10),

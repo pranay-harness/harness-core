@@ -564,7 +564,87 @@ public class DataGenUtil extends BaseIntegrationTest {
 
     workflow2 = workflowGenerator.postProcess(workflow2, PostProcessInfo.builder().selectNodeCount(5).build());
 
-    Pipeline pipeline = pipelineGenerator.createPipeline(seed,
+    Workflow workflow3 = workflowGenerator.createWorkflow(seed,
+        aWorkflow()
+            .withName("Barrier Parallel Section 2-1")
+            .withAppId(environment.getAppId())
+            .withEnvId(environment.getUuid())
+            .withWorkflowType(WorkflowType.ORCHESTRATION)
+            .withServiceId(service.getUuid())
+            .withInfraMappingId(infrastructureMapping.getUuid())
+            .withOrchestrationWorkflow(
+                aBasicOrchestrationWorkflow()
+                    .withPreDeploymentSteps(aPhaseStep(PRE_DEPLOYMENT, Constants.PRE_DEPLOYMENT).build())
+                    .withPostDeploymentSteps(aPhaseStep(POST_DEPLOYMENT, Constants.POST_DEPLOYMENT).build())
+                    .build())
+            .build());
+
+    workflow3 = workflowGenerator.postProcess(workflow3, PostProcessInfo.builder().selectNodeCount(2).build());
+
+    Workflow workflow4 = workflowGenerator.createWorkflow(seed,
+        aWorkflow()
+            .withName("Barrier Parallel Section 2-2")
+            .withAppId(environment.getAppId())
+            .withEnvId(environment.getUuid())
+            .withWorkflowType(WorkflowType.ORCHESTRATION)
+            .withServiceId(service.getUuid())
+            .withInfraMappingId(infrastructureMapping.getUuid())
+            .withOrchestrationWorkflow(
+                aBasicOrchestrationWorkflow()
+                    .withPreDeploymentSteps(aPhaseStep(PRE_DEPLOYMENT, Constants.PRE_DEPLOYMENT).build())
+                    .withPostDeploymentSteps(aPhaseStep(POST_DEPLOYMENT, Constants.POST_DEPLOYMENT).build())
+                    .build())
+            .build());
+
+    workflow4 = workflowGenerator.postProcess(workflow4, PostProcessInfo.builder().selectNodeCount(2).build());
+
+    Pipeline pipeline1 = pipelineGenerator.createPipeline(seed,
+        aPipeline()
+            .withAppId(workflow1.getAppId())
+            .withName("Barrier Pipeline")
+            .withPipelineStages(
+                asList(PipelineStage.builder()
+                           .pipelineStageElements(asList(PipelineStageElement.builder()
+                                                             .name("Parallel section 1-1")
+                                                             .type(ENV_STATE.name())
+                                                             .properties(ImmutableMap.of("envId", workflow1.getEnvId(),
+                                                                 "workflowId", workflow1.getUuid()))
+                                                             .build()))
+                           .build(),
+                    PipelineStage.builder()
+                        .parallel(true)
+                        .pipelineStageElements(
+                            asList(PipelineStageElement.builder()
+                                       .name("Parallel section 1-2")
+                                       .type(ENV_STATE.name())
+                                       .properties(ImmutableMap.of(
+                                           "envId", workflow2.getEnvId(), "workflowId", workflow2.getUuid()))
+                                       .build()))
+                        .build(),
+                    PipelineStage.builder()
+                        .pipelineStageElements(
+                            asList(PipelineStageElement.builder()
+                                       .name("Parallel section 2-1")
+                                       .type(ENV_STATE.name())
+                                       .properties(ImmutableMap.of(
+                                           "envId", workflow3.getEnvId(), "workflowId", workflow3.getUuid()))
+                                       .build()))
+                        .build(),
+                    PipelineStage.builder()
+                        .parallel(true)
+                        .pipelineStageElements(
+                            asList(PipelineStageElement.builder()
+                                       .name("Parallel section 2-2")
+                                       .type(ENV_STATE.name())
+                                       .properties(ImmutableMap.of(
+                                           "envId", workflow4.getEnvId(), "workflowId", workflow4.getUuid()))
+                                       .build()))
+                        .build()
+
+                        ))
+            .build());
+
+    Pipeline pipeline2 = pipelineGenerator.createPipeline(seed,
         aPipeline()
             .withAppId(workflow1.getAppId())
             .withName("Pipeline")
