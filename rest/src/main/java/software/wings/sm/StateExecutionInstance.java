@@ -34,6 +34,8 @@ public class StateExecutionInstance extends Base {
   public static final String PIPELINE_STATE_ELEMENT_ID_KEY = "pipelineStateElementId";
   public static final String PHASE_SUBWORKFLOW_ID_KEY = "phaseSubWorkflowId";
   public static final String STEP_ID_KEY = "stepId";
+  public static final String CALLBACK_KEY = "callback";
+  public static final String CALLBACKS_KEY = "callbacks";
 
   private String stateMachineId;
   private String childStateMachineId;
@@ -53,7 +55,11 @@ public class StateExecutionInstance extends Base {
 
   private List<ContextElement> notifyElements;
 
+  // TODO: remove, this is kept for the 2 minutes of transition between
+  //       the versions
   private StateMachineExecutionCallback callback;
+
+  private List<StateMachineExecutionCallback> callbacks;
 
   private String executionName;
 
@@ -111,7 +117,7 @@ public class StateExecutionInstance extends Base {
     private Map<String, StateExecutionData> stateExecutionMap = new HashMap<>();
     private List<StateExecutionData> stateExecutionDataHistory = new ArrayList<>();
     private List<ContextElement> notifyElements;
-    private StateMachineExecutionCallback callback;
+    private List<StateMachineExecutionCallback> callbacks;
     private String executionName;
     private WorkflowType executionType;
     private OrchestrationWorkflowType orchestrationWorkflowType;
@@ -274,8 +280,8 @@ public class StateExecutionInstance extends Base {
       return this;
     }
 
-    public Builder withCallback(StateMachineExecutionCallback callback) {
-      this.callback = callback;
+    public Builder withCallbacks(List<StateMachineExecutionCallback> callbacks) {
+      this.callbacks = callbacks;
       return this;
     }
 
@@ -493,7 +499,7 @@ public class StateExecutionInstance extends Base {
           .withStateExecutionMap(stateExecutionMap)
           .withStateExecutionDataHistory(stateExecutionDataHistory)
           .withNotifyElements(notifyElements)
-          .withCallback(callback)
+          .withCallbacks(callbacks)
           .withExecutionName(executionName)
           .withExecutionType(executionType)
           .withOrchestrationWorkflowType(orchestrationWorkflowType)
@@ -531,7 +537,7 @@ public class StateExecutionInstance extends Base {
       stateExecutionInstance.setStateExecutionMap(stateExecutionMap);
       stateExecutionInstance.setStateExecutionDataHistory(stateExecutionDataHistory);
       stateExecutionInstance.setNotifyElements(notifyElements);
-      stateExecutionInstance.setCallback(callback);
+      stateExecutionInstance.setCallbacks(callbacks);
       stateExecutionInstance.setExecutionName(executionName);
       stateExecutionInstance.setExecutionType(executionType);
       stateExecutionInstance.setOrchestrationWorkflowType(orchestrationWorkflowType);
