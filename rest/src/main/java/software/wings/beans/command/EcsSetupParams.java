@@ -20,6 +20,8 @@ public class EcsSetupParams extends ContainerSetupParams {
   private boolean assignPublicIps;
   private String executionRoleArn;
   private String launchType;
+  private String targetContainerName;
+  private String targetPort;
 
   public static final class EcsSetupParamsBuilder {
     private String taskFamily;
@@ -41,6 +43,8 @@ public class EcsSetupParams extends ContainerSetupParams {
     private boolean assignPublicIps;
     private String executionRoleArn;
     private String launchType;
+    private String targetContainerName;
+    private String targetPort;
 
     private EcsSetupParamsBuilder() {}
 
@@ -143,6 +147,16 @@ public class EcsSetupParams extends ContainerSetupParams {
       return this;
     }
 
+    public EcsSetupParamsBuilder withTargetContainerName(String targetContainerName) {
+      this.targetContainerName = targetContainerName;
+      return this;
+    }
+
+    public EcsSetupParamsBuilder withTargetPort(String targetPort) {
+      this.targetPort = targetPort;
+      return this;
+    }
+
     public EcsSetupParamsBuilder but() {
       return anEcsSetupParams()
           .withTaskFamily(taskFamily)
@@ -163,7 +177,9 @@ public class EcsSetupParams extends ContainerSetupParams {
           .withSecurityGroupIds(securityGroupIds)
           .withAssignPublicIps(assignPublicIps)
           .withExecutionRoleArn(executionRoleArn)
-          .withLaunchType(launchType);
+          .withLaunchType(launchType)
+          .withTargetContainerName(targetContainerName)
+          .withTargetPort(targetPort);
     }
 
     public EcsSetupParams build() {
@@ -187,6 +203,8 @@ public class EcsSetupParams extends ContainerSetupParams {
       ecsSetupParams.setAssignPublicIps(assignPublicIps);
       ecsSetupParams.setExecutionRoleArn(executionRoleArn);
       ecsSetupParams.setLaunchType(launchType);
+      ecsSetupParams.setTargetContainerName(targetContainerName);
+      ecsSetupParams.setTargetPort(targetPort);
       return ecsSetupParams;
     }
   }
