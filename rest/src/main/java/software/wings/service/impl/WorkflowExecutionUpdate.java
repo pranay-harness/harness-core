@@ -113,7 +113,12 @@ public class WorkflowExecutionUpdate implements StateMachineExecutionCallback {
   @Override
   public void callback(ExecutionContext context, ExecutionStatus status, Exception ex) {
     // TODO: this is temporary. this should be part of its own callback and with more precise filter
-    barrierService.updateAllActiveBarriers(context.getAppId());
+    try {
+      barrierService.updateAllActiveBarriers(context.getAppId());
+    } catch (RuntimeException exception) {
+      // Do not block the execution for possible exception in the barrier update
+      logger.error("Something wrong with barrier update", exception);
+    }
 
     Query<WorkflowExecution> query = wingsPersistence.createQuery(WorkflowExecution.class)
                                          .filter("appId", appId)

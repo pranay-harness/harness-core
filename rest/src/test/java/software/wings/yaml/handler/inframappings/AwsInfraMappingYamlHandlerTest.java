@@ -33,7 +33,7 @@ public class AwsInfraMappingYamlHandlerTest extends BaseInfraMappingYamlHandlerT
       + "connectionType: Wings Key\n"
       + "deploymentType: SSH\n"
       + "desiredCapacity: 0\n"
-      + "hostNameConvention: ${host.ec2Instance.privateDnsName}.split('.')[1]\n"
+      + "hostNameConvention: ${host.ec2Instance.privateDnsName.split('.')[0]}\n"
       + "infraMappingType: AWS_SSH\n"
       + "provisionInstances: false\n"
       + "region: us-east-1\n"
