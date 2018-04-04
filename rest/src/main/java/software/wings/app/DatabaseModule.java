@@ -79,6 +79,8 @@ public class DatabaseModule extends AbstractModule {
     morphia.mapPackage("software.wings");
     ensureIndex(morphia);
 
+    this.primaryDatastore.setQueryFactory(new HQueryFactory());
+    this.secondaryDatastore.setQueryFactory(new HQueryFactory());
     datastoreMap.put(ReadPref.CRITICAL, primaryDatastore);
     datastoreMap.put(ReadPref.NORMAL, secondaryDatastore);
   }
