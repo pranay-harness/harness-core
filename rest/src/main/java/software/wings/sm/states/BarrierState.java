@@ -12,6 +12,7 @@ import io.harness.distribution.barrier.Barrier;
 import lombok.Getter;
 import lombok.Setter;
 import org.mongodb.morphia.annotations.Transient;
+import software.wings.api.BarrierExecutionData;
 import software.wings.beans.BarrierInstance;
 import software.wings.service.intfc.BarrierService;
 import software.wings.sm.BarrierStatusData;
@@ -89,7 +90,7 @@ public class BarrierState extends State {
   @Override
   public ExecutionResponse handleAsyncResponse(ExecutionContext context, Map<String, NotifyResponseData> response) {
     updateBarrier(context);
-    final Builder executionResponseBuilder = anExecutionResponse();
+    final Builder executionResponseBuilder = executionResponseBuilder();
 
     NotifyResponseData notifyResponseData = response.values().iterator().next();
     if (notifyResponseData instanceof BarrierStatusData && ((BarrierStatusData) notifyResponseData).isFailed()) {
@@ -101,21 +102,30 @@ public class BarrierState extends State {
 
   private ExecutionResponse executeInternal(ExecutionContext context) {
     BarrierInstance barrierInstance = updateBarrier(context);
+
+    final Builder executionResponseBuilder = executionResponseBuilder();
+
     if (barrierInstance == null) {
-      return anExecutionResponse().withExecutionStatus(ExecutionStatus.SUCCESS).build();
+      return executionResponseBuilder.withExecutionStatus(ExecutionStatus.SUCCESS).build();
     }
     final Barrier.State state = Barrier.State.valueOf(barrierInstance.getState());
     switch (state) {
       case DOWN:
-        return anExecutionResponse().withExecutionStatus(ExecutionStatus.SUCCESS).build();
+        return executionResponseBuilder.withExecutionStatus(ExecutionStatus.SUCCESS).build();
       case ENDURE:
-        return anExecutionResponse().withExecutionStatus(ExecutionStatus.FAILED).withErrorMessage(errorMsg).build();
+        return executionResponseBuilder.withExecutionStatus(ExecutionStatus.FAILED).withErrorMessage(errorMsg).build();
       case STANDING:
         break;
       default:
         unhandled(state);
     }
-    return anExecutionResponse().withAsync(true).withCorrelationIds(asList(barrierInstance.getUuid())).build();
+    return executionResponseBuilder.withAsync(true).withCorrelationIds(asList(barrierInstance.getUuid())).build();
+  }
+
+  private Builder executionResponseBuilder() {
+    BarrierExecutionData stateExecutionData = new BarrierExecutionData();
+    stateExecutionData.setIdentifier(identifier);
+    return anExecutionResponse().withStateExecutionData(stateExecutionData);
   }
 
   private BarrierInstance updateBarrier(ExecutionContext context) {
