@@ -99,6 +99,13 @@ public abstract class AbstractCommandUnit implements CommandUnit {
     this.name = name;
   }
 
+  @Deprecated
+  public String getDeploymentType() {
+    return "";
+  }
+
+  @Deprecated public void setDeploymentType(String deploymentType){/*no op*/};
+
   /**
    * Is artifact needed boolean.
    *
