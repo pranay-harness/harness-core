@@ -1,6 +1,7 @@
 package software.wings.service.impl.elk;
 
 import static io.harness.network.Http.getOkHttpClientBuilder;
+import static io.harness.network.Http.getOkHttpClientBuilderWithReadtimeOut;
 import static org.apache.commons.lang3.StringUtils.isBlank;
 import static org.apache.commons.lang3.StringUtils.isNotBlank;
 
@@ -180,8 +181,9 @@ public class ElkDelegateServiceImpl implements ElkDelegateService {
 
   private Retrofit createRetrofit(ElkConfig elkConfig, List<EncryptedDataDetail> encryptedDataDetails) {
     encryptionService.decrypt(elkConfig, encryptedDataDetails);
-    OkHttpClient.Builder httpClient =
-        elkConfig.getElkUrl().startsWith("https") ? getUnsafeOkHttpClient() : getOkHttpClientBuilder();
+    OkHttpClient.Builder httpClient = elkConfig.getElkUrl().startsWith("https")
+        ? getUnsafeOkHttpClient().readTimeout(60, TimeUnit.SECONDS)
+        : getOkHttpClientBuilderWithReadtimeOut(60, TimeUnit.SECONDS);
     httpClient
         .addInterceptor(chain -> {
           Request original = chain.request();

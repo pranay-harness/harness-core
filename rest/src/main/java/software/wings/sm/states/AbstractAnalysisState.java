@@ -225,10 +225,6 @@ public abstract class AbstractAnalysisState extends State {
             hosts.add(instanceStatusSummary.getInstanceElement().getHostName());
           }
 
-          /*
-           * DO NOT REMOVE. HACK for build.com
-           */
-
           hosts = hosts.stream()
                       .flatMap(hostname
                           -> hostname.contains(".") ? Lists.newArrayList(hostname.split("\\.")[0], hostname).stream()
@@ -262,14 +258,6 @@ public abstract class AbstractAnalysisState extends State {
         rv.add(context.renderExpression(hostnameTemplate, Lists.newArrayList(instanceElement)));
       }
     }
-    /*
-     * DO NOT REMOVE. HACK for build.com
-     */
-    rv = rv.stream()
-             .flatMap(hostname
-                 -> hostname.contains(".") ? Lists.newArrayList(hostname.split("\\.")[0], hostname).stream()
-                                           : Stream.of(hostname))
-             .collect(Collectors.toSet());
     return rv;
   }
 
