@@ -244,4 +244,8 @@ public class Http {
   public static OkHttpClient.Builder getOkHttpClientBuilder() {
     return new OkHttpClient.Builder().connectionPool(new ConnectionPool(0, 5, TimeUnit.MINUTES));
   }
+
+  public static OkHttpClient.Builder getOkHttpClientBuilderWithReadtimeOut(int timeout, TimeUnit timeUnit) {
+    return getOkHttpClientBuilder().readTimeout(timeout, timeUnit);
+  }
 }
