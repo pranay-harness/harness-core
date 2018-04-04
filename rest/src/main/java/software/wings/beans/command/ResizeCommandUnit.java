@@ -9,7 +9,6 @@ import lombok.Data;
 import lombok.EqualsAndHashCode;
 import org.mongodb.morphia.annotations.Transient;
 import software.wings.api.ContainerServiceData;
-import software.wings.api.DeploymentType;
 import software.wings.cloudprovider.ContainerInfo;
 import software.wings.cloudprovider.aws.AwsClusterService;
 
@@ -23,7 +22,6 @@ public class ResizeCommandUnit extends ContainerResizeCommandUnit {
 
   public ResizeCommandUnit() {
     super(CommandUnitType.RESIZE);
-    setDeploymentType(DeploymentType.ECS.name());
   }
 
   @Override

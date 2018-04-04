@@ -4,17 +4,22 @@ import static com.google.common.collect.ImmutableMap.of;
 import static freemarker.template.Configuration.VERSION_2_3_23;
 import static io.harness.data.structure.EmptyPredicate.isNotEmpty;
 import static java.util.stream.Collectors.toMap;
+import static org.apache.commons.lang3.StringUtils.isNotBlank;
 
 import com.google.common.annotations.VisibleForTesting;
 import com.google.common.collect.Lists;
 import com.google.common.collect.Maps;
+import com.google.common.io.CharStreams;
 
 import com.fasterxml.jackson.annotation.JsonIgnore;
 import com.fasterxml.jackson.annotation.JsonTypeName;
 import com.github.reinert.jjschema.SchemaIgnore;
-import freemarker.cache.ClassTemplateLoader;
+import freemarker.cache.StringTemplateLoader;
 import freemarker.template.Configuration;
 import freemarker.template.TemplateException;
+import jersey.repackaged.com.google.common.collect.ImmutableMap;
+import org.apache.commons.codec.digest.DigestUtils;
+import org.apache.commons.io.IOUtils;
 import org.mongodb.morphia.annotations.Transient;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -25,6 +30,7 @@ import software.wings.utils.Validator;
 import java.io.File;
 import java.io.FileOutputStream;
 import java.io.IOException;
+import java.io.InputStream;
 import java.io.OutputStreamWriter;
 import java.io.StringReader;
 import java.nio.charset.StandardCharsets;
@@ -43,6 +49,32 @@ public class InitSshCommandUnit extends SshCommandUnit {
    */
   public static final transient String INITIALIZE_UNIT = "Initialize";
   private static final Configuration cfg = new Configuration(VERSION_2_3_23);
+  static {
+    try {
+      StringTemplateLoader stringLoader = new StringTemplateLoader();
+
+      InputStream execLauncherInputStream =
+          InitSshCommandUnit.class.getClassLoader().getResourceAsStream("commandtemplates/execlauncher.ftl");
+      if (execLauncherInputStream == null) {
+        throw new RuntimeException("execlauncher.ftl file is missing.");
+      }
+
+      stringLoader.putTemplate("execlauncher.ftl",
+          convertToUnixStyleLineEndings(IOUtils.toString(execLauncherInputStream, StandardCharsets.UTF_8)));
+
+      InputStream tailWrapperInputStream =
+          InitSshCommandUnit.class.getClassLoader().getResourceAsStream("commandtemplates/tailwrapper.ftl");
+      if (tailWrapperInputStream == null) {
+        throw new RuntimeException("tailwrapper.ftl file is missing.");
+      }
+
+      stringLoader.putTemplate("tailwrapper.ftl",
+          convertToUnixStyleLineEndings(IOUtils.toString(tailWrapperInputStream, StandardCharsets.UTF_8)));
+      cfg.setTemplateLoader(stringLoader);
+    } catch (IOException e) {
+      throw new RuntimeException("Failed to load and parse commandtemplates ", e);
+    }
+  }
 
   @JsonIgnore @SchemaIgnore @Transient private Command command;
 
@@ -71,11 +103,21 @@ public class InitSshCommandUnit extends SshCommandUnit {
     setName(INITIALIZE_UNIT);
   }
 
+  private static String convertToUnixStyleLineEndings(String input) {
+    return input.replace("\r\n", "\n");
+  }
+
+  private static String getExecutionStagingDir(SshCommandExecutionContext context, String activityId) {
+    StringBuffer stringBuffer = new StringBuffer();
+    context.executeCommandString(String.format("echo %s", context.getStagingPath()), stringBuffer);
+    String stagingDirectory = stringBuffer.toString().trim();
+    return stagingDirectory.endsWith("/") ? stagingDirectory + activityId : stagingDirectory + "/" + activityId;
+  }
+
   @Override
   protected CommandExecutionStatus executeInternal(SshCommandExecutionContext context) {
-    cfg.setTemplateLoader(new ClassTemplateLoader(getClass(), "/commandtemplates"));
     activityId = context.getActivityId();
-    executionStagingDir = new File("/tmp", activityId).getAbsolutePath();
+    executionStagingDir = getExecutionStagingDir(context, activityId);
     preInitCommand = "mkdir -p " + executionStagingDir;
     Validator.notNullCheck("Service Variables", context.getServiceVariables());
     for (Map.Entry<String, String> entry : context.getServiceVariables().entrySet()) {
@@ -199,10 +241,52 @@ public class InitSshCommandUnit extends SshCommandUnit {
       if (unit instanceof Command) {
         files.addAll(createScripts((Command) unit, prefix + unit.getName()));
       } else {
-        files.addAll(unit.prepare(activityId, executionStagingDir, launcherScriptFileName, prefix));
+        files.addAll(prepare(unit, activityId, executionStagingDir, launcherScriptFileName, prefix));
       }
     }
     return files;
+  }
+
+  private static List<String> prepare(CommandUnit commandUnit, String activityId, String executionStagingDir,
+      String launcherScriptFileName, String prefix) throws IOException, TemplateException {
+    if (commandUnit instanceof ExecCommandUnit) {
+      ExecCommandUnit execCommandUnit = (ExecCommandUnit) commandUnit;
+
+      String commandFileName = "harness" + DigestUtils.md5Hex(prefix + execCommandUnit.getName() + activityId);
+      String commandFile = new File(System.getProperty("java.io.tmpdir"), commandFileName).getAbsolutePath();
+      String commandDir =
+          isNotBlank(execCommandUnit.getCommandPath()) ? "-w '" + execCommandUnit.getCommandPath().trim() + "'" : "";
+      String preparedCommand = "";
+
+      try (OutputStreamWriter fileWriter =
+               new OutputStreamWriter(new FileOutputStream(commandFile), StandardCharsets.UTF_8)) {
+        CharStreams.asWriter(fileWriter).append(execCommandUnit.getCommandString()).close();
+        preparedCommand = executionStagingDir + "/" + launcherScriptFileName + " " + commandDir + " " + commandFileName;
+      }
+
+      List<String> returnValue = Lists.newArrayList(commandFile);
+
+      if (isNotEmpty(execCommandUnit.getTailPatterns())) {
+        String tailWrapperFileName =
+            "harnesstailwrapper" + DigestUtils.md5Hex(prefix + execCommandUnit.getName() + activityId);
+        String tailWrapperFile = new File(System.getProperty("java.io.tmpdir"), tailWrapperFileName).getAbsolutePath();
+        try (OutputStreamWriter fileWriter =
+                 new OutputStreamWriter(new FileOutputStream(tailWrapperFile), StandardCharsets.UTF_8)) {
+          cfg.getTemplate("tailwrapper.ftl")
+              .process(ImmutableMap.of("tailPatterns", execCommandUnit.getTailPatterns(), "executionId", activityId,
+                           "executionStagingDir", executionStagingDir),
+                  fileWriter);
+        }
+        returnValue.add(tailWrapperFile);
+        returnValue.add(tailWrapperFile);
+        preparedCommand = executionStagingDir + "/" + launcherScriptFileName + " " + commandDir + " "
+            + tailWrapperFileName + " " + commandFileName;
+      }
+      execCommandUnit.setPreparedCommand(preparedCommand);
+      return returnValue;
+    } else {
+      return Collections.emptyList();
+    }
   }
 
   /**

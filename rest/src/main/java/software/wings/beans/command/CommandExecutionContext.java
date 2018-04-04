@@ -53,6 +53,7 @@ public class CommandExecutionContext {
   private Map<String, String> metadata = Maps.newHashMap();
   private CommandExecutionData commandExecutionData;
   private Integer timeout;
+  private String deploymentType;
 
   public CommandExecutionContext() {}
 
@@ -90,6 +91,7 @@ public class CommandExecutionContext {
     this.metadata = other.metadata;
     this.commandExecutionData = other.commandExecutionData;
     this.timeout = other.timeout;
+    this.deploymentType = other.deploymentType;
   }
 
   /**
@@ -122,251 +124,201 @@ public class CommandExecutionContext {
   }
 
   public static final class Builder {
-    private String accountId;
-    private String envId;
-    private Host host;
-    private String appId;
-    private String activityId;
-    private String serviceName;
-    private String runtimePath;
-    private String stagingPath;
-    private String backupPath;
-    private String serviceTemplateId;
-    private ExecutionCredential executionCredential;
-    private AppContainer appContainer;
-    private List<ArtifactFile> artifactFiles;
-    private Map<String, String> serviceVariables = Maps.newHashMap();
-    private Map<String, String> safeDisplayServiceVariables = Maps.newHashMap();
-    private Map<String, String> envVariables = Maps.newHashMap();
-    private SettingAttribute hostConnectionAttributes;
-    private List<EncryptedDataDetail> hostConnectionCredentials;
-    private SettingAttribute bastionConnectionAttributes;
-    private List<EncryptedDataDetail> bastionConnectionCredentials;
-    private ArtifactStreamAttributes artifactStreamAttributes;
-    private SettingAttribute cloudProviderSetting;
-    private List<EncryptedDataDetail> cloudProviderCredentials;
-    private CodeDeployParams codeDeployParams;
-    private ContainerSetupParams containerSetupParams;
-    private ContainerResizeParams containerResizeParams;
-    private Map<String, String> metadata = Maps.newHashMap();
-    private CommandExecutionData commandExecutionData;
-    private Integer timeout;
+    private CommandExecutionContext commandExecutionContext;
 
-    private Builder() {}
+    private Builder() {
+      commandExecutionContext = new CommandExecutionContext();
+    }
 
     public static Builder aCommandExecutionContext() {
       return new Builder();
     }
 
     public Builder withAccountId(String accountId) {
-      this.accountId = accountId;
+      commandExecutionContext.setAccountId(accountId);
       return this;
     }
 
     public Builder withEnvId(String envId) {
-      this.envId = envId;
+      commandExecutionContext.setEnvId(envId);
       return this;
     }
 
     public Builder withHost(Host host) {
-      this.host = host;
+      commandExecutionContext.setHost(host);
       return this;
     }
 
     public Builder withAppId(String appId) {
-      this.appId = appId;
+      commandExecutionContext.setAppId(appId);
       return this;
     }
 
     public Builder withActivityId(String activityId) {
-      this.activityId = activityId;
-      return this;
-    }
-
-    public Builder withRuntimePath(String runtimePath) {
-      this.runtimePath = runtimePath;
-      return this;
-    }
-
-    public Builder withStagingPath(String stagingPath) {
-      this.stagingPath = stagingPath;
-      return this;
-    }
-
-    public Builder withBackupPath(String backupPath) {
-      this.backupPath = backupPath;
-      return this;
-    }
-
-    public Builder withServiceTemplateId(String serviceTemplateId) {
-      this.serviceTemplateId = serviceTemplateId;
-      return this;
-    }
-
-    public Builder withExecutionCredential(ExecutionCredential executionCredential) {
-      this.executionCredential = executionCredential;
-      return this;
-    }
-
-    public Builder withAppContainer(AppContainer appContainer) {
-      this.appContainer = appContainer;
-      return this;
-    }
-
-    public Builder withArtifactFiles(List<ArtifactFile> artifactFiles) {
-      this.artifactFiles = artifactFiles;
-      return this;
-    }
-
-    public Builder withServiceVariables(Map<String, String> serviceVariables) {
-      this.serviceVariables = serviceVariables;
-      return this;
-    }
-
-    public Builder withSafeDisplayServiceVariables(Map<String, String> safeDisplayServiceVariables) {
-      this.safeDisplayServiceVariables = safeDisplayServiceVariables;
-      return this;
-    }
-
-    public Builder withEnvVariables(Map<String, String> envVariables) {
-      this.envVariables = envVariables;
-      return this;
-    }
-
-    public Builder withHostConnectionAttributes(SettingAttribute hostConnectionAttributes) {
-      this.hostConnectionAttributes = hostConnectionAttributes;
-      return this;
-    }
-
-    public Builder withHostConnectionCredentials(List<EncryptedDataDetail> encryptedDataDetails) {
-      this.hostConnectionCredentials = encryptedDataDetails;
-      return this;
-    }
-
-    public Builder withBastionConnectionAttributes(SettingAttribute bastionConnectionAttributes) {
-      this.bastionConnectionAttributes = bastionConnectionAttributes;
-      return this;
-    }
-
-    public Builder withBastionConnectionCredentials(List<EncryptedDataDetail> encryptedDataDetails) {
-      this.bastionConnectionCredentials = encryptedDataDetails;
-      return this;
-    }
-
-    public Builder withArtifactStreamAttributes(ArtifactStreamAttributes artifactStreamAttributes) {
-      this.artifactStreamAttributes = artifactStreamAttributes;
-      return this;
-    }
-
-    public Builder withCloudProviderSetting(SettingAttribute cloudProviderSetting) {
-      this.cloudProviderSetting = cloudProviderSetting;
-      return this;
-    }
-
-    public Builder withCloudProviderCredentials(List<EncryptedDataDetail> encryptedDataDetails) {
-      this.cloudProviderCredentials = encryptedDataDetails;
+      commandExecutionContext.setActivityId(activityId);
       return this;
     }
 
     public Builder withServiceName(String serviceName) {
-      this.serviceName = serviceName;
+      commandExecutionContext.setServiceName(serviceName);
+      return this;
+    }
+
+    public Builder withRuntimePath(String runtimePath) {
+      commandExecutionContext.setRuntimePath(runtimePath);
+      return this;
+    }
+
+    public Builder withStagingPath(String stagingPath) {
+      commandExecutionContext.setStagingPath(stagingPath);
+      return this;
+    }
+
+    public Builder withBackupPath(String backupPath) {
+      commandExecutionContext.setBackupPath(backupPath);
+      return this;
+    }
+
+    public Builder withServiceTemplateId(String serviceTemplateId) {
+      commandExecutionContext.setServiceTemplateId(serviceTemplateId);
+      return this;
+    }
+
+    public Builder withExecutionCredential(ExecutionCredential executionCredential) {
+      commandExecutionContext.setExecutionCredential(executionCredential);
+      return this;
+    }
+
+    public Builder withAppContainer(AppContainer appContainer) {
+      commandExecutionContext.setAppContainer(appContainer);
+      return this;
+    }
+
+    public Builder withArtifactFiles(List<ArtifactFile> artifactFiles) {
+      commandExecutionContext.setArtifactFiles(artifactFiles);
+      return this;
+    }
+
+    public Builder withServiceVariables(Map<String, String> serviceVariables) {
+      commandExecutionContext.setServiceVariables(serviceVariables);
+      return this;
+    }
+
+    public Builder withSafeDisplayServiceVariables(Map<String, String> safeDisplayServiceVariables) {
+      commandExecutionContext.setSafeDisplayServiceVariables(safeDisplayServiceVariables);
+      return this;
+    }
+
+    public Builder withEnvVariables(Map<String, String> envVariables) {
+      commandExecutionContext.setEnvVariables(envVariables);
+      return this;
+    }
+
+    public Builder withHostConnectionAttributes(SettingAttribute hostConnectionAttributes) {
+      commandExecutionContext.setHostConnectionAttributes(hostConnectionAttributes);
+      return this;
+    }
+
+    public Builder withHostConnectionCredentials(List<EncryptedDataDetail> hostConnectionCredentials) {
+      commandExecutionContext.setHostConnectionCredentials(hostConnectionCredentials);
+      return this;
+    }
+
+    public Builder withBastionConnectionAttributes(SettingAttribute bastionConnectionAttributes) {
+      commandExecutionContext.setBastionConnectionAttributes(bastionConnectionAttributes);
+      return this;
+    }
+
+    public Builder withBastionConnectionCredentials(List<EncryptedDataDetail> bastionConnectionCredentials) {
+      commandExecutionContext.setBastionConnectionCredentials(bastionConnectionCredentials);
+      return this;
+    }
+
+    public Builder withArtifactStreamAttributes(ArtifactStreamAttributes artifactStreamAttributes) {
+      commandExecutionContext.setArtifactStreamAttributes(artifactStreamAttributes);
+      return this;
+    }
+
+    public Builder withCloudProviderSetting(SettingAttribute cloudProviderSetting) {
+      commandExecutionContext.setCloudProviderSetting(cloudProviderSetting);
+      return this;
+    }
+
+    public Builder withCloudProviderCredentials(List<EncryptedDataDetail> cloudProviderCredentials) {
+      commandExecutionContext.setCloudProviderCredentials(cloudProviderCredentials);
       return this;
     }
 
     public Builder withCodeDeployParams(CodeDeployParams codeDeployParams) {
-      this.codeDeployParams = codeDeployParams;
+      commandExecutionContext.setCodeDeployParams(codeDeployParams);
       return this;
     }
 
     public Builder withContainerSetupParams(ContainerSetupParams containerSetupParams) {
-      this.containerSetupParams = containerSetupParams;
+      commandExecutionContext.setContainerSetupParams(containerSetupParams);
       return this;
     }
 
     public Builder withContainerResizeParams(ContainerResizeParams containerResizeParams) {
-      this.containerResizeParams = containerResizeParams;
+      commandExecutionContext.setContainerResizeParams(containerResizeParams);
       return this;
     }
 
     public Builder withMetadata(Map<String, String> metadata) {
-      this.metadata = metadata;
+      commandExecutionContext.setMetadata(metadata);
       return this;
     }
 
     public Builder withCommandExecutionData(CommandExecutionData commandExecutionData) {
-      this.commandExecutionData = commandExecutionData;
+      commandExecutionContext.setCommandExecutionData(commandExecutionData);
       return this;
     }
 
     public Builder withTimeout(Integer timeout) {
-      this.timeout = timeout;
+      commandExecutionContext.setTimeout(timeout);
+      return this;
+    }
+
+    public Builder withDeploymentType(String deploymentType) {
+      commandExecutionContext.setDeploymentType(deploymentType);
       return this;
     }
 
     public Builder but() {
       return aCommandExecutionContext()
-          .withAccountId(accountId)
-          .withEnvId(envId)
-          .withHost(host)
-          .withAppId(appId)
-          .withActivityId(activityId)
-          .withRuntimePath(runtimePath)
-          .withStagingPath(stagingPath)
-          .withBackupPath(backupPath)
-          .withServiceTemplateId(serviceTemplateId)
-          .withExecutionCredential(executionCredential)
-          .withAppContainer(appContainer)
-          .withArtifactFiles(artifactFiles)
-          .withServiceVariables(serviceVariables)
-          .withEnvVariables(envVariables)
-          .withHostConnectionAttributes(hostConnectionAttributes)
-          .withBastionConnectionAttributes(bastionConnectionAttributes)
-          .withHostConnectionCredentials(hostConnectionCredentials)
-          .withBastionConnectionCredentials(bastionConnectionCredentials)
-          .withArtifactStreamAttributes(artifactStreamAttributes)
-          .withCloudProviderSetting(cloudProviderSetting)
-          .withCloudProviderCredentials(cloudProviderCredentials)
-          .withCodeDeployParams(codeDeployParams)
-          .withMetadata(metadata)
-          .withCommandExecutionData(commandExecutionData)
-          .withContainerSetupParams(containerSetupParams)
-          .withContainerResizeParams(containerResizeParams)
-          .withSafeDisplayServiceVariables(safeDisplayServiceVariables)
-          .withServiceName(serviceName)
-          .withTimeout(timeout);
+          .withAccountId(commandExecutionContext.getAccountId())
+          .withEnvId(commandExecutionContext.getEnvId())
+          .withHost(commandExecutionContext.getHost())
+          .withAppId(commandExecutionContext.getAppId())
+          .withActivityId(commandExecutionContext.getActivityId())
+          .withServiceName(commandExecutionContext.getServiceName())
+          .withRuntimePath(commandExecutionContext.getRuntimePath())
+          .withStagingPath(commandExecutionContext.getStagingPath())
+          .withBackupPath(commandExecutionContext.getBackupPath())
+          .withServiceTemplateId(commandExecutionContext.getServiceTemplateId())
+          .withExecutionCredential(commandExecutionContext.getExecutionCredential())
+          .withAppContainer(commandExecutionContext.getAppContainer())
+          .withArtifactFiles(commandExecutionContext.getArtifactFiles())
+          .withServiceVariables(commandExecutionContext.getServiceVariables())
+          .withSafeDisplayServiceVariables(commandExecutionContext.getSafeDisplayServiceVariables())
+          .withEnvVariables(commandExecutionContext.getEnvVariables())
+          .withHostConnectionAttributes(commandExecutionContext.getHostConnectionAttributes())
+          .withHostConnectionCredentials(commandExecutionContext.getHostConnectionCredentials())
+          .withBastionConnectionAttributes(commandExecutionContext.getBastionConnectionAttributes())
+          .withBastionConnectionCredentials(commandExecutionContext.getBastionConnectionCredentials())
+          .withArtifactStreamAttributes(commandExecutionContext.getArtifactStreamAttributes())
+          .withCloudProviderSetting(commandExecutionContext.getCloudProviderSetting())
+          .withCloudProviderCredentials(commandExecutionContext.getCloudProviderCredentials())
+          .withCodeDeployParams(commandExecutionContext.getCodeDeployParams())
+          .withContainerSetupParams(commandExecutionContext.getContainerSetupParams())
+          .withContainerResizeParams(commandExecutionContext.getContainerResizeParams())
+          .withMetadata(commandExecutionContext.getMetadata())
+          .withCommandExecutionData(commandExecutionContext.getCommandExecutionData())
+          .withTimeout(commandExecutionContext.getTimeout())
+          .withDeploymentType(commandExecutionContext.getDeploymentType());
     }
 
     public CommandExecutionContext build() {
-      CommandExecutionContext commandExecutionContext = new CommandExecutionContext();
-      commandExecutionContext.setAccountId(accountId);
-      commandExecutionContext.setEnvId(envId);
-      commandExecutionContext.setHost(host);
-      commandExecutionContext.setAppId(appId);
-      commandExecutionContext.setActivityId(activityId);
-      commandExecutionContext.setServiceName(serviceName);
-      commandExecutionContext.setRuntimePath(runtimePath);
-      commandExecutionContext.setStagingPath(stagingPath);
-      commandExecutionContext.setBackupPath(backupPath);
-      commandExecutionContext.setServiceTemplateId(serviceTemplateId);
-      commandExecutionContext.setExecutionCredential(executionCredential);
-      commandExecutionContext.setAppContainer(appContainer);
-      commandExecutionContext.setArtifactFiles(artifactFiles);
-      commandExecutionContext.setServiceVariables(serviceVariables);
-      commandExecutionContext.setSafeDisplayServiceVariables(safeDisplayServiceVariables);
-      commandExecutionContext.setEnvVariables(envVariables);
-      commandExecutionContext.setHostConnectionAttributes(hostConnectionAttributes);
-      commandExecutionContext.setHostConnectionCredentials(hostConnectionCredentials);
-      commandExecutionContext.setBastionConnectionAttributes(bastionConnectionAttributes);
-      commandExecutionContext.setBastionConnectionCredentials(bastionConnectionCredentials);
-      commandExecutionContext.setArtifactStreamAttributes(artifactStreamAttributes);
-      commandExecutionContext.setCloudProviderSetting(cloudProviderSetting);
-      commandExecutionContext.setCloudProviderCredentials(cloudProviderCredentials);
-      commandExecutionContext.setCodeDeployParams(codeDeployParams);
-      commandExecutionContext.setMetadata(metadata);
-      commandExecutionContext.setCommandExecutionData(commandExecutionData);
-      commandExecutionContext.setContainerSetupParams(containerSetupParams);
-      commandExecutionContext.setContainerResizeParams(containerResizeParams);
-      commandExecutionContext.setTimeout(timeout);
       return commandExecutionContext;
     }
   }

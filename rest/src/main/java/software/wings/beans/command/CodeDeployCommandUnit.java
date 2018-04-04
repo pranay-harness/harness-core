@@ -16,7 +16,6 @@ import lombok.EqualsAndHashCode;
 import org.mongodb.morphia.annotations.Transient;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-import software.wings.api.DeploymentType;
 import software.wings.beans.ErrorCode;
 import software.wings.beans.Log.LogLevel;
 import software.wings.beans.SettingAttribute;
@@ -43,7 +42,6 @@ public class CodeDeployCommandUnit extends AbstractCommandUnit {
   public CodeDeployCommandUnit() {
     super(CommandUnitType.CODE_DEPLOY);
     setArtifactNeeded(true);
-    setDeploymentType(DeploymentType.AWS_CODEDEPLOY.name());
   }
 
   @Override

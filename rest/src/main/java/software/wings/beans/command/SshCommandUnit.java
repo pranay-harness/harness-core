@@ -3,7 +3,6 @@ package software.wings.beans.command;
 import com.github.reinert.jjschema.SchemaIgnore;
 import lombok.Data;
 import lombok.EqualsAndHashCode;
-import software.wings.api.DeploymentType;
 import software.wings.beans.command.CommandExecutionResult.CommandExecutionStatus;
 
 /**
@@ -19,7 +18,6 @@ public abstract class SshCommandUnit extends AbstractCommandUnit {
    */
   public SshCommandUnit(CommandUnitType commandUnitType) {
     super(commandUnitType);
-    super.setDeploymentType(DeploymentType.SSH.name());
   }
 
   @Override

@@ -85,7 +85,6 @@ import org.apache.commons.lang3.StringUtils;
 import org.mongodb.morphia.annotations.Transient;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-import software.wings.api.DeploymentType;
 import software.wings.beans.AzureConfig;
 import software.wings.beans.ErrorCode;
 import software.wings.beans.KubernetesClusterConfig;
@@ -146,7 +145,6 @@ public class KubernetesSetupCommandUnit extends ContainerSetupCommandUnit {
 
   public KubernetesSetupCommandUnit() {
     super(CommandUnitType.KUBERNETES_SETUP);
-    setDeploymentType(DeploymentType.KUBERNETES.name());
   }
 
   @Override
