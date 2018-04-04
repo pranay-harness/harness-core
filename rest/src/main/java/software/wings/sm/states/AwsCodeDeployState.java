@@ -192,6 +192,7 @@ public class AwsCodeDeployState extends State {
                                                           .withAccountId(app.getAccountId())
                                                           .withAppId(app.getUuid())
                                                           .withEnvId(envId)
+                                                          .withDeploymentType(infrastructureMapping.getDeploymentType())
                                                           .withServiceName(service.getName())
                                                           .withActivityId(activity.getUuid())
                                                           .withCloudProviderSetting(cloudProviderSetting)

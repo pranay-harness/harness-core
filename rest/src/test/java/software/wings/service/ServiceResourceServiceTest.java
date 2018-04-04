@@ -65,7 +65,6 @@ import org.mongodb.morphia.AdvancedDatastore;
 import org.mongodb.morphia.query.Query;
 import org.mongodb.morphia.query.UpdateOperations;
 import software.wings.WingsBaseTest;
-import software.wings.api.DeploymentType;
 import software.wings.beans.Application;
 import software.wings.beans.ConfigFile;
 import software.wings.beans.EntityType;
@@ -611,7 +610,6 @@ public class ServiceResourceServiceTest extends WingsBaseTest {
     Command oldCommand = aCommand().withGraph(oldCommandGraph).build();
     oldCommand.transformGraph();
     oldCommand.setVersion(1L);
-    oldCommand.setDeploymentType(DeploymentType.SSH.name());
 
     PageRequest<ServiceCommand> serviceCommandPageRequest = getServiceCommandPageRequest();
 
@@ -684,10 +682,6 @@ public class ServiceResourceServiceTest extends WingsBaseTest {
     verify(configService).getConfigFilesForEntity(APP_ID, DEFAULT_TEMPLATE_ID, SERVICE_ID);
 
     assertThat(updatedService).isNotNull();
-    assertThat(
-        updatedService.getServiceCommands().stream().anyMatch(
-            serviceCommand -> serviceCommand.getCommand().getDeploymentType().equals(oldCommand.getDeploymentType())))
-        .isTrue();
   }
 
   /**

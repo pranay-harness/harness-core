@@ -37,7 +37,6 @@ import org.apache.commons.lang3.StringUtils;
 import org.mongodb.morphia.annotations.Transient;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-import software.wings.api.DeploymentType;
 import software.wings.beans.Log.LogLevel;
 import software.wings.beans.SettingAttribute;
 import software.wings.beans.command.CommandExecutionResult.CommandExecutionStatus;
@@ -69,7 +68,6 @@ public class EcsSetupCommandUnit extends ContainerSetupCommandUnit {
 
   public EcsSetupCommandUnit() {
     super(CommandUnitType.ECS_SETUP);
-    setDeploymentType(DeploymentType.ECS.name());
   }
 
   @Override

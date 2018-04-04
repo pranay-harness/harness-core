@@ -22,7 +22,6 @@ public abstract class AbstractCommandUnit implements CommandUnit {
   private CommandUnitType commandUnitType;
   @SchemaIgnore private CommandExecutionStatus commandExecutionStatus = CommandExecutionStatus.QUEUED;
   @SchemaIgnore private boolean artifactNeeded;
-  @SchemaIgnore private String deploymentType;
 
   /**
    * Instantiates a new Command unit.
@@ -122,21 +121,6 @@ public abstract class AbstractCommandUnit implements CommandUnit {
   }
 
   @Override
-  @SchemaIgnore
-  public String getDeploymentType() {
-    return deploymentType;
-  }
-
-  /**
-   * Sets deployment type.
-   *
-   * @param deploymentType the deployment type
-   */
-  public void setDeploymentType(String deploymentType) {
-    this.deploymentType = deploymentType;
-  }
-
-  @Override
   public String toString() {
     return MoreObjects.toStringHelper(this)
         .add("name", name)
@@ -205,7 +189,6 @@ public abstract class AbstractCommandUnit implements CommandUnit {
   public abstract static class Yaml extends BaseYaml {
     private String name;
     private String commandUnitType;
-    private String deploymentType;
 
     public Yaml(String commandUnitType) {
       this.commandUnitType = commandUnitType;
@@ -214,7 +197,6 @@ public abstract class AbstractCommandUnit implements CommandUnit {
     public Yaml(String name, String commandUnitType, String deploymentType) {
       this.name = name;
       this.commandUnitType = commandUnitType;
-      this.deploymentType = deploymentType;
     }
   }
 }

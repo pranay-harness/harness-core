@@ -1,33 +1,18 @@
 package software.wings.beans.command;
 
-import static freemarker.template.Configuration.VERSION_2_3_23;
-import static io.harness.data.structure.EmptyPredicate.isNotEmpty;
-import static jersey.repackaged.com.google.common.collect.ImmutableMap.of;
-import static org.apache.commons.lang3.StringUtils.isNotBlank;
 import static software.wings.beans.command.CommandUnitType.EXEC;
 
 import com.google.common.base.MoreObjects;
-import com.google.common.collect.Lists;
-import com.google.common.io.CharStreams;
 
 import com.fasterxml.jackson.annotation.JsonTypeName;
 import com.github.reinert.jjschema.Attributes;
 import com.github.reinert.jjschema.SchemaIgnore;
-import freemarker.cache.ClassTemplateLoader;
-import freemarker.template.Configuration;
-import freemarker.template.TemplateException;
 import lombok.Data;
 import lombok.EqualsAndHashCode;
-import org.apache.commons.codec.digest.DigestUtils;
 import org.hibernate.validator.constraints.NotEmpty;
 import org.mongodb.morphia.annotations.Transient;
 import software.wings.beans.command.CommandExecutionResult.CommandExecutionStatus;
 
-import java.io.File;
-import java.io.FileOutputStream;
-import java.io.IOException;
-import java.io.OutputStreamWriter;
-import java.nio.charset.StandardCharsets;
 import java.util.List;
 import java.util.Objects;
 
@@ -36,8 +21,6 @@ import java.util.Objects;
  */
 @JsonTypeName("EXEC")
 public class ExecCommandUnit extends SshCommandUnit {
-  private static final Configuration cfg = new Configuration(VERSION_2_3_23);
-
   @Attributes(title = "Working Directory") @NotEmpty private String commandPath;
   @Attributes(title = "Command") @NotEmpty private String commandString;
 
@@ -50,41 +33,6 @@ public class ExecCommandUnit extends SshCommandUnit {
    */
   public ExecCommandUnit() {
     super(EXEC);
-  }
-
-  @Override
-  public List<String> prepare(String activityId, String executionStagingDir, String launcherScriptFileName,
-      String prefix) throws IOException, TemplateException {
-    String commandFileName = "harness" + DigestUtils.md5Hex(prefix + getName() + activityId);
-    String commandFile = new File(System.getProperty("java.io.tmpdir"), commandFileName).getAbsolutePath();
-    String commandDir = isNotBlank(commandPath) ? "-w '" + commandPath.trim() + "'" : "";
-
-    try (OutputStreamWriter fileWriter =
-             new OutputStreamWriter(new FileOutputStream(commandFile), StandardCharsets.UTF_8)) {
-      CharStreams.asWriter(fileWriter).append(commandString).close();
-      preparedCommand = executionStagingDir + "/" + launcherScriptFileName + " " + commandDir + " " + commandFileName;
-    }
-
-    List<String> returnValue = Lists.newArrayList(commandFile);
-
-    if (isNotEmpty(tailPatterns)) {
-      cfg.setTemplateLoader(new ClassTemplateLoader(getClass(), "/commandtemplates"));
-      String tailWrapperFileName = "harnesstailwrapper" + DigestUtils.md5Hex(prefix + getName() + activityId);
-      String tailWrapperFile = new File(System.getProperty("java.io.tmpdir"), tailWrapperFileName).getAbsolutePath();
-      try (OutputStreamWriter fileWriter =
-               new OutputStreamWriter(new FileOutputStream(tailWrapperFile), StandardCharsets.UTF_8)) {
-        cfg.getTemplate("tailwrapper.ftl")
-            .process(
-                of("tailPatterns", tailPatterns, "executionId", activityId, "executionStagingDir", executionStagingDir),
-                fileWriter);
-      }
-      returnValue.add(tailWrapperFile);
-      returnValue.add(tailWrapperFile);
-      preparedCommand = executionStagingDir + "/" + launcherScriptFileName + " " + commandDir + " "
-          + tailWrapperFileName + " " + commandFileName;
-    }
-
-    return returnValue;
   }
 
   @Override

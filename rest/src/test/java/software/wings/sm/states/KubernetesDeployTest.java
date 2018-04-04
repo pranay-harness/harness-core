@@ -194,8 +194,11 @@ public class KubernetesDeployTest extends WingsBaseTest {
     on(workflowStandardParams).set("environmentService", environmentService);
 
     InfrastructureMapping infrastructureMapping = aGcpKubernetesInfrastructureMapping()
+                                                      .withUuid(INFRA_MAPPING_ID)
                                                       .withClusterName(CLUSTER_NAME)
                                                       .withComputeProviderSettingId(COMPUTE_PROVIDER_ID)
+                                                      .withDeploymentType(DeploymentType.KUBERNETES.name())
+
                                                       .build();
     when(infrastructureMappingService.get(APP_ID, INFRA_MAPPING_ID)).thenReturn(infrastructureMapping);
 

@@ -3,7 +3,6 @@ package software.wings.beans.command;
 import com.fasterxml.jackson.annotation.JsonTypeName;
 import lombok.Data;
 import lombok.EqualsAndHashCode;
-import software.wings.api.DeploymentType;
 import software.wings.beans.command.CommandExecutionResult.CommandExecutionStatus;
 
 /**
@@ -13,7 +12,6 @@ public class AmiCommandUnit extends AbstractCommandUnit {
   public AmiCommandUnit() {
     super(CommandUnitType.AWS_AMI);
     setArtifactNeeded(true);
-    setDeploymentType(DeploymentType.AMI.name());
   }
 
   @Override
