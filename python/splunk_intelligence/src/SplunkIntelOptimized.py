@@ -5,6 +5,7 @@ import time
 import newrelic
 
 import numpy as np
+import os
 from sklearn.metrics.pairwise import euclidean_distances
 
 from core.anomaly.FrequencyAnomalyDetector import FrequencyAnomalyDetector
@@ -17,6 +18,11 @@ from sources.LogCorpus import LogCorpus
 from core.util.lelogging import get_log
 
 logger = get_log(__name__)
+
+if os.environ.get('cluster_limit'):
+    cluster_limit = os.environ.get('cluster_limit')
+else:
+    cluster_limit = 500
 
 
 class SplunkIntelOptimized(object):
@@ -199,6 +205,12 @@ class SplunkIntelOptimized(object):
 
         if not bool(self.corpus.control_events):
             logger.warn("No control events. Nothing to do")
+            return self.corpus
+
+        if len(self.corpus.control_events) > cluster_limit:
+            logger.warn("Too many potential clusters = " + str(len(self.corpus.control_events)) + " . skipping analysis")
+            self.corpus.analysis_summary_message = "Too many potential clusters : " \
+                                        + str(len(self.corpus.control_events)) + ".Skipping analysis!"
             return self.corpus
 
         vectorizer, kmeans = self.cluster_input()
