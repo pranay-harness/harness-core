@@ -45,7 +45,7 @@ class KmeansCluster(object):
         mid = min(100, (int)(lower + (upper - lower) / 2))
         while lower <= upper:
             logger.info("Running kemans with k = " + str(mid))
-            curr_km = KMeans(n_clusters=mid, n_jobs=-4)
+            curr_km = KMeans(n_clusters=mid, n_jobs=-1)
             curr_km.fit(self.feature_matrix)
             clusters = np.array(curr_km.labels_.tolist())
             found = True

@@ -22,6 +22,8 @@ class LogCorpus(object):
         self.score = 0.0
         self.cluster_scores = {'unknown': {}, 'test': {}}
         self.feedback_clusters = {}
+        self.analysis_summary_message = None
+
 
     def add_event(self, event, event_type):
 
@@ -519,7 +521,8 @@ class LogCorpus(object):
 
     def get_output_as_json(self, options):
 
-        return json.dumps(dict(query=options.query, control_events=self.control_events, test_events=self.test_events,
+        return json.dumps(dict(analysisSummaryMessage=self.analysis_summary_message,
+                               query=options.query, control_events=self.control_events, test_events=self.test_events,
                                unknown_events=self.anomalies, ignore_clusters=self.ignore_clusters,
                                control_clusters=self.control_clusters, test_clusters=self.test_clusters,
                                unknown_clusters=self.anom_clusters,
