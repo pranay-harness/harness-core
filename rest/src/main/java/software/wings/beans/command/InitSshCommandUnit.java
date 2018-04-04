@@ -107,17 +107,14 @@ public class InitSshCommandUnit extends SshCommandUnit {
     return input.replace("\r\n", "\n");
   }
 
-  private static String getExecutionStagingDir(SshCommandExecutionContext context, String activityId) {
-    StringBuffer stringBuffer = new StringBuffer();
-    context.executeCommandString(String.format("echo %s", context.getStagingPath()), stringBuffer);
-    String stagingDirectory = stringBuffer.toString().trim();
-    return stagingDirectory.endsWith("/") ? stagingDirectory + activityId : stagingDirectory + "/" + activityId;
+  private static String getExecutionStagingDir(String activityId) {
+    return "/tmp/" + activityId;
   }
 
   @Override
   protected CommandExecutionStatus executeInternal(SshCommandExecutionContext context) {
     activityId = context.getActivityId();
-    executionStagingDir = getExecutionStagingDir(context, activityId);
+    executionStagingDir = getExecutionStagingDir(activityId);
     preInitCommand = "mkdir -p " + executionStagingDir;
     Validator.notNullCheck("Service Variables", context.getServiceVariables());
     for (Map.Entry<String, String> entry : context.getServiceVariables().entrySet()) {
@@ -165,12 +162,12 @@ public class InitSshCommandUnit extends SshCommandUnit {
       commandExecutionStatus = CommandExecutionStatus.FAILURE;
       logger.error("Error in InitCommandUnit", e);
     }
-    commandExecutionStatus = commandExecutionStatus == CommandExecutionStatus.SUCCESS
-        ? context.executeCommandString("chmod 0744 " + executionStagingDir + "/*")
-        : commandExecutionStatus;
     StringBuffer envVariablesFromHost = new StringBuffer();
     commandExecutionStatus = commandExecutionStatus == CommandExecutionStatus.SUCCESS
         ? context.executeCommandString("printenv", envVariablesFromHost)
+        : commandExecutionStatus;
+    commandExecutionStatus = commandExecutionStatus == CommandExecutionStatus.SUCCESS
+        ? context.executeCommandString("chmod 0744 " + executionStagingDir + "/*")
         : commandExecutionStatus;
     Properties properties = new Properties();
     try {

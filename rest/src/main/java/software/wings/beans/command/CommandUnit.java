@@ -61,6 +61,10 @@ public interface CommandUnit {
    */
   @SchemaIgnore void setName(String name);
 
+  @Deprecated @SchemaIgnore String getDeploymentType();
+
+  @Deprecated void setDeploymentType(String deploymentType);
+
   /**
    * Is artifact needed boolean.
    *

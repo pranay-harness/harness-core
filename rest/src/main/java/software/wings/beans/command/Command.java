@@ -284,6 +284,13 @@ public class Command extends Base implements CommandUnit {
         && Objects.equals(this.commandUnits, other.commandUnits);
   }
 
+  @Deprecated
+  public String getDeploymentType() {
+    return "";
+  }
+
+  @Deprecated public void setDeploymentType(String deploymentType){/*no op*/};
+
   /**
    * {@inheritDoc}
    */

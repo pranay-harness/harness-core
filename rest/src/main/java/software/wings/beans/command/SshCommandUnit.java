@@ -20,6 +20,13 @@ public abstract class SshCommandUnit extends AbstractCommandUnit {
     super(commandUnitType);
   }
 
+  @Deprecated
+  public String getDeploymentType() {
+    return "";
+  }
+
+  @Deprecated public void setDeploymentType(String deploymentType){/*no op*/};
+
   @Override
   public final CommandExecutionStatus execute(CommandExecutionContext context) {
     return executeInternal((SshCommandExecutionContext) context);
