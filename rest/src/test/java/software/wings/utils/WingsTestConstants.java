@@ -192,6 +192,8 @@ public interface WingsTestConstants {
 
   String ARTIFACT_FILTER = "ARTIFACT_FILTER";
 
+  String USER_GROUP_ID = "USER_GROUP_ID";
+
   int INTEGER_DEFAULT_VALUE = Integer.MAX_VALUE;
 
   long LONG_DEFAULT_VALUE = Long.MAX_VALUE;

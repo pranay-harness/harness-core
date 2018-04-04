@@ -62,4 +62,13 @@ public interface UserGroupService {
   UserGroup updatePermissions(UserGroup userGroup);
 
   boolean delete(String accountId, String userGroupId);
+
+  /**
+   * Clone the given User Group with a new name
+   * @param accountId The id of the account of the user group
+   * @param uuid The id of the user group
+   * @param newName The new name to be used for creating the cloned object
+   * @return The newly created clone.
+   */
+  UserGroup cloneUserGroup(@NotEmpty String accountId, @NotEmpty String uuid, @NotEmpty String newName);
 }

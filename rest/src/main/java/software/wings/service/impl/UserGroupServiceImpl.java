@@ -158,6 +158,15 @@ public class UserGroupServiceImpl implements UserGroupService {
     return deleted;
   }
 
+  @Override
+  public UserGroup cloneUserGroup(final String accountId, final String uuid, final String newName) {
+    UserGroup existingGroup = get(accountId, uuid, true);
+    Validator.notNullCheck("userGroup", existingGroup);
+    Validator.unEqualCheck(existingGroup.getName(), newName);
+    UserGroup newClonedGroup = existingGroup.cloneWithNewName(newName);
+    return save(newClonedGroup);
+  }
+
   private void evictUserPermissionInfoCacheForUserGroup(UserGroup userGroup) {
     authService.evictAccountUserPermissionInfoCache(userGroup.getAccountId(), userGroup.getMemberIds());
   }

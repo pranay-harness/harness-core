@@ -86,6 +86,22 @@ public class UserGroupResource {
   }
 
   /**
+   * Clone the user group with the given id and a new name
+   * @param accountId The account it
+   * @param userGroupId The user group id to clone
+   * @param newName The name to be set of the new cloned user group
+   * @return The rest response.
+   */
+  @POST
+  @Path("{userGroupId}/clone")
+  @Timed
+  @ExceptionMetered
+  public RestResponse<UserGroup> clone(@QueryParam("accountId") String accountId,
+      @PathParam("userGroupId") String userGroupId, @QueryParam("newName") String newName) {
+    return new RestResponse<>(userGroupService.cloneUserGroup(accountId, userGroupId, newName));
+  }
+
+  /**
    * Save.
    *
    * @param accountId   the account id
