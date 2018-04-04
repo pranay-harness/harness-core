@@ -561,7 +561,7 @@ public class WingsMongoPersistence implements WingsPersistence, Managed {
    */
   @Override
   public <T> Query<T> createQuery(Class<T> cls, ReadPref readPref) {
-    return new HQuery(datastoreMap.get(readPref).createQuery(cls));
+    return datastoreMap.get(readPref).createQuery(cls);
   }
 
   /**
