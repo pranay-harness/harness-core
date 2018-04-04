@@ -518,8 +518,8 @@ public class DelegateServiceImpl implements DelegateService {
       } else {
         logger.info("Checking for upgrade");
         try {
-          RestResponse<DelegateScripts> restResponse =
-              execute(managerClient.checkForUpgrade(version, delegateId, accountId));
+          RestResponse<DelegateScripts> restResponse = timeLimiter.callWithTimeout(
+              () -> execute(managerClient.checkForUpgrade(version, delegateId, accountId)), 1L, TimeUnit.MINUTES, true);
           DelegateScripts delegateScripts = restResponse.getResource();
           if (delegateScripts.isDoUpgrade()) {
             upgradePending.set(true);
@@ -531,11 +531,13 @@ public class DelegateServiceImpl implements DelegateService {
           } else {
             logger.info("Delegate up to date");
           }
+        } catch (UncheckedTimeoutException tex) {
+          logger.warn("Timed out checking for upgrade");
         } catch (Exception e) {
           upgradePending.set(false);
           upgradeNeeded.set(false);
           acquireTasks.set(true);
-          logger.error("[Old] Exception while checking for upgrade", e);
+          logger.error("Exception while checking for upgrade", e);
         }
       }
     }, 0, delegateConfiguration.getHeartbeatIntervalMs(), TimeUnit.MILLISECONDS);
