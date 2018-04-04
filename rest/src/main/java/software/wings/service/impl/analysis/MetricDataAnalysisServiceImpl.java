@@ -25,6 +25,7 @@ import software.wings.metrics.TimeSeriesMetricDefinition;
 import software.wings.service.impl.DelegateServiceImpl;
 import software.wings.service.impl.dynatrace.DynaTraceTimeSeries;
 import software.wings.service.impl.newrelic.LearningEngineAnalysisTask;
+import software.wings.service.impl.newrelic.NewRelicMetric;
 import software.wings.service.impl.newrelic.NewRelicMetricAnalysisRecord;
 import software.wings.service.impl.newrelic.NewRelicMetricAnalysisRecord.NewRelicMetricAnalysis;
 import software.wings.service.impl.newrelic.NewRelicMetricAnalysisRecord.NewRelicMetricAnalysisValue;
@@ -106,9 +107,11 @@ public class MetricDataAnalysisServiceImpl implements MetricDataAnalysisService 
     Query<NewRelicMetricNames> query = wingsPersistence.createQuery(NewRelicMetricNames.class)
                                            .filter("newRelicAppId", metricNames.getNewRelicAppId())
                                            .filter("newRelicConfigId", metricNames.getNewRelicConfigId());
+
+    List<NewRelicMetric> metrics = metricNames.getMetrics() == null ? Collections.EMPTY_LIST : metricNames.getMetrics();
     wingsPersistence.update(query,
         wingsPersistence.createUpdateOperations(NewRelicMetricNames.class)
-            .set("metrics", metricNames.getMetrics())
+            .set("metrics", metrics)
             .set("lastUpdatedTime", System.currentTimeMillis()));
     return true;
   }
