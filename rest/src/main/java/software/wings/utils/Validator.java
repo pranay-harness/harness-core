@@ -57,6 +57,13 @@ public class Validator {
     }
   }
 
+  public static void unEqualCheck(Object value1, Object value2) {
+    if (Objects.equals(value1, value2)) {
+      throw new WingsException(INVALID_REQUEST)
+          .addParam("message", "Equal -  value1: " + value1 + ", value2: " + value2);
+    }
+  }
+
   public static void validateUuid(UuidAware base, String fieldName, String fieldValue) {
     notNullCheck(fieldValue, fieldName);
     if (!fieldValue.equals(base.getUuid())) {
