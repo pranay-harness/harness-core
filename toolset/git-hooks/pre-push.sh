@@ -25,3 +25,14 @@ else
 
     . $BASEDIR/toolset/git-hooks/checkstyle.sh
 fi
+
+CURRENT_BRANCH=`git rev-parse --abbrev-ref HEAD`
+TARGET_BRANCH=`git rev-parse --abbrev-ref HEAD | sed -e "s/^\([^@]*\)$/\1@master/" | sed -e "s/^.*@//"`
+
+BEHIND=`git rev-list --left-right --count ${TARGET_BRANCH}...${CURRENT_BRANCH} | awk '{ print $1}'`
+
+if [ $BEHIND -gt 3 ]
+then
+    echo "You are $BEHIND commits behind ${TARGET_BRANCH}. Please merge before you push."
+    exit 1
+fi
