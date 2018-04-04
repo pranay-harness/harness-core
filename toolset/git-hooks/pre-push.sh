@@ -26,13 +26,28 @@ else
     . $BASEDIR/toolset/git-hooks/checkstyle.sh
 fi
 
-CURRENT_BRANCH=`git rev-parse --abbrev-ref HEAD`
-TARGET_BRANCH=`git rev-parse --abbrev-ref HEAD | sed -e "s/^\([^@]*\)$/\1@master/" | sed -e "s/^.*@//"`
-
-BEHIND=`git rev-list --left-right --count ${TARGET_BRANCH}...${CURRENT_BRANCH} | awk '{ print $1}'`
-
-if [ $BEHIND -gt 3 ]
+CHECK_BEHIND_COMMITS=hook.pre-push.behindcommits
+BEHIND_COMMITS=`git config $CHECK_BEHIND_COMMITS 2>/dev/null`
+if [ "$BEHIND_COMMITS" == "" ]
 then
-    echo "You are $BEHIND commits behind ${TARGET_BRANCH}. Please merge before you push."
-    exit 1
+    BEHIND_COMMITS=-1
 fi
+
+if [ $BEHIND_COMMITS == -1 ]
+then
+    echo '\033[0;31m' checking behind commits is disabled - to enable: '\033[0;37m'git config --add $CHECK_BEHIND_COMMITS 3 \# or any other number \>= 0 '\033[0m'
+else
+    echo '\033[0;34m' checking behind commits  ... to disable: '\033[0;37m'git config --unset $CHECK_BEHIND_COMMITS '\033[0m'
+
+    CURRENT_BRANCH=`git rev-parse --abbrev-ref HEAD`
+    TARGET_BRANCH=`echo $CURRENT_BRANCH | sed -e "s/^\([^@]*\)$/\1@master/" | sed -e "s/^.*@//"`
+
+    BEHIND=`git rev-list --left-right --count ${TARGET_BRANCH}...${CURRENT_BRANCH} | awk '{ print $1}'`
+
+    if [ $BEHIND -gt 3 ]
+    then
+        echo "You are $BEHIND commits behind ${TARGET_BRANCH}. Please merge before you push."
+        exit 1
+    fi
+fi
+
