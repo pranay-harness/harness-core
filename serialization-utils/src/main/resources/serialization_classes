@@ -289,3 +289,5 @@ software.wings.api.ScriptType, 5253
 software.wings.sm.states.ShellScriptState$ConnectionType, 5254
 software.wings.beans.WinRmConnectionAttributes, 5255
 software.wings.beans.WinRmConnectionAttributes$AuthenticationScheme, 5256
+software.wings.api.BarrierStepExecutionSummary, 5257
+software.wings.api.BarrierExecutionData, 5258
