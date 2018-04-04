@@ -461,8 +461,8 @@ public class ServiceTemplateServiceImpl implements ServiceTemplateService {
     List<ConfigFile> mergedConfigFiles = existingFiles;
 
     if (!existingFiles.isEmpty() || !newFiles.isEmpty()) {
-      logger.info("Config files before overrides [{}]", existingFiles.toString());
-      logger.info("New override config files [{}]", newFiles != null ? newFiles.toString() : null);
+      logger.debug("Config files before overrides [{}]", existingFiles.toString());
+      logger.debug("New override config files [{}]", newFiles != null ? newFiles.toString() : null);
       if (isNotEmpty(newFiles)) {
         mergedConfigFiles = concat(newFiles.stream(), existingFiles.stream())
                                 .filter(new TreeSet<>(comparing(ConfigFile::getRelativeFilePath))::add)
@@ -478,8 +478,8 @@ public class ServiceTemplateServiceImpl implements ServiceTemplateService {
       boolean maskEncryptedFields) {
     List<ServiceVariable> mergedServiceSettings = existingServiceVariables;
     if (!existingServiceVariables.isEmpty() || !newServiceVariables.isEmpty()) {
-      logger.info("Service variables before overrides [{}]", existingServiceVariables.toString());
-      logger.info(
+      logger.debug("Service variables before overrides [{}]", existingServiceVariables.toString());
+      logger.debug(
           "New override service variables [{}]", newServiceVariables != null ? newServiceVariables.toString() : null);
       if (isNotEmpty(newServiceVariables)) {
         mergedServiceSettings = concat(newServiceVariables.stream(), existingServiceVariables.stream())
