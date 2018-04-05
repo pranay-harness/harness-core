@@ -42,6 +42,9 @@ logging:
     com.novemberain.quartz.mongodb: WARN
     org.quartz.plugins: WARN
     org.glassfish.jersey: WARN
+    # the following is to suppress "Error retrieving job for trigger XYZ, setting trigger state to ERROR."
+    # TODO: remove this suppression when the mentioned issue is resolved
+    com.novemberain.quartz.mongodb.TriggerRunner: "OFF"
   appenders:
     - type: console
       threshold: TRACE
