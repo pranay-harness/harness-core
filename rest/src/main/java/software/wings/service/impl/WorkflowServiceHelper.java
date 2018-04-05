@@ -1,12 +1,20 @@
 package software.wings.service.impl;
 
+import static io.harness.data.structure.EmptyPredicate.isNotEmpty;
+import static java.util.Arrays.asList;
+
 import com.google.inject.Singleton;
 
 import io.fabric8.kubernetes.api.KubernetesHelper;
 import io.fabric8.kubernetes.api.model.HorizontalPodAutoscaler;
+import software.wings.beans.OrchestrationWorkflow;
+import software.wings.beans.TemplateExpression;
+import software.wings.beans.Workflow;
 import software.wings.exception.WingsException;
 
 import java.io.IOException;
+import java.util.List;
+import java.util.Optional;
 
 @Singleton
 public class WorkflowServiceHelper {
@@ -42,6 +50,45 @@ public class WorkflowServiceHelper {
       return KubernetesHelper.toYaml(horizontalPodAutoscaler);
     } catch (IOException e) {
       throw new WingsException("Unable to generate Yaml String for Horizontal pod autoscalar");
+    }
+  }
+
+  /***
+   *
+   * @param templateExpressions
+   * @return
+   */
+  public boolean isEnvironmentTemplatized(List<TemplateExpression> templateExpressions) {
+    if (templateExpressions == null) {
+      return false;
+    }
+    return templateExpressions.stream().anyMatch(
+        templateExpression -> templateExpression.getFieldName().equals("envId"));
+  }
+
+  /***
+   *
+   * @param templateExpressions
+   * @return
+   */
+  public boolean isInfraTemplatized(List<TemplateExpression> templateExpressions) {
+    if (templateExpressions == null) {
+      return false;
+    }
+    return templateExpressions.stream().anyMatch(
+        templateExpression -> templateExpression.getFieldName().equals("infraMappingId"));
+  }
+
+  public void transformEnvTemplateExpressions(Workflow workflow, OrchestrationWorkflow orchestrationWorkflow) {
+    if (isNotEmpty(workflow.getTemplateExpressions())) {
+      Optional<TemplateExpression> envExpression =
+          workflow.getTemplateExpressions()
+              .stream()
+              .filter(templateExpression -> templateExpression.getFieldName().equals("envId"))
+              .findAny();
+      if (envExpression.isPresent()) {
+        orchestrationWorkflow.addToUserVariables(asList(envExpression.get()));
+      }
     }
   }
 }

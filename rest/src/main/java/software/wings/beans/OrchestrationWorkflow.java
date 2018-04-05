@@ -1,6 +1,7 @@
 package software.wings.beans;
 
 import static io.harness.data.structure.EmptyPredicate.isEmpty;
+import static io.harness.data.structure.EmptyPredicate.isNotEmpty;
 import static java.util.Arrays.asList;
 import static software.wings.beans.EntityType.APPDYNAMICS_APPID;
 import static software.wings.beans.EntityType.APPDYNAMICS_CONFIGID;
@@ -211,8 +212,9 @@ public abstract class OrchestrationWorkflow {
                                               .withMandatory(entityType != null);
 
         variableBuilder.withParentFields(parentTemplateFields);
-        variableBuilder.withStateType(stateType);
-
+        if (isNotEmpty(stateType)) {
+          variableBuilder.withStateType(stateType);
+        }
         // Set the description
         variable = variableBuilder.build();
         setVariableDescription(variable, name);
@@ -223,9 +225,15 @@ public abstract class OrchestrationWorkflow {
           variableMetadata = new HashMap<>();
         }
         variableMetadata.put(ENTITY_TYPE, entityType);
-        variableMetadata.put(ARTIFACT_TYPE, artifactType);
-        variableMetadata.put(RELATED_FIELD, relatedField);
-        variableMetadata.put(STATE_TYPE, stateType);
+        if (isNotEmpty(artifactType)) {
+          variableMetadata.put(ARTIFACT_TYPE, artifactType);
+        }
+        if (isNotEmpty(relatedField)) {
+          variableMetadata.put(RELATED_FIELD, relatedField);
+        }
+        if (ENVIRONMENT != entityType && isNotEmpty(stateType)) {
+          variableMetadata.put(STATE_TYPE, stateType);
+        }
         variable.setMandatory(entityType != null);
         if (isEmpty(parentTemplateFields)) {
           variableMetadata.remove(Constants.PARENT_FIELDS);

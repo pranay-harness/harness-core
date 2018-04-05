@@ -2335,6 +2335,97 @@ public class WorkflowServiceTest extends WingsBaseTest {
   }
 
   @Test
+  public void shouldTemplatizeBasicDeploymentOnCreation() {
+    TemplateExpression envExpression = aTemplateExpression()
+                                           .withFieldName("envId")
+                                           .withExpression("${Environment}")
+                                           .withMetadata(ImmutableMap.of("entityType", "ENVIRONMENT"))
+                                           .build();
+    TemplateExpression infraExpression = aTemplateExpression()
+                                             .withFieldName("infraMappingId")
+                                             .withExpression("${ServiceInfra_SSH}")
+                                             .withMetadata(ImmutableMap.of("entityType", "INFRASTRUCTURE_MAPPING"))
+                                             .build();
+    TemplateExpression serviceExpression = aTemplateExpression()
+                                               .withFieldName("serviceId")
+                                               .withExpression("${Service}")
+                                               .withMetadata(ImmutableMap.of("entityType", "SERVICE"))
+                                               .build();
+
+    Workflow workflow =
+        aWorkflow()
+            .withEnvId(ENV_ID)
+            .withName(WORKFLOW_NAME)
+            .withAppId(APP_ID)
+            .withServiceId(SERVICE_ID)
+            .withInfraMappingId(INFRA_MAPPING_ID)
+            .withOrchestrationWorkflow(
+                aBasicOrchestrationWorkflow()
+                    .withWorkflowPhases(
+                        asList(aWorkflowPhase()
+                                   .withServiceId(SERVICE_ID)
+                                   .withInfraMappingId(INFRA_MAPPING_ID)
+                                   .withTemplateExpressions(asList(envExpression, serviceExpression, infraExpression))
+                                   .build()))
+                    .withPreDeploymentSteps(aPhaseStep(PRE_DEPLOYMENT, Constants.PRE_DEPLOYMENT).build())
+                    .withPostDeploymentSteps(aPhaseStep(POST_DEPLOYMENT, Constants.POST_DEPLOYMENT).build())
+                    .build())
+            .withTemplateExpressions(asList(envExpression, serviceExpression, infraExpression))
+            .build();
+
+    when(infrastructureMappingService.get(APP_ID, INFRA_MAPPING_ID))
+        .thenReturn(anAwsInfrastructureMapping()
+                        .withUuid(INFRA_MAPPING_ID)
+                        .withServiceId(SERVICE_ID)
+                        .withDeploymentType(SSH.name())
+                        .withComputeProviderType(SettingVariableTypes.AWS.name())
+                        .build());
+    when(serviceResourceService.get(APP_ID, SERVICE_ID)).thenReturn(aService().withUuid(SERVICE_ID).build());
+
+    Role role = aRole()
+                    .withRoleType(RoleType.ACCOUNT_ADMIN)
+                    .withUuid(ROLE_ID)
+                    .withAccountId(application.getAccountId())
+                    .build();
+    List<NotificationGroup> notificationGroups = asList(aNotificationGroup()
+                                                            .withUuid(NOTIFICATION_GROUP_ID)
+                                                            .withAccountId(application.getAccountId())
+                                                            .withRole(role)
+                                                            .build());
+    when(notificationSetupService.listNotificationGroups(
+             application.getAccountId(), RoleType.ACCOUNT_ADMIN.getDisplayName()))
+        .thenReturn(notificationGroups);
+
+    Workflow workflow2 = workflowService.createWorkflow(workflow);
+
+    assertThat(workflow2.getTemplateExpressions())
+        .isNotEmpty()
+        .extracting(templateExpression -> templateExpression.getFieldName())
+        .contains("envId");
+    OrchestrationWorkflow orchestrationWorkflow = workflow2.getOrchestrationWorkflow();
+    List<WorkflowPhase> workflowPhases = ((BasicOrchestrationWorkflow) orchestrationWorkflow).getWorkflowPhases();
+    assertThat(orchestrationWorkflow.getTemplatizedServiceIds()).isNotNull().contains(SERVICE_ID);
+    assertThat(orchestrationWorkflow.getTemplatizedInfraMappingIds()).isNotNull().contains(INFRA_MAPPING_ID);
+    assertThat(orchestrationWorkflow).extracting("userVariables").isNotEmpty();
+    assertThat(
+        orchestrationWorkflow.getUserVariables().stream().anyMatch(variable -> variable.getName().equals("Service")))
+        .isTrue();
+
+    assertThat(workflowPhases).isNotNull().hasSize(1);
+
+    WorkflowPhase workflowPhase = workflowPhases.get(0);
+    assertThat(workflowPhase).isNotNull().hasFieldOrPropertyWithValue("name", PHASE_NAME_PREFIX + 1);
+    assertThat(workflowPhase.getInfraMappingId()).isNotNull();
+    assertThat(workflowPhase.getTemplateExpressions())
+        .isNotEmpty()
+        .extracting(templateExpression -> templateExpression.getFieldName())
+        .contains("infraMappingId");
+    assertThat(orchestrationWorkflow.getUserVariables())
+        .extracting(variable -> variable.getEntityType())
+        .containsSequence(ENVIRONMENT, SERVICE, INFRASTRUCTURE_MAPPING);
+  }
+
+  @Test
   public void shouldTemplatizeBasicDeployment() {
     Workflow workflow1 = createBasicWorkflow();
     String name2 = "Name2";
