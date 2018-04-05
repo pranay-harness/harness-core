@@ -188,7 +188,7 @@ public class AuthRuleFilter implements ContainerRequestFilter {
 
       if (isEmpty(requiredPermissionAttributes)) {
         logger.error("Requested Resource is not authorized: {}", requestContext.getUriInfo().getPath());
-        throw new WingsException(ACCESS_DENIED);
+        throw new WingsException(ACCESS_DENIED, HARMLESS);
       }
     }
 
@@ -198,9 +198,9 @@ public class AuthRuleFilter implements ContainerRequestFilter {
 
     if (accountId == null) {
       if (emptyAppIdsInReq) {
-        throw new WingsException(INVALID_REQUEST).addParam("message", "appId not specified");
+        throw new WingsException(INVALID_REQUEST, HARMLESS).addParam("message", "appId not specified");
       }
-      throw new WingsException(INVALID_REQUEST).addParam("message", "accountId not specified");
+      throw new WingsException(INVALID_REQUEST, HARMLESS).addParam("message", "accountId not specified");
     }
 
     if (rbacEnabledForAccount) {

@@ -134,10 +134,10 @@ public class ContainerInstanceHelper {
             }
 
             if (containerSvcNameSet.isEmpty()) {
-              String msg = "Both old and new container services are empty. Cannot proceed for phase step "
-                  + commandStepExecutionSummary.getServiceId();
-              logger.error(msg);
-              throw new WingsException(msg);
+              logger.warn(
+                  "Both old and new container services are empty. Cannot proceed for phase step for state execution instance: {}",
+                  stateExecutionInstanceId);
+              return Optional.empty();
             }
 
             return Optional.of(buildContainerDeploymentEvent(stateExecutionInstanceId, workflowExecution,
