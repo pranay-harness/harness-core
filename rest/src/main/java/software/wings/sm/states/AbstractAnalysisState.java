@@ -61,7 +61,6 @@ import java.util.List;
 import java.util.Set;
 import java.util.concurrent.TimeUnit;
 import java.util.stream.Collectors;
-import java.util.stream.Stream;
 
 /**
  * Created by rsingh on 7/6/17.
@@ -222,15 +221,13 @@ public abstract class AbstractAnalysisState extends State {
         if (executionSummary != null) {
           Set<String> hosts = new HashSet<>();
           for (InstanceStatusSummary instanceStatusSummary : executionSummary.getInstanceStatusSummaries()) {
-            hosts.add(instanceStatusSummary.getInstanceElement().getHostName());
+            if (isEmpty(hostnameTemplate)) {
+              hosts.add(instanceStatusSummary.getInstanceElement().getHostName());
+            } else {
+              hosts.add(context.renderExpression(
+                  hostnameTemplate, Lists.newArrayList(instanceStatusSummary.getInstanceElement())));
+            }
           }
-
-          hosts = hosts.stream()
-                      .flatMap(hostname
-                          -> hostname.contains(".") ? Lists.newArrayList(hostname.split("\\.")[0], hostname).stream()
-                                                    : Stream.of(hostname))
-                      .collect(Collectors.toSet());
-
           return hosts;
         }
       }
