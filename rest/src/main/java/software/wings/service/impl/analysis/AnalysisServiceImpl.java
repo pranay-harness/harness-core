@@ -241,7 +241,7 @@ public class AnalysisServiceImpl implements AnalysisService {
   @Override
   public List<LogDataRecord> getLogData(LogRequest logRequest, boolean compareCurrent, String workflowExecutionId,
       ClusterLevel clusterLevel, StateType stateType) {
-    List<LogDataRecord> records;
+    MorphiaIterator<LogDataRecord, LogDataRecord> records;
     if (compareCurrent) {
       records = wingsPersistence.createQuery(LogDataRecord.class)
                     .filter("stateType", stateType)
@@ -254,7 +254,7 @@ public class AnalysisServiceImpl implements AnalysisService {
                     .filter("logCollectionMinute", logRequest.getLogCollectionMinute())
                     .field("host")
                     .hasAnyOf(logRequest.getNodes())
-                    .asList();
+                    .fetch();
 
     } else {
       records = wingsPersistence.createQuery(LogDataRecord.class)
@@ -265,13 +265,20 @@ public class AnalysisServiceImpl implements AnalysisService {
                     .filter("serviceId", logRequest.getServiceId())
                     .filter("clusterLevel", clusterLevel)
                     .filter("logCollectionMinute", logRequest.getLogCollectionMinute())
-                    .asList();
+                    .fetch();
+    }
+
+    List<LogDataRecord> rv = new ArrayList<>();
+    try (DBCursor cursor = records.getCursor()) {
+      while (records.hasNext()) {
+        rv.add(records.next());
+      }
     }
 
     if (logger.isDebugEnabled()) {
-      logger.debug("returning " + records.size() + " records for request: " + logRequest);
+      logger.debug("returning " + rv.size() + " records for request: " + logRequest);
     }
-    return records;
+    return rv;
   }
 
   private boolean deleteFeedbackHelper(String feedbackId) {
