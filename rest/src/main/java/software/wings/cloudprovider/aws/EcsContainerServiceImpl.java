@@ -35,6 +35,7 @@ import com.amazonaws.services.ecs.model.DescribeClustersRequest;
 import com.amazonaws.services.ecs.model.DescribeContainerInstancesRequest;
 import com.amazonaws.services.ecs.model.DescribeServicesRequest;
 import com.amazonaws.services.ecs.model.DescribeTasksRequest;
+import com.amazonaws.services.ecs.model.DesiredStatus;
 import com.amazonaws.services.ecs.model.LaunchType;
 import com.amazonaws.services.ecs.model.ListServicesRequest;
 import com.amazonaws.services.ecs.model.ListServicesResult;
@@ -993,7 +994,10 @@ public class EcsContainerServiceImpl implements EcsContainerService {
 
       List<String> taskArns = awsHelperService
                                   .listTasks(region, awsConfig, encryptedDataDetails,
-                                      new ListTasksRequest().withCluster(clusterName).withServiceName(serviceName))
+                                      new ListTasksRequest()
+                                          .withCluster(clusterName)
+                                          .withServiceName(serviceName)
+                                          .withDesiredStatus(DesiredStatus.RUNNING))
                                   .getTaskArns();
       if (isEmpty(taskArns)) {
         logger.info("No task arns.");
