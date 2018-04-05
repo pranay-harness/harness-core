@@ -214,36 +214,36 @@ public class AuthServiceImpl implements AuthService {
     if (!accountNullCheck) {
       if (accountId == null || dbCache.get(Account.class, accountId) == null) {
         logger.error("Auth Failure: non-existing accountId: {}", accountId);
-        throw new WingsException(ACCESS_DENIED);
+        throw new WingsException(ACCESS_DENIED, HARMLESS);
       }
     }
 
     if (appId != null && dbCache.get(Application.class, appId) == null) {
       logger.error("Auth Failure: non-existing appId: {}", appId);
-      throw new WingsException(ACCESS_DENIED);
+      throw new WingsException(ACCESS_DENIED, HARMLESS);
     }
 
     if (user == null) {
       logger.error("No user context for authorization request for app: {}", appId);
-      throw new WingsException(ACCESS_DENIED);
+      throw new WingsException(ACCESS_DENIED, HARMLESS);
     }
 
     UserRequestContext userRequestContext = user.getUserRequestContext();
     if (userRequestContext == null) {
       logger.error("User Request Context null for User {}", user.getName());
-      throw new WingsException(ACCESS_DENIED);
+      throw new WingsException(ACCESS_DENIED, HARMLESS);
     }
 
     UserPermissionInfo userPermissionInfo = userRequestContext.getUserPermissionInfo();
     if (userPermissionInfo == null) {
       logger.error("User permission info null for User {}", user.getName());
-      throw new WingsException(ACCESS_DENIED);
+      throw new WingsException(ACCESS_DENIED, HARMLESS);
     }
 
     for (PermissionAttribute permissionAttribute : permissionAttributes) {
       if (!authorizeAccessType(appId, entityId, permissionAttribute, userPermissionInfo)) {
         logger.error("User {} not authorized to access requested resource: {}", user.getName(), entityId);
-        throw new WingsException(ACCESS_DENIED);
+        throw new WingsException(ACCESS_DENIED, HARMLESS);
       }
     }
   }
@@ -268,7 +268,7 @@ public class AuthServiceImpl implements AuthService {
       List<PermissionAttribute> permissionAttributes) {
     if (accountId == null || dbCache.get(Account.class, accountId) == null) {
       logger.error("Auth Failure: non-existing accountId: {}", accountId);
-      throw new WingsException(ACCESS_DENIED);
+      throw new WingsException(ACCESS_DENIED, HARMLESS);
     }
 
     if (appIds != null) {
