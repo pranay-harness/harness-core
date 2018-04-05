@@ -193,10 +193,6 @@ public class ArtifactStreamServiceImpl implements ArtifactStreamService, DataPro
     }
 
     artifactStream.setSourceName(artifactStream.generateSourceName());
-    if (artifactStream.isAutoPopulate()) {
-      setAutoPopulatedName(artifactStream);
-    }
-
     artifactStream = wingsPersistence.saveAndGet(ArtifactStream.class, artifactStream);
 
     if (savedArtifactStream.getSourceName().equals(artifactStream.getSourceName())) {
