@@ -476,7 +476,7 @@ public class UserServiceImpl implements UserService {
     User user = getUserByEmail(email);
 
     if (user == null) {
-      throw new WingsException(INVALID_REQUEST).addParam("message", "Email doesn't exist");
+      throw new WingsException(INVALID_REQUEST, HARMLESS).addParam("message", "Email doesn't exist");
     }
 
     String jwtPasswordSecret = configuration.getPortal().getJwtPasswordSecret();
