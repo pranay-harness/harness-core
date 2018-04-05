@@ -74,6 +74,7 @@ import software.wings.service.intfc.DelegateService;
 import software.wings.sm.ExecutionEvent.ExecutionEventBuilder;
 import software.wings.sm.states.BarrierState;
 import software.wings.sm.states.EnvState;
+import software.wings.sm.states.PhaseStepSubWorkflow;
 import software.wings.sm.states.PhaseSubWorkflow;
 import software.wings.utils.KryoUtils;
 import software.wings.utils.MapperUtils;
@@ -246,8 +247,13 @@ public class StateMachineExecutor {
       stateExecutionInstance.setPipelineStateElementId(((EnvState) state).getPipelineStateElementId());
     }
 
-    stateExecutionInstance.setPhaseSubWorkflowId(
-        state instanceof PhaseSubWorkflow ? ((PhaseSubWorkflow) state).getSubWorkflowId() : null);
+    if (state instanceof PhaseStepSubWorkflow) {
+      stateExecutionInstance.setPhaseSubWorkflowId(((PhaseStepSubWorkflow) state).getSubWorkflowId());
+    } else if (state instanceof PhaseSubWorkflow) {
+      stateExecutionInstance.setPhaseSubWorkflowId(((PhaseSubWorkflow) state).getSubWorkflowId());
+    } else {
+      stateExecutionInstance.setPhaseSubWorkflowId(null);
+    }
 
     stateExecutionInstance.setStepId(state instanceof BarrierState ? state.getId() : null);
 

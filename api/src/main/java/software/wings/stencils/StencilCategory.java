@@ -62,7 +62,7 @@ public enum StencilCategory {
   /**
    * Flow controls stencil category.
    */
-  FLOW_CONTROLS("FLOW CONTROLS", 9),
+  FLOW_CONTROLS("Flow controls", 9),
   /**
    * Others stencil category.
    */
@@ -98,6 +98,8 @@ public enum StencilCategory {
   StencilCategory(String displayName, Integer displayOrder) {
     if (displayName == null) {
       this.displayName = CaseFormat.UPPER_UNDERSCORE.to(CaseFormat.UPPER_CAMEL, name());
+    } else {
+      this.displayName = displayName;
     }
     this.displayOrder = displayOrder;
   }
