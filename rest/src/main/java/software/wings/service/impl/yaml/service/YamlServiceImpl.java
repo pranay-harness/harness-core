@@ -1,6 +1,7 @@
 package software.wings.service.impl.yaml.service;
 
 import static io.harness.data.structure.EmptyPredicate.isEmpty;
+import static io.harness.data.structure.EmptyPredicate.isNotEmpty;
 import static java.util.Arrays.asList;
 import static software.wings.beans.yaml.YamlConstants.PATH_DELIMITER;
 import static software.wings.beans.yaml.YamlConstants.YAML_EXTENSION;
@@ -157,8 +158,15 @@ public class YamlServiceImpl<Y extends BaseYaml, B extends Base> implements Yaml
             rr, ErrorCode.GENERAL_YAML_INFO, Level.ERROR, "Update yaml failed. Reason: " + yamlPayload.getName());
       }
     } catch (YamlProcessingException ex) {
+      Map<Change, String> failedChangeErrorMsgMap = ex.getFailedChangeErrorMsgMap();
+      String errorMsg;
+      if (isNotEmpty(failedChangeErrorMsgMap)) {
+        errorMsg = failedChangeErrorMsgMap.get(change);
+      } else {
+        errorMsg = "Internal error";
+      }
       software.wings.yaml.YamlHelper.addResponseMessage(
-          rr, ErrorCode.GENERAL_YAML_INFO, Level.ERROR, "Update failed. Reason:" + ex.getMessage());
+          rr, ErrorCode.GENERAL_YAML_INFO, Level.ERROR, "Update failed. Reason:" + errorMsg);
     }
 
     return rr;

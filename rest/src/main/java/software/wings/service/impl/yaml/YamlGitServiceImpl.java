@@ -116,7 +116,7 @@ public class YamlGitServiceImpl implements YamlGitService {
     validateGit(gitConfig);
     gitConfig.setDecrypted(false);
     YamlGitConfig yamlGitSync = wingsPersistence.saveAndGet(YamlGitConfig.class, ygs);
-    executorService.submit(() -> fullSync(ygs.getAccountId()));
+    executorService.submit(() -> fullSync(ygs.getAccountId(), true));
     return yamlGitSync;
   }
 
@@ -133,7 +133,7 @@ public class YamlGitServiceImpl implements YamlGitService {
     validateGit(gitConfig);
     gitConfig.setDecrypted(false);
     YamlGitConfig yamlGitSync = wingsPersistence.saveAndGet(YamlGitConfig.class, ygs);
-    executorService.submit(() -> fullSync(ygs.getAccountId()));
+    executorService.submit(() -> fullSync(ygs.getAccountId(), true));
     return yamlGitSync;
   }
 
@@ -171,7 +171,7 @@ public class YamlGitServiceImpl implements YamlGitService {
   }
 
   @Override
-  public void fullSync(String accountId) {
+  public void fullSync(String accountId, boolean forcePush) {
     logger.info(GIT_YAML_LOG_PREFIX + "Performing git full-sync for account {} " + accountId);
     YamlGitConfig yamlGitConfig = yamlDirectoryService.weNeedToPushChanges(accountId);
     if (yamlGitConfig != null) {
@@ -181,7 +181,7 @@ public class YamlGitServiceImpl implements YamlGitService {
         gitFileChanges = yamlDirectoryService.traverseDirectory(gitFileChanges, accountId, top, "", true);
         discardGitSyncErrorForFullSync(accountId);
         // if everything goes fine, close any alert if open
-        syncFiles(accountId, gitFileChanges, true);
+        syncFiles(accountId, gitFileChanges, forcePush);
         logger.info(GIT_YAML_LOG_PREFIX + "Performed git full-sync for account {} successfully" + accountId);
       } catch (Exception ex) {
         logger.error(

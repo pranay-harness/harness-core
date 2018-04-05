@@ -349,13 +349,16 @@ public class GitClientImpl implements GitClient {
                                              .call();
 
       RemoteRefUpdate remoteRefUpdate = pushResults.iterator().next().getRemoteUpdates().iterator().next();
-      RefUpdate refUpdate = RefUpdate.builder()
-                                .status(remoteRefUpdate.getStatus().name())
-                                .expectedOldObjectId(remoteRefUpdate.getExpectedOldObjectId().name())
-                                .newObjectId(remoteRefUpdate.getNewObjectId().name())
-                                .forceUpdate(remoteRefUpdate.isForceUpdate())
-                                .message(remoteRefUpdate.getMessage())
-                                .build();
+      RefUpdate refUpdate =
+          RefUpdate.builder()
+              .status(remoteRefUpdate.getStatus().name())
+              .expectedOldObjectId(remoteRefUpdate.getExpectedOldObjectId() != null
+                      ? remoteRefUpdate.getExpectedOldObjectId().name()
+                      : null)
+              .newObjectId(remoteRefUpdate.getNewObjectId() != null ? remoteRefUpdate.getNewObjectId().name() : null)
+              .forceUpdate(remoteRefUpdate.isForceUpdate())
+              .message(remoteRefUpdate.getMessage())
+              .build();
       if (remoteRefUpdate.getStatus() == OK || remoteRefUpdate.getStatus() == UP_TO_DATE) {
         return GitPushResult.builder().refUpdate(refUpdate).build();
       } else {

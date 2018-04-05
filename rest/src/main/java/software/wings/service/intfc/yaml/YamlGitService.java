@@ -54,8 +54,9 @@ public interface YamlGitService {
    * Push directory.
    *
    * @param accountId the account id
+   * @param forcePush force push
    */
-  void fullSync(@NotEmpty String accountId);
+  void fullSync(@NotEmpty String accountId, boolean forcePush);
 
   /**
    * Sync files.
