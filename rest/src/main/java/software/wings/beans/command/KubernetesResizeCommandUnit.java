@@ -21,6 +21,7 @@ import me.snowdrop.istio.api.model.v1.routing.DestinationWeight;
 import me.snowdrop.istio.api.model.v1.routing.RouteRule;
 import org.mongodb.morphia.annotations.Transient;
 import software.wings.api.ContainerServiceData;
+import software.wings.api.DeploymentType;
 import software.wings.beans.AzureConfig;
 import software.wings.beans.ErrorCode;
 import software.wings.beans.GcpConfig;
@@ -50,6 +51,7 @@ public class KubernetesResizeCommandUnit extends ContainerResizeCommandUnit {
 
   public KubernetesResizeCommandUnit() {
     super(CommandUnitType.RESIZE_KUBERNETES);
+    setDeploymentType(DeploymentType.KUBERNETES.name());
   }
 
   @Override

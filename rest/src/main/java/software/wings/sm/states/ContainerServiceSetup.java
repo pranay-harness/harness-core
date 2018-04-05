@@ -214,7 +214,6 @@ public abstract class ContainerServiceSetup extends State {
               .withAccountId(app.getAccountId())
               .withAppId(app.getUuid())
               .withEnvId(env.getUuid())
-              .withDeploymentType(infrastructureMapping.getDeploymentType())
               .withContainerSetupParams(containerSetupParams)
               .withActivityId(activity.getUuid())
               .withCloudProviderSetting(settingAttribute)

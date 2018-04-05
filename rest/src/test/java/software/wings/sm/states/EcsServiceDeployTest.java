@@ -182,11 +182,9 @@ public class EcsServiceDeployTest extends WingsBaseTest {
     on(workflowStandardParams).set("environmentService", environmentService);
 
     InfrastructureMapping infrastructureMapping = anEcsInfrastructureMapping()
-                                                      .withUuid(INFRA_MAPPING_ID)
                                                       .withRegion(Regions.US_EAST_1.getName())
                                                       .withClusterName(CLUSTER_NAME)
                                                       .withComputeProviderSettingId(COMPUTE_PROVIDER_ID)
-                                                      .withDeploymentType(DeploymentType.ECS.name())
                                                       .build();
     when(infrastructureMappingService.get(APP_ID, INFRA_MAPPING_ID)).thenReturn(infrastructureMapping);
 
@@ -218,8 +216,6 @@ public class EcsServiceDeployTest extends WingsBaseTest {
     on(context).set("serviceTemplateService", serviceTemplateService);
     on(context).set("variableProcessor", variableProcessor);
     on(context).set("evaluator", evaluator);
-    // on(context).set("appId", APP_ID);
-    // on(context).set("infrastructureMappingId", INFRA_MAPPING_ID);
     ExecutionResponse response = ecsServiceDeploy.execute(context);
     assertThat(response).isNotNull().hasFieldOrPropertyWithValue("async", true);
     assertThat(response.getCorrelationIds()).isNotNull().hasSize(1);
