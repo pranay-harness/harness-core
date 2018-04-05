@@ -19,6 +19,8 @@ import software.wings.beans.container.KubernetesPayload;
 import software.wings.beans.stats.CloneMetadata;
 import software.wings.dl.PageRequest;
 import software.wings.dl.PageResponse;
+import software.wings.security.PermissionAttribute.Action;
+import software.wings.security.PermissionAttribute.PermissionType;
 import software.wings.security.annotations.AuthRule;
 import software.wings.security.annotations.ListAPI;
 import software.wings.security.annotations.Scope;
@@ -174,6 +176,7 @@ public class EnvironmentResource {
   @Path("{envId}/config-map-yaml")
   @Timed
   @ExceptionMetered
+  @AuthRule(permissionType = PermissionType.ENV, action = Action.UPDATE)
   public RestResponse<Environment> setConfigMapYaml(
       @ApiParam(name = "appId", required = true) @QueryParam("appId") String appId,
       @ApiParam(name = "envId", required = true) @PathParam("envId") String envId,
@@ -206,6 +209,7 @@ public class EnvironmentResource {
   @Path("{envId}/config-map-yaml/{templateId}")
   @Timed
   @ExceptionMetered
+  @AuthRule(permissionType = PermissionType.ENV, action = Action.UPDATE)
   public RestResponse<Environment> setConfigMapYamlForService(
       @ApiParam(name = "appId", required = true) @QueryParam("appId") String appId,
       @ApiParam(name = "envId", required = true) @PathParam("envId") String envId,
@@ -240,6 +244,7 @@ public class EnvironmentResource {
   @Path("{envId}/helm-value-yaml")
   @Timed
   @ExceptionMetered
+  @AuthRule(permissionType = PermissionType.ENV, action = Action.UPDATE)
   public RestResponse<Environment> setHelmValueYaml(
       @ApiParam(name = "appId", required = true) @QueryParam("appId") String appId,
       @ApiParam(name = "envId", required = true) @PathParam("envId") String envId,
@@ -272,6 +277,7 @@ public class EnvironmentResource {
   @Path("{envId}/helm-value-yaml/{templateId}")
   @Timed
   @ExceptionMetered
+  @AuthRule(permissionType = PermissionType.ENV, action = Action.UPDATE)
   public RestResponse<Environment> setHelmValueYamlForService(
       @ApiParam(name = "appId", required = true) @QueryParam("appId") String appId,
       @ApiParam(name = "envId", required = true) @PathParam("envId") String envId,

@@ -301,7 +301,7 @@ public class ServiceResource {
   @Path("{serviceId}/containers/tasks/{taskId}")
   @Timed
   @ExceptionMetered
-  public RestResponse<ContainerTask> createContainerTask(@QueryParam("appId") String appId,
+  public RestResponse<ContainerTask> updateContainerTask(@QueryParam("appId") String appId,
       @QueryParam("advanced") boolean advanced, @PathParam("serviceId") String serviceId,
       @PathParam("taskId") String taskId, ContainerTask containerTask) {
     containerTask.setAppId(appId);
@@ -314,7 +314,7 @@ public class ServiceResource {
   @Path("{serviceId}/containers/tasks/{taskId}/advanced")
   @Timed
   @ExceptionMetered
-  public RestResponse<ContainerTask> createContainerTaskAdvanced(@QueryParam("appId") String appId,
+  public RestResponse<ContainerTask> updateContainerTaskAdvanced(@QueryParam("appId") String appId,
       @QueryParam("reset") boolean reset, @PathParam("serviceId") String serviceId, @PathParam("taskId") String taskId,
       KubernetesPayload kubernetesPayload) {
     return new RestResponse<>(
@@ -359,7 +359,7 @@ public class ServiceResource {
   @Path("{serviceId}/containers/charts/{taskId}")
   @Timed
   @ExceptionMetered
-  public RestResponse<HelmChartSpecification> createHelmChartSpecification(@QueryParam("appId") String appId,
+  public RestResponse<HelmChartSpecification> updateHelmChartSpecification(@QueryParam("appId") String appId,
       @PathParam("serviceId") String serviceId, @PathParam("taskId") String taskId,
       HelmChartSpecification helmChartSpecification) {
     helmChartSpecification.setAppId(appId);
@@ -444,6 +444,7 @@ public class ServiceResource {
   @Path("{serviceId}/config-map-yaml")
   @Timed
   @ExceptionMetered
+  @AuthRule(permissionType = PermissionType.SERVICE, action = Action.UPDATE)
   public RestResponse<Service> setConfigMapYaml(
       @ApiParam(name = "appId", required = true) @QueryParam("appId") String appId,
       @ApiParam(name = "serviceId", required = true) @PathParam("serviceId") String serviceId,
@@ -476,6 +477,7 @@ public class ServiceResource {
   @Path("{serviceId}/helm-value-yaml")
   @Timed
   @ExceptionMetered
+  @AuthRule(permissionType = PermissionType.SERVICE, action = Action.UPDATE)
   public RestResponse<Service> setHelmValueYaml(
       @ApiParam(name = "appId", required = true) @QueryParam("appId") String appId,
       @ApiParam(name = "serviceId", required = true) @PathParam("serviceId") String serviceId,
