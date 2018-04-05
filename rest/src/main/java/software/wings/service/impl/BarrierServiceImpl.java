@@ -118,6 +118,7 @@ public class BarrierServiceImpl implements BarrierService, ForceProctor {
             wingsPersistence.createQuery(WorkflowExecution.class)
                 .filter(WorkflowExecution.APP_ID_KEY, barrierInstance.getAppId())
                 .filter(WorkflowExecution.PIPELINE_EXECUTION_ID_KEY, pipeline.getExecutionId())
+                .filter(WorkflowExecution.ARGS_PIPELINE_PHASE_ELEMENT_ID_KEY, workflow.getPipelineStateId())
                 .filter(WorkflowExecution.WORKFLOW_ID_KEY, workflow.getUuid())
                 .fetchKeys();
         try (DBCursor cursor = keys.getCursor()) {
