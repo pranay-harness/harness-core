@@ -834,6 +834,9 @@ public class ServiceResourceServiceImpl implements ServiceResourceService, DataP
     command.setVersion(1L);
     command.setOriginEntityId(serviceCommand.getUuid());
     command.setAppId(appId);
+    if (isNotEmpty(command.getCommandUnits())) {
+      command.setDeploymentType(command.getCommandUnits().get(0).getDeploymentType());
+    }
     // TODO: Set the graph to null after backward compatible change
     commandService.save(command, pushToYaml);
     service.getServiceCommands().add(serviceCommand);
@@ -895,6 +898,7 @@ public class ServiceResourceServiceImpl implements ServiceResourceService, DataP
                 serviceCommand.getName(), EntityVersion.ChangeType.UPDATED, serviceCommand.getNotes());
         command.setVersion(Long.valueOf(entityVersion.getVersion().intValue()));
         // Copy the old command values
+        command.setDeploymentType(oldCommand.getDeploymentType());
         command.setCommandType(oldCommand.getCommandType());
         command.setArtifactType(oldCommand.getArtifactType());
         commandService.save(command, true);

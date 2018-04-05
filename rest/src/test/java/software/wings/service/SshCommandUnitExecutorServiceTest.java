@@ -3,10 +3,8 @@ package software.wings.service;
 import static java.util.Arrays.asList;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.joor.Reflect.on;
-import static org.mockito.Matchers.any;
 import static org.mockito.Matchers.anyListOf;
 import static org.mockito.Matchers.anyString;
-import static org.mockito.Mockito.doAnswer;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 import static software.wings.beans.BastionConnectionAttributes.Builder.aBastionConnectionAttributes;
@@ -282,15 +280,6 @@ public class SshCommandUnitExecutorServiceTest extends WingsBaseTest {
 
     when(sshExecutorFactory.getExecutor(PASSWORD_AUTH)).thenReturn(sshPwdAuthExecutor);
     when(sshPwdAuthExecutor.executeCommandString(anyString())).thenReturn(CommandExecutionStatus.SUCCESS);
-    final String stagingDirectory = "/tmp";
-    doAnswer(invocation -> {
-      StringBuffer buffer = invocation.getArgumentAt(1, StringBuffer.class);
-      buffer.append(stagingDirectory);
-      return CommandExecutionStatus.SUCCESS;
-    })
-        .when(sshPwdAuthExecutor)
-        .executeCommandString(anyString(), any());
-
     when(sshPwdAuthExecutor.copyFiles(anyString(), anyListOf(String.class))).thenReturn(CommandExecutionStatus.SUCCESS);
 
     sshCommandUnitExecutorService.execute(host, commandUnit,
@@ -340,15 +329,6 @@ public class SshCommandUnitExecutorServiceTest extends WingsBaseTest {
                     .build()))
             .build();
     commandUnit.setCommand(command);
-
-    final String stagingDirectory = "/tmp";
-    doAnswer(invocation -> {
-      StringBuffer buffer = invocation.getArgumentAt(1, StringBuffer.class);
-      buffer.append(stagingDirectory);
-      return CommandExecutionStatus.SUCCESS;
-    })
-        .when(sshPwdAuthExecutor)
-        .executeCommandString(anyString(), any());
 
     when(sshExecutorFactory.getExecutor(PASSWORD_AUTH)).thenReturn(sshPwdAuthExecutor);
     when(sshPwdAuthExecutor.executeCommandString(anyString())).thenReturn(CommandExecutionStatus.SUCCESS);

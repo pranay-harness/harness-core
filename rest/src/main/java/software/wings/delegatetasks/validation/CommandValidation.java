@@ -21,6 +21,7 @@ import software.wings.beans.GcpConfig;
 import software.wings.beans.KubernetesClusterConfig;
 import software.wings.beans.KubernetesConfig;
 import software.wings.beans.SettingAttribute;
+import software.wings.beans.command.Command;
 import software.wings.beans.command.CommandExecutionContext;
 import software.wings.beans.command.EcsResizeParams;
 import software.wings.beans.command.EcsSetupParams;
@@ -59,21 +60,20 @@ public class CommandValidation extends AbstractDelegateValidateTask {
   @Override
   public List<DelegateConnectionResult> validate() {
     Object[] parameters = getParameters();
-    return singletonList(validate((CommandExecutionContext) parameters[1]));
+    return singletonList(validate((Command) parameters[0], (CommandExecutionContext) parameters[1]));
   }
 
-  private DelegateConnectionResult validate(CommandExecutionContext context) {
+  private DelegateConnectionResult validate(Command command, CommandExecutionContext context) {
     decryptCredentials(context);
-    if (NON_SSH_DEPLOYMENT_TYPES.contains(context.getDeploymentType())) {
-      return validateNonSsh(context);
+    if (NON_SSH_DEPLOYMENT_TYPES.contains(command.getDeploymentType())) {
+      return validateNonSsh(context, command.getDeploymentType());
     } else {
-      return validateHostSsh(context.getHost().getPublicDns(), context);
+      return validateHostSsh(command.getDeploymentType(), context.getHost().getPublicDns(), context);
     }
   }
 
-  private DelegateConnectionResult validateNonSsh(CommandExecutionContext context) {
-    String criteria = getCriteria(context);
-    String deploymentType = context.getDeploymentType().toString();
+  private DelegateConnectionResult validateNonSsh(CommandExecutionContext context, String deploymentType) {
+    String criteria = getCriteria(deploymentType, context);
     DelegateConnectionResultBuilder resultBuilder = DelegateConnectionResult.builder().criteria(criteria);
     if (DeploymentType.KUBERNETES.name().equals(deploymentType) && context.getCloudProviderSetting() != null) {
       resultBuilder.validated(connectableHttpUrl(getKubernetesMasterUrl(context)));
@@ -94,8 +94,9 @@ public class CommandValidation extends AbstractDelegateValidateTask {
     return resultBuilder.build();
   }
 
-  private DelegateConnectionResult validateHostSsh(String hostName, CommandExecutionContext context) {
-    String criteria = getCriteria(context);
+  private DelegateConnectionResult validateHostSsh(
+      String deploymentType, String hostName, CommandExecutionContext context) {
+    String criteria = getCriteria(deploymentType, context);
     DelegateConnectionResultBuilder resultBuilder = DelegateConnectionResult.builder().criteria(criteria);
     try {
       getSSHSession(getSshSessionConfig(hostName, "HOST_CONNECTION_TEST", context, 20)).disconnect();
@@ -161,11 +162,11 @@ public class CommandValidation extends AbstractDelegateValidateTask {
 
   @Override
   public List<String> getCriteria() {
-    return singletonList(getCriteria((CommandExecutionContext) getParameters()[1]));
+    return singletonList(
+        getCriteria(((Command) getParameters()[0]).getDeploymentType(), (CommandExecutionContext) getParameters()[1]));
   }
 
-  private String getCriteria(CommandExecutionContext context) {
-    String deploymentType = context.getDeploymentType().toString();
+  private String getCriteria(String deploymentType, CommandExecutionContext context) {
     Set<String> nonSshDeploymentType = Sets.newHashSet(
         DeploymentType.AWS_CODEDEPLOY.name(), DeploymentType.ECS.name(), DeploymentType.KUBERNETES.name());
     if (!nonSshDeploymentType.contains(deploymentType)) {

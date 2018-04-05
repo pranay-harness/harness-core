@@ -48,6 +48,7 @@ public class Command extends Base implements CommandUnit {
   @SchemaIgnore private CommandExecutionStatus commandExecutionStatus = CommandExecutionStatus.QUEUED;
 
   @SchemaIgnore private boolean artifactNeeded;
+  @SchemaIgnore private String deploymentType;
 
   @SchemaIgnore private String originEntityId;
 
@@ -284,13 +285,6 @@ public class Command extends Base implements CommandUnit {
         && Objects.equals(this.commandUnits, other.commandUnits);
   }
 
-  @Deprecated
-  public String getDeploymentType() {
-    return "";
-  }
-
-  @Deprecated public void setDeploymentType(String deploymentType){/*no op*/};
-
   /**
    * {@inheritDoc}
    */
@@ -303,6 +297,17 @@ public class Command extends Base implements CommandUnit {
   @Override
   public void setArtifactNeeded(boolean artifactNeeded) {
     this.artifactNeeded = artifactNeeded;
+  }
+
+  @Override
+  @SchemaIgnore
+  public String getDeploymentType() {
+    return deploymentType;
+  }
+
+  @Override
+  public void setDeploymentType(String deploymentType) {
+    this.deploymentType = deploymentType;
   }
 
   @SchemaIgnore
