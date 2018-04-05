@@ -549,7 +549,7 @@ public class DataGenUtil extends BaseIntegrationTest {
 
     Workflow workflow2 = workflowGenerator.createWorkflow(seed,
         aWorkflow()
-            .withName("Basic - 5 nodes")
+            .withName("Basic - 10 nodes")
             .withAppId(environment.getAppId())
             .withEnvId(environment.getUuid())
             .withWorkflowType(WorkflowType.ORCHESTRATION)
@@ -562,7 +562,7 @@ public class DataGenUtil extends BaseIntegrationTest {
                     .build())
             .build());
 
-    workflow2 = workflowGenerator.postProcess(workflow2, PostProcessInfo.builder().selectNodeCount(5).build());
+    workflow2 = workflowGenerator.postProcess(workflow2, PostProcessInfo.builder().selectNodeCount(10).build());
 
     Workflow workflow3 = workflowGenerator.createWorkflow(seed,
         aWorkflow()

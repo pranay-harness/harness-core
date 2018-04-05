@@ -1,7 +1,5 @@
 package software.wings.api;
 
-import static software.wings.api.ExecutionDataValue.Builder.anExecutionDataValue;
-
 import lombok.Builder;
 import lombok.Data;
 import lombok.EqualsAndHashCode;
@@ -45,28 +43,28 @@ public class JenkinsExecutionData extends StateExecutionData implements NotifyRe
 
   private void setExecutionData(Map<String, ExecutionDataValue> executionDetails) {
     putNotNull(
-        executionDetails, "jobName", anExecutionDataValue().withValue(jobName).withDisplayName("Job Name").build());
+        executionDetails, "jobName", ExecutionDataValue.builder().displayName("Job Name").value(jobName).build());
 
     if (jobParameters != null) {
       putNotNull(executionDetails, "jobParameters",
-          anExecutionDataValue().withValue(removeNullValues(jobParameters)).withDisplayName("Job Parameters").build());
+          ExecutionDataValue.builder().displayName("Job Parameters").value(removeNullValues(jobParameters)).build());
     }
 
     putNotNull(executionDetails, "fileAssertionData",
-        anExecutionDataValue().withValue(filePathAssertionMap).withDisplayName("Assertion Data").build());
-    putNotNull(executionDetails, "jobStatus",
-        anExecutionDataValue().withValue(jobStatus).withDisplayName("Job Status").build());
-    putNotNull(executionDetails, "buildNumber",
-        anExecutionDataValue().withValue(buildNumber).withDisplayName("Build Number").build());
-    putNotNull(executionDetails, "description",
-        anExecutionDataValue().withValue(description).withDisplayName("Description").build());
+        ExecutionDataValue.builder().displayName("Assertion Data").value(filePathAssertionMap).build());
     putNotNull(
-        executionDetails, "build", anExecutionDataValue().withValue(buildUrl).withDisplayName("Build Url").build());
+        executionDetails, "jobStatus", ExecutionDataValue.builder().displayName("Job Status").value(jobStatus).build());
+    putNotNull(executionDetails, "buildNumber",
+        ExecutionDataValue.builder().displayName("Build Number").value(buildNumber).build());
+    putNotNull(executionDetails, "description",
+        ExecutionDataValue.builder().displayName("Description").value(description).build());
+    putNotNull(
+        executionDetails, "build", ExecutionDataValue.builder().displayName("Build Url").value(buildUrl).build());
     if (metadata != null) {
       putNotNull(executionDetails, "metadata",
-          anExecutionDataValue().withValue(removeNullValues(jobParameters)).withDisplayName("Meta-Data").build());
+          ExecutionDataValue.builder().displayName("Meta-Data").value(removeNullValues(jobParameters)).build());
     }
     putNotNull(executionDetails, "activityId",
-        anExecutionDataValue().withValue(activityId).withDisplayName("Activity Id").build());
+        ExecutionDataValue.builder().displayName("Activity Id").value(activityId).build());
   }
 }

@@ -1,7 +1,5 @@
 package software.wings.api;
 
-import static software.wings.api.ExecutionDataValue.Builder.anExecutionDataValue;
-
 import software.wings.sm.StateExecutionData;
 import software.wings.waitnotify.NotifyResponseData;
 
@@ -52,12 +50,12 @@ public class AwsClusterExecutionData extends StateExecutionData implements Notif
   public Map<String, ExecutionDataValue> getExecutionSummary() {
     Map<String, ExecutionDataValue> executionDetails = super.getExecutionSummary();
     putNotNull(executionDetails, "clusterName",
-        anExecutionDataValue().withValue(clusterName).withDisplayName("Cluster Name").build());
-    putNotNull(executionDetails, "region", anExecutionDataValue().withValue(region).withDisplayName("Zone").build());
-    putNotNull(executionDetails, "nodeCount",
-        anExecutionDataValue().withValue(nodeCount).withDisplayName("Node Count").build());
+        ExecutionDataValue.builder().displayName("Cluster Name").value(clusterName).build());
+    putNotNull(executionDetails, "region", ExecutionDataValue.builder().displayName("Zone").value(region).build());
+    putNotNull(
+        executionDetails, "nodeCount", ExecutionDataValue.builder().displayName("Node Count").value(nodeCount).build());
     putNotNull(executionDetails, "machineType",
-        anExecutionDataValue().withValue(machineType).withDisplayName("Machine Type").build());
+        ExecutionDataValue.builder().displayName("Machine Type").value(machineType).build());
     return executionDetails;
   }
 
@@ -65,12 +63,12 @@ public class AwsClusterExecutionData extends StateExecutionData implements Notif
   public Map<String, ExecutionDataValue> getExecutionDetails() {
     Map<String, ExecutionDataValue> executionDetails = super.getExecutionDetails();
     putNotNull(executionDetails, "clusterName",
-        anExecutionDataValue().withValue(clusterName).withDisplayName("Cluster Name").build());
-    putNotNull(executionDetails, "region", anExecutionDataValue().withValue(region).withDisplayName("Zone").build());
-    putNotNull(executionDetails, "nodeCount",
-        anExecutionDataValue().withValue(nodeCount).withDisplayName("Node Count").build());
+        ExecutionDataValue.builder().displayName("Cluster Name").value(clusterName).build());
+    putNotNull(executionDetails, "region", ExecutionDataValue.builder().displayName("Zone").value(region).build());
+    putNotNull(
+        executionDetails, "nodeCount", ExecutionDataValue.builder().displayName("Node Count").value(nodeCount).build());
     putNotNull(executionDetails, "machineType",
-        anExecutionDataValue().withValue(machineType).withDisplayName("Machine Type").build());
+        ExecutionDataValue.builder().displayName("Machine Type").value(machineType).build());
     return executionDetails;
   }
 

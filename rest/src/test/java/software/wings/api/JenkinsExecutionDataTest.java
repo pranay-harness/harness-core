@@ -1,7 +1,6 @@
 package software.wings.api;
 
 import static org.assertj.core.api.Assertions.assertThat;
-import static software.wings.api.ExecutionDataValue.Builder.anExecutionDataValue;
 
 import com.google.common.collect.ImmutableMap;
 
@@ -27,17 +26,17 @@ public class JenkinsExecutionDataTest {
   public void shouldGetExecutionSummary() throws Exception {
     assertThat(jenkinsExecutionData.getExecutionSummary())
         .containsAllEntriesOf(ImmutableMap.of("jobName",
-            anExecutionDataValue().withValue("testjob").withDisplayName("Job Name").build(), "build",
-            anExecutionDataValue().withValue("http://jenkins/testjob/11").withDisplayName("Build Url").build(),
-            "jobStatus", anExecutionDataValue().withValue("ERROR").withDisplayName("Job Status").build()));
+            ExecutionDataValue.builder().displayName("Job Name").value("testjob").build(), "build",
+            ExecutionDataValue.builder().displayName("Build Url").value("http://jenkins/testjob/11").build(),
+            "jobStatus", ExecutionDataValue.builder().displayName("Job Status").value("ERROR").build()));
   }
 
   @Test
   public void shouldGetExecutionDetails() throws Exception {
     assertThat(jenkinsExecutionData.getExecutionDetails())
         .containsAllEntriesOf(ImmutableMap.of("jobName",
-            anExecutionDataValue().withValue("testjob").withDisplayName("Job Name").build(), "build",
-            anExecutionDataValue().withValue("http://jenkins/testjob/11").withDisplayName("Build Url").build(),
-            "jobStatus", anExecutionDataValue().withValue("ERROR").withDisplayName("Job Status").build()));
+            ExecutionDataValue.builder().displayName("Job Name").value("testjob").build(), "build",
+            ExecutionDataValue.builder().displayName("Build Url").value("http://jenkins/testjob/11").build(),
+            "jobStatus", ExecutionDataValue.builder().displayName("Job Status").value("ERROR").build()));
   }
 }

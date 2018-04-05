@@ -5,6 +5,7 @@
 package software.wings.service.impl;
 
 import static java.util.Arrays.asList;
+import static java.util.Collections.emptySet;
 import static org.mongodb.morphia.mapping.Mapper.ID_KEY;
 import static software.wings.service.impl.ExecutionEvent.ExecutionEventBuilder.anExecutionEvent;
 import static software.wings.sm.ExecutionStatus.NEW;
@@ -159,7 +160,8 @@ public class WorkflowExecutionUpdate implements StateMachineExecutionCallback {
 
   protected void handlePostExecution(ExecutionContext context) {
     try {
-      WorkflowExecution workflowExecution = workflowExecutionService.getExecutionDetails(appId, workflowExecutionId);
+      WorkflowExecution workflowExecution =
+          workflowExecutionService.getExecutionDetails(appId, workflowExecutionId, emptySet());
       if (context.getWorkflowType() == WorkflowType.ORCHESTRATION) {
         executionEventQueue.send(
             anExecutionEvent().withAppId(context.getAppId()).withWorkflowId(workflowExecution.getWorkflowId()).build());

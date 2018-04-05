@@ -1,7 +1,5 @@
 package software.wings.api;
 
-import static software.wings.api.ExecutionDataValue.Builder.anExecutionDataValue;
-
 import lombok.Builder;
 import lombok.Data;
 import lombok.EqualsAndHashCode;
@@ -43,24 +41,22 @@ public class ArtifactCollectionExecutionData extends StateExecutionData implemen
 
   private Map<String, ExecutionDataValue> setExecutionData(Map<String, ExecutionDataValue> executionDetails) {
     putNotNull(
-        executionDetails, "timeout", anExecutionDataValue().withValue(timeout).withDisplayName("Timeout (ms)").build());
+        executionDetails, "timeout", ExecutionDataValue.builder().displayName("Timeout (ms)").value(timeout).build());
     putNotNull(executionDetails, "artifactSource",
-        anExecutionDataValue().withValue(artifactSource).withDisplayName("Artifact Source").build());
+        ExecutionDataValue.builder().displayName("Artifact Source").value(artifactSource).build());
     putNotNull(
-        executionDetails, "status", anExecutionDataValue().withValue(artifactStatus).withDisplayName("Status").build());
+        executionDetails, "status", ExecutionDataValue.builder().displayName("Status").value(artifactStatus).build());
     putNotNull(
-        executionDetails, "jobName", anExecutionDataValue().withValue(jobName).withDisplayName("Job Name").build());
+        executionDetails, "jobName", ExecutionDataValue.builder().displayName("Job Name").value(jobName).build());
     putNotNull(
-        executionDetails, "buildNo", anExecutionDataValue().withValue(buildNo).withDisplayName("Build / Tag").build());
+        executionDetails, "buildNo", ExecutionDataValue.builder().displayName("Build / Tag").value(buildNo).build());
     putNotNull(
-        executionDetails, "revision", anExecutionDataValue().withValue(revision).withDisplayName("Revision").build());
+        executionDetails, "revision", ExecutionDataValue.builder().displayName("Revision").value(revision).build());
     if (metadata != null) {
       putNotNull(executionDetails, "metadata",
-          anExecutionDataValue().withValue(removeNullValues(metadata)).withDisplayName("Meta-Data").build());
+          ExecutionDataValue.builder().displayName("Meta-Data").value(removeNullValues(metadata)).build());
     }
-    putNotNull(
-        executionDetails, "message", anExecutionDataValue().withValue(message).withDisplayName("Message").build());
-
+    putNotNull(executionDetails, "message", ExecutionDataValue.builder().displayName("Message").value(message).build());
     return executionDetails;
   }
 }

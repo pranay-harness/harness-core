@@ -4,8 +4,6 @@
 
 package software.wings.api;
 
-import static software.wings.api.ExecutionDataValue.Builder.anExecutionDataValue;
-
 import com.google.common.base.MoreObjects;
 
 import org.apache.commons.lang3.StringUtils;
@@ -213,37 +211,37 @@ public class HttpStateExecutionData extends StateExecutionData implements Notify
   @Override
   public Map<String, ExecutionDataValue> getExecutionSummary() {
     Map<String, ExecutionDataValue> executionDetails = super.getExecutionSummary();
-    putNotNull(executionDetails, "httpUrl", anExecutionDataValue().withValue(httpUrl).withDisplayName("Url").build());
+    putNotNull(executionDetails, "httpUrl", ExecutionDataValue.builder().displayName("Url").value(httpUrl).build());
     putNotNull(
-        executionDetails, "httpMethod", anExecutionDataValue().withValue(httpMethod).withDisplayName("Method").build());
+        executionDetails, "httpMethod", ExecutionDataValue.builder().displayName("Method").value(httpMethod).build());
     putNotNull(executionDetails, "httpResponseCode",
-        anExecutionDataValue().withValue(httpResponseCode).withDisplayName("Response Code").build());
+        ExecutionDataValue.builder().displayName("Response Code").value(httpResponseCode).build());
     putNotNull(executionDetails, "httpResponseBody",
-        anExecutionDataValue()
-            .withValue(StringUtils.abbreviate(httpResponseBody, Constants.SUMMARY_PAYLOAD_LIMIT))
-            .withDisplayName("Response Body")
+        ExecutionDataValue.builder()
+            .displayName("Response Body")
+            .value(StringUtils.abbreviate(httpResponseBody, Constants.SUMMARY_PAYLOAD_LIMIT))
             .build());
     putNotNull(executionDetails, "assertionStatement",
-        anExecutionDataValue().withValue(assertionStatement).withDisplayName("Assertion").build());
+        ExecutionDataValue.builder().displayName("Assertion").value(assertionStatement).build());
     putNotNull(executionDetails, "assertionStatus",
-        anExecutionDataValue().withValue(assertionStatus).withDisplayName("Assertion Result").build());
+        ExecutionDataValue.builder().displayName("Assertion Result").value(assertionStatus).build());
     return executionDetails;
   }
 
   @Override
   public Map<String, ExecutionDataValue> getExecutionDetails() {
     Map<String, ExecutionDataValue> executionDetails = super.getExecutionDetails();
-    putNotNull(executionDetails, "httpUrl", anExecutionDataValue().withValue(httpUrl).withDisplayName("Url").build());
+    putNotNull(executionDetails, "httpUrl", ExecutionDataValue.builder().displayName("Url").value(httpUrl).build());
     putNotNull(
-        executionDetails, "httpMethod", anExecutionDataValue().withValue(httpMethod).withDisplayName("Method").build());
+        executionDetails, "httpMethod", ExecutionDataValue.builder().displayName("Method").value(httpMethod).build());
     putNotNull(executionDetails, "httpResponseCode",
-        anExecutionDataValue().withValue(httpResponseCode).withDisplayName("Response Code").build());
+        ExecutionDataValue.builder().displayName("Response Code").value(httpResponseCode).build());
     putNotNull(executionDetails, "httpResponseBody",
-        anExecutionDataValue().withValue(httpResponseBody).withDisplayName("Response Body").build());
+        ExecutionDataValue.builder().displayName("Response Body").value(httpResponseBody).build());
     putNotNull(executionDetails, "assertionStatement",
-        anExecutionDataValue().withValue(assertionStatement).withDisplayName("Assertion").build());
+        ExecutionDataValue.builder().displayName("Assertion").value(assertionStatement).build());
     putNotNull(executionDetails, "assertionStatus",
-        anExecutionDataValue().withValue(assertionStatus).withDisplayName("Assertion Result").build());
+        ExecutionDataValue.builder().displayName("Assertion Result").value(assertionStatus).build());
     return executionDetails;
   }
 

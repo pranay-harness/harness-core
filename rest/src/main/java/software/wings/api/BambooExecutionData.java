@@ -3,7 +3,6 @@ package software.wings.api;
 import static io.harness.data.structure.EmptyPredicate.isEmpty;
 import static io.harness.data.structure.EmptyPredicate.isNotEmpty;
 import static java.util.stream.Collectors.toMap;
-import static software.wings.api.ExecutionDataValue.Builder.anExecutionDataValue;
 
 import software.wings.sm.ExecutionStatus;
 import software.wings.sm.StateExecutionData;
@@ -105,32 +104,32 @@ public class BambooExecutionData extends StateExecutionData implements NotifyRes
   public Map<String, ExecutionDataValue> getExecutionSummary() {
     Map<String, ExecutionDataValue> executionDetails = super.getExecutionDetails();
     putNotNull(executionDetails, "projectName",
-        anExecutionDataValue().withValue(projectName).withDisplayName("Project Name").build());
+        ExecutionDataValue.builder().displayName("Project Name").value(projectName).build());
     putNotNull(
-        executionDetails, "planName", anExecutionDataValue().withValue(planName).withDisplayName("Plan Name").build());
+        executionDetails, "planName", ExecutionDataValue.builder().displayName("Plan Name").value(planName).build());
     if (isNotEmpty(parameters)) {
       Map<String, String> jobParameterMap = isEmpty(parameters)
           ? Collections.emptyMap()
           : parameters.stream().collect(toMap(ParameterEntry::getKey, ParameterEntry::getValue));
       putNotNull(executionDetails, "parameters",
-          anExecutionDataValue().withValue(String.valueOf(jobParameterMap)).withDisplayName("Parameters").build());
+          ExecutionDataValue.builder().displayName("Parameters").value(String.valueOf(jobParameterMap)).build());
     }
     if (isNotEmpty(filePathAssertionEntries)) {
       Map<String, String> filePathAsssertionMap = isEmpty(parameters)
           ? Collections.emptyMap()
           : parameters.stream().collect(toMap(ParameterEntry::getKey, ParameterEntry::getValue));
       putNotNull(executionDetails, "fileAssertionData",
-          anExecutionDataValue()
-              .withValue(String.valueOf(filePathAsssertionMap))
-              .withDisplayName("Assertion Data")
+          ExecutionDataValue.builder()
+              .displayName("Assertion Data")
+              .value(String.valueOf(filePathAsssertionMap))
               .build());
     }
     putNotNull(executionDetails, "buildNumber",
-        anExecutionDataValue().withValue(buildNumber).withDisplayName("Build Number").build());
+        ExecutionDataValue.builder().displayName("Build Number").value(buildNumber).build());
     putNotNull(executionDetails, "buildStatus",
-        anExecutionDataValue().withValue(buildStatus).withDisplayName("Build Status").build());
+        ExecutionDataValue.builder().displayName("Build Status").value(buildStatus).build());
     putNotNull(
-        executionDetails, "buildUrl", anExecutionDataValue().withValue(buildUrl).withDisplayName("Build URL").build());
+        executionDetails, "buildUrl", ExecutionDataValue.builder().displayName("Build URL").value(buildUrl).build());
     return executionDetails;
   }
 
@@ -138,15 +137,15 @@ public class BambooExecutionData extends StateExecutionData implements NotifyRes
   public Map<String, ExecutionDataValue> getExecutionDetails() {
     Map<String, ExecutionDataValue> executionDetails = super.getExecutionDetails();
     putNotNull(executionDetails, "projectName",
-        anExecutionDataValue().withValue(projectName).withDisplayName("Project Name").build());
+        ExecutionDataValue.builder().displayName("Project Name").value(projectName).build());
     putNotNull(
-        executionDetails, "planName", anExecutionDataValue().withValue(planName).withDisplayName("Plan Name").build());
+        executionDetails, "planName", ExecutionDataValue.builder().displayName("Plan Name").value(planName).build());
     if (isNotEmpty(parameters)) {
       Map<String, String> jobParameterMap = isEmpty(parameters)
           ? Collections.emptyMap()
           : parameters.stream().collect(toMap(ParameterEntry::getKey, ParameterEntry::getValue));
       putNotNull(executionDetails, "parameters",
-          anExecutionDataValue().withValue(String.valueOf(jobParameterMap)).withDisplayName("Parameters").build());
+          ExecutionDataValue.builder().displayName("Parameters").value(String.valueOf(jobParameterMap)).build());
     }
 
     if (isNotEmpty(filePathAssertionEntries)) {
@@ -154,18 +153,18 @@ public class BambooExecutionData extends StateExecutionData implements NotifyRes
           ? Collections.emptyMap()
           : parameters.stream().collect(toMap(ParameterEntry::getKey, ParameterEntry::getValue));
       putNotNull(executionDetails, "fileAssertionData",
-          anExecutionDataValue()
-              .withValue(String.valueOf(filePathAsssertionMap))
-              .withDisplayName("Assertion Data")
+          ExecutionDataValue.builder()
+              .displayName("Assertion Data")
+              .value(String.valueOf(filePathAsssertionMap))
               .build());
     }
 
     putNotNull(executionDetails, "buildNumber",
-        anExecutionDataValue().withValue(buildNumber).withDisplayName("Build Number").build());
+        ExecutionDataValue.builder().displayName("Build Number").value(buildNumber).build());
     putNotNull(executionDetails, "buildStatus",
-        anExecutionDataValue().withValue(buildStatus).withDisplayName("Build Status").build());
+        ExecutionDataValue.builder().displayName("Build Status").value(buildStatus).build());
     putNotNull(
-        executionDetails, "buildUrl", anExecutionDataValue().withValue(buildUrl).withDisplayName("Build URL").build());
+        executionDetails, "buildUrl", ExecutionDataValue.builder().displayName("Build URL").value(buildUrl).build());
 
     return executionDetails;
   }

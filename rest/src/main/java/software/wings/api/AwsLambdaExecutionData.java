@@ -1,7 +1,5 @@
 package software.wings.api;
 
-import static software.wings.api.ExecutionDataValue.Builder.anExecutionDataValue;
-
 import com.google.common.collect.Maps;
 
 import lombok.AllArgsConstructor;
@@ -44,25 +42,24 @@ public class AwsLambdaExecutionData extends StateExecutionData implements Notify
   private Map<String, ExecutionDataValue> getInternalExecutionDetails() {
     Map<String, ExecutionDataValue> executionDetails = Maps.newLinkedHashMap();
     putNotNull(executionDetails, "functionName",
-        anExecutionDataValue().withValue(functionName).withDisplayName("Function Name").build());
+        ExecutionDataValue.builder().displayName("Function Name").value(functionName).build());
     putNotNull(executionDetails, "functionArn",
-        anExecutionDataValue().withValue(functionArn).withDisplayName("Function ARN").build());
+        ExecutionDataValue.builder().displayName("Function ARN").value(functionArn).build());
     putNotNull(executionDetails, "functionVersion",
-        anExecutionDataValue().withValue(functionVersion).withDisplayName("Function Version").build());
+        ExecutionDataValue.builder().displayName("Function Version").value(functionVersion).build());
     putNotNull(executionDetails, "executionDisabled",
-        anExecutionDataValue().withValue(executionDisabled).withDisplayName("Execution Disabled").build());
+        ExecutionDataValue.builder().displayName("Execution Disabled").value(executionDisabled).build());
     putNotNull(executionDetails, "statusCode",
-        anExecutionDataValue().withValue(statusCode).withDisplayName("Status Code").build());
+        ExecutionDataValue.builder().displayName("Status Code").value(statusCode).build());
     putNotNull(executionDetails, "functionError",
-        anExecutionDataValue().withValue(functionError).withDisplayName("Function Error").build());
-    putNotNull(
-        executionDetails, "payload", anExecutionDataValue().withValue(payload).withDisplayName("Payload").build());
+        ExecutionDataValue.builder().displayName("Function Error").value(functionError).build());
+    putNotNull(executionDetails, "payload", ExecutionDataValue.builder().displayName("Payload").value(payload).build());
     putNotNull(executionDetails, "assertionStatement",
-        anExecutionDataValue().withValue(assertionStatement).withDisplayName("Assertion").build());
+        ExecutionDataValue.builder().displayName("Assertion").value(assertionStatement).build());
     putNotNull(executionDetails, "assertionStatus",
-        anExecutionDataValue().withValue(assertionStatus).withDisplayName("Assertion Result").build());
-    putNotNull(executionDetails, "logResult",
-        anExecutionDataValue().withValue(logResult).withDisplayName("Log Result").build());
+        ExecutionDataValue.builder().displayName("Assertion Result").value(assertionStatus).build());
+    putNotNull(
+        executionDetails, "logResult", ExecutionDataValue.builder().displayName("Log Result").value(logResult).build());
     return executionDetails;
   }
 }

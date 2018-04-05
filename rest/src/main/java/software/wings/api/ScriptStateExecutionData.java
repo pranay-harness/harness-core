@@ -1,7 +1,5 @@
 package software.wings.api;
 
-import static software.wings.api.ExecutionDataValue.Builder.anExecutionDataValue;
-
 import lombok.Builder;
 import lombok.Data;
 import lombok.EqualsAndHashCode;
@@ -33,7 +31,7 @@ public class ScriptStateExecutionData extends StateExecutionData implements Noti
 
   private void setExecutionData(Map<String, ExecutionDataValue> executionDetails) {
     putNotNull(executionDetails, "activityId",
-        anExecutionDataValue().withValue(activityId).withDisplayName("Activity Id").build());
-    putNotNull(executionDetails, "name", anExecutionDataValue().withValue(name).withDisplayName("Name").build());
+        ExecutionDataValue.builder().displayName("Activity Id").value(activityId).build());
+    putNotNull(executionDetails, "name", ExecutionDataValue.builder().displayName("Name").value(name).build());
   }
 }

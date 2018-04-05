@@ -1,7 +1,5 @@
 package software.wings.api;
 
-import static software.wings.api.ExecutionDataValue.Builder.anExecutionDataValue;
-
 import software.wings.sm.StateExecutionData;
 
 import java.util.Map;
@@ -24,14 +22,14 @@ public class ElbStateExecutionData extends StateExecutionData {
   @Override
   public Map<String, ExecutionDataValue> getExecutionSummary() {
     Map<String, ExecutionDataValue> data = super.getExecutionSummary();
-    putNotNull(data, "hostName", anExecutionDataValue().withDisplayName("Host").withValue(hostName).build());
+    putNotNull(data, "hostName", ExecutionDataValue.builder().displayName("Host").value(hostName).build());
     return data;
   }
 
   @Override
   public Map<String, ExecutionDataValue> getExecutionDetails() {
     Map<String, ExecutionDataValue> data = super.getExecutionDetails();
-    putNotNull(data, "hostName", anExecutionDataValue().withDisplayName("Host").withValue(hostName).build());
+    putNotNull(data, "hostName", ExecutionDataValue.builder().displayName("Host").value(hostName).build());
     return data;
   }
 

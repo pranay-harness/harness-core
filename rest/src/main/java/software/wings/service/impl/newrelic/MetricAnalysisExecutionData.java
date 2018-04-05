@@ -1,7 +1,5 @@
 package software.wings.service.impl.newrelic;
 
-import static software.wings.api.ExecutionDataValue.Builder.anExecutionDataValue;
-
 import com.google.inject.Inject;
 
 import lombok.AllArgsConstructor;
@@ -41,19 +39,19 @@ public class MetricAnalysisExecutionData extends StateExecutionData {
   public Map<String, ExecutionDataValue> getExecutionSummary() {
     Map<String, ExecutionDataValue> executionDetails = getExecutionDetails();
     putNotNull(executionDetails, "stateExecutionInstanceId",
-        anExecutionDataValue().withValue(stateExecutionInstanceId).withDisplayName("State Execution Id").build());
+        ExecutionDataValue.builder().displayName("State Execution Id").value(stateExecutionInstanceId).build());
     putNotNull(executionDetails, "serverConfigId",
-        anExecutionDataValue().withValue(serverConfigId).withDisplayName("Server Config Id").build());
+        ExecutionDataValue.builder().displayName("Server Config Id").value(serverConfigId).build());
     return executionDetails;
   }
 
   @Override
   public Map<String, ExecutionDataValue> getExecutionDetails() {
     Map<String, ExecutionDataValue> executionDetails = super.getExecutionDetails();
-    putNotNull(executionDetails, "errorMsg",
-        anExecutionDataValue().withValue(getErrorMsg()).withDisplayName("Message").build());
+    putNotNull(
+        executionDetails, "errorMsg", ExecutionDataValue.builder().displayName("Message").value(getErrorMsg()).build());
     final int total = timeDuration;
-    putNotNull(executionDetails, "total", anExecutionDataValue().withDisplayName("Total").withValue(total).build());
+    putNotNull(executionDetails, "total", ExecutionDataValue.builder().displayName("Total").value(total).build());
     final NewRelicMetricAnalysisRecord analysisRecord = metricDataAnalysisService.getMetricsAnalysis(
         StateType.valueOf(getStateType()), stateExecutionInstanceId, workflowExecutionId);
 
@@ -70,10 +68,10 @@ public class MetricAnalysisExecutionData extends StateExecutionData {
         breakdown.setSuccess(Math.min(elapsedMinutes, total));
         break;
     }
-    putNotNull(executionDetails, "breakdown",
-        anExecutionDataValue().withDisplayName("breakdown").withValue(breakdown).build());
+    putNotNull(
+        executionDetails, "breakdown", ExecutionDataValue.builder().displayName("breakdown").value(breakdown).build());
     putNotNull(executionDetails, "timeDuration",
-        anExecutionDataValue().withValue(timeDuration).withDisplayName("Analysis duration").build());
+        ExecutionDataValue.builder().displayName("Analysis duration").value(timeDuration).build());
     return executionDetails;
   }
 }
