@@ -1,6 +1,7 @@
 package software.wings.sm.states;
 
 import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertFalse;
 import static org.junit.Assert.assertTrue;
 import static org.mockito.Matchers.anyObject;
 import static org.mockito.Matchers.anyString;
@@ -114,13 +115,13 @@ public class AbstractAnalysisStateTest extends WingsBaseTest {
     setInternalState(splunkV2State, "infraMappingService", infraMappingService);
     Reflect.on(splunkV2State).set("workflowExecutionService", workflowExecutionService);
     Set<String> nodes = splunkV2State.getLastExecutionNodes(context);
-    assertEquals(10, nodes.size());
+    assertEquals(5, nodes.size());
     for (int i = 0; i < 5; ++i) {
       assertTrue(nodes.contains("serviceA"
           + "-" + i + ".harness.com"));
       nodes.remove("serviceA"
           + "-" + i + ".harness.com");
-      assertTrue(nodes.contains("serviceA"
+      assertFalse(nodes.contains("serviceA"
           + "-" + i));
       nodes.remove("serviceA"
           + "-" + i);
