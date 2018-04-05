@@ -14,10 +14,11 @@ import com.google.common.io.Files;
 import com.google.inject.Inject;
 import com.google.inject.Singleton;
 
+import com.mongodb.DBCursor;
 import com.mongodb.DBObject;
 import com.mongodb.WriteResult;
 import org.mongodb.morphia.DatastoreImpl;
-import org.mongodb.morphia.Key;
+import org.mongodb.morphia.query.MorphiaIterator;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import software.wings.beans.Activity;
@@ -50,7 +51,6 @@ import javax.validation.executable.ValidateOnExecution;
 @Singleton
 @ValidateOnExecution
 public class LogServiceImpl implements LogService {
-  public static final String MAX_NUMBER_OF_LOGS_RECORDS_IN_ONE_REQUEST = "10";
   public static final int MAX_LOG_ROWS_PER_ACTIVITY = 1000;
   private final SimpleDateFormat dateFormatter = new SimpleDateFormat("yyyy-MM-dd'T'HH:mm:ss.SSSZ");
   public static final int NUM_OF_LOGS_TO_KEEP = 200;
@@ -148,38 +148,47 @@ public class LogServiceImpl implements LogService {
   public void purgeActivityLogs() {
     long startTime = System.currentTimeMillis();
     logger.info("Purging activities Start time", startTime);
-    List<Key<Activity>> nonPurgedActivities =
+    final MorphiaIterator<Activity, Activity> nonPurgedActivityIterator =
         wingsPersistence.createQuery(Activity.class)
             .filter("logPurged", false)
             .field("createdAt")
             .greaterThan(System.currentTimeMillis() - DataCleanUpJob.LOGS_RETENTION_TIME)
-            .asKeyList();
-    logger.info("Fetching activities time  {}", System.currentTimeMillis() - startTime);
-    for (Key<Activity> activityKey : nonPurgedActivities) {
-      List<Object> idsToKeep = new ArrayList<>();
-      startTime = System.currentTimeMillis();
-      List<Key<Log>> logs = wingsPersistence.createQuery(Log.class)
-                                .filter("activityId", activityKey.getId())
-                                .order("-createdAt")
-                                .asKeyList();
-      logger.info("Fetching log keys  for activity {}  End time {}", activityKey.getId(),
-          System.currentTimeMillis() - startTime);
-      for (Key<Log> logKey : logs) {
-        idsToKeep.add(logKey.getId());
-        if (idsToKeep.size() >= NUM_OF_LOGS_TO_KEEP) {
-          break;
+            .fetchEmptyEntities();
+
+    try (DBCursor ignored = nonPurgedActivityIterator.getCursor()) {
+      while (nonPurgedActivityIterator.hasNext()) {
+        String activityId = nonPurgedActivityIterator.next().getUuid();
+        List<String> idsToKeep = new ArrayList<>();
+        final MorphiaIterator<Log, Log> logIterator = wingsPersistence.createQuery(Log.class)
+                                                          .filter("activityId", activityId)
+                                                          .order("-createdAt")
+                                                          .fetchEmptyEntities();
+        try (DBCursor cursor = logIterator.getCursor()) {
+          while (logIterator.hasNext()) {
+            idsToKeep.add(logIterator.next().getUuid());
+            if (idsToKeep.size() >= NUM_OF_LOGS_TO_KEEP) {
+              break;
+            }
+          }
         }
+        if (idsToKeep.size() != 0) {
+          logger.info("Deleting logs of size {} for activityId {}", idsToKeep.size(), activityId);
+          wingsPersistence.delete(wingsPersistence.createQuery(Log.class)
+                                      .filter("activityId", activityId)
+                                      .field("_id")
+                                      .hasNoneOf(idsToKeep));
+        }
+        // TODO: We should enable this and run it once. Also, We have not purged the command logs for a long time
+        /* logger.info("Updating activityId {} logPurged status to true", activityId);
+         Query<Activity> query =
+             wingsPersistence.createQuery(Activity.class).filter(Mapper.ID_KEY, activityId).disableValidation();
+         UpdateOperations<Activity> updateOperations =
+             wingsPersistence.createUpdateOperations(Activity.class).disableValidation().set("logPurged", true);
+         wingsPersistence.update(query, updateOperations);
+         logger.info("Updating activityId {} logPurged status to true success", activityId);*/
       }
-      startTime = System.currentTimeMillis();
-      if (idsToKeep.size() != 0) {
-        wingsPersistence.delete(wingsPersistence.createQuery(Log.class)
-                                    .filter("activityId", activityKey.getId())
-                                    .field("_id")
-                                    .hasNoneOf(idsToKeep));
-      }
-      logger.info(
-          "Deleting logs for activity {}  time {}", activityKey.getId(), System.currentTimeMillis() - startTime);
     }
+    logger.info("Purging activities end time", System.currentTimeMillis() - startTime);
   }
 
   @Override
