@@ -8,9 +8,10 @@ import static org.junit.Assert.assertNotNull;
 import static org.junit.Assert.assertNull;
 import static org.junit.Assert.assertTrue;
 import static org.junit.Assert.fail;
-import static org.junit.Assume.assumeTrue;
 import static org.mockito.Matchers.any;
 import static org.mockito.Matchers.anyObject;
+import static org.mockito.Matchers.anyString;
+import static org.mockito.Matchers.eq;
 import static org.mockito.Mockito.when;
 import static org.mockito.MockitoAnnotations.initMocks;
 import static org.mockito.internal.util.reflection.Whitebox.setInternalState;
@@ -22,7 +23,6 @@ import com.google.inject.Inject;
 
 import org.apache.commons.io.FileUtils;
 import org.junit.Before;
-import org.junit.Ignore;
 import org.junit.Test;
 import org.junit.runner.RunWith;
 import org.junit.runners.Parameterized;
@@ -66,11 +66,11 @@ import software.wings.security.encryption.EncryptedData;
 import software.wings.security.encryption.SecretChangeLog;
 import software.wings.security.encryption.SecretUsageLog;
 import software.wings.service.impl.security.KmsTransitionEventListener;
-import software.wings.service.impl.security.SecretManagementDelegateServiceImpl;
 import software.wings.service.intfc.ConfigService;
 import software.wings.service.intfc.security.EncryptionConfig;
 import software.wings.service.intfc.security.EncryptionService;
 import software.wings.service.intfc.security.KmsService;
+import software.wings.service.intfc.security.SecretManagementDelegateService;
 import software.wings.service.intfc.security.SecretManager;
 import software.wings.service.intfc.security.VaultService;
 import software.wings.settings.SettingValue.SettingVariableTypes;
@@ -79,7 +79,6 @@ import software.wings.utils.BoundedInputStream;
 import java.io.File;
 import java.io.FileInputStream;
 import java.io.IOException;
-import java.net.URL;
 import java.nio.charset.Charset;
 import java.util.ArrayList;
 import java.util.Collection;
@@ -98,11 +97,10 @@ import java.util.concurrent.TimeUnit;
  * Created by rsingh on 11/3/17.
  */
 @RunWith(Parameterized.class)
-@Ignore
 public class VaultTest extends WingsBaseTest {
   private static final Logger logger = LoggerFactory.getLogger(VaultTest.class);
 
-  private static String VAULT_TOKEN = System.getProperty("vault.token");
+  private static String VAULT_TOKEN = UUID.randomUUID().toString();
 
   private final int numOfEncryptedValsForKms = 3;
   private final int numOfEncryptedValsForVault = 1;
@@ -116,6 +114,7 @@ public class VaultTest extends WingsBaseTest {
   @Inject private EncryptionService encryptionService;
   @Inject private Queue<KmsTransitionEvent> transitionKmsQueue;
   @Mock private DelegateProxyFactory delegateProxyFactory;
+  @Mock private SecretManagementDelegateService secretManagementDelegateService;
   private final String userEmail = "rsingh@harness.io";
   private final String userName = "raghu";
   private final User user = User.Builder.anUser().withEmail(userEmail).withName(userName).build();
@@ -133,23 +132,46 @@ public class VaultTest extends WingsBaseTest {
   }
 
   @Before
-  public void setup() {
-    assumeTrue(getClass().getClassLoader().getResource("vault_token.txt") != null);
+  public void setup() throws IOException {
+    //    assumeTrue(getClass().getClassLoader().getResource("vault_token.txt") != null);
     initMocks(this);
     appId = UUID.randomUUID().toString();
     workflowName = UUID.randomUUID().toString();
     envId = UUID.randomUUID().toString();
     workflowExecutionId = wingsPersistence.save(
         WorkflowExecutionBuilder.aWorkflowExecution().withName(workflowName).withEnvId(envId).build());
-    when(delegateProxyFactory.get(anyObject(), any(SyncTaskContext.class)))
-        .thenReturn(new SecretManagementDelegateServiceImpl());
+    when(secretManagementDelegateService.encrypt(anyString(), anyObject(), anyString(), any(SettingVariableTypes.class),
+             any(VaultConfig.class), any(EncryptedData.class)))
+        .then(invocation -> {
+          Object[] args = invocation.getArguments();
+          return encrypt((String) args[0], (String) args[1], (String) args[2], (SettingVariableTypes) args[3],
+              (VaultConfig) args[4], (EncryptedData) args[5]);
+        });
+
+    when(secretManagementDelegateService.decrypt(anyObject(), any(VaultConfig.class))).then(invocation -> {
+      Object[] args = invocation.getArguments();
+      return decrypt((EncryptedData) args[0], (VaultConfig) args[1]);
+    });
+
+    when(secretManagementDelegateService.encrypt(anyString(), anyObject(), anyObject())).then(invocation -> {
+      Object[] args = invocation.getArguments();
+      return encrypt((String) args[0], (char[]) args[1], (KmsConfig) args[2]);
+    });
+
+    when(secretManagementDelegateService.decrypt(anyObject(), any(KmsConfig.class))).then(invocation -> {
+      Object[] args = invocation.getArguments();
+      return decrypt((EncryptedData) args[0], (KmsConfig) args[1]);
+    });
+    when(delegateProxyFactory.get(eq(SecretManagementDelegateService.class), any(SyncTaskContext.class)))
+        .thenReturn(secretManagementDelegateService);
     setInternalState(vaultService, "delegateProxyFactory", delegateProxyFactory);
     setInternalState(kmsService, "delegateProxyFactory", delegateProxyFactory);
-    setInternalState(secretManager, "kmsService", kmsService);
-    setInternalState(wingsPersistence, "secretManager", secretManager);
     setInternalState(vaultService, "kmsService", kmsService);
+    setInternalState(secretManager, "kmsService", kmsService);
     setInternalState(secretManager, "vaultService", vaultService);
+    setInternalState(wingsPersistence, "secretManager", secretManager);
     setInternalState(configService, "secretManager", secretManager);
+    setInternalState(encryptionService, "secretManagementDelegateService", secretManagementDelegateService);
     wingsPersistence.save(user);
     UserThreadLocal.set(user);
 
@@ -165,7 +187,7 @@ public class VaultTest extends WingsBaseTest {
   @Test
   public void invalidConfig() throws IOException {
     VaultConfig vaultConfig = getVaultConfig();
-    vaultConfig.setAuthToken(UUID.randomUUID().toString());
+    vaultConfig.setAuthToken("invalidKey");
     vaultConfig.setAccountId(accountId);
 
     try {
@@ -479,7 +501,7 @@ public class VaultTest extends WingsBaseTest {
 
     vaultConfig = vaultService.getSecretConfig(accountId);
     encryptedData = vaultService.encrypt(
-        name, keyToEncrypt, accountId, SettingVariableTypes.APP_DYNAMICS, vaultConfig, savedEncryptedData);
+        name, password, accountId, SettingVariableTypes.APP_DYNAMICS, vaultConfig, savedEncryptedData);
     assertNotNull(encryptedData.getEncryptedValue());
     assertNotNull(encryptedData.getEncryptionKey());
     assertFalse(isBlank(encryptedData.getEncryptionKey()));
@@ -786,6 +808,7 @@ public class VaultTest extends WingsBaseTest {
 
     newAppDynamicsConfig.setPassword(null);
     assertEquals(newAppDynamicsConfig, updatedAttribute.getValue());
+    newAppDynamicsConfig.setPassword(newPassWord.toCharArray());
 
     assertEquals(1, wingsPersistence.createQuery(SettingAttribute.class).asList().size());
     assertEquals(numOfEncRecords + 1, wingsPersistence.createQuery(EncryptedData.class).asList().size());
@@ -1450,18 +1473,6 @@ public class VaultTest extends WingsBaseTest {
   }
 
   private VaultConfig getVaultConfig() throws IOException {
-    URL resource = getClass().getClassLoader().getResource("vault_token.txt");
-
-    if (resource == null) {
-      logger.info("reading vault token from environment variable");
-    } else {
-      logger.info("reading vault token from file");
-      VAULT_TOKEN = FileUtils.readFileToString(new File(resource.getFile()), Charset.defaultCharset());
-    }
-    if (VAULT_TOKEN.endsWith("\n")) {
-      VAULT_TOKEN = VAULT_TOKEN.replaceAll("\n", "");
-    }
-    logger.info("VAULT_TOKEN: " + VAULT_TOKEN);
     return VaultConfig.builder()
         .vaultUrl("http://127.0.0.1:8200")
         .authToken(VAULT_TOKEN)

@@ -56,10 +56,19 @@ public abstract class WingsBaseTest extends CategoryTest {
 
   protected EncryptedData encrypt(String name, String value, String accountId, SettingVariableTypes settingType,
       VaultConfig vaultConfig, EncryptedData savedEncryptedData) throws IOException {
+    if (vaultConfig.getAuthToken().equals("invalidKey")) {
+      throw new WingsException(ErrorCode.KMS_OPERATION_ERROR);
+    }
     String keyUrl = settingType + "/" + name;
+    if (savedEncryptedData != null) {
+      savedEncryptedData.setEncryptionKey(keyUrl);
+      savedEncryptedData.setEncryptedValue(value == null ? keyUrl.toCharArray() : value.toCharArray());
+      return savedEncryptedData;
+    }
+
     return EncryptedData.builder()
         .encryptionKey(keyUrl)
-        .encryptedValue(value.toCharArray())
+        .encryptedValue(value == null ? null : value.toCharArray())
         .encryptionType(EncryptionType.VAULT)
         .enabled(true)
         .accountId(accountId)
