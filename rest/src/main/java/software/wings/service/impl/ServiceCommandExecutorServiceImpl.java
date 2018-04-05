@@ -46,10 +46,10 @@ public class ServiceCommandExecutorServiceImpl implements ServiceCommandExecutor
     Set<String> nonSshDeploymentType = Sets.newHashSet(
         DeploymentType.AWS_CODEDEPLOY.name(), DeploymentType.ECS.name(), DeploymentType.KUBERNETES.name());
     decryptCredentials(context);
-    if (!nonSshDeploymentType.contains(command.getDeploymentType())) {
+    if (!nonSshDeploymentType.contains(context.getDeploymentType())) {
       return executeSshCommand(command, context);
     } else {
-      return executeNonSshCommand(command, context, commandUnitExecutorServiceMap.get(command.getDeploymentType()));
+      return executeNonSshCommand(command, context, commandUnitExecutorServiceMap.get(context.getDeploymentType()));
     }
   }
 
