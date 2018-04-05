@@ -525,7 +525,8 @@ public class WorkflowServiceImpl implements WorkflowService, DataProvider {
         newArrayList(workflow.getName(), workflow.getDescription(), workflow.getWorkflowType(), workflow.getNotes())));
     String key = wingsPersistence.save(workflow);
     if (orchestrationWorkflow != null) {
-      if (orchestrationWorkflow.getOrchestrationWorkflowType().equals(CANARY)) {
+      if (orchestrationWorkflow.getOrchestrationWorkflowType().equals(CANARY)
+          || orchestrationWorkflow.getOrchestrationWorkflowType().equals(MULTI_SERVICE)) {
         CanaryOrchestrationWorkflow canaryOrchestrationWorkflow = (CanaryOrchestrationWorkflow) orchestrationWorkflow;
         if (isNotEmpty(canaryOrchestrationWorkflow.getWorkflowPhases())) {
           List<WorkflowPhase> workflowPhases = canaryOrchestrationWorkflow.getWorkflowPhases();
@@ -542,14 +543,6 @@ public class WorkflowServiceImpl implements WorkflowService, DataProvider {
                               .withDaemonSet(isDaemonSet(workflow.getAppId(), workflow.getServiceId()))
                               .build();
           attachWorkflowPhase(workflow, workflowPhase);
-        }
-      } else if (orchestrationWorkflow.getOrchestrationWorkflowType().equals(MULTI_SERVICE)) {
-        MultiServiceOrchestrationWorkflow canaryOrchestrationWorkflow =
-            (MultiServiceOrchestrationWorkflow) orchestrationWorkflow;
-        if (isNotEmpty(canaryOrchestrationWorkflow.getWorkflowPhases())) {
-          List<WorkflowPhase> workflowPhases = canaryOrchestrationWorkflow.getWorkflowPhases();
-          canaryOrchestrationWorkflow.setWorkflowPhases(new ArrayList<>());
-          workflowPhases.forEach(workflowPhase -> attachWorkflowPhase(workflow, workflowPhase));
         }
       } else if (orchestrationWorkflow.getOrchestrationWorkflowType().equals(BUILD)) {
         BuildWorkflow buildWorkflow = (BuildWorkflow) orchestrationWorkflow;
@@ -570,9 +563,14 @@ public class WorkflowServiceImpl implements WorkflowService, DataProvider {
           createDefaultFailureStrategy(workflow);
         }
       }
+
+      // Ensure artifact check
       ensureArtifactCheck(workflow.getAppId(), orchestrationWorkflow);
 
+      // Add environment expressions
+      workflowServiceHelper.transformEnvTemplateExpressions(workflow, orchestrationWorkflow);
       orchestrationWorkflow.onSave();
+
       updateRequiredEntityTypes(workflow.getAppId(), orchestrationWorkflow);
       StateMachine stateMachine = new StateMachine(workflow, workflow.getDefaultVersion(),
           ((CustomOrchestrationWorkflow) orchestrationWorkflow).getGraph(), stencilMap());
@@ -1028,7 +1026,8 @@ public class WorkflowServiceImpl implements WorkflowService, DataProvider {
             .map(Variable::getName)
             .distinct()
             .collect(toList());
-    if (isEnvironmentTemplatized(templateExpressions) && !isInfraTemplatized(phaseTemplateExpressions)) {
+    if (workflowServiceHelper.isEnvironmentTemplatized(templateExpressions)
+        && !workflowServiceHelper.isInfraTemplatized(phaseTemplateExpressions)) {
       Service service = serviceResourceService.get(appId, workflowPhase.getServiceId(), false);
       notNullCheck("Service", service);
       TemplateExpression templateExpression = new TemplateExpression();
@@ -1070,32 +1069,6 @@ public class WorkflowServiceImpl implements WorkflowService, DataProvider {
       orchestrationWorkflow.addToUserVariables(
           phaseTemplateExpressions, StateType.PHASE.name(), workflowPhase.getName(), null);
     }
-  }
-
-  /***
-   *
-   * @param templateExpressions
-   * @return
-   */
-  private boolean isEnvironmentTemplatized(List<TemplateExpression> templateExpressions) {
-    if (templateExpressions == null) {
-      return false;
-    }
-    return templateExpressions.stream().anyMatch(
-        templateExpression -> templateExpression.getFieldName().equals("envId"));
-  }
-
-  /***
-   *
-   * @param templateExpressions
-   * @return
-   */
-  private boolean isInfraTemplatized(List<TemplateExpression> templateExpressions) {
-    if (templateExpressions == null) {
-      return false;
-    }
-    return templateExpressions.stream().anyMatch(
-        templateExpression -> templateExpression.getFieldName().equals("infraMappingId"));
   }
 
   private void unsetInfraMappingDetails(WorkflowPhase phase) {
