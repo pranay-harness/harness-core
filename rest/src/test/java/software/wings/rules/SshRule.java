@@ -2,7 +2,7 @@ package software.wings.rules;
 
 import org.apache.commons.lang3.StringUtils;
 import org.apache.sshd.common.file.virtualfs.VirtualFileSystemFactory;
-import org.apache.sshd.common.util.SecurityUtils;
+import org.apache.sshd.common.util.security.SecurityUtils;
 import org.apache.sshd.server.SshServer;
 import org.apache.sshd.server.scp.ScpCommandFactory;
 import org.bouncycastle.jce.provider.BouncyCastleProvider;
