@@ -492,7 +492,7 @@ public class YamlResource {
   @Timed
   @ExceptionMetered
   public RestResponse pushDirectory(@QueryParam("accountId") String accountId) {
-    yamlGitService.fullSync(accountId);
+    yamlGitService.fullSync(accountId, true);
     return new RestResponse<>();
   }
 

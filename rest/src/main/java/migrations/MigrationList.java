@@ -7,6 +7,7 @@ import migrations.all.AddIsDefaultToExistingNotificationGroups;
 import migrations.all.AddVerifyToRollbackWorkflows;
 import migrations.all.CreateDefaultUserGroupsAndAddToExistingUsers;
 import migrations.all.CreateSupportUserGroupsAndRenameAccountAdmin;
+import migrations.all.GitSyncToAllAccounts;
 import migrations.all.SetDaemonSetInWorkflowPhase;
 import migrations.all.TrimYamlMigration;
 import migrations.all.VerifyStepWorkflowOrder;
@@ -31,6 +32,7 @@ public class MigrationList {
         .add(Pair.of(111, AddArtifactCheck.class))
         .add(Pair.of(112, CreateDefaultUserGroupsAndAddToExistingUsers.class))
         .add(Pair.of(113, CreateSupportUserGroupsAndRenameAccountAdmin.class))
+        .add(Pair.of(114, GitSyncToAllAccounts.class))
         .build();
   }
 }
