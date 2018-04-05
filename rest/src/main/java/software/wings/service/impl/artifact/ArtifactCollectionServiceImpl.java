@@ -85,7 +85,7 @@ public class ArtifactCollectionServiceImpl implements ArtifactCollectionService 
 
   @Override
   public List<Artifact> collectNewArtifacts(String appId, String artifactStreamId) {
-    try (AcquiredLock lock = persistentLocker.acquireLock(ArtifactStream.class, artifactStreamId, timeout)) {
+    try (AcquiredLock ignored = persistentLocker.acquireLock(ArtifactStream.class, artifactStreamId, timeout)) {
       List<Artifact> newArtifacts = new ArrayList<>();
       ArtifactStream artifactStream = artifactStreamService.get(appId, artifactStreamId);
       if (artifactStream == null) {
@@ -211,27 +211,27 @@ public class ArtifactCollectionServiceImpl implements ArtifactCollectionService 
    * @return
    */
   private Set<String> getNewBuildNumbers(ArtifactStream artifactStream, List<BuildDetails> builds) {
-    Map<String, BuildDetails> buildDetails =
+    Map<String, BuildDetails> buildNoDetails =
         builds.parallelStream().collect(Collectors.toMap(BuildDetails::getNumber, Function.identity()));
     final MorphiaIterator<Artifact, Artifact> iterator = getArtifactQuery(artifactStream).fetch();
-    try (DBCursor cursor = iterator.getCursor()) {
+    try (DBCursor ignored = iterator.getCursor()) {
       while (iterator.hasNext()) {
-        buildDetails.remove(iterator.next().getBuildNo());
+        buildNoDetails.remove(iterator.next().getBuildNo());
       }
     }
-    return buildDetails.keySet();
+    return buildNoDetails.keySet();
   }
 
   private Set<String> getNewArtifactPaths(ArtifactStream artifactStream, List<BuildDetails> builds) {
-    Map<String, BuildDetails> buildDetails =
+    Map<String, BuildDetails> buildArtifactPathDetails =
         builds.parallelStream().collect(Collectors.toMap(BuildDetails::getArtifactPath, Function.identity()));
     final MorphiaIterator<Artifact, Artifact> iterator = getArtifactQuery(artifactStream).fetch();
-    try (DBCursor cursor = iterator.getCursor()) {
+    try (DBCursor ignored = iterator.getCursor()) {
       while (iterator.hasNext()) {
-        buildDetails.remove(iterator.next().getArtifactPath());
+        buildArtifactPathDetails.remove(iterator.next().getArtifactPath());
       }
     }
-    return buildDetails.keySet();
+    return buildArtifactPathDetails.keySet();
   }
 
   private Query getArtifactQuery(ArtifactStream artifactStream) {

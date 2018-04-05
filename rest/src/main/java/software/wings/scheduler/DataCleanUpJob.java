@@ -43,10 +43,11 @@ public class DataCleanUpJob implements Job {
   private void executeInternal() {
     logger.info("Running Data Cleanup Job");
     deleteArtifacts();
-    deleteAuditRecords();
+    // Not purging audit and activity logs any more
+    // deleteAuditRecords();
+    // deleteActivityLogs();
     deleteAlerts();
     deleteDelegateTasks();
-    deleteActivityLogs();
     logger.info("Running Data Cleanup Job complete");
   }
 

@@ -25,9 +25,6 @@ import java.util.List;
 import java.util.UUID;
 import java.util.concurrent.TimeUnit;
 
-/**
- * Created by peeyushaggarwal on 5/27/16.
- */
 public class LogPurgeTest extends WingsBaseTest {
   @Inject private WingsPersistence wingsPersistence;
   @Inject private LogService logService;

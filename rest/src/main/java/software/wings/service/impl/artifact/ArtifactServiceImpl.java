@@ -29,6 +29,7 @@ import com.google.inject.Singleton;
 import com.google.inject.name.Named;
 
 import com.mongodb.BasicDBObject;
+import com.mongodb.DBCursor;
 import org.bson.types.ObjectId;
 import org.mongodb.morphia.Key;
 import org.mongodb.morphia.query.FindOptions;
@@ -327,36 +328,37 @@ public class ArtifactServiceImpl implements ArtifactService {
   public void pruneByApplication(String appId) {
     final MorphiaIterator<Artifact, Artifact> iterator =
         wingsPersistence.createQuery(Artifact.class).filter(Artifact.APP_ID_KEY, appId).fetchEmptyEntities();
-
-    while (iterator.hasNext()) {
-      prune(appId, iterator.next().getUuid());
+    try (DBCursor ignored = iterator.getCursor()) {
+      while (iterator.hasNext()) {
+        // TODO: Batch deleting
+        prune(appId, iterator.next().getUuid());
+      }
     }
   }
 
   @Override
   public Artifact fetchLatestArtifactForArtifactStream(
       String appId, String artifactStreamId, String artifactSourceName) {
+    return getArtifact(appId, artifactStreamId, artifactSourceName,
+        asList(QUEUED, RUNNING, REJECTED, WAITING, READY, APPROVED, FAILED));
+  }
+
+  private Artifact getArtifact(
+      String appId, String artifactStreamId, String artifactSourceName, List<Status> statuses) {
     return wingsPersistence.createQuery(Artifact.class)
         .filter("appId", appId)
         .filter("artifactStreamId", artifactStreamId)
         .filter("artifactSourceName", artifactSourceName)
         .order("-createdAt")
         .field("status")
-        .hasAnyOf(asList(QUEUED, RUNNING, REJECTED, WAITING, READY, APPROVED, FAILED))
+        .hasAnyOf(statuses)
         .get();
   }
 
   @Override
   public Artifact fetchLastCollectedArtifactForArtifactStream(
       String appId, String artifactStreamId, String artifactSourceName) {
-    return wingsPersistence.createQuery(Artifact.class)
-        .filter("appId", appId)
-        .filter("artifactStreamId", artifactStreamId)
-        .filter("artifactSourceName", artifactSourceName)
-        .order("-createdAt")
-        .field("status")
-        .hasAnyOf(asList(READY, APPROVED))
-        .get();
+    return getArtifact(appId, artifactStreamId, artifactSourceName, asList(READY, APPROVED));
   }
 
   @Override

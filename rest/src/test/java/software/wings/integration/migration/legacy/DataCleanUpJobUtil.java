@@ -103,15 +103,15 @@ public class DataCleanUpJobUtil extends WingsBaseTest {
 
   @Test
   public void deleteActivityLogs() {
-    logger.info("Deleting alerts");
+    logger.info("Deleting activity logs");
     try {
       logService.purgeActivityLogs();
-      logger.info("Deleting alerts success");
+      logger.info("Deleting activity logs success");
     } catch (Exception e) {
-      logger.info("Deleting alerts failed.");
+      logger.info("Deleting activity logs failed.");
       logger.error("", e);
     }
-    logger.info("Deleting alerts completed");
+    logger.info("Deleting activity logs completed");
   }
 
   /**
@@ -210,7 +210,7 @@ public class DataCleanUpJobUtil extends WingsBaseTest {
 
       List<Artifact> artifacts = new ArrayList<>();
       final MorphiaIterator<Artifact, Artifact> iterator = artifactQuery.fetch();
-      try (DBCursor cursor = iterator.getCursor()) {
+      try (DBCursor ignored = iterator.getCursor()) {
         while (iterator.hasNext()) {
           artifacts.add(iterator.next());
         }
