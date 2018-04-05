@@ -22,6 +22,7 @@ import static software.wings.api.SimpleWorkflowParam.Builder.aSimpleWorkflowPara
 import static software.wings.beans.Application.Builder.anApplication;
 import static software.wings.beans.DelegateTask.Builder.aDelegateTask;
 import static software.wings.beans.Environment.Builder.anEnvironment;
+import static software.wings.beans.PhysicalInfrastructureMapping.Builder.aPhysicalInfrastructureMapping;
 import static software.wings.beans.Service.Builder.aService;
 import static software.wings.beans.ServiceInstance.Builder.aServiceInstance;
 import static software.wings.beans.ServiceTemplate.Builder.aServiceTemplate;
@@ -85,6 +86,7 @@ import software.wings.service.intfc.ArtifactStreamService;
 import software.wings.service.intfc.DelegateService;
 import software.wings.service.intfc.EnvironmentService;
 import software.wings.service.intfc.HostService;
+import software.wings.service.intfc.InfrastructureMappingService;
 import software.wings.service.intfc.ServiceCommandExecutorService;
 import software.wings.service.intfc.ServiceInstanceService;
 import software.wings.service.intfc.ServiceResourceService;
@@ -178,6 +180,7 @@ public class CommandStateTest extends WingsBaseTest {
   @Mock private HostService hostService;
   @Mock private DelegateService delegateService;
   @Mock private SecretManager secretManager;
+  @Mock private InfrastructureMappingService infrastructureMappingService;
 
   @InjectMocks private CommandState commandState = new CommandState("start1", "START");
 
@@ -216,7 +219,12 @@ public class CommandStateTest extends WingsBaseTest {
     when(context.getContextElement(ContextElementType.STANDARD)).thenReturn(WORKFLOW_STANDARD_PARAMS);
     when(context.getContextElementList(ContextElementType.PARAM)).thenReturn(singletonList(SIMPLE_WORKFLOW_PARAM));
     when(context.getContextElement(ContextElementType.PARAM, Constants.PHASE_PARAM)).thenReturn(PHASE_ELEMENT);
-
+    when(infrastructureMappingService.get(APP_ID, INFRA_MAPPING_ID))
+        .thenReturn(aPhysicalInfrastructureMapping()
+                        .withAppId(APP_ID)
+                        .withUuid(INFRA_MAPPING_ID)
+                        .withDeploymentType("ECS")
+                        .build());
     when(context.getContextElement(ContextElementType.SERVICE))
         .thenReturn(aServiceElement().withUuid(SERVICE_ID).build());
     when(context.getContextElement(ContextElementType.INSTANCE))
@@ -291,6 +299,7 @@ public class CommandStateTest extends WingsBaseTest {
                                .withBastionConnectionCredentials(Collections.emptyList())
                                .withServiceVariables(emptyMap())
                                .withSafeDisplayServiceVariables(emptyMap())
+                               .withDeploymentType("ECS")
                                .withAccountId(ACCOUNT_ID)
                                .build()})
                        .withEnvId(ENV_ID)
@@ -411,6 +420,7 @@ public class CommandStateTest extends WingsBaseTest {
                                        .build())
                                .withBastionConnectionCredentials(Collections.emptyList())
                                .withSafeDisplayServiceVariables(emptyMap())
+                               .withDeploymentType("ECS")
                                .withAccountId(ACCOUNT_ID)
                                .build()})
                        .withEnvId(ENV_ID)

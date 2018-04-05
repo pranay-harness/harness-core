@@ -53,6 +53,7 @@ public class CommandExecutionContext {
   private Map<String, String> metadata = Maps.newHashMap();
   private CommandExecutionData commandExecutionData;
   private Integer timeout;
+  private String deploymentType;
 
   public CommandExecutionContext() {}
 
@@ -90,6 +91,7 @@ public class CommandExecutionContext {
     this.metadata = other.metadata;
     this.commandExecutionData = other.commandExecutionData;
     this.timeout = other.timeout;
+    this.deploymentType = other.deploymentType;
   }
 
   /**
@@ -151,6 +153,7 @@ public class CommandExecutionContext {
     private Map<String, String> metadata = Maps.newHashMap();
     private CommandExecutionData commandExecutionData;
     private Integer timeout;
+    private String deploymentType;
 
     private Builder() {}
 
@@ -303,6 +306,11 @@ public class CommandExecutionContext {
       return this;
     }
 
+    public Builder withDeploymentType(String deploymentType) {
+      this.deploymentType = deploymentType;
+      return this;
+    }
+
     public Builder but() {
       return aCommandExecutionContext()
           .withAccountId(accountId)
@@ -333,7 +341,8 @@ public class CommandExecutionContext {
           .withContainerResizeParams(containerResizeParams)
           .withSafeDisplayServiceVariables(safeDisplayServiceVariables)
           .withServiceName(serviceName)
-          .withTimeout(timeout);
+          .withTimeout(timeout)
+          .withDeploymentType(deploymentType);
     }
 
     public CommandExecutionContext build() {
@@ -367,6 +376,7 @@ public class CommandExecutionContext {
       commandExecutionContext.setContainerSetupParams(containerSetupParams);
       commandExecutionContext.setContainerResizeParams(containerResizeParams);
       commandExecutionContext.setTimeout(timeout);
+      commandExecutionContext.setDeploymentType(deploymentType);
       return commandExecutionContext;
     }
   }

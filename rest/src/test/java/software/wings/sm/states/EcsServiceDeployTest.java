@@ -182,9 +182,11 @@ public class EcsServiceDeployTest extends WingsBaseTest {
     on(workflowStandardParams).set("environmentService", environmentService);
 
     InfrastructureMapping infrastructureMapping = anEcsInfrastructureMapping()
+                                                      .withUuid(INFRA_MAPPING_ID)
                                                       .withRegion(Regions.US_EAST_1.getName())
                                                       .withClusterName(CLUSTER_NAME)
                                                       .withComputeProviderSettingId(COMPUTE_PROVIDER_ID)
+                                                      .withDeploymentType("ECS")
                                                       .build();
     when(infrastructureMappingService.get(APP_ID, INFRA_MAPPING_ID)).thenReturn(infrastructureMapping);
 

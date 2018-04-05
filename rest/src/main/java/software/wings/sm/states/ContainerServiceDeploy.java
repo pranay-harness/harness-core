@@ -104,6 +104,9 @@ public abstract class ContainerServiceDeploy extends State {
       logger.info("Executing container service deploy");
       ContextData contextData = new ContextData(context, this);
 
+      InfrastructureMapping infrastructureMapping =
+          infrastructureMappingService.get(contextData.appId, contextData.infrastructureMappingId);
+
       Activity activity = Activity.builder()
                               .applicationName(contextData.app.getName())
                               .environmentId(contextData.env.getUuid())
@@ -156,6 +159,7 @@ public abstract class ContainerServiceDeploy extends State {
               .withCloudProviderSetting(contextData.settingAttribute)
               .withCloudProviderCredentials(contextData.encryptedDataDetails)
               .withContainerResizeParams(params)
+              .withDeploymentType(infrastructureMapping.getDeploymentType())
               .build();
 
       String waitId = UUID.randomUUID().toString();

@@ -22,7 +22,7 @@ public abstract class AbstractCommandUnit implements CommandUnit {
   private CommandUnitType commandUnitType;
   @SchemaIgnore private CommandExecutionStatus commandExecutionStatus = CommandExecutionStatus.QUEUED;
   @SchemaIgnore private boolean artifactNeeded;
-  @SchemaIgnore private String deploymentType;
+  @Deprecated @SchemaIgnore private String deploymentType;
 
   /**
    * Instantiates a new Command unit.
