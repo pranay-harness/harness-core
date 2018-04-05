@@ -6,6 +6,9 @@ import static io.harness.govern.Switch.unhandled;
 import static java.util.Arrays.asList;
 import static java.util.stream.Collectors.toList;
 import static software.wings.beans.ErrorCode.BARRIERS_NOT_RUNNING_CONCURRENTLY;
+import static software.wings.sm.StateType.BARRIER;
+import static software.wings.sm.StateType.PHASE;
+import static software.wings.sm.StateType.PHASE_STEP;
 
 import com.google.common.collect.ImmutableMap;
 import com.google.inject.Inject;
@@ -133,8 +136,9 @@ public class BarrierServiceImpl implements BarrierService, ForceProctor {
             wingsPersistence.createQuery(StateExecutionInstance.class)
                 .filter(StateExecutionInstance.APP_ID_KEY, barrierInstance.getAppId())
                 .filter(StateExecutionInstance.EXECUTION_UUID_KEY, workflow.getWorkflowExecutionId())
-                .filter(StateExecutionInstance.STATE_TYPE_KEY, "PHASE")
                 .filter(StateExecutionInstance.PHASE_SUBWORKFLOW_ID_KEY, workflow.getPhaseUuid())
+                .field(StateExecutionInstance.STATE_TYPE_KEY)
+                .in(asList(PHASE.name(), PHASE_STEP.name()))
                 .fetchKeys();
         try (DBCursor cursor = keys.getCursor()) {
           if (!keys.hasNext()) {
@@ -152,7 +156,7 @@ public class BarrierServiceImpl implements BarrierService, ForceProctor {
             wingsPersistence.createQuery(StateExecutionInstance.class)
                 .filter(StateExecutionInstance.APP_ID_KEY, barrierInstance.getAppId())
                 .filter(StateExecutionInstance.EXECUTION_UUID_KEY, workflow.getWorkflowExecutionId())
-                .filter(StateExecutionInstance.STATE_TYPE_KEY, "BARRIER")
+                .filter(StateExecutionInstance.STATE_TYPE_KEY, BARRIER.name())
                 .filter(StateExecutionInstance.STEP_ID_KEY, workflow.getStepUuid())
                 .fetchKeys();
         try (DBCursor cursor = keys.getCursor()) {
@@ -301,6 +305,25 @@ public class BarrierServiceImpl implements BarrierService, ForceProctor {
         continue;
       }
 
+      final CanaryOrchestrationWorkflow orchestrationWorkflow =
+          (CanaryOrchestrationWorkflow) workflow.getOrchestrationWorkflow();
+
+      for (GraphNode node : orchestrationWorkflow.getPreDeploymentSteps().getSteps()) {
+        BarrierDetail barrierDetail =
+            barrierDetail(workflow, orchestrationWorkflow.getPreDeploymentSteps().getUuid(), node);
+        if (barrierDetail != null) {
+          barrierDetails.add(barrierDetail);
+        }
+      }
+
+      for (GraphNode node : orchestrationWorkflow.getPostDeploymentSteps().getSteps()) {
+        BarrierDetail barrierDetail =
+            barrierDetail(workflow, orchestrationWorkflow.getPostDeploymentSteps().getUuid(), node);
+        if (barrierDetail != null) {
+          barrierDetails.add(barrierDetail);
+        }
+      }
+
       for (WorkflowPhase phase :
           ((CanaryOrchestrationWorkflow) workflow.getOrchestrationWorkflow()).getWorkflowPhases()) {
         for (PhaseStep section : phase.getPhaseSteps()) {
@@ -308,19 +331,10 @@ public class BarrierServiceImpl implements BarrierService, ForceProctor {
           // parallel is not critical someone still could want to do that
           // session.stepsInParallel()
           for (GraphNode node : section.getSteps()) {
-            if (!"BARRIER".equals(node.getType())) {
-              continue;
+            BarrierDetail barrierDetail = barrierDetail(workflow, phase.getUuid(), node);
+            if (barrierDetail != null) {
+              barrierDetails.add(barrierDetail);
             }
-
-            barrierDetails.add(BarrierDetail.builder()
-                                   .name((String) node.getProperties().get("identifier"))
-                                   .workflow(BarrierInstance.Workflow.builder()
-                                                 .uuid(workflow.getWorkflowId())
-                                                 .pipelineStateId(workflow.getPipelineStateId())
-                                                 .phaseUuid(phase.getUuid())
-                                                 .stepUuid(node.getId())
-                                                 .build())
-                                   .build());
           }
         }
       }
@@ -361,6 +375,22 @@ public class BarrierServiceImpl implements BarrierService, ForceProctor {
           return barrier;
         })
         .collect(toList());
+  }
+
+  private BarrierDetail barrierDetail(OrchestrationWorkflowInfo workflow, String phaseUuid, GraphNode node) {
+    if (!BARRIER.name().equals(node.getType())) {
+      return null;
+    }
+
+    return BarrierDetail.builder()
+        .name((String) node.getProperties().get("identifier"))
+        .workflow(BarrierInstance.Workflow.builder()
+                      .uuid(workflow.getWorkflowId())
+                      .pipelineStateId(workflow.getPipelineStateId())
+                      .phaseUuid(phaseUuid)
+                      .stepUuid(node.getId())
+                      .build())
+        .build();
   }
 
   @Override
