@@ -1,7 +1,6 @@
 package software.wings.sm;
 
 import static io.harness.govern.Switch.unhandled;
-import static software.wings.api.ExecutionDataValue.Builder.anExecutionDataValue;
 
 import com.google.common.collect.Maps;
 
@@ -169,7 +168,7 @@ public class StateExecutionData {
   @JsonProperty("executionSummary")
   public Map<String, ExecutionDataValue> getExecutionSummary() {
     Map<String, ExecutionDataValue> executionData = Maps.newLinkedHashMap();
-    executionData.put("total", anExecutionDataValue().withDisplayName("Total").withValue(1).build());
+    executionData.put("total", ExecutionDataValue.builder().displayName("Total").value(1).build());
     CountsByStatuses breakDown = new CountsByStatuses();
     switch (status) {
       case FAILED:
@@ -194,9 +193,8 @@ public class StateExecutionData {
       default:
         unhandled(status);
     }
-    executionData.put("breakdown", anExecutionDataValue().withDisplayName("breakdown").withValue(breakDown).build());
-    putNotNull(
-        executionData, "errorMsg", anExecutionDataValue().withValue(errorMsg).withDisplayName("Message").build());
+    executionData.put("breakdown", ExecutionDataValue.builder().displayName("breakdown").value(breakDown).build());
+    putNotNull(executionData, "errorMsg", ExecutionDataValue.builder().displayName("Message").value(errorMsg).build());
     return executionData;
   }
 
@@ -217,10 +215,10 @@ public class StateExecutionData {
     Map<String, ExecutionDataValue> executionDetails = Maps.newLinkedHashMap();
 
     putNotNull(
-        executionDetails, "errorMsg", anExecutionDataValue().withValue(errorMsg).withDisplayName("Message").build());
+        executionDetails, "errorMsg", ExecutionDataValue.builder().displayName("Message").value(errorMsg).build());
     putNotNull(
-        executionDetails, "startTs", anExecutionDataValue().withValue(startTs).withDisplayName("Started At").build());
-    putNotNull(executionDetails, "endTs", anExecutionDataValue().withValue(endTs).withDisplayName("Ended At").build());
+        executionDetails, "startTs", ExecutionDataValue.builder().displayName("Started At").value(startTs).build());
+    putNotNull(executionDetails, "endTs", ExecutionDataValue.builder().displayName("Ended At").value(endTs).build());
 
     return executionDetails;
   }

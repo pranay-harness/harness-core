@@ -3,7 +3,6 @@ package software.wings.sm.states;
 import static io.harness.data.structure.EmptyPredicate.isEmpty;
 import static io.harness.data.structure.EmptyPredicate.isNotEmpty;
 import static org.apache.commons.lang3.StringUtils.abbreviate;
-import static software.wings.api.ExecutionDataValue.Builder.anExecutionDataValue;
 
 import com.google.common.base.Joiner;
 import com.google.inject.Inject;
@@ -443,13 +442,13 @@ public class RepeatState extends State {
     public Map<String, ExecutionDataValue> getExecutionDetails() {
       Map<String, ExecutionDataValue> executionDetails = super.getExecutionDetails();
       putNotNull(executionDetails, "repeatElements",
-          anExecutionDataValue()
-              .withValue(Joiner.on(", ").join(
+          ExecutionDataValue.builder()
+              .displayName("Repeating Over")
+              .value(Joiner.on(", ").join(
                   repeatElements.stream().map(ContextElement::getName).collect(Collectors.toList())))
-              .withDisplayName("Repeating Over")
               .build());
       putNotNull(executionDetails, "executionStrategy",
-          anExecutionDataValue().withValue(executionStrategy).withDisplayName("Execution Strategy").build());
+          ExecutionDataValue.builder().displayName("Execution Strategy").value(executionStrategy).build());
       return executionDetails;
     }
 
@@ -457,15 +456,14 @@ public class RepeatState extends State {
     public Map<String, ExecutionDataValue> getExecutionSummary() {
       Map<String, ExecutionDataValue> executionDetails = super.getExecutionSummary();
       putNotNull(executionDetails, "repeatElements",
-          anExecutionDataValue()
-              .withValue(
-                  abbreviate(Joiner.on(", ").join(
-                                 repeatElements.stream().map(ContextElement::getName).collect(Collectors.toList())),
-                      Constants.SUMMARY_PAYLOAD_LIMIT))
-              .withDisplayName("Repeating Over")
+          ExecutionDataValue.builder()
+              .displayName("Repeating Over")
+              .value(abbreviate(Joiner.on(", ").join(
+                                    repeatElements.stream().map(ContextElement::getName).collect(Collectors.toList())),
+                  Constants.SUMMARY_PAYLOAD_LIMIT))
               .build());
       putNotNull(executionDetails, "executionStrategy",
-          anExecutionDataValue().withValue(executionStrategy).withDisplayName("Execution Strategy").build());
+          ExecutionDataValue.builder().displayName("Execution Strategy").value(executionStrategy).build());
       return executionDetails;
     }
 

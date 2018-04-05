@@ -2,7 +2,6 @@ package software.wings.api;
 
 import static io.harness.data.structure.EmptyPredicate.isNotEmpty;
 import static org.apache.commons.lang3.StringUtils.isNotBlank;
-import static software.wings.api.ExecutionDataValue.Builder.anExecutionDataValue;
 
 import com.google.common.collect.Maps;
 
@@ -60,29 +59,29 @@ public class AwsAmiDeployStateExecutionData extends StateExecutionData implement
   private Map<String, ExecutionDataValue> getInternalExecutionDetails() {
     Map<String, ExecutionDataValue> executionDetails = Maps.newLinkedHashMap();
     putNotNull(executionDetails, "activityId",
-        anExecutionDataValue().withValue(activityId).withDisplayName("Activity Id").build());
+        ExecutionDataValue.builder().displayName("Activity Id").value(activityId).build());
     String requestedCount = instanceCount + " " + (instanceUnitType == InstanceUnitType.PERCENTAGE ? "%" : "");
     putNotNull(executionDetails, "requestedCount",
-        anExecutionDataValue().withValue(requestedCount).withDisplayName("Desired Instance Requested").build());
+        ExecutionDataValue.builder().displayName("Desired Instance Requested").value(requestedCount).build());
     if (resizeStrategy != null) {
       putNotNull(executionDetails, "resizeStrategy",
-          anExecutionDataValue().withValue(resizeStrategy.getDisplayName()).withDisplayName("Resize Strategy").build());
+          ExecutionDataValue.builder().displayName("Resize Strategy").value(resizeStrategy.getDisplayName()).build());
     }
     putNotNull(executionDetails, "newAutoScalingGroupName",
-        anExecutionDataValue().withValue(newAutoScalingGroupName).withDisplayName("New ASG").build());
+        ExecutionDataValue.builder().displayName("New ASG").value(newAutoScalingGroupName).build());
     if (isNotEmpty(newInstanceData) && isNotBlank(newAutoScalingGroupName)) {
       int desiredCapacity =
           rollback ? newInstanceData.get(0).getPreviousCount() : newInstanceData.get(0).getDesiredCount();
       putNotNull(executionDetails, "newInstanceDataDesiredCapacity",
-          anExecutionDataValue().withValue(desiredCapacity).withDisplayName("New ASG Desired Capacity").build());
+          ExecutionDataValue.builder().displayName("New ASG Desired Capacity").value(desiredCapacity).build());
     }
     putNotNull(executionDetails, "oldAutoScalingGroupName",
-        anExecutionDataValue().withValue(oldAutoScalingGroupName).withDisplayName("Old ASG").build());
+        ExecutionDataValue.builder().displayName("Old ASG").value(oldAutoScalingGroupName).build());
     if (isNotEmpty(oldInstanceData) && isNotBlank(oldAutoScalingGroupName)) {
       int desiredCapacity =
           rollback ? oldInstanceData.get(0).getPreviousCount() : oldInstanceData.get(0).getDesiredCount();
       putNotNull(executionDetails, "oldInstanceDataDesiredCapacity",
-          anExecutionDataValue().withValue(desiredCapacity).withDisplayName("Old ASG Desired Capacity").build());
+          ExecutionDataValue.builder().displayName("Old ASG Desired Capacity").value(desiredCapacity).build());
     }
     return executionDetails;
   }

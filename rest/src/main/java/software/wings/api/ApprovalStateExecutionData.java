@@ -1,7 +1,5 @@
 package software.wings.api;
 
-import static software.wings.api.ExecutionDataValue.Builder.anExecutionDataValue;
-
 import software.wings.beans.EmbeddedUser;
 import software.wings.sm.ExecutionStatus;
 import software.wings.sm.StateExecutionData;
@@ -91,8 +89,7 @@ public class ApprovalStateExecutionData extends StateExecutionData implements No
   @Override
   public Map<String, ExecutionDataValue> getExecutionSummary() {
     Map<String, ExecutionDataValue> executionDetails = super.getExecutionSummary();
-    putNotNull(
-        executionDetails, "approvalId", anExecutionDataValue().withValue(approvalId).withDisplayName("").build());
+    putNotNull(executionDetails, "approvalId", ExecutionDataValue.builder().displayName("").value(approvalId).build());
     return executionDetails;
   }
 

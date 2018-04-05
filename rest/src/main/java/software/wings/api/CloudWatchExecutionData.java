@@ -1,7 +1,5 @@
 package software.wings.api;
 
-import static software.wings.api.ExecutionDataValue.Builder.anExecutionDataValue;
-
 import com.google.common.base.Functions;
 import com.google.common.collect.Lists;
 
@@ -41,41 +39,41 @@ public class CloudWatchExecutionData extends StateExecutionData {
   public Map<String, ExecutionDataValue> getExecutionSummary() {
     Map<String, ExecutionDataValue> executionDetails = super.getExecutionSummary();
     putNotNull(executionDetails, "statistics",
-        anExecutionDataValue()
-            .withValue(datapoint == null ? null : datapoint.toString())
-            .withDisplayName("statistics")
+        ExecutionDataValue.builder()
+            .displayName("statistics")
+            .value(datapoint == null ? null : datapoint.toString())
             .build());
     putNotNull(executionDetails, "assertionStatement",
-        anExecutionDataValue().withValue(assertionStatement).withDisplayName("Assertion").build());
+        ExecutionDataValue.builder().displayName("Assertion").value(assertionStatement).build());
     putNotNull(executionDetails, "assertionStatus",
-        anExecutionDataValue().withValue(assertionStatus).withDisplayName("Assertion Result").build());
+        ExecutionDataValue.builder().displayName("Assertion Result").value(assertionStatus).build());
     return executionDetails;
   }
 
   @Override
   public Map<String, ExecutionDataValue> getExecutionDetails() {
     Map<String, ExecutionDataValue> executionDetails = super.getExecutionDetails();
-    putNotNull(executionDetails, "region", anExecutionDataValue().withValue(region).withDisplayName("Region").build());
-    putNotNull(executionDetails, "namespace",
-        anExecutionDataValue().withValue(namespace).withDisplayName("Namespace").build());
+    putNotNull(executionDetails, "region", ExecutionDataValue.builder().displayName("Region").value(region).build());
+    putNotNull(
+        executionDetails, "namespace", ExecutionDataValue.builder().displayName("Namespace").value(namespace).build());
     putNotNull(executionDetails, "metricName",
-        anExecutionDataValue().withValue(metricName).withDisplayName("metricName").build());
+        ExecutionDataValue.builder().displayName("metricName").value(metricName).build());
     putNotNull(executionDetails, "percentile",
-        anExecutionDataValue().withValue(percentile).withDisplayName("percentile").build());
+        ExecutionDataValue.builder().displayName("percentile").value(percentile).build());
     putNotNull(executionDetails, "dimensions",
-        anExecutionDataValue()
-            .withValue(dimensions == null ? null : Lists.transform(dimensions, Functions.toStringFunction()))
-            .withDisplayName("dimensions")
+        ExecutionDataValue.builder()
+            .displayName("dimensions")
+            .value(dimensions == null ? null : Lists.transform(dimensions, Functions.toStringFunction()))
             .build());
     putNotNull(executionDetails, "statistics",
-        anExecutionDataValue()
-            .withValue(datapoint == null ? null : datapoint.toString())
-            .withDisplayName("statistics")
+        ExecutionDataValue.builder()
+            .displayName("statistics")
+            .value(datapoint == null ? null : datapoint.toString())
             .build());
     putNotNull(executionDetails, "assertion",
-        anExecutionDataValue().withValue(assertionStatement).withDisplayName("Assertion").build());
+        ExecutionDataValue.builder().displayName("Assertion").value(assertionStatement).build());
     putNotNull(executionDetails, "assertionStatus",
-        anExecutionDataValue().withValue(assertionStatus).withDisplayName("Assertion Result").build());
+        ExecutionDataValue.builder().displayName("Assertion Result").value(assertionStatus).build());
     return executionDetails;
   }
 }

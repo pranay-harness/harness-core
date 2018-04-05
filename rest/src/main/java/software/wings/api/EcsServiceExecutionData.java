@@ -5,7 +5,6 @@ import static org.apache.commons.lang3.ArrayUtils.getLength;
 import static org.apache.commons.lang3.StringUtils.split;
 import static org.apache.commons.lang3.StringUtils.strip;
 import static org.apache.commons.lang3.StringUtils.substringAfterLast;
-import static software.wings.api.ExecutionDataValue.Builder.anExecutionDataValue;
 
 import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
 import lombok.Data;
@@ -37,21 +36,21 @@ public class EcsServiceExecutionData extends StateExecutionData implements Notif
   public Map<String, ExecutionDataValue> getExecutionSummary() {
     Map<String, ExecutionDataValue> executionDetails = super.getExecutionSummary();
     putNotNull(executionDetails, "ecsClusterName",
-        anExecutionDataValue().withValue(ecsClusterName).withDisplayName("ECS Cluster Name").build());
+        ExecutionDataValue.builder().displayName("ECS Cluster Name").value(ecsClusterName).build());
     putNotNull(executionDetails, "ecsServiceName",
-        anExecutionDataValue().withValue(ecsServiceName).withDisplayName("ECS Service Name").build());
+        ExecutionDataValue.builder().displayName("ECS Service Name").value(ecsServiceName).build());
     putNotNull(executionDetails, "dockerImageName",
-        anExecutionDataValue().withValue(dockerImageName).withDisplayName("Docker Image Name").build());
+        ExecutionDataValue.builder().displayName("Docker Image Name").value(dockerImageName).build());
     putNotNull(executionDetails, "commandName",
-        anExecutionDataValue().withValue(commandName).withDisplayName("Command Name").build());
+        ExecutionDataValue.builder().displayName("Command Name").value(commandName).build());
     putNotNull(executionDetails, "loadBalancerName",
-        anExecutionDataValue().withValue(loadBalancerName).withDisplayName("Load Balancer").build());
+        ExecutionDataValue.builder().displayName("Load Balancer").value(loadBalancerName).build());
     putNotNull(executionDetails, "targetGroupArn",
-        anExecutionDataValue().withValue(emptyToNull(getTargetGroupName())).withDisplayName("Target Group").build());
+        ExecutionDataValue.builder().displayName("Target Group").value(emptyToNull(getTargetGroupName())).build());
     putNotNull(executionDetails, "roleArn",
-        anExecutionDataValue()
-            .withValue(emptyToNull(strip(substringAfterLast(roleArn, "/"))))
-            .withDisplayName("ECS Role")
+        ExecutionDataValue.builder()
+            .displayName("ECS Role")
+            .value(emptyToNull(strip(substringAfterLast(roleArn, "/"))))
             .build());
 
     return executionDetails;
@@ -61,21 +60,21 @@ public class EcsServiceExecutionData extends StateExecutionData implements Notif
   public Map<String, ExecutionDataValue> getExecutionDetails() {
     Map<String, ExecutionDataValue> executionDetails = super.getExecutionDetails();
     putNotNull(executionDetails, "ecsClusterName",
-        anExecutionDataValue().withValue(ecsClusterName).withDisplayName("ECS Cluster Name").build());
+        ExecutionDataValue.builder().displayName("ECS Cluster Name").value(ecsClusterName).build());
     putNotNull(executionDetails, "ecsServiceName",
-        anExecutionDataValue().withValue(ecsServiceName).withDisplayName("ECS Service Name").build());
+        ExecutionDataValue.builder().displayName("ECS Service Name").value(ecsServiceName).build());
     putNotNull(executionDetails, "dockerImageName",
-        anExecutionDataValue().withValue(dockerImageName).withDisplayName("Docker Image Name").build());
+        ExecutionDataValue.builder().displayName("Docker Image Name").value(dockerImageName).build());
     putNotNull(executionDetails, "commandName",
-        anExecutionDataValue().withValue(commandName).withDisplayName("Command Name").build());
+        ExecutionDataValue.builder().displayName("Command Name").value(commandName).build());
     putNotNull(executionDetails, "loadBalancerName",
-        anExecutionDataValue().withValue(loadBalancerName).withDisplayName("Load Balancer").build());
+        ExecutionDataValue.builder().displayName("Load Balancer").value(loadBalancerName).build());
     putNotNull(executionDetails, "targetGroupArn",
-        anExecutionDataValue().withValue(emptyToNull(getTargetGroupName())).withDisplayName("Target Group").build());
+        ExecutionDataValue.builder().displayName("Target Group").value(emptyToNull(getTargetGroupName())).build());
     putNotNull(executionDetails, "roleArn",
-        anExecutionDataValue()
-            .withValue(emptyToNull(strip(substringAfterLast(roleArn, "/"))))
-            .withDisplayName("ECS Role")
+        ExecutionDataValue.builder()
+            .displayName("ECS Role")
+            .value(emptyToNull(strip(substringAfterLast(roleArn, "/"))))
             .build());
 
     return executionDetails;

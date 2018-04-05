@@ -2,7 +2,6 @@ package software.wings.api;
 
 import static io.harness.data.structure.EmptyPredicate.isNotEmpty;
 import static io.harness.govern.Switch.unhandled;
-import static software.wings.api.ExecutionDataValue.Builder.anExecutionDataValue;
 
 import com.google.inject.Inject;
 
@@ -100,31 +99,29 @@ public class CommandStateExecutionData extends StateExecutionData {
       }
       if (countsByStatuses != null) {
         data.put("total",
-            anExecutionDataValue()
-                .withDisplayName("Total")
-                .withValue(countsByStatuses.getFailed() + countsByStatuses.getInprogress()
-                    + countsByStatuses.getSuccess() + countsByStatuses.getQueued())
+            ExecutionDataValue.builder()
+                .displayName("Total")
+                .value(countsByStatuses.getFailed() + countsByStatuses.getInprogress() + countsByStatuses.getSuccess()
+                    + countsByStatuses.getQueued())
                 .build());
-        data.put("breakdown", anExecutionDataValue().withDisplayName("breakdown").withValue(countsByStatuses).build());
+        data.put("breakdown", ExecutionDataValue.builder().displayName("breakdown").value(countsByStatuses).build());
       }
     }
-    putNotNull(data, "hostName", anExecutionDataValue().withDisplayName("Host").withValue(hostName).build());
-    putNotNull(data, "templateName", anExecutionDataValue().withDisplayName("Config").withValue(templateName).build());
-    putNotNull(data, "commandName", anExecutionDataValue().withDisplayName("Command").withValue(commandName).build());
+    putNotNull(data, "hostName", ExecutionDataValue.builder().displayName("Host").value(hostName).build());
+    putNotNull(data, "templateName", ExecutionDataValue.builder().displayName("Config").value(templateName).build());
+    putNotNull(data, "commandName", ExecutionDataValue.builder().displayName("Command").value(commandName).build());
 
     return data;
   }
 
   public Map<String, ExecutionDataValue> getExecutionDetails() {
     Map<String, ExecutionDataValue> executionDetails = super.getExecutionDetails();
-    putNotNull(
-        executionDetails, "hostName", anExecutionDataValue().withDisplayName("Host").withValue(hostName).build());
+    putNotNull(executionDetails, "hostName", ExecutionDataValue.builder().displayName("Host").value(hostName).build());
     putNotNull(executionDetails, "templateName",
-        anExecutionDataValue().withDisplayName("Config").withValue(templateName).build());
+        ExecutionDataValue.builder().displayName("Config").value(templateName).build());
     putNotNull(executionDetails, "commandName",
-        anExecutionDataValue().withDisplayName("Command").withValue(commandName).build());
-    putNotNull(
-        executionDetails, "activityId", anExecutionDataValue().withDisplayName("").withValue(activityId).build());
+        ExecutionDataValue.builder().displayName("Command").value(commandName).build());
+    putNotNull(executionDetails, "activityId", ExecutionDataValue.builder().displayName("").value(activityId).build());
     return executionDetails;
   }
 

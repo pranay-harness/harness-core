@@ -1,6 +1,7 @@
 package software.wings.sm.states;
 
 import static io.harness.data.structure.EmptyPredicate.isEmpty;
+import static java.util.Collections.emptySet;
 import static org.apache.commons.lang3.StringUtils.isBlank;
 import static software.wings.beans.ErrorCode.INVALID_REQUEST;
 import static software.wings.dl.PageRequest.PageRequestBuilder.aPageRequest;
@@ -54,7 +55,6 @@ import software.wings.stencils.DefaultValue;
 import software.wings.waitnotify.WaitNotifyEngine;
 
 import java.io.UnsupportedEncodingException;
-import java.util.Collections;
 import java.util.Date;
 import java.util.HashSet;
 import java.util.List;
@@ -153,7 +153,7 @@ public abstract class AbstractAnalysisState extends State {
 
       if (workflowExecution.getPipelineExecutionId() != null) {
         WorkflowExecution pipelineExecutionDetails = workflowExecutionService.getExecutionDetails(
-            executionContext.getAppId(), workflowExecution.getPipelineExecutionId());
+            executionContext.getAppId(), workflowExecution.getPipelineExecutionId(), emptySet());
         cvExecutionMetaDataBuilder.pipelineName(pipelineExecutionDetails.getName())
             .pipelineStartTs(pipelineExecutionDetails.getStartTs())
             .pipelineId(pipelineExecutionDetails.getPipelineExecutionId());
@@ -206,7 +206,7 @@ public abstract class AbstractAnalysisState extends State {
 
       if (workflowExecutions == null) {
         getLogger().info("Did not find a successful workflow with service {}. It will be a baseline run", serviceId);
-        return Collections.emptySet();
+        return emptySet();
       }
 
       for (WorkflowExecution workflowExecution : workflowExecutions) {
@@ -237,7 +237,7 @@ public abstract class AbstractAnalysisState extends State {
     } while (workflowExecutions.size() >= PageRequest.DEFAULT_PAGE_SIZE);
 
     getLogger().info("Did not find a successful workflow with service {}. It will be a baseline run", serviceId);
-    return Collections.emptySet();
+    return emptySet();
   }
 
   protected Set<String> getCanaryNewHostNames(ExecutionContext context) {

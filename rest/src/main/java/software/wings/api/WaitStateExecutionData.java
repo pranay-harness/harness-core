@@ -4,8 +4,6 @@
 
 package software.wings.api;
 
-import static software.wings.api.ExecutionDataValue.Builder.anExecutionDataValue;
-
 import software.wings.sm.StateExecutionData;
 
 import java.util.Map;
@@ -78,7 +76,7 @@ public class WaitStateExecutionData extends StateExecutionData {
   public Map<String, ExecutionDataValue> getExecutionSummary() {
     Map<String, ExecutionDataValue> executionDetails = super.getExecutionSummary();
     putNotNull(executionDetails, "duration",
-        anExecutionDataValue().withValue(duration).withDisplayName("Duration (In Seconds)").build());
+        ExecutionDataValue.builder().displayName("Duration (In Seconds)").value(duration).build());
     return executionDetails;
   }
 
@@ -86,7 +84,7 @@ public class WaitStateExecutionData extends StateExecutionData {
   public Map<String, ExecutionDataValue> getExecutionDetails() {
     Map<String, ExecutionDataValue> executionDetails = super.getExecutionDetails();
     putNotNull(executionDetails, "duration",
-        anExecutionDataValue().withValue(duration).withDisplayName("Duration (In Seconds)").build());
+        ExecutionDataValue.builder().displayName("Duration (In Seconds)").value(duration).build());
     return executionDetails;
   }
 }

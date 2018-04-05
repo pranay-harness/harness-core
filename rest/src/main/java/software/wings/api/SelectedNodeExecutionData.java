@@ -1,7 +1,6 @@
 package software.wings.api;
 
 import static io.harness.data.structure.EmptyPredicate.isNotEmpty;
-import static software.wings.api.ExecutionDataValue.Builder.anExecutionDataValue;
 
 import software.wings.beans.ServiceInstance;
 import software.wings.sm.StateExecutionData;
@@ -39,9 +38,9 @@ public class SelectedNodeExecutionData extends StateExecutionData {
     Map<String, ExecutionDataValue> executionDetails = super.getExecutionSummary();
     if (isNotEmpty(serviceInstanceList)) {
       putNotNull(executionDetails, "hosts",
-          anExecutionDataValue()
-              .withDisplayName("Hosts")
-              .withValue(serviceInstanceList.stream().map(ServiceInstance::getPublicDns).collect(Collectors.toList()))
+          ExecutionDataValue.builder()
+              .displayName("Hosts")
+              .value(serviceInstanceList.stream().map(ServiceInstance::getPublicDns).collect(Collectors.toList()))
               .build());
     }
     return executionDetails;
@@ -52,9 +51,9 @@ public class SelectedNodeExecutionData extends StateExecutionData {
     Map<String, ExecutionDataValue> executionDetails = super.getExecutionDetails();
     if (isNotEmpty(serviceInstanceList)) {
       putNotNull(executionDetails, "hosts",
-          anExecutionDataValue()
-              .withDisplayName("Hosts")
-              .withValue(serviceInstanceList.stream().map(ServiceInstance::getPublicDns).collect(Collectors.toList()))
+          ExecutionDataValue.builder()
+              .displayName("Hosts")
+              .value(serviceInstanceList.stream().map(ServiceInstance::getPublicDns).collect(Collectors.toList()))
               .build());
     }
     return executionDetails;

@@ -2,12 +2,26 @@ package software.wings.service.impl;
 
 import static io.harness.data.structure.UUIDGenerator.generateUuid;
 import static java.util.Arrays.asList;
+import static java.util.Collections.emptySet;
 import static java.util.function.Function.identity;
 import static java.util.stream.Collectors.toMap;
 import static org.assertj.core.api.Assertions.assertThat;
 import static software.wings.api.HostElement.Builder.aHostElement;
 import static software.wings.beans.GraphNode.GraphNodeBuilder.aGraphNode;
+import static software.wings.sm.ExecutionStatus.ABORTED;
+import static software.wings.sm.ExecutionStatus.ABORTING;
+import static software.wings.sm.ExecutionStatus.ERROR;
+import static software.wings.sm.ExecutionStatus.FAILED;
+import static software.wings.sm.ExecutionStatus.NEW;
+import static software.wings.sm.ExecutionStatus.PAUSED;
+import static software.wings.sm.ExecutionStatus.PAUSING;
+import static software.wings.sm.ExecutionStatus.QUEUED;
+import static software.wings.sm.ExecutionStatus.RESUMED;
+import static software.wings.sm.ExecutionStatus.RUNNING;
+import static software.wings.sm.ExecutionStatus.SCHEDULED;
+import static software.wings.sm.ExecutionStatus.STARTING;
 import static software.wings.sm.ExecutionStatus.SUCCESS;
+import static software.wings.sm.ExecutionStatus.WAITING;
 import static software.wings.sm.StateExecutionInstance.Builder.aStateExecutionInstance;
 import static software.wings.sm.StateType.COMMAND;
 import static software.wings.sm.StateType.PHASE;
@@ -55,7 +69,7 @@ public class GraphRendererTest extends WingsBaseTest {
     Map<String, StateExecutionInstance> stateExecutionInstanceMap =
         stateExecutionInstances.stream().collect(toMap(StateExecutionInstance::getUuid, identity()));
 
-    final GraphNode node = graphRenderer.generateHierarchyNode(stateExecutionInstanceMap, "origin");
+    final GraphNode node = graphRenderer.generateHierarchyNode(stateExecutionInstanceMap, "origin", emptySet());
     assertThat(node).isNotNull();
   }
 
@@ -102,7 +116,8 @@ public class GraphRendererTest extends WingsBaseTest {
     Map<String, StateExecutionInstance> stateExecutionInstanceMap =
         stateExecutionInstances.stream().collect(toMap(StateExecutionInstance::getUuid, identity()));
 
-    final GraphNode node = graphRenderer.generateHierarchyNode(stateExecutionInstanceMap, parent.getStateName());
+    final GraphNode node =
+        graphRenderer.generateHierarchyNode(stateExecutionInstanceMap, parent.getStateName(), emptySet());
     assertThat(node).isNotNull();
     assertThat(node.getName()).isEqualTo(parent.getStateName());
 
@@ -147,7 +162,7 @@ public class GraphRendererTest extends WingsBaseTest {
     Map<String, StateExecutionInstance> stateExecutionInstanceMap =
         stateExecutionInstances.stream().collect(toMap(StateExecutionInstance::getUuid, identity()));
 
-    return graphRenderer.generateHierarchyNode(stateExecutionInstanceMap, provision.getStateName());
+    return graphRenderer.generateHierarchyNode(stateExecutionInstanceMap, provision.getStateName(), emptySet());
   }
 
   @Test
@@ -212,5 +227,58 @@ public class GraphRendererTest extends WingsBaseTest {
     assertThat(node.isRollback()).isEqualTo(instance.isRollback());
     assertThat(node.getStatus()).isEqualTo(instance.getStatus().name());
     assertThat(node.getProperties()).isEqualTo(instance.getStateParams());
+  }
+
+  @Test
+  public void testAggregateStatus() {
+    assertThat(GraphRenderer.aggregateStatus(asList(NEW, NEW, NEW))).isEqualTo(NEW);
+    assertThat(GraphRenderer.aggregateStatus(asList(STARTING, STARTING, STARTING))).isEqualTo(STARTING);
+    assertThat(GraphRenderer.aggregateStatus(asList(RUNNING, RUNNING, RUNNING))).isEqualTo(RUNNING);
+    assertThat(GraphRenderer.aggregateStatus(asList(SUCCESS, SUCCESS, SUCCESS))).isEqualTo(SUCCESS);
+    assertThat(GraphRenderer.aggregateStatus(asList(ABORTING, ABORTING, ABORTING))).isEqualTo(ABORTING);
+    assertThat(GraphRenderer.aggregateStatus(asList(ABORTED, ABORTED, ABORTED))).isEqualTo(ABORTED);
+    assertThat(GraphRenderer.aggregateStatus(asList(FAILED, FAILED, FAILED))).isEqualTo(FAILED);
+    assertThat(GraphRenderer.aggregateStatus(asList(QUEUED, QUEUED, QUEUED))).isEqualTo(QUEUED);
+    assertThat(GraphRenderer.aggregateStatus(asList(SCHEDULED, SCHEDULED, SCHEDULED))).isEqualTo(SCHEDULED);
+    assertThat(GraphRenderer.aggregateStatus(asList(ERROR, ERROR, ERROR))).isEqualTo(ERROR);
+    assertThat(GraphRenderer.aggregateStatus(asList(WAITING, WAITING, WAITING))).isEqualTo(WAITING);
+    assertThat(GraphRenderer.aggregateStatus(asList(PAUSING, PAUSING, PAUSING))).isEqualTo(PAUSING);
+    assertThat(GraphRenderer.aggregateStatus(asList(PAUSED, PAUSED, PAUSED))).isEqualTo(PAUSED);
+    assertThat(GraphRenderer.aggregateStatus(asList(RESUMED, RESUMED, RESUMED))).isEqualTo(RESUMED);
+
+    assertThat(GraphRenderer.aggregateStatus(asList(NEW, STARTING, RUNNING, SUCCESS, ABORTING, ABORTED, FAILED, QUEUED,
+                   SCHEDULED, ERROR, WAITING, PAUSING, PAUSED, RESUMED)))
+        .isEqualTo(WAITING);
+    assertThat(GraphRenderer.aggregateStatus(asList(NEW, STARTING, RUNNING, SUCCESS, ABORTING, ABORTED, FAILED, QUEUED,
+                   SCHEDULED, ERROR, PAUSING, PAUSED, RESUMED)))
+        .isEqualTo(PAUSED);
+    assertThat(GraphRenderer.aggregateStatus(asList(NEW, STARTING, RUNNING, SUCCESS, ABORTING, ABORTED, FAILED, QUEUED,
+                   SCHEDULED, ERROR, PAUSING, RESUMED)))
+        .isEqualTo(PAUSING);
+    assertThat(GraphRenderer.aggregateStatus(asList(
+                   NEW, STARTING, RUNNING, SUCCESS, ABORTING, ABORTED, FAILED, QUEUED, SCHEDULED, ERROR, RESUMED)))
+        .isEqualTo(RUNNING);
+    assertThat(GraphRenderer.aggregateStatus(
+                   asList(NEW, STARTING, SUCCESS, ABORTING, ABORTED, FAILED, QUEUED, SCHEDULED, ERROR, RESUMED)))
+        .isIn(STARTING, ABORTING, QUEUED, SCHEDULED, RESUMED);
+    assertThat(GraphRenderer.aggregateStatus(asList(NEW, SUCCESS, ABORTED, FAILED, ERROR))).isEqualTo(NEW);
+
+    assertThat(GraphRenderer.aggregateStatus(asList(SUCCESS, ABORTED, FAILED, ERROR))).isEqualTo(ABORTED);
+    assertThat(GraphRenderer.aggregateStatus(asList(SUCCESS, FAILED, ERROR))).isEqualTo(ERROR);
+    assertThat(GraphRenderer.aggregateStatus(asList(SUCCESS, FAILED))).isEqualTo(FAILED);
+    assertThat(GraphRenderer.aggregateStatus(asList(SUCCESS))).isEqualTo(SUCCESS);
+  }
+
+  @Test
+  public void testAggregateNodeName() {
+    assertThat(GraphRenderer.aggregateNodeName(true, 0, true)).isEqualTo("instances");
+    assertThat(GraphRenderer.aggregateNodeName(false, 0, true)).isEqualTo("instances");
+    assertThat(GraphRenderer.aggregateNodeName(true, 0, false)).isEqualTo("instances");
+    assertThat(GraphRenderer.aggregateNodeName(false, 0, false)).isEqualTo("instances");
+
+    assertThat(GraphRenderer.aggregateNodeName(true, 5, true)).isEqualTo("5 instances");
+    assertThat(GraphRenderer.aggregateNodeName(false, 5, true)).isEqualTo("5 more instances");
+    assertThat(GraphRenderer.aggregateNodeName(true, 5, false)).isEqualTo("5 instances");
+    assertThat(GraphRenderer.aggregateNodeName(false, 5, false)).isEqualTo("5 instances");
   }
 }

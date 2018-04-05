@@ -12,7 +12,9 @@ import static io.harness.data.structure.UUIDGenerator.generateUuid;
 import static io.harness.govern.Switch.unhandled;
 import static java.lang.String.format;
 import static java.util.Arrays.asList;
+import static java.util.Collections.emptySet;
 import static java.util.stream.Collectors.toList;
+import static java.util.stream.Collectors.toMap;
 import static org.apache.commons.lang3.StringUtils.isBlank;
 import static org.apache.commons.lang3.StringUtils.isNotBlank;
 import static org.mongodb.morphia.mapping.Mapper.ID_KEY;
@@ -48,6 +50,7 @@ import static software.wings.sm.ExecutionStatus.PAUSED;
 import static software.wings.sm.ExecutionStatus.PAUSING;
 import static software.wings.sm.ExecutionStatus.QUEUED;
 import static software.wings.sm.ExecutionStatus.RUNNING;
+import static software.wings.sm.ExecutionStatus.STARTING;
 import static software.wings.sm.ExecutionStatus.SUCCESS;
 import static software.wings.sm.ExecutionStatus.WAITING;
 import static software.wings.sm.InfraMappingSummary.Builder.anInfraMappingSummary;
@@ -63,6 +66,9 @@ import com.google.common.collect.Maps;
 import com.google.inject.Inject;
 import com.google.inject.Singleton;
 
+import lombok.Data;
+import lombok.NoArgsConstructor;
+import org.mongodb.morphia.query.MorphiaIterator;
 import org.mongodb.morphia.query.Query;
 import org.mongodb.morphia.query.UpdateOperations;
 import org.mongodb.morphia.query.UpdateResults;
@@ -107,6 +113,7 @@ import software.wings.beans.SearchFilter.Operator;
 import software.wings.beans.Service;
 import software.wings.beans.ServiceInstance;
 import software.wings.beans.SortOrder.OrderType;
+import software.wings.beans.StateExecutionElement;
 import software.wings.beans.StateExecutionInterrupt;
 import software.wings.beans.User;
 import software.wings.beans.Variable;
@@ -122,6 +129,7 @@ import software.wings.dl.PageRequest;
 import software.wings.dl.PageResponse;
 import software.wings.dl.WingsDeque;
 import software.wings.dl.WingsPersistence;
+import software.wings.exception.InvalidRequestException;
 import software.wings.exception.WingsException;
 import software.wings.lock.AcquiredLock;
 import software.wings.lock.PersistentLocker;
@@ -162,8 +170,10 @@ import software.wings.sm.StateType;
 import software.wings.sm.StepExecutionSummary;
 import software.wings.sm.WorkflowStandardParams;
 import software.wings.sm.states.ElementStateExecutionData;
+import software.wings.sm.states.RepeatState.RepeatStateExecutionData;
 import software.wings.utils.KryoUtils;
 import software.wings.utils.MapperUtils;
+import software.wings.utils.Validator;
 import software.wings.waitnotify.WaitNotifyEngine;
 
 import java.time.Duration;
@@ -286,7 +296,7 @@ public class WorkflowExecutionServiceImpl implements WorkflowExecutionService {
 
       if (!runningOnly || workflowExecution.isRunningStatus() || workflowExecution.isPausedStatus()) {
         try {
-          populateNodeHierarchy(workflowExecution, includeGraph, includeStatus);
+          populateNodeHierarchy(workflowExecution, includeGraph, includeStatus, emptySet());
         } catch (Exception e) {
           logger.error("Failed to populate node hierarchy for the workflow execution {} ", res, e);
         }
@@ -541,7 +551,8 @@ public class WorkflowExecutionServiceImpl implements WorkflowExecutionService {
    * {@inheritDoc}
    */
   @Override
-  public WorkflowExecution getExecutionDetails(String appId, String workflowExecutionId) {
+  public WorkflowExecution getExecutionDetails(
+      String appId, String workflowExecutionId, Set<String> excludeFromAggregation) {
     WorkflowExecution workflowExecution = getExecutionDetailsWithoutGraph(appId, workflowExecutionId);
 
     if (workflowExecution.getWorkflowType() == PIPELINE) {
@@ -549,7 +560,7 @@ public class WorkflowExecutionServiceImpl implements WorkflowExecutionService {
     }
 
     if (workflowExecution != null) {
-      populateNodeHierarchyWithGraph(workflowExecution);
+      populateNodeHierarchyWithGraph(workflowExecution, excludeFromAggregation);
     }
     return workflowExecution;
   }
@@ -602,7 +613,8 @@ public class WorkflowExecutionServiceImpl implements WorkflowExecutionService {
     return wingsPersistence.get(WorkflowExecution.class, appId, workflowExecutionId);
   }
 
-  private void populateNodeHierarchy(WorkflowExecution workflowExecution, boolean includeGraph, boolean includeStatus) {
+  private void populateNodeHierarchy(WorkflowExecution workflowExecution, boolean includeGraph, boolean includeStatus,
+      Set<String> excludeFromAggregation) {
     if (includeStatus || includeGraph) {
       PageRequest<StateExecutionInstance> req = aPageRequest()
                                                     .withLimit(PageRequest.UNLIMITED)
@@ -644,7 +656,10 @@ public class WorkflowExecutionServiceImpl implements WorkflowExecutionService {
           StateExecutionInstance stateExecutionInstance = getEarliestInstance(allInstances);
           initialStateName = stateExecutionInstance.getStateName();
         }
-        workflowExecution.setExecutionNode(graphRenderer.generateHierarchyNode(allInstancesIdMap, initialStateName));
+
+        final GraphNode graphNode =
+            graphRenderer.generateHierarchyNode(allInstancesIdMap, initialStateName, excludeFromAggregation);
+        workflowExecution.setExecutionNode(graphNode);
       }
     }
   }
@@ -662,8 +677,8 @@ public class WorkflowExecutionServiceImpl implements WorkflowExecutionService {
     return earliest;
   }
 
-  private void populateNodeHierarchyWithGraph(WorkflowExecution workflowExecution) {
-    populateNodeHierarchy(workflowExecution, true, false);
+  private void populateNodeHierarchyWithGraph(WorkflowExecution workflowExecution, Set<String> excludeFromAggregation) {
+    populateNodeHierarchy(workflowExecution, true, false, excludeFromAggregation);
   }
 
   /**
@@ -1006,9 +1021,8 @@ public class WorkflowExecutionServiceImpl implements WorkflowExecutionService {
           logger.error("Service instances argument and valid service instance retrieved size not matching");
           throw new WingsException(ErrorCode.INVALID_REQUEST).addParam("message", "Invalid service instances");
         }
-        executionArgs.setServiceInstanceIdNames(
-            serviceInstances.stream().collect(Collectors.toMap(ServiceInstance::getUuid,
-                serviceInstance -> serviceInstance.getHostName() + ":" + serviceInstance.getServiceName())));
+        executionArgs.setServiceInstanceIdNames(serviceInstances.stream().collect(toMap(ServiceInstance::getUuid,
+            serviceInstance -> serviceInstance.getHostName() + ":" + serviceInstance.getServiceName())));
 
         keywords.addAll(serviceInstances.stream().map(ServiceInstance::getHostName).collect(toList()));
         keywords.addAll(serviceInstances.stream().map(ServiceInstance::getServiceName).collect(toList()));
@@ -1029,7 +1043,7 @@ public class WorkflowExecutionServiceImpl implements WorkflowExecutionService {
 
         // TODO: get rid of artifactIdNames when UI moves to artifact list
         executionArgs.setArtifactIdNames(
-            artifacts.stream().collect(Collectors.toMap(Artifact::getUuid, Artifact::getDisplayName)));
+            artifacts.stream().collect(toMap(Artifact::getUuid, Artifact::getDisplayName)));
         artifacts.forEach(artifact -> {
           artifact.setArtifactFiles(null);
           artifact.setCreatedBy(null);
@@ -1525,6 +1539,7 @@ public class WorkflowExecutionServiceImpl implements WorkflowExecutionService {
   public List<StateExecutionInterrupt> getExecutionInterrupts(String appId, String stateExecutionInstanceId) {
     StateExecutionInstance stateExecutionInstance =
         wingsPersistence.get(StateExecutionInstance.class, appId, stateExecutionInstanceId);
+    Validator.notNullCheck("stateExecutionInstance", stateExecutionInstance);
 
     Map<String, ExecutionInterruptEffect> map = new HashMap<>();
     stateExecutionInstance.getInterruptHistory().stream().forEach(effect -> map.put(effect.getInterruptId(), effect));
@@ -1554,6 +1569,101 @@ public class WorkflowExecutionServiceImpl implements WorkflowExecutionService {
     }
 
     return interrupts;
+  }
+
+  @Override
+  public List<StateExecutionElement> getExecutionElements(String appId, String stateExecutionInstanceId) {
+    StateExecutionInstance stateExecutionInstance =
+        wingsPersistence.get(StateExecutionInstance.class, appId, stateExecutionInstanceId);
+    Validator.notNullCheck("stateExecutionInstance", stateExecutionInstance);
+
+    StateExecutionData stateExecutionData = stateExecutionInstance.getStateExecutionData();
+    Validator.notNullCheck("stateExecutionData", stateExecutionData);
+    if (!(stateExecutionData instanceof RepeatStateExecutionData)) {
+      throw new InvalidRequestException("Request for elements of instance that is not repeated");
+    }
+
+    RepeatStateExecutionData repeatStateExecutionData = (RepeatStateExecutionData) stateExecutionData;
+
+    final Map<String, StateExecutionElement> elementMap = repeatStateExecutionData.getRepeatElements()
+                                                              .stream()
+                                                              .map(element
+                                                                  -> StateExecutionElement.builder()
+                                                                         .executionContextElementId(element.getUuid())
+                                                                         .name(element.getName())
+                                                                         .progress(0)
+                                                                         .status(STARTING)
+                                                                         .build())
+                                                              .collect(toMap(StateExecutionElement::getName, x -> x));
+
+    final StateMachine stateMachine = wingsPersistence.get(
+        StateMachine.class, stateExecutionInstance.getAppId(), stateExecutionInstance.getStateMachineId());
+
+    int subStates =
+        stateMachine.getChildStateMachines().get(stateExecutionInstance.getChildStateMachineId()).getStates().size()
+        - 1;
+
+    MorphiaIterator<StateExecutionInstance, StateExecutionInstance> stateExecutionInstances = null;
+    try {
+      stateExecutionInstances = wingsPersistence.createQuery(StateExecutionInstance.class)
+                                    .filter(StateExecutionInstance.APP_ID_KEY, appId)
+                                    .filter(StateExecutionInstance.PARENT_INSTANCE_ID_KEY, stateExecutionInstanceId)
+                                    .fetch();
+
+      @Data
+      @NoArgsConstructor
+      class Stat {
+        String element;
+        String prevInstanceId;
+        ExecutionStatus status;
+
+        int children;
+        List<ExecutionStatus> allStatuses = new ArrayList<>();
+      }
+
+      Map<String, Stat> stats = new HashMap<>();
+      while (stateExecutionInstances.hasNext()) {
+        StateExecutionInstance instance = stateExecutionInstances.next();
+        Stat stat = stats.computeIfAbsent(instance.getUuid(), x -> new Stat());
+        stat.setElement(instance.getContextElement().getName());
+        stat.setPrevInstanceId(instance.getPrevInstanceId());
+        stat.setStatus(instance.getStatus());
+
+        stat.setChildren(stat.getChildren() + 1);
+        stat.allStatuses.add(instance.getStatus());
+
+        // update previous aggregates
+        while (stat.getPrevInstanceId() != null) {
+          Stat previousStat = stats.get(stat.getPrevInstanceId());
+          if (previousStat == null) {
+            break;
+          }
+          previousStat.setChildren(stat.getChildren() + 1);
+          List<ExecutionStatus> statuses = previousStat.getAllStatuses();
+          statuses.clear();
+          statuses.add(previousStat.getStatus());
+          statuses.addAll(stat.getAllStatuses());
+          stat = previousStat;
+        }
+
+        if (stat.getElement() != null) {
+          final StateExecutionElement stateExecutionElement = elementMap.get(stat.getElement());
+          elementMap.put(stat.getElement(),
+              StateExecutionElement.builder()
+                  .executionContextElementId(stateExecutionElement.getExecutionContextElementId())
+                  .name(stat.getElement())
+                  .progress(100 * stat.getChildren() / subStates)
+                  .status(GraphRenderer.aggregateStatus(stat.getAllStatuses()))
+                  .build());
+        }
+      }
+    } finally {
+      if (stateExecutionInstances != null) {
+        stateExecutionInstances.close();
+      }
+    }
+
+    return elementMap.values().stream().collect(toList());
   }
 
   @Override
@@ -1654,7 +1764,7 @@ public class WorkflowExecutionServiceImpl implements WorkflowExecutionService {
       }
     }
     Map<String, ElementExecutionSummary> serviceExecutionSummaryMap = serviceExecutionSummaries.stream().collect(
-        Collectors.toMap(summary -> summary.getContextElement().getUuid(), Function.identity()));
+        toMap(summary -> summary.getContextElement().getUuid(), Function.identity()));
 
     populateServiceSummary(serviceExecutionSummaryMap, workflowExecution);
 
@@ -1930,7 +2040,7 @@ public class WorkflowExecutionServiceImpl implements WorkflowExecutionService {
     Map<String, StateExecutionInstance> prevInstanceIdMap =
         allStateExecutionInstances.stream()
             .filter(instance -> instance.getPrevInstanceId() != null)
-            .collect(Collectors.toMap(instance -> instance.getPrevInstanceId(), Function.identity()));
+            .collect(toMap(instance -> instance.getPrevInstanceId(), Function.identity()));
 
     List<ElementExecutionSummary> elementExecutionSummaries = new ArrayList<>();
     for (StateExecutionInstance stateExecutionInstance : contextTransitionInstances) {

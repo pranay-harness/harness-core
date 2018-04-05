@@ -1,7 +1,6 @@
 package software.wings.api;
 
 import static org.apache.commons.lang3.StringUtils.abbreviate;
-import static software.wings.api.ExecutionDataValue.Builder.anExecutionDataValue;
 import static software.wings.common.Constants.SUMMARY_PAYLOAD_LIMIT;
 
 import com.google.common.base.MoreObjects;
@@ -112,27 +111,21 @@ public class EmailStateExecutionData extends StateExecutionData {
   @Override
   public Map<String, ExecutionDataValue> getExecutionSummary() {
     Map<String, ExecutionDataValue> executionDetails = super.getExecutionSummary();
-    putNotNull(
-        executionDetails, "toAddress", anExecutionDataValue().withValue(toAddress).withDisplayName("To").build());
-    putNotNull(
-        executionDetails, "ccAddress", anExecutionDataValue().withValue(ccAddress).withDisplayName("CC").build());
-    putNotNull(
-        executionDetails, "subject", anExecutionDataValue().withValue(subject).withDisplayName("Subject").build());
+    putNotNull(executionDetails, "toAddress", ExecutionDataValue.builder().displayName("To").value(toAddress).build());
+    putNotNull(executionDetails, "ccAddress", ExecutionDataValue.builder().displayName("CC").value(ccAddress).build());
+    putNotNull(executionDetails, "subject", ExecutionDataValue.builder().displayName("Subject").value(subject).build());
     putNotNull(executionDetails, "body",
-        anExecutionDataValue().withValue(abbreviate(body, SUMMARY_PAYLOAD_LIMIT)).withDisplayName("Body").build());
+        ExecutionDataValue.builder().displayName("Body").value(abbreviate(body, SUMMARY_PAYLOAD_LIMIT)).build());
     return executionDetails;
   }
 
   @Override
   public Map<String, ExecutionDataValue> getExecutionDetails() {
     Map<String, ExecutionDataValue> executionDetails = super.getExecutionDetails();
-    putNotNull(
-        executionDetails, "toAddress", anExecutionDataValue().withValue(toAddress).withDisplayName("To").build());
-    putNotNull(
-        executionDetails, "ccAddress", anExecutionDataValue().withValue(ccAddress).withDisplayName("CC").build());
-    putNotNull(
-        executionDetails, "subject", anExecutionDataValue().withValue(subject).withDisplayName("Subject").build());
-    putNotNull(executionDetails, "body", anExecutionDataValue().withValue(body).withDisplayName("Body").build());
+    putNotNull(executionDetails, "toAddress", ExecutionDataValue.builder().displayName("To").value(toAddress).build());
+    putNotNull(executionDetails, "ccAddress", ExecutionDataValue.builder().displayName("CC").value(ccAddress).build());
+    putNotNull(executionDetails, "subject", ExecutionDataValue.builder().displayName("Subject").value(subject).build());
+    putNotNull(executionDetails, "body", ExecutionDataValue.builder().displayName("Body").value(body).build());
 
     return executionDetails;
   }

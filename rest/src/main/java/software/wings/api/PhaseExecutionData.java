@@ -1,7 +1,5 @@
 package software.wings.api;
 
-import static software.wings.api.ExecutionDataValue.Builder.anExecutionDataValue;
-
 import software.wings.beans.ElementExecutionSummary;
 import software.wings.sm.ContextElement;
 import software.wings.sm.ExecutionStatus;
@@ -131,15 +129,15 @@ public class PhaseExecutionData extends ElementStateExecutionData {
   public Map<String, ExecutionDataValue> getExecutionSummary() {
     Map<String, ExecutionDataValue> executionDetails = super.getExecutionSummary();
     putNotNull(executionDetails, "serviceName",
-        anExecutionDataValue().withValue(serviceName).withDisplayName("Service Name").build());
+        ExecutionDataValue.builder().displayName("Service Name").value(serviceName).build());
     putNotNull(executionDetails, "deploymentType",
-        anExecutionDataValue().withValue(deploymentType).withDisplayName("Deployment Type").build());
+        ExecutionDataValue.builder().displayName("Deployment Type").value(deploymentType).build());
     putNotNull(executionDetails, "computeProviderType",
-        anExecutionDataValue().withValue(computeProviderType).withDisplayName("Cloud Provider Type").build());
+        ExecutionDataValue.builder().displayName("Cloud Provider Type").value(computeProviderType).build());
     putNotNull(executionDetails, "computeProviderName",
-        anExecutionDataValue().withValue(computeProviderName).withDisplayName("Cloud Provider").build());
+        ExecutionDataValue.builder().displayName("Cloud Provider").value(computeProviderName).build());
     putNotNull(executionDetails, "clusterName",
-        anExecutionDataValue().withValue(clusterName).withDisplayName("Cluster Name").build());
+        ExecutionDataValue.builder().displayName("Cluster Name").value(clusterName).build());
     return executionDetails;
   }
 
@@ -147,15 +145,15 @@ public class PhaseExecutionData extends ElementStateExecutionData {
   public Map<String, ExecutionDataValue> getExecutionDetails() {
     Map<String, ExecutionDataValue> executionDetails = super.getExecutionDetails();
     putNotNull(executionDetails, "serviceName",
-        anExecutionDataValue().withValue(serviceName).withDisplayName("Service Name").build());
+        ExecutionDataValue.builder().displayName("Service Name").value(serviceName).build());
     putNotNull(executionDetails, "deploymentType",
-        anExecutionDataValue().withValue(deploymentType).withDisplayName("Deployment Type").build());
+        ExecutionDataValue.builder().displayName("Deployment Type").value(deploymentType).build());
     putNotNull(executionDetails, "computeProviderType",
-        anExecutionDataValue().withValue(computeProviderType).withDisplayName("Cloud Provider Type").build());
+        ExecutionDataValue.builder().displayName("Cloud Provider Type").value(computeProviderType).build());
     putNotNull(executionDetails, "computeProviderName",
-        anExecutionDataValue().withValue(computeProviderName).withDisplayName("Cloud Provider").build());
+        ExecutionDataValue.builder().displayName("Cloud Provider").value(computeProviderName).build());
     putNotNull(executionDetails, "clusterName",
-        anExecutionDataValue().withValue(clusterName).withDisplayName("Cluster Name").build());
+        ExecutionDataValue.builder().displayName("Cluster Name").value(clusterName).build());
     return executionDetails;
   }
 

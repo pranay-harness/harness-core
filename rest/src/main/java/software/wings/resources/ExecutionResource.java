@@ -20,6 +20,7 @@ import software.wings.beans.GraphNode;
 import software.wings.beans.RequiredExecutionArgs;
 import software.wings.beans.RestResponse;
 import software.wings.beans.SearchFilter.Operator;
+import software.wings.beans.StateExecutionElement;
 import software.wings.beans.StateExecutionInterrupt;
 import software.wings.beans.WorkflowExecution;
 import software.wings.beans.WorkflowType;
@@ -151,8 +152,10 @@ public class ExecutionResource {
   @ExceptionMetered
   @AuthRule(permissionType = DEPLOYMENT, action = READ, skipAuth = true)
   public RestResponse<WorkflowExecution> getExecutionDetails(@QueryParam("appId") String appId,
-      @QueryParam("envId") String envId, @PathParam("workflowExecutionId") String workflowExecutionId) {
-    return new RestResponse<>(workflowExecutionService.getExecutionDetails(appId, workflowExecutionId));
+      @QueryParam("envId") String envId, @PathParam("workflowExecutionId") String workflowExecutionId,
+      @QueryParam("excludeFromAggregation") Set<String> excludeFromAggregation) {
+    return new RestResponse<>(
+        workflowExecutionService.getExecutionDetails(appId, workflowExecutionId, excludeFromAggregation));
   }
 
   /**
@@ -322,6 +325,24 @@ public class ExecutionResource {
       @PathParam("workflowExecutionId") String workflowExecutionId,
       @PathParam("stateExecutionInstanceId") String stateExecutionInstanceId) {
     return new RestResponse<>(workflowExecutionService.getExecutionInterrupts(appId, stateExecutionInstanceId));
+  }
+
+  /**
+   * Gets execution history list.
+   *
+   * @param appId                    the app id
+   * @param workflowExecutionId      the workflow execution id
+   * @param stateExecutionInstanceId the state execution instance id
+   * @return the execution history list
+   */
+  @GET
+  @Path("{workflowExecutionId}/element/{stateExecutionInstanceId}")
+  @Timed
+  @ExceptionMetered
+  public RestResponse<List<StateExecutionElement>> getExecutionElement(@QueryParam("appId") String appId,
+      @PathParam("workflowExecutionId") String workflowExecutionId,
+      @PathParam("stateExecutionInstanceId") String stateExecutionInstanceId) {
+    return new RestResponse<>(workflowExecutionService.getExecutionElements(appId, stateExecutionInstanceId));
   }
 
   /**

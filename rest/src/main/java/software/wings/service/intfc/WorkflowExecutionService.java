@@ -7,6 +7,7 @@ import software.wings.beans.ElementExecutionSummary;
 import software.wings.beans.ExecutionArgs;
 import software.wings.beans.GraphNode;
 import software.wings.beans.RequiredExecutionArgs;
+import software.wings.beans.StateExecutionElement;
 import software.wings.beans.StateExecutionInterrupt;
 import software.wings.beans.WorkflowExecution;
 import software.wings.beans.WorkflowType;
@@ -103,7 +104,8 @@ public interface WorkflowExecutionService {
    * @param workflowExecutionId the workflow execution id
    * @return the execution details
    */
-  WorkflowExecution getExecutionDetails(@NotNull String appId, @NotNull String workflowExecutionId);
+  WorkflowExecution getExecutionDetails(
+      @NotNull String appId, @NotNull String workflowExecutionId, Set<String> excludeFromAggregation);
 
   /**
    * Gets the execution details.
@@ -228,6 +230,16 @@ public interface WorkflowExecutionService {
    * @return the execution history
    */
   List<StateExecutionInterrupt> getExecutionInterrupts(String appId, String stateExecutionInstanceId);
+
+  /**
+   * Gets execution history.
+   *
+   * @param appId                    the app id
+   * @param workflowExecutionId      the workflow execution id
+   * @param stateExecutionInstanceId the state execution instance id
+   * @return the elements
+   */
+  List<StateExecutionElement> getExecutionElements(String appId, String stateExecutionInstanceId);
 
   /**
    * Gets recorded per execution instance interrupts.

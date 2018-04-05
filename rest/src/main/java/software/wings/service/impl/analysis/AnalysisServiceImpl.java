@@ -5,6 +5,7 @@ import static io.harness.data.structure.EmptyPredicate.isNotEmpty;
 import static io.harness.govern.Switch.noop;
 import static io.harness.govern.Switch.unhandled;
 import static java.util.Arrays.asList;
+import static java.util.Collections.emptySet;
 import static software.wings.beans.DelegateTask.SyncTaskContext.Builder.aContext;
 import static software.wings.dl.PageRequest.PageRequestBuilder.aPageRequest;
 
@@ -221,10 +222,10 @@ public class AnalysisServiceImpl implements AnalysisService {
               workflowExecutionId, stateExecutionId, logCollectionMinute, MLAnalysisType.LOG_CLUSTER, ClusterLevel.L1);
           break;
         case L2:
-          bumpClusterLevel(stateType, stateExecutionId, appId, query, Collections.emptySet(), logCollectionMinute,
+          bumpClusterLevel(stateType, stateExecutionId, appId, query, emptySet(), logCollectionMinute,
               ClusterLevel.getHeartBeatLevel(ClusterLevel.L1), ClusterLevel.getHeartBeatLevel(ClusterLevel.L2));
           deleteClusterLevel(
-              stateType, stateExecutionId, appId, query, Collections.emptySet(), logCollectionMinute, ClusterLevel.L1);
+              stateType, stateExecutionId, appId, query, emptySet(), logCollectionMinute, ClusterLevel.L1);
           learningEngineService.markCompleted(
               workflowExecutionId, stateExecutionId, logCollectionMinute, MLAnalysisType.LOG_CLUSTER, ClusterLevel.L2);
           break;
@@ -507,7 +508,7 @@ public class AnalysisServiceImpl implements AnalysisService {
           + " StateExecutionInstanceId: " + mlAnalysisResponse.getStateExecutionId());
     }
     bumpClusterLevel(stateType, mlAnalysisResponse.getStateExecutionId(), mlAnalysisResponse.getApplicationId(),
-        mlAnalysisResponse.getQuery(), Collections.emptySet(), mlAnalysisResponse.getLogCollectionMinute(),
+        mlAnalysisResponse.getQuery(), emptySet(), mlAnalysisResponse.getLogCollectionMinute(),
         ClusterLevel.getHeartBeatLevel(ClusterLevel.L2), ClusterLevel.getFinal());
     if (taskId.isPresent()) {
       learningEngineService.markCompleted(taskId.get());
@@ -572,7 +573,7 @@ public class AnalysisServiceImpl implements AnalysisService {
           + " StateExecutionInstanceId: " + mlAnalysisResponse.getStateExecutionId());
     }
     bumpClusterLevel(stateType, mlAnalysisResponse.getStateExecutionId(), mlAnalysisResponse.getApplicationId(),
-        mlAnalysisResponse.getQuery(), Collections.emptySet(), mlAnalysisResponse.getLogCollectionMinute(),
+        mlAnalysisResponse.getQuery(), emptySet(), mlAnalysisResponse.getLogCollectionMinute(),
         ClusterLevel.getHeartBeatLevel(ClusterLevel.L2), ClusterLevel.getFinal());
     if (taskId.isPresent()) {
       learningEngineService.markExpTaskCompleted(taskId.get());

@@ -3,6 +3,7 @@ package software.wings.service.impl;
 import static io.harness.data.structure.EmptyPredicate.isEmpty;
 import static io.harness.data.structure.EmptyPredicate.isNotEmpty;
 import static io.harness.govern.Switch.unhandled;
+import static java.util.Collections.emptySet;
 import static org.apache.commons.lang3.StringUtils.isNotBlank;
 import static software.wings.beans.ExecutionScope.WORKFLOW;
 import static software.wings.beans.ExecutionScope.WORKFLOW_PHASE;
@@ -186,7 +187,7 @@ public class WorkflowNotificationHelper {
   private Map<String, String> getPlaceholderValues(ExecutionContext context, Application app, Environment env,
       ExecutionStatus status, @Nullable PhaseSubWorkflow phaseSubWorkflow) {
     WorkflowExecution workflowExecution =
-        workflowExecutionService.getExecutionDetails(app.getUuid(), context.getWorkflowExecutionId());
+        workflowExecutionService.getExecutionDetails(app.getUuid(), context.getWorkflowExecutionId(), emptySet());
     String triggeredBy = workflowExecution.getTriggeredBy().getName();
     if (triggeredBy.equalsIgnoreCase("Deployment trigger")) {
       triggeredBy = triggeredBy.toLowerCase();

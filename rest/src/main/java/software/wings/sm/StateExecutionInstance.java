@@ -29,13 +29,14 @@ import java.util.Map;
 @EqualsAndHashCode(callSuper = false)
 @JsonIgnoreProperties(ignoreUnknown = true)
 public class StateExecutionInstance extends Base {
-  public static final String STATUS_KEY = "status";
-  public static final String WORKFLOW_ID_KEY = "workflowId";
   public static final String EXECUTION_UUID_KEY = "executionUuid";
-  public static final String STATE_TYPE_KEY = "stateType";
-  public static final String PIPELINE_STATE_ELEMENT_ID_KEY = "pipelineStateElementId";
+  public static final String PARENT_INSTANCE_ID_KEY = "parentInstanceId";
   public static final String PHASE_SUBWORKFLOW_ID_KEY = "phaseSubWorkflowId";
+  public static final String PIPELINE_STATE_ELEMENT_ID_KEY = "pipelineStateElementId";
+  public static final String STATE_TYPE_KEY = "stateType";
+  public static final String STATUS_KEY = "status";
   public static final String STEP_ID_KEY = "stepId";
+  public static final String WORKFLOW_ID_KEY = "workflowId";
 
   private String stateMachineId;
   private String childStateMachineId;

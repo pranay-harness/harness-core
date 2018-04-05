@@ -1,7 +1,5 @@
 package software.wings.service.impl.analysis;
 
-import static software.wings.api.ExecutionDataValue.Builder.anExecutionDataValue;
-
 import lombok.Builder;
 import lombok.Data;
 import lombok.EqualsAndHashCode;
@@ -33,19 +31,19 @@ public class LogAnalysisExecutionData extends StateExecutionData {
   public Map<String, ExecutionDataValue> getExecutionSummary() {
     Map<String, ExecutionDataValue> executionDetails = getExecutionDetails();
     putNotNull(executionDetails, "stateExecutionInstanceId",
-        anExecutionDataValue().withValue(stateExecutionInstanceId).withDisplayName("State Execution Id").build());
+        ExecutionDataValue.builder().displayName("State Execution Id").value(stateExecutionInstanceId).build());
     putNotNull(executionDetails, "serverConfigId",
-        anExecutionDataValue().withValue(serverConfigId).withDisplayName("Server Config Id").build());
+        ExecutionDataValue.builder().displayName("Server Config Id").value(serverConfigId).build());
     return executionDetails;
   }
 
   @Override
   public Map<String, ExecutionDataValue> getExecutionDetails() {
     Map<String, ExecutionDataValue> executionDetails = super.getExecutionDetails();
-    putNotNull(executionDetails, "errorMsg",
-        anExecutionDataValue().withValue(getErrorMsg()).withDisplayName("Message").build());
+    putNotNull(
+        executionDetails, "errorMsg", ExecutionDataValue.builder().displayName("Message").value(getErrorMsg()).build());
     final int total = timeDuration + SplunkDataCollectionTask.DELAY_MINUTES + 1;
-    putNotNull(executionDetails, "total", anExecutionDataValue().withDisplayName("Total").withValue(total).build());
+    putNotNull(executionDetails, "total", ExecutionDataValue.builder().displayName("Total").value(total).build());
     int elapsedMinutes = (int) TimeUnit.MILLISECONDS.toMinutes(System.currentTimeMillis() - getStartTs());
     if (elapsedMinutes < SplunkDataCollectionTask.DELAY_MINUTES + 1) {
       elapsedMinutes = 0;
@@ -64,11 +62,12 @@ public class LogAnalysisExecutionData extends StateExecutionData {
         breakdown.setSuccess(Math.min(elapsedMinutes, total));
         break;
     }
-    putNotNull(executionDetails, "breakdown",
-        anExecutionDataValue().withDisplayName("breakdown").withValue(breakdown).build());
+    putNotNull(
+        executionDetails, "breakdown", ExecutionDataValue.builder().displayName("breakdown").value(breakdown).build());
     putNotNull(executionDetails, "timeDuration",
-        anExecutionDataValue().withValue(timeDuration).withDisplayName("Analysis duration").build());
-    putNotNull(executionDetails, "queries", anExecutionDataValue().withValue(query).withDisplayName("Queries").build());
+        ExecutionDataValue.builder().displayName("Analysis duration").value(timeDuration).build());
+    putNotNull(executionDetails, "queries", ExecutionDataValue.builder().displayName("Queries").value(query).build());
+
     return executionDetails;
   }
 }

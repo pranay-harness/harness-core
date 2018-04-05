@@ -1,7 +1,5 @@
 package software.wings.api;
 
-import static software.wings.api.ExecutionDataValue.Builder.anExecutionDataValue;
-
 import software.wings.sm.StateExecutionData;
 import software.wings.sm.StepExecutionSummary;
 
@@ -25,7 +23,7 @@ public class BarrierExecutionData extends StateExecutionData {
   public Map<String, ExecutionDataValue> getExecutionSummary() {
     Map<String, ExecutionDataValue> executionDetails = super.getExecutionSummary();
     putNotNull(executionDetails, "identifier",
-        anExecutionDataValue().withDisplayName("Identifier").withValue(identifier).build());
+        ExecutionDataValue.builder().displayName("Identifier").value(identifier).build());
     return executionDetails;
   }
 
@@ -33,7 +31,7 @@ public class BarrierExecutionData extends StateExecutionData {
   public Map<String, ExecutionDataValue> getExecutionDetails() {
     Map<String, ExecutionDataValue> executionDetails = super.getExecutionDetails();
     putNotNull(executionDetails, "identifier",
-        anExecutionDataValue().withDisplayName("Identifier").withValue(identifier).build());
+        ExecutionDataValue.builder().displayName("Identifier").value(identifier).build());
     return executionDetails;
   }
 

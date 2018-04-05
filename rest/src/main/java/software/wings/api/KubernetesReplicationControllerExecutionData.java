@@ -1,7 +1,5 @@
 package software.wings.api;
 
-import static software.wings.api.ExecutionDataValue.Builder.anExecutionDataValue;
-
 import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
 import lombok.Data;
 import lombok.EqualsAndHashCode;
@@ -31,27 +29,27 @@ public class KubernetesReplicationControllerExecutionData extends StateExecution
   public Map<String, ExecutionDataValue> getExecutionSummary() {
     Map<String, ExecutionDataValue> executionDetails = super.getExecutionSummary();
     putNotNull(executionDetails, "gkeClusterName",
-        anExecutionDataValue().withValue(gkeClusterName).withDisplayName("Cluster Name").build());
+        ExecutionDataValue.builder().displayName("Cluster Name").value(gkeClusterName).build());
     putNotNull(executionDetails, "kubernetesReplicationControllerName",
-        anExecutionDataValue()
-            .withValue(kubernetesReplicationControllerName)
-            .withDisplayName("Replication Controller Name")
+        ExecutionDataValue.builder()
+            .displayName("Replication Controller Name")
+            .value(kubernetesReplicationControllerName)
             .build());
     putNotNull(executionDetails, "kubernetesServiceName",
-        anExecutionDataValue().withValue(kubernetesServiceName).withDisplayName("Service Name").build());
+        ExecutionDataValue.builder().displayName("Service Name").value(kubernetesServiceName).build());
     putNotNull(executionDetails, "kubernetesServiceClusterIP",
-        anExecutionDataValue().withValue(kubernetesServiceClusterIP).withDisplayName("Service Cluster IP").build());
+        ExecutionDataValue.builder().displayName("Service Cluster IP").value(kubernetesServiceClusterIP).build());
     putNotNull(executionDetails, "kubernetesServiceLoadBalancerEndpoint",
-        anExecutionDataValue()
-            .withValue(kubernetesServiceLoadBalancerEndpoint)
-            .withDisplayName("Load Balancer Endpoint")
+        ExecutionDataValue.builder()
+            .displayName("Load Balancer Endpoint")
+            .value(kubernetesServiceLoadBalancerEndpoint)
             .build());
     putNotNull(executionDetails, "dockerImageName",
-        anExecutionDataValue().withValue(dockerImageName).withDisplayName("Docker Image Name").build());
+        ExecutionDataValue.builder().displayName("Docker Image Name").value(dockerImageName).build());
     putNotNull(executionDetails, "commandName",
-        anExecutionDataValue().withValue(commandName).withDisplayName("Command Name").build());
+        ExecutionDataValue.builder().displayName("Command Name").value(commandName).build());
     putNotNull(executionDetails, "instanceCount",
-        anExecutionDataValue().withValue(instanceCount).withDisplayName("Instance Count").build());
+        ExecutionDataValue.builder().displayName("Instance Count").value(instanceCount).build());
     return executionDetails;
   }
 
@@ -59,27 +57,27 @@ public class KubernetesReplicationControllerExecutionData extends StateExecution
   public Map<String, ExecutionDataValue> getExecutionDetails() {
     Map<String, ExecutionDataValue> executionDetails = super.getExecutionDetails();
     putNotNull(executionDetails, "gkeClusterName",
-        anExecutionDataValue().withValue(gkeClusterName).withDisplayName("Cluster Name").build());
+        ExecutionDataValue.builder().displayName("Cluster Name").value(gkeClusterName).build());
     putNotNull(executionDetails, "kubernetesReplicationControllerName",
-        anExecutionDataValue()
-            .withValue(kubernetesReplicationControllerName)
-            .withDisplayName("Replication Controller Name")
+        ExecutionDataValue.builder()
+            .displayName("Replication Controller Name")
+            .value(kubernetesReplicationControllerName)
             .build());
     putNotNull(executionDetails, "kubernetesServiceName",
-        anExecutionDataValue().withValue(kubernetesServiceName).withDisplayName("Service Name").build());
+        ExecutionDataValue.builder().displayName("Service Name").value(kubernetesServiceName).build());
     putNotNull(executionDetails, "kubernetesServiceClusterIP",
-        anExecutionDataValue().withValue(kubernetesServiceClusterIP).withDisplayName("Service Cluster IP").build());
+        ExecutionDataValue.builder().displayName("Service Cluster IP").value(kubernetesServiceClusterIP).build());
     putNotNull(executionDetails, "kubernetesServiceLoadBalancerEndpoint",
-        anExecutionDataValue()
-            .withValue(kubernetesServiceLoadBalancerEndpoint)
-            .withDisplayName("Load Balancer Endpoint")
+        ExecutionDataValue.builder()
+            .displayName("Load Balancer Endpoint")
+            .value(kubernetesServiceLoadBalancerEndpoint)
             .build());
     putNotNull(executionDetails, "dockerImageName",
-        anExecutionDataValue().withValue(dockerImageName).withDisplayName("Docker Image Name").build());
+        ExecutionDataValue.builder().displayName("Docker Image Name").value(dockerImageName).build());
     putNotNull(executionDetails, "commandName",
-        anExecutionDataValue().withValue(commandName).withDisplayName("Command Name").build());
+        ExecutionDataValue.builder().displayName("Command Name").value(commandName).build());
     putNotNull(executionDetails, "instanceCount",
-        anExecutionDataValue().withValue(instanceCount).withDisplayName("Instance Count").build());
+        ExecutionDataValue.builder().displayName("Instance Count").value(instanceCount).build());
     return executionDetails;
   }
 

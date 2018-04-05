@@ -1,7 +1,5 @@
 package software.wings.api;
 
-import static software.wings.api.ExecutionDataValue.Builder.anExecutionDataValue;
-
 import com.google.common.collect.Maps;
 
 import lombok.AllArgsConstructor;
@@ -47,13 +45,13 @@ public class AwsAmiSetupExecutionData extends StateExecutionData implements Noti
   private Map<String, ExecutionDataValue> getInternalExecutionDetails() {
     Map<String, ExecutionDataValue> executionDetails = Maps.newHashMap();
     putNotNull(executionDetails, "newAutoScalingGroupName",
-        anExecutionDataValue().withValue(newAutoScalingGroupName).withDisplayName("New ASG Name").build());
+        ExecutionDataValue.builder().displayName("New ASG Name").value(newAutoScalingGroupName).build());
     putNotNull(executionDetails, "maxInstances",
-        anExecutionDataValue().withValue(maxInstances).withDisplayName("Desired Capacity").build());
+        ExecutionDataValue.builder().displayName("Desired Capacity").value(maxInstances).build());
     putNotNull(executionDetails, "oldAutoScalingGroupName",
-        anExecutionDataValue().withValue(oldAutoScalingGroupName).withDisplayName("Old ASG Name").build());
+        ExecutionDataValue.builder().displayName("Old ASG Name").value(oldAutoScalingGroupName).build());
     putNotNull(executionDetails, Constants.ACTIVITY_ID,
-        anExecutionDataValue().withValue(activityId).withDisplayName(Constants.ACTIVITY_ID).build());
+        ExecutionDataValue.builder().displayName(Constants.ACTIVITY_ID).value(activityId).build());
     return executionDetails;
   }
 }

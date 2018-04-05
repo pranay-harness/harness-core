@@ -1,7 +1,6 @@
 package software.wings.sm.states;
 
 import static org.apache.commons.lang3.StringUtils.abbreviate;
-import static software.wings.api.ExecutionDataValue.Builder.anExecutionDataValue;
 import static software.wings.api.ForkElement.Builder.aForkElement;
 
 import com.google.common.base.Joiner;
@@ -212,7 +211,7 @@ public class ForkState extends State {
     public Map<String, ExecutionDataValue> getExecutionDetails() {
       Map<String, ExecutionDataValue> executionDetails = super.getExecutionDetails();
       putNotNull(executionDetails, "forkStateNames",
-          anExecutionDataValue().withValue(Joiner.on(", ").join(forkStateNames)).withDisplayName("Forking to").build());
+          ExecutionDataValue.builder().displayName("Forking to").value(Joiner.on(", ").join(forkStateNames)).build());
       return executionDetails;
     }
 
@@ -220,9 +219,9 @@ public class ForkState extends State {
     public Map<String, ExecutionDataValue> getExecutionSummary() {
       Map<String, ExecutionDataValue> executionDetails = super.getExecutionSummary();
       putNotNull(executionDetails, "forkStateNames",
-          anExecutionDataValue()
-              .withValue(abbreviate(Joiner.on(", ").join(forkStateNames), Constants.SUMMARY_PAYLOAD_LIMIT))
-              .withDisplayName("Forking to")
+          ExecutionDataValue.builder()
+              .displayName("Forking to")
+              .value(abbreviate(Joiner.on(", ").join(forkStateNames), Constants.SUMMARY_PAYLOAD_LIMIT))
               .build());
       return executionDetails;
     }
