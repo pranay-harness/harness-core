@@ -227,6 +227,15 @@ public class AppDynamicsState extends AbstractMetricAnalysisState {
     return parentTemplateFields;
   }
 
+  @Attributes(required = false, title = "Expression for Host/Container name")
+  public String getHostnameTemplate() {
+    return hostnameTemplate;
+  }
+
+  public void setHostnameTemplate(String hostnameTemplate) {
+    this.hostnameTemplate = hostnameTemplate;
+  }
+
   private boolean appIdTemplatized() {
     return TemplateExpressionProcessor.checkFieldTemplatized("applicationId", getTemplateExpressions());
   }
