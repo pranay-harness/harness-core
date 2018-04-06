@@ -96,6 +96,10 @@ public class AwsInfraMappingYamlHandler
   }
 
   private List<NameValuePair.Yaml> getTagsYaml(List<Tag> tagList) {
+    if (tagList == null) {
+      return null;
+    }
+
     return tagList.stream()
         .map(tag -> NameValuePair.Yaml.builder().name(tag.getKey()).value(tag.getValue()).build())
         .collect(Collectors.toList());
