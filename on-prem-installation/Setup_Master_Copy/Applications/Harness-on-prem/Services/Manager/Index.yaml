@@ -15,7 +15,7 @@ configVariables:
     value: <DOCKER_LOGIN_PASSWORD_PLACEHOLDER>
     valueType: ENCRYPTED_TEXT
   - name: UI_SERVER_URL
-    value: https://localhost:8000
+    value: <LOAD_BALANCER_URL_PLACEHOLDER>
     valueType: TEXT
   - name: SERVER_PORT
     value: '9090'
