@@ -588,6 +588,9 @@ public class AuthHandlerTest extends WingsBaseTest {
     assertThat(userPermissionInfo.getAppPermissionMap().get(APP_ID).getPipelinePermissions())
         .isNotNull()
         .containsOnlyKeys(approvalPipeline.getUuid(), buildPipeline.getUuid());
+    assertThat(userPermissionInfo.getAppPermissionMap().get(APP_ID).getDeploymentPermissions())
+        .isNotNull()
+        .containsOnlyKeys(buildWorkflow.getUuid(), approvalPipeline.getUuid(), buildPipeline.getUuid());
   }
 
   @Test
@@ -649,5 +652,8 @@ public class AuthHandlerTest extends WingsBaseTest {
     assertThat(userPermissionInfo.getAppPermissionMap().get(APP_ID).getPipelinePermissions())
         .isNotNull()
         .containsOnlyKeys(approvalPipeline.getUuid(), buildPipeline.getUuid());
+    assertThat(userPermissionInfo.getAppPermissionMap().get(APP_ID).getDeploymentPermissions())
+        .isNotNull()
+        .containsOnlyKeys(buildWorkflow.getUuid(), approvalPipeline.getUuid(), buildPipeline.getUuid());
   }
 }
