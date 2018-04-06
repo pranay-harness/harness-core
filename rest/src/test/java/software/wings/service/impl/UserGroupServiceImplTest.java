@@ -72,6 +72,7 @@ public class UserGroupServiceImplTest {
     final Account account = anAccount().withUuid(ACCOUNT_ID).build();
     doReturn(account).when(accountService).get(ACCOUNT_ID);
     final String newName = "NewName";
+    final String newDescription = "Desc";
     final UserGroup cloneExpected = UserGroup.builder()
                                         .uuid(USER_GROUP_ID)
                                         .appId(APP_ID)
@@ -82,7 +83,7 @@ public class UserGroupServiceImplTest {
                                         .keywords(null)
                                         .entityYamlPath(null)
                                         .name(newName)
-                                        .description("Desc")
+                                        .description(newDescription)
                                         .accountId(ACCOUNT_ID)
                                         .memberIds(null)
                                         .members(null)
@@ -91,8 +92,9 @@ public class UserGroupServiceImplTest {
                                         .build();
     doNothing().when(authService).evictAccountUserPermissionInfoCache(anyString(), any());
     doReturn(cloneExpected).when(wingsPersistence).saveAndGet(eq(UserGroup.class), any());
-    UserGroup cloneActual = userGroupService.cloneUserGroup(ACCOUNT_ID, USER_GROUP_ID, newName);
+    UserGroup cloneActual = userGroupService.cloneUserGroup(ACCOUNT_ID, USER_GROUP_ID, newName, newDescription);
     assertThat(cloneActual.getName()).isEqualTo(newName);
+    assertThat(cloneActual.getDescription()).isEqualTo(newDescription);
     verify(wingsPersistence).saveAndGet(UserGroup.class, cloneExpected);
   }
 }

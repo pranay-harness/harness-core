@@ -68,7 +68,9 @@ public interface UserGroupService {
    * @param accountId The id of the account of the user group
    * @param uuid The id of the user group
    * @param newName The new name to be used for creating the cloned object
+   * @param newDescription The description of the new cloned user group
    * @return The newly created clone.
    */
-  UserGroup cloneUserGroup(@NotEmpty String accountId, @NotEmpty String uuid, @NotEmpty String newName);
+  UserGroup cloneUserGroup(
+      @NotEmpty String accountId, @NotEmpty String uuid, @NotEmpty String newName, @NotEmpty String newDescription);
 }

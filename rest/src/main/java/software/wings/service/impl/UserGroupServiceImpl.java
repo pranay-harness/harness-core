@@ -159,11 +159,12 @@ public class UserGroupServiceImpl implements UserGroupService {
   }
 
   @Override
-  public UserGroup cloneUserGroup(final String accountId, final String uuid, final String newName) {
+  public UserGroup cloneUserGroup(
+      final String accountId, final String uuid, final String newName, final String newDescription) {
     UserGroup existingGroup = get(accountId, uuid, true);
     Validator.notNullCheck("userGroup", existingGroup);
     Validator.unEqualCheck(existingGroup.getName(), newName);
-    UserGroup newClonedGroup = existingGroup.cloneWithNewName(newName);
+    UserGroup newClonedGroup = existingGroup.cloneWithNewName(newName, newDescription);
     return save(newClonedGroup);
   }
 

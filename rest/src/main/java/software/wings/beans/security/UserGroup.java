@@ -55,7 +55,7 @@ public class UserGroup extends Base {
     this.accountPermissions = accountPermissions;
   }
 
-  public UserGroup cloneWithNewName(final String newName) {
+  public UserGroup cloneWithNewName(final String newName, final String newDescription) {
     return UserGroup.builder()
         .uuid(generateUuid())
         .appId(appId)
@@ -66,7 +66,7 @@ public class UserGroup extends Base {
         .keywords(getKeywords())
         .entityYamlPath(entityYamlPath)
         .name(newName)
-        .description(description)
+        .description(newDescription)
         .accountId(accountId)
         .memberIds(memberIds)
         .members(members)
