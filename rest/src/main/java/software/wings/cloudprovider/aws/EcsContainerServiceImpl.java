@@ -1226,6 +1226,8 @@ public class EcsContainerServiceImpl implements EcsContainerService {
       AwsConfig awsConfig, List<EncryptedDataDetail> encryptedDataDetails, String clusterName, String serviceName,
       Integer desiredCount, ExecutionLogCallback executionLogCallback) {
     final Service[] service = {updateServiceResult.getService()};
+    executionLogCallback.saveExecutionLog(
+        "Waiting for service: " + serviceName + " to reflect updated desired count: " + desiredCount, LogLevel.INFO);
     try {
       timeLimiter.callWithTimeout(() -> {
         while (true) {
@@ -1234,6 +1236,9 @@ public class EcsContainerServiceImpl implements EcsContainerService {
                                new DescribeServicesRequest().withCluster(clusterName).withServices(serviceName))
                            .getServices()
                            .get(0);
+          executionLogCallback.saveExecutionLog(
+              "Current service desired count return from aws for Service: " + serviceName + " is: " + desiredCount,
+              LogLevel.INFO);
           if (Objects.equals(service[0].getDesiredCount(), desiredCount)) {
             return true;
           }
