@@ -26,7 +26,7 @@ public class Account extends Base {
 
   @Indexed(options = @IndexOptions(unique = true)) @NotNull private String accountName;
 
-  @NotNull(groups = Create.class) @Encrypted private String accountKey;
+  @JsonIgnore @NotNull(groups = Create.class) @Encrypted private String accountKey;
 
   private String licenseId;
 
