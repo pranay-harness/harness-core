@@ -28,7 +28,7 @@ public class ServiceCommand extends Base {
   private String name;
   @Indexed private String serviceId;
   @Embedded private Map<String, EntityVersion> envIdVersionMap = Maps.newHashMap();
-  private Integer defaultVersion = 1;
+  private Integer defaultVersion;
 
   private boolean targetToAllEnv;
 

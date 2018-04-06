@@ -939,8 +939,12 @@ public class ServiceResourceServiceImpl implements ServiceResourceService, DataP
     }
 
     setUnset(updateOperation, "envIdVersionMap", serviceCommand.getEnvIdVersionMap());
-    setUnset(updateOperation, "defaultVersion", serviceCommand.getDefaultVersion());
-    setUnset(updateOperation, "name", serviceCommand.getName());
+    if (serviceCommand.getDefaultVersion() != null) {
+      updateOperation.set("defaultVersion", serviceCommand.getDefaultVersion());
+    }
+    if (serviceCommand.getName() != null) {
+      updateOperation.set("name", serviceCommand.getName());
+    }
 
     wingsPersistence.update(
         wingsPersistence.createQuery(ServiceCommand.class).filter(ID_KEY, serviceCommand.getUuid()), updateOperation);
