@@ -39,6 +39,7 @@ public class Base implements UuidAware {
   public static final String APP_ID_KEY = "appId";
   public static final String ACCOUNT_ID_KEY = "accountId";
   public static final String LAST_UPDATED_AT_KEY = "lastUpdatedAt";
+  public static final String CREATED_AT_KEY = "createdAt";
 
   public static final String GLOBAL_APP_ID = "__GLOBAL_APP_ID__";
 
@@ -53,6 +54,7 @@ public class Base implements UuidAware {
   @Indexed @NotNull @SchemaIgnore protected String appId;
   @SchemaIgnore private EmbeddedUser createdBy;
   @SchemaIgnore @Indexed private long createdAt;
+
   @SchemaIgnore private EmbeddedUser lastUpdatedBy;
   @SchemaIgnore private long lastUpdatedAt;
 

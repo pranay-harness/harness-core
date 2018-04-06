@@ -156,14 +156,7 @@ public class PhaseStepSubWorkflow extends SubWorkflowState {
                                               .distinct()
                                               .collect(toList());
 
-        List<ContextElement> contextParams =
-            Lists.newArrayList(aServiceInstanceIdsParam().withInstanceIds(serviceInstanceIds).build());
-        if (artifactNeeded) {
-          ServiceInstanceArtifactParam serviceInstanceArtifactParam = buildInstanceArtifactParam(
-              contextIntf.getAppId(), contextIntf.getWorkflowExecutionId(), serviceInstanceIds);
-          contextParams.add(serviceInstanceArtifactParam);
-        }
-        return contextParams;
+        return asList(aServiceInstanceIdsParam().withInstanceIds(serviceInstanceIds).build());
       case CONTAINER_DEPLOY: {
         Optional<StepExecutionSummary> first = phaseStepExecutionSummary.getStepExecutionSummaryList()
                                                    .stream()

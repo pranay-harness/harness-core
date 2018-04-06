@@ -30,7 +30,6 @@ import software.wings.api.CommandStateExecutionData;
 import software.wings.api.DeploymentType;
 import software.wings.api.InstanceElement;
 import software.wings.api.PhaseElement;
-import software.wings.api.ServiceInstanceArtifactParam;
 import software.wings.api.SimpleWorkflowParam;
 import software.wings.beans.Activity;
 import software.wings.beans.Activity.ActivityBuilder;
@@ -62,6 +61,7 @@ import software.wings.beans.command.InitSshCommandUnit;
 import software.wings.beans.command.ServiceCommand;
 import software.wings.beans.infrastructure.Host;
 import software.wings.common.Constants;
+import software.wings.dl.WingsPersistence;
 import software.wings.exception.WingsException;
 import software.wings.service.intfc.ActivityService;
 import software.wings.service.intfc.AppService;
@@ -100,50 +100,29 @@ import java.util.concurrent.TimeUnit;
  * Created by peeyushaggarwal on 5/31/16.
  */
 public class CommandState extends State {
-  /**
-   * The constant RUNTIME_PATH.
-   */
-  public static final String RUNTIME_PATH = "RUNTIME_PATH";
-  /**
-   * The constant BACKUP_PATH.
-   */
-  public static final String BACKUP_PATH = "BACKUP_PATH";
-  /**
-   * The constant STAGING_PATH.
-   */
-  public static final String STAGING_PATH = "STAGING_PATH";
-
   private static final Logger logger = LoggerFactory.getLogger(CommandState.class);
 
-  @Inject @Transient private transient AppService appService;
-
-  @Inject @Transient private transient ServiceResourceService serviceResourceService;
-
-  @Inject @Transient private transient ServiceInstanceService serviceInstanceService;
-
-  @Inject @Transient private transient ServiceTemplateService serviceTemplateService;
-
-  @Inject @Transient private transient HostService hostService;
-
-  @Inject @Transient private transient ActivityService activityService;
-
-  @Inject @Transient private transient SettingsService settingsService;
-
-  @Inject @Transient private transient EnvironmentService environmentService;
-
-  @Inject @Transient private transient WorkflowExecutionService workflowExecutionService;
-
-  @Inject @Transient private ArtifactStreamService artifactStreamService;
-
-  @Inject @Transient private DelegateService delegateService;
+  public static final String RUNTIME_PATH = "RUNTIME_PATH";
+  public static final String BACKUP_PATH = "BACKUP_PATH";
+  public static final String STAGING_PATH = "STAGING_PATH";
 
   @Inject @Transient @SchemaIgnore private transient ExecutorService executorService;
-
-  @Transient @Inject private transient ArtifactService artifactService;
-
-  @Transient @Inject private transient SecretManager secretManager;
-
+  @Inject @Transient private transient ActivityService activityService;
+  @Inject @Transient private transient AppService appService;
+  @Inject @Transient private transient ArtifactService artifactService;
+  @Inject @Transient private transient ArtifactStreamService artifactStreamService;
+  @Inject @Transient private transient DelegateService delegateService;
+  @Inject @Transient private transient EnvironmentService environmentService;
+  @Inject @Transient private transient HostService hostService;
   @Inject @Transient private transient InfrastructureMappingService infrastructureMappingService;
+  @Inject @Transient private transient SecretManager secretManager;
+  @Inject @Transient private transient ServiceInstanceService serviceInstanceService;
+  @Inject @Transient private transient ServiceResourceService serviceResourceService;
+  @Inject @Transient private transient ServiceTemplateService serviceTemplateService;
+  @Inject @Transient private transient SettingsService settingsService;
+  @Inject @Transient private transient WorkflowExecutionService workflowExecutionService;
+
+  @Inject @Transient private transient WingsPersistence wingsPersistence;
 
   @Attributes(title = "Command") @Expand(dataProvider = CommandStateEnumDataProvider.class) private String commandName;
 
@@ -260,6 +239,11 @@ public class CommandState extends State {
 
       Application application = appService.get(serviceInstance.getAppId());
       String accountId = application.getAccountId();
+      Artifact artifact = null;
+
+      if (command.isArtifactNeeded()) {
+        artifact = findArtifact(service.getUuid(), context);
+      }
 
       Map<String, String> serviceVariables = context.getServiceVariables();
       Map<String, String> safeDisplayServiceVariables = context.getSafeDisplayServiceVariables();
@@ -333,8 +317,9 @@ public class CommandState extends State {
             (Encryptable) bastionConnectionAttribute.getValue(), context.getAppId(), context.getWorkflowExecutionId()));
       }
 
-      Artifact artifact = findArtifact(context, service.getUuid());
       if (artifact != null) {
+        logger.info("Artifact being used: {} for stateExecutionInstanceId: {}", artifact.getUuid(),
+            context.getStateExecutionInstanceId());
         commandExecutionContextBuilder.withMetadata(artifact.getMetadata());
         ArtifactStream artifactStream = artifactStreamService.get(artifact.getAppId(), artifact.getArtifactStreamId());
         // Observed NPE in alerts
@@ -441,19 +426,13 @@ public class CommandState extends State {
     return flattenCommandUnitList;
   }
 
-  private Artifact findArtifact(ExecutionContext context, String serviceId) {
-    ContextElement instanceElement = context.getContextElement(ContextElementType.INSTANCE);
-    if (instanceElement != null) {
-      ServiceInstanceArtifactParam serviceArtifactElement =
-          context.getContextElement(ContextElementType.PARAM, Constants.SERVICE_INSTANCE_ARTIFACT_PARAMS);
-      if (serviceArtifactElement != null) {
-        String artifactId = serviceArtifactElement.getInstanceArtifactMap().get(instanceElement.getUuid());
-        if (artifactId != null) {
-          return artifactService.get(context.getAppId(), artifactId);
-        }
+  private Artifact findArtifact(String serviceId, ExecutionContext context) {
+    if (isRollback()) {
+      final Artifact previousArtifact = serviceResourceService.findPreviousArtifact(serviceId, context);
+      if (previousArtifact != null) {
+        return previousArtifact;
       }
     }
-
     return ((DeploymentExecutionContext) context).getArtifactForService(serviceId);
   }
 

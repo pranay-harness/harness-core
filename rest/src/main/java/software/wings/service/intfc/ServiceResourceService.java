@@ -5,6 +5,7 @@ import ru.vyarus.guice.validator.group.annotation.ValidationGroups;
 import software.wings.beans.LambdaSpecification;
 import software.wings.beans.Service;
 import software.wings.beans.Setup.SetupStatus;
+import software.wings.beans.artifact.Artifact;
 import software.wings.beans.command.CommandUnit;
 import software.wings.beans.command.ServiceCommand;
 import software.wings.beans.container.ContainerTask;
@@ -14,6 +15,7 @@ import software.wings.beans.container.UserDataSpecification;
 import software.wings.dl.PageRequest;
 import software.wings.dl.PageResponse;
 import software.wings.service.intfc.ownership.OwnedByApplication;
+import software.wings.sm.ExecutionContext;
 import software.wings.stencils.Stencil;
 import software.wings.utils.validation.Create;
 import software.wings.utils.validation.Update;
@@ -237,6 +239,8 @@ public interface ServiceResourceService extends OwnedByApplication {
    * @return the list
    */
   List<Service> findServicesByApp(String appId);
+
+  Artifact findPreviousArtifact(String serviceId, ExecutionContext context);
 
   /**
    * Get service.
