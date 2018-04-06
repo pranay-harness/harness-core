@@ -1088,7 +1088,14 @@ public class EcsContainerServiceImpl implements EcsContainerService {
                 .getInstances()
                 .get(0);
 
-        String ipAddress = ec2Instance.getPublicIpAddress();
+        String ipAddress = ec2Instance.getPrivateIpAddress();
+
+        // Instance will always have privateIp, but if is null for any reason, this is safeguard not to have NPE
+        if (ipAddress == null) {
+          logger.error(
+              "ECS Deployment ALERT:- Ec2Instance is not expected to have NULL PrivateIp, something seems wrong");
+          ipAddress = StringUtils.EMPTY;
+        }
 
         String uri = generateTaskMetadataEndpointUrl(ipAddress);
         if (Http.connectableHttpUrl(uri)) {
