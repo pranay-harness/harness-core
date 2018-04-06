@@ -84,6 +84,7 @@ import software.wings.sm.StateType;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collection;
+import java.util.Collections;
 import java.util.HashMap;
 import java.util.HashSet;
 import java.util.List;
@@ -225,6 +226,7 @@ public class AuthHandler {
           Set<String> entityIds =
               getEnvIdsByFilter(permissionTypeAppIdEntityMap.get(permissionType).get(appId), (EnvFilter) entityFilter);
           AppPermissionSummaryForUI finalAppPermissionSummaryForUI = appPermissionSummaryForUI;
+
           entityIds.forEach(entityId -> {
             if (finalAppPermissionSummaryForUI.getEnvPermissions() == null) {
               finalAppPermissionSummaryForUI.setEnvPermissions(new HashMap<>());
@@ -241,9 +243,11 @@ public class AuthHandler {
           if (isEmpty(entityActions)) {
             break;
           }
+
           Set<String> entityIds = getWorkflowIdsByFilter(permissionTypeAppIdEntityMap.get(permissionType).get(appId),
               permissionTypeAppIdEntityMap.get(ENV).get(appId), (WorkflowFilter) entityFilter);
           AppPermissionSummaryForUI finalAppPermissionSummaryForUI = appPermissionSummaryForUI;
+
           entityIds.forEach(entityId -> {
             if (finalAppPermissionSummaryForUI.getWorkflowPermissions() == null) {
               finalAppPermissionSummaryForUI.setWorkflowPermissions(new HashMap<>());
@@ -251,6 +255,7 @@ public class AuthHandler {
             finalAppPermissionSummaryForUI.getWorkflowPermissions().put(entityId, entityActions);
 
           });
+
           break;
         }
         case PIPELINE: {
@@ -706,7 +711,7 @@ public class AuthHandler {
 
   private Set<String> getWorkflowIdsByFilter(
       List<Base> workflows, List<Base> environments, WorkflowFilter workflowFilter) {
-    if (workflows == null || environments == null) {
+    if (workflows == null) {
       return new HashSet<>();
     }
 
@@ -724,13 +729,19 @@ public class AuthHandler {
 
     Set<String> finalFilterEnvIds = filterEnvIds;
     WorkflowFilter finalWorkflowFilter = workflowFilter;
-    Set<String> envIds = environments.stream()
-                             .filter(environment
-                                 -> finalFilterEnvIds.contains(environment.getUuid())
-                                     || finalWorkflowFilter.getFilterTypes().contains(
-                                            ((Environment) environment).getEnvironmentType().name()))
-                             .map(Base::getUuid)
-                             .collect(Collectors.toSet());
+
+    final Set<String> envIds;
+    if (environments != null) {
+      envIds = environments.stream()
+                   .filter(environment
+                       -> finalFilterEnvIds.contains(environment.getUuid())
+                           || finalWorkflowFilter.getFilterTypes().contains(
+                                  ((Environment) environment).getEnvironmentType().name()))
+                   .map(Base::getUuid)
+                   .collect(Collectors.toSet());
+    } else {
+      envIds = Collections.emptySet();
+    }
 
     return workflows.stream()
         .filter(workflow -> {
@@ -794,11 +805,16 @@ public class AuthHandler {
   }
 
   private Set<String> getPipelineIdsByFilter(List<Base> pipelines, List<Base> environments, EnvFilter envFilter) {
-    if (pipelines == null || environments == null) {
+    if (pipelines == null) {
       return new HashSet<>();
     }
 
-    Set<String> envIds = getEnvIdsByFilter(environments, envFilter);
+    Set<String> envIds;
+    if (environments != null) {
+      envIds = getEnvIdsByFilter(environments, envFilter);
+    } else {
+      envIds = Collections.emptySet();
+    }
 
     return pipelines.stream()
         .filter(p -> {
@@ -811,7 +827,8 @@ public class AuthHandler {
               -> pipelineStage != null && pipelineStage.getPipelineStageElements() != null
                   && pipelineStage.getPipelineStageElements().stream().allMatch(pipelineStageElement
                          -> (pipelineStageElement.getProperties() != null
-                                && envIds.contains(pipelineStageElement.getProperties().get("envId")))
+                                && (pipelineStageElement.getProperties().get("envId") == null
+                                       || envIds.contains(pipelineStageElement.getProperties().get("envId"))))
                              || pipelineStageElement.getType().equals(StateType.APPROVAL.name())));
         })
         .map(pipeline -> pipeline.getUuid())

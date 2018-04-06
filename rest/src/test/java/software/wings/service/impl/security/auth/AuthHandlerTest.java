@@ -11,6 +11,8 @@ import static software.wings.beans.Environment.Builder.anEnvironment;
 import static software.wings.beans.Pipeline.Builder.aPipeline;
 import static software.wings.beans.Workflow.WorkflowBuilder.aWorkflow;
 import static software.wings.dl.PageResponse.PageResponseBuilder.aPageResponse;
+import static software.wings.security.EnvFilter.FilterType.NON_PROD;
+import static software.wings.security.EnvFilter.FilterType.PROD;
 import static software.wings.security.PermissionAttribute.PermissionType.ACCOUNT_MANAGEMENT;
 import static software.wings.security.PermissionAttribute.PermissionType.ALL_APP_ENTITIES;
 import static software.wings.security.PermissionAttribute.PermissionType.APPLICATION_CREATE_DELETE;
@@ -19,6 +21,7 @@ import static software.wings.security.PermissionAttribute.PermissionType.ENV;
 import static software.wings.security.PermissionAttribute.PermissionType.PIPELINE;
 import static software.wings.security.PermissionAttribute.PermissionType.USER_PERMISSION_MANAGEMENT;
 import static software.wings.security.PermissionAttribute.PermissionType.WORKFLOW;
+import static software.wings.sm.StateType.APPROVAL;
 import static software.wings.sm.StateType.ENV_STATE;
 import static software.wings.utils.WingsTestConstants.ACCOUNT_ID;
 import static software.wings.utils.WingsTestConstants.APP_ID;
@@ -57,8 +60,10 @@ import software.wings.service.intfc.PipelineService;
 import software.wings.service.intfc.ServiceResourceService;
 import software.wings.service.intfc.WorkflowService;
 
+import java.util.HashMap;
 import java.util.HashSet;
 import java.util.List;
+import java.util.Map;
 
 public class AuthHandlerTest extends WingsBaseTest {
   @Mock private AppService appService;
@@ -90,6 +95,7 @@ public class AuthHandlerTest extends WingsBaseTest {
   private Workflow workflow1 = aWorkflow().withUuid(generateUuid()).withAppId(APP_ID).withEnvId(dev.getUuid()).build();
   private Workflow workflow2 = aWorkflow().withUuid(generateUuid()).withAppId(APP_ID).withEnvId(qa.getUuid()).build();
   private Workflow workflow3 = aWorkflow().withUuid(generateUuid()).withAppId(APP_ID).withEnvId(prod.getUuid()).build();
+  private Workflow buildWorkflow = aWorkflow().withUuid(generateUuid()).withAppId(APP_ID).withEnvId(null).build();
 
   private Pipeline pipeline1 =
       aPipeline()
@@ -121,6 +127,33 @@ public class AuthHandlerTest extends WingsBaseTest {
                                                            .type(ENV_STATE.name())
                                                            .build()))
                          .build()))
+          .build();
+
+  private Pipeline approvalPipeline =
+      aPipeline()
+          .withUuid(generateUuid())
+          .withAppId(APP_ID)
+          .withPipelineStages(
+              asList(PipelineStage.builder()
+                         .pipelineStageElements(asList(PipelineStageElement.builder().type(APPROVAL.name()).build()))
+                         .build()))
+          .build();
+
+  private Map<String, Object> getEmptyEnvMap() {
+    HashMap<String, Object> map = new HashMap<>();
+    map.put("envId", null);
+    return map;
+  }
+
+  private Pipeline buildPipeline =
+      aPipeline()
+          .withUuid(generateUuid())
+          .withAppId(APP_ID)
+          .withPipelineStages(asList(
+              PipelineStage.builder()
+                  .pipelineStageElements(asList(PipelineStageElement.builder().type(APPROVAL.name()).build(),
+                      PipelineStageElement.builder().properties(getEmptyEnvMap()).type(ENV_STATE.name()).build()))
+                  .build()))
           .build();
 
   private AccountPermissions accountPermissions =
@@ -188,6 +221,36 @@ public class AuthHandlerTest extends WingsBaseTest {
 
     PageResponse<Pipeline> pipelineResponse = aPageResponse().withResponse(asList(pipeline1, pipeline2)).build();
     when(pipelineService.listPipelines(any(PageRequest.class))).thenReturn(pipelineResponse);
+  }
+
+  private void setupForNoEnvs() {
+    setupForOneEnv(null);
+  }
+
+  private void setupForOneEnv(Environment env) {
+    when(appService.getAppIdsByAccountId(ACCOUNT_ID)).thenReturn(appIds);
+    PageResponse<Service> svcResponse = aPageResponse().withResponse(asList(service1, service2)).build();
+    when(serviceResourceService.list(any(PageRequest.class), eq(false), eq(false))).thenReturn(svcResponse);
+
+    PageResponse<Environment> envResponse;
+    if (env == null) {
+      envResponse = aPageResponse().withResponse(asList()).build();
+    } else {
+      envResponse = aPageResponse().withResponse(asList(env)).build();
+    }
+    when(environmentService.list(any(PageRequest.class), eq(false))).thenReturn(envResponse);
+
+    PageResponse<Workflow> workflowResponse =
+        aPageResponse().withResponse(asList(workflow1, workflow2, workflow3, buildWorkflow)).build();
+    when(workflowService.listWorkflowsWithoutOrchestration(any(PageRequest.class))).thenReturn(workflowResponse);
+
+    PageResponse<Pipeline> pipelineResponse =
+        aPageResponse().withResponse(asList(pipeline1, pipeline2, buildPipeline, approvalPipeline)).build();
+    when(pipelineService.listPipelines(any(PageRequest.class))).thenReturn(pipelineResponse);
+  }
+
+  private void setupForDevEnv() {
+    setupForOneEnv(dev);
   }
 
   private void verifyAllAppPermissions(UserPermissionInfo userPermissionInfo) {
@@ -287,10 +350,10 @@ public class AuthHandlerTest extends WingsBaseTest {
   public void shouldfetchPermissionsForProdSupport() {
     setupForAllApp();
     EnvFilter envFilter = new EnvFilter();
-    envFilter.setFilterTypes(Sets.newHashSet(EnvFilter.FilterType.PROD));
+    envFilter.setFilterTypes(Sets.newHashSet(PROD));
 
     WorkflowFilter workflowFilter = new WorkflowFilter();
-    workflowFilter.setFilterTypes(Sets.newHashSet(EnvFilter.FilterType.PROD));
+    workflowFilter.setFilterTypes(Sets.newHashSet(PROD));
 
     AppPermission envPermission = AppPermission.builder()
                                       .permissionType(ENV)
@@ -387,7 +450,7 @@ public class AuthHandlerTest extends WingsBaseTest {
     envFilter.setIds(Sets.newHashSet(dev.getUuid()));
 
     WorkflowFilter workflowFilter = new WorkflowFilter();
-    workflowFilter.setFilterTypes(Sets.newHashSet(EnvFilter.FilterType.NON_PROD));
+    workflowFilter.setFilterTypes(Sets.newHashSet(NON_PROD));
 
     AppPermission envPermission =
         AppPermission.builder()
@@ -464,5 +527,127 @@ public class AuthHandlerTest extends WingsBaseTest {
     assertThat(userPermissionInfo.getAppPermissionMap().get(APP_ID).getDeploymentPermissions().get(workflow1.getUuid()))
         .isNotNull()
         .contains(Action.UPDATE, Action.READ, Action.DELETE);
+  }
+
+  @Test
+  public void shouldFetchPermissionsForNoEnv() {
+    setupForNoEnvs();
+    EnvFilter envFilter = new EnvFilter();
+    envFilter.setFilterTypes(Sets.newHashSet(PROD, NON_PROD));
+
+    WorkflowFilter workflowFilter = new WorkflowFilter();
+    workflowFilter.setFilterTypes(Sets.newHashSet(PROD, NON_PROD));
+
+    AppPermission envPermission =
+        AppPermission.builder()
+            .permissionType(ENV)
+            .appFilter(
+                GenericEntityFilter.builder().filterType(FilterType.SELECTED).ids(Sets.newHashSet(APP_ID)).build())
+            .entityFilter(envFilter)
+            .actions(new HashSet(allActions))
+            .build();
+
+    AppPermission workflowPermission =
+        AppPermission.builder()
+            .permissionType(WORKFLOW)
+            .appFilter(
+                GenericEntityFilter.builder().filterType(FilterType.SELECTED).ids(Sets.newHashSet(APP_ID)).build())
+            .entityFilter(workflowFilter)
+            .actions(new HashSet(allActions))
+            .build();
+
+    AppPermission pipelinePermission =
+        AppPermission.builder()
+            .permissionType(PIPELINE)
+            .appFilter(
+                GenericEntityFilter.builder().filterType(FilterType.SELECTED).ids(Sets.newHashSet(APP_ID)).build())
+            .entityFilter(envFilter)
+            .actions(new HashSet(allActions))
+            .build();
+
+    AppPermission deploymentPermission =
+        AppPermission.builder()
+            .permissionType(DEPLOYMENT)
+            .appFilter(
+                GenericEntityFilter.builder().filterType(FilterType.SELECTED).ids(Sets.newHashSet(APP_ID)).build())
+            .entityFilter(envFilter)
+            .actions(new HashSet(allActions))
+            .build();
+
+    List<UserGroup> userGroups =
+        asList(UserGroup.builder()
+                   .accountId(ACCOUNT_ID)
+                   .appPermissions(
+                       new HashSet(asList(envPermission, workflowPermission, pipelinePermission, deploymentPermission)))
+                   .build());
+    UserPermissionInfo userPermissionInfo = authHandler.getUserPermissionInfo(ACCOUNT_ID, userGroups);
+
+    assertThat(userPermissionInfo.getAppPermissionMap().get(APP_ID).getWorkflowPermissions())
+        .isNotNull()
+        .containsOnlyKeys(buildWorkflow.getUuid());
+    assertThat(userPermissionInfo.getAppPermissionMap().get(APP_ID).getPipelinePermissions())
+        .isNotNull()
+        .containsOnlyKeys(approvalPipeline.getUuid(), buildPipeline.getUuid());
+  }
+
+  @Test
+  public void shouldFetchPermissionsForBuildAndApprovalPipeline() {
+    setupForNoEnvs();
+    EnvFilter envFilter = new EnvFilter();
+    envFilter.setFilterTypes(Sets.newHashSet(PROD));
+
+    WorkflowFilter workflowFilter = new WorkflowFilter();
+    workflowFilter.setFilterTypes(Sets.newHashSet(PROD));
+
+    AppPermission envPermission =
+        AppPermission.builder()
+            .permissionType(ENV)
+            .appFilter(
+                GenericEntityFilter.builder().filterType(FilterType.SELECTED).ids(Sets.newHashSet(APP_ID)).build())
+            .entityFilter(envFilter)
+            .actions(new HashSet(allActions))
+            .build();
+
+    AppPermission workflowPermission =
+        AppPermission.builder()
+            .permissionType(WORKFLOW)
+            .appFilter(
+                GenericEntityFilter.builder().filterType(FilterType.SELECTED).ids(Sets.newHashSet(APP_ID)).build())
+            .entityFilter(workflowFilter)
+            .actions(new HashSet(allActions))
+            .build();
+
+    AppPermission pipelinePermission =
+        AppPermission.builder()
+            .permissionType(PIPELINE)
+            .appFilter(
+                GenericEntityFilter.builder().filterType(FilterType.SELECTED).ids(Sets.newHashSet(APP_ID)).build())
+            .entityFilter(envFilter)
+            .actions(new HashSet(allActions))
+            .build();
+
+    AppPermission deploymentPermission =
+        AppPermission.builder()
+            .permissionType(DEPLOYMENT)
+            .appFilter(
+                GenericEntityFilter.builder().filterType(FilterType.SELECTED).ids(Sets.newHashSet(APP_ID)).build())
+            .entityFilter(envFilter)
+            .actions(new HashSet(allActions))
+            .build();
+
+    List<UserGroup> userGroups =
+        asList(UserGroup.builder()
+                   .accountId(ACCOUNT_ID)
+                   .appPermissions(
+                       new HashSet(asList(envPermission, workflowPermission, pipelinePermission, deploymentPermission)))
+                   .build());
+    UserPermissionInfo userPermissionInfo = authHandler.getUserPermissionInfo(ACCOUNT_ID, userGroups);
+
+    assertThat(userPermissionInfo.getAppPermissionMap().get(APP_ID).getWorkflowPermissions())
+        .isNotNull()
+        .containsOnlyKeys(buildWorkflow.getUuid());
+    assertThat(userPermissionInfo.getAppPermissionMap().get(APP_ID).getPipelinePermissions())
+        .isNotNull()
+        .containsOnlyKeys(approvalPipeline.getUuid(), buildPipeline.getUuid());
   }
 }
