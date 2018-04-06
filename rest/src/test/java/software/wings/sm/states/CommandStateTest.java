@@ -307,7 +307,7 @@ public class CommandStateTest extends WingsBaseTest {
                        .build());
 
     verify(context, times(4)).getContextElement(ContextElementType.STANDARD);
-    verify(context, times(2)).getContextElement(ContextElementType.INSTANCE);
+    verify(context, times(1)).getContextElement(ContextElementType.INSTANCE);
     verify(context, times(1)).getContextElement(ContextElementType.PARAM, Constants.PHASE_PARAM);
     verify(context, times(2)).getContextElementList(ContextElementType.PARAM);
     verify(context, times(5)).getWorkflowExecutionId();
@@ -428,15 +428,14 @@ public class CommandStateTest extends WingsBaseTest {
                        .build());
 
     verify(context, times(4)).getContextElement(ContextElementType.STANDARD);
-    verify(context, times(2)).getContextElement(ContextElementType.INSTANCE);
+    verify(context, times(1)).getContextElement(ContextElementType.INSTANCE);
     verify(context, times(1)).getContextElement(ContextElementType.PARAM, Constants.PHASE_PARAM);
     verify(context, times(2)).getContextElementList(ContextElementType.PARAM);
-    verify(context, times(1)).getContextElement(ContextElementType.PARAM, Constants.SERVICE_INSTANCE_ARTIFACT_PARAMS);
     verify(context, times(5)).getWorkflowExecutionId();
     verify(context, times(1)).getWorkflowType();
     verify(context, times(4)).renderExpression(anyString());
     verify(context, times(1)).getWorkflowExecutionName();
-    verify(context, times(1)).getStateExecutionInstanceId();
+    verify(context, times(2)).getStateExecutionInstanceId();
     verify(context, times(1)).getStateExecutionInstanceName();
     verify(context, times(1)).getServiceVariables();
     verify(context, times(1)).getSafeDisplayServiceVariables();
@@ -480,7 +479,7 @@ public class CommandStateTest extends WingsBaseTest {
     verify(activityService).updateStatus(ACTIVITY_ID, APP_ID, ExecutionStatus.FAILED);
 
     verify(context, times(3)).getContextElement(ContextElementType.STANDARD);
-    verify(context, times(2)).getContextElement(ContextElementType.INSTANCE);
+    verify(context, times(1)).getContextElement(ContextElementType.INSTANCE);
     verify(context, times(2)).getContextElementList(ContextElementType.PARAM);
     verify(context, times(5)).getWorkflowExecutionId();
     verify(context, times(1)).getWorkflowExecutionName();

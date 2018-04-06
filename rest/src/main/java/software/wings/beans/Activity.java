@@ -30,6 +30,11 @@ import javax.validation.constraints.NotNull;
 @AllArgsConstructor
 @Builder
 public class Activity extends Base {
+  public static final String ARTIFACT_ID_KEY = "artifactId";
+  public static final String SERVICE_INSTANCE_ID_KEY = "serviceInstanceId";
+  public static final String STATUS_KEY = "status";
+  public static final String WORKFLOW_EXECUTION_ID_KEY = "workflowExecutionId";
+
   private Type type;
   @NotEmpty private String applicationName;
   @NotEmpty private String environmentId;

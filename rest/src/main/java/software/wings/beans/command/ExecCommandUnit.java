@@ -1,5 +1,6 @@
 package software.wings.beans.command;
 
+import static io.harness.data.structure.EmptyPredicate.isEmpty;
 import static software.wings.beans.command.CommandUnitType.EXEC;
 
 import com.google.common.base.MoreObjects;
@@ -33,6 +34,16 @@ public class ExecCommandUnit extends SshCommandUnit {
    */
   public ExecCommandUnit() {
     super(EXEC);
+  }
+
+  @Override
+  @SchemaIgnore
+  public boolean isArtifactNeeded() {
+    if (isEmpty(commandString)) {
+      return false;
+    }
+    return commandString.contains("${artifact.") || commandString.contains("${ARTIFACT_FILE_NAME}")
+        || commandString.contains("$ARTIFACT_FILE_NAME");
   }
 
   @Override

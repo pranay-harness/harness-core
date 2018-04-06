@@ -38,9 +38,11 @@ import de.danielbechler.diff.node.DiffNode;
 import de.danielbechler.diff.path.NodePath;
 import org.apache.commons.lang3.StringUtils;
 import org.hibernate.validator.constraints.NotEmpty;
+import org.mongodb.morphia.query.Sort;
 import org.mongodb.morphia.query.UpdateOperations;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import software.wings.beans.Activity;
 import software.wings.beans.AppContainer;
 import software.wings.beans.CanaryOrchestrationWorkflow;
 import software.wings.beans.ConfigFile;
@@ -59,6 +61,7 @@ import software.wings.beans.ServiceVariable;
 import software.wings.beans.Setup.SetupStatus;
 import software.wings.beans.Workflow;
 import software.wings.beans.WorkflowPhase;
+import software.wings.beans.artifact.Artifact;
 import software.wings.beans.artifact.ArtifactStream;
 import software.wings.beans.command.AmiCommandUnit;
 import software.wings.beans.command.AwsLambdaCommandUnit;
@@ -83,6 +86,7 @@ import software.wings.scheduler.PruneEntityJob;
 import software.wings.scheduler.QuartzScheduler;
 import software.wings.service.impl.yaml.YamlChangeSetHelper;
 import software.wings.service.intfc.AppService;
+import software.wings.service.intfc.ArtifactService;
 import software.wings.service.intfc.ArtifactStreamService;
 import software.wings.service.intfc.CommandService;
 import software.wings.service.intfc.ConfigService;
@@ -95,6 +99,10 @@ import software.wings.service.intfc.SetupService;
 import software.wings.service.intfc.TriggerService;
 import software.wings.service.intfc.WorkflowService;
 import software.wings.service.intfc.ownership.OwnedByService;
+import software.wings.sm.ContextElement;
+import software.wings.sm.ContextElementType;
+import software.wings.sm.ExecutionContext;
+import software.wings.sm.ExecutionStatus;
 import software.wings.stencils.DataProvider;
 import software.wings.stencils.Stencil;
 import software.wings.stencils.StencilCategory;
@@ -130,6 +138,7 @@ public class ServiceResourceServiceImpl implements ServiceResourceService, DataP
 
   @Inject private WingsPersistence wingsPersistence;
   @Inject private AppService appService;
+  @Inject private ArtifactService artifactService;
   @Inject private ArtifactStreamService artifactStreamService;
   @Inject private CommandService commandService;
   @Inject private ConfigService configService;
@@ -1257,5 +1266,29 @@ public class ServiceResourceServiceImpl implements ServiceResourceService, DataP
     wingsPersistence.update(savedService, updateOperations);
 
     return get(appId, serviceId, false);
+  }
+
+  @Override
+  public Artifact findPreviousArtifact(String serviceId, ExecutionContext context) {
+    ContextElement instanceElement = context.getContextElement(ContextElementType.INSTANCE);
+    if (instanceElement == null) {
+      return null;
+    }
+
+    final Activity activity = wingsPersistence.createQuery(Activity.class)
+                                  .filter(Activity.APP_ID_KEY, context.getAppId())
+                                  .filter(Activity.SERVICE_INSTANCE_ID_KEY, instanceElement.getUuid())
+                                  .filter(Activity.STATUS_KEY, ExecutionStatus.SUCCESS)
+                                  .field(Activity.WORKFLOW_EXECUTION_ID_KEY)
+                                  .notEqual(context.getWorkflowExecutionId())
+                                  .field(Activity.ARTIFACT_ID_KEY)
+                                  .exists()
+                                  .order(Sort.descending(Activity.CREATED_AT_KEY))
+                                  .get();
+
+    if (activity == null) {
+      return null;
+    }
+    return artifactService.get(context.getAppId(), activity.getArtifactId());
   }
 }
