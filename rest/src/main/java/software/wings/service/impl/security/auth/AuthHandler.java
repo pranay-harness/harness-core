@@ -765,10 +765,12 @@ public class AuthHandler {
       List<Base> pipelines, List<Base> workflows, List<Base> environments, EnvFilter envFilter, String appId) {
     WorkflowFilter workflowFilter = getWorkflowFilterFromEnvFilter(envFilter);
 
-    Set<String> envIds = getEnvIdsByFilter(environments, envFilter);
-    if (CollectionUtils.isEmpty(envIds)) {
-      logger.info("No environments matched the filter for app {}. Returning empty set of deployments", appId);
-      return new HashSet<>();
+    if (environments != null) {
+      Set<String> envIds = getEnvIdsByFilter(environments, envFilter);
+      if (CollectionUtils.isEmpty(envIds)) {
+        logger.info("No environments matched the filter for app {}. Returning empty set of deployments", appId);
+        return new HashSet<>();
+      }
     }
 
     Set<String> workflowIds = getWorkflowIdsByFilter(workflows, environments, workflowFilter);
