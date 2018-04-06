@@ -97,8 +97,9 @@ public class UserGroupResource {
   @Timed
   @ExceptionMetered
   public RestResponse<UserGroup> clone(@QueryParam("accountId") String accountId,
-      @PathParam("userGroupId") String userGroupId, @QueryParam("newName") String newName) {
-    return new RestResponse<>(userGroupService.cloneUserGroup(accountId, userGroupId, newName));
+      @PathParam("userGroupId") String userGroupId, @QueryParam("newName") String newName,
+      @QueryParam("newDescription") String newDescription) {
+    return new RestResponse<>(userGroupService.cloneUserGroup(accountId, userGroupId, newName, newDescription));
   }
 
   /**
