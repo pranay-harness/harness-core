@@ -36,18 +36,22 @@ public class FailureStrategyYamlHandler extends BaseYamlHandler<FailureStrategy.
         .repairActionCodeAfterRetry(repairActionCodeAfterRetry)
         .retryCount(yaml.getRetryCount())
         .retryIntervals(yaml.getRetryIntervals())
-        .failureTypes(yaml.getFailureTypes()
-                          .stream()
-                          .map(failureTypeString -> Util.getEnumFromString(FailureType.class, failureTypeString))
-                          .collect(toList()))
+        .failureTypes(yaml.getFailureTypes() != null
+                ? yaml.getFailureTypes()
+                      .stream()
+                      .map(failureTypeString -> Util.getEnumFromString(FailureType.class, failureTypeString))
+                      .collect(toList())
+                : null)
         .specificSteps(yaml.getSpecificSteps())
         .build();
   }
 
   @Override
   public Yaml toYaml(FailureStrategy bean, String appId) {
-    List<String> failureTypeList =
-        bean.getFailureTypes().stream().map(failureType -> failureType.name()).collect(toList());
+    List<String> failureTypeList = null;
+    if (bean.getFailureTypes() != null) {
+      failureTypeList = bean.getFailureTypes().stream().map(failureType -> failureType.name()).collect(toList());
+    }
     String repairActionCode = Util.getStringFromEnum(bean.getRepairActionCode());
     String repairActionCodeAfterRetry = Util.getStringFromEnum(bean.getRepairActionCodeAfterRetry());
     String executionScope = Util.getStringFromEnum(bean.getExecutionScope());
