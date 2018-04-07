@@ -131,6 +131,7 @@ public class ServiceResourceServiceTest extends WingsBaseTest {
   private static final ServiceCommand.Builder serviceCommandBuilder = aServiceCommand()
                                                                           .withServiceId(SERVICE_ID)
                                                                           .withUuid(SERVICE_COMMAND_ID)
+                                                                          .withDefaultVersion(1)
                                                                           .withAppId(APP_ID)
                                                                           .withName("START")
                                                                           .withCommand(commandBuilder.but().build());
@@ -214,6 +215,7 @@ public class ServiceResourceServiceTest extends WingsBaseTest {
                         .withResponse(asList(aServiceCommand()
                                                  .withTargetToAllEnv(true)
                                                  .withName("START")
+                                                 .withDefaultVersion(1)
                                                  .withCommand(commandBuilder.build())
                                                  .build()))
                         .build());
@@ -412,6 +414,7 @@ public class ServiceResourceServiceTest extends WingsBaseTest {
         .thenReturn(aPageResponse()
                         .withResponse(asList(aServiceCommand()
                                                  .withUuid("SERVICE_COMMAND_ID")
+                                                 .withDefaultVersion(1)
                                                  .withTargetToAllEnv(true)
                                                  .withName("START")
                                                  .withCommand(command)
@@ -621,6 +624,7 @@ public class ServiceResourceServiceTest extends WingsBaseTest {
                                                  .withUuid(ID_KEY)
                                                  .withTargetToAllEnv(true)
                                                  .withName("START")
+                                                 .withDefaultVersion(1)
                                                  .withCommand(oldCommand)
                                                  .build()))
                         .build());
@@ -841,6 +845,7 @@ public class ServiceResourceServiceTest extends WingsBaseTest {
             .withTargetToAllEnv(true)
             .withUuid(ID_KEY)
             .withName("START")
+            .withDefaultVersion(1)
             .withCommand(aCommand().withCommandUnits(expectedCommand.getCommandUnits()).build())
             .build());
 
@@ -922,6 +927,7 @@ public class ServiceResourceServiceTest extends WingsBaseTest {
             .withTargetToAllEnv(true)
             .withUuid(ID_KEY)
             .withName("START")
+            .withDefaultVersion(1)
             .withCommand(expectedCommand)
             .build());
 
@@ -1001,6 +1007,7 @@ public class ServiceResourceServiceTest extends WingsBaseTest {
     Service updatedService = srs.updateCommand(APP_ID, SERVICE_ID,
         aServiceCommand()
             .withTargetToAllEnv(true)
+            .withDefaultVersion(1)
             .withUuid(ID_KEY)
             .withName("START")
             .withCommand(expectedCommand)
@@ -1098,6 +1105,7 @@ public class ServiceResourceServiceTest extends WingsBaseTest {
             .withTargetToAllEnv(true)
             .withUuid(ID_KEY)
             .withName("STOP")
+            .withDefaultVersion(1)
             .withCommand(expectedCommand)
             .build());
 
@@ -1373,9 +1381,11 @@ public class ServiceResourceServiceTest extends WingsBaseTest {
                         .addCommands(aServiceCommand()
                                          .withTargetToAllEnv(true)
                                          .withName("START")
+                                         .withDefaultVersion(1)
                                          .withCommand(commandBuilder.build())
                                          .build(),
                             aServiceCommand()
+                                .withDefaultVersion(1)
                                 .withTargetToAllEnv(true)
                                 .withName("START2")
                                 .withCommand(commandBuilder.but().withName("START2").build())
@@ -1389,11 +1399,13 @@ public class ServiceResourceServiceTest extends WingsBaseTest {
                         .withResponse(asList(aServiceCommand()
                                                  .withTargetToAllEnv(false)
                                                  .withName("START")
+                                                 .withDefaultVersion(1)
                                                  .withCommand(commandBuilder.build())
                                                  .build(),
                             aServiceCommand()
                                 .withTargetToAllEnv(true)
                                 .withName("START2")
+                                .withDefaultVersion(1)
                                 .withCommand(commandBuilder.but().withName("START2").build())
                                 .build()))
                         .build());
@@ -1409,6 +1421,7 @@ public class ServiceResourceServiceTest extends WingsBaseTest {
                         .addCommands(aServiceCommand()
                                          .withTargetToAllEnv(true)
                                          .withName("START")
+                                         .withDefaultVersion(1)
                                          .withCommand(commandBuilder.build())
                                          .build())
                         .build());
@@ -1425,6 +1438,7 @@ public class ServiceResourceServiceTest extends WingsBaseTest {
                         .addCommands(aServiceCommand()
                                          .withTargetToAllEnv(true)
                                          .withName("START")
+                                         .withDefaultVersion(1)
                                          .withCommand(commandBuilder.build())
                                          .build())
                         .build());
@@ -1442,6 +1456,7 @@ public class ServiceResourceServiceTest extends WingsBaseTest {
                 .addCommands(aServiceCommand()
                                  .withEnvIdVersionMap(ImmutableMap.of(ENV_ID, anEntityVersion().withVersion(2).build()))
                                  .withName("START")
+                                 .withDefaultVersion(1)
                                  .withCommand(commandBuilder.build())
                                  .build())
                 .build());
@@ -1458,6 +1473,7 @@ public class ServiceResourceServiceTest extends WingsBaseTest {
                         .withResponse(asList(aServiceCommand()
                                                  .withTargetToAllEnv(false)
                                                  .withName("START")
+                                                 .withDefaultVersion(1)
                                                  .withCommand(commandBuilder.build())
                                                  .build()))
                         .build());
