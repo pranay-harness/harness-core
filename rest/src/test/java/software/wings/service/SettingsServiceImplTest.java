@@ -1,6 +1,7 @@
 package software.wings.service;
 
 import static java.util.Arrays.asList;
+import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThatThrownBy;
 import static org.mockito.Matchers.any;
 import static org.mockito.Matchers.anyObject;
@@ -56,6 +57,7 @@ import software.wings.beans.JenkinsConfig;
 import software.wings.beans.SettingAttribute;
 import software.wings.beans.SettingAttribute.Category;
 import software.wings.beans.StringValue;
+import software.wings.beans.ValidationResult;
 import software.wings.beans.artifact.JenkinsArtifactStream;
 import software.wings.dl.PageRequest;
 import software.wings.dl.PageResponse;
@@ -109,7 +111,6 @@ public class SettingsServiceImplTest extends WingsBaseTest {
     when(wingsPersistence.query(eq(SettingAttribute.class), any(PageRequest.class))).thenReturn(pageResponse);
     when(wingsPersistence.saveAndGet(eq(SettingAttribute.class), any(SettingAttribute.class)))
         .thenAnswer(new Answer<SettingAttribute>() {
-
           @Override
           public SettingAttribute answer(InvocationOnMock invocationOnMock) throws Throwable {
             return (SettingAttribute) invocationOnMock.getArguments()[1];
@@ -370,5 +371,69 @@ public class SettingsServiceImplTest extends WingsBaseTest {
                                                          .build();
 
     settingsService.update(settingAttribute, false);
+  }
+
+  @Test
+  public void testValidateWhenValid() {
+    final String uuid = UUID.randomUUID().toString();
+    final SettingAttribute settingAttribute =
+        aSettingAttribute()
+            .withUuid(uuid)
+            .withAppId(APP_ID)
+            .withAccountId(ACCOUNT_ID)
+            .withName("MY_CLOUD_PROVIDER_00")
+            .withCategory(Category.CLOUD_PROVIDER)
+            .withValue(AwsConfig.builder().accountId(ACCOUNT_ID).accessKey(ACCESS_KEY).secretKey(SECRET_KEY).build())
+            .build();
+    doReturn(true).when(settingValidationService).validate(settingAttribute);
+    final ValidationResult result = settingsService.validate(settingAttribute);
+    assertThat(result).isNotNull();
+    assertThat(result.isValid()).isTrue();
+  }
+
+  @Test
+  public void testValidateWhenNotValid() {
+    final String uuid = UUID.randomUUID().toString();
+    final SettingAttribute settingAttribute =
+        aSettingAttribute()
+            .withUuid(uuid)
+            .withAppId(APP_ID)
+            .withAccountId(ACCOUNT_ID)
+            .withName("MY_CLOUD_PROVIDER_01")
+            .withCategory(Category.CLOUD_PROVIDER)
+            .withValue(AwsConfig.builder().accountId(ACCOUNT_ID).accessKey(ACCESS_KEY).secretKey(SECRET_KEY).build())
+            .build();
+    doReturn(false).when(settingValidationService).validate(settingAttribute);
+    final ValidationResult result = settingsService.validate(settingAttribute);
+    assertThat(result).isNotNull();
+    assertThat(result.isValid()).isFalse();
+  }
+
+  @Test
+  public void testValidateIdValid() {
+    final String uuid = UUID.randomUUID().toString();
+    final SettingAttribute settingAttribute =
+        aSettingAttribute()
+            .withUuid(uuid)
+            .withAppId(APP_ID)
+            .withAccountId(ACCOUNT_ID)
+            .withName("MY_CLOUD_PROVIDER_02")
+            .withCategory(Category.CLOUD_PROVIDER)
+            .withValue(AwsConfig.builder().accountId(ACCOUNT_ID).accessKey(ACCESS_KEY).secretKey(SECRET_KEY).build())
+            .build();
+    doReturn(settingAttribute).when(wingsPersistence).get(SettingAttribute.class, uuid);
+    doReturn(true).when(settingValidationService).validate(settingAttribute);
+    final ValidationResult result = settingsService.validate(uuid);
+    assertThat(result).isNotNull();
+    assertThat(result.isValid()).isTrue();
+  }
+
+  @Test
+  public void testValidateIdWhenNotExists() {
+    final String uuid = UUID.randomUUID().toString();
+    doReturn(null).when(wingsPersistence).get(SettingAttribute.class, uuid);
+    final ValidationResult result = settingsService.validate(uuid);
+    assertThat(result).isNotNull();
+    assertThat(result.isValid()).isFalse();
   }
 }

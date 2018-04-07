@@ -24,6 +24,7 @@ import software.wings.beans.GcpConfig;
 import software.wings.beans.RestResponse;
 import software.wings.beans.SettingAttribute;
 import software.wings.beans.SettingAttribute.Category;
+import software.wings.beans.ValidationResult;
 import software.wings.dl.PageRequest;
 import software.wings.dl.PageResponse;
 import software.wings.exception.WingsException;
@@ -94,6 +95,19 @@ public class SettingResource {
     }
   }
 
+  private void prePruneSettingAttribute(final String appId, final String accountId, final SettingAttribute variable) {
+    variable.setAppId(appId);
+    if (accountId != null) {
+      variable.setAccountId(accountId);
+    }
+    if (variable.getValue() != null) {
+      if (variable.getValue() instanceof Encryptable) {
+        ((Encryptable) variable.getValue()).setAccountId(variable.getAccountId());
+      }
+    }
+    variable.setCategory(Category.getCategory(SettingVariableTypes.valueOf(variable.getValue().getType())));
+  }
+
   /**
    * Save.
    *
@@ -106,17 +120,25 @@ public class SettingResource {
   @ExceptionMetered
   public RestResponse<SettingAttribute> save(@DefaultValue(GLOBAL_APP_ID) @QueryParam("appId") String appId,
       @QueryParam("accountId") String accountId, SettingAttribute variable) {
-    variable.setAppId(appId);
-    if (accountId != null) {
-      variable.setAccountId(accountId);
-    }
-    if (variable.getValue() != null) {
-      if (variable.getValue() instanceof Encryptable) {
-        ((Encryptable) variable.getValue()).setAccountId(variable.getAccountId());
-      }
-    }
-    variable.setCategory(Category.getCategory(SettingVariableTypes.valueOf(variable.getValue().getType())));
+    prePruneSettingAttribute(appId, accountId, variable);
     return new RestResponse<>(attributeService.save(variable));
+  }
+
+  /**
+   * Validate
+   * @param appId The appId
+   * @param accountId The account Id
+   * @param variable The variable to be validated
+   * @return
+   */
+  @POST
+  @Path("validate")
+  @Timed
+  @ExceptionMetered
+  public RestResponse<ValidationResult> validate(@DefaultValue(GLOBAL_APP_ID) @QueryParam("appId") String appId,
+      @QueryParam("accountId") String accountId, SettingAttribute variable) {
+    prePruneSettingAttribute(appId, accountId, variable);
+    return new RestResponse<>(attributeService.validate(variable));
   }
 
   /**

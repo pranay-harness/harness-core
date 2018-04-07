@@ -2,6 +2,7 @@ package software.wings.service.intfc;
 
 import ru.vyarus.guice.validator.group.annotation.ValidationGroups;
 import software.wings.beans.SettingAttribute;
+import software.wings.beans.ValidationResult;
 import software.wings.dl.PageRequest;
 import software.wings.dl.PageResponse;
 import software.wings.service.intfc.ownership.OwnedByAccount;
@@ -184,4 +185,18 @@ public interface SettingsService extends OwnedByAccount {
   void deleteSettingAttributesByType(String accountId, String appId, String envId, String type);
 
   SettingAttribute getGlobalSettingAttributesById(String accountId, String id);
+
+  /**
+   * Validate the passed SettingAttribute for correctness
+   * @param settingAttribute The POJO to validate
+   * @return true if passed POJO is valid, false otherwise
+   */
+  ValidationResult validate(SettingAttribute settingAttribute);
+
+  /**
+   * Validate the SettingAttribute stored in the DB for correctness
+   * @param varId The Id of the stores SettingAttribute
+   * @return true / false
+   */
+  ValidationResult validate(String varId);
 }
