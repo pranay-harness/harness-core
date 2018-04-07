@@ -253,7 +253,7 @@ public class ServiceCommand extends Base {
     private String name;
     private String serviceId;
     private Map<String, EntityVersion> envIdVersionMap = Maps.newHashMap();
-    private Integer defaultVersion = 1;
+    private Integer defaultVersion;
     private boolean targetToAllEnv;
     private boolean setAsDefault;
     private Command command;
