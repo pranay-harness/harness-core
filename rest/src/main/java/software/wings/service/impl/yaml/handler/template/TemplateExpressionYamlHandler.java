@@ -1,5 +1,7 @@
 package software.wings.service.impl.yaml.handler.template;
 
+import static java.util.stream.Collectors.toList;
+
 import com.google.common.collect.Maps;
 import com.google.inject.Inject;
 import com.google.inject.Singleton;
@@ -19,7 +21,6 @@ import software.wings.utils.Util;
 
 import java.util.List;
 import java.util.Map;
-import java.util.stream.Collectors;
 
 /**
  * @author rktummala on 10/28/17
@@ -37,7 +38,7 @@ public class TemplateExpressionYamlHandler extends BaseYamlHandler<TemplateExpre
           yaml.getMetadata()
               .stream()
               .map(nvpYaml -> NameValuePair.builder().name(nvpYaml.getName()).value(nvpYaml.getValue()).build())
-              .collect(Collectors.toList());
+              .collect(toList());
       properties = Util.toProperties(nameValuePairList);
     }
 

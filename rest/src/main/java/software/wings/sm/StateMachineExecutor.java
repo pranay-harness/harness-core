@@ -7,6 +7,7 @@ import static io.harness.govern.Switch.unhandled;
 import static io.harness.threading.Morpheus.quietSleep;
 import static java.lang.String.format;
 import static java.util.Arrays.asList;
+import static java.util.stream.Collectors.toList;
 import static org.apache.commons.lang3.StringUtils.isNotBlank;
 import static org.mongodb.morphia.mapping.Mapper.ID_KEY;
 import static software.wings.beans.ErrorCode.INVALID_ARGUMENT;
@@ -93,7 +94,6 @@ import java.util.List;
 import java.util.Map;
 import java.util.Optional;
 import java.util.concurrent.ExecutorService;
-import java.util.stream.Collectors;
 
 /**
  * Class responsible for executing state machine.
@@ -1379,7 +1379,7 @@ public class StateMachineExecutor {
   private List<String> getAllLeafInstanceIds(ExecutionInterrupt workflowExecutionInterrupt,
       WorkflowExecution workflowExecution, List<StateExecutionInstance> stateExecutionInstances) {
     List<String> allInstanceIds =
-        stateExecutionInstances.stream().map(StateExecutionInstance::getUuid).collect(Collectors.toList());
+        stateExecutionInstances.stream().map(StateExecutionInstance::getUuid).collect(toList());
 
     // Get Parent Ids
     List<String> parentInstanceIds =
@@ -1391,7 +1391,7 @@ public class StateMachineExecutor {
                     || stateExecutionInstance.getStateType().equals(StateType.PHASE.name())
                     || stateExecutionInstance.getStateType().equals(StateType.SUB_WORKFLOW.name()))
             .map(StateExecutionInstance::getUuid)
-            .collect(Collectors.toList());
+            .collect(toList());
 
     if (isEmpty(parentInstanceIds)) {
       return allInstanceIds;
@@ -1412,10 +1412,8 @@ public class StateMachineExecutor {
     List<StateExecutionInstance> childInstances = getAllStateExecutionInstances(pageRequest);
 
     // get distinct parent Ids
-    List<String> parentIdsHavingChildren = childInstances.stream()
-                                               .map(StateExecutionInstance::getParentInstanceId)
-                                               .distinct()
-                                               .collect(Collectors.toList());
+    List<String> parentIdsHavingChildren =
+        childInstances.stream().map(StateExecutionInstance::getParentInstanceId).distinct().collect(toList());
 
     // parent with no children
     allInstanceIds.removeAll(parentIdsHavingChildren);

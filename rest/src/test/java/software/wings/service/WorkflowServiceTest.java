@@ -2,6 +2,7 @@ package software.wings.service;
 
 import static io.harness.data.structure.UUIDGenerator.generateUuid;
 import static java.util.Arrays.asList;
+import static java.util.stream.Collectors.toList;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThatThrownBy;
 import static org.assertj.core.api.Assertions.fail;
@@ -175,7 +176,6 @@ import software.wings.waitnotify.NotifyEventListener;
 
 import java.util.List;
 import java.util.Map;
-import java.util.stream.Collectors;
 import javax.validation.ConstraintViolationException;
 
 /**
@@ -2319,7 +2319,7 @@ public class WorkflowServiceTest extends WingsBaseTest {
     PhaseStep deployPhaseStep = workflowPhase.getPhaseSteps()
                                     .stream()
                                     .filter(ps -> ps.getPhaseStepType() == PhaseStepType.DEPLOY_SERVICE)
-                                    .collect(Collectors.toList())
+                                    .collect(toList())
                                     .get(0);
 
     deployPhaseStep.getSteps().add(
@@ -3370,7 +3370,7 @@ public class WorkflowServiceTest extends WingsBaseTest {
     PhaseStep verifyPhaseStep = workflowPhase.getPhaseSteps()
                                     .stream()
                                     .filter(ps -> ps.getPhaseStepType() == PhaseStepType.VERIFY_SERVICE)
-                                    .collect(Collectors.toList())
+                                    .collect(toList())
                                     .get(0);
 
     verifyPhaseStep.getSteps().add(aGraphNode()
@@ -3398,7 +3398,7 @@ public class WorkflowServiceTest extends WingsBaseTest {
     verifyPhaseStep = workflowPhase.getPhaseSteps()
                           .stream()
                           .filter(ps -> ps.getPhaseStepType() == PhaseStepType.VERIFY_SERVICE)
-                          .collect(Collectors.toList())
+                          .collect(toList())
                           .get(0);
 
     List<TemplateExpression> appDTemplateExpressions =

@@ -2,6 +2,7 @@ package software.wings.sm.states;
 
 import static java.util.Collections.emptyList;
 import static java.util.Collections.singletonList;
+import static java.util.stream.Collectors.toList;
 import static software.wings.api.CommandStateExecutionData.Builder.aCommandStateExecutionData;
 import static software.wings.api.InstanceElementListParam.InstanceElementListParamBuilder.anInstanceElementListParam;
 import static software.wings.beans.DelegateTask.Builder.aDelegateTask;
@@ -97,7 +98,6 @@ import java.util.List;
 import java.util.Map;
 import java.util.Optional;
 import java.util.concurrent.TimeUnit;
-import java.util.stream.Collectors;
 
 /**
  * Created by brett on 9/29/17
@@ -282,7 +282,7 @@ public abstract class ContainerServiceSetup extends State {
                                       .ofNullable(executionData.getNewInstanceStatusSummaries()
                                                       .stream()
                                                       .map(InstanceStatusSummary::getInstanceElement)
-                                                      .collect(Collectors.toList()))
+                                                      .collect(toList()))
                                       .orElse(emptyList()))
             .build();
 

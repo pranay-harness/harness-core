@@ -3,6 +3,7 @@ package software.wings.service.impl.artifact;
 import static io.harness.data.structure.EmptyPredicate.isEmpty;
 import static io.harness.data.structure.EmptyPredicate.isNotEmpty;
 import static java.util.Arrays.asList;
+import static java.util.stream.Collectors.toList;
 import static org.mongodb.morphia.mapping.Mapper.ID_KEY;
 import static software.wings.beans.artifact.Artifact.ContentStatus.DOWNLOADED;
 import static software.wings.beans.artifact.Artifact.ContentStatus.DOWNLOADING;
@@ -108,7 +109,7 @@ public class ArtifactServiceImpl implements ArtifactService {
             artifact.setServices(artifact.getServiceIds()
                                      .stream()
                                      .map(serviceId -> serviceResourceService.get(artifact.getAppId(), serviceId))
-                                     .collect(Collectors.toList()));
+                                     .collect(toList()));
           } catch (Exception e) {
             logger.error("Failed to set services for artifact {} ", artifact, e);
           }
@@ -125,10 +126,8 @@ public class ArtifactServiceImpl implements ArtifactService {
         pageResponse.getResponse().stream().collect(Collectors.groupingBy(Artifact::getArtifactStreamId));
     List<Artifact> artifacts = new ArrayList<>();
     for (String artifactStreamId : groupByArtifactStream.keySet()) {
-      artifacts.addAll(groupByArtifactStream.get(artifactStreamId)
-                           .stream()
-                           .sorted(new ArtifactComparator())
-                           .collect(Collectors.toList()));
+      artifacts.addAll(
+          groupByArtifactStream.get(artifactStreamId).stream().sorted(new ArtifactComparator()).collect(toList()));
     }
     pageResponse.setResponse(artifacts);
     return pageResponse;
@@ -300,7 +299,7 @@ public class ArtifactServiceImpl implements ArtifactService {
       List<Service> services = artifact.getServiceIds()
                                    .stream()
                                    .map(serviceId -> serviceResourceService.get(artifact.getAppId(), serviceId))
-                                   .collect(Collectors.toList());
+                                   .collect(toList());
       artifact.setServices(services);
     }
     return artifact;
@@ -394,7 +393,7 @@ public class ArtifactServiceImpl implements ArtifactService {
           if (isNotEmpty(toBeDeletedArtifacts)) {
             toBeDeletedArtifacts = toBeDeletedArtifacts.stream()
                                        .filter(artifact -> !artifact.getArtifactFiles().isEmpty())
-                                       .collect(Collectors.toList());
+                                       .collect(toList());
             logger.info("Deleting artifacts for artifactStreamId [{}]  of size: [{}] for appId [{}]",
                 artifactStream.getUuid(), toBeDeletedArtifacts.size(), appId);
             deleteArtifacts(app.getId().toString(), artifactStream.getUuid(), toBeDeletedArtifacts);
@@ -446,8 +445,7 @@ public class ArtifactServiceImpl implements ArtifactService {
       logger.info("Artifact with files size {} and uuids {} ", fileUuids.size(), fileUuids);
       List<ObjectId> artifactFileUuids = wingsPersistence.getCollection("artifacts.files").distinct("_id");
       logger.info("Artifact files size {} and  uuids {}", artifactFileUuids.size(), artifactFileUuids);
-      List<ObjectId> fileObjectUuids =
-          fileUuids.stream().map((String s) -> new ObjectId(s)).collect(Collectors.toList());
+      List<ObjectId> fileObjectUuids = fileUuids.stream().map((String s) -> new ObjectId(s)).collect(toList());
       artifactFileUuids.removeAll(fileObjectUuids);
       logger.info("Dangling artifact files size {} and  uuids {}", artifactFileUuids.size(), artifactFileUuids);
       wingsPersistence.getCollection("artifacts.files")

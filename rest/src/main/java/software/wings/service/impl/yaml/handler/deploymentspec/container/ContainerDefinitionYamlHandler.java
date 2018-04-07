@@ -1,6 +1,7 @@
 package software.wings.service.impl.yaml.handler.deploymentspec.container;
 
 import static io.harness.data.structure.EmptyPredicate.isNotEmpty;
+import static java.util.stream.Collectors.toList;
 import static org.apache.commons.lang3.StringUtils.isNotBlank;
 
 import com.google.common.collect.Lists;
@@ -22,7 +23,6 @@ import software.wings.service.impl.yaml.handler.YamlHandlerFactory;
 
 import java.util.Collections;
 import java.util.List;
-import java.util.stream.Collectors;
 /**
  * @author rktummala on 11/15/17
  */
@@ -44,9 +44,8 @@ public class ContainerDefinitionYamlHandler extends BaseYamlHandler<ContainerDef
     PortMappingYamlHandler portMappingYamlHandler = yamlHandlerFactory.getYamlHandler(YamlType.PORT_MAPPING);
     List<PortMapping> portMappings = containerDefinition.getPortMappings();
     if (isNotEmpty(portMappings)) {
-      portMappingYamlList = portMappings.stream()
-                                .map(portMapping -> portMappingYamlHandler.toYaml(portMapping, appId))
-                                .collect(Collectors.toList());
+      portMappingYamlList =
+          portMappings.stream().map(portMapping -> portMappingYamlHandler.toYaml(portMapping, appId)).collect(toList());
     }
 
     // Storage Configurations
@@ -61,7 +60,7 @@ public class ContainerDefinitionYamlHandler extends BaseYamlHandler<ContainerDef
                   -> isNotBlank(storageConfiguration.getHostSourcePath())
                       && isNotBlank(storageConfiguration.getContainerPath()))
               .map(storageConfiguration -> storageConfigYamlHandler.toYaml(storageConfiguration, appId))
-              .collect(Collectors.toList());
+              .collect(toList());
     }
 
     return Yaml.builder()
@@ -99,7 +98,7 @@ public class ContainerDefinitionYamlHandler extends BaseYamlHandler<ContainerDef
                              throw new WingsException(e);
                            }
                          })
-                         .collect(Collectors.toList());
+                         .collect(toList());
     }
 
     // storage configurations
@@ -118,7 +117,7 @@ public class ContainerDefinitionYamlHandler extends BaseYamlHandler<ContainerDef
                                throw new WingsException(e);
                              }
                            })
-                           .collect(Collectors.toList());
+                           .collect(toList());
     }
 
     // log configuration

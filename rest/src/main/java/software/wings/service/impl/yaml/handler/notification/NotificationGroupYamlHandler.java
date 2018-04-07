@@ -1,5 +1,6 @@
 package software.wings.service.impl.yaml.handler.notification;
 
+import static java.util.stream.Collectors.toList;
 import static software.wings.beans.Base.GLOBAL_APP_ID;
 import static software.wings.beans.ObjectType.NOTIFICATION_GROUP;
 
@@ -87,7 +88,7 @@ public class NotificationGroupYamlHandler extends BaseYamlHandler<Yaml, Notifica
   }
 
   private List<AddressYaml> toAddressYamlList(Map<NotificationChannelType, List<String>> addressesByChannelType) {
-    return addressesByChannelType.entrySet().stream().map(entry -> toAddressYaml(entry)).collect(Collectors.toList());
+    return addressesByChannelType.entrySet().stream().map(entry -> toAddressYaml(entry)).collect(toList());
   }
 
   private AddressYaml toAddressYaml(Entry<NotificationChannelType, List<String>> entry) {

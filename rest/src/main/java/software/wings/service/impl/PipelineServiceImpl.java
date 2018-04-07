@@ -79,7 +79,6 @@ import java.util.List;
 import java.util.Map;
 import java.util.Set;
 import java.util.concurrent.ExecutorService;
-import java.util.stream.Collectors;
 import javax.validation.executable.ValidateOnExecution;
 
 /**
@@ -259,7 +258,7 @@ public class PipelineServiceImpl implements PipelineService {
       if (isEmpty(triggers)) {
         return;
       }
-      List<String> triggerNames = triggers.stream().map(Trigger::getName).collect(Collectors.toList());
+      List<String> triggerNames = triggers.stream().map(Trigger::getName).collect(toList());
 
       throw new WingsException(INVALID_REQUEST, ReportTarget.USER)
           .addParam("message",

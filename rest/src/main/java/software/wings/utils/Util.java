@@ -1,6 +1,7 @@
 package software.wings.utils;
 
 import static io.harness.data.structure.EmptyPredicate.isEmpty;
+import static java.util.stream.Collectors.toList;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -13,7 +14,6 @@ import java.lang.reflect.Type;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
-import java.util.stream.Collectors;
 
 /**
  *
@@ -49,7 +49,7 @@ public class Util {
                                             .build();
           return nameValuePairYamlHandler.toYaml(nameValuePair, appId);
         })
-        .collect(Collectors.toList());
+        .collect(toList());
   }
 
   public static Map<String, Object> toProperties(List<NameValuePair> nameValuePairList) {

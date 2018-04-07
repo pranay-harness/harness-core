@@ -3,6 +3,7 @@ package software.wings.service.impl;
 import static io.harness.data.structure.EmptyPredicate.isEmpty;
 import static io.harness.data.structure.EmptyPredicate.isNotEmpty;
 import static java.util.Arrays.asList;
+import static java.util.stream.Collectors.toList;
 import static org.mongodb.morphia.mapping.Mapper.ID_KEY;
 import static software.wings.beans.Base.GLOBAL_APP_ID;
 import static software.wings.beans.Base.GLOBAL_ENV_ID;
@@ -73,7 +74,6 @@ import software.wings.utils.Validator;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
-import java.util.stream.Collectors;
 import javax.validation.executable.ValidateOnExecution;
 
 /**
@@ -197,7 +197,7 @@ public class SettingsServiceImpl implements SettingsService {
                     //            }).findFirst().isPresent();
                   }
                 })
-                .collect(Collectors.toList());
+                .collect(toList());
 
         return aPageResponse().withResponse(settingAttributeList).withTotal(settingAttributeList.size()).build();
       } else {
@@ -395,7 +395,7 @@ public class SettingsServiceImpl implements SettingsService {
               .getResponse();
 
       List<String> infraMappingNames =
-          infrastructureMappings.stream().map(InfrastructureMapping::getName).collect(Collectors.toList());
+          infrastructureMappings.stream().map(InfrastructureMapping::getName).collect(toList());
       if (!infraMappingNames.isEmpty()) {
         throw new WingsException(INVALID_REQUEST)
             .addParam("message",
@@ -411,7 +411,7 @@ public class SettingsServiceImpl implements SettingsService {
         List<String> artifactStreamName = artifactStreams.stream()
                                               .map(ArtifactStream::getSourceName)
                                               .filter(java.util.Objects::nonNull)
-                                              .collect(Collectors.toList());
+                                              .collect(toList());
         throw new WingsException(INVALID_REQUEST, ReportTarget.USER)
             .addParam("message",
                 String.format("Connector [%s] is referenced by %s Artifact Source%s [%s].", connectorSetting.getName(),
@@ -433,7 +433,7 @@ public class SettingsServiceImpl implements SettingsService {
             .getResponse();
     if (!infrastructureMappings.isEmpty()) {
       List<String> infraMappingNames =
-          infrastructureMappings.stream().map(InfrastructureMapping::getName).collect(Collectors.toList());
+          infrastructureMappings.stream().map(InfrastructureMapping::getName).collect(toList());
       throw new WingsException(INVALID_REQUEST, ReportTarget.USER)
           .addParam("message",
               String.format("Cloud provider [%s] is referenced by %s Service Infrastructure%s [%s].",
@@ -448,8 +448,7 @@ public class SettingsServiceImpl implements SettingsService {
                                                          .build())
                                                .getResponse();
     if (!artifactStreams.isEmpty()) {
-      List<String> artifactStreamNames =
-          artifactStreams.stream().map(ArtifactStream::getName).collect(Collectors.toList());
+      List<String> artifactStreamNames = artifactStreams.stream().map(ArtifactStream::getName).collect(toList());
       throw new WingsException(INVALID_REQUEST, ReportTarget.USER)
           .addParam("message",
               String.format("Cloud provider [%s] is referenced by %s Artifact Stream%s [%s].",

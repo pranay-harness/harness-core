@@ -106,7 +106,7 @@ public class NexusTwoServiceImpl {
           // Strip out the version
           String[] pathElems = folderPath.getPath().substring(1).split("/");
           if (pathElems.length >= 1) {
-            groupIds.add(getGroupId(Arrays.stream(pathElems).limit(pathElems.length - 1).collect(Collectors.toList())));
+            groupIds.add(getGroupId(Arrays.stream(pathElems).limit(pathElems.length - 1).collect(toList())));
           }
         }
       }
@@ -198,7 +198,7 @@ public class NexusTwoServiceImpl {
       }
     }
     logger.info("Versions come from nexus server {}", versions);
-    versions = versions.stream().sorted(new AlphanumComparator()).collect(Collectors.toList());
+    versions = versions.stream().sorted(new AlphanumComparator()).collect(toList());
     logger.info("After sorting alphanumerically versions {}", versions);
     return versions.stream()
         .map(version -> aBuildDetails().withNumber(version).withRevision(version).build())

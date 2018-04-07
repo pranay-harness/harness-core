@@ -1,6 +1,7 @@
 package software.wings.service.impl.yaml.handler.deploymentspec.container;
 
 import static io.harness.data.structure.EmptyPredicate.isEmpty;
+import static java.util.stream.Collectors.toList;
 
 import com.google.inject.Singleton;
 
@@ -16,7 +17,6 @@ import software.wings.service.impl.yaml.handler.BaseYamlHandler;
 
 import java.util.Collections;
 import java.util.List;
-import java.util.stream.Collectors;
 /**
  * @author rktummala on 11/15/17
  */
@@ -42,7 +42,7 @@ public class LogConfigurationYamlHandler extends BaseYamlHandler<Yaml, LogConfig
     }
     return logOptionList.stream()
         .map(logOption -> NameValuePair.Yaml.builder().name(logOption.getKey()).value(logOption.getValue()).build())
-        .collect(Collectors.toList());
+        .collect(toList());
   }
 
   private List<LogOption> getLogOptions(List<NameValuePair.Yaml> yamlList) {
@@ -57,7 +57,7 @@ public class LogConfigurationYamlHandler extends BaseYamlHandler<Yaml, LogConfig
           logOption.setValue(yaml.getValue());
           return logOption;
         })
-        .collect(Collectors.toList());
+        .collect(toList());
   }
 
   private LogConfiguration toBean(ChangeContext<Yaml> changeContext) throws HarnessException {

@@ -1059,7 +1059,7 @@ public class DelegateServiceImpl implements DelegateService {
                                                   .hostName(delegate.getHostName())
                                                   .ip(delegate.getIp())
                                                   .build())
-                                       .collect(Collectors.toList());
+                                       .collect(toList());
 
       // Find out new Alerts to be created
       List<AlertData> alertsToBeCreated = new ArrayList<>();

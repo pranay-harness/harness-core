@@ -507,7 +507,7 @@ public class WorkflowServiceImpl implements WorkflowService, DataProvider {
                                  .stream()
                                  .map(serviceId -> serviceResourceService.get(workflow.getAppId(), serviceId, false))
                                  .filter(Objects::nonNull)
-                                 .collect(Collectors.toList());
+                                 .collect(toList());
 
     workflow.setServices(services);
     workflow.setTemplatizedServiceIds(orchestrationWorkflow.getTemplatizedServiceIds());
@@ -1275,7 +1275,7 @@ public class WorkflowServiceImpl implements WorkflowService, DataProvider {
             .build());
 
     if (!pipelines.isEmpty()) {
-      List<String> pipelineNames = pipelines.stream().map(Pipeline::getName).collect(Collectors.toList());
+      List<String> pipelineNames = pipelines.stream().map(Pipeline::getName).collect(toList());
       String message = String.format("Workflow is referenced by %s pipeline%s [%s].", pipelines.size(),
           pipelines.size() == 1 ? "" : "s", Joiner.on(", ").join(pipelineNames));
       throw new WingsException(INVALID_REQUEST, USER).addParam("message", message);
@@ -1291,7 +1291,7 @@ public class WorkflowServiceImpl implements WorkflowService, DataProvider {
     if (isEmpty(triggers)) {
       return;
     }
-    List<String> triggerNames = triggers.stream().map(Trigger::getName).collect(Collectors.toList());
+    List<String> triggerNames = triggers.stream().map(Trigger::getName).collect(toList());
 
     throw new WingsException(INVALID_REQUEST, USER)
         .addParam("message",
@@ -1575,7 +1575,7 @@ public class WorkflowServiceImpl implements WorkflowService, DataProvider {
           userVariables.stream()
               .filter(variable -> variable.getEntityType() != null && variable.getEntityType().equals(SERVICE))
               .map(Variable::getName)
-              .collect(Collectors.toList());
+              .collect(toList());
     }
     List<String> serviceIds = new ArrayList<>();
     if (workflowVariables != null) {
@@ -1636,7 +1636,7 @@ public class WorkflowServiceImpl implements WorkflowService, DataProvider {
       infraMappingIds = workflowPhases.stream()
                             .filter(workflowPhase -> workflowPhase.getInfraMappingId() != null)
                             .map(WorkflowPhase::getInfraMappingId)
-                            .collect(Collectors.toList());
+                            .collect(toList());
       if (infraMappingIds.size() != 0) {
         List<InfrastructureMapping> infrastructureMappings = wingsPersistence.createQuery(InfrastructureMapping.class)
                                                                  .filter("appId", appId)

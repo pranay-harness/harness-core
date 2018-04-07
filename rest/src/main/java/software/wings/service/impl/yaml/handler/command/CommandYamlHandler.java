@@ -1,6 +1,7 @@
 package software.wings.service.impl.yaml.handler.command;
 
 import static io.harness.data.structure.EmptyPredicate.isNotEmpty;
+import static java.util.stream.Collectors.toList;
 import static software.wings.beans.yaml.YamlConstants.PATH_DELIMITER;
 
 import com.google.common.collect.Lists;
@@ -37,7 +38,6 @@ import software.wings.yaml.command.CommandYaml;
 
 import java.util.List;
 import java.util.Map;
-import java.util.stream.Collectors;
 /**
  *  @author rktummala on 11/13/17
  */
@@ -161,7 +161,7 @@ public class CommandYamlHandler extends BaseYamlHandler<CommandYaml, ServiceComm
                   yamlHandlerFactory.getYamlHandler(YamlType.COMMAND_UNIT, commandUnit.getCommandUnitType().name());
               return (AbstractCommandUnit.Yaml) commandUnitsYamlHandler.toYaml(commandUnit, appId);
             })
-            .collect(Collectors.toList());
+            .collect(toList());
 
     // target environments
     Map<String, EntityVersion> envIdVersionMap = serviceCommand.getEnvIdVersionMap();
@@ -173,7 +173,7 @@ public class CommandYamlHandler extends BaseYamlHandler<CommandYaml, ServiceComm
                                    .stream()
                                    .filter(entry -> entry.getValue() == null)
                                    .map(entry -> entry.getKey())
-                                   .collect(Collectors.toList());
+                                   .collect(toList());
       if (isNotEmpty(envIdList)) {
         envIdList.forEach(envId -> {
           Environment environment = environmentService.get(appId, envId, false);

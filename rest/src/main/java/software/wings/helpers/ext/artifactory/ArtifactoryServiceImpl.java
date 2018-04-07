@@ -79,7 +79,6 @@ import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Future;
 import java.util.concurrent.TimeUnit;
 import java.util.regex.Pattern;
-import java.util.stream.Collectors;
 
 /**
  * Created by sgurubelli on 6/27/17.
@@ -263,7 +262,7 @@ public class ArtifactoryServiceImpl implements ArtifactoryService {
         String subPath;
         if (artifactPath.contains("/")) {
           String[] pathElems = artifactPath.split("/");
-          subPath = getPath(Arrays.stream(pathElems).limit(pathElems.length - 1).collect(Collectors.toList()));
+          subPath = getPath(Arrays.stream(pathElems).limit(pathElems.length - 1).collect(toList()));
           artifactName = pathElems[pathElems.length - 1];
           if (!artifactName.contains("?") && !artifactName.contains("*")) {
             artifactName = artifactName + "*";
@@ -353,7 +352,7 @@ public class ArtifactoryServiceImpl implements ArtifactoryService {
         Pattern pattern = Pattern.compile(artifactPath.replace(".", "\\.").replace("?", ".?").replace("*", ".*?"));
         if (artifactPath.contains("/")) {
           String[] pathElems = artifactPath.split("/");
-          String subPath = getPath(Arrays.stream(pathElems).limit(pathElems.length - 1).collect(Collectors.toList()));
+          String subPath = getPath(Arrays.stream(pathElems).limit(pathElems.length - 1).collect(toList()));
           if (!subPath.contains("?") && !subPath.contains("*")) {
             folderPaths = getFolderPaths(artifactory, repoKey, "/" + subPath);
             if (folderPaths != null) {
@@ -390,9 +389,9 @@ public class ArtifactoryServiceImpl implements ArtifactoryService {
           }
         }
         // Sort the alphanumeric order
-        artifactPaths = artifactPaths.stream().sorted(new AlphanumComparator()).collect(Collectors.toList());
+        artifactPaths = artifactPaths.stream().sorted(new AlphanumComparator()).collect(toList());
         Collections.reverse(artifactPaths);
-        artifactPaths = artifactPaths.stream().limit(maxVersions).collect(Collectors.toList());
+        artifactPaths = artifactPaths.stream().limit(maxVersions).collect(toList());
         Collections.reverse(artifactPaths);
       } else {
         throw new WingsException(INVALID_ARTIFACT_SERVER).addParam("message", "Artifact path can not be empty");
@@ -429,8 +428,7 @@ public class ArtifactoryServiceImpl implements ArtifactoryService {
               // strip out the file
               String[] pathElems = uri.substring(1).split("/");
               if (pathElems.length >= 4) {
-                String groupId =
-                    getGroupId(Arrays.stream(pathElems).limit(pathElems.length - 3).collect(Collectors.toList()));
+                String groupId = getGroupId(Arrays.stream(pathElems).limit(pathElems.length - 3).collect(toList()));
                 if (groupIds.add(groupId)) {
                   groupIdList.add(groupId);
                 }
@@ -489,8 +487,7 @@ public class ArtifactoryServiceImpl implements ArtifactoryService {
               // Strip out the version
               String[] pathElems = path.substring(1).split("/");
               if (pathElems.length >= 3) {
-                groupIds.add(
-                    getGroupId(Arrays.stream(pathElems).limit(pathElems.length - 2).collect(Collectors.toList())));
+                groupIds.add(getGroupId(Arrays.stream(pathElems).limit(pathElems.length - 2).collect(toList())));
               }
             }
           }
@@ -708,7 +705,7 @@ public class ArtifactoryServiceImpl implements ArtifactoryService {
       logger.info("Downloading artifact file maven repo style");
       Pattern pattern = Pattern.compile(artifactPattern.replace(".", "\\.").replace("?", ".?").replace("*", ".*?"));
       String[] paths = artifactPattern.split("/");
-      groupId = getGroupId(Arrays.stream(paths).limit(paths.length - 3).collect(Collectors.toList()));
+      groupId = getGroupId(Arrays.stream(paths).limit(paths.length - 3).collect(toList()));
       String artifactId = paths[paths.length - 3];
       Set<String> artifactNames = new HashSet<>();
       String latestVersion;
@@ -804,8 +801,7 @@ public class ArtifactoryServiceImpl implements ArtifactoryService {
         throw new WingsException(INVALID_ARTIFACT_SERVER, USER)
             .addParam("message", "Not in maven style format. Sample format: com/mycompany/myservice/*/myservice*.war");
       }
-      String groupId =
-          getGroupId(Arrays.stream(artifactPaths).limit(artifactPaths.length - 3).collect(Collectors.toList()));
+      String groupId = getGroupId(Arrays.stream(artifactPaths).limit(artifactPaths.length - 3).collect(toList()));
       String artifactId = artifactPaths[artifactPaths.length - 3];
       if (groupId.contains("*") || groupId.contains("?")) {
         prepareAndThrowException(

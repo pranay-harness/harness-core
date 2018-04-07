@@ -2,6 +2,7 @@ package software.wings.service.impl.yaml.handler.workflow;
 
 import static io.harness.data.structure.EmptyPredicate.isEmpty;
 import static io.harness.data.structure.UUIDGenerator.generateUuid;
+import static java.util.stream.Collectors.toList;
 import static software.wings.beans.GraphNode.GraphNodeBuilder.aGraphNode;
 
 import com.google.common.collect.Lists;
@@ -35,7 +36,6 @@ import software.wings.yaml.workflow.StepYaml;
 import java.util.List;
 import java.util.Map;
 import java.util.Map.Entry;
-import java.util.stream.Collectors;
 /**
  * @author rktummala on 10/28/17
  */
@@ -71,7 +71,7 @@ public class StepYamlHandler extends BaseYamlHandler<StepYaml, GraphNode> {
                   throw new WingsException(e);
                 }
               })
-              .collect(Collectors.toList());
+              .collect(toList());
     }
 
     // properties
@@ -124,7 +124,7 @@ public class StepYamlHandler extends BaseYamlHandler<StepYaml, GraphNode> {
           bean.getTemplateExpressions()
               .stream()
               .map(templateExpression -> templateExpressionYamlHandler.toYaml(templateExpression, appId))
-              .collect(Collectors.toList());
+              .collect(toList());
     }
 
     return StepYaml.builder()

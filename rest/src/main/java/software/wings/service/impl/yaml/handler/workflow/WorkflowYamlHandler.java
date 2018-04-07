@@ -1,5 +1,6 @@
 package software.wings.service.impl.yaml.handler.workflow;
 
+import static java.util.stream.Collectors.toList;
 import static org.apache.commons.lang3.StringUtils.isNotBlank;
 
 import com.google.common.collect.Lists;
@@ -111,7 +112,7 @@ public abstract class WorkflowYamlHandler<Y extends WorkflowYaml> extends BaseYa
                             throw new WingsException(e);
                           }
                         })
-                        .collect(Collectors.toList());
+                        .collect(toList());
       }
 
       Map<String, WorkflowPhase> workflowPhaseMap =
@@ -137,7 +138,7 @@ public abstract class WorkflowYamlHandler<Y extends WorkflowYaml> extends BaseYa
                     throw new WingsException(e);
                   }
                 })
-                .collect(Collectors.toList());
+                .collect(toList());
         rollbackPhaseList.stream().forEach(rollbackPhase -> {
           WorkflowPhase workflowPhase = workflowPhaseMap.get(rollbackPhase.getPhaseNameForRollback());
           if (workflowPhase != null) {
@@ -161,7 +162,7 @@ public abstract class WorkflowYamlHandler<Y extends WorkflowYaml> extends BaseYa
                                 throw new WingsException(e);
                               }
                             })
-                            .collect(Collectors.toList());
+                            .collect(toList());
       }
 
       // template expressions
@@ -181,7 +182,7 @@ public abstract class WorkflowYamlHandler<Y extends WorkflowYaml> extends BaseYa
                     throw new WingsException(e);
                   }
                 })
-                .collect(Collectors.toList());
+                .collect(toList());
       }
 
       StepYamlHandler stepYamlHandler = yamlHandlerFactory.getYamlHandler(YamlType.STEP);
@@ -202,7 +203,7 @@ public abstract class WorkflowYamlHandler<Y extends WorkflowYaml> extends BaseYa
                     throw new WingsException(e);
                   }
                 })
-                .collect(Collectors.toList());
+                .collect(toList());
         preDeploymentSteps.addAllSteps(stepList).build();
       }
 
@@ -222,7 +223,7 @@ public abstract class WorkflowYamlHandler<Y extends WorkflowYaml> extends BaseYa
                     throw new WingsException(e);
                   }
                 })
-                .collect(Collectors.toList());
+                .collect(toList());
         postDeploymentSteps.addAllSteps(postDeployStepList).build();
       }
 
@@ -242,7 +243,7 @@ public abstract class WorkflowYamlHandler<Y extends WorkflowYaml> extends BaseYa
                     throw new WingsException(e);
                   }
                 })
-                .collect(Collectors.toList());
+                .collect(toList());
       }
 
       // Notification rules
@@ -261,7 +262,7 @@ public abstract class WorkflowYamlHandler<Y extends WorkflowYaml> extends BaseYa
                     throw new WingsException(e);
                   }
                 })
-                .collect(Collectors.toList());
+                .collect(toList());
       }
 
       WorkflowInfo workflowInfo = WorkflowInfo.builder()
@@ -304,9 +305,8 @@ public abstract class WorkflowYamlHandler<Y extends WorkflowYaml> extends BaseYa
 
     // phases
     WorkflowPhaseYamlHandler phaseYamlHandler = yamlHandlerFactory.getYamlHandler(YamlType.PHASE);
-    List<WorkflowPhase.Yaml> phaseYamlList = workflowPhases.stream()
-                                                 .map(workflowPhase -> phaseYamlHandler.toYaml(workflowPhase, appId))
-                                                 .collect(Collectors.toList());
+    List<WorkflowPhase.Yaml> phaseYamlList =
+        workflowPhases.stream().map(workflowPhase -> phaseYamlHandler.toYaml(workflowPhase, appId)).collect(toList());
 
     // rollback phases
     Map<String, WorkflowPhase> rollbackWorkflowPhaseIdMap = orchestrationWorkflow.getRollbackWorkflowPhaseIdMap();
@@ -322,9 +322,8 @@ public abstract class WorkflowYamlHandler<Y extends WorkflowYaml> extends BaseYa
     // user variables
     List<Variable> userVariables = orchestrationWorkflow.getUserVariables();
     VariableYamlHandler variableYamlHandler = yamlHandlerFactory.getYamlHandler(YamlType.VARIABLE);
-    List<Variable.Yaml> variableYamlList = userVariables.stream()
-                                               .map(userVariable -> variableYamlHandler.toYaml(userVariable, appId))
-                                               .collect(Collectors.toList());
+    List<Variable.Yaml> variableYamlList =
+        userVariables.stream().map(userVariable -> variableYamlHandler.toYaml(userVariable, appId)).collect(toList());
 
     // template expressions
     TemplateExpressionYamlHandler templateExpressionYamlHandler =
@@ -335,23 +334,19 @@ public abstract class WorkflowYamlHandler<Y extends WorkflowYaml> extends BaseYa
       templateExprYamlList =
           templateExpressions.stream()
               .map(templateExpression -> templateExpressionYamlHandler.toYaml(templateExpression, appId))
-              .collect(Collectors.toList());
+              .collect(toList());
     }
 
     StepYamlHandler stepYamlHandler = yamlHandlerFactory.getYamlHandler(YamlType.STEP);
     // Pre-deployment steps
     PhaseStep preDeploymentSteps = orchestrationWorkflow.getPreDeploymentSteps();
-    List<StepYaml> preDeployStepsYamlList = preDeploymentSteps.getSteps()
-                                                .stream()
-                                                .map(step -> stepYamlHandler.toYaml(step, appId))
-                                                .collect(Collectors.toList());
+    List<StepYaml> preDeployStepsYamlList =
+        preDeploymentSteps.getSteps().stream().map(step -> stepYamlHandler.toYaml(step, appId)).collect(toList());
 
     // Post-deployment steps
     PhaseStep postDeploymentSteps = orchestrationWorkflow.getPostDeploymentSteps();
-    List<StepYaml> postDeployStepsYamlList = postDeploymentSteps.getSteps()
-                                                 .stream()
-                                                 .map(step -> stepYamlHandler.toYaml(step, appId))
-                                                 .collect(Collectors.toList());
+    List<StepYaml> postDeployStepsYamlList =
+        postDeploymentSteps.getSteps().stream().map(step -> stepYamlHandler.toYaml(step, appId)).collect(toList());
 
     // Failure strategies
     FailureStrategyYamlHandler failureStrategyYamlHandler =
@@ -360,7 +355,7 @@ public abstract class WorkflowYamlHandler<Y extends WorkflowYaml> extends BaseYa
     List<FailureStrategy.Yaml> failureStrategyYamlList =
         failureStrategies.stream()
             .map(failureStrategy -> failureStrategyYamlHandler.toYaml(failureStrategy, appId))
-            .collect(Collectors.toList());
+            .collect(toList());
 
     // Notification rules
     NotificationRulesYamlHandler notificationRuleYamlHandler =
@@ -369,7 +364,7 @@ public abstract class WorkflowYamlHandler<Y extends WorkflowYaml> extends BaseYa
     List<NotificationRule.Yaml> notificationRuleYamlList =
         notificationRules.stream()
             .map(notificationRule -> notificationRuleYamlHandler.toYaml(notificationRule, appId))
-            .collect(Collectors.toList());
+            .collect(toList());
 
     yaml.setDescription(workflow.getDescription());
     yaml.setEnvName(envName);

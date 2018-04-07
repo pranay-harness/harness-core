@@ -1,6 +1,7 @@
 package software.wings.service.impl.yaml.handler.workflow;
 
 import static io.harness.data.structure.EmptyPredicate.isNotEmpty;
+import static java.util.stream.Collectors.toList;
 
 import com.google.common.collect.Lists;
 import com.google.inject.Inject;
@@ -35,7 +36,6 @@ import software.wings.utils.Util;
 import software.wings.utils.Validator;
 
 import java.util.List;
-import java.util.stream.Collectors;
 
 /**
  * @author rktummala on 10/27/17
@@ -86,7 +86,7 @@ public class WorkflowPhaseYamlHandler extends BaseYamlHandler<WorkflowPhase.Yaml
                            throw new WingsException(e);
                          }
                        })
-                       .collect(Collectors.toList());
+                       .collect(toList());
     }
 
     // template expressions
@@ -105,7 +105,7 @@ public class WorkflowPhaseYamlHandler extends BaseYamlHandler<WorkflowPhase.Yaml
                   throw new WingsException(e);
                 }
               })
-              .collect(Collectors.toList());
+              .collect(toList());
     }
 
     SettingAttribute computeProvider = settingsService.getByName(accountId, appId, yaml.getComputeProviderName());
@@ -153,7 +153,7 @@ public class WorkflowPhaseYamlHandler extends BaseYamlHandler<WorkflowPhase.Yaml
           bean.getTemplateExpressions()
               .stream()
               .map(templateExpression -> templateExpressionYamlHandler.toYaml(templateExpression, appId))
-              .collect(Collectors.toList());
+              .collect(toList());
     }
 
     List<PhaseStep.Yaml> phaseStepYamlList = Lists.newArrayList();
@@ -162,7 +162,7 @@ public class WorkflowPhaseYamlHandler extends BaseYamlHandler<WorkflowPhase.Yaml
       phaseStepYamlList = bean.getPhaseSteps()
                               .stream()
                               .map(phaseStep -> phaseStepYamlHandler.toYaml(phaseStep, appId))
-                              .collect(Collectors.toList());
+                              .collect(toList());
     }
 
     String deploymentType = Util.getStringFromEnum(bean.getDeploymentType());

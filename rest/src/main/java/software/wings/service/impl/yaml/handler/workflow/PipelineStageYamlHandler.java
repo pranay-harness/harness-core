@@ -1,6 +1,7 @@
 package software.wings.service.impl.yaml.handler.workflow;
 
 import static io.harness.data.structure.EmptyPredicate.isEmpty;
+import static java.util.stream.Collectors.toList;
 import static software.wings.beans.PipelineStage.Yaml;
 
 import com.google.common.collect.Lists;
@@ -28,7 +29,6 @@ import software.wings.utils.Validator;
 
 import java.util.List;
 import java.util.Map;
-import java.util.stream.Collectors;
 
 /**
  * @author rktummala on 11/2/17
@@ -115,7 +115,7 @@ public class PipelineStageYamlHandler extends BaseYamlHandler<Yaml, PipelineStag
                                         NameValuePair.builder().name(entry.getKey()).value(entry.getValue()).build();
                                     return nameValuePairYamlHandler.toYaml(nameValuePair, appId);
                                   })
-                                  .collect(Collectors.toList());
+                                  .collect(toList());
     }
 
     return Yaml.builder()

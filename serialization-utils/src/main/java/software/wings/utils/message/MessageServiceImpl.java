@@ -2,6 +2,7 @@ package software.wings.utils.message;
 
 import static java.nio.charset.StandardCharsets.UTF_8;
 import static java.util.Collections.singletonList;
+import static java.util.stream.Collectors.toList;
 import static org.apache.commons.io.filefilter.FileFileFilter.FILE;
 
 import com.google.common.annotations.VisibleForTesting;
@@ -32,7 +33,6 @@ import java.util.concurrent.BlockingQueue;
 import java.util.concurrent.LinkedBlockingQueue;
 import java.util.concurrent.TimeUnit;
 import java.util.function.Consumer;
-import java.util.stream.Collectors;
 import javax.annotation.Nullable;
 
 /**
@@ -296,7 +296,7 @@ public class MessageServiceImpl implements MessageService {
       logger.error("Error creating channel directory: {}", channelDirectory.getAbsolutePath(), e);
       return null;
     }
-    return FileUtils.listFiles(channelDirectory, FILE, null).stream().map(File::getName).collect(Collectors.toList());
+    return FileUtils.listFiles(channelDirectory, FILE, null).stream().map(File::getName).collect(toList());
   }
 
   @Override
@@ -391,7 +391,7 @@ public class MessageServiceImpl implements MessageService {
         .listFiles(dataDirectory, new AndFileFilter(FILE, new PrefixFileFilter(prefix == null ? "" : prefix)), null)
         .stream()
         .map(File::getName)
-        .collect(Collectors.toList());
+        .collect(toList());
   }
 
   @Override

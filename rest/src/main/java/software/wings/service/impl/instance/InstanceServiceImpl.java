@@ -1,5 +1,6 @@
 package software.wings.service.impl.instance;
 
+import static java.util.stream.Collectors.toList;
 import static java.util.stream.Collectors.toMap;
 import static java.util.stream.Collectors.toSet;
 import static software.wings.beans.infrastructure.instance.InstanceType.ECS_CONTAINER_INSTANCE;
@@ -292,10 +293,7 @@ public class InstanceServiceImpl implements InstanceService {
             .addOrder("containerSvcName", OrderType.ASC)
             .build();
     PageResponse<ContainerDeploymentInfo> response = wingsPersistence.query(ContainerDeploymentInfo.class, pageRequest);
-    return response.getResponse()
-        .stream()
-        .map(ContainerDeploymentInfo::getContainerSvcName)
-        .collect(Collectors.toList());
+    return response.getResponse().stream().map(ContainerDeploymentInfo::getContainerSvcName).collect(toList());
   }
 
   @Override

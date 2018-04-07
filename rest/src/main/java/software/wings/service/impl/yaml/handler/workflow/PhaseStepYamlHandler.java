@@ -1,6 +1,7 @@
 package software.wings.service.impl.yaml.handler.workflow;
 
 import static io.harness.data.structure.UUIDGenerator.generateUuid;
+import static java.util.stream.Collectors.toList;
 
 import com.google.common.collect.Lists;
 import com.google.inject.Inject;
@@ -25,7 +26,6 @@ import software.wings.utils.Util;
 import software.wings.yaml.workflow.StepYaml;
 
 import java.util.List;
-import java.util.stream.Collectors;
 
 /**
  * @author rktummala on 10/28/17
@@ -60,7 +60,7 @@ public class PhaseStepYamlHandler extends BaseYamlHandler<PhaseStep.Yaml, PhaseS
                          throw new WingsException(e);
                        }
                      })
-                     .collect(Collectors.toList());
+                     .collect(toList());
     }
 
     // Failure strategies
@@ -79,7 +79,7 @@ public class PhaseStepYamlHandler extends BaseYamlHandler<PhaseStep.Yaml, PhaseS
                   throw new WingsException(e);
                 }
               })
-              .collect(Collectors.toList());
+              .collect(toList());
     }
 
     Boolean isRollback = (Boolean) changeContext.getProperties().get(YamlConstants.IS_ROLLBACK);
@@ -102,12 +102,12 @@ public class PhaseStepYamlHandler extends BaseYamlHandler<PhaseStep.Yaml, PhaseS
     List<FailureStrategy.Yaml> failureStrategyYamlList =
         failureStrategies.stream()
             .map(failureStrategy -> failureStrategyYamlHandler.toYaml(failureStrategy, appId))
-            .collect(Collectors.toList());
+            .collect(toList());
 
     // Phase steps
     StepYamlHandler stepYamlHandler = yamlHandlerFactory.getYamlHandler(YamlType.STEP);
     List<StepYaml> stepsYamlList =
-        bean.getSteps().stream().map(step -> stepYamlHandler.toYaml(step, appId)).collect(Collectors.toList());
+        bean.getSteps().stream().map(step -> stepYamlHandler.toYaml(step, appId)).collect(toList());
 
     return Yaml.builder()
         .failureStrategies(failureStrategyYamlList)

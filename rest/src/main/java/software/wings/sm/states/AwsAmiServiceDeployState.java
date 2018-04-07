@@ -1,6 +1,7 @@
 package software.wings.sm.states;
 
 import static java.util.Arrays.asList;
+import static java.util.stream.Collectors.toList;
 import static org.apache.commons.lang3.StringUtils.isBlank;
 import static org.apache.commons.lang3.StringUtils.isNotBlank;
 import static software.wings.api.HostElement.Builder.aHostElement;
@@ -90,7 +91,6 @@ import java.util.Map;
 import java.util.Set;
 import java.util.concurrent.ScheduledExecutorService;
 import java.util.concurrent.TimeUnit;
-import java.util.stream.Collectors;
 
 /**
  * Created by anubhaw on 12/19/17.
@@ -336,7 +336,7 @@ public class AwsAmiServiceDeployState extends State {
                          .withInstanceElement((InstanceElement) instanceElement.cloneMin())
                          .withStatus(ExecutionStatus.SUCCESS)
                          .build())
-              .collect(Collectors.toList());
+              .collect(toList());
 
       awsAmiDeployStateExecutionData.setNewInstanceStatusSummaries(instanceStatusSummaries);
       instanceElementListParam.setInstanceElements(instanceElements);
@@ -433,7 +433,7 @@ public class AwsAmiServiceDeployState extends State {
                                                   .build())
                   .build();
             })
-            .collect(Collectors.toList());
+            .collect(toList());
 
     int instancesAdded = newContainerServiceData.getDesiredCount() - newContainerServiceData.getPreviousCount();
     if (instancesAdded > 0 && instancesAdded < instanceElements.size()) {

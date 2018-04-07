@@ -2,6 +2,7 @@ package software.wings.service.impl;
 
 import static io.harness.network.Http.connectableHttpUrl;
 import static io.harness.network.Http.validUrl;
+import static java.util.stream.Collectors.toList;
 import static software.wings.beans.ErrorCode.INVALID_ARTIFACT_SERVER;
 import static software.wings.beans.ErrorCode.INVALID_REQUEST;
 import static software.wings.exception.WingsException.ALERTING;
@@ -43,7 +44,6 @@ import java.util.List;
 import java.util.Map;
 import java.util.Objects;
 import java.util.Optional;
-import java.util.stream.Collectors;
 
 /**
  * Created by peeyushaggarwal on 5/13/16.
@@ -123,7 +123,7 @@ public class JenkinsBuildServiceImpl implements JenkinsBuildService {
                                     .parallelStream()
                                     .map(Artifact::getRelativePath)
                                     .distinct()
-                                    .collect(Collectors.toList()));
+                                    .collect(toList()));
     } catch (WingsException e) {
       throw e;
     } catch (Exception ex) {

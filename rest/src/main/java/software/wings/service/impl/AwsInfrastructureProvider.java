@@ -302,6 +302,6 @@ public class AwsInfrastructureProvider implements InfrastructureProvider {
         .listAutoScalingGroups(awsConfig, secretManager.getEncryptionDetails(awsConfig, null, null), region)
         .stream()
         .map(AutoScalingGroup::getAutoScalingGroupName)
-        .collect(Collectors.toList());
+        .collect(toList());
   }
 }

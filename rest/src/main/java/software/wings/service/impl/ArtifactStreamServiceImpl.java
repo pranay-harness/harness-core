@@ -3,6 +3,7 @@ package software.wings.service.impl;
 import static io.harness.data.structure.EmptyPredicate.isEmpty;
 import static io.harness.data.structure.EmptyPredicate.isNotEmpty;
 import static java.util.Arrays.asList;
+import static java.util.stream.Collectors.toList;
 import static software.wings.beans.ErrorCode.INVALID_REQUEST;
 import static software.wings.beans.FeatureName.AZURE_SUPPORT;
 import static software.wings.beans.SearchFilter.Operator.EQ;
@@ -212,8 +213,7 @@ public class ArtifactStreamServiceImpl implements ArtifactStreamService, DataPro
     if (isEmpty(triggers)) {
       return;
     }
-    List<String> triggerNames =
-        triggers.stream().map(software.wings.beans.trigger.Trigger::getName).collect(Collectors.toList());
+    List<String> triggerNames = triggers.stream().map(software.wings.beans.trigger.Trigger::getName).collect(toList());
     throw new WingsException(INVALID_REQUEST, ReportTarget.USER)
         .addParam("message",
             String.format(

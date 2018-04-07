@@ -3,6 +3,7 @@ package software.wings.security;
 import static com.google.common.collect.ImmutableList.copyOf;
 import static io.harness.data.structure.EmptyPredicate.isEmpty;
 import static io.harness.data.structure.EmptyPredicate.isNotEmpty;
+import static java.util.stream.Collectors.toList;
 import static javax.ws.rs.HttpMethod.OPTIONS;
 import static javax.ws.rs.Priorities.AUTHORIZATION;
 import static org.apache.commons.lang3.StringUtils.startsWith;
@@ -56,7 +57,6 @@ import java.util.List;
 import java.util.Map;
 import java.util.Optional;
 import java.util.Set;
-import java.util.stream.Collectors;
 import java.util.stream.Stream;
 import javax.annotation.Priority;
 import javax.ws.rs.container.ContainerRequestContext;
@@ -447,11 +447,8 @@ public class AuthRuleFilter implements ContainerRequestFilter {
         logger.info("No account role exist for user [{}]", user.getUuid());
       } else {
         logger.info("User account role [{}]", userAccountRole);
-        allowedAppIds = copyOf(userAccountRole.getApplicationRoles()
-                                   .stream()
-                                   .map(ApplicationRole::getAppId)
-                                   .distinct()
-                                   .collect(Collectors.toList()));
+        allowedAppIds = copyOf(
+            userAccountRole.getApplicationRoles().stream().map(ApplicationRole::getAppId).distinct().collect(toList()));
       }
 
       if (!emptyAppIdsInReq) {
@@ -463,8 +460,8 @@ public class AuthRuleFilter implements ContainerRequestFilter {
             if (applicationRole != null) {
               List<EnvironmentRole> environmentRoles = applicationRole.getEnvironmentRoles();
               if (environmentRoles != null) {
-                ImmutableList<String> envIds = copyOf(
-                    environmentRoles.stream().map(EnvironmentRole::getEnvId).distinct().collect(Collectors.toList()));
+                ImmutableList<String> envIds =
+                    copyOf(environmentRoles.stream().map(EnvironmentRole::getEnvId).distinct().collect(toList()));
                 userRequestInfoBuilder.allEnvironmentsAllowed(false).allowedEnvIds(envIds);
               } else {
                 userRequestInfoBuilder.allEnvironmentsAllowed(false).allowedEnvIds(

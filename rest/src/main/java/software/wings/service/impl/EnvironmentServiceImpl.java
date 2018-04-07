@@ -5,6 +5,7 @@ import static io.harness.data.structure.EmptyPredicate.isNotEmpty;
 import static io.harness.data.structure.ListUtil.trimList;
 import static java.time.Duration.ofSeconds;
 import static java.util.Arrays.asList;
+import static java.util.stream.Collectors.toList;
 import static java.util.stream.Collectors.toMap;
 import static org.apache.commons.lang3.StringUtils.isNotBlank;
 import static org.mongodb.morphia.mapping.Mapper.ID_KEY;
@@ -89,7 +90,6 @@ import java.util.Map;
 import java.util.Optional;
 import java.util.Set;
 import java.util.concurrent.ExecutorService;
-import java.util.stream.Collectors;
 import javax.validation.constraints.NotNull;
 import javax.validation.executable.ValidateOnExecution;
 /**
@@ -341,7 +341,7 @@ public class EnvironmentServiceImpl implements EnvironmentService, DataProvider 
             .build());
 
     if (!pipelines.isEmpty()) {
-      List<String> pipelineNames = pipelines.stream().map(Pipeline::getName).collect(Collectors.toList());
+      List<String> pipelineNames = pipelines.stream().map(Pipeline::getName).collect(toList());
       throw new WingsException(INVALID_REQUEST, ReportTarget.USER)
           .addParam("message",
               String.format("Environment is referenced by %s pipeline%s [%s].", pipelines.size(),

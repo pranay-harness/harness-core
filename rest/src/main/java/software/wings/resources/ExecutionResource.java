@@ -2,6 +2,7 @@ package software.wings.resources;
 
 import static io.harness.data.structure.EmptyPredicate.isEmpty;
 import static io.harness.data.structure.EmptyPredicate.isNotEmpty;
+import static java.util.stream.Collectors.toList;
 import static org.apache.commons.lang3.StringUtils.isNotBlank;
 import static software.wings.dl.PageRequest.PageRequestBuilder.aPageRequest;
 import static software.wings.security.PermissionAttribute.Action.EXECUTE;
@@ -43,7 +44,6 @@ import software.wings.sm.StateExecutionData;
 import java.util.Arrays;
 import java.util.List;
 import java.util.Set;
-import java.util.stream.Collectors;
 import javax.ws.rs.BeanParam;
 import javax.ws.rs.DefaultValue;
 import javax.ws.rs.GET;
@@ -114,7 +114,7 @@ public class ExecutionResource {
       if (isEmpty(res)) {
         return new RestResponse<>(new PageResponse<>());
       }
-      authorizedAppIds = res.stream().map(Application::getUuid).collect(Collectors.toList());
+      authorizedAppIds = res.stream().map(Application::getUuid).collect(toList());
     }
 
     pageRequest.addFilter("appId", Operator.IN, authorizedAppIds.toArray());

@@ -2,6 +2,7 @@ package software.wings.service.impl;
 
 import static io.harness.data.structure.EmptyPredicate.isEmpty;
 import static java.util.Collections.singletonList;
+import static java.util.stream.Collectors.toList;
 import static software.wings.beans.SearchFilter.Operator.EQ;
 import static software.wings.beans.SearchFilter.Operator.IN;
 import static software.wings.common.Constants.ABORTED_COLOR;
@@ -44,7 +45,6 @@ import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
 import java.util.Map.Entry;
-import java.util.stream.Collectors;
 /**
  * Created by rishi on 10/30/16.
  */
@@ -78,7 +78,7 @@ public class NotificationDispatcherServiceImpl implements NotificationDispatcher
             .map(
                 notificationGroup -> notificationSetupService.readNotificationGroup(appId, notificationGroup.getUuid()))
             .filter(notificationGroup -> notificationGroup.getAddressesByChannelType() != null)
-            .collect(Collectors.toList());
+            .collect(toList());
 
     for (NotificationGroup notificationGroup : notificationGroups) {
       if (notificationGroup.getRoles() != null) {
@@ -91,8 +91,7 @@ public class NotificationDispatcherServiceImpl implements NotificationDispatcher
                                           .addFieldsIncluded("email", "emailVerified")
                                           .build();
           PageResponse<User> users = userService.list(request);
-          List<String> toAddresses =
-              users.stream().filter(User::isEmailVerified).map(User::getEmail).collect(Collectors.toList());
+          List<String> toAddresses = users.stream().filter(User::isEmailVerified).map(User::getEmail).collect(toList());
           logger.info("Dispatching notifications to all the users of role {}", role.getRoleType().getDisplayName());
           dispatchEmail(notifications, toAddresses);
         });

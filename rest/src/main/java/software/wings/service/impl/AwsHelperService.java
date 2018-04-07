@@ -848,7 +848,7 @@ public class AwsHelperService {
           .getSecurityGroups()
           .stream()
           .map(SecurityGroup::getGroupId)
-          .collect(Collectors.toList());
+          .collect(toList());
     } catch (AmazonServiceException amazonServiceException) {
       handleAmazonServiceException(amazonServiceException);
     }
@@ -869,7 +869,7 @@ public class AwsHelperService {
           .getSubnets()
           .stream()
           .map(Subnet::getSubnetId)
-          .collect(Collectors.toList());
+          .collect(toList());
     } catch (AmazonServiceException amazonServiceException) {
       handleAmazonServiceException(amazonServiceException);
     }
@@ -1482,7 +1482,7 @@ public class AwsHelperService {
           .stream()
           .filter(loadBalancer -> StringUtils.equalsIgnoreCase(loadBalancer.getType(), "application"))
           .map(LoadBalancer::getLoadBalancerName)
-          .collect(Collectors.toList());
+          .collect(toList());
     } catch (AmazonServiceException amazonServiceException) {
       handleAmazonServiceException(amazonServiceException);
     }
@@ -1494,9 +1494,7 @@ public class AwsHelperService {
     try {
       List<LoadBalancerDescription> describeLoadBalancers =
           getLoadBalancerDescriptions(region, awsConfig, encryptionDetails);
-      return describeLoadBalancers.stream()
-          .map(LoadBalancerDescription::getLoadBalancerName)
-          .collect(Collectors.toList());
+      return describeLoadBalancers.stream().map(LoadBalancerDescription::getLoadBalancerName).collect(toList());
     } catch (AmazonServiceException amazonServiceException) {
       handleAmazonServiceException(amazonServiceException);
     }

@@ -2,6 +2,7 @@ package software.wings.service.impl.yaml.handler.notification;
 
 import static io.harness.data.structure.EmptyPredicate.isNotEmpty;
 import static io.harness.data.structure.UUIDGenerator.generateUuid;
+import static java.util.stream.Collectors.toList;
 import static software.wings.beans.NotificationGroup.NotificationGroupBuilder.aNotificationGroup;
 
 import com.google.common.collect.Lists;
@@ -24,7 +25,6 @@ import software.wings.utils.Util;
 import software.wings.utils.Validator;
 
 import java.util.List;
-import java.util.stream.Collectors;
 
 /**
  * @author rktummala on 10/28/17
@@ -56,13 +56,13 @@ public class NotificationRulesYamlHandler extends BaseYamlHandler<NotificationRu
                     .withEditable(notificationGroup.isEditable())
                     .build();
               })
-              .collect(Collectors.toList());
+              .collect(toList());
     }
 
     List<ExecutionStatus> conditions = yaml.getConditions()
                                            .stream()
                                            .map(condition -> Util.getEnumFromString(ExecutionStatus.class, condition))
-                                           .collect(Collectors.toList());
+                                           .collect(toList());
     return NotificationRuleBuilder.aNotificationRule()
         .withUuid(generateUuid())
         .withActive(true)
@@ -75,8 +75,7 @@ public class NotificationRulesYamlHandler extends BaseYamlHandler<NotificationRu
 
   @Override
   public Yaml toYaml(NotificationRule bean, String appId) {
-    List<String> conditionList =
-        bean.getConditions().stream().map(condition -> condition.name()).collect(Collectors.toList());
+    List<String> conditionList = bean.getConditions().stream().map(condition -> condition.name()).collect(toList());
 
     List<String> notificationGroupList =
         bean.getNotificationGroups()
@@ -88,7 +87,7 @@ public class NotificationRulesYamlHandler extends BaseYamlHandler<NotificationRu
                   notificationGroupFromDB);
               return notificationGroupFromDB.getName();
             })
-            .collect(Collectors.toList());
+            .collect(toList());
 
     return Yaml.builder()
         .conditions(conditionList)

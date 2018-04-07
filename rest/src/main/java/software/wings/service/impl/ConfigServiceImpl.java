@@ -1,5 +1,6 @@
 package software.wings.service.impl;
 
+import static java.util.stream.Collectors.toList;
 import static org.apache.commons.lang3.StringUtils.isNotBlank;
 import static org.mongodb.morphia.mapping.Mapper.ID_KEY;
 import static software.wings.beans.Base.GLOBAL_ENV_ID;
@@ -62,7 +63,6 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.concurrent.ExecutorService;
-import java.util.stream.Collectors;
 import javax.validation.executable.ValidateOnExecution;
 
 /**
@@ -396,7 +396,7 @@ public class ConfigServiceImpl implements ConfigService {
             .getTemplateRefKeysByService(existingConfigFile.getAppId(), existingConfigFile.getEntityId(), null)
             .stream()
             .map(Key::getId)
-            .collect(Collectors.toList());
+            .collect(toList());
 
     Query<ConfigFile> query = wingsPersistence.createQuery(ConfigFile.class)
                                   .filter("appId", existingConfigFile.getAppId())

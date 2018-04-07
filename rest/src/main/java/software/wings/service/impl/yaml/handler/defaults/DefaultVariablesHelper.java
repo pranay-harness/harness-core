@@ -1,5 +1,6 @@
 package software.wings.service.impl.yaml.handler.defaults;
 
+import static java.util.stream.Collectors.toList;
 import static software.wings.beans.Base.GLOBAL_ENV_ID;
 
 import com.google.common.collect.Lists;
@@ -50,7 +51,7 @@ public class DefaultVariablesHelper {
           return NameValuePair.Yaml.builder().name(settingAttribute.getName()).value(value).build();
 
         })
-        .collect(Collectors.toList());
+        .collect(toList());
   }
 
   public void saveOrUpdateDefaults(Yaml updatedYaml, String appId, String accountId) throws HarnessException {

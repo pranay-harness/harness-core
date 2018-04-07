@@ -2,6 +2,7 @@ package software.wings.integration;
 
 import static java.util.Arrays.asList;
 import static java.util.Collections.singletonList;
+import static java.util.stream.Collectors.toList;
 import static org.assertj.core.api.Assertions.assertThat;
 import static software.wings.beans.Application.Builder.anApplication;
 import static software.wings.beans.AwsInfrastructureMapping.Builder.anAwsInfrastructureMapping;
@@ -44,7 +45,6 @@ import software.wings.service.intfc.ServiceResourceService;
 import software.wings.service.intfc.ServiceTemplateService;
 
 import java.util.List;
-import java.util.stream.Collectors;
 
 /**
  * Created by anubhaw on 1/16/17.
@@ -154,7 +154,7 @@ public class InfrastructureMappingIntegrationTest extends BaseIntegrationTest {
                 .withSelectSpecificHosts(false)
                 .withCount(2)
                 .withExcludedServiceInstanceIds(
-                    allServiceInstances.stream().map(ServiceInstance::getUuid).collect(Collectors.toList()))
+                    allServiceInstances.stream().map(ServiceInstance::getUuid).collect(toList()))
                 .build());
     assertThat(serviceInstances).hasSize(0);
   }

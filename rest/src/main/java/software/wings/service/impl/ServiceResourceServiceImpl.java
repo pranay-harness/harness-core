@@ -556,7 +556,7 @@ public class ServiceResourceServiceImpl implements ServiceResourceService, DataP
     List<Workflow> serviceWorkflows =
         workflows.stream()
             .filter(wfl -> wfl.getServices().stream().anyMatch(s -> service.getUuid().equals(s.getUuid())))
-            .collect(Collectors.toList());
+            .collect(toList());
 
     if (isNotEmpty(serviceWorkflows)) {
       String workflowNames = serviceWorkflows.stream().map(Workflow::getName).collect(Collectors.joining(","));
@@ -1169,7 +1169,7 @@ public class ServiceResourceServiceImpl implements ServiceResourceService, DataP
         .stream()
         .filter(stringLongEntry -> stringLongEntry.getValue() > 1)
         .map(Entry::getKey)
-        .collect(Collectors.toList());
+        .collect(toList());
   }
 
   @Override

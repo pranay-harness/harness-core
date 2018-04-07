@@ -1,5 +1,6 @@
 package software.wings.helpers.ext.amazons3;
 
+import static java.util.stream.Collectors.toList;
 import static software.wings.helpers.ext.jenkins.BuildDetails.Builder.aBuildDetails;
 
 import com.google.common.collect.Lists;
@@ -65,7 +66,7 @@ public class AmazonS3ServiceImpl implements AmazonS3Service {
       List<String> objectKeyListForCurrentBatch = objectSummaryList.stream()
                                                       .filter(objectSummary -> !objectSummary.getKey().endsWith("/"))
                                                       .map(S3ObjectSummary::getKey)
-                                                      .collect(Collectors.toList());
+                                                      .collect(toList());
       objectKeyList.addAll(objectKeyListForCurrentBatch);
       listObjectsV2Request.setContinuationToken(result.getNextContinuationToken());
     } while (result.isTruncated() == true && objectKeyList.size() < MAX_FILES_TO_SHOW_IN_UI);
@@ -124,7 +125,7 @@ public class AmazonS3ServiceImpl implements AmazonS3Service {
                 .filter(objectSummary
                     -> !objectSummary.getKey().endsWith("/") && pattern.matcher(objectSummary.getKey()).find())
                 .map(S3ObjectSummary::getKey)
-                .collect(Collectors.toList());
+                .collect(toList());
         objectKeyList.addAll(objectKeyListForCurrentBatch);
         listObjectsV2Request.setContinuationToken(result.getNextContinuationToken());
       } while (result.isTruncated() == true);
@@ -183,7 +184,7 @@ public class AmazonS3ServiceImpl implements AmazonS3Service {
               .filter(objectSummary
                   -> !objectSummary.getKey().endsWith("/") && pattern.matcher(objectSummary.getKey()).find())
               .map(S3ObjectSummary::getKey)
-              .collect(Collectors.toList());
+              .collect(toList());
       objectKeyList.addAll(objectKeyListForCurrentBatch);
       listObjectsV2Request.setContinuationToken(result.getNextContinuationToken());
     } while (result.isTruncated());

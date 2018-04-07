@@ -1,6 +1,7 @@
 package software.wings.yaml.gitSync;
 
 import static io.harness.data.structure.EmptyPredicate.isNotEmpty;
+import static java.util.stream.Collectors.toList;
 import static software.wings.beans.yaml.YamlConstants.GIT_YAML_LOG_PREFIX;
 import static software.wings.core.maintenance.MaintenanceController.isMaintenance;
 
@@ -16,7 +17,6 @@ import software.wings.service.intfc.yaml.YamlGitService;
 import software.wings.yaml.gitSync.YamlChangeSet.Status;
 
 import java.util.List;
-import java.util.stream.Collectors;
 
 /**
  * @author bsollish on 09/26/17
@@ -43,9 +43,8 @@ public class GitChangeSetRunnable implements Runnable {
           wingsPersistence.getDatastore()
               .getCollection(YamlChangeSet.class)
               .distinct("accountId", new BasicDBObject("status", Status.RUNNING.name()));
-      List<String> waitingAccountIdList = queuedAccountIdList.stream()
-                                              .filter(accountId -> !runningAccountIdList.contains(accountId))
-                                              .collect(Collectors.toList());
+      List<String> waitingAccountIdList =
+          queuedAccountIdList.stream().filter(accountId -> !runningAccountIdList.contains(accountId)).collect(toList());
 
       if (waitingAccountIdList.isEmpty()) {
         return;

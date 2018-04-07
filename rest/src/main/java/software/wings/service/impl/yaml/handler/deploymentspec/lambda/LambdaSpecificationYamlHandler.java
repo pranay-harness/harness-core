@@ -1,6 +1,7 @@
 package software.wings.service.impl.yaml.handler.deploymentspec.lambda;
 
 import static io.harness.data.structure.EmptyPredicate.isNotEmpty;
+import static java.util.stream.Collectors.toList;
 
 import com.google.common.collect.Lists;
 import com.google.inject.Inject;
@@ -23,7 +24,6 @@ import software.wings.utils.Validator;
 
 import java.util.Collections;
 import java.util.List;
-import java.util.stream.Collectors;
 /**
  * @author rktummala on 11/15/17
  */
@@ -53,7 +53,7 @@ public class LambdaSpecificationYamlHandler extends DeploymentSpecificationYamlH
       functionSpecYamlList =
           functionSpecificationList.stream()
               .map(functionSpecification -> functionSpecYamlHandler.toYaml(functionSpecification, appId))
-              .collect(Collectors.toList());
+              .collect(toList());
     }
 
     return Yaml.builder()
@@ -108,7 +108,7 @@ public class LambdaSpecificationYamlHandler extends DeploymentSpecificationYamlH
                                  throw new WingsException(e);
                                }
                              })
-                             .collect(Collectors.toList());
+                             .collect(toList());
     }
 
     String appId =

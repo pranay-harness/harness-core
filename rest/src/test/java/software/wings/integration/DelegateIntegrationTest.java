@@ -1,6 +1,7 @@
 package software.wings.integration;
 
 import static java.util.Arrays.asList;
+import static java.util.stream.Collectors.toList;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.awaitility.Awaitility.await;
 
@@ -28,7 +29,6 @@ import java.util.List;
 import java.util.Set;
 import java.util.concurrent.TimeUnit;
 import java.util.concurrent.TimeoutException;
-import java.util.stream.Collectors;
 import javax.net.ssl.SSLContext;
 import javax.net.ssl.TrustManager;
 import javax.net.ssl.X509TrustManager;
@@ -102,7 +102,7 @@ public void shouldDownloadDelegateZipWithWatcher()
                              .getLines()
                              .stream()
                              .map(String::trim)
-                             .collect(Collectors.toList());
+                             .collect(toList());
   assertThat(scripts).hasSize(5).containsOnly("README.txt", "start.sh", "stop.sh", "delegate.sh", "proxy.config");
 }
 

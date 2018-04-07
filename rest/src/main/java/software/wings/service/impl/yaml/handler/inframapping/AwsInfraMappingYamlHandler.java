@@ -1,5 +1,7 @@
 package software.wings.service.impl.yaml.handler.inframapping;
 
+import static java.util.stream.Collectors.toList;
+
 import com.google.common.collect.Lists;
 import com.google.inject.Singleton;
 
@@ -16,7 +18,6 @@ import software.wings.exception.HarnessException;
 import software.wings.utils.Validator;
 
 import java.util.List;
-import java.util.stream.Collectors;
 
 /**
  * @author rktummala on 10/15/17
@@ -102,13 +103,13 @@ public class AwsInfraMappingYamlHandler
 
     return tagList.stream()
         .map(tag -> NameValuePair.Yaml.builder().name(tag.getKey()).value(tag.getValue()).build())
-        .collect(Collectors.toList());
+        .collect(toList());
   }
 
   private List<Tag> getTags(List<NameValuePair.Yaml> tagYamlList) {
     return tagYamlList.stream()
         .map(tagYaml -> Tag.builder().key(tagYaml.getName()).value(tagYaml.getValue()).build())
-        .collect(Collectors.toList());
+        .collect(toList());
   }
 
   private void toBean(AwsInfrastructureMapping bean, ChangeContext<Yaml> changeContext, String appId, String envId,

@@ -2,6 +2,7 @@ package software.wings.service.impl.yaml.handler.environment;
 
 import static io.harness.data.structure.EmptyPredicate.isEmpty;
 import static java.util.Collections.emptyList;
+import static java.util.stream.Collectors.toList;
 import static software.wings.beans.EntityType.SERVICE_TEMPLATE;
 
 import com.google.common.collect.Lists;
@@ -144,7 +145,7 @@ public class EnvironmentYamlHandler extends BaseYamlHandler<Environment.Yaml, En
               .serviceName(parentServiceName)
               .build();
         })
-        .collect(Collectors.toList());
+        .collect(toList());
   }
 
   @Override

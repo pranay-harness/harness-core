@@ -3,6 +3,7 @@ package software.wings.helpers.ext.docker;
 import static io.harness.data.structure.EmptyPredicate.isNotEmpty;
 import static io.harness.govern.Switch.unhandled;
 import static java.util.Collections.emptyList;
+import static java.util.stream.Collectors.toList;
 import static software.wings.exception.WingsException.ReportTarget.USER;
 import static software.wings.helpers.ext.jenkins.BuildDetails.Builder.aBuildDetails;
 
@@ -98,7 +99,7 @@ public class DockerRegistryServiceImpl implements DockerRegistryService {
       return dockerImageTagResponse.getTags()
           .stream()
           .map(tag -> aBuildDetails().withNumber(tag).withBuildUrl(tagUrl + tag).build())
-          .collect(Collectors.toList());
+          .collect(toList());
     } else {
       if (dockerImageTagResponse == null) {
         logger.warn("Docker image tag response was null.");

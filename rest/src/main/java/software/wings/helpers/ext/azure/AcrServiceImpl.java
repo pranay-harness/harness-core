@@ -1,5 +1,6 @@
 package software.wings.helpers.ext.azure;
 
+import static java.util.stream.Collectors.toList;
 import static software.wings.helpers.ext.jenkins.BuildDetails.Builder.aBuildDetails;
 
 import com.google.inject.Inject;
@@ -15,7 +16,6 @@ import software.wings.helpers.ext.jenkins.BuildDetails;
 import software.wings.security.encryption.EncryptedDataDetail;
 
 import java.util.List;
-import java.util.stream.Collectors;
 
 @Singleton
 public class AcrServiceImpl implements AcrService {
@@ -42,7 +42,7 @@ public class AcrServiceImpl implements AcrService {
             artifactStreamAttributes.getRegistryName(), artifactStreamAttributes.getRepositoryName())
         .stream()
         .map(tag -> aBuildDetails().withNumber(tag).build())
-        .collect(Collectors.toList());
+        .collect(toList());
   }
 
   @Override

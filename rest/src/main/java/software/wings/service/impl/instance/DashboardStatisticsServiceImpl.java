@@ -2,6 +2,7 @@ package software.wings.service.impl.instance;
 
 import static io.harness.data.structure.EmptyPredicate.isEmpty;
 import static io.harness.data.structure.EmptyPredicate.isNotEmpty;
+import static java.util.stream.Collectors.toList;
 import static org.mongodb.morphia.aggregation.Accumulator.accumulator;
 import static org.mongodb.morphia.aggregation.Group.grouping;
 import static org.mongodb.morphia.aggregation.Projection.projection;
@@ -81,7 +82,6 @@ import java.util.List;
 import java.util.Map;
 import java.util.Set;
 import java.util.concurrent.atomic.AtomicLong;
-import java.util.stream.Collectors;
 /**
  * @author rktummala on 8/13/17
  */
@@ -628,7 +628,7 @@ public class DashboardStatisticsServiceImpl implements DashboardStatisticsServic
     List<String> envIds = environments.stream()
                               .filter(environment -> environment.getEnvironmentType() == EnvironmentType.PROD)
                               .map(Environment::getUuid)
-                              .collect(Collectors.toList());
+                              .collect(toList());
 
     PageRequest<WorkflowExecution> pageRequest = aPageRequest()
                                                      .addFilter("appId", EQ, appId)

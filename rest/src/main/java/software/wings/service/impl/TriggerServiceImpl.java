@@ -859,7 +859,7 @@ public class TriggerServiceImpl implements TriggerService {
                 -> serviceInfraWorkflow.getInfraMappingId() != null
                     && serviceInfraWorkflow.getInfraMappingId().equals(infraMappingId))
             .filter(distinctByKey(ServiceInfraWorkflow::getWorkflowId))
-            .collect(Collectors.toList());
+            .collect(toList());
 
     List<String> serviceIds = Collections.singletonList(serviceId);
     List<String> envIds = Collections.singletonList(envId);

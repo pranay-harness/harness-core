@@ -3,6 +3,7 @@ package software.wings.service.impl;
 import static io.harness.data.structure.EmptyPredicate.isNotEmpty;
 import static java.net.URLEncoder.encode;
 import static java.util.Arrays.asList;
+import static java.util.stream.Collectors.toList;
 import static org.apache.commons.lang3.StringUtils.isBlank;
 import static org.apache.commons.lang3.StringUtils.isNotBlank;
 import static org.mindrot.jbcrypt.BCrypt.hashpw;
@@ -104,7 +105,6 @@ import java.util.List;
 import java.util.Map;
 import java.util.UUID;
 import java.util.concurrent.ExecutorService;
-import java.util.stream.Collectors;
 import javax.cache.Cache;
 import javax.validation.executable.ValidateOnExecution;
 
@@ -333,7 +333,7 @@ public class UserServiceImpl implements UserService {
           userInviteClone.setEmail(email.trim());
           return inviteUser(userInviteClone);
         })
-        .collect(Collectors.toList());
+        .collect(toList());
   }
 
   private UserInvite inviteUser(UserInvite userInvite) {

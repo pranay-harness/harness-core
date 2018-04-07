@@ -2,6 +2,7 @@ package software.wings.integration.migration.legacy;
 
 import static io.harness.data.structure.EmptyPredicate.isEmpty;
 import static io.harness.data.structure.EmptyPredicate.isNotEmpty;
+import static java.util.stream.Collectors.toList;
 import static software.wings.beans.Graph.Builder.aGraph;
 import static software.wings.beans.GraphNode.GraphNodeBuilder.aGraphNode;
 import static software.wings.beans.command.Command.Builder.aCommand;
@@ -34,7 +35,6 @@ import software.wings.service.intfc.ServiceResourceService;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Set;
-import java.util.stream.Collectors;
 
 /**
  * Migration script to make node select counts cumulative
@@ -123,7 +123,7 @@ public class ContainerSetupCommandsMigrationUtil extends WingsBaseTest {
       }
       if (isNotEmpty(updatedServices)) {
         logger.info("Updated services in app " + app.getName() + ": "
-            + updatedServices.stream().map(Service::getName).collect(Collectors.toList()));
+            + updatedServices.stream().map(Service::getName).collect(toList()));
       }
     }
   }

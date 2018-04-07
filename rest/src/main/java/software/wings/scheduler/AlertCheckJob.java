@@ -1,6 +1,7 @@
 package software.wings.scheduler;
 
 import static io.harness.data.structure.EmptyPredicate.isEmpty;
+import static java.util.stream.Collectors.toList;
 import static software.wings.beans.Base.GLOBAL_APP_ID;
 
 import com.google.inject.Inject;
@@ -28,7 +29,6 @@ import software.wings.service.intfc.DelegateService;
 import java.util.List;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.TimeUnit;
-import java.util.stream.Collectors;
 
 /**
  * @author brett on 10/17/17
@@ -109,12 +109,12 @@ public class AlertCheckJob implements Job {
     List<Delegate> delegatesDown =
         delegates.stream()
             .filter(delegate -> System.currentTimeMillis() - delegate.getLastHeartBeat() > MAX_HB_TIMEOUT)
-            .collect(Collectors.toList());
+            .collect(toList());
 
     List<Delegate> delegatesUp =
         delegates.stream()
             .filter(delegate -> System.currentTimeMillis() - delegate.getLastHeartBeat() <= MAX_HB_TIMEOUT)
-            .collect(Collectors.toList());
+            .collect(toList());
 
     if (CollectionUtils.isNotEmpty(delegatesDown)) {
       delegateService.sendAlertNotificationsForDownDelegates(accountId, delegatesDown);

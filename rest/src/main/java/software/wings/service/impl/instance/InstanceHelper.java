@@ -3,6 +3,7 @@ package software.wings.service.impl.instance;
 import static io.harness.data.structure.EmptyPredicate.isEmpty;
 import static io.harness.data.structure.EmptyPredicate.isNotEmpty;
 import static io.harness.data.structure.UUIDGenerator.generateUuid;
+import static java.util.stream.Collectors.toList;
 import static software.wings.exception.WingsException.SERIOUS;
 import static software.wings.sm.ExecutionStatus.FAILED;
 
@@ -76,7 +77,6 @@ import java.time.Duration;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Optional;
-import java.util.stream.Collectors;
 
 /**
  * Both the normal instance and container instance are handled here.
@@ -328,7 +328,7 @@ public class InstanceHelper {
           List<String> asgList = amiStepExecutionSummary.getNewInstanceData()
                                      .stream()
                                      .map(ContainerServiceData::getName)
-                                     .collect(Collectors.toList());
+                                     .collect(toList());
           if (isNotEmpty(asgList)) {
             autoScalingGroupNames.addAll(asgList);
           }
@@ -340,7 +340,7 @@ public class InstanceHelper {
           List<String> asgList = amiStepExecutionSummary.getOldInstanceData()
                                      .stream()
                                      .map(ContainerServiceData::getName)
-                                     .collect(Collectors.toList());
+                                     .collect(toList());
           if (isNotEmpty(asgList)) {
             autoScalingGroupNames.addAll(asgList);
           }
