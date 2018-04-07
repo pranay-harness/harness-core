@@ -31,7 +31,6 @@ import java.util.Iterator;
 import java.util.List;
 import java.util.Objects;
 import java.util.Optional;
-import javax.validation.constraints.NotNull;
 
 /**
  * Created by peeyushaggarwal on 5/31/16.
@@ -43,14 +42,14 @@ import javax.validation.constraints.NotNull;
     fields = { @Field("appId")
                , @Field("originEntityId"), @Field("version") }, options = @IndexOptions(unique = true)))
 public class Command extends Base implements CommandUnit {
-  @SchemaIgnore private String name;
+  @NotEmpty @SchemaIgnore private String name;
   @SchemaIgnore private CommandUnitType commandUnitType;
   @SchemaIgnore private CommandExecutionStatus commandExecutionStatus = CommandExecutionStatus.QUEUED;
 
   @SchemaIgnore private boolean artifactNeeded;
   @Deprecated @SchemaIgnore private String deploymentType;
 
-  @SchemaIgnore private String originEntityId;
+  @NotEmpty @SchemaIgnore private String originEntityId;
 
   @SchemaIgnore private ContainerFamily containerFamily;
 
@@ -61,11 +60,11 @@ public class Command extends Base implements CommandUnit {
   @Attributes(title = "Name")
   private String referenceId;
 
-  @SchemaIgnore @NotNull private Graph graph;
+  @SchemaIgnore private Graph graph;
 
   @SchemaIgnore private Long version;
 
-  @SchemaIgnore @NotEmpty private List<CommandUnit> commandUnits = Lists.newArrayList();
+  @SchemaIgnore private List<CommandUnit> commandUnits = Lists.newArrayList();
 
   @SchemaIgnore private CommandType commandType = CommandType.OTHER;
 
@@ -346,6 +345,12 @@ public class Command extends Base implements CommandUnit {
   @Override
   public String getUuid() {
     return super.getUuid();
+  }
+
+  @SchemaIgnore
+  @Override
+  public List<String> getKeywords() {
+    return super.getKeywords();
   }
 
   @Override

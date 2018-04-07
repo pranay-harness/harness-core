@@ -77,9 +77,6 @@ import java.io.File;
 import java.util.List;
 import javax.validation.ConstraintViolationException;
 
-/**
- * Created by peeyushaggarwal on 4/4/16.
- */
 @SetupScheduler
 public class ArtifactServiceTest extends WingsBaseTest {
   @Inject @Spy private WingsPersistence wingsPersistence;

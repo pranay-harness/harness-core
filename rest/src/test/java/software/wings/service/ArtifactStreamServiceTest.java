@@ -23,8 +23,6 @@ import org.junit.Before;
 import org.junit.Test;
 import org.mockito.InjectMocks;
 import org.mockito.Mock;
-import org.mockito.Spy;
-import org.mongodb.morphia.query.FieldEnd;
 import org.mongodb.morphia.query.Query;
 import org.mongodb.morphia.query.UpdateOperations;
 import org.quartz.JobDetail;
@@ -39,15 +37,10 @@ import software.wings.dl.PageRequest;
 import software.wings.dl.PageResponse;
 import software.wings.dl.WingsPersistence;
 import software.wings.scheduler.JobScheduler;
-import software.wings.service.impl.ArtifactStreamServiceImpl;
 import software.wings.service.impl.yaml.YamlChangeSetHelper;
 import software.wings.service.intfc.AppService;
-import software.wings.service.intfc.ArtifactService;
 import software.wings.service.intfc.ArtifactStreamService;
 import software.wings.service.intfc.BuildSourceService;
-import software.wings.service.intfc.EnvironmentService;
-import software.wings.service.intfc.WorkflowService;
-import software.wings.service.intfc.yaml.EntityUpdateService;
 
 /**
  * Created by anubhaw on 11/4/16.
@@ -56,19 +49,12 @@ public class ArtifactStreamServiceTest extends WingsBaseTest {
   @Mock private WingsPersistence wingsPersistence;
   @Mock private UpdateOperations<ArtifactStream> updateOperations;
   @Mock private JobScheduler jobScheduler;
-  @Mock private WorkflowService workflowService;
-  @Mock private EnvironmentService environmentService;
   @Mock private Query<ArtifactStream> query;
-  @Mock private FieldEnd end;
   @Mock private BuildSourceService buildSourceService;
-  @Mock private ArtifactService artifactService;
-  @Mock private EntityUpdateService entityUpdateService;
   @Mock private AppService appService;
   @Mock private YamlChangeSetHelper yamlChangeSetHelper;
 
   @Inject @InjectMocks private ArtifactStreamService artifactStreamService;
-
-  @Spy @InjectMocks private ArtifactStreamService spyArtifactStreamService = new ArtifactStreamServiceImpl();
 
   private JenkinsArtifactStream jenkinsArtifactStream = aJenkinsArtifactStream()
                                                             .withAppId(APP_ID)

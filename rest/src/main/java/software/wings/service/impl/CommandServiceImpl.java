@@ -22,9 +22,6 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.concurrent.ExecutorService;
 
-/**
- * Created by peeyushaggarwal on 11/17/16.
- */
 @Singleton
 public class CommandServiceImpl implements CommandService {
   @Inject private WingsPersistence wingsPersistence;
@@ -60,12 +57,10 @@ public class CommandServiceImpl implements CommandService {
   @Override
   public Command save(Command command, boolean pushToYaml) {
     Command savedCommand = wingsPersistence.saveAndGet(Command.class, command);
-
     if (savedCommand != null && pushToYaml) {
-      String accountId = appService.getAccountIdByAppId(command.getAppId());
-      String serviceCommandId = command.getOriginEntityId();
-      ServiceCommand serviceCommand = getServiceCommand(command.getAppId(), serviceCommandId);
+      ServiceCommand serviceCommand = getServiceCommand(command.getAppId(), command.getOriginEntityId());
       Service service = serviceResourceService.get(serviceCommand.getAppId(), serviceCommand.getServiceId());
+      String accountId = appService.getAccountIdByAppId(command.getAppId());
       yamlChangeSetHelper.commandFileChangeAsync(accountId, service, serviceCommand, ChangeType.ADD);
     }
     return savedCommand;
@@ -75,8 +70,7 @@ public class CommandServiceImpl implements CommandService {
   public Command update(Command command) {
     // check whether we need to push changes (through git sync)
     String accountId = appService.getAccountIdByAppId(command.getAppId());
-    String serviceCommandId = command.getOriginEntityId();
-    ServiceCommand serviceCommand = getServiceCommand(command.getAppId(), serviceCommandId);
+    ServiceCommand serviceCommand = getServiceCommand(command.getAppId(), command.getOriginEntityId());
     Service service = serviceResourceService.get(serviceCommand.getAppId(), serviceCommand.getServiceId());
     executorService.submit(() -> {
       YamlGitConfig ygs = yamlDirectoryService.weNeedToPushChanges(accountId);

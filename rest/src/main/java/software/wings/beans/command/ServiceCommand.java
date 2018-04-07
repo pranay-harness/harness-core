@@ -30,7 +30,7 @@ public class ServiceCommand extends Base {
   @Embedded private Map<String, EntityVersion> envIdVersionMap = Maps.newHashMap();
   private Integer defaultVersion;
 
-  private boolean targetToAllEnv;
+  private boolean targetToAllEnv = true;
 
   @Transient private Command command;
 
@@ -254,7 +254,7 @@ public class ServiceCommand extends Base {
     private String serviceId;
     private Map<String, EntityVersion> envIdVersionMap = Maps.newHashMap();
     private Integer defaultVersion;
-    private boolean targetToAllEnv;
+    private boolean targetToAllEnv = true;
     private boolean setAsDefault;
     private Command command;
     private String uuid;

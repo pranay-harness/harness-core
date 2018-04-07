@@ -23,6 +23,8 @@ import static software.wings.common.Constants.autoDownloaded;
 import static software.wings.dl.MongoHelper.setUnset;
 import static software.wings.exception.WingsException.ReportTarget.USER;
 import static software.wings.service.intfc.FileService.FileBucket.ARTIFACTS;
+import static software.wings.utils.ArtifactType.AMI;
+import static software.wings.utils.ArtifactType.DOCKER;
 
 import com.google.common.io.Files;
 import com.google.inject.Inject;
@@ -165,14 +167,13 @@ public class ArtifactServiceImpl implements ArtifactService {
       return;
     }
     if (NEXUS.name().equals(artifactStream.getArtifactStreamType())) {
-      artifact.setContentStatus(
-          getArtifactType(artifactStream).equals(ArtifactType.DOCKER) ? METADATA_ONLY : NOT_DOWNLOADED);
+      artifact.setContentStatus(getArtifactType(artifactStream).equals(DOCKER) ? METADATA_ONLY : NOT_DOWNLOADED);
       artifact.setStatus(APPROVED);
       return;
     }
 
     if (ARTIFACTORY.name().equals(artifactStream.getArtifactStreamType())) {
-      if (getArtifactType(artifactStream).equals(ArtifactType.DOCKER)) {
+      if (getArtifactType(artifactStream).equals(DOCKER)) {
         artifact.setContentStatus(METADATA_ONLY);
         artifact.setStatus(APPROVED);
         return;
@@ -367,10 +368,7 @@ public class ArtifactServiceImpl implements ArtifactService {
       String appId = app.getId().toString();
       List<Service> services = wingsPersistence.createQuery(Service.class).filter("appId", appId).asList();
       for (Service service : services) {
-        if (ArtifactType.DOCKER.equals(service.getArtifactType())
-            || ArtifactType.AMI.equals(service.getArtifactType())) {
-          logger.info("Service [{}] artifact type   for the app [{}] is Docker or AMI. Skipping deleting artifacts",
-              service.getName(), appId);
+        if (DOCKER.equals(service.getArtifactType()) || AMI.equals(service.getArtifactType())) {
           continue;
         }
         List<ArtifactStream> artifactStreams = wingsPersistence.createQuery(ArtifactStream.class)
@@ -379,8 +377,6 @@ public class ArtifactServiceImpl implements ArtifactService {
                                                    .asList();
         for (ArtifactStream artifactStream : artifactStreams) {
           if (artifactStream.isMetadataOnly()) {
-            logger.info("Service [{}] artifact type   for the app [{}] is Metadata only. Skipping deleting artifacts",
-                service.getName(), appId);
             continue;
           }
           List<Artifact> toBeDeletedArtifacts = wingsPersistence.createQuery(Artifact.class)
@@ -397,10 +393,6 @@ public class ArtifactServiceImpl implements ArtifactService {
             logger.info("Deleting artifacts for artifactStreamId [{}]  of size: [{}] for appId [{}]",
                 artifactStream.getUuid(), toBeDeletedArtifacts.size(), appId);
             deleteArtifacts(app.getId().toString(), artifactStream.getUuid(), toBeDeletedArtifacts);
-          } else {
-            logger.info(
-                "ArtifactStreamId [{}] for the app [{}] does not have more than [{}] successful artifacts. Not deleting",
-                artifactStream.getUuid(), appId, retentionSize);
           }
         }
       }
@@ -422,10 +414,8 @@ public class ArtifactServiceImpl implements ArtifactService {
         logger.info("Deleting artifactIds of artifacts {}", artifactIds);
         wingsPersistence.getCollection("artifacts")
             .remove(new BasicDBObject("_id", new BasicDBObject("$in", artifactIds)));
-        logger.info("Deleting artifactFileUuids of artifacts.files {}", artifactFileUuids.toArray());
         wingsPersistence.getCollection("artifacts.files")
             .remove(new BasicDBObject("_id", new BasicDBObject("$in", artifactFileUuids.toArray())));
-        logger.info("Deleting files_id of artifacts {}", artifactFileUuids.toArray());
         wingsPersistence.getCollection("artifacts.chunks")
             .remove(new BasicDBObject("files_id", new BasicDBObject("$in", artifactFileUuids.toArray())));
       }

@@ -1580,7 +1580,8 @@ public class WorkflowExecutionServiceImpl implements WorkflowExecutionService {
     StateExecutionData stateExecutionData = stateExecutionInstance.getStateExecutionData();
     Validator.notNullCheck("stateExecutionData", stateExecutionData);
     if (!(stateExecutionData instanceof RepeatStateExecutionData)) {
-      throw new InvalidRequestException("Request for elements of instance that is not repeated");
+      throw new InvalidRequestException(
+          "Request for elements of instance that is not repeated", WingsException.ReportTarget.USER);
     }
 
     RepeatStateExecutionData repeatStateExecutionData = (RepeatStateExecutionData) stateExecutionData;
