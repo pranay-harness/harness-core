@@ -151,6 +151,7 @@ import software.wings.dl.PageResponse;
 import software.wings.dl.WingsPersistence;
 import software.wings.exception.ExplanationException;
 import software.wings.exception.InvalidArgumentsException;
+import software.wings.exception.InvalidRequestException;
 import software.wings.exception.WingsException;
 import software.wings.expression.ExpressionEvaluator;
 import software.wings.scheduler.PruneEntityJob;
@@ -299,7 +300,7 @@ public class WorkflowServiceImpl implements WorkflowService, DataProvider {
     if (filterForWorkflow) {
       workflow = readWorkflow(appId, workflowId);
       if (workflow == null) {
-        throw new WingsException("Worflow [" + workflowId + "] does not exist.", USER);
+        throw new InvalidRequestException("Worflow does not exist", USER);
       }
       if (filterForPhase) {
         if (workflow != null) {
@@ -309,8 +310,8 @@ public class WorkflowServiceImpl implements WorkflowService, DataProvider {
           }
         }
         if (workflowPhase == null) {
-          throw new WingsException(
-              "Worflow Phase [" + phaseId + "] not associated with Workflow [" + workflow.getName() + "]", USER);
+          throw new InvalidRequestException(
+              "Worflow Phase  not associated with Workflow [" + workflow.getName() + "]", USER);
         }
         String serviceId = workflowPhase.getServiceId();
         if (serviceId != null) {
@@ -379,7 +380,7 @@ public class WorkflowServiceImpl implements WorkflowService, DataProvider {
     Map<StateTypeScope, List<StateTypeDescriptor>> mapByScope = new HashMap<>();
     for (StateTypeDescriptor sd : stencils) {
       if (mapByType.get(sd.getType()) != null) {
-        throw new WingsException("Duplicate implementation for the stencil: " + sd.getType(), USER);
+        throw new InvalidRequestException("Duplicate implementation for the stencil: " + sd.getType(), USER);
       }
       mapByType.put(sd.getType(), sd);
       sd.getScopes().forEach(scope -> mapByScope.computeIfAbsent(scope, k -> new ArrayList<>()).add(sd));

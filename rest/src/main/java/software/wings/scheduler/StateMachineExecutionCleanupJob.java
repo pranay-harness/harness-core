@@ -79,7 +79,6 @@ public class StateMachineExecutionCleanupJob implements Job {
   }
 
   private void executeInternal(String appId) {
-    logger.info("Running state machine execution cleanup job for appId {}", appId);
     PageRequest<WorkflowExecution> pageRequest =
         aPageRequest()
             .withLimit(PageRequest.UNLIMITED)
@@ -117,6 +116,5 @@ public class StateMachineExecutionCleanupJob implements Job {
         logger.error("Error in cleaning up the workflowExecution {}", workflowExecution.getUuid(), e);
       }
     }
-    logger.info("State machine execution cleanup job for appId {} complete", appId);
   }
 }

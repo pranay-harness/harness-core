@@ -3,7 +3,6 @@ package software.wings.service.impl;
 import static io.harness.data.structure.EmptyPredicate.isEmpty;
 import static io.harness.data.structure.EmptyPredicate.isNotEmpty;
 import static java.util.Arrays.asList;
-import static java.util.stream.Collectors.toList;
 import static software.wings.beans.ErrorCode.INVALID_REQUEST;
 import static software.wings.beans.FeatureName.AZURE_SUPPORT;
 import static software.wings.beans.SearchFilter.Operator.EQ;
@@ -16,6 +15,7 @@ import static software.wings.beans.artifact.ArtifactStreamType.ECR;
 import static software.wings.beans.artifact.ArtifactStreamType.GCR;
 import static software.wings.beans.artifact.ArtifactStreamType.NEXUS;
 import static software.wings.dl.PageRequest.PageRequestBuilder.aPageRequest;
+import static software.wings.exception.WingsException.ReportTarget.USER;
 
 import com.google.common.base.Joiner;
 import com.google.common.collect.ImmutableMap;
@@ -36,8 +36,8 @@ import software.wings.beans.yaml.GitFileChange;
 import software.wings.dl.PageRequest;
 import software.wings.dl.PageResponse;
 import software.wings.dl.WingsPersistence;
+import software.wings.exception.InvalidRequestException;
 import software.wings.exception.WingsException;
-import software.wings.exception.WingsException.ReportTarget;
 import software.wings.scheduler.ArtifactCollectionJob;
 import software.wings.scheduler.PruneEntityJob;
 import software.wings.scheduler.QuartzScheduler;
@@ -70,9 +70,7 @@ import java.util.regex.Pattern;
 import java.util.stream.Collectors;
 import javax.validation.executable.ValidateOnExecution;
 import javax.ws.rs.NotFoundException;
-/**
- * The Class ArtifactStreamServiceImpl.
- */
+
 @Singleton
 @ValidateOnExecution
 public class ArtifactStreamServiceImpl implements ArtifactStreamService, DataProvider {
@@ -112,19 +110,10 @@ public class ArtifactStreamServiceImpl implements ArtifactStreamService, DataPro
   @Override
   @ValidationGroups(Create.class)
   public ArtifactStream create(ArtifactStream artifactStream) {
-    if (DOCKER.name().equals(artifactStream.getArtifactStreamType())
-        || ECR.name().equals(artifactStream.getArtifactStreamType())
-        || GCR.name().equals(artifactStream.getArtifactStreamType())
-        || ACR.name().equals(artifactStream.getArtifactStreamType())
-        || ARTIFACTORY.name().equals(artifactStream.getArtifactStreamType())) {
-      buildSourceService.validateArtifactSource(
-          artifactStream.getAppId(), artifactStream.getSettingId(), artifactStream.getArtifactStreamAttributes());
-    }
+    validateArtifactSourceData(artifactStream);
 
     artifactStream.setSourceName(artifactStream.generateSourceName());
-    if (artifactStream.isAutoPopulate()) {
-      setAutoPopulatedName(artifactStream);
-    }
+    setAutoPopulatedName(artifactStream);
 
     String id = wingsPersistence.save(artifactStream);
     ArtifactCollectionJob.addDefaultJob(jobScheduler, artifactStream.getAppId(), artifactStream.getUuid());
@@ -154,26 +143,26 @@ public class ArtifactStreamServiceImpl implements ArtifactStreamService, DataPro
    * @param artifactStream
    */
   private void setAutoPopulatedName(ArtifactStream artifactStream) {
-    String name = artifactStream.generateName();
+    if (artifactStream.isAutoPopulate()) {
+      String name = artifactStream.generateName();
+      String escapedString = Pattern.quote(name);
 
-    String escapedString = Pattern.quote(name);
+      // We need to check if the name exists in case of auto generate, if it exists, we need to add a suffix to the
+      // name.
+      PageRequest<ArtifactStream> pageRequest = aPageRequest()
+                                                    .addFilter("appId", Operator.EQ, artifactStream.getAppId())
+                                                    .addFilter("serviceId", Operator.EQ, artifactStream.getServiceId())
+                                                    .addFilter("name", Operator.STARTS_WITH, escapedString)
+                                                    .addOrder("name", OrderType.DESC)
+                                                    .build();
+      PageResponse<ArtifactStream> response = wingsPersistence.query(ArtifactStream.class, pageRequest);
 
-    // We need to check if the name exists in case of auto generate, if it exists, we need to add a suffix to the name.
-    PageRequest<ArtifactStream> pageRequest = aPageRequest()
-                                                  .addFilter("appId", Operator.EQ, artifactStream.getAppId())
-                                                  .addFilter("serviceId", Operator.EQ, artifactStream.getServiceId())
-                                                  .addFilter("name", Operator.STARTS_WITH, escapedString)
-                                                  .addOrder("name", OrderType.DESC)
-                                                  .build();
-    PageResponse<ArtifactStream> response = wingsPersistence.query(ArtifactStream.class, pageRequest);
-
-    // If an entry exists with the given default name
-    if (isNotEmpty(response)) {
-      String existingName = response.get(0).getName();
-      name = Util.getNameWithNextRevision(existingName, name);
+      // If an entry exists with the given default name
+      if (isNotEmpty(response)) {
+        name = Util.getNameWithNextRevision(response.get(0).getName(), name);
+      }
+      artifactStream.setName(name);
     }
-
-    artifactStream.setName(name);
   }
 
   @Override
@@ -184,14 +173,7 @@ public class ArtifactStreamServiceImpl implements ArtifactStreamService, DataPro
     if (savedArtifactStream == null) {
       throw new NotFoundException("Artifact stream with id " + artifactStream.getUuid() + " not found");
     }
-    if (DOCKER.name().equals(artifactStream.getArtifactStreamType())
-        || ECR.name().equals(artifactStream.getArtifactStreamType())
-        || GCR.name().equals(artifactStream.getArtifactStreamType())
-        || ACR.name().equals(artifactStream.getArtifactStreamType())
-        || ARTIFACTORY.name().equals(artifactStream.getArtifactStreamType())) {
-      buildSourceService.validateArtifactSource(
-          artifactStream.getAppId(), artifactStream.getSettingId(), artifactStream.getArtifactStreamAttributes());
-    }
+    validateArtifactSourceData(artifactStream);
 
     artifactStream.setSourceName(artifactStream.generateSourceName());
     artifactStream = wingsPersistence.saveAndGet(ArtifactStream.class, artifactStream);
@@ -207,14 +189,25 @@ public class ArtifactStreamServiceImpl implements ArtifactStreamService, DataPro
     return artifactStream;
   }
 
+  private void validateArtifactSourceData(ArtifactStream artifactStream) {
+    String artifactStreamType = artifactStream.getArtifactStreamType();
+    if (DOCKER.name().equals(artifactStreamType) || ECR.name().equals(artifactStreamType)
+        || GCR.name().equals(artifactStreamType) || ACR.name().equals(artifactStreamType)
+        || ARTIFACTORY.name().equals(artifactStreamType)) {
+      buildSourceService.validateArtifactSource(
+          artifactStream.getAppId(), artifactStream.getSettingId(), artifactStream.getArtifactStreamAttributes());
+    }
+  }
+
   private void ensureArtifactStreamSafeToDelete(String appId, String artifactStreamId) {
     List<software.wings.beans.trigger.Trigger> triggers =
         triggerService.getTriggersHasArtifactStreamAction(appId, artifactStreamId);
     if (isEmpty(triggers)) {
       return;
     }
-    List<String> triggerNames = triggers.stream().map(software.wings.beans.trigger.Trigger::getName).collect(toList());
-    throw new WingsException(INVALID_REQUEST, ReportTarget.USER)
+    List<String> triggerNames =
+        triggers.stream().map(software.wings.beans.trigger.Trigger::getName).collect(Collectors.toList());
+    throw new WingsException(INVALID_REQUEST, USER)
         .addParam("message",
             String.format(
                 "Artifact Source associated as a trigger action to triggers [%s]", Joiner.on(", ").join(triggerNames)));
@@ -281,7 +274,7 @@ public class ArtifactStreamServiceImpl implements ArtifactStreamService, DataPro
     Service service = serviceResourceService.get(appId, serviceId);
     // Observed NPE in logs due to invalid service id provided by the ui due to a stale screen.
     if (service == null) {
-      throw new WingsException("Service " + serviceId + "for the given app " + appId + "does not exist ");
+      throw new InvalidRequestException("Service does not exist", USER);
     }
     if (service.getArtifactType().equals(ArtifactType.DOCKER)) {
       String accountId = appService.getAccountIdByAppId(appId);

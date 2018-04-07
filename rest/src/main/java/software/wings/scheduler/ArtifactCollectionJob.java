@@ -73,9 +73,7 @@ public class ArtifactCollectionJob implements Job {
   public void execute(JobExecutionContext jobExecutionContext) {
     String artifactStreamId = jobExecutionContext.getMergedJobDataMap().getString(ARTIFACT_STREAM_ID_KEY);
     String appId = jobExecutionContext.getMergedJobDataMap().getString(APP_ID_KEY);
-    logger.info("Received artifact collection job request for appId {} artifactStreamId {}", appId, artifactStreamId);
     executorService.submit(() -> executeJobAsync(appId, artifactStreamId));
-    logger.info("Submitted request successfully");
   }
 
   private void executeJobAsync(String appId, String artifactStreamId) {

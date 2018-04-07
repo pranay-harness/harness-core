@@ -69,7 +69,6 @@ public class AlertCheckJob implements Job {
 
   @Override
   public void execute(JobExecutionContext jobExecutionContext) {
-    logger.info("Running AlertCheck Job asynchronously and returning");
     executorService.submit(
         () -> executeInternal((String) jobExecutionContext.getJobDetail().getJobDataMap().get(ACCOUNT_ID)));
   }

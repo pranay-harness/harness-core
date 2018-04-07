@@ -36,7 +36,6 @@ public class DataCleanUpJob implements Job {
 
   @Override
   public void execute(JobExecutionContext jobExecutionContext) {
-    logger.info("Running Data Cleanup Job asynchronously and returning");
     executorService.submit(this ::executeInternal);
   }
 
