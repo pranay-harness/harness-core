@@ -31,6 +31,8 @@ import javax.validation.constraints.NotNull;
 @Indexes(@Index(fields = { @Field("appId")
                            , @Field("name") }, options = @IndexOptions(unique = true)))
 public class Environment extends Base {
+  public static final String NAME_KEY = "name";
+
   @NotEmpty private String name;
   private String description;
   private String configMapYaml;

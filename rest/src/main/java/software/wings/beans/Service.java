@@ -38,6 +38,8 @@ import java.util.Objects;
 @Indexes(@Index(fields = { @Field("appId")
                            , @Field("name") }, options = @IndexOptions(unique = true)))
 public class Service extends Base {
+  public static final String NAME_KEY = "name";
+
   private String name;
   private String description;
   private ArtifactType artifactType;

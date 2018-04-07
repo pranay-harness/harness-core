@@ -10,6 +10,7 @@ import io.github.benas.randombeans.EnhancedRandomBuilder;
 import io.github.benas.randombeans.api.EnhancedRandom;
 import software.wings.beans.Application;
 import software.wings.beans.Service;
+import software.wings.dl.WingsPersistence;
 import software.wings.generator.ApplicationGenerator.Applications;
 import software.wings.service.intfc.ServiceResourceService;
 import software.wings.utils.ArtifactType;
@@ -19,6 +20,7 @@ public class ServiceGenerator {
   @Inject ApplicationGenerator applicationGenerator;
 
   @Inject ServiceResourceService serviceResourceService;
+  @Inject WingsPersistence wingsPersistence;
 
   public enum Services {
     GENERIC_TEST,
@@ -54,6 +56,13 @@ public class ServiceGenerator {
     return ensurePredefined(seed, predefined);
   }
 
+  public Service exists(Service service) {
+    return wingsPersistence.createQuery(Service.class)
+        .filter(Service.APP_ID_KEY, service.getAppId())
+        .filter(Service.NAME_KEY, service.getName())
+        .get();
+  }
+
   public Service ensureService(long seed, Service service) {
     EnhancedRandom random =
         EnhancedRandomBuilder.aNewEnhancedRandomBuilder().seed(seed).scanClasspathForConcreteTypes(true).build();
@@ -70,6 +79,11 @@ public class ServiceGenerator {
       builder.withName(service.getName());
     } else {
       builder.withName(random.nextObject(String.class));
+    }
+
+    Service existing = exists(builder.build());
+    if (existing != null) {
+      return existing;
     }
 
     if (service != null && service.getArtifactType() != null) {
