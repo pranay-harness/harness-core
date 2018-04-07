@@ -7,7 +7,6 @@ import static javax.ws.rs.core.MediaType.APPLICATION_JSON;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.mockito.MockitoAnnotations.initMocks;
 import static software.wings.beans.Application.Builder.anApplication;
-import static software.wings.beans.AwsInfrastructureMapping.Builder.anAwsInfrastructureMapping;
 import static software.wings.beans.Base.GLOBAL_APP_ID;
 import static software.wings.beans.Base.GLOBAL_ENV_ID;
 import static software.wings.beans.BasicOrchestrationWorkflow.BasicOrchestrationWorkflowBuilder.aBasicOrchestrationWorkflow;
@@ -17,7 +16,6 @@ import static software.wings.beans.Environment.Builder.anEnvironment;
 import static software.wings.beans.HostConnectionAttributes.AccessType.KEY;
 import static software.wings.beans.HostConnectionAttributes.Builder.aHostConnectionAttributes;
 import static software.wings.beans.HostConnectionAttributes.ConnectionType.SSH;
-import static software.wings.beans.InfrastructureMappingType.AWS_SSH;
 import static software.wings.beans.PhaseStep.PhaseStepBuilder.aPhaseStep;
 import static software.wings.beans.PhaseStepType.POST_DEPLOYMENT;
 import static software.wings.beans.PhaseStepType.PRE_DEPLOYMENT;
@@ -25,6 +23,7 @@ import static software.wings.beans.Pipeline.Builder.aPipeline;
 import static software.wings.beans.SettingAttribute.Builder.aSettingAttribute;
 import static software.wings.beans.Workflow.WorkflowBuilder.aWorkflow;
 import static software.wings.beans.artifact.JenkinsArtifactStream.Builder.aJenkinsArtifactStream;
+import static software.wings.generator.InfrastructureMappingGenerator.InfrastructureMappings.AWS_SSH_TEST;
 import static software.wings.integration.IntegrationTestUtil.randomInt;
 import static software.wings.integration.SeedData.containerNames;
 import static software.wings.integration.SeedData.envNames;
@@ -42,15 +41,12 @@ import org.junit.Rule;
 import org.junit.Test;
 import org.junit.rules.TemporaryFolder;
 import org.junit.runner.JUnitCore;
-import software.wings.api.DeploymentType;
 import software.wings.app.MainConfiguration;
 import software.wings.beans.Account;
 import software.wings.beans.AppContainer;
 import software.wings.beans.AppDynamicsConfig;
 import software.wings.beans.Application;
 import software.wings.beans.AwsConfig;
-import software.wings.beans.AwsInstanceFilter;
-import software.wings.beans.AwsInstanceFilter.Tag;
 import software.wings.beans.BambooConfig;
 import software.wings.beans.Base;
 import software.wings.beans.DockerConfig;
@@ -100,7 +96,6 @@ import software.wings.service.intfc.SettingsService;
 import software.wings.service.intfc.SystemCatalogService;
 import software.wings.service.intfc.WorkflowExecutionService;
 import software.wings.service.intfc.WorkflowService;
-import software.wings.settings.SettingValue.SettingVariableTypes;
 
 import java.io.BufferedWriter;
 import java.io.File;
@@ -135,9 +130,7 @@ public class DataGenUtil extends BaseIntegrationTest {
   public static final String TERRAFORM_TEST_SCRIPTS = "Terraform test scripts";
   public static final String GIT_REPO_TERRAFORM_TEST = "Git Repo terraform test";
   public static final String AWS_NON_PROD = "Aws non-prod";
-  public static final String AWS_TEST = "Aws test";
   public static final String WINGS_KEY = "Wings Key";
-  public static final String DEV_KEY = "Dev Test Key";
 
   /**
    * The Test folder.
@@ -389,21 +382,6 @@ public class DataGenUtil extends BaseIntegrationTest {
             .build();
     wingsPersistence.save(awsNonProdAttribute);
 
-    SettingAttribute awsTestAttribute =
-        aSettingAttribute()
-            .withCategory(Category.CLOUD_PROVIDER)
-            .withName(AWS_TEST)
-            .withAppId(GLOBAL_APP_ID)
-            .withEnvId(GLOBAL_ENV_ID)
-            .withAccountId(accountId)
-            .withValue(AwsConfig.builder()
-                           .accessKey("AKIAJJUEMEKQBYHZCQSA")
-                           .secretKey("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".toCharArray())
-                           .accountId(accountId)
-                           .build())
-            .build();
-    wingsPersistence.save(awsTestAttribute);
-
     final SettingAttribute hostConnection =
         aSettingAttribute()
             .withAccountId(accountId)
@@ -442,49 +420,6 @@ public class DataGenUtil extends BaseIntegrationTest {
                            .build())
             .build();
     wingsPersistence.save(hostConnection);
-
-    final SettingAttribute devTestKey =
-        aSettingAttribute()
-            .withAccountId(accountId)
-            .withAppId(GLOBAL_APP_ID)
-            .withEnvId(GLOBAL_ENV_ID)
-            .withName(DEV_KEY)
-            .withValue(aHostConnectionAttributes()
-                           .withConnectionType(SSH)
-                           .withAccessType(KEY)
-                           .withAccountId(accountId)
-                           .withUserName("ubuntu")
-                           .withKey(("-----BEGIN RSA PRIVATE KEY-----\n"
-                               + "MIIEpQIBAAKCAQEA1Bxs1dMQSD25VBrTVvMvTFwTagL+N9qKAptxdBBRvxFm9Kfv\n"
-                               + "TsZAibtfFgXa71gy7id+uMDPGQEHtIeXXvzkYPq/MPltVooWhouadGzrOr1hVDHM\n"
-                               + "UGwDGQrpy7XyZPfHKjjGmNUd+B27zDon5RtOZbCbRCvevoPnCvTtItfSFLiF/mE+\n"
-                               + "q///1jpyf6jLPz/vpARLr2VoZDNvxhU/RdJOSXQVkxEQKzDUMTsgCTZkh1xc9Nb1\n"
-                               + "gfDvd1BfJv6l+2nh2sWmRSy72lbupxDcUG5CUPD4V/ka9duVfGKmylo9QooiW5ER\n"
-                               + "0qa0lCHGbzil8xRZwR4gqAct7YU8da1FEBWGlQIDAQABAoIBAQCWz8MeYRxRkPll\n"
-                               + "cFFVoEC/9TOki44/HjZEVktbb4L/7Bqc146SHumiREP+P5mD1d0YcaJrMEPPjmjx\n"
-                               + "FfstgXfL8FziMGZqQnJzpWzjXNH/iMlb+LBBehrVwmmq+qnm2jmUrpud7OGLGXD+\n"
-                               + "a1cUUc7zBJfQ57RPFy++HZlBzdvD+IcPuVqyyQoS6f0PzGrC3nuqsqYKjmAoOJsx\n"
-                               + "kLuKS59QJ/HXEGJtduw0UvjfQS4l3qebbFAcImIldZ0kVumhIlxcpes6kqZw8dfH\n"
-                               + "dZOndMujWYaJIxRhLHwla+myE6p3eneVg15EcBj9PGKHZkXrmk7Jlt+2j6PVQikw\n"
-                               + "Z7HJDwThAoGBAPW1dGbR5ml1wYQnqwLUp9TtMmZqFMC3gMgNXd3NIJkyK1vM0rZs\n"
-                               + "qokZB2SxyXwCHw+FjUG9WT/Jahy/Pk1D4cBxGgO5CqK+GjON27tn+HcSjt20ZUnl\n"
-                               + "dRhsEIyau034ecIR6zsyHXxJxcU1+yfMp1DD8u0n1wq8OWo3HRH6pn+JAoGBANz+\n"
-                               + "ukC8TAF/WnTXaLrYR2KB9KmbD9KmdUT0289xafFIlF8WFdz6baZCXIXmo/oiOURv\n"
-                               + "bPnJEqZHsowfdky6m8CHC3zsH6GZDrRP03qj1rHxgu5LP5Na4dHXRB03/dg5nZSV\n"
-                               + "mfkFI3swI+9nC0g49g0djT/aqleLbezPUrdRcd+tAoGBAIVtzVFMqOgaF0Vx2S8H\n"
-                               + "VkCNsnHlJ3Hj9J4ujAu3qf0nPl5yovaHmjArFFW9KiIacM2YA7ZwYbf+443K2MVS\n"
-                               + "mJRNlwfwg3MO8uGOJoXllwrqXATPQrXXUjg57t674/0actxNqMUTmOl2klxezQ22\n"
-                               + "2CFG13Orz943iqJAXZv21lWpAoGBAI6+LdnAhit1ch0EQg5lwn4bSMgAc1Dx2c9H\n"
-                               + "hW9RZ0fFRKjCYC7Sxt5cAN0wY3wefPT6L96LhPNIXkhpzgSziATsdXwkHC5J6ZiH\n"
-                               + "8yZFC1j2kUaP7imkyzW6ILHqx5jRZjpiAwk4y3k3WA67dSsaN7uy+dhjyiEv2znZ\n"
-                               + "lCj6f14lAoGAWGMSz05Ugzk7W7XWDkbM+I3K1nCRX7Dws32dWmyPNoEGy+x8sCcu\n"
-                               + "9XdXmwNc7akrF8jG8Zk/0qwlfvYh4kSRQr037sdQpB1HrSAP4LeVSeJZFohi1QZG\n"
-                               + "lcqQrz6/ZvrHFG/VTrr1JOGSNlKmmptsk9IQAm0nedOh+rWx63w+kJQ=\n"
-                               + "-----END RSA PRIVATE KEY-----\n")
-                                        .toCharArray())
-                           .build())
-            .build();
-    wingsPersistence.save(devTestKey);
   }
 
   private void createTestApplication(Account account) {
@@ -495,30 +430,7 @@ public class DataGenUtil extends BaseIntegrationTest {
     ServiceTemplate serviceTemplate =
         serviceTemplateService.get(service.getAppId(), service.getUuid(), environment.getUuid());
 
-    final SettingAttribute awsTest = settingsService.getByName(accountId, GLOBAL_APP_ID, AWS_TEST);
-    final SettingAttribute devKey = settingsService.getByName(accountId, GLOBAL_APP_ID, DEV_KEY);
-    final SettingAttribute terraformTest = settingsService.getByName(accountId, GLOBAL_APP_ID, GIT_REPO_TERRAFORM_TEST);
-
-    final List<Tag> tags = asList(Tag.builder().key("Purpose").value("test").build(),
-        Tag.builder().key("User").value(System.getProperty("user.name")).build());
-
-    InfrastructureMapping infrastructureMapping = infrastructureMappingGenerator.createInfrastructureMapping(seed,
-        anAwsInfrastructureMapping()
-            .withName("Aws non prod - ssh workflow test")
-            .withAutoPopulate(false)
-            .withInfraMappingType(AWS_SSH.name())
-            .withAccountId(account.getUuid())
-            .withAppId(environment.getAppId())
-            .withServiceTemplateId(serviceTemplate.getUuid())
-            .withEnvId(environment.getUuid())
-            .withDeploymentType(DeploymentType.SSH.name())
-            .withComputeProviderType(SettingVariableTypes.AWS.name())
-            .withComputeProviderSettingId(awsTest.getUuid())
-            .withHostConnectionAttrs(devKey.getUuid())
-            .withUsePublicDns(true)
-            .withRegion("us-east-1")
-            .withAwsInstanceFilter(AwsInstanceFilter.builder().tags(tags).build())
-            .build());
+    InfrastructureMapping infrastructureMapping = infrastructureMappingGenerator.ensurePredefined(seed, AWS_SSH_TEST);
 
     final SettingAttribute jenkins = settingsService.getByName(accountId, GLOBAL_APP_ID, HARNESS_JENKINS);
 
