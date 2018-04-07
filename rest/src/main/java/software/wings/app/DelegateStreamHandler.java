@@ -2,13 +2,13 @@ package software.wings.app;
 
 import static io.harness.govern.Switch.unhandled;
 import static software.wings.beans.ErrorCode.UNKNOWN_ERROR;
-import static software.wings.beans.ResponseMessage.Level.ERROR;
 import static software.wings.beans.ResponseMessage.aResponseMessage;
 
 import com.google.common.base.Splitter;
 import com.google.common.io.CharStreams;
 import com.google.inject.Inject;
 
+import io.harness.eraro.Level;
 import org.atmosphere.cache.UUIDBroadcasterCache;
 import org.atmosphere.config.service.AtmosphereHandlerService;
 import org.atmosphere.cpr.AtmosphereRequest;
@@ -133,7 +133,7 @@ public class DelegateStreamHandler extends AtmosphereHandlerAdapter {
     }
     resource.write(JsonUtils.asJson(aResponseMessage()
                                         .code(errorCode)
-                                        .level(ERROR)
+                                        .level(Level.ERROR)
                                         .message(ResponseCodeCache.getInstance().prepareMessage(errorCode, null))
                                         .build()));
     resource.close();

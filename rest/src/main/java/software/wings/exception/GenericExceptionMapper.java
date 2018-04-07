@@ -1,9 +1,9 @@
 package software.wings.exception;
 
 import static software.wings.beans.ErrorCode.DEFAULT_ERROR_CODE;
-import static software.wings.beans.ResponseMessage.Level.ERROR;
 import static software.wings.beans.ResponseMessage.aResponseMessage;
 
+import io.harness.eraro.Level;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import software.wings.beans.RestResponse;
@@ -34,7 +34,7 @@ public class GenericExceptionMapper<T> implements ExceptionMapper<Throwable> {
       restResponse.getResponseMessages().add(
           aResponseMessage()
               .code(DEFAULT_ERROR_CODE)
-              .level(ERROR)
+              .level(Level.ERROR)
               .message(ResponseCodeCache.getInstance().prepareMessage(DEFAULT_ERROR_CODE, null))
               .build());
     }
