@@ -65,7 +65,6 @@ import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Future;
 import java.util.concurrent.TimeUnit;
 import java.util.regex.Pattern;
-import java.util.stream.Collectors;
 import javax.net.ssl.HostnameVerifier;
 
 /**
@@ -229,7 +228,7 @@ public class JenkinsImpl implements Jenkins {
             .values()
             .stream()
             .map(job -> new JobDetails(getJobNameFromUrl(job.getUrl()), job.getUrl(), isFolderJob(job)))
-            .collect(Collectors.toList());
+            .collect(toList());
       } else {
         jobs.addAll(jenkinsServer.getJobs(new FolderJob(parentJob, "/job/" + parentJob + "/")).values());
       }

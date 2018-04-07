@@ -1,6 +1,7 @@
 package software.wings.api;
 
 import static io.harness.data.structure.EmptyPredicate.isNotEmpty;
+import static java.util.stream.Collectors.toList;
 
 import software.wings.beans.ServiceInstance;
 import software.wings.sm.StateExecutionData;
@@ -8,7 +9,6 @@ import software.wings.sm.StepExecutionSummary;
 
 import java.util.List;
 import java.util.Map;
-import java.util.stream.Collectors;
 
 /**
  * Created by rishi on 4/3/17.
@@ -40,7 +40,7 @@ public class SelectedNodeExecutionData extends StateExecutionData {
       putNotNull(executionDetails, "hosts",
           ExecutionDataValue.builder()
               .displayName("Hosts")
-              .value(serviceInstanceList.stream().map(ServiceInstance::getPublicDns).collect(Collectors.toList()))
+              .value(serviceInstanceList.stream().map(ServiceInstance::getPublicDns).collect(toList()))
               .build());
     }
     return executionDetails;
@@ -53,7 +53,7 @@ public class SelectedNodeExecutionData extends StateExecutionData {
       putNotNull(executionDetails, "hosts",
           ExecutionDataValue.builder()
               .displayName("Hosts")
-              .value(serviceInstanceList.stream().map(ServiceInstance::getPublicDns).collect(Collectors.toList()))
+              .value(serviceInstanceList.stream().map(ServiceInstance::getPublicDns).collect(toList()))
               .build());
     }
     return executionDetails;

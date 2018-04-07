@@ -3,6 +3,7 @@ package software.wings.service.impl;
 import static io.harness.data.structure.EmptyPredicate.isEmpty;
 import static io.harness.network.Http.connectableHttpUrl;
 import static io.harness.network.Http.validUrl;
+import static java.util.stream.Collectors.toList;
 import static software.wings.beans.ErrorCode.INVALID_ARTIFACT_SERVER;
 import static software.wings.utils.ArtifactType.DOCKER;
 import static software.wings.utils.Validator.equalCheck;
@@ -29,7 +30,6 @@ import java.util.Collections;
 import java.util.List;
 import java.util.Map;
 import java.util.Optional;
-import java.util.stream.Collectors;
 import javax.ws.rs.NotSupportedException;
 
 /**
@@ -89,8 +89,7 @@ public class ArtifactoryBuildServiceImpl implements ArtifactoryBuildService {
       throw new WingsException(INVALID_ARTIFACT_SERVER)
           .addParam("message", "Not in maven style format. Sample format: com/mycompany/myservice/.*/myservice*.war");
     }
-    String groupId =
-        getGroupId(Arrays.stream(artifactPaths).limit(artifactPaths.length - 3).collect(Collectors.toList()));
+    String groupId = getGroupId(Arrays.stream(artifactPaths).limit(artifactPaths.length - 3).collect(toList()));
     String artifactId = artifactPaths[artifactPaths.length - 3];
     return artifactoryService.getLatestVersion(
         artifactoryConfig, encryptionDetails, artifactStreamAttributes.getJobName(), groupId, artifactId);

@@ -1,5 +1,6 @@
 package software.wings.service.impl;
 
+import static java.util.stream.Collectors.toList;
 import static org.apache.commons.lang3.StringUtils.isNotBlank;
 import static org.mongodb.morphia.mapping.Mapper.ID_KEY;
 import static software.wings.beans.ServiceInstance.Builder.aServiceInstance;
@@ -21,7 +22,6 @@ import software.wings.dl.WingsPersistence;
 import software.wings.service.intfc.ServiceInstanceService;
 
 import java.util.List;
-import java.util.stream.Collectors;
 import javax.validation.executable.ValidateOnExecution;
 
 /**
@@ -84,7 +84,7 @@ public class ServiceInstanceServiceImpl implements ServiceInstanceService {
                                                    .withInfraMappingType(infraMapping.getComputeProviderType())
                                                    .build());
         })
-        .collect(Collectors.toList());
+        .collect(toList());
   }
 
   /* (non-Javadoc)

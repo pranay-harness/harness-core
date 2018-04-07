@@ -6,6 +6,7 @@ import static com.amazonaws.services.codedeploy.model.DeploymentStatus.Succeeded
 import static io.harness.data.structure.EmptyPredicate.isNotEmpty;
 import static io.harness.threading.Morpheus.sleep;
 import static java.time.Duration.ofSeconds;
+import static java.util.stream.Collectors.toList;
 import static software.wings.beans.ErrorCode.INIT_TIMEOUT;
 import static software.wings.beans.ErrorCode.INVALID_REQUEST;
 
@@ -52,7 +53,6 @@ import java.util.Collections;
 import java.util.List;
 import java.util.Set;
 import java.util.concurrent.TimeUnit;
-import java.util.stream.Collectors;
 
 /**
  * Created by anubhaw on 6/22/17.
@@ -155,7 +155,7 @@ public class AwsCodeDeployServiceImpl implements AwsCodeDeployService {
               .getReservations()
               .stream()
               .flatMap(reservation -> reservation.getInstances().stream())
-              .collect(Collectors.toList());
+              .collect(toList());
 
       codeDeployDeploymentInfo.setInstances(instances);
       codeDeployDeploymentInfo.setDeploymentId(deploymentResult.getDeploymentId());
@@ -185,7 +185,7 @@ public class AwsCodeDeployServiceImpl implements AwsCodeDeployService {
           .getReservations()
           .stream()
           .flatMap(reservation -> reservation.getInstances().stream())
-          .collect(Collectors.toList());
+          .collect(toList());
     } else {
       return Collections.EMPTY_LIST;
     }

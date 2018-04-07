@@ -3,6 +3,7 @@ package software.wings.service.impl.yaml;
 import static io.harness.data.structure.EmptyPredicate.isEmpty;
 import static io.harness.data.structure.EmptyPredicate.isNotEmpty;
 import static io.harness.data.structure.UUIDGenerator.generateUuid;
+import static java.util.stream.Collectors.toList;
 import static software.wings.beans.Base.GLOBAL_APP_ID;
 import static software.wings.beans.DelegateTask.Builder.aDelegateTask;
 import static software.wings.beans.yaml.YamlConstants.GIT_YAML_LOG_PREFIX;
@@ -68,7 +69,6 @@ import java.util.Map;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.TimeUnit;
 import java.util.regex.Pattern;
-import java.util.stream.Collectors;
 import javax.validation.executable.ValidateOnExecution;
 /**
  * The type Yaml git sync service.
@@ -271,9 +271,8 @@ public class YamlGitServiceImpl implements YamlGitService {
    */
   private void checkForValidNameSyntax(List<GitFileChange> gitFileChanges) {
     // Get all yamlTypes having non-empty filepath prefixes (these yaml types represent different file paths)
-    List<YamlType> folderYamlTypes = Arrays.stream(YamlType.values())
-                                         .filter(yamlType -> isNotEmpty(yamlType.getPathExpression()))
-                                         .collect(Collectors.toList());
+    List<YamlType> folderYamlTypes =
+        Arrays.stream(YamlType.values()).filter(yamlType -> isNotEmpty(yamlType.getPathExpression())).collect(toList());
 
     // make sure, all filepaths to be synced with git are in proper format
     // e.g. Setup/Application/app_name/index.yaml is valid one, but
@@ -434,8 +433,7 @@ public class YamlGitServiceImpl implements YamlGitService {
 
   @Override
   public void removeGitSyncErrors(String accountId, List<GitFileChange> gitFileChangeList, boolean gitToHarness) {
-    List<String> yamlFilePathList =
-        gitFileChangeList.stream().map(GitFileChange::getFilePath).collect(Collectors.toList());
+    List<String> yamlFilePathList = gitFileChangeList.stream().map(GitFileChange::getFilePath).collect(toList());
     Query query = wingsPersistence.createAuthorizedQuery(GitSyncError.class);
     query.filter("accountId", accountId);
     query.field("yamlFilePath").in(yamlFilePathList);

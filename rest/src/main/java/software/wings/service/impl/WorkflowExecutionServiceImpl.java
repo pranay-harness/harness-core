@@ -2068,7 +2068,7 @@ public class WorkflowExecutionServiceImpl implements WorkflowExecutionService {
                                              .stream()
                                              .filter(e -> e.getInstanceStatusSummaries() != null)
                                              .flatMap(l -> l.getInstanceStatusSummaries().stream())
-                                             .collect(Collectors.toList()));
+                                             .collect(toList()));
         } else if ((nextStateType == StateType.ECS_SERVICE_DEPLOY || nextStateType == StateType.KUBERNETES_DEPLOY
                        || nextStateType == StateType.AWS_CODEDEPLOY_STATE)
             && next.getStateExecutionData() instanceof CommandStateExecutionData) {

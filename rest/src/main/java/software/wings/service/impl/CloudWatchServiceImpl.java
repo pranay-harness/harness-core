@@ -1,5 +1,7 @@
 package software.wings.service.impl;
 
+import static java.util.stream.Collectors.toList;
+
 import com.google.inject.Inject;
 import com.google.inject.Singleton;
 
@@ -14,7 +16,6 @@ import software.wings.service.intfc.security.SecretManager;
 import software.wings.sm.StateExecutionException;
 
 import java.util.List;
-import java.util.stream.Collectors;
 
 /**
  * Created by anubhaw on 12/14/16.
@@ -33,7 +34,7 @@ public class CloudWatchServiceImpl implements CloudWatchService {
         .stream()
         .map(Metric::getNamespace)
         .distinct()
-        .collect(Collectors.toList());
+        .collect(toList());
   }
 
   @Override
@@ -43,7 +44,7 @@ public class CloudWatchServiceImpl implements CloudWatchService {
     AwsConfig awsConfig = getAwsConfig(settingId);
     List<Metric> metrics = awsHelperService.getCloudWatchMetrics(
         awsConfig, secretManager.getEncryptionDetails(awsConfig, null, null), region, listMetricsRequest);
-    return metrics.stream().map(Metric::getMetricName).distinct().collect(Collectors.toList());
+    return metrics.stream().map(Metric::getMetricName).distinct().collect(toList());
   }
 
   @Override
@@ -56,7 +57,7 @@ public class CloudWatchServiceImpl implements CloudWatchService {
     return metrics.stream()
         .flatMap(metric -> metric.getDimensions().stream().map(Dimension::getName))
         .distinct()
-        .collect(Collectors.toList());
+        .collect(toList());
   }
 
   private AwsConfig getAwsConfig(String settingId) {

@@ -1,6 +1,7 @@
 package software.wings.beans;
 
 import static com.fasterxml.jackson.annotation.JsonInclude.Include.NON_EMPTY;
+import static java.util.stream.Collectors.toList;
 
 import com.fasterxml.jackson.annotation.JsonIgnore;
 import com.fasterxml.jackson.annotation.JsonInclude;
@@ -17,7 +18,6 @@ import software.wings.security.UserRequestInfo;
 import java.security.Principal;
 import java.util.ArrayList;
 import java.util.List;
-import java.util.stream.Collectors;
 import javax.security.auth.Subject;
 
 /**
@@ -114,7 +114,7 @@ public class User extends Base implements Principal {
     }
     return roles.stream()
         .filter(role -> role.getAccountId() != null && role.getAccountId().equals(accountId))
-        .collect(Collectors.toList());
+        .collect(toList());
   }
 
   @Override

@@ -3,6 +3,7 @@ package software.wings.helpers.ext.gcr;
 import static io.harness.govern.Switch.unhandled;
 import static io.harness.network.Http.getOkHttpClientBuilder;
 import static java.util.Collections.emptyList;
+import static java.util.stream.Collectors.toList;
 import static software.wings.helpers.ext.jenkins.BuildDetails.Builder.aBuildDetails;
 
 import com.google.api.client.googleapis.auth.oauth2.GoogleCredential;
@@ -30,7 +31,6 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.concurrent.TimeUnit;
-import java.util.stream.Collectors;
 
 /**
  * @author brett on 8/2/17
@@ -97,7 +97,7 @@ public class GcrServiceImpl implements GcrService {
       return dockerImageTagResponse.getTags()
           .stream()
           .map(tag -> aBuildDetails().withNumber(tag).build())
-          .collect(Collectors.toList());
+          .collect(toList());
     }
     return emptyList();
   }

@@ -1,6 +1,7 @@
 package software.wings.sm.states;
 
 import static io.harness.data.structure.EmptyPredicate.isEmpty;
+import static java.util.stream.Collectors.toList;
 import static software.wings.beans.artifact.Artifact.ContentStatus;
 import static software.wings.beans.artifact.Artifact.ContentStatus.DOWNLOADED;
 import static software.wings.beans.artifact.Artifact.ContentStatus.FAILED;
@@ -28,7 +29,6 @@ import software.wings.waitnotify.NotifyResponseData;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
-import java.util.stream.Collectors;
 
 public class ArtifactCheckState extends State {
   private static final Logger logger = LoggerFactory.getLogger(ArtifactCheckState.class);
@@ -51,7 +51,7 @@ public class ArtifactCheckState extends State {
     List<Artifact> failedArtifacts =
         artifacts.stream()
             .filter(artifact -> artifact.getStatus() == Status.FAILED || artifact.getStatus() == Status.ERROR)
-            .collect(Collectors.toList());
+            .collect(toList());
 
     if (!isEmpty(failedArtifacts)) {
       return anExecutionResponse()
@@ -101,8 +101,8 @@ public class ArtifactCheckState extends State {
 
   private ExecutionResponse getExecutionResponse(List<Artifact> artifacts) {
     return anExecutionResponse()
-        .withErrorMessage("All artifacts: "
-            + artifacts.stream().map(Artifact::getDisplayName).collect(Collectors.toList()) + " are available.")
+        .withErrorMessage(
+            "All artifacts: " + artifacts.stream().map(Artifact::getDisplayName).collect(toList()) + " are available.")
         .build();
   }
 
@@ -133,8 +133,7 @@ public class ArtifactCheckState extends State {
       return anExecutionResponse()
           .withExecutionStatus(ExecutionStatus.FAILED)
           .withErrorMessage("One or more artifacts: "
-              + failedArtifacts.stream().map(Artifact::getDisplayName).collect(Collectors.toList())
-              + " are in failed status")
+              + failedArtifacts.stream().map(Artifact::getDisplayName).collect(toList()) + " are in failed status")
           .build();
     }
 

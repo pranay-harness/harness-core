@@ -1,9 +1,9 @@
 package io.harness.data.structure;
 
 import static io.harness.data.structure.EmptyPredicate.isNotEmpty;
+import static java.util.stream.Collectors.toList;
 
 import java.util.List;
-import java.util.stream.Collectors;
 
 public class ListUtil {
   public static List<String> trimList(List<Object> objects) {
@@ -15,6 +15,6 @@ public class ListUtil {
         .map(o -> String.valueOf(o).trim().toLowerCase())
         .filter(s -> isNotEmpty(s))
         .distinct()
-        .collect(Collectors.toList());
+        .collect(toList());
   }
 }

@@ -2,6 +2,7 @@ package software.wings.sm.states;
 
 import static io.harness.data.structure.EmptyPredicate.isEmpty;
 import static io.harness.data.structure.EmptyPredicate.isNotEmpty;
+import static java.util.stream.Collectors.toList;
 import static org.apache.commons.lang3.StringUtils.abbreviate;
 
 import com.google.common.base.Joiner;
@@ -38,7 +39,6 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
 import java.util.Objects;
-import java.util.stream.Collectors;
 
 /**
  * The Class RepeatState.
@@ -444,8 +444,7 @@ public class RepeatState extends State {
       putNotNull(executionDetails, "repeatElements",
           ExecutionDataValue.builder()
               .displayName("Repeating Over")
-              .value(Joiner.on(", ").join(
-                  repeatElements.stream().map(ContextElement::getName).collect(Collectors.toList())))
+              .value(Joiner.on(", ").join(repeatElements.stream().map(ContextElement::getName).collect(toList())))
               .build());
       putNotNull(executionDetails, "executionStrategy",
           ExecutionDataValue.builder().displayName("Execution Strategy").value(executionStrategy).build());
@@ -458,8 +457,8 @@ public class RepeatState extends State {
       putNotNull(executionDetails, "repeatElements",
           ExecutionDataValue.builder()
               .displayName("Repeating Over")
-              .value(abbreviate(Joiner.on(", ").join(
-                                    repeatElements.stream().map(ContextElement::getName).collect(Collectors.toList())),
+              .value(abbreviate(
+                  Joiner.on(", ").join(repeatElements.stream().map(ContextElement::getName).collect(toList())),
                   Constants.SUMMARY_PAYLOAD_LIMIT))
               .build());
       putNotNull(executionDetails, "executionStrategy",

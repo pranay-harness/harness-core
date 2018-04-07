@@ -3,6 +3,7 @@ package software.wings.beans;
 import static io.harness.data.structure.EmptyPredicate.isEmpty;
 import static io.harness.data.structure.EmptyPredicate.isNotEmpty;
 import static io.harness.data.structure.UUIDGenerator.generateUuid;
+import static java.util.stream.Collectors.toList;
 import static software.wings.beans.Graph.Builder.aGraph;
 import static software.wings.beans.GraphLink.Builder.aLink;
 import static software.wings.beans.GraphNode.GraphNodeBuilder.aGraphNode;
@@ -30,7 +31,6 @@ import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
-import java.util.stream.Collectors;
 
 /**
  * Created by rishi on 12/21/16.
@@ -281,7 +281,7 @@ public class PhaseStep {
     validationMessage = null;
     if (steps != null) {
       List<String> invalidChildren =
-          steps.stream().filter(step -> !step.validate()).map(GraphNode::getName).collect(Collectors.toList());
+          steps.stream().filter(step -> !step.validate()).map(GraphNode::getName).collect(toList());
       if (isNotEmpty(invalidChildren)) {
         valid = false;
         validationMessage = String.format(Constants.PHASE_STEP_VALIDATION_MESSAGE, invalidChildren.toString());

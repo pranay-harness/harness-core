@@ -1,6 +1,7 @@
 package software.wings.service.impl.expression;
 
 import static java.util.Arrays.asList;
+import static java.util.stream.Collectors.toList;
 import static software.wings.beans.EntityType.ENVIRONMENT;
 import static software.wings.beans.EntityType.SERVICE;
 import static software.wings.beans.SearchFilter.Operator.EQ;
@@ -23,7 +24,6 @@ import java.util.List;
 import java.util.Set;
 import java.util.SortedSet;
 import java.util.TreeSet;
-import java.util.stream.Collectors;
 
 /**
  * Created by sgurubelli on 8/7/17.
@@ -61,7 +61,7 @@ public class ServiceExpressionBuilder extends ExpressionBuilder {
       List<Service> services = serviceResourceService.list(
           aPageRequest().withLimit(UNLIMITED).addFilter("appId", EQ, appId).addFieldsIncluded("uuid").build(), false,
           false);
-      return services.stream().map(Service::getUuid).collect(Collectors.toList());
+      return services.stream().map(Service::getUuid).collect(toList());
     } else {
       return asList(Misc.commaCharPattern.split(entityId));
     }

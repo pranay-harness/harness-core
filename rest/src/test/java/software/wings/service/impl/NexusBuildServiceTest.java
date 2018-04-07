@@ -1,5 +1,6 @@
 package software.wings.service.impl;
 
+import static java.util.stream.Collectors.toList;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.mockito.Mockito.when;
 import static software.wings.helpers.ext.jenkins.BuildDetails.Builder.aBuildDetails;
@@ -32,7 +33,6 @@ import software.wings.service.intfc.NexusBuildService;
 import java.util.List;
 import java.util.Map;
 import java.util.Optional;
-import java.util.stream.Collectors;
 import java.util.stream.Stream;
 
 /**
@@ -56,7 +56,7 @@ public class NexusBuildServiceTest extends WingsBaseTest {
           .withSourceName(ARTIFACT_STREAM_NAME)
           .withJobname(BUILD_JOB_NAME)
           .withGroupId(ARTIFACT_GROUP_ID)
-          .withArtifactPaths(Stream.of(ARTIFACT_NAME).collect(Collectors.toList()))
+          .withArtifactPaths(Stream.of(ARTIFACT_NAME).collect(toList()))
           .build();
 
   @Test

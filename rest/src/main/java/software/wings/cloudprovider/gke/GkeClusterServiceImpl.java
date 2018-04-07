@@ -2,6 +2,7 @@ package software.wings.cloudprovider.gke;
 
 import static io.harness.threading.Morpheus.sleep;
 import static java.time.Duration.ofSeconds;
+import static java.util.stream.Collectors.toList;
 import static org.apache.commons.lang3.StringUtils.isNotBlank;
 import static software.wings.beans.ErrorCode.ARGS;
 import static software.wings.beans.ErrorCode.INVALID_ARGUMENT;
@@ -44,7 +45,6 @@ import java.io.IOException;
 import java.util.List;
 import java.util.Map;
 import java.util.concurrent.TimeUnit;
-import java.util.stream.Collectors;
 import javax.annotation.Nullable;
 
 /**
@@ -217,10 +217,9 @@ public class GkeClusterServiceImpl implements GkeClusterService {
       ListClustersResponse response =
           gkeContainerService.projects().zones().clusters().list(projectId, ALL_ZONES).execute();
       List<Cluster> clusters = response.getClusters();
-      return clusters != null ? clusters.stream()
-                                    .map(cluster -> cluster.getZone() + ZONE_DELIMITER + cluster.getName())
-                                    .collect(Collectors.toList())
-                              : ImmutableList.of();
+      return clusters != null
+          ? clusters.stream().map(cluster -> cluster.getZone() + ZONE_DELIMITER + cluster.getName()).collect(toList())
+          : ImmutableList.of();
     } catch (IOException e) {
       logger.error("Error listing clusters for project " + projectId, e);
     }

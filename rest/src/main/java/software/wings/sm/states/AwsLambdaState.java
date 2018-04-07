@@ -2,6 +2,7 @@ package software.wings.sm.states;
 
 import static io.harness.data.structure.EmptyPredicate.isEmpty;
 import static io.harness.data.structure.EmptyPredicate.isNotEmpty;
+import static java.util.stream.Collectors.toList;
 import static software.wings.api.CommandStateExecutionData.Builder.aCommandStateExecutionData;
 import static software.wings.beans.Log.Builder.aLog;
 import static software.wings.sm.ExecutionResponse.Builder.anExecutionResponse;
@@ -291,7 +292,7 @@ public class AwsLambdaState extends State {
     String roleArn = infrastructureMapping.getRole();
     List<String> evaluatedAliases = new ArrayList<>();
     if (isNotEmpty(aliases)) {
-      evaluatedAliases = aliases.stream().map(context::renderExpression).collect(Collectors.toList());
+      evaluatedAliases = aliases.stream().map(context::renderExpression).collect(toList());
     }
 
     logService.save(logBuilder.but().withLogLine("Deploying Lambda with following configuration.").build());
@@ -441,7 +442,7 @@ public class AwsLambdaState extends State {
                                     .filter(alias
                                         -> listAliasesResult.getAliases().stream().noneMatch(
                                             aliasConfiguration -> aliasConfiguration.getName().equals(alias)))
-                                    .collect(Collectors.toList());
+                                    .collect(toList());
       if (newAliases != null) {
         createFunctionAlias(
             region, accessKey, secretKey, functionName, publishVersionResult.getVersion(), newAliases, logBuilder);
@@ -449,7 +450,7 @@ public class AwsLambdaState extends State {
       List<String> updateAlias =
           evaluatedAliases.stream()
               .filter(alias -> newAliases != null && newAliases.stream().noneMatch(s -> s.equals(alias)))
-              .collect(Collectors.toList());
+              .collect(toList());
       if (updateAlias != null) {
         updateFunctionAlias(
             region, accessKey, secretKey, functionName, publishVersionResult.getVersion(), updateAlias, logBuilder);

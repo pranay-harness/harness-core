@@ -2,6 +2,7 @@ package software.wings.helpers.ext.nexus;
 
 import static java.util.Collections.emptyMap;
 import static java.util.Collections.singletonList;
+import static java.util.stream.Collectors.toList;
 import static software.wings.helpers.ext.jenkins.BuildDetails.Builder.aBuildDetails;
 import static software.wings.helpers.ext.nexus.NexusServiceImpl.getBaseUrl;
 import static software.wings.helpers.ext.nexus.NexusServiceImpl.getRetrofit;
@@ -93,7 +94,7 @@ public class NexusThreeServiceImpl {
       if (response.body() != null && response.body().getRepositories() != null) {
         logger.info(
             "Retrieving docker images for repository {} from url {} success", repository, nexusConfig.getNexusUrl());
-        return response.body().getRepositories().stream().collect(Collectors.toList());
+        return response.body().getRepositories().stream().collect(toList());
       }
     } else {
       logger.warn("Failed to fetch the docker images as request is not success");
@@ -114,11 +115,7 @@ public class NexusThreeServiceImpl {
             .execute();
     if (isSuccessful(response)) {
       if (response.body() != null && response.body().getTags() != null) {
-        return response.body()
-            .getTags()
-            .stream()
-            .map(tag -> aBuildDetails().withNumber(tag).build())
-            .collect(Collectors.toList());
+        return response.body().getTags().stream().map(tag -> aBuildDetails().withNumber(tag).build()).collect(toList());
       }
     } else {
       logger.warn("Failed to fetch the repositories as request is not success");

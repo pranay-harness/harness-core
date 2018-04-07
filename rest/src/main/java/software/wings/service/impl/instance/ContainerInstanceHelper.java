@@ -1,5 +1,7 @@
 package software.wings.service.impl.instance;
 
+import static java.util.stream.Collectors.toList;
+
 import com.google.common.collect.Lists;
 import com.google.common.collect.Maps;
 import com.google.common.collect.Sets;
@@ -55,7 +57,6 @@ import java.util.List;
 import java.util.Map;
 import java.util.Optional;
 import java.util.Set;
-import java.util.stream.Collectors;
 
 /**
  * Handles all the container instance related operations like querying the latest instances from container provider,
@@ -122,14 +123,14 @@ public class ContainerInstanceHelper {
               containerSvcNameSet.addAll(commandStepExecutionSummary.getOldInstanceData()
                                              .stream()
                                              .map(ContainerServiceData::getName)
-                                             .collect(Collectors.toList()));
+                                             .collect(toList()));
             }
 
             if (commandStepExecutionSummary.getNewInstanceData() != null) {
               List<String> newcontainerSvcNames = commandStepExecutionSummary.getNewInstanceData()
                                                       .stream()
                                                       .map(ContainerServiceData::getName)
-                                                      .collect(Collectors.toList());
+                                                      .collect(toList());
               containerSvcNameSet.addAll(newcontainerSvcNames);
             }
 
@@ -161,7 +162,7 @@ public class ContainerInstanceHelper {
               .stream()
               .filter(entry -> entry.getKey().equals(Constants.DEPLOY_CONTAINERS))
               .map(entry -> entry.getValue())
-              .collect(Collectors.toList());
+              .collect(toList());
       deployPhaseStepList.stream().forEach(phaseStep -> {
         PhaseStepExecutionSummary phaseStepExecutionSummary =
             ((PhaseStepExecutionData) phaseStep).getPhaseStepExecutionSummary();
@@ -179,14 +180,14 @@ public class ContainerInstanceHelper {
               containerSvcNameSet.addAll(commandStepExecutionSummary.getOldInstanceData()
                                              .stream()
                                              .map(ContainerServiceData::getName)
-                                             .collect(Collectors.toList()));
+                                             .collect(toList()));
             }
 
             if (commandStepExecutionSummary.getNewInstanceData() != null) {
               List<String> newcontainerSvcNames = commandStepExecutionSummary.getNewInstanceData()
                                                       .stream()
                                                       .map(ContainerServiceData::getName)
-                                                      .collect(Collectors.toList());
+                                                      .collect(toList());
               containerSvcNameSet.addAll(newcontainerSvcNames);
             }
 

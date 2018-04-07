@@ -1,5 +1,6 @@
 package software.wings.service.impl.yaml.handler.workflow;
 
+import static java.util.stream.Collectors.toList;
 import static software.wings.beans.Pipeline.Yaml;
 
 import com.google.common.collect.Lists;
@@ -21,7 +22,6 @@ import software.wings.service.intfc.PipelineService;
 import software.wings.utils.Validator;
 
 import java.util.List;
-import java.util.stream.Collectors;
 
 /**
  * @author rktummala on 11/2/17
@@ -57,7 +57,7 @@ public class PipelineYamlHandler extends BaseYamlHandler<Yaml, Pipeline> {
                     throw new WingsException(e);
                   }
                 })
-                .collect(Collectors.toList());
+                .collect(toList());
       }
 
       String name = yamlHelper.getNameFromYamlFilePath(context.getChange().getFilePath());
@@ -79,7 +79,7 @@ public class PipelineYamlHandler extends BaseYamlHandler<Yaml, Pipeline> {
     List<PipelineStage.Yaml> pipelineStageYamlList =
         pipelineStages.stream()
             .map(pipelineStage -> pipelineStageYamlHandler.toYaml(pipelineStage, bean.getAppId()))
-            .collect(Collectors.toList());
+            .collect(toList());
 
     return Yaml.builder()
         .harnessApiVersion(getHarnessApiVersion())

@@ -8,6 +8,7 @@ import static com.amazonaws.services.cloudwatch.model.Statistic.Sum;
 import static io.harness.data.structure.EmptyPredicate.isEmpty;
 import static io.harness.data.structure.EmptyPredicate.isNotEmpty;
 import static java.util.Arrays.asList;
+import static java.util.stream.Collectors.toList;
 import static org.apache.commons.lang3.exception.ExceptionUtils.getMessage;
 import static software.wings.beans.Base.GLOBAL_APP_ID;
 
@@ -60,7 +61,6 @@ import java.util.Date;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
-import java.util.stream.Collectors;
 
 /**
  * Created by anubhaw on 12/7/16.
@@ -139,7 +139,7 @@ public class CloudWatchState extends State {
                                                   d.setValue(context.renderExpression(dimension.getValue()));
                                                   return d;
                                                 })
-                                                .collect(Collectors.toList());
+                                                .collect(toList());
       stateExecutionData.setDimensions(evaluatedDimensions);
     }
 

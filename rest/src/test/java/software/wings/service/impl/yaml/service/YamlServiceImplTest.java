@@ -1,5 +1,7 @@
 package software.wings.service.impl.yaml.service;
 
+import static java.util.stream.Collectors.toList;
+
 import com.google.inject.Inject;
 
 import org.assertj.core.api.Assertions;
@@ -16,7 +18,6 @@ import software.wings.service.intfc.yaml.YamlGitService;
 import java.io.IOException;
 import java.io.InputStream;
 import java.util.List;
-import java.util.stream.Collectors;
 
 public class YamlServiceImplTest {
   @Mock private YamlHandlerFactory yamlHandlerFactory;
@@ -42,7 +43,7 @@ public class YamlServiceImplTest {
                         .filter(change
                             -> change.getFilePath().equals(
                                 "Setup_Master_Copy/Applications/Harness-on-prem/Services/MongoDB/Config Files/"))
-                        .collect(Collectors.toList()))
+                        .collect(toList()))
         .isEmpty();
   }
 }

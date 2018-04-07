@@ -2,6 +2,7 @@ package software.wings.service.impl.yaml.handler.command;
 
 import static io.harness.data.structure.EmptyPredicate.isEmpty;
 import static io.harness.data.structure.EmptyPredicate.isNotEmpty;
+import static java.util.stream.Collectors.toList;
 import static software.wings.beans.yaml.YamlConstants.NODE_PROPERTY_COMMAND_PATH;
 import static software.wings.beans.yaml.YamlConstants.NODE_PROPERTY_COMMAND_STRING;
 import static software.wings.beans.yaml.YamlConstants.NODE_PROPERTY_COMMAND_TYPE;
@@ -16,7 +17,6 @@ import software.wings.exception.HarnessException;
 
 import java.util.List;
 import java.util.Map;
-import java.util.stream.Collectors;
 /**
  * @author rktummala on 11/13/17
  */
@@ -41,7 +41,7 @@ public abstract class AbstractExecCommandUnitYamlHandler<Y extends AbstractYaml,
                    .withFilePath(entry.getFilePath())
                    .withSearchPattern(entry.getPattern())
                    .build())
-        .collect(Collectors.toList());
+        .collect(toList());
   }
 
   private List<TailFilePatternEntry> convertToBean(List<TailFilePatternEntry.Yaml> patternEntryYamlList) {
@@ -56,7 +56,7 @@ public abstract class AbstractExecCommandUnitYamlHandler<Y extends AbstractYaml,
                    .withFilePath(yamlEntry.getFilePath())
                    .withPattern(yamlEntry.getSearchPattern())
                    .build())
-        .collect(Collectors.toList());
+        .collect(toList());
   }
 
   protected B toBean(ChangeContext<Y> changeContext) throws HarnessException {
@@ -83,7 +83,7 @@ public abstract class AbstractExecCommandUnitYamlHandler<Y extends AbstractYaml,
       List<String> patternList = filePatternEntryList.stream()
                                      .filter(filePatternEntry -> filePatternEntry != null)
                                      .map(filePatternEntry -> filePatternEntry.getSearchPattern())
-                                     .collect(Collectors.toList());
+                                     .collect(toList());
       nodeProperties.put(NODE_PROPERTY_TAIL_FILES, true);
       nodeProperties.put(NODE_PROPERTY_TAIL_PATTERNS, patternList);
     }

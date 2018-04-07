@@ -1,6 +1,7 @@
 package software.wings.service.impl;
 
 import static io.harness.data.structure.EmptyPredicate.isNotEmpty;
+import static java.util.stream.Collectors.toList;
 import static org.mongodb.morphia.mapping.Mapper.ID_KEY;
 import static software.wings.dl.MongoHelper.setUnset;
 import static software.wings.dl.PageRequest.PageRequestBuilder.aPageRequest;
@@ -27,7 +28,6 @@ import software.wings.utils.Validator;
 
 import java.util.ArrayList;
 import java.util.List;
-import java.util.stream.Collectors;
 import javax.validation.executable.ValidateOnExecution;
 
 /**
@@ -106,7 +106,7 @@ public class UserGroupServiceImpl implements UserGroupService {
   public UserGroup updateMembers(UserGroup userGroup) {
     List<String> memberIds = new ArrayList<>();
     if (isNotEmpty(userGroup.getMembers())) {
-      memberIds = userGroup.getMembers().stream().map(User::getUuid).collect(Collectors.toList());
+      memberIds = userGroup.getMembers().stream().map(User::getUuid).collect(toList());
     }
     UserGroup existingUserGroup = get(userGroup.getAccountId(), userGroup.getUuid());
 
@@ -119,7 +119,7 @@ public class UserGroupServiceImpl implements UserGroupService {
 
     if (isNotEmpty(memberIds)) {
       evictUserPermissionInfoCacheForUserGroup(
-          userGroup.getAccountId(), memberIds.stream().distinct().collect(Collectors.toList()));
+          userGroup.getAccountId(), memberIds.stream().distinct().collect(toList()));
     }
     return updatedUserGroup;
   }

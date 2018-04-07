@@ -3,6 +3,7 @@ package software.wings.service.impl.expression;
 import static io.harness.data.structure.EmptyPredicate.isEmpty;
 import static io.harness.govern.Switch.noop;
 import static java.util.Arrays.asList;
+import static java.util.stream.Collectors.toList;
 import static software.wings.beans.EntityType.ENVIRONMENT;
 import static software.wings.beans.EntityType.SERVICE;
 import static software.wings.beans.EntityType.SERVICE_TEMPLATE;
@@ -208,13 +209,13 @@ public abstract class ExpressionBuilder {
     SortedSet<String> serviceVariables = new TreeSet<>();
     if (SERVICE.equals(entityType)) {
       return getServiceVariables(
-          appId, serviceTemplates.stream().map(ServiceTemplate::getServiceId).collect(Collectors.toList()), SERVICE);
+          appId, serviceTemplates.stream().map(ServiceTemplate::getServiceId).collect(toList()), SERVICE);
     } else if (ENVIRONMENT.equals(entityType)) {
       serviceVariables.addAll(getServiceVariables(
-          appId, serviceTemplates.stream().map(ServiceTemplate::getEnvId).collect(Collectors.toList()), ENVIRONMENT));
+          appId, serviceTemplates.stream().map(ServiceTemplate::getEnvId).collect(toList()), ENVIRONMENT));
     }
     serviceVariables.addAll(getServiceVariables(
-        appId, serviceTemplates.stream().map(ServiceTemplate::getUuid).collect(Collectors.toList()), SERVICE_TEMPLATE));
+        appId, serviceTemplates.stream().map(ServiceTemplate::getUuid).collect(toList()), SERVICE_TEMPLATE));
     return serviceVariables;
   }
 }

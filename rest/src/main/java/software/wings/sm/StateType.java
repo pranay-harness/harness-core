@@ -4,6 +4,7 @@ import static com.google.common.base.CaseFormat.UPPER_CAMEL;
 import static com.google.common.base.CaseFormat.UPPER_UNDERSCORE;
 import static java.util.Arrays.asList;
 import static java.util.Collections.emptyList;
+import static java.util.stream.Collectors.toList;
 import static org.apache.commons.lang3.StringUtils.isNotBlank;
 import static org.joor.Reflect.on;
 import static software.wings.beans.PhaseStepType.AMI_DEPLOY_AUTOSCALING_GROUP;
@@ -103,7 +104,6 @@ import java.net.URL;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
-import java.util.stream.Collectors;
 
 /**
  * Represents type of state.
@@ -403,8 +403,7 @@ public enum StateType implements StateTypeDescriptor {
       List<PhaseStepType> phaseStepTypes, StateTypeScope... scopes) {
     this.stateClass = stateClass;
     this.scopes = asList(scopes);
-    this.phaseStepTypes =
-        phaseStepTypes.stream().map(phaseStepType -> phaseStepType.name()).collect(Collectors.toList());
+    this.phaseStepTypes = phaseStepTypes.stream().map(phaseStepType -> phaseStepType.name()).collect(toList());
     jsonSchema = loadJsonSchema();
     this.stencilCategory = stencilCategory;
     this.displayOrder = displayOrder;

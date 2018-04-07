@@ -1,6 +1,7 @@
 package software.wings.service.impl.yaml.handler.artifactstream;
 
 import static io.harness.data.structure.EmptyPredicate.isEmpty;
+import static java.util.stream.Collectors.toList;
 
 import com.google.common.collect.Lists;
 import com.google.inject.Singleton;
@@ -12,7 +13,6 @@ import software.wings.beans.artifact.AmiArtifactStream.Yaml;
 import software.wings.beans.yaml.ChangeContext;
 
 import java.util.List;
-import java.util.stream.Collectors;
 /**
  * @author rktummala on 10/09/17
  */
@@ -52,7 +52,7 @@ public class AmiArtifactStreamYamlHandler extends ArtifactStreamYamlHandler<Yaml
     }
     return tagList.stream()
         .map(tag -> NameValuePair.Yaml.builder().name(tag.getKey()).value(tag.getValue()).build())
-        .collect(Collectors.toList());
+        .collect(toList());
   }
 
   private List<Tag> getTags(List<NameValuePair.Yaml> tagYamlList) {
@@ -63,6 +63,6 @@ public class AmiArtifactStreamYamlHandler extends ArtifactStreamYamlHandler<Yaml
           tag.setValue(tagYaml.getValue());
           return tag;
         })
-        .collect(Collectors.toList());
+        .collect(toList());
   }
 }

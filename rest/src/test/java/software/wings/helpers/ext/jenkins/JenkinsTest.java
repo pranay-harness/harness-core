@@ -3,6 +3,7 @@ package software.wings.helpers.ext.jenkins;
 import static com.github.tomakehurst.wiremock.client.WireMock.aResponse;
 import static com.github.tomakehurst.wiremock.client.WireMock.get;
 import static com.github.tomakehurst.wiremock.client.WireMock.urlEqualTo;
+import static java.util.stream.Collectors.toList;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.tuple;
 import static org.joor.Reflect.on;
@@ -30,7 +31,6 @@ import java.net.URISyntaxException;
 import java.util.Collections;
 import java.util.List;
 import java.util.Objects;
-import java.util.stream.Collectors;
 
 /**
  * The Class JenkinsTest.
@@ -260,7 +260,7 @@ public class JenkinsTest {
                                                         .map(jp -> jp.getParameterDefinitions())
                                                         .filter(Objects::nonNull)
                                                         .flatMap(pd -> pd.stream())
-                                                        .collect(Collectors.toList());
+                                                        .collect(toList());
     assertThat(properties)
         .isNotNull()
         .extracting(ParametersDefinitionProperty::getName)

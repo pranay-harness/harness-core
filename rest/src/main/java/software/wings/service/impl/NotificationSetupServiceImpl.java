@@ -1,6 +1,7 @@
 package software.wings.service.impl;
 
 import static io.harness.data.structure.EmptyPredicate.isNotEmpty;
+import static java.util.stream.Collectors.toList;
 import static software.wings.beans.ErrorCode.INVALID_REQUEST;
 import static software.wings.dl.PageRequest.PageRequestBuilder.aPageRequest;
 
@@ -31,7 +32,6 @@ import software.wings.utils.Validator;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
-import java.util.stream.Collectors;
 import javax.validation.executable.ValidateOnExecution;
 
 /**
@@ -154,7 +154,7 @@ public class NotificationSetupServiceImpl implements NotificationSetupService {
                                                 -> notificationRule.getNotificationGroups().stream().anyMatch(
                                                     ng -> ng.getUuid().equals(notificationGroupId))))
                              .map(Workflow::getName)
-                             .collect(Collectors.toList());
+                             .collect(toList());
     if (!inUse.isEmpty()) {
       throw new WingsException(INVALID_REQUEST)
           .addParam("message",

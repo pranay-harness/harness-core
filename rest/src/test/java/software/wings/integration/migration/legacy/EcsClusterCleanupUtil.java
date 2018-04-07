@@ -1,5 +1,6 @@
 package software.wings.integration.migration.legacy;
 
+import static java.util.stream.Collectors.toList;
 import static software.wings.beans.SettingAttribute.Builder.aSettingAttribute;
 
 import com.google.inject.Inject;
@@ -18,7 +19,6 @@ import software.wings.rules.Integration;
 
 import java.util.Collections;
 import java.util.List;
-import java.util.stream.Collectors;
 
 /**
  * Script to clean old service instances from ECS.
@@ -51,7 +51,7 @@ public class EcsClusterCleanupUtil extends WingsBaseTest {
         awsClusterService.getServices(region.getName(), connectorConfig, Collections.emptyList(), clusterName)
             .stream()
             .filter(s -> s.getDesiredCount() == 0)
-            .collect(Collectors.toList());
+            .collect(toList());
     logger.info("Deleting " + zeroTaskServices.size() + " unused services.");
     zeroTaskServices.forEach(s -> {
       String oldServiceName = s.getServiceName();

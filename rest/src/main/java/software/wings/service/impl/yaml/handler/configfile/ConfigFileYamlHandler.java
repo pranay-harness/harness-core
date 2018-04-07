@@ -1,6 +1,7 @@
 package software.wings.service.impl.yaml.handler.configfile;
 
 import static io.harness.data.structure.EmptyPredicate.isNotEmpty;
+import static java.util.stream.Collectors.toList;
 import static software.wings.beans.yaml.YamlConstants.PATH_DELIMITER;
 
 import com.google.common.collect.Lists;
@@ -35,7 +36,6 @@ import java.io.ByteArrayInputStream;
 import java.util.List;
 import java.util.Map;
 import java.util.Optional;
-import java.util.stream.Collectors;
 /**
  * @author rktummala on 12/08/17
  */
@@ -73,7 +73,7 @@ public class ConfigFileYamlHandler extends BaseYamlHandler<Yaml, ConfigFile> {
                                    .stream()
                                    .filter(entry -> entry.getValue() == null)
                                    .map(entry -> entry.getKey())
-                                   .collect(Collectors.toList());
+                                   .collect(toList());
       if (isNotEmpty(envIdList)) {
         envIdList.forEach(envId -> {
           Environment environment = environmentService.get(appId, envId, false);

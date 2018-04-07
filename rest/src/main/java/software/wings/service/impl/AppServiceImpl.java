@@ -4,6 +4,7 @@ import static io.harness.data.structure.EmptyPredicate.isEmpty;
 import static io.harness.data.structure.EmptyPredicate.isNotEmpty;
 import static io.harness.data.structure.ListUtil.trimList;
 import static java.util.Arrays.asList;
+import static java.util.stream.Collectors.toList;
 import static org.mongodb.morphia.mapping.Mapper.ID_KEY;
 import static software.wings.beans.ErrorCode.INVALID_ARGUMENT;
 import static software.wings.beans.InformationNotification.Builder.anInformationNotification;
@@ -75,7 +76,6 @@ import java.util.Arrays;
 import java.util.List;
 import java.util.Map;
 import java.util.concurrent.ExecutorService;
-import java.util.stream.Collectors;
 import javax.validation.executable.ValidateOnExecution;
 
 /**
@@ -185,7 +185,7 @@ public class AppServiceImpl implements AppService {
 
     List<Application> applicationList = response.getResponse();
     List<String> appIdList =
-        applicationList.parallelStream().map(application -> application.getUuid()).collect(Collectors.toList());
+        applicationList.parallelStream().map(application -> application.getUuid()).collect(toList());
 
     if (overview) { // TODO: merge both overview block make service/env population part of overview option
       Map<String, AppKeyStatistics> applicationKeyStats =
