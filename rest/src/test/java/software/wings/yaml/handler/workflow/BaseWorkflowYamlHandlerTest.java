@@ -1,5 +1,6 @@
 package software.wings.yaml.handler.workflow;
 
+import static java.util.Arrays.asList;
 import static org.assertj.core.api.Fail.failBecauseExceptionWasNotThrown;
 import static org.mockito.Matchers.anyString;
 import static org.mockito.Mockito.when;
@@ -59,7 +60,6 @@ import software.wings.yaml.BaseYaml;
 import software.wings.yaml.handler.BaseYamlHandlerTest;
 
 import java.io.IOException;
-import java.util.Arrays;
 import javax.validation.ConstraintViolationException;
 
 /**
@@ -202,7 +202,7 @@ public abstract class BaseWorkflowYamlHandlerTest extends BaseYamlHandlerTest {
     changeContext.setYaml(yamlObject);
 
     try {
-      yamlHandler.upsertFromYaml(changeContext, Arrays.asList(changeContext));
+      yamlHandler.upsertFromYaml(changeContext, asList(changeContext));
       failBecauseExceptionWasNotThrown(ConstraintViolationException.class);
     } catch (ConstraintViolationException | HarnessException ex) {
       // Do nothing
@@ -215,7 +215,7 @@ public abstract class BaseWorkflowYamlHandlerTest extends BaseYamlHandlerTest {
       yamlObject = (Y) getYaml(invalidYamlContent, yamlClass, false);
       changeContext.setYaml(yamlObject);
 
-      yamlHandler.upsertFromYaml(changeContext, Arrays.asList(changeContext));
+      yamlHandler.upsertFromYaml(changeContext, asList(changeContext));
       failBecauseExceptionWasNotThrown(UnrecognizedPropertyException.class);
     } catch (UnrecognizedPropertyException ex) {
       // Do nothing

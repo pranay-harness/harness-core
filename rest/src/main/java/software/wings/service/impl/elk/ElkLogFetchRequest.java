@@ -1,5 +1,7 @@
 package software.wings.service.impl.elk;
 
+import static java.util.Arrays.asList;
+
 import lombok.AllArgsConstructor;
 import lombok.Data;
 import org.json.JSONObject;
@@ -7,7 +9,6 @@ import software.wings.exception.WingsException;
 import software.wings.utils.JsonUtils;
 
 import java.util.ArrayList;
-import java.util.Arrays;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
@@ -46,8 +47,7 @@ public class ElkLogFetchRequest {
 
     Map<String, List<JSONObject>> mustArrayObjects = new HashMap<>();
     mustArrayObjects.put("filter",
-        Arrays.asList(
-            new JSONObject().put("bool", new JSONObject().put("should", hostJsonObjects)), rangeObject, eval()));
+        asList(new JSONObject().put("bool", new JSONObject().put("should", hostJsonObjects)), rangeObject, eval()));
 
     JSONObject queryObject =
         new JSONObject().put("query", new JSONObject().put("bool", mustArrayObjects)).put("size", 10000);
@@ -147,12 +147,12 @@ public class ElkLogFetchRequest {
   }
 
   private JSONObject evalOrExpression(JSONObject left, JSONObject right) {
-    List<JSONObject> jsonObjects = Arrays.asList(left, right);
+    List<JSONObject> jsonObjects = asList(left, right);
     return new JSONObject().put("bool", new JSONObject().put("should", jsonObjects));
   }
 
   private JSONObject evalAndExpression(JSONObject left, JSONObject right) {
-    List<JSONObject> jsonObjects = Arrays.asList(left, right);
+    List<JSONObject> jsonObjects = asList(left, right);
     return new JSONObject().put("bool", new JSONObject().put("must", jsonObjects));
   }
 

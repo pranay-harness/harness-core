@@ -1,5 +1,6 @@
 package software.wings.service.impl.instance;
 
+import static java.util.Arrays.asList;
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertTrue;
 import static org.mockito.Matchers.any;
@@ -75,7 +76,6 @@ import software.wings.service.intfc.instance.InstanceService;
 import software.wings.service.intfc.security.SecretManager;
 
 import java.util.ArrayList;
-import java.util.Arrays;
 import java.util.Collection;
 import java.util.Set;
 
@@ -129,7 +129,7 @@ public class AwsInstanceHandlerTest extends WingsBaseTest {
         .when(infraMappingService)
         .get(anyString(), anyString());
 
-    doReturn(Arrays.asList(encryptedDataDetail)).when(secretManager).getEncryptionDetails(any(), any(), any());
+    doReturn(asList(encryptedDataDetail)).when(secretManager).getEncryptionDetails(any(), any(), any());
 
     doReturn(SettingAttribute.Builder.aSettingAttribute()
                  .withValue(AwsConfig.builder()
@@ -164,7 +164,7 @@ public class AwsInstanceHandlerTest extends WingsBaseTest {
   @Test
   public void testSyncInstances_instanceSync() throws Exception {
     PageResponse<Instance> pageResponse = new PageResponse<>();
-    pageResponse.setResponse(Arrays.asList(
+    pageResponse.setResponse(asList(
         Instance.builder()
             .uuid(INSTANCE_1_ID)
             .accountId(ACCOUNT_ID)

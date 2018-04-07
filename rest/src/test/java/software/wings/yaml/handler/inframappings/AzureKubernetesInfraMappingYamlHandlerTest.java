@@ -57,7 +57,6 @@ import software.wings.yaml.BaseYaml;
 import software.wings.yaml.handler.BaseYamlHandlerTest;
 
 import java.io.IOException;
-import java.util.Arrays;
 
 public class AzureKubernetesInfraMappingYamlHandlerTest extends BaseYamlHandlerTest {
   @Mock protected SettingsService settingsService;
@@ -169,7 +168,7 @@ public class AzureKubernetesInfraMappingYamlHandlerTest extends BaseYamlHandlerT
     changeContext.setYaml(yamlObject);
 
     AzureKubernetesInfrastructureMapping azureInfraMapping =
-        yamlHandler.upsertFromYaml(changeContext, Arrays.asList(changeContext));
+        yamlHandler.upsertFromYaml(changeContext, asList(changeContext));
     assertNotNull(azureInfraMapping);
     assertEquals(azureInfraMapping.getName(), infraMappingName);
 
@@ -206,7 +205,7 @@ public class AzureKubernetesInfraMappingYamlHandlerTest extends BaseYamlHandlerT
           invalidYamlContent, AzureKubernetesInfrastructureMapping.Yaml.class, false);
       changeContext.setYaml(yamlObject);
 
-      yamlHandler.upsertFromYaml(changeContext, Arrays.asList(changeContext));
+      yamlHandler.upsertFromYaml(changeContext, asList(changeContext));
       failBecauseExceptionWasNotThrown(UnrecognizedPropertyException.class);
     } catch (UnrecognizedPropertyException ex) {
       // Do nothing

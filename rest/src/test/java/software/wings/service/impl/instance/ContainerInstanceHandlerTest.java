@@ -1,5 +1,6 @@
 package software.wings.service.impl.instance;
 
+import static java.util.Arrays.asList;
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertTrue;
 import static org.mockito.Matchers.any;
@@ -64,7 +65,6 @@ import software.wings.service.intfc.SettingsService;
 import software.wings.service.intfc.instance.InstanceService;
 import software.wings.service.intfc.security.SecretManager;
 
-import java.util.Arrays;
 import java.util.List;
 import java.util.Set;
 
@@ -132,7 +132,7 @@ public class ContainerInstanceHandlerTest extends WingsBaseTest {
   @Test
   public void testSyncInstances() throws Exception {
     PageResponse<Instance> pageResponse = new PageResponse<>();
-    pageResponse.setResponse(Arrays.asList(
+    pageResponse.setResponse(asList(
         Instance.builder()
             .uuid(INSTANCE_1_ID)
             .accountId(ACCOUNT_ID)
@@ -183,15 +183,15 @@ public class ContainerInstanceHandlerTest extends WingsBaseTest {
     doReturn(pageResponse).when(instanceService).list(any());
 
     ContainerSyncResponse instanceSyncResponse =
-        doReturn(ContainerSyncResponse.builder().containerInfoList(Arrays.asList()).build())
+        doReturn(ContainerSyncResponse.builder().containerInfoList(asList()).build())
             .doReturn(ContainerSyncResponse.builder()
-                          .containerInfoList(Arrays.asList(EcsContainerInfo.Builder.anEcsContainerInfo()
-                                                               .withClusterName(ECS_CLUSTER)
-                                                               .withServiceName("service_b_1")
-                                                               .withTaskArn("taskARN:1")
-                                                               .withStartedAt(0)
-                                                               .withStartedBy("user1")
-                                                               .build()))
+                          .containerInfoList(asList(EcsContainerInfo.Builder.anEcsContainerInfo()
+                                                        .withClusterName(ECS_CLUSTER)
+                                                        .withServiceName("service_b_1")
+                                                        .withTaskArn("taskARN:1")
+                                                        .withStartedAt(0)
+                                                        .withStartedBy("user1")
+                                                        .build()))
                           .build())
             .when(containerSync)
             .getInstances(any(), anyList());
@@ -215,7 +215,7 @@ public class ContainerInstanceHandlerTest extends WingsBaseTest {
   @Test
   public void testSyncInstances_2() throws Exception {
     PageResponse<Instance> pageResponse = new PageResponse<>();
-    pageResponse.setResponse(Arrays.asList(
+    pageResponse.setResponse(asList(
         Instance.builder()
             .uuid(INSTANCE_1_ID)
             .accountId(ACCOUNT_ID)
@@ -243,15 +243,15 @@ public class ContainerInstanceHandlerTest extends WingsBaseTest {
     doReturn(pageResponse).when(instanceService).list(any());
 
     ContainerSyncResponse instanceSyncResponse =
-        doReturn(ContainerSyncResponse.builder().containerInfoList(Arrays.asList()).build())
+        doReturn(ContainerSyncResponse.builder().containerInfoList(asList()).build())
             .doReturn(ContainerSyncResponse.builder()
-                          .containerInfoList(Arrays.asList(EcsContainerInfo.Builder.anEcsContainerInfo()
-                                                               .withClusterName(ECS_CLUSTER)
-                                                               .withServiceName("service_b_2")
-                                                               .withTaskArn("taskARN:2")
-                                                               .withStartedAt(0)
-                                                               .withStartedBy("user1")
-                                                               .build()))
+                          .containerInfoList(asList(EcsContainerInfo.Builder.anEcsContainerInfo()
+                                                        .withClusterName(ECS_CLUSTER)
+                                                        .withServiceName("service_b_2")
+                                                        .withTaskArn("taskARN:2")
+                                                        .withStartedAt(0)
+                                                        .withStartedBy("user1")
+                                                        .build()))
                           .build())
             .when(containerSync)
             .getInstances(any(), anyList());
@@ -259,7 +259,7 @@ public class ContainerInstanceHandlerTest extends WingsBaseTest {
     containerInstanceHandler.handleNewDeployment(
         ContainerDeploymentInfo.builder()
             .clusterName(ECS_CLUSTER)
-            .containerSvcNameSet(Collections.setOf(Arrays.asList("service_b_1", "service_b_2")))
+            .containerSvcNameSet(Collections.setOf(asList("service_b_1", "service_b_2")))
             .accountId(ACCOUNT_ID)
             .infraMappingId(INFRA_MAPPING_ID)
             .workflowExecutionId("workfloeExecution_1")

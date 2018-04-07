@@ -1,5 +1,6 @@
 package software.wings.service.impl.instance;
 
+import static java.util.Arrays.asList;
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertTrue;
 import static org.mockito.Matchers.any;
@@ -78,7 +79,6 @@ import software.wings.service.intfc.instance.InstanceService;
 import software.wings.service.intfc.security.SecretManager;
 
 import java.util.ArrayList;
-import java.util.Arrays;
 import java.util.Collection;
 import java.util.HashSet;
 import java.util.List;
@@ -133,7 +133,7 @@ public class AwsCodeDeployInstanceHandlerTest extends WingsBaseTest {
         .when(infraMappingService)
         .get(anyString(), anyString());
 
-    doReturn(Arrays.asList(encryptedDataDetail)).when(secretManager).getEncryptionDetails(any(), any(), any());
+    doReturn(asList(encryptedDataDetail)).when(secretManager).getEncryptionDetails(any(), any(), any());
 
     doReturn(SettingAttribute.Builder.aSettingAttribute()
                  .withValue(AwsConfig.builder()
@@ -168,7 +168,7 @@ public class AwsCodeDeployInstanceHandlerTest extends WingsBaseTest {
   @Test
   public void testSyncInstances_syncJob() throws Exception {
     PageResponse<Instance> pageResponse = new PageResponse<>();
-    pageResponse.setResponse(Arrays.asList(
+    pageResponse.setResponse(asList(
         Instance.builder()
             .uuid(INSTANCE_1_ID)
             .accountId(ACCOUNT_ID)
@@ -242,7 +242,7 @@ public class AwsCodeDeployInstanceHandlerTest extends WingsBaseTest {
   @Test
   public void testSyncInstances_NewDeployment() throws Exception {
     PageResponse<Instance> pageResponse = new PageResponse<>();
-    pageResponse.setResponse(Arrays.asList(
+    pageResponse.setResponse(asList(
         Instance.builder()
             .uuid(INSTANCE_1_ID)
             .accountId(ACCOUNT_ID)
@@ -282,9 +282,7 @@ public class AwsCodeDeployInstanceHandlerTest extends WingsBaseTest {
     ec2Instance2.setInstanceId(INSTANCE_3_ID);
     ec2Instance2.setPublicDnsName(PUBLIC_DNS_3);
 
-    doReturn(Arrays.asList(ec2Instance2))
-        .when(awsCodeDeployService)
-        .listDeploymentInstances(any(), any(), any(), any());
+    doReturn(asList(ec2Instance2)).when(awsCodeDeployService).listDeploymentInstances(any(), any(), any(), any());
     doReturn(HOST_NAME_IP3).when(awsHelperService).getHostnameFromPrivateDnsName(PRIVATE_DNS_3);
 
     DescribeInstancesResult result = new DescribeInstancesResult();
@@ -310,7 +308,7 @@ public class AwsCodeDeployInstanceHandlerTest extends WingsBaseTest {
 
     List<Instance> capturedInstances = captorInstance.getAllValues();
     assertEquals(1, capturedInstances.size());
-    Set<String> hostNames = new HashSet<>(Arrays.asList(HOST_NAME_IP3));
+    Set<String> hostNames = new HashSet<>(asList(HOST_NAME_IP3));
     assertTrue(hostNames.contains(capturedInstances.get(0).getHostInstanceKey().getHostName()));
   }
 }

@@ -2086,7 +2086,7 @@ public class WorkflowServiceImpl implements WorkflowService, DataProvider {
       return requiredEntityTypes;
     }
 
-    if (Arrays.asList(ECS, KUBERNETES, AWS_CODEDEPLOY, AWS_LAMBDA, AMI).contains(workflowPhase.getDeploymentType())) {
+    if (asList(ECS, KUBERNETES, AWS_CODEDEPLOY, AWS_LAMBDA, AMI).contains(workflowPhase.getDeploymentType())) {
       requiredEntityTypes.add(ARTIFACT);
       return requiredEntityTypes;
     }

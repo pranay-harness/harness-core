@@ -123,7 +123,6 @@ import software.wings.utils.BoundedInputStream;
 import java.io.IOException;
 import java.io.InputStream;
 import java.util.ArrayList;
-import java.util.Arrays;
 import java.util.List;
 import java.util.concurrent.ExecutorService;
 
@@ -1495,11 +1494,10 @@ public class ServiceResourceServiceTest extends WingsBaseTest {
                                                       .functionName("TestFunctionName")
                                                       .handler("TestHandler")
                                                       .build();
-    LambdaSpecification lambdaSpecification =
-        LambdaSpecification.builder()
-            .serviceId("TestServiceID")
-            .functions(Arrays.asList(functionSpecification, functionSpecification))
-            .build();
+    LambdaSpecification lambdaSpecification = LambdaSpecification.builder()
+                                                  .serviceId("TestServiceID")
+                                                  .functions(asList(functionSpecification, functionSpecification))
+                                                  .build();
     lambdaSpecification.setAppId("TestAppID");
     try {
       srs.updateLambdaSpecification(lambdaSpecification);
@@ -1515,7 +1513,7 @@ public class ServiceResourceServiceTest extends WingsBaseTest {
                                                        .build();
     lambdaSpecification = LambdaSpecification.builder()
                               .serviceId("TestServiceID")
-                              .functions(Arrays.asList(functionSpecification, functionSpecification2))
+                              .functions(asList(functionSpecification, functionSpecification2))
                               .build();
     lambdaSpecification.setAppId("TestAppID");
     when(wingsPersistence.saveAndGet(Mockito.any(Class.class), Mockito.any(LambdaSpecification.class)))

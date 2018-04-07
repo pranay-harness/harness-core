@@ -4,6 +4,7 @@
 
 package software.wings.expression;
 
+import static java.util.Arrays.asList;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThatThrownBy;
 
@@ -20,7 +21,6 @@ import software.wings.api.HostElement;
 import software.wings.beans.infrastructure.Host;
 import software.wings.exception.WingsException;
 
-import java.util.Arrays;
 import java.util.HashMap;
 import java.util.Map;
 
@@ -243,7 +243,7 @@ public class ExpressionEvaluatorTest extends WingsBaseTest {
     Tag tag2 = new Tag();
     tag2.setKey("type");
     tag2.setValue("bar");
-    ec2.setTags(Arrays.asList(tag1, tag2));
+    ec2.setTags(asList(tag1, tag2));
 
     HostElement host = HostElement.Builder.aHostElement().withEc2Instance(ec2).build();
     Map<String, Object> map = ImmutableMap.<String, Object>builder().put("host", host).build();

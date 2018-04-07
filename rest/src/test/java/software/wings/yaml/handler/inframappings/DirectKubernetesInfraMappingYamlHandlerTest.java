@@ -58,7 +58,6 @@ import software.wings.yaml.BaseYaml;
 import software.wings.yaml.handler.BaseYamlHandlerTest;
 
 import java.io.IOException;
-import java.util.Arrays;
 
 public class DirectKubernetesInfraMappingYamlHandlerTest extends BaseYamlHandlerTest {
   @Mock protected SettingsService settingsService;
@@ -161,7 +160,7 @@ public class DirectKubernetesInfraMappingYamlHandlerTest extends BaseYamlHandler
     changeContext.setYaml(yamlObject);
 
     DirectKubernetesInfrastructureMapping infraMapping =
-        yamlHandler.upsertFromYaml(changeContext, Arrays.asList(changeContext));
+        yamlHandler.upsertFromYaml(changeContext, asList(changeContext));
     assertNotNull(infraMapping);
     assertEquals(infraMapping.getName(), infraMappingName);
 
@@ -198,7 +197,7 @@ public class DirectKubernetesInfraMappingYamlHandlerTest extends BaseYamlHandler
           invalidYamlContent, DirectKubernetesInfrastructureMapping.Yaml.class, false);
       changeContext.setYaml(yamlObject);
 
-      yamlHandler.upsertFromYaml(changeContext, Arrays.asList(changeContext));
+      yamlHandler.upsertFromYaml(changeContext, asList(changeContext));
       failBecauseExceptionWasNotThrown(UnrecognizedPropertyException.class);
     } catch (UnrecognizedPropertyException ex) {
       // Do nothing

@@ -1,6 +1,7 @@
 package software.wings.service.impl.instance;
 
 import static io.harness.data.structure.EmptyPredicate.isNotEmpty;
+import static java.util.Arrays.asList;
 
 import com.google.common.collect.ArrayListMultimap;
 import com.google.common.collect.Maps;
@@ -26,7 +27,6 @@ import software.wings.service.impl.instance.sync.response.ContainerSyncResponse;
 import software.wings.service.intfc.InfrastructureMappingService;
 import software.wings.utils.Validator;
 
-import java.util.Arrays;
 import java.util.Collection;
 import java.util.HashSet;
 import java.util.List;
@@ -81,7 +81,7 @@ public class ContainerInstanceHandler extends InstanceHandler {
         // Get all the instances for the given containerSvcName (In kubernetes, this is replication Controller and in
         // ECS it is taskDefinition)
         ContainerSyncResponse instanceSyncResponse =
-            containerSync.getInstances(containerInfraMapping, Arrays.asList(containerSvcName));
+            containerSync.getInstances(containerInfraMapping, asList(containerSvcName));
         Validator.notNullCheck("InstanceSyncResponse", instanceSyncResponse);
 
         List<ContainerInfo> latestContainerInfoList = instanceSyncResponse.getContainerInfoList();

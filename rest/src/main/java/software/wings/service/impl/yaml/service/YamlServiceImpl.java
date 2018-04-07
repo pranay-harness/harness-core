@@ -84,7 +84,6 @@ import java.io.IOException;
 import java.io.InputStream;
 import java.io.OutputStream;
 import java.io.StringWriter;
-import java.util.Arrays;
 import java.util.Collections;
 import java.util.Comparator;
 import java.util.Enumeration;
@@ -188,7 +187,7 @@ public class YamlServiceImpl<Y extends BaseYaml, B extends Base> implements Yaml
       yamlGitService.processFailedChanges(accountId, ex.getFailedChangeErrorMsgMap(), false);
     }
     return Builder.aRestResponse()
-        .withResponseMessages(Arrays.asList(
+        .withResponseMessages(asList(
             new ResponseMessage[] {ResponseMessage.aResponseMessage().code(ErrorCode.DEFAULT_ERROR_CODE).build()}))
         .build();
   }

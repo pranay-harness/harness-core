@@ -1,5 +1,6 @@
 package software.wings.service.impl.instance;
 
+import static java.util.Arrays.asList;
 import static org.assertj.core.api.Assertions.assertThat;
 
 import com.google.common.collect.Lists;
@@ -29,7 +30,6 @@ import software.wings.sm.StepExecutionSummary;
 import software.wings.sm.StepExecutionSummary.StepExecutionSummaryBuilder;
 
 import java.util.ArrayList;
-import java.util.Arrays;
 import java.util.Collections;
 import java.util.List;
 
@@ -145,28 +145,28 @@ public class InstanceHelperTestHelper {
 
     if (InfrastructureMappingType.PHYSICAL_DATA_CENTER_SSH.equals(infrastructureMappingType)) {
       stepExecutionSummaries =
-          Arrays.asList(StepExecutionSummaryBuilder.aStepExecutionSummary().withStatus(ExecutionStatus.SUCCESS).build(),
+          asList(StepExecutionSummaryBuilder.aStepExecutionSummary().withStatus(ExecutionStatus.SUCCESS).build(),
               StepExecutionSummaryBuilder.aStepExecutionSummary().withStatus(ExecutionStatus.SUCCESS).build());
 
       instanceStatusSummaries = getInstanceStatusSummariesForPDC();
 
     } else if (InfrastructureMappingType.AWS_SSH.equals(infrastructureMappingType)) {
       stepExecutionSummaries =
-          Arrays.asList(StepExecutionSummaryBuilder.aStepExecutionSummary().withStatus(ExecutionStatus.SUCCESS).build(),
+          asList(StepExecutionSummaryBuilder.aStepExecutionSummary().withStatus(ExecutionStatus.SUCCESS).build(),
               StepExecutionSummaryBuilder.aStepExecutionSummary().withStatus(ExecutionStatus.SUCCESS).build());
 
       instanceStatusSummaries = getInstanceStatusSummariesForAws();
     } else if (InfrastructureMappingType.AWS_AMI.equals(infrastructureMappingType)) {
-      stepExecutionSummaries = Arrays.asList(
-          StepExecutionSummaryBuilder.aStepExecutionSummary().withStatus(ExecutionStatus.SUCCESS).build(),
-          AmiStepExecutionSummary.builder()
-              .instanceCount(1)
-              .instanceUnitType(InstanceUnitType.COUNT)
-              .newInstanceData(
-                  Arrays.asList(ContainerServiceData.builder().desiredCount(1).name("asgNew").previousCount(1).build()))
-              .oldInstanceData(
-                  Arrays.asList(ContainerServiceData.builder().desiredCount(1).name("asgOld").previousCount(1).build()))
-              .build());
+      stepExecutionSummaries =
+          asList(StepExecutionSummaryBuilder.aStepExecutionSummary().withStatus(ExecutionStatus.SUCCESS).build(),
+              AmiStepExecutionSummary.builder()
+                  .instanceCount(1)
+                  .instanceUnitType(InstanceUnitType.COUNT)
+                  .newInstanceData(
+                      asList(ContainerServiceData.builder().desiredCount(1).name("asgNew").previousCount(1).build()))
+                  .oldInstanceData(
+                      asList(ContainerServiceData.builder().desiredCount(1).name("asgOld").previousCount(1).build()))
+                  .build());
 
       instanceStatusSummaries = getInstanceStatusSummariesForAws();
     } else if (InfrastructureMappingType.AWS_AWS_CODEDEPLOY.equals(infrastructureMappingType)) {
@@ -174,7 +174,7 @@ public class InstanceHelperTestHelper {
       commandStepExecutionSummary.setCodeDeployDeploymentId(InstanceHelperTest.CODE_DEPLOY_DEPLOYMENT_ID);
 
       stepExecutionSummaries =
-          Arrays.asList(StepExecutionSummaryBuilder.aStepExecutionSummary().withStatus(ExecutionStatus.SUCCESS).build(),
+          asList(StepExecutionSummaryBuilder.aStepExecutionSummary().withStatus(ExecutionStatus.SUCCESS).build(),
               commandStepExecutionSummary);
 
       instanceStatusSummaries = getInstanceStatusSummariesForAws();
@@ -183,12 +183,12 @@ public class InstanceHelperTestHelper {
       commandStepExecutionSummary.setCodeDeployDeploymentId(InstanceHelperTest.CODE_DEPLOY_DEPLOYMENT_ID);
       commandStepExecutionSummary.setClusterName(InstanceHelperTest.CLUSTER_NAME);
       commandStepExecutionSummary.setNewInstanceData(
-          Arrays.asList(ContainerServiceData.builder().desiredCount(1).name("ecsNew").previousCount(1).build()));
+          asList(ContainerServiceData.builder().desiredCount(1).name("ecsNew").previousCount(1).build()));
       commandStepExecutionSummary.setOldInstanceData(
-          Arrays.asList(ContainerServiceData.builder().desiredCount(1).name("ecsOld").previousCount(1).build()));
+          asList(ContainerServiceData.builder().desiredCount(1).name("ecsOld").previousCount(1).build()));
 
       stepExecutionSummaries =
-          Arrays.asList(StepExecutionSummaryBuilder.aStepExecutionSummary().withStatus(ExecutionStatus.SUCCESS).build(),
+          asList(StepExecutionSummaryBuilder.aStepExecutionSummary().withStatus(ExecutionStatus.SUCCESS).build(),
               commandStepExecutionSummary);
 
       instanceStatusSummaries = getInstanceStatusSummariesForAws();
@@ -197,12 +197,12 @@ public class InstanceHelperTestHelper {
       commandStepExecutionSummary.setCodeDeployDeploymentId(InstanceHelperTest.CODE_DEPLOY_DEPLOYMENT_ID);
       commandStepExecutionSummary.setClusterName(InstanceHelperTest.CLUSTER_NAME);
       commandStepExecutionSummary.setNewInstanceData(
-          Arrays.asList(ContainerServiceData.builder().desiredCount(1).name("kubernetesNew").previousCount(1).build()));
+          asList(ContainerServiceData.builder().desiredCount(1).name("kubernetesNew").previousCount(1).build()));
       commandStepExecutionSummary.setOldInstanceData(
-          Arrays.asList(ContainerServiceData.builder().desiredCount(1).name("kubernetesOld").previousCount(1).build()));
+          asList(ContainerServiceData.builder().desiredCount(1).name("kubernetesOld").previousCount(1).build()));
 
       stepExecutionSummaries =
-          Arrays.asList(StepExecutionSummaryBuilder.aStepExecutionSummary().withStatus(ExecutionStatus.SUCCESS).build(),
+          asList(StepExecutionSummaryBuilder.aStepExecutionSummary().withStatus(ExecutionStatus.SUCCESS).build(),
               commandStepExecutionSummary);
 
       instanceStatusSummaries = getInstanceStatusSummariesForAws();

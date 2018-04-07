@@ -1,12 +1,11 @@
 package software.wings.beans.artifact;
 
+import static java.util.Arrays.asList;
 import static org.assertj.core.api.Assertions.assertThat;
 
 import org.junit.Test;
 import software.wings.beans.artifact.AmiArtifactStream.FilterClass;
 import software.wings.beans.artifact.AmiArtifactStream.Tag;
-
-import java.util.Arrays;
 
 public class AmiArtifactStreamTest {
   @Test
@@ -23,7 +22,7 @@ public class AmiArtifactStreamTest {
     f2.setKey("TestKey");
     f2.setValue("TestValue");
 
-    artifactStream.setFilters(Arrays.asList(f1, f2));
+    artifactStream.setFilters(asList(f1, f2));
 
     assertThat(artifactStream.generateSourceName()).isEqualTo("TestRegion:TestKey:TestValue_TestKey:TestValue");
 
@@ -35,7 +34,7 @@ public class AmiArtifactStreamTest {
     t2.setKey("TestTagKey");
     t2.setValue("TestTagValue");
 
-    artifactStream.setTags(Arrays.asList(t1, t2));
+    artifactStream.setTags(asList(t1, t2));
 
     assertThat(artifactStream.generateSourceName())
         .isEqualTo("TestRegion:TestTagKey:TestTagValue_TestTagKey:TestTagValue:TestKey:TestValue_TestKey:TestValue");

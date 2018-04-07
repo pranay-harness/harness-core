@@ -82,7 +82,6 @@ import software.wings.service.intfc.WorkflowService;
 import software.wings.sm.StateType;
 
 import java.util.ArrayList;
-import java.util.Arrays;
 import java.util.Collection;
 import java.util.Collections;
 import java.util.HashMap;
@@ -966,7 +965,7 @@ public class AuthHandler {
                                             .appPermissions(appPermissions)
                                             .description("Default account admin user group");
     if (user != null) {
-      userGroupBuilder.memberIds(Arrays.asList(user.getUuid()));
+      userGroupBuilder.memberIds(asList(user.getUuid()));
     }
 
     return userGroupBuilder.build();

@@ -6,6 +6,7 @@ import static com.amazonaws.services.codedeploy.model.DeploymentStatus.Succeeded
 import static io.harness.data.structure.EmptyPredicate.isNotEmpty;
 import static io.harness.threading.Morpheus.sleep;
 import static java.time.Duration.ofSeconds;
+import static java.util.Arrays.asList;
 import static java.util.stream.Collectors.toList;
 import static software.wings.beans.ErrorCode.INIT_TIMEOUT;
 import static software.wings.beans.ErrorCode.INVALID_REQUEST;
@@ -48,7 +49,6 @@ import software.wings.security.encryption.EncryptedDataDetail;
 import software.wings.service.impl.AwsHelperService;
 
 import java.util.ArrayList;
-import java.util.Arrays;
 import java.util.Collections;
 import java.util.List;
 import java.util.Set;
@@ -175,7 +175,7 @@ public class AwsCodeDeployServiceImpl implements AwsCodeDeployService {
     AwsConfig awsConfig = awsHelperService.validateAndGetAwsConfig(cloudProviderSetting, encryptedDataDetails);
 
     List<String> instanceIds = fetchAllDeploymentInstances(
-        awsConfig, encryptedDataDetails, region, deploymentId, Arrays.asList(InstanceStatus.Succeeded.name()));
+        awsConfig, encryptedDataDetails, region, deploymentId, asList(InstanceStatus.Succeeded.name()));
 
     if (isNotEmpty(instanceIds)) {
       DescribeInstancesRequest describeInstancesRequest =

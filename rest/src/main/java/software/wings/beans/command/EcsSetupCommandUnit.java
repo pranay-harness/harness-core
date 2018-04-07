@@ -2,6 +2,7 @@ package software.wings.beans.command;
 
 import static io.harness.data.structure.EmptyPredicate.isEmpty;
 import static io.harness.data.structure.EmptyPredicate.isNotEmpty;
+import static java.util.Arrays.asList;
 import static java.util.Collections.emptyList;
 import static java.util.stream.Collectors.toList;
 import static org.apache.commons.lang3.StringUtils.isNotBlank;
@@ -262,10 +263,10 @@ public class EcsSetupCommandUnit extends ContainerSetupCommandUnit {
     List<LoadBalancer> loadBalancers;
 
     if (containerName != null && containerPort != null) {
-      loadBalancers = Arrays.asList(new LoadBalancer()
-                                        .withContainerName(containerName)
-                                        .withContainerPort(containerPort)
-                                        .withTargetGroupArn(setupParams.getTargetGroupArn()));
+      loadBalancers = asList(new LoadBalancer()
+                                 .withContainerName(containerName)
+                                 .withContainerPort(containerPort)
+                                 .withTargetGroupArn(setupParams.getTargetGroupArn()));
       createServiceRequest.withLoadBalancers(loadBalancers);
     } else {
       throw new WingsException("Could not obtain container name and port to set to the target"

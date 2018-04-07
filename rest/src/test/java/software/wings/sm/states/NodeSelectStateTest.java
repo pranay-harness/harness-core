@@ -1,6 +1,7 @@
 package software.wings.sm.states;
 
 import static io.harness.data.structure.UUIDGenerator.generateUuid;
+import static java.util.Arrays.asList;
 import static java.util.Collections.emptyList;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.mockito.Matchers.any;
@@ -55,7 +56,6 @@ import software.wings.sm.ExecutionStatus;
 import software.wings.sm.StateExecutionInstance;
 import software.wings.sm.WorkflowStandardParams;
 
-import java.util.Arrays;
 import java.util.List;
 
 public class NodeSelectStateTest extends WingsBaseTest {
@@ -122,7 +122,7 @@ public class NodeSelectStateTest extends WingsBaseTest {
     when(infrastructureMappingService.selectServiceInstances(anyString(), anyString(), anyString(), any()))
         .thenReturn(instances);
     when(infrastructureMappingService.listHostDisplayNames(anyString(), anyString(), anyString()))
-        .thenReturn(Arrays.asList("Host1", "Host2", "Host3"));
+        .thenReturn(asList("Host1", "Host2", "Host3"));
 
     when(context.getContextElement(ContextElementType.INSTANCE)).thenReturn(contextElement);
     when(context.getContextElement(ContextElementType.PARAM, Constants.SERVICE_INSTANCE_ARTIFACT_PARAMS))
@@ -141,7 +141,7 @@ public class NodeSelectStateTest extends WingsBaseTest {
     when(artifactService.get(APP_ID, ARTIFACT_ID)).thenReturn(artifact);
     when(workflowStandardParams.isExcludeHostsWithSameArtifact()).thenReturn(false);
 
-    PageResponse<Instance> pageResponse = aPageResponse().withResponse(Arrays.asList(instance)).build();
+    PageResponse<Instance> pageResponse = aPageResponse().withResponse(asList(instance)).build();
 
     when(instanceService.list(any(PageRequest.class))).thenReturn(pageResponse);
 
@@ -166,7 +166,7 @@ public class NodeSelectStateTest extends WingsBaseTest {
     when(artifactService.get(APP_ID, ARTIFACT_ID)).thenReturn(artifact);
     when(workflowStandardParams.isExcludeHostsWithSameArtifact()).thenReturn(true);
 
-    PageResponse<Instance> pageResponse = aPageResponse().withResponse(Arrays.asList(instance)).build();
+    PageResponse<Instance> pageResponse = aPageResponse().withResponse(asList(instance)).build();
 
     when(instanceService.list(any(PageRequest.class))).thenReturn(pageResponse);
 
@@ -191,7 +191,7 @@ public class NodeSelectStateTest extends WingsBaseTest {
     when(artifactService.get(APP_ID, ARTIFACT_ID)).thenReturn(artifact);
     when(workflowStandardParams.isExcludeHostsWithSameArtifact()).thenReturn(true);
 
-    PageResponse<Instance> pageResponse = aPageResponse().withResponse(Arrays.asList(instance)).build();
+    PageResponse<Instance> pageResponse = aPageResponse().withResponse(asList(instance)).build();
 
     when(instanceService.list(any(PageRequest.class))).thenReturn(pageResponse);
 
@@ -219,7 +219,7 @@ public class NodeSelectStateTest extends WingsBaseTest {
     when(artifactService.get(APP_ID, ARTIFACT_ID)).thenReturn(artifact);
     when(workflowStandardParams.isExcludeHostsWithSameArtifact()).thenReturn(true);
 
-    PageResponse<Instance> pageResponse = aPageResponse().withResponse(Arrays.asList(instance)).build();
+    PageResponse<Instance> pageResponse = aPageResponse().withResponse(asList(instance)).build();
 
     when(instanceService.list(any(PageRequest.class))).thenReturn(pageResponse);
 
@@ -249,7 +249,7 @@ public class NodeSelectStateTest extends WingsBaseTest {
     when(artifactService.get(APP_ID, ARTIFACT_ID)).thenReturn(artifact);
     when(workflowStandardParams.isExcludeHostsWithSameArtifact()).thenReturn(true);
 
-    PageResponse<Instance> pageResponse = aPageResponse().withResponse(Arrays.asList(instance)).build();
+    PageResponse<Instance> pageResponse = aPageResponse().withResponse(asList(instance)).build();
 
     when(instanceService.list(any(PageRequest.class))).thenReturn(pageResponse);
 

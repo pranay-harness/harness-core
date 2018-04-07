@@ -97,7 +97,6 @@ import software.wings.utils.KryoUtils;
 import java.io.UnsupportedEncodingException;
 import java.net.URISyntaxException;
 import java.nio.charset.Charset;
-import java.util.Arrays;
 import java.util.Collections;
 import java.util.Date;
 import java.util.HashMap;
@@ -343,7 +342,7 @@ public class UserServiceImpl implements UserService {
     if (CollectionUtils.isEmpty(userInvite.getRoles())) {
       Role accountAdminRole = roleService.getAccountAdminRole(userInvite.getAccountId());
       if (accountAdminRole != null) {
-        List<Role> roleList = Arrays.asList(accountAdminRole);
+        List<Role> roleList = asList(accountAdminRole);
         userInvite.setRoles(roleList);
       }
     }

@@ -1,5 +1,6 @@
 package software.wings.yaml.handler.defaults;
 
+import static java.util.Arrays.asList;
 import static org.assertj.core.api.Fail.failBecauseExceptionWasNotThrown;
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertNotNull;
@@ -35,7 +36,6 @@ import software.wings.settings.SettingValue;
 import software.wings.yaml.handler.BaseYamlHandlerTest;
 
 import java.io.IOException;
-import java.util.Arrays;
 import java.util.List;
 
 /**
@@ -89,12 +89,12 @@ public class AppDefaultVarYamlHandlerTest extends BaseYamlHandlerTest {
     v1_settingAttribute1 = createNewSettingAttribute("var1", "value1");
     v1_settingAttribute2 = createNewSettingAttribute("var2", "value2");
     v1_settingAttribute3 = createNewSettingAttribute("var3", "value3");
-    v1_settingAttributeList = Arrays.asList(v1_settingAttribute1, v1_settingAttribute2, v1_settingAttribute3);
+    v1_settingAttributeList = asList(v1_settingAttribute1, v1_settingAttribute2, v1_settingAttribute3);
 
     v2_settingAttribute1 = createNewSettingAttribute("var1", "modified");
     v2_settingAttribute2 = createNewSettingAttribute("var4", "add");
     v2_settingAttribute3 = createNewSettingAttribute("var3", "value3");
-    v2_settingAttributeList = Arrays.asList(v2_settingAttribute1, v2_settingAttribute2, v2_settingAttribute3);
+    v2_settingAttributeList = asList(v2_settingAttribute1, v2_settingAttribute2, v2_settingAttribute3);
   }
 
   private SettingAttribute createNewSettingAttribute(String name, String value) {
@@ -129,8 +129,7 @@ public class AppDefaultVarYamlHandlerTest extends BaseYamlHandlerTest {
     Yaml yamlObject = (Yaml) getYaml(v1_validYamlContent, Yaml.class, false);
     changeContext.setYaml(yamlObject);
 
-    List<SettingAttribute> createdSettingAttributes =
-        yamlHandler.upsertFromYaml(changeContext, Arrays.asList(changeContext));
+    List<SettingAttribute> createdSettingAttributes = yamlHandler.upsertFromYaml(changeContext, asList(changeContext));
     compareSettingAttributes(v1_settingAttributeList, createdSettingAttributes);
 
     Yaml yaml = yamlHandler.toYaml(this.v1_settingAttributeList, APP_ID);
@@ -151,7 +150,7 @@ public class AppDefaultVarYamlHandlerTest extends BaseYamlHandlerTest {
     changeContext.setYaml(yamlObject);
 
     List<SettingAttribute> v2_createdSettingAttributes =
-        yamlHandler.upsertFromYaml(changeContext, Arrays.asList(changeContext));
+        yamlHandler.upsertFromYaml(changeContext, asList(changeContext));
     compareSettingAttributes(v2_settingAttributeList, v2_createdSettingAttributes);
 
     yamlHandler.delete(changeContext);
@@ -183,7 +182,7 @@ public class AppDefaultVarYamlHandlerTest extends BaseYamlHandlerTest {
       yamlObject = (Yaml) getYaml(invalidYamlContent, Yaml.class, false);
       changeContext.setYaml(yamlObject);
 
-      yamlHandler.upsertFromYaml(changeContext, Arrays.asList(changeContext));
+      yamlHandler.upsertFromYaml(changeContext, asList(changeContext));
       failBecauseExceptionWasNotThrown(UnrecognizedPropertyException.class);
     } catch (UnrecognizedPropertyException ex) {
       // Do nothing

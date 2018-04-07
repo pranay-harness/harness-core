@@ -72,7 +72,6 @@ import software.wings.utils.Validator;
 
 import java.time.Duration;
 import java.util.ArrayList;
-import java.util.Arrays;
 import java.util.List;
 import java.util.Map;
 import java.util.concurrent.ExecutorService;
@@ -196,10 +195,10 @@ public class AppServiceImpl implements AppService {
     }
 
     PermissionAttribute svcPermissionAttribute = new PermissionAttribute(PermissionType.SERVICE, Action.READ);
-    authHandler.setEntityIdFilterIfUserAction(Arrays.asList(svcPermissionAttribute), appIdList);
+    authHandler.setEntityIdFilterIfUserAction(asList(svcPermissionAttribute), appIdList);
 
     PermissionAttribute envPermissionAttribute = new PermissionAttribute(PermissionType.ENV, Action.READ);
-    authHandler.setEntityIdFilterIfUserAction(Arrays.asList(envPermissionAttribute), appIdList);
+    authHandler.setEntityIdFilterIfUserAction(asList(envPermissionAttribute), appIdList);
 
     // Had to change the parallel stream to normal stream since we want
     applicationList.stream().forEach(application -> {
@@ -381,12 +380,12 @@ public class AppServiceImpl implements AppService {
   public Application get(String appId, SetupStatus status, boolean overview, int overviewDays) {
     Application application = get(appId);
 
-    List<String> appIdAsList = Arrays.asList(appId);
+    List<String> appIdAsList = asList(appId);
     PermissionAttribute svcPermissionAttribute = new PermissionAttribute(PermissionType.SERVICE, Action.READ);
-    authHandler.setEntityIdFilterIfUserAction(Arrays.asList(svcPermissionAttribute), appIdAsList);
+    authHandler.setEntityIdFilterIfUserAction(asList(svcPermissionAttribute), appIdAsList);
 
     PermissionAttribute envPermissionAttribute = new PermissionAttribute(PermissionType.ENV, Action.READ);
-    authHandler.setEntityIdFilterIfUserAction(Arrays.asList(envPermissionAttribute), appIdAsList);
+    authHandler.setEntityIdFilterIfUserAction(asList(envPermissionAttribute), appIdAsList);
 
     application.setEnvironments(environmentService.getEnvByApp(application.getUuid()));
     application.setServices(serviceResourceService.findServicesByApp(application.getUuid()));

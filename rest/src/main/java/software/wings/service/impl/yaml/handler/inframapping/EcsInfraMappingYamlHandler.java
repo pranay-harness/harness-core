@@ -1,5 +1,6 @@
 package software.wings.service.impl.yaml.handler.inframapping;
 
+import static java.util.Arrays.asList;
 import static org.apache.commons.lang3.StringUtils.isBlank;
 
 import com.google.inject.Singleton;
@@ -15,7 +16,6 @@ import software.wings.exception.HarnessException;
 import software.wings.exception.WingsException;
 import software.wings.utils.Validator;
 
-import java.util.Arrays;
 import java.util.Collections;
 import java.util.List;
 
@@ -95,7 +95,7 @@ public class EcsInfraMappingYamlHandler
     }
 
     String[] idArr = ids.split(",");
-    return Arrays.asList(idArr);
+    return asList(idArr);
   }
 
   private static void validateNetworkParameters(Yaml yaml, EcsInfrastructureMapping bean) {

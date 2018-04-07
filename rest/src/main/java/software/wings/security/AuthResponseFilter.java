@@ -14,7 +14,6 @@ import org.slf4j.LoggerFactory;
 import software.wings.service.intfc.AppService;
 import software.wings.service.intfc.AuthService;
 
-import java.util.Arrays;
 import java.util.List;
 import javax.ws.rs.container.ContainerRequestContext;
 import javax.ws.rs.container.ContainerResponseContext;
@@ -28,7 +27,7 @@ import javax.ws.rs.core.MultivaluedMap;
 public class AuthResponseFilter implements ContainerResponseFilter {
   private static final Logger logger = LoggerFactory.getLogger(AuthResponseFilter.class);
   private static final List<String> authAwareResources =
-      Arrays.asList("/api/apps", "/api/services", "/api/environments", "/api/workflows", "/api/pipelines");
+      asList("/api/apps", "/api/services", "/api/environments", "/api/workflows", "/api/pipelines");
 
   @Inject private AuthService authService;
   @Inject private AppService appService;

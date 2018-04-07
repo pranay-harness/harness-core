@@ -5,6 +5,7 @@ import static com.fasterxml.jackson.dataformat.yaml.YAMLGenerator.Feature.WRITE_
 import static io.fabric8.kubernetes.client.utils.Utils.isNotNullOrEmpty;
 import static io.harness.data.structure.EmptyPredicate.isNotEmpty;
 import static io.harness.network.Http.getOkHttpClientBuilder;
+import static java.util.Arrays.asList;
 import static okhttp3.ConnectionSpec.CLEARTEXT;
 import static org.apache.commons.lang3.StringUtils.isNotBlank;
 import static software.wings.common.Constants.HARNESS_REVISION;
@@ -62,7 +63,6 @@ import java.net.Proxy;
 import java.net.URL;
 import java.security.GeneralSecurityException;
 import java.util.ArrayList;
-import java.util.Arrays;
 import java.util.Base64;
 import java.util.Comparator;
 import java.util.List;
@@ -287,7 +287,7 @@ public class KubernetesHelperService {
       if (config.getTlsVersions() != null && config.getTlsVersions().length > 0) {
         ConnectionSpec spec =
             new ConnectionSpec.Builder(ConnectionSpec.MODERN_TLS).tlsVersions(config.getTlsVersions()).build();
-        httpClientBuilder.connectionSpecs(Arrays.asList(spec, CLEARTEXT));
+        httpClientBuilder.connectionSpecs(asList(spec, CLEARTEXT));
       }
 
       return httpClientBuilder.build();

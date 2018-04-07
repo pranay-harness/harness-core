@@ -1,5 +1,6 @@
 package software.wings.yaml.handler.inframappings;
 
+import static java.util.Arrays.asList;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertNotNull;
@@ -23,7 +24,6 @@ import software.wings.service.impl.yaml.handler.inframapping.AwsInfraMappingYaml
 import software.wings.service.intfc.InfrastructureMappingService;
 
 import java.io.IOException;
-import java.util.Arrays;
 
 public class AwsInfraMappingYamlHandlerTest extends BaseInfraMappingYamlHandlerTest {
   private String validYamlContent = "harnessApiVersion: '1.0'\n"
@@ -60,8 +60,7 @@ public class AwsInfraMappingYamlHandlerTest extends BaseInfraMappingYamlHandlerT
     Yaml yamlObject = (Yaml) getYaml(validYamlContent, Yaml.class, false);
     changeContext.setYaml(yamlObject);
 
-    AwsInfrastructureMapping infrastructureMapping =
-        yamlHandler.upsertFromYaml(changeContext, Arrays.asList(changeContext));
+    AwsInfrastructureMapping infrastructureMapping = yamlHandler.upsertFromYaml(changeContext, asList(changeContext));
     assertNotNull(infrastructureMapping);
     assertEquals(infrastructureMapping.getName(), infraMappingName);
 
