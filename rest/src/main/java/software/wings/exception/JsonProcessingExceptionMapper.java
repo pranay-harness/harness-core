@@ -2,12 +2,12 @@ package software.wings.exception;
 
 import static java.util.Collections.singletonList;
 import static javax.ws.rs.core.Response.Status.BAD_REQUEST;
-import static software.wings.beans.ResponseMessage.Level.ERROR;
 import static software.wings.beans.ResponseMessage.aResponseMessage;
 import static software.wings.beans.RestResponse.Builder.aRestResponse;
 
 import com.fasterxml.jackson.core.JsonGenerationException;
 import com.fasterxml.jackson.core.JsonProcessingException;
+import io.harness.eraro.Level;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import software.wings.beans.ErrorCode;
@@ -35,7 +35,7 @@ public class JsonProcessingExceptionMapper implements ExceptionMapper<JsonProces
                       .withResponseMessages(singletonList(aResponseMessage()
                                                               .code(ErrorCode.DEFAULT_ERROR_CODE)
                                                               .message("Error generating response")
-                                                              .level(ERROR)
+                                                              .level(Level.ERROR)
                                                               .build()))
                       .build())
           .build();
@@ -54,7 +54,7 @@ public class JsonProcessingExceptionMapper implements ExceptionMapper<JsonProces
                       .withResponseMessages(singletonList(aResponseMessage()
                                                               .code(ErrorCode.DEFAULT_ERROR_CODE)
                                                               .message("Error reading request")
-                                                              .level(ERROR)
+                                                              .level(Level.ERROR)
                                                               .build()))
                       .build())
           .build();
@@ -69,7 +69,7 @@ public class JsonProcessingExceptionMapper implements ExceptionMapper<JsonProces
                     .withResponseMessages(singletonList(aResponseMessage()
                                                             .code(ErrorCode.DEFAULT_ERROR_CODE)
                                                             .message("Unable to process JSON " + message)
-                                                            .level(ERROR)
+                                                            .level(Level.ERROR)
                                                             .build()))
                     .build())
         .build();

@@ -4,10 +4,10 @@ import static javax.ws.rs.client.Entity.entity;
 import static javax.ws.rs.core.MediaType.APPLICATION_JSON;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.tuple;
-import static software.wings.beans.ResponseMessage.Level.ERROR;
 import static software.wings.beans.ResponseMessage.aResponseMessage;
 import static software.wings.beans.SettingAttribute.Builder.aSettingAttribute;
 
+import io.harness.eraro.Level;
 import io.harness.rule.RepeatRule.Repeat;
 import org.junit.Before;
 import org.junit.Ignore;
@@ -82,7 +82,7 @@ public class SettingServiceIntegrationTest extends BaseIntegrationTest {
         .containsExactly(aResponseMessage()
                              .code(ErrorCode.INVALID_ARTIFACT_SERVER)
                              .message("Jenkins URL must be a valid URL")
-                             .level(ERROR)
+                             .level(Level.ERROR)
                              .build());
   }
 
