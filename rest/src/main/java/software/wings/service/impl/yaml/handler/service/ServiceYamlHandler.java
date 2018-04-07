@@ -133,7 +133,7 @@ public class ServiceYamlHandler extends BaseYamlHandler<Yaml, Service> {
     } else {
       ArtifactType artifactType = Util.getEnumFromString(ArtifactType.class, yaml.getArtifactType());
       current.setArtifactType(artifactType);
-      current = serviceResourceService.save(current, true);
+      current = serviceResourceService.save(current, true, serviceResourceService.hasInternalCommands(current));
       saveOrUpdateServiceVariables(null, yaml, emptyList(), current.getAppId(), current.getUuid());
     }
     return current;
