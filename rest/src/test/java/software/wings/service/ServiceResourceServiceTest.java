@@ -28,6 +28,7 @@ import static software.wings.beans.Workflow.WorkflowBuilder.aWorkflow;
 import static software.wings.beans.WorkflowPhase.WorkflowPhaseBuilder.aWorkflowPhase;
 import static software.wings.beans.command.Command.Builder.aCommand;
 import static software.wings.beans.command.ExecCommandUnit.Builder.anExecCommandUnit;
+import static software.wings.beans.command.ScpCommandUnit.Builder.aScpCommandUnit;
 import static software.wings.beans.command.ServiceCommand.Builder.aServiceCommand;
 import static software.wings.dl.PageRequest.PageRequestBuilder.aPageRequest;
 import static software.wings.dl.PageResponse.PageResponseBuilder.aPageResponse;
@@ -49,6 +50,7 @@ import com.google.common.collect.ImmutableMap;
 import com.google.inject.Inject;
 import com.google.inject.name.Named;
 
+import de.danielbechler.diff.ObjectDifferBuilder;
 import org.junit.Before;
 import org.junit.Rule;
 import org.junit.Test;
@@ -85,10 +87,13 @@ import software.wings.beans.Setup.SetupStatus;
 import software.wings.beans.Workflow.WorkflowBuilder;
 import software.wings.beans.command.AmiCommandUnit;
 import software.wings.beans.command.AwsLambdaCommandUnit;
+import software.wings.beans.command.CleanupSshCommandUnit;
 import software.wings.beans.command.CodeDeployCommandUnit;
 import software.wings.beans.command.Command;
 import software.wings.beans.command.CommandType;
 import software.wings.beans.command.CommandUnitType;
+import software.wings.beans.command.CopyConfigCommandUnit;
+import software.wings.beans.command.InitSshCommandUnit;
 import software.wings.beans.command.ServiceCommand;
 import software.wings.beans.container.ContainerTask;
 import software.wings.beans.container.KubernetesContainerTask;
@@ -1562,5 +1567,14 @@ public class ServiceResourceServiceTest extends WingsBaseTest {
         .addFilter("appId", EQ, APP_ID)
         .addFilter("serviceId", EQ, SERVICE_ID)
         .build();
+  }
+
+  @Test
+  public void shouldCompareCommandUnits() {
+    ObjectDifferBuilder.buildDefault().compare(anExecCommandUnit().build(), anExecCommandUnit().build());
+    ObjectDifferBuilder.buildDefault().compare(aScpCommandUnit().build(), aScpCommandUnit().build());
+    ObjectDifferBuilder.buildDefault().compare(new CleanupSshCommandUnit(), new CleanupSshCommandUnit());
+    ObjectDifferBuilder.buildDefault().compare(new CopyConfigCommandUnit(), new CopyConfigCommandUnit());
+    ObjectDifferBuilder.buildDefault().compare(new InitSshCommandUnit(), new InitSshCommandUnit());
   }
 }

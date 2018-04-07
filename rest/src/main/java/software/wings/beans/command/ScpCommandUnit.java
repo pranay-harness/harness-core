@@ -68,7 +68,7 @@ public class ScpCommandUnit extends SshCommandUnit {
   @SchemaIgnore
   @Override
   public boolean isArtifactNeeded() {
-    return fileCategory.equals(ARTIFACTS);
+    return fileCategory != null && fileCategory.equals(ARTIFACTS);
   }
 
   /**
