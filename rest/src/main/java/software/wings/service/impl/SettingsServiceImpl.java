@@ -44,6 +44,7 @@ import software.wings.beans.InfrastructureMapping;
 import software.wings.beans.SettingAttribute;
 import software.wings.beans.SettingAttribute.Category;
 import software.wings.beans.User;
+import software.wings.beans.ValidationResult;
 import software.wings.beans.artifact.ArtifactStream;
 import software.wings.beans.yaml.Change.ChangeType;
 import software.wings.dl.PageRequest;
@@ -215,6 +216,29 @@ public class SettingsServiceImpl implements SettingsService {
   @Override
   public SettingAttribute save(SettingAttribute settingAttribute) {
     return save(settingAttribute, true);
+  }
+
+  private ValidationResult validateInternal(final SettingAttribute settingAttribute) {
+    try {
+      return new ValidationResult(settingValidationService.validate(settingAttribute), "");
+    } catch (Exception ex) {
+      return new ValidationResult(false, ex.getMessage());
+    }
+  }
+
+  @Override
+  public ValidationResult validate(final SettingAttribute settingAttribute) {
+    return validateInternal(settingAttribute);
+  }
+
+  @Override
+  public ValidationResult validate(final String varId) {
+    final SettingAttribute settingAttribute = get(varId);
+    if (settingAttribute != null) {
+      return validateInternal(settingAttribute);
+    } else {
+      return new ValidationResult(false, String.format("Setting Attribute with id: %s does not exist.", varId));
+    }
   }
 
   @Override
