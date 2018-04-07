@@ -221,6 +221,8 @@ public class DockerRegistryServiceImpl implements DockerRegistryService {
   private boolean isSuccessful(Response<?> response) throws IOException {
     int code = response.code();
     switch (code) {
+      case 200:
+        return true;
       case 404:
       case 400:
         return false;
