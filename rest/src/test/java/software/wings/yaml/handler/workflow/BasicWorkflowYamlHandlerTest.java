@@ -1,5 +1,6 @@
 package software.wings.yaml.handler.workflow;
 
+import static java.util.Arrays.asList;
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertNotNull;
 import static org.junit.Assert.assertNull;
@@ -18,7 +19,6 @@ import software.wings.service.impl.yaml.handler.workflow.BasicWorkflowYamlHandle
 import software.wings.yaml.workflow.BasicWorkflowYaml;
 
 import java.io.IOException;
-import java.util.Arrays;
 
 /**
  * @author rktummala on 1/9/18
@@ -249,7 +249,7 @@ public class BasicWorkflowYamlHandlerTest extends BaseWorkflowYamlHandlerTest {
     BasicWorkflowYaml yamlObject = (BasicWorkflowYaml) getYaml(yamlString, BasicWorkflowYaml.class, false);
     changeContext.setYaml(yamlObject);
 
-    Workflow workflow = yamlHandler.upsertFromYaml(changeContext, Arrays.asList(changeContext));
+    Workflow workflow = yamlHandler.upsertFromYaml(changeContext, asList(changeContext));
     assertNotNull(workflow);
     assertEquals(workflow.getName(), workflowName);
 

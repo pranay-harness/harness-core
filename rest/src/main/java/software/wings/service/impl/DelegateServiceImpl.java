@@ -6,6 +6,7 @@ import static io.harness.data.structure.EmptyPredicate.isNotEmpty;
 import static io.harness.data.structure.UUIDGenerator.generateUuid;
 import static io.harness.threading.Morpheus.sleep;
 import static java.time.Duration.ofSeconds;
+import static java.util.Arrays.asList;
 import static java.util.stream.Collectors.toList;
 import static org.apache.commons.lang3.StringUtils.isNotBlank;
 import static org.apache.commons.lang3.StringUtils.substringAfter;
@@ -104,7 +105,6 @@ import java.io.OutputStreamWriter;
 import java.io.StringWriter;
 import java.time.Clock;
 import java.util.ArrayList;
-import java.util.Arrays;
 import java.util.HashSet;
 import java.util.Iterator;
 import java.util.List;
@@ -1106,6 +1106,6 @@ public class DelegateServiceImpl implements DelegateService {
                 English.plural("hostname", alertsToBeCreated.size()), "COUNT",
                 Integer.toString(alertsToBeCreated.size())))
             .build(),
-        Arrays.asList(notificationRule));
+        asList(notificationRule));
   }
 }

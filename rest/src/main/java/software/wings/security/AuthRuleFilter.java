@@ -3,6 +3,7 @@ package software.wings.security;
 import static com.google.common.collect.ImmutableList.copyOf;
 import static io.harness.data.structure.EmptyPredicate.isEmpty;
 import static io.harness.data.structure.EmptyPredicate.isNotEmpty;
+import static java.util.Arrays.asList;
 import static java.util.stream.Collectors.toList;
 import static javax.ws.rs.HttpMethod.OPTIONS;
 import static javax.ws.rs.Priorities.AUTHORIZATION;
@@ -51,7 +52,6 @@ import software.wings.service.intfc.UserService;
 
 import java.lang.reflect.Method;
 import java.util.ArrayList;
-import java.util.Arrays;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
@@ -610,13 +610,13 @@ public class AuthRuleFilter implements ContainerRequestFilter {
     Method resourceMethod = resourceInfo.getResourceMethod();
     Scope methodAnnotations = resourceMethod.getAnnotation(Scope.class);
     if (null != methodAnnotations) {
-      methodResourceTypes = Arrays.asList(methodAnnotations.value());
+      methodResourceTypes = asList(methodAnnotations.value());
     }
 
     Class<?> resourceClass = resourceInfo.getResourceClass();
     Scope classAnnotations = resourceClass.getAnnotation(Scope.class);
     if (null != classAnnotations) {
-      classResourceTypes = Arrays.asList(classAnnotations.value());
+      classResourceTypes = asList(classAnnotations.value());
     }
 
     if (methodResourceTypes.isEmpty()) {

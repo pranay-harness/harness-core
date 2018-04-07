@@ -2,6 +2,7 @@ package software.wings.resources;
 
 import static io.harness.data.structure.EmptyPredicate.isEmpty;
 import static io.harness.data.structure.EmptyPredicate.isNotEmpty;
+import static java.util.Arrays.asList;
 import static java.util.stream.Collectors.toList;
 import static org.apache.commons.lang3.StringUtils.isNotBlank;
 import static software.wings.dl.PageRequest.PageRequestBuilder.aPageRequest;
@@ -41,7 +42,6 @@ import software.wings.service.intfc.WorkflowExecutionService;
 import software.wings.sm.ExecutionInterrupt;
 import software.wings.sm.StateExecutionData;
 
-import java.util.Arrays;
 import java.util.List;
 import java.util.Set;
 import javax.ws.rs.BeanParam;
@@ -174,16 +174,16 @@ public class ExecutionResource {
   public RestResponse<WorkflowExecution> triggerExecution(@QueryParam("appId") String appId,
       @QueryParam("envId") String envId, @QueryParam("pipelineId") String pipelineId, ExecutionArgs executionArgs) {
     PermissionAttribute permissionAttribute = new PermissionAttribute(PermissionType.DEPLOYMENT, Action.EXECUTE);
-    List<PermissionAttribute> permissionAttributeList = Arrays.asList(permissionAttribute);
+    List<PermissionAttribute> permissionAttributeList = asList(permissionAttribute);
     if (pipelineId != null && executionArgs.getWorkflowType() == WorkflowType.PIPELINE) {
       executionArgs.setPipelineId(pipelineId);
-      authHandler.authorize(permissionAttributeList, Arrays.asList(appId), pipelineId);
+      authHandler.authorize(permissionAttributeList, asList(appId), pipelineId);
     } else {
       if (executionArgs != null) {
         if (executionArgs.getOrchestrationId() != null) {
-          authHandler.authorize(permissionAttributeList, Arrays.asList(appId), executionArgs.getOrchestrationId());
+          authHandler.authorize(permissionAttributeList, asList(appId), executionArgs.getOrchestrationId());
         } else if (executionArgs.getPipelineId() != null) {
-          authHandler.authorize(permissionAttributeList, Arrays.asList(appId), executionArgs.getPipelineId());
+          authHandler.authorize(permissionAttributeList, asList(appId), executionArgs.getPipelineId());
         }
       }
     }

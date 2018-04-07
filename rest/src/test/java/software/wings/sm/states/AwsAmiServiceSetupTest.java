@@ -1,6 +1,7 @@
 package software.wings.sm.states;
 
 import static io.harness.data.structure.UUIDGenerator.generateUuid;
+import static java.util.Arrays.asList;
 import static java.util.Collections.singletonList;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.joor.Reflect.on;
@@ -90,7 +91,6 @@ import software.wings.sm.StateExecutionInstance;
 import software.wings.sm.WorkflowStandardParams;
 
 import java.util.ArrayList;
-import java.util.Arrays;
 import java.util.Collection;
 import java.util.Collections;
 import java.util.HashMap;
@@ -164,7 +164,7 @@ public class AwsAmiServiceSetupTest extends WingsBaseTest {
     AmiCommandUnit amiCommandUnit = new AmiCommandUnit();
     amiCommandUnit.setName("TestAMISetup");
     when(serviceResourceService.getFlattenCommandUnitList(APP_ID, SERVICE_ID, ENV_ID, Constants.AMI_SETUP_COMMAND_NAME))
-        .thenReturn(Arrays.asList(amiCommandUnit));
+        .thenReturn(asList(amiCommandUnit));
 
     ContainerDefinition containerDefinition = ContainerDefinition.builder().memory(256).cpu(1).build();
 

@@ -43,7 +43,6 @@ import software.wings.yaml.gitSync.YamlGitConfig;
 
 import java.io.ByteArrayOutputStream;
 import java.util.ArrayList;
-import java.util.Arrays;
 import java.util.List;
 import java.util.concurrent.ExecutorService;
 
@@ -210,7 +209,7 @@ public class YamlChangeSetHelper {
   }
 
   private void queueYamlChangeSet(String accountId, GitFileChange gitFileChange) {
-    queueYamlChangeSet(accountId, Arrays.asList(gitFileChange));
+    queueYamlChangeSet(accountId, asList(gitFileChange));
   }
 
   private void moveApplicationYamlChange(Application oldApp, Application newApp) {

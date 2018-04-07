@@ -1,5 +1,6 @@
 package software.wings.scheduler;
 
+import static java.util.Arrays.asList;
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertNotNull;
 import static org.mockito.Matchers.any;
@@ -22,7 +23,6 @@ import software.wings.dl.WingsPersistence;
 import software.wings.service.intfc.AlertService;
 import software.wings.service.intfc.DelegateService;
 
-import java.util.Arrays;
 import java.util.List;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.TimeUnit;
@@ -47,7 +47,7 @@ public class AlertCheckJobTest {
    */
   @Test
   public void testExecuteInternal_noAlert() throws Exception {
-    doReturn(Arrays.asList(getDelegate("host1", 2))).when(alertCheckJob).getDelegatesForAccount(ACCOUNT_ID);
+    doReturn(asList(getDelegate("host1", 2))).when(alertCheckJob).getDelegatesForAccount(ACCOUNT_ID);
     doNothing().when(alertService).closeAlert(any(), any(), any(), any());
 
     MethodUtils.invokeMethod(alertCheckJob, true, "executeInternal", ACCOUNT_ID);
@@ -60,7 +60,7 @@ public class AlertCheckJobTest {
    */
   @Test
   public void testExecuteInternal_noDelegateAlert() throws Exception {
-    doReturn(Arrays.asList(getDelegate("host1", 12), getDelegate("host2", 10)))
+    doReturn(asList(getDelegate("host1", 12), getDelegate("host2", 10)))
         .when(alertCheckJob)
         .getDelegatesForAccount(ACCOUNT_ID);
     doReturn(null).when(alertService).openAlert(any(), any(), any(), any());
@@ -81,7 +81,7 @@ public class AlertCheckJobTest {
    */
   @Test
   public void testExecuteInternal_delegatesDownAlert() throws Exception {
-    doReturn(Arrays.asList(getDelegate("host1", 2), getDelegate("host2", 10)))
+    doReturn(asList(getDelegate("host1", 2), getDelegate("host2", 10)))
         .when(alertCheckJob)
         .getDelegatesForAccount(ACCOUNT_ID);
 

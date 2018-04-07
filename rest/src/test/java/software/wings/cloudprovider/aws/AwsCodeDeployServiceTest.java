@@ -1,5 +1,6 @@
 package software.wings.cloudprovider.aws;
 
+import static java.util.Arrays.asList;
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertNotNull;
 import static org.mockito.Matchers.any;
@@ -31,7 +32,6 @@ import software.wings.beans.command.ExecutionLogCallback;
 import software.wings.cloudprovider.CodeDeployDeploymentInfo;
 import software.wings.service.impl.AwsHelperService;
 
-import java.util.Arrays;
 import java.util.Collections;
 import java.util.List;
 
@@ -118,8 +118,7 @@ public class AwsCodeDeployServiceTest extends WingsBaseTest {
     doReturn(request).when(awsHelperService).getDescribeInstancesRequestWithRunningFilter();
 
     DescribeInstancesResult result = new DescribeInstancesResult();
-    result.withReservations(
-        Arrays.asList(new Reservation().withInstances(new Instance().withPublicDnsName(PUBLIC_DNS_NAME))));
+    result.withReservations(asList(new Reservation().withInstances(new Instance().withPublicDnsName(PUBLIC_DNS_NAME))));
     doReturn(result).when(awsHelperService).describeEc2Instances(any(), any(), any(), any());
 
     instanceList =

@@ -1,5 +1,6 @@
 package software.wings.service.impl.instance;
 
+import static java.util.Arrays.asList;
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertTrue;
 import static org.mockito.Matchers.any;
@@ -78,7 +79,6 @@ import software.wings.service.intfc.SettingsService;
 import software.wings.service.intfc.instance.InstanceService;
 import software.wings.service.intfc.security.SecretManager;
 
-import java.util.Arrays;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Set;
@@ -133,7 +133,7 @@ public class AwsAmiInstanceHandlerTest extends WingsBaseTest {
         .when(infraMappingService)
         .get(anyString(), anyString());
 
-    doReturn(Arrays.asList(encryptedDataDetail)).when(secretManager).getEncryptionDetails(any(), any(), any());
+    doReturn(asList(encryptedDataDetail)).when(secretManager).getEncryptionDetails(any(), any(), any());
 
     doReturn(SettingAttribute.Builder.aSettingAttribute()
                  .withValue(AwsConfig.builder()
@@ -168,7 +168,7 @@ public class AwsAmiInstanceHandlerTest extends WingsBaseTest {
   @Test
   public void testSyncInstances_instanceSync() throws Exception {
     PageResponse<Instance> pageResponse = new PageResponse<>();
-    pageResponse.setResponse(Arrays.asList(
+    pageResponse.setResponse(asList(
         Instance.builder()
             .uuid(INSTANCE_1_ID)
             .accountId(ACCOUNT_ID)
@@ -259,7 +259,7 @@ public class AwsAmiInstanceHandlerTest extends WingsBaseTest {
     com.amazonaws.services.ec2.model.Instance ec2Instance2 = new com.amazonaws.services.ec2.model.Instance();
     ec2Instance2.setInstanceId(INSTANCE_2_ID);
 
-    doReturn(Arrays.asList(ec2Instance1, ec2Instance2))
+    doReturn(asList(ec2Instance1, ec2Instance2))
         .when(awsHelperService)
         .listAutoScalingGroupInstances(any(), any(), any(), any());
 
@@ -275,7 +275,7 @@ public class AwsAmiInstanceHandlerTest extends WingsBaseTest {
     verify(instanceService, times(2)).saveOrUpdate(captorInstance.capture());
 
     List<Instance> capturedInstances = captorInstance.getAllValues();
-    Set<String> hostNames = new HashSet<>(Arrays.asList(HOST_NAME_IP1, ""));
+    Set<String> hostNames = new HashSet<>(asList(HOST_NAME_IP1, ""));
     assertTrue(hostNames.contains(capturedInstances.get(0).getHostInstanceKey().getHostName()));
     assertTrue(hostNames.contains(capturedInstances.get(1).getHostInstanceKey().getHostName()));
   }

@@ -1,5 +1,6 @@
 package software.wings.yaml.handler.connectors.configyamlhandlers;
 
+import static java.util.Arrays.asList;
 import static org.assertj.core.api.Fail.failBecauseExceptionWasNotThrown;
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertNotNull;
@@ -29,7 +30,6 @@ import software.wings.yaml.BaseYaml;
 import software.wings.yaml.handler.BaseYamlHandlerTest;
 
 import java.io.IOException;
-import java.util.Arrays;
 
 public abstract class BaseSettingValueConfigYamlHandlerTest extends BaseYamlHandlerTest {
   @InjectMocks @Inject protected SecretManager secretManager;
@@ -94,7 +94,7 @@ public abstract class BaseSettingValueConfigYamlHandlerTest extends BaseYamlHand
     // 3. call upsert() using this yamlContent
     ChangeContext changeContext =
         getChangeContext(yamlContent, yamlFilePath, settingValueYamlConfig.getYamlClass(), yamlHandler);
-    SettingAttribute settingAttributeFromYaml = yamlHandler.upsertFromYaml(changeContext, Arrays.asList(changeContext));
+    SettingAttribute settingAttributeFromYaml = yamlHandler.upsertFromYaml(changeContext, asList(changeContext));
     verify(settingAttributeSaved, settingAttributeFromYaml);
 
     // 4. delete  record using yaml
@@ -116,7 +116,7 @@ public abstract class BaseSettingValueConfigYamlHandlerTest extends BaseYamlHand
     ChangeContext changeContext =
         getChangeContext(yamlContent, invalidYamlPath, settingValueYamlConfig.getYamlClass(), yamlHandler);
     try {
-      yamlHandler.upsertFromYaml(changeContext, Arrays.asList(changeContext));
+      yamlHandler.upsertFromYaml(changeContext, asList(changeContext));
       failBecauseExceptionWasNotThrown(WingsException.class);
     } catch (WingsException ex) {
       // Do nothing
@@ -126,7 +126,7 @@ public abstract class BaseSettingValueConfigYamlHandlerTest extends BaseYamlHand
     try {
       changeContext = getChangeContext(settingValueYamlConfig.getInvalidYamlContent(), yamlFilePath,
           settingValueYamlConfig.getYamlClass(), yamlHandler);
-      yamlHandler.upsertFromYaml(changeContext, Arrays.asList(changeContext));
+      yamlHandler.upsertFromYaml(changeContext, asList(changeContext));
       failBecauseExceptionWasNotThrown(UnrecognizedPropertyException.class);
     } catch (UnrecognizedPropertyException ex) {
       // Do nothing

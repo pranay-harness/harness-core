@@ -1,5 +1,6 @@
 package software.wings.service.impl.instance;
 
+import static java.util.Arrays.asList;
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertFalse;
 import static org.junit.Assert.assertNotNull;
@@ -60,7 +61,6 @@ import software.wings.sm.PhaseExecutionSummary;
 import software.wings.sm.StateExecutionData;
 import software.wings.sm.WorkflowStandardParams;
 
-import java.util.Arrays;
 import java.util.Collections;
 import java.util.List;
 import java.util.Set;
@@ -120,7 +120,7 @@ public class InstanceHelperTest extends WingsBaseTest {
 
     // This mocking will be used for workflowStandardParams.getArtifactForService(phaseExecutionData.getServiceId())
     workflowStandardParams.setAppId(APP_ID);
-    workflowStandardParams.setArtifactIds(Arrays.asList("artifact_1", "artifact_2"));
+    workflowStandardParams.setArtifactIds(asList("artifact_1", "artifact_2"));
     when(artifactService.get(anyString(), anyString())).thenAnswer(invocation -> {
       if (invocation.getArgumentAt(1, String.class).equals("artifact_1")) {
         return Artifact.Builder.anArtifact()
@@ -129,7 +129,7 @@ public class InstanceHelperTest extends WingsBaseTest {
             .withArtifactStreamId("artifactStream_1")
             .withArtifactSourceName("sourceName")
             .withMetadata(Collections.singletonMap("buildNo", "1.0"))
-            .withServiceIds(Arrays.asList(SERVICE_ID))
+            .withServiceIds(asList(SERVICE_ID))
             .build();
       } else {
         return Artifact.Builder.anArtifact()
@@ -138,7 +138,7 @@ public class InstanceHelperTest extends WingsBaseTest {
             .withArtifactStreamId("artifactStream_2")
             .withArtifactSourceName("sourceName")
             .withMetadata(Collections.singletonMap("buildNo", "1.0"))
-            .withServiceIds(Arrays.asList("service_2"))
+            .withServiceIds(asList("service_2"))
             .build();
       }
     });
@@ -297,8 +297,8 @@ public class InstanceHelperTest extends WingsBaseTest {
     DeploymentInfo deploymentInfo = event.getDeploymentInfo();
     assertTrue(deploymentInfo instanceof AwsAutoScalingGroupDeploymentInfo);
     assertDeploymentInfoObject(deploymentInfo);
-    assertEquals(Arrays.asList("asgNew", "asgOld"),
-        ((AwsAutoScalingGroupDeploymentInfo) deploymentInfo).getAutoScalingGroupNameList());
+    assertEquals(
+        asList("asgNew", "asgOld"), ((AwsAutoScalingGroupDeploymentInfo) deploymentInfo).getAutoScalingGroupNameList());
   }
 
   @Test

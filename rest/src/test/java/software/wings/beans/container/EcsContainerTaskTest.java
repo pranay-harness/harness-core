@@ -1,12 +1,11 @@
 package software.wings.beans.container;
 
+import static java.util.Arrays.asList;
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertNotNull;
 
 import com.amazonaws.services.ecs.model.TaskDefinition;
 import org.junit.Test;
-
-import java.util.Arrays;
 
 public class EcsContainerTaskTest {
   public static final String CONTAINER_NAME = "containerName";
@@ -22,11 +21,11 @@ public class EcsContainerTaskTest {
         ContainerDefinition.builder()
             .cpu(256)
             .memory(1024)
-            .portMappings(Arrays.asList(portMapping))
+            .portMappings(asList(portMapping))
             .logConfiguration(LogConfiguration.builder().logDriver("awslog").build())
             .build();
 
-    ecsContainerTask.setContainerDefinitions(Arrays.asList(containerDefinition));
+    ecsContainerTask.setContainerDefinitions(asList(containerDefinition));
 
     TaskDefinition taskDefinition = ecsContainerTask.createTaskDefinition(CONTAINER_NAME, IMAGE_NAME, EXEC_ROLE);
 
@@ -66,11 +65,11 @@ public class EcsContainerTaskTest {
     assertEquals(80, containerDefinitionAws.getPortMappings().iterator().next().getContainerPort().intValue());
 
     containerDefinition = ContainerDefinition.builder()
-                              .portMappings(Arrays.asList(portMapping))
+                              .portMappings(asList(portMapping))
                               .logConfiguration(LogConfiguration.builder().logDriver("awslog").build())
                               .build();
 
-    ecsContainerTask.setContainerDefinitions(Arrays.asList(containerDefinition));
+    ecsContainerTask.setContainerDefinitions(asList(containerDefinition));
     taskDefinition = ecsContainerTask.createTaskDefinition(CONTAINER_NAME, IMAGE_NAME, EXEC_ROLE);
     assertNotNull(taskDefinition);
   }

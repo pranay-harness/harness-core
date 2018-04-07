@@ -3,6 +3,7 @@ package software.wings.integration;
 import static com.fasterxml.jackson.databind.DeserializationFeature.FAIL_ON_UNKNOWN_PROPERTIES;
 import static io.harness.network.Localhost.getLocalHostName;
 import static java.lang.String.format;
+import static java.util.Arrays.asList;
 import static javax.ws.rs.client.Entity.entity;
 import static javax.ws.rs.core.MediaType.APPLICATION_JSON;
 import static org.apache.commons.codec.binary.Base64.encodeBase64String;
@@ -348,12 +349,12 @@ public abstract class BaseIntegrationTest extends WingsBaseTest {
                                              .build();
     PageResponse<UserGroup> pageResponse = userGroupService.list(accountId, pageRequest);
     UserGroup userGroup = pageResponse.get(0);
-    userGroup.setMembers(Arrays.asList(user));
+    userGroup.setMembers(asList(user));
     userGroupService.updateMembers(userGroup);
   }
 
   private void addUserToUserGroup(User user, UserGroup userGroup) {
-    userGroup.setMembers(Arrays.asList(user));
+    userGroup.setMembers(asList(user));
     userGroupService.updateMembers(userGroup);
   }
 

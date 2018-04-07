@@ -67,7 +67,6 @@ import software.wings.yaml.handler.BaseYamlHandlerTest;
 
 import java.io.IOException;
 import java.lang.reflect.InvocationTargetException;
-import java.util.Arrays;
 
 public class EcsInfraMappingYamlHandlerTest extends BaseYamlHandlerTest {
   @Mock protected SettingsService settingsService;
@@ -236,7 +235,7 @@ public class EcsInfraMappingYamlHandlerTest extends BaseYamlHandlerTest {
     Yaml yamlObject = (Yaml) getYaml(validYamlContent, Yaml.class, false);
     changeContext.setYaml(yamlObject);
 
-    EcsInfrastructureMapping ecsInfraMapping = yamlHandler.upsertFromYaml(changeContext, Arrays.asList(changeContext));
+    EcsInfrastructureMapping ecsInfraMapping = yamlHandler.upsertFromYaml(changeContext, asList(changeContext));
     assertNotNull(ecsInfraMapping);
     assertEquals(ecsInfraMapping.getName(), infraMappingName);
 
@@ -270,7 +269,7 @@ public class EcsInfraMappingYamlHandlerTest extends BaseYamlHandlerTest {
       yamlObject = (Yaml) getYaml(invalidYamlContent, Yaml.class, false);
       changeContext.setYaml(yamlObject);
 
-      yamlHandler.upsertFromYaml(changeContext, Arrays.asList(changeContext));
+      yamlHandler.upsertFromYaml(changeContext, asList(changeContext));
       failBecauseExceptionWasNotThrown(UnrecognizedPropertyException.class);
     } catch (UnrecognizedPropertyException ex) {
       // Do nothing

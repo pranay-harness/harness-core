@@ -1,5 +1,6 @@
 package software.wings.yaml.handler;
 
+import static java.util.Arrays.asList;
 import static org.assertj.core.api.Fail.failBecauseExceptionWasNotThrown;
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertNotNull;
@@ -33,7 +34,6 @@ import software.wings.service.intfc.EnvironmentService;
 import software.wings.service.intfc.ServiceVariableService;
 
 import java.io.IOException;
-import java.util.Arrays;
 
 /**
  * @author rktummala on 1/9/18
@@ -87,7 +87,7 @@ public class EnvironmentYamlHandlerTest extends BaseYamlHandlerTest {
     Yaml yamlObject = (Yaml) getYaml(validYamlContent, Yaml.class, false);
     changeContext.setYaml(yamlObject);
 
-    Environment savedEnv = yamlHandler.upsertFromYaml(changeContext, Arrays.asList(changeContext));
+    Environment savedEnv = yamlHandler.upsertFromYaml(changeContext, asList(changeContext));
     compareEnv(environment, savedEnv);
 
     Yaml yaml = yamlHandler.toYaml(this.environment, APP_ID);
@@ -125,7 +125,7 @@ public class EnvironmentYamlHandlerTest extends BaseYamlHandlerTest {
     changeContext.setYaml(yamlObject);
 
     try {
-      yamlHandler.upsertFromYaml(changeContext, Arrays.asList(changeContext));
+      yamlHandler.upsertFromYaml(changeContext, asList(changeContext));
       failBecauseExceptionWasNotThrown(WingsException.class);
     } catch (WingsException ex) {
       // do nothing
@@ -139,7 +139,7 @@ public class EnvironmentYamlHandlerTest extends BaseYamlHandlerTest {
       yamlObject = (Yaml) getYaml(invalidYamlContent, Yaml.class, false);
       changeContext.setYaml(yamlObject);
 
-      yamlHandler.upsertFromYaml(changeContext, Arrays.asList(changeContext));
+      yamlHandler.upsertFromYaml(changeContext, asList(changeContext));
       failBecauseExceptionWasNotThrown(UnrecognizedPropertyException.class);
     } catch (UnrecognizedPropertyException ex) {
       // Do nothing
