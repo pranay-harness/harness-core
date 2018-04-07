@@ -49,10 +49,12 @@ public interface ServiceResourceService extends OwnedByApplication {
    * Save service.
    *
    * @param service  the service
-   * @param pushToYaml flag indicating if the entity needs to be pushed to yaml
+   * @param createdFromYaml flag indicating if the entity is created from yaml
+   * @param createDefaultCommands flag indicating if the default commands needs to be created
    * @return the service
    */
-  @ValidationGroups(Create.class) Service save(@Valid Service service, boolean pushToYaml);
+  @ValidationGroups(Create.class)
+  Service save(@Valid Service service, boolean createdFromYaml, boolean createDefaultCommands);
 
   /**
    * Clone service.

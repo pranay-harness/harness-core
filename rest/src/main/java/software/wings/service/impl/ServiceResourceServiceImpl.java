@@ -228,15 +228,18 @@ public class ServiceResourceServiceImpl implements ServiceResourceService, DataP
    */
   @Override
   public Service save(Service service) {
-    return save(service, true);
+    return save(service, false, true);
   }
 
   @Override
-  public Service save(Service service, boolean pushToYaml) {
+  public Service save(Service service, boolean createdFromYaml, boolean createDefaultCommands) {
     service.setKeywords(getKeywords(service));
     Service savedService =
         Validator.duplicateCheck(() -> wingsPersistence.saveAndGet(Service.class, service), "name", service.getName());
-    savedService = addDefaultCommands(savedService, pushToYaml);
+    if (createDefaultCommands) {
+      savedService = addDefaultCommands(savedService, !createdFromYaml);
+    }
+
     serviceTemplateService.createDefaultTemplatesByService(savedService);
     notificationService.sendNotificationAsync(
         anInformationNotification()
@@ -246,7 +249,7 @@ public class ServiceResourceServiceImpl implements ServiceResourceService, DataP
                 ImmutableMap.of("ENTITY_TYPE", "Service", "ENTITY_NAME", savedService.getName()))
             .build());
 
-    if (pushToYaml) {
+    if (!createdFromYaml) {
       yamlChangeSetHelper.serviceYamlChangeAsync(savedService, ChangeType.ADD);
     }
 
@@ -272,14 +275,14 @@ public class ServiceResourceServiceImpl implements ServiceResourceService, DataP
     Service clonedService = originalService.clone();
     clonedService.setName(service.getName());
     clonedService.setDescription(service.getDescription());
-
     clonedService.setKeywords(getKeywords(clonedService));
     Service savedCloneService = Validator.duplicateCheck(
         () -> wingsPersistence.saveAndGet(Service.class, clonedService), "name", service.getName());
 
+    boolean shouldPushToYaml = !hasInternalCommands(originalService);
     originalService.getServiceCommands().forEach(serviceCommand -> {
       ServiceCommand clonedServiceCommand = serviceCommand.clone();
-      addCommand(savedCloneService.getAppId(), savedCloneService.getUuid(), clonedServiceCommand, true);
+      addCommand(savedCloneService.getAppId(), savedCloneService.getUuid(), clonedServiceCommand, shouldPushToYaml);
     });
 
     List<ServiceTemplate> serviceTemplates =
@@ -398,9 +401,8 @@ public class ServiceResourceServiceImpl implements ServiceResourceService, DataP
       commands = artifactType.getDefaultCommands();
     }
 
-    // This makes sure we only push commands to git when the service is not created from yaml and if the artifact type
-    // has commands that could be edited. For services like docker, the commands are internal. For War, user could
-    // configure it.
+    // Default Commands are pushed to yaml only if it matches both the conditions
+    // 1) pushToYaml is true 2) commands are not internal. (Check hasInternalCommands()).
     boolean shouldPushCommandsToYaml = pushToYaml && !hasInternalCommands(service);
 
     Service serviceToReturn = service;
