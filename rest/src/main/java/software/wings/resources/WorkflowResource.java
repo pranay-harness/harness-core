@@ -6,6 +6,7 @@ package software.wings.resources;
 
 import static io.harness.data.structure.EmptyPredicate.isEmpty;
 import static software.wings.beans.ErrorCode.DUPLICATE_STATE_NAMES;
+import static software.wings.beans.ErrorCode.INVALID_ARGUMENT;
 import static software.wings.security.PermissionAttribute.Action.UPDATE;
 import static software.wings.security.PermissionAttribute.PermissionType.LOGGED_IN;
 import static software.wings.security.PermissionAttribute.PermissionType.WORKFLOW;
@@ -323,6 +324,7 @@ public class WorkflowResource {
     } catch (WingsException exception) {
       // When the workflow update is coming from the user there is no harness engineer wrong doing to alerted for
       exception.excludeReportTarget(DUPLICATE_STATE_NAMES, ReportTarget.HARNESS_ENGINEER);
+      exception.excludeReportTarget(INVALID_ARGUMENT, ReportTarget.HARNESS_ENGINEER);
       throw exception;
     }
   }

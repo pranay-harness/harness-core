@@ -57,6 +57,7 @@ import static software.wings.common.Constants.ENTITY_TYPE;
 import static software.wings.common.Constants.WORKFLOW_INFRAMAPPING_VALIDATION_MESSAGE;
 import static software.wings.dl.MongoHelper.setUnset;
 import static software.wings.dl.PageRequest.PageRequestBuilder.aPageRequest;
+import static software.wings.exception.HintException.MOVE_TO_THE_PARENT_OBJECT;
 import static software.wings.exception.WingsException.ReportTarget.USER;
 import static software.wings.sm.StateMachineExecutionSimulator.populateRequiredEntityTypesByAccessType;
 import static software.wings.sm.StateType.ARTIFACT_COLLECTION;
@@ -116,6 +117,7 @@ import software.wings.beans.GraphNode.GraphNodeBuilder;
 import software.wings.beans.HostConnectionAttributes;
 import software.wings.beans.InfrastructureMapping;
 import software.wings.beans.MultiServiceOrchestrationWorkflow;
+import software.wings.beans.NameValuePair;
 import software.wings.beans.NotificationGroup;
 import software.wings.beans.NotificationRule;
 import software.wings.beans.OrchestrationWorkflow;
@@ -147,6 +149,8 @@ import software.wings.common.Constants;
 import software.wings.dl.PageRequest;
 import software.wings.dl.PageResponse;
 import software.wings.dl.WingsPersistence;
+import software.wings.exception.ExplanationException;
+import software.wings.exception.InvalidArgumentsException;
 import software.wings.exception.WingsException;
 import software.wings.expression.ExpressionEvaluator;
 import software.wings.scheduler.PruneEntityJob;
@@ -1715,11 +1719,24 @@ public class WorkflowServiceImpl implements WorkflowService, DataProvider {
   @Override
   public WorkflowPhase updateWorkflowPhase(String appId, String workflowId, WorkflowPhase workflowPhase) {
     Workflow workflow = readWorkflow(appId, workflowId);
-    notNullCheck("workflow", workflow);
+    if (workflow == null) {
+      throw new InvalidArgumentsException(new ExplanationException("This might be caused from someone else deleted "
+                                                  + "the application and/or the workflow while you worked on it.",
+                                              MOVE_TO_THE_PARENT_OBJECT),
+          NameValuePair.builder().name("application").value(appId).build(),
+          NameValuePair.builder().name("workflow").value(workflowId).build());
+    }
     CanaryOrchestrationWorkflow orchestrationWorkflow =
         (CanaryOrchestrationWorkflow) workflow.getOrchestrationWorkflow();
     notNullCheck("orchestrationWorkflow", orchestrationWorkflow);
-    notNullCheck("WorkflowPhase", orchestrationWorkflow.getWorkflowPhaseIdMap().get(workflowPhase.getUuid()));
+
+    if (orchestrationWorkflow.getWorkflowPhaseIdMap().get(workflowPhase.getUuid()) == null) {
+      throw new InvalidArgumentsException(new ExplanationException("This might be caused from someone else modified "
+                                                  + "the workflow resulting in removing the phase that you worked on.",
+                                              MOVE_TO_THE_PARENT_OBJECT),
+          NameValuePair.builder().name("workflow").value(workflowId).build(),
+          NameValuePair.builder().name("workflowPhase").value(appId).build());
+    }
 
     String serviceId = workflowPhase.getServiceId();
     String infraMappingId = workflowPhase.getInfraMappingId();

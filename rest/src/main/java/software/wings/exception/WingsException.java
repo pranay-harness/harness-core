@@ -113,24 +113,15 @@ public class WingsException extends WingsApiException {
     this.params = params;
   }
 
-  /**
-   * Instantiates a new wings exception.
-   *
-   * @param responseMessage     the message
-   */
   public WingsException(@NotNull ResponseMessage responseMessage) {
     this(responseMessage, null);
   }
 
-  /**
-   * Instantiates a new wings exception.
-   *
-   * @param responseMessage     the message
-   */
   public WingsException(@NotNull ResponseMessage responseMessage, Throwable cause) {
     super(
         responseMessage.getMessage() == null ? responseMessage.getCode().name() : responseMessage.getMessage(), cause);
     this.responseMessage = responseMessage;
+    this.reportTargets = reportTargets;
   }
 
   public List<ResponseMessage> getResponseMessageList(ReportTarget reportTarget) {
