@@ -61,7 +61,7 @@ public interface ServiceTemplateService extends OwnedByEnvironment, OwnedByServi
 
   String computeConfigMapYaml(String appId, String envId, String templateId);
 
-  List<String> computeHelmValueYaml(String appId, String envId, String templateId);
+  List<String> helmValueOverridesYamlFiles(String appId, String templateId);
 
   /**
    * Override config files.
@@ -117,7 +117,7 @@ public interface ServiceTemplateService extends OwnedByEnvironment, OwnedByServi
    *
    * @param appId             the app id
    * @param serviceId         the service id
-   * @param envId             the environment id
+   * @param environmentId             the environment id
    * @return the service template
    */
   ServiceTemplate get(@NotEmpty String appId, @NotEmpty String serviceId, @NotEmpty String environmentId);

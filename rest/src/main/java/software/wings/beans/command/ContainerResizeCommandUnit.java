@@ -47,8 +47,8 @@ public abstract class ContainerResizeCommandUnit extends AbstractCommandUnit {
 
   @Override
   public CommandExecutionStatus execute(CommandExecutionContext context) {
-    ExecutionLogCallback executionLogCallback = new ExecutionLogCallback(context, getName());
-    executionLogCallback.setLogService(logService);
+    ExecutionLogCallback executionLogCallback = new ExecutionLogCallback(
+        logService, context.getAccountId(), context.getAppId(), context.getActivityId(), getName());
     ResizeCommandUnitExecutionDataBuilder executionDataBuilder = ResizeCommandUnitExecutionData.builder();
     CommandExecutionStatus status = CommandExecutionStatus.FAILURE;
 

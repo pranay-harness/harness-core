@@ -30,6 +30,8 @@ import software.wings.api.ContainerRollbackRequestElement;
 import software.wings.api.ContainerServiceData;
 import software.wings.api.ContainerServiceElement;
 import software.wings.api.DeploymentType;
+import software.wings.api.HelmDeployContextElement;
+import software.wings.api.HelmSetupExecutionSummary;
 import software.wings.api.InstanceElementListParam;
 import software.wings.api.PhaseElement;
 import software.wings.api.PhaseExecutionData;
@@ -215,6 +217,19 @@ public class PhaseStepSubWorkflow extends SubWorkflowState {
                                  .previousActiveAutoscalers(commandStepExecutionSummary.getPreviousActiveAutoscalers())
                                  .build());
       }
+      case HELM_DEPLOY:
+        Optional<StepExecutionSummary> first = phaseStepExecutionSummary.getStepExecutionSummaryList()
+                                                   .stream()
+                                                   .filter(s -> s instanceof HelmSetupExecutionSummary)
+                                                   .findFirst();
+        if (!first.isPresent()) {
+          return null;
+        }
+        HelmSetupExecutionSummary helmSetpExecutionSummary = (HelmSetupExecutionSummary) first.get();
+        return asList(HelmDeployContextElement.builder()
+                          .releaseName(helmSetpExecutionSummary.getReleaseName())
+                          .previousReleaseRevision(helmSetpExecutionSummary.getOldVersion())
+                          .build());
       default:
         unhandled(phaseStepType);
     }
@@ -290,6 +305,7 @@ public class PhaseStepSubWorkflow extends SubWorkflowState {
       case COLLECT_ARTIFACT:
       case AMI_AUTOSCALING_GROUP_SETUP:
       case AMI_DEPLOY_AUTOSCALING_GROUP:
+      case HELM_DEPLOY:
         noop();
         break;
 
@@ -387,6 +403,10 @@ public class PhaseStepSubWorkflow extends SubWorkflowState {
           executionResponse.setContextElements(Lists.newArrayList(amiServiceElement));
           executionResponse.setNotifyElements(Lists.newArrayList(amiServiceElement));
         } else if (phaseStepType == PhaseStepType.AMI_DEPLOY_AUTOSCALING_GROUP) {
+          InstanceElementListParam instanceElementListParam = (InstanceElementListParam) notifiedElement(
+              elementNotifyResponseData, InstanceElementListParam.class, "Missing InstanceElementListParam Element");
+          executionResponse.setContextElements(Lists.newArrayList(instanceElementListParam));
+        } else if (phaseStepType == PhaseStepType.HELM_DEPLOY) {
           InstanceElementListParam instanceElementListParam = (InstanceElementListParam) notifiedElement(
               elementNotifyResponseData, InstanceElementListParam.class, "Missing InstanceElementListParam Element");
           executionResponse.setContextElements(Lists.newArrayList(instanceElementListParam));

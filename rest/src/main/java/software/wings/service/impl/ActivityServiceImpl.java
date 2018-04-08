@@ -5,7 +5,6 @@ import static org.mongodb.morphia.mapping.Mapper.ID_KEY;
 import static software.wings.beans.ErrorCode.INVALID_ARGUMENT;
 import static software.wings.beans.Event.Builder.anEvent;
 import static software.wings.exception.WingsException.ReportTarget.USER_ADMIN;
-import static software.wings.sm.states.JenkinsState.COMMAND_UNIT_NAME;
 
 import com.google.inject.Inject;
 import com.google.inject.Singleton;
@@ -25,7 +24,6 @@ import software.wings.beans.command.Command;
 import software.wings.beans.command.CommandExecutionResult.CommandExecutionStatus;
 import software.wings.beans.command.CommandUnit;
 import software.wings.beans.command.CommandUnitDetails;
-import software.wings.beans.command.CommandUnitDetails.CommandUnitType;
 import software.wings.dl.PageRequest;
 import software.wings.dl.PageResponse;
 import software.wings.dl.WingsPersistence;
@@ -112,25 +110,30 @@ public class ActivityServiceImpl implements ActivityService {
   public List<CommandUnitDetails> getCommandUnits(String appId, String activityId) {
     Activity activity = get(activityId, appId);
     List<CommandUnitDetails> rv = new ArrayList<>();
-    if (activity.getCommandUnitType() == null || activity.getCommandUnitType() == CommandUnitType.COMMAND) {
-      List<CommandUnit> commandUnits = activity.getCommandUnits();
-      for (CommandUnit commandUnit : commandUnits) {
-        rv.add(CommandUnitDetails.builder()
-                   .commandExecutionStatus(commandUnit.getCommandExecutionStatus())
-                   .name(commandUnit.getName())
-                   .commandUnitType(activity.getCommandUnitType())
-                   .build());
+    if (activity.getCommandUnitType() != null) {
+      switch (activity.getCommandUnitType()) {
+        case COMMAND:
+          List<CommandUnit> commandUnits = activity.getCommandUnits();
+          for (CommandUnit commandUnit : commandUnits) {
+            rv.add(CommandUnitDetails.builder()
+                       .commandExecutionStatus(commandUnit.getCommandExecutionStatus())
+                       .name(commandUnit.getName())
+                       .commandUnitType(activity.getCommandUnitType())
+                       .build());
+          }
+          break;
+        case JENKINS:
+        case HELM:
+          rv.add(CommandUnitDetails.builder()
+                     .commandExecutionStatus(CommandExecutionStatus.translateExecutionStatus(activity.getStatus()))
+                     .name(activity.getCommandUnitType().getName())
+                     .commandUnitType(activity.getCommandUnitType())
+                     .build());
+          break;
+        default:
+          throw new IllegalStateException("Invalid command type: " + activity.getCommandUnitType());
       }
-    } else if (activity.getCommandUnitType() == CommandUnitType.JENKINS) {
-      rv.add(CommandUnitDetails.builder()
-                 .commandExecutionStatus(CommandExecutionStatus.translateExecutionStatus(activity.getStatus()))
-                 .name(COMMAND_UNIT_NAME)
-                 .commandUnitType(CommandUnitType.JENKINS)
-                 .build());
-    } else {
-      throw new IllegalStateException("Invalid command type: " + activity.getCommandUnitType());
     }
-
     return rv;
   }
 

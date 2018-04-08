@@ -12,6 +12,7 @@ import static software.wings.api.DeploymentType.AMI;
 import static software.wings.api.DeploymentType.AWS_CODEDEPLOY;
 import static software.wings.api.DeploymentType.AWS_LAMBDA;
 import static software.wings.api.DeploymentType.ECS;
+import static software.wings.api.DeploymentType.HELM;
 import static software.wings.api.DeploymentType.KUBERNETES;
 import static software.wings.api.DeploymentType.SSH;
 import static software.wings.api.DeploymentType.WINRM;
@@ -60,6 +61,7 @@ import software.wings.beans.DirectKubernetesInfrastructureMapping;
 import software.wings.beans.EcsInfrastructureMapping;
 import software.wings.beans.Environment;
 import software.wings.beans.ErrorCode;
+import software.wings.beans.FeatureName;
 import software.wings.beans.GcpKubernetesInfrastructureMapping;
 import software.wings.beans.HostValidationRequest;
 import software.wings.beans.HostValidationResponse;
@@ -276,7 +278,7 @@ public class InfrastructureMappingServiceImpl implements InfrastructureMappingSe
 
   /**
    * This method gets the default name, checks if another entry exists with the same name, if exists, it parses and
-   * extracts the revision and creates a name with the next revision.
+   * extracts the chartVersion and creates a name with the next chartVersion.
    *
    * @param infraMapping
    */
@@ -1341,8 +1343,6 @@ public class InfrastructureMappingServiceImpl implements InfrastructureMappingSe
 
   @Override
   public Map<DeploymentType, List<SettingVariableTypes>> listInfraTypes(String appId, String envId, String serviceId) {
-    // TODO:: use serviceId and envId to narrow down list ??
-
     Service service = serviceResourceService.get(appId, serviceId);
     ArtifactType artifactType = service.getArtifactType();
     Map<DeploymentType, List<SettingVariableTypes>> infraTypes = new HashMap<>();
@@ -1354,9 +1354,18 @@ public class InfrastructureMappingServiceImpl implements InfrastructureMappingSe
         infraTypes.put(KUBERNETES,
             asList(SettingVariableTypes.GCP, SettingVariableTypes.AZURE, SettingVariableTypes.DIRECT,
                 SettingVariableTypes.KUBERNETES_CLUSTER));
+        if (featureFlagService.isEnabled(FeatureName.HELM, accountId)) {
+          infraTypes.put(HELM,
+              asList(SettingVariableTypes.GCP, SettingVariableTypes.AZURE, SettingVariableTypes.DIRECT,
+                  SettingVariableTypes.KUBERNETES_CLUSTER));
+        }
       } else {
         infraTypes.put(KUBERNETES,
             asList(SettingVariableTypes.GCP, SettingVariableTypes.DIRECT, SettingVariableTypes.KUBERNETES_CLUSTER));
+        if (featureFlagService.isEnabled(FeatureName.HELM, accountId)) {
+          infraTypes.put(HELM,
+              asList(SettingVariableTypes.GCP, SettingVariableTypes.DIRECT, SettingVariableTypes.KUBERNETES_CLUSTER));
+        }
       }
     } else if (artifactType == ArtifactType.AWS_CODEDEPLOY) {
       infraTypes.put(AWS_CODEDEPLOY, asList(SettingVariableTypes.AWS));

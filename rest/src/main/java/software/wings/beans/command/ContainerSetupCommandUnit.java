@@ -40,8 +40,9 @@ public abstract class ContainerSetupCommandUnit extends AbstractCommandUnit {
     SettingAttribute cloudProviderSetting = context.getCloudProviderSetting();
     List<EncryptedDataDetail> cloudProviderCredentials = context.getCloudProviderCredentials();
     ContainerSetupParams setupParams = context.getContainerSetupParams();
-    ExecutionLogCallback executionLogCallback = new ExecutionLogCallback(context, getName());
-    executionLogCallback.setLogService(logService);
+
+    ExecutionLogCallback executionLogCallback = new ExecutionLogCallback(
+        logService, context.getAccountId(), context.getAppId(), context.getActivityId(), getName());
 
     return executeInternal(context, cloudProviderSetting, cloudProviderCredentials, setupParams,
         context.getServiceVariables(), context.getSafeDisplayServiceVariables(), executionLogCallback);

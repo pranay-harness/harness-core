@@ -55,7 +55,6 @@ import software.wings.service.impl.EventEmitter.Channel;
 import software.wings.service.intfc.ActivityService;
 import software.wings.service.intfc.LogService;
 import software.wings.service.intfc.ServiceInstanceService;
-import software.wings.service.intfc.ServiceResourceService;
 import software.wings.sm.ExecutionStatus;
 
 import java.util.Collections;
@@ -66,8 +65,6 @@ import java.util.List;
  */
 public class ActivityServiceTest extends WingsBaseTest {
   @Inject private WingsPersistence wingsPersistence;
-
-  @Mock private ServiceResourceService serviceResourceService;
 
   @Mock private ServiceInstanceService serviceInstanceService;
   @Mock private LogService logService;

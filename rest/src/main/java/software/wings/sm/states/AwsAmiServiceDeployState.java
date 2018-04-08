@@ -351,9 +351,9 @@ public class AwsAmiServiceDeployState extends State {
 
     executionLogCallback.saveExecutionLog(
         String.format("AutoScaling Group resize operation completed with status:[%s]", executionStatus),
+        ExecutionStatus.SUCCESS.equals(executionStatus) ? LogLevel.INFO : LogLevel.ERROR,
         ExecutionStatus.SUCCESS.equals(executionStatus) ? CommandExecutionStatus.SUCCESS
-                                                        : CommandExecutionStatus.FAILURE,
-        ExecutionStatus.SUCCESS.equals(executionStatus) ? LogLevel.INFO : LogLevel.ERROR);
+                                                        : CommandExecutionStatus.FAILURE);
 
     return anExecutionResponse()
         .withStateExecutionData(awsAmiDeployStateExecutionData)

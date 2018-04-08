@@ -1,20 +1,16 @@
 package software.wings.sm.states;
 
-import static io.harness.data.structure.EmptyPredicate.isNotEmpty;
 import static java.util.Collections.singletonList;
 import static java.util.stream.Collectors.toList;
 import static org.apache.commons.lang3.StringUtils.isBlank;
 import static org.apache.commons.lang3.StringUtils.isNotBlank;
 import static software.wings.api.CommandStateExecutionData.Builder.aCommandStateExecutionData;
-import static software.wings.api.HostElement.Builder.aHostElement;
-import static software.wings.api.InstanceElement.Builder.anInstanceElement;
 import static software.wings.api.InstanceElementListParam.InstanceElementListParamBuilder.anInstanceElementListParam;
 import static software.wings.api.ServiceTemplateElement.Builder.aServiceTemplateElement;
 import static software.wings.beans.DelegateTask.Builder.aDelegateTask;
 import static software.wings.beans.SettingAttribute.Builder.aSettingAttribute;
 import static software.wings.beans.command.CommandExecutionContext.Builder.aCommandExecutionContext;
 import static software.wings.sm.ExecutionResponse.Builder.anExecutionResponse;
-import static software.wings.sm.InstanceStatusSummary.InstanceStatusSummaryBuilder.anInstanceStatusSummary;
 
 import com.google.common.base.Preconditions;
 import com.google.inject.Inject;
@@ -27,7 +23,6 @@ import software.wings.annotation.Encryptable;
 import software.wings.api.CommandStateExecutionData;
 import software.wings.api.ContainerRollbackRequestElement;
 import software.wings.api.ContainerServiceElement;
-import software.wings.api.HostElement;
 import software.wings.api.InstanceElement;
 import software.wings.api.InstanceElementListParam;
 import software.wings.api.PhaseElement;
@@ -54,8 +49,6 @@ import software.wings.beans.command.CommandExecutionResult;
 import software.wings.beans.command.CommandExecutionResult.CommandExecutionStatus;
 import software.wings.beans.command.ContainerResizeParams;
 import software.wings.beans.command.ResizeCommandUnitExecutionData;
-import software.wings.cloudprovider.ContainerInfo;
-import software.wings.cloudprovider.ContainerInfo.Status;
 import software.wings.common.Constants;
 import software.wings.exception.WingsException;
 import software.wings.security.encryption.EncryptedDataDetail;
@@ -74,6 +67,7 @@ import software.wings.sm.ExecutionStatus;
 import software.wings.sm.InstanceStatusSummary;
 import software.wings.sm.State;
 import software.wings.sm.WorkflowStandardParams;
+import software.wings.utils.ContainerDeploymentHelper;
 import software.wings.waitnotify.NotifyResponseData;
 
 import java.util.ArrayList;
@@ -278,31 +272,14 @@ public abstract class ContainerServiceDeploy extends State {
     CommandExecutionData commandExecutionData =
         ((CommandExecutionResult) response.values().iterator().next()).getCommandExecutionData();
     ResizeCommandUnitExecutionData resizeExecutionData = (ResizeCommandUnitExecutionData) commandExecutionData;
-
+    ServiceTemplateElement serviceTemplateElement = aServiceTemplateElement()
+                                                        .withUuid(serviceTemplateKey.getId().toString())
+                                                        .withServiceElement(serviceElement)
+                                                        .build();
     List<InstanceStatusSummary> instanceStatusSummaries = new ArrayList<>();
-    if (resizeExecutionData != null && isNotEmpty(resizeExecutionData.getContainerInfos())) {
-      for (ContainerInfo containerInfo : resizeExecutionData.getContainerInfos()) {
-        HostElement hostElement = aHostElement()
-                                      .withHostName(containerInfo.getHostName())
-                                      .withEc2Instance(containerInfo.getEc2Instance())
-                                      .build();
-        ServiceTemplateElement serviceTemplateElement = aServiceTemplateElement()
-                                                            .withUuid(serviceTemplateKey.getId().toString())
-                                                            .withServiceElement(serviceElement)
-                                                            .build();
-        InstanceElement instanceElement = anInstanceElement()
-                                              .withUuid(containerInfo.getContainerId())
-                                              .withDockerId(containerInfo.getContainerId())
-                                              .withHostName(containerInfo.getHostName())
-                                              .withHost(hostElement)
-                                              .withServiceTemplateElement(serviceTemplateElement)
-                                              .withDisplayName(containerInfo.getContainerId())
-                                              .build();
-        ExecutionStatus status =
-            containerInfo.getStatus() == Status.SUCCESS ? ExecutionStatus.SUCCESS : ExecutionStatus.FAILED;
-        instanceStatusSummaries.add(
-            anInstanceStatusSummary().withStatus(status).withInstanceElement(instanceElement).build());
-      }
+    if (resizeExecutionData != null) {
+      instanceStatusSummaries.addAll(ContainerDeploymentHelper.getInstanceStatusSummaryFromContainerInfoList(
+          resizeExecutionData.getContainerInfos(), serviceTemplateElement));
     }
     return instanceStatusSummaries;
   }

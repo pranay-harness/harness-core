@@ -15,6 +15,7 @@ import static software.wings.api.DeploymentType.AMI;
 import static software.wings.api.DeploymentType.AWS_CODEDEPLOY;
 import static software.wings.api.DeploymentType.AWS_LAMBDA;
 import static software.wings.api.DeploymentType.ECS;
+import static software.wings.api.DeploymentType.HELM;
 import static software.wings.api.DeploymentType.KUBERNETES;
 import static software.wings.api.DeploymentType.SSH;
 import static software.wings.beans.EntityType.ARTIFACT;
@@ -60,6 +61,7 @@ import static software.wings.dl.PageRequest.PageRequestBuilder.aPageRequest;
 import static software.wings.exception.HintException.MOVE_TO_THE_PARENT_OBJECT;
 import static software.wings.exception.WingsException.ReportTarget.USER;
 import static software.wings.sm.StateMachineExecutionSimulator.populateRequiredEntityTypesByAccessType;
+import static software.wings.sm.StateType.ARTIFACT_CHECK;
 import static software.wings.sm.StateType.ARTIFACT_COLLECTION;
 import static software.wings.sm.StateType.AWS_AMI_SERVICE_DEPLOY;
 import static software.wings.sm.StateType.AWS_AMI_SERVICE_ROLLBACK;
@@ -77,9 +79,15 @@ import static software.wings.sm.StateType.ECS_SERVICE_ROLLBACK;
 import static software.wings.sm.StateType.ECS_SERVICE_SETUP;
 import static software.wings.sm.StateType.ELASTIC_LOAD_BALANCER;
 import static software.wings.sm.StateType.GCP_CLUSTER_SETUP;
+import static software.wings.sm.StateType.HELM_DEPLOY;
+import static software.wings.sm.StateType.HELM_ROLLBACK;
 import static software.wings.sm.StateType.KUBERNETES_DEPLOY;
+import static software.wings.sm.StateType.KUBERNETES_DEPLOY_ROLLBACK;
 import static software.wings.sm.StateType.KUBERNETES_SETUP;
 import static software.wings.sm.StateType.KUBERNETES_SETUP_ROLLBACK;
+import static software.wings.sm.StateType.NEW_RELIC;
+import static software.wings.sm.StateType.PHASE;
+import static software.wings.sm.StateType.values;
 import static software.wings.utils.Validator.notNullCheck;
 
 import com.google.common.base.Joiner;
@@ -122,6 +130,7 @@ import software.wings.beans.NotificationGroup;
 import software.wings.beans.NotificationRule;
 import software.wings.beans.OrchestrationWorkflow;
 import software.wings.beans.PhaseStep;
+import software.wings.beans.PhaseStepType;
 import software.wings.beans.PhysicalInfrastructureMappingBase;
 import software.wings.beans.Pipeline;
 import software.wings.beans.RepairActionCode;
@@ -371,7 +380,7 @@ public class WorkflowServiceImpl implements WorkflowService, DataProvider {
     }
 
     List<StateTypeDescriptor> stencils = new ArrayList<StateTypeDescriptor>();
-    Arrays.stream(StateType.values()).forEach(state -> stencils.add(state));
+    Arrays.stream(values()).forEach(state -> stencils.add(state));
 
     List<StateTypeDescriptor> plugins = pluginManager.getExtensions(StateTypeDescriptor.class);
     stencils.addAll(plugins);
@@ -634,13 +643,13 @@ public class WorkflowServiceImpl implements WorkflowService, DataProvider {
     if (preDeploymentSteps.getSteps() == null) {
       preDeploymentSteps.setSteps(new ArrayList<>());
     }
-    boolean artifactCheckFound = preDeploymentSteps.getSteps().stream().anyMatch(
-        graphNode -> StateType.ARTIFACT_CHECK.name().equals(graphNode.getType()));
+    boolean artifactCheckFound =
+        preDeploymentSteps.getSteps().stream().anyMatch(graphNode -> ARTIFACT_CHECK.name().equals(graphNode.getType()));
     if (artifactCheckFound) {
       return false;
     } else {
       preDeploymentSteps.getSteps().add(
-          GraphNodeBuilder.aGraphNode().withType(StateType.ARTIFACT_CHECK.name()).withName("Artifact Check").build());
+          GraphNodeBuilder.aGraphNode().withType(ARTIFACT_CHECK.name()).withName("Artifact Check").build());
       return true;
     }
   }
@@ -696,7 +705,7 @@ public class WorkflowServiceImpl implements WorkflowService, DataProvider {
             continue;
           }
           for (GraphNode node : phaseStep.getSteps()) {
-            if (!StateType.NEW_RELIC.name().equals(node.getType())) {
+            if (!NEW_RELIC.name().equals(node.getType())) {
               continue;
             }
 
@@ -1071,8 +1080,7 @@ public class WorkflowServiceImpl implements WorkflowService, DataProvider {
       templateExpression.setMetadata(metaData);
       templateExpression.setExpression(expression);
       phaseTemplateExpressions.add(templateExpression);
-      orchestrationWorkflow.addToUserVariables(
-          phaseTemplateExpressions, StateType.PHASE.name(), workflowPhase.getName(), null);
+      orchestrationWorkflow.addToUserVariables(phaseTemplateExpressions, PHASE.name(), workflowPhase.getName(), null);
     }
   }
 
@@ -2087,7 +2095,7 @@ public class WorkflowServiceImpl implements WorkflowService, DataProvider {
       return requiredEntityTypes;
     }
 
-    if (asList(ECS, KUBERNETES, AWS_CODEDEPLOY, AWS_LAMBDA, AMI).contains(workflowPhase.getDeploymentType())) {
+    if (asList(ECS, KUBERNETES, AWS_CODEDEPLOY, AWS_LAMBDA, AMI, HELM).contains(workflowPhase.getDeploymentType())) {
       requiredEntityTypes.add(ARTIFACT);
       return requiredEntityTypes;
     }
@@ -2136,6 +2144,8 @@ public class WorkflowServiceImpl implements WorkflowService, DataProvider {
       generateNewWorkflowPhaseStepsForECS(appId, workflowPhase, !serviceRepeat);
     } else if (deploymentType == KUBERNETES) {
       generateNewWorkflowPhaseStepsForKubernetes(appId, workflowPhase, !serviceRepeat);
+    } else if (deploymentType == HELM) {
+      generateNewWorkflowPhaseStepsForHelm(appId, workflowPhase, !serviceRepeat);
     } else if (deploymentType == AWS_CODEDEPLOY) {
       generateNewWorkflowPhaseStepsForAWSCodeDeploy(appId, workflowPhase);
     } else if (deploymentType == AWS_LAMBDA) {
@@ -2287,6 +2297,24 @@ public class WorkflowServiceImpl implements WorkflowService, DataProvider {
     workflowPhase.addPhaseStep(aPhaseStep(WRAP_UP, Constants.WRAP_UP).build());
   }
 
+  private void generateNewWorkflowPhaseStepsForHelm(
+      String appId, WorkflowPhase workflowPhase, boolean serviceSetupRequired) {
+    Service service = serviceResourceService.get(appId, workflowPhase.getServiceId());
+    Map<CommandType, List<Command>> commandMap = getCommandTypeListMap(service);
+
+    workflowPhase.addPhaseStep(aPhaseStep(PhaseStepType.HELM_DEPLOY, Constants.DEPLOY_CONTAINERS)
+                                   .addStep(aGraphNode()
+                                                .withId(generateUuid())
+                                                .withType(HELM_DEPLOY.name())
+                                                .withName(Constants.HELM_DEPLOY)
+                                                .build())
+                                   .build());
+    workflowPhase.addPhaseStep(aPhaseStep(VERIFY_SERVICE, Constants.VERIFY_SERVICE)
+                                   .addAllSteps(commandNodes(commandMap, CommandType.VERIFY))
+                                   .build());
+    workflowPhase.addPhaseStep(aPhaseStep(WRAP_UP, Constants.WRAP_UP).build());
+  }
+
   private void generateNewWorkflowPhaseStepsForKubernetes(
       String appId, WorkflowPhase workflowPhase, boolean serviceSetupRequired) {
     Service service = serviceResourceService.get(appId, workflowPhase.getServiceId());
@@ -2411,9 +2439,42 @@ public class WorkflowServiceImpl implements WorkflowService, DataProvider {
       return generateRollbackWorkflowPhaseForAwsLambda(workflowPhase);
     } else if (deploymentType == AMI) {
       return generateRollbackWorkflowPhaseForAwsAmi(workflowPhase);
+    } else if (deploymentType == HELM) {
+      return generateRollbackWorkflowPhaseForHelm(workflowPhase);
     } else {
       return generateRollbackWorkflowPhaseForSSH(appId, workflowPhase);
     }
+  }
+
+  private WorkflowPhase generateRollbackWorkflowPhaseForHelm(WorkflowPhase workflowPhase) {
+    return aWorkflowPhase()
+        .withName(Constants.ROLLBACK_PREFIX + workflowPhase.getName())
+        .withRollback(true)
+        .withServiceId(workflowPhase.getServiceId())
+        .withComputeProviderId(workflowPhase.getComputeProviderId())
+        .withInfraMappingName(workflowPhase.getInfraMappingName())
+        .withPhaseNameForRollback(workflowPhase.getName())
+        .withDeploymentType(workflowPhase.getDeploymentType())
+        .withInfraMappingId(workflowPhase.getInfraMappingId())
+        .addPhaseStep(aPhaseStep(PhaseStepType.HELM_DEPLOY, Constants.DEPLOY_CONTAINERS)
+                          .addStep(aGraphNode()
+                                       .withId(generateUuid())
+                                       .withType(HELM_ROLLBACK.name())
+                                       .withName(Constants.HELM_ROLLBACK)
+                                       .addProperty("rollback", true)
+                                       .build())
+                          .withPhaseStepNameForRollback(Constants.DEPLOY_CONTAINERS)
+                          .withStatusForRollback(ExecutionStatus.SUCCESS)
+                          .withRollback(true)
+                          .build())
+        // When we rolling back the verification steps the same criterie to run if deployment is needed should be used
+        .addPhaseStep(aPhaseStep(VERIFY_SERVICE, Constants.VERIFY_SERVICE)
+                          .withPhaseStepNameForRollback(Constants.DEPLOY_CONTAINERS)
+                          .withStatusForRollback(ExecutionStatus.SUCCESS)
+                          .withRollback(true)
+                          .build())
+        .addPhaseStep(aPhaseStep(WRAP_UP, Constants.WRAP_UP).build())
+        .build();
   }
 
   private WorkflowPhase generateRollbackWorkflowPhaseForAwsAmi(WorkflowPhase workflowPhase) {
@@ -2654,7 +2715,7 @@ public class WorkflowServiceImpl implements WorkflowService, DataProvider {
               .addPhaseStep(aPhaseStep(CONTAINER_DEPLOY, Constants.DEPLOY_CONTAINERS)
                                 .addStep(aGraphNode()
                                              .withId(generateUuid())
-                                             .withType(StateType.KUBERNETES_DEPLOY_ROLLBACK.name())
+                                             .withType(KUBERNETES_DEPLOY_ROLLBACK.name())
                                              .withName(Constants.ROLLBACK_CONTAINERS)
                                              .addProperty("rollback", true)
                                              .build())

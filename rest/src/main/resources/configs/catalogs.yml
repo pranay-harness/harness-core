@@ -213,6 +213,8 @@ DEPLOYMENT_TYPE:
       value: AWS_LAMBDA
     - name: AMI
       value: AMI
+    - name: Kubernetes Helm
+      value: HELM
     - name: Windows Remote Management (WinRM)
       value: WINRM
 
