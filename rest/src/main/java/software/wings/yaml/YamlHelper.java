@@ -10,7 +10,6 @@ import com.fasterxml.jackson.dataformat.yaml.snakeyaml.DumperOptions.FlowStyle;
 import com.fasterxml.jackson.dataformat.yaml.snakeyaml.DumperOptions.ScalarStyle;
 import com.fasterxml.jackson.dataformat.yaml.snakeyaml.Yaml;
 import com.fasterxml.jackson.dataformat.yaml.snakeyaml.introspector.PropertyUtils;
-import io.harness.eraro.Level;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import software.wings.beans.Account;
@@ -19,6 +18,7 @@ import software.wings.beans.Environment;
 import software.wings.beans.ErrorCode;
 import software.wings.beans.Pipeline;
 import software.wings.beans.ResponseMessage;
+import software.wings.beans.ResponseMessage.Level;
 import software.wings.beans.RestResponse;
 import software.wings.beans.Service;
 import software.wings.beans.SettingAttribute;
@@ -68,6 +68,11 @@ public class YamlHelper {
 
   public static void addMissingYamlMessage(RestResponse rr) {
     addResponseMessage(rr, ErrorCode.MISSING_YAML, Level.ERROR, "ERROR: The Yaml is empty or missing!");
+  }
+
+  public static void addNonEmptyDeletionsWarningMessage(RestResponse rr) {
+    addResponseMessage(rr, ErrorCode.NON_EMPTY_DELETIONS, Level.WARN,
+        "WARNING: This operation will delete objects! Pass 'deleteEnabled=true' if you want to proceed.");
   }
 
   public static void addSettingAttributeNotFoundMessage(RestResponse rr, String uuid) {

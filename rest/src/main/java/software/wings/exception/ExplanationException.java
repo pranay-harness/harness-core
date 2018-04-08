@@ -1,7 +1,7 @@
 package software.wings.exception;
 
-import static io.harness.eraro.Level.INFO;
 import static software.wings.beans.ErrorCode.EXPLANATION;
+import static software.wings.beans.ResponseMessage.Level.INFO;
 import static software.wings.beans.ResponseMessage.aResponseMessage;
 
 public class ExplanationException extends WingsException {

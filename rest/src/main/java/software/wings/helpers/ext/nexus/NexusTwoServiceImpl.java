@@ -8,6 +8,7 @@ import static java.util.Collections.emptyMap;
 import static java.util.stream.Collectors.toList;
 import static org.apache.commons.lang3.StringUtils.isBlank;
 import static software.wings.beans.ErrorCode.INVALID_REQUEST;
+import static software.wings.beans.ResponseMessage.Level.ERROR;
 import static software.wings.beans.ResponseMessage.aResponseMessage;
 import static software.wings.helpers.ext.jenkins.BuildDetails.Builder.aBuildDetails;
 import static software.wings.helpers.ext.nexus.NexusServiceImpl.getBaseUrl;
@@ -17,7 +18,6 @@ import static software.wings.helpers.ext.nexus.NexusServiceImpl.isSuccessful;
 import com.google.inject.Inject;
 import com.google.inject.Singleton;
 
-import io.harness.eraro.Level;
 import okhttp3.Credentials;
 import org.apache.commons.lang3.tuple.ImmutablePair;
 import org.apache.commons.lang3.tuple.Pair;
@@ -339,7 +339,7 @@ public class NexusTwoServiceImpl {
       throw new WingsException(
           aResponseMessage()
               .code(INVALID_REQUEST)
-              .level(Level.ERROR)
+              .level(ERROR)
               .message("Error occurred while retrieving Repository Group Ids from Nexus server "
                   + nexusConfig.getNexusUrl() + " for repository " + repoKey + " under path " + repoPath)
               .build(),
