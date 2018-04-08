@@ -20,11 +20,6 @@
 
         <dependency>
             <groupId>software.wings</groupId>
-            <artifactId>logging</artifactId>
-            <version>${project.parent.version}</version>
-        </dependency>
-        <dependency>
-            <groupId>software.wings</groupId>
             <artifactId>rest-utils</artifactId>
             <version>${project.parent.version}</version>
         </dependency>

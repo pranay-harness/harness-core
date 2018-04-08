@@ -1,4 +1,4 @@
 io.dropwizard.logging.ConsoleAppenderFactory
 io.dropwizard.logging.FileAppenderFactory
 io.dropwizard.logging.SyslogAppenderFactory
-software.wings.logging.RsyslogAppenderFactory
+io.harness.logging.RsyslogAppenderFactory
