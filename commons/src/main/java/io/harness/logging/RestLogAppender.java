@@ -4,7 +4,6 @@ import static io.harness.network.Localhost.getLocalHostName;
 import static java.lang.String.format;
 import static org.apache.commons.codec.binary.Base64.encodeBase64String;
 
-import com.google.common.base.MoreObjects;
 import com.google.common.collect.Queues;
 
 import ch.qos.logback.classic.Level;
@@ -13,6 +12,8 @@ import ch.qos.logback.core.AppenderBase;
 import ch.qos.logback.core.Layout;
 import com.fasterxml.jackson.databind.JsonNode;
 import io.harness.network.Http;
+import lombok.AllArgsConstructor;
+import lombok.Value;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import retrofit2.Response;
@@ -33,6 +34,12 @@ public class RestLogAppender<E> extends AppenderBase<E> {
   private static final int MAX_BATCH_SIZE = 1000;
   private static final String LOGDNA_INGEST_URL = "https://logs.logdna.com/logs/ingest?hostname=%s&now=:now";
   public static final String LOGDNA_HOST = "https://logs.logdna.com";
+
+  private static final Retrofit retrofit = new Retrofit.Builder()
+                                               .baseUrl(LOGDNA_HOST)
+                                               .addConverterFactory(JacksonConverterFactory.create())
+                                               .client(Http.getUnsafeOkHttpClient(LOGDNA_HOST))
+                                               .build();
 
   private String programName;
   private String key;
@@ -74,11 +81,6 @@ public class RestLogAppender<E> extends AppenderBase<E> {
         return;
       }
 
-      Retrofit retrofit = new Retrofit.Builder()
-                              .baseUrl(LOGDNA_HOST)
-                              .addConverterFactory(JacksonConverterFactory.create())
-                              .client(Http.getUnsafeOkHttpClient(LOGDNA_HOST))
-                              .build();
       Response<JsonNode> execute =
           retrofit.create(LogdnaRestClient.class).postLogs(getAuthHeader(), localhostName, logLines).execute();
     } catch (Exception ex) {
@@ -167,41 +169,11 @@ public class RestLogAppender<E> extends AppenderBase<E> {
     }
   }
 
+  @Value
+  @AllArgsConstructor
   public static class LogLine {
     private String line;
-    private String app;
     private String level;
-
-    public LogLine(String line, String level, String app) {
-      this.line = line;
-      this.app = app;
-      this.level = level;
-    }
-
-    public String getLine() {
-      return line;
-    }
-    public void setLine(String line) {
-      this.line = line;
-    }
-
-    public String getApp() {
-      return app;
-    }
-    public void setApp(String app) {
-      this.app = app;
-    }
-
-    public String getLevel() {
-      return level;
-    }
-    public void setLevel(String level) {
-      this.level = level;
-    }
-
-    @Override
-    public String toString() {
-      return MoreObjects.toStringHelper(this).add("line", line).add("app", app).add("level", level).toString();
-    }
+    private String app;
   }
 }
