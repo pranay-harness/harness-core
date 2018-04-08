@@ -5,14 +5,11 @@ import static software.wings.beans.artifact.ArtifactStreamAttributes.Builder.anA
 import static software.wings.beans.artifact.ArtifactStreamType.ARTIFACTORY;
 
 import com.fasterxml.jackson.annotation.JsonTypeName;
-import com.github.reinert.jjschema.Attributes;
-import com.github.reinert.jjschema.SchemaIgnore;
 import lombok.Data;
 import lombok.EqualsAndHashCode;
 import lombok.NoArgsConstructor;
 import org.hibernate.validator.constraints.NotEmpty;
 import software.wings.beans.EmbeddedUser;
-import software.wings.stencils.UIOrder;
 import software.wings.utils.Util;
 
 import java.util.ArrayList;
@@ -25,25 +22,16 @@ import java.util.List;
 @JsonTypeName("ARTIFACTORY")
 public class ArtifactoryArtifactStream extends ArtifactStream {
   private String repositoryType = "any";
+  @NotEmpty private String jobname;
+  private String groupId;
+  private String imageName;
+  private List<String> artifactPaths;
+  private String artifactPattern;
+  private String dockerRepositoryServer;
 
-  @UIOrder(4) @NotEmpty @Attributes(title = "Repository", required = true) private String jobname;
-
-  @SchemaIgnore private String groupId;
-
-  @SchemaIgnore private String imageName;
-
-  @SchemaIgnore @Attributes(title = "Artifact Path") private List<String> artifactPaths;
-
-  @UIOrder(5) @Attributes(title = "Artifact Path / File Filter") private String artifactPattern;
-
-  @UIOrder(6)
-  @Attributes(title = "Meta-data Only (Artifact download not required)")
   public boolean getMetadataOnly() {
     return super.isMetadataOnly();
   }
-
-  private String dockerRepositoryServer;
-
   public String getRepositoryType() {
     return repositoryType;
   }
@@ -57,7 +45,6 @@ public class ArtifactoryArtifactStream extends ArtifactStream {
     super.setAutoApproveForProduction(true);
   }
 
-  @SchemaIgnore
   @Override
   public String getArtifactDisplayName(String buildNo) {
     if (isBlank(getImageName())) {
@@ -125,7 +112,7 @@ public class ArtifactoryArtifactStream extends ArtifactStream {
    *
    * @return the image name
    */
-  @SchemaIgnore
+
   public String getImageName() {
     return imageName;
   }
@@ -154,24 +141,6 @@ public class ArtifactoryArtifactStream extends ArtifactStream {
     this.imageName = groupId;
   }
 
-  @Attributes(title = "Source Type")
-  @Override
-  public String getArtifactStreamType() {
-    return super.getArtifactStreamType();
-  }
-
-  @Attributes(title = "Source Server")
-  @Override
-  public String getSettingId() {
-    return super.getSettingId();
-  }
-
-  @UIOrder(7)
-  @Attributes(title = "Auto-approved for Production")
-  public boolean getAutoApproveForProduction() {
-    return super.isAutoApproveForProduction();
-  }
-
   public String getDockerRepositoryServer() {
     return dockerRepositoryServer;
   }
@@ -198,7 +167,6 @@ public class ArtifactoryArtifactStream extends ArtifactStream {
     return builder.toString();
   }
 
-  @SchemaIgnore
   @Override
   public ArtifactStreamAttributes getArtifactStreamAttributes() {
     return anArtifactStreamAttributes()
@@ -219,7 +187,7 @@ public class ArtifactoryArtifactStream extends ArtifactStream {
         .withAppId(getAppId())
         .withSourceName(getSourceName())
         .withSettingId(getSettingId())
-        .withAutoApproveForProduction(getAutoApproveForProduction())
+        .withAutoApproveForProduction(isAutoApproveForProduction())
         .withJobname(getJobname())
         .withArtifactPaths(getArtifactPaths())
         .withArtifactPattern(getArtifactPattern())
@@ -248,7 +216,7 @@ public class ArtifactoryArtifactStream extends ArtifactStream {
         .withCreatedAt(getCreatedAt())
         .withLastUpdatedBy(getLastUpdatedBy())
         .withLastUpdatedAt(getLastUpdatedAt())
-        .withAutoApproveForProduction(getAutoApproveForProduction())
+        .withAutoApproveForProduction(isAutoApproveForProduction())
         .withMetadataOnly(getMetadataOnly())
         .withArtifactPattern(getArtifactPattern())
         .withMetadataOnly(getMetadataOnly())

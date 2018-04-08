@@ -2,7 +2,6 @@ package software.wings.service.impl;
 
 import static io.harness.data.structure.EmptyPredicate.isEmpty;
 import static io.harness.data.structure.EmptyPredicate.isNotEmpty;
-import static java.util.Arrays.asList;
 import static software.wings.beans.ErrorCode.INVALID_REQUEST;
 import static software.wings.beans.FeatureName.AZURE_SUPPORT;
 import static software.wings.beans.SearchFilter.Operator.EQ;
@@ -53,7 +52,6 @@ import software.wings.service.intfc.yaml.EntityUpdateService;
 import software.wings.service.intfc.yaml.YamlChangeSetService;
 import software.wings.service.intfc.yaml.YamlDirectoryService;
 import software.wings.stencils.DataProvider;
-import software.wings.stencils.Stencil;
 import software.wings.stencils.StencilPostProcessor;
 import software.wings.utils.ArtifactType;
 import software.wings.utils.Util;
@@ -262,11 +260,6 @@ public class ArtifactStreamServiceImpl implements ArtifactStreamService, DataPro
                                   .build();
     PageResponse pageResponse = wingsPersistence.query(ArtifactStream.class, pageRequest);
     return pageResponse.getResponse();
-  }
-
-  @Override
-  public List<Stencil> getArtifactStreamSchema(String appId, String serviceId) {
-    return stencilPostProcessor.postProcess(asList(ArtifactStreamType.values()), appId, serviceId);
   }
 
   @Override

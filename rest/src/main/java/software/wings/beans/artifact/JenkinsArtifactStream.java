@@ -5,14 +5,11 @@ import static software.wings.beans.artifact.ArtifactStreamType.JENKINS;
 import static software.wings.beans.artifact.JenkinsArtifactStream.Builder.aJenkinsArtifactStream;
 
 import com.fasterxml.jackson.annotation.JsonTypeName;
-import com.github.reinert.jjschema.Attributes;
-import com.github.reinert.jjschema.SchemaIgnore;
 import lombok.Data;
 import lombok.EqualsAndHashCode;
 import lombok.NoArgsConstructor;
 import org.hibernate.validator.constraints.NotEmpty;
 import software.wings.beans.EmbeddedUser;
-import software.wings.stencils.UIOrder;
 import software.wings.utils.Util;
 
 import java.util.ArrayList;
@@ -24,15 +21,13 @@ import java.util.List;
  */
 @JsonTypeName("JENKINS")
 public class JenkinsArtifactStream extends ArtifactStream {
-  @UIOrder(4) @NotEmpty @Attributes(title = "Job Name", required = true) private String jobname;
+  @NotEmpty private String jobname;
 
-  @UIOrder(5)
-  @Attributes(title = "Meta-data Only (Artifact download not required)")
   public boolean getMetadataOnly() {
     return super.isMetadataOnly();
   }
 
-  @UIOrder(6) @NotEmpty @Attributes(title = "Artifact Path", required = true) private List<String> artifactPaths;
+  @NotEmpty private List<String> artifactPaths;
 
   /**
    * Instantiates a new jenkins artifact source.
@@ -59,7 +54,6 @@ public class JenkinsArtifactStream extends ArtifactStream {
    * @return the artifact display name
    */
   @Override
-  @SchemaIgnore
   public String getArtifactDisplayName(String buildNo) {
     return String.format("%s_%s_%s", getJobname(), buildNo, getDateFormat().format(new Date()));
   }
@@ -82,32 +76,7 @@ public class JenkinsArtifactStream extends ArtifactStream {
     this.jobname = jobname;
   }
 
-  @Attributes(title = "Source Type")
   @Override
-  public String getArtifactStreamType() {
-    return super.getArtifactStreamType();
-  }
-
-  @Attributes(title = "Source Server")
-  @Override
-  public String getSettingId() {
-    return super.getSettingId();
-  }
-
-  /*@UIOrder(7)
-  @Attributes(title = "Automatic Download")
-  public boolean getAutoDownload() {
-    return super.isAutoDownload();
-  }*/
-
-  @UIOrder(7)
-  @Attributes(title = "Auto-approved for Production")
-  public boolean getAutoApproveForProduction() {
-    return super.isAutoApproveForProduction();
-  }
-
-  @Override
-  @SchemaIgnore
   public ArtifactStreamAttributes getArtifactStreamAttributes() {
     return anArtifactStreamAttributes().withArtifactStreamType(getArtifactStreamType()).withJobName(jobname).build();
   }
@@ -135,7 +104,7 @@ public class JenkinsArtifactStream extends ArtifactStream {
         .withAppId(getAppId())
         .withSourceName(getSourceName())
         .withSettingId(getSettingId())
-        .withAutoApproveForProduction(getAutoApproveForProduction())
+        .withAutoApproveForProduction(isAutoApproveForProduction())
         .withJobname(getJobname())
         .withArtifactPaths(getArtifactPaths())
         .withMetadataOnly(getMetadataOnly())
@@ -159,7 +128,7 @@ public class JenkinsArtifactStream extends ArtifactStream {
         .withCreatedAt(getCreatedAt())
         .withLastUpdatedBy(getLastUpdatedBy())
         .withLastUpdatedAt(getLastUpdatedAt())
-        .withAutoApproveForProduction(getAutoApproveForProduction())
+        .withAutoApproveForProduction(isAutoApproveForProduction())
         .withMetadataOnly(getMetadataOnly());
   }
 

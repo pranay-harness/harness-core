@@ -4,12 +4,10 @@ import com.google.common.base.MoreObjects;
 
 import com.fasterxml.jackson.annotation.JsonIgnore;
 import com.fasterxml.jackson.annotation.JsonTypeInfo;
-import com.github.reinert.jjschema.Attributes;
 import com.github.reinert.jjschema.SchemaIgnore;
 import lombok.Data;
 import lombok.EqualsAndHashCode;
 import lombok.NoArgsConstructor;
-import org.hibernate.validator.constraints.NotEmpty;
 import org.mongodb.morphia.annotations.Entity;
 import org.mongodb.morphia.annotations.Field;
 import org.mongodb.morphia.annotations.Index;
@@ -17,15 +15,10 @@ import org.mongodb.morphia.annotations.IndexOptions;
 import org.mongodb.morphia.annotations.Indexed;
 import org.mongodb.morphia.annotations.Indexes;
 import software.wings.beans.Base;
-import software.wings.beans.EmbeddedUser;
-import software.wings.stencils.EnumData;
-import software.wings.stencils.UIOrder;
 import software.wings.yaml.BaseEntityYaml;
 
 import java.text.DateFormat;
 import java.text.SimpleDateFormat;
-import java.util.Objects;
-import javax.validation.constraints.NotNull;
 
 /**
  * ArtifactStream bean class.
@@ -38,30 +31,17 @@ import javax.validation.constraints.NotNull;
     @Index(fields = { @Field("appId")
                       , @Field("serviceId"), @Field("name") }, options = @IndexOptions(unique = true)))
 public abstract class ArtifactStream extends Base {
-  @SchemaIgnore private static final DateFormat dateFormat = new SimpleDateFormat("HHMMSS");
+  private static final DateFormat dateFormat = new SimpleDateFormat("HHMMSS");
 
-  @UIOrder(1)
-  @NotNull
-  @Attributes(title = "Source Type")
-  @EnumData(enumDataProvider = ArtifactSourceTypeEnumDataProvider.class)
   private String artifactStreamType;
-
-  @SchemaIgnore private String sourceName;
-
-  @UIOrder(2) @NotEmpty @Attributes(title = "Source Server") private String settingId;
-
-  @Attributes(title = "Name") private String name;
-
-  // auto populate name
-  @SchemaIgnore private boolean autoPopulate = true;
-
-  @UIOrder(3) @Indexed private String serviceId;
-
-  @SchemaIgnore private boolean autoDownload = true;
-
-  @SchemaIgnore private boolean autoApproveForProduction;
-
-  @SchemaIgnore private boolean metadataOnly;
+  private String sourceName;
+  private String settingId;
+  private String name;
+  private boolean autoPopulate = true;
+  @Indexed private String serviceId;
+  private boolean autoDownload = true;
+  private boolean autoApproveForProduction;
+  private boolean metadataOnly;
 
   /**
    * Instantiates a new lastArtifact source.
@@ -77,7 +57,6 @@ public abstract class ArtifactStream extends Base {
    *
    * @return the date format
    */
-  @SchemaIgnore
   public static DateFormat getDateFormat() {
     return dateFormat;
   }
@@ -95,7 +74,6 @@ public abstract class ArtifactStream extends Base {
    *
    * @return the source name
    */
-  @SchemaIgnore
   public String getSourceName() {
     return sourceName;
   }
@@ -160,7 +138,7 @@ public abstract class ArtifactStream extends Base {
    *
    * @return the boolean
    */
-  @SchemaIgnore
+
   public boolean isAutoApproveForProduction() {
     return autoApproveForProduction;
   }
@@ -178,7 +156,7 @@ public abstract class ArtifactStream extends Base {
    * Is metadata only
    * @return
    */
-  @SchemaIgnore
+
   public boolean isMetadataOnly() {
     return metadataOnly;
   }
@@ -191,43 +169,6 @@ public abstract class ArtifactStream extends Base {
     this.metadataOnly = metadataOnly;
   }
 
-  @SchemaIgnore
-  @Override
-  public String getAppId() {
-    return super.getAppId();
-  }
-
-  @SchemaIgnore
-  @Override
-  public EmbeddedUser getCreatedBy() {
-    return super.getCreatedBy();
-  }
-
-  @SchemaIgnore
-  @Override
-  public EmbeddedUser getLastUpdatedBy() {
-    return super.getLastUpdatedBy();
-  }
-
-  @SchemaIgnore
-  @Override
-  public long getCreatedAt() {
-    return super.getCreatedAt();
-  }
-
-  @SchemaIgnore
-  @Override
-  public long getLastUpdatedAt() {
-    return super.getLastUpdatedAt();
-  }
-
-  @SchemaIgnore
-  @Override
-  public String getUuid() {
-    return super.getUuid();
-  }
-
-  @SchemaIgnore
   public boolean isAutoPopulate() {
     return autoPopulate;
   }
@@ -240,9 +181,9 @@ public abstract class ArtifactStream extends Base {
     return name;
   }
 
-  @JsonIgnore @SchemaIgnore public abstract String generateName();
+  @JsonIgnore public abstract String generateName();
 
-  @JsonIgnore @SchemaIgnore public abstract String generateSourceName();
+  @JsonIgnore public abstract String generateSourceName();
 
   public void setName(String name) {
     this.name = name;
@@ -257,30 +198,6 @@ public abstract class ArtifactStream extends Base {
         .add("artifactStreamType", artifactStreamType)
         .add("settingId", settingId)
         .toString();
-  }
-
-  @Override
-  public int hashCode() {
-    return 31 * super.hashCode()
-        + Objects.hash(sourceName, artifactStreamType, settingId, autoDownload, autoApproveForProduction);
-  }
-
-  @Override
-  public boolean equals(Object obj) {
-    if (this == obj) {
-      return true;
-    }
-    if (obj == null || getClass() != obj.getClass()) {
-      return false;
-    }
-    if (!super.equals(obj)) {
-      return false;
-    }
-    final ArtifactStream other = (ArtifactStream) obj;
-    return Objects.equals(this.sourceName, other.sourceName)
-        && Objects.equals(this.artifactStreamType, other.artifactStreamType)
-        && Objects.equals(this.settingId, other.settingId) && Objects.equals(this.autoDownload, other.autoDownload)
-        && Objects.equals(this.autoApproveForProduction, other.autoApproveForProduction);
   }
 
   /**
@@ -306,7 +223,7 @@ public abstract class ArtifactStream extends Base {
    *
    * @return the artifact stream attributes
    */
-  @SchemaIgnore public abstract ArtifactStreamAttributes getArtifactStreamAttributes();
+  public abstract ArtifactStreamAttributes getArtifactStreamAttributes();
 
   public abstract ArtifactStream clone();
 
