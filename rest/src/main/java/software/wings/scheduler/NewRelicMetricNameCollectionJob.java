@@ -96,7 +96,7 @@ public class NewRelicMetricNameCollectionJob implements Job {
               logger.info("Scheduling new relic metric name collection task {}", dataCollectionInfo);
               if (System.currentTimeMillis() - metricNames.getLastUpdatedTime()
                   > (TimeUnit.DAYS.toMillis(1) + TimeUnit.HOURS.toMillis(6))) {
-                logger.error("[learning-engine] NewRelic metric name collection task past due over 6 hours {} ",
+                logger.warn("[learning-engine] NewRelic metric name collection task past due over 6 hours {} ",
                     dataCollectionInfo);
                 metricDataAnalysisService.updateMetricNames(metricNames);
               }
