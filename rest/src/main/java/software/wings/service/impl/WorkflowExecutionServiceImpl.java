@@ -1959,13 +1959,10 @@ public class WorkflowExecutionServiceImpl implements WorkflowExecutionService {
   }
 
   private void refreshBreakdown(WorkflowExecution workflowExecution) {
-    if ((workflowExecution.getStatus() == ExecutionStatus.SUCCESS
-            || workflowExecution.getStatus() == ExecutionStatus.FAILED
-            || workflowExecution.getStatus() == ExecutionStatus.ERROR
-            || workflowExecution.getStatus() == ExecutionStatus.ABORTED)
-        && workflowExecution.getBreakdown() != null) {
+    if (workflowExecution.getStatus().isFinalStatus() && workflowExecution.getBreakdown() != null) {
       return;
     }
+
     StateMachine sm =
         wingsPersistence.get(StateMachine.class, workflowExecution.getAppId(), workflowExecution.getStateMachineId());
     PageRequest<StateExecutionInstance> req =
@@ -1989,10 +1986,7 @@ public class WorkflowExecutionServiceImpl implements WorkflowExecutionService {
     logger.info("Got the breakdown workflowExecution: {}, status: {}, breakdown: {}", workflowExecution.getUuid(),
         workflowExecution.getStatus(), breakdown);
 
-    if (workflowExecution.getStatus() == ExecutionStatus.SUCCESS
-        || workflowExecution.getStatus() == ExecutionStatus.FAILED
-        || workflowExecution.getStatus() == ExecutionStatus.ERROR
-        || workflowExecution.getStatus() == ExecutionStatus.ABORTED) {
+    if (workflowExecution.getStatus().isFinalStatus()) {
       logger.info("Set the breakdown of the completed workflowExecution: {}, status: {}, breakdown: {}",
           workflowExecution.getUuid(), workflowExecution.getStatus(), breakdown);
 
