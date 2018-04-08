@@ -5,15 +5,11 @@ import static software.wings.beans.artifact.ArtifactStreamType.GCR;
 import static software.wings.beans.artifact.GcrArtifactStream.Builder.aGcrArtifactStream;
 
 import com.fasterxml.jackson.annotation.JsonTypeName;
-import com.github.reinert.jjschema.Attributes;
-import com.github.reinert.jjschema.SchemaIgnore;
 import lombok.Data;
 import lombok.EqualsAndHashCode;
 import lombok.NoArgsConstructor;
 import org.hibernate.validator.constraints.NotEmpty;
 import software.wings.beans.EmbeddedUser;
-import software.wings.stencils.DefaultValue;
-import software.wings.stencils.UIOrder;
 import software.wings.utils.Util;
 
 import java.util.Date;
@@ -23,13 +19,8 @@ import java.util.Date;
  */
 @JsonTypeName("GCR")
 public class GcrArtifactStream extends ArtifactStream {
-  @UIOrder(4)
-  @NotEmpty
-  @DefaultValue("gcr.io")
-  @Attributes(title = "Registry Host Name", required = true)
-  private String registryHostName;
-
-  @UIOrder(5) @NotEmpty @Attributes(title = "Docker Image Name", required = true) private String dockerImageName;
+  @NotEmpty private String registryHostName;
+  @NotEmpty private String dockerImageName;
 
   /**
    * Instantiates a new Docker artifact stream.
@@ -41,7 +32,6 @@ public class GcrArtifactStream extends ArtifactStream {
   }
 
   @Override
-  @SchemaIgnore
   public String getArtifactDisplayName(String buildNo) {
     return String.format("%s_%s_%s", getDockerImageName(), buildNo, getDateFormat().format(new Date()));
   }
@@ -65,31 +55,12 @@ public class GcrArtifactStream extends ArtifactStream {
   }
 
   @Override
-  @SchemaIgnore
   public ArtifactStreamAttributes getArtifactStreamAttributes() {
     return anArtifactStreamAttributes()
         .withArtifactStreamType(getArtifactStreamType())
         .withImageName(dockerImageName)
         .withRegistryHostName(registryHostName)
         .build();
-  }
-
-  @Attributes(title = "Source Type")
-  @Override
-  public String getArtifactStreamType() {
-    return super.getArtifactStreamType();
-  }
-
-  @Attributes(title = "Source Server")
-  @Override
-  public String getSettingId() {
-    return super.getSettingId();
-  }
-
-  @UIOrder(5)
-  @Attributes(title = "Auto-approved for Production")
-  public boolean getAutoApproveForProduction() {
-    return super.isAutoApproveForProduction();
   }
 
   public String getRegistryHostName() {
@@ -116,7 +87,7 @@ public class GcrArtifactStream extends ArtifactStream {
         .withAppId(getAppId())
         .withSourceName(getSourceName())
         .withSettingId(getSettingId())
-        .withAutoApproveForProduction(getAutoApproveForProduction())
+        .withAutoApproveForProduction(isAutoApproveForProduction())
         .withDockerImageName(getDockerImageName())
         .withRegistryHostName(getRegistryHostName())
         .build();

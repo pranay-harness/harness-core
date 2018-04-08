@@ -5,7 +5,6 @@ import software.wings.beans.artifact.ArtifactStream;
 import software.wings.dl.PageRequest;
 import software.wings.dl.PageResponse;
 import software.wings.service.intfc.ownership.OwnedByService;
-import software.wings.stencils.Stencil;
 
 import java.util.List;
 import java.util.Map;
@@ -65,18 +64,9 @@ public interface ArtifactStreamService extends OwnedByService {
    * Prune owned from the app entities.
    *
    * @param appId the app id
-   * @param triggerId the id
+   * @param artifactStreamId the id
    */
   void pruneDescendingEntities(@NotEmpty String appId, @NotEmpty String artifactStreamId);
-
-  /**
-   * Gets artifact stream schema.
-   *
-   * @param appId     the app id
-   * @param serviceId the service id
-   * @return the artifact stream schema
-   */
-  List<Stencil> getArtifactStreamSchema(String appId, String serviceId);
 
   /**
    * Gets build source.

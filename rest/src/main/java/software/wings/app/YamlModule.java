@@ -18,7 +18,6 @@ import static software.wings.beans.artifact.ArtifactStreamType.ACR;
 import static software.wings.beans.artifact.ArtifactStreamType.AMAZON_S3;
 import static software.wings.beans.artifact.ArtifactStreamType.AMI;
 import static software.wings.beans.artifact.ArtifactStreamType.ARTIFACTORY;
-import static software.wings.beans.artifact.ArtifactStreamType.ARTIFACTORYDOCKER;
 import static software.wings.beans.artifact.ArtifactStreamType.BAMBOO;
 import static software.wings.beans.artifact.ArtifactStreamType.DOCKER;
 import static software.wings.beans.artifact.ArtifactStreamType.ECR;
@@ -58,7 +57,6 @@ import software.wings.service.impl.yaml.handler.artifactstream.AmazonS3ArtifactS
 import software.wings.service.impl.yaml.handler.artifactstream.AmiArtifactStreamYamlHandler;
 import software.wings.service.impl.yaml.handler.artifactstream.ArtifactStreamYamlHandler;
 import software.wings.service.impl.yaml.handler.artifactstream.ArtifactoryArtifactStreamYamlHandler;
-import software.wings.service.impl.yaml.handler.artifactstream.ArtifactoryDockerArtifactStreamYamlHandler;
 import software.wings.service.impl.yaml.handler.artifactstream.BambooArtifactStreamYamlHandler;
 import software.wings.service.impl.yaml.handler.artifactstream.DockerArtifactStreamYamlHandler;
 import software.wings.service.impl.yaml.handler.artifactstream.EcrArtifactStreamYamlHandler;
@@ -165,8 +163,6 @@ public class YamlModule extends AbstractModule {
     artifactStreamYamlHelperMapBinder.addBinding(AMAZON_S3.name()).to(AmazonS3ArtifactStreamYamlHandler.class);
     artifactStreamYamlHelperMapBinder.addBinding(AMI.name()).to(AmiArtifactStreamYamlHandler.class);
     artifactStreamYamlHelperMapBinder.addBinding(ARTIFACTORY.name()).to(ArtifactoryArtifactStreamYamlHandler.class);
-    artifactStreamYamlHelperMapBinder.addBinding(ARTIFACTORYDOCKER.name())
-        .to(ArtifactoryDockerArtifactStreamYamlHandler.class);
     artifactStreamYamlHelperMapBinder.addBinding(BAMBOO.name()).to(BambooArtifactStreamYamlHandler.class);
     artifactStreamYamlHelperMapBinder.addBinding(DOCKER.name()).to(DockerArtifactStreamYamlHandler.class);
     artifactStreamYamlHelperMapBinder.addBinding(ECR.name()).to(EcrArtifactStreamYamlHandler.class);

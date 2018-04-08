@@ -1,8 +1,6 @@
 package software.wings.resources;
 
-import static software.wings.beans.RestResponse.Builder.aRestResponse;
 import static software.wings.beans.SearchFilter.Operator.EQ;
-import static software.wings.security.PermissionAttribute.PermissionType.LOGGED_IN;
 import static software.wings.security.PermissionAttribute.PermissionType.SERVICE;
 import static software.wings.security.PermissionAttribute.ResourceType.APPLICATION;
 
@@ -19,9 +17,7 @@ import software.wings.security.annotations.AuthRule;
 import software.wings.security.annotations.Scope;
 import software.wings.service.intfc.AppService;
 import software.wings.service.intfc.ArtifactStreamService;
-import software.wings.stencils.Stencil;
 
-import java.util.List;
 import java.util.Map;
 import javax.ws.rs.BeanParam;
 import javax.ws.rs.Consumes;
@@ -163,22 +159,6 @@ public class ArtifactStreamResource {
   public RestResponse delete(@QueryParam("appId") String appId, @PathParam("id") String id) {
     artifactStreamService.delete(appId, id);
     return new RestResponse<>();
-  }
-  /**
-   * Installed plugin setting schema rest response.
-   *
-   * @param appId     the app id
-   * @param serviceId the service id
-   * @return the rest response
-   */
-  @GET
-  @Path("stencils")
-  @Timed
-  @ExceptionMetered
-  @AuthRule(permissionType = LOGGED_IN)
-  public RestResponse<List<Stencil>> installedPluginSettingSchema(
-      @QueryParam("appId") String appId, @QueryParam("serviceId") String serviceId) {
-    return aRestResponse().withResource(artifactStreamService.getArtifactStreamSchema(appId, serviceId)).build();
   }
 
   /**

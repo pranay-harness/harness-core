@@ -8,7 +8,6 @@ import static software.wings.beans.artifact.ArtifactStreamType.AMI;
 import com.google.common.base.Joiner;
 
 import com.fasterxml.jackson.annotation.JsonTypeName;
-import com.github.reinert.jjschema.SchemaIgnore;
 import lombok.Data;
 import lombok.EqualsAndHashCode;
 import lombok.NoArgsConstructor;
@@ -80,7 +79,6 @@ public class AmiArtifactStream extends ArtifactStream {
   }
 
   @Override
-  @SchemaIgnore
   public ArtifactStreamAttributes getArtifactStreamAttributes() {
     Map<String, List<String>> tagMap = new HashMap<>();
     Map<String, String> filterMap = new HashMap<>();

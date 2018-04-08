@@ -5,25 +5,20 @@ import static software.wings.beans.artifact.ArtifactStreamAttributes.Builder.anA
 import static software.wings.beans.artifact.ArtifactStreamType.ACR;
 
 import com.fasterxml.jackson.annotation.JsonTypeName;
-import com.github.reinert.jjschema.Attributes;
-import com.github.reinert.jjschema.SchemaIgnore;
 import lombok.Data;
 import lombok.EqualsAndHashCode;
 import lombok.NoArgsConstructor;
 import org.hibernate.validator.constraints.NotEmpty;
 import software.wings.beans.EmbeddedUser;
-import software.wings.stencils.UIOrder;
 import software.wings.utils.Util;
 
 import java.util.Date;
 
 @JsonTypeName("ACR")
 public class AcrArtifactStream extends ArtifactStream {
-  @UIOrder(4) @NotEmpty @Attributes(title = "Azure Subscription Id", required = true) private String subscriptionId;
-
-  @UIOrder(5) @NotEmpty @Attributes(title = "Container Registry Name", required = true) private String registryName;
-
-  @UIOrder(6) @NotEmpty @Attributes(title = "Repository Name", required = true) private String repositoryName;
+  @NotEmpty private String subscriptionId;
+  @NotEmpty private String registryName;
+  @NotEmpty private String repositoryName;
 
   public AcrArtifactStream() {
     super(ACR.name());
@@ -32,7 +27,6 @@ public class AcrArtifactStream extends ArtifactStream {
   }
 
   @Override
-  @SchemaIgnore
   public String getArtifactDisplayName(String buildNo) {
     return String.format("%s_%s_%s", getRepositoryName(), buildNo, getDateFormat().format(new Date()));
   }
@@ -62,7 +56,6 @@ public class AcrArtifactStream extends ArtifactStream {
   }
 
   @Override
-  @SchemaIgnore
   public ArtifactStreamAttributes getArtifactStreamAttributes() {
     return anArtifactStreamAttributes()
         .withArtifactStreamType(getArtifactStreamType())
@@ -70,24 +63,6 @@ public class AcrArtifactStream extends ArtifactStream {
         .withRegistryName(registryName)
         .withRepositoryName(repositoryName)
         .build();
-  }
-
-  @Attributes(title = "Source Type")
-  @Override
-  public String getArtifactStreamType() {
-    return super.getArtifactStreamType();
-  }
-
-  @Attributes(title = "Source Server")
-  @Override
-  public String getSettingId() {
-    return super.getSettingId();
-  }
-
-  @UIOrder(7)
-  @Attributes(title = "Auto-approved for Production")
-  public boolean getAutoApproveForProduction() {
-    return super.isAutoApproveForProduction();
   }
 
   @Override
@@ -106,7 +81,7 @@ public class AcrArtifactStream extends ArtifactStream {
         .withAppId(getAppId())
         .withSourceName(getSourceName())
         .withSettingId(getSettingId())
-        .withAutoApproveForProduction(getAutoApproveForProduction())
+        .withAutoApproveForProduction(isAutoApproveForProduction())
         .withSubscriptionId(getSubscriptionId())
         .withRegistryName(getRegistryName())
         .withRepositoryName(getRepositoryName())
@@ -244,11 +219,6 @@ public class AcrArtifactStream extends ArtifactStream {
 
     public Builder withAutoApproveForProduction(boolean autoApproveForProduction) {
       this.autoApproveForProduction = autoApproveForProduction;
-      return this;
-    }
-
-    public Builder withMetadataOnly(boolean metadataOnly) {
-      this.metadataOnly = metadataOnly;
       return this;
     }
 

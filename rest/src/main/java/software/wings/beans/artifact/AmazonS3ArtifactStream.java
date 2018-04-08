@@ -5,14 +5,11 @@ import static software.wings.beans.artifact.ArtifactStreamAttributes.Builder.anA
 import static software.wings.beans.artifact.ArtifactStreamType.AMAZON_S3;
 
 import com.fasterxml.jackson.annotation.JsonTypeName;
-import com.github.reinert.jjschema.Attributes;
-import com.github.reinert.jjschema.SchemaIgnore;
 import lombok.Data;
 import lombok.EqualsAndHashCode;
 import lombok.NoArgsConstructor;
 import org.hibernate.validator.constraints.NotEmpty;
 import software.wings.beans.EmbeddedUser;
-import software.wings.stencils.UIOrder;
 import software.wings.utils.Util;
 
 import java.util.ArrayList;
@@ -24,20 +21,16 @@ import java.util.List;
  */
 @JsonTypeName("AMAZON_S3")
 public class AmazonS3ArtifactStream extends ArtifactStream {
-  @UIOrder(4) @NotEmpty @Attributes(title = "Bucket", required = true) private String jobname;
+  @NotEmpty private String jobname;
+  @NotEmpty private List<String> artifactPaths;
 
-  @UIOrder(6)
-  @Attributes(title = "Meta-data Only (Artifact download not required)")
   public boolean getMetadataOnly() {
     return super.isMetadataOnly();
   }
-
-  @UIOrder(6) @NotEmpty @Attributes(title = "Artifact Path", required = true) private List<String> artifactPaths;
-
   public AmazonS3ArtifactStream() {
     super(AMAZON_S3.name());
   }
-  @SchemaIgnore
+
   @Override
   public String getArtifactDisplayName(String buildNo) {
     if (isBlank(getSourceName())) {
@@ -80,25 +73,6 @@ public class AmazonS3ArtifactStream extends ArtifactStream {
     this.artifactPaths = artifactPaths;
   }
 
-  @Attributes(title = "Source Type")
-  @Override
-  public String getArtifactStreamType() {
-    return super.getArtifactStreamType();
-  }
-
-  @Attributes(title = "Source Server")
-  @Override
-  public String getSettingId() {
-    return super.getSettingId();
-  }
-
-  @UIOrder(7)
-  @Attributes(title = "Auto-approved for Production")
-  public boolean getAutoApproveForProduction() {
-    return super.isAutoApproveForProduction();
-  }
-
-  @SchemaIgnore
   @Override
   public ArtifactStreamAttributes getArtifactStreamAttributes() {
     return anArtifactStreamAttributes()
@@ -129,32 +103,11 @@ public class AmazonS3ArtifactStream extends ArtifactStream {
         .withAppId(getAppId())
         .withSourceName(getSourceName())
         .withSettingId(getSettingId())
-        .withAutoApproveForProduction(getAutoApproveForProduction())
+        .withAutoApproveForProduction(isAutoApproveForProduction())
         .withJobname(getJobname())
         .withArtifactPaths(getArtifactPaths())
         .withMetadataOnly(getMetadataOnly())
         .build();
-  }
-
-  /**
-   * Clone and return builder.
-   * @return the builder
-   */
-  public AmazonS3ArtifactStream.Builder toBuilder() {
-    return AmazonS3ArtifactStream.Builder.anAmazonS3ArtifactStream()
-        .withJobname(getJobname())
-        .withArtifactPaths(getArtifactPaths())
-        .withSourceName(getSourceName())
-        .withSettingId(getSettingId())
-        .withServiceId(getServiceId())
-        .withUuid(getUuid())
-        .withAppId(getAppId())
-        .withCreatedBy(getCreatedBy())
-        .withCreatedAt(getCreatedAt())
-        .withLastUpdatedBy(getLastUpdatedBy())
-        .withLastUpdatedAt(getLastUpdatedAt())
-        .withAutoApproveForProduction(getAutoApproveForProduction())
-        .withMetadataOnly(getMetadataOnly());
   }
 
   /**
