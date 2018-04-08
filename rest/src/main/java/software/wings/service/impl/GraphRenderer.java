@@ -356,12 +356,17 @@ public class GraphRenderer {
 
     GraphNode generateHierarchyNode(String initialStateName) {
       StateExecutionInstance origin = null;
+      StateExecutionInstance origin2 = null;
 
       logger.debug("generateSubworkflows request received - instanceIdMap: {}, initialStateName: {}", instanceIdMap,
           initialStateName);
       for (StateExecutionInstance instance : instanceIdMap.values()) {
         if (instance.getStateName().equals(initialStateName)) {
           origin = instance;
+        }
+
+        if (instance.getPrevInstanceId() == null && instance.getParentInstanceId() == null) {
+          origin2 = instance;
         }
 
         final String parentInstanceId = instance.getParentInstanceId();
@@ -388,6 +393,15 @@ public class GraphRenderer {
       if (logger.isDebugEnabled()) {
         logger.debug("generateNodeTree invoked - instanceIdMap: {}, prevInstanceIdMap: {}, parentIdElementsMap: {}",
             instanceIdMap, prevInstanceIdMap, parentIdElementsMap);
+      }
+
+      // TODO: this is temporary A/B testing for better approach to determine the initial state. This check if it does
+      //       the same or even better job than the time based algorithm. At several occasions the Artifact Check was
+      //       showing as first state in the workflow execution.
+      if (origin2 != origin) {
+        logger.error(
+            "The new algorithm to find the first instance detected {} - [{}] as a first instance. The time based algorithm detected {} - [{}]",
+            origin2.getUuid(), origin2.getStateName(), origin.getUuid(), origin.getStateName());
       }
 
       return generateNodeTree(asList(origin), null);

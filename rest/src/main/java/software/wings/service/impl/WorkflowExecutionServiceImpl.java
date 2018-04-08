@@ -615,53 +615,57 @@ public class WorkflowExecutionServiceImpl implements WorkflowExecutionService {
 
   private void populateNodeHierarchy(WorkflowExecution workflowExecution, boolean includeGraph, boolean includeStatus,
       Set<String> excludeFromAggregation) {
-    if (includeStatus || includeGraph) {
-      PageRequest<StateExecutionInstance> req = aPageRequest()
-                                                    .withLimit(PageRequest.UNLIMITED)
-                                                    .addFilter("appId", EQ, workflowExecution.getAppId())
-                                                    .addFilter("executionUuid", EQ, workflowExecution.getUuid())
-                                                    .addFilter("createdAt", GE, workflowExecution.getCreatedAt())
-                                                    .addFieldsExcluded("contextElements", "callback")
-                                                    .build();
-      List<StateExecutionInstance> allInstances = getAllStateExecutionInstances(req);
-      if (isEmpty(allInstances)) {
-        return;
-      }
-      Map<String, StateExecutionInstance> allInstancesIdMap = new HashMap<>();
-      for (StateExecutionInstance stateExecutionInstance : allInstances) {
-        allInstancesIdMap.put(stateExecutionInstance.getUuid(), stateExecutionInstance);
-      }
+    if (!includeStatus && !includeGraph) {
+      return;
+    }
 
-      if (!workflowExecution.getStatus().isFinalStatus()) {
-        if (allInstances.stream().anyMatch(
-                i -> i.getStatus() == ExecutionStatus.PAUSED || i.getStatus() == ExecutionStatus.PAUSING)) {
-          workflowExecution.setStatus(ExecutionStatus.PAUSED);
-        } else if (allInstances.stream().anyMatch(i -> i.getStatus() == ExecutionStatus.WAITING)) {
-          workflowExecution.setStatus(ExecutionStatus.WAITING);
-        } else {
-          List<ExecutionInterrupt> executionInterrupts = executionInterruptManager.checkForExecutionInterrupt(
-              workflowExecution.getAppId(), workflowExecution.getUuid());
-          if (executionInterrupts != null
-              && executionInterrupts.stream().anyMatch(
-                     e -> e.getExecutionInterruptType() == ExecutionInterruptType.PAUSE_ALL)) {
-            workflowExecution.setStatus(ExecutionStatus.PAUSING);
-          }
-        }
-      }
-      if (includeGraph) {
-        String initialStateName;
-        if (workflowExecution.getStatus() == NEW || workflowExecution.getStatus() == QUEUED) {
-          initialStateName = allInstances.get(0).getStateName();
-        } else {
-          StateExecutionInstance stateExecutionInstance = getEarliestInstance(allInstances);
-          initialStateName = stateExecutionInstance.getStateName();
-        }
+    PageRequest<StateExecutionInstance> req = aPageRequest()
+                                                  .withLimit(PageRequest.UNLIMITED)
+                                                  .addFilter("appId", EQ, workflowExecution.getAppId())
+                                                  .addFilter("executionUuid", EQ, workflowExecution.getUuid())
+                                                  .addFilter("createdAt", GE, workflowExecution.getCreatedAt())
+                                                  .addFieldsExcluded("contextElements", "callback")
+                                                  .build();
+    List<StateExecutionInstance> allInstances = getAllStateExecutionInstances(req);
+    if (isEmpty(allInstances)) {
+      return;
+    }
 
-        final GraphNode graphNode =
-            graphRenderer.generateHierarchyNode(allInstancesIdMap, initialStateName, excludeFromAggregation);
-        workflowExecution.setExecutionNode(graphNode);
+    Map<String, StateExecutionInstance> allInstancesIdMap = new HashMap<>();
+    for (StateExecutionInstance stateExecutionInstance : allInstances) {
+      allInstancesIdMap.put(stateExecutionInstance.getUuid(), stateExecutionInstance);
+    }
+
+    if (!workflowExecution.getStatus().isFinalStatus()) {
+      if (allInstances.stream().anyMatch(
+              i -> i.getStatus() == ExecutionStatus.PAUSED || i.getStatus() == ExecutionStatus.PAUSING)) {
+        workflowExecution.setStatus(ExecutionStatus.PAUSED);
+      } else if (allInstances.stream().anyMatch(i -> i.getStatus() == ExecutionStatus.WAITING)) {
+        workflowExecution.setStatus(ExecutionStatus.WAITING);
+      } else {
+        List<ExecutionInterrupt> executionInterrupts = executionInterruptManager.checkForExecutionInterrupt(
+            workflowExecution.getAppId(), workflowExecution.getUuid());
+        if (executionInterrupts != null
+            && executionInterrupts.stream().anyMatch(
+                   e -> e.getExecutionInterruptType() == ExecutionInterruptType.PAUSE_ALL)) {
+          workflowExecution.setStatus(ExecutionStatus.PAUSING);
+        }
       }
     }
+    if (!includeGraph) {
+      return;
+    }
+    String initialStateName;
+    if (workflowExecution.getStatus() == NEW || workflowExecution.getStatus() == QUEUED) {
+      initialStateName = allInstances.get(0).getStateName();
+    } else {
+      StateExecutionInstance stateExecutionInstance = getEarliestInstance(allInstances);
+      initialStateName = stateExecutionInstance.getStateName();
+    }
+
+    final GraphNode graphNode =
+        graphRenderer.generateHierarchyNode(allInstancesIdMap, initialStateName, excludeFromAggregation);
+    workflowExecution.setExecutionNode(graphNode);
   }
 
   private StateExecutionInstance getEarliestInstance(List<StateExecutionInstance> allInstances) {
