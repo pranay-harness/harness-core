@@ -1,5 +1,6 @@
 package software.wings.utils;
 
+import static io.harness.data.structure.EmptyPredicate.isNotEmpty;
 import static org.apache.commons.lang3.StringUtils.isNotBlank;
 import static org.apache.commons.lang3.StringUtils.trim;
 
@@ -14,6 +15,7 @@ import java.util.regex.Pattern;
  * Created by brett on 3/8/17
  */
 public class KubernetesConvention {
+  public static final int HELM_RELEASE_VERSION_LENGTH = 15;
   private static Logger logger = LoggerFactory.getLogger(KubernetesConvention.class);
 
   public static final String DOT = ".";
@@ -98,5 +100,18 @@ public class KubernetesConvention {
 
   private static String noDot(String str) {
     return str != null ? str.replaceAll("\\.", DASH) : "null";
+  }
+
+  public static String getHelmReleaseName(String appName, String serviceName, String envName, String infraMappingId) {
+    String controllerNamePrefix = normalize(appName + DASH + serviceName + DASH + envName);
+    String infraMappingIdPrefix = infraMappingId.substring(0, 7).toLowerCase().replace('-', 'z').replace('_', 'z');
+    String revision = "harness" + DASH + infraMappingIdPrefix;
+    return normalize(controllerNamePrefix) + DASH + revision;
+  }
+
+  public static String getHelmHarnessReleaseRevision(String releaseName) {
+    return isNotEmpty(releaseName) && releaseName.length() > HELM_RELEASE_VERSION_LENGTH
+        ? releaseName.substring(releaseName.length() - 15)
+        : null;
   }
 }

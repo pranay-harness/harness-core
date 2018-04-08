@@ -72,9 +72,14 @@ public enum ContextElementType {
   AWS_LAMBDA_FUNCTION, /**
                         * Ami service context element type.
                         */
-  AMI_SERVICE_SETUP,
+  AMI_SERVICE_SETUP, /**
+                      * Ami service deploy context element type.
+                      */
   AMI_SERVICE_DEPLOY, /**
                        * Artifact context element type.
                        */
-  ARTIFACT
+  ARTIFACT, /**
+             * Helm deploy context element type.
+             */
+  HELM_DEPLOY
 }

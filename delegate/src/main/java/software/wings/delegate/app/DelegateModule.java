@@ -53,6 +53,10 @@ import software.wings.helpers.ext.ecr.EcrService;
 import software.wings.helpers.ext.ecr.EcrServiceImpl;
 import software.wings.helpers.ext.gcr.GcrService;
 import software.wings.helpers.ext.gcr.GcrServiceImpl;
+import software.wings.helpers.ext.helm.HelmClient;
+import software.wings.helpers.ext.helm.HelmClientImpl;
+import software.wings.helpers.ext.helm.HelmDeployService;
+import software.wings.helpers.ext.helm.HelmDeployServiceImpl;
 import software.wings.helpers.ext.jenkins.Jenkins;
 import software.wings.helpers.ext.jenkins.JenkinsFactory;
 import software.wings.helpers.ext.jenkins.JenkinsImpl;
@@ -224,6 +228,8 @@ public class DelegateModule extends AbstractModule {
     bind(SecretManagementDelegateService.class).to(SecretManagementDelegateServiceImpl.class);
     bind(EncryptionService.class).to(EncryptionServiceImpl.class);
     bind(Clock.class).toInstance(Clock.systemUTC());
+    bind(HelmClient.class).to(HelmClientImpl.class);
+    bind(HelmDeployService.class).to(HelmDeployServiceImpl.class);
     bind(MessageService.class)
         .toInstance(
             new MessageServiceImpl(Clock.systemUTC(), MessengerType.DELEGATE, DelegateApplication.getProcessId()));

@@ -151,7 +151,7 @@ public class DelegateFileManagerImpl implements DelegateFileManager {
         Arrays.sort(files, Comparator.comparingLong(File::lastModified));
         for (int idx = 0; idx < files.length - maxCachedArtifacts; idx++) {
           File file = files[idx];
-          synchronized (file.getName()) {
+          synchronized (fileIdLocks.get(file.getName())) {
             if (file.exists() && !file.isDirectory()) {
               boolean deleted = file.delete();
               if (deleted) {

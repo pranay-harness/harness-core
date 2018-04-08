@@ -427,29 +427,27 @@ public class ServiceTemplateServiceImpl implements ServiceTemplateService {
   }
 
   @Override
-  public List<String> computeHelmValueYaml(String appId, String envId, String templateId) {
-    ServiceTemplate serviceTemplate = get(appId, envId, templateId, false, false);
-    if (serviceTemplate == null) {
-      return null;
-    }
-
+  public List<String> helmValueOverridesYamlFiles(String appId, String templateId) {
     List<String> result = new ArrayList<>();
-    Service service = serviceResourceService.get(appId, serviceTemplate.getServiceId());
-    Environment env = environmentService.get(appId, envId, false);
 
-    if (isNotBlank(service.getHelmValueYaml())) {
-      result.add(service.getHelmValueYaml());
+    ServiceTemplate serviceTemplate = get(appId, templateId);
+    if (serviceTemplate != null) {
+      Service service = serviceResourceService.get(appId, serviceTemplate.getServiceId());
+      Environment env = environmentService.get(appId, serviceTemplate.getEnvId(), false);
+
+      if (isNotBlank(service.getHelmValueYaml())) {
+        result.add(service.getHelmValueYaml());
+      }
+
+      if (isNotBlank(env.getHelmValueYaml())) {
+        result.add(env.getHelmValueYaml());
+      }
+
+      Map<String, String> envHelmValues = env.getHelmValueYamlByServiceTemplateId();
+      if (isNotEmpty(envHelmValues) && isNotBlank(envHelmValues.get(templateId))) {
+        result.add(envHelmValues.get(templateId));
+      }
     }
-
-    if (isNotBlank(env.getHelmValueYaml())) {
-      result.add(env.getHelmValueYaml());
-    }
-
-    Map<String, String> envHelmValues = env.getHelmValueYamlByServiceTemplateId();
-    if (isNotEmpty(envHelmValues) && isNotBlank(envHelmValues.get(templateId))) {
-      result.add(envHelmValues.get(templateId));
-    }
-
     return result;
   }
 

@@ -26,9 +26,8 @@ import javax.validation.constraints.NotNull;
 @Entity(value = "activities", noClassnameStored = true)
 @Data
 @EqualsAndHashCode(callSuper = false)
-@NoArgsConstructor
 @AllArgsConstructor
-@Builder
+@NoArgsConstructor
 public class Activity extends Base {
   public static final String ARTIFACT_ID_KEY = "artifactId";
   public static final String SERVICE_INSTANCE_ID_KEY = "serviceInstanceId";
@@ -60,7 +59,7 @@ public class Activity extends Base {
   @NotEmpty private String stateExecutionInstanceName;
   @Version private Long version; // Morphia managed for optimistic locking. don't remove
 
-  @Builder.Default private CommandUnitType commandUnitType = CommandUnitType.COMMAND;
+  private CommandUnitType commandUnitType = CommandUnitType.COMMAND;
   private boolean logPurged;
 
   private String artifactStreamId;
@@ -82,5 +81,51 @@ public class Activity extends Base {
      * Verification type.
      */
     Verification
+  }
+
+  @Builder
+  public Activity(String uuid, String appId, EmbeddedUser createdBy, long createdAt, EmbeddedUser lastUpdatedBy,
+      long lastUpdatedAt, List<String> keywords, String entityYamlPath, Type type, String applicationName,
+      String environmentId, String environmentName, EnvironmentType environmentType, String commandName,
+      List<CommandUnit> commandUnits, Map<String, Integer> commandNameVersionMap, Map<String, String> serviceVariables,
+      String commandType, String serviceId, String serviceName, String serviceTemplateId, String serviceTemplateName,
+      String hostName, String publicDns, String serviceInstanceId, String workflowExecutionId, String workflowId,
+      String workflowExecutionName, WorkflowType workflowType, String stateExecutionInstanceId,
+      String stateExecutionInstanceName, Long version, CommandUnitType commandUnitType, boolean logPurged,
+      String artifactStreamId, String artifactStreamName, boolean isPipeline, String artifactId, String artifactName,
+      ExecutionStatus status) {
+    super(uuid, appId, createdBy, createdAt, lastUpdatedBy, lastUpdatedAt, keywords, entityYamlPath);
+    this.type = type;
+    this.applicationName = applicationName;
+    this.environmentId = environmentId;
+    this.environmentName = environmentName;
+    this.environmentType = environmentType;
+    this.commandName = commandName;
+    this.commandUnits = commandUnits == null ? new ArrayList<>() : commandUnits;
+    this.commandNameVersionMap = commandNameVersionMap;
+    this.serviceVariables = serviceVariables == null ? Maps.newHashMap() : serviceVariables;
+    this.commandType = commandType;
+    this.serviceId = serviceId;
+    this.serviceName = serviceName;
+    this.serviceTemplateId = serviceTemplateId;
+    this.serviceTemplateName = serviceTemplateName;
+    this.hostName = hostName;
+    this.publicDns = publicDns;
+    this.serviceInstanceId = serviceInstanceId;
+    this.workflowExecutionId = workflowExecutionId;
+    this.workflowId = workflowId;
+    this.workflowExecutionName = workflowExecutionName;
+    this.workflowType = workflowType;
+    this.stateExecutionInstanceId = stateExecutionInstanceId;
+    this.stateExecutionInstanceName = stateExecutionInstanceName;
+    this.version = version;
+    this.commandUnitType = commandUnitType == null ? CommandUnitType.COMMAND : commandUnitType;
+    this.logPurged = logPurged;
+    this.artifactStreamId = artifactStreamId;
+    this.artifactStreamName = artifactStreamName;
+    this.isPipeline = isPipeline;
+    this.artifactId = artifactId;
+    this.artifactName = artifactName;
+    this.status = status == null ? ExecutionStatus.RUNNING : status;
   }
 }

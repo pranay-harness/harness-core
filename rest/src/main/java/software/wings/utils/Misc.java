@@ -147,7 +147,7 @@ public class Misc {
     while (t != null && i++ < MAX_CAUSES) {
       String msg = getMessage(t);
       if (isNotBlank(msg)) {
-        executionLogCallback.saveExecutionLog(msg, commandExecutionStatus, LogLevel.ERROR);
+        executionLogCallback.saveExecutionLog(msg, LogLevel.ERROR, commandExecutionStatus);
       }
       t = t.getCause();
     }

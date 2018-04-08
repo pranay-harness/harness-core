@@ -81,8 +81,6 @@ public class ServiceVariableServiceImpl implements ServiceVariableService {
           .addParam("args", "Service setting not supported for entityType " + serviceVariable.getEntityType());
     }
 
-    ExpressionEvaluator.isValidVariableName(serviceVariable.getName());
-
     // TODO:: revisit. for environment envId can be specific
     String envId =
         serviceVariable.getEntityType().equals(SERVICE) || serviceVariable.getEntityType().equals(ENVIRONMENT)

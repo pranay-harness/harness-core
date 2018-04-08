@@ -291,3 +291,14 @@ software.wings.beans.WinRmConnectionAttributes, 5255
 software.wings.beans.WinRmConnectionAttributes$AuthenticationScheme, 5256
 software.wings.api.BarrierStepExecutionSummary, 5257
 software.wings.api.BarrierExecutionData, 5258
+software.wings.helpers.ext.helm.request.HelmInstallCommandRequest, 5259
+software.wings.helpers.ext.helm.HelmCommandExecutionResponse, 5260
+software.wings.helpers.ext.helm.response.HelmCommandResponse, 5261
+software.wings.helpers.ext.helm.request.HelmCommandRequest$HelmCommandType, 5262
+software.wings.helpers.ext.helm.response.HelmInstallCommandResponse, 5263
+software.wings.helpers.ext.helm.response.ReleaseInfo, 5264
+software.wings.helpers.ext.helm.request.HelmReleaseHistoryCommandRequest, 5265
+software.wings.helpers.ext.helm.response.HelmReleaseHistoryCommandResponse, 5266
+software.wings.api.HelmSetupExecutionSummary, 5267
+software.wings.helpers.ext.helm.request.HelmRollbackCommandRequest, 5268
+software.wings.beans.container.HelmChartSpecification, 5269

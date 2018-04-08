@@ -11,6 +11,7 @@ import software.wings.delegatetasks.DelegateRunnableTask;
 import software.wings.delegatetasks.DynaTraceDataCollectionTask;
 import software.wings.delegatetasks.ElkLogzDataCollectionTask;
 import software.wings.delegatetasks.GitCommandTask;
+import software.wings.delegatetasks.HelmCommandTask;
 import software.wings.delegatetasks.HttpTask;
 import software.wings.delegatetasks.JenkinsTask;
 import software.wings.delegatetasks.NewRelicDataCollectionTask;
@@ -169,7 +170,8 @@ public enum TaskType {
   DYNA_TRACE_VALIDATE_CONFIGURATION_TASK(
       TaskGroup.DYNA_TRACE, ServiceImplDelegateTask.class, DynaTraceValidation.class),
   DYNA_TRACE_METRIC_DATA_COLLECTION_TASK(
-      TaskGroup.DYNA_TRACE, DynaTraceDataCollectionTask.class, DynaTraceValidation.class);
+      TaskGroup.DYNA_TRACE, DynaTraceDataCollectionTask.class, DynaTraceValidation.class),
+  HELM_COMMAND_TASK(TaskGroup.HELM, HelmCommandTask.class, AlwaysTrueValidation.class);
 
   private final TaskGroup taskGroup;
   private final Class<? extends DelegateRunnableTask> delegateRunnableTaskClass;

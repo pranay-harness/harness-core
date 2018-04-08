@@ -13,14 +13,22 @@ import software.wings.delegatetasks.DelegateLogService;
  */
 public class ExecutionLogCallback implements LogCallback {
   private transient DelegateLogService logService;
-  private CommandExecutionContext commandExecutionContext;
+  private String accountId;
+  private String appId;
+  private String activityId;
   private String commandName;
   private static final Logger logger = LoggerFactory.getLogger(ExecutionLogCallback.class);
 
-  public ExecutionLogCallback() {}
+  public ExecutionLogCallback() {
+    // do nothing callback
+  }
 
-  public ExecutionLogCallback(CommandExecutionContext commandExecutionContext, String commandName) {
-    this.commandExecutionContext = commandExecutionContext;
+  public ExecutionLogCallback(
+      DelegateLogService logService, String accountId, String appId, String activityId, String commandName) {
+    this.logService = logService;
+    this.accountId = accountId;
+    this.appId = appId;
+    this.activityId = activityId;
     this.commandName = commandName;
   }
 
@@ -29,15 +37,19 @@ public class ExecutionLogCallback implements LogCallback {
   }
 
   public void saveExecutionLog(String line, LogLevel logLevel) {
+    saveExecutionLog(line, logLevel, CommandExecutionStatus.RUNNING);
+  }
+
+  public void saveExecutionLog(String line, LogLevel logLevel, CommandExecutionStatus commandExecutionStatus) {
     if (logService != null) {
-      logService.save(commandExecutionContext.getAccountId(),
+      logService.save(accountId,
           aLog()
-              .withAppId(commandExecutionContext.getAppId())
-              .withActivityId(commandExecutionContext.getActivityId())
+              .withAppId(appId)
+              .withActivityId(activityId)
               .withLogLevel(logLevel)
               .withCommandUnitName(commandName)
               .withLogLine(line)
-              .withExecutionResult(CommandExecutionStatus.RUNNING)
+              .withExecutionResult(commandExecutionStatus)
               .build());
     } else {
       logger.error("No logService injected. Couldn't save log [{}:{}]", logLevel, line);

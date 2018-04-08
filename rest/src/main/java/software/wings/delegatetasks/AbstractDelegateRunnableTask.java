@@ -1,3 +1,4 @@
+
 package software.wings.delegatetasks;
 
 import com.google.inject.Inject;
@@ -6,6 +7,7 @@ import com.google.inject.name.Named;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import software.wings.beans.DelegateTask;
+import software.wings.beans.TaskType;
 import software.wings.waitnotify.ErrorNotifyResponseData;
 import software.wings.waitnotify.NotifyResponseData;
 
@@ -33,6 +35,8 @@ public abstract class AbstractDelegateRunnableTask implements DelegateRunnableTa
   private String accountId;
   private String appId;
   private String taskId;
+  private TaskType taskType;
+  private boolean isAsync;
   private Object[] parameters;
   private Consumer<NotifyResponseData> consumer;
   private Supplier<Boolean> preExecute;
@@ -48,6 +52,8 @@ public abstract class AbstractDelegateRunnableTask implements DelegateRunnableTa
     this.appId = delegateTask.getAppId();
     this.consumer = consumer;
     this.preExecute = preExecute;
+    this.taskType = delegateTask.getTaskType();
+    this.isAsync = delegateTask.isAsync();
   }
 
   @Override
@@ -124,5 +130,17 @@ public abstract class AbstractDelegateRunnableTask implements DelegateRunnableTa
 
   public Object[] getParameters() {
     return parameters;
+  }
+
+  public TaskType getTaskType() {
+    return taskType;
+  }
+
+  public boolean isAsync() {
+    return isAsync;
+  }
+
+  public void setAsync(boolean async) {
+    isAsync = async;
   }
 }

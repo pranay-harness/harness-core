@@ -77,6 +77,8 @@ import software.wings.sm.states.EmailState;
 import software.wings.sm.states.EnvState;
 import software.wings.sm.states.ForkState;
 import software.wings.sm.states.GcpClusterSetup;
+import software.wings.sm.states.HelmDeployState;
+import software.wings.sm.states.HelmRollbackState;
 import software.wings.sm.states.HttpState;
 import software.wings.sm.states.JenkinsState;
 import software.wings.sm.states.KubernetesDeploy;
@@ -335,7 +337,14 @@ public enum StateType implements StateTypeDescriptor {
 
   GCP_CLUSTER_SETUP(GcpClusterSetup.class, CLOUD,
       Lists.newArrayList(InfrastructureMappingType.GCP_KUBERNETES, InfrastructureMappingType.AZURE_KUBERNETES),
-      asList(CLUSTER_SETUP), ORCHESTRATION_STENCILS);
+      asList(CLUSTER_SETUP), ORCHESTRATION_STENCILS),
+
+  HELM_DEPLOY(HelmDeployState.class, COMMANDS, Constants.UPGRADE_CONTAINERS,
+      Lists.newArrayList(InfrastructureMappingType.DIRECT_KUBERNETES), asList(PhaseStepType.HELM_DEPLOY),
+      ORCHESTRATION_STENCILS),
+  HELM_ROLLBACK(HelmRollbackState.class, COMMANDS, Constants.ROLLBACK_CONTAINERS,
+      Lists.newArrayList(InfrastructureMappingType.DIRECT_KUBERNETES), asList(PhaseStepType.HELM_DEPLOY),
+      ORCHESTRATION_STENCILS);
 
   private static final String stencilsPath = "/templates/stencils/";
   private static final String uiSchemaSuffix = "-UISchema.json";

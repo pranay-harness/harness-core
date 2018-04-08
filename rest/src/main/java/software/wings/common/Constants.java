@@ -268,6 +268,16 @@ public interface Constants {
    * The constant UPGRADE_CONTAINERS.
    */
   String UPGRADE_CONTAINERS = "Upgrade Containers";
+
+  /**
+   * The constant HELM_DEPLOY.
+   */
+  String HELM_DEPLOY = "Helm Deploy";
+
+  /**
+   * The constant HELM_ROLLBACK.
+   */
+  String HELM_ROLLBACK = "Helm Rollback";
   /**
    * The constant ROLLBACK_AWS_CODE_DEPLOY.
    */
@@ -657,9 +667,21 @@ public interface Constants {
    */
   String HARNESS_NAME = "Harness";
 
+  /**
+   * The constant HARNESS_APP.
+   */
   String HARNESS_APP = "harness-app";
+  /**
+   * The constant HARNESS_SERVICE.
+   */
   String HARNESS_SERVICE = "harness-service";
+  /**
+   * The constant HARNESS_ENV.
+   */
   String HARNESS_ENV = "harness-env";
+  /**
+   * The constant HARNESS_REVISION.
+   */
   String HARNESS_REVISION = "harness-revision";
 
   /**
@@ -694,13 +716,31 @@ public interface Constants {
    * The constant DEPLOYMENT.
    */
   String DEPLOYMENT = "DEPLOYMENT";
+  /**
+   * The constant DEFAULT_OLD_USER_GROUP_NAME.
+   */
   String DEFAULT_OLD_USER_GROUP_NAME = "ADMIN";
+  /**
+   * The constant DEFAULT_ACCOUNT_ADMIN_USER_GROUP_NAME.
+   */
   String DEFAULT_ACCOUNT_ADMIN_USER_GROUP_NAME = "Account Administrator";
+  /**
+   * The constant DEFAULT_PROD_SUPPORT_USER_GROUP_NAME.
+   */
   String DEFAULT_PROD_SUPPORT_USER_GROUP_NAME = "Production Support";
+  /**
+   * The constant DEFAULT_PROD_SUPPORT_USER_GROUP_DESCRIPTION.
+   */
   String DEFAULT_PROD_SUPPORT_USER_GROUP_DESCRIPTION =
       "Production Support members have access to override configuration, "
       + "setup infrastructure and setup/execute deployment workflows within PROD environments";
+  /**
+   * The constant DEFAULT_NON_PROD_SUPPORT_USER_GROUP_NAME.
+   */
   String DEFAULT_NON_PROD_SUPPORT_USER_GROUP_NAME = "Non-Production Support";
+  /**
+   * The constant DEFAULT_NON_PROD_SUPPORT_USER_GROUP_DESCRIPTION.
+   */
   String DEFAULT_NON_PROD_SUPPORT_USER_GROUP_DESCRIPTION =
       "Non-production Support members have access to override configuration, "
       + "setup infrastructure and setup/execute deployment workflows within NON_PROD environments";

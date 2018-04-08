@@ -278,6 +278,11 @@ public class EcsInfrastructureMapping extends ContainerInfrastructureMapping {
         .withName(getName());
   }
 
+  @Override
+  public String getNamespace() {
+    return null;
+  }
+
   public static final class Builder {
     public transient String entityYamlPath; // TODO:: remove it with changeSet batching
     protected String appId;

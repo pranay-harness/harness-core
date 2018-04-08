@@ -37,7 +37,12 @@ public class ManagerExecutionLogCallback implements LogCallback {
     saveExecutionLog(line, CommandExecutionStatus.RUNNING, logLevel);
   }
 
-  public void saveExecutionLog(String line, CommandExecutionStatus commandExecutionStatus, LogLevel logLevel) {
+  private void saveExecutionLog(String line, CommandExecutionStatus status, LogLevel logLevel) {
+    saveExecutionLog(line, logLevel, status);
+  }
+
+  @Override
+  public void saveExecutionLog(String line, LogLevel logLevel, CommandExecutionStatus commandExecutionStatus) {
     if (logService != null) {
       Log log =
           logBuilder.but().withLogLevel(logLevel).withExecutionResult(commandExecutionStatus).withLogLine(line).build();

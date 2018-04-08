@@ -73,4 +73,5 @@ public abstract class ContainerInfrastructureMapping extends InfrastructureMappi
       this.cluster = cluster;
     }
   }
+  public abstract String getNamespace();
 }

@@ -29,6 +29,6 @@ public enum TaskGroup {
   KMS,
   GIT,
   CONTAINER,
-  AMI
-
+  AMI,
+  HELM
 }

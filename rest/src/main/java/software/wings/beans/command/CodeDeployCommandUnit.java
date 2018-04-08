@@ -67,8 +67,8 @@ public class CodeDeployCommandUnit extends AbstractCommandUnit {
             .withBundleType(codeDeployParams.getBundleType())
             .withKey(codeDeployParams.getKey()));
 
-    ExecutionLogCallback executionLogCallback = new ExecutionLogCallback(context, getName());
-    executionLogCallback.setLogService(logService);
+    ExecutionLogCallback executionLogCallback = new ExecutionLogCallback(
+        logService, context.getAccountId(), context.getAppId(), context.getActivityId(), getName());
     CommandExecutionStatus commandExecutionStatus;
 
     try {
