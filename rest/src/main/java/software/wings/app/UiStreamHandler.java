@@ -6,12 +6,12 @@ import static org.apache.commons.lang3.StringUtils.isBlank;
 import static software.wings.beans.ErrorCode.INVALID_REQUEST;
 import static software.wings.beans.ErrorCode.INVALID_TOKEN;
 import static software.wings.beans.ErrorCode.UNKNOWN_ERROR;
+import static software.wings.beans.ResponseMessage.Level.ERROR;
 import static software.wings.beans.ResponseMessage.aResponseMessage;
 
 import com.google.common.base.Splitter;
 import com.google.inject.Inject;
 
-import io.harness.eraro.Level;
 import org.atmosphere.cache.UUIDBroadcasterCache;
 import org.atmosphere.config.service.AtmosphereHandlerService;
 import org.atmosphere.cpr.AtmosphereRequest;
@@ -138,7 +138,7 @@ public class UiStreamHandler extends AtmosphereHandlerAdapter {
     }
     resource.write(JsonUtils.asJson(aResponseMessage()
                                         .code(errorCode)
-                                        .level(Level.ERROR)
+                                        .level(ERROR)
                                         .message(ResponseCodeCache.getInstance().prepareMessage(errorCode, null))
                                         .build()));
     resource.close();

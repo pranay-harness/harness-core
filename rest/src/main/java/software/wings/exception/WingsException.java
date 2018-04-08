@@ -2,12 +2,14 @@ package software.wings.exception;
 
 import static io.harness.data.structure.EmptyPredicate.isNotEmpty;
 import static java.util.stream.Collectors.toList;
+import static software.wings.beans.ResponseMessage.Level.ERROR;
+import static software.wings.beans.ResponseMessage.Level.INFO;
+import static software.wings.beans.ResponseMessage.Level.WARN;
 import static software.wings.beans.ResponseMessage.aResponseMessage;
 import static software.wings.exception.WingsException.ReportTarget.HARNESS_ENGINEER;
 import static software.wings.exception.WingsException.ReportTarget.USER;
 import static software.wings.exception.WingsException.ReportTarget.USER_ADMIN;
 
-import io.harness.eraro.Level;
 import lombok.Builder;
 import lombok.Getter;
 import org.apache.commons.lang3.ArrayUtils;
@@ -169,9 +171,11 @@ public class WingsException extends WingsApiException {
     final List<ResponseMessage> responseMessages = getResponseMessageList(HARNESS_ENGINEER);
 
     String msg = "Exception occurred: " + getMessage();
-    if (responseMessages.stream().anyMatch(responseMessage -> responseMessage.getLevel() == Level.ERROR)) {
+    if (responseMessages.stream().anyMatch(responseMessage -> responseMessage.getLevel() == ERROR)) {
       logger.error(msg, this);
-    } else if (responseMessages.stream().anyMatch(responseMessage -> responseMessage.getLevel() == Level.INFO)) {
+    } else if (responseMessages.stream().anyMatch(responseMessage -> responseMessage.getLevel() == WARN)) {
+      logger.warn(msg, this);
+    } else if (responseMessages.stream().anyMatch(responseMessage -> responseMessage.getLevel() == INFO)) {
       logger.info(msg, this);
     } else {
       logger.debug(msg, this);

@@ -2,12 +2,14 @@ package software.wings.utils;
 
 import static software.wings.beans.ErrorCode.GENERAL_ERROR;
 import static software.wings.beans.ErrorCode.INVALID_REQUEST;
+import static software.wings.beans.ResponseMessage.Level.ERROR;
+import static software.wings.beans.ResponseMessage.Level.WARN;
 import static software.wings.beans.ResponseMessage.aResponseMessage;
 
 import com.mongodb.DuplicateKeyException;
-import io.harness.eraro.Level;
 import software.wings.beans.ErrorCode;
 import software.wings.beans.ResponseMessage;
+import software.wings.beans.ResponseMessage.Level;
 import software.wings.beans.UuidAware;
 import software.wings.exception.WingsException;
 
@@ -98,7 +100,7 @@ public class Validator {
    * @param message
    * @return
    */
-  private static WingsException prepareWingsException(
+  public static WingsException prepareWingsException(
       ErrorCode errorCode, Level responseType, String param, String message) {
     return new WingsException(prepareResponseMessage(errorCode, responseType, message)).addParam(param, message);
   }
@@ -110,7 +112,7 @@ public class Validator {
    * @param message
    */
   public static WingsException prepareWingsException(ErrorCode errorCode, String param, String message) {
-    return prepareWingsException(errorCode, Level.INFO, param, message);
+    return prepareWingsException(errorCode, WARN, param, message);
   }
 
   /**
@@ -121,6 +123,6 @@ public class Validator {
    * @return
    */
   public static ResponseMessage prepareResponseMessage(ErrorCode errorCode, Level level, String errorMsg) {
-    return aResponseMessage().code(errorCode).level(level == null ? Level.ERROR : level).message(errorMsg).build();
+    return aResponseMessage().code(errorCode).level(level == null ? ERROR : level).message(errorMsg).build();
   }
 }
