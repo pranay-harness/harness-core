@@ -1,4 +1,4 @@
-package software.wings.logging;
+package io.harness.logging;
 
 import com.google.common.base.Splitter;
 

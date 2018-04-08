@@ -61,12 +61,6 @@
         </dependency>
 
         <dependency>
-            <groupId>software.wings</groupId>
-            <artifactId>logging</artifactId>
-            <version>${project.parent.version}</version>
-        </dependency>
-
-        <dependency>
             <groupId>io.dropwizard</groupId>
             <artifactId>dropwizard-core</artifactId>
         </dependency>

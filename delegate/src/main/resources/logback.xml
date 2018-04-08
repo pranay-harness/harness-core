@@ -2,7 +2,7 @@
 <configuration>
     <statusListener class="ch.qos.logback.core.status.NopStatusListener"/>
 
-    <conversionRule conversionWord="process_id" converterClass="software.wings.logging.ProcessIdConverter"/>
+    <conversionRule conversionWord="process_id" converterClass="io.harness.logging.ProcessIdConverter"/>
 
     <appender name="file" class="ch.qos.logback.core.rolling.RollingFileAppender">
         <file>delegate.log</file>
@@ -30,7 +30,7 @@
         </encoder>
     </appender>
 
-    <appender name="REST" class="software.wings.logging.RestLogAppender">
+    <appender name="REST" class="io.harness.logging.RestLogAppender">
         <layout class="ch.qos.logback.classic.PatternLayout">
             <pattern>%boldGreen(%process_id) %boldCyan(${version}) %green([%thread]) %cyan(%logger) - %msg %n</pattern>
         </layout>

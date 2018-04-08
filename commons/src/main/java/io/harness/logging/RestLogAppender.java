@@ -1,4 +1,4 @@
-package software.wings.logging;
+package io.harness.logging;
 
 import static io.harness.network.Localhost.getLocalHostName;
 import static java.lang.String.format;
@@ -27,17 +27,13 @@ import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
 import java.util.concurrent.TimeUnit;
 
-/**
- * The type Rest log appender.
- *
- * @param <E> the type parameter
- */
 public class RestLogAppender<E> extends AppenderBase<E> {
   private static final Logger logger = LoggerFactory.getLogger(RestLogAppender.class);
 
   private static final int MAX_BATCH_SIZE = 1000;
   private static final String LOGDNA_INGEST_URL = "https://logs.logdna.com/logs/ingest?hostname=%s&now=:now";
   public static final String LOGDNA_HOST = "https://logs.logdna.com";
+
   private String programName;
   private String key;
   private String localhostName = "localhost";
@@ -124,92 +120,38 @@ public class RestLogAppender<E> extends AppenderBase<E> {
     }
   }
 
-  /**
-   * Gets program name.
-   *
-   * @return the program name
-   */
   public String getProgramName() {
     return programName;
   }
-
-  /**
-   * Sets program name.
-   *
-   * @param programName the program name
-   */
   public void setProgramName(String programName) {
     this.programName = programName;
   }
 
-  /**
-   * Gets key.
-   *
-   * @return the key
-   */
   public String getKey() {
     return key;
   }
-
-  /**
-   * Sets key.
-   *
-   * @param key the key
-   */
   public void setKey(String key) {
     this.key = key;
   }
 
-  /**
-   * Gets layout.
-   *
-   * @return the layout
-   */
   public Layout<E> getLayout() {
     return layout;
   }
-
-  /**
-   * Sets layout.
-   *
-   * @param layout the layout
-   */
   public void setLayout(Layout<E> layout) {
     this.layout = layout;
   }
 
-  /**
-   * The type Log lines.
-   */
   public static class LogLines {
-    /**
-     * The Lines.
-     */
     List<LogLine> lines = new ArrayList<>();
 
-    /**
-     * Gets lines.
-     *
-     * @return the lines
-     */
     public List<LogLine> getLines() {
       return lines;
     }
 
-    /**
-     * Sets lines.
-     *
-     * @param lines the lines
-     */
     public void setLines(List<LogLine> lines) {
       this.lines = lines;
     }
 
-    /**
-     * Add.
-     *
-     * @param logLine the log line
-     */
     public void add(LogLine logLine) {
       if (logLine != null) {
         lines.add(logLine);
@@ -225,77 +167,34 @@ public class RestLogAppender<E> extends AppenderBase<E> {
     }
   }
 
-  /**
-   * The type Log line.
-   */
   public static class LogLine {
     private String line;
     private String app;
     private String level;
 
-    /**
-     * Instantiates a new Log line.
-     *
-     * @param line  the line
-     * @param level the level
-     * @param app   the app
-     */
     public LogLine(String line, String level, String app) {
       this.line = line;
       this.app = app;
       this.level = level;
     }
 
-    /**
-     * Gets line.
-     *
-     * @return the line
-     */
     public String getLine() {
       return line;
     }
-
-    /**
-     * Sets line.
-     *
-     * @param line the line
-     */
     public void setLine(String line) {
       this.line = line;
     }
 
-    /**
-     * Gets app.
-     *
-     * @return the app
-     */
     public String getApp() {
       return app;
     }
-
-    /**
-     * Sets app.
-     *
-     * @param app the app
-     */
     public void setApp(String app) {
       this.app = app;
     }
 
-    /**
-     * Gets level.
-     *
-     * @return the level
-     */
     public String getLevel() {
       return level;
     }
-
-    /**
-     * Sets level.
-     *
-     * @param level the level
-     */
     public void setLevel(String level) {
       this.level = level;
     }
