@@ -149,8 +149,6 @@ public class YamlHelper {
     // remove empty arrays/lists:
     yaml = yaml.replace("[]", "");
 
-    yaml = fixIndentSpaces(yaml);
-
     return yaml;
   }
 
@@ -188,41 +186,6 @@ public class YamlHelper {
             }
             continue;
           }
-        }
-
-        sb.append(line).append('\n');
-      }
-    } catch (Exception e) {
-      logger.error("", e);
-    }
-
-    return sb.toString();
-  }
-
-  private static String fixIndentSpaces(String content) {
-    StringBuilder sb = new StringBuilder();
-
-    BufferedReader bufReader = new BufferedReader(new StringReader(content));
-
-    String line = null;
-
-    try {
-      while ((line = bufReader.readLine()) != null) {
-        // count number of spaces or dashes at start of line
-        int count = 0;
-
-        for (int i = 0; i < line.length(); i++) {
-          char c = line.charAt(i);
-          // Process char
-          if (c != ' ' && c != '-') {
-            count = i;
-            break;
-          }
-        }
-
-        // prepend that many spaces to the start of the line
-        for (int i = 0; i < count; i++) {
-          sb.append(' ');
         }
 
         sb.append(line).append('\n');

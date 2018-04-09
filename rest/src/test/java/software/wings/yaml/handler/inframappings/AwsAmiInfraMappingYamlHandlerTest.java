@@ -30,7 +30,7 @@ public class AwsAmiInfraMappingYamlHandlerTest extends BaseInfraMappingYamlHandl
       + "type: AWS_AMI\n"
       + "autoScalingGroupName: Abaris__AMI__Test__deploy__v2__QA__Env__1\n"
       + "classicLoadBalancers:\n"
-      + "  - todolist-lb\n"
+      + "- todolist-lb\n"
       + "computeProviderName: aws\n"
       + "computeProviderType: AWS\n"
       + "deploymentType: AMI\n"
