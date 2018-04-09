@@ -22,12 +22,14 @@ import static software.wings.beans.DelegateTaskEvent.DelegateTaskEventBuilder.aD
 import static software.wings.beans.ErrorCode.UNAVAILABLE_DELEGATES;
 import static software.wings.beans.Event.Builder.anEvent;
 import static software.wings.beans.InformationNotification.Builder.anInformationNotification;
+import static software.wings.beans.NotificationGroup.NotificationGroupBuilder.aNotificationGroup;
 import static software.wings.beans.NotificationRule.NotificationRuleBuilder.aNotificationRule;
 import static software.wings.beans.SearchFilter.Operator.EQ;
 import static software.wings.beans.SearchFilter.Operator.IN;
 import static software.wings.beans.alert.AlertType.NoEligibleDelegates;
 import static software.wings.beans.alert.NoEligibleDelegatesAlert.NoEligibleDelegatesAlertBuilder.aNoEligibleDelegatesAlert;
 import static software.wings.common.Constants.DELEGATE_SYNC_CACHE;
+import static software.wings.common.NotificationMessageResolver.NotificationMessageType.DELEGATE_STATE_NOTIFICATION;
 import static software.wings.dl.MongoHelper.setUnset;
 import static software.wings.dl.PageRequest.PageRequestBuilder.aPageRequest;
 import static software.wings.exception.WingsException.ALERTING;
@@ -73,13 +75,14 @@ import software.wings.beans.DelegateTaskEvent;
 import software.wings.beans.DelegateTaskResponse;
 import software.wings.beans.ErrorCode;
 import software.wings.beans.Event.Type;
+import software.wings.beans.NotificationChannelType;
+import software.wings.beans.NotificationGroup;
 import software.wings.beans.NotificationRule;
 import software.wings.beans.alert.AlertData;
 import software.wings.beans.alert.AlertType;
 import software.wings.beans.alert.DelegatesDownAlert;
 import software.wings.beans.alert.NoActiveDelegatesAlert;
 import software.wings.common.Constants;
-import software.wings.common.NotificationMessageResolver.NotificationMessageType;
 import software.wings.delegatetasks.validation.DelegateConnectionResult;
 import software.wings.dl.PageRequest;
 import software.wings.dl.PageResponse;
@@ -105,6 +108,7 @@ import java.io.OutputStreamWriter;
 import java.io.StringWriter;
 import java.time.Clock;
 import java.util.ArrayList;
+import java.util.HashMap;
 import java.util.HashSet;
 import java.util.Iterator;
 import java.util.List;
@@ -124,6 +128,9 @@ import javax.validation.executable.ValidateOnExecution;
 @ValidateOnExecution
 public class DelegateServiceImpl implements DelegateService {
   private static final Configuration cfg = new Configuration(VERSION_2_3_23);
+
+  private static final String DELEGATE_DOWN_SLACK_CHANEL = "delegatedown";
+  private static final String DELEGATE_DOWN_EMAIL_ID = "delegatedown@harness.io";
 
   static {
     cfg.setTemplateLoader(new ClassTemplateLoader(DelegateServiceImpl.class, "/delegatetemplates"));
@@ -1090,16 +1097,22 @@ public class DelegateServiceImpl implements DelegateService {
     alertsToBeCreated.stream().forEach(alertData
         -> hostNamesForDownDelegatesHtml.append(((DelegatesDownAlert) alertData).getHostName()).append("<br />"));
 
-    NotificationRule notificationRule =
-        aNotificationRule()
-            .withNotificationGroups(notificationSetupService.listDefaultNotificationGroup(accountId))
-            .build();
+    // Delegate down notification to a hardcoded email and slack channel
+    List<NotificationGroup> notificationGroups = notificationSetupService.listDefaultNotificationGroup(accountId);
+    Map<NotificationChannelType, List<String>> map = new HashMap<>();
+    map.put(NotificationChannelType.EMAIL, asList(DELEGATE_DOWN_EMAIL_ID));
+    map.put(NotificationChannelType.SLACK, asList(DELEGATE_DOWN_SLACK_CHANEL));
+    NotificationGroup harnessGroup =
+        aNotificationGroup().withAddressesByChannelType(map).withAccountId(accountId).withAppId(GLOBAL_APP_ID).build();
+    notificationGroups.add(harnessGroup);
+
+    NotificationRule notificationRule = aNotificationRule().withNotificationGroups(notificationGroups).build();
 
     notificationService.sendNotificationAsync(
         anInformationNotification()
             .withAppId(GLOBAL_APP_ID)
             .withAccountId(accountId)
-            .withNotificationTemplateId(NotificationMessageType.DELEGATE_STATE_NOTIFICATION.name())
+            .withNotificationTemplateId(DELEGATE_STATE_NOTIFICATION.name())
             .withNotificationTemplateVariables(ImmutableMap.of("HOST_NAMES", hostNamesForDownDelegates,
                 "HOST_NAMES_HTML", hostNamesForDownDelegatesHtml.toString(), "ENTITY_AFFECTED",
                 English.plural("Delegate", alertsToBeCreated.size()), "DESCRIPTION_FIELD",
