@@ -23,5 +23,6 @@ public class LogMLAnalysisSummary {
   private List<LogMLClusterSummary> controlClusters;
   private List<LogMLClusterSummary> testClusters;
   private List<LogMLClusterSummary> unknownClusters;
+  private List<LogMLClusterSummary> ignoreClusters;
   private StateType stateType;
 }

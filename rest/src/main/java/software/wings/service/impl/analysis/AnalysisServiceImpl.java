@@ -796,6 +796,8 @@ public class AnalysisServiceImpl implements AnalysisService {
           computeCluster(analysisRecord.getTest_clusters(), logMLClusterScores.getTest(), CLUSTER_TYPE.TEST));
       analysisSummary.setUnknownClusters(
           computeCluster(analysisRecord.getUnknown_clusters(), logMLClusterScores.getUnknown(), CLUSTER_TYPE.UNKNOWN));
+      analysisSummary.setIgnoreClusters(
+          computeCluster(analysisRecord.getIgnore_clusters(), Collections.emptyMap(), CLUSTER_TYPE.IGNORE));
 
       if (!analysisRecord.isBaseLineCreated()) {
         analysisSummary.setTestClusters(analysisSummary.getControlClusters());
@@ -1273,7 +1275,7 @@ public class AnalysisServiceImpl implements AnalysisService {
     return false;
   }
 
-  public enum CLUSTER_TYPE { CONTROL, TEST, UNKNOWN }
+  public enum CLUSTER_TYPE { CONTROL, TEST, UNKNOWN, IGNORE }
 
   public enum LogMLFeedbackType {
     IGNORE_SERVICE,
