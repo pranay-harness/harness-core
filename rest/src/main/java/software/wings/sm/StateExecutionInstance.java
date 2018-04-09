@@ -33,6 +33,9 @@ import java.util.Map;
 @EqualsAndHashCode(callSuper = false)
 @JsonIgnoreProperties(ignoreUnknown = true)
 public class StateExecutionInstance extends Base {
+  public static final String CALLBACK = "callback";
+  public static final String CONTEXT_ELEMENT_KEY = "contextElement";
+  public static final String CONTEXT_ELEMENTS_KEY = "contextElements";
   public static final String EXECUTION_UUID_KEY = "executionUuid";
   public static final String PARENT_INSTANCE_ID_KEY = "parentInstanceId";
   public static final String PHASE_SUBWORKFLOW_ID_KEY = "phaseSubWorkflowId";
