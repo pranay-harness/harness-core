@@ -30,6 +30,7 @@ import static software.wings.dl.PageRequest.PageRequestBuilder.aPageRequest;
 
 import com.google.common.collect.Lists;
 import com.google.common.collect.Maps;
+import com.google.common.collect.Sets;
 import com.google.inject.Inject;
 import com.google.inject.Singleton;
 
@@ -46,6 +47,7 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import software.wings.beans.Application;
 import software.wings.beans.Base;
+import software.wings.beans.EntityType;
 import software.wings.beans.ErrorCode;
 import software.wings.beans.InfrastructureMapping;
 import software.wings.beans.ResponseMessage;
@@ -70,7 +72,7 @@ import software.wings.exception.YamlProcessingException;
 import software.wings.service.impl.yaml.handler.BaseYamlHandler;
 import software.wings.service.impl.yaml.handler.YamlHandlerFactory;
 import software.wings.service.impl.yaml.handler.app.ApplicationYamlHandler;
-import software.wings.service.intfc.AlertService;
+import software.wings.service.intfc.AuthService;
 import software.wings.service.intfc.yaml.YamlGitService;
 import software.wings.service.intfc.yaml.sync.YamlService;
 import software.wings.utils.Misc;
@@ -90,6 +92,7 @@ import java.util.Enumeration;
 import java.util.List;
 import java.util.Map;
 import java.util.Optional;
+import java.util.Set;
 import java.util.concurrent.atomic.AtomicInteger;
 import java.util.regex.Pattern;
 import java.util.zip.ZipEntry;
@@ -106,7 +109,7 @@ public class YamlServiceImpl<Y extends BaseYaml, B extends Base> implements Yaml
   @Inject private YamlHelper yamlHelper;
   @Inject private WingsPersistence wingsPersistence;
   @Inject private transient YamlGitService yamlGitService;
-  @Inject private AlertService alertService;
+  @Inject private AuthService authService;
 
   private final List<YamlType> yamlProcessingOrder = getEntityProcessingOrder();
 
@@ -477,12 +480,14 @@ public class YamlServiceImpl<Y extends BaseYaml, B extends Base> implements Yaml
 
   private void process(List<ChangeContext> changeContextList) throws YamlProcessingException {
     Map<Change, String> failedChangeErrorMsgMap = Maps.newHashMap();
+    Set<ChangeContext> processedChangeSet = Sets.newHashSet();
     for (ChangeContext changeContext : changeContextList) {
       String yamlFilePath = changeContext.getChange().getFilePath();
       try {
         logger.info("Processing change [{}]", changeContext.getChange());
         processYamlChange(changeContext, changeContextList);
         yamlGitService.discardGitSyncError(changeContext.getChange().getAccountId(), yamlFilePath);
+        processedChangeSet.add(changeContext);
         logger.info("Processing done for change [{}]", changeContext.getChange());
       } catch (Exception ex) {
         logger.error("Exception while processing yaml file {}", yamlFilePath, ex);
@@ -491,10 +496,28 @@ public class YamlServiceImpl<Y extends BaseYaml, B extends Base> implements Yaml
       }
     }
 
+    if (isNotEmpty(changeContextList)) {
+      String accountId = changeContextList.get(0).getChange().getAccountId();
+      checkAndInvalidateUserCache(accountId, processedChangeSet);
+    }
     if (failedChangeErrorMsgMap.size() > 0) {
       throw new YamlProcessingException(
           "Error while processing some yaml files in the changeset", failedChangeErrorMsgMap);
     }
+  }
+
+  private void checkAndInvalidateUserCache(String accountId, Set<ChangeContext> processedChangeSet) {
+    if (isNotEmpty(processedChangeSet)) {
+      if (processedChangeSet.stream().anyMatch(
+              context -> shouldInvalidateCache(context.getYamlType().getEntityType()))) {
+        authService.evictAccountUserPermissionInfoCache(accountId);
+      }
+    }
+  }
+
+  private boolean shouldInvalidateCache(String entityType) {
+    return EntityType.SERVICE.name().equals(entityType) || EntityType.ENVIRONMENT.name().equals(entityType)
+        || EntityType.WORKFLOW.name().equals(entityType) || EntityType.PIPELINE.name().equals(entityType);
   }
 
   private void processYamlChange(ChangeContext changeContext, List<ChangeContext> changeContextList)
