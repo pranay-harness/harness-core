@@ -66,6 +66,7 @@ import com.google.common.collect.Maps;
 import com.google.inject.Inject;
 import com.google.inject.Singleton;
 
+import com.mongodb.DBCursor;
 import lombok.Data;
 import lombok.NoArgsConstructor;
 import org.mongodb.morphia.query.MorphiaIterator;
@@ -1580,25 +1581,26 @@ public class WorkflowExecutionServiceImpl implements WorkflowExecutionService {
         stateMachine.getChildStateMachines().get(stateExecutionInstance.getChildStateMachineId()).getStates().size()
         - 1;
 
-    MorphiaIterator<StateExecutionInstance, StateExecutionInstance> stateExecutionInstances = null;
-    try {
-      stateExecutionInstances = wingsPersistence.createQuery(StateExecutionInstance.class)
-                                    .filter(StateExecutionInstance.APP_ID_KEY, appId)
-                                    .filter(StateExecutionInstance.PARENT_INSTANCE_ID_KEY, stateExecutionInstanceId)
-                                    .fetch();
+    @Data
+    @NoArgsConstructor
+    class Stat {
+      String element;
+      String prevInstanceId;
+      ExecutionStatus status;
 
-      @Data
-      @NoArgsConstructor
-      class Stat {
-        String element;
-        String prevInstanceId;
-        ExecutionStatus status;
+      int children;
+      List<ExecutionStatus> allStatuses = new ArrayList<>();
+    }
 
-        int children;
-        List<ExecutionStatus> allStatuses = new ArrayList<>();
-      }
+    Map<String, Stat> stats = new HashMap<>();
+    MorphiaIterator<StateExecutionInstance, StateExecutionInstance> stateExecutionInstances =
+        wingsPersistence.createQuery(StateExecutionInstance.class)
+            .filter(StateExecutionInstance.APP_ID_KEY, appId)
+            .filter(StateExecutionInstance.EXECUTION_UUID_KEY, stateExecutionInstance.getExecutionUuid())
+            .filter(StateExecutionInstance.PARENT_INSTANCE_ID_KEY, stateExecutionInstanceId)
+            .fetch();
 
-      Map<String, Stat> stats = new HashMap<>();
+    try (DBCursor cursor = stateExecutionInstances.getCursor()) {
       while (stateExecutionInstances.hasNext()) {
         StateExecutionInstance instance = stateExecutionInstances.next();
         Stat stat = stats.computeIfAbsent(instance.getUuid(), x -> new Stat());
@@ -1633,10 +1635,6 @@ public class WorkflowExecutionServiceImpl implements WorkflowExecutionService {
                   .status(GraphRenderer.aggregateStatus(stat.getAllStatuses()))
                   .build());
         }
-      }
-    } finally {
-      if (stateExecutionInstances != null) {
-        stateExecutionInstances.close();
       }
     }
 
