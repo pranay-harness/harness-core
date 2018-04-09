@@ -69,7 +69,7 @@ public class GraphRendererTest extends WingsBaseTest {
     Map<String, StateExecutionInstance> stateExecutionInstanceMap =
         stateExecutionInstances.stream().collect(toMap(StateExecutionInstance::getUuid, identity()));
 
-    final GraphNode node = graphRenderer.generateHierarchyNode(stateExecutionInstanceMap, "origin", emptySet());
+    final GraphNode node = graphRenderer.generateHierarchyNode(stateExecutionInstanceMap, emptySet());
     assertThat(node).isNotNull();
   }
 
@@ -116,8 +116,7 @@ public class GraphRendererTest extends WingsBaseTest {
     Map<String, StateExecutionInstance> stateExecutionInstanceMap =
         stateExecutionInstances.stream().collect(toMap(StateExecutionInstance::getUuid, identity()));
 
-    final GraphNode node =
-        graphRenderer.generateHierarchyNode(stateExecutionInstanceMap, parent.getStateName(), emptySet());
+    final GraphNode node = graphRenderer.generateHierarchyNode(stateExecutionInstanceMap, emptySet());
     assertThat(node).isNotNull();
     assertThat(node.getName()).isEqualTo(parent.getStateName());
 
@@ -162,7 +161,7 @@ public class GraphRendererTest extends WingsBaseTest {
     Map<String, StateExecutionInstance> stateExecutionInstanceMap =
         stateExecutionInstances.stream().collect(toMap(StateExecutionInstance::getUuid, identity()));
 
-    return graphRenderer.generateHierarchyNode(stateExecutionInstanceMap, provision.getStateName(), emptySet());
+    return graphRenderer.generateHierarchyNode(stateExecutionInstanceMap, emptySet());
   }
 
   @Test

@@ -143,6 +143,7 @@ import software.wings.service.intfc.InfrastructureMappingService;
 import software.wings.service.intfc.PipelineService;
 import software.wings.service.intfc.ServiceInstanceService;
 import software.wings.service.intfc.ServiceResourceService;
+import software.wings.service.intfc.StateExecutionService;
 import software.wings.service.intfc.WorkflowExecutionBaselineService;
 import software.wings.service.intfc.WorkflowExecutionService;
 import software.wings.service.intfc.WorkflowService;
@@ -207,10 +208,10 @@ public class WorkflowExecutionServiceImpl implements WorkflowExecutionService {
   private static final Logger logger = LoggerFactory.getLogger(WorkflowExecutionServiceImpl.class);
 
   @Inject private MainConfiguration mainConfiguration;
-  @Inject private WingsPersistence wingsPersistence;
   @Inject private BarrierService barrierService;
   @Inject private StateMachineExecutor stateMachineExecutor;
   @Inject private EnvironmentService environmentService;
+  @Inject private StateExecutionService stateExecutionService;
   @Inject private ExecutionInterruptManager executionInterruptManager;
   @Inject private ServiceResourceService serviceResourceService;
   @Inject private ServiceInstanceService serviceInstanceService;
@@ -226,6 +227,8 @@ public class WorkflowExecutionServiceImpl implements WorkflowExecutionService {
   @Inject private WaitNotifyEngine waitNotifyEngine;
   @Inject private Queue<ExecutionEvent> executionEventQueue;
   @Inject private WorkflowExecutionBaselineService workflowExecutionBaselineService;
+
+  @Inject private WingsPersistence wingsPersistence;
 
   /**
    * {@inheritDoc}
@@ -619,28 +622,18 @@ public class WorkflowExecutionServiceImpl implements WorkflowExecutionService {
       return;
     }
 
-    PageRequest<StateExecutionInstance> req = aPageRequest()
-                                                  .withLimit(PageRequest.UNLIMITED)
-                                                  .addFilter("appId", EQ, workflowExecution.getAppId())
-                                                  .addFilter("executionUuid", EQ, workflowExecution.getUuid())
-                                                  .addFilter("createdAt", GE, workflowExecution.getCreatedAt())
-                                                  .addFieldsExcluded("contextElements", "callback")
-                                                  .build();
-    List<StateExecutionInstance> allInstances = getAllStateExecutionInstances(req);
-    if (isEmpty(allInstances)) {
+    Map<String, StateExecutionInstance> allInstancesIdMap =
+        stateExecutionService.executionStatesMap(workflowExecution.getAppId(), workflowExecution.getUuid());
+
+    if (allInstancesIdMap.isEmpty()) {
       return;
     }
 
-    Map<String, StateExecutionInstance> allInstancesIdMap = new HashMap<>();
-    for (StateExecutionInstance stateExecutionInstance : allInstances) {
-      allInstancesIdMap.put(stateExecutionInstance.getUuid(), stateExecutionInstance);
-    }
-
     if (!workflowExecution.getStatus().isFinalStatus()) {
-      if (allInstances.stream().anyMatch(
+      if (allInstancesIdMap.values().stream().anyMatch(
               i -> i.getStatus() == ExecutionStatus.PAUSED || i.getStatus() == ExecutionStatus.PAUSING)) {
         workflowExecution.setStatus(ExecutionStatus.PAUSED);
-      } else if (allInstances.stream().anyMatch(i -> i.getStatus() == ExecutionStatus.WAITING)) {
+      } else if (allInstancesIdMap.values().stream().anyMatch(i -> i.getStatus() == ExecutionStatus.WAITING)) {
         workflowExecution.setStatus(ExecutionStatus.WAITING);
       } else {
         List<ExecutionInterrupt> executionInterrupts = executionInterruptManager.checkForExecutionInterrupt(
@@ -655,30 +648,9 @@ public class WorkflowExecutionServiceImpl implements WorkflowExecutionService {
     if (!includeGraph) {
       return;
     }
-    String initialStateName;
-    if (workflowExecution.getStatus() == NEW || workflowExecution.getStatus() == QUEUED) {
-      initialStateName = allInstances.get(0).getStateName();
-    } else {
-      StateExecutionInstance stateExecutionInstance = getEarliestInstance(allInstances);
-      initialStateName = stateExecutionInstance.getStateName();
-    }
 
-    final GraphNode graphNode =
-        graphRenderer.generateHierarchyNode(allInstancesIdMap, initialStateName, excludeFromAggregation);
+    final GraphNode graphNode = graphRenderer.generateHierarchyNode(allInstancesIdMap, excludeFromAggregation);
     workflowExecution.setExecutionNode(graphNode);
-  }
-
-  private StateExecutionInstance getEarliestInstance(List<StateExecutionInstance> allInstances) {
-    StateExecutionInstance earliest = allInstances.get(0);
-    for (StateExecutionInstance stateExecutionInstance : allInstances) {
-      if (stateExecutionInstance.getStartTs() == null || stateExecutionInstance.getStartTs() == 0) {
-        continue;
-      }
-      if (earliest.getStartTs() == null || earliest.getStartTs() > stateExecutionInstance.getStartTs()) {
-        earliest = stateExecutionInstance;
-      }
-    }
-    return earliest;
   }
 
   private void populateNodeHierarchyWithGraph(WorkflowExecution workflowExecution, Set<String> excludeFromAggregation) {
