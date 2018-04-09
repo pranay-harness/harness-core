@@ -62,21 +62,21 @@ public class AppDefaultVarYamlHandlerTest extends BaseYamlHandlerTest {
   private String v1_validYamlContent = "harnessApiVersion: '1.0'\n"
       + "type: APPLICATION_DEFAULTS\n"
       + "defaults:\n"
-      + "  - name: var1\n"
-      + "    value: value1\n"
-      + "  - name: var2\n"
-      + "    value: value2\n"
-      + "  - name: var3\n"
-      + "    value: value3";
+      + "- name: var1\n"
+      + "  value: value1\n"
+      + "- name: var2\n"
+      + "  value: value2\n"
+      + "- name: var3\n"
+      + "  value: value3";
   private String v2_validYamlContent = "harnessApiVersion: '1.0'\n"
       + "type: APPLICATION_DEFAULTS\n"
       + "defaults:\n"
-      + "  - name: var1\n"
-      + "    value: modified\n"
-      + "  - name: var4\n"
-      + "    value: add\n"
-      + "  - name: var3\n"
-      + "    value: value3";
+      + "- name: var1\n"
+      + "  value: modified\n"
+      + "- name: var4\n"
+      + "  value: add\n"
+      + "- name: var3\n"
+      + "  value: value3";
   private String validYamlFilePath = "Setup/Applications/" + APP_NAME + "/Defaults.yaml";
   private String invalidYamlContent = "invalid:\n"
       + "  - name: STAGING_PATH\n"
