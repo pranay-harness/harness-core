@@ -5,14 +5,12 @@ import static io.harness.data.structure.UUIDGenerator.generateUuid;
 import static org.apache.commons.lang3.StringUtils.isBlank;
 import static software.wings.beans.DelegateTask.Builder.aDelegateTask;
 
-import com.google.common.base.Preconditions;
 import com.google.common.collect.Sets;
 import com.google.inject.Inject;
 
 import com.github.reinert.jjschema.Attributes;
 import com.github.reinert.jjschema.SchemaIgnore;
 import org.apache.commons.lang3.StringUtils;
-import org.json.JSONObject;
 import org.mongodb.morphia.annotations.Transient;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -29,7 +27,6 @@ import software.wings.service.impl.analysis.AnalysisTolerance;
 import software.wings.service.impl.analysis.AnalysisToleranceProvider;
 import software.wings.service.impl.analysis.DataCollectionCallback;
 import software.wings.service.impl.elk.ElkDataCollectionInfo;
-import software.wings.service.impl.elk.ElkIndexTemplate;
 import software.wings.service.impl.elk.ElkLogFetchRequest;
 import software.wings.service.impl.elk.ElkSettingProvider;
 import software.wings.service.intfc.elk.ElkAnalysisService;
@@ -40,7 +37,6 @@ import software.wings.sm.WorkflowStandardParams;
 import software.wings.stencils.DefaultValue;
 import software.wings.stencils.EnumData;
 import software.wings.time.WingsTimeUtils;
-import software.wings.utils.JsonUtils;
 
 import java.util.ArrayList;
 import java.util.HashMap;
@@ -195,8 +191,7 @@ public class ElkAnalysisState extends AbstractLogAnalysisState {
     }
     final ElkConfig elkConfig = (ElkConfig) settingAttribute.getValue();
 
-    final String timestampFieldFormat =
-        getTimestampFieldFormat(accountId, finalAnalysisServerConfigId, finalIndices, timestampField);
+    final String timestampFieldFormat = getTimestampFormat();
     final Set<String> queries = Sets.newHashSet(query.split(","));
     final long logCollectionStartTimeStamp = WingsTimeUtils.getMinuteBoundary(System.currentTimeMillis());
 
@@ -262,30 +257,6 @@ public class ElkAnalysisState extends AbstractLogAnalysisState {
   @SchemaIgnore
   public Logger getLogger() {
     return logger;
-  }
-
-  protected String getTimestampFieldFormat(
-      String accountId, String analysisServerConfigId, String indices, String timestampField) {
-    try {
-      Map<String, ElkIndexTemplate> indexTemplateMap = elkAnalysisService.getIndices(accountId, analysisServerConfigId);
-      final ElkIndexTemplate indexTemplate = indexTemplateMap.get(indices);
-      Preconditions.checkNotNull(indexTemplate, "No index template mapping found for " + indices);
-
-      final Object timeStampObject = indexTemplate.getProperties().get(timestampField);
-      if (timeStampObject == null) {
-        logger.warn("No timestamp field mapping for {} for index {} ", timestampField, indices);
-        return DEFAULT_TIME_FORMAT;
-      }
-
-      JSONObject timeStampJsonObject = new JSONObject(JsonUtils.asJson(timeStampObject));
-
-      if (!timeStampJsonObject.has("format")) {
-        return DEFAULT_TIME_FORMAT;
-      }
-      return timeStampJsonObject.getString("format");
-    } catch (Exception e) {
-      throw new WingsException(e);
-    }
   }
 
   @Override
