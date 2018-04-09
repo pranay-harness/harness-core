@@ -897,18 +897,18 @@ public class EcsContainerServiceImpl implements EcsContainerService {
         awsHelperService.createService(region, awsConfig, encryptedDataDetails, createServiceRequest);
 
     waitForTasksToBeInRunningState(region, awsConfig, encryptedDataDetails, createServiceRequest.getCluster(),
-        createServiceRequest.getServiceName(), new ExecutionLogCallback());
+        createServiceRequest.getServiceName(), new ExecutionLogCallback(), createServiceRequest.getDesiredCount());
 
     return createServiceResult.getService().getServiceArn();
   }
 
   private void waitForTasksToBeInRunningState(String region, AwsConfig awsConfig,
       List<EncryptedDataDetail> encryptedDataDetails, String clusterName, String serviceName,
-      ExecutionLogCallback executionLogCallback) {
+      ExecutionLogCallback executionLogCallback, Integer desiredCount) {
     try {
       timeLimiter.callWithTimeout(() -> {
         while (notAllDesiredTasksRunning(
-            region, awsConfig, encryptedDataDetails, clusterName, serviceName, executionLogCallback)) {
+            region, awsConfig, encryptedDataDetails, clusterName, serviceName, executionLogCallback, desiredCount)) {
           sleep(ofSeconds(10));
         }
         return true;
@@ -925,10 +925,10 @@ public class EcsContainerServiceImpl implements EcsContainerService {
 
   private void waitForTasksToBeInRunningStateButDontThrowException(String region, AwsConfig awsConfig,
       List<EncryptedDataDetail> encryptedDataDetails, String clusterName, String serviceName,
-      ExecutionLogCallback executionLogCallback) {
+      ExecutionLogCallback executionLogCallback, int desiredCount) {
     try {
       waitForTasksToBeInRunningState(
-          region, awsConfig, encryptedDataDetails, clusterName, serviceName, executionLogCallback);
+          region, awsConfig, encryptedDataDetails, clusterName, serviceName, executionLogCallback, desiredCount);
     } catch (WingsException e) {
       if (e.getResponseMessage().getCode() == INIT_TIMEOUT) {
         throw e;
@@ -938,7 +938,7 @@ public class EcsContainerServiceImpl implements EcsContainerService {
 
   private boolean notAllDesiredTasksRunning(String region, AwsConfig awsConfig,
       List<EncryptedDataDetail> encryptedDataDetails, String clusterName, String serviceName,
-      ExecutionLogCallback executionLogCallback) {
+      ExecutionLogCallback executionLogCallback, Integer desiredCount) {
     Service service = awsHelperService
                           .describeServices(region, awsConfig, encryptedDataDetails,
                               new DescribeServicesRequest().withCluster(clusterName).withServices(serviceName))
@@ -951,7 +951,7 @@ public class EcsContainerServiceImpl implements EcsContainerService {
     executionLogCallback.saveExecutionLog(String.format("Waiting for pending tasks to finish. %s/%s running ...",
                                               service.getRunningCount(), service.getDesiredCount()),
         LogLevel.INFO);
-    return !service.getDesiredCount().equals(service.getRunningCount());
+    return !desiredCount.equals(service.getRunningCount());
   }
 
   @Override
@@ -985,7 +985,7 @@ public class EcsContainerServiceImpl implements EcsContainerService {
             serviceName, desiredCount, executionLogCallback);
         executionLogCallback.saveExecutionLog("Service update request successfully submitted.", LogLevel.INFO);
         waitForTasksToBeInRunningStateButDontThrowException(
-            region, awsConfig, encryptedDataDetails, clusterName, serviceName, executionLogCallback);
+            region, awsConfig, encryptedDataDetails, clusterName, serviceName, executionLogCallback, desiredCount);
         if (desiredCount > previousCount) { // don't do it for downsize.
           waitForServiceToReachSteadyState(latestExcludedEventId, region, awsConfig, encryptedDataDetails, clusterName,
               serviceName, serviceSteadyStateTimeout, executionLogCallback);
