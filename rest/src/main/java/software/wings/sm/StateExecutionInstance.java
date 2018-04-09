@@ -2,10 +2,12 @@ package software.wings.sm;
 
 import com.fasterxml.jackson.annotation.JsonIgnore;
 import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
+import com.github.reinert.jjschema.SchemaIgnore;
 import lombok.Data;
 import lombok.EqualsAndHashCode;
 import org.mongodb.morphia.annotations.Embedded;
 import org.mongodb.morphia.annotations.Entity;
+import org.mongodb.morphia.annotations.IndexOptions;
 import org.mongodb.morphia.annotations.Indexed;
 import org.simpleframework.xml.Transient;
 import software.wings.beans.Base;
@@ -14,7 +16,9 @@ import software.wings.beans.OrchestrationWorkflowType;
 import software.wings.beans.WorkflowType;
 import software.wings.dl.WingsDeque;
 
+import java.time.OffsetDateTime;
 import java.util.ArrayList;
+import java.util.Date;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
@@ -87,6 +91,11 @@ public class StateExecutionInstance extends Base {
   @Transient private String stepId;
 
   private OrchestrationWorkflowType orchestrationWorkflowType;
+
+  @SchemaIgnore
+  @JsonIgnore
+  @Indexed(options = @IndexOptions(expireAfterSeconds = 0))
+  private Date validUntil = Date.from(OffsetDateTime.now().plusMonths(6).toInstant());
 
   public StateExecutionData getStateExecutionData() {
     return stateExecutionMap.get(stateName);
