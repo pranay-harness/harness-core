@@ -11,6 +11,7 @@ import org.slf4j.LoggerFactory;
 import software.wings.beans.artifact.ArtifactFile;
 import software.wings.delegatetasks.DelegateFile;
 import software.wings.delegatetasks.DelegateFileManager;
+import software.wings.service.intfc.FileService.FileBucket;
 import software.wings.waitnotify.ListNotifyResponseData;
 
 import java.io.FileNotFoundException;
@@ -34,6 +35,7 @@ public class ArtifactCollectionTaskHelper {
     logger.info("Uploading the file {} for artifact path {}", fileInfo.getKey(), artifactPath);
 
     DelegateFile delegateFile = aDelegateFile()
+                                    .withBucket(FileBucket.ARTIFACTS)
                                     .withFileName(fileInfo.getKey())
                                     .withDelegateId(delegateId)
                                     .withTaskId(taskId)

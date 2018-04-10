@@ -4,7 +4,6 @@ import static io.harness.data.structure.UUIDGenerator.generateUuid;
 import static javax.ws.rs.core.MediaType.MULTIPART_FORM_DATA;
 import static software.wings.delegatetasks.DelegateFile.Builder.aDelegateFile;
 import static software.wings.security.PermissionAttribute.ResourceType.DELEGATE;
-import static software.wings.service.intfc.FileService.FileBucket.ARTIFACTS;
 
 import com.google.common.io.Files;
 import com.google.inject.Inject;
@@ -68,8 +67,9 @@ public class DelegateFileResource {
   @Consumes(MULTIPART_FORM_DATA)
   @Timed
   @ExceptionMetered
-  public RestResponse<String> saveFile(@PathParam("delegateId") String delegateId, @PathParam("taskId") String taskId,
-      @QueryParam("accountId") @NotEmpty String accountId, @FormDataParam("file") InputStream uploadedInputStream,
+  public RestResponse<String> upload(@PathParam("delegateId") String delegateId, @PathParam("taskId") String taskId,
+      @QueryParam("accountId") @NotEmpty String accountId, @QueryParam("fileBucket") FileBucket fileBucket,
+      @FormDataParam("file") InputStream uploadedInputStream,
       @FormDataParam("file") FormDataContentDisposition fileDetail)
       throws UnableToRegisterIdempotentOperationException {
     logger.info("Received save artifact request for delegateId : {}, taskId: {}, accountId: {}, fileDetail: {}",
@@ -88,7 +88,7 @@ public class DelegateFileResource {
       fileMetadata.setFileName(new File(fileDetail.getFileName()).getName());
       String fileId = fileService.saveFile(fileMetadata,
           new BoundedInputStream(uploadedInputStream, configuration.getFileUploadLimits().getAppContainerLimit()),
-          ARTIFACTS);
+          fileBucket);
       logger.info("fileId: {} and fileName {}", fileId, fileMetadata.getFileName());
 
       idempotent.succeeded(fileId);
