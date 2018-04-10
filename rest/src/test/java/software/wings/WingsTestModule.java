@@ -11,7 +11,6 @@ import software.wings.helpers.ext.artifactory.ArtifactoryService;
 import software.wings.helpers.ext.artifactory.ArtifactoryServiceImpl;
 import software.wings.service.impl.AmazonS3BuildServiceImpl;
 import software.wings.service.impl.ArtifactoryBuildServiceImpl;
-import software.wings.service.impl.ContainerServiceImpl;
 import software.wings.service.impl.EcrBuildServiceImpl;
 import software.wings.service.impl.appdynamics.AppdynamicsDelegateServiceImpl;
 import software.wings.service.impl.elk.ElkDelegateServiceImpl;
@@ -22,7 +21,6 @@ import software.wings.service.impl.splunk.SplunkDelegateServiceImpl;
 import software.wings.service.impl.sumo.SumoDelegateServiceImpl;
 import software.wings.service.intfc.AmazonS3BuildService;
 import software.wings.service.intfc.ArtifactoryBuildService;
-import software.wings.service.intfc.ContainerService;
 import software.wings.service.intfc.EcrBuildService;
 import software.wings.service.intfc.appdynamics.AppdynamicsDelegateService;
 import software.wings.service.intfc.elk.ElkDelegateService;
@@ -49,6 +47,5 @@ public class WingsTestModule extends AbstractModule {
     bind(ArtifactoryBuildService.class).to(ArtifactoryBuildServiceImpl.class);
     bind(ArtifactoryService.class).to(ArtifactoryServiceImpl.class);
     bind(EcrBuildService.class).to(EcrBuildServiceImpl.class);
-    bind(ContainerService.class).to(ContainerServiceImpl.class);
   }
 }

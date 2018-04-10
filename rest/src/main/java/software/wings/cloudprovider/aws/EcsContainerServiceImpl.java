@@ -1025,8 +1025,7 @@ public class EcsContainerServiceImpl implements EcsContainerService {
     }
   }
 
-  @Override
-  public List<ContainerInfo> generateContainerInfos(List<Task> tasks, String clusterName, String region,
+  private List<ContainerInfo> generateContainerInfos(List<Task> tasks, String clusterName, String region,
       List<EncryptedDataDetail> encryptedDataDetails, ExecutionLogCallback executionLogCallback, AwsConfig awsConfig,
       List<String> taskArns) {
     List<ContainerInfo> containerInfos = new ArrayList<>();
@@ -1101,9 +1100,7 @@ public class EcsContainerServiceImpl implements EcsContainerService {
         String uri = generateTaskMetadataEndpointUrl(ipAddress);
         if (Http.connectableHttpUrl(uri)) {
           try {
-            if (executionLogCallback != null) {
-              executionLogCallback.saveExecutionLog("Fetching container meta data from " + uri, LogLevel.INFO);
-            }
+            executionLogCallback.saveExecutionLog("Fetching container meta data from " + uri, LogLevel.INFO);
             logger.info("requesting data from {}", uri);
             TaskMetadata taskMetadata = Request.Get(uri).execute().handleResponse(response
                 -> JsonUtils.asObject(CharStreams.toString(new InputStreamReader(response.getEntity().getContent())),
@@ -1125,11 +1122,9 @@ public class EcsContainerServiceImpl implements EcsContainerService {
             } else {
               logger.warn("Metadata tasks {} not found in taskArns {}",
                   taskMetadata.getTasks().stream().map(TaskMetadata.Task::getArn).collect(toList()), taskArns);
-              if (executionLogCallback != null) {
-                executionLogCallback.saveExecutionLog(
-                    "Could not find container meta data. Verification steps using containerId may not work",
-                    LogLevel.WARN);
-              }
+              executionLogCallback.saveExecutionLog(
+                  "Could not find container meta data. Verification steps using containerId may not work",
+                  LogLevel.WARN);
               containerInfos.add(ContainerInfo.builder()
                                      .hostName(ipAddress)
                                      .containerId(ipAddress)
@@ -1138,11 +1133,9 @@ public class EcsContainerServiceImpl implements EcsContainerService {
                                      .build());
             }
           } catch (IOException ex) {
-            if (executionLogCallback != null) {
-              executionLogCallback.saveExecutionLog(
-                  "Could not fetch container meta data. Verification steps using containerId may not work",
-                  LogLevel.WARN);
-            }
+            executionLogCallback.saveExecutionLog(
+                "Could not fetch container meta data. Verification steps using containerId may not work",
+                LogLevel.WARN);
             logger.error("Container meta data fetch failed on EC2 host: " + ipAddress, ex);
             containerInfos.add(ContainerInfo.builder()
                                    .hostName(ipAddress)
@@ -1156,11 +1149,9 @@ public class EcsContainerServiceImpl implements EcsContainerService {
           }
         } else {
           logger.warn("Could not connect to {}", uri);
-          if (executionLogCallback != null) {
-            executionLogCallback.saveExecutionLog("Could not reach " + uri
-                    + " to fetch container meta data. Verification steps using containerId may not work",
-                LogLevel.WARN);
-          }
+          executionLogCallback.saveExecutionLog("Could not reach " + uri
+                  + " to fetch container meta data. Verification steps using containerId may not work",
+              LogLevel.WARN);
           containerInfos.add(ContainerInfo.builder()
                                  .hostName(ipAddress)
                                  .containerId(ipAddress)
