@@ -853,6 +853,7 @@ public class VaultTest extends WingsBaseTest {
   }
 
   @Test
+  @Ignore
   public void vaultEncryptionSaveServiceVariable() throws IOException, IllegalAccessException {
     VaultConfig vaultConfig = getVaultConfig();
     vaultService.saveVaultConfig(accountId, vaultConfig);
