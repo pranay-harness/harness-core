@@ -242,7 +242,7 @@ public class AuthServiceImpl implements AuthService {
 
     for (PermissionAttribute permissionAttribute : permissionAttributes) {
       if (!authorizeAccessType(appId, entityId, permissionAttribute, userPermissionInfo)) {
-        logger.error("User {} not authorized to access requested resource: {}", user.getName(), entityId);
+        logger.warn("User {} not authorized to access requested resource: {}", user.getName(), entityId);
         throw new WingsException(ACCESS_DENIED, HARMLESS);
       }
     }
