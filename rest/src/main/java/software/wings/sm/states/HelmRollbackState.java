@@ -3,6 +3,7 @@ package software.wings.sm.states;
 import software.wings.api.HelmDeployContextElement;
 import software.wings.beans.ContainerInfrastructureMapping;
 import software.wings.beans.container.HelmChartSpecification;
+import software.wings.beans.container.ImageDetails;
 import software.wings.helpers.ext.helm.HelmCommandExecutionResponse;
 import software.wings.helpers.ext.helm.request.HelmCommandRequest;
 import software.wings.helpers.ext.helm.request.HelmRollbackCommandRequest;
@@ -32,7 +33,7 @@ public class HelmRollbackState extends HelmDeployState {
   @Override
   protected HelmCommandRequest getHelmCommandRequest(ExecutionContext context,
       HelmChartSpecification helmChartSpecification, ContainerServiceParams containerServiceParams, String releaseName,
-      String accountId, String appId, String activityId, String imageTag,
+      String accountId, String appId, String activityId, ImageDetails imageTag,
       ContainerInfrastructureMapping infrastructureMapping) {
     String previousReleaseRevision = null;
 

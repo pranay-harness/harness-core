@@ -44,6 +44,7 @@ import software.wings.beans.artifact.Artifact;
 import software.wings.beans.command.CommandExecutionResult.CommandExecutionStatus;
 import software.wings.beans.command.CommandUnitDetails.CommandUnitType;
 import software.wings.beans.container.HelmChartSpecification;
+import software.wings.beans.container.ImageDetails;
 import software.wings.common.Constants;
 import software.wings.exception.WingsException;
 import software.wings.helpers.ext.helm.HelmCommandExecutionResponse;
@@ -90,17 +91,19 @@ import java.util.stream.Collectors;
  * Created by anubhaw on 3/25/18.
  */
 public class HelmDeployState extends State {
-  @Inject private AppService appService;
-  @Inject private ServiceResourceService serviceResourceService;
-  @Inject private InfrastructureMappingService infrastructureMappingService;
-  @Inject private DelegateService delegateService;
-  @Inject private SecretManager secretManager;
-  @Inject private SettingsService settingsService;
-  @Inject private ServiceTemplateService serviceTemplateService;
-  @Inject private ActivityService activityService;
+  @Inject private transient AppService appService;
+  @Inject private transient ServiceResourceService serviceResourceService;
+  @Inject private transient InfrastructureMappingService infrastructureMappingService;
+  @Inject private transient DelegateService delegateService;
+  @Inject private transient SecretManager secretManager;
+  @Inject private transient SettingsService settingsService;
+  @Inject private transient ServiceTemplateService serviceTemplateService;
+  @Inject private transient ActivityService activityService;
+  @Inject private transient ContainerDeploymentHelper containerDeploymentHelper;
 
   public static final String HELM_COMMAND_NAME = "Helm Deploy";
   private static final String DOCKER_IMAGE_TAG_PLACEHOLDER_REGEX = "\\$\\{DOCKER_IMAGE_TAG}";
+  private static final String DOCKER_IMAGE_NAME_PLACEHOLDER_REGEX = "\\$\\{DOCKER_IMAGE_NAME}";
 
   private static final Logger logger = LoggerFactory.getLogger(HelmDeployState.class);
 
@@ -158,15 +161,17 @@ public class HelmDeployState extends State {
                                                           .chartVersion(helmChartSpecification.getChartVersion())
                                                           .releaseName(releaseName)
                                                           .build();
+    ImageDetails imageDetails = null;
     if (!isRollback()) {
+      imageDetails =
+          containerDeploymentHelper.fetchArtifactDetails(artifact, app.getUuid(), context.getWorkflowExecutionId());
       String prevVersion =
           getPreviousReleaseVersion(app.getUuid(), app.getAccountId(), releaseName, containerServiceParams);
       stateExecutionData.setReleaseOldVersion(prevVersion);
     }
 
-    HelmCommandRequest commandRequest =
-        getHelmCommandRequest(context, helmChartSpecification, containerServiceParams, releaseName, app.getAccountId(),
-            app.getUuid(), activity.getUuid(), artifact.getBuildNo(), containerInfraMapping);
+    HelmCommandRequest commandRequest = getHelmCommandRequest(context, helmChartSpecification, containerServiceParams,
+        releaseName, app.getAccountId(), app.getUuid(), activity.getUuid(), imageDetails, containerInfraMapping);
 
     DelegateTask delegateTask = aDelegateTask()
                                     .withAccountId(app.getAccountId())
@@ -196,7 +201,7 @@ public class HelmDeployState extends State {
 
   protected HelmCommandRequest getHelmCommandRequest(ExecutionContext context,
       HelmChartSpecification helmChartSpecification, ContainerServiceParams containerServiceParams, String releaseName,
-      String accountId, String appId, String activityId, String imageTag,
+      String accountId, String appId, String activityId, ImageDetails imageDetails,
       ContainerInfrastructureMapping infrastructureMapping) {
     List<String> helmValueOverridesYamlFiles =
         serviceTemplateService.helmValueOverridesYamlFiles(appId, infrastructureMapping.getServiceTemplateId());
@@ -205,7 +210,9 @@ public class HelmDeployState extends State {
     if (isNotEmpty(helmValueOverridesYamlFiles)) {
       helmValueOverridesYamlFilesEvaluated =
           helmValueOverridesYamlFiles.stream()
-              .map(yamlFileContent -> yamlFileContent.replaceAll(DOCKER_IMAGE_TAG_PLACEHOLDER_REGEX, imageTag))
+              .map(yamlFileContent
+                  -> yamlFileContent.replaceAll(DOCKER_IMAGE_TAG_PLACEHOLDER_REGEX, imageDetails.getTag())
+                         .replaceAll(DOCKER_IMAGE_NAME_PLACEHOLDER_REGEX, imageDetails.getName()))
               .map(context::renderExpression)
               .collect(Collectors.toList());
     }
@@ -312,7 +319,7 @@ public class HelmDeployState extends State {
 
     HelmInstallCommandResponse helmCommandResponse =
         (HelmInstallCommandResponse) executionResponse.getHelmCommandResponse();
-    instanceStatusSummaries.addAll(ContainerDeploymentHelper.getInstanceStatusSummaryFromContainerInfoList(
+    instanceStatusSummaries.addAll(containerDeploymentHelper.getInstanceStatusSummaryFromContainerInfoList(
         helmCommandResponse.getContainerInfoList(), serviceTemplateElement));
     return instanceStatusSummaries;
   }
