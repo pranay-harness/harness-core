@@ -41,6 +41,7 @@ import software.wings.service.intfc.AppService;
 import software.wings.service.intfc.WorkflowExecutionService;
 import software.wings.sm.ExecutionInterrupt;
 import software.wings.sm.StateExecutionData;
+import software.wings.utils.Validator;
 
 import java.util.List;
 import java.util.Set;
@@ -208,8 +209,24 @@ public class ExecutionResource {
       @PathParam("workflowExecutionId") String workflowExecutionId, ExecutionInterrupt executionInterrupt) {
     executionInterrupt.setAppId(appId);
     executionInterrupt.setExecutionUuid(workflowExecutionId);
-
+    authorize(appId, workflowExecutionId, EXECUTE);
     return new RestResponse<>(workflowExecutionService.triggerExecutionInterrupt(executionInterrupt));
+  }
+
+  private void authorize(String appId, String workflowExecutionId, Action requiredAction) {
+    PermissionAttribute permissionAttribute = new PermissionAttribute(PermissionType.DEPLOYMENT, requiredAction);
+    List<PermissionAttribute> permissionAttributeList = asList(permissionAttribute);
+    WorkflowExecution workflowExecution =
+        workflowExecutionService.getExecutionDetailsWithoutGraph(appId, workflowExecutionId);
+    if (workflowExecution.getPipelineSummary() != null) {
+      String pipelineId = workflowExecution.getPipelineSummary().getPipelineId();
+      Validator.notNullCheck("Pipeline id is null for execution " + workflowExecutionId, pipelineId);
+      authHandler.authorize(permissionAttributeList, asList(appId), pipelineId);
+    } else {
+      String workflowId = workflowExecution.getWorkflowId();
+      Validator.notNullCheck("Workflow id is null for execution " + workflowExecutionId, workflowId);
+      authHandler.authorize(permissionAttributeList, asList(appId), workflowId);
+    }
   }
 
   /**
@@ -227,6 +244,7 @@ public class ExecutionResource {
   @AuthRule(permissionType = DEPLOYMENT, action = EXECUTE, skipAuth = true)
   public RestResponse<Boolean> approveOrRejectExecution(@QueryParam("appId") String appId,
       @PathParam("workflowExecutionId") String workflowExecutionId, ExecutionArgs executionArgs) {
+    authorize(appId, workflowExecutionId, EXECUTE);
     return new RestResponse<>(workflowExecutionService.updateNotes(appId, workflowExecutionId, executionArgs));
   }
 
@@ -245,6 +263,7 @@ public class ExecutionResource {
   @AuthRule(permissionType = DEPLOYMENT, action = EXECUTE, skipAuth = true)
   public RestResponse approveOrRejectExecution(@QueryParam("appId") String appId,
       @PathParam("workflowExecutionId") String workflowExecutionId, ApprovalDetails approvalDetails) {
+    authorize(appId, workflowExecutionId, EXECUTE);
     return new RestResponse<>(
         workflowExecutionService.approveOrRejectExecution(appId, workflowExecutionId, approvalDetails));
   }
@@ -358,6 +377,7 @@ public class ExecutionResource {
   @AuthRule(permissionType = DEPLOYMENT, action = EXECUTE, skipAuth = true)
   public RestResponse<Set<WorkflowExecutionBaseline>> markAsBaseline(@QueryParam("appId") String appId,
       @QueryParam("isBaseline") boolean isBaseline, @PathParam("workflowExecutionId") String workflowExecutionId) {
+    authorize(appId, workflowExecutionId, EXECUTE);
     return new RestResponse<>(workflowExecutionService.markBaseline(appId, workflowExecutionId, isBaseline));
   }
 
