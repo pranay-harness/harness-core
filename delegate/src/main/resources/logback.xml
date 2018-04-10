@@ -45,5 +45,6 @@
     <root level="INFO">
         <appender-ref ref="file"/>
         <appender-ref ref="REST"/>
+        <appender-ref ref="stdout"/>
     </root>
 </configuration>

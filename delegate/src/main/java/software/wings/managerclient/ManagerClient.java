@@ -50,7 +50,7 @@ public interface ManagerClient {
   @Multipart
   @POST("delegateFiles/{delegateId}/tasks/{taskId}")
   Call<RestResponse<String>> uploadFile(@Path("delegateId") String delegateId, @Path("taskId") String taskId,
-      @Query("accountId") String accountId, @Part MultipartBody.Part file);
+      @Query("accountId") String accountId, @Query("fileBucket") FileBucket bucket, @Part MultipartBody.Part file);
 
   @GET("delegates/{delegateId}/upgrade")
   Call<RestResponse<DelegateScripts>> checkForUpgrade(

@@ -66,7 +66,7 @@ public class DelegateFileManagerImpl implements DelegateFileManager {
   }
 
   @Override
-  public InputStream downloadByFileId(FileBucket bucket, String fileId, String accountId, boolean encrypted)
+  public InputStream downloadArtifactByFileId(FileBucket bucket, String fileId, String accountId, boolean encrypted)
       throws IOException, ExecutionException {
     logger.info("Downloading file:[{}] , bucket:[{}], accountId:[{}]", fileId, bucket, accountId);
     synchronized (fileIdLocks.get(fileId)) { // Block all thread only one gets to enter
@@ -78,7 +78,8 @@ public class DelegateFileManagerImpl implements DelegateFileManager {
       }
       logger.info("file:[{}] doesn't exist locally. Download from manager", fileId);
 
-      InputStream inputStream = downloadByFileIdInternal(bucket, fileId, accountId, encrypted);
+      InputStream inputStream = downloadByFileId(bucket, fileId, accountId, encrypted);
+
       logger.info("Input stream acquired for file:[{}]. Saving locally", fileId);
 
       File downloadedFile = new File(ARTIFACT_REPO_TMP_DIR, fileId);
@@ -107,11 +108,15 @@ public class DelegateFileManagerImpl implements DelegateFileManager {
     return execute(managerClient.getFileIdByVersion(entityId, fileBucket, version, accountId)).getResource();
   }
 
-  private InputStream downloadByFileIdInternal(FileBucket bucket, String fileId, String accountId, boolean encrypted)
+  @Override
+  public InputStream downloadByFileId(FileBucket bucket, String fileId, String accountId, boolean encrypted)
       throws IOException {
     Response<ResponseBody> response = null;
     try {
       response = managerClient.downloadFile(fileId, bucket, accountId, encrypted).execute();
+      if (response.body() == null) {
+        return null;
+      }
       return response.body().byteStream();
     } finally {
       if (response != null && !response.isSuccessful()) {
@@ -174,10 +179,10 @@ public class DelegateFileManagerImpl implements DelegateFileManager {
 
     // MultipartBody.Part is used to send also the actual file name
     Part part = Part.createFormData("file", delegateFile.getFileName(), requestFile);
-    Response<RestResponse<String>> response =
-        managerClient
-            .uploadFile(delegateFile.getDelegateId(), delegateFile.getTaskId(), delegateFile.getAccountId(), part)
-            .execute();
+    Response<RestResponse<String>> response = managerClient
+                                                  .uploadFile(delegateFile.getDelegateId(), delegateFile.getTaskId(),
+                                                      delegateFile.getAccountId(), delegateFile.getBucket(), part)
+                                                  .execute();
     delegateFile.setFileId(response.body().getResource());
     logger.info("Uploaded delegate file id {} ", delegateFile.getFileId());
   }
