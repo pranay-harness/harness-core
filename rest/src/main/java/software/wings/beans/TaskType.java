@@ -167,7 +167,6 @@ public enum TaskType {
   CONTAINER_DAEMON_SET_YAML(TaskGroup.CONTAINER, ServiceImplDelegateTask.class, ContainerValidation.class, true),
   CONTAINER_ACTIVE_AUTOSCALERS(TaskGroup.CONTAINER, ServiceImplDelegateTask.class, ContainerValidation.class, true),
   CONTAINER_CONNECTION_VALIDATION(TaskGroup.CONTAINER, ServiceImplDelegateTask.class, ContainerValidation.class),
-  FETCH_CONTAINER_INFO(TaskGroup.CONTAINER, ServiceImplDelegateTask.class, ContainerValidation.class),
   DYNA_TRACE_VALIDATE_CONFIGURATION_TASK(
       TaskGroup.DYNA_TRACE, ServiceImplDelegateTask.class, DynaTraceValidation.class),
   DYNA_TRACE_METRIC_DATA_COLLECTION_TASK(
