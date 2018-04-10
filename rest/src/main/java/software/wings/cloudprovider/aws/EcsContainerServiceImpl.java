@@ -968,6 +968,7 @@ public class EcsContainerServiceImpl implements EcsContainerService {
       int desiredCount, int serviceSteadyStateTimeout, ExecutionLogCallback executionLogCallback) {
     AwsConfig awsConfig = awsHelperService.validateAndGetAwsConfig(connectorConfig, encryptedDataDetails);
 
+    boolean isDownsize = checkIfDownSize(previousCount, desiredCount);
     try {
       if (desiredCount != previousCount) {
         UpdateServiceRequest updateServiceRequest =
@@ -999,8 +1000,10 @@ public class EcsContainerServiceImpl implements EcsContainerService {
                                           .withServiceName(serviceName)
                                           .withDesiredStatus(DesiredStatus.RUNNING))
                                   .getTaskArns();
-      if (isEmpty(taskArns)) {
-        logger.info("No task arns.");
+
+      // Do not generate containerInfo for downsize as we dont do verification for downsize
+      if (isEmpty(taskArns) || isDownsize) {
+        logger.info("Downsize complete for ECS deployment, Service: " + serviceName);
         return emptyList();
       }
 
@@ -1023,6 +1026,10 @@ public class EcsContainerServiceImpl implements EcsContainerService {
     } catch (Exception ex) {
       throw new WingsException(INVALID_REQUEST, ex).addParam("message", ex.getMessage());
     }
+  }
+
+  private boolean checkIfDownSize(int previousCount, int desiredCount) {
+    return desiredCount < previousCount;
   }
 
   @Override

@@ -11,6 +11,7 @@ import com.google.inject.Inject;
 
 import lombok.Data;
 import lombok.EqualsAndHashCode;
+import org.apache.commons.collections.CollectionUtils;
 import org.mongodb.morphia.annotations.Transient;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -157,34 +158,44 @@ public abstract class ContainerResizeCommandUnit extends AbstractCommandUnit {
 
   private boolean allContainersSuccess(
       List<ContainerInfo> containerInfos, int totalDesiredCount, ExecutionLogCallback executionLogCallback) {
+    // this is downsize scenario, nothing to check
+    if (CollectionUtils.isEmpty(containerInfos)) {
+      return true;
+    }
+
     boolean success = false;
     boolean allContainersSuccess =
         containerInfos.stream().allMatch(info -> info.getStatus() == ContainerInfo.Status.SUCCESS);
-    if (containerInfos.size() == totalDesiredCount && allContainersSuccess) {
+    if (allContainersSuccess) {
       success = true;
-      logger.info("Successfully completed resize operation");
-      if (containerInfos.size() > 0) {
-        executionLogCallback.saveExecutionLog("\nContainer IDs:");
-        containerInfos.forEach(info
-            -> executionLogCallback.saveExecutionLog("  " + info.getHostName()
-                + (info.getHostName().equals(info.getContainerId()) ? "" : " - " + info.getContainerId())));
-        executionLogCallback.saveExecutionLog("");
+      try {
+        logger.info("Successfully completed resize operation");
+        if (containerInfos.size() > 0) {
+          executionLogCallback.saveExecutionLog("\nContainer IDs:");
+          containerInfos.forEach(info
+              -> executionLogCallback.saveExecutionLog("  " + info.getHostName()
+                  + (info.getHostName().equals(info.getContainerId()) ? "" : " - " + info.getContainerId())));
+          executionLogCallback.saveExecutionLog("");
+        }
+      } catch (Exception e) {
+        // we do not care if something fails (like NPE) while adding execution logs
+        // here we will just miss out on few execution logs
       }
       executionLogCallback.saveExecutionLog(String.format("Completed operation\n%s\n", DASH_STRING));
     } else {
-      if (containerInfos.size() != totalDesiredCount) {
-        executionLogCallback.saveExecutionLog(
-            String.format("Expected data for %d container%s but got %d", totalDesiredCount,
-                totalDesiredCount == 1 ? "" : "s", containerInfos.size()),
-            LogLevel.ERROR);
-      }
       if (!allContainersSuccess) {
-        List<ContainerInfo> failed =
-            containerInfos.stream().filter(info -> info.getStatus() != ContainerInfo.Status.SUCCESS).collect(toList());
-        executionLogCallback.saveExecutionLog(
-            String.format("The following container%s did not have success status: %s", failed.size() == 1 ? "" : "s",
-                failed.stream().map(ContainerInfo::getContainerId).collect(toList())),
-            LogLevel.ERROR);
+        try {
+          List<ContainerInfo> failed = containerInfos.stream()
+                                           .filter(info -> info.getStatus() != ContainerInfo.Status.SUCCESS)
+                                           .collect(toList());
+          executionLogCallback.saveExecutionLog(
+              String.format("The following container%s did not have success status: %s", failed.size() == 1 ? "" : "s",
+                  failed.stream().map(ContainerInfo::getContainerId).collect(toList())),
+              LogLevel.ERROR);
+        } catch (Exception e) {
+          // we do not care if something fails (NPE) while adding execution logs
+          // here we will just miss out on few execution logs
+        }
       }
       logger.error("Completed operation with errors");
       executionLogCallback.saveExecutionLog(
