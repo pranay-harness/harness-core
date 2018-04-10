@@ -3,9 +3,11 @@ package software.wings.sm.states;
 import static io.harness.data.structure.EmptyPredicate.isEmpty;
 import static java.util.Collections.emptySet;
 import static org.apache.commons.lang3.StringUtils.isBlank;
+import static software.wings.beans.DelegateTask.SyncTaskContext.Builder.aContext;
 import static software.wings.beans.ErrorCode.INVALID_REQUEST;
 import static software.wings.dl.PageRequest.PageRequestBuilder.aPageRequest;
 
+import com.google.common.base.Preconditions;
 import com.google.common.collect.Lists;
 import com.google.inject.Inject;
 
@@ -19,8 +21,13 @@ import software.wings.api.CanaryWorkflowStandardParams;
 import software.wings.api.InstanceElement;
 import software.wings.api.PhaseElement;
 import software.wings.app.MainConfiguration;
+import software.wings.beans.AwsConfig;
+import software.wings.beans.DelegateTask.SyncTaskContext;
+import software.wings.beans.EcsInfrastructureMapping;
 import software.wings.beans.ElementExecutionSummary;
+import software.wings.beans.InfrastructureMapping;
 import software.wings.beans.SearchFilter.Operator;
+import software.wings.beans.SettingAttribute;
 import software.wings.beans.SortOrder.OrderType;
 import software.wings.beans.WorkflowExecution;
 import software.wings.beans.infrastructure.instance.info.ContainerInfo;
@@ -28,16 +35,21 @@ import software.wings.beans.infrastructure.instance.info.EcsContainerInfo;
 import software.wings.beans.infrastructure.instance.info.KubernetesContainerInfo;
 import software.wings.common.Constants;
 import software.wings.common.TemplateExpressionProcessor;
+import software.wings.delegatetasks.DelegateProxyFactory;
 import software.wings.dl.PageRequest;
 import software.wings.dl.PageResponse;
 import software.wings.dl.WingsPersistence;
 import software.wings.exception.WingsException;
+import software.wings.security.encryption.EncryptedDataDetail;
+import software.wings.service.impl.AwsHelperService;
+import software.wings.service.impl.ContainerServiceParams;
 import software.wings.service.impl.analysis.AnalysisComparisonStrategy;
 import software.wings.service.impl.analysis.ContinuousVerificationExecutionMetaData;
 import software.wings.service.impl.analysis.ContinuousVerificationExecutionMetaData.ContinuousVerificationExecutionMetaDataBuilder;
 import software.wings.service.impl.analysis.ContinuousVerificationService;
 import software.wings.service.impl.instance.ContainerInstanceHelper;
 import software.wings.service.intfc.AppService;
+import software.wings.service.intfc.ContainerService;
 import software.wings.service.intfc.DelegateService;
 import software.wings.service.intfc.InfrastructureMappingService;
 import software.wings.service.intfc.SettingsService;
@@ -95,6 +107,10 @@ public abstract class AbstractAnalysisState extends State {
   @Transient @Inject @SchemaIgnore protected WorkflowExecutionBaselineService workflowExecutionBaselineService;
 
   @Transient @Inject @SchemaIgnore protected ContinuousVerificationService continuousVerificationService;
+
+  @Transient @Inject @SchemaIgnore private AwsHelperService awsHelperService;
+
+  @Transient @Inject @SchemaIgnore private DelegateProxyFactory delegateProxyFactory;
 
   protected String hostnameField;
 
@@ -170,9 +186,16 @@ public abstract class AbstractAnalysisState extends State {
     String serviceId = phaseElement.getServiceElement().getUuid();
     String infraMappingId = phaseElement.getInfraMappingId();
 
-    if (containerInstanceHelper.isContainerDeployment(infraMappingService.get(context.getAppId(), infraMappingId))) {
+    InfrastructureMapping infrastructureMapping = infraMappingService.get(context.getAppId(), infraMappingId);
+    if (containerInstanceHelper.isContainerDeployment(infrastructureMapping)) {
       Set<String> containerServiceNames =
           containerInstanceHelper.getContainerServiceNames(context, serviceId, infraMappingId);
+
+      if (infrastructureMapping instanceof EcsInfrastructureMapping) {
+        return getEcsLastExecutionNodes(
+            context, (EcsInfrastructureMapping) infrastructureMapping, containerServiceNames);
+      }
+
       List<ContainerInfo> containerInfoForService =
           containerInstanceHelper.getContainerInfoForService(containerServiceNames, context, infraMappingId, serviceId);
       return containerInfoForService.stream()
@@ -238,6 +261,34 @@ public abstract class AbstractAnalysisState extends State {
 
     getLogger().info("Did not find a successful workflow with service {}. It will be a baseline run", serviceId);
     return emptySet();
+  }
+
+  private Set<String> getEcsLastExecutionNodes(ExecutionContext context,
+      EcsInfrastructureMapping containerInfrastructureMapping, Set<String> containerServiceNames) {
+    String clusterName = containerInfrastructureMapping.getClusterName();
+    String region = containerInfrastructureMapping.getRegion();
+    SettingAttribute settingAttribute =
+        settingsService.get(containerInfrastructureMapping.getComputeProviderSettingId());
+    Preconditions.checkNotNull(settingAttribute, "Could not find config for " + containerInfrastructureMapping);
+    Preconditions.checkNotNull(settingAttribute.getValue(), "Cloud provider setting not found for " + settingAttribute);
+    AwsConfig awsConfig = (AwsConfig) settingAttribute.getValue();
+
+    List<EncryptedDataDetail> encryptionDetails =
+        secretManager.getEncryptionDetails(awsConfig, context.getAppId(), context.getWorkflowExecutionId());
+    String accountId = this.appService.get(context.getAppId()).getAccountId();
+    SyncTaskContext syncTaskContext = aContext().withAccountId(accountId).withAppId(context.getAppId()).build();
+    syncTaskContext.setTimeout(Constants.DEFAULT_SYNC_CALL_TIMEOUT * 2);
+    List<software.wings.cloudprovider.ContainerInfo> containerInfos =
+        delegateProxyFactory.get(ContainerService.class, syncTaskContext)
+            .fetchContainerInfos(ContainerServiceParams.builder()
+                                     .containerServiceNames(containerServiceNames)
+                                     .clusterName(clusterName)
+                                     .region(region)
+                                     .encryptionDetails(encryptionDetails)
+                                     .settingAttribute(settingAttribute)
+                                     .build());
+
+    return containerInfos.stream().map(containerInfo -> containerInfo.getContainerId()).collect(Collectors.toSet());
   }
 
   protected Set<String> getCanaryNewHostNames(ExecutionContext context) {
