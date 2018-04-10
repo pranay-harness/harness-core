@@ -27,7 +27,7 @@ import java.util.List;
 import java.util.Map;
 
 /**
- * The Class ServiceElement.
+ * The Class PhaseElement.
  *
  * @author Rishi
  */

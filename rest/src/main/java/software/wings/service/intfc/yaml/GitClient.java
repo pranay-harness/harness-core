@@ -19,12 +19,27 @@ import software.wings.beans.yaml.GitPushResult;
  */
 public interface GitClient {
   /**
+   * Gets repo directory.
+   *
+   * @param gitConfig the git config
+   * @return the repo directory
+   */
+  String getRepoDirectory(GitConfig gitConfig);
+
+  /**
    * Clone git clone result.
    *
    * @param gitConfig the git config
    * @return the git clone result
    */
   GitCloneResult clone(GitConfig gitConfig);
+
+  /**
+   * Ensure repo locally cloned and updated.
+   *
+   * @param gitConfig the git config
+   */
+  void ensureRepoLocallyClonedAndUpdated(GitConfig gitConfig);
 
   /**
    * Diff git diff result.
@@ -82,6 +97,8 @@ public interface GitClient {
    * Validate.
    *
    * @param gitConfig the git config
+   * @param logError  the log error
+   * @return the string
    */
   String validate(GitConfig gitConfig, boolean logError);
 }

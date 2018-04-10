@@ -9,6 +9,7 @@ import org.slf4j.LoggerFactory;
 import software.wings.beans.DelegateTask;
 import software.wings.beans.ErrorCode;
 import software.wings.beans.GitConfig;
+import software.wings.beans.GitConfig.GitRepositoryType;
 import software.wings.beans.yaml.GitCommand.GitCommandType;
 import software.wings.beans.yaml.GitCommandExecutionResponse;
 import software.wings.beans.yaml.GitCommandExecutionResponse.GitCommandExecutionResponseBuilder;
@@ -45,6 +46,7 @@ public class GitCommandTask extends AbstractDelegateRunnableTask {
   public GitCommandExecutionResponse run(Object[] parameters) {
     GitCommandType gitCommandType = (GitCommandType) parameters[0];
     GitConfig gitConfig = (GitConfig) parameters[1];
+    gitConfig.setGitRepoType(GitRepositoryType.YAML); // TODO:: find better place. possibly manager can set this
 
     try {
       List<EncryptedDataDetail> encryptionDetails = (List<EncryptedDataDetail>) parameters[2];

@@ -35,10 +35,10 @@ public class WorkflowPhase implements UuidAware {
   private boolean daemonSet;
 
   private String infraMappingId;
+  private String infraMappingName;
 
   private DeploymentType deploymentType;
   private String computeProviderId;
-  private String infraMappingName;
   private boolean provisionNodes;
 
   private boolean rollback;
@@ -99,6 +99,14 @@ public class WorkflowPhase implements UuidAware {
 
   public void setDeploymentType(DeploymentType deploymentType) {
     this.deploymentType = deploymentType;
+  }
+
+  public String getInfraMappingId() {
+    return infraMappingId;
+  }
+
+  public void setInfraMappingId(String infraMappingId) {
+    this.infraMappingId = infraMappingId;
   }
 
   public String getInfraMappingName() {
@@ -213,14 +221,6 @@ public class WorkflowPhase implements UuidAware {
     return params;
   }
 
-  public String getInfraMappingId() {
-    return infraMappingId;
-  }
-
-  public void setInfraMappingId(String infraMappingId) {
-    this.infraMappingId = infraMappingId;
-  }
-
   public Map<String, Graph> generateSubworkflows() {
     Map<String, Graph> graphs = new HashMap<>();
     Builder graphBuilder = aGraph().withGraphName(name);
@@ -313,9 +313,9 @@ public class WorkflowPhase implements UuidAware {
     private String name;
     private String serviceId;
     private String infraMappingId;
+    private String infraMappingName;
     private DeploymentType deploymentType;
     private String computeProviderId;
-    private String infraMappingName;
     private boolean rollback;
     private String phaseNameForRollback;
     private boolean valid = true;
@@ -350,6 +350,11 @@ public class WorkflowPhase implements UuidAware {
       return this;
     }
 
+    public WorkflowPhaseBuilder withInfraMappingName(String infraMappingName) {
+      this.infraMappingName = infraMappingName;
+      return this;
+    }
+
     public WorkflowPhaseBuilder withDeploymentType(DeploymentType deploymentType) {
       this.deploymentType = deploymentType;
       return this;
@@ -357,11 +362,6 @@ public class WorkflowPhase implements UuidAware {
 
     public WorkflowPhaseBuilder withComputeProviderId(String computeProviderId) {
       this.computeProviderId = computeProviderId;
-      return this;
-    }
-
-    public WorkflowPhaseBuilder withInfraMappingName(String infraMappingName) {
-      this.infraMappingName = infraMappingName;
       return this;
     }
 
@@ -411,9 +411,9 @@ public class WorkflowPhase implements UuidAware {
       workflowPhase.setName(name);
       workflowPhase.setServiceId(serviceId);
       workflowPhase.setInfraMappingId(infraMappingId);
+      workflowPhase.setInfraMappingName(infraMappingName);
       workflowPhase.setDeploymentType(deploymentType);
       workflowPhase.setComputeProviderId(computeProviderId);
-      workflowPhase.setInfraMappingName(infraMappingName);
       workflowPhase.setRollback(rollback);
       workflowPhase.setPhaseNameForRollback(phaseNameForRollback);
       workflowPhase.setValid(valid);

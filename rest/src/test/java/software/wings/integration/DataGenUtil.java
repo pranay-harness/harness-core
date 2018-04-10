@@ -446,7 +446,7 @@ public class DataGenUtil extends BaseIntegrationTest {
 
     Workflow workflow1 = workflowGenerator.createWorkflow(seed,
         aWorkflow()
-            .withName("Basic - simplest")
+            .withName("Basic - simple")
             .withAppId(environment.getAppId())
             .withEnvId(environment.getUuid())
             .withWorkflowType(WorkflowType.ORCHESTRATION)

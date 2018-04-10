@@ -67,5 +67,7 @@ public interface YamlConstants {
 
   String FIELD_HARNESS_API_VERSION = "harnessApiVersion";
   String FIELD_TYPE = "type";
+
   String GIT_YAML_LOG_PREFIX = "GIT_YAML_LOG_ENTRY: ";
+  String GIT_TERRAFORM_LOG_PREFIX = "GIT_TERRAFORM_LOG_ENTRY: ";
 }

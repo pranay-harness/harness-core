@@ -12,6 +12,7 @@ import static software.wings.beans.PluginCategory.CloudProvider;
 import static software.wings.beans.PluginCategory.Collaboration;
 import static software.wings.beans.PluginCategory.ConnectionAttributes;
 import static software.wings.beans.PluginCategory.LoadBalancer;
+import static software.wings.beans.PluginCategory.SourceRepo;
 import static software.wings.beans.PluginCategory.Verification;
 
 import org.junit.Before;
@@ -26,6 +27,7 @@ import software.wings.beans.DynaTraceConfig;
 import software.wings.beans.ElasticLoadBalancerConfig;
 import software.wings.beans.ElkConfig;
 import software.wings.beans.GcpConfig;
+import software.wings.beans.GitConfig;
 import software.wings.beans.HostConnectionAttributes;
 import software.wings.beans.JenkinsConfig;
 import software.wings.beans.KubernetesClusterConfig;
@@ -68,7 +70,7 @@ public class PluginServiceTest {
   @Test
   public void shouldGetInstalledPlugins() throws Exception {
     assertThat(pluginService.getInstalledPlugins(accountId))
-        .hasSize(20)
+        .hasSize(21)
         .containsExactly(anAccountPlugin()
                              .withSettingClass(JenkinsConfig.class)
                              .withAccountId(accountId)
@@ -228,10 +230,18 @@ public class PluginServiceTest {
                 .withDisplayName("Elastic Classic Load Balancer")
                 .withType("ELB")
                 .withPluginCategories(asList(LoadBalancer))
+                .build(),
+            anAccountPlugin()
+                .withSettingClass(GitConfig.class)
+                .withAccountId(accountId)
+                .withIsEnabled(true)
+                .withDisplayName("Git Repository")
+                .withType("GIT")
+                .withPluginCategories(asList(SourceRepo))
                 .build());
 
     assertThat(pluginService.getInstalledPlugins(azureEnabledAccountId))
-        .hasSize(21)
+        .hasSize(22)
         .contains(anAccountPlugin()
                       .withSettingClass(AzureConfig.class)
                       .withAccountId(azureEnabledAccountId)
@@ -245,15 +255,15 @@ public class PluginServiceTest {
   @Test
   public void shouldGetPluginSettingSchema() throws Exception {
     assertThat(pluginService.getPluginSettingSchema(accountId))
-        .hasSize(20)
-        .containsOnlyKeys("APP_DYNAMICS", "NEW_RELIC", "DYNA_TRACE", "JENKINS", "BAMBOO", "SMTP", "SLACK", "SPLUNK",
-            "ELK", "LOGZ", "SUMO", "AWS", "GCP", "PHYSICAL_DATA_CENTER", "KUBERNETES_CLUSTER", "DOCKER",
-            "HOST_CONNECTION_ATTRIBUTES", "ELB", "NEXUS", "ARTIFACTORY");
-
-    assertThat(pluginService.getPluginSettingSchema(azureEnabledAccountId))
         .hasSize(21)
         .containsOnlyKeys("APP_DYNAMICS", "NEW_RELIC", "DYNA_TRACE", "JENKINS", "BAMBOO", "SMTP", "SLACK", "SPLUNK",
+            "ELK", "LOGZ", "SUMO", "AWS", "GCP", "PHYSICAL_DATA_CENTER", "KUBERNETES_CLUSTER", "DOCKER",
+            "HOST_CONNECTION_ATTRIBUTES", "ELB", "NEXUS", "ARTIFACTORY", "GIT");
+
+    assertThat(pluginService.getPluginSettingSchema(azureEnabledAccountId))
+        .hasSize(22)
+        .containsOnlyKeys("APP_DYNAMICS", "NEW_RELIC", "DYNA_TRACE", "JENKINS", "BAMBOO", "SMTP", "SLACK", "SPLUNK",
             "ELK", "LOGZ", "SUMO", "AWS", "GCP", "AZURE", "PHYSICAL_DATA_CENTER", "KUBERNETES_CLUSTER", "DOCKER",
-            "HOST_CONNECTION_ATTRIBUTES", "ELB", "NEXUS", "ARTIFACTORY");
+            "HOST_CONNECTION_ATTRIBUTES", "ELB", "NEXUS", "ARTIFACTORY", "GIT");
   }
 }

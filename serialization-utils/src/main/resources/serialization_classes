@@ -302,3 +302,5 @@ software.wings.helpers.ext.helm.response.HelmReleaseHistoryCommandResponse, 5266
 software.wings.api.HelmSetupExecutionSummary, 5267
 software.wings.helpers.ext.helm.request.HelmRollbackCommandRequest, 5268
 software.wings.beans.container.HelmChartSpecification, 5269
+software.wings.beans.GitConfig$GitRepositoryType, 5270
+software.wings.waitnotify.StringNotifyResponseData, 5271
