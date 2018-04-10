@@ -1,5 +1,6 @@
 package software.wings.service.impl;
 
+import static io.harness.data.structure.EmptyPredicate.isEmpty;
 import static software.wings.beans.infrastructure.instance.info.EcsContainerInfo.Builder.anEcsContainerInfo;
 import static software.wings.beans.infrastructure.instance.info.KubernetesContainerInfo.Builder.aKubernetesContainerInfo;
 
@@ -23,6 +24,7 @@ import software.wings.beans.KubernetesConfig;
 import software.wings.beans.ResponseMessage;
 import software.wings.beans.infrastructure.instance.info.ContainerInfo;
 import software.wings.cloudprovider.aws.AwsClusterService;
+import software.wings.cloudprovider.aws.EcsContainerService;
 import software.wings.cloudprovider.gke.GkeClusterService;
 import software.wings.cloudprovider.gke.KubernetesContainerService;
 import software.wings.exception.WingsException;
@@ -36,6 +38,7 @@ import java.util.ArrayList;
 import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.stream.Collectors;
 
 public class ContainerServiceImpl implements ContainerService {
   private static final Logger logger = LoggerFactory.getLogger(ContainerServiceImpl.class);
@@ -45,6 +48,7 @@ public class ContainerServiceImpl implements ContainerService {
   @Inject private AwsClusterService awsClusterService;
   @Inject private AwsHelperService awsHelperService;
   @Inject private AzureHelperService azureHelperService;
+  @Inject private EcsContainerService ecsContainerService;
 
   private boolean isKubernetesClusterConfig(SettingValue value) {
     return value instanceof AzureConfig || value instanceof GcpConfig || value instanceof KubernetesConfig
@@ -217,5 +221,39 @@ public class ContainerServiceImpl implements ContainerService {
 
     throw new WingsException(ErrorCode.INVALID_ARGUMENT, ReportTarget.USER)
         .addParam("args", "Unknown setting value type: " + value.getType());
+  }
+
+  @Override
+  public List<software.wings.cloudprovider.ContainerInfo> fetchContainerInfos(
+      ContainerServiceParams containerServiceParams) {
+    if (containerServiceParams.getSettingAttribute().getValue() instanceof AwsConfig) {
+      AwsConfig awsConfig = (AwsConfig) containerServiceParams.getSettingAttribute().getValue();
+      List<Task> tasks = new ArrayList<>();
+      containerServiceParams.getContainerServiceNames().forEach(serviceName -> {
+        ListTasksRequest listTasksRequest = new ListTasksRequest()
+                                                .withCluster(containerServiceParams.getClusterName())
+                                                .withServiceName(serviceName)
+                                                .withDesiredStatus("RUNNING");
+
+        ListTasksResult listTasksResult = awsHelperService.listTasks(containerServiceParams.getRegion(), awsConfig,
+            containerServiceParams.getEncryptionDetails(), listTasksRequest);
+
+        if (listTasksResult != null && !isEmpty(listTasksResult.getTaskArns())) {
+          DescribeTasksRequest describeTasksRequest = new DescribeTasksRequest()
+                                                          .withCluster(containerServiceParams.getClusterName())
+                                                          .withTasks(listTasksResult.getTaskArns());
+          DescribeTasksResult describeTasksResult = awsHelperService.describeTasks(containerServiceParams.getRegion(),
+              awsConfig, containerServiceParams.getEncryptionDetails(), describeTasksRequest);
+          tasks.addAll(describeTasksResult.getTasks());
+        }
+      });
+
+      List<String> taskArns = tasks.stream().map(Task::getTaskArn).collect(Collectors.toList());
+
+      return ecsContainerService.generateContainerInfos(tasks, containerServiceParams.getClusterName(),
+          containerServiceParams.getRegion(), containerServiceParams.getEncryptionDetails(), null, awsConfig, taskArns);
+    }
+
+    throw new WingsException("invalid setting type " + containerServiceParams);
   }
 }

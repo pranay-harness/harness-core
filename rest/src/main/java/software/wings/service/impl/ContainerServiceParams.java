@@ -7,6 +7,7 @@ import software.wings.beans.SettingAttribute;
 import software.wings.security.encryption.EncryptedDataDetail;
 
 import java.util.List;
+import java.util.Set;
 
 @JsonIgnoreProperties(ignoreUnknown = true)
 @Data
@@ -20,4 +21,5 @@ public class ContainerServiceParams {
   private String region;
   private String subscriptionId;
   private String resourceGroup;
+  private Set<String> containerServiceNames;
 }
