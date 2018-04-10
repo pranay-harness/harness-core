@@ -1598,6 +1598,10 @@ public class WorkflowExecutionServiceImpl implements WorkflowExecutionService {
             .filter(StateExecutionInstance.APP_ID_KEY, appId)
             .filter(StateExecutionInstance.EXECUTION_UUID_KEY, stateExecutionInstance.getExecutionUuid())
             .filter(StateExecutionInstance.PARENT_INSTANCE_ID_KEY, stateExecutionInstanceId)
+            .project(StateExecutionInstance.ID_KEY, true)
+            .project(StateExecutionInstance.STATUS_KEY, true)
+            .project(StateExecutionInstance.PREV_INSTANCE_ID_KEY, true)
+            .project(StateExecutionInstance.CONTEXT_ELEMENT_KEY, true)
             .fetch();
 
     try (DBCursor cursor = stateExecutionInstances.getCursor()) {
