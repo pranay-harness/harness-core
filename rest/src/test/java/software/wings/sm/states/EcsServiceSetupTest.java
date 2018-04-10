@@ -89,6 +89,7 @@ import software.wings.beans.command.EcsSetupParams.EcsSetupParamsBuilder;
 import software.wings.beans.command.ServiceCommand;
 import software.wings.beans.container.ContainerDefinition;
 import software.wings.beans.container.EcsContainerTask;
+import software.wings.beans.container.ImageDetails;
 import software.wings.common.VariableProcessor;
 import software.wings.expression.ExpressionEvaluator;
 import software.wings.service.intfc.ActivityService;
@@ -109,6 +110,7 @@ import software.wings.sm.ExecutionContextImpl;
 import software.wings.sm.ExecutionStatus;
 import software.wings.sm.StateExecutionInstance;
 import software.wings.sm.WorkflowStandardParams;
+import software.wings.utils.ContainerDeploymentHelper;
 
 import java.util.Collections;
 import java.util.List;
@@ -132,6 +134,7 @@ public class EcsServiceSetupTest extends WingsBaseTest {
   @Mock private EncryptionService encryptionService;
   @Mock private VariableProcessor variableProcessor;
   @Mock private ExpressionEvaluator evaluator;
+  @Mock private ContainerDeploymentHelper containerDeploymentHelper;
 
   @InjectMocks private EcsServiceSetup ecsServiceSetup = new EcsServiceSetup("name");
 
@@ -265,6 +268,8 @@ public class EcsServiceSetupTest extends WingsBaseTest {
   @Test
   public void shouldExecute() {
     on(context).set("serviceTemplateService", serviceTemplateService);
+    when(containerDeploymentHelper.fetchArtifactDetails(artifact, app.getUuid(), context.getWorkflowExecutionId()))
+        .thenReturn(ImageDetails.builder().name(artifactStream.getSourceName()).tag(artifact.getBuildNo()).build());
 
     ecsServiceSetup.execute(context);
 

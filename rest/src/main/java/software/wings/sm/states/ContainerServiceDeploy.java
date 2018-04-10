@@ -87,6 +87,7 @@ public abstract class ContainerServiceDeploy extends State {
   @Inject @Transient private transient InfrastructureMappingService infrastructureMappingService;
   @Inject @Transient private transient ServiceTemplateService serviceTemplateService;
   @Inject @Transient private transient SecretManager secretManager;
+  @Inject @Transient private transient ContainerDeploymentHelper containerDeploymentHelper;
 
   ContainerServiceDeploy(String name, String type) {
     super(name, type);
@@ -278,7 +279,7 @@ public abstract class ContainerServiceDeploy extends State {
                                                         .build();
     List<InstanceStatusSummary> instanceStatusSummaries = new ArrayList<>();
     if (resizeExecutionData != null) {
-      instanceStatusSummaries.addAll(ContainerDeploymentHelper.getInstanceStatusSummaryFromContainerInfoList(
+      instanceStatusSummaries.addAll(containerDeploymentHelper.getInstanceStatusSummaryFromContainerInfoList(
           resizeExecutionData.getContainerInfos(), serviceTemplateElement));
     }
     return instanceStatusSummaries;
