@@ -17,4 +17,7 @@ public interface ContainerService {
 
   @DelegateTaskType(TaskType.CONTAINER_CONNECTION_VALIDATION)
   Boolean validate(ContainerServiceParams containerServiceParams);
+
+  @DelegateTaskType(TaskType.FETCH_CONTAINER_INFO)
+  List<software.wings.cloudprovider.ContainerInfo> fetchContainerInfos(ContainerServiceParams containerServiceParams);
 }
