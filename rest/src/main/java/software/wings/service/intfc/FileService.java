@@ -30,11 +30,13 @@ public interface FileService {
    * Update parent entity id boolean.
    *
    * @param entityId   the entity id
+   * @param entityClass   the entity class
    * @param fileId     the file id
    * @param fileBucket the file bucket
    * @return the boolean
    */
-  boolean updateParentEntityIdAndVersion(String entityId, String fileId, int version, FileBucket fileBucket);
+  boolean updateParentEntityIdAndVersion(
+      Class entityClass, String entityId, Integer version, String fileId, FileBucket fileBucket);
   /**
    * Save file.
    *
@@ -99,6 +101,15 @@ public interface FileService {
    */
   List<String> getAllFileIds(String entityId, FileBucket fileBucket);
 
+  /**
+   * Gets the latest file id.
+   *
+   * @param entityId   the entity id
+   * @param fileBucket the file bucket
+   * @return the all file ids
+   */
+  String getLatestFileId(String entityId, FileBucket fileBucket);
+
   String getFileIdByVersion(String entityId, int version, FileBucket fileBucket);
 
   /**
@@ -156,7 +167,11 @@ public interface FileService {
     /**
      * Platforms file bucket.
      */
-    PLATFORMS();
+    PLATFORMS(),
+    /**
+     * Terraform state file bucket.
+     */
+    TERRAFORM_STATE();
 
     private int chunkSize;
 

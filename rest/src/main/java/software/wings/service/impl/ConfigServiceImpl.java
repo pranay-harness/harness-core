@@ -131,7 +131,7 @@ public class ConfigServiceImpl implements ConfigService {
         configFile.getEntityId(), configFile.getFileName(), ChangeType.CREATED, configFile.getNotes());
 
     if (secretManager.getEncryptionType(configFile.getAccountId()) != EncryptionType.VAULT) {
-      fileService.updateParentEntityIdAndVersion(id, fileId, 1, CONFIGS);
+      fileService.updateParentEntityIdAndVersion(null, id, 1, fileId, CONFIGS);
     }
 
     if (configFile.isEncrypted()) {
@@ -345,7 +345,7 @@ public class ConfigServiceImpl implements ConfigService {
 
       if (secretManager.getEncryptionType(inputConfigFile.getAccountId()) != EncryptionType.VAULT) {
         fileService.updateParentEntityIdAndVersion(
-            inputConfigFile.getUuid(), fileId, entityVersion.getVersion(), CONFIGS);
+            null, inputConfigFile.getUuid(), entityVersion.getVersion(), fileId, CONFIGS);
       }
     }
     if (inputConfigFile.getDescription() != null) {

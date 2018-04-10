@@ -236,7 +236,7 @@ public class SshPwdAuthExecutorTest extends WingsBaseTest {
     FileInputStream fileInputStream = new FileInputStream(file);
     when(fileService.getMetaInfo(any(FileBucket.class), anyString(), anyString()))
         .thenReturn(aDelegateFile().withFileName("text.txt").withLength(file.length()).build());
-    when(fileService.downloadByFileId(any(FileBucket.class), anyString(), anyString(), eq(false)))
+    when(fileService.downloadArtifactByFileId(any(FileBucket.class), anyString(), anyString(), eq(false)))
         .thenReturn(fileInputStream);
     executor.init(configBuilder.but().build());
 
@@ -264,7 +264,7 @@ public class SshPwdAuthExecutorTest extends WingsBaseTest {
     FileInputStream fileInputStream = new FileInputStream(file);
     when(fileService.getMetaInfo(any(FileBucket.class), anyString(), anyString()))
         .thenReturn(aDelegateFile().withFileName("text.txt").withLength(file.length()).build());
-    when(fileService.downloadByFileId(any(FileBucket.class), anyString(), anyString(), eq(false)))
+    when(fileService.downloadArtifactByFileId(any(FileBucket.class), anyString(), anyString(), eq(false)))
         .thenReturn(fileInputStream);
     executor.init(configBuilder.but().build());
 

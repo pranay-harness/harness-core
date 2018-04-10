@@ -48,6 +48,7 @@ import java.time.Duration;
 import java.util.List;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.ConcurrentMap;
+import java.util.concurrent.ExecutionException;
 import java.util.regex.Pattern;
 import javax.validation.Valid;
 import javax.validation.executable.ValidateOnExecution;
@@ -241,8 +242,8 @@ public abstract class AbstractSshExecutor implements SshExecutor {
                   }
 
                   @Override
-                  public void downloadToStream(OutputStream outputStream) throws IOException {
-                    try (InputStream inputStream = delegateFileManager.downloadByFileId(
+                  public void downloadToStream(OutputStream outputStream) throws IOException, ExecutionException {
+                    try (InputStream inputStream = delegateFileManager.downloadArtifactByFileId(
                              fileBucket, fileNamesId.getKey(), config.getAccountId(), false)) {
                       IOUtils.copy(inputStream, outputStream);
                     }
@@ -266,8 +267,8 @@ public abstract class AbstractSshExecutor implements SshExecutor {
       }
 
       @Override
-      public void downloadToStream(OutputStream outputStream) throws IOException {
-        try (InputStream inputStream = delegateFileManager.downloadByFileId(configFileMetaData.getFileBucket(),
+      public void downloadToStream(OutputStream outputStream) throws IOException, ExecutionException {
+        try (InputStream inputStream = delegateFileManager.downloadArtifactByFileId(configFileMetaData.getFileBucket(),
                  configFileMetaData.getFileId(), config.getAccountId(), configFileMetaData.isEncrypted())) {
           IOUtils.copy(inputStream, outputStream);
         }
@@ -476,7 +477,7 @@ public abstract class AbstractSshExecutor implements SshExecutor {
       saveExecutionLog("File successfully transferred");
       out.close();
       channel.disconnect();
-    } catch (IOException | JSchException ex) {
+    } catch (IOException | ExecutionException | JSchException ex) {
       if (ex instanceof FileNotFoundException) {
         saveExecutionLogError("File not found");
       } else if (ex instanceof JSchException) {
@@ -551,6 +552,6 @@ public abstract class AbstractSshExecutor implements SshExecutor {
      * @param outputStream the output stream
      * @throws IOException the io exception
      */
-    void downloadToStream(OutputStream outputStream) throws IOException;
+    void downloadToStream(OutputStream outputStream) throws IOException, ExecutionException;
   }
 }

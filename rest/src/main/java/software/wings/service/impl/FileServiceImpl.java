@@ -1,6 +1,8 @@
 package software.wings.service.impl;
 
 import static com.google.common.collect.ImmutableMap.of;
+import static com.mongodb.client.model.Sorts.descending;
+import static com.mongodb.client.model.Sorts.orderBy;
 import static java.util.stream.Collectors.toList;
 import static java.util.stream.StreamSupport.stream;
 import static org.apache.commons.lang3.StringUtils.isNotBlank;
@@ -17,7 +19,6 @@ import com.mongodb.client.gridfs.GridFSFindIterable;
 import com.mongodb.client.gridfs.model.GridFSFile;
 import com.mongodb.client.gridfs.model.GridFSUploadOptions;
 import com.mongodb.client.model.Filters;
-import com.mongodb.client.model.Sorts;
 import org.bson.Document;
 import org.bson.types.ObjectId;
 import org.slf4j.Logger;
@@ -36,6 +37,7 @@ import java.io.IOException;
 import java.io.InputStream;
 import java.io.OutputStream;
 import java.util.ArrayList;
+import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import javax.validation.executable.ValidateOnExecution;
@@ -96,21 +98,35 @@ public class FileServiceImpl implements FileService {
   public List<String> getAllFileIds(String entityId, FileBucket fileBucket) {
     GridFSFindIterable filemetaData =
         fileBucketHelper.getOrCreateFileBucket(fileBucket).find(Filters.eq("metadata.entityId", entityId));
-    return stream(filemetaData.sort(Sorts.descending("uploadDate")).spliterator(), false)
+    return stream(filemetaData.sort(descending("uploadDate")).spliterator(), false)
         .map(gridFSFile -> gridFSFile.getObjectId().toHexString())
         .collect(toList());
   }
 
   @Override
+  public String getLatestFileId(String entityId, FileBucket fileBucket) {
+    final GridFSFile first = fileBucketHelper.getOrCreateFileBucket(fileBucket)
+                                 .find(Filters.and(Filters.eq("metadata.entityId", entityId)))
+                                 .sort(orderBy(descending("uploadDate")))
+                                 .limit(1)
+                                 .first();
+    if (first == null) {
+      return null;
+    }
+    return first.getId().asObjectId().getValue().toHexString();
+  }
+
+  @Override
   public String getFileIdByVersion(String entityId, int version, FileBucket fileBucket) {
-    return fileBucketHelper.getOrCreateFileBucket(fileBucket)
-        .find(Filters.and(Filters.eq("metadata.entityId", entityId), Filters.eq("metadata.version", version)))
-        .limit(1)
-        .first()
-        .getId()
-        .asObjectId()
-        .getValue()
-        .toHexString();
+    final GridFSFile first =
+        fileBucketHelper.getOrCreateFileBucket(fileBucket)
+            .find(Filters.and(Filters.eq("metadata.entityId", entityId), Filters.eq("metadata.version", version)))
+            .limit(1)
+            .first();
+    if (first == null) {
+      return null;
+    }
+    return first.getId().asObjectId().getValue().toHexString();
   }
 
   /**
@@ -172,15 +188,27 @@ public class FileServiceImpl implements FileService {
    * {@inheritDoc}
    */
   @Override
-  public boolean updateParentEntityIdAndVersion(String entityId, String fileId, int version, FileBucket fileBucket) {
+  public boolean updateParentEntityIdAndVersion(
+      Class entityClass, String entityId, Integer version, String fileId, FileBucket fileBucket) {
     DBCollection collection =
         wingsPersistence.getDatastore().getDB().getCollection(fileBucket.representationName() + ".files");
     collection.createIndex(
         new BasicDBObject(of("metadata.entityId", 1, "metadata.version", 1)), new BasicDBObject("background", true));
+
+    Map<String, Object> updateMap = new HashMap<>();
+    if (entityClass != null) {
+      updateMap.put("metadata.class", entityClass.getCanonicalName());
+    }
+    if (entityId != null) {
+      updateMap.put("metadata.entityId", entityId);
+    }
+    if (version != null) {
+      updateMap.put("metadata.version", version);
+    }
+
     return collection
                .update(new BasicDBObject("_id", new ObjectId(fileId)),
-                   new BasicDBObject(
-                       "$set", new BasicDBObject(of("metadata.entityId", entityId, "metadata.version", version))))
+                   new BasicDBObject("$set", new BasicDBObject(updateMap)))
                .getN()
         > 0;
   }
