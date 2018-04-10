@@ -13,7 +13,17 @@ import software.wings.service.intfc.yaml.GitClient;
 
 public class GitClientUnsupported implements GitClient {
   @Override
+  public String getRepoDirectory(GitConfig gitConfig) {
+    throw new UnsupportedOperationException("Git operations not supported.");
+  }
+
+  @Override
   public GitCloneResult clone(GitConfig gitConfig) {
+    throw new UnsupportedOperationException("Git operations not supported.");
+  }
+
+  @Override
+  public void ensureRepoLocallyClonedAndUpdated(GitConfig gitConfig) {
     throw new UnsupportedOperationException("Git operations not supported.");
   }
 

@@ -10,6 +10,7 @@ import lombok.EqualsAndHashCode;
 import lombok.NoArgsConstructor;
 import lombok.ToString;
 import org.hibernate.validator.constraints.NotEmpty;
+import org.mongodb.morphia.annotations.Transient;
 import software.wings.annotation.Encryptable;
 import software.wings.annotation.Encrypted;
 import software.wings.jersey.JsonViews;
@@ -20,7 +21,6 @@ import software.wings.yaml.setting.ArtifactServerYaml;
 @JsonTypeName("GIT")
 @Data
 @EqualsAndHashCode(callSuper = false)
-@Builder
 @ToString(exclude = "password")
 public class GitConfig extends SettingValue implements Encryptable {
   @NotEmpty @Attributes(title = "Username", required = true) private String username;
@@ -33,6 +33,11 @@ public class GitConfig extends SettingValue implements Encryptable {
   @SchemaIgnore @NotEmpty private String accountId;
 
   @JsonView(JsonViews.Internal.class) @SchemaIgnore private String encryptedPassword;
+
+  @SchemaIgnore @Transient private GitRepositoryType gitRepoType;
+
+  public enum GitRepositoryType { YAML, TERRAFORM }
+
   /**
    * Instantiates a new setting value.
    */
@@ -40,6 +45,7 @@ public class GitConfig extends SettingValue implements Encryptable {
     super(SettingVariableTypes.GIT.name());
   }
 
+  @Builder
   public GitConfig(
       String username, char[] password, String repoUrl, String branch, String accountId, String encryptedPassword) {
     super(SettingVariableTypes.GIT.name());

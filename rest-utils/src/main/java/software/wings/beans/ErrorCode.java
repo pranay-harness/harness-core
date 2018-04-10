@@ -493,6 +493,8 @@ public enum ErrorCode {
    * Git Connection error
    */
   GIT_CONNECTION_ERROR("GIT_CONNECTION_ERROR"),
+
+  GIT_ERROR("GIT_ERROR"),
   /**
    * Artifact server
    */

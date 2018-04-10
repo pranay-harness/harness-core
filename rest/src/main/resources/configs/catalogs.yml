@@ -282,6 +282,8 @@ PLUGIN_CATEGORY:
       value: ConnectionAttributes
     - name: AppDynamics
       value: APP_DYNAMICS
+    - name: Source Repository
+      value: SourceRepo
 
 CLOUD_PROVIDERS:
     - name: Google Cloud Platform

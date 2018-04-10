@@ -9,6 +9,7 @@ import static software.wings.beans.PluginCategory.CloudProvider;
 import static software.wings.beans.PluginCategory.Collaboration;
 import static software.wings.beans.PluginCategory.ConnectionAttributes;
 import static software.wings.beans.PluginCategory.LoadBalancer;
+import static software.wings.beans.PluginCategory.SourceRepo;
 import static software.wings.beans.PluginCategory.Verification;
 
 import com.google.common.base.Charsets;
@@ -29,6 +30,7 @@ import software.wings.beans.DynaTraceConfig;
 import software.wings.beans.ElasticLoadBalancerConfig;
 import software.wings.beans.ElkConfig;
 import software.wings.beans.GcpConfig;
+import software.wings.beans.GitConfig;
 import software.wings.beans.HostConnectionAttributes;
 import software.wings.beans.JenkinsConfig;
 import software.wings.beans.KubernetesClusterConfig;
@@ -256,6 +258,16 @@ public class PluginServiceImpl implements PluginService {
                          .withUiSchema(readUiSchema("AZURE"))
                          .build());
     }
+
+    pluginList.add(anAccountPlugin()
+                       .withSettingClass(GitConfig.class)
+                       .withAccountId(accountId)
+                       .withIsEnabled(true)
+                       .withDisplayName("Git Repository")
+                       .withType("GIT")
+                       .withPluginCategories(asList(SourceRepo))
+                       .withUiSchema(readUiSchema("GIT"))
+                       .build());
 
     return pluginList;
   }
