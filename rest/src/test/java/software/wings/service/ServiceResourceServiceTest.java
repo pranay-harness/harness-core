@@ -777,7 +777,7 @@ public class ServiceResourceServiceTest extends WingsBaseTest {
 
     verify(configService).getConfigFilesForEntity(APP_ID, DEFAULT_TEMPLATE_ID, SERVICE_ID);
 
-    verify(commandService).update(expectedCommand);
+    verify(commandService).update(expectedCommand, false);
   }
 
   /**
@@ -862,7 +862,7 @@ public class ServiceResourceServiceTest extends WingsBaseTest {
 
     verify(configService).getConfigFilesForEntity(APP_ID, DEFAULT_TEMPLATE_ID, SERVICE_ID);
 
-    verify(commandService).save(expectedCommand, true);
+    verify(commandService).save(expectedCommand, false);
   }
 
   /**
@@ -965,7 +965,7 @@ public class ServiceResourceServiceTest extends WingsBaseTest {
 
     verify(configService).getConfigFilesForEntity(APP_ID, DEFAULT_TEMPLATE_ID, SERVICE_ID);
 
-    verify(commandService).save(expectedCommand, true);
+    verify(commandService).save(expectedCommand, false);
   }
 
   /**
