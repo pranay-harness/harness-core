@@ -812,7 +812,7 @@ public class ServiceResourceServiceImpl implements ServiceResourceService, DataP
         entityVersionService.lastEntityVersion(appId, EntityType.COMMAND, serviceCommand.getUuid(), serviceId);
 
     if (serviceCommand.getCommand() != null) {
-      updateCommandInternal(appId, serviceId, serviceCommand, lastEntityVersion);
+      updateCommandInternal(appId, serviceId, serviceCommand, lastEntityVersion, false);
     }
 
     setUnset(updateOperation, "envIdVersionMap", serviceCommand.getEnvIdVersionMap());
@@ -823,14 +823,19 @@ public class ServiceResourceServiceImpl implements ServiceResourceService, DataP
       updateOperation.set("name", serviceCommand.getName());
     }
 
+    String accountId = appService.getAccountIdByAppId(appId);
     wingsPersistence.update(
         wingsPersistence.createQuery(ServiceCommand.class).filter(ID_KEY, serviceCommand.getUuid()), updateOperation);
+    // Fetching the service command from db just to make sure it has the latest info since multiple update operations
+    // were performed.
+    serviceCommand = commandService.getServiceCommand(appId, serviceCommand.getUuid());
+    yamlChangeSetHelper.commandFileChangeAsync(accountId, service, serviceCommand, ChangeType.MODIFY);
 
     return get(appId, serviceId);
   }
 
-  private void updateCommandInternal(
-      String appId, String serviceId, ServiceCommand serviceCommand, EntityVersion lastEntityVersion) {
+  private void updateCommandInternal(String appId, String serviceId, ServiceCommand serviceCommand,
+      EntityVersion lastEntityVersion, boolean pushToYaml) {
     Command command = aCommand().build();
     if (serviceCommand.getCommand().getGraph() != null) {
       if (!isLinearCommandGraph(serviceCommand)) {
@@ -876,7 +881,7 @@ public class ServiceResourceServiceImpl implements ServiceResourceService, DataP
       if (command.getArtifactType() == null) {
         command.setArtifactType(oldCommand.getArtifactType());
       }
-      commandService.save(command, true);
+      commandService.save(command, pushToYaml);
 
       if (serviceCommand.getSetAsDefault()) {
         serviceCommand.setDefaultVersion(entityVersion.getVersion());
@@ -888,7 +893,7 @@ public class ServiceResourceServiceImpl implements ServiceResourceService, DataP
         DiffNode graphDiff = builder.build().compare(command.getGraph(), oldCommand.getGraph());
         if (graphDiff.hasChanges()) {
           oldCommand.setGraph(command.getGraph());
-          commandService.update(oldCommand);
+          commandService.update(oldCommand, pushToYaml);
         }
       } else {
         // Check if Name and CommandType changes

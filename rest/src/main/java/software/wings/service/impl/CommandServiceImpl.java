@@ -67,19 +67,22 @@ public class CommandServiceImpl implements CommandService {
   }
 
   @Override
-  public Command update(Command command) {
-    // check whether we need to push changes (through git sync)
-    String accountId = appService.getAccountIdByAppId(command.getAppId());
-    ServiceCommand serviceCommand = getServiceCommand(command.getAppId(), command.getOriginEntityId());
-    Service service = serviceResourceService.get(serviceCommand.getAppId(), serviceCommand.getServiceId());
-    executorService.submit(() -> {
-      YamlGitConfig ygs = yamlDirectoryService.weNeedToPushChanges(accountId);
-      if (ygs != null) {
-        List<GitFileChange> changeSet = new ArrayList<>();
-        changeSet.add(entityUpdateService.getCommandGitSyncFile(accountId, service, serviceCommand, ChangeType.MODIFY));
-        yamlChangeSetService.saveChangeSet(ygs, changeSet);
-      }
-    });
+  public Command update(Command command, boolean pushToYaml) {
+    if (pushToYaml) {
+      // check whether we need to push changes (through git sync)
+      String accountId = appService.getAccountIdByAppId(command.getAppId());
+      ServiceCommand serviceCommand = getServiceCommand(command.getAppId(), command.getOriginEntityId());
+      Service service = serviceResourceService.get(serviceCommand.getAppId(), serviceCommand.getServiceId());
+      executorService.submit(() -> {
+        YamlGitConfig ygs = yamlDirectoryService.weNeedToPushChanges(accountId);
+        if (ygs != null) {
+          List<GitFileChange> changeSet = new ArrayList<>();
+          changeSet.add(
+              entityUpdateService.getCommandGitSyncFile(accountId, service, serviceCommand, ChangeType.MODIFY));
+          yamlChangeSetService.saveChangeSet(ygs, changeSet);
+        }
+      });
+    }
     return wingsPersistence.saveAndGet(Command.class, command);
   }
 }
