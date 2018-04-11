@@ -876,6 +876,8 @@ public class ServiceResourceServiceImpl implements ServiceResourceService, DataP
 
       if (command.getCommandType() == null) {
         command.setCommandType(oldCommand.getCommandType());
+      } else {
+        command.setCommandType(serviceCommand.getCommand().getCommandType());
       }
 
       if (command.getArtifactType() == null) {
