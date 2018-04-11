@@ -28,16 +28,19 @@ import static software.wings.dl.PageRequest.UNLIMITED;
 import static software.wings.yaml.YamlHelper.trimYaml;
 
 import com.google.common.base.Joiner;
+import com.google.common.collect.ArrayListMultimap;
 import com.google.common.collect.ImmutableMap;
 import com.google.inject.Inject;
 import com.google.inject.Singleton;
 import com.google.inject.name.Named;
 
+import com.mongodb.DBCursor;
 import de.danielbechler.diff.ObjectDifferBuilder;
 import de.danielbechler.diff.node.DiffNode;
 import de.danielbechler.diff.path.NodePath;
 import org.apache.commons.lang3.StringUtils;
 import org.hibernate.validator.constraints.NotEmpty;
+import org.mongodb.morphia.query.MorphiaIterator;
 import org.mongodb.morphia.query.Sort;
 import org.mongodb.morphia.query.UpdateOperations;
 import org.slf4j.Logger;
@@ -54,7 +57,6 @@ import software.wings.beans.LambdaSpecification;
 import software.wings.beans.LambdaSpecification.FunctionSpecification;
 import software.wings.beans.OrchestrationWorkflow;
 import software.wings.beans.PhaseStep;
-import software.wings.beans.SearchFilter;
 import software.wings.beans.Service;
 import software.wings.beans.ServiceTemplate;
 import software.wings.beans.ServiceVariable;
@@ -115,7 +117,6 @@ import java.io.File;
 import java.io.FileInputStream;
 import java.io.FileNotFoundException;
 import java.time.Duration;
-import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
 import java.util.Map;
@@ -161,66 +162,14 @@ public class ServiceResourceServiceImpl implements ServiceResourceService, DataP
   public PageResponse<Service> list(
       PageRequest<Service> request, boolean withBuildSource, boolean withServiceCommands) {
     PageResponse<Service> pageResponse = wingsPersistence.query(Service.class, request);
-
-    SearchFilter appIdSearchFilter = request.getFilters()
-                                         .stream()
-                                         .filter(searchFilter -> searchFilter.getFieldName().equals("appId"))
-                                         .findFirst()
-                                         .orElse(null);
+    List<Service> services = pageResponse.getResponse();
     if (withServiceCommands) {
-      if (appIdSearchFilter != null) {
-        PageRequest<ServiceCommand> serviceCommandPageRequest =
-            aPageRequest().withLimit(UNLIMITED).addFilter(appIdSearchFilter).build();
-        List<ServiceCommand> appServiceCommands =
-            wingsPersistence.query(ServiceCommand.class, serviceCommandPageRequest).getResponse();
-        Map<String, List<ServiceCommand>> serviceToServiceCommandMap =
-            appServiceCommands.stream().collect(Collectors.groupingBy(ServiceCommand::getServiceId));
-        pageResponse.getResponse().forEach(service -> {
-          try {
-            //            service.setServiceCommands(getServiceCommands(service.getAppId(), service.getUuid()));
-            if (serviceToServiceCommandMap != null) {
-              List<ServiceCommand> serviceCommands = serviceToServiceCommandMap.get(service.getUuid());
-              if (serviceCommands != null) {
-                serviceCommands = getServiceCommandsByOrder(serviceCommands);
-                serviceCommands.forEach(serviceCommand
-                    -> serviceCommand.setCommand(commandService.getCommand(
-                        serviceCommand.getAppId(), serviceCommand.getUuid(), serviceCommand.getDefaultVersion())));
-                service.setServiceCommands(serviceCommands);
-              } else {
-                service.setServiceCommands(getServiceCommands(service.getAppId(), service.getUuid()));
-              }
-            }
-          } catch (Exception e) {
-            logger.error("Failed to retrieve service commands for serviceId {}  of appId  {}", service.getUuid(),
-                service.getAppId(), e);
-          }
-        });
-      } else {
-        throw new WingsException("AppId field is required in Search Filter");
-      }
+      setServiceCommands(services);
     }
-    if (withBuildSource && appIdSearchFilter != null) {
-      List<ArtifactStream> artifactStreams = new ArrayList<>();
-      try {
-        artifactStreams =
-            artifactStreamService.list(aPageRequest().addFilter(appIdSearchFilter).withLimit(UNLIMITED).build())
-                .getResponse();
-      } catch (Exception e) {
-        logger.error("Failed to retrieve artifact streams", e);
-      }
-      Map<String, List<ArtifactStream>> serviceToBuildSourceMap =
-          artifactStreams.stream().collect(Collectors.groupingBy(ArtifactStream::getServiceId));
-      if (serviceToBuildSourceMap != null) {
-        pageResponse.getResponse().forEach(service
-            -> service.setArtifactStreams(serviceToBuildSourceMap.getOrDefault(service.getUuid(), emptyList())));
-      }
+    if (withBuildSource) {
+      setArtifactStreams(services);
     }
     return pageResponse;
-  }
-
-  private List<ServiceCommand> getServiceCommandsByOrder(List<ServiceCommand> serviceCommands) {
-    serviceCommands = serviceCommands.stream().sorted(comparingDouble(ServiceCommand::getOrder)).collect(toList());
-    return serviceCommands;
   }
 
   /**
@@ -254,19 +203,6 @@ public class ServiceResourceServiceImpl implements ServiceResourceService, DataP
     }
 
     return savedService;
-  }
-
-  private List<String> getKeywords(Service service) {
-    List<Object> keywords = asList(service.getName(), service.getDescription(), service.getArtifactType());
-    if (service.getCreatedBy() != null) {
-      keywords.add(service.getCreatedBy().getName());
-      keywords.add(service.getCreatedBy().getEmail());
-    }
-    if (service.getLastUpdatedBy() != null) {
-      keywords.add(service.getLastUpdatedBy().getName());
-      keywords.add(service.getLastUpdatedBy().getEmail());
-    }
-    return trimList(keywords);
   }
 
   @Override
@@ -797,7 +733,7 @@ public class ServiceResourceServiceImpl implements ServiceResourceService, DataP
   }
 
   @Override
-  public Service updateCommands(String appId, String serviceId, List<ServiceCommand> serviceCommands) {
+  public Service updateCommandsOrder(String appId, String serviceId, List<ServiceCommand> serviceCommands) {
     Service service = wingsPersistence.get(Service.class, appId, serviceId);
     Validator.notNullCheck("service", service);
     if (isEmpty(serviceCommands)) {
@@ -876,77 +812,7 @@ public class ServiceResourceServiceImpl implements ServiceResourceService, DataP
         entityVersionService.lastEntityVersion(appId, EntityType.COMMAND, serviceCommand.getUuid(), serviceId);
 
     if (serviceCommand.getCommand() != null) {
-      Command command = aCommand().build();
-      if (serviceCommand.getCommand().getGraph() != null) {
-        if (!isLinearCommandGraph(serviceCommand)) {
-          WingsException wingsException =
-              new WingsException(ErrorCode.INVALID_PIPELINE, new IllegalArgumentException("Graph is not a pipeline"));
-          wingsException.addParam("message", "Graph is not a linear pipeline");
-          throw wingsException;
-        }
-        command.setGraph(serviceCommand.getCommand().getGraph());
-        command.transformGraph();
-      } else {
-        command.setCommandUnits(serviceCommand.getCommand().getCommandUnits());
-        command.setName(serviceCommand.getCommand().getName());
-        command.setCommandType(serviceCommand.getCommand().getCommandType());
-        if (isEmpty(serviceCommand.getName())) {
-          serviceCommand.setName(serviceCommand.getCommand().getName());
-        }
-      }
-      command.setOriginEntityId(serviceCommand.getUuid());
-      command.setAppId(appId);
-      command.setUuid(null);
-
-      Command oldCommand = commandService.getCommand(appId, serviceCommand.getUuid(), lastEntityVersion.getVersion());
-
-      DiffNode commandUnitDiff =
-          ObjectDifferBuilder.buildDefault().compare(command.getCommandUnits(), oldCommand.getCommandUnits());
-
-      if (commandUnitDiff.hasChanges()
-          || isCommandUnitsOrderChanged(command.getCommandUnits(), oldCommand.getCommandUnits())) {
-        EntityVersion entityVersion =
-            entityVersionService.newEntityVersion(appId, EntityType.COMMAND, serviceCommand.getUuid(), serviceId,
-                serviceCommand.getName(), EntityVersion.ChangeType.UPDATED, serviceCommand.getNotes());
-        command.setVersion(Long.valueOf(entityVersion.getVersion().intValue()));
-        if (command.getDeploymentType() == null) {
-          // Copy the old command values
-          command.setDeploymentType(oldCommand.getDeploymentType());
-        }
-
-        if (command.getCommandType() == null) {
-          command.setCommandType(oldCommand.getCommandType());
-        }
-
-        if (command.getArtifactType() == null) {
-          command.setArtifactType(oldCommand.getArtifactType());
-        }
-        commandService.save(command, true);
-
-        if (serviceCommand.getSetAsDefault()) {
-          serviceCommand.setDefaultVersion(entityVersion.getVersion());
-        }
-      } else {
-        if (serviceCommand.getCommand().getGraph() != null) {
-          ObjectDifferBuilder builder = ObjectDifferBuilder.startBuilding();
-          builder.inclusion().exclude().node(NodePath.with("linearGraphIterator"));
-          DiffNode graphDiff = builder.build().compare(command.getGraph(), oldCommand.getGraph());
-          if (graphDiff.hasChanges()) {
-            oldCommand.setGraph(command.getGraph());
-            commandService.update(oldCommand);
-          }
-        } else {
-          // Check if Name and CommandType changes
-          if (!oldCommand.getName().equals(command.getName())
-              || !oldCommand.getCommandType().equals(command.getCommandType())) {
-            UpdateOperations<Command> commandUpdateOperations = wingsPersistence.createUpdateOperations(Command.class);
-            setUnset(commandUpdateOperations, "name", command.getName());
-            setUnset(commandUpdateOperations, "commandType", command.getCommandType());
-            wingsPersistence.update(wingsPersistence.createQuery(Command.class).filter(ID_KEY, oldCommand.getUuid()),
-                commandUpdateOperations);
-          }
-        }
-      }
+      updateCommandInternal(appId, serviceId, serviceCommand, lastEntityVersion);
     }
 
     setUnset(updateOperation, "envIdVersionMap", serviceCommand.getEnvIdVersionMap());
@@ -961,6 +827,81 @@ public class ServiceResourceServiceImpl implements ServiceResourceService, DataP
         wingsPersistence.createQuery(ServiceCommand.class).filter(ID_KEY, serviceCommand.getUuid()), updateOperation);
 
     return get(appId, serviceId);
+  }
+
+  private void updateCommandInternal(
+      String appId, String serviceId, ServiceCommand serviceCommand, EntityVersion lastEntityVersion) {
+    Command command = aCommand().build();
+    if (serviceCommand.getCommand().getGraph() != null) {
+      if (!isLinearCommandGraph(serviceCommand)) {
+        WingsException wingsException =
+            new WingsException(ErrorCode.INVALID_PIPELINE, new IllegalArgumentException("Graph is not a pipeline"));
+        wingsException.addParam("message", "Graph is not a linear pipeline");
+        throw wingsException;
+      }
+      command.setGraph(serviceCommand.getCommand().getGraph());
+      command.transformGraph();
+    } else {
+      command.setCommandUnits(serviceCommand.getCommand().getCommandUnits());
+      command.setName(serviceCommand.getCommand().getName());
+      command.setCommandType(serviceCommand.getCommand().getCommandType());
+      if (isEmpty(serviceCommand.getName())) {
+        serviceCommand.setName(serviceCommand.getCommand().getName());
+      }
+    }
+    command.setOriginEntityId(serviceCommand.getUuid());
+    command.setAppId(appId);
+    command.setUuid(null);
+
+    Command oldCommand = commandService.getCommand(appId, serviceCommand.getUuid(), lastEntityVersion.getVersion());
+
+    DiffNode commandUnitDiff =
+        ObjectDifferBuilder.buildDefault().compare(command.getCommandUnits(), oldCommand.getCommandUnits());
+
+    if (commandUnitDiff.hasChanges()
+        || isCommandUnitsOrderChanged(command.getCommandUnits(), oldCommand.getCommandUnits())) {
+      EntityVersion entityVersion =
+          entityVersionService.newEntityVersion(appId, EntityType.COMMAND, serviceCommand.getUuid(), serviceId,
+              serviceCommand.getName(), EntityVersion.ChangeType.UPDATED, serviceCommand.getNotes());
+      command.setVersion(Long.valueOf(entityVersion.getVersion().intValue()));
+      if (command.getDeploymentType() == null) {
+        // Copy the old command values
+        command.setDeploymentType(oldCommand.getDeploymentType());
+      }
+
+      if (command.getCommandType() == null) {
+        command.setCommandType(oldCommand.getCommandType());
+      }
+
+      if (command.getArtifactType() == null) {
+        command.setArtifactType(oldCommand.getArtifactType());
+      }
+      commandService.save(command, true);
+
+      if (serviceCommand.getSetAsDefault()) {
+        serviceCommand.setDefaultVersion(entityVersion.getVersion());
+      }
+    } else {
+      if (serviceCommand.getCommand().getGraph() != null) {
+        ObjectDifferBuilder builder = ObjectDifferBuilder.startBuilding();
+        builder.inclusion().exclude().node(NodePath.with("linearGraphIterator"));
+        DiffNode graphDiff = builder.build().compare(command.getGraph(), oldCommand.getGraph());
+        if (graphDiff.hasChanges()) {
+          oldCommand.setGraph(command.getGraph());
+          commandService.update(oldCommand);
+        }
+      } else {
+        // Check if Name and CommandType changes
+        if (!oldCommand.getName().equals(command.getName())
+            || !oldCommand.getCommandType().equals(command.getCommandType())) {
+          UpdateOperations<Command> commandUpdateOperations = wingsPersistence.createUpdateOperations(Command.class);
+          setUnset(commandUpdateOperations, "name", command.getName());
+          setUnset(commandUpdateOperations, "commandType", command.getCommandType());
+          wingsPersistence.update(wingsPersistence.createQuery(Command.class).filter(ID_KEY, oldCommand.getUuid()),
+              commandUpdateOperations);
+        }
+      }
+    }
   }
 
   /**
@@ -1317,5 +1258,66 @@ public class ServiceResourceServiceImpl implements ServiceResourceService, DataP
       }
     }
     return false;
+  }
+  private List<String> getKeywords(Service service) {
+    List<Object> keywords = asList(service.getName(), service.getDescription(), service.getArtifactType());
+    if (service.getCreatedBy() != null) {
+      keywords.add(service.getCreatedBy().getName());
+      keywords.add(service.getCreatedBy().getEmail());
+    }
+    if (service.getLastUpdatedBy() != null) {
+      keywords.add(service.getLastUpdatedBy().getName());
+      keywords.add(service.getLastUpdatedBy().getEmail());
+    }
+    return trimList(keywords);
+  }
+
+  public void setArtifactStreams(List<Service> services) {
+    List<String> serviceIds = services.stream().map(service -> service.getUuid()).collect(toList());
+    final MorphiaIterator<ArtifactStream, ArtifactStream> iterator =
+        wingsPersistence.createQuery(ArtifactStream.class).field("serviceId").in(serviceIds).fetch();
+    ArrayListMultimap<String, ArtifactStream> serviceToArtifactStreamMap = ArrayListMultimap.create();
+    try (DBCursor ignored = iterator.getCursor()) {
+      while (iterator.hasNext()) {
+        ArtifactStream artifactStream = iterator.next();
+        serviceToArtifactStreamMap.put(artifactStream.getServiceId(), artifactStream);
+      }
+    }
+    services.forEach(service -> service.setArtifactStreams(serviceToArtifactStreamMap.get(service.getUuid())));
+  }
+
+  public void setServiceCommands(List<Service> services) {
+    List<String> serviceIds = services.stream().map(service -> service.getUuid()).collect(toList());
+    final MorphiaIterator<ServiceCommand, ServiceCommand> iterator =
+        wingsPersistence.createQuery(ServiceCommand.class).field("serviceId").in(serviceIds).fetch();
+    ArrayListMultimap<String, ServiceCommand> serviceToServiceCommandMap = ArrayListMultimap.create();
+    try (DBCursor ignored = iterator.getCursor()) {
+      while (iterator.hasNext()) {
+        ServiceCommand serviceCommand = iterator.next();
+        serviceToServiceCommandMap.put(serviceCommand.getServiceId(), serviceCommand);
+      }
+    }
+    services.forEach((Service service) -> {
+      try {
+        List<ServiceCommand> serviceCommands = serviceToServiceCommandMap.get(service.getUuid());
+        if (serviceCommands != null) {
+          serviceCommands = getServiceCommandsByOrder(serviceCommands);
+
+          serviceCommands.forEach((ServiceCommand serviceCommand)
+                                      -> serviceCommand.setCommand(commandService.getCommand(serviceCommand.getAppId(),
+                                          serviceCommand.getUuid(), serviceCommand.getDefaultVersion())));
+
+          service.setServiceCommands(serviceCommands);
+        }
+      } catch (Exception e) {
+        logger.error("Failed to retrieve service commands for serviceId {}  of appId  {}", service.getUuid(),
+            service.getAppId(), e);
+      }
+    });
+  }
+
+  private List<ServiceCommand> getServiceCommandsByOrder(List<ServiceCommand> serviceCommands) {
+    serviceCommands = serviceCommands.stream().sorted(comparingDouble(ServiceCommand::getOrder)).collect(toList());
+    return serviceCommands;
   }
 }
