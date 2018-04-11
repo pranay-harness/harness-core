@@ -180,7 +180,16 @@ public class YamlGitServiceImpl implements YamlGitService {
         List<GitFileChange> gitFileChanges = new ArrayList<>();
         gitFileChanges = yamlDirectoryService.traverseDirectory(gitFileChanges, accountId, top, "", true);
         discardGitSyncErrorForFullSync(accountId);
-        // if everything goes fine, close any alert if open
+
+        if (gitFileChanges.size() > 0 && forcePush) {
+          gitFileChanges.add(0,
+              GitFileChange.Builder.aGitFileChange()
+                  .withAccountId(accountId)
+                  .withChangeType(ChangeType.DELETE)
+                  .withFilePath(YamlConstants.SETUP_FOLDER)
+                  .build());
+        }
+
         syncFiles(accountId, gitFileChanges, forcePush);
         logger.info(GIT_YAML_LOG_PREFIX + "Performed git full-sync for account {} successfully" + accountId);
       } catch (Exception ex) {
