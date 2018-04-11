@@ -107,6 +107,7 @@ public class AppdynamicsDelegateServiceImpl implements AppdynamicsDelegateServic
           appDynamicsConfig, appdynamicsAppId, appdynamicsTierMetric, tierBTsPath + "|", encryptionDetails));
     }
 
+    logger.info("metrics to analyze: " + rv);
     return rv;
   }
 
@@ -119,6 +120,7 @@ public class AppdynamicsDelegateServiceImpl implements AppdynamicsDelegateServic
 
     String metricPath = BT_PERFORMANCE_PATH_PREFIX + tier.getName() + "|" + btName + "|"
         + "Individual Nodes|" + hostName + "|*";
+    logger.info("fetching metrics for path {} ", metricPath);
     Call<List<AppdynamicsMetricData>> tierBTMetricRequest =
         getAppdynamicsRestClient(appDynamicsConfig)
             .getMetricData(getHeaderWithCredentials(appDynamicsConfig, encryptionDetails), appdynamicsAppId, metricPath,
@@ -129,6 +131,7 @@ public class AppdynamicsDelegateServiceImpl implements AppdynamicsDelegateServic
       if (logger.isDebugEnabled()) {
         logger.debug("AppDynamics metric data found: " + tierBTMResponse.body().size() + " records.");
       }
+      logger.info("got {} metrics for path {}", tierBTMResponse.body().size(), metricPath);
       return tierBTMResponse.body();
     } else {
       logger.error("Request not successful. Reason: {}", tierBTMResponse);
