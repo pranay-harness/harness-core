@@ -157,7 +157,7 @@ public interface ServiceResourceService extends OwnedByApplication {
    * @param serviceCommands   the service commands
    * @return the service
    */
-  Service updateCommands(@NotEmpty String appId, @NotEmpty String serviceId, List<ServiceCommand> serviceCommands);
+  Service updateCommandsOrder(@NotEmpty String appId, @NotEmpty String serviceId, List<ServiceCommand> serviceCommands);
 
   /**
    * Update command service.

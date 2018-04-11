@@ -168,7 +168,6 @@ public class ServiceResourceServiceTest extends WingsBaseTest {
   @Mock private AppService appService;
   @Mock private YamlChangeSetHelper yamlChangeSetHelper;
   @Mock private ExecutorService executorService;
-
   @Mock private JobScheduler jobScheduler;
 
   @Inject @InjectMocks private ServiceResourceService srs;
@@ -1390,7 +1389,7 @@ public class ServiceResourceServiceTest extends WingsBaseTest {
     when(entityVersionService.lastEntityVersion(APP_ID, EntityType.COMMAND, ID_KEY, SERVICE_ID))
         .thenReturn(anEntityVersion().withVersion(1).build());
 
-    service = srs.updateCommands(APP_ID, SERVICE_ID, serviceCommands);
+    service = srs.updateCommandsOrder(APP_ID, SERVICE_ID, serviceCommands);
 
     verify(wingsPersistence).createUpdateOperations(ServiceCommand.class);
 
@@ -1422,7 +1421,7 @@ public class ServiceResourceServiceTest extends WingsBaseTest {
             .withCommand(oldCommand)
             .build());
 
-    service = srs.updateCommands(APP_ID, SERVICE_ID, serviceCommands);
+    service = srs.updateCommandsOrder(APP_ID, SERVICE_ID, serviceCommands);
 
     assertThat(service.getServiceCommands()).extracting(ServiceCommand::getName).containsSequence("EXEC", "START");
 

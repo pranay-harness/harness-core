@@ -197,7 +197,7 @@ public class ServiceResource {
       @ApiParam(name = "appId", required = true) @QueryParam("appId") String appId,
       @ApiParam(name = "serviceId", required = true) @PathParam("serviceId") String serviceId,
       @ApiParam(name = "command", required = true) List<ServiceCommand> commands) {
-    return new RestResponse<>(serviceResourceService.updateCommands(appId, serviceId, commands));
+    return new RestResponse<>(serviceResourceService.updateCommandsOrder(appId, serviceId, commands));
   }
 
   @GET
