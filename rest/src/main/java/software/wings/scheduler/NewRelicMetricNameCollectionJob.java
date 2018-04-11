@@ -2,6 +2,7 @@ package software.wings.scheduler;
 
 import static io.harness.data.structure.UUIDGenerator.generateUuid;
 import static software.wings.beans.DelegateTask.Builder.aDelegateTask;
+import static software.wings.beans.alert.AlertType.NEW_RELIC_METRIC_NAMES_COLLECTION;
 
 import com.google.inject.Inject;
 
@@ -12,16 +13,18 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import software.wings.beans.DelegateTask;
 import software.wings.beans.NewRelicConfig;
+import software.wings.beans.SettingAttribute;
 import software.wings.beans.TaskType;
+import software.wings.beans.alert.NewRelicMetricNameCollectionAlert;
 import software.wings.service.impl.analysis.DataCollectionTaskResult;
 import software.wings.service.impl.newrelic.NewRelicDataCollectionInfo;
 import software.wings.service.impl.newrelic.NewRelicMetricNames;
 import software.wings.service.impl.newrelic.NewRelicMetricNames.WorkflowInfo;
+import software.wings.service.intfc.AlertService;
 import software.wings.service.intfc.DelegateService;
 import software.wings.service.intfc.MetricDataAnalysisService;
 import software.wings.service.intfc.SettingsService;
 import software.wings.service.intfc.security.SecretManager;
-import software.wings.settings.SettingValue;
 import software.wings.waitnotify.NotifyCallback;
 import software.wings.waitnotify.NotifyResponseData;
 import software.wings.waitnotify.WaitNotifyEngine;
@@ -36,12 +39,14 @@ import java.util.concurrent.TimeUnit;
  */
 @DisallowConcurrentExecution
 public class NewRelicMetricNameCollectionJob implements Job {
+  public static final long NEW_RELIC_METRIC_COLLECTION_ALERT_THRESHOLD = TimeUnit.HOURS.toMillis(6);
   private static final Logger logger = LoggerFactory.getLogger(NewRelicMetricNameCollectionJob.class);
   private static final int DEFAULT_NEWRELIC_COLLECTION_TIMEOUT_MINS = 60;
   @Inject private SettingsService settingsService;
   @Inject private DelegateService delegateService;
   @Inject private SecretManager secretManager;
   @Inject private MetricDataAnalysisService metricDataAnalysisService;
+  @Inject private AlertService alertService;
   @Inject protected WaitNotifyEngine waitNotifyEngine;
 
   @Override
@@ -59,22 +64,25 @@ public class NewRelicMetricNameCollectionJob implements Job {
         .filter(metricNames
             -> !newRelicAppToConfigMap.containsKey(
                 metricNames.getNewRelicAppId() + "-" + metricNames.getNewRelicConfigId()))
-        .filter(
-            metricNames -> System.currentTimeMillis() - metricNames.getLastUpdatedTime() > TimeUnit.DAYS.toMillis(1))
         .forEach(metricNames -> {
           try {
             for (WorkflowInfo workflowInfo : metricNames.getRegisteredWorkflows()) {
+              if (System.currentTimeMillis() - metricNames.getLastUpdatedTime()
+                  < NEW_RELIC_METRIC_COLLECTION_ALERT_THRESHOLD) {
+                alertService.closeAlert(workflowInfo.getAccountId(), workflowInfo.getAppId(),
+                    NEW_RELIC_METRIC_NAMES_COLLECTION,
+                    NewRelicMetricNameCollectionAlert.builder().configId(metricNames.getNewRelicConfigId()).build());
+                continue;
+              }
               // TODO validate and cleanup stale records
-              SettingValue settingAttribute =
-                  settingsService
-                      .getGlobalSettingAttributesById(workflowInfo.getAccountId(), metricNames.getNewRelicConfigId())
-                      .getValue();
-              if (settingAttribute == null) {
+              SettingAttribute settingAttribute = settingsService.getGlobalSettingAttributesById(
+                  workflowInfo.getAccountId(), metricNames.getNewRelicConfigId());
+              if (settingAttribute == null || settingAttribute.getValue() == null) {
                 logger.warn("No NewRelic connector found for account {} , NewRelic server config id {}",
                     workflowInfo.getAccountId(), metricNames.getNewRelicConfigId());
                 continue;
               }
-              NewRelicConfig newRelicConfig = (NewRelicConfig) settingAttribute;
+              NewRelicConfig newRelicConfig = (NewRelicConfig) settingAttribute.getValue();
 
               if (newRelicAppToConfigMap.containsKey(
                       metricNames.getNewRelicAppId() + "-" + metricNames.getNewRelicConfigId())) {
@@ -94,11 +102,17 @@ public class NewRelicMetricNameCollectionJob implements Job {
                       .settingAttributeId(metricNames.getNewRelicConfigId())
                       .build();
               logger.info("Scheduling new relic metric name collection task {}", dataCollectionInfo);
-              if (System.currentTimeMillis() - metricNames.getLastUpdatedTime()
-                  > (TimeUnit.DAYS.toMillis(1) + TimeUnit.HOURS.toMillis(6))) {
+              if (System.currentTimeMillis() - metricNames.getLastUpdatedTime() > TimeUnit.HOURS.toMillis(6)) {
                 logger.warn("[learning-engine] NewRelic metric name collection task past due over 6 hours {} ",
                     dataCollectionInfo);
                 metricDataAnalysisService.updateMetricNames(metricNames);
+                alertService.openAlert(workflowInfo.getAccountId(), workflowInfo.getAppId(),
+                    NEW_RELIC_METRIC_NAMES_COLLECTION,
+                    NewRelicMetricNameCollectionAlert.builder()
+                        .configId(metricNames.getNewRelicConfigId())
+                        .message("NewRelic metric name collection task past due over 6 hours for connector "
+                            + settingAttribute.getName())
+                        .build());
               }
               String waitId = generateUuid();
               DelegateTask delegateTask =

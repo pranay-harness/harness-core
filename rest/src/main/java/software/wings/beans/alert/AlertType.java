@@ -17,7 +17,8 @@ public enum AlertType {
   NoEligibleDelegates(Setup, Error, NoEligibleDelegatesAlert.class),
   InvalidKMS(Setup, Error, KmsSetupAlert.class),
   GitSyncError(Setup, Error, GitSyncErrorAlert.class),
-  GitConnectionError(Setup, Error, GitConnectionErrorAlert.class);
+  GitConnectionError(Setup, Error, GitConnectionErrorAlert.class),
+  NEW_RELIC_METRIC_NAMES_COLLECTION(Setup, Error, NewRelicMetricNameCollectionAlert.class);
 
   private AlertCategory category;
   private AlertSeverity severity;

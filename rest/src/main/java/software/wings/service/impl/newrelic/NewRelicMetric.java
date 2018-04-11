@@ -1,5 +1,6 @@
 package software.wings.service.impl.newrelic;
 
+import lombok.Builder;
 import lombok.Data;
 import lombok.EqualsAndHashCode;
 
@@ -10,6 +11,7 @@ import java.util.List;
  */
 @Data
 @EqualsAndHashCode(exclude = "values")
+@Builder
 public class NewRelicMetric {
   private String name;
   private List<String> values;
