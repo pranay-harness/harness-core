@@ -147,7 +147,7 @@ public abstract class AbstractMetricAnalysisState extends AbstractAnalysisState 
           .withAsync(true)
           .withCorrelationIds(Collections.singletonList(executionData.getCorrelationId()))
           .withExecutionStatus(ExecutionStatus.RUNNING)
-          .withErrorMessage("New Relic Verification running")
+          .withErrorMessage(getStateType() + " Verification running")
           .withStateExecutionData(executionData)
           .build();
     } catch (Exception ex) {

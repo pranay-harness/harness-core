@@ -200,6 +200,7 @@ public class AppdynamicsDataCollectionTask extends AbstractDelegateDataCollectio
         while (!completed.get() && retry < RETRIES) {
           try {
             List<AppdynamicsMetricData> metricsData = getMetricsData();
+            logger.info("Got {} metrics from appdynamics", metricsData.size());
             TreeBasedTable<String, Long, Map<String, NewRelicMetricDataRecord>> records = TreeBasedTable.create();
 
             // HeartBeat
