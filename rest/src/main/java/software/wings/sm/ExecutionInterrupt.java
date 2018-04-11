@@ -5,6 +5,7 @@
 package software.wings.sm;
 
 import org.mongodb.morphia.annotations.Entity;
+import org.mongodb.morphia.annotations.Indexed;
 import software.wings.beans.Base;
 import software.wings.beans.EmbeddedUser;
 
@@ -23,8 +24,8 @@ public class ExecutionInterrupt extends Base {
   // If true, means this interruption is no longer in effect
   private boolean seized;
   private String envId;
-  @NotNull private String executionUuid;
-  private String stateExecutionInstanceId;
+  @NotNull @Indexed private String executionUuid;
+  @Indexed private String stateExecutionInstanceId;
   private Map<String, Object> properties;
 
   public boolean isSeized() {
