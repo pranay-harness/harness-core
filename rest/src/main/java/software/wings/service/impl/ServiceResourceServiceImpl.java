@@ -903,7 +903,8 @@ public class ServiceResourceServiceImpl implements ServiceResourceService, DataP
       DiffNode commandUnitDiff =
           ObjectDifferBuilder.buildDefault().compare(command.getCommandUnits(), oldCommand.getCommandUnits());
 
-      if (commandUnitDiff.hasChanges()) {
+      if (commandUnitDiff.hasChanges()
+          || isCommandUnitsOrderChanged(command.getCommandUnits(), oldCommand.getCommandUnits())) {
         EntityVersion entityVersion =
             entityVersionService.newEntityVersion(appId, EntityType.COMMAND, serviceCommand.getUuid(), serviceId,
                 serviceCommand.getName(), EntityVersion.ChangeType.UPDATED, serviceCommand.getNotes());
@@ -1304,5 +1305,17 @@ public class ServiceResourceServiceImpl implements ServiceResourceService, DataP
       return null;
     }
     return artifactService.get(context.getAppId(), activity.getArtifactId());
+  }
+
+  private boolean isCommandUnitsOrderChanged(List<CommandUnit> commandUnits, List<CommandUnit> oldCommandUnits) {
+    if (commandUnits != null && oldCommandUnits != null) {
+      if (commandUnits.size() == oldCommandUnits.size()) {
+        List<String> commandNames = commandUnits.stream().map(commandUnit -> commandUnit.getName()).collect(toList());
+        List<String> oldCommandNames =
+            oldCommandUnits.stream().map(oldCommandUnit -> oldCommandUnit.getName()).collect(toList());
+        return !commandNames.equals(oldCommandNames);
+      }
+    }
+    return false;
   }
 }
