@@ -11,6 +11,7 @@ import static org.apache.commons.lang3.StringUtils.startsWith;
 import static software.wings.beans.ErrorCode.ACCESS_DENIED;
 import static software.wings.beans.ErrorCode.INVALID_ARGUMENT;
 import static software.wings.beans.ErrorCode.INVALID_REQUEST;
+import static software.wings.beans.ErrorCode.NOT_WHITELISTED_IP;
 import static software.wings.exception.WingsException.HARMLESS;
 
 import com.google.common.collect.ImmutableList;
@@ -49,6 +50,7 @@ import software.wings.service.intfc.AuditService;
 import software.wings.service.intfc.AuthService;
 import software.wings.service.intfc.FeatureFlagService;
 import software.wings.service.intfc.UserService;
+import software.wings.service.intfc.WhitelistService;
 
 import java.lang.reflect.Method;
 import java.util.ArrayList;
@@ -59,6 +61,7 @@ import java.util.Optional;
 import java.util.Set;
 import java.util.stream.Stream;
 import javax.annotation.Priority;
+import javax.servlet.http.HttpServletRequest;
 import javax.ws.rs.container.ContainerRequestContext;
 import javax.ws.rs.container.ContainerRequestFilter;
 import javax.ws.rs.container.ResourceInfo;
@@ -74,6 +77,7 @@ public class AuthRuleFilter implements ContainerRequestFilter {
   private static final Logger logger = LoggerFactory.getLogger(AuthRuleFilter.class);
 
   @Context private ResourceInfo resourceInfo;
+  @Context private HttpServletRequest servletRequest;
 
   private AuditService auditService;
   private AuditHelper auditHelper;
@@ -82,6 +86,7 @@ public class AuthRuleFilter implements ContainerRequestFilter {
   private UserService userService;
   private AppService appService;
   private FeatureFlagService featureFlagService;
+  private WhitelistService whitelistService;
 
   /**
    * Instantiates a new Auth rule filter.
@@ -91,10 +96,13 @@ public class AuthRuleFilter implements ContainerRequestFilter {
    * @param authService  the auth service
    * @param appService   the appService
    * @param userService  the userService
+   * @param featureFlagService
+   * @param whitelistService
    */
   @Inject
   public AuthRuleFilter(AuditService auditService, AuditHelper auditHelper, AuthService authService,
-      AuthHandler authHandler, AppService appService, UserService userService, FeatureFlagService featureFlagService) {
+      AuthHandler authHandler, AppService appService, UserService userService, FeatureFlagService featureFlagService,
+      WhitelistService whitelistService) {
     this.auditService = auditService;
     this.auditHelper = auditHelper;
     this.authService = authService;
@@ -102,6 +110,7 @@ public class AuthRuleFilter implements ContainerRequestFilter {
     this.appService = appService;
     this.userService = userService;
     this.featureFlagService = featureFlagService;
+    this.whitelistService = whitelistService;
   }
 
   /* (non-Javadoc)
@@ -158,7 +167,16 @@ public class AuthRuleFilter implements ContainerRequestFilter {
                .findFirst()
                .isPresent()) {
         throw new WingsException(INVALID_REQUEST, HARMLESS)
-            .addParam("message", "User not authorized to access the given account");
+            .addParam("message", "User not authorized to access the given account: " + accountIdFinal);
+      }
+    }
+
+    if (servletRequest != null) {
+      String remoteHost = servletRequest.getRemoteHost();
+      if (!whitelistService.isValidIPAddress(accountId, remoteHost)) {
+        String msg = "Current IP Address (" + remoteHost + ") is not whitelisted.";
+        logger.warn(msg);
+        throw new WingsException(NOT_WHITELISTED_IP, HARMLESS).addParam("args", msg);
       }
     }
 

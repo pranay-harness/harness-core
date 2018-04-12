@@ -124,6 +124,7 @@ import software.wings.service.impl.TriggerServiceImpl;
 import software.wings.service.impl.UserGroupServiceImpl;
 import software.wings.service.impl.UserServiceImpl;
 import software.wings.service.impl.WebHookServiceImpl;
+import software.wings.service.impl.WhitelistServiceImpl;
 import software.wings.service.impl.WorkflowExecutionBaselineServiceImpl;
 import software.wings.service.impl.WorkflowExecutionServiceImpl;
 import software.wings.service.impl.WorkflowServiceImpl;
@@ -221,6 +222,7 @@ import software.wings.service.intfc.TriggerService;
 import software.wings.service.intfc.UserGroupService;
 import software.wings.service.intfc.UserService;
 import software.wings.service.intfc.WebHookService;
+import software.wings.service.intfc.WhitelistService;
 import software.wings.service.intfc.WorkflowExecutionBaselineService;
 import software.wings.service.intfc.WorkflowExecutionService;
 import software.wings.service.intfc.WorkflowService;
@@ -384,6 +386,7 @@ public class WingsModule extends AbstractModule {
     bind(WorkflowExecutionBaselineService.class).to(WorkflowExecutionBaselineServiceImpl.class);
     bind(GitClient.class).to(GitClientUnsupported.class).in(Singleton.class);
     bind(ArtifactCollectionService.class).to(ArtifactCollectionServiceImpl.class);
+    bind(WhitelistService.class).to(WhitelistServiceImpl.class);
 
     MapBinder<String, InfrastructureProvider> infrastructureProviderMapBinder =
         MapBinder.newMapBinder(binder(), String.class, InfrastructureProvider.class);

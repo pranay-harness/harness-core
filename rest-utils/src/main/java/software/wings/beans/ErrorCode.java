@@ -512,7 +512,9 @@ public enum ErrorCode {
 
   EXPLANATION("EXPLANATION"),
 
-  HINT("HINT");
+  HINT("HINT"),
+
+  NOT_WHITELISTED_IP("NOT_WHITELISTED_IP");
 
   /**
    * The constant ARGS_NAME.

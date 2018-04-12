@@ -178,7 +178,9 @@ public class PermissionAttribute {
     /**
      * Delegate Scope resource type.
      */
-    DELEGATE_SCOPE(PermissionType.DELEGATE);
+    DELEGATE_SCOPE(PermissionType.DELEGATE),
+
+    WHITE_LIST(ACCOUNT);
 
     private ImmutableMap<Action, PermissionType> actionPermissionScopeMap;
 

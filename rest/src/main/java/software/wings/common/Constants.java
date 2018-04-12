@@ -494,6 +494,11 @@ public interface Constants {
   String USER_PERMISSION_CACHE = "userPermissionCache";
 
   /**
+   * The constant
+   */
+  String WHITELIST_CACHE = "whitelistCache";
+
+  /**
    * Template expression constants
    */
   String ENTITY_TYPE = "entityType";
