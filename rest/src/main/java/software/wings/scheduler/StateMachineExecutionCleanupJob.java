@@ -97,6 +97,10 @@ public class StateMachineExecutionCleanupJob implements Job {
                 .withLimit("1000")
                 .addFilter(APP_ID_KEY, Operator.EQ, appId)
                 .build());
+        if (pageResponse.isEmpty()) {
+          logger.error("WorkflowExecution {} is in non final state, but there is no active state execution for it.",
+              workflowExecution.getUuid());
+        }
         for (StateExecutionInstance stateExecutionInstance : pageResponse) {
           try {
             logger.info("Expired StateExecutionInstance found: {}", stateExecutionInstance.getUuid());
