@@ -4,6 +4,7 @@ import com.google.common.collect.ImmutableList;
 
 import migrations.all.AddArtifactCheck;
 import migrations.all.AddIsDefaultToExistingNotificationGroups;
+import migrations.all.AddValidUntilToStateExecutionInstance;
 import migrations.all.AddVerifyToRollbackWorkflows;
 import migrations.all.CreateDefaultUserGroupsAndAddToExistingUsers;
 import migrations.all.CreateSupportUserGroupsAndRenameAccountAdmin;
@@ -33,6 +34,7 @@ public class MigrationList {
         .add(Pair.of(112, CreateDefaultUserGroupsAndAddToExistingUsers.class))
         .add(Pair.of(113, CreateSupportUserGroupsAndRenameAccountAdmin.class))
         .add(Pair.of(114, GitSyncToAllAccounts.class))
+        .add(Pair.of(115, AddValidUntilToStateExecutionInstance.class))
         .build();
   }
 }
