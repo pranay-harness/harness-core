@@ -60,11 +60,12 @@ import software.wings.dl.PageResponse;
 import software.wings.dl.WingsPersistence;
 import software.wings.exception.WingsException;
 import software.wings.security.UserRequestContext;
+import software.wings.security.UserRequestInfo;
 import software.wings.security.UserThreadLocal;
 import software.wings.service.impl.instance.DashboardStatisticsServiceImpl.AggregationInfo.ArtifactInfo;
 import software.wings.service.impl.instance.DashboardStatisticsServiceImpl.AggregationInfo.EnvInfo;
+import software.wings.service.intfc.AppService;
 import software.wings.service.intfc.EnvironmentService;
-import software.wings.service.intfc.PipelineService;
 import software.wings.service.intfc.ServiceResourceService;
 import software.wings.service.intfc.WorkflowExecutionService;
 import software.wings.service.intfc.instance.DashboardStatisticsService;
@@ -90,7 +91,7 @@ public class DashboardStatisticsServiceImpl implements DashboardStatisticsServic
   private static final Logger logger = LoggerFactory.getLogger(DashboardStatisticsServiceImpl.class);
   @Inject private WingsPersistence wingsPersistence;
   @Inject private InstanceService instanceService;
-  @Inject private PipelineService pipelineService;
+  @Inject private AppService appService;
   @Inject private WorkflowExecutionService workflowExecutionService;
   @Inject private ServiceResourceService serviceResourceService;
   @Inject private EnvironmentService environmentService;
@@ -776,9 +777,22 @@ public class DashboardStatisticsServiceImpl implements DashboardStatisticsServic
               query.field("appId").in(allowedAppIds);
             } else {
               throw new WingsException(
-                  "No appIds are assigned to the user or no apps exist in the account", WingsException.HARMLESS);
+                  "No apps are assigned to the user or no apps exist in the account", WingsException.HARMLESS);
             }
           }
+        } else {
+          UserRequestInfo userRequestInfo = user.getUserRequestInfo();
+          if (userRequestInfo == null) {
+            throw new WingsException(
+                "No apps are assigned to the user or no apps exist in the account", WingsException.HARMLESS);
+          }
+
+          if (userRequestInfo.isAllAppsAllowed()) {
+            appIds = userRequestInfo.getAllowedAppIds();
+          } else {
+            appIds = appService.getAppIdsByAccountId(userRequestInfo.getAccountId());
+          }
+          query.field("appId").in(appIds);
         }
       } else {
         throw new WingsException(
