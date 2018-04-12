@@ -506,7 +506,6 @@ public class YamlGitServiceImpl implements YamlGitService {
     List<GitFileChange> gitFileChangeList = Lists.newArrayList();
 
     syncErrorList.stream().forEach(syncError -> {
-
       String currentYamlFilePath = syncError.getYamlFilePath();
       String yamlContent;
       if (currentYamlFilePath.equals(yamlFilePath)) {

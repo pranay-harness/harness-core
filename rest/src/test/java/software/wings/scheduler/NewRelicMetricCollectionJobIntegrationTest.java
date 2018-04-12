@@ -243,7 +243,6 @@ public class NewRelicMetricCollectionJobIntegrationTest extends BaseIntegrationT
                          }
                        }
                      }));
-
         });
 
     newRelicAppToConfigMap.values().stream().forEach(config

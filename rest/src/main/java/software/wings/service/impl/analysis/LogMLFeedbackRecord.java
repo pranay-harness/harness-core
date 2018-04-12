@@ -17,7 +17,6 @@ import software.wings.sm.StateType;
 @Indexes({
   @Index(fields = {
     @Field("applicationId"), @Field("stateExecutionId"), @Field("clusterType"), @Field("clusterLabel")
-
   }, options = @IndexOptions(unique = true, name = "logFeedbackUniqueIdx"))
 })
 @Data

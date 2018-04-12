@@ -92,7 +92,6 @@ public class ExecutionContextImpl implements DeploymentExecutionContext {
         if (contextElement instanceof ExecutionContextAware) {
           ((ExecutionContextAware) contextElement).setExecutionContext(this);
         }
-
       });
     }
     if (isNotEmpty(stateExecutionInstance.getExecutionEventAdvisors())) {

@@ -45,7 +45,6 @@ public class YamlUtilsTest {
      * The constant displayOrderComparator.
      */
     public static final Comparator<CatalogItem> displayOrderComparator = new Comparator<CatalogItem>() {
-
       @Override
       public int compare(CatalogItem o1, CatalogItem o2) {
         if (o1.displayOrder == null && o2.displayOrder == null) {

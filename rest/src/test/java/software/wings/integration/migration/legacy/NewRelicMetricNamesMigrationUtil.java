@@ -130,7 +130,6 @@ public class NewRelicMetricNamesMigrationUtil extends WingsBaseTest {
                        } catch (Exception ex) {
                          logger.error("", ex);
                        }
-
                      }));
         });
   }

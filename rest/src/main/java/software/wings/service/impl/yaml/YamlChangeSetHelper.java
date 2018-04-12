@@ -427,7 +427,6 @@ public class YamlChangeSetHelper {
   public void queueSettingUpdateYamlChangeAsync(
       SettingAttribute savedSettingAttributes, SettingAttribute updatedSettingAttribute) {
     executorService.submit(() -> {
-
       if (!updatedSettingAttribute.getName().equals(updatedSettingAttribute.getName())) {
         queueMoveSettingChange(savedSettingAttributes, updatedSettingAttribute);
       } else {
@@ -440,7 +439,6 @@ public class YamlChangeSetHelper {
                   updatedSettingAttribute.getAccountId(), updatedSettingAttribute, ChangeType.MODIFY));
         }
       }
-
     });
   }
 

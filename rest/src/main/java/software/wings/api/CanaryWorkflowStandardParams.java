@@ -72,7 +72,6 @@ public class CanaryWorkflowStandardParams extends WorkflowStandardParams {
       stateStream.filter(state -> state.getName().equals(phaseName));
     }
     stateStream.forEach(state -> {
-
       PhaseSubWorkflow phaseState = (PhaseSubWorkflow) state;
       StateMachine phaseStateMachine = rootStateMachine.getChildStateMachines().get(phaseState.getId());
       InfraNodeRequest infraNodeRequestForPhase = getInfraNodeRequestForPhase(

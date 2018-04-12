@@ -49,7 +49,6 @@ public class DefaultVariablesHelper {
           }
 
           return NameValuePair.Yaml.builder().name(settingAttribute.getName()).value(value).build();
-
         })
         .collect(toList());
   }

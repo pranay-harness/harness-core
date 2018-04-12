@@ -407,7 +407,6 @@ public class WorkflowExecutionServiceImpl implements WorkflowExecutionService {
         .stream()
         .flatMap(pipelineStage -> pipelineStage.getPipelineStageElements().stream())
         .forEach(pipelineStageElement -> {
-
           StateExecutionInstance stateExecutionInstance = stateExecutionInstanceMap.get(pipelineStageElement.getName());
 
           if (stateExecutionInstance == null) {

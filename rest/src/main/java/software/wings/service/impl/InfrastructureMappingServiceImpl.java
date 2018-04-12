@@ -267,6 +267,19 @@ public class InfrastructureMappingServiceImpl implements InfrastructureMappingSe
     return savedInfraMapping;
   }
 
+  private List<String> getUniqueHostNames(PhysicalInfrastructureMappingBase physicalInfrastructureMapping) {
+    List<String> hostNames = physicalInfrastructureMapping.getHostNames()
+                                 .stream()
+                                 .map(String::trim)
+                                 .filter(StringUtils::isNotEmpty)
+                                 .distinct()
+                                 .collect(toList());
+    if (hostNames.isEmpty()) {
+      throw new WingsException(ErrorCode.INVALID_ARGUMENT).addParam("args", "Host names must not be empty");
+    }
+    return hostNames;
+  }
+
   private void saveYamlChangeSet(InfrastructureMapping infraMapping, ChangeType crudType) {
     String accountId = appService.getAccountIdByAppId(infraMapping.getAppId());
     YamlGitConfig ygs = yamlDirectoryService.weNeedToPushChanges(accountId);
@@ -627,27 +640,11 @@ public class InfrastructureMappingServiceImpl implements InfrastructureMappingSe
   }
 
   private void validatePyInfraMapping(PhysicalInfrastructureMapping pyInfraMapping) {
-    List<String> hostNames = pyInfraMapping.getHostNames()
-                                 .stream()
-                                 .map(String::trim)
-                                 .filter(StringUtils::isNotEmpty)
-                                 .distinct()
-                                 .collect(toList());
-    if (hostNames.size() != pyInfraMapping.getHostNames().size()) {
-      throw new WingsException(ErrorCode.INVALID_ARGUMENT).addParam("args", "Host names must be unique");
-    }
+    pyInfraMapping.setHostNames(getUniqueHostNames(pyInfraMapping));
   }
 
   private void validatePhysicalInfrastructureMappingWinRm(PhysicalInfrastructureMappingWinRm infraMapping) {
-    List<String> hostNames = infraMapping.getHostNames()
-                                 .stream()
-                                 .map(String::trim)
-                                 .filter(StringUtils::isNotEmpty)
-                                 .distinct()
-                                 .collect(toList());
-    if (hostNames.size() != infraMapping.getHostNames().size()) {
-      throw new WingsException(ErrorCode.INVALID_ARGUMENT).addParam("args", "Host names must be unique");
-    }
+    infraMapping.setHostNames(getUniqueHostNames(infraMapping));
 
     SettingAttribute settingAttribute = settingsService.get(infraMapping.getComputeProviderSettingId());
     Validator.notNullCheck("ComputeProviderSettingAttribute", settingAttribute);

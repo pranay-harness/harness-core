@@ -16,13 +16,17 @@ import static software.wings.beans.Environment.Builder.anEnvironment;
 import static software.wings.beans.HostConnectionAttributes.AccessType.KEY;
 import static software.wings.beans.HostConnectionAttributes.Builder.aHostConnectionAttributes;
 import static software.wings.beans.HostConnectionAttributes.ConnectionType.SSH;
+import static software.wings.beans.License.Builder.aLicense;
 import static software.wings.beans.PhaseStep.PhaseStepBuilder.aPhaseStep;
 import static software.wings.beans.PhaseStepType.POST_DEPLOYMENT;
 import static software.wings.beans.PhaseStepType.PRE_DEPLOYMENT;
 import static software.wings.beans.Pipeline.Builder.aPipeline;
 import static software.wings.beans.SettingAttribute.Builder.aSettingAttribute;
+import static software.wings.beans.User.Builder.anUser;
 import static software.wings.beans.Workflow.WorkflowBuilder.aWorkflow;
 import static software.wings.beans.artifact.JenkinsArtifactStream.Builder.aJenkinsArtifactStream;
+import static software.wings.common.Constants.HARNESS_NAME;
+import static software.wings.dl.PageRequest.PageRequestBuilder.aPageRequest;
 import static software.wings.generator.InfrastructureMappingGenerator.InfrastructureMappings.AWS_SSH_TEST;
 import static software.wings.integration.IntegrationTestUtil.randomInt;
 import static software.wings.integration.SeedData.containerNames;
@@ -34,6 +38,9 @@ import static software.wings.utils.ArtifactType.WAR;
 import com.google.common.collect.ImmutableMap;
 import com.google.inject.Inject;
 
+import com.mongodb.BasicDBObject;
+import com.mongodb.MongoCommandException;
+import org.assertj.core.util.Lists;
 import org.glassfish.jersey.media.multipart.FormDataMultiPart;
 import org.glassfish.jersey.media.multipart.file.FileDataBodyPart;
 import org.junit.Before;
@@ -41,6 +48,13 @@ import org.junit.Rule;
 import org.junit.Test;
 import org.junit.rules.TemporaryFolder;
 import org.junit.runner.JUnitCore;
+import org.mongodb.morphia.Datastore;
+import org.mongodb.morphia.Morphia;
+import org.mongodb.morphia.annotations.Indexed;
+import org.mongodb.morphia.annotations.Indexes;
+import org.mongodb.morphia.mapping.MappedField;
+import org.mongodb.morphia.query.UpdateOperations;
+import software.wings.app.DatabaseModule;
 import software.wings.app.MainConfiguration;
 import software.wings.beans.Account;
 import software.wings.beans.AppContainer;
@@ -58,22 +72,29 @@ import software.wings.beans.GitConfig;
 import software.wings.beans.InfrastructureMapping;
 import software.wings.beans.JenkinsConfig;
 import software.wings.beans.KmsConfig;
+import software.wings.beans.License;
 import software.wings.beans.NewRelicConfig;
 import software.wings.beans.Pipeline;
 import software.wings.beans.PipelineStage;
 import software.wings.beans.PipelineStage.PipelineStageElement;
 import software.wings.beans.RestResponse;
+import software.wings.beans.Role;
+import software.wings.beans.RoleType;
+import software.wings.beans.SearchFilter.Operator;
 import software.wings.beans.Service;
 import software.wings.beans.ServiceTemplate;
 import software.wings.beans.SettingAttribute;
 import software.wings.beans.SettingAttribute.Category;
 import software.wings.beans.SplunkConfig;
+import software.wings.beans.User;
 import software.wings.beans.Workflow;
 import software.wings.beans.WorkflowType;
 import software.wings.beans.artifact.ArtifactStream;
 import software.wings.beans.config.ArtifactoryConfig;
 import software.wings.beans.config.NexusConfig;
+import software.wings.beans.security.UserGroup;
 import software.wings.common.Constants;
+import software.wings.dl.PageRequest;
 import software.wings.dl.PageResponse;
 import software.wings.generator.AccountGenerator;
 import software.wings.generator.ApplicationGenerator;
@@ -89,11 +110,14 @@ import software.wings.generator.WorkflowGenerator;
 import software.wings.generator.WorkflowGenerator.PostProcessInfo;
 import software.wings.helpers.ext.mail.SmtpConfig;
 import software.wings.rules.SetupScheduler;
+import software.wings.service.intfc.AccountService;
 import software.wings.service.intfc.EnvironmentService;
 import software.wings.service.intfc.FeatureFlagService;
 import software.wings.service.intfc.ServiceTemplateService;
 import software.wings.service.intfc.SettingsService;
 import software.wings.service.intfc.SystemCatalogService;
+import software.wings.service.intfc.UserGroupService;
+import software.wings.service.intfc.UserService;
 import software.wings.service.intfc.WorkflowExecutionService;
 import software.wings.service.intfc.WorkflowService;
 
@@ -102,9 +126,11 @@ import java.io.File;
 import java.io.FileWriter;
 import java.io.IOException;
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.concurrent.TimeUnit;
 import javax.ws.rs.client.WebTarget;
 import javax.ws.rs.core.GenericType;
 import javax.ws.rs.core.Response;
@@ -149,6 +175,9 @@ public class DataGenUtil extends BaseIntegrationTest {
   @Inject private EnvironmentService environmentService;
   @Inject private FeatureFlagService featureFlagService;
   @Inject private ServiceTemplateService serviceTemplateService;
+  @Inject private AccountService accountService;
+  @Inject private UserGroupService userGroupService;
+  @Inject private UserService userService;
 
   @Inject private AccountGenerator accountGenerator;
   @Inject private ApplicationGenerator applicationGenerator;
@@ -208,6 +237,147 @@ public class DataGenUtil extends BaseIntegrationTest {
     learningEngineService.initializeServiceSecretKeys();
 
     createTestApplication(account);
+  }
+
+  protected void dropDBAndEnsureIndexes() throws IOException, ClassNotFoundException {
+    wingsPersistence.getDatastore().getDB().dropDatabase();
+    Morphia morphia = new Morphia();
+    morphia.getMapper().getOptions().setMapSubPackages(true);
+    morphia.mapPackage("software.wings");
+    ensureIndex(morphia, wingsPersistence.getDatastore());
+  }
+
+  protected void ensureIndex(Morphia morphia, Datastore primaryDatastore) {
+    /*
+    Morphia auto creates embedded/nested Entity indexes with the parent Entity indexes.
+    There is no way to override this behavior.
+    https://github.com/mongodb/morphia/issues/706
+     */
+
+    morphia.getMapper().getMappedClasses().forEach(mc -> {
+      if (mc.getEntityAnnotation() != null && !mc.isAbstract()) {
+        // Read Entity level "Indexes" annotation
+        List<Indexes> indexesAnnotations = mc.getAnnotations(Indexes.class);
+        if (indexesAnnotations != null) {
+          indexesAnnotations.stream().flatMap(indexes -> Arrays.stream(indexes.value())).forEach(index -> {
+            DatabaseModule.reportDeprecatedUnique(index);
+
+            BasicDBObject keys = new BasicDBObject();
+            Arrays.stream(index.fields()).forEach(field -> keys.append(field.value(), 1));
+            primaryDatastore.getCollection(mc.getClazz())
+                .createIndex(keys, index.options().name(), index.options().unique());
+          });
+        }
+
+        // Read field level "Indexed" annotation
+        for (final MappedField mf : mc.getPersistenceFields()) {
+          if (mf.hasAnnotation(Indexed.class)) {
+            final Indexed indexed = mf.getAnnotation(Indexed.class);
+            DatabaseModule.reportDeprecatedUnique(indexed);
+
+            try {
+              primaryDatastore.getCollection(mc.getClazz())
+                  .createIndex(new BasicDBObject().append(mf.getNameToStore(), 1), null, indexed.options().unique());
+            } catch (MongoCommandException mex) {
+              logger.error("Index creation failed for class {}", mc.getClazz().getCanonicalName());
+              throw mex;
+            }
+          }
+        }
+      }
+    });
+  }
+
+  protected Account createLicenseAndDefaultUsers() {
+    License license =
+        aLicense().withName("Trial").withExpiryDuration(TimeUnit.DAYS.toMillis(365)).withIsActive(true).build();
+    wingsPersistence.save(license);
+
+    Account account = wingsPersistence.executeGetOneQuery(wingsPersistence.createQuery(Account.class));
+    boolean oldAccountExists = false;
+    if (account == null) {
+      account = Account.Builder.anAccount().build();
+      account.setCompanyName("Harness");
+      account.setAccountName("Harness");
+    } else {
+      oldAccountExists = true;
+    }
+
+    //    String oldAccountId = account.getUuid();
+    String accountKey = "2f6b0988b6fb3370073c3d0505baee59";
+    account.setAccountKey(accountKey);
+    account.setLicenseExpiryTime(-1);
+
+    account.setUuid("kmpySmUISimoRrJL6NL73w");
+    accountId = "kmpySmUISimoRrJL6NL73w";
+    if (oldAccountExists) {
+      accountService.delete(account.getUuid());
+    }
+
+    accountService.save(account);
+
+    // wingsPersistence.save(account);
+    // Update account key to make delegate works
+    UpdateOperations<Account> accountUpdateOperations = wingsPersistence.createUpdateOperations(Account.class);
+    accountUpdateOperations.set("accountKey", accountKey);
+    wingsPersistence.update(wingsPersistence.createQuery(Account.class), accountUpdateOperations);
+
+    UpdateOperations<User> userUpdateOperations = wingsPersistence.createUpdateOperations(User.class);
+    userUpdateOperations.set("accounts", Lists.newArrayList(account));
+    wingsPersistence.update(wingsPersistence.createQuery(User.class), userUpdateOperations);
+
+    UpdateOperations<Role> roleUpdateOperations = wingsPersistence.createUpdateOperations(Role.class);
+    roleUpdateOperations.set("accountId", "kmpySmUISimoRrJL6NL73w");
+    wingsPersistence.update(wingsPersistence.createQuery(Role.class), roleUpdateOperations);
+
+    User adminUser = addUser(adminUserName, adminUserEmail, adminPassword, account);
+    addUser(defaultUserName, defaultEmail, defaultPassword, account);
+    User readOnlyUser = addUser(readOnlyUserName, readOnlyEmail, readOnlyPassword, account);
+
+    addUserToUserGroup(adminUser, accountId, Constants.DEFAULT_ACCOUNT_ADMIN_USER_GROUP_NAME);
+    UserGroup readOnlyUserGroup = authHandler.buildReadOnlyUserGroup(accountId, readOnlyUser, "ReadOnlyUserGroup");
+    readOnlyUserGroup = wingsPersistence.saveAndGet(UserGroup.class, readOnlyUserGroup);
+
+    addUserToUserGroup(readOnlyUser, readOnlyUserGroup);
+
+    loginAdminUser();
+
+    return account;
+  }
+
+  private void addUserToUserGroup(User user, String accountId, String userGroupName) {
+    PageRequest<UserGroup> pageRequest = aPageRequest()
+                                             .addFilter("accountId", Operator.EQ, accountId)
+                                             .addFilter("name", Operator.EQ, userGroupName)
+                                             .build();
+    PageResponse<UserGroup> pageResponse = userGroupService.list(accountId, pageRequest);
+    UserGroup userGroup = pageResponse.get(0);
+    userGroup.setMembers(asList(user));
+    userGroupService.updateMembers(userGroup);
+  }
+
+  private void addUserToUserGroup(User user, UserGroup userGroup) {
+    userGroup.setMembers(asList(user));
+    userGroupService.updateMembers(userGroup);
+  }
+
+  private User addUser(String userName, String email, char[] password, Account account) {
+    User user =
+        anUser()
+            .withName(userName)
+            .withEmail(email)
+            .withPassword(password)
+            .withRoles(wingsPersistence
+                           .query(Role.class,
+                               aPageRequest().addFilter("roleType", Operator.EQ, RoleType.ACCOUNT_ADMIN).build())
+                           .getResponse())
+            .withAccountName(HARNESS_NAME)
+            .withCompanyName(HARNESS_NAME)
+            .build();
+    User newUser = userService.registerNewUser(user, account);
+    wingsPersistence.updateFields(User.class, newUser.getUuid(), ImmutableMap.of("emailVerified", true));
+
+    return wingsPersistence.get(User.class, newUser.getUuid());
   }
 
   private void enableRbac() {

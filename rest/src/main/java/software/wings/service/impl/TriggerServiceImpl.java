@@ -509,7 +509,6 @@ public class TriggerServiceImpl implements TriggerService {
         .filter(distinctByKey(Trigger::getWorkflowId))
         .collect(toList())
         .forEach(trigger -> {
-
           List<ArtifactSelection> artifactSelections = trigger.getArtifactSelections();
           if (isEmpty(artifactSelections)) {
             logger.info("No artifactSelection configuration setup found. Executing pipeline {} from source pipeline {}",

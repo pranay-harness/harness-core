@@ -253,7 +253,6 @@ public class DataCleanUpJobUtil extends WingsBaseTest {
       wingsPersistence.getCollection("artifacts.chunks")
           .remove(new BasicDBObject("files_id", new BasicDBObject("$eq", objectId)));
       logger.info("Deleting artifactFileUuids of artifacts.files {} success", objectId);
-
     });
   }
 
