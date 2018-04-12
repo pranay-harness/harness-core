@@ -9,6 +9,4 @@ public class WebHookResponse {
   private String requestId;
   private String status;
   private String error;
-  private String uiUrl;
-  private String restUrl;
 }
