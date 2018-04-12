@@ -46,7 +46,6 @@ public class CreateSupportUserGroupsAndRenameAccountAdmin implements Migration {
 
     if (accountList != null) {
       accountList.stream().forEach(account -> {
-
         String accountId = account.getUuid();
         PageRequest<UserGroup> pageRequest =
             aPageRequest()
@@ -80,7 +79,6 @@ public class CreateSupportUserGroupsAndRenameAccountAdmin implements Migration {
           UserGroup nonProdSupportUserGroup = authHandler.buildNonProdSupportUserGroup(accountId);
           userGroupService.save(nonProdSupportUserGroup);
         }
-
       });
     }
   }

@@ -192,7 +192,6 @@ public class SystemCatalogMigratorUtil extends WingsBaseTest {
           logger.info("Error while creating system app container " + appContainer);
         }
       }
-
     });
     logger.info("System App Containers created successfully");
   }

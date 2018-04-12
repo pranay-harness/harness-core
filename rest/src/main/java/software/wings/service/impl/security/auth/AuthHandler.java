@@ -147,7 +147,6 @@ public class AuthHandler {
     Map<String, AppPermissionSummaryForUI> appPermissionMap = new HashMap<>();
 
     userGroups.stream().forEach(userGroup -> {
-
       Set<AppPermission> appPermissions = userGroup.getAppPermissions();
       if (isEmpty(appPermissions)) {
         return;
@@ -161,7 +160,6 @@ public class AuthHandler {
         Set<String> appIds = getAppIdsByFilter(allAppIds, appPermission.getAppFilter());
         if (appPermission.getPermissionType() == ALL_APP_ENTITIES) {
           asList(SERVICE, ENV, WORKFLOW, PIPELINE, DEPLOYMENT).forEach(permissionType1 -> {
-
             // ignoring entity filter in case of ALL_APP_ENTITIES
             attachPermission(appPermissionMap, permissionTypeAppIdEntityMap, appIds, permissionType1, null,
                 appPermission.getActions());
@@ -182,7 +180,6 @@ public class AuthHandler {
     final HashSet<Action> fixedEntityActions =
         Sets.newHashSet(Action.READ, Action.UPDATE, Action.DELETE, Action.EXECUTE);
     appIds.forEach(appId -> {
-
       AppPermissionSummaryForUI appPermissionSummaryForUI = appPermissionMap.get(appId);
       if (appPermissionSummaryForUI == null) {
         appPermissionSummaryForUI = new AppPermissionSummaryForUI();
@@ -252,7 +249,6 @@ public class AuthHandler {
               finalAppPermissionSummaryForUI.setWorkflowPermissions(new HashMap<>());
             }
             finalAppPermissionSummaryForUI.getWorkflowPermissions().put(entityId, entityActions);
-
           });
 
           break;
@@ -272,7 +268,6 @@ public class AuthHandler {
               finalAppPermissionSummaryForUI.setPipelinePermissions(new HashMap<>());
             }
             finalAppPermissionSummaryForUI.getPipelinePermissions().put(entityId, entityActions);
-
           });
           break;
         }
@@ -290,7 +285,6 @@ public class AuthHandler {
               finalAppPermissionSummaryForUI.setDeploymentPermissions(new HashMap<>());
             }
             finalAppPermissionSummaryForUI.getDeploymentPermissions().put(entityId, entityActions);
-
           });
           break;
         }
@@ -304,7 +298,6 @@ public class AuthHandler {
       Map<PermissionType, Set<String>> permissionTypeAppIdSetMap) {
     Map<PermissionType, Map<String, List<Base>>> permissionTypeAppIdEntityMap = new HashMap<>();
     permissionTypeAppIdSetMap.keySet().forEach(permissionType -> {
-
       switch (permissionType) {
         case SERVICE: {
           permissionTypeAppIdEntityMap.put(
@@ -620,7 +613,6 @@ public class AuthHandler {
     Optional<String> entityFieldNameOptional =
         permissionAttributes.stream()
             .map(permissionAttribute -> {
-
               if (StringUtils.isNotBlank(permissionAttribute.getDbCollectionName())) {
                 return permissionAttribute.getDbCollectionName();
               }
@@ -754,7 +746,6 @@ public class AuthHandler {
           }
 
           return envIds.contains(workflowObj.getEnvId());
-
         })
         .map(Base::getUuid)
         .collect(Collectors.toSet());
@@ -819,7 +810,6 @@ public class AuthHandler {
 
     return pipelines.stream()
         .filter(p -> {
-
           Pipeline pipeline = (Pipeline) p;
           if (pipeline.getPipelineStages() == null) {
             return true;

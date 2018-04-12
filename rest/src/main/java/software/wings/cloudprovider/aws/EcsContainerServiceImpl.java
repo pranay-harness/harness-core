@@ -1051,7 +1051,6 @@ public class EcsContainerServiceImpl implements EcsContainerService {
 
       tasks.forEach(ecsTask -> {
         ecsTask.getContainers().stream().forEach(container -> {
-
           // Read private Ip of ENI (all container will have same private IP as all containers within task use same
           // ENI)
           String privateIpv4AddressForENI = container.getNetworkInterfaces()
@@ -1067,7 +1066,6 @@ public class EcsContainerServiceImpl implements EcsContainerService {
                                             .build();
           containerInfos.add(containerInfo);
         });
-
       });
     }
 

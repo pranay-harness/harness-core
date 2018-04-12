@@ -53,7 +53,6 @@ public class JsonUtils {
   static {
     // json-path initialization
     Configuration.setDefaults(new Configuration.Defaults() {
-
       private final JsonProvider jsonProvider = new JacksonJsonProvider();
       private final MappingProvider mappingProvider = new JacksonMappingProvider();
 

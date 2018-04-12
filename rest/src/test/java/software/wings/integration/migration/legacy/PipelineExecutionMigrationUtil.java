@@ -64,7 +64,6 @@ public class PipelineExecutionMigrationUtil extends WingsBaseTest {
                                     .filter("appId", application.getAppId())
                                     .filter(ID_KEY, pipelineExecution.getUuid()),
             ops);
-
       });
     });
   }

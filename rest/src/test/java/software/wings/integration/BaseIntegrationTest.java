@@ -3,7 +3,6 @@ package software.wings.integration;
 import static com.fasterxml.jackson.databind.DeserializationFeature.FAIL_ON_UNKNOWN_PROPERTIES;
 import static io.harness.network.Localhost.getLocalHostName;
 import static java.lang.String.format;
-import static java.util.Arrays.asList;
 import static javax.ws.rs.client.Entity.entity;
 import static javax.ws.rs.core.MediaType.APPLICATION_JSON;
 import static org.apache.commons.codec.binary.Base64.encodeBase64String;
@@ -13,22 +12,15 @@ import static org.mockito.Matchers.anyObject;
 import static org.mockito.Mockito.when;
 import static org.mockito.internal.util.reflection.Whitebox.setInternalState;
 import static software.wings.beans.Application.Builder.anApplication;
-import static software.wings.beans.License.Builder.aLicense;
-import static software.wings.beans.User.Builder.anUser;
-import static software.wings.common.Constants.HARNESS_NAME;
-import static software.wings.dl.PageRequest.PageRequestBuilder.aPageRequest;
 import static software.wings.integration.IntegrationTestUtil.randomInt;
 import static software.wings.integration.SeedData.randomSeedString;
 
-import com.google.common.collect.ImmutableMap;
 import com.google.inject.Inject;
 
 import com.fasterxml.jackson.databind.DeserializationFeature;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.jaxrs.json.JacksonJaxbJsonProvider;
 import com.fasterxml.jackson.jaxrs.json.JacksonJsonProvider;
-import com.mongodb.BasicDBObject;
-import com.mongodb.MongoCommandException;
 import com.nimbusds.jose.EncryptionMethod;
 import com.nimbusds.jose.JOSEException;
 import com.nimbusds.jose.JWEAlgorithm;
@@ -39,39 +31,21 @@ import com.nimbusds.jwt.EncryptedJWT;
 import com.nimbusds.jwt.JWTClaimsSet;
 import org.apache.commons.codec.DecoderException;
 import org.apache.commons.codec.binary.Hex;
-import org.apache.commons.lang3.StringUtils;
-import org.assertj.core.util.Lists;
 import org.glassfish.jersey.client.ClientConfig;
 import org.glassfish.jersey.media.multipart.MultiPartFeature;
 import org.glassfish.jersey.media.multipart.internal.MultiPartWriter;
 import org.junit.Before;
 import org.junit.BeforeClass;
 import org.mockito.Mock;
-import org.mongodb.morphia.Datastore;
-import org.mongodb.morphia.Morphia;
-import org.mongodb.morphia.annotations.Indexed;
-import org.mongodb.morphia.annotations.Indexes;
-import org.mongodb.morphia.mapping.MappedField;
-import org.mongodb.morphia.query.UpdateOperations;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import software.wings.WingsBaseTest;
-import software.wings.app.DatabaseModule;
-import software.wings.beans.Account;
 import software.wings.beans.Application;
 import software.wings.beans.DelegateTask.SyncTaskContext;
-import software.wings.beans.License;
 import software.wings.beans.RestResponse;
-import software.wings.beans.Role;
-import software.wings.beans.RoleType;
-import software.wings.beans.SearchFilter.Operator;
 import software.wings.beans.Service;
 import software.wings.beans.User;
-import software.wings.beans.security.UserGroup;
-import software.wings.common.Constants;
 import software.wings.delegatetasks.DelegateProxyFactory;
-import software.wings.dl.PageRequest;
-import software.wings.dl.PageResponse;
 import software.wings.dl.WingsPersistence;
 import software.wings.service.impl.security.SecretManagementDelegateServiceImpl;
 import software.wings.service.impl.security.auth.AuthHandler;
@@ -79,18 +53,15 @@ import software.wings.service.intfc.AccountService;
 import software.wings.service.intfc.AppService;
 import software.wings.service.intfc.LearningEngineService;
 import software.wings.service.intfc.SettingsService;
-import software.wings.service.intfc.UserGroupService;
-import software.wings.service.intfc.UserService;
 import software.wings.service.intfc.security.KmsService;
 import software.wings.service.intfc.security.SecretManager;
 import software.wings.utils.JsonSubtypeResolver;
+import software.wings.utils.WingsIntegrationTestConstants;
 
-import java.io.IOException;
 import java.net.UnknownHostException;
 import java.security.KeyManagementException;
 import java.security.NoSuchAlgorithmException;
 import java.security.cert.X509Certificate;
-import java.util.Arrays;
 import java.util.Date;
 import java.util.List;
 import java.util.Map;
@@ -109,33 +80,12 @@ import javax.ws.rs.core.GenericType;
 /**
  * Created by rsingh on 4/24/17.
  */
-public abstract class BaseIntegrationTest extends WingsBaseTest {
+public abstract class BaseIntegrationTest extends WingsBaseTest implements WingsIntegrationTestConstants {
   protected static Client client;
-  protected static final String API_BASE = StringUtils.isBlank(System.getenv().get("BASE_HTTP"))
-      ? "https://localhost:9090/api"
-      : "http://localhost:9090/api";
-  protected static final String adminUserName = "Admin";
-  protected static final String adminEmail = "admin@harness.io";
-  protected static final char[] adminPassword = "admin".toCharArray();
-
-  protected static final String readOnlyUserName = "readonlyuser";
-  protected static final String readOnlyEmail = "readonlyuser@harness.io";
-  protected static final char[] readOnlyPassword = "readonlyuser".toCharArray();
-
-  protected static final String defaultUserName = "default";
-  protected static final String defaultEmail = "default@harness.io";
-  protected static final char[] defaultPassword = "default".toCharArray();
-
-  protected static final String delegateAccountSecret = "2f6b0988b6fb3370073c3d0505baee59";
-
-  protected static String accountId = "INVALID_ID";
-  protected static String userToken = "INVALID_TOKEN";
 
   protected static final Logger logger = LoggerFactory.getLogger(BaseIntegrationTest.class);
   @Inject protected WingsPersistence wingsPersistence;
   @Inject private AccountService accountService;
-  @Inject private UserGroupService userGroupService;
-  @Inject private UserService userService;
   @Inject protected SettingsService settingsService;
   @Inject protected AppService appService;
   @Inject protected LearningEngineService learningEngineService;
@@ -144,20 +94,8 @@ public abstract class BaseIntegrationTest extends WingsBaseTest {
   @Inject protected AuthHandler authHandler;
   @Mock private DelegateProxyFactory delegateProxyFactory;
 
-  protected static final char[] JENKINS_PASSWORD = "admin".toCharArray();
-  protected static final String JENKINS_URL = "http://ec2-34-207-79-21.compute-1.amazonaws.com:8080/";
-  protected static final String JENKINS_USERNAME = "admin";
-  protected static final String NEXUS_URL = "https://nexus.wings.software";
-  protected static final String NEXUS_USERNAME = "admin";
-  protected static final char[] NEXUS_PASSWORD = "wings123!".toCharArray();
-  protected static final String BAMBOO_URL = "http://ec2-34-205-16-35.compute-1.amazonaws.com:8085/";
-  protected static final String BAMBOO_USERNAME = "wingsbuild";
-  protected static final char[] BAMBOO_PASSWORD = "0db28aa0f4fc0685df9a216fc7af0ca96254b7c2".toCharArray();
-  protected static final String DOCKER_REGISTRY_URL = "https://registry.hub.docker.com/v2/";
-  protected static final String DOCKER_USERNAME = "wingsplugins";
-  protected static final char[] DOCKER_PASSOWRD = "W!ngs@DockerHub".toCharArray();
-  public static final String HARNESS_JENKINS = "Harness Jenkins";
-  public static final String HARNESS_KMS = "Harness KMS";
+  protected static String accountId = "INVALID_ID";
+  protected static String userToken = "INVALID_TOKEN";
 
   //  @Rule public ThreadDumpRule threadDumpRule = new ThreadDumpRule();
 
@@ -217,7 +155,7 @@ public abstract class BaseIntegrationTest extends WingsBaseTest {
   }
 
   protected void loginAdminUser() {
-    loginUser(adminEmail, new String(adminPassword));
+    loginUser(adminUserEmail, new String(adminPassword));
   }
 
   protected Builder getRequestBuilderWithAuthHeader(WebTarget target) {
@@ -232,149 +170,8 @@ public abstract class BaseIntegrationTest extends WingsBaseTest {
     return target.request();
   }
 
-  protected void dropDBAndEnsureIndexes() throws IOException, ClassNotFoundException {
-    wingsPersistence.getDatastore().getDB().dropDatabase();
-    Morphia morphia = new Morphia();
-    morphia.getMapper().getOptions().setMapSubPackages(true);
-    morphia.mapPackage("software.wings");
-    ensureIndex(morphia, wingsPersistence.getDatastore());
-  }
-
   protected void deleteAllDocuments(List<Class> classes) {
     classes.forEach(cls -> wingsPersistence.getDatastore().delete(wingsPersistence.createQuery(cls)));
-  }
-
-  protected void ensureIndex(Morphia morphia, Datastore primaryDatastore) {
-    /*
-    Morphia auto creates embedded/nested Entity indexes with the parent Entity indexes.
-    There is no way to override this behavior.
-    https://github.com/mongodb/morphia/issues/706
-     */
-
-    morphia.getMapper().getMappedClasses().forEach(mc -> {
-      if (mc.getEntityAnnotation() != null && !mc.isAbstract()) {
-        // Read Entity level "Indexes" annotation
-        List<Indexes> indexesAnnotations = mc.getAnnotations(Indexes.class);
-        if (indexesAnnotations != null) {
-          indexesAnnotations.stream().flatMap(indexes -> Arrays.stream(indexes.value())).forEach(index -> {
-            DatabaseModule.reportDeprecatedUnique(index);
-
-            BasicDBObject keys = new BasicDBObject();
-            Arrays.stream(index.fields()).forEach(field -> keys.append(field.value(), 1));
-            primaryDatastore.getCollection(mc.getClazz())
-                .createIndex(keys, index.options().name(), index.options().unique());
-          });
-        }
-
-        // Read field level "Indexed" annotation
-        for (final MappedField mf : mc.getPersistenceFields()) {
-          if (mf.hasAnnotation(Indexed.class)) {
-            final Indexed indexed = mf.getAnnotation(Indexed.class);
-            DatabaseModule.reportDeprecatedUnique(indexed);
-
-            try {
-              primaryDatastore.getCollection(mc.getClazz())
-                  .createIndex(new BasicDBObject().append(mf.getNameToStore(), 1), null, indexed.options().unique());
-            } catch (MongoCommandException mex) {
-              logger.error("Index creation failed for class {}", mc.getClazz().getCanonicalName());
-              throw mex;
-            }
-          }
-        }
-      }
-    });
-  }
-
-  protected Account createLicenseAndDefaultUsers() {
-    License license =
-        aLicense().withName("Trial").withExpiryDuration(TimeUnit.DAYS.toMillis(365)).withIsActive(true).build();
-    wingsPersistence.save(license);
-
-    Account account = wingsPersistence.executeGetOneQuery(wingsPersistence.createQuery(Account.class));
-    boolean oldAccountExists = false;
-    if (account == null) {
-      account = Account.Builder.anAccount().build();
-      account.setCompanyName("Harness");
-      account.setAccountName("Harness");
-    } else {
-      oldAccountExists = true;
-    }
-
-    //    String oldAccountId = account.getUuid();
-    String accountKey = "2f6b0988b6fb3370073c3d0505baee59";
-    account.setAccountKey(accountKey);
-    account.setLicenseExpiryTime(-1);
-
-    account.setUuid("kmpySmUISimoRrJL6NL73w");
-    accountId = "kmpySmUISimoRrJL6NL73w";
-    if (oldAccountExists) {
-      accountService.delete(account.getUuid());
-    }
-
-    accountService.save(account);
-
-    // wingsPersistence.save(account);
-    // Update account key to make delegate works
-    UpdateOperations<Account> accountUpdateOperations = wingsPersistence.createUpdateOperations(Account.class);
-    accountUpdateOperations.set("accountKey", accountKey);
-    wingsPersistence.update(wingsPersistence.createQuery(Account.class), accountUpdateOperations);
-
-    UpdateOperations<User> userUpdateOperations = wingsPersistence.createUpdateOperations(User.class);
-    userUpdateOperations.set("accounts", Lists.newArrayList(account));
-    wingsPersistence.update(wingsPersistence.createQuery(User.class), userUpdateOperations);
-
-    UpdateOperations<Role> roleUpdateOperations = wingsPersistence.createUpdateOperations(Role.class);
-    roleUpdateOperations.set("accountId", "kmpySmUISimoRrJL6NL73w");
-    wingsPersistence.update(wingsPersistence.createQuery(Role.class), roleUpdateOperations);
-
-    User adminUser = addUser(adminUserName, adminEmail, adminPassword, account);
-    addUser(defaultUserName, defaultEmail, defaultPassword, account);
-    User readOnlyUser = addUser(readOnlyUserName, readOnlyEmail, readOnlyPassword, account);
-
-    addUserToUserGroup(adminUser, accountId, Constants.DEFAULT_ACCOUNT_ADMIN_USER_GROUP_NAME);
-    UserGroup readOnlyUserGroup = authHandler.buildReadOnlyUserGroup(accountId, readOnlyUser, "ReadOnlyUserGroup");
-    readOnlyUserGroup = wingsPersistence.saveAndGet(UserGroup.class, readOnlyUserGroup);
-
-    addUserToUserGroup(readOnlyUser, readOnlyUserGroup);
-
-    loginAdminUser();
-
-    return account;
-  }
-
-  private void addUserToUserGroup(User user, String accountId, String userGroupName) {
-    PageRequest<UserGroup> pageRequest = aPageRequest()
-                                             .addFilter("accountId", Operator.EQ, accountId)
-                                             .addFilter("name", Operator.EQ, userGroupName)
-                                             .build();
-    PageResponse<UserGroup> pageResponse = userGroupService.list(accountId, pageRequest);
-    UserGroup userGroup = pageResponse.get(0);
-    userGroup.setMembers(asList(user));
-    userGroupService.updateMembers(userGroup);
-  }
-
-  private void addUserToUserGroup(User user, UserGroup userGroup) {
-    userGroup.setMembers(asList(user));
-    userGroupService.updateMembers(userGroup);
-  }
-
-  private User addUser(String userName, String email, char[] password, Account account) {
-    User user =
-        anUser()
-            .withName(userName)
-            .withEmail(email)
-            .withPassword(password)
-            .withRoles(wingsPersistence
-                           .query(Role.class,
-                               aPageRequest().addFilter("roleType", Operator.EQ, RoleType.ACCOUNT_ADMIN).build())
-                           .getResponse())
-            .withAccountName(HARNESS_NAME)
-            .withCompanyName(HARNESS_NAME)
-            .build();
-    User newUser = userService.registerNewUser(user, account);
-    wingsPersistence.updateFields(User.class, newUser.getUuid(), ImmutableMap.of("emailVerified", true));
-
-    return wingsPersistence.get(User.class, newUser.getUuid());
   }
 
   protected Application createApp(String appName) {

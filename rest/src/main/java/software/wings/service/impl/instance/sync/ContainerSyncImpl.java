@@ -127,7 +127,6 @@ public class ContainerSyncImpl implements ContainerSync {
       ContainerInfrastructureMapping containerInfraMapping, List<String> containerSvcNameList) {
     List<ContainerInfo> result = Lists.newArrayList();
     containerSvcNameList.stream().forEach(containerSvcName -> {
-
       try {
         SettingAttribute settingAttribute;
         String clusterName = null;
