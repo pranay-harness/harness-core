@@ -20,6 +20,8 @@ import io.dropwizard.request.logging.RequestLogFactory;
 import io.dropwizard.server.DefaultServerFactory;
 import io.dropwizard.server.ServerFactory;
 import io.federecio.dropwizard.swagger.SwaggerBundleConfiguration;
+import lombok.Data;
+import software.wings.beans.security.access.Whitelist;
 import software.wings.dl.MongoConfig;
 import software.wings.helpers.ext.mail.SmtpConfig;
 
@@ -32,6 +34,7 @@ import java.util.Optional;
  *
  * @author Rishi
  */
+@Data
 public class MainConfiguration extends Configuration implements AssetsBundleConfiguration {
   @JsonProperty
   private AssetsConfiguration assetsConfiguration =
@@ -53,6 +56,7 @@ public class MainConfiguration extends Configuration implements AssetsBundleConf
   @JsonProperty("hazelcast") private HazelcastConfiguration hazelcast;
   @JsonProperty("apiUrl") private String apiUrl;
   @JsonProperty("smtp") private SmtpConfig smtpConfig;
+  @JsonProperty("whitelists") private List<Whitelist> whitelists;
   @JsonProperty(defaultValue = "AWS") private DeployMode deployMode = DeployMode.AWS;
   private int applicationPort;
   private boolean sslEnabled;
@@ -94,152 +98,11 @@ public class MainConfiguration extends Configuration implements AssetsBundleConf
   }
 
   /**
-   * Sets swagger bundle configuration.
-   *
-   * @param swaggerBundleConfiguration the swagger bundle configuration
-   */
-  public void setSwaggerBundleConfiguration(SwaggerBundleConfiguration swaggerBundleConfiguration) {
-    this.swaggerBundleConfiguration = swaggerBundleConfiguration;
-  }
-
-  /**
-   * Gets mongo connection factory.
-   *
-   * @return the mongo connection factory
-   */
-  public MongoConfig getMongoConnectionFactory() {
-    return mongoConnectionFactory;
-  }
-
-  /**
-   * Sets mongo connection factory.
-   *
-   * @param mongoConnectionFactory the mongo connection factory
-   */
-  public void setMongoConnectionFactory(MongoConfig mongoConnectionFactory) {
-    this.mongoConnectionFactory = mongoConnectionFactory;
-  }
-
-  /**
-   * Gets portal.
-   *
-   * @return the portal
-   */
-  public PortalConfig getPortal() {
-    return portal;
-  }
-
-  /**
-   * Sets portal.
-   *
-   * @param portal the portal
-   */
-  public void setPortal(PortalConfig portal) {
-    this.portal = portal;
-  }
-
-  /**
-   * Is enable auth boolean.
-   *
-   * @return the boolean
-   */
-  public boolean isEnableAuth() {
-    return enableAuth;
-  }
-
-  /**
-   * Sets enable auth.
-   *
-   * @param enableAuth the enable auth
-   */
-  public void setEnableAuth(boolean enableAuth) {
-    this.enableAuth = enableAuth;
-  }
-
-  /**
-   * Gets jenkins build query size.
-   *
-   * @return the jenkins build query size
-   */
-  public int getJenkinsBuildQuerySize() {
-    return jenkinsBuildQuerySize;
-  }
-
-  /**
-   * Sets jenkins build query size.
-   *
-   * @param jenkinsBuildQuerySize the jenkins build query size
-   */
-  public void setJenkinsBuildQuerySize(int jenkinsBuildQuerySize) {
-    this.jenkinsBuildQuerySize = jenkinsBuildQuerySize;
-  }
-
-  /**
    * {@inheritDoc}
    */
   @Override
   public AssetsConfiguration getAssetsConfiguration() {
     return assetsConfiguration;
-  }
-
-  /**
-   * Gets file upload limit.
-   *
-   * @return the file upload limit
-   */
-  public FileUploadLimit getFileUploadLimits() {
-    return fileUploadLimits;
-  }
-
-  /**
-   * Sets file upload limit.
-   *
-   * @param fileUploadLimits the file upload limit
-   */
-  public void setFileUploadLimits(FileUploadLimit fileUploadLimits) {
-    this.fileUploadLimits = fileUploadLimits;
-  }
-
-  /**
-   * Getter for property 'delegateMetadataUrl'.
-   *
-   * @return Value for property 'delegateMetadataUrl'.
-   */
-  public String getDelegateMetadataUrl() {
-    return delegateMetadataUrl;
-  }
-
-  /**
-   * Setter for property 'delegateMetadataUrl'.
-   *
-   * @param delegateMetadataUrl Value to set for property 'delegateMetadataUrl'.
-   */
-  public void setDelegateMetadataUrl(String delegateMetadataUrl) {
-    this.delegateMetadataUrl = delegateMetadataUrl;
-  }
-
-  public String getWatcherMetadataUrl() {
-    return watcherMetadataUrl;
-  }
-
-  public void setWatcherMetadataUrl(String watcherMetadataUrl) {
-    this.watcherMetadataUrl = watcherMetadataUrl;
-  }
-
-  public String getApiUrl() {
-    return apiUrl;
-  }
-
-  public void setApiUrl(String apiUrl) {
-    this.apiUrl = apiUrl;
-  }
-
-  public DeployMode getDeployMode() {
-    return deployMode;
-  }
-
-  public void setDeployMode(DeployMode deployMode) {
-    this.deployMode = deployMode;
   }
 
   private ConnectorFactory getDefaultAdminConnectorFactory() {
@@ -264,72 +127,6 @@ public class MainConfiguration extends Configuration implements AssetsBundleConf
     fileAppenderFactory.setArchivedFileCount(14);
     logbackAccessRequestLogFactory.setAppenders(ImmutableList.of(fileAppenderFactory));
     return logbackAccessRequestLogFactory;
-  }
-
-  public SchedulerConfig getSchedulerConfig() {
-    return schedulerConfig;
-  }
-
-  public void setSchedulerConfig(SchedulerConfig schedulerConfig) {
-    this.schedulerConfig = schedulerConfig;
-  }
-
-  public List<String> getAwsInstanceTypes() {
-    return awsInstanceTypes;
-  }
-
-  public void setAwsInstanceTypes(List<String> awsInstanceTypes) {
-    this.awsInstanceTypes = awsInstanceTypes;
-  }
-
-  public Map<String, String> getAwsRegionIdToName() {
-    return awsRegionIdToName;
-  }
-
-  public void setAwsRegionIdToName(Map<String, String> awsRegionIdToName) {
-    this.awsRegionIdToName = awsRegionIdToName;
-  }
-
-  /**
-   * Getter for property 'hazelcast'.
-   *
-   * @return Value for property 'hazelcast'.
-   */
-  public HazelcastConfiguration getHazelcast() {
-    return hazelcast;
-  }
-
-  /**
-   * Setter for property 'hazelcast'.
-   *
-   * @param hazelcast Value to set for property 'hazelcast'.
-   */
-  public void setHazelcast(HazelcastConfiguration hazelcast) {
-    this.hazelcast = hazelcast;
-  }
-
-  public SmtpConfig getSmtpConfig() {
-    return smtpConfig;
-  }
-
-  public void setSmtpConfig(SmtpConfig smtpConfig) {
-    this.smtpConfig = smtpConfig;
-  }
-
-  public int getApplicationPort() {
-    return applicationPort;
-  }
-
-  public void setApplicationPort(int applicationPort) {
-    this.applicationPort = applicationPort;
-  }
-
-  public boolean isSslEnabled() {
-    return sslEnabled;
-  }
-
-  public void setSslEnabled(boolean sslEnabled) {
-    this.sslEnabled = sslEnabled;
   }
 
   /**

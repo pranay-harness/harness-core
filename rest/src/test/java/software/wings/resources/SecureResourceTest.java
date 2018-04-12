@@ -85,6 +85,7 @@ import software.wings.service.intfc.FeatureFlagService;
 import software.wings.service.intfc.LearningEngineService;
 import software.wings.service.intfc.UserGroupService;
 import software.wings.service.intfc.UserService;
+import software.wings.service.intfc.WhitelistService;
 import software.wings.service.intfc.WorkflowService;
 import software.wings.utils.CacheHelper;
 import software.wings.utils.ResourceTestRule;
@@ -134,13 +135,14 @@ public class SecureResourceTest {
   private static MainConfiguration configuration = mock(MainConfiguration.class);
   private static AuthHandler authHandler = mock(AuthHandler.class);
   private static FeatureFlagService featureFlagService = mock(FeatureFlagService.class);
+  private static WhitelistService whitelistService = mock(WhitelistService.class);
 
   private static AuthService authService =
       new AuthServiceImpl(genericDbCache, wingsPersistence, userService, userGroupService, workflowService, envService,
           cacheHelper, configuration, learningEngineService, authHandler, featureFlagService);
 
-  private static AuthRuleFilter authRuleFilter = new AuthRuleFilter(
-      auditService, auditHelper, authService, authHandler, appService, userService, featureFlagService);
+  private static AuthRuleFilter authRuleFilter = new AuthRuleFilter(auditService, auditHelper, authService, authHandler,
+      appService, userService, featureFlagService, whitelistService);
 
   Cache<String, User> cache = Mockito.mock(Cache.class);
 
