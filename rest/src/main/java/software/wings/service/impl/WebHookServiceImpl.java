@@ -7,26 +7,20 @@ import com.google.inject.Inject;
 import com.jayway.jsonpath.DocumentContext;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-import software.wings.app.MainConfiguration;
 import software.wings.beans.Application;
 import software.wings.beans.WebHookRequest;
 import software.wings.beans.WebHookResponse;
 import software.wings.beans.WorkflowExecution;
-import software.wings.beans.WorkflowExecutionStatusResponse;
 import software.wings.beans.artifact.Artifact;
 import software.wings.beans.artifact.ArtifactStream;
 import software.wings.beans.trigger.Trigger;
 import software.wings.beans.trigger.WebHookTriggerCondition;
-import software.wings.exception.InvalidRequestException;
-import software.wings.exception.WingsException.ReportTarget;
 import software.wings.expression.ExpressionEvaluator;
 import software.wings.service.intfc.AppService;
 import software.wings.service.intfc.ArtifactService;
 import software.wings.service.intfc.ArtifactStreamService;
 import software.wings.service.intfc.TriggerService;
 import software.wings.service.intfc.WebHookService;
-import software.wings.service.intfc.WorkflowExecutionService;
-import software.wings.utils.CryptoUtil;
 import software.wings.utils.JsonUtils;
 
 import java.util.HashMap;
@@ -40,42 +34,8 @@ public class WebHookServiceImpl implements WebHookService {
   @Inject private ArtifactService artifactService;
   @Inject private TriggerService triggerService;
   @Inject private AppService appService;
-  @Inject private WorkflowExecutionService workflowExecutionService;
-  @Inject private MainConfiguration configuration;
 
   private static final Logger logger = LoggerFactory.getLogger(WebHookServiceImpl.class);
-
-  @Override
-  public WorkflowExecutionStatusResponse getWorkflowExecutionStatus(
-      final String statusToken, final String appId, final String workflowExecutionId) {
-    final WorkflowExecution workflowExecution =
-        workflowExecutionService.getWorkflowExecution(appId, workflowExecutionId);
-    if (workflowExecution != null) {
-      return WorkflowExecutionStatusResponse.builder().status(workflowExecution.getStatus().name()).build();
-    } else {
-      throw new InvalidRequestException(String.format("Workflow with id: [%s], appId: [%s], token: [%s] not found",
-                                            workflowExecutionId, appId, statusToken),
-          ReportTarget.USER);
-    }
-  }
-
-  private String getBaseUrl() {
-    String baseUrl = configuration.getPortal().getUrl().trim();
-    if (!baseUrl.endsWith("/")) {
-      baseUrl += "/";
-    }
-    return baseUrl;
-  }
-
-  private String getUiUrl(String accountId, String appId, String envId, String workflowExecutionId) {
-    return String.format("%s#/account/%s/app/%s/env/%s/executions/%s/details", getBaseUrl(), accountId, appId, envId,
-        workflowExecutionId);
-  }
-
-  private String getRestUrl(String appId, String workflowExecutionId) {
-    return String.format("%sapi/webhooks/%s/status?appId=%s&workflowExecutionId=%s", getBaseUrl(),
-        CryptoUtil.secureRandAlphaNumString(40), appId, workflowExecutionId);
-  }
 
   @Override
   public WebHookResponse execute(String token, WebHookRequest webHookRequest) {
@@ -123,8 +83,6 @@ public class WebHookServiceImpl implements WebHookService {
       return WebHookResponse.builder()
           .requestId(workflowExecution.getUuid())
           .status(workflowExecution.getStatus().name())
-          .restUrl(getRestUrl(appId, workflowExecution.getUuid()))
-          .uiUrl(getUiUrl(app.getAccountId(), appId, workflowExecution.getEnvId(), workflowExecution.getUuid()))
           .build();
     } catch (Exception ex) {
       logger.error("WebHook call failed [%s]", token, ex);
