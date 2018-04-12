@@ -91,12 +91,6 @@ public class SettingValidationService {
               "The name " + settingAttribute.getName() + " already exists in " + settingAttribute.getCategory() + ".");
     }
 
-    // Name has leading/trailing spaces
-    if (!settingAttribute.getName().trim().equals(settingAttribute.getName())) {
-      throw new WingsException(ErrorCode.INVALID_ARGUMENT)
-          .addParam("args", "The name " + settingAttribute.getName() + " has leading/trailing spaces. ");
-    }
-
     SettingValue settingValue = settingAttribute.getValue();
 
     if (settingValue instanceof GcpConfig) {
