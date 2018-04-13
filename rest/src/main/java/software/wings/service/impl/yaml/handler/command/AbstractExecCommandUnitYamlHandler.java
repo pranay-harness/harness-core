@@ -9,11 +9,13 @@ import static software.wings.beans.yaml.YamlConstants.NODE_PROPERTY_COMMAND_TYPE
 import static software.wings.beans.yaml.YamlConstants.NODE_PROPERTY_TAIL_FILES;
 import static software.wings.beans.yaml.YamlConstants.NODE_PROPERTY_TAIL_PATTERNS;
 
+import software.wings.api.ScriptType;
 import software.wings.beans.command.ExecCommandUnit;
 import software.wings.beans.command.ExecCommandUnit.AbstractYaml;
 import software.wings.beans.command.TailFilePatternEntry;
 import software.wings.beans.yaml.ChangeContext;
 import software.wings.exception.HarnessException;
+import software.wings.utils.Util;
 
 import java.util.List;
 import java.util.Map;
@@ -24,6 +26,7 @@ public abstract class AbstractExecCommandUnitYamlHandler<Y extends AbstractYaml,
     extends SshCommandUnitYamlHandler<Y, B> {
   protected void toYaml(Y yaml, B bean) {
     super.toYaml(yaml, bean);
+    yaml.setScriptType(bean.getScriptType().name());
     yaml.setCommand(bean.getCommandString());
     yaml.setWorkingDirectory(bean.getCommandPath());
     yaml.setFilePatternEntryList(convertToYaml(bean.getTailPatterns()));
@@ -62,6 +65,10 @@ public abstract class AbstractExecCommandUnitYamlHandler<Y extends AbstractYaml,
   protected B toBean(ChangeContext<Y> changeContext) throws HarnessException {
     B bean = super.toBean(changeContext);
     Y yaml = changeContext.getYaml();
+    ScriptType scriptType = isEmpty(yaml.getScriptType())
+        ? ScriptType.BASH
+        : Util.getEnumFromString(ScriptType.class, yaml.getScriptType());
+    bean.setScriptType(scriptType);
     bean.setCommandString(yaml.getCommand());
     bean.setCommandPath(yaml.getWorkingDirectory());
     bean.setTailPatterns(convertToBean(yaml.getFilePatternEntryList()));

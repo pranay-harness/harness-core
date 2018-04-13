@@ -10,9 +10,13 @@ import static software.wings.beans.command.CommandExecutionResult.CommandExecuti
 import static software.wings.beans.command.CommandExecutionResult.CommandExecutionStatus.SUCCESS;
 import static software.wings.utils.WinRmHelperUtil.HandleWinRmClientException;
 
+import org.apache.commons.lang3.NotImplementedException;
+import org.apache.commons.lang3.tuple.Pair;
 import software.wings.beans.Log.LogLevel;
 import software.wings.beans.command.CommandExecutionResult.CommandExecutionStatus;
+import software.wings.beans.command.CopyConfigCommandUnit.ConfigFileMetaData;
 import software.wings.delegatetasks.DelegateLogService;
+import software.wings.service.intfc.FileService.FileBucket;
 import software.wings.utils.ExecutionLogWriter;
 
 import java.nio.charset.StandardCharsets;
@@ -27,13 +31,17 @@ public class DefaultWinRmExecutor implements WinRmExecutor {
     this.config = config;
   }
 
+  public CommandExecutionStatus executeCommandString(String command) {
+    return executeCommandString(command, null);
+  }
+
   public CommandExecutionStatus executeCommandString(String command, StringBuffer output) {
     CommandExecutionStatus commandExecutionStatus = FAILURE;
     saveExecutionLog(format("Initializing WinRM connection to %s ...", config.getHostname()), INFO);
 
     try (WinRmSession session = new WinRmSession(config)) {
       saveExecutionLog(format("Connected to %s", config.getHostname()), INFO);
-      saveExecutionLog(format("Executing command ...", config.getHostname()), INFO);
+      saveExecutionLog(format("Executing command ..."), INFO);
 
       ExecutionLogWriter outputWriter = ExecutionLogWriter.builder()
                                             .accountId(config.getAccountId())
@@ -93,7 +101,20 @@ public class DefaultWinRmExecutor implements WinRmExecutor {
             .build());
   }
 
+  public CommandExecutionStatus copyConfigFiles(ConfigFileMetaData configFileMetaData) {
+    throw new NotImplementedException("Not implemented");
+  }
+
   public CommandExecutionStatus copyFiles(String destinationDirectoryPath, List<String> files) {
-    return null;
+    throw new NotImplementedException("Not implemented");
+  }
+
+  public CommandExecutionStatus copyGridFsFiles(
+      String destinationDirectoryPath, FileBucket fileBucket, List<Pair<String, String>> fileNamesIds) {
+    throw new NotImplementedException("Not implemented");
+  }
+
+  public CommandExecutionStatus copyGridFsFiles(ConfigFileMetaData configFileMetaData) {
+    throw new NotImplementedException("Not implemented");
   }
 }

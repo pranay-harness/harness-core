@@ -21,10 +21,10 @@ public abstract class SshCommandUnit extends AbstractCommandUnit {
 
   @Override
   public final CommandExecutionStatus execute(CommandExecutionContext context) {
-    return executeInternal((SshCommandExecutionContext) context);
+    return executeInternal((ShellCommandExecutionContext) context);
   }
 
-  protected abstract CommandExecutionStatus executeInternal(SshCommandExecutionContext context);
+  protected abstract CommandExecutionStatus executeInternal(ShellCommandExecutionContext context);
 
   @Data
   @EqualsAndHashCode(callSuper = true)

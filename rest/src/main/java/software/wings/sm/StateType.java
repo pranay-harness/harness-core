@@ -222,7 +222,8 @@ public enum StateType implements StateTypeDescriptor {
    * Command state type.
    */
   COMMAND(CommandState.class, COMMANDS,
-      Lists.newArrayList(InfrastructureMappingType.AWS_SSH, InfrastructureMappingType.PHYSICAL_DATA_CENTER_SSH),
+      Lists.newArrayList(InfrastructureMappingType.AWS_SSH, InfrastructureMappingType.PHYSICAL_DATA_CENTER_SSH,
+          InfrastructureMappingType.PHYSICAL_DATA_CENTER_WINRM),
       asList(START_SERVICE, STOP_SERVICE, DEPLOY_SERVICE, ENABLE_SERVICE, DISABLE_SERVICE), ORCHESTRATION_STENCILS),
 
   /**

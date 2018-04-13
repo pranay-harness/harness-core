@@ -27,11 +27,7 @@ public class WinRmSession implements AutoCloseable {
   }
 
   public int executeCommandString(String command, Writer output, Writer error) {
-    try {
-      return shell.execute(command, output, error);
-    } catch (Exception e) {
-      return 1;
-    }
+    return shell.execute(command, output, error);
   }
 
   private static String getEndpoint(String hostname, int port, boolean useHttps) {

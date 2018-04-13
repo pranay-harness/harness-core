@@ -5,6 +5,9 @@
 package software.wings.service.impl;
 
 import static io.harness.data.structure.EmptyPredicate.isEmpty;
+import static software.wings.beans.Base.GLOBAL_ACCOUNT_ID;
+import static software.wings.beans.CatalogItem.Builder.aCatalogItem;
+import static software.wings.beans.FeatureName.WINRM_SUPPORT;
 
 import com.google.common.base.Charsets;
 import com.google.common.io.Resources;
@@ -18,6 +21,7 @@ import software.wings.beans.CatalogItem;
 import software.wings.common.Constants;
 import software.wings.exception.WingsException;
 import software.wings.service.intfc.CatalogService;
+import software.wings.service.intfc.FeatureFlagService;
 import software.wings.utils.YamlUtils;
 
 import java.net.URL;
@@ -35,6 +39,7 @@ import java.util.Map;
 public class CatalogServiceImpl implements CatalogService {
   private static final Logger logger = LoggerFactory.getLogger(CatalogServiceImpl.class);
   private Map<String, List<CatalogItem>> catalogs;
+  private static final CatalogItem iisCatalogItem = aCatalogItem().withName("IIS Website").withValue("IIS").build();
 
   /**
    * Instantiates a new catalog service impl.
@@ -42,11 +47,16 @@ public class CatalogServiceImpl implements CatalogService {
    * @param yamlUtils the yaml utils
    */
   @Inject
-  public CatalogServiceImpl(YamlUtils yamlUtils) {
+  public CatalogServiceImpl(YamlUtils yamlUtils, FeatureFlagService featureFlagService) {
     try {
       URL url = this.getClass().getResource(Constants.STATIC_CATALOG_URL);
       String yaml = Resources.toString(url, Charsets.UTF_8);
       catalogs = yamlUtils.read(yaml, new TypeReference<Map<String, List<CatalogItem>>>() {});
+
+      if (featureFlagService.isEnabled(WINRM_SUPPORT, GLOBAL_ACCOUNT_ID)) {
+        catalogs.get("ARTIFACT_TYPE").add(iisCatalogItem);
+      }
+
       for (List<CatalogItem> catalogItems : catalogs.values()) {
         Collections.sort(catalogItems, CatalogItem.displayOrderComparator);
       }

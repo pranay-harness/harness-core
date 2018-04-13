@@ -92,7 +92,7 @@ software.wings.beans.command.ResizeCommandUnitExecutionData, 5053
 software.wings.beans.command.ScpCommandUnit, 5054
 software.wings.beans.command.ScpCommandUnit$ScpFileCategory, 5055
 software.wings.beans.command.SetupEnvCommandUnit, 5056
-software.wings.beans.command.SshCommandExecutionContext, 5057
+#software.wings.beans.command.SshCommandExecutionContext, 5057
 software.wings.beans.command.SshCommandUnit, 5058
 software.wings.beans.command.TailFilePatternEntry, 5059
 software.wings.beans.Graph, 5060
@@ -304,3 +304,7 @@ software.wings.helpers.ext.helm.request.HelmRollbackCommandRequest, 5268
 software.wings.beans.container.HelmChartSpecification, 5269
 software.wings.beans.GitConfig$GitRepositoryType, 5270
 software.wings.waitnotify.StringNotifyResponseData, 5271
+software.wings.beans.command.InitPowerShellCommandUnit, 5272
+software.wings.beans.command.CleanupPowerShellCommandUnit, 5273
+software.wings.beans.command.ShellCommandExecutionContext, 5274
+

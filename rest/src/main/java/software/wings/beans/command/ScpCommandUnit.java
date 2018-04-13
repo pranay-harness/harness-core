@@ -46,7 +46,7 @@ public class ScpCommandUnit extends SshCommandUnit {
   }
 
   @Override
-  protected CommandExecutionStatus executeInternal(SshCommandExecutionContext context) {
+  protected CommandExecutionStatus executeInternal(ShellCommandExecutionContext context) {
     List<Pair<String, String>> fileIds = Lists.newArrayList();
     FileBucket fileBucket = null;
     switch (fileCategory) {

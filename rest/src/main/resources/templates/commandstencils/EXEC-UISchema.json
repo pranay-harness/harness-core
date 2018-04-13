@@ -6,5 +6,5 @@
   "tailPatterns": {
     "classNames": "__2Col"
   },
-  "ui:order": ["commandPath", "commandString", "tailPatterns"]
+  "ui:order": ["commandPath", "scriptType", "commandString", "tailPatterns"]
 }

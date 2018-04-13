@@ -867,7 +867,7 @@ public class DelegateServiceImpl implements DelegateService {
                                .build())
                        .execute();
         logger.info("Task {} response sent to manager", delegateTask.getUuid());
-      } catch (IOException e) {
+      } catch (Exception e) {
         logger.error("Unable to send response to manager", e);
       } finally {
         currentlyExecutingTasks.remove(delegateTask.getUuid());

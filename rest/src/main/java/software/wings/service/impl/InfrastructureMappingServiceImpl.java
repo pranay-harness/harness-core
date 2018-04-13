@@ -21,7 +21,6 @@ import static software.wings.beans.ErrorCode.INVALID_REQUEST;
 import static software.wings.beans.FeatureName.AZURE_SUPPORT;
 import static software.wings.beans.FeatureName.ECS_CREATE_CLUSTER;
 import static software.wings.beans.FeatureName.KUBERNETES_CREATE_CLUSTER;
-import static software.wings.beans.FeatureName.WINRM_SUPPORT;
 import static software.wings.beans.SettingAttribute.Builder.aSettingAttribute;
 import static software.wings.beans.infrastructure.Host.Builder.aHost;
 import static software.wings.dl.PageRequest.PageRequestBuilder.aPageRequest;
@@ -789,8 +788,8 @@ public class InfrastructureMappingServiceImpl implements InfrastructureMappingSe
   }
 
   private List<Host> listHosts(InfrastructureMapping infrastructureMapping) {
-    if (infrastructureMapping instanceof PhysicalInfrastructureMappingBase) {
-      PhysicalInfrastructureMappingBase pyInfraMapping = (PhysicalInfrastructureMappingBase) infrastructureMapping;
+    if (infrastructureMapping instanceof PhysicalInfrastructureMapping) {
+      PhysicalInfrastructureMapping pyInfraMapping = (PhysicalInfrastructureMapping) infrastructureMapping;
       List<String> hostNames = pyInfraMapping.getHostNames()
                                    .stream()
                                    .map(String::trim)
@@ -798,7 +797,37 @@ public class InfrastructureMappingServiceImpl implements InfrastructureMappingSe
                                    .distinct()
                                    .collect(toList());
       return hostNames.stream()
-          .map(hostName -> aHost().withHostName(hostName).withPublicDns(hostName).build())
+          .map(hostName
+              -> aHost()
+                     .withHostName(hostName)
+                     .withPublicDns(hostName)
+                     .withAppId(pyInfraMapping.getAppId())
+                     .withEnvId(pyInfraMapping.getEnvId())
+                     .withInfraMappingId(pyInfraMapping.getUuid())
+                     .withHostConnAttr(pyInfraMapping.getHostConnectionAttrs())
+                     .withServiceTemplateId(pyInfraMapping.getServiceTemplateId())
+                     .build())
+          .collect(toList());
+    } else if (infrastructureMapping instanceof PhysicalInfrastructureMappingWinRm) {
+      PhysicalInfrastructureMappingWinRm pyInfraMappingWinRm =
+          (PhysicalInfrastructureMappingWinRm) infrastructureMapping;
+      List<String> hostNames = pyInfraMappingWinRm.getHostNames()
+                                   .stream()
+                                   .map(String::trim)
+                                   .filter(StringUtils::isNotEmpty)
+                                   .distinct()
+                                   .collect(toList());
+      return hostNames.stream()
+          .map(hostName
+              -> aHost()
+                     .withHostName(hostName)
+                     .withPublicDns(hostName)
+                     .withAppId(pyInfraMappingWinRm.getAppId())
+                     .withEnvId(pyInfraMappingWinRm.getEnvId())
+                     .withInfraMappingId(pyInfraMappingWinRm.getUuid())
+                     .withWinrmConnAttr(pyInfraMappingWinRm.getWinRmConnectionAttributes())
+                     .withServiceTemplateId(pyInfraMappingWinRm.getServiceTemplateId())
+                     .build())
           .collect(toList());
     } else if (infrastructureMapping instanceof AwsInfrastructureMapping) {
       AwsInfrastructureMapping awsInfraMapping = (AwsInfrastructureMapping) infrastructureMapping;
@@ -806,11 +835,20 @@ public class InfrastructureMappingServiceImpl implements InfrastructureMappingSe
           (AwsInfrastructureProvider) getInfrastructureProviderByComputeProviderType(AWS.name());
       SettingAttribute computeProviderSetting = settingsService.get(awsInfraMapping.getComputeProviderSettingId());
       notNullCheck("Compute Provider", computeProviderSetting);
-      return infrastructureProvider
-          .listHosts(awsInfraMapping, computeProviderSetting,
-              secretManager.getEncryptionDetails((Encryptable) computeProviderSetting.getValue(), null, null),
-              new PageRequest<>())
-          .getResponse();
+      List<Host> hosts =
+          infrastructureProvider
+              .listHosts(awsInfraMapping, computeProviderSetting,
+                  secretManager.getEncryptionDetails((Encryptable) computeProviderSetting.getValue(), null, null),
+                  new PageRequest<>())
+              .getResponse();
+      hosts.stream().forEach(host -> {
+        host.setAppId(awsInfraMapping.getAppId());
+        host.setEnvId(awsInfraMapping.getEnvId());
+        host.setHostConnAttr(awsInfraMapping.getHostConnectionAttrs());
+        host.setInfraMappingId(awsInfraMapping.getUuid());
+        host.setServiceTemplateId(awsInfraMapping.getServiceTemplateId());
+      });
+      return hosts;
     } else {
       throw new WingsException(INVALID_REQUEST)
           .addParam("message", "Unsupported infrastructure mapping: " + infrastructureMapping.getClass().getName());
@@ -824,16 +862,8 @@ public class InfrastructureMappingServiceImpl implements InfrastructureMappingSe
     ServiceTemplate serviceTemplate =
         serviceTemplateService.get(infrastructureMapping.getAppId(), infrastructureMapping.getServiceTemplateId());
 
-    List<Host> savedHosts = hosts.stream()
-                                .map(host -> {
-                                  host.setAppId(infrastructureMapping.getAppId());
-                                  host.setEnvId(infrastructureMapping.getEnvId());
-                                  host.setHostConnAttr(infrastructureMapping.getHostConnectionAttrs());
-                                  host.setInfraMappingId(infrastructureMapping.getUuid());
-                                  host.setServiceTemplateId(infrastructureMapping.getServiceTemplateId());
-                                  return infrastructureProvider.saveHost(host);
-                                })
-                                .collect(toList());
+    List<Host> savedHosts =
+        hosts.stream().map(host -> { return infrastructureProvider.saveHost(host); }).collect(toList());
 
     return serviceInstanceService.updateInstanceMappings(serviceTemplate, infrastructureMapping, savedHosts);
   }
@@ -1370,12 +1400,10 @@ public class InfrastructureMappingServiceImpl implements InfrastructureMappingSe
       infraTypes.put(AWS_LAMBDA, asList(SettingVariableTypes.AWS));
     } else if (artifactType == ArtifactType.AMI) {
       infraTypes.put(AMI, asList(SettingVariableTypes.AWS));
+    } else if (artifactType == ArtifactType.IIS) {
+      infraTypes.put(WINRM, asList(SettingVariableTypes.PHYSICAL_DATA_CENTER));
     } else {
-      String accountId = appService.getAccountIdByAppId(appId);
       infraTypes.put(SSH, asList(SettingVariableTypes.PHYSICAL_DATA_CENTER, SettingVariableTypes.AWS));
-      if (featureFlagService.isEnabled(WINRM_SUPPORT, accountId)) {
-        infraTypes.put(WINRM, asList(SettingVariableTypes.PHYSICAL_DATA_CENTER));
-      }
     }
     return infraTypes;
   }
