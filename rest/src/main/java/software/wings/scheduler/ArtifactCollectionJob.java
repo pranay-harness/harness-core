@@ -79,7 +79,7 @@ public class ArtifactCollectionJob implements Job {
   private void executeJobAsync(String appId, String artifactStreamId) {
     List<Artifact> artifacts = null;
     ArtifactStream artifactStream = artifactStreamService.get(appId, artifactStreamId);
-    if (artifactStream == null || !artifactStream.isAutoDownload()) {
+    if (artifactStream == null) {
       jobScheduler.deleteJob(artifactStreamId, GROUP);
       return;
     }

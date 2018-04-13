@@ -39,15 +39,14 @@ public class AmazonS3BuildServiceTest extends WingsBaseTest {
   private static final List<String> artifactPaths = Lists.newArrayList("path1", "path2");
   private static final AwsConfig awsConfig =
       AwsConfig.builder().accessKey("access").secretKey("secret".toCharArray()).accountId("accountId").build();
-  private static final AmazonS3ArtifactStream amazonS3ArtifactStream =
-      AmazonS3ArtifactStream.Builder.anAmazonS3ArtifactStream()
-          .withUuid(ARTIFACT_STREAM_ID)
-          .withAppId(APP_ID)
-          .withSettingId("")
-          .withSourceName(ARTIFACT_STREAM_NAME)
-          .withJobname(BUILD_JOB_NAME)
-          .withArtifactPaths(artifactPaths)
-          .build();
+  private static final AmazonS3ArtifactStream amazonS3ArtifactStream = AmazonS3ArtifactStream.builder()
+                                                                           .uuid(ARTIFACT_STREAM_ID)
+                                                                           .appId(APP_ID)
+                                                                           .settingId("")
+                                                                           .sourceName(ARTIFACT_STREAM_NAME)
+                                                                           .jobname(BUILD_JOB_NAME)
+                                                                           .artifactPaths(artifactPaths)
+                                                                           .build();
 
   @Before
   public void setUp() throws Exception {}

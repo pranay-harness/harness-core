@@ -14,13 +14,10 @@ import static org.mockito.Mockito.when;
 import static org.mongodb.morphia.mapping.Mapper.ID_KEY;
 import static software.wings.beans.AwsInfrastructureMapping.Builder.anAwsInfrastructureMapping;
 import static software.wings.beans.Base.GLOBAL_ENV_ID;
-import static software.wings.beans.HostConnectionAttributes.AccessType.USER_PASSWORD;
-import static software.wings.beans.HostConnectionAttributes.Builder.aHostConnectionAttributes;
 import static software.wings.beans.HostConnectionAttributes.ConnectionType.SSH;
 import static software.wings.beans.SettingAttribute.Builder.aSettingAttribute;
 import static software.wings.dl.PageRequest.PageRequestBuilder.aPageRequest;
 import static software.wings.dl.PageResponse.PageResponseBuilder.aPageResponse;
-import static software.wings.service.impl.security.SecretManagerImpl.ENCRYPTED_FIELD_MASK;
 import static software.wings.settings.SettingValue.SettingVariableTypes.AWS;
 import static software.wings.settings.SettingValue.SettingVariableTypes.HOST_CONNECTION_ATTRIBUTES;
 import static software.wings.utils.WingsTestConstants.ACCESS_KEY;
@@ -75,7 +72,6 @@ import software.wings.service.intfc.yaml.YamlDirectoryService;
 import software.wings.settings.SettingValue.SettingVariableTypes;
 
 import java.util.Collections;
-import java.util.List;
 import java.util.UUID;
 
 /**
@@ -229,10 +225,8 @@ public class SettingsServiceImplTest extends WingsBaseTest {
                                             .build();
     when(wingsPersistence.get(SettingAttribute.class, SETTING_ID)).thenReturn(settingAttribute);
     when(artifactStreamService.list(any(PageRequest.class)))
-        .thenReturn(aPageResponse()
-                        .withResponse(asList(
-                            JenkinsArtifactStream.Builder.aJenkinsArtifactStream().withSourceName(JOB_NAME).build()))
-                        .build());
+        .thenReturn(
+            aPageResponse().withResponse(asList(JenkinsArtifactStream.builder().sourceName(JOB_NAME).build())).build());
 
     assertThatThrownBy(() -> settingsService.delete(APP_ID, SETTING_ID))
         .isInstanceOf(WingsException.class)
@@ -281,18 +275,7 @@ public class SettingsServiceImplTest extends WingsBaseTest {
    */
   @Test
   public void shouldListConnectionAttributes() {
-    SettingAttribute settingAttribute = settingsService.save(aSettingAttribute()
-                                                                 .withAppId("APP_ID")
-                                                                 .withAccountId("ACCOUNT_ID")
-                                                                 .withName("USER_PASSWORD")
-                                                                 .withValue(aHostConnectionAttributes()
-                                                                                .withAccessType(USER_PASSWORD)
-                                                                                .withConnectionType(SSH)
-                                                                                .withAccountId("ACCOUNT_ID")
-                                                                                .build())
-                                                                 .build());
-    List<SettingAttribute> connectionAttributes =
-        settingsService.getSettingAttributesByType("APP_ID", HOST_CONNECTION_ATTRIBUTES.name());
+    settingsService.getSettingAttributesByType("APP_ID", HOST_CONNECTION_ATTRIBUTES.name());
     verify(wingsPersistence).query(eq(SettingAttribute.class), any(PageRequest.class));
   }
 
@@ -301,20 +284,7 @@ public class SettingsServiceImplTest extends WingsBaseTest {
    */
   @Test
   public void shouldListBastionHostConnectionAttributes() {
-    SettingAttribute settingAttribute =
-        settingsService.save(aSettingAttribute()
-                                 .withAppId("APP_ID")
-                                 .withAccountId("ACCOUNT_ID")
-                                 .withName("USER_PASSWORD")
-                                 .withValue(BastionConnectionAttributes.Builder.aBastionConnectionAttributes()
-                                                .withAccessType(AccessType.USER_PASSWORD)
-                                                .withConnectionType(SSH)
-                                                .withHostName(HOST_NAME)
-                                                .withAccountId("ACCOUNT_ID")
-                                                .build())
-                                 .build());
-
-    List<SettingAttribute> connectionAttributes = settingsService.getSettingAttributesByType(
+    settingsService.getSettingAttributesByType(
         "APP_ID", SettingVariableTypes.BASTION_HOST_CONNECTION_ATTRIBUTES.name());
     verify(wingsPersistence).query(eq(SettingAttribute.class), any(PageRequest.class));
   }
@@ -357,18 +327,6 @@ public class SettingsServiceImplTest extends WingsBaseTest {
 
     doReturn(settingAttribute).when(wingsPersistence).get(SettingAttribute.class, uuid);
     doReturn(settingAttribute).when(spyQuery).get();
-
-    SettingAttribute aSettingAttributeWithDummyKey = aSettingAttribute()
-                                                         .withAppId("APP_ID")
-                                                         .withAccountId("ACCOUNT_ID")
-                                                         .withName("MY_CLOUD_PROVIDER")
-                                                         .withCategory(Category.CLOUD_PROVIDER)
-                                                         .withValue(AwsConfig.builder()
-                                                                        .accountId("accountId")
-                                                                        .accessKey("accessKey")
-                                                                        .secretKey(ENCRYPTED_FIELD_MASK)
-                                                                        .build())
-                                                         .build();
 
     settingsService.update(settingAttribute, false);
   }

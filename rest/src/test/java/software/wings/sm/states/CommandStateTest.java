@@ -29,7 +29,6 @@ import static software.wings.beans.ServiceTemplate.Builder.aServiceTemplate;
 import static software.wings.beans.SettingAttribute.Builder.aSettingAttribute;
 import static software.wings.beans.StringValue.Builder.aStringValue;
 import static software.wings.beans.artifact.Artifact.Builder.anArtifact;
-import static software.wings.beans.artifact.JenkinsArtifactStream.Builder.aJenkinsArtifactStream;
 import static software.wings.beans.command.Command.Builder.aCommand;
 import static software.wings.beans.command.CommandExecutionContext.Builder.aCommandExecutionContext;
 import static software.wings.beans.command.CommandExecutionResult.Builder.aCommandExecutionResult;
@@ -74,6 +73,7 @@ import software.wings.beans.ServiceTemplate;
 import software.wings.beans.SettingAttribute;
 import software.wings.beans.TaskType;
 import software.wings.beans.artifact.Artifact;
+import software.wings.beans.artifact.JenkinsArtifactStream;
 import software.wings.beans.command.AbstractCommandUnit;
 import software.wings.beans.command.Command;
 import software.wings.beans.command.ScpCommandUnit;
@@ -240,7 +240,7 @@ public class CommandStateTest extends WingsBaseTest {
     when(hostService.getHostByEnv(APP_ID, ENV_ID, HOST_ID)).thenReturn(HOST);
     commandState.setExecutorService(executorService);
     when(artifactStreamService.get(APP_ID, ARTIFACT_STREAM_ID))
-        .thenReturn(aJenkinsArtifactStream().withUuid(ARTIFACT_STREAM_ID).withAppId(APP_ID).build());
+        .thenReturn(JenkinsArtifactStream.builder().uuid(ARTIFACT_STREAM_ID).appId(APP_ID).build());
     when(secretManager.getEncryptionDetails(anyObject(), anyString(), anyString())).thenReturn(Collections.emptyList());
     setInternalState(commandState, "secretManager", secretManager);
   }

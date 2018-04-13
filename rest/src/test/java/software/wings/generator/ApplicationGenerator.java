@@ -41,8 +41,7 @@ public class ApplicationGenerator {
   }
 
   public Application ensureRandom(long seed) {
-    EnhancedRandom random =
-        EnhancedRandomBuilder.aNewEnhancedRandomBuilder().seed(seed).scanClasspathForConcreteTypes(true).build();
+    EnhancedRandom random = EnhancedRandomBuilder.aNewEnhancedRandomBuilder().seed(seed).build();
 
     Applications predefined = random.nextObject(Applications.class);
 
@@ -57,15 +56,14 @@ public class ApplicationGenerator {
   }
 
   public Application ensureApplication(long seed, Application application) {
-    EnhancedRandom random =
-        EnhancedRandomBuilder.aNewEnhancedRandomBuilder().seed(seed).scanClasspathForConcreteTypes(true).build();
+    EnhancedRandom random = EnhancedRandomBuilder.aNewEnhancedRandomBuilder().seed(seed).build();
 
     final Builder builder = anApplication();
 
     if (application != null && application.getAccountId() != null) {
       builder.withAccountId(application.getAccountId());
     } else {
-      Account account = accountGenerator.randomAccount();
+      Account account = accountGenerator.ensurePredefined(seed, AccountGenerator.Accounts.GENERIC_TEST);
       builder.withAccountId(account.getUuid());
     }
 

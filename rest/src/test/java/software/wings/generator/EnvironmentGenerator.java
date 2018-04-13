@@ -49,8 +49,7 @@ public class EnvironmentGenerator {
   }
 
   public Environment ensureRandom(long seed) {
-    EnhancedRandom random =
-        EnhancedRandomBuilder.aNewEnhancedRandomBuilder().seed(seed).scanClasspathForConcreteTypes(true).build();
+    EnhancedRandom random = EnhancedRandomBuilder.aNewEnhancedRandomBuilder().seed(seed).build();
 
     Environments predefined = random.nextObject(Environments.class);
 
@@ -65,8 +64,7 @@ public class EnvironmentGenerator {
   }
 
   public Environment ensureEnvironment(long seed, Environment environment) {
-    EnhancedRandom random =
-        EnhancedRandomBuilder.aNewEnhancedRandomBuilder().seed(seed).scanClasspathForConcreteTypes(true).build();
+    EnhancedRandom random = EnhancedRandomBuilder.aNewEnhancedRandomBuilder().seed(seed).build();
 
     Environment.Builder builder = anEnvironment();
 

@@ -40,14 +40,12 @@ public class DockerBuildServiceImplTest extends WingsBaseTest {
   @Test
   @Ignore
   public void shouldGetBuilds() {
-    DockerArtifactStream dockerArtifactStream = DockerArtifactStream.Builder.aDockerArtifactStream()
-                                                    .withAppId("UXGI1f4vQa6nt5eXBcnv7A")
-                                                    .withImageName("library/mysql")
-                                                    .withAutoDownload(true)
-                                                    .withAutoApproveForProduction(true)
-                                                    .withSettingId("knCLyrVjRjyUYM15RcjUQQ")
-                                                    .withSourceName(ArtifactType.DOCKER.name())
-                                                    .withServiceId("Yn57GaqwR9ioXq8YZ4V87Q")
+    DockerArtifactStream dockerArtifactStream = DockerArtifactStream.builder()
+                                                    .appId("UXGI1f4vQa6nt5eXBcnv7A")
+                                                    .imageName("library/mysql")
+                                                    .settingId("knCLyrVjRjyUYM15RcjUQQ")
+                                                    .sourceName(ArtifactType.DOCKER.name())
+                                                    .serviceId("Yn57GaqwR9ioXq8YZ4V87Q")
                                                     .build();
     ArtifactStream artifactStream = artifactStreamService.create(dockerArtifactStream);
     logger.info(artifactStream.toString());

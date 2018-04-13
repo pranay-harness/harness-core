@@ -16,8 +16,7 @@ import software.wings.sm.StateType;
 @Singleton
 public class OrchestrationWorkflowGenerator {
   public OrchestrationWorkflow createOrchestrationWorkflow(long seed) {
-    EnhancedRandom random =
-        EnhancedRandomBuilder.aNewEnhancedRandomBuilder().seed(seed).scanClasspathForConcreteTypes(true).build();
+    EnhancedRandom random = EnhancedRandomBuilder.aNewEnhancedRandomBuilder().seed(seed).build();
     Graph graph = aGraph()
                       .addNodes(aGraphNode()
                                     .withId("n1")

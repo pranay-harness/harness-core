@@ -5,6 +5,9 @@ import static io.harness.data.structure.EmptyPredicate.isNotEmpty;
 import static software.wings.beans.ErrorCode.INVALID_REQUEST;
 import static software.wings.beans.FeatureName.AZURE_SUPPORT;
 import static software.wings.beans.SearchFilter.Operator.EQ;
+import static software.wings.beans.SearchFilter.Operator.STARTS_WITH;
+import static software.wings.beans.SortOrder.OrderType.ASC;
+import static software.wings.beans.SortOrder.OrderType.DESC;
 import static software.wings.beans.artifact.ArtifactStreamType.ACR;
 import static software.wings.beans.artifact.ArtifactStreamType.AMAZON_S3;
 import static software.wings.beans.artifact.ArtifactStreamType.AMI;
@@ -25,9 +28,7 @@ import com.google.inject.name.Named;
 import org.hibernate.validator.constraints.NotEmpty;
 import org.mongodb.morphia.annotations.Transient;
 import ru.vyarus.guice.validator.group.annotation.ValidationGroups;
-import software.wings.beans.SearchFilter.Operator;
 import software.wings.beans.Service;
-import software.wings.beans.SortOrder.OrderType;
 import software.wings.beans.artifact.ArtifactStream;
 import software.wings.beans.artifact.ArtifactStreamType;
 import software.wings.beans.yaml.Change.ChangeType;
@@ -148,10 +149,10 @@ public class ArtifactStreamServiceImpl implements ArtifactStreamService, DataPro
       // We need to check if the name exists in case of auto generate, if it exists, we need to add a suffix to the
       // name.
       PageRequest<ArtifactStream> pageRequest = aPageRequest()
-                                                    .addFilter("appId", Operator.EQ, artifactStream.getAppId())
-                                                    .addFilter("serviceId", Operator.EQ, artifactStream.getServiceId())
-                                                    .addFilter("name", Operator.STARTS_WITH, escapedString)
-                                                    .addOrder("name", OrderType.DESC)
+                                                    .addFilter("appId", EQ, artifactStream.getAppId())
+                                                    .addFilter("serviceId", EQ, artifactStream.getServiceId())
+                                                    .addFilter("name", STARTS_WITH, escapedString)
+                                                    .addOrder("name", DESC)
                                                     .build();
       PageResponse<ArtifactStream> response = wingsPersistence.query(ArtifactStream.class, pageRequest);
 
@@ -176,7 +177,7 @@ public class ArtifactStreamServiceImpl implements ArtifactStreamService, DataPro
     artifactStream.setSourceName(artifactStream.generateSourceName());
     artifactStream = wingsPersistence.saveAndGet(ArtifactStream.class, artifactStream);
 
-    if (savedArtifactStream.getSourceName().equals(artifactStream.getSourceName())) {
+    if (!savedArtifactStream.getSourceName().equals(artifactStream.getSourceName())) {
       executorService.submit(() -> triggerService.updateByApp(savedArtifactStream.getAppId()));
     }
 
@@ -254,9 +255,9 @@ public class ArtifactStreamServiceImpl implements ArtifactStreamService, DataPro
   @Override
   public List<ArtifactStream> getArtifactStreamsForService(String appId, String serviceId) {
     PageRequest pageRequest = aPageRequest()
-                                  .addFilter("appId", Operator.EQ, appId)
-                                  .addFilter("serviceId", Operator.EQ, serviceId)
-                                  .addOrder("createdAt", OrderType.ASC)
+                                  .addFilter("appId", EQ, appId)
+                                  .addFilter("serviceId", EQ, serviceId)
+                                  .addOrder("createdAt", ASC)
                                   .build();
     PageResponse pageResponse = wingsPersistence.query(ArtifactStream.class, pageRequest);
     return pageResponse.getResponse();

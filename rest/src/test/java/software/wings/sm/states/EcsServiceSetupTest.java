@@ -25,7 +25,6 @@ import static software.wings.beans.ServiceTemplate.Builder.aServiceTemplate;
 import static software.wings.beans.SettingAttribute.Builder.aSettingAttribute;
 import static software.wings.beans.WorkflowExecution.WorkflowExecutionBuilder.aWorkflowExecution;
 import static software.wings.beans.artifact.Artifact.Builder.anArtifact;
-import static software.wings.beans.artifact.DockerArtifactStream.Builder.aDockerArtifactStream;
 import static software.wings.beans.command.Command.Builder.aCommand;
 import static software.wings.beans.command.CommandExecutionResult.Builder.aCommandExecutionResult;
 import static software.wings.beans.command.ServiceCommand.Builder.aServiceCommand;
@@ -79,6 +78,7 @@ import software.wings.beans.ServiceVariable.Type;
 import software.wings.beans.SettingAttribute;
 import software.wings.beans.artifact.Artifact;
 import software.wings.beans.artifact.ArtifactStream;
+import software.wings.beans.artifact.DockerArtifactStream;
 import software.wings.beans.command.CommandExecutionContext;
 import software.wings.beans.command.CommandExecutionResult;
 import software.wings.beans.command.CommandType;
@@ -185,7 +185,7 @@ public class EcsServiceSetupTest extends WingsBaseTest {
                                   .withMetadata(ImmutableMap.of(BUILD_NO, "bn"))
                                   .withServiceIds(singletonList(SERVICE_ID))
                                   .build();
-  private ArtifactStream artifactStream = aDockerArtifactStream().withAppId(APP_ID).withImageName("imageName").build();
+  private ArtifactStream artifactStream = DockerArtifactStream.builder().appId(APP_ID).imageName("imageName").build();
 
   private SettingAttribute dockerConfig = aSettingAttribute()
                                               .withValue(DockerConfig.builder()

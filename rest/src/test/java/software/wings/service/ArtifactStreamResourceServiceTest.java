@@ -4,7 +4,6 @@ import static java.util.Arrays.asList;
 import static org.assertj.core.api.Assertions.assertThat;
 import static software.wings.beans.Application.Builder.anApplication;
 import static software.wings.beans.Service.Builder.aService;
-import static software.wings.beans.artifact.JenkinsArtifactStream.Builder.aJenkinsArtifactStream;
 import static software.wings.utils.WingsTestConstants.APP_ID;
 import static software.wings.utils.WingsTestConstants.SERVICE_ID;
 
@@ -29,13 +28,13 @@ import java.util.List;
  * Created by peeyushaggarwal on 5/4/16.
  */
 public class ArtifactStreamResourceServiceTest extends WingsBaseTest {
-  private static final JenkinsArtifactStream artifactStream = aJenkinsArtifactStream()
-                                                                  .withAppId(APP_ID)
-                                                                  .withSourceName("job1")
-                                                                  .withJobname("job1")
-                                                                  .withSettingId("JENKINS_SETTING_ID")
-                                                                  .withServiceId(SERVICE_ID)
-                                                                  .withArtifactPaths(asList("dist/svr-*.war"))
+  private static final JenkinsArtifactStream artifactStream = JenkinsArtifactStream.builder()
+                                                                  .appId(APP_ID)
+                                                                  .sourceName("job1")
+                                                                  .jobname("job1")
+                                                                  .settingId("JENKINS_SETTING_ID")
+                                                                  .serviceId(SERVICE_ID)
+                                                                  .artifactPaths(asList("dist/svr-*.war"))
                                                                   .build();
 
   @Mock private JobScheduler jobScheduler;

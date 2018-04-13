@@ -15,8 +15,7 @@ public class ServiceTemplateGenerator {
   @Inject ServiceTemplateService serviceTemplateService;
 
   public ServiceTemplate createServiceTemplate(long seed, ServiceTemplate serviceTemplate) {
-    EnhancedRandom random =
-        EnhancedRandomBuilder.aNewEnhancedRandomBuilder().seed(seed).scanClasspathForConcreteTypes(true).build();
+    EnhancedRandom random = EnhancedRandomBuilder.aNewEnhancedRandomBuilder().seed(seed).build();
 
     ServiceTemplate.Builder builder = aServiceTemplate();
 

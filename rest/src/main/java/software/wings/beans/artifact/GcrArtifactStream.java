@@ -2,22 +2,23 @@ package software.wings.beans.artifact;
 
 import static software.wings.beans.artifact.ArtifactStreamAttributes.Builder.anArtifactStreamAttributes;
 import static software.wings.beans.artifact.ArtifactStreamType.GCR;
-import static software.wings.beans.artifact.GcrArtifactStream.Builder.aGcrArtifactStream;
 
 import com.fasterxml.jackson.annotation.JsonTypeName;
+import lombok.Builder;
 import lombok.Data;
 import lombok.EqualsAndHashCode;
 import lombok.NoArgsConstructor;
 import org.hibernate.validator.constraints.NotEmpty;
 import software.wings.beans.EmbeddedUser;
-import software.wings.utils.Util;
 
 import java.util.Date;
+import java.util.List;
 
 /**
  * @author rktummala on 8/4/17.
  */
 @JsonTypeName("GCR")
+@Data
 public class GcrArtifactStream extends ArtifactStream {
   @NotEmpty private String registryHostName;
   @NotEmpty private String dockerImageName;
@@ -27,31 +28,23 @@ public class GcrArtifactStream extends ArtifactStream {
    */
   public GcrArtifactStream() {
     super(GCR.name());
-    super.setAutoApproveForProduction(true);
-    super.setAutoDownload(true);
+    super.setMetadataOnly(true);
+  }
+
+  @Builder
+  public GcrArtifactStream(String uuid, String appId, EmbeddedUser createdBy, long createdAt,
+      EmbeddedUser lastUpdatedBy, long lastUpdatedAt, List<String> keywords, String entityYamlPath, String sourceName,
+      String settingId, String name, boolean autoPopulate, String serviceId, String registryHostName,
+      String dockerImageName) {
+    super(uuid, appId, createdBy, createdAt, lastUpdatedBy, lastUpdatedAt, keywords, entityYamlPath, GCR.name(),
+        sourceName, settingId, name, autoPopulate, serviceId, true);
+    this.registryHostName = registryHostName;
+    this.dockerImageName = dockerImageName;
   }
 
   @Override
   public String getArtifactDisplayName(String buildNo) {
-    return String.format("%s_%s_%s", getDockerImageName(), buildNo, getDateFormat().format(new Date()));
-  }
-
-  /**
-   * Gets image name.
-   *
-   * @return the image name
-   */
-  public String getDockerImageName() {
-    return dockerImageName;
-  }
-
-  /**
-   * Sets image name.
-   *
-   * @param dockerImageName the image name
-   */
-  public void setDockerImageName(String dockerImageName) {
-    this.dockerImageName = dockerImageName;
+    return String.format("%s_%s_%s", getDockerImageName(), buildNo, dateFormat.format(new Date()));
   }
 
   @Override
@@ -63,189 +56,9 @@ public class GcrArtifactStream extends ArtifactStream {
         .build();
   }
 
-  public String getRegistryHostName() {
-    return registryHostName;
-  }
-
-  public void setRegistryHostName(String registryHostName) {
-    this.registryHostName = registryHostName;
-  }
-
-  @Override
-  public String generateName() {
-    return Util.normalize(generateSourceName());
-  }
-
   @Override
   public String generateSourceName() {
     return new StringBuilder(getRegistryHostName()).append('/').append(getDockerImageName()).toString();
-  }
-
-  @Override
-  public ArtifactStream clone() {
-    return aGcrArtifactStream()
-        .withAppId(getAppId())
-        .withSourceName(getSourceName())
-        .withSettingId(getSettingId())
-        .withAutoApproveForProduction(isAutoApproveForProduction())
-        .withDockerImageName(getDockerImageName())
-        .withRegistryHostName(getRegistryHostName())
-        .build();
-  }
-
-  /**
-   * clone and return builder
-   * @return
-   */
-  public Builder deepClone() {
-    return aGcrArtifactStream()
-        .withDockerImageName(getDockerImageName())
-        .withRegistryHostName(getRegistryHostName())
-        .withSourceName(getSourceName())
-        .withSettingId(getSettingId())
-        .withServiceId(getServiceId())
-        .withUuid(getUuid())
-        .withAppId(getAppId())
-        .withCreatedBy(getCreatedBy())
-        .withCreatedAt(getCreatedAt())
-        .withLastUpdatedBy(getLastUpdatedBy())
-        .withLastUpdatedAt(getLastUpdatedAt())
-        .withAutoDownload(isAutoDownload())
-        .withAutoApproveForProduction(isAutoApproveForProduction());
-  }
-
-  public static final class Builder {
-    public transient String entityYamlPath; // TODO:: remove it with changeSet batching
-    protected String appId;
-    private String registryHostName;
-    private String dockerImageName;
-    private String uuid;
-    private String sourceName;
-    private EmbeddedUser createdBy;
-    private String settingId;
-    private long createdAt;
-    private EmbeddedUser lastUpdatedBy;
-    private String name;
-    private long lastUpdatedAt;
-    // auto populate name
-    private boolean autoPopulate = true;
-    private String serviceId;
-    private boolean autoDownload = true;
-    private boolean autoApproveForProduction;
-    private boolean metadataOnly;
-
-    private Builder() {}
-
-    public static Builder aGcrArtifactStream() {
-      return new Builder();
-    }
-
-    public Builder withRegistryHostName(String registryHostName) {
-      this.registryHostName = registryHostName;
-      return this;
-    }
-
-    public Builder withDockerImageName(String dockerImageName) {
-      this.dockerImageName = dockerImageName;
-      return this;
-    }
-
-    public Builder withUuid(String uuid) {
-      this.uuid = uuid;
-      return this;
-    }
-
-    public Builder withAppId(String appId) {
-      this.appId = appId;
-      return this;
-    }
-
-    public Builder withSourceName(String sourceName) {
-      this.sourceName = sourceName;
-      return this;
-    }
-
-    public Builder withCreatedBy(EmbeddedUser createdBy) {
-      this.createdBy = createdBy;
-      return this;
-    }
-
-    public Builder withSettingId(String settingId) {
-      this.settingId = settingId;
-      return this;
-    }
-
-    public Builder withCreatedAt(long createdAt) {
-      this.createdAt = createdAt;
-      return this;
-    }
-
-    public Builder withLastUpdatedBy(EmbeddedUser lastUpdatedBy) {
-      this.lastUpdatedBy = lastUpdatedBy;
-      return this;
-    }
-
-    public Builder withName(String name) {
-      this.name = name;
-      return this;
-    }
-
-    public Builder withLastUpdatedAt(long lastUpdatedAt) {
-      this.lastUpdatedAt = lastUpdatedAt;
-      return this;
-    }
-
-    public Builder withAutoPopulate(boolean autoPopulate) {
-      this.autoPopulate = autoPopulate;
-      return this;
-    }
-
-    public Builder withServiceId(String serviceId) {
-      this.serviceId = serviceId;
-      return this;
-    }
-
-    public Builder withEntityYamlPath(String entityYamlPath) {
-      this.entityYamlPath = entityYamlPath;
-      return this;
-    }
-
-    public Builder withAutoDownload(boolean autoDownload) {
-      this.autoDownload = autoDownload;
-      return this;
-    }
-
-    public Builder withAutoApproveForProduction(boolean autoApproveForProduction) {
-      this.autoApproveForProduction = autoApproveForProduction;
-      return this;
-    }
-
-    public Builder withMetadataOnly(boolean metadataOnly) {
-      this.metadataOnly = metadataOnly;
-      return this;
-    }
-
-    public GcrArtifactStream build() {
-      GcrArtifactStream gcrArtifactStream = new GcrArtifactStream();
-      gcrArtifactStream.setRegistryHostName(registryHostName);
-      gcrArtifactStream.setDockerImageName(dockerImageName);
-      gcrArtifactStream.setUuid(uuid);
-      gcrArtifactStream.setAppId(appId);
-      gcrArtifactStream.setSourceName(sourceName);
-      gcrArtifactStream.setCreatedBy(createdBy);
-      gcrArtifactStream.setSettingId(settingId);
-      gcrArtifactStream.setCreatedAt(createdAt);
-      gcrArtifactStream.setLastUpdatedBy(lastUpdatedBy);
-      gcrArtifactStream.setName(name);
-      gcrArtifactStream.setLastUpdatedAt(lastUpdatedAt);
-      gcrArtifactStream.setAutoPopulate(autoPopulate);
-      gcrArtifactStream.setServiceId(serviceId);
-      gcrArtifactStream.setEntityYamlPath(entityYamlPath);
-      gcrArtifactStream.setAutoDownload(autoDownload);
-      gcrArtifactStream.setAutoApproveForProduction(autoApproveForProduction);
-      gcrArtifactStream.setMetadataOnly(metadataOnly);
-      return gcrArtifactStream;
-    }
   }
 
   @Data
@@ -255,7 +68,7 @@ public class GcrArtifactStream extends ArtifactStream {
     private String registryHostName;
     private String dockerImageName;
 
-    @lombok.Builder
+    @Builder
     public Yaml(String harnessApiVersion, String serverName, boolean metadataOnly, String registryHostName,
         String dockerImageName) {
       super(GCR.name(), harnessApiVersion, serverName, metadataOnly);

@@ -6,7 +6,6 @@ import static org.mockito.Mockito.when;
 import static software.wings.beans.artifact.Artifact.Builder.anArtifact;
 import static software.wings.beans.artifact.Artifact.ContentStatus.DOWNLOADED;
 import static software.wings.beans.artifact.ArtifactFile.Builder.anArtifactFile;
-import static software.wings.beans.artifact.JenkinsArtifactStream.Builder.aJenkinsArtifactStream;
 import static software.wings.utils.WingsTestConstants.APP_ID;
 import static software.wings.utils.WingsTestConstants.ARTIFACT_ID;
 import static software.wings.utils.WingsTestConstants.ARTIFACT_PATH;
@@ -30,6 +29,7 @@ import software.wings.beans.artifact.Artifact;
 import software.wings.beans.artifact.Artifact.Status;
 import software.wings.beans.artifact.ArtifactFile;
 import software.wings.beans.artifact.ArtifactStream;
+import software.wings.beans.artifact.JenkinsArtifactStream;
 import software.wings.service.impl.EventEmitter;
 import software.wings.service.intfc.ArtifactService;
 import software.wings.service.intfc.ArtifactStreamService;
@@ -49,28 +49,18 @@ public class ArtifactCollectionCallbackTest extends WingsBaseTest {
   private final Artifact ARTIFACT =
       anArtifact().withUuid(ARTIFACT_ID).withAppId(APP_ID).withArtifactStreamId(ARTIFACT_STREAM_ID).build();
 
-  /**
-   * The constant ARTIFACT_STREAM_NAME.
-   */
-  private final ArtifactStream ARTIFACT_SOURCE = aJenkinsArtifactStream()
-                                                     .withSourceName(ARTIFACT_STREAM_NAME)
-                                                     .withAppId(APP_ID)
-                                                     .withSettingId(SETTING_ID)
-                                                     .withJobname(JOB_NAME)
-                                                     .withServiceId(SERVICE_ID)
-                                                     .withArtifactPaths(asList(ARTIFACT_PATH))
-                                                     .withAutoApproveForProduction(false)
+  private final ArtifactStream ARTIFACT_SOURCE = JenkinsArtifactStream.builder()
+                                                     .sourceName(ARTIFACT_STREAM_NAME)
+                                                     .appId(APP_ID)
+                                                     .settingId(SETTING_ID)
+                                                     .jobname(JOB_NAME)
+                                                     .serviceId(SERVICE_ID)
+                                                     .artifactPaths(asList(ARTIFACT_PATH))
                                                      .build();
 
-  /**
-   * The constant ARTIFACT_FILE.
-   */
   public static final ArtifactFile ARTIFACT_FILE =
       anArtifactFile().withAppId(APP_ID).withUuid("ARTIFACT_FILE_ID").build();
 
-  /**
-   * Setup mocks.
-   */
   @Before
   public void setupMocks() {
     when(artifactService.get(APP_ID, ARTIFACT_ID)).thenReturn(ARTIFACT);
@@ -79,11 +69,6 @@ public class ArtifactCollectionCallbackTest extends WingsBaseTest {
     artifactCollectionCallback.setArtifactId(ARTIFACT_ID);
   }
 
-  /**
-   * Should shouldSendTask
-   *
-   * @throws Exception the exception
-   */
   @Test
   public void shouldNotify() {
     artifactCollectionCallback.notify(Maps.newHashMap("", aListNotifyResponseData().addData(ARTIFACT_FILE).build()));

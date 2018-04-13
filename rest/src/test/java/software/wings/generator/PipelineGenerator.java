@@ -16,8 +16,7 @@ public class PipelineGenerator {
   @Inject PipelineService pipelineService;
 
   public Pipeline createPipeline(long seed, Pipeline pipeline) {
-    EnhancedRandom random =
-        EnhancedRandomBuilder.aNewEnhancedRandomBuilder().seed(seed).scanClasspathForConcreteTypes(true).build();
+    EnhancedRandom random = EnhancedRandomBuilder.aNewEnhancedRandomBuilder().seed(seed).build();
 
     final Builder builder = aPipeline();
 
