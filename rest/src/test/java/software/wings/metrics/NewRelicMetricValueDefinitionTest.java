@@ -394,7 +394,7 @@ public class NewRelicMetricValueDefinitionTest {
     }
 
     // test for medium
-    testRecord.setError(130);
+    testRecord.setError(106);
     controlRecord.setError(100);
     for (Entry<String, List<Threshold>> valuesToAnalyze :
         getThresholdsMap(NewRelicMetricValueDefinition.NEW_RELIC_VALUES_TO_ANALYZE).entrySet()) {
@@ -419,8 +419,8 @@ public class NewRelicMetricValueDefinitionTest {
     }
 
     // test for medium
-    testRecord.setError(16);
-    controlRecord.setError(10);
+    testRecord.setError(2);
+    controlRecord.setError(0.5);
     for (Entry<String, List<Threshold>> valuesToAnalyze :
         getThresholdsMap(NewRelicMetricValueDefinition.NEW_RELIC_VALUES_TO_ANALYZE).entrySet()) {
       NewRelicMetricValueDefinition metricValueDefinition = NewRelicMetricValueDefinition.builder()
