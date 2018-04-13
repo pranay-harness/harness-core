@@ -749,6 +749,98 @@ public enum ArtifactType {
     }
   },
 
+  IIS {
+    private static final long serialVersionUID = 2932493038229748527L;
+
+    @Override
+    public boolean isInternal() {
+      return false;
+    }
+
+    @Override
+    public List<Command> getDefaultCommands() {
+      return asList(getStopCommand(), getInstallCommand(), getStartCommand());
+    }
+
+    /**
+     * Gets start command graph.
+     *
+     * @return the start command graph
+     */
+    private Command getStartCommand() {
+      return aCommand()
+          .withCommandType(CommandType.START)
+          .withGraph(aGraph()
+                         .withGraphName("Start")
+                         .addNodes(aGraphNode()
+                                       .withOrigin(true)
+                                       .withId(UUIDGenerator.graphIdGenerator("node"))
+                                       .withType(EXEC.name())
+                                       .withName("Start Service")
+                                       .addProperty("commandPath", "$WINGS_RUNTIME_PATH")
+                                       .addProperty("scriptType", "POWERSHELL")
+                                       .addProperty("commandString", "Write-Host \"Starting Service\"")
+                                       .build(),
+                             aGraphNode()
+                                 .withId(UUIDGenerator.graphIdGenerator("node"))
+                                 .withType(PROCESS_CHECK_RUNNING.name())
+                                 .withName("Service Running")
+                                 .addProperty("scriptType", "POWERSHELL")
+                                 .addProperty("commandString", "Write-Host \"All Running\"")
+                                 .build())
+                         .buildPipeline())
+          .build();
+    }
+
+    private Command getInstallCommand() {
+      return aCommand()
+          .withCommandType(CommandType.INSTALL)
+          .withGraph(aGraph()
+                         .withGraphName("Install")
+                         .addNodes(aGraphNode()
+                                       .withOrigin(true)
+                                       .withId(UUIDGenerator.graphIdGenerator("node"))
+                                       .withType(EXEC.name())
+                                       .withName("Install Service")
+                                       .addProperty("commandPath", "$WINGS_RUNTIME_PATH")
+                                       .addProperty("scriptType", "POWERSHELL")
+                                       .addProperty("commandString", "Write-Host \"Installing Service\"")
+                                       .build())
+                         .buildPipeline())
+          .build();
+    }
+
+    /**
+     * Gets stop command graph.
+     *
+     * @return the stop command graph
+     */
+    private Command getStopCommand() {
+      return aCommand()
+          .withCommandType(CommandType.STOP)
+          .withGraph(aGraph()
+                         .withGraphName("Stop")
+                         .addNodes(aGraphNode()
+                                       .withOrigin(true)
+                                       .withId(UUIDGenerator.graphIdGenerator("node"))
+                                       .withType(EXEC.name())
+                                       .withName("Stop Service")
+                                       .addProperty("commandPath", "$WINGS_RUNTIME_PATH")
+                                       .addProperty("scriptType", "POWERSHELL")
+                                       .addProperty("commandString", "Write-Host \"Stopping Service\"")
+                                       .build(),
+                             aGraphNode()
+                                 .withId(UUIDGenerator.graphIdGenerator("node"))
+                                 .withName("Service Stopped")
+                                 .withType(PROCESS_CHECK_STOPPED.name())
+                                 .addProperty("scriptType", "POWERSHELL")
+                                 .addProperty("commandString", "Write-Host \"All Stopped\"")
+                                 .build())
+                         .buildPipeline())
+          .build();
+    }
+  },
+
   /**
    * Other artifact type.
    */

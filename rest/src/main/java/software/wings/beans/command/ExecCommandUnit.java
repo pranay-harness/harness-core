@@ -10,9 +10,13 @@ import com.github.reinert.jjschema.Attributes;
 import com.github.reinert.jjschema.SchemaIgnore;
 import lombok.Data;
 import lombok.EqualsAndHashCode;
+import lombok.Getter;
+import lombok.Setter;
 import org.hibernate.validator.constraints.NotEmpty;
 import org.mongodb.morphia.annotations.Transient;
+import software.wings.api.ScriptType;
 import software.wings.beans.command.CommandExecutionResult.CommandExecutionStatus;
+import software.wings.stencils.DefaultValue;
 
 import java.util.List;
 import java.util.Objects;
@@ -23,6 +27,9 @@ import java.util.Objects;
 @JsonTypeName("EXEC")
 public class ExecCommandUnit extends SshCommandUnit {
   @Attributes(title = "Working Directory") @NotEmpty private String commandPath;
+
+  @NotEmpty @Getter @Setter @DefaultValue("BASH") @Attributes(title = "Script Type") private ScriptType scriptType;
+
   @Attributes(title = "Command") @NotEmpty private String commandString;
 
   @Attributes(title = "Files and Patterns") private List<TailFilePatternEntry> tailPatterns;
@@ -34,6 +41,9 @@ public class ExecCommandUnit extends SshCommandUnit {
    */
   public ExecCommandUnit() {
     super(EXEC);
+    if (scriptType == null) {
+      scriptType = ScriptType.BASH;
+    }
   }
 
   @Override
@@ -48,7 +58,7 @@ public class ExecCommandUnit extends SshCommandUnit {
 
   @Override
   public int hashCode() {
-    return Objects.hash(commandPath, commandString, tailPatterns);
+    return Objects.hash(commandPath, scriptType, commandString, tailPatterns);
   }
 
   @Override
@@ -60,7 +70,7 @@ public class ExecCommandUnit extends SshCommandUnit {
       return false;
     }
     final ExecCommandUnit other = (ExecCommandUnit) obj;
-    return Objects.equals(this.commandPath, other.commandPath)
+    return Objects.equals(this.commandPath, other.commandPath) && Objects.equals(this.scriptType, other.scriptType)
         && Objects.equals(this.commandString, other.commandString)
         && Objects.equals(this.tailPatterns, other.tailPatterns);
   }
@@ -69,6 +79,7 @@ public class ExecCommandUnit extends SshCommandUnit {
   public String toString() {
     return MoreObjects.toStringHelper(this)
         .add("commandPath", commandPath)
+        .add("scriptType", scriptType)
         .add("commandString", commandString)
         .add("tailPatterns", tailPatterns)
         .add("preparedCommand", preparedCommand)
@@ -76,7 +87,7 @@ public class ExecCommandUnit extends SshCommandUnit {
   }
 
   @Override
-  protected CommandExecutionStatus executeInternal(SshCommandExecutionContext context) {
+  protected CommandExecutionStatus executeInternal(ShellCommandExecutionContext context) {
     return context.executeCommandString(preparedCommand);
   }
 
@@ -158,6 +169,7 @@ public class ExecCommandUnit extends SshCommandUnit {
   public static final class Builder {
     private String name;
     private String commandPath;
+    private ScriptType scriptType;
     private String commandString;
     private List<TailFilePatternEntry> tailPatterns;
 
@@ -197,6 +209,17 @@ public class ExecCommandUnit extends SshCommandUnit {
     /**
      * With command string builder.
      *
+     * @param scriptType the command string
+     * @return the builder
+     */
+    public Builder withScriptType(ScriptType scriptType) {
+      this.scriptType = scriptType;
+      return this;
+    }
+
+    /**
+     * With command string builder.
+     *
      * @param commandString the command string
      * @return the builder
      */
@@ -225,6 +248,7 @@ public class ExecCommandUnit extends SshCommandUnit {
       return anExecCommandUnit()
           .withName(name)
           .withCommandPath(commandPath)
+          .withScriptType(scriptType)
           .withCommandString(commandString)
           .withTailPatterns(tailPatterns);
     }
@@ -238,6 +262,7 @@ public class ExecCommandUnit extends SshCommandUnit {
       ExecCommandUnit execCommandUnit = new ExecCommandUnit();
       execCommandUnit.setName(name);
       execCommandUnit.setCommandPath(commandPath);
+      execCommandUnit.setScriptType(scriptType);
       execCommandUnit.setCommandString(commandString);
       execCommandUnit.setTailPatterns(tailPatterns);
       return execCommandUnit;
@@ -253,9 +278,10 @@ public class ExecCommandUnit extends SshCommandUnit {
     }
 
     @lombok.Builder
-    public Yaml(String name, String deploymentType, String workingDirectory, String command,
+    public Yaml(String name, String deploymentType, String workingDirectory, String scriptType, String command,
         List<TailFilePatternEntry.Yaml> filePatternEntryList) {
-      super(name, CommandUnitType.EXEC.name(), deploymentType, workingDirectory, command, filePatternEntryList);
+      super(name, CommandUnitType.EXEC.name(), deploymentType, workingDirectory, scriptType, command,
+          filePatternEntryList);
     }
   }
 
@@ -264,6 +290,7 @@ public class ExecCommandUnit extends SshCommandUnit {
   public static class AbstractYaml extends SshCommandUnit.Yaml {
     // maps to commandPath
     private String workingDirectory;
+    private String scriptType;
     // maps to commandString
     private String command;
     // maps to tailPatterns
@@ -274,9 +301,10 @@ public class ExecCommandUnit extends SshCommandUnit {
     }
 
     public AbstractYaml(String name, String commandUnitType, String deploymentType, String workingDirectory,
-        String command, List<TailFilePatternEntry.Yaml> filePatternEntryList) {
+        String scriptType, String command, List<TailFilePatternEntry.Yaml> filePatternEntryList) {
       super(name, commandUnitType, deploymentType);
       this.workingDirectory = workingDirectory;
+      this.scriptType = scriptType;
       this.command = command;
       this.filePatternEntryList = filePatternEntryList;
     }

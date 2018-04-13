@@ -30,6 +30,7 @@ import software.wings.api.CommandStateExecutionData;
 import software.wings.api.DeploymentType;
 import software.wings.api.InstanceElement;
 import software.wings.api.PhaseElement;
+import software.wings.api.ScriptType;
 import software.wings.api.SimpleWorkflowParam;
 import software.wings.beans.Activity;
 import software.wings.beans.Activity.ActivityBuilder;
@@ -47,9 +48,11 @@ import software.wings.beans.ServiceTemplate;
 import software.wings.beans.SettingAttribute;
 import software.wings.beans.StringValue;
 import software.wings.beans.TaskType;
+import software.wings.beans.WinRmConnectionAttributes;
 import software.wings.beans.artifact.Artifact;
 import software.wings.beans.artifact.ArtifactStream;
 import software.wings.beans.artifact.ArtifactStreamAttributes;
+import software.wings.beans.command.CleanupPowerShellCommandUnit;
 import software.wings.beans.command.CleanupSshCommandUnit;
 import software.wings.beans.command.Command;
 import software.wings.beans.command.CommandExecutionContext;
@@ -57,6 +60,7 @@ import software.wings.beans.command.CommandExecutionResult;
 import software.wings.beans.command.CommandUnit;
 import software.wings.beans.command.CommandUnitType;
 import software.wings.beans.command.ExecCommandUnit;
+import software.wings.beans.command.InitPowerShellCommandUnit;
 import software.wings.beans.command.InitSshCommandUnit;
 import software.wings.beans.command.ServiceCommand;
 import software.wings.beans.infrastructure.Host;
@@ -316,6 +320,13 @@ public class CommandState extends State {
         commandExecutionContextBuilder.withBastionConnectionCredentials(secretManager.getEncryptionDetails(
             (Encryptable) bastionConnectionAttribute.getValue(), context.getAppId(), context.getWorkflowExecutionId()));
       }
+      if (isNotEmpty(host.getWinrmConnAttr())) {
+        WinRmConnectionAttributes winrmConnectionAttribute =
+            (WinRmConnectionAttributes) settingsService.get(host.getWinrmConnAttr()).getValue();
+        commandExecutionContextBuilder.withWinRmConnectionAttributes(winrmConnectionAttribute);
+        commandExecutionContextBuilder.withWinrmConnectionEncryptedDataDetails(secretManager.getEncryptionDetails(
+            winrmConnectionAttribute, context.getAppId(), context.getWorkflowExecutionId()));
+      }
 
       if (artifact != null) {
         logger.info("Artifact being used: {} for stateExecutionInstanceId: {}", artifact.getUuid(),
@@ -419,9 +430,20 @@ public class CommandState extends State {
   private List<CommandUnit> getFlattenCommandUnits(String appId, String envId, Service service, String deploymentType) {
     List<CommandUnit> flattenCommandUnitList =
         serviceResourceService.getFlattenCommandUnitList(appId, service.getUuid(), envId, commandName);
+
     if (DeploymentType.SSH.name().equals(deploymentType)) {
-      flattenCommandUnitList.add(0, new InitSshCommandUnit());
-      flattenCommandUnitList.add(new CleanupSshCommandUnit());
+      if (getScriptType(flattenCommandUnitList) == ScriptType.POWERSHELL) {
+        flattenCommandUnitList.add(0, new InitPowerShellCommandUnit());
+        flattenCommandUnitList.add(new CleanupPowerShellCommandUnit());
+      } else {
+        flattenCommandUnitList.add(0, new InitSshCommandUnit());
+        flattenCommandUnitList.add(new CleanupSshCommandUnit());
+      }
+    } else if (DeploymentType.WINRM.name().equals(deploymentType)) {
+      if (getScriptType(flattenCommandUnitList) == ScriptType.POWERSHELL) {
+        flattenCommandUnitList.add(0, new InitPowerShellCommandUnit());
+        flattenCommandUnitList.add(new CleanupPowerShellCommandUnit());
+      }
     }
     return flattenCommandUnitList;
   }
@@ -434,6 +456,16 @@ public class CommandState extends State {
       }
     }
     return ((DeploymentExecutionContext) context).getArtifactForService(serviceId);
+  }
+
+  private ScriptType getScriptType(List<CommandUnit> commandUnits) {
+    if (commandUnits.stream().anyMatch(unit
+            -> unit.getCommandUnitType() == CommandUnitType.EXEC
+                && ((ExecCommandUnit) unit).getScriptType() == ScriptType.POWERSHELL)) {
+      return ScriptType.POWERSHELL;
+    } else {
+      return ScriptType.BASH;
+    }
   }
 
   private void handleCommandException(ExecutionContext context, String activityId, String appId) {

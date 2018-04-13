@@ -66,9 +66,10 @@ public class SetupEnvCommandUnit extends ExecCommandUnit {
     }
 
     @lombok.Builder
-    public Yaml(String name, String deploymentType, String workingDirectory, String command,
+    public Yaml(String name, String deploymentType, String workingDirectory, String scriptType, String command,
         List<TailFilePatternEntry.Yaml> filePatternEntryList) {
-      super(name, CommandUnitType.SETUP_ENV.name(), deploymentType, workingDirectory, command, filePatternEntryList);
+      super(name, CommandUnitType.SETUP_ENV.name(), deploymentType, workingDirectory, scriptType, command,
+          filePatternEntryList);
     }
   }
 }

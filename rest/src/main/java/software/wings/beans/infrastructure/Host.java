@@ -11,7 +11,6 @@ import software.wings.beans.Base;
 import software.wings.beans.EmbeddedUser;
 
 import java.util.Objects;
-import javax.validation.constraints.NotNull;
 
 /**
  * The Class Host.
@@ -27,8 +26,9 @@ public class Host extends Base {
   // In the case of EC2, publicDns could be either the public or private DNS name, depending on the setting in AWS_SSH
   // infrastructure mapping.
   @Indexed private String publicDns;
-  @NotNull private String hostConnAttr;
+  private String hostConnAttr;
   private String bastionConnAttr;
+  private String winrmConnAttr;
 
   private Instance ec2Instance;
 
@@ -161,6 +161,14 @@ public class Host extends Base {
     this.bastionConnAttr = bastionConnAttr;
   }
 
+  public String getWinrmConnAttr() {
+    return winrmConnAttr;
+  }
+
+  public void setWinrmConnAttr(String winrmConnAttr) {
+    this.winrmConnAttr = winrmConnAttr;
+  }
+
   /**
    * Gets service template id.
    *
@@ -190,8 +198,8 @@ public class Host extends Base {
   @Override
   public int hashCode() {
     return 31 * super.hashCode()
-        + Objects.hash(
-              envId, serviceTemplateId, infraMappingId, computeProviderId, hostName, hostConnAttr, bastionConnAttr);
+        + Objects.hash(envId, serviceTemplateId, infraMappingId, computeProviderId, hostName, hostConnAttr,
+              bastionConnAttr, winrmConnAttr);
   }
 
   @Override
@@ -210,7 +218,8 @@ public class Host extends Base {
         && Objects.equals(this.infraMappingId, other.infraMappingId)
         && Objects.equals(this.computeProviderId, other.computeProviderId)
         && Objects.equals(this.hostName, other.hostName) && Objects.equals(this.hostConnAttr, other.hostConnAttr)
-        && Objects.equals(this.bastionConnAttr, other.bastionConnAttr);
+        && Objects.equals(this.bastionConnAttr, other.bastionConnAttr)
+        && Objects.equals(this.winrmConnAttr, other.winrmConnAttr);
   }
 
   @Override
@@ -224,6 +233,7 @@ public class Host extends Base {
         .add("publicDns", publicDns)
         .add("hostConnAttr", hostConnAttr)
         .add("bastionConnAttr", bastionConnAttr)
+        .add("winrmConnAttr", winrmConnAttr)
         .toString();
   }
 
@@ -239,6 +249,7 @@ public class Host extends Base {
     private String publicDns;
     private String hostConnAttr;
     private String bastionConnAttr;
+    private String winrmConnAttr;
     private String uuid;
     private String appId;
     private EmbeddedUser createdBy;
@@ -347,6 +358,17 @@ public class Host extends Base {
     }
 
     /**
+     * With winrm conn attr builder.
+     *
+     * @param winrmConnAttr the winrm conn attr
+     * @return the builder
+     */
+    public Builder withWinrmConnAttr(String winrmConnAttr) {
+      this.winrmConnAttr = winrmConnAttr;
+      return this;
+    }
+
+    /**
      * With uuid builder.
      *
      * @param uuid the uuid
@@ -431,6 +453,7 @@ public class Host extends Base {
           .withHostName(hostName)
           .withHostConnAttr(hostConnAttr)
           .withBastionConnAttr(bastionConnAttr)
+          .withWinrmConnAttr(winrmConnAttr)
           .withUuid(uuid)
           .withAppId(appId)
           .withCreatedBy(createdBy)
@@ -456,6 +479,7 @@ public class Host extends Base {
       host.setPublicDns(publicDns);
       host.setHostConnAttr(hostConnAttr);
       host.setBastionConnAttr(bastionConnAttr);
+      host.setWinrmConnAttr(winrmConnAttr);
       host.setUuid(uuid);
       host.setAppId(appId);
       host.setCreatedBy(createdBy);

@@ -54,9 +54,9 @@ public class PortCheckListeningCommandUnit extends ExecCommandUnit {
     }
 
     @lombok.Builder
-    public Yaml(String name, String deploymentType, String workingDirectory, String command,
+    public Yaml(String name, String deploymentType, String workingDirectory, String scriptType, String command,
         List<TailFilePatternEntry.Yaml> filePatternEntryList) {
-      super(name, CommandUnitType.PORT_CHECK_LISTENING.name(), deploymentType, workingDirectory, command,
+      super(name, CommandUnitType.PORT_CHECK_LISTENING.name(), deploymentType, workingDirectory, scriptType, command,
           filePatternEntryList);
     }
   }

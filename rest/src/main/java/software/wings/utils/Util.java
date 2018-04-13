@@ -128,4 +128,13 @@ public class Util {
     }
     return ((ParameterizedType) superclassType).getActualTypeArguments();
   }
+
+  public static String escapifyString(String input) {
+    String str = input.replaceAll("`", "\\\\`").replaceAll("\"", "\\\\\"");
+
+    if (str.endsWith("\\")) {
+      str = str.substring(0, str.length() - 1) + "\\\\";
+    }
+    return str;
+  }
 }

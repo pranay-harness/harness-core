@@ -11,11 +11,16 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import software.wings.annotation.Encryptable;
 import software.wings.api.DeploymentType;
+import software.wings.api.ScriptType;
+import software.wings.beans.command.CleanupPowerShellCommandUnit;
 import software.wings.beans.command.CleanupSshCommandUnit;
 import software.wings.beans.command.Command;
 import software.wings.beans.command.CommandExecutionContext;
 import software.wings.beans.command.CommandExecutionResult.CommandExecutionStatus;
 import software.wings.beans.command.CommandUnit;
+import software.wings.beans.command.CommandUnitType;
+import software.wings.beans.command.ExecCommandUnit;
+import software.wings.beans.command.InitPowerShellCommandUnit;
 import software.wings.beans.command.InitSshCommandUnit;
 import software.wings.service.intfc.CommandUnitExecutorService;
 import software.wings.service.intfc.ServiceCommandExecutorService;
@@ -47,7 +52,7 @@ public class ServiceCommandExecutorServiceImpl implements ServiceCommandExecutor
         DeploymentType.AWS_CODEDEPLOY.name(), DeploymentType.ECS.name(), DeploymentType.KUBERNETES.name());
     decryptCredentials(context);
     if (!nonSshDeploymentType.contains(context.getDeploymentType())) {
-      return executeSshCommand(command, context);
+      return executeShellCommand(command, context, context.getDeploymentType());
     } else {
       return executeNonSshCommand(command, context, commandUnitExecutorServiceMap.get(context.getDeploymentType()));
     }
@@ -66,15 +71,25 @@ public class ServiceCommandExecutorServiceImpl implements ServiceCommandExecutor
     }
   }
 
-  private CommandExecutionStatus executeSshCommand(Command command, CommandExecutionContext context) {
-    CommandUnitExecutorService commandUnitExecutorService =
-        commandUnitExecutorServiceMap.get(DeploymentType.SSH.name());
+  private CommandExecutionStatus executeShellCommand(
+      Command command, CommandExecutionContext context, String deploymentType) {
+    CommandUnitExecutorService commandUnitExecutorService = commandUnitExecutorServiceMap.get(deploymentType);
+
+    ScriptType scriptType = getScriptType(command.getCommandUnits());
     try {
-      InitSshCommandUnit initCommandUnit = new InitSshCommandUnit();
-      initCommandUnit.setCommand(command);
-      command.getCommandUnits().add(0, initCommandUnit);
-      command.getCommandUnits().add(new CleanupSshCommandUnit());
-      CommandExecutionStatus commandExecutionStatus = executeSshCommand(commandUnitExecutorService, command, context);
+      if (scriptType == ScriptType.BASH) {
+        InitSshCommandUnit initCommandUnit = new InitSshCommandUnit();
+        initCommandUnit.setCommand(command);
+        command.getCommandUnits().add(0, initCommandUnit);
+        command.getCommandUnits().add(new CleanupSshCommandUnit());
+      } else if (scriptType == ScriptType.POWERSHELL) {
+        InitPowerShellCommandUnit initPowerShellCommandUnit = new InitPowerShellCommandUnit();
+        initPowerShellCommandUnit.setCommand(command);
+        command.getCommandUnits().add(0, initPowerShellCommandUnit);
+        command.getCommandUnits().add(new CleanupPowerShellCommandUnit());
+      }
+
+      CommandExecutionStatus commandExecutionStatus = executeShellCommand(commandUnitExecutorService, command, context);
       commandUnitExecutorService.cleanup(context.getActivityId(), context.getHost());
       return commandExecutionStatus;
     } catch (Exception ex) {
@@ -83,7 +98,17 @@ public class ServiceCommandExecutorServiceImpl implements ServiceCommandExecutor
     }
   }
 
-  private CommandExecutionStatus executeSshCommand(
+  private ScriptType getScriptType(List<CommandUnit> commandUnits) {
+    if (commandUnits.stream().anyMatch(unit
+            -> unit.getCommandUnitType() == CommandUnitType.EXEC
+                && ((ExecCommandUnit) unit).getScriptType() == ScriptType.POWERSHELL)) {
+      return ScriptType.POWERSHELL;
+    } else {
+      return ScriptType.BASH;
+    }
+  }
+
+  private CommandExecutionStatus executeShellCommand(
       CommandUnitExecutorService commandUnitExecutorService, Command command, CommandExecutionContext context) {
     List<CommandUnit> commandUnits = command.getCommandUnits();
 
@@ -91,7 +116,7 @@ public class ServiceCommandExecutorServiceImpl implements ServiceCommandExecutor
 
     for (CommandUnit commandUnit : commandUnits) {
       commandExecutionStatus = COMMAND.equals(commandUnit.getCommandUnitType())
-          ? executeSshCommand(commandUnitExecutorService, (Command) commandUnit, context)
+          ? executeShellCommand(commandUnitExecutorService, (Command) commandUnit, context)
           : commandUnitExecutorService.execute(context.getHost(), commandUnit, context);
       if (FAILURE == commandExecutionStatus) {
         break;
@@ -109,6 +134,10 @@ public class ServiceCommandExecutorServiceImpl implements ServiceCommandExecutor
     if (context.getBastionConnectionAttributes() != null) {
       encryptionService.decrypt(
           (Encryptable) context.getBastionConnectionAttributes().getValue(), context.getBastionConnectionCredentials());
+    }
+    if (context.getWinrmConnectionAttributes() != null) {
+      encryptionService.decrypt(
+          context.getWinrmConnectionAttributes(), context.getWinrmConnectionEncryptedDataDetails());
     }
     if (context.getCloudProviderSetting() != null) {
       encryptionService.decrypt(

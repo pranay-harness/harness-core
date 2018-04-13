@@ -2,6 +2,7 @@ package software.wings.utils;
 
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertNotNull;
+import static software.wings.utils.Util.escapifyString;
 
 import org.junit.Test;
 import software.wings.beans.NameValuePair;
@@ -21,5 +22,21 @@ public class UtilTest {
     Map map = Util.toProperties(nameValuePairList);
     assertNotNull(map);
     assertEquals(3, map.size());
+  }
+
+  @Test
+  public void testEscapifyString() {
+    assertEquals(escapifyString("ab\\"), "ab\\\\");
+    assertEquals(escapifyString("ab\\cd"), "ab\\cd");
+    assertEquals(escapifyString("a\"b"), "a\\\"b");
+    assertEquals(escapifyString("a'b"), "a'b");
+    assertEquals(escapifyString("a`b"), "a\\`b");
+    assertEquals(escapifyString("a(b"), "a(b");
+    assertEquals(escapifyString("a)b"), "a)b");
+    assertEquals(escapifyString("a|b"), "a|b");
+    assertEquals(escapifyString("a<b"), "a<b");
+    assertEquals(escapifyString("a>b"), "a>b");
+    assertEquals(escapifyString("a;b"), "a;b");
+    assertEquals(escapifyString("a b"), "a b");
   }
 }

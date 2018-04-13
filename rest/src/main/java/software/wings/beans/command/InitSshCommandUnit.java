@@ -5,8 +5,8 @@ import static freemarker.template.Configuration.VERSION_2_3_23;
 import static io.harness.data.structure.EmptyPredicate.isNotEmpty;
 import static java.util.stream.Collectors.toMap;
 import static org.apache.commons.lang3.StringUtils.isNotBlank;
+import static software.wings.utils.Util.escapifyString;
 
-import com.google.common.annotations.VisibleForTesting;
 import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.Lists;
 import com.google.common.collect.Maps;
@@ -107,7 +107,7 @@ public class InitSshCommandUnit extends SshCommandUnit {
   }
 
   @Override
-  protected CommandExecutionStatus executeInternal(SshCommandExecutionContext context) {
+  protected CommandExecutionStatus executeInternal(ShellCommandExecutionContext context) {
     activityId = context.getActivityId();
     executionStagingDir = "/tmp/" + activityId;
     preInitCommand = "mkdir -p " + executionStagingDir;
@@ -175,16 +175,6 @@ public class InitSshCommandUnit extends SshCommandUnit {
     }
     context.addEnvVariables(envVariables);
     return commandExecutionStatus;
-  }
-
-  @VisibleForTesting
-  static String escapifyString(String input) {
-    String str = input.replaceAll("`", "\\\\`").replaceAll("\"", "\\\\\"");
-
-    if (str.endsWith("\\")) {
-      str = str.substring(0, str.length() - 1) + "\\\\";
-    }
-    return str;
   }
 
   /**

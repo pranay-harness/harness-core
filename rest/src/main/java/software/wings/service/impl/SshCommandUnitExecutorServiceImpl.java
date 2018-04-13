@@ -22,7 +22,7 @@ import software.wings.beans.ResponseMessage;
 import software.wings.beans.command.CommandExecutionContext;
 import software.wings.beans.command.CommandExecutionResult.CommandExecutionStatus;
 import software.wings.beans.command.CommandUnit;
-import software.wings.beans.command.SshCommandExecutionContext;
+import software.wings.beans.command.ShellCommandExecutionContext;
 import software.wings.beans.infrastructure.Host;
 import software.wings.core.ssh.executors.AbstractSshExecutor;
 import software.wings.core.ssh.executors.SshExecutor;
@@ -87,15 +87,15 @@ public class SshCommandUnitExecutorServiceImpl implements CommandUnitExecutorSer
     SshExecutor executor = sshExecutorFactory.getExecutor(sshSessionConfig.getExecutorType()); // TODO: Reuse executor
     executor.init(sshSessionConfig);
 
-    SshCommandExecutionContext sshCommandExecutionContext = new SshCommandExecutionContext(context);
-    sshCommandExecutionContext.setSshExecutor(executor);
+    ShellCommandExecutionContext shellCommandExecutionContext = new ShellCommandExecutionContext(context);
+    shellCommandExecutionContext.setExecutor(executor);
 
     injector.injectMembers(commandUnit);
 
     try {
       long timeoutMs = context.getTimeout() == null ? TimeUnit.MINUTES.toMillis(10) : context.getTimeout().longValue();
       commandExecutionStatus = timeLimiter.callWithTimeout(
-          () -> commandUnit.execute(sshCommandExecutionContext), timeoutMs, TimeUnit.MILLISECONDS, true);
+          () -> commandUnit.execute(shellCommandExecutionContext), timeoutMs, TimeUnit.MILLISECONDS, true);
     } catch (InterruptedException | TimeoutException | UncheckedTimeoutException e) {
       logService.save(context.getAccountId(),
           aLog()

@@ -9,11 +9,14 @@ import lombok.Data;
 import software.wings.beans.AppContainer;
 import software.wings.beans.ExecutionCredential;
 import software.wings.beans.SettingAttribute;
+import software.wings.beans.WinRmConnectionAttributes;
 import software.wings.beans.artifact.ArtifactFile;
 import software.wings.beans.artifact.ArtifactStreamAttributes;
 import software.wings.beans.infrastructure.Host;
+import software.wings.core.winrm.executors.WinRmSessionConfig;
 import software.wings.security.encryption.EncryptedDataDetail;
 
+import java.util.Collections;
 import java.util.List;
 import java.util.Map;
 import java.util.Map.Entry;
@@ -44,6 +47,8 @@ public class CommandExecutionContext {
   private List<EncryptedDataDetail> hostConnectionCredentials;
   private SettingAttribute bastionConnectionAttributes;
   private List<EncryptedDataDetail> bastionConnectionCredentials;
+  private WinRmConnectionAttributes winrmConnectionAttributes;
+  private List<EncryptedDataDetail> winrmConnectionEncryptedDataDetails;
   private ArtifactStreamAttributes artifactStreamAttributes;
   private SettingAttribute cloudProviderSetting;
   private List<EncryptedDataDetail> cloudProviderCredentials;
@@ -82,6 +87,8 @@ public class CommandExecutionContext {
     this.hostConnectionCredentials = other.hostConnectionCredentials;
     this.bastionConnectionAttributes = other.bastionConnectionAttributes;
     this.bastionConnectionCredentials = other.bastionConnectionCredentials;
+    this.winrmConnectionAttributes = other.winrmConnectionAttributes;
+    this.winrmConnectionEncryptedDataDetails = other.winrmConnectionEncryptedDataDetails;
     this.artifactStreamAttributes = other.artifactStreamAttributes;
     this.cloudProviderSetting = other.cloudProviderSetting;
     this.cloudProviderCredentials = other.cloudProviderCredentials;
@@ -123,6 +130,25 @@ public class CommandExecutionContext {
     return text;
   }
 
+  public WinRmSessionConfig winrmSessionConfig(String commandUnitName) {
+    return WinRmSessionConfig.builder()
+        .accountId(accountId)
+        .appId(appId)
+        .executionId(activityId)
+        .commandUnitName(commandUnitName)
+        .hostname(host.getPublicDns())
+        .authenticationScheme(winrmConnectionAttributes.getAuthenticationScheme())
+        .domain(winrmConnectionAttributes.getDomain())
+        .username(winrmConnectionAttributes.getUsername())
+        .password(String.valueOf(winrmConnectionAttributes.getPassword()))
+        .port(winrmConnectionAttributes.getPort())
+        .useSSL(winrmConnectionAttributes.isUseSSL())
+        .skipCertChecks(winrmConnectionAttributes.isSkipCertChecks())
+        .workingDirectory(runtimePath)
+        .environment(envVariables == null ? Collections.emptyMap() : envVariables)
+        .build();
+  }
+
   public static final class Builder {
     private String accountId;
     private String envId;
@@ -144,6 +170,8 @@ public class CommandExecutionContext {
     private List<EncryptedDataDetail> hostConnectionCredentials;
     private SettingAttribute bastionConnectionAttributes;
     private List<EncryptedDataDetail> bastionConnectionCredentials;
+    private WinRmConnectionAttributes winrmConnectionAttributes;
+    private List<EncryptedDataDetail> winrmConnectionEncryptedDataDetails;
     private ArtifactStreamAttributes artifactStreamAttributes;
     private SettingAttribute cloudProviderSetting;
     private List<EncryptedDataDetail> cloudProviderCredentials;
@@ -256,6 +284,17 @@ public class CommandExecutionContext {
       return this;
     }
 
+    public Builder withWinRmConnectionAttributes(WinRmConnectionAttributes winRmConnectionAttributes) {
+      this.winrmConnectionAttributes = winRmConnectionAttributes;
+      return this;
+    }
+
+    public Builder withWinrmConnectionEncryptedDataDetails(
+        List<EncryptedDataDetail> winrmConnectionEncryptedDataDetails) {
+      this.winrmConnectionEncryptedDataDetails = winrmConnectionEncryptedDataDetails;
+      return this;
+    }
+
     public Builder withArtifactStreamAttributes(ArtifactStreamAttributes artifactStreamAttributes) {
       this.artifactStreamAttributes = artifactStreamAttributes;
       return this;
@@ -331,6 +370,8 @@ public class CommandExecutionContext {
           .withBastionConnectionAttributes(bastionConnectionAttributes)
           .withHostConnectionCredentials(hostConnectionCredentials)
           .withBastionConnectionCredentials(bastionConnectionCredentials)
+          .withWinRmConnectionAttributes(winrmConnectionAttributes)
+          .withWinrmConnectionEncryptedDataDetails(winrmConnectionEncryptedDataDetails)
           .withArtifactStreamAttributes(artifactStreamAttributes)
           .withCloudProviderSetting(cloudProviderSetting)
           .withCloudProviderCredentials(cloudProviderCredentials)
@@ -367,6 +408,8 @@ public class CommandExecutionContext {
       commandExecutionContext.setHostConnectionCredentials(hostConnectionCredentials);
       commandExecutionContext.setBastionConnectionAttributes(bastionConnectionAttributes);
       commandExecutionContext.setBastionConnectionCredentials(bastionConnectionCredentials);
+      commandExecutionContext.setWinrmConnectionAttributes(winrmConnectionAttributes);
+      commandExecutionContext.setWinrmConnectionEncryptedDataDetails(winrmConnectionEncryptedDataDetails);
       commandExecutionContext.setArtifactStreamAttributes(artifactStreamAttributes);
       commandExecutionContext.setCloudProviderSetting(cloudProviderSetting);
       commandExecutionContext.setCloudProviderCredentials(cloudProviderCredentials);

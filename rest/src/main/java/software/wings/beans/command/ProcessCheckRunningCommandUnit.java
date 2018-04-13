@@ -56,9 +56,9 @@ public class ProcessCheckRunningCommandUnit extends ExecCommandUnit {
     }
 
     @lombok.Builder
-    public Yaml(String name, String deploymentType, String workingDirectory, String command,
+    public Yaml(String name, String deploymentType, String workingDirectory, String scriptType, String command,
         List<TailFilePatternEntry.Yaml> filePatternEntryList) {
-      super(name, CommandUnitType.PROCESS_CHECK_RUNNING.name(), deploymentType, workingDirectory, command,
+      super(name, CommandUnitType.PROCESS_CHECK_RUNNING.name(), deploymentType, workingDirectory, scriptType, command,
           filePatternEntryList);
     }
   }

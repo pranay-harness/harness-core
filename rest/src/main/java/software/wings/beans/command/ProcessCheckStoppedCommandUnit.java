@@ -58,9 +58,9 @@ public class ProcessCheckStoppedCommandUnit extends ExecCommandUnit {
     }
 
     @lombok.Builder
-    public Yaml(String name, String deploymentType, String workingDirectory, String command,
+    public Yaml(String name, String deploymentType, String workingDirectory, String scriptType, String command,
         List<TailFilePatternEntry.Yaml> filePatternEntryList) {
-      super(name, CommandUnitType.PROCESS_CHECK_STOPPED.name(), deploymentType, workingDirectory, command,
+      super(name, CommandUnitType.PROCESS_CHECK_STOPPED.name(), deploymentType, workingDirectory, scriptType, command,
           filePatternEntryList);
     }
   }

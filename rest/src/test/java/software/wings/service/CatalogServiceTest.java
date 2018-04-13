@@ -1,17 +1,30 @@
 package software.wings.service;
 
+import static junit.framework.TestCase.assertFalse;
+import static junit.framework.TestCase.assertTrue;
 import static org.assertj.core.api.Assertions.assertThat;
+import static org.mockito.Mockito.when;
+import static org.mockito.MockitoAnnotations.initMocks;
+import static software.wings.beans.Base.GLOBAL_ACCOUNT_ID;
+import static software.wings.beans.CatalogItem.Builder.aCatalogItem;
+import static software.wings.beans.FeatureName.WINRM_SUPPORT;
 
 import com.google.inject.Inject;
 
+import org.junit.Before;
 import org.junit.Test;
+import org.mockito.Mock;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import software.wings.WingsBaseTest;
 import software.wings.beans.CatalogItem;
+import software.wings.service.impl.CatalogServiceImpl;
 import software.wings.service.intfc.CatalogService;
+import software.wings.service.intfc.FeatureFlagService;
 import software.wings.utils.JsonUtils;
+import software.wings.utils.YamlUtils;
 
+import java.io.IOException;
 import java.util.List;
 import java.util.Map;
 
@@ -22,7 +35,13 @@ import java.util.Map;
  */
 public class CatalogServiceTest extends WingsBaseTest {
   private static final Logger logger = LoggerFactory.getLogger(JsonUtils.class);
+  @Mock private FeatureFlagService mockFeatureFlagService;
   @Inject private CatalogService catalogService;
+
+  @Before
+  public void setup() throws IOException {
+    initMocks(this);
+  }
 
   /**
    * Should get cardview sort by.
@@ -43,5 +62,21 @@ public class CatalogServiceTest extends WingsBaseTest {
     Map<String, List<CatalogItem>> catalogs = catalogService.getCatalogs("CARD_VIEW_SORT_BY", "ARTIFACT_TYPE");
     assertThat(catalogs).isNotNull();
     assertThat(catalogs.size()).isEqualTo(2);
+  }
+
+  private static final CatalogItem iisCatalogItem = aCatalogItem().withName("IIS Website").withValue("IIS").build();
+
+  @Test
+  public void shouldNotGetIISArtifactType() {
+    List<CatalogItem> catalogItems = catalogService.getCatalogItems("ARTIFACT_TYPE");
+    assertFalse(catalogItems.stream().anyMatch(item -> item.getValue().equals("IIS")));
+  }
+
+  @Test
+  public void shouldGetIISArtifactType() {
+    when(mockFeatureFlagService.isEnabled(WINRM_SUPPORT, GLOBAL_ACCOUNT_ID)).thenReturn(true);
+    CatalogService catalogServiceWithMockFeatureFlag = new CatalogServiceImpl(new YamlUtils(), mockFeatureFlagService);
+    List<CatalogItem> catalogItems = catalogServiceWithMockFeatureFlag.getCatalogItems("ARTIFACT_TYPE");
+    assertTrue(catalogItems.stream().anyMatch(item -> item.getValue().equals("IIS")));
   }
 }
