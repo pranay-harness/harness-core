@@ -101,7 +101,6 @@ public class InstanceSyncJob implements Job {
         String infraMappingId = infraMapping.getUuid();
         InfrastructureMappingType infraMappingType =
             Util.getEnumFromString(InfrastructureMappingType.class, infraMapping.getInfraMappingType());
-
         try (AcquiredLock lock =
                  persistentLocker.acquireLock(InfrastructureMapping.class, infraMappingId, Duration.ofSeconds(120))) {
           try {
@@ -114,6 +113,8 @@ public class InstanceSyncJob implements Job {
           } catch (Exception ex) {
             logger.warn("Instance sync failed for infraMappingId [{}]", infraMappingId, ex);
           }
+        } catch (Exception e) {
+          logger.warn("Failed to acquire lock for infraMappingId [{}] of appId [{}]", infraMappingId, appId);
         }
       });
 
