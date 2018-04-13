@@ -11,7 +11,6 @@ import static org.mockito.Matchers.anyString;
 import static org.mockito.Matchers.eq;
 import static org.mockito.Mockito.RETURNS_DEEP_STUBS;
 import static org.mockito.Mockito.when;
-import static software.wings.beans.artifact.JenkinsArtifactStream.Builder.aJenkinsArtifactStream;
 import static software.wings.helpers.ext.jenkins.BuildDetails.Builder.aBuildDetails;
 import static software.wings.helpers.ext.jenkins.model.ParametersDefinitionProperty.builder;
 import static software.wings.utils.WingsTestConstants.ACCOUNT_ID;
@@ -67,12 +66,12 @@ public class JenkinsBuildServiceTest extends WingsBaseTest {
 
   @InjectMocks @Inject private JenkinsBuildService jenkinsBuildService;
 
-  private static final JenkinsArtifactStream jenkinsArtifactStream = aJenkinsArtifactStream()
-                                                                         .withUuid(ARTIFACT_STREAM_ID)
-                                                                         .withAppId(APP_ID)
-                                                                         .withSettingId("")
-                                                                         .withSourceName(ARTIFACT_STREAM_NAME)
-                                                                         .withJobname("job1")
+  private static final JenkinsArtifactStream jenkinsArtifactStream = JenkinsArtifactStream.builder()
+                                                                         .uuid(ARTIFACT_STREAM_ID)
+                                                                         .appId(APP_ID)
+                                                                         .settingId("")
+                                                                         .sourceName(ARTIFACT_STREAM_NAME)
+                                                                         .jobname("job1")
                                                                          .build();
 
   /**

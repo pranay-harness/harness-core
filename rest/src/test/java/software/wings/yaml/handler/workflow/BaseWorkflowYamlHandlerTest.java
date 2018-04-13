@@ -159,13 +159,12 @@ public abstract class BaseWorkflowYamlHandlerTest extends BaseYamlHandlerTest {
   }
 
   private ArtifactStream getArtifactStream() {
-    return GcrArtifactStream.Builder.aGcrArtifactStream()
-        .withAppId(APP_ID)
-        .withServiceId(SERVICE_ID)
-        .withAutoApproveForProduction(true)
-        .withDockerImageName("testDockerImageName")
-        .withSourceName("gcr.io_exploration-161417_todolist")
-        .withName("gcr.io_exploration-161417_todolist")
+    return GcrArtifactStream.builder()
+        .appId(APP_ID)
+        .serviceId(SERVICE_ID)
+        .dockerImageName("testDockerImageName")
+        .sourceName("gcr.io_exploration-161417_todolist")
+        .name("gcr.io_exploration-161417_todolist")
         .build();
   }
 

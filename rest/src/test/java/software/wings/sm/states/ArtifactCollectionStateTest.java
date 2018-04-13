@@ -10,7 +10,6 @@ import static org.mockito.internal.util.reflection.Whitebox.setInternalState;
 import static software.wings.api.WorkflowElement.WorkflowElementBuilder.aWorkflowElement;
 import static software.wings.beans.OrchestrationWorkflowType.BUILD;
 import static software.wings.beans.artifact.Artifact.Builder.anArtifact;
-import static software.wings.beans.artifact.JenkinsArtifactStream.Builder.aJenkinsArtifactStream;
 import static software.wings.sm.StateExecutionInstance.Builder.aStateExecutionInstance;
 import static software.wings.utils.WingsTestConstants.ACCOUNT_ID;
 import static software.wings.utils.WingsTestConstants.ACTIVITY_ID;
@@ -69,14 +68,14 @@ public class ArtifactCollectionStateTest {
   @InjectMocks
   private ArtifactCollectionState artifactCollectionState = new ArtifactCollectionState("Collect Artifact");
 
-  private JenkinsArtifactStream jenkinsArtifactStream = aJenkinsArtifactStream()
-                                                            .withAppId(APP_ID)
-                                                            .withUuid(ARTIFACT_STREAM_ID)
-                                                            .withSourceName(ARTIFACT_SOURCE_NAME)
-                                                            .withSettingId(SETTING_ID)
-                                                            .withJobname("JOB")
-                                                            .withServiceId(SERVICE_ID)
-                                                            .withArtifactPaths(asList("*WAR"))
+  private JenkinsArtifactStream jenkinsArtifactStream = JenkinsArtifactStream.builder()
+                                                            .appId(APP_ID)
+                                                            .uuid(ARTIFACT_STREAM_ID)
+                                                            .sourceName(ARTIFACT_SOURCE_NAME)
+                                                            .settingId(SETTING_ID)
+                                                            .jobname("JOB")
+                                                            .serviceId(SERVICE_ID)
+                                                            .artifactPaths(asList("*WAR"))
                                                             .build();
   private WorkflowStandardParams workflowStandardParams =
       WorkflowStandardParams.Builder.aWorkflowStandardParams()

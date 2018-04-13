@@ -91,7 +91,6 @@ public abstract class ArtifactStreamYamlHandler<Y extends Yaml, B extends Artifa
     bean.setName(name);
     bean.setAutoPopulate(false);
     bean.setSettingId(getSettingId(changeContext.getChange().getAccountId(), appId, yaml.getServerName()));
-    bean.setAutoApproveForProduction(true);
     bean.setMetadataOnly(yaml.isMetadataOnly());
   }
 

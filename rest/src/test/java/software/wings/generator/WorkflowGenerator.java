@@ -23,8 +23,7 @@ public class WorkflowGenerator {
   @Inject OrchestrationWorkflowGenerator orchestrationWorkflowGenerator;
 
   public Workflow createWorkflow(long seed, Workflow workflow) {
-    EnhancedRandom random =
-        EnhancedRandomBuilder.aNewEnhancedRandomBuilder().seed(seed).scanClasspathForConcreteTypes(true).build();
+    EnhancedRandom random = EnhancedRandomBuilder.aNewEnhancedRandomBuilder().seed(seed).build();
 
     WorkflowBuilder builder = aWorkflow();
 

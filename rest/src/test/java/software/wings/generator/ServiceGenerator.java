@@ -48,8 +48,7 @@ public class ServiceGenerator {
   }
 
   public Service ensureRandom(long seed) {
-    EnhancedRandom random =
-        EnhancedRandomBuilder.aNewEnhancedRandomBuilder().seed(seed).scanClasspathForConcreteTypes(true).build();
+    EnhancedRandom random = EnhancedRandomBuilder.aNewEnhancedRandomBuilder().seed(seed).build();
 
     Services predefined = random.nextObject(Services.class);
 
@@ -64,8 +63,7 @@ public class ServiceGenerator {
   }
 
   public Service ensureService(long seed, Service service) {
-    EnhancedRandom random =
-        EnhancedRandomBuilder.aNewEnhancedRandomBuilder().seed(seed).scanClasspathForConcreteTypes(true).build();
+    EnhancedRandom random = EnhancedRandomBuilder.aNewEnhancedRandomBuilder().seed(seed).build();
 
     Service.Builder builder = aService();
 

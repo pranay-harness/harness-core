@@ -7,6 +7,7 @@ import static software.wings.utils.WingsTestConstants.APP_ID;
 import static software.wings.utils.WingsTestConstants.ARTIFACT_STREAM_ID;
 import static software.wings.utils.WingsTestConstants.ARTIFACT_STREAM_NAME;
 import static software.wings.utils.WingsTestConstants.BUILD_JOB_NAME;
+import static software.wings.utils.WingsTestConstants.SETTING_ID;
 
 import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.Lists;
@@ -38,12 +39,12 @@ public class BambooBuildServiceTest extends WingsBaseTest {
 
   private static final BambooConfig bambooConfig =
       BambooConfig.builder().bambooUrl("http://bamboo").username("username").password("password".toCharArray()).build();
-  private static final BambooArtifactStream bambooArtifactStream = BambooArtifactStream.Builder.aBambooArtifactStream()
-                                                                       .withUuid(ARTIFACT_STREAM_ID)
-                                                                       .withAppId(APP_ID)
-                                                                       .withSettingId("")
-                                                                       .withSourceName(ARTIFACT_STREAM_NAME)
-                                                                       .withJobname(BUILD_JOB_NAME)
+  private static final BambooArtifactStream bambooArtifactStream = BambooArtifactStream.builder()
+                                                                       .uuid(ARTIFACT_STREAM_ID)
+                                                                       .appId(APP_ID)
+                                                                       .settingId(SETTING_ID)
+                                                                       .sourceName(ARTIFACT_STREAM_NAME)
+                                                                       .jobname(BUILD_JOB_NAME)
                                                                        .build();
 
   @Before

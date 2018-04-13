@@ -92,8 +92,7 @@ public class InfrastructureMappingGenerator {
   }
 
   public InfrastructureMapping ensureRandom(long seed) {
-    EnhancedRandom random =
-        EnhancedRandomBuilder.aNewEnhancedRandomBuilder().seed(seed).scanClasspathForConcreteTypes(true).build();
+    EnhancedRandom random = EnhancedRandomBuilder.aNewEnhancedRandomBuilder().seed(seed).build();
 
     InfrastructureMappings predefined = random.nextObject(InfrastructureMappings.class);
 
@@ -101,8 +100,7 @@ public class InfrastructureMappingGenerator {
   }
 
   public InfrastructureMapping ensureInfrastructureMapping(long seed, InfrastructureMapping infrastructureMapping) {
-    EnhancedRandom random =
-        EnhancedRandomBuilder.aNewEnhancedRandomBuilder().seed(seed).scanClasspathForConcreteTypes(true).build();
+    EnhancedRandom random = EnhancedRandomBuilder.aNewEnhancedRandomBuilder().seed(seed).build();
 
     InfrastructureMappingType infrastructureMappingType;
 

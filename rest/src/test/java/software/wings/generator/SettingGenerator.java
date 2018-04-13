@@ -112,8 +112,7 @@ public class SettingGenerator {
   }
 
   public SettingAttribute ensureSettingAttribute(long seed, SettingAttribute settingAttribute) {
-    EnhancedRandom random =
-        EnhancedRandomBuilder.aNewEnhancedRandomBuilder().seed(seed).scanClasspathForConcreteTypes(true).build();
+    EnhancedRandom random = EnhancedRandomBuilder.aNewEnhancedRandomBuilder().seed(seed).build();
 
     SettingAttribute.Builder builder = aSettingAttribute();
 

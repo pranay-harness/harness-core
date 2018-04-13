@@ -24,7 +24,6 @@ import static software.wings.beans.WorkflowType.ORCHESTRATION;
 import static software.wings.beans.WorkflowType.PIPELINE;
 import static software.wings.beans.artifact.Artifact.Builder.anArtifact;
 import static software.wings.beans.artifact.ArtifactFile.Builder.anArtifactFile;
-import static software.wings.beans.artifact.JenkinsArtifactStream.Builder.aJenkinsArtifactStream;
 import static software.wings.beans.trigger.ArtifactSelection.Type.ARTIFACT_SOURCE;
 import static software.wings.beans.trigger.ArtifactSelection.Type.LAST_COLLECTED;
 import static software.wings.beans.trigger.ArtifactSelection.Type.LAST_DEPLOYED;
@@ -217,14 +216,14 @@ public class TriggerServiceTest extends WingsBaseTest {
               aService().withUuid(SERVICE_ID_CHANGED).withName("Order").build()))
           .build();
 
-  private JenkinsArtifactStream jenkinsArtifactStream = aJenkinsArtifactStream()
-                                                            .withAppId(APP_ID)
-                                                            .withUuid(ARTIFACT_STREAM_ID)
-                                                            .withSourceName(ARTIFACT_SOURCE_NAME)
-                                                            .withSettingId(SETTING_ID)
-                                                            .withJobname("JOB")
-                                                            .withServiceId(SERVICE_ID)
-                                                            .withArtifactPaths(asList("*WAR"))
+  private JenkinsArtifactStream jenkinsArtifactStream = JenkinsArtifactStream.builder()
+                                                            .appId(APP_ID)
+                                                            .uuid(ARTIFACT_STREAM_ID)
+                                                            .sourceName(ARTIFACT_SOURCE_NAME)
+                                                            .settingId(SETTING_ID)
+                                                            .jobname("JOB")
+                                                            .serviceId(SERVICE_ID)
+                                                            .artifactPaths(asList("*WAR"))
                                                             .build();
 
   @Before

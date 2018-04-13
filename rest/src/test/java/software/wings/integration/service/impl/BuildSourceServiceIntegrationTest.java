@@ -16,6 +16,7 @@ import static software.wings.integration.DataGenUtil.HARNESS_BAMBOO_SERVICE;
 import static software.wings.integration.DataGenUtil.HARNESS_DOCKER_REGISTRY;
 import static software.wings.integration.DataGenUtil.HARNESS_NEXUS;
 import static software.wings.utils.ArtifactType.DOCKER;
+import static software.wings.utils.ArtifactType.RPM;
 import static software.wings.utils.ArtifactType.WAR;
 
 import com.google.inject.Inject;
@@ -130,24 +131,22 @@ public class BuildSourceServiceIntegrationTest extends WingsBaseTest {
             WAR},
         {true, SettingVariableTypes.DOCKER, ArtifactStreamType.DOCKER, "", "xyz", "", "wingsplugins/todolist", WAR},
         {false, SettingVariableTypes.DOCKER, ArtifactStreamType.DOCKER, "", "xyz", "", "wingsplugins/todolist", WAR},
-        //        {true, SettingVariableTypes.ARTIFACTORY, ArtifactStreamType.ARTIFACTORY, "any", "generic-repo",
-        //            "io/harness/todolist/todolist*", "", WAR},
-        //        {false, SettingVariableTypes.ARTIFACTORY, ArtifactStreamType.ARTIFACTORY, "any", "generic-repo",
-        //            "io/harness/todolist/todolist*", "", WAR},
-        //        {true, SettingVariableTypes.ARTIFACTORY, ArtifactStreamType.ARTIFACTORY, "any", "harness-rpm",
-        //        "todolist*", "",
-        //            RPM},
-        //        {false, SettingVariableTypes.ARTIFACTORY, ArtifactStreamType.ARTIFACTORY, "any", "harness-rpm",
-        //        "todolist*", "",
-        //            RPM},
-        //        {true, SettingVariableTypes.ARTIFACTORY, ArtifactStreamType.ARTIFACTORY, "maven", "harness-maven",
-        //            "io/harness/todolist/todolist/*/todolist*", "", WAR},
-        //        {false, SettingVariableTypes.ARTIFACTORY, ArtifactStreamType.ARTIFACTORY, "maven", "harness-maven",
-        //            "io/harness/todolist/todolist/*/todolist*", "", WAR},
-        //        {true, SettingVariableTypes.ARTIFACTORY, ArtifactStreamType.ARTIFACTORY, "docker", "docker",
-        //            "wingsplugins/todolist", "", DOCKER},
-        //        {false, SettingVariableTypes.ARTIFACTORY, ArtifactStreamType.ARTIFACTORY, "docker", "docker",
-        //            "wingsplugins/todolist", "", DOCKER},
+        {true, SettingVariableTypes.ARTIFACTORY, ArtifactStreamType.ARTIFACTORY, "any", "generic-repo",
+            "io/harness/todolist/todolist*", "", WAR},
+        {false, SettingVariableTypes.ARTIFACTORY, ArtifactStreamType.ARTIFACTORY, "any", "generic-repo",
+            "io/harness/todolist/todolist*", "", WAR},
+        {true, SettingVariableTypes.ARTIFACTORY, ArtifactStreamType.ARTIFACTORY, "any", "harness-rpm", "todolist*", "",
+            RPM},
+        {false, SettingVariableTypes.ARTIFACTORY, ArtifactStreamType.ARTIFACTORY, "any", "harness-rpm", "todolist*", "",
+            RPM},
+        {true, SettingVariableTypes.ARTIFACTORY, ArtifactStreamType.ARTIFACTORY, "maven", "harness-maven",
+            "io/harness/todolist/todolist/*/todolist*", "", WAR},
+        {false, SettingVariableTypes.ARTIFACTORY, ArtifactStreamType.ARTIFACTORY, "maven", "harness-maven",
+            "io/harness/todolist/todolist/*/todolist*", "", WAR},
+        {true, SettingVariableTypes.ARTIFACTORY, ArtifactStreamType.ARTIFACTORY, "docker", "docker",
+            "wingsplugins/todolist", "", DOCKER},
+        {false, SettingVariableTypes.ARTIFACTORY, ArtifactStreamType.ARTIFACTORY, "docker", "docker",
+            "wingsplugins/todolist", "", DOCKER},
         {true, SettingVariableTypes.ECR, ArtifactStreamType.ECR, "docker", Regions.US_EAST_1.getName(), "todolist",
             "todolist", DOCKER},
         {false, SettingVariableTypes.ECR, ArtifactStreamType.ECR, "docker", Regions.US_EAST_1.getName(), "todolist",

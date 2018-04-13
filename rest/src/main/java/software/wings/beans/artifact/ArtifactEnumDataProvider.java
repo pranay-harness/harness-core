@@ -13,25 +13,18 @@ import software.wings.stencils.DataProvider;
 import java.util.Map;
 import java.util.Optional;
 
-/**
- * Created by anubhaw on 2/2/17.
- */
 @Singleton
 public class ArtifactEnumDataProvider implements DataProvider {
   @Inject private ArtifactStreamService artifactStreamService;
 
   @Override
   public Map<String, String> getData(String appId, String... params) {
-    String serviceId = params[0];
     Optional<ArtifactStream> artifactStream =
-        artifactStreamService.list(aPageRequest().addFilter("serviceId", SearchFilter.Operator.EQ, serviceId).build())
+        artifactStreamService.list(aPageRequest().addFilter("serviceId", SearchFilter.Operator.EQ, params[0]).build())
             .getResponse()
             .stream()
             .findFirst();
-    String artifactName = "";
-    if (artifactStream.isPresent()) {
-      artifactName = artifactStream.get().getSourceName();
-    }
+    String artifactName = artifactStream.isPresent() ? artifactStream.get().getSourceName() : "";
     return ImmutableMap.of(artifactName, artifactName);
   }
 }

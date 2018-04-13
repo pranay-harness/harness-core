@@ -1,20 +1,22 @@
 package software.wings.beans.artifact;
 
-import static software.wings.beans.artifact.AcrArtifactStream.Builder.anAcrArtifactStream;
 import static software.wings.beans.artifact.ArtifactStreamAttributes.Builder.anArtifactStreamAttributes;
 import static software.wings.beans.artifact.ArtifactStreamType.ACR;
 
 import com.fasterxml.jackson.annotation.JsonTypeName;
+import lombok.Builder;
 import lombok.Data;
 import lombok.EqualsAndHashCode;
 import lombok.NoArgsConstructor;
 import org.hibernate.validator.constraints.NotEmpty;
 import software.wings.beans.EmbeddedUser;
-import software.wings.utils.Util;
 
 import java.util.Date;
+import java.util.List;
 
 @JsonTypeName("ACR")
+@Data
+@EqualsAndHashCode(callSuper = true)
 public class AcrArtifactStream extends ArtifactStream {
   @NotEmpty private String subscriptionId;
   @NotEmpty private String registryName;
@@ -22,37 +24,25 @@ public class AcrArtifactStream extends ArtifactStream {
 
   public AcrArtifactStream() {
     super(ACR.name());
-    super.setAutoApproveForProduction(true);
-    super.setAutoDownload(true);
+    super.setMetadataOnly(true);
+  }
+
+  @Builder
+  public AcrArtifactStream(String uuid, String appId, EmbeddedUser createdBy, long createdAt,
+      EmbeddedUser lastUpdatedBy, long lastUpdatedAt, List<String> keywords, String entityYamlPath, String sourceName,
+      String settingId, String name, boolean autoPopulate, String serviceId, String subscriptionId, String registryName,
+      String repositoryName) {
+    super(uuid, appId, createdBy, createdAt, lastUpdatedBy, lastUpdatedAt, keywords, entityYamlPath, ACR.name(),
+        sourceName, settingId, name, autoPopulate, serviceId, true);
+    this.subscriptionId = subscriptionId;
+    this.registryName = registryName;
+    this.repositoryName = repositoryName;
   }
 
   @Override
   public String getArtifactDisplayName(String buildNo) {
-    return String.format("%s_%s_%s", getRepositoryName(), buildNo, getDateFormat().format(new Date()));
-  }
-
-  public String getSubscriptionId() {
-    return subscriptionId;
-  }
-
-  public void setSubscriptionId(String subscriptionId) {
-    this.subscriptionId = subscriptionId;
-  }
-
-  public String getRegistryName() {
-    return registryName;
-  }
-
-  public void setRegistryName(String registryName) {
-    this.registryName = registryName;
-  }
-
-  public String getRepositoryName() {
-    return repositoryName;
-  }
-
-  public void setRepositoryName(String repositoryName) {
-    this.repositoryName = repositoryName;
+    return String.format(
+        "%s_%s_%s", getRegistryName() + "/" + getRepositoryName(), buildNo, dateFormat.format(new Date()));
   }
 
   @Override
@@ -66,184 +56,8 @@ public class AcrArtifactStream extends ArtifactStream {
   }
 
   @Override
-  public String generateName() {
-    return Util.normalize(generateSourceName());
-  }
-
-  @Override
   public String generateSourceName() {
     return new StringBuilder(getRegistryName()).append('/').append(getRepositoryName()).toString();
-  }
-
-  @Override
-  public ArtifactStream clone() {
-    return anAcrArtifactStream()
-        .withAppId(getAppId())
-        .withSourceName(getSourceName())
-        .withSettingId(getSettingId())
-        .withAutoApproveForProduction(isAutoApproveForProduction())
-        .withSubscriptionId(getSubscriptionId())
-        .withRegistryName(getRegistryName())
-        .withRepositoryName(getRepositoryName())
-        .build();
-  }
-
-  /**
-   * clone and return builder
-   * @return
-   */
-  public Builder deepClone() {
-    return anAcrArtifactStream()
-        .withSubscriptionId(getSubscriptionId())
-        .withRegistryName(getRegistryName())
-        .withRepositoryName(getRepositoryName())
-        .withSourceName(getSourceName())
-        .withSettingId(getSettingId())
-        .withServiceId(getServiceId())
-        .withUuid(getUuid())
-        .withAppId(getAppId())
-        .withCreatedBy(getCreatedBy())
-        .withCreatedAt(getCreatedAt())
-        .withLastUpdatedBy(getLastUpdatedBy())
-        .withLastUpdatedAt(getLastUpdatedAt())
-        .withAutoDownload(isAutoDownload())
-        .withAutoApproveForProduction(isAutoApproveForProduction());
-  }
-
-  public static final class Builder {
-    public transient String entityYamlPath; // TODO:: remove it with changeSet batching
-    protected String appId;
-    private String subscriptionId;
-    private String registryName;
-    private String repositoryName;
-    private String uuid;
-    private String sourceName;
-    private EmbeddedUser createdBy;
-    private String settingId;
-    private long createdAt;
-    private EmbeddedUser lastUpdatedBy;
-    private String name;
-    private long lastUpdatedAt;
-    // auto populate name
-    private boolean autoPopulate = true;
-    private String serviceId;
-    private boolean autoDownload = true;
-    private boolean autoApproveForProduction;
-    private boolean metadataOnly;
-
-    private Builder() {}
-
-    public static Builder anAcrArtifactStream() {
-      return new Builder();
-    }
-
-    public Builder withSubscriptionId(String subscriptionId) {
-      this.subscriptionId = subscriptionId;
-      return this;
-    }
-
-    public Builder withRegistryName(String registryName) {
-      this.registryName = registryName;
-      return this;
-    }
-
-    public Builder withRepositoryName(String repositoryName) {
-      this.repositoryName = repositoryName;
-      return this;
-    }
-
-    public Builder withUuid(String uuid) {
-      this.uuid = uuid;
-      return this;
-    }
-
-    public Builder withAppId(String appId) {
-      this.appId = appId;
-      return this;
-    }
-
-    public Builder withSourceName(String sourceName) {
-      this.sourceName = sourceName;
-      return this;
-    }
-
-    public Builder withCreatedBy(EmbeddedUser createdBy) {
-      this.createdBy = createdBy;
-      return this;
-    }
-
-    public Builder withSettingId(String settingId) {
-      this.settingId = settingId;
-      return this;
-    }
-
-    public Builder withCreatedAt(long createdAt) {
-      this.createdAt = createdAt;
-      return this;
-    }
-
-    public Builder withLastUpdatedBy(EmbeddedUser lastUpdatedBy) {
-      this.lastUpdatedBy = lastUpdatedBy;
-      return this;
-    }
-
-    public Builder withName(String name) {
-      this.name = name;
-      return this;
-    }
-
-    public Builder withLastUpdatedAt(long lastUpdatedAt) {
-      this.lastUpdatedAt = lastUpdatedAt;
-      return this;
-    }
-
-    public Builder withAutoPopulate(boolean autoPopulate) {
-      this.autoPopulate = autoPopulate;
-      return this;
-    }
-
-    public Builder withServiceId(String serviceId) {
-      this.serviceId = serviceId;
-      return this;
-    }
-
-    public Builder withEntityYamlPath(String entityYamlPath) {
-      this.entityYamlPath = entityYamlPath;
-      return this;
-    }
-
-    public Builder withAutoDownload(boolean autoDownload) {
-      this.autoDownload = autoDownload;
-      return this;
-    }
-
-    public Builder withAutoApproveForProduction(boolean autoApproveForProduction) {
-      this.autoApproveForProduction = autoApproveForProduction;
-      return this;
-    }
-
-    public AcrArtifactStream build() {
-      AcrArtifactStream acrArtifactStream = new AcrArtifactStream();
-      acrArtifactStream.setSubscriptionId(subscriptionId);
-      acrArtifactStream.setRegistryName(registryName);
-      acrArtifactStream.setRepositoryName(repositoryName);
-      acrArtifactStream.setUuid(uuid);
-      acrArtifactStream.setAppId(appId);
-      acrArtifactStream.setSourceName(sourceName);
-      acrArtifactStream.setCreatedBy(createdBy);
-      acrArtifactStream.setSettingId(settingId);
-      acrArtifactStream.setCreatedAt(createdAt);
-      acrArtifactStream.setLastUpdatedBy(lastUpdatedBy);
-      acrArtifactStream.setName(name);
-      acrArtifactStream.setLastUpdatedAt(lastUpdatedAt);
-      acrArtifactStream.setAutoPopulate(autoPopulate);
-      acrArtifactStream.setServiceId(serviceId);
-      acrArtifactStream.setEntityYamlPath(entityYamlPath);
-      acrArtifactStream.setAutoDownload(autoDownload);
-      acrArtifactStream.setAutoApproveForProduction(autoApproveForProduction);
-      acrArtifactStream.setMetadataOnly(metadataOnly);
-      return acrArtifactStream;
-    }
   }
 
   @Data

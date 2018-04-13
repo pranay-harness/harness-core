@@ -24,7 +24,6 @@ import static software.wings.beans.Pipeline.Builder.aPipeline;
 import static software.wings.beans.SettingAttribute.Builder.aSettingAttribute;
 import static software.wings.beans.User.Builder.anUser;
 import static software.wings.beans.Workflow.WorkflowBuilder.aWorkflow;
-import static software.wings.beans.artifact.JenkinsArtifactStream.Builder.aJenkinsArtifactStream;
 import static software.wings.common.Constants.HARNESS_NAME;
 import static software.wings.dl.PageRequest.PageRequestBuilder.aPageRequest;
 import static software.wings.generator.InfrastructureMappingGenerator.InfrastructureMappings.AWS_SSH_TEST;
@@ -90,6 +89,7 @@ import software.wings.beans.User;
 import software.wings.beans.Workflow;
 import software.wings.beans.WorkflowType;
 import software.wings.beans.artifact.ArtifactStream;
+import software.wings.beans.artifact.JenkinsArtifactStream;
 import software.wings.beans.config.ArtifactoryConfig;
 import software.wings.beans.config.NexusConfig;
 import software.wings.beans.security.UserGroup;
@@ -604,14 +604,14 @@ public class DataGenUtil extends BaseIntegrationTest {
 
     final SettingAttribute jenkins = settingsService.getByName(accountId, GLOBAL_APP_ID, HARNESS_JENKINS);
 
-    ArtifactStream artifactStream = artifactStreamGenerator.createArtifactStream(seed,
-        aJenkinsArtifactStream()
-            .withAppId(environment.getAppId())
-            .withServiceId(service.getUuid())
-            .withSourceName(HARNESS_JENKINS)
-            .withJobname("harness-samples")
-            .withArtifactPaths(asList("echo/target/echo.war"))
-            .withSettingId(jenkins.getUuid())
+    ArtifactStream artifactStream = artifactStreamGenerator.ensureArtifactStream(seed,
+        JenkinsArtifactStream.builder()
+            .appId(environment.getAppId())
+            .serviceId(service.getUuid())
+            .sourceName(HARNESS_JENKINS)
+            .jobname("harness-samples")
+            .artifactPaths(asList("echo/target/echo.war"))
+            .settingId(jenkins.getUuid())
             .build());
 
     Workflow workflow1 = workflowGenerator.createWorkflow(seed,
