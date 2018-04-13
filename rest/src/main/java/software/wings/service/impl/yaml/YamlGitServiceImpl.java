@@ -12,6 +12,7 @@ import static software.wings.dl.PageRequest.PageRequestBuilder.aPageRequest;
 import com.google.common.collect.Lists;
 import com.google.inject.Inject;
 
+import io.harness.data.structure.EmptyPredicate;
 import org.mongodb.morphia.query.Query;
 import org.mongodb.morphia.query.UpdateOperations;
 import org.slf4j.Logger;
@@ -22,6 +23,7 @@ import software.wings.beans.GitCommit;
 import software.wings.beans.GitConfig;
 import software.wings.beans.RestResponse;
 import software.wings.beans.SearchFilter.Operator;
+import software.wings.beans.SettingAttribute;
 import software.wings.beans.SortOrder.OrderType;
 import software.wings.beans.TaskType;
 import software.wings.beans.alert.AlertData;
@@ -47,6 +49,7 @@ import software.wings.exception.WingsException;
 import software.wings.exception.YamlProcessingException;
 import software.wings.service.intfc.AlertService;
 import software.wings.service.intfc.DelegateService;
+import software.wings.service.intfc.SettingsService;
 import software.wings.service.intfc.security.SecretManager;
 import software.wings.service.intfc.yaml.YamlChangeSetService;
 import software.wings.service.intfc.yaml.YamlDirectoryService;
@@ -91,6 +94,7 @@ public class YamlGitServiceImpl implements YamlGitService {
   @Inject private ExecutorService executorService;
   @Inject private DelegateService delegateService;
   @Inject private AlertService alertService;
+  @Inject private SettingsService settingsService;
 
   /**
    * Gets the yaml git sync info by entityId
@@ -110,14 +114,22 @@ public class YamlGitServiceImpl implements YamlGitService {
    */
   @Override
   public YamlGitConfig save(YamlGitConfig ygs) {
-    //
-    GitConfig gitConfig = ygs.getGitConfig();
+    GitConfig gitConfig = getGitConfig(ygs);
     gitConfig.setDecrypted(true);
     validateGit(gitConfig);
     gitConfig.setDecrypted(false);
     YamlGitConfig yamlGitSync = wingsPersistence.saveAndGet(YamlGitConfig.class, ygs);
     executorService.submit(() -> fullSync(ygs.getAccountId(), true));
     return yamlGitSync;
+  }
+
+  private GitConfig getGitConfig(YamlGitConfig ygs) {
+    SettingAttribute settingAttribute = null;
+    if (!EmptyPredicate.isEmpty(ygs.getSshSettingId())) {
+      settingAttribute = settingsService.get(ygs.getSshSettingId());
+    }
+
+    return ygs.getGitConfig(settingAttribute);
   }
 
   /**
@@ -128,10 +140,15 @@ public class YamlGitServiceImpl implements YamlGitService {
    */
   @Override
   public YamlGitConfig update(YamlGitConfig ygs) {
-    GitConfig gitConfig = ygs.getGitConfig();
-    gitConfig.setDecrypted(true);
-    validateGit(gitConfig);
-    gitConfig.setDecrypted(false);
+    GitConfig gitConfig = getGitConfig(ygs);
+
+    // Encryption applies to User name / password auth
+    if (!gitConfig.isKeyAuth()) {
+      gitConfig.setDecrypted(true);
+      validateGit(gitConfig);
+      gitConfig.setDecrypted(false);
+    }
+
     YamlGitConfig yamlGitSync = wingsPersistence.saveAndGet(YamlGitConfig.class, ygs);
     executorService.submit(() -> fullSync(ygs.getAccountId(), true));
     return yamlGitSync;
@@ -143,7 +160,8 @@ public class YamlGitServiceImpl implements YamlGitService {
     2. Invalid credentials
     3. No write access
     4. Branch doesn't exist
-     */
+    */
+
     try {
       GitCommandExecutionResponse gitCommandExecutionResponse =
           delegateService.executeTask(aDelegateTask()
@@ -253,20 +271,21 @@ public class YamlGitServiceImpl implements YamlGitService {
     logger.info(GIT_YAML_LOG_PREFIX + "Change set [{}] files", yamlChangeSet.getUuid());
 
     String waitId = generateUuid();
-    DelegateTask delegateTask =
-        aDelegateTask()
-            .withTaskType(TaskType.GIT_COMMAND)
-            .withAccountId(yamlChangeSet.getAccountId())
-            .withAppId(GLOBAL_APP_ID)
-            .withWaitId(waitId)
-            .withParameters(new Object[] {GitCommandType.COMMIT_AND_PUSH, yamlGitConfig.getGitConfig(),
-                secretManager.getEncryptionDetails(yamlGitConfig.getGitConfig(), GLOBAL_APP_ID, null),
-                GitCommitRequest.builder()
-                    .gitFileChanges(gitFileChanges)
-                    .forcePush(yamlChangeSet.isForcePush())
-                    .build()})
-            .withTimeout(TimeUnit.MINUTES.toMillis(10))
-            .build();
+    GitConfig gitConfig = getGitConfig(yamlGitConfig);
+
+    DelegateTask delegateTask = aDelegateTask()
+                                    .withTaskType(TaskType.GIT_COMMAND)
+                                    .withAccountId(yamlChangeSet.getAccountId())
+                                    .withAppId(GLOBAL_APP_ID)
+                                    .withWaitId(waitId)
+                                    .withParameters(new Object[] {GitCommandType.COMMIT_AND_PUSH, gitConfig,
+                                        secretManager.getEncryptionDetails(gitConfig, GLOBAL_APP_ID, null),
+                                        GitCommitRequest.builder()
+                                            .gitFileChanges(gitFileChanges)
+                                            .forcePush(yamlChangeSet.isForcePush())
+                                            .build()})
+                                    .withTimeout(TimeUnit.MINUTES.toMillis(10))
+                                    .build();
 
     waitNotifyEngine.waitForAll(
         new GitCommandCallback(yamlChangeSet.getAccountId(), yamlChangeSet.getUuid(), yamlGitConfig.getUuid()), waitId);
@@ -327,16 +346,16 @@ public class YamlGitServiceImpl implements YamlGitService {
       String processedCommit = gitCommit == null ? null : gitCommit.getCommitId();
 
       String waitId = generateUuid();
-      DelegateTask delegateTask =
-          aDelegateTask()
-              .withTaskType(TaskType.GIT_COMMAND)
-              .withAccountId(accountId)
-              .withAppId(GLOBAL_APP_ID)
-              .withWaitId(waitId)
-              .withParameters(new Object[] {GitCommandType.DIFF, yamlGitConfig.getGitConfig(),
-                  secretManager.getEncryptionDetails(yamlGitConfig.getGitConfig(), GLOBAL_APP_ID, null),
-                  GitDiffRequest.builder().lastProcessedCommitId(processedCommit).build()})
-              .build();
+      GitConfig gitConfig = getGitConfig(yamlGitConfig);
+      DelegateTask delegateTask = aDelegateTask()
+                                      .withTaskType(TaskType.GIT_COMMAND)
+                                      .withAccountId(accountId)
+                                      .withAppId(GLOBAL_APP_ID)
+                                      .withWaitId(waitId)
+                                      .withParameters(new Object[] {GitCommandType.DIFF, gitConfig,
+                                          secretManager.getEncryptionDetails(gitConfig, GLOBAL_APP_ID, null),
+                                          GitDiffRequest.builder().lastProcessedCommitId(processedCommit).build()})
+                                      .build();
 
       waitNotifyEngine.waitForAll(new GitCommandCallback(accountId, null, yamlGitConfig.getUuid()), waitId);
       delegateService.queueTask(delegateTask);

@@ -33,6 +33,9 @@ public class GitConfig extends SettingValue implements Encryptable {
   @SchemaIgnore @NotEmpty private String accountId;
 
   @JsonView(JsonViews.Internal.class) @SchemaIgnore private String encryptedPassword;
+  private String sshSettingId;
+  private SettingAttribute sshSettingAttribute;
+  private boolean keyAuth;
 
   @SchemaIgnore @Transient private GitRepositoryType gitRepoType;
 
@@ -46,8 +49,8 @@ public class GitConfig extends SettingValue implements Encryptable {
   }
 
   @Builder
-  public GitConfig(
-      String username, char[] password, String repoUrl, String branch, String accountId, String encryptedPassword) {
+  public GitConfig(String username, char[] password, String repoUrl, String branch, String accountId,
+      String encryptedPassword, String sshSettingId, SettingAttribute sshSettingAttribute, boolean keyAuth) {
     super(SettingVariableTypes.GIT.name());
     this.username = username;
     this.password = password;
@@ -55,6 +58,9 @@ public class GitConfig extends SettingValue implements Encryptable {
     this.branch = branch;
     this.accountId = accountId;
     this.encryptedPassword = encryptedPassword;
+    this.sshSettingId = sshSettingId;
+    this.sshSettingAttribute = sshSettingAttribute;
+    this.keyAuth = keyAuth;
   }
 
   @Data
