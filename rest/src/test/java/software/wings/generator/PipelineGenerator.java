@@ -5,7 +5,6 @@ import static software.wings.beans.Pipeline.Builder.aPipeline;
 import com.google.inject.Inject;
 import com.google.inject.Singleton;
 
-import io.github.benas.randombeans.EnhancedRandomBuilder;
 import io.github.benas.randombeans.api.EnhancedRandom;
 import software.wings.beans.Pipeline;
 import software.wings.beans.Pipeline.Builder;
@@ -15,8 +14,8 @@ import software.wings.service.intfc.PipelineService;
 public class PipelineGenerator {
   @Inject PipelineService pipelineService;
 
-  public Pipeline createPipeline(long seed, Pipeline pipeline) {
-    EnhancedRandom random = EnhancedRandomBuilder.aNewEnhancedRandomBuilder().seed(seed).build();
+  public Pipeline createPipeline(Randomizer.Seed seed, Pipeline pipeline) {
+    EnhancedRandom random = Randomizer.instance(seed);
 
     final Builder builder = aPipeline();
 

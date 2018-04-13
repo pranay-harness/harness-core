@@ -6,12 +6,12 @@ import static software.wings.beans.Application.Builder.anApplication;
 import com.google.inject.Inject;
 import com.google.inject.Singleton;
 
-import io.github.benas.randombeans.EnhancedRandomBuilder;
 import io.github.benas.randombeans.api.EnhancedRandom;
 import software.wings.beans.Account;
 import software.wings.beans.Application;
 import software.wings.beans.Application.Builder;
 import software.wings.dl.WingsPersistence;
+import software.wings.generator.AccountGenerator.Accounts;
 import software.wings.service.intfc.AppService;
 
 @Singleton
@@ -25,7 +25,7 @@ public class ApplicationGenerator {
     GENERIC_TEST,
   }
 
-  public Application ensurePredefined(long seed, Applications predefined) {
+  public Application ensurePredefined(Randomizer.Seed seed, Applications predefined) {
     switch (predefined) {
       case GENERIC_TEST:
         return ensureGenericTest(seed);
@@ -36,12 +36,14 @@ public class ApplicationGenerator {
     return null;
   }
 
-  private Application ensureGenericTest(long seed) {
-    return ensureApplication(seed, anApplication().withName("Test Application").build());
+  private Application ensureGenericTest(Randomizer.Seed seed) {
+    Account account = accountGenerator.ensurePredefined(seed, Accounts.GENERIC_TEST);
+    return ensureApplication(
+        seed, anApplication().withAccountId(account.getUuid()).withName("Test Application").build());
   }
 
-  public Application ensureRandom(long seed) {
-    EnhancedRandom random = EnhancedRandomBuilder.aNewEnhancedRandomBuilder().seed(seed).build();
+  public Application ensureRandom(Randomizer.Seed seed) {
+    EnhancedRandom random = Randomizer.instance(seed);
 
     Applications predefined = random.nextObject(Applications.class);
 
@@ -55,15 +57,15 @@ public class ApplicationGenerator {
         .get();
   }
 
-  public Application ensureApplication(long seed, Application application) {
-    EnhancedRandom random = EnhancedRandomBuilder.aNewEnhancedRandomBuilder().seed(seed).build();
+  public Application ensureApplication(Randomizer.Seed seed, Application application) {
+    EnhancedRandom random = Randomizer.instance(seed);
 
     final Builder builder = anApplication();
 
     if (application != null && application.getAccountId() != null) {
       builder.withAccountId(application.getAccountId());
     } else {
-      Account account = accountGenerator.ensurePredefined(seed, AccountGenerator.Accounts.GENERIC_TEST);
+      Account account = accountGenerator.randomAccount();
       builder.withAccountId(account.getUuid());
     }
 

@@ -6,7 +6,6 @@ import static software.wings.beans.Service.Builder.aService;
 import com.google.inject.Inject;
 import com.google.inject.Singleton;
 
-import io.github.benas.randombeans.EnhancedRandomBuilder;
 import io.github.benas.randombeans.api.EnhancedRandom;
 import software.wings.beans.Application;
 import software.wings.beans.Service;
@@ -26,7 +25,7 @@ public class ServiceGenerator {
     GENERIC_TEST,
   }
 
-  public Service ensurePredefined(long seed, Services predefined) {
+  public Service ensurePredefined(Randomizer.Seed seed, Services predefined) {
     switch (predefined) {
       case GENERIC_TEST:
         return ensureGenericTest(seed);
@@ -37,7 +36,7 @@ public class ServiceGenerator {
     return null;
   }
 
-  private Service ensureGenericTest(long seed) {
+  private Service ensureGenericTest(Randomizer.Seed seed) {
     final Application application = applicationGenerator.ensurePredefined(seed, Applications.GENERIC_TEST);
     return ensureService(seed,
         aService()
@@ -47,8 +46,8 @@ public class ServiceGenerator {
             .build());
   }
 
-  public Service ensureRandom(long seed) {
-    EnhancedRandom random = EnhancedRandomBuilder.aNewEnhancedRandomBuilder().seed(seed).build();
+  public Service ensureRandom(Randomizer.Seed seed) {
+    EnhancedRandom random = Randomizer.instance(seed);
 
     Services predefined = random.nextObject(Services.class);
 
@@ -62,8 +61,8 @@ public class ServiceGenerator {
         .get();
   }
 
-  public Service ensureService(long seed, Service service) {
-    EnhancedRandom random = EnhancedRandomBuilder.aNewEnhancedRandomBuilder().seed(seed).build();
+  public Service ensureService(Randomizer.Seed seed, Service service) {
+    EnhancedRandom random = Randomizer.instance(seed);
 
     Service.Builder builder = aService();
 
