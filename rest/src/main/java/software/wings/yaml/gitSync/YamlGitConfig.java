@@ -19,6 +19,7 @@ import software.wings.annotation.Encryptable;
 import software.wings.annotation.Encrypted;
 import software.wings.beans.Base;
 import software.wings.beans.GitConfig;
+import software.wings.beans.SettingAttribute;
 import software.wings.jersey.JsonViews;
 import software.wings.settings.SettingValue.SettingVariableTypes;
 
@@ -40,6 +41,8 @@ public class YamlGitConfig extends Base implements Encryptable {
   @NotEmpty private String username;
 
   @Encrypted @JsonView(JsonViews.Internal.class) private char[] password;
+  private String sshSettingId;
+  private boolean keyAuth;
 
   @SchemaIgnore @JsonIgnore private String encryptedPassword;
 
@@ -72,12 +75,15 @@ public class YamlGitConfig extends Base implements Encryptable {
 
   @SchemaIgnore
   @JsonIgnore
-  public GitConfig getGitConfig() {
+  public GitConfig getGitConfig(SettingAttribute sshSettingAttribute) {
     return GitConfig.builder()
         .accountId(this.accountId)
         .repoUrl(this.url)
         .username(this.username)
         .password(this.password)
+        .sshSettingAttribute(sshSettingAttribute)
+        .sshSettingId(this.sshSettingId)
+        .keyAuth(this.keyAuth)
         .encryptedPassword(this.encryptedPassword)
         .branch(this.branchName.trim())
         .build();
