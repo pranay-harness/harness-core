@@ -23,7 +23,7 @@ import software.wings.yaml.setting.ArtifactServerYaml;
 @EqualsAndHashCode(callSuper = false)
 @ToString(exclude = "password")
 public class GitConfig extends SettingValue implements Encryptable {
-  @NotEmpty @Attributes(title = "Username", required = true) private String username;
+  @Attributes(title = "Username", required = true) private String username;
 
   @Attributes(title = "Password", required = true) @Encrypted private char[] password;
   @NotEmpty @Attributes(title = "Git Repo Url", required = true) private String repoUrl;
@@ -34,7 +34,7 @@ public class GitConfig extends SettingValue implements Encryptable {
 
   @JsonView(JsonViews.Internal.class) @SchemaIgnore private String encryptedPassword;
   private String sshSettingId;
-  private SettingAttribute sshSettingAttribute;
+  @Transient private SettingAttribute sshSettingAttribute;
   private boolean keyAuth;
 
   @SchemaIgnore @Transient private GitRepositoryType gitRepoType;
