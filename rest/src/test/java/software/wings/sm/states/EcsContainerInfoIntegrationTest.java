@@ -6,6 +6,7 @@ import static org.mockito.Matchers.anyObject;
 import static org.mockito.Matchers.anyString;
 import static org.mockito.Matchers.eq;
 import static org.mockito.Mockito.doReturn;
+import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.spy;
 import static org.mockito.Mockito.when;
 import static org.mockito.MockitoAnnotations.initMocks;
@@ -44,10 +45,13 @@ import software.wings.service.intfc.WorkflowExecutionService;
 import software.wings.service.intfc.security.SecretManager;
 import software.wings.sm.ContextElementType;
 import software.wings.sm.ExecutionContext;
+import software.wings.sm.ExecutionContextImpl;
 import software.wings.sm.ExecutionStatus;
+import software.wings.sm.StateExecutionInstance;
 
 import java.security.KeyManagementException;
 import java.security.NoSuchAlgorithmException;
+import java.util.Collections;
 import java.util.Set;
 import java.util.UUID;
 
@@ -69,8 +73,6 @@ public class EcsContainerInfoIntegrationTest extends WingsBaseTest {
   private final String appId = UUID.randomUUID().toString();
   private final String accountId = UUID.randomUUID().toString();
   private final String previousWorkflowExecutionId = UUID.randomUUID().toString();
-
-  @Mock ExecutionContext context;
 
   @Before
   public void setUp() throws Exception {
@@ -104,12 +106,17 @@ public class EcsContainerInfoIntegrationTest extends WingsBaseTest {
     wingsPersistence.save(workflow);
     wingsPersistence.save(workflowExecution);
 
-    when(context.getContextElement(ContextElementType.PARAM, Constants.PHASE_PARAM))
-        .thenReturn(PhaseElementBuilder.aPhaseElement()
-                        .withServiceElement(ServiceElement.Builder.aServiceElement().withUuid("serviceA").build())
-                        .build());
-    when(context.getAppId()).thenReturn(appId);
-    when(context.getWorkflowExecutionId()).thenReturn(UUID.randomUUID().toString());
+    StateExecutionInstance stateExecutionInstance = mock(StateExecutionInstance.class);
+    when(stateExecutionInstance.getStateExecutionMap()).thenReturn(Collections.emptyMap());
+
+    ExecutionContext context = spy(new ExecutionContextImpl(stateExecutionInstance));
+    doReturn(PhaseElementBuilder.aPhaseElement()
+                 .withServiceElement(ServiceElement.Builder.aServiceElement().withUuid("serviceA").build())
+                 .build())
+        .when(context)
+        .getContextElement(ContextElementType.PARAM, Constants.PHASE_PARAM);
+    doReturn(appId).when(context).getAppId();
+    doReturn(UUID.randomUUID().toString()).when(context).getWorkflowExecutionId();
     when(infraMappingService.get(anyString(), anyString()))
         .thenReturn(EcsInfrastructureMapping.Builder.anEcsInfrastructureMapping()
                         .withClusterName("harness-qa")

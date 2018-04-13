@@ -191,6 +191,9 @@ public abstract class AbstractAnalysisState extends State {
     String serviceId = phaseElement.getServiceElement().getUuid();
     String infraMappingId = phaseElement.getInfraMappingId();
 
+    Set<String> phaseHosts = getHostsDeployedSoFar(context, serviceId);
+    getLogger().info("Deployed hosts so far: {}", phaseHosts);
+
     InfrastructureMapping infrastructureMapping = infraMappingService.get(context.getAppId(), infraMappingId);
     if (containerInstanceHelper.isContainerDeployment(infrastructureMapping)) {
       Set<String> containerServiceNames =
@@ -203,19 +206,21 @@ public abstract class AbstractAnalysisState extends State {
 
       List<ContainerInfo> containerInfoForService =
           containerInstanceHelper.getContainerInfoForService(containerServiceNames, context, infraMappingId, serviceId);
-      return containerInfoForService.stream()
-          .map(containerInfo -> {
-            if (containerInfo instanceof KubernetesContainerInfo) {
-              return ((KubernetesContainerInfo) containerInfo).getPodName();
-            }
+      Set<String> hosts = containerInfoForService.stream()
+                              .map(containerInfo -> {
+                                if (containerInfo instanceof KubernetesContainerInfo) {
+                                  return ((KubernetesContainerInfo) containerInfo).getPodName();
+                                }
 
-            if (containerInfo instanceof EcsContainerInfo) {
-              return ((EcsContainerInfo) containerInfo).getServiceName();
-            }
+                                if (containerInfo instanceof EcsContainerInfo) {
+                                  return ((EcsContainerInfo) containerInfo).getServiceName();
+                                }
 
-            throw new IllegalStateException("Invalid type " + containerInfo);
-          })
-          .collect(Collectors.toSet());
+                                throw new IllegalStateException("Invalid type " + containerInfo);
+                              })
+                              .collect(Collectors.toSet());
+      hosts.removeAll(phaseHosts);
+      return hosts;
     }
     int offSet = 0;
     final PageRequest<WorkflowExecution> pageRequest =
@@ -229,8 +234,6 @@ public abstract class AbstractAnalysisState extends State {
             .withLimit(String.valueOf(PageRequest.DEFAULT_PAGE_SIZE))
             .build();
 
-    Set<String> phaseHosts = getHostsDeployedSoFar(context, serviceId);
-    getLogger().info("Deployed hosts so far: {}", phaseHosts);
     PageResponse<WorkflowExecution> workflowExecutions;
     do {
       workflowExecutions = workflowExecutionService.listExecutions(pageRequest, false);
