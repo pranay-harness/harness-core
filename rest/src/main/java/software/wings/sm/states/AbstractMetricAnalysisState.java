@@ -80,7 +80,7 @@ public abstract class AbstractMetricAnalysisState extends AbstractAnalysisState 
       if (getComparisonStrategy() == AnalysisComparisonStrategy.COMPARE_WITH_CURRENT) {
         getLogger().warn("No nodes with older version found to compare the logs. Skipping analysis");
         return generateAnalysisResponse(context, ExecutionStatus.SUCCESS,
-            "Skipping analysis due to lack of baseline data (First time deployment).");
+            "Skipping analysis due to lack of baseline data (First time deployment or Last phase).");
       }
 
       getLogger().warn("It seems that there is no successful run for this workflow yet. "

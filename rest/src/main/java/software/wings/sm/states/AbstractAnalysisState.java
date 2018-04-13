@@ -20,6 +20,8 @@ import org.slf4j.Logger;
 import software.wings.api.CanaryWorkflowStandardParams;
 import software.wings.api.InstanceElement;
 import software.wings.api.PhaseElement;
+import software.wings.api.PhaseExecutionData;
+import software.wings.api.ServiceElement;
 import software.wings.app.MainConfiguration;
 import software.wings.beans.AwsConfig;
 import software.wings.beans.DelegateTask.SyncTaskContext;
@@ -62,6 +64,8 @@ import software.wings.sm.ExecutionContextImpl;
 import software.wings.sm.ExecutionStatus;
 import software.wings.sm.InstanceStatusSummary;
 import software.wings.sm.State;
+import software.wings.sm.StateExecutionData;
+import software.wings.sm.StateExecutionInstance;
 import software.wings.sm.StateType;
 import software.wings.stencils.DefaultValue;
 import software.wings.waitnotify.WaitNotifyEngine;
@@ -70,6 +74,7 @@ import java.io.UnsupportedEncodingException;
 import java.util.Date;
 import java.util.HashSet;
 import java.util.List;
+import java.util.Map;
 import java.util.Set;
 import java.util.concurrent.TimeUnit;
 import java.util.stream.Collectors;
@@ -223,6 +228,9 @@ public abstract class AbstractAnalysisState extends State {
             .withOffset(String.valueOf(offSet))
             .withLimit(String.valueOf(PageRequest.DEFAULT_PAGE_SIZE))
             .build();
+
+    Set<String> phaseHosts = getHostsDeployedSoFar(context, serviceId);
+    getLogger().info("Deployed hosts so far: {}", phaseHosts);
     PageResponse<WorkflowExecution> workflowExecutions;
     do {
       workflowExecutions = workflowExecutionService.listExecutions(pageRequest, false);
@@ -251,6 +259,8 @@ public abstract class AbstractAnalysisState extends State {
                   hostnameTemplate, Lists.newArrayList(instanceStatusSummary.getInstanceElement())));
             }
           }
+          getLogger().info("hosts deployed with last workflow execution: {}", hosts);
+          hosts.removeAll(phaseHosts);
           return hosts;
         }
       }
@@ -289,6 +299,51 @@ public abstract class AbstractAnalysisState extends State {
                                      .build());
 
     return containerInfos.stream().map(containerInfo -> containerInfo.getContainerId()).collect(Collectors.toSet());
+  }
+
+  private Set<String> getHostsDeployedSoFar(ExecutionContext context, String serviceId) {
+    Set<String> hosts = new HashSet<>();
+    StateExecutionInstance stateExecutionInstance = ((ExecutionContextImpl) context).getStateExecutionInstance();
+    Preconditions.checkNotNull(stateExecutionInstance);
+    Map<String, StateExecutionData> stateExecutionMap = stateExecutionInstance.getStateExecutionMap();
+
+    if (stateExecutionMap == null) {
+      return hosts;
+    }
+    stateExecutionMap.values()
+        .stream()
+        .filter(stateExecutionData -> stateExecutionData.getStateType().equals(StateType.PHASE.name()))
+        .forEach(stateExecutionData -> {
+
+          PhaseExecutionData phaseExecutionData = (PhaseExecutionData) stateExecutionData;
+          phaseExecutionData.getElementStatusSummary().stream().forEach(elementExecutionSummary -> {
+            PhaseElement phaseElement = (PhaseElement) elementExecutionSummary.getContextElement();
+            if (phaseElement == null) {
+              getLogger().error("null phase element for " + elementExecutionSummary);
+              return;
+            }
+
+            ServiceElement serviceElement = phaseElement.getServiceElement();
+            if (serviceElement == null) {
+              getLogger().error("null service element for " + phaseElement);
+              return;
+            }
+
+            if (serviceElement.getUuid().equals(serviceId)) {
+              elementExecutionSummary.getInstanceStatusSummaries().forEach(instanceStatusSummary -> {
+                if (isEmpty(hostnameTemplate)) {
+                  hosts.add(instanceStatusSummary.getInstanceElement().getHostName());
+                } else {
+                  hosts.add(context.renderExpression(
+                      hostnameTemplate, Lists.newArrayList(instanceStatusSummary.getInstanceElement())));
+                }
+              });
+            }
+
+          });
+
+        });
+    return hosts;
   }
 
   protected Set<String> getCanaryNewHostNames(ExecutionContext context) {
