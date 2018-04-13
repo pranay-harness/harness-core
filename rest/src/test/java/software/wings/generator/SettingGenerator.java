@@ -9,14 +9,15 @@ import static software.wings.beans.HostConnectionAttributes.ConnectionType.SSH;
 import static software.wings.beans.SettingAttribute.Builder.aSettingAttribute;
 import static software.wings.generator.SettingGenerator.Settings.AWS_TEST_CLOUD_PROVIDER;
 import static software.wings.generator.SettingGenerator.Settings.DEV_TEST_CONNECTOR;
+import static software.wings.generator.SettingGenerator.Settings.TERRAFORM_TEST_GIT_REPO;
 
 import com.google.inject.Inject;
 import com.google.inject.Singleton;
 
-import io.github.benas.randombeans.EnhancedRandomBuilder;
 import io.github.benas.randombeans.api.EnhancedRandom;
 import software.wings.beans.Account;
 import software.wings.beans.AwsConfig;
+import software.wings.beans.GitConfig;
 import software.wings.beans.SettingAttribute;
 import software.wings.beans.SettingAttribute.Category;
 import software.wings.service.intfc.SettingsService;
@@ -30,14 +31,17 @@ public class SettingGenerator {
   public enum Settings {
     AWS_TEST_CLOUD_PROVIDER,
     DEV_TEST_CONNECTOR,
+    TERRAFORM_TEST_GIT_REPO,
   }
 
-  public SettingAttribute ensurePredefined(long seed, Settings predefined) {
+  public SettingAttribute ensurePredefined(Randomizer.Seed seed, Settings predefined) {
     switch (predefined) {
       case AWS_TEST_CLOUD_PROVIDER:
         return ensureAwsTest(seed);
       case DEV_TEST_CONNECTOR:
         return ensureDevTest(seed);
+      case TERRAFORM_TEST_GIT_REPO:
+        return ensureTerraformTestGitRepo(seed);
       default:
         unhandled(predefined);
     }
@@ -45,7 +49,7 @@ public class SettingGenerator {
     return null;
   }
 
-  private SettingAttribute ensureAwsTest(long seed) {
+  private SettingAttribute ensureAwsTest(Randomizer.Seed seed) {
     final Account account = accountGenerator.randomAccount();
     SettingAttribute settingAttribute =
         aSettingAttribute()
@@ -63,7 +67,7 @@ public class SettingGenerator {
     return ensureSettingAttribute(seed, settingAttribute);
   }
 
-  private SettingAttribute ensureDevTest(long seed) {
+  private SettingAttribute ensureDevTest(Randomizer.Seed seed) {
     final Account account = accountGenerator.randomAccount();
 
     final SettingAttribute settingAttribute =
@@ -111,8 +115,28 @@ public class SettingGenerator {
     return ensureSettingAttribute(seed, settingAttribute);
   }
 
-  public SettingAttribute ensureSettingAttribute(long seed, SettingAttribute settingAttribute) {
-    EnhancedRandom random = EnhancedRandomBuilder.aNewEnhancedRandomBuilder().seed(seed).build();
+  private SettingAttribute ensureTerraformTestGitRepo(Randomizer.Seed seed) {
+    final Account account = accountGenerator.randomAccount();
+
+    SettingAttribute settingAttribute =
+        aSettingAttribute()
+            .withCategory(Category.CONNECTOR)
+            .withName(TERRAFORM_TEST_GIT_REPO.name())
+            .withAppId(GLOBAL_APP_ID)
+            .withEnvId(GLOBAL_ENV_ID)
+            .withAccountId(account.getUuid())
+            .withValue(GitConfig.builder()
+                           .repoUrl("https://github.com/wings-software/terraform-test.git")
+                           .username("george-harness")
+                           .branch("master")
+                           .accountId(account.getUuid())
+                           .build())
+            .build();
+    return ensureSettingAttribute(seed, settingAttribute);
+  }
+
+  public SettingAttribute ensureSettingAttribute(Randomizer.Seed seed, SettingAttribute settingAttribute) {
+    EnhancedRandom random = Randomizer.instance(seed);
 
     SettingAttribute.Builder builder = aSettingAttribute();
 

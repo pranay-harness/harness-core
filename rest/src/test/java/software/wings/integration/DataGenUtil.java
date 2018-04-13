@@ -103,6 +103,7 @@ import software.wings.generator.EnvironmentGenerator;
 import software.wings.generator.EnvironmentGenerator.Environments;
 import software.wings.generator.InfrastructureMappingGenerator;
 import software.wings.generator.PipelineGenerator;
+import software.wings.generator.Randomizer.Seed;
 import software.wings.generator.ServiceGenerator;
 import software.wings.generator.ServiceGenerator.Services;
 import software.wings.generator.ServiceTemplateGenerator;
@@ -593,7 +594,7 @@ public class DataGenUtil extends BaseIntegrationTest {
   }
 
   private void createTestApplication(Account account) {
-    int seed = 0;
+    final Seed seed = new Seed(0);
 
     Environment environment = environmentGenerator.ensurePredefined(seed, Environments.GENERIC_TEST);
     Service service = serviceGenerator.ensurePredefined(seed, Services.GENERIC_TEST);

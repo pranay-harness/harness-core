@@ -8,7 +8,6 @@ import static software.wings.beans.InfrastructureMappingType.AWS_SSH;
 import com.google.inject.Inject;
 import com.google.inject.Singleton;
 
-import io.github.benas.randombeans.EnhancedRandomBuilder;
 import io.github.benas.randombeans.api.EnhancedRandom;
 import software.wings.api.DeploymentType;
 import software.wings.beans.AwsInfrastructureMapping;
@@ -44,7 +43,7 @@ public class InfrastructureMappingGenerator {
     AWS_SSH_TEST,
   }
 
-  public InfrastructureMapping ensurePredefined(long seed, InfrastructureMappings predefined) {
+  public InfrastructureMapping ensurePredefined(Randomizer.Seed seed, InfrastructureMappings predefined) {
     switch (predefined) {
       case AWS_SSH_TEST:
         return ensureAwsSshTest(seed);
@@ -55,7 +54,7 @@ public class InfrastructureMappingGenerator {
     return null;
   }
 
-  private InfrastructureMapping ensureAwsSshTest(long seed) {
+  private InfrastructureMapping ensureAwsSshTest(Randomizer.Seed seed) {
     final Environment environment = environmentGenerator.ensurePredefined(seed, Environments.GENERIC_TEST);
 
     Service service = serviceGenerator.ensurePredefined(seed, Services.GENERIC_TEST);
@@ -91,16 +90,17 @@ public class InfrastructureMappingGenerator {
             .build());
   }
 
-  public InfrastructureMapping ensureRandom(long seed) {
-    EnhancedRandom random = EnhancedRandomBuilder.aNewEnhancedRandomBuilder().seed(seed).build();
+  public InfrastructureMapping ensureRandom(Randomizer.Seed seed) {
+    EnhancedRandom random = Randomizer.instance(seed);
 
     InfrastructureMappings predefined = random.nextObject(InfrastructureMappings.class);
 
     return ensurePredefined(seed, predefined);
   }
 
-  public InfrastructureMapping ensureInfrastructureMapping(long seed, InfrastructureMapping infrastructureMapping) {
-    EnhancedRandom random = EnhancedRandomBuilder.aNewEnhancedRandomBuilder().seed(seed).build();
+  public InfrastructureMapping ensureInfrastructureMapping(
+      Randomizer.Seed seed, InfrastructureMapping infrastructureMapping) {
+    EnhancedRandom random = Randomizer.instance(seed);
 
     InfrastructureMappingType infrastructureMappingType;
 

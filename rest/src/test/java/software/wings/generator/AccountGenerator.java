@@ -17,7 +17,7 @@ public class AccountGenerator {
     GENERIC_TEST,
   }
 
-  public Account ensurePredefined(long seed, Accounts predefined) {
+  public Account ensurePredefined(Randomizer.Seed seed, Accounts predefined) {
     switch (predefined) {
       case GENERIC_TEST:
         return ensureGenericTest(seed);
@@ -28,7 +28,7 @@ public class AccountGenerator {
     return null;
   }
 
-  private Account ensureGenericTest(long seed) {
+  private Account ensureGenericTest(Randomizer.Seed seed) {
     if (account == null) {
       account = anAccount().withUuid(GLOBAL_ACCOUNT_ID).build();
     }

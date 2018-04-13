@@ -1,11 +1,12 @@
 package software.wings.generator;
 
 import static software.wings.beans.Workflow.WorkflowBuilder.aWorkflow;
+import static software.wings.common.Constants.PROVISION_NODE_NAME;
+import static software.wings.common.Constants.SELECT_NODE_NAME;
 
 import com.google.inject.Inject;
 import com.google.inject.Singleton;
 
-import io.github.benas.randombeans.EnhancedRandomBuilder;
 import io.github.benas.randombeans.api.EnhancedRandom;
 import lombok.Builder;
 import lombok.Value;
@@ -22,8 +23,8 @@ public class WorkflowGenerator {
   @Inject ApplicationGenerator applicationGenerator;
   @Inject OrchestrationWorkflowGenerator orchestrationWorkflowGenerator;
 
-  public Workflow createWorkflow(long seed, Workflow workflow) {
-    EnhancedRandom random = EnhancedRandomBuilder.aNewEnhancedRandomBuilder().seed(seed).build();
+  public Workflow createWorkflow(Randomizer.Seed seed, Workflow workflow) {
+    EnhancedRandom random = Randomizer.instance(seed);
 
     WorkflowBuilder builder = aWorkflow();
 
@@ -86,12 +87,15 @@ public class WorkflowGenerator {
                                           .getSubworkflows()
                                           .entrySet()
                                           .stream()
-                                          .filter(entry -> "Provision Nodes".equals(entry.getValue().getGraphName()))
+                                          .filter(entry -> PROVISION_NODE_NAME.equals(entry.getValue().getGraphName()))
                                           .findFirst()
                                           .get()
                                           .getValue()
                                           .getNodes()
-                                          .get(0);
+                                          .stream()
+                                          .filter(entry -> SELECT_NODE_NAME.equals(entry.getName()))
+                                          .findFirst()
+                                          .get();
 
         selectNodes.getProperties().put("instanceCount", params.getSelectNodeCount());
       }

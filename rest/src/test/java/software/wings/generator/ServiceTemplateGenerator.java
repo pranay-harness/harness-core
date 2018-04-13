@@ -5,7 +5,6 @@ import static software.wings.beans.ServiceTemplate.Builder.aServiceTemplate;
 import com.google.inject.Inject;
 import com.google.inject.Singleton;
 
-import io.github.benas.randombeans.EnhancedRandomBuilder;
 import io.github.benas.randombeans.api.EnhancedRandom;
 import software.wings.beans.ServiceTemplate;
 import software.wings.service.intfc.ServiceTemplateService;
@@ -14,8 +13,8 @@ import software.wings.service.intfc.ServiceTemplateService;
 public class ServiceTemplateGenerator {
   @Inject ServiceTemplateService serviceTemplateService;
 
-  public ServiceTemplate createServiceTemplate(long seed, ServiceTemplate serviceTemplate) {
-    EnhancedRandom random = EnhancedRandomBuilder.aNewEnhancedRandomBuilder().seed(seed).build();
+  public ServiceTemplate createServiceTemplate(Randomizer.Seed seed, ServiceTemplate serviceTemplate) {
+    EnhancedRandom random = Randomizer.instance(seed);
 
     ServiceTemplate.Builder builder = aServiceTemplate();
 

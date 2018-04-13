@@ -7,7 +7,6 @@ import static software.wings.beans.GraphNode.GraphNodeBuilder.aGraphNode;
 
 import com.google.inject.Singleton;
 
-import io.github.benas.randombeans.EnhancedRandomBuilder;
 import io.github.benas.randombeans.api.EnhancedRandom;
 import software.wings.beans.Graph;
 import software.wings.beans.OrchestrationWorkflow;
@@ -15,8 +14,9 @@ import software.wings.sm.StateType;
 
 @Singleton
 public class OrchestrationWorkflowGenerator {
-  public OrchestrationWorkflow createOrchestrationWorkflow(long seed) {
-    EnhancedRandom random = EnhancedRandomBuilder.aNewEnhancedRandomBuilder().seed(seed).build();
+  public OrchestrationWorkflow createOrchestrationWorkflow(Randomizer.Seed seed) {
+    EnhancedRandom random = Randomizer.instance(seed);
+
     Graph graph = aGraph()
                       .addNodes(aGraphNode()
                                     .withId("n1")

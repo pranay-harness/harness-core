@@ -7,7 +7,6 @@ import static software.wings.beans.Environment.EnvironmentType.NON_PROD;
 import com.google.inject.Inject;
 import com.google.inject.Singleton;
 
-import io.github.benas.randombeans.EnhancedRandomBuilder;
 import io.github.benas.randombeans.api.EnhancedRandom;
 import software.wings.beans.Application;
 import software.wings.beans.Environment;
@@ -27,7 +26,7 @@ public class EnvironmentGenerator {
     GENERIC_TEST,
   }
 
-  public Environment ensurePredefined(long seed, Environments predefined) {
+  public Environment ensurePredefined(Randomizer.Seed seed, Environments predefined) {
     switch (predefined) {
       case GENERIC_TEST:
         return ensureGenericTest(seed);
@@ -38,7 +37,7 @@ public class EnvironmentGenerator {
     return null;
   }
 
-  private Environment ensureGenericTest(long seed) {
+  private Environment ensureGenericTest(Randomizer.Seed seed) {
     final Application application = applicationGenerator.ensurePredefined(seed, Applications.GENERIC_TEST);
     return ensureEnvironment(seed,
         anEnvironment()
@@ -48,8 +47,8 @@ public class EnvironmentGenerator {
             .build());
   }
 
-  public Environment ensureRandom(long seed) {
-    EnhancedRandom random = EnhancedRandomBuilder.aNewEnhancedRandomBuilder().seed(seed).build();
+  public Environment ensureRandom(Randomizer.Seed seed) {
+    EnhancedRandom random = Randomizer.instance(seed);
 
     Environments predefined = random.nextObject(Environments.class);
 
@@ -63,8 +62,8 @@ public class EnvironmentGenerator {
         .get();
   }
 
-  public Environment ensureEnvironment(long seed, Environment environment) {
-    EnhancedRandom random = EnhancedRandomBuilder.aNewEnhancedRandomBuilder().seed(seed).build();
+  public Environment ensureEnvironment(Randomizer.Seed seed, Environment environment) {
+    EnhancedRandom random = Randomizer.instance(seed);
 
     Environment.Builder builder = anEnvironment();
 
