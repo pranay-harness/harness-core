@@ -1,19 +1,70 @@
 package software.wings.generator;
 
+import static io.harness.govern.Switch.unhandled;
+import static java.util.Arrays.asList;
 import static software.wings.beans.artifact.JenkinsArtifactStream.JenkinsArtifactStreamBuilder;
 
 import com.google.inject.Inject;
 import com.google.inject.Singleton;
 
 import io.github.benas.randombeans.api.EnhancedRandom;
+import software.wings.beans.Environment;
+import software.wings.beans.Service;
+import software.wings.beans.SettingAttribute;
 import software.wings.beans.artifact.ArtifactStream;
 import software.wings.beans.artifact.ArtifactStreamType;
 import software.wings.beans.artifact.JenkinsArtifactStream;
+import software.wings.generator.SettingGenerator.Settings;
 import software.wings.service.intfc.ArtifactStreamService;
 
 @Singleton
 public class ArtifactStreamGenerator {
   @Inject ArtifactStreamService artifactStreamService;
+
+  @Inject private EnvironmentGenerator environmentGenerator;
+  @Inject private ServiceGenerator serviceGenerator;
+  @Inject private SettingGenerator settingGenerator;
+
+  public enum ArtifactStreams {
+    HARNESS_SAMPLE_ECHO_WAR,
+  }
+
+  public ArtifactStream ensurePredefined(Randomizer.Seed seed, Owners owners, ArtifactStreams predefined) {
+    switch (predefined) {
+      case HARNESS_SAMPLE_ECHO_WAR:
+        return ensureHarnessSampleEchoWar(seed, owners);
+      default:
+        unhandled(predefined);
+    }
+
+    return null;
+  }
+
+  private ArtifactStream ensureHarnessSampleEchoWar(Randomizer.Seed seed, Owners owners) {
+    Environment environment = owners.obtainEnvironment();
+    Service service = owners.obtainService();
+
+    final SettingAttribute settingAttribute =
+        settingGenerator.ensurePredefined(seed, Settings.HARNESS_JENKINS_CONNECTOR);
+
+    return ensureArtifactStream(seed,
+        JenkinsArtifactStream.builder()
+            .appId(environment.getAppId())
+            .serviceId(service.getUuid())
+            .sourceName(settingAttribute.getName())
+            .jobname("harness-samples")
+            .artifactPaths(asList("echo/target/echo.war"))
+            .settingId(settingAttribute.getUuid())
+            .build());
+  }
+
+  public ArtifactStream ensureRandom(Randomizer.Seed seed, Owners owners) {
+    EnhancedRandom random = Randomizer.instance(seed);
+
+    ArtifactStreams predefined = random.nextObject(ArtifactStreams.class);
+
+    return ensurePredefined(seed, owners, predefined);
+  }
 
   public ArtifactStream ensureArtifactStream(Randomizer.Seed seed, ArtifactStream artifactStream) {
     EnhancedRandom random = Randomizer.instance(seed);
@@ -74,6 +125,6 @@ public class ArtifactStreamGenerator {
         throw new UnsupportedOperationException();
     }
 
-    return artifactStreamService.create(newArtifactStream);
+    return artifactStreamService.forceCreate(newArtifactStream);
   }
 }

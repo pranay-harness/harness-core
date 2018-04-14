@@ -87,7 +87,6 @@ public interface WingsIntegrationTestConstants {
   String DOCKER_REGISTRY_URL = "https://registry.hub.docker.com/v2/";
   String DOCKER_USERNAME = "wingsplugins";
   char[] DOCKER_PASSOWRD = "W!ngs@DockerHub".toCharArray();
-  String HARNESS_JENKINS = "Harness Jenkins";
   String HARNESS_KMS = "Harness KMS";
 
   String DEFAULT_USER_KEY = "DEFAULT_USER_KEY";

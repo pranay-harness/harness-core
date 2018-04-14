@@ -44,6 +44,14 @@ public interface ArtifactStreamService extends OwnedByService {
   ArtifactStream create(@Valid ArtifactStream artifactStream);
 
   /**
+   * Creates artifact without checking the validity artifact stream.
+   *
+   * @param artifactStream the artifact stream
+   * @return the artifact stream
+   */
+  ArtifactStream forceCreate(@Valid ArtifactStream artifactStream);
+
+  /**
    * Update artifact stream.
    *
    * @param artifactStream the artifact stream

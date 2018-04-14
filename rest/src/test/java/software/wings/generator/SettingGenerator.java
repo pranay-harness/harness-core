@@ -9,6 +9,7 @@ import static software.wings.beans.HostConnectionAttributes.ConnectionType.SSH;
 import static software.wings.beans.SettingAttribute.Builder.aSettingAttribute;
 import static software.wings.generator.SettingGenerator.Settings.AWS_TEST_CLOUD_PROVIDER;
 import static software.wings.generator.SettingGenerator.Settings.DEV_TEST_CONNECTOR;
+import static software.wings.generator.SettingGenerator.Settings.HARNESS_JENKINS_CONNECTOR;
 import static software.wings.generator.SettingGenerator.Settings.TERRAFORM_TEST_GIT_REPO;
 
 import com.google.inject.Inject;
@@ -18,8 +19,10 @@ import io.github.benas.randombeans.api.EnhancedRandom;
 import software.wings.beans.Account;
 import software.wings.beans.AwsConfig;
 import software.wings.beans.GitConfig;
+import software.wings.beans.JenkinsConfig;
 import software.wings.beans.SettingAttribute;
 import software.wings.beans.SettingAttribute.Category;
+import software.wings.generator.AccountGenerator.Accounts;
 import software.wings.service.intfc.SettingsService;
 
 @Singleton
@@ -31,6 +34,7 @@ public class SettingGenerator {
   public enum Settings {
     AWS_TEST_CLOUD_PROVIDER,
     DEV_TEST_CONNECTOR,
+    HARNESS_JENKINS_CONNECTOR,
     TERRAFORM_TEST_GIT_REPO,
   }
 
@@ -40,6 +44,8 @@ public class SettingGenerator {
         return ensureAwsTest(seed);
       case DEV_TEST_CONNECTOR:
         return ensureDevTest(seed);
+      case HARNESS_JENKINS_CONNECTOR:
+        return ensureHarnessJenkins(seed);
       case TERRAFORM_TEST_GIT_REPO:
         return ensureTerraformTestGitRepo(seed);
       default:
@@ -135,6 +141,24 @@ public class SettingGenerator {
     return ensureSettingAttribute(seed, settingAttribute);
   }
 
+  private SettingAttribute ensureHarnessJenkins(Randomizer.Seed seed) {
+    final Account account = accountGenerator.ensurePredefined(seed, Accounts.GENERIC_TEST);
+
+    SettingAttribute settingAttribute =
+        aSettingAttribute()
+            .withName(HARNESS_JENKINS_CONNECTOR.name())
+            .withCategory(Category.CONNECTOR)
+            .withAccountId(account.getUuid())
+            .withValue(JenkinsConfig.builder()
+                           .accountId(account.getUuid())
+                           .jenkinsUrl("https://jenkins.wings.software")
+                           .username("wingsbuild")
+                           .password("06b13aea6f5f13ec69577689a899bbaad69eeb2f".toCharArray())
+                           .build())
+            .build();
+    return ensureSettingAttribute(seed, settingAttribute);
+  }
+
   public SettingAttribute ensureSettingAttribute(Randomizer.Seed seed, SettingAttribute settingAttribute) {
     EnhancedRandom random = Randomizer.instance(seed);
 
@@ -176,6 +200,6 @@ public class SettingGenerator {
       throw new UnsupportedOperationException();
     }
 
-    return settingsService.save(builder.build());
+    return settingsService.forceSave(builder.build());
   }
 }

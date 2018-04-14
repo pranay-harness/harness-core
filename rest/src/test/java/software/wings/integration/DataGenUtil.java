@@ -68,7 +68,6 @@ import software.wings.beans.FeatureFlag;
 import software.wings.beans.FeatureName;
 import software.wings.beans.GitConfig;
 import software.wings.beans.InfrastructureMapping;
-import software.wings.beans.JenkinsConfig;
 import software.wings.beans.KmsConfig;
 import software.wings.beans.License;
 import software.wings.beans.NewRelicConfig;
@@ -88,7 +87,6 @@ import software.wings.beans.User;
 import software.wings.beans.Workflow;
 import software.wings.beans.WorkflowType;
 import software.wings.beans.artifact.ArtifactStream;
-import software.wings.beans.artifact.JenkinsArtifactStream;
 import software.wings.beans.config.ArtifactoryConfig;
 import software.wings.beans.config.NexusConfig;
 import software.wings.beans.security.UserGroup;
@@ -98,11 +96,13 @@ import software.wings.dl.PageResponse;
 import software.wings.generator.AccountGenerator;
 import software.wings.generator.ApplicationGenerator;
 import software.wings.generator.ArtifactStreamGenerator;
+import software.wings.generator.ArtifactStreamGenerator.ArtifactStreams;
 import software.wings.generator.EnvironmentGenerator;
 import software.wings.generator.EnvironmentGenerator.Environments;
 import software.wings.generator.InfrastructureMappingGenerator;
 import software.wings.generator.LicenseGenerator;
 import software.wings.generator.LicenseGenerator.Licenses;
+import software.wings.generator.Owners;
 import software.wings.generator.PipelineGenerator;
 import software.wings.generator.Randomizer.Seed;
 import software.wings.generator.ServiceGenerator;
@@ -396,20 +396,6 @@ public class DataGenUtil extends BaseIntegrationTest {
   }
 
   private void createGlobalSettings() {
-    SettingAttribute jenkinsSettingAttribute =
-        aSettingAttribute()
-            .withName(HARNESS_JENKINS)
-            .withCategory(Category.CONNECTOR)
-            .withAccountId(accountId)
-            .withValue(JenkinsConfig.builder()
-                           .accountId(accountId)
-                           .jenkinsUrl("https://jenkins.wings.software")
-                           .username("wingsbuild")
-                           .password("06b13aea6f5f13ec69577689a899bbaad69eeb2f".toCharArray())
-                           .build())
-            .build();
-    wingsPersistence.save(jenkinsSettingAttribute);
-
     SettingAttribute nexusSettingAttribute = aSettingAttribute()
                                                  .withName(HARNESS_NEXUS)
                                                  .withCategory(Category.CONNECTOR)
@@ -597,24 +583,21 @@ public class DataGenUtil extends BaseIntegrationTest {
   private void createTestApplication(Account account) {
     final Seed seed = new Seed(0);
 
+    final Owners owners = new Owners();
+
     Environment environment = environmentGenerator.ensurePredefined(seed, Environments.GENERIC_TEST);
+    owners.add(environment);
+
     Service service = serviceGenerator.ensurePredefined(seed, Services.GENERIC_TEST);
+    owners.add(service);
+
     ServiceTemplate serviceTemplate =
         serviceTemplateService.get(service.getAppId(), service.getUuid(), environment.getUuid());
 
     InfrastructureMapping infrastructureMapping = infrastructureMappingGenerator.ensurePredefined(seed, AWS_SSH_TEST);
 
-    final SettingAttribute jenkins = settingsService.getByName(accountId, GLOBAL_APP_ID, HARNESS_JENKINS);
-
-    ArtifactStream artifactStream = artifactStreamGenerator.ensureArtifactStream(seed,
-        JenkinsArtifactStream.builder()
-            .appId(environment.getAppId())
-            .serviceId(service.getUuid())
-            .sourceName(HARNESS_JENKINS)
-            .jobname("harness-samples")
-            .artifactPaths(asList("echo/target/echo.war"))
-            .settingId(jenkins.getUuid())
-            .build());
+    ArtifactStream artifactStream =
+        artifactStreamGenerator.ensurePredefined(seed, owners, ArtifactStreams.HARNESS_SAMPLE_ECHO_WAR);
 
     Workflow workflow1 = workflowGenerator.createWorkflow(seed,
         aWorkflow()
