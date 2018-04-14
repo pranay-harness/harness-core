@@ -21,7 +21,7 @@ public class MultiServiceOrchestrationWorkflow extends CanaryOrchestrationWorkfl
   }
 
   @Override
-  public OrchestrationWorkflow clone() {
+  public OrchestrationWorkflow cloneInternal() {
     return aMultiServiceOrchestrationWorkflow()
         .withGraph(getGraph())
         .withPreDeploymentSteps(getPreDeploymentSteps())

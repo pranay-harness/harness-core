@@ -48,7 +48,7 @@ public class GraphNode {
   private GraphNode next;
   private GraphGroup group;
 
-  public GraphNode clone() {
+  public GraphNode cloneIntenal() {
     GraphNode clonedNode = aGraphNode()
                                .withId("node_" + generateUuid())
                                .withName(getName())

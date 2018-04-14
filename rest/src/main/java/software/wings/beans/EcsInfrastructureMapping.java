@@ -1,7 +1,6 @@
 package software.wings.beans;
 
 import static com.amazonaws.util.StringUtils.isNullOrEmpty;
-import static software.wings.beans.EcsInfrastructureMapping.Builder.anEcsInfrastructureMapping;
 
 import com.amazonaws.services.ecs.model.LaunchType;
 import com.fasterxml.jackson.annotation.JsonTypeName;
@@ -244,38 +243,6 @@ public class EcsInfrastructureMapping extends ContainerInfrastructureMapping {
 
   public void setLaunchType(String launchType) {
     this.launchType = launchType;
-  }
-
-  public Builder deepClone() {
-    return anEcsInfrastructureMapping()
-        .withClusterName(getClusterName())
-        .withRegion(getRegion())
-        .withVpcId(getVpcId())
-        .withSubnetIds(getSubnetIds())
-        .withSecurityGroupIds(getSecurityGroupIds())
-        .withLaunchType(getLaunchType())
-        .withExecutionRole(getExecutionRole())
-        .withType(getType())
-        .withRole(getRole())
-        .withDiskSize(getDiskSize())
-        .withAmi(getAmi())
-        .withNumberOfNodes(getNumberOfNodes())
-        .withUuid(getUuid())
-        .withComputeProviderSettingId(getComputeProviderSettingId())
-        .withAppId(getAppId())
-        .withEnvId(getEnvId())
-        .withCreatedBy(getCreatedBy())
-        .withServiceTemplateId(getServiceTemplateId())
-        .withCreatedAt(getCreatedAt())
-        .withLastUpdatedBy(getLastUpdatedBy())
-        .withServiceId(getServiceId())
-        .withLastUpdatedAt(getLastUpdatedAt())
-        .withComputeProviderType(getComputeProviderType())
-        .withInfraMappingType(getInfraMappingType())
-        .withEntityYamlPath(entityYamlPath)
-        .withDeploymentType(getDeploymentType())
-        .withComputeProviderName(getComputeProviderName())
-        .withName(getName());
   }
 
   @Override

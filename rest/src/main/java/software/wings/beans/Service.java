@@ -59,7 +59,7 @@ public class Service extends Base {
   @Transient private Activity lastProdDeploymentActivity;
   @Transient private Setup setup;
 
-  public Service clone() {
+  public Service cloneInternal() {
     return aService()
         .withAppId(getAppId())
         .withName(getName())

@@ -430,7 +430,7 @@ public class ServiceResourceServiceTest extends WingsBaseTest {
         serviceBuilder.but().withCommands(asList(aServiceCommand().withUuid("SERVICE_COMMAND_ID").build())).build();
     when(wingsPersistence.get(Service.class, APP_ID, SERVICE_ID)).thenReturn(originalService);
 
-    Service savedClonedService = originalService.clone();
+    Service savedClonedService = originalService.cloneInternal();
     savedClonedService.setName("Clone Service");
     savedClonedService.setDescription("clone description");
     savedClonedService.setUuid("CLONED_SERVICE_ID");

@@ -3,7 +3,6 @@ package software.wings.beans;
 import static io.harness.data.structure.EmptyPredicate.isEmpty;
 import static io.harness.data.structure.EmptyPredicate.isNotEmpty;
 import static java.util.stream.Collectors.toMap;
-import static software.wings.beans.AwsInfrastructureMapping.Builder.anAwsInfrastructureMapping;
 
 import com.google.common.collect.ImmutableMap;
 import com.google.inject.Inject;
@@ -465,42 +464,6 @@ public class AwsInfrastructureMapping extends InfrastructureMapping {
                      .orElse(ImmutableMap.of(regions.getName(), regions.getName()))
                      .get(regions.getName())));
     }
-  }
-
-  /**
-   * Clone and return builder.
-   *
-   * @return the builder
-   */
-  public Builder deepClone() {
-    return anAwsInfrastructureMapping()
-        .withRestrictionType(getRestrictionType())
-        .withRestrictionExpression(getRestrictionExpression())
-        .withRegion(getRegion())
-        .withUuid(getUuid())
-        .withAppId(getAppId())
-        .withHostConnectionAttrs(getHostConnectionAttrs())
-        .withCreatedBy(getCreatedBy())
-        .withLoadBalancerId(getLoadBalancerId())
-        .withCreatedAt(getCreatedAt())
-        .withLoadBalancerName(getLoadBalancerName())
-        .withLastUpdatedBy(getLastUpdatedBy())
-        .withComputeProviderSettingId(getComputeProviderSettingId())
-        .withLastUpdatedAt(getLastUpdatedAt())
-        .withEnvId(getEnvId())
-        .withUsePublicDns(isUsePublicDns())
-        .withServiceTemplateId(getServiceTemplateId())
-        .withProvisionInstances(isProvisionInstances())
-        .withServiceId(getServiceId())
-        .withComputeProviderType(getComputeProviderType())
-        .withAwsInstanceFilter(getAwsInstanceFilter())
-        .withInfraMappingType(getInfraMappingType())
-        .withAutoScalingGroupName(getAutoScalingGroupName())
-        .withDeploymentType(getDeploymentType())
-        .withComputeProviderName(getComputeProviderName())
-        .withName(getName())
-        .withSetDesiredCapacity(isSetDesiredCapacity())
-        .withHostNameConvention(hostNameConvention);
   }
 
   /**

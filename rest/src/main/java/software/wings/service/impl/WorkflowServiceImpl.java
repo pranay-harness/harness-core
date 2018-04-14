@@ -1537,7 +1537,7 @@ public class WorkflowServiceImpl implements WorkflowService, DataProvider {
     workflowPhase = orchestrationWorkflow.getWorkflowPhaseIdMap().get(phaseId);
     notNullCheck("workflowPhase", workflowPhase);
 
-    WorkflowPhase clonedWorkflowPhase = workflowPhase.clone();
+    WorkflowPhase clonedWorkflowPhase = workflowPhase.cloneInternal();
     clonedWorkflowPhase.setName(phaseName);
 
     orchestrationWorkflow.getWorkflowPhases().add(clonedWorkflowPhase);
@@ -1546,7 +1546,7 @@ public class WorkflowServiceImpl implements WorkflowService, DataProvider {
         orchestrationWorkflow.getRollbackWorkflowPhaseIdMap().get(workflowPhase.getUuid());
 
     if (rollbackWorkflowPhase != null) {
-      WorkflowPhase clonedRollbackWorkflowPhase = rollbackWorkflowPhase.clone();
+      WorkflowPhase clonedRollbackWorkflowPhase = rollbackWorkflowPhase.cloneInternal();
       orchestrationWorkflow.getRollbackWorkflowPhaseIdMap().put(
           clonedWorkflowPhase.getUuid(), clonedRollbackWorkflowPhase);
     }
@@ -1908,12 +1908,12 @@ public class WorkflowServiceImpl implements WorkflowService, DataProvider {
   @Override
   public Workflow cloneWorkflow(String appId, String originalWorkflowId, Workflow workflow) {
     Workflow originalWorkflow = readWorkflow(appId, originalWorkflowId);
-    Workflow clonedWorkflow = originalWorkflow.clone();
+    Workflow clonedWorkflow = originalWorkflow.cloneInternal();
     clonedWorkflow.setName(workflow.getName());
     clonedWorkflow.setDescription(workflow.getDescription());
     Workflow savedWorkflow = createWorkflow(clonedWorkflow);
     if (originalWorkflow.getOrchestrationWorkflow() != null) {
-      savedWorkflow.setOrchestrationWorkflow(originalWorkflow.getOrchestrationWorkflow().clone());
+      savedWorkflow.setOrchestrationWorkflow(originalWorkflow.getOrchestrationWorkflow().cloneInternal());
     }
     return updateWorkflow(savedWorkflow, savedWorkflow.getOrchestrationWorkflow(), false, false, false, true);
   }
@@ -1933,7 +1933,7 @@ public class WorkflowServiceImpl implements WorkflowService, DataProvider {
         + "Environment, Service Infrastructure and Node selection will not be cloned");
     validateServiceMapping(appId, targetAppId, cloneMetadata.getServiceMapping());
     Workflow originalWorkflow = readWorkflow(appId, originalWorkflowId);
-    Workflow clonedWorkflow = originalWorkflow.clone();
+    Workflow clonedWorkflow = originalWorkflow.cloneInternal();
     clonedWorkflow.setName(workflow.getName());
     clonedWorkflow.setDescription(workflow.getDescription());
     clonedWorkflow.setAppId(targetAppId);
@@ -1941,7 +1941,7 @@ public class WorkflowServiceImpl implements WorkflowService, DataProvider {
     Workflow savedWorkflow = createWorkflow(clonedWorkflow);
     OrchestrationWorkflow orchestrationWorkflow = originalWorkflow.getOrchestrationWorkflow();
     if (orchestrationWorkflow != null) {
-      OrchestrationWorkflow clonedOrchestrationWorkflow = orchestrationWorkflow.clone();
+      OrchestrationWorkflow clonedOrchestrationWorkflow = orchestrationWorkflow.cloneInternal();
       // Set service ids
       clonedOrchestrationWorkflow.setCloneMetadata(cloneMetadata.getServiceMapping());
       savedWorkflow.setOrchestrationWorkflow(clonedOrchestrationWorkflow);

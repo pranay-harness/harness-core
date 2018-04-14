@@ -208,7 +208,7 @@ public class ServiceResourceServiceImpl implements ServiceResourceService, DataP
   @Override
   public Service clone(String appId, String originalServiceId, Service service) {
     Service originalService = get(appId, originalServiceId);
-    Service clonedService = originalService.clone();
+    Service clonedService = originalService.cloneInternal();
     clonedService.setName(service.getName());
     clonedService.setDescription(service.getDescription());
     clonedService.setKeywords(getKeywords(clonedService));
@@ -217,7 +217,7 @@ public class ServiceResourceServiceImpl implements ServiceResourceService, DataP
 
     boolean shouldPushToYaml = !hasInternalCommands(originalService);
     originalService.getServiceCommands().forEach(serviceCommand -> {
-      ServiceCommand clonedServiceCommand = serviceCommand.clone();
+      ServiceCommand clonedServiceCommand = serviceCommand.cloneInternal();
       addCommand(savedCloneService.getAppId(), savedCloneService.getUuid(), clonedServiceCommand, shouldPushToYaml);
     });
 
@@ -231,7 +231,7 @@ public class ServiceResourceServiceImpl implements ServiceResourceService, DataP
             .getResponse();
 
     serviceTemplates.forEach(serviceTemplate -> {
-      ServiceTemplate clonedServiceTemplate = serviceTemplate.clone();
+      ServiceTemplate clonedServiceTemplate = serviceTemplate.cloneInternal();
       clonedServiceTemplate.setName(savedCloneService.getName());
       clonedServiceTemplate.setServiceId(savedCloneService.getUuid());
       serviceTemplateService.save(clonedServiceTemplate);
@@ -240,7 +240,7 @@ public class ServiceResourceServiceImpl implements ServiceResourceService, DataP
     originalService.getConfigFiles().forEach(originalConfigFile -> {
       try {
         File file = configService.download(originalConfigFile.getAppId(), originalConfigFile.getUuid());
-        ConfigFile clonedConfigFile = originalConfigFile.clone();
+        ConfigFile clonedConfigFile = originalConfigFile.cloneInternal();
         clonedConfigFile.setEntityId(savedCloneService.getUuid());
         configService.save(clonedConfigFile, new BoundedInputStream(new FileInputStream(file)));
       } catch (FileNotFoundException e) {
@@ -250,7 +250,7 @@ public class ServiceResourceServiceImpl implements ServiceResourceService, DataP
     });
 
     originalService.getServiceVariables().forEach(originalServiceVariable -> {
-      ServiceVariable clonedServiceVariable = originalServiceVariable.clone();
+      ServiceVariable clonedServiceVariable = originalServiceVariable.cloneInternal();
       if (ENCRYPTED_TEXT.equals(clonedServiceVariable.getType())) {
         clonedServiceVariable.setValue(clonedServiceVariable.getEncryptedValue().toCharArray());
       }
@@ -272,7 +272,7 @@ public class ServiceResourceServiceImpl implements ServiceResourceService, DataP
                                            .filter(cmd -> equalsIgnoreCase(commandName, cmd.getName()))
                                            .findFirst()
                                            .orElse(null);
-    ServiceCommand clonedServiceCommand = oldServiceCommand.clone();
+    ServiceCommand clonedServiceCommand = oldServiceCommand.cloneInternal();
     if (clonedServiceCommand.getCommand().getGraph() != null) {
       clonedServiceCommand.getCommand().getGraph().setGraphName(command.getName());
     }

@@ -1,7 +1,5 @@
 package software.wings.beans;
 
-import static software.wings.beans.AzureKubernetesInfrastructureMapping.Builder.anAzureKubernetesInfrastructureMapping;
-
 import com.fasterxml.jackson.annotation.JsonTypeName;
 import com.github.reinert.jjschema.Attributes;
 import com.github.reinert.jjschema.SchemaIgnore;
@@ -32,28 +30,6 @@ public class AzureKubernetesInfrastructureMapping extends ContainerInfrastructur
             .orElse(this.getComputeProviderType().toLowerCase())
             .replace(':', '_'),
         Optional.ofNullable(this.getNamespace()).orElse("default")));
-  }
-
-  public Builder deepClone() {
-    return anAzureKubernetesInfrastructureMapping()
-        .withName(getName())
-        .withClusterName(getClusterName())
-        .withSubscriptionId(getSubscriptionId())
-        .withResourceGroup(getResourceGroup())
-        .withNamespace(getNamespace())
-        .withComputeProviderSettingId(getComputeProviderSettingId())
-        .withEnvId(getEnvId())
-        .withServiceTemplateId(getServiceTemplateId())
-        .withServiceId(getServiceId())
-        .withComputeProviderType(getComputeProviderType())
-        .withDeploymentType(getDeploymentType())
-        .withComputeProviderName(getComputeProviderName())
-        .withUuid(getUuid())
-        .withAppId(getAppId())
-        .withCreatedBy(getCreatedBy())
-        .withCreatedAt(getCreatedAt())
-        .withLastUpdatedBy(getLastUpdatedBy())
-        .withLastUpdatedAt(getLastUpdatedAt());
   }
 
   public static final class Builder {

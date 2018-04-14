@@ -41,7 +41,7 @@ public class ServiceTemplate extends Base {
   @Transient private List<InfrastructureMapping> infrastructureMappings = new ArrayList<>();
   private boolean defaultServiceTemplate;
 
-  public ServiceTemplate clone() {
+  public ServiceTemplate cloneInternal() {
     return aServiceTemplate()
         .withAppId(getAppId())
         .withEnvId(getEnvId())

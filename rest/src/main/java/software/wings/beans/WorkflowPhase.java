@@ -24,6 +24,8 @@ import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.Objects;
+import java.util.stream.Collectors;
 
 /**
  * Created by rishi on 12/21/16.
@@ -261,7 +263,7 @@ public class WorkflowPhase implements UuidAware {
     return valid;
   }
 
-  public WorkflowPhase clone() {
+  public WorkflowPhase cloneInternal() {
     WorkflowPhase clonedWorkflowPhase = aWorkflowPhase()
                                             .withUuid(generateUuid())
                                             .withServiceId(getServiceId())
@@ -279,12 +281,8 @@ public class WorkflowPhase implements UuidAware {
     List<PhaseStep> phaseSteps = getPhaseSteps();
     List<PhaseStep> clonedPhaseSteps = new ArrayList<>();
     if (phaseSteps != null) {
-      for (PhaseStep phaseStep : phaseSteps) {
-        PhaseStep phaseStepClone = phaseStep.clone();
-        if (phaseStepClone != null) {
-          clonedPhaseSteps.add(phaseStepClone);
-        }
-      }
+      clonedPhaseSteps =
+          phaseSteps.stream().map(PhaseStep::cloneIntenal).filter(Objects::nonNull).collect(Collectors.toList());
     }
     clonedWorkflowPhase.setPhaseSteps(clonedPhaseSteps);
     return clonedWorkflowPhase;
@@ -301,11 +299,9 @@ public class WorkflowPhase implements UuidAware {
   }
 
   private boolean checkFieldTemplatized(String fieldName) {
-    if (templateExpressions == null) {
-      return false;
-    }
-    return templateExpressions.stream().anyMatch(
-        templateExpression -> templateExpression.getFieldName().equals(fieldName));
+    return templateExpressions != null
+        && templateExpressions.stream().anyMatch(
+               templateExpression -> templateExpression.getFieldName().equals(fieldName));
   }
 
   public static final class WorkflowPhaseBuilder {

@@ -290,7 +290,7 @@ public class PhaseStep {
     return valid;
   }
 
-  public PhaseStep clone() {
+  public PhaseStep cloneIntenal() {
     PhaseStepType phaseStepType = getPhaseStepType();
     if (phaseStepType != null && phaseStepType.equals(CONTAINER_SETUP)) {
       return null;
@@ -310,22 +310,14 @@ public class PhaseStep {
     List<GraphNode> clonedSteps = new ArrayList<>();
     if (steps != null) {
       for (GraphNode step : steps) {
-        /* if (clonedPhaseStep.getPhaseStepType() != null && clonedPhaseStep.getPhaseStepType().equals(CONTAINER_SETUP))
-         { if (step.getType().equals(ECS_SERVICE_SETUP.name()) ||
-         step.getType().equals(KUBERNETES_SETUP.name())) {
-             //Do not clone Kubernetes replication controller  or ECS service setup
-             continue;
-           }
-         }*/
-        GraphNode clonedStep = step.clone();
-        if (PROVISION_NODE.equals(clonedPhaseStep.getPhaseStepType())) {
-          if (clonedStep.getType().equals(StateType.DC_NODE_SELECT.name())
-              || clonedStep.getType().equals(StateType.AWS_NODE_SELECT.name())) {
-            Map<String, Object> properties = new HashMap<>(clonedStep.getProperties());
-            if ((Boolean) properties.get("specificHosts")) {
-              properties.remove("hostNames");
-              clonedStep.setProperties(properties);
-            }
+        GraphNode clonedStep = step.cloneIntenal();
+        if (PROVISION_NODE.equals(clonedPhaseStep.getPhaseStepType())
+            && (clonedStep.getType().equals(StateType.DC_NODE_SELECT.name())
+                   || clonedStep.getType().equals(StateType.AWS_NODE_SELECT.name()))) {
+          Map<String, Object> properties = new HashMap<>(clonedStep.getProperties());
+          if ((Boolean) properties.get("specificHosts")) {
+            properties.remove("hostNames");
+            clonedStep.setProperties(properties);
           }
         }
         clonedSteps.add(clonedStep);

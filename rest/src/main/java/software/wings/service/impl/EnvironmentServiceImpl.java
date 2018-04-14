@@ -422,7 +422,7 @@ public class EnvironmentServiceImpl implements EnvironmentService, DataProvider 
         envId = cloneMetadata.getEnvironment().getUuid();
       }
       Environment sourceEnvironment = get(appId, envId, true);
-      Environment clonedEnvironment = sourceEnvironment.clone();
+      Environment clonedEnvironment = sourceEnvironment.cloneInternal();
       if (isEmpty(description)) {
         description = "Cloned from environment " + sourceEnvironment.getName();
       }
@@ -451,7 +451,7 @@ public class EnvironmentServiceImpl implements EnvironmentService, DataProvider 
             clonedServiceTemplate = serviceTemplateList.get(0);
           }
           if (clonedServiceTemplate == null) {
-            clonedServiceTemplate = serviceTemplate.clone();
+            clonedServiceTemplate = serviceTemplate.cloneInternal();
             clonedServiceTemplate.setEnvId(clonedEnvironment.getUuid());
             clonedServiceTemplate = serviceTemplateService.save(clonedServiceTemplate);
           }
@@ -516,7 +516,7 @@ public class EnvironmentServiceImpl implements EnvironmentService, DataProvider 
             "Cloned from environment " + sourceEnvironment.getName() + " of application " + sourceApplication.getName();
       }
 
-      Environment clonedEnvironment = sourceEnvironment.clone();
+      Environment clonedEnvironment = sourceEnvironment.cloneInternal();
       clonedEnvironment.setName(envName);
       clonedEnvironment.setDescription(description);
       clonedEnvironment.setAppId(targetAppId);
@@ -553,7 +553,7 @@ public class EnvironmentServiceImpl implements EnvironmentService, DataProvider 
             clonedServiceTemplate = serviceTemplateList.get(0);
           }
           if (clonedServiceTemplate == null) {
-            clonedServiceTemplate = serviceTemplate.clone();
+            clonedServiceTemplate = serviceTemplate.cloneInternal();
             clonedServiceTemplate.setAppId(targetAppId);
             clonedServiceTemplate.setEnvId(clonedEnvironmentUuid);
             clonedServiceTemplate.setServiceId(targetServiceId);
@@ -590,7 +590,7 @@ public class EnvironmentServiceImpl implements EnvironmentService, DataProvider 
       String serviceTemplateId, String targetAppId, String targetServiceId) {
     if (serviceVariables != null) {
       for (ServiceVariable serviceVariable : serviceVariables) {
-        ServiceVariable clonedServiceVariable = serviceVariable.clone();
+        ServiceVariable clonedServiceVariable = serviceVariable.cloneInternal();
         if (ENCRYPTED_TEXT.equals(clonedServiceVariable.getType())) {
           clonedServiceVariable.setValue(clonedServiceVariable.getEncryptedValue().toCharArray());
         }
@@ -627,7 +627,7 @@ public class EnvironmentServiceImpl implements EnvironmentService, DataProvider 
       List<ConfigFile> configFiles, String targetAppId, String targetServiceId) {
     if (configFiles != null) {
       for (ConfigFile configFile : configFiles) {
-        ConfigFile clonedConfigFile = configFile.clone();
+        ConfigFile clonedConfigFile = configFile.cloneInternal();
         if (targetAppId != null) {
           clonedConfigFile.setAppId(targetAppId);
         }

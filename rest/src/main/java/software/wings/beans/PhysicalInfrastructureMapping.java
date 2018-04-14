@@ -1,7 +1,5 @@
 package software.wings.beans;
 
-import static software.wings.beans.PhysicalInfrastructureMapping.Builder.aPhysicalInfrastructureMapping;
-
 import com.fasterxml.jackson.annotation.JsonTypeName;
 import com.github.reinert.jjschema.Attributes;
 import com.github.reinert.jjschema.SchemaIgnore;
@@ -58,28 +56,6 @@ public class PhysicalInfrastructureMapping extends PhysicalInfrastructureMapping
           computeProviderName, name, hostNames, loadBalancer);
       this.connection = connection;
     }
-  }
-
-  private PhysicalInfrastructureMapping.Builder deepClone() {
-    return aPhysicalInfrastructureMapping()
-        .withHostConnectionAttrs(getHostConnectionAttrs())
-        .withHostNames(getHostNames())
-        .withLoadBalancerName(getLoadBalancerName())
-        .withLoadBalancerId(getLoadBalancerId())
-        .withUuid(getUuid())
-        .withAppId(getAppId())
-        .withCreatedBy(getCreatedBy())
-        .withCreatedAt(getCreatedAt())
-        .withLastUpdatedBy(getLastUpdatedBy())
-        .withLastUpdatedAt(getLastUpdatedAt())
-        .withComputeProviderSettingId(getComputeProviderSettingId())
-        .withEnvId(getEnvId())
-        .withServiceTemplateId(getServiceTemplateId())
-        .withServiceId(getServiceId())
-        .withComputeProviderType(getComputeProviderType())
-        .withDeploymentType(getDeploymentType())
-        .withComputeProviderName(getComputeProviderName())
-        .withName(getName());
   }
 
   public static final class Builder {

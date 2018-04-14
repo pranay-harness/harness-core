@@ -92,7 +92,7 @@ public abstract class OrchestrationWorkflow {
 
   public abstract boolean validate();
 
-  public abstract OrchestrationWorkflow clone();
+  public abstract OrchestrationWorkflow cloneInternal();
 
   public abstract List<Variable> getUserVariables();
 
