@@ -113,9 +113,6 @@ public class UserResourceRestClient {
   public Account setupAccountUserFirstTime() {
     // Not going through register user route as account id/secret should match the delegate config
     Account account = accountService.get(defaultAccountId);
-    if (account == null) {
-      account = accountService.getByName(defaultCompanyName);
-    }
 
     if (account == null) {
       account = anAccount()
@@ -124,7 +121,11 @@ public class UserResourceRestClient {
                     .withAccountName(defaultAccountName)
                     .withCompanyName(defaultCompanyName)
                     .build();
-      account = accountService.save(account);
+      try {
+        account = accountService.save(account);
+      } catch (Exception e) {
+        account = accountService.get(defaultAccountId);
+      }
     }
 
     User user =
@@ -138,7 +139,11 @@ public class UserResourceRestClient {
       user.setPasswordHash(hashed);
       user.setPasswordChangedAt(System.currentTimeMillis());
       user.setRoles(Lists.newArrayList(roleService.getAccountAdminRole(account.getUuid())));
-      wingsPersistence.saveAndGet(User.class, user);
+      try {
+        wingsPersistence.saveAndGet(User.class, user);
+      } catch (Exception e) {
+        user = wingsPersistence.get(User.class, aPageRequest().addFilter("email", Operator.EQ, adminUserEmail).build());
+      }
     } else {
       Account finalAccount = account;
       if (isEmpty(user.getAccounts())
