@@ -14,6 +14,7 @@ import static software.wings.beans.ErrorCode.DOMAIN_NOT_ALLOWED_TO_REGISTER;
 import static software.wings.beans.ErrorCode.EMAIL_VERIFICATION_TOKEN_NOT_FOUND;
 import static software.wings.beans.ErrorCode.EXPIRED_TOKEN;
 import static software.wings.beans.ErrorCode.INVALID_ARGUMENT;
+import static software.wings.beans.ErrorCode.INVALID_CREDENTIAL;
 import static software.wings.beans.ErrorCode.INVALID_REQUEST;
 import static software.wings.beans.ErrorCode.ROLE_DOES_NOT_EXIST;
 import static software.wings.beans.ErrorCode.UNKNOWN_ERROR;
@@ -40,6 +41,7 @@ import com.auth0.jwt.JWT;
 import com.auth0.jwt.JWTVerifier;
 import com.auth0.jwt.algorithms.Algorithm;
 import com.auth0.jwt.exceptions.JWTCreationException;
+import com.auth0.jwt.exceptions.JWTDecodeException;
 import com.auth0.jwt.exceptions.JWTVerificationException;
 import com.auth0.jwt.interfaces.DecodedJWT;
 import com.nimbusds.jose.JWSAlgorithm;
@@ -82,6 +84,7 @@ import software.wings.exception.WingsException;
 import software.wings.helpers.ext.mail.EmailData;
 import software.wings.security.PermissionAttribute.Action;
 import software.wings.security.PermissionAttribute.ResourceType;
+import software.wings.security.SecretManager;
 import software.wings.security.UserThreadLocal;
 import software.wings.service.impl.security.auth.AuthHandler;
 import software.wings.service.intfc.AccountService;
@@ -117,6 +120,8 @@ public class UserServiceImpl implements UserService {
   public static final String SIGNUP_EMAIL_TEMPLATE_NAME = "signup";
   public static final String INVITE_EMAIL_TEMPLATE_NAME = "invite";
   private static final Logger logger = LoggerFactory.getLogger(UserServiceImpl.class);
+  public static final int JWT_TOKEN_VALIDITY_DURATION = 3 * 60 * 1000; // 3 min
+
   /**
    * The Executor service.
    */
@@ -131,6 +136,7 @@ public class UserServiceImpl implements UserService {
   @Inject private AppService appService;
   @Inject private CacheHelper cacheHelper;
   @Inject private AuthHandler authHandler;
+  @Inject private SecretManager secretManager;
 
   /* (non-Javadoc)
    * @see software.wings.service.intfc.UserService#register(software.wings.beans.User)
@@ -883,5 +889,47 @@ public class UserServiceImpl implements UserService {
     Account account = Account.Builder.anAccount().withAccountName(accountName).withCompanyName(companyName).build();
 
     return accountService.save(account);
+  }
+
+  @Override
+  public String generateJWTToken(String userId, SecretManager.JWT_CATEGORY category) {
+    String jwtPasswordSecret = secretManager.getJWTSecret(category);
+    if (jwtPasswordSecret == null) {
+      throw new WingsException(INVALID_REQUEST).addParam("message", "incorrect portal setup");
+    }
+
+    try {
+      Algorithm algorithm = Algorithm.HMAC256(jwtPasswordSecret);
+      return JWT.create()
+          .withIssuer("Harness Inc")
+          .withIssuedAt(new Date())
+          .withExpiresAt(new Date(System.currentTimeMillis() + category.getValidityDuration()))
+          .withClaim("email", userId)
+          .sign(algorithm);
+    } catch (UnsupportedEncodingException | JWTCreationException exception) {
+      throw new WingsException(UNKNOWN_ERROR, exception).addParam("message", "JWTToken could not be generated");
+    }
+  }
+
+  @Override
+  public User verifyJWTToken(String jwtToken, SecretManager.JWT_CATEGORY category) {
+    String jwtPasswordSecret = secretManager.getJWTSecret(category);
+    if (jwtPasswordSecret == null) {
+      throw new WingsException(INVALID_REQUEST).addParam("message", "incorrect portal setup");
+    }
+
+    try {
+      Algorithm algorithm = Algorithm.HMAC256(jwtPasswordSecret);
+      JWTVerifier verifier = JWT.require(algorithm).withIssuer("Harness Inc").build();
+      DecodedJWT jwt = verifier.verify(jwtToken);
+      JWT decode = JWT.decode(jwtToken);
+      String claimEmail = decode.getClaim("email").asString();
+      return getUserByEmail(claimEmail);
+    } catch (UnsupportedEncodingException | JWTCreationException exception) {
+      throw new WingsException(UNKNOWN_ERROR, exception).addParam("message", "JWTToken validation failed");
+    } catch (JWTDecodeException e) {
+      throw new WingsException(INVALID_CREDENTIAL)
+          .addParam("message", "Invalid JWTToken received, failed to decode the token");
+    }
   }
 }

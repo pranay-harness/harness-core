@@ -183,8 +183,10 @@ public class AccountServiceImpl implements AccountService {
 
   @Override
   public Account update(@Valid Account account) {
-    wingsPersistence.update(
-        account, wingsPersistence.createUpdateOperations(Account.class).set("companyName", account.getCompanyName()));
+    wingsPersistence.update(account,
+        wingsPersistence.createUpdateOperations(Account.class)
+            .set("companyName", account.getCompanyName())
+            .set("authenticationMechanism", account.getAuthenticationMechanism()));
     return wingsPersistence.get(Account.class, account.getUuid());
   }
 

@@ -180,7 +180,9 @@ public class PermissionAttribute {
      */
     DELEGATE_SCOPE(PermissionType.DELEGATE),
 
-    WHITE_LIST(ACCOUNT);
+    WHITE_LIST(ACCOUNT),
+
+    SSO(ACCOUNT);
 
     private ImmutableMap<Action, PermissionType> actionPermissionScopeMap;
 

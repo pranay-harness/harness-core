@@ -108,6 +108,8 @@ import software.wings.service.impl.NotificationSetupServiceImpl;
 import software.wings.service.impl.PipelineServiceImpl;
 import software.wings.service.impl.PluginServiceImpl;
 import software.wings.service.impl.RoleServiceImpl;
+import software.wings.service.impl.SSOServiceImpl;
+import software.wings.service.impl.SSOSettingServiceImpl;
 import software.wings.service.impl.ServiceClassLocator;
 import software.wings.service.impl.ServiceInstanceServiceImpl;
 import software.wings.service.impl.ServiceResourceServiceImpl;
@@ -208,6 +210,8 @@ import software.wings.service.intfc.NotificationSetupService;
 import software.wings.service.intfc.PipelineService;
 import software.wings.service.intfc.PluginService;
 import software.wings.service.intfc.RoleService;
+import software.wings.service.intfc.SSOService;
+import software.wings.service.intfc.SSOSettingService;
 import software.wings.service.intfc.ServiceInstanceService;
 import software.wings.service.intfc.ServiceResourceService;
 import software.wings.service.intfc.ServiceTemplateService;
@@ -424,5 +428,7 @@ public class WingsModule extends AbstractModule {
 
     bind(ContainerSync.class).to(ContainerSyncImpl.class);
     bind(AwsLambdaService.class).to(AwsLambdaServiceImpl.class);
+    bind(SSOSettingService.class).to(SSOSettingServiceImpl.class);
+    bind(SSOService.class).to(SSOServiceImpl.class);
   }
 }

@@ -10,6 +10,7 @@ import static org.mockito.Mockito.when;
 import static software.wings.beans.User.Builder.anUser;
 import static software.wings.dl.PageResponse.PageResponseBuilder.aPageResponse;
 
+import org.glassfish.jersey.media.multipart.MultiPartFeature;
 import org.junit.Before;
 import org.junit.ClassRule;
 import org.junit.Test;
@@ -18,6 +19,7 @@ import software.wings.beans.User;
 import software.wings.dl.PageRequest;
 import software.wings.dl.PageResponse;
 import software.wings.exception.WingsExceptionMapper;
+import software.wings.security.authentication.AuthenticationManager;
 import software.wings.service.intfc.AccountService;
 import software.wings.service.intfc.AuthService;
 import software.wings.service.intfc.UserService;
@@ -34,6 +36,7 @@ public class UserResourceTest {
   public static final UserService USER_SERVICE = mock(UserService.class);
   public static final AuthService AUTH_SERVICE = mock(AuthService.class);
   public static final AccountService ACCOUNT_SERVICE = mock(AccountService.class);
+  public static final AuthenticationManager AUTHENTICATION_MANAGER = mock(AuthenticationManager.class);
 
   /**
    * The constant RESOURCES.
@@ -41,8 +44,9 @@ public class UserResourceTest {
   @ClassRule
   public static final ResourceTestRule RESOURCES =
       ResourceTestRule.builder()
-          .addResource(new UserResource(USER_SERVICE, AUTH_SERVICE, ACCOUNT_SERVICE))
+          .addResource(new UserResource(USER_SERVICE, AUTH_SERVICE, ACCOUNT_SERVICE, AUTHENTICATION_MANAGER))
           .addProvider(WingsExceptionMapper.class)
+          .addProvider(MultiPartFeature.class)
           .build();
 
   /**

@@ -11,11 +11,13 @@ import software.wings.beans.ZendeskSsoLoginResponse;
 import software.wings.beans.security.UserGroup;
 import software.wings.dl.PageRequest;
 import software.wings.dl.PageResponse;
+import software.wings.security.SecretManager;
 import software.wings.utils.validation.Create;
 import software.wings.utils.validation.Update;
 
 import java.util.List;
 import javax.validation.Valid;
+import javax.validation.constraints.NotNull;
 
 /**
  * Created by anubhaw on 3/28/16.
@@ -237,4 +239,18 @@ public interface UserService {
   ZendeskSsoLoginResponse generateZendeskSsoJwt(String returnToUrl);
 
   User addUserGroups(User user, List<UserGroup> userGroups);
+
+  /**
+   *
+   * @param userId
+   * @return
+   */
+  String generateJWTToken(@NotEmpty String userId, @NotNull SecretManager.JWT_CATEGORY category);
+
+  /**
+   *
+   * @param userId
+   * @return
+   */
+  User verifyJWTToken(@NotEmpty String jwtToken, @NotNull SecretManager.JWT_CATEGORY category);
 }
