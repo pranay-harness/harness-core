@@ -155,7 +155,7 @@ public class ServiceVariable extends Base implements Encryptable {
     CUSTOM
   }
 
-  public ServiceVariable clone() {
+  public ServiceVariable cloneInternal() {
     ServiceVariable serviceVariable = builder()
                                           .accountId(getAccountId())
                                           .envId(getEnvId())

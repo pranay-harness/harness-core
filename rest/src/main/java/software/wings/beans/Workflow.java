@@ -197,7 +197,7 @@ public class Workflow extends Base {
     return isNotBlank(envId) || checkEnvironmentTemplatized();
   }
 
-  public Workflow clone() {
+  public Workflow cloneInternal() {
     return aWorkflow()
         .withAppId(getAppId())
         .withEnvId(getEnvId())

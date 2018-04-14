@@ -64,7 +64,7 @@ public class CustomOrchestrationWorkflow extends OrchestrationWorkflow {
   }
 
   @Override
-  public OrchestrationWorkflow clone() {
+  public OrchestrationWorkflow cloneInternal() {
     return aCustomOrchestrationWorkflow().withGraph(getGraph()).build();
   }
 

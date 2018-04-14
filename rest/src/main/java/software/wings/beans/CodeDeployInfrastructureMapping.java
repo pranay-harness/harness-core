@@ -1,7 +1,5 @@
 package software.wings.beans;
 
-import static software.wings.beans.CodeDeployInfrastructureMapping.CodeDeployInfrastructureMappingBuilder.aCodeDeployInfrastructureMapping;
-
 import com.fasterxml.jackson.annotation.JsonTypeName;
 import com.github.reinert.jjschema.Attributes;
 import com.github.reinert.jjschema.SchemaIgnore;
@@ -113,27 +111,6 @@ public class CodeDeployInfrastructureMapping extends InfrastructureMapping {
 
   public void setHostNameConvention(String hostNameConvention) {
     this.hostNameConvention = hostNameConvention;
-  }
-
-  public CodeDeployInfrastructureMappingBuilder deepClone() {
-    return aCodeDeployInfrastructureMapping()
-        .withRegion(getRegion())
-        .withApplicationName(getApplicationName())
-        .withDeploymentGroup(getDeploymentGroup())
-        .withDeploymentConfig(getDeploymentConfig())
-        .withCreatedBy(getCreatedBy())
-        .withCreatedAt(getCreatedAt())
-        .withLastUpdatedBy(getLastUpdatedBy())
-        .withLastUpdatedAt(getLastUpdatedAt())
-        .withComputeProviderSettingId(getComputeProviderSettingId())
-        .withEnvId(getEnvId())
-        .withServiceTemplateId(getServiceTemplateId())
-        .withServiceId(getServiceId())
-        .withComputeProviderType(getComputeProviderType())
-        .withDeploymentType(getDeploymentType())
-        .withComputeProviderName(getComputeProviderName())
-        .withName(getName())
-        .withHostNameConvention(getHostNameConvention());
   }
 
   public static final class CodeDeployInfrastructureMappingBuilder {

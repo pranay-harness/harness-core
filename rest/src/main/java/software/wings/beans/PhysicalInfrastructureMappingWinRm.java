@@ -1,7 +1,5 @@
 package software.wings.beans;
 
-import static software.wings.beans.PhysicalInfrastructureMappingWinRm.Builder.aPhysicalInfrastructureMappingWinRm;
-
 import com.fasterxml.jackson.annotation.JsonTypeName;
 import com.github.reinert.jjschema.Attributes;
 import com.github.reinert.jjschema.SchemaIgnore;
@@ -56,28 +54,6 @@ public class PhysicalInfrastructureMappingWinRm extends PhysicalInfrastructureMa
           computeProviderName, name, hostNames, loadBalancer);
       this.winRmProfile = winRmProfile;
     }
-  }
-
-  public PhysicalInfrastructureMappingWinRm.Builder deepClone() {
-    return aPhysicalInfrastructureMappingWinRm()
-        .withWinRmConnectionAttributes(getWinRmConnectionAttributes())
-        .withHostNames(getHostNames())
-        .withLoadBalancerName(getLoadBalancerName())
-        .withLoadBalancerId(getLoadBalancerId())
-        .withUuid(getUuid())
-        .withAppId(getAppId())
-        .withCreatedBy(getCreatedBy())
-        .withCreatedAt(getCreatedAt())
-        .withLastUpdatedBy(getLastUpdatedBy())
-        .withLastUpdatedAt(getLastUpdatedAt())
-        .withComputeProviderSettingId(getComputeProviderSettingId())
-        .withEnvId(getEnvId())
-        .withServiceTemplateId(getServiceTemplateId())
-        .withServiceId(getServiceId())
-        .withComputeProviderType(getComputeProviderType())
-        .withDeploymentType(getDeploymentType())
-        .withComputeProviderName(getComputeProviderName())
-        .withName(getName());
   }
 
   public static final class Builder {

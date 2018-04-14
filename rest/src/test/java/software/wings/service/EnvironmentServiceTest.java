@@ -209,7 +209,7 @@ public class EnvironmentServiceTest extends WingsBaseTest {
   public void shouldCloneEnvironment() {
     Environment environment =
         anEnvironment().withUuid(ENV_ID).withAppId(APP_ID).withName(ENV_NAME).withDescription(ENV_DESCRIPTION).build();
-    Environment clonedEnvironment = environment.clone();
+    Environment clonedEnvironment = environment.cloneInternal();
     when(wingsPersistence.get(Environment.class, APP_ID, ENV_ID)).thenReturn(environment);
     when(wingsPersistence.saveAndGet(any(), any(Environment.class))).thenReturn(clonedEnvironment);
 
@@ -233,7 +233,7 @@ public class EnvironmentServiceTest extends WingsBaseTest {
                                           .withInfrastructureMappings(asList(physicalInfrastructureMapping))
                                           .build();
 
-    ServiceTemplate clonedServiceTemplate = serviceTemplate.clone();
+    ServiceTemplate clonedServiceTemplate = serviceTemplate.cloneInternal();
     PageResponse<ServiceTemplate> pageResponse = aPageResponse().withResponse(asList(serviceTemplate)).build();
     when(serviceTemplateService.list(pageRequest, false, false)).thenReturn(pageResponse);
     when(serviceTemplateService.save(any(ServiceTemplate.class))).thenReturn(clonedServiceTemplate);
@@ -257,7 +257,7 @@ public class EnvironmentServiceTest extends WingsBaseTest {
     when(appService.get(APP_ID)).thenReturn(application);
     Environment environment =
         anEnvironment().withUuid(ENV_ID).withAppId(APP_ID).withName(ENV_NAME).withDescription(ENV_DESCRIPTION).build();
-    Environment clonedEnvironment = environment.clone();
+    Environment clonedEnvironment = environment.cloneInternal();
     when(wingsPersistence.get(Environment.class, APP_ID, ENV_ID)).thenReturn(environment);
     when(wingsPersistence.saveAndGet(any(), any(Environment.class))).thenReturn(clonedEnvironment);
 
@@ -281,7 +281,7 @@ public class EnvironmentServiceTest extends WingsBaseTest {
                                           .withInfrastructureMappings(asList(physicalInfrastructureMapping))
                                           .build();
 
-    ServiceTemplate clonedServiceTemplate = serviceTemplate.clone();
+    ServiceTemplate clonedServiceTemplate = serviceTemplate.cloneInternal();
     PageResponse<ServiceTemplate> pageResponse = aPageResponse().withResponse(asList(serviceTemplate)).build();
     when(serviceTemplateService.list(pageRequest, false, false)).thenReturn(pageResponse);
     when(serviceTemplateService.save(any(ServiceTemplate.class))).thenReturn(clonedServiceTemplate);

@@ -202,7 +202,7 @@ public class Environment extends Base {
     this.servicesWithOverrides = servicesWithOverrides;
   }
 
-  public Environment clone() {
+  public Environment cloneInternal() {
     return anEnvironment()
         .withName(getName())
         .withAppId(getAppId())

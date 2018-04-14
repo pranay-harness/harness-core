@@ -52,7 +52,7 @@ public class BuildWorkflow extends CanaryOrchestrationWorkflow {
   }
 
   @Override
-  public OrchestrationWorkflow clone() {
+  public OrchestrationWorkflow cloneInternal() {
     return aBuildOrchestrationWorkflow()
         .withGraph(getGraph())
         .withPreDeploymentSteps(getPreDeploymentSteps())

@@ -193,7 +193,7 @@ public class Pipeline extends Base {
     this.workflowExecutions = workflowExecutions;
   }
 
-  public Pipeline clone() {
+  public Pipeline cloneInternal() {
     return aPipeline()
         .withAppId(getAppId())
         .withName(name)

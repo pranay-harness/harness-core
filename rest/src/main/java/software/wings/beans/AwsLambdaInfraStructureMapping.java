@@ -1,7 +1,5 @@
 package software.wings.beans;
 
-import static software.wings.beans.AwsLambdaInfraStructureMapping.Builder.anAwsLambdaInfraStructureMapping;
-
 import com.fasterxml.jackson.annotation.JsonTypeName;
 import com.github.reinert.jjschema.Attributes;
 import com.github.reinert.jjschema.SchemaIgnore;
@@ -131,31 +129,6 @@ public class AwsLambdaInfraStructureMapping extends InfrastructureMapping {
 
   public void setRole(String role) {
     this.role = role;
-  }
-
-  public Builder deepClone() {
-    return anAwsLambdaInfraStructureMapping()
-        .withRegion(getRegion())
-        .withVpcId(getVpcId())
-        .withSubnetIds(getSubnetIds())
-        .withSecurityGroupIds(getSecurityGroupIds())
-        .withRole(getRole())
-        .withUuid(getUuid())
-        .withAppId(getAppId())
-        .withComputeProviderSettingId(getComputeProviderSettingId())
-        .withCreatedBy(getCreatedBy())
-        .withEnvId(getEnvId())
-        .withCreatedAt(getCreatedAt())
-        .withServiceTemplateId(getServiceTemplateId())
-        .withLastUpdatedBy(getLastUpdatedBy())
-        .withLastUpdatedAt(getLastUpdatedAt())
-        .withServiceId(getServiceId())
-        .withComputeProviderType(getComputeProviderType())
-        .withEntityYamlPath(entityYamlPath)
-        .withInfraMappingType(getInfraMappingType())
-        .withDeploymentType(getDeploymentType())
-        .withComputeProviderName(getComputeProviderName())
-        .withName(getName());
   }
 
   public static final class Builder {

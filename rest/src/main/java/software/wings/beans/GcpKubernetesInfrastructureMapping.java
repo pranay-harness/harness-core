@@ -1,7 +1,5 @@
 package software.wings.beans;
 
-import static software.wings.beans.GcpKubernetesInfrastructureMapping.Builder.aGcpKubernetesInfrastructureMapping;
-
 import com.fasterxml.jackson.annotation.JsonTypeName;
 import com.github.reinert.jjschema.Attributes;
 import com.github.reinert.jjschema.SchemaIgnore;
@@ -34,31 +32,6 @@ public class GcpKubernetesInfrastructureMapping extends ContainerInfrastructureM
     return Util.normalize(String.format("%s (GCP/Kubernetes::%s) %s", this.getClusterName(),
         Optional.ofNullable(this.getComputeProviderName()).orElse(this.getComputeProviderType().toLowerCase()),
         Optional.ofNullable(this.getNamespace()).orElse("default")));
-  }
-
-  /**
-   * Deep clone builder.
-   *
-   * @return the builder
-   */
-  public Builder deepClone() {
-    return aGcpKubernetesInfrastructureMapping()
-        .withName(getName())
-        .withClusterName(getClusterName())
-        .withNamespace(getNamespace())
-        .withComputeProviderSettingId(getComputeProviderSettingId())
-        .withEnvId(getEnvId())
-        .withServiceTemplateId(getServiceTemplateId())
-        .withServiceId(getServiceId())
-        .withComputeProviderType(getComputeProviderType())
-        .withDeploymentType(getDeploymentType())
-        .withComputeProviderName(getComputeProviderName())
-        .withUuid(getUuid())
-        .withAppId(getAppId())
-        .withCreatedBy(getCreatedBy())
-        .withCreatedAt(getCreatedAt())
-        .withLastUpdatedBy(getLastUpdatedBy())
-        .withLastUpdatedAt(getLastUpdatedAt());
   }
 
   /**

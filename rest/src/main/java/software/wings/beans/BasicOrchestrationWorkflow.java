@@ -21,7 +21,7 @@ public class BasicOrchestrationWorkflow extends CanaryOrchestrationWorkflow {
   }
 
   @Override
-  public OrchestrationWorkflow clone() {
+  public OrchestrationWorkflow cloneInternal() {
     return aBasicOrchestrationWorkflow()
         .withGraph(getGraph())
         .withPreDeploymentSteps(getPreDeploymentSteps())

@@ -2,7 +2,6 @@ package software.wings.beans;
 
 import static io.harness.data.structure.EmptyPredicate.isNotEmpty;
 import static org.apache.commons.lang3.StringUtils.isNotBlank;
-import static software.wings.beans.DirectKubernetesInfrastructureMapping.Builder.aDirectKubernetesInfrastructureMapping;
 
 import com.fasterxml.jackson.annotation.JsonIgnore;
 import com.fasterxml.jackson.annotation.JsonTypeName;
@@ -146,36 +145,6 @@ public class DirectKubernetesInfrastructureMapping extends ContainerInfrastructu
     }
 
     return kubernetesConfig.build();
-  }
-
-  public Builder deepClone() {
-    return aDirectKubernetesInfrastructureMapping()
-        .withClusterName(getClusterName())
-        .withMasterUrl(getMasterUrl())
-        .withUsername(getUsername())
-        .withPassword(getPassword())
-        .withCaCert(getCaCert())
-        .withClientCert(getClientCert())
-        .withClientKey(getClientKey())
-        .withClientKeyPassphrase(getClientKeyPassphrase())
-        .withClientKeyAlgo(getClientKeyAlgo())
-        .withNamespace(getNamespace())
-        .withUuid(getUuid())
-        .withComputeProviderSettingId(getComputeProviderSettingId())
-        .withAppId(getAppId())
-        .withEnvId(getEnvId())
-        .withCreatedBy(getCreatedBy())
-        .withServiceTemplateId(getServiceTemplateId())
-        .withCreatedAt(getCreatedAt())
-        .withLastUpdatedBy(getLastUpdatedBy())
-        .withServiceId(getServiceId())
-        .withLastUpdatedAt(getLastUpdatedAt())
-        .withComputeProviderType(getComputeProviderType())
-        .withInfraMappingType(getInfraMappingType())
-        .withEntityYamlPath(entityYamlPath)
-        .withDeploymentType(getDeploymentType())
-        .withComputeProviderName(getComputeProviderName())
-        .withName(getName());
   }
 
   public static final class Builder {
