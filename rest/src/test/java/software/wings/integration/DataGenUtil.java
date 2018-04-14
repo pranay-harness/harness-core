@@ -306,12 +306,12 @@ public class DataGenUtil extends BaseIntegrationTest {
     }
 
     //    String oldAccountId = account.getUuid();
-    String accountKey = "2f6b0988b6fb3370073c3d0505baee59";
+    String accountKey = delegateAccountSecret;
     account.setAccountKey(accountKey);
     account.setLicenseExpiryTime(-1);
 
-    account.setUuid("kmpySmUISimoRrJL6NL73w");
-    accountId = "kmpySmUISimoRrJL6NL73w";
+    account.setUuid(defaultAccountId);
+    accountId = defaultAccountId;
     if (oldAccountExists) {
       accountService.delete(account.getUuid());
     }
