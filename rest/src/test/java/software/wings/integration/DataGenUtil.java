@@ -16,7 +16,6 @@ import static software.wings.beans.Environment.Builder.anEnvironment;
 import static software.wings.beans.HostConnectionAttributes.AccessType.KEY;
 import static software.wings.beans.HostConnectionAttributes.Builder.aHostConnectionAttributes;
 import static software.wings.beans.HostConnectionAttributes.ConnectionType.SSH;
-import static software.wings.beans.License.Builder.aLicense;
 import static software.wings.beans.PhaseStep.PhaseStepBuilder.aPhaseStep;
 import static software.wings.beans.PhaseStepType.POST_DEPLOYMENT;
 import static software.wings.beans.PhaseStepType.PRE_DEPLOYMENT;
@@ -102,6 +101,8 @@ import software.wings.generator.ArtifactStreamGenerator;
 import software.wings.generator.EnvironmentGenerator;
 import software.wings.generator.EnvironmentGenerator.Environments;
 import software.wings.generator.InfrastructureMappingGenerator;
+import software.wings.generator.LicenseGenerator;
+import software.wings.generator.LicenseGenerator.Licenses;
 import software.wings.generator.PipelineGenerator;
 import software.wings.generator.Randomizer.Seed;
 import software.wings.generator.ServiceGenerator;
@@ -131,7 +132,6 @@ import java.util.Arrays;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
-import java.util.concurrent.TimeUnit;
 import javax.ws.rs.client.WebTarget;
 import javax.ws.rs.core.GenericType;
 import javax.ws.rs.core.Response;
@@ -185,6 +185,7 @@ public class DataGenUtil extends BaseIntegrationTest {
   @Inject private ArtifactStreamGenerator artifactStreamGenerator;
   @Inject private EnvironmentGenerator environmentGenerator;
   @Inject private InfrastructureMappingGenerator infrastructureMappingGenerator;
+  @Inject private LicenseGenerator licenseGenerator;
   @Inject private PipelineGenerator pipelineGenerator;
   @Inject private ServiceGenerator serviceGenerator;
   @Inject private ServiceTemplateGenerator serviceTemplateGenerator;
@@ -290,9 +291,9 @@ public class DataGenUtil extends BaseIntegrationTest {
   }
 
   protected Account createLicenseAndDefaultUsers() {
-    License license =
-        aLicense().withName("Trial").withExpiryDuration(TimeUnit.DAYS.toMillis(365)).withIsActive(true).build();
-    wingsPersistence.save(license);
+    final Seed seed = new Seed(0);
+
+    License license = licenseGenerator.ensurePredefined(seed, Licenses.TRIAL);
 
     Account account = wingsPersistence.executeGetOneQuery(wingsPersistence.createQuery(Account.class));
     boolean oldAccountExists = false;
