@@ -604,11 +604,6 @@
         </dependency>
 
         <dependency>
-            <groupId>commons-validator</groupId>
-            <artifactId>commons-validator</artifactId>
-        </dependency>
-
-        <dependency>
             <groupId>com.splunk</groupId>
             <artifactId>splunk</artifactId>
             <version>1.6.3.0</version>
