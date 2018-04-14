@@ -111,6 +111,10 @@ public class ArtifactStreamServiceImpl implements ArtifactStreamService, DataPro
   public ArtifactStream create(ArtifactStream artifactStream) {
     validateArtifactSourceData(artifactStream);
 
+    return forceCreate(artifactStream);
+  }
+
+  public ArtifactStream forceCreate(ArtifactStream artifactStream) {
     artifactStream.setSourceName(artifactStream.generateSourceName());
     setAutoPopulatedName(artifactStream);
 

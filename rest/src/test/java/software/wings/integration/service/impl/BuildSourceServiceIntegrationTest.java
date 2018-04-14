@@ -56,7 +56,6 @@ import software.wings.dl.WingsPersistence;
 import software.wings.exception.WingsException;
 import software.wings.helpers.ext.jenkins.BuildDetails;
 import software.wings.helpers.ext.jenkins.JobDetails;
-import software.wings.integration.BaseIntegrationTest;
 import software.wings.security.UserThreadLocal;
 import software.wings.service.intfc.ArtifactoryBuildService;
 import software.wings.service.intfc.BambooBuildService;
@@ -176,7 +175,7 @@ public class BuildSourceServiceIntegrationTest extends WingsBaseTest {
       case JENKINS:
         when(delegateProxyFactory.get(anyObject(), any(SyncTaskContext.class))).thenReturn(jenkinsBuildService);
         settingAttribute = aSettingAttribute()
-                               .withName(BaseIntegrationTest.HARNESS_JENKINS)
+                               .withName("harness")
                                .withCategory(Category.CONNECTOR)
                                .withAccountId(accountId)
                                .withValue(JenkinsConfig.builder()

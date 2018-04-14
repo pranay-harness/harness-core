@@ -210,12 +210,22 @@ public class SettingsServiceImpl implements SettingsService {
     }
   }
 
-  /* (non-Javadoc)
-   * @see software.wings.service.intfc.SettingsService#save(software.wings.beans.SettingAttribute)
-   */
   @Override
   public SettingAttribute save(SettingAttribute settingAttribute) {
     return save(settingAttribute, true);
+  }
+
+  @Override
+  public SettingAttribute forceSave(SettingAttribute settingAttribute) {
+    if (settingAttribute.getValue() != null) {
+      if (settingAttribute.getValue() instanceof Encryptable) {
+        ((Encryptable) settingAttribute.getValue()).setAccountId(settingAttribute.getAccountId());
+      }
+    }
+
+    return Validator.duplicateCheck(()
+                                        -> wingsPersistence.saveAndGet(SettingAttribute.class, settingAttribute),
+        "name", settingAttribute.getName());
   }
 
   private ValidationResult validateInternal(final SettingAttribute settingAttribute) {
@@ -244,16 +254,8 @@ public class SettingsServiceImpl implements SettingsService {
   @Override
   public SettingAttribute save(SettingAttribute settingAttribute, boolean pushToGit) {
     settingValidationService.validate(settingAttribute);
-    if (settingAttribute.getValue() != null) {
-      if (settingAttribute.getValue() instanceof Encryptable) {
-        ((Encryptable) settingAttribute.getValue()).setAccountId(settingAttribute.getAccountId());
-      }
-    }
+    SettingAttribute newSettingAttribute = forceSave(settingAttribute);
 
-    SettingAttribute newSettingAttribute =
-        Validator.duplicateCheck(()
-                                     -> wingsPersistence.saveAndGet(SettingAttribute.class, settingAttribute),
-            "name", settingAttribute.getName());
     if (shouldBeSynced(newSettingAttribute, pushToGit)) {
       yamlChangeSetHelper.queueSettingYamlChangeAsync(newSettingAttribute, ChangeType.ADD);
     }
