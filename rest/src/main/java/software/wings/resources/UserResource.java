@@ -30,24 +30,34 @@ import software.wings.security.UserThreadLocal;
 import software.wings.security.annotations.AuthRule;
 import software.wings.security.annotations.PublicApi;
 import software.wings.security.annotations.Scope;
+import software.wings.security.authentication.AuthenticationManager;
+import software.wings.security.authentication.LoginTypeResponse;
+import software.wings.security.authentication.SsoRedirectRequest;
 import software.wings.service.intfc.AccountService;
 import software.wings.service.intfc.AuthService;
 import software.wings.service.intfc.UserService;
 
 import java.net.URISyntaxException;
+import java.util.Base64;
 import java.util.List;
 import java.util.Map;
+import javax.servlet.http.HttpServletRequest;
+import javax.servlet.http.HttpServletResponse;
 import javax.validation.constraints.NotNull;
 import javax.ws.rs.BeanParam;
 import javax.ws.rs.Consumes;
 import javax.ws.rs.DELETE;
+import javax.ws.rs.FormParam;
 import javax.ws.rs.GET;
+import javax.ws.rs.HeaderParam;
 import javax.ws.rs.POST;
 import javax.ws.rs.PUT;
 import javax.ws.rs.Path;
 import javax.ws.rs.PathParam;
 import javax.ws.rs.Produces;
 import javax.ws.rs.QueryParam;
+import javax.ws.rs.core.Context;
+import javax.ws.rs.core.HttpHeaders;
 import javax.ws.rs.core.MediaType;
 
 /**
@@ -65,6 +75,7 @@ public class UserResource {
   private UserService userService;
   private AuthService authService;
   private AccountService accountService;
+  private AuthenticationManager authenticationManager;
 
   /**
    * Instantiates a new User resource.
@@ -73,10 +84,12 @@ public class UserResource {
    * @param accountService the account service
    */
   @Inject
-  public UserResource(UserService userService, AuthService authService, AccountService accountService) {
+  public UserResource(UserService userService, AuthService authService, AccountService accountService,
+      AuthenticationManager authenticationManager) {
     this.userService = userService;
     this.authService = authService;
     this.accountService = accountService;
+    this.authenticationManager = authenticationManager;
   }
 
   /**
@@ -299,9 +312,47 @@ public class UserResource {
   @PublicApi
   @Timed
   @ExceptionMetered
-  public RestResponse<User> login() {
-    User user = UserThreadLocal.get();
-    return new RestResponse<>(user);
+  public RestResponse<User> login(@HeaderParam(HttpHeaders.AUTHORIZATION) String authorization) {
+    String basicToken = authenticationManager.extractToken(authorization, "Basic");
+    String[] decryptedData = new String(Base64.getDecoder().decode(basicToken)).split(":");
+    String userName = decryptedData[0];
+    String password = decryptedData[1];
+    return new RestResponse<>(authenticationManager.defaultLogin(userName, password));
+  }
+
+  @GET
+  @Path("logintype")
+  @PublicApi
+  @Timed
+  @ExceptionMetered
+  public RestResponse<LoginTypeResponse> getLoginType(@QueryParam("userName") String userName) {
+    return new RestResponse(authenticationManager.getLoginTypeResponse(userName));
+  }
+
+  @POST
+  @Path("sso-redirect-login")
+  @PublicApi
+  @Timed
+  @ExceptionMetered
+  public RestResponse<User> redirectlogin(SsoRedirectRequest request) {
+    return new RestResponse<User>(authenticationManager.ssoRedirectLogin(request.getJwtToken()));
+  }
+
+  @POST
+  @Path("saml-login")
+  @Produces(MediaType.TEXT_HTML)
+  @Consumes(MediaType.APPLICATION_FORM_URLENCODED)
+  @PublicApi
+  @Timed
+  @ExceptionMetered
+  public javax.ws.rs.core.Response samlLogin(@FormParam(value = "SAMLResponse") String samlResponse,
+      @Context HttpServletRequest request, @Context HttpServletResponse response) {
+    try {
+      return authenticationManager.samlLogin(
+          request.getHeader(com.google.common.net.HttpHeaders.REFERER), samlResponse);
+    } catch (URISyntaxException e) {
+      throw new WingsException(ErrorCode.UNKNOWN_ERROR, e);
+    }
   }
 
   /**

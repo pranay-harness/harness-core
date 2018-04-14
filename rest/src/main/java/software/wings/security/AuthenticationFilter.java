@@ -4,11 +4,8 @@ import static javax.ws.rs.HttpMethod.OPTIONS;
 import static javax.ws.rs.Priorities.AUTHENTICATION;
 import static org.apache.commons.lang3.StringUtils.startsWith;
 import static org.apache.commons.lang3.StringUtils.substringAfter;
-import static org.mindrot.jbcrypt.BCrypt.checkpw;
-import static software.wings.beans.ErrorCode.EMAIL_NOT_VERIFIED;
 import static software.wings.beans.ErrorCode.INVALID_CREDENTIAL;
 import static software.wings.beans.ErrorCode.INVALID_TOKEN;
-import static software.wings.beans.ErrorCode.USER_DOES_NOT_EXIST;
 import static software.wings.exception.WingsException.ALERTING;
 import static software.wings.exception.WingsException.HARMLESS;
 
@@ -30,7 +27,6 @@ import software.wings.service.intfc.UserService;
 
 import java.io.IOException;
 import java.lang.reflect.Method;
-import java.util.Base64;
 import javax.annotation.Priority;
 import javax.ws.rs.container.ContainerRequestContext;
 import javax.ws.rs.container.ContainerRequestFilter;
@@ -90,8 +86,7 @@ public class AuthenticationFilter implements ContainerRequestFilter {
       return;
     }
 
-    User user = authenticateRequest(containerRequestContext);
-    UserThreadLocal.set(user);
+    throw new WingsException(INVALID_CREDENTIAL, HARMLESS);
   }
 
   private User validateBearerToken(ContainerRequestContext containerRequestContext) {
@@ -106,32 +101,6 @@ public class AuthenticationFilter implements ContainerRequestFilter {
 
   private void updateUserInAuditRecord(User user) {
     auditService.updateUser(auditHelper.get(), user.getPublicUser());
-  }
-
-  protected User authenticateRequest(ContainerRequestContext containerRequestContext) {
-    String basicToken = extractToken(containerRequestContext, "Basic");
-    String[] decryptedData = new String(Base64.getDecoder().decode(basicToken)).split(":");
-    String userName = decryptedData[0];
-    String password = decryptedData[1];
-    User user = getUser(userName);
-    if (user == null) {
-      throw new WingsException(USER_DOES_NOT_EXIST, HARMLESS);
-    }
-    if (!user.isEmailVerified()) {
-      throw new WingsException(EMAIL_NOT_VERIFIED, HARMLESS);
-    }
-    if (checkpw(password, user.getPasswordHash())) {
-      AuthToken authToken = new AuthToken(user.getUuid(), configuration.getPortal().getAuthTokenExpiryInMillis());
-      userService.evictUserFromCache(user.getUuid());
-      wingsPersistence.save(authToken);
-      user.setToken(authToken.getUuid());
-      return user;
-    }
-    throw new WingsException(INVALID_CREDENTIAL, HARMLESS);
-  }
-
-  protected User getUser(String userName) {
-    return wingsPersistence.createQuery(User.class).filter("email", userName.trim().toLowerCase()).get();
   }
 
   protected void validateLearningEngineRequest(ContainerRequestContext containerRequestContext) {
@@ -154,8 +123,7 @@ public class AuthenticationFilter implements ContainerRequestFilter {
   }
 
   protected boolean authenticationExemptedRequests(ContainerRequestContext requestContext) {
-    return requestContext.getMethod().equals(OPTIONS)
-        || (!requestContext.getUriInfo().getAbsolutePath().getPath().endsWith("api/users/login") && publicAPI())
+    return requestContext.getMethod().equals(OPTIONS) || publicAPI()
         || requestContext.getUriInfo().getAbsolutePath().getPath().endsWith("api/version")
         || requestContext.getUriInfo().getAbsolutePath().getPath().endsWith("api/swagger")
         || requestContext.getUriInfo().getAbsolutePath().getPath().endsWith("api/swagger.json");

@@ -8,6 +8,7 @@ import org.mongodb.morphia.annotations.Entity;
 import org.mongodb.morphia.annotations.IndexOptions;
 import org.mongodb.morphia.annotations.Indexed;
 import software.wings.annotation.Encrypted;
+import software.wings.security.authentication.AuthenticationMechanism;
 import software.wings.security.encryption.EncryptionInterface;
 import software.wings.security.encryption.SimpleEncryption;
 import software.wings.utils.validation.Create;
@@ -33,6 +34,11 @@ public class Account extends Base {
   private long licenseExpiryTime;
 
   @JsonIgnore private EncryptionInterface encryption;
+
+  /**
+   * Default mechanism is USER_PASSWORD
+   */
+  @JsonIgnore private AuthenticationMechanism authenticationMechanism = AuthenticationMechanism.USER_PASSWORD;
 
   /**
    * Getter for property 'companyName'.
@@ -122,6 +128,14 @@ public class Account extends Base {
     this.encryption = encryption;
   }
 
+  public AuthenticationMechanism getAuthenticationMechanism() {
+    return authenticationMechanism;
+  }
+
+  public void setAuthenticationMechanism(AuthenticationMechanism authenticationMechanism) {
+    this.authenticationMechanism = authenticationMechanism;
+  }
+
   @Override
   public boolean equals(Object o) {
     if (this == o) {
@@ -164,6 +178,7 @@ public class Account extends Base {
     private long createdAt;
     private EmbeddedUser lastUpdatedBy;
     private long lastUpdatedAt;
+    private AuthenticationMechanism authenticationMechanism;
 
     private Builder() {}
 
@@ -221,6 +236,11 @@ public class Account extends Base {
       return this;
     }
 
+    public Builder withAuthenticationMechanism(AuthenticationMechanism mechanism) {
+      this.authenticationMechanism = mechanism;
+      return this;
+    }
+
     public Builder but() {
       return anAccount()
           .withCompanyName(companyName)
@@ -232,7 +252,8 @@ public class Account extends Base {
           .withAccountName(accountName)
           .withCreatedAt(createdAt)
           .withLastUpdatedBy(lastUpdatedBy)
-          .withLastUpdatedAt(lastUpdatedAt);
+          .withLastUpdatedAt(lastUpdatedAt)
+          .withAuthenticationMechanism(authenticationMechanism);
     }
 
     public Account build() {
@@ -247,6 +268,7 @@ public class Account extends Base {
       account.setCreatedAt(createdAt);
       account.setLastUpdatedBy(lastUpdatedBy);
       account.setLastUpdatedAt(lastUpdatedAt);
+      account.setAuthenticationMechanism(authenticationMechanism);
       return account;
     }
   }
