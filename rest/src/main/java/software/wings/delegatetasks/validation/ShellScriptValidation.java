@@ -1,6 +1,7 @@
 package software.wings.delegatetasks.validation;
 
 import static io.harness.govern.Switch.unhandled;
+import static java.util.Arrays.asList;
 import static java.util.Collections.singletonList;
 import static software.wings.core.ssh.executors.SshSessionFactory.getSSHSession;
 
@@ -20,7 +21,6 @@ import software.wings.delegatetasks.validation.DelegateConnectionResult.Delegate
 import software.wings.service.intfc.security.EncryptionService;
 import software.wings.utils.WinRmHelperUtil;
 
-import java.io.IOException;
 import java.util.List;
 import java.util.function.Consumer;
 
@@ -43,6 +43,10 @@ public class ShellScriptValidation extends AbstractDelegateValidateTask {
     DelegateConnectionResultBuilder resultBuilder = DelegateConnectionResult.builder();
     resultBuilder.criteria(getCriteria().get(0));
 
+    if (parameters.getExecuteOnDelegate()) {
+      return resultBuilder.validated(true).build();
+    }
+
     switch (parameters.getConnectionType()) {
       case SSH:
         try {
@@ -53,7 +57,7 @@ public class ShellScriptValidation extends AbstractDelegateValidateTask {
         } catch (JSchException jschEx) {
           // Invalid credentials error is still a valid connection
           resultBuilder.validated(StringUtils.contains(jschEx.getMessage(), "Auth"));
-        } catch (IOException ex) {
+        } catch (Exception ex) {
           resultBuilder.validated(false);
         }
         break;
@@ -81,6 +85,7 @@ public class ShellScriptValidation extends AbstractDelegateValidateTask {
   @Override
   public List<String> getCriteria() {
     ShellScriptParameters parameters = (ShellScriptParameters) getParameters()[0];
-    return singletonList(parameters.getHost());
+    String hostname = parameters.getExecuteOnDelegate() ? "localhost" : parameters.getHost();
+    return asList(hostname);
   }
 }

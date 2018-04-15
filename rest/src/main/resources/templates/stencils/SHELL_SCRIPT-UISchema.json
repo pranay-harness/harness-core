@@ -1,6 +1,6 @@
 {
   "scriptString" : {"ui:widget" : "textarea"}, "ui:order" : [
-    "commandPath", "host", "connectionType", "sshKeyRef",
+    "commandPath", "executeOnDelegate", "host", "connectionType", "sshKeyRef",
     "connectionAttributes", "scriptType", "scriptString", "timeoutMillis"
   ]
 }

@@ -70,6 +70,8 @@ public class ShellScriptState extends State {
   @Inject @Transient private transient SettingsService settingsService;
   @Inject @Transient private transient SecretManager secretManager;
 
+  @Getter @Setter @Attributes(title = "Execute on Delegate") private Boolean executeOnDelegate;
+
   @NotEmpty @Getter @Setter @Attributes(title = "Target Host") private String host;
 
   public enum ConnectionType { SSH, WINRM }
@@ -234,6 +236,7 @@ public class ShellScriptState extends State {
                                               .workingDirectory(commandPath)
                                               .scriptType(scriptType)
                                               .script(scriptString)
+                                              .executeOnDelegate(executeOnDelegate)
                                               .build()})
             .withEnvId(envId)
             .withInfrastructureMappingId(infrastructureMappingId)
