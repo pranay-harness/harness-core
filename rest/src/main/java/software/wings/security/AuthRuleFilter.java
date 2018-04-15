@@ -171,7 +171,7 @@ public class AuthRuleFilter implements ContainerRequestFilter {
       }
     }
 
-    if (servletRequest != null) {
+    if (servletRequest != null && featureFlagService.isEnabled(FeatureName.WHITELIST, accountId)) {
       String remoteHost = servletRequest.getRemoteHost();
       if (!whitelistService.isValidIPAddress(accountId, remoteHost)) {
         String msg = "Current IP Address (" + remoteHost + ") is not whitelisted.";
@@ -377,7 +377,7 @@ public class AuthRuleFilter implements ContainerRequestFilter {
         if (!invalidAppIdList.isEmpty()) {
           String msg = "The appIds from request %s do not belong to the given account :" + accountId;
           String formattedMsg = String.format(msg, (Object[]) invalidAppIdList.toArray());
-          throw new WingsException(INVALID_ARGUMENT).addParam("args", formattedMsg);
+          throw new WingsException(INVALID_ARGUMENT, HARMLESS).addParam("args", formattedMsg);
         }
       }
     }

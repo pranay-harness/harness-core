@@ -86,6 +86,20 @@ public class WhitelistResource {
   }
 
   /**
+   * Gets the whitelist config.
+   *
+   * @param accountId   the account id
+   * @return the rest response
+   */
+  @GET
+  @Path("isEnabled")
+  @Timed
+  @ExceptionMetered
+  public RestResponse<Boolean> isEnabled(@QueryParam("accountId") String accountId) {
+    return new RestResponse<>(whitelistService.isEnabled(accountId));
+  }
+
+  /**
    * Save.
    *
    * @param accountId   the account id
