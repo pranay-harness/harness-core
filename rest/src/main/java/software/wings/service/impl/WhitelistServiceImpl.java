@@ -18,16 +18,20 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import software.wings.app.MainConfiguration;
 import software.wings.beans.ErrorCode;
+import software.wings.beans.FeatureName;
+import software.wings.beans.security.access.GlobalWhitelistConfig;
 import software.wings.beans.security.access.Whitelist;
 import software.wings.beans.security.access.WhitelistConfig;
 import software.wings.dl.PageRequest;
 import software.wings.dl.PageResponse;
 import software.wings.dl.WingsPersistence;
 import software.wings.exception.WingsException;
+import software.wings.service.intfc.FeatureFlagService;
 import software.wings.service.intfc.WhitelistService;
 import software.wings.utils.CacheHelper;
 import software.wings.utils.Validator;
 
+import java.util.Arrays;
 import java.util.List;
 import javax.cache.Cache;
 import javax.validation.executable.ValidateOnExecution;
@@ -41,6 +45,7 @@ public class WhitelistServiceImpl implements WhitelistService {
   private static final Logger logger = LoggerFactory.getLogger(WhitelistServiceImpl.class);
   @Inject private WingsPersistence wingsPersistence;
   @Inject private MainConfiguration mainConfiguration;
+  @Inject private FeatureFlagService featureFlagService;
   @Inject private CacheHelper cacheHelper;
 
   @Override
@@ -141,7 +146,7 @@ public class WhitelistServiceImpl implements WhitelistService {
         return true;
       } else {
         // Check if the request originated from harness network
-        return checkWhitelist(mainConfiguration.getWhitelists(), ipAddress);
+        return checkDefaultWhitelist(mainConfiguration.getGlobalWhitelistConfig(), ipAddress);
       }
     }
   }
@@ -162,6 +167,28 @@ public class WhitelistServiceImpl implements WhitelistService {
         }
       } else {
         return ipAddress.matches(condition);
+      }
+    });
+  }
+
+  private boolean checkDefaultWhitelist(GlobalWhitelistConfig globalWhitelistConfig, String ipAddress) {
+    if (globalWhitelistConfig == null || isEmpty(globalWhitelistConfig.getFilters())) {
+      return false;
+    }
+
+    String[] filters = globalWhitelistConfig.getFilters().split(",");
+
+    return Arrays.stream(filters).anyMatch(filter -> {
+      if (filter.contains("/")) {
+        try {
+          SubnetUtils subnetUtils = new SubnetUtils(filter);
+          return subnetUtils.getInfo().isInRange(ipAddress);
+        } catch (Exception ex) {
+          logger.warn("Exception while checking if the ip {} is in range: {}", ipAddress, filter);
+          return false;
+        }
+      } else {
+        return ipAddress.matches(filter);
       }
     });
   }
@@ -195,5 +222,10 @@ public class WhitelistServiceImpl implements WhitelistService {
       evictWhitelistConfigCache(whitelist.getAccountId());
     }
     return delete;
+  }
+
+  @Override
+  public boolean isEnabled(String accountId) {
+    return featureFlagService.isEnabled(FeatureName.WHITELIST, accountId);
   }
 }

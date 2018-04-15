@@ -36,9 +36,8 @@ smtp:
   username: support@harness.io
   password: "H@rness@987"
 
-whitelists:
-  - filter: 192.168.128.0/24
-  - filter: 127.0.0.1/8
+globalWhitelistConfig:
+  filters: ${GLOBAL_WHITELIST}
 
 logging:
   level: INFO

@@ -21,7 +21,7 @@ import io.dropwizard.server.DefaultServerFactory;
 import io.dropwizard.server.ServerFactory;
 import io.federecio.dropwizard.swagger.SwaggerBundleConfiguration;
 import lombok.Data;
-import software.wings.beans.security.access.Whitelist;
+import software.wings.beans.security.access.GlobalWhitelistConfig;
 import software.wings.dl.MongoConfig;
 import software.wings.helpers.ext.mail.SmtpConfig;
 
@@ -56,7 +56,7 @@ public class MainConfiguration extends Configuration implements AssetsBundleConf
   @JsonProperty("hazelcast") private HazelcastConfiguration hazelcast;
   @JsonProperty("apiUrl") private String apiUrl;
   @JsonProperty("smtp") private SmtpConfig smtpConfig;
-  @JsonProperty("whitelists") private List<Whitelist> whitelists;
+  @JsonProperty("globalWhitelistConfig") private GlobalWhitelistConfig globalWhitelistConfig;
   @JsonProperty(defaultValue = "AWS") private DeployMode deployMode = DeployMode.AWS;
   private int applicationPort;
   private boolean sslEnabled;

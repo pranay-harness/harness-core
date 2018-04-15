@@ -19,6 +19,7 @@ import org.mockito.Mock;
 import software.wings.WingsBaseTest;
 import software.wings.app.MainConfiguration;
 import software.wings.beans.Account;
+import software.wings.beans.security.access.GlobalWhitelistConfig;
 import software.wings.beans.security.access.Whitelist;
 import software.wings.beans.security.access.WhitelistStatus;
 import software.wings.dl.PageRequest.PageRequestBuilder;
@@ -27,7 +28,6 @@ import software.wings.exception.WingsException;
 import software.wings.service.intfc.AccountService;
 import software.wings.service.intfc.WhitelistService;
 
-import java.util.Arrays;
 import java.util.List;
 
 /**
@@ -59,12 +59,11 @@ public class WhitelistServiceTest extends WingsBaseTest {
   @Before
   public void setupMocks() {
     when(accountService.get(anyString())).thenReturn(account);
-    when(mainConfig.getWhitelists()).thenReturn(getHarnessDefaults());
+    when(mainConfig.getGlobalWhitelistConfig()).thenReturn(getHarnessDefaults());
   }
 
-  private List<Whitelist> getHarnessDefaults() {
-    return Arrays.asList(Whitelist.builder().accountId(accountId).filter("192.168.128.0/24").build(),
-        Whitelist.builder().accountId(accountId).filter("127.0.0.1/8").build());
+  private GlobalWhitelistConfig getHarnessDefaults() {
+    return GlobalWhitelistConfig.builder().filters("192.168.128.0/24,127.0.0.1/8").build();
   }
 
   /**

@@ -1102,4 +1102,8 @@ public class AuthHandler {
     UserGroup nonProdSupportUserGroup = buildNonProdSupportUserGroup(account.getUuid());
     userGroupService.save(nonProdSupportUserGroup);
   }
+
+  public <T extends Base> void setFilter(String accountId, String appId, PageRequest<T> pageRequest) {}
+
+  public <T extends Base> void setFilter(String accountId, List<String> appIdList, PageRequest<T> pageRequest) {}
 }
