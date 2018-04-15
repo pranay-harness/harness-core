@@ -84,6 +84,11 @@ public class AwsInfrastructureProvider implements InfrastructureProvider {
                          .withPublicDns(awsInfrastructureMapping.isUsePublicDns() ? instance.getPublicDnsName()
                                                                                   : instance.getPrivateDnsName())
                          .withEc2Instance(instance)
+                         .withAppId(awsInfrastructureMapping.getAppId())
+                         .withEnvId(awsInfrastructureMapping.getEnvId())
+                         .withHostConnAttr(awsInfrastructureMapping.getHostConnectionAttrs())
+                         .withInfraMappingId(awsInfrastructureMapping.getUuid())
+                         .withServiceTemplateId(awsInfrastructureMapping.getServiceTemplateId())
                          .build())
               .collect(toList());
       if (awsInfrastructureMapping.getHostNameConvention() != null
@@ -191,6 +196,11 @@ public class AwsInfrastructureProvider implements InfrastructureProvider {
                    .withPublicDns(infrastructureMapping.isUsePublicDns() ? instance.getPublicDnsName()
                                                                          : instance.getPrivateDnsName())
                    .withEc2Instance(instance)
+                   .withAppId(infrastructureMapping.getAppId())
+                   .withEnvId(infrastructureMapping.getEnvId())
+                   .withHostConnAttr(infrastructureMapping.getHostConnectionAttrs())
+                   .withInfraMappingId(infrastructureMapping.getUuid())
+                   .withServiceTemplateId(infrastructureMapping.getServiceTemplateId())
                    .build())
         .collect(toList());
   }

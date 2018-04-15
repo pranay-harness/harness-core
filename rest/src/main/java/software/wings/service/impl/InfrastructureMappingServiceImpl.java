@@ -835,20 +835,11 @@ public class InfrastructureMappingServiceImpl implements InfrastructureMappingSe
           (AwsInfrastructureProvider) getInfrastructureProviderByComputeProviderType(AWS.name());
       SettingAttribute computeProviderSetting = settingsService.get(awsInfraMapping.getComputeProviderSettingId());
       notNullCheck("Compute Provider", computeProviderSetting);
-      List<Host> hosts =
-          infrastructureProvider
-              .listHosts(awsInfraMapping, computeProviderSetting,
-                  secretManager.getEncryptionDetails((Encryptable) computeProviderSetting.getValue(), null, null),
-                  new PageRequest<>())
-              .getResponse();
-      hosts.stream().forEach(host -> {
-        host.setAppId(awsInfraMapping.getAppId());
-        host.setEnvId(awsInfraMapping.getEnvId());
-        host.setHostConnAttr(awsInfraMapping.getHostConnectionAttrs());
-        host.setInfraMappingId(awsInfraMapping.getUuid());
-        host.setServiceTemplateId(awsInfraMapping.getServiceTemplateId());
-      });
-      return hosts;
+      return infrastructureProvider
+          .listHosts(awsInfraMapping, computeProviderSetting,
+              secretManager.getEncryptionDetails((Encryptable) computeProviderSetting.getValue(), null, null),
+              new PageRequest<>())
+          .getResponse();
     } else {
       throw new WingsException(INVALID_REQUEST)
           .addParam("message", "Unsupported infrastructure mapping: " + infrastructureMapping.getClass().getName());
@@ -862,8 +853,7 @@ public class InfrastructureMappingServiceImpl implements InfrastructureMappingSe
     ServiceTemplate serviceTemplate =
         serviceTemplateService.get(infrastructureMapping.getAppId(), infrastructureMapping.getServiceTemplateId());
 
-    List<Host> savedHosts =
-        hosts.stream().map(host -> { return infrastructureProvider.saveHost(host); }).collect(toList());
+    List<Host> savedHosts = hosts.stream().map(infrastructureProvider::saveHost).collect(toList());
 
     return serviceInstanceService.updateInstanceMappings(serviceTemplate, infrastructureMapping, savedHosts);
   }
