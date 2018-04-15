@@ -7,6 +7,7 @@ import lombok.Getter;
 import lombok.Setter;
 import software.wings.api.ScriptType;
 import software.wings.beans.WinRmConnectionAttributes;
+import software.wings.core.local.executors.ShellExecutorConfig;
 import software.wings.core.ssh.executors.SshSessionConfig;
 import software.wings.core.winrm.executors.WinRmSessionConfig;
 import software.wings.security.encryption.EncryptedDataDetail;
@@ -37,6 +38,7 @@ public class ShellScriptParameters {
   private final String workingDirectory;
   private final ScriptType scriptType;
   private final String script;
+  private final Boolean executeOnDelegate;
 
   public SshSessionConfig sshSessionConfig(EncryptionService encryptionService) throws IOException {
     return aSshSessionConfig()
@@ -66,6 +68,17 @@ public class ShellScriptParameters {
         .port(winrmConnectionAttributes.getPort())
         .useSSL(winrmConnectionAttributes.isUseSSL())
         .skipCertChecks(winrmConnectionAttributes.isSkipCertChecks())
+        .workingDirectory(workingDirectory)
+        .environment(environment == null ? Collections.emptyMap() : environment)
+        .build();
+  }
+
+  public ShellExecutorConfig processExecutorConfig() {
+    return ShellExecutorConfig.builder()
+        .accountId(accountId)
+        .appId(appId)
+        .executionId(activityId)
+        .commandUnitName(CommandUnit)
         .workingDirectory(workingDirectory)
         .environment(environment == null ? Collections.emptyMap() : environment)
         .build();

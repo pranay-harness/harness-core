@@ -12,6 +12,8 @@ import software.wings.beans.DelegateTask;
 import software.wings.beans.command.CommandExecutionResult;
 import software.wings.beans.command.CommandExecutionResult.CommandExecutionStatus;
 import software.wings.beans.delegation.ShellScriptParameters;
+import software.wings.core.local.executors.ShellExecutor;
+import software.wings.core.local.executors.ShellExecutorFactory;
 import software.wings.core.ssh.executors.SshExecutor;
 import software.wings.core.ssh.executors.SshExecutor.ExecutorType;
 import software.wings.core.ssh.executors.SshExecutorFactory;
@@ -23,7 +25,6 @@ import software.wings.exception.WingsException;
 import software.wings.service.intfc.security.EncryptionService;
 import software.wings.waitnotify.NotifyResponseData;
 
-import java.io.IOException;
 import java.util.function.Consumer;
 import java.util.function.Supplier;
 
@@ -32,6 +33,7 @@ public class ShellScriptTask extends AbstractDelegateRunnableTask {
 
   @Inject private SshExecutorFactory sshExecutorFactory;
   @Inject private WinRmExecutorFactory winrmExecutorFactory;
+  @Inject private ShellExecutorFactory shellExecutorFactory;
   @Inject private EncryptionService encryptionService;
 
   public ShellScriptTask(String delegateId, DelegateTask delegateTask, Consumer<NotifyResponseData> postExecute,
@@ -45,6 +47,15 @@ public class ShellScriptTask extends AbstractDelegateRunnableTask {
   }
 
   private CommandExecutionResult run(ShellScriptParameters parameters) {
+    if (parameters.getExecuteOnDelegate()) {
+      ShellExecutor executor =
+          shellExecutorFactory.getExecutor(parameters.processExecutorConfig(), parameters.getScriptType());
+      CommandExecutionStatus commandExecutionStatus =
+          executor.executeCommandString(parameters.getScript(), new StringBuffer());
+
+      return aCommandExecutionResult().withStatus(commandExecutionStatus).build();
+    }
+
     switch (parameters.getConnectionType()) {
       case SSH: {
         SshExecutor executor = sshExecutorFactory.getExecutor(ExecutorType.KEY_AUTH);
@@ -56,7 +67,7 @@ public class ShellScriptTask extends AbstractDelegateRunnableTask {
           CommandExecutionStatus commandExecutionStatus = executor.executeCommandString(parameters.getScript());
 
           return aCommandExecutionResult().withStatus(commandExecutionStatus).build();
-        } catch (IOException e) {
+        } catch (Exception e) {
           throw new WingsException(e);
         }
       }
@@ -69,7 +80,7 @@ public class ShellScriptTask extends AbstractDelegateRunnableTask {
               executor.executeCommandString(parameters.getScript(), new StringBuffer());
 
           return aCommandExecutionResult().withStatus(commandExecutionStatus).build();
-        } catch (IOException e) {
+        } catch (Exception e) {
           throw new WingsException(e);
         }
       }
