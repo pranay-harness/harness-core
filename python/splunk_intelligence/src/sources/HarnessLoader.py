@@ -48,7 +48,7 @@ class HarnessLoader(object):
         headers = HarnessLoader.make_header(version_file_path, service_secret)
         while max_retries > 0:
             r = requests.get(url, headers=headers, verify=False, timeout=30)
-            if r.status_code != 500 and r.status_code != 503:
+            if r.status_code == 200:
                 return json.loads(r.text), r.status_code
             else:
                 max_retries = max_retries - 1
@@ -71,7 +71,7 @@ class HarnessLoader(object):
 
         while max_retries > 0:
             r = requests.post(url, data=payload, headers=headers, verify=ssl_verify, timeout=read_timeout)
-            if r.status_code != 500 and r.status_code != 503:
+            if r.status_code == 200:
                 return r.text, r.status_code
             else:
                 max_retries = max_retries - 1
