@@ -1,7 +1,6 @@
 package software.wings.delegatetasks.validation;
 
 import static io.harness.govern.Switch.unhandled;
-import static java.util.Arrays.asList;
 import static java.util.Collections.singletonList;
 import static software.wings.core.ssh.executors.SshSessionFactory.getSSHSession;
 
@@ -43,7 +42,7 @@ public class ShellScriptValidation extends AbstractDelegateValidateTask {
     DelegateConnectionResultBuilder resultBuilder = DelegateConnectionResult.builder();
     resultBuilder.criteria(getCriteria().get(0));
 
-    if (parameters.getExecuteOnDelegate()) {
+    if (parameters.isExecuteOnDelegate()) {
       return resultBuilder.validated(true).build();
     }
 
@@ -85,7 +84,6 @@ public class ShellScriptValidation extends AbstractDelegateValidateTask {
   @Override
   public List<String> getCriteria() {
     ShellScriptParameters parameters = (ShellScriptParameters) getParameters()[0];
-    String hostname = parameters.getExecuteOnDelegate() ? "localhost" : parameters.getHost();
-    return asList(hostname);
+    return singletonList(parameters.isExecuteOnDelegate() ? "localhost" : parameters.getHost());
   }
 }
