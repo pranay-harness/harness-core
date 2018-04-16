@@ -47,7 +47,7 @@ public class ShellScriptTask extends AbstractDelegateRunnableTask {
   }
 
   private CommandExecutionResult run(ShellScriptParameters parameters) {
-    if (parameters.getExecuteOnDelegate()) {
+    if (parameters.isExecuteOnDelegate()) {
       ShellExecutor executor =
           shellExecutorFactory.getExecutor(parameters.processExecutorConfig(), parameters.getScriptType());
       CommandExecutionStatus commandExecutionStatus =

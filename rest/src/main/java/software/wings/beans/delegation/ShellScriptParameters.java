@@ -38,7 +38,7 @@ public class ShellScriptParameters {
   private final String workingDirectory;
   private final ScriptType scriptType;
   private final String script;
-  private final Boolean executeOnDelegate;
+  private final boolean executeOnDelegate;
 
   public SshSessionConfig sshSessionConfig(EncryptionService encryptionService) throws IOException {
     return aSshSessionConfig()
