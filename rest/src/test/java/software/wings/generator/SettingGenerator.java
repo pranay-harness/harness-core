@@ -9,7 +9,6 @@ import static software.wings.beans.HostConnectionAttributes.ConnectionType.SSH;
 import static software.wings.beans.SettingAttribute.Builder.aSettingAttribute;
 import static software.wings.generator.SettingGenerator.Settings.AWS_TEST_CLOUD_PROVIDER;
 import static software.wings.generator.SettingGenerator.Settings.DEV_TEST_CONNECTOR;
-import static software.wings.generator.SettingGenerator.Settings.HARNESS_JENKINS_CONNECTOR;
 import static software.wings.generator.SettingGenerator.Settings.TERRAFORM_TEST_GIT_REPO;
 
 import com.google.inject.Inject;
@@ -146,7 +145,7 @@ public class SettingGenerator {
 
     SettingAttribute settingAttribute =
         aSettingAttribute()
-            .withName(HARNESS_JENKINS_CONNECTOR.name())
+            .withName("Harness Jenkins")
             .withCategory(Category.CONNECTOR)
             .withAccountId(account.getUuid())
             .withValue(JenkinsConfig.builder()
