@@ -70,7 +70,7 @@ public class ShellScriptState extends State {
   @Inject @Transient private transient SettingsService settingsService;
   @Inject @Transient private transient SecretManager secretManager;
 
-  @Getter @Setter @Attributes(title = "Execute on Delegate") private Boolean executeOnDelegate;
+  @Getter @Setter @Attributes(title = "Execute on Delegate") private boolean executeOnDelegate;
 
   @NotEmpty @Getter @Setter @Attributes(title = "Target Host") private String host;
 
