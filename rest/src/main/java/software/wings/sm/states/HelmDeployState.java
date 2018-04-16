@@ -77,6 +77,7 @@ import software.wings.sm.InstanceStatusSummary;
 import software.wings.sm.State;
 import software.wings.sm.StateType;
 import software.wings.sm.WorkflowStandardParams;
+import software.wings.stencils.DefaultValue;
 import software.wings.utils.ContainerDeploymentHelper;
 import software.wings.utils.KubernetesConvention;
 import software.wings.utils.Validator;
@@ -104,7 +105,9 @@ public class HelmDeployState extends State {
   @Inject private transient ActivityService activityService;
   @Inject private transient ContainerDeploymentHelper containerDeploymentHelper;
 
-  @Attributes(title = "Deployment steady state timeout (in minutes).") private int steadyStateTimeout; // Minutes
+  @Attributes(title = "Deployment steady state timeout (in minutes).")
+  @DefaultValue("10")
+  private int steadyStateTimeout; // Minutes
 
   public static final String HELM_COMMAND_NAME = "Helm Deploy";
   private static final String DOCKER_IMAGE_TAG_PLACEHOLDER_REGEX = "\\$\\{DOCKER_IMAGE_TAG}";
