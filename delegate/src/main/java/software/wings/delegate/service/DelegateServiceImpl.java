@@ -212,7 +212,7 @@ public class DelegateServiceImpl implements DelegateService {
       long start = clock.millis();
       String description = "description here".equals(delegateConfiguration.getDescription())
           ? ""
-          : delegateConfiguration.getDescription().trim();
+          : delegateConfiguration.getDescription();
       Delegate.Builder builder = aDelegate()
                                      .withIp(getLocalHostAddress())
                                      .withAccountId(accountId)
