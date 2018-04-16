@@ -35,6 +35,10 @@ public class StateExecutionInstanceDisplayName implements Migration {
       MorphiaIterator<StateExecutionInstance, StateExecutionInstance> iterator =
           wingsPersistence.createQuery(StateExecutionInstance.class)
               .filter("appId", app.getUuid())
+              .field("displayName")
+              .doesNotExist()
+              .field("createdAt")
+              .greaterThan(1523343600000l) // 10 apr
               .project("uuid", true)
               .project("stateName", true)
               .project("displayName", true)
