@@ -37,6 +37,7 @@ public class MigrationList {
         .add(Pair.of(114, GitSyncToAllAccounts.class))
         .add(Pair.of(115, AddValidUntilToStateExecutionInstance.class))
         .add(Pair.of(116, StateExecutionInstanceDisplayName.class))
+        .add(Pair.of(117, StateExecutionInstanceDisplayName.class))
         .build();
   }
 }
