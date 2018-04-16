@@ -203,18 +203,20 @@ public class ShellScriptState extends State {
       scriptType = ScriptType.BASH;
     }
 
-    if (connectionType == ConnectionType.SSH) {
-      SettingAttribute keySettingAttribute = settingsService.get(sshKeyRef);
-      HostConnectionAttributes hostConnectionAttributes = (HostConnectionAttributes) keySettingAttribute.getValue();
-      username = hostConnectionAttributes.getUserName();
-      keyEncryptionDetails = secretManager.getEncryptionDetails(
-          (Encryptable) keySettingAttribute.getValue(), context.getAppId(), context.getWorkflowExecutionId());
+    if (!executeOnDelegate) {
+      if (connectionType == ConnectionType.SSH) {
+        SettingAttribute keySettingAttribute = settingsService.get(sshKeyRef);
+        HostConnectionAttributes hostConnectionAttributes = (HostConnectionAttributes) keySettingAttribute.getValue();
+        username = hostConnectionAttributes.getUserName();
+        keyEncryptionDetails = secretManager.getEncryptionDetails(
+            (Encryptable) keySettingAttribute.getValue(), context.getAppId(), context.getWorkflowExecutionId());
 
-    } else if (connectionType == ConnectionType.WINRM) {
-      winRmConnectionAttributes = (WinRmConnectionAttributes) settingsService.get(connectionAttributes).getValue();
-      username = winRmConnectionAttributes.getUsername();
-      winrmEdd = secretManager.getEncryptionDetails(
-          winRmConnectionAttributes, context.getAppId(), context.getWorkflowExecutionId());
+      } else if (connectionType == ConnectionType.WINRM) {
+        winRmConnectionAttributes = (WinRmConnectionAttributes) settingsService.get(connectionAttributes).getValue();
+        username = winRmConnectionAttributes.getUsername();
+        winrmEdd = secretManager.getEncryptionDetails(
+            winRmConnectionAttributes, context.getAppId(), context.getWorkflowExecutionId());
+      }
     }
 
     DelegateTask delegateTask =
