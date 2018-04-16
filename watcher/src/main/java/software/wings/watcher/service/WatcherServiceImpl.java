@@ -350,8 +350,6 @@ public class WatcherServiceImpl implements WatcherService {
                           .timeout(5, TimeUnit.MINUTES)
                           .command("nohup", "./delegate.sh", watcherProcess)
                           .redirectError(Slf4jStream.of(scriptName).asError())
-                          .redirectOutput(Slf4jStream.of(scriptName).asInfo())
-                          .readOutput(true)
                           .setMessageLogger((log, format, arguments) -> log.info(format, arguments))
                           .start();
 
@@ -565,8 +563,6 @@ public class WatcherServiceImpl implements WatcherService {
                     .timeout(5, TimeUnit.MINUTES)
                     .command("nohup", "./start.sh", "upgrade", WatcherApplication.getProcessId())
                     .redirectError(Slf4jStream.of("UpgradeScript").asError())
-                    .redirectOutput(Slf4jStream.of("UpgradeScript").asInfo())
-                    .readOutput(true)
                     .setMessageLogger((log, format, arguments) -> log.info(format, arguments))
                     .start();
 
