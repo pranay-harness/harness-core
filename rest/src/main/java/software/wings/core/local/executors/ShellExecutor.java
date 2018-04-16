@@ -45,7 +45,7 @@ public class ShellExecutor {
 
     switch (this.scriptType) {
       case BASH:
-        commandList = new String[] {"bash", "-c", bashWrappedCommand(command)};
+        commandList = new String[] {"/bin/bash", "-c", bashWrappedCommand(command)};
         break;
 
       case POWERSHELL:
