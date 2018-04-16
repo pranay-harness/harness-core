@@ -567,8 +567,9 @@ public class GraphRenderer {
   }
 
   static boolean isProvisionNode(GraphNode node) {
-    return PHASE_STEP.name().equals(node.getType()) && node.getName().equals(Constants.PROVISION_NODE_NAME)
-        && node.getGroup() != null && isNotEmpty(node.getGroup().getElements());
+    return node != null && PHASE_STEP.name().equals(node.getType())
+        && node.getName().equals(Constants.PROVISION_NODE_NAME) && node.getGroup() != null
+        && isNotEmpty(node.getGroup().getElements());
   }
 
   static void adjustProvisionNode(GraphNode node) {
