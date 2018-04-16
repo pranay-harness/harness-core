@@ -14,9 +14,8 @@ import java.util.Map;
 @Data
 public class HelmInstallCommandRequest extends HelmCommandRequest {
   private HelmChartSpecification chartSpecification;
-  private String releaseName;
-  private String releaseVersion;
-  private String harnessVersion;
+  private Integer newReleaseVersion;
+  private Integer prevReleaseVersion;
   private String namespace;
   private long timeoutInMillis;
   private Map<String, String> valueOverrides;
@@ -27,16 +26,16 @@ public class HelmInstallCommandRequest extends HelmCommandRequest {
   }
 
   @Builder
+
   public HelmInstallCommandRequest(String accountId, String appId, String kubeConfigLocation, String commandName,
-      String activityId, ContainerServiceParams containerServiceParams, HelmChartSpecification chartSpecification,
-      String releaseName, String releaseVersion, String harnessVersion, String namespace, long timeoutInMillis,
-      Map<String, String> valueOverrides, List<String> variableOverridesYamlFiles) {
-    super(
-        HelmCommandType.INSTALL, accountId, appId, kubeConfigLocation, commandName, activityId, containerServiceParams);
+      String activityId, ContainerServiceParams containerServiceParams, String releaseName,
+      HelmChartSpecification chartSpecification, int newReleaseVersion, int prevReleaseVersion, String namespace,
+      long timeoutInMillis, Map<String, String> valueOverrides, List<String> variableOverridesYamlFiles) {
+    super(HelmCommandType.INSTALL, accountId, appId, kubeConfigLocation, commandName, activityId,
+        containerServiceParams, releaseName);
     this.chartSpecification = chartSpecification;
-    this.releaseName = releaseName;
-    this.releaseVersion = releaseVersion;
-    this.harnessVersion = harnessVersion;
+    this.newReleaseVersion = newReleaseVersion;
+    this.prevReleaseVersion = prevReleaseVersion;
     this.namespace = namespace;
     this.timeoutInMillis = timeoutInMillis;
     this.valueOverrides = valueOverrides;

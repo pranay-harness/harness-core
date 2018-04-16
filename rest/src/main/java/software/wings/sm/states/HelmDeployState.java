@@ -9,10 +9,13 @@ import static software.wings.beans.DelegateTask.Builder.aDelegateTask;
 import static software.wings.beans.Environment.EnvironmentType.ALL;
 import static software.wings.beans.OrchestrationWorkflowType.BUILD;
 import static software.wings.beans.SettingAttribute.Builder.aSettingAttribute;
+import static software.wings.common.Constants.DEFAULT_STEADY_STATE_TIMEOUT;
 
 import com.google.common.collect.Maps;
 import com.google.inject.Inject;
 
+import com.github.reinert.jjschema.Attributes;
+import com.github.reinert.jjschema.SchemaIgnore;
 import org.mongodb.morphia.Key;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -101,6 +104,8 @@ public class HelmDeployState extends State {
   @Inject private transient ActivityService activityService;
   @Inject private transient ContainerDeploymentHelper containerDeploymentHelper;
 
+  @Attributes(title = "Deployment steady state timeout (in minutes).") private int steadyStateTimeout; // Minutes
+
   public static final String HELM_COMMAND_NAME = "Helm Deploy";
   private static final String DOCKER_IMAGE_TAG_PLACEHOLDER_REGEX = "\\$\\{DOCKER_IMAGE_TAG}";
   private static final String DOCKER_IMAGE_NAME_PLACEHOLDER_REGEX = "\\$\\{DOCKER_IMAGE_NAME}";
@@ -161,15 +166,9 @@ public class HelmDeployState extends State {
                                                           .chartVersion(helmChartSpecification.getChartVersion())
                                                           .releaseName(releaseName)
                                                           .build();
-    ImageDetails imageDetails = null;
-    if (!isRollback()) {
-      imageDetails =
-          containerDeploymentHelper.fetchArtifactDetails(artifact, app.getUuid(), context.getWorkflowExecutionId());
-      String prevVersion =
-          getPreviousReleaseVersion(app.getUuid(), app.getAccountId(), releaseName, containerServiceParams);
-      stateExecutionData.setReleaseOldVersion(prevVersion);
-    }
 
+    ImageDetails imageDetails = getImageDetails(context, app, artifact);
+    setNewAndPrevReleaseVersion(context, app, releaseName, containerServiceParams, stateExecutionData);
     HelmCommandRequest commandRequest = getHelmCommandRequest(context, helmChartSpecification, containerServiceParams,
         releaseName, app.getAccountId(), app.getUuid(), activity.getUuid(), imageDetails, containerInfraMapping);
 
@@ -190,6 +189,18 @@ public class HelmDeployState extends State {
         .withStateExecutionData(stateExecutionData)
         .withAsync(true)
         .build();
+  }
+
+  protected ImageDetails getImageDetails(ExecutionContext context, Application app, Artifact artifact) {
+    return containerDeploymentHelper.fetchArtifactDetails(artifact, app.getUuid(), context.getWorkflowExecutionId());
+  }
+
+  protected void setNewAndPrevReleaseVersion(ExecutionContext context, Application app, String releaseName,
+      ContainerServiceParams containerServiceParams, HelmDeployStateExecutionData stateExecutionData) {
+    int prevVersion = getPreviousReleaseVersion(app.getUuid(), app.getAccountId(), releaseName, containerServiceParams);
+
+    stateExecutionData.setReleaseOldVersion(prevVersion);
+    stateExecutionData.setReleaseNewVersion(prevVersion + 1);
   }
 
   private void validateChartSpecification(HelmChartSpecification chartSpec) {
@@ -217,6 +228,7 @@ public class HelmDeployState extends State {
               .collect(Collectors.toList());
     }
 
+    steadyStateTimeout = steadyStateTimeout > 0 ? 10 : DEFAULT_STEADY_STATE_TIMEOUT;
     return HelmInstallCommandRequest.builder()
         .appId(appId)
         .accountId(accountId)
@@ -227,12 +239,13 @@ public class HelmDeployState extends State {
         .namespace(infrastructureMapping.getNamespace())
         .containerServiceParams(containerServiceParams)
         .variableOverridesYamlFiles(helmValueOverridesYamlFilesEvaluated)
+        .timeoutInMillis(TimeUnit.MINUTES.toMillis(steadyStateTimeout))
         .build();
   }
 
-  protected String getPreviousReleaseVersion(
+  protected int getPreviousReleaseVersion(
       String appId, String accountId, String releaseName, ContainerServiceParams containerServiceParams) {
-    String prevVersion = null;
+    int prevVersion = 0;
     try {
       HelmReleaseHistoryCommandRequest helmReleaseHistoryCommandRequest =
           HelmReleaseHistoryCommandRequest.builder()
@@ -252,7 +265,7 @@ public class HelmDeployState extends State {
         List<ReleaseInfo> releaseInfoList =
             ((HelmReleaseHistoryCommandResponse) helmCommandExecutionResponse.getHelmCommandResponse())
                 .getReleaseInfoList();
-        prevVersion = releaseInfoList.get(releaseInfoList.size() - 1).getRevision();
+        return Integer.parseInt(releaseInfoList.get(releaseInfoList.size() - 1).getRevision());
       }
     } catch (InterruptedException e) {
       logger.error("Helm Release history fetch failed", e);
@@ -299,6 +312,7 @@ public class HelmDeployState extends State {
         .build();
   }
 
+  @SchemaIgnore
   protected List<InstanceStatusSummary> getInstanceStatusSummaries(
       ExecutionContext context, HelmCommandExecutionResponse executionResponse) {
     List<InstanceStatusSummary> instanceStatusSummaries = new ArrayList<>();
@@ -370,7 +384,7 @@ public class HelmDeployState extends State {
     return activityService.save(activity);
   }
 
-  public ContainerServiceParams getContainerServiceParams(
+  protected ContainerServiceParams getContainerServiceParams(
       ContainerInfrastructureMapping containerInfraMapping, String containerServiceName) {
     String clusterName = containerInfraMapping.getClusterName();
     SettingAttribute settingAttribute;
@@ -411,5 +425,13 @@ public class HelmDeployState extends State {
         .subscriptionId(subscriptionId)
         .resourceGroup(resourceGroup)
         .build();
+  }
+
+  public int getSteadyStateTimeout() {
+    return steadyStateTimeout;
+  }
+
+  public void setSteadyStateTimeout(int steadyStateTimeout) {
+    this.steadyStateTimeout = steadyStateTimeout;
   }
 }

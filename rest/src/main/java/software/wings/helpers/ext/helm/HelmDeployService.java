@@ -9,6 +9,9 @@ import software.wings.helpers.ext.helm.response.HelmCommandResponse;
 import software.wings.helpers.ext.helm.response.HelmListReleasesCommandResponse;
 import software.wings.helpers.ext.helm.response.HelmReleaseHistoryCommandResponse;
 
+import java.io.IOException;
+import java.util.concurrent.TimeoutException;
+
 /**
  * Created by anubhaw on 4/1/18.
  */
@@ -35,11 +38,10 @@ public interface HelmDeployService {
    * Ensure helm cli and tiller installed helm command response.
    *
    * @param helmCommandRequest   the helm command request
-   * @param executionLogCallback the execution log callback
    * @return the helm command response
    */
-  HelmCommandResponse ensureHelmCliAndTillerInstalled(
-      HelmCommandRequest helmCommandRequest, ExecutionLogCallback executionLogCallback);
+  HelmCommandResponse ensureHelmCliAndTillerInstalled(HelmCommandRequest helmCommandRequest)
+      throws InterruptedException, IOException, TimeoutException;
 
   /**
    * Last successful release version string.

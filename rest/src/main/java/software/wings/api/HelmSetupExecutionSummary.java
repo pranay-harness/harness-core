@@ -13,5 +13,6 @@ import software.wings.sm.StepExecutionSummary;
 @EqualsAndHashCode(callSuper = false)
 public class HelmSetupExecutionSummary extends StepExecutionSummary {
   private String releaseName;
-  private String oldVersion;
+  private Integer prevVersion;
+  private Integer newVersion;
 }

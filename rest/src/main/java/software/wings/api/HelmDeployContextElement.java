@@ -15,8 +15,8 @@ import java.util.Map;
 @Builder
 public class HelmDeployContextElement implements ContextElement {
   private String releaseName;
-  private String previousReleaseRevision;
-  private String newReleaseRevision;
+  private Integer previousReleaseRevision;
+  private Integer newReleaseRevision;
 
   @Override
   public ContextElementType getElementType() {
