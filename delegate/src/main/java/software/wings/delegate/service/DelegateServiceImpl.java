@@ -210,11 +210,14 @@ public class DelegateServiceImpl implements DelegateService {
       }
 
       long start = clock.millis();
+      String description = "description here".equals(delegateConfiguration.getDescription())
+          ? ""
+          : delegateConfiguration.getDescription().trim();
       Delegate.Builder builder = aDelegate()
                                      .withIp(getLocalHostAddress())
                                      .withAccountId(accountId)
                                      .withHostName(hostName)
-                                     .withDescription(delegateConfiguration.getDescription())
+                                     .withDescription(description)
                                      .withVersion(getVersion())
                                      .withSupportedTaskTypes(getSupportedTaskTypes())
                                      .withIncludeScopes(new ArrayList<>())
