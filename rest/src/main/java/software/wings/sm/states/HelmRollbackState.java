@@ -2,6 +2,7 @@ package software.wings.sm.states;
 
 import static software.wings.common.Constants.DEFAULT_STEADY_STATE_TIMEOUT;
 
+import com.github.reinert.jjschema.Attributes;
 import software.wings.api.HelmDeployContextElement;
 import software.wings.api.HelmDeployStateExecutionData;
 import software.wings.beans.Application;
@@ -18,6 +19,7 @@ import software.wings.sm.ContextElementType;
 import software.wings.sm.ExecutionContext;
 import software.wings.sm.InstanceStatusSummary;
 import software.wings.sm.StateType;
+import software.wings.stencils.DefaultValue;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -82,5 +84,11 @@ public class HelmRollbackState extends HelmDeployState {
       stateExecutionData.setReleaseNewVersion(contextElement.getNewReleaseRevision() + 1);
       stateExecutionData.setRollbackVersion(contextElement.getPreviousReleaseRevision());
     }
+  }
+
+  @Attributes(title = "Deployment steady state timeout (in minutes).")
+  @DefaultValue("10")
+  public int getSteadyStateTimeout() {
+    return super.getSteadyStateTimeout();
   }
 }
