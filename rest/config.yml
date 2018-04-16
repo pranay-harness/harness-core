@@ -37,7 +37,7 @@ smtp:
   password: "H@rness@987"
 
 globalWhitelistConfig:
-  filters: ${GLOBAL_WHITELIST}
+  filters: 127.0.0.1/8
 
 logging:
   level: INFO
