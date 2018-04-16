@@ -37,7 +37,7 @@ public class AppResourceRestClient {
     return cachedEntity.computeIfAbsent(SEED_APP_KEY, key -> readOrCreateSeedApplication(client));
   }
 
-  public Application readOrCreateSeedApplication(Client client) {
+  public synchronized Application readOrCreateSeedApplication(Client client) {
     Application seedApp = getAppByName(client, userResourceRestClient.getUserToken(client),
         userResourceRestClient.getSeedAccount(client).getUuid(), SEED_APP_NAME);
     if (seedApp == null) {

@@ -1,6 +1,7 @@
 package software.wings.sm.states;
 
 import static io.harness.data.structure.EmptyPredicate.isEmpty;
+import static io.harness.data.structure.EmptyPredicate.isNotEmpty;
 import static java.util.Collections.emptySet;
 import static org.apache.commons.lang3.StringUtils.isBlank;
 import static software.wings.beans.DelegateTask.SyncTaskContext.Builder.aContext;
@@ -200,8 +201,10 @@ public abstract class AbstractAnalysisState extends State {
           containerInstanceHelper.getContainerServiceNames(context, serviceId, infraMappingId);
 
       if (infrastructureMapping instanceof EcsInfrastructureMapping) {
-        return getEcsLastExecutionNodes(
-            context, (EcsInfrastructureMapping) infrastructureMapping, containerServiceNames);
+        Set<String> hosts =
+            getEcsLastExecutionNodes(context, (EcsInfrastructureMapping) infrastructureMapping, containerServiceNames);
+        hosts.removeAll(phaseHosts);
+        return hosts;
       }
 
       List<ContainerInfo> containerInfoForService =
@@ -333,14 +336,20 @@ public abstract class AbstractAnalysisState extends State {
             }
 
             if (serviceElement.getUuid().equals(serviceId)) {
-              elementExecutionSummary.getInstanceStatusSummaries().forEach(instanceStatusSummary -> {
-                if (isEmpty(hostnameTemplate)) {
-                  hosts.add(instanceStatusSummary.getInstanceElement().getHostName());
-                } else {
-                  hosts.add(context.renderExpression(
-                      hostnameTemplate, Lists.newArrayList(instanceStatusSummary.getInstanceElement())));
-                }
-              });
+              if (isNotEmpty(elementExecutionSummary.getInstanceStatusSummaries())) {
+                elementExecutionSummary.getInstanceStatusSummaries().forEach(instanceStatusSummary -> {
+                  if (isEmpty(hostnameTemplate)) {
+                    hosts.add(instanceStatusSummary.getInstanceElement().getHostName());
+                  } else {
+                    hosts.add(context.renderExpression(
+                        hostnameTemplate, Lists.newArrayList(instanceStatusSummary.getInstanceElement())));
+                  }
+                });
+              } else {
+                getLogger().warn(
+                    "elementExecutionSummary does not have instance summaries. This may lead to incorrect canary analysis. {}",
+                    elementExecutionSummary);
+              }
             }
 
           });
