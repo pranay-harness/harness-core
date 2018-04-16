@@ -153,7 +153,7 @@ public class ExecutionContextImpl implements DeploymentExecutionContext {
    */
   @Override
   public StateExecutionData getStateExecutionData() {
-    return stateExecutionInstance.getStateExecutionMap().get(stateExecutionInstance.getStateName());
+    return stateExecutionInstance.getStateExecutionMap().get(stateExecutionInstance.getDisplayName());
   }
 
   public StateExecutionData getStateExecutionData(String stateName) {
@@ -308,11 +308,11 @@ public class ExecutionContextImpl implements DeploymentExecutionContext {
   }
 
   private String renderExpression(String expression, Map<String, Object> context) {
-    return evaluator.substitute(expression, context, normalizeStateName(stateExecutionInstance.getStateName()));
+    return evaluator.substitute(expression, context, normalizeStateName(stateExecutionInstance.getDisplayName()));
   }
 
   private Object evaluateExpression(String expression, Map<String, Object> context) {
-    return normalizeAndEvaluate(expression, context, normalizeStateName(stateExecutionInstance.getStateName()));
+    return normalizeAndEvaluate(expression, context, normalizeStateName(stateExecutionInstance.getDisplayName()));
   }
 
   private Object normalizeAndEvaluate(String expression, Map<String, Object> context, String defaultObjectPrefix) {
@@ -410,7 +410,7 @@ public class ExecutionContextImpl implements DeploymentExecutionContext {
   private Map<String, Object> prepareContext(Object stateExecutionData) {
     Map<String, Object> context = prepareContext();
     if (stateExecutionData != null) {
-      context.put(normalizeStateName(getStateExecutionInstance().getStateName()), stateExecutionData);
+      context.put(normalizeStateName(getStateExecutionInstance().getDisplayName()), stateExecutionData);
     }
     return context;
   }
@@ -510,7 +510,7 @@ public class ExecutionContextImpl implements DeploymentExecutionContext {
 
   @Override
   public String getStateExecutionInstanceName() {
-    return stateExecutionInstance.getStateName();
+    return stateExecutionInstance.getDisplayName();
   }
 
   @Override

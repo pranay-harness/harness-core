@@ -422,7 +422,7 @@ public class WorkflowExecutionServiceImpl implements WorkflowExecutionService {
             PipelineStageExecution stageExecution = aPipelineStageExecution()
                                                         .withStateType(stateExecutionInstance.getStateType())
                                                         .withStatus(stateExecutionInstance.getStatus())
-                                                        .withStateName(stateExecutionInstance.getStateName())
+                                                        .withStateName(stateExecutionInstance.getDisplayName())
                                                         .withStartTs(stateExecutionInstance.getStartTs())
                                                         .withEndTs(stateExecutionInstance.getEndTs())
                                                         .build();
@@ -537,7 +537,7 @@ public class WorkflowExecutionServiceImpl implements WorkflowExecutionService {
   private ImmutableMap<String, StateExecutionInstance> getStateExecutionInstanceMap(
       WorkflowExecution workflowExecution) {
     List<StateExecutionInstance> stateExecutionInstances = getStateExecutionInstances(workflowExecution);
-    return Maps.uniqueIndex(stateExecutionInstances, v -> v.getStateName());
+    return Maps.uniqueIndex(stateExecutionInstances, v -> v.getDisplayName());
   }
 
   private List<StateExecutionInstance> getStateExecutionInstances(WorkflowExecution workflowExecution) {
@@ -1657,7 +1657,7 @@ public class WorkflowExecutionServiceImpl implements WorkflowExecutionService {
             .addFilter("appId", EQ, appId)
             .addFilter("executionUuid", EQ, executionUuid)
             .addFilter("stateType", EQ, stateType)
-            .addFilter("stateName", EQ, stateName)
+            .addFilter("displayName", EQ, stateName)
             .addFilter("contextElement.serviceElement.uuid", EQ, serviceId)
             .addFilter("contextElement.infraMappingId", EQ, infraMappingId)
             .build();
@@ -1949,7 +1949,7 @@ public class WorkflowExecutionServiceImpl implements WorkflowExecutionService {
             .addFilter("appId", EQ, workflowExecution.getAppId())
             .addFilter("executionUuid", EQ, workflowExecution.getUuid())
             .addFilter("createdAt", GE, workflowExecution.getCreatedAt())
-            .addFieldsIncluded("uuid", "stateName", "contextElement", "parentInstanceId", "status")
+            .addFieldsIncluded("uuid", "displayName", "contextElement", "parentInstanceId", "status")
             .build();
 
     List<StateExecutionInstance> allStateExecutionInstances = getAllStateExecutionInstances(req);
@@ -2095,7 +2095,7 @@ public class WorkflowExecutionServiceImpl implements WorkflowExecutionService {
             .addFilter("parentInstanceId", Operator.IN, stateExecutionInstanceId)
             .addFilter("stateType", EQ, StateType.PHASE_STEP.name())
             .addFieldsIncluded(
-                "uuid", "parentInstanceId", "contextElement", "status", "stateType", "stateName", "stateExecutionMap")
+                "uuid", "parentInstanceId", "contextElement", "status", "stateType", "displayName", "stateExecutionMap")
             .build();
 
     List<StateExecutionInstance> allStateExecutionInstances = getAllStateExecutionInstances(pageRequest);
@@ -2108,7 +2108,7 @@ public class WorkflowExecutionServiceImpl implements WorkflowExecutionService {
       if (stateExecutionData instanceof PhaseStepExecutionData) {
         PhaseStepExecutionData phaseStepExecutionData = (PhaseStepExecutionData) stateExecutionData;
         phaseExecutionSummary.getPhaseStepExecutionSummaryMap().put(
-            instance.getStateName(), phaseStepExecutionData.getPhaseStepExecutionSummary());
+            instance.getDisplayName(), phaseStepExecutionData.getPhaseStepExecutionSummary());
       }
     });
 
@@ -2130,8 +2130,8 @@ public class WorkflowExecutionServiceImpl implements WorkflowExecutionService {
               .addFilter("appId", EQ, appId)
               .addFilter("executionUuid", EQ, executionUuid)
               .addFilter("parentInstanceId", Operator.IN, parentInstanceIds.toArray())
-              .addFieldsIncluded(
-                  "uuid", "parentInstanceId", "contextElement", "status", "stateType", "stateName", "stateExecutionMap")
+              .addFieldsIncluded("uuid", "parentInstanceId", "contextElement", "status", "stateType", "displayName",
+                  "stateExecutionMap")
               .build();
 
       List<StateExecutionInstance> allStateExecutionInstances = getAllStateExecutionInstances(pageRequest);

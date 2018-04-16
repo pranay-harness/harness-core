@@ -110,7 +110,7 @@ public class ExecutionInterruptManager {
       final List<ExecutionStatus> statuses = acceptableIndividualStatusList.get(executionInterruptType);
       if (!statuses.contains(stateExecutionInstance.getStatus())) {
         throw new WingsException(STATE_NOT_FOR_TYPE)
-            .addParam("stateName", stateExecutionInstance.getStateName())
+            .addParam("displayName", stateExecutionInstance.getDisplayName())
             .addParam("type", executionInterruptType.name())
             .addParam("status", stateExecutionInstance.getStatus().name())
             .addParam("statuses", statuses);

@@ -49,6 +49,7 @@ public class StateExecutionInstance extends Base {
 
   private String stateMachineId;
   private String childStateMachineId;
+  private String displayName;
   private String stateName;
   @Indexed private String stateType;
   private ContextElement contextElement;
@@ -103,7 +104,7 @@ public class StateExecutionInstance extends Base {
   private Date validUntil = Date.from(OffsetDateTime.now().plusMonths(6).toInstant());
 
   public StateExecutionData getStateExecutionData() {
-    return stateExecutionMap.get(stateName);
+    return stateExecutionMap.get(displayName);
   }
 
   @Override
@@ -120,6 +121,7 @@ public class StateExecutionInstance extends Base {
   public static final class Builder {
     private String stateMachineId;
     private String childStateMachineId;
+    private String displayName;
     private String stateName;
     private String stateType;
     private ContextElement contextElement;
@@ -172,6 +174,17 @@ public class StateExecutionInstance extends Base {
 
     public Builder withStateMachineId(String stateMachineId) {
       this.stateMachineId = stateMachineId;
+      return this;
+    }
+
+    /**
+     * With state name builder.
+     *
+     * @param displayName the state name
+     * @return the builder
+     */
+    public Builder withDisplayName(String displayName) {
+      this.displayName = displayName;
       return this;
     }
 
@@ -271,7 +284,7 @@ public class StateExecutionInstance extends Base {
      * @return the builder
      */
     public Builder addStateExecutionData(StateExecutionData stateExecutionData) {
-      this.stateExecutionMap.put(stateName, stateExecutionData);
+      this.stateExecutionMap.put(displayName, stateExecutionData);
       return this;
     }
 
@@ -503,6 +516,7 @@ public class StateExecutionInstance extends Base {
       return aStateExecutionInstance()
           .withStateMachineId(stateMachineId)
           .withStateName(stateName)
+          .withDisplayName(displayName)
           .withStateType(stateType)
           .withContextElement(contextElement)
           .withContextTransition(contextTransition)
@@ -540,6 +554,7 @@ public class StateExecutionInstance extends Base {
       StateExecutionInstance stateExecutionInstance = new StateExecutionInstance();
       stateExecutionInstance.setStateMachineId(stateMachineId);
       stateExecutionInstance.setChildStateMachineId(childStateMachineId);
+      stateExecutionInstance.setDisplayName(displayName);
       stateExecutionInstance.setStateName(stateName);
       stateExecutionInstance.setStateType(stateType);
       stateExecutionInstance.setContextElement(contextElement);
