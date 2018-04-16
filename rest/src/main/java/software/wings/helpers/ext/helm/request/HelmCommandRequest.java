@@ -18,6 +18,7 @@ public class HelmCommandRequest {
   private String commandName;
   private String activityId;
   private ContainerServiceParams containerServiceParams;
+  private String releaseName;
 
   public HelmCommandRequest(HelmCommandType helmCommandType) {
     this.helmCommandType = helmCommandType;

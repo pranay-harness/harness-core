@@ -52,7 +52,7 @@ public class HelmClientTest {
   @Test
   public void shouldRollback() throws InterruptedException, IOException, TimeoutException {
     HelmCommandResponse helmCommandResponse =
-        helmClient.rollback(HelmRollbackCommandRequest.builder().releaseName("rel1").revision("1").build());
+        helmClient.rollback(HelmRollbackCommandRequest.builder().releaseName("rel1").prevReleaseVersion(1).build());
     System.out.println();
     System.out.println();
     System.out.println(helmCommandResponse.getOutput());

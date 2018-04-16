@@ -28,7 +28,6 @@ import software.wings.beans.container.HelmChartSpecification;
 import software.wings.helpers.ext.helm.request.HelmCommandRequest;
 import software.wings.helpers.ext.helm.request.HelmInstallCommandRequest;
 import software.wings.helpers.ext.helm.request.HelmRollbackCommandRequest;
-import software.wings.helpers.ext.helm.response.HelmCommandResponse;
 import software.wings.helpers.ext.helm.response.HelmInstallCommandResponse;
 
 import java.io.File;
@@ -57,8 +56,7 @@ public class HelmClientImpl implements HelmClient {
             .replace("${OVERRIDE_VALUES}", keyValueOverrides)
             .replace("${RELEASE_NAME}", getReleaseFlag(commandRequest))
             .replace("${NAMESPACE}", getNamespaceFlag(commandRequest))
-            .replace("${CHART_REFERENCE}", chartReference)
-            .replace("${TIMEOUT}", getTimeoutFlag(commandRequest.getTimeoutInMillis()));
+            .replace("${CHART_REFERENCE}", chartReference);
     HelmCliResponse cliResponse = executeHelmCLICommand(installCommand);
     return HelmInstallCommandResponse.builder()
         .commandExecutionStatus(cliResponse.getCommandExecutionStatus())
@@ -76,8 +74,7 @@ public class HelmClientImpl implements HelmClient {
         HELM_UPGRADE_COMMAND_TEMPLATE.replace("${KUBECONFIG_PATH}", commandRequest.getKubeConfigLocation())
             .replace("${RELEASE_NAME}", commandRequest.getReleaseName())
             .replace("${CHART_REFERENCE}", chartReference)
-            .replace("${OVERRIDE_VALUES}", keyValueOverrides)
-            .replace("${TIMEOUT}", getTimeoutFlag(commandRequest.getTimeoutInMillis()));
+            .replace("${OVERRIDE_VALUES}", keyValueOverrides);
 
     HelmCliResponse cliResponse = executeHelmCLICommand(upgradeCommand);
     return HelmInstallCommandResponse.builder()
@@ -87,14 +84,17 @@ public class HelmClientImpl implements HelmClient {
   }
 
   @Override
-  public HelmCommandResponse rollback(HelmRollbackCommandRequest commandRequest)
+  public HelmInstallCommandResponse rollback(HelmRollbackCommandRequest commandRequest)
       throws InterruptedException, TimeoutException, IOException {
     String command =
         HELM_ROLLBACK_COMMAND_TEMPLATE.replace("${KUBECONFIG_PATH}", commandRequest.getKubeConfigLocation())
             .replace("${RELEASE}", commandRequest.getReleaseName())
-            .replace("${REVISION}", commandRequest.getRevision());
+            .replace("${REVISION}", commandRequest.getPrevReleaseVersion().toString());
     HelmCliResponse cliResponse = executeHelmCLICommand(command);
-    return new HelmCommandResponse(cliResponse.getCommandExecutionStatus(), cliResponse.output);
+    return HelmInstallCommandResponse.builder()
+        .commandExecutionStatus(cliResponse.getCommandExecutionStatus())
+        .output(cliResponse.output)
+        .build();
   }
 
   @Override
@@ -149,11 +149,6 @@ public class HelmClientImpl implements HelmClient {
 
   private String getNamespaceFlag(HelmInstallCommandRequest requestParameters) {
     return "--namespace " + requestParameters.getNamespace();
-  }
-
-  private String getTimeoutFlag(long timeout) {
-    //    return "--wait --timeout " + timeout;
-    return ""; // No wait timeout in CLI operation.
   }
 
   private String getChartReference(HelmChartSpecification chartSpecification) {

@@ -82,9 +82,10 @@ public class HelmCommandTask extends AbstractDelegateRunnableTask {
     try {
       String configLocation = createAndGetKubeConfigLocation(helmCommandRequest.getContainerServiceParams());
       helmCommandRequest.setKubeConfigLocation(configLocation);
-      helmDeployService.ensureHelmCliAndTillerInstalled(helmCommandRequest, executionLogCallback);
+      HelmCommandResponse helmCommandResponse = helmDeployService.ensureHelmCliAndTillerInstalled(helmCommandRequest);
 
       if (isAsync()) {
+        executionLogCallback.saveExecutionLog(helmCommandResponse.getOutput());
         executionLogCallback.saveExecutionLog(
             "Started executing helm command", LogLevel.INFO, CommandExecutionStatus.RUNNING);
       }

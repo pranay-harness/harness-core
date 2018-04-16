@@ -4,7 +4,7 @@ import software.wings.helpers.ext.helm.HelmClientImpl.HelmCliResponse;
 import software.wings.helpers.ext.helm.request.HelmCommandRequest;
 import software.wings.helpers.ext.helm.request.HelmInstallCommandRequest;
 import software.wings.helpers.ext.helm.request.HelmRollbackCommandRequest;
-import software.wings.helpers.ext.helm.response.HelmCommandResponse;
+import software.wings.helpers.ext.helm.response.HelmInstallCommandResponse;
 
 import java.io.IOException;
 import java.util.concurrent.ExecutionException;
@@ -24,7 +24,7 @@ public interface HelmClient {
    * @throws IOException          the io exception
    * @throws ExecutionException   the execution exception
    */
-  HelmCommandResponse install(HelmInstallCommandRequest commandRequest)
+  HelmInstallCommandResponse install(HelmInstallCommandRequest commandRequest)
       throws InterruptedException, TimeoutException, IOException, ExecutionException;
 
   /**
@@ -37,7 +37,7 @@ public interface HelmClient {
    * @throws IOException          the io exception
    * @throws ExecutionException   the execution exception
    */
-  HelmCommandResponse upgrade(HelmInstallCommandRequest commandRequest)
+  HelmInstallCommandResponse upgrade(HelmInstallCommandRequest commandRequest)
       throws InterruptedException, TimeoutException, IOException, ExecutionException;
 
   /**
@@ -49,7 +49,7 @@ public interface HelmClient {
    * @throws TimeoutException     the timeout exception
    * @throws IOException          the io exception
    */
-  HelmCommandResponse rollback(HelmRollbackCommandRequest commandRequest)
+  HelmInstallCommandResponse rollback(HelmRollbackCommandRequest commandRequest)
       throws InterruptedException, TimeoutException, IOException;
 
   /**

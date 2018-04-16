@@ -340,12 +340,14 @@ public enum StateType implements StateTypeDescriptor {
       Lists.newArrayList(InfrastructureMappingType.GCP_KUBERNETES, InfrastructureMappingType.AZURE_KUBERNETES),
       asList(CLUSTER_SETUP), ORCHESTRATION_STENCILS),
 
-  HELM_DEPLOY(HelmDeployState.class, COMMANDS, Constants.UPGRADE_CONTAINERS,
-      Lists.newArrayList(InfrastructureMappingType.DIRECT_KUBERNETES), asList(PhaseStepType.HELM_DEPLOY),
-      ORCHESTRATION_STENCILS),
-  HELM_ROLLBACK(HelmRollbackState.class, COMMANDS, Constants.ROLLBACK_CONTAINERS,
-      Lists.newArrayList(InfrastructureMappingType.DIRECT_KUBERNETES), asList(PhaseStepType.HELM_DEPLOY),
-      ORCHESTRATION_STENCILS);
+  HELM_DEPLOY(HelmDeployState.class, COMMANDS, Constants.HELM_DEPLOY,
+      Lists.newArrayList(InfrastructureMappingType.DIRECT_KUBERNETES, InfrastructureMappingType.AZURE_KUBERNETES,
+          InfrastructureMappingType.GCP_KUBERNETES),
+      asList(PhaseStepType.HELM_DEPLOY), ORCHESTRATION_STENCILS),
+  HELM_ROLLBACK(HelmRollbackState.class, COMMANDS, Constants.HELM_ROLLBACK,
+      Lists.newArrayList(InfrastructureMappingType.DIRECT_KUBERNETES, InfrastructureMappingType.AZURE_KUBERNETES,
+          InfrastructureMappingType.GCP_KUBERNETES),
+      asList(PhaseStepType.HELM_DEPLOY), ORCHESTRATION_STENCILS);
 
   private static final String stencilsPath = "/templates/stencils/";
   private static final String uiSchemaSuffix = "-UISchema.json";

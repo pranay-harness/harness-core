@@ -228,7 +228,8 @@ public class PhaseStepSubWorkflow extends SubWorkflowState {
         HelmSetupExecutionSummary helmSetpExecutionSummary = (HelmSetupExecutionSummary) first.get();
         return asList(HelmDeployContextElement.builder()
                           .releaseName(helmSetpExecutionSummary.getReleaseName())
-                          .previousReleaseRevision(helmSetpExecutionSummary.getOldVersion())
+                          .previousReleaseRevision(helmSetpExecutionSummary.getPrevVersion())
+                          .newReleaseRevision(helmSetpExecutionSummary.getNewVersion())
                           .build());
       default:
         unhandled(phaseStepType);

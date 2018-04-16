@@ -9,8 +9,10 @@ import software.wings.service.impl.ContainerServiceParams;
  */
 @Data
 public class HelmRollbackCommandRequest extends HelmCommandRequest {
-  private String revision;
-  private String releaseName;
+  private Integer newReleaseVersion;
+  private Integer prevReleaseVersion;
+  private Integer rollbackVersion;
+  private long timeoutInMillis;
 
   public HelmRollbackCommandRequest() {
     super(HelmCommandType.ROLLBACK);
@@ -18,10 +20,13 @@ public class HelmRollbackCommandRequest extends HelmCommandRequest {
 
   @Builder
   public HelmRollbackCommandRequest(String accountId, String appId, String kubeConfigLocation, String commandName,
-      String activityId, ContainerServiceParams containerServiceParams, String revision, String releaseName) {
+      String activityId, ContainerServiceParams containerServiceParams, String releaseName, int newReleaseVersion,
+      int prevReleaseVersion, int rollbackVersion, long timeoutInMillis) {
     super(HelmCommandType.ROLLBACK, accountId, appId, kubeConfigLocation, commandName, activityId,
-        containerServiceParams);
-    this.revision = revision;
-    this.releaseName = releaseName;
+        containerServiceParams, releaseName);
+    this.newReleaseVersion = newReleaseVersion;
+    this.prevReleaseVersion = prevReleaseVersion;
+    this.rollbackVersion = rollbackVersion;
+    this.timeoutInMillis = timeoutInMillis;
   }
 }

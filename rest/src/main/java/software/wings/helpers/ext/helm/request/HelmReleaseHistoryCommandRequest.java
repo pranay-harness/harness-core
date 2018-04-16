@@ -9,8 +9,6 @@ import software.wings.service.impl.ContainerServiceParams;
  */
 @Data
 public class HelmReleaseHistoryCommandRequest extends HelmCommandRequest {
-  private String releaseName;
-
   public HelmReleaseHistoryCommandRequest() {
     super(HelmCommandType.RELEASE_HISTORY);
   }
@@ -19,7 +17,6 @@ public class HelmReleaseHistoryCommandRequest extends HelmCommandRequest {
   public HelmReleaseHistoryCommandRequest(String accountId, String appId, String kubeConfigLocation, String commandName,
       String activityId, ContainerServiceParams containerServiceParams, String releaseName) {
     super(HelmCommandType.RELEASE_HISTORY, accountId, appId, kubeConfigLocation, commandName, activityId,
-        containerServiceParams);
-    this.releaseName = releaseName;
+        containerServiceParams, releaseName);
   }
 }
