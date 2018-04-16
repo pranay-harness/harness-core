@@ -3,6 +3,8 @@ package software.wings.service.impl.yaml.handler.service;
 import static java.util.Collections.emptyList;
 import static java.util.stream.Collectors.toList;
 import static software.wings.beans.Service.Builder.aService;
+import static software.wings.exception.WingsException.HARMLESS;
+import static software.wings.utils.Validator.notNullCheck;
 
 import com.google.common.collect.Lists;
 import com.google.inject.Inject;
@@ -30,7 +32,6 @@ import software.wings.service.intfc.ServiceVariableService;
 import software.wings.service.intfc.security.SecretManager;
 import software.wings.utils.ArtifactType;
 import software.wings.utils.Util;
-import software.wings.utils.Validator;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -101,7 +102,7 @@ public class ServiceYamlHandler extends BaseYamlHandler<Yaml, Service> {
     String yamlFilePath = changeContext.getChange().getFilePath();
     String accountId = changeContext.getChange().getAccountId();
     String appId = yamlHelper.getAppId(accountId, yamlFilePath);
-    Validator.notNullCheck("appId null for given yaml file:" + yamlFilePath, appId);
+    notNullCheck("appId null for given yaml file:" + yamlFilePath, appId, HARMLESS);
 
     String serviceName = yamlHelper.getServiceName(yamlFilePath);
 
@@ -116,7 +117,7 @@ public class ServiceYamlHandler extends BaseYamlHandler<Yaml, Service> {
     String applicationStack = yaml.getApplicationStack();
     if (StringUtils.isNotBlank(applicationStack)) {
       AppContainer appContainer = appContainerService.getByName(accountId, applicationStack);
-      Validator.notNullCheck("No application stack found with the given name: " + applicationStack, appContainer);
+      notNullCheck("No application stack found with the given name: " + applicationStack, appContainer, HARMLESS);
       currentBuilder.withAppContainer(appContainer);
     }
 
@@ -237,7 +238,7 @@ public class ServiceYamlHandler extends BaseYamlHandler<Yaml, Service> {
   }
 
   private ServiceVariable createNewServiceVariable(String appId, String serviceId, NameValuePair.Yaml cv) {
-    Validator.notNullCheck("Value type is not set for variable: " + cv.getName(), cv.getValueType());
+    notNullCheck("Value type is not set for variable: " + cv.getName(), cv.getValueType(), HARMLESS);
 
     ServiceVariableBuilder serviceVariableBuilder = ServiceVariable.builder()
                                                         .name(cv.getName())

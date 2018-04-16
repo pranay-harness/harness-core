@@ -1,5 +1,8 @@
 package software.wings.service.impl.yaml.handler.inframapping;
 
+import static software.wings.exception.WingsException.HARMLESS;
+import static software.wings.utils.Validator.notNullCheck;
+
 import com.google.inject.Inject;
 import com.google.inject.Singleton;
 
@@ -13,7 +16,6 @@ import software.wings.exception.HarnessException;
 import software.wings.exception.WingsException;
 import software.wings.service.intfc.security.SecretManager;
 import software.wings.settings.SettingValue.SettingVariableTypes;
-import software.wings.utils.Validator;
 
 import java.io.IOException;
 import java.util.List;
@@ -77,15 +79,15 @@ public class DirectKubernetesInfraMappingYamlHandler
     String yamlFilePath = changeContext.getChange().getFilePath();
     String accountId = changeContext.getChange().getAccountId();
     String appId = yamlHelper.getAppId(changeContext.getChange().getAccountId(), yamlFilePath);
-    Validator.notNullCheck("Couldn't retrieve app from yaml:" + yamlFilePath, appId);
+    notNullCheck("Couldn't retrieve app from yaml:" + yamlFilePath, appId, HARMLESS);
     String envId = yamlHelper.getEnvironmentId(appId, yamlFilePath);
-    Validator.notNullCheck("Couldn't retrieve environment from yaml:" + yamlFilePath, envId);
+    notNullCheck("Couldn't retrieve environment from yaml:" + yamlFilePath, envId, HARMLESS);
     String computeProviderId = infraMappingYaml.getComputeProviderName().equals(SettingVariableTypes.DIRECT.name())
         ? SettingVariableTypes.DIRECT.name()
         : getSettingId(accountId, appId, infraMappingYaml.getComputeProviderName());
-    Validator.notNullCheck("Couldn't retrieve compute provider from yaml:" + yamlFilePath, computeProviderId);
+    notNullCheck("Couldn't retrieve compute provider from yaml:" + yamlFilePath, computeProviderId, HARMLESS);
     String serviceId = getServiceId(appId, infraMappingYaml.getServiceName());
-    Validator.notNullCheck("Couldn't retrieve service from yaml:" + yamlFilePath, serviceId);
+    notNullCheck("Couldn't retrieve service from yaml:" + yamlFilePath, serviceId, HARMLESS);
 
     DirectKubernetesInfrastructureMapping current = new DirectKubernetesInfrastructureMapping();
     toBean(current, changeContext, appId, envId, computeProviderId, serviceId);

@@ -1,6 +1,8 @@
 package software.wings.service.impl.yaml.handler.command;
 
 import static software.wings.beans.yaml.YamlConstants.NODE_PROPERTY_REFERENCEID;
+import static software.wings.exception.WingsException.HARMLESS;
+import static software.wings.utils.Validator.notNullCheck;
 
 import com.google.inject.Inject;
 import com.google.inject.Singleton;
@@ -15,7 +17,6 @@ import software.wings.service.impl.yaml.handler.YamlHandlerFactory;
 import software.wings.service.impl.yaml.service.YamlHelper;
 import software.wings.service.intfc.CommandService;
 import software.wings.service.intfc.ServiceResourceService;
-import software.wings.utils.Validator;
 import software.wings.yaml.command.CommandRefYaml;
 
 import java.util.List;
@@ -51,9 +52,9 @@ public class CommandRefCommandUnitYamlHandler extends CommandUnitYamlHandler<Com
     String filePath = changeContext.getChange().getFilePath();
 
     String appId = yamlHelper.getAppId(changeContext.getChange().getAccountId(), filePath);
-    Validator.notNullCheck("Couldn't retrieve app from yaml:" + filePath, appId);
+    notNullCheck("Couldn't retrieve app from yaml:" + filePath, appId, HARMLESS);
     String serviceId = yamlHelper.getServiceId(appId, filePath);
-    Validator.notNullCheck("Couldn't retrieve service from yaml:" + filePath, serviceId);
+    notNullCheck("Couldn't retrieve service from yaml:" + filePath, serviceId, HARMLESS);
 
     String commandName = yaml.getName();
     ServiceCommand serviceCommand = serviceResourceService.getCommandByName(appId, serviceId, commandName);
@@ -87,7 +88,7 @@ public class CommandRefCommandUnitYamlHandler extends CommandUnitYamlHandler<Com
         CommandYamlHandler commandYamlHandler = yamlHandlerFactory.getYamlHandler(YamlType.COMMAND);
         commandYamlHandler.upsertFromYaml(commandContext, changeSetContext);
         serviceCommand = serviceResourceService.getCommandByName(appId, serviceId, commandName);
-        Validator.notNullCheck("No command found with the given name:" + commandName, serviceCommand);
+        notNullCheck("No command found with the given name:" + commandName, serviceCommand, HARMLESS);
 
       } else {
         throw new HarnessException("No command with the given name: " + yaml.getName());
@@ -96,7 +97,7 @@ public class CommandRefCommandUnitYamlHandler extends CommandUnitYamlHandler<Com
 
     Command commandFromDB =
         commandService.getCommand(appId, serviceCommand.getUuid(), serviceCommand.getDefaultVersion());
-    Validator.notNullCheck("No command with the given service command id:" + serviceCommand.getUuid(), commandFromDB);
+    notNullCheck("No command with the given service command id:" + serviceCommand.getUuid(), commandFromDB, HARMLESS);
 
     // Setting the command type as OTHER based on the observation of the value in db in the commandUnit list.
     // To keep it consistent with the normal ui operation, setting it to OTHER. Could be a UI bug.

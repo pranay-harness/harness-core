@@ -12,6 +12,7 @@ import software.wings.beans.ResponseMessage;
 import software.wings.beans.ResponseMessage.Level;
 import software.wings.beans.UuidAware;
 import software.wings.exception.WingsException;
+import software.wings.exception.WingsException.ReportTarget;
 
 import java.util.Objects;
 import java.util.concurrent.Callable;
@@ -29,6 +30,18 @@ public class Validator {
   public static void notNullCheck(String name, Object value) {
     if (value == null) {
       throw new WingsException(GENERAL_ERROR).addParam("args", name);
+    }
+  }
+
+  /**
+   * Checks that value is not null.
+   *
+   * @param name  name of parameter.
+   * @param value input value of parameter.
+   */
+  public static void notNullCheck(String name, Object value, ReportTarget[] reportTargets) {
+    if (value == null) {
+      throw new WingsException(GENERAL_ERROR, reportTargets).addParam("args", name);
     }
   }
 

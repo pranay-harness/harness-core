@@ -2,6 +2,8 @@ package software.wings.service.impl.yaml.handler.deploymentspec.lambda;
 
 import static io.harness.data.structure.EmptyPredicate.isNotEmpty;
 import static java.util.stream.Collectors.toList;
+import static software.wings.exception.WingsException.HARMLESS;
+import static software.wings.utils.Validator.notNullCheck;
 
 import com.google.common.collect.Lists;
 import com.google.inject.Inject;
@@ -20,7 +22,6 @@ import software.wings.service.impl.yaml.handler.YamlHandlerFactory;
 import software.wings.service.impl.yaml.handler.deploymentspec.DeploymentSpecificationYamlHandler;
 import software.wings.service.impl.yaml.service.YamlHelper;
 import software.wings.service.intfc.ServiceResourceService;
-import software.wings.utils.Validator;
 
 import java.util.Collections;
 import java.util.List;
@@ -113,11 +114,11 @@ public class LambdaSpecificationYamlHandler extends DeploymentSpecificationYamlH
 
     String appId =
         yamlHelper.getAppId(changeContext.getChange().getAccountId(), changeContext.getChange().getFilePath());
-    Validator.notNullCheck("Could not lookup app for the yaml file: " + changeContext.getChange().getFilePath(), appId);
+    notNullCheck("Could not lookup app for the yaml file: " + changeContext.getChange().getFilePath(), appId, HARMLESS);
 
     String serviceId = yamlHelper.getServiceId(appId, changeContext.getChange().getFilePath());
-    Validator.notNullCheck(
-        "Could not lookup service for the yaml file: " + changeContext.getChange().getFilePath(), serviceId);
+    notNullCheck(
+        "Could not lookup service for the yaml file: " + changeContext.getChange().getFilePath(), serviceId, HARMLESS);
 
     LambdaSpecification lambdaSpecification =
         LambdaSpecification.builder().defaults(defaultSpec).functions(functionSpecList).serviceId(serviceId).build();
@@ -133,10 +134,10 @@ public class LambdaSpecificationYamlHandler extends DeploymentSpecificationYamlH
   @Override
   public LambdaSpecification get(String accountId, String yamlFilePath) {
     String appId = yamlHelper.getAppId(accountId, yamlFilePath);
-    Validator.notNullCheck("Could not lookup app for the yaml file: " + yamlFilePath, appId);
+    notNullCheck("Could not lookup app for the yaml file: " + yamlFilePath, appId, HARMLESS);
 
     String serviceId = yamlHelper.getServiceId(appId, yamlFilePath);
-    Validator.notNullCheck("Could not lookup service for the yaml file: " + yamlFilePath, serviceId);
+    notNullCheck("Could not lookup service for the yaml file: " + yamlFilePath, serviceId, HARMLESS);
 
     return serviceResourceService.getLambdaSpecification(appId, serviceId);
   }

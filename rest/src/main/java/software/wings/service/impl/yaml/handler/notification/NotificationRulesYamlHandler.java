@@ -4,6 +4,8 @@ import static io.harness.data.structure.EmptyPredicate.isNotEmpty;
 import static io.harness.data.structure.UUIDGenerator.generateUuid;
 import static java.util.stream.Collectors.toList;
 import static software.wings.beans.NotificationGroup.NotificationGroupBuilder.aNotificationGroup;
+import static software.wings.exception.WingsException.HARMLESS;
+import static software.wings.utils.Validator.notNullCheck;
 
 import com.google.common.collect.Lists;
 import com.google.inject.Inject;
@@ -22,7 +24,6 @@ import software.wings.service.impl.yaml.handler.BaseYamlHandler;
 import software.wings.service.intfc.NotificationSetupService;
 import software.wings.sm.ExecutionStatus;
 import software.wings.utils.Util;
-import software.wings.utils.Validator;
 
 import java.util.List;
 
@@ -47,8 +48,8 @@ public class NotificationRulesYamlHandler extends BaseYamlHandler<NotificationRu
               .map(notificationGroupName -> {
                 NotificationGroup notificationGroup =
                     notificationSetupService.readNotificationGroupByName(accountId, notificationGroupName);
-                Validator.notNullCheck(
-                    "Invalid notification group for the given name: " + notificationGroupName, notificationGroup);
+                notNullCheck("Invalid notification group for the given name: " + notificationGroupName,
+                    notificationGroup, HARMLESS);
                 // We only store couple of fields in workflow when created from the normal ui.
                 // Sticking to the same approach.
                 return aNotificationGroup()
@@ -83,8 +84,8 @@ public class NotificationRulesYamlHandler extends BaseYamlHandler<NotificationRu
             .map(notificationGroup -> {
               NotificationGroup notificationGroupFromDB = notificationSetupService.readNotificationGroup(
                   notificationGroup.getAccountId(), notificationGroup.getUuid());
-              Validator.notNullCheck("Invalid notification group for the given id: " + notificationGroup.getUuid(),
-                  notificationGroupFromDB);
+              notNullCheck("Invalid notification group for the given id: " + notificationGroup.getUuid(),
+                  notificationGroupFromDB, HARMLESS);
               return notificationGroupFromDB.getName();
             })
             .collect(toList());

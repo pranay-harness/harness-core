@@ -1,5 +1,8 @@
 package software.wings.service.impl.yaml.handler.deploymentspec.container;
 
+import static software.wings.exception.WingsException.HARMLESS;
+import static software.wings.utils.Validator.notNullCheck;
+
 import com.google.inject.Inject;
 import com.google.inject.Singleton;
 
@@ -12,7 +15,6 @@ import software.wings.service.impl.yaml.handler.YamlHandlerFactory;
 import software.wings.service.impl.yaml.handler.deploymentspec.DeploymentSpecificationYamlHandler;
 import software.wings.service.impl.yaml.service.YamlHelper;
 import software.wings.service.intfc.ServiceResourceService;
-import software.wings.utils.Validator;
 
 import java.util.List;
 
@@ -53,10 +55,10 @@ public class HelmChartSpecificationYamlHandler
 
     String filePath = changeContext.getChange().getFilePath();
     String appId = yamlHelper.getAppId(changeContext.getChange().getAccountId(), filePath);
-    Validator.notNullCheck("Could not lookup app for the yaml file: " + filePath, appId);
+    notNullCheck("Could not lookup app for the yaml file: " + filePath, appId, HARMLESS);
 
     String serviceId = yamlHelper.getServiceId(appId, filePath);
-    Validator.notNullCheck("Could not lookup service for the yaml file: " + filePath, serviceId);
+    notNullCheck("Could not lookup service for the yaml file: " + filePath, serviceId, HARMLESS);
 
     HelmChartSpecification helmChartSpecification = HelmChartSpecification.builder()
                                                         .chartName(yaml.getChartName())
@@ -76,10 +78,10 @@ public class HelmChartSpecificationYamlHandler
   @Override
   public HelmChartSpecification get(String accountId, String yamlFilePath) {
     String appId = yamlHelper.getAppId(accountId, yamlFilePath);
-    Validator.notNullCheck("Could not lookup app for the yaml file: " + yamlFilePath, appId);
+    notNullCheck("Could not lookup app for the yaml file: " + yamlFilePath, appId, HARMLESS);
 
     String serviceId = yamlHelper.getServiceId(appId, yamlFilePath);
-    Validator.notNullCheck("Could not lookup service for the yaml file: " + yamlFilePath, serviceId);
+    notNullCheck("Could not lookup service for the yaml file: " + yamlFilePath, serviceId, HARMLESS);
 
     return serviceResourceService.getHelmChartSpecification(appId, serviceId);
   }

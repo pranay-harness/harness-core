@@ -2,6 +2,8 @@ package software.wings.service.impl.yaml.handler.workflow;
 
 import static java.util.stream.Collectors.toList;
 import static software.wings.beans.Pipeline.Yaml;
+import static software.wings.exception.WingsException.HARMLESS;
+import static software.wings.utils.Validator.notNullCheck;
 
 import com.google.common.collect.Lists;
 import com.google.inject.Inject;
@@ -19,7 +21,6 @@ import software.wings.service.impl.yaml.handler.BaseYamlHandler;
 import software.wings.service.impl.yaml.handler.YamlHandlerFactory;
 import software.wings.service.impl.yaml.service.YamlHelper;
 import software.wings.service.intfc.PipelineService;
-import software.wings.utils.Validator;
 
 import java.util.List;
 
@@ -39,7 +40,7 @@ public class PipelineYamlHandler extends BaseYamlHandler<Yaml, Pipeline> {
       Change change = context.getChange();
 
       String appId = yamlHelper.getAppId(change.getAccountId(), change.getFilePath());
-      Validator.notNullCheck("Could not retrieve valid app from path: " + change.getFilePath(), appId);
+      notNullCheck("Could not retrieve valid app from path: " + change.getFilePath(), appId, HARMLESS);
 
       List<PipelineStage> pipelineStages = Lists.newArrayList();
       if (yaml.getPipelineStages() != null) {

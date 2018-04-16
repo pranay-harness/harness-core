@@ -3,6 +3,8 @@ package software.wings.service.impl.yaml.handler.workflow;
 import static io.harness.data.structure.EmptyPredicate.isEmpty;
 import static java.util.stream.Collectors.toList;
 import static software.wings.beans.PipelineStage.Yaml;
+import static software.wings.exception.WingsException.HARMLESS;
+import static software.wings.utils.Validator.notNullCheck;
 
 import com.google.common.collect.Lists;
 import com.google.common.collect.Maps;
@@ -25,7 +27,6 @@ import software.wings.service.impl.yaml.handler.YamlHandlerFactory;
 import software.wings.service.impl.yaml.service.YamlHelper;
 import software.wings.service.intfc.WorkflowService;
 import software.wings.sm.StateType;
-import software.wings.utils.Validator;
 
 import java.util.List;
 import java.util.Map;
@@ -44,7 +45,7 @@ public class PipelineStageYamlHandler extends BaseYamlHandler<Yaml, PipelineStag
     Change change = context.getChange();
 
     String appId = yamlHelper.getAppId(change.getAccountId(), change.getFilePath());
-    Validator.notNullCheck("Could not retrieve valid app from path: " + change.getFilePath(), appId);
+    notNullCheck("Could not retrieve valid app from path: " + change.getFilePath(), appId, HARMLESS);
 
     PipelineStage stage = PipelineStage.builder().build();
     stage.setName(yaml.getName());
@@ -55,7 +56,7 @@ public class PipelineStageYamlHandler extends BaseYamlHandler<Yaml, PipelineStag
 
     if (!yaml.getType().equals(StateType.APPROVAL.name())) {
       Workflow workflow = workflowService.readWorkflowByName(appId, yaml.getWorkflowName());
-      Validator.notNullCheck("Invalid workflow with the given name:" + yaml.getWorkflowName(), workflow);
+      notNullCheck("Invalid workflow with the given name:" + yaml.getWorkflowName(), workflow, HARMLESS);
 
       properties.put("envId", workflow.getEnvId());
       properties.put("workflowId", workflow.getUuid());
@@ -86,24 +87,24 @@ public class PipelineStageYamlHandler extends BaseYamlHandler<Yaml, PipelineStag
     }
 
     PipelineStageElement stageElement = bean.getPipelineStageElements().get(0);
-    Validator.notNullCheck("Pipeline stage element is null", stageElement);
+    notNullCheck("Pipeline stage element is null", stageElement, HARMLESS);
 
     String workflowName = null;
     List<NameValuePair.Yaml> nameValuePairYamlList = null;
     if (!StateType.APPROVAL.name().equals(stageElement.getType())) {
       Map<String, Object> properties = stageElement.getProperties();
-      Validator.notNullCheck("Pipeline stage element is null", properties);
+      notNullCheck("Pipeline stage element is null", properties, HARMLESS);
 
       String workflowId = (String) properties.get("workflowId");
-      Validator.notNullCheck("Workflow id is null in stage properties", workflowId);
+      notNullCheck("Workflow id is null in stage properties", workflowId, HARMLESS);
 
       Workflow workflow = workflowService.readWorkflow(appId, workflowId);
-      Validator.notNullCheck("Workflow id is null in stage properties", workflowId);
+      notNullCheck("Workflow id is null in stage properties", workflowId, HARMLESS);
 
       workflowName = workflow.getName();
 
       Map<String, String> workflowVariables = stageElement.getWorkflowVariables();
-      Validator.notNullCheck("Pipeline stage element is null", workflowVariables);
+      notNullCheck("Pipeline stage element is null", workflowVariables, HARMLESS);
 
       // properties
       NameValuePairYamlHandler nameValuePairYamlHandler = yamlHandlerFactory.getYamlHandler(YamlType.NAME_VALUE_PAIR);

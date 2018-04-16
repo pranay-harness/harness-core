@@ -1,6 +1,8 @@
 package software.wings.service.impl.yaml.handler.inframapping;
 
 import static java.util.stream.Collectors.toList;
+import static software.wings.exception.WingsException.HARMLESS;
+import static software.wings.utils.Validator.notNullCheck;
 
 import com.google.common.collect.Lists;
 import com.google.inject.Singleton;
@@ -15,7 +17,6 @@ import software.wings.beans.NameValuePair;
 import software.wings.beans.SettingAttribute;
 import software.wings.beans.yaml.ChangeContext;
 import software.wings.exception.HarnessException;
-import software.wings.utils.Validator;
 
 import java.util.List;
 
@@ -45,8 +46,8 @@ public class AwsInfraMappingYamlHandler
     String hostConnectionAttrsSettingId = bean.getHostConnectionAttrs();
 
     SettingAttribute settingAttribute = settingsService.get(hostConnectionAttrsSettingId);
-    Validator.notNullCheck(
-        "Host connection attributes null for the given id: " + hostConnectionAttrsSettingId, settingAttribute);
+    notNullCheck("Host connection attributes null for the given id: " + hostConnectionAttrsSettingId, settingAttribute,
+        HARMLESS);
     yaml.setConnectionType(settingAttribute.getName());
 
     yaml.setType(InfrastructureMappingType.AWS_SSH.name());
@@ -73,13 +74,13 @@ public class AwsInfraMappingYamlHandler
     String yamlFilePath = changeContext.getChange().getFilePath();
     String accountId = changeContext.getChange().getAccountId();
     String appId = yamlHelper.getAppId(accountId, yamlFilePath);
-    Validator.notNullCheck("Couldn't retrieve app from yaml:" + yamlFilePath, appId);
+    notNullCheck("Couldn't retrieve app from yaml:" + yamlFilePath, appId, HARMLESS);
     String envId = yamlHelper.getEnvironmentId(appId, yamlFilePath);
-    Validator.notNullCheck("Couldn't retrieve environment from yaml:" + yamlFilePath, envId);
+    notNullCheck("Couldn't retrieve environment from yaml:" + yamlFilePath, envId, HARMLESS);
     String computeProviderId = getSettingId(accountId, appId, infraMappingYaml.getComputeProviderName());
-    Validator.notNullCheck("Couldn't retrieve compute provider from yaml:" + yamlFilePath, computeProviderId);
+    notNullCheck("Couldn't retrieve compute provider from yaml:" + yamlFilePath, computeProviderId, HARMLESS);
     String serviceId = getServiceId(appId, infraMappingYaml.getServiceName());
-    Validator.notNullCheck("Couldn't retrieve service from yaml:" + yamlFilePath, serviceId);
+    notNullCheck("Couldn't retrieve service from yaml:" + yamlFilePath, serviceId, HARMLESS);
 
     AwsInfrastructureMapping current = new AwsInfrastructureMapping();
     toBean(current, changeContext, appId, envId, computeProviderId, serviceId);
@@ -129,7 +130,7 @@ public class AwsInfraMappingYamlHandler
     String hostConnAttrsName = yaml.getConnectionType();
     SettingAttribute hostConnAttributes =
         settingsService.getSettingAttributeByName(changeContext.getChange().getAccountId(), hostConnAttrsName);
-    Validator.notNullCheck("HostConnectionAttrs is null for name:" + hostConnAttrsName, hostConnAttributes);
+    notNullCheck("HostConnectionAttrs is null for name:" + hostConnAttrsName, hostConnAttributes, HARMLESS);
     bean.setHostConnectionAttrs(hostConnAttributes.getUuid());
 
     bean.setRestrictionType(yaml.getRestrictions());

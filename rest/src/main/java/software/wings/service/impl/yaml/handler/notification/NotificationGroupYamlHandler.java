@@ -3,6 +3,8 @@ package software.wings.service.impl.yaml.handler.notification;
 import static java.util.stream.Collectors.toList;
 import static software.wings.beans.Base.GLOBAL_APP_ID;
 import static software.wings.beans.ObjectType.NOTIFICATION_GROUP;
+import static software.wings.exception.WingsException.HARMLESS;
+import static software.wings.utils.Validator.notNullCheck;
 
 import com.google.common.collect.Lists;
 import com.google.common.collect.Maps;
@@ -20,7 +22,6 @@ import software.wings.service.impl.yaml.handler.BaseYamlHandler;
 import software.wings.service.impl.yaml.service.YamlHelper;
 import software.wings.service.intfc.NotificationSetupService;
 import software.wings.utils.Util;
-import software.wings.utils.Validator;
 
 import java.util.List;
 import java.util.Map;
@@ -121,8 +122,8 @@ public class NotificationGroupYamlHandler extends BaseYamlHandler<Yaml, Notifica
     String notificationGroupName = yamlHelper.getNameFromYamlFilePath(changeContext.getChange().getFilePath());
     NotificationGroup notificationGroup =
         notificationSetupService.readNotificationGroupByName(accountId, notificationGroupName);
-    Validator.notNullCheck(
-        "No Notification Group exists with the given name: " + notificationGroupName, notificationGroup);
+    notNullCheck(
+        "No Notification Group exists with the given name: " + notificationGroupName, notificationGroup, HARMLESS);
     notificationSetupService.deleteNotificationGroups(accountId, notificationGroup.getUuid());
   }
 }

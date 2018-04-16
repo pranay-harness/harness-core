@@ -2,6 +2,8 @@ package software.wings.service.impl.yaml.handler.workflow;
 
 import static io.harness.data.structure.EmptyPredicate.isNotEmpty;
 import static java.util.stream.Collectors.toList;
+import static software.wings.exception.WingsException.HARMLESS;
+import static software.wings.utils.Validator.notNullCheck;
 
 import com.google.common.collect.Lists;
 import com.google.inject.Inject;
@@ -33,7 +35,6 @@ import software.wings.service.intfc.InfrastructureMappingService;
 import software.wings.service.intfc.ServiceResourceService;
 import software.wings.service.intfc.SettingsService;
 import software.wings.utils.Util;
-import software.wings.utils.Validator;
 
 import java.util.List;
 
@@ -54,7 +55,7 @@ public class WorkflowPhaseYamlHandler extends BaseYamlHandler<WorkflowPhase.Yaml
     Change change = context.getChange();
     String accountId = change.getAccountId();
     String appId = yamlHelper.getAppId(accountId, change.getFilePath());
-    Validator.notNullCheck("Could not retrieve valid app from path: " + change.getFilePath(), appId);
+    notNullCheck("Could not retrieve valid app from path: " + change.getFilePath(), appId, HARMLESS);
 
     String envId = context.getEntityIdMap().get(EntityType.ENVIRONMENT.name());
     String infraMappingId = null;
