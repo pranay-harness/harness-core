@@ -167,6 +167,7 @@ public class DelegateServiceImpl implements DelegateService {
     setUnset(updateOperations, "connected", delegate.isConnected());
     setUnset(updateOperations, "supportedTaskTypes", delegate.getSupportedTaskTypes());
     setUnset(updateOperations, "version", delegate.getVersion());
+    setUnset(updateOperations, "description", delegate.getDescription());
 
     logger.info("Updating delegate : {}", delegate.getUuid());
     return updateDelegate(delegate, updateOperations);
