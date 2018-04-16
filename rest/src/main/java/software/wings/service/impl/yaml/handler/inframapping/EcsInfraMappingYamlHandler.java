@@ -2,6 +2,8 @@ package software.wings.service.impl.yaml.handler.inframapping;
 
 import static java.util.Arrays.asList;
 import static org.apache.commons.lang3.StringUtils.isBlank;
+import static software.wings.exception.WingsException.HARMLESS;
+import static software.wings.utils.Validator.notNullCheck;
 
 import com.google.inject.Singleton;
 
@@ -14,7 +16,6 @@ import software.wings.beans.InfrastructureMappingType;
 import software.wings.beans.yaml.ChangeContext;
 import software.wings.exception.HarnessException;
 import software.wings.exception.WingsException;
-import software.wings.utils.Validator;
 
 import java.util.Collections;
 import java.util.List;
@@ -44,13 +45,13 @@ public class EcsInfraMappingYamlHandler
     String yamlFilePath = changeContext.getChange().getFilePath();
     String accountId = changeContext.getChange().getAccountId();
     String appId = yamlHelper.getAppId(accountId, yamlFilePath);
-    Validator.notNullCheck("Couldn't retrieve app from yaml:" + yamlFilePath, appId);
+    notNullCheck("Couldn't retrieve app from yaml:" + yamlFilePath, appId, HARMLESS);
     String envId = yamlHelper.getEnvironmentId(appId, yamlFilePath);
-    Validator.notNullCheck("Couldn't retrieve environment from yaml:" + yamlFilePath, envId);
+    notNullCheck("Couldn't retrieve environment from yaml:" + yamlFilePath, envId, HARMLESS);
     String computeProviderId = getSettingId(accountId, appId, infraMappingYaml.getComputeProviderName());
-    Validator.notNullCheck("Couldn't retrieve compute provider from yaml:" + yamlFilePath, computeProviderId);
+    notNullCheck("Couldn't retrieve compute provider from yaml:" + yamlFilePath, computeProviderId, HARMLESS);
     String serviceId = getServiceId(appId, infraMappingYaml.getServiceName());
-    Validator.notNullCheck("Couldn't retrieve service from yaml:" + yamlFilePath, serviceId);
+    notNullCheck("Couldn't retrieve service from yaml:" + yamlFilePath, serviceId, HARMLESS);
 
     EcsInfrastructureMapping current = new EcsInfrastructureMapping();
     toBean(current, changeContext, appId, envId, computeProviderId, serviceId);

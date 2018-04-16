@@ -1,5 +1,8 @@
 package software.wings.service.impl.yaml.handler.inframapping;
 
+import static software.wings.exception.WingsException.HARMLESS;
+import static software.wings.utils.Validator.notNullCheck;
+
 import com.google.inject.Inject;
 
 import org.mongodb.morphia.Key;
@@ -17,7 +20,6 @@ import software.wings.service.intfc.InfrastructureMappingService;
 import software.wings.service.intfc.ServiceResourceService;
 import software.wings.service.intfc.ServiceTemplateService;
 import software.wings.service.intfc.SettingsService;
-import software.wings.utils.Validator;
 
 import java.util.List;
 
@@ -35,38 +37,38 @@ public abstract class InfraMappingYamlHandler<Y extends InfrastructureMapping.Ya
 
   protected String getSettingId(String accountId, String appId, String settingName) {
     SettingAttribute settingAttribute = settingsService.getByName(accountId, appId, settingName);
-    Validator.notNullCheck("Invalid SettingAttribute:" + settingName, settingAttribute);
+    notNullCheck("Invalid SettingAttribute:" + settingName, settingAttribute, HARMLESS);
     return settingAttribute.getUuid();
   }
 
   protected String getEnvironmentId(String appId, String envName) {
     Environment environment = environmentService.getEnvironmentByName(appId, envName);
-    Validator.notNullCheck("Invalid Environment:" + envName, environment);
+    notNullCheck("Invalid Environment:" + envName, environment, HARMLESS);
     return environment.getUuid();
   }
 
   protected String getServiceTemplateId(String appId, String serviceId, String envId) {
     List<Key<ServiceTemplate>> templateRefKeysByService =
         serviceTemplateService.getTemplateRefKeysByService(appId, serviceId, envId);
-    Validator.notNullCheck("Service template can't be found for Service " + serviceId, templateRefKeysByService.get(0));
+    notNullCheck("Service template can't be found for Service " + serviceId, templateRefKeysByService.get(0), HARMLESS);
     return templateRefKeysByService.get(0).getId().toString();
   }
 
   protected String getServiceId(String appId, String serviceName) {
     Service service = serviceResourceService.getServiceByName(appId, serviceName);
-    Validator.notNullCheck("Invalid Service:" + serviceName, service);
+    notNullCheck("Invalid Service:" + serviceName, service, HARMLESS);
     return service.getUuid();
   }
 
   protected String getServiceName(String appId, String serviceId) {
     Service service = serviceResourceService.get(appId, serviceId);
-    Validator.notNullCheck("Service can't be found for Id:" + serviceId, service);
+    notNullCheck("Service can't be found for Id:" + serviceId, service, HARMLESS);
     return service.getName();
   }
 
   protected String getSettingName(String settingId) {
     SettingAttribute settingAttribute = settingsService.get(settingId);
-    Validator.notNullCheck("SettingAttribute can't be found for Id:" + settingId, settingAttribute);
+    notNullCheck("SettingAttribute can't be found for Id:" + settingId, settingAttribute, HARMLESS);
     return settingAttribute.getName();
   }
 
@@ -75,7 +77,7 @@ public abstract class InfraMappingYamlHandler<Y extends InfrastructureMapping.Ya
     String yamlFilePath = changeContext.getChange().getFilePath();
     String accountId = changeContext.getChange().getAccountId();
     String appId = yamlHelper.getAppId(accountId, yamlFilePath);
-    Validator.notNullCheck("Application can't be found for yaml file:" + yamlFilePath, appId);
+    notNullCheck("Application can't be found for yaml file:" + yamlFilePath, appId, HARMLESS);
     InfrastructureMapping infraMapping = yamlHelper.getInfraMapping(accountId, yamlFilePath);
     if (infraMapping != null) {
       infraMappingService.delete(appId, infraMapping.getUuid());

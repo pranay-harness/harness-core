@@ -1,5 +1,8 @@
 package software.wings.service.impl.yaml.handler.artifactstream;
 
+import static software.wings.exception.WingsException.HARMLESS;
+import static software.wings.utils.Validator.notNullCheck;
+
 import com.google.inject.Inject;
 
 import software.wings.beans.SettingAttribute;
@@ -11,7 +14,6 @@ import software.wings.service.impl.yaml.handler.BaseYamlHandler;
 import software.wings.service.impl.yaml.service.YamlHelper;
 import software.wings.service.intfc.ArtifactStreamService;
 import software.wings.service.intfc.SettingsService;
-import software.wings.utils.Validator;
 
 import java.util.List;
 
@@ -26,18 +28,18 @@ public abstract class ArtifactStreamYamlHandler<Y extends Yaml, B extends Artifa
 
   protected String getSettingId(String accountId, String appId, String settingName) {
     SettingAttribute settingAttribute = settingsService.getByName(accountId, appId, settingName);
-    Validator.notNullCheck("Invalid SettingAttribute:" + settingName, settingAttribute);
+    notNullCheck("Invalid SettingAttribute:" + settingName, settingAttribute, HARMLESS);
     return settingAttribute.getUuid();
   }
 
   protected String getSettingName(String settingId) {
     SettingAttribute settingAttribute = settingsService.get(settingId);
-    Validator.notNullCheck("SettingAttribute can't be found for Id:" + settingId, settingAttribute);
+    notNullCheck("SettingAttribute can't be found for Id:" + settingId, settingAttribute, HARMLESS);
     return settingAttribute.getName();
   }
 
   protected B getArtifactStream(String accountId, String yamlFilePath) {
-    Validator.notNullCheck("Yaml file path is null", yamlFilePath);
+    notNullCheck("Yaml file path is null", yamlFilePath, HARMLESS);
     return (B) yamlHelper.getArtifactStream(accountId, yamlFilePath);
   }
 
@@ -51,7 +53,7 @@ public abstract class ArtifactStreamYamlHandler<Y extends Yaml, B extends Artifa
     String yamlFilePath = changeContext.getChange().getFilePath();
     String accountId = changeContext.getChange().getAccountId();
     String appId = yamlHelper.getAppId(accountId, yamlFilePath);
-    Validator.notNullCheck("Application can't be found for yaml file:" + yamlFilePath, appId);
+    notNullCheck("Application can't be found for yaml file:" + yamlFilePath, appId, HARMLESS);
     ArtifactStream artifactStream = yamlHelper.getArtifactStream(accountId, yamlFilePath);
     if (artifactStream != null) {
       artifactStreamService.delete(appId, artifactStream.getUuid());

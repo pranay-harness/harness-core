@@ -4,6 +4,8 @@ import static io.harness.data.structure.EmptyPredicate.isEmpty;
 import static io.harness.data.structure.UUIDGenerator.generateUuid;
 import static java.util.stream.Collectors.toList;
 import static software.wings.beans.GraphNode.GraphNodeBuilder.aGraphNode;
+import static software.wings.exception.WingsException.HARMLESS;
+import static software.wings.utils.Validator.notNullCheck;
 
 import com.google.common.collect.Lists;
 import com.google.common.collect.Maps;
@@ -30,7 +32,6 @@ import software.wings.service.intfc.ArtifactStreamService;
 import software.wings.service.intfc.InfrastructureMappingService;
 import software.wings.service.intfc.ServiceResourceService;
 import software.wings.service.intfc.SettingsService;
-import software.wings.utils.Validator;
 import software.wings.yaml.workflow.StepYaml;
 
 import java.util.List;
@@ -149,32 +150,32 @@ public class StepYamlHandler extends BaseYamlHandler<StepYaml, GraphNode> {
       case "computeProviderId":
         String computeProviderId = (String) objectValue;
         SettingAttribute settingAttribute = settingsService.get(computeProviderId);
-        Validator.notNullCheck("Setting Attribute is null for the given id:" + computeProviderId, settingAttribute);
+        notNullCheck("Setting Attribute is null for the given id:" + computeProviderId, settingAttribute, HARMLESS);
         outputProperties.put("computeProviderName", settingAttribute.getName());
         return;
       case "serviceId":
         String serviceId = (String) objectValue;
         Service service = serviceResourceService.get(appId, serviceId);
-        Validator.notNullCheck("Service is null for the given id:" + serviceId, service);
+        notNullCheck("Service is null for the given id:" + serviceId, service, HARMLESS);
         outputProperties.put("serviceName", service.getName());
         return;
       case "infraMappingId":
         String infraMappingId = (String) objectValue;
         InfrastructureMapping infraMapping = infraMappingService.get(appId, infraMappingId);
-        Validator.notNullCheck("Infra mapping is null for the given id:" + infraMappingId, infraMapping);
+        notNullCheck("Infra mapping is null for the given id:" + infraMappingId, infraMapping, HARMLESS);
         outputProperties.put("infraMappingName", infraMapping.getName());
         return;
       case "artifactStreamId":
         String artifactStreamId = (String) objectValue;
         ArtifactStream artifactStream = artifactStreamService.get(appId, artifactStreamId);
-        Validator.notNullCheck("Artifact stream is null for the given id:" + artifactStreamId, artifactStream);
+        notNullCheck("Artifact stream is null for the given id:" + artifactStreamId, artifactStream, HARMLESS);
         outputProperties.put("artifactStreamName", artifactStream.getName());
 
         if (inputProperties.get("serviceId") == null) {
           String serviceIdWithArtifactStream = artifactStream.getServiceId();
           Service serviceWithArtifactStream = serviceResourceService.get(appId, serviceIdWithArtifactStream);
-          Validator.notNullCheck(
-              "Service is null for the given id:" + serviceIdWithArtifactStream, serviceWithArtifactStream);
+          notNullCheck(
+              "Service is null for the given id:" + serviceIdWithArtifactStream, serviceWithArtifactStream, HARMLESS);
           outputProperties.put("serviceName", serviceWithArtifactStream.getName());
         }
         return;
@@ -198,31 +199,31 @@ public class StepYamlHandler extends BaseYamlHandler<StepYaml, GraphNode> {
       case "computeProviderName":
         String computeProviderName = (String) objectValue;
         SettingAttribute settingAttribute = settingsService.getSettingAttributeByName(accountId, computeProviderName);
-        Validator.notNullCheck("Setting Attribute is null for the given name:" + computeProviderName, settingAttribute);
+        notNullCheck("Setting Attribute is null for the given name:" + computeProviderName, settingAttribute, HARMLESS);
         properties.put("computeProviderId", settingAttribute.getUuid());
         return;
       case "serviceName":
         String serviceName = (String) objectValue;
         Service service = serviceResourceService.getServiceByName(appId, serviceName);
-        Validator.notNullCheck("Service is null for the given name:" + serviceName, service);
+        notNullCheck("Service is null for the given name:" + serviceName, service, HARMLESS);
         properties.put("serviceId", service.getUuid());
         return;
       case "infraMappingName":
         String infraMappingName = (String) objectValue;
         InfrastructureMapping infraMapping = infraMappingService.get(appId, infraMappingName);
-        Validator.notNullCheck("Infra mapping is null for the given name:" + infraMappingName, infraMapping);
+        notNullCheck("Infra mapping is null for the given name:" + infraMappingName, infraMapping, HARMLESS);
         properties.put("infraMappingId", infraMapping.getUuid());
         return;
       case "artifactStreamName":
         String artifactStreamName = (String) objectValue;
         Object serviceNameObj = inputProperties.get("serviceName");
-        Validator.notNullCheck("Service null in the properties", serviceNameObj);
+        notNullCheck("Service null in the properties", serviceNameObj, HARMLESS);
         serviceName = (String) serviceNameObj;
         service = serviceResourceService.getServiceByName(appId, serviceName);
-        Validator.notNullCheck("Service is null for the given name:" + serviceName, service);
+        notNullCheck("Service is null for the given name:" + serviceName, service, HARMLESS);
         ArtifactStream artifactStream =
             artifactStreamService.getArtifactStreamByName(appId, service.getUuid(), artifactStreamName);
-        Validator.notNullCheck("Artifact stream is null for the given name:" + artifactStreamName, artifactStream);
+        notNullCheck("Artifact stream is null for the given name:" + artifactStreamName, artifactStream, HARMLESS);
         properties.put("artifactStreamId", artifactStream.getUuid());
         return;
       default:

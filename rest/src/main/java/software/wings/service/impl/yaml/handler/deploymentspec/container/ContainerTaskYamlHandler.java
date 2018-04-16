@@ -2,6 +2,8 @@ package software.wings.service.impl.yaml.handler.deploymentspec.container;
 
 import static io.harness.data.structure.EmptyPredicate.isNotEmpty;
 import static java.util.Arrays.asList;
+import static software.wings.exception.WingsException.HARMLESS;
+import static software.wings.utils.Validator.notNullCheck;
 
 import com.google.inject.Inject;
 
@@ -16,7 +18,6 @@ import software.wings.service.impl.yaml.handler.YamlHandlerFactory;
 import software.wings.service.impl.yaml.handler.deploymentspec.DeploymentSpecificationYamlHandler;
 import software.wings.service.impl.yaml.service.YamlHelper;
 import software.wings.service.intfc.ServiceResourceService;
-import software.wings.utils.Validator;
 
 import java.util.List;
 /**
@@ -35,10 +36,10 @@ public abstract class ContainerTaskYamlHandler<Y extends ContainerTask.Yaml, C e
     Change change = changeContext.getChange();
 
     String appId = yamlHelper.getAppId(change.getAccountId(), change.getFilePath());
-    Validator.notNullCheck("Could not locate app info in file path:" + change.getFilePath(), appId);
+    notNullCheck("Could not locate app info in file path:" + change.getFilePath(), appId, HARMLESS);
 
     String serviceId = yamlHelper.getServiceId(appId, change.getFilePath());
-    Validator.notNullCheck("Could not locate service info in file path:" + change.getFilePath(), serviceId);
+    notNullCheck("Could not locate service info in file path:" + change.getFilePath(), serviceId, HARMLESS);
 
     C containerTask = createNewContainerTask();
 
@@ -87,10 +88,10 @@ public abstract class ContainerTaskYamlHandler<Y extends ContainerTask.Yaml, C e
 
   protected C getContainerTask(String accountId, String yamlFilePath, String deploymentType) {
     String appId = yamlHelper.getAppId(accountId, yamlFilePath);
-    Validator.notNullCheck("Could not locate app info in file path:" + yamlFilePath, appId);
+    notNullCheck("Could not locate app info in file path:" + yamlFilePath, appId, HARMLESS);
 
     String serviceId = yamlHelper.getServiceId(appId, yamlFilePath);
-    Validator.notNullCheck("Could not locate service info in file path:" + yamlFilePath, serviceId);
+    notNullCheck("Could not locate service info in file path:" + yamlFilePath, serviceId, HARMLESS);
 
     return (C) serviceResourceService.getContainerTaskByDeploymentType(appId, serviceId, deploymentType);
   }

@@ -3,6 +3,8 @@ package software.wings.service.impl.yaml.handler.command;
 import static io.harness.data.structure.EmptyPredicate.isNotEmpty;
 import static java.util.stream.Collectors.toList;
 import static software.wings.beans.yaml.YamlConstants.PATH_DELIMITER;
+import static software.wings.exception.WingsException.HARMLESS;
+import static software.wings.utils.Validator.notNullCheck;
 
 import com.google.common.collect.Lists;
 import com.google.common.collect.Maps;
@@ -33,7 +35,6 @@ import software.wings.service.intfc.CommandService;
 import software.wings.service.intfc.EnvironmentService;
 import software.wings.service.intfc.ServiceResourceService;
 import software.wings.utils.Util;
-import software.wings.utils.Validator;
 import software.wings.yaml.command.CommandYaml;
 
 import java.util.List;
@@ -54,9 +55,9 @@ public class CommandYamlHandler extends BaseYamlHandler<CommandYaml, ServiceComm
     String accountId = changeContext.getChange().getAccountId();
     String yamlFilePath = changeContext.getChange().getFilePath();
     String appId = yamlHelper.getAppId(accountId, yamlFilePath);
-    Validator.notNullCheck("appId is null for given yamlFilePath: " + yamlFilePath, appId);
+    notNullCheck("appId is null for given yamlFilePath: " + yamlFilePath, appId, HARMLESS);
     String serviceId = yamlHelper.getServiceId(appId, yamlFilePath);
-    Validator.notNullCheck("serviceId is null for given yamlFilePath: " + yamlFilePath, serviceId);
+    notNullCheck("serviceId is null for given yamlFilePath: " + yamlFilePath, serviceId, HARMLESS);
     CommandYaml commandYaml = changeContext.getYaml();
     List<GraphNode> nodeList = Lists.newArrayList();
     List<Yaml> commandUnitYamlList = commandYaml.getCommandUnits();
@@ -118,7 +119,7 @@ public class CommandYamlHandler extends BaseYamlHandler<CommandYaml, ServiceComm
     ServiceCommand.Builder builder = ServiceCommand.Builder.aServiceCommand();
     if (!isCreate) {
       ServiceCommand existingSvcCommand = serviceResourceService.getCommandByName(appId, serviceId, name);
-      Validator.notNullCheck("Service command with the given name doesn't exist: " + name, existingSvcCommand);
+      notNullCheck("Service command with the given name doesn't exist: " + name, existingSvcCommand, HARMLESS);
       builder.withUuid(existingSvcCommand.getUuid());
     }
 
@@ -147,7 +148,7 @@ public class CommandYamlHandler extends BaseYamlHandler<CommandYaml, ServiceComm
   @Override
   public CommandYaml toYaml(ServiceCommand serviceCommand, String appId) {
     Command command = serviceCommand.getCommand();
-    Validator.notNullCheck("command is null for serviceCommand:" + serviceCommand.getName(), command);
+    notNullCheck("command is null for serviceCommand:" + serviceCommand.getName(), command, HARMLESS);
 
     String commandType = Util.getStringFromEnum(command.getCommandType());
     String commandUnitType = Util.getStringFromEnum(command.getCommandUnitType());
@@ -215,12 +216,12 @@ public class CommandYamlHandler extends BaseYamlHandler<CommandYaml, ServiceComm
   @Override
   public ServiceCommand get(String accountId, String yamlFilePath) {
     String appId = yamlHelper.getAppId(accountId, yamlFilePath);
-    Validator.notNullCheck("appId is null for given yamlFilePath: " + yamlFilePath, appId);
+    notNullCheck("appId is null for given yamlFilePath: " + yamlFilePath, appId, HARMLESS);
     String serviceId = yamlHelper.getServiceId(appId, yamlFilePath);
-    Validator.notNullCheck("serviceId is null for given yamlFilePath: " + yamlFilePath, serviceId);
+    notNullCheck("serviceId is null for given yamlFilePath: " + yamlFilePath, serviceId, HARMLESS);
     String commandName =
         yamlHelper.extractEntityNameFromYamlPath(YamlType.COMMAND.getPathExpression(), yamlFilePath, PATH_DELIMITER);
-    Validator.notNullCheck("commandName is null for given yamlFilePath: " + yamlFilePath, commandName);
+    notNullCheck("commandName is null for given yamlFilePath: " + yamlFilePath, commandName, HARMLESS);
     return serviceResourceService.getCommandByName(appId, serviceId, commandName);
   }
 

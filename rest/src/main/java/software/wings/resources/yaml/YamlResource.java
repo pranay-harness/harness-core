@@ -42,7 +42,6 @@ import software.wings.service.intfc.yaml.YamlGitService;
 import software.wings.service.intfc.yaml.YamlResourceService;
 import software.wings.service.intfc.yaml.sync.YamlService;
 import software.wings.utils.BoundedInputStream;
-import software.wings.yaml.BaseYaml;
 import software.wings.yaml.YamlPayload;
 import software.wings.yaml.directory.DirectoryNode;
 import software.wings.yaml.errorhandling.GitSyncError;
@@ -645,21 +644,6 @@ public class YamlResource {
   @ExceptionMetered
   public RestResponse<Base> updateYaml(@QueryParam("accountId") String accountId, YamlPayload yamlPayload) {
     return yamlService.update(yamlPayload, accountId);
-  }
-
-  /**
-   * Generic api to get any yaml file
-   *
-   * @param accountId the account id
-   * @param yamlPath  the yaml path
-   * @return rest response
-   */
-  @GET
-  @Timed
-  @ExceptionMetered
-  public RestResponse<BaseYaml> getYaml(
-      @QueryParam("accountId") String accountId, @QueryParam("yamlPath") String yamlPath) {
-    return yamlService.getYaml(accountId, yamlPath);
   }
 
   /**

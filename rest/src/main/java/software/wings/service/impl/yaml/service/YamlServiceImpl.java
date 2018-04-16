@@ -3,7 +3,6 @@ package software.wings.service.impl.yaml.service;
 import static io.harness.data.structure.EmptyPredicate.isEmpty;
 import static io.harness.data.structure.EmptyPredicate.isNotEmpty;
 import static java.util.Arrays.asList;
-import static software.wings.beans.yaml.YamlConstants.PATH_DELIMITER;
 import static software.wings.beans.yaml.YamlConstants.YAML_EXTENSION;
 import static software.wings.beans.yaml.YamlType.ACCOUNT_DEFAULTS;
 import static software.wings.beans.yaml.YamlType.APPLICATION;
@@ -26,7 +25,8 @@ import static software.wings.beans.yaml.YamlType.PIPELINE;
 import static software.wings.beans.yaml.YamlType.SERVICE;
 import static software.wings.beans.yaml.YamlType.VERIFICATION_PROVIDER;
 import static software.wings.beans.yaml.YamlType.WORKFLOW;
-import static software.wings.dl.PageRequest.PageRequestBuilder.aPageRequest;
+import static software.wings.exception.WingsException.HARMLESS;
+import static software.wings.utils.Validator.notNullCheck;
 
 import com.google.common.collect.Lists;
 import com.google.common.collect.Maps;
@@ -45,38 +45,29 @@ import com.fasterxml.jackson.dataformat.yaml.snakeyaml.scanner.ScannerException;
 import org.apache.commons.io.IOUtils;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-import software.wings.beans.Application;
 import software.wings.beans.Base;
 import software.wings.beans.EntityType;
 import software.wings.beans.ErrorCode;
-import software.wings.beans.InfrastructureMapping;
 import software.wings.beans.ResponseMessage;
 import software.wings.beans.ResponseMessage.Level;
 import software.wings.beans.RestResponse;
 import software.wings.beans.RestResponse.Builder;
-import software.wings.beans.SearchFilter.Operator;
-import software.wings.beans.Workflow;
-import software.wings.beans.artifact.ArtifactStream;
 import software.wings.beans.yaml.Change;
 import software.wings.beans.yaml.Change.ChangeType;
 import software.wings.beans.yaml.ChangeContext;
 import software.wings.beans.yaml.GitFileChange;
 import software.wings.beans.yaml.YamlConstants;
 import software.wings.beans.yaml.YamlType;
-import software.wings.dl.PageRequest.PageRequestBuilder;
-import software.wings.dl.PageResponse;
 import software.wings.dl.WingsPersistence;
 import software.wings.exception.HarnessException;
 import software.wings.exception.WingsException;
 import software.wings.exception.YamlProcessingException;
 import software.wings.service.impl.yaml.handler.BaseYamlHandler;
 import software.wings.service.impl.yaml.handler.YamlHandlerFactory;
-import software.wings.service.impl.yaml.handler.app.ApplicationYamlHandler;
 import software.wings.service.intfc.AuthService;
 import software.wings.service.intfc.yaml.YamlGitService;
 import software.wings.service.intfc.yaml.sync.YamlService;
 import software.wings.utils.Misc;
-import software.wings.utils.Validator;
 import software.wings.yaml.BaseYaml;
 import software.wings.yaml.YamlPayload;
 
@@ -145,7 +136,7 @@ public class YamlServiceImpl<Y extends BaseYaml, B extends Base> implements Yaml
 
     try {
       List<ChangeContext> changeContextList = processChangeSet(asList(change));
-      Validator.notNullCheck("Change Context List is null", changeContextList);
+      notNullCheck("Change Context List is null", changeContextList);
       boolean empty = isEmpty(changeContextList);
       if (!empty) {
         // We only sent one
@@ -243,139 +234,6 @@ public class YamlServiceImpl<Y extends BaseYaml, B extends Base> implements Yaml
     return changeList;
   }
 
-  @Override
-  public RestResponse<Y> getYaml(String accountId, String yamlFilePath) {
-    RestResponse rr = new RestResponse<>();
-
-    try {
-      YamlType yamlType = findYamlType(yamlFilePath);
-      BaseYaml yaml = null;
-
-      final Class beanClass = yamlType.getBeanClass();
-      String entityName =
-          yamlHelper.extractEntityNameFromYamlPath(yamlType.getPathExpression(), yamlFilePath, PATH_DELIMITER);
-      PageRequestBuilder pageRequest = aPageRequest();
-      String appId;
-      String serviceId;
-      Object entity;
-
-      switch (yamlType) {
-        case APPLICATION:
-          pageRequest.addFilter("accountId", Operator.EQ, accountId).addFilter("name", Operator.EQ, entityName);
-          entity = getResult(beanClass, pageRequest);
-          appId = yamlHelper.getAppId(accountId, yamlFilePath);
-          if (entity != null) {
-            ApplicationYamlHandler yamlHandler = yamlHandlerFactory.getYamlHandler(yamlType);
-            yaml = yamlHandler.toYaml((Application) entity, appId);
-          }
-          break;
-
-        case SERVICE:
-        case ENVIRONMENT:
-        case PIPELINE:
-          appId = yamlHelper.getAppId(accountId, yamlFilePath);
-          pageRequest.addFilter("appId", Operator.EQ, appId).addFilter("name", Operator.EQ, entityName);
-          entity = getResult(beanClass, pageRequest);
-          if (entity != null) {
-            yaml = yamlHandlerFactory.getYamlHandler(yamlType).toYaml(entity, appId);
-          }
-          break;
-
-        case CONFIG_FILE:
-          // TODO
-          break;
-        case CONFIG_FILE_OVERRIDE:
-          // TODO
-          break;
-        case CLOUD_PROVIDER:
-          // TODO
-          break;
-        case ARTIFACT_SERVER:
-          // TODO
-          break;
-        case COLLABORATION_PROVIDER:
-          // TODO
-          break;
-        case LOADBALANCER_PROVIDER:
-          // TODO
-          break;
-        case VERIFICATION_PROVIDER:
-          // TODO
-          break;
-        case NOTIFICATION_GROUP:
-          // TODO
-          break;
-        case WORKFLOW:
-          appId = yamlHelper.getAppId(accountId, yamlFilePath);
-          pageRequest.addFilter("appId", Operator.EQ, appId).addFilter("name", Operator.EQ, entityName);
-          entity = getResult(beanClass, pageRequest);
-          if (entity != null) {
-            Workflow workflow = (Workflow) entity;
-            yaml =
-                yamlHandlerFactory
-                    .getYamlHandler(yamlType, workflow.getOrchestrationWorkflow().getOrchestrationWorkflowType().name())
-                    .toYaml(workflow, appId);
-          }
-          break;
-
-        case ARTIFACT_STREAM:
-          appId = yamlHelper.getAppId(accountId, yamlFilePath);
-          serviceId = yamlHelper.getServiceId(appId, yamlFilePath);
-          pageRequest.addFilter("appId", Operator.EQ, appId)
-              .addFilter("serviceId", Operator.EQ, serviceId)
-              .addFilter("sourceName", Operator.EQ, entityName);
-          entity = getResult(beanClass, pageRequest);
-          if (entity != null) {
-            ArtifactStream artifactStream = (ArtifactStream) entity;
-            yaml = yamlHandlerFactory.getYamlHandler(yamlType, artifactStream.getArtifactStreamType())
-                       .toYaml(artifactStream, appId);
-          }
-          break;
-
-        case COMMAND:
-          // TODO
-          break;
-
-        case INFRA_MAPPING:
-          appId = yamlHelper.getAppId(accountId, yamlFilePath);
-          String envId = yamlHelper.getEnvironmentId(appId, yamlFilePath);
-          pageRequest.addFilter("appId", Operator.EQ, appId)
-              .addFilter("envId", Operator.EQ, envId)
-              .addFilter("name", Operator.EQ, entityName);
-          entity = getResult(beanClass, pageRequest);
-          if (entity != null) {
-            InfrastructureMapping infraMapping = (InfrastructureMapping) entity;
-            yaml = yamlHandlerFactory.getYamlHandler(yamlType, infraMapping.getInfraMappingType())
-                       .toYaml(infraMapping, appId);
-          }
-          break;
-
-        default:
-      }
-
-      if (yaml != null) {
-        rr.setResource(yaml);
-      } else {
-        software.wings.yaml.YamlHelper.addResponseMessage(
-            rr, ErrorCode.GENERAL_YAML_INFO, Level.ERROR, "Unable to update yaml for:" + yamlFilePath);
-      }
-
-    } catch (HarnessException e) {
-      software.wings.yaml.YamlHelper.addResponseMessage(
-          rr, ErrorCode.GENERAL_YAML_INFO, Level.ERROR, "Unable to update yaml for:" + yamlFilePath);
-    }
-    return rr;
-  }
-
-  private Object getResult(Class beanClass, PageRequestBuilder pageRequest) {
-    PageResponse response = wingsPersistence.query(beanClass, pageRequest.build());
-    if (response.getTotal() > 0) {
-      return response.get(0);
-    } else {
-      return null;
-    }
-  }
-
   /**
    *
    * @param changeList
@@ -403,7 +261,7 @@ public class YamlServiceImpl<Y extends BaseYaml, B extends Base> implements Yaml
           if (yamlSyncHandler != null) {
             Class yamlClass = yamlSyncHandler.getYamlClass();
             BaseYaml yaml = getYaml(change.getFileContent(), yamlClass, false);
-            Validator.notNullCheck("Could not get yaml object for :" + yamlFilePath, yaml);
+            notNullCheck("Could not get yaml object for :" + yamlFilePath, yaml);
 
             ChangeContext.Builder changeContextBuilder = ChangeContext.Builder.aChangeContext()
                                                              .withChange(change)
@@ -440,20 +298,20 @@ public class YamlServiceImpl<Y extends BaseYaml, B extends Base> implements Yaml
         } else {
           message = ex.getMessage();
         }
-        logger.error(message, ex);
+        logger.warn(message, ex);
         failedChangeErrorMsgMap.put(change, message);
       } catch (UnrecognizedPropertyException ex) {
         String propertyName = ex.getPropertyName();
         if (propertyName != null) {
           String error = "Unrecognized field: " + propertyName;
-          logger.error(error, ex);
+          logger.warn(error, ex);
           failedChangeErrorMsgMap.put(change, error);
         } else {
-          logger.error("Unable to load yaml from string for file: " + yamlFilePath, ex);
+          logger.warn("Unable to load yaml from string for file: " + yamlFilePath, ex);
           failedChangeErrorMsgMap.put(change, ex.getMessage());
         }
       } catch (Exception ex) {
-        logger.error("Unable to load yaml from string for file: " + yamlFilePath, ex);
+        logger.warn("Unable to load yaml from string for file: " + yamlFilePath, ex);
         failedChangeErrorMsgMap.put(change, ex.getMessage());
       }
     }
@@ -490,7 +348,7 @@ public class YamlServiceImpl<Y extends BaseYaml, B extends Base> implements Yaml
         processedChangeSet.add(changeContext);
         logger.info("Processing done for change [{}]", changeContext.getChange());
       } catch (Exception ex) {
-        logger.error("Exception while processing yaml file {}", yamlFilePath, ex);
+        logger.warn("Exception while processing yaml file {}", yamlFilePath, ex);
         // We continue processing the yaml files we understand, the failures are reported at the end
         failedChangeErrorMsgMap.put(changeContext.getChange(), Misc.getMessage(ex));
       }
@@ -522,10 +380,10 @@ public class YamlServiceImpl<Y extends BaseYaml, B extends Base> implements Yaml
 
   private void processYamlChange(ChangeContext changeContext, List<ChangeContext> changeContextList)
       throws HarnessException {
-    Validator.notNullCheck("changeContext is null", changeContext);
+    notNullCheck("changeContext is null", changeContext, HARMLESS);
     Change change = changeContext.getChange();
-    Validator.notNullCheck("FileChange is null", change);
-    Validator.notNullCheck("ChangeType is null for change:" + change.getFilePath(), change.getChangeType());
+    notNullCheck("FileChange is null", change, HARMLESS);
+    notNullCheck("ChangeType is null for change:" + change.getFilePath(), change.getChangeType(), HARMLESS);
 
     // If its not a yaml file, we don't have a handler for that file
     if (!change.getFilePath().endsWith(YAML_EXTENSION)) {

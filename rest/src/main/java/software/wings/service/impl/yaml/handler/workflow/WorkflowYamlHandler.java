@@ -2,6 +2,8 @@ package software.wings.service.impl.yaml.handler.workflow;
 
 import static java.util.stream.Collectors.toList;
 import static org.apache.commons.lang3.StringUtils.isNotBlank;
+import static software.wings.exception.WingsException.HARMLESS;
+import static software.wings.utils.Validator.notNullCheck;
 
 import com.google.common.collect.Lists;
 import com.google.common.collect.Maps;
@@ -39,7 +41,6 @@ import software.wings.service.impl.yaml.handler.variable.VariableYamlHandler;
 import software.wings.service.impl.yaml.service.YamlHelper;
 import software.wings.service.intfc.EnvironmentService;
 import software.wings.service.intfc.WorkflowService;
-import software.wings.utils.Validator;
 import software.wings.yaml.workflow.StepYaml;
 import software.wings.yaml.workflow.WorkflowYaml;
 
@@ -82,7 +83,7 @@ public abstract class WorkflowYamlHandler<Y extends WorkflowYaml> extends BaseYa
     Change change = changeContext.getChange();
 
     String appId = yamlHelper.getAppId(change.getAccountId(), change.getFilePath());
-    Validator.notNullCheck("Could not locate app info in file path:" + change.getFilePath(), appId);
+    notNullCheck("Could not locate app info in file path:" + change.getFilePath(), appId, HARMLESS);
 
     // Environment can be null in cloned workflows
     Environment environment = environmentService.getEnvironmentByName(appId, yaml.getEnvName());
