@@ -418,7 +418,7 @@ public class GraphRenderer {
   GraphNode convertToNode(StateExecutionInstance instance) {
     GraphNodeBuilder builder = aGraphNode()
                                    .withId(instance.getUuid())
-                                   .withName(instance.getStateName())
+                                   .withName(instance.getDisplayName())
                                    .withType(instance.getStateType())
                                    .withRollback(instance.isRollback())
                                    .withStatus(String.valueOf(instance.getStatus()).toUpperCase());
@@ -440,13 +440,13 @@ public class GraphRenderer {
         builder.withExecutionSummary(executionData.getExecutionSummary());
       } catch (RuntimeException e) {
         logger.error("Failed to get state execution summary for state instance id {} and state name {}",
-            instance.getUuid(), instance.getStateName(), e);
+            instance.getUuid(), instance.getDisplayName(), e);
       }
       try {
         builder.withExecutionDetails(executionData.getExecutionDetails());
       } catch (RuntimeException e) {
         logger.error("Failed to get state execution details for state instance id {} and state name {}",
-            instance.getUuid(), instance.getStateName(), e);
+            instance.getUuid(), instance.getDisplayName(), e);
       }
 
       if (executionData instanceof ElementStateExecutionData) {
@@ -455,7 +455,7 @@ public class GraphRenderer {
           builder.withElementStatusSummary(elementStateExecutionData.getElementStatusSummary());
         } catch (RuntimeException e) {
           logger.error("Failed to get state element status summary for state instance id {} and state name {}",
-              instance.getUuid(), instance.getStateName(), e);
+              instance.getUuid(), instance.getDisplayName(), e);
         }
       }
     }
@@ -475,7 +475,7 @@ public class GraphRenderer {
     }
 
     StateExecutionInstance instance = instances.get(0);
-    if (instances.stream().noneMatch(item -> instance.getStateName().equals(instance.getStateName()))) {
+    if (instances.stream().noneMatch(item -> instance.getDisplayName().equals(instance.getDisplayName()))) {
       throw new UnexpectedException();
     }
     if (instances.stream().noneMatch(item -> instance.getStateType().equals(instance.getStateType()))) {
@@ -507,7 +507,7 @@ public class GraphRenderer {
 
     GraphNodeBuilder builder = aGraphNode()
                                    .withId(generateUuid())
-                                   .withName(instance.getStateName())
+                                   .withName(instance.getDisplayName())
                                    .withType(instance.getStateType())
                                    .withRollback(instance.isRollback())
                                    .withStatus(String.valueOf(status).toUpperCase())

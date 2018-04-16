@@ -780,7 +780,7 @@ public class StateMachineExecutorTest extends WingsBaseTest {
 
     String prevStateExecutionInstanceId = wingsPersistence.save(aStateExecutionInstance()
                                                                     .withAppId("appId")
-                                                                    .withStateName("state0")
+                                                                    .withDisplayName("state0")
                                                                     .withNotifyElements(originalNotifyElements)
                                                                     .build());
 
@@ -793,7 +793,7 @@ public class StateMachineExecutorTest extends WingsBaseTest {
 
     StateExecutionInstance stateExecutionInstance = aStateExecutionInstance()
                                                         .withAppId("appId")
-                                                        .withStateName("state1")
+                                                        .withDisplayName("state1")
                                                         .withStateExecutionMap(stateExecutionMap)
                                                         .withPrevInstanceId(prevStateExecutionInstanceId)
                                                         .withStatus(FAILED)

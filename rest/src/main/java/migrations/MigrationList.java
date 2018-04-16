@@ -10,6 +10,7 @@ import migrations.all.CreateDefaultUserGroupsAndAddToExistingUsers;
 import migrations.all.CreateSupportUserGroupsAndRenameAccountAdmin;
 import migrations.all.GitSyncToAllAccounts;
 import migrations.all.SetDaemonSetInWorkflowPhase;
+import migrations.all.StateExecutionInstanceDisplayName;
 import migrations.all.TrimYamlMigration;
 import migrations.all.VerifyStepWorkflowOrder;
 import org.apache.commons.lang3.tuple.Pair;
@@ -35,6 +36,7 @@ public class MigrationList {
         .add(Pair.of(113, CreateSupportUserGroupsAndRenameAccountAdmin.class))
         .add(Pair.of(114, GitSyncToAllAccounts.class))
         .add(Pair.of(115, AddValidUntilToStateExecutionInstance.class))
+        .add(Pair.of(116, StateExecutionInstanceDisplayName.class))
         .build();
   }
 }

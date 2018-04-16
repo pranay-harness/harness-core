@@ -67,6 +67,7 @@ public class ForkState extends State {
       childStateExecutionInstance.setStateParams(null);
 
       childStateExecutionInstance.setContextElement(element);
+      childStateExecutionInstance.setDisplayName(state);
       childStateExecutionInstance.setStateName(state);
       childStateExecutionInstance.setNotifyId(element.getUuid());
       childStateExecutionInstance.setPrevInstanceId(null);
@@ -109,7 +110,7 @@ public class ForkState extends State {
         executionResponse.setExecutionStatus(executionStatus);
       }
     }
-    logger.info("Fork state execution completed - stateExecutionInstanceId:{}, stateName:{}, executionStatus:{}",
+    logger.info("Fork state execution completed - stateExecutionInstanceId:{}, displayName:{}, executionStatus:{}",
         ((ExecutionContextImpl) context).getStateExecutionInstance().getUuid(), getName(),
         executionResponse.getExecutionStatus());
     return executionResponse;

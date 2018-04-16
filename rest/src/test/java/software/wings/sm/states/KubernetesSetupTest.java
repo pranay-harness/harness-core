@@ -162,7 +162,7 @@ public class KubernetesSetupTest extends WingsBaseTest {
                                           .build();
   private StateExecutionInstance stateExecutionInstance =
       aStateExecutionInstance()
-          .withStateName(STATE_NAME)
+          .withDisplayName(STATE_NAME)
           .addContextElement(workflowStandardParams)
           .addContextElement(phaseElement)
           .addContextElement(ContainerServiceElement.builder()
@@ -406,7 +406,7 @@ public class KubernetesSetupTest extends WingsBaseTest {
     }
     StateExecutionInstance stateExecutionInstance =
         aStateExecutionInstance()
-            .withStateName(STATE_NAME)
+            .withDisplayName(STATE_NAME)
             .addContextElement(workflowStandardParams)
             .addContextElement(phaseElement)
             .addContextElement(serviceElementBuilder.build())

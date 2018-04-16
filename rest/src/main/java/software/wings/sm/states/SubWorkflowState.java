@@ -72,6 +72,7 @@ public class SubWorkflowState extends State {
     childStateExecutionInstance.setStateParams(null);
 
     childStateExecutionInstance.setChildStateMachineId(subWorkflowId);
+    childStateExecutionInstance.setDisplayName(null);
     childStateExecutionInstance.setStateName(null);
     childStateExecutionInstance.setStateType(null);
     childStateExecutionInstance.setNotifyId(stateExecutionInstance.getUuid());
@@ -104,7 +105,8 @@ public class SubWorkflowState extends State {
     if (executionStatus != ExecutionStatus.SUCCESS) {
       executionResponse.setExecutionStatus(executionStatus);
     }
-    logger.info("Subworkflow state execution completed - stateExecutionInstanceId:{}, stateName:{}, executionStatus:{}",
+    logger.info(
+        "Subworkflow state execution completed - stateExecutionInstanceId:{}, displayName:{}, executionStatus:{}",
         ((ExecutionContextImpl) context).getStateExecutionInstance().getUuid(), getName(),
         executionResponse.getExecutionStatus());
 

@@ -109,7 +109,7 @@ public class ExecutionContextImplTest extends WingsBaseTest {
   @Test
   public void shouldRenderExpression() {
     StateExecutionInstance stateExecutionInstance = new StateExecutionInstance();
-    stateExecutionInstance.setStateName("abc");
+    stateExecutionInstance.setDisplayName("abc");
     ExecutionContextImpl context = new ExecutionContextImpl(stateExecutionInstance);
     injector.injectMembers(context);
 
@@ -157,7 +157,7 @@ public class ExecutionContextImplTest extends WingsBaseTest {
   public void shouldEvaluateIndirectExpression() {
     StateExecutionInstance stateExecutionInstance = new StateExecutionInstance();
     stateExecutionInstance.setExecutionUuid(generateUuid());
-    stateExecutionInstance.setStateName("http");
+    stateExecutionInstance.setDisplayName("http");
     ExecutionContextImpl context = new ExecutionContextImpl(stateExecutionInstance);
     injector.injectMembers(context);
 

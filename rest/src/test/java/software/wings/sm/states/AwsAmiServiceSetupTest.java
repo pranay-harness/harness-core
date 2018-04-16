@@ -132,7 +132,7 @@ public class AwsAmiServiceSetupTest extends WingsBaseTest {
                                   .build();
 
   private StateExecutionInstance stateExecutionInstance = aStateExecutionInstance()
-                                                              .withStateName(STATE_NAME)
+                                                              .withDisplayName(STATE_NAME)
                                                               .addContextElement(workflowStandardParams)
                                                               .addContextElement(phaseElement)
                                                               .addStateExecutionData(new PhaseStepExecutionData())
