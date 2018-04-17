@@ -265,7 +265,7 @@ public class KubernetesSetup extends ContainerServiceSetup {
                                           .stream()
                                           .mapToInt(item -> Integer.valueOf(item[1]))
                                           .sum();
-        if (totalActiveServiceCount > 0) {
+        if (totalActiveServiceCount > maxInstances) {
           containerServiceElementBuilder.maxInstances(totalActiveServiceCount);
         }
       }
