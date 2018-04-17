@@ -165,7 +165,7 @@ public class EcsServiceSetup extends ContainerServiceSetup {
                                           .stream()
                                           .mapToInt(item -> Integer.valueOf(item[1]))
                                           .sum();
-        if (totalActiveServiceCount > maxInstances) {
+        if (totalActiveServiceCount > 0) {
           containerServiceElementBuilder.maxInstances(totalActiveServiceCount);
         }
       }
