@@ -924,7 +924,7 @@ public class VaultTest extends WingsBaseTest {
     String secretValue = UUID.randomUUID().toString();
     String secretId = secretManager.saveSecret(accountId, secretName, secretValue);
 
-    String serviceId = wingsPersistence.save(Service.Builder.aService().withName(UUID.randomUUID().toString()).build());
+    String serviceId = wingsPersistence.save(Service.builder().name(UUID.randomUUID().toString()).build());
     String serviceTemplateId =
         wingsPersistence.save(ServiceTemplate.Builder.aServiceTemplate().withServiceId(serviceId).build());
 
@@ -1300,7 +1300,7 @@ public class VaultTest extends WingsBaseTest {
     String encryptedUuid =
         wingsPersistence.createQuery(EncryptedData.class).filter("type", CONFIG_FILE).asList().get(0).getUuid();
 
-    Service service = Service.Builder.aService().withName(UUID.randomUUID().toString()).withAppId(appId).build();
+    Service service = Service.builder().name(UUID.randomUUID().toString()).appId(appId).build();
     wingsPersistence.save(service);
 
     Activity activity = Activity.builder().workflowExecutionId(workflowExecutionId).environmentId(envId).build();

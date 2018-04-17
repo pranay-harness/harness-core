@@ -17,7 +17,6 @@ import static software.wings.beans.PhaseStepType.POST_DEPLOYMENT;
 import static software.wings.beans.PhaseStepType.PRE_DEPLOYMENT;
 import static software.wings.beans.SearchFilter.Operator.EQ;
 import static software.wings.beans.SearchFilter.Operator.IN;
-import static software.wings.beans.Service.Builder.aService;
 import static software.wings.beans.ServiceTemplate.Builder.aServiceTemplate;
 import static software.wings.beans.Variable.VariableBuilder.aVariable;
 import static software.wings.beans.Workflow.WorkflowBuilder.aWorkflow;
@@ -48,6 +47,7 @@ import org.junit.Test;
 import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import software.wings.WingsBaseTest;
+import software.wings.beans.Service;
 import software.wings.beans.ServiceTemplate;
 import software.wings.beans.ServiceVariable;
 import software.wings.beans.Variable;
@@ -184,7 +184,7 @@ public class ExpressionBuilderServiceTest extends WingsBaseTest {
              aPageRequest().withLimit(UNLIMITED).addFilter("appId", EQ, APP_ID).addFieldsIncluded("uuid").build(),
              false, false))
         .thenReturn(aPageResponse()
-                        .withResponse(asList(aService().withUuid(SERVICE_ID).withName(SERVICE_NAME).build()))
+                        .withResponse(asList(Service.builder().uuid(SERVICE_ID).name(SERVICE_NAME).build()))
                         .build());
     when(serviceVariableService.list(serviceVariablePageRequest, true)).thenReturn(serviceVariables);
     when(serviceTemplateService.list(serviceTemplatePageRequest, false, false)).thenReturn(aPageResponse().build());
@@ -344,7 +344,7 @@ public class ExpressionBuilderServiceTest extends WingsBaseTest {
              aPageRequest().withLimit(UNLIMITED).addFilter("appId", EQ, APP_ID).addFieldsIncluded("uuid").build(),
              false, false))
         .thenReturn(aPageResponse()
-                        .withResponse(asList(aService().withUuid(SERVICE_ID).withName(SERVICE_NAME).build()))
+                        .withResponse(asList(Service.builder().uuid(SERVICE_ID).name(SERVICE_NAME).build()))
                         .build());
     when(serviceTemplateService.list(serviceTemplatePageRequest, false, false)).thenReturn(aPageResponse().build());
 

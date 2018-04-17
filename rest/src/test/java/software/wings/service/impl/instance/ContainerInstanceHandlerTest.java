@@ -122,9 +122,7 @@ public class ContainerInstanceHandlerTest extends WingsBaseTest {
         .when(environmentService)
         .get(anyString(), anyString(), anyBoolean());
 
-    doReturn(Service.Builder.aService().withName(SERVICE_NAME).build())
-        .when(serviceResourceService)
-        .get(anyString(), anyString());
+    doReturn(Service.builder().name(SERVICE_NAME).build()).when(serviceResourceService).get(anyString(), anyString());
   }
 
   // 2 existing ECS instances,

@@ -22,7 +22,7 @@ import static software.wings.beans.Graph.Builder.aGraph;
 import static software.wings.beans.GraphNode.GraphNodeBuilder.aGraphNode;
 import static software.wings.beans.PhaseStep.PhaseStepBuilder.aPhaseStep;
 import static software.wings.beans.SearchFilter.Operator.EQ;
-import static software.wings.beans.Service.Builder.aService;
+import static software.wings.beans.Service.ServiceBuilder;
 import static software.wings.beans.ServiceTemplate.Builder.aServiceTemplate;
 import static software.wings.beans.Workflow.WorkflowBuilder.aWorkflow;
 import static software.wings.beans.WorkflowPhase.WorkflowPhaseBuilder.aWorkflowPhase;
@@ -46,6 +46,7 @@ import static software.wings.utils.WingsTestConstants.SERVICE_VARIABLE_ID;
 import static software.wings.utils.WingsTestConstants.TARGET_APP_ID;
 import static software.wings.utils.WingsTestConstants.WORKFLOW_NAME;
 
+import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
 import com.google.inject.Inject;
 import com.google.inject.name.Named;
@@ -80,7 +81,6 @@ import software.wings.beans.Notification;
 import software.wings.beans.PhaseStepType;
 import software.wings.beans.SearchFilter;
 import software.wings.beans.Service;
-import software.wings.beans.Service.Builder;
 import software.wings.beans.ServiceVariable;
 import software.wings.beans.Setup;
 import software.wings.beans.Setup.SetupStatus;
@@ -139,7 +139,7 @@ public class ServiceResourceServiceTest extends WingsBaseTest {
                                                                           .withAppId(APP_ID)
                                                                           .withName("START")
                                                                           .withCommand(commandBuilder.but().build());
-  private static final Builder serviceBuilder = getServiceBuilder();
+  private ServiceBuilder serviceBuilder = getServiceBuilder();
 
   PageRequest<ServiceCommand> serviceCommandPageRequest = getServiceCommandPageRequest();
 
@@ -179,14 +179,14 @@ public class ServiceResourceServiceTest extends WingsBaseTest {
 
   @Mock private UpdateOperations<Service> updateOperations;
 
-  private static Builder getServiceBuilder() {
-    return aService()
-        .withUuid(SERVICE_ID)
-        .withAppId(APP_ID)
-        .withName("SERVICE_NAME")
-        .withDescription("SERVICE_DESC")
-        .withArtifactType(JAR)
-        .withAppContainer(anAppContainer().withUuid("APP_CONTAINER_ID").build());
+  private static ServiceBuilder getServiceBuilder() {
+    return Service.builder()
+        .uuid(SERVICE_ID)
+        .appId(APP_ID)
+        .name("SERVICE_NAME")
+        .description("SERVICE_DESC")
+        .artifactType(JAR)
+        .appContainer(anAppContainer().withUuid("APP_CONTAINER_ID").build());
   }
   /**
    * Sets the up.
@@ -195,8 +195,8 @@ public class ServiceResourceServiceTest extends WingsBaseTest {
    */
   @Before
   public void setUp() throws Exception {
-    when(wingsPersistence.saveAndGet(eq(Service.class), any(Service.class))).thenReturn(serviceBuilder.but().build());
-    when(wingsPersistence.get(Service.class, APP_ID, SERVICE_ID)).thenReturn(serviceBuilder.but().build());
+    when(wingsPersistence.saveAndGet(eq(Service.class), any(Service.class))).thenReturn(serviceBuilder.build());
+    when(wingsPersistence.get(Service.class, APP_ID, SERVICE_ID)).thenReturn(serviceBuilder.build());
     when(wingsPersistence.get(ServiceCommand.class, APP_ID, SERVICE_COMMAND_ID))
         .thenReturn(serviceCommandBuilder.but().build());
     when(appService.get(TARGET_APP_ID))
@@ -258,7 +258,7 @@ public class ServiceResourceServiceTest extends WingsBaseTest {
    */
   @Test
   public void shouldSaveService() {
-    Service service = serviceBuilder.but().build();
+    Service service = serviceBuilder.build();
     doReturn(service).when(spyServiceResourceService).addCommand(any(), any(), any(), eq(true));
     Service savedService = spyServiceResourceService.save(service);
 
@@ -293,7 +293,7 @@ public class ServiceResourceServiceTest extends WingsBaseTest {
    */
   @Test
   public void shouldGetService() {
-    when(wingsPersistence.get(Service.class, APP_ID, SERVICE_ID)).thenReturn(serviceBuilder.but().build());
+    when(wingsPersistence.get(Service.class, APP_ID, SERVICE_ID)).thenReturn(serviceBuilder.build());
     when(configService.getConfigFilesForEntity(APP_ID, DEFAULT_TEMPLATE_ID, SERVICE_ID)).thenReturn(new ArrayList<>());
     srs.get(APP_ID, SERVICE_ID);
     verify(wingsPersistence).get(Service.class, APP_ID, SERVICE_ID);
@@ -302,15 +302,15 @@ public class ServiceResourceServiceTest extends WingsBaseTest {
 
   @Test
   public void shouldAddSetupSuggestionForIncompleteService() {
-    when(wingsPersistence.get(Service.class, APP_ID, SERVICE_ID)).thenReturn(serviceBuilder.but().build());
+    when(wingsPersistence.get(Service.class, APP_ID, SERVICE_ID)).thenReturn(serviceBuilder.build());
     when(configService.getConfigFilesForEntity(APP_ID, DEFAULT_TEMPLATE_ID, SERVICE_ID)).thenReturn(new ArrayList<>());
-    when(setupService.getServiceSetupStatus(serviceBuilder.but().build())).thenReturn(Setup.Builder.aSetup().build());
+    when(setupService.getServiceSetupStatus(any())).thenReturn(Setup.Builder.aSetup().build());
 
     Service service = srs.get(APP_ID, SERVICE_ID, SetupStatus.INCOMPLETE);
 
     verify(wingsPersistence).get(Service.class, APP_ID, SERVICE_ID);
     verify(configService).getConfigFilesForEntity(APP_ID, DEFAULT_TEMPLATE_ID, SERVICE_ID);
-    verify(setupService).getServiceSetupStatus(serviceBuilder.but().build());
+    verify(setupService).getServiceSetupStatus(Mockito.any(Service.class));
     assertThat(service.getSetup()).isNotNull();
   }
 
@@ -319,10 +319,10 @@ public class ServiceResourceServiceTest extends WingsBaseTest {
    */
   @Test
   public void shouldUpdateService() {
-    Service service = serviceBuilder.withName("UPDATED_SERVICE_NAME")
-                          .withDescription("UPDATED_SERVICE_DESC")
-                          .withArtifactType(WAR)
-                          .withAppContainer(anAppContainer().withUuid("UPDATED_APP_CONTAINER_ID").build())
+    Service service = serviceBuilder.name("UPDATED_SERVICE_NAME")
+                          .description("UPDATED_SERVICE_DESC")
+                          .artifactType(WAR)
+                          .appContainer(anAppContainer().withUuid("UPDATED_APP_CONTAINER_ID").build())
                           .build();
     ArgumentCaptor<Runnable> runnableCaptor = ArgumentCaptor.forClass(Runnable.class);
     when(executorService.submit(runnableCaptor.capture())).then(executeRunnable(runnableCaptor));
@@ -378,7 +378,7 @@ public class ServiceResourceServiceTest extends WingsBaseTest {
         .thenReturn(aPageResponse()
                         .withResponse(asList(WorkflowBuilder.aWorkflow()
                                                  .withName(WORKFLOW_NAME)
-                                                 .withServices(asList(aService().withUuid(SERVICE_ID).build()))
+                                                 .withServices(asList(Service.builder().uuid(SERVICE_ID).build()))
                                                  .build()))
                         .build());
     assertThatThrownBy(() -> srs.delete(APP_ID, SERVICE_ID))
@@ -427,7 +427,7 @@ public class ServiceResourceServiceTest extends WingsBaseTest {
     when(commandService.getCommand(APP_ID, "SERVICE_COMMAND_ID", 1)).thenReturn(command);
 
     Service originalService =
-        serviceBuilder.but().withCommands(asList(aServiceCommand().withUuid("SERVICE_COMMAND_ID").build())).build();
+        serviceBuilder.serviceCommands(asList(aServiceCommand().withUuid("SERVICE_COMMAND_ID").build())).build();
     when(wingsPersistence.get(Service.class, APP_ID, SERVICE_ID)).thenReturn(originalService);
 
     Service savedClonedService = originalService.cloneInternal();
@@ -456,7 +456,7 @@ public class ServiceResourceServiceTest extends WingsBaseTest {
         .thenReturn(aPageResponse().withResponse(asList(aServiceTemplate().build())).build());
 
     Service clonedService = spyServiceResourceService.clone(
-        APP_ID, SERVICE_ID, aService().withName("Clone Service").withDescription("clone description").build());
+        APP_ID, SERVICE_ID, Service.builder().name("Clone Service").description("clone description").build());
 
     assertThat(clonedService)
         .isNotNull()
@@ -491,10 +491,10 @@ public class ServiceResourceServiceTest extends WingsBaseTest {
   public void shouldThrowExceptionOnDeleteServiceStillReferencedInWorkflow() {
     when(wingsPersistence.delete(any(), any())).thenReturn(true);
     when(workflowService.listWorkflows(any(PageRequest.class)))
-        .thenReturn(
-            aPageResponse()
-                .withResponse(asList(aWorkflow().withServices(asList(aService().withUuid(SERVICE_ID).build())).build()))
-                .build());
+        .thenReturn(aPageResponse()
+                        .withResponse(asList(
+                            aWorkflow().withServices(asList(Service.builder().uuid(SERVICE_ID).build())).build()))
+                        .build());
 
     assertThatThrownBy(() -> srs.delete(APP_ID, SERVICE_ID))
         .isInstanceOf(WingsException.class)
@@ -512,6 +512,7 @@ public class ServiceResourceServiceTest extends WingsBaseTest {
   public void shouldAddCommand() {
     when(wingsPersistence.saveAndGet(eq(ServiceCommand.class), any(ServiceCommand.class))).thenAnswer(invocation -> {
       ServiceCommand command = invocation.getArgumentAt(1, ServiceCommand.class);
+      command.setServiceId(SERVICE_ID);
       command.setUuid(ID_KEY);
       return command;
     });
@@ -530,22 +531,24 @@ public class ServiceResourceServiceTest extends WingsBaseTest {
     Command expectedCommand = aCommand().withGraph(commandGraph).build();
     expectedCommand.transformGraph();
 
+    Service service = serviceBuilder.build();
+    service.getServiceCommands().add(aServiceCommand()
+                                         .withTargetToAllEnv(true)
+                                         .withAppId(APP_ID)
+                                         .withServiceId(SERVICE_ID)
+                                         .withUuid(ID_KEY)
+                                         .withDefaultVersion(1)
+                                         .withName("START")
+                                         .withCommand(expectedCommand)
+                                         .build());
+
     srs.addCommand(APP_ID, SERVICE_ID,
-        aServiceCommand().withTargetToAllEnv(true).withCommand(aCommand().withGraph(commandGraph).build()).build(),
+        aServiceCommand().withServiceId(SERVICE_ID).withTargetToAllEnv(true).withCommand(expectedCommand).build(),
         true);
 
     verify(wingsPersistence, times(2)).get(Service.class, APP_ID, SERVICE_ID);
-    verify(wingsPersistence)
-        .save(serviceBuilder.but()
-                  .addCommands(aServiceCommand()
-                                   .withTargetToAllEnv(true)
-                                   .withAppId(APP_ID)
-                                   .withUuid(ID_KEY)
-                                   .withServiceId(SERVICE_ID)
-                                   .withDefaultVersion(1)
-                                   .withName("START")
-                                   .build())
-                  .build());
+
+    verify(wingsPersistence).save(Mockito.any(Service.class));
     verify(configService).getConfigFilesForEntity(APP_ID, DEFAULT_TEMPLATE_ID, SERVICE_ID);
     verify(wingsPersistence).saveAndGet(eq(ServiceCommand.class), any(ServiceCommand.class));
   }
@@ -583,17 +586,7 @@ public class ServiceResourceServiceTest extends WingsBaseTest {
         true);
 
     verify(wingsPersistence, times(2)).get(Service.class, APP_ID, SERVICE_ID);
-    verify(wingsPersistence)
-        .save(serviceBuilder.but()
-                  .addCommands(aServiceCommand()
-                                   .withTargetToAllEnv(true)
-                                   .withAppId(APP_ID)
-                                   .withUuid(ID_KEY)
-                                   .withServiceId(SERVICE_ID)
-                                   .withDefaultVersion(1)
-                                   .withName("START")
-                                   .build())
-                  .build());
+    verify(wingsPersistence).save(Mockito.any(Service.class));
     verify(configService).getConfigFilesForEntity(APP_ID, DEFAULT_TEMPLATE_ID, SERVICE_ID);
     verify(wingsPersistence).saveAndGet(eq(ServiceCommand.class), any(ServiceCommand.class));
   }
@@ -637,15 +630,15 @@ public class ServiceResourceServiceTest extends WingsBaseTest {
     when(wingsPersistence.createQuery(ServiceCommand.class)).thenReturn(datastore.createQuery(ServiceCommand.class));
 
     when(wingsPersistence.get(Service.class, APP_ID, SERVICE_ID))
-        .thenReturn(serviceBuilder.but()
-                        .addCommands(aServiceCommand()
-                                         .withTargetToAllEnv(true)
-                                         .withUuid(ID_KEY)
-                                         .withAppId(APP_ID)
-                                         .withServiceId(SERVICE_ID)
-                                         .withDefaultVersion(1)
-                                         .withCommand(oldCommand)
-                                         .build())
+        .thenReturn(serviceBuilder
+                        .serviceCommands(asList(aServiceCommand()
+                                                    .withTargetToAllEnv(true)
+                                                    .withUuid(ID_KEY)
+                                                    .withAppId(APP_ID)
+                                                    .withServiceId(SERVICE_ID)
+                                                    .withDefaultVersion(1)
+                                                    .withCommand(oldCommand)
+                                                    .build()))
                         .build());
 
     when(entityVersionService.newEntityVersion(
@@ -723,15 +716,15 @@ public class ServiceResourceServiceTest extends WingsBaseTest {
     when(wingsPersistence.createQuery(ServiceCommand.class)).thenReturn(datastore.createQuery(ServiceCommand.class));
 
     when(wingsPersistence.get(Service.class, APP_ID, SERVICE_ID))
-        .thenReturn(serviceBuilder.but()
-                        .addCommands(aServiceCommand()
-                                         .withTargetToAllEnv(true)
-                                         .withUuid(ID_KEY)
-                                         .withAppId(APP_ID)
-                                         .withServiceId(SERVICE_ID)
-                                         .withDefaultVersion(1)
-                                         .withCommand(oldCommand)
-                                         .build())
+        .thenReturn(serviceBuilder
+                        .serviceCommands(ImmutableList.of(aServiceCommand()
+                                                              .withTargetToAllEnv(true)
+                                                              .withUuid(ID_KEY)
+                                                              .withAppId(APP_ID)
+                                                              .withServiceId(SERVICE_ID)
+                                                              .withDefaultVersion(1)
+                                                              .withCommand(oldCommand)
+                                                              .build()))
                         .build());
 
     when(entityVersionService.newEntityVersion(
@@ -806,15 +799,15 @@ public class ServiceResourceServiceTest extends WingsBaseTest {
     when(wingsPersistence.createQuery(ServiceCommand.class)).thenReturn(datastore.createQuery(ServiceCommand.class));
 
     when(wingsPersistence.get(Service.class, APP_ID, SERVICE_ID))
-        .thenReturn(serviceBuilder.but()
-                        .addCommands(aServiceCommand()
-                                         .withTargetToAllEnv(true)
-                                         .withUuid(ID_KEY)
-                                         .withAppId(APP_ID)
-                                         .withServiceId(SERVICE_ID)
-                                         .withDefaultVersion(1)
-                                         .withCommand(oldCommand)
-                                         .build())
+        .thenReturn(serviceBuilder
+                        .serviceCommands(ImmutableList.of(aServiceCommand()
+                                                              .withTargetToAllEnv(true)
+                                                              .withUuid(ID_KEY)
+                                                              .withAppId(APP_ID)
+                                                              .withServiceId(SERVICE_ID)
+                                                              .withDefaultVersion(1)
+                                                              .withCommand(oldCommand)
+                                                              .build()))
                         .build());
 
     when(entityVersionService.newEntityVersion(
@@ -900,15 +893,15 @@ public class ServiceResourceServiceTest extends WingsBaseTest {
     when(wingsPersistence.createQuery(ServiceCommand.class)).thenReturn(datastore.createQuery(ServiceCommand.class));
 
     when(wingsPersistence.get(Service.class, APP_ID, SERVICE_ID))
-        .thenReturn(serviceBuilder.but()
-                        .addCommands(aServiceCommand()
-                                         .withTargetToAllEnv(true)
-                                         .withUuid(ID_KEY)
-                                         .withAppId(APP_ID)
-                                         .withServiceId(SERVICE_ID)
-                                         .withDefaultVersion(1)
-                                         .withCommand(oldCommand)
-                                         .build())
+        .thenReturn(serviceBuilder
+                        .serviceCommands(ImmutableList.of(aServiceCommand()
+                                                              .withTargetToAllEnv(true)
+                                                              .withUuid(ID_KEY)
+                                                              .withAppId(APP_ID)
+                                                              .withServiceId(SERVICE_ID)
+                                                              .withDefaultVersion(1)
+                                                              .withCommand(oldCommand)
+                                                              .build()))
                         .build());
 
     when(entityVersionService.newEntityVersion(
@@ -993,15 +986,15 @@ public class ServiceResourceServiceTest extends WingsBaseTest {
     when(wingsPersistence.createQuery(ServiceCommand.class)).thenReturn(datastore.createQuery(ServiceCommand.class));
 
     when(wingsPersistence.get(Service.class, APP_ID, SERVICE_ID))
-        .thenReturn(serviceBuilder.but()
-                        .addCommands(aServiceCommand()
-                                         .withTargetToAllEnv(true)
-                                         .withUuid(ID_KEY)
-                                         .withAppId(APP_ID)
-                                         .withServiceId(SERVICE_ID)
-                                         .withDefaultVersion(1)
-                                         .withCommand(oldCommand)
-                                         .build())
+        .thenReturn(serviceBuilder
+                        .serviceCommands(ImmutableList.of(aServiceCommand()
+                                                              .withTargetToAllEnv(true)
+                                                              .withUuid(ID_KEY)
+                                                              .withAppId(APP_ID)
+                                                              .withServiceId(SERVICE_ID)
+                                                              .withDefaultVersion(1)
+                                                              .withCommand(oldCommand)
+                                                              .build()))
                         .build());
 
     when(entityVersionService.newEntityVersion(
@@ -1076,15 +1069,15 @@ public class ServiceResourceServiceTest extends WingsBaseTest {
     when(wingsPersistence.createQuery(ServiceCommand.class)).thenReturn(datastore.createQuery(ServiceCommand.class));
 
     when(wingsPersistence.get(Service.class, APP_ID, SERVICE_ID))
-        .thenReturn(serviceBuilder.but()
-                        .addCommands(aServiceCommand()
-                                         .withTargetToAllEnv(true)
-                                         .withUuid(ID_KEY)
-                                         .withAppId(APP_ID)
-                                         .withServiceId(SERVICE_ID)
-                                         .withDefaultVersion(1)
-                                         .withCommand(oldCommand)
-                                         .build())
+        .thenReturn(serviceBuilder
+                        .serviceCommands(ImmutableList.of(aServiceCommand()
+                                                              .withTargetToAllEnv(true)
+                                                              .withUuid(ID_KEY)
+                                                              .withAppId(APP_ID)
+                                                              .withServiceId(SERVICE_ID)
+                                                              .withDefaultVersion(1)
+                                                              .withCommand(oldCommand)
+                                                              .build()))
                         .build());
 
     when(entityVersionService.newEntityVersion(
@@ -1158,15 +1151,15 @@ public class ServiceResourceServiceTest extends WingsBaseTest {
     when(wingsPersistence.createQuery(ServiceCommand.class)).thenReturn(datastore.createQuery(ServiceCommand.class));
 
     when(wingsPersistence.get(Service.class, APP_ID, SERVICE_ID))
-        .thenReturn(serviceBuilder.but()
-                        .addCommands(aServiceCommand()
-                                         .withTargetToAllEnv(true)
-                                         .withUuid(ID_KEY)
-                                         .withAppId(APP_ID)
-                                         .withServiceId(SERVICE_ID)
-                                         .withDefaultVersion(1)
-                                         .withCommand(oldCommand)
-                                         .build())
+        .thenReturn(serviceBuilder
+                        .serviceCommands(ImmutableList.of(aServiceCommand()
+                                                              .withName("START")
+                                                              .withUuid(ID_KEY)
+                                                              .withAppId(APP_ID)
+                                                              .withServiceId(SERVICE_ID)
+                                                              .withDefaultVersion(1)
+                                                              .withCommand(oldCommand)
+                                                              .build()))
                         .build());
 
     when(entityVersionService.newEntityVersion(
@@ -1250,16 +1243,16 @@ public class ServiceResourceServiceTest extends WingsBaseTest {
     when(wingsPersistence.createQuery(Command.class)).thenReturn(datastore.createQuery(Command.class));
 
     when(wingsPersistence.get(Service.class, APP_ID, SERVICE_ID))
-        .thenReturn(serviceBuilder.but()
-                        .addCommands(aServiceCommand()
-                                         .withName("START")
-                                         .withTargetToAllEnv(true)
-                                         .withUuid(ID_KEY)
-                                         .withAppId(APP_ID)
-                                         .withServiceId(SERVICE_ID)
-                                         .withDefaultVersion(1)
-                                         .withCommand(oldCommand)
-                                         .build())
+        .thenReturn(serviceBuilder
+                        .serviceCommands(ImmutableList.of(aServiceCommand()
+                                                              .withName("START")
+                                                              .withTargetToAllEnv(true)
+                                                              .withUuid(ID_KEY)
+                                                              .withAppId(APP_ID)
+                                                              .withServiceId(SERVICE_ID)
+                                                              .withDefaultVersion(1)
+                                                              .withCommand(oldCommand)
+                                                              .build()))
                         .build());
 
     when(entityVersionService.newEntityVersion(
@@ -1377,7 +1370,7 @@ public class ServiceResourceServiceTest extends WingsBaseTest {
     when(wingsPersistence.query(ServiceCommand.class, serviceCommandPageRequest))
         .thenReturn(aPageResponse().withResponse(serviceCommands).build());
 
-    Service service = aService().withUuid(SERVICE_ID).withAppId(APP_ID).withCommands(serviceCommands).build();
+    Service service = Service.builder().uuid(SERVICE_ID).appId(APP_ID).serviceCommands(serviceCommands).build();
     when(wingsPersistence.get(Service.class, APP_ID, SERVICE_ID)).thenReturn(service);
 
     when(entityVersionService.newEntityVersion(
@@ -1456,10 +1449,10 @@ public class ServiceResourceServiceTest extends WingsBaseTest {
                         .withResponse(asList(
                             WorkflowBuilder.aWorkflow()
                                 .withName(WORKFLOW_NAME)
-                                .withServices(asList(aService()
-                                                         .withUuid(SERVICE_ID)
-                                                         .withAppId(APP_ID)
-                                                         .withCommands(asList(serviceCommand))
+                                .withServices(asList(Service.builder()
+                                                         .uuid(SERVICE_ID)
+                                                         .appId(APP_ID)
+                                                         .serviceCommands(asList(serviceCommand))
                                                          .build()))
                                 .withOrchestrationWorkflow(
                                     aCanaryOrchestrationWorkflow()
@@ -1492,10 +1485,10 @@ public class ServiceResourceServiceTest extends WingsBaseTest {
                         .withResponse(asList(
                             WorkflowBuilder.aWorkflow()
                                 .withName(WORKFLOW_NAME)
-                                .withServices(asList(aService()
-                                                         .withUuid(SERVICE_ID_CHANGED)
-                                                         .withAppId(APP_ID)
-                                                         .withCommands(asList(serviceCommand))
+                                .withServices(asList(Service.builder()
+                                                         .uuid(SERVICE_ID)
+                                                         .appId(APP_ID)
+                                                         .serviceCommands(asList(serviceCommand))
                                                          .build()))
                                 .withOrchestrationWorkflow(
                                     aCanaryOrchestrationWorkflow()
@@ -1566,19 +1559,19 @@ public class ServiceResourceServiceTest extends WingsBaseTest {
 
   private void stencilsMock() {
     when(wingsPersistence.get(eq(Service.class), anyString(), anyString()))
-        .thenReturn(serviceBuilder.but()
-                        .addCommands(aServiceCommand()
-                                         .withTargetToAllEnv(true)
-                                         .withName("START")
-                                         .withDefaultVersion(1)
-                                         .withCommand(commandBuilder.build())
-                                         .build(),
+        .thenReturn(serviceBuilder
+                        .serviceCommands(ImmutableList.of(aServiceCommand()
+                                                              .withTargetToAllEnv(true)
+                                                              .withName("START")
+                                                              .withDefaultVersion(1)
+                                                              .withCommand(commandBuilder.build())
+                                                              .build(),
                             aServiceCommand()
                                 .withDefaultVersion(1)
                                 .withTargetToAllEnv(true)
                                 .withName("START2")
                                 .withCommand(commandBuilder.but().withName("START2").build())
-                                .build())
+                                .build()))
                         .build());
 
     PageRequest<ServiceCommand> serviceCommandPageRequest = getServiceCommandPageRequest();
@@ -1606,13 +1599,13 @@ public class ServiceResourceServiceTest extends WingsBaseTest {
   @Test
   public void shouldGetCommandByName() {
     when(wingsPersistence.get(eq(Service.class), anyString(), anyString()))
-        .thenReturn(serviceBuilder.but()
-                        .addCommands(aServiceCommand()
-                                         .withTargetToAllEnv(true)
-                                         .withName("START")
-                                         .withDefaultVersion(1)
-                                         .withCommand(commandBuilder.build())
-                                         .build())
+        .thenReturn(serviceBuilder
+                        .serviceCommands(ImmutableList.of(aServiceCommand()
+                                                              .withTargetToAllEnv(true)
+                                                              .withName("START")
+                                                              .withDefaultVersion(1)
+                                                              .withCommand(commandBuilder.build())
+                                                              .build()))
                         .build());
 
     assertThat(srs.getCommandByName(APP_ID, SERVICE_ID, "START")).isNotNull();
@@ -1623,13 +1616,13 @@ public class ServiceResourceServiceTest extends WingsBaseTest {
   @Test
   public void shouldGetCommandByNameAndEnv() {
     when(wingsPersistence.get(eq(Service.class), anyString(), anyString()))
-        .thenReturn(serviceBuilder.but()
-                        .addCommands(aServiceCommand()
-                                         .withTargetToAllEnv(true)
-                                         .withName("START")
-                                         .withDefaultVersion(1)
-                                         .withCommand(commandBuilder.build())
-                                         .build())
+        .thenReturn(serviceBuilder
+                        .serviceCommands(ImmutableList.of(aServiceCommand()
+                                                              .withTargetToAllEnv(true)
+                                                              .withName("START")
+                                                              .withDefaultVersion(1)
+                                                              .withCommand(commandBuilder.build())
+                                                              .build()))
                         .build());
 
     assertThat(srs.getCommandByName(APP_ID, SERVICE_ID, ENV_ID, "START")).isNotNull();
@@ -1640,15 +1633,15 @@ public class ServiceResourceServiceTest extends WingsBaseTest {
   @Test
   public void shouldGetCommandByNameAndEnvForSpecificEnv() {
     when(wingsPersistence.get(eq(Service.class), anyString(), anyString()))
-        .thenReturn(
-            serviceBuilder.but()
-                .addCommands(aServiceCommand()
-                                 .withEnvIdVersionMap(ImmutableMap.of(ENV_ID, anEntityVersion().withVersion(2).build()))
-                                 .withName("START")
-                                 .withDefaultVersion(1)
-                                 .withCommand(commandBuilder.build())
-                                 .build())
-                .build());
+        .thenReturn(serviceBuilder
+                        .serviceCommands(ImmutableList.of(
+                            aServiceCommand()
+                                .withEnvIdVersionMap(ImmutableMap.of(ENV_ID, anEntityVersion().withVersion(2).build()))
+                                .withName("START")
+                                .withDefaultVersion(1)
+                                .withCommand(commandBuilder.build())
+                                .build()))
+                        .build());
 
     assertThat(srs.getCommandByName(APP_ID, SERVICE_ID, ENV_ID, "START")).isNotNull();
 
@@ -1713,7 +1706,7 @@ public class ServiceResourceServiceTest extends WingsBaseTest {
 
   @Test
   public void shouldUpdateContainerTaskAdvanced() {
-    datastore.save(aService().withUuid(SERVICE_ID).withAppId(APP_ID).build());
+    datastore.save(Service.builder().uuid(SERVICE_ID).appId(APP_ID).build());
     KubernetesContainerTask containerTask = new KubernetesContainerTask();
     containerTask.setAppId(APP_ID);
     containerTask.setServiceId(SERVICE_ID);

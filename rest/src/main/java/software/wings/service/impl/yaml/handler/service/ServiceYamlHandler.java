@@ -2,7 +2,6 @@ package software.wings.service.impl.yaml.handler.service;
 
 import static java.util.Collections.emptyList;
 import static java.util.stream.Collectors.toList;
-import static software.wings.beans.Service.Builder.aService;
 import static software.wings.exception.WingsException.HARMLESS;
 import static software.wings.utils.Validator.notNullCheck;
 
@@ -17,6 +16,7 @@ import software.wings.beans.AppContainer;
 import software.wings.beans.EntityType;
 import software.wings.beans.NameValuePair;
 import software.wings.beans.Service;
+import software.wings.beans.Service.ServiceBuilder;
 import software.wings.beans.Service.Yaml;
 import software.wings.beans.ServiceVariable;
 import software.wings.beans.ServiceVariable.ServiceVariableBuilder;
@@ -107,37 +107,37 @@ public class ServiceYamlHandler extends BaseYamlHandler<Yaml, Service> {
     String serviceName = yamlHelper.getServiceName(yamlFilePath);
 
     Yaml yaml = changeContext.getYaml();
-    Service.Builder currentBuilder = aService()
-                                         .withAppId(appId)
-                                         .withName(serviceName)
-                                         .withDescription(yaml.getDescription())
-                                         .withConfigMapYaml(yaml.getConfigMapYaml())
-                                         .withHelmValueYaml(yaml.getHelmValueYaml());
+
+    ServiceBuilder currentBuilder = Service.builder()
+                                        .appId(appId)
+                                        .name(serviceName)
+                                        .description(yaml.getDescription())
+                                        .configMapYaml(yaml.getConfigMapYaml())
+                                        .helmValueYaml(yaml.getHelmValueYaml());
 
     String applicationStack = yaml.getApplicationStack();
     if (StringUtils.isNotBlank(applicationStack)) {
       AppContainer appContainer = appContainerService.getByName(accountId, applicationStack);
       notNullCheck("No application stack found with the given name: " + applicationStack, appContainer, HARMLESS);
-      currentBuilder.withAppContainer(appContainer);
+      currentBuilder.appContainer(appContainer);
     }
+    Service currentService = currentBuilder.build();
+    Service previousService = get(accountId, yamlFilePath);
 
-    Service current = currentBuilder.build();
-
-    Service previous = get(accountId, yamlFilePath);
-
-    if (previous != null) {
-      current.setUuid(previous.getUuid());
-      current = serviceResourceService.update(current, true);
-      Yaml previousYaml = toYaml(previous, previous.getAppId());
-      saveOrUpdateServiceVariables(
-          previousYaml, yaml, previous.getServiceVariables(), current.getAppId(), current.getUuid());
+    if (previousService != null) {
+      currentBuilder.uuid(previousService.getUuid());
+      currentService = serviceResourceService.update(currentBuilder.build(), true);
+      Yaml previousYaml = toYaml(previousService, previousService.getAppId());
+      saveOrUpdateServiceVariables(previousYaml, yaml, previousService.getServiceVariables(), currentService.getAppId(),
+          currentService.getUuid());
     } else {
       ArtifactType artifactType = Util.getEnumFromString(ArtifactType.class, yaml.getArtifactType());
-      current.setArtifactType(artifactType);
-      current = serviceResourceService.save(current, true, serviceResourceService.hasInternalCommands(current));
-      saveOrUpdateServiceVariables(null, yaml, emptyList(), current.getAppId(), current.getUuid());
+      currentService.setArtifactType(artifactType);
+      currentService =
+          serviceResourceService.save(currentService, true, serviceResourceService.hasInternalCommands(currentService));
+      saveOrUpdateServiceVariables(null, yaml, emptyList(), currentService.getAppId(), currentService.getUuid());
     }
-    return current;
+    return currentService;
   }
 
   @Override

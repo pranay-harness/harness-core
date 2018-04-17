@@ -4,7 +4,6 @@ import static java.util.Arrays.asList;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.mockito.Mockito.when;
 import static software.wings.beans.Environment.Builder.anEnvironment;
-import static software.wings.beans.Service.Builder.aService;
 import static software.wings.beans.Setup.SetupStatus.COMPLETE;
 import static software.wings.beans.Setup.SetupStatus.INCOMPLETE;
 import static software.wings.utils.WingsTestConstants.APP_ID;
@@ -22,6 +21,7 @@ import software.wings.app.MainConfiguration;
 import software.wings.app.PortalConfig;
 import software.wings.beans.Application;
 import software.wings.beans.Application.Builder;
+import software.wings.beans.Service;
 import software.wings.beans.Setup;
 import software.wings.beans.infrastructure.Host;
 import software.wings.service.intfc.ArtifactService;
@@ -121,8 +121,10 @@ public class SetupServiceTest extends WingsBaseTest {
    */
   @Test
   public void shouldGetIncompleteStatusForApplicationWithoutEnvironment() {
-    Application application =
-        Builder.anApplication().withUuid(APP_ID).withServices(asList(aService().withUuid(SERVICE_ID).build())).build();
+    Application application = Builder.anApplication()
+                                  .withUuid(APP_ID)
+                                  .withServices(asList(Service.builder().uuid(SERVICE_ID).build()))
+                                  .build();
     Setup setupStatus = setupService.getApplicationSetupStatus(application);
     assertThat(setupStatus.getSetupStatus()).isEqualTo(INCOMPLETE);
     assertThat(setupStatus.getActions().size()).isEqualTo(1);
@@ -134,7 +136,7 @@ public class SetupServiceTest extends WingsBaseTest {
    */
   @Test
   public void shouldGetServiceSetupStatus() {
-    Setup setupStatus = setupService.getServiceSetupStatus(aService().build());
+    Setup setupStatus = setupService.getServiceSetupStatus(Service.builder().build());
     assertThat(setupStatus.getSetupStatus()).isEqualTo(COMPLETE);
     assertThat(setupStatus.getActions()).isEmpty();
   }

@@ -146,11 +146,11 @@ public abstract class BaseWorkflowYamlHandlerTest extends BaseYamlHandlerTest {
   }
 
   private Service getService() {
-    return Service.Builder.aService()
-        .withName(SERVICE_NAME)
-        .withAppId(APP_ID)
-        .withUuid(SERVICE_ID)
-        .withArtifactType(ArtifactType.DOCKER)
+    return Service.builder()
+        .name(SERVICE_NAME)
+        .appId(APP_ID)
+        .uuid(SERVICE_ID)
+        .artifactType(ArtifactType.DOCKER)
         .build();
   }
 

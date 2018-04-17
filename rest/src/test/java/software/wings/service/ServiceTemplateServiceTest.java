@@ -11,7 +11,6 @@ import static org.mockito.Mockito.when;
 import static org.mongodb.morphia.mapping.Mapper.ID_KEY;
 import static software.wings.beans.ConfigFile.DEFAULT_TEMPLATE_ID;
 import static software.wings.beans.Environment.Builder.anEnvironment;
-import static software.wings.beans.Service.Builder.aService;
 import static software.wings.beans.ServiceTemplate.Builder.aServiceTemplate;
 import static software.wings.dl.PageRequest.PageRequestBuilder.aPageRequest;
 import static software.wings.dl.PageResponse.PageResponseBuilder.aPageResponse;
@@ -91,7 +90,7 @@ public class ServiceTemplateServiceTest extends WingsBaseTest {
   @Before
   public void setUp() throws Exception {
     when(serviceResourceService.get(APP_ID, SERVICE_ID))
-        .thenReturn(aService().withAppId(APP_ID).withUuid(SERVICE_ID).withName(SERVICE_NAME).build());
+        .thenReturn(Service.builder().appId(APP_ID).uuid(SERVICE_ID).name(SERVICE_NAME).build());
     when(wingsPersistence.createQuery(ServiceTemplate.class)).thenReturn(query);
     when(query.filter(any(), any())).thenReturn(query);
   }
@@ -132,7 +131,7 @@ public class ServiceTemplateServiceTest extends WingsBaseTest {
    */
   @Test
   public void shouldCreateDefaultServiceTemplateByEnv() {
-    Service service = aService().withAppId(APP_ID).withUuid(SERVICE_ID).withName(SERVICE_NAME).build();
+    Service service = Service.builder().appId(APP_ID).uuid(SERVICE_ID).name(SERVICE_NAME).build();
     when(serviceResourceService.findServicesByApp(APP_ID)).thenReturn(asList(service));
     templateService.createDefaultTemplatesByEnv(anEnvironment().withAppId(APP_ID).withUuid(ENV_ID).build());
     verify(serviceResourceService).findServicesByApp(APP_ID);
@@ -152,7 +151,7 @@ public class ServiceTemplateServiceTest extends WingsBaseTest {
    */
   @Test
   public void shouldCreateDefaultServiceTemplateByService() {
-    Service service = aService().withAppId(APP_ID).withUuid(SERVICE_ID).withName(SERVICE_NAME).build();
+    Service service = Service.builder().appId(APP_ID).uuid(SERVICE_ID).name(SERVICE_NAME).build();
     Environment environment = Builder.anEnvironment().withAppId(APP_ID).withUuid(ENV_ID).build();
     when(environmentService.getEnvByApp(APP_ID)).thenReturn(asList(environment));
     templateService.createDefaultTemplatesByService(service);

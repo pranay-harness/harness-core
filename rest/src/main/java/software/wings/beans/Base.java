@@ -18,6 +18,7 @@ import org.mongodb.morphia.annotations.Transient;
 import software.wings.security.UserThreadLocal;
 import software.wings.utils.validation.Update;
 
+import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
@@ -80,19 +81,7 @@ public class Base implements UuidAware {
     if (createdAt == 0) {
       createdAt = currentTimeMillis();
     }
-
-    User user = UserThreadLocal.get();
-
-    EmbeddedUser embeddedUser = null;
-
-    if (user != null) {
-      embeddedUser = EmbeddedUser.builder()
-                         .uuid(UserThreadLocal.get().getUuid())
-                         .email(UserThreadLocal.get().getEmail())
-                         .name(UserThreadLocal.get().getName())
-                         .build();
-    }
-
+    EmbeddedUser embeddedUser = prepareEmbeddedUser();
     if (createdBy == null && !(this instanceof Account)) {
       createdBy = embeddedUser;
     }
@@ -107,5 +96,38 @@ public class Base implements UuidAware {
     Map shardKeys = new HashMap();
     shardKeys.put("appId", appId);
     return shardKeys;
+  }
+
+  public List<Object> generateKeywords() {
+    EmbeddedUser embeddedUser = prepareEmbeddedUser();
+    if (createdBy == null) {
+      createdBy = embeddedUser;
+    }
+    List<Object> keyWordList = new ArrayList<>();
+    if (createdBy != null) {
+      keyWordList.add(createdBy.getName());
+      keyWordList.add(createdBy.getEmail());
+    }
+
+    if (lastUpdatedBy == null) {
+      lastUpdatedBy = embeddedUser;
+    }
+    if (lastUpdatedBy != null && !lastUpdatedBy.equals(createdBy)) {
+      keyWordList.add(lastUpdatedBy.getName());
+      keyWordList.add(lastUpdatedBy.getEmail());
+    }
+    return keyWordList;
+  }
+
+  private EmbeddedUser prepareEmbeddedUser() {
+    User user = UserThreadLocal.get();
+    if (user != null) {
+      return EmbeddedUser.builder()
+          .uuid(UserThreadLocal.get().getUuid())
+          .email(UserThreadLocal.get().getEmail())
+          .name(UserThreadLocal.get().getName())
+          .build();
+    }
+    return null;
   }
 }

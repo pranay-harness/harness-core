@@ -23,7 +23,6 @@ import static software.wings.beans.Application.Builder.anApplication;
 import static software.wings.beans.DelegateTask.Builder.aDelegateTask;
 import static software.wings.beans.Environment.Builder.anEnvironment;
 import static software.wings.beans.PhysicalInfrastructureMapping.Builder.aPhysicalInfrastructureMapping;
-import static software.wings.beans.Service.Builder.aService;
 import static software.wings.beans.ServiceInstance.Builder.aServiceInstance;
 import static software.wings.beans.ServiceTemplate.Builder.aServiceTemplate;
 import static software.wings.beans.SettingAttribute.Builder.aSettingAttribute;
@@ -125,7 +124,7 @@ public class CommandStateTest extends WingsBaseTest {
   public static final String STAGING_PATH =
       "$HOME/${app.name}/${service.name}/${serviceTemplate.name}/staging/${timestampId}";
   private static final Command COMMAND = aCommand().build();
-  private static final Service SERVICE = aService().withUuid(SERVICE_ID).build();
+  private static final Service SERVICE = Service.builder().uuid(SERVICE_ID).build();
   private static final ServiceTemplate SERVICE_TEMPLATE =
       aServiceTemplate().withUuid(TEMPLATE_ID).withServiceId(SERVICE.getUuid()).build();
   private static final Host HOST =

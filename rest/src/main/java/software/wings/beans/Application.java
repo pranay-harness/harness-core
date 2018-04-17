@@ -1,5 +1,6 @@
 package software.wings.beans;
 
+import static java.util.Arrays.asList;
 import static software.wings.beans.Application.Builder.anApplication;
 
 import com.google.common.base.MoreObjects;
@@ -417,6 +418,14 @@ public class Application extends Base {
       application.setLastUpdatedAt(lastUpdatedAt);
       return application;
     }
+  }
+
+  @Override
+  public List<Object> generateKeywords() {
+    List<Object> keywords = new ArrayList<>();
+    keywords.addAll(asList(name, description));
+    keywords.addAll(super.generateKeywords());
+    return keywords;
   }
 
   @Data

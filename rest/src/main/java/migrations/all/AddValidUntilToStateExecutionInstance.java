@@ -1,6 +1,5 @@
 package migrations.all;
 
-import com.google.common.util.concurrent.TimeLimiter;
 import com.google.inject.Inject;
 
 import com.mongodb.BasicDBObject;
@@ -22,7 +21,6 @@ public class AddValidUntilToStateExecutionInstance implements Migration {
   private static final Logger logger = LoggerFactory.getLogger(AddValidUntilToStateExecutionInstance.class);
 
   @Inject private WingsPersistence wingsPersistence;
-  @Inject private TimeLimiter timeLimiter;
 
   @Override
   public void migrate() {
@@ -37,7 +35,7 @@ public class AddValidUntilToStateExecutionInstance implements Migration {
             .fetch();
 
     int i = 1;
-    try (DBCursor cursor = stateExecutionInstances.getCursor()) {
+    try (DBCursor ignored = stateExecutionInstances.getCursor()) {
       while (stateExecutionInstances.hasNext()) {
         final StateExecutionInstance stateExecutionInstance = stateExecutionInstances.next();
         final ZonedDateTime zonedDateTime =

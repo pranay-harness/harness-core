@@ -4,6 +4,7 @@
 
 package software.wings.beans;
 
+import static java.util.Arrays.asList;
 import static software.wings.beans.Pipeline.Builder.aPipeline;
 
 import com.google.common.base.MoreObjects;
@@ -433,6 +434,13 @@ public class Pipeline extends Base {
     }
   }
 
+  @Override
+  public List<Object> generateKeywords() {
+    List<Object> keywords = new ArrayList<>();
+    keywords.addAll(asList(name, description));
+    keywords.addAll(super.generateKeywords());
+    return keywords;
+  }
   @Data
   @EqualsAndHashCode(callSuper = true)
   @NoArgsConstructor

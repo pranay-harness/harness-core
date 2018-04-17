@@ -13,7 +13,6 @@ import static org.mongodb.morphia.mapping.Mapper.ID_KEY;
 import static software.wings.api.InstanceElement.Builder.anInstanceElement;
 import static software.wings.beans.Application.Builder.anApplication;
 import static software.wings.beans.Environment.Builder.anEnvironment;
-import static software.wings.beans.Service.Builder.aService;
 import static software.wings.beans.ServiceInstance.Builder.aServiceInstance;
 import static software.wings.beans.ServiceTemplate.Builder.aServiceTemplate;
 import static software.wings.beans.SettingAttribute.Builder.aSettingAttribute;
@@ -167,7 +166,7 @@ public class InstanceExpressionProcessorTest extends WingsBaseTest {
     when(serviceTemplateServiceMock.get(anyString(), anyString(), anyString(), anyBoolean(), anyBoolean()))
         .thenReturn(SERVICE_TEMPLATE);
     when(serviceResourceServiceMock.get(anyString(), anyString()))
-        .thenReturn(aService().withUuid("uuid1").withName("svc1").build());
+        .thenReturn(Service.builder().uuid("uuid1").name("svc1").build());
 
     instances.forEach(instance
         -> when(hostService.getHostByEnv(anyString(), anyString(), eq(instance.getHostId())))
@@ -356,7 +355,7 @@ public class InstanceExpressionProcessorTest extends WingsBaseTest {
     app = appService.save(app);
     Environment env = wingsPersistence.saveAndGet(
         Environment.class, anEnvironment().withAppId(app.getUuid()).withName("DEV").build());
-    Service service = wingsPersistence.saveAndGet(Service.class, aService().withName("svc1").build());
+    Service service = wingsPersistence.saveAndGet(Service.class, Service.builder().name("svc1").build());
 
     ServiceTemplate serviceTemplate = serviceTemplateService.save(aServiceTemplate()
                                                                       .withAppId(app.getUuid())
@@ -402,7 +401,7 @@ public class InstanceExpressionProcessorTest extends WingsBaseTest {
     when(serviceTemplateServiceMock.get(app.getAppId(), env.getUuid(), serviceTemplate.getUuid(), false, false))
         .thenReturn(serviceTemplate);
     when(serviceResourceServiceMock.get(anyString(), anyString()))
-        .thenReturn(aService().withUuid("uuid1").withName("svc1").build());
+        .thenReturn(Service.builder().uuid("uuid1").name("svc1").build());
 
     instances.forEach(instance
         -> when(hostService.getHostByEnv(anyString(), anyString(), eq(instance.getHostId())))
@@ -433,7 +432,7 @@ public class InstanceExpressionProcessorTest extends WingsBaseTest {
         Host.class, aHost().withAppId(app.getAppId()).withEnvId(env.getUuid()).withHostName("host1").build());
 
     Service service = wingsPersistence.saveAndGet(
-        Service.class, aService().withAppId(app.getAppId()).withUuid(generateUuid()).withName("svc1").build());
+        Service.class, Service.builder().appId(app.getAppId()).uuid(generateUuid()).name("svc1").build());
     ServiceTemplate serviceTemplate = serviceTemplateService.save(aServiceTemplate()
                                                                       .withAppId(app.getUuid())
                                                                       .withEnvId(env.getUuid())

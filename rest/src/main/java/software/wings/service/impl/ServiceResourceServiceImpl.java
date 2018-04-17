@@ -182,7 +182,7 @@ public class ServiceResourceServiceImpl implements ServiceResourceService, DataP
 
   @Override
   public Service save(Service service, boolean createdFromYaml, boolean createDefaultCommands) {
-    service.setKeywords(getKeywords(service));
+    setKeyWords(service);
     Service savedService =
         Validator.duplicateCheck(() -> wingsPersistence.saveAndGet(Service.class, service), "name", service.getName());
     if (createDefaultCommands) {
@@ -211,7 +211,7 @@ public class ServiceResourceServiceImpl implements ServiceResourceService, DataP
     Service clonedService = originalService.cloneInternal();
     clonedService.setName(service.getName());
     clonedService.setDescription(service.getDescription());
-    clonedService.setKeywords(getKeywords(clonedService));
+    setKeyWords(clonedService);
     Service savedCloneService = Validator.duplicateCheck(
         () -> wingsPersistence.saveAndGet(Service.class, clonedService), "name", service.getName());
 
@@ -258,6 +258,10 @@ public class ServiceResourceServiceImpl implements ServiceResourceService, DataP
       serviceVariableService.save(clonedServiceVariable);
     });
     return savedCloneService;
+  }
+
+  private void setKeyWords(Service clonedService) {
+    clonedService.setKeywords(trimList(clonedService.generateKeywords()));
   }
 
   @Override
@@ -366,7 +370,7 @@ public class ServiceResourceServiceImpl implements ServiceResourceService, DataP
     Service savedService = get(service.getAppId(), service.getUuid(), false);
     Validator.notNullCheck("Service", savedService);
 
-    List<String> keywords = getKeywords(service);
+    List<String> keywords = trimList(service.generateKeywords());
     UpdateOperations<Service> updateOperations =
         wingsPersistence.createUpdateOperations(Service.class)
             .set("name", service.getName().trim())
@@ -1266,24 +1270,14 @@ public class ServiceResourceServiceImpl implements ServiceResourceService, DataP
     }
     return false;
   }
-  private List<String> getKeywords(Service service) {
-    List<Object> keywords = asList(service.getName(), service.getDescription(), service.getArtifactType());
-    if (service.getCreatedBy() != null) {
-      keywords.add(service.getCreatedBy().getName());
-      keywords.add(service.getCreatedBy().getEmail());
-    }
-    if (service.getLastUpdatedBy() != null) {
-      keywords.add(service.getLastUpdatedBy().getName());
-      keywords.add(service.getLastUpdatedBy().getEmail());
-    }
-    return trimList(keywords);
-  }
 
   public void setArtifactStreams(List<Service> services) {
     List<String> serviceIds = services.stream().map(service -> service.getUuid()).collect(toList());
     final MorphiaIterator<ArtifactStream, ArtifactStream> iterator =
         wingsPersistence.createQuery(ArtifactStream.class).field("serviceId").in(serviceIds).fetch();
+
     ArrayListMultimap<String, ArtifactStream> serviceToArtifactStreamMap = ArrayListMultimap.create();
+
     try (DBCursor ignored = iterator.getCursor()) {
       while (iterator.hasNext()) {
         ArtifactStream artifactStream = iterator.next();

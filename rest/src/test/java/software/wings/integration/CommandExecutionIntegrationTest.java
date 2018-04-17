@@ -5,7 +5,6 @@ import static org.assertj.core.api.Assertions.assertThat;
 import static software.wings.beans.HostConnectionAttributes.AccessType.USER_PASSWORD;
 import static software.wings.beans.HostConnectionAttributes.Builder.aHostConnectionAttributes;
 import static software.wings.beans.SSHExecutionCredential.Builder.aSSHExecutionCredential;
-import static software.wings.beans.Service.Builder.aService;
 import static software.wings.beans.ServiceInstance.Builder.aServiceInstance;
 import static software.wings.beans.ServiceTemplate.Builder.aServiceTemplate;
 import static software.wings.beans.SettingAttribute.Builder.aSettingAttribute;
@@ -21,7 +20,6 @@ import static software.wings.utils.WingsTestConstants.ACTIVITY_ID;
 import static software.wings.utils.WingsTestConstants.APP_ID;
 import static software.wings.utils.WingsTestConstants.ENV_ID;
 import static software.wings.utils.WingsTestConstants.SERVICE_ID;
-import static software.wings.utils.WingsTestConstants.SERVICE_NAME;
 import static software.wings.utils.WingsTestConstants.TEMPLATE_ID;
 import static software.wings.utils.WingsTestConstants.TEMPLATE_NAME;
 
@@ -32,7 +30,6 @@ import org.junit.Ignore;
 import org.junit.Test;
 import software.wings.WingsBaseTest;
 import software.wings.beans.AppContainer;
-import software.wings.beans.Service;
 import software.wings.beans.ServiceInstance;
 import software.wings.beans.ServiceTemplate;
 import software.wings.beans.SettingAttribute;
@@ -69,7 +66,6 @@ public class CommandExecutionIntegrationTest extends WingsBaseTest {
                                        .withHostName(HOST_NAME)
                                        .withHostConnAttr(HOST_CONN_ATTR_PWD.getUuid())
                                        .build();
-  private static final Service SERVICE = aService().withUuid(SERVICE_ID).withName(SERVICE_NAME).build();
   private static final ServiceTemplate SERVICE_TEMPLATE =
       aServiceTemplate().withUuid(TEMPLATE_ID).withName(TEMPLATE_NAME).withServiceId(SERVICE_ID).build();
   /**

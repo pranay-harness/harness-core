@@ -3,7 +3,6 @@ package software.wings.service;
 import static java.util.Arrays.asList;
 import static org.assertj.core.api.Assertions.assertThat;
 import static software.wings.beans.Application.Builder.anApplication;
-import static software.wings.beans.Service.Builder.aService;
 import static software.wings.utils.WingsTestConstants.APP_ID;
 import static software.wings.utils.WingsTestConstants.SERVICE_ID;
 
@@ -15,6 +14,7 @@ import org.junit.Test;
 import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import software.wings.WingsBaseTest;
+import software.wings.beans.Service;
 import software.wings.beans.artifact.ArtifactStream;
 import software.wings.beans.artifact.JenkinsArtifactStream;
 import software.wings.dl.PageRequest;
@@ -48,7 +48,7 @@ public class ArtifactStreamResourceServiceTest extends WingsBaseTest {
   @Before
   public void setUp() {
     wingsRule.getDatastore().save(anApplication().withUuid(APP_ID).build());
-    wingsRule.getDatastore().save(aService().withUuid(SERVICE_ID).withAppId(APP_ID).withAppId(APP_ID).build());
+    wingsRule.getDatastore().save(Service.builder().uuid(SERVICE_ID).appId(APP_ID).build());
   }
 
   /**
