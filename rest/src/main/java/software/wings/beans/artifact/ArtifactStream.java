@@ -1,5 +1,13 @@
 package software.wings.beans.artifact;
 
+import static java.util.Arrays.asList;
+import static software.wings.beans.artifact.ArtifactStreamType.ACR;
+import static software.wings.beans.artifact.ArtifactStreamType.AMAZON_S3;
+import static software.wings.beans.artifact.ArtifactStreamType.AMI;
+import static software.wings.beans.artifact.ArtifactStreamType.DOCKER;
+import static software.wings.beans.artifact.ArtifactStreamType.ECR;
+import static software.wings.beans.artifact.ArtifactStreamType.GCR;
+
 import com.fasterxml.jackson.annotation.JsonTypeInfo;
 import lombok.AllArgsConstructor;
 import lombok.Data;
@@ -34,6 +42,12 @@ import java.util.List;
 @AllArgsConstructor
 public abstract class ArtifactStream extends Base {
   protected static final DateFormat dateFormat = new SimpleDateFormat("HHMMSS");
+
+  public static final String ARTIFACT_STREAM_TYPE_KEY = "artifactStreamType";
+  public static final String METADATA_ONLY_KEY = "metadataOnly";
+
+  public static final List<String> metaDataOnlyStreams =
+      asList(DOCKER.name(), ECR.name(), GCR.name(), ACR.name(), AMI.name(), AMAZON_S3.name());
 
   private String artifactStreamType;
   private String sourceName;
