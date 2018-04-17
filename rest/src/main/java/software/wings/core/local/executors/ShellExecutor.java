@@ -23,15 +23,28 @@ import java.io.File;
 import java.io.FileOutputStream;
 import java.io.IOException;
 import java.nio.charset.StandardCharsets;
+import java.nio.file.FileVisitResult;
 import java.nio.file.Files;
+import java.nio.file.Path;
 import java.nio.file.Paths;
+import java.nio.file.SimpleFileVisitor;
+import java.nio.file.attribute.BasicFileAttributes;
 
 public class ShellExecutor {
   private DelegateLogService logService;
   private ShellExecutorConfig config;
   private ScriptType scriptType;
 
-  private static final File defaultWorkingDirectory = new File(System.getProperty("java.io.tmpdir"));
+  private static final String defaultParentWorkingDirectory = "./local-scripts/";
+  static {
+    try {
+      if (!Files.exists(Paths.get(defaultParentWorkingDirectory))) {
+        Files.createDirectory(Paths.get(defaultParentWorkingDirectory));
+      }
+    } catch (IOException e) {
+      throw new RuntimeException("Failed to create local-scripts directory", e);
+    }
+  }
 
   ShellExecutor(DelegateLogService logService, ShellExecutorConfig config, ScriptType scriptType) {
     this.logService = logService;
@@ -70,8 +83,15 @@ public class ShellExecutor {
 
   private CommandExecutionStatus executeBashScript(String command) throws IOException {
     CommandExecutionStatus commandExecutionStatus = FAILURE;
-    File workingDirectory =
-        isEmpty(config.getWorkingDirectory()) ? defaultWorkingDirectory : new File(config.getWorkingDirectory());
+    File workingDirectory;
+
+    if (isEmpty(config.getWorkingDirectory())) {
+      String directoryPath = defaultParentWorkingDirectory + config.getExecutionId();
+      Files.createDirectory(Paths.get(directoryPath));
+      workingDirectory = new File(directoryPath);
+    } else {
+      workingDirectory = new File(config.getWorkingDirectory());
+    }
 
     String scriptFilename = "harness" + this.config.getExecutionId() + ".sh";
     File scriptFile = new File(workingDirectory, scriptFilename);
@@ -105,17 +125,40 @@ public class ShellExecutor {
     } catch (Exception e) {
       saveExecutionLog(format("Exception: %s", e), ERROR, commandExecutionStatus);
     } finally {
-      Files.deleteIfExists(Paths.get(scriptFile.getAbsolutePath()));
+      if (isEmpty(config.getWorkingDirectory())) {
+        deleteFolderAndItsContent(Paths.get(workingDirectory.getAbsolutePath()));
+      } else {
+        Files.deleteIfExists(Paths.get(scriptFile.getAbsolutePath()));
+      }
     }
 
     return commandExecutionStatus;
   }
 
+  private static void deleteFolderAndItsContent(final Path folder) throws IOException {
+    Files.walkFileTree(folder, new SimpleFileVisitor<Path>() {
+      @Override
+      public FileVisitResult visitFile(Path file, BasicFileAttributes attrs) throws IOException {
+        Files.delete(file);
+        return FileVisitResult.CONTINUE;
+      }
+
+      @Override
+      public FileVisitResult postVisitDirectory(Path dir, IOException exc) throws IOException {
+        if (exc != null) {
+          throw exc;
+        }
+        Files.delete(dir);
+        return FileVisitResult.CONTINUE;
+      }
+    });
+  }
+
   private CommandExecutionStatus executePowerShellScript(String command) {
     CommandExecutionStatus commandExecutionStatus = FAILURE;
 
-    File workingDirectory =
-        isEmpty(config.getWorkingDirectory()) ? defaultWorkingDirectory : new File(config.getWorkingDirectory());
+    File workingDirectory = isEmpty(config.getWorkingDirectory()) ? new File(defaultParentWorkingDirectory)
+                                                                  : new File(config.getWorkingDirectory());
 
     String[] commandList = new String[] {"Powershell", "-c", psWrappedCommand(command)};
     try {
