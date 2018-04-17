@@ -92,7 +92,7 @@ software.wings.beans.command.ResizeCommandUnitExecutionData, 5053
 software.wings.beans.command.ScpCommandUnit, 5054
 software.wings.beans.command.ScpCommandUnit$ScpFileCategory, 5055
 software.wings.beans.command.SetupEnvCommandUnit, 5056
-#software.wings.beans.command.SshCommandExecutionContext, 5057
+# Retired: 5057
 software.wings.beans.command.SshCommandUnit, 5058
 software.wings.beans.command.TailFilePatternEntry, 5059
 software.wings.beans.Graph, 5060
@@ -194,7 +194,7 @@ software.wings.api.ContainerServiceData, 5157
 software.wings.beans.command.EcsSetupCommandUnit, 5158
 software.wings.beans.command.EcsSetupParams, 5159
 software.wings.beans.container.EcsContainerTask, 5160
-#software.wings.beans.container.ContainerTask$AdvancedType, 5161
+# Retired: 5161
 software.wings.beans.container.ContainerDefinition, 5162
 software.wings.beans.container.LogConfiguration, 5163
 software.wings.beans.container.StorageConfiguration, 5164
@@ -278,7 +278,7 @@ software.wings.beans.AzureConfig, 5242
 software.wings.service.impl.newrelic.NewRelicMarkerExecutionData, 5243
 software.wings.beans.KubernetesClusterConfig, 5244
 software.wings.service.impl.analysis.ElkValidationType, 5245
-java.lang.NoSuchMethodException, 5246
+# Retired: 5246
 software.wings.settings.UsageRestrictions, 5247
 software.wings.settings.UsageRestrictions$AppEnvRestriction, 5248
 software.wings.security.GenericEntityFilter, 5249
