@@ -1,9 +1,7 @@
 package software.wings.sm.states;
 
 import static io.harness.data.structure.EmptyPredicate.isNotEmpty;
-import static io.harness.govern.Switch.unhandled;
 import static java.util.stream.Collectors.toList;
-import static org.apache.commons.lang3.StringUtils.isBlank;
 import static org.apache.commons.lang3.StringUtils.isNotBlank;
 import static software.wings.beans.ResizeStrategy.RESIZE_NEW_FIRST;
 import static software.wings.beans.command.KubernetesSetupParams.KubernetesSetupParamsBuilder.aKubernetesSetupParams;
@@ -162,19 +160,8 @@ public class KubernetesSetup extends ContainerServiceSetup {
       resourceGroup = ((AzureKubernetesInfrastructureMapping) infrastructureMapping).getResourceGroup();
     }
 
-    String namespace = null;
-    if (infrastructureMapping instanceof GcpKubernetesInfrastructureMapping) {
-      namespace = ((GcpKubernetesInfrastructureMapping) infrastructureMapping).getNamespace();
-    } else if (infrastructureMapping instanceof AzureKubernetesInfrastructureMapping) {
-      namespace = ((AzureKubernetesInfrastructureMapping) infrastructureMapping).getNamespace();
-    } else if (infrastructureMapping instanceof DirectKubernetesInfrastructureMapping) {
-      namespace = ((DirectKubernetesInfrastructureMapping) infrastructureMapping).getNamespace();
-    } else {
-      unhandled(infrastructureMapping.getInfraMappingType());
-    }
-    if (isBlank(namespace)) {
-      namespace = "default";
-    }
+    String namespace =
+        isNotBlank(infrastructureMapping.getNamespace()) ? infrastructureMapping.getNamespace() : "default";
 
     String serviceYamlEvaluated = null;
     if (serviceType == KubernetesServiceType.Yaml && isNotBlank(serviceYaml)) {

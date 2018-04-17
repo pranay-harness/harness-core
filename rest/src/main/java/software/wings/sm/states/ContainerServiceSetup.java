@@ -87,7 +87,7 @@ public abstract class ContainerServiceSetup extends State {
 
   private String desiredInstanceCount;
   private String fixedInstances;
-  private String maxInstances; // Named minimum in the UI
+  private String maxInstances; // Number for first time when using "Same as already running" in the UI
   private ResizeStrategy resizeStrategy;
   private int serviceSteadyStateTimeout; // Minutes
   @Inject @Transient protected transient SettingsService settingsService;
@@ -132,7 +132,7 @@ public abstract class ContainerServiceSetup extends State {
 
       InfrastructureMapping infrastructureMapping =
           infrastructureMappingService.get(app.getUuid(), phaseElement.getInfraMappingId());
-      if (infrastructureMapping == null || !(infrastructureMapping instanceof ContainerInfrastructureMapping)
+      if (!(infrastructureMapping instanceof ContainerInfrastructureMapping)
           || !isValidInfraMapping(infrastructureMapping)) {
         throw new WingsException(ErrorCode.INVALID_REQUEST).addParam("message", "Invalid infrastructure type");
       }
