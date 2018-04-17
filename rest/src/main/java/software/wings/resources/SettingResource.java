@@ -7,6 +7,7 @@ import static software.wings.beans.Base.GLOBAL_APP_ID;
 import static software.wings.beans.SearchFilter.Operator.EQ;
 import static software.wings.beans.SearchFilter.Operator.IN;
 import static software.wings.beans.SettingAttribute.Builder.aSettingAttribute;
+import static software.wings.common.Constants.GIT_USER;
 import static software.wings.service.impl.security.SecretManagerImpl.ENCRYPTED_FIELD_MASK;
 import static software.wings.settings.SettingValue.SettingVariableTypes.GCP;
 
@@ -21,6 +22,7 @@ import org.glassfish.jersey.media.multipart.FormDataParam;
 import software.wings.annotation.Encryptable;
 import software.wings.beans.ErrorCode;
 import software.wings.beans.GcpConfig;
+import software.wings.beans.HostConnectionAttributes;
 import software.wings.beans.RestResponse;
 import software.wings.beans.SettingAttribute;
 import software.wings.beans.SettingAttribute.Category;
@@ -39,6 +41,7 @@ import java.io.IOException;
 import java.io.InputStream;
 import java.nio.charset.Charset;
 import java.util.List;
+import java.util.stream.Collectors;
 import javax.ws.rs.BeanParam;
 import javax.ws.rs.Consumes;
 import javax.ws.rs.DELETE;
@@ -77,14 +80,29 @@ public class SettingResource {
   public RestResponse<PageResponse<SettingAttribute>> list(
       @DefaultValue(GLOBAL_APP_ID) @QueryParam("appId") String appId, @QueryParam("accountId") String accountId,
       @QueryParam("type") List<SettingVariableTypes> settingVariableTypes,
-      @BeanParam PageRequest<SettingAttribute> pageRequest) {
+      @QueryParam("gitSshConfigOnly") boolean gitSshConfigOnly, @BeanParam PageRequest<SettingAttribute> pageRequest) {
+    pageRequest.addFilter("appId", EQ, appId);
     if (isNotEmpty(settingVariableTypes)) {
       pageRequest.addFilter("value.type", IN, settingVariableTypes.toArray());
     }
-    pageRequest.addFilter("appId", EQ, appId);
+
+    if (gitSshConfigOnly) {
+      pageRequest.addFilter("accountId", EQ, accountId);
+      pageRequest.addFilter("value.type", EQ, SettingVariableTypes.HOST_CONNECTION_ATTRIBUTES.name());
+    }
 
     PageResponse<SettingAttribute> result = attributeService.list(pageRequest);
-    result.stream().forEach(settingAttribute -> maskEncryptedFields(settingAttribute));
+
+    if (gitSshConfigOnly) {
+      List<SettingAttribute> filteredResponse =
+          result.stream()
+              .filter(settingAttribute
+                  -> GIT_USER.equals(((HostConnectionAttributes) settingAttribute.getValue()).getUserName()))
+              .collect(Collectors.toList());
+      result.setResponse(filteredResponse);
+    }
+
+    result.forEach(this ::maskEncryptedFields);
     return new RestResponse<>(result);
   }
 

@@ -38,7 +38,7 @@ import javax.validation.constraints.NotNull;
 public class YamlGitConfig extends Base implements Encryptable {
   @NotEmpty private String url;
   @NotEmpty private String branchName;
-  @NotEmpty private String username;
+  private String username;
 
   @Encrypted @JsonView(JsonViews.Internal.class) private char[] password;
   private String sshSettingId;

@@ -33,9 +33,9 @@ public class GitConfig extends SettingValue implements Encryptable {
   @SchemaIgnore @NotEmpty private String accountId;
 
   @JsonView(JsonViews.Internal.class) @SchemaIgnore private String encryptedPassword;
-  private String sshSettingId;
-  @Transient private SettingAttribute sshSettingAttribute;
-  private boolean keyAuth;
+  @SchemaIgnore private String sshSettingId;
+  @SchemaIgnore @Transient private SettingAttribute sshSettingAttribute;
+  @SchemaIgnore private boolean keyAuth;
 
   @SchemaIgnore @Transient private GitRepositoryType gitRepoType;
 
