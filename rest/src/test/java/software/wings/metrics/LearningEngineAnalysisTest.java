@@ -9,7 +9,6 @@ import static software.wings.service.impl.newrelic.LearningEngineAnalysisTask.TI
 import com.google.inject.Inject;
 
 import org.junit.After;
-import org.junit.Assert;
 import org.junit.Before;
 import org.junit.Ignore;
 import org.junit.Test;
@@ -18,7 +17,6 @@ import software.wings.beans.ServiceSecretKey;
 import software.wings.beans.ServiceSecretKey.ServiceApiVersion;
 import software.wings.beans.ServiceSecretKey.ServiceType;
 import software.wings.dl.WingsPersistence;
-import software.wings.exception.WingsException;
 import software.wings.service.impl.newrelic.LearningEngineAnalysisTask;
 import software.wings.service.impl.newrelic.LearningEngineExperimentalAnalysisTask;
 import software.wings.service.intfc.LearningEngineService;
@@ -129,12 +127,7 @@ public class LearningEngineAnalysisTest extends WingsBaseTest {
             .executionStatus(ExecutionStatus.QUEUED)
             .analysis_minute((int) (TimeUnit.MILLISECONDS.toMinutes(TIME_SERIES_ANALYSIS_TASK_TIME_OUT)))
             .build();
-    try {
-      learningEngineService.addLearningEngineAnalysisTask(learningEngineAnalysisTask);
-      Assert.fail("Was able to add a task wrongly");
-    } catch (WingsException e) {
-      // expected
-    }
+    assertFalse(learningEngineService.addLearningEngineAnalysisTask(learningEngineAnalysisTask));
   }
 
   @Test
