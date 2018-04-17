@@ -111,6 +111,11 @@ import software.wings.generator.ServiceTemplateGenerator;
 import software.wings.generator.WorkflowGenerator;
 import software.wings.generator.WorkflowGenerator.PostProcessInfo;
 import software.wings.helpers.ext.mail.SmtpConfig;
+import software.wings.integration.setup.rest.AppResourceRestClient;
+import software.wings.integration.setup.rest.EnvResourceRestClient;
+import software.wings.integration.setup.rest.ServiceResourceRestClient;
+import software.wings.integration.setup.rest.SettingsResourceRestClient;
+import software.wings.integration.setup.rest.WorkflowResourceRestClient;
 import software.wings.rules.SetupScheduler;
 import software.wings.service.intfc.AccountService;
 import software.wings.service.intfc.EnvironmentService;
@@ -190,6 +195,12 @@ public class DataGenUtil extends BaseIntegrationTest {
   @Inject private ServiceGenerator serviceGenerator;
   @Inject private ServiceTemplateGenerator serviceTemplateGenerator;
   @Inject private WorkflowGenerator workflowGenerator;
+  @Inject private AppResourceRestClient appResourceRestClient;
+  @Inject private ServiceResourceRestClient serviceResourceRestClient;
+  @Inject private SettingsResourceRestClient settingsResourceRestClient;
+  @Inject private EnvResourceRestClient envResourceRestClient;
+  @Inject private WorkflowResourceRestClient workflowResourceRestClient;
+  @Inject private UserResourceRestClient userResourceRestClient;
 
   /**
    * Generated Data for across the API use.
@@ -239,6 +250,19 @@ public class DataGenUtil extends BaseIntegrationTest {
     learningEngineService.initializeServiceSecretKeys();
 
     createTestApplication(account);
+    createSeedEntries();
+  }
+
+  private void createSeedEntries() {
+    userResourceRestClient.getUserToken(client);
+    appResourceRestClient.getSeedApplication(client);
+    serviceResourceRestClient.getSeedWarService(client);
+    serviceResourceRestClient.getSeedDockerService(client);
+    settingsResourceRestClient.seedDataCenter(client);
+    settingsResourceRestClient.seedSshKey(client);
+    envResourceRestClient.getSeedEnvironment(client);
+    envResourceRestClient.getSeedFakeHostsDcInfra(client);
+    workflowResourceRestClient.getSeedBasicWorkflow(client);
   }
 
   protected void dropDBAndEnsureIndexes() throws IOException, ClassNotFoundException {
