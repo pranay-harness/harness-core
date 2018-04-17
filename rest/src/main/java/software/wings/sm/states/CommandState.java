@@ -236,7 +236,7 @@ public class CommandState extends State {
 
       if (command == null) {
         throw new StateExecutionException(
-            String.format("Unable to find command %s for service %s", actualCommand, service.getName()));
+            String.format("Unable to find command %s for service %s", actualCommand, service.getUuid()));
       }
 
       command.setGraph(null);
