@@ -66,11 +66,27 @@ public class LogzAnalysisState extends ElkAnalysisState {
     int i = 0;
     for (Set<String> hostBatch : batchedHosts) {
       final LogzDataCollectionInfo dataCollectionInfo =
-          new LogzDataCollectionInfo(logzConfig, appService.get(context.getAppId()).getAccountId(), context.getAppId(),
-              context.getStateExecutionInstanceId(), getWorkflowId(context), context.getWorkflowExecutionId(),
-              getPhaseServiceId(context), queries, hostnameField, messageField, DEFAULT_TIME_FIELD, DEFAULT_TIME_FORMAT,
-              logCollectionStartTimeStamp, 0, Integer.parseInt(timeDuration), hostBatch,
-              secretManager.getEncryptionDetails(logzConfig, context.getAppId(), context.getWorkflowExecutionId()));
+          LogzDataCollectionInfo.builder()
+              .logzConfig(logzConfig)
+              .accountId(appService.get(context.getAppId()).getAccountId())
+              .applicationId(context.getAppId())
+              .stateExecutionId(context.getStateExecutionInstanceId())
+              .workflowId(getWorkflowId(context))
+              .workflowExecutionId(context.getWorkflowExecutionId())
+              .serviceId(getPhaseServiceId(context))
+              .queries(queries)
+              .hostnameField(hostnameField)
+              .messageField(messageField)
+              .timestampField(DEFAULT_TIME_FIELD)
+              .timestampFieldFormat(DEFAULT_TIME_FORMAT)
+              .startTime(logCollectionStartTimeStamp)
+              .startMinute(0)
+              .collectionTime(Integer.parseInt(timeDuration))
+              .hosts(hostBatch)
+              .encryptedDataDetails(
+                  secretManager.getEncryptionDetails(logzConfig, context.getAppId(), context.getWorkflowExecutionId()))
+              .build();
+
       String waitId = generateUuid();
       delegateTasks.add(aDelegateTask()
                             .withTaskType(TaskType.LOGZ_COLLECT_LOG_DATA)

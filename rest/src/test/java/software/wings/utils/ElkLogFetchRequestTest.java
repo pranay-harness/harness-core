@@ -3,6 +3,7 @@ package software.wings.utils;
 import org.json.JSONObject;
 import org.junit.Test;
 import software.wings.service.impl.elk.ElkLogFetchRequest;
+import software.wings.service.impl.elk.ElkQueryType;
 
 import java.util.ArrayList;
 import java.util.HashMap;
@@ -26,8 +27,17 @@ public class ElkLogFetchRequestTest {
     long startTime = System.currentTimeMillis();
     long endTime = startTime + TimeUnit.HOURS.toMillis(34);
 
-    ElkLogFetchRequest elkLogFetchRequest =
-        new ElkLogFetchRequest(query, null, "beat.hostaname", "message", "", hosts, startTime, endTime);
+    ElkLogFetchRequest elkLogFetchRequest = ElkLogFetchRequest.builder()
+                                                .query(query)
+                                                .indices(null)
+                                                .hostnameField("beat.hostname")
+                                                .messageField("message")
+                                                .timestampField("")
+                                                .hosts(hosts)
+                                                .startTime(startTime)
+                                                .endTime(endTime)
+                                                .queryType(ElkQueryType.TERM)
+                                                .build();
 
     List<JSONObject> hostJsonObjects = new ArrayList<>();
     for (String host : hosts) {
@@ -52,7 +62,7 @@ public class ElkLogFetchRequestTest {
 
     String expectedJson = new JSONObject().put("query", new JSONObject().put("bool", mustArrayObjects)).toString();
 
-    // Assert.assertEquals(expectedJson, JsonUtils.asJson(elkLogFetchRequest.toElasticSearchJsonObject()));
+    //    assertEquals(expectedJson, JsonUtils.asJson(elkLogFetchRequest.toElasticSearchJsonObject()));
   }
 
   @Test
@@ -65,12 +75,21 @@ public class ElkLogFetchRequestTest {
     long startTime = System.currentTimeMillis();
     long endTime = startTime + TimeUnit.HOURS.toMillis(34);
 
-    ElkLogFetchRequest elkLogFetchRequest =
-        new ElkLogFetchRequest(query, indices, "beat.hostname", "message", "", hosts, startTime, endTime);
+    ElkLogFetchRequest elkLogFetchRequest = ElkLogFetchRequest.builder()
+                                                .query(query)
+                                                .indices(indices)
+                                                .hostnameField("beat.hostname")
+                                                .messageField("message")
+                                                .timestampField("")
+                                                .hosts(hosts)
+                                                .startTime(startTime)
+                                                .endTime(endTime)
+                                                .queryType(ElkQueryType.MATCH)
+                                                .build();
 
     List<JSONObject> hostJsonObjects = new ArrayList<>();
     for (String host : hosts) {
-      hostJsonObjects.add(new JSONObject().put("term", new JSONObject().put("beat.hostname", host)));
+      hostJsonObjects.add(new JSONObject().put("match", new JSONObject().put("beat.hostname", host)));
     }
 
     JSONObject boolObject = new JSONObject().put("bool", new JSONObject().put("should", hostJsonObjects));
@@ -99,6 +118,6 @@ public class ElkLogFetchRequestTest {
 
     String expectedJson = new JSONObject().put("query", indicesObject).toString();
 
-    // Assert.assertEquals(expectedJson, JsonUtils.asJson(elkLogFetchRequest.toElasticSearchJsonObject()));
+    //    assertEquals(expectedJson, JsonUtils.asJson(elkLogFetchRequest.toElasticSearchJsonObject()));
   }
 }

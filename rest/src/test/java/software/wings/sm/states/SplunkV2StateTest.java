@@ -286,9 +286,21 @@ public class SplunkV2StateTest extends WingsBaseTest {
     assertEquals(TaskType.SPLUNK_COLLECT_LOG_DATA, task.getTaskType());
 
     final SplunkDataCollectionInfo expectedCollectionInfo =
-        new SplunkDataCollectionInfo(splunkConfig, accountId, appId, stateExecutionId, workflowId, workflowExecutionId,
-            serviceId, Sets.newHashSet(splunkState.getQuery().split(",")), 0, 0,
-            Integer.parseInt(splunkState.getTimeDuration()), Collections.singleton("test"), Collections.emptyList());
+        SplunkDataCollectionInfo.builder()
+            .splunkConfig(splunkConfig)
+            .accountId(accountId)
+            .applicationId(appId)
+            .stateExecutionId(stateExecutionId)
+            .workflowId(workflowId)
+            .workflowExecutionId(workflowExecutionId)
+            .serviceId(serviceId)
+            .queries(Sets.newHashSet(splunkState.getQuery().split(",")))
+            .startMinute(0)
+            .startMinute(0)
+            .collectionTime(Integer.parseInt(splunkState.getTimeDuration()))
+            .hosts(Collections.singleton("test"))
+            .encryptedDataDetails(Collections.emptyList())
+            .build();
     final SplunkDataCollectionInfo actualCollectionInfo = (SplunkDataCollectionInfo) task.getParameters()[0];
     expectedCollectionInfo.setStartTime(actualCollectionInfo.getStartTime());
     assertEquals(expectedCollectionInfo, actualCollectionInfo);

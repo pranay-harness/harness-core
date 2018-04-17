@@ -16,6 +16,7 @@ import software.wings.service.impl.analysis.LogDataCollectionInfo;
 import software.wings.service.impl.analysis.LogElement;
 import software.wings.service.impl.elk.ElkDataCollectionInfo;
 import software.wings.service.impl.elk.ElkLogFetchRequest;
+import software.wings.service.impl.elk.ElkQueryType;
 import software.wings.service.impl.logz.LogzDataCollectionInfo;
 import software.wings.service.intfc.elk.ElkDelegateService;
 import software.wings.service.intfc.logz.LogzDelegateService;
@@ -112,11 +113,17 @@ public class ElkLogzDataCollectionTask extends AbstractDelegateDataCollectionTas
                   case ELK:
                     final ElkDataCollectionInfo elkDataCollectionInfo = (ElkDataCollectionInfo) dataCollectionInfo;
                     final ElkLogFetchRequest elkFetchRequest =
-                        new ElkLogFetchRequest(query, elkDataCollectionInfo.getIndices(),
-                            elkDataCollectionInfo.getHostnameField(), elkDataCollectionInfo.getMessageField(),
-                            ((ElkDataCollectionInfo) dataCollectionInfo).getTimestampField(),
-                            Collections.singleton(hostName), collectionStartTime,
-                            collectionStartTime + TimeUnit.MINUTES.toMillis(1));
+                        ElkLogFetchRequest.builder()
+                            .query(query)
+                            .indices(elkDataCollectionInfo.getIndices())
+                            .hostnameField(elkDataCollectionInfo.getHostnameField())
+                            .messageField(elkDataCollectionInfo.getMessageField())
+                            .timestampField(elkDataCollectionInfo.getTimestampField())
+                            .hosts(Collections.singleton(hostName))
+                            .startTime(collectionStartTime)
+                            .endTime(collectionStartTime + TimeUnit.MINUTES.toMillis(1))
+                            .queryType(elkDataCollectionInfo.getQueryType())
+                            .build();
                     logger.info("running elk query: " + JsonUtils.asJson(elkFetchRequest.toElasticSearchJsonObject()));
                     searchResponse = elkDelegateService.search(elkDataCollectionInfo.getElkConfig(),
                         elkDataCollectionInfo.getEncryptedDataDetails(), elkFetchRequest);
@@ -127,10 +134,19 @@ public class ElkLogzDataCollectionTask extends AbstractDelegateDataCollectionTas
                     break;
                   case LOGZ:
                     final LogzDataCollectionInfo logzDataCollectionInfo = (LogzDataCollectionInfo) dataCollectionInfo;
-                    final ElkLogFetchRequest logzFetchRequest = new ElkLogFetchRequest(query, "",
-                        logzDataCollectionInfo.getHostnameField(), logzDataCollectionInfo.getMessageField(),
-                        logzDataCollectionInfo.getTimestampField(), Collections.singleton(hostName),
-                        collectionStartTime, collectionStartTime + TimeUnit.MINUTES.toMillis(1));
+                    final ElkLogFetchRequest logzFetchRequest =
+                        ElkLogFetchRequest.builder()
+                            .query(query)
+                            .indices("")
+                            .hostnameField(logzDataCollectionInfo.getHostnameField())
+                            .messageField(logzDataCollectionInfo.getMessageField())
+                            .timestampField(logzDataCollectionInfo.getTimestampField())
+                            .hosts(Collections.singleton(hostName))
+                            .startTime(collectionStartTime)
+                            .endTime(collectionStartTime + TimeUnit.MINUTES.toMillis(1))
+                            .queryType(ElkQueryType.TERM)
+                            .build();
+
                     logger.info(
                         "running logz query: " + JsonUtils.asJson(logzFetchRequest.toElasticSearchJsonObject()));
                     searchResponse = logzDelegateService.search(logzDataCollectionInfo.getLogzConfig(),

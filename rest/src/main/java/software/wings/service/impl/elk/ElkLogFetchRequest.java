@@ -2,7 +2,7 @@ package software.wings.service.impl.elk;
 
 import static java.util.Arrays.asList;
 
-import lombok.AllArgsConstructor;
+import lombok.Builder;
 import lombok.Data;
 import org.json.JSONObject;
 import software.wings.exception.WingsException;
@@ -20,7 +20,7 @@ import java.util.Stack;
  */
 
 @Data
-@AllArgsConstructor
+@Builder
 public class ElkLogFetchRequest {
   private final String query;
   private final String indices;
@@ -30,11 +30,13 @@ public class ElkLogFetchRequest {
   private final Set<String> hosts;
   private final long startTime;
   private final long endTime;
+  @Builder.Default private ElkQueryType queryType = ElkQueryType.TERM;
 
   public Object toElasticSearchJsonObject() {
     List<JSONObject> hostJsonObjects = new ArrayList<>();
     for (String host : hosts) {
-      hostJsonObjects.add(new JSONObject().put("term", new JSONObject().put(hostnameField, host)));
+      hostJsonObjects.add(
+          new JSONObject().put(queryType.name().toLowerCase(), new JSONObject().put(hostnameField, host)));
     }
 
     JSONObject regexObject = new JSONObject();
