@@ -72,7 +72,6 @@ public class NewRelicMetricNameCollectionJob implements Job {
                 alertService.closeAlert(workflowInfo.getAccountId(), workflowInfo.getAppId(),
                     NEW_RELIC_METRIC_NAMES_COLLECTION,
                     NewRelicMetricNameCollectionAlert.builder().configId(metricNames.getNewRelicConfigId()).build());
-                continue;
               }
               // TODO validate and cleanup stale records
               SettingAttribute settingAttribute = settingsService.getGlobalSettingAttributesById(
