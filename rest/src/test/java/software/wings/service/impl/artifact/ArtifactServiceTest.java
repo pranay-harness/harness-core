@@ -9,12 +9,14 @@ import static org.mockito.Matchers.anyString;
 import static org.mockito.Mockito.times;
 import static org.mockito.Mockito.when;
 import static software.wings.beans.artifact.Artifact.Builder.anArtifact;
+import static software.wings.beans.artifact.Artifact.ContentStatus.DELETED;
 import static software.wings.beans.artifact.Artifact.ContentStatus.DOWNLOADED;
 import static software.wings.beans.artifact.Artifact.ContentStatus.DOWNLOADING;
+import static software.wings.beans.artifact.Artifact.ContentStatus.FAILED;
 import static software.wings.beans.artifact.Artifact.ContentStatus.METADATA_ONLY;
 import static software.wings.beans.artifact.Artifact.ContentStatus.NOT_DOWNLOADED;
+import static software.wings.beans.artifact.Artifact.Status;
 import static software.wings.beans.artifact.Artifact.Status.APPROVED;
-import static software.wings.beans.artifact.Artifact.Status.FAILED;
 import static software.wings.beans.artifact.Artifact.Status.QUEUED;
 import static software.wings.beans.artifact.Artifact.Status.READY;
 import static software.wings.beans.artifact.Artifact.Status.RUNNING;
@@ -23,6 +25,7 @@ import static software.wings.utils.WingsTestConstants.APP_ID;
 import static software.wings.utils.WingsTestConstants.ARTIFACT_ID;
 import static software.wings.utils.WingsTestConstants.ARTIFACT_STREAM_ID;
 import static software.wings.utils.WingsTestConstants.SERVICE_ID;
+import static software.wings.utils.WingsTestConstants.SETTING_ID;
 
 import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.Lists;
@@ -36,7 +39,6 @@ import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.Mockito;
 import org.mockito.Spy;
-import org.mongodb.morphia.Key;
 import org.mongodb.morphia.query.Query;
 import software.wings.WingsBaseTest;
 import software.wings.beans.Application;
@@ -48,7 +50,6 @@ import software.wings.beans.artifact.Artifact;
 import software.wings.beans.artifact.Artifact.Builder;
 import software.wings.beans.artifact.Artifact.ContentStatus;
 import software.wings.beans.artifact.ArtifactFile;
-import software.wings.beans.artifact.ArtifactStream;
 import software.wings.beans.artifact.ArtifactoryArtifactStream;
 import software.wings.beans.artifact.BambooArtifactStream;
 import software.wings.beans.artifact.DockerArtifactStream;
@@ -60,6 +61,7 @@ import software.wings.collect.CollectEvent;
 import software.wings.common.Constants;
 import software.wings.core.queue.Queue;
 import software.wings.dl.PageRequest;
+import software.wings.dl.PageResponse;
 import software.wings.dl.WingsPersistence;
 import software.wings.exception.WingsException;
 import software.wings.rules.SetupScheduler;
@@ -83,7 +85,6 @@ public class ArtifactServiceTest extends WingsBaseTest {
   @Mock private ArtifactStreamService artifactStreamService;
   @Mock private AppService appService;
   @Mock private Query<Application> appQuery;
-  @Mock private Query<ArtifactStream> artifactStreamQuery;
   @Mock private Queue<CollectEvent> collectQueue;
   @Mock private ServiceResourceService serviceResourceService;
 
@@ -91,6 +92,7 @@ public class ArtifactServiceTest extends WingsBaseTest {
 
   private Builder artifactBuilder = anArtifact()
                                         .withAppId(APP_ID)
+                                        .withMetadata(ImmutableMap.of("buildNo", "200"))
                                         .withArtifactStreamId(ARTIFACT_STREAM_ID)
                                         .withRevision("1.0")
                                         .withDisplayName("DISPLAY_NAME")
@@ -123,6 +125,23 @@ public class ArtifactServiceTest extends WingsBaseTest {
     assertThat(artifactService.create(artifactBuilder.but().build()))
         .isNotNull()
         .hasFieldOrPropertyWithValue("artifactSourceName", "ARTIFACT_SOURCE");
+  }
+
+  @Test
+  public void shouldAddArtifactFile() {
+    Artifact savedArtifact = artifactService.create(artifactBuilder.but().build());
+    assertThat(savedArtifact).isNotNull().hasFieldOrPropertyWithValue("artifactSourceName", "ARTIFACT_SOURCE");
+    ArtifactFile artifactFile = anArtifactFile()
+                                    .withAppId(APP_ID)
+                                    .withName("test-artifact.war")
+                                    .withUuid("5942bffe1e204f7f3004f455")
+                                    .withFileUuid("5942bffe1e204f7f3004f455")
+                                    .build();
+    artifactService.addArtifactFile(savedArtifact.getUuid(), savedArtifact.getAppId(), asList(artifactFile));
+    Artifact updatedArtifact = artifactService.get(savedArtifact.getAppId(), savedArtifact.getUuid());
+    assertThat(updatedArtifact).isNotNull().extracting(Artifact::getArtifactFiles).hasSize(1);
+
+    assertThat(updatedArtifact.getArtifactFiles().get(0).getFileUuid().equals("5942bffe1e204f7f3004f455"));
   }
 
   @Test
@@ -163,14 +182,53 @@ public class ArtifactServiceTest extends WingsBaseTest {
   }
 
   @Test
+  public void shouldUpdateStatusApproved() {
+    Artifact savedArtifact = artifactService.create(artifactBuilder.but().build());
+    artifactService.updateStatus(savedArtifact.getUuid(), savedArtifact.getAppId(), APPROVED);
+    Artifact updatedArtifact = artifactService.get(savedArtifact.getAppId(), savedArtifact.getUuid());
+    assertThat(updatedArtifact).isNotNull();
+    assertThat(updatedArtifact.getStatus()).isEqualTo(APPROVED);
+  }
+
+  @Test
+  public void shouldUpdateStatusWithErrorMessage() {
+    Artifact savedArtifact = artifactService.create(artifactBuilder.but().build());
+    artifactService.updateStatus(
+        savedArtifact.getUuid(), savedArtifact.getAppId(), Status.FAILED, "Failed to download artifact");
+    Artifact updatedArtifact = artifactService.get(savedArtifact.getAppId(), savedArtifact.getUuid());
+    assertThat(updatedArtifact).isNotNull();
+    assertThat(updatedArtifact.getStatus()).isEqualTo(Status.FAILED);
+    assertThat(updatedArtifact.getErrorMessage()).isEqualTo("Failed to download artifact");
+  }
+
+  @Test
+  public void shouldUpdateContentStatus() {
+    Artifact savedArtifact = artifactService.create(artifactBuilder.but().build());
+    artifactService.updateStatus(savedArtifact.getUuid(), savedArtifact.getAppId(), APPROVED, DOWNLOADED);
+    Artifact updatedArtifact = artifactService.get(savedArtifact.getAppId(), savedArtifact.getUuid());
+    assertThat(updatedArtifact).isNotNull();
+    assertThat(updatedArtifact.getStatus()).isEqualTo(APPROVED);
+    assertThat(updatedArtifact.getContentStatus()).isEqualTo(DOWNLOADED);
+  }
+
+  @Test
+  public void shouldUpdateContentStatusWithErrorMessage() {
+    Artifact savedArtifact = artifactService.create(artifactBuilder.but().build());
+    artifactService.updateStatus(
+        savedArtifact.getUuid(), savedArtifact.getAppId(), Status.FAILED, FAILED, "Failed to download artifact");
+    Artifact updatedArtifact = artifactService.get(savedArtifact.getAppId(), savedArtifact.getUuid());
+    assertThat(updatedArtifact).isNotNull();
+    assertThat(updatedArtifact.getStatus()).isEqualTo(Status.FAILED);
+    assertThat(updatedArtifact.getContentStatus()).isEqualTo(FAILED);
+    assertThat(updatedArtifact.getErrorMessage()).isEqualTo("Failed to download artifact");
+  }
+
+  @Test
   public void shouldNotDownloadFileForArtifactWhenNotReady() {
     Artifact savedArtifact = artifactService.create(artifactBuilder.but().build());
     assertThat(artifactService.download(APP_ID, savedArtifact.getUuid())).isNull();
   }
 
-  /**
-   * Should download file for artifact when ready.
-   */
   @Test
   public void shouldDownloadFileForArtifactWhenReady() {
     File file = null;
@@ -197,13 +255,20 @@ public class ArtifactServiceTest extends WingsBaseTest {
     }
   }
 
-  /**
-   * Should list artifact.
-   */
   @Test
   public void shouldListArtifact() {
     Artifact savedArtifact = artifactService.create(artifactBuilder.but().build());
     assertThat(artifactService.list(new PageRequest<>(), false)).hasSize(1).containsExactly(savedArtifact);
+  }
+
+  @Test
+  public void shouldListArtifactWithDetails() {
+    when(serviceResourceService.get(APP_ID, SERVICE_ID))
+        .thenReturn(Service.builder().appId(APP_ID).artifactType(ArtifactType.WAR).uuid(SERVICE_ID).build());
+    Artifact savedArtifact = artifactService.create(artifactBuilder.but().build());
+    PageResponse<Artifact> artifacts = artifactService.list(new PageRequest<>(), true);
+    assertThat(artifacts).hasSize(1).extracting(Artifact::getUuid).contains(savedArtifact.getUuid());
+    assertThat(artifacts).extracting(Artifact::getServices).hasSize(1);
   }
 
   @Test
@@ -234,97 +299,64 @@ public class ArtifactServiceTest extends WingsBaseTest {
     assertThat(artifactService.get(savedArtifact.getAppId(), savedArtifact.getUuid())).isEqualTo(savedArtifact);
   }
 
-  /**
-   * Should soft delete artifact.
-   */
   @Test
-  public void shouldDeleteArtifact() {
+  public void shouldGetArtifactWithServices() {
+    when(serviceResourceService.get(APP_ID, SERVICE_ID))
+        .thenReturn(Service.builder().appId(APP_ID).artifactType(ArtifactType.WAR).uuid(SERVICE_ID).build());
     Artifact savedArtifact = artifactService.create(artifactBuilder.but().build());
-    assertThat(wingsPersistence.get(Artifact.class, savedArtifact.getUuid())).isNotNull();
-    artifactService.delete(savedArtifact.getAppId(), savedArtifact.getUuid());
-    assertThat(wingsPersistence.get(Artifact.class, savedArtifact.getUuid())).isNull();
+    Artifact updatedArtifact = artifactService.get(savedArtifact.getAppId(), savedArtifact.getUuid());
+    assertThat(updatedArtifact).isEqualTo(savedArtifact);
+    assertThat(updatedArtifact).extracting(Artifact::getServices).hasSize(1);
   }
 
   @Test
-  public void shouldNotDeleteArtifacts() {
-    when(wingsPersistence.createQuery(Application.class)).thenReturn(appQuery);
-    when(wingsPersistence.createQuery(ArtifactStream.class)).thenReturn(artifactStreamQuery);
-    when(appQuery.asKeyList()).thenReturn(asList(new Key(Application.class, "applications", APP_ID)));
-    when(artifactStreamQuery.filter(anyString(), anyObject())).thenReturn(artifactStreamQuery);
-    when(artifactStreamQuery.asList()).thenReturn(asList(jenkinsArtifactStream));
-
-    artifactService.create(artifactBuilder.but().build());
-    artifactService.deleteArtifacts(50);
-    assertThat(artifactService.list(new PageRequest<>(), false)).hasSize(1);
+  public void shouldFetchLatestArtifactForArtifactStream() {
+    Artifact savedArtifact = artifactService.create(artifactBuilder.but().build());
+    Artifact latestArtifact = artifactService.fetchLatestArtifactForArtifactStream(
+        savedArtifact.getAppId(), savedArtifact.getArtifactStreamId(), savedArtifact.getArtifactSourceName());
+    assertThat(latestArtifact)
+        .isNotNull()
+        .extracting(Artifact::getArtifactSourceName)
+        .containsExactly(savedArtifact.getArtifactSourceName());
   }
 
   @Test
-  public void shouldDeleteArtifactsWithArtifactFiles() {
-    when(wingsPersistence.createQuery(Application.class)).thenReturn(appQuery);
-    when(wingsPersistence.createQuery(ArtifactStream.class)).thenReturn(artifactStreamQuery);
-    when(appQuery.asKeyList()).thenReturn(asList(new Key(Application.class, "applications", APP_ID)));
-    when(artifactStreamQuery.filter(anyString(), anyObject())).thenReturn(artifactStreamQuery);
-    when(artifactStreamQuery.asList()).thenReturn(asList(jenkinsArtifactStream));
-
-    Artifact savedArtifact = artifactService.create(artifactBuilder.but().build());
-    ArtifactFile artifactFile = anArtifactFile()
-                                    .withAppId(APP_ID)
-                                    .withName("test-artifact.war")
-                                    .withUuid("5942bffe1e204f7f3004f455")
-                                    .withFileUuid("5942bffe1e204f7f3004f455")
-                                    .build();
-    wingsRule.getDatastore().save(artifactFile);
-    savedArtifact.setArtifactFiles(Lists.newArrayList(artifactFile));
-    savedArtifact.setStatus(READY);
-    wingsRule.getDatastore().save(savedArtifact);
-    artifactService.deleteArtifacts(0);
-    assertThat(artifactService.list(new PageRequest<>(), false)).hasSize(0);
+  public void shouldFetchLastCollectedArtifactForArtifactStream() {
+    Artifact artifact = artifactBuilder.build();
+    Artifact savedArtifact = artifactService.create(artifact);
+    artifactService.updateStatus(savedArtifact.getUuid(), savedArtifact.getAppId(), APPROVED);
+    Artifact latestArtifact = artifactService.fetchLastCollectedArtifactForArtifactStream(
+        savedArtifact.getAppId(), savedArtifact.getArtifactStreamId(), savedArtifact.getArtifactSourceName());
+    assertThat(latestArtifact)
+        .isNotNull()
+        .extracting(Artifact::getArtifactSourceName)
+        .containsExactly(savedArtifact.getArtifactSourceName());
   }
 
   @Test
-  public void shouldNotDeleteFailedArtifacts() {
-    when(wingsPersistence.createQuery(Application.class)).thenReturn(appQuery);
-    when(wingsPersistence.createQuery(ArtifactStream.class)).thenReturn(artifactStreamQuery);
-    when(appQuery.asKeyList()).thenReturn(asList(new Key(Application.class, "applications", APP_ID)));
-    when(artifactStreamQuery.filter(anyString(), anyObject())).thenReturn(artifactStreamQuery);
-    when(artifactStreamQuery.asList()).thenReturn(asList(jenkinsArtifactStream));
-
-    Artifact savedArtifact = artifactService.create(artifactBuilder.but().build());
-    ArtifactFile artifactFile = anArtifactFile()
-                                    .withAppId(APP_ID)
-                                    .withName("test-artifact.war")
-                                    .withUuid("5942bffe1e204f7f3004f455")
-                                    .withFileUuid("5942bffe1e204f7f3004f455")
-                                    .build();
-    wingsRule.getDatastore().save(artifactFile);
-    savedArtifact.setArtifactFiles(Lists.newArrayList(artifactFile));
-    savedArtifact.setStatus(FAILED);
-    wingsRule.getDatastore().save(savedArtifact);
-    artifactService.deleteArtifacts(0);
-    assertThat(artifactService.list(new PageRequest<>(), false)).hasSize(1);
+  public void shouldGetArtifactByBuildNumber() {
+    Artifact artifact = artifactBuilder.build();
+    Artifact savedArtifact = artifactService.create(artifact);
+    artifactService.updateStatus(savedArtifact.getUuid(), savedArtifact.getAppId(), APPROVED);
+    Artifact latestArtifact = artifactService.getArtifactByBuildNumber(
+        savedArtifact.getAppId(), savedArtifact.getArtifactStreamId(), savedArtifact.getBuildNo());
+    assertThat(latestArtifact)
+        .isNotNull()
+        .extracting(Artifact::getArtifactSourceName)
+        .containsExactly(savedArtifact.getArtifactSourceName());
   }
 
   @Test
-  public void shouldNotDeleteArtifactsGreaterThanRetentionTime() {
-    when(wingsPersistence.createQuery(Application.class)).thenReturn(appQuery);
-    when(wingsPersistence.createQuery(ArtifactStream.class)).thenReturn(artifactStreamQuery);
-    when(appQuery.asKeyList()).thenReturn(asList(new Key(Application.class, "applications", APP_ID)));
-    when(artifactStreamQuery.filter(anyString(), anyObject())).thenReturn(artifactStreamQuery);
-    when(artifactStreamQuery.asList()).thenReturn(asList(jenkinsArtifactStream));
-
-    Artifact savedArtifact = artifactService.create(artifactBuilder.but().build());
-    ArtifactFile artifactFile = anArtifactFile()
-                                    .withAppId(APP_ID)
-                                    .withName("test-artifact.war")
-                                    .withUuid("5942bffe1e204f7f3004f455")
-                                    .withFileUuid("5942bffe1e204f7f3004f455")
-                                    .build();
-    wingsRule.getDatastore().save(artifactFile);
-    savedArtifact.setArtifactFiles(Lists.newArrayList(artifactFile));
-    savedArtifact.setStatus(READY);
-    wingsRule.getDatastore().save(savedArtifact);
-    artifactService.deleteArtifacts(1);
-    assertThat(artifactService.list(new PageRequest<>(), false)).hasSize(1);
+  public void shouldGetArtifactByBuildNumberSource() {
+    Artifact artifact = artifactBuilder.build();
+    Artifact savedArtifact = artifactService.create(artifact);
+    artifactService.updateStatus(savedArtifact.getUuid(), savedArtifact.getAppId(), APPROVED);
+    Artifact latestArtifact = artifactService.getArtifactByBuildNumber(savedArtifact.getAppId(),
+        savedArtifact.getArtifactStreamId(), savedArtifact.getArtifactSourceName(), savedArtifact.getBuildNo());
+    assertThat(latestArtifact)
+        .isNotNull()
+        .extracting(Artifact::getArtifactSourceName)
+        .containsExactly(savedArtifact.getArtifactSourceName());
   }
 
   @Test(expected = WingsException.class)
@@ -393,6 +425,36 @@ public class ArtifactServiceTest extends WingsBaseTest {
     when(wingsPersistence.get(Artifact.class, APP_ID, ARTIFACT_ID)).thenReturn(artifact);
     ContentStatus contentStatus = artifactService.getArtifactContentStatus(artifact);
     assertThat(contentStatus).isEqualTo(NOT_DOWNLOADED);
+  }
+
+  @Test
+  public void shouldGetArtifactContentStatusDeleted() {
+    Artifact artifact = artifactBuilder.withStatus(APPROVED).build();
+    when(wingsPersistence.get(Artifact.class, APP_ID, ARTIFACT_ID)).thenReturn(artifact);
+    when(artifactStreamService.get(artifact.getAppId(), artifact.getArtifactStreamId())).thenReturn(null);
+    ContentStatus contentStatus = artifactService.getArtifactContentStatus(artifact);
+    assertThat(contentStatus).isEqualTo(DELETED);
+  }
+
+  @Test
+  public void shouldGetArtifactContentStatusStreamDeleted() {
+    Artifact artifact = artifactBuilder.withUuid(ARTIFACT_ID).withStatus(APPROVED).build();
+    when(wingsPersistence.get(Artifact.class, APP_ID, ARTIFACT_ID)).thenReturn(artifact);
+    when(artifactStreamService.get(artifact.getAppId(), artifact.getArtifactStreamId())).thenReturn(null);
+    ContentStatus contentStatus = artifactService.getArtifactContentStatus(artifact);
+    assertThat(contentStatus).isEqualTo(METADATA_ONLY);
+  }
+
+  @Test
+  public void shouldGetArtifactContentStatusStreamDeletedWithFiles() {
+    Artifact artifact = artifactBuilder.withUuid(ARTIFACT_ID)
+                            .withStatus(APPROVED)
+                            .withArtifactFiles(asList(anArtifactFile().build()))
+                            .build();
+    when(wingsPersistence.get(Artifact.class, APP_ID, ARTIFACT_ID)).thenReturn(artifact);
+    when(artifactStreamService.get(artifact.getAppId(), artifact.getArtifactStreamId())).thenReturn(null);
+    ContentStatus contentStatus = artifactService.getArtifactContentStatus(artifact);
+    assertThat(contentStatus).isEqualTo(DOWNLOADED);
   }
 
   @Test
@@ -551,5 +613,255 @@ public class ArtifactServiceTest extends WingsBaseTest {
                         .build());
     assertThat(artifactService.getArtifactContentStatus(artifact)).isEqualTo(null);
     assertThat(artifact.getStatus()).isEqualTo(QUEUED);
+  }
+
+  @Test
+  public void shouldDeleteArtifact() {
+    Artifact savedArtifact = artifactService.create(artifactBuilder.but().build());
+    assertThat(wingsPersistence.get(Artifact.class, savedArtifact.getUuid())).isNotNull();
+    artifactService.delete(savedArtifact.getAppId(), savedArtifact.getUuid());
+    assertThat(wingsPersistence.get(Artifact.class, savedArtifact.getUuid())).isNull();
+  }
+
+  @Test
+  public void shouldNotDeleteMetadataOnlyArtifacts() {
+    DockerArtifactStream dockerArtifactStream = DockerArtifactStream.builder()
+                                                    .appId(APP_ID)
+                                                    .settingId(SETTING_ID)
+                                                    .imageName("wingsplugins/todolist")
+                                                    .autoPopulate(true)
+                                                    .serviceId(SERVICE_ID)
+                                                    .build();
+    String dockerArtifactStreamId = wingsRule.getDatastore().save(dockerArtifactStream).getId().toString();
+
+    JenkinsArtifactStream jenkinsArtifactStream = JenkinsArtifactStream.builder()
+                                                      .sourceName("todolistwar")
+                                                      .settingId(SETTING_ID)
+                                                      .appId(APP_ID)
+                                                      .jobname("todolistwar")
+                                                      .autoPopulate(true)
+                                                      .metadataOnly(true)
+                                                      .serviceId(SERVICE_ID)
+                                                      .artifactPaths(asList("target/todolist.war"))
+                                                      .build();
+
+    String jenkinsArtifactStreamId = wingsRule.getDatastore().save(jenkinsArtifactStream).getId().toString();
+
+    Artifact dockerArtifact = anArtifact()
+                                  .withAppId(APP_ID)
+                                  .withArtifactStreamId(dockerArtifactStreamId)
+                                  .withMetadata(ImmutableMap.of("buildNo", "200"))
+                                  .withRevision("1.0")
+                                  .withDisplayName("DISPLAY_NAME")
+                                  .withServiceIds(asList(SERVICE_ID))
+                                  .build();
+
+    Artifact jenkinsArtifact = anArtifact()
+                                   .withAppId(APP_ID)
+                                   .withArtifactStreamId(jenkinsArtifactStreamId)
+                                   .withMetadata(ImmutableMap.of("buildNo", "200"))
+                                   .withRevision("1.0")
+                                   .withDisplayName("DISPLAY_NAME")
+                                   .withServiceIds(asList(SERVICE_ID))
+                                   .build();
+
+    when(artifactStreamService.get(APP_ID, dockerArtifactStreamId)).thenReturn(dockerArtifactStream);
+    artifactService.create(dockerArtifact);
+
+    when(artifactStreamService.get(APP_ID, jenkinsArtifactStreamId)).thenReturn(jenkinsArtifactStream);
+    artifactService.create(jenkinsArtifact);
+
+    artifactService.deleteArtifacts(50);
+    assertThat(artifactService.list(new PageRequest<>(), false)).hasSize(2);
+  }
+
+  @Test
+  public void shouldDeleteArtifactsWithNoArtifactFiles() {
+    JenkinsArtifactStream jenkinsArtifactStream = JenkinsArtifactStream.builder()
+                                                      .sourceName("todolistwar")
+                                                      .settingId(SETTING_ID)
+                                                      .appId(APP_ID)
+                                                      .jobname("todolistwar")
+                                                      .autoPopulate(true)
+                                                      .serviceId(SERVICE_ID)
+                                                      .artifactPaths(asList("target/todolist.war"))
+                                                      .build();
+    String jenkinsArtifactStreamId = wingsRule.getDatastore().save(jenkinsArtifactStream).getId().toString();
+    Artifact jenkinsArtifact = anArtifact()
+                                   .withAppId(APP_ID)
+                                   .withArtifactStreamId(jenkinsArtifactStreamId)
+                                   .withMetadata(ImmutableMap.of("buildNo", "200"))
+                                   .withRevision("1.0")
+                                   .withDisplayName("DISPLAY_NAME")
+                                   .withServiceIds(asList(SERVICE_ID))
+                                   .withStatus(APPROVED)
+                                   .withContentStatus(DOWNLOADED)
+                                   .build();
+
+    when(artifactStreamService.get(APP_ID, jenkinsArtifactStreamId)).thenReturn(jenkinsArtifactStream);
+    Artifact savedArtifact = artifactService.create(jenkinsArtifact);
+
+    wingsRule.getDatastore().save(savedArtifact);
+    artifactService.deleteArtifacts(0);
+    assertThat(artifactService.list(new PageRequest<>(), false)).hasSize(1);
+  }
+
+  @Test
+  public void shouldDeleteArtifactsWithArtifactFiles() {
+    JenkinsArtifactStream jenkinsArtifactStream = JenkinsArtifactStream.builder()
+                                                      .sourceName("todolistwar")
+                                                      .settingId(SETTING_ID)
+                                                      .appId(APP_ID)
+                                                      .jobname("todolistwar")
+                                                      .autoPopulate(true)
+                                                      .serviceId(SERVICE_ID)
+                                                      .artifactPaths(asList("target/todolist.war"))
+                                                      .build();
+    String jenkinsArtifactStreamId = wingsRule.getDatastore().save(jenkinsArtifactStream).getId().toString();
+    Artifact jenkinsArtifact = anArtifact()
+                                   .withAppId(APP_ID)
+                                   .withArtifactStreamId(jenkinsArtifactStreamId)
+                                   .withMetadata(ImmutableMap.of("buildNo", "200"))
+                                   .withRevision("1.0")
+                                   .withDisplayName("DISPLAY_NAME")
+                                   .withServiceIds(asList(SERVICE_ID))
+                                   .withStatus(APPROVED)
+                                   .build();
+
+    when(artifactStreamService.get(APP_ID, jenkinsArtifactStreamId)).thenReturn(jenkinsArtifactStream);
+    Artifact savedArtifact = artifactService.create(jenkinsArtifact);
+    ArtifactFile artifactFile = anArtifactFile()
+                                    .withAppId(APP_ID)
+                                    .withName("test-artifact.war")
+                                    .withUuid("5942bffe1e204f7f3004f455")
+                                    .withFileUuid("5942bffe1e204f7f3004f455")
+                                    .build();
+    wingsRule.getDatastore().save(artifactFile);
+    savedArtifact.setArtifactFiles(asList(artifactFile));
+    savedArtifact.setContentStatus(DOWNLOADED);
+
+    wingsRule.getDatastore().save(savedArtifact);
+
+    artifactService.deleteArtifacts(0);
+    assertThat(artifactService.list(new PageRequest<>(), false)).hasSize(0);
+  }
+
+  @Test
+  public void shouldNotDeleteFailedArtifacts() {
+    JenkinsArtifactStream jenkinsArtifactStream = JenkinsArtifactStream.builder()
+                                                      .sourceName("todolistwar")
+                                                      .settingId(SETTING_ID)
+                                                      .appId(APP_ID)
+                                                      .jobname("todolistwar")
+                                                      .autoPopulate(true)
+                                                      .serviceId(SERVICE_ID)
+                                                      .artifactPaths(asList("target/todolist.war"))
+                                                      .build();
+    String jenkinsArtifactStreamId = wingsRule.getDatastore().save(jenkinsArtifactStream).getId().toString();
+    Artifact jenkinsArtifact = anArtifact()
+                                   .withAppId(APP_ID)
+                                   .withArtifactStreamId(jenkinsArtifactStreamId)
+                                   .withMetadata(ImmutableMap.of("buildNo", "200"))
+                                   .withRevision("1.0")
+                                   .withDisplayName("DISPLAY_NAME")
+                                   .withServiceIds(asList(SERVICE_ID))
+                                   .withStatus(APPROVED)
+                                   .build();
+
+    when(artifactStreamService.get(APP_ID, jenkinsArtifactStreamId)).thenReturn(jenkinsArtifactStream);
+    Artifact savedArtifact = artifactService.create(jenkinsArtifact);
+    ArtifactFile artifactFile = anArtifactFile()
+                                    .withAppId(APP_ID)
+                                    .withName("test-artifact.war")
+                                    .withUuid("5942bffe1e204f7f3004f455")
+                                    .withFileUuid("5942bffe1e204f7f3004f455")
+                                    .build();
+    wingsRule.getDatastore().save(artifactFile);
+    savedArtifact.setArtifactFiles(asList(artifactFile));
+    savedArtifact.setContentStatus(FAILED);
+
+    wingsRule.getDatastore().save(savedArtifact);
+
+    artifactService.deleteArtifacts(0);
+    assertThat(artifactService.list(new PageRequest<>(), false)).hasSize(1);
+  }
+
+  @Test
+  public void shouldNotDeleteArtifactsGreaterThanRetentionTime() {
+    JenkinsArtifactStream jenkinsArtifactStream = JenkinsArtifactStream.builder()
+                                                      .sourceName("todolistwar")
+                                                      .settingId(SETTING_ID)
+                                                      .appId(APP_ID)
+                                                      .jobname("todolistwar")
+                                                      .autoPopulate(true)
+                                                      .serviceId(SERVICE_ID)
+                                                      .artifactPaths(asList("target/todolist.war"))
+                                                      .build();
+    String jenkinsArtifactStreamId = wingsRule.getDatastore().save(jenkinsArtifactStream).getId().toString();
+    Artifact jenkinsArtifact = anArtifact()
+                                   .withAppId(APP_ID)
+                                   .withArtifactStreamId(jenkinsArtifactStreamId)
+                                   .withMetadata(ImmutableMap.of("buildNo", "200"))
+                                   .withRevision("1.0")
+                                   .withDisplayName("DISPLAY_NAME")
+                                   .withServiceIds(asList(SERVICE_ID))
+                                   .withStatus(APPROVED)
+                                   .build();
+
+    when(artifactStreamService.get(APP_ID, jenkinsArtifactStreamId)).thenReturn(jenkinsArtifactStream);
+    Artifact savedArtifact = artifactService.create(jenkinsArtifact);
+    ArtifactFile artifactFile = anArtifactFile()
+                                    .withAppId(APP_ID)
+                                    .withName("test-artifact.war")
+                                    .withUuid("5942bffe1e204f7f3004f455")
+                                    .withFileUuid("5942bffe1e204f7f3004f455")
+                                    .build();
+    wingsRule.getDatastore().save(artifactFile);
+    savedArtifact.setArtifactFiles(asList(artifactFile));
+    savedArtifact.setContentStatus(DOWNLOADED);
+
+    wingsRule.getDatastore().save(savedArtifact);
+
+    artifactService.deleteArtifacts(1);
+    assertThat(artifactService.list(new PageRequest<>(), false)).hasSize(1);
+  }
+
+  @Test
+  public void shouldDeleteArtifactFiles() {
+    JenkinsArtifactStream jenkinsArtifactStream = JenkinsArtifactStream.builder()
+                                                      .sourceName("todolistwar")
+                                                      .settingId(SETTING_ID)
+                                                      .appId(APP_ID)
+                                                      .jobname("todolistwar")
+                                                      .autoPopulate(true)
+                                                      .serviceId(SERVICE_ID)
+                                                      .artifactPaths(asList("target/todolist.war"))
+                                                      .build();
+    String jenkinsArtifactStreamId = wingsRule.getDatastore().save(jenkinsArtifactStream).getId().toString();
+    Artifact jenkinsArtifact = anArtifact()
+                                   .withAppId(APP_ID)
+                                   .withArtifactStreamId(jenkinsArtifactStreamId)
+                                   .withMetadata(ImmutableMap.of("buildNo", "200"))
+                                   .withRevision("1.0")
+                                   .withDisplayName("DISPLAY_NAME")
+                                   .withServiceIds(asList(SERVICE_ID))
+                                   .withStatus(APPROVED)
+                                   .build();
+
+    when(artifactStreamService.get(APP_ID, jenkinsArtifactStreamId)).thenReturn(jenkinsArtifactStream);
+    Artifact savedArtifact = artifactService.create(jenkinsArtifact);
+    ArtifactFile artifactFile = anArtifactFile()
+                                    .withAppId(APP_ID)
+                                    .withName("test-artifact.war")
+                                    .withUuid("5942bffe1e204f7f3004f455")
+                                    .withFileUuid("5942bffe1e204f7f3004f455")
+                                    .build();
+    wingsRule.getDatastore().save(artifactFile);
+    savedArtifact.setArtifactFiles(asList(artifactFile));
+    savedArtifact.setContentStatus(DOWNLOADED);
+
+    wingsRule.getDatastore().save(savedArtifact);
+
+    artifactService.deleteArtifactFiles();
   }
 }

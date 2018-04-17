@@ -40,6 +40,12 @@ import java.util.Map;
 @Indexes(@Index(fields = { @Field("artifactStreamId")
                            , @Field("appId") }))
 public class Artifact extends Base {
+  public static final String ARTIFACT_STREAM_ID_KEY = "artifactStreamId";
+  public static final String CONTENT_STATUS_KEY = "contentStatus";
+  public static final String STATUS_KEY = "status";
+  public static final String ERROR_MSG_KEY = "errorMessage";
+  public static final String DISPLAY_NAME_KEY = "displayName";
+
   @Indexed private String artifactStreamId;
   @Indexed private String artifactSourceName;
   private Map<String, String> metadata = Maps.newHashMap();

@@ -74,15 +74,16 @@ public class ArtifactStreamServiceTest extends WingsBaseTest {
   }
   @Test
   public void shouldAddJenkinsArtifactStream() {
-    ArtifactStream savedArtifactSteam = artifactStreamService.create(JenkinsArtifactStream.builder()
-                                                                         .sourceName("todolistwar")
-                                                                         .settingId(SETTING_ID)
-                                                                         .appId(APP_ID)
-                                                                         .jobname("todolistwar")
-                                                                         .autoPopulate(true)
-                                                                         .serviceId(SERVICE_ID)
-                                                                         .artifactPaths(asList("target/todolist.war"))
-                                                                         .build());
+    JenkinsArtifactStream jenkinsArtifactStream = JenkinsArtifactStream.builder()
+                                                      .sourceName("todolistwar")
+                                                      .settingId(SETTING_ID)
+                                                      .appId(APP_ID)
+                                                      .jobname("todolistwar")
+                                                      .autoPopulate(true)
+                                                      .serviceId(SERVICE_ID)
+                                                      .artifactPaths(asList("target/todolist.war"))
+                                                      .build();
+    ArtifactStream savedArtifactSteam = artifactStreamService.create(jenkinsArtifactStream);
 
     assertThat(savedArtifactSteam.getUuid()).isNotEmpty();
     assertThat(savedArtifactSteam.getName()).isNotEmpty();
