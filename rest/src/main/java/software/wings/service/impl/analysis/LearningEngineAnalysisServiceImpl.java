@@ -16,12 +16,10 @@ import org.mongodb.morphia.query.Query;
 import org.mongodb.morphia.query.UpdateOperations;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-import software.wings.beans.ErrorCode;
 import software.wings.beans.ServiceSecretKey;
 import software.wings.beans.ServiceSecretKey.ServiceApiVersion;
 import software.wings.beans.ServiceSecretKey.ServiceType;
 import software.wings.dl.WingsPersistence;
-import software.wings.exception.WingsException;
 import software.wings.service.impl.newrelic.LearningEngineAnalysisTask;
 import software.wings.service.impl.newrelic.LearningEngineExperimentalAnalysisTask;
 import software.wings.service.impl.newrelic.MLExperiments;
@@ -34,7 +32,6 @@ import java.io.InputStream;
 import java.util.List;
 import java.util.Optional;
 import java.util.Properties;
-import java.util.concurrent.TimeUnit;
 
 /**
  * Created by rsingh on 1/9/18.
@@ -99,14 +96,6 @@ public class LearningEngineAnalysisServiceImpl implements LearningEngineService 
       return false;
     }
 
-    // task has been sitting for a while without being executed
-    if (analysisTask.getAnalysis_minute() - learningEngineAnalysisTask.getAnalysis_minute()
-            >= TimeUnit.MILLISECONDS.toMinutes(TIME_SERIES_ANALYSIS_TASK_TIME_OUT)
-        || learningEngineAnalysisTask.getCreatedAt()
-            < System.currentTimeMillis() - TIME_SERIES_ANALYSIS_TASK_TIME_OUT) {
-      throw new WingsException(
-          ErrorCode.NEWRELIC_ERROR, "Analysis timed out for minute " + learningEngineAnalysisTask.getAnalysis_minute());
-    }
     logger.warn("task is already {}. Will not queue for minute {}, {}", learningEngineAnalysisTask.getExecutionStatus(),
         analysisTask.getAnalysis_minute(), learningEngineAnalysisTask);
     return false;
