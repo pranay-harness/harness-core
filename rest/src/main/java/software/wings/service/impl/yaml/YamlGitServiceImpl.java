@@ -21,6 +21,7 @@ import software.wings.beans.DelegateTask;
 import software.wings.beans.ErrorCode;
 import software.wings.beans.GitCommit;
 import software.wings.beans.GitConfig;
+import software.wings.beans.HostConnectionAttributes;
 import software.wings.beans.RestResponse;
 import software.wings.beans.SearchFilter.Operator;
 import software.wings.beans.SettingAttribute;
@@ -47,9 +48,11 @@ import software.wings.dl.PageResponse;
 import software.wings.dl.WingsPersistence;
 import software.wings.exception.WingsException;
 import software.wings.exception.YamlProcessingException;
+import software.wings.security.encryption.EncryptedDataDetail;
 import software.wings.service.intfc.AlertService;
 import software.wings.service.intfc.DelegateService;
 import software.wings.service.intfc.SettingsService;
+import software.wings.service.intfc.security.EncryptionService;
 import software.wings.service.intfc.security.SecretManager;
 import software.wings.service.intfc.yaml.YamlChangeSetService;
 import software.wings.service.intfc.yaml.YamlDirectoryService;
@@ -95,6 +98,7 @@ public class YamlGitServiceImpl implements YamlGitService {
   @Inject private DelegateService delegateService;
   @Inject private AlertService alertService;
   @Inject private SettingsService settingsService;
+  @Inject private EncryptionService encryptionService;
 
   /**
    * Gets the yaml git sync info by entityId
@@ -127,6 +131,10 @@ public class YamlGitServiceImpl implements YamlGitService {
     SettingAttribute settingAttribute = null;
     if (!EmptyPredicate.isEmpty(ygs.getSshSettingId())) {
       settingAttribute = settingsService.get(ygs.getSshSettingId());
+      HostConnectionAttributes attributeValue = (HostConnectionAttributes) settingAttribute.getValue();
+      List<EncryptedDataDetail> encryptionDetails =
+          secretManager.getEncryptionDetails(attributeValue, GLOBAL_APP_ID, null);
+      encryptionService.decrypt(attributeValue, encryptionDetails);
     }
 
     return ygs.getGitConfig(settingAttribute);

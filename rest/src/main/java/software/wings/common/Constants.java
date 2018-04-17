@@ -516,6 +516,11 @@ public interface Constants {
   String STATE_TYPE = "stateType";
 
   /**
+   * The constant GIT_USER.
+   */
+  String GIT_USER = "git";
+
+  /**
    * The constant STATE_TYPE.
    */
   String PARENT_FIELDS = "parentFields";

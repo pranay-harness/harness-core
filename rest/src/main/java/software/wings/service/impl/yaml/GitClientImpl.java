@@ -110,20 +110,32 @@ public class GitClientImpl implements GitClient {
                     .append(gitRepoDirectory)
                     .toString());
 
-    try {
-      // Init Git repo
-      Git git = Git.init().setDirectory(new File(gitRepoDirectory)).call();
-
-      git = getCloneCommand(gitConfig, git)
-                .setURI(gitConfig.getRepoUrl())
-                .setDirectory(new File(gitRepoDirectory))
-                .setBranch(gitConfig.getBranch())
-                .call();
-      return GitCloneResult.builder().build();
-    } catch (GitAPIException ex) {
-      logger.error(GIT_YAML_LOG_PREFIX + "Exception: ", ex);
-      checkIfTransportException(ex);
-      throw new WingsException(ErrorCode.YAML_GIT_SYNC_ERROR).addParam("message", "Error in cloning repo");
+    if (!gitConfig.isKeyAuth()) {
+      try (Git git = Git.cloneRepository()
+                         .setURI(gitConfig.getRepoUrl())
+                         .setCredentialsProvider(getCredentialsProvider(gitConfig))
+                         .setDirectory(new File(gitRepoDirectory))
+                         .setBranch(gitConfig.getBranch())
+                         .call()) {
+        return GitCloneResult.builder().build();
+      } catch (GitAPIException ex) {
+        logger.error(GIT_YAML_LOG_PREFIX + "Exception: ", ex);
+        checkIfTransportException(ex);
+        throw new WingsException(ErrorCode.YAML_GIT_SYNC_ERROR).addParam("message", "Error in cloning repo");
+      }
+    } else {
+      CloneCommand cloneCommand = Git.cloneRepository();
+      cloneCommand = (CloneCommand) getAuthConfiguredCommand(cloneCommand, gitConfig);
+      try (Git git = cloneCommand.setURI(gitConfig.getRepoUrl())
+                         .setDirectory(new File(gitRepoDirectory))
+                         .setBranch(gitConfig.getBranch())
+                         .call()) {
+        return GitCloneResult.builder().build();
+      } catch (GitAPIException ex) {
+        logger.error(GIT_YAML_LOG_PREFIX + "Exception: ", ex);
+        checkIfTransportException(ex);
+        throw new WingsException(ErrorCode.YAML_GIT_SYNC_ERROR).addParam("message", "Error in cloning repo");
+      }
     }
   }
 
@@ -147,7 +159,7 @@ public class GitClientImpl implements GitClient {
           try {
             session = getSSHSession(newConfig);
           } catch (JSchException jse) {
-            logger.error("getAuthConfiguredCommand : Could not get SSH Session");
+            logger.error("getAuthConfiguredCommand : Could not get SSH Session", jse);
           }
         }
 
@@ -423,7 +435,7 @@ public class GitClientImpl implements GitClient {
             filePath -> commitMessage.append(String.format("%s: %s\n", DiffEntry.ChangeType.DELETE, filePath)));
       }
       RevCommit revCommit = git.commit()
-                                .setCommitter(gitConfig.getUsername(), "")
+                                .setCommitter("Harness.io", "support@harness.io")
                                 .setAuthor("Harness.io", "support@harness.io")
                                 .setAll(true)
                                 .setMessage(commitMessage.toString())
