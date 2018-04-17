@@ -14,6 +14,7 @@ import com.fasterxml.jackson.datatype.jsr310.JavaTimeModule;
 import io.swagger.annotations.SwaggerDefinition;
 import io.swagger.jaxrs.Reader;
 import io.swagger.jaxrs.config.ReaderListener;
+import io.swagger.models.Info;
 import io.swagger.models.Operation;
 import io.swagger.models.Path;
 import io.swagger.models.Swagger;
@@ -47,6 +48,10 @@ public class SwaggerFileExamplesReader implements ReaderListener {
 
   @Override
   public void beforeScan(Reader reader, Swagger swagger) {
+    Info info = new Info();
+    info.title("Harness Manager");
+    swagger.info(info);
+
     swagger.securityDefinition("oauth", new OAuth2Definition().password("/users/login"));
   }
 
