@@ -382,7 +382,7 @@ public class KubernetesSetupTest extends WingsBaseTest {
     ContainerServiceElement containerServiceElement = buildContainerServiceElement("5", "5", 3);
 
     assertThat(containerServiceElement.getName()).isEqualTo(KUBERNETES_CONTROLLER_NAME);
-    assertThat(containerServiceElement.getMaxInstances()).isEqualTo(3);
+    assertThat(containerServiceElement.getMaxInstances()).isEqualTo(5);
     assertThat(containerServiceElement.getFixedInstances()).isEqualTo(5);
   }
 
