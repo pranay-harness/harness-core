@@ -182,13 +182,21 @@ public class WhitelistServiceImpl implements WhitelistService {
       if (filter.contains("/")) {
         try {
           SubnetUtils subnetUtils = new SubnetUtils(filter);
-          return subnetUtils.getInfo().isInRange(ipAddress);
+          boolean inRange = subnetUtils.getInfo().isInRange(ipAddress);
+          if (!inRange) {
+            logger.warn("ip {} is not in range: {}", ipAddress, filter);
+          }
+          return inRange;
         } catch (Exception ex) {
           logger.warn("Exception while checking if the ip {} is in range: {}", ipAddress, filter);
           return false;
         }
       } else {
-        return ipAddress.matches(filter);
+        boolean matches = ipAddress.equals(filter);
+        if (!matches) {
+          logger.warn("ip {} does not match configured ip filter: {}", ipAddress, filter);
+        }
+        return matches;
       }
     });
   }
