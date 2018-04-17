@@ -17,6 +17,7 @@ import software.wings.service.impl.analysis.AnalysisServiceImpl;
 import software.wings.service.impl.analysis.LogMLAnalysisSummary;
 import software.wings.service.impl.elk.ElkIndexTemplate;
 import software.wings.service.impl.elk.ElkLogFetchRequest;
+import software.wings.service.impl.elk.ElkQueryType;
 import software.wings.service.intfc.analysis.LogAnalysisResource;
 import software.wings.service.intfc.elk.ElkAnalysisService;
 import software.wings.sm.StateType;
@@ -94,9 +95,17 @@ public class ElkResource implements LogAnalysisResource {
   public RestResponse<Boolean> validateQuery(
       @QueryParam("accountId") String accountId, @QueryParam("query") String query) throws IOException {
     try {
-      new ElkLogFetchRequest(query, "logstash-*", "beat.hostname", "message", "@timestamp",
-          Sets.newHashSet("ip-172-31-8-144", "ip-172-31-12-79", "ip-172-31-13-153"),
-          1518724315175L - TimeUnit.MINUTES.toMillis(1), 1518724315175L)
+      ElkLogFetchRequest.builder()
+          .query(query)
+          .indices("logstash-*")
+          .hostnameField("beat.hostname")
+          .messageField("message")
+          .timestampField("@timestamp")
+          .hosts(Sets.newHashSet("ip-172-31-8-144", "ip-172-31-12-79", "ip-172-31-13-153"))
+          .startTime(1518724315175L - TimeUnit.MINUTES.toMillis(1))
+          .endTime(1518724315175L)
+          .queryType(ElkQueryType.TERM)
+          .build()
           .toElasticSearchJsonObject();
       return new RestResponse<>(true);
     } catch (Exception ex) {

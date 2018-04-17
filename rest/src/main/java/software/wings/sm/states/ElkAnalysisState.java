@@ -28,6 +28,8 @@ import software.wings.service.impl.analysis.AnalysisToleranceProvider;
 import software.wings.service.impl.analysis.DataCollectionCallback;
 import software.wings.service.impl.elk.ElkDataCollectionInfo;
 import software.wings.service.impl.elk.ElkLogFetchRequest;
+import software.wings.service.impl.elk.ElkQueryType;
+import software.wings.service.impl.elk.ElkQueryTypeProvider;
 import software.wings.service.impl.elk.ElkSettingProvider;
 import software.wings.service.intfc.elk.ElkAnalysisService;
 import software.wings.sm.ContextElementType;
@@ -73,6 +75,8 @@ public class ElkAnalysisState extends AbstractLogAnalysisState {
   @Attributes(required = true, title = "Timestamp format")
   @DefaultValue("yyyy-MM-dd'T'HH:mm:ss.SSS'Z'")
   private String timestampFormat;
+
+  @Attributes(required = true, title = "Query Type") @DefaultValue("TERM") private String queryType;
 
   public ElkAnalysisState(String name) {
     super(name, StateType.ELK.getType());
@@ -143,6 +147,18 @@ public class ElkAnalysisState extends AbstractLogAnalysisState {
     return query;
   }
 
+  @EnumData(enumDataProvider = ElkQueryTypeProvider.class)
+  public ElkQueryType getQueryType() {
+    if (isBlank(queryType)) {
+      return ElkQueryType.TERM;
+    }
+    return ElkQueryType.valueOf(queryType);
+  }
+
+  public void setQueryType(String queryType) {
+    this.queryType = queryType;
+  }
+
   @Attributes(title = "Execute with previous steps")
   public boolean getExecuteWithPreviousSteps() {
     return super.isExecuteWithPreviousSteps();
@@ -200,12 +216,29 @@ public class ElkAnalysisState extends AbstractLogAnalysisState {
     List<DelegateTask> delegateTasks = new ArrayList<>();
     int i = 0;
     for (Set<String> hostBatch : batchedHosts) {
-      final ElkDataCollectionInfo dataCollectionInfo = new ElkDataCollectionInfo(elkConfig, accountId,
-          context.getAppId(), context.getStateExecutionInstanceId(), getWorkflowId(context),
-          context.getWorkflowExecutionId(), getPhaseServiceId(context), queries, finalIndices,
-          context.renderExpression(hostnameField), context.renderExpression(messageField), timestampField,
-          timestampFieldFormat, logCollectionStartTimeStamp, 0, Integer.parseInt(timeDuration), hostBatch,
-          secretManager.getEncryptionDetails(elkConfig, context.getAppId(), context.getWorkflowExecutionId()));
+      final ElkDataCollectionInfo dataCollectionInfo =
+          ElkDataCollectionInfo.builder()
+              .elkConfig(elkConfig)
+              .accountId(accountId)
+              .applicationId(context.getAppId())
+              .stateExecutionId(context.getStateExecutionInstanceId())
+              .workflowId(getWorkflowId(context))
+              .workflowExecutionId(context.getWorkflowExecutionId())
+              .serviceId(getPhaseServiceId(context))
+              .queries(queries)
+              .indices(finalIndices)
+              .hostnameField(context.renderExpression(hostnameField))
+              .messageField(context.renderExpression(messageField))
+              .timestampField(timestampField)
+              .timestampFieldFormat(timestampFieldFormat)
+              .queryType(getQueryType())
+              .startTime(logCollectionStartTimeStamp)
+              .startMinute(0)
+              .collectionTime(Integer.parseInt(timeDuration))
+              .hosts(hostBatch)
+              .encryptedDataDetails(
+                  secretManager.getEncryptionDetails(elkConfig, context.getAppId(), context.getWorkflowExecutionId()))
+              .build();
 
       String waitId = generateUuid();
       delegateTasks.add(aDelegateTask()
@@ -243,9 +276,17 @@ public class ElkAnalysisState extends AbstractLogAnalysisState {
   public Map<String, String> validateFields() {
     Map<String, String> invalidFields = new HashMap<>();
     try {
-      new ElkLogFetchRequest(query, "logstash-*", "beat.hostname", "message", "@timestamp",
-          Sets.newHashSet("ip-172-31-8-144", "ip-172-31-12-79", "ip-172-31-13-153"),
-          1518724315175L - TimeUnit.MINUTES.toMillis(1), 1518724315175L)
+      ElkLogFetchRequest.builder()
+          .query(query)
+          .indices("logstash-*")
+          .hostnameField("beat.hostname")
+          .messageField("message")
+          .timestampField("@timestamp")
+          .hosts(Sets.newHashSet("ip-172-31-8-144", "ip-172-31-12-79", "ip-172-31-13-153"))
+          .startTime(1518724315175L - TimeUnit.MINUTES.toMillis(1))
+          .endTime(1518724315175L)
+          .queryType(ElkQueryType.TERM)
+          .build()
           .toElasticSearchJsonObject();
     } catch (Exception ex) {
       invalidFields.put("query", ex.getMessage());

@@ -1,10 +1,8 @@
 package software.wings.service.impl.logz;
 
-import lombok.AllArgsConstructor;
 import lombok.Builder;
 import lombok.Data;
 import lombok.EqualsAndHashCode;
-import lombok.NoArgsConstructor;
 import lombok.ToString;
 import software.wings.beans.config.LogzConfig;
 import software.wings.security.encryption.EncryptedDataDetail;
@@ -19,10 +17,7 @@ import java.util.Set;
  */
 @Data
 @EqualsAndHashCode(callSuper = false)
-@NoArgsConstructor
-@AllArgsConstructor
 @ToString(callSuper = true)
-@Builder
 public class LogzDataCollectionInfo extends LogDataCollectionInfo {
   private LogzConfig logzConfig;
   private String hostnameField;
@@ -30,6 +25,7 @@ public class LogzDataCollectionInfo extends LogDataCollectionInfo {
   private String timestampField;
   private String timestampFieldFormat;
 
+  @Builder
   public LogzDataCollectionInfo(LogzConfig logzConfig, String accountId, String applicationId, String stateExecutionId,
       String workflowId, String workflowExecutionId, String serviceId, Set<String> queries, String hostnameField,
       String messageField, String timestampField, String timestampFieldFormat, long startTime, int startMinute,

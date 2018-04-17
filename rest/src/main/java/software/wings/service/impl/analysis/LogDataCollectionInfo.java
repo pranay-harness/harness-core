@@ -2,7 +2,6 @@ package software.wings.service.impl.analysis;
 
 import lombok.AllArgsConstructor;
 import lombok.Data;
-import lombok.NoArgsConstructor;
 import software.wings.security.encryption.EncryptedDataDetail;
 import software.wings.sm.StateType;
 
@@ -14,7 +13,6 @@ import java.util.Set;
  * Created by rsingh on 8/8/17.
  */
 @Data
-@NoArgsConstructor
 @AllArgsConstructor
 public abstract class LogDataCollectionInfo {
   private String accountId;

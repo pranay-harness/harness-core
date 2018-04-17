@@ -131,12 +131,25 @@ public class SumoLogicAnalysisState extends AbstractLogAnalysisState {
     List<DelegateTask> delegateTasks = new ArrayList<>();
     int i = 0;
     for (Set<String> hostBatch : batchedHosts) {
-      final SumoDataCollectionInfo dataCollectionInfo = new SumoDataCollectionInfo(sumoConfig,
-          appService.get(context.getAppId()).getAccountId(), context.getAppId(), context.getStateExecutionInstanceId(),
-          getWorkflowId(context), context.getWorkflowExecutionId(), getPhaseServiceId(context), queries,
-          logCollectionStartTimeStamp, 0, Integer.parseInt(timeDuration), hostBatch,
-          secretManager.getEncryptionDetails(sumoConfig, context.getAppId(), context.getWorkflowExecutionId()),
-          getHostnameField());
+      final SumoDataCollectionInfo dataCollectionInfo =
+          SumoDataCollectionInfo.builder()
+              .sumoConfig(sumoConfig)
+              .accountId(appService.get(context.getAppId()).getAccountId())
+              .applicationId(context.getAppId())
+              .stateExecutionId(context.getStateExecutionInstanceId())
+              .workflowId(getWorkflowId(context))
+              .workflowExecutionId(context.getWorkflowExecutionId())
+              .serviceId(getPhaseServiceId(context))
+              .queries(queries)
+              .startTime(logCollectionStartTimeStamp)
+              .startMinute(0)
+              .collectionTime(Integer.parseInt(timeDuration))
+              .hosts(hostBatch)
+              .encryptedDataDetails(
+                  secretManager.getEncryptionDetails(sumoConfig, context.getAppId(), context.getWorkflowExecutionId()))
+              .hostnameField(getHostnameField())
+              .build();
+
       String waitId = generateUuid();
       PhaseElement phaseElement = context.getContextElement(ContextElementType.PARAM, Constants.PHASE_PARAM);
       String infrastructureMappingId = phaseElement == null ? null : phaseElement.getInfraMappingId();

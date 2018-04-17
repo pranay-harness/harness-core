@@ -105,11 +105,24 @@ public class SplunkV2State extends AbstractLogAnalysisState {
     List<DelegateTask> delegateTasks = new ArrayList<>();
     int i = 0;
     for (Set<String> hostBatch : batchedHosts) {
-      final SplunkDataCollectionInfo dataCollectionInfo = new SplunkDataCollectionInfo(splunkConfig,
-          appService.get(context.getAppId()).getAccountId(), context.getAppId(), context.getStateExecutionInstanceId(),
-          getWorkflowId(context), context.getWorkflowExecutionId(), getPhaseServiceId(context), queries,
-          logCollectionStartTimeStamp, 0, Integer.parseInt(timeDuration), hostBatch,
-          secretManager.getEncryptionDetails(splunkConfig, context.getAppId(), context.getWorkflowExecutionId()));
+      final SplunkDataCollectionInfo dataCollectionInfo =
+          SplunkDataCollectionInfo.builder()
+              .splunkConfig(splunkConfig)
+              .accountId(appService.get(context.getAppId()).getAccountId())
+              .applicationId(context.getAppId())
+              .stateExecutionId(context.getStateExecutionInstanceId())
+              .workflowId(getWorkflowId(context))
+              .workflowExecutionId(context.getWorkflowExecutionId())
+              .serviceId(getPhaseServiceId(context))
+              .queries(queries)
+              .startTime(logCollectionStartTimeStamp)
+              .startMinute(0)
+              .collectionTime(Integer.parseInt(timeDuration))
+              .hosts(hostBatch)
+              .encryptedDataDetails(secretManager.getEncryptionDetails(
+                  splunkConfig, context.getAppId(), context.getWorkflowExecutionId()))
+              .build();
+
       String waitId = generateUuid();
       PhaseElement phaseElement = context.getContextElement(ContextElementType.PARAM, Constants.PHASE_PARAM);
       String infrastructureMappingId = phaseElement == null ? null : phaseElement.getInfraMappingId();

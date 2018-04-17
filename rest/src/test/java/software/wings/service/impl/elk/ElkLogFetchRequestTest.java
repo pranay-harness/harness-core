@@ -114,8 +114,16 @@ public class ElkLogFetchRequestTest {
   }
 
   private ElkLogFetchRequest getElkLogFetchRequest(String query) {
-    return new ElkLogFetchRequest(query, "logstash-*", "beat.hostname", "message", "@timestamp",
-        Sets.newHashSet("ip-172-31-8-144", "ip-172-31-12-79", "ip-172-31-13-153"),
-        1518724315175L - TimeUnit.MINUTES.toMillis(1), 1518724315175L);
+    return ElkLogFetchRequest.builder()
+        .query(query)
+        .indices("logstash-*")
+        .hostnameField("beat.hostname")
+        .messageField("message")
+        .timestampField("@timestamp")
+        .hosts(Sets.newHashSet("ip-172-31-8-144", "ip-172-31-12-79", "ip-172-31-13-153"))
+        .startTime(1518724315175L - TimeUnit.MINUTES.toMillis(1))
+        .endTime(1518724315175L)
+        .queryType(ElkQueryType.TERM)
+        .build();
   }
 }

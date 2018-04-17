@@ -1,9 +1,8 @@
 package software.wings.service.impl.elk;
 
-import lombok.AllArgsConstructor;
+import lombok.Builder;
 import lombok.Data;
 import lombok.EqualsAndHashCode;
-import lombok.NoArgsConstructor;
 import lombok.ToString;
 import software.wings.beans.ElkConfig;
 import software.wings.security.encryption.EncryptedDataDetail;
@@ -18,8 +17,6 @@ import java.util.Set;
  */
 @Data
 @EqualsAndHashCode(callSuper = false)
-@NoArgsConstructor
-@AllArgsConstructor
 @ToString(callSuper = true)
 public class ElkDataCollectionInfo extends LogDataCollectionInfo {
   private ElkConfig elkConfig;
@@ -28,11 +25,14 @@ public class ElkDataCollectionInfo extends LogDataCollectionInfo {
   private String messageField;
   private String timestampField;
   private String timestampFieldFormat;
+  private ElkQueryType queryType;
 
+  @Builder
   public ElkDataCollectionInfo(ElkConfig elkConfig, String accountId, String applicationId, String stateExecutionId,
       String workflowId, String workflowExecutionId, String serviceId, Set<String> queries, String indices,
-      String hostnameField, String messageField, String timestampField, String timestampFieldFormat, long startTime,
-      int startMinute, int collectionTime, Set<String> hosts, List<EncryptedDataDetail> encryptedDataDetails) {
+      String hostnameField, String messageField, String timestampField, String timestampFieldFormat,
+      ElkQueryType queryType, long startTime, int startMinute, int collectionTime, Set<String> hosts,
+      List<EncryptedDataDetail> encryptedDataDetails) {
     super(accountId, applicationId, stateExecutionId, workflowId, workflowExecutionId, serviceId, queries, startTime,
         startMinute, collectionTime, hosts, StateType.ELK, encryptedDataDetails);
     this.elkConfig = elkConfig;
@@ -41,5 +41,6 @@ public class ElkDataCollectionInfo extends LogDataCollectionInfo {
     this.messageField = messageField;
     this.timestampField = timestampField;
     this.timestampFieldFormat = timestampFieldFormat;
+    this.queryType = queryType;
   }
 }

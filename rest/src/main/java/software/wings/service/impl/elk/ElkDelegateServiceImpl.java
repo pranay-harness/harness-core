@@ -1,5 +1,7 @@
 package software.wings.service.impl.elk;
 
+import static io.harness.data.structure.EmptyPredicate.isEmpty;
+import static io.harness.data.structure.EmptyPredicate.isNotEmpty;
 import static io.harness.network.Http.getOkHttpClientBuilder;
 import static io.harness.network.Http.getOkHttpClientBuilderWithReadtimeOut;
 import static org.apache.commons.lang3.StringUtils.isBlank;
@@ -54,11 +56,11 @@ public class ElkDelegateServiceImpl implements ElkDelegateService {
   @Override
   public boolean validateConfig(ElkConfig elkConfig, List<EncryptedDataDetail> encryptedDataDetails) {
     try {
-      if (isNotBlank(elkConfig.getUsername()) && elkConfig.getPassword() == null) {
+      if (isNotBlank(elkConfig.getUsername()) && isEmpty(elkConfig.getPassword())) {
         throw new WingsException("User name is given but password is empty");
       }
 
-      if (isBlank(elkConfig.getUsername()) && elkConfig.getPassword() != null) {
+      if (isBlank(elkConfig.getUsername()) && isNotEmpty(elkConfig.getPassword())) {
         throw new WingsException("User name is empty but password is given");
       }
       getLogSample(elkConfig, "*", encryptedDataDetails);
