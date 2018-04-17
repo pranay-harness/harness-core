@@ -130,12 +130,7 @@ public class AzureKubernetesInfraMappingYamlHandlerTest extends BaseYamlHandlerT
   }
 
   private Service getService() {
-    return Service.Builder.aService()
-        .withName(serviceName)
-        .withAppId(APP_ID)
-        .withUuid(SERVICE_ID)
-        .withArtifactType(ArtifactType.DOCKER)
-        .build();
+    return Service.builder().name(serviceName).appId(APP_ID).uuid(SERVICE_ID).artifactType(ArtifactType.DOCKER).build();
   }
 
   private Environment getEnvironment() {

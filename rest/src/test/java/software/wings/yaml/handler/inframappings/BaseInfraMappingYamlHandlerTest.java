@@ -5,7 +5,6 @@ import static org.mockito.Matchers.anyString;
 import static org.mockito.Mockito.when;
 import static software.wings.beans.Application.Builder.anApplication;
 import static software.wings.beans.Environment.Builder.anEnvironment;
-import static software.wings.beans.Service.Builder.aService;
 import static software.wings.beans.ServiceTemplate.Builder.aServiceTemplate;
 import static software.wings.beans.SettingAttribute.Builder.aSettingAttribute;
 import static software.wings.beans.yaml.YamlConstants.PATH_DELIMITER;
@@ -43,12 +42,8 @@ import software.wings.yaml.BaseYaml;
 import software.wings.yaml.handler.BaseYamlHandlerTest;
 
 public class BaseInfraMappingYamlHandlerTest extends BaseYamlHandlerTest {
-  protected Service service = aService()
-                                  .withName(SERVICE_NAME)
-                                  .withAppId(APP_ID)
-                                  .withUuid(SERVICE_ID)
-                                  .withArtifactType(ArtifactType.DOCKER)
-                                  .build();
+  protected Service service =
+      Service.builder().name(SERVICE_NAME).appId(APP_ID).uuid(SERVICE_ID).artifactType(ArtifactType.DOCKER).build();
 
   protected Environment environment = anEnvironment().withName(ENV_NAME).withAppId(APP_ID).withUuid(ENV_ID).build();
 

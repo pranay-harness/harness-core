@@ -21,7 +21,6 @@ import static software.wings.beans.GraphNode.GraphNodeBuilder.aGraphNode;
 import static software.wings.beans.PhaseStep.PhaseStepBuilder.aPhaseStep;
 import static software.wings.beans.PhysicalDataCenterConfig.Builder.aPhysicalDataCenterConfig;
 import static software.wings.beans.Pipeline.Builder.aPipeline;
-import static software.wings.beans.Service.Builder.aService;
 import static software.wings.beans.ServiceInstance.Builder.aServiceInstance;
 import static software.wings.beans.ServiceTemplate.Builder.aServiceTemplate;
 import static software.wings.beans.SettingAttribute.Builder.aSettingAttribute;
@@ -213,7 +212,7 @@ public class WorkflowExecutionServiceImplTest extends WingsBaseTest {
         Host.class, aHost().withAppId(app.getAppId()).withEnvId(env.getUuid()).withHostName("host2").build());
 
     Service service = wingsPersistence.saveAndGet(
-        Service.class, aService().withUuid(generateUuid()).withName("svc1").withAppId(app.getUuid()).build());
+        Service.class, Service.builder().uuid(generateUuid()).name("svc1").appId(app.getUuid()).build());
     ServiceTemplate serviceTemplate = wingsPersistence.saveAndGet(ServiceTemplate.class,
         aServiceTemplate()
             .withAppId(app.getUuid())
@@ -341,7 +340,7 @@ public class WorkflowExecutionServiceImplTest extends WingsBaseTest {
         Host.class, aHost().withAppId(app.getAppId()).withEnvId(env.getUuid()).withHostName("host2").build());
 
     Service service = wingsPersistence.saveAndGet(
-        Service.class, aService().withUuid(generateUuid()).withName("svc1").withAppId(app.getUuid()).build());
+        Service.class, Service.builder().uuid(generateUuid()).name("svc1").appId(app.getUuid()).build());
     ServiceTemplate serviceTemplate = wingsPersistence.saveAndGet(ServiceTemplate.class,
         aServiceTemplate()
             .withAppId(app.getUuid())
@@ -445,9 +444,9 @@ public class WorkflowExecutionServiceImplTest extends WingsBaseTest {
         Host.class, aHost().withAppId(app.getUuid()).withEnvId(env.getUuid()).withHostName("host2").build());
 
     Service service1 = wingsPersistence.saveAndGet(
-        Service.class, aService().withUuid(generateUuid()).withName("svc1").withAppId(app.getUuid()).build());
+        Service.class, Service.builder().uuid(generateUuid()).name("svc1").appId(app.getUuid()).build());
     Service service2 = wingsPersistence.saveAndGet(
-        Service.class, aService().withUuid(generateUuid()).withName("svc2").withAppId(app.getUuid()).build());
+        Service.class, Service.builder().uuid(generateUuid()).name("svc2").appId(app.getUuid()).build());
     ServiceTemplate serviceTemplate1 = wingsPersistence.saveAndGet(ServiceTemplate.class,
         aServiceTemplate()
             .withAppId(app.getUuid())
@@ -616,7 +615,7 @@ public class WorkflowExecutionServiceImplTest extends WingsBaseTest {
         Host.class, aHost().withAppId(app.getUuid()).withEnvId(env.getUuid()).withHostName("host").build());
 
     Service service = wingsPersistence.saveAndGet(
-        Service.class, aService().withUuid(generateUuid()).withName("svc1").withAppId(app.getUuid()).build());
+        Service.class, Service.builder().uuid(generateUuid()).name("svc1").appId(app.getUuid()).build());
     ServiceTemplate serviceTemplate = wingsPersistence.saveAndGet(ServiceTemplate.class,
         aServiceTemplate()
             .withAppId(app.getUuid())
@@ -1022,9 +1021,9 @@ public class WorkflowExecutionServiceImplTest extends WingsBaseTest {
   @Ignore
   public void shouldPauseAllAndResumeAllState() throws InterruptedException {
     Service service1 = wingsPersistence.saveAndGet(
-        Service.class, aService().withUuid(generateUuid()).withName("svc1").withAppId(app.getUuid()).build());
+        Service.class, Service.builder().uuid(generateUuid()).name("svc1").appId(app.getUuid()).build());
     Service service2 = wingsPersistence.saveAndGet(
-        Service.class, aService().withUuid(generateUuid()).withName("svc2").withAppId(app.getUuid()).build());
+        Service.class, Service.builder().uuid(generateUuid()).name("svc2").appId(app.getUuid()).build());
 
     Graph graph =
         aGraph()
@@ -1279,9 +1278,9 @@ public class WorkflowExecutionServiceImplTest extends WingsBaseTest {
   @Test
   public void shouldAbortAllStates() {
     Service service1 = wingsPersistence.saveAndGet(
-        Service.class, aService().withUuid(generateUuid()).withName("svc1").withAppId(app.getUuid()).build());
+        Service.class, Service.builder().uuid(generateUuid()).name("svc1").appId(app.getUuid()).build());
     Service service2 = wingsPersistence.saveAndGet(
-        Service.class, aService().withUuid(generateUuid()).withName("svc2").withAppId(app.getUuid()).build());
+        Service.class, Service.builder().uuid(generateUuid()).name("svc2").appId(app.getUuid()).build());
 
     Graph graph =
         aGraph()
@@ -1375,7 +1374,7 @@ public class WorkflowExecutionServiceImplTest extends WingsBaseTest {
         Host.class, aHost().withAppId(app.getAppId()).withEnvId(env.getUuid()).withHostName("host2").build());
 
     Service service = wingsPersistence.saveAndGet(
-        Service.class, aService().withUuid(generateUuid()).withName("svc1").withAppId(app.getUuid()).build());
+        Service.class, Service.builder().uuid(generateUuid()).name("svc1").appId(app.getUuid()).build());
     ServiceTemplate serviceTemplate = wingsPersistence.saveAndGet(ServiceTemplate.class,
         aServiceTemplate()
             .withAppId(app.getUuid())
@@ -1577,7 +1576,7 @@ public class WorkflowExecutionServiceImplTest extends WingsBaseTest {
         Host.class, aHost().withAppId(app.getUuid()).withEnvId(env.getUuid()).withHostName("host1").build());
 
     Service service = wingsPersistence.saveAndGet(
-        Service.class, aService().withUuid(generateUuid()).withName("svc1").withAppId(app.getUuid()).build());
+        Service.class, Service.builder().uuid(generateUuid()).name("svc1").appId(app.getUuid()).build());
     ServiceTemplate serviceTemplate = wingsPersistence.saveAndGet(ServiceTemplate.class,
         aServiceTemplate()
             .withAppId(app.getUuid())
@@ -1729,7 +1728,7 @@ public class WorkflowExecutionServiceImplTest extends WingsBaseTest {
   @Test
   public void shouldTriggerCanaryWorkflow() throws InterruptedException {
     Service service = wingsPersistence.saveAndGet(
-        Service.class, aService().withUuid(generateUuid()).withName("svc1").withAppId(app.getUuid()).build());
+        Service.class, Service.builder().uuid(generateUuid()).name("svc1").appId(app.getUuid()).build());
 
     ServiceTemplate serviceTemplate = wingsPersistence.saveAndGet(ServiceTemplate.class,
         aServiceTemplate()
@@ -1763,10 +1762,10 @@ public class WorkflowExecutionServiceImplTest extends WingsBaseTest {
   @Test
   public void shouldTriggerTemplateCanaryWorkflow() throws InterruptedException {
     Service service = wingsPersistence.saveAndGet(
-        Service.class, aService().withUuid(generateUuid()).withName("svc1").withAppId(app.getUuid()).build());
+        Service.class, Service.builder().uuid(generateUuid()).name("svc1").appId(app.getUuid()).build());
 
     Service templateService = wingsPersistence.saveAndGet(
-        Service.class, aService().withUuid(generateUuid()).withName("svc2").withAppId(app.getUuid()).build());
+        Service.class, Service.builder().uuid(generateUuid()).name("svc2").appId(app.getUuid()).build());
 
     ServiceTemplate serviceTemplate = wingsPersistence.saveAndGet(ServiceTemplate.class,
         aServiceTemplate()

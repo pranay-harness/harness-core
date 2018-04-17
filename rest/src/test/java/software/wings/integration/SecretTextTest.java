@@ -743,7 +743,7 @@ public class SecretTextTest extends WingsBaseTest {
     assertEquals(encryptionType, encryptedData.getEncryptionType());
     assertEquals(CONFIG_FILE, encryptedData.getType());
 
-    Service service = Service.Builder.aService().withName(generateUuid()).withAppId(appId).build();
+    Service service = Service.builder().name(generateUuid()).appId(appId).build();
     wingsPersistence.save(service);
 
     ConfigFile configFile = ConfigFile.builder()
@@ -880,7 +880,7 @@ public class SecretTextTest extends WingsBaseTest {
     int numOfVariable = 10;
     Set<String> variableIds = new HashSet<>();
     for (int i = 0; i < numOfVariable; i++) {
-      Service service = Service.Builder.aService().withName(generateUuid()).withAppId(appId).build();
+      Service service = Service.builder().name(generateUuid()).appId(appId).build();
       wingsPersistence.save(service);
 
       ConfigFile configFile = ConfigFile.builder()
@@ -993,7 +993,7 @@ public class SecretTextTest extends WingsBaseTest {
     int numOfVariable = 10;
     Set<String> variableIds = new HashSet<>();
     for (int i = 0; i < numOfVariable; i++) {
-      Service service = Service.Builder.aService().withName(generateUuid()).withAppId(appId).build();
+      Service service = Service.builder().name(generateUuid()).appId(appId).build();
       wingsPersistence.save(service);
 
       ConfigFile configFile = ConfigFile.builder()
@@ -1088,7 +1088,7 @@ public class SecretTextTest extends WingsBaseTest {
     assertEquals(CONFIG_FILE, encryptedData.getType());
     assertEquals(secretFileId, encryptedData.getUuid());
 
-    Service service = Service.Builder.aService().withName(generateUuid()).withAppId(appId).build();
+    Service service = Service.builder().name(generateUuid()).appId(appId).build();
     wingsPersistence.save(service);
 
     ConfigFile configFile = ConfigFile.builder()

@@ -18,7 +18,6 @@ import static software.wings.beans.PhaseStepType.PRE_DEPLOYMENT;
 import static software.wings.beans.Pipeline.Builder.aPipeline;
 import static software.wings.beans.PipelineExecution.Builder.aPipelineExecution;
 import static software.wings.beans.SearchFilter.Operator.EQ;
-import static software.wings.beans.Service.Builder.aService;
 import static software.wings.beans.Variable.VariableBuilder.aVariable;
 import static software.wings.beans.Workflow.WorkflowBuilder.aWorkflow;
 import static software.wings.dl.PageRequest.PageRequestBuilder.aPageRequest;
@@ -29,6 +28,7 @@ import static software.wings.utils.WingsTestConstants.APP_NAME;
 import static software.wings.utils.WingsTestConstants.ENV_ID;
 import static software.wings.utils.WingsTestConstants.PIPELINE_ID;
 import static software.wings.utils.WingsTestConstants.SERVICE_ID;
+import static software.wings.utils.WingsTestConstants.SERVICE_NAME;
 import static software.wings.utils.WingsTestConstants.WORKFLOW_ID;
 
 import com.google.common.collect.ImmutableMap;
@@ -51,6 +51,7 @@ import software.wings.beans.PipelineExecution;
 import software.wings.beans.PipelineStage;
 import software.wings.beans.PipelineStage.PipelineStageElement;
 import software.wings.beans.RepairActionCode;
+import software.wings.beans.Service;
 import software.wings.beans.WorkflowType;
 import software.wings.common.Constants;
 import software.wings.dl.PageResponse;
@@ -262,7 +263,10 @@ public class PipelineServiceTest extends WingsBaseTest {
                         .build());
 
     when(workflowService.readWorkflow(APP_ID, WORKFLOW_ID))
-        .thenReturn(aWorkflow().withServices(asList(aService().withUuid(SERVICE_ID).build())).build());
+        .thenReturn(
+            aWorkflow()
+                .withServices(asList(Service.builder().appId(APP_ID).uuid(SERVICE_ID).name(SERVICE_NAME).build()))
+                .build());
 
     Pipeline pipeline = pipelineService.readPipeline(APP_ID, PIPELINE_ID, true);
     assertThat(pipeline).isNotNull().hasFieldOrPropertyWithValue("uuid", PIPELINE_ID);
@@ -290,7 +294,10 @@ public class PipelineServiceTest extends WingsBaseTest {
                 .build());
 
     when(serviceResourceService.list(any(), anyBoolean(), anyBoolean()))
-        .thenReturn(aPageResponse().withResponse(asList(aService().withUuid(SERVICE_ID).build())).build());
+        .thenReturn(
+            aPageResponse()
+                .withResponse(asList(Service.builder().appId(APP_ID).uuid(SERVICE_ID).name(SERVICE_NAME).build()))
+                .build());
     when(workflowService.readWorkflow(APP_ID, WORKFLOW_ID))
         .thenReturn(
             aWorkflow()
@@ -301,7 +308,7 @@ public class PipelineServiceTest extends WingsBaseTest {
                         .withPreDeploymentSteps(aPhaseStep(PRE_DEPLOYMENT, Constants.PRE_DEPLOYMENT).build())
                         .withPostDeploymentSteps(aPhaseStep(POST_DEPLOYMENT, Constants.POST_DEPLOYMENT).build())
                         .build())
-                .withServices(asList(aService().withUuid(SERVICE_ID).build()))
+                .withServices(asList(Service.builder().appId(APP_ID).uuid(SERVICE_ID).name(SERVICE_NAME).build()))
                 .build());
 
     Pipeline pipeline = pipelineService.readPipeline(APP_ID, PIPELINE_ID, true);

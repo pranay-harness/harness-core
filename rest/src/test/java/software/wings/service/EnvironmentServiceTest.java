@@ -17,7 +17,6 @@ import static software.wings.beans.Environment.EnvironmentType.PROD;
 import static software.wings.beans.PhysicalInfrastructureMapping.Builder.aPhysicalInfrastructureMapping;
 import static software.wings.beans.SearchFilter.Operator.EQ;
 import static software.wings.beans.SearchFilter.Operator.IN;
-import static software.wings.beans.Service.Builder.aService;
 import static software.wings.beans.ServiceTemplate.Builder.aServiceTemplate;
 import static software.wings.beans.ServiceVariable.Type.TEXT;
 import static software.wings.dl.PageRequest.PageRequestBuilder.aPageRequest;
@@ -289,13 +288,13 @@ public class EnvironmentServiceTest extends WingsBaseTest {
         .thenReturn(serviceTemplate);
 
     when(serviceResourceService.get(APP_ID, SERVICE_ID))
-        .thenReturn(aService().withUuid(SERVICE_ID).withArtifactType(WAR).build());
+        .thenReturn(Service.builder().uuid(SERVICE_ID).artifactType(WAR).build());
     when(serviceResourceService.get(APP_ID, SERVICE_ID, false))
-        .thenReturn(aService().withUuid(SERVICE_ID).withArtifactType(WAR).build());
+        .thenReturn(Service.builder().uuid(SERVICE_ID).artifactType(WAR).build());
     when(serviceResourceService.get(TARGET_APP_ID, TARGET_SERVICE_ID))
-        .thenReturn(aService().withUuid(TARGET_SERVICE_ID).withArtifactType(WAR).build());
+        .thenReturn(Service.builder().uuid(TARGET_SERVICE_ID).artifactType(WAR).build());
     when(serviceResourceService.get(TARGET_APP_ID, TARGET_SERVICE_ID, false))
-        .thenReturn(aService().withUuid(TARGET_SERVICE_ID).withArtifactType(WAR).build());
+        .thenReturn(Service.builder().uuid(TARGET_SERVICE_ID).artifactType(WAR).build());
 
     CloneMetadata cloneMetadata = CloneMetadata.builder()
                                       .environment(environment)
@@ -499,7 +498,7 @@ public class EnvironmentServiceTest extends WingsBaseTest {
     when(serviceVariableService.getServiceVariablesByTemplate(APP_ID, ENV_ID, serviceTemplate, true))
         .thenReturn(serviceVariableResponse);
 
-    Service service = Service.Builder.aService().withUuid(SERVICE_ID).withName(SERVICE_NAME).withAppId(APP_ID).build();
+    Service service = Service.builder().uuid(SERVICE_ID).name(SERVICE_NAME).appId(APP_ID).build();
     PageRequest<Service> servicePageRequest = aPageRequest()
                                                   .withLimit(PageRequest.UNLIMITED)
                                                   .addFilter("appId", EQ, environment.getAppId())

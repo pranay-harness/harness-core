@@ -15,7 +15,6 @@ import static org.mockito.Matchers.eq;
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.when;
 import static software.wings.beans.Environment.Builder.anEnvironment;
-import static software.wings.beans.Service.Builder.aService;
 import static software.wings.beans.ServiceInstance.Builder.aServiceInstance;
 import static software.wings.beans.ServiceTemplate.Builder.aServiceTemplate;
 import static software.wings.beans.infrastructure.Host.Builder.aHost;
@@ -112,7 +111,7 @@ public class InstancePartitionExpressionProcessorTest extends WingsBaseTest {
 
     PageResponse<ServiceInstance> res = new PageResponse<>();
 
-    Service service = aService().withUuid("uuid1").withName("svc1").build();
+    Service service = Service.builder().uuid("uuid1").name("svc1").build();
     ServiceTemplate serviceTemplate =
         aServiceTemplate().withUuid(TEMPLATE_ID).withName("template").withServiceId(service.getUuid()).build();
 
@@ -172,7 +171,7 @@ public class InstancePartitionExpressionProcessorTest extends WingsBaseTest {
     when(serviceTemplateService.get(anyString(), anyString(), eq(TEMPLATE_ID), anyBoolean(), anyBoolean()))
         .thenReturn(serviceTemplate);
     when(serviceResourceServiceMock.get(anyString(), anyString()))
-        .thenReturn(aService().withUuid(SERVICE_ID).withName(SERVICE_NAME).build());
+        .thenReturn(Service.builder().uuid(SERVICE_ID).name(SERVICE_NAME).build());
 
     instances.forEach(instance
         -> when(hostService.getHostByEnv(anyString(), anyString(), eq(instance.getHostId())))

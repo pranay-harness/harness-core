@@ -1375,7 +1375,7 @@ public class KmsTest extends WingsBaseTest {
     String secretValue = UUID.randomUUID().toString();
     String secretId = secretManager.saveSecret(accountId, secretName, secretValue);
 
-    String serviceId = wingsPersistence.save(Service.Builder.aService().withName(UUID.randomUUID().toString()).build());
+    String serviceId = wingsPersistence.save(Service.builder().name(UUID.randomUUID().toString()).build());
     String serviceTemplateId =
         wingsPersistence.save(ServiceTemplate.Builder.aServiceTemplate().withServiceId(serviceId).build());
 
@@ -2144,14 +2144,14 @@ public class KmsTest extends WingsBaseTest {
 
   @Test
   @RealMongo
-  public void saveUpdateConfigFileNoKms() throws IOException, InterruptedException, IllegalAccessException {
+  public void saveUpdateConfigFileNoKms() throws IOException, IllegalAccessException {
     final long seed = System.currentTimeMillis();
     logger.info("seed: " + seed);
     Random r = new Random(seed);
     final String renameAccountId = UUID.randomUUID().toString();
     final String renameAppId = UUID.randomUUID().toString();
 
-    Service service = Service.Builder.aService().withName(UUID.randomUUID().toString()).withAppId(renameAppId).build();
+    Service service = Service.builder().name(UUID.randomUUID().toString()).appId(renameAppId).build();
     wingsPersistence.save(service);
 
     ConfigFile configFile = ConfigFile.builder()
@@ -2250,7 +2250,7 @@ public class KmsTest extends WingsBaseTest {
     KmsConfig fromConfig = getKmsConfig();
     kmsService.saveKmsConfig(renameAccountId, fromConfig);
 
-    Service service = Service.Builder.aService().withName(UUID.randomUUID().toString()).withAppId(renameAppId).build();
+    Service service = Service.builder().name(UUID.randomUUID().toString()).appId(renameAppId).build();
     wingsPersistence.save(service);
 
     ConfigFile configFile = ConfigFile.builder()
@@ -2297,7 +2297,7 @@ public class KmsTest extends WingsBaseTest {
     KmsConfig fromConfig = getKmsConfig();
     kmsService.saveKmsConfig(randomAccountId, fromConfig);
 
-    Service service = Service.Builder.aService().withName(UUID.randomUUID().toString()).withAppId(randomAppId).build();
+    Service service = Service.builder().name(UUID.randomUUID().toString()).appId(randomAppId).build();
     wingsPersistence.save(service);
 
     Activity activity = Activity.builder().workflowExecutionId(workflowExecutionId).environmentId(envId).build();
@@ -2400,7 +2400,7 @@ public class KmsTest extends WingsBaseTest {
 
   @Test
   @RealMongo
-  public void saveConfigFileTemplateWithEncryption() throws IOException, InterruptedException, IllegalAccessException {
+  public void saveConfigFileTemplateWithEncryption() throws IOException {
     final long seed = System.currentTimeMillis();
     logger.info("seed: " + seed);
     Random r = new Random(seed);
@@ -2409,7 +2409,7 @@ public class KmsTest extends WingsBaseTest {
     KmsConfig fromConfig = getKmsConfig();
     kmsService.saveKmsConfig(renameAccountId, fromConfig);
 
-    Service service = Service.Builder.aService().withName(UUID.randomUUID().toString()).build();
+    Service service = Service.builder().name(UUID.randomUUID().toString()).build();
     service.setAppId(renameAppId);
     String serviceId = wingsPersistence.save(service);
     ServiceTemplate serviceTemplate = ServiceTemplate.Builder.aServiceTemplate().withServiceId(serviceId).build();
@@ -2854,7 +2854,7 @@ public class KmsTest extends WingsBaseTest {
   }
 
   @Test
-  public void getChangeLogs() throws IOException, IllegalAccessException {
+  public void getChangeLogs() throws IllegalAccessException {
     final String accountId = UUID.randomUUID().toString();
     final KmsConfig kmsConfig = getKmsConfig();
     kmsService.saveKmsConfig(accountId, kmsConfig);
@@ -2907,8 +2907,7 @@ public class KmsTest extends WingsBaseTest {
 
     String appId = wingsPersistence.save(anApplication().withUuid(UUID.randomUUID().toString()).build());
 
-    String serviceId = wingsPersistence.save(
-        Service.Builder.aService().withAppId(appId).withName(UUID.randomUUID().toString()).build());
+    String serviceId = wingsPersistence.save(Service.builder().appId(appId).name(UUID.randomUUID().toString()).build());
     String serviceTemplateId = wingsPersistence.save(
         ServiceTemplate.Builder.aServiceTemplate().withAppId(appId).withServiceId(serviceId).build());
 

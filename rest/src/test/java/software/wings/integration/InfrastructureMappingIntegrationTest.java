@@ -7,7 +7,6 @@ import static org.assertj.core.api.Assertions.assertThat;
 import static software.wings.beans.Application.Builder.anApplication;
 import static software.wings.beans.AwsInfrastructureMapping.Builder.anAwsInfrastructureMapping;
 import static software.wings.beans.PhysicalInfrastructureMapping.Builder.aPhysicalInfrastructureMapping;
-import static software.wings.beans.Service.Builder.aService;
 import static software.wings.beans.ServiceInstanceSelectionParams.Builder.aServiceInstanceSelectionParams;
 import static software.wings.beans.SettingAttribute.Builder.aSettingAttribute;
 import static software.wings.settings.SettingValue.SettingVariableTypes.PHYSICAL_DATA_CENTER;
@@ -69,7 +68,7 @@ public class InfrastructureMappingIntegrationTest extends BaseIntegrationTest {
     super.setUp();
     app =
         appService.save(anApplication().withName("AppA" + System.currentTimeMillis()).withAccountId(accountId).build());
-    service = serviceResourceService.save(aService().withAppId(app.getUuid()).withName("Catalog").build());
+    service = serviceResourceService.save(Service.builder().appId(app.getUuid()).name("Catalog").build());
 
     environment = environmentService.save(
         Environment.Builder.anEnvironment().withAppId(app.getUuid()).withName("Developmenet").build());

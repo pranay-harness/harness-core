@@ -85,8 +85,7 @@ public class BambooBuildSourceServiceTest extends WingsBaseTest {
 
   @Test
   public void getPlansWithType() {
-    Service service =
-        Service.Builder.aService().withAppId(appId).withArtifactType(ArtifactType.WAR).withName("Some service").build();
+    Service service = Service.builder().appId(appId).artifactType(ArtifactType.WAR).name("Some service").build();
     wingsPersistence.save(service);
     Map<String, String> plans =
         buildSourceService.getPlans(appId, settingAttribute.getUuid(), service.getUuid(), streamType.name(), "");
@@ -103,8 +102,7 @@ public class BambooBuildSourceServiceTest extends WingsBaseTest {
 
   @Test
   public void getBuilds() {
-    Service service =
-        Service.Builder.aService().withAppId(appId).withArtifactType(ArtifactType.WAR).withName("Some service").build();
+    Service service = Service.builder().appId(appId).artifactType(ArtifactType.WAR).name("Some service").build();
     wingsPersistence.save(service);
     BambooArtifactStream artifactStream = new BambooArtifactStream();
     artifactStream.setJobname("TOD-TOD");
@@ -120,8 +118,7 @@ public class BambooBuildSourceServiceTest extends WingsBaseTest {
 
   @Test
   public void getLastSuccessfulBuild() {
-    Service service =
-        Service.Builder.aService().withAppId(appId).withArtifactType(ArtifactType.WAR).withName("Some service").build();
+    Service service = Service.builder().appId(appId).artifactType(ArtifactType.WAR).name("Some service").build();
     wingsPersistence.save(service);
     BambooArtifactStream artifactStream = new BambooArtifactStream();
     artifactStream.setJobname("TOD-TOD");

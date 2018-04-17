@@ -11,7 +11,6 @@ import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 import static software.wings.beans.AppContainer.Builder.anAppContainer;
-import static software.wings.beans.Service.Builder.aService;
 import static software.wings.beans.command.ServiceCommand.Builder.aServiceCommand;
 import static software.wings.utils.ArtifactType.JAR;
 import static software.wings.utils.WingsTestConstants.APP_ID;
@@ -47,12 +46,12 @@ public class ServiceResourceTest {
                                                        .addResource(new ServiceResource(RESOURCE_SERVICE))
                                                        .addProvider(WingsExceptionMapper.class)
                                                        .build();
-  private static final Service aSERVICE = aService()
-                                              .withAppId(APP_ID)
-                                              .withName("NAME")
-                                              .withDescription("DESCRIPTION")
-                                              .withArtifactType(JAR)
-                                              .withAppContainer(anAppContainer().withAppId(APP_ID).build())
+  private static final Service aSERVICE = Service.builder()
+                                              .appId(APP_ID)
+                                              .name("NAME")
+                                              .description("DESCRIPTION")
+                                              .artifactType(JAR)
+                                              .appContainer(anAppContainer().withAppId(APP_ID).build())
                                               .build();
 
   /**
@@ -111,7 +110,7 @@ public class ServiceResourceTest {
    */
   @Test
   public void shouldUpdateService() {
-    Service service = aService().withAppId(APP_ID).withUuid(SERVICE_ID).build();
+    Service service = Service.builder().appId(APP_ID).uuid(SERVICE_ID).build();
     when(RESOURCE_SERVICE.update(any(Service.class))).thenReturn(service);
     RestResponse<Service> restResponse =
         RESOURCES.client()

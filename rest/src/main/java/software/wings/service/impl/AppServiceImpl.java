@@ -115,7 +115,7 @@ public class AppServiceImpl implements AppService {
   @Override
   public Application save(Application app) {
     Validator.notNullCheck("accountId", app.getAccountId());
-    app.setKeywords(trimList(asList(app.getName(), app.getDescription())));
+    app.setKeywords(trimList(app.generateKeywords()));
     Application application =
         Validator.duplicateCheck(() -> wingsPersistence.saveAndGet(Application.class, app), "name", app.getName());
     createDefaultRoles(app);
@@ -278,7 +278,7 @@ public class AppServiceImpl implements AppService {
     UpdateOperations<Application> operations =
         wingsPersistence.createUpdateOperations(Application.class).set("name", app.getName());
 
-    List<String> keywords = trimList(asList(app.getName(), app.getDescription()));
+    List<String> keywords = trimList(app.generateKeywords());
 
     if (isNotEmpty(app.getDescription())) {
       operations.set("description", app.getDescription()).set("keywords", keywords);

@@ -12,7 +12,6 @@ import static org.mockito.Matchers.eq;
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.when;
 import static software.wings.api.ServiceElement.Builder.aServiceElement;
-import static software.wings.beans.Service.Builder.aService;
 import static software.wings.sm.WorkflowStandardParams.Builder.aWorkflowStandardParams;
 import static software.wings.utils.WingsTestConstants.SERVICE_ID;
 
@@ -86,8 +85,8 @@ public class ServiceExpressionProcessorTest {
    */
   @Test
   public void shouldReturnListAll() {
-    List<Service> services = Lists.newArrayList(aService().withName("A1234").build(),
-        aService().withName("B1234").build(), aService().withName("C1234").build());
+    List<Service> services = Lists.newArrayList(Service.builder().name("A1234").build(),
+        Service.builder().name("B1234").build(), Service.builder().name("C1234").build());
 
     ExecutionContextImpl context = mock(ExecutionContextImpl.class);
     when(context.getApp()).thenReturn(Application.Builder.anApplication().withUuid(appId).build());
@@ -117,7 +116,7 @@ public class ServiceExpressionProcessorTest {
    */
   @Test
   public void shouldReturnListAllFromContext() {
-    Service serviceC = aService().withName("C1234").withUuid(SERVICE_ID).build();
+    Service serviceC = Service.builder().name("C1234").uuid(SERVICE_ID).build();
 
     ServiceElement serviceCElement =
         aServiceElement().withName(serviceC.getName()).withUuid(serviceC.getUuid()).build();
@@ -140,8 +139,8 @@ public class ServiceExpressionProcessorTest {
    */
   @Test
   public void shouldReturnListSomeByName() {
-    List<Service> services = Lists.newArrayList(aService().withName("A1234").build(),
-        aService().withName("B1234").build(), aService().withName("C1234").build());
+    List<Service> services = Lists.newArrayList(Service.builder().name("A1234").build(),
+        Service.builder().name("B1234").build(), Service.builder().name("C1234").build());
 
     when(context.getApp()).thenReturn(Application.Builder.anApplication().withUuid(appId).build());
     when(context.getContextElement(ContextElementType.STANDARD)).thenReturn(aWorkflowStandardParams().build());
@@ -190,10 +189,10 @@ public class ServiceExpressionProcessorTest {
    */
   @Test
   public void shouldReturnNotFromContext() {
-    Service serviceC = aService().withName("C1234").build();
+    Service serviceC = Service.builder().name("C1234").build();
 
     List<Service> services =
-        Lists.newArrayList(aService().withName("A1234").build(), aService().withName("B1234").build(), serviceC);
+        Lists.newArrayList(Service.builder().name("A1234").build(), Service.builder().name("B1234").build(), serviceC);
 
     ServiceElement serviceCElement = new ServiceElement();
     serviceCElement.setName(serviceC.getName());

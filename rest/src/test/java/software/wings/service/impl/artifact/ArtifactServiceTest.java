@@ -8,7 +8,6 @@ import static org.mockito.Matchers.anyObject;
 import static org.mockito.Matchers.anyString;
 import static org.mockito.Mockito.times;
 import static org.mockito.Mockito.when;
-import static software.wings.beans.Service.Builder.aService;
 import static software.wings.beans.artifact.Artifact.Builder.anArtifact;
 import static software.wings.beans.artifact.Artifact.ContentStatus.DOWNLOADED;
 import static software.wings.beans.artifact.Artifact.ContentStatus.DOWNLOADING;
@@ -42,6 +41,7 @@ import org.mongodb.morphia.query.Query;
 import software.wings.WingsBaseTest;
 import software.wings.beans.Application;
 import software.wings.beans.EmbeddedUser;
+import software.wings.beans.Service;
 import software.wings.beans.artifact.AmazonS3ArtifactStream;
 import software.wings.beans.artifact.AmiArtifactStream;
 import software.wings.beans.artifact.Artifact;
@@ -110,7 +110,7 @@ public class ArtifactServiceTest extends WingsBaseTest {
   @Before
   public void setUp() {
     wingsRule.getDatastore().save(
-        aService().withAppId(APP_ID).withArtifactType(ArtifactType.WAR).withUuid(SERVICE_ID).build());
+        Service.builder().appId(APP_ID).artifactType(ArtifactType.WAR).uuid(SERVICE_ID).build());
     when(appQuery.filter(anyString(), anyObject())).thenReturn(appQuery);
 
     when(appService.exist(APP_ID)).thenReturn(true);
@@ -476,7 +476,7 @@ public class ArtifactServiceTest extends WingsBaseTest {
   @Test
   public void shouldGetArtifactStatusForNexusDockerStream() {
     when(serviceResourceService.get(APP_ID, SERVICE_ID, false))
-        .thenReturn(aService().withUuid(SERVICE_ID).withArtifactType(ArtifactType.DOCKER).build());
+        .thenReturn(Service.builder().uuid(SERVICE_ID).artifactType(ArtifactType.DOCKER).build());
     when(artifactStreamService.get(APP_ID, ARTIFACT_STREAM_ID))
         .thenReturn(NexusArtifactStream.builder()
                         .uuid(ARTIFACT_STREAM_ID)
@@ -491,7 +491,7 @@ public class ArtifactServiceTest extends WingsBaseTest {
   @Test
   public void shouldGetArtifactStatusForNexusStream() {
     when(serviceResourceService.get(APP_ID, SERVICE_ID, false))
-        .thenReturn(aService().withUuid(SERVICE_ID).withArtifactType(ArtifactType.WAR).build());
+        .thenReturn(Service.builder().uuid(SERVICE_ID).artifactType(ArtifactType.WAR).build());
     when(artifactStreamService.get(APP_ID, ARTIFACT_STREAM_ID))
         .thenReturn(NexusArtifactStream.builder()
                         .uuid(ARTIFACT_STREAM_ID)
@@ -506,7 +506,7 @@ public class ArtifactServiceTest extends WingsBaseTest {
   @Test
   public void shouldGetArtifactStatusForArtifactoryDockerStream() {
     when(serviceResourceService.get(APP_ID, SERVICE_ID, false))
-        .thenReturn(aService().withUuid(SERVICE_ID).withArtifactType(ArtifactType.DOCKER).build());
+        .thenReturn(Service.builder().uuid(SERVICE_ID).artifactType(ArtifactType.DOCKER).build());
     when(artifactStreamService.get(APP_ID, ARTIFACT_STREAM_ID))
         .thenReturn(ArtifactoryArtifactStream.builder()
                         .uuid(ARTIFACT_STREAM_ID)
@@ -521,7 +521,7 @@ public class ArtifactServiceTest extends WingsBaseTest {
   @Test
   public void shouldGetArtifactStatusForArtifactoryStream() {
     when(serviceResourceService.get(APP_ID, SERVICE_ID, false))
-        .thenReturn(aService().withUuid(SERVICE_ID).withArtifactType(ArtifactType.RPM).build());
+        .thenReturn(Service.builder().uuid(SERVICE_ID).artifactType(ArtifactType.RPM).build());
     when(artifactStreamService.get(APP_ID, ARTIFACT_STREAM_ID))
         .thenReturn(ArtifactoryArtifactStream.builder()
                         .uuid(ARTIFACT_STREAM_ID)

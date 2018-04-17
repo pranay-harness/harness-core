@@ -1,7 +1,10 @@
 package software.wings.generator;
 
 import static io.harness.govern.Switch.unhandled;
-import static software.wings.beans.Service.Builder.aService;
+import static software.wings.beans.Service.APP_ID_KEY;
+import static software.wings.beans.Service.NAME_KEY;
+import static software.wings.beans.Service.ServiceBuilder;
+import static software.wings.beans.Service.builder;
 
 import com.google.inject.Inject;
 import com.google.inject.Singleton;
@@ -38,12 +41,8 @@ public class ServiceGenerator {
 
   private Service ensureGenericTest(Randomizer.Seed seed) {
     final Application application = applicationGenerator.ensurePredefined(seed, Applications.GENERIC_TEST);
-    return ensureService(seed,
-        aService()
-            .withAppId(application.getAppId())
-            .withName("Test Service")
-            .withArtifactType(ArtifactType.WAR)
-            .build());
+    return ensureService(
+        seed, builder().appId(application.getAppId()).name("Test Service").artifactType(ArtifactType.WAR).build());
   }
 
   public Service ensureRandom(Randomizer.Seed seed) {
@@ -56,26 +55,26 @@ public class ServiceGenerator {
 
   public Service exists(Service service) {
     return wingsPersistence.createQuery(Service.class)
-        .filter(Service.APP_ID_KEY, service.getAppId())
-        .filter(Service.NAME_KEY, service.getName())
+        .filter(APP_ID_KEY, service.getAppId())
+        .filter(NAME_KEY, service.getName())
         .get();
   }
 
   public Service ensureService(Randomizer.Seed seed, Service service) {
     EnhancedRandom random = Randomizer.instance(seed);
 
-    Service.Builder builder = aService();
+    ServiceBuilder builder = Service.builder();
 
     if (service != null && service.getAppId() != null) {
-      builder.withAppId(service.getAppId());
+      builder.appId(service.getAppId());
     } else {
       throw new UnsupportedOperationException();
     }
 
     if (service != null && service.getName() != null) {
-      builder.withName(service.getName());
+      builder.name(service.getName());
     } else {
-      builder.withName(random.nextObject(String.class));
+      builder.name(random.nextObject(String.class));
     }
 
     Service existing = exists(builder.build());
@@ -84,9 +83,9 @@ public class ServiceGenerator {
     }
 
     if (service != null && service.getArtifactType() != null) {
-      builder.withArtifactType(service.getArtifactType());
+      builder.artifactType(service.getArtifactType());
     } else {
-      builder.withArtifactType(random.nextObject(ArtifactType.class));
+      builder.artifactType(random.nextObject(ArtifactType.class));
     }
 
     return serviceResourceService.save(builder.build());

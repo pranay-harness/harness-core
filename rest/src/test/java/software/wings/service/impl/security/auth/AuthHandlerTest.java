@@ -79,9 +79,8 @@ public class AuthHandlerTest extends WingsBaseTest {
   private List<Action> allActions = asList(Action.CREATE, Action.UPDATE, Action.READ, Action.DELETE, Action.EXECUTE);
 
   private List<String> appIds = asList(APP_ID, "appId1", "appId2", "appId3");
-  private Service service1 = Service.Builder.aService().withUuid(generateUuid()).withAppId(APP_ID).build();
-  private Service service2 = Service.Builder.aService().withUuid(generateUuid()).withAppId(APP_ID).build();
-  private Service service3 = Service.Builder.aService().withUuid(generateUuid()).withAppId("appId2").build();
+  private Service service1 = Service.builder().uuid(generateUuid()).appId(APP_ID).build();
+  private Service service2 = Service.builder().uuid(generateUuid()).appId(APP_ID).build();
 
   private Environment dev =
       anEnvironment().withUuid(generateUuid()).withAppId(APP_ID).withEnvironmentType(EnvironmentType.NON_PROD).build();

@@ -9,6 +9,7 @@ import migrations.all.AddVerifyToRollbackWorkflows;
 import migrations.all.CreateDefaultUserGroupsAndAddToExistingUsers;
 import migrations.all.CreateSupportUserGroupsAndRenameAccountAdmin;
 import migrations.all.GitSyncToAllAccounts;
+import migrations.all.ServiceKeywordsMigration;
 import migrations.all.SetDaemonSetInWorkflowPhase;
 import migrations.all.StateExecutionInstanceDisplayName;
 import migrations.all.TrimYamlMigration;
@@ -38,6 +39,7 @@ public class MigrationList {
         .add(Pair.of(115, AddValidUntilToStateExecutionInstance.class))
         .add(Pair.of(116, StateExecutionInstanceDisplayName.class))
         .add(Pair.of(117, StateExecutionInstanceDisplayName.class))
+        .add(Pair.of(118, ServiceKeywordsMigration.class))
         .build();
   }
 }

@@ -76,7 +76,7 @@ public class ConfigFileIntegrationTest extends BaseIntegrationTest {
     app =
         appService.save(anApplication().withAccountId(accountId).withName("AppA" + System.currentTimeMillis()).build());
     service = serviceResourceService.save(
-        Service.Builder.aService().withAppId(app.getUuid()).withName("Catalog" + System.currentTimeMillis()).build());
+        Service.builder().appId(app.getUuid()).name("Catalog" + System.currentTimeMillis()).build());
     fileName = UUID.randomUUID().toString();
   }
 

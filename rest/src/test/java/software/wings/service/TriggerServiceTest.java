@@ -16,7 +16,6 @@ import static software.wings.beans.PhaseStep.PhaseStepBuilder.aPhaseStep;
 import static software.wings.beans.PhaseStepType.POST_DEPLOYMENT;
 import static software.wings.beans.PhaseStepType.PRE_DEPLOYMENT;
 import static software.wings.beans.Pipeline.Builder.aPipeline;
-import static software.wings.beans.Service.Builder.aService;
 import static software.wings.beans.Variable.VariableBuilder.aVariable;
 import static software.wings.beans.Workflow.WorkflowBuilder.aWorkflow;
 import static software.wings.beans.WorkflowExecution.WorkflowExecutionBuilder.aWorkflowExecution;
@@ -69,6 +68,7 @@ import software.wings.beans.ExecutionArgs;
 import software.wings.beans.Pipeline;
 import software.wings.beans.PipelineStage;
 import software.wings.beans.PipelineStage.PipelineStageElement;
+import software.wings.beans.Service;
 import software.wings.beans.WebHookToken;
 import software.wings.beans.Workflow;
 import software.wings.beans.WorkflowExecution;
@@ -195,8 +195,8 @@ public class TriggerServiceTest extends WingsBaseTest {
   private Pipeline pipeline = aPipeline()
                                   .withAppId(APP_ID)
                                   .withUuid(PIPELINE_ID)
-                                  .withServices(asList(aService().withUuid(SERVICE_ID).withName("Catalog").build(),
-                                      aService().withUuid(SERVICE_ID_CHANGED).withName("Order").build()))
+                                  .withServices(asList(Service.builder().uuid(SERVICE_ID).name("Catalog").build(),
+                                      Service.builder().uuid(SERVICE_ID_CHANGED).name("Order").build()))
                                   .build();
 
   private Workflow workflow =
@@ -212,8 +212,8 @@ public class TriggerServiceTest extends WingsBaseTest {
                   .withPreDeploymentSteps(aPhaseStep(PRE_DEPLOYMENT, Constants.PRE_DEPLOYMENT).build())
                   .withPostDeploymentSteps(aPhaseStep(POST_DEPLOYMENT, Constants.POST_DEPLOYMENT).build())
                   .build())
-          .withServices(asList(aService().withUuid(SERVICE_ID).withName("Catalog").build(),
-              aService().withUuid(SERVICE_ID_CHANGED).withName("Order").build()))
+          .withServices(asList(Service.builder().uuid(SERVICE_ID).name("Catalog").build(),
+              Service.builder().uuid(SERVICE_ID_CHANGED).name("Order").build()))
           .build();
 
   private JenkinsArtifactStream jenkinsArtifactStream = JenkinsArtifactStream.builder()
@@ -241,7 +241,7 @@ public class TriggerServiceTest extends WingsBaseTest {
     when(workflowService.readWorkflow(APP_ID, WORKFLOW_ID)).thenReturn(workflow);
     when(artifactStreamService.get(APP_ID, ARTIFACT_STREAM_ID)).thenReturn(jenkinsArtifactStream);
     when(serviceResourceService.get(APP_ID, SERVICE_ID, false))
-        .thenReturn(aService().withUuid(SERVICE_ID).withName("Catalog").build());
+        .thenReturn(Service.builder().uuid(SERVICE_ID).name("Catalog").build());
   }
 
   @Test

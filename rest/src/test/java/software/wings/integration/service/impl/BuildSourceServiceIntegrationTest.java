@@ -168,8 +168,7 @@ public class BuildSourceServiceIntegrationTest extends WingsBaseTest {
       final KmsConfig kmsConfig = getKmsConfig();
       kmsService.saveKmsConfig(accountId, kmsConfig);
     }
-    Service service =
-        Service.Builder.aService().withAppId(appId).withArtifactType(artifactType).withName("Some service").build();
+    Service service = Service.builder().appId(appId).artifactType(artifactType).name("Some service").build();
     wingsPersistence.save(service);
     switch (type) {
       case JENKINS:
@@ -331,8 +330,7 @@ public class BuildSourceServiceIntegrationTest extends WingsBaseTest {
         return;
 
       default:
-        Service service =
-            Service.Builder.aService().withAppId(appId).withArtifactType(WAR).withName("Some service").build();
+        Service service = Service.builder().appId(appId).artifactType(WAR).name("Some service").build();
         wingsPersistence.save(service);
         Map<String, String> plans = buildSourceService.getPlans(
             appId, settingAttribute.getUuid(), service.getUuid(), streamType.name(), repositoryType);
@@ -381,8 +379,7 @@ public class BuildSourceServiceIntegrationTest extends WingsBaseTest {
           case "docker":
             return;
           case "maven":
-            Service service =
-                Service.Builder.aService().withAppId(appId).withArtifactType(WAR).withName("Some service").build();
+            Service service = Service.builder().appId(appId).artifactType(WAR).name("Some service").build();
             wingsPersistence.save(service);
             BuildDetails build =
                 buildSourceService.getLastSuccessfulBuild(appId, artifactStream.getUuid(), settingAttribute.getUuid());
@@ -394,8 +391,7 @@ public class BuildSourceServiceIntegrationTest extends WingsBaseTest {
         break;
 
       default:
-        Service service =
-            Service.Builder.aService().withAppId(appId).withArtifactType(WAR).withName("Some service").build();
+        Service service = Service.builder().appId(appId).artifactType(WAR).name("Some service").build();
         wingsPersistence.save(service);
         BuildDetails build =
             buildSourceService.getLastSuccessfulBuild(appId, artifactStream.getUuid(), settingAttribute.getUuid());
@@ -405,7 +401,7 @@ public class BuildSourceServiceIntegrationTest extends WingsBaseTest {
 
   @Test
   public void getGroupIds() {
-    Set<String> groupIds = null;
+    Set<String> groupIds;
     switch (type) {
       case JENKINS:
       case BAMBOO:

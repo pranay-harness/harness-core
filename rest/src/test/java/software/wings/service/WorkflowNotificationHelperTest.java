@@ -13,7 +13,6 @@ import static software.wings.beans.BuildWorkflow.BuildOrchestrationWorkflowBuild
 import static software.wings.beans.CanaryOrchestrationWorkflow.CanaryOrchestrationWorkflowBuilder.aCanaryOrchestrationWorkflow;
 import static software.wings.beans.Environment.Builder.anEnvironment;
 import static software.wings.beans.NotificationRule.NotificationRuleBuilder.aNotificationRule;
-import static software.wings.beans.Service.Builder.aService;
 import static software.wings.beans.WorkflowExecution.WorkflowExecutionBuilder.aWorkflowExecution;
 import static software.wings.beans.artifact.Artifact.Builder.anArtifact;
 import static software.wings.common.Constants.BUILD_NO;
@@ -56,6 +55,7 @@ import software.wings.beans.InformationNotification;
 import software.wings.beans.Notification;
 import software.wings.beans.NotificationRule;
 import software.wings.beans.OrchestrationWorkflowType;
+import software.wings.beans.Service;
 import software.wings.beans.WorkflowExecution;
 import software.wings.common.NotificationMessageResolver.NotificationMessageType;
 import software.wings.dl.WingsPersistence;
@@ -126,9 +126,9 @@ public class WorkflowNotificationHelperTest extends WingsBaseTest {
     portalConfig.setUrl(BASE_URL);
     when(configuration.getPortal()).thenReturn(portalConfig);
     when(serviceResourceService.get(APP_ID, "service-1"))
-        .thenReturn(aService().withUuid("service-1").withName("Service One").build());
+        .thenReturn(Service.builder().uuid("service-1").name("Service One").build());
     when(serviceResourceService.get(APP_ID, "service-2"))
-        .thenReturn(aService().withUuid("service-2").withName("Service Two").build());
+        .thenReturn(Service.builder().uuid("service-2").name("Service Two").build());
     when(wingsPersistence.createQuery(StateExecutionInstance.class)).thenReturn(stateExecutionInstanceQuery);
     when(stateExecutionInstanceQuery.filter(any(), any())).thenReturn(stateExecutionInstanceQuery);
     when(stateExecutionInstanceQuery.get())

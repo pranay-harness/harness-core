@@ -151,7 +151,7 @@ public class ConfigFileOverrideIntegrationTest extends WingsBaseTest {
 
     // test setup
     Application app = appService.save(anApplication().withName("AppA").build());
-    Service service = srs.save(Service.Builder.aService().withAppId(app.getUuid()).withName("Catalog").build());
+    Service service = srs.save(Service.builder().appId(app.getUuid()).name("Catalog").build());
     List<Environment> environments = environmentService.getEnvByApp(app.getUuid());
     for (int i = 1; i < environments.size(); i++) {
       environmentService.delete(app.getUuid(), environments.get(i).getUuid());
