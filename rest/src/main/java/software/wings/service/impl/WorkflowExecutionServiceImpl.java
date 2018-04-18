@@ -23,7 +23,6 @@ import static software.wings.api.ServiceElement.Builder.aServiceElement;
 import static software.wings.api.WorkflowElement.WorkflowElementBuilder.aWorkflowElement;
 import static software.wings.beans.ApprovalDetails.Action.APPROVE;
 import static software.wings.beans.ApprovalDetails.Action.REJECT;
-import static software.wings.beans.CountsByStatuses.Builder.aCountsByStatuses;
 import static software.wings.beans.ElementExecutionSummary.ElementExecutionSummaryBuilder.anElementExecutionSummary;
 import static software.wings.beans.EntityType.ARTIFACT;
 import static software.wings.beans.EntityType.INFRASTRUCTURE_MAPPING;
@@ -58,6 +57,7 @@ import static software.wings.sm.InfraMappingSummary.Builder.anInfraMappingSummar
 import static software.wings.sm.InstanceStatusSummary.InstanceStatusSummaryBuilder.anInstanceStatusSummary;
 import static software.wings.sm.StateType.APPROVAL;
 import static software.wings.sm.StateType.ENV_STATE;
+import static software.wings.sm.StateType.PHASE;
 import static software.wings.utils.Validator.notNullCheck;
 
 import com.google.common.base.Preconditions;
@@ -84,6 +84,7 @@ import software.wings.api.CommandStateExecutionData;
 import software.wings.api.EnvStateExecutionData;
 import software.wings.api.InstanceElement;
 import software.wings.api.PhaseElement;
+import software.wings.api.PhaseExecutionData;
 import software.wings.api.PhaseStepExecutionData;
 import software.wings.api.ServiceElement;
 import software.wings.api.ServiceTemplateElement;
@@ -1944,11 +1945,14 @@ public class WorkflowExecutionServiceImpl implements WorkflowExecutionService {
     CountsByStatuses breakdown = null;
     int total;
 
-    // TODO: done for rolling - needs revisit
-    if (workflowExecution.getOrchestrationType() == OrchestrationWorkflowType.ROLLING
-        && workflowExecution.getStatus() == ExecutionStatus.SUCCESS) {
-      breakdown = aCountsByStatuses().withSuccess(1).build();
-      total = 1;
+    if (workflowExecution.getOrchestrationType() == OrchestrationWorkflowType.ROLLING) {
+      breakdown = new CountsByStatuses();
+      total = workflowExecution.getTotal();
+      if (total == 0) {
+        total = refreshTotal(workflowExecution);
+      }
+      breakdown = getBreakdownFromPhases(workflowExecution);
+      breakdown.setQueued(total - (breakdown.getFailed() + breakdown.getSuccess() + breakdown.getInprogress()));
     } else {
       StateMachine sm =
           wingsPersistence.get(StateMachine.class, workflowExecution.getAppId(), workflowExecution.getStateMachineId());
@@ -1993,6 +1997,81 @@ public class WorkflowExecutionServiceImpl implements WorkflowExecutionService {
             "Error occurred while updating workflow execution {} with breakdown summary", workflowExecution, e);
       }
     }
+  }
+
+  private CountsByStatuses getBreakdownFromPhases(WorkflowExecution workflowExecution) {
+    CountsByStatuses breakdown = new CountsByStatuses();
+    PageRequest<StateExecutionInstance> req = aPageRequest()
+                                                  .withReadPref(CRITICAL)
+                                                  .withLimit(PageRequest.UNLIMITED)
+                                                  .addFilter("appId", EQ, workflowExecution.getAppId())
+                                                  .addFilter("executionUuid", EQ, workflowExecution.getUuid())
+                                                  .addFilter("createdAt", GE, workflowExecution.getCreatedAt())
+                                                  .addFilter("stateType", EQ, PHASE.name())
+                                                  .addFilter("rollback", EQ, false)
+                                                  .build();
+
+    List<StateExecutionInstance> allStateExecutionInstances = getAllStateExecutionInstances(req);
+    if (isEmpty(allStateExecutionInstances)) {
+      breakdown.setSuccess(0);
+    }
+    for (StateExecutionInstance stateExecutionInstance : allStateExecutionInstances) {
+      StateExecutionData stateExecutionData = stateExecutionInstance.getStateExecutionData();
+      if (stateExecutionData == null || !(stateExecutionData instanceof PhaseExecutionData)) {
+        continue;
+      }
+      PhaseExecutionData phaseExecutionData = (PhaseExecutionData) stateExecutionData;
+      List<ElementExecutionSummary> elementStatusSummary = phaseExecutionData.getElementStatusSummary();
+      if (isEmpty(elementStatusSummary)) {
+        continue;
+      }
+      for (ElementExecutionSummary elementExecutionSummary : elementStatusSummary) {
+        if (elementExecutionSummary == null || elementExecutionSummary.getInstancesCount() == null) {
+          continue;
+        }
+        for (InstanceStatusSummary instanceStatusSummary : elementExecutionSummary.getInstanceStatusSummaries()) {
+          switch (instanceStatusSummary.getStatus()) {
+            case SUCCESS: {
+              breakdown.setSuccess(breakdown.getSuccess() + 1);
+              break;
+            }
+            case ERROR:
+            case FAILED: {
+              breakdown.setFailed(breakdown.getFailed() + 1);
+              break;
+            }
+            case STARTING:
+            case RUNNING: {
+              breakdown.setInprogress(breakdown.getInprogress() + 1);
+              break;
+            }
+            default: {
+              breakdown.setQueued(breakdown.getQueued() + 1);
+              break;
+            }
+          }
+        }
+      }
+    }
+    return breakdown;
+  }
+
+  private int refreshTotal(WorkflowExecution workflowExecution) {
+    Workflow workflow = workflowService.readWorkflow(workflowExecution.getAppId(), workflowExecution.getWorkflowId());
+
+    if (workflow.getOrchestrationWorkflow() == null
+        || !(workflow.getOrchestrationWorkflow() instanceof CanaryOrchestrationWorkflow)) {
+      return 0;
+    }
+
+    CanaryOrchestrationWorkflow canaryOrchestrationWorkflow =
+        (CanaryOrchestrationWorkflow) workflow.getOrchestrationWorkflow();
+    if (isEmpty(canaryOrchestrationWorkflow.getWorkflowPhases())) {
+      return 0;
+    }
+
+    String infraMappingId = canaryOrchestrationWorkflow.getWorkflowPhases().get(0).getInfraMappingId();
+    return infrastructureMappingService.listHosts(workflowExecution.getAppId(), infraMappingId).size();
   }
 
   private List<StateExecutionInstance> getAllStateExecutionInstances(PageRequest<StateExecutionInstance> req) {
