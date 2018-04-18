@@ -6,9 +6,11 @@ import software.wings.beans.CountsByStatuses;
 import software.wings.beans.ElementExecutionSummary;
 import software.wings.beans.ExecutionArgs;
 import software.wings.beans.GraphNode;
+import software.wings.beans.InfrastructureMapping;
 import software.wings.beans.RequiredExecutionArgs;
 import software.wings.beans.StateExecutionElement;
 import software.wings.beans.StateExecutionInterrupt;
+import software.wings.beans.Workflow;
 import software.wings.beans.WorkflowExecution;
 import software.wings.beans.WorkflowType;
 import software.wings.beans.artifact.Artifact;
@@ -269,6 +271,8 @@ public interface WorkflowExecutionService {
    * @param workflowId the workflow id
    */
   void deleteByWorkflow(String appId, String workflowId);
+
+  List<InfrastructureMapping> getResolvedInfraMappings(Workflow workflow, WorkflowExecution workflowExecution);
 
   List<ElementExecutionSummary> getElementsSummary(
       String appId, String executionUuid, String parentStateExecutionInstanceId);

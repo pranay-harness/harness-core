@@ -87,6 +87,7 @@ public class CanaryWorkflowExecutionAdvisor implements ExecutionEventAdvisor {
     StateExecutionInstance stateExecutionInstance = ((ExecutionContextImpl) context).getStateExecutionInstance();
     WorkflowExecution workflowExecution =
         workflowExecutionService.getWorkflowExecution(context.getAppId(), context.getWorkflowExecutionId());
+    Workflow workflow = workflowService.readWorkflow(workflowExecution.getAppId(), workflowExecution.getWorkflowId());
 
     boolean rolling = false;
     if (stateExecutionInstance != null && stateExecutionInstance.getOrchestrationWorkflowType() == ROLLING) {
@@ -98,7 +99,7 @@ public class CanaryWorkflowExecutionAdvisor implements ExecutionEventAdvisor {
       // ready for rolling deploy
 
       CanaryOrchestrationWorkflow orchestrationWorkflow =
-          (CanaryOrchestrationWorkflow) findOrchestrationWorkflow(workflowExecution);
+          (CanaryOrchestrationWorkflow) findOrchestrationWorkflow(workflow, workflowExecution);
       if (orchestrationWorkflow == null || isEmpty(orchestrationWorkflow.getWorkflowPhases())) {
         return null;
       }
@@ -132,7 +133,24 @@ public class CanaryWorkflowExecutionAdvisor implements ExecutionEventAdvisor {
         }
 
         List<ServiceInstance> hostExclusionList = CanaryUtils.getHostExclusionList(context, phaseElement);
-        String infraMappingId = ((PhaseSubWorkflow) state).getInfraMappingId();
+
+        String infraMappingId;
+        if (phaseElement == null || phaseElement.getInfraMappingId() == null) {
+          List<InfrastructureMapping> resolvedInfraMappings =
+              workflowExecutionService.getResolvedInfraMappings(workflow, workflowExecution);
+          if (isEmpty(resolvedInfraMappings)) {
+            return anExecutionEventAdvice()
+                .withExecutionInterruptType(ExecutionInterruptType.NEXT_STEP)
+                .withNextStateName(((CanaryOrchestrationWorkflow) workflow.getOrchestrationWorkflow())
+                                       .getPostDeploymentSteps()
+                                       .getName())
+                .withNextChildStateMachineId(stateExecutionInstance.getChildStateMachineId())
+                .build();
+          }
+          infraMappingId = resolvedInfraMappings.get(0).getUuid();
+        } else {
+          infraMappingId = phaseElement.getInfraMappingId();
+        }
         ServiceInstanceSelectionParams.Builder selectionParams =
             aServiceInstanceSelectionParams().withExcludedServiceInstanceIds(
                 hostExclusionList.stream().map(ServiceInstance::getUuid).distinct().collect(toList()));
@@ -174,7 +192,7 @@ public class CanaryWorkflowExecutionAdvisor implements ExecutionEventAdvisor {
     }
 
     CanaryOrchestrationWorkflow orchestrationWorkflow =
-        (CanaryOrchestrationWorkflow) findOrchestrationWorkflow(workflowExecution);
+        (CanaryOrchestrationWorkflow) findOrchestrationWorkflow(workflow, workflowExecution);
     if (orchestrationWorkflow == null || orchestrationWorkflow.getRollbackWorkflowPhaseIdMap() == null) {
       return null;
     }
@@ -313,8 +331,7 @@ public class CanaryWorkflowExecutionAdvisor implements ExecutionEventAdvisor {
     }
   }
 
-  private OrchestrationWorkflow findOrchestrationWorkflow(WorkflowExecution workflowExecution) {
-    Workflow workflow = workflowService.readWorkflow(workflowExecution.getAppId(), workflowExecution.getWorkflowId());
+  private OrchestrationWorkflow findOrchestrationWorkflow(Workflow workflow, WorkflowExecution workflowExecution) {
     if (workflow == null || workflow.getOrchestrationWorkflow() == null
         || !(workflow.getOrchestrationWorkflow() instanceof CanaryOrchestrationWorkflow)) {
       return null;

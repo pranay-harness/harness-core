@@ -19,7 +19,7 @@ import java.util.List;
  */
 @Data
 @EqualsAndHashCode(callSuper = true)
-@JsonTypeName("BASIC")
+@JsonTypeName("ROLLING")
 @JsonPropertyOrder({"harnessApiVersion"})
 @NoArgsConstructor
 public class RollingWorkflowYaml extends WorkflowYaml {
