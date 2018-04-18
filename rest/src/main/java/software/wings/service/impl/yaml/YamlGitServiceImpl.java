@@ -148,18 +148,7 @@ public class YamlGitServiceImpl implements YamlGitService {
    */
   @Override
   public YamlGitConfig update(YamlGitConfig ygs) {
-    GitConfig gitConfig = getGitConfig(ygs);
-
-    // Encryption applies to User name / password auth
-    if (!gitConfig.isKeyAuth()) {
-      gitConfig.setDecrypted(true);
-      validateGit(gitConfig);
-      gitConfig.setDecrypted(false);
-    }
-
-    YamlGitConfig yamlGitSync = wingsPersistence.saveAndGet(YamlGitConfig.class, ygs);
-    executorService.submit(() -> fullSync(ygs.getAccountId(), true));
-    return yamlGitSync;
+    return save(ygs);
   }
 
   private void validateGit(GitConfig gitConfig) {
