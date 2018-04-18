@@ -52,11 +52,13 @@ import software.wings.beans.WorkflowExecution.WorkflowExecutionBuilder;
 import software.wings.delegatetasks.DelegateProxyFactory;
 import software.wings.dl.WingsPersistence;
 import software.wings.exception.WingsException;
+import software.wings.resources.SecretManagementResource;
 import software.wings.rules.RealMongo;
 import software.wings.security.EncryptionType;
 import software.wings.security.UserThreadLocal;
 import software.wings.security.encryption.EncryptedData;
 import software.wings.security.encryption.SecretChangeLog;
+import software.wings.service.impl.security.SecretText;
 import software.wings.service.intfc.ConfigService;
 import software.wings.service.intfc.FileService;
 import software.wings.service.intfc.ServiceVariableService;
@@ -100,6 +102,7 @@ public class SecretTextTest extends WingsBaseTest {
   @Inject private EncryptionService encryptionService;
   @Inject private ServiceVariableService serviceVariableService;
   @Inject private FileService fileService;
+  @Inject private SecretManagementResource secretManagementResource;
   @Mock private DelegateProxyFactory delegateProxyFactory;
   @Mock private SecretManagementDelegateService secretManagementDelegateService;
   private final String userEmail = "rsingh@harness.io";
@@ -160,6 +163,7 @@ public class SecretTextTest extends WingsBaseTest {
     setInternalState(configService, "secretManager", secretManager);
     setInternalState(encryptionService, "secretManagementDelegateService", secretManagementDelegateService);
     setInternalState(secretManager, "encryptionService", encryptionService);
+    setInternalState(secretManagementResource, "secretManager", secretManager);
     wingsPersistence.save(user);
     UserThreadLocal.set(user);
 
@@ -1171,6 +1175,95 @@ public class SecretTextTest extends WingsBaseTest {
 
     char[] decryptedRef = secretManager.decryptYamlRef(yamlRef);
     assertEquals(password, String.valueOf(decryptedRef));
+  }
+
+  @Test
+  public void updateLocalToKms() throws IllegalAccessException {
+    if (encryptionType != EncryptionType.LOCAL) {
+      return;
+    }
+
+    String secretName = generateUuid();
+    String secretValue = generateUuid();
+    String secretId =
+        secretManagementResource.addSecret(accountId, SecretText.builder().name(secretName).value(secretValue).build())
+            .getResource();
+
+    Query<EncryptedData> query = wingsPersistence.createQuery(EncryptedData.class).filter("type", SECRET_TEXT);
+    List<EncryptedData> encryptedDataList = query.asList();
+    assertEquals(1, encryptedDataList.size());
+    EncryptedData encryptedData = encryptedDataList.get(0);
+    assertEquals(secretName, encryptedData.getName());
+    assertNotNull(encryptedData.getEncryptionKey());
+    assertNotNull(encryptedData.getEncryptedValue());
+    assertNull(encryptedData.getParentIds());
+    assertEquals(accountId, encryptedData.getAccountId());
+    assertTrue(encryptedData.isEnabled());
+    assertEquals(kmsId, encryptedData.getKmsId());
+    assertEquals(encryptionType, encryptedData.getEncryptionType());
+    assertEquals(SECRET_TEXT, encryptedData.getType());
+
+    KmsConfig kmsConfig = getKmsConfig();
+    kmsId = kmsService.saveKmsConfig(accountId, kmsConfig);
+
+    final ServiceVariable serviceVariable = ServiceVariable.builder()
+                                                .templateId(generateUuid())
+                                                .envId(generateUuid())
+                                                .entityType(EntityType.APPLICATION)
+                                                .entityId(generateUuid())
+                                                .parentServiceVariableId(generateUuid())
+                                                .overrideType(OverrideType.ALL)
+                                                .instances(Collections.singletonList(generateUuid()))
+                                                .expression(generateUuid())
+                                                .accountId(accountId)
+                                                .name(generateUuid())
+                                                .value(secretId.toCharArray())
+                                                .encryptedValue(secretId)
+                                                .type(Type.ENCRYPTED_TEXT)
+                                                .build();
+
+    String savedAttributeId = wingsPersistence.save(serviceVariable);
+
+    ServiceVariable savedVariable = wingsPersistence.get(ServiceVariable.class, savedAttributeId);
+    assertNull(savedVariable.getValue());
+    assertEquals(secretId, savedVariable.getEncryptedValue());
+
+    encryptionService.decrypt(
+        savedVariable, secretManager.getEncryptionDetails(savedVariable, appId, workflowExecutionId));
+    assertEquals(secretValue, String.valueOf(savedVariable.getValue()));
+
+    kmsConfig = getKmsConfig();
+    kmsId = kmsService.saveKmsConfig(accountId, kmsConfig);
+
+    String newSecretName = generateUuid();
+    String newSecretValue = generateUuid();
+    secretManagementResource.updateSecret(
+        accountId, secretId, SecretText.builder().name(newSecretName).value(newSecretValue).build());
+
+    query = wingsPersistence.createQuery(EncryptedData.class).filter("type", SECRET_TEXT);
+    encryptedDataList = query.asList();
+    assertEquals(1, encryptedDataList.size());
+    encryptedData = encryptedDataList.get(0);
+    assertEquals(newSecretName, encryptedData.getName());
+    assertNotNull(encryptedData.getEncryptionKey());
+    assertNotNull(encryptedData.getEncryptedValue());
+    assertNotNull(encryptedData.getParentIds());
+    assertEquals(1, encryptedData.getParentIds().size());
+    assertEquals(savedAttributeId, encryptedData.getParentIds().iterator().next());
+    assertEquals(accountId, encryptedData.getAccountId());
+    assertTrue(encryptedData.isEnabled());
+    assertEquals(kmsId, encryptedData.getKmsId());
+    assertNotNull(encryptedData.getKmsId());
+    assertEquals(EncryptionType.KMS, encryptedData.getEncryptionType());
+    assertEquals(SECRET_TEXT, encryptedData.getType());
+
+    savedVariable = wingsPersistence.get(ServiceVariable.class, savedAttributeId);
+    assertNull(savedVariable.getValue());
+    assertEquals(secretId, savedVariable.getEncryptedValue());
+
+    encryptionService.decrypt(
+        savedVariable, secretManager.getEncryptionDetails(savedVariable, appId, workflowExecutionId));
+    assertEquals(newSecretValue, String.valueOf(savedVariable.getValue()));
   }
 
   private VaultConfig getVaultConfig() throws IOException {
