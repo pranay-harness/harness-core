@@ -29,7 +29,8 @@ import java.util.List;
 @JsonTypeInfo(use = Id.NAME, property = "type", include = As.EXISTING_PROPERTY)
 @JsonSubTypes({
   @Type(value = BasicWorkflowYaml.class, name = "BASIC")
-  , @Type(value = CanaryWorkflowYaml.class, name = "CANARY"), @Type(value = BuildWorkflowYaml.class, name = "BUILD"),
+  , @Type(value = RollingWorkflowYaml.class, name = "ROLLING"),
+      @Type(value = CanaryWorkflowYaml.class, name = "CANARY"), @Type(value = BuildWorkflowYaml.class, name = "BUILD"),
       @Type(value = MultiServiceWorkflowYaml.class, name = "MULTI_SERVICE")
 })
 public abstract class WorkflowYaml extends BaseEntityYaml {

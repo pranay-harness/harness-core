@@ -10,6 +10,7 @@ import static software.wings.sm.StateType.AWS_NODE_SELECT;
 import static software.wings.sm.StateType.DC_NODE_SELECT;
 import static software.wings.sm.StateType.ECS_SERVICE_DEPLOY;
 import static software.wings.sm.StateType.KUBERNETES_DEPLOY;
+import static software.wings.sm.StateType.ROLLING_NODE_SELECT;
 
 import com.google.inject.Inject;
 
@@ -128,8 +129,8 @@ public class CanaryWorkflowStandardParams extends WorkflowStandardParams {
       }
 
       case SSH: {
-        State infraState = getInfraState(
-            rootStateMachine, phaseStateMachine, PROVISION_NODE, DC_NODE_SELECT.name(), AWS_NODE_SELECT.name());
+        State infraState = getInfraState(rootStateMachine, phaseStateMachine, PROVISION_NODE,
+            ROLLING_NODE_SELECT.name(), DC_NODE_SELECT.name(), AWS_NODE_SELECT.name());
         if (infraState != null) {
           if (infraState instanceof DcNodeSelectState) {
             DcNodeSelectState dcNodeSelectState = (DcNodeSelectState) infraState;

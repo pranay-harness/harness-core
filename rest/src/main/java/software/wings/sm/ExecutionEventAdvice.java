@@ -9,8 +9,10 @@ public class ExecutionEventAdvice {
   private ExecutionInterruptType executionInterruptType;
   private String nextStateName;
   private String nextChildStateMachineId;
+  private String nextStateDisplayName;
   private Integer waitInterval;
   private Map<String, Object> stateParams;
+  private String rollbackPhaseName;
 
   public ExecutionInterruptType getExecutionInterruptType() {
     return executionInterruptType;
@@ -36,6 +38,14 @@ public class ExecutionEventAdvice {
     this.nextChildStateMachineId = nextChildStateMachineId;
   }
 
+  public String getNextStateDisplayName() {
+    return nextStateDisplayName;
+  }
+
+  public void setNextStateDisplayName(String nextStateDisplayName) {
+    this.nextStateDisplayName = nextStateDisplayName;
+  }
+
   public Integer getWaitInterval() {
     return waitInterval;
   }
@@ -52,12 +62,22 @@ public class ExecutionEventAdvice {
     this.stateParams = stateParams;
   }
 
+  public String getRollbackPhaseName() {
+    return rollbackPhaseName;
+  }
+
+  public void setRollbackPhaseName(String rollbackPhaseName) {
+    this.rollbackPhaseName = rollbackPhaseName;
+  }
+
   public static final class ExecutionEventAdviceBuilder {
     private ExecutionInterruptType executionInterruptType;
+    private String nextStateDisplayName;
     private String nextStateName;
     private String nextChildStateMachineId;
     private Integer waitInterval;
     private Map<String, Object> stateParams;
+    private String rollbackPhaseName;
 
     private ExecutionEventAdviceBuilder() {}
 
@@ -67,6 +87,11 @@ public class ExecutionEventAdvice {
 
     public ExecutionEventAdviceBuilder withExecutionInterruptType(ExecutionInterruptType executionInterruptType) {
       this.executionInterruptType = executionInterruptType;
+      return this;
+    }
+
+    public ExecutionEventAdviceBuilder withNextStateDisplayName(String nextStateDisplayName) {
+      this.nextStateDisplayName = nextStateDisplayName;
       return this;
     }
 
@@ -90,13 +115,20 @@ public class ExecutionEventAdvice {
       return this;
     }
 
+    public ExecutionEventAdviceBuilder withRollbackPhaseName(String rollbackPhaseName) {
+      this.rollbackPhaseName = rollbackPhaseName;
+      return this;
+    }
+
     public ExecutionEventAdvice build() {
       ExecutionEventAdvice executionEventAdvice = new ExecutionEventAdvice();
       executionEventAdvice.setExecutionInterruptType(executionInterruptType);
       executionEventAdvice.setNextStateName(nextStateName);
+      executionEventAdvice.setNextStateDisplayName(nextStateDisplayName);
       executionEventAdvice.setNextChildStateMachineId(nextChildStateMachineId);
       executionEventAdvice.setWaitInterval(waitInterval);
       executionEventAdvice.setStateParams(stateParams);
+      executionEventAdvice.setRollbackPhaseName(rollbackPhaseName);
       return executionEventAdvice;
     }
   }

@@ -23,6 +23,7 @@ import static software.wings.api.ServiceElement.Builder.aServiceElement;
 import static software.wings.api.WorkflowElement.WorkflowElementBuilder.aWorkflowElement;
 import static software.wings.beans.ApprovalDetails.Action.APPROVE;
 import static software.wings.beans.ApprovalDetails.Action.REJECT;
+import static software.wings.beans.CountsByStatuses.Builder.aCountsByStatuses;
 import static software.wings.beans.ElementExecutionSummary.ElementExecutionSummaryBuilder.anElementExecutionSummary;
 import static software.wings.beans.EntityType.ARTIFACT;
 import static software.wings.beans.EntityType.INFRASTRUCTURE_MAPPING;
@@ -870,6 +871,7 @@ public class WorkflowExecutionServiceImpl implements WorkflowExecutionService {
     WorkflowStandardParams stdParams;
     if (workflow.getOrchestrationWorkflow().getOrchestrationWorkflowType() == OrchestrationWorkflowType.CANARY
         || workflow.getOrchestrationWorkflow().getOrchestrationWorkflowType() == OrchestrationWorkflowType.BASIC
+        || workflow.getOrchestrationWorkflow().getOrchestrationWorkflowType() == OrchestrationWorkflowType.ROLLING
         || workflow.getOrchestrationWorkflow().getOrchestrationWorkflowType() == OrchestrationWorkflowType.MULTI_SERVICE
         || workflow.getOrchestrationWorkflow().getOrchestrationWorkflowType() == OrchestrationWorkflowType.BUILD) {
       stdParams = new CanaryWorkflowStandardParams();
@@ -1939,24 +1941,33 @@ public class WorkflowExecutionServiceImpl implements WorkflowExecutionService {
     if (workflowExecution.getStatus().isFinalStatus() && workflowExecution.getBreakdown() != null) {
       return;
     }
+    CountsByStatuses breakdown = null;
+    int total;
 
-    StateMachine sm =
-        wingsPersistence.get(StateMachine.class, workflowExecution.getAppId(), workflowExecution.getStateMachineId());
-    PageRequest<StateExecutionInstance> req =
-        aPageRequest()
-            .withReadPref(CRITICAL)
-            .withLimit(PageRequest.UNLIMITED)
-            .addFilter("appId", EQ, workflowExecution.getAppId())
-            .addFilter("executionUuid", EQ, workflowExecution.getUuid())
-            .addFilter("createdAt", GE, workflowExecution.getCreatedAt())
-            .addFieldsIncluded("uuid", "displayName", "contextElement", "parentInstanceId", "status")
-            .build();
+    // TODO: done for rolling - needs revisit
+    if (workflowExecution.getOrchestrationType() == OrchestrationWorkflowType.ROLLING
+        && workflowExecution.getStatus() == ExecutionStatus.SUCCESS) {
+      breakdown = aCountsByStatuses().withSuccess(1).build();
+      total = 1;
+    } else {
+      StateMachine sm =
+          wingsPersistence.get(StateMachine.class, workflowExecution.getAppId(), workflowExecution.getStateMachineId());
+      PageRequest<StateExecutionInstance> req =
+          aPageRequest()
+              .withReadPref(CRITICAL)
+              .withLimit(PageRequest.UNLIMITED)
+              .addFilter("appId", EQ, workflowExecution.getAppId())
+              .addFilter("executionUuid", EQ, workflowExecution.getUuid())
+              .addFilter("createdAt", GE, workflowExecution.getCreatedAt())
+              .addFieldsIncluded("uuid", "displayName", "contextElement", "parentInstanceId", "status")
+              .build();
 
-    List<StateExecutionInstance> allStateExecutionInstances = getAllStateExecutionInstances(req);
+      List<StateExecutionInstance> allStateExecutionInstances = getAllStateExecutionInstances(req);
 
-    CountsByStatuses breakdown = stateMachineExecutionSimulator.getStatusBreakdown(
-        workflowExecution.getAppId(), workflowExecution.getEnvId(), sm, allStateExecutionInstances);
-    int total = breakdown.getFailed() + breakdown.getSuccess() + breakdown.getInprogress() + breakdown.getQueued();
+      breakdown = stateMachineExecutionSimulator.getStatusBreakdown(
+          workflowExecution.getAppId(), workflowExecution.getEnvId(), sm, allStateExecutionInstances);
+      total = breakdown.getFailed() + breakdown.getSuccess() + breakdown.getInprogress() + breakdown.getQueued();
+    }
 
     workflowExecution.setBreakdown(breakdown);
     workflowExecution.setTotal(total);

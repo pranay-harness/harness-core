@@ -21,7 +21,7 @@ import java.util.List;
  * Created by rishi on 7/16/17.
  */
 public class CanaryUtils {
-  static List<ServiceInstance> getHostExclusionList(ExecutionContext context, PhaseElement phaseElement) {
+  public static List<ServiceInstance> getHostExclusionList(ExecutionContext context, PhaseElement phaseElement) {
     List<ServiceInstance> hostExclusionList = new ArrayList<>();
 
     ExecutionContextImpl impl = (ExecutionContextImpl) context;
@@ -32,7 +32,7 @@ public class CanaryUtils {
             .stream()
             .filter(stateExecutionData
                 -> stateExecutionData.getStateType().equals(StateType.PHASE.name())
-                    && !stateExecutionData.getStateName().equals(phaseElement.getName()))
+                    && (phaseElement == null || !stateExecutionData.getStateName().equals(phaseElement.getName())))
             .collect(toList());
     if (isEmpty(previousPhaseExecutionData)) {
       return hostExclusionList;
@@ -40,7 +40,8 @@ public class CanaryUtils {
 
     for (StateExecutionData stateExecutionData : previousPhaseExecutionData) {
       PhaseExecutionData phaseExecutionData = (PhaseExecutionData) stateExecutionData;
-      if (!phaseExecutionData.getInfraMappingId().equals(phaseElement.getInfraMappingId())) {
+      if (phaseElement != null && phaseElement.getInfraMappingId() != null
+          && !phaseExecutionData.getInfraMappingId().equals(phaseElement.getInfraMappingId())) {
         continue;
       }
       PhaseExecutionSummary phaseExecutionSummary = phaseExecutionData.getPhaseExecutionSummary();

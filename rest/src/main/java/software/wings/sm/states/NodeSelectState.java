@@ -27,6 +27,7 @@ import software.wings.beans.ErrorCode;
 import software.wings.beans.InfrastructureMapping;
 import software.wings.beans.InfrastructureMappingType;
 import software.wings.beans.InstanceUnitType;
+import software.wings.beans.OrchestrationWorkflowType;
 import software.wings.beans.ServiceInstance;
 import software.wings.beans.ServiceInstanceSelectionParams;
 import software.wings.beans.artifact.Artifact;
@@ -107,7 +108,13 @@ public abstract class NodeSelectState extends State {
         instancesToAdd = hostNames.size();
         logger.info("Selecting specific hosts: {}", hostNames);
       } else {
-        instancesToAdd = getCumulativeTotal(totalAvailableInstances) - hostExclusionList.size();
+        int instanceCountTotal = getCount(totalAvailableInstances);
+        if (((ExecutionContextImpl) context).getStateExecutionInstance().getOrchestrationWorkflowType()
+            == OrchestrationWorkflowType.ROLLING) {
+          instancesToAdd = instanceCountTotal;
+        } else {
+          instancesToAdd = instanceCountTotal - hostExclusionList.size();
+        }
       }
       selectionParams.withCount(instancesToAdd);
 
@@ -172,7 +179,7 @@ public abstract class NodeSelectState extends State {
     }
   }
 
-  private int getCumulativeTotal(int maxInstances) {
+  private int getCount(int maxInstances) {
     if (instanceUnitType == PERCENTAGE) {
       int percent = Math.min(instanceCount, 100);
       int percentInstanceCount = (int) Math.round(percent * maxInstances / 100.0);
