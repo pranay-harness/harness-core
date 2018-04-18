@@ -515,7 +515,7 @@ public class YamlGitServiceImpl implements YamlGitService {
     RestResponse<List<GitSyncError>> listRestResponse = listGitSyncErrors(accountId);
     List<GitSyncError> syncErrorList = listRestResponse.getResource();
     if (isEmpty(syncErrorList)) {
-      logger.error("No sync errors found to process for account {}", accountId);
+      logger.warn("No sync errors found to process for account {}", accountId);
       return RestResponse.Builder.aRestResponse().build();
     }
 
@@ -545,7 +545,7 @@ public class YamlGitServiceImpl implements YamlGitService {
       logger.info(GIT_YAML_LOG_PREFIX + "Processed ChangeSet: [{}]", fileChangeContexts);
       removeGitSyncErrors(accountId, gitFileChangeList, false);
     } catch (YamlProcessingException ex) {
-      logger.error(GIT_YAML_LOG_PREFIX + "Unable to process Git sync errors for account {}", accountId, ex);
+      logger.warn(GIT_YAML_LOG_PREFIX + "Unable to process Git sync errors for account {}", accountId, ex);
       // gitToHarness is false, as this action is initiated from UI
       processFailedChanges(accountId, ex.getFailedChangeErrorMsgMap(), false);
     }

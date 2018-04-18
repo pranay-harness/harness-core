@@ -152,7 +152,7 @@ public class GitCommandCallback implements NotifyCallback {
 
   @Override
   public void notifyError(Map<String, NotifyResponseData> response) {
-    logger.error("Git request failed [{}] for changeSetId [{}] for account {}", response, changeSetId, accountId);
+    logger.warn("Git request failed [{}] for changeSetId [{}] for account {}", response, changeSetId, accountId);
     yamlChangeSetService.updateStatus(accountId, changeSetId, Status.FAILED);
   }
 }
