@@ -11,13 +11,13 @@ import static software.wings.beans.yaml.Change.ChangeType.MODIFY;
 import static software.wings.beans.yaml.Change.ChangeType.RENAME;
 import static software.wings.beans.yaml.YamlConstants.GIT_TERRAFORM_LOG_PREFIX;
 import static software.wings.beans.yaml.YamlConstants.GIT_YAML_LOG_PREFIX;
-import static software.wings.core.ssh.executors.SshSessionConfig.Builder.aSshSessionConfig;
-import static software.wings.core.ssh.executors.SshSessionFactory.getSSHSession;
 
 import com.jcraft.jsch.JSch;
 import com.jcraft.jsch.JSchException;
 import com.jcraft.jsch.Session;
 import groovy.lang.Singleton;
+import io.harness.data.structure.EmptyPredicate;
+import io.harness.data.structure.UUIDGenerator;
 import org.eclipse.jgit.api.CloneCommand;
 import org.eclipse.jgit.api.CreateBranchCommand.SetupUpstreamMode;
 import org.eclipse.jgit.api.FetchCommand;
@@ -49,6 +49,7 @@ import org.eclipse.jgit.transport.OpenSshConfig;
 import org.eclipse.jgit.transport.PushResult;
 import org.eclipse.jgit.transport.RefSpec;
 import org.eclipse.jgit.transport.RemoteRefUpdate;
+import org.eclipse.jgit.transport.RemoteSession;
 import org.eclipse.jgit.transport.SshSessionFactory;
 import org.eclipse.jgit.transport.SshTransport;
 import org.eclipse.jgit.treewalk.CanonicalTreeParser;
@@ -69,7 +70,6 @@ import software.wings.beans.yaml.GitDiffResult;
 import software.wings.beans.yaml.GitFileChange;
 import software.wings.beans.yaml.GitPushResult;
 import software.wings.beans.yaml.GitPushResult.RefUpdate;
-import software.wings.core.ssh.executors.SshSessionConfig;
 import software.wings.exception.WingsException;
 import software.wings.service.intfc.yaml.GitClient;
 
@@ -93,11 +93,8 @@ import java.util.List;
 @Singleton
 public class GitClientImpl implements GitClient {
   private static final String GIT_REPO_BASE_DIR = "./repository/${REPO_TYPE}/${ACCOUNT_ID}/${REPO_NAME}";
+  private static final String TEMP_SSH_KEY_DIR = "./repository/.ssh";
   private static final String COMMIT_TIMESTAMP_FORMAT = "yyyy.MM.dd.HH.mm.ss";
-  /**
-   * The constant DEFAULT_BRANCH.
-   */
-  public static final String DEFAULT_BRANCH = "master";
 
   private static final Logger logger = LoggerFactory.getLogger(GitClientImpl.class);
 
@@ -110,79 +107,18 @@ public class GitClientImpl implements GitClient {
                     .append(gitRepoDirectory)
                     .toString());
 
-    if (!gitConfig.isKeyAuth()) {
-      try (Git git = Git.cloneRepository()
-                         .setURI(gitConfig.getRepoUrl())
-                         .setCredentialsProvider(getCredentialsProvider(gitConfig))
-                         .setDirectory(new File(gitRepoDirectory))
-                         .setBranch(gitConfig.getBranch())
-                         .call()) {
-        return GitCloneResult.builder().build();
-      } catch (GitAPIException ex) {
-        logger.error(GIT_YAML_LOG_PREFIX + "Exception: ", ex);
-        checkIfTransportException(ex);
-        throw new WingsException(ErrorCode.YAML_GIT_SYNC_ERROR).addParam("message", "Error in cloning repo");
-      }
-    } else {
-      CloneCommand cloneCommand = Git.cloneRepository();
-      cloneCommand = (CloneCommand) getAuthConfiguredCommand(cloneCommand, gitConfig);
-      try (Git git = cloneCommand.setURI(gitConfig.getRepoUrl())
-                         .setDirectory(new File(gitRepoDirectory))
-                         .setBranch(gitConfig.getBranch())
-                         .call()) {
-        return GitCloneResult.builder().build();
-      } catch (GitAPIException ex) {
-        logger.error(GIT_YAML_LOG_PREFIX + "Exception: ", ex);
-        checkIfTransportException(ex);
-        throw new WingsException(ErrorCode.YAML_GIT_SYNC_ERROR).addParam("message", "Error in cloning repo");
-      }
+    CloneCommand cloneCommand = Git.cloneRepository();
+    cloneCommand = (CloneCommand) getAuthConfiguredCommand(cloneCommand, gitConfig);
+    try (Git git = cloneCommand.setURI(gitConfig.getRepoUrl())
+                       .setDirectory(new File(gitRepoDirectory))
+                       .setBranch(gitConfig.getBranch())
+                       .call()) {
+      return GitCloneResult.builder().build();
+    } catch (GitAPIException ex) {
+      logger.error(GIT_YAML_LOG_PREFIX + "Exception: ", ex);
+      checkIfTransportException(ex);
+      throw new WingsException(ErrorCode.YAML_GIT_SYNC_ERROR).addParam("message", "Error in cloning repo");
     }
-  }
-
-  private TransportCommand getAuthConfiguredCommand(TransportCommand gitCommand, GitConfig gitConfig) {
-    // HTTPS Connection
-    if (!gitConfig.isKeyAuth()) {
-      gitCommand.setCredentialsProvider(getCredentialsProvider(gitConfig));
-    } else { // SSH Connection
-      SshSessionFactory sshSessionFactory = new JschConfigSessionFactory() {
-        @Override
-        protected void configure(OpenSshConfig.Host host, Session session) {
-          session.setConfig("StrictHostKeyChecking", "no");
-          SshSessionConfig newConfig =
-              aSshSessionConfig()
-                  .withKey(((HostConnectionAttributes) gitConfig.getSshSettingAttribute().getValue()).getKey())
-                  .withKeyName(gitConfig.getSshSettingId())
-                  .withHost(host.getHostName())
-                  .withUserName(gitConfig.getUsername())
-                  .withPort(host.getPort())
-                  .build();
-          try {
-            session = getSSHSession(newConfig);
-          } catch (JSchException jse) {
-            logger.error("getAuthConfiguredCommand : Could not get SSH Session", jse);
-          }
-        }
-
-        // https://stackoverflow.com/questions/13686643/using-keys-with-jgit-to-access-a-git-repository-securely/19931041#19931041
-        @Override
-        protected JSch getJSch(final OpenSshConfig.Host hc, FS fs) throws JSchException {
-          JSch jsch = super.getJSch(hc, fs);
-          jsch.removeAllIdentity();
-          return jsch;
-        }
-      };
-
-      gitCommand.setTransportConfigCallback(transport -> {
-        SshTransport sshTransport = (SshTransport) transport;
-        sshTransport.setSshSessionFactory(sshSessionFactory);
-      });
-    }
-
-    return gitCommand;
-  }
-
-  private UsernamePasswordCredentialsProviderWithSkipSslVerify getCredentialsProvider(GitConfig gitConfig) {
-    return new UsernamePasswordCredentialsProviderWithSkipSslVerify(gitConfig.getUsername(), gitConfig.getPassword());
   }
 
   @Override
@@ -226,7 +162,7 @@ public class GitClientImpl implements GitClient {
                                    .build();
     try (Git git = Git.open(new File(getRepoDirectory(gitConfig)))) {
       git.checkout().setName(gitConfig.getBranch()).call();
-      getPullCommand(gitConfig, git).call();
+      ((PullCommand) (getAuthConfiguredCommand(git.pull(), gitConfig))).call();
       Repository repository = git.getRepository();
       ObjectId headCommitId = repository.resolve("HEAD");
       diffResult.setCommitId(headCommitId.getName());
@@ -259,26 +195,6 @@ public class GitClientImpl implements GitClient {
       throw new WingsException(ErrorCode.YAML_GIT_SYNC_ERROR).addParam("message", "Error in getting commit diff");
     }
     return diffResult;
-  }
-
-  private PullCommand getPullCommand(GitConfig gitConfig, Git git) {
-    return (PullCommand) (getAuthConfiguredCommand(git.pull(), gitConfig));
-  }
-
-  private PushCommand getPushCommand(GitConfig gitConfig, Git git) {
-    return (PushCommand) (getAuthConfiguredCommand(git.push(), gitConfig));
-  }
-
-  private CloneCommand getCloneCommand(GitConfig gitConfig, Git git) {
-    return (CloneCommand) (getAuthConfiguredCommand(Git.cloneRepository(), gitConfig));
-  }
-
-  private LsRemoteCommand getLsRemoteCommand(GitConfig gitConfig, Git git) {
-    return (LsRemoteCommand) (getAuthConfiguredCommand(git.lsRemote(), gitConfig));
-  }
-
-  private FetchCommand getFetchCommand(GitConfig gitConfig, Git git) {
-    return (FetchCommand) (getAuthConfiguredCommand(git.fetch(), gitConfig));
   }
 
   private void addToGitDiffResult(List<DiffEntry> diffs, GitDiffResult diffResult, ObjectId headCommitId,
@@ -334,6 +250,7 @@ public class GitClientImpl implements GitClient {
   @Override
   public synchronized GitCommitResult commit(GitConfig gitConfig, GitCommitRequest gitCommitRequest) {
     ensureRepoLocallyClonedAndUpdated(gitConfig);
+
     // TODO:: pull latest remote branch??
     try (Git git = Git.open(new File(getRepoDirectory(gitConfig)))) {
       String timestamp = new SimpleDateFormat(COMMIT_TIMESTAMP_FORMAT).format(new java.util.Date());
@@ -452,7 +369,7 @@ public class GitClientImpl implements GitClient {
   public synchronized GitPushResult push(GitConfig gitConfig, boolean forcePush) {
     logger.info(getGitLogMessagePrefix(gitConfig.getGitRepoType()) + "Performing git PUSH, forcePush is: " + forcePush);
     try (Git git = Git.open(new File(getRepoDirectory(gitConfig)))) {
-      Iterable<PushResult> pushResults = getPushCommand(gitConfig, git)
+      Iterable<PushResult> pushResults = ((PushCommand) (getAuthConfiguredCommand(git.push(), gitConfig)))
                                              .setRemote("origin")
                                              .setForce(forcePush)
                                              .setRefSpecs(new RefSpec(gitConfig.getBranch()))
@@ -519,7 +436,7 @@ public class GitClientImpl implements GitClient {
           .setStartPoint("origin/" + gitConfig.getBranch())
           .call();
       git.checkout().setName(gitConfig.getBranch()).call();
-      return getPullCommand(gitConfig, git).call();
+      return ((PullCommand) (getAuthConfiguredCommand(git.pull(), gitConfig))).call();
     } catch (IOException | GitAPIException ex) {
       logger.error(getGitLogMessagePrefix(gitConfig.getGitRepoType()) + "Exception: ", ex);
       throw new WingsException(ErrorCode.YAML_GIT_SYNC_ERROR).addParam("message", "Error in getting commit diff");
@@ -530,9 +447,9 @@ public class GitClientImpl implements GitClient {
   public String validate(GitConfig gitConfig, boolean logError) {
     try {
       // Init Git repo
-      Git git = Git.init().setDirectory(new File(getRepoDirectory(gitConfig))).call();
-      Collection<Ref> refs =
-          getLsRemoteCommand(gitConfig, git).setRemote(gitConfig.getRepoUrl()).setHeads(true).setTags(true).call();
+      LsRemoteCommand lsRemoteCommand = Git.lsRemoteRepository();
+      lsRemoteCommand = (LsRemoteCommand) getAuthConfiguredCommand(lsRemoteCommand, gitConfig);
+      Collection<Ref> refs = lsRemoteCommand.setRemote(gitConfig.getRepoUrl()).setHeads(true).setTags(true).call();
       logger.info(getGitLogMessagePrefix(gitConfig.getGitRepoType()) + "Remote branches [{}]", refs);
     } catch (Exception e) {
       if (logError) {
@@ -564,23 +481,28 @@ public class GitClientImpl implements GitClient {
    * @param gitConfig the git config
    */
   public synchronized void ensureRepoLocallyClonedAndUpdated(GitConfig gitConfig) {
-    try (Git git = Git.open(new File(getRepoDirectory(gitConfig)))) {
-      logger.info(getGitLogMessagePrefix(gitConfig.getGitRepoType()) + "Repo exist. do hard sync with remote branch");
-      FetchResult fetchResult = getFetchCommand(gitConfig, git).call(); // fetch all remote references
-      checkout(gitConfig);
-      Ref ref = git.reset().setMode(ResetType.HARD).setRef("refs/remotes/origin/" + gitConfig.getBranch()).call();
-      logger.info(
-          getGitLogMessagePrefix(gitConfig.getGitRepoType()) + "Hard reset done for branch " + gitConfig.getBranch());
-      // TODO:: log failed commits queued and being ignored.
-      return;
-    } catch (IOException ex) {
-      logger.error(getGitLogMessagePrefix(gitConfig.getGitRepoType()) + "Repo doesn't exist locally [repo: {}], {}",
-          gitConfig.getRepoUrl(), ex);
-    } catch (GitAPIException ex) {
-      logger.info(getGitLogMessagePrefix(gitConfig.getGitRepoType()) + "Hard reset failed for branch [{}]",
-          gitConfig.getBranch());
-      logger.error(getGitLogMessagePrefix(gitConfig.getGitRepoType()) + "Exception: ", ex);
-      checkIfTransportException(ex);
+    File repoDir = new File(getRepoDirectory(gitConfig));
+    if (repoDir.exists()) {
+      try (Git git = Git.open(new File(getRepoDirectory(gitConfig)))) {
+        logger.info(getGitLogMessagePrefix(gitConfig.getGitRepoType()) + "Repo exist. do hard sync with remote branch");
+
+        FetchResult fetchResult =
+            ((FetchCommand) (getAuthConfiguredCommand(git.fetch(), gitConfig))).call(); // fetch all remote references
+        checkout(gitConfig);
+        Ref ref = git.reset().setMode(ResetType.HARD).setRef("refs/remotes/origin/" + gitConfig.getBranch()).call();
+        logger.info(
+            getGitLogMessagePrefix(gitConfig.getGitRepoType()) + "Hard reset done for branch " + gitConfig.getBranch());
+        // TODO:: log failed commits queued and being ignored.
+        return;
+      } catch (IOException ex) {
+        logger.error(getGitLogMessagePrefix(gitConfig.getGitRepoType()) + "Repo doesn't exist locally [repo: {}], {} ",
+            gitConfig.getRepoUrl(), ex);
+      } catch (GitAPIException ex) {
+        logger.info(getGitLogMessagePrefix(gitConfig.getGitRepoType()) + "Hard reset failed for branch [{}]",
+            gitConfig.getBranch());
+        logger.error(getGitLogMessagePrefix(gitConfig.getGitRepoType()) + "Exception: ", ex);
+        checkIfTransportException(ex);
+      }
     }
 
     logger.info(getGitLogMessagePrefix(gitConfig.getGitRepoType()) + "Repo doesn't exist. Do a fresh clone");
@@ -598,5 +520,81 @@ public class GitClientImpl implements GitClient {
 
   protected String getGitLogMessagePrefix(GitRepositoryType repositoryType) {
     return repositoryType.equals(GitRepositoryType.TERRAFORM) ? GIT_TERRAFORM_LOG_PREFIX : GIT_YAML_LOG_PREFIX;
+  }
+
+  private TransportCommand getAuthConfiguredCommand(TransportCommand gitCommand, GitConfig gitConfig) {
+    if (!gitConfig.isKeyAuth()) {
+      setHttpAuthCredential(gitCommand, gitConfig);
+    } else {
+      setSshAuthCredentials(gitCommand, gitConfig);
+    }
+    return gitCommand;
+  }
+
+  private void setSshAuthCredentials(TransportCommand gitCommand, GitConfig gitConfig) {
+    String keyPath = null;
+    try {
+      String sshKey = new String(((HostConnectionAttributes) gitConfig.getSshSettingAttribute().getValue()).getKey());
+      keyPath = getTempSshKeyPath(sshKey);
+
+      SshSessionFactory sshSessionFactory = getSshSessionFactory(keyPath);
+
+      gitCommand.setTransportConfigCallback(transport -> {
+        SshTransport sshTransport = (SshTransport) transport;
+        sshTransport.setSshSessionFactory(sshSessionFactory);
+      });
+    } catch (Exception e) {
+      if (EmptyPredicate.isNotEmpty(keyPath)) {
+        new File(keyPath).delete();
+      }
+      throw new WingsException(ErrorCode.INVALID_REQUEST, e);
+    }
+  }
+
+  private void setHttpAuthCredential(TransportCommand gitCommand, GitConfig gitConfig) {
+    gitCommand.setCredentialsProvider(getCredentialsProvider(gitConfig));
+  }
+
+  private SshSessionFactory getSshSessionFactory(String sshKeyPath) {
+    return new JschConfigSessionFactory() {
+      @Override
+      protected void configure(OpenSshConfig.Host host, Session session) {
+        session.setConfig("StrictHostKeyChecking", "no");
+      }
+
+      @Override
+      protected JSch getJSch(final OpenSshConfig.Host hc, FS fs) throws JSchException {
+        JSch jsch = super.getJSch(hc, fs);
+        jsch.removeAllIdentity();
+        jsch.addIdentity(sshKeyPath);
+        return jsch;
+      }
+
+      @Override
+      public void releaseSession(RemoteSession session) {
+        super.releaseSession(session);
+        (new File(sshKeyPath)).delete(); // TODO: try-catch security exception
+      }
+    };
+  }
+
+  private String getTempSshKeyPath(String sshKey) throws IOException {
+    String keyFilePath = TEMP_SSH_KEY_DIR + "/" + UUIDGenerator.generateUuid();
+    File keyFile = new File(keyFilePath);
+
+    File sshDirectory = keyFile.getParentFile();
+    if (sshDirectory.exists() || !sshDirectory.isDirectory()) {
+      sshDirectory.delete();
+    }
+    sshDirectory.mkdirs();
+
+    try (FileWriter writer = new FileWriter(keyFile)) {
+      writer.write(sshKey);
+    }
+    return keyFilePath;
+  }
+
+  private UsernamePasswordCredentialsProviderWithSkipSslVerify getCredentialsProvider(GitConfig gitConfig) {
+    return new UsernamePasswordCredentialsProviderWithSkipSslVerify(gitConfig.getUsername(), gitConfig.getPassword());
   }
 }

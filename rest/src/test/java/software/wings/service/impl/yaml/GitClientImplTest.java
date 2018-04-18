@@ -49,62 +49,114 @@ public class GitClientImplTest {
   public static final String newPath = "root/dir/file_new_path";
 
   // Git sync credentials (Keeping it here for now)
-  private static final String GIT_REPO_URL = "git@github.com:rathn/Rathna-Test.git";
-  private static final String PRIVATE_KEY = "/Users/rathna/.ssh/id_rsa";
+  private static final String GIT_REPO_URL = "git@github.com:wings-software/yaml-test.git";
+  // private static final String PRIVATE_KEY = "/Users/rathna/.ssh/id_rsa";
   private static final String GIT_USER = "git";
 
   private static final Logger logger = LoggerFactory.getLogger(GitClientImplTest.class);
 
-  private static final String localSSHKey = "-----BEGIN RSA PRIVATE KEY-----\n"
-      + "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\n"
+  private static final String localSSHKey_Rathna = "-----BEGIN RSA PRIVATE KEY-----\n"
+      + "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\n"
+      + "-----END RSA PRIVATE KEY-----\n";
+
+  private static final String localSSHKey_Anubhaw = "-----BEGIN RSA PRIVATE KEY-----\n"
+      + "MIIJKQIBAAKCAgEAxg7Ffm9UsqO5H91dmT6VbKK5lVAr24893UJxPbWsocaFAmq9\n"
+      + "5UOtGx9P7fTS1Hx9ScclhPBstiPmqwU4zyV06XYHKGzgPvaFh6e/D8zXUcUu+3XP\n"
+      + "4xG1HoEBdInZXfNvLl006R95J0cLVfI0zSNeQ29OSUzPDeAHlTTfiB+bgUsmipeQ\n"
+      + "WMLgZ26euemKJpf64H5JoC9OYIngz1cn1LHTBoFo7+W3jXX7foQ+fy5vqglrvdTX\n"
+      + "yjhflgRExMTTiKORaBjdgmm69bDNTJwRUo3XJJvjhNc1PWb2g2OG26B/v4ChgZmN\n"
+      + "9XkYU5AUjEK48F7B52MW51a54UalwExOKCNlY3l/+IOA/hoVMwDJH5ELBmiSTcgn\n"
+      + "Q4+gNMtsavlRl30/JQ7Ai+iHrR3qQRSPIdN79kuZ9T3JSc+lx9m1oQtZYH0H4/vQ\n"
+      + "wOEO8RuXBVDPkPMjOngQqlAJNGXD+CYK9KOCYRS791dFWjfyB3kvSwseniw4x941\n"
+      + "nnHWCGKZ5T+Eh7rqiuYgvKd8s6LhbuPf1q0sIBUk/856RGP5ZFqAb5tYBnkytS6t\n"
+      + "II70mwdypUUVUm3+ftmYmYP87GJweDcIGOoaBc2lFQhkT/QVWgF5Ex0k7bx/yP1g\n"
+      + "Fc9giC8C+4JgwAoiy48cjmix7ND7Api38+fZJl5ord5RMTE7HrDwUyeuHV0CAwEA\n"
+      + "AQKCAgEAqvGS6hbDPtBq9yLEJ4FJzRMCJOqmgAG5PqCbRszobFUA9l4U+q2X2mID\n"
+      + "RfnagoXUSXp2WrB81BRWgmOmbbwBlYNGmFComA+Entpc4RFHAw+zBlzgCjd9YQ+t\n"
+      + "pt1X3GxBGP5frZp5ojoCgbLkee497OxD4KZHy80CHnkdOcs2F7k6UcKRVtsUfpGO\n"
+      + "tB3rHHZulZbKi1RpTI+UlsC94yl8XxAQ94YJEDK117PikTkOLe+lq5nqimJvtfaH\n"
+      + "OGI9xaCP3w4fGfGR6X8pIydNGDjOaY2XKU/qZs3YlPyxKBz2Rd6LB2X2jdlv8qfX\n"
+      + "5FuubeELcWAoI5HKK7MjWr9Bcgli9pzAp751xhdinLBHqGnYsq2Sbl/oHqr3iHQl\n"
+      + "FJVFSY0ZHqLxYL+h+O54WU30nVEk0eKztWMI6MVJMpWS1yVQ8a5wL9GJ8wS75i5Q\n"
+      + "A4Z7hoEQN16S0iVwFNLcaRb7npcis0ViIZ0VuKa4cm0IDnZ9qzUwTa8jHQK+VBsn\n"
+      + "zIezMVAcxGQrZCHfm6ZzqZ25dJ4rxP+v9aLkGk06+bzZ9zEeaZaeZn940Jy9eMk7\n"
+      + "3fNSpLi9chdO/Urmr0IwnJtMjCqt8/S9ZXr4yYnSv6cP9WTbhNYLBtKCKd8ohF7R\n"
+      + "DGaSNxEbdp7xACcbJEWRB5v+jJ6oVez1nJifSWZieewcRyPjeY0CggEBAOh/J6P/\n"
+      + "jf/dAZE5TPa2296UW+cISDsS6SD0IZLThrxTV5Viw+ashmyq5Q4QLx47iDIHyp0y\n"
+      + "8uNyNBAo5xpVQeMb6C7hia3bPXsCT2uhpQOjnchV+hUkgfKAI2++JSsulsnIb2LZ\n"
+      + "PiKQbb31GTuYfF9WIHRnGOwI2DRMv/XoDMWH+8nJs2NrQlCGDL7kY5so/yH3Ax/6\n"
+      + "p3h4JaXGuvhndGqa3cojqW5Ni0kmcFckybPiSuGojpLy8OflgzZeT9KgZ3VvZGXK\n"
+      + "kuITJBhG2DwjxXQ39obroiHDr49POARiNtgaW6eFCiD1bS9WHueiH2hSp8OR4d/f\n"
+      + "ots6BPS7mL4AUbsCggEBANoUXEZ0ljVqirvzXkipKq/psmGfl6eGxHuSSwKLxlkm\n"
+      + "urSYUH2h7L858EnCGaTviCgp84b5f/48ntAnyO9Do4DRZxEksIc3+plxYOv1cKtJ\n"
+      + "kouO91sX2JpMc+Um76wGGVuIKWtpiSXhupTsb2UReivNTU2kz7pP/PJuL2enkFiO\n"
+      + "yX0lqcoDj0zUX/q5jYL27S13mOAlt3+OFa5AGRqFdeXFUNVMsD1+ssWYRBXb0vBT\n"
+      + "/i5OKrslcaf0dm92XJS0/4zlqOvtAX4ebTUlFclcwE8yUPgT0zTj/3ZjnH/4IQrh\n"
+      + "9v4QYs151jqQWccm9jt2aphXyal+1spacBIRYqTT78cCggEAJ0klJ58NHYj4tNNb\n"
+      + "3+xyJqAnD1jk66Z8YicebTL092mVyRZRR+8rH72YytGNRKyGjP2oDPwI8snfZkOj\n"
+      + "GV4Crh+PEizmGMyNDPYM+YDs4zqIdMuiYGQ02Qcx9bXJjgxnSl1mBOv0hd6lzI1X\n"
+      + "4CwaB/oDreel3Gx6LAwz+5dkYRRjRWuhtlDvea/NA4yQEC3TPqgAjSzLk52pruNv\n"
+      + "wH2qvEDC7V8tSAguWwP1w6PhuVWplYvn24jVkDnF/C/fiRW1pbBW5KRgQXc+iCOg\n"
+      + "cjkRKlwyegXi9ZWdWrfmHUeDQOzjQ+FFHuCZvH/u5PEOIZCl7HQAGNYvLKAXKktw\n"
+      + "udpP9QKCAQEAkPFTWyiF5T7Isp7QHW8CBiVHAAd4Xkn+MTtMS4bm774D/Z/2b2m9\n"
+      + "1mMFx6AQN0VUs40eZKlTXoCf9S1cKVpFQ4rp+8Ts5xJXpsBqcKmSluWxVrxQvuSc\n"
+      + "fAEwTi+QwD7Vf7aCAPgFxX2/6tcyOnRhRNeQ93gA8I3VSrPdIgGGuLU+ScVMkg3H\n"
+      + "ooLMv/GvkknX3Y5NtzyaN1cSJdxIUw49C9gXH4123Yhl/Vp0dirCiiTpHZGqaPQ8\n"
+      + "FCswxGhgpB2gc974ZMYDZfWHE/lv/4N79ac1lYxnphGbau5Nx+f83iTNapMtd+/w\n"
+      + "aMAkS28j3OWZd2NxjwvUam2tavTPIUoTZQKCAQBWXNZNxQNCt+QR6EHObBmv8XyA\n"
+      + "C6kDpHtxIaISuOcPv8Xwwc5YSjhPS6J2MgRkiP6zvJ+pp/D2UJJ9D3Ifh0mFx6fW\n"
+      + "VkBnsKXSPh3VKy1DSElK/bCSBKRBi3YnIufboI+5WZ5ua2F1loTtj60mn9N/iQFg\n"
+      + "WxIGyqEQkVWO8QxsC22Gz/JEiuAwzS8SX2sNrkYYWB2omb5hVepFsESaFcH6Pt9A\n"
+      + "pvg3M19/5M53SHF34T7MiYD1K6VdoXAwSAil7cDV+rsi/JGeTS/nJ+cDh/q/YjKf\n"
+      + "+rabOzjsrJHAl5YogGm2nT5r2Zq5jYobJyUy0+p9pW1MShXTLTDguDZHFmbg\n"
       + "-----END RSA PRIVATE KEY-----\n";
 
   @Test
@@ -181,7 +233,7 @@ public class GitClientImplTest {
         session.setConfig("StrictHostKeyChecking", "no");
 
         SshSessionConfig newConfig = aSshSessionConfig()
-                                         .withKey(getSSHKey(PRIVATE_KEY))
+                                         .withKey(localSSHKey_Anubhaw.toCharArray())
                                          .withKeyName(UUIDGenerator.generateUuid())
                                          .withHost(host.getHostName())
                                          .withUserName(GIT_USER)
@@ -207,10 +259,11 @@ public class GitClientImplTest {
 
     Git result = null;
     File localPath = File.createTempFile("TestGitRepository", "");
-    localPath.delete();
+    String PATH = "/Users/rathna/tmp";
+    // localPath.delete();
     result = Git.cloneRepository()
                  .setURI(GIT_REPO_URL)
-                 .setDirectory(localPath)
+                 .setDirectory(new File(PATH))
                  .setTransportConfigCallback(transport -> {
                    SshTransport sshTransport = (SshTransport) transport;
                    sshTransport.setSshSessionFactory(sshSessionFactory);
@@ -224,7 +277,7 @@ public class GitClientImplTest {
   public void testCloneRepoWithSSH() throws Exception {
     try {
       Git gitResult = gitSyncCloneRepository();
-    } catch (GitAPIException gae) {
+    } catch (Exception gae) {
       logger.error("Git Clone with SSH failed for repository: " + gae.getMessage());
     }
   }
