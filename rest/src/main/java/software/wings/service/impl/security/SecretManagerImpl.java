@@ -558,6 +558,8 @@ public class SecretManagerImpl implements SecretManager {
     savedData.setEncryptionKey(encryptedData.getEncryptionKey());
     savedData.setEncryptedValue(encryptedData.getEncryptedValue());
     savedData.setName(name);
+    savedData.setEncryptionType(encryptedData.getEncryptionType());
+    savedData.setKmsId(encryptedData.getKmsId());
     try {
       wingsPersistence.save(savedData);
     } catch (DuplicateKeyException e) {
