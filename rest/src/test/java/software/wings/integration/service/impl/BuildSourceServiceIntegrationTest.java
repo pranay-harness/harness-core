@@ -297,6 +297,7 @@ public class BuildSourceServiceIntegrationTest extends WingsBaseTest {
   }
 
   @Test
+  @Repeat(times = 5, successes = 1)
   public void getJobs() {
     switch (type) {
       case DOCKER:
@@ -311,6 +312,7 @@ public class BuildSourceServiceIntegrationTest extends WingsBaseTest {
   }
 
   @Test
+  @Repeat(times = 5, successes = 1)
   public void getPlans() {
     switch (type) {
       case DOCKER:
@@ -323,6 +325,7 @@ public class BuildSourceServiceIntegrationTest extends WingsBaseTest {
   }
 
   @Test
+  @Repeat(times = 5, successes = 1)
   public void getPlansWithService() {
     switch (type) {
       case DOCKER:
@@ -339,6 +342,7 @@ public class BuildSourceServiceIntegrationTest extends WingsBaseTest {
   }
 
   @Test
+  @Repeat(times = 5, successes = 1)
   public void getArtifactPaths() {
     switch (type) {
       case DOCKER:
@@ -354,6 +358,7 @@ public class BuildSourceServiceIntegrationTest extends WingsBaseTest {
   }
 
   @Test
+  @Repeat(times = 5, successes = 1)
   public void getBuilds() {
     switch (type) {
       case DOCKER:
@@ -368,6 +373,7 @@ public class BuildSourceServiceIntegrationTest extends WingsBaseTest {
   }
 
   @Test
+  @Repeat(times = 5, successes = 1)
   public void getLastSuccessfulBuild() {
     switch (type) {
       case DOCKER:
@@ -400,6 +406,7 @@ public class BuildSourceServiceIntegrationTest extends WingsBaseTest {
   }
 
   @Test
+  @Repeat(times = 5, successes = 1)
   public void getGroupIds() {
     Set<String> groupIds;
     switch (type) {
