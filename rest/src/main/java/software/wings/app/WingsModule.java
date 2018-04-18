@@ -67,6 +67,7 @@ import software.wings.service.impl.AcrBuildServiceImpl;
 import software.wings.service.impl.ActivityServiceImpl;
 import software.wings.service.impl.AlertServiceImpl;
 import software.wings.service.impl.AmiBuildServiceImpl;
+import software.wings.service.impl.ApiKeyServiceImpl;
 import software.wings.service.impl.AppContainerServiceImpl;
 import software.wings.service.impl.AppServiceImpl;
 import software.wings.service.impl.ArtifactStreamServiceImpl;
@@ -164,6 +165,7 @@ import software.wings.service.intfc.AcrBuildService;
 import software.wings.service.intfc.ActivityService;
 import software.wings.service.intfc.AlertService;
 import software.wings.service.intfc.AmiBuildService;
+import software.wings.service.intfc.ApiKeyService;
 import software.wings.service.intfc.AppContainerService;
 import software.wings.service.intfc.AppService;
 import software.wings.service.intfc.ArtifactCollectionService;
@@ -391,6 +393,7 @@ public class WingsModule extends AbstractModule {
     bind(GitClient.class).to(GitClientUnsupported.class).in(Singleton.class);
     bind(ArtifactCollectionService.class).to(ArtifactCollectionServiceImpl.class);
     bind(WhitelistService.class).to(WhitelistServiceImpl.class);
+    bind(ApiKeyService.class).to(ApiKeyServiceImpl.class);
 
     MapBinder<String, InfrastructureProvider> infrastructureProviderMapBinder =
         MapBinder.newMapBinder(binder(), String.class, InfrastructureProvider.class);
