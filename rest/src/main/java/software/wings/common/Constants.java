@@ -153,6 +153,8 @@ public interface Constants {
    */
   String WINGS_VARIABLE_SUFFIX = "}";
 
+  String ROLLING_PHASE_PREFIX = "Rolling Phase ";
+
   /**
    * The constant PRE_DEPLOYMENT.
    */

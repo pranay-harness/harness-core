@@ -31,6 +31,7 @@ import software.wings.beans.yaml.Change;
 import software.wings.beans.yaml.ChangeContext;
 import software.wings.beans.yaml.YamlConstants;
 import software.wings.beans.yaml.YamlType;
+import software.wings.common.Constants;
 import software.wings.exception.HarnessException;
 import software.wings.exception.WingsException;
 import software.wings.service.impl.yaml.handler.BaseYamlHandler;
@@ -199,7 +200,7 @@ public abstract class WorkflowYamlHandler<Y extends WorkflowYaml> extends BaseYa
 
       // Pre-deployment steps
       PhaseStepBuilder preDeploymentSteps =
-          PhaseStepBuilder.aPhaseStep(PhaseStepType.PRE_DEPLOYMENT, PhaseStepType.PRE_DEPLOYMENT.name());
+          PhaseStepBuilder.aPhaseStep(PhaseStepType.PRE_DEPLOYMENT, Constants.PRE_DEPLOYMENT);
 
       if (yaml.getPreDeploymentSteps() != null) {
         List<GraphNode> stepList =
@@ -219,7 +220,7 @@ public abstract class WorkflowYamlHandler<Y extends WorkflowYaml> extends BaseYa
 
       // Post-deployment steps
       PhaseStepBuilder postDeploymentSteps =
-          PhaseStepBuilder.aPhaseStep(PhaseStepType.POST_DEPLOYMENT, PhaseStepType.POST_DEPLOYMENT.name());
+          PhaseStepBuilder.aPhaseStep(PhaseStepType.POST_DEPLOYMENT, Constants.POST_DEPLOYMENT);
 
       if (yaml.getPostDeploymentSteps() != null) {
         List<GraphNode> postDeployStepList =

@@ -169,13 +169,17 @@ public class PhaseSubWorkflow extends SubWorkflowState {
       MapperUtils.mapObject(service, serviceElement);
       PhaseElement phaseElement = aPhaseElement()
                                       .withUuid(getId())
-                                      .withPhaseName(getName())
+                                      .withPhaseName(stateExecutionInstance.getDisplayName())
                                       .withServiceElement(serviceElement)
                                       .withDeploymentType(infrastructureMapping.getDeploymentType())
                                       .withInfraMappingId(infrastructureMapping.getUuid())
                                       .withAppId(infrastructureMapping.getAppId())
                                       .withPhaseNameForRollback(phaseNameForRollback)
                                       .build();
+
+      if (stateExecutionInstance.getRollbackPhaseName() != null) {
+        phaseElement.setPhaseNameForRollback(stateExecutionInstance.getRollbackPhaseName());
+      }
 
       if (isNotEmpty(getVariableOverrides())) {
         phaseElement.setVariableOverrides(getVariableOverrides());

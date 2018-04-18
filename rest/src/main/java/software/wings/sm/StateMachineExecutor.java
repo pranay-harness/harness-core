@@ -238,10 +238,14 @@ public class StateMachineExecutor {
       throw new WingsException(INVALID_ARGUMENT).addParam(ErrorCode.ARGS, "displayName");
     }
 
+    if (stateExecutionInstance.getStateName() == null) {
+      throw new WingsException(INVALID_ARGUMENT).addParam(ErrorCode.ARGS, "stateName");
+    }
+
     stateExecutionInstance.setAppId(stateMachine.getAppId());
     stateExecutionInstance.setStateMachineId(stateMachine.getUuid());
     State state =
-        stateMachine.getState(stateExecutionInstance.getChildStateMachineId(), stateExecutionInstance.getDisplayName());
+        stateMachine.getState(stateExecutionInstance.getChildStateMachineId(), stateExecutionInstance.getStateName());
     stateExecutionInstance.setRollback(state.isRollback());
     stateExecutionInstance.setStateType(state.getStateType());
 
@@ -385,7 +389,7 @@ public class StateMachineExecutor {
       throw new WingsException("stateExecutionInstance: " + stateExecutionInstance.getUuid() + " could not be started");
     }
     State currentState =
-        stateMachine.getState(stateExecutionInstance.getChildStateMachineId(), stateExecutionInstance.getDisplayName());
+        stateMachine.getState(stateExecutionInstance.getChildStateMachineId(), stateExecutionInstance.getStateName());
     if (currentState.getWaitInterval() != null && currentState.getWaitInterval() > 0) {
       StateExecutionData stateExecutionData =
           aStateExecutionData()
@@ -423,8 +427,8 @@ public class StateMachineExecutor {
     Exception ex = null;
     try {
       StateMachine stateMachine = context.getStateMachine();
-      State currentState = stateMachine.getState(
-          stateExecutionInstance.getChildStateMachineId(), stateExecutionInstance.getDisplayName());
+      State currentState =
+          stateMachine.getState(stateExecutionInstance.getChildStateMachineId(), stateExecutionInstance.getStateName());
       if (stateExecutionInstance.getStateParams() != null) {
         MapperUtils.mapObject(stateExecutionInstance.getStateParams(), currentState);
       }
@@ -471,7 +475,7 @@ public class StateMachineExecutor {
     StateExecutionInstance stateExecutionInstance = context.getStateExecutionInstance();
     StateMachine sm = context.getStateMachine();
     State currentState =
-        sm.getState(stateExecutionInstance.getChildStateMachineId(), stateExecutionInstance.getDisplayName());
+        sm.getState(stateExecutionInstance.getChildStateMachineId(), stateExecutionInstance.getStateName());
 
     ExecutionStatus status = executionResponse.getExecutionStatus();
     if (executionResponse.isAsync()) {
@@ -585,6 +589,7 @@ public class StateMachineExecutor {
 
         break;
       }
+      case NEXT_STEP:
       case ROLLBACK: {
         if (executionEventAdvice.getNextChildStateMachineId() != null
             || executionEventAdvice.getNextStateName() != null) {
@@ -678,6 +683,12 @@ public class StateMachineExecutor {
         sm.getState(executionEventAdvice.getNextChildStateMachineId(), executionEventAdvice.getNextStateName());
     StateExecutionInstance cloned =
         clone(context.getStateExecutionInstance(), executionEventAdvice.getNextChildStateMachineId(), nextState);
+    if (executionEventAdvice.getNextStateDisplayName() != null) {
+      cloned.setDisplayName(executionEventAdvice.getNextStateDisplayName());
+    }
+    if (executionEventAdvice.getRollbackPhaseName() != null) {
+      cloned.setRollbackPhaseName(executionEventAdvice.getRollbackPhaseName());
+    }
     return triggerExecution(sm, cloned);
   }
 
@@ -692,7 +703,7 @@ public class StateMachineExecutor {
     StateExecutionInstance stateExecutionInstance = context.getStateExecutionInstance();
     StateMachine sm = context.getStateMachine();
     State currentState =
-        sm.getState(stateExecutionInstance.getChildStateMachineId(), stateExecutionInstance.getDisplayName());
+        sm.getState(stateExecutionInstance.getChildStateMachineId(), stateExecutionInstance.getStateName());
     logger.warn("Error seen in the state execution - currentState : {}, stateExecutionInstanceId: {} : {}",
         currentState, stateExecutionInstance.getUuid(), Misc.getMessage(e), e);
 
@@ -727,12 +738,11 @@ public class StateMachineExecutor {
     StateExecutionInstance stateExecutionInstance = context.getStateExecutionInstance();
     StateMachine sm = context.getStateMachine();
 
-    State nextState = sm.getSuccessTransition(
-        stateExecutionInstance.getChildStateMachineId(), stateExecutionInstance.getDisplayName());
+    State nextState =
+        sm.getSuccessTransition(stateExecutionInstance.getChildStateMachineId(), stateExecutionInstance.getStateName());
     if (nextState == null) {
-      logger.info(
-          "nextSuccessState is null.. ending execution  - currentState : " + stateExecutionInstance.getDisplayName()
-          + ", stateExecutionInstanceId: " + stateExecutionInstance.getUuid());
+      logger.info("nextSuccessState is null.. ending execution  - currentState : "
+          + stateExecutionInstance.getStateName() + ", stateExecutionInstanceId: " + stateExecutionInstance.getUuid());
 
       logger.info("State Machine execution ended for the stateMachine: {}, executionUuid: {}", sm.getName(),
           stateExecutionInstance.getExecutionUuid());
@@ -750,25 +760,25 @@ public class StateMachineExecutor {
     StateExecutionInstance stateExecutionInstance = context.getStateExecutionInstance();
     StateMachine sm = context.getStateMachine();
 
-    State nextState = sm.getFailureTransition(
-        stateExecutionInstance.getChildStateMachineId(), stateExecutionInstance.getDisplayName());
+    State nextState =
+        sm.getFailureTransition(stateExecutionInstance.getChildStateMachineId(), stateExecutionInstance.getStateName());
     if (nextState == null) {
       logger.info("nextFailureState is null.. for the currentState : {}, stateExecutionInstanceId: {}",
-          stateExecutionInstance.getDisplayName(), stateExecutionInstance.getUuid());
+          stateExecutionInstance.getStateName(), stateExecutionInstance.getUuid());
 
       ErrorStrategy errorStrategy = context.getErrorStrategy();
       if (errorStrategy == null || errorStrategy == ErrorStrategy.FAIL) {
         logger.info("Ending execution  - currentState : {}, stateExecutionInstanceId: {}",
-            stateExecutionInstance.getDisplayName(), stateExecutionInstance.getUuid());
+            stateExecutionInstance.getStateName(), stateExecutionInstance.getUuid());
         endTransition(context, stateExecutionInstance, FAILED, exception);
       } else if (errorStrategy == ErrorStrategy.PAUSE) {
         logger.info("Pausing execution  - currentState : {}, stateExecutionInstanceId: {}",
-            stateExecutionInstance.getDisplayName(), stateExecutionInstance.getUuid());
+            stateExecutionInstance.getStateName(), stateExecutionInstance.getUuid());
         updateStatus(stateExecutionInstance, WAITING, Lists.newArrayList(FAILED), null);
       } else {
         // TODO: handle more strategy
         logger.info("Unhandled error strategy for the state: {}, stateExecutionInstanceId: {}, errorStrategy: {}",
-            stateExecutionInstance.getDisplayName(), stateExecutionInstance.getUuid(), errorStrategy);
+            stateExecutionInstance.getStateName(), stateExecutionInstance.getUuid(), errorStrategy);
       }
     } else {
       StateExecutionInstance cloned = clone(stateExecutionInstance, nextState);
@@ -816,7 +826,7 @@ public class StateMachineExecutor {
     try {
       updated = false;
       State currentState =
-          sm.getState(stateExecutionInstance.getChildStateMachineId(), stateExecutionInstance.getDisplayName());
+          sm.getState(stateExecutionInstance.getChildStateMachineId(), stateExecutionInstance.getStateName());
       injector.injectMembers(currentState);
       if (isNotBlank(stateExecutionInstance.getDelegateTaskId())) {
         delegateService.abortTask(context.getApp().getAccountId(), stateExecutionInstance.getDelegateTaskId());
@@ -859,7 +869,7 @@ public class StateMachineExecutor {
           childStateExecutionInstance.setParentInstanceId(stateExecutionInstance.getUuid());
           childStateExecutionInstance.setAppId(stateExecutionInstance.getAppId());
           childStateExecutionInstance.setNotifyElements(null);
-          if (childStateExecutionInstance.getDisplayName() == null
+          if (childStateExecutionInstance.getStateName() == null
               && childStateExecutionInstance.getChildStateMachineId() != null) {
             if (sm.getChildStateMachines().get(childStateExecutionInstance.getChildStateMachineId()) == null) {
               notify(childStateExecutionInstance, SUCCESS);
@@ -1080,7 +1090,7 @@ public class StateMachineExecutor {
     StateMachine sm =
         wingsPersistence.get(StateMachine.class, appId, stateExecutionInstance.getStateMachineId(), CRITICAL);
     State currentState =
-        sm.getState(stateExecutionInstance.getChildStateMachineId(), stateExecutionInstance.getDisplayName());
+        sm.getState(stateExecutionInstance.getChildStateMachineId(), stateExecutionInstance.getStateName());
     injector.injectMembers(currentState);
 
     while (stateExecutionInstance.getStatus() == NEW || stateExecutionInstance.getStatus() == QUEUED
@@ -1123,7 +1133,7 @@ public class StateMachineExecutor {
             stateExecutionInstance.getStateMachineId(), CRITICAL);
 
         State currentState =
-            sm.getState(stateExecutionInstance.getChildStateMachineId(), stateExecutionInstance.getDisplayName());
+            sm.getState(stateExecutionInstance.getChildStateMachineId(), stateExecutionInstance.getStateName());
         injector.injectMembers(currentState);
 
         ExecutionContextImpl context = new ExecutionContextImpl(stateExecutionInstance, sm, injector);
@@ -1141,7 +1151,7 @@ public class StateMachineExecutor {
             stateExecutionInstance.getStateMachineId(), CRITICAL);
 
         State currentState =
-            sm.getState(stateExecutionInstance.getChildStateMachineId(), stateExecutionInstance.getDisplayName());
+            sm.getState(stateExecutionInstance.getChildStateMachineId(), stateExecutionInstance.getStateName());
         injector.injectMembers(currentState);
 
         ExecutionContextImpl context = new ExecutionContextImpl(stateExecutionInstance, sm, injector);
@@ -1269,7 +1279,7 @@ public class StateMachineExecutor {
         StateMachine.class, stateExecutionInstance.getAppId(), stateExecutionInstance.getStateMachineId(), CRITICAL);
 
     State currentState =
-        sm.getState(stateExecutionInstance.getChildStateMachineId(), stateExecutionInstance.getDisplayName());
+        sm.getState(stateExecutionInstance.getChildStateMachineId(), stateExecutionInstance.getStateName());
     injector.injectMembers(currentState);
 
     ExecutionContextImpl context = new ExecutionContextImpl(stateExecutionInstance, sm, injector);

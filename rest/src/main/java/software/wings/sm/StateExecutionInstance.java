@@ -56,6 +56,7 @@ public class StateExecutionInstance extends Base {
   private boolean contextTransition;
   private boolean rollback;
   private String delegateTaskId;
+  private String rollbackPhaseName;
 
   @Embedded private WingsDeque<ContextElement> contextElements = new WingsDeque<>();
   private Map<String, StateExecutionData> stateExecutionMap = new HashMap<>();

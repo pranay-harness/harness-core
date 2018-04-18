@@ -392,7 +392,7 @@ public class StateMachineExecutorTest extends WingsBaseTest {
     String executionUuid = generateUuid();
 
     StateMachineExecutionCallbackMock callback = new StateMachineExecutionCallbackMock();
-    CustomeExecutionEventAdvisor advisor = new CustomeExecutionEventAdvisor(ExecutionInterruptType.MARK_SUCCESS);
+    CustomExecutionEventAdvisor advisor = new CustomExecutionEventAdvisor(ExecutionInterruptType.MARK_SUCCESS);
     stateMachineExecutor.execute(appId, sm.getUuid(), executionUuid, executionUuid, null, callback, advisor);
     callback.await();
 
@@ -454,7 +454,7 @@ public class StateMachineExecutorTest extends WingsBaseTest {
     String executionUuid = generateUuid();
 
     StateMachineExecutionCallbackMock callback = new StateMachineExecutionCallbackMock();
-    CustomeExecutionEventAdvisor advisor = new CustomeExecutionEventAdvisor(ExecutionInterruptType.MARK_FAILED);
+    CustomExecutionEventAdvisor advisor = new CustomExecutionEventAdvisor(ExecutionInterruptType.MARK_FAILED);
     stateMachineExecutor.execute(appId, sm.getUuid(), executionUuid, executionUuid, null, callback, advisor);
     callback.await();
 
@@ -516,7 +516,7 @@ public class StateMachineExecutorTest extends WingsBaseTest {
     String executionUuid = generateUuid();
 
     StateMachineExecutionCallbackMock callback = new StateMachineExecutionCallbackMock();
-    CustomeExecutionEventAdvisor advisor = new CustomeExecutionEventAdvisor(ExecutionInterruptType.ABORT);
+    CustomExecutionEventAdvisor advisor = new CustomExecutionEventAdvisor(ExecutionInterruptType.ABORT);
     stateMachineExecutor.execute(appId, sm.getUuid(), executionUuid, executionUuid, null, callback, advisor);
     callback.await();
 
@@ -530,12 +530,12 @@ public class StateMachineExecutorTest extends WingsBaseTest {
         .isEqualTo(true);
   }
 
-  public static class CustomeExecutionEventAdvisor implements ExecutionEventAdvisor {
+  public static class CustomExecutionEventAdvisor implements ExecutionEventAdvisor {
     private ExecutionInterruptType executionInterruptType;
 
-    public CustomeExecutionEventAdvisor() {}
+    public CustomExecutionEventAdvisor() {}
 
-    public CustomeExecutionEventAdvisor(ExecutionInterruptType executionInterruptType) {
+    public CustomExecutionEventAdvisor(ExecutionInterruptType executionInterruptType) {
       this.executionInterruptType = executionInterruptType;
     }
 
