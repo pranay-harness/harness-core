@@ -36,6 +36,7 @@ import software.wings.cloudprovider.gke.KubernetesContainerService;
 import software.wings.exception.WingsException;
 import software.wings.helpers.ext.azure.AzureHelperService;
 import software.wings.security.encryption.EncryptedDataDetail;
+import software.wings.utils.Misc;
 
 import java.util.ArrayList;
 import java.util.Comparator;
@@ -77,12 +78,8 @@ public class KubernetesResizeCommandUnit extends ContainerResizeCommandUnit {
         containerServiceData.getDesiredCount(), resizeParams.getServiceSteadyStateTimeout(), executionLogCallback);
 
     boolean allContainersSuccess = containerInfos.stream().allMatch(info -> info.getStatus() == SUCCESS);
-    if (containerInfos.size() == totalDesiredCount && allContainersSuccess) {
-      if (totalDesiredCount > 0 && contextData.deployingToHundredPercent && resizeParams.isUseAutoscaler()) {
-        enableAutoscaler(kubernetesConfig, encryptedDataDetails, controllerName, executionLogCallback);
-      }
-      return containerInfos;
-    } else {
+
+    if (containerInfos.size() != totalDesiredCount || !allContainersSuccess) {
       try {
         if (containerInfos.size() != totalDesiredCount) {
           executionLogCallback.saveExecutionLog(
@@ -98,11 +95,16 @@ public class KubernetesResizeCommandUnit extends ContainerResizeCommandUnit {
                 failedContainers.stream().map(ContainerInfo::getContainerId).collect(toList())),
             LogLevel.WARN);
       } catch (Exception e) {
-        // Ignore failure to log failing containers
+        Misc.logAllMessages(e, executionLogCallback);
       }
-
       throw new WingsException(INVALID_REQUEST).addParam("message", "Failed to resize controller");
     }
+
+    if (totalDesiredCount > 0 && contextData.deployingToHundredPercent && resizeParams.isUseAutoscaler()) {
+      enableAutoscaler(kubernetesConfig, encryptedDataDetails, controllerName, executionLogCallback);
+    }
+
+    return containerInfos;
   }
 
   protected void postExecution(
