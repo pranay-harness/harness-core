@@ -306,7 +306,7 @@ public abstract class OrchestrationWorkflow {
         }
       } else if (entityType.equals(INFRASTRUCTURE_MAPPING)) {
         if (getOrchestrationWorkflowType().equals(BASIC) || getOrchestrationWorkflowType().equals(ROLLING)) {
-          variable.setDescription("Variable for Service Infra-strucuture entity");
+          variable.setDescription("Variable for Service Infra-structure entity");
         } else {
           variable.setDescription("Variable for Service Infra-structure entity " + stateName);
         }
