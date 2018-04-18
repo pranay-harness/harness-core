@@ -18,9 +18,9 @@ public class WorkflowIntegrationTest extends BaseIntegrationTest {
     assertThat(seedBasicWorkflow).isNotNull().hasFieldOrPropertyWithValue("name", SEED_BASIC_WORKFLOW_NAME);
   }
 
-  //  @Test
-  //  public void shouldReturnSeedRollingWorkflow() {
-  //    Workflow seedRollingWorkflow = workflowResourceRestClient.getSeedRollingWorkflow(client);
-  //    assertThat(seedRollingWorkflow).isNotNull().hasFieldOrPropertyWithValue("name", SEED_ROLLING_WORKFLOW_NAME);
-  //  }
+  @Test
+  public void shouldReturnSeedRollingWorkflow() {
+    Workflow seedRollingWorkflow = workflowResourceRestClient.getSeedRollingWorkflow(client);
+    assertThat(seedRollingWorkflow).isNotNull().hasFieldOrPropertyWithValue("name", SEED_ROLLING_WORKFLOW_NAME);
+  }
 }

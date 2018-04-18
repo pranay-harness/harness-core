@@ -6,11 +6,14 @@ import static javax.ws.rs.core.MediaType.APPLICATION_JSON;
 import static org.assertj.core.api.Assertions.assertThat;
 import static software.wings.beans.BasicOrchestrationWorkflow.BasicOrchestrationWorkflowBuilder.aBasicOrchestrationWorkflow;
 import static software.wings.beans.GraphNode.GraphNodeBuilder.aGraphNode;
+import static software.wings.beans.RollingOrchestrationWorkflow.RollingOrchestrationWorkflowBuilder.aRollingOrchestrationWorkflow;
 import static software.wings.beans.Workflow.WorkflowBuilder.aWorkflow;
 import static software.wings.integration.SeedData.randomText;
 import static software.wings.utils.WingsIntegrationTestConstants.API_BASE;
 import static software.wings.utils.WingsIntegrationTestConstants.SEED_BASIC_WORKFLOW_KEY;
 import static software.wings.utils.WingsIntegrationTestConstants.SEED_BASIC_WORKFLOW_NAME;
+import static software.wings.utils.WingsIntegrationTestConstants.SEED_ROLLING_WORKFLOW_KEY;
+import static software.wings.utils.WingsIntegrationTestConstants.SEED_ROLLING_WORKFLOW_NAME;
 
 import com.google.common.collect.ImmutableMap;
 import com.google.inject.Inject;
@@ -53,10 +56,10 @@ public class WorkflowResourceRestClient {
         key -> fetchOrCreateWorkflow(client, SEED_BASIC_WORKFLOW_NAME, aBasicOrchestrationWorkflow().build()));
   }
 
-  //  public Workflow getSeedRollingWorkflow(Client client) {
-  //    return cachedEntity.computeIfAbsent(SEED_ROLLING_WORKFLOW_KEY,
-  //        key -> fetchOrCreateWorkflow(client, SEED_ROLLING_WORKFLOW_NAME, aRollingOrchestrationWorkflow().build()));
-  //  }
+  public Workflow getSeedRollingWorkflow(Client client) {
+    return cachedEntity.computeIfAbsent(SEED_ROLLING_WORKFLOW_KEY,
+        key -> fetchOrCreateWorkflow(client, SEED_ROLLING_WORKFLOW_NAME, aRollingOrchestrationWorkflow().build()));
+  }
 
   private Workflow fetchOrCreateWorkflow(
       Client client, String workflowName, OrchestrationWorkflow orchestrationWorkflow) {

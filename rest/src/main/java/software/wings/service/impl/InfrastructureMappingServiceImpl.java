@@ -787,6 +787,13 @@ public class InfrastructureMappingServiceImpl implements InfrastructureMappingSe
         .collect(toList());
   }
 
+  @Override
+  public List<Host> listHosts(String appId, String infrastructureMappingId) {
+    InfrastructureMapping infrastructureMapping = get(appId, infrastructureMappingId);
+    notNullCheck("Infra Mapping", infrastructureMapping);
+    return listHosts(infrastructureMapping);
+  }
+
   private List<Host> listHosts(InfrastructureMapping infrastructureMapping) {
     if (infrastructureMapping instanceof PhysicalInfrastructureMapping) {
       PhysicalInfrastructureMapping pyInfraMapping = (PhysicalInfrastructureMapping) infrastructureMapping;

@@ -106,4 +106,6 @@ public interface InfrastructureMappingService extends OwnedByEnvironment {
   List<String> listAutoScalingGroups(String appId, String computeProviderId, String region);
 
   Map<String, String> listAlbTargetGroups(String appId, String computeProviderId, String region);
+
+  List<Host> listHosts(String appId, String infrastructureMappingId);
 }
