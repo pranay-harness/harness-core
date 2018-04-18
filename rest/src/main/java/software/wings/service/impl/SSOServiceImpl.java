@@ -19,6 +19,8 @@ import software.wings.service.intfc.SSOSettingService;
 
 import java.io.IOException;
 import java.io.InputStream;
+import java.net.URI;
+import java.net.URISyntaxException;
 import java.nio.charset.Charset;
 import java.util.ArrayList;
 import java.util.List;
@@ -38,7 +40,7 @@ public class SSOServiceImpl implements SSOService {
       Account account = accountService.get(accountId);
       buildAndUploadSamlSettings(accountId, fileAsString, displayName);
       return getAccountAccessManagementSettings(accountId);
-    } catch (SamlException | IOException e) {
+    } catch (SamlException | IOException | URISyntaxException e) {
       throw new WingsException(ErrorCode.INVALID_SAML_CONFIGURATION, e);
     }
   }
@@ -77,13 +79,14 @@ public class SSOServiceImpl implements SSOService {
   }
 
   private SamlSettings buildAndUploadSamlSettings(String accountId, String fileAsString, String displayName)
-      throws SamlException {
+      throws SamlException, URISyntaxException {
     SamlClient samlClient = samlClientService.getSamlClient(fileAsString);
     SamlSettings samlSettings = SamlSettings.builder()
                                     .metaDataFile(fileAsString)
                                     .url(samlClient.getIdentityProviderUrl())
                                     .accountId(accountId)
                                     .displayName(displayName)
+                                    .origin(new URI(samlClient.getIdentityProviderUrl()).getHost())
                                     .build();
     return ssoSettingService.saveSamlSettings(samlSettings);
   }

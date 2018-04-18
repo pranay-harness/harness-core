@@ -44,9 +44,14 @@ public class SamlBasedAuthHandlerTest extends WingsBaseTest {
   @Before
   public void initMocks() throws IOException {
     String xml = IOUtils.toString(getClass().getResourceAsStream("/okta-IDP-metadata.xml"), Charset.defaultCharset());
-    SamlSettings samlSettings =
-        SamlSettings.builder().metaDataFile(xml).url(idpUrl).accountId("TestAccountID").displayName("Okta").build();
-    when(ssoSettingService.getSamlSettingsByIdpUrl(idpUrl)).thenReturn(samlSettings);
+    SamlSettings samlSettings = SamlSettings.builder()
+                                    .metaDataFile(xml)
+                                    .url(idpUrl)
+                                    .accountId("TestAccountID")
+                                    .displayName("Okta")
+                                    .origin("dev-274703.oktapreview.com")
+                                    .build();
+    when(ssoSettingService.getSamlSettingsByOrigin("dev-274703.oktapreview.com")).thenReturn(samlSettings);
   }
 
   @Test
@@ -60,8 +65,8 @@ public class SamlBasedAuthHandlerTest extends WingsBaseTest {
       account.setAuthenticationMechanism(AuthenticationMechanism.SAML);
       Mockito.when(authenticationUtil.getUser(anyString())).thenReturn(user);
       Mockito.when(authenticationUtil.getPrimaryAccount(any(User.class))).thenReturn(Optional.of(account));
-      authHandler.authenticate(idpUrl, samlResponse);
       Assertions.assertThat(authHandler.getAuthenticationMechanism()).isEqualTo(AuthenticationMechanism.SAML);
+      authHandler.authenticate(idpUrl, samlResponse);
       Assertions.failBecauseExceptionWasNotThrown(WingsException.class);
     } catch (WingsException e) {
       Assertions.assertThat(e.getMessage()).isEqualTo("Saml Authentication Failed");
@@ -82,7 +87,7 @@ public class SamlBasedAuthHandlerTest extends WingsBaseTest {
     SamlResponse samlResponse = mock(SamlResponse.class);
     when(samlResponse.getNameID()).thenReturn("rushabh@harness.io");
     SamlClient samlClient = mock(SamlClient.class);
-    doReturn(samlClient).when(samlClientService).getSamlClientFromIdpUrl(anyString());
+    doReturn(samlClient).when(samlClientService).getSamlClientFromOrigin(anyString());
     when(samlClient.decodeAndValidateSamlResponse(anyString())).thenReturn(samlResponse);
 
     User returnedUser = authHandler.authenticate(idpUrl, samlResponseString);

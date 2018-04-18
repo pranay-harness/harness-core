@@ -15,4 +15,6 @@ public interface SSOSettingService {
   @ValidationGroups(Create.class) SamlSettings saveSamlSettings(@Valid SamlSettings settings);
 
   boolean deleteSamlSettings(@NotNull String accountId);
+
+  SamlSettings getSamlSettingsByOrigin(@NotNull String origin);
 }

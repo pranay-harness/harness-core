@@ -30,6 +30,7 @@ public class SSOSettingServiceImpl implements SSOSettingService {
       queriedSettings.setUrl(settings.getUrl());
       queriedSettings.setMetaDataFile(settings.getMetaDataFile());
       queriedSettings.setDisplayName(settings.getDisplayName());
+      queriedSettings.setOrigin(settings.getOrigin());
       return wingsPersistence.saveAndGet(SamlSettings.class, queriedSettings);
     } else {
       return wingsPersistence.saveAndGet(SamlSettings.class, settings);
@@ -43,5 +44,11 @@ public class SSOSettingServiceImpl implements SSOSettingService {
       return wingsPersistence.delete(samlSettings);
     }
     return false;
+  }
+
+  @Override
+  public SamlSettings getSamlSettingsByOrigin(String origin) {
+    return wingsPersistence.executeGetOneQuery(
+        wingsPersistence.createQuery(SamlSettings.class).field("origin").equal(origin));
   }
 }
