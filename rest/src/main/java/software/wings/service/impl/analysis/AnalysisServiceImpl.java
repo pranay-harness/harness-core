@@ -1005,6 +1005,9 @@ public class AnalysisServiceImpl implements AnalysisService {
 
   private int computeCountFromFrequencies(SplunkAnalysisCluster analysisCluster) {
     int count = 0;
+    if (isEmpty(analysisCluster.getMessage_frequencies())) {
+      return count;
+    }
     for (Map frequency : analysisCluster.getMessage_frequencies()) {
       if (!frequency.containsKey("count")) {
         continue;

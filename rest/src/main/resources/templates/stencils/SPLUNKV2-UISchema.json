@@ -1,8 +1,8 @@
 {
   "ui:order" :
       [
-        "analysisServerConfigId", "query", "timeDuration", "comparisonStrategy",
-        "analysisTolerance", "executeWithPreviousSteps"
+        "analysisServerConfigId", "query", "hostnameTemplate", "timeDuration",
+        "comparisonStrategy", "analysisTolerance", "executeWithPreviousSteps"
       ],
       "query" : {
     "ui:widget" : "textarea"
