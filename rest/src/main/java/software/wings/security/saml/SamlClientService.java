@@ -60,4 +60,9 @@ public class SamlClientService {
 
     throw new WingsException(ErrorCode.INVALID_AUTHENTICATION_MECHANISM, WingsException.HARMLESS);
   }
+
+  public SamlClient getSamlClientFromOrigin(String origin) throws SamlException {
+    SamlSettings samlSettings = ssoSettingService.getSamlSettingsByOrigin(origin);
+    return getSamlClient(samlSettings);
+  }
 }
