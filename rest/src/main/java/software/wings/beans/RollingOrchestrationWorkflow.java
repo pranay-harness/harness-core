@@ -18,7 +18,7 @@ public class RollingOrchestrationWorkflow extends CanaryOrchestrationWorkflow {
   }
 
   @Override
-  public OrchestrationWorkflow clone() {
+  public OrchestrationWorkflow cloneInternal() {
     return aRollingOrchestrationWorkflow()
         .withGraph(getGraph())
         .withPreDeploymentSteps(getPreDeploymentSteps())

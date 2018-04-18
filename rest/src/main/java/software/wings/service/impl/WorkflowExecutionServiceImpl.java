@@ -1711,13 +1711,7 @@ public class WorkflowExecutionServiceImpl implements WorkflowExecutionService {
         services = asList(serviceResourceService.get(
             workflow.getAppId(), workflowExecution.getExecutionArgs().getServiceId(), false));
       }
-      List<InfrastructureMapping> infrastructureMappings;
-      if (isInfraMappingTemplatized(workflow)) {
-        infrastructureMappings = resolveTemplateInfraMappings(workflow, workflowExecution);
-      } else {
-        infrastructureMappings =
-            getInfrastructureMappings(workflow, workflow.getOrchestrationWorkflow().getInfraMappingIds());
-      }
+      List<InfrastructureMapping> infrastructureMappings = getResolvedInfraMappings(workflow, workflowExecution);
       if (services != null) {
         services.forEach(service -> {
           ServiceElement serviceElement =
@@ -1760,6 +1754,15 @@ public class WorkflowExecutionServiceImpl implements WorkflowExecutionService {
         wingsPersistence.updateField(WorkflowExecution.class, workflowExecution.getUuid(), "serviceExecutionSummaries",
             workflowExecution.getServiceExecutionSummaries());
       }
+    }
+  }
+
+  @Override
+  public List<InfrastructureMapping> getResolvedInfraMappings(Workflow workflow, WorkflowExecution workflowExecution) {
+    if (isInfraMappingTemplatized(workflow)) {
+      return resolveTemplateInfraMappings(workflow, workflowExecution);
+    } else {
+      return getInfrastructureMappings(workflow, workflow.getOrchestrationWorkflow().getInfraMappingIds());
     }
   }
 
@@ -2026,7 +2029,7 @@ public class WorkflowExecutionServiceImpl implements WorkflowExecutionService {
         continue;
       }
       for (ElementExecutionSummary elementExecutionSummary : elementStatusSummary) {
-        if (elementExecutionSummary == null || elementExecutionSummary.getInstancesCount() == null) {
+        if (elementExecutionSummary == null || elementExecutionSummary.getInstanceStatusSummaries() == null) {
           continue;
         }
         for (InstanceStatusSummary instanceStatusSummary : elementExecutionSummary.getInstanceStatusSummaries()) {
@@ -2058,20 +2061,12 @@ public class WorkflowExecutionServiceImpl implements WorkflowExecutionService {
 
   private int refreshTotal(WorkflowExecution workflowExecution) {
     Workflow workflow = workflowService.readWorkflow(workflowExecution.getAppId(), workflowExecution.getWorkflowId());
-
-    if (workflow.getOrchestrationWorkflow() == null
-        || !(workflow.getOrchestrationWorkflow() instanceof CanaryOrchestrationWorkflow)) {
+    List<InfrastructureMapping> resolvedInfraMappings = getResolvedInfraMappings(workflow, workflowExecution);
+    if (isEmpty(resolvedInfraMappings)) {
       return 0;
     }
-
-    CanaryOrchestrationWorkflow canaryOrchestrationWorkflow =
-        (CanaryOrchestrationWorkflow) workflow.getOrchestrationWorkflow();
-    if (isEmpty(canaryOrchestrationWorkflow.getWorkflowPhases())) {
-      return 0;
-    }
-
-    String infraMappingId = canaryOrchestrationWorkflow.getWorkflowPhases().get(0).getInfraMappingId();
-    return infrastructureMappingService.listHosts(workflowExecution.getAppId(), infraMappingId).size();
+    return infrastructureMappingService.listHosts(workflowExecution.getAppId(), resolvedInfraMappings.get(0).getUuid())
+        .size();
   }
 
   private List<StateExecutionInstance> getAllStateExecutionInstances(PageRequest<StateExecutionInstance> req) {

@@ -554,20 +554,6 @@ public class WorkflowServiceImpl implements WorkflowService, DataProvider {
         }
       } else if (orchestrationWorkflow.getOrchestrationWorkflowType().equals(BASIC)
           || orchestrationWorkflow.getOrchestrationWorkflowType().equals(ROLLING)) {
-        if (orchestrationWorkflow.getOrchestrationWorkflowType().equals(ROLLING)) {
-          String infraMappingId = workflow.getInfraMappingId();
-          InfrastructureMapping infrastructureMapping =
-              infrastructureMappingService.get(workflow.getAppId(), infraMappingId);
-          if (infrastructureMapping == null
-              || !(InfrastructureMappingType.AWS_SSH.name().equals(infrastructureMapping.getInfraMappingType())
-                     || InfrastructureMappingType.PHYSICAL_DATA_CENTER_SSH.name().equals(
-                            infrastructureMapping.getInfraMappingType()))) {
-            logger.warn("Rolling Deployment is requested for {}", infrastructureMapping.getInfraMappingType());
-            throw new WingsException(INVALID_REQUEST, USER)
-                .addParam("message", "Requested Infrastructure Type is not supported using Rolling Deployment");
-          }
-        }
-
         CanaryOrchestrationWorkflow canaryOrchestrationWorkflow = (CanaryOrchestrationWorkflow) orchestrationWorkflow;
         WorkflowPhase workflowPhase;
         if (isEmpty(canaryOrchestrationWorkflow.getWorkflowPhases())) {
@@ -2926,11 +2912,26 @@ public class WorkflowServiceImpl implements WorkflowService, DataProvider {
 
   private void validateBasicOrRollingWorkflow(Workflow workflow) {
     OrchestrationWorkflow orchestrationWorkflow = workflow.getOrchestrationWorkflow();
+
     if (orchestrationWorkflow != null
         && (orchestrationWorkflow.getOrchestrationWorkflowType().equals(BASIC)
                || orchestrationWorkflow.getOrchestrationWorkflowType().equals(ROLLING))) {
       if (!orchestrationWorkflow.isInfraMappingTemplatized()) {
         notNullCheck("Invalid inframappingId", workflow.getInfraMappingId());
+
+        if (orchestrationWorkflow.getOrchestrationWorkflowType().equals(ROLLING)) {
+          String infraMappingId = workflow.getInfraMappingId();
+          InfrastructureMapping infrastructureMapping =
+              infrastructureMappingService.get(workflow.getAppId(), infraMappingId);
+          if (infrastructureMapping == null
+              || !(InfrastructureMappingType.AWS_SSH.name().equals(infrastructureMapping.getInfraMappingType())
+                     || InfrastructureMappingType.PHYSICAL_DATA_CENTER_SSH.name().equals(
+                            infrastructureMapping.getInfraMappingType()))) {
+            logger.warn("Rolling Deployment is requested for {}", infrastructureMapping.getInfraMappingType());
+            throw new WingsException(INVALID_REQUEST, USER)
+                .addParam("message", "Requested Infrastructure Type is not supported using Rolling Deployment");
+          }
+        }
       }
       if (!orchestrationWorkflow.isServiceTemplatized()) {
         notNullCheck("Invalid serviceId", workflow.getServiceId());
