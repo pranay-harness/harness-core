@@ -113,8 +113,8 @@ WORKFLOW_ORCHESTRATION_TYPE:
       value: CANARY
     - name: Blue/Green
       value: BLUE_GREEN
-    - name:  Rolling Upgrade
-      value: ROLLING_UPGRADE
+    - name:  Rolling
+      value: ROLLING
     - name: Custom Workflow
       value: CUSTOM
 
