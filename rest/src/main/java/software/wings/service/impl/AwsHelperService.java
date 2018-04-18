@@ -7,6 +7,7 @@ import static java.time.Duration.ofSeconds;
 import static java.util.Collections.emptyList;
 import static java.util.Collections.emptyMap;
 import static java.util.Collections.singletonList;
+import static java.util.Comparator.comparing;
 import static java.util.stream.Collectors.counting;
 import static java.util.stream.Collectors.groupingBy;
 import static java.util.stream.Collectors.toList;
@@ -224,7 +225,6 @@ import java.net.InetSocketAddress;
 import java.net.Socket;
 import java.util.ArrayList;
 import java.util.Collections;
-import java.util.Comparator;
 import java.util.HashSet;
 import java.util.LinkedHashSet;
 import java.util.List;
@@ -475,13 +475,6 @@ public class AwsHelperService {
     return isNotEmpty(dnsName) ? dnsName.split("\\.")[0] : "";
   }
 
-  /**
-   * Gets hostname based on convention
-   *
-   * @param hostElement the host element
-   * @param hostNameConvention the host name convention
-   * @return the hostname from dns name
-   */
   public String getHostnameFromConvention(Map<String, Object> context, String hostNameConvention) {
     if (isEmpty(hostNameConvention)) {
       hostNameConvention = Constants.DEFAULT_AWS_HOST_NAME_CONVENTION;
@@ -1683,7 +1676,7 @@ public class AwsHelperService {
       return cloudWatchClient.getMetricStatistics(metricStatisticsRequest)
           .getDatapoints()
           .stream()
-          .max(Comparator.comparing(Datapoint::getTimestamp))
+          .max(comparing(Datapoint::getTimestamp))
           .orElse(null);
     } catch (AmazonServiceException amazonServiceException) {
       handleAmazonServiceException(amazonServiceException);
