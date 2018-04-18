@@ -13,15 +13,14 @@ import org.mongodb.morphia.query.Query;
 import org.mongodb.morphia.query.UpdateOperations;
 import software.wings.beans.Account;
 import software.wings.beans.SearchFilter.Operator;
+import software.wings.beans.SortOrder.OrderType;
 import software.wings.beans.User;
 import software.wings.beans.security.UserGroup;
 import software.wings.dl.PageRequest;
 import software.wings.dl.PageResponse;
 import software.wings.dl.WingsPersistence;
 import software.wings.service.intfc.AccountService;
-import software.wings.service.intfc.AppService;
 import software.wings.service.intfc.AuthService;
-import software.wings.service.intfc.ServiceResourceService;
 import software.wings.service.intfc.UserGroupService;
 import software.wings.service.intfc.UserService;
 import software.wings.utils.Validator;
@@ -39,8 +38,6 @@ public class UserGroupServiceImpl implements UserGroupService {
   @Inject private WingsPersistence wingsPersistence;
   @Inject private UserService userService;
   @Inject private AccountService accountService;
-  @Inject private AppService appService;
-  @Inject private ServiceResourceService serviceResourceService;
   @Inject private AuthService authService;
 
   @Override
@@ -58,6 +55,7 @@ public class UserGroupServiceImpl implements UserGroupService {
     Account account = accountService.get(accountId);
     Validator.notNullCheck("account", account);
     req.addFilter("accountId", Operator.EQ, accountId);
+    req.addOrder("name", OrderType.ASC);
     PageResponse<UserGroup> res = wingsPersistence.query(UserGroup.class, req);
     res.getResponse().forEach(userGroup -> loadUsers(userGroup, account));
     return res;
