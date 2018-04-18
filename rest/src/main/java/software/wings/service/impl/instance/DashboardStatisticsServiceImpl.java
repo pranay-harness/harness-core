@@ -792,7 +792,13 @@ public class DashboardStatisticsServiceImpl implements DashboardStatisticsServic
           } else {
             appIds = appService.getAppIdsByAccountId(userRequestInfo.getAccountId());
           }
-          query.field("appId").in(appIds);
+
+          if (isNotEmpty(appIds)) {
+            query.field("appId").in(appIds);
+          } else {
+            throw new WingsException(
+                "No appIds are assigned to the user or no apps exist in the account", WingsException.HARMLESS);
+          }
         }
       } else {
         throw new WingsException(
