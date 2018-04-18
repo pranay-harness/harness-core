@@ -88,6 +88,15 @@ public class SplunkV2State extends AbstractLogAnalysisState {
     return query;
   }
 
+  @Attributes(required = false, title = "Expression for Host/Container name")
+  public String getHostnameTemplate() {
+    return hostnameTemplate;
+  }
+
+  public void setHostnameTemplate(String hostnameTemplate) {
+    this.hostnameTemplate = hostnameTemplate;
+  }
+
   @Override
   protected String triggerAnalysisDataCollection(ExecutionContext context, String correlationID, Set<String> hosts) {
     WorkflowStandardParams workflowStandardParams = context.getContextElement(ContextElementType.STANDARD);

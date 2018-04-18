@@ -528,7 +528,7 @@ public class DataGenUtil extends BaseIntegrationTest {
             .withValue(NewRelicConfig.builder()
                            .accountId(accountId)
                            .newRelicUrl("https://api.newrelic.com")
-                           .apiKey("5ed76b50ebcfda54b77cd1daaabe635bd7f2e13dc6c5b11".toCharArray())
+                           .apiKey("d8d3da54ce9355bd39cb7ced542a8acd2c1672312711610".toCharArray())
                            .build())
             .build();
 
