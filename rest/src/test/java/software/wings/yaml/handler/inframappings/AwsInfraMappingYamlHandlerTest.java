@@ -57,7 +57,7 @@ public class AwsInfraMappingYamlHandlerTest extends BaseInfraMappingYamlHandlerT
   public void testCRUDAndGet() throws HarnessException, IOException {
     ChangeContext<Yaml> changeContext = getChangeContext(validYamlContent, validYamlFilePath, yamlHandler);
 
-    Yaml yamlObject = (Yaml) getYaml(validYamlContent, Yaml.class, false);
+    Yaml yamlObject = (Yaml) getYaml(validYamlContent, Yaml.class);
     changeContext.setYaml(yamlObject);
 
     AwsInfrastructureMapping infrastructureMapping = yamlHandler.upsertFromYaml(changeContext, asList(changeContext));

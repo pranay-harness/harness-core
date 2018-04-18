@@ -1,7 +1,6 @@
 package software.wings.yaml.handler;
 
 import static java.util.Arrays.asList;
-import static org.assertj.core.api.Fail.failBecauseExceptionWasNotThrown;
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertNotNull;
 import static org.junit.Assert.assertNull;
@@ -10,7 +9,6 @@ import static software.wings.utils.WingsTestConstants.APP_ID;
 
 import com.google.inject.Inject;
 
-import com.fasterxml.jackson.databind.exc.UnrecognizedPropertyException;
 import org.junit.Before;
 import org.junit.Test;
 import org.mockito.InjectMocks;
@@ -42,7 +40,6 @@ public class ApplicationYamlHandlerTest extends BaseYamlHandlerTest {
 
   private String validYamlContent = "harnessApiVersion: '1.0'\ntype: APPLICATION\ndescription: valid application yaml";
   private String validYamlFilePath = "Setup/Applications/" + APP_NAME + "/Index.yaml";
-  private String invalidYamlContent = "description1: valid application yaml\ntype: APPLICATION";
   private String invalidYamlFilePath = "Setup/ApplicationsInvalid/" + APP_NAME + "/Index.yaml";
 
   @Before
@@ -67,7 +64,7 @@ public class ApplicationYamlHandlerTest extends BaseYamlHandlerTest {
     changeContext.setYamlType(YamlType.APPLICATION);
     changeContext.setYamlSyncHandler(yamlHandler);
 
-    Application.Yaml yamlObject = (Application.Yaml) getYaml(validYamlContent, Yaml.class, false);
+    Application.Yaml yamlObject = (Application.Yaml) getYaml(validYamlContent, Yaml.class);
     changeContext.setYaml(yamlObject);
 
     Application savedApplication = yamlHandler.upsertFromYaml(changeContext, asList(changeContext));
@@ -104,29 +101,11 @@ public class ApplicationYamlHandlerTest extends BaseYamlHandlerTest {
     changeContext.setYamlType(YamlType.APPLICATION);
     changeContext.setYamlSyncHandler(yamlHandler);
 
-    Application.Yaml yamlObject = (Application.Yaml) getYaml(validYamlContent, Yaml.class, false);
+    Application.Yaml yamlObject = (Application.Yaml) getYaml(validYamlContent, Yaml.class);
     changeContext.setYaml(yamlObject);
 
-    try {
-      yamlHandler.upsertFromYaml(changeContext, asList(changeContext));
-      failBecauseExceptionWasNotThrown(WingsException.class);
-    } catch (WingsException ex) {
-      // do nothing
-    }
-
-    // Invalid yaml content
-    gitFileChange.setFileContent(invalidYamlContent);
-    gitFileChange.setFilePath(validYamlFilePath);
-
-    try {
-      yamlObject = (Application.Yaml) getYaml(invalidYamlContent, Yaml.class, false);
-      changeContext.setYaml(yamlObject);
-
-      yamlHandler.upsertFromYaml(changeContext, asList(changeContext));
-      failBecauseExceptionWasNotThrown(UnrecognizedPropertyException.class);
-    } catch (UnrecognizedPropertyException ex) {
-      // Do nothing
-    }
+    thrown.expect(WingsException.class);
+    yamlHandler.upsertFromYaml(changeContext, asList(changeContext));
   }
 
   private void compareApp(Application lhs, Application rhs) {

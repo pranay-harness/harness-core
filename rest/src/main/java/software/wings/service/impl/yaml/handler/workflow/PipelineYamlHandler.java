@@ -1,17 +1,20 @@
 package software.wings.service.impl.yaml.handler.workflow;
 
+import static io.harness.data.structure.EmptyPredicate.isEmpty;
 import static java.util.stream.Collectors.toList;
 import static software.wings.beans.Pipeline.Yaml;
 import static software.wings.exception.WingsException.HARMLESS;
 import static software.wings.utils.Validator.notNullCheck;
 
 import com.google.common.collect.Lists;
+import com.google.common.collect.Maps;
 import com.google.inject.Inject;
 import com.google.inject.Singleton;
 
 import software.wings.beans.Pipeline;
 import software.wings.beans.Pipeline.Builder;
 import software.wings.beans.PipelineStage;
+import software.wings.beans.PipelineStage.PipelineStageElement;
 import software.wings.beans.yaml.Change;
 import software.wings.beans.yaml.ChangeContext;
 import software.wings.beans.yaml.YamlType;
@@ -23,6 +26,7 @@ import software.wings.service.impl.yaml.service.YamlHelper;
 import software.wings.service.intfc.PipelineService;
 
 import java.util.List;
+import java.util.Map;
 
 /**
  * @author rktummala on 11/2/17
@@ -33,14 +37,16 @@ public class PipelineYamlHandler extends BaseYamlHandler<Yaml, Pipeline> {
   @Inject private PipelineService pipelineService;
   @Inject private YamlHandlerFactory yamlHandlerFactory;
 
-  private Pipeline toBean(ChangeContext<Yaml> context, List<ChangeContext> changeSetContext, Pipeline.Builder pipeline)
-      throws HarnessException {
+  private Pipeline toBean(ChangeContext<Yaml> context, List<ChangeContext> changeSetContext, Builder pipeline,
+      Pipeline previous) throws HarnessException {
     try {
       Yaml yaml = context.getYaml();
       Change change = context.getChange();
 
       String appId = yamlHelper.getAppId(change.getAccountId(), change.getFilePath());
       notNullCheck("Could not retrieve valid app from path: " + change.getFilePath(), appId, HARMLESS);
+
+      context.setEntityIdMap(getPreviousStageElementMap(previous));
 
       List<PipelineStage> pipelineStages = Lists.newArrayList();
       if (yaml.getPipelineStages() != null) {
@@ -73,6 +79,31 @@ public class PipelineYamlHandler extends BaseYamlHandler<Yaml, Pipeline> {
     }
   }
 
+  private Map<String, String> getPreviousStageElementMap(Pipeline previous) {
+    Map<String, String> entityIdMap = Maps.newHashMap();
+
+    if (previous == null) {
+      return entityIdMap;
+    }
+
+    List<PipelineStage> pipelineStages = previous.getPipelineStages();
+    if (isEmpty(pipelineStages)) {
+      return entityIdMap;
+    }
+
+    pipelineStages.stream().forEach(pipelineStage -> {
+      List<PipelineStageElement> pipelineStageElements = pipelineStage.getPipelineStageElements();
+      if (isEmpty(pipelineStageElements)) {
+        return;
+      }
+
+      pipelineStageElements.stream().forEach(
+          stageElement -> entityIdMap.putIfAbsent(stageElement.getName(), stageElement.getUuid()));
+    });
+
+    return entityIdMap;
+  }
+
   @Override
   public Yaml toYaml(Pipeline bean, String appId) {
     PipelineStageYamlHandler pipelineStageYamlHandler = yamlHandlerFactory.getYamlHandler(YamlType.PIPELINE_STAGE);
@@ -93,7 +124,7 @@ public class PipelineYamlHandler extends BaseYamlHandler<Yaml, Pipeline> {
   public Pipeline upsertFromYaml(ChangeContext<Yaml> changeContext, List<ChangeContext> changeSetContext)
       throws HarnessException {
     Pipeline previous = get(changeContext.getChange().getAccountId(), changeContext.getChange().getFilePath());
-    Pipeline current = toBean(changeContext, changeSetContext, Builder.aPipeline());
+    Pipeline current = toBean(changeContext, changeSetContext, Builder.aPipeline(), previous);
     if (previous != null) {
       current.setUuid(previous.getUuid());
       return pipelineService.updatePipeline(current);

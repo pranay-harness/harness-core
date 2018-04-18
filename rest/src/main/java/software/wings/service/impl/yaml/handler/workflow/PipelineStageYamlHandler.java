@@ -13,8 +13,10 @@ import com.google.inject.Singleton;
 
 import software.wings.beans.ErrorCode;
 import software.wings.beans.NameValuePair;
+import software.wings.beans.Pipeline;
 import software.wings.beans.PipelineStage;
 import software.wings.beans.PipelineStage.PipelineStageElement;
+import software.wings.beans.PipelineStage.PipelineStageElement.PipelineStageElementBuilder;
 import software.wings.beans.Workflow;
 import software.wings.beans.yaml.Change;
 import software.wings.beans.yaml.ChangeContext;
@@ -62,13 +64,26 @@ public class PipelineStageYamlHandler extends BaseYamlHandler<Yaml, PipelineStag
       properties.put("workflowId", workflow.getUuid());
     }
 
+    String stageElementId = null;
+    Pipeline previous = yamlHelper.getPipeline(change.getAccountId(), change.getFilePath());
+    if (previous != null) {
+      Map<String, String> entityIdMap = context.getEntityIdMap();
+      if (entityIdMap != null) {
+        stageElementId = entityIdMap.remove(yaml.getName());
+      }
+    }
+
     if (yaml.getWorkflowVariables() != null) {
       yaml.getWorkflowVariables().stream().forEach(
           variable -> workflowVariables.put(variable.getName(), variable.getValue()));
     }
-    PipelineStageElement pipelineStageElement = PipelineStageElement.builder()
-                                                    .uuid(yaml.getUuid())
-                                                    .name(yaml.getName())
+
+    PipelineStageElementBuilder builder = PipelineStageElement.builder();
+    if (stageElementId != null) {
+      builder.uuid(stageElementId);
+    }
+
+    PipelineStageElement pipelineStageElement = builder.name(yaml.getName())
                                                     .type(yaml.getType())
                                                     .properties(properties)
                                                     .workflowVariables(workflowVariables)
@@ -120,7 +135,6 @@ public class PipelineStageYamlHandler extends BaseYamlHandler<Yaml, PipelineStag
     }
 
     return Yaml.builder()
-        .uuid(stageElement.getUuid())
         .name(stageElement.getName())
         .parallel(bean.isParallel())
         .type(stageElement.getType())

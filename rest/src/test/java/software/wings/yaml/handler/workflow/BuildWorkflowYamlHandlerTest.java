@@ -42,8 +42,7 @@ public class BuildWorkflowYamlHandlerTest extends BaseWorkflowYamlHandlerTest {
     ChangeContext<BuildWorkflowYaml> changeContext =
         getChangeContext(BUILD_VALID_YAML_CONTENT, BUILD_VALID_YAML_FILE_PATH, yamlHandler);
 
-    BuildWorkflowYaml yamlObject =
-        (BuildWorkflowYaml) getYaml(BUILD_VALID_YAML_CONTENT, BuildWorkflowYaml.class, false);
+    BuildWorkflowYaml yamlObject = (BuildWorkflowYaml) getYaml(BUILD_VALID_YAML_CONTENT, BuildWorkflowYaml.class);
     changeContext.setYaml(yamlObject);
 
     Workflow workflow = yamlHandler.upsertFromYaml(changeContext, asList(changeContext));

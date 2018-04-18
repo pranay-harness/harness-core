@@ -47,17 +47,15 @@ public class PipelineStage {
   @EqualsAndHashCode(callSuper = true)
   @NoArgsConstructor
   public static final class Yaml extends BaseYamlWithType {
-    private String uuid;
     private String name;
     private boolean parallel;
     private String workflowName;
     private List<NameValuePair.Yaml> workflowVariables = Lists.newArrayList();
 
     @Builder
-    public Yaml(String type, String uuid, String name, boolean parallel, String workflowName,
-        List<NameValuePair.Yaml> workflowVariables) {
+    public Yaml(
+        String type, String name, boolean parallel, String workflowName, List<NameValuePair.Yaml> workflowVariables) {
       super(type);
-      this.uuid = uuid;
       this.name = name;
       this.parallel = parallel;
       this.workflowName = workflowName;

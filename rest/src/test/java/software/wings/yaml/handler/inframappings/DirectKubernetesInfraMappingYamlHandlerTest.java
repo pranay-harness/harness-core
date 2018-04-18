@@ -1,7 +1,6 @@
 package software.wings.yaml.handler.inframappings;
 
 import static java.util.Arrays.asList;
-import static org.assertj.core.api.Fail.failBecauseExceptionWasNotThrown;
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertNotNull;
 import static org.junit.Assert.assertNull;
@@ -19,7 +18,6 @@ import static software.wings.utils.WingsTestConstants.SETTING_ID;
 import com.google.inject.Inject;
 import com.google.inject.name.Named;
 
-import com.fasterxml.jackson.databind.exc.UnrecognizedPropertyException;
 import org.junit.Before;
 import org.junit.Test;
 import org.mockito.InjectMocks;
@@ -86,11 +84,6 @@ public class DirectKubernetesInfraMappingYamlHandlerTest extends BaseYamlHandler
 
   private String invalidYamlContent = "harnessApiVersion: '1.0'\n"
       + "type: DIRECT_KUBERNETES\n"
-      + "computeProviderName: kubernetes_cluster\n"
-      + "computeProviderType: KUBERNETES_CLUSTER\n"
-      + "deploymentType: KUBERNETES\n"
-      + "infraMappingType: DIRECT_KUBERNETES\n"
-      + "namespace_1: default\n"
       + "serviceName: dockersvc";
 
   private String validYamlFilePath =
@@ -151,7 +144,7 @@ public class DirectKubernetesInfraMappingYamlHandlerTest extends BaseYamlHandler
         getChangeContext(validYamlContentWithKubernetesClusterCloudProvider, validYamlFilePath, yamlHandler);
 
     DirectKubernetesInfrastructureMapping.Yaml yamlObject = (DirectKubernetesInfrastructureMapping.Yaml) getYaml(
-        validYamlContentWithKubernetesClusterCloudProvider, DirectKubernetesInfrastructureMapping.Yaml.class, false);
+        validYamlContentWithKubernetesClusterCloudProvider, DirectKubernetesInfrastructureMapping.Yaml.class);
     changeContext.setYaml(yamlObject);
 
     DirectKubernetesInfrastructureMapping infraMapping =
@@ -184,19 +177,14 @@ public class DirectKubernetesInfraMappingYamlHandlerTest extends BaseYamlHandler
         getChangeContext(invalidYamlContent, validYamlFilePath, yamlHandler);
 
     DirectKubernetesInfrastructureMapping.Yaml yamlObject = (DirectKubernetesInfrastructureMapping.Yaml) getYaml(
-        validYamlContentWithKubernetesClusterCloudProvider, DirectKubernetesInfrastructureMapping.Yaml.class, false);
+        validYamlContentWithKubernetesClusterCloudProvider, DirectKubernetesInfrastructureMapping.Yaml.class);
     changeContext.setYaml(yamlObject);
 
-    try {
-      yamlObject = (DirectKubernetesInfrastructureMapping.Yaml) getYaml(
-          invalidYamlContent, DirectKubernetesInfrastructureMapping.Yaml.class, false);
-      changeContext.setYaml(yamlObject);
-
-      yamlHandler.upsertFromYaml(changeContext, asList(changeContext));
-      failBecauseExceptionWasNotThrown(UnrecognizedPropertyException.class);
-    } catch (UnrecognizedPropertyException ex) {
-      // Do nothing
-    }
+    yamlObject = (DirectKubernetesInfrastructureMapping.Yaml) getYaml(
+        invalidYamlContent, DirectKubernetesInfrastructureMapping.Yaml.class);
+    changeContext.setYaml(yamlObject);
+    thrown.expect(Exception.class);
+    yamlHandler.upsertFromYaml(changeContext, asList(changeContext));
   }
 
   protected <Y extends BaseYaml, H extends BaseYamlHandler> ChangeContext<Y> getChangeContext(

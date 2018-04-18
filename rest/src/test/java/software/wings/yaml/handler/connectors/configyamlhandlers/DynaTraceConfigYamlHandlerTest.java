@@ -27,7 +27,7 @@ public class DynaTraceConfigYamlHandlerTest extends BaseSettingValueConfigYamlHa
 
   public static final String url = "https://bdv73347.live.dynatrace.com";
 
-  private String invalidYamlContent = "apiToken_dynatrace: amazonkms:C7cBDpxHQzG5rv30tvZDgw\n"
+  private String invalidYamlContent = "apiToken: amazonkms:C7cBDpxHQzG5rv30tvZDgw\n"
       + "harnessApiVersion: '1.0'\n"
       + "type: DYNA_TRACE";
 

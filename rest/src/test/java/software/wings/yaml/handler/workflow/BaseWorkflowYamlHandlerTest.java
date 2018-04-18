@@ -1,7 +1,6 @@
 package software.wings.yaml.handler.workflow;
 
 import static java.util.Arrays.asList;
-import static org.assertj.core.api.Fail.failBecauseExceptionWasNotThrown;
 import static org.mockito.Matchers.anyString;
 import static org.mockito.Mockito.when;
 import static software.wings.beans.NotificationGroup.NotificationGroupBuilder.aNotificationGroup;
@@ -19,7 +18,6 @@ import static software.wings.utils.WingsTestConstants.SERVICE_NAME;
 
 import com.google.inject.Inject;
 
-import com.fasterxml.jackson.databind.exc.UnrecognizedPropertyException;
 import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import software.wings.api.DeploymentType;
@@ -35,6 +33,7 @@ import software.wings.beans.yaml.ChangeContext;
 import software.wings.beans.yaml.GitFileChange;
 import software.wings.beans.yaml.YamlType;
 import software.wings.exception.HarnessException;
+import software.wings.exception.WingsException;
 import software.wings.service.impl.yaml.handler.BaseYamlHandler;
 import software.wings.service.impl.yaml.handler.NameValuePairYamlHandler;
 import software.wings.service.impl.yaml.handler.YamlHandlerFactory;
@@ -60,7 +59,6 @@ import software.wings.yaml.BaseYaml;
 import software.wings.yaml.handler.BaseYamlHandlerTest;
 
 import java.io.IOException;
-import javax.validation.ConstraintViolationException;
 
 /**
  * @author rktummala on 1/11/18
@@ -197,27 +195,19 @@ public abstract class BaseWorkflowYamlHandlerTest extends BaseYamlHandlerTest {
       Class<Y> yamlClass) throws HarnessException, IOException {
     ChangeContext<Y> changeContext = getChangeContext(validYamlContent, invalidYamlFilePath, yamlHandler);
 
-    Y yamlObject = (Y) getYaml(validYamlContent, yamlClass, false);
+    Y yamlObject = (Y) getYaml(validYamlContent, yamlClass);
     changeContext.setYaml(yamlObject);
 
-    try {
-      yamlHandler.upsertFromYaml(changeContext, asList(changeContext));
-      failBecauseExceptionWasNotThrown(ConstraintViolationException.class);
-    } catch (ConstraintViolationException | HarnessException ex) {
-      // Do nothing
-    }
+    thrown.expect(Exception.class);
+    yamlHandler.upsertFromYaml(changeContext, asList(changeContext));
 
     // Invalid yaml content
     changeContext = getChangeContext(invalidYamlContent, validYamlFilePath, yamlHandler);
 
-    try {
-      yamlObject = (Y) getYaml(invalidYamlContent, yamlClass, false);
-      changeContext.setYaml(yamlObject);
+    yamlObject = (Y) getYaml(invalidYamlContent, yamlClass);
+    changeContext.setYaml(yamlObject);
 
-      yamlHandler.upsertFromYaml(changeContext, asList(changeContext));
-      failBecauseExceptionWasNotThrown(UnrecognizedPropertyException.class);
-    } catch (UnrecognizedPropertyException ex) {
-      // Do nothing
-    }
+    thrown.expect(WingsException.class);
+    yamlHandler.upsertFromYaml(changeContext, asList(changeContext));
   }
 }

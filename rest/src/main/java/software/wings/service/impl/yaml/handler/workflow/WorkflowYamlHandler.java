@@ -67,7 +67,7 @@ public abstract class WorkflowYamlHandler<Y extends WorkflowYaml> extends BaseYa
     Workflow previous = get(accountId, yamlFilePath);
 
     WorkflowBuilder workflowBuilder = WorkflowBuilder.aWorkflow();
-    toBean(changeContext, changeSetContext, workflowBuilder);
+    toBean(changeContext, changeSetContext, workflowBuilder, previous);
 
     if (previous != null) {
       workflowBuilder.withUuid(previous.getUuid());
@@ -77,8 +77,8 @@ public abstract class WorkflowYamlHandler<Y extends WorkflowYaml> extends BaseYa
     }
   }
 
-  private void toBean(ChangeContext<Y> changeContext, List<ChangeContext> changeContextList, WorkflowBuilder workflow)
-      throws HarnessException {
+  private void toBean(ChangeContext<Y> changeContext, List<ChangeContext> changeContextList, WorkflowBuilder workflow,
+      Workflow previous) throws HarnessException {
     WorkflowYaml yaml = changeContext.getYaml();
     Change change = changeContext.getChange();
 
@@ -108,6 +108,10 @@ public abstract class WorkflowYamlHandler<Y extends WorkflowYaml> extends BaseYa
 
                             WorkflowPhase workflowPhase =
                                 phaseYamlHandler.upsertFromYaml(clonedContext, changeContextList);
+                            String workflowPhaseId = getPreviousWorkflowPhaseId(workflowPhase.getName(), previous);
+                            if (workflowPhaseId != null) {
+                              workflowPhase.setUuid(workflowPhaseId);
+                            }
                             return workflowPhase;
                           } catch (HarnessException e) {
                             throw new WingsException(e);
@@ -134,6 +138,11 @@ public abstract class WorkflowYamlHandler<Y extends WorkflowYaml> extends BaseYa
                     clonedContext.getProperties().put(YamlConstants.IS_ROLLBACK, true);
 
                     WorkflowPhase workflowPhase = phaseYamlHandler.upsertFromYaml(clonedContext, changeContextList);
+                    String workflowPhaseId = getPreviousWorkflowPhaseId(workflowPhase.getName(), previous);
+                    if (workflowPhaseId != null) {
+                      workflowPhase.setUuid(workflowPhaseId);
+                    }
+
                     return workflowPhase;
                   } catch (HarnessException e) {
                     throw new WingsException(e);
@@ -289,6 +298,26 @@ public abstract class WorkflowYamlHandler<Y extends WorkflowYaml> extends BaseYa
 
     } catch (WingsException ex) {
       throw new HarnessException(ex);
+    }
+  }
+
+  private String getPreviousWorkflowPhaseId(String name, Workflow previous) {
+    if (previous == null || previous.getOrchestrationWorkflow() == null) {
+      return null;
+    }
+
+    CanaryOrchestrationWorkflow orchestrationWorkflow =
+        (CanaryOrchestrationWorkflow) previous.getOrchestrationWorkflow();
+    List<WorkflowPhase> workflowPhaseList = orchestrationWorkflow.getWorkflowPhases()
+                                                .stream()
+                                                .filter(phase -> name.equals(phase.getName()))
+                                                .collect(Collectors.toList());
+    int size = workflowPhaseList.size();
+    // If size is greater than, we don't know what to pick, so we return null.
+    if (size == 1) {
+      return workflowPhaseList.get(0).getUuid();
+    } else {
+      return null;
     }
   }
 

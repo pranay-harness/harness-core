@@ -53,7 +53,7 @@ public class BasicWorkflowYamlHandlerTest extends BaseWorkflowYamlHandlerTest {
       ChangeContext<BasicWorkflowYaml> changeContext =
           getChangeContext(yamlString, BASIC_VALID_YAML_FILE_PATH, yamlHandler);
 
-      BasicWorkflowYaml yamlObject = (BasicWorkflowYaml) getYaml(yamlString, BasicWorkflowYaml.class, false);
+      BasicWorkflowYaml yamlObject = (BasicWorkflowYaml) getYaml(yamlString, BasicWorkflowYaml.class);
       changeContext.setYaml(yamlObject);
 
       Workflow workflow = yamlHandler.upsertFromYaml(changeContext, Arrays.asList(changeContext));
@@ -74,7 +74,7 @@ public class BasicWorkflowYamlHandlerTest extends BaseWorkflowYamlHandlerTest {
     ChangeContext<BasicWorkflowYaml> changeContext =
         getChangeContext(yamlString, BASIC_VALID_YAML_FILE_PATH, yamlHandler);
 
-    BasicWorkflowYaml yamlObject = (BasicWorkflowYaml) getYaml(yamlString, BasicWorkflowYaml.class, false);
+    BasicWorkflowYaml yamlObject = (BasicWorkflowYaml) getYaml(yamlString, BasicWorkflowYaml.class);
     changeContext.setYaml(yamlObject);
 
     Workflow workflow = yamlHandler.upsertFromYaml(changeContext, asList(changeContext));
@@ -87,6 +87,8 @@ public class BasicWorkflowYamlHandlerTest extends BaseWorkflowYamlHandlerTest {
 
     String yamlContent = getYamlContent(yaml);
     assertNotNull(yamlContent);
+    yamlContent = yamlContent.substring(0, yamlContent.length() - 1);
+    assertEquals(yamlString, yamlContent);
 
     Workflow savedWorkflow = workflowService.readWorkflowByName(APP_ID, workflowName);
     // TODO find out why this couldn't be called

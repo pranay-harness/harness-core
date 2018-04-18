@@ -197,7 +197,6 @@ public class AuthRuleFilter implements ContainerRequestFilter {
           user.setUserRequestContext(userRequestContextBuilder.build());
         }
 
-        logger.info("No permission attribute is required for request: {}", requestContext.getUriInfo().getPath());
         return;
       }
 

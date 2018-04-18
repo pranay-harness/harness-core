@@ -92,9 +92,9 @@ public class YamlHelper {
   public static YamlRepresenter getRepresenter(boolean removeEmptyValues) {
     YamlRepresenter representer = new YamlRepresenter(removeEmptyValues);
 
-    // use custom that PropertyUtils that doesn't sort alphabetically
+    // use custom property utils so that PropertyUtils that doesn't sort alphabetically
     PropertyUtils pu = new CustomPropertyUtils();
-    pu.setSkipMissingProperties(false);
+    pu.setSkipMissingProperties(true);
 
     representer.setPropertyUtils(pu);
 
