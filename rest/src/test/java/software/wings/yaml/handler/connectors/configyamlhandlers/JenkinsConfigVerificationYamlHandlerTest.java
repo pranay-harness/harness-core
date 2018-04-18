@@ -109,7 +109,7 @@ public class JenkinsConfigVerificationYamlHandlerTest extends BaseSettingValueCo
   private SettingValueYamlConfig generateSettingValueYamlConfig(String name, SettingAttribute settingAttributeSaved) {
     String invalidYamlContent = "url_jenkins: https://jenkins.example.com\n"
         + "username: username\n"
-        + "password: safeharness:#\n"
+        + "password: amazonkms:C7cBDpxHQzG5rv30tvZDgw\n"
         + "type: JENKINS";
     return SettingValueYamlConfig.builder()
         .yamlHandler(yamlHandler)

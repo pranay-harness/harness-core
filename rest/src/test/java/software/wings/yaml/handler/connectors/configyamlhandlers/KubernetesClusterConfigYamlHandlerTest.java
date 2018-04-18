@@ -25,8 +25,6 @@ public class KubernetesClusterConfigYamlHandlerTest extends BaseSettingValueConf
   public static final String password = "dummyPassword";
 
   private String invalidYamlContent = "type: KUBERNETES_CLUSTER\n"
-      + "masterUrl: dummyMasterUrl\n"
-      + "password_1: dummyPassword\n"
       + "username: dummyUsername";
 
   private Class yamlClass = KubernetesClusterConfig.Yaml.class;

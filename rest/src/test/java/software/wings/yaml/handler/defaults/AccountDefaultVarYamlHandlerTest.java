@@ -1,7 +1,6 @@
 package software.wings.yaml.handler.defaults;
 
 import static java.util.Arrays.asList;
-import static org.assertj.core.api.Fail.failBecauseExceptionWasNotThrown;
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertNotNull;
 import static org.junit.Assert.assertTrue;
@@ -11,7 +10,6 @@ import static software.wings.utils.WingsTestConstants.ACCOUNT_ID;
 
 import com.google.inject.Inject;
 
-import com.fasterxml.jackson.databind.exc.UnrecognizedPropertyException;
 import org.assertj.core.api.Assertions;
 import org.junit.Before;
 import org.junit.Test;
@@ -33,6 +31,7 @@ import software.wings.yaml.handler.BaseYamlHandlerTest;
 
 import java.io.IOException;
 import java.util.List;
+import javax.validation.ConstraintViolationException;
 
 /**
  * @author rktummala on 1/19/18
@@ -72,8 +71,8 @@ public class AccountDefaultVarYamlHandlerTest extends BaseYamlHandlerTest {
       + "- name: var3\n"
       + "  value: value3";
   private String validYamlFilePath = "Setup/Defaults.yaml";
-  private String invalidYamlContent = "invalid:\n"
-      + "  - name: var1\n"
+  private String invalidYamlContent = "defaults:\n"
+      + "  - name1: var1\n"
       + "    value: value1\n"
       + "harnessApiVersion: '1.0'\n"
       + "type: ACCOUNT_DEFAULTS";
@@ -114,7 +113,7 @@ public class AccountDefaultVarYamlHandlerTest extends BaseYamlHandlerTest {
     changeContext.setYamlType(YamlType.ACCOUNT_DEFAULTS);
     changeContext.setYamlSyncHandler(yamlHandler);
 
-    Yaml yamlObject = (Yaml) getYaml(v1_validYamlContent, Yaml.class, false);
+    Yaml yamlObject = (Yaml) getYaml(v1_validYamlContent, Yaml.class);
     changeContext.setYaml(yamlObject);
 
     List<SettingAttribute> createdSettingAttributes = yamlHandler.upsertFromYaml(changeContext, asList(changeContext));
@@ -134,7 +133,7 @@ public class AccountDefaultVarYamlHandlerTest extends BaseYamlHandlerTest {
 
     gitFileChange.setFileContent(v2_validYamlContent);
 
-    yamlObject = (Yaml) getYaml(v2_validYamlContent, Yaml.class, false);
+    yamlObject = (Yaml) getYaml(v2_validYamlContent, Yaml.class);
     changeContext.setYaml(yamlObject);
 
     List<SettingAttribute> v2_createdSettingAttributes =
@@ -159,20 +158,14 @@ public class AccountDefaultVarYamlHandlerTest extends BaseYamlHandlerTest {
     changeContext.setYamlType(YamlType.ACCOUNT_DEFAULTS);
     changeContext.setYamlSyncHandler(yamlHandler);
 
-    Yaml yamlObject = (Yaml) getYaml(v1_validYamlContent, Yaml.class, false);
+    Yaml yamlObject = (Yaml) getYaml(v1_validYamlContent, Yaml.class);
     changeContext.setYaml(yamlObject);
 
     // Invalid yaml content
-
-    try {
-      yamlObject = (Yaml) getYaml(invalidYamlContent, Yaml.class, false);
-      changeContext.setYaml(yamlObject);
-
-      yamlHandler.upsertFromYaml(changeContext, asList(changeContext));
-      failBecauseExceptionWasNotThrown(UnrecognizedPropertyException.class);
-    } catch (UnrecognizedPropertyException ex) {
-      // Do nothing
-    }
+    yamlObject = (Yaml) getYaml(invalidYamlContent, Yaml.class);
+    changeContext.setYaml(yamlObject);
+    thrown.expect(ConstraintViolationException.class);
+    yamlHandler.upsertFromYaml(changeContext, asList(changeContext));
   }
 
   private void compareSettingAttributes(List<SettingAttribute> lhs, List<SettingAttribute> rhs) {

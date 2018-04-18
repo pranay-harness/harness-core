@@ -1,7 +1,6 @@
 package software.wings.yaml.handler.inframappings;
 
 import static java.util.Arrays.asList;
-import static org.assertj.core.api.Fail.failBecauseExceptionWasNotThrown;
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertNotNull;
 import static org.junit.Assert.assertNull;
@@ -19,7 +18,6 @@ import static software.wings.utils.WingsTestConstants.SETTING_ID;
 import com.google.inject.Inject;
 import com.google.inject.name.Named;
 
-import com.fasterxml.jackson.databind.exc.UnrecognizedPropertyException;
 import org.junit.Before;
 import org.junit.Test;
 import org.mockito.InjectMocks;
@@ -85,15 +83,8 @@ public class AzureKubernetesInfraMappingYamlHandlerTest extends BaseYamlHandlerT
       + "serviceName: dockersvc\n"
       + "subscriptionId: 52d2db62-5aa9-471d-84bb-faa489b3e319";
 
-  private String invalidYamlContent = "invalidSubscriptionId: 52d2db62-5aa9-471d-84bb-faa489b3e319\n"
-      + "resourceGroup: test-aks\n"
+  private String invalidYamlContent = "resourceGroup: test-aks\n"
       + "namespace: default\n"
-      + "cluster: test-aks\n"
-      + "computeProviderType: AZURE\n"
-      + "computeProviderName: azure-infra\n"
-      + "serviceName: dockersvc\n"
-      + "infraMappingType: AZURE_KUBERNETES\n"
-      + "deploymentType: KUBERNETES\n"
       + "harnessApiVersion: '1.0'\n"
       + "type: AZURE_KUBERNETES";
 
@@ -159,7 +150,7 @@ public class AzureKubernetesInfraMappingYamlHandlerTest extends BaseYamlHandlerT
         getChangeContext(validYamlContent, validYamlFilePath, yamlHandler);
 
     AzureKubernetesInfrastructureMapping.Yaml yamlObject = (AzureKubernetesInfrastructureMapping.Yaml) getYaml(
-        validYamlContent, AzureKubernetesInfrastructureMapping.Yaml.class, false);
+        validYamlContent, AzureKubernetesInfrastructureMapping.Yaml.class);
     changeContext.setYaml(yamlObject);
 
     AzureKubernetesInfrastructureMapping azureInfraMapping =
@@ -192,19 +183,14 @@ public class AzureKubernetesInfraMappingYamlHandlerTest extends BaseYamlHandlerT
         getChangeContext(invalidYamlContent, validYamlFilePath, yamlHandler);
 
     AzureKubernetesInfrastructureMapping.Yaml yamlObject = (AzureKubernetesInfrastructureMapping.Yaml) getYaml(
-        validYamlContent, AzureKubernetesInfrastructureMapping.Yaml.class, false);
+        validYamlContent, AzureKubernetesInfrastructureMapping.Yaml.class);
     changeContext.setYaml(yamlObject);
 
-    try {
-      yamlObject = (AzureKubernetesInfrastructureMapping.Yaml) getYaml(
-          invalidYamlContent, AzureKubernetesInfrastructureMapping.Yaml.class, false);
-      changeContext.setYaml(yamlObject);
-
-      yamlHandler.upsertFromYaml(changeContext, asList(changeContext));
-      failBecauseExceptionWasNotThrown(UnrecognizedPropertyException.class);
-    } catch (UnrecognizedPropertyException ex) {
-      // Do nothing
-    }
+    yamlObject = (AzureKubernetesInfrastructureMapping.Yaml) getYaml(
+        invalidYamlContent, AzureKubernetesInfrastructureMapping.Yaml.class);
+    changeContext.setYaml(yamlObject);
+    thrown.expect(Exception.class);
+    yamlHandler.upsertFromYaml(changeContext, asList(changeContext));
   }
 
   protected <Y extends BaseYaml, H extends BaseYamlHandler> ChangeContext<Y> getChangeContext(

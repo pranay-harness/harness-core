@@ -260,7 +260,7 @@ public class YamlServiceImpl<Y extends BaseYaml, B extends Base> implements Yaml
           T yamlSyncHandler = yamlHandlerFactory.getYamlHandler(yamlType, yamlSubType);
           if (yamlSyncHandler != null) {
             Class yamlClass = yamlSyncHandler.getYamlClass();
-            BaseYaml yaml = getYaml(change.getFileContent(), yamlClass, false);
+            BaseYaml yaml = getYaml(change.getFileContent(), yamlClass);
             notNullCheck("Could not get yaml object for :" + yamlFilePath, yaml);
 
             ChangeContext.Builder changeContextBuilder = ChangeContext.Builder.aChangeContext()
@@ -408,12 +408,9 @@ public class YamlServiceImpl<Y extends BaseYaml, B extends Base> implements Yaml
     }
   }
 
-  private BaseYaml getYaml(String yamlString, Class<? extends BaseYaml> yamlClass, boolean ignoreUnknownFields)
-      throws IOException {
+  private BaseYaml getYaml(String yamlString, Class<? extends BaseYaml> yamlClass) throws IOException {
     ObjectMapper mapper = new ObjectMapper(new YAMLFactory());
-    if (ignoreUnknownFields) {
-      mapper.configure(DeserializationFeature.FAIL_ON_UNKNOWN_PROPERTIES, false);
-    }
+    mapper.disable(DeserializationFeature.FAIL_ON_UNKNOWN_PROPERTIES);
     return mapper.readValue(yamlString, yamlClass);
   }
 

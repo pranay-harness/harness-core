@@ -1,7 +1,6 @@
 package software.wings.yaml.handler;
 
 import static java.util.Arrays.asList;
-import static org.assertj.core.api.Fail.failBecauseExceptionWasNotThrown;
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertNotNull;
 import static org.mockito.Matchers.anyString;
@@ -13,7 +12,6 @@ import static software.wings.utils.WingsTestConstants.ENV_ID;
 
 import com.google.inject.Inject;
 
-import com.fasterxml.jackson.databind.exc.UnrecognizedPropertyException;
 import org.junit.Before;
 import org.junit.Test;
 import org.mockito.InjectMocks;
@@ -53,7 +51,6 @@ public class EnvironmentYamlHandlerTest extends BaseYamlHandlerTest {
   private String validYamlContent =
       "harnessApiVersion: '1.0'\ntype: ENVIRONMENT\ndescription: valid env yaml\nenvironmentType: NON_PROD";
   private String validYamlFilePath = "Setup/Applications/" + APP_NAME + "/Environments/" + ENV_NAME + "/Index.yaml";
-  private String invalidYamlContent = "description1: invalid env yaml\ntype: ENVIRONMENT";
   private String invalidYamlFilePath =
       "Setup/Applications/" + APP_NAME + "/EnvironmentsInvalid/" + ENV_NAME + "/Index.yaml";
 
@@ -84,7 +81,7 @@ public class EnvironmentYamlHandlerTest extends BaseYamlHandlerTest {
     changeContext.setYamlType(YamlType.ENVIRONMENT);
     changeContext.setYamlSyncHandler(yamlHandler);
 
-    Yaml yamlObject = (Yaml) getYaml(validYamlContent, Yaml.class, false);
+    Yaml yamlObject = (Yaml) getYaml(validYamlContent, Yaml.class);
     changeContext.setYaml(yamlObject);
 
     Environment savedEnv = yamlHandler.upsertFromYaml(changeContext, asList(changeContext));
@@ -121,29 +118,11 @@ public class EnvironmentYamlHandlerTest extends BaseYamlHandlerTest {
     changeContext.setYamlType(YamlType.ENVIRONMENT);
     changeContext.setYamlSyncHandler(yamlHandler);
 
-    Yaml yamlObject = (Yaml) getYaml(validYamlContent, Yaml.class, false);
+    Yaml yamlObject = (Yaml) getYaml(validYamlContent, Yaml.class);
     changeContext.setYaml(yamlObject);
 
-    try {
-      yamlHandler.upsertFromYaml(changeContext, asList(changeContext));
-      failBecauseExceptionWasNotThrown(WingsException.class);
-    } catch (WingsException ex) {
-      // do nothing
-    }
-
-    // Invalid yaml content
-    gitFileChange.setFileContent(invalidYamlContent);
-    gitFileChange.setFilePath(validYamlFilePath);
-
-    try {
-      yamlObject = (Yaml) getYaml(invalidYamlContent, Yaml.class, false);
-      changeContext.setYaml(yamlObject);
-
-      yamlHandler.upsertFromYaml(changeContext, asList(changeContext));
-      failBecauseExceptionWasNotThrown(UnrecognizedPropertyException.class);
-    } catch (UnrecognizedPropertyException ex) {
-      // Do nothing
-    }
+    thrown.expect(WingsException.class);
+    yamlHandler.upsertFromYaml(changeContext, asList(changeContext));
   }
 
   private void compareEnv(Environment lhs, Environment rhs) {

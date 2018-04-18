@@ -42,6 +42,7 @@ public class MigrationList {
         .add(Pair.of(117, StateExecutionInstanceDisplayName.class))
         .add(Pair.of(118, ServiceKeywordsMigration.class))
         .add(Pair.of(119, FixMaxInstancesFieldInContainerSetup.class))
+        .add(Pair.of(120, GitSyncToAllAccounts.class))
         .build();
   }
 }

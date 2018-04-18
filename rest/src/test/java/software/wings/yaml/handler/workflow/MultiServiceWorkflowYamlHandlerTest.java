@@ -43,7 +43,7 @@ public class MultiServiceWorkflowYamlHandlerTest extends BaseWorkflowYamlHandler
         getChangeContext(MULTI_SERVICE_VALID_YAML_CONTENT, MULTI_SERVICE_VALID_YAML_FILE_PATH, yamlHandler);
 
     MultiServiceWorkflowYaml yamlObject =
-        (MultiServiceWorkflowYaml) getYaml(MULTI_SERVICE_VALID_YAML_CONTENT, MultiServiceWorkflowYaml.class, false);
+        (MultiServiceWorkflowYaml) getYaml(MULTI_SERVICE_VALID_YAML_CONTENT, MultiServiceWorkflowYaml.class);
     changeContext.setYaml(yamlObject);
 
     Workflow workflow = yamlHandler.upsertFromYaml(changeContext, asList(changeContext));

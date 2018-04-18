@@ -10,7 +10,6 @@ import static software.wings.utils.WingsTestConstants.ACCOUNT_ID;
 
 import com.google.inject.Inject;
 
-import com.fasterxml.jackson.databind.exc.UnrecognizedPropertyException;
 import org.apache.commons.lang3.StringUtils;
 import org.mockito.InjectMocks;
 import org.mockito.Mock;
@@ -57,7 +56,7 @@ public abstract class BaseSettingValueConfigYamlHandlerTest extends BaseYamlHand
 
   protected <T extends BaseYaml> ChangeContext<T> getChangeContext(
       String yamlContent, String yamlPath, Class yamlClass, BaseYamlHandler yamlHandler) throws IOException {
-    T yamlObject = (T) getYaml(yamlContent, yamlClass, false);
+    T yamlObject = (T) getYaml(yamlContent, yamlClass);
 
     GitFileChange gitFileChange = GitFileChange.Builder.aGitFileChange()
                                       .withFileContent(yamlContent)
@@ -123,14 +122,11 @@ public abstract class BaseSettingValueConfigYamlHandlerTest extends BaseYamlHand
     }
 
     // 4. Now, Use invalid yaml content (missing encrypted password) and  make sure upsertFromYaml fails
-    try {
-      changeContext = getChangeContext(settingValueYamlConfig.getInvalidYamlContent(), yamlFilePath,
-          settingValueYamlConfig.getYamlClass(), yamlHandler);
-      yamlHandler.upsertFromYaml(changeContext, asList(changeContext));
-      failBecauseExceptionWasNotThrown(UnrecognizedPropertyException.class);
-    } catch (UnrecognizedPropertyException ex) {
-      // Do nothing
-    }
+
+    changeContext = getChangeContext(settingValueYamlConfig.getInvalidYamlContent(), yamlFilePath,
+        settingValueYamlConfig.getYamlClass(), yamlHandler);
+    thrown.expect(Exception.class);
+    yamlHandler.upsertFromYaml(changeContext, asList(changeContext));
   }
 
   protected String getYamlContentString(SettingAttribute settingAttribute, BaseYamlHandler yamlHandler) {

@@ -1,7 +1,6 @@
 package software.wings.yaml.handler.inframappings;
 
 import static java.util.Arrays.asList;
-import static org.assertj.core.api.Fail.failBecauseExceptionWasNotThrown;
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertNotNull;
 import static org.junit.Assert.assertNull;
@@ -25,7 +24,6 @@ import com.google.inject.Inject;
 import com.google.inject.name.Named;
 
 import com.amazonaws.services.ecs.model.LaunchType;
-import com.fasterxml.jackson.databind.exc.UnrecognizedPropertyException;
 import org.apache.commons.lang3.reflect.MethodUtils;
 import org.junit.Before;
 import org.junit.Test;
@@ -112,17 +110,6 @@ public class EcsInfraMappingYamlHandlerTest extends BaseYamlHandlerTest {
 
   private String invalidYamlContent = "InvalidharnessApiVersion: '1.0'\n"
       + "type: AWS_ECS\n"
-      + "assignPublicIp: true\n"
-      + "cluster: ABfargate\n"
-      + "NocomputeProviderName: aws\n"
-      + "computeProviderType: AWS\n"
-      + "deploymentType: ECS\n"
-      + "infraMappingType: AWS_ECS\n"
-      + "launchType: FARGATE\n"
-      + "region: us-east-1\n"
-      + "securityGroupIds: sg-4e8f0c38\n"
-      + "serviceName: fargate\n"
-      + "subnetIds: subnet-2fa27920,subnet-ad9b92c9\n"
       + "vpcId: vpc-bfff4dc4";
 
   private String validYamlFilePath =
@@ -227,7 +214,7 @@ public class EcsInfraMappingYamlHandlerTest extends BaseYamlHandlerTest {
   private void testCrud(String validYamlContent) throws IOException, HarnessException {
     ChangeContext<Yaml> changeContext = getChangeContext(validYamlContent, validYamlFilePath, yamlHandler);
 
-    Yaml yamlObject = (Yaml) getYaml(validYamlContent, Yaml.class, false);
+    Yaml yamlObject = (Yaml) getYaml(validYamlContent, Yaml.class);
     changeContext.setYaml(yamlObject);
 
     EcsInfrastructureMapping ecsInfraMapping = yamlHandler.upsertFromYaml(changeContext, asList(changeContext));
@@ -257,18 +244,13 @@ public class EcsInfraMappingYamlHandlerTest extends BaseYamlHandlerTest {
   public void testFailures() throws HarnessException, IOException {
     ChangeContext<Yaml> changeContext = getChangeContext(invalidYamlContent, validYamlFilePath, yamlHandler);
 
-    Yaml yamlObject = (Yaml) getYaml(validYamlContent2, EcsInfrastructureMapping.Yaml.class, false);
+    Yaml yamlObject = (Yaml) getYaml(validYamlContent2, EcsInfrastructureMapping.Yaml.class);
     changeContext.setYaml(yamlObject);
 
-    try {
-      yamlObject = (Yaml) getYaml(invalidYamlContent, Yaml.class, false);
-      changeContext.setYaml(yamlObject);
-
-      yamlHandler.upsertFromYaml(changeContext, asList(changeContext));
-      failBecauseExceptionWasNotThrown(UnrecognizedPropertyException.class);
-    } catch (UnrecognizedPropertyException ex) {
-      // Do nothing
-    }
+    yamlObject = (Yaml) getYaml(invalidYamlContent, Yaml.class);
+    changeContext.setYaml(yamlObject);
+    thrown.expect(Exception.class);
+    yamlHandler.upsertFromYaml(changeContext, asList(changeContext));
   }
 
   protected <Y extends BaseYaml, H extends BaseYamlHandler> ChangeContext<Y> getChangeContext(

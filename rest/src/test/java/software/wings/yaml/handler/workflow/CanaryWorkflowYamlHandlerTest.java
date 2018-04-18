@@ -42,8 +42,7 @@ public class CanaryWorkflowYamlHandlerTest extends BaseWorkflowYamlHandlerTest {
     ChangeContext<CanaryWorkflowYaml> changeContext =
         getChangeContext(CANARY_VALID_YAML_CONTENT, CANARY_VALID_YAML_FILE_PATH, yamlHandler);
 
-    CanaryWorkflowYaml yamlObject =
-        (CanaryWorkflowYaml) getYaml(CANARY_VALID_YAML_CONTENT, CanaryWorkflowYaml.class, false);
+    CanaryWorkflowYaml yamlObject = (CanaryWorkflowYaml) getYaml(CANARY_VALID_YAML_CONTENT, CanaryWorkflowYaml.class);
     changeContext.setYaml(yamlObject);
 
     Workflow workflow = yamlHandler.upsertFromYaml(changeContext, asList(changeContext));
