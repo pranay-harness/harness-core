@@ -1,5 +1,7 @@
 package software.wings.beans.command;
 
+import static java.util.stream.Collectors.toList;
+import static software.wings.beans.ErrorCode.INVALID_REQUEST;
 import static software.wings.cloudprovider.ContainerInfo.Status.SUCCESS;
 import static software.wings.common.Constants.HARNESS_REVISION;
 import static software.wings.service.impl.KubernetesHelperService.printRouteRuleWeights;
@@ -75,14 +77,32 @@ public class KubernetesResizeCommandUnit extends ContainerResizeCommandUnit {
         containerServiceData.getDesiredCount(), resizeParams.getServiceSteadyStateTimeout(), executionLogCallback);
 
     boolean allContainersSuccess = containerInfos.stream().allMatch(info -> info.getStatus() == SUCCESS);
-    if (totalDesiredCount > 0 && containerInfos.size() == totalDesiredCount && allContainersSuccess
-        && contextData.deployingToHundredPercent) {
-      if (resizeParams.isUseAutoscaler()) {
+    if (containerInfos.size() == totalDesiredCount && allContainersSuccess) {
+      if (totalDesiredCount > 0 && contextData.deployingToHundredPercent && resizeParams.isUseAutoscaler()) {
         enableAutoscaler(kubernetesConfig, encryptedDataDetails, controllerName, executionLogCallback);
       }
-    }
+      return containerInfos;
+    } else {
+      try {
+        if (containerInfos.size() != totalDesiredCount) {
+          executionLogCallback.saveExecutionLog(
+              String.format("\nExpected data for %d container%s but got %d", totalDesiredCount,
+                  totalDesiredCount == 1 ? "" : "s", containerInfos.size()),
+              LogLevel.WARN);
+        }
+        List<ContainerInfo> failedContainers =
+            containerInfos.stream().filter(info -> info.getStatus() != ContainerInfo.Status.SUCCESS).collect(toList());
+        executionLogCallback.saveExecutionLog(
+            String.format("\nThe following container%s did not have success status: %s",
+                failedContainers.size() == 1 ? "" : "s",
+                failedContainers.stream().map(ContainerInfo::getContainerId).collect(toList())),
+            LogLevel.WARN);
+      } catch (Exception e) {
+        // Ignore failure to log failing containers
+      }
 
-    return containerInfos;
+      throw new WingsException(INVALID_REQUEST).addParam("message", "Failed to resize controller");
+    }
   }
 
   protected void postExecution(

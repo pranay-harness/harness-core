@@ -5,6 +5,8 @@ import static io.harness.threading.Morpheus.sleep;
 import static java.time.Duration.ofSeconds;
 import static java.util.Arrays.asList;
 import static java.util.Collections.emptyList;
+import static java.util.Comparator.comparing;
+import static java.util.Comparator.reverseOrder;
 import static java.util.stream.Collectors.toList;
 import static software.wings.beans.ErrorCode.INIT_TIMEOUT;
 import static software.wings.beans.ErrorCode.INVALID_REQUEST;
@@ -40,6 +42,7 @@ import com.amazonaws.services.ecs.model.LaunchType;
 import com.amazonaws.services.ecs.model.ListServicesRequest;
 import com.amazonaws.services.ecs.model.ListServicesResult;
 import com.amazonaws.services.ecs.model.ListTasksRequest;
+import com.amazonaws.services.ecs.model.NetworkInterface;
 import com.amazonaws.services.ecs.model.RegisterTaskDefinitionRequest;
 import com.amazonaws.services.ecs.model.Service;
 import com.amazonaws.services.ecs.model.ServiceEvent;
@@ -71,8 +74,6 @@ import software.wings.utils.JsonUtils;
 import java.io.IOException;
 import java.io.InputStreamReader;
 import java.util.ArrayList;
-import java.util.Collections;
-import java.util.Comparator;
 import java.util.List;
 import java.util.Map;
 import java.util.Objects;
@@ -974,12 +975,6 @@ public class EcsContainerServiceImpl implements EcsContainerService {
             new UpdateServiceRequest().withCluster(clusterName).withService(serviceName).withDesiredCount(desiredCount);
         UpdateServiceResult updateServiceResult =
             awsHelperService.updateService(region, awsConfig, encryptedDataDetails, updateServiceRequest);
-        List<ServiceEvent> events = updateServiceResult.getService().getEvents();
-
-        String latestExcludedEventId = null;
-        if (!events.isEmpty()) {
-          latestExcludedEventId = events.get(0).getId();
-        }
 
         waitForServiceUpdateToComplete(updateServiceResult, region, awsConfig, encryptedDataDetails, clusterName,
             serviceName, desiredCount, executionLogCallback);
@@ -987,8 +982,8 @@ public class EcsContainerServiceImpl implements EcsContainerService {
         waitForTasksToBeInRunningStateButDontThrowException(
             region, awsConfig, encryptedDataDetails, clusterName, serviceName, executionLogCallback, desiredCount);
         if (desiredCount > previousCount) { // don't do it for downsize.
-          waitForServiceToReachSteadyState(latestExcludedEventId, region, awsConfig, encryptedDataDetails, clusterName,
-              serviceName, serviceSteadyStateTimeout, executionLogCallback);
+          waitForServiceToReachSteadyState(region, awsConfig, encryptedDataDetails, clusterName, serviceName,
+              serviceSteadyStateTimeout, executionLogCallback);
         }
       }
 
@@ -999,8 +994,8 @@ public class EcsContainerServiceImpl implements EcsContainerService {
                                           .withServiceName(serviceName)
                                           .withDesiredStatus(DesiredStatus.RUNNING))
                                   .getTaskArns();
-      if (isEmpty(taskArns)) {
-        logger.info("No task arns.");
+      if (isEmpty(taskArns) || desiredCount <= previousCount) {
+        logger.info("Downsize complete for ECS deployment, Service: " + serviceName);
         return emptyList();
       }
 
@@ -1043,13 +1038,13 @@ public class EcsContainerServiceImpl implements EcsContainerService {
           + "so there is no way to fetch dockerContainerId. Verification steps using containerId may not work");
 
       tasks.forEach(ecsTask -> {
-        ecsTask.getContainers().stream().forEach(container -> {
+        ecsTask.getContainers().forEach(container -> {
           // Read private Ip of ENI (all container will have same private IP as all containers within task use same
           // ENI)
           String privateIpv4AddressForENI = container.getNetworkInterfaces()
                                                 .stream()
                                                 .findFirst()
-                                                .map(networkInterface -> networkInterface.getPrivateIpv4Address())
+                                                .map(NetworkInterface::getPrivateIpv4Address)
                                                 .orElse(StringUtils.EMPTY);
 
           ContainerInfo containerInfo = ContainerInfo.builder()
@@ -1065,8 +1060,7 @@ public class EcsContainerServiceImpl implements EcsContainerService {
     // Handle EC2 tasks
     if (CollectionUtils.isNotEmpty(ec2Tasks)) {
       List<String> containerInstances = tasks.stream().map(Task::getContainerInstanceArn).collect(toList());
-      containerInstances =
-          containerInstances.stream().filter(containerInstance -> containerInstance != null).collect(toList());
+      containerInstances = containerInstances.stream().filter(Objects::nonNull).collect(toList());
       logger.info("Container Instances = " + containerInstances);
 
       List<ContainerInstance> containerInstanceList =
@@ -1178,14 +1172,13 @@ public class EcsContainerServiceImpl implements EcsContainerService {
    * @return
    */
   private String generateTaskMetadataEndpointUrl(String ipAddress) {
-    return new StringBuilder("http://").append(ipAddress).append(":51678/v1/tasks").toString();
+    return "http://" + ipAddress + ":51678/v1/tasks";
   }
 
-  private void waitForServiceToReachSteadyState(String latestExcludedEventId, String region, AwsConfig awsConfig,
+  private void waitForServiceToReachSteadyState(String region, AwsConfig awsConfig,
       List<EncryptedDataDetail> encryptedDataDetails, String clusterName, String serviceName,
       int serviceSteadyStateTimeout, ExecutionLogCallback executionLogCallback) {
     try {
-      final String[] excludedEventId = {latestExcludedEventId};
       timeLimiter.callWithTimeout(() -> {
         while (true) {
           executionLogCallback.saveExecutionLog("Waiting for service to be in steady state...", LogLevel.INFO);
@@ -1198,12 +1191,7 @@ public class EcsContainerServiceImpl implements EcsContainerService {
 
           // AWS returns events in descending order of createdTime, but its safer to sort on our own rather than
           // depending on their API.
-          Collections.sort(events, new Comparator<ServiceEvent>() {
-            @Override
-            public int compare(ServiceEvent o1, ServiceEvent o2) {
-              return o2.getCreatedAt().compareTo(o1.getCreatedAt());
-            }
-          });
+          events.sort(comparing(ServiceEvent::getCreatedAt, reverseOrder()));
 
           if (events.get(0).getMessage().endsWith("has reached a steady state.")) {
             executionLogCallback.saveExecutionLog("Service has reached a steady state", LogLevel.INFO);

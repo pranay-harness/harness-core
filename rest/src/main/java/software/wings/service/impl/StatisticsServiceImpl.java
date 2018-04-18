@@ -3,6 +3,8 @@ package software.wings.service.impl;
 import static io.harness.data.structure.EmptyPredicate.isEmpty;
 import static io.harness.data.structure.EmptyPredicate.isNotEmpty;
 import static java.util.Arrays.asList;
+import static java.util.Comparator.comparing;
+import static java.util.Comparator.reverseOrder;
 import static java.util.stream.Collectors.groupingBy;
 import static java.util.stream.Collectors.toList;
 import static org.mongodb.morphia.aggregation.Group.grouping;
@@ -349,7 +351,7 @@ public class StatisticsServiceImpl implements StatisticsService {
       List<WorkflowExecution> workflowExecutions = pageResponse.getResponse();
 
       if (workflowExecutions != null) {
-        Comparator<TopConsumer> byCount = Comparator.comparing(tc -> tc.getTotalCount(), Comparator.reverseOrder());
+        Comparator<TopConsumer> byCount = comparing(TopConsumer::getTotalCount, reverseOrder());
 
         List<TopConsumer> allTopConsumers = new ArrayList<>();
         getTopServicesDeployed(allTopConsumers, workflowExecutions);
@@ -547,8 +549,7 @@ public class StatisticsServiceImpl implements StatisticsService {
       List<WorkflowExecution> wflExecutions = pageResponse.getResponse();
       getTopInstancesDeployed(topConsumers, wflExecutions);
     }
-    Comparator<TopConsumer> byCount = Comparator.comparing(tc -> tc.getTotalCount(), Comparator.reverseOrder());
-    return topConsumers.stream().sorted(byCount).collect(toList());
+    return topConsumers.stream().sorted(comparing(TopConsumer::getTotalCount, reverseOrder())).collect(toList());
   }
 
   private void getTopServicesDeployed(List<TopConsumer> topConsumers, List<WorkflowExecution> wflExecutions) {

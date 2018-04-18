@@ -244,7 +244,7 @@ public class EcsContainerServiceImplTest extends WingsBaseTest {
 
     try {
       MethodUtils.invokeMethod(ecsContainerServiceImpl, true, "waitForServiceToReachSteadyState",
-          new Object[] {"E1", "use-east-1", AwsConfig.builder().build(), new ArrayList<>(), "cluster", "service", 1,
+          new Object[] {"use-east-1", AwsConfig.builder().build(), new ArrayList<>(), "cluster", "service", 1,
               new ExecutionLogCallback()});
       assertTrue(true);
     } catch (UncheckedTimeoutException e) {

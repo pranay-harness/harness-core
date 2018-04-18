@@ -36,7 +36,7 @@ import java.util.stream.Collectors;
 public abstract class ContainerResizeCommandUnit extends AbstractCommandUnit {
   private static final Logger logger = LoggerFactory.getLogger(ContainerResizeCommandUnit.class);
 
-  protected static final String DASH_STRING = "----------";
+  static final String DASH_STRING = "----------";
 
   @Inject @Transient private transient DelegateLogService logService;
 
@@ -95,24 +95,24 @@ public abstract class ContainerResizeCommandUnit extends AbstractCommandUnit {
       List<ContainerServiceData> firstDataList = resizeNewFirst ? newInstanceDataList : oldInstanceDataList;
       List<ContainerServiceData> secondDataList = resizeNewFirst ? oldInstanceDataList : newInstanceDataList;
 
-      boolean executionSucceeded =
-          resizeInstances(contextData, firstDataList, executionDataBuilder, executionLogCallback, resizeNewFirst)
-          && resizeInstances(contextData, secondDataList, executionDataBuilder, executionLogCallback, !resizeNewFirst);
+      resizeInstances(contextData, firstDataList, executionDataBuilder, executionLogCallback, resizeNewFirst);
+      resizeInstances(contextData, secondDataList, executionDataBuilder, executionLogCallback, !resizeNewFirst);
 
-      if (executionSucceeded) {
-        List<ContainerServiceData> allData = new ArrayList<>();
-        if (isNotEmpty(firstDataList)) {
-          allData.addAll(firstDataList);
-        }
-        if (isNotEmpty(secondDataList)) {
-          allData.addAll(secondDataList);
-        }
-        postExecution(contextData, allData, executionLogCallback);
-        status = CommandExecutionStatus.SUCCESS;
+      List<ContainerServiceData> allData = new ArrayList<>();
+      if (isNotEmpty(firstDataList)) {
+        allData.addAll(firstDataList);
       }
+      if (isNotEmpty(secondDataList)) {
+        allData.addAll(secondDataList);
+      }
+      postExecution(contextData, allData, executionLogCallback);
+      status = CommandExecutionStatus.SUCCESS;
     } catch (Exception ex) {
       logger.error(ex.getMessage(), ex);
       Misc.logAllMessages(ex, executionLogCallback);
+      logger.error("Completed operation with errors");
+      executionLogCallback.saveExecutionLog(
+          String.format("Completed operation with errors\n%s\n", DASH_STRING), LogLevel.ERROR);
     } finally {
       context.setCommandExecutionData(executionDataBuilder.build());
     }
@@ -137,7 +137,7 @@ public abstract class ContainerResizeCommandUnit extends AbstractCommandUnit {
     }
   }
 
-  private boolean resizeInstances(ContextData contextData, List<ContainerServiceData> instanceData,
+  private void resizeInstances(ContextData contextData, List<ContainerServiceData> instanceData,
       ResizeCommandUnitExecutionDataBuilder executionDataBuilder, ExecutionLogCallback executionLogCallback,
       boolean isUpsize) {
     if (isNotEmpty(instanceData)) {
@@ -149,48 +149,24 @@ public abstract class ContainerResizeCommandUnit extends AbstractCommandUnit {
       if (isUpsize) {
         executionDataBuilder.containerInfos(containerInfos);
       }
-      return allContainersSuccess(containerInfos, totalDesiredCount, executionLogCallback);
-    } else {
-      return true;
+      logContainerInfos(containerInfos, executionLogCallback);
     }
+    logger.info("Successfully completed resize operation");
+    executionLogCallback.saveExecutionLog(String.format("Completed operation\n%s\n", DASH_STRING));
   }
 
-  private boolean allContainersSuccess(
-      List<ContainerInfo> containerInfos, int totalDesiredCount, ExecutionLogCallback executionLogCallback) {
-    boolean success = false;
-    boolean allContainersSuccess =
-        containerInfos.stream().allMatch(info -> info.getStatus() == ContainerInfo.Status.SUCCESS);
-    if (containerInfos.size() == totalDesiredCount && allContainersSuccess) {
-      success = true;
-      logger.info("Successfully completed resize operation");
-      if (containerInfos.size() > 0) {
+  private void logContainerInfos(List<ContainerInfo> containerInfos, ExecutionLogCallback executionLogCallback) {
+    try {
+      if (isNotEmpty(containerInfos)) {
         executionLogCallback.saveExecutionLog("\nContainer IDs:");
         containerInfos.forEach(info
             -> executionLogCallback.saveExecutionLog("  " + info.getHostName()
                 + (info.getHostName().equals(info.getContainerId()) ? "" : " - " + info.getContainerId())));
         executionLogCallback.saveExecutionLog("");
       }
-      executionLogCallback.saveExecutionLog(String.format("Completed operation\n%s\n", DASH_STRING));
-    } else {
-      if (containerInfos.size() != totalDesiredCount) {
-        executionLogCallback.saveExecutionLog(
-            String.format("Expected data for %d container%s but got %d", totalDesiredCount,
-                totalDesiredCount == 1 ? "" : "s", containerInfos.size()),
-            LogLevel.ERROR);
-      }
-      if (!allContainersSuccess) {
-        List<ContainerInfo> failed =
-            containerInfos.stream().filter(info -> info.getStatus() != ContainerInfo.Status.SUCCESS).collect(toList());
-        executionLogCallback.saveExecutionLog(
-            String.format("The following container%s did not have success status: %s", failed.size() == 1 ? "" : "s",
-                failed.stream().map(ContainerInfo::getContainerId).collect(toList())),
-            LogLevel.ERROR);
-      }
-      logger.error("Completed operation with errors");
-      executionLogCallback.saveExecutionLog(
-          String.format("Completed operation with errors\n%s\n", DASH_STRING), LogLevel.ERROR);
+    } catch (Exception e) {
+      // Ignore failure to log container infos
     }
-    return success;
   }
 
   private ContainerServiceData getNewInstanceData(ContextData contextData) {
@@ -319,7 +295,7 @@ public abstract class ContainerResizeCommandUnit extends AbstractCommandUnit {
     }
   }
 
-  protected static class ContextData {
+  static class ContextData {
     final SettingAttribute settingAttribute;
     final List<EncryptedDataDetail> encryptedDataDetails;
     final ContainerResizeParams resizeParams;
