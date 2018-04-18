@@ -1203,6 +1203,11 @@ public class StateMachineExecutor {
   public ExecutionContext getExecutionContext(String appId, String executionUuid, String stateExecutionInstanceId) {
     StateExecutionInstance stateExecutionInstance =
         getStateExecutionInstance(appId, executionUuid, stateExecutionInstanceId);
+    if (stateExecutionInstance == null) {
+      logger.warn("could not find state execution for app {}, workflow execution {}, uuid {}", appId, executionUuid,
+          stateExecutionInstanceId);
+      return null;
+    }
     StateMachine sm =
         wingsPersistence.get(StateMachine.class, appId, stateExecutionInstance.getStateMachineId(), NORMAL);
     return new ExecutionContextImpl(stateExecutionInstance, sm, injector);
