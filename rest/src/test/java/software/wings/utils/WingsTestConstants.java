@@ -148,6 +148,8 @@ public interface WingsTestConstants {
 
   String ACCOUNT_ID = "ACCOUNT_ID";
 
+  String ACCOUNT_KEY = "ACCOUNT_KEY_ACCOUNT_KEY_ACCOUNT_"; // Account key must be 32 characters
+
   String ACCESS_KEY = "ACCESS_KEY";
 
   char[] SECRET_KEY = "SECRET_KEY".toCharArray();

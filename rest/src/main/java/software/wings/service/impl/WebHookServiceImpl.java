@@ -7,6 +7,7 @@ import com.google.inject.Inject;
 import com.jayway.jsonpath.DocumentContext;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import software.wings.app.MainConfiguration;
 import software.wings.beans.Application;
 import software.wings.beans.WebHookRequest;
 import software.wings.beans.WebHookResponse;
@@ -34,8 +35,27 @@ public class WebHookServiceImpl implements WebHookService {
   @Inject private ArtifactService artifactService;
   @Inject private TriggerService triggerService;
   @Inject private AppService appService;
+  @Inject private MainConfiguration configuration;
 
   private static final Logger logger = LoggerFactory.getLogger(WebHookServiceImpl.class);
+
+  private String getBaseUrl() {
+    String baseUrl = configuration.getPortal().getUrl().trim();
+    if (!baseUrl.endsWith("/")) {
+      baseUrl += "/";
+    }
+    return baseUrl;
+  }
+
+  private String getUiUrl(String accountId, String appId, String envId, String workflowExecutionId) {
+    return String.format("%s#/account/%s/app/%s/env/%s/executions/%s/details", getBaseUrl(), accountId, appId, envId,
+        workflowExecutionId);
+  }
+
+  private String getApiUrl(String accountId, String appId, String workflowExecutionId) {
+    return String.format("%sapi/external/v1/executions/%s/status?accountId=%s&appId=%s", getBaseUrl(),
+        workflowExecutionId, accountId, appId);
+  }
 
   @Override
   public WebHookResponse execute(String token, WebHookRequest webHookRequest) {
@@ -83,6 +103,8 @@ public class WebHookServiceImpl implements WebHookService {
       return WebHookResponse.builder()
           .requestId(workflowExecution.getUuid())
           .status(workflowExecution.getStatus().name())
+          .apiUrl(getApiUrl(app.getAccountId(), appId, workflowExecution.getUuid()))
+          .uiUrl(getUiUrl(app.getAccountId(), appId, workflowExecution.getEnvId(), workflowExecution.getUuid()))
           .build();
     } catch (Exception ex) {
       logger.error("WebHook call failed [%s]", token, ex);

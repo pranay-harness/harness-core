@@ -1,7 +1,9 @@
 package software.wings.security;
 
+import static io.harness.data.structure.EmptyPredicate.isNotEmpty;
 import static javax.ws.rs.HttpMethod.OPTIONS;
 import static javax.ws.rs.Priorities.AUTHENTICATION;
+import static org.apache.commons.lang3.StringUtils.isBlank;
 import static org.apache.commons.lang3.StringUtils.startsWith;
 import static org.apache.commons.lang3.StringUtils.substringAfter;
 import static software.wings.beans.ErrorCode.INVALID_CREDENTIAL;
@@ -9,6 +11,7 @@ import static software.wings.beans.ErrorCode.INVALID_TOKEN;
 import static software.wings.exception.WingsException.ALERTING;
 import static software.wings.exception.WingsException.HARMLESS;
 
+import com.google.common.annotations.VisibleForTesting;
 import com.google.inject.Inject;
 import com.google.inject.Singleton;
 
@@ -17,10 +20,14 @@ import software.wings.beans.AuthToken;
 import software.wings.beans.User;
 import software.wings.common.AuditHelper;
 import software.wings.dl.WingsPersistence;
+import software.wings.exception.InvalidRequestException;
 import software.wings.exception.WingsException;
+import software.wings.exception.WingsException.ReportTarget;
 import software.wings.security.annotations.DelegateAuth;
+import software.wings.security.annotations.ExternalFacingApiAuth;
 import software.wings.security.annotations.LearningEngineAuth;
 import software.wings.security.annotations.PublicApi;
+import software.wings.service.intfc.ApiKeyService;
 import software.wings.service.intfc.AuditService;
 import software.wings.service.intfc.AuthService;
 import software.wings.service.intfc.UserService;
@@ -38,28 +45,38 @@ import javax.ws.rs.core.MultivaluedMap;
 @Singleton
 @Priority(AUTHENTICATION)
 public class AuthenticationFilter implements ContainerRequestFilter {
+  @VisibleForTesting static final String EXTERNAL_FACING_API_HEADER = "X-Api-Key";
+
   @Context private ResourceInfo resourceInfo;
   private WingsPersistence wingsPersistence;
   private MainConfiguration configuration;
   private UserService userService;
   private AuthService authService;
   private AuditService auditService;
+  private ApiKeyService apiKeyService;
   private AuditHelper auditHelper;
 
   @Inject
   public AuthenticationFilter(AuthService authService, WingsPersistence wingsPersistence,
-      MainConfiguration configuration, UserService userService, AuditService auditService, AuditHelper auditHelper) {
+      MainConfiguration configuration, UserService userService, AuditService auditService, AuditHelper auditHelper,
+      ApiKeyService apiKeyService) {
     this.authService = authService;
     this.wingsPersistence = wingsPersistence;
     this.userService = userService;
     this.configuration = configuration;
     this.auditService = auditService;
     this.auditHelper = auditHelper;
+    this.apiKeyService = apiKeyService;
   }
 
   @Override
   public void filter(ContainerRequestContext containerRequestContext) throws IOException {
     if (authenticationExemptedRequests(containerRequestContext)) {
+      return;
+    }
+
+    if (isExternalFacingApiRequest(containerRequestContext)) {
+      validateExternalFacingApiRequest(containerRequestContext);
       return;
     }
 
@@ -122,6 +139,16 @@ public class AuthenticationFilter implements ContainerRequestFilter {
     }
   }
 
+  protected void validateExternalFacingApiRequest(ContainerRequestContext containerRequestContext) {
+    String apiKey = containerRequestContext.getHeaderString(EXTERNAL_FACING_API_HEADER);
+    if (isBlank(apiKey)) {
+      throw new InvalidRequestException("Api Key not supplied", ReportTarget.USER);
+    }
+    String accountId = getRequestParamFromContext("accountId", containerRequestContext.getUriInfo().getPathParameters(),
+        containerRequestContext.getUriInfo().getQueryParameters());
+    apiKeyService.validate(apiKey, accountId);
+  }
+
   protected boolean authenticationExemptedRequests(ContainerRequestContext requestContext) {
     return requestContext.getMethod().equals(OPTIONS) || publicAPI()
         || requestContext.getUriInfo().getAbsolutePath().getPath().endsWith("api/version")
@@ -154,6 +181,10 @@ public class AuthenticationFilter implements ContainerRequestFilter {
         && startsWith(requestContext.getHeaderString(HttpHeaders.AUTHORIZATION), "LearningEngine ");
   }
 
+  private boolean isExternalFacingApiRequest(ContainerRequestContext requestContext) {
+    return externalFacingAPI() && isNotEmpty(requestContext.getHeaderString(EXTERNAL_FACING_API_HEADER));
+  }
+
   protected boolean delegateAPI() {
     Class<?> resourceClass = resourceInfo.getResourceClass();
     Method resourceMethod = resourceInfo.getResourceMethod();
@@ -168,6 +199,11 @@ public class AuthenticationFilter implements ContainerRequestFilter {
 
     return resourceMethod.getAnnotation(LearningEngineAuth.class) != null
         || resourceClass.getAnnotation(LearningEngineAuth.class) != null;
+  }
+
+  protected boolean externalFacingAPI() {
+    return resourceInfo.getResourceMethod().getAnnotation(ExternalFacingApiAuth.class) != null
+        || resourceInfo.getResourceClass().getAnnotation(ExternalFacingApiAuth.class) != null;
   }
 
   private String getRequestParamFromContext(
