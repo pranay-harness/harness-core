@@ -175,6 +175,15 @@ public class ElkAnalysisState extends AbstractLogAnalysisState {
     this.timestampFormat = format;
   }
 
+  @Attributes(required = false, title = "Expression for Host/Container name")
+  public String getHostnameTemplate() {
+    return hostnameTemplate;
+  }
+
+  public void setHostnameTemplate(String hostnameTemplate) {
+    this.hostnameTemplate = hostnameTemplate;
+  }
+
   @Override
   protected String triggerAnalysisDataCollection(ExecutionContext context, String correlationId, Set<String> hosts) {
     final String timestampField = DEFAULT_TIME_FIELD;
