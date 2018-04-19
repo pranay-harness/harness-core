@@ -17,7 +17,7 @@ import software.wings.dl.WingsPersistence;
 import java.util.List;
 
 public class ServiceKeywordsMigration implements Migration {
-  private static final Logger logger = LoggerFactory.getLogger(AddValidUntilToStateExecutionInstance.class);
+  private static final Logger logger = LoggerFactory.getLogger(ServiceKeywordsMigration.class);
   public static final int BATCH_SIZE = 50;
 
   @Inject private WingsPersistence wingsPersistence;

@@ -31,118 +31,37 @@ import javax.validation.constraints.NotNull;
  * @author Rishi
  */
 public interface WorkflowService extends OwnedByApplication, OwnedByEnvironment {
-  /**
-   * List Workflow.
-   *
-   * @param pageRequest the page request
-   * @return the page response
-   */
   PageResponse<Workflow> listWorkflows(PageRequest<Workflow> pageRequest);
 
   PageResponse<Workflow> listWorkflowsWithoutOrchestration(PageRequest<Workflow> pageRequest);
 
   PageResponse<Workflow> listWorkflows(PageRequest<Workflow> pageRequest, Integer previousExecutionsCount);
 
-  /**
-   * Read Workflow.
-   *
-   * @param appId      the app id
-   * @param workflowId the workflow id
-   * @param version    the version
-   * @return the workflow
-   */
   Workflow readWorkflow(@NotNull String appId, @NotNull String workflowId, Integer version);
 
-  /**
-   * Read Workflow.
-   *
-   * @param appId      the app id
-   * @param workflowId the workflow id
-   * @return the workflow
-   */
   Workflow readWorkflow(@NotNull String appId, @NotNull String workflowId);
 
   Workflow readWorkflowByName(String appId, String workflowName);
 
-  /**
-   * Creates the workflow.
-   *
-   * @param workflow the workflow
-   * @return the workflow
-   */
   Workflow createWorkflow(@Valid Workflow workflow);
 
   boolean ensureArtifactCheck(String appId, OrchestrationWorkflow orchestrationWorkflow);
 
-  /**
-   * Update workflow.
-   *
-   * @param workflow the workflow
-   * @return the workflow
-   */
   Workflow updateWorkflow(@Valid Workflow workflow);
 
-  /**
-   * Update workflow.
-   *
-   * @param workflow the workflow
-   * @return the workflow
-   */
   Workflow updateWorkflow(@Valid Workflow workflow, OrchestrationWorkflow orchestrationWorkflow);
 
-  /**
-   * Update workflow.
-   *
-   * @param workflow            the workflow
-   * @param inframappingChanged Inframapping changed or not
-   * @param envChanged          Env changed or not
-   * @param cloned              cloned request or not
-   * @return the workflow
-   */
   Workflow updateWorkflow(@Valid Workflow workflow, OrchestrationWorkflow orchestrationWorkflow,
       boolean inframappingChanged, boolean envChanged, boolean cloned);
 
-  /**
-   * Delete workflow.
-   *
-   * @param appId      the app id
-   * @param workflowId the workflow id
-   * @return the boolean
-   */
   boolean deleteWorkflow(String appId, String workflowId);
 
-  /**
-   * Creates the.
-   *
-   * @param stateMachine the state machine
-   * @return the state machine
-   */
   StateMachine createStateMachine(@Valid StateMachine stateMachine);
 
-  /**
-   * Read latest.
-   *
-   * @param appId    the app id
-   * @param originId the origin id
-   * @return the state machine
-   */
   StateMachine readLatestStateMachine(String appId, String originId);
 
-  /**
-   * List.
-   *
-   * @param req the req
-   * @return the page response
-   */
   PageResponse<StateMachine> listStateMachines(PageRequest<StateMachine> req);
 
-  /**
-   * Stencils.
-   *
-   * @param appId           the app id
-   * @param stateTypeScopes the state type scopes
-   * @return the map
-   */
   Map<StateTypeScope, List<Stencil>> stencils(
       String appId, String workflowId, String phaseId, StateTypeScope... stateTypeScopes);
 
@@ -150,20 +69,8 @@ public interface WorkflowService extends OwnedByApplication, OwnedByEnvironment 
 
   StateMachine readStateMachine(String appId, String stateMachineId);
 
-  /**
-   * Read latest simple workflow .
-   *
-   * @param appId the app id
-   * @param envId the environment id
-   * @return the workflow
-   */
   Workflow readLatestSimpleWorkflow(String appId, String envId);
 
-  /**
-   * Stencil map map.
-   *
-   * @return the map
-   */
   Map<String, StateTypeDescriptor> stencilMap();
 
   PhaseStep updatePreDeployment(String appId, String workflowId, PhaseStep phaseStep);
@@ -202,12 +109,6 @@ public interface WorkflowService extends OwnedByApplication, OwnedByEnvironment 
 
   List<Service> resolveServices(Workflow workflow, Map<String, String> workflowVariables);
 
-  /**
-   * Prune workflow descending objects.
-   *
-   * @param appId      the app id
-   * @param workflowId the workflow id
-   */
   void pruneDescendingEntities(@org.hibernate.validator.constraints.NotEmpty String appId,
       @org.hibernate.validator.constraints.NotEmpty String workflowId);
 
@@ -215,4 +116,6 @@ public interface WorkflowService extends OwnedByApplication, OwnedByEnvironment 
 
   String getHPAYamlStringWithCustomMetric(
       Integer minAutoscaleInstances, Integer maxAutoscaleInstances, Integer targetCpuUtilizationPercentage);
+
+  void loadOrchestrationWorkflow(Workflow workflow, Integer version);
 }

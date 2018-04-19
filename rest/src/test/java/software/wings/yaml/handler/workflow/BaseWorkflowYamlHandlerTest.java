@@ -34,6 +34,7 @@ import software.wings.beans.yaml.GitFileChange;
 import software.wings.beans.yaml.YamlType;
 import software.wings.exception.HarnessException;
 import software.wings.exception.WingsException;
+import software.wings.service.impl.WorkflowServiceHelper;
 import software.wings.service.impl.yaml.handler.BaseYamlHandler;
 import software.wings.service.impl.yaml.handler.NameValuePairYamlHandler;
 import software.wings.service.impl.yaml.handler.YamlHandlerFactory;
@@ -91,6 +92,7 @@ public abstract class BaseWorkflowYamlHandlerTest extends BaseYamlHandlerTest {
   @InjectMocks @Inject protected TemplateExpressionYamlHandler templateExpressionYamlHandler;
   @InjectMocks @Inject protected VariableYamlHandler variableYamlHandler;
   @InjectMocks @Inject protected NameValuePairYamlHandler nameValuePairYamlHandler;
+  @InjectMocks @Inject protected WorkflowServiceHelper workflowServiceHelper;
 
   protected void setup(String yamlFilePath, String workflowName) {
     when(appService.getAppByName(anyString(), anyString()))
