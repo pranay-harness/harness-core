@@ -122,6 +122,7 @@ public class YamlGitServiceImpl implements YamlGitService {
     gitConfig.setDecrypted(true);
     validateGit(gitConfig);
     gitConfig.setDecrypted(false);
+
     YamlGitConfig yamlGitSync = wingsPersistence.saveAndGet(YamlGitConfig.class, ygs);
     executorService.submit(() -> fullSync(ygs.getAccountId(), true));
     return yamlGitSync;
