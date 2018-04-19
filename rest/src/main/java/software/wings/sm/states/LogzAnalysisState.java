@@ -187,6 +187,15 @@ public class LogzAnalysisState extends ElkAnalysisState {
     return super.getTimestampFormat();
   }
 
+  @Attributes(required = false, title = "Expression for Host/Container name")
+  public String getHostnameTemplate() {
+    return hostnameTemplate;
+  }
+
+  public void setHostnameTemplate(String hostnameTemplate) {
+    this.hostnameTemplate = hostnameTemplate;
+  }
+
   @Override
   @SchemaIgnore
   public Logger getLogger() {
