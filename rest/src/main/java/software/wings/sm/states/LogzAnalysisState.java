@@ -22,6 +22,7 @@ import software.wings.service.impl.analysis.AnalysisComparisonStrategyProvider;
 import software.wings.service.impl.analysis.AnalysisTolerance;
 import software.wings.service.impl.analysis.AnalysisToleranceProvider;
 import software.wings.service.impl.analysis.DataCollectionCallback;
+import software.wings.service.impl.elk.ElkQueryType;
 import software.wings.service.impl.logz.LogzDataCollectionInfo;
 import software.wings.service.impl.logz.LogzSettingProvider;
 import software.wings.sm.ContextElementType;
@@ -78,7 +79,8 @@ public class LogzAnalysisState extends ElkAnalysisState {
               .hostnameField(hostnameField)
               .messageField(messageField)
               .timestampField(DEFAULT_TIME_FIELD)
-              .timestampFieldFormat(DEFAULT_TIME_FORMAT)
+              .timestampFieldFormat(getTimestampFormat())
+              .queryType(getQueryType())
               .startTime(logCollectionStartTimeStamp)
               .startMinute(0)
               .collectionTime(Integer.parseInt(timeDuration))
@@ -169,6 +171,20 @@ public class LogzAnalysisState extends ElkAnalysisState {
   @Attributes(title = "Execute with previous steps")
   public boolean getExecuteWithPreviousSteps() {
     return super.isExecuteWithPreviousSteps();
+  }
+
+  @Override
+  @Attributes(required = true, title = "Query Type")
+  @DefaultValue("TERM")
+  public ElkQueryType getQueryType() {
+    return super.getQueryType();
+  }
+
+  @Override
+  @Attributes(required = true, title = "Timestamp format")
+  @DefaultValue("yyyy-MM-dd'T'HH:mm:ss.SSSZ")
+  public String getTimestampFormat() {
+    return super.getTimestampFormat();
   }
 
   @Override
