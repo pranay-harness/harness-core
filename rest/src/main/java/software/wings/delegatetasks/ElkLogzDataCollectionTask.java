@@ -16,7 +16,6 @@ import software.wings.service.impl.analysis.LogDataCollectionInfo;
 import software.wings.service.impl.analysis.LogElement;
 import software.wings.service.impl.elk.ElkDataCollectionInfo;
 import software.wings.service.impl.elk.ElkLogFetchRequest;
-import software.wings.service.impl.elk.ElkQueryType;
 import software.wings.service.impl.logz.LogzDataCollectionInfo;
 import software.wings.service.intfc.elk.ElkDelegateService;
 import software.wings.service.intfc.logz.LogzDelegateService;
@@ -144,7 +143,7 @@ public class ElkLogzDataCollectionTask extends AbstractDelegateDataCollectionTas
                             .hosts(Collections.singleton(hostName))
                             .startTime(collectionStartTime)
                             .endTime(collectionStartTime + TimeUnit.MINUTES.toMillis(1))
-                            .queryType(ElkQueryType.TERM)
+                            .queryType(logzDataCollectionInfo.getQueryType())
                             .build();
 
                     logger.info(

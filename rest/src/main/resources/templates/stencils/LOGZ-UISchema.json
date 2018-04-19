@@ -1,6 +1,11 @@
 {
-  "ui:order": ["analysisServerConfigId", "query", "hostnameField", "messageField", "timeDuration", "comparisonStrategy", "analysisTolerance", "executeWithPreviousSteps", "*"],
-  "query": {
-    "ui:widget": "textarea"
+  "ui:order" :
+      [
+        "analysisServerConfigId", "query", "queryType", "hostnameField",
+        "messageField", "timestampFormat", "timeDuration", "comparisonStrategy",
+        "analysisTolerance", "executeWithPreviousSteps", "*"
+      ],
+      "query" : {
+    "ui:widget" : "textarea"
   }
 }

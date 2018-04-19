@@ -7,6 +7,7 @@ import lombok.ToString;
 import software.wings.beans.config.LogzConfig;
 import software.wings.security.encryption.EncryptedDataDetail;
 import software.wings.service.impl.analysis.LogDataCollectionInfo;
+import software.wings.service.impl.elk.ElkQueryType;
 import software.wings.sm.StateType;
 
 import java.util.List;
@@ -24,12 +25,13 @@ public class LogzDataCollectionInfo extends LogDataCollectionInfo {
   private String messageField;
   private String timestampField;
   private String timestampFieldFormat;
+  private ElkQueryType queryType;
 
   @Builder
   public LogzDataCollectionInfo(LogzConfig logzConfig, String accountId, String applicationId, String stateExecutionId,
       String workflowId, String workflowExecutionId, String serviceId, Set<String> queries, String hostnameField,
-      String messageField, String timestampField, String timestampFieldFormat, long startTime, int startMinute,
-      int collectionTime, Set<String> hosts, List<EncryptedDataDetail> encryptedDataDetails) {
+      String messageField, String timestampField, String timestampFieldFormat, ElkQueryType queryType, long startTime,
+      int startMinute, int collectionTime, Set<String> hosts, List<EncryptedDataDetail> encryptedDataDetails) {
     super(accountId, applicationId, stateExecutionId, workflowId, workflowExecutionId, serviceId, queries, startTime,
         startMinute, collectionTime, hosts, StateType.LOGZ, encryptedDataDetails);
     this.logzConfig = logzConfig;
@@ -37,5 +39,6 @@ public class LogzDataCollectionInfo extends LogDataCollectionInfo {
     this.messageField = messageField;
     this.timestampField = timestampField;
     this.timestampFieldFormat = timestampFieldFormat;
+    this.queryType = queryType;
   }
 }
