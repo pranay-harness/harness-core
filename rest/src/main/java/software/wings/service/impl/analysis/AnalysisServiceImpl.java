@@ -989,6 +989,9 @@ public class AnalysisServiceImpl implements AnalysisService {
 
   private Map<Integer, Integer> getFrequencyMap(SplunkAnalysisCluster analysisCluster) {
     Map<Integer, Integer> frequencyMap = new HashMap<>();
+    if (isEmpty(analysisCluster.getMessage_frequencies())) {
+      return frequencyMap;
+    }
     int count;
     for (Map frequency : analysisCluster.getMessage_frequencies()) {
       if (!frequency.containsKey("count")) {
@@ -1021,6 +1024,9 @@ public class AnalysisServiceImpl implements AnalysisService {
 
   private List<Integer> getFrequencies(SplunkAnalysisCluster analysisCluster) {
     List<Integer> counts = new ArrayList<>();
+    if (isEmpty(analysisCluster.getMessage_frequencies())) {
+      return counts;
+    }
     for (Map frequency : analysisCluster.getMessage_frequencies()) {
       if (!frequency.containsKey("count")) {
         continue;
@@ -1034,7 +1040,7 @@ public class AnalysisServiceImpl implements AnalysisService {
 
   private int getUnexpectedFrequency(Map<String, Map<String, SplunkAnalysisCluster>> testClusters) {
     int unexpectedFrequency = 0;
-    if (testClusters == null) {
+    if (isEmpty(testClusters)) {
       return unexpectedFrequency;
     }
     for (Entry<String, Map<String, SplunkAnalysisCluster>> labelEntry : testClusters.entrySet()) {
