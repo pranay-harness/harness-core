@@ -10,21 +10,20 @@ import static org.mockito.Matchers.anyString;
 import static org.mockito.Matchers.eq;
 import static org.mockito.Mockito.doReturn;
 import static org.mockito.Mockito.mock;
-import static org.mockito.Mockito.spy;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 import static software.wings.beans.Account.Builder.anAccount;
 import static software.wings.utils.WingsTestConstants.ACCOUNT_ID;
 import static software.wings.utils.WingsTestConstants.ACCOUNT_KEY;
 
-import org.junit.Before;
+import com.google.inject.Inject;
+
 import org.junit.Test;
 import org.mindrot.jbcrypt.BCrypt;
 import org.mockito.InjectMocks;
 import org.mockito.Mock;
-import org.mockito.MockitoAnnotations;
 import org.mongodb.morphia.query.Query;
-import software.wings.app.MainConfiguration;
+import software.wings.WingsBaseTest;
 import software.wings.beans.Account;
 import software.wings.beans.ApiKeyEntry;
 import software.wings.beans.Base;
@@ -35,21 +34,14 @@ import software.wings.dl.PageResponse.PageResponseBuilder;
 import software.wings.dl.WingsPersistence;
 import software.wings.exception.UnauthorizedException;
 import software.wings.security.encryption.SimpleEncryption;
-import software.wings.service.impl.ApiKeyServiceImpl;
 import software.wings.utils.Validator;
 
 import java.util.Arrays;
 
-public class ApiKeyServiceTest {
+public class ApiKeyServiceTest extends WingsBaseTest {
   @Mock private WingsPersistence wingsPersistence;
-  @Mock private MainConfiguration configuration;
   @Mock private AccountService accountService;
-  @InjectMocks private ApiKeyService apiKeyService = spy(ApiKeyServiceImpl.class);
-
-  @Before
-  public void setup() {
-    MockitoAnnotations.initMocks(this);
-  }
+  @Inject @InjectMocks private ApiKeyService apiKeyService;
 
   @Test
   public void testGenerate() {
@@ -115,7 +107,6 @@ public class ApiKeyServiceTest {
                                   .accountId(ACCOUNT_ID)
                                   .build()))
             .build();
-    // doReturn(response).when(wingsPersistence).query(ApiKeyEntry.class, any(PageRequest.class));
     when(wingsPersistence.query(eq(ApiKeyEntry.class), any(PageRequest.class))).thenReturn(response);
     try {
       apiKeyService.validate(apiKey, ACCOUNT_ID);

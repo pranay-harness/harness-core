@@ -11,7 +11,6 @@ import com.google.inject.Inject;
 import com.google.inject.Singleton;
 
 import org.mindrot.jbcrypt.BCrypt;
-import software.wings.app.MainConfiguration;
 import software.wings.beans.Account;
 import software.wings.beans.ApiKeyEntry;
 import software.wings.beans.Base;
@@ -33,7 +32,6 @@ import javax.validation.executable.ValidateOnExecution;
 @ValidateOnExecution
 public class ApiKeyServiceImpl implements ApiKeyService {
   @Inject private WingsPersistence wingsPersistence;
-  @Inject private MainConfiguration configuration;
   @Inject private AccountService accountService;
 
   private SimpleEncryption getSimpleEncryption(String accountId) {
