@@ -1,6 +1,9 @@
 package software.wings.core.local.executors;
 
 import static io.harness.data.structure.EmptyPredicate.isEmpty;
+import static io.harness.filesystem.FileIo.createDirectoryIfDoesNotExist;
+import static io.harness.filesystem.FileIo.deleteDirectoryAndItsContentIfExists;
+import static io.harness.filesystem.FileIo.deleteFileIfExists;
 import static io.harness.govern.Switch.unhandled;
 import static java.lang.String.format;
 import static org.apache.commons.codec.binary.Base64.encodeBase64String;
@@ -23,12 +26,6 @@ import java.io.File;
 import java.io.FileOutputStream;
 import java.io.IOException;
 import java.nio.charset.StandardCharsets;
-import java.nio.file.FileVisitResult;
-import java.nio.file.Files;
-import java.nio.file.Path;
-import java.nio.file.Paths;
-import java.nio.file.SimpleFileVisitor;
-import java.nio.file.attribute.BasicFileAttributes;
 
 public class ShellExecutor {
   private DelegateLogService logService;
@@ -38,9 +35,7 @@ public class ShellExecutor {
   private static final String defaultParentWorkingDirectory = "./local-scripts/";
   static {
     try {
-      if (!Files.exists(Paths.get(defaultParentWorkingDirectory))) {
-        Files.createDirectory(Paths.get(defaultParentWorkingDirectory));
-      }
+      createDirectoryIfDoesNotExist(defaultParentWorkingDirectory);
     } catch (IOException e) {
       throw new RuntimeException("Failed to create local-scripts directory", e);
     }
@@ -87,7 +82,7 @@ public class ShellExecutor {
 
     if (isEmpty(config.getWorkingDirectory())) {
       String directoryPath = defaultParentWorkingDirectory + config.getExecutionId();
-      Files.createDirectory(Paths.get(directoryPath));
+      createDirectoryIfDoesNotExist(directoryPath);
       workingDirectory = new File(directoryPath);
     } else {
       workingDirectory = new File(config.getWorkingDirectory());
@@ -126,32 +121,13 @@ public class ShellExecutor {
       saveExecutionLog(format("Exception: %s", e), ERROR, commandExecutionStatus);
     } finally {
       if (isEmpty(config.getWorkingDirectory())) {
-        deleteFolderAndItsContent(Paths.get(workingDirectory.getAbsolutePath()));
+        deleteDirectoryAndItsContentIfExists(workingDirectory.getAbsolutePath());
       } else {
-        Files.deleteIfExists(Paths.get(scriptFile.getAbsolutePath()));
+        deleteFileIfExists(scriptFile.getAbsolutePath());
       }
     }
 
     return commandExecutionStatus;
-  }
-
-  private static void deleteFolderAndItsContent(final Path folder) throws IOException {
-    Files.walkFileTree(folder, new SimpleFileVisitor<Path>() {
-      @Override
-      public FileVisitResult visitFile(Path file, BasicFileAttributes attrs) throws IOException {
-        Files.delete(file);
-        return FileVisitResult.CONTINUE;
-      }
-
-      @Override
-      public FileVisitResult postVisitDirectory(Path dir, IOException exc) throws IOException {
-        if (exc != null) {
-          throw exc;
-        }
-        Files.delete(dir);
-        return FileVisitResult.CONTINUE;
-      }
-    });
   }
 
   private CommandExecutionStatus executePowerShellScript(String command) {
