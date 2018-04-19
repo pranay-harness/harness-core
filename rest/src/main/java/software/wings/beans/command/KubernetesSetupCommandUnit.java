@@ -380,7 +380,7 @@ public class KubernetesSetupCommandUnit extends ContainerSetupCommandUnit {
       }
       if (ingress != null) {
         executionLogCallback.saveExecutionLog("Ingress Name: " + ingress.getMetadata().getName());
-        executionLogCallback.saveExecutionLog("Ingress Rule: " + getIngressRuleString(ingress));
+        printIngressRules(ingress, executionLogCallback);
       }
       if (routeRule != null) {
         executionLogCallback.saveExecutionLog("Istio route rule: " + routeRule.getMetadata().getName());
@@ -1135,23 +1135,25 @@ public class KubernetesSetupCommandUnit extends ContainerSetupCommandUnit {
     }
   }
 
-  private String getIngressRuleString(Ingress ingress) {
+  private void printIngressRules(Ingress ingress, ExecutionLogCallback executionLogCallback) {
     String path;
     String port;
     String serviceName;
     String host;
     try {
-      IngressRule ingressRule = ingress.getSpec().getRules().get(0);
-      HTTPIngressPath httpIngressPath = ingressRule.getHttp().getPaths().get(0);
-      path = httpIngressPath.getPath();
-      port = httpIngressPath.getBackend().getServicePort().getIntVal().toString();
-      serviceName = httpIngressPath.getBackend().getServiceName();
-      host = ingressRule.getHost();
+      for (IngressRule ingressRule : ingress.getSpec().getRules()) {
+        HTTPIngressPath httpIngressPath = ingressRule.getHttp().getPaths().get(0);
+        path = httpIngressPath.getPath();
+        port = httpIngressPath.getBackend().getServicePort().getIntVal().toString();
+        serviceName = httpIngressPath.getBackend().getServiceName();
+        host = ingressRule.getHost();
+        executionLogCallback.saveExecutionLog(
+            "Ingress Rule: " + (isNotBlank(host) ? host : "") + ":" + port + path + " → " + serviceName);
+      }
     } catch (Exception e) {
       logger.error("Couldn't get path from ingress rule.", e);
-      return "ERROR - " + Misc.getMessage(e);
+      executionLogCallback.saveExecutionLog("Error getting Ingress rule - " + Misc.getMessage(e), LogLevel.WARN);
     }
-    return (isNotBlank(host) ? host : "") + ":" + port + path + " → " + serviceName;
   }
 
   @Data
