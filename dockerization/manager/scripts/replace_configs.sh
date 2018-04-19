@@ -28,7 +28,7 @@ if [[ -v "MONGO_URI" ]]; then
     sed -i "s|uri: mongodb://localhost:27017/harness|uri: ${MONGO_URI}|" /opt/harness/config.yml
 fi
 
-sed -i 's|9a3e6eac4dcdbdc41a93ca99100537df|4ac03b05674fc5c488e3b9b235078d5d|' /opt/harness/config.yml
+sed -i 's|9a3e6eac4dcdbdc41a93ca99100537df|6b67160308cde40bb10fd642c6ba860f|' /opt/harness/config.yml
 
 if [[ -v "WATCHER_METADATA_URL" ]]; then
     sed -i "s|watcherMetadataUrl: http://wingswatchers.s3-website-us-east-1.amazonaws.com/watcherci.txt|watcherMetadataUrl: ${WATCHER_METADATA_URL}|" /opt/harness/config.yml
@@ -47,3 +47,23 @@ if [[ -v "DEPLOY_MODE" ]]; then
 fi
 
 sed -i "s|91b01067de772de3a12d99bddeab84d82a9f05c8|${NEWRELIC_LICENSE_KEY}|" /opt/harness/newrelic.yml
+
+if [[ -v "jwtPasswordSecret" ]]; then
+    sed -i "s|a8SGF1CQMHN6pnCJgz32kLn1tebrXnw6MtWto8xI|${jwtPasswordSecret}|" /opt/harness/config.yml
+fi
+
+if [[ -v "jwtExternalServiceSecret" ]]; then
+    sed -i "s|nhUmut2NMcUnsR01OgOz0e51MZ51AqUwrOATJ3fJ|${jwtExternalServiceSecret}|" /opt/harness/config.yml
+fi
+
+if [[ -v "jwtZendeskSecret" ]]; then
+    sed -i "s|RdL7j9ZdCz6TVSHO7obJRS6ywYLJjH8tdfPP39i4MbevKjVo|${jwtZendeskSecret}|" /opt/harness/config.yml
+fi
+
+if [[ -v "jwtMultiAuthSecret" ]]; then
+    sed -i "s|5E1YekVGldTSS5Kt0GHlyWrJ6fJHmee9nXSBssefAWSOgdMwAvvbvJalnYENZ0H0EealN0CxHh34gUCN|${jwtMultiAuthSecret}|" /opt/harness/config.yml
+fi
+
+if [[ -v "jwtSsoRedirectSecret" ]]; then
+    sed -i "s|qY4GXZAlPJQPEV8JCPTNhgmDmnHZSAgorzGxvOY03Xptr8N9xDfAYbwGohr2pCRLfFG69vBQaNpeTjcV|${jwtSsoRedirectSecret}|" /opt/harness/config.yml
+fi

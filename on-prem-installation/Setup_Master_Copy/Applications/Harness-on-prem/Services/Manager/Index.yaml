@@ -50,3 +50,18 @@ configVariables:
   - name: DEPLOY_MODE
     value: ONPREM
     valueType: TEXT
+  - name: jwtSsoRedirectSecret
+    value: <JWT_SSO_REDIRECT_SECRET_PLACEHOLDER>
+    valueType: ENCRYPTED_TEXT
+  - name: jwtMultiAuthSecret
+    value: <JWT_MULTI_AUTH_SECRET_PLACEHOLDER>
+    valueType: ENCRYPTED_TEXT
+  - name: jwtZendeskSecret
+    value: <JWT_ZENDESK_SECRET_PLACEHOLDER>
+    valueType: ENCRYPTED_TEXT
+  - name: jwtExternalServiceSecret
+    value: <JWT_EXTERNAL_SERVICE_SECRET_PLACEHOLDER>
+    valueType: ENCRYPTED_TEXT
+  - name: jwtPasswordSecret
+    value: <JWT_PASSWORD_SECRET_PLACEHOLDER>
+    valueType: ENCRYPTED_TEXT
