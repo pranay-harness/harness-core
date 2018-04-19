@@ -18,6 +18,7 @@ import com.jcraft.jsch.Session;
 import groovy.lang.Singleton;
 import io.harness.data.structure.EmptyPredicate;
 import io.harness.data.structure.UUIDGenerator;
+import org.apache.commons.io.FileUtils;
 import org.eclipse.jgit.api.CloneCommand;
 import org.eclipse.jgit.api.CreateBranchCommand.SetupUpstreamMode;
 import org.eclipse.jgit.api.FetchCommand;
@@ -40,6 +41,7 @@ import org.eclipse.jgit.lib.ObjectLoader;
 import org.eclipse.jgit.lib.ObjectReader;
 import org.eclipse.jgit.lib.Ref;
 import org.eclipse.jgit.lib.Repository;
+import org.eclipse.jgit.lib.StoredConfig;
 import org.eclipse.jgit.revwalk.RevCommit;
 import org.eclipse.jgit.revwalk.RevSort;
 import org.eclipse.jgit.revwalk.RevWalk;
@@ -101,6 +103,14 @@ public class GitClientImpl implements GitClient {
   @Override
   public synchronized GitCloneResult clone(GitConfig gitConfig) {
     String gitRepoDirectory = getRepoDirectory(gitConfig);
+    try {
+      if (new File(gitRepoDirectory).exists()) {
+        FileUtils.deleteDirectory(new File(gitRepoDirectory));
+      }
+    } catch (IOException ioex) {
+      logger.error(GIT_YAML_LOG_PREFIX + "Exception while deleting repo: ", ioex.getMessage());
+    }
+
     logger.info(new StringBuilder()
                     .append(GIT_YAML_LOG_PREFIX)
                     .append("cloning repo, Git repo directory :")
@@ -118,6 +128,22 @@ public class GitClientImpl implements GitClient {
       logger.error(GIT_YAML_LOG_PREFIX + "Exception: ", ex);
       checkIfTransportException(ex);
       throw new WingsException(ErrorCode.YAML_GIT_SYNC_ERROR).addParam("message", "Error in cloning repo");
+    }
+  }
+
+  private void updateRemoteOriginInConfig(GitConfig gitConfig) {
+    String gitRepoDirectory = getRepoDirectory(gitConfig);
+
+    try (Git git = Git.open(new File(gitRepoDirectory))) {
+      StoredConfig config = git.getRepository().getConfig();
+      // Update local remote url if its changed
+      if (!config.getString("remote", "origin", "url").equals(gitConfig.getRepoUrl())) {
+        config.setString("remote", "origin", "url", gitConfig.getRepoUrl());
+        config.save();
+        logger.info(GIT_YAML_LOG_PREFIX + "Local repo remote origin is updated to : ", gitConfig.getRepoUrl());
+      }
+    } catch (IOException ioex) {
+      logger.error(GIT_YAML_LOG_PREFIX + "Failed to update repo url in git config");
     }
   }
 
@@ -483,7 +509,9 @@ public class GitClientImpl implements GitClient {
   public synchronized void ensureRepoLocallyClonedAndUpdated(GitConfig gitConfig) {
     File repoDir = new File(getRepoDirectory(gitConfig));
     if (repoDir.exists()) {
-      try (Git git = Git.open(new File(getRepoDirectory(gitConfig)))) {
+      try (Git git = Git.open(repoDir)) {
+        // Check URL change (ssh, https) and update in .git/config
+        updateRemoteOriginInConfig(gitConfig);
         logger.info(getGitLogMessagePrefix(gitConfig.getGitRepoType()) + "Repo exist. do hard sync with remote branch");
 
         FetchResult fetchResult =
@@ -505,7 +533,7 @@ public class GitClientImpl implements GitClient {
       }
     }
 
-    logger.info(getGitLogMessagePrefix(gitConfig.getGitRepoType()) + "Repo doesn't exist. Do a fresh clone");
+    logger.info(getGitLogMessagePrefix(gitConfig.getGitRepoType()) + "Do a fresh clone");
     clone(gitConfig);
   }
 
