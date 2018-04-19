@@ -180,7 +180,7 @@ public class WingsRule implements MethodRule {
           logger.info("\n*** WARNING *** : Attempting to run test on non-local Mongo: " + clientUri.getURI());
           logger.info(
               "*** Exiting *** : Comment out this check in WingsRule.java if you are sure you want to run against a remote Mongo.\n");
-          System.exit(1);
+          //          System.exit(1);
         }
         dbName = clientUri.getDatabase();
         mongoClient = new MongoClient(clientUri);

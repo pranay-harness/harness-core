@@ -147,6 +147,7 @@ import software.wings.dl.WingsPersistence;
 import software.wings.exception.WingsException;
 import software.wings.rules.Listeners;
 import software.wings.scheduler.QuartzScheduler;
+import software.wings.service.impl.WorkflowServiceHelper;
 import software.wings.service.intfc.AccountService;
 import software.wings.service.intfc.AppService;
 import software.wings.service.intfc.ArtifactStreamService;
@@ -207,6 +208,7 @@ public class WorkflowServiceTest extends WingsBaseTest {
   @Mock private ArtifactStream artifactStream;
   @Mock private TriggerService triggerService;
   @Mock private EnvironmentService environmentService;
+  @InjectMocks @Inject private WorkflowServiceHelper workflowServiceHelper;
 
   @Mock @Named("JobScheduler") private QuartzScheduler jobScheduler;
 
@@ -224,7 +226,7 @@ public class WorkflowServiceTest extends WingsBaseTest {
   @InjectMocks @Inject private WorkflowService workflowService;
   @Mock private FieldEnd fieldEnd;
 
-  private Service service = Service.builder().uuid(SERVICE_ID).artifactType(WAR).build();
+  private Service service = Service.builder().name(SERVICE_NAME).uuid(SERVICE_ID).artifactType(WAR).build();
   /**
    * Sets mocks.
    */
@@ -803,6 +805,7 @@ public class WorkflowServiceTest extends WingsBaseTest {
         aWorkflow()
             .withName(WORKFLOW_NAME)
             .withWorkflowType(WorkflowType.ORCHESTRATION)
+            .withEnvId(ENV_ID)
             .withAppId(APP_ID)
             .withServiceId(SERVICE_ID)
             .withInfraMappingId(INFRA_MAPPING_ID)
@@ -879,9 +882,12 @@ public class WorkflowServiceTest extends WingsBaseTest {
     workflow2 = workflowService.readWorkflow(workflow2.getAppId(), workflow2.getUuid());
     assertThat(workflow2.getKeywords())
         .isNotNull()
+        .isNotNull()
         .contains(workflow.getName().toLowerCase())
         .contains(WorkflowType.ORCHESTRATION.name().toLowerCase())
-        .contains(OrchestrationWorkflowType.BASIC.name().toLowerCase());
+        .contains(OrchestrationWorkflowType.BASIC.name().toLowerCase())
+        .contains(ENV_NAME.toLowerCase())
+        .contains(SERVICE_NAME.toLowerCase());
 
     logger.info(JsonUtils.asJson(workflow2));
   }
@@ -978,6 +984,7 @@ public class WorkflowServiceTest extends WingsBaseTest {
 
     assertThat(workflow2.getKeywords())
         .isNotNull()
+        .isNotNull()
         .contains(workflow.getName().toLowerCase())
         .contains(WorkflowType.ORCHESTRATION.name().toLowerCase());
 
@@ -1063,7 +1070,7 @@ public class WorkflowServiceTest extends WingsBaseTest {
   }
 
   @Test
-  public void shouldUpdateBasic() {
+  public void shouldUpdateCanary() {
     Workflow workflow1 = createCanaryWorkflow();
     String name2 = "Name2";
 
@@ -1073,7 +1080,13 @@ public class WorkflowServiceTest extends WingsBaseTest {
 
     Workflow orchestrationWorkflow3 = workflowService.readWorkflow(workflow1.getAppId(), workflow1.getUuid());
     assertThat(orchestrationWorkflow3).isNotNull().hasFieldOrPropertyWithValue("name", name2);
-    assertThat(orchestrationWorkflow3.getKeywords()).isNotNull().contains(name2.toLowerCase(), ENV_NAME.toLowerCase());
+    assertThat(orchestrationWorkflow3.getKeywords())
+        .isNotNull()
+        .isNotNull()
+        .contains(orchestrationWorkflow3.getName().toLowerCase())
+        .contains(WorkflowType.ORCHESTRATION.name().toLowerCase())
+        .contains(OrchestrationWorkflowType.CANARY.name().toLowerCase())
+        .contains(ENV_NAME.toLowerCase());
   }
 
   @Test
@@ -2356,6 +2369,14 @@ public class WorkflowServiceTest extends WingsBaseTest {
         .thenReturn(notificationGroups);
 
     Workflow workflow2 = workflowService.createWorkflow(workflow);
+
+    assertThat(workflow2.getKeywords())
+        .isNotNull()
+        .contains(workflow2.getName().toLowerCase())
+        .contains(OrchestrationWorkflowType.BASIC.name().toLowerCase())
+        .contains(ENV_NAME.toLowerCase())
+        .contains(SERVICE_NAME.toLowerCase())
+        .contains("template");
 
     assertThat(workflow2.getTemplateExpressions())
         .isNotEmpty()

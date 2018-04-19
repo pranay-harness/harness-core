@@ -4,6 +4,7 @@
 
 package software.wings.beans;
 
+import static java.util.Arrays.asList;
 import static org.apache.commons.lang3.StringUtils.isNotBlank;
 import static software.wings.beans.Workflow.WorkflowBuilder.aWorkflow;
 
@@ -208,29 +209,13 @@ public class Workflow extends Base {
         .build();
   }
 
-  public WorkflowBuilder toBuilder() {
-    return aWorkflow()
-        .withAppId(getAppId())
-        .withCreatedAt(getCreatedAt())
-        .withCreatedBy(getCreatedBy())
-        .withDefaultVersion(getDefaultVersion())
-        .withDescription(getDescription())
-        .withEnvId(getEnvId())
-        .withInfraMappingId(getInfraMappingId())
-        .withLastUpdatedAt(getLastUpdatedAt())
-        .withLastUpdatedBy(getLastUpdatedBy())
-        .withName(getName())
-        .withNotes(getNotes())
-        .withOrchestrationWorkflow(getOrchestrationWorkflow())
-        .withServiceId(getServiceId())
-        .withServices(getServices())
-        .withTemplatized(isTemplatized())
-        .withTemplateExpressions(getTemplateExpressions())
-        .withUuid(getUuid())
-        .withWorkflowType(getWorkflowType())
-        .withWorkflowExecutions(getWorkflowExecutions());
+  @Override
+  public List<Object> generateKeywords() {
+    List<Object> keywords = new ArrayList<>();
+    keywords.addAll(asList(name, description, workflowType, notes));
+    keywords.addAll(super.generateKeywords());
+    return keywords;
   }
-
   public static final class WorkflowBuilder {
     private String name;
     private String description;

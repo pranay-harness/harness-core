@@ -1,16 +1,21 @@
 package software.wings.service.impl;
 
 import static io.harness.data.structure.EmptyPredicate.isNotEmpty;
+import static io.harness.data.structure.ListUtil.trimList;
 import static java.util.Arrays.asList;
 
+import com.google.inject.Inject;
 import com.google.inject.Singleton;
 
 import io.fabric8.kubernetes.api.KubernetesHelper;
 import io.fabric8.kubernetes.api.model.HorizontalPodAutoscaler;
+import software.wings.beans.Environment;
 import software.wings.beans.OrchestrationWorkflow;
 import software.wings.beans.TemplateExpression;
 import software.wings.beans.Workflow;
+import software.wings.dl.WingsPersistence;
 import software.wings.exception.WingsException;
+import software.wings.service.intfc.EnvironmentService;
 
 import java.io.IOException;
 import java.util.List;
@@ -39,6 +44,9 @@ public class WorkflowServiceHelper {
       + "      name: cpu\n"
       + "      targetAverageUtilization: ${UTILIZATION}\n";
 
+  @Inject private EnvironmentService environmentService;
+  @Inject private WingsPersistence wingsPersistence;
+
   public String getHPAYamlStringWithCustomMetric(
       Integer minAutoscaleInstances, Integer maxAutoscaleInstances, Integer targetCpuUtilizationPercentage) {
     try {
@@ -51,6 +59,27 @@ public class WorkflowServiceHelper {
     } catch (IOException e) {
       throw new WingsException("Unable to generate Yaml String for Horizontal pod autoscalar");
     }
+  }
+
+  public List<String> getKeywords(Workflow workflow) {
+    List<Object> keywords = workflow.generateKeywords();
+    if (workflow.getServices() != null) {
+      workflow.getServices().forEach(service -> keywords.add(service.getName()));
+    }
+    if (workflow.getEnvId() != null) {
+      Environment environment = environmentService.get(workflow.getAppId(), workflow.getEnvId(), false);
+      if (environment != null) {
+        keywords.add(environment.getName());
+      }
+    }
+    if (workflow.getOrchestrationWorkflow() != null) {
+      keywords.add(workflow.getOrchestrationWorkflow().getOrchestrationWorkflowType());
+    }
+
+    if (workflow.isTemplatized()) {
+      keywords.add("template");
+    }
+    return trimList(keywords);
   }
 
   /***

@@ -1,9 +1,7 @@
 package software.wings.service.impl;
 
-import static com.google.common.collect.Lists.newArrayList;
 import static io.harness.data.structure.EmptyPredicate.isEmpty;
 import static io.harness.data.structure.EmptyPredicate.isNotEmpty;
-import static io.harness.data.structure.ListUtil.trimList;
 import static io.harness.data.structure.UUIDGenerator.generateUuid;
 import static io.harness.govern.Switch.noop;
 import static io.harness.govern.Switch.unhandled;
@@ -117,7 +115,6 @@ import software.wings.beans.CustomOrchestrationWorkflow;
 import software.wings.beans.EcsInfrastructureMapping;
 import software.wings.beans.EntityType;
 import software.wings.beans.EntityVersion;
-import software.wings.beans.Environment;
 import software.wings.beans.ExecutionScope;
 import software.wings.beans.FailureStrategy;
 import software.wings.beans.FailureType;
@@ -499,7 +496,8 @@ public class WorkflowServiceImpl implements WorkflowService, DataProvider {
     return workflow;
   }
 
-  private void loadOrchestrationWorkflow(Workflow workflow, Integer version) {
+  @Override
+  public void loadOrchestrationWorkflow(Workflow workflow, Integer version) {
     StateMachine stateMachine = readStateMachine(
         workflow.getAppId(), workflow.getUuid(), version == null ? workflow.getDefaultVersion() : version);
     if (stateMachine != null) {
@@ -540,8 +538,6 @@ public class WorkflowServiceImpl implements WorkflowService, DataProvider {
     validateBasicOrRollingWorkflow(workflow);
     OrchestrationWorkflow orchestrationWorkflow = workflow.getOrchestrationWorkflow();
     workflow.setDefaultVersion(1);
-    workflow.setKeywords(trimList(
-        newArrayList(workflow.getName(), workflow.getDescription(), workflow.getWorkflowType(), workflow.getNotes())));
     String key = wingsPersistence.save(workflow);
     if (orchestrationWorkflow != null) {
       if (orchestrationWorkflow.getOrchestrationWorkflowType().equals(CANARY)
@@ -619,6 +615,15 @@ public class WorkflowServiceImpl implements WorkflowService, DataProvider {
     return newWorkflow;
   }
 
+  private void updateKeywords(Workflow workflow) {
+    List<String> keywords = workflowServiceHelper.getKeywords(workflow);
+    wingsPersistence.update(wingsPersistence.createQuery(Workflow.class)
+                                .filter(Constants.APP_ID, workflow.getAppId())
+                                .filter(Constants.UUID, workflow.getUuid()),
+        wingsPersistence.createUpdateOperations(Workflow.class).set("keywords", keywords));
+    workflow.setKeywords(keywords);
+  }
+
   @Override
   public boolean ensureArtifactCheck(String appId, OrchestrationWorkflow orchestrationWorkflow) {
     if (orchestrationWorkflow == null) {
@@ -658,32 +663,6 @@ public class WorkflowServiceImpl implements WorkflowService, DataProvider {
           GraphNodeBuilder.aGraphNode().withType(ARTIFACT_CHECK.name()).withName("Artifact Check").build());
       return true;
     }
-  }
-
-  private void updateKeywords(Workflow workflow) {
-    List<Object> keywords =
-        newArrayList(workflow.getName(), workflow.getDescription(), workflow.getWorkflowType(), workflow.getNotes());
-    if (workflow.getServices() != null) {
-      workflow.getServices().forEach(service -> keywords.add(service.getName()));
-    }
-    if (workflow.getEnvId() != null) {
-      Environment environment = environmentService.get(workflow.getAppId(), workflow.getEnvId(), false);
-      if (environment != null) {
-        keywords.add(environment.getName());
-      }
-    }
-    if (workflow.getOrchestrationWorkflow() != null) {
-      keywords.add(workflow.getOrchestrationWorkflow().getOrchestrationWorkflowType());
-    }
-
-    if (workflow.isTemplatized()) {
-      keywords.add("template");
-    }
-
-    wingsPersistence.update(wingsPersistence.createQuery(Workflow.class)
-                                .filter(Constants.APP_ID, workflow.getAppId())
-                                .filter(Constants.UUID, workflow.getUuid()),
-        wingsPersistence.createUpdateOperations(Workflow.class).set("keywords", trimList(keywords)));
   }
 
   private void notifyNewRelicMetricCollection(Workflow workflow) {
