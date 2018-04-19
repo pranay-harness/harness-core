@@ -85,7 +85,7 @@ public abstract class AbstractLogAnalysisState extends AbstractAnalysisState {
 
     Set<String> canaryNewHostNames = context.getTestNodes();
     if (isEmpty(canaryNewHostNames)) {
-      getLogger().error("Could not find test nodes to compare the data");
+      getLogger().warn("Could not find test nodes to compare the data");
       return generateAnalysisResponse(context, ExecutionStatus.SUCCESS, "Could not find hosts to analyze!");
     }
 
