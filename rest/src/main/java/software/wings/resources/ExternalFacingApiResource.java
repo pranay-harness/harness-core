@@ -43,9 +43,9 @@ public class ExternalFacingApiResource {
       @QueryParam("appId") String appId) {
     WorkflowExecution execution = workflowExecutionService.getExecutionDetailsWithoutGraph(appId, workflowExecutionId);
     if (execution == null) {
-      throw new InvalidArgumentsException(new IllegalArgumentException("Invalid App Id Or Workflow execution Id"),
-          NameValuePair.builder().name("Application Id").value(appId).build(),
-          NameValuePair.builder().name("Workflow Execution Id").value(workflowExecutionId).build());
+      throw new InvalidArgumentsException(NameValuePair.builder().name("Application Id").value(appId).build(),
+          NameValuePair.builder().name("Workflow Execution Id").value(workflowExecutionId).build(),
+          new IllegalArgumentException("Invalid App Id Or Workflow execution Id"));
     }
     return ExecutionStatusResponse.builder().status(execution.getStatus().name()).build();
   }

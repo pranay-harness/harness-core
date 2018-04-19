@@ -22,7 +22,6 @@ import software.wings.common.AuditHelper;
 import software.wings.dl.WingsPersistence;
 import software.wings.exception.InvalidRequestException;
 import software.wings.exception.WingsException;
-import software.wings.exception.WingsException.ReportTarget;
 import software.wings.security.annotations.DelegateAuth;
 import software.wings.security.annotations.ExternalFacingApiAuth;
 import software.wings.security.annotations.LearningEngineAuth;
@@ -142,7 +141,7 @@ public class AuthenticationFilter implements ContainerRequestFilter {
   protected void validateExternalFacingApiRequest(ContainerRequestContext containerRequestContext) {
     String apiKey = containerRequestContext.getHeaderString(EXTERNAL_FACING_API_HEADER);
     if (isBlank(apiKey)) {
-      throw new InvalidRequestException("Api Key not supplied", ReportTarget.USER);
+      throw new InvalidRequestException("Api Key not supplied");
     }
     String accountId = getRequestParamFromContext("accountId", containerRequestContext.getUriInfo().getPathParameters(),
         containerRequestContext.getUriInfo().getQueryParameters());

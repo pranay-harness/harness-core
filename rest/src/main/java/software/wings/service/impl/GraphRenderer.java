@@ -475,10 +475,10 @@ public class GraphRenderer {
     }
 
     StateExecutionInstance instance = instances.get(0);
-    if (instances.stream().noneMatch(item -> instance.getDisplayName().equals(instance.getDisplayName()))) {
+    if (instances.stream().noneMatch(item -> instance.getDisplayName().equals(item.getDisplayName()))) {
       throw new UnexpectedException();
     }
-    if (instances.stream().noneMatch(item -> instance.getStateType().equals(instance.getStateType()))) {
+    if (instances.stream().noneMatch(item -> instance.getStateType().equals(item.getStateType()))) {
       throw new UnexpectedException();
     }
     if (instances.stream().noneMatch(item -> instance.isRollback() == item.isRollback())) {
