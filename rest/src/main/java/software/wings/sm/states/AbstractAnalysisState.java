@@ -256,6 +256,9 @@ public abstract class AbstractAnalysisState extends State {
         }
 
         if (executionSummary != null) {
+          if (isEmpty(executionSummary.getInstanceStatusSummaries())) {
+            return emptySet();
+          }
           Set<String> hosts = new HashSet<>();
           for (InstanceStatusSummary instanceStatusSummary : executionSummary.getInstanceStatusSummaries()) {
             if (isEmpty(hostnameTemplate)) {
