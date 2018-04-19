@@ -12,6 +12,7 @@ import migrations.all.FixMaxInstancesFieldInContainerSetup;
 import migrations.all.GitSyncToAllAccounts;
 import migrations.all.ServiceKeywordsMigration;
 import migrations.all.SetDaemonSetInWorkflowPhase;
+import migrations.all.SetRollbackFlagToWorkflows;
 import migrations.all.StateExecutionInstanceDisplayName;
 import migrations.all.TrimYamlMigration;
 import migrations.all.VerifyStepWorkflowOrder;
@@ -43,6 +44,7 @@ public class MigrationList {
         .add(Pair.of(118, ServiceKeywordsMigration.class))
         .add(Pair.of(119, FixMaxInstancesFieldInContainerSetup.class))
         .add(Pair.of(120, GitSyncToAllAccounts.class))
+        .add(Pair.of(121, SetRollbackFlagToWorkflows.class))
         .build();
   }
 }

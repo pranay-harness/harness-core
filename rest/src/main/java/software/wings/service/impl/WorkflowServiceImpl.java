@@ -60,6 +60,7 @@ import static software.wings.dl.MongoHelper.setUnset;
 import static software.wings.dl.PageRequest.PageRequestBuilder.aPageRequest;
 import static software.wings.exception.HintException.MOVE_TO_THE_PARENT_OBJECT;
 import static software.wings.exception.WingsException.ReportTarget.USER;
+import static software.wings.exception.WingsException.SERIOUS;
 import static software.wings.sm.StateMachineExecutionSimulator.populateRequiredEntityTypesByAccessType;
 import static software.wings.sm.StateType.ARTIFACT_CHECK;
 import static software.wings.sm.StateType.ARTIFACT_COLLECTION;
@@ -311,7 +312,7 @@ public class WorkflowServiceImpl implements WorkflowService, DataProvider {
     if (filterForWorkflow) {
       workflow = readWorkflow(appId, workflowId);
       if (workflow == null) {
-        throw new InvalidRequestException("Worflow does not exist", USER);
+        throw new InvalidRequestException("Worflow does not exist");
       }
       if (filterForPhase) {
         if (workflow != null) {
@@ -321,8 +322,7 @@ public class WorkflowServiceImpl implements WorkflowService, DataProvider {
           }
         }
         if (workflowPhase == null) {
-          throw new InvalidRequestException(
-              "Worflow Phase  not associated with Workflow [" + workflow.getName() + "]", USER);
+          throw new InvalidRequestException("Worflow Phase  not associated with Workflow [" + workflow.getName() + "]");
         }
         String serviceId = workflowPhase.getServiceId();
         if (serviceId != null) {
@@ -391,7 +391,7 @@ public class WorkflowServiceImpl implements WorkflowService, DataProvider {
     Map<StateTypeScope, List<StateTypeDescriptor>> mapByScope = new HashMap<>();
     for (StateTypeDescriptor sd : stencils) {
       if (mapByType.get(sd.getType()) != null) {
-        throw new InvalidRequestException("Duplicate implementation for the stencil: " + sd.getType(), USER);
+        throw new InvalidRequestException("Duplicate implementation for the stencil: " + sd.getType());
       }
       mapByType.put(sd.getType(), sd);
       sd.getScopes().forEach(scope -> mapByScope.computeIfAbsent(scope, k -> new ArrayList<>()).add(sd));
@@ -1718,24 +1718,29 @@ public class WorkflowServiceImpl implements WorkflowService, DataProvider {
 
   @Override
   public WorkflowPhase updateWorkflowPhase(String appId, String workflowId, WorkflowPhase workflowPhase) {
+    if (workflowPhase.isRollback() || workflowPhase.getPhaseSteps().stream().anyMatch(PhaseStep::isRollback)) {
+      // This might seem as user error, but since this is controlled from the our UI lets get allerted for it
+      throw new InvalidRequestException("The direct workflow phase should not have rollback flag set!", SERIOUS);
+    }
+
     Workflow workflow = readWorkflow(appId, workflowId);
     if (workflow == null) {
-      throw new InvalidArgumentsException(new ExplanationException("This might be caused from someone else deleted "
-                                                  + "the application and/or the workflow while you worked on it.",
-                                              MOVE_TO_THE_PARENT_OBJECT),
-          NameValuePair.builder().name("application").value(appId).build(),
-          NameValuePair.builder().name("workflow").value(workflowId).build());
+      throw new InvalidArgumentsException(NameValuePair.builder().name("application").value(appId).build(),
+          NameValuePair.builder().name("workflow").value(workflowId).build(),
+          new ExplanationException("This might be caused from someone else deleted "
+                  + "the application and/or the workflow while you worked on it.",
+              MOVE_TO_THE_PARENT_OBJECT));
     }
     CanaryOrchestrationWorkflow orchestrationWorkflow =
         (CanaryOrchestrationWorkflow) workflow.getOrchestrationWorkflow();
     notNullCheck("orchestrationWorkflow", orchestrationWorkflow);
 
     if (orchestrationWorkflow.getWorkflowPhaseIdMap().get(workflowPhase.getUuid()) == null) {
-      throw new InvalidArgumentsException(new ExplanationException("This might be caused from someone else modified "
-                                                  + "the workflow resulting in removing the phase that you worked on.",
-                                              MOVE_TO_THE_PARENT_OBJECT),
-          NameValuePair.builder().name("workflow").value(workflowId).build(),
-          NameValuePair.builder().name("workflowPhase").value(appId).build());
+      throw new InvalidArgumentsException(NameValuePair.builder().name("workflow").value(workflowId).build(),
+          NameValuePair.builder().name("workflowPhase").value(appId).build(),
+          new ExplanationException("This might be caused from someone else modified "
+                  + "the workflow resulting in removing the phase that you worked on.",
+              MOVE_TO_THE_PARENT_OBJECT));
     }
 
     String serviceId = workflowPhase.getServiceId();
@@ -1831,6 +1836,12 @@ public class WorkflowServiceImpl implements WorkflowService, DataProvider {
   @Override
   public WorkflowPhase updateWorkflowPhaseRollback(
       String appId, String workflowId, String phaseId, WorkflowPhase rollbackWorkflowPhase) {
+    if (!rollbackWorkflowPhase.isRollback()
+        || rollbackWorkflowPhase.getPhaseSteps().stream().anyMatch(step -> !step.isRollback())) {
+      // This might seem as user error, but since this is controlled from the our UI lets get allerted for it
+      throw new InvalidRequestException("The rolback workflow phase should have rollback flag set!", SERIOUS);
+    }
+
     Workflow workflow = readWorkflow(appId, workflowId);
     notNullCheck("workflow", workflow);
     CanaryOrchestrationWorkflow orchestrationWorkflow =
@@ -2468,7 +2479,7 @@ public class WorkflowServiceImpl implements WorkflowService, DataProvider {
                           .withStatusForRollback(ExecutionStatus.SUCCESS)
                           .withRollback(true)
                           .build())
-        .addPhaseStep(aPhaseStep(WRAP_UP, Constants.WRAP_UP).build())
+        .addPhaseStep(aPhaseStep(WRAP_UP, Constants.WRAP_UP).withRollback(true).build())
         .build();
   }
 
@@ -2499,7 +2510,7 @@ public class WorkflowServiceImpl implements WorkflowService, DataProvider {
                           .withStatusForRollback(ExecutionStatus.SUCCESS)
                           .withRollback(true)
                           .build())
-        .addPhaseStep(aPhaseStep(WRAP_UP, Constants.WRAP_UP).build())
+        .addPhaseStep(aPhaseStep(WRAP_UP, Constants.WRAP_UP).withRollback(true).build())
         .build();
   }
 
@@ -2530,7 +2541,7 @@ public class WorkflowServiceImpl implements WorkflowService, DataProvider {
                           .withStatusForRollback(ExecutionStatus.SUCCESS)
                           .withRollback(true)
                           .build())
-        .addPhaseStep(aPhaseStep(WRAP_UP, Constants.WRAP_UP).build())
+        .addPhaseStep(aPhaseStep(WRAP_UP, Constants.WRAP_UP).withRollback(true).build())
         .build();
   }
 
@@ -2561,7 +2572,7 @@ public class WorkflowServiceImpl implements WorkflowService, DataProvider {
                           .withStatusForRollback(ExecutionStatus.SUCCESS)
                           .withRollback(true)
                           .build())
-        .addPhaseStep(aPhaseStep(WRAP_UP, Constants.WRAP_UP).build())
+        .addPhaseStep(aPhaseStep(WRAP_UP, Constants.WRAP_UP).withRollback(true).build())
         .build();
   }
 
@@ -2592,7 +2603,7 @@ public class WorkflowServiceImpl implements WorkflowService, DataProvider {
                           .withStatusForRollback(ExecutionStatus.SUCCESS)
                           .withRollback(true)
                           .build())
-        .addPhaseStep(aPhaseStep(WRAP_UP, Constants.WRAP_UP).build())
+        .addPhaseStep(aPhaseStep(WRAP_UP, Constants.WRAP_UP).withRollback(true).build())
         .build();
   }
 
@@ -2673,7 +2684,7 @@ public class WorkflowServiceImpl implements WorkflowService, DataProvider {
                               .withStatusForRollback(ExecutionStatus.SUCCESS)
                               .withRollback(true)
                               .build())
-            .addPhaseStep(aPhaseStep(WRAP_UP, Constants.WRAP_UP).build())
+            .addPhaseStep(aPhaseStep(WRAP_UP, Constants.WRAP_UP).withRollback(true).build())
             .build();
 
     // get provision NODE
@@ -2745,7 +2756,7 @@ public class WorkflowServiceImpl implements WorkflowService, DataProvider {
                             .withStatusForRollback(ExecutionStatus.SUCCESS)
                             .withRollback(true)
                             .build())
-          .addPhaseStep(aPhaseStep(WRAP_UP, Constants.WRAP_UP).build());
+          .addPhaseStep(aPhaseStep(WRAP_UP, Constants.WRAP_UP).withRollback(true).build());
       return workflowPhaseBuilder.build();
     }
   }
@@ -2785,7 +2796,7 @@ public class WorkflowServiceImpl implements WorkflowService, DataProvider {
                           .withStatusForRollback(ExecutionStatus.SUCCESS)
                           .withRollback(true)
                           .build())
-        .addPhaseStep(aPhaseStep(WRAP_UP, Constants.WRAP_UP).build())
+        .addPhaseStep(aPhaseStep(WRAP_UP, Constants.WRAP_UP).withRollback(true).build())
         .build();
   }
 

@@ -272,7 +272,7 @@ public class ArtifactStreamServiceImpl implements ArtifactStreamService, DataPro
     Service service = serviceResourceService.get(appId, serviceId);
     // Observed NPE in logs due to invalid service id provided by the ui due to a stale screen.
     if (service == null) {
-      throw new InvalidRequestException("Service does not exist", USER);
+      throw new InvalidRequestException("Service does not exist");
     }
     if (service.getArtifactType().equals(ArtifactType.DOCKER)) {
       String accountId = appService.getAccountIdByAppId(appId);

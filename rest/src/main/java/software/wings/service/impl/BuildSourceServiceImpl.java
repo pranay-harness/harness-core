@@ -4,7 +4,6 @@ import static software.wings.beans.DelegateTask.SyncTaskContext.Builder.aContext
 import static software.wings.beans.artifact.ArtifactStreamType.AMAZON_S3;
 import static software.wings.beans.artifact.ArtifactStreamType.AMI;
 import static software.wings.beans.artifact.ArtifactStreamType.ARTIFACTORY;
-import static software.wings.exception.WingsException.ReportTarget.USER;
 import static software.wings.utils.Validator.notNullCheck;
 
 import com.google.common.collect.Sets;
@@ -225,7 +224,7 @@ public class BuildSourceServiceImpl implements BuildSourceService {
   @Override
   public Artifact collectArtifact(String appId, String artifactStreamId, BuildDetails buildDetails) {
     if (buildDetails == null) {
-      throw new InvalidRequestException("Build details can not null", USER);
+      throw new InvalidRequestException("Build details can not null");
     }
     return artifactCollectionService.collectArtifact(appId, artifactStreamId, buildDetails);
   }
