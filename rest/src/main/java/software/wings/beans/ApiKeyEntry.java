@@ -3,7 +3,7 @@ package software.wings.beans;
 import com.fasterxml.jackson.annotation.JsonView;
 import lombok.Builder;
 import lombok.Getter;
-import lombok.Value;
+import lombok.NoArgsConstructor;
 import org.hibernate.validator.constraints.NotEmpty;
 import org.mongodb.morphia.annotations.Entity;
 import org.mongodb.morphia.annotations.Indexed;
@@ -11,8 +11,8 @@ import software.wings.jersey.JsonViews;
 
 import java.util.List;
 
-@Value
 @Getter
+@NoArgsConstructor
 @Entity(value = "apiKeys", noClassnameStored = true)
 public class ApiKeyEntry extends Base {
   @Indexed @NotEmpty private String accountId;

@@ -8,6 +8,7 @@ import com.google.inject.Inject;
 import com.codahale.metrics.annotation.ExceptionMetered;
 import com.codahale.metrics.annotation.Timed;
 import io.swagger.annotations.Api;
+import org.hibernate.validator.constraints.NotEmpty;
 import software.wings.beans.ApiKeyEntry;
 import software.wings.beans.Base;
 import software.wings.beans.RestResponse;
@@ -43,7 +44,7 @@ public class ApiKeyResource {
   @POST
   @Timed
   @ExceptionMetered
-  public RestResponse<String> generate(@QueryParam("accountId") String accountId) {
+  public RestResponse<String> generate(@NotEmpty @QueryParam("accountId") String accountId) {
     return new RestResponse<>(apiKeyService.generate(accountId));
   }
 
@@ -51,7 +52,7 @@ public class ApiKeyResource {
   @Timed
   @ExceptionMetered
   public RestResponse<PageResponse<ApiKeyEntry>> list(
-      @QueryParam("accountId") String accountId, @BeanParam PageRequest<ApiKeyEntry> pageRequest) {
+      @NotEmpty @QueryParam("accountId") String accountId, @BeanParam PageRequest<ApiKeyEntry> pageRequest) {
     pageRequest.addFilter("appId", EQ, Base.GLOBAL_APP_ID);
     pageRequest.addFilter("accountId", EQ, accountId);
     return new RestResponse<>(apiKeyService.list(pageRequest));
@@ -61,7 +62,8 @@ public class ApiKeyResource {
   @Path("{apiKeyId}")
   @Timed
   @ExceptionMetered
-  public RestResponse<String> get(@QueryParam("accountId") String accountId, @PathParam("apiKeyId") String uuid) {
+  public RestResponse<String> get(
+      @NotEmpty @QueryParam("accountId") String accountId, @NotEmpty @PathParam("apiKeyId") String uuid) {
     return new RestResponse<>(apiKeyService.get(uuid, accountId));
   }
 
@@ -69,7 +71,7 @@ public class ApiKeyResource {
   @Path("{apiKeyId}")
   @Timed
   @ExceptionMetered
-  public RestResponse<Void> delete(@PathParam("apiKeyId") String uuid) {
+  public RestResponse<Void> delete(@NotEmpty @PathParam("apiKeyId") String uuid) {
     apiKeyService.delete(uuid);
     return new RestResponse<>();
   }

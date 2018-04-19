@@ -7,6 +7,7 @@ import com.google.inject.Inject;
 import com.codahale.metrics.annotation.ExceptionMetered;
 import com.codahale.metrics.annotation.Timed;
 import io.swagger.annotations.Api;
+import org.hibernate.validator.constraints.NotEmpty;
 import software.wings.beans.ExecutionStatusResponse;
 import software.wings.beans.NameValuePair;
 import software.wings.beans.WorkflowExecution;
@@ -22,7 +23,7 @@ import javax.ws.rs.Produces;
 import javax.ws.rs.QueryParam;
 
 @Api("/external")
-@Path("/external")
+@Path("/external/{version}")
 @Consumes(APPLICATION_JSON)
 @Produces(APPLICATION_JSON)
 @ExternalFacingApiAuth
@@ -35,12 +36,12 @@ public class ExternalFacingApiResource {
   }
 
   @GET
-  @Path("{version}/executions/{workflowExecutionId}/status")
+  @Path("/executions/{workflowExecutionId}/status")
   @Timed
   @ExceptionMetered
-  public ExecutionStatusResponse getWorkFlowExecutionStatus(@PathParam("version") String version,
-      @PathParam("workflowExecutionId") String workflowExecutionId, @QueryParam("accountId") String accountId,
-      @QueryParam("appId") String appId) {
+  public ExecutionStatusResponse getWorkFlowExecutionStatus(
+      @NotEmpty @PathParam("workflowExecutionId") String workflowExecutionId,
+      @NotEmpty @QueryParam("accountId") String accountId, @NotEmpty @QueryParam("appId") String appId) {
     WorkflowExecution execution = workflowExecutionService.getExecutionDetailsWithoutGraph(appId, workflowExecutionId);
     if (execution == null) {
       throw new InvalidArgumentsException(NameValuePair.builder().name("Application Id").value(appId).build(),
