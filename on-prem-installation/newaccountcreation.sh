@@ -48,8 +48,12 @@ function getProperty () {
 }
 
 function generateRandomString(){
-   LENGTH=$1
    echo `hexdump -n 16 -e '4/4 "%08X" 1 "\n"' /dev/urandom`
+}
+
+function generateRandomStringOfLength(){
+    LENGTH=$1
+    echo `cat /dev/urandom | LC_CTYPE=C tr -dc "[:alnum:]" | head -c $LENGTH`
 }
 
 function replace() {
@@ -121,7 +125,7 @@ echo "AccountID="$accountId
 
 ####Generate secrets section START ######################################
 
-learningengine_secret=$(generateRandomString "32")
+learningengine_secret=$(generateRandomString)
 learningengine_curl_statement="curl -X POST -k '$API_URL/api/secrets/add-local-secret?accountId=$accountId' -H 'Authorization: Bearer $TOKEN' -H 'Content-Type: application/json' -d '{ \"name\":\"LEARNING_ENGINE_SECRET\",\"value\":\"$learningengine_secret\"}'"
 echo "learningengine_curl_statement sent is " $learningengine_curl_statement
 learning_engine_response="$(eval $learningengine_curl_statement)"
@@ -129,13 +133,54 @@ echo "LearningEngine response = " $learning_engine_response
 learning_engine_secret_token="$(echo $learning_engine_response | awk -F "," '{print $2}' | awk -F ":" '{print $2}' | awk -F "\"" '{print $2}')"
 echo "learning_engine_secret_token=" $learning_engine_secret_token
 
-account_secret=$(generateRandomString "32")
+account_secret=$(generateRandomString)
 account_secret_curl_statement="curl -X POST -k '$API_URL/api/secrets/add-local-secret?accountId=$accountId' -H 'Authorization: Bearer $TOKEN' -H 'Content-Type: application/json' -d '{ \"name\":\"ACCOUNT_SECRET_KEY\",\"value\":\"$account_secret\"}'"
 echo "account_secret_curl_statement sent is " $account_secret_curl_statement
 account_secret_response="$(eval $account_secret_curl_statement)"
 echo "account_secret response = " $account_secret_response
 account_secret_token="$(echo $account_secret_response | awk -F "," '{print $2}' | awk -F ":" '{print $2}' | awk -F "\"" '{print $2}')"
 echo "account_secret_token="$account_secret_token
+
+jwtPasswordSecret=$(generateRandomStringOfLength 80)
+jwtExternalServiceSecret=$(generateRandomStringOfLength 80)
+jwtZendeskSecret=$(generateRandomStringOfLength 80)
+jwtMultiAuthSecret=$(generateRandomStringOfLength 80)
+jwtSsoRedirectSecret=$(generateRandomStringOfLength 80)
+
+jwtPasswordSecret_curl_statement="curl -X POST -k '$API_URL/api/secrets/add-local-secret?accountId=$accountId' -H 'Authorization: Bearer $TOKEN' -H 'Content-Type: application/json' -d '{ \"name\":\"jwtPasswordSecret\",\"value\":\"$jwtPasswordSecret\"}'"
+echo "jwtPasswordSecret_curl_statement sent is " $jwtPasswordSecret_curl_statement
+jwtPasswordSecret_response="$(eval $jwtPasswordSecret_curl_statement)"
+echo "jwtPasswordSecret response = " $jwtPasswordSecret_response
+jwtPasswordSecret_token="$(echo $jwtPasswordSecret_response | awk -F "," '{print $2}' | awk -F ":" '{print $2}' | awk -F "\"" '{print $2}')"
+echo "jwtPasswordSecret_token="$jwtPasswordSecret_token
+
+jwtExternalServiceSecret_curl_statement="curl -X POST -k '$API_URL/api/secrets/add-local-secret?accountId=$accountId' -H 'Authorization: Bearer $TOKEN' -H 'Content-Type: application/json' -d '{ \"name\":\"jwtExternalServiceSecret\",\"value\":\"$jwtExternalServiceSecret\"}'"
+echo "jwtExternalServiceSecret_curl_statement sent is " $jwtExternalServiceSecret_curl_statement
+jwtExternalServiceSecret_response="$(eval $jwtExternalServiceSecret_curl_statement)"
+echo "jwtExternalServiceSecret response = " $jwtExternalServiceSecret_response
+jwtExternalServiceSecret_token="$(echo $jwtExternalServiceSecret_response | awk -F "," '{print $2}' | awk -F ":" '{print $2}' | awk -F "\"" '{print $2}')"
+echo "jwtExternalServiceSecret_token="$jwtExternalServiceSecret_token
+
+jwtZendeskSecret_curl_statement="curl -X POST -k '$API_URL/api/secrets/add-local-secret?accountId=$accountId' -H 'Authorization: Bearer $TOKEN' -H 'Content-Type: application/json' -d '{ \"name\":\"jwtZendeskSecret\",\"value\":\"$jwtZendeskSecret\"}'"
+echo "jwtZendeskSecret_curl_statement sent is " $jwtZendeskSecret_curl_statement
+jwtZendeskSecret_response="$(eval $jwtZendeskSecret_curl_statement)"
+echo "jwtZendeskSecret response = " $jwtZendeskSecret_response
+jwtZendeskSecret_token="$(echo $jwtZendeskSecret_response | awk -F "," '{print $2}' | awk -F ":" '{print $2}' | awk -F "\"" '{print $2}')"
+echo "jwtZendeskSecret_token="$jwtZendeskSecret_token
+
+jwtMultiAuthSecret_curl_statement="curl -X POST -k '$API_URL/api/secrets/add-local-secret?accountId=$accountId' -H 'Authorization: Bearer $TOKEN' -H 'Content-Type: application/json' -d '{ \"name\":\"jwtMultiAuthSecret\",\"value\":\"$jwtMultiAuthSecret\"}'"
+echo "jwtMultiAuthSecret_curl_statement sent is " $jwtMultiAuthSecret_curl_statement
+jwtMultiAuthSecret_response="$(eval $jwtMultiAuthSecret_curl_statement)"
+echo "jwtMultiAuthSecret response = " $jwtMultiAuthSecret_response
+jwtMultiAuthSecret_token="$(echo $jwtMultiAuthSecret_response | awk -F "," '{print $2}' | awk -F ":" '{print $2}' | awk -F "\"" '{print $2}')"
+echo "jwtMultiAuthSecret_token="$jwtMultiAuthSecret_token
+
+jwtSsoRedirectSecret_curl_statement="curl -X POST -k '$API_URL/api/secrets/add-local-secret?accountId=$accountId' -H 'Authorization: Bearer $TOKEN' -H 'Content-Type: application/json' -d '{ \"name\":\"jwtSsoRedirectSecret\",\"value\":\"$jwtSsoRedirectSecret\"}'"
+echo "jwtSsoRedirectSecret_curl_statement sent is " $jwtSsoRedirectSecret_curl_statement
+jwtSsoRedirectSecret_response="$(eval $jwtSsoRedirectSecret_curl_statement)"
+echo "jwtSsoRedirectSecret response = " $jwtSsoRedirectSecret_response
+jwtSsoRedirectSecret_token="$(echo $jwtSsoRedirectSecret_response | awk -F "," '{print $2}' | awk -F ":" '{print $2}' | awk -F "\"" '{print $2}')"
+echo "jwtSsoRedirectSecret_token="$jwtSsoRedirectSecret_token
 
 mongodb_username_curl_statement="curl -X POST -k '$API_URL/api/secrets/add-local-secret?accountId=$accountId' -H 'Authorization: Bearer $TOKEN' -H 'Content-Type: application/json' -d '{ \"name\":\"mongodb_admin_user\",\"value\":\"$mongodbUserName\"}'"
 echo "mongodb_username_curl_statement sent is " $mongodb_username_curl_statement
@@ -203,6 +248,11 @@ $(replace "<LEARNING_ENGINE_SECRET_KEY_PLACEHOLDER>" "safeharness:$learning_engi
 $(replace "<ACCOUNT_SECRET_KEY_PLACEHOLDER>" "safeharness:$account_secret_token")
 $(replace "<DOCKER_LOGIN_PASSWORD_PLACEHOLDER>" "safeharness:$docker_password_token")
 $(replace "<NEWRELIC_LICENSE_KEY_PLACEHOLDER>" "safeharness:$newrelic_license_token")
+$(replace "<JWT_SSO_REDIRECT_SECRET_PLACEHOLDER>" "safeharness:$jwtSsoRedirectSecret_token")
+$(replace "<JWT_MULTI_AUTH_SECRET_PLACEHOLDER>" "safeharness:$jwtMultiAuthSecret_token")
+$(replace "<JWT_ZENDESK_SECRET_PLACEHOLDER>" "safeharness:$jwtZendeskSecret_token")
+$(replace "<JWT_EXTERNAL_SERVICE_SECRET_PLACEHOLDER>" "safeharness:$jwtExternalServiceSecret_token")
+$(replace "<JWT_PASSWORD_SECRET_PLACEHOLDER>" "safeharness:$jwtPasswordSecret_token")
 $(replace "<HOST1_PLACEHOLDER>" "$sanitizedhost1")
 $(replace "<HOST2_PLACEHOLDER>" "$sanitizedhost2")
 $(replace "<HOST3_PLACEHOLDER>" "$sanitizedhost3")
