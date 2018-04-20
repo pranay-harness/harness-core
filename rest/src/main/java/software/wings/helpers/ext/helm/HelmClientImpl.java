@@ -3,7 +3,7 @@ package software.wings.helpers.ext.helm;
 import static io.harness.data.structure.EmptyPredicate.isNotEmpty;
 import static software.wings.beans.command.CommandExecutionResult.CommandExecutionStatus.FAILURE;
 import static software.wings.beans.command.CommandExecutionResult.CommandExecutionStatus.SUCCESS;
-import static software.wings.delegatetasks.HelmCommandTask.lockObjects;
+import static software.wings.helpers.ext.container.ContainerDeploymentDelegateHelper.lockObjects;
 import static software.wings.helpers.ext.helm.HelmConstants.DEFAULT_HELM_COMMAND_TIMEOUT;
 import static software.wings.helpers.ext.helm.HelmConstants.DEFAULT_TILLER_CONNECTION_TIMEOUT;
 import static software.wings.helpers.ext.helm.HelmConstants.HELM_INSTALL_COMMAND_TEMPLATE;

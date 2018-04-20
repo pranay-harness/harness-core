@@ -1,4 +1,4 @@
-package software.wings.utils;
+package software.wings.helpers.ext.container;
 
 import static software.wings.api.HostElement.Builder.aHostElement;
 import static software.wings.api.InstanceElement.Builder.anInstanceElement;
@@ -60,7 +60,7 @@ import java.util.List;
  * Created by anubhaw on 4/6/18.
  */
 @Singleton
-public class ContainerDeploymentHelper {
+public class ContainerDeploymentManagerHelper {
   @Inject private SettingsService settingsService;
   @Inject private ArtifactStreamService artifactStreamService;
   @Inject private EncryptionService encryptionService;
@@ -69,7 +69,7 @@ public class ContainerDeploymentHelper {
   @Inject private AzureHelperService azureHelperService;
   @Inject private EcrService ecrService;
   @Inject private EcrClassicService ecrClassicService;
-  private static final Logger logger = LoggerFactory.getLogger(ContainerDeploymentHelper.class);
+  private static final Logger logger = LoggerFactory.getLogger(ContainerDeploymentManagerHelper.class);
 
   public List<InstanceStatusSummary> getInstanceStatusSummaryFromContainerInfoList(
       List<ContainerInfo> containerInfos, ServiceTemplateElement serviceTemplateElement) {

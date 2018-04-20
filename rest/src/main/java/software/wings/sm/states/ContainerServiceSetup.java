@@ -49,6 +49,7 @@ import software.wings.beans.container.ContainerTask;
 import software.wings.beans.container.ImageDetails;
 import software.wings.common.Constants;
 import software.wings.exception.WingsException;
+import software.wings.helpers.ext.container.ContainerDeploymentManagerHelper;
 import software.wings.security.encryption.EncryptedDataDetail;
 import software.wings.service.intfc.ActivityService;
 import software.wings.service.intfc.ArtifactStreamService;
@@ -67,7 +68,6 @@ import software.wings.sm.ExecutionStatus;
 import software.wings.sm.InstanceStatusSummary;
 import software.wings.sm.State;
 import software.wings.sm.WorkflowStandardParams;
-import software.wings.utils.ContainerDeploymentHelper;
 import software.wings.waitnotify.NotifyResponseData;
 
 import java.util.List;
@@ -99,7 +99,7 @@ public abstract class ContainerServiceSetup extends State {
   @Inject @Transient protected transient EncryptionService encryptionService;
   @Inject @Transient protected transient ActivityService activityService;
   @Inject @Transient protected transient DelegateService delegateService;
-  @Inject @Transient protected transient ContainerDeploymentHelper containerDeploymentHelper;
+  @Inject @Transient protected transient ContainerDeploymentManagerHelper containerDeploymentHelper;
 
   ContainerServiceSetup(String name, String type) {
     super(name, type);

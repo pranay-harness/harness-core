@@ -91,6 +91,7 @@ import software.wings.beans.container.ImageDetails;
 import software.wings.beans.container.KubernetesContainerTask;
 import software.wings.common.VariableProcessor;
 import software.wings.expression.ExpressionEvaluator;
+import software.wings.helpers.ext.container.ContainerDeploymentManagerHelper;
 import software.wings.service.intfc.ActivityService;
 import software.wings.service.intfc.AppService;
 import software.wings.service.intfc.ArtifactService;
@@ -110,7 +111,6 @@ import software.wings.sm.ExecutionContextImpl;
 import software.wings.sm.ExecutionStatus;
 import software.wings.sm.StateExecutionInstance;
 import software.wings.sm.WorkflowStandardParams;
-import software.wings.utils.ContainerDeploymentHelper;
 
 import java.util.Collections;
 import java.util.List;
@@ -136,7 +136,7 @@ public class KubernetesSetupTest extends WingsBaseTest {
   @Mock private VariableProcessor variableProcessor;
   @Mock private ExpressionEvaluator evaluator;
   @Mock private ConfigService configService;
-  @Mock private ContainerDeploymentHelper containerDeploymentHelper;
+  @Mock private ContainerDeploymentManagerHelper containerDeploymentHelper;
 
   @InjectMocks private KubernetesSetup kubernetesSetup = new KubernetesSetup("name");
 
