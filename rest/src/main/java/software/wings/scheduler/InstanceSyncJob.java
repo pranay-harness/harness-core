@@ -79,6 +79,11 @@ public class InstanceSyncJob implements Job {
         return;
       }
       final String appIdFinal = appId;
+      try (AcquiredLock lock = persistentLocker.tryToAcquireLock(Application.class, appId, Duration.ofSeconds(1))) {
+        if (lock == null) {
+          return;
+        }
+      }
       executorService.submit(() -> executeInternal(appIdFinal));
     } catch (WingsException exception) {
       exception.logProcessedMessages(logger);
@@ -101,8 +106,12 @@ public class InstanceSyncJob implements Job {
         String infraMappingId = infraMapping.getUuid();
         InfrastructureMappingType infraMappingType =
             Util.getEnumFromString(InfrastructureMappingType.class, infraMapping.getInfraMappingType());
-        try (AcquiredLock lock =
-                 persistentLocker.acquireLock(InfrastructureMapping.class, infraMappingId, Duration.ofSeconds(120))) {
+        try (AcquiredLock lock = persistentLocker.tryToAcquireLock(
+                 InfrastructureMapping.class, infraMappingId, Duration.ofSeconds(120))) {
+          if (lock == null) {
+            return;
+          }
+
           try {
             InstanceHandler instanceHandler = instanceHandlerFactory.getInstanceHandler(infraMappingType);
             if (instanceHandler == null) {
