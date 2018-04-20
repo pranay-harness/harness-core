@@ -12,6 +12,8 @@ import static software.wings.utils.WinRmHelperUtil.HandleWinRmClientException;
 
 import org.apache.commons.lang3.NotImplementedException;
 import org.apache.commons.lang3.tuple.Pair;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import software.wings.beans.Log.LogLevel;
 import software.wings.beans.command.CommandExecutionResult.CommandExecutionStatus;
 import software.wings.beans.command.CopyConfigCommandUnit.ConfigFileMetaData;
@@ -23,6 +25,8 @@ import java.nio.charset.StandardCharsets;
 import java.util.List;
 
 public class DefaultWinRmExecutor implements WinRmExecutor {
+  private static final Logger logger = LoggerFactory.getLogger(DefaultWinRmExecutor.class);
+
   protected DelegateLogService logService;
   private final WinRmSessionConfig config;
 
@@ -70,8 +74,9 @@ public class DefaultWinRmExecutor implements WinRmExecutor {
       saveExecutionLog(format("Command completed with ExitCode (%d)", exitCode), INFO, commandExecutionStatus);
     } catch (Exception e) {
       commandExecutionStatus = FAILURE;
+      logger.error("Error while executing command", e);
       saveExecutionLog(
-          format("Command execution failed. Error: {%s}", HandleWinRmClientException(e)), INFO, commandExecutionStatus);
+          format("Command execution failed. Error: %s", HandleWinRmClientException(e)), INFO, commandExecutionStatus);
     }
     return commandExecutionStatus;
   }
