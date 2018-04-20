@@ -6,7 +6,9 @@ import static org.mockito.Matchers.any;
 import static org.mockito.Matchers.eq;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
+import static software.wings.api.ApprovalStateExecutionData.Builder.anApprovalStateExecutionData;
 import static software.wings.beans.Application.Builder.anApplication;
+import static software.wings.common.Constants.DEFAULT_APPROVAL_STATE_TIMEOUT_MILLIS;
 import static software.wings.sm.WorkflowStandardParams.Builder.aWorkflowStandardParams;
 import static software.wings.utils.WingsTestConstants.ACCOUNT_ID;
 import static software.wings.utils.WingsTestConstants.APP_ID;
@@ -28,6 +30,8 @@ import software.wings.sm.ExecutionContextImpl;
 import software.wings.sm.ExecutionResponse;
 import software.wings.sm.ExecutionStatus;
 import software.wings.sm.WorkflowStandardParams;
+
+import java.util.concurrent.TimeUnit;
 
 /**
  * Created by anubhaw on 11/3/16.
@@ -58,5 +62,28 @@ public class ApprovalStateTest extends WingsBaseTest {
         .openAlert(eq(ACCOUNT_ID), eq(APP_ID), eq(AlertType.ApprovalNeeded), any(ApprovalNeededAlert.class));
     assertThat(executionResponse.isAsync()).isTrue();
     assertThat(executionResponse.getExecutionStatus()).isEqualTo(ExecutionStatus.PAUSED);
+  }
+
+  @Test
+  public void shouldGetTimeout() {
+    Integer timeoutMillis = approvalState.getTimeoutMillis();
+    assertThat(timeoutMillis).isEqualTo(DEFAULT_APPROVAL_STATE_TIMEOUT_MILLIS);
+  }
+
+  @Test
+  public void shouldGetSetTimeout() {
+    approvalState.setTimeoutMillis((int) TimeUnit.HOURS.toMillis(1));
+    Integer timeoutMillis = approvalState.getTimeoutMillis();
+    assertThat(timeoutMillis).isEqualTo((int) TimeUnit.HOURS.toMillis(1));
+  }
+
+  @Test
+  public void shouldHandleAbort() {
+    when(context.getStateExecutionData())
+        .thenReturn(anApprovalStateExecutionData().withApprovalId("APPROVAL_ID").build());
+
+    approvalState.handleAbortEvent(context);
+    assertThat(context.getStateExecutionData()).isNotNull();
+    assertThat(context.getStateExecutionData().getErrorMsg().contains("Pipeline was not approved"));
   }
 }

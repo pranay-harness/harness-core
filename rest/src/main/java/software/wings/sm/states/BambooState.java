@@ -1,7 +1,6 @@
 package software.wings.sm.states;
 
 import static io.harness.data.structure.EmptyPredicate.isNotEmpty;
-import static software.wings.api.BambooExecutionData.Builder.aBambooExecutionData;
 import static software.wings.beans.Base.GLOBAL_ENV_ID;
 import static software.wings.beans.Environment.EnvironmentType.ALL;
 import static software.wings.beans.OrchestrationWorkflowType.BUILD;
@@ -17,6 +16,10 @@ import com.google.inject.Inject;
 
 import com.github.reinert.jjschema.Attributes;
 import com.github.reinert.jjschema.SchemaIgnore;
+import lombok.AllArgsConstructor;
+import lombok.Builder;
+import lombok.Data;
+import lombok.NoArgsConstructor;
 import org.mongodb.morphia.annotations.Transient;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -122,6 +125,9 @@ public class BambooState extends State {
   @DefaultValue("" + DEFAULT_ASYNC_CALL_TIMEOUT)
   @Override
   public Integer getTimeoutMillis() {
+    if (super.getTimeoutMillis() == null) {
+      return Math.toIntExact(DEFAULT_ASYNC_CALL_TIMEOUT);
+    }
     return super.getTimeoutMillis();
   }
 
@@ -162,6 +168,7 @@ public class BambooState extends State {
         evaluatedParameters.add(evaluatedParameterEntry);
       });
     }
+
     List<FilePathAssertionEntry> evaluatedFilePathsForAssertion = new ArrayList<>();
     if (isNotEmpty(filePathsForAssertion)) {
       filePathsForAssertion.forEach(filePathAssertionEntry -> {
@@ -174,7 +181,9 @@ public class BambooState extends State {
 
     final String finalPlanName = evaluatedPlanName;
     PhaseElement phaseElement = context.getContextElement(ContextElementType.PARAM, Constants.PHASE_PARAM);
+
     String infrastructureMappingId = phaseElement == null ? null : phaseElement.getInfraMappingId();
+
     DelegateTask delegateTask =
         DelegateTask.Builder.aDelegateTask()
             .withTaskType(getTaskType())
@@ -191,17 +200,14 @@ public class BambooState extends State {
     if (getTimeoutMillis() != null) {
       delegateTask.setTimeout(getTimeoutMillis());
     }
-    logger.info("Sending Bamboo task to delegate");
     String delegateTaskId = delegateService.queueTask(delegateTask);
-    logger.info("Delegate task id {}", delegateTaskId);
-    BambooExecutionData bambooExecutionData = aBambooExecutionData()
-                                                  .withPlanName(planName)
-                                                  .withParameters(evaluatedParameters)
-                                                  .withFilePathAssertionMap(evaluatedFilePathsForAssertion)
-                                                  .build();
     return anExecutionResponse()
         .withAsync(true)
-        .withStateExecutionData(bambooExecutionData)
+        .withStateExecutionData(BambooExecutionData.builder()
+                                    .planName(planName)
+                                    .parameters(evaluatedParameters)
+                                    .filePathAssertionEntries(evaluatedFilePathsForAssertion)
+                                    .build())
         .withCorrelationIds(Collections.singletonList(activityId))
         .withDelegateTaskId(delegateTaskId)
         .build();
@@ -294,6 +300,10 @@ public class BambooState extends State {
     activityService.updateStatus(activityId, appId, status);
   }
 
+  @Builder
+  @Data
+  @NoArgsConstructor
+  @AllArgsConstructor
   public static final class BambooExecutionResponse implements NotifyResponseData {
     private String projectName;
     private String planName;
@@ -305,137 +315,5 @@ public class BambooState extends State {
     private String errorMessage;
     private List<ParameterEntry> parameters;
     private List<FilePathAssertionEntry> filePathAssertionMap;
-
-    public BambooExecutionResponse() {}
-
-    public String getBuildNumber() {
-      return buildNumber;
-    }
-
-    public void setBuildNumber(String buildNumber) {
-      this.buildNumber = buildNumber;
-    }
-
-    public String getProjectName() {
-      return projectName;
-    }
-
-    public void setProjectName(String projectName) {
-      this.projectName = projectName;
-    }
-
-    public String getPlanName() {
-      return planName;
-    }
-
-    public void setPlanName(String planName) {
-      this.planName = planName;
-    }
-
-    public String getPlanUrl() {
-      return planUrl;
-    }
-
-    public void setPlanUrl(String planUrl) {
-      this.planUrl = planUrl;
-    }
-
-    public List<ParameterEntry> getParameters() {
-      return parameters;
-    }
-
-    public void setParameters(List<ParameterEntry> parameters) {
-      this.parameters = parameters;
-    }
-
-    /**
-     * Getter for property 'planUrl'.
-     *
-     * @return Value for property 'planUrl'.
-     */
-    public String getBuildUrl() {
-      return buildUrl;
-    }
-
-    /**
-     * Setter for property 'buildUrl'.
-     *
-     * @param buildUrl Value to set for property 'buildUrl'.
-     */
-    public void setBuildUrl(String buildUrl) {
-      this.buildUrl = buildUrl;
-    }
-
-    /**
-     * Getter for property 'executionStatus'.
-     *
-     * @return Value for property 'executionStatus'.
-     */
-    public ExecutionStatus getExecutionStatus() {
-      return executionStatus;
-    }
-
-    /**
-     * Setter for property 'executionStatus'.
-     *
-     * @param executionStatus Value to set for property 'executionStatus'.
-     */
-    public void setExecutionStatus(ExecutionStatus executionStatus) {
-      this.executionStatus = executionStatus;
-    }
-
-    /**
-     * Getter for property 'BambooResult'.
-     *
-     * @return Value for property 'BambooResult'.
-     */
-    public String getBuildStatus() {
-      return buildStatus;
-    }
-
-    /**
-     * Setter for property 'buildStatus'.
-     *
-     * @param buildStatus Value to set for property 'buildStatus'.
-     */
-    public void setBuildStatus(String buildStatus) {
-      this.buildStatus = buildStatus;
-    }
-
-    /**
-     * Getter for property 'errorMessage'.
-     *
-     * @return Value for property 'errorMessage'.
-     */
-    public String getErrorMessage() {
-      return errorMessage;
-    }
-
-    /**
-     * Setter for property 'errorMessage'.
-     *
-     * @param errorMessage Value to set for property 'errorMessage'.
-     */
-    public void setErrorMessage(String errorMessage) {
-      this.errorMessage = errorMessage;
-    }
-
-    /**
-     * Getter for property 'filePathAssertionMap'.
-     *
-     * @return Value for property 'filePathAssertionMap'.
-     */
-    public List<FilePathAssertionEntry> getFilePathAssertionMap() {
-      return filePathAssertionMap;
-    }
-
-    /**
-     * Setter for property 'filePathAssertionMap'.
-     *
-     * @param filePathAssertionMap Value to set for property 'filePathAssertionMap'.
-     */
-    public void setFilePathAssertionMap(List<FilePathAssertionEntry> filePathAssertionMap) {
-      this.filePathAssertionMap = filePathAssertionMap;
-    }
   }
 }

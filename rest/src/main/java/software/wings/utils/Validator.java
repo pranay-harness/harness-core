@@ -2,14 +2,9 @@ package software.wings.utils;
 
 import static software.wings.beans.ErrorCode.GENERAL_ERROR;
 import static software.wings.beans.ErrorCode.INVALID_REQUEST;
-import static software.wings.beans.ResponseMessage.Level.ERROR;
-import static software.wings.beans.ResponseMessage.Level.WARN;
-import static software.wings.beans.ResponseMessage.aResponseMessage;
+import static software.wings.exception.WingsException.ReportTarget.USER;
 
 import com.mongodb.DuplicateKeyException;
-import software.wings.beans.ErrorCode;
-import software.wings.beans.ResponseMessage;
-import software.wings.beans.ResponseMessage.Level;
 import software.wings.beans.UuidAware;
 import software.wings.exception.WingsException;
 import software.wings.exception.WingsException.ReportTarget;
@@ -88,7 +83,7 @@ public class Validator {
     try {
       runnable.run();
     } catch (DuplicateKeyException e) {
-      throw prepareWingsException(GENERAL_ERROR, "args", "Duplicate " + field + " " + value);
+      new WingsException(GENERAL_ERROR).addParam("args", "Duplicate " + field + " " + value);
     }
   }
 
@@ -96,46 +91,12 @@ public class Validator {
     try {
       return runnable.call();
     } catch (DuplicateKeyException e) {
-      throw prepareWingsException(GENERAL_ERROR, "args", "Duplicate " + field + " " + value);
+      throw new WingsException(GENERAL_ERROR, USER).addParam("args", "Duplicate " + field + " " + value);
     } catch (Exception e) {
       if (e.getCause() != null && e.getCause() instanceof DuplicateKeyException) {
-        throw prepareWingsException(GENERAL_ERROR, "args", "Duplicate " + field + " " + value);
+        throw new WingsException(GENERAL_ERROR, USER).addParam("args", "Duplicate " + field + " " + value);
       }
-      throw prepareWingsException(GENERAL_ERROR, "args", e.getMessage());
+      throw new WingsException(GENERAL_ERROR, USER).addParam("args", e.getMessage());
     }
-  }
-
-  /***
-   * Prepares WingsException
-   * @param errorCode
-   * @param responseType
-   * @param param
-   * @param message
-   * @return
-   */
-  public static WingsException prepareWingsException(
-      ErrorCode errorCode, Level responseType, String param, String message) {
-    return new WingsException(prepareResponseMessage(errorCode, responseType, message)).addParam(param, message);
-  }
-  /**
-   * Prepares and throw exception with WARN error type.
-   *
-   * @param errorCode
-   * @param param
-   * @param message
-   */
-  public static WingsException prepareWingsException(ErrorCode errorCode, String param, String message) {
-    return prepareWingsException(errorCode, WARN, param, message);
-  }
-
-  /**
-   * Prepares Response Message
-   * @param errorCode
-   * @param level
-   * @param errorMsg
-   * @return
-   */
-  public static ResponseMessage prepareResponseMessage(ErrorCode errorCode, Level level, String errorMsg) {
-    return aResponseMessage().code(errorCode).level(level == null ? ERROR : level).message(errorMsg).build();
   }
 }

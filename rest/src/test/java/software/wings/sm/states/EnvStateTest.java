@@ -6,8 +6,10 @@ import static org.mockito.Matchers.any;
 import static org.mockito.Matchers.eq;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
+import static software.wings.api.EnvStateExecutionData.Builder.anEnvStateExecutionData;
 import static software.wings.beans.Application.Builder.anApplication;
 import static software.wings.beans.WorkflowExecution.WorkflowExecutionBuilder.aWorkflowExecution;
+import static software.wings.common.Constants.ENV_STATE_TIMEOUT_MILLIS;
 import static software.wings.sm.WorkflowStandardParams.Builder.aWorkflowStandardParams;
 import static software.wings.utils.WingsTestConstants.APP_ID;
 import static software.wings.utils.WingsTestConstants.ARTIFACT_ID;
@@ -26,7 +28,6 @@ import software.wings.beans.CanaryOrchestrationWorkflow;
 import software.wings.beans.ErrorCode;
 import software.wings.beans.Workflow;
 import software.wings.exception.WingsException;
-import software.wings.service.intfc.PipelineService;
 import software.wings.service.intfc.WorkflowExecutionService;
 import software.wings.service.intfc.WorkflowService;
 import software.wings.sm.ContextElementType;
@@ -35,13 +36,14 @@ import software.wings.sm.ExecutionResponse;
 import software.wings.sm.ExecutionStatus;
 import software.wings.sm.WorkflowStandardParams;
 
+import java.util.concurrent.TimeUnit;
+
 /**
  * Created by anubhaw on 11/2/16.
  */
 
 public class EnvStateTest extends WingsBaseTest {
   @Mock private WorkflowExecutionService workflowExecutionService;
-  @Mock private PipelineService pipelineService;
   @Mock private ExecutionContextImpl context;
   @Mock private WorkflowService workflowService;
   @Mock private Workflow workflow;
@@ -102,5 +104,28 @@ public class EnvStateTest extends WingsBaseTest {
     assertThat(executionResponse.getErrorMessage())
         .isNotEmpty()
         .isEqualTo("INVALID_REQUEST - Workflow variable [test] is mandatory for execution. ");
+  }
+
+  @Test
+  public void shouldGetTimeout() {
+    Integer timeoutMillis = envState.getTimeoutMillis();
+    assertThat(timeoutMillis).isEqualTo(ENV_STATE_TIMEOUT_MILLIS);
+  }
+
+  @Test
+  public void shouldGetSetTimeout() {
+    envState.setTimeoutMillis((int) TimeUnit.HOURS.toMillis(1));
+    Integer timeoutMillis = envState.getTimeoutMillis();
+    assertThat(timeoutMillis).isEqualTo((int) TimeUnit.HOURS.toMillis(1));
+  }
+
+  @Test
+  public void shouldHandleAbort() {
+    when(context.getStateExecutionData())
+        .thenReturn(anEnvStateExecutionData().withWorkflowId(WORKFLOW_ID).withEnvId(ENV_ID).build());
+
+    envState.handleAbortEvent(context);
+    assertThat(context.getStateExecutionData()).isNotNull();
+    assertThat(context.getStateExecutionData().getErrorMsg().contains("Workflow not completed within"));
   }
 }

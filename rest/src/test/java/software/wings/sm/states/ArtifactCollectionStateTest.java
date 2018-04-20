@@ -10,7 +10,9 @@ import static org.mockito.internal.util.reflection.Whitebox.setInternalState;
 import static software.wings.api.WorkflowElement.WorkflowElementBuilder.aWorkflowElement;
 import static software.wings.beans.OrchestrationWorkflowType.BUILD;
 import static software.wings.beans.artifact.Artifact.Builder.anArtifact;
+import static software.wings.common.Constants.DEFAULT_ARTIFACT_COLLECTION_STATE_TIMEOUT_MILLIS;
 import static software.wings.sm.StateExecutionInstance.Builder.aStateExecutionInstance;
+import static software.wings.sm.StateType.ARTIFACT_COLLECTION;
 import static software.wings.utils.WingsTestConstants.ACCOUNT_ID;
 import static software.wings.utils.WingsTestConstants.ACTIVITY_ID;
 import static software.wings.utils.WingsTestConstants.APP_ID;
@@ -49,6 +51,8 @@ import software.wings.sm.ExecutionResponse;
 import software.wings.sm.StateExecutionInstance;
 import software.wings.sm.StateType;
 import software.wings.sm.WorkflowStandardParams;
+
+import java.util.concurrent.TimeUnit;
 
 /**
  * Created by sgurubelli on 11/28/17.
@@ -147,5 +151,27 @@ public class ArtifactCollectionStateTest {
         ImmutableMap.of(
             ACTIVITY_ID, ArtifactCollectionExecutionData.builder().artifactStreamId(ARTIFACT_STREAM_ID).build()));
     verify(workflowExecutionService).refreshBuildExecutionSummary(anyString(), anyString(), any());
+  }
+
+  @Test
+  public void shouldGetTimeout() {
+    Integer timeoutMillis = artifactCollectionState.getTimeoutMillis();
+    assertThat(timeoutMillis).isEqualTo(Math.toIntExact(DEFAULT_ARTIFACT_COLLECTION_STATE_TIMEOUT_MILLIS));
+  }
+
+  @Test
+  public void shouldGetSetTimeout() {
+    artifactCollectionState.setTimeoutMillis((int) TimeUnit.HOURS.toMillis(1));
+    Integer timeoutMillis = artifactCollectionState.getTimeoutMillis();
+    assertThat(timeoutMillis).isEqualTo((int) TimeUnit.HOURS.toMillis(1));
+  }
+
+  @Test
+  public void shouldHandleAbort() {
+    executionContext.getStateExecutionInstance().setStateExecutionMap(
+        ImmutableMap.of(ARTIFACT_COLLECTION.name(), ArtifactCollectionExecutionData.builder().build()));
+    artifactCollectionState.handleAbortEvent(executionContext);
+    assertThat(executionContext.getStateExecutionData()).isNotNull();
+    assertThat(executionContext.getStateExecutionData().getErrorMsg()).isNotBlank();
   }
 }

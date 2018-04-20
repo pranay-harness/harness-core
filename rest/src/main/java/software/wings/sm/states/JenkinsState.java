@@ -299,6 +299,9 @@ public class JenkinsState extends State {
   @DefaultValue("" + DEFAULT_ASYNC_CALL_TIMEOUT)
   @Override
   public Integer getTimeoutMillis() {
+    if (super.getTimeoutMillis() == null) {
+      return Math.toIntExact(DEFAULT_ASYNC_CALL_TIMEOUT);
+    }
     return super.getTimeoutMillis();
   }
 

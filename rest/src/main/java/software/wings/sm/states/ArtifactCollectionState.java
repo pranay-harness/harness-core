@@ -207,6 +207,9 @@ public class ArtifactCollectionState extends State {
   @DefaultValue("" + DEFAULT_ARTIFACT_COLLECTION_STATE_TIMEOUT_MILLIS)
   @Override
   public Integer getTimeoutMillis() {
+    if (super.getTimeoutMillis() == null) {
+      return Math.toIntExact(DEFAULT_ARTIFACT_COLLECTION_STATE_TIMEOUT_MILLIS);
+    }
     return super.getTimeoutMillis();
   }
 
