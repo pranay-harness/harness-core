@@ -94,7 +94,9 @@ public class ElkLogFetchRequest {
       for (String token : tokens) {
         if (")".equals(token)) {
           Stack<JSONObject> result = new Stack<>();
-          while (!(rval = operandStack.pop()).toString().equals("{\"term\":{\"(\":\"(\"}}")) {
+          while (!(rval = operandStack.pop())
+                      .toString()
+                      .equals("{\"" + queryType.name().toLowerCase() + "\":{\"(\":\"(\"}}")) {
             if (operatorStack.isEmpty()) {
               result.push(rval);
             } else {
@@ -123,7 +125,7 @@ public class ElkLogFetchRequest {
       if (operandStack.size() > 1) {
         List<JSONObject> mustObjectList = new ArrayList<>();
         while (!operandStack.isEmpty()) {
-          if (operandStack.peek().toString().equals("{\"term\":{\"(\":\"(\"}}")) {
+          if (operandStack.peek().toString().equals("{\"" + queryType.name().toLowerCase() + "\":{\"(\":\"(\"}}")) {
             throw new WingsException("Unmatched open braces `(`");
           }
           mustObjectList.add(operandStack.pop());
@@ -179,6 +181,6 @@ public class ElkLogFetchRequest {
   }
 
   private JSONObject termToJson(String term, String val) {
-    return new JSONObject().put("term", new JSONObject().put(term, val));
+    return new JSONObject().put(queryType.name().toLowerCase(), new JSONObject().put(term, val));
   }
 }
