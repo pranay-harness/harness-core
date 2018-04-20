@@ -25,15 +25,20 @@ import org.apache.commons.csv.CSVParser;
 import org.apache.commons.csv.CSVRecord;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import software.wings.beans.AzureConfig;
 import software.wings.beans.ErrorCode;
+import software.wings.beans.GcpConfig;
+import software.wings.beans.KubernetesClusterConfig;
 import software.wings.beans.KubernetesConfig;
 import software.wings.beans.Log.LogLevel;
+import software.wings.beans.SettingAttribute;
 import software.wings.beans.command.CommandExecutionResult.CommandExecutionStatus;
 import software.wings.beans.command.ExecutionLogCallback;
 import software.wings.cloudprovider.ContainerInfo;
 import software.wings.cloudprovider.gke.GkeClusterService;
 import software.wings.cloudprovider.gke.KubernetesContainerService;
 import software.wings.exception.WingsException;
+import software.wings.helpers.ext.azure.AzureHelperService;
 import software.wings.helpers.ext.helm.HelmClientImpl.HelmCliResponse;
 import software.wings.helpers.ext.helm.request.HelmCommandRequest;
 import software.wings.helpers.ext.helm.request.HelmCommandRequest.HelmCommandType;
@@ -45,8 +50,8 @@ import software.wings.helpers.ext.helm.response.HelmInstallCommandResponse;
 import software.wings.helpers.ext.helm.response.HelmListReleasesCommandResponse;
 import software.wings.helpers.ext.helm.response.HelmReleaseHistoryCommandResponse;
 import software.wings.helpers.ext.helm.response.ReleaseInfo;
+import software.wings.security.encryption.EncryptedDataDetail;
 import software.wings.service.impl.ContainerServiceParams;
-import software.wings.service.impl.KubernetesHelperService;
 
 import java.io.IOException;
 import java.util.ArrayList;
@@ -61,9 +66,9 @@ import java.util.stream.Collectors;
 @Singleton
 public class HelmDeployServiceImpl implements HelmDeployService {
   @Inject private HelmClient helmClient;
-  @Inject private KubernetesHelperService kubernetesHelperService;
   @Inject private KubernetesContainerService kubernetesContainerService;
   @Inject private GkeClusterService gkeClusterService;
+  @Inject private AzureHelperService azureHelperService;
   @Inject private TimeLimiter timeLimiter;
 
   private static final Logger logger = LoggerFactory.getLogger(HelmDeployService.class);
@@ -112,9 +117,7 @@ public class HelmDeployServiceImpl implements HelmDeployService {
       HelmCommandRequest commandRequest, ExecutionLogCallback executionLogCallback) {
     ContainerServiceParams containerServiceParams = commandRequest.getContainerServiceParams();
 
-    KubernetesConfig kubernetesConfig = gkeClusterService.getCluster(containerServiceParams.getSettingAttribute(),
-        containerServiceParams.getEncryptionDetails(), containerServiceParams.getClusterName(),
-        containerServiceParams.getNamespace());
+    KubernetesConfig kubernetesConfig = getKubernetesConfig(containerServiceParams);
 
     List<? extends HasMetadata> controllers = kubernetesContainerService.getControllers(kubernetesConfig,
         containerServiceParams.getEncryptionDetails(), ImmutableMap.of("release", commandRequest.getReleaseName()));
@@ -143,6 +146,33 @@ public class HelmDeployServiceImpl implements HelmDeployService {
               .collect(Collectors.toList());
     }
     return containerInfoList;
+  }
+
+  private KubernetesConfig getKubernetesConfig(ContainerServiceParams containerServiceParam) {
+    SettingAttribute settingAttribute = containerServiceParam.getSettingAttribute();
+    List<EncryptedDataDetail> encryptedDataDetails = containerServiceParam.getEncryptionDetails();
+    String clusterName = containerServiceParam.getClusterName();
+    String namespace = containerServiceParam.getNamespace();
+
+    KubernetesConfig kubernetesConfig;
+    if (settingAttribute.getValue() instanceof KubernetesConfig) {
+      kubernetesConfig = (KubernetesConfig) settingAttribute.getValue();
+    } else if (settingAttribute.getValue() instanceof KubernetesClusterConfig) {
+      kubernetesConfig = ((KubernetesClusterConfig) settingAttribute.getValue()).createKubernetesConfig(namespace);
+    } else if (settingAttribute.getValue() instanceof GcpConfig) {
+      kubernetesConfig = gkeClusterService.getCluster(settingAttribute, encryptedDataDetails, clusterName, namespace);
+      kubernetesConfig.setDecrypted(true);
+    } else if (settingAttribute.getValue() instanceof AzureConfig) {
+      AzureConfig azureConfig = (AzureConfig) settingAttribute.getValue();
+      kubernetesConfig = azureHelperService.getKubernetesClusterConfig(azureConfig, encryptedDataDetails,
+          containerServiceParam.getSubscriptionId(), containerServiceParam.getResourceGroup(), clusterName, namespace);
+      kubernetesConfig.setDecrypted(true);
+    } else {
+      throw new WingsException(ErrorCode.INVALID_ARGUMENT)
+          .addParam(
+              "args", "Unknown kubernetes cloud provider setting value: " + settingAttribute.getValue().getType());
+    }
+    return kubernetesConfig;
   }
 
   private boolean steadyStateCheckRequired(KubeControllerStatus controllerStatus) {
