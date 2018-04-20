@@ -307,6 +307,6 @@ software.wings.waitnotify.StringNotifyResponseData, 5271
 software.wings.beans.command.InitPowerShellCommandUnit, 5272
 software.wings.beans.command.CleanupPowerShellCommandUnit, 5273
 software.wings.beans.command.ShellCommandExecutionContext, 5274
-software.wings.service.impl.elk.ElkQueryType, 5276
+software.wings.service.impl.elk.ElkQueryType, 5275
 
 
