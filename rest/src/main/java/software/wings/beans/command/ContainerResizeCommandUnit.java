@@ -150,9 +150,9 @@ public abstract class ContainerResizeCommandUnit extends AbstractCommandUnit {
         executionDataBuilder.containerInfos(containerInfos);
       }
       logContainerInfos(containerInfos, executionLogCallback);
+      logger.info("Successfully completed resize operation");
+      executionLogCallback.saveExecutionLog(String.format("Completed operation\n%s\n", DASH_STRING));
     }
-    logger.info("Successfully completed resize operation");
-    executionLogCallback.saveExecutionLog(String.format("Completed operation\n%s\n", DASH_STRING));
   }
 
   private void logContainerInfos(List<ContainerInfo> containerInfos, ExecutionLogCallback executionLogCallback) {
@@ -165,7 +165,7 @@ public abstract class ContainerResizeCommandUnit extends AbstractCommandUnit {
         executionLogCallback.saveExecutionLog("");
       }
     } catch (Exception e) {
-      // Ignore failure to log container infos
+      Misc.logAllMessages(e, executionLogCallback);
     }
   }
 
