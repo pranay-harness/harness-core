@@ -6,7 +6,6 @@ import static com.github.tomakehurst.wiremock.client.WireMock.head;
 import static com.github.tomakehurst.wiremock.client.WireMock.urlEqualTo;
 import static io.harness.data.structure.UUIDGenerator.generateUuid;
 import static java.util.Arrays.asList;
-import static java.util.stream.Collectors.toSet;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.mockito.Matchers.any;
 import static org.mockito.Matchers.anyBoolean;
@@ -18,7 +17,6 @@ import static software.wings.beans.Delegate.Builder.aDelegate;
 import static software.wings.beans.DelegateTask.Builder.aDelegateTask;
 import static software.wings.beans.DelegateTaskResponse.Builder.aDelegateTaskResponse;
 import static software.wings.beans.Event.Builder.anEvent;
-import static software.wings.common.Constants.DELEGATE_SYNC_CACHE;
 import static software.wings.dl.PageRequest.PageRequestBuilder.aPageRequest;
 import static software.wings.sm.ExecutionStatusData.Builder.anExecutionStatusData;
 import static software.wings.utils.WingsTestConstants.ACCOUNT_ID;
@@ -29,8 +27,6 @@ import com.google.common.io.CharStreams;
 import com.google.inject.Inject;
 
 import com.github.tomakehurst.wiremock.junit.WireMockRule;
-import com.hazelcast.core.HazelcastInstance;
-import com.hazelcast.core.IQueue;
 import freemarker.template.TemplateException;
 import org.apache.commons.compress.archivers.zip.AsiExtraField;
 import org.apache.commons.compress.archivers.zip.ZipArchiveEntry;
@@ -64,7 +60,6 @@ import software.wings.service.intfc.AccountService;
 import software.wings.service.intfc.AssignDelegateService;
 import software.wings.service.intfc.DelegateService;
 import software.wings.sm.ExecutionStatus;
-import software.wings.utils.CacheHelper;
 import software.wings.waitnotify.WaitNotifyEngine;
 
 import java.io.File;
@@ -93,16 +88,11 @@ public class DelegateServiceTest extends WingsBaseTest {
   @Mock private MainConfiguration mainConfiguration;
   @Mock private BroadcasterFactory broadcasterFactory;
   @Mock private Broadcaster broadcaster;
-  @Mock private CacheHelper cacheHelper;
-  @Mock private javax.cache.Cache<String, DelegateTask> cache;
   @Mock private AssignDelegateService assignDelegateService;
-  @Mock private HazelcastInstance hazelcastInstance;
 
   @Rule public WireMockRule wireMockRule = new WireMockRule(8888);
 
   @InjectMocks @Inject private DelegateService delegateService;
-
-  @Mock private IQueue topic;
 
   @Inject private WingsPersistence wingsPersistence;
 
@@ -126,8 +116,6 @@ public class DelegateServiceTest extends WingsBaseTest {
                                              .withHeader("Content-Type", "text/plain")));
 
     when(broadcasterFactory.lookup(anyString(), anyBoolean())).thenReturn(broadcaster);
-    when(cacheHelper.getCache(DELEGATE_SYNC_CACHE, String.class, DelegateTask.class)).thenReturn(cache);
-    when(hazelcastInstance.getQueue(anyString())).thenReturn(topic);
   }
 
   @Test
@@ -185,6 +173,7 @@ public class DelegateServiceTest extends WingsBaseTest {
 
   @Test
   public void shouldGetDelegateTasks() {
+    String delegateId = generateUuid();
     DelegateTask delegateTask = aDelegateTask()
                                     .withAccountId(ACCOUNT_ID)
                                     .withWaitId(generateUuid())
@@ -192,9 +181,10 @@ public class DelegateServiceTest extends WingsBaseTest {
                                     .withAppId(APP_ID)
                                     .withParameters(new Object[] {})
                                     .withTags(new ArrayList<>())
+                                    .withDelegateId(delegateId)
                                     .build();
     wingsPersistence.save(delegateTask);
-    assertThat(delegateService.getDelegateTasks(ACCOUNT_ID, generateUuid())).hasSize(1).containsExactly(delegateTask);
+    assertThat(delegateService.getDelegateTasks(ACCOUNT_ID, delegateId)).hasSize(1).containsExactly(delegateTask);
   }
 
   @Test
@@ -254,7 +244,6 @@ public class DelegateServiceTest extends WingsBaseTest {
 
   @Test
   public void shouldProcessSyncDelegateTaskResponse() {
-    when(topic.offer(any())).thenReturn(true);
     DelegateTask delegateTask = aDelegateTask()
                                     .withAccountId(ACCOUNT_ID)
                                     .withTaskType(TaskType.HTTP)
@@ -264,13 +253,16 @@ public class DelegateServiceTest extends WingsBaseTest {
                                     .withAsync(false)
                                     .withQueueName("queue")
                                     .build();
+    wingsPersistence.save(delegateTask);
     delegateService.processDelegateResponse(
         aDelegateTaskResponse()
             .withAccountId(ACCOUNT_ID)
             .withTask(delegateTask)
             .withResponse(anExecutionStatusData().withExecutionStatus(ExecutionStatus.SUCCESS).build())
             .build());
-    verify(hazelcastInstance).getQueue("queue");
+
+    delegateTask = wingsPersistence.get(DelegateTask.class, delegateTask.getUuid());
+    assertThat(delegateTask.getStatus()).isEqualTo(DelegateTask.Status.FINISHED);
   }
 
   @Test
@@ -482,8 +474,6 @@ public class DelegateServiceTest extends WingsBaseTest {
     delegateService.deleteOldTasks(0);
 
     List<DelegateTask> delegateTasks = wingsPersistence.createQuery(DelegateTask.class).asList();
-    assertThat(delegateTasks.size()).isEqualTo(2);
-    assertThat(delegateTasks.stream().map(DelegateTask::getUuid).collect(toSet()))
-        .containsExactlyInAnyOrder("ID3", "ID4");
+    assertThat(delegateTasks.size()).isEqualTo(0);
   }
 }

@@ -824,7 +824,6 @@ public class StateMachineExecutor {
     boolean updated = false;
     StateMachine sm = context.getStateMachine();
     try {
-      updated = false;
       State currentState =
           sm.getState(stateExecutionInstance.getChildStateMachineId(), stateExecutionInstance.getStateName());
       injector.injectMembers(currentState);
