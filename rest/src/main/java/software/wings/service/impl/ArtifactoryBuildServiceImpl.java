@@ -5,6 +5,8 @@ import static io.harness.network.Http.connectableHttpUrl;
 import static io.harness.network.Http.validUrl;
 import static java.util.stream.Collectors.toList;
 import static software.wings.beans.ErrorCode.INVALID_ARTIFACT_SERVER;
+import static software.wings.exception.WingsException.ALERTING;
+import static software.wings.exception.WingsException.ReportTarget.USER;
 import static software.wings.utils.ArtifactType.DOCKER;
 import static software.wings.utils.Validator.equalCheck;
 
@@ -86,7 +88,7 @@ public class ArtifactoryBuildServiceImpl implements ArtifactoryBuildService {
       ArtifactoryConfig artifactoryConfig, List<EncryptedDataDetail> encryptionDetails) {
     String[] artifactPaths = artifactStreamAttributes.getArtifactPattern().split("/");
     if (artifactPaths.length < 4) {
-      throw new WingsException(INVALID_ARTIFACT_SERVER)
+      throw new WingsException(INVALID_ARTIFACT_SERVER, ALERTING)
           .addParam("message", "Not in maven style format. Sample format: com/mycompany/myservice/.*/myservice*.war");
     }
     String groupId = getGroupId(Arrays.stream(artifactPaths).limit(artifactPaths.length - 3).collect(toList()));
@@ -132,11 +134,11 @@ public class ArtifactoryBuildServiceImpl implements ArtifactoryBuildService {
   @Override
   public boolean validateArtifactServer(ArtifactoryConfig config) {
     if (!validUrl(config.getArtifactoryUrl())) {
-      throw new WingsException(ErrorCode.INVALID_ARTIFACT_SERVER)
+      throw new WingsException(ErrorCode.INVALID_ARTIFACT_SERVER, USER)
           .addParam("message", "Artifactory URL must be a valid URL");
     }
     if (!connectableHttpUrl(config.getArtifactoryUrl())) {
-      throw new WingsException(ErrorCode.INVALID_ARTIFACT_SERVER)
+      throw new WingsException(ErrorCode.INVALID_ARTIFACT_SERVER, USER)
           .addParam("message", "Could not reach Artifactory Server at : " + config.getArtifactoryUrl());
     }
     return artifactoryService.getRepositories(config, Collections.emptyList()) != null;
