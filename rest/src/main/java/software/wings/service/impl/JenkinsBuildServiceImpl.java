@@ -175,12 +175,11 @@ public class JenkinsBuildServiceImpl implements JenkinsBuildService {
   @Override
   public boolean validateArtifactServer(JenkinsConfig jenkinsConfig) {
     if (!validUrl(jenkinsConfig.getJenkinsUrl())) {
-      throw new WingsException(INVALID_ARTIFACT_SERVER, ALERTING)
-          .addParam("message", "Jenkins URL must be a valid URL");
+      throw new WingsException(INVALID_ARTIFACT_SERVER, USER).addParam("message", "Jenkins URL must be a valid URL");
     }
 
     if (!connectableHttpUrl(jenkinsConfig.getJenkinsUrl())) {
-      throw new WingsException(INVALID_ARTIFACT_SERVER, ALERTING)
+      throw new WingsException(INVALID_ARTIFACT_SERVER, USER)
           .addParam("message", "Could not reach Jenkins Server at : " + jenkinsConfig.getJenkinsUrl());
     }
     encryptionService.decrypt(jenkinsConfig, Collections.emptyList());

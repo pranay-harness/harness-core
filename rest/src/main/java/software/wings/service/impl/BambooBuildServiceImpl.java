@@ -2,6 +2,7 @@ package software.wings.service.impl;
 
 import static io.harness.network.Http.connectableHttpUrl;
 import static io.harness.network.Http.validUrl;
+import static software.wings.exception.WingsException.ReportTarget.USER;
 import static software.wings.utils.Validator.equalCheck;
 
 import com.google.common.collect.Lists;
@@ -74,18 +75,19 @@ public class BambooBuildServiceImpl implements BambooBuildService {
   @Override
   public List<String> getGroupIds(
       String jobName, BambooConfig bambooConfig, List<EncryptedDataDetail> encryptionDetails) {
-    throw new WingsException(ErrorCode.INVALID_REQUEST)
+    throw new WingsException(ErrorCode.INVALID_REQUEST, USER)
         .addParam("message", "Operation not supported by Bamboo Artifact Stream");
   }
 
   @Override
   public boolean validateArtifactServer(BambooConfig bambooConfig) {
     if (!validUrl(bambooConfig.getBambooUrl())) {
-      throw new WingsException(ErrorCode.INVALID_ARTIFACT_SERVER).addParam("message", "Bamboo URL must be a valid URL");
+      throw new WingsException(ErrorCode.INVALID_ARTIFACT_SERVER, USER)
+          .addParam("message", "Bamboo URL must be a valid URL");
     }
 
     if (!connectableHttpUrl(bambooConfig.getBambooUrl())) {
-      throw new WingsException(ErrorCode.INVALID_ARTIFACT_SERVER)
+      throw new WingsException(ErrorCode.INVALID_ARTIFACT_SERVER, USER)
           .addParam("message", "Could not reach Bamboo Server at : " + bambooConfig.getBambooUrl());
     }
     // check for credentials

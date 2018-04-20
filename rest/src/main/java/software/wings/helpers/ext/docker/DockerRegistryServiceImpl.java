@@ -30,7 +30,6 @@ import software.wings.service.intfc.security.EncryptionService;
 
 import java.io.IOException;
 import java.util.Arrays;
-import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.concurrent.TimeUnit;
@@ -44,7 +43,6 @@ public class DockerRegistryServiceImpl implements DockerRegistryService {
   private static final Logger logger = LoggerFactory.getLogger(DockerRegistryServiceImpl.class);
 
   @Inject private EncryptionService encryptionService;
-  private static final int CONNECT_TIMEOUT = 5; // TODO:: read from config
   private ExpiringMap<String, String> cachedBearerTokens = ExpiringMap.builder().variableExpiration().build();
 
   private DockerRegistryRestClient getDockerRegistryRestClient(
@@ -83,10 +81,8 @@ public class DockerRegistryServiceImpl implements DockerRegistryService {
 
   private void checkValidImage(String imageName, Response<DockerImageTagResponse> response) {
     if (response.code() == 404) { // Page not found
-      Map<String, Object> params = new HashMap<>();
-      params.put("name", imageName);
-      params.put("reason", " Reason: Image name does not exist.");
-      throw new WingsException(params, ErrorCode.INVALID_ARTIFACT_SOURCE);
+      throw new WingsException(ErrorCode.INVALID_ARGUMENT, USER)
+          .addParam("args", "Image name [" + imageName + "] does not exist in Google Container Registry.");
     }
   }
 
@@ -130,12 +126,11 @@ public class DockerRegistryServiceImpl implements DockerRegistryService {
       }
       if (!isSuccessful(response)) {
         // image not found or user doesn't have permission to list image tags
-        logger.warn("Image name [" + imageName + "] does not exist in Docker registry.");
         throw new WingsException(ErrorCode.INVALID_ARGUMENT, USER)
             .addParam("args", "Image name [" + imageName + "] does not exist in Docker registry.");
       }
     } catch (IOException e) {
-      throw new WingsException(ErrorCode.REQUEST_TIMEOUT).addParam("name", "Registry server");
+      throw new WingsException(ErrorCode.REQUEST_TIMEOUT, USER).addParam("name", "Registry server");
     }
     return true;
   }
@@ -155,8 +150,7 @@ public class DockerRegistryServiceImpl implements DockerRegistryService {
       }
       return isSuccessful(response);
     } catch (IOException e) {
-      logger.error("Error occurred while sending request to server " + dockerConfig.getDockerRegistryUrl(), e);
-      throw new WingsException(ErrorCode.DEFAULT_ERROR_CODE).addParam("message", e.getMessage());
+      throw new WingsException(ErrorCode.DEFAULT_ERROR_CODE, USER).addParam("message", e.getMessage());
     }
   }
 
@@ -218,7 +212,7 @@ public class DockerRegistryServiceImpl implements DockerRegistryService {
     return null;
   }
 
-  private boolean isSuccessful(Response<?> response) throws IOException {
+  private boolean isSuccessful(Response<?> response) {
     int code = response.code();
     switch (code) {
       case 200:
@@ -227,7 +221,7 @@ public class DockerRegistryServiceImpl implements DockerRegistryService {
       case 400:
         return false;
       case 401:
-        throw new WingsException(ErrorCode.INVALID_ARTIFACT_SERVER)
+        throw new WingsException(ErrorCode.INVALID_ARTIFACT_SERVER, USER)
             .addParam("message", "Invalid Docker Registry credentials");
       default:
         unhandled(code);

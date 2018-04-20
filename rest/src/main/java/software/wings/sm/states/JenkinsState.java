@@ -9,6 +9,7 @@ import static software.wings.beans.Environment.EnvironmentType.ALL;
 import static software.wings.beans.OrchestrationWorkflowType.BUILD;
 import static software.wings.common.Constants.DEFAULT_ASYNC_CALL_TIMEOUT;
 import static software.wings.sm.ExecutionResponse.Builder.anExecutionResponse;
+import static software.wings.sm.ExecutionStatus.FAILED;
 
 import com.google.common.collect.Lists;
 import com.google.common.collect.Maps;
@@ -47,7 +48,6 @@ import software.wings.sm.StateType;
 import software.wings.sm.WorkflowStandardParams;
 import software.wings.stencils.DefaultValue;
 import software.wings.stencils.EnumData;
-import software.wings.utils.Validator;
 import software.wings.waitnotify.NotifyResponseData;
 
 import java.util.ArrayList;
@@ -198,7 +198,13 @@ public class JenkinsState extends State {
 
     JenkinsConfig jenkinsConfig =
         (JenkinsConfig) context.getGlobalSettingValue(accountId, jenkinsConfigId, StateType.JENKINS.name());
-    Validator.notNullCheck("JenkinsConfig", jenkinsConfig);
+    if (jenkinsConfig == null) {
+      logger.warn("JenkinsConfig Id {} does not exist. It might have been deleted", jenkinsConfigId);
+      return anExecutionResponse()
+          .withExecutionStatus(FAILED)
+          .withErrorMessage("Jenkins Server was deleted. Please update with an appropriate server.")
+          .build();
+    }
 
     String evaluatedJobName = context.renderExpression(jobName);
 

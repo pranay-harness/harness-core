@@ -1,5 +1,6 @@
 package software.wings.service.impl;
 
+import static software.wings.exception.WingsException.ReportTarget.USER;
 import static software.wings.utils.Validator.equalCheck;
 
 import com.google.common.collect.Lists;
@@ -46,14 +47,14 @@ public class GcrBuildServiceImpl implements GcrBuildService {
   @Override
   public List<String> getArtifactPaths(
       String jobName, String groupId, GcpConfig config, List<EncryptedDataDetail> encryptionDetails) {
-    throw new WingsException(ErrorCode.INVALID_REQUEST)
+    throw new WingsException(ErrorCode.INVALID_REQUEST, USER)
         .addParam("message", "Operation not supported by GCR Artifact Stream");
   }
 
   @Override
   public BuildDetails getLastSuccessfulBuild(String appId, ArtifactStreamAttributes artifactStreamAttributes,
       GcpConfig gcpConfig, List<EncryptedDataDetail> encryptionDetails) {
-    throw new WingsException(ErrorCode.INVALID_REQUEST)
+    throw new WingsException(ErrorCode.INVALID_REQUEST, USER)
         .addParam("message", "Operation not supported by GCR Artifact Stream");
   }
 
@@ -72,7 +73,7 @@ public class GcrBuildServiceImpl implements GcrBuildService {
 
   @Override
   public List<String> getGroupIds(String jobName, GcpConfig config, List<EncryptedDataDetail> encryptionDetails) {
-    throw new WingsException(ErrorCode.INVALID_REQUEST)
+    throw new WingsException(ErrorCode.INVALID_REQUEST, USER)
         .addParam("message", "Operation not supported by GCR Artifact Stream");
   }
 
