@@ -2376,6 +2376,11 @@ public class WorkflowExecutionServiceImpl implements WorkflowExecutionService {
       String appId, String workflowExecutionId, String stateExecutionId, String currentExecId) {
     ExecutionContext executionContext =
         stateMachineExecutor.getExecutionContext(appId, currentExecId, stateExecutionId);
+    if (executionContext == null) {
+      logger.info("failed to get baseline details for app {}, workflow execution {}, uuid {}", appId, currentExecId,
+          stateExecutionId);
+      return null;
+    }
     WorkflowStandardParams workflowStandardParams = executionContext.getContextElement(ContextElementType.STANDARD);
     String envId = workflowStandardParams.getEnv().getUuid();
     PhaseElement phaseElement = executionContext.getContextElement(ContextElementType.PARAM, Constants.PHASE_PARAM);

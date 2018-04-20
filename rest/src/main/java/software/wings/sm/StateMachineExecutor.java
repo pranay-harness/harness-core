@@ -1203,7 +1203,7 @@ public class StateMachineExecutor {
     StateExecutionInstance stateExecutionInstance =
         getStateExecutionInstance(appId, executionUuid, stateExecutionInstanceId);
     if (stateExecutionInstance == null) {
-      logger.warn("could not find state execution for app {}, workflow execution {}, uuid {}", appId, executionUuid,
+      logger.info("could not find state execution for app {}, workflow execution {}, uuid {}", appId, executionUuid,
           stateExecutionInstanceId);
       return null;
     }
