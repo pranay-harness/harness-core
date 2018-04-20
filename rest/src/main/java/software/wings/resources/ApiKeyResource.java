@@ -15,7 +15,9 @@ import software.wings.beans.RestResponse;
 import software.wings.dl.PageRequest;
 import software.wings.dl.PageResponse;
 import software.wings.security.PermissionAttribute.PermissionType;
+import software.wings.security.PermissionAttribute.ResourceType;
 import software.wings.security.annotations.AuthRule;
+import software.wings.security.annotations.Scope;
 import software.wings.service.intfc.ApiKeyService;
 
 import javax.ws.rs.BeanParam;
@@ -32,6 +34,7 @@ import javax.ws.rs.QueryParam;
 @Path("/api-keys")
 @Consumes(APPLICATION_JSON)
 @Produces(APPLICATION_JSON)
+@Scope(ResourceType.API_KEY)
 @AuthRule(permissionType = PermissionType.ACCOUNT_MANAGEMENT)
 public class ApiKeyResource {
   private ApiKeyService apiKeyService;

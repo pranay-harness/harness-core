@@ -182,7 +182,9 @@ public class PermissionAttribute {
 
     WHITE_LIST(ACCOUNT),
 
-    SSO(ACCOUNT);
+    SSO(ACCOUNT),
+
+    API_KEY(ACCOUNT);
 
     private ImmutableMap<Action, PermissionType> actionPermissionScopeMap;
 
