@@ -13,6 +13,7 @@ import org.mongodb.morphia.mapping.MappedField;
 import software.wings.beans.DelegateTask.Converter;
 import software.wings.delegatetasks.DelegateRunnableTask;
 import software.wings.utils.KryoUtils;
+import software.wings.waitnotify.NotifyResponseData;
 
 import java.util.ArrayList;
 import java.util.Arrays;
@@ -43,7 +44,9 @@ public class DelegateTask extends Base {
   private Set<String> blacklistedDelegateIds = new HashSet<>();
   private Set<String> validatingDelegateIds = new HashSet<>();
   private Set<String> validationCompleteDelegateIds = new HashSet<>();
+  private byte[] serializedNotifyResponseData;
 
+  @Transient private transient NotifyResponseData notifyResponse;
   @Transient private transient DelegateRunnableTask delegateRunnableTask;
 
   public boolean isTimedOut() {
@@ -178,6 +181,29 @@ public class DelegateTask extends Base {
     this.validationCompleteDelegateIds = validationCompleteDelegateIds;
   }
 
+  public NotifyResponseData getNotifyResponse() {
+    if (notifyResponse != null) {
+      return notifyResponse;
+    }
+    if (serializedNotifyResponseData != null) {
+      return (NotifyResponseData) KryoUtils.asObject(serializedNotifyResponseData);
+    }
+    return null;
+  }
+
+  public void setNotifyResponse(NotifyResponseData notifyResponse) {
+    this.notifyResponse = notifyResponse;
+    setSerializedNotifyResponseData(notifyResponse != null ? KryoUtils.asBytes(notifyResponse) : null);
+  }
+
+  public byte[] getSerializedNotifyResponseData() {
+    return serializedNotifyResponseData;
+  }
+
+  public void setSerializedNotifyResponseData(byte[] serializedNotifyResponseData) {
+    this.serializedNotifyResponseData = serializedNotifyResponseData;
+  }
+
   @Override
   public boolean equals(Object o) {
     if (this == o) {
@@ -196,13 +222,16 @@ public class DelegateTask extends Base {
         && Objects.equals(queueName, that.queueName) && status == that.status
         && Objects.equals(delegateId, that.delegateId) && Objects.equals(envId, that.envId)
         && Objects.equals(infrastructureMappingId, that.infrastructureMappingId)
-        && Objects.equals(delegateRunnableTask, that.delegateRunnableTask);
+        && Objects.equals(delegateRunnableTask, that.delegateRunnableTask)
+        && Objects.equals(notifyResponse, that.notifyResponse)
+        && Arrays.equals(serializedNotifyResponseData, that.serializedNotifyResponseData);
   }
 
   @Override
   public int hashCode() {
     return Objects.hash(super.hashCode(), taskType, parameters, tags, accountId, waitId, queueName, status, delegateId,
-        timeout, async, envId, infrastructureMappingId, delegateRunnableTask);
+        timeout, async, envId, infrastructureMappingId, delegateRunnableTask, notifyResponse,
+        serializedNotifyResponseData);
   }
 
   @Override
@@ -212,7 +241,7 @@ public class DelegateTask extends Base {
         + ", accountId='" + accountId + '\'' + ", waitId='" + waitId + '\'' + ", queueName='" + queueName + '\''
         + ", status=" + status + ", delegateId='" + delegateId + '\'' + ", timeout=" + timeout + ", async=" + async
         + ", envId='" + envId + '\'' + ", infrastructureMappingId='" + infrastructureMappingId + '\''
-        + ", delegateRunnableTask=" + delegateRunnableTask + '}';
+        + ", delegateRunnableTask=" + delegateRunnableTask + ", notifyResponse=" + notifyResponse + '}';
   }
 
   public static class SyncTaskContext {
@@ -321,6 +350,7 @@ public class DelegateTask extends Base {
     private long createdAt;
     private EmbeddedUser lastUpdatedBy;
     private long lastUpdatedAt;
+    private NotifyResponseData notifyResponse;
 
     private Builder() {}
 
@@ -418,6 +448,11 @@ public class DelegateTask extends Base {
       return this;
     }
 
+    public Builder withNotifyResponse(NotifyResponseData notifyResponse) {
+      this.notifyResponse = notifyResponse;
+      return this;
+    }
+
     public Builder but() {
       return aDelegateTask()
           .withTaskType(taskType)
@@ -437,7 +472,8 @@ public class DelegateTask extends Base {
           .withCreatedBy(createdBy)
           .withCreatedAt(createdAt)
           .withLastUpdatedBy(lastUpdatedBy)
-          .withLastUpdatedAt(lastUpdatedAt);
+          .withLastUpdatedAt(lastUpdatedAt)
+          .withNotifyResponse(notifyResponse);
     }
 
     public DelegateTask build() {
@@ -460,6 +496,7 @@ public class DelegateTask extends Base {
       delegateTask.setCreatedAt(createdAt);
       delegateTask.setLastUpdatedBy(lastUpdatedBy);
       delegateTask.setLastUpdatedAt(lastUpdatedAt);
+      delegateTask.setNotifyResponse(notifyResponse);
       return delegateTask;
     }
   }

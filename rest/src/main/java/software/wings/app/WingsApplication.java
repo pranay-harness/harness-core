@@ -4,7 +4,6 @@ import static com.google.common.collect.ImmutableMap.of;
 import static com.google.inject.matcher.Matchers.not;
 import static java.time.Duration.ofSeconds;
 import static software.wings.app.LoggingInitializer.initializeLogging;
-import static software.wings.common.Constants.DELEGATE_SYNC_CACHE;
 import static software.wings.common.Constants.USER_CACHE;
 
 import com.google.inject.AbstractModule;
@@ -45,7 +44,6 @@ import org.slf4j.LoggerFactory;
 import ro.fortsoft.pf4j.PluginManager;
 import ru.vyarus.guice.validator.ValidationModule;
 import software.wings.app.MainConfiguration.AssetsConfigurationMixin;
-import software.wings.beans.DelegateTask;
 import software.wings.beans.User;
 import software.wings.core.maintenance.MaintenanceController;
 import software.wings.core.queue.AbstractQueueListener;
@@ -173,26 +171,6 @@ public class WingsApplication extends Application<MainConfiguration> {
         },
         new ValidationModule(validatorFactory), databaseModule, new WingsModule(configuration), new YamlModule(),
         new ExecutorModule(), new QueueModule(databaseModule.getPrimaryDatastore()));
-    Caching.getCachingProvider().getCacheManager().createCache(
-        DELEGATE_SYNC_CACHE, new Configuration<String, DelegateTask>() {
-          public static final long serialVersionUID = 1L;
-
-          @Override
-          public Class<String> getKeyType() {
-            return String.class;
-          }
-
-          @Override
-          public Class<DelegateTask> getValueType() {
-            return DelegateTask.class;
-          }
-
-          @Override
-          public boolean isStoreByValue() {
-            return true;
-          }
-        });
-
     Caching.getCachingProvider().getCacheManager().createCache(USER_CACHE, new Configuration<String, User>() {
       public static final long serialVersionUID = 1L;
 

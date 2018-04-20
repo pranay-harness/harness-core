@@ -3,12 +3,11 @@ package software.wings.service.impl;
 import static freemarker.template.Configuration.VERSION_2_3_23;
 import static io.harness.data.structure.EmptyPredicate.isEmpty;
 import static io.harness.data.structure.EmptyPredicate.isNotEmpty;
-import static io.harness.data.structure.UUIDGenerator.generateUuid;
 import static io.harness.threading.Morpheus.sleep;
+import static java.time.Duration.ofMillis;
 import static java.time.Duration.ofSeconds;
-import static java.util.Arrays.asList;
+import static java.util.Collections.singletonList;
 import static java.util.stream.Collectors.toList;
-import static org.apache.commons.lang3.StringUtils.isNotBlank;
 import static org.apache.commons.lang3.StringUtils.substringAfter;
 import static org.apache.commons.lang3.StringUtils.substringBefore;
 import static org.mongodb.morphia.mapping.Mapper.ID_KEY;
@@ -16,7 +15,9 @@ import static software.wings.beans.Base.GLOBAL_ACCOUNT_ID;
 import static software.wings.beans.Base.GLOBAL_APP_ID;
 import static software.wings.beans.DelegateTask.Status.ABORTED;
 import static software.wings.beans.DelegateTask.Status.ERROR;
+import static software.wings.beans.DelegateTask.Status.FINISHED;
 import static software.wings.beans.DelegateTask.Status.QUEUED;
+import static software.wings.beans.DelegateTask.Status.STARTED;
 import static software.wings.beans.DelegateTaskAbortEvent.Builder.aDelegateTaskAbortEvent;
 import static software.wings.beans.DelegateTaskEvent.DelegateTaskEventBuilder.aDelegateTaskEvent;
 import static software.wings.beans.ErrorCode.UNAVAILABLE_DELEGATES;
@@ -27,7 +28,6 @@ import static software.wings.beans.SearchFilter.Operator.EQ;
 import static software.wings.beans.SearchFilter.Operator.IN;
 import static software.wings.beans.alert.AlertType.NoEligibleDelegates;
 import static software.wings.beans.alert.NoEligibleDelegatesAlert.NoEligibleDelegatesAlertBuilder.aNoEligibleDelegatesAlert;
-import static software.wings.common.Constants.DELEGATE_SYNC_CACHE;
 import static software.wings.common.NotificationMessageResolver.NotificationMessageType.DELEGATE_STATE_NOTIFICATION;
 import static software.wings.dl.MongoHelper.setUnset;
 import static software.wings.dl.PageRequest.PageRequestBuilder.aPageRequest;
@@ -36,12 +36,12 @@ import static software.wings.exception.WingsException.ALERTING;
 import com.google.common.base.Joiner;
 import com.google.common.collect.ImmutableMap;
 import com.google.common.util.concurrent.TimeLimiter;
+import com.google.common.util.concurrent.UncheckedTimeoutException;
 import com.google.inject.Inject;
 import com.google.inject.Singleton;
 
 import com.github.zafarkhaja.semver.Version;
 import com.hazelcast.core.HazelcastInstance;
-import com.hazelcast.core.IQueue;
 import com.mongodb.BasicDBObject;
 import freemarker.cache.ClassTemplateLoader;
 import freemarker.template.Configuration;
@@ -107,15 +107,13 @@ import java.io.StringWriter;
 import java.time.Clock;
 import java.util.ArrayList;
 import java.util.HashSet;
-import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
 import java.util.Optional;
 import java.util.Set;
 import java.util.concurrent.TimeUnit;
+import java.util.concurrent.atomic.AtomicReference;
 import java.util.stream.Collectors;
-import javax.cache.Cache;
-import javax.cache.Caching;
 import javax.validation.executable.ValidateOnExecution;
 
 /**
@@ -528,46 +526,75 @@ public class DelegateServiceImpl implements DelegateService {
   @Override
   @SuppressWarnings("unchecked")
   public PageResponse<DelegateTask> getDelegateTasks(String accountId, String delegateId) {
-    return wingsPersistence.query(DelegateTask.class, aPageRequest().addFilter("accountId", EQ, accountId).build());
+    return wingsPersistence.query(DelegateTask.class,
+        aPageRequest().addFilter("accountId", EQ, accountId).addFilter("delegateId", EQ, delegateId).build());
   }
 
   @Override
   public String queueTask(DelegateTask task) {
-    logger.info("Queueing task uuid: {}, accountId: {}, type: {}, async: {}", task.getUuid(), task.getAccountId(),
-        task.getTaskType(), task.isAsync());
-    wingsPersistence.save(task);
-    broadcasterFactory.lookup("/stream/delegate/" + task.getAccountId(), true).broadcast(task);
-    return task.getUuid();
+    task.setAsync(true);
+    DelegateTask delegateTask = wingsPersistence.saveAndGet(DelegateTask.class, task);
+    logger.info("Queueing async task uuid: {}, accountId: {}, type: {}", delegateTask.getUuid(),
+        delegateTask.getAccountId(), delegateTask.getTaskType());
+    broadcasterFactory.lookup("/stream/delegate/" + delegateTask.getAccountId(), true).broadcast(delegateTask);
+    return delegateTask.getUuid();
   }
 
   @Override
-  public <T extends NotifyResponseData> T executeTask(DelegateTask task) throws InterruptedException {
+  @SuppressWarnings("unchecked")
+  public <T extends NotifyResponseData> T executeTask(DelegateTask task) {
     List<String> eligibleDelegateIds = ensureDelegateAvailableToExecuteTask(task);
     if (isEmpty(eligibleDelegateIds)) {
       throw new WingsException(UNAVAILABLE_DELEGATES, ALERTING);
     }
-    String taskId = generateUuid();
-    task.setQueueName(taskId);
-    task.setUuid(taskId);
-    task.setCreatedAt(clock.millis());
-    IQueue<T> topic = hazelcastInstance.getQueue(taskId);
-    T responseData;
+    task.setAsync(false);
+    DelegateTask delegateTask = wingsPersistence.saveAndGet(DelegateTask.class, task);
+
+    broadcasterFactory.lookup("/stream/delegate/" + delegateTask.getAccountId(), true).broadcast(delegateTask);
+    logger.info("Executing sync task: uuid: {}, accountId: {}, type: {}", delegateTask.getUuid(),
+        delegateTask.getAccountId(), delegateTask.getTaskType());
+
+    // Wait for task to complete
+    AtomicReference<DelegateTask> delegateTaskRef = new AtomicReference<>(delegateTask);
     try {
-      cacheHelper.getCache(DELEGATE_SYNC_CACHE, String.class, DelegateTask.class).put(taskId, task);
-      broadcasterFactory.lookup("/stream/delegate/" + task.getAccountId(), true).broadcast(task);
-      logger.info("Broadcast new task: uuid: {}, accountId: {}, type: {}, async: {}", task.getUuid(),
-          task.getAccountId(), task.getTaskType(), task.isAsync());
-      responseData = topic.poll(task.getTimeout(), TimeUnit.MILLISECONDS);
-      if (responseData == null) {
-        logger.warn("Task {} timed out, removed it from cache", task.getUuid());
-        throw new WingsException(ErrorCode.REQUEST_TIMEOUT).addParam("name", Constants.DELEGATE_NAME);
-      }
-    } finally {
-      Caching.getCache(DELEGATE_SYNC_CACHE, String.class, DelegateTask.class).remove(taskId);
-      topic.destroy();
+      timeLimiter.callWithTimeout(() -> {
+        while (delegateTaskRef.get() == null || !isTaskComplete(delegateTaskRef.get().getStatus())) {
+          sleep(ofMillis(500));
+          delegateTaskRef.set(wingsPersistence.get(DelegateTask.class, task.getUuid()));
+          if (delegateTaskRef.get() != null) {
+            logger.info(
+                "Delegate task [{}] - status [{}]", delegateTaskRef.get().getUuid(), delegateTaskRef.get().getStatus());
+          }
+        }
+        return true;
+      }, task.getTimeout(), TimeUnit.MILLISECONDS, true);
+    } catch (UncheckedTimeoutException e) {
+      logger.info("Timed out waiting for sync task {}", delegateTask.getUuid());
+    } catch (Exception e) {
+      logger.error("Exception", e);
     }
 
-    return responseData;
+    if (delegateTaskRef.get() == null) {
+      logger.info("Task {} was deleted while waiting for completion", delegateTask.getUuid());
+      throw new WingsException(ErrorCode.INVALID_ARGUMENT)
+          .addParam("args", "Task was deleted while waiting for completion");
+    }
+
+    wingsPersistence.delete(wingsPersistence.createQuery(DelegateTask.class)
+                                .filter("accountId", delegateTask.getAccountId())
+                                .filter(ID_KEY, delegateTask.getUuid()));
+
+    NotifyResponseData responseData = delegateTaskRef.get().getNotifyResponse();
+    if (responseData == null) {
+      throw new WingsException(ErrorCode.REQUEST_TIMEOUT).addParam("name", Constants.DELEGATE_NAME);
+    }
+
+    logger.info("Returned response to calling function for delegate task [{}] ", delegateTask.getUuid());
+    return (T) responseData;
+  }
+
+  private boolean isTaskComplete(DelegateTask.Status status) {
+    return status != null && (status.equals(FINISHED) || status.equals(ABORTED) || status.equals(ERROR));
   }
 
   private List<String> ensureDelegateAvailableToExecuteTask(DelegateTask task) {
@@ -726,67 +753,46 @@ public class DelegateServiceImpl implements DelegateService {
   }
 
   private void storeDelegateTracking(DelegateTask delegateTask, String trackDelegateField, String delegateId) {
-    if (delegateTask.isAsync()) {
-      UpdateOperations<DelegateTask> updateOperations =
-          wingsPersistence.createUpdateOperations(DelegateTask.class).addToSet(trackDelegateField, delegateId);
-      Query<DelegateTask> updateQuery = wingsPersistence.createQuery(DelegateTask.class)
-                                            .filter("accountId", delegateTask.getAccountId())
-                                            .filter("status", QUEUED)
-                                            .field("delegateId")
-                                            .doesNotExist()
-                                            .filter(ID_KEY, delegateTask.getUuid());
-      wingsPersistence.update(updateQuery, updateOperations);
-    } else {
-      Caching.getCache(DELEGATE_SYNC_CACHE, String.class, DelegateTask.class).put(delegateTask.getUuid(), delegateTask);
-    }
+    UpdateOperations<DelegateTask> updateOperations =
+        wingsPersistence.createUpdateOperations(DelegateTask.class).addToSet(trackDelegateField, delegateId);
+    Query<DelegateTask> updateQuery = wingsPersistence.createQuery(DelegateTask.class)
+                                          .filter("accountId", delegateTask.getAccountId())
+                                          .filter("status", QUEUED)
+                                          .field("delegateId")
+                                          .doesNotExist()
+                                          .filter(ID_KEY, delegateTask.getUuid());
+    wingsPersistence.update(updateQuery, updateOperations);
   }
 
   private void clearFromValidationCache(DelegateTask delegateTask) {
     delegateTask.setValidatingDelegateIds(null);
     delegateTask.setValidationCompleteDelegateIds(null);
     delegateTask.setBlacklistedDelegateIds(null);
-    if (delegateTask.isAsync()) {
-      UpdateOperations<DelegateTask> updateOperations = wingsPersistence.createUpdateOperations(DelegateTask.class)
-                                                            .unset("validatingDelegateIds")
-                                                            .unset("validationCompleteDelegateIds")
-                                                            .unset("blacklistedDelegateIds");
-      Query<DelegateTask> updateQuery = wingsPersistence.createQuery(DelegateTask.class)
-                                            .filter("accountId", delegateTask.getAccountId())
-                                            .filter("status", QUEUED)
-                                            .field("delegateId")
-                                            .doesNotExist()
-                                            .filter(ID_KEY, delegateTask.getUuid());
-      wingsPersistence.update(updateQuery, updateOperations);
-    } else {
-      Caching.getCache(DELEGATE_SYNC_CACHE, String.class, DelegateTask.class).put(delegateTask.getUuid(), delegateTask);
-    }
+    UpdateOperations<DelegateTask> updateOperations = wingsPersistence.createUpdateOperations(DelegateTask.class)
+                                                          .unset("validatingDelegateIds")
+                                                          .unset("validationCompleteDelegateIds")
+                                                          .unset("blacklistedDelegateIds");
+    Query<DelegateTask> updateQuery = wingsPersistence.createQuery(DelegateTask.class)
+                                          .filter("accountId", delegateTask.getAccountId())
+                                          .filter("status", QUEUED)
+                                          .field("delegateId")
+                                          .doesNotExist()
+                                          .filter(ID_KEY, delegateTask.getUuid());
+    wingsPersistence.update(updateQuery, updateOperations);
   }
 
   private DelegateTask getUnassignedDelegateTask(String accountId, String taskId) {
-    DelegateTask delegateTask = cacheHelper.getCache(DELEGATE_SYNC_CACHE, String.class, DelegateTask.class).get(taskId);
+    DelegateTask delegateTask = wingsPersistence.createQuery(DelegateTask.class)
+                                    .filter("accountId", accountId)
+                                    .filter("status", QUEUED)
+                                    .field("delegateId")
+                                    .doesNotExist()
+                                    .filter(ID_KEY, taskId)
+                                    .get();
     if (delegateTask != null) {
-      // Sync
-      logger.info("Got delegate task from cache: {}", delegateTask.getUuid());
-      if (isNotBlank(delegateTask.getDelegateId())) {
-        logger.info("Task {} is already assigned to delegate {}", taskId, delegateTask.getDelegateId());
-        delegateTask = null;
-      }
+      logger.info("Found unassigned delegate task: {}", delegateTask.getUuid());
     } else {
-      logger.info("Delegate task {} not in cache, checking database.", taskId);
-      // Async
-      delegateTask = wingsPersistence.createQuery(DelegateTask.class)
-                         .filter("accountId", accountId)
-                         .filter("status", QUEUED)
-                         .field("delegateId")
-                         .doesNotExist()
-                         .filter(ID_KEY, taskId)
-                         .get();
-      if (delegateTask != null) {
-        logger.info("Delegate task from database: {}", delegateTask.getUuid());
-        delegateTask.setAsync(true);
-      } else {
-        logger.warn("Delegate task {} is already assigned", taskId);
-      }
+      logger.info("Delegate task {} is already assigned", taskId);
     }
     return delegateTask;
   }
@@ -798,22 +804,18 @@ public class DelegateServiceImpl implements DelegateService {
     logger.info(
         "Assigning task {} to delegate {} {}", taskId, delegateId, delegateTask.isAsync() ? "(async)" : "(sync)");
     delegateTask.setDelegateId(delegateId);
-    if (delegateTask.isAsync()) {
-      UpdateOperations<DelegateTask> updateOperations =
-          wingsPersistence.createUpdateOperations(DelegateTask.class).set("delegateId", delegateId);
-      Query<DelegateTask> updateQuery = wingsPersistence.createQuery(DelegateTask.class)
-                                            .filter("accountId", delegateTask.getAccountId())
-                                            .filter("status", QUEUED)
-                                            .field("delegateId")
-                                            .doesNotExist()
-                                            .filter(ID_KEY, taskId);
-      UpdateResults updateResults = wingsPersistence.update(updateQuery, updateOperations);
-      if (updateResults.getUpdatedCount() == 0) {
-        // Couldn't assign, probably because it was already assigned to another delegate.
-        delegateTask = null;
-      }
-    } else {
-      Caching.getCache(DELEGATE_SYNC_CACHE, String.class, DelegateTask.class).put(taskId, delegateTask);
+    UpdateOperations<DelegateTask> updateOperations =
+        wingsPersistence.createUpdateOperations(DelegateTask.class).set("delegateId", delegateId);
+    Query<DelegateTask> updateQuery = wingsPersistence.createQuery(DelegateTask.class)
+                                          .filter("accountId", delegateTask.getAccountId())
+                                          .filter("status", QUEUED)
+                                          .field("delegateId")
+                                          .doesNotExist()
+                                          .filter(ID_KEY, taskId);
+    UpdateResults updateResults = wingsPersistence.update(updateQuery, updateOperations);
+    if (updateResults.getUpdatedCount() == 0) {
+      // Couldn't assign, probably because it was already assigned to another delegate.
+      delegateTask = null;
     }
     return delegateTask;
   }
@@ -821,22 +823,14 @@ public class DelegateServiceImpl implements DelegateService {
   @Override
   public DelegateTask startDelegateTask(String accountId, String delegateId, String taskId) {
     logger.info("Starting task {} with delegate {}", taskId, delegateId);
-    DelegateTask delegateTask = cacheHelper.getCache(DELEGATE_SYNC_CACHE, String.class, DelegateTask.class).get(taskId);
-    if (delegateTask == null) {
-      logger.info("Delegate task from cache is null for task {}", taskId);
-      Query<DelegateTask> query = wingsPersistence.createQuery(DelegateTask.class)
-                                      .filter("accountId", accountId)
-                                      .filter("status", QUEUED)
-                                      .filter("delegateId", delegateId)
-                                      .filter(ID_KEY, taskId);
-      UpdateOperations<DelegateTask> updateOperations =
-          wingsPersistence.createUpdateOperations(DelegateTask.class).set("status", DelegateTask.Status.STARTED);
-      delegateTask = wingsPersistence.getDatastore().findAndModify(query, updateOperations);
-    } else {
-      logger.info("Removing delegate task from cache: {}", delegateTask.getUuid());
-      Caching.getCache(DELEGATE_SYNC_CACHE, String.class, DelegateTask.class).remove(taskId);
-    }
-    return delegateTask;
+    Query<DelegateTask> query = wingsPersistence.createQuery(DelegateTask.class)
+                                    .filter("accountId", accountId)
+                                    .filter("status", QUEUED)
+                                    .filter("delegateId", delegateId)
+                                    .filter(ID_KEY, taskId);
+    UpdateOperations<DelegateTask> updateOperations =
+        wingsPersistence.createUpdateOperations(DelegateTask.class).set("status", STARTED);
+    return wingsPersistence.getDatastore().findAndModify(query, updateOperations);
   }
 
   @Override
@@ -849,13 +843,14 @@ public class DelegateServiceImpl implements DelegateService {
     DelegateTask task = response.getTask();
     logger.info("Delegate [{}], response received for task [{}, {}, {}]", task.getDelegateId(), task.getUuid(),
         task.getStatus(), task.getTaskType());
-    if (task.isAsync()) {
-      DelegateTask delegateTask = wingsPersistence.get(DelegateTask.class,
-          aPageRequest()
-              .addFilter("accountId", EQ, response.getAccountId())
-              .addFilter(ID_KEY, EQ, task.getUuid())
-              .build());
-      if (delegateTask != null) {
+
+    DelegateTask delegateTask = wingsPersistence.createQuery(DelegateTask.class)
+                                    .filter("accountId", response.getAccountId())
+                                    .filter(ID_KEY, task.getUuid())
+                                    .get();
+
+    if (delegateTask != null) {
+      if (delegateTask.isAsync()) {
         String waitId = delegateTask.getWaitId();
         if (waitId != null) {
           waitNotifyEngine.notify(waitId, response.getResponse());
@@ -865,17 +860,13 @@ public class DelegateServiceImpl implements DelegateService {
         wingsPersistence.delete(wingsPersistence.createQuery(DelegateTask.class)
                                     .filter("accountId", response.getAccountId())
                                     .filter(ID_KEY, delegateTask.getUuid()));
+      } else {
+        delegateTask.setNotifyResponse(response.getResponse());
+        delegateTask.setStatus(FINISHED);
+        wingsPersistence.save(delegateTask);
       }
     } else {
-      String topicName = task.getQueueName();
-      if (isNotBlank(topicName)) {
-        IQueue<NotifyResponseData> topic = hazelcastInstance.getQueue(topicName);
-        boolean queued = topic.offer(response.getResponse());
-        logger.info(
-            "Sync call response added to queue [name: {}, object: {}] with status [{}]", topicName, topic, queued);
-      } else {
-        logger.error("Sync task {} with type {} has no queue name", task.getUuid(), task.getTaskType().name());
-      }
+      logger.error("No delegateTask found: {}", task.getUuid());
     }
   }
 
@@ -909,25 +900,24 @@ public class DelegateServiceImpl implements DelegateService {
   @Override
   public void abortTask(String accountId, String delegateTaskId) {
     logger.info("Aborting delegate task {}", delegateTaskId);
-    DelegateTask updatedTask =
-        wingsPersistence.getDatastore().findAndModify(wingsPersistence.createQuery(DelegateTask.class)
-                                                          .filter(ID_KEY, delegateTaskId)
-                                                          .filter("accountId", accountId)
-                                                          .filter("status", QUEUED),
-            wingsPersistence.createUpdateOperations(DelegateTask.class).set("status", ABORTED).unset("delegateId"));
+    Query<DelegateTask> delegateTaskQuery = wingsPersistence.createQuery(DelegateTask.class)
+                                                .filter(ID_KEY, delegateTaskId)
+                                                .filter("accountId", accountId)
+                                                .filter("async", true);
+    delegateTaskQuery.or(
+        delegateTaskQuery.criteria("status").equal(QUEUED), delegateTaskQuery.criteria("status").equal(STARTED));
+    wingsPersistence.update(
+        delegateTaskQuery, wingsPersistence.createUpdateOperations(DelegateTask.class).set("status", ABORTED));
 
-    if (updatedTask == null) {
-      logger.info("Updated task null");
-      broadcasterFactory.lookup("/stream/delegate/" + accountId, true)
-          .broadcast(aDelegateTaskAbortEvent().withAccountId(accountId).withDelegateTaskId(delegateTaskId).build());
-    }
+    broadcasterFactory.lookup("/stream/delegate/" + accountId, true)
+        .broadcast(aDelegateTaskAbortEvent().withAccountId(accountId).withDelegateTaskId(delegateTaskId).build());
   }
 
   @Override
   public List<DelegateTaskEvent> getDelegateTaskEvents(String accountId, String delegateId, boolean syncOnly) {
-    List<DelegateTaskEvent> delegateTaskEvents = new ArrayList<>(getSyncEvents());
+    List<DelegateTaskEvent> delegateTaskEvents = new ArrayList<>(getQueuedEvents(true));
     if (!syncOnly) {
-      delegateTaskEvents.addAll(getQueuedEvents());
+      delegateTaskEvents.addAll(getQueuedEvents(false));
       delegateTaskEvents.addAll(getAbortedEvents(delegateId));
     }
 
@@ -938,77 +928,44 @@ public class DelegateServiceImpl implements DelegateService {
     return delegateTaskEvents;
   }
 
-  private List<DelegateTaskEvent> getSyncEvents() {
-    List<DelegateTaskEvent> syncTaskEvents = new ArrayList<>();
-    Cache<String, DelegateTask> delegateSyncCache =
-        cacheHelper.getCache(DELEGATE_SYNC_CACHE, String.class, DelegateTask.class);
-    Iterator<Cache.Entry<String, DelegateTask>> iterator = delegateSyncCache.iterator();
-    try {
-      while (iterator.hasNext()) {
-        Cache.Entry<String, DelegateTask> stringDelegateTaskEntry = iterator.next();
-        if (stringDelegateTaskEntry != null) {
-          try {
-            DelegateTask syncDelegateTask = stringDelegateTaskEntry.getValue();
-            if (syncDelegateTask.getStatus().equals(QUEUED) && syncDelegateTask.getDelegateId() == null) {
-              syncTaskEvents.add(aDelegateTaskEvent()
-                                     .withAccountId(syncDelegateTask.getAccountId())
-                                     .withDelegateTaskId(syncDelegateTask.getUuid())
-                                     .withSync(!syncDelegateTask.isAsync())
-                                     .build());
-            }
-          } catch (Exception ex) {
-            logger.error("Could not fetch delegate task from queue", ex);
-            logger.warn("Remove Delegate task {} from cache", stringDelegateTaskEntry.getKey());
-            Caching.getCache(DELEGATE_SYNC_CACHE, String.class, DelegateTask.class)
-                .remove(stringDelegateTaskEntry.getKey());
-          }
-        }
-      }
-    } catch (Exception e) {
-      delegateSyncCache.clear();
-    }
-    return syncTaskEvents;
-  }
-
-  private List<DelegateTaskEvent> getQueuedEvents() {
-    Query<DelegateTask> queuedQuery = wingsPersistence.createQuery(DelegateTask.class)
-                                          .filter("status", QUEUED)
-                                          .field("delegateId")
-                                          .doesNotExist()
-                                          .project("accountId", true)
-                                          .project("status", true)
-                                          .project("async", true);
-    return queuedQuery.asList()
+  private List<DelegateTaskEvent> getQueuedEvents(boolean sync) {
+    return wingsPersistence.createQuery(DelegateTask.class)
+        .filter("status", QUEUED)
+        .filter("async", !sync)
+        .field("delegateId")
+        .doesNotExist()
+        .project("accountId", true)
+        .asList()
         .stream()
         .map(delegateTask
             -> aDelegateTaskEvent()
                    .withAccountId(delegateTask.getAccountId())
                    .withDelegateTaskId(delegateTask.getUuid())
-                   .withSync(!delegateTask.isAsync())
+                   .withSync(sync)
                    .build())
         .collect(toList());
   }
 
   private List<DelegateTaskEvent> getAbortedEvents(String delegateId) {
-    Query<DelegateTask> abortedQuery =
-        wingsPersistence.createQuery(DelegateTask.class).filter("status", ABORTED).filter("delegateId", delegateId);
+    Query<DelegateTask> abortedQuery = wingsPersistence.createQuery(DelegateTask.class)
+                                           .filter("status", ABORTED)
+                                           .filter("async", true)
+                                           .filter("delegateId", delegateId);
 
-    List<DelegateTaskEvent> delegateTaskAbortEvents = abortedQuery.project("accountId", true)
-                                                          .project("status", true)
-                                                          .project("async", true)
-                                                          .asList()
-                                                          .stream()
-                                                          .map(delegateTask
-                                                              -> aDelegateTaskAbortEvent()
-                                                                     .withAccountId(delegateTask.getAccountId())
-                                                                     .withDelegateTaskId(delegateTask.getUuid())
-                                                                     .withSync(!delegateTask.isAsync())
-                                                                     .build())
-                                                          .collect(toList());
-    UpdateOperations<DelegateTask> updateOperations =
-        wingsPersistence.createUpdateOperations(DelegateTask.class).unset("delegateId");
-    wingsPersistence.update(abortedQuery, updateOperations);
-    return delegateTaskAbortEvents;
+    // Send abort event only once by clearing delegateId
+    wingsPersistence.update(
+        abortedQuery, wingsPersistence.createUpdateOperations(DelegateTask.class).unset("delegateId"));
+
+    return abortedQuery.project("accountId", true)
+        .asList()
+        .stream()
+        .map(delegateTask
+            -> aDelegateTaskAbortEvent()
+                   .withAccountId(delegateTask.getAccountId())
+                   .withDelegateTaskId(delegateTask.getUuid())
+                   .withSync(false)
+                   .build())
+        .collect(toList());
   }
 
   @Override
@@ -1025,7 +982,6 @@ public class DelegateServiceImpl implements DelegateService {
             Query<DelegateTask> query = wingsPersistence.createQuery(DelegateTask.class)
                                             .field("createdAt")
                                             .lessThan(clock.millis() - retentionMillis);
-            query.or(query.criteria("status").equal(ABORTED), query.criteria("status").equal(ERROR));
             delegateTaskKeys.addAll(query.asKeyList(new FindOptions().limit(limit).batchSize(batchSize)));
             if (isEmpty(delegateTaskKeys)) {
               logger.info("No more delegate tasks older than {} hours", hours);
@@ -1081,15 +1037,13 @@ public class DelegateServiceImpl implements DelegateService {
 
   private void sendDelegateDownNotification(String accountId, List<AlertData> alertsToBeCreated) {
     // send slack/email notification
-    String hostNamesForDownDelegates = new StringBuilder()
-                                           .append("\n")
-                                           .append(alertsToBeCreated.stream()
-                                                       .map(alertData -> ((DelegatesDownAlert) alertData).getHostName())
-                                                       .collect(Collectors.joining("\n ")))
-                                           .toString();
+    String hostNamesForDownDelegates = "\n"
+        + alertsToBeCreated.stream()
+              .map(alertData -> ((DelegatesDownAlert) alertData).getHostName())
+              .collect(Collectors.joining("\n"));
 
     StringBuilder hostNamesForDownDelegatesHtml = new StringBuilder().append("<br />");
-    alertsToBeCreated.stream().forEach(alertData
+    alertsToBeCreated.forEach(alertData
         -> hostNamesForDownDelegatesHtml.append(((DelegatesDownAlert) alertData).getHostName()).append("<br />"));
 
     List<NotificationGroup> notificationGroups = notificationSetupService.listDefaultNotificationGroup(accountId);
@@ -1106,6 +1060,6 @@ public class DelegateServiceImpl implements DelegateService {
                 English.plural("hostname", alertsToBeCreated.size()), "COUNT",
                 Integer.toString(alertsToBeCreated.size())))
             .build(),
-        asList(notificationRule));
+        singletonList(notificationRule));
   }
 }
