@@ -1,6 +1,7 @@
 package software.wings.cloudprovider.aws;
 
 import static io.harness.data.structure.EmptyPredicate.isEmpty;
+import static io.harness.data.structure.EmptyPredicate.isNotEmpty;
 import static io.harness.threading.Morpheus.sleep;
 import static java.time.Duration.ofSeconds;
 import static java.util.Arrays.asList;
@@ -1182,20 +1183,23 @@ public class EcsContainerServiceImpl implements EcsContainerService {
       timeLimiter.callWithTimeout(() -> {
         while (true) {
           executionLogCallback.saveExecutionLog("Waiting for service to be in steady state...", LogLevel.INFO);
-          Service service = awsHelperService
-                                .describeServices(region, awsConfig, encryptedDataDetails,
-                                    new DescribeServicesRequest().withCluster(clusterName).withServices(serviceName))
-                                .getServices()
-                                .get(0);
-          List<ServiceEvent> events = service.getEvents();
+          List<Service> services =
+              awsHelperService
+                  .describeServices(region, awsConfig, encryptedDataDetails,
+                      new DescribeServicesRequest().withCluster(clusterName).withServices(serviceName))
+                  .getServices();
 
-          // AWS returns events in descending order of createdTime, but its safer to sort on our own rather than
-          // depending on their API.
-          events.sort(comparing(ServiceEvent::getCreatedAt, reverseOrder()));
+          List<ServiceEvent> events = isNotEmpty(services) ? services.get(0).getEvents() : null;
 
-          if (events.get(0).getMessage().endsWith("has reached a steady state.")) {
-            executionLogCallback.saveExecutionLog("Service has reached a steady state", LogLevel.INFO);
-            return true;
+          if (isNotEmpty(events)) {
+            // AWS returns events in descending order of createdTime, but its safer to sort on our own rather than
+            // depending on their API.
+            events.sort(comparing(ServiceEvent::getCreatedAt, reverseOrder()));
+
+            if (events.get(0).getMessage().endsWith("has reached a steady state.")) {
+              executionLogCallback.saveExecutionLog("Service has reached a steady state", LogLevel.INFO);
+              return true;
+            }
           }
           sleep(ofSeconds(10));
         }
