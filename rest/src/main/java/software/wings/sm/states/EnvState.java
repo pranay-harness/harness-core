@@ -3,10 +3,12 @@ package software.wings.sm.states;
 import static io.harness.data.structure.EmptyPredicate.isEmpty;
 import static io.harness.data.structure.EmptyPredicate.isNotEmpty;
 import static java.util.Arrays.asList;
+import static java.util.concurrent.TimeUnit.MILLISECONDS;
 import static software.wings.api.EnvStateExecutionData.Builder.anEnvStateExecutionData;
 import static software.wings.api.ServiceArtifactElement.ServiceArtifactElementBuilder.aServiceArtifactElement;
 import static software.wings.beans.ExecutionCredential.ExecutionType.SSH;
 import static software.wings.beans.SSHExecutionCredential.Builder.aSSHExecutionCredential;
+import static software.wings.common.Constants.ENV_STATE_TIMEOUT_MILLIS;
 import static software.wings.sm.ExecutionResponse.Builder.anExecutionResponse;
 
 import com.google.inject.Inject;
@@ -22,7 +24,6 @@ import software.wings.beans.Workflow;
 import software.wings.beans.WorkflowExecution;
 import software.wings.beans.WorkflowType;
 import software.wings.beans.artifact.Artifact;
-import software.wings.common.Constants;
 import software.wings.service.impl.EnvironmentServiceImpl;
 import software.wings.service.impl.WorkflowServiceImpl;
 import software.wings.service.intfc.WorkflowExecutionService;
@@ -152,7 +153,10 @@ public class EnvState extends State {
    * @param context the context
    */
   @Override
-  public void handleAbortEvent(ExecutionContext context) {}
+  public void handleAbortEvent(ExecutionContext context) {
+    long toHours = MILLISECONDS.toHours(getTimeoutMillis());
+    context.getStateExecutionData().setErrorMsg("Workflow not completed within [" + toHours + " (hours)]");
+  }
 
   public ExecutionResponse handleAsyncResponse(ExecutionContext context, Map<String, NotifyResponseData> response) {
     EnvExecutionResponseData responseData = (EnvExecutionResponseData) response.values().iterator().next();
@@ -218,7 +222,10 @@ public class EnvState extends State {
   @SchemaIgnore
   @Override
   public Integer getTimeoutMillis() {
-    return Constants.ENV_STATE_TIMEOUT_MILLIS;
+    if (super.getTimeoutMillis() == null) {
+      return ENV_STATE_TIMEOUT_MILLIS;
+    }
+    return super.getTimeoutMillis();
   }
 
   public void setWorkflowVariables(Map<String, String> workflowVariables) {

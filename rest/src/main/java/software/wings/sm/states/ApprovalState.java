@@ -2,8 +2,10 @@ package software.wings.sm.states;
 
 import static io.harness.data.structure.UUIDGenerator.generateUuid;
 import static java.util.Arrays.asList;
+import static java.util.concurrent.TimeUnit.MILLISECONDS;
 import static software.wings.api.ApprovalStateExecutionData.Builder.anApprovalStateExecutionData;
 import static software.wings.beans.alert.AlertType.ApprovalNeeded;
+import static software.wings.common.Constants.DEFAULT_APPROVAL_STATE_TIMEOUT_MILLIS;
 import static software.wings.sm.ExecutionResponse.Builder.anExecutionResponse;
 
 import com.google.inject.Inject;
@@ -15,7 +17,6 @@ import org.slf4j.LoggerFactory;
 import software.wings.api.ApprovalStateExecutionData;
 import software.wings.beans.Application;
 import software.wings.beans.alert.ApprovalNeededAlert;
-import software.wings.common.Constants;
 import software.wings.service.intfc.AlertService;
 import software.wings.sm.ExecutionContext;
 import software.wings.sm.ExecutionContextImpl;
@@ -103,12 +104,18 @@ public class ApprovalState extends State {
    * @param context the context
    */
   @Override
-  public void handleAbortEvent(ExecutionContext context) {}
+  public void handleAbortEvent(ExecutionContext context) {
+    long toHours = MILLISECONDS.toHours(getTimeoutMillis());
+    context.getStateExecutionData().setErrorMsg("Pipeline was not approved within " + toHours + "(hours)");
+  }
 
   @SchemaIgnore
   @Override
   public Integer getTimeoutMillis() {
-    return Constants.DEFAULT_APPROVAL_STATE_TIMEOUT_MILLIS;
+    if (super.getTimeoutMillis() == null) {
+      return DEFAULT_APPROVAL_STATE_TIMEOUT_MILLIS;
+    }
+    return super.getTimeoutMillis();
   }
 
   /**
