@@ -51,6 +51,7 @@ import software.wings.beans.command.ContainerResizeParams;
 import software.wings.beans.command.ResizeCommandUnitExecutionData;
 import software.wings.common.Constants;
 import software.wings.exception.WingsException;
+import software.wings.helpers.ext.container.ContainerDeploymentManagerHelper;
 import software.wings.security.encryption.EncryptedDataDetail;
 import software.wings.service.intfc.ActivityService;
 import software.wings.service.intfc.DelegateService;
@@ -67,7 +68,6 @@ import software.wings.sm.ExecutionStatus;
 import software.wings.sm.InstanceStatusSummary;
 import software.wings.sm.State;
 import software.wings.sm.WorkflowStandardParams;
-import software.wings.utils.ContainerDeploymentHelper;
 import software.wings.waitnotify.NotifyResponseData;
 
 import java.util.ArrayList;
@@ -87,7 +87,7 @@ public abstract class ContainerServiceDeploy extends State {
   @Inject @Transient private transient InfrastructureMappingService infrastructureMappingService;
   @Inject @Transient private transient ServiceTemplateService serviceTemplateService;
   @Inject @Transient private transient SecretManager secretManager;
-  @Inject @Transient private transient ContainerDeploymentHelper containerDeploymentHelper;
+  @Inject @Transient private transient ContainerDeploymentManagerHelper containerDeploymentHelper;
 
   ContainerServiceDeploy(String name, String type) {
     super(name, type);

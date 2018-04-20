@@ -50,6 +50,7 @@ import software.wings.beans.container.HelmChartSpecification;
 import software.wings.beans.container.ImageDetails;
 import software.wings.common.Constants;
 import software.wings.exception.WingsException;
+import software.wings.helpers.ext.container.ContainerDeploymentManagerHelper;
 import software.wings.helpers.ext.helm.HelmCommandExecutionResponse;
 import software.wings.helpers.ext.helm.request.HelmCommandRequest;
 import software.wings.helpers.ext.helm.request.HelmInstallCommandRequest;
@@ -78,7 +79,6 @@ import software.wings.sm.State;
 import software.wings.sm.StateType;
 import software.wings.sm.WorkflowStandardParams;
 import software.wings.stencils.DefaultValue;
-import software.wings.utils.ContainerDeploymentHelper;
 import software.wings.utils.KubernetesConvention;
 import software.wings.utils.Validator;
 import software.wings.waitnotify.NotifyResponseData;
@@ -103,7 +103,7 @@ public class HelmDeployState extends State {
   @Inject private transient SettingsService settingsService;
   @Inject private transient ServiceTemplateService serviceTemplateService;
   @Inject private transient ActivityService activityService;
-  @Inject private transient ContainerDeploymentHelper containerDeploymentHelper;
+  @Inject private transient ContainerDeploymentManagerHelper containerDeploymentHelper;
 
   @Attributes(title = "Deployment steady state timeout (in minutes).")
   @DefaultValue("10")
