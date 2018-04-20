@@ -841,8 +841,8 @@ public class DelegateServiceImpl implements DelegateService {
   @Override
   public void processDelegateResponse(DelegateTaskResponse response) {
     DelegateTask task = response.getTask();
-    logger.info("Delegate [{}], response received for task [{}, {}, {}]", task.getDelegateId(), task.getUuid(),
-        task.getStatus(), task.getTaskType());
+    logger.info(
+        "Delegate [{}], response received for task [{}, {}]", task.getDelegateId(), task.getUuid(), task.getTaskType());
 
     DelegateTask delegateTask = wingsPersistence.createQuery(DelegateTask.class)
                                     .filter("accountId", response.getAccountId())
@@ -866,7 +866,7 @@ public class DelegateServiceImpl implements DelegateService {
         wingsPersistence.save(delegateTask);
       }
     } else {
-      logger.error("No delegateTask found: {}", task.getUuid());
+      logger.warn("No delegate task found: {}", task.getUuid());
     }
   }
 
