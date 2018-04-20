@@ -11,6 +11,7 @@ import org.mongodb.morphia.annotations.Transient;
 import software.wings.api.ContainerServiceElement;
 import software.wings.api.DeploymentType;
 import software.wings.api.PhaseElement;
+import software.wings.api.PhaseElement.PhaseElementBuilder;
 import software.wings.api.PhaseExecutionData;
 import software.wings.api.PhaseExecutionData.PhaseExecutionDataBuilder;
 import software.wings.api.ServiceElement;
@@ -164,29 +165,36 @@ public class PhaseSubWorkflow extends SubWorkflowState {
   private StateExecutionInstance getSpawningInstance(
       StateExecutionInstance stateExecutionInstance, Service service, InfrastructureMapping infrastructureMapping) {
     StateExecutionInstance spawningInstance = super.getSpawningInstance(stateExecutionInstance);
+
+    PhaseElementBuilder phaseElementBuilder = aPhaseElement()
+                                                  .withUuid(getId())
+                                                  .withPhaseName(stateExecutionInstance.getDisplayName())
+                                                  .withAppId(stateExecutionInstance.getAppId())
+                                                  .withPhaseNameForRollback(phaseNameForRollback);
+
     if (service != null) {
       ServiceElement serviceElement = new ServiceElement();
       MapperUtils.mapObject(service, serviceElement);
-      PhaseElement phaseElement = aPhaseElement()
-                                      .withUuid(getId())
-                                      .withPhaseName(stateExecutionInstance.getDisplayName())
-                                      .withServiceElement(serviceElement)
-                                      .withDeploymentType(infrastructureMapping.getDeploymentType())
-                                      .withInfraMappingId(infrastructureMapping.getUuid())
-                                      .withAppId(infrastructureMapping.getAppId())
-                                      .withPhaseNameForRollback(phaseNameForRollback)
-                                      .build();
-
-      if (stateExecutionInstance.getRollbackPhaseName() != null) {
-        phaseElement.setPhaseNameForRollback(stateExecutionInstance.getRollbackPhaseName());
-      }
-
-      if (isNotEmpty(getVariableOverrides())) {
-        phaseElement.setVariableOverrides(getVariableOverrides());
-      }
-      spawningInstance.getContextElements().push(phaseElement);
-      spawningInstance.setContextElement(phaseElement);
+      phaseElementBuilder.withServiceElement(serviceElement);
     }
+
+    if (infrastructureMapping != null) {
+      phaseElementBuilder.withDeploymentType(infrastructureMapping.getDeploymentType())
+          .withInfraMappingId(infrastructureMapping.getUuid());
+    }
+
+    if (stateExecutionInstance.getRollbackPhaseName() != null) {
+      phaseElementBuilder.withPhaseNameForRollback(stateExecutionInstance.getRollbackPhaseName());
+    }
+
+    if (isNotEmpty(getVariableOverrides())) {
+      phaseElementBuilder.withVariableOverrides(getVariableOverrides());
+    }
+
+    final PhaseElement phaseElement = phaseElementBuilder.build();
+
+    spawningInstance.getContextElements().push(phaseElement);
+    spawningInstance.setContextElement(phaseElement);
 
     return spawningInstance;
   }

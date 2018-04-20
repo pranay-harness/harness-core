@@ -160,6 +160,7 @@ public class PhaseElement implements ContextElement {
     private String deploymentType;
     private String phaseNameForRollback;
     private String phaseName;
+    private List<NameValuePair> variableOverrides = new ArrayList<>();
 
     private PhaseElementBuilder() {}
 
@@ -202,6 +203,11 @@ public class PhaseElement implements ContextElement {
       return this;
     }
 
+    public PhaseElementBuilder withVariableOverrides(List<NameValuePair> variableOverrides) {
+      this.variableOverrides = variableOverrides;
+      return this;
+    }
+
     public PhaseElementBuilder but() {
       return aPhaseElement()
           .withUuid(uuid)
@@ -210,7 +216,8 @@ public class PhaseElement implements ContextElement {
           .withInfraMappingId(infraMappingId)
           .withDeploymentType(deploymentType)
           .withPhaseNameForRollback(phaseNameForRollback)
-          .withPhaseName(phaseName);
+          .withPhaseName(phaseName)
+          .withVariableOverrides(variableOverrides);
     }
 
     public PhaseElement build() {
@@ -222,6 +229,7 @@ public class PhaseElement implements ContextElement {
       phaseElement.setDeploymentType(deploymentType);
       phaseElement.setPhaseNameForRollback(phaseNameForRollback);
       phaseElement.setPhaseName(phaseName);
+      phaseElement.setVariableOverrides(variableOverrides);
       return phaseElement;
     }
   }
