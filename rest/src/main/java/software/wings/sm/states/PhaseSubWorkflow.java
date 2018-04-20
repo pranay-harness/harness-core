@@ -164,32 +164,29 @@ public class PhaseSubWorkflow extends SubWorkflowState {
   private StateExecutionInstance getSpawningInstance(
       StateExecutionInstance stateExecutionInstance, Service service, InfrastructureMapping infrastructureMapping) {
     StateExecutionInstance spawningInstance = super.getSpawningInstance(stateExecutionInstance);
-
-    ServiceElement serviceElement = null;
     if (service != null) {
-      serviceElement = new ServiceElement();
+      ServiceElement serviceElement = new ServiceElement();
       MapperUtils.mapObject(service, serviceElement);
-    }
+      PhaseElement phaseElement = aPhaseElement()
+                                      .withUuid(getId())
+                                      .withPhaseName(stateExecutionInstance.getDisplayName())
+                                      .withServiceElement(serviceElement)
+                                      .withDeploymentType(infrastructureMapping.getDeploymentType())
+                                      .withInfraMappingId(infrastructureMapping.getUuid())
+                                      .withAppId(infrastructureMapping.getAppId())
+                                      .withPhaseNameForRollback(phaseNameForRollback)
+                                      .build();
 
-    PhaseElement phaseElement = aPhaseElement()
-                                    .withUuid(getId())
-                                    .withPhaseName(stateExecutionInstance.getDisplayName())
-                                    .withServiceElement(serviceElement)
-                                    .withDeploymentType(infrastructureMapping.getDeploymentType())
-                                    .withInfraMappingId(infrastructureMapping.getUuid())
-                                    .withAppId(infrastructureMapping.getAppId())
-                                    .withPhaseNameForRollback(phaseNameForRollback)
-                                    .build();
+      if (stateExecutionInstance.getRollbackPhaseName() != null) {
+        phaseElement.setPhaseNameForRollback(stateExecutionInstance.getRollbackPhaseName());
+      }
 
-    if (stateExecutionInstance.getRollbackPhaseName() != null) {
-      phaseElement.setPhaseNameForRollback(stateExecutionInstance.getRollbackPhaseName());
+      if (isNotEmpty(getVariableOverrides())) {
+        phaseElement.setVariableOverrides(getVariableOverrides());
+      }
+      spawningInstance.getContextElements().push(phaseElement);
+      spawningInstance.setContextElement(phaseElement);
     }
-
-    if (isNotEmpty(getVariableOverrides())) {
-      phaseElement.setVariableOverrides(getVariableOverrides());
-    }
-    spawningInstance.getContextElements().push(phaseElement);
-    spawningInstance.setContextElement(phaseElement);
 
     return spawningInstance;
   }
