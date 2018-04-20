@@ -6,6 +6,28 @@ import java.util.concurrent.TimeUnit;
  * Created by anubhaw on 3/23/18.
  */
 public class HelmConstants {
+  public static final String KUBE_CONFIG_TEMPLATE = "apiVersion: v1\n"
+      + "clusters:\n"
+      + "- cluster:\n"
+      + "    xxxxxxxx ${MASTER_URL}\n"
+      + "    insecure-skip-tls-verify: true\n"
+      + "  name: ${CLUSTER_NAME}\n"
+      + "contexts:\n"
+      + "- context:\n"
+      + "    cluster: ${CLUSTER_NAME}\n"
+      + "    user: ${USER_NAME}\n"
+      + "  name: ${CLUSTER_NAME}\n"
+      + "current-context: ${CLUSTER_NAME}\n"
+      + "kind: Config\n"
+      + "preferences: {}\n"
+      + "users:\n"
+      + "- name: ${USER_NAME}\n"
+      + "  user:\n"
+      + "    ${CLIENT_CERT_DATA}\n"
+      + "    ${CLIENT_KEY_DATA}\n"
+      + "    ${PASSWORD}\n"
+      + "    username: ${USER_NAME}";
+
   public static final String HELM_ROLLBACK_COMMAND_TEMPLATE =
       "KUBECONFIG=${KUBECONFIG_PATH} helm rollback ${RELEASE} ${REVISION}";
   public static final String HELM_INSTALL_COMMAND_TEMPLATE =
