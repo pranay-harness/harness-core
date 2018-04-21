@@ -2,7 +2,7 @@ package software.wings.service.impl.yaml.handler.workflow;
 
 import static io.harness.data.structure.EmptyPredicate.isNotEmpty;
 import static java.util.stream.Collectors.toList;
-import static software.wings.exception.WingsException.HARMLESS;
+import static software.wings.exception.WingsException.USER;
 import static software.wings.utils.Validator.notNullCheck;
 
 import com.google.common.collect.Lists;
@@ -26,7 +26,6 @@ import software.wings.beans.yaml.YamlConstants;
 import software.wings.beans.yaml.YamlType;
 import software.wings.exception.HarnessException;
 import software.wings.exception.WingsException;
-import software.wings.exception.WingsException.ReportTarget;
 import software.wings.service.impl.yaml.handler.BaseYamlHandler;
 import software.wings.service.impl.yaml.handler.YamlHandlerFactory;
 import software.wings.service.impl.yaml.handler.template.TemplateExpressionYamlHandler;
@@ -55,7 +54,7 @@ public class WorkflowPhaseYamlHandler extends BaseYamlHandler<WorkflowPhase.Yaml
     Change change = context.getChange();
     String accountId = change.getAccountId();
     String appId = yamlHelper.getAppId(accountId, change.getFilePath());
-    notNullCheck("Could not retrieve valid app from path: " + change.getFilePath(), appId, HARMLESS);
+    notNullCheck("Could not retrieve valid app from path: " + change.getFilePath(), appId, USER);
 
     String envId = context.getEntityIdMap().get(EntityType.ENVIRONMENT.name());
     String infraMappingId = null;
@@ -192,7 +191,7 @@ public class WorkflowPhaseYamlHandler extends BaseYamlHandler<WorkflowPhase.Yaml
                              .append(", for app:")
                              .append(appId)
                              .toString();
-        throw new WingsException(ErrorCode.GENERAL_ERROR, ReportTarget.USER).addParam("args", message);
+        throw new WingsException(ErrorCode.GENERAL_ERROR, USER).addParam("args", message);
       }
     }
 

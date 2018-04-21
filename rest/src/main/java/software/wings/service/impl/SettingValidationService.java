@@ -4,6 +4,7 @@ import static java.util.Collections.emptyList;
 import static software.wings.beans.DelegateTask.SyncTaskContext.Builder.aContext;
 import static software.wings.beans.ErrorCode.INVALID_REQUEST;
 import static software.wings.beans.FeatureName.AZURE_SUPPORT;
+import static software.wings.exception.WingsException.USER;
 import static software.wings.utils.WingsReflectionUtils.getEncryptedRefField;
 
 import com.google.inject.Inject;
@@ -37,7 +38,6 @@ import software.wings.beans.config.NexusConfig;
 import software.wings.delegatetasks.DelegateProxyFactory;
 import software.wings.dl.WingsPersistence;
 import software.wings.exception.WingsException;
-import software.wings.exception.WingsException.ReportTarget;
 import software.wings.helpers.ext.azure.AzureHelperService;
 import software.wings.service.impl.analysis.ElkConnector;
 import software.wings.service.intfc.AppService;
@@ -169,7 +169,7 @@ public class SettingValidationService {
       delegateProxyFactory.get(ContainerService.class, syncTaskContext).validate(containerServiceParams);
     } catch (Exception e) {
       logger.warn(Misc.getMessage(e), e);
-      throw new WingsException(INVALID_REQUEST, ReportTarget.USER).addParam("message", Misc.getMessage(e));
+      throw new WingsException(INVALID_REQUEST, USER).addParam("message", Misc.getMessage(e));
     }
   }
 }

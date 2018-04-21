@@ -25,6 +25,7 @@ import static software.wings.beans.SettingAttribute.Builder.aSettingAttribute;
 import static software.wings.beans.infrastructure.Host.Builder.aHost;
 import static software.wings.dl.PageRequest.PageRequestBuilder.aPageRequest;
 import static software.wings.dl.PageRequest.UNLIMITED;
+import static software.wings.exception.WingsException.USER;
 import static software.wings.settings.SettingValue.SettingVariableTypes.AWS;
 import static software.wings.settings.SettingValue.SettingVariableTypes.GCP;
 import static software.wings.settings.SettingValue.SettingVariableTypes.PHYSICAL_DATA_CENTER;
@@ -87,7 +88,6 @@ import software.wings.dl.PageRequest;
 import software.wings.dl.PageResponse;
 import software.wings.dl.WingsPersistence;
 import software.wings.exception.WingsException;
-import software.wings.exception.WingsException.ReportTarget;
 import software.wings.expression.ExpressionEvaluator;
 import software.wings.scheduler.PruneEntityJob;
 import software.wings.scheduler.QuartzScheduler;
@@ -344,7 +344,7 @@ public class InfrastructureMappingServiceImpl implements InfrastructureMappingSe
       delegateProxyFactory.get(ContainerService.class, syncTaskContext).validate(containerServiceParams);
     } catch (Exception e) {
       logger.warn(Misc.getMessage(e), e);
-      throw new WingsException(INVALID_REQUEST, ReportTarget.USER).addParam("message", Misc.getMessage(e));
+      throw new WingsException(INVALID_REQUEST, USER).addParam("message", Misc.getMessage(e));
     }
   }
 
@@ -376,7 +376,7 @@ public class InfrastructureMappingServiceImpl implements InfrastructureMappingSe
       delegateProxyFactory.get(ContainerService.class, syncTaskContext).validate(containerServiceParams);
     } catch (Exception e) {
       logger.warn(Misc.getMessage(e), e);
-      throw new WingsException(INVALID_REQUEST, ReportTarget.USER).addParam("message", Misc.getMessage(e));
+      throw new WingsException(INVALID_REQUEST, USER).addParam("message", Misc.getMessage(e));
     }
   }
 
@@ -405,7 +405,7 @@ public class InfrastructureMappingServiceImpl implements InfrastructureMappingSe
       delegateProxyFactory.get(ContainerService.class, syncTaskContext).validate(containerServiceParams);
     } catch (Exception e) {
       logger.warn(Misc.getMessage(e), e);
-      throw new WingsException(INVALID_REQUEST, ReportTarget.USER).addParam("message", Misc.getMessage(e));
+      throw new WingsException(INVALID_REQUEST, USER).addParam("message", Misc.getMessage(e));
     }
   }
 
@@ -432,7 +432,7 @@ public class InfrastructureMappingServiceImpl implements InfrastructureMappingSe
       delegateProxyFactory.get(ContainerService.class, syncTaskContext).validate(containerServiceParams);
     } catch (Exception e) {
       logger.warn(Misc.getMessage(e), e);
-      throw new WingsException(INVALID_REQUEST, ReportTarget.USER).addParam("message", Misc.getMessage(e));
+      throw new WingsException(INVALID_REQUEST, USER).addParam("message", Misc.getMessage(e));
     }
   }
 
@@ -735,7 +735,7 @@ public class InfrastructureMappingServiceImpl implements InfrastructureMappingSe
             .collect(toList());
 
     if (!referencingWorkflowNames.isEmpty()) {
-      throw new WingsException(INVALID_REQUEST, ReportTarget.USER)
+      throw new WingsException(INVALID_REQUEST, USER)
           .addParam("message",
               String.format("Service Infrastructure is in use by %s workflow%s [%s].", referencingWorkflowNames.size(),
                   referencingWorkflowNames.size() == 1 ? "" : "s", Joiner.on(", ").join(referencingWorkflowNames)));

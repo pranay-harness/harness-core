@@ -5,9 +5,9 @@ import static io.harness.network.Http.validUrl;
 import static java.util.stream.Collectors.toList;
 import static software.wings.beans.ErrorCode.INVALID_ARTIFACT_SERVER;
 import static software.wings.beans.ErrorCode.INVALID_REQUEST;
-import static software.wings.exception.WingsException.ALERTING;
-import static software.wings.exception.WingsException.ReportTarget.HARNESS_ENGINEER;
-import static software.wings.exception.WingsException.ReportTarget.USER;
+import static software.wings.exception.WingsException.SRE;
+import static software.wings.exception.WingsException.USER;
+import static software.wings.exception.WingsException.USER_ADMIN;
 import static software.wings.helpers.ext.jenkins.JobDetails.JobParameter;
 import static software.wings.helpers.ext.jenkins.model.ParamPropertyType.BooleanParameterDefinition;
 import static software.wings.utils.Validator.equalCheck;
@@ -81,7 +81,7 @@ public class JenkinsBuildServiceImpl implements JenkinsBuildService {
     } catch (WingsException e) {
       throw e;
     } catch (IOException ex) {
-      throw new WingsException(INVALID_REQUEST, ALERTING)
+      throw new WingsException(INVALID_REQUEST, USER_ADMIN)
           .addParam("message", "Failed to fetch build details jenkins server. Reason:" + ex.getMessage());
     }
   }
@@ -144,7 +144,7 @@ public class JenkinsBuildServiceImpl implements JenkinsBuildService {
     } catch (WingsException e) {
       throw e;
     } catch (IOException ex) {
-      throw new WingsException(INVALID_ARTIFACT_SERVER, ALERTING)
+      throw new WingsException(INVALID_ARTIFACT_SERVER, USER_ADMIN)
           .addParam("message", "Error in fetching build from jenkins server. Reason:" + ex.getMessage());
     }
   }
@@ -168,7 +168,7 @@ public class JenkinsBuildServiceImpl implements JenkinsBuildService {
   @Override
   public List<String> getGroupIds(
       String jobName, JenkinsConfig jenkinsConfig, List<EncryptedDataDetail> encryptionDetails) {
-    throw new WingsException(INVALID_REQUEST, HARNESS_ENGINEER)
+    throw new WingsException(INVALID_REQUEST, SRE)
         .addParam("message", "Operation not supported by Jenkins Artifact Stream");
   }
 

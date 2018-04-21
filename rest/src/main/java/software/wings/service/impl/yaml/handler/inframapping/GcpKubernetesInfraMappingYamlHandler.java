@@ -1,6 +1,6 @@
 package software.wings.service.impl.yaml.handler.inframapping;
 
-import static software.wings.exception.WingsException.HARMLESS;
+import static software.wings.exception.WingsException.USER;
 import static software.wings.utils.Validator.notNullCheck;
 
 import com.google.inject.Singleton;
@@ -36,13 +36,13 @@ public class GcpKubernetesInfraMappingYamlHandler
     String yamlFilePath = changeContext.getChange().getFilePath();
     String accountId = changeContext.getChange().getAccountId();
     String appId = yamlHelper.getAppId(accountId, yamlFilePath);
-    notNullCheck("Couldn't retrieve app from yaml:" + yamlFilePath, appId, HARMLESS);
+    notNullCheck("Couldn't retrieve app from yaml:" + yamlFilePath, appId, USER);
     String envId = yamlHelper.getEnvironmentId(appId, yamlFilePath);
-    notNullCheck("Couldn't retrieve environment from yaml:" + yamlFilePath, envId, HARMLESS);
+    notNullCheck("Couldn't retrieve environment from yaml:" + yamlFilePath, envId, USER);
     String computeProviderId = getSettingId(accountId, appId, infraMappingYaml.getComputeProviderName());
-    notNullCheck("Couldn't retrieve compute provider from yaml:" + yamlFilePath, computeProviderId, HARMLESS);
+    notNullCheck("Couldn't retrieve compute provider from yaml:" + yamlFilePath, computeProviderId, USER);
     String serviceId = getServiceId(appId, infraMappingYaml.getServiceName());
-    notNullCheck("Couldn't retrieve service from yaml:" + yamlFilePath, serviceId, HARMLESS);
+    notNullCheck("Couldn't retrieve service from yaml:" + yamlFilePath, serviceId, USER);
 
     GcpKubernetesInfrastructureMapping current = new GcpKubernetesInfrastructureMapping();
     toBean(current, changeContext, appId, envId, computeProviderId, serviceId);

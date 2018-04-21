@@ -25,7 +25,7 @@ import static software.wings.beans.yaml.YamlType.PIPELINE;
 import static software.wings.beans.yaml.YamlType.SERVICE;
 import static software.wings.beans.yaml.YamlType.VERIFICATION_PROVIDER;
 import static software.wings.beans.yaml.YamlType.WORKFLOW;
-import static software.wings.exception.WingsException.HARMLESS;
+import static software.wings.exception.WingsException.USER;
 import static software.wings.utils.Validator.notNullCheck;
 
 import com.google.common.collect.Lists;
@@ -380,10 +380,10 @@ public class YamlServiceImpl<Y extends BaseYaml, B extends Base> implements Yaml
 
   private void processYamlChange(ChangeContext changeContext, List<ChangeContext> changeContextList)
       throws HarnessException {
-    notNullCheck("changeContext is null", changeContext, HARMLESS);
+    notNullCheck("changeContext is null", changeContext, USER);
     Change change = changeContext.getChange();
-    notNullCheck("FileChange is null", change, HARMLESS);
-    notNullCheck("ChangeType is null for change:" + change.getFilePath(), change.getChangeType(), HARMLESS);
+    notNullCheck("FileChange is null", change, USER);
+    notNullCheck("ChangeType is null for change:" + change.getFilePath(), change.getChangeType(), USER);
 
     // If its not a yaml file, we don't have a handler for that file
     if (!change.getFilePath().endsWith(YAML_EXTENSION)) {

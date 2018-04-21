@@ -316,8 +316,7 @@ public class YamlGitServiceImpl implements YamlGitService {
       if (!folderYamlTypes.stream().anyMatch(
               yamlType -> Pattern.compile(yamlType.getPathExpression()).matcher(filePath).matches())) {
         throw new WingsException(
-            "Invalid entity name, entity can not contain / in the name. Caused invalid file path: " + filePath,
-            WingsException.SERIOUS);
+            "Invalid entity name, entity can not contain / in the name. Caused invalid file path: " + filePath);
       }
     }
   }

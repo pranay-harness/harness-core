@@ -17,7 +17,7 @@ import static software.wings.beans.artifact.ArtifactStreamType.ECR;
 import static software.wings.beans.artifact.ArtifactStreamType.GCR;
 import static software.wings.beans.artifact.ArtifactStreamType.NEXUS;
 import static software.wings.dl.PageRequest.PageRequestBuilder.aPageRequest;
-import static software.wings.exception.WingsException.ReportTarget.USER;
+import static software.wings.exception.WingsException.USER;
 
 import com.google.common.base.Joiner;
 import com.google.common.collect.ImmutableMap;
@@ -272,7 +272,7 @@ public class ArtifactStreamServiceImpl implements ArtifactStreamService, DataPro
     Service service = serviceResourceService.get(appId, serviceId);
     // Observed NPE in logs due to invalid service id provided by the ui due to a stale screen.
     if (service == null) {
-      throw new InvalidRequestException("Service does not exist");
+      throw new InvalidRequestException("Service does not exist", USER);
     }
     if (service.getArtifactType().equals(ArtifactType.DOCKER)) {
       String accountId = appService.getAccountIdByAppId(appId);

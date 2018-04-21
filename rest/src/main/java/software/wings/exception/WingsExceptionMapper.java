@@ -3,12 +3,12 @@ package software.wings.exception;
 import static io.harness.data.structure.EmptyPredicate.isNotEmpty;
 import static javax.ws.rs.core.Response.Status.INTERNAL_SERVER_ERROR;
 import static software.wings.beans.RestResponse.Builder.aRestResponse;
+import static software.wings.exception.WingsException.ReportTarget.REST_API;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import software.wings.beans.ErrorCode;
 import software.wings.beans.ResponseMessage;
-import software.wings.exception.WingsException.ReportTarget;
 
 import java.util.List;
 import javax.ws.rs.core.Response;
@@ -27,7 +27,7 @@ public class WingsExceptionMapper implements ExceptionMapper<WingsException> {
   @Override
   public Response toResponse(WingsException ex) {
     ex.logProcessedMessages(logger);
-    List<ResponseMessage> responseMessages = ex.getResponseMessageList(ReportTarget.USER);
+    List<ResponseMessage> responseMessages = ex.getResponseMessageList(REST_API);
 
     return Response.status(resolveHttpStatus(responseMessages))
         .entity(aRestResponse().withResponseMessages(responseMessages).build())

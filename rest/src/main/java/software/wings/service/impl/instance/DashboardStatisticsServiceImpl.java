@@ -17,6 +17,7 @@ import static software.wings.beans.instance.dashboard.EntitySummaryStats.Builder
 import static software.wings.beans.instance.dashboard.InstanceSummaryStats.Builder.anInstanceSummaryStats;
 import static software.wings.beans.instance.dashboard.service.PipelineExecutionHistory.Builder.aPipelineExecutionHistory;
 import static software.wings.dl.PageRequest.PageRequestBuilder.aPageRequest;
+import static software.wings.exception.WingsException.USER;
 
 import com.google.common.collect.Lists;
 import com.google.inject.Inject;
@@ -776,15 +777,13 @@ public class DashboardStatisticsServiceImpl implements DashboardStatisticsServic
             if (isNotEmpty(allowedAppIds)) {
               query.field("appId").in(allowedAppIds);
             } else {
-              throw new WingsException(
-                  "No apps are assigned to the user or no apps exist in the account", WingsException.HARMLESS);
+              throw new WingsException("No apps are assigned to the user or no apps exist in the account", USER);
             }
           }
         } else {
           UserRequestInfo userRequestInfo = user.getUserRequestInfo();
           if (userRequestInfo == null) {
-            throw new WingsException(
-                "No apps are assigned to the user or no apps exist in the account", WingsException.HARMLESS);
+            throw new WingsException("No apps are assigned to the user or no apps exist in the account", USER);
           }
 
           if (userRequestInfo.isAllAppsAllowed()) {
@@ -796,13 +795,11 @@ public class DashboardStatisticsServiceImpl implements DashboardStatisticsServic
           if (isNotEmpty(appIds)) {
             query.field("appId").in(appIds);
           } else {
-            throw new WingsException(
-                "No appIds are assigned to the user or no apps exist in the account", WingsException.HARMLESS);
+            throw new WingsException("No appIds are assigned to the user or no apps exist in the account", USER);
           }
         }
       } else {
-        throw new WingsException(
-            "No appIds are assigned to the user or no apps exist in the account", WingsException.HARMLESS);
+        throw new WingsException("No appIds are assigned to the user or no apps exist in the account", USER);
       }
     }
 

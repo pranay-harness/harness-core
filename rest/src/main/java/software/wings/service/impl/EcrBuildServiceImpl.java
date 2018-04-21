@@ -2,8 +2,8 @@ package software.wings.service.impl;
 
 import static software.wings.beans.ErrorCode.INVALID_REQUEST;
 import static software.wings.beans.artifact.ArtifactStreamType.ECR;
-import static software.wings.exception.WingsException.ReportTarget.HARNESS_ENGINEER;
-import static software.wings.exception.WingsException.ReportTarget.USER;
+import static software.wings.exception.WingsException.SRE;
+import static software.wings.exception.WingsException.USER;
 import static software.wings.utils.Validator.equalCheck;
 
 import com.google.inject.Inject;
@@ -55,7 +55,7 @@ public class EcrBuildServiceImpl implements EcrBuildService {
   @Override
   public BuildDetails getLastSuccessfulBuild(String appId, ArtifactStreamAttributes artifactStreamAttributes,
       AwsConfig awsConfig, List<EncryptedDataDetail> encryptionDetails) {
-    throw new WingsException(INVALID_REQUEST, HARNESS_ENGINEER)
+    throw new WingsException(INVALID_REQUEST, SRE)
         .addParam("message", "Operation not supported by ECR Artifact Stream");
   }
 

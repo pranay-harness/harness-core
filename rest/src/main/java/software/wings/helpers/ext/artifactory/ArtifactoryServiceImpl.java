@@ -22,8 +22,8 @@ import static software.wings.beans.ErrorCode.INVALID_ARTIFACT_SERVER;
 import static software.wings.common.Constants.ARTIFACT_FILE_NAME;
 import static software.wings.common.Constants.ARTIFACT_PATH;
 import static software.wings.common.Constants.BUILD_NO;
-import static software.wings.exception.WingsException.ReportTarget.USER;
-import static software.wings.exception.WingsException.ReportTarget.USER_ADMIN;
+import static software.wings.exception.WingsException.ADMIN;
+import static software.wings.exception.WingsException.USER;
 import static software.wings.helpers.ext.jenkins.BuildDetails.Builder.aBuildDetails;
 
 import com.google.common.util.concurrent.TimeLimiter;
@@ -238,7 +238,7 @@ public class ArtifactoryServiceImpl implements ArtifactoryService {
     } catch (Exception e) {
       logger.error("Error occurred while listing docker tags from artifactory {} for Repo {} for image {} ",
           artifactoryConfig.getArtifactoryUrl(), repoKey, imageName, e);
-      handleException(e, USER_ADMIN);
+      handleException(e, ADMIN);
     }
     logger.info("Retrieving docker tags for repoKey {} imageName {} success ", repoKey, imageName);
     return buildDetails;
@@ -330,7 +330,7 @@ public class ArtifactoryServiceImpl implements ArtifactoryService {
       }
       logger.error("Error occurred while retrieving File Paths from Artifactory server {}",
           artifactoryConfig.getArtifactoryUrl(), e);
-      handleException(e, USER_ADMIN);
+      handleException(e, ADMIN);
     }
     return new ArrayList<>();
   }
@@ -400,7 +400,7 @@ public class ArtifactoryServiceImpl implements ArtifactoryService {
       return artifactPaths;
     } catch (Exception e) {
       logger.error("Error occurred while retrieving File Paths from Artifactory server {}", artifactory.getUri(), e);
-      handleException(e, USER_ADMIN);
+      handleException(e, ADMIN);
     }
     return new ArrayList<>();
   }
@@ -610,7 +610,7 @@ public class ArtifactoryServiceImpl implements ArtifactoryService {
       return aBuildDetails().withNumber(latestVersion).withRevision(latestVersion).build();
     } catch (Exception e) {
       logger.error("Failed to fetch the latest version for url {}  ", artifactoryConfig.getArtifactoryUrl(), e);
-      handleException(e, USER_ADMIN);
+      handleException(e, ADMIN);
     }
     return null;
   }
@@ -763,7 +763,7 @@ public class ArtifactoryServiceImpl implements ArtifactoryService {
       }
     } catch (Exception e) {
       String msg = "Failed to download the latest artifacts  of repo [" + repoType + "] groupId [" + groupId;
-      prepareAndThrowException(msg + "Reason:" + ExceptionUtils.getRootCauseMessage(e), USER_ADMIN);
+      prepareAndThrowException(msg + "Reason:" + ExceptionUtils.getRootCauseMessage(e), ADMIN);
     }
     return res;
   }
@@ -827,8 +827,8 @@ public class ArtifactoryServiceImpl implements ArtifactoryService {
     prepareAndThrowException(message, USER);
   }
 
-  private void prepareAndThrowException(String message, ReportTarget reportTarget) {
-    throw new WingsException(ErrorCode.INVALID_ARTIFACT_SERVER, reportTarget).addParam("message", message);
+  private void prepareAndThrowException(String message, ReportTarget[] reportTargets) {
+    throw new WingsException(ErrorCode.INVALID_ARTIFACT_SERVER, reportTargets).addParam("message", message);
   }
 
   private ListNotifyResponseData downloadArtifacts(ArtifactoryConfig artifactoryConfig,
@@ -913,20 +913,20 @@ public class ArtifactoryServiceImpl implements ArtifactoryService {
     return "/" + path.replace(".", "/") + "/";
   }
 
-  private void handleException(Exception e, ReportTarget reportTarget) {
+  private void handleException(Exception e, ReportTarget[] reportTargets) {
     if (e instanceof HttpResponseException) {
       HttpResponseException httpResponseException = (HttpResponseException) e;
       if (httpResponseException.getStatusCode() == 401) {
-        prepareAndThrowException("Invalid Artifactory credentials", reportTarget);
+        prepareAndThrowException("Invalid Artifactory credentials", reportTargets);
       } else if (httpResponseException.getStatusCode() == 403) {
-        prepareAndThrowException("User not authorized to access artifactory", reportTarget);
+        prepareAndThrowException("User not authorized to access artifactory", reportTargets);
       }
     }
     if (e instanceof SocketTimeoutException) {
       prepareAndThrowException(e.getMessage() + "."
               + " Artifactory server may not be running",
-          reportTarget);
+          reportTargets);
     }
-    throw new WingsException(ARTIFACT_SERVER_ERROR, reportTarget).addParam("message", e.getMessage());
+    throw new WingsException(ARTIFACT_SERVER_ERROR, reportTargets).addParam("message", e.getMessage());
   }
 }

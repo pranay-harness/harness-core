@@ -1,7 +1,7 @@
 package software.wings.service.impl.yaml.handler.command;
 
 import static software.wings.beans.yaml.YamlConstants.NODE_PROPERTY_REFERENCEID;
-import static software.wings.exception.WingsException.HARMLESS;
+import static software.wings.exception.WingsException.USER;
 import static software.wings.utils.Validator.notNullCheck;
 
 import com.google.inject.Inject;
@@ -52,9 +52,9 @@ public class CommandRefCommandUnitYamlHandler extends CommandUnitYamlHandler<Com
     String filePath = changeContext.getChange().getFilePath();
 
     String appId = yamlHelper.getAppId(changeContext.getChange().getAccountId(), filePath);
-    notNullCheck("Couldn't retrieve app from yaml:" + filePath, appId, HARMLESS);
+    notNullCheck("Couldn't retrieve app from yaml:" + filePath, appId, USER);
     String serviceId = yamlHelper.getServiceId(appId, filePath);
-    notNullCheck("Couldn't retrieve service from yaml:" + filePath, serviceId, HARMLESS);
+    notNullCheck("Couldn't retrieve service from yaml:" + filePath, serviceId, USER);
 
     String commandName = yaml.getName();
     ServiceCommand serviceCommand = serviceResourceService.getCommandByName(appId, serviceId, commandName);
@@ -88,7 +88,7 @@ public class CommandRefCommandUnitYamlHandler extends CommandUnitYamlHandler<Com
         CommandYamlHandler commandYamlHandler = yamlHandlerFactory.getYamlHandler(YamlType.COMMAND);
         commandYamlHandler.upsertFromYaml(commandContext, changeSetContext);
         serviceCommand = serviceResourceService.getCommandByName(appId, serviceId, commandName);
-        notNullCheck("No command found with the given name:" + commandName, serviceCommand, HARMLESS);
+        notNullCheck("No command found with the given name:" + commandName, serviceCommand, USER);
 
       } else {
         throw new HarnessException("No command with the given name: " + yaml.getName());
@@ -97,7 +97,7 @@ public class CommandRefCommandUnitYamlHandler extends CommandUnitYamlHandler<Com
 
     Command commandFromDB =
         commandService.getCommand(appId, serviceCommand.getUuid(), serviceCommand.getDefaultVersion());
-    notNullCheck("No command with the given service command id:" + serviceCommand.getUuid(), commandFromDB, HARMLESS);
+    notNullCheck("No command with the given service command id:" + serviceCommand.getUuid(), commandFromDB, USER);
 
     // Setting the command type as OTHER based on the observation of the value in db in the commandUnit list.
     // To keep it consistent with the normal ui operation, setting it to OTHER. Could be a UI bug.

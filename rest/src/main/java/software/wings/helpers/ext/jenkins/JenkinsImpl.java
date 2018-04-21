@@ -11,8 +11,8 @@ import static java.util.Collections.emptyList;
 import static java.util.Collections.singletonList;
 import static java.util.stream.Collectors.toList;
 import static org.apache.commons.lang3.StringUtils.isBlank;
-import static software.wings.exception.WingsException.ALERTING;
-import static software.wings.exception.WingsException.ReportTarget.USER;
+import static software.wings.exception.WingsException.USER;
+import static software.wings.exception.WingsException.USER_ADMIN;
 import static software.wings.helpers.ext.jenkins.BuildDetails.Builder.aBuildDetails;
 
 import com.google.common.collect.Lists;
@@ -383,7 +383,7 @@ public class JenkinsImpl implements Jenkins {
   public QueueReference trigger(String jobname, Map<String, String> parameters) throws IOException {
     JobWithDetails jobWithDetails = getJob(jobname);
     if (jobWithDetails == null) {
-      throw new WingsException(ErrorCode.INVALID_ARTIFACT_SERVER, ALERTING)
+      throw new WingsException(ErrorCode.INVALID_ARTIFACT_SERVER, USER_ADMIN)
           .addParam("message", "No job [" + jobname + "] found");
     }
     try {

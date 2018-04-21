@@ -3,7 +3,7 @@ package software.wings.service.impl.yaml.handler.configfile;
 import static io.harness.data.structure.EmptyPredicate.isNotEmpty;
 import static java.util.stream.Collectors.toList;
 import static software.wings.beans.yaml.YamlConstants.PATH_DELIMITER;
-import static software.wings.exception.WingsException.HARMLESS;
+import static software.wings.exception.WingsException.USER;
 import static software.wings.utils.Validator.notNullCheck;
 
 import com.google.common.collect.Lists;
@@ -54,9 +54,9 @@ public class ConfigFileYamlHandler extends BaseYamlHandler<Yaml, ConfigFile> {
     String accountId = changeContext.getChange().getAccountId();
     String yamlFilePath = changeContext.getChange().getFilePath();
     String appId = yamlHelper.getAppId(accountId, yamlFilePath);
-    notNullCheck("Invalid Application for the yaml file:" + yamlFilePath, appId, HARMLESS);
+    notNullCheck("Invalid Application for the yaml file:" + yamlFilePath, appId, USER);
     String serviceId = yamlHelper.getServiceId(appId, yamlFilePath);
-    notNullCheck("Invalid Service for the yaml file:" + yamlFilePath, serviceId, HARMLESS);
+    notNullCheck("Invalid Service for the yaml file:" + yamlFilePath, serviceId, USER);
     Yaml yaml = changeContext.getYaml();
     String targetFilePath = yaml.getTargetFilePath();
     configService.delete(appId, serviceId, EntityType.SERVICE, targetFilePath);
@@ -115,9 +115,9 @@ public class ConfigFileYamlHandler extends BaseYamlHandler<Yaml, ConfigFile> {
     String accountId = changeContext.getChange().getAccountId();
     String yamlFilePath = changeContext.getChange().getFilePath();
     String appId = yamlHelper.getAppId(accountId, yamlFilePath);
-    notNullCheck("Invalid Application for the yaml file:" + yamlFilePath, appId, HARMLESS);
+    notNullCheck("Invalid Application for the yaml file:" + yamlFilePath, appId, USER);
     String serviceId = yamlHelper.getServiceId(appId, yamlFilePath);
-    notNullCheck("Invalid Service for the yaml file:" + yamlFilePath, serviceId, HARMLESS);
+    notNullCheck("Invalid Service for the yaml file:" + yamlFilePath, serviceId, USER);
     String configFileName = yamlHelper.getNameFromYamlFilePath(yamlFilePath);
 
     Yaml yaml = changeContext.getYaml();
@@ -212,9 +212,9 @@ public class ConfigFileYamlHandler extends BaseYamlHandler<Yaml, ConfigFile> {
   @Override
   public ConfigFile get(String accountId, String yamlFilePath) {
     String appId = yamlHelper.getAppId(accountId, yamlFilePath);
-    notNullCheck("Invalid Application for the yaml file:" + yamlFilePath, appId, HARMLESS);
+    notNullCheck("Invalid Application for the yaml file:" + yamlFilePath, appId, USER);
     String serviceId = yamlHelper.getServiceId(appId, yamlFilePath);
-    notNullCheck("Invalid Service for the yaml file:" + yamlFilePath, serviceId, HARMLESS);
+    notNullCheck("Invalid Service for the yaml file:" + yamlFilePath, serviceId, USER);
     String relativeFilePath = yamlHelper.getNameFromYamlFilePath(yamlFilePath);
     return configService.get(appId, serviceId, EntityType.SERVICE, relativeFilePath);
   }

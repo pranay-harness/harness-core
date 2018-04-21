@@ -18,7 +18,7 @@ import static software.wings.beans.SearchFilter.Operator.IN;
 import static software.wings.dl.MongoHelper.setUnset;
 import static software.wings.dl.PageRequest.PageRequestBuilder.aPageRequest;
 import static software.wings.dl.PageRequest.UNLIMITED;
-import static software.wings.exception.WingsException.HARMLESS;
+import static software.wings.exception.WingsException.USER;
 import static software.wings.sm.StateType.ENV_STATE;
 import static software.wings.utils.Validator.notNullCheck;
 
@@ -54,7 +54,6 @@ import software.wings.dl.PageRequest;
 import software.wings.dl.PageResponse;
 import software.wings.dl.WingsPersistence;
 import software.wings.exception.WingsException;
-import software.wings.exception.WingsException.ReportTarget;
 import software.wings.scheduler.PruneEntityJob;
 import software.wings.scheduler.QuartzScheduler;
 import software.wings.service.intfc.AppService;
@@ -260,12 +259,12 @@ public class PipelineServiceImpl implements PipelineService {
       }
       List<String> triggerNames = triggers.stream().map(Trigger::getName).collect(toList());
 
-      throw new WingsException(INVALID_REQUEST, ReportTarget.USER)
+      throw new WingsException(INVALID_REQUEST, USER)
           .addParam("message",
               String.format(
                   "Pipeline associated as a trigger action to triggers [%s]", Joiner.on(", ").join(triggerNames)));
     }
-    throw new WingsException(PIPELINE_EXECUTION_IN_PROGRESS, HARMLESS)
+    throw new WingsException(PIPELINE_EXECUTION_IN_PROGRESS, USER)
         .addParam("message", String.format("Pipeline:[%s] couldn't be deleted", pipeline.getName()));
   }
 

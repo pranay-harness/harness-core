@@ -1,5 +1,7 @@
 package software.wings.security.saml;
 
+import static software.wings.exception.WingsException.USER;
+
 import com.google.inject.Inject;
 import com.google.inject.Singleton;
 
@@ -58,7 +60,7 @@ public class SamlClientService {
       }
     }
 
-    throw new WingsException(ErrorCode.INVALID_AUTHENTICATION_MECHANISM, WingsException.HARMLESS);
+    throw new WingsException(ErrorCode.INVALID_AUTHENTICATION_MECHANISM, USER);
   }
 
   public SamlClient getSamlClientFromOrigin(String origin) throws SamlException {

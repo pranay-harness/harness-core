@@ -8,6 +8,7 @@ import static software.wings.beans.ErrorCode.INVALID_REQUEST;
 import static software.wings.beans.SearchFilter.Operator.EQ;
 import static software.wings.dl.MongoHelper.setUnset;
 import static software.wings.dl.PageRequest.PageRequestBuilder.aPageRequest;
+import static software.wings.exception.WingsException.USER;
 
 import com.google.common.base.Joiner;
 import com.google.inject.Inject;
@@ -24,7 +25,6 @@ import software.wings.dl.PageRequest;
 import software.wings.dl.PageResponse;
 import software.wings.dl.WingsPersistence;
 import software.wings.exception.WingsException;
-import software.wings.exception.WingsException.ReportTarget;
 import software.wings.service.intfc.DelegateScopeService;
 import software.wings.service.intfc.DelegateService;
 
@@ -148,7 +148,7 @@ public class DelegateScopeServiceImpl implements DelegateScopeService {
       String message =
           String.format("Delegate scope [%s] could not be deleted because it's used by these delegates [%s]",
               delegateScope.getName(), Joiner.on(", ").join(delegateNames));
-      throw new WingsException(INVALID_REQUEST, ReportTarget.USER).addParam("message", message);
+      throw new WingsException(INVALID_REQUEST, USER).addParam("message", message);
     }
   }
 }

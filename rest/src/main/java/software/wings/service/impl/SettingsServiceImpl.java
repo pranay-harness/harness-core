@@ -24,6 +24,7 @@ import static software.wings.common.Constants.RUNTIME_PATH;
 import static software.wings.common.Constants.STAGING_PATH;
 import static software.wings.dl.PageRequest.PageRequestBuilder.aPageRequest;
 import static software.wings.dl.PageResponse.PageResponseBuilder.aPageResponse;
+import static software.wings.exception.WingsException.USER;
 
 import com.google.common.base.Joiner;
 import com.google.common.collect.HashMultimap;
@@ -50,7 +51,6 @@ import software.wings.dl.PageRequest;
 import software.wings.dl.PageResponse;
 import software.wings.dl.WingsPersistence;
 import software.wings.exception.WingsException;
-import software.wings.exception.WingsException.ReportTarget;
 import software.wings.security.AppPermissionSummaryForUI;
 import software.wings.security.EnvFilter;
 import software.wings.security.GenericEntityFilter;
@@ -437,7 +437,7 @@ public class SettingsServiceImpl implements SettingsService {
                                               .map(ArtifactStream::getSourceName)
                                               .filter(java.util.Objects::nonNull)
                                               .collect(toList());
-        throw new WingsException(INVALID_REQUEST, ReportTarget.USER)
+        throw new WingsException(INVALID_REQUEST, USER)
             .addParam("message",
                 String.format("Connector [%s] is referenced by %s Artifact Source%s [%s].", connectorSetting.getName(),
                     artifactStreamName.size(), artifactStreamName.size() == 1 ? "" : "s",
@@ -459,7 +459,7 @@ public class SettingsServiceImpl implements SettingsService {
     if (!infrastructureMappings.isEmpty()) {
       List<String> infraMappingNames =
           infrastructureMappings.stream().map(InfrastructureMapping::getName).collect(toList());
-      throw new WingsException(INVALID_REQUEST, ReportTarget.USER)
+      throw new WingsException(INVALID_REQUEST, USER)
           .addParam("message",
               String.format("Cloud provider [%s] is referenced by %s Service Infrastructure%s [%s].",
                   cloudProviderSetting.getName(), infraMappingNames.size(), infraMappingNames.size() == 1 ? "" : "s",
@@ -474,7 +474,7 @@ public class SettingsServiceImpl implements SettingsService {
                                                .getResponse();
     if (!artifactStreams.isEmpty()) {
       List<String> artifactStreamNames = artifactStreams.stream().map(ArtifactStream::getName).collect(toList());
-      throw new WingsException(INVALID_REQUEST, ReportTarget.USER)
+      throw new WingsException(INVALID_REQUEST, USER)
           .addParam("message",
               String.format("Cloud provider [%s] is referenced by %s Artifact Stream%s [%s].",
                   cloudProviderSetting.getName(), artifactStreamNames.size(),

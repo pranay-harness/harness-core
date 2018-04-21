@@ -1,6 +1,6 @@
 package software.wings.service.impl.yaml.handler.deploymentspec.userdata;
 
-import static software.wings.exception.WingsException.HARMLESS;
+import static software.wings.exception.WingsException.USER;
 import static software.wings.utils.Validator.notNullCheck;
 
 import com.google.inject.Inject;
@@ -55,10 +55,10 @@ public class UserDataSpecificationYamlHandler extends DeploymentSpecificationYam
 
     String filePath = changeContext.getChange().getFilePath();
     String appId = yamlHelper.getAppId(changeContext.getChange().getAccountId(), filePath);
-    notNullCheck("Could not lookup app for the yaml file: " + filePath, appId, HARMLESS);
+    notNullCheck("Could not lookup app for the yaml file: " + filePath, appId, USER);
 
     String serviceId = yamlHelper.getServiceId(appId, filePath);
-    notNullCheck("Could not lookup service for the yaml file: " + filePath, serviceId, HARMLESS);
+    notNullCheck("Could not lookup service for the yaml file: " + filePath, serviceId, USER);
 
     UserDataSpecification userDataSpecification =
         UserDataSpecification.builder().data(yaml.getData()).serviceId(serviceId).build();
@@ -74,10 +74,10 @@ public class UserDataSpecificationYamlHandler extends DeploymentSpecificationYam
   @Override
   public UserDataSpecification get(String accountId, String yamlFilePath) {
     String appId = yamlHelper.getAppId(accountId, yamlFilePath);
-    notNullCheck("Could not lookup app for the yaml file: " + yamlFilePath, appId, HARMLESS);
+    notNullCheck("Could not lookup app for the yaml file: " + yamlFilePath, appId, USER);
 
     String serviceId = yamlHelper.getServiceId(appId, yamlFilePath);
-    notNullCheck("Could not lookup service for the yaml file: " + yamlFilePath, serviceId, HARMLESS);
+    notNullCheck("Could not lookup service for the yaml file: " + yamlFilePath, serviceId, USER);
 
     return serviceResourceService.getUserDataSpecification(appId, serviceId);
   }

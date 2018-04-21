@@ -5,6 +5,7 @@ import static io.harness.data.structure.EmptyPredicate.isNotEmpty;
 import static java.util.stream.Collectors.joining;
 import static org.apache.commons.lang3.StringUtils.isNotBlank;
 import static org.apache.commons.lang3.StringUtils.trim;
+import static software.wings.exception.WingsException.ReportTarget.REST_API;
 
 import org.apache.commons.codec.binary.Hex;
 import org.apache.commons.lang3.StringUtils;
@@ -16,7 +17,6 @@ import software.wings.beans.command.CommandExecutionResult.CommandExecutionStatu
 import software.wings.beans.command.ExecutionLogCallback;
 import software.wings.common.Constants;
 import software.wings.exception.WingsException;
-import software.wings.exception.WingsException.ReportTarget;
 import software.wings.sm.states.ManagerExecutionLogCallback;
 
 import java.security.NoSuchAlgorithmException;
@@ -159,10 +159,7 @@ public class Misc {
   public static String getMessage(Throwable t) {
     if (t instanceof WingsException) {
       WingsException we = (WingsException) t;
-      return we.getResponseMessageList(ReportTarget.USER)
-          .stream()
-          .map(ResponseMessage::getMessage)
-          .collect(joining(". "));
+      return we.getResponseMessageList(REST_API).stream().map(ResponseMessage::getMessage).collect(joining(". "));
     } else {
       return t.getClass().getSimpleName() + (t.getMessage() == null ? "" : ": " + t.getMessage());
     }

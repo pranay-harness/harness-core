@@ -17,7 +17,6 @@ import org.slf4j.LoggerFactory;
 import software.wings.beans.artifact.Artifact;
 import software.wings.beans.artifact.ArtifactStream;
 import software.wings.exception.WingsException;
-import software.wings.exception.WingsException.ReportTarget;
 import software.wings.service.intfc.ArtifactCollectionService;
 import software.wings.service.intfc.ArtifactStreamService;
 import software.wings.service.intfc.TriggerService;
@@ -86,12 +85,7 @@ public class ArtifactCollectionJob implements Job {
     try {
       artifacts = artifactCollectionService.collectNewArtifacts(appId, artifactStreamId);
     } catch (WingsException exception) {
-      // TODO: temporary suppress the errors coming from here - they are too many:
-      if (!exception.getResponseMessageList(ReportTarget.HARNESS_ENGINEER).isEmpty()) {
-        log(appId, artifactStream, exception);
-      }
-      // This is the way we should print this after most of the cases are resolved
-      // exception.logProcessedMessages();
+      exception.logProcessedMessages(logger);
     } catch (Exception e) {
       log(appId, artifactStream, new WingsException(e));
     }

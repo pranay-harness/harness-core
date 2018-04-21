@@ -11,8 +11,8 @@ import static software.wings.beans.ErrorCode.EXPIRED_TOKEN;
 import static software.wings.beans.ErrorCode.INVALID_REQUEST;
 import static software.wings.beans.ErrorCode.INVALID_TOKEN;
 import static software.wings.beans.ErrorCode.USER_DOES_NOT_EXIST;
-import static software.wings.exception.WingsException.ALERTING;
-import static software.wings.exception.WingsException.HARMLESS;
+import static software.wings.exception.WingsException.USER;
+import static software.wings.exception.WingsException.USER_ADMIN;
 
 import com.google.inject.Inject;
 import com.google.inject.Singleton;
@@ -120,9 +120,9 @@ public class AuthServiceImpl implements AuthService {
     AuthToken authToken = dbCache.get(AuthToken.class, tokenString);
 
     if (authToken == null) {
-      throw new WingsException(INVALID_TOKEN, HARMLESS);
+      throw new WingsException(INVALID_TOKEN, USER);
     } else if (authToken.getExpireAt() <= System.currentTimeMillis()) {
-      throw new WingsException(EXPIRED_TOKEN, HARMLESS);
+      throw new WingsException(EXPIRED_TOKEN, USER);
     }
     User user = getUserFromCacheOrDB(authToken);
     if (user == null) {
@@ -214,36 +214,36 @@ public class AuthServiceImpl implements AuthService {
     if (!accountNullCheck) {
       if (accountId == null || dbCache.get(Account.class, accountId) == null) {
         logger.error("Auth Failure: non-existing accountId: {}", accountId);
-        throw new WingsException(ACCESS_DENIED, HARMLESS);
+        throw new WingsException(ACCESS_DENIED, USER);
       }
     }
 
     if (appId != null && dbCache.get(Application.class, appId) == null) {
       logger.error("Auth Failure: non-existing appId: {}", appId);
-      throw new WingsException(ACCESS_DENIED, HARMLESS);
+      throw new WingsException(ACCESS_DENIED, USER);
     }
 
     if (user == null) {
       logger.error("No user context for authorization request for app: {}", appId);
-      throw new WingsException(ACCESS_DENIED, HARMLESS);
+      throw new WingsException(ACCESS_DENIED, USER);
     }
 
     UserRequestContext userRequestContext = user.getUserRequestContext();
     if (userRequestContext == null) {
       logger.error("User Request Context null for User {}", user.getName());
-      throw new WingsException(ACCESS_DENIED, HARMLESS);
+      throw new WingsException(ACCESS_DENIED, USER);
     }
 
     UserPermissionInfo userPermissionInfo = userRequestContext.getUserPermissionInfo();
     if (userPermissionInfo == null) {
       logger.error("User permission info null for User {}", user.getName());
-      throw new WingsException(ACCESS_DENIED, HARMLESS);
+      throw new WingsException(ACCESS_DENIED, USER);
     }
 
     for (PermissionAttribute permissionAttribute : permissionAttributes) {
       if (!authorizeAccessType(appId, entityId, permissionAttribute, userPermissionInfo)) {
         logger.warn("User {} not authorized to access requested resource: {}", user.getName(), entityId);
-        throw new WingsException(ACCESS_DENIED, HARMLESS);
+        throw new WingsException(ACCESS_DENIED, USER);
       }
     }
   }
@@ -268,7 +268,7 @@ public class AuthServiceImpl implements AuthService {
       List<PermissionAttribute> permissionAttributes) {
     if (accountId == null || dbCache.get(Account.class, accountId) == null) {
       logger.error("Auth Failure: non-existing accountId: {}", accountId);
-      throw new WingsException(ACCESS_DENIED, HARMLESS);
+      throw new WingsException(ACCESS_DENIED, USER);
     }
 
     if (appIds != null) {
@@ -330,7 +330,7 @@ public class AuthServiceImpl implements AuthService {
       verifier.verify(externalServiceToken);
       JWT decode = JWT.decode(externalServiceToken);
       if (decode.getExpiresAt().getTime() < System.currentTimeMillis()) {
-        throw new WingsException(EXPIRED_TOKEN, ALERTING);
+        throw new WingsException(EXPIRED_TOKEN, USER_ADMIN);
       }
     } catch (Exception ex) {
       logger.warn("Error in verifying JWT token ", ex);
@@ -351,7 +351,7 @@ public class AuthServiceImpl implements AuthService {
       verifier.verify(learningEngineServiceToken);
       JWT decode = JWT.decode(learningEngineServiceToken);
       if (decode.getExpiresAt().getTime() < System.currentTimeMillis()) {
-        throw new WingsException(EXPIRED_TOKEN, ALERTING);
+        throw new WingsException(EXPIRED_TOKEN, USER_ADMIN);
       }
     } catch (Exception ex) {
       logger.warn("Error in verifying JWT token ", ex);

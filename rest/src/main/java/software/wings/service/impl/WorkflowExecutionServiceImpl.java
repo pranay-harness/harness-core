@@ -40,7 +40,7 @@ import static software.wings.beans.WorkflowType.ORCHESTRATION;
 import static software.wings.beans.WorkflowType.PIPELINE;
 import static software.wings.dl.PageRequest.PageRequestBuilder.aPageRequest;
 import static software.wings.dl.PageRequest.UNLIMITED;
-import static software.wings.exception.WingsException.HARMLESS;
+import static software.wings.exception.WingsException.USER;
 import static software.wings.service.impl.ExecutionEvent.ExecutionEventBuilder.anExecutionEvent;
 import static software.wings.sm.ExecutionInterruptType.ABORT_ALL;
 import static software.wings.sm.ExecutionInterruptType.PAUSE_ALL;
@@ -1347,7 +1347,7 @@ public class WorkflowExecutionServiceImpl implements WorkflowExecutionService {
       // There is a race between the workflow progress and request coming from the user.
       // It is completely normal the workflow to finish while interrupt request is coming.
       // Therefore there is nothing alarming when this occurs.
-      throw new WingsException(INVALID_REQUEST, HARMLESS)
+      throw new WingsException(INVALID_REQUEST, USER)
           .addParam("message", "Workflow execution already completed. executionUuid:" + executionUuid);
     }
 
@@ -1557,7 +1557,7 @@ public class WorkflowExecutionServiceImpl implements WorkflowExecutionService {
     StateExecutionData stateExecutionData = stateExecutionInstance.getStateExecutionData();
     Validator.notNullCheck("stateExecutionData", stateExecutionData);
     if (!(stateExecutionData instanceof RepeatStateExecutionData)) {
-      throw new InvalidRequestException("Request for elements of instance that is not repeated");
+      throw new InvalidRequestException("Request for elements of instance that is not repeated", USER);
     }
 
     RepeatStateExecutionData repeatStateExecutionData = (RepeatStateExecutionData) stateExecutionData;

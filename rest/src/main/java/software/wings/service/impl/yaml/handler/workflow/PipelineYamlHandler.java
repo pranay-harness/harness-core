@@ -3,7 +3,7 @@ package software.wings.service.impl.yaml.handler.workflow;
 import static io.harness.data.structure.EmptyPredicate.isEmpty;
 import static java.util.stream.Collectors.toList;
 import static software.wings.beans.Pipeline.Yaml;
-import static software.wings.exception.WingsException.HARMLESS;
+import static software.wings.exception.WingsException.USER;
 import static software.wings.utils.Validator.notNullCheck;
 
 import com.google.common.collect.Lists;
@@ -44,7 +44,7 @@ public class PipelineYamlHandler extends BaseYamlHandler<Yaml, Pipeline> {
       Change change = context.getChange();
 
       String appId = yamlHelper.getAppId(change.getAccountId(), change.getFilePath());
-      notNullCheck("Could not retrieve valid app from path: " + change.getFilePath(), appId, HARMLESS);
+      notNullCheck("Could not retrieve valid app from path: " + change.getFilePath(), appId, USER);
 
       context.setEntityIdMap(getPreviousStageElementMap(previous));
 

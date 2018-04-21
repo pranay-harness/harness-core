@@ -8,8 +8,8 @@ import static org.apache.commons.lang3.StringUtils.startsWith;
 import static org.apache.commons.lang3.StringUtils.substringAfter;
 import static software.wings.beans.ErrorCode.INVALID_CREDENTIAL;
 import static software.wings.beans.ErrorCode.INVALID_TOKEN;
-import static software.wings.exception.WingsException.ALERTING;
-import static software.wings.exception.WingsException.HARMLESS;
+import static software.wings.exception.WingsException.USER;
+import static software.wings.exception.WingsException.USER_ADMIN;
 
 import com.google.common.annotations.VisibleForTesting;
 import com.google.inject.Inject;
@@ -81,7 +81,7 @@ public class AuthenticationFilter implements ContainerRequestFilter {
 
     String authorization = containerRequestContext.getHeaderString(HttpHeaders.AUTHORIZATION);
     if (authorization == null) {
-      throw new WingsException(INVALID_TOKEN, HARMLESS);
+      throw new WingsException(INVALID_TOKEN, USER);
     }
 
     if (isDelegateRequest(containerRequestContext)) {
@@ -102,7 +102,7 @@ public class AuthenticationFilter implements ContainerRequestFilter {
       return;
     }
 
-    throw new WingsException(INVALID_CREDENTIAL, HARMLESS);
+    throw new WingsException(INVALID_CREDENTIAL, USER);
   }
 
   private User validateBearerToken(ContainerRequestContext containerRequestContext) {
@@ -112,7 +112,7 @@ public class AuthenticationFilter implements ContainerRequestFilter {
     if (user != null) {
       return user;
     }
-    throw new WingsException(INVALID_TOKEN, HARMLESS);
+    throw new WingsException(INVALID_TOKEN, USER);
   }
 
   private void updateUserInAuditRecord(User user) {
@@ -141,7 +141,7 @@ public class AuthenticationFilter implements ContainerRequestFilter {
   protected void validateExternalFacingApiRequest(ContainerRequestContext containerRequestContext) {
     String apiKey = containerRequestContext.getHeaderString(EXTERNAL_FACING_API_HEADER);
     if (isBlank(apiKey)) {
-      throw new InvalidRequestException("Api Key not supplied");
+      throw new InvalidRequestException("Api Key not supplied", USER);
     }
     String accountId = getRequestParamFromContext("accountId", containerRequestContext.getUriInfo().getPathParameters(),
         containerRequestContext.getUriInfo().getQueryParameters());
@@ -166,7 +166,7 @@ public class AuthenticationFilter implements ContainerRequestFilter {
   protected String extractToken(ContainerRequestContext requestContext, String prefix) {
     String authorizationHeader = requestContext.getHeaderString(HttpHeaders.AUTHORIZATION);
     if (authorizationHeader == null || !authorizationHeader.startsWith(prefix)) {
-      throw new WingsException(INVALID_TOKEN, ALERTING);
+      throw new WingsException(INVALID_TOKEN, USER_ADMIN);
     }
     return authorizationHeader.substring(prefix.length()).trim();
   }

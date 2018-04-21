@@ -2,6 +2,7 @@ package software.wings.security.authentication;
 
 import static java.util.Arrays.asList;
 import static org.apache.commons.lang3.StringUtils.isBlank;
+import static software.wings.exception.WingsException.USER;
 
 import com.google.common.collect.ImmutableMap;
 import com.google.inject.Inject;
@@ -35,7 +36,7 @@ public class TOTPAuthHandler implements TwoFactorAuthHandler {
       String currentSecret = TimeBasedOneTimePasswordUtil.generateCurrentNumberString(totpSecret);
 
       if (!currentSecret.equals(passcode)) {
-        throw new WingsException(ErrorCode.INVALID_TOTP_TOKEN, WingsException.HARMLESS);
+        throw new WingsException(ErrorCode.INVALID_TOTP_TOKEN, USER);
       }
       return user;
 

@@ -4,6 +4,7 @@ import static software.wings.beans.ErrorCode.EXPLANATION;
 import static software.wings.beans.ErrorCode.HINT;
 import static software.wings.beans.ResponseMessage.Level.INFO;
 import static software.wings.beans.ResponseMessage.aResponseMessage;
+import static software.wings.exception.WingsException.ReportTarget.LOG_SYSTEM;
 
 public class HintException extends WingsException {
   public static HintException MOVE_TO_THE_PARENT_OBJECT =
@@ -12,7 +13,7 @@ public class HintException extends WingsException {
 
   public HintException(String message) {
     super(aResponseMessage().code(HINT).level(INFO).build());
-    super.excludeReportTarget(EXPLANATION, ReportTarget.HARNESS_ENGINEER);
+    super.excludeReportTarget(EXPLANATION, LOG_SYSTEM);
     super.addParam("message", message);
   }
 }

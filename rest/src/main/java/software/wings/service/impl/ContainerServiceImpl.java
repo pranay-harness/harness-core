@@ -3,6 +3,7 @@ package software.wings.service.impl;
 import static io.harness.data.structure.EmptyPredicate.isEmpty;
 import static software.wings.beans.infrastructure.instance.info.EcsContainerInfo.Builder.anEcsContainerInfo;
 import static software.wings.beans.infrastructure.instance.info.KubernetesContainerInfo.Builder.aKubernetesContainerInfo;
+import static software.wings.exception.WingsException.USER;
 
 import com.google.inject.Inject;
 
@@ -28,7 +29,6 @@ import software.wings.cloudprovider.aws.EcsContainerService;
 import software.wings.cloudprovider.gke.GkeClusterService;
 import software.wings.cloudprovider.gke.KubernetesContainerService;
 import software.wings.exception.WingsException;
-import software.wings.exception.WingsException.ReportTarget;
 import software.wings.helpers.ext.azure.AzureHelperService;
 import software.wings.service.intfc.ContainerService;
 import software.wings.settings.SettingValue;
@@ -219,7 +219,7 @@ public class ContainerServiceImpl implements ContainerService {
       return true;
     }
 
-    throw new WingsException(ErrorCode.INVALID_ARGUMENT, ReportTarget.USER)
+    throw new WingsException(ErrorCode.INVALID_ARGUMENT, USER)
         .addParam("args", "Unknown setting value type: " + value.getType());
   }
 

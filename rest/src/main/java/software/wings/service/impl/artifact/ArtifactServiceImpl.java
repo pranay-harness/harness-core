@@ -31,7 +31,7 @@ import static software.wings.beans.artifact.ArtifactStreamType.NEXUS;
 import static software.wings.collect.CollectEvent.Builder.aCollectEvent;
 import static software.wings.common.Constants.autoDownloaded;
 import static software.wings.dl.MongoHelper.setUnset;
-import static software.wings.exception.WingsException.ReportTarget.USER;
+import static software.wings.exception.WingsException.USER;
 import static software.wings.service.intfc.FileService.FileBucket.ARTIFACTS;
 import static software.wings.utils.ArtifactType.DOCKER;
 

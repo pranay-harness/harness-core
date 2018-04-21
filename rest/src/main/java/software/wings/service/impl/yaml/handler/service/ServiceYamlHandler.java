@@ -2,7 +2,7 @@ package software.wings.service.impl.yaml.handler.service;
 
 import static java.util.Collections.emptyList;
 import static java.util.stream.Collectors.toList;
-import static software.wings.exception.WingsException.HARMLESS;
+import static software.wings.exception.WingsException.USER;
 import static software.wings.utils.Validator.notNullCheck;
 
 import com.google.common.collect.Lists;
@@ -102,7 +102,7 @@ public class ServiceYamlHandler extends BaseYamlHandler<Yaml, Service> {
     String yamlFilePath = changeContext.getChange().getFilePath();
     String accountId = changeContext.getChange().getAccountId();
     String appId = yamlHelper.getAppId(accountId, yamlFilePath);
-    notNullCheck("appId null for given yaml file:" + yamlFilePath, appId, HARMLESS);
+    notNullCheck("appId null for given yaml file:" + yamlFilePath, appId, USER);
 
     String serviceName = yamlHelper.getServiceName(yamlFilePath);
 
@@ -118,7 +118,7 @@ public class ServiceYamlHandler extends BaseYamlHandler<Yaml, Service> {
     String applicationStack = yaml.getApplicationStack();
     if (StringUtils.isNotBlank(applicationStack)) {
       AppContainer appContainer = appContainerService.getByName(accountId, applicationStack);
-      notNullCheck("No application stack found with the given name: " + applicationStack, appContainer, HARMLESS);
+      notNullCheck("No application stack found with the given name: " + applicationStack, appContainer, USER);
       currentBuilder.appContainer(appContainer);
     }
     Service currentService = currentBuilder.build();
@@ -238,7 +238,7 @@ public class ServiceYamlHandler extends BaseYamlHandler<Yaml, Service> {
   }
 
   private ServiceVariable createNewServiceVariable(String appId, String serviceId, NameValuePair.Yaml cv) {
-    notNullCheck("Value type is not set for variable: " + cv.getName(), cv.getValueType(), HARMLESS);
+    notNullCheck("Value type is not set for variable: " + cv.getName(), cv.getValueType(), USER);
 
     ServiceVariableBuilder serviceVariableBuilder = ServiceVariable.builder()
                                                         .name(cv.getName())
