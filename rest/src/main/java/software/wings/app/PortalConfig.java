@@ -76,4 +76,12 @@ public class PortalConfig {
   public void setAllowedOrigins(String allowedOrigins) {
     this.allowedOrigins = Splitter.on(",").trimResults().omitEmptyStrings().splitToList(allowedOrigins);
   }
+
+  public String getJwtMultiAuthSecret() {
+    return jwtMultiAuthSecret;
+  }
+
+  public void setJwtMultiAuthSecret(String jwtMultiAuthSecret) {
+    this.jwtMultiAuthSecret = jwtMultiAuthSecret;
+  }
 }

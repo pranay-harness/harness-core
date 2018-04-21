@@ -34,6 +34,9 @@ import software.wings.security.annotations.Scope;
 import software.wings.security.authentication.AuthenticationManager;
 import software.wings.security.authentication.LoginTypeResponse;
 import software.wings.security.authentication.SsoRedirectRequest;
+import software.wings.security.authentication.TwoFactorAuthenticationManager;
+import software.wings.security.authentication.TwoFactorAuthenticationMechanism;
+import software.wings.security.authentication.TwoFactorAuthenticationSettings;
 import software.wings.service.intfc.AccountService;
 import software.wings.service.intfc.AuthService;
 import software.wings.service.intfc.UserService;
@@ -77,6 +80,7 @@ public class UserResource {
   private AuthService authService;
   private AccountService accountService;
   private AuthenticationManager authenticationManager;
+  private TwoFactorAuthenticationManager twoFactorAuthenticationManager;
 
   /**
    * Instantiates a new User resource.
@@ -86,11 +90,12 @@ public class UserResource {
    */
   @Inject
   public UserResource(UserService userService, AuthService authService, AccountService accountService,
-      AuthenticationManager authenticationManager) {
+      AuthenticationManager authenticationManager, TwoFactorAuthenticationManager twoFactorAuthenticationManager) {
     this.userService = userService;
     this.authService = authService;
     this.accountService = accountService;
     this.authenticationManager = authenticationManager;
+    this.twoFactorAuthenticationManager = twoFactorAuthenticationManager;
   }
 
   /**
@@ -318,7 +323,22 @@ public class UserResource {
     String[] decryptedData = new String(Base64.getDecoder().decode(basicToken)).split(":");
     String userName = decryptedData[0];
     String password = decryptedData[1];
-    return new RestResponse<>(authenticationManager.defaultLogin(userName, password));
+    return new RestResponse<User>(authenticationManager.defaultLogin(userName, password));
+  }
+
+  /**
+   * Login.
+   *
+   * @return the rest response
+   */
+  @GET
+  @Path("two-factor-login")
+  @PublicApi
+  @Timed
+  @ExceptionMetered
+  public RestResponse<User> twoFactorLogin(@HeaderParam(HttpHeaders.AUTHORIZATION) String authorization) {
+    return new RestResponse<User>(
+        twoFactorAuthenticationManager.authenticate(authenticationManager.extractToken(authorization, "JWT")));
   }
 
   @GET
@@ -337,6 +357,33 @@ public class UserResource {
   @ExceptionMetered
   public RestResponse<User> redirectlogin(SsoRedirectRequest request) {
     return new RestResponse<User>(authenticationManager.ssoRedirectLogin(request.getJwtToken()));
+  }
+
+  @GET
+  @Path("two-factor-auth/{auth-mechanism}")
+  @Timed
+  @ExceptionMetered
+  public RestResponse<TwoFactorAuthenticationSettings> getTwoFactorAuthSettings(
+      @PathParam("auth-mechanism") TwoFactorAuthenticationMechanism authMechanism) {
+    return new RestResponse(
+        twoFactorAuthenticationManager.createTwoFactorAuthenticationSettings(UserThreadLocal.get(), authMechanism));
+  }
+
+  @PUT
+  @Path("disable-two-factor-auth")
+  @Timed
+  @ExceptionMetered
+  public RestResponse<User> disableTwoFactorAuth() {
+    return new RestResponse(twoFactorAuthenticationManager.disableTwoFactorAuthentication(UserThreadLocal.get()));
+  }
+
+  @PUT
+  @Path("enable-two-factor-auth")
+  @Timed
+  @ExceptionMetered
+  public RestResponse<User> enableTwoFactorAuth(TwoFactorAuthenticationSettings settings) {
+    return new RestResponse(
+        twoFactorAuthenticationManager.enableTwoFactorAuthenticationSettings(UserThreadLocal.get(), settings));
   }
 
   @POST
@@ -552,6 +599,23 @@ public class UserResource {
   @Path("sso/zendesk")
   public RestResponse<ZendeskSsoLoginResponse> zendDesk(@QueryParam("returnTo") @NotEmpty String returnTo) {
     return new RestResponse(userService.generateZendeskSsoJwt(returnTo));
+  }
+
+  /**
+   * Delete invite rest response.
+   *
+   * @param inviteId  the invite id
+   * @param accountId the account id
+   * @return the rest response
+   */
+  @GET
+  @Path("reset-two-factor-auth/{userId}")
+  @Timed
+  @ExceptionMetered
+  @AuthRule(permissionType = PermissionType.USER_PERMISSION_MANAGEMENT)
+  public RestResponse<Boolean> reset2fa(
+      @PathParam("userId") @NotEmpty String userId, @QueryParam("accountId") @NotEmpty String accountId) {
+    return new RestResponse<>(twoFactorAuthenticationManager.sendTwoFactorAuthenticationResetEmail(userId));
   }
 
   /**

@@ -146,7 +146,10 @@ public class AuthRuleFilter implements ContainerRequestFilter {
         && (requestContext.getUriInfo().getPath().startsWith("users/user")
                || requestContext.getUriInfo().getPath().startsWith("users/sso/zendesk")
                || requestContext.getUriInfo().getPath().startsWith("users/account")
-               || requestContext.getUriInfo().getPath().endsWith("/logout"))) {
+               || requestContext.getUriInfo().getPath().endsWith("/logout")
+               || requestContext.getUriInfo().getPath().startsWith("users/two-factor-auth")
+               || requestContext.getUriInfo().getPath().startsWith("users/disable-two-factor-auth")
+               || requestContext.getUriInfo().getPath().startsWith("users/enable-two-factor-auth"))) {
       return;
     }
 

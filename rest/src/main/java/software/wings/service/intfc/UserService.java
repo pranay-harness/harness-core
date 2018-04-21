@@ -245,6 +245,7 @@ public interface UserService {
    * @param userId
    * @return
    */
+
   String generateJWTToken(@NotEmpty String userId, @NotNull SecretManager.JWT_CATEGORY category);
 
   /**

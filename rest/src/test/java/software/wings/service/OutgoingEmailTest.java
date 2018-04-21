@@ -28,6 +28,7 @@ public class OutgoingEmailTest {
     testData.put("company", "Testcompany");
     testData.put("name", "Testname");
     testData.put("url", "TestURL");
+    testData.put("totpSecret", "testTotpSecret");
 
     EmailData emailData = EmailData.builder().templateModel(testData).build();
 
@@ -36,6 +37,7 @@ public class OutgoingEmailTest {
     verifyMailForAction(cfg, emailData, "add_role");
     verifyMailForAction(cfg, emailData, "reset_password");
     verifyMailForAction(cfg, emailData, "signup");
+    verifyMailForAction(cfg, emailData, "reset_2fa");
   }
 
   private void verifyMailForAction(Configuration cfg, EmailData emailData, String action)
