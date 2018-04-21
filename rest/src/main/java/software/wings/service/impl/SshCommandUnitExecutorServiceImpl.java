@@ -8,7 +8,6 @@ import static software.wings.beans.command.CommandExecutionResult.CommandExecuti
 import static software.wings.beans.command.CommandExecutionResult.CommandExecutionStatus.RUNNING;
 import static software.wings.beans.command.CommandExecutionResult.CommandExecutionStatus.SUCCESS;
 
-import com.google.common.base.Joiner;
 import com.google.common.util.concurrent.TimeLimiter;
 import com.google.common.util.concurrent.UncheckedTimeoutException;
 import com.google.inject.Inject;
@@ -32,6 +31,7 @@ import software.wings.delegatetasks.DelegateLogService;
 import software.wings.exception.WingsException;
 import software.wings.exception.WingsException.ReportTarget;
 import software.wings.service.intfc.CommandUnitExecutorService;
+import software.wings.utils.Misc;
 import software.wings.utils.SshHelperUtil;
 
 import java.util.List;
@@ -111,7 +111,7 @@ public class SshCommandUnitExecutorServiceImpl implements CommandUnitExecutorSer
     } catch (ExecutionException e) {
       if (e.getCause() instanceof WingsException) {
         WingsException ex = (WingsException) e.getCause();
-        String errorMessage = Joiner.on(",").join(ex.getResponseMessageList(ReportTarget.USER));
+        String errorMessage = Misc.getMessage(ex);
         logService.save(context.getAccountId(),
             aLog()
                 .withAppId(context.getAppId())

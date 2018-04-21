@@ -8,8 +8,6 @@ import static java.util.Collections.emptyMap;
 import static java.util.stream.Collectors.toList;
 import static org.apache.commons.lang3.StringUtils.isBlank;
 import static software.wings.beans.ErrorCode.INVALID_REQUEST;
-import static software.wings.beans.ResponseMessage.Level.ERROR;
-import static software.wings.beans.ResponseMessage.aResponseMessage;
 import static software.wings.helpers.ext.jenkins.BuildDetails.Builder.aBuildDetails;
 import static software.wings.helpers.ext.nexus.NexusServiceImpl.getBaseUrl;
 import static software.wings.helpers.ext.nexus.NexusServiceImpl.getRetrofit;
@@ -336,14 +334,10 @@ public class NexusTwoServiceImpl {
         }
       }
     } catch (final IOException e) {
-      throw new WingsException(
-          aResponseMessage()
-              .code(INVALID_REQUEST)
-              .level(ERROR)
-              .message("Error occurred while retrieving Repository Group Ids from Nexus server "
-                  + nexusConfig.getNexusUrl() + " for repository " + repoKey + " under path " + repoPath)
-              .build(),
-          e);
+      throw new WingsException(INVALID_REQUEST, e)
+          .addParam("message",
+              "Error occurred while retrieving Repository Group Ids from Nexus server " + nexusConfig.getNexusUrl()
+                  + " for repository " + repoKey + " under path " + repoPath);
     }
     return folderPaths;
   }

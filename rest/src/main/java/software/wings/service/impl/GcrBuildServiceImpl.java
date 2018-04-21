@@ -62,7 +62,7 @@ public class GcrBuildServiceImpl implements GcrBuildService {
   public Map<String, String> getPlans(GcpConfig config, List<EncryptedDataDetail> encryptionDetails) {
     return getJobs(config, encryptionDetails, Optional.empty())
         .stream()
-        .collect(Collectors.toMap(o -> o.getJobName(), o -> o.getJobName()));
+        .collect(Collectors.toMap(JobDetails::getJobName, JobDetails::getJobName));
   }
 
   @Override

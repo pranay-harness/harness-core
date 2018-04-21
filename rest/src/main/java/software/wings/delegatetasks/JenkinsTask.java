@@ -5,7 +5,6 @@ import static org.apache.commons.lang3.StringUtils.isNotBlank;
 import static software.wings.beans.Log.Builder.aLog;
 import static software.wings.service.impl.LogServiceImpl.NUM_OF_LOGS_TO_KEEP;
 
-import com.google.common.base.Joiner;
 import com.google.inject.Inject;
 
 import com.offbytwo.jenkins.model.Build;
@@ -20,13 +19,12 @@ import software.wings.beans.Log;
 import software.wings.beans.Log.LogLevel;
 import software.wings.beans.command.CommandExecutionResult.CommandExecutionStatus;
 import software.wings.beans.command.JenkinsTaskParams;
-import software.wings.exception.WingsException;
-import software.wings.exception.WingsException.ReportTarget;
 import software.wings.helpers.ext.jenkins.Jenkins;
 import software.wings.helpers.ext.jenkins.JenkinsFactory;
 import software.wings.service.intfc.security.EncryptionService;
 import software.wings.sm.ExecutionStatus;
 import software.wings.sm.states.JenkinsState.JenkinsExecutionResponse;
+import software.wings.utils.Misc;
 import software.wings.waitnotify.NotifyResponseData;
 
 import java.io.IOException;
@@ -91,12 +89,7 @@ public class JenkinsTask extends AbstractDelegateRunnableTask {
       }
     } catch (Exception e) {
       logger.warn("Exception: " + e.getMessage(), e);
-      if (e instanceof WingsException) {
-        WingsException ex = (WingsException) e;
-        errorMessage = Joiner.on(",").join(ex.getResponseMessageList(ReportTarget.USER));
-      } else {
-        errorMessage = e.getMessage();
-      }
+      errorMessage = Misc.getMessage(e);
       executionStatus = ExecutionStatus.FAILED;
       jenkinsExecutionResponse.setErrorMessage(errorMessage);
     }

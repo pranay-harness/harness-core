@@ -93,7 +93,7 @@ public class ArtifactCollectionJob implements Job {
       // This is the way we should print this after most of the cases are resolved
       // exception.logProcessedMessages();
     } catch (Exception e) {
-      log(appId, artifactStream, (WingsException) e);
+      log(appId, artifactStream, new WingsException(e));
     }
     if (isNotEmpty(artifacts)) {
       logger.info("[{}] new artifacts collected", artifacts.size());

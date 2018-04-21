@@ -5,7 +5,6 @@ import static io.harness.threading.Morpheus.sleep;
 import static java.time.Duration.ofSeconds;
 import static software.wings.sm.states.BambooState.BambooExecutionResponse;
 
-import com.google.common.base.Joiner;
 import com.google.common.collect.Maps;
 import com.google.inject.Inject;
 
@@ -13,14 +12,13 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import software.wings.beans.BambooConfig;
 import software.wings.beans.DelegateTask;
-import software.wings.exception.WingsException;
-import software.wings.exception.WingsException.ReportTarget;
 import software.wings.helpers.ext.bamboo.BambooService;
 import software.wings.helpers.ext.bamboo.Result;
 import software.wings.security.encryption.EncryptedDataDetail;
 import software.wings.sm.ExecutionStatus;
 import software.wings.sm.states.FilePathAssertionEntry;
 import software.wings.sm.states.ParameterEntry;
+import software.wings.utils.Misc;
 import software.wings.waitnotify.NotifyResponseData;
 
 import java.io.IOException;
@@ -92,12 +90,7 @@ public class BambooTask extends AbstractDelegateRunnableTask {
       }
     } catch (Exception e) {
       logger.warn("Failed to execute Bamboo verification task: " + e.getMessage(), e);
-      if (e instanceof WingsException) {
-        WingsException ex = (WingsException) e;
-        errorMessage = Joiner.on(",").join(ex.getResponseMessageList(ReportTarget.USER));
-      } else {
-        errorMessage = e.getMessage();
-      }
+      errorMessage = Misc.getMessage(e);
       executionStatus = ExecutionStatus.FAILED;
     }
     bambooExecutionResponse.setErrorMessage(errorMessage);

@@ -1,7 +1,7 @@
 package software.wings.beans.command;
 
 import static java.util.stream.Collectors.toList;
-import static software.wings.beans.ErrorCode.INVALID_REQUEST;
+import static software.wings.beans.ErrorCode.GENERAL_ERROR;
 import static software.wings.cloudprovider.ContainerInfo.Status.SUCCESS;
 import static software.wings.common.Constants.HARNESS_REVISION;
 import static software.wings.service.impl.KubernetesHelperService.printRouteRuleWeights;
@@ -97,7 +97,7 @@ public class KubernetesResizeCommandUnit extends ContainerResizeCommandUnit {
       } catch (Exception e) {
         Misc.logAllMessages(e, executionLogCallback);
       }
-      throw new WingsException(INVALID_REQUEST).addParam("message", "Failed to resize controller");
+      throw new WingsException(GENERAL_ERROR).addParam("args", "Failed to resize controller");
     }
 
     if (totalDesiredCount > 0 && contextData.deployingToHundredPercent && resizeParams.isUseAutoscaler()) {

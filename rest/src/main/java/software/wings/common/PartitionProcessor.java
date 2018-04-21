@@ -97,14 +97,14 @@ public interface PartitionProcessor {
         finalCounts = computeCounts(elements.size());
         if (isEmpty(finalCounts)) {
           throw new WingsException(ErrorCode.INVALID_REQUEST)
-              .addParam("messages",
+              .addParam("message",
                   "Incorrect partition breakdown expressions- breakdowns:" + Arrays.toString(breakdowns)
                       + "percentages:" + Arrays.toString(percentages) + ", counts:" + Arrays.toString(counts));
         }
       } catch (Exception e) {
         log().error(e.getMessage(), e);
         throw new WingsException(ErrorCode.INVALID_REQUEST, e)
-            .addParam("messages",
+            .addParam("message",
                 "Incorrect partition expressions- breakdowns:" + Arrays.toString(breakdowns)
                     + "percentages:" + Arrays.toString(percentages) + ", counts:" + Arrays.toString(counts));
       }
