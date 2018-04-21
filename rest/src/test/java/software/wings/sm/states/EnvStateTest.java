@@ -121,11 +121,11 @@ public class EnvStateTest extends WingsBaseTest {
 
   @Test
   public void shouldHandleAbort() {
+    envState.setTimeoutMillis((int) (0.6 * TimeUnit.HOURS.toMillis(1)));
     when(context.getStateExecutionData())
         .thenReturn(anEnvStateExecutionData().withWorkflowId(WORKFLOW_ID).withEnvId(ENV_ID).build());
-
     envState.handleAbortEvent(context);
     assertThat(context.getStateExecutionData()).isNotNull();
-    assertThat(context.getStateExecutionData().getErrorMsg().contains("Workflow not completed within"));
+    assertThat(context.getStateExecutionData().getErrorMsg().contains("Workflow not completed within 0.6 hour(s)"));
   }
 }

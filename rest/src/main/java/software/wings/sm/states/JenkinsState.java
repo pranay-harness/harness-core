@@ -17,6 +17,10 @@ import com.google.inject.Inject;
 
 import com.github.reinert.jjschema.Attributes;
 import com.github.reinert.jjschema.SchemaIgnore;
+import lombok.AllArgsConstructor;
+import lombok.Builder;
+import lombok.Data;
+import lombok.NoArgsConstructor;
 import org.mongodb.morphia.annotations.Transient;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -292,7 +296,7 @@ public class JenkinsState extends State {
   @Override
   public void handleAbortEvent(ExecutionContext context) {
     context.getStateExecutionData().setErrorMsg(
-        "Job did not complete within timeout [" + (getTimeoutMillis() / 1000) + " (s)]");
+        "Job did not complete within timeout " + (getTimeoutMillis() / 1000) + " (s)");
   }
 
   @Attributes(title = "Timeout (ms)")
@@ -367,6 +371,10 @@ public class JenkinsState extends State {
     activityService.updateStatus(activityId, appId, status);
   }
 
+  @Builder
+  @Data
+  @NoArgsConstructor
+  @AllArgsConstructor
   public static final class JenkinsExecutionResponse implements NotifyResponseData {
     private ExecutionStatus executionStatus;
     private String jenkinsResult;
@@ -377,219 +385,5 @@ public class JenkinsState extends State {
     private Map<String, String> metadata;
     private Map<String, String> jobParameters;
     private String description;
-
-    public JenkinsExecutionResponse() {}
-
-    /**
-     * Getter for property 'jobUrl'.
-     *
-     * @return Value for property 'jobUrl'.
-     */
-    public String getJobUrl() {
-      return jobUrl;
-    }
-
-    /**
-     * Setter for property 'jobUrl'.
-     *
-     * @param jobUrl Value to set for property 'jobUrl'.
-     */
-    public void setJobUrl(String jobUrl) {
-      this.jobUrl = jobUrl;
-    }
-
-    /**
-     * Getter for property 'executionStatus'.
-     *
-     * @return Value for property 'executionStatus'.
-     */
-    public ExecutionStatus getExecutionStatus() {
-      return executionStatus;
-    }
-
-    /**
-     * Setter for property 'executionStatus'.
-     *
-     * @param executionStatus Value to set for property 'executionStatus'.
-     */
-    public void setExecutionStatus(ExecutionStatus executionStatus) {
-      this.executionStatus = executionStatus;
-    }
-
-    /**
-     * Getter for property 'jenkinsResult'.
-     *
-     * @return Value for property 'jenkinsResult'.
-     */
-    public String getJenkinsResult() {
-      return jenkinsResult;
-    }
-
-    /**
-     * Setter for property 'jenkinsResult'.
-     *
-     * @param jenkinsResult Value to set for property 'jenkinsResult'.
-     */
-    public void setJenkinsResult(String jenkinsResult) {
-      this.jenkinsResult = jenkinsResult;
-    }
-
-    /**
-     * Getter for property 'errorMessage'.
-     *
-     * @return Value for property 'errorMessage'.
-     */
-    public String getErrorMessage() {
-      return errorMessage;
-    }
-
-    /**
-     * Setter for property 'errorMessage'.
-     *
-     * @param errorMessage Value to set for property 'errorMessage'.
-     */
-    public void setErrorMessage(String errorMessage) {
-      this.errorMessage = errorMessage;
-    }
-
-    /**
-     * Getter for property 'filePathAssertionMap'.
-     *
-     * @return Value for property 'filePathAssertionMap'.
-     */
-    public List<FilePathAssertionEntry> getFilePathAssertionMap() {
-      return filePathAssertionMap;
-    }
-
-    /**
-     * Setter for property 'filePathAssertionMap'.
-     *
-     * @param filePathAssertionMap Value to set for property 'filePathAssertionMap'.
-     */
-    public void setFilePathAssertionMap(List<FilePathAssertionEntry> filePathAssertionMap) {
-      this.filePathAssertionMap = filePathAssertionMap;
-    }
-
-    public String getBuildNumber() {
-      return buildNumber;
-    }
-
-    public void setBuildNumber(String buildNumber) {
-      this.buildNumber = buildNumber;
-    }
-
-    public String getDescription() {
-      return description;
-    }
-
-    public void setDescription(String description) {
-      this.description = description;
-    }
-
-    public Map<String, String> getMetadata() {
-      return metadata;
-    }
-
-    public Map<String, String> getJobParameters() {
-      return jobParameters;
-    }
-
-    public void setJobParameters(Map<String, String> jobParameters) {
-      this.jobParameters = jobParameters;
-    }
-
-    public void setMetadata(Map<String, String> metadata) {
-      this.metadata = metadata;
-    }
-
-    public static final class Builder {
-      private ExecutionStatus executionStatus;
-      private String jenkinsResult;
-      private String errorMessage;
-      private String jobUrl;
-      private List<FilePathAssertionEntry> filePathAssertionMap = Lists.newArrayList();
-      private String buildNumber;
-      private Map<String, String> metadata;
-      private String description;
-      private Map<String, String> jobParameters;
-
-      private Builder() {}
-
-      public static Builder aJenkinsExecutionResponse() {
-        return new Builder();
-      }
-
-      public Builder withExecutionStatus(ExecutionStatus executionStatus) {
-        this.executionStatus = executionStatus;
-        return this;
-      }
-
-      public Builder withJenkinsResult(String jenkinsResult) {
-        this.jenkinsResult = jenkinsResult;
-        return this;
-      }
-
-      public Builder withErrorMessage(String errorMessage) {
-        this.errorMessage = errorMessage;
-        return this;
-      }
-
-      public Builder withJobUrl(String jobUrl) {
-        this.jobUrl = jobUrl;
-        return this;
-      }
-
-      public Builder withFilePathAssertionMap(List<FilePathAssertionEntry> filePathAssertionMap) {
-        this.filePathAssertionMap = filePathAssertionMap;
-        return this;
-      }
-
-      public Builder withBuildNumber(String buildNumber) {
-        this.buildNumber = buildNumber;
-        return this;
-      }
-
-      public Builder withDescription(String description) {
-        this.description = description;
-        return this;
-      }
-
-      public Builder withMetadata(Map<String, String> metadata) {
-        this.metadata = metadata;
-        return this;
-      }
-
-      public Builder withJobParameters(Map<String, String> jobParameters) {
-        this.jobParameters = jobParameters;
-        return this;
-      }
-
-      public Builder but() {
-        return aJenkinsExecutionResponse()
-            .withExecutionStatus(executionStatus)
-            .withJenkinsResult(jenkinsResult)
-            .withErrorMessage(errorMessage)
-            .withJobUrl(jobUrl)
-            .withFilePathAssertionMap(filePathAssertionMap)
-            .withBuildNumber(buildNumber)
-            .withDescription(description)
-            .withMetadata(metadata)
-            .withJobParameters(jobParameters);
-      }
-
-      public JenkinsExecutionResponse build() {
-        JenkinsExecutionResponse jenkinsExecutionResponse = new JenkinsExecutionResponse();
-        jenkinsExecutionResponse.setExecutionStatus(executionStatus);
-        jenkinsExecutionResponse.setJenkinsResult(jenkinsResult);
-        jenkinsExecutionResponse.setErrorMessage(errorMessage);
-        jenkinsExecutionResponse.setJobUrl(jobUrl);
-        jenkinsExecutionResponse.setFilePathAssertionMap(filePathAssertionMap);
-        jenkinsExecutionResponse.setBuildNumber(buildNumber);
-        jenkinsExecutionResponse.setMetadata(metadata);
-        jenkinsExecutionResponse.setDescription(description);
-        jenkinsExecutionResponse.setJobParameters(jobParameters);
-        return jenkinsExecutionResponse;
-      }
-    }
   }
 }
