@@ -2,7 +2,6 @@ package software.wings.service;
 
 import static io.harness.network.Http.connectableHttpUrl;
 import static io.harness.network.Http.validUrl;
-import static software.wings.beans.ErrorCode.INVALID_REQUEST;
 import static software.wings.beans.artifact.ArtifactStreamType.ECR;
 import static software.wings.utils.Validator.equalCheck;
 
@@ -12,6 +11,7 @@ import com.google.inject.Singleton;
 import software.wings.beans.EcrConfig;
 import software.wings.beans.ErrorCode;
 import software.wings.beans.artifact.ArtifactStreamAttributes;
+import software.wings.exception.InvalidRequestException;
 import software.wings.exception.WingsException;
 import software.wings.helpers.ext.ecr.EcrClassicService;
 import software.wings.helpers.ext.jenkins.BuildDetails;
@@ -50,13 +50,13 @@ public class EcrClassicBuildServiceImpl implements EcrClassicBuildService {
   @Override
   public List<String> getArtifactPaths(
       String jobName, String groupId, EcrConfig config, List<EncryptedDataDetail> encryptionDetails) {
-    throw new WingsException(INVALID_REQUEST).addParam("message", "Operation not supported by Docker Artifact Stream");
+    throw new InvalidRequestException("Operation not supported by Docker Artifact Stream");
   }
 
   @Override
   public BuildDetails getLastSuccessfulBuild(String appId, ArtifactStreamAttributes artifactStreamAttributes,
       EcrConfig ecrConfig, List<EncryptedDataDetail> encryptionDetails) {
-    throw new WingsException(INVALID_REQUEST).addParam("message", "Operation not supported by Docker Artifact Stream");
+    throw new InvalidRequestException("Operation not supported by Docker Artifact Stream");
   }
 
   @Override
@@ -74,7 +74,7 @@ public class EcrClassicBuildServiceImpl implements EcrClassicBuildService {
 
   @Override
   public List<String> getGroupIds(String jobName, EcrConfig config, List<EncryptedDataDetail> encryptionDetails) {
-    throw new WingsException(INVALID_REQUEST).addParam("message", "Operation not supported by Docker Artifact Stream");
+    throw new InvalidRequestException("Operation not supported by Docker Artifact Stream");
   }
 
   @Override

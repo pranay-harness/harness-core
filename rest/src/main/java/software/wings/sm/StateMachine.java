@@ -3,7 +3,6 @@ package software.wings.sm;
 import static io.harness.data.structure.EmptyPredicate.isEmpty;
 import static io.harness.data.structure.EmptyPredicate.isNotEmpty;
 import static java.util.stream.Collectors.toList;
-import static software.wings.beans.ErrorCode.INVALID_REQUEST;
 import static software.wings.beans.OrchestrationWorkflowType.BUILD;
 import static software.wings.sm.ExpressionProcessor.EXPRESSION_PREFIX;
 import static software.wings.sm.StateType.REPEAT;
@@ -33,6 +32,7 @@ import software.wings.beans.PipelineStage.PipelineStageElement;
 import software.wings.beans.Workflow;
 import software.wings.common.Constants;
 import software.wings.common.WingsExpressionProcessorFactory;
+import software.wings.exception.InvalidRequestException;
 import software.wings.exception.WingsException;
 import software.wings.sm.states.ForkState;
 import software.wings.sm.states.RepeatState;
@@ -150,7 +150,7 @@ public class StateMachine extends Base {
       throw e;
     } catch (Exception e) {
       logger.error(e.getLocalizedMessage(), e);
-      throw new WingsException(INVALID_REQUEST).addParam("message", "StateMachine transformation error");
+      throw new InvalidRequestException("StateMachine transformation error");
     }
   }
 
@@ -277,17 +277,16 @@ public class StateMachine extends Base {
       logger.info("node : {}", node);
 
       if (node.getType() == null || stencilMap.get(node.getType()) == null) {
-        throw new WingsException(INVALID_REQUEST).addParam("message", "Unknown stencil type");
+        throw new InvalidRequestException("Unknown stencil type");
       }
 
       if (node.getName() == null) {
-        throw new WingsException(INVALID_REQUEST).addParam("message", "Node name null");
+        throw new InvalidRequestException("Node name null");
       }
 
       if (node.isOrigin()) {
         if (originStateName != null) {
-          throw new WingsException(INVALID_REQUEST)
-              .addParam("message", "Duplicate origin state: " + originStateName + " and " + node.getName());
+          throw new InvalidRequestException("Duplicate origin state: " + originStateName + " and " + node.getName());
         }
 
         originStateName = node.getName();
@@ -327,7 +326,7 @@ public class StateMachine extends Base {
     }
 
     if (originStateName == null) {
-      throw new WingsException(INVALID_REQUEST).addParam("message", "Origin state missing");
+      throw new InvalidRequestException("Origin state missing");
     }
 
     try {

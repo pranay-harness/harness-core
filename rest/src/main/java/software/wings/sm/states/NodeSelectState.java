@@ -4,7 +4,6 @@ import static io.harness.data.structure.EmptyPredicate.isEmpty;
 import static io.harness.data.structure.EmptyPredicate.isNotEmpty;
 import static java.util.stream.Collectors.toList;
 import static software.wings.api.ServiceInstanceIdsParam.ServiceInstanceIdsParamBuilder.aServiceInstanceIdsParam;
-import static software.wings.beans.ErrorCode.INVALID_REQUEST;
 import static software.wings.beans.InstanceUnitType.COUNT;
 import static software.wings.beans.InstanceUnitType.PERCENTAGE;
 import static software.wings.beans.SearchFilter.Operator.EQ;
@@ -35,6 +34,7 @@ import software.wings.beans.artifact.Artifact;
 import software.wings.beans.infrastructure.instance.Instance;
 import software.wings.common.Constants;
 import software.wings.dl.PageRequest;
+import software.wings.exception.InvalidRequestException;
 import software.wings.exception.WingsException;
 import software.wings.service.intfc.AccountService;
 import software.wings.service.intfc.ArtifactService;
@@ -175,8 +175,7 @@ public abstract class NodeSelectState extends State {
     } catch (WingsException e) {
       throw e;
     } catch (Exception e) {
-      logger.warn(e.getMessage(), e);
-      throw new WingsException(INVALID_REQUEST).addParam("message", e.getMessage());
+      throw new InvalidRequestException(e.getMessage(), e);
     }
   }
 

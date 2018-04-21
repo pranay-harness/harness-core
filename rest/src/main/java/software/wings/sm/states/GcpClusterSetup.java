@@ -3,7 +3,6 @@ package software.wings.sm.states;
 import static io.harness.data.structure.EmptyPredicate.isEmpty;
 import static software.wings.api.ClusterElement.ClusterElementBuilder.aClusterElement;
 import static software.wings.api.GcpClusterExecutionData.GcpClusterExecutionDataBuilder.aGcpClusterExecutionData;
-import static software.wings.beans.ErrorCode.INVALID_REQUEST;
 import static software.wings.beans.FeatureName.KUBERNETES_CREATE_CLUSTER;
 import static software.wings.sm.ExecutionResponse.Builder.anExecutionResponse;
 import static software.wings.sm.StateType.GCP_CLUSTER_SETUP;
@@ -25,7 +24,7 @@ import software.wings.beans.InfrastructureMapping;
 import software.wings.beans.SettingAttribute;
 import software.wings.cloudprovider.gke.GkeClusterService;
 import software.wings.common.Constants;
-import software.wings.exception.WingsException;
+import software.wings.exception.InvalidRequestException;
 import software.wings.security.encryption.EncryptedDataDetail;
 import software.wings.service.intfc.FeatureFlagService;
 import software.wings.service.intfc.InfrastructureMappingService;
@@ -77,14 +76,13 @@ public class GcpClusterSetup extends State {
     String env = workflowStandardParams.getEnv().getName();
 
     if (!featureFlagService.isEnabled(KUBERNETES_CREATE_CLUSTER, app.getAccountId())) {
-      throw new WingsException(INVALID_REQUEST)
-          .addParam("message", "Runtime creation of clusters is not yet supported.");
+      throw new InvalidRequestException("Runtime creation of clusters is not yet supported.");
     }
 
     InfrastructureMapping infrastructureMapping =
         infrastructureMappingService.get(app.getUuid(), phaseElement.getInfraMappingId());
     if (infrastructureMapping == null || !(infrastructureMapping instanceof GcpKubernetesInfrastructureMapping)) {
-      throw new WingsException(INVALID_REQUEST).addParam("message", "Invalid infrastructure type");
+      throw new InvalidRequestException("Invalid infrastructure type");
     }
     GcpKubernetesInfrastructureMapping gcpInfraMapping = (GcpKubernetesInfrastructureMapping) infrastructureMapping;
     SettingAttribute computeProviderSetting = settingsService.get(gcpInfraMapping.getComputeProviderSettingId());

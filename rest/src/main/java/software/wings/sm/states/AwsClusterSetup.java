@@ -5,7 +5,6 @@ import static io.harness.data.structure.EmptyPredicate.isNotEmpty;
 import static java.util.Arrays.asList;
 import static software.wings.api.AwsClusterExecutionData.AwsClusterExecutionDataBuilder.anAwsClusterExecutionData;
 import static software.wings.api.ClusterElement.ClusterElementBuilder.aClusterElement;
-import static software.wings.beans.ErrorCode.INVALID_REQUEST;
 import static software.wings.beans.FeatureName.ECS_CREATE_CLUSTER;
 import static software.wings.sm.ExecutionResponse.Builder.anExecutionResponse;
 import static software.wings.sm.StateType.AWS_CLUSTER_SETUP;
@@ -28,7 +27,7 @@ import software.wings.beans.SettingAttribute;
 import software.wings.cloudprovider.aws.AwsClusterConfiguration;
 import software.wings.cloudprovider.aws.AwsClusterService;
 import software.wings.common.Constants;
-import software.wings.exception.WingsException;
+import software.wings.exception.InvalidRequestException;
 import software.wings.security.encryption.EncryptedDataDetail;
 import software.wings.service.intfc.FeatureFlagService;
 import software.wings.service.intfc.InfrastructureMappingService;
@@ -92,14 +91,13 @@ public class AwsClusterSetup extends State {
     String env = workflowStandardParams.getEnv().getName();
 
     if (!featureFlagService.isEnabled(ECS_CREATE_CLUSTER, app.getAccountId())) {
-      throw new WingsException(INVALID_REQUEST)
-          .addParam("message", "Runtime creation of clusters is not yet supported.");
+      throw new InvalidRequestException("Runtime creation of clusters is not yet supported.");
     }
 
     InfrastructureMapping infrastructureMapping =
         infrastructureMappingService.get(app.getUuid(), phaseElement.getInfraMappingId());
     if (infrastructureMapping == null || !(infrastructureMapping instanceof EcsInfrastructureMapping)) {
-      throw new WingsException(INVALID_REQUEST).addParam("message", "Invalid infrastructure type");
+      throw new InvalidRequestException("Invalid infrastructure type");
     }
 
     SettingAttribute computeProviderSetting = settingsService.get(infrastructureMapping.getComputeProviderSettingId());

@@ -10,7 +10,6 @@ import static java.util.Comparator.comparing;
 import static java.util.Comparator.reverseOrder;
 import static java.util.stream.Collectors.toList;
 import static software.wings.beans.ErrorCode.INIT_TIMEOUT;
-import static software.wings.beans.ErrorCode.INVALID_REQUEST;
 
 import com.google.common.io.CharStreams;
 import com.google.common.util.concurrent.TimeLimiter;
@@ -67,6 +66,7 @@ import software.wings.beans.command.ExecutionLogCallback;
 import software.wings.beans.command.LogCallback;
 import software.wings.cloudprovider.ContainerInfo;
 import software.wings.cloudprovider.ContainerInfo.Status;
+import software.wings.exception.InvalidRequestException;
 import software.wings.exception.WingsException;
 import software.wings.security.encryption.EncryptedDataDetail;
 import software.wings.service.impl.AwsHelperService;
@@ -834,8 +834,7 @@ public class EcsContainerServiceImpl implements EcsContainerService {
     } catch (WingsException e) {
       throw e;
     } catch (Exception e) {
-      throw new WingsException(INVALID_REQUEST, e)
-          .addParam("message", "Error while waiting for instances to register with cluster");
+      throw new InvalidRequestException("Error while waiting for instances to register with cluster", e);
     }
   }
 
@@ -853,7 +852,7 @@ public class EcsContainerServiceImpl implements EcsContainerService {
     } catch (WingsException e) {
       throw e;
     } catch (Exception e) {
-      throw new WingsException(INVALID_REQUEST, e).addParam("message", "Error while waiting for instances to be ready");
+      throw new InvalidRequestException("Error while waiting for instances to be ready", e);
     }
   }
 
@@ -892,7 +891,7 @@ public class EcsContainerServiceImpl implements EcsContainerService {
     try {
       createServiceRequest = mapper.readValue(serviceDefinition, CreateServiceRequest.class);
     } catch (IOException ex) {
-      throw new WingsException(INVALID_REQUEST, ex).addParam("message", ex.getMessage());
+      throw new InvalidRequestException(ex.getMessage(), ex);
     }
     logger.info("Begin service deployment " + createServiceRequest.getServiceName());
     CreateServiceResult createServiceResult =
@@ -920,8 +919,7 @@ public class EcsContainerServiceImpl implements EcsContainerService {
     } catch (WingsException e) {
       throw e;
     } catch (Exception e) {
-      throw new WingsException(INVALID_REQUEST, e)
-          .addParam("message", "Error while waiting for tasks to be in running state");
+      throw new InvalidRequestException("Error while waiting for tasks to be in running state", e);
     }
   }
 
@@ -1017,7 +1015,7 @@ public class EcsContainerServiceImpl implements EcsContainerService {
       logger.info("Docker container ids = " + containerInfos);
       return containerInfos;
     } catch (Exception ex) {
-      throw new WingsException(INVALID_REQUEST, ex).addParam("message", ex.getMessage());
+      throw new InvalidRequestException(ex.getMessage(), ex);
     }
   }
 
@@ -1144,8 +1142,7 @@ public class EcsContainerServiceImpl implements EcsContainerService {
                                    .status(Status.SUCCESS)
                                    .build());
           } catch (Exception e) {
-            logger.error("Unknown error fetching meta info ", e);
-            throw new WingsException(INVALID_REQUEST, e).addParam("message", e.getMessage());
+            throw new InvalidRequestException(e.getMessage(), e);
           }
         } else {
           logger.warn("Could not connect to {}", uri);
@@ -1211,13 +1208,12 @@ public class EcsContainerServiceImpl implements EcsContainerService {
     } catch (WingsException e) {
       throw e;
     } catch (Exception e) {
-      logger.error("Wait for service steady state failed with exception ", e);
       if (e instanceof InterruptedException) {
         String msg = "Interrupted while waiting for service to reach steady state";
         executionLogCallback.saveExecutionLog(msg, LogLevel.ERROR);
-        throw new WingsException(INVALID_REQUEST, e).addParam("message", msg);
+        throw new InvalidRequestException(msg, e);
       }
-      throw new WingsException(INVALID_REQUEST, e).addParam("message", e.getMessage());
+      throw new InvalidRequestException(e.getMessage(), e);
     }
   }
 
@@ -1251,11 +1247,11 @@ public class EcsContainerServiceImpl implements EcsContainerService {
               desiredCount, service[0].getDesiredCount()),
           LogLevel.ERROR);
       executionLogCallback.saveExecutionLog("Service resize operation failed.", LogLevel.ERROR);
-      throw new WingsException(INVALID_REQUEST).addParam("message", "Service update timed out");
+      throw new InvalidRequestException("Service update timed out");
     } catch (WingsException e) {
       throw e;
     } catch (Exception e) {
-      throw new WingsException(INVALID_REQUEST, e).addParam("message", "Service update failed");
+      throw new InvalidRequestException("Service update failed", e);
     }
   }
 

@@ -6,7 +6,6 @@ import static java.util.stream.Collectors.toList;
 import static software.wings.api.CommandStateExecutionData.Builder.aCommandStateExecutionData;
 import static software.wings.api.InstanceElementListParam.InstanceElementListParamBuilder.anInstanceElementListParam;
 import static software.wings.beans.DelegateTask.Builder.aDelegateTask;
-import static software.wings.beans.ErrorCode.INVALID_REQUEST;
 import static software.wings.beans.FeatureName.ECS_CREATE_CLUSTER;
 import static software.wings.beans.FeatureName.KUBERNETES_CREATE_CLUSTER;
 import static software.wings.beans.SettingAttribute.Builder.aSettingAttribute;
@@ -49,6 +48,7 @@ import software.wings.beans.command.ContainerSetupParams;
 import software.wings.beans.container.ContainerTask;
 import software.wings.beans.container.ImageDetails;
 import software.wings.common.Constants;
+import software.wings.exception.InvalidRequestException;
 import software.wings.exception.WingsException;
 import software.wings.helpers.ext.container.ContainerDeploymentManagerHelper;
 import software.wings.security.encryption.EncryptedDataDetail;
@@ -135,7 +135,7 @@ public abstract class ContainerServiceSetup extends State {
           infrastructureMappingService.get(app.getUuid(), phaseElement.getInfraMappingId());
       if (!(infrastructureMapping instanceof ContainerInfrastructureMapping)
           || !isValidInfraMapping(infrastructureMapping)) {
-        throw new WingsException(INVALID_REQUEST).addParam("message", "Invalid infrastructure type");
+        throw new InvalidRequestException("Invalid infrastructure type");
       }
 
       ContainerInfrastructureMapping containerInfrastructureMapping =
@@ -150,8 +150,7 @@ public abstract class ContainerServiceSetup extends State {
                    && featureFlagService.isEnabled(ECS_CREATE_CLUSTER, app.getAccountId()))) {
           clusterName = getClusterNameFromContextElement(context);
         } else {
-          throw new WingsException(INVALID_REQUEST)
-              .addParam("message", "Runtime creation of clusters is not yet supported.");
+          throw new InvalidRequestException("Runtime creation of clusters is not yet supported.");
         }
       }
 
@@ -220,8 +219,7 @@ public abstract class ContainerServiceSetup extends State {
     } catch (WingsException e) {
       throw e;
     } catch (Exception e) {
-      logger.warn(e.getMessage(), e);
-      throw new WingsException(INVALID_REQUEST, e).addParam("message", e.getMessage());
+      throw new InvalidRequestException(e.getMessage(), e);
     }
   }
 
@@ -239,8 +237,7 @@ public abstract class ContainerServiceSetup extends State {
     } catch (WingsException e) {
       throw e;
     } catch (Exception e) {
-      logger.warn(e.getMessage(), e);
-      throw new WingsException(INVALID_REQUEST, e).addParam("message", e.getMessage());
+      throw new InvalidRequestException(e.getMessage(), e);
     }
   }
 

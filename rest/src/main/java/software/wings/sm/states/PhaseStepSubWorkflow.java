@@ -44,6 +44,7 @@ import software.wings.beans.FailureStrategy;
 import software.wings.beans.PhaseStepType;
 import software.wings.common.Constants;
 import software.wings.dl.PageResponse;
+import software.wings.exception.InvalidRequestException;
 import software.wings.exception.WingsException;
 import software.wings.service.intfc.ActivityService;
 import software.wings.service.intfc.WorkflowExecutionService;
@@ -93,7 +94,7 @@ public class PhaseStepSubWorkflow extends SubWorkflowState {
   @Override
   public ExecutionResponse execute(ExecutionContext contextIntf) {
     if (phaseStepType == null) {
-      throw new WingsException(INVALID_REQUEST).addParam("message", "null phaseStepType");
+      throw new InvalidRequestException("null phaseStepType");
     }
 
     ExecutionResponse response;
@@ -320,7 +321,7 @@ public class PhaseStepSubWorkflow extends SubWorkflowState {
   private void validateServiceElement(ExecutionContext context, PhaseElement phaseElement) {
     List<ContextElement> contextElements = context.getContextElementList(ContextElementType.CONTAINER_SERVICE);
     if (isEmpty(contextElements)) {
-      throw new WingsException(INVALID_REQUEST).addParam("message", "Setup not done");
+      throw new InvalidRequestException("Setup not done");
     }
     Optional<ContextElement> containerServiceElement =
         contextElements.parallelStream()
@@ -363,11 +364,11 @@ public class PhaseStepSubWorkflow extends SubWorkflowState {
   private void handleElementNotifyResponseData(
       PhaseElement phaseElement, Map<String, NotifyResponseData> response, ExecutionResponse executionResponse) {
     if (isEmpty(response)) {
-      throw new WingsException(INVALID_REQUEST).addParam("message", "Missing response");
+      throw new InvalidRequestException("Missing response");
     }
     NotifyResponseData notifiedResponseData = response.values().iterator().next();
     if (!(notifiedResponseData instanceof ElementNotifyResponseData)) {
-      throw new WingsException(INVALID_REQUEST).addParam("message", "Response data has wrong type");
+      throw new InvalidRequestException("Response data has wrong type");
     }
     ElementNotifyResponseData elementNotifyResponseData = (ElementNotifyResponseData) notifiedResponseData;
     if (elementNotifyResponseData.getExecutionStatus() != ExecutionStatus.ABORTED) {
@@ -420,10 +421,10 @@ public class PhaseStepSubWorkflow extends SubWorkflowState {
       ElementNotifyResponseData elementNotifyResponseData, Class<? extends ContextElement> cls, String message) {
     List<ContextElement> elements = elementNotifyResponseData.getContextElements();
     if (isEmpty(elements)) {
-      throw new WingsException(INVALID_REQUEST).addParam("message", message);
+      throw new InvalidRequestException(message);
     }
     if (!(cls.isInstance(elements.get(0)))) {
-      throw new WingsException(INVALID_REQUEST).addParam("message", message);
+      throw new InvalidRequestException(message);
     }
 
     return elements.get(0);

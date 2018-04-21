@@ -2,7 +2,6 @@ package software.wings.delegate.service;
 
 import static io.harness.data.structure.UUIDGenerator.generateUuid;
 import static javax.ws.rs.core.MediaType.MULTIPART_FORM_DATA;
-import static software.wings.beans.ErrorCode.INVALID_REQUEST;
 import static software.wings.managerclient.SafeHttpCall.execute;
 
 import com.google.common.cache.CacheBuilder;
@@ -24,7 +23,7 @@ import software.wings.beans.RestResponse;
 import software.wings.delegate.app.DelegateConfiguration;
 import software.wings.delegatetasks.DelegateFile;
 import software.wings.delegatetasks.DelegateFileManager;
-import software.wings.exception.WingsException;
+import software.wings.exception.InvalidRequestException;
 import software.wings.managerclient.ManagerClient;
 import software.wings.service.intfc.FileService.FileBucket;
 
@@ -98,7 +97,7 @@ public class DelegateFileManagerImpl implements DelegateFileManager {
       }
 
       logger.error("fileId[{}] could not be found", fileId);
-      throw new WingsException(INVALID_REQUEST).addParam("message", "File couldn't be downloaded");
+      throw new InvalidRequestException("File couldn't be downloaded");
     }
   }
 

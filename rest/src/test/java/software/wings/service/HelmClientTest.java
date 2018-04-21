@@ -2,6 +2,8 @@ package software.wings.service;
 
 import org.junit.Ignore;
 import org.junit.Test;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import software.wings.helpers.ext.helm.HelmClient;
 import software.wings.helpers.ext.helm.HelmClientImpl;
 import software.wings.helpers.ext.helm.request.HelmRollbackCommandRequest;
@@ -16,6 +18,8 @@ import java.util.concurrent.TimeoutException;
  */
 @Ignore
 public class HelmClientTest {
+  private static final Logger logger = LoggerFactory.getLogger(HelmClientTest.class);
+
   private HelmClient helmClient = new HelmClientImpl();
   @Test
   public void shouldInstall() throws InterruptedException, IOException, TimeoutException, ExecutionException {
@@ -53,8 +57,7 @@ public class HelmClientTest {
   public void shouldRollback() throws InterruptedException, IOException, TimeoutException {
     HelmCommandResponse helmCommandResponse =
         helmClient.rollback(HelmRollbackCommandRequest.builder().releaseName("rel1").prevReleaseVersion(1).build());
-    System.out.println();
-    System.out.println();
-    System.out.println(helmCommandResponse.getOutput());
+
+    logger.info(helmCommandResponse.getOutput());
   }
 }

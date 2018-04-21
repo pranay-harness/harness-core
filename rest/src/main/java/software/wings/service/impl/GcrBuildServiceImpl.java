@@ -1,6 +1,5 @@
 package software.wings.service.impl;
 
-import static software.wings.beans.ErrorCode.INVALID_REQUEST;
 import static software.wings.exception.WingsException.USER;
 import static software.wings.utils.Validator.equalCheck;
 
@@ -11,7 +10,7 @@ import com.google.inject.Singleton;
 import software.wings.beans.GcpConfig;
 import software.wings.beans.artifact.ArtifactStreamAttributes;
 import software.wings.beans.artifact.ArtifactStreamType;
-import software.wings.exception.WingsException;
+import software.wings.exception.InvalidRequestException;
 import software.wings.helpers.ext.gcr.GcrService;
 import software.wings.helpers.ext.jenkins.BuildDetails;
 import software.wings.helpers.ext.jenkins.JobDetails;
@@ -47,15 +46,13 @@ public class GcrBuildServiceImpl implements GcrBuildService {
   @Override
   public List<String> getArtifactPaths(
       String jobName, String groupId, GcpConfig config, List<EncryptedDataDetail> encryptionDetails) {
-    throw new WingsException(INVALID_REQUEST, USER)
-        .addParam("message", "Operation not supported by GCR Artifact Stream");
+    throw new InvalidRequestException("Operation not supported by GCR Artifact Stream", USER);
   }
 
   @Override
   public BuildDetails getLastSuccessfulBuild(String appId, ArtifactStreamAttributes artifactStreamAttributes,
       GcpConfig gcpConfig, List<EncryptedDataDetail> encryptionDetails) {
-    throw new WingsException(INVALID_REQUEST, USER)
-        .addParam("message", "Operation not supported by GCR Artifact Stream");
+    throw new InvalidRequestException("Operation not supported by GCR Artifact Stream", USER);
   }
 
   @Override
@@ -73,8 +70,7 @@ public class GcrBuildServiceImpl implements GcrBuildService {
 
   @Override
   public List<String> getGroupIds(String jobName, GcpConfig config, List<EncryptedDataDetail> encryptionDetails) {
-    throw new WingsException(INVALID_REQUEST, USER)
-        .addParam("message", "Operation not supported by GCR Artifact Stream");
+    throw new InvalidRequestException("Operation not supported by GCR Artifact Stream", USER);
   }
 
   @Override

@@ -1164,15 +1164,15 @@ public class WorkflowServiceImpl implements WorkflowService, DataProvider {
     // Infra not present
     envExpression.ifPresent(templateExpression -> {
       if (!infraExpression.isPresent()) {
-        throw new WingsException(INVALID_REQUEST, USER)
-            .addParam("message", "Service Infrastructure cannot be de-templatized because Environment is templatized");
+        throw new InvalidRequestException(
+            "Service Infrastructure cannot be de-templatized because Environment is templatized", USER);
       }
     });
     // Infra not present
     serviceExpression.ifPresent(templateExpression -> {
       if (!infraExpression.isPresent()) {
-        throw new WingsException(INVALID_REQUEST, USER)
-            .addParam("message", "Service Infrastructure cannot be de-templatized because Service is templatized");
+        throw new InvalidRequestException(
+            "Service Infrastructure cannot be de-templatized because Service is templatized", USER);
       }
     });
   }
@@ -1278,7 +1278,7 @@ public class WorkflowServiceImpl implements WorkflowService, DataProvider {
       List<String> pipelineNames = pipelines.stream().map(Pipeline::getName).collect(toList());
       String message = String.format("Workflow is referenced by %s pipeline%s [%s].", pipelines.size(),
           pipelines.size() == 1 ? "" : "s", Joiner.on(", ").join(pipelineNames));
-      throw new WingsException(INVALID_REQUEST, USER).addParam("message", message);
+      throw new InvalidRequestException(message, USER);
     }
 
     if (workflowExecutionService.workflowExecutionsRunning(
@@ -1494,12 +1494,11 @@ public class WorkflowServiceImpl implements WorkflowService, DataProvider {
     }
     Service service = serviceResourceService.get(appId, serviceId, false);
     if (service == null) {
-      throw new WingsException(INVALID_REQUEST).addParam("message", "Service [" + serviceId + "] does not exist");
+      throw new InvalidRequestException("Service [" + serviceId + "] does not exist");
     }
     InfrastructureMapping infrastructureMapping = infrastructureMappingService.get(appId, inframappingId);
     if (infrastructureMapping == null) {
-      throw new WingsException(INVALID_REQUEST)
-          .addParam("message", "Service Infrastructure [" + inframappingId + "] does not exist");
+      throw new InvalidRequestException("Service Infrastructure [" + inframappingId + "] does not exist");
     }
     if (!service.getUuid().equals(infrastructureMapping.getServiceId())) {
       throw new WingsException(INVALID_REQUEST)
@@ -1749,14 +1748,13 @@ public class WorkflowServiceImpl implements WorkflowService, DataProvider {
     if (!orchestrationWorkflow.getOrchestrationWorkflowType().equals(BUILD)) {
       Service service = serviceResourceService.get(appId, workflowPhase.getServiceId(), false);
       if (service == null) {
-        throw new WingsException(INVALID_REQUEST, USER)
-            .addParam("message", "Service [" + workflowPhase.getServiceId() + "] does not exist");
+        throw new InvalidRequestException("Service [" + workflowPhase.getServiceId() + "] does not exist", USER);
       }
       InfrastructureMapping infrastructureMapping = null;
       if (!workflowPhase.checkInfraTemplatized()) {
         if (infraMappingId == null) {
-          throw new WingsException(INVALID_REQUEST, USER)
-              .addParam("message", String.format(WORKFLOW_INFRAMAPPING_VALIDATION_MESSAGE, workflowPhase.getName()));
+          throw new InvalidRequestException(
+              String.format(WORKFLOW_INFRAMAPPING_VALIDATION_MESSAGE, workflowPhase.getName()), USER);
         }
         infrastructureMapping = infrastructureMappingService.get(appId, infraMappingId);
         notNullCheck("InfraMapping", infrastructureMapping);
@@ -1825,7 +1823,7 @@ public class WorkflowServiceImpl implements WorkflowService, DataProvider {
     }
 
     if (!found) {
-      throw new WingsException(INVALID_REQUEST, USER).addParam("message", "No matching Workflow Phase");
+      throw new InvalidRequestException("No matching Workflow Phase", USER);
     }
 
     orchestrationWorkflow =
@@ -1894,7 +1892,7 @@ public class WorkflowServiceImpl implements WorkflowService, DataProvider {
     }
 
     if (!found) {
-      throw new WingsException(INVALID_REQUEST).addParam("message", "node not found");
+      throw new InvalidRequestException("node not found");
     }
 
     orchestrationWorkflow =
@@ -1960,8 +1958,7 @@ public class WorkflowServiceImpl implements WorkflowService, DataProvider {
    */
   private void validateServiceMapping(String appId, String targetAppId, Map<String, String> serviceMapping) {
     if (serviceMapping == null) {
-      throw new WingsException(INVALID_REQUEST, USER)
-          .addParam("message", "At least one service mapping required to clone across applications");
+      throw new InvalidRequestException("At least one service mapping required to clone across applications", USER);
     }
     Set<String> serviceIds = serviceMapping.keySet();
     for (String serviceId : serviceIds) {
@@ -2377,7 +2374,7 @@ public class WorkflowServiceImpl implements WorkflowService, DataProvider {
     }
 
     if (!asList(ROLLING_NODE_SELECT, DC_NODE_SELECT, AWS_NODE_SELECT).contains(stateType)) {
-      throw new WingsException(INVALID_REQUEST, USER).addParam("message", "Unsupported state type: " + stateType);
+      throw new InvalidRequestException("Unsupported state type: " + stateType, USER);
     }
 
     Service service = serviceResourceService.get(appId, workflowPhase.getServiceId());
@@ -2919,8 +2916,8 @@ public class WorkflowServiceImpl implements WorkflowService, DataProvider {
                      || InfrastructureMappingType.PHYSICAL_DATA_CENTER_SSH.name().equals(
                             infrastructureMapping.getInfraMappingType()))) {
             logger.warn("Rolling Deployment is requested for {}", infrastructureMapping.getInfraMappingType());
-            throw new WingsException(INVALID_REQUEST, USER)
-                .addParam("message", "Requested Infrastructure Type is not supported using Rolling Deployment");
+            throw new InvalidRequestException(
+                "Requested Infrastructure Type is not supported using Rolling Deployment", USER);
           }
         }
       }

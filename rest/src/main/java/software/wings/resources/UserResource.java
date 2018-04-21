@@ -3,7 +3,6 @@ package software.wings.resources;
 import static com.google.common.collect.ImmutableMap.of;
 import static io.harness.data.structure.EmptyPredicate.isNotEmpty;
 import static software.wings.beans.Base.GLOBAL_APP_ID;
-import static software.wings.beans.ErrorCode.INVALID_REQUEST;
 import static software.wings.exception.WingsException.ReportTarget.REST_API;
 
 import com.google.inject.Inject;
@@ -23,6 +22,7 @@ import software.wings.beans.UserInvite;
 import software.wings.beans.ZendeskSsoLoginResponse;
 import software.wings.dl.PageRequest;
 import software.wings.dl.PageResponse;
+import software.wings.exception.InvalidRequestException;
 import software.wings.exception.WingsException;
 import software.wings.security.PermissionAttribute.PermissionType;
 import software.wings.security.PermissionAttribute.ResourceType;
@@ -160,7 +160,7 @@ public class UserResource {
   public RestResponse<Account> addAccount(Account account) {
     User existingUser = UserThreadLocal.get();
     if (existingUser == null) {
-      throw new WingsException(INVALID_REQUEST).addParam("message", "Invalid User");
+      throw new InvalidRequestException("Invalid User");
     }
     return new RestResponse<>(userService.addAccount(account, existingUser));
   }

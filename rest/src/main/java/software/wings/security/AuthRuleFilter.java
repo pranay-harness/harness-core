@@ -10,7 +10,6 @@ import static javax.ws.rs.Priorities.AUTHORIZATION;
 import static org.apache.commons.lang3.StringUtils.startsWith;
 import static software.wings.beans.ErrorCode.ACCESS_DENIED;
 import static software.wings.beans.ErrorCode.INVALID_ARGUMENT;
-import static software.wings.beans.ErrorCode.INVALID_REQUEST;
 import static software.wings.beans.ErrorCode.NOT_WHITELISTED_IP;
 import static software.wings.exception.WingsException.USER;
 
@@ -32,6 +31,7 @@ import software.wings.beans.FeatureName;
 import software.wings.beans.HttpMethod;
 import software.wings.beans.User;
 import software.wings.common.AuditHelper;
+import software.wings.exception.InvalidRequestException;
 import software.wings.exception.WingsException;
 import software.wings.security.PermissionAttribute.Action;
 import software.wings.security.PermissionAttribute.PermissionType;
@@ -169,8 +169,7 @@ public class AuthRuleFilter implements ContainerRequestFilter {
                .filter(account -> account.getUuid().equals(accountIdFinal))
                .findFirst()
                .isPresent()) {
-        throw new WingsException(INVALID_REQUEST, USER)
-            .addParam("message", "User not authorized to access the given account: " + accountIdFinal);
+        throw new InvalidRequestException("User not authorized to access the given account: " + accountIdFinal, USER);
       }
     }
 
@@ -218,9 +217,9 @@ public class AuthRuleFilter implements ContainerRequestFilter {
 
     if (accountId == null) {
       if (emptyAppIdsInReq) {
-        throw new WingsException(INVALID_REQUEST, USER).addParam("message", "appId not specified");
+        throw new InvalidRequestException("appId not specified", USER);
       }
-      throw new WingsException(INVALID_REQUEST, USER).addParam("message", "accountId not specified");
+      throw new InvalidRequestException("accountId not specified", USER);
     }
 
     if (rbacEnabledForAccount) {
@@ -235,23 +234,23 @@ public class AuthRuleFilter implements ContainerRequestFilter {
         if (accountLevelPermissions) {
           UserPermissionInfo userPermissionInfo = userRequestContext.getUserPermissionInfo();
           if (userPermissionInfo == null) {
-            throw new WingsException(INVALID_REQUEST, USER).addParam("message", "User not authorized");
+            throw new InvalidRequestException("User not authorized", USER);
           }
 
           AccountPermissionSummary accountPermissionSummary = userPermissionInfo.getAccountPermissionSummary();
           if (accountPermissionSummary == null) {
-            throw new WingsException(INVALID_REQUEST, USER).addParam("message", "User not authorized");
+            throw new InvalidRequestException("User not authorized", USER);
           }
 
           Set<PermissionType> accountPermissions = accountPermissionSummary.getPermissions();
           if (accountPermissions == null) {
-            throw new WingsException(INVALID_REQUEST, USER).addParam("message", "User not authorized");
+            throw new InvalidRequestException("User not authorized", USER);
           }
 
           if (isAuthorized(requiredPermissionAttributes, accountPermissions)) {
             return;
           } else {
-            throw new WingsException(INVALID_REQUEST, USER).addParam("message", "User not authorized");
+            throw new InvalidRequestException("User not authorized", USER);
           }
         } else {
           // Handle delete and update methods

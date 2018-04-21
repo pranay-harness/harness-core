@@ -7,7 +7,6 @@ import static net.redhogs.cronparser.CronExpressionDescriptor.getDescription;
 import static org.apache.commons.lang3.StringUtils.isBlank;
 import static org.apache.commons.lang3.StringUtils.isNotBlank;
 import static software.wings.beans.ErrorCode.INVALID_ARGUMENT;
-import static software.wings.beans.ErrorCode.INVALID_REQUEST;
 import static software.wings.beans.ExecutionCredential.ExecutionType.SSH;
 import static software.wings.beans.OrchestrationWorkflowType.BUILD;
 import static software.wings.beans.SSHExecutionCredential.Builder.aSSHExecutionCredential;
@@ -75,6 +74,7 @@ import software.wings.beans.trigger.WebhookParameters;
 import software.wings.dl.PageRequest;
 import software.wings.dl.PageResponse;
 import software.wings.dl.WingsPersistence;
+import software.wings.exception.InvalidRequestException;
 import software.wings.exception.WingsException;
 import software.wings.lock.AcquiredLock;
 import software.wings.lock.PersistentLocker;
@@ -840,8 +840,7 @@ public class TriggerServiceImpl implements TriggerService {
     logger.info("Received the trigger execution for appId {} and infraMappingId {}", appId, infraMappingId);
     InfrastructureMapping infrastructureMapping = infrastructureMappingService.get(appId, infraMappingId);
     if (infrastructureMapping == null) {
-      throw new WingsException(INVALID_REQUEST, USER_ADMIN)
-          .addParam("message", "Infrastructure Mapping" + infraMappingId + " does not exist");
+      throw new InvalidRequestException("Infrastructure Mapping" + infraMappingId + " does not exist", USER_ADMIN);
     }
     List<Trigger> triggers =
         getTriggersByApp(appId)
@@ -932,7 +931,7 @@ public class TriggerServiceImpl implements TriggerService {
         validateAndSetServiceInfraWorkflows(trigger);
         break;
       default:
-        throw new WingsException(INVALID_REQUEST, USER).addParam("message", "Invalid trigger condition type");
+        throw new InvalidRequestException("Invalid trigger condition type", USER);
     }
   }
 
@@ -942,7 +941,7 @@ public class TriggerServiceImpl implements TriggerService {
       return;
     }
     if (isEmpty(services)) {
-      throw new WingsException(INVALID_REQUEST, USER).addParam("message", "Pipeline services can not be empty");
+      throw new InvalidRequestException("Pipeline services can not be empty", USER);
     }
 
     Map<String, String> serviceIdNames =
@@ -953,8 +952,7 @@ public class TriggerServiceImpl implements TriggerService {
       switch (artifactSelection.getType()) {
         case LAST_DEPLOYED:
           if (isBlank(artifactSelection.getWorkflowId())) {
-            throw new WingsException(INVALID_REQUEST, USER)
-                .addParam("message", "Pipeline cannot be empty for Last deployed type");
+            throw new InvalidRequestException("Pipeline cannot be empty for Last deployed type", USER);
           }
           if (ORCHESTRATION.equals(trigger.getWorkflowType())) {
             Workflow workflow =
@@ -970,8 +968,7 @@ public class TriggerServiceImpl implements TriggerService {
           break;
         case LAST_COLLECTED:
           if (isBlank(artifactSelection.getArtifactStreamId())) {
-            throw new WingsException(INVALID_REQUEST, USER)
-                .addParam("message", "Artifact Source cannot be empty for Last collected type");
+            throw new InvalidRequestException("Artifact Source cannot be empty for Last collected type", USER);
           }
           artifactStream = validateArtifactStream(trigger.getAppId(), artifactSelection.getArtifactStreamId());
           service = serviceResourceService.get(trigger.getAppId(), artifactStream.getServiceId(), false);
@@ -980,8 +977,7 @@ public class TriggerServiceImpl implements TriggerService {
           break;
         case WEBHOOK_VARIABLE:
           if (isBlank(artifactSelection.getArtifactStreamId())) {
-            throw new WingsException(INVALID_REQUEST, USER)
-                .addParam("message", "Artifact Source cannot be empty for Webhook Variable type");
+            throw new InvalidRequestException("Artifact Source cannot be empty for Webhook Variable type", USER);
           }
           artifactStream = validateArtifactStream(trigger.getAppId(), artifactSelection.getArtifactStreamId());
           service = serviceResourceService.get(trigger.getAppId(), artifactStream.getServiceId(), false);
@@ -992,7 +988,7 @@ public class TriggerServiceImpl implements TriggerService {
         case PIPELINE_SOURCE:
           break;
         default:
-          throw new WingsException(INVALID_REQUEST, USER).addParam("message", "Invalid artifact selection type");
+          throw new InvalidRequestException("Invalid artifact selection type", USER);
       }
       if (serviceIdNames.get(artifactSelection.getServiceId()) == null) {
         service = serviceResourceService.get(trigger.getAppId(), artifactSelection.getServiceId(), false);

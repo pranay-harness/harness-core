@@ -20,6 +20,8 @@ import org.joor.Reflect;
 import org.junit.Before;
 import org.junit.Test;
 import org.mockito.Mock;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import software.wings.WingsBaseTest;
 import software.wings.api.PhaseElement.PhaseElementBuilder;
 import software.wings.api.ServiceElement;
@@ -59,6 +61,8 @@ import java.util.UUID;
  * Created by rsingh on 4/9/18.
  */
 public class EcsContainerInfoIntegrationTest extends WingsBaseTest {
+  private static final Logger logger = LoggerFactory.getLogger(EcsContainerInfoIntegrationTest.class);
+
   @Inject private WingsPersistence wingsPersistence;
   @Inject private WorkflowExecutionService workflowExecutionService;
   @Inject private SettingsService settingsService;
@@ -139,6 +143,6 @@ public class EcsContainerInfoIntegrationTest extends WingsBaseTest {
     Reflect.on(splunkV2State).set("workflowExecutionService", workflowExecutionService);
     Set<String> nodes = splunkV2State.getLastExecutionNodes(context);
     assertTrue(nodes.size() >= 1);
-    System.out.println("do_not_delete__ecs__container__integration__test__Prod: " + nodes);
+    logger.info("do_not_delete__ecs__container__integration__test__Prod: " + nodes);
   }
 }

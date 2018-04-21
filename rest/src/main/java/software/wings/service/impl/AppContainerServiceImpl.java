@@ -18,6 +18,7 @@ import software.wings.beans.Service;
 import software.wings.dl.PageRequest;
 import software.wings.dl.PageResponse;
 import software.wings.dl.WingsPersistence;
+import software.wings.exception.InvalidRequestException;
 import software.wings.exception.WingsException;
 import software.wings.scheduler.PruneFileJob;
 import software.wings.scheduler.QuartzScheduler;
@@ -106,8 +107,7 @@ public class AppContainerServiceImpl implements AppContainerService {
     AppContainer storedAppContainer = get(appContainer.getAccountId(), appContainer.getUuid());
     Validator.notNullCheck("App Stack", storedAppContainer);
     if (storedAppContainer.isSystemCreated()) {
-      throw new WingsException(INVALID_REQUEST)
-          .addParam("message", "System created Application Stack can not be updated.");
+      throw new InvalidRequestException("System created Application Stack can not be updated.");
     }
     if (newPlatformSoftwareBinaryUploaded(storedAppContainer, appContainer)) {
       uploadAppContainerFile(appContainer, in, fileBucket);

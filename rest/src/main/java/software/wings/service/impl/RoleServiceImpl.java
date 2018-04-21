@@ -1,6 +1,5 @@
 package software.wings.service.impl;
 
-import static software.wings.beans.ErrorCode.INVALID_REQUEST;
 import static software.wings.utils.Validator.notNullCheck;
 
 import com.google.common.collect.ImmutableMap;
@@ -13,7 +12,7 @@ import software.wings.beans.User;
 import software.wings.dl.PageRequest;
 import software.wings.dl.PageResponse;
 import software.wings.dl.WingsPersistence;
-import software.wings.exception.WingsException;
+import software.wings.exception.InvalidRequestException;
 import software.wings.service.intfc.RoleService;
 import software.wings.service.intfc.UserService;
 
@@ -73,7 +72,7 @@ public class RoleServiceImpl implements RoleService {
 
   private void ensureNonAdminRole(Role role) {
     if (role.getRoleType() == RoleType.ACCOUNT_ADMIN) {
-      throw new WingsException(INVALID_REQUEST).addParam("message", "Administrator role can not be modified");
+      throw new InvalidRequestException("Administrator role can not be modified");
     }
   }
 

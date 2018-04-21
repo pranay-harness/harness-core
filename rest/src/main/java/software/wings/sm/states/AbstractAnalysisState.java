@@ -5,7 +5,6 @@ import static io.harness.data.structure.EmptyPredicate.isNotEmpty;
 import static java.util.Collections.emptySet;
 import static org.apache.commons.lang3.StringUtils.isBlank;
 import static software.wings.beans.DelegateTask.SyncTaskContext.Builder.aContext;
-import static software.wings.beans.ErrorCode.INVALID_REQUEST;
 import static software.wings.dl.PageRequest.PageRequestBuilder.aPageRequest;
 
 import com.google.common.base.Preconditions;
@@ -42,7 +41,7 @@ import software.wings.delegatetasks.DelegateProxyFactory;
 import software.wings.dl.PageRequest;
 import software.wings.dl.PageResponse;
 import software.wings.dl.WingsPersistence;
-import software.wings.exception.WingsException;
+import software.wings.exception.InvalidRequestException;
 import software.wings.security.encryption.EncryptedDataDetail;
 import software.wings.service.impl.AwsHelperService;
 import software.wings.service.impl.ContainerServiceParams;
@@ -420,7 +419,7 @@ public abstract class AbstractAnalysisState extends State {
 
   public static String generateAuthToken(final String secret) throws UnsupportedEncodingException {
     if (secret == null) {
-      throw new WingsException(INVALID_REQUEST).addParam("message", "No secret present for external service");
+      throw new InvalidRequestException("No secret present for external service");
     }
 
     Algorithm algorithm = Algorithm.HMAC256(secret);

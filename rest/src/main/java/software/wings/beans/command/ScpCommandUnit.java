@@ -1,7 +1,6 @@
 package software.wings.beans.command;
 
 import static java.util.stream.Collectors.toMap;
-import static software.wings.beans.ErrorCode.INVALID_REQUEST;
 import static software.wings.beans.command.ScpCommandUnit.ScpFileCategory.ARTIFACTS;
 
 import com.google.common.base.MoreObjects;
@@ -16,7 +15,7 @@ import lombok.EqualsAndHashCode;
 import org.apache.commons.lang3.tuple.Pair;
 import software.wings.beans.AppContainer;
 import software.wings.beans.command.CommandExecutionResult.CommandExecutionStatus;
-import software.wings.exception.WingsException;
+import software.wings.exception.InvalidRequestException;
 import software.wings.service.intfc.FileService.FileBucket;
 import software.wings.stencils.DataProvider;
 import software.wings.stencils.DefaultValue;
@@ -60,7 +59,7 @@ public class ScpCommandUnit extends SshCommandUnit {
         fileIds.add(Pair.of(appContainer.getFileUuid(), null));
         break;
       default:
-        throw new WingsException(INVALID_REQUEST).addParam("message", "Unsupported file category for copy step");
+        throw new InvalidRequestException("Unsupported file category for copy step");
     }
     return context.copyGridFsFiles(destinationDirectoryPath, fileBucket, fileIds);
   }

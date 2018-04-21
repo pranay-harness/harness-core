@@ -28,6 +28,7 @@ import retrofit2.Response;
 import retrofit2.converter.simplexml.SimpleXmlConverterFactory;
 import software.wings.beans.config.NexusConfig;
 import software.wings.common.AlphanumComparator;
+import software.wings.exception.InvalidRequestException;
 import software.wings.exception.WingsException;
 import software.wings.helpers.ext.artifactory.FolderPath;
 import software.wings.helpers.ext.jenkins.BuildDetails;
@@ -252,8 +253,7 @@ public class NexusTwoServiceImpl {
                       new MyAuthenticator(nexusConfig.getUsername(), new String(nexusConfig.getPassword())));
                   return ImmutablePair.of(artifact.getNodeName(), new URL(resourceUrl).openStream());
                 } catch (IOException ex) {
-                  logger.error("Error occurred while getting the input stream", ex);
-                  throw new WingsException(INVALID_REQUEST).addParam("message", ex.getMessage());
+                  throw new InvalidRequestException(ex.getMessage(), ex);
                 }
               }
             }
@@ -283,7 +283,7 @@ public class NexusTwoServiceImpl {
       } else {
         logger.error("Error while getting the latest version from Nexus url {} and queryParams {}. Reason:{}", url,
             queryParams, response.message());
-        throw new WingsException(INVALID_REQUEST).addParam("message", response.message());
+        throw new InvalidRequestException(response.message());
       }
     } catch (IOException e) {
       logger.error("Error occurred while retrieving pom model from url " + url, e);

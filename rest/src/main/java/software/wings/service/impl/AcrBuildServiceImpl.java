@@ -1,6 +1,5 @@
 package software.wings.service.impl;
 
-import static software.wings.beans.ErrorCode.INVALID_REQUEST;
 import static software.wings.utils.Validator.equalCheck;
 
 import com.google.common.collect.Lists;
@@ -10,7 +9,7 @@ import com.google.inject.Singleton;
 import software.wings.beans.AzureConfig;
 import software.wings.beans.artifact.ArtifactStreamAttributes;
 import software.wings.beans.artifact.ArtifactStreamType;
-import software.wings.exception.WingsException;
+import software.wings.exception.InvalidRequestException;
 import software.wings.helpers.ext.azure.AcrService;
 import software.wings.helpers.ext.jenkins.BuildDetails;
 import software.wings.helpers.ext.jenkins.JobDetails;
@@ -49,7 +48,7 @@ public class AcrBuildServiceImpl implements AcrBuildService {
   @Override
   public BuildDetails getLastSuccessfulBuild(String appId, ArtifactStreamAttributes artifactStreamAttributes,
       AzureConfig config, List<EncryptedDataDetail> encryptionDetails) {
-    throw new WingsException(INVALID_REQUEST).addParam("message", "Operation not supported by ACR Artifact Stream");
+    throw new InvalidRequestException("Operation not supported by ACR Artifact Stream");
   }
 
   @Override
@@ -67,7 +66,7 @@ public class AcrBuildServiceImpl implements AcrBuildService {
 
   @Override
   public List<String> getGroupIds(String jobName, AzureConfig config, List<EncryptedDataDetail> encryptionDetails) {
-    throw new WingsException(INVALID_REQUEST).addParam("message", "Operation not supported by ACR Artifact Stream");
+    throw new InvalidRequestException("Operation not supported by ACR Artifact Stream");
   }
 
   @Override

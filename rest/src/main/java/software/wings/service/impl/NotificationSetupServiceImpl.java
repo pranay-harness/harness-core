@@ -22,6 +22,7 @@ import software.wings.beans.yaml.Change.ChangeType;
 import software.wings.dl.PageRequest;
 import software.wings.dl.PageResponse;
 import software.wings.dl.WingsPersistence;
+import software.wings.exception.InvalidRequestException;
 import software.wings.exception.WingsException;
 import software.wings.service.impl.yaml.YamlChangeSetHelper;
 import software.wings.service.intfc.NotificationSetupService;
@@ -120,7 +121,7 @@ public class NotificationSetupServiceImpl implements NotificationSetupService {
     NotificationGroup existingGroup =
         wingsPersistence.get(NotificationGroup.class, Base.GLOBAL_APP_ID, notificationGroup.getUuid());
     if (!existingGroup.isEditable()) {
-      throw new WingsException(INVALID_REQUEST).addParam("message", "Default Notification Group can not be updated");
+      throw new InvalidRequestException("Default Notification Group can not be updated");
     }
     NotificationGroup updatedGroup =
         wingsPersistence.saveAndGet(NotificationGroup.class, notificationGroup); // TODO:: selective update
@@ -134,7 +135,7 @@ public class NotificationSetupServiceImpl implements NotificationSetupService {
     NotificationGroup notificationGroup =
         wingsPersistence.get(NotificationGroup.class, Base.GLOBAL_APP_ID, notificationGroupId);
     if (!notificationGroup.isEditable()) {
-      throw new WingsException(INVALID_REQUEST).addParam("message", "Default Notification group can not be deleted");
+      throw new InvalidRequestException("Default Notification group can not be deleted");
     }
 
     List<Workflow> workflows =
