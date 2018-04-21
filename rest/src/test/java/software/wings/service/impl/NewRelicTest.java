@@ -5,6 +5,7 @@ import static org.junit.Assert.assertFalse;
 import com.google.inject.Inject;
 
 import io.harness.rule.RepeatRule.Repeat;
+import io.harness.time.Timestamp;
 import org.junit.Before;
 import org.junit.Ignore;
 import org.junit.Test;
@@ -15,7 +16,6 @@ import software.wings.service.impl.newrelic.NewRelicApplicationInstance;
 import software.wings.service.impl.newrelic.NewRelicDelgateServiceImpl;
 import software.wings.service.impl.newrelic.NewRelicMetric;
 import software.wings.service.intfc.newrelic.NewRelicDelegateService;
-import software.wings.time.WingsTimeUtils;
 
 import java.io.IOException;
 import java.util.Collection;
@@ -85,7 +85,7 @@ public class NewRelicTest extends WingsBaseTest {
 
   @Test
   public void testTimeStampCreations() {
-    NewRelicDelgateServiceImpl.dateFormatter.format(new Date(WingsTimeUtils.getMinuteBoundary(1513463100000L)))
+    NewRelicDelgateServiceImpl.dateFormatter.format(new Date(Timestamp.minuteBoundary(1513463100000L)))
         .equals("2017-12-16T14:25:00-0800");
   }
 }

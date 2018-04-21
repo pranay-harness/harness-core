@@ -8,6 +8,7 @@ import com.google.common.collect.Table.Cell;
 import com.google.common.collect.TreeBasedTable;
 import com.google.inject.Inject;
 
+import io.harness.time.Timestamp;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import software.wings.beans.DelegateTask;
@@ -28,7 +29,6 @@ import software.wings.service.impl.newrelic.NewRelicWebTransactions;
 import software.wings.service.intfc.analysis.ClusterLevel;
 import software.wings.service.intfc.newrelic.NewRelicDelegateService;
 import software.wings.sm.StateType;
-import software.wings.time.WingsTimeUtils;
 import software.wings.utils.JsonUtils;
 import software.wings.waitnotify.NotifyResponseData;
 
@@ -114,8 +114,8 @@ public class NewRelicDataCollectionTask extends AbstractDelegateDataCollectionTa
     private NewRelicMetricCollector(NewRelicDataCollectionInfo dataCollectionInfo, DataCollectionTaskResult taskResult)
         throws IOException {
       this.dataCollectionInfo = dataCollectionInfo;
-      this.managerAnalysisStartTime = WingsTimeUtils.getMinuteBoundary(dataCollectionInfo.getStartTime());
-      this.windowStartTimeManager = WingsTimeUtils.getMinuteBoundary(dataCollectionInfo.getStartTime());
+      this.managerAnalysisStartTime = Timestamp.minuteBoundary(dataCollectionInfo.getStartTime());
+      this.windowStartTimeManager = Timestamp.minuteBoundary(dataCollectionInfo.getStartTime());
       this.analysisStartTimeDelegate = System.currentTimeMillis();
       this.lastCollectionTime = analysisStartTimeDelegate;
       this.dataCollectionMinute = 0;

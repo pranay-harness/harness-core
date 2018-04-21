@@ -8,6 +8,7 @@ import com.google.common.collect.Sets;
 
 import com.github.reinert.jjschema.Attributes;
 import com.github.reinert.jjschema.SchemaIgnore;
+import io.harness.time.Timestamp;
 import org.apache.commons.lang3.StringUtils;
 import org.mongodb.morphia.annotations.Transient;
 import org.slf4j.Logger;
@@ -32,7 +33,6 @@ import software.wings.sm.StateType;
 import software.wings.sm.WorkflowStandardParams;
 import software.wings.stencils.DefaultValue;
 import software.wings.stencils.EnumData;
-import software.wings.time.WingsTimeUtils;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -108,7 +108,7 @@ public class SplunkV2State extends AbstractLogAnalysisState {
 
     final SplunkConfig splunkConfig = (SplunkConfig) settingAttribute.getValue();
     final Set<String> queries = Sets.newHashSet(query.split(","));
-    final long logCollectionStartTimeStamp = WingsTimeUtils.getMinuteBoundary(System.currentTimeMillis());
+    final long logCollectionStartTimeStamp = Timestamp.currentMinuteBoundary();
     List<Set<String>> batchedHosts = batchHosts(hosts);
     String[] waitIds = new String[batchedHosts.size()];
     List<DelegateTask> delegateTasks = new ArrayList<>();

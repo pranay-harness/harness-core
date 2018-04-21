@@ -5,6 +5,7 @@ import static software.wings.delegatetasks.SplunkDataCollectionTask.RETRY_SLEEP;
 
 import com.google.inject.Inject;
 
+import io.harness.time.Timestamp;
 import org.json.JSONArray;
 import org.json.JSONObject;
 import org.slf4j.Logger;
@@ -20,7 +21,6 @@ import software.wings.service.impl.logz.LogzDataCollectionInfo;
 import software.wings.service.intfc.elk.ElkDelegateService;
 import software.wings.service.intfc.logz.LogzDelegateService;
 import software.wings.sm.StateType;
-import software.wings.time.WingsTimeUtils;
 import software.wings.utils.JsonUtils;
 import software.wings.waitnotify.NotifyResponseData;
 
@@ -89,7 +89,7 @@ public class ElkLogzDataCollectionTask extends AbstractDelegateDataCollectionTas
       this.delegateTaskId = delegateTaskId;
       this.dataCollectionInfo = dataCollectionInfo;
       this.logCollectionMinute = dataCollectionInfo.getStartMinute();
-      this.collectionStartTime = WingsTimeUtils.getMinuteBoundary(dataCollectionInfo.getStartTime())
+      this.collectionStartTime = Timestamp.minuteBoundary(dataCollectionInfo.getStartTime())
           + logCollectionMinute * TimeUnit.MINUTES.toMillis(1);
       this.taskResult = taskResult;
     }
