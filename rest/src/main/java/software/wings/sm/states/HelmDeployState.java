@@ -208,8 +208,8 @@ public class HelmDeployState extends State {
 
   private void validateChartSpecification(HelmChartSpecification chartSpec) {
     if (chartSpec == null || (isEmpty(chartSpec.getChartName()) && isEmpty(chartSpec.getChartUrl()))) {
-      throw new WingsException(ErrorCode.INVALID_REQUEST,
-          "Invalid chart specification " + (chartSpec == null ? "NULL" : chartSpec.toString()));
+      throw new WingsException(ErrorCode.INVALID_REQUEST)
+          .addParam("message", "Invalid chart specification " + (chartSpec == null ? "NULL" : chartSpec.toString()));
     }
   }
 

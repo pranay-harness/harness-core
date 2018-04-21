@@ -33,11 +33,11 @@ import software.wings.beans.Workflow;
 import software.wings.common.Constants;
 import software.wings.common.WingsExpressionProcessorFactory;
 import software.wings.exception.WingsException;
-import software.wings.exception.WingsException.ReportTarget;
 import software.wings.sm.states.ForkState;
 import software.wings.sm.states.RepeatState;
 import software.wings.sm.states.SubWorkflowState;
 import software.wings.utils.MapperUtils;
+import software.wings.utils.Misc;
 
 import java.util.ArrayList;
 import java.util.HashMap;
@@ -106,18 +106,18 @@ public class StateMachine extends Base {
     setAppId(workflow.getAppId());
     this.originId = workflow.getUuid();
     this.originVersion = originVersion;
-    StringBuilder sb = new StringBuilder();
+    String errorMsg = null;
     try {
       deepTransform(graph, stencilMap, orchestrationWorkflow);
       valid = true;
     } catch (WingsException wingsException) {
       logger.error("Error in State Machine transform", wingsException);
-      wingsException.getResponseMessageList(ReportTarget.USER).forEach(responseMessage -> sb.append(responseMessage));
+      errorMsg = Misc.getMessage(wingsException);
     }
     orchestrationWorkflow.validate();
     if (orchestrationWorkflow.isValid() && !valid) {
       orchestrationWorkflow.setValid(false);
-      orchestrationWorkflow.setValidationMessage(sb.toString());
+      orchestrationWorkflow.setValidationMessage(errorMsg);
     }
 
     if (!workflow.envValid()) {

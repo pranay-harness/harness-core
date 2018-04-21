@@ -1349,7 +1349,7 @@ public class WorkflowExecutionServiceImpl implements WorkflowExecutionService {
       // It is completely normal the workflow to finish while interrupt request is coming.
       // Therefore there is nothing alarming when this occurs.
       throw new WingsException(ErrorCode.INVALID_REQUEST, HARMLESS)
-          .addParam("args", "Workflow execution already completed. executionUuid:" + executionUuid);
+          .addParam("message", "Workflow execution already completed. executionUuid:" + executionUuid);
     }
 
     if (workflowExecution.getWorkflowType() != PIPELINE) {

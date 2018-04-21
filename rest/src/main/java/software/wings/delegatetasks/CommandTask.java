@@ -2,7 +2,6 @@ package software.wings.delegatetasks;
 
 import static software.wings.beans.command.CommandExecutionResult.Builder.aCommandExecutionResult;
 
-import com.google.common.base.Joiner;
 import com.google.inject.Inject;
 
 import org.slf4j.Logger;
@@ -12,9 +11,8 @@ import software.wings.beans.command.Command;
 import software.wings.beans.command.CommandExecutionContext;
 import software.wings.beans.command.CommandExecutionResult;
 import software.wings.beans.command.CommandExecutionResult.CommandExecutionStatus;
-import software.wings.exception.WingsException;
-import software.wings.exception.WingsException.ReportTarget;
 import software.wings.service.intfc.ServiceCommandExecutorService;
+import software.wings.utils.Misc;
 import software.wings.waitnotify.NotifyResponseData;
 
 import java.util.function.Consumer;
@@ -45,12 +43,7 @@ public class CommandTask extends AbstractDelegateRunnableTask {
       commandExecutionStatus = serviceCommandExecutorService.execute(command, commandExecutionContext);
     } catch (Exception e) {
       logger.warn("Exception while executing task {}: {}", getTaskId(), e.getMessage(), e);
-      if (e instanceof WingsException) {
-        WingsException ex = (WingsException) e;
-        errorMessage = Joiner.on(",").join(ex.getResponseMessageList(ReportTarget.USER));
-      } else {
-        errorMessage = e.getMessage();
-      }
+      errorMessage = Misc.getMessage(e);
       commandExecutionStatus = CommandExecutionStatus.FAILURE;
     }
 

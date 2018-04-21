@@ -103,7 +103,7 @@ public class EnvStateTest extends WingsBaseTest {
     assertThat(executionResponse.getExecutionStatus()).isEqualTo(ExecutionStatus.FAILED);
     assertThat(executionResponse.getErrorMessage())
         .isNotEmpty()
-        .isEqualTo("INVALID_REQUEST - Workflow variable [test] is mandatory for execution. ");
+        .isEqualTo("Invalid request: Workflow variable [test] is mandatory for execution");
   }
 
   @Test

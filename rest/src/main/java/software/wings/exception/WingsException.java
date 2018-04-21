@@ -1,7 +1,6 @@
 package software.wings.exception;
 
-import static io.harness.data.structure.EmptyPredicate.isNotEmpty;
-import static java.util.stream.Collectors.toList;
+import static java.util.stream.Collectors.joining;
 import static software.wings.beans.ResponseMessage.Level.ERROR;
 import static software.wings.beans.ResponseMessage.Level.INFO;
 import static software.wings.beans.ResponseMessage.Level.WARN;
@@ -121,7 +120,6 @@ public class WingsException extends WingsApiException {
     super(
         responseMessage.getMessage() == null ? responseMessage.getCode().name() : responseMessage.getMessage(), cause);
     this.responseMessage = responseMessage;
-    this.reportTargets = reportTargets;
   }
 
   public List<ResponseMessage> getResponseMessageList(ReportTarget reportTarget) {
@@ -171,34 +169,19 @@ public class WingsException extends WingsApiException {
     final List<ResponseMessage> responseMessages = getResponseMessageList(HARNESS_ENGINEER);
 
     String msg = "Exception occurred: " + getMessage();
+    String responseMsgs = responseMessages.stream().map(ResponseMessage::getMessage).collect(joining(". "));
     if (responseMessages.stream().anyMatch(responseMessage -> responseMessage.getLevel() == ERROR)) {
       logger.error(msg, this);
+      logger.error(responseMsgs);
     } else if (responseMessages.stream().anyMatch(responseMessage -> responseMessage.getLevel() == WARN)) {
       logger.warn(msg, this);
+      logger.warn(responseMsgs);
     } else if (responseMessages.stream().anyMatch(responseMessage -> responseMessage.getLevel() == INFO)) {
       logger.info(msg, this);
+      logger.info(responseMsgs);
     } else {
       logger.debug(msg, this);
+      logger.debug(responseMsgs);
     }
-  }
-
-  // There is only one use of this method. We should reconsider the need of it.
-  @Deprecated
-  public String getMessagesAsString() {
-    final List<ResponseMessage> responseMessages =
-        getResponseMessageList(USER)
-            .stream()
-            .map(responseMessage -> ResponseCodeCache.getInstance().rebuildMessage(responseMessage, params))
-            .collect(toList());
-
-    StringBuilder errorMsgBuilder = new StringBuilder();
-    if (isNotEmpty(responseMessages)) {
-      responseMessages.stream().forEach(responseMessage -> {
-        errorMsgBuilder.append(responseMessage.getMessage());
-        errorMsgBuilder.append('.');
-      });
-    }
-
-    return errorMsgBuilder.toString();
   }
 }

@@ -575,7 +575,7 @@ public class GitClientImpl implements GitClient {
       if (EmptyPredicate.isNotEmpty(keyPath)) {
         new File(keyPath).delete();
       }
-      throw new WingsException(ErrorCode.INVALID_REQUEST, e);
+      throw new WingsException(ErrorCode.INVALID_REQUEST, e).addParam("message", "Error setting SSH credentials");
     }
   }
 

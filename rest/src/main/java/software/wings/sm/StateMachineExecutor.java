@@ -39,7 +39,6 @@ import static software.wings.sm.ExecutionStatus.SUCCESS;
 import static software.wings.sm.ExecutionStatus.WAITING;
 import static software.wings.sm.StateExecutionData.StateExecutionDataBuilder.aStateExecutionData;
 
-import com.google.common.base.Joiner;
 import com.google.common.base.Preconditions;
 import com.google.common.collect.Lists;
 import com.google.inject.Inject;
@@ -67,7 +66,6 @@ import software.wings.dl.PageResponse;
 import software.wings.dl.WingsDeque;
 import software.wings.dl.WingsPersistence;
 import software.wings.exception.WingsException;
-import software.wings.exception.WingsException.ReportTarget;
 import software.wings.scheduler.NotifyJob;
 import software.wings.scheduler.QuartzScheduler;
 import software.wings.service.intfc.AlertService;
@@ -704,16 +702,9 @@ public class StateMachineExecutor {
     StateMachine sm = context.getStateMachine();
     State currentState =
         sm.getState(stateExecutionInstance.getChildStateMachineId(), stateExecutionInstance.getStateName());
+    String errorMessage = Misc.getMessage(e);
     logger.warn("Error seen in the state execution - currentState : {}, stateExecutionInstanceId: {} : {}",
-        currentState, stateExecutionInstance.getUuid(), Misc.getMessage(e), e);
-
-    String errorMessage;
-    if (e instanceof WingsException) {
-      WingsException ex = (WingsException) e;
-      errorMessage = Joiner.on(",").join(ex.getResponseMessageList(ReportTarget.USER));
-    } else {
-      errorMessage = e.getMessage();
-    }
+        currentState, stateExecutionInstance.getUuid(), errorMessage, e);
 
     updateStateExecutionData(stateExecutionInstance, null, FAILED, errorMessage, null, null);
 

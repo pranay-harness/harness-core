@@ -3,6 +3,7 @@ package software.wings.app;
 import static io.harness.govern.Switch.unhandled;
 import static java.util.Arrays.asList;
 import static org.apache.commons.lang3.StringUtils.isBlank;
+import static org.apache.commons.lang3.StringUtils.isNotBlank;
 import static software.wings.beans.ErrorCode.INVALID_REQUEST;
 import static software.wings.beans.ErrorCode.INVALID_TOKEN;
 import static software.wings.beans.ErrorCode.UNKNOWN_ERROR;
@@ -33,7 +34,9 @@ import software.wings.service.intfc.AuthService;
 import software.wings.utils.JsonUtils;
 
 import java.io.IOException;
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
 
 /**
  * Created by peeyushaggarwal on 8/15/16.
@@ -63,7 +66,7 @@ public class UiStreamHandler extends AtmosphereHandlerAdapter {
 
         List<String> pathSegments = SPLITTER.splitToList(req.getPathInfo());
         if (pathSegments.size() <= 5) {
-          sendError(resource, INVALID_REQUEST);
+          sendError(resource, INVALID_REQUEST, "message", "Request had too few path segments");
         }
 
         String accountId = pathSegments.get(1);
@@ -72,7 +75,7 @@ public class UiStreamHandler extends AtmosphereHandlerAdapter {
         Channel channel = Channel.getChannelByChannelName(pathSegments.get(5));
 
         if (channel == null) {
-          sendError(resource, INVALID_REQUEST);
+          sendError(resource, INVALID_REQUEST, "message", "Channel was null");
         }
         PermissionAttribute permissionAttribute =
             new PermissionAttribute(channel.getPermission(), channel.getScope(), "GET");
@@ -81,7 +84,7 @@ public class UiStreamHandler extends AtmosphereHandlerAdapter {
         logger.info("Authorization successful");
 
       } catch (WingsException e) {
-        sendError(resource, e.getResponseMessage().getCode());
+        sendError(resource, e.getResponseMessage().getCode(), e.getParams());
         return;
       } catch (Exception e) {
         sendError(resource, UNKNOWN_ERROR);
@@ -100,9 +103,8 @@ public class UiStreamHandler extends AtmosphereHandlerAdapter {
     AtmosphereResponse res = r.getResponse();
 
     if (r.isSuspended()) {
-      Object message = event.getMessage() == null ? null : event.getMessage();
-      if (message != null) {
-        event.getResource().write(JsonUtils.asJson(message));
+      if (event.getMessage() != null) {
+        event.getResource().write(JsonUtils.asJson(event.getMessage()));
       }
 
       AtmosphereResource.TRANSPORT transport = r.transport();
@@ -123,6 +125,21 @@ public class UiStreamHandler extends AtmosphereHandlerAdapter {
   }
 
   private void sendError(AtmosphereResource resource, ErrorCode errorCode) throws IOException {
+    sendError(resource, errorCode, null, null);
+  }
+
+  private void sendError(AtmosphereResource resource, ErrorCode errorCode, String paramKey, String paramValue)
+      throws IOException {
+    Map<String, Object> params = new HashMap<>();
+    if (isNotBlank(paramKey) && paramValue != null) {
+      params.put(paramKey, paramValue);
+    }
+
+    sendError(resource, errorCode, params);
+  }
+
+  private void sendError(AtmosphereResource resource, ErrorCode errorCode, Map<String, Object> params)
+      throws IOException {
     AtmosphereResource.TRANSPORT transport = resource.transport();
     switch (transport) {
       case JSONP:
@@ -139,7 +156,7 @@ public class UiStreamHandler extends AtmosphereHandlerAdapter {
     resource.write(JsonUtils.asJson(aResponseMessage()
                                         .code(errorCode)
                                         .level(ERROR)
-                                        .message(ResponseCodeCache.getInstance().prepareMessage(errorCode, null))
+                                        .message(ResponseCodeCache.getInstance().prepareMessage(errorCode, params))
                                         .build()));
     resource.close();
   }
