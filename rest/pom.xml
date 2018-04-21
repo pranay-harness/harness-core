@@ -35,7 +35,11 @@
             <artifactId>winrm4j</artifactId>
             <version>0.6.0-SNAPSHOT</version>
         </dependency>
-
+        <dependency>
+            <groupId>com.j256.two-factor-auth</groupId>
+            <artifactId>two-factor-auth</artifactId>
+            <version>1.0</version>
+        </dependency>
         <dependency>
             <groupId>software.wings</groupId>
             <artifactId>commons</artifactId>

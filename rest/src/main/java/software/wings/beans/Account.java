@@ -163,8 +163,7 @@ public class Account extends Base {
   @Override
   public String toString() {
     return "Account{"
-        + "companyName='" + companyName + '\'' + ", accountName='" + accountName + '\'' + ", accountKey='" + accountKey
-        + '\'' + '}';
+        + "companyName='" + companyName + '\'' + ", accountName='" + accountName + '\'' + '}';
   }
 
   public static final class Builder {

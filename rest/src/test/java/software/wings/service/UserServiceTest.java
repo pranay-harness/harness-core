@@ -9,6 +9,7 @@ import static org.mockito.Matchers.any;
 import static org.mockito.Matchers.anyLong;
 import static org.mockito.Matchers.anyString;
 import static org.mockito.Matchers.eq;
+import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.times;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
@@ -55,6 +56,7 @@ import com.auth0.jwt.algorithms.Algorithm;
 import freemarker.template.TemplateException;
 import org.apache.commons.lang3.tuple.ImmutablePair;
 import org.apache.commons.mail.EmailException;
+import org.assertj.core.api.Assertions;
 import org.junit.Before;
 import org.junit.Ignore;
 import org.junit.Test;
@@ -70,6 +72,7 @@ import org.mongodb.morphia.query.Query;
 import org.mongodb.morphia.query.UpdateOperations;
 import software.wings.WingsBaseTest;
 import software.wings.app.MainConfiguration;
+import software.wings.app.PortalConfig;
 import software.wings.beans.Account;
 import software.wings.beans.AccountRole;
 import software.wings.beans.ApplicationRole;
@@ -87,6 +90,8 @@ import software.wings.exception.WingsException;
 import software.wings.helpers.ext.mail.EmailData;
 import software.wings.security.PermissionAttribute.Action;
 import software.wings.security.PermissionAttribute.ResourceType;
+import software.wings.security.SecretManager;
+import software.wings.security.SecretManager.JWT_CATEGORY;
 import software.wings.service.intfc.AccountService;
 import software.wings.service.intfc.AppService;
 import software.wings.service.intfc.AuthService;
@@ -155,6 +160,7 @@ public class UserServiceTest extends WingsBaseTest {
   @Captor private ArgumentCaptor<User> userArgumentCaptor;
   @Captor private ArgumentCaptor<PageRequest<User>> pageRequestArgumentCaptor;
   @Captor private ArgumentCaptor<UserInvite> userInviteCaptor;
+  @Inject @InjectMocks SecretManager secretManager;
 
   /**
    * Sets mocks.
@@ -278,9 +284,12 @@ public class UserServiceTest extends WingsBaseTest {
         aRole().withUuid(generateUuid()).withRoleType(RoleType.APPLICATION_ADMIN).withAppId(generateUuid()).build());
     User user =
         anUser().withAppId(APP_ID).withUuid(USER_ID).withEmail(USER_EMAIL).withName(USER_NAME).withRoles(roles).build();
+    UpdateOperations<User> updateOperations = wingsPersistence.createUpdateOperations(User.class);
+    updateOperations.set("name", USER_NAME);
+    updateOperations.set("roles", roles);
 
     userService.update(user);
-    verify(wingsPersistence).updateFields(User.class, USER_ID, ImmutableMap.of("name", USER_NAME, "roles", roles));
+    verify(wingsPersistence).update(user, updateOperations);
     verify(wingsPersistence).get(User.class, APP_ID, USER_ID);
     verify(cache).remove(USER_ID);
   }
@@ -654,5 +663,33 @@ public class UserServiceTest extends WingsBaseTest {
     Account created = userService.addAccount(account, user);
     assertThat(created).isEqualTo(account);
     verify(accountService).exists(eq(ACCOUNT_NAME));
+  }
+
+  @Test
+  public void testJWTToken() {
+    PortalConfig portalConfig = mock(PortalConfig.class);
+    when(configuration.getPortal()).thenReturn(portalConfig);
+    when(portalConfig.getJwtMultiAuthSecret())
+        .thenReturn("5E1YekVGldTSS5Kt0GHlyWrJ6fJHmee9nXSBssefAWSOgdMwAvvbvJalnYENZ0H0EealN0CxHh34gUCN");
+    assertThat(
+        userService.verifyJWTToken(userService.generateJWTToken("testUser@harness.io", JWT_CATEGORY.MULTIFACTOR_AUTH),
+            JWT_CATEGORY.MULTIFACTOR_AUTH))
+        .isEqualTo(null);
+
+    try {
+      userService.verifyJWTToken(
+          userService.generateJWTToken("testUser@harness.io", JWT_CATEGORY.MULTIFACTOR_AUTH) + "fakeData",
+          JWT_CATEGORY.MULTIFACTOR_AUTH);
+      Assertions.failBecauseExceptionWasNotThrown(WingsException.class);
+    } catch (WingsException e) {
+      Assertions.assertThatExceptionOfType(WingsException.class);
+    }
+
+    try {
+      userService.verifyJWTToken("fakeData", JWT_CATEGORY.MULTIFACTOR_AUTH);
+      Assertions.failBecauseExceptionWasNotThrown(WingsException.class);
+    } catch (WingsException e) {
+      Assertions.assertThatExceptionOfType(WingsException.class);
+    }
   }
 }

@@ -32,7 +32,6 @@ import static software.wings.security.PermissionAttribute.ResourceType.WORKFLOW;
 
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
-import com.google.common.collect.ImmutableMap.Builder;
 import com.google.common.collect.Lists;
 import com.google.inject.Inject;
 import com.google.inject.Singleton;
@@ -43,6 +42,7 @@ import com.auth0.jwt.algorithms.Algorithm;
 import com.auth0.jwt.exceptions.JWTCreationException;
 import com.auth0.jwt.exceptions.JWTDecodeException;
 import com.auth0.jwt.exceptions.JWTVerificationException;
+import com.auth0.jwt.exceptions.SignatureVerificationException;
 import com.auth0.jwt.interfaces.DecodedJWT;
 import com.nimbusds.jose.JWSAlgorithm;
 import com.nimbusds.jose.JWSHeader;
@@ -591,15 +591,29 @@ public class UserServiceImpl implements UserService {
     //      throw new WingsException(INVALID_REQUEST, "message", "Modifying other user's profile not allowed");
     //    }
 
-    Builder<String, Object> builder = ImmutableMap.<String, Object>builder().put("name", user.getName());
+    UpdateOperations<User> updateOperations = wingsPersistence.createUpdateOperations(User.class);
+
     if (user.getPassword() != null && user.getPassword().length > 0) {
-      builder.put("passwordHash", hashpw(new String(user.getPassword()), BCrypt.gensalt()));
-      builder.put("passwordChangedAt", System.currentTimeMillis());
+      updateOperations.set("passwordHash", hashpw(new String(user.getPassword()), BCrypt.gensalt()));
+      updateOperations.set("passwordChangedAt", System.currentTimeMillis());
     }
     if (isNotEmpty(user.getRoles())) {
-      builder.put("roles", user.getRoles());
+      updateOperations.set("roles", user.getRoles());
     }
-    wingsPersistence.updateFields(User.class, user.getUuid(), builder.build());
+
+    updateOperations.set("twoFactorAuthenticationEnabled", user.isTwoFactorAuthenticationEnabled());
+    if (user.getTwoFactorAuthenticationMechanism() != null) {
+      updateOperations.set("twoFactorAuthenticationMechanism", user.getTwoFactorAuthenticationMechanism());
+    } else {
+      updateOperations.unset("twoFactorAuthenticationMechanism");
+    }
+    if (user.getTotpSecretKey() != null) {
+      updateOperations.set("totpSecretKey", user.getTotpSecretKey());
+    } else {
+      updateOperations.unset("totpSecretKey");
+    }
+
+    wingsPersistence.update(user, updateOperations);
     evictUserFromCache(user.getUuid());
     return wingsPersistence.get(User.class, user.getAppId(), user.getUuid());
   }
@@ -927,7 +941,7 @@ public class UserServiceImpl implements UserService {
       return getUserByEmail(claimEmail);
     } catch (UnsupportedEncodingException | JWTCreationException exception) {
       throw new WingsException(UNKNOWN_ERROR, exception).addParam("message", "JWTToken validation failed");
-    } catch (JWTDecodeException e) {
+    } catch (JWTDecodeException | SignatureVerificationException e) {
       throw new WingsException(INVALID_CREDENTIAL)
           .addParam("message", "Invalid JWTToken received, failed to decode the token");
     }

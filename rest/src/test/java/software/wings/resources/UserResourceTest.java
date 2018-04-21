@@ -20,6 +20,7 @@ import software.wings.dl.PageRequest;
 import software.wings.dl.PageResponse;
 import software.wings.exception.WingsExceptionMapper;
 import software.wings.security.authentication.AuthenticationManager;
+import software.wings.security.authentication.TwoFactorAuthenticationManager;
 import software.wings.service.intfc.AccountService;
 import software.wings.service.intfc.AuthService;
 import software.wings.service.intfc.UserService;
@@ -37,6 +38,8 @@ public class UserResourceTest {
   public static final AuthService AUTH_SERVICE = mock(AuthService.class);
   public static final AccountService ACCOUNT_SERVICE = mock(AccountService.class);
   public static final AuthenticationManager AUTHENTICATION_MANAGER = mock(AuthenticationManager.class);
+  public static final TwoFactorAuthenticationManager TWO_FACTOR_AUTHENTICATION_MANAGER =
+      mock(TwoFactorAuthenticationManager.class);
 
   /**
    * The constant RESOURCES.
@@ -44,7 +47,8 @@ public class UserResourceTest {
   @ClassRule
   public static final ResourceTestRule RESOURCES =
       ResourceTestRule.builder()
-          .addResource(new UserResource(USER_SERVICE, AUTH_SERVICE, ACCOUNT_SERVICE, AUTHENTICATION_MANAGER))
+          .addResource(new UserResource(
+              USER_SERVICE, AUTH_SERVICE, ACCOUNT_SERVICE, AUTHENTICATION_MANAGER, TWO_FACTOR_AUTHENTICATION_MANAGER))
           .addProvider(WingsExceptionMapper.class)
           .addProvider(MultiPartFeature.class)
           .build();

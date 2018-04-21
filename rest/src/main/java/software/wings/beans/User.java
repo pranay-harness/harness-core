@@ -14,6 +14,7 @@ import org.mongodb.morphia.annotations.Reference;
 import org.mongodb.morphia.annotations.Transient;
 import software.wings.security.UserRequestContext;
 import software.wings.security.UserRequestInfo;
+import software.wings.security.authentication.TwoFactorAuthenticationMechanism;
 
 import java.security.Principal;
 import java.util.ArrayList;
@@ -46,6 +47,7 @@ public class User extends Base implements Principal {
 
   @Transient private char[] password;
   @Transient private String token;
+  @Transient private String twoFactorJwtToken;
 
   private boolean emailVerified;
 
@@ -60,6 +62,10 @@ public class User extends Base implements Principal {
   @JsonIgnore @Transient private UserRequestInfo userRequestInfo;
   @JsonIgnore @Transient private UserRequestContext userRequestContext;
   @JsonIgnore @Transient private boolean useNewRbac;
+
+  private boolean twoFactorAuthenticationEnabled;
+  private TwoFactorAuthenticationMechanism twoFactorAuthenticationMechanism;
+  @JsonIgnore private String totpSecretKey;
 
   /**
    * Return partial user object without sensitive information.
@@ -431,6 +437,38 @@ public class User extends Base implements Principal {
     this.useNewRbac = useNewRbac;
   }
 
+  public boolean isTwoFactorAuthenticationEnabled() {
+    return twoFactorAuthenticationEnabled;
+  }
+
+  public void setTwoFactorAuthenticationEnabled(boolean twoFactorAuthenticationEnabled) {
+    this.twoFactorAuthenticationEnabled = twoFactorAuthenticationEnabled;
+  }
+
+  public TwoFactorAuthenticationMechanism getTwoFactorAuthenticationMechanism() {
+    return twoFactorAuthenticationMechanism;
+  }
+
+  public void setTwoFactorAuthenticationMechanism(TwoFactorAuthenticationMechanism twoFactorAuthenticationMechanism) {
+    this.twoFactorAuthenticationMechanism = twoFactorAuthenticationMechanism;
+  }
+
+  public String getTotpSecretKey() {
+    return totpSecretKey;
+  }
+
+  public void setTotpSecretKey(String totpSecretKey) {
+    this.totpSecretKey = totpSecretKey;
+  }
+
+  public String getTwoFactorJwtToken() {
+    return twoFactorJwtToken;
+  }
+
+  public void setTwoFactorJwtToken(String twoFactorJwtToken) {
+    this.twoFactorJwtToken = twoFactorJwtToken;
+  }
+
   public static final class Builder {
     private String name;
     private String email;
@@ -450,6 +488,10 @@ public class User extends Base implements Principal {
     private long createdAt;
     private EmbeddedUser lastUpdatedBy;
     private long lastUpdatedAt;
+    private boolean twoFactorAuthenticationEnabled;
+    private TwoFactorAuthenticationMechanism twoFactorAuthenticationMechanism;
+    private String totpSecretKey;
+    private String twoFactorJwtToken;
 
     private Builder() {}
 
@@ -547,6 +589,27 @@ public class User extends Base implements Principal {
       return this;
     }
 
+    public Builder withTwoFactorAuthenticationEnabled(boolean twoFactorAuthenticationEnabled) {
+      this.twoFactorAuthenticationEnabled = twoFactorAuthenticationEnabled;
+      return this;
+    }
+
+    public Builder withTwoFactorAuthenticationMechanism(
+        TwoFactorAuthenticationMechanism twoFactorAuthenticationMechanism) {
+      this.twoFactorAuthenticationMechanism = twoFactorAuthenticationMechanism;
+      return this;
+    }
+
+    public Builder withTotpSecretKey(String totpSecretKey) {
+      this.totpSecretKey = totpSecretKey;
+      return this;
+    }
+
+    public Builder withTwoFactorJwtToken(String twoFactorJwtToken) {
+      this.twoFactorJwtToken = twoFactorJwtToken;
+      return this;
+    }
+
     public Builder but() {
       return anUser()
           .withName(name)
@@ -566,7 +629,11 @@ public class User extends Base implements Principal {
           .withCreatedBy(createdBy)
           .withCreatedAt(createdAt)
           .withLastUpdatedBy(lastUpdatedBy)
-          .withLastUpdatedAt(lastUpdatedAt);
+          .withLastUpdatedAt(lastUpdatedAt)
+          .withTwoFactorAuthenticationEnabled(twoFactorAuthenticationEnabled)
+          .withTwoFactorAuthenticationMechanism(twoFactorAuthenticationMechanism)
+          .withTotpSecretKey(totpSecretKey)
+          .withTwoFactorJwtToken(twoFactorJwtToken);
     }
 
     public User build() {
@@ -589,6 +656,10 @@ public class User extends Base implements Principal {
       user.setCreatedAt(createdAt);
       user.setLastUpdatedBy(lastUpdatedBy);
       user.setLastUpdatedAt(lastUpdatedAt);
+      user.setTwoFactorAuthenticationEnabled(twoFactorAuthenticationEnabled);
+      user.setTwoFactorAuthenticationMechanism(twoFactorAuthenticationMechanism);
+      user.setTotpSecretKey(totpSecretKey);
+      user.setTwoFactorJwtToken(twoFactorJwtToken);
       return user;
     }
   }

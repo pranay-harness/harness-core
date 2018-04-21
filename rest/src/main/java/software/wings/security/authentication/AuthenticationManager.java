@@ -3,6 +3,7 @@ package software.wings.security.authentication;
 import static software.wings.beans.ErrorCode.INVALID_TOKEN;
 import static software.wings.beans.ErrorCode.USER_DOES_NOT_EXIST;
 import static software.wings.exception.WingsException.ALERTING;
+import static software.wings.exception.WingsException.HARMLESS;
 
 import com.google.inject.Inject;
 import com.google.inject.Singleton;
@@ -11,8 +12,6 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import software.wings.app.MainConfiguration;
 import software.wings.beans.Account;
-import software.wings.beans.AuthToken;
-import software.wings.beans.ErrorCode;
 import software.wings.beans.User;
 import software.wings.dl.WingsPersistence;
 import software.wings.exception.WingsException;
@@ -68,24 +67,11 @@ public class AuthenticationManager {
   }
 
   public AuthenticationMechanism getAuthenticationMechanism(String userName) {
-    User user = getUser(userName);
-    if (user == null) {
-      throw new WingsException(ErrorCode.USER_DOES_NOT_EXIST, WingsException.HARMLESS);
-    }
-
-    return getAuthenticationMechanism(user);
-  }
-
-  private User getUser(String userName) {
-    return authenticationUtil.getUser(userName);
+    return getAuthenticationMechanism(authenticationUtil.getUser(userName));
   }
 
   public LoginTypeResponse getLoginTypeResponse(String userName) {
-    User user = getUser(userName);
-    if (user == null) {
-      throw new WingsException(ErrorCode.USER_DOES_NOT_EXIST, WingsException.HARMLESS);
-    }
-
+    User user = authenticationUtil.getUser(userName, HARMLESS);
     AuthenticationMechanism authenticationMechanism = getAuthenticationMechanism(user);
 
     LoginTypeResponseBuilder builder = LoginTypeResponse.builder();
@@ -101,9 +87,23 @@ public class AuthenticationManager {
     return builder.authenticationMechanism(authenticationMechanism).build();
   }
 
+  private User generate2faJWTToken(User user) {
+    String jwtToken = userService.generateJWTToken(user.getEmail(), JWT_CATEGORY.MULTIFACTOR_AUTH);
+    return User.Builder.anUser()
+        .withEmail(user.getEmail())
+        .withName(user.getName())
+        .withTwoFactorAuthenticationMechanism(user.getTwoFactorAuthenticationMechanism())
+        .withTwoFactorAuthenticationEnabled(user.isTwoFactorAuthenticationEnabled())
+        .withTwoFactorJwtToken(jwtToken)
+        .build();
+  }
   public User defaultLogin(String... credentials) {
     User user = passwordBasedAuthHandler.authenticate(credentials);
-    return generateAuthToken(user);
+    if (user.isTwoFactorAuthenticationEnabled()) {
+      return generate2faJWTToken(user);
+    } else {
+      return authenticationUtil.generateBearerTokenForUser(user);
+    }
   }
 
   public User ssoRedirectLogin(String jwtSecret) {
@@ -111,7 +111,11 @@ public class AuthenticationManager {
     if (user == null) {
       throw new WingsException(USER_DOES_NOT_EXIST);
     }
-    return generateAuthToken(user);
+    if (user.isTwoFactorAuthenticationEnabled()) {
+      return generate2faJWTToken(user);
+    } else {
+      return authenticationUtil.generateBearerTokenForUser(user);
+    }
   }
 
   public Response samlLogin(String... credentials) throws URISyntaxException {
@@ -129,14 +133,6 @@ public class AuthenticationManager {
       URI redirectUrl = new URI(authenticationUtil.getBaseUrl() + "#/login?errorCode=invalidsso");
       return Response.seeOther(redirectUrl).build();
     }
-  }
-
-  private User generateAuthToken(User user) {
-    AuthToken authToken = new AuthToken(user.getUuid(), configuration.getPortal().getAuthTokenExpiryInMillis());
-    userService.evictUserFromCache(user.getUuid());
-    wingsPersistence.save(authToken);
-    user.setToken(authToken.getUuid());
-    return user;
   }
 
   public String extractToken(String authorizationHeader, String prefix) {
