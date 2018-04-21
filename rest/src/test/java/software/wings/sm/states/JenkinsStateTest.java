@@ -9,7 +9,6 @@ import static software.wings.beans.Application.Builder.anApplication;
 import static software.wings.beans.Environment.Builder.anEnvironment;
 import static software.wings.beans.TaskType.JENKINS;
 import static software.wings.common.Constants.DEFAULT_ASYNC_CALL_TIMEOUT;
-import static software.wings.sm.states.JenkinsState.JenkinsExecutionResponse.Builder.aJenkinsExecutionResponse;
 import static software.wings.utils.WingsTestConstants.ACCOUNT_ID;
 import static software.wings.utils.WingsTestConstants.ACTIVITY_ID;
 import static software.wings.utils.WingsTestConstants.APP_ID;
@@ -37,6 +36,7 @@ import software.wings.settings.SettingValue.SettingVariableTypes;
 import software.wings.sm.ExecutionContextImpl;
 import software.wings.sm.ExecutionResponse;
 import software.wings.sm.ExecutionStatus;
+import software.wings.sm.states.JenkinsState.JenkinsExecutionResponse;
 
 import java.util.Collections;
 import java.util.concurrent.TimeUnit;
@@ -91,12 +91,12 @@ public class JenkinsStateTest {
     when(executionContext.getStateExecutionData()).thenReturn(JenkinsExecutionData.builder().build());
     jenkinsState.handleAsyncResponse(executionContext,
         ImmutableMap.of(ACTIVITY_ID,
-            aJenkinsExecutionResponse()
-                .withErrorMessage("Err")
-                .withExecutionStatus(ExecutionStatus.FAILED)
-                .withJenkinsResult("SUCCESS")
-                .withJobUrl("http://jenkins")
-                .withFilePathAssertionMap(Collections.emptyList())
+            JenkinsExecutionResponse.builder()
+                .errorMessage("Err")
+                .executionStatus(ExecutionStatus.FAILED)
+                .jenkinsResult("SUCCESS")
+                .jobUrl("http://jenkins")
+                .filePathAssertionMap(Collections.emptyList())
                 .build()));
 
     verify(activityService).updateStatus(ACTIVITY_ID, APP_ID, ExecutionStatus.FAILED);

@@ -2,7 +2,6 @@ package software.wings.sm.states;
 
 import static io.harness.data.structure.UUIDGenerator.generateUuid;
 import static java.util.Arrays.asList;
-import static java.util.concurrent.TimeUnit.MILLISECONDS;
 import static software.wings.api.ApprovalStateExecutionData.Builder.anApprovalStateExecutionData;
 import static software.wings.beans.alert.AlertType.ApprovalNeeded;
 import static software.wings.common.Constants.DEFAULT_APPROVAL_STATE_TIMEOUT_MILLIS;
@@ -105,8 +104,8 @@ public class ApprovalState extends State {
    */
   @Override
   public void handleAbortEvent(ExecutionContext context) {
-    long toHours = MILLISECONDS.toHours(getTimeoutMillis());
-    context.getStateExecutionData().setErrorMsg("Pipeline was not approved within " + toHours + "(hours)");
+    double toHours = getTimeoutMillis() / (double) (60 * 60 * 1000);
+    context.getStateExecutionData().setErrorMsg("Pipeline was not approved within " + toHours + " hour(s");
   }
 
   @SchemaIgnore

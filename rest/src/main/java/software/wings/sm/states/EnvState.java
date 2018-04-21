@@ -3,7 +3,6 @@ package software.wings.sm.states;
 import static io.harness.data.structure.EmptyPredicate.isEmpty;
 import static io.harness.data.structure.EmptyPredicate.isNotEmpty;
 import static java.util.Arrays.asList;
-import static java.util.concurrent.TimeUnit.MILLISECONDS;
 import static software.wings.api.EnvStateExecutionData.Builder.anEnvStateExecutionData;
 import static software.wings.api.ServiceArtifactElement.ServiceArtifactElementBuilder.aServiceArtifactElement;
 import static software.wings.beans.ExecutionCredential.ExecutionType.SSH;
@@ -154,8 +153,8 @@ public class EnvState extends State {
    */
   @Override
   public void handleAbortEvent(ExecutionContext context) {
-    long toHours = MILLISECONDS.toHours(getTimeoutMillis());
-    context.getStateExecutionData().setErrorMsg("Workflow not completed within [" + toHours + " (hours)]");
+    double toHours = getTimeoutMillis() / (double) (60 * 60 * 1000);
+    context.getStateExecutionData().setErrorMsg("Workflow not completed within " + toHours + " hour(s)");
   }
 
   public ExecutionResponse handleAsyncResponse(ExecutionContext context, Map<String, NotifyResponseData> response) {
