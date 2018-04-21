@@ -211,7 +211,9 @@ public class ContainerDeploymentDelegateHelper {
   }
 
   private boolean steadyStateCheckRequired(KubeControllerStatus controllerStatus) {
-    boolean noSteadyCheckRequire = controllerStatus.getDesiredCount() == 0 && controllerStatus.getRunningCount() == 0;
+    boolean noSteadyCheckRequire = (controllerStatus.getDesiredCount() == 0 && controllerStatus.getRunningCount() == 0)
+        || "Deployment".equals(controllerStatus.getKind());
+
     if (noSteadyCheckRequire) {
       logger.info("Controller doesn't need steady state check. [{}]", controllerStatus);
     }
