@@ -87,6 +87,7 @@ import software.wings.delegatetasks.DelegateProxyFactory;
 import software.wings.dl.PageRequest;
 import software.wings.dl.PageResponse;
 import software.wings.dl.WingsPersistence;
+import software.wings.exception.InvalidRequestException;
 import software.wings.exception.WingsException;
 import software.wings.expression.ExpressionEvaluator;
 import software.wings.scheduler.PruneEntityJob;
@@ -344,7 +345,7 @@ public class InfrastructureMappingServiceImpl implements InfrastructureMappingSe
       delegateProxyFactory.get(ContainerService.class, syncTaskContext).validate(containerServiceParams);
     } catch (Exception e) {
       logger.warn(Misc.getMessage(e), e);
-      throw new WingsException(INVALID_REQUEST, USER).addParam("message", Misc.getMessage(e));
+      throw new InvalidRequestException(Misc.getMessage(e), USER);
     }
   }
 
@@ -376,7 +377,7 @@ public class InfrastructureMappingServiceImpl implements InfrastructureMappingSe
       delegateProxyFactory.get(ContainerService.class, syncTaskContext).validate(containerServiceParams);
     } catch (Exception e) {
       logger.warn(Misc.getMessage(e), e);
-      throw new WingsException(INVALID_REQUEST, USER).addParam("message", Misc.getMessage(e));
+      throw new InvalidRequestException(Misc.getMessage(e), USER);
     }
   }
 
@@ -405,7 +406,7 @@ public class InfrastructureMappingServiceImpl implements InfrastructureMappingSe
       delegateProxyFactory.get(ContainerService.class, syncTaskContext).validate(containerServiceParams);
     } catch (Exception e) {
       logger.warn(Misc.getMessage(e), e);
-      throw new WingsException(INVALID_REQUEST, USER).addParam("message", Misc.getMessage(e));
+      throw new InvalidRequestException(Misc.getMessage(e), USER);
     }
   }
 
@@ -432,7 +433,7 @@ public class InfrastructureMappingServiceImpl implements InfrastructureMappingSe
       delegateProxyFactory.get(ContainerService.class, syncTaskContext).validate(containerServiceParams);
     } catch (Exception e) {
       logger.warn(Misc.getMessage(e), e);
-      throw new WingsException(INVALID_REQUEST, USER).addParam("message", Misc.getMessage(e));
+      throw new InvalidRequestException(Misc.getMessage(e), USER);
     }
   }
 
@@ -848,8 +849,8 @@ public class InfrastructureMappingServiceImpl implements InfrastructureMappingSe
               new PageRequest<>())
           .getResponse();
     } else {
-      throw new WingsException(INVALID_REQUEST)
-          .addParam("message", "Unsupported infrastructure mapping: " + infrastructureMapping.getClass().getName());
+      throw new InvalidRequestException(
+          "Unsupported infrastructure mapping: " + infrastructureMapping.getClass().getName());
     }
   }
 
@@ -1122,7 +1123,7 @@ public class InfrastructureMappingServiceImpl implements InfrastructureMappingSe
     notNullCheck("Compute Provider", computeProviderSetting);
 
     if (!PHYSICAL_DATA_CENTER.name().equals(computeProviderSetting.getValue().getType())) {
-      throw new WingsException(INVALID_REQUEST).addParam("message", "Invalid infrastructure provider");
+      throw new InvalidRequestException("Invalid infrastructure provider");
     }
 
     SettingAttribute hostConnectionSetting = settingsService.get(validationRequest.getHostConnectionAttrs());
@@ -1360,8 +1361,7 @@ public class InfrastructureMappingServiceImpl implements InfrastructureMappingSe
       return awsInfrastructureProvider.maybeSetAutoScaleCapacityAndGetHosts(
           appId, workflowExecutionId, awsInfrastructureMapping, computeProviderSetting);
     } else {
-      throw new WingsException(INVALID_REQUEST)
-          .addParam("message", "Auto Scale groups are only supported for AWS infrastructure mapping");
+      throw new InvalidRequestException("Auto Scale groups are only supported for AWS infrastructure mapping");
     }
   }
 

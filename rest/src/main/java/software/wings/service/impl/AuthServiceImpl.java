@@ -8,7 +8,6 @@ import static software.wings.beans.Base.GLOBAL_ENV_ID;
 import static software.wings.beans.ErrorCode.ACCESS_DENIED;
 import static software.wings.beans.ErrorCode.DEFAULT_ERROR_CODE;
 import static software.wings.beans.ErrorCode.EXPIRED_TOKEN;
-import static software.wings.beans.ErrorCode.INVALID_REQUEST;
 import static software.wings.beans.ErrorCode.INVALID_TOKEN;
 import static software.wings.beans.ErrorCode.USER_DOES_NOT_EXIST;
 import static software.wings.exception.WingsException.USER;
@@ -51,6 +50,7 @@ import software.wings.dl.PageRequest;
 import software.wings.dl.PageRequest.PageRequestBuilder;
 import software.wings.dl.PageResponse;
 import software.wings.dl.WingsPersistence;
+import software.wings.exception.InvalidRequestException;
 import software.wings.exception.WingsException;
 import software.wings.security.AppPermissionSummary;
 import software.wings.security.PermissionAttribute;
@@ -322,7 +322,7 @@ public class AuthServiceImpl implements AuthService {
   public void validateExternalServiceToken(String accountId, String externalServiceToken) {
     String jwtExternalServiceSecret = configuration.getPortal().getJwtExternalServiceSecret();
     if (isBlank(jwtExternalServiceSecret)) {
-      throw new WingsException(INVALID_REQUEST).addParam("message", "incorrect portal setup");
+      throw new InvalidRequestException("incorrect portal setup");
     }
     try {
       Algorithm algorithm = Algorithm.HMAC256(jwtExternalServiceSecret);
@@ -342,8 +342,7 @@ public class AuthServiceImpl implements AuthService {
   public void validateLearningEngineServiceToken(String learningEngineServiceToken) {
     String jwtLearningEngineServiceSecret = learningEngineService.getServiceSecretKey(ServiceType.LEARNING_ENGINE);
     if (StringUtils.isBlank(jwtLearningEngineServiceSecret)) {
-      throw new WingsException(INVALID_REQUEST)
-          .addParam("message", "no secret key for service found for " + ServiceType.LEARNING_ENGINE);
+      throw new InvalidRequestException("no secret key for service found for " + ServiceType.LEARNING_ENGINE);
     }
     try {
       Algorithm algorithm = Algorithm.HMAC256(jwtLearningEngineServiceSecret);

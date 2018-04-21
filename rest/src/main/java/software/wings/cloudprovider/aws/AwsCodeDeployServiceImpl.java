@@ -9,7 +9,6 @@ import static java.time.Duration.ofSeconds;
 import static java.util.Arrays.asList;
 import static java.util.stream.Collectors.toList;
 import static software.wings.beans.ErrorCode.INIT_TIMEOUT;
-import static software.wings.beans.ErrorCode.INVALID_REQUEST;
 
 import com.google.common.collect.Sets;
 import com.google.common.util.concurrent.TimeLimiter;
@@ -44,6 +43,7 @@ import software.wings.beans.SettingAttribute;
 import software.wings.beans.command.CommandExecutionResult.CommandExecutionStatus;
 import software.wings.beans.command.ExecutionLogCallback;
 import software.wings.cloudprovider.CodeDeployDeploymentInfo;
+import software.wings.exception.InvalidRequestException;
 import software.wings.exception.WingsException;
 import software.wings.security.encryption.EncryptedDataDetail;
 import software.wings.service.impl.AwsHelperService;
@@ -237,8 +237,7 @@ public class AwsCodeDeployServiceImpl implements AwsCodeDeployService {
     } catch (WingsException e) {
       throw e;
     } catch (Exception e) {
-      throw new WingsException(INVALID_REQUEST, e)
-          .addParam("message", "Error while waiting for deployment to complete");
+      throw new InvalidRequestException("Error while waiting for deployment to complete", e);
     }
   }
 

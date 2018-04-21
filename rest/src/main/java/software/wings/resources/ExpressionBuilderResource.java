@@ -1,7 +1,6 @@
 package software.wings.resources;
 
 import static org.apache.commons.lang3.StringUtils.isNotBlank;
-import static software.wings.beans.ErrorCode.INVALID_REQUEST;
 import static software.wings.security.PermissionAttribute.ResourceType.APPLICATION;
 
 import com.google.inject.Inject;
@@ -11,7 +10,7 @@ import com.codahale.metrics.annotation.Timed;
 import io.swagger.annotations.Api;
 import software.wings.beans.EntityType;
 import software.wings.beans.RestResponse;
-import software.wings.exception.WingsException;
+import software.wings.exception.InvalidRequestException;
 import software.wings.security.annotations.Scope;
 import software.wings.service.intfc.expression.ExpressionBuilderService;
 import software.wings.sm.StateType;
@@ -47,7 +46,7 @@ public class ExpressionBuilderResource {
           stateType = StateType.valueOf(strStateType);
         }
       } catch (IllegalArgumentException e) {
-        throw new WingsException(INVALID_REQUEST).addParam("message", "Invalid state type " + strStateType);
+        throw new InvalidRequestException("Invalid state type " + strStateType);
       }
     }
     return new RestResponse(

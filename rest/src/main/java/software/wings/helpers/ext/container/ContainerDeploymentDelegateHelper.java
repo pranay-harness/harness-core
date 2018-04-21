@@ -1,7 +1,6 @@
 package software.wings.helpers.ext.container;
 
 import static io.harness.data.structure.EmptyPredicate.isNotEmpty;
-import static software.wings.beans.ErrorCode.INVALID_REQUEST;
 import static software.wings.helpers.ext.helm.HelmConstants.KUBE_CONFIG_TEMPLATE;
 
 import com.google.common.cache.CacheBuilder;
@@ -35,6 +34,7 @@ import software.wings.beans.command.ExecutionLogCallback;
 import software.wings.cloudprovider.ContainerInfo;
 import software.wings.cloudprovider.gke.GkeClusterService;
 import software.wings.cloudprovider.gke.KubernetesContainerService;
+import software.wings.exception.InvalidRequestException;
 import software.wings.exception.WingsException;
 import software.wings.helpers.ext.azure.AzureHelperService;
 import software.wings.helpers.ext.helm.HelmDeployServiceImpl.KubeControllerStatus;
@@ -174,7 +174,7 @@ public class ContainerDeploymentDelegateHelper {
           .desiredCount(status.getDesiredNumberScheduled())
           .build();
     } else {
-      throw new WingsException(INVALID_REQUEST).addParam("message", "Unhandled resource type" + hasMetadata.getKind());
+      throw new InvalidRequestException("Unhandled resource type" + hasMetadata.getKind());
     }
   }
 

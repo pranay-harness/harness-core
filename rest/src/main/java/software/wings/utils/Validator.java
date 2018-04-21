@@ -1,11 +1,11 @@
 package software.wings.utils;
 
 import static software.wings.beans.ErrorCode.GENERAL_ERROR;
-import static software.wings.beans.ErrorCode.INVALID_REQUEST;
 import static software.wings.exception.WingsException.USER;
 
 import com.mongodb.DuplicateKeyException;
 import software.wings.beans.UuidAware;
+import software.wings.exception.InvalidRequestException;
 import software.wings.exception.WingsException;
 import software.wings.exception.WingsException.ReportTarget;
 
@@ -60,22 +60,20 @@ public class Validator {
    */
   public static void equalCheck(Object value1, Object value2) {
     if (!Objects.equals(value1, value2)) {
-      throw new WingsException(INVALID_REQUEST)
-          .addParam("message", "Not equal -  value1: " + value1 + ", value2: " + value2);
+      throw new InvalidRequestException("Not equal -  value1: " + value1 + ", value2: " + value2);
     }
   }
 
   public static void unEqualCheck(Object value1, Object value2) {
     if (Objects.equals(value1, value2)) {
-      throw new WingsException(INVALID_REQUEST)
-          .addParam("message", "Equal -  value1: " + value1 + ", value2: " + value2);
+      throw new InvalidRequestException("Equal -  value1: " + value1 + ", value2: " + value2);
     }
   }
 
   public static void validateUuid(UuidAware base, String fieldName, String fieldValue) {
     notNullCheck(fieldValue, fieldName);
     if (!fieldValue.equals(base.getUuid())) {
-      throw new WingsException(INVALID_REQUEST).addParam("message", fieldName + " mismatch with object uuid");
+      throw new InvalidRequestException(fieldName + " mismatch with object uuid");
     }
   }
 

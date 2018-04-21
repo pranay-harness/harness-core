@@ -4,7 +4,6 @@ import static io.harness.data.structure.EmptyPredicate.isNotEmpty;
 import static java.util.stream.Collectors.toList;
 import static org.mongodb.morphia.mapping.Mapper.ID_KEY;
 import static software.wings.beans.Base.GLOBAL_APP_ID;
-import static software.wings.beans.ErrorCode.INVALID_REQUEST;
 import static software.wings.beans.SearchFilter.Operator.EQ;
 import static software.wings.dl.MongoHelper.setUnset;
 import static software.wings.dl.PageRequest.PageRequestBuilder.aPageRequest;
@@ -24,6 +23,7 @@ import software.wings.beans.ErrorCode;
 import software.wings.dl.PageRequest;
 import software.wings.dl.PageResponse;
 import software.wings.dl.WingsPersistence;
+import software.wings.exception.InvalidRequestException;
 import software.wings.exception.WingsException;
 import software.wings.service.intfc.DelegateScopeService;
 import software.wings.service.intfc.DelegateService;
@@ -148,7 +148,7 @@ public class DelegateScopeServiceImpl implements DelegateScopeService {
       String message =
           String.format("Delegate scope [%s] could not be deleted because it's used by these delegates [%s]",
               delegateScope.getName(), Joiner.on(", ").join(delegateNames));
-      throw new WingsException(INVALID_REQUEST, USER).addParam("message", message);
+      throw new InvalidRequestException(message, USER);
     }
   }
 }

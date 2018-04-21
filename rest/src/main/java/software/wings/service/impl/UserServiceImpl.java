@@ -15,7 +15,6 @@ import static software.wings.beans.ErrorCode.EMAIL_VERIFICATION_TOKEN_NOT_FOUND;
 import static software.wings.beans.ErrorCode.EXPIRED_TOKEN;
 import static software.wings.beans.ErrorCode.INVALID_ARGUMENT;
 import static software.wings.beans.ErrorCode.INVALID_CREDENTIAL;
-import static software.wings.beans.ErrorCode.INVALID_REQUEST;
 import static software.wings.beans.ErrorCode.ROLE_DOES_NOT_EXIST;
 import static software.wings.beans.ErrorCode.UNKNOWN_ERROR;
 import static software.wings.beans.ErrorCode.USER_DOES_NOT_EXIST;
@@ -80,6 +79,7 @@ import software.wings.common.Constants;
 import software.wings.dl.PageRequest;
 import software.wings.dl.PageResponse;
 import software.wings.dl.WingsPersistence;
+import software.wings.exception.InvalidRequestException;
 import software.wings.exception.WingsException;
 import software.wings.helpers.ext.mail.EmailData;
 import software.wings.security.PermissionAttribute.Action;
@@ -446,7 +446,7 @@ public class UserServiceImpl implements UserService {
       return existingInvite;
     }
     if (userInvite.getName() == null || userInvite.getPassword() == null) {
-      throw new WingsException(INVALID_REQUEST).addParam("message", "User name/password");
+      throw new InvalidRequestException("User name/password");
     }
 
     Account account = accountService.get(existingInvite.getAccountId());
@@ -481,12 +481,12 @@ public class UserServiceImpl implements UserService {
     User user = getUserByEmail(email);
 
     if (user == null) {
-      throw new WingsException(INVALID_REQUEST, USER).addParam("message", "Email doesn't exist");
+      throw new InvalidRequestException("Email doesn't exist", USER);
     }
 
     String jwtPasswordSecret = configuration.getPortal().getJwtPasswordSecret();
     if (jwtPasswordSecret == null) {
-      throw new WingsException(INVALID_REQUEST).addParam("message", "incorrect portal setup");
+      throw new InvalidRequestException("incorrect portal setup");
     }
 
     try {
@@ -508,7 +508,7 @@ public class UserServiceImpl implements UserService {
   public boolean updatePassword(String resetPasswordToken, char[] password) {
     String jwtPasswordSecret = configuration.getPortal().getJwtPasswordSecret();
     if (jwtPasswordSecret == null) {
-      throw new WingsException(INVALID_REQUEST).addParam("message", "incorrect portal setup");
+      throw new InvalidRequestException("incorrect portal setup");
     }
 
     try {
@@ -535,7 +535,7 @@ public class UserServiceImpl implements UserService {
   private void resetUserPassword(String email, char[] password, long tokenIssuedAt) {
     User user = getUserByEmail(email);
     if (user == null) {
-      throw new WingsException(INVALID_REQUEST).addParam("message", "Email doesn't exist");
+      throw new InvalidRequestException("Email doesn't exist");
     } else if (user.getPasswordChangedAt() > tokenIssuedAt) {
       throw new WingsException(EXPIRED_TOKEN, USER);
     }
@@ -799,8 +799,7 @@ public class UserServiceImpl implements UserService {
   public ZendeskSsoLoginResponse generateZendeskSsoJwt(String returnToUrl) {
     String jwtZendeskSecret = configuration.getPortal().getJwtZendeskSecret();
     if (jwtZendeskSecret == null) {
-      throw new WingsException(INVALID_REQUEST)
-          .addParam("message", "Request can not be completed. No Zendesk SSO secret found.");
+      throw new InvalidRequestException("Request can not be completed. No Zendesk SSO secret found.");
     }
 
     User user = UserThreadLocal.get();
@@ -825,7 +824,7 @@ public class UserServiceImpl implements UserService {
       jwsObject.sign(signer);
     } catch (com.nimbusds.jose.JOSEException e) {
       logger.error("Error signing JWT: " + e.getMessage(), e);
-      throw new WingsException(INVALID_REQUEST).addParam("message", "Error signing JWT: " + e.getMessage());
+      throw new InvalidRequestException("Error signing JWT: " + e.getMessage());
     }
 
     // Serialise to JWT compact form
@@ -909,7 +908,7 @@ public class UserServiceImpl implements UserService {
   public String generateJWTToken(String userId, SecretManager.JWT_CATEGORY category) {
     String jwtPasswordSecret = secretManager.getJWTSecret(category);
     if (jwtPasswordSecret == null) {
-      throw new WingsException(INVALID_REQUEST).addParam("message", "incorrect portal setup");
+      throw new InvalidRequestException("incorrect portal setup");
     }
 
     try {
@@ -929,7 +928,7 @@ public class UserServiceImpl implements UserService {
   public User verifyJWTToken(String jwtToken, SecretManager.JWT_CATEGORY category) {
     String jwtPasswordSecret = secretManager.getJWTSecret(category);
     if (jwtPasswordSecret == null) {
-      throw new WingsException(INVALID_REQUEST).addParam("message", "incorrect portal setup");
+      throw new InvalidRequestException("incorrect portal setup");
     }
 
     try {

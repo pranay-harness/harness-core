@@ -1,6 +1,5 @@
 package software.wings.service.impl;
 
-import static software.wings.beans.ErrorCode.INVALID_REQUEST;
 import static software.wings.beans.artifact.ArtifactStreamType.ECR;
 import static software.wings.exception.WingsException.SRE;
 import static software.wings.exception.WingsException.USER;
@@ -11,7 +10,7 @@ import com.google.inject.Singleton;
 
 import software.wings.beans.AwsConfig;
 import software.wings.beans.artifact.ArtifactStreamAttributes;
-import software.wings.exception.WingsException;
+import software.wings.exception.InvalidRequestException;
 import software.wings.helpers.ext.ecr.EcrService;
 import software.wings.helpers.ext.jenkins.BuildDetails;
 import software.wings.helpers.ext.jenkins.JobDetails;
@@ -55,8 +54,7 @@ public class EcrBuildServiceImpl implements EcrBuildService {
   @Override
   public BuildDetails getLastSuccessfulBuild(String appId, ArtifactStreamAttributes artifactStreamAttributes,
       AwsConfig awsConfig, List<EncryptedDataDetail> encryptionDetails) {
-    throw new WingsException(INVALID_REQUEST, SRE)
-        .addParam("message", "Operation not supported by ECR Artifact Stream");
+    throw new InvalidRequestException("Operation not supported by ECR Artifact Stream", SRE);
   }
 
   @Override
@@ -74,14 +72,12 @@ public class EcrBuildServiceImpl implements EcrBuildService {
 
   @Override
   public List<String> getGroupIds(String jobName, AwsConfig config, List<EncryptedDataDetail> encryptionDetails) {
-    throw new WingsException(INVALID_REQUEST, USER)
-        .addParam("message", "Operation not supported by ECR Artifact Stream");
+    throw new InvalidRequestException("Operation not supported by ECR Artifact Stream", USER);
   }
 
   @Override
   public boolean validateArtifactServer(AwsConfig config) {
-    throw new WingsException(INVALID_REQUEST, USER)
-        .addParam("message", "Operation not supported by ECR Artifact Stream");
+    throw new InvalidRequestException("Operation not supported by ECR Artifact Stream", USER);
   }
 
   @Override

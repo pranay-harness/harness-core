@@ -15,7 +15,6 @@ import static org.apache.commons.lang3.StringUtils.isBlank;
 import static org.apache.commons.lang3.StringUtils.isNotBlank;
 import static org.apache.commons.lang3.StringUtils.startsWith;
 import static software.wings.beans.ErrorCode.INIT_TIMEOUT;
-import static software.wings.beans.ErrorCode.INVALID_REQUEST;
 
 import com.google.common.base.Joiner;
 import com.google.common.collect.ArrayListMultimap;
@@ -214,6 +213,7 @@ import software.wings.beans.SettingAttribute;
 import software.wings.beans.command.CommandExecutionResult.CommandExecutionStatus;
 import software.wings.beans.command.LogCallback;
 import software.wings.common.Constants;
+import software.wings.exception.InvalidRequestException;
 import software.wings.exception.WingsException;
 import software.wings.expression.ExpressionEvaluator;
 import software.wings.security.encryption.EncryptedDataDetail;
@@ -619,7 +619,7 @@ public class AwsHelperService {
       SettingAttribute connectorConfig, List<EncryptedDataDetail> encryptedDataDetails) {
     if (connectorConfig == null || connectorConfig.getValue() == null
         || !(connectorConfig.getValue() instanceof AwsConfig)) {
-      throw new WingsException(INVALID_REQUEST).addParam("message", "connectorConfig is not of type AwsConfig");
+      throw new InvalidRequestException("connectorConfig is not of type AwsConfig");
     }
     encryptionService.decrypt((Encryptable) connectorConfig.getValue(), encryptedDataDetails);
     return (AwsConfig) connectorConfig.getValue();
@@ -1347,8 +1347,7 @@ public class AwsHelperService {
     } catch (WingsException e) {
       throw e;
     } catch (Exception e) {
-      throw new WingsException(INVALID_REQUEST, e)
-          .addParam("message", "Error while waiting for all instances to be in running state");
+      throw new InvalidRequestException("Error while waiting for all instances to be in running state", e);
     }
     executionLogCallback.saveExecutionLog("AutoScaling group reached steady state");
   }
@@ -1622,8 +1621,7 @@ public class AwsHelperService {
     } catch (WingsException e) {
       throw e;
     } catch (Exception e) {
-      throw new WingsException(INVALID_REQUEST, e)
-          .addParam("message", "Error while waiting for autoscaling group to be deleted");
+      throw new InvalidRequestException("Error while waiting for autoscaling group to be deleted", e);
     }
   }
 

@@ -83,6 +83,7 @@ import software.wings.common.NotificationMessageResolver.NotificationMessageType
 import software.wings.dl.PageRequest;
 import software.wings.dl.PageResponse;
 import software.wings.dl.WingsPersistence;
+import software.wings.exception.InvalidRequestException;
 import software.wings.exception.WingsException;
 import software.wings.scheduler.PruneEntityJob;
 import software.wings.scheduler.QuartzScheduler;
@@ -269,7 +270,7 @@ public class ServiceResourceServiceImpl implements ServiceResourceService, DataP
     // don't allow cloning of Docker commands
     Service service = getServiceWithServiceCommands(appId, serviceId);
     if (service.getArtifactType().equals(ArtifactType.DOCKER)) {
-      throw new WingsException(INVALID_REQUEST).addParam("message", "Docker commands can not be cloned");
+      throw new InvalidRequestException("Docker commands can not be cloned");
     }
     ServiceCommand oldServiceCommand = service.getServiceCommands()
                                            .stream()
@@ -506,7 +507,7 @@ public class ServiceResourceServiceImpl implements ServiceResourceService, DataP
           String.format("Service [%s] couldn't be deleted. Remove Service reference from the following workflows ["
                   + workflowNames + "]",
               service.getName());
-      throw new WingsException(INVALID_REQUEST, USER).addParam("message", message);
+      throw new InvalidRequestException(message, USER);
     }
   }
 
@@ -589,7 +590,7 @@ public class ServiceResourceServiceImpl implements ServiceResourceService, DataP
       String message = String.format(
           "Command [%s] couldn't be deleted. Remove reference from the following workflows [" + sb.toString() + "]",
           serviceCommand.getName());
-      throw new WingsException(INVALID_REQUEST, USER).addParam("message", message);
+      throw new InvalidRequestException(message, USER);
     }
   }
 
@@ -624,7 +625,7 @@ public class ServiceResourceServiceImpl implements ServiceResourceService, DataP
   private ContainerTask upsertContainerTask(ContainerTask containerTask, boolean advanced, boolean isCreate) {
     boolean exist = exist(containerTask.getAppId(), containerTask.getServiceId());
     if (!exist) {
-      throw new WingsException(INVALID_REQUEST).addParam("message", "Service doesn't exist");
+      throw new InvalidRequestException("Service doesn't exist");
     }
     ContainerTask persistedContainerTask = wingsPersistence.saveAndGet(ContainerTask.class, containerTask);
 
@@ -686,7 +687,7 @@ public class ServiceResourceServiceImpl implements ServiceResourceService, DataP
       HelmChartSpecification helmChartSpecification, boolean isCreate) {
     boolean exist = exist(helmChartSpecification.getAppId(), helmChartSpecification.getServiceId());
     if (!exist) {
-      throw new WingsException(INVALID_REQUEST).addParam("message", "Service doesn't exist");
+      throw new InvalidRequestException("Service doesn't exist");
     }
     HelmChartSpecification persistedHelmChartSpecification =
         wingsPersistence.saveAndGet(HelmChartSpecification.class, helmChartSpecification);

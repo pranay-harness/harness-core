@@ -5,7 +5,6 @@ import static io.harness.data.structure.EmptyPredicate.isNotEmpty;
 import static io.harness.govern.Switch.unhandled;
 import static java.util.Arrays.asList;
 import static org.apache.commons.lang3.StringUtils.isBlank;
-import static software.wings.beans.ErrorCode.INVALID_REQUEST;
 import static software.wings.beans.SearchFilter.Operator.AND;
 import static software.wings.beans.SearchFilter.Operator.EQ;
 import static software.wings.beans.SearchFilter.Operator.EXISTS;
@@ -28,6 +27,7 @@ import software.wings.beans.SearchFilter;
 import software.wings.beans.SearchFilter.Operator;
 import software.wings.beans.SortOrder;
 import software.wings.beans.SortOrder.OrderType;
+import software.wings.exception.InvalidRequestException;
 import software.wings.exception.WingsException;
 
 import java.util.ArrayList;
@@ -175,7 +175,7 @@ public class MongoHelper {
 
   private static <T> T applyOperator(FieldEnd<T> fieldEnd, SearchFilter filter) {
     if (!(filter.getOp() == EXISTS || filter.getOp() == NOT_EXISTS) && isEmpty(filter.getFieldValues())) {
-      throw new WingsException(INVALID_REQUEST).addParam("message", "Unspecified fieldValue for search");
+      throw new InvalidRequestException("Unspecified fieldValue for search");
     }
     Operator op = filter.getOp();
     if (op == null) {

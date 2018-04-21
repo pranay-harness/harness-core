@@ -1,7 +1,5 @@
 package software.wings.helpers.ext.helm;
 
-import static software.wings.beans.ErrorCode.INVALID_REQUEST;
-
 import com.google.common.util.concurrent.TimeLimiter;
 import com.google.common.util.concurrent.UncheckedTimeoutException;
 import com.google.inject.Inject;
@@ -20,6 +18,7 @@ import software.wings.beans.Log.LogLevel;
 import software.wings.beans.command.CommandExecutionResult.CommandExecutionStatus;
 import software.wings.beans.command.ExecutionLogCallback;
 import software.wings.cloudprovider.ContainerInfo;
+import software.wings.exception.InvalidRequestException;
 import software.wings.exception.WingsException;
 import software.wings.helpers.ext.container.ContainerDeploymentDelegateHelper;
 import software.wings.helpers.ext.helm.HelmClientImpl.HelmCliResponse;
@@ -135,7 +134,7 @@ public class HelmDeployServiceImpl implements HelmDeployService {
       throws InterruptedException, IOException, TimeoutException {
     HelmCliResponse cliResponse = helmClient.getClientAndServerVersion(helmCommandRequest);
     if (cliResponse.getCommandExecutionStatus().equals(CommandExecutionStatus.FAILURE)) {
-      throw new WingsException(INVALID_REQUEST).addParam("message", "Helm client not installed or not initialized");
+      throw new InvalidRequestException("Helm client not installed or not initialized");
     }
     return new HelmCommandResponse(cliResponse.getCommandExecutionStatus(), cliResponse.getOutput());
   }

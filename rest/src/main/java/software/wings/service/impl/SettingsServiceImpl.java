@@ -50,6 +50,7 @@ import software.wings.beans.yaml.Change.ChangeType;
 import software.wings.dl.PageRequest;
 import software.wings.dl.PageResponse;
 import software.wings.dl.WingsPersistence;
+import software.wings.exception.InvalidRequestException;
 import software.wings.exception.WingsException;
 import software.wings.security.AppPermissionSummaryForUI;
 import software.wings.security.EnvFilter;
@@ -204,8 +205,7 @@ public class SettingsServiceImpl implements SettingsService {
         return pageResponse;
       }
     } catch (Exception e) {
-      logger.error("Error getting setting attributes. " + e.getMessage(), e);
-      throw new WingsException(INVALID_REQUEST, e).addParam("message", e.getMessage());
+      throw new InvalidRequestException(e.getMessage(), e);
     }
   }
 

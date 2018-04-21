@@ -214,8 +214,8 @@ public class GitClientImplTest {
       priKeyBytes = new byte[(int) filePrivateKey.length()];
       fis.read(priKeyBytes);
       fis.close();
-    } catch (IOException ioex) {
-      ioex.printStackTrace();
+    } catch (IOException ex) {
+      logger.error("", ex);
     }
 
     StringBuilder sb = new StringBuilder();

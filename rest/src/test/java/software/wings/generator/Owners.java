@@ -15,26 +15,22 @@ public class Owners {
   }
 
   public Application obtainApplication() {
-    final Application application = objects.stream()
-                                        .filter(obj -> obj instanceof Application)
-                                        .findFirst()
-                                        .map(obj -> (Application) obj)
-                                        .orElse(null);
-    return application;
+    return objects.stream()
+        .filter(obj -> obj instanceof Application)
+        .findFirst()
+        .map(obj -> (Application) obj)
+        .orElse(null);
   }
 
   public Environment obtainEnvironment() {
-    final Environment environment = objects.stream()
-                                        .filter(obj -> obj instanceof Environment)
-                                        .findFirst()
-                                        .map(obj -> (Environment) obj)
-                                        .orElse(null);
-    return environment;
+    return objects.stream()
+        .filter(obj -> obj instanceof Environment)
+        .findFirst()
+        .map(obj -> (Environment) obj)
+        .orElse(null);
   }
 
   public Service obtainService() {
-    final Service service =
-        objects.stream().filter(obj -> obj instanceof Service).findFirst().map(obj -> (Service) obj).orElse(null);
-    return service;
+    return objects.stream().filter(obj -> obj instanceof Service).findFirst().map(obj -> (Service) obj).orElse(null);
   }
 }

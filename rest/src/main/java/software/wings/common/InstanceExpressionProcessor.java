@@ -8,7 +8,6 @@ import static java.util.stream.Collectors.toList;
 import static org.apache.commons.collections.CollectionUtils.intersection;
 import static org.apache.commons.lang3.StringUtils.isNotBlank;
 import static org.mongodb.morphia.mapping.Mapper.ID_KEY;
-import static software.wings.beans.ErrorCode.INVALID_REQUEST;
 import static software.wings.dl.PageRequest.PageRequestBuilder.aPageRequest;
 import static software.wings.dl.PageRequest.UNLIMITED;
 
@@ -32,7 +31,7 @@ import software.wings.beans.infrastructure.Host;
 import software.wings.dl.PageRequest;
 import software.wings.dl.PageRequest.PageRequestBuilder;
 import software.wings.dl.PageResponse;
-import software.wings.exception.WingsException;
+import software.wings.exception.InvalidRequestException;
 import software.wings.service.intfc.HostService;
 import software.wings.service.intfc.ServiceInstanceService;
 import software.wings.service.intfc.ServiceResourceService;
@@ -253,7 +252,7 @@ public class InstanceExpressionProcessor implements ExpressionProcessor {
     PageRequest<ServiceInstance> req = pageRequest.build();
     // Just for safety
     if (isEmpty(req.getFilters())) {
-      throw new WingsException(INVALID_REQUEST).addParam("message", "No Filter attached to filter service instances");
+      throw new InvalidRequestException("No Filter attached to filter service instances");
     }
     req.addFilter("appId", Operator.EQ, app.getUuid());
     return req;

@@ -4,7 +4,6 @@ import static io.harness.govern.Switch.unhandled;
 import static org.apache.commons.lang3.StringUtils.isNotBlank;
 import static org.eclipse.jgit.transport.RemoteRefUpdate.Status.OK;
 import static org.eclipse.jgit.transport.RemoteRefUpdate.Status.UP_TO_DATE;
-import static software.wings.beans.ErrorCode.INVALID_REQUEST;
 import static software.wings.beans.ErrorCode.UNREACHABLE_HOST;
 import static software.wings.beans.yaml.Change.ChangeType.ADD;
 import static software.wings.beans.yaml.Change.ChangeType.DELETE;
@@ -74,6 +73,7 @@ import software.wings.beans.yaml.GitDiffResult;
 import software.wings.beans.yaml.GitFileChange;
 import software.wings.beans.yaml.GitPushResult;
 import software.wings.beans.yaml.GitPushResult.RefUpdate;
+import software.wings.exception.InvalidRequestException;
 import software.wings.exception.WingsException;
 import software.wings.service.intfc.yaml.GitClient;
 
@@ -577,7 +577,7 @@ public class GitClientImpl implements GitClient {
       if (EmptyPredicate.isNotEmpty(keyPath)) {
         new File(keyPath).delete();
       }
-      throw new WingsException(INVALID_REQUEST, e).addParam("message", "Error setting SSH credentials");
+      throw new InvalidRequestException("Error setting SSH credentials", e);
     }
   }
 

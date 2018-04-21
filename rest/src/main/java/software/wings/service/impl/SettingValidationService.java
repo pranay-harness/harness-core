@@ -2,7 +2,6 @@ package software.wings.service.impl;
 
 import static java.util.Collections.emptyList;
 import static software.wings.beans.DelegateTask.SyncTaskContext.Builder.aContext;
-import static software.wings.beans.ErrorCode.INVALID_REQUEST;
 import static software.wings.beans.FeatureName.AZURE_SUPPORT;
 import static software.wings.exception.WingsException.USER;
 import static software.wings.utils.WingsReflectionUtils.getEncryptedRefField;
@@ -37,6 +36,7 @@ import software.wings.beans.config.LogzConfig;
 import software.wings.beans.config.NexusConfig;
 import software.wings.delegatetasks.DelegateProxyFactory;
 import software.wings.dl.WingsPersistence;
+import software.wings.exception.InvalidRequestException;
 import software.wings.exception.WingsException;
 import software.wings.helpers.ext.azure.AzureHelperService;
 import software.wings.service.impl.analysis.ElkConnector;
@@ -97,8 +97,7 @@ public class SettingValidationService {
       gcpHelperService.validateCredential((GcpConfig) settingValue);
     } else if (settingValue instanceof AzureConfig) {
       if (!featureFlagService.isEnabled(AZURE_SUPPORT, settingAttribute.getAccountId())) {
-        throw new WingsException(INVALID_REQUEST)
-            .addParam("message", "Adding Azure as Cloud Provider is not supported yet.");
+        throw new InvalidRequestException("Adding Azure as Cloud Provider is not supported yet.");
       }
       azureHelperService.validateAzureAccountCredential(((AzureConfig) settingValue).getClientId(),
           ((AzureConfig) settingValue).getTenantId(), new String(((AzureConfig) settingValue).getKey()));
@@ -169,7 +168,7 @@ public class SettingValidationService {
       delegateProxyFactory.get(ContainerService.class, syncTaskContext).validate(containerServiceParams);
     } catch (Exception e) {
       logger.warn(Misc.getMessage(e), e);
-      throw new WingsException(INVALID_REQUEST, USER).addParam("message", Misc.getMessage(e));
+      throw new InvalidRequestException(Misc.getMessage(e), USER);
     }
   }
 }

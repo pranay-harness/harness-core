@@ -2,7 +2,6 @@ package software.wings.service.impl;
 
 import static io.harness.network.Http.connectableHttpUrl;
 import static io.harness.network.Http.validUrl;
-import static software.wings.beans.ErrorCode.INVALID_REQUEST;
 import static software.wings.beans.artifact.ArtifactStreamType.DOCKER;
 import static software.wings.exception.WingsException.SRE;
 import static software.wings.exception.WingsException.USER;
@@ -14,6 +13,7 @@ import com.google.inject.Singleton;
 import software.wings.beans.DockerConfig;
 import software.wings.beans.ErrorCode;
 import software.wings.beans.artifact.ArtifactStreamAttributes;
+import software.wings.exception.InvalidRequestException;
 import software.wings.exception.WingsException;
 import software.wings.helpers.ext.docker.DockerRegistryService;
 import software.wings.helpers.ext.jenkins.BuildDetails;
@@ -45,28 +45,24 @@ public class DockerBuildServiceImpl implements DockerBuildService {
   @Override
   public List<JobDetails> getJobs(
       DockerConfig dockerConfig, List<EncryptedDataDetail> encryptionDetails, Optional<String> parentJobName) {
-    throw new WingsException(INVALID_REQUEST, SRE)
-        .addParam("message", "Operation not supported by Docker Artifact Stream");
+    throw new InvalidRequestException("Operation not supported by Docker Artifact Stream", SRE);
   }
 
   @Override
   public List<String> getArtifactPaths(
       String jobName, String groupId, DockerConfig config, List<EncryptedDataDetail> encryptionDetails) {
-    throw new WingsException(INVALID_REQUEST, SRE)
-        .addParam("message", "Operation not supported by Docker Artifact Stream");
+    throw new InvalidRequestException("Operation not supported by Docker Artifact Stream", SRE);
   }
 
   @Override
   public BuildDetails getLastSuccessfulBuild(String appId, ArtifactStreamAttributes artifactStreamAttributes,
       DockerConfig dockerConfig, List<EncryptedDataDetail> encryptionDetails) {
-    throw new WingsException(INVALID_REQUEST, SRE)
-        .addParam("message", "Operation not supported by Docker Artifact Stream");
+    throw new InvalidRequestException("Operation not supported by Docker Artifact Stream", SRE);
   }
 
   @Override
   public Map<String, String> getPlans(DockerConfig config, List<EncryptedDataDetail> encryptionDetails) {
-    throw new WingsException(INVALID_REQUEST, SRE)
-        .addParam("message", "Operation not supported by Docker Artifact Stream");
+    throw new InvalidRequestException("Operation not supported by Docker Artifact Stream", SRE);
   }
 
   @Override
@@ -77,8 +73,7 @@ public class DockerBuildServiceImpl implements DockerBuildService {
 
   @Override
   public List<String> getGroupIds(String jobName, DockerConfig config, List<EncryptedDataDetail> encryptionDetails) {
-    throw new WingsException(INVALID_REQUEST, SRE)
-        .addParam("message", "Operation not supported by Docker Artifact Stream");
+    throw new InvalidRequestException("Operation not supported by Docker Artifact Stream", SRE);
   }
 
   @Override

@@ -8,7 +8,6 @@ import static software.wings.beans.ConfigFile.DEFAULT_TEMPLATE_ID;
 import static software.wings.beans.EntityType.ENVIRONMENT;
 import static software.wings.beans.EntityType.SERVICE;
 import static software.wings.beans.ErrorCode.INVALID_ARGUMENT;
-import static software.wings.beans.ErrorCode.INVALID_REQUEST;
 import static software.wings.beans.SearchFilter.Builder.aSearchFilter;
 import static software.wings.beans.yaml.Change.ChangeType.ADD;
 import static software.wings.dl.PageRequest.PageRequestBuilder.aPageRequest;
@@ -33,6 +32,7 @@ import software.wings.dl.PageRequest;
 import software.wings.dl.PageRequest.PageRequestBuilder;
 import software.wings.dl.PageResponse;
 import software.wings.dl.WingsPersistence;
+import software.wings.exception.InvalidRequestException;
 import software.wings.exception.WingsException;
 import software.wings.security.EncryptionType;
 import software.wings.security.encryption.EncryptedData;
@@ -166,7 +166,7 @@ public class ConfigServiceImpl implements ConfigService {
           .addParam("args", "Config upload not supported for entityType " + entityType);
     }
     if (!entityExist) {
-      throw new WingsException(INVALID_REQUEST).addParam("message", "Node identifier and node type do not match");
+      throw new InvalidRequestException("Node identifier and node type do not match");
     }
   }
 
