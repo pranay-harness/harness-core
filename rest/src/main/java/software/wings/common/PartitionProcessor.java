@@ -6,6 +6,7 @@ package software.wings.common;
 
 import static io.harness.data.structure.EmptyPredicate.isEmpty;
 import static io.harness.data.structure.EmptyPredicate.isNotEmpty;
+import static software.wings.beans.ErrorCode.INVALID_REQUEST;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -96,14 +97,14 @@ public interface PartitionProcessor {
       try {
         finalCounts = computeCounts(elements.size());
         if (isEmpty(finalCounts)) {
-          throw new WingsException(ErrorCode.INVALID_REQUEST)
+          throw new WingsException(INVALID_REQUEST)
               .addParam("message",
                   "Incorrect partition breakdown expressions- breakdowns:" + Arrays.toString(breakdowns)
                       + "percentages:" + Arrays.toString(percentages) + ", counts:" + Arrays.toString(counts));
         }
       } catch (Exception e) {
         log().error(e.getMessage(), e);
-        throw new WingsException(ErrorCode.INVALID_REQUEST, e)
+        throw new WingsException(INVALID_REQUEST, e)
             .addParam("message",
                 "Incorrect partition expressions- breakdowns:" + Arrays.toString(breakdowns)
                     + "percentages:" + Arrays.toString(percentages) + ", counts:" + Arrays.toString(counts));

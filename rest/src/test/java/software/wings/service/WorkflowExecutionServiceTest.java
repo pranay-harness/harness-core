@@ -16,6 +16,7 @@ import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 import static software.wings.beans.CanaryOrchestrationWorkflow.CanaryOrchestrationWorkflowBuilder.aCanaryOrchestrationWorkflow;
 import static software.wings.beans.CountsByStatuses.Builder.aCountsByStatuses;
+import static software.wings.beans.ErrorCode.INVALID_REQUEST;
 import static software.wings.beans.GraphNode.GraphNodeBuilder.aGraphNode;
 import static software.wings.beans.Workflow.WorkflowBuilder.aWorkflow;
 import static software.wings.beans.WorkflowExecution.WorkflowExecutionBuilder.aWorkflowExecution;
@@ -536,7 +537,7 @@ public class WorkflowExecutionServiceTest extends WingsBaseTest {
       RequiredExecutionArgs required = workflowExecutionService.getRequiredExecutionArgs(APP_ID, ENV_ID, executionArgs);
       failBecauseExceptionWasNotThrown(WingsException.class);
     } catch (WingsException exception) {
-      assertThat(exception).hasMessage(ErrorCode.INVALID_REQUEST.getCode());
+      assertThat(exception).hasMessage(INVALID_REQUEST.getCode());
       assertThat(exception.getParams()).containsEntry("message", "OrchestrationWorkflow not found");
     }
   }
@@ -556,7 +557,7 @@ public class WorkflowExecutionServiceTest extends WingsBaseTest {
       RequiredExecutionArgs required = workflowExecutionService.getRequiredExecutionArgs(APP_ID, ENV_ID, executionArgs);
       failBecauseExceptionWasNotThrown(WingsException.class);
     } catch (WingsException exception) {
-      assertThat(exception).hasMessage(ErrorCode.INVALID_REQUEST.getCode());
+      assertThat(exception).hasMessage(INVALID_REQUEST.getCode());
       assertThat(exception.getParams()).containsEntry("message", "Associated state machine not found");
     }
   }
@@ -576,7 +577,7 @@ public class WorkflowExecutionServiceTest extends WingsBaseTest {
       RequiredExecutionArgs required = workflowExecutionService.getRequiredExecutionArgs(APP_ID, ENV_ID, executionArgs);
       failBecauseExceptionWasNotThrown(WingsException.class);
     } catch (WingsException exception) {
-      assertThat(exception).hasMessage(ErrorCode.INVALID_REQUEST.getCode());
+      assertThat(exception).hasMessage(INVALID_REQUEST.getCode());
       assertThat(exception.getParams()).containsEntry("message", "serviceId is null for a simple execution");
     }
   }
@@ -598,7 +599,7 @@ public class WorkflowExecutionServiceTest extends WingsBaseTest {
       RequiredExecutionArgs required = workflowExecutionService.getRequiredExecutionArgs(APP_ID, ENV_ID, executionArgs);
       failBecauseExceptionWasNotThrown(WingsException.class);
     } catch (WingsException exception) {
-      assertThat(exception).hasMessage(ErrorCode.INVALID_REQUEST.getCode());
+      assertThat(exception).hasMessage(INVALID_REQUEST.getCode());
       assertThat(exception.getParams()).containsEntry("message", "serviceInstances are empty for a simple execution");
     }
   }

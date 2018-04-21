@@ -5,6 +5,7 @@ import static io.harness.data.structure.EmptyPredicate.isNotEmpty;
 import static java.util.Arrays.asList;
 import static software.wings.api.AwsClusterExecutionData.AwsClusterExecutionDataBuilder.anAwsClusterExecutionData;
 import static software.wings.api.ClusterElement.ClusterElementBuilder.aClusterElement;
+import static software.wings.beans.ErrorCode.INVALID_REQUEST;
 import static software.wings.beans.FeatureName.ECS_CREATE_CLUSTER;
 import static software.wings.sm.ExecutionResponse.Builder.anExecutionResponse;
 import static software.wings.sm.StateType.AWS_CLUSTER_SETUP;
@@ -22,7 +23,6 @@ import software.wings.api.PhaseElement;
 import software.wings.beans.Application;
 import software.wings.beans.AwsInfrastructureMapping.AwsRegionDataProvider;
 import software.wings.beans.EcsInfrastructureMapping;
-import software.wings.beans.ErrorCode;
 import software.wings.beans.InfrastructureMapping;
 import software.wings.beans.SettingAttribute;
 import software.wings.cloudprovider.aws.AwsClusterConfiguration;
@@ -92,14 +92,14 @@ public class AwsClusterSetup extends State {
     String env = workflowStandardParams.getEnv().getName();
 
     if (!featureFlagService.isEnabled(ECS_CREATE_CLUSTER, app.getAccountId())) {
-      throw new WingsException(ErrorCode.INVALID_REQUEST)
+      throw new WingsException(INVALID_REQUEST)
           .addParam("message", "Runtime creation of clusters is not yet supported.");
     }
 
     InfrastructureMapping infrastructureMapping =
         infrastructureMappingService.get(app.getUuid(), phaseElement.getInfraMappingId());
     if (infrastructureMapping == null || !(infrastructureMapping instanceof EcsInfrastructureMapping)) {
-      throw new WingsException(ErrorCode.INVALID_REQUEST).addParam("message", "Invalid infrastructure type");
+      throw new WingsException(INVALID_REQUEST).addParam("message", "Invalid infrastructure type");
     }
 
     SettingAttribute computeProviderSetting = settingsService.get(infrastructureMapping.getComputeProviderSettingId());

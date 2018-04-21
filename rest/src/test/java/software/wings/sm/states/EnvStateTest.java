@@ -8,6 +8,7 @@ import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 import static software.wings.api.EnvStateExecutionData.Builder.anEnvStateExecutionData;
 import static software.wings.beans.Application.Builder.anApplication;
+import static software.wings.beans.ErrorCode.INVALID_REQUEST;
 import static software.wings.beans.WorkflowExecution.WorkflowExecutionBuilder.aWorkflowExecution;
 import static software.wings.common.Constants.ENV_STATE_TIMEOUT_MILLIS;
 import static software.wings.sm.WorkflowStandardParams.Builder.aWorkflowStandardParams;
@@ -25,7 +26,6 @@ import org.mockito.Mock;
 import software.wings.WingsBaseTest;
 import software.wings.api.EnvStateExecutionData;
 import software.wings.beans.CanaryOrchestrationWorkflow;
-import software.wings.beans.ErrorCode;
 import software.wings.beans.Workflow;
 import software.wings.exception.WingsException;
 import software.wings.service.intfc.WorkflowExecutionService;
@@ -94,7 +94,7 @@ public class EnvStateTest extends WingsBaseTest {
     when(workflow.getOrchestrationWorkflow()).thenReturn(canaryOrchestrationWorkflow);
     when(workflowExecutionService.triggerOrchestrationExecution(
              eq(APP_ID), eq(ENV_ID), eq(WORKFLOW_ID), eq(PIPELINE_WORKFLOW_EXECUTION_ID), any()))
-        .thenThrow(new WingsException(ErrorCode.INVALID_REQUEST)
+        .thenThrow(new WingsException(INVALID_REQUEST)
                        .addParam("message", "Workflow variable [test] is mandatory for execution"));
     ExecutionResponse executionResponse = envState.execute(context);
     verify(workflowExecutionService)

@@ -97,7 +97,7 @@ public class SettingValidationService {
       gcpHelperService.validateCredential((GcpConfig) settingValue);
     } else if (settingValue instanceof AzureConfig) {
       if (!featureFlagService.isEnabled(AZURE_SUPPORT, settingAttribute.getAccountId())) {
-        throw new WingsException(ErrorCode.INVALID_REQUEST)
+        throw new WingsException(INVALID_REQUEST)
             .addParam("message", "Adding Azure as Cloud Provider is not supported yet.");
       }
       azureHelperService.validateAzureAccountCredential(((AzureConfig) settingValue).getClientId(),

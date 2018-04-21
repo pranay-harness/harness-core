@@ -1,6 +1,7 @@
 package software.wings.helpers.ext.container;
 
 import static io.harness.data.structure.EmptyPredicate.isNotEmpty;
+import static software.wings.beans.ErrorCode.INVALID_REQUEST;
 import static software.wings.helpers.ext.helm.HelmConstants.KUBE_CONFIG_TEMPLATE;
 
 import com.google.common.cache.CacheBuilder;
@@ -173,8 +174,7 @@ public class ContainerDeploymentDelegateHelper {
           .desiredCount(status.getDesiredNumberScheduled())
           .build();
     } else {
-      throw new WingsException(ErrorCode.INVALID_REQUEST)
-          .addParam("message", "Unhandled resource type" + hasMetadata.getKind());
+      throw new WingsException(INVALID_REQUEST).addParam("message", "Unhandled resource type" + hasMetadata.getKind());
     }
   }
 

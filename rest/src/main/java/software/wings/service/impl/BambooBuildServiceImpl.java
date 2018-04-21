@@ -2,6 +2,7 @@ package software.wings.service.impl;
 
 import static io.harness.network.Http.connectableHttpUrl;
 import static io.harness.network.Http.validUrl;
+import static software.wings.beans.ErrorCode.INVALID_REQUEST;
 import static software.wings.exception.WingsException.ReportTarget.USER;
 import static software.wings.utils.Validator.equalCheck;
 
@@ -75,7 +76,7 @@ public class BambooBuildServiceImpl implements BambooBuildService {
   @Override
   public List<String> getGroupIds(
       String jobName, BambooConfig bambooConfig, List<EncryptedDataDetail> encryptionDetails) {
-    throw new WingsException(ErrorCode.INVALID_REQUEST, USER)
+    throw new WingsException(INVALID_REQUEST, USER)
         .addParam("message", "Operation not supported by Bamboo Artifact Stream");
   }
 

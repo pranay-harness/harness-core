@@ -1,6 +1,7 @@
 package software.wings.service.impl;
 
 import static org.mongodb.morphia.mapping.Mapper.ID_KEY;
+import static software.wings.beans.ErrorCode.INVALID_REQUEST;
 import static software.wings.utils.Validator.notNullCheck;
 
 import com.google.common.collect.ImmutableMap;
@@ -13,7 +14,6 @@ import org.mongodb.morphia.query.Query;
 import org.mongodb.morphia.query.UpdateOperations;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-import software.wings.beans.ErrorCode;
 import software.wings.beans.infrastructure.Host;
 import software.wings.dl.PageRequest;
 import software.wings.dl.PageResponse;
@@ -80,7 +80,7 @@ public class HostServiceImpl implements HostService {
     Host savedHost = get(host.getAppId(), envId, host.getUuid());
 
     if (savedHost == null) {
-      throw new WingsException(ErrorCode.INVALID_REQUEST).addParam("message", "Host doesn't exist");
+      throw new WingsException(INVALID_REQUEST).addParam("message", "Host doesn't exist");
     }
 
     ImmutableMap.Builder builder = ImmutableMap.<String, Object>builder().put("hostConnAttr", host.getHostConnAttr());

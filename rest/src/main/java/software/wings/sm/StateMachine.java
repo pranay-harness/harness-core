@@ -3,6 +3,7 @@ package software.wings.sm;
 import static io.harness.data.structure.EmptyPredicate.isEmpty;
 import static io.harness.data.structure.EmptyPredicate.isNotEmpty;
 import static java.util.stream.Collectors.toList;
+import static software.wings.beans.ErrorCode.INVALID_REQUEST;
 import static software.wings.beans.OrchestrationWorkflowType.BUILD;
 import static software.wings.sm.ExpressionProcessor.EXPRESSION_PREFIX;
 import static software.wings.sm.StateType.REPEAT;
@@ -149,7 +150,7 @@ public class StateMachine extends Base {
       throw e;
     } catch (Exception e) {
       logger.error(e.getLocalizedMessage(), e);
-      throw new WingsException(ErrorCode.INVALID_REQUEST).addParam("message", "StateMachine transformation error");
+      throw new WingsException(INVALID_REQUEST).addParam("message", "StateMachine transformation error");
     }
   }
 
@@ -276,16 +277,16 @@ public class StateMachine extends Base {
       logger.info("node : {}", node);
 
       if (node.getType() == null || stencilMap.get(node.getType()) == null) {
-        throw new WingsException(ErrorCode.INVALID_REQUEST).addParam("message", "Unknown stencil type");
+        throw new WingsException(INVALID_REQUEST).addParam("message", "Unknown stencil type");
       }
 
       if (node.getName() == null) {
-        throw new WingsException(ErrorCode.INVALID_REQUEST).addParam("message", "Node name null");
+        throw new WingsException(INVALID_REQUEST).addParam("message", "Node name null");
       }
 
       if (node.isOrigin()) {
         if (originStateName != null) {
-          throw new WingsException(ErrorCode.INVALID_REQUEST)
+          throw new WingsException(INVALID_REQUEST)
               .addParam("message", "Duplicate origin state: " + originStateName + " and " + node.getName());
         }
 
@@ -326,7 +327,7 @@ public class StateMachine extends Base {
     }
 
     if (originStateName == null) {
-      throw new WingsException(ErrorCode.INVALID_REQUEST).addParam("message", "Origin state missing");
+      throw new WingsException(INVALID_REQUEST).addParam("message", "Origin state missing");
     }
 
     try {

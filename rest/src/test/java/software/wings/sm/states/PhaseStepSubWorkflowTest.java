@@ -7,6 +7,7 @@ import static org.mockito.Matchers.anyString;
 import static org.mockito.Mockito.when;
 import static software.wings.api.PhaseElement.PhaseElementBuilder.aPhaseElement;
 import static software.wings.api.ServiceElement.Builder.aServiceElement;
+import static software.wings.beans.ErrorCode.INVALID_REQUEST;
 import static software.wings.beans.ResizeStrategy.RESIZE_NEW_FIRST;
 import static software.wings.sm.ElementNotifyResponseData.Builder.anElementNotifyResponseData;
 import static software.wings.sm.ExecutionStatusData.Builder.anExecutionStatusData;
@@ -29,7 +30,6 @@ import software.wings.api.ServiceElement;
 import software.wings.api.ServiceInstanceIdsParam;
 import software.wings.api.ServiceInstanceIdsParam.ServiceInstanceIdsParamBuilder;
 import software.wings.beans.ElementExecutionSummary;
-import software.wings.beans.ErrorCode;
 import software.wings.beans.FailureStrategy;
 import software.wings.beans.PhaseStepType;
 import software.wings.exception.WingsException;
@@ -107,7 +107,7 @@ public class PhaseStepSubWorkflowTest extends WingsBaseTest {
       assertThat(response).isNotNull();
       failBecauseExceptionWasNotThrown(WingsException.class);
     } catch (WingsException exception) {
-      assertThat(exception).hasMessage(ErrorCode.INVALID_REQUEST.getCode());
+      assertThat(exception).hasMessage(INVALID_REQUEST.getCode());
       assertThat(exception.getParams()).hasSize(1);
       assertThat(exception.getParams()).containsKey("message");
       assertThat(exception.getParams().get("message")).asString().contains("Setup not done");
@@ -136,7 +136,7 @@ public class PhaseStepSubWorkflowTest extends WingsBaseTest {
       assertThat(response).isNotNull();
       failBecauseExceptionWasNotThrown(WingsException.class);
     } catch (WingsException exception) {
-      assertThat(exception).hasMessage(ErrorCode.INVALID_REQUEST.getCode());
+      assertThat(exception).hasMessage(INVALID_REQUEST.getCode());
       assertThat(exception.getParams()).hasSize(1);
       assertThat(exception.getParams()).containsKey("message");
       assertThat(exception.getParams().get("message"))
@@ -175,7 +175,7 @@ public class PhaseStepSubWorkflowTest extends WingsBaseTest {
       assertThat(response).isNotNull();
       failBecauseExceptionWasNotThrown(WingsException.class);
     } catch (WingsException exception) {
-      assertThat(exception).hasMessage(ErrorCode.INVALID_REQUEST.getCode());
+      assertThat(exception).hasMessage(INVALID_REQUEST.getCode());
       assertThat(exception.getParams()).hasSize(1);
       assertThat(exception.getParams()).containsKey("message");
       assertThat(exception.getParams().get("message")).asString().contains("null phaseStepType");
@@ -293,7 +293,7 @@ public class PhaseStepSubWorkflowTest extends WingsBaseTest {
     try {
       phaseStepSubWorkflow.handleAsyncResponse(context, notifyResponse);
     } catch (WingsException exception) {
-      assertThat(exception).hasMessage(ErrorCode.INVALID_REQUEST.getCode());
+      assertThat(exception).hasMessage(INVALID_REQUEST.getCode());
       assertThat(exception.getParams()).hasSize(1);
       assertThat(exception.getParams()).containsKey("message");
       assertThat(exception.getParams().get("message")).asString().contains("Missing response");
@@ -360,7 +360,7 @@ public class PhaseStepSubWorkflowTest extends WingsBaseTest {
     try {
       phaseStepSubWorkflow.handleAsyncResponse(context, notifyResponse);
     } catch (WingsException exception) {
-      assertThat(exception).hasMessage(ErrorCode.INVALID_REQUEST.getCode());
+      assertThat(exception).hasMessage(INVALID_REQUEST.getCode());
       assertThat(exception.getParams()).hasSize(1);
       assertThat(exception.getParams()).containsKey("message");
       assertThat(exception.getParams().get("message")).asString().contains("Missing response");

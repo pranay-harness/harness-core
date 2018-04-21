@@ -4,6 +4,7 @@ import static io.harness.data.structure.EmptyPredicate.isNotEmpty;
 import static java.util.Arrays.asList;
 import static java.util.stream.Collectors.toList;
 import static org.apache.commons.lang3.StringUtils.isNotBlank;
+import static software.wings.beans.ErrorCode.INVALID_REQUEST;
 import static software.wings.beans.Log.Builder.aLog;
 import static software.wings.beans.ResizeStrategy.RESIZE_NEW_FIRST;
 import static software.wings.sm.ExecutionResponse.Builder.anExecutionResponse;
@@ -36,7 +37,6 @@ import software.wings.beans.AwsAmiInfrastructureMapping;
 import software.wings.beans.AwsConfig;
 import software.wings.beans.DeploymentExecutionContext;
 import software.wings.beans.Environment;
-import software.wings.beans.ErrorCode;
 import software.wings.beans.Log.Builder;
 import software.wings.beans.ResizeStrategy;
 import software.wings.beans.Service;
@@ -288,7 +288,7 @@ public class AwsAmiServiceSetup extends State {
         awsConfig, encryptionDetails, region, baseAutoScalingGroup.getLaunchConfigurationName());
 
     if (baseAutoScalingGroupLaunchConfiguration == null) {
-      throw new WingsException(ErrorCode.INVALID_REQUEST)
+      throw new WingsException(INVALID_REQUEST)
           .addParam("message",
               String.format(
                   "LaunchConfiguration [%s] for referenced AutoScaling Group [%s] provided in Service Infrastructure couldn't be found in AWS region [%s]",
@@ -305,7 +305,7 @@ public class AwsAmiServiceSetup extends State {
         awsHelperService.getAutoScalingGroup(awsConfig, encryptionDetails, region, baseAutoScalingGroupName);
     if (baseAutoScalingGroup == null) {
       logger.error("Couldn't find reference AutoScalingGroup: {}", infrastructureMapping.getAutoScalingGroupName());
-      throw new WingsException(ErrorCode.INVALID_REQUEST)
+      throw new WingsException(INVALID_REQUEST)
           .addParam("message",
               String.format(
                   "Reference AutoScaling Group [%s] provided in Service Infrastructure couldn't be found in AWS region [%s]",

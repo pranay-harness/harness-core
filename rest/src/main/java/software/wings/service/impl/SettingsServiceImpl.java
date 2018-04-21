@@ -39,7 +39,6 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import software.wings.annotation.Encryptable;
 import software.wings.beans.Application;
-import software.wings.beans.ErrorCode;
 import software.wings.beans.InfrastructureMapping;
 import software.wings.beans.SettingAttribute;
 import software.wings.beans.SettingAttribute.Category;
@@ -206,7 +205,7 @@ public class SettingsServiceImpl implements SettingsService {
       }
     } catch (Exception e) {
       logger.error("Error getting setting attributes. " + e.getMessage(), e);
-      throw new WingsException(ErrorCode.INVALID_REQUEST, e).addParam("message", e.getMessage());
+      throw new WingsException(INVALID_REQUEST, e).addParam("message", e.getMessage());
     }
   }
 

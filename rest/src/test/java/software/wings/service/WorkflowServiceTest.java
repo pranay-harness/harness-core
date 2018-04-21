@@ -26,6 +26,7 @@ import static software.wings.beans.EntityType.ELK_INDICES;
 import static software.wings.beans.EntityType.ENVIRONMENT;
 import static software.wings.beans.EntityType.INFRASTRUCTURE_MAPPING;
 import static software.wings.beans.EntityType.SERVICE;
+import static software.wings.beans.ErrorCode.INVALID_REQUEST;
 import static software.wings.beans.Graph.Builder.aGraph;
 import static software.wings.beans.GraphLink.Builder.aLink;
 import static software.wings.beans.GraphNode.GraphNodeBuilder.aGraphNode;
@@ -108,7 +109,6 @@ import software.wings.beans.CanaryOrchestrationWorkflow;
 import software.wings.beans.CustomOrchestrationWorkflow;
 import software.wings.beans.EntityType;
 import software.wings.beans.Environment;
-import software.wings.beans.ErrorCode;
 import software.wings.beans.ExecutionScope;
 import software.wings.beans.FailureCriteria;
 import software.wings.beans.FailureStrategy;
@@ -560,7 +560,7 @@ public class WorkflowServiceTest extends WingsBaseTest {
         .thenReturn(aPageResponse().withResponse(asList(pipeline)).build());
     assertThatThrownBy(() -> workflowService.deleteWorkflow(APP_ID, uuid))
         .isInstanceOf(WingsException.class)
-        .hasMessage(ErrorCode.INVALID_REQUEST.name());
+        .hasMessage(INVALID_REQUEST.name());
   }
 
   /**

@@ -3,6 +3,7 @@ package software.wings.beans.command;
 import static io.harness.data.structure.EmptyPredicate.isNotEmpty;
 import static java.util.Collections.emptyList;
 import static java.util.stream.Collectors.toList;
+import static software.wings.beans.ErrorCode.INVALID_REQUEST;
 import static software.wings.beans.InstanceUnitType.PERCENTAGE;
 import static software.wings.beans.ResizeStrategy.RESIZE_NEW_FIRST;
 
@@ -15,7 +16,6 @@ import org.mongodb.morphia.annotations.Transient;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import software.wings.api.ContainerServiceData;
-import software.wings.beans.ErrorCode;
 import software.wings.beans.Log.LogLevel;
 import software.wings.beans.SettingAttribute;
 import software.wings.beans.command.CommandExecutionResult.CommandExecutionStatus;
@@ -174,7 +174,7 @@ public abstract class ContainerResizeCommandUnit extends AbstractCommandUnit {
 
     String containerServiceName = contextData.resizeParams.getContainerServiceName();
     if (!previousDesiredCount.isPresent()) {
-      throw new WingsException(ErrorCode.INVALID_REQUEST)
+      throw new WingsException(INVALID_REQUEST)
           .addParam("message", "Service setup not done, service name: " + containerServiceName);
     }
 
@@ -194,7 +194,7 @@ public abstract class ContainerResizeCommandUnit extends AbstractCommandUnit {
       String msg = "Desired instance count must be greater than or equal to the current instance count: {current: "
           + previousCount + ", desired: " + desiredCount + "}";
       logger.error(msg);
-      throw new WingsException(ErrorCode.INVALID_REQUEST).addParam("message", msg);
+      throw new WingsException(INVALID_REQUEST).addParam("message", msg);
     }
 
     return ContainerServiceData.builder()

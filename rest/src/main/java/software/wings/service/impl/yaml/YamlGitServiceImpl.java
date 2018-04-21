@@ -6,6 +6,7 @@ import static io.harness.data.structure.UUIDGenerator.generateUuid;
 import static java.util.stream.Collectors.toList;
 import static software.wings.beans.Base.GLOBAL_APP_ID;
 import static software.wings.beans.DelegateTask.Builder.aDelegateTask;
+import static software.wings.beans.ErrorCode.INVALID_REQUEST;
 import static software.wings.beans.yaml.YamlConstants.GIT_YAML_LOG_PREFIX;
 import static software.wings.dl.PageRequest.PageRequestBuilder.aPageRequest;
 
@@ -175,8 +176,7 @@ public class YamlGitServiceImpl implements YamlGitService {
       if (gitCommandExecutionResponse.getGitCommandStatus().equals(GitCommandStatus.FAILURE)) {
         raiseAlertForGitFailure(gitConfig.getAccountId(), GLOBAL_APP_ID, ErrorCode.GIT_CONNECTION_ERROR,
             gitCommandExecutionResponse.getErrorMessage());
-        throw new WingsException(ErrorCode.INVALID_REQUEST)
-            .addParam("message", gitCommandExecutionResponse.getErrorMessage());
+        throw new WingsException(INVALID_REQUEST).addParam("message", gitCommandExecutionResponse.getErrorMessage());
       } else {
         closeAlertForGitFailureIfOpen(gitConfig.getAccountId(), GLOBAL_APP_ID, AlertType.GitConnectionError,
             GitConnectionErrorAlert.builder().accountId(gitConfig.getAccountId()).build());

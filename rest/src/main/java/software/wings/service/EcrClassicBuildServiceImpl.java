@@ -2,6 +2,7 @@ package software.wings.service;
 
 import static io.harness.network.Http.connectableHttpUrl;
 import static io.harness.network.Http.validUrl;
+import static software.wings.beans.ErrorCode.INVALID_REQUEST;
 import static software.wings.beans.artifact.ArtifactStreamType.ECR;
 import static software.wings.utils.Validator.equalCheck;
 
@@ -49,15 +50,13 @@ public class EcrClassicBuildServiceImpl implements EcrClassicBuildService {
   @Override
   public List<String> getArtifactPaths(
       String jobName, String groupId, EcrConfig config, List<EncryptedDataDetail> encryptionDetails) {
-    throw new WingsException(ErrorCode.INVALID_REQUEST)
-        .addParam("message", "Operation not supported by Docker Artifact Stream");
+    throw new WingsException(INVALID_REQUEST).addParam("message", "Operation not supported by Docker Artifact Stream");
   }
 
   @Override
   public BuildDetails getLastSuccessfulBuild(String appId, ArtifactStreamAttributes artifactStreamAttributes,
       EcrConfig ecrConfig, List<EncryptedDataDetail> encryptionDetails) {
-    throw new WingsException(ErrorCode.INVALID_REQUEST)
-        .addParam("message", "Operation not supported by Docker Artifact Stream");
+    throw new WingsException(INVALID_REQUEST).addParam("message", "Operation not supported by Docker Artifact Stream");
   }
 
   @Override
@@ -75,8 +74,7 @@ public class EcrClassicBuildServiceImpl implements EcrClassicBuildService {
 
   @Override
   public List<String> getGroupIds(String jobName, EcrConfig config, List<EncryptedDataDetail> encryptionDetails) {
-    throw new WingsException(ErrorCode.INVALID_REQUEST)
-        .addParam("message", "Operation not supported by Docker Artifact Stream");
+    throw new WingsException(INVALID_REQUEST).addParam("message", "Operation not supported by Docker Artifact Stream");
   }
 
   @Override

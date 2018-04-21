@@ -14,6 +14,7 @@ import static org.mockito.Mockito.when;
 import static org.mongodb.morphia.mapping.Mapper.ID_KEY;
 import static software.wings.beans.AwsInfrastructureMapping.Builder.anAwsInfrastructureMapping;
 import static software.wings.beans.Base.GLOBAL_ENV_ID;
+import static software.wings.beans.ErrorCode.INVALID_REQUEST;
 import static software.wings.beans.HostConnectionAttributes.ConnectionType.SSH;
 import static software.wings.beans.SettingAttribute.Builder.aSettingAttribute;
 import static software.wings.dl.PageRequest.PageRequestBuilder.aPageRequest;
@@ -230,7 +231,7 @@ public class SettingsServiceImplTest extends WingsBaseTest {
 
     assertThatThrownBy(() -> settingsService.delete(APP_ID, SETTING_ID))
         .isInstanceOf(WingsException.class)
-        .hasMessage(ErrorCode.INVALID_REQUEST.name());
+        .hasMessage(INVALID_REQUEST.name());
   }
 
   @Test
@@ -253,7 +254,7 @@ public class SettingsServiceImplTest extends WingsBaseTest {
                         .build());
     assertThatThrownBy(() -> settingsService.delete(APP_ID, SETTING_ID))
         .isInstanceOf(WingsException.class)
-        .hasMessage(ErrorCode.INVALID_REQUEST.name());
+        .hasMessage(INVALID_REQUEST.name());
   }
 
   /**

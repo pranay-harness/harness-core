@@ -18,6 +18,7 @@ import static software.wings.beans.AppContainer.Builder.anAppContainer;
 import static software.wings.beans.CanaryOrchestrationWorkflow.CanaryOrchestrationWorkflowBuilder.aCanaryOrchestrationWorkflow;
 import static software.wings.beans.ConfigFile.DEFAULT_TEMPLATE_ID;
 import static software.wings.beans.EntityVersion.Builder.anEntityVersion;
+import static software.wings.beans.ErrorCode.INVALID_REQUEST;
 import static software.wings.beans.Graph.Builder.aGraph;
 import static software.wings.beans.GraphNode.GraphNodeBuilder.aGraphNode;
 import static software.wings.beans.PhaseStep.PhaseStepBuilder.aPhaseStep;
@@ -73,7 +74,6 @@ import software.wings.beans.Application;
 import software.wings.beans.ConfigFile;
 import software.wings.beans.EntityType;
 import software.wings.beans.EntityVersion.ChangeType;
-import software.wings.beans.ErrorCode;
 import software.wings.beans.Graph;
 import software.wings.beans.LambdaSpecification;
 import software.wings.beans.LambdaSpecification.FunctionSpecification;
@@ -383,7 +383,7 @@ public class ServiceResourceServiceTest extends WingsBaseTest {
                         .build());
     assertThatThrownBy(() -> srs.delete(APP_ID, SERVICE_ID))
         .isInstanceOf(WingsException.class)
-        .hasMessage(ErrorCode.INVALID_REQUEST.name());
+        .hasMessage(INVALID_REQUEST.name());
     verify(wingsPersistence).get(Service.class, APP_ID, SERVICE_ID);
     verify(workflowService).listWorkflows(any(PageResponse.class));
   }
@@ -498,7 +498,7 @@ public class ServiceResourceServiceTest extends WingsBaseTest {
 
     assertThatThrownBy(() -> srs.delete(APP_ID, SERVICE_ID))
         .isInstanceOf(WingsException.class)
-        .hasMessage(ErrorCode.INVALID_REQUEST.name());
+        .hasMessage(INVALID_REQUEST.name());
 
     verify(wingsPersistence).get(Service.class, APP_ID, SERVICE_ID);
     verify(workflowService).listWorkflows(any(PageResponse.class));
@@ -1471,7 +1471,7 @@ public class ServiceResourceServiceTest extends WingsBaseTest {
                         .build());
     assertThatThrownBy(() -> srs.deleteCommand(APP_ID, SERVICE_ID, SERVICE_COMMAND_ID))
         .isInstanceOf(WingsException.class)
-        .hasMessage(ErrorCode.INVALID_REQUEST.name());
+        .hasMessage(INVALID_REQUEST.name());
     verify(wingsPersistence).get(Service.class, APP_ID, SERVICE_ID);
     verify(wingsPersistence).get(ServiceCommand.class, APP_ID, SERVICE_COMMAND_ID);
     verify(workflowService).listWorkflows(any(PageResponse.class));

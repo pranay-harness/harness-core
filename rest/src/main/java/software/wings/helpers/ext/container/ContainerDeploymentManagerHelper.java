@@ -2,6 +2,7 @@ package software.wings.helpers.ext.container;
 
 import static software.wings.api.HostElement.Builder.aHostElement;
 import static software.wings.api.InstanceElement.Builder.anInstanceElement;
+import static software.wings.beans.ErrorCode.INVALID_REQUEST;
 import static software.wings.beans.artifact.ArtifactStreamType.ACR;
 import static software.wings.beans.artifact.ArtifactStreamType.ARTIFACTORY;
 import static software.wings.beans.artifact.ArtifactStreamType.DOCKER;
@@ -23,7 +24,6 @@ import software.wings.beans.AwsConfig;
 import software.wings.beans.AzureConfig;
 import software.wings.beans.DockerConfig;
 import software.wings.beans.EcrConfig;
-import software.wings.beans.ErrorCode;
 import software.wings.beans.SettingAttribute;
 import software.wings.beans.artifact.AcrArtifactStream;
 import software.wings.beans.artifact.Artifact;
@@ -201,7 +201,7 @@ public class ContainerDeploymentManagerHelper {
           .username(nexusConfig.getUsername())
           .password(new String(nexusConfig.getPassword()));
     } else {
-      throw new WingsException(ErrorCode.INVALID_REQUEST)
+      throw new WingsException(INVALID_REQUEST)
           .addParam(
               "message", artifactStream.getArtifactStreamType() + " artifact source can't be used for containers");
     }
