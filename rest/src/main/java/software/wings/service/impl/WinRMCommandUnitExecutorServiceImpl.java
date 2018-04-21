@@ -7,6 +7,7 @@ import static software.wings.beans.Log.LogLevel.INFO;
 import static software.wings.beans.command.CommandExecutionResult.CommandExecutionStatus.FAILURE;
 import static software.wings.beans.command.CommandExecutionResult.CommandExecutionStatus.RUNNING;
 import static software.wings.beans.command.CommandExecutionResult.CommandExecutionStatus.SUCCESS;
+import static software.wings.exception.WingsException.ReportTarget.REST_API;
 
 import com.google.common.util.concurrent.TimeLimiter;
 import com.google.common.util.concurrent.UncheckedTimeoutException;
@@ -28,7 +29,6 @@ import software.wings.core.winrm.executors.WinRmExecutorFactory;
 import software.wings.core.winrm.executors.WinRmSessionConfig;
 import software.wings.delegatetasks.DelegateLogService;
 import software.wings.exception.WingsException;
-import software.wings.exception.WingsException.ReportTarget;
 import software.wings.service.intfc.CommandUnitExecutorService;
 import software.wings.utils.Misc;
 
@@ -121,7 +121,7 @@ public class WinRMCommandUnitExecutorServiceImpl implements CommandUnitExecutorS
         throw new WingsException(ErrorCode.UNKNOWN_ERROR, "", e);
       }
     } catch (WingsException e) {
-      final List<ResponseMessage> messageList = e.getResponseMessageList(ReportTarget.USER);
+      final List<ResponseMessage> messageList = e.getResponseMessageList(REST_API);
       if (!messageList.isEmpty()) {
         if (messageList.get(0).getCode() == ErrorCode.INVALID_KEY
             || messageList.get(0).getCode() == ErrorCode.INVALID_CREDENTIAL) {

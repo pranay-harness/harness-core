@@ -18,7 +18,7 @@ import static software.wings.beans.artifact.ArtifactStreamType.ECR;
 import static software.wings.beans.artifact.ArtifactStreamType.GCR;
 import static software.wings.beans.artifact.ArtifactStreamType.NEXUS;
 import static software.wings.common.Constants.BUILD_NO;
-import static software.wings.exception.WingsException.ReportTarget.USER;
+import static software.wings.exception.WingsException.USER;
 import static software.wings.service.impl.artifact.ArtifactCollectionUtil.getArtifact;
 
 import com.google.inject.Inject;

@@ -6,6 +6,7 @@ import static software.wings.beans.SearchFilter.Operator.EQ;
 import static software.wings.beans.security.access.WhitelistStatus.ACTIVE;
 import static software.wings.dl.MongoHelper.setUnset;
 import static software.wings.dl.PageRequest.PageRequestBuilder.aPageRequest;
+import static software.wings.exception.WingsException.USER;
 
 import com.google.inject.Inject;
 import com.google.inject.Singleton;
@@ -67,13 +68,13 @@ public class WhitelistServiceImpl implements WhitelistService {
       } catch (IllegalArgumentException ex) {
         String msg = "Invalid cidr notation : " + filterCondition;
         logger.warn(msg);
-        throw new WingsException(ErrorCode.GENERAL_ERROR, WingsException.HARMLESS).addParam("args", msg);
+        throw new WingsException(ErrorCode.GENERAL_ERROR, USER).addParam("args", msg);
       }
     } else {
       if (!InetAddressValidator.getInstance().isValid(filterCondition)) {
         String msg = "Invalid ip address : " + filterCondition;
         logger.warn(msg);
-        throw new WingsException(ErrorCode.GENERAL_ERROR, WingsException.HARMLESS).addParam("args", msg);
+        throw new WingsException(ErrorCode.GENERAL_ERROR, USER).addParam("args", msg);
       }
     }
   }

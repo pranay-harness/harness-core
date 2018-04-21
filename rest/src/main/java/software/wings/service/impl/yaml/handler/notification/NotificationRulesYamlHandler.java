@@ -4,7 +4,7 @@ import static io.harness.data.structure.EmptyPredicate.isNotEmpty;
 import static io.harness.data.structure.UUIDGenerator.generateUuid;
 import static java.util.stream.Collectors.toList;
 import static software.wings.beans.NotificationGroup.NotificationGroupBuilder.aNotificationGroup;
-import static software.wings.exception.WingsException.HARMLESS;
+import static software.wings.exception.WingsException.USER;
 import static software.wings.utils.Validator.notNullCheck;
 
 import com.google.common.collect.Lists;
@@ -48,8 +48,8 @@ public class NotificationRulesYamlHandler extends BaseYamlHandler<NotificationRu
               .map(notificationGroupName -> {
                 NotificationGroup notificationGroup =
                     notificationSetupService.readNotificationGroupByName(accountId, notificationGroupName);
-                notNullCheck("Invalid notification group for the given name: " + notificationGroupName,
-                    notificationGroup, HARMLESS);
+                notNullCheck(
+                    "Invalid notification group for the given name: " + notificationGroupName, notificationGroup, USER);
                 // We only store couple of fields in workflow when created from the normal ui.
                 // Sticking to the same approach.
                 return aNotificationGroup()
@@ -85,7 +85,7 @@ public class NotificationRulesYamlHandler extends BaseYamlHandler<NotificationRu
               NotificationGroup notificationGroupFromDB = notificationSetupService.readNotificationGroup(
                   notificationGroup.getAccountId(), notificationGroup.getUuid());
               notNullCheck("Invalid notification group for the given id: " + notificationGroup.getUuid(),
-                  notificationGroupFromDB, HARMLESS);
+                  notificationGroupFromDB, USER);
               return notificationGroupFromDB.getName();
             })
             .collect(toList());

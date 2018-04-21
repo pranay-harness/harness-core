@@ -1,6 +1,6 @@
 package software.wings.service.impl.yaml.handler.artifactstream;
 
-import static software.wings.exception.WingsException.HARMLESS;
+import static software.wings.exception.WingsException.USER;
 import static software.wings.utils.Validator.notNullCheck;
 
 import com.google.inject.Inject;
@@ -28,18 +28,18 @@ public abstract class ArtifactStreamYamlHandler<Y extends Yaml, B extends Artifa
 
   protected String getSettingId(String accountId, String appId, String settingName) {
     SettingAttribute settingAttribute = settingsService.getByName(accountId, appId, settingName);
-    notNullCheck("Invalid SettingAttribute:" + settingName, settingAttribute, HARMLESS);
+    notNullCheck("Invalid SettingAttribute:" + settingName, settingAttribute, USER);
     return settingAttribute.getUuid();
   }
 
   protected String getSettingName(String settingId) {
     SettingAttribute settingAttribute = settingsService.get(settingId);
-    notNullCheck("SettingAttribute can't be found for Id:" + settingId, settingAttribute, HARMLESS);
+    notNullCheck("SettingAttribute can't be found for Id:" + settingId, settingAttribute, USER);
     return settingAttribute.getName();
   }
 
   protected B getArtifactStream(String accountId, String yamlFilePath) {
-    notNullCheck("Yaml file path is null", yamlFilePath, HARMLESS);
+    notNullCheck("Yaml file path is null", yamlFilePath, USER);
     return (B) yamlHelper.getArtifactStream(accountId, yamlFilePath);
   }
 
@@ -53,7 +53,7 @@ public abstract class ArtifactStreamYamlHandler<Y extends Yaml, B extends Artifa
     String yamlFilePath = changeContext.getChange().getFilePath();
     String accountId = changeContext.getChange().getAccountId();
     String appId = yamlHelper.getAppId(accountId, yamlFilePath);
-    notNullCheck("Application can't be found for yaml file:" + yamlFilePath, appId, HARMLESS);
+    notNullCheck("Application can't be found for yaml file:" + yamlFilePath, appId, USER);
     ArtifactStream artifactStream = yamlHelper.getArtifactStream(accountId, yamlFilePath);
     if (artifactStream != null) {
       artifactStreamService.delete(appId, artifactStream.getUuid());

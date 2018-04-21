@@ -1,7 +1,7 @@
 package software.wings.service.impl;
 
 import static software.wings.beans.ErrorCode.INVALID_REQUEST;
-import static software.wings.exception.WingsException.ReportTarget.USER;
+import static software.wings.exception.WingsException.USER;
 import static software.wings.utils.Validator.equalCheck;
 
 import com.google.common.collect.Lists;

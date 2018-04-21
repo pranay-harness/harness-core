@@ -3,7 +3,7 @@ package software.wings.service.impl.yaml.handler.configfile;
 import static io.harness.data.structure.EmptyPredicate.isEmpty;
 import static io.harness.data.structure.EmptyPredicate.isNotEmpty;
 import static software.wings.beans.yaml.YamlConstants.PATH_DELIMITER;
-import static software.wings.exception.WingsException.HARMLESS;
+import static software.wings.exception.WingsException.USER;
 import static software.wings.utils.Validator.notNullCheck;
 
 import com.google.inject.Inject;
@@ -50,9 +50,9 @@ public class ConfigFileOverrideYamlHandler extends BaseYamlHandler<OverrideYaml,
     String accountId = changeContext.getChange().getAccountId();
     String yamlFilePath = changeContext.getChange().getFilePath();
     String appId = yamlHelper.getAppId(accountId, yamlFilePath);
-    notNullCheck("Invalid Application for the yaml file:" + yamlFilePath, appId, HARMLESS);
+    notNullCheck("Invalid Application for the yaml file:" + yamlFilePath, appId, USER);
     String envId = yamlHelper.getServiceId(appId, yamlFilePath);
-    notNullCheck("Invalid Environment for the yaml file:" + yamlFilePath, envId, HARMLESS);
+    notNullCheck("Invalid Environment for the yaml file:" + yamlFilePath, envId, USER);
     OverrideYaml yaml = changeContext.getYaml();
     String targetFilePath = yaml.getTargetFilePath();
     configService.delete(appId, envId, EntityType.ENVIRONMENT, targetFilePath);
@@ -75,10 +75,10 @@ public class ConfigFileOverrideYamlHandler extends BaseYamlHandler<OverrideYaml,
     String serviceName = null;
     if (EntityType.SERVICE_TEMPLATE.equals(bean.getEntityType())) {
       ServiceTemplate serviceTemplate = serviceTemplateService.get(appId, bean.getTemplateId());
-      notNullCheck("Service template is null for the given id:" + bean.getTemplateId(), serviceTemplate, HARMLESS);
+      notNullCheck("Service template is null for the given id:" + bean.getTemplateId(), serviceTemplate, USER);
       String serviceId = serviceTemplate.getServiceId();
       Service service = serviceResourceService.get(appId, serviceId);
-      notNullCheck("Service is null for the given id:" + serviceId, service, HARMLESS);
+      notNullCheck("Service is null for the given id:" + serviceId, service, USER);
       serviceName = service.getName();
     } else {
       if (!EntityType.ENVIRONMENT.equals(bean.getEntityType())) {
@@ -103,9 +103,9 @@ public class ConfigFileOverrideYamlHandler extends BaseYamlHandler<OverrideYaml,
     String accountId = changeContext.getChange().getAccountId();
     String yamlFilePath = changeContext.getChange().getFilePath();
     String appId = yamlHelper.getAppId(accountId, yamlFilePath);
-    notNullCheck("Invalid Application for the yaml file:" + yamlFilePath, appId, HARMLESS);
+    notNullCheck("Invalid Application for the yaml file:" + yamlFilePath, appId, USER);
     String envId = yamlHelper.getEnvironmentId(appId, yamlFilePath);
-    notNullCheck("Invalid Environment for the yaml file:" + yamlFilePath, envId, HARMLESS);
+    notNullCheck("Invalid Environment for the yaml file:" + yamlFilePath, envId, USER);
     String configFileName = yamlHelper.getNameFromYamlFilePath(yamlFilePath);
 
     OverrideYaml yaml = changeContext.getYaml();
@@ -204,9 +204,9 @@ public class ConfigFileOverrideYamlHandler extends BaseYamlHandler<OverrideYaml,
   @Override
   public ConfigFile get(String accountId, String yamlFilePath) {
     String appId = yamlHelper.getAppId(accountId, yamlFilePath);
-    notNullCheck("Invalid Application for the yaml file:" + yamlFilePath, appId, HARMLESS);
+    notNullCheck("Invalid Application for the yaml file:" + yamlFilePath, appId, USER);
     String envId = yamlHelper.getEnvironmentId(appId, yamlFilePath);
-    notNullCheck("Invalid Environment for the yaml file:" + yamlFilePath, envId, HARMLESS);
+    notNullCheck("Invalid Environment for the yaml file:" + yamlFilePath, envId, USER);
     String relativeFilePath = yamlHelper.getNameFromYamlFilePath(yamlFilePath);
     return configService.get(appId, envId, EntityType.ENVIRONMENT, relativeFilePath);
   }

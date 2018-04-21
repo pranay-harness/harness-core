@@ -2,8 +2,8 @@ package software.wings.security.authentication;
 
 import static software.wings.beans.ErrorCode.INVALID_TOKEN;
 import static software.wings.beans.ErrorCode.USER_DOES_NOT_EXIST;
-import static software.wings.exception.WingsException.ALERTING;
-import static software.wings.exception.WingsException.HARMLESS;
+import static software.wings.exception.WingsException.USER;
+import static software.wings.exception.WingsException.USER_ADMIN;
 
 import com.google.inject.Inject;
 import com.google.inject.Singleton;
@@ -71,7 +71,8 @@ public class AuthenticationManager {
   }
 
   public LoginTypeResponse getLoginTypeResponse(String userName) {
-    User user = authenticationUtil.getUser(userName, HARMLESS);
+    User user = authenticationUtil.getUser(userName, USER);
+
     AuthenticationMechanism authenticationMechanism = getAuthenticationMechanism(user);
 
     LoginTypeResponseBuilder builder = LoginTypeResponse.builder();
@@ -137,7 +138,7 @@ public class AuthenticationManager {
 
   public String extractToken(String authorizationHeader, String prefix) {
     if (authorizationHeader == null || !authorizationHeader.startsWith(prefix)) {
-      throw new WingsException(INVALID_TOKEN, ALERTING);
+      throw new WingsException(INVALID_TOKEN, USER_ADMIN);
     }
     return authorizationHeader.substring(prefix.length()).trim();
   }

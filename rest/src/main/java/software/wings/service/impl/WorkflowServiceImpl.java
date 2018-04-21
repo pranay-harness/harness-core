@@ -59,8 +59,8 @@ import static software.wings.common.Constants.WORKFLOW_INFRAMAPPING_VALIDATION_M
 import static software.wings.dl.MongoHelper.setUnset;
 import static software.wings.dl.PageRequest.PageRequestBuilder.aPageRequest;
 import static software.wings.exception.HintException.MOVE_TO_THE_PARENT_OBJECT;
-import static software.wings.exception.WingsException.ReportTarget.USER;
-import static software.wings.exception.WingsException.SERIOUS;
+import static software.wings.exception.WingsException.USER;
+import static software.wings.exception.WingsException.USER_SRE;
 import static software.wings.sm.StateMachineExecutionSimulator.populateRequiredEntityTypesByAccessType;
 import static software.wings.sm.StateType.ARTIFACT_CHECK;
 import static software.wings.sm.StateType.ARTIFACT_COLLECTION;
@@ -312,7 +312,7 @@ public class WorkflowServiceImpl implements WorkflowService, DataProvider {
     if (filterForWorkflow) {
       workflow = readWorkflow(appId, workflowId);
       if (workflow == null) {
-        throw new InvalidRequestException("Worflow does not exist");
+        throw new InvalidRequestException("Worflow does not exist", USER);
       }
       if (filterForPhase) {
         if (workflow != null) {
@@ -322,7 +322,8 @@ public class WorkflowServiceImpl implements WorkflowService, DataProvider {
           }
         }
         if (workflowPhase == null) {
-          throw new InvalidRequestException("Worflow Phase  not associated with Workflow [" + workflow.getName() + "]");
+          throw new InvalidRequestException(
+              "Worflow Phase  not associated with Workflow [" + workflow.getName() + "]", USER);
         }
         String serviceId = workflowPhase.getServiceId();
         if (serviceId != null) {
@@ -391,7 +392,7 @@ public class WorkflowServiceImpl implements WorkflowService, DataProvider {
     Map<StateTypeScope, List<StateTypeDescriptor>> mapByScope = new HashMap<>();
     for (StateTypeDescriptor sd : stencils) {
       if (mapByType.get(sd.getType()) != null) {
-        throw new InvalidRequestException("Duplicate implementation for the stencil: " + sd.getType());
+        throw new InvalidRequestException("Duplicate implementation for the stencil: " + sd.getType(), USER);
       }
       mapByType.put(sd.getType(), sd);
       sd.getScopes().forEach(scope -> mapByScope.computeIfAbsent(scope, k -> new ArrayList<>()).add(sd));
@@ -1720,7 +1721,7 @@ public class WorkflowServiceImpl implements WorkflowService, DataProvider {
   public WorkflowPhase updateWorkflowPhase(String appId, String workflowId, WorkflowPhase workflowPhase) {
     if (workflowPhase.isRollback() || workflowPhase.getPhaseSteps().stream().anyMatch(PhaseStep::isRollback)) {
       // This might seem as user error, but since this is controlled from the our UI lets get allerted for it
-      throw new InvalidRequestException("The direct workflow phase should not have rollback flag set!", SERIOUS);
+      throw new InvalidRequestException("The direct workflow phase should not have rollback flag set!", USER_SRE);
     }
 
     Workflow workflow = readWorkflow(appId, workflowId);
@@ -1839,7 +1840,7 @@ public class WorkflowServiceImpl implements WorkflowService, DataProvider {
     if (!rollbackWorkflowPhase.isRollback()
         || rollbackWorkflowPhase.getPhaseSteps().stream().anyMatch(step -> !step.isRollback())) {
       // This might seem as user error, but since this is controlled from the our UI lets get allerted for it
-      throw new InvalidRequestException("The rolback workflow phase should have rollback flag set!", SERIOUS);
+      throw new InvalidRequestException("The rolback workflow phase should have rollback flag set!", USER_SRE);
     }
 
     Workflow workflow = readWorkflow(appId, workflowId);

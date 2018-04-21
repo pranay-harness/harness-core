@@ -12,6 +12,7 @@ import static software.wings.beans.yaml.Change.ChangeType.MODIFY;
 import static software.wings.beans.yaml.Change.ChangeType.RENAME;
 import static software.wings.beans.yaml.YamlConstants.GIT_TERRAFORM_LOG_PREFIX;
 import static software.wings.beans.yaml.YamlConstants.GIT_YAML_LOG_PREFIX;
+import static software.wings.exception.WingsException.USER_ADMIN;
 
 import com.jcraft.jsch.JSch;
 import com.jcraft.jsch.JSchException;
@@ -542,7 +543,7 @@ public class GitClientImpl implements GitClient {
     // TransportException is subclass of GitAPIException. This is thrown when there is any issue in connecting to git
     // repo, like invalid authorization and invalid repo
     if (ex.getCause() instanceof TransportException) {
-      throw new WingsException(ErrorCode.GIT_CONNECTION_ERROR + ":" + ex.getMessage(), WingsException.ALERTING)
+      throw new WingsException(ErrorCode.GIT_CONNECTION_ERROR + ":" + ex.getMessage(), USER_ADMIN)
           .addParam(ErrorCode.GIT_CONNECTION_ERROR.name(), ErrorCode.GIT_CONNECTION_ERROR);
     }
   }

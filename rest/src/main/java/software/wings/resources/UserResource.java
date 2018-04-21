@@ -4,6 +4,7 @@ import static com.google.common.collect.ImmutableMap.of;
 import static io.harness.data.structure.EmptyPredicate.isNotEmpty;
 import static software.wings.beans.Base.GLOBAL_APP_ID;
 import static software.wings.beans.ErrorCode.INVALID_REQUEST;
+import static software.wings.exception.WingsException.ReportTarget.REST_API;
 
 import com.google.inject.Inject;
 
@@ -23,7 +24,6 @@ import software.wings.beans.ZendeskSsoLoginResponse;
 import software.wings.dl.PageRequest;
 import software.wings.dl.PageResponse;
 import software.wings.exception.WingsException;
-import software.wings.exception.WingsException.ReportTarget;
 import software.wings.security.PermissionAttribute.PermissionType;
 import software.wings.security.PermissionAttribute.ResourceType;
 import software.wings.security.UserPermissionInfo;
@@ -454,7 +454,7 @@ public class UserResource {
     } catch (WingsException e) {
       return RestResponse.Builder.aRestResponse()
           .withResource(false)
-          .withResponseMessages(e.getResponseMessageList(ReportTarget.USER))
+          .withResponseMessages(e.getResponseMessageList(REST_API))
           .build();
     }
     return new RestResponse<>(true);

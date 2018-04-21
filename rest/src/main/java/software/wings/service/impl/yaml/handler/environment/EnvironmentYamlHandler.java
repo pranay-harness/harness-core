@@ -4,7 +4,7 @@ import static io.harness.data.structure.EmptyPredicate.isEmpty;
 import static java.util.Collections.emptyList;
 import static java.util.stream.Collectors.toList;
 import static software.wings.beans.EntityType.SERVICE_TEMPLATE;
-import static software.wings.exception.WingsException.HARMLESS;
+import static software.wings.exception.WingsException.USER;
 import static software.wings.utils.Validator.notNullCheck;
 
 import com.google.common.collect.Lists;
@@ -123,16 +123,16 @@ public class EnvironmentYamlHandler extends BaseYamlHandler<Environment.Yaml, En
                   serviceVariableService.get(serviceVariable.getAppId(), parentServiceVariableId);
               String serviceId = parentServiceVariable.getEntityId();
               Service service = serviceResourceService.get(serviceVariable.getAppId(), serviceId);
-              notNullCheck("Service not found for id: " + serviceId, service, HARMLESS);
+              notNullCheck("Service not found for id: " + serviceId, service, USER);
               parentServiceName = service.getName();
             } else {
               ServiceTemplate serviceTemplate =
                   serviceTemplateService.get(serviceVariable.getAppId(), serviceVariable.getEntityId());
               notNullCheck(
-                  "Service template not found for id: " + serviceVariable.getEntityId(), serviceTemplate, HARMLESS);
+                  "Service template not found for id: " + serviceVariable.getEntityId(), serviceTemplate, USER);
               String serviceId = serviceTemplate.getServiceId();
               Service service = serviceResourceService.get(serviceVariable.getAppId(), serviceId);
-              notNullCheck("Service not found for id: " + serviceId, service, HARMLESS);
+              notNullCheck("Service not found for id: " + serviceId, service, USER);
               parentServiceName = service.getName();
             }
           } else {
@@ -154,7 +154,7 @@ public class EnvironmentYamlHandler extends BaseYamlHandler<Environment.Yaml, En
       throws HarnessException {
     String appId =
         yamlHelper.getAppId(changeContext.getChange().getAccountId(), changeContext.getChange().getFilePath());
-    notNullCheck("appId null for given yaml file:" + changeContext.getChange().getFilePath(), appId, HARMLESS);
+    notNullCheck("appId null for given yaml file:" + changeContext.getChange().getFilePath(), appId, USER);
     Yaml yaml = changeContext.getYaml();
     String environmentName = yamlHelper.getEnvironmentName(changeContext.getChange().getFilePath());
     Environment current = Builder.anEnvironment()
@@ -193,7 +193,7 @@ public class EnvironmentYamlHandler extends BaseYamlHandler<Environment.Yaml, En
   @Override
   public Environment get(String accountId, String yamlFilePath) {
     String appId = yamlHelper.getAppId(accountId, yamlFilePath);
-    notNullCheck("appId null for given yaml file:" + yamlFilePath, appId, HARMLESS);
+    notNullCheck("appId null for given yaml file:" + yamlFilePath, appId, USER);
     return yamlHelper.getEnvironment(appId, yamlFilePath);
   }
 
@@ -288,8 +288,7 @@ public class EnvironmentYamlHandler extends BaseYamlHandler<Environment.Yaml, En
 
   private ServiceVariable createNewVariableOverride(String appId, String envId, VariableOverrideYaml overrideYaml)
       throws HarnessException {
-    notNullCheck(
-        "Value type is not set for variable: " + overrideYaml.getName(), overrideYaml.getValueType(), HARMLESS);
+    notNullCheck("Value type is not set for variable: " + overrideYaml.getName(), overrideYaml.getValueType(), USER);
 
     ServiceVariableBuilder variableBuilder = ServiceVariable.builder().name(overrideYaml.getName());
     if (overrideYaml.getServiceName() == null) {
@@ -299,7 +298,7 @@ public class EnvironmentYamlHandler extends BaseYamlHandler<Environment.Yaml, En
     } else {
       String parentServiceName = overrideYaml.getServiceName();
       Service service = serviceResourceService.getServiceByName(appId, parentServiceName);
-      notNullCheck("No service found for given name: " + parentServiceName, service, HARMLESS);
+      notNullCheck("No service found for given name: " + parentServiceName, service, USER);
       List<Key<ServiceTemplate>> templateRefKeysByService =
           serviceTemplateService.getTemplateRefKeysByService(appId, service.getUuid(), envId);
       if (isEmpty(templateRefKeysByService)) {

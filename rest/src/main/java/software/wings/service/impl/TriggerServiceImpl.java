@@ -25,8 +25,8 @@ import static software.wings.beans.trigger.TriggerConditionType.PIPELINE_COMPLET
 import static software.wings.beans.trigger.TriggerConditionType.SCHEDULED;
 import static software.wings.beans.trigger.TriggerConditionType.WEBHOOK;
 import static software.wings.dl.PageRequest.PageRequestBuilder.aPageRequest;
-import static software.wings.exception.WingsException.ALERTING;
-import static software.wings.exception.WingsException.ReportTarget.USER;
+import static software.wings.exception.WingsException.USER;
+import static software.wings.exception.WingsException.USER_ADMIN;
 import static software.wings.sm.ExecutionStatus.SUCCESS;
 import static software.wings.sm.StateType.ENV_STATE;
 import static software.wings.utils.Validator.duplicateCheck;
@@ -382,7 +382,7 @@ public class TriggerServiceImpl implements TriggerService {
                           .findFirst()
                           .orElse(null);
     if (trigger == null) {
-      throw new WingsException("Trigger does not exist or Invalid WebHook token", ALERTING);
+      throw new WingsException("Trigger does not exist or Invalid WebHook token", USER_ADMIN);
     }
     return trigger;
   }
@@ -403,7 +403,7 @@ public class TriggerServiceImpl implements TriggerService {
         logger.warn("Error occurred while retrieving Pipeline {} ", trigger.getWorkflowId());
       }
       if (workflow == null) {
-        throw new WingsException("Workflow " + trigger.getWorkflowName() + " does not exist.", ALERTING);
+        throw new WingsException("Workflow " + trigger.getWorkflowName() + " does not exist.", USER_ADMIN);
       }
       if (!BUILD.equals(workflow.getOrchestrationWorkflow().getOrchestrationWorkflowType())) {
         if (workflow.getOrchestrationWorkflow().isServiceTemplatized()) {
@@ -421,7 +421,7 @@ public class TriggerServiceImpl implements TriggerService {
         logger.warn("Error occurred while retrieving Pipeline {} ", trigger.getWorkflowId());
       }
       if (pipeline == null) {
-        throw new WingsException("Pipeline " + trigger.getWorkflowName() + " does not exist.", ALERTING);
+        throw new WingsException("Pipeline " + trigger.getWorkflowName() + " does not exist.", USER_ADMIN);
       }
       services = pipeline.getServices().stream().collect(Collectors.toMap(Base::getUuid, Service::getName));
     }
@@ -840,7 +840,7 @@ public class TriggerServiceImpl implements TriggerService {
     logger.info("Received the trigger execution for appId {} and infraMappingId {}", appId, infraMappingId);
     InfrastructureMapping infrastructureMapping = infrastructureMappingService.get(appId, infraMappingId);
     if (infrastructureMapping == null) {
-      throw new WingsException(INVALID_REQUEST, ALERTING)
+      throw new WingsException(INVALID_REQUEST, USER_ADMIN)
           .addParam("message", "Infrastructure Mapping" + infraMappingId + " does not exist");
     }
     List<Trigger> triggers =

@@ -8,7 +8,7 @@ import static org.mockito.Mockito.never;
 import static software.wings.beans.ErrorCode.DEFAULT_ERROR_CODE;
 import static software.wings.beans.ErrorCode.INVALID_ARTIFACT_SOURCE;
 import static software.wings.beans.ResponseMessage.aResponseMessage;
-import static software.wings.exception.WingsException.HARMLESS;
+import static software.wings.exception.WingsException.USER;
 
 import io.harness.CategoryTest;
 import org.junit.Test;
@@ -72,7 +72,7 @@ public class WingsExceptionMapperTest extends CategoryTest {
 
   @Test
   public void shouldNotLogHarmless() {
-    final WingsException exception = new WingsException(DEFAULT_ERROR_CODE, HARMLESS);
+    final WingsException exception = new WingsException(DEFAULT_ERROR_CODE, USER);
     final WingsExceptionMapper mapper = new WingsExceptionMapper();
 
     Logger mockLogger = mock(Logger.class);

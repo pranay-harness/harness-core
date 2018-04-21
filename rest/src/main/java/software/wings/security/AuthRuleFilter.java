@@ -12,7 +12,7 @@ import static software.wings.beans.ErrorCode.ACCESS_DENIED;
 import static software.wings.beans.ErrorCode.INVALID_ARGUMENT;
 import static software.wings.beans.ErrorCode.INVALID_REQUEST;
 import static software.wings.beans.ErrorCode.NOT_WHITELISTED_IP;
-import static software.wings.exception.WingsException.HARMLESS;
+import static software.wings.exception.WingsException.USER;
 
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.Lists;
@@ -169,7 +169,7 @@ public class AuthRuleFilter implements ContainerRequestFilter {
                .filter(account -> account.getUuid().equals(accountIdFinal))
                .findFirst()
                .isPresent()) {
-        throw new WingsException(INVALID_REQUEST, HARMLESS)
+        throw new WingsException(INVALID_REQUEST, USER)
             .addParam("message", "User not authorized to access the given account: " + accountIdFinal);
       }
     }
@@ -179,7 +179,7 @@ public class AuthRuleFilter implements ContainerRequestFilter {
       if (!whitelistService.isValidIPAddress(accountId, remoteHost)) {
         String msg = "Current IP Address (" + remoteHost + ") is not whitelisted.";
         logger.warn(msg);
-        throw new WingsException(NOT_WHITELISTED_IP, HARMLESS).addParam("args", msg);
+        throw new WingsException(NOT_WHITELISTED_IP, USER).addParam("args", msg);
       }
     }
 
@@ -208,7 +208,7 @@ public class AuthRuleFilter implements ContainerRequestFilter {
 
       if (isEmpty(requiredPermissionAttributes)) {
         logger.error("Requested Resource is not authorized: {}", requestContext.getUriInfo().getPath());
-        throw new WingsException(ACCESS_DENIED, HARMLESS);
+        throw new WingsException(ACCESS_DENIED, USER);
       }
     }
 
@@ -218,9 +218,9 @@ public class AuthRuleFilter implements ContainerRequestFilter {
 
     if (accountId == null) {
       if (emptyAppIdsInReq) {
-        throw new WingsException(INVALID_REQUEST, HARMLESS).addParam("message", "appId not specified");
+        throw new WingsException(INVALID_REQUEST, USER).addParam("message", "appId not specified");
       }
-      throw new WingsException(INVALID_REQUEST, HARMLESS).addParam("message", "accountId not specified");
+      throw new WingsException(INVALID_REQUEST, USER).addParam("message", "accountId not specified");
     }
 
     if (rbacEnabledForAccount) {
@@ -235,23 +235,23 @@ public class AuthRuleFilter implements ContainerRequestFilter {
         if (accountLevelPermissions) {
           UserPermissionInfo userPermissionInfo = userRequestContext.getUserPermissionInfo();
           if (userPermissionInfo == null) {
-            throw new WingsException(INVALID_REQUEST, HARMLESS).addParam("message", "User not authorized");
+            throw new WingsException(INVALID_REQUEST, USER).addParam("message", "User not authorized");
           }
 
           AccountPermissionSummary accountPermissionSummary = userPermissionInfo.getAccountPermissionSummary();
           if (accountPermissionSummary == null) {
-            throw new WingsException(INVALID_REQUEST, HARMLESS).addParam("message", "User not authorized");
+            throw new WingsException(INVALID_REQUEST, USER).addParam("message", "User not authorized");
           }
 
           Set<PermissionType> accountPermissions = accountPermissionSummary.getPermissions();
           if (accountPermissions == null) {
-            throw new WingsException(INVALID_REQUEST, HARMLESS).addParam("message", "User not authorized");
+            throw new WingsException(INVALID_REQUEST, USER).addParam("message", "User not authorized");
           }
 
           if (isAuthorized(requiredPermissionAttributes, accountPermissions)) {
             return;
           } else {
-            throw new WingsException(INVALID_REQUEST, HARMLESS).addParam("message", "User not authorized");
+            throw new WingsException(INVALID_REQUEST, USER).addParam("message", "User not authorized");
           }
         } else {
           // Handle delete and update methods
@@ -379,7 +379,7 @@ public class AuthRuleFilter implements ContainerRequestFilter {
         if (!invalidAppIdList.isEmpty()) {
           String msg = "The appIds from request %s do not belong to the given account :" + accountId;
           String formattedMsg = String.format(msg, (Object[]) invalidAppIdList.toArray());
-          throw new WingsException(INVALID_ARGUMENT, HARMLESS).addParam("args", formattedMsg);
+          throw new WingsException(INVALID_ARGUMENT, USER).addParam("args", formattedMsg);
         }
       }
     }

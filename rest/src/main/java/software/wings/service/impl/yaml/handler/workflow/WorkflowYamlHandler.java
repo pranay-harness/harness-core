@@ -2,7 +2,7 @@ package software.wings.service.impl.yaml.handler.workflow;
 
 import static java.util.stream.Collectors.toList;
 import static org.apache.commons.lang3.StringUtils.isNotBlank;
-import static software.wings.exception.WingsException.HARMLESS;
+import static software.wings.exception.WingsException.USER;
 import static software.wings.utils.Validator.notNullCheck;
 
 import com.google.common.collect.Lists;
@@ -84,7 +84,7 @@ public abstract class WorkflowYamlHandler<Y extends WorkflowYaml> extends BaseYa
     Change change = changeContext.getChange();
 
     String appId = yamlHelper.getAppId(change.getAccountId(), change.getFilePath());
-    notNullCheck("Could not locate app info in file path:" + change.getFilePath(), appId, HARMLESS);
+    notNullCheck("Could not locate app info in file path:" + change.getFilePath(), appId, USER);
 
     // Environment can be null in cloned workflows
     Environment environment = environmentService.getEnvironmentByName(appId, yaml.getEnvName());

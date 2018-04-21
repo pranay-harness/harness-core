@@ -31,7 +31,7 @@ import static software.wings.beans.alert.NoEligibleDelegatesAlert.NoEligibleDele
 import static software.wings.common.NotificationMessageResolver.NotificationMessageType.DELEGATE_STATE_NOTIFICATION;
 import static software.wings.dl.MongoHelper.setUnset;
 import static software.wings.dl.PageRequest.PageRequestBuilder.aPageRequest;
-import static software.wings.exception.WingsException.ALERTING;
+import static software.wings.exception.WingsException.USER_ADMIN;
 
 import com.google.common.base.Joiner;
 import com.google.common.collect.ImmutableMap;
@@ -545,7 +545,7 @@ public class DelegateServiceImpl implements DelegateService {
   public <T extends NotifyResponseData> T executeTask(DelegateTask task) {
     List<String> eligibleDelegateIds = ensureDelegateAvailableToExecuteTask(task);
     if (isEmpty(eligibleDelegateIds)) {
-      throw new WingsException(UNAVAILABLE_DELEGATES, ALERTING);
+      throw new WingsException(UNAVAILABLE_DELEGATES, USER_ADMIN);
     }
     task.setAsync(false);
     DelegateTask delegateTask = wingsPersistence.saveAndGet(DelegateTask.class, task);

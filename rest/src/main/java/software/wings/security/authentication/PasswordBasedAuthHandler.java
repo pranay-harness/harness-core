@@ -5,7 +5,7 @@ import static software.wings.beans.ErrorCode.EMAIL_NOT_VERIFIED;
 import static software.wings.beans.ErrorCode.INVALID_ARGUMENT;
 import static software.wings.beans.ErrorCode.INVALID_CREDENTIAL;
 import static software.wings.beans.ErrorCode.USER_DOES_NOT_EXIST;
-import static software.wings.exception.WingsException.HARMLESS;
+import static software.wings.exception.WingsException.USER;
 
 import com.google.inject.Inject;
 import com.google.inject.Singleton;
@@ -43,15 +43,15 @@ public class PasswordBasedAuthHandler implements AuthHandler {
 
     User user = getUser(userName);
     if (user == null) {
-      throw new WingsException(USER_DOES_NOT_EXIST, HARMLESS);
+      throw new WingsException(USER_DOES_NOT_EXIST, USER);
     }
     if (!user.isEmailVerified()) {
-      throw new WingsException(EMAIL_NOT_VERIFIED, HARMLESS);
+      throw new WingsException(EMAIL_NOT_VERIFIED, USER);
     }
     if (checkpw(password, user.getPasswordHash())) {
       return user;
     }
-    throw new WingsException(INVALID_CREDENTIAL, HARMLESS);
+    throw new WingsException(INVALID_CREDENTIAL, USER);
   }
 
   @Override

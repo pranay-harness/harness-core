@@ -6,6 +6,7 @@ import static org.mongodb.morphia.mapping.Mapper.ID_KEY;
 import static software.wings.beans.Base.ACCOUNT_ID_KEY;
 import static software.wings.beans.SearchFilter.Operator.EQ;
 import static software.wings.dl.PageRequest.PageRequestBuilder.aPageRequest;
+import static software.wings.exception.WingsException.USER;
 
 import com.google.inject.Inject;
 import com.google.inject.Singleton;
@@ -18,7 +19,6 @@ import software.wings.dl.PageRequest;
 import software.wings.dl.PageResponse;
 import software.wings.dl.WingsPersistence;
 import software.wings.exception.UnauthorizedException;
-import software.wings.exception.WingsException.ReportTarget;
 import software.wings.security.encryption.SimpleEncryption;
 import software.wings.service.intfc.AccountService;
 import software.wings.service.intfc.ApiKeyService;
@@ -80,7 +80,7 @@ public class ApiKeyServiceImpl implements ApiKeyService {
              .map(apiKeyEntry -> checkpw(key, apiKeyEntry.getHashOfKey()))
              .collect(Collectors.toSet())
              .contains(true)) {
-      throw new UnauthorizedException("Invalid Api Key", ReportTarget.USER);
+      throw new UnauthorizedException("Invalid Api Key", USER);
     }
   }
 }

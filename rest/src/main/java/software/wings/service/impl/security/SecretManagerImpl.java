@@ -6,6 +6,7 @@ import static org.apache.commons.lang3.StringUtils.isNotBlank;
 import static software.wings.beans.ErrorCode.INVALID_ARGUMENT;
 import static software.wings.common.Constants.SECRET_MASK;
 import static software.wings.dl.PageRequest.PageRequestBuilder.aPageRequest;
+import static software.wings.exception.WingsException.USER;
 import static software.wings.security.EncryptionType.LOCAL;
 import static software.wings.security.encryption.SimpleEncryption.CHARSET;
 import static software.wings.service.impl.security.VaultServiceImpl.VAULT_VAILDATION_URL;
@@ -49,7 +50,6 @@ import software.wings.dl.PageRequest;
 import software.wings.dl.PageResponse;
 import software.wings.dl.WingsPersistence;
 import software.wings.exception.WingsException;
-import software.wings.exception.WingsException.ReportTarget;
 import software.wings.security.EncryptionType;
 import software.wings.security.UserThreadLocal;
 import software.wings.security.encryption.EncryptedData;
@@ -433,7 +433,7 @@ public class SecretManagerImpl implements SecretManager {
   public char[] decryptYamlRef(String encryptedYamlRef) throws IllegalAccessException, IOException {
     EncryptedData encryptedData = getEncryptedDataFromYamlRef(encryptedYamlRef);
     if (encryptedData == null) {
-      throw new WingsException("encryptedData is null", ReportTarget.USER);
+      throw new WingsException("encryptedData is null", USER);
     }
 
     EncryptionConfig encryptionConfig =

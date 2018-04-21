@@ -2,7 +2,7 @@ package software.wings.service.impl.yaml.handler.deploymentspec.container;
 
 import static io.harness.data.structure.EmptyPredicate.isNotEmpty;
 import static java.util.Arrays.asList;
-import static software.wings.exception.WingsException.HARMLESS;
+import static software.wings.exception.WingsException.USER;
 import static software.wings.utils.Validator.notNullCheck;
 
 import com.google.inject.Inject;
@@ -36,10 +36,10 @@ public abstract class ContainerTaskYamlHandler<Y extends ContainerTask.Yaml, C e
     Change change = changeContext.getChange();
 
     String appId = yamlHelper.getAppId(change.getAccountId(), change.getFilePath());
-    notNullCheck("Could not locate app info in file path:" + change.getFilePath(), appId, HARMLESS);
+    notNullCheck("Could not locate app info in file path:" + change.getFilePath(), appId, USER);
 
     String serviceId = yamlHelper.getServiceId(appId, change.getFilePath());
-    notNullCheck("Could not locate service info in file path:" + change.getFilePath(), serviceId, HARMLESS);
+    notNullCheck("Could not locate service info in file path:" + change.getFilePath(), serviceId, USER);
 
     C containerTask = createNewContainerTask();
 
@@ -88,10 +88,10 @@ public abstract class ContainerTaskYamlHandler<Y extends ContainerTask.Yaml, C e
 
   protected C getContainerTask(String accountId, String yamlFilePath, String deploymentType) {
     String appId = yamlHelper.getAppId(accountId, yamlFilePath);
-    notNullCheck("Could not locate app info in file path:" + yamlFilePath, appId, HARMLESS);
+    notNullCheck("Could not locate app info in file path:" + yamlFilePath, appId, USER);
 
     String serviceId = yamlHelper.getServiceId(appId, yamlFilePath);
-    notNullCheck("Could not locate service info in file path:" + yamlFilePath, serviceId, HARMLESS);
+    notNullCheck("Could not locate service info in file path:" + yamlFilePath, serviceId, USER);
 
     return (C) serviceResourceService.getContainerTaskByDeploymentType(appId, serviceId, deploymentType);
   }

@@ -2,7 +2,7 @@ package software.wings.resources;
 
 import static software.wings.beans.ErrorCode.RESOURCE_NOT_FOUND;
 import static software.wings.core.maintenance.MaintenanceController.isMaintenance;
-import static software.wings.exception.WingsException.HARMLESS;
+import static software.wings.exception.WingsException.USER;
 
 import com.codahale.metrics.annotation.ExceptionMetered;
 import com.codahale.metrics.annotation.Timed;
@@ -36,7 +36,7 @@ public class HealthResource {
   public RestResponse<String> get() {
     if (isMaintenance()) {
       logger.info("In maintenance mode. Throwing exception for letting load balancer know.");
-      throw new WingsException(RESOURCE_NOT_FOUND, HARMLESS);
+      throw new WingsException(RESOURCE_NOT_FOUND, USER);
     }
     return new RestResponse<>("healthy");
   }

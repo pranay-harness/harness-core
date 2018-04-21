@@ -2,7 +2,7 @@ package software.wings.service.impl.yaml.handler.deploymentspec.lambda;
 
 import static io.harness.data.structure.EmptyPredicate.isNotEmpty;
 import static java.util.stream.Collectors.toList;
-import static software.wings.exception.WingsException.HARMLESS;
+import static software.wings.exception.WingsException.USER;
 import static software.wings.utils.Validator.notNullCheck;
 
 import com.google.common.collect.Lists;
@@ -114,11 +114,11 @@ public class LambdaSpecificationYamlHandler extends DeploymentSpecificationYamlH
 
     String appId =
         yamlHelper.getAppId(changeContext.getChange().getAccountId(), changeContext.getChange().getFilePath());
-    notNullCheck("Could not lookup app for the yaml file: " + changeContext.getChange().getFilePath(), appId, HARMLESS);
+    notNullCheck("Could not lookup app for the yaml file: " + changeContext.getChange().getFilePath(), appId, USER);
 
     String serviceId = yamlHelper.getServiceId(appId, changeContext.getChange().getFilePath());
     notNullCheck(
-        "Could not lookup service for the yaml file: " + changeContext.getChange().getFilePath(), serviceId, HARMLESS);
+        "Could not lookup service for the yaml file: " + changeContext.getChange().getFilePath(), serviceId, USER);
 
     LambdaSpecification lambdaSpecification =
         LambdaSpecification.builder().defaults(defaultSpec).functions(functionSpecList).serviceId(serviceId).build();
@@ -134,10 +134,10 @@ public class LambdaSpecificationYamlHandler extends DeploymentSpecificationYamlH
   @Override
   public LambdaSpecification get(String accountId, String yamlFilePath) {
     String appId = yamlHelper.getAppId(accountId, yamlFilePath);
-    notNullCheck("Could not lookup app for the yaml file: " + yamlFilePath, appId, HARMLESS);
+    notNullCheck("Could not lookup app for the yaml file: " + yamlFilePath, appId, USER);
 
     String serviceId = yamlHelper.getServiceId(appId, yamlFilePath);
-    notNullCheck("Could not lookup service for the yaml file: " + yamlFilePath, serviceId, HARMLESS);
+    notNullCheck("Could not lookup service for the yaml file: " + yamlFilePath, serviceId, USER);
 
     return serviceResourceService.getLambdaSpecification(appId, serviceId);
   }

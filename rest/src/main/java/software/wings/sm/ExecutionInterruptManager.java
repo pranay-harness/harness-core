@@ -18,7 +18,7 @@ import static software.wings.beans.SearchFilter.Operator.GE;
 import static software.wings.beans.SearchFilter.Operator.IN;
 import static software.wings.beans.alert.AlertType.ManualInterventionNeeded;
 import static software.wings.dl.PageRequest.PageRequestBuilder.aPageRequest;
-import static software.wings.exception.WingsException.HARMLESS;
+import static software.wings.exception.WingsException.USER;
 import static software.wings.sm.ExecutionInterruptType.ABORT;
 import static software.wings.sm.ExecutionInterruptType.ABORT_ALL;
 import static software.wings.sm.ExecutionInterruptType.IGNORE;
@@ -121,13 +121,13 @@ public class ExecutionInterruptManager {
 
     if (executionInterruptType == ROLLBACK) {
       if (isPresent(res, ROLLBACK)) {
-        throw new WingsException(ROLLBACK_ALREADY, HARMLESS);
+        throw new WingsException(ROLLBACK_ALREADY, USER);
       }
     }
 
     if (executionInterruptType == PAUSE_ALL) {
       if (isPresent(res, PAUSE_ALL)) {
-        throw new WingsException(PAUSE_ALL_ALREADY, HARMLESS);
+        throw new WingsException(PAUSE_ALL_ALREADY, USER);
       }
       ExecutionInterrupt resumeAll = getExecutionInterrupt(res, ExecutionInterruptType.RESUME_ALL);
       if (resumeAll != null) {
@@ -138,7 +138,7 @@ public class ExecutionInterruptManager {
     if (executionInterruptType == ExecutionInterruptType.RESUME_ALL) {
       ExecutionInterrupt pauseAll = getExecutionInterrupt(res, PAUSE_ALL);
       if (pauseAll == null || isPresent(res, ExecutionInterruptType.RESUME_ALL)) {
-        throw new WingsException(RESUME_ALL_ALREADY, HARMLESS);
+        throw new WingsException(RESUME_ALL_ALREADY, USER);
       }
       seize(pauseAll);
       waitNotifyEngine.notify(pauseAll.getUuid(), anExecutionStatusData().withExecutionStatus(SUCCESS).build());

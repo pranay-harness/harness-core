@@ -4,7 +4,7 @@ import static io.harness.data.structure.EmptyPredicate.isEmpty;
 import static io.harness.data.structure.EmptyPredicate.isNotEmpty;
 import static io.harness.data.structure.UUIDGenerator.generateUuid;
 import static java.util.stream.Collectors.toList;
-import static software.wings.exception.WingsException.SERIOUS;
+import static software.wings.exception.WingsException.USER_SRE;
 import static software.wings.sm.ExecutionStatus.FAILED;
 
 import com.google.common.collect.Lists;
@@ -634,7 +634,7 @@ public class InstanceHelper {
   public void handleDeploymentEvent(DeploymentEvent deploymentEvent) {
     DeploymentInfo deploymentInfo = deploymentEvent.getDeploymentInfo();
     if (deploymentInfo == null) {
-      throw new WingsException("Deployment info can not be null: " + deploymentInfo, SERIOUS);
+      throw new WingsException("Deployment info can not be null: " + deploymentInfo, USER_SRE);
     }
 
     String infraMappingId = deploymentInfo.getInfraMappingId();

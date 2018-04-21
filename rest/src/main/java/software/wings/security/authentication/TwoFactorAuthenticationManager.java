@@ -1,5 +1,7 @@
 package software.wings.security.authentication;
 
+import static software.wings.exception.WingsException.USER;
+
 import com.google.inject.Inject;
 import com.google.inject.Singleton;
 
@@ -52,7 +54,7 @@ public class TwoFactorAuthenticationManager {
 
   public User enableTwoFactorAuthenticationSettings(User user, TwoFactorAuthenticationSettings settings) {
     if (settings.getMechanism() == null) {
-      throw new WingsException(ErrorCode.INVALID_TWO_FACTOR_AUTHENTICATION_CONFIGURATION, WingsException.HARMLESS);
+      throw new WingsException(ErrorCode.INVALID_TWO_FACTOR_AUTHENTICATION_CONFIGURATION, USER);
     }
     settings.setTwoFactorAuthenticationEnabled(true);
     return applyTwoFactorAuthenticationSettings(user, settings);

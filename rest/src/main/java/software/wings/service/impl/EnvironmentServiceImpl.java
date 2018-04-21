@@ -24,6 +24,7 @@ import static software.wings.beans.SearchFilter.Operator.IN;
 import static software.wings.beans.ServiceVariable.DEFAULT_TEMPLATE_ID;
 import static software.wings.beans.ServiceVariable.Type.ENCRYPTED_TEXT;
 import static software.wings.dl.PageRequest.PageRequestBuilder.aPageRequest;
+import static software.wings.exception.WingsException.USER;
 import static software.wings.yaml.YamlHelper.trimYaml;
 
 import com.google.common.base.Joiner;
@@ -55,7 +56,6 @@ import software.wings.dl.PageRequest;
 import software.wings.dl.PageResponse;
 import software.wings.dl.WingsPersistence;
 import software.wings.exception.WingsException;
-import software.wings.exception.WingsException.ReportTarget;
 import software.wings.lock.AcquiredLock;
 import software.wings.lock.PersistentLocker;
 import software.wings.scheduler.PruneEntityJob;
@@ -342,7 +342,7 @@ public class EnvironmentServiceImpl implements EnvironmentService, DataProvider 
 
     if (!pipelines.isEmpty()) {
       List<String> pipelineNames = pipelines.stream().map(Pipeline::getName).collect(toList());
-      throw new WingsException(INVALID_REQUEST, ReportTarget.USER)
+      throw new WingsException(INVALID_REQUEST, USER)
           .addParam("message",
               String.format("Environment is referenced by %s pipeline%s [%s].", pipelines.size(),
                   pipelines.size() == 1 ? "" : "s", Joiner.on(", ").join(pipelineNames)));

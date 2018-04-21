@@ -5,9 +5,9 @@ import static software.wings.beans.ResponseMessage.Level.ERROR;
 import static software.wings.beans.ResponseMessage.Level.INFO;
 import static software.wings.beans.ResponseMessage.Level.WARN;
 import static software.wings.beans.ResponseMessage.aResponseMessage;
-import static software.wings.exception.WingsException.ReportTarget.HARNESS_ENGINEER;
-import static software.wings.exception.WingsException.ReportTarget.USER;
-import static software.wings.exception.WingsException.ReportTarget.USER_ADMIN;
+import static software.wings.exception.WingsException.ReportTarget.LOG_SYSTEM;
+import static software.wings.exception.WingsException.ReportTarget.RED_BELL_ALERT;
+import static software.wings.exception.WingsException.ReportTarget.REST_API;
 
 import lombok.Builder;
 import lombok.Getter;
@@ -33,22 +33,26 @@ public class WingsException extends WingsApiException {
   private static final long serialVersionUID = -3266129015976960503L;
 
   public enum ReportTarget {
-    // When exception targets harness engineer it will be logged.
-    HARNESS_ENGINEER,
+    // Logging system.
+    LOG_SYSTEM,
 
     // When exception targets user it will be serialized in the rest APIs
-    USER,
+    REST_API,
 
     // When exception targets user admin it will trigger an alert in the harness app.
-    USER_ADMIN,
+    RED_BELL_ALERT,
   }
 
-  public static final ReportTarget[] SERIOUS = {HARNESS_ENGINEER, USER};
-  public static final ReportTarget[] ALERTING = {USER_ADMIN, USER};
-  public static final ReportTarget[] HARMLESS = {USER};
-  public static final ReportTarget[] IGNORABLE = {};
+  public static final ReportTarget[] EVERYBODY = {LOG_SYSTEM, REST_API, RED_BELL_ALERT};
+  public static final ReportTarget[] ADMIN_SRE = {LOG_SYSTEM, RED_BELL_ALERT};
+  public static final ReportTarget[] USER_SRE = {LOG_SYSTEM, REST_API};
+  public static final ReportTarget[] USER_ADMIN = {RED_BELL_ALERT, REST_API};
+  public static final ReportTarget[] ADMIN = {RED_BELL_ALERT};
+  public static final ReportTarget[] SRE = {LOG_SYSTEM};
+  public static final ReportTarget[] USER = {REST_API};
+  public static final ReportTarget[] NOBODY = {};
 
-  @Builder.Default private ReportTarget[] reportTargets = SERIOUS;
+  @Builder.Default private ReportTarget[] reportTargets = USER_SRE;
 
   /**
    * The Response message list.
@@ -61,7 +65,7 @@ public class WingsException extends WingsApiException {
     this(ErrorCode.UNKNOWN_ERROR, message);
   }
 
-  public WingsException(String message, ReportTarget... reportTargets) {
+  public WingsException(String message, ReportTarget[] reportTargets) {
     this(ErrorCode.UNKNOWN_ERROR, message);
     this.reportTargets = reportTargets;
   }
@@ -78,7 +82,7 @@ public class WingsException extends WingsApiException {
     this(errorCode, message, (Throwable) null);
   }
 
-  public WingsException(ErrorCode errorCode, String message, ReportTarget... reportTargets) {
+  public WingsException(ErrorCode errorCode, String message, ReportTarget[] reportTargets) {
     this(errorCode, message, (Throwable) null);
     this.reportTargets = reportTargets;
   }
@@ -87,7 +91,7 @@ public class WingsException extends WingsApiException {
     this(errorCode, (Throwable) null);
   }
 
-  public WingsException(ErrorCode errorCode, ReportTarget... reportTargets) {
+  public WingsException(ErrorCode errorCode, ReportTarget[] reportTargets) {
     this(errorCode, (Throwable) null);
     this.reportTargets = reportTargets;
   }
@@ -166,7 +170,7 @@ public class WingsException extends WingsApiException {
   }
 
   public void logProcessedMessages(Logger logger) {
-    final List<ResponseMessage> responseMessages = getResponseMessageList(HARNESS_ENGINEER);
+    final List<ResponseMessage> responseMessages = getResponseMessageList(LOG_SYSTEM);
 
     String msg = "Exception occurred: " + getMessage();
     String responseMsgs = responseMessages.stream().map(ResponseMessage::getMessage).collect(joining(". "));

@@ -4,7 +4,7 @@ import static io.harness.govern.Switch.unhandled;
 import static io.harness.network.Http.getOkHttpClientBuilder;
 import static java.util.Collections.emptyList;
 import static java.util.stream.Collectors.toList;
-import static software.wings.exception.WingsException.ReportTarget.USER;
+import static software.wings.exception.WingsException.USER;
 import static software.wings.helpers.ext.jenkins.BuildDetails.Builder.aBuildDetails;
 
 import com.google.api.client.googleapis.auth.oauth2.GoogleCredential;

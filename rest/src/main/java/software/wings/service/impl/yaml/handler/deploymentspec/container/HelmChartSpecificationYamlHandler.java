@@ -1,6 +1,6 @@
 package software.wings.service.impl.yaml.handler.deploymentspec.container;
 
-import static software.wings.exception.WingsException.HARMLESS;
+import static software.wings.exception.WingsException.USER;
 import static software.wings.utils.Validator.notNullCheck;
 
 import com.google.inject.Inject;
@@ -55,10 +55,10 @@ public class HelmChartSpecificationYamlHandler
 
     String filePath = changeContext.getChange().getFilePath();
     String appId = yamlHelper.getAppId(changeContext.getChange().getAccountId(), filePath);
-    notNullCheck("Could not lookup app for the yaml file: " + filePath, appId, HARMLESS);
+    notNullCheck("Could not lookup app for the yaml file: " + filePath, appId, USER);
 
     String serviceId = yamlHelper.getServiceId(appId, filePath);
-    notNullCheck("Could not lookup service for the yaml file: " + filePath, serviceId, HARMLESS);
+    notNullCheck("Could not lookup service for the yaml file: " + filePath, serviceId, USER);
 
     HelmChartSpecification helmChartSpecification = HelmChartSpecification.builder()
                                                         .chartName(yaml.getChartName())
@@ -78,10 +78,10 @@ public class HelmChartSpecificationYamlHandler
   @Override
   public HelmChartSpecification get(String accountId, String yamlFilePath) {
     String appId = yamlHelper.getAppId(accountId, yamlFilePath);
-    notNullCheck("Could not lookup app for the yaml file: " + yamlFilePath, appId, HARMLESS);
+    notNullCheck("Could not lookup app for the yaml file: " + yamlFilePath, appId, USER);
 
     String serviceId = yamlHelper.getServiceId(appId, yamlFilePath);
-    notNullCheck("Could not lookup service for the yaml file: " + yamlFilePath, serviceId, HARMLESS);
+    notNullCheck("Could not lookup service for the yaml file: " + yamlFilePath, serviceId, USER);
 
     return serviceResourceService.getHelmChartSpecification(appId, serviceId);
   }

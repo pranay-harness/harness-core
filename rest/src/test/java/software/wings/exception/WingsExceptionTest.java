@@ -2,11 +2,11 @@ package software.wings.exception;
 
 import static org.assertj.core.api.Assertions.assertThat;
 import static software.wings.beans.ErrorCode.DEFAULT_ERROR_CODE;
+import static software.wings.exception.WingsException.ReportTarget.REST_API;
 
 import io.harness.CategoryTest;
 import org.junit.Test;
 import software.wings.beans.ErrorCode;
-import software.wings.exception.WingsException.ReportTarget;
 
 public class WingsExceptionTest extends CategoryTest {
   @Test
@@ -23,7 +23,7 @@ public class WingsExceptionTest extends CategoryTest {
   public void testCollectResponseMessages() {
     final WingsException exception =
         new WingsException(DEFAULT_ERROR_CODE, new Exception(new WingsException(DEFAULT_ERROR_CODE)));
-    assertThat(exception.getResponseMessageList(ReportTarget.USER).size()).isEqualTo(2);
+    assertThat(exception.getResponseMessageList(REST_API).size()).isEqualTo(2);
   }
 
   @Test
@@ -31,12 +31,12 @@ public class WingsExceptionTest extends CategoryTest {
     final WingsException exception =
         new WingsException(DEFAULT_ERROR_CODE, new Exception(new WingsException(DEFAULT_ERROR_CODE)));
 
-    assertThat(exception.getReportTargets()).contains(ReportTarget.USER);
-    assertThat(((WingsException) exception.getCause().getCause()).getReportTargets()).contains(ReportTarget.USER);
+    assertThat(exception.getReportTargets()).contains(REST_API);
+    assertThat(((WingsException) exception.getCause().getCause()).getReportTargets()).contains(REST_API);
 
-    exception.excludeReportTarget(DEFAULT_ERROR_CODE, ReportTarget.USER);
+    exception.excludeReportTarget(DEFAULT_ERROR_CODE, REST_API);
 
-    assertThat(exception.getReportTargets()).doesNotContain(ReportTarget.USER);
-    assertThat(((WingsException) exception.getCause().getCause()).getReportTargets()).doesNotContain(ReportTarget.USER);
+    assertThat(exception.getReportTargets()).doesNotContain(REST_API);
+    assertThat(((WingsException) exception.getCause().getCause()).getReportTargets()).doesNotContain(REST_API);
   }
 }

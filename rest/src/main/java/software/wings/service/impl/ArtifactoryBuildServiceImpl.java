@@ -5,8 +5,8 @@ import static io.harness.network.Http.connectableHttpUrl;
 import static io.harness.network.Http.validUrl;
 import static java.util.stream.Collectors.toList;
 import static software.wings.beans.ErrorCode.INVALID_ARTIFACT_SERVER;
-import static software.wings.exception.WingsException.ALERTING;
-import static software.wings.exception.WingsException.ReportTarget.USER;
+import static software.wings.exception.WingsException.USER;
+import static software.wings.exception.WingsException.USER_ADMIN;
 import static software.wings.utils.ArtifactType.DOCKER;
 import static software.wings.utils.Validator.equalCheck;
 
@@ -88,7 +88,7 @@ public class ArtifactoryBuildServiceImpl implements ArtifactoryBuildService {
       ArtifactoryConfig artifactoryConfig, List<EncryptedDataDetail> encryptionDetails) {
     String[] artifactPaths = artifactStreamAttributes.getArtifactPattern().split("/");
     if (artifactPaths.length < 4) {
-      throw new WingsException(INVALID_ARTIFACT_SERVER, ALERTING)
+      throw new WingsException(INVALID_ARTIFACT_SERVER, USER_ADMIN)
           .addParam("message", "Not in maven style format. Sample format: com/mycompany/myservice/.*/myservice*.war");
     }
     String groupId = getGroupId(Arrays.stream(artifactPaths).limit(artifactPaths.length - 3).collect(toList()));
