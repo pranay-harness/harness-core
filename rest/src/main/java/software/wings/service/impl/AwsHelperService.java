@@ -619,8 +619,7 @@ public class AwsHelperService {
       SettingAttribute connectorConfig, List<EncryptedDataDetail> encryptedDataDetails) {
     if (connectorConfig == null || connectorConfig.getValue() == null
         || !(connectorConfig.getValue() instanceof AwsConfig)) {
-      throw new WingsException(ErrorCode.INVALID_REQUEST)
-          .addParam("message", "connectorConfig is not of type AwsConfig");
+      throw new WingsException(INVALID_REQUEST).addParam("message", "connectorConfig is not of type AwsConfig");
     }
     encryptionService.decrypt((Encryptable) connectorConfig.getValue(), encryptedDataDetails);
     return (AwsConfig) connectorConfig.getValue();

@@ -3,6 +3,7 @@ package software.wings.beans;
 import static io.harness.data.structure.EmptyPredicate.isEmpty;
 import static io.harness.data.structure.EmptyPredicate.isNotEmpty;
 import static java.util.stream.Collectors.toMap;
+import static software.wings.beans.ErrorCode.INVALID_ARGUMENT;
 
 import com.google.common.collect.ImmutableMap;
 import com.google.inject.Inject;
@@ -133,16 +134,15 @@ public class AwsInfrastructureMapping extends InfrastructureMapping {
   public void validate() {
     if (provisionInstances) {
       if (isEmpty(autoScalingGroupName)) {
-        throw new WingsException(ErrorCode.INVALID_ARGUMENT)
+        throw new WingsException(INVALID_ARGUMENT)
             .addParam("args", "Auto Scaling group must not be empty when provision instances is true.");
       }
       if (setDesiredCapacity && desiredCapacity <= 0) {
-        throw new WingsException(ErrorCode.INVALID_ARGUMENT)
-            .addParam("args", "Desired count must be greater than zero.");
+        throw new WingsException(INVALID_ARGUMENT).addParam("args", "Desired count must be greater than zero.");
       }
     } else {
       if (awsInstanceFilter == null) {
-        throw new WingsException(ErrorCode.INVALID_ARGUMENT)
+        throw new WingsException(INVALID_ARGUMENT)
             .addParam("args", "Instance filter must not be null when provision instances is false.");
       }
     }

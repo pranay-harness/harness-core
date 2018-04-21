@@ -14,6 +14,7 @@ import static org.mockito.Mockito.when;
 import static org.mongodb.morphia.mapping.Mapper.ID_KEY;
 import static software.wings.beans.Environment.Builder.anEnvironment;
 import static software.wings.beans.Environment.EnvironmentType.PROD;
+import static software.wings.beans.ErrorCode.INVALID_REQUEST;
 import static software.wings.beans.PhysicalInfrastructureMapping.Builder.aPhysicalInfrastructureMapping;
 import static software.wings.beans.SearchFilter.Operator.EQ;
 import static software.wings.beans.SearchFilter.Operator.IN;
@@ -58,7 +59,6 @@ import software.wings.beans.Application;
 import software.wings.beans.Base;
 import software.wings.beans.EntityType;
 import software.wings.beans.Environment;
-import software.wings.beans.ErrorCode;
 import software.wings.beans.Notification;
 import software.wings.beans.PhysicalInfrastructureMapping;
 import software.wings.beans.Pipeline;
@@ -356,7 +356,7 @@ public class EnvironmentServiceTest extends WingsBaseTest {
                         .build());
     assertThatThrownBy(() -> environmentService.delete(APP_ID, ENV_ID))
         .isInstanceOf(WingsException.class)
-        .hasMessage(ErrorCode.INVALID_REQUEST.name());
+        .hasMessage(INVALID_REQUEST.name());
   }
 
   @Test

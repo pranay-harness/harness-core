@@ -673,7 +673,7 @@ public class EnvironmentServiceImpl implements EnvironmentService, DataProvider 
           Validator.notNullCheck("targetService", newService);
           if (oldService.getArtifactType() != null
               && !oldService.getArtifactType().equals(newService.getArtifactType())) {
-            throw new WingsException(ErrorCode.INVALID_REQUEST)
+            throw new WingsException(INVALID_REQUEST)
                 .addParam("message",
                     "Target service  [" + oldService.getName() + " ] is not compatible with service ["
                         + newService.getName() + "]");

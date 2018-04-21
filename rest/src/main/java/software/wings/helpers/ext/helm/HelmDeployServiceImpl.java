@@ -1,5 +1,7 @@
 package software.wings.helpers.ext.helm;
 
+import static software.wings.beans.ErrorCode.INVALID_REQUEST;
+
 import com.google.common.util.concurrent.TimeLimiter;
 import com.google.common.util.concurrent.UncheckedTimeoutException;
 import com.google.inject.Inject;
@@ -13,7 +15,6 @@ import org.apache.commons.csv.CSVParser;
 import org.apache.commons.csv.CSVRecord;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-import software.wings.beans.ErrorCode;
 import software.wings.beans.KubernetesConfig;
 import software.wings.beans.Log.LogLevel;
 import software.wings.beans.command.CommandExecutionResult.CommandExecutionStatus;
@@ -134,8 +135,7 @@ public class HelmDeployServiceImpl implements HelmDeployService {
       throws InterruptedException, IOException, TimeoutException {
     HelmCliResponse cliResponse = helmClient.getClientAndServerVersion(helmCommandRequest);
     if (cliResponse.getCommandExecutionStatus().equals(CommandExecutionStatus.FAILURE)) {
-      throw new WingsException(ErrorCode.INVALID_REQUEST)
-          .addParam("message", "Helm client not installed or not initialized");
+      throw new WingsException(INVALID_REQUEST).addParam("message", "Helm client not installed or not initialized");
     }
     return new HelmCommandResponse(cliResponse.getCommandExecutionStatus(), cliResponse.getOutput());
   }

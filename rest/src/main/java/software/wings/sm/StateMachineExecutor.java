@@ -11,6 +11,7 @@ import static java.util.stream.Collectors.toList;
 import static org.apache.commons.lang3.StringUtils.isNotBlank;
 import static org.mongodb.morphia.mapping.Mapper.ID_KEY;
 import static software.wings.beans.ErrorCode.INVALID_ARGUMENT;
+import static software.wings.beans.ErrorCode.INVALID_REQUEST;
 import static software.wings.beans.ErrorCode.STATE_NOT_FOR_TYPE;
 import static software.wings.beans.ReadPref.CRITICAL;
 import static software.wings.beans.ReadPref.NORMAL;
@@ -262,8 +263,7 @@ public class StateMachineExecutor {
     stateExecutionInstance.setStepId(state instanceof BarrierState ? state.getId() : null);
 
     if (stateExecutionInstance.getUuid() != null) {
-      throw new WingsException(ErrorCode.INVALID_REQUEST)
-          .addParam("message", "StateExecutionInstance was already created");
+      throw new WingsException(INVALID_REQUEST).addParam("message", "StateExecutionInstance was already created");
     }
 
     Integer timeout = state.getTimeoutMillis();

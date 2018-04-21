@@ -11,6 +11,7 @@ import static software.wings.beans.EntityType.ELK_INDICES;
 import static software.wings.beans.EntityType.ENVIRONMENT;
 import static software.wings.beans.EntityType.INFRASTRUCTURE_MAPPING;
 import static software.wings.beans.EntityType.SERVICE;
+import static software.wings.beans.ErrorCode.INVALID_ARGUMENT;
 import static software.wings.beans.OrchestrationWorkflowType.BASIC;
 import static software.wings.beans.OrchestrationWorkflowType.ROLLING;
 import static software.wings.beans.Variable.VariableBuilder.aVariable;
@@ -278,7 +279,7 @@ public abstract class OrchestrationWorkflow {
     // check if template variable contains special character
     if (entityType != null) {
       if (!matcher.matches()) {
-        throw new WingsException(ErrorCode.INVALID_ARGUMENT)
+        throw new WingsException(INVALID_ARGUMENT)
             .addParam(
                 "args", "Template expression:" + templateExpression.getExpression() + " contains special characters");
       }

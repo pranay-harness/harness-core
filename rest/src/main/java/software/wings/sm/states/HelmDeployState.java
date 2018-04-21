@@ -7,6 +7,7 @@ import static software.wings.api.ServiceTemplateElement.Builder.aServiceTemplate
 import static software.wings.beans.Base.GLOBAL_ENV_ID;
 import static software.wings.beans.DelegateTask.Builder.aDelegateTask;
 import static software.wings.beans.Environment.EnvironmentType.ALL;
+import static software.wings.beans.ErrorCode.INVALID_REQUEST;
 import static software.wings.beans.OrchestrationWorkflowType.BUILD;
 import static software.wings.beans.SettingAttribute.Builder.aSettingAttribute;
 import static software.wings.common.Constants.DEFAULT_STEADY_STATE_TIMEOUT;
@@ -38,7 +39,6 @@ import software.wings.beans.DeploymentExecutionContext;
 import software.wings.beans.DirectKubernetesInfrastructureMapping;
 import software.wings.beans.EcsInfrastructureMapping;
 import software.wings.beans.Environment;
-import software.wings.beans.ErrorCode;
 import software.wings.beans.GcpKubernetesInfrastructureMapping;
 import software.wings.beans.ServiceTemplate;
 import software.wings.beans.SettingAttribute;
@@ -133,7 +133,7 @@ public class HelmDeployState extends State {
     try {
       return executeInternal(context);
     } catch (Exception e) {
-      throw new WingsException(ErrorCode.INVALID_REQUEST, e).addParam("message", e.getMessage());
+      throw new WingsException(INVALID_REQUEST, e).addParam("message", e.getMessage());
     }
   }
 
@@ -208,7 +208,7 @@ public class HelmDeployState extends State {
 
   private void validateChartSpecification(HelmChartSpecification chartSpec) {
     if (chartSpec == null || (isEmpty(chartSpec.getChartName()) && isEmpty(chartSpec.getChartUrl()))) {
-      throw new WingsException(ErrorCode.INVALID_REQUEST)
+      throw new WingsException(INVALID_REQUEST)
           .addParam("message", "Invalid chart specification " + (chartSpec == null ? "NULL" : chartSpec.toString()));
     }
   }
@@ -283,7 +283,7 @@ public class HelmDeployState extends State {
     } catch (WingsException e) {
       throw e;
     } catch (Exception e) {
-      throw new WingsException(ErrorCode.INVALID_REQUEST, e).addParam("message", e.getMessage());
+      throw new WingsException(INVALID_REQUEST, e).addParam("message", e.getMessage());
     }
   }
 

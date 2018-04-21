@@ -8,6 +8,7 @@ import static software.wings.api.CommandStateExecutionData.Builder.aCommandState
 import static software.wings.api.InstanceElementListParam.InstanceElementListParamBuilder.anInstanceElementListParam;
 import static software.wings.api.ServiceTemplateElement.Builder.aServiceTemplateElement;
 import static software.wings.beans.DelegateTask.Builder.aDelegateTask;
+import static software.wings.beans.ErrorCode.INVALID_REQUEST;
 import static software.wings.beans.SettingAttribute.Builder.aSettingAttribute;
 import static software.wings.beans.command.CommandExecutionContext.Builder.aCommandExecutionContext;
 import static software.wings.sm.ExecutionResponse.Builder.anExecutionResponse;
@@ -35,7 +36,6 @@ import software.wings.beans.AzureKubernetesInfrastructureMapping;
 import software.wings.beans.DirectKubernetesInfrastructureMapping;
 import software.wings.beans.EcsInfrastructureMapping;
 import software.wings.beans.Environment;
-import software.wings.beans.ErrorCode;
 import software.wings.beans.InfrastructureMapping;
 import software.wings.beans.InstanceUnitType;
 import software.wings.beans.Service;
@@ -179,7 +179,7 @@ public abstract class ContainerServiceDeploy extends State {
     } catch (WingsException e) {
       throw e;
     } catch (Exception e) {
-      throw new WingsException(ErrorCode.INVALID_REQUEST, e).addParam("message", e.getMessage());
+      throw new WingsException(INVALID_REQUEST, e).addParam("message", e.getMessage());
     }
   }
 
@@ -207,7 +207,7 @@ public abstract class ContainerServiceDeploy extends State {
       throw e;
     } catch (Exception e) {
       logger.warn(e.getMessage(), e);
-      throw new WingsException(ErrorCode.INVALID_REQUEST, e).addParam("message", e.getMessage());
+      throw new WingsException(INVALID_REQUEST, e).addParam("message", e.getMessage());
     }
   }
 

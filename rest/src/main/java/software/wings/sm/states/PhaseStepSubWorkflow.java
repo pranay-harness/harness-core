@@ -10,6 +10,7 @@ import static java.util.stream.Collectors.toList;
 import static software.wings.api.AwsCodeDeployRequestElement.AwsCodeDeployRequestElementBuilder.anAwsCodeDeployRequestElement;
 import static software.wings.api.PhaseStepExecutionData.PhaseStepExecutionDataBuilder.aPhaseStepExecutionData;
 import static software.wings.api.ServiceInstanceIdsParam.ServiceInstanceIdsParamBuilder.aServiceInstanceIdsParam;
+import static software.wings.beans.ErrorCode.INVALID_REQUEST;
 import static software.wings.beans.SearchFilter.Operator.EQ;
 import static software.wings.beans.SearchFilter.Operator.EXISTS;
 import static software.wings.beans.SearchFilter.Operator.NOT_EQ;
@@ -39,7 +40,6 @@ import software.wings.api.PhaseStepExecutionData;
 import software.wings.api.ServiceInstanceArtifactParam;
 import software.wings.api.ServiceInstanceIdsParam;
 import software.wings.beans.Activity;
-import software.wings.beans.ErrorCode;
 import software.wings.beans.FailureStrategy;
 import software.wings.beans.PhaseStepType;
 import software.wings.common.Constants;
@@ -93,7 +93,7 @@ public class PhaseStepSubWorkflow extends SubWorkflowState {
   @Override
   public ExecutionResponse execute(ExecutionContext contextIntf) {
     if (phaseStepType == null) {
-      throw new WingsException(ErrorCode.INVALID_REQUEST).addParam("message", "null phaseStepType");
+      throw new WingsException(INVALID_REQUEST).addParam("message", "null phaseStepType");
     }
 
     ExecutionResponse response;
@@ -320,7 +320,7 @@ public class PhaseStepSubWorkflow extends SubWorkflowState {
   private void validateServiceElement(ExecutionContext context, PhaseElement phaseElement) {
     List<ContextElement> contextElements = context.getContextElementList(ContextElementType.CONTAINER_SERVICE);
     if (isEmpty(contextElements)) {
-      throw new WingsException(ErrorCode.INVALID_REQUEST).addParam("message", "Setup not done");
+      throw new WingsException(INVALID_REQUEST).addParam("message", "Setup not done");
     }
     Optional<ContextElement> containerServiceElement =
         contextElements.parallelStream()
@@ -330,7 +330,7 @@ public class PhaseStepSubWorkflow extends SubWorkflowState {
             .findFirst();
 
     if (!containerServiceElement.isPresent()) {
-      throw new WingsException(ErrorCode.INVALID_REQUEST)
+      throw new WingsException(INVALID_REQUEST)
           .addParam("message",
               "containerServiceElement not present for the service " + phaseElement.getServiceElement().getUuid());
     }
@@ -363,11 +363,11 @@ public class PhaseStepSubWorkflow extends SubWorkflowState {
   private void handleElementNotifyResponseData(
       PhaseElement phaseElement, Map<String, NotifyResponseData> response, ExecutionResponse executionResponse) {
     if (isEmpty(response)) {
-      throw new WingsException(ErrorCode.INVALID_REQUEST).addParam("message", "Missing response");
+      throw new WingsException(INVALID_REQUEST).addParam("message", "Missing response");
     }
     NotifyResponseData notifiedResponseData = response.values().iterator().next();
     if (!(notifiedResponseData instanceof ElementNotifyResponseData)) {
-      throw new WingsException(ErrorCode.INVALID_REQUEST).addParam("message", "Response data has wrong type");
+      throw new WingsException(INVALID_REQUEST).addParam("message", "Response data has wrong type");
     }
     ElementNotifyResponseData elementNotifyResponseData = (ElementNotifyResponseData) notifiedResponseData;
     if (elementNotifyResponseData.getExecutionStatus() != ExecutionStatus.ABORTED) {
@@ -420,10 +420,10 @@ public class PhaseStepSubWorkflow extends SubWorkflowState {
       ElementNotifyResponseData elementNotifyResponseData, Class<? extends ContextElement> cls, String message) {
     List<ContextElement> elements = elementNotifyResponseData.getContextElements();
     if (isEmpty(elements)) {
-      throw new WingsException(ErrorCode.INVALID_REQUEST).addParam("message", message);
+      throw new WingsException(INVALID_REQUEST).addParam("message", message);
     }
     if (!(cls.isInstance(elements.get(0)))) {
-      throw new WingsException(ErrorCode.INVALID_REQUEST).addParam("message", message);
+      throw new WingsException(INVALID_REQUEST).addParam("message", message);
     }
 
     return elements.get(0);

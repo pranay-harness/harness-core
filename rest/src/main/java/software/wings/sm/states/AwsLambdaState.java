@@ -4,6 +4,7 @@ import static io.harness.data.structure.EmptyPredicate.isEmpty;
 import static io.harness.data.structure.EmptyPredicate.isNotEmpty;
 import static java.util.stream.Collectors.toList;
 import static software.wings.api.CommandStateExecutionData.Builder.aCommandStateExecutionData;
+import static software.wings.beans.ErrorCode.INVALID_REQUEST;
 import static software.wings.beans.Log.Builder.aLog;
 import static software.wings.sm.ExecutionResponse.Builder.anExecutionResponse;
 
@@ -43,7 +44,6 @@ import software.wings.beans.AwsConfig;
 import software.wings.beans.AwsLambdaInfraStructureMapping;
 import software.wings.beans.DeploymentExecutionContext;
 import software.wings.beans.Environment;
-import software.wings.beans.ErrorCode;
 import software.wings.beans.LambdaSpecification;
 import software.wings.beans.LambdaSpecification.FunctionSpecification;
 import software.wings.beans.Log.Builder;
@@ -509,7 +509,7 @@ public class AwsLambdaState extends State {
         vpcConfig.setSubnetIds(subnetIds);
         vpcConfig.setSecurityGroupIds(securityGroupIds);
       } else {
-        throw new WingsException(ErrorCode.INVALID_REQUEST)
+        throw new WingsException(INVALID_REQUEST)
             .addParam("message", "At least one security group and one subnet must be provided");
       }
     }

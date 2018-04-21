@@ -7,6 +7,7 @@ import static org.apache.commons.lang3.StringUtils.isNotBlank;
 import static software.wings.api.HostElement.Builder.aHostElement;
 import static software.wings.api.InstanceElement.Builder.anInstanceElement;
 import static software.wings.api.ServiceTemplateElement.Builder.aServiceTemplateElement;
+import static software.wings.beans.ErrorCode.INVALID_REQUEST;
 import static software.wings.beans.InstanceUnitType.PERCENTAGE;
 import static software.wings.beans.Log.Builder.aLog;
 import static software.wings.common.Constants.ASG_COMMAND_NAME;
@@ -41,7 +42,6 @@ import software.wings.beans.AwsAmiInfrastructureMapping;
 import software.wings.beans.AwsConfig;
 import software.wings.beans.DeploymentExecutionContext;
 import software.wings.beans.Environment;
-import software.wings.beans.ErrorCode;
 import software.wings.beans.InstanceUnitType;
 import software.wings.beans.Log.Builder;
 import software.wings.beans.Log.LogLevel;
@@ -447,8 +447,7 @@ public class AwsAmiServiceDeployState extends State {
       Integer oldAsgFinalDesiredCount, ManagerExecutionLogCallback executionLogCallback, boolean resizeNewFirst,
       Integer autoScalingSteadyStateTimeout) {
     if (isBlank(newAutoScalingGroupName) && isBlank(oldAutoScalingGroupName)) {
-      throw new WingsException(ErrorCode.INVALID_REQUEST)
-          .addParam("message", "At least one AutoScaling Group must be present");
+      throw new WingsException(INVALID_REQUEST).addParam("message", "At least one AutoScaling Group must be present");
     }
     if (resizeNewFirst) {
       if (isNotBlank(newAutoScalingGroupName)) {

@@ -13,6 +13,7 @@ import static software.wings.beans.ApplicationRole.ApplicationRoleBuilder.anAppl
 import static software.wings.beans.Base.GLOBAL_APP_ID;
 import static software.wings.beans.Environment.Builder.anEnvironment;
 import static software.wings.beans.EnvironmentRole.EnvironmentRoleBuilder.anEnvironmentRole;
+import static software.wings.beans.ErrorCode.INVALID_REQUEST;
 import static software.wings.beans.Permission.Builder.aPermission;
 import static software.wings.beans.Role.Builder.aRole;
 import static software.wings.beans.User.Builder.anUser;
@@ -304,7 +305,7 @@ public class SecureResourceTest {
   public void shouldDenyAccessForNonPublicResourceWithoutValidToken() {
     Assertions.assertThatThrownBy(() -> resources.client().target("/secure-resources/NonPublicApi").request().get())
         .hasCauseInstanceOf(WingsException.class)
-        .hasStackTraceContaining(ErrorCode.INVALID_REQUEST.name());
+        .hasStackTraceContaining(INVALID_REQUEST.name());
   }
 
   /**

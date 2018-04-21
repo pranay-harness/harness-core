@@ -4,6 +4,7 @@ import static io.harness.data.structure.EmptyPredicate.isEmpty;
 import static io.harness.data.structure.EmptyPredicate.isNotEmpty;
 import static java.util.stream.Collectors.toList;
 import static software.wings.api.ServiceInstanceIdsParam.ServiceInstanceIdsParamBuilder.aServiceInstanceIdsParam;
+import static software.wings.beans.ErrorCode.INVALID_REQUEST;
 import static software.wings.beans.InstanceUnitType.COUNT;
 import static software.wings.beans.InstanceUnitType.PERCENTAGE;
 import static software.wings.beans.SearchFilter.Operator.EQ;
@@ -175,7 +176,7 @@ public abstract class NodeSelectState extends State {
       throw e;
     } catch (Exception e) {
       logger.warn(e.getMessage(), e);
-      throw new WingsException(ErrorCode.INVALID_REQUEST).addParam("message", e.getMessage());
+      throw new WingsException(INVALID_REQUEST).addParam("message", e.getMessage());
     }
   }
 

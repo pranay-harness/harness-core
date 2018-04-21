@@ -4,8 +4,8 @@ import com.google.inject.Singleton;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-import software.wings.beans.KubernetesClusterConfig.Yaml;
 import software.wings.beans.KubernetesClusterConfig;
+import software.wings.beans.KubernetesClusterConfig.Yaml;
 import software.wings.beans.SettingAttribute;
 import software.wings.beans.yaml.ChangeContext;
 import software.wings.exception.HarnessException;

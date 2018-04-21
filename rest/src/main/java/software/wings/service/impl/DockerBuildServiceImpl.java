@@ -2,6 +2,7 @@ package software.wings.service.impl;
 
 import static io.harness.network.Http.connectableHttpUrl;
 import static io.harness.network.Http.validUrl;
+import static software.wings.beans.ErrorCode.INVALID_REQUEST;
 import static software.wings.beans.artifact.ArtifactStreamType.DOCKER;
 import static software.wings.exception.WingsException.ReportTarget.HARNESS_ENGINEER;
 import static software.wings.exception.WingsException.ReportTarget.USER;
@@ -44,27 +45,27 @@ public class DockerBuildServiceImpl implements DockerBuildService {
   @Override
   public List<JobDetails> getJobs(
       DockerConfig dockerConfig, List<EncryptedDataDetail> encryptionDetails, Optional<String> parentJobName) {
-    throw new WingsException(ErrorCode.INVALID_REQUEST, HARNESS_ENGINEER)
+    throw new WingsException(INVALID_REQUEST, HARNESS_ENGINEER)
         .addParam("message", "Operation not supported by Docker Artifact Stream");
   }
 
   @Override
   public List<String> getArtifactPaths(
       String jobName, String groupId, DockerConfig config, List<EncryptedDataDetail> encryptionDetails) {
-    throw new WingsException(ErrorCode.INVALID_REQUEST, HARNESS_ENGINEER)
+    throw new WingsException(INVALID_REQUEST, HARNESS_ENGINEER)
         .addParam("message", "Operation not supported by Docker Artifact Stream");
   }
 
   @Override
   public BuildDetails getLastSuccessfulBuild(String appId, ArtifactStreamAttributes artifactStreamAttributes,
       DockerConfig dockerConfig, List<EncryptedDataDetail> encryptionDetails) {
-    throw new WingsException(ErrorCode.INVALID_REQUEST, HARNESS_ENGINEER)
+    throw new WingsException(INVALID_REQUEST, HARNESS_ENGINEER)
         .addParam("message", "Operation not supported by Docker Artifact Stream");
   }
 
   @Override
   public Map<String, String> getPlans(DockerConfig config, List<EncryptedDataDetail> encryptionDetails) {
-    throw new WingsException(ErrorCode.INVALID_REQUEST, HARNESS_ENGINEER)
+    throw new WingsException(INVALID_REQUEST, HARNESS_ENGINEER)
         .addParam("message", "Operation not supported by Docker Artifact Stream");
   }
 
@@ -76,7 +77,7 @@ public class DockerBuildServiceImpl implements DockerBuildService {
 
   @Override
   public List<String> getGroupIds(String jobName, DockerConfig config, List<EncryptedDataDetail> encryptionDetails) {
-    throw new WingsException(ErrorCode.INVALID_REQUEST, HARNESS_ENGINEER)
+    throw new WingsException(INVALID_REQUEST, HARNESS_ENGINEER)
         .addParam("message", "Operation not supported by Docker Artifact Stream");
   }
 

@@ -1,5 +1,6 @@
 package software.wings.sm.states;
 
+import static software.wings.beans.ErrorCode.INVALID_REQUEST;
 import static software.wings.sm.ExecutionResponse.Builder.anExecutionResponse;
 
 import com.google.inject.Inject;
@@ -14,7 +15,6 @@ import software.wings.api.PhaseElement;
 import software.wings.beans.AwsConfig;
 import software.wings.beans.AwsInfrastructureMapping;
 import software.wings.beans.ElasticLoadBalancerConfig;
-import software.wings.beans.ErrorCode;
 import software.wings.beans.InfrastructureMapping;
 import software.wings.beans.PhysicalInfrastructureMappingBase;
 import software.wings.beans.SettingAttribute;
@@ -89,7 +89,7 @@ public class ElasticLoadBalancerState extends State {
       return execute(context, loadBalancerName, Regions.valueOf(region), loadBalancerConfig.getAccessKey(),
           loadBalancerConfig.getSecretKey());
     } else {
-      throw new WingsException(ErrorCode.INVALID_REQUEST).addParam("message", "ELB operations not supported");
+      throw new WingsException(INVALID_REQUEST).addParam("message", "ELB operations not supported");
     }
   }
 
