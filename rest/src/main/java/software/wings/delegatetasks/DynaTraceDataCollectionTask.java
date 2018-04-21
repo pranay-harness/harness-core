@@ -7,6 +7,7 @@ import com.google.common.base.Preconditions;
 import com.google.common.collect.TreeBasedTable;
 import com.google.inject.Inject;
 
+import io.harness.time.Timestamp;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import software.wings.beans.DelegateTask;
@@ -24,7 +25,6 @@ import software.wings.service.intfc.analysis.ClusterLevel;
 import software.wings.service.intfc.dynatrace.DynaTraceDelegateService;
 import software.wings.sm.StateType;
 import software.wings.sm.states.DynatraceState;
-import software.wings.time.WingsTimeUtils;
 import software.wings.waitnotify.NotifyResponseData;
 
 import java.io.IOException;
@@ -89,7 +89,7 @@ public class DynaTraceDataCollectionTask extends AbstractDelegateDataCollectionT
         DynaTraceDataCollectionInfo dataCollectionInfo, DataCollectionTaskResult taskResult) {
       this.dataCollectionInfo = dataCollectionInfo;
       this.taskResult = taskResult;
-      this.collectionStartTime = WingsTimeUtils.getMinuteBoundary(dataCollectionInfo.getStartTime())
+      this.collectionStartTime = Timestamp.minuteBoundary(dataCollectionInfo.getStartTime())
           - TimeUnit.MINUTES.toMillis(DURATION_TO_ASK_MINUTES);
       this.dataCollectionMinute = dataCollectionInfo.getDataCollectionMinute();
     }

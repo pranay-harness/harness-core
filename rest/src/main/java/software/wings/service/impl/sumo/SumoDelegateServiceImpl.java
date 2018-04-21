@@ -6,13 +6,13 @@ import com.sumologic.client.Credentials;
 import com.sumologic.client.SumoLogicClient;
 import com.sumologic.client.SumoServerException;
 import io.harness.network.Http;
+import io.harness.time.Timestamp;
 import org.apache.http.HttpHost;
 import software.wings.beans.SumoConfig;
 import software.wings.exception.WingsException;
 import software.wings.security.encryption.EncryptedDataDetail;
 import software.wings.service.intfc.security.EncryptionService;
 import software.wings.service.intfc.sumo.SumoDelegateService;
-import software.wings.time.WingsTimeUtils;
 
 import java.io.IOException;
 import java.net.MalformedURLException;
@@ -29,10 +29,8 @@ public class SumoDelegateServiceImpl implements SumoDelegateService {
       throws IOException {
     try {
       getSumoClient(sumoConfig, encryptedDataDetails)
-          .createSearchJob("*exception*",
-              String.valueOf(WingsTimeUtils.getMinuteBoundary(System.currentTimeMillis()) - 1),
-              String.valueOf(WingsTimeUtils.getMinuteBoundary(System.currentTimeMillis())),
-              TimeZone.getDefault().getID());
+          .createSearchJob("*exception*", String.valueOf(Timestamp.currentMinuteBoundary() - 1),
+              String.valueOf(Timestamp.currentMinuteBoundary()), TimeZone.getDefault().getID());
       return true;
     } catch (MalformedURLException exception) {
       throw new WingsException(sumoConfig.getSumoUrl() + " is not a valid url. ", exception);

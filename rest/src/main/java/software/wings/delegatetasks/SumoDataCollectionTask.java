@@ -10,6 +10,7 @@ import com.sumologic.client.SumoLogicClient;
 import com.sumologic.client.model.LogMessage;
 import com.sumologic.client.searchjob.model.GetMessagesForSearchJobResponse;
 import com.sumologic.client.searchjob.model.GetSearchJobStatusResponse;
+import io.harness.time.Timestamp;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import software.wings.beans.DelegateTask;
@@ -18,7 +19,6 @@ import software.wings.service.impl.analysis.DataCollectionTaskResult.DataCollect
 import software.wings.service.impl.analysis.LogElement;
 import software.wings.service.impl.sumo.SumoDataCollectionInfo;
 import software.wings.sm.StateType;
-import software.wings.time.WingsTimeUtils;
 import software.wings.waitnotify.NotifyResponseData;
 
 import java.io.IOException;
@@ -100,7 +100,7 @@ public class SumoDataCollectionTask extends AbstractDelegateDataCollectionTask {
       this.logAnalysisStoreService = logAnalysisStoreService;
       this.logCollectionMinute = dataCollectionInfo.getStartMinute();
       this.taskResult = taskResult;
-      this.collectionStartTime = WingsTimeUtils.getMinuteBoundary(dataCollectionInfo.getStartTime())
+      this.collectionStartTime = Timestamp.minuteBoundary(dataCollectionInfo.getStartTime())
           + logCollectionMinute * TimeUnit.MINUTES.toMillis(1);
     }
 

@@ -10,6 +10,7 @@ import com.google.common.collect.Sets;
 
 import com.github.reinert.jjschema.Attributes;
 import com.github.reinert.jjschema.SchemaIgnore;
+import io.harness.time.Timestamp;
 import lombok.Data;
 import lombok.EqualsAndHashCode;
 import org.mongodb.morphia.annotations.Transient;
@@ -35,7 +36,6 @@ import software.wings.sm.StateType;
 import software.wings.sm.WorkflowStandardParams;
 import software.wings.stencils.DefaultValue;
 import software.wings.stencils.EnumData;
-import software.wings.time.WingsTimeUtils;
 
 import java.util.HashSet;
 import java.util.Set;
@@ -104,7 +104,7 @@ public class DynatraceState extends AbstractMetricAnalysisState {
 
     final DynaTraceConfig dynaTraceConfig = (DynaTraceConfig) settingAttribute.getValue();
 
-    final long dataCollectionStartTimeStamp = WingsTimeUtils.getMinuteBoundary(System.currentTimeMillis());
+    final long dataCollectionStartTimeStamp = Timestamp.currentMinuteBoundary();
     final DynaTraceDataCollectionInfo dataCollectionInfo =
         DynaTraceDataCollectionInfo.builder()
             .dynaTraceConfig(dynaTraceConfig)

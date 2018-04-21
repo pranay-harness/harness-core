@@ -7,6 +7,7 @@ import static software.wings.beans.DelegateTask.Builder.aDelegateTask;
 
 import com.github.reinert.jjschema.Attributes;
 import com.github.reinert.jjschema.SchemaIgnore;
+import io.harness.time.Timestamp;
 import org.mongodb.morphia.annotations.Transient;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -32,7 +33,6 @@ import software.wings.sm.StateType;
 import software.wings.sm.WorkflowStandardParams;
 import software.wings.stencils.DefaultValue;
 import software.wings.stencils.EnumData;
-import software.wings.time.WingsTimeUtils;
 
 import java.util.LinkedHashMap;
 import java.util.Map;
@@ -135,7 +135,7 @@ public class NewRelicState extends AbstractMetricAnalysisState {
     }
 
     final NewRelicConfig newRelicConfig = (NewRelicConfig) settingAttribute.getValue();
-    final long dataCollectionStartTimeStamp = WingsTimeUtils.getMinuteBoundary(System.currentTimeMillis());
+    final long dataCollectionStartTimeStamp = Timestamp.currentMinuteBoundary();
     final NewRelicDataCollectionInfo dataCollectionInfo =
         NewRelicDataCollectionInfo.builder()
             .newRelicConfig(newRelicConfig)

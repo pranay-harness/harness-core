@@ -7,6 +7,7 @@ import com.google.common.collect.Table.Cell;
 import com.google.common.collect.TreeBasedTable;
 import com.google.inject.Inject;
 
+import io.harness.time.Timestamp;
 import org.apache.commons.text.WordUtils;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -25,7 +26,6 @@ import software.wings.service.impl.newrelic.NewRelicMetricDataRecord;
 import software.wings.service.intfc.analysis.ClusterLevel;
 import software.wings.service.intfc.appdynamics.AppdynamicsDelegateService;
 import software.wings.sm.StateType;
-import software.wings.time.WingsTimeUtils;
 import software.wings.waitnotify.NotifyResponseData;
 
 import java.io.IOException;
@@ -93,7 +93,7 @@ public class AppdynamicsDataCollectionTask extends AbstractDelegateDataCollectio
     private AppdynamicsMetricCollector(
         AppdynamicsDataCollectionInfo dataCollectionInfo, DataCollectionTaskResult taskResult) {
       this.dataCollectionInfo = dataCollectionInfo;
-      this.collectionStartTime = WingsTimeUtils.getMinuteBoundary(dataCollectionInfo.getStartTime())
+      this.collectionStartTime = Timestamp.minuteBoundary(dataCollectionInfo.getStartTime())
           - TimeUnit.MINUTES.toMillis(DURATION_TO_ASK_MINUTES);
       this.dataCollectionMinute = dataCollectionInfo.getDataCollectionMinute();
       this.taskResult = taskResult;
