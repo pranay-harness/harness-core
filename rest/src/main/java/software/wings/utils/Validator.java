@@ -24,7 +24,7 @@ public class Validator {
    */
   public static void notNullCheck(String name, Object value) {
     if (value == null) {
-      throw new WingsException(GENERAL_ERROR).addParam("args", name);
+      throw new WingsException(GENERAL_ERROR).addParam("message", name);
     }
   }
 
@@ -36,7 +36,7 @@ public class Validator {
    */
   public static void notNullCheck(String name, Object value, ReportTarget[] reportTargets) {
     if (value == null) {
-      throw new WingsException(GENERAL_ERROR, reportTargets).addParam("args", name);
+      throw new WingsException(GENERAL_ERROR, reportTargets).addParam("message", name);
     }
   }
 
@@ -48,7 +48,7 @@ public class Validator {
    */
   public static void nullCheck(String name, Object value) {
     if (value != null) {
-      throw new WingsException(GENERAL_ERROR).addParam("args", name);
+      throw new WingsException(GENERAL_ERROR).addParam("message", name);
     }
   }
 
@@ -81,7 +81,7 @@ public class Validator {
     try {
       runnable.run();
     } catch (DuplicateKeyException e) {
-      new WingsException(GENERAL_ERROR).addParam("args", "Duplicate " + field + " " + value);
+      new WingsException(GENERAL_ERROR).addParam("message", "Duplicate " + field + " " + value);
     }
   }
 
@@ -89,12 +89,12 @@ public class Validator {
     try {
       return runnable.call();
     } catch (DuplicateKeyException e) {
-      throw new WingsException(GENERAL_ERROR, USER).addParam("args", "Duplicate " + field + " " + value);
+      throw new WingsException(GENERAL_ERROR, USER).addParam("message", "Duplicate " + field + " " + value);
     } catch (Exception e) {
       if (e.getCause() != null && e.getCause() instanceof DuplicateKeyException) {
-        throw new WingsException(GENERAL_ERROR, USER).addParam("args", "Duplicate " + field + " " + value);
+        throw new WingsException(GENERAL_ERROR, USER).addParam("message", "Duplicate " + field + " " + value);
       }
-      throw new WingsException(GENERAL_ERROR, USER).addParam("args", e.getMessage());
+      throw new WingsException(GENERAL_ERROR, USER).addParam("message", e.getMessage());
     }
   }
 }

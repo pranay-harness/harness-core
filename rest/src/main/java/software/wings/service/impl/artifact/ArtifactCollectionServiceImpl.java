@@ -250,7 +250,7 @@ public class ArtifactCollectionServiceImpl implements ArtifactCollectionService 
     if (service == null) {
       artifactStreamService.delete(appId, artifactStream.getUuid());
       throw new WingsException(ErrorCode.GENERAL_ERROR)
-          .addParam("args", String.format("Artifact stream %s is a zombie.", artifactStream.getUuid()));
+          .addParam("message", String.format("Artifact stream %s is a zombie.", artifactStream.getUuid()));
     }
     return service;
   }

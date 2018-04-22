@@ -707,7 +707,7 @@ public class EnvironmentServiceImpl implements EnvironmentService, DataProvider 
     try (
         AcquiredLock lock = persistentLocker.waitToAcquireLock(Environment.class, envId, ofSeconds(5), ofSeconds(10))) {
       if (lock == null) {
-        throw new WingsException(ErrorCode.GENERAL_ERROR).addParam("args", "The persistent lock was not acquired.");
+        throw new WingsException(ErrorCode.GENERAL_ERROR).addParam("message", "The persistent lock was not acquired.");
       }
       Environment savedEnv = get(appId, envId, false);
       Validator.notNullCheck("Environment", savedEnv);
@@ -760,7 +760,7 @@ public class EnvironmentServiceImpl implements EnvironmentService, DataProvider 
     try (
         AcquiredLock lock = persistentLocker.waitToAcquireLock(Environment.class, envId, ofSeconds(5), ofSeconds(10))) {
       if (lock == null) {
-        throw new WingsException(ErrorCode.GENERAL_ERROR).addParam("args", "The persistent lock was not acquired.");
+        throw new WingsException(ErrorCode.GENERAL_ERROR).addParam("message", "The persistent lock was not acquired.");
       }
       Environment savedEnv = get(appId, envId, false);
       Validator.notNullCheck("Environment", savedEnv);

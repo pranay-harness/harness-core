@@ -97,7 +97,7 @@ public class KubernetesResizeCommandUnit extends ContainerResizeCommandUnit {
       } catch (Exception e) {
         Misc.logAllMessages(e, executionLogCallback);
       }
-      throw new WingsException(GENERAL_ERROR).addParam("args", "Failed to resize controller");
+      throw new WingsException(GENERAL_ERROR).addParam("message", "Failed to resize controller");
     }
 
     if (totalDesiredCount > 0 && contextData.deployingToHundredPercent && resizeParams.isUseAutoscaler()) {

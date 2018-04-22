@@ -43,7 +43,7 @@ public class PersistentLocker implements Locker {
     }
 
     throw new WingsException(GENERAL_ERROR, NOBODY)
-        .addParam("args", format("Failed to acquire distributed lock for %s", name));
+        .addParam("message", format("Failed to acquire distributed lock for %s", name));
   }
 
   @Override
@@ -76,7 +76,7 @@ public class PersistentLocker implements Locker {
       }, waitTimeout.toMillis(), TimeUnit.MILLISECONDS, true);
     } catch (Exception e) {
       throw new WingsException(GENERAL_ERROR, NOBODY)
-          .addParam("args", format("Failed to acquire distributed lock for %s within %s", name, waitTimeout));
+          .addParam("message", format("Failed to acquire distributed lock for %s within %s", name, waitTimeout));
     }
   }
 
@@ -89,6 +89,6 @@ public class PersistentLocker implements Locker {
     wingsPersistence.getCollection("locks").remove(filter);
     acquiredLock.release();
     throw new WingsException(GENERAL_ERROR, NOBODY)
-        .addParam("args", format("Acquired distributed lock %s was destroyed and the lock was broken.", name));
+        .addParam("message", format("Acquired distributed lock %s was destroyed and the lock was broken.", name));
   }
 }

@@ -48,7 +48,7 @@ public class MigrationServiceImpl implements MigrationService {
         AcquiredLock lock = persistentLocker.waitToAcquireLock(Schema.class, SCHEMA_ID, ofMinutes(15), ofMinutes(20))) {
       if (lock == null) {
         throw new WingsException(ErrorCode.GENERAL_ERROR)
-            .addParam("args", "The persistent lock was not acquired. That very unlikely, but yet it happened.");
+            .addParam("message", "The persistent lock was not acquired. That very unlikely, but yet it happened.");
       }
 
       logger.info("[Migration] - Checking for new migrations");
