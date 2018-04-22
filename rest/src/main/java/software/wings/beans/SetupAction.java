@@ -2,7 +2,7 @@ package software.wings.beans;
 
 import com.google.common.base.MoreObjects;
 
-import software.wings.beans.ResponseMessage.Level;
+import io.harness.eraro.Level;
 
 import java.util.Objects;
 

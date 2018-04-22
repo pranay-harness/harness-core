@@ -2,7 +2,6 @@ package software.wings.exception;
 
 import static java.util.stream.Collectors.toList;
 import static software.wings.beans.ErrorCode.INVALID_ARGUMENT;
-import static software.wings.beans.ResponseMessage.Level.ERROR;
 import static software.wings.beans.ResponseMessage.aResponseMessage;
 import static software.wings.beans.RestResponse.Builder.aRestResponse;
 
@@ -15,6 +14,7 @@ import com.google.common.collect.ImmutableList;
 import com.google.common.collect.Iterables;
 
 import io.dropwizard.validation.ValidationMethod;
+import io.harness.eraro.Level;
 import org.apache.commons.lang3.StringUtils;
 import org.apache.commons.lang3.reflect.FieldUtils;
 import org.apache.commons.lang3.reflect.MethodUtils;
@@ -182,7 +182,7 @@ public class ConstraintViolationExceptionMapper implements ExceptionMapper<Const
   }
 
   private ResponseMessage errorMessageToResponseMessage(String s) {
-    return aResponseMessage().code(INVALID_ARGUMENT).level(ERROR).message(s).build();
+    return aResponseMessage().code(INVALID_ARGUMENT).level(Level.ERROR).message(s).build();
   }
 
   private String processMessage(ConstraintViolation<?> v, String message) {

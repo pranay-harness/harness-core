@@ -1,8 +1,9 @@
 package software.wings.beans;
 
+import static io.harness.eraro.Level.ERROR;
 import static software.wings.beans.ErrorCode.DEFAULT_ERROR_CODE;
-import static software.wings.beans.ResponseMessage.Level.ERROR;
 
+import io.harness.eraro.Level;
 import lombok.Builder;
 import lombok.EqualsAndHashCode;
 import lombok.Getter;
@@ -19,8 +20,6 @@ import java.io.Serializable;
 @ToString
 public class ResponseMessage implements Serializable {
   private static final long serialVersionUID = 7669895652860634550L;
-
-  public enum Level { DEBUG, INFO, WARN, ERROR }
 
   @Builder.Default private ErrorCode code = DEFAULT_ERROR_CODE;
   @Builder.Default private Level level = ERROR;

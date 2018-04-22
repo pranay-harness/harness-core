@@ -7,7 +7,6 @@ import static java.time.Duration.ofMillis;
 import static java.util.Collections.emptyMap;
 import static java.util.stream.Collectors.toList;
 import static org.apache.commons.lang3.StringUtils.isBlank;
-import static software.wings.beans.ErrorCode.INVALID_REQUEST;
 import static software.wings.helpers.ext.jenkins.BuildDetails.Builder.aBuildDetails;
 import static software.wings.helpers.ext.nexus.NexusServiceImpl.getBaseUrl;
 import static software.wings.helpers.ext.nexus.NexusServiceImpl.getRetrofit;
@@ -29,7 +28,6 @@ import retrofit2.converter.simplexml.SimpleXmlConverterFactory;
 import software.wings.beans.config.NexusConfig;
 import software.wings.common.AlphanumComparator;
 import software.wings.exception.InvalidRequestException;
-import software.wings.exception.WingsException;
 import software.wings.helpers.ext.artifactory.FolderPath;
 import software.wings.helpers.ext.jenkins.BuildDetails;
 import software.wings.helpers.ext.nexus.model.IndexBrowserTreeNode;
@@ -334,10 +332,9 @@ public class NexusTwoServiceImpl {
         }
       }
     } catch (final IOException e) {
-      throw new WingsException(INVALID_REQUEST, e)
-          .addParam("message",
-              "Error occurred while retrieving Repository Group Ids from Nexus server " + nexusConfig.getNexusUrl()
-                  + " for repository " + repoKey + " under path " + repoPath);
+      throw new InvalidRequestException("Error occurred while retrieving Repository Group Ids from Nexus server "
+              + nexusConfig.getNexusUrl() + " for repository " + repoKey + " under path " + repoPath,
+          e);
     }
     return folderPaths;
   }
