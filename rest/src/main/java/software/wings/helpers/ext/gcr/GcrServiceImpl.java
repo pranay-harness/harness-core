@@ -78,7 +78,6 @@ public class GcrServiceImpl implements GcrService {
       checkValidImage(imageName, response);
       return processBuildResponse(response.body());
     } catch (IOException e) {
-      logger.error("Error occurred while getting builds from " + imageName, e);
       throw new WingsException(ErrorCode.DEFAULT_ERROR_CODE, USER).addParam("message", e.getMessage());
     }
   }

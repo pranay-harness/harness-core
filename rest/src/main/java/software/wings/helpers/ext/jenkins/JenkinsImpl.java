@@ -81,7 +81,6 @@ public class JenkinsImpl implements Jenkins {
 
   private JenkinsServer jenkinsServer;
   private JenkinsHttpClient jenkinsHttpClient;
-  private String jenkinsBaseUrl;
 
   /**
    * Instantiates a new jenkins impl.
@@ -93,7 +92,6 @@ public class JenkinsImpl implements Jenkins {
   public JenkinsImpl(@Assisted(value = "url") String jenkinsUrl) throws URISyntaxException {
     jenkinsHttpClient = new CustomJenkinsHttpClient(new URI(jenkinsUrl), getUnSafeBuilder(jenkinsUrl));
     jenkinsServer = new CustomJenkinsServer(jenkinsHttpClient);
-    this.jenkinsBaseUrl = jenkinsUrl;
   }
 
   /**
@@ -110,7 +108,6 @@ public class JenkinsImpl implements Jenkins {
     jenkinsHttpClient =
         new CustomJenkinsHttpClient(new URI(jenkinsUrl), username, new String(password), getUnSafeBuilder(jenkinsUrl));
     jenkinsServer = new CustomJenkinsServer(jenkinsHttpClient);
-    this.jenkinsBaseUrl = jenkinsUrl;
   }
 
   /* (non-Javadoc)
@@ -359,7 +356,6 @@ public class JenkinsImpl implements Jenkins {
 
   @Override
   public BuildDetails getLastSuccessfulBuildForJob(String jobName) throws IOException {
-    logger.info("Retrieving last successful build for job name {}", jobName);
     JobWithDetails jobWithDetails = getJob(jobName);
     if (jobWithDetails == null) {
       logger.info("Job {} does not exist", jobName);
@@ -372,7 +368,6 @@ public class JenkinsImpl implements Jenkins {
       return null;
     }
     BuildWithDetails buildWithDetails = lastSuccessfulBuild.details();
-    logger.info("Last successful build {} for job {}", buildWithDetails.getNumber(), jobName);
     return getBuildDetails(buildWithDetails);
   }
 
