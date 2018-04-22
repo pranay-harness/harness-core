@@ -1,9 +1,8 @@
 package software.wings.exception;
 
+import static io.harness.eraro.Level.ERROR;
+import static io.harness.eraro.Level.INFO;
 import static java.util.stream.Collectors.joining;
-import static software.wings.beans.ResponseMessage.Level.ERROR;
-import static software.wings.beans.ResponseMessage.Level.INFO;
-import static software.wings.beans.ResponseMessage.Level.WARN;
 import static software.wings.beans.ResponseMessage.aResponseMessage;
 import static software.wings.exception.WingsException.ReportTarget.LOG_SYSTEM;
 import static software.wings.exception.WingsException.ReportTarget.RED_BELL_ALERT;
@@ -177,9 +176,6 @@ public class WingsException extends WingsApiException {
     if (responseMessages.stream().anyMatch(responseMessage -> responseMessage.getLevel() == ERROR)) {
       logger.error(msg, this);
       logger.error(responseMsgs);
-    } else if (responseMessages.stream().anyMatch(responseMessage -> responseMessage.getLevel() == WARN)) {
-      logger.warn(msg, this);
-      logger.warn(responseMsgs);
     } else if (responseMessages.stream().anyMatch(responseMessage -> responseMessage.getLevel() == INFO)) {
       logger.info(msg, this);
       logger.info(responseMsgs);
