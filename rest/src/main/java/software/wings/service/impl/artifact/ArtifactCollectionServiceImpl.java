@@ -1,6 +1,7 @@
 package software.wings.service.impl.artifact;
 
 import static io.harness.data.structure.EmptyPredicate.isEmpty;
+import static java.lang.Integer.parseInt;
 import static java.util.Arrays.asList;
 import static software.wings.beans.artifact.Artifact.Status.APPROVED;
 import static software.wings.beans.artifact.Artifact.Status.FAILED;
@@ -132,9 +133,9 @@ public class ArtifactCollectionServiceImpl implements ArtifactCollectionService 
     Artifact lastCollectedArtifact = artifactService.fetchLatestArtifactForArtifactStream(
         appId, artifactStream.getUuid(), artifactStream.getSourceName());
     int buildNo = (lastCollectedArtifact != null && lastCollectedArtifact.getMetadata().get(BUILD_NO) != null)
-        ? Integer.parseInt(lastCollectedArtifact.getMetadata().get(BUILD_NO))
+        ? parseInt(lastCollectedArtifact.getMetadata().get(BUILD_NO))
         : 0;
-    if (Integer.parseInt(lastSuccessfulBuild.getNumber()) > buildNo) {
+    if (lastSuccessfulBuild != null && parseInt(lastSuccessfulBuild.getNumber()) > buildNo) {
       logger.info("Existing build no {} is older than new build number {}. Collect new Artifact for ArtifactStream {}",
           buildNo, lastSuccessfulBuild.getNumber(), artifactStream.getUuid());
       newArtifacts.add(artifactService.create(getArtifact(artifactStream, lastSuccessfulBuild)));

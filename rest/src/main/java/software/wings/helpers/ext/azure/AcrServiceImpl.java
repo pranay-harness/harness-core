@@ -1,6 +1,8 @@
 package software.wings.helpers.ext.azure;
 
 import static java.util.stream.Collectors.toList;
+import static software.wings.beans.ErrorCode.GENERAL_ERROR;
+import static software.wings.exception.WingsException.USER;
 import static software.wings.helpers.ext.jenkins.BuildDetails.Builder.aBuildDetails;
 
 import com.google.inject.Inject;
@@ -31,18 +33,27 @@ public class AcrServiceImpl implements AcrService {
   @Override
   public List<String> listRegistries(
       AzureConfig config, List<EncryptedDataDetail> encryptionDetails, String subscriptionId) {
-    return azureHelperService.listContainerRegistries(config, encryptionDetails, subscriptionId);
+    try {
+      return azureHelperService.listContainerRegistries(config, encryptionDetails, subscriptionId);
+    } catch (Exception e) {
+      throw new WingsException(ErrorCode.INVALID_ARTIFACT_SERVER, USER).addParam("message", e.getMessage());
+    }
   }
 
   @Override
   public List<BuildDetails> getBuilds(AzureConfig config, List<EncryptedDataDetail> encryptionDetails,
       ArtifactStreamAttributes artifactStreamAttributes, int maxNumberOfBuilds) {
-    return azureHelperService
-        .listRepositoryTags(config, encryptionDetails, artifactStreamAttributes.getSubscriptionId(),
-            artifactStreamAttributes.getRegistryName(), artifactStreamAttributes.getRepositoryName())
-        .stream()
-        .map(tag -> aBuildDetails().withNumber(tag).build())
-        .collect(toList());
+    try {
+      return azureHelperService
+          .listRepositoryTags(config, encryptionDetails, artifactStreamAttributes.getSubscriptionId(),
+              artifactStreamAttributes.getRegistryName(), artifactStreamAttributes.getRepositoryName())
+          .stream()
+          .map(tag -> aBuildDetails().withNumber(tag).build())
+          .collect(toList());
+
+    } catch (Exception e) {
+      throw new WingsException(GENERAL_ERROR, WingsException.ADMIN_SRE).addParam("message", e.getMessage());
+    }
   }
 
   @Override
@@ -58,7 +69,7 @@ public class AcrServiceImpl implements AcrService {
             config, encryptionDetails, artifactStreamAttributes.getSubscriptionId())) {
       logger.info(
           "SubscriptionId [" + artifactStreamAttributes.getSubscriptionId() + "] does not exist in Azure account.");
-      throw new WingsException(ErrorCode.INVALID_ARGUMENT)
+      throw new WingsException(ErrorCode.INVALID_ARGUMENT, USER)
           .addParam("args",
               "SubscriptionId [" + artifactStreamAttributes.getSubscriptionId() + "] does not exist in Azure account.");
     }
@@ -67,7 +78,7 @@ public class AcrServiceImpl implements AcrService {
             artifactStreamAttributes.getSubscriptionId(), artifactStreamAttributes.getRegistryName())) {
       logger.info(
           "Registry [" + artifactStreamAttributes.getRegistryName() + "] does not exist in Azure subscription.");
-      throw new WingsException(ErrorCode.INVALID_ARGUMENT)
+      throw new WingsException(ErrorCode.INVALID_ARGUMENT, USER)
           .addParam("args",
               "Registry [" + artifactStreamAttributes.getRegistryName() + "] does not exist in Azure subscription.");
     }
@@ -78,7 +89,7 @@ public class AcrServiceImpl implements AcrService {
              .contains(artifactStreamAttributes.getRepositoryName())) {
       logger.info(
           "Repository [" + artifactStreamAttributes.getRepositoryName() + "] does not exist in Azure Registry.");
-      throw new WingsException(ErrorCode.INVALID_ARGUMENT)
+      throw new WingsException(ErrorCode.INVALID_ARGUMENT, USER)
           .addParam("args",
               "Repository [" + artifactStreamAttributes.getRepositoryName() + "] does not exist in Azure Registry.");
     }

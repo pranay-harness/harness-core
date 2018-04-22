@@ -1,6 +1,7 @@
 package software.wings.helpers.ext.ecr;
 
 import static io.harness.data.structure.EmptyPredicate.isNotEmpty;
+import static software.wings.beans.ErrorCode.GENERAL_ERROR;
 
 import com.google.inject.Inject;
 import com.google.inject.Singleton;
@@ -12,6 +13,7 @@ import com.amazonaws.services.ecr.model.ListImagesResult;
 import com.amazonaws.services.ecr.model.Repository;
 import software.wings.beans.AwsConfig;
 import software.wings.beans.artifact.EcrArtifactStream;
+import software.wings.exception.WingsException;
 import software.wings.helpers.ext.jenkins.BuildDetails;
 import software.wings.security.encryption.EncryptedDataDetail;
 import software.wings.service.impl.AwsHelperService;
@@ -32,19 +34,23 @@ public class EcrServiceImpl implements EcrService {
   public List<BuildDetails> getBuilds(AwsConfig awsConfig, List<EncryptedDataDetail> encryptionDetails, String region,
       String imageName, int maxNumberOfBuilds) {
     List<BuildDetails> buildDetails = new ArrayList<>();
-    ListImagesResult listImagesResult;
-    ListImagesRequest listImagesRequest = new ListImagesRequest().withRepositoryName(imageName);
-    do {
-      encryptionService.decrypt(awsConfig, encryptionDetails);
-      listImagesResult = awsHelperService.listEcrImages(awsConfig, encryptionDetails, region, listImagesRequest);
-      listImagesResult.getImageIds()
-          .stream()
-          .filter(imageIdentifier -> imageIdentifier != null && isNotEmpty(imageIdentifier.getImageTag()))
-          .forEach(imageIdentifier
-              -> buildDetails.add(
-                  BuildDetails.Builder.aBuildDetails().withNumber(imageIdentifier.getImageTag()).build()));
-      listImagesRequest.setNextToken(listImagesResult.getNextToken());
-    } while (listImagesRequest.getNextToken() != null);
+    try {
+      ListImagesResult listImagesResult;
+      ListImagesRequest listImagesRequest = new ListImagesRequest().withRepositoryName(imageName);
+      do {
+        encryptionService.decrypt(awsConfig, encryptionDetails);
+        listImagesResult = awsHelperService.listEcrImages(awsConfig, encryptionDetails, region, listImagesRequest);
+        listImagesResult.getImageIds()
+            .stream()
+            .filter(imageIdentifier -> imageIdentifier != null && isNotEmpty(imageIdentifier.getImageTag()))
+            .forEach(imageIdentifier
+                -> buildDetails.add(
+                    BuildDetails.Builder.aBuildDetails().withNumber(imageIdentifier.getImageTag()).build()));
+        listImagesRequest.setNextToken(listImagesResult.getNextToken());
+      } while (listImagesRequest.getNextToken() != null);
+    } catch (Exception e) {
+      throw new WingsException(GENERAL_ERROR, WingsException.ADMIN_SRE).addParam("message", e.getMessage());
+    }
     return buildDetails;
   }
 

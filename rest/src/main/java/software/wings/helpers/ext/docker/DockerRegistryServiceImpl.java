@@ -4,6 +4,7 @@ import static io.harness.data.structure.EmptyPredicate.isNotEmpty;
 import static io.harness.govern.Switch.unhandled;
 import static java.util.Collections.emptyList;
 import static java.util.stream.Collectors.toList;
+import static software.wings.beans.ErrorCode.GENERAL_ERROR;
 import static software.wings.exception.WingsException.USER;
 import static software.wings.helpers.ext.jenkins.BuildDetails.Builder.aBuildDetails;
 
@@ -74,9 +75,8 @@ public class DockerRegistryServiceImpl implements DockerRegistryService {
       checkValidImage(imageName, response);
       return processBuildResponse(response.body(), dockerConfig, imageName);
     } catch (IOException e) {
-      logger.error(e.getMessage(), e);
+      throw new WingsException(GENERAL_ERROR, WingsException.ADMIN_SRE).addParam("message", e.getMessage());
     }
-    return null;
   }
 
   private void checkValidImage(String imageName, Response<DockerImageTagResponse> response) {
@@ -150,7 +150,7 @@ public class DockerRegistryServiceImpl implements DockerRegistryService {
       }
       return isSuccessful(response);
     } catch (IOException e) {
-      throw new WingsException(ErrorCode.DEFAULT_ERROR_CODE, USER).addParam("message", e.getMessage());
+      throw new WingsException(GENERAL_ERROR, USER).addParam("message", e.getMessage());
     }
   }
 
