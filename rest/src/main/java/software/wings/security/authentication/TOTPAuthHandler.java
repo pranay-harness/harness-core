@@ -86,15 +86,8 @@ public class TOTPAuthHandler implements TwoFactorAuthHandler {
   }
 
   private String generateOtpUrl(String companyName, String userEmailAddress, String secret) {
-    StringBuilder sb = new StringBuilder(100);
-    return sb.append("otpauth://totp/")
-        .append(companyName.replace(" ", "-"))
-        .append(":")
-        .append(userEmailAddress)
-        .append("?secret=")
-        .append(secret)
-        .append("&issuer=Harness-Inc")
-        .toString();
+    return String.format(
+        "otpauth://totp/%s:%s?secret=%s&issuer=Harness-Inc", companyName.replace(" ", "-"), userEmailAddress, secret);
   }
 
   @Override

@@ -2,6 +2,7 @@ package software.wings.beans.container;
 
 import static io.harness.data.structure.EmptyPredicate.isNotEmpty;
 import static java.util.Collections.emptyList;
+import static java.util.stream.Collectors.joining;
 import static java.util.stream.Collectors.toList;
 import static org.apache.commons.lang3.StringUtils.isNotBlank;
 import static org.apache.commons.lang3.StringUtils.strip;
@@ -100,12 +101,9 @@ public class EcsContainerTask extends ContainerTask {
 
   public String fetchAdvancedConfigNoComments() {
     if (isNotEmpty(getAdvancedConfig())) {
-      StringBuilder strippedConfig = new StringBuilder();
-      String[] lines = getAdvancedConfig().split("\n");
-      Arrays.stream(lines)
+      return Arrays.stream(getAdvancedConfig().split("\n"))
           .filter(line -> !commentPattern.matcher(line).matches())
-          .forEach(line -> strippedConfig.append(line).append("\n"));
-      return strippedConfig.toString();
+          .collect(joining("\n"));
     }
     return getAdvancedConfig();
   }

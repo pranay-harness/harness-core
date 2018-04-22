@@ -1098,7 +1098,7 @@ public class YamlDirectoryServiceImpl implements YamlDirectoryService {
   public String getRootPathBySettingAttribute(
       SettingAttribute settingAttribute, SettingVariableTypes settingVariableType) {
     StringBuilder sb = new StringBuilder();
-    sb.append(getRootPath() + PATH_DELIMITER);
+    sb.append(getRootPath()).append(PATH_DELIMITER);
 
     switch (settingVariableType) {
       // cloud providers

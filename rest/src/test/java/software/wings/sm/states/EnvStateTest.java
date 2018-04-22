@@ -124,6 +124,6 @@ public class EnvStateTest extends WingsBaseTest {
         .thenReturn(anEnvStateExecutionData().withWorkflowId(WORKFLOW_ID).withEnvId(ENV_ID).build());
     envState.handleAbortEvent(context);
     assertThat(context.getStateExecutionData()).isNotNull();
-    assertThat(context.getStateExecutionData().getErrorMsg().contains("Workflow not completed within 0.6 hour(s)"));
+    assertThat(context.getStateExecutionData().getErrorMsg()).contains("Workflow not completed within 36m");
   }
 }

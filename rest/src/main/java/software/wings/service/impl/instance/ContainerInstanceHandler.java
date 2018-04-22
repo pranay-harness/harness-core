@@ -76,7 +76,7 @@ public class ContainerInstanceHandler extends InstanceHandler {
 
     // This is to handle the case of the instances stored in the new schema.
     if (containerSvcNameInstanceMap.size() > 0) {
-      containerSvcNameInstanceMap.keySet().stream().forEach(containerSvcName -> {
+      containerSvcNameInstanceMap.keySet().forEach(containerSvcName -> {
         // Get all the instances for the given containerSvcName (In kubernetes, this is replication Controller and in
         // ECS it is taskDefinition)
         ContainerSyncResponse instanceSyncResponse =
@@ -87,7 +87,7 @@ public class ContainerInstanceHandler extends InstanceHandler {
 
         // Key - containerId(taskId in ECS / podId in Kubernetes), Value - ContainerInfo
         Map<String, ContainerInfo> latestContainerInfoMap = latestContainerInfoList.stream().collect(
-            Collectors.toMap(containerInfo -> getContainerId(containerInfo), containerInfo -> containerInfo));
+            Collectors.toMap(this ::getContainerId, containerInfo -> containerInfo));
 
         Collection<Instance> instancesInDB = containerSvcNameInstanceMap.get(containerSvcName);
 
@@ -96,7 +96,7 @@ public class ContainerInstanceHandler extends InstanceHandler {
 
         // If there are prior instances in db already
         if (isNotEmpty(instancesInDB)) {
-          instancesInDB.stream().forEach(instance -> {
+          instancesInDB.forEach(instance -> {
             if (instance != null) {
               instancesInDBMap.put(instance.getContainerInstanceKey().getContainerId(), instance);
             }
@@ -128,29 +128,17 @@ public class ContainerInstanceHandler extends InstanceHandler {
           }
         });
 
-        logger.info(new StringBuilder()
-                        .append("Total no of Container instances found in DB for InfraMappingId: ")
-                        .append(infraMappingId)
-                        .append(" and AppId: ")
-                        .append(appId)
-                        .append(", No of instances in DB: ")
-                        .append(instancesInDB.size())
-                        .append(", No of Running instances: ")
-                        .append(latestContainerInfoMap.keySet().size())
-                        .append(", No of instances updated: ")
-                        .append(instancesToBeUpdated.size())
-                        .append(", No of instances to be Added: ")
-                        .append(instancesToBeAdded.size())
-                        .append(", No of instances to be deleted: ")
-                        .append(instanceIdsToBeDeleted.size())
-                        .toString());
-
+        logger.info("Total no of Container instances found in DB for InfraMappingId: {} and AppId: {}, "
+                + "No of instances in DB: {}, No of Running instances: {}, No of instances updated: {}, "
+                + "No of instances to be Added: {}, No of instances to be deleted: {}",
+            infraMappingId, appId, instancesInDB.size(), latestContainerInfoMap.keySet().size(),
+            instancesToBeUpdated.size(), instancesToBeAdded.size(), instanceIdsToBeDeleted.size());
         if (isNotEmpty(instanceIdsToBeDeleted)) {
           instanceService.delete(instanceIdsToBeDeleted);
         }
 
         if (isNotEmpty(instancesToBeAdded)) {
-          instancesToBeAdded.stream().forEach(containerId -> {
+          instancesToBeAdded.forEach(containerId -> {
             ContainerInfo containerInfo = latestContainerInfoMap.get(containerId);
             Instance instance = containerInstanceHelper.buildInstanceFromContainerInfo(
                 containerInfraMapping, containerInfo, newDeploymentInfo);

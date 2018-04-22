@@ -260,12 +260,8 @@ public class YamlGitServiceImpl implements YamlGitService {
     checkForValidNameSyntax(gitFileChanges);
 
     // @TODO_GITLOG add accountId here
-    logger.info(new StringBuilder()
-                    .append(GIT_YAML_LOG_PREFIX)
-                    .append("Creating COMMIT_AND_PUSH git delegate task for account: ")
-                    .append(yamlChangeSet.getAccountId())
-                    .toString());
-
+    logger.info(GIT_YAML_LOG_PREFIX + "Creating COMMIT_AND_PUSH git delegate task for account: {}",
+        yamlChangeSet.getAccountId());
     logger.info(GIT_YAML_LOG_PREFIX + "Change set [{}] files", yamlChangeSet.getUuid());
 
     String waitId = generateUuid();

@@ -6,7 +6,6 @@ import static software.wings.beans.ResponseMessage.aResponseMessage;
 import static software.wings.beans.RestResponse.Builder.aRestResponse;
 
 import com.google.common.base.Joiner;
-import com.google.common.base.Optional;
 import com.google.common.base.Strings;
 import com.google.common.cache.Cache;
 import com.google.common.cache.CacheBuilder;
@@ -28,6 +27,7 @@ import java.lang.annotation.Annotation;
 import java.lang.reflect.Field;
 import java.lang.reflect.Method;
 import java.util.List;
+import java.util.Optional;
 import java.util.concurrent.TimeUnit;
 import javax.validation.ConstraintViolation;
 import javax.validation.ConstraintViolationException;
@@ -77,7 +77,7 @@ public class ConstraintViolationExceptionMapper implements ExceptionMapper<Const
     } else if (isValidationMethod(v)) {
       return validationMethodFormatted(v);
     } else {
-      final String name = getMemberName(v).or(v.getPropertyPath().toString());
+      final String name = getMemberName(v).orElse(v.getPropertyPath().toString());
       return name + " " + v.getMessage();
     }
   }
@@ -94,7 +94,7 @@ public class ConstraintViolationExceptionMapper implements ExceptionMapper<Const
       }
     }
 
-    return returnValueNames >= 0 ? Optional.of(result.toString()) : Optional.<String>absent();
+    return returnValueNames >= 0 ? Optional.of(result.toString()) : Optional.empty();
   }
 
   /**
@@ -119,7 +119,7 @@ public class ConstraintViolationExceptionMapper implements ExceptionMapper<Const
       }
     }
 
-    return Optional.absent();
+    return Optional.empty();
   }
 
   /**
@@ -128,7 +128,7 @@ public class ConstraintViolationExceptionMapper implements ExceptionMapper<Const
   private static Optional<String> getMemberName(ConstraintViolation<?> violation) {
     final int size = Iterables.size(violation.getPropertyPath());
     if (size < 2) {
-      return Optional.absent();
+      return Optional.empty();
     }
 
     final Path.Node parent = Iterables.get(violation.getPropertyPath(), size - 2);
@@ -140,13 +140,13 @@ public class ConstraintViolationExceptionMapper implements ExceptionMapper<Const
         return getMemberName(field.getDeclaredAnnotations());
       case METHOD:
         List<Class<?>> params = parent.as(Path.MethodNode.class).getParameterTypes();
-        Class<?>[] parcs = params.toArray(new Class<?>[ params.size() ]);
+        Class<?>[] parcs = params.toArray(new Class<?>[ 0 ]);
         Method method = MethodUtils.getAccessibleMethod(resourceClass, parent.getName(), parcs);
 
         int paramIndex = member.as(Path.ParameterNode.class).getParameterIndex();
         return getMemberName(method.getParameterAnnotations()[paramIndex]);
       default:
-        return Optional.absent();
+        return Optional.empty();
     }
   }
 

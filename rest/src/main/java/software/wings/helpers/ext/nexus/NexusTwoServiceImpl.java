@@ -297,12 +297,7 @@ public class NexusTwoServiceImpl {
   }
 
   private String getIndexContentPathUrl(NexusConfig nexusConfig, String repoId, String path) {
-    return new StringBuilder(getBaseUrl(nexusConfig))
-        .append("service/local/repositories/")
-        .append(repoId)
-        .append("/index_content")
-        .append(path)
-        .toString();
+    return getBaseUrl(nexusConfig) + "service/local/repositories/" + repoId + "/index_content" + path;
   }
 
   private List<FolderPath> getFolderPaths(

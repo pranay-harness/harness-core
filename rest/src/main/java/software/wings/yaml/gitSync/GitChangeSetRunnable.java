@@ -59,12 +59,9 @@ public class GitChangeSetRunnable implements Runnable {
       // than 10 mins (same as timeout duration for GitDelegateTask), just mark it as failed, so other YamlChangeSets
       // for that account get unblocked
       if (isNotEmpty(runningAccountIdList)) {
-        logger.info(new StringBuilder()
-                        .append(GIT_YAML_LOG_PREFIX)
-                        .append(" Skipping processing of GitChangeSet for Accounts :{")
-                        .append(runningAccountIdList)
-                        .append("}, as there is already running task for these accounts")
-                        .toString());
+        logger.info(GIT_YAML_LOG_PREFIX
+                + " Skipping processing of GitChangeSet for Accounts :[{}], as there is already running task for these accounts",
+            runningAccountIdList);
       }
 
       // nothing already in execution and lock acquired
@@ -79,10 +76,10 @@ public class GitChangeSetRunnable implements Runnable {
             logger.info(GIT_YAML_LOG_PREFIX + "No change set queued to process for accountId [{}]", accountId);
           }
         } catch (Exception ex) {
-          yamlChangeSetService.updateStatus(queuedChangeSet.getAccountId(), queuedChangeSet.getUuid(), Status.FAILED);
           StringBuilder stringBuilder =
               new StringBuilder().append("Unexpected error while processing commit for accountId: ").append(accountId);
           if (queuedChangeSet != null) {
+            yamlChangeSetService.updateStatus(queuedChangeSet.getAccountId(), queuedChangeSet.getUuid(), Status.FAILED);
             stringBuilder.append(" and for changeSet: ").append(queuedChangeSet.getUuid());
           }
           stringBuilder.append(" Reason: ").append(ex.getMessage());

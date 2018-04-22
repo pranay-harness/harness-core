@@ -113,11 +113,7 @@ public class GitClientImpl implements GitClient {
       logger.error(GIT_YAML_LOG_PREFIX + "Exception while deleting repo: ", ioex.getMessage());
     }
 
-    logger.info(new StringBuilder()
-                    .append(GIT_YAML_LOG_PREFIX)
-                    .append("cloning repo, Git repo directory :")
-                    .append(gitRepoDirectory)
-                    .toString());
+    logger.info(GIT_YAML_LOG_PREFIX + "cloning repo, Git repo directory :{}", gitRepoDirectory);
 
     CloneCommand cloneCommand = Git.cloneRepository();
     cloneCommand = (CloneCommand) getAuthConfiguredCommand(cloneCommand, gitConfig);
@@ -299,7 +295,6 @@ public class GitClientImpl implements GitClient {
               file.createNewFile();
               try (FileWriter writer = new FileWriter(file)) {
                 writer.write(gitFileChange.getFileContent());
-                writer.close();
               }
               git.add().addFilepattern(".").call();
               //              commitMessage.append(String.format("%s: %s\n", gitFileChange.getChangeType(),
@@ -417,16 +412,11 @@ public class GitClientImpl implements GitClient {
       if (remoteRefUpdate.getStatus() == OK || remoteRefUpdate.getStatus() == UP_TO_DATE) {
         return GitPushResult.builder().refUpdate(refUpdate).build();
       } else {
-        StringBuilder builder =
-            new StringBuilder("Unable to push changes to git repository. Status reported by Remote is: ")
-                .append(remoteRefUpdate.getStatus())
-                .append(" and message is: ")
-                .append(remoteRefUpdate.getMessage())
-                .append(". Other info: Force push: ")
-                .append(remoteRefUpdate.isForceUpdate())
-                .append("")
-                .append(remoteRefUpdate.isFastForward());
-        String errorMsg = builder.toString();
+        String errorMsg = String.format("Unable to push changes to git repository. "
+                + "Status reported by Remote is: %s and message is: %s. "
+                + "Other info: Force push: %s. Fast forward: %s",
+            remoteRefUpdate.getStatus(), remoteRefUpdate.getMessage(), remoteRefUpdate.isForceUpdate(),
+            remoteRefUpdate.isFastForward());
         throw new WingsException(ErrorCode.YAML_GIT_SYNC_ERROR).addParam("message", errorMsg);
       }
     } catch (IOException | GitAPIException ex) {

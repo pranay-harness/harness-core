@@ -1,6 +1,7 @@
 package software.wings.service.impl.security;
 
 import static io.harness.data.structure.UUIDGenerator.generateUuid;
+import static java.util.stream.Collectors.joining;
 import static org.apache.commons.lang3.StringUtils.isBlank;
 import static org.apache.commons.lang3.StringUtils.isNotBlank;
 import static software.wings.beans.ErrorCode.INVALID_ARGUMENT;
@@ -589,12 +590,9 @@ public class SecretManagerImpl implements SecretManager {
                                                  .filter("encryptedValue", uuId)
                                                  .asList();
     if (!serviceVariables.isEmpty()) {
-      StringBuilder errorMessage = new StringBuilder("Being used by ");
-      for (ServiceVariable serviceVariable : serviceVariables) {
-        errorMessage.append(serviceVariable.getName()).append(", ");
-      }
-
-      throw new WingsException(ErrorCode.KMS_OPERATION_ERROR).addParam("reason", errorMessage.toString());
+      throw new WingsException(ErrorCode.KMS_OPERATION_ERROR)
+          .addParam("reason",
+              "Being used by " + serviceVariables.stream().map(ServiceVariable::getName).collect(joining(", ")));
     }
 
     return wingsPersistence.delete(EncryptedData.class, uuId);
