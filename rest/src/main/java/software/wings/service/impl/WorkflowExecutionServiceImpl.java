@@ -25,7 +25,6 @@ import static software.wings.beans.ApprovalDetails.Action.APPROVE;
 import static software.wings.beans.ApprovalDetails.Action.REJECT;
 import static software.wings.beans.ElementExecutionSummary.ElementExecutionSummaryBuilder.anElementExecutionSummary;
 import static software.wings.beans.EntityType.ARTIFACT;
-import static software.wings.beans.EntityType.INFRASTRUCTURE_MAPPING;
 import static software.wings.beans.EntityType.ORCHESTRATED_DEPLOYMENT;
 import static software.wings.beans.EntityType.SIMPLE_DEPLOYMENT;
 import static software.wings.beans.ErrorCode.INVALID_ARGUMENT;
@@ -34,7 +33,6 @@ import static software.wings.beans.PipelineStageExecution.Builder.aPipelineStage
 import static software.wings.beans.ReadPref.CRITICAL;
 import static software.wings.beans.SearchFilter.Operator.EQ;
 import static software.wings.beans.SearchFilter.Operator.GE;
-import static software.wings.beans.SearchFilter.Operator.IN;
 import static software.wings.beans.WorkflowType.ORCHESTRATION;
 import static software.wings.beans.WorkflowType.PIPELINE;
 import static software.wings.dl.PageRequest.PageRequestBuilder.aPageRequest;
@@ -104,7 +102,6 @@ import software.wings.beans.ErrorCode;
 import software.wings.beans.ExecutionArgs;
 import software.wings.beans.GraphNode;
 import software.wings.beans.InfrastructureMapping;
-import software.wings.beans.OrchestrationWorkflow;
 import software.wings.beans.OrchestrationWorkflowType;
 import software.wings.beans.Pipeline;
 import software.wings.beans.PipelineExecution;
@@ -206,8 +203,6 @@ import javax.validation.executable.ValidateOnExecution;
 @Singleton
 @ValidateOnExecution
 public class WorkflowExecutionServiceImpl implements WorkflowExecutionService {
-  private static final String COMMAND_NAME_PREF = "Command: ";
-  private static final String WORKFLOW_NAME_PREF = "Workflow: ";
   private static final Logger logger = LoggerFactory.getLogger(WorkflowExecutionServiceImpl.class);
 
   @Inject private MainConfiguration mainConfiguration;
@@ -313,11 +308,11 @@ public class WorkflowExecutionServiceImpl implements WorkflowExecutionService {
 
   @Override
   public boolean updateNotes(String appId, String workflowExecutionId, ExecutionArgs executionArgs) {
-    notNullCheck("executionArgs", executionArgs);
-    notNullCheck("notes", executionArgs.getNotes());
+    notNullCheck("executionArgs", executionArgs, USER);
+    notNullCheck("notes", executionArgs.getNotes(), USER);
 
     WorkflowExecution workflowExecution = getWorkflowExecution(appId, workflowExecutionId);
-    notNullCheck("workflowExecution", workflowExecution);
+    notNullCheck("workflowExecution", workflowExecution, USER);
 
     try {
       Query<WorkflowExecution> query = wingsPersistence.createQuery(WorkflowExecution.class)
@@ -336,14 +331,14 @@ public class WorkflowExecutionServiceImpl implements WorkflowExecutionService {
 
   @Override
   public boolean approveOrRejectExecution(String appId, String workflowExecutionId, ApprovalDetails approvalDetails) {
-    notNullCheck("ApprovalDetails", approvalDetails);
+    notNullCheck("ApprovalDetails", approvalDetails, USER);
     String approvalId = approvalDetails.getApprovalId();
 
     WorkflowExecution workflowExecution = getWorkflowExecution(appId, workflowExecutionId);
-    notNullCheck("workflowExecution", workflowExecution);
+    notNullCheck("workflowExecution", workflowExecution, USER);
 
     if (!isPipelineWaitingApproval(workflowExecution.getPipelineExecution(), approvalId)) {
-      throw new WingsException(INVALID_ARGUMENT)
+      throw new WingsException(INVALID_ARGUMENT, USER)
           .addParam("args",
               "No Pipeline execution [" + workflowExecutionId
                   + "] waiting for approval id: " + approvalDetails.getApprovalId());
@@ -585,7 +580,7 @@ public class WorkflowExecutionServiceImpl implements WorkflowExecutionService {
   @Override
   public WorkflowExecution getExecutionWithoutSummary(String appId, String workflowExecutionId) {
     WorkflowExecution workflowExecution = getWorkflowExecution(appId, workflowExecutionId);
-    notNullCheck("WorkflowExecution", workflowExecution);
+    notNullCheck("WorkflowExecution", workflowExecution, USER);
 
     if (workflowExecution.getExecutionArgs() != null) {
       if (workflowExecution.getExecutionArgs().getServiceInstanceIdNames() != null) {
@@ -762,6 +757,8 @@ public class WorkflowExecutionServiceImpl implements WorkflowExecutionService {
     if (isNotEmpty(executionArgs.getWorkflowVariables())) {
       stdParams.setWorkflowVariables(executionArgs.getWorkflowVariables());
     }
+    // Setting  exclude hosts with same artifact
+    stdParams.setExcludeHostsWithSameArtifact(executionArgs.isExcludeHostsWithSameArtifact());
     User user = UserThreadLocal.get();
     if (user != null) {
       stdParams.setCurrentUser(
@@ -853,16 +850,8 @@ public class WorkflowExecutionServiceImpl implements WorkflowExecutionService {
     workflowExecution.setPipelineExecutionId(pipelineExecutionId);
     workflowExecution.setExecutionArgs(executionArgs);
 
-    List<Service> services;
-    if (isServiceTemplatized(workflow)) {
-      Map<String, String> workflowVariables = workflowExecution.getExecutionArgs() != null
-          ? workflowExecution.getExecutionArgs().getWorkflowVariables()
-          : null;
-      services = workflowService.resolveServices(workflow, workflowVariables);
-    } else {
-      services = workflow.getServices();
-    }
-
+    Map<String, String> workflowVariables = executionArgs != null ? executionArgs.getWorkflowVariables() : null;
+    List<Service> services = workflowService.getResolvedServices(workflow, workflowVariables);
     if (isNotEmpty(services)) {
       workflowExecution.setServiceIds(services.stream().map(Service::getUuid).collect(toList()));
     }
@@ -1595,7 +1584,7 @@ public class WorkflowExecutionServiceImpl implements WorkflowExecutionService {
             .project(StateExecutionInstance.CONTEXT_ELEMENT_KEY, true)
             .fetch();
 
-    try (DBCursor cursor = stateExecutionInstances.getCursor()) {
+    try (DBCursor ignored = stateExecutionInstances.getCursor()) {
       while (stateExecutionInstances.hasNext()) {
         StateExecutionInstance instance = stateExecutionInstances.next();
         Stat stat = stats.computeIfAbsent(instance.getUuid(), x -> new Stat());
@@ -1659,26 +1648,6 @@ public class WorkflowExecutionServiceImpl implements WorkflowExecutionService {
     return query.getResponse();
   }
 
-  @Override
-  public void deleteByWorkflow(String appId, String workflowId) {
-    wingsPersistence.createQuery(WorkflowExecution.class)
-        .filter("appId", appId)
-        .filter("workflowId", workflowId)
-        .asList()
-        .forEach(workflowExecution -> {
-          wingsPersistence.delete(workflowExecution);
-          wingsPersistence.createQuery(StateExecutionInstance.class)
-              .filter("appId", appId)
-              .filter("stateMachineId", workflowExecution.getStateMachineId())
-              .forEach(stateExecutionInstance -> {
-                wingsPersistence.delete(stateExecutionInstance);
-                wingsPersistence.delete(wingsPersistence.createQuery(ExecutionInterrupt.class)
-                                            .filter("appId", appId)
-                                            .filter("stateExecutionInstanceId", stateExecutionInstance.getUuid()));
-              });
-        });
-  }
-
   private void refreshSummaries(WorkflowExecution workflowExecution) {
     if (workflowExecution.getServiceExecutionSummaries() != null) {
       return;
@@ -1687,15 +1656,7 @@ public class WorkflowExecutionServiceImpl implements WorkflowExecutionService {
     // TODO : version should also be captured as part of the WorkflowExecution
     Workflow workflow = workflowService.readWorkflow(workflowExecution.getAppId(), workflowExecution.getWorkflowId());
     if (workflow != null && workflow.getOrchestrationWorkflow() != null) {
-      List<Service> services;
-      if (isServiceTemplatized(workflow)) {
-        Map<String, String> workflowVariables = workflowExecution.getExecutionArgs() != null
-            ? workflowExecution.getExecutionArgs().getWorkflowVariables()
-            : null;
-        services = workflowService.resolveServices(workflow, workflowVariables);
-      } else {
-        services = workflow.getServices();
-      }
+      List<Service> services = getResolvedServices(workflow, workflowExecution);
       if (workflow.getWorkflowType() == WorkflowType.SIMPLE) {
         services = asList(serviceResourceService.get(
             workflow.getAppId(), workflowExecution.getExecutionArgs().getServiceId(), false));
@@ -1735,7 +1696,6 @@ public class WorkflowExecutionServiceImpl implements WorkflowExecutionService {
     if (!serviceExecutionSummaryMap.isEmpty()) {
       Collections.sort(serviceExecutionSummaries, ElementExecutionSummary.startTsComparator);
       workflowExecution.setServiceExecutionSummaries(serviceExecutionSummaries);
-
       if (workflowExecution.getStatus() == ExecutionStatus.SUCCESS
           || workflowExecution.getStatus() == ExecutionStatus.FAILED
           || workflowExecution.getStatus() == ExecutionStatus.ERROR
@@ -1746,96 +1706,18 @@ public class WorkflowExecutionServiceImpl implements WorkflowExecutionService {
     }
   }
 
-  @Override
-  public List<InfrastructureMapping> getResolvedInfraMappings(Workflow workflow, WorkflowExecution workflowExecution) {
-    if (isInfraMappingTemplatized(workflow)) {
-      return resolveTemplateInfraMappings(workflow, workflowExecution);
-    } else {
-      return getInfrastructureMappings(workflow, workflow.getOrchestrationWorkflow().getInfraMappingIds());
-    }
+  private List<Service> getResolvedServices(Workflow workflow, WorkflowExecution workflowExecution) {
+    ExecutionArgs executionArgs = workflowExecution.getExecutionArgs();
+    Map<String, String> workflowVariables = executionArgs != null ? executionArgs.getWorkflowVariables() : null;
+    return workflowService.getResolvedServices(workflow, workflowVariables);
   }
 
-  private List<InfrastructureMapping> resolveTemplateInfraMappings(
-      Workflow workflow, WorkflowExecution workflowExecution) {
-    // Lookup service
-    List<String> workflowInframappingIds = workflow.getOrchestrationWorkflow().getInfraMappingIds();
-    CanaryOrchestrationWorkflow canaryOrchestrationWorkflow =
-        (CanaryOrchestrationWorkflow) workflow.getOrchestrationWorkflow();
-    List<Variable> userVariables = canaryOrchestrationWorkflow.getUserVariables();
-    List<String> infraMappingNames = new ArrayList<>();
-    if (userVariables != null) {
-      infraMappingNames =
-          userVariables.stream()
-              .filter(variable
-                  -> variable.getEntityType() != null && variable.getEntityType().equals(INFRASTRUCTURE_MAPPING))
-              .map(Variable::getName)
-              .collect(toList());
-    }
-    List<String> infraMappingIds = new ArrayList<>();
+  @Override
+  public List<InfrastructureMapping> getResolvedInfraMappings(Workflow workflow, WorkflowExecution workflowExecution) {
     Map<String, String> workflowVariables = workflowExecution.getExecutionArgs() != null
         ? workflowExecution.getExecutionArgs().getWorkflowVariables()
         : null;
-    if (workflowVariables != null) {
-      Set<String> workflowVariableNames = workflowVariables.keySet();
-      for (String variableName : workflowVariableNames) {
-        if (infraMappingNames.contains(variableName)) {
-          infraMappingIds.add(workflowVariables.get(variableName));
-        }
-      }
-    }
-    List<String> templatizedInfraMappingIdsIds = canaryOrchestrationWorkflow.getTemplatizedInfraMappingIds();
-    if (workflowInframappingIds != null) {
-      for (String workflowServiceId : workflowInframappingIds) {
-        if (!templatizedInfraMappingIdsIds.contains(workflowServiceId)) {
-          infraMappingIds.add(workflowServiceId);
-        }
-      }
-    }
-    if (!infraMappingIds.isEmpty()) {
-      return getInfrastructureMappings(workflow, infraMappingIds);
-    } else {
-      logger.info("No inframappings resolved for templatized workflow id {} and workflow execution {}",
-          workflow.getUuid(), workflowExecution);
-      return new ArrayList<>();
-    }
-  }
-
-  private List<InfrastructureMapping> getInfrastructureMappings(Workflow workflow, List<String> infraMappingIds) {
-    if (isNotEmpty(infraMappingIds)) {
-      PageRequest<InfrastructureMapping> pageRequest = aPageRequest()
-                                                           .withLimit(PageRequest.UNLIMITED)
-                                                           .addFilter("appId", EQ, workflow.getAppId())
-                                                           .addFilter("uuid", IN, infraMappingIds.toArray())
-                                                           .build();
-      return infrastructureMappingService.list(pageRequest);
-    }
-    return new ArrayList<>();
-  }
-
-  /**
-   * Checks if service templatized or not
-   * @param workflow
-   * @return
-   */
-  private boolean isServiceTemplatized(Workflow workflow) {
-    OrchestrationWorkflow orchestrationWorkflow = workflow.getOrchestrationWorkflow();
-    if (orchestrationWorkflow != null) {
-      return orchestrationWorkflow.isServiceTemplatized();
-    }
-    return false;
-  }
-
-  /**
-   * Checks if service templatized or not
-   * @param workflow
-   * @return
-   */
-  private boolean isInfraMappingTemplatized(Workflow workflow) {
-    OrchestrationWorkflow orchestrationWorkflow = workflow.getOrchestrationWorkflow();
-    if (orchestrationWorkflow != null) {
-      return orchestrationWorkflow.isInfraMappingTemplatized();
-    }
-    return false;
+    return workflowService.getResolvedInfraMappings(workflow, workflowVariables);
   }
 
   private void populateServiceSummary(

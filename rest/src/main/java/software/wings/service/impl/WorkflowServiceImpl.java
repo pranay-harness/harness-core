@@ -19,13 +19,10 @@ import static software.wings.api.DeploymentType.KUBERNETES;
 import static software.wings.api.DeploymentType.SSH;
 import static software.wings.beans.EntityType.ARTIFACT;
 import static software.wings.beans.EntityType.INFRASTRUCTURE_MAPPING;
-import static software.wings.beans.EntityType.SERVICE;
 import static software.wings.beans.EntityType.WORKFLOW;
 import static software.wings.beans.ErrorCode.INVALID_REQUEST;
 import static software.wings.beans.ErrorCode.WORKFLOW_EXECUTION_IN_PROGRESS;
 import static software.wings.beans.GraphNode.GraphNodeBuilder.aGraphNode;
-import static software.wings.beans.InfrastructureMappingType.AWS_SSH;
-import static software.wings.beans.InfrastructureMappingType.PHYSICAL_DATA_CENTER_SSH;
 import static software.wings.beans.NotificationRule.NotificationRuleBuilder.aNotificationRule;
 import static software.wings.beans.OrchestrationWorkflowType.BASIC;
 import static software.wings.beans.OrchestrationWorkflowType.BUILD;
@@ -51,7 +48,6 @@ import static software.wings.beans.PhaseStepType.STOP_SERVICE;
 import static software.wings.beans.PhaseStepType.VERIFY_SERVICE;
 import static software.wings.beans.PhaseStepType.WRAP_UP;
 import static software.wings.beans.SearchFilter.Operator.EQ;
-import static software.wings.beans.SearchFilter.Operator.IN;
 import static software.wings.beans.WorkflowPhase.WorkflowPhaseBuilder.aWorkflowPhase;
 import static software.wings.common.Constants.ARTIFACT_TYPE;
 import static software.wings.common.Constants.ENTITY_TYPE;
@@ -640,7 +636,7 @@ public class WorkflowServiceImpl implements WorkflowService, DataProvider {
     if (canaryOrchestrationWorkflow.getWorkflowPhases() == null) {
       return false;
     }
-    if (workflowHasSshInfraMapping(appId, canaryOrchestrationWorkflow)) {
+    if (workflowServiceHelper.workflowHasSshInfraMapping(appId, canaryOrchestrationWorkflow)) {
       return ensureArtifactCheckInPreDeployment(canaryOrchestrationWorkflow);
     }
     return false;
@@ -1510,18 +1506,16 @@ public class WorkflowServiceImpl implements WorkflowService, DataProvider {
 
   @Override
   public WorkflowPhase cloneWorkflowPhase(String appId, String workflowId, WorkflowPhase workflowPhase) {
-    logger.info("Cloning workflow phase for appId {}, workflowId {} workflowPhase {}", appId, workflowId,
-        workflowPhase.getUuid());
     String phaseId = workflowPhase.getUuid();
     String phaseName = workflowPhase.getName();
     Workflow workflow = readWorkflow(appId, workflowId);
-    notNullCheck("workflow", workflow);
+    notNullCheck("workflow", workflow, USER);
     CanaryOrchestrationWorkflow orchestrationWorkflow =
         (CanaryOrchestrationWorkflow) workflow.getOrchestrationWorkflow();
-    notNullCheck("orchestrationWorkflow", orchestrationWorkflow);
+    notNullCheck("orchestrationWorkflow", orchestrationWorkflow, USER);
 
     workflowPhase = orchestrationWorkflow.getWorkflowPhaseIdMap().get(phaseId);
-    notNullCheck("workflowPhase", workflowPhase);
+    notNullCheck("workflowPhase", workflowPhase, USER);
 
     WorkflowPhase clonedWorkflowPhase = workflowPhase.cloneInternal();
     clonedWorkflowPhase.setName(phaseName);
@@ -1539,8 +1533,7 @@ public class WorkflowServiceImpl implements WorkflowService, DataProvider {
 
     orchestrationWorkflow =
         (CanaryOrchestrationWorkflow) updateWorkflow(workflow, orchestrationWorkflow).getOrchestrationWorkflow();
-    logger.info("Cloning workflow phase for appId {}, workflowId {} workflowPhase {} success", appId, workflowId,
-        workflowPhase.getUuid());
+
     return orchestrationWorkflow.getWorkflowPhaseIdMap().get(clonedWorkflowPhase.getUuid());
   }
 
@@ -1562,49 +1555,14 @@ public class WorkflowServiceImpl implements WorkflowService, DataProvider {
   }
 
   @Override
-  public List<Service> resolveServices(Workflow workflow, Map<String, String> workflowVariables) {
-    // Lookup service
-    List<String> workflowServiceIds = workflow.getOrchestrationWorkflow().getServiceIds();
-    CanaryOrchestrationWorkflow canaryOrchestrationWorkflow =
-        (CanaryOrchestrationWorkflow) workflow.getOrchestrationWorkflow();
-    List<Variable> userVariables = canaryOrchestrationWorkflow.getUserVariables();
-    List<String> serviceNames = new ArrayList<>();
-    if (userVariables != null) {
-      serviceNames =
-          userVariables.stream()
-              .filter(variable -> variable.getEntityType() != null && variable.getEntityType().equals(SERVICE))
-              .map(Variable::getName)
-              .collect(toList());
-    }
-    List<String> serviceIds = new ArrayList<>();
-    if (workflowVariables != null) {
-      Set<String> workflowVariableNames = workflowVariables.keySet();
-      for (String variableName : workflowVariableNames) {
-        if (serviceNames.contains(variableName)) {
-          serviceIds.add(workflowVariables.get(variableName));
-        }
-      }
-    }
-    List<String> templatizedServiceIds = canaryOrchestrationWorkflow.getTemplatizedServiceIds();
-    if (workflowServiceIds != null) {
-      for (String workflowServiceId : workflowServiceIds) {
-        if (!templatizedServiceIds.contains(workflowServiceId)) {
-          serviceIds.add(workflowServiceId);
-        }
-      }
-    }
+  public List<Service> getResolvedServices(Workflow workflow, Map<String, String> workflowVariables) {
+    return workflowServiceHelper.getResolvedServices(workflow, workflowVariables);
+  }
 
-    if (serviceIds.isEmpty()) {
-      logger.info("No services resolved for templatized workflow id {}", workflow.getUuid());
-      return null;
-    }
-
-    PageRequest<Service> pageRequest = aPageRequest()
-                                           .withLimit(PageRequest.UNLIMITED)
-                                           .addFilter("appId", EQ, workflow.getAppId())
-                                           .addFilter("uuid", IN, serviceIds.toArray())
-                                           .build();
-    return serviceResourceService.list(pageRequest, false, false);
+  @Override
+  public List<InfrastructureMapping> getResolvedInfraMappings(
+      Workflow workflow, Map<String, String> workflowVariables) {
+    return workflowServiceHelper.getResolvedInfraMappings(workflow, workflowVariables);
   }
 
   @Override
@@ -1617,36 +1575,13 @@ public class WorkflowServiceImpl implements WorkflowService, DataProvider {
   @Override
   public boolean workflowHasSshInfraMapping(String appId, String workflowId) {
     Workflow workflow = readWorkflow(appId, workflowId);
-    notNullCheck("Workflow", workflow);
+    notNullCheck("Workflow", workflow, USER);
     OrchestrationWorkflow orchestrationWorkflow = workflow.getOrchestrationWorkflow();
-    notNullCheck("OrchestrationWorkflow", orchestrationWorkflow);
+    notNullCheck("OrchestrationWorkflow", orchestrationWorkflow, USER);
     List<String> infraMappingIds = new ArrayList<>();
     if (orchestrationWorkflow instanceof CanaryOrchestrationWorkflow) {
       CanaryOrchestrationWorkflow canaryOrchestrationWorkflow = (CanaryOrchestrationWorkflow) orchestrationWorkflow;
-      return workflowHasSshInfraMapping(workflow.getAppId(), canaryOrchestrationWorkflow);
-    }
-    return false;
-  }
-
-  private boolean workflowHasSshInfraMapping(String appId, CanaryOrchestrationWorkflow canaryOrchestrationWorkflow) {
-    List<String> infraMappingIds = new ArrayList<>();
-    List<WorkflowPhase> workflowPhases = canaryOrchestrationWorkflow.getWorkflowPhases();
-    if (workflowPhases != null) {
-      infraMappingIds = workflowPhases.stream()
-                            .filter(workflowPhase -> workflowPhase.getInfraMappingId() != null)
-                            .map(WorkflowPhase::getInfraMappingId)
-                            .collect(toList());
-      if (infraMappingIds.size() != 0) {
-        List<InfrastructureMapping> infrastructureMappings = wingsPersistence.createQuery(InfrastructureMapping.class)
-                                                                 .filter("appId", appId)
-                                                                 .field("uuid")
-                                                                 .in(infraMappingIds)
-                                                                 .asList();
-        return infrastructureMappings.stream().anyMatch((InfrastructureMapping infra) -> {
-          return AWS_SSH.name().equals(infra.getInfraMappingType())
-              || PHYSICAL_DATA_CENTER_SSH.name().equals(infra.getInfraMappingType());
-        });
-      }
+      return workflowServiceHelper.workflowHasSshInfraMapping(appId, canaryOrchestrationWorkflow);
     }
     return false;
   }
@@ -1706,7 +1641,6 @@ public class WorkflowServiceImpl implements WorkflowService, DataProvider {
     if (workflowPhase.checkInfraTemplatized()) {
       return;
     }
-
     InfrastructureMapping infrastructureMapping =
         infrastructureMappingService.get(appId, workflowPhase.getInfraMappingId());
     notNullCheck("InfraMapping", infrastructureMapping);
@@ -2900,12 +2834,11 @@ public class WorkflowServiceImpl implements WorkflowService, DataProvider {
 
   private void validateBasicOrRollingWorkflow(Workflow workflow) {
     OrchestrationWorkflow orchestrationWorkflow = workflow.getOrchestrationWorkflow();
-
     if (orchestrationWorkflow != null
         && (orchestrationWorkflow.getOrchestrationWorkflowType().equals(BASIC)
                || orchestrationWorkflow.getOrchestrationWorkflowType().equals(ROLLING))) {
       if (!orchestrationWorkflow.isInfraMappingTemplatized()) {
-        notNullCheck("Invalid inframappingId", workflow.getInfraMappingId());
+        notNullCheck("Invalid inframappingId", workflow.getInfraMappingId(), USER);
 
         if (orchestrationWorkflow.getOrchestrationWorkflowType().equals(ROLLING)) {
           String infraMappingId = workflow.getInfraMappingId();
@@ -2922,7 +2855,7 @@ public class WorkflowServiceImpl implements WorkflowService, DataProvider {
         }
       }
       if (!orchestrationWorkflow.isServiceTemplatized()) {
-        notNullCheck("Invalid serviceId", workflow.getServiceId());
+        notNullCheck("Invalid serviceId", workflow.getServiceId(), USER);
       }
     }
   }

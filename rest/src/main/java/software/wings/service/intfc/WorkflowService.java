@@ -2,6 +2,7 @@ package software.wings.service.intfc;
 
 import software.wings.beans.FailureStrategy;
 import software.wings.beans.GraphNode;
+import software.wings.beans.InfrastructureMapping;
 import software.wings.beans.NotificationRule;
 import software.wings.beans.OrchestrationWorkflow;
 import software.wings.beans.PhaseStep;
@@ -107,8 +108,6 @@ public interface WorkflowService extends OwnedByApplication, OwnedByEnvironment 
 
   Map<String, String> getStateDefaults(@NotNull String appId, @NotNull String serviceId, @NotNull StateType stateType);
 
-  List<Service> resolveServices(Workflow workflow, Map<String, String> workflowVariables);
-
   void pruneDescendingEntities(@org.hibernate.validator.constraints.NotEmpty String appId,
       @org.hibernate.validator.constraints.NotEmpty String workflowId);
 
@@ -118,4 +117,20 @@ public interface WorkflowService extends OwnedByApplication, OwnedByEnvironment 
       Integer minAutoscaleInstances, Integer maxAutoscaleInstances, Integer targetCpuUtilizationPercentage);
 
   void loadOrchestrationWorkflow(Workflow workflow, Integer version);
+
+  /**
+   * Resolves the services from workflow variables if parameterized
+   * @param workflow
+   * @param workflowVariables
+   * @return
+   */
+  List<Service> getResolvedServices(Workflow workflow, Map<String, String> workflowVariables);
+
+  /**
+   * Resolves the Inframappings from workflow variables if parameterized
+   * @param workflow
+   * @param workflowVariables
+   * @return
+   */
+  List<InfrastructureMapping> getResolvedInfraMappings(Workflow workflow, Map<String, String> workflowVariables);
 }

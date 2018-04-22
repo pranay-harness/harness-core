@@ -24,6 +24,7 @@ import static software.wings.beans.trigger.TriggerConditionType.PIPELINE_COMPLET
 import static software.wings.beans.trigger.TriggerConditionType.SCHEDULED;
 import static software.wings.beans.trigger.TriggerConditionType.WEBHOOK;
 import static software.wings.dl.PageRequest.PageRequestBuilder.aPageRequest;
+import static software.wings.exception.WingsException.ADMIN_SRE;
 import static software.wings.exception.WingsException.USER;
 import static software.wings.exception.WingsException.USER_ADMIN;
 import static software.wings.sm.ExecutionStatus.SUCCESS;
@@ -104,10 +105,6 @@ import java.util.function.Predicate;
 import java.util.regex.Pattern;
 import java.util.stream.Collectors;
 import javax.validation.executable.ValidateOnExecution;
-/**
- * Handles Triggers
- * Created by Srinivas on 10/26/17.
- */
 
 @Singleton
 @ValidateOnExecution
@@ -142,7 +139,6 @@ public class TriggerServiceImpl implements TriggerService {
     validateInput(trigger);
     Trigger savedTrigger =
         duplicateCheck(() -> wingsPersistence.saveAndGet(Trigger.class, trigger), "name", trigger.getName());
-    notNullCheck("Trigger", savedTrigger);
     if (trigger.getCondition().getConditionType().equals(SCHEDULED)) {
       ScheduledTriggerJob.add(
           jobScheduler, savedTrigger.getAppId(), savedTrigger.getUuid(), ScheduledTriggerJob.getQuartzTrigger(trigger));
@@ -153,7 +149,7 @@ public class TriggerServiceImpl implements TriggerService {
   @Override
   public Trigger update(Trigger trigger) {
     Trigger existingTrigger = wingsPersistence.get(Trigger.class, trigger.getAppId(), trigger.getUuid());
-    notNullCheck("Trigger", existingTrigger);
+    notNullCheck("Trigger was deleted ", existingTrigger, USER);
     Validator.equalCheck(trigger.getWorkflowType(), existingTrigger.getWorkflowType());
 
     validateInput(trigger);
@@ -166,17 +162,13 @@ public class TriggerServiceImpl implements TriggerService {
 
   @Override
   public boolean delete(String appId, String triggerId) {
-    Trigger trigger = wingsPersistence.get(Trigger.class, appId, triggerId);
-    if (trigger == null) {
-      return true;
-    }
     return deleteTrigger(triggerId);
   }
 
   @Override
   public WebHookToken generateWebHookToken(String appId, String triggerId) {
     Trigger trigger = wingsPersistence.get(Trigger.class, appId, triggerId);
-    Validator.notNullCheck("Trigger", trigger);
+    Validator.notNullCheck("Trigger was deleted", trigger, USER);
     return generateWebHookToken(trigger);
   }
 
@@ -245,11 +237,11 @@ public class TriggerServiceImpl implements TriggerService {
       for (PipelineStage pipelineStage : pipeline.getPipelineStages()) {
         for (PipelineStageElement pipelineStageElement : pipelineStage.getPipelineStageElements()) {
           if (ENV_STATE.name().equals(pipelineStageElement.getType())) {
+            String workflowId = (String) pipelineStageElement.getProperties().get("workflowId");
             try {
-              Workflow workflow = workflowService.readWorkflow(
-                  pipeline.getAppId(), (String) pipelineStageElement.getProperties().get("workflowId"));
-              Validator.notNullCheck("workflow", workflow);
-              Validator.notNullCheck("orchestrationWorkflow", workflow.getOrchestrationWorkflow());
+              Workflow workflow = workflowService.readWorkflow(pipeline.getAppId(), workflowId);
+              Validator.notNullCheck("Workflow was deleted", workflow, USER);
+              Validator.notNullCheck("No orchestration workflow", workflow.getOrchestrationWorkflow(), USER);
               if (BUILD.equals(workflow.getOrchestrationWorkflow().getOrchestrationWorkflowType())) {
                 artifactNeeded = false;
               }
@@ -259,7 +251,8 @@ public class TriggerServiceImpl implements TriggerService {
                 }
               });
             } catch (Exception ex) {
-              logger.warn("Exception occurred while reading workflow associated to the pipeline {}", pipeline);
+              logger.warn("Exception occurred while reading workflow {} associated to the pipeline {}", workflowId,
+                  pipeline.getName());
             }
           }
         }
@@ -271,7 +264,7 @@ public class TriggerServiceImpl implements TriggerService {
       if (isNotEmpty(workflowVariables)) {
         if (!BUILD.equals(workflow.getOrchestrationWorkflow().getOrchestrationWorkflowType())) {
           if (workflow.getOrchestrationWorkflow().isServiceTemplatized()) {
-            services = workflowService.resolveServices(workflow, workflowVariables);
+            services = workflowService.getResolvedServices(workflow, workflowVariables);
           }
         }
       }
@@ -407,7 +400,7 @@ public class TriggerServiceImpl implements TriggerService {
       }
       if (!BUILD.equals(workflow.getOrchestrationWorkflow().getOrchestrationWorkflowType())) {
         if (workflow.getOrchestrationWorkflow().isServiceTemplatized()) {
-          workflowServices = workflowService.resolveServices(workflow, trigger.getWorkflowVariables());
+          workflowServices = workflowService.getResolvedServices(workflow, trigger.getWorkflowVariables());
         }
       }
       if (workflowServices != null) {
@@ -594,7 +587,7 @@ public class TriggerServiceImpl implements TriggerService {
    */
   private void addLastCollectedArtifact(String appId, ArtifactSelection artifactSelection, List<Artifact> artifacts) {
     String artifactStreamId = artifactSelection.getArtifactStreamId();
-    notNullCheck("artifactStreamId", artifactStreamId);
+    notNullCheck("Artifact Stream was deleted", artifactStreamId, ADMIN_SRE);
     ArtifactStream artifactStream = validateArtifactStream(appId, artifactStreamId);
     Artifact lastCollectedArtifact = artifactService.fetchLastCollectedArtifactForArtifactStream(
         appId, artifactStreamId, artifactStream.getSourceName());
@@ -698,6 +691,7 @@ public class TriggerServiceImpl implements TriggerService {
     executionArgs.setOrchestrationId(trigger.getWorkflowId());
     executionArgs.setExecutionCredential(aSSHExecutionCredential().withExecutionType(SSH).build());
     executionArgs.setWorkflowType(trigger.getWorkflowType());
+    executionArgs.setExcludeHostsWithSameArtifact(trigger.isExcludeHostsWithSameArtifact());
     if (parameters != null) {
       executionArgs.setWorkflowVariables(parameters);
     }
@@ -705,7 +699,7 @@ public class TriggerServiceImpl implements TriggerService {
       logger.info("Triggering  workflow execution of appId {} with with workflow id {}", trigger.getAppId(),
           trigger.getWorkflowId());
       Workflow workflow = wingsPersistence.get(Workflow.class, trigger.getAppId(), trigger.getWorkflowId());
-      Validator.notNullCheck("Workflow", workflow);
+      Validator.notNullCheck("Workflow was deleted", workflow, ADMIN_SRE);
       Map<String, String> workflowVariables = executionArgs.getWorkflowVariables();
       Map<String, String> triggerWorkflowVariables = trigger.getWorkflowVariables();
       if (triggerWorkflowVariables != null) {
@@ -802,8 +796,8 @@ public class TriggerServiceImpl implements TriggerService {
             try {
               Workflow workflow = workflowService.readWorkflow(
                   pipeline.getAppId(), (String) pipelineStageElement.getProperties().get("workflowId"));
-              notNullCheck("workflow", workflow);
-              notNullCheck("orchestrationWorkflow", workflow.getOrchestrationWorkflow());
+              notNullCheck("workflow", workflow, USER);
+              notNullCheck("orchestrationWorkflow", workflow.getOrchestrationWorkflow(), USER);
               workflow.getOrchestrationWorkflow().getUserVariables().forEach(uservariable -> {
                 if (!uservariable.getType().equals(VariableType.ENTITY)) {
                   if (!parameters.contains(uservariable.getName())) {
@@ -819,8 +813,8 @@ public class TriggerServiceImpl implements TriggerService {
       }
     } else if (ORCHESTRATION.equals(workflowType)) {
       Workflow workflow = workflowService.readWorkflow(appId, workflowId);
-      notNullCheck("workflow", workflow);
-      notNullCheck("orchestrationWorkflow", workflow.getOrchestrationWorkflow());
+      notNullCheck("workflow", workflow, USER);
+      notNullCheck("orchestrationWorkflow", USER);
       workflow.getOrchestrationWorkflow().getUserVariables().forEach(uservariable -> {
         if (!uservariable.getType().equals(VariableType.ENTITY)) {
           if (!parameters.contains(uservariable.getName())) {
@@ -893,7 +887,7 @@ public class TriggerServiceImpl implements TriggerService {
 
   private ArtifactStream validateArtifactStream(String appId, String artifactStreamId) {
     ArtifactStream artifactStream = artifactStreamService.get(appId, artifactStreamId);
-    notNullCheck("ArtifactStream", artifactStream);
+    notNullCheck("ArtifactStream was deleted", artifactStream, ADMIN_SRE);
     return artifactStream;
   }
 
@@ -904,7 +898,7 @@ public class TriggerServiceImpl implements TriggerService {
         ArtifactStream artifactStream =
             validateArtifactStream(trigger.getAppId(), artifactTriggerCondition.getArtifactStreamId());
         Service service = serviceResourceService.get(trigger.getAppId(), artifactStream.getServiceId(), false);
-        notNullCheck("Service", service);
+        notNullCheck("Service", service, USER);
         artifactTriggerCondition.setArtifactSourceName(artifactStream.getSourceName() + " (" + service.getName() + ")");
         break;
       case PIPELINE_COMPLETION:
@@ -923,11 +917,11 @@ public class TriggerServiceImpl implements TriggerService {
         break;
       case SCHEDULED:
         ScheduledTriggerCondition scheduledTriggerCondition = (ScheduledTriggerCondition) trigger.getCondition();
-        notNullCheck("CronExpression", scheduledTriggerCondition.getCronExpression());
+        notNullCheck("CronExpression", scheduledTriggerCondition.getCronExpression(), USER);
         break;
       case NEW_INSTANCE:
         NewInstanceTriggerCondition newInstanceTriggerCondition = (NewInstanceTriggerCondition) trigger.getCondition();
-        notNullCheck("NewInstanceTriggerCondition", newInstanceTriggerCondition);
+        notNullCheck("NewInstanceTriggerCondition", newInstanceTriggerCondition, USER);
         validateAndSetServiceInfraWorkflows(trigger);
         break;
       default:
@@ -957,12 +951,12 @@ public class TriggerServiceImpl implements TriggerService {
           if (ORCHESTRATION.equals(trigger.getWorkflowType())) {
             Workflow workflow =
                 wingsPersistence.get(Workflow.class, trigger.getAppId(), artifactSelection.getWorkflowId());
-            notNullCheck("LastDeployedWorkflow", workflow);
+            notNullCheck("LastDeployedWorkflow", workflow, USER);
             artifactSelection.setWorkflowName(workflow.getName());
           } else {
             Pipeline pipeline =
                 pipelineService.readPipeline(trigger.getAppId(), artifactSelection.getWorkflowId(), false);
-            notNullCheck("LastDeployedPipeline", pipeline);
+            notNullCheck("LastDeployedPipeline", pipeline, USER);
             artifactSelection.setWorkflowName(pipeline.getName());
           }
           break;
@@ -1006,10 +1000,10 @@ public class TriggerServiceImpl implements TriggerService {
       serviceInfraWorkflows.forEach(serviceInfraWorkflow -> {
         InfrastructureMapping infrastructureMapping =
             infrastructureMappingService.get(trigger.getAppId(), serviceInfraWorkflow.getInfraMappingId());
-        notNullCheck("ServiceInfraStructure", infrastructureMapping);
+        notNullCheck("ServiceInfraStructure", infrastructureMapping, USER);
         serviceInfraWorkflow.setInfraMappingName(infrastructureMapping.getName());
         Workflow workflow = workflowService.readWorkflow(trigger.getAppId(), serviceInfraWorkflow.getWorkflowId());
-        notNullCheck("Workflow", workflow);
+        notNullCheck("Workflow", workflow, USER);
         if (workflow.isTemplatized()) {
           serviceInfraWorkflow.setWorkflowName(workflow.getName() + " (TEMPLATE)");
         } else {
@@ -1044,13 +1038,13 @@ public class TriggerServiceImpl implements TriggerService {
 
   private Pipeline validatePipeline(String appId, String pipelineId, boolean withServices) {
     Pipeline pipeline = pipelineService.readPipeline(appId, pipelineId, withServices);
-    notNullCheck("Pipeline", pipeline);
+    notNullCheck("Pipeline", pipeline, USER);
     return pipeline;
   }
 
   private Workflow validateWorkflow(String appId, String workflowId) {
     Workflow workflow = workflowService.readWorkflow(appId, workflowId);
-    Validator.notNullCheck("Workflow", workflow);
+    Validator.notNullCheck("Workflow", workflow, USER);
     return workflow;
   }
 

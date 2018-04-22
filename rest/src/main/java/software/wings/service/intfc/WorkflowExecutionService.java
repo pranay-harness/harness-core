@@ -224,10 +224,9 @@ public interface WorkflowExecutionService {
       String appId, String workflowExecutionId, String stateExecutionInstanceId);
 
   /**
-   * Gets execution history.
+   * Gets execution interrupts.
    *
    * @param appId                    the app id
-   * @param workflowExecutionId      the workflow execution id
    * @param stateExecutionInstanceId the state execution instance id
    * @return the execution history
    */
@@ -237,7 +236,6 @@ public interface WorkflowExecutionService {
    * Gets execution history.
    *
    * @param appId                    the app id
-   * @param workflowExecutionId      the workflow execution id
    * @param stateExecutionInstanceId the state execution instance id
    * @return the elements
    */
@@ -246,8 +244,6 @@ public interface WorkflowExecutionService {
   /**
    * Gets recorded per execution instance interrupts.
    *
-   * @param appId                    the app id
-   * @param workflowExecutionId      the workflow execution id
    * @param stateExecutionInstanceId the state execution instance id
    * @return the execution history
    */
@@ -263,14 +259,6 @@ public interface WorkflowExecutionService {
 
   List<StateExecutionInstance> getStateExecutionData(String appId, String executionUuid, String serviceId,
       String infraMappingId, StateType stateType, String stateName);
-
-  /**
-   * Delete by workflow.
-   *
-   * @param appId      the app id
-   * @param workflowId the workflow id
-   */
-  void deleteByWorkflow(String appId, String workflowId);
 
   List<InfrastructureMapping> getResolvedInfraMappings(Workflow workflow, WorkflowExecution workflowExecution);
 

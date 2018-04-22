@@ -12,7 +12,6 @@ import com.google.inject.Inject;
 import com.google.inject.Singleton;
 
 import software.wings.beans.Pipeline;
-import software.wings.beans.Pipeline.Builder;
 import software.wings.beans.PipelineStage;
 import software.wings.beans.PipelineStage.PipelineStageElement;
 import software.wings.beans.yaml.Change;
@@ -37,8 +36,8 @@ public class PipelineYamlHandler extends BaseYamlHandler<Yaml, Pipeline> {
   @Inject private PipelineService pipelineService;
   @Inject private YamlHandlerFactory yamlHandlerFactory;
 
-  private Pipeline toBean(ChangeContext<Yaml> context, List<ChangeContext> changeSetContext, Builder pipeline,
-      Pipeline previous) throws HarnessException {
+  private Pipeline toBean(ChangeContext<Yaml> context, List<ChangeContext> changeSetContext, Pipeline previous)
+      throws HarnessException {
     try {
       Yaml yaml = context.getYaml();
       Change change = context.getChange();
@@ -68,11 +67,13 @@ public class PipelineYamlHandler extends BaseYamlHandler<Yaml, Pipeline> {
       }
 
       String name = yamlHelper.getNameFromYamlFilePath(context.getChange().getFilePath());
-      pipeline.withAppId(appId)
-          .withDescription(yaml.getDescription())
-          .withName(name)
-          .withPipelineStages(pipelineStages);
-      return pipeline.build();
+
+      return Pipeline.builder()
+          .appId(appId)
+          .description(yaml.getDescription())
+          .name(name)
+          .pipelineStages(pipelineStages)
+          .build();
 
     } catch (WingsException ex) {
       throw new HarnessException(ex);
@@ -124,7 +125,9 @@ public class PipelineYamlHandler extends BaseYamlHandler<Yaml, Pipeline> {
   public Pipeline upsertFromYaml(ChangeContext<Yaml> changeContext, List<ChangeContext> changeSetContext)
       throws HarnessException {
     Pipeline previous = get(changeContext.getChange().getAccountId(), changeContext.getChange().getFilePath());
-    Pipeline current = toBean(changeContext, changeSetContext, Builder.aPipeline(), previous);
+
+    Pipeline current = toBean(changeContext, changeSetContext, previous);
+
     if (previous != null) {
       current.setUuid(previous.getUuid());
       return pipelineService.updatePipeline(current);
