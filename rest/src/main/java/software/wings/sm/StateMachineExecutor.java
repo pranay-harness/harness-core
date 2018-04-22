@@ -1229,32 +1229,33 @@ public class StateMachineExecutor {
 
   private void abortInstancesByStatus(
       ExecutionInterrupt workflowExecutionInterrupt, WorkflowExecution workflowExecution, ExecutionStatus... statuses) {
-    boolean updated = markAbortingState(workflowExecutionInterrupt, workflowExecution, statuses);
-    if (updated) {
-      PageRequest<StateExecutionInstance> pageRequest =
-          aPageRequest()
-              .withReadPref(CRITICAL)
-              .withLimit(PageRequest.UNLIMITED)
-              .addFilter("appId", EQ, workflowExecutionInterrupt.getAppId())
-              .addFilter("executionUuid", EQ, workflowExecutionInterrupt.getExecutionUuid())
-              .addFilter("status", IN, ABORTING)
-              .addFilter("createdAt", GE, workflowExecution.getCreatedAt())
-              .build();
+    if (!markAbortingState(workflowExecutionInterrupt, workflowExecution, statuses)) {
+      return;
+    }
+    PageRequest<StateExecutionInstance> pageRequest =
+        aPageRequest()
+            .withReadPref(CRITICAL)
+            .withLimit(PageRequest.UNLIMITED)
+            .addFilter("appId", EQ, workflowExecutionInterrupt.getAppId())
+            .addFilter("executionUuid", EQ, workflowExecutionInterrupt.getExecutionUuid())
+            .addFilter("status", IN, ABORTING)
+            .addFilter("createdAt", GE, workflowExecution.getCreatedAt())
+            .build();
 
-      List<StateExecutionInstance> allStateExecutionInstances = getAllStateExecutionInstances(pageRequest);
-      if (isEmpty(allStateExecutionInstances)) {
-        logger.warn(
-            "ABORT_ALL workflowExecutionInterrupt: {} being ignored as no running instance found for executionUuid: {}",
-            workflowExecutionInterrupt.getUuid(), workflowExecutionInterrupt.getExecutionUuid());
-      } else {
-        for (StateExecutionInstance stateExecutionInstance : allStateExecutionInstances) {
-          StateMachine sm = wingsPersistence.get(StateMachine.class, workflowExecutionInterrupt.getAppId(),
-              stateExecutionInstance.getStateMachineId(), CRITICAL);
-          ExecutionContextImpl context = new ExecutionContextImpl(stateExecutionInstance, sm, injector);
-          injector.injectMembers(context);
-          abortMarkedInstance(context, stateExecutionInstance);
-        }
-      }
+    List<StateExecutionInstance> allStateExecutionInstances = getAllStateExecutionInstances(pageRequest);
+    if (isEmpty(allStateExecutionInstances)) {
+      logger.warn(
+          "ABORT_ALL workflowExecutionInterrupt: {} being ignored as no running instance found for executionUuid: {}",
+          workflowExecutionInterrupt.getUuid(), workflowExecutionInterrupt.getExecutionUuid());
+      return;
+    }
+
+    for (StateExecutionInstance stateExecutionInstance : allStateExecutionInstances) {
+      StateMachine sm = wingsPersistence.get(StateMachine.class, workflowExecutionInterrupt.getAppId(),
+          stateExecutionInstance.getStateMachineId(), CRITICAL);
+      ExecutionContextImpl context = new ExecutionContextImpl(stateExecutionInstance, sm, injector);
+      injector.injectMembers(context);
+      abortMarkedInstance(context, stateExecutionInstance);
     }
   }
 
