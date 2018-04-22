@@ -37,10 +37,11 @@ public class StateExecutionInstance extends Base {
   public static final String CONTEXT_ELEMENT_KEY = "contextElement";
   public static final String CONTEXT_ELEMENTS_KEY = "contextElements";
   public static final String EXECUTION_UUID_KEY = "executionUuid";
+  public static final String EXPIRY_TS_KEY = "expiryTs";
   public static final String PARENT_INSTANCE_ID_KEY = "parentInstanceId";
   public static final String PHASE_SUBWORKFLOW_ID_KEY = "phaseSubWorkflowId";
-  public static final String PREV_INSTANCE_ID_KEY = "prevInstanceId";
   public static final String PIPELINE_STATE_ELEMENT_ID_KEY = "pipelineStateElementId";
+  public static final String PREV_INSTANCE_ID_KEY = "prevInstanceId";
   public static final String STATE_EXECUTION_MAP_KEY = "stateExecutionMap";
   public static final String STATE_TYPE_KEY = "stateType";
   public static final String STATUS_KEY = "status";

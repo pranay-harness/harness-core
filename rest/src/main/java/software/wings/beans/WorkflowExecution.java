@@ -17,6 +17,7 @@ import software.wings.sm.ExecutionStatus;
 import software.wings.sm.InfraMappingSummary;
 import software.wings.sm.PipelineSummary;
 
+import java.time.Duration;
 import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
@@ -32,6 +33,9 @@ public class WorkflowExecution extends Base {
   public static final String WORKFLOW_ID_KEY = "workflowId";
   public static final String PIPELINE_EXECUTION_ID_KEY = "pipelineExecutionId";
   public static final String ARGS_PIPELINE_PHASE_ELEMENT_ID_KEY = "executionArgs.pipelinePhaseElementId";
+
+  // TODO: Determine the right expiry duration for workflow exceptions
+  public static final Duration EXPIRY = Duration.ofDays(7);
 
   @Indexed private String workflowId;
 
