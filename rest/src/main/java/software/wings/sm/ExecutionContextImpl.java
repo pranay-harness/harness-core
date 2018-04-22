@@ -403,7 +403,7 @@ public class ExecutionContextImpl implements DeploymentExecutionContext {
       evaluatedValueMap.put(key, val);
     }
 
-    logger.info("expr: {}, evaluatedValueMap: {}", expr, evaluatedValueMap);
+    logger.debug("expr: {}, evaluatedValueMap: {}", expr, evaluatedValueMap);
     return evaluator.evaluate(expr, evaluatedValueMap);
   }
 
