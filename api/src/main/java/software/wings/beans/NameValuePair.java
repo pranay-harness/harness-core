@@ -1,10 +1,14 @@
 package software.wings.beans;
 
+import io.harness.data.validator.Trimmed;
 import lombok.Builder;
 import lombok.Data;
 import lombok.EqualsAndHashCode;
 import lombok.NoArgsConstructor;
+import org.hibernate.validator.constraints.NotEmpty;
 import software.wings.yaml.BaseYaml;
+
+import javax.validation.constraints.NotNull;
 
 /**
  * Generic Name Value pair
@@ -13,11 +17,11 @@ import software.wings.yaml.BaseYaml;
 @Data
 @Builder
 public class NameValuePair {
-  private String name;
+  @NotEmpty @Trimmed private String name;
   /*
     Value can only be of type String or in encrypted format
   */
-  private String value;
+  @NotNull private String value;
 
   /*
    Could be TEXT / ENCRYPTED_TEXT

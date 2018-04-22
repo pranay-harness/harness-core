@@ -94,11 +94,13 @@ import com.google.inject.Singleton;
 import com.google.inject.name.Named;
 
 import org.apache.commons.collections.CollectionUtils;
+import org.hibernate.validator.constraints.NotEmpty;
 import org.mongodb.morphia.Key;
 import org.mongodb.morphia.query.UpdateOperations;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import ro.fortsoft.pf4j.PluginManager;
+import ru.vyarus.guice.validator.group.annotation.ValidationGroups;
 import software.wings.api.DeploymentType;
 import software.wings.app.StaticConfiguration;
 import software.wings.beans.Account;
@@ -197,6 +199,7 @@ import software.wings.stencils.DataProvider;
 import software.wings.stencils.Stencil;
 import software.wings.stencils.StencilCategory;
 import software.wings.stencils.StencilPostProcessor;
+import software.wings.utils.validation.Update;
 import software.wings.yaml.gitSync.YamlGitConfig;
 
 import java.time.Duration;
@@ -215,6 +218,7 @@ import java.util.Set;
 import java.util.concurrent.ExecutorService;
 import java.util.function.Predicate;
 import java.util.stream.Collectors;
+import javax.validation.Valid;
 import javax.validation.executable.ValidateOnExecution;
 
 /**
@@ -1651,7 +1655,9 @@ public class WorkflowServiceImpl implements WorkflowService, DataProvider {
   }
 
   @Override
-  public WorkflowPhase updateWorkflowPhase(String appId, String workflowId, WorkflowPhase workflowPhase) {
+  @ValidationGroups(Update.class)
+  public WorkflowPhase updateWorkflowPhase(
+      @NotEmpty String appId, @NotEmpty String workflowId, @Valid WorkflowPhase workflowPhase) {
     if (workflowPhase.isRollback() || workflowPhase.getPhaseSteps().stream().anyMatch(PhaseStep::isRollback)) {
       // This might seem as user error, but since this is controlled from the our UI lets get allerted for it
       throw new InvalidRequestException("The direct workflow phase should not have rollback flag set!", USER_SRE);

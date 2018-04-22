@@ -1,5 +1,7 @@
 package software.wings.service.intfc;
 
+import org.hibernate.validator.constraints.NotEmpty;
+import ru.vyarus.guice.validator.group.annotation.ValidationGroups;
 import software.wings.beans.FailureStrategy;
 import software.wings.beans.GraphNode;
 import software.wings.beans.InfrastructureMapping;
@@ -20,6 +22,7 @@ import software.wings.sm.StateType;
 import software.wings.sm.StateTypeDescriptor;
 import software.wings.sm.StateTypeScope;
 import software.wings.stencils.Stencil;
+import software.wings.utils.validation.Update;
 
 import java.util.List;
 import java.util.Map;
@@ -80,7 +83,9 @@ public interface WorkflowService extends OwnedByApplication, OwnedByEnvironment 
 
   WorkflowPhase createWorkflowPhase(String appId, String workflowId, WorkflowPhase workflowPhase);
 
-  WorkflowPhase updateWorkflowPhase(String appId, String workflowId, WorkflowPhase workflowPhase);
+  @ValidationGroups(Update.class)
+  WorkflowPhase updateWorkflowPhase(
+      @NotEmpty String appId, @NotEmpty String workflowId, @Valid WorkflowPhase workflowPhase);
 
   WorkflowPhase updateWorkflowPhaseRollback(
       String appId, String workflowId, String phaseId, WorkflowPhase workflowPhase);

@@ -24,6 +24,7 @@ public class TrimmedTest {
     assertThat(validator.validate(TrimmedTestStructure.builder().str("a ").build())).isNotEmpty();
     assertThat(validator.validate(TrimmedTestStructure.builder().str(" a").build())).isNotEmpty();
 
+    assertThat(validator.validate(TrimmedTestStructure.builder().str(null).build())).isEmpty();
     assertThat(validator.validate(TrimmedTestStructure.builder().str("").build())).isEmpty();
     assertThat(validator.validate(TrimmedTestStructure.builder().str("abc").build())).isEmpty();
   }
