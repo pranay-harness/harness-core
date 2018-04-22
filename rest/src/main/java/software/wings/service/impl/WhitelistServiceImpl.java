@@ -68,13 +68,13 @@ public class WhitelistServiceImpl implements WhitelistService {
       } catch (IllegalArgumentException ex) {
         String msg = "Invalid cidr notation : " + filterCondition;
         logger.warn(msg);
-        throw new WingsException(ErrorCode.GENERAL_ERROR, USER).addParam("args", msg);
+        throw new WingsException(ErrorCode.GENERAL_ERROR, USER).addParam("message", msg);
       }
     } else {
       if (!InetAddressValidator.getInstance().isValid(filterCondition)) {
         String msg = "Invalid ip address : " + filterCondition;
         logger.warn(msg);
-        throw new WingsException(ErrorCode.GENERAL_ERROR, USER).addParam("args", msg);
+        throw new WingsException(ErrorCode.GENERAL_ERROR, USER).addParam("message", msg);
       }
     }
   }

@@ -263,7 +263,7 @@ public class YamlDirectoryServiceImpl implements YamlDirectoryService {
           // createAlert of type HarnessToGitFullSyncError
           alertService.openAlert(accountId, GLOBAL_APP_ID, AlertType.GitSyncError,
               GitSyncErrorAlert.builder().accountId(accountId).message(message).gitToHarness(false).build());
-          throw new WingsException(ErrorCode.GENERAL_ERROR).addParam("args", message);
+          throw new WingsException(ErrorCode.GENERAL_ERROR).addParam("message", message);
         }
 
         if (addToFileChangeList) {

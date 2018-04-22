@@ -181,17 +181,11 @@ public class WorkflowPhaseYamlHandler extends BaseYamlHandler<WorkflowPhase.Yaml
         infraMappingName = infrastructureMapping.getName();
       }
 
-      // when templatized infraMappings used, we do expect infraMapping can be null, so dint perform this check
+      // when templatized infraMappings used, we do expect infraMapping can be null, so don't perform this check
       if (infrastructureMapping == null && !bean.checkInfraTemplatized()) {
-        String message = new StringBuilder()
-                             .append("Infra-mapping:")
-                             .append(infraMappingId)
-                             .append(" could not be found for workflowPhase:")
-                             .append(bean.getName())
-                             .append(", for app:")
-                             .append(appId)
-                             .toString();
-        throw new WingsException(ErrorCode.GENERAL_ERROR, USER).addParam("args", message);
+        String message = String.format("Infra-mapping:%s could not be found for workflowPhase:%s, for app:%s",
+            infraMappingId, bean.getName(), appId);
+        throw new WingsException(ErrorCode.GENERAL_ERROR, USER).addParam("message", message);
       }
     }
 

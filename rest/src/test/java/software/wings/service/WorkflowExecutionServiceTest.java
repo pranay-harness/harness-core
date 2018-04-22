@@ -503,7 +503,7 @@ public class WorkflowExecutionServiceTest extends WingsBaseTest {
       failBecauseExceptionWasNotThrown(WingsException.class);
     } catch (WingsException exception) {
       assertThat(exception).hasMessage(ErrorCode.GENERAL_ERROR.getCode());
-      assertThat(exception.getParams()).containsEntry("args", "workflowType");
+      assertThat(exception.getParams()).containsEntry("message", "workflowType");
     }
   }
 
@@ -520,7 +520,7 @@ public class WorkflowExecutionServiceTest extends WingsBaseTest {
       failBecauseExceptionWasNotThrown(WingsException.class);
     } catch (WingsException exception) {
       assertThat(exception).hasMessage(ErrorCode.GENERAL_ERROR.getCode());
-      assertThat(exception.getParams()).containsEntry("args", "orchestrationId");
+      assertThat(exception.getParams()).containsEntry("message", "orchestrationId");
     }
   }
 

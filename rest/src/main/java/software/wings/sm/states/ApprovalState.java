@@ -105,7 +105,7 @@ public class ApprovalState extends State {
   @Override
   public void handleAbortEvent(ExecutionContext context) {
     double toHours = getTimeoutMillis() / (double) (60 * 60 * 1000);
-    context.getStateExecutionData().setErrorMsg("Pipeline was not approved within " + toHours + " hour(s");
+    context.getStateExecutionData().setErrorMsg("Pipeline was not approved within " + toHours + " hour(s)");
   }
 
   @SchemaIgnore
