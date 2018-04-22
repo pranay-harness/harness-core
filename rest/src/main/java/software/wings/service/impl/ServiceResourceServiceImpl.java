@@ -118,6 +118,7 @@ import java.io.File;
 import java.io.FileInputStream;
 import java.io.FileNotFoundException;
 import java.time.Duration;
+import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
 import java.util.Map;
@@ -1234,6 +1235,19 @@ public class ServiceResourceServiceImpl implements ServiceResourceService, DataP
     wingsPersistence.update(savedService, updateOperations);
 
     return get(appId, serviceId, false);
+  }
+
+  @Override
+  public List<Service> getServicesByUuids(String appId, List<String> serviceUuids) {
+    if (isNotEmpty(serviceUuids)) {
+      return wingsPersistence.createQuery(Service.class)
+          .project("appContainer", false)
+          .filter("appId", appId)
+          .field("uuid")
+          .in(serviceUuids)
+          .asList();
+    }
+    return new ArrayList<>();
   }
 
   @Override

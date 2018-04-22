@@ -393,4 +393,12 @@ public interface ServiceResourceService extends OwnedByApplication {
   Service setConfigMapYaml(String appId, String serviceId, KubernetesPayload kubernetesPayload);
 
   Service setHelmValueYaml(String appId, String serviceId, KubernetesPayload kubernetesPayload);
+
+  /**
+   * Get services excluding appContainer details
+   * @param appId
+   * @param serviceUuids
+   * @return
+   */
+  List<Service> getServicesByUuids(String appId, List<String> serviceUuids);
 }

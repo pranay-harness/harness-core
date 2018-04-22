@@ -1404,4 +1404,16 @@ public class InfrastructureMappingServiceImpl implements InfrastructureMappingSe
     }
     return infraTypes;
   }
+
+  @Override
+  public List<InfrastructureMapping> getInfraStructureMappingsByUuids(String appId, List<String> infraMappingIds) {
+    if (isNotEmpty(infraMappingIds)) {
+      return wingsPersistence.createQuery(InfrastructureMapping.class)
+          .filter("appId", appId)
+          .field("uuid")
+          .in(infraMappingIds)
+          .asList();
+    }
+    return new ArrayList<>();
+  }
 }

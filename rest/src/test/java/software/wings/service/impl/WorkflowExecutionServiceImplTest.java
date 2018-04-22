@@ -20,7 +20,6 @@ import static software.wings.beans.GraphLink.Builder.aLink;
 import static software.wings.beans.GraphNode.GraphNodeBuilder.aGraphNode;
 import static software.wings.beans.PhaseStep.PhaseStepBuilder.aPhaseStep;
 import static software.wings.beans.PhysicalDataCenterConfig.Builder.aPhysicalDataCenterConfig;
-import static software.wings.beans.Pipeline.Builder.aPipeline;
 import static software.wings.beans.ServiceInstance.Builder.aServiceInstance;
 import static software.wings.beans.ServiceTemplate.Builder.aServiceTemplate;
 import static software.wings.beans.SettingAttribute.Builder.aSettingAttribute;
@@ -704,11 +703,11 @@ public class WorkflowExecutionServiceImplTest extends WingsBaseTest {
 
     List<PipelineStage> pipelineStages = asList(stag1);
 
-    Pipeline pipeline = aPipeline()
-                            .withAppId(app.getUuid())
-                            .withName("pipeline1")
-                            .withDescription("Sample Pipeline")
-                            .withPipelineStages(pipelineStages)
+    Pipeline pipeline = Pipeline.builder()
+                            .appId(app.getUuid())
+                            .name("pipeline1")
+                            .description("Sample Pipeline")
+                            .pipelineStages(pipelineStages)
                             .build();
 
     pipeline = pipelineService.createPipeline(pipeline);

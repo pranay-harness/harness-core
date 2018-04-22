@@ -8,7 +8,6 @@ import static org.mockito.Matchers.any;
 import static org.mockito.Matchers.eq;
 import static org.mockito.Mockito.when;
 import static software.wings.beans.Environment.Builder.anEnvironment;
-import static software.wings.beans.Pipeline.Builder.aPipeline;
 import static software.wings.beans.Workflow.WorkflowBuilder.aWorkflow;
 import static software.wings.dl.PageResponse.PageResponseBuilder.aPageResponse;
 import static software.wings.security.EnvFilter.FilterType.NON_PROD;
@@ -97,10 +96,10 @@ public class AuthHandlerTest extends WingsBaseTest {
   private Workflow buildWorkflow = aWorkflow().withUuid(generateUuid()).withAppId(APP_ID).withEnvId(null).build();
 
   private Pipeline pipeline1 =
-      aPipeline()
-          .withUuid(generateUuid())
-          .withAppId(APP_ID)
-          .withPipelineStages(
+      Pipeline.builder()
+          .uuid(generateUuid())
+          .appId(APP_ID)
+          .pipelineStages(
               asList(PipelineStage.builder()
                          .pipelineStageElements(asList(PipelineStageElement.builder()
                                                            .properties(ImmutableMap.of("envId", dev.getUuid()))
@@ -116,10 +115,10 @@ public class AuthHandlerTest extends WingsBaseTest {
           .build();
 
   private Pipeline pipeline2 =
-      aPipeline()
-          .withUuid(generateUuid())
-          .withAppId(APP_ID)
-          .withPipelineStages(
+      Pipeline.builder()
+          .uuid(generateUuid())
+          .appId(APP_ID)
+          .pipelineStages(
               asList(PipelineStage.builder()
                          .pipelineStageElements(asList(PipelineStageElement.builder()
                                                            .properties(ImmutableMap.of("envId", prod.getUuid()))
@@ -129,10 +128,10 @@ public class AuthHandlerTest extends WingsBaseTest {
           .build();
 
   private Pipeline approvalPipeline =
-      aPipeline()
-          .withUuid(generateUuid())
-          .withAppId(APP_ID)
-          .withPipelineStages(
+      Pipeline.builder()
+          .uuid(generateUuid())
+          .appId(APP_ID)
+          .pipelineStages(
               asList(PipelineStage.builder()
                          .pipelineStageElements(asList(PipelineStageElement.builder().type(APPROVAL.name()).build()))
                          .build()))
@@ -145,10 +144,10 @@ public class AuthHandlerTest extends WingsBaseTest {
   }
 
   private Pipeline buildPipeline =
-      aPipeline()
-          .withUuid(generateUuid())
-          .withAppId(APP_ID)
-          .withPipelineStages(asList(
+      Pipeline.builder()
+          .uuid(generateUuid())
+          .appId(APP_ID)
+          .pipelineStages(asList(
               PipelineStage.builder()
                   .pipelineStageElements(asList(PipelineStageElement.builder().type(APPROVAL.name()).build(),
                       PipelineStageElement.builder().properties(getEmptyEnvMap()).type(ENV_STATE.name()).build()))

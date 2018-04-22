@@ -98,6 +98,7 @@ public class EnvState extends State {
     executionArgs.setPipelinePhaseElementId(context.getPipelineStateElementId());
     executionArgs.setTriggeredBy(workflowStandardParams.getCurrentUser());
     executionArgs.setWorkflowVariables(populatePipelineVariables(workflowStandardParams));
+    executionArgs.setExcludeHostsWithSameArtifact(workflowStandardParams.isExcludeHostsWithSameArtifact());
 
     Workflow workflow = workflowService.readWorkflow(appId, workflowId);
     EnvStateExecutionData envStateExecutionData =

@@ -351,9 +351,7 @@ public class EnvironmentServiceTest extends WingsBaseTest {
         .thenReturn(anEnvironment().withAppId(APP_ID).withUuid(ENV_ID).withName("PROD").build());
     when(wingsPersistence.delete(any(Query.class))).thenReturn(true);
     when(pipelineService.listPipelines(any(PageRequest.class)))
-        .thenReturn(aPageResponse()
-                        .withResponse(asList(Pipeline.Builder.aPipeline().withName("PIPELINE_NAME").build()))
-                        .build());
+        .thenReturn(aPageResponse().withResponse(asList(Pipeline.builder().name("PIPELINE_NAME").build())).build());
     assertThatThrownBy(() -> environmentService.delete(APP_ID, ENV_ID))
         .isInstanceOf(WingsException.class)
         .hasMessage(INVALID_REQUEST.name());

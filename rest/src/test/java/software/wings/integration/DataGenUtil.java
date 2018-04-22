@@ -19,7 +19,6 @@ import static software.wings.beans.HostConnectionAttributes.ConnectionType.SSH;
 import static software.wings.beans.PhaseStep.PhaseStepBuilder.aPhaseStep;
 import static software.wings.beans.PhaseStepType.POST_DEPLOYMENT;
 import static software.wings.beans.PhaseStepType.PRE_DEPLOYMENT;
-import static software.wings.beans.Pipeline.Builder.aPipeline;
 import static software.wings.beans.SettingAttribute.Builder.aSettingAttribute;
 import static software.wings.beans.User.Builder.anUser;
 import static software.wings.beans.Workflow.WorkflowBuilder.aWorkflow;
@@ -690,10 +689,10 @@ public class DataGenUtil extends BaseIntegrationTest {
     workflow4 = workflowGenerator.postProcess(workflow4, PostProcessInfo.builder().selectNodeCount(2).build());
 
     Pipeline pipeline1 = pipelineGenerator.createPipeline(seed,
-        aPipeline()
-            .withAppId(workflow1.getAppId())
-            .withName("Barrier Pipeline")
-            .withPipelineStages(
+        Pipeline.builder()
+            .appId(workflow1.getAppId())
+            .name("Barrier Pipeline")
+            .pipelineStages(
                 asList(PipelineStage.builder()
                            .pipelineStageElements(asList(PipelineStageElement.builder()
                                                              .name("Parallel section 1-1")
@@ -736,10 +735,10 @@ public class DataGenUtil extends BaseIntegrationTest {
             .build());
 
     Pipeline pipeline2 = pipelineGenerator.createPipeline(seed,
-        aPipeline()
-            .withAppId(workflow1.getAppId())
-            .withName("Pipeline")
-            .withPipelineStages(
+        Pipeline.builder()
+            .appId(workflow1.getAppId())
+            .name("Pipeline")
+            .pipelineStages(
                 asList(PipelineStage.builder()
                            .pipelineStageElements(asList(PipelineStageElement.builder()
                                                              .name("Simple")

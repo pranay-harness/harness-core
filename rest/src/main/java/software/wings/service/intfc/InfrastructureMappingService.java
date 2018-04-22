@@ -108,4 +108,6 @@ public interface InfrastructureMappingService extends OwnedByEnvironment {
   Map<String, String> listAlbTargetGroups(String appId, String computeProviderId, String region);
 
   List<Host> listHosts(String appId, String infrastructureMappingId);
+
+  List<InfrastructureMapping> getInfraStructureMappingsByUuids(String appId, List<String> infraMappingIds);
 }

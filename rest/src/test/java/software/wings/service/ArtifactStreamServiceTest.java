@@ -17,7 +17,6 @@ import static software.wings.beans.artifact.ArtifactStreamType.ECR;
 import static software.wings.beans.artifact.ArtifactStreamType.GCR;
 import static software.wings.beans.artifact.ArtifactStreamType.JENKINS;
 import static software.wings.beans.artifact.ArtifactStreamType.NEXUS;
-import static software.wings.beans.trigger.Trigger.Builder.aTrigger;
 import static software.wings.dl.PageRequest.PageRequestBuilder.aPageRequest;
 import static software.wings.utils.WingsTestConstants.ACCOUNT_ID;
 import static software.wings.utils.WingsTestConstants.APP_ID;
@@ -1258,7 +1257,8 @@ public class ArtifactStreamServiceTest extends WingsBaseTest {
     assertThat(savedArtifactStream).isNotNull();
 
     when(triggerService.getTriggersHasArtifactStreamAction(APP_ID, savedArtifactStream.getUuid()))
-        .thenReturn(Collections.singletonList(aTrigger().withName(TRIGGER_NAME).build()));
+        .thenReturn(
+            Collections.singletonList(software.wings.beans.trigger.Trigger.builder().name(TRIGGER_NAME).build()));
     assertThat(artifactStreamService.delete(APP_ID, savedArtifactStream.getUuid())).isTrue();
   }
 }
