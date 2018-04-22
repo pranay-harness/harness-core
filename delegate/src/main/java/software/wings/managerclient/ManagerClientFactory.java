@@ -6,6 +6,7 @@ import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.datatype.guava.GuavaModule;
 import com.fasterxml.jackson.datatype.jdk8.Jdk8Module;
 import com.fasterxml.jackson.datatype.jsr310.JavaTimeModule;
+import io.harness.network.FibonacciBackOff;
 import okhttp3.ConnectionPool;
 import okhttp3.OkHttpClient;
 import okhttp3.OkHttpClient.Builder;
@@ -13,7 +14,6 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import retrofit2.Retrofit;
 import retrofit2.converter.jackson.JacksonConverterFactory;
-import software.wings.http.ExponentialBackOff;
 import software.wings.security.TokenGenerator;
 
 import javax.net.ssl.SSLContext;
@@ -80,7 +80,7 @@ public class ManagerClientFactory implements Provider<ManagerClient> {
                                    .newBuilder()
                                    .addHeader("User-Agent", "delegate/" + System.getProperty("version"))
                                    .build()))
-          .addInterceptor(chain -> ExponentialBackOff.executeForEver(() -> chain.proceed(chain.request())))
+          .addInterceptor(chain -> FibonacciBackOff.executeForEver(() -> chain.proceed(chain.request())))
           .hostnameVerifier((hostname, session) -> true)
           .build();
     } catch (Exception e) {
