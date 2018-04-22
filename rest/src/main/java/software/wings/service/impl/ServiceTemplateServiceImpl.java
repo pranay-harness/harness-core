@@ -467,7 +467,7 @@ public class ServiceTemplateServiceImpl implements ServiceTemplateService {
                                 .collect(toList());
       }
     }
-    logger.info("Config files after overrides [{}]", mergedConfigFiles.toString());
+    logger.debug("Config files after overrides [{}]", mergedConfigFiles.toString());
     return mergedConfigFiles;
   }
 
@@ -485,7 +485,7 @@ public class ServiceTemplateServiceImpl implements ServiceTemplateService {
                                     .collect(toList());
       }
     }
-    logger.info("Service variables after overrides [{}]", mergedServiceSettings.toString());
+    logger.debug("Service variables after overrides [{}]", mergedServiceSettings.toString());
     if (!maskEncryptedFields) {
       mergedServiceSettings.forEach(serviceVariable -> {
         if (serviceVariable.getType() == Type.ENCRYPTED_TEXT) {

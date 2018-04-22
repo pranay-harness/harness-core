@@ -206,10 +206,10 @@ public class SecretManagerImpl implements SecretManager {
                                        .fieldName(f.getName())
                                        .build());
         } else {
-          EncryptedData encryptedData =
-              wingsPersistence.get(EncryptedData.class, (String) encryptedRefField.get(object));
+          String id = (String) encryptedRefField.get(object);
+          EncryptedData encryptedData = wingsPersistence.get(EncryptedData.class, id);
           if (encryptedData == null) {
-            logger.info("No encrypted record set for field {} for object {}", f.getName(), object);
+            logger.info("No encrypted record set for field {} for id: {}", f.getName(), id);
             continue;
           }
           EncryptionConfig encryptionConfig =

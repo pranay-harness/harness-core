@@ -161,7 +161,7 @@ public class ArtifactServiceImpl implements ArtifactService {
 
     Artifact savedArtifact = wingsPersistence.get(Artifact.class, artifact.getAppId(), key);
     if (savedArtifact.getStatus().equals(QUEUED)) {
-      logger.info("Sending event to collect artifact {} ", savedArtifact);
+      logger.info("Sending event to collect artifact {} ", savedArtifact.getUuid());
       collectQueue.send(aCollectEvent().withArtifact(savedArtifact).build());
     }
     return savedArtifact;
@@ -410,7 +410,7 @@ public class ArtifactServiceImpl implements ArtifactService {
       return artifact;
     }
 
-    logger.info("Sending event to collect artifact {} ", artifact);
+    logger.info("Sending event to collect artifact {} ", artifact.getUuid());
     collectQueue.send(aCollectEvent().withArtifact(artifact).build());
 
     return artifact;

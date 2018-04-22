@@ -70,7 +70,8 @@ public class GkeClusterServiceImpl implements GkeClusterService {
     // See if the cluster already exists
     try {
       Cluster cluster = gkeContainerService.projects().zones().clusters().get(projectId, zone, clusterName).execute();
-      logger.info("Cluster {} already exists in zone {} for project {}", clusterName, zone, projectId);
+      logger.info("Cluster already exists");
+      logger.debug("Cluster {}, zone {}, project {}", clusterName, zone, projectId);
       return configFromCluster(cluster, namespace);
     } catch (IOException e) {
       logNotFoundOrError(e, projectId, zone, clusterName, "getting");
@@ -91,8 +92,8 @@ public class GkeClusterServiceImpl implements GkeClusterService {
           waitForOperationToComplete(createOperation, gkeContainerService, projectId, zone, "Provisioning");
       if (operationStatus.equals("DONE")) {
         Cluster cluster = gkeContainerService.projects().zones().clusters().get(projectId, zone, clusterName).execute();
-        logger.info("Cluster status: " + cluster.getStatus());
-        logger.info("Master endpoint: " + cluster.getEndpoint());
+        logger.info("Cluster status: {}", cluster.getStatus());
+        logger.debug("Master endpoint: {}", cluster.getEndpoint());
         return configFromCluster(cluster, namespace);
       }
     } catch (IOException e) {
@@ -195,9 +196,9 @@ public class GkeClusterServiceImpl implements GkeClusterService {
     String clusterName = zoneCluster[1];
     try {
       Cluster cluster = gkeContainerService.projects().zones().clusters().get(projectId, zone, clusterName).execute();
-      logger.info("Found cluster {} in zone {} for project {}", clusterName, zone, projectId);
-      logger.info("Cluster status: " + cluster.getStatus());
-      logger.info("Master endpoint: " + cluster.getEndpoint());
+      logger.debug("Found cluster {} in zone {} for project {}", clusterName, zone, projectId);
+      logger.info("Cluster status: {}", cluster.getStatus());
+      logger.debug("Master endpoint: {}", cluster.getEndpoint());
       return configFromCluster(cluster, namespace);
     } catch (IOException e) {
       logNotFoundOrError(e, projectId, zone, clusterName, "getting");

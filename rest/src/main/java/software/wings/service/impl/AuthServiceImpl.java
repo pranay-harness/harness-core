@@ -280,7 +280,7 @@ public class AuthServiceImpl implements AuthService {
 
   @Override
   public void validateDelegateToken(String accountId, String tokenString) {
-    logger.info("Delegate token validation, account id [{}] token [{}]", accountId, tokenString); // TODO: remove this
+    logger.info("Delegate token validation, account id [{}] token requested", accountId);
     Account account = dbCache.get(Account.class, accountId);
     if (account == null) {
       logger.error("Account Id {} does not exist in manager. So, rejecting delegate register request.", accountId);

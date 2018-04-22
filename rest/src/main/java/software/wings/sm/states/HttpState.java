@@ -266,7 +266,7 @@ public class HttpState extends State {
 
     String finalUrl = getFinalUrl(context);
     String evaluatedUrl = trim(context.renderExpression(finalUrl));
-    logger.info("evaluatedUrl: {}", evaluatedUrl);
+    logger.debug("evaluatedUrl: {}", evaluatedUrl);
     String evaluatedBody = null;
     try {
       evaluatedBody = getFinalBody(context);
@@ -275,13 +275,13 @@ public class HttpState extends State {
     }
     if (evaluatedBody != null) {
       evaluatedBody = trim(context.renderExpression(evaluatedBody));
-      logger.info("evaluatedBody: {}", evaluatedBody);
+      logger.debug("evaluatedBody: {}", evaluatedBody);
     }
 
     String evaluatedHeader = getFinalHeader(context);
     if (evaluatedHeader != null) {
       evaluatedHeader = trim(context.renderExpression(evaluatedHeader));
-      logger.info("evaluatedHeader: {}", evaluatedHeader);
+      logger.debug("evaluatedHeader: {}", evaluatedHeader);
     }
     String evaluatedMethod = getFinalMethod(context);
     PhaseElement phaseElement = context.getContextElement(ContextElementType.PARAM, Constants.PHASE_PARAM);

@@ -141,7 +141,7 @@ public class StateMachine extends Base {
   }
 
   public StateMachine(Pipeline pipeline, Map<String, StateTypeDescriptor> stencilMap) {
-    logger.info("Pipeline received for transformation {}", pipeline.toString());
+    logger.debug("Pipeline received for transformation {}", pipeline.toString());
     setAppId(pipeline.getAppId());
     this.originId = pipeline.getUuid();
     try {
@@ -274,7 +274,7 @@ public class StateMachine extends Base {
       Graph graph, Map<String, StateTypeDescriptor> stencilMap, OrchestrationWorkflow orchestrationWorkflow) {
     String originStateName = null;
     for (GraphNode node : graph.getNodes()) {
-      logger.info("node : {}", node);
+      logger.debug("node : {}", node);
 
       if (node.getType() == null || stencilMap.get(node.getType()) == null) {
         throw new InvalidRequestException("Unknown stencil type");
