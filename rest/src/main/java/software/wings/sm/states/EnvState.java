@@ -153,8 +153,8 @@ public class EnvState extends State {
    */
   @Override
   public void handleAbortEvent(ExecutionContext context) {
-    double toHours = getTimeoutMillis() / (double) (60 * 60 * 1000);
-    context.getStateExecutionData().setErrorMsg("Workflow not completed within " + toHours + " hour(s)");
+    context.getStateExecutionData().setErrorMsg(
+        "Workflow not completed within " + Misc.getDurationString(getTimeoutMillis()));
   }
 
   public ExecutionResponse handleAsyncResponse(ExecutionContext context, Map<String, NotifyResponseData> response) {

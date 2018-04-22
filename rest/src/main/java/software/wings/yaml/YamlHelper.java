@@ -152,7 +152,7 @@ public class YamlHelper {
 
     BufferedReader bufReader = new BufferedReader(new StringReader(content));
 
-    String line = null;
+    String line;
 
     try {
       while ((line = bufReader.readLine()) != null) {
@@ -173,7 +173,7 @@ public class YamlHelper {
                 if (chars[i] != ' ') {
                   if (i >= 2) {
                     chars[i - 2] = '-';
-                    sb.append(new String(chars) + "\n");
+                    sb.append(new String(chars)).append('\n');
                     break;
                   }
                 }

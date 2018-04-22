@@ -84,6 +84,6 @@ public class ApprovalStateTest extends WingsBaseTest {
     approvalState.setTimeoutMillis((int) (0.6 * TimeUnit.HOURS.toMillis(1)));
     approvalState.handleAbortEvent(context);
     assertThat(context.getStateExecutionData()).isNotNull();
-    assertThat(context.getStateExecutionData().getErrorMsg().contains("Pipeline was not approved within 0.6 hour(s)"));
+    assertThat(context.getStateExecutionData().getErrorMsg()).contains("Pipeline was not approved within 36m");
   }
 }

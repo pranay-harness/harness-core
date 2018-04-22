@@ -259,19 +259,13 @@ public class AwsInstanceHandler extends InstanceHandler {
   private void deleteRunningEc2InstancesFromMap(Map<String, Instance> ec2InstanceIdInstanceMap,
       List<com.amazonaws.services.ec2.model.Instance> activeInstanceList) {
     Instance ec2instance = ec2InstanceIdInstanceMap.values().iterator().next();
-    logger.info(new StringBuilder()
-                    .append("Total no of Ec2 instances found in DB for InfraMappingId: ")
-                    .append(ec2instance.getInfraMappingId())
-                    .append(" and AppId: ")
-                    .append(ec2instance.getAppId())
-                    .append(": ")
-                    .append(ec2InstanceIdInstanceMap.size())
-                    .append(", No of Running instances found in aws:")
-                    .append(activeInstanceList.size())
-                    .toString());
+    logger.info(
+        "Total no of Ec2 instances found in DB for InfraMappingId: {} and AppId: {}: {}, No of Running instances found in aws:{}",
+        ec2instance.getInfraMappingId(), ec2instance.getAppId(), ec2InstanceIdInstanceMap.size(),
+        activeInstanceList.size());
 
     ec2InstanceIdInstanceMap.keySet().removeAll(
-        activeInstanceList.stream().map(instance -> instance.getInstanceId()).collect(toSet()));
+        activeInstanceList.stream().map(com.amazonaws.services.ec2.model.Instance::getInstanceId).collect(toSet()));
 
     Set<String> instanceIdsToBeDeleted = ec2InstanceIdInstanceMap.entrySet()
                                              .stream()
@@ -279,15 +273,8 @@ public class AwsInstanceHandler extends InstanceHandler {
                                              .collect(Collectors.toSet());
 
     if (isNotEmpty(instanceIdsToBeDeleted)) {
-      logger.info(new StringBuilder()
-                      .append("Total no of Ec2 instances to be deleted for InfraMappingId: ")
-                      .append(ec2instance.getInfraMappingId())
-                      .append(", AppId: ")
-                      .append(ec2instance.getAppId())
-                      .append(" : ")
-                      .append(instanceIdsToBeDeleted.size())
-                      .toString());
-
+      logger.info("Total no of Ec2 instances to be deleted for InfraMappingId: {}, AppId: {} : {}",
+          ec2instance.getInfraMappingId(), ec2instance.getAppId(), instanceIdsToBeDeleted.size());
       instanceService.delete(instanceIdsToBeDeleted);
     }
   }

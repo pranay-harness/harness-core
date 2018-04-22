@@ -57,7 +57,7 @@ public class AcrArtifactStream extends ArtifactStream {
 
   @Override
   public String generateSourceName() {
-    return new StringBuilder(getRegistryName()).append('/').append(getRepositoryName()).toString();
+    return getRegistryName() + '/' + getRepositoryName();
   }
 
   @Data

@@ -1,5 +1,6 @@
 package software.wings.service.impl.yaml.handler.inframapping;
 
+import static io.harness.data.structure.EmptyPredicate.isEmpty;
 import static java.util.Arrays.asList;
 import static org.apache.commons.lang3.StringUtils.isBlank;
 import static software.wings.exception.WingsException.USER;
@@ -8,10 +9,10 @@ import static software.wings.utils.Validator.notNullCheck;
 import com.google.inject.Singleton;
 
 import com.amazonaws.services.ecs.model.LaunchType;
-import org.apache.commons.collections.CollectionUtils;
 import org.apache.commons.lang3.StringUtils;
 import software.wings.beans.EcsInfrastructureMapping;
 import software.wings.beans.EcsInfrastructureMapping.Yaml;
+import software.wings.beans.ErrorCode;
 import software.wings.beans.InfrastructureMappingType;
 import software.wings.beans.yaml.ChangeContext;
 import software.wings.exception.HarnessException;
@@ -101,13 +102,11 @@ public class EcsInfraMappingYamlHandler
 
   private static void validateNetworkParameters(Yaml yaml, EcsInfrastructureMapping bean) {
     if (isBlank(yaml.getVpcId()) || isBlank(yaml.getSubnetIds()) || isBlank(yaml.getSecurityGroupIds())) {
-      StringBuilder builder = new StringBuilder(128);
-      builder.append("Failed to parse yaml for EcsInfraMapping: ")
-          .append(bean.getName())
-          .append(", App: ")
-          .append(bean.getAppId())
-          .append(", For Fargate Lauch type, VpcId  -  SubnetIds  - SecurityGroupIds are required, can not be blank");
-      throw new WingsException(builder.toString());
+      throw new WingsException(ErrorCode.INVALID_ARGUMENT, USER)
+          .addParam("args",
+              String.format("Failed to parse yaml for EcsInfraMapping: %s, App: %s, "
+                      + "For Fargate Launch type, VpcId  -  SubnetIds  - SecurityGroupIds are required, can not be blank",
+                  bean.getName(), bean.getAppId()));
     }
   }
 
@@ -135,11 +134,10 @@ public class EcsInfraMappingYamlHandler
   }
 
   private String getIds(List<String> ids) {
-    if (CollectionUtils.isEmpty(ids)) {
+    if (isEmpty(ids)) {
       return StringUtils.EMPTY;
     }
 
-    StringBuilder builder = new StringBuilder();
     return String.join(",", ids);
   }
 }

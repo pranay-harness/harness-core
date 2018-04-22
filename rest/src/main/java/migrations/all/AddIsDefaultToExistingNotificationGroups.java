@@ -44,12 +44,8 @@ public class AddIsDefaultToExistingNotificationGroups implements Migration {
       // so we dont want to mark all as false.
       if (notificationGroup.isEditable() && !notificationGroup.isDefaultNotificationGroupForAccount()) {
         notificationGroup.setDefaultNotificationGroupForAccount(false);
-        logger.info(new StringBuilder("... Updating notificationGroup, Id:{")
-                        .append(notificationGroup.getUuid())
-                        .append("}, Name{")
-                        .append(notificationGroup.getName())
-                        .append("}")
-                        .toString());
+        logger.info("... Updating notificationGroup, Id:[{}], Name:[{}]", notificationGroup.getUuid(),
+            notificationGroup.getName());
         notificationSetupService.updateNotificationGroup(notificationGroup);
       }
     }

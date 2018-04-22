@@ -192,7 +192,10 @@ public class Misc {
   }
 
   public static String getDurationString(long start, long end) {
-    long duration = end - start;
+    return getDurationString(end - start);
+  }
+
+  public static String getDurationString(long duration) {
     long elapsedHours = duration / TimeUnit.HOURS.toMillis(1);
     duration = duration % TimeUnit.HOURS.toMillis(1);
 

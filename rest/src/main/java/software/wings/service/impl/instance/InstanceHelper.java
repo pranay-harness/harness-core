@@ -134,12 +134,8 @@ public class InstanceHelper {
 
       if (phaseExecutionData.getInfraMappingId() == null) {
         if (logger.isDebugEnabled()) {
-          logger.debug(new StringBuilder()
-                           .append("infraMappingId is null for appId:")
-                           .append(appId)
-                           .append(", WorkflowExecutionId:")
-                           .append(workflowExecution.getUuid())
-                           .toString());
+          logger.debug(
+              "infraMappingId is null for appId:{}, WorkflowExecutionId:{}", appId, workflowExecution.getUuid());
         }
         return;
       }
@@ -166,10 +162,8 @@ public class InstanceHelper {
           String codeDeployDeploymentId = getCodeDeployDeploymentId(phaseExecutionData, workflowExecution);
 
           if (codeDeployDeploymentId == null) {
-            logger.warn(new StringBuilder("Phase step execution summary null for Deploy for workflow:")
-                            .append(workflowExecution.getName())
-                            .append("Cant create deployment event")
-                            .toString());
+            logger.warn("Phase step execution summary null for Deploy for workflow:{} Can't create deployment event",
+                workflowExecution.getName());
             return;
           }
           AwsCodeDeployDeploymentInfo deploymentInfo =
@@ -187,25 +181,16 @@ public class InstanceHelper {
               getDeployPhaseStep(phaseExecutionData, Constants.DEPLOY_SERVICE);
 
           if (phaseStepExecutionSummary == null) {
-            logger.warn(new StringBuilder()
-                            .append("phaseStepExecutionSummary is null for InfraMappingType")
-                            .append(infrastructureMapping.getInfraMappingType())
-                            .append(", appId: ")
-                            .append(appId)
-                            .append(", WorkflowExecution<Name, Id> :<")
-                            .append(workflowExecution.getName())
-                            .append(",")
-                            .append(workflowExecution.getWorkflowId())
-                            .append(">")
-                            .toString());
+            logger.warn(
+                "phaseStepExecutionSummary is null for InfraMappingType {}, appId: {}, WorkflowExecution<Name, Id> :<{},{}>",
+                infrastructureMapping.getInfraMappingType(), appId, workflowExecution.getName(),
+                workflowExecution.getWorkflowId());
             return;
           }
-          if (phaseStepExecutionSummary != null) {
-            boolean failed = checkIfAnyStepsFailed(phaseStepExecutionSummary);
-            if (failed) {
-              logger.info("Deploy Service Phase step failed, not capturing any instances");
-              return;
-            }
+
+          if (checkIfAnyStepsFailed(phaseStepExecutionSummary)) {
+            logger.info("Deploy Service Phase step failed, not capturing any instances");
+            return;
           }
 
           for (ElementExecutionSummary summary : phaseExecutionData.getElementStatusSummary()) {
@@ -279,23 +264,15 @@ public class InstanceHelper {
   }
 
   private boolean checkIfAnyStepsFailed(PhaseStepExecutionSummary phaseStepExecutionSummary) {
-    return phaseStepExecutionSummary.getStepExecutionSummaryList()
-        .stream()
-        .filter(stepExecutionSummary -> stepExecutionSummary.getStatus() == FAILED)
-        .findFirst()
-        .isPresent();
+    return phaseStepExecutionSummary.getStepExecutionSummaryList().stream().anyMatch(
+        stepExecutionSummary -> stepExecutionSummary.getStatus() == FAILED);
   }
 
   private PhaseStepExecutionSummary getDeployPhaseStep(PhaseExecutionData phaseExecutionData, String phaseStepName) {
     if (phaseExecutionData == null || phaseExecutionData.getPhaseExecutionSummary() == null
         || phaseExecutionData.getPhaseExecutionSummary().getPhaseStepExecutionSummaryMap() == null) {
-      logger.warn(new StringBuilder()
-                      .append("Not able to get PhaseStepExecutionSummary for phaseStepName: ")
-                      .append(phaseStepName)
-                      .append(", as phaseExecutionData= ")
-                      .append(phaseExecutionData)
-                      .toString());
-
+      logger.warn("Not able to get PhaseStepExecutionSummary for phaseStepName: {}, as phaseExecutionData= {}",
+          phaseStepName, phaseExecutionData);
       return null;
     }
 

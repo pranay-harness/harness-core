@@ -71,8 +71,7 @@ public class ArtifactoryArtifactStream extends ArtifactStream {
 
   @Override
   public String generateSourceName() {
-    StringBuilder builder = new StringBuilder(getJobname());
-    return builder.append('/').append(isBlank(getImageName()) ? getArtifactPattern() : getImageName()).toString();
+    return getJobname() + '/' + (isBlank(getImageName()) ? getArtifactPattern() : getImageName());
   }
 
   @Override

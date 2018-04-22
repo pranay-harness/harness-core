@@ -23,6 +23,7 @@ import software.wings.sm.ExecutionResponse;
 import software.wings.sm.ExecutionStatus;
 import software.wings.sm.State;
 import software.wings.sm.StateType;
+import software.wings.utils.Misc;
 import software.wings.waitnotify.NotifyResponseData;
 
 import java.util.Map;
@@ -104,8 +105,8 @@ public class ApprovalState extends State {
    */
   @Override
   public void handleAbortEvent(ExecutionContext context) {
-    double toHours = getTimeoutMillis() / (double) (60 * 60 * 1000);
-    context.getStateExecutionData().setErrorMsg("Pipeline was not approved within " + toHours + " hour(s)");
+    context.getStateExecutionData().setErrorMsg(
+        "Pipeline was not approved within " + Misc.getDurationString(getTimeoutMillis()));
   }
 
   @SchemaIgnore

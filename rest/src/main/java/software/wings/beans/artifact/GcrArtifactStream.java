@@ -58,7 +58,7 @@ public class GcrArtifactStream extends ArtifactStream {
 
   @Override
   public String generateSourceName() {
-    return new StringBuilder(getRegistryHostName()).append('/').append(getDockerImageName()).toString();
+    return getRegistryHostName() + '/' + getDockerImageName();
   }
 
   @Data

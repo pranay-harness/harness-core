@@ -1,6 +1,7 @@
 package software.wings.yaml.handler.inframappings;
 
 import static java.util.Arrays.asList;
+import static junit.framework.TestCase.fail;
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertNotNull;
 import static org.junit.Assert.assertNull;
@@ -47,6 +48,8 @@ import software.wings.beans.yaml.GitFileChange;
 import software.wings.beans.yaml.YamlType;
 import software.wings.delegatetasks.DelegateProxyFactory;
 import software.wings.exception.HarnessException;
+import software.wings.exception.WingsException;
+import software.wings.exception.WingsException.ReportTarget;
 import software.wings.scheduler.QuartzScheduler;
 import software.wings.service.impl.yaml.handler.BaseYamlHandler;
 import software.wings.service.impl.yaml.handler.inframapping.EcsInfraMappingYamlHandler;
@@ -144,7 +147,7 @@ public class EcsInfraMappingYamlHandlerTest extends BaseYamlHandlerTest {
   }
 
   @Test
-  public void tbsValidateNetworkParameters() throws Exception {
+  public void tbsValidateNetworkParameters() {
     Yaml yaml = Yaml.builder()
                     .assignPublicIp(true)
                     .cluster(CLUSTER_NAME)
@@ -154,31 +157,15 @@ public class EcsInfraMappingYamlHandlerTest extends BaseYamlHandlerTest {
     EcsInfrastructureMapping ecsInfrastructureMapping =
         anEcsInfrastructureMapping().withAppId(APP_ID).withName("name").build();
 
-    String errorMsg = "";
     try {
-      errorMsg = (String) MethodUtils.invokeMethod(
-          yamlHandler, true, "validateNetworkParameters", new Object[] {yaml, ecsInfrastructureMapping});
+      MethodUtils.invokeMethod(yamlHandler, true, "validateNetworkParameters", yaml, ecsInfrastructureMapping);
+      fail();
     } catch (Exception e) {
-      assertEquals(((InvocationTargetException) e).getTargetException().getMessage(),
-          new StringBuilder()
-              .append("Failed to parse yaml for EcsInfraMapping: ")
-              .append("name")
-              .append(", App: ")
-              .append(APP_ID)
-              .append(
-                  ", For Fargate Lauch type, VpcId  -  SubnetIds  - SecurityGroupIds are required, can not be blank")
-              .toString());
+      WingsException wingsException = (WingsException) ((InvocationTargetException) e).getTargetException();
+      assertEquals("Invalid argument(s): Failed to parse yaml for EcsInfraMapping: name, App: " + APP_ID
+              + ", For Fargate Launch type, VpcId  -  SubnetIds  - SecurityGroupIds are required, can not be blank",
+          wingsException.getResponseMessageList(ReportTarget.REST_API).get(0).getMessage());
     }
-
-    yaml = Yaml.builder()
-               .assignPublicIp(true)
-               .cluster(CLUSTER_NAME)
-               .computeProviderName(COMPUTE_PROVIDER_ID)
-               .launchType(LaunchType.FARGATE.name())
-               .vpcId("vpcId")
-               .subnetIds("subnetId1, subnetId2")
-               .securityGroupIds("sgId1")
-               .build();
   }
 
   private Service getService() {
