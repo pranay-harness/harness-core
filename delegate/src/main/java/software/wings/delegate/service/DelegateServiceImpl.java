@@ -49,6 +49,7 @@ import com.google.inject.Singleton;
 import com.google.inject.name.Named;
 
 import com.ning.http.client.AsyncHttpClient;
+import io.harness.network.FibonacciBackOff;
 import okhttp3.ResponseBody;
 import org.apache.commons.io.FileUtils;
 import org.apache.commons.io.filefilter.FileFilterUtils;
@@ -82,7 +83,6 @@ import software.wings.delegate.app.DelegateConfiguration;
 import software.wings.delegatetasks.DelegateRunnableTask;
 import software.wings.delegatetasks.validation.DelegateConnectionResult;
 import software.wings.delegatetasks.validation.DelegateValidateTask;
-import software.wings.http.ExponentialBackOff;
 import software.wings.managerclient.ManagerClient;
 import software.wings.security.TokenGenerator;
 import software.wings.utils.JsonUtils;
@@ -357,7 +357,7 @@ public class DelegateServiceImpl implements DelegateService {
         // Ignore
       }
       try {
-        ExponentialBackOff.executeForEver(() -> socket.open(request.build()));
+        FibonacciBackOff.executeForEver(() -> socket.open(request.build()));
       } catch (IOException ex) {
         logger.error("Unable to open socket", e);
       }
@@ -416,7 +416,7 @@ public class DelegateServiceImpl implements DelegateService {
   private void resume() {
     try {
       if (!delegateConfiguration.isPollForTasks()) {
-        ExponentialBackOff.executeForEver(() -> socket.open(request.build()));
+        FibonacciBackOff.executeForEver(() -> socket.open(request.build()));
       }
       upgradePending.set(false);
       upgradeNeeded.set(false);

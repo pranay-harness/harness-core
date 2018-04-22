@@ -1,16 +1,16 @@
-package software.wings.http;
+package io.harness.network;
+
+import static io.harness.threading.Morpheus.sleep;
 
 import java.io.IOException;
+import java.time.Duration;
 
-/**
- * Created by peeyushaggarwal on 1/3/17.
- */
-public final class ExponentialBackOff {
+public final class FibonacciBackOff {
   private static final int[] FIBONACCI = new int[] {1, 1, 2, 3, 5, 8, 13};
 
-  private ExponentialBackOff() {}
+  private FibonacciBackOff() {}
 
-  public static <T, E extends Exception> T execute(ExponentialBackOffFunction<T> fn) throws IOException {
+  public static <T, E extends Exception> T execute(FibonacciBackOffFunction<T> fn) throws IOException {
     for (int attempt = 0; attempt < FIBONACCI.length; attempt++) {
       try {
         return fn.execute();
@@ -21,7 +21,7 @@ public final class ExponentialBackOff {
     throw new RuntimeException("Failed to communicate.");
   }
 
-  public static <T> T executeForEver(ExponentialBackOffFunction<T> fn) throws IOException {
+  public static <T> T executeForEver(FibonacciBackOffFunction<T> fn) throws IOException {
     for (int attempt = 0; attempt < FIBONACCI.length; attempt++) {
       try {
         return fn.execute();
@@ -44,15 +44,7 @@ public final class ExponentialBackOff {
     if (ex.getCause() != null) {
       throw ex;
     }
-    doWait(attempt);
-  }
-
-  private static void doWait(int attempt) {
-    try {
-      Thread.sleep(FIBONACCI[attempt] * 1000);
-    } catch (InterruptedException e) {
-      Thread.currentThread().interrupt();
-    }
+    sleep(Duration.ofSeconds(FIBONACCI[attempt]));
   }
 
   public static IOException peel(IOException t) {
