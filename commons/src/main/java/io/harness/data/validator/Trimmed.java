@@ -20,7 +20,7 @@ import javax.validation.ReportAsSingleViolation;
 @Retention(RUNTIME)
 @ReportAsSingleViolation
 public @interface Trimmed {
-  String message() default "{foo}";
+  String message() default "{io.harness.data.validator.Trimmed.message}";
 
   Class<?>[] groups() default {};
 

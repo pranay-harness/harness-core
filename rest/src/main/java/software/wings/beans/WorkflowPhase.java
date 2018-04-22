@@ -26,6 +26,7 @@ import java.util.List;
 import java.util.Map;
 import java.util.Objects;
 import java.util.stream.Collectors;
+import javax.validation.Valid;
 
 /**
  * Created by rishi on 12/21/16.
@@ -51,7 +52,7 @@ public class WorkflowPhase implements UuidAware {
 
   private List<TemplateExpression> templateExpressions;
 
-  private List<NameValuePair> variableOverrides = new ArrayList<>();
+  @Valid private List<NameValuePair> variableOverrides = new ArrayList<>();
 
   @Embedded private List<PhaseStep> phaseSteps = new ArrayList<>();
 
@@ -260,6 +261,7 @@ public class WorkflowPhase implements UuidAware {
         validationMessage = String.format(Constants.PHASE_VALIDATION_MESSAGE, invalidChildren.toString());
       }
     }
+
     return valid;
   }
 
