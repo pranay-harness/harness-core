@@ -13,7 +13,6 @@ import org.mongodb.morphia.query.Query;
 import org.mongodb.morphia.query.UpdateOperations;
 import software.wings.beans.Account;
 import software.wings.beans.SearchFilter.Operator;
-import software.wings.beans.SortOrder.OrderType;
 import software.wings.beans.User;
 import software.wings.beans.security.UserGroup;
 import software.wings.dl.PageRequest;
@@ -26,6 +25,8 @@ import software.wings.service.intfc.UserService;
 import software.wings.utils.Validator;
 
 import java.util.ArrayList;
+import java.util.Collections;
+import java.util.Comparator;
 import java.util.List;
 import javax.validation.executable.ValidateOnExecution;
 
@@ -45,6 +46,9 @@ public class UserGroupServiceImpl implements UserGroupService {
     Validator.notNullCheck("accountId", userGroup.getAccountId());
     UserGroup savedUserGroup = Validator.duplicateCheck(
         () -> wingsPersistence.saveAndGet(UserGroup.class, userGroup), "name", userGroup.getName());
+    Account account = accountService.get(userGroup.getAccountId());
+    Validator.notNullCheck("account", account);
+    loadUsers(savedUserGroup, account);
     evictUserPermissionInfoCacheForUserGroup(savedUserGroup);
     return savedUserGroup;
   }
@@ -55,10 +59,20 @@ public class UserGroupServiceImpl implements UserGroupService {
     Account account = accountService.get(accountId);
     Validator.notNullCheck("account", account);
     req.addFilter("accountId", Operator.EQ, accountId);
-    req.addOrder("name", OrderType.ASC);
     PageResponse<UserGroup> res = wingsPersistence.query(UserGroup.class, req);
-    res.getResponse().forEach(userGroup -> loadUsers(userGroup, account));
+    List<UserGroup> userGroupList = res.getResponse();
+    // Using a custom comparator since our mongo apis don't support alphabetical sorting with case insensitivity.
+    // Currently, it only supports ASC and DSC.
+    Collections.sort(userGroupList, new UserGroupComparator());
+    userGroupList.forEach(userGroup -> loadUsers(userGroup, account));
     return res;
+  }
+
+  private class UserGroupComparator implements Comparator<UserGroup> {
+    @Override
+    public int compare(UserGroup lhs, UserGroup rhs) {
+      return lhs.getName().compareToIgnoreCase(rhs.getName());
+    }
   }
 
   @Override
