@@ -5,6 +5,7 @@ import com.google.common.collect.ImmutableList;
 import migrations.all.AddArtifactCheck;
 import migrations.all.AddIsDefaultToExistingNotificationGroups;
 import migrations.all.AddValidUntilToStateExecutionInstance;
+import migrations.all.AddValidUntilToWaitInstance;
 import migrations.all.AddVerifyToRollbackWorkflows;
 import migrations.all.CreateDefaultUserGroupsAndAddToExistingUsers;
 import migrations.all.CreateSupportUserGroupsAndRenameAccountAdmin;
@@ -45,6 +46,7 @@ public class MigrationList {
         .add(Pair.of(119, FixMaxInstancesFieldInContainerSetup.class))
         .add(Pair.of(120, GitSyncToAllAccounts.class))
         .add(Pair.of(121, SetRollbackFlagToWorkflows.class))
+        .add(Pair.of(122, AddValidUntilToWaitInstance.class))
         .build();
   }
 }
