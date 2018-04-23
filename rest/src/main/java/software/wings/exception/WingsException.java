@@ -1,7 +1,6 @@
 package software.wings.exception;
 
 import static io.harness.eraro.Level.ERROR;
-import static io.harness.eraro.Level.INFO;
 import static java.util.stream.Collectors.joining;
 import static software.wings.beans.ResponseMessage.aResponseMessage;
 import static software.wings.exception.WingsException.ReportTarget.LOG_SYSTEM;
@@ -174,14 +173,11 @@ public class WingsException extends WingsApiException {
     String msg = "Exception occurred: " + getMessage();
     String responseMsgs = responseMessages.stream().map(ResponseMessage::getMessage).collect(joining(". "));
     if (responseMessages.stream().anyMatch(responseMessage -> responseMessage.getLevel() == ERROR)) {
-      logger.error(msg, this);
       logger.error(responseMsgs);
-    } else if (responseMessages.stream().anyMatch(responseMessage -> responseMessage.getLevel() == INFO)) {
-      logger.info(msg, this);
-      logger.info(responseMsgs);
+      logger.error(msg, this);
     } else {
-      logger.debug(msg, this);
-      logger.debug(responseMsgs);
+      logger.info(responseMsgs);
+      logger.info(msg, this);
     }
   }
 }
