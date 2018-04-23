@@ -79,6 +79,8 @@ public class User extends Base implements Principal {
     publicUser.setName(getName());
     publicUser.setEmail(getEmail());
     publicUser.setAccounts(getAccounts());
+    publicUser.setTwoFactorAuthenticationEnabled(isTwoFactorAuthenticationEnabled());
+    publicUser.setTwoFactorAuthenticationMechanism(getTwoFactorAuthenticationMechanism());
     // publicUser.setCompanyName(getCompanyName());
     return publicUser;
   }
