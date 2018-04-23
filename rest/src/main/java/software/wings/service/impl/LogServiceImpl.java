@@ -200,7 +200,7 @@ public class LogServiceImpl implements LogService {
                        .filter("activityId", activityId)
                        .count();
       if (count > MAX_LOG_ROWS_PER_ACTIVITY) {
-        logger.error(
+        logger.warn(
             "Number of log rows per activity threshold [{}] crossed. [{}] log lines truncated for activityId: [{}], commandUnitName: [{}]",
             MAX_LOG_ROWS_PER_ACTIVITY, log.getLinesCount(), log.getActivityId(), log.getCommandUnitName());
         activityService.updateCommandUnitStatus(log.getAppId(), activityId, unitName, log.getCommandExecutionStatus());
