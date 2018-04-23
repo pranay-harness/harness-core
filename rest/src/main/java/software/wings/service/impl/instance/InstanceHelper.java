@@ -112,7 +112,9 @@ public class InstanceHelper {
       WorkflowExecution workflowExecution) {
     try {
       if (!(stateExecutionData instanceof PhaseExecutionData)) {
-        logger.error("stateExecutionData is not of type PhaseExecutionData");
+        logger.error("stateExecutionData for instance {} is not of type PhaseExecutionData, but {}",
+            stateExecutionInstanceId,
+            stateExecutionData == null ? "null" : stateExecutionData.getClass().getCanonicalName());
         return;
       }
 
