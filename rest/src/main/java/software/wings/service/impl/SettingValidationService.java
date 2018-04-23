@@ -76,6 +76,12 @@ public class SettingValidationService {
   @Inject @Transient private transient FeatureFlagService featureFlagService;
 
   public boolean validate(SettingAttribute settingAttribute) {
+    // Name has leading/trailing spaces
+    if (!settingAttribute.getName().trim().equals(settingAttribute.getName())) {
+      throw new WingsException(ErrorCode.INVALID_ARGUMENT)
+          .addParam("args", "The name " + settingAttribute.getName() + " has leading/trailing spaces. ");
+    }
+
     if (wingsPersistence.createQuery(SettingAttribute.class)
             .filter("accountId", settingAttribute.getAccountId())
             .filter("appId", settingAttribute.getAppId())
