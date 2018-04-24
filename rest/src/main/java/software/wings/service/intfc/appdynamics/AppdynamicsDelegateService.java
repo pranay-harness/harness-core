@@ -6,7 +6,6 @@ import software.wings.delegatetasks.DelegateTaskType;
 import software.wings.security.encryption.EncryptedDataDetail;
 import software.wings.service.impl.appdynamics.AppdynamicsMetric;
 import software.wings.service.impl.appdynamics.AppdynamicsMetricData;
-import software.wings.service.impl.appdynamics.AppdynamicsNode;
 import software.wings.service.impl.appdynamics.AppdynamicsTier;
 import software.wings.service.impl.newrelic.NewRelicApplication;
 
@@ -24,9 +23,6 @@ public interface AppdynamicsDelegateService {
   @DelegateTaskType(TaskType.APPDYNAMICS_GET_TIER_TASK)
   List<AppdynamicsTier> getTiers(
       AppDynamicsConfig value, long appdynamicsAppId, List<EncryptedDataDetail> encryptionDetails) throws IOException;
-
-  List<AppdynamicsNode> getNodes(AppDynamicsConfig appDynamicsConfig, long appdynamicsAppId, long tierId,
-      List<EncryptedDataDetail> encryptionDetails) throws IOException;
 
   @DelegateTaskType(TaskType.APPDYNAMICS_CONFIGURATION_VALIDATE_TASK)
   boolean validateConfig(AppDynamicsConfig appDynamicsConfig) throws IOException;

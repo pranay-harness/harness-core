@@ -69,22 +69,6 @@ public class AppdynamicsDelegateServiceImpl implements AppdynamicsDelegateServic
   }
 
   @Override
-  public List<AppdynamicsNode> getNodes(AppDynamicsConfig appDynamicsConfig, long appdynamicsAppId, long tierId,
-      List<EncryptedDataDetail> encryptionDetails) throws IOException {
-    final Call<List<AppdynamicsNode>> request =
-        getAppdynamicsRestClient(appDynamicsConfig)
-            .listNodes(getHeaderWithCredentials(appDynamicsConfig, encryptionDetails), appdynamicsAppId, tierId);
-    final Response<List<AppdynamicsNode>> response = request.execute();
-    if (response.isSuccessful()) {
-      return response.body();
-    } else {
-      logger.error("Request not successful. Reason: {}", response);
-      throw new WingsException(ErrorCode.APPDYNAMICS_ERROR)
-          .addParam("reason", "could not fetch Appdynamics nodes : " + response);
-    }
-  }
-
-  @Override
   public List<AppdynamicsMetric> getTierBTMetrics(AppDynamicsConfig appDynamicsConfig, long appdynamicsAppId,
       long tierId, List<EncryptedDataDetail> encryptionDetails) throws IOException {
     final AppdynamicsTier tier = getAppdynamicsTier(appDynamicsConfig, appdynamicsAppId, tierId, encryptionDetails);
@@ -218,7 +202,7 @@ public class AppdynamicsDelegateServiceImpl implements AppdynamicsDelegateServic
     throw new WingsException(response.message());
   }
 
-  private AppdynamicsRestClient getAppdynamicsRestClient(final AppDynamicsConfig appDynamicsConfig) {
+  AppdynamicsRestClient getAppdynamicsRestClient(final AppDynamicsConfig appDynamicsConfig) {
     final Retrofit retrofit =
         new Retrofit.Builder()
             .baseUrl(appDynamicsConfig.getControllerUrl() + "/")
