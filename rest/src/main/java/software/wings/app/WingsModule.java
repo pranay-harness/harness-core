@@ -93,6 +93,7 @@ import software.wings.service.impl.EcrBuildServiceImpl;
 import software.wings.service.impl.EmailNotificationServiceImpl;
 import software.wings.service.impl.EntityVersionServiceImpl;
 import software.wings.service.impl.EnvironmentServiceImpl;
+import software.wings.service.impl.ExternalApiRateLimitingServiceImpl;
 import software.wings.service.impl.FeatureFlagServiceImpl;
 import software.wings.service.impl.FileServiceImpl;
 import software.wings.service.impl.GcpInfrastructureProvider;
@@ -194,6 +195,7 @@ import software.wings.service.intfc.EcrClassicBuildService;
 import software.wings.service.intfc.EmailNotificationService;
 import software.wings.service.intfc.EntityVersionService;
 import software.wings.service.intfc.EnvironmentService;
+import software.wings.service.intfc.ExternalApiRateLimitingService;
 import software.wings.service.intfc.FeatureFlagService;
 import software.wings.service.intfc.FileService;
 import software.wings.service.intfc.GcrBuildService;
@@ -394,6 +396,7 @@ public class WingsModule extends AbstractModule {
     bind(ArtifactCollectionService.class).to(ArtifactCollectionServiceImpl.class);
     bind(WhitelistService.class).to(WhitelistServiceImpl.class);
     bind(ApiKeyService.class).to(ApiKeyServiceImpl.class);
+    bind(ExternalApiRateLimitingService.class).to(ExternalApiRateLimitingServiceImpl.class);
 
     MapBinder<String, InfrastructureProvider> infrastructureProviderMapBinder =
         MapBinder.newMapBinder(binder(), String.class, InfrastructureProvider.class);

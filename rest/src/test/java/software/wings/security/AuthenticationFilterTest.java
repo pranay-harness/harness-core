@@ -2,6 +2,7 @@ package software.wings.security;
 
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThatExceptionOfType;
+import static org.assertj.core.api.Assertions.assertThatThrownBy;
 import static org.assertj.core.api.Assertions.fail;
 import static org.assertj.core.api.Assertions.failBecauseExceptionWasNotThrown;
 import static org.mockito.Matchers.eq;
@@ -30,11 +31,13 @@ import software.wings.exception.WingsException;
 import software.wings.service.intfc.ApiKeyService;
 import software.wings.service.intfc.AuditService;
 import software.wings.service.intfc.AuthService;
+import software.wings.service.intfc.ExternalApiRateLimitingService;
 import software.wings.service.intfc.UserService;
 
 import java.io.IOException;
 import java.util.Arrays;
 import javax.ws.rs.HttpMethod;
+import javax.ws.rs.WebApplicationException;
 import javax.ws.rs.container.ContainerRequestContext;
 import javax.ws.rs.core.HttpHeaders;
 import javax.ws.rs.core.MultivaluedHashMap;
@@ -49,6 +52,7 @@ public class AuthenticationFilterTest {
   @Mock AuditService auditService = mock(AuditService.class);
   @Mock AuditHelper auditHelper = mock(AuditHelper.class);
   @Mock ApiKeyService apiKeyService = mock(ApiKeyService.class);
+  @Mock ExternalApiRateLimitingService rateLimitingService = mock(ExternalApiRateLimitingService.class);
 
   @InjectMocks AuthenticationFilter authenticationFilter;
 
@@ -58,8 +62,8 @@ public class AuthenticationFilterTest {
 
   @Before
   public void setUp() {
-    authenticationFilter = new AuthenticationFilter(
-        authService, wingsPersistence, configuration, userService, auditService, auditHelper, apiKeyService);
+    authenticationFilter = new AuthenticationFilter(authService, wingsPersistence, configuration, userService,
+        auditService, auditHelper, apiKeyService, rateLimitingService);
     authenticationFilter = spy(authenticationFilter);
     when(context.getSecurityContext()).thenReturn(securityContext);
     when(securityContext.isSecure()).thenReturn(true);
@@ -122,6 +126,7 @@ public class AuthenticationFilterTest {
     when(context.getHeaderString(EXTERNAL_FACING_API_HEADER)).thenReturn(apiKey);
     doReturn(false).when(authenticationFilter).authenticationExemptedRequests(any(ContainerRequestContext.class));
     doReturn(true).when(authenticationFilter).externalFacingAPI();
+    doReturn(false).when(rateLimitingService).rateLimitRequest(anyString());
     UriInfo uriInfo = mock(UriInfo.class);
     MultivaluedHashMap<String, String> queryParams = new MultivaluedHashMap<>();
     queryParams.put("accountId", Arrays.asList(ACCOUNT_ID));
@@ -131,6 +136,16 @@ public class AuthenticationFilterTest {
     authenticationFilter.filter(context);
     verify(apiKeyService).validate(eq(apiKey), eq(ACCOUNT_ID));
     assertThat(context.getSecurityContext().isSecure());
+  }
+
+  @Test
+  public void testExternalApiRateLimiting() throws IOException {
+    String apiKey = "ApiKey";
+    when(context.getHeaderString(EXTERNAL_FACING_API_HEADER)).thenReturn(apiKey);
+    doReturn(false).when(authenticationFilter).authenticationExemptedRequests(any(ContainerRequestContext.class));
+    doReturn(true).when(authenticationFilter).externalFacingAPI();
+    doReturn(true).when(rateLimitingService).rateLimitRequest(anyString());
+    assertThatThrownBy(() -> authenticationFilter.filter(context)).isInstanceOf(WebApplicationException.class);
   }
 
   @Test
