@@ -50,6 +50,7 @@ import org.slf4j.LoggerFactory;
 import software.wings.beans.Activity;
 import software.wings.beans.AppContainer;
 import software.wings.beans.CanaryOrchestrationWorkflow;
+import software.wings.beans.CommandCategory;
 import software.wings.beans.ConfigFile;
 import software.wings.beans.EntityType;
 import software.wings.beans.EntityVersion;
@@ -90,6 +91,7 @@ import software.wings.exception.WingsException;
 import software.wings.scheduler.PruneEntityJob;
 import software.wings.scheduler.QuartzScheduler;
 import software.wings.service.ServiceHelper;
+import software.wings.service.impl.command.CommandHelper;
 import software.wings.service.impl.yaml.YamlChangeSetHelper;
 import software.wings.service.intfc.AppService;
 import software.wings.service.intfc.ArtifactService;
@@ -160,6 +162,7 @@ public class ServiceResourceServiceImpl implements ServiceResourceService, DataP
   @Inject private StencilPostProcessor stencilPostProcessor;
   @Inject private ServiceHelper serviceHelper;
   @Inject @Named("JobScheduler") private QuartzScheduler jobScheduler;
+  @Inject private CommandHelper commandHelper;
 
   /**
    * {@inheritDoc}
@@ -1412,5 +1415,10 @@ public class ServiceResourceServiceImpl implements ServiceResourceService, DataP
   private List<ServiceCommand> getServiceCommandsByOrder(List<ServiceCommand> serviceCommands) {
     serviceCommands = serviceCommands.stream().sorted(comparingDouble(ServiceCommand::getOrder)).collect(toList());
     return serviceCommands;
+  }
+
+  @Override
+  public List<CommandCategory> getCommandCategories(String appId, String serviceId, String commandName) {
+    return commandHelper.getCommandCategories(appId, serviceId, commandName);
   }
 }
