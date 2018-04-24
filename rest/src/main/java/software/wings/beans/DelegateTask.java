@@ -3,6 +3,7 @@ package software.wings.beans;
 import static software.wings.common.Constants.DEFAULT_ASYNC_CALL_TIMEOUT;
 import static software.wings.common.Constants.DEFAULT_SYNC_CALL_TIMEOUT;
 
+import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
 import org.hibernate.validator.constraints.NotEmpty;
 import org.mongodb.morphia.annotations.AlsoLoad;
 import org.mongodb.morphia.annotations.Converters;
@@ -26,6 +27,7 @@ import javax.validation.constraints.NotNull;
 /**
  * Created by peeyushaggarwal on 12/5/16.
  */
+@JsonIgnoreProperties(ignoreUnknown = true)
 @Entity(value = "delegateTasks", noClassnameStored = true)
 @Converters(Converter.class)
 public class DelegateTask extends Base {
@@ -41,7 +43,7 @@ public class DelegateTask extends Base {
   private boolean async = true;
   private String envId;
   private String infrastructureMappingId;
-  private Set<String> blacklistedDelegateIds = new HashSet<>();
+  private Long validationStartedAt;
   private Set<String> validatingDelegateIds = new HashSet<>();
   private Set<String> validationCompleteDelegateIds = new HashSet<>();
   private byte[] serializedNotifyResponseData;
@@ -157,12 +159,12 @@ public class DelegateTask extends Base {
     this.async = async;
   }
 
-  public Set<String> getBlacklistedDelegateIds() {
-    return blacklistedDelegateIds;
+  public Long getValidationStartedAt() {
+    return validationStartedAt;
   }
 
-  public void setBlacklistedDelegateIds(Set<String> blacklistedDelegateIds) {
-    this.blacklistedDelegateIds = blacklistedDelegateIds;
+  public void setValidationStartedAt(Long validationStartedAt) {
+    this.validationStartedAt = validationStartedAt;
   }
 
   public Set<String> getValidatingDelegateIds() {

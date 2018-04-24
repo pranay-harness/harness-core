@@ -1,10 +1,10 @@
 package software.wings.app;
 
-import static io.harness.data.structure.EmptyPredicate.isEmpty;
 import static io.harness.data.structure.EmptyPredicate.isNotEmpty;
 import static java.util.stream.Collectors.toList;
 import static org.apache.commons.lang3.StringUtils.isBlank;
 import static software.wings.core.maintenance.MaintenanceController.isMaintenance;
+import static software.wings.service.impl.DelegateServiceImpl.VALIDATION_TIMEOUT;
 
 import com.google.inject.Inject;
 
@@ -28,7 +28,6 @@ import java.time.Clock;
 import java.time.Duration;
 import java.util.ArrayList;
 import java.util.List;
-import java.util.Set;
 import java.util.concurrent.TimeUnit;
 
 /**
@@ -184,12 +183,10 @@ public class DelegateQueueTask implements Runnable {
       }
 
       if (isNotEmpty(unassignedTasks)) {
+        long now = clock.millis();
         unassignedTasks.forEach(delegateTask -> {
-          Set<String> validatingDelegates = delegateTask.getValidatingDelegateIds();
-          Set<String> completeDelegates = delegateTask.getValidationCompleteDelegateIds();
-          if ((isEmpty(validatingDelegates) && isEmpty(completeDelegates))
-              || (completeDelegates != null && validatingDelegates != null
-                     && completeDelegates.containsAll(validatingDelegates))) {
+          if (delegateTask.getValidationStartedAt() == null
+              || now - delegateTask.getValidationStartedAt() > VALIDATION_TIMEOUT) {
             logger.info("Re-broadcast queued task [{}]", delegateTask.getUuid());
             broadcasterFactory.lookup("/stream/delegate/" + delegateTask.getAccountId(), true).broadcast(delegateTask);
           }
