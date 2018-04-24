@@ -171,13 +171,15 @@ public class WingsException extends WingsApiException {
     final List<ResponseMessage> responseMessages = getResponseMessageList(LOG_SYSTEM);
 
     String msg = "Exception occurred: " + getMessage();
-    String responseMsgs = responseMessages.stream().map(ResponseMessage::getMessage).collect(joining(". "));
+    String messages = responseMessages.stream().map(ResponseMessage::getMessage).collect(joining(". "));
     if (responseMessages.stream().anyMatch(responseMessage -> responseMessage.getLevel() == ERROR)) {
-      logger.error(responseMsgs);
+      logger.error(messages);
       logger.error(msg, this);
     } else {
-      logger.info(responseMsgs);
-      logger.info(msg, this);
+      logger.info(messages);
+      if (logger.isDebugEnabled()) {
+        logger.debug(msg, this);
+      }
     }
   }
 }
