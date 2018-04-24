@@ -11,22 +11,22 @@ public class HelmConstants {
       + "- cluster:\n"
       + "    xxxxxxxx ${MASTER_URL}\n"
       + "    insecure-skip-tls-verify: true\n"
-      + "  name: ${CLUSTER_NAME}\n"
+      + "  name: CLUSTER_NAME\n"
       + "contexts:\n"
       + "- context:\n"
-      + "    cluster: ${CLUSTER_NAME}\n"
-      + "    user: ${USER_NAME}\n"
-      + "  name: ${CLUSTER_NAME}\n"
-      + "current-context: ${CLUSTER_NAME}\n"
+      + "    cluster: CLUSTER_NAME\n"
+      + "    user: HARNESS_USER\n"
+      + "  name: CURRENT_CONTEXT\n"
+      + "current-context: CURRENT_CONTEXT\n"
       + "kind: Config\n"
       + "preferences: {}\n"
       + "users:\n"
-      + "- name: ${USER_NAME}\n"
+      + "- name: HARNESS_USER\n"
       + "  user:\n"
       + "    ${CLIENT_CERT_DATA}\n"
       + "    ${CLIENT_KEY_DATA}\n"
       + "    ${PASSWORD}\n"
-      + "    username: ${USER_NAME}";
+      + "    ${USER_NAME}";
 
   public static final String HELM_ROLLBACK_COMMAND_TEMPLATE =
       "KUBECONFIG=${KUBECONFIG_PATH} helm rollback ${RELEASE} ${REVISION}";
