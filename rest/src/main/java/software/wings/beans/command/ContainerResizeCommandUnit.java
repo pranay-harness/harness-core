@@ -140,10 +140,9 @@ public abstract class ContainerResizeCommandUnit extends AbstractCommandUnit {
       ResizeCommandUnitExecutionDataBuilder executionDataBuilder, ExecutionLogCallback executionLogCallback,
       boolean isUpsize) {
     if (isNotEmpty(instanceData)) {
-      int totalDesiredCount = instanceData.stream().mapToInt(ContainerServiceData::getDesiredCount).sum();
       List<ContainerInfo> containerInfos =
           instanceData.stream()
-              .flatMap(data -> executeResize(contextData, totalDesiredCount, data, executionLogCallback).stream())
+              .flatMap(data -> executeResize(contextData, data, executionLogCallback).stream())
               .collect(toList());
       if (isUpsize) {
         executionDataBuilder.containerInfos(containerInfos);
@@ -278,8 +277,8 @@ public abstract class ContainerResizeCommandUnit extends AbstractCommandUnit {
 
   protected abstract Integer getDesiredTrafficPercent(ContextData contextData);
 
-  protected abstract List<ContainerInfo> executeResize(ContextData contextData, int totalDesiredCount,
-      ContainerServiceData containerServiceData, ExecutionLogCallback executionLogCallback);
+  protected abstract List<ContainerInfo> executeResize(
+      ContextData contextData, ContainerServiceData containerServiceData, ExecutionLogCallback executionLogCallback);
 
   @Data
   @EqualsAndHashCode(callSuper = true)

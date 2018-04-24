@@ -1,6 +1,7 @@
 package software.wings.beans.command;
 
 import static java.util.stream.Collectors.toList;
+import static org.atteo.evo.inflector.English.plural;
 import static software.wings.beans.ErrorCode.GENERAL_ERROR;
 import static software.wings.cloudprovider.ContainerInfo.Status.SUCCESS;
 import static software.wings.common.Constants.HARNESS_REVISION;
@@ -58,8 +59,8 @@ public class KubernetesResizeCommandUnit extends ContainerResizeCommandUnit {
   }
 
   @Override
-  protected List<ContainerInfo> executeResize(ContextData contextData, int totalDesiredCount,
-      ContainerServiceData containerServiceData, ExecutionLogCallback executionLogCallback) {
+  protected List<ContainerInfo> executeResize(
+      ContextData contextData, ContainerServiceData containerServiceData, ExecutionLogCallback executionLogCallback) {
     KubernetesResizeParams resizeParams = (KubernetesResizeParams) contextData.resizeParams;
     List<EncryptedDataDetail> encryptedDataDetails = new ArrayList<>();
     KubernetesConfig kubernetesConfig = getKubernetesConfig(contextData, encryptedDataDetails);
@@ -73,18 +74,18 @@ public class KubernetesResizeCommandUnit extends ContainerResizeCommandUnit {
       }
     }
 
+    int desiredCount = containerServiceData.getDesiredCount();
     List<ContainerInfo> containerInfos = kubernetesContainerService.setControllerPodCount(kubernetesConfig,
         encryptedDataDetails, resizeParams.getClusterName(), controllerName, containerServiceData.getPreviousCount(),
-        containerServiceData.getDesiredCount(), resizeParams.getServiceSteadyStateTimeout(), executionLogCallback);
+        desiredCount, resizeParams.getServiceSteadyStateTimeout(), executionLogCallback);
 
     boolean allContainersSuccess = containerInfos.stream().allMatch(info -> info.getStatus() == SUCCESS);
 
-    if (containerInfos.size() != totalDesiredCount || !allContainersSuccess) {
+    if (containerInfos.size() != desiredCount || !allContainersSuccess) {
       try {
-        if (containerInfos.size() != totalDesiredCount) {
-          executionLogCallback.saveExecutionLog(
-              String.format("Expected data for %d container%s but got %d", totalDesiredCount,
-                  totalDesiredCount == 1 ? "" : "s", containerInfos.size()),
+        if (containerInfos.size() != desiredCount) {
+          executionLogCallback.saveExecutionLog(String.format("Expected data for %d %s but got %d", desiredCount,
+                                                    plural("container", desiredCount), containerInfos.size()),
               LogLevel.ERROR);
         }
         List<ContainerInfo> failedContainers =
@@ -100,7 +101,7 @@ public class KubernetesResizeCommandUnit extends ContainerResizeCommandUnit {
       throw new WingsException(GENERAL_ERROR).addParam("message", "Failed to resize controller");
     }
 
-    if (totalDesiredCount > 0 && contextData.deployingToHundredPercent && resizeParams.isUseAutoscaler()) {
+    if (desiredCount > 0 && contextData.deployingToHundredPercent && resizeParams.isUseAutoscaler()) {
       enableAutoscaler(kubernetesConfig, encryptedDataDetails, controllerName, executionLogCallback);
     }
 
