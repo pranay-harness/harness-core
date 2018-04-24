@@ -289,6 +289,10 @@ public interface Constants {
    */
   String ROLLBACK_CONTAINERS = "Rollback Containers";
   /**
+   * The constant KUBERNETES_STEADY_STATE_CHECK.
+   */
+  String KUBERNETES_STEADY_STATE_CHECK = "Steady State Check";
+  /**
    * The constant SUB_WORKFLOW_ID.
    */
   String SUB_WORKFLOW_ID = "subWorkflowId";

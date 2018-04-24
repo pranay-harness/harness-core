@@ -85,6 +85,7 @@ import software.wings.sm.states.KubernetesDeploy;
 import software.wings.sm.states.KubernetesDeployRollback;
 import software.wings.sm.states.KubernetesSetup;
 import software.wings.sm.states.KubernetesSetupRollback;
+import software.wings.sm.states.KubernetesSteadyStateCheck;
 import software.wings.sm.states.LogzAnalysisState;
 import software.wings.sm.states.NewRelicDeploymentMarkerState;
 import software.wings.sm.states.NewRelicState;
@@ -334,6 +335,11 @@ public enum StateType implements StateTypeDescriptor {
   KUBERNETES_DEPLOY_ROLLBACK(KubernetesDeployRollback.class, COMMANDS, Constants.ROLLBACK_CONTAINERS,
       Lists.newArrayList(InfrastructureMappingType.DIRECT_KUBERNETES, InfrastructureMappingType.GCP_KUBERNETES,
           InfrastructureMappingType.AZURE_KUBERNETES),
+      asList(CONTAINER_DEPLOY), ORCHESTRATION_STENCILS),
+
+  KUBERNETES_STEADY_STATE_CHECK(KubernetesSteadyStateCheck.class, COMMANDS, Constants.KUBERNETES_STEADY_STATE_CHECK,
+      Lists.newArrayList(InfrastructureMappingType.DIRECT_KUBERNETES, InfrastructureMappingType.AZURE_KUBERNETES,
+          InfrastructureMappingType.GCP_KUBERNETES),
       asList(CONTAINER_DEPLOY), ORCHESTRATION_STENCILS),
 
   AWS_CLUSTER_SETUP(AwsClusterSetup.class, CLOUD, Lists.newArrayList(InfrastructureMappingType.AWS_ECS),

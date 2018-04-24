@@ -2,6 +2,7 @@ package software.wings.beans.command;
 
 import static software.wings.sm.states.HelmDeployState.HELM_COMMAND_NAME;
 import static software.wings.sm.states.JenkinsState.COMMAND_UNIT_NAME;
+import static software.wings.sm.states.KubernetesSteadyStateCheck.KUBERNETES_STEADY_STATE_CHECK_COMMAND_NAME;
 
 import lombok.AllArgsConstructor;
 import lombok.Builder;
@@ -24,7 +25,8 @@ public class CommandUnitDetails {
   public enum CommandUnitType {
     COMMAND("COMMAND"),
     JENKINS(COMMAND_UNIT_NAME),
-    HELM(HELM_COMMAND_NAME);
+    HELM(HELM_COMMAND_NAME),
+    KUBERNETES_STEADY_STATE_CHECK(KUBERNETES_STEADY_STATE_CHECK_COMMAND_NAME);
     private String name;
 
     public String getName() {

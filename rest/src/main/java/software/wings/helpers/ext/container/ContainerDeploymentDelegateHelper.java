@@ -49,6 +49,7 @@ import java.io.UnsupportedEncodingException;
 import java.util.ArrayList;
 import java.util.Base64;
 import java.util.List;
+import java.util.Map;
 import java.util.concurrent.TimeUnit;
 import java.util.stream.Collectors;
 
@@ -160,7 +161,7 @@ public class ContainerDeploymentDelegateHelper {
           .name(hasMetadata.getMetadata().getName())
           .kind(hasMetadata.getKind())
           .runningCount(status.getReadyReplicas() == null ? 0 : status.getReadyReplicas())
-          .desiredCount(status.getReplicas())
+          .desiredCount(status.getReplicas() == null ? 0 : status.getReplicas())
           .build();
     } else if ("StatefulSet".equals(hasMetadata.getKind())) {
       StatefulSetStatus status = ((StatefulSet) hasMetadata).getStatus();
@@ -168,7 +169,7 @@ public class ContainerDeploymentDelegateHelper {
           .name(hasMetadata.getMetadata().getName())
           .kind(hasMetadata.getKind())
           .runningCount(status.getReadyReplicas() == null ? 0 : status.getReadyReplicas())
-          .desiredCount(status.getReplicas())
+          .desiredCount(status.getReplicas() == null ? 0 : status.getReplicas())
           .build();
     } else if ("ReplicaSet".equals(hasMetadata.getKind())) {
       ReplicaSetStatus status = ((ReplicaSet) hasMetadata).getStatus();
@@ -176,7 +177,7 @@ public class ContainerDeploymentDelegateHelper {
           .name(hasMetadata.getMetadata().getName())
           .kind(hasMetadata.getKind())
           .runningCount(status.getReadyReplicas() == null ? 0 : status.getReadyReplicas())
-          .desiredCount(status.getReplicas())
+          .desiredCount(status.getReplicas() == null ? 0 : status.getReplicas())
           .build();
     } else if ("ReplicationController".equals(hasMetadata.getKind())) {
       ReplicationControllerStatus status = ((ReplicationController) hasMetadata).getStatus();
@@ -184,7 +185,7 @@ public class ContainerDeploymentDelegateHelper {
           .name(hasMetadata.getMetadata().getName())
           .kind(hasMetadata.getKind())
           .runningCount(status.getReadyReplicas() == null ? 0 : status.getReadyReplicas())
-          .desiredCount(status.getReplicas())
+          .desiredCount(status.getReplicas() == null ? 0 : status.getReplicas())
           .build();
     } else if ("DaemonSet".equals(hasMetadata.getKind())) {
       DaemonSetStatus status = ((DaemonSet) hasMetadata).getStatus();
@@ -192,18 +193,17 @@ public class ContainerDeploymentDelegateHelper {
           .name(hasMetadata.getMetadata().getName())
           .kind(hasMetadata.getKind())
           .runningCount(status.getNumberReady() == null ? 0 : status.getNumberReady())
-          .desiredCount(status.getDesiredNumberScheduled())
+          .desiredCount(status.getDesiredNumberScheduled() == null ? 0 : status.getDesiredNumberScheduled())
           .build();
     } else {
       throw new InvalidRequestException("Unhandled resource type" + hasMetadata.getKind());
     }
   }
 
-  public List<ContainerInfo> getContainerInfosWhenReadyByLabel(String labelName, String labelValue,
-      ContainerServiceParams containerServiceParams, KubernetesConfig kubernetesConfig,
-      ExecutionLogCallback executionLogCallback) {
+  public List<ContainerInfo> getContainerInfosWhenReadyByLabels(ContainerServiceParams containerServiceParams,
+      KubernetesConfig kubernetesConfig, ExecutionLogCallback executionLogCallback, Map<String, String> labels) {
     List<? extends HasMetadata> controllers = kubernetesContainerService.getControllers(
-        kubernetesConfig, containerServiceParams.getEncryptionDetails(), ImmutableMap.of(labelName, labelValue));
+        kubernetesConfig, containerServiceParams.getEncryptionDetails(), labels);
 
     List<KubeControllerStatus> controllerStatuses = controllers.stream()
                                                         .map(this ::getControllerStatus)
@@ -229,6 +229,13 @@ public class ContainerDeploymentDelegateHelper {
               .collect(Collectors.toList());
     }
     return containerInfoList;
+  }
+
+  public List<ContainerInfo> getContainerInfosWhenReadyByLabel(String labelName, String labelValue,
+      ContainerServiceParams containerServiceParams, KubernetesConfig kubernetesConfig,
+      ExecutionLogCallback executionLogCallback) {
+    return getContainerInfosWhenReadyByLabels(
+        containerServiceParams, kubernetesConfig, executionLogCallback, ImmutableMap.of(labelName, labelValue));
   }
 
   private boolean steadyStateCheckRequired(KubeControllerStatus controllerStatus) {

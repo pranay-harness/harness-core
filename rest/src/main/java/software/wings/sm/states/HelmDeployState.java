@@ -3,45 +3,33 @@ package software.wings.sm.states;
 import static io.harness.data.structure.EmptyPredicate.isEmpty;
 import static io.harness.data.structure.EmptyPredicate.isNotEmpty;
 import static java.util.stream.Collectors.toList;
-import static software.wings.api.ServiceTemplateElement.Builder.aServiceTemplateElement;
 import static software.wings.beans.Base.GLOBAL_ENV_ID;
 import static software.wings.beans.DelegateTask.Builder.aDelegateTask;
 import static software.wings.beans.Environment.EnvironmentType.ALL;
 import static software.wings.beans.OrchestrationWorkflowType.BUILD;
-import static software.wings.beans.SettingAttribute.Builder.aSettingAttribute;
 import static software.wings.common.Constants.DEFAULT_STEADY_STATE_TIMEOUT;
 
 import com.google.common.collect.Maps;
 import com.google.inject.Inject;
 
 import com.github.reinert.jjschema.Attributes;
-import com.github.reinert.jjschema.SchemaIgnore;
-import org.mongodb.morphia.Key;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-import software.wings.annotation.Encryptable;
 import software.wings.api.HelmDeployStateExecutionData;
 import software.wings.api.InstanceElement;
 import software.wings.api.InstanceElementListParam;
 import software.wings.api.InstanceElementListParam.InstanceElementListParamBuilder;
 import software.wings.api.PhaseElement;
 import software.wings.api.ServiceElement;
-import software.wings.api.ServiceTemplateElement;
 import software.wings.beans.Activity;
 import software.wings.beans.Activity.ActivityBuilder;
 import software.wings.beans.Activity.Type;
 import software.wings.beans.Application;
-import software.wings.beans.AzureKubernetesInfrastructureMapping;
 import software.wings.beans.ContainerInfrastructureMapping;
 import software.wings.beans.DelegateTask;
 import software.wings.beans.DeploymentExecutionContext;
-import software.wings.beans.DirectKubernetesInfrastructureMapping;
-import software.wings.beans.EcsInfrastructureMapping;
 import software.wings.beans.Environment;
 import software.wings.beans.ErrorCode;
-import software.wings.beans.GcpKubernetesInfrastructureMapping;
-import software.wings.beans.ServiceTemplate;
-import software.wings.beans.SettingAttribute;
 import software.wings.beans.TaskType;
 import software.wings.beans.artifact.Artifact;
 import software.wings.beans.command.CommandExecutionResult.CommandExecutionStatus;
@@ -59,7 +47,6 @@ import software.wings.helpers.ext.helm.request.HelmReleaseHistoryCommandRequest;
 import software.wings.helpers.ext.helm.response.HelmInstallCommandResponse;
 import software.wings.helpers.ext.helm.response.HelmReleaseHistoryCommandResponse;
 import software.wings.helpers.ext.helm.response.ReleaseInfo;
-import software.wings.security.encryption.EncryptedDataDetail;
 import software.wings.service.impl.ContainerServiceParams;
 import software.wings.service.intfc.ActivityService;
 import software.wings.service.intfc.AppService;
@@ -69,7 +56,6 @@ import software.wings.service.intfc.ServiceResourceService;
 import software.wings.service.intfc.ServiceTemplateService;
 import software.wings.service.intfc.SettingsService;
 import software.wings.service.intfc.security.SecretManager;
-import software.wings.settings.SettingValue.SettingVariableTypes;
 import software.wings.sm.ContextElementType;
 import software.wings.sm.ExecutionContext;
 import software.wings.sm.ExecutionContextImpl;
@@ -81,10 +67,8 @@ import software.wings.sm.StateType;
 import software.wings.sm.WorkflowStandardParams;
 import software.wings.stencils.DefaultValue;
 import software.wings.utils.KubernetesConvention;
-import software.wings.utils.Validator;
 import software.wings.waitnotify.NotifyResponseData;
 
-import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collections;
 import java.util.List;
@@ -158,7 +142,8 @@ public class HelmDeployState extends State {
     String releaseName = KubernetesConvention.getHelmReleaseName(
         app.getName(), serviceElement.getName(), env.getName(), containerInfraMapping.getUuid());
 
-    ContainerServiceParams containerServiceParams = getContainerServiceParams(containerInfraMapping, releaseName);
+    ContainerServiceParams containerServiceParams =
+        containerDeploymentHelper.getContainerServiceParams(containerInfraMapping, releaseName);
 
     HelmChartSpecification helmChartSpecification =
         serviceResourceService.getHelmChartSpecification(context.getAppId(), serviceElement.getUuid());
@@ -303,7 +288,11 @@ public class HelmDeployState extends State {
     stateExecutionData.setStatus(executionStatus);
     stateExecutionData.setErrorMsg(executionResponse.getErrorMessage());
 
-    List<InstanceStatusSummary> instanceStatusSummaries = getInstanceStatusSummaries(context, executionResponse);
+    HelmInstallCommandResponse helmInstallCommandResponse =
+        (HelmInstallCommandResponse) executionResponse.getHelmCommandResponse();
+
+    List<InstanceStatusSummary> instanceStatusSummaries = containerDeploymentHelper.getInstanceStatusSummaries(
+        context, helmInstallCommandResponse.getContainerInfoList());
     stateExecutionData.setNewInstanceStatusSummaries(instanceStatusSummaries);
 
     List<InstanceElement> instanceElements =
@@ -318,32 +307,6 @@ public class HelmDeployState extends State {
         .addContextElement(instanceElementListParam)
         .addNotifyElement(instanceElementListParam)
         .build();
-  }
-
-  @SchemaIgnore
-  protected List<InstanceStatusSummary> getInstanceStatusSummaries(
-      ExecutionContext context, HelmCommandExecutionResponse executionResponse) {
-    List<InstanceStatusSummary> instanceStatusSummaries = new ArrayList<>();
-
-    PhaseElement phaseElement = context.getContextElement(ContextElementType.PARAM, Constants.PHASE_PARAM);
-    ServiceElement serviceElement = phaseElement.getServiceElement();
-    String serviceId = phaseElement.getServiceElement().getUuid();
-    String appId = context.getAppId();
-    WorkflowStandardParams workflowStandardParams = context.getContextElement(ContextElementType.STANDARD);
-    String envId = workflowStandardParams.getEnv().getUuid();
-
-    Key<ServiceTemplate> serviceTemplateKey =
-        serviceTemplateService.getTemplateRefKeysByService(appId, serviceId, envId).get(0);
-    ServiceTemplateElement serviceTemplateElement = aServiceTemplateElement()
-                                                        .withUuid(serviceTemplateKey.getId().toString())
-                                                        .withServiceElement(serviceElement)
-                                                        .build();
-
-    HelmInstallCommandResponse helmCommandResponse =
-        (HelmInstallCommandResponse) executionResponse.getHelmCommandResponse();
-    instanceStatusSummaries.addAll(containerDeploymentHelper.getInstanceStatusSummaryFromContainerInfoList(
-        helmCommandResponse.getContainerInfoList(), serviceTemplateElement));
-    return instanceStatusSummaries;
   }
 
   @Override
@@ -390,49 +353,6 @@ public class HelmDeployState extends State {
 
     Activity activity = activityBuilder.build();
     return activityService.save(activity);
-  }
-
-  protected ContainerServiceParams getContainerServiceParams(
-      ContainerInfrastructureMapping containerInfraMapping, String containerServiceName) {
-    String clusterName = containerInfraMapping.getClusterName();
-    SettingAttribute settingAttribute;
-    String namespace = null;
-    String region = null;
-    String resourceGroup = null;
-    String subscriptionId = null;
-    if (containerInfraMapping instanceof DirectKubernetesInfrastructureMapping) {
-      DirectKubernetesInfrastructureMapping directInfraMapping =
-          (DirectKubernetesInfrastructureMapping) containerInfraMapping;
-      settingAttribute = (directInfraMapping.getComputeProviderType().equals(SettingVariableTypes.DIRECT.name()))
-          ? aSettingAttribute().withValue(directInfraMapping.createKubernetesConfig()).build()
-          : settingsService.get(directInfraMapping.getComputeProviderSettingId());
-      namespace = directInfraMapping.getNamespace();
-    } else {
-      settingAttribute = settingsService.get(containerInfraMapping.getComputeProviderSettingId());
-      if (containerInfraMapping instanceof GcpKubernetesInfrastructureMapping) {
-        namespace = ((GcpKubernetesInfrastructureMapping) containerInfraMapping).getNamespace();
-      } else if (containerInfraMapping instanceof AzureKubernetesInfrastructureMapping) {
-        subscriptionId = ((AzureKubernetesInfrastructureMapping) containerInfraMapping).getSubscriptionId();
-        resourceGroup = ((AzureKubernetesInfrastructureMapping) containerInfraMapping).getResourceGroup();
-        namespace = ((AzureKubernetesInfrastructureMapping) containerInfraMapping).getNamespace();
-      } else if (containerInfraMapping instanceof EcsInfrastructureMapping) {
-        region = ((EcsInfrastructureMapping) containerInfraMapping).getRegion();
-      }
-    }
-    Validator.notNullCheck("SettingAttribute", settingAttribute);
-
-    List<EncryptedDataDetail> encryptionDetails = secretManager.getEncryptionDetails(
-        (Encryptable) settingAttribute.getValue(), containerInfraMapping.getAppId(), null);
-    return ContainerServiceParams.builder()
-        .settingAttribute(settingAttribute)
-        .containerServiceName(containerServiceName)
-        .encryptionDetails(encryptionDetails)
-        .clusterName(clusterName)
-        .namespace(namespace)
-        .region(region)
-        .subscriptionId(subscriptionId)
-        .resourceGroup(resourceGroup)
-        .build();
   }
 
   public int getSteadyStateTimeout() {
