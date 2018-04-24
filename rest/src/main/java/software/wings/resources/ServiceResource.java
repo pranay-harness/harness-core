@@ -9,6 +9,7 @@ import com.codahale.metrics.annotation.ExceptionMetered;
 import com.codahale.metrics.annotation.Timed;
 import io.swagger.annotations.Api;
 import io.swagger.annotations.ApiParam;
+import software.wings.beans.CommandCategory;
 import software.wings.beans.LambdaSpecification;
 import software.wings.beans.RestResponse;
 import software.wings.beans.Service;
@@ -542,5 +543,23 @@ public class ServiceResource {
       @ApiParam(name = "appId", required = true) @QueryParam("appId") String appId,
       @ApiParam(name = "serviceId", required = true) @PathParam("serviceId") String serviceId) {
     return new RestResponse<>(serviceResourceService.setHelmValueYaml(appId, serviceId, new KubernetesPayload()));
+  }
+
+  /**
+   * Stencils rest response.
+   *
+   * @param appId       the app id
+   * @param serviceId   the service id
+   * @param commandName the command name
+   * @return the rest response
+   */
+  @GET
+  @Path("{serviceId}/commands/categories")
+  @Timed
+  @ExceptionMetered
+  @AuthRule(permissionType = PermissionType.LOGGED_IN)
+  public RestResponse<List<CommandCategory>> getCommandUnitItems(@QueryParam("appId") String appId,
+      @PathParam("serviceId") String serviceId, @QueryParam("filterCommand") String commandName) {
+    return new RestResponse<>(serviceResourceService.getCommandCategories(appId, serviceId, commandName));
   }
 }

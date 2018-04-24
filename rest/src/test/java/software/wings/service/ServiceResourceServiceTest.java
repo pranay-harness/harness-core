@@ -1,6 +1,7 @@
 package software.wings.service;
 
 import static java.util.Arrays.asList;
+import static java.util.stream.Collectors.toList;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThatThrownBy;
 import static org.assertj.core.api.Assertions.fail;
@@ -16,6 +17,11 @@ import static org.mockito.Mockito.when;
 import static org.mongodb.morphia.mapping.Mapper.ID_KEY;
 import static software.wings.beans.AppContainer.Builder.anAppContainer;
 import static software.wings.beans.CanaryOrchestrationWorkflow.CanaryOrchestrationWorkflowBuilder.aCanaryOrchestrationWorkflow;
+import static software.wings.beans.CommandCategory.Type;
+import static software.wings.beans.CommandCategory.Type.COMMANDS;
+import static software.wings.beans.CommandCategory.Type.COPY;
+import static software.wings.beans.CommandCategory.Type.SCRIPTS;
+import static software.wings.beans.CommandCategory.Type.VERIFICATIONS;
 import static software.wings.beans.ConfigFile.DEFAULT_TEMPLATE_ID;
 import static software.wings.beans.EntityVersion.Builder.anEntityVersion;
 import static software.wings.beans.ErrorCode.INVALID_REQUEST;
@@ -28,6 +34,16 @@ import static software.wings.beans.ServiceTemplate.Builder.aServiceTemplate;
 import static software.wings.beans.Workflow.WorkflowBuilder.aWorkflow;
 import static software.wings.beans.WorkflowPhase.WorkflowPhaseBuilder.aWorkflowPhase;
 import static software.wings.beans.command.Command.Builder.aCommand;
+import static software.wings.beans.command.CommandUnitType.COMMAND;
+import static software.wings.beans.command.CommandUnitType.COPY_CONFIGS;
+import static software.wings.beans.command.CommandUnitType.DOCKER_START;
+import static software.wings.beans.command.CommandUnitType.DOCKER_STOP;
+import static software.wings.beans.command.CommandUnitType.EXEC;
+import static software.wings.beans.command.CommandUnitType.PORT_CHECK_CLEARED;
+import static software.wings.beans.command.CommandUnitType.PORT_CHECK_LISTENING;
+import static software.wings.beans.command.CommandUnitType.PROCESS_CHECK_RUNNING;
+import static software.wings.beans.command.CommandUnitType.SCP;
+import static software.wings.beans.command.CommandUnitType.values;
 import static software.wings.beans.command.ExecCommandUnit.Builder.anExecCommandUnit;
 import static software.wings.beans.command.ScpCommandUnit.Builder.aScpCommandUnit;
 import static software.wings.beans.command.ServiceCommand.Builder.aServiceCommand;
@@ -71,6 +87,7 @@ import org.mongodb.morphia.query.UpdateOperations;
 import software.wings.WingsBaseTest;
 import software.wings.api.DeploymentType;
 import software.wings.beans.Application;
+import software.wings.beans.CommandCategory;
 import software.wings.beans.ConfigFile;
 import software.wings.beans.EntityType;
 import software.wings.beans.EntityVersion.ChangeType;
@@ -91,7 +108,6 @@ import software.wings.beans.command.CleanupSshCommandUnit;
 import software.wings.beans.command.CodeDeployCommandUnit;
 import software.wings.beans.command.Command;
 import software.wings.beans.command.CommandType;
-import software.wings.beans.command.CommandUnitType;
 import software.wings.beans.command.CopyConfigCommandUnit;
 import software.wings.beans.command.InitSshCommandUnit;
 import software.wings.beans.command.ServiceCommand;
@@ -104,6 +120,7 @@ import software.wings.dl.WingsPersistence;
 import software.wings.exception.WingsException;
 import software.wings.scheduler.JobScheduler;
 import software.wings.service.impl.ServiceResourceServiceImpl;
+import software.wings.service.impl.command.CommandHelper;
 import software.wings.service.impl.yaml.YamlChangeSetHelper;
 import software.wings.service.intfc.ActivityService;
 import software.wings.service.intfc.AppService;
@@ -172,12 +189,16 @@ public class ServiceResourceServiceTest extends WingsBaseTest {
 
   @Inject @InjectMocks private ServiceResourceService srs;
 
+  @Inject @InjectMocks private CommandHelper commandHelper;
+
   @Spy @InjectMocks private ServiceResourceService spyServiceResourceService = new ServiceResourceServiceImpl();
 
   @Captor
   private ArgumentCaptor<ServiceCommand> serviceCommandArgumentCaptor = ArgumentCaptor.forClass(ServiceCommand.class);
 
   @Mock private UpdateOperations<Service> updateOperations;
+
+  @Mock private Query<ServiceCommand> serviceCommandQuery;
 
   private static ServiceBuilder getServiceBuilder() {
     return Service.builder()
@@ -1524,12 +1545,12 @@ public class ServiceResourceServiceTest extends WingsBaseTest {
    */
   @Test
   public void shouldGetCommandStencils() {
-    stencilsMock();
+    serviceCommandsMock();
     List<Stencil> commandStencils = srs.getCommandStencils(APP_ID, SERVICE_ID, null);
 
     assertThat(commandStencils)
         .isNotNull()
-        .hasSize(CommandUnitType.values().length + 1)
+        .hasSize(values().length + 1)
         .extracting(Stencil::getName)
         .contains("START", "START2");
 
@@ -1541,7 +1562,7 @@ public class ServiceResourceServiceTest extends WingsBaseTest {
    */
   @Test
   public void shouldGetScriptCommandStencilsOnly() {
-    stencilsMock();
+    serviceCommandsMock();
 
     List<Stencil> commandStencils = srs.getCommandStencils(APP_ID, SERVICE_ID, null, true);
 
@@ -1557,7 +1578,7 @@ public class ServiceResourceServiceTest extends WingsBaseTest {
     verify(wingsPersistence, times(2)).get(Service.class, APP_ID, SERVICE_ID);
   }
 
-  private void stencilsMock() {
+  private void serviceCommandsMock() {
     when(wingsPersistence.get(eq(Service.class), anyString(), anyString()))
         .thenReturn(serviceBuilder
                         .serviceCommands(ImmutableList.of(aServiceCommand()
@@ -1591,6 +1612,96 @@ public class ServiceResourceServiceTest extends WingsBaseTest {
                                 .withCommand(commandBuilder.but().withName("START2").build())
                                 .build()))
                         .build());
+  }
+
+  /**
+   * Should get command categories
+   */
+  @Test
+  public void shouldGetCommandCategories() {
+    when(wingsPersistence.createQuery(ServiceCommand.class)).thenReturn(serviceCommandQuery);
+    when(serviceCommandQuery.project("name", true)).thenReturn(serviceCommandQuery);
+    when(serviceCommandQuery.filter("appId", APP_ID)).thenReturn(serviceCommandQuery);
+    when(serviceCommandQuery.filter("serviceId", SERVICE_ID)).thenReturn(serviceCommandQuery);
+
+    when(serviceCommandQuery.asList())
+        .thenReturn(asList(aServiceCommand()
+                               .withTargetToAllEnv(false)
+                               .withName("START")
+                               .withDefaultVersion(1)
+                               .withCommand(commandBuilder.build())
+                               .build(),
+            aServiceCommand()
+                .withTargetToAllEnv(true)
+                .withName("START2")
+                .withDefaultVersion(1)
+                .withCommand(commandBuilder.but().withName("START2").build())
+                .build()));
+
+    List<CommandCategory> commandCategories = srs.getCommandCategories(APP_ID, SERVICE_ID, "MyCommand");
+    assertThat(commandCategories).isNotEmpty();
+    assertThat(commandCategories).isNotEmpty().extracting(CommandCategory::getType).contains(Type.values());
+    assertThat(commandCategories)
+        .isNotEmpty()
+        .extracting(CommandCategory::getDisplayName)
+        .contains(
+            COMMANDS.getDisplayName(), COPY.getDisplayName(), SCRIPTS.getDisplayName(), VERIFICATIONS.getDisplayName());
+
+    List<CommandCategory> copyCategories =
+        commandCategories.stream().filter(commandCategory -> commandCategory.getType().equals(COPY)).collect(toList());
+    assertThat(copyCategories).extracting(CommandCategory::getCommandUnits).isNotEmpty();
+    copyCategories.forEach(commandCategory -> {
+      assertThat(commandCategory.getType()).isEqualTo(COPY);
+      assertThat(commandCategory.getDisplayName()).isEqualTo(COPY.getDisplayName());
+      assertThat(commandCategory.getCommandUnits())
+          .isNotEmpty()
+          .extracting(CommandCategory.CommandUnit::getType)
+          .contains(COPY_CONFIGS, SCP);
+    });
+    List<CommandCategory> scriptCategories = commandCategories.stream()
+                                                 .filter(commandCategory -> commandCategory.getType().equals(SCRIPTS))
+                                                 .collect(toList());
+    assertThat(scriptCategories).extracting(CommandCategory::getCommandUnits).isNotEmpty();
+    scriptCategories.forEach(commandCategory -> {
+      assertThat(commandCategory.getType()).isEqualTo(SCRIPTS);
+      assertThat(commandCategory.getDisplayName()).isEqualTo(SCRIPTS.getDisplayName());
+      assertThat(commandCategory.getCommandUnits())
+          .isNotEmpty()
+          .extracting(CommandCategory.CommandUnit::getType)
+          .contains(EXEC, DOCKER_START, DOCKER_STOP);
+    });
+
+    List<CommandCategory> commandCommandCategories =
+        commandCategories.stream()
+            .filter(commandCategory -> commandCategory.getType().equals(COMMANDS))
+            .collect(toList());
+    assertThat(commandCommandCategories).extracting(CommandCategory::getCommandUnits).isNotEmpty();
+    commandCommandCategories.forEach(commandCategory -> {
+      assertThat(commandCategory.getType()).isEqualTo(COMMANDS);
+      assertThat(commandCategory.getDisplayName()).isEqualTo(COMMANDS.getDisplayName());
+      assertThat(commandCategory.getCommandUnits())
+          .isNotEmpty()
+          .extracting(CommandCategory.CommandUnit::getType)
+          .contains(COMMAND, COMMAND);
+      assertThat(commandCategory.getCommandUnits())
+          .isNotEmpty()
+          .extracting(CommandCategory.CommandUnit::getName)
+          .contains("START", "START2");
+    });
+
+    List<CommandCategory> verifyCategories =
+        commandCategories.stream()
+            .filter(commandCategory -> commandCategory.getType().equals(VERIFICATIONS))
+            .collect(toList());
+    assertThat(verifyCategories).extracting(CommandCategory::getCommandUnits).isNotEmpty();
+    verifyCategories.forEach(commandCategory -> {
+      assertThat(commandCategory.getType()).isEqualTo(VERIFICATIONS);
+      assertThat(commandCategory.getDisplayName()).isEqualTo(VERIFICATIONS.getDisplayName());
+      assertThat(commandCategory.getCommandUnits())
+          .isNotEmpty()
+          .extracting(CommandCategory.CommandUnit::getType)
+          .contains(PROCESS_CHECK_RUNNING, PORT_CHECK_CLEARED, PORT_CHECK_LISTENING);
+    });
   }
 
   /**

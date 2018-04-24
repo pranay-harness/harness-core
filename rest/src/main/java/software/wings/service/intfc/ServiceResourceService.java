@@ -2,6 +2,7 @@ package software.wings.service.intfc;
 
 import org.hibernate.validator.constraints.NotEmpty;
 import ru.vyarus.guice.validator.group.annotation.ValidationGroups;
+import software.wings.beans.CommandCategory;
 import software.wings.beans.LambdaSpecification;
 import software.wings.beans.Service;
 import software.wings.beans.Setup.SetupStatus;
@@ -403,4 +404,14 @@ public interface ServiceResourceService extends OwnedByApplication {
   PageResponse<PcfServiceSpecification> listPcfServiceSpecifications(PageRequest<PcfServiceSpecification> pageRequest);
 
   PcfServiceSpecification getPcfServiceSpecificationById(String appId, String pcfServiceSpecificationId);
+
+  /***
+   * Get command categories
+   * @param appId
+   * @param serviceId
+   * @param commandName
+   * @return
+   */
+  List<CommandCategory> getCommandCategories(
+      @NotEmpty String appId, @NotEmpty String serviceId, @NotEmpty String commandName);
 }
