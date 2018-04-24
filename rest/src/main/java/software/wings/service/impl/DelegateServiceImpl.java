@@ -6,6 +6,7 @@ import static io.harness.data.structure.EmptyPredicate.isNotEmpty;
 import static io.harness.threading.Morpheus.sleep;
 import static java.time.Duration.ofMillis;
 import static java.time.Duration.ofSeconds;
+import static java.util.Arrays.asList;
 import static java.util.Collections.singletonList;
 import static java.util.stream.Collectors.joining;
 import static java.util.stream.Collectors.toList;
@@ -597,12 +598,13 @@ public class DelegateServiceImpl implements DelegateService {
       logger.warn("Delegate task is null");
       throw new WingsException(ErrorCode.INVALID_ARGUMENT).addParam("args", "Delegate task is null");
     }
+
     List<String> activeDelegates = wingsPersistence.createQuery(Delegate.class)
                                        .filter("accountId", task.getAccountId())
                                        .filter("connected", true)
                                        .filter("status", Status.ENABLED)
                                        .field("supportedTaskTypes")
-                                       .contains(task.getTaskType().name())
+                                       .hasAllOf(asList(task.getTaskType().name()))
                                        .field("lastHeartBeat")
                                        .greaterThan(clock.millis() - Constants.MAX_DELEGATE_LAST_HEARTBEAT)
                                        .asKeyList()
