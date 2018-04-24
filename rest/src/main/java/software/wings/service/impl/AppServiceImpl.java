@@ -258,7 +258,7 @@ public class AppServiceImpl implements AppService {
   public Application get(String uuid) {
     Application application = wingsPersistence.get(Application.class, uuid);
     if (application == null) {
-      throw new WingsException(INVALID_ARGUMENT).addParam("args", "Application -" + uuid + " doesn't exist");
+      throw new WingsException(INVALID_ARGUMENT).addParam("args", "Application " + uuid + " doesn't exist");
     }
     return application;
   }

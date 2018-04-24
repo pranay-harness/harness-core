@@ -1,5 +1,6 @@
 package software.wings.beans;
 
+import static java.util.Arrays.asList;
 import static software.wings.beans.Environment.Builder.anEnvironment;
 import static software.wings.beans.Environment.EnvironmentType.NON_PROD;
 import static software.wings.yaml.YamlHelper.trimYaml;
@@ -196,6 +197,15 @@ public class Environment extends Base {
         .withEnvironmentType(getEnvironmentType())
         .build();
   }
+
+  @Override
+  public List<Object> generateKeywords() {
+    List<Object> keywords = new ArrayList<>();
+    keywords.addAll(asList(name, description, environmentType));
+    keywords.addAll(super.generateKeywords());
+    return keywords;
+  }
+
   @Override
   public int hashCode() {
     return 31 * super.hashCode()

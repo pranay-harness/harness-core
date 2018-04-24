@@ -4,7 +4,6 @@ import static io.harness.data.structure.EmptyPredicate.isEmpty;
 import static io.harness.data.structure.EmptyPredicate.isNotEmpty;
 import static io.harness.data.structure.ListUtil.trimList;
 import static java.time.Duration.ofSeconds;
-import static java.util.Arrays.asList;
 import static java.util.stream.Collectors.toList;
 import static java.util.stream.Collectors.toMap;
 import static org.apache.commons.lang3.StringUtils.isNotBlank;
@@ -16,6 +15,7 @@ import static software.wings.beans.EntityType.SERVICE_TEMPLATE;
 import static software.wings.beans.Environment.Builder.anEnvironment;
 import static software.wings.beans.Environment.EnvironmentType.NON_PROD;
 import static software.wings.beans.Environment.EnvironmentType.PROD;
+import static software.wings.beans.ErrorCode.GENERAL_ERROR;
 import static software.wings.beans.ErrorCode.INVALID_ARGUMENT;
 import static software.wings.beans.ErrorCode.INVALID_REQUEST;
 import static software.wings.beans.InformationNotification.Builder.anInformationNotification;
@@ -25,6 +25,7 @@ import static software.wings.beans.ServiceVariable.DEFAULT_TEMPLATE_ID;
 import static software.wings.beans.ServiceVariable.Type.ENCRYPTED_TEXT;
 import static software.wings.dl.PageRequest.PageRequestBuilder.aPageRequest;
 import static software.wings.exception.WingsException.USER;
+import static software.wings.utils.Validator.notNullCheck;
 import static software.wings.yaml.YamlHelper.trimYaml;
 
 import com.google.common.base.Joiner;
@@ -40,7 +41,6 @@ import org.slf4j.LoggerFactory;
 import software.wings.beans.Application;
 import software.wings.beans.ConfigFile;
 import software.wings.beans.Environment;
-import software.wings.beans.ErrorCode;
 import software.wings.beans.InfrastructureMapping;
 import software.wings.beans.Pipeline;
 import software.wings.beans.Service;
@@ -74,7 +74,6 @@ import software.wings.service.intfc.ServiceVariableService;
 import software.wings.service.intfc.SetupService;
 import software.wings.service.intfc.WorkflowService;
 import software.wings.service.intfc.ownership.OwnedByEnvironment;
-import software.wings.service.intfc.yaml.EntityUpdateService;
 import software.wings.stencils.DataProvider;
 import software.wings.utils.BoundedInputStream;
 import software.wings.utils.Validator;
@@ -89,7 +88,6 @@ import java.util.List;
 import java.util.Map;
 import java.util.Optional;
 import java.util.Set;
-import java.util.concurrent.ExecutorService;
 import javax.validation.constraints.NotNull;
 import javax.validation.executable.ValidateOnExecution;
 /**
@@ -101,12 +99,9 @@ public class EnvironmentServiceImpl implements EnvironmentService, DataProvider 
   private static final Logger logger = LoggerFactory.getLogger(EnvironmentServiceImpl.class);
 
   @Inject private WingsPersistence wingsPersistence;
-
   @Inject private ActivityService activityService;
   @Inject private AppService appService;
   @Inject private ConfigService configService;
-  @Inject private EntityUpdateService entityUpdateService;
-  @Inject private ExecutorService executorService;
   @Inject private InfrastructureMappingService infrastructureMappingService;
   @Inject private NotificationService notificationService;
   @Inject private PipelineService pipelineService;
@@ -114,9 +109,9 @@ public class EnvironmentServiceImpl implements EnvironmentService, DataProvider 
   @Inject private ServiceTemplateService serviceTemplateService;
   @Inject private ServiceVariableService serviceVariableService;
   @Inject private SetupService setupService;
-  @Inject private WorkflowService workflowService;
   @Inject private YamlChangeSetHelper yamlChangeSetHelper;
   @Inject private PersistentLocker persistentLocker;
+  @Inject private WorkflowService workflowService;
 
   @Inject @Named("JobScheduler") private QuartzScheduler jobScheduler;
 
@@ -203,22 +198,24 @@ public class EnvironmentServiceImpl implements EnvironmentService, DataProvider 
    */
   @Override
   public Environment save(Environment environment) {
-    environment.setKeywords(
-        trimList(asList(environment.getName(), environment.getDescription(), environment.getEnvironmentType())));
+    environment.setKeywords(environment.getKeywords());
     Environment savedEnvironment = Validator.duplicateCheck(
         () -> wingsPersistence.saveAndGet(Environment.class, environment), "name", environment.getName());
     serviceTemplateService.createDefaultTemplatesByEnv(savedEnvironment);
-    notificationService.sendNotificationAsync(
-        anInformationNotification()
-            .withAppId(savedEnvironment.getAppId())
-            .withNotificationTemplateId(NotificationMessageType.ENTITY_CREATE_NOTIFICATION.name())
-            .withNotificationTemplateVariables(
-                ImmutableMap.of("ENTITY_TYPE", "Environment", "ENTITY_NAME", savedEnvironment.getName()))
-            .build());
+    sendNotifaction(savedEnvironment, NotificationMessageType.ENTITY_CREATE_NOTIFICATION);
 
     yamlChangeSetHelper.environmentYamlChangeAsync(savedEnvironment, ChangeType.ADD);
 
     return savedEnvironment;
+  }
+
+  private void sendNotifaction(Environment savedEnvironment, NotificationMessageType entityCreateNotification) {
+    notificationService.sendNotificationAsync(anInformationNotification()
+                                                  .withAppId(savedEnvironment.getAppId())
+                                                  .withNotificationTemplateId(entityCreateNotification.name())
+                                                  .withNotificationTemplateVariables(ImmutableMap.of("ENTITY_TYPE",
+                                                      "Environment", "ENTITY_NAME", savedEnvironment.getName()))
+                                                  .build());
   }
 
   /**
@@ -229,8 +226,7 @@ public class EnvironmentServiceImpl implements EnvironmentService, DataProvider 
     Environment savedEnvironment =
         wingsPersistence.get(Environment.class, environment.getAppId(), environment.getUuid());
 
-    List<String> keywords =
-        trimList(asList(environment.getName(), environment.getDescription(), environment.getEnvironmentType()));
+    List<String> keywords = trimList(environment.generateKeywords());
 
     UpdateOperations<Environment> updateOperations =
         wingsPersistence.createUpdateOperations(Environment.class)
@@ -366,15 +362,8 @@ public class EnvironmentServiceImpl implements EnvironmentService, DataProvider 
 
     // Now we are ready to delete the object.
     if (wingsPersistence.delete(environment)) {
-      notificationService.sendNotificationAsync(
-          anInformationNotification()
-              .withAppId(environment.getAppId())
-              .withNotificationTemplateId(NotificationMessageType.ENTITY_DELETE_NOTIFICATION.name())
-              .withNotificationTemplateVariables(
-                  ImmutableMap.of("ENTITY_TYPE", "Environment", "ENTITY_NAME", environment.getName()))
-              .build());
+      sendNotifaction(environment, NotificationMessageType.ENTITY_DELETE_NOTIFICATION);
     }
-
     // Note that if we failed to delete the object we left without the yaml. Likely the users
     // will not reconsider and start using the object as they never intended to delete it, but
     // probably they will retry. This is why there is no reason for us to regenerate it at this
@@ -412,21 +401,17 @@ public class EnvironmentServiceImpl implements EnvironmentService, DataProvider 
 
   @Override
   public Environment cloneEnvironment(String appId, String envId, CloneMetadata cloneMetadata) {
-    Validator.notNullCheck("cloneMetadata", cloneMetadata);
-    Validator.notNullCheck("environment", cloneMetadata.getEnvironment());
+    notNullCheck("cloneMetadata", cloneMetadata, USER);
+    notNullCheck("environment", cloneMetadata.getEnvironment(), USER);
     if (cloneMetadata.getTargetAppId() == null) {
-      logger.info("Cloning environment envId {}  within the same appId {}", envId, appId);
-      String envName = cloneMetadata.getEnvironment().getName();
-      String description = cloneMetadata.getEnvironment().getDescription();
-      if (envId == null) {
-        envId = cloneMetadata.getEnvironment().getUuid();
-      }
+      envId = (envId == null) ? cloneMetadata.getEnvironment().getUuid() : envId;
       Environment sourceEnvironment = get(appId, envId, true);
       Environment clonedEnvironment = sourceEnvironment.cloneInternal();
+      String description = cloneMetadata.getEnvironment().getDescription();
       if (isEmpty(description)) {
         description = "Cloned from environment " + sourceEnvironment.getName();
       }
-      clonedEnvironment.setName(envName);
+      clonedEnvironment.setName(cloneMetadata.getEnvironment().getName());
       clonedEnvironment.setDescription(description);
       // Create environment
       clonedEnvironment = save(clonedEnvironment);
@@ -491,17 +476,14 @@ public class EnvironmentServiceImpl implements EnvironmentService, DataProvider 
                                                                     .build();
       List<ServiceVariable> serviceVariables = serviceVariableService.list(serviceVariablePageRequest, false);
       cloneServiceVariables(clonedEnvironment, serviceVariables, null, null, null);
-      logger.info("Cloning environment envId {}  within the same appId {} success", envId, appId);
       return clonedEnvironment;
     } else {
       String targetAppId = cloneMetadata.getTargetAppId();
-      logger.info("Cloning environment from appId {} to appId {}", appId, targetAppId);
-      Validator.notNullCheck("targetAppId", targetAppId);
+      notNullCheck("targetAppId", targetAppId, USER);
+      notNullCheck("appId", appId, USER);
       Application sourceApplication = appService.get(appId);
-      Validator.notNullCheck("appId", appId);
-
       Map<String, String> serviceMapping = cloneMetadata.getServiceMapping();
-      Validator.notNullCheck("serviceMapping", serviceMapping);
+      notNullCheck("serviceMapping", serviceMapping, USER);
 
       validateServiceMapping(appId, targetAppId, serviceMapping);
 
@@ -534,7 +516,7 @@ public class EnvironmentServiceImpl implements EnvironmentService, DataProvider 
             continue;
           }
           Service targetService = serviceResourceService.get(targetAppId, targetServiceId);
-          Validator.notNullCheck("Target Service", targetService);
+          notNullCheck("Target Service", targetService, USER);
 
           String clonedEnvironmentUuid = clonedEnvironment.getUuid();
 
@@ -668,12 +650,12 @@ public class EnvironmentServiceImpl implements EnvironmentService, DataProvider 
         String targetServiceId = serviceMapping.get(serviceId);
         if (serviceId != null && targetServiceId != null) {
           Service oldService = serviceResourceService.get(appId, serviceId, false);
-          Validator.notNullCheck("service", oldService);
+          notNullCheck("service", oldService, USER);
           Service newService = serviceResourceService.get(targetAppId, targetServiceId, false);
-          Validator.notNullCheck("targetService", newService);
+          notNullCheck("targetService", newService, USER);
           if (oldService.getArtifactType() != null
               && !oldService.getArtifactType().equals(newService.getArtifactType())) {
-            throw new WingsException(INVALID_REQUEST)
+            throw new WingsException(INVALID_REQUEST, USER)
                 .addParam("message",
                     "Target service  [" + oldService.getName() + " ] is not compatible with service ["
                         + newService.getName() + "]");
@@ -686,7 +668,7 @@ public class EnvironmentServiceImpl implements EnvironmentService, DataProvider 
   @Override
   public Environment setConfigMapYaml(String appId, String envId, KubernetesPayload kubernetesPayload) {
     Environment savedEnv = get(appId, envId, false);
-    Validator.notNullCheck("Environment", savedEnv);
+    notNullCheck("Environment", savedEnv, USER);
 
     String configMapYaml = trimYaml(kubernetesPayload.getAdvancedConfig());
     UpdateOperations<Environment> updateOperations;
@@ -707,10 +689,10 @@ public class EnvironmentServiceImpl implements EnvironmentService, DataProvider 
     try (
         AcquiredLock lock = persistentLocker.waitToAcquireLock(Environment.class, envId, ofSeconds(5), ofSeconds(10))) {
       if (lock == null) {
-        throw new WingsException(ErrorCode.GENERAL_ERROR).addParam("message", "The persistent lock was not acquired.");
+        throw new WingsException(GENERAL_ERROR, USER).addParam("message", "The persistent lock was not acquired.");
       }
       Environment savedEnv = get(appId, envId, false);
-      Validator.notNullCheck("Environment", savedEnv);
+      notNullCheck("Environment", savedEnv, USER);
 
       String configMapYaml = trimYaml(kubernetesPayload.getAdvancedConfig());
       Map<String, String> configMapYamls =
@@ -739,7 +721,7 @@ public class EnvironmentServiceImpl implements EnvironmentService, DataProvider 
   @Override
   public Environment setHelmValueYaml(String appId, String envId, KubernetesPayload kubernetesPayload) {
     Environment savedEnv = get(appId, envId, false);
-    Validator.notNullCheck("Environment", savedEnv);
+    notNullCheck("Environment", savedEnv, USER);
 
     String helmValueYaml = trimYaml(kubernetesPayload.getAdvancedConfig());
     UpdateOperations<Environment> updateOperations;
@@ -760,10 +742,10 @@ public class EnvironmentServiceImpl implements EnvironmentService, DataProvider 
     try (
         AcquiredLock lock = persistentLocker.waitToAcquireLock(Environment.class, envId, ofSeconds(5), ofSeconds(10))) {
       if (lock == null) {
-        throw new WingsException(ErrorCode.GENERAL_ERROR).addParam("message", "The persistent lock was not acquired.");
+        throw new WingsException(GENERAL_ERROR, USER).addParam("message", "The persistent lock was not acquired.");
       }
       Environment savedEnv = get(appId, envId, false);
-      Validator.notNullCheck("Environment", savedEnv);
+      notNullCheck("Environment", savedEnv, USER);
 
       String helmValueYaml = trimYaml(kubernetesPayload.getAdvancedConfig());
       Map<String, String> helmValueYamls =
