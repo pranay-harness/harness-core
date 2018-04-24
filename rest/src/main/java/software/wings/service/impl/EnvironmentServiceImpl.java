@@ -198,7 +198,7 @@ public class EnvironmentServiceImpl implements EnvironmentService, DataProvider 
    */
   @Override
   public Environment save(Environment environment) {
-    environment.setKeywords(environment.getKeywords());
+    environment.setKeywords(trimList(environment.generateKeywords()));
     Environment savedEnvironment = Validator.duplicateCheck(
         () -> wingsPersistence.saveAndGet(Environment.class, environment), "name", environment.getName());
     serviceTemplateService.createDefaultTemplatesByEnv(savedEnvironment);
