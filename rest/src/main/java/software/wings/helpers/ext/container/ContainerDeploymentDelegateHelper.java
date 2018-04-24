@@ -1,5 +1,6 @@
 package software.wings.helpers.ext.container;
 
+import static io.harness.data.structure.EmptyPredicate.isEmpty;
 import static io.harness.data.structure.EmptyPredicate.isNotEmpty;
 import static software.wings.helpers.ext.helm.HelmConstants.KUBE_CONFIG_TEMPLATE;
 
@@ -44,7 +45,9 @@ import software.wings.service.intfc.security.EncryptionService;
 
 import java.io.File;
 import java.io.FileWriter;
+import java.io.UnsupportedEncodingException;
 import java.util.ArrayList;
+import java.util.Base64;
 import java.util.List;
 import java.util.concurrent.TimeUnit;
 import java.util.stream.Collectors;
@@ -70,6 +73,15 @@ public class ContainerDeploymentDelegateHelper {
 
       KubernetesConfig kubernetesConfig = getKubernetesConfig(containerServiceParam);
       encryptionService.decrypt(kubernetesConfig, containerServiceParam.getEncryptionDetails());
+
+      SettingAttribute settingAttribute = containerServiceParam.getSettingAttribute();
+      if (settingAttribute.getValue() instanceof KubernetesConfig
+          || settingAttribute.getValue() instanceof KubernetesClusterConfig) {
+        kubernetesConfig.setCaCert(getEncodedChars(kubernetesConfig.getCaCert()));
+        kubernetesConfig.setClientCert(getEncodedChars(kubernetesConfig.getClientCert()));
+        kubernetesConfig.setClientKey(getEncodedChars(kubernetesConfig.getClientKey()));
+      }
+
       String configFileContent = getConfigFileContent(kubernetesConfig, clusterName);
       String md5Hash = DigestUtils.md5Hex(configFileContent);
 
@@ -90,16 +102,25 @@ public class ContainerDeploymentDelegateHelper {
     }
   }
 
+  protected char[] getEncodedChars(char[] chars) throws UnsupportedEncodingException {
+    if (isEmpty(chars) || !(new String(chars).startsWith("-----BEGIN "))) {
+      return chars;
+    }
+
+    byte[] encode = Base64.getEncoder().encode(new String(chars).getBytes("UTF-8"));
+    return new String(encode, "UTF-8").toCharArray();
+  }
+
   private String getConfigFileContent(KubernetesConfig config, String clusterName) {
     String clientCertData =
         isNotEmpty(config.getClientCert()) ? "client-certificate-data: " + new String(config.getClientCert()) : "";
     String clientKeyData =
         isNotEmpty(config.getClientKey()) ? "client-key-data: " + new String(config.getClientKey()) : "";
     String password = isNotEmpty(config.getPassword()) ? "password: " + new String(config.getPassword()) : "";
+    String username = isNotEmpty(config.getUsername()) ? "username: " + new String(config.getUsername()) : "";
 
     return KUBE_CONFIG_TEMPLATE.replace("${MASTER_URL}", config.getMasterUrl())
-        .replace("${CLUSTER_NAME}", clusterName)
-        .replace("${USER_NAME}", config.getUsername())
+        .replace("${USER_NAME}", username)
         .replace("${CLIENT_CERT_DATA}", clientCertData)
         .replace("${CLIENT_KEY_DATA}", clientKeyData)
         .replace("${PASSWORD}", password);
