@@ -29,22 +29,26 @@ import software.wings.security.annotations.PublicApi;
 import software.wings.service.intfc.ApiKeyService;
 import software.wings.service.intfc.AuditService;
 import software.wings.service.intfc.AuthService;
+import software.wings.service.intfc.ExternalApiRateLimitingService;
 import software.wings.service.intfc.UserService;
 
 import java.io.IOException;
 import java.lang.reflect.Method;
 import javax.annotation.Priority;
+import javax.ws.rs.WebApplicationException;
 import javax.ws.rs.container.ContainerRequestContext;
 import javax.ws.rs.container.ContainerRequestFilter;
 import javax.ws.rs.container.ResourceInfo;
 import javax.ws.rs.core.Context;
 import javax.ws.rs.core.HttpHeaders;
 import javax.ws.rs.core.MultivaluedMap;
+import javax.ws.rs.core.Response;
 
 @Singleton
 @Priority(AUTHENTICATION)
 public class AuthenticationFilter implements ContainerRequestFilter {
   @VisibleForTesting static final String EXTERNAL_FACING_API_HEADER = "X-Api-Key";
+  private static final int NUM_MANAGERS = 3;
 
   @Context private ResourceInfo resourceInfo;
   private WingsPersistence wingsPersistence;
@@ -54,11 +58,12 @@ public class AuthenticationFilter implements ContainerRequestFilter {
   private AuditService auditService;
   private ApiKeyService apiKeyService;
   private AuditHelper auditHelper;
+  private ExternalApiRateLimitingService rateLimitingService;
 
   @Inject
   public AuthenticationFilter(AuthService authService, WingsPersistence wingsPersistence,
       MainConfiguration configuration, UserService userService, AuditService auditService, AuditHelper auditHelper,
-      ApiKeyService apiKeyService) {
+      ApiKeyService apiKeyService, ExternalApiRateLimitingService rateLimitingService) {
     this.authService = authService;
     this.wingsPersistence = wingsPersistence;
     this.userService = userService;
@@ -66,6 +71,7 @@ public class AuthenticationFilter implements ContainerRequestFilter {
     this.auditService = auditService;
     this.auditHelper = auditHelper;
     this.apiKeyService = apiKeyService;
+    this.rateLimitingService = rateLimitingService;
   }
 
   @Override
@@ -75,6 +81,7 @@ public class AuthenticationFilter implements ContainerRequestFilter {
     }
 
     if (isExternalFacingApiRequest(containerRequestContext)) {
+      ensureValidQPM(containerRequestContext.getHeaderString(EXTERNAL_FACING_API_HEADER));
       validateExternalFacingApiRequest(containerRequestContext);
       return;
     }
@@ -103,6 +110,15 @@ public class AuthenticationFilter implements ContainerRequestFilter {
     }
 
     throw new WingsException(INVALID_CREDENTIAL, USER);
+  }
+
+  private void ensureValidQPM(String key) {
+    if (rateLimitingService.rateLimitRequest(key)) {
+      throw new WebApplicationException(Response.status(429)
+                                            .entity("Too Many requests. Throttled. Max QPM: "
+                                                + rateLimitingService.getMaxQPMPerManager() * NUM_MANAGERS)
+                                            .build());
+    }
   }
 
   private User validateBearerToken(ContainerRequestContext containerRequestContext) {
