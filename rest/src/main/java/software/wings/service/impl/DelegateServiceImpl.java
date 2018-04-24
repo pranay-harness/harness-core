@@ -711,18 +711,18 @@ public class DelegateServiceImpl implements DelegateService {
   private void setValidationStarted(String delegateId, DelegateTask delegateTask) {
     logger.info("Delegate {} to validate task {} {}", delegateId, delegateTask.getUuid(),
         delegateTask.isAsync() ? "(async)" : "(sync)");
-    UpdateOperations<DelegateTask> updateOperations = wingsPersistence.createUpdateOperations(DelegateTask.class)
-                                                          .set("validationStartedAt", clock.millis())
-                                                          .addToSet("validatingDelegateIds", delegateId);
+    UpdateOperations<DelegateTask> updateOperations =
+        wingsPersistence.createUpdateOperations(DelegateTask.class).addToSet("validatingDelegateIds", delegateId);
     Query<DelegateTask> updateQuery = wingsPersistence.createQuery(DelegateTask.class)
                                           .filter("accountId", delegateTask.getAccountId())
                                           .filter("status", QUEUED)
                                           .field("delegateId")
                                           .doesNotExist()
-                                          .field("validationStartedAt")
-                                          .doesNotExist()
                                           .filter(ID_KEY, delegateTask.getUuid());
     wingsPersistence.update(updateQuery, updateOperations);
+
+    wingsPersistence.update(updateQuery.field("validationStartedAt").doesNotExist(),
+        wingsPersistence.createUpdateOperations(DelegateTask.class).set("validationStartedAt", clock.millis()));
   }
 
   private boolean isValidationComplete(DelegateTask delegateTask) {
