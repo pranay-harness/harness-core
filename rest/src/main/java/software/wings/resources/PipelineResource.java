@@ -109,7 +109,7 @@ public class PipelineResource {
   @ExceptionMetered
   public RestResponse<Pipeline> create(@QueryParam("appId") String appId, Pipeline pipeline) {
     pipeline.setAppId(appId);
-    return new RestResponse<>(pipelineService.createPipeline(pipeline));
+    return new RestResponse<>(pipelineService.save(pipeline));
   }
 
   /**
@@ -129,7 +129,7 @@ public class PipelineResource {
     pipeline.setAppId(appId);
     pipeline.setUuid(pipelineId);
     try {
-      return new RestResponse<>(pipelineService.updatePipeline(pipeline));
+      return new RestResponse<>(pipelineService.update(pipeline));
     } catch (WingsException exception) {
       // When the pipeline update is coming from the user there is no harness engineer wrong doing to alerted for
       exception.excludeReportTarget(DUPLICATE_STATE_NAMES, LOG_SYSTEM);

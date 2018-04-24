@@ -105,7 +105,7 @@ public class PipelineServiceDBTest extends WingsBaseTest {
                             .pipelineStages(asList(pipelineStage))
                             .build();
 
-    pipelineService.createPipeline(pipeline);
+    pipelineService.save(pipeline);
 
     List<FailureStrategy> failureStrategies =
         asList(FailureStrategy.builder().repairActionCode(RepairActionCode.MANUAL_INTERVENTION).build());

@@ -5,6 +5,7 @@
 package software.wings.beans;
 
 import static java.util.Arrays.asList;
+import static java.util.stream.Collectors.toList;
 import static org.apache.commons.lang3.StringUtils.isNotBlank;
 import static software.wings.beans.Workflow.WorkflowBuilder.aWorkflow;
 
@@ -213,9 +214,19 @@ public class Workflow extends Base {
   public List<Object> generateKeywords() {
     List<Object> keywords = new ArrayList<>();
     keywords.addAll(asList(name, description, workflowType, notes));
+    if (orchestrationWorkflow != null) {
+      keywords.add(orchestrationWorkflow.getOrchestrationWorkflowType());
+    }
+    if (templatized) {
+      keywords.add("template");
+    }
+    if (services != null) {
+      keywords.addAll(services.stream().map(service -> service.getName()).distinct().collect(toList()));
+    }
     keywords.addAll(super.generateKeywords());
     return keywords;
   }
+
   public static final class WorkflowBuilder {
     private String name;
     private String description;

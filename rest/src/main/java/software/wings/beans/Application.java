@@ -1,7 +1,6 @@
 package software.wings.beans;
 
 import static java.util.Arrays.asList;
-import static software.wings.beans.Application.Builder.anApplication;
 
 import com.google.common.base.MoreObjects;
 
@@ -258,25 +257,6 @@ public class Application extends Base {
         .add("notifications", notifications)
         .add("nextDeploymentOn", nextDeploymentOn)
         .toString();
-  }
-
-  public Builder toBuilder() {
-    return anApplication()
-        .withName(getName())
-        .withDescription(getDescription())
-        .withAccountId(getAccountId())
-        .withServices(getServices())
-        .withEnvironments(getEnvironments())
-        .withSetup(getSetup())
-        .withRecentExecutions(getRecentExecutions())
-        .withNotifications(getNotifications())
-        .withNextDeploymentOn(getNextDeploymentOn())
-        .withUuid(getUuid())
-        .withAppId(getAppId())
-        .withCreatedBy(getCreatedBy())
-        .withCreatedAt(getCreatedAt())
-        .withLastUpdatedBy(getLastUpdatedBy())
-        .withLastUpdatedAt(getLastUpdatedAt());
   }
 
   /**

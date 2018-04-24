@@ -1,7 +1,6 @@
 package software.wings.service.impl;
 
 import static com.google.common.base.Strings.isNullOrEmpty;
-import static com.google.common.collect.Lists.newArrayList;
 import static io.harness.data.structure.EmptyPredicate.isEmpty;
 import static io.harness.data.structure.EmptyPredicate.isNotEmpty;
 import static io.harness.data.structure.ListUtil.trimList;
@@ -9,12 +8,17 @@ import static io.harness.data.structure.UUIDGenerator.generateUuid;
 import static java.util.stream.Collectors.toList;
 import static java.util.stream.Collectors.toSet;
 import static org.mongodb.morphia.mapping.Mapper.ID_KEY;
+import static software.wings.beans.Base.APP_ID_KEY;
 import static software.wings.beans.ErrorCode.INVALID_ARGUMENT;
 import static software.wings.beans.ErrorCode.INVALID_REQUEST;
 import static software.wings.beans.ErrorCode.PIPELINE_EXECUTION_IN_PROGRESS;
 import static software.wings.beans.InfrastructureMappingType.AWS_SSH;
 import static software.wings.beans.InfrastructureMappingType.PHYSICAL_DATA_CENTER_SSH;
+import static software.wings.beans.PipelineExecution.PIPELINE_ID_KEY;
 import static software.wings.beans.SearchFilter.Operator.EQ;
+import static software.wings.beans.yaml.Change.ChangeType.ADD;
+import static software.wings.beans.yaml.Change.ChangeType.DELETE;
+import static software.wings.beans.yaml.Change.ChangeType.MODIFY;
 import static software.wings.common.Constants.PIPELINE_ENV_STATE_VALIDATION_MESSAGE;
 import static software.wings.dl.MongoHelper.setUnset;
 import static software.wings.dl.PageRequest.PageRequestBuilder.aPageRequest;
@@ -46,7 +50,6 @@ import software.wings.beans.Service;
 import software.wings.beans.Variable;
 import software.wings.beans.Workflow;
 import software.wings.beans.WorkflowExecution;
-import software.wings.beans.WorkflowType;
 import software.wings.beans.trigger.Trigger;
 import software.wings.beans.yaml.Change.ChangeType;
 import software.wings.beans.yaml.GitFileChange;
@@ -58,7 +61,6 @@ import software.wings.scheduler.PruneEntityJob;
 import software.wings.scheduler.QuartzScheduler;
 import software.wings.service.intfc.AppService;
 import software.wings.service.intfc.PipelineService;
-import software.wings.service.intfc.ServiceResourceService;
 import software.wings.service.intfc.TriggerService;
 import software.wings.service.intfc.WorkflowExecutionService;
 import software.wings.service.intfc.WorkflowService;
@@ -67,8 +69,6 @@ import software.wings.service.intfc.yaml.EntityUpdateService;
 import software.wings.service.intfc.yaml.YamlChangeSetService;
 import software.wings.service.intfc.yaml.YamlDirectoryService;
 import software.wings.sm.StateMachine;
-import software.wings.sm.StateTypeScope;
-import software.wings.stencils.Stencil;
 import software.wings.yaml.gitSync.YamlGitConfig;
 
 import java.time.Duration;
@@ -91,7 +91,6 @@ public class PipelineServiceImpl implements PipelineService {
   @Inject private AppService appService;
   @Inject private EntityUpdateService entityUpdateService;
   @Inject private ExecutorService executorService;
-  @Inject private ServiceResourceService serviceResourceService;
   @Inject private TriggerService triggerService;
   @Inject private WingsPersistence wingsPersistence;
   @Inject private WorkflowService workflowService;
@@ -123,21 +122,201 @@ public class PipelineServiceImpl implements PipelineService {
     if (previousExecutionsCount != null && previousExecutionsCount > 0) {
       for (Pipeline pipeline : pipelines) {
         try {
-          PageRequest<WorkflowExecution> workflowExecutionPageRequest =
-              aPageRequest()
-                  .withLimit(previousExecutionsCount.toString())
-                  .addFilter("workflowId", EQ, pipeline.getUuid())
-                  .build();
-
-          pipeline.setWorkflowExecutions(
-              workflowExecutionService.listExecutions(workflowExecutionPageRequest, false, false, false, false)
-                  .getResponse());
+          List<WorkflowExecution> workflowExecutions =
+              workflowExecutionService
+                  .listExecutions(aPageRequest()
+                                      .withLimit(previousExecutionsCount.toString())
+                                      .addFilter("workflowId", EQ, pipeline.getUuid())
+                                      .build(),
+                      false, false, false, false)
+                  .getResponse();
+          pipeline.setWorkflowExecutions(workflowExecutions);
         } catch (Exception e) {
           logger.error("Failed to fetch recent executions for pipeline {}", pipeline, e);
         }
       }
     }
     return res;
+  }
+
+  /**
+   * {@inheritDoc}
+   */
+  @Override
+  public Pipeline update(Pipeline pipeline) {
+    Pipeline savedPipeline = wingsPersistence.get(Pipeline.class, pipeline.getAppId(), pipeline.getUuid());
+    notNullCheck("Pipeline not saved", savedPipeline, USER);
+
+    List<Object> keywords = pipeline.generateKeywords();
+    ensurePipelineStageUuids(pipeline);
+
+    validatePipeline(pipeline, keywords);
+    UpdateOperations<Pipeline> ops = wingsPersistence.createUpdateOperations(Pipeline.class);
+    setUnset(ops, "description", pipeline.getDescription());
+    setUnset(ops, "name", pipeline.getName());
+    setUnset(ops, "pipelineStages", pipeline.getPipelineStages());
+    setUnset(ops, "failureStrategies", pipeline.getFailureStrategies());
+    setUnset(ops, "keywords", trimList(keywords));
+
+    wingsPersistence.update(wingsPersistence.createQuery(Pipeline.class)
+                                .filter("appId", pipeline.getAppId())
+                                .filter(ID_KEY, pipeline.getUuid()),
+        ops);
+
+    wingsPersistence.saveAndGet(StateMachine.class, new StateMachine(pipeline, workflowService.stencilMap()));
+
+    if (!savedPipeline.getName().equals(pipeline.getName())) {
+      executorService.submit(() -> triggerService.updateByApp(pipeline.getAppId()));
+    }
+
+    sendYamlUpdate(pipeline, MODIFY);
+
+    return pipeline;
+  }
+
+  private void ensurePipelineStageUuids(Pipeline pipeline) {
+    // The UI or other agents my try to update the pipeline with new stages without uuids. This makes sure that
+    // they all will have one.
+    pipeline.getPipelineStages()
+        .stream()
+        .flatMap(stage -> stage.getPipelineStageElements().stream())
+        .forEach(element -> {
+          if (element.getUuid() == null) {
+            element.setUuid(generateUuid());
+          }
+        });
+  }
+
+  @Override
+  public List<FailureStrategy> updateFailureStrategies(
+      String appId, String pipelineId, List<FailureStrategy> failureStrategies) {
+    Pipeline savedPipeline = wingsPersistence.get(Pipeline.class, appId, pipelineId);
+    notNullCheck("pipeline", savedPipeline);
+
+    savedPipeline.setFailureStrategies(failureStrategies);
+    Pipeline pipeline = update(savedPipeline);
+    return pipeline.getFailureStrategies();
+  }
+
+  // TODO: Add unit tests for this function
+  private void ensurePipelineSafeToDelete(Pipeline pipeline) {
+    PageRequest<PipelineExecution> pageRequest = aPageRequest()
+                                                     .addFilter(APP_ID_KEY, EQ, pipeline.getAppId())
+                                                     .addFilter(PIPELINE_ID_KEY, EQ, pipeline.getUuid())
+                                                     .build();
+    PageResponse<PipelineExecution> pageResponse = wingsPersistence.query(PipelineExecution.class, pageRequest);
+    if (pageResponse == null || isEmpty(pageResponse.getResponse())
+        || pageResponse.getResponse().stream().allMatch(
+               pipelineExecution -> pipelineExecution.getStatus().isFinalStatus())) {
+      List<Trigger> triggers = triggerService.getTriggersHasPipelineAction(pipeline.getAppId(), pipeline.getUuid());
+      if (isEmpty(triggers)) {
+        return;
+      }
+      List<String> triggerNames = triggers.stream().map(Trigger::getName).collect(toList());
+      throw new WingsException(INVALID_REQUEST, USER)
+          .addParam("message",
+              String.format(
+                  "Pipeline associated as a trigger action to triggers [%s]", Joiner.on(", ").join(triggerNames)));
+    }
+    throw new WingsException(PIPELINE_EXECUTION_IN_PROGRESS, USER)
+        .addParam("message", String.format("Pipeline:[%s] couldn't be deleted", pipeline.getName()));
+  }
+
+  @Override
+  public boolean deletePipeline(String appId, String pipelineId) {
+    return deletePipeline(appId, pipelineId, false);
+  }
+
+  private boolean deletePipeline(String appId, String pipelineId, boolean forceDelete) {
+    Pipeline pipeline = wingsPersistence.get(Pipeline.class, appId, pipelineId);
+    if (pipeline == null) {
+      return true;
+    }
+
+    if (!forceDelete) {
+      ensurePipelineSafeToDelete(pipeline);
+    }
+
+    // YAML is identified by name that can be reused after deletion. Pruning yaml eventual consistent
+    // may result in deleting object from a new application created after the first one was deleted,
+    // or preexisting being renamed to the vacated name. This is why we have to do this synchronously.
+    String accountId = appService.getAccountIdByAppId(pipeline.getAppId());
+    YamlGitConfig ygs = yamlDirectoryService.weNeedToPushChanges(accountId);
+    if (ygs != null) {
+      List<GitFileChange> changeSet = new ArrayList<>();
+      changeSet.add(entityUpdateService.getPipelineGitSyncFile(accountId, pipeline, DELETE));
+      yamlChangeSetService.saveChangeSet(ygs, changeSet);
+    }
+
+    return prunePipeline(appId, pipelineId);
+  }
+
+  @Override
+  public void pruneDescendingEntities(@NotEmpty String appId, @NotEmpty String pipelineId) {
+    List<OwnedByPipeline> services =
+        ServiceClassLocator.descendingServices(this, PipelineServiceImpl.class, OwnedByPipeline.class);
+    PruneEntityJob.pruneDescendingEntities(services, descending -> descending.pruneByPipeline(appId, pipelineId));
+  }
+
+  @Override
+  public void pruneByApplication(String appId) {
+    List<Key<Pipeline>> pipelineKeys =
+        wingsPersistence.createQuery(Pipeline.class).filter(APP_ID_KEY, appId).asKeyList();
+    for (Key key : pipelineKeys) {
+      prunePipeline(appId, (String) key.getId());
+    }
+  }
+
+  @Override
+  public Pipeline clonePipeline(String originalPipelineId, Pipeline pipeline) {
+    Pipeline originalPipeline = readPipeline(pipeline.getAppId(), originalPipelineId, false);
+    Pipeline clonedPipeline = originalPipeline.cloneInternal();
+    clonedPipeline.setName(pipeline.getName());
+    clonedPipeline.setDescription(pipeline.getDescription());
+    return save(clonedPipeline);
+  }
+
+  @Override
+  public List<EntityType> getRequiredEntities(String appId, String pipelineId) {
+    Pipeline pipeline = wingsPersistence.get(Pipeline.class, appId, pipelineId);
+    notNullCheck("pipeline", pipeline, USER);
+    List<EntityType> entityTypes = new ArrayList<>();
+    for (PipelineStage pipelineStage : pipeline.getPipelineStages()) {
+      for (PipelineStageElement pipelineStageElement : pipelineStage.getPipelineStageElements()) {
+        if (ENV_STATE.name().equals(pipelineStageElement.getType())) {
+          Workflow workflow = workflowService.readWorkflow(
+              pipeline.getAppId(), (String) pipelineStageElement.getProperties().get("workflowId"));
+          OrchestrationWorkflow orchestrationWorkflow = workflow.getOrchestrationWorkflow();
+          if (orchestrationWorkflow != null) {
+            if (orchestrationWorkflow.getOrchestrationWorkflowType().equals(OrchestrationWorkflowType.BUILD)) {
+              return new ArrayList<>();
+            }
+            if (orchestrationWorkflow.getRequiredEntityTypes() != null) {
+              entityTypes.addAll(orchestrationWorkflow.getRequiredEntityTypes());
+            }
+          }
+        }
+      }
+    }
+    return entityTypes;
+  }
+
+  /**
+   * {@inheritDoc}
+   */
+  @Override
+  public Pipeline readPipeline(String appId, String pipelineId, boolean withServices) {
+    Pipeline pipeline = wingsPersistence.get(Pipeline.class, appId, pipelineId);
+    notNullCheck("Pipeline was deleted", pipeline, USER);
+    if (withServices) {
+      populateAssociatedWorkflowServices(pipeline);
+    }
+    return pipeline;
+  }
+
+  @Override
+  public Pipeline getPipelineByName(String appId, String pipelineName) {
+    return wingsPersistence.createQuery(Pipeline.class).filter("appId", appId).filter("name", pipelineName).get();
   }
 
   private void setPipelineDetails(List<Pipeline> pipelines) {
@@ -187,205 +366,12 @@ public class PipelineServiceImpl implements PipelineService {
     }
   }
 
-  /**
-   * {@inheritDoc}
-   */
-  @Override
-  public Pipeline updatePipeline(Pipeline pipeline) {
-    Pipeline savedPipeline = wingsPersistence.get(Pipeline.class, pipeline.getAppId(), pipeline.getUuid());
-    notNullCheck("Pipeline not saved", savedPipeline, USER);
-
-    List<Object> keywords = newArrayList(pipeline.getName(), pipeline.getDescription(), WorkflowType.PIPELINE);
-    ensurePipelineStageUuids(pipeline);
-
-    validatePipeline(pipeline, keywords);
-    UpdateOperations<Pipeline> ops = wingsPersistence.createUpdateOperations(Pipeline.class);
-    setUnset(ops, "description", pipeline.getDescription());
-    setUnset(ops, "name", pipeline.getName());
-    setUnset(ops, "pipelineStages", pipeline.getPipelineStages());
-    setUnset(ops, "failureStrategies", pipeline.getFailureStrategies());
-    setUnset(ops, "keywords", keywords);
-
-    wingsPersistence.update(wingsPersistence.createQuery(Pipeline.class)
-                                .filter("appId", pipeline.getAppId())
-                                .filter(ID_KEY, pipeline.getUuid()),
-        ops);
-
-    wingsPersistence.saveAndGet(StateMachine.class, new StateMachine(pipeline, workflowService.stencilMap()));
-
-    if (!savedPipeline.getName().equals(pipeline.getName())) {
-      executorService.submit(() -> triggerService.updateByApp(pipeline.getAppId()));
-    }
-
-    executorService.submit(() -> {
-      String accountId = appService.getAccountIdByAppId(pipeline.getAppId());
-      YamlGitConfig ygs = yamlDirectoryService.weNeedToPushChanges(accountId);
-      if (ygs != null) {
-        List<GitFileChange> changeSet = new ArrayList<>();
-        changeSet.add(entityUpdateService.getPipelineGitSyncFile(accountId, pipeline, ChangeType.MODIFY));
-
-        yamlChangeSetService.saveChangeSet(ygs, changeSet);
-      }
-    });
-
-    return pipeline;
-  }
-
-  private void ensurePipelineStageUuids(Pipeline pipeline) {
-    // The UI or other agents my try to update the pipeline with new stages without uuids. This makes sure that
-    // they all will have one.
-    pipeline.getPipelineStages()
-        .stream()
-        .flatMap(stage -> stage.getPipelineStageElements().stream())
-        .forEach(element -> {
-          if (element.getUuid() == null) {
-            element.setUuid(generateUuid());
-          }
-        });
-  }
-
-  @Override
-  public List<FailureStrategy> updateFailureStrategies(
-      String appId, String pipelineId, List<FailureStrategy> failureStrategies) {
-    Pipeline savedPipeline = wingsPersistence.get(Pipeline.class, appId, pipelineId);
-    notNullCheck("pipeline", savedPipeline);
-
-    savedPipeline.setFailureStrategies(failureStrategies);
-    Pipeline pipeline = updatePipeline(savedPipeline);
-    return pipeline.getFailureStrategies();
-  }
-
-  // TODO: Add unit tests for this function
-  private void ensurePipelineSafeToDelete(Pipeline pipeline) {
-    PageRequest<PipelineExecution> pageRequest =
-        aPageRequest()
-            .addFilter(PipelineExecution.APP_ID_KEY, EQ, pipeline.getAppId())
-            .addFilter(PipelineExecution.PIPELINE_ID_KEY, EQ, pipeline.getUuid())
-            .build();
-    PageResponse<PipelineExecution> pageResponse = wingsPersistence.query(PipelineExecution.class, pageRequest);
-    if (pageResponse == null || isEmpty(pageResponse.getResponse())
-        || pageResponse.getResponse().stream().allMatch(
-               pipelineExecution -> pipelineExecution.getStatus().isFinalStatus())) {
-      List<Trigger> triggers = triggerService.getTriggersHasPipelineAction(pipeline.getAppId(), pipeline.getUuid());
-      if (isEmpty(triggers)) {
-        return;
-      }
-      List<String> triggerNames = triggers.stream().map(Trigger::getName).collect(toList());
-
-      throw new WingsException(INVALID_REQUEST, USER)
-          .addParam("message",
-              String.format(
-                  "Pipeline associated as a trigger action to triggers [%s]", Joiner.on(", ").join(triggerNames)));
-    }
-    throw new WingsException(PIPELINE_EXECUTION_IN_PROGRESS, USER)
-        .addParam("message", String.format("Pipeline:[%s] couldn't be deleted", pipeline.getName()));
-  }
-
-  @Override
-  public boolean deletePipeline(String appId, String pipelineId) {
-    return deletePipeline(appId, pipelineId, false);
-  }
-
-  private boolean deletePipeline(String appId, String pipelineId, boolean forceDelete) {
-    Pipeline pipeline = wingsPersistence.get(Pipeline.class, appId, pipelineId);
-    if (pipeline == null) {
-      return true;
-    }
-
-    if (!forceDelete) {
-      ensurePipelineSafeToDelete(pipeline);
-    }
-
-    // YAML is identified by name that can be reused after deletion. Pruning yaml eventual consistent
-    // may result in deleting object from a new application created after the first one was deleted,
-    // or preexisting being renamed to the vacated name. This is why we have to do this synchronously.
-    String accountId = appService.getAccountIdByAppId(pipeline.getAppId());
-    YamlGitConfig ygs = yamlDirectoryService.weNeedToPushChanges(accountId);
-    if (ygs != null) {
-      List<GitFileChange> changeSet = new ArrayList<>();
-      changeSet.add(entityUpdateService.getPipelineGitSyncFile(accountId, pipeline, ChangeType.DELETE));
-      yamlChangeSetService.saveChangeSet(ygs, changeSet);
-    }
-
-    return prunePipeline(appId, pipelineId);
-  }
-
-  private boolean prunePipeline(String appId, String pipelineId) {
-    // First lets make sure that we have persisted a job that will prone the descendant objects
-    PruneEntityJob.addDefaultJob(jobScheduler, Pipeline.class, appId, pipelineId, Duration.ofSeconds(5));
-
-    return wingsPersistence.delete(Pipeline.class, appId, pipelineId);
-  }
-
-  @Override
-  public void pruneDescendingEntities(@NotEmpty String appId, @NotEmpty String pipelineId) {
-    List<OwnedByPipeline> services =
-        ServiceClassLocator.descendingServices(this, PipelineServiceImpl.class, OwnedByPipeline.class);
-    PruneEntityJob.pruneDescendingEntities(services, descending -> descending.pruneByPipeline(appId, pipelineId));
-  }
-
-  @Override
-  public void pruneByApplication(String appId) {
-    List<Key<Pipeline>> pipelineKeys =
-        wingsPersistence.createQuery(Pipeline.class).filter(Pipeline.APP_ID_KEY, appId).asKeyList();
-    for (Key key : pipelineKeys) {
-      prunePipeline(appId, (String) key.getId());
-    }
-  }
-
-  @Override
-  public Pipeline clonePipeline(String originalPipelineId, Pipeline pipeline) {
-    Pipeline originalPipeline = readPipeline(pipeline.getAppId(), originalPipelineId, false);
-    Pipeline clonedPipeline = originalPipeline.cloneInternal();
-    clonedPipeline.setName(pipeline.getName());
-    clonedPipeline.setDescription(pipeline.getDescription());
-    return createPipeline(clonedPipeline);
-  }
-
-  @Override
-  public List<EntityType> getRequiredEntities(String appId, String pipelineId) {
-    Pipeline pipeline = wingsPersistence.get(Pipeline.class, appId, pipelineId);
-    notNullCheck("pipeline", pipeline, USER);
-    List<EntityType> entityTypes = new ArrayList<>();
-    for (PipelineStage pipelineStage : pipeline.getPipelineStages()) {
-      for (PipelineStageElement pipelineStageElement : pipelineStage.getPipelineStageElements()) {
-        if (ENV_STATE.name().equals(pipelineStageElement.getType())) {
-          Workflow workflow = workflowService.readWorkflow(
-              pipeline.getAppId(), (String) pipelineStageElement.getProperties().get("workflowId"));
-          OrchestrationWorkflow orchestrationWorkflow = workflow.getOrchestrationWorkflow();
-          if (orchestrationWorkflow != null) {
-            if (orchestrationWorkflow.getOrchestrationWorkflowType().equals(OrchestrationWorkflowType.BUILD)) {
-              return new ArrayList<>();
-            }
-            if (orchestrationWorkflow.getRequiredEntityTypes() != null) {
-              entityTypes.addAll(orchestrationWorkflow.getRequiredEntityTypes());
-            }
-          }
-        }
-      }
-    }
-    return entityTypes;
-  }
-
-  /**
-   * {@inheritDoc}
-   */
-  @Override
-  public Pipeline readPipeline(String appId, String pipelineId, boolean withServices) {
-    Pipeline pipeline = wingsPersistence.get(Pipeline.class, appId, pipelineId);
-    notNullCheck("Pipeline was deleted", pipeline, USER);
-    if (withServices) {
-      populateAssociatedWorkflowServices(pipeline);
-    }
-    return pipeline;
-  }
-
-  @Override
-  public Pipeline getPipelineByName(String appId, String pipelineName) {
-    return wingsPersistence.createQuery(Pipeline.class).filter("appId", appId).filter("name", pipelineName).get();
-  }
-
   private void populateAssociatedWorkflowServices(Pipeline pipeline) {
+    List<Service> services = getResolvedServices(pipeline);
+    pipeline.setServices(services);
+  }
+
+  public List<Service> getResolvedServices(Pipeline pipeline) {
     List<Service> services = new ArrayList<>();
     List<String> serviceIds = new ArrayList<>();
     pipeline.getPipelineStages()
@@ -396,36 +382,41 @@ public class PipelineServiceImpl implements PipelineService {
           try {
             Workflow workflow =
                 workflowService.readWorkflow(pipeline.getAppId(), (String) pse.getProperties().get("workflowId"));
-            if (isEmpty(pse.getWorkflowVariables())) {
-              workflow.getServices().forEach(service -> {
-                if (!serviceIds.contains(service.getUuid())) {
-                  services.add(service);
-                  serviceIds.add(service.getUuid());
-                }
-              });
-            } else {
-              List<Service> resolvedServices =
-                  workflowService.getResolvedServices(workflow, pse.getWorkflowVariables());
-              if (resolvedServices != null) {
-                for (Service resolvedService : resolvedServices) {
-                  if (!serviceIds.contains(resolvedService.getUuid())) {
-                    services.add(resolvedService);
-                    serviceIds.add(resolvedService.getUuid());
-                  }
-                }
-              }
-            }
+            resolveServicesOfWorkflow(services, serviceIds, pse, workflow);
 
           } catch (Exception ex) {
             logger.warn("Exception occurred while reading workflow associated to the pipeline {}", pipeline);
           }
         });
-    pipeline.setServices(services);
+    return services;
   }
 
-  private void validatePipelineEnvState(
-      Workflow workflow, PipelineStageElement pipelineStageElement, List<String> invalidWorkflows) {
-    Map<String, String> pseWorkflowVariables = pipelineStageElement.getWorkflowVariables();
+  private void resolveServicesOfWorkflow(
+      List<Service> services, List<String> serviceIds, PipelineStageElement pse, Workflow workflow) {
+    if (isEmpty(pse.getWorkflowVariables())) {
+      if (workflow.getServices() != null) {
+        workflow.getServices().forEach((Service service) -> {
+          if (!serviceIds.contains(service.getUuid())) {
+            services.add(service);
+            serviceIds.add(service.getUuid());
+          }
+        });
+      }
+    } else {
+      List<Service> resolvedServices = workflowService.getResolvedServices(workflow, pse.getWorkflowVariables());
+      if (resolvedServices != null) {
+        for (Service resolvedService : resolvedServices) {
+          if (!serviceIds.contains(resolvedService.getUuid())) {
+            services.add(resolvedService);
+            serviceIds.add(resolvedService.getUuid());
+          }
+        }
+      }
+    }
+  }
+
+  private void validatePipelineEnvState(Workflow workflow, PipelineStageElement pse, List<String> invalidWorkflows) {
+    Map<String, String> pseWorkflowVariables = pse.getWorkflowVariables();
     if (isEmpty(pseWorkflowVariables) || workflow == null || workflow.getOrchestrationWorkflow() == null) {
       return;
     }
@@ -436,8 +427,8 @@ public class PipelineServiceImpl implements PipelineService {
         : userVariables.stream().map(variable -> variable.getName()).collect(toSet());
     for (String pseWorkflowVariable : pseWorkflowVariableNames) {
       if (!workflowVariableNames.contains(pseWorkflowVariable)) {
-        pipelineStageElement.setValid(false);
-        pipelineStageElement.setValidationMessage("Workflow variables updated or deleted");
+        pse.setValid(false);
+        pse.setValidationMessage("Workflow variables updated or deleted");
         invalidWorkflows.add(workflow.getName());
         break;
       }
@@ -445,26 +436,17 @@ public class PipelineServiceImpl implements PipelineService {
   }
 
   @Override
-  public Pipeline createPipeline(Pipeline pipeline) {
+  public Pipeline save(Pipeline pipeline) {
     ensurePipelineStageUuids(pipeline);
 
-    List<Object> keywords = newArrayList(pipeline.getName(), pipeline.getDescription(), WorkflowType.PIPELINE);
+    List<Object> keywords = pipeline.generateKeywords();
     validatePipeline(pipeline, keywords);
     pipeline.setKeywords(trimList(keywords));
     pipeline = wingsPersistence.saveAndGet(Pipeline.class, pipeline);
-    Map<StateTypeScope, List<Stencil>> stencils = workflowService.stencils(null, null, null);
     wingsPersistence.saveAndGet(StateMachine.class, new StateMachine(pipeline, workflowService.stencilMap()));
 
     Pipeline finalPipeline = pipeline;
-    executorService.submit(() -> {
-      String accountId = appService.getAccountIdByAppId(finalPipeline.getAppId());
-      YamlGitConfig ygs = yamlDirectoryService.weNeedToPushChanges(accountId);
-      if (ygs != null) {
-        List<GitFileChange> changeSet = new ArrayList<>();
-        changeSet.add(entityUpdateService.getPipelineGitSyncFile(accountId, finalPipeline, ChangeType.ADD));
-        yamlChangeSetService.saveChangeSet(ygs, changeSet);
-      }
-    });
+    sendYamlUpdate(finalPipeline, ADD);
 
     return pipeline;
   }
@@ -473,36 +455,34 @@ public class PipelineServiceImpl implements PipelineService {
     if (Collections.isEmpty(pipeline.getPipelineStages())) {
       throw new WingsException(INVALID_ARGUMENT).addParam("args", "At least one pipeline stage required");
     }
-
+    List<Service> services = new ArrayList<>();
+    List<String> serviceIds = new ArrayList<>();
     final List<PipelineStage> pipelineStages = pipeline.getPipelineStages();
     for (int i = 0; i < pipelineStages.size(); ++i) {
       PipelineStage pipelineStage = pipelineStages.get(i);
       if (isEmpty(pipelineStage.getPipelineStageElements())) {
-        throw new WingsException(INVALID_ARGUMENT).addParam("args", "Invalid pipeline stage");
+        throw new WingsException(INVALID_ARGUMENT, USER).addParam("args", "Invalid pipeline stage");
       }
-
       for (PipelineStageElement stageElement : pipelineStage.getPipelineStageElements()) {
         if (!ENV_STATE.name().equals(stageElement.getType())) {
           continue;
         }
         if (isNullOrEmpty((String) stageElement.getProperties().get("workflowId"))) {
-          throw new WingsException(INVALID_ARGUMENT).addParam("args", "Workflow can not be null for Environment state");
+          throw new WingsException(INVALID_ARGUMENT, USER)
+              .addParam("args", "Workflow can not be null for Environment state");
         }
         Workflow workflow =
             workflowService.readWorkflow(pipeline.getAppId(), (String) stageElement.getProperties().get("workflowId"));
         if (workflow == null || workflow.getOrchestrationWorkflow() == null) {
-          throw new WingsException(INVALID_ARGUMENT).addParam("args", "Workflow can not be null for Environment state");
+          throw new WingsException(INVALID_ARGUMENT, USER)
+              .addParam("args", "Workflow can not be null for Environment state");
         }
         keywords.add(workflow.getName());
         keywords.add(workflow.getDescription());
-        // TODO: resolve the templatized ones
-        if (workflow.getServices() != null) {
-          keywords.addAll(workflow.getServices().stream().map(service -> service.getName()).collect(toList()));
-        }
-
+        resolveServicesOfWorkflow(services, serviceIds, stageElement, workflow);
         if (workflow.getOrchestrationWorkflow().getOrchestrationWorkflowType() != OrchestrationWorkflowType.BUILD
             && isNullOrEmpty((String) stageElement.getProperties().get("envId"))) {
-          throw new WingsException(INVALID_ARGUMENT)
+          throw new WingsException(INVALID_ARGUMENT, USER)
               .addParam("args", "Environment can not be null for non-build state");
         }
 
@@ -513,11 +493,32 @@ public class PipelineServiceImpl implements PipelineService {
         //              .addParam("args",
         //                  "A pipeline can have only one build workflow and it has to be at the beginning of the
         //                  pipeline. "
-        //                      + "If the pipeline needs more than one artifact use multiple steps in the build workflow
+        //                      + "If the pipeline needs more than one artifact use multiple steps in the build
+        //                      workflow
         //                      "
         //                      + "to build and collect all required artifacts.");
         //        }
       }
     }
+    keywords.addAll(services.stream().map(service -> service.getName()).distinct().collect(toList()));
+  }
+
+  private void sendYamlUpdate(Pipeline pipeline, ChangeType changeType) {
+    executorService.submit(() -> {
+      String accountId = appService.getAccountIdByAppId(pipeline.getAppId());
+      YamlGitConfig ygs = yamlDirectoryService.weNeedToPushChanges(accountId);
+      if (ygs != null) {
+        List<GitFileChange> changeSet = new ArrayList<>();
+        changeSet.add(entityUpdateService.getPipelineGitSyncFile(accountId, pipeline, changeType));
+
+        yamlChangeSetService.saveChangeSet(ygs, changeSet);
+      }
+    });
+  }
+
+  private boolean prunePipeline(String appId, String pipelineId) {
+    // First lets make sure that we have persisted a job that will prone the descendant objects
+    PruneEntityJob.addDefaultJob(jobScheduler, Pipeline.class, appId, pipelineId, Duration.ofSeconds(5));
+    return wingsPersistence.delete(Pipeline.class, appId, pipelineId);
   }
 }

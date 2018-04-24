@@ -710,7 +710,7 @@ public class WorkflowExecutionServiceImplTest extends WingsBaseTest {
                             .pipelineStages(pipelineStages)
                             .build();
 
-    pipeline = pipelineService.createPipeline(pipeline);
+    pipeline = pipelineService.save(pipeline);
     assertThat(pipeline).isNotNull();
     assertThat(pipeline.getUuid()).isNotNull();
 
