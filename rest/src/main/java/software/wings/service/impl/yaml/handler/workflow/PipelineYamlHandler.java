@@ -130,9 +130,9 @@ public class PipelineYamlHandler extends BaseYamlHandler<Yaml, Pipeline> {
 
     if (previous != null) {
       current.setUuid(previous.getUuid());
-      return pipelineService.updatePipeline(current);
+      return pipelineService.update(current);
     } else {
-      return pipelineService.createPipeline(current);
+      return pipelineService.save(current);
     }
   }
 

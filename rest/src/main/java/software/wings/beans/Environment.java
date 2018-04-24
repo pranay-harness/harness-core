@@ -43,7 +43,6 @@ public class Environment extends Base {
   @Transient private List<ServiceTemplate> serviceTemplates;
   @Transient private List<ConfigFile> configFiles;
   @Transient private Setup setup;
-  @Transient private List<Service> servicesWithOverrides;
 
   /**
    * Gets name.
@@ -185,23 +184,6 @@ public class Environment extends Base {
     this.setup = setup;
   }
 
-  /**
-   * Return services that have overrides
-   *
-   * @return
-   */
-  public List<Service> getServicesWithOverrides() {
-    return servicesWithOverrides;
-  }
-
-  /***
-   *
-   * @param servicesWithOverrides
-   */
-  public void setServicesWithOverrides(List<Service> servicesWithOverrides) {
-    this.servicesWithOverrides = servicesWithOverrides;
-  }
-
   public Environment cloneInternal() {
     return anEnvironment()
         .withName(getName())
@@ -240,24 +222,6 @@ public class Environment extends Base {
         && Objects.equals(this.helmValueYamlByServiceTemplateId, other.helmValueYamlByServiceTemplateId)
         && Objects.equals(this.environmentType, other.environmentType)
         && Objects.equals(this.configFiles, other.configFiles);
-  }
-
-  public Builder toBuilder() {
-    return anEnvironment()
-        .withName(getName())
-        .withDescription(getDescription())
-        .withConfigMapYaml(getConfigMapYaml())
-        .withConfigMapYamlByServiceTemplateId(getConfigMapYamlByServiceTemplateId())
-        .withHelmValueYaml(getHelmValueYaml())
-        .withHelmValueYamlByServiceTemplateId(getHelmValueYamlByServiceTemplateId())
-        .withEnvironmentType(getEnvironmentType())
-        .withConfigFiles(getConfigFiles())
-        .withUuid(getUuid())
-        .withAppId(getAppId())
-        .withCreatedBy(getCreatedBy())
-        .withCreatedAt(getCreatedAt())
-        .withLastUpdatedBy(getLastUpdatedBy())
-        .withLastUpdatedAt(getLastUpdatedAt());
   }
 
   /**

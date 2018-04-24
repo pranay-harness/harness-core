@@ -54,7 +54,7 @@ public interface PipelineService extends OwnedByApplication {
    * @param pipeline the pipeline
    * @return the pipeline
    */
-  @ValidationGroups(Create.class) Pipeline createPipeline(@Valid Pipeline pipeline);
+  @ValidationGroups(Create.class) Pipeline save(@Valid Pipeline pipeline);
 
   /**
    * Update pipeline pipeline.
@@ -62,7 +62,7 @@ public interface PipelineService extends OwnedByApplication {
    * @param pipeline the pipeline
    * @return the pipeline
    */
-  @ValidationGroups(Update.class) Pipeline updatePipeline(@Valid Pipeline pipeline);
+  @ValidationGroups(Update.class) Pipeline update(@Valid Pipeline pipeline);
 
   /**
    * Update pipeline failure strategies.

@@ -37,6 +37,6 @@ public class PipelineGenerator {
       throw new UnsupportedOperationException();
     }
 
-    return pipelineService.createPipeline(builder.build());
+    return pipelineService.save(builder.build());
   }
 }

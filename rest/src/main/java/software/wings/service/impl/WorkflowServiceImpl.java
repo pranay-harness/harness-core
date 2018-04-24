@@ -312,7 +312,7 @@ public class WorkflowServiceImpl implements WorkflowService, DataProvider {
     if (filterForWorkflow) {
       workflow = readWorkflow(appId, workflowId);
       if (workflow == null) {
-        throw new InvalidRequestException("Worflow does not exist", USER);
+        throw new InvalidRequestException("Workflow does not exist", USER);
       }
       if (filterForPhase) {
         if (workflow != null) {

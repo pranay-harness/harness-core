@@ -4,7 +4,6 @@ import static io.harness.data.structure.UUIDGenerator.generateUuid;
 import static java.util.Arrays.asList;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.mockito.Matchers.any;
-import static org.mockito.Matchers.anyBoolean;
 import static org.mockito.Matchers.eq;
 import static org.mockito.Mockito.inOrder;
 import static org.mockito.Mockito.times;
@@ -73,7 +72,6 @@ import software.wings.exception.WingsException;
 import software.wings.scheduler.JobScheduler;
 import software.wings.service.intfc.AppService;
 import software.wings.service.intfc.PipelineService;
-import software.wings.service.intfc.ServiceResourceService;
 import software.wings.service.intfc.TriggerService;
 import software.wings.service.intfc.WorkflowExecutionService;
 import software.wings.service.intfc.WorkflowService;
@@ -92,7 +90,6 @@ public class PipelineServiceTest extends WingsBaseTest {
   private static final String PIPELINE = Loader.load("pipeline/dry_run.json");
 
   @Mock private AppService appService;
-  @Mock private ServiceResourceService serviceResourceService;
   @Mock private TriggerService triggerService;
   @Mock private WingsPersistence wingsPersistence;
   @Mock private WorkflowService workflowService;
@@ -131,7 +128,7 @@ public class PipelineServiceTest extends WingsBaseTest {
     when(wingsPersistence.saveAndGet(eq(Pipeline.class), eq(pipeline))).thenReturn(pipeline);
     when(workflowService.stencilMap()).thenReturn(ImmutableMap.of("ENV_STATE", StateType.ENV_STATE));
 
-    pipelineService.createPipeline(pipeline);
+    pipelineService.save(pipeline);
 
     verify(wingsPersistence).saveAndGet(eq(Pipeline.class), pipelineArgumentCaptor.capture());
     assertThat(pipelineArgumentCaptor.getValue()).isNotNull();
@@ -176,7 +173,7 @@ public class PipelineServiceTest extends WingsBaseTest {
     when(wingsPersistence.saveAndGet(eq(Pipeline.class), eq(pipeline))).thenReturn(pipeline);
     when(workflowService.stencilMap()).thenReturn(ImmutableMap.of("ENV_STATE", StateType.ENV_STATE));
 
-    pipelineService.createPipeline(pipeline);
+    pipelineService.save(pipeline);
 
     verify(wingsPersistence).saveAndGet(eq(Pipeline.class), pipelineArgumentCaptor.capture());
     assertThat(pipelineArgumentCaptor.getValue()).isNotNull();
@@ -213,7 +210,7 @@ public class PipelineServiceTest extends WingsBaseTest {
         .thenReturn(aWorkflow().withOrchestrationWorkflow(aCanaryOrchestrationWorkflow().build()).build());
     when(workflowService.stencilMap()).thenReturn(ImmutableMap.of("ENV_STATE", StateType.ENV_STATE));
 
-    pipelineService.createPipeline(pipeline);
+    pipelineService.save(pipeline);
 
     verify(wingsPersistence).saveAndGet(eq(Pipeline.class), pipelineArgumentCaptor.capture());
     Pipeline argumentCaptorValue = pipelineArgumentCaptor.getValue();
@@ -257,7 +254,7 @@ public class PipelineServiceTest extends WingsBaseTest {
 
     when(wingsPersistence.get(Pipeline.class, pipeline.getAppId(), pipeline.getUuid())).thenReturn(pipeline);
 
-    Pipeline updatedPipeline = pipelineService.updatePipeline(pipeline);
+    Pipeline updatedPipeline = pipelineService.update(pipeline);
 
     assertThat(updatedPipeline)
         .isNotNull()
@@ -341,11 +338,6 @@ public class PipelineServiceTest extends WingsBaseTest {
                                .build()))
                 .build());
 
-    when(serviceResourceService.list(any(), anyBoolean(), anyBoolean()))
-        .thenReturn(
-            aPageResponse()
-                .withResponse(asList(Service.builder().appId(APP_ID).uuid(SERVICE_ID).name(SERVICE_NAME).build()))
-                .build());
     when(workflowService.readWorkflow(APP_ID, WORKFLOW_ID))
         .thenReturn(
             aWorkflow()

@@ -169,21 +169,11 @@ public class WorkflowServiceHelper {
 
   public List<String> getKeywords(Workflow workflow) {
     List<Object> keywords = workflow.generateKeywords();
-    if (workflow.getServices() != null) {
-      workflow.getServices().forEach(service -> keywords.add(service.getName()));
-    }
     if (workflow.getEnvId() != null) {
       Environment environment = environmentService.get(workflow.getAppId(), workflow.getEnvId(), false);
       if (environment != null) {
         keywords.add(environment.getName());
       }
-    }
-    if (workflow.getOrchestrationWorkflow() != null) {
-      keywords.add(workflow.getOrchestrationWorkflow().getOrchestrationWorkflowType());
-    }
-
-    if (workflow.isTemplatized()) {
-      keywords.add("template");
     }
     return trimList(keywords);
   }

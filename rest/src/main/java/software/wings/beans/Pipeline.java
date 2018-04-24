@@ -4,6 +4,9 @@
 
 package software.wings.beans;
 
+import static java.util.Arrays.asList;
+import static software.wings.beans.WorkflowType.PIPELINE;
+
 import lombok.AllArgsConstructor;
 import lombok.Builder;
 import lombok.Builder.Default;
@@ -68,6 +71,14 @@ public class Pipeline extends Base {
         .failureStrategies(failureStrategies)
         .stateEtaMap(stateEtaMap)
         .build();
+  }
+
+  @Override
+  public List<Object> generateKeywords() {
+    List<Object> keywords = new ArrayList<>();
+    keywords.addAll(asList(name, description, PIPELINE));
+    keywords.addAll(super.generateKeywords());
+    return keywords;
   }
 
   @Data
