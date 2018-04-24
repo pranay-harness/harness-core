@@ -7,6 +7,7 @@ import static java.util.Arrays.asList;
 import static java.util.Collections.emptyList;
 import static java.util.Collections.emptyMap;
 import static java.util.Comparator.comparingDouble;
+import static java.util.stream.Collectors.joining;
 import static java.util.stream.Collectors.toList;
 import static java.util.stream.Collectors.toMap;
 import static org.apache.commons.lang3.StringUtils.equalsIgnoreCase;
@@ -503,7 +504,7 @@ public class ServiceResourceServiceImpl implements ServiceResourceService, DataP
             .collect(toList());
 
     if (isNotEmpty(serviceWorkflows)) {
-      String workflowNames = serviceWorkflows.stream().map(Workflow::getName).collect(Collectors.joining(","));
+      String workflowNames = serviceWorkflows.stream().map(Workflow::getName).collect(joining(","));
       String message =
           String.format("Service [%s] couldn't be deleted. Remove Service reference from the following workflows ["
                   + workflowNames + "]",

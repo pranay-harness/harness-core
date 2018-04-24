@@ -4,6 +4,7 @@ import static io.harness.data.structure.EmptyPredicate.isEmpty;
 import static io.harness.data.structure.EmptyPredicate.isNotEmpty;
 import static io.harness.govern.Switch.unhandled;
 import static java.util.Arrays.asList;
+import static java.util.stream.Collectors.joining;
 import static org.apache.commons.lang3.StringUtils.isBlank;
 import static software.wings.beans.SearchFilter.Operator.AND;
 import static software.wings.beans.SearchFilter.Operator.EQ;
@@ -11,6 +12,8 @@ import static software.wings.beans.SearchFilter.Operator.EXISTS;
 import static software.wings.beans.SearchFilter.Operator.NOT_EXISTS;
 import static software.wings.beans.SearchFilter.Operator.OR;
 import static software.wings.beans.SortOrder.OrderType.DESC;
+
+import com.google.common.base.Preconditions;
 
 import org.mongodb.morphia.Datastore;
 import org.mongodb.morphia.DatastoreImpl;
@@ -32,7 +35,6 @@ import software.wings.exception.WingsException;
 
 import java.util.ArrayList;
 import java.util.List;
-import java.util.stream.Collectors;
 
 /**
  * The Class MongoHelper.
@@ -115,6 +117,7 @@ public class MongoHelper {
       return query;
     }
 
+    Preconditions.checkNotNull(query, "Query cannot be null");
     req.populateFilters(mappedClass, mapper);
 
     if (req.getFilters() != null) {
@@ -126,7 +129,7 @@ public class MongoHelper {
         if (filter.getOp() == OR || filter.getOp() == AND) {
           List<Criteria> criterias = new ArrayList<>();
           for (Object opFilter : filter.getFieldValues()) {
-            if (opFilter == null || !(opFilter instanceof SearchFilter)) {
+            if (!(opFilter instanceof SearchFilter)) {
               logger.error("OR/AND operator can only be used with SearchFiter values");
               throw new WingsException(ErrorCode.DEFAULT_ERROR_CODE);
             }
@@ -135,9 +138,9 @@ public class MongoHelper {
           }
 
           if (filter.getOp() == OR) {
-            query.or(criterias.toArray(new Criteria[criterias.size()]));
+            query.or(criterias.toArray(new Criteria[0]));
           } else {
-            query.and(criterias.toArray(new Criteria[criterias.size()]));
+            query.and(criterias.toArray(new Criteria[0]));
           }
         } else {
           FieldEnd<? extends Query<T>> fieldEnd = query.field(filter.getFieldName());
@@ -158,7 +161,7 @@ public class MongoHelper {
       query.order(req.getOrders()
                       .stream()
                       .map(so -> (DESC.equals(so.getOrderType())) ? "-" + so.getFieldName() : so.getFieldName())
-                      .collect(Collectors.joining(", ")));
+                      .collect(joining(", ")));
     }
 
     List<String> fieldsIncluded = req.getFieldsIncluded();

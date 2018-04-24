@@ -7,7 +7,9 @@ import static io.harness.threading.Morpheus.sleep;
 import static java.time.Duration.ofMillis;
 import static java.time.Duration.ofSeconds;
 import static java.util.Collections.singletonList;
+import static java.util.stream.Collectors.joining;
 import static java.util.stream.Collectors.toList;
+import static org.apache.commons.lang3.StringUtils.isNotBlank;
 import static org.apache.commons.lang3.StringUtils.substringAfter;
 import static org.apache.commons.lang3.StringUtils.substringBefore;
 import static org.mongodb.morphia.mapping.Mapper.ID_KEY;
@@ -41,7 +43,6 @@ import com.google.inject.Inject;
 import com.google.inject.Singleton;
 
 import com.github.zafarkhaja.semver.Version;
-import com.hazelcast.core.HazelcastInstance;
 import com.mongodb.BasicDBObject;
 import freemarker.cache.ClassTemplateLoader;
 import freemarker.template.Configuration;
@@ -51,7 +52,6 @@ import org.apache.commons.compress.archivers.zip.AsiExtraField;
 import org.apache.commons.compress.archivers.zip.ZipArchiveEntry;
 import org.apache.commons.compress.archivers.zip.ZipArchiveOutputStream;
 import org.apache.commons.io.IOUtils;
-import org.apache.commons.lang3.StringUtils;
 import org.apache.http.client.fluent.Request;
 import org.atmosphere.cpr.BroadcasterFactory;
 import org.atteo.evo.inflector.English;
@@ -60,7 +60,6 @@ import org.mongodb.morphia.mapping.Mapper;
 import org.mongodb.morphia.query.FindOptions;
 import org.mongodb.morphia.query.Query;
 import org.mongodb.morphia.query.UpdateOperations;
-import org.mongodb.morphia.query.UpdateResults;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import software.wings.app.MainConfiguration;
@@ -93,7 +92,6 @@ import software.wings.service.intfc.AssignDelegateService;
 import software.wings.service.intfc.DelegateService;
 import software.wings.service.intfc.NotificationService;
 import software.wings.service.intfc.NotificationSetupService;
-import software.wings.utils.CacheHelper;
 import software.wings.waitnotify.NotifyResponseData;
 import software.wings.waitnotify.WaitNotifyEngine;
 
@@ -106,14 +104,11 @@ import java.io.OutputStreamWriter;
 import java.io.StringWriter;
 import java.time.Clock;
 import java.util.ArrayList;
-import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
-import java.util.Optional;
 import java.util.Set;
 import java.util.concurrent.TimeUnit;
 import java.util.concurrent.atomic.AtomicReference;
-import java.util.stream.Collectors;
 import javax.validation.executable.ValidateOnExecution;
 
 /**
@@ -122,21 +117,22 @@ import javax.validation.executable.ValidateOnExecution;
 @Singleton
 @ValidateOnExecution
 public class DelegateServiceImpl implements DelegateService {
+  private static final Logger logger = LoggerFactory.getLogger(DelegateServiceImpl.class);
+
   private static final Configuration cfg = new Configuration(VERSION_2_3_23);
 
   static {
     cfg.setTemplateLoader(new ClassTemplateLoader(DelegateServiceImpl.class, "/delegatetemplates"));
   }
 
-  private static final Logger logger = LoggerFactory.getLogger(DelegateServiceImpl.class);
+  public static final long VALIDATION_TIMEOUT = TimeUnit.SECONDS.toMillis(12);
+
   @Inject private WingsPersistence wingsPersistence;
   @Inject private WaitNotifyEngine waitNotifyEngine;
   @Inject private AccountService accountService;
   @Inject private MainConfiguration mainConfiguration;
   @Inject private EventEmitter eventEmitter;
-  @Inject private HazelcastInstance hazelcastInstance;
   @Inject private BroadcasterFactory broadcasterFactory;
-  @Inject private CacheHelper cacheHelper;
   @Inject private AssignDelegateService assignDelegateService;
   @Inject private AlertService alertService;
   @Inject private NotificationService notificationService;
@@ -281,9 +277,8 @@ public class DelegateServiceImpl implements DelegateService {
     boolean jarFileExists = false;
     String harnessApiUrl = "https://api.harness.io";
 
-    String apiUrl = mainConfiguration.getApiUrl();
-    if (!StringUtils.isEmpty(apiUrl)) {
-      harnessApiUrl = apiUrl;
+    if (isNotBlank(mainConfiguration.getApiUrl())) {
+      harnessApiUrl = mainConfiguration.getApiUrl();
     }
 
     try {
@@ -653,16 +648,11 @@ public class DelegateServiceImpl implements DelegateService {
       ensureDelegateAvailableToExecuteTask(delegateTask); // Raises an alert if there are no eligible delegates.
       return null;
     }
-    if (isBlacklisted(delegateId, delegateTask)) {
-      logger.info("Delegate {} is blacklisted for task {}", delegateId, taskId);
-      return null;
-    }
 
     if (assignDelegateService.isWhitelisted(delegateTask, delegateId)) {
       return assignTask(delegateId, taskId, delegateTask);
     } else {
-      // Set delegate as validating
-      addToValidating(delegateId, delegateTask);
+      setValidationStarted(delegateId, delegateTask);
       return delegateTask;
     }
   }
@@ -676,12 +666,21 @@ public class DelegateServiceImpl implements DelegateService {
       return null;
     }
 
-    // Mark delegate as validation complete
-    addToValidationComplete(delegateId, delegateTask);
+    logger.info("Delegate {} completed validating task {} {}", delegateId, delegateTask.getUuid(),
+        delegateTask.isAsync() ? "(async)" : "(sync)");
+
+    UpdateOperations<DelegateTask> updateOperations = wingsPersistence.createUpdateOperations(DelegateTask.class)
+                                                          .addToSet("validationCompleteDelegateIds", delegateId);
+    Query<DelegateTask> updateQuery = wingsPersistence.createQuery(DelegateTask.class)
+                                          .filter("accountId", delegateTask.getAccountId())
+                                          .filter("status", QUEUED)
+                                          .field("delegateId")
+                                          .doesNotExist()
+                                          .filter(ID_KEY, delegateTask.getUuid());
+    wingsPersistence.update(updateQuery, updateOperations);
+
     if (results.stream().anyMatch(DelegateConnectionResult::isValidated)) {
       return assignTask(delegateId, taskId, delegateTask);
-    } else if (clock.millis() - delegateTask.getCreatedAt() > TimeUnit.MINUTES.toMillis(5)) {
-      addToBlacklisted(delegateId, delegateTask);
     }
     return null;
   }
@@ -693,10 +692,7 @@ public class DelegateServiceImpl implements DelegateService {
       logger.info("Task {} not found or was already assigned", taskId);
       return null;
     }
-
-    // Tell delegate whether to proceed anyway because all eligible delegates failed
     if (isValidationComplete(delegateTask)) {
-      logger.info("Validation attempts are complete for task {}", taskId);
       // Check whether a whitelisted delegate is connected
       List<String> whitelistedDelegates = assignDelegateService.connectedWhitelistedDelegates(delegateTask);
       if (isNotEmpty(whitelistedDelegates)) {
@@ -706,72 +702,49 @@ public class DelegateServiceImpl implements DelegateService {
         logger.info("No whitelisted delegates found for task {}", taskId);
         return assignTask(delegateId, taskId, delegateTask);
       }
-    } else {
-      logger.info("Task {} is still being validated", taskId);
-      return null;
     }
+
+    logger.info("Task {} is still being validated", taskId);
+    return null;
   }
 
-  private void addToValidating(String delegateId, DelegateTask delegateTask) {
+  private void setValidationStarted(String delegateId, DelegateTask delegateTask) {
     logger.info("Delegate {} to validate task {} {}", delegateId, delegateTask.getUuid(),
         delegateTask.isAsync() ? "(async)" : "(sync)");
-    Set<String> validating = Optional.ofNullable(delegateTask.getValidatingDelegateIds()).orElse(new HashSet<>());
-    validating.add(delegateId);
-    delegateTask.setValidatingDelegateIds(validating);
-    storeDelegateTracking(delegateTask, "validatingDelegateIds", delegateId);
-  }
-
-  private void addToValidationComplete(String delegateId, DelegateTask delegateTask) {
-    logger.info("Delegate {} completed validating task {} {}", delegateId, delegateTask.getUuid(),
-        delegateTask.isAsync() ? "(async)" : "(sync)");
-    Set<String> validationComplete =
-        Optional.ofNullable(delegateTask.getValidationCompleteDelegateIds()).orElse(new HashSet<>());
-    validationComplete.add(delegateId);
-    delegateTask.setValidationCompleteDelegateIds(validationComplete);
-    storeDelegateTracking(delegateTask, "validationCompleteDelegateIds", delegateId);
-  }
-
-  private void addToBlacklisted(String delegateId, DelegateTask delegateTask) {
-    logger.info("Delegate {} blacklisted for task {} {}", delegateId, delegateTask.getUuid(),
-        delegateTask.isAsync() ? "(async)" : "(sync)");
-    Set<String> blacklisted = Optional.ofNullable(delegateTask.getBlacklistedDelegateIds()).orElse(new HashSet<>());
-    blacklisted.add(delegateId);
-    delegateTask.setBlacklistedDelegateIds(blacklisted);
-    storeDelegateTracking(delegateTask, "blacklistedDelegateIds", delegateId);
-  }
-
-  private boolean isValidationComplete(DelegateTask delegateTask) {
-    Set<String> validatingDelegates = delegateTask.getValidatingDelegateIds();
-    Set<String> completeDelegates = delegateTask.getValidationCompleteDelegateIds();
-    return isNotEmpty(validatingDelegates) && isNotEmpty(completeDelegates)
-        && completeDelegates.containsAll(validatingDelegates);
-  }
-
-  private boolean isBlacklisted(String delegateId, DelegateTask delegateTask) {
-    Set<String> blacklistedDelegateIds = delegateTask.getBlacklistedDelegateIds();
-    return isNotEmpty(blacklistedDelegateIds) && blacklistedDelegateIds.contains(delegateId);
-  }
-
-  private void storeDelegateTracking(DelegateTask delegateTask, String trackDelegateField, String delegateId) {
-    UpdateOperations<DelegateTask> updateOperations =
-        wingsPersistence.createUpdateOperations(DelegateTask.class).addToSet(trackDelegateField, delegateId);
+    UpdateOperations<DelegateTask> updateOperations = wingsPersistence.createUpdateOperations(DelegateTask.class)
+                                                          .set("validationStartedAt", clock.millis())
+                                                          .addToSet("validatingDelegateIds", delegateId);
     Query<DelegateTask> updateQuery = wingsPersistence.createQuery(DelegateTask.class)
                                           .filter("accountId", delegateTask.getAccountId())
                                           .filter("status", QUEUED)
                                           .field("delegateId")
                                           .doesNotExist()
+                                          .field("validationStartedAt")
+                                          .doesNotExist()
                                           .filter(ID_KEY, delegateTask.getUuid());
     wingsPersistence.update(updateQuery, updateOperations);
   }
 
+  private boolean isValidationComplete(DelegateTask delegateTask) {
+    Set<String> validatingDelegates = delegateTask.getValidatingDelegateIds();
+    Set<String> completeDelegates = delegateTask.getValidationCompleteDelegateIds();
+    boolean allDelegatesFinished = isNotEmpty(validatingDelegates) && isNotEmpty(completeDelegates)
+        && completeDelegates.containsAll(validatingDelegates);
+    if (allDelegatesFinished) {
+      logger.info("Validation attempts are complete for task {}", delegateTask.getUuid());
+    }
+    boolean validationTimedOut = delegateTask.getValidationStartedAt() != null
+        && clock.millis() - delegateTask.getValidationStartedAt() > VALIDATION_TIMEOUT;
+    if (validationTimedOut) {
+      logger.info("Validation timed out for task {}", delegateTask.getUuid());
+    }
+    return allDelegatesFinished || validationTimedOut;
+  }
+
   private void clearFromValidationCache(DelegateTask delegateTask) {
-    delegateTask.setValidatingDelegateIds(null);
-    delegateTask.setValidationCompleteDelegateIds(null);
-    delegateTask.setBlacklistedDelegateIds(null);
     UpdateOperations<DelegateTask> updateOperations = wingsPersistence.createUpdateOperations(DelegateTask.class)
                                                           .unset("validatingDelegateIds")
-                                                          .unset("validationCompleteDelegateIds")
-                                                          .unset("blacklistedDelegateIds");
+                                                          .unset("validationCompleteDelegateIds");
     Query<DelegateTask> updateQuery = wingsPersistence.createQuery(DelegateTask.class)
                                           .filter("accountId", delegateTask.getAccountId())
                                           .filter("status", QUEUED)
@@ -789,11 +762,13 @@ public class DelegateServiceImpl implements DelegateService {
                                     .doesNotExist()
                                     .filter(ID_KEY, taskId)
                                     .get();
-    if (delegateTask != null) {
-      logger.info("Found unassigned delegate task: {}", delegateTask.getUuid());
-    } else {
+
+    if (delegateTask == null) {
       logger.info("Delegate task {} is already assigned", taskId);
+      return null;
     }
+
+    logger.info("Found unassigned delegate task: {}", delegateTask.getUuid());
     return delegateTask;
   }
 
@@ -803,21 +778,15 @@ public class DelegateServiceImpl implements DelegateService {
 
     logger.info(
         "Assigning task {} to delegate {} {}", taskId, delegateId, delegateTask.isAsync() ? "(async)" : "(sync)");
-    delegateTask.setDelegateId(delegateId);
+    Query<DelegateTask> query = wingsPersistence.createQuery(DelegateTask.class)
+                                    .filter("accountId", delegateTask.getAccountId())
+                                    .filter("status", QUEUED)
+                                    .field("delegateId")
+                                    .doesNotExist()
+                                    .filter(ID_KEY, taskId);
     UpdateOperations<DelegateTask> updateOperations =
         wingsPersistence.createUpdateOperations(DelegateTask.class).set("delegateId", delegateId);
-    Query<DelegateTask> updateQuery = wingsPersistence.createQuery(DelegateTask.class)
-                                          .filter("accountId", delegateTask.getAccountId())
-                                          .filter("status", QUEUED)
-                                          .field("delegateId")
-                                          .doesNotExist()
-                                          .filter(ID_KEY, taskId);
-    UpdateResults updateResults = wingsPersistence.update(updateQuery, updateOperations);
-    if (updateResults.getUpdatedCount() == 0) {
-      // Couldn't assign, probably because it was already assigned to another delegate.
-      delegateTask = null;
-    }
-    return delegateTask;
+    return wingsPersistence.getDatastore().findAndModify(query, updateOperations);
   }
 
   @Override
@@ -1040,7 +1009,7 @@ public class DelegateServiceImpl implements DelegateService {
     String hostNamesForDownDelegates = "\n"
         + alertsToBeCreated.stream()
               .map(alertData -> ((DelegatesDownAlert) alertData).getHostName())
-              .collect(Collectors.joining("\n"));
+              .collect(joining("\n"));
 
     StringBuilder hostNamesForDownDelegatesHtml = new StringBuilder().append("<br />");
     alertsToBeCreated.forEach(alertData

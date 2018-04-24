@@ -1,5 +1,6 @@
 package software.wings.beans.artifact;
 
+import static java.util.stream.Collectors.joining;
 import static org.apache.commons.lang3.StringUtils.isBlank;
 import static software.wings.beans.artifact.ArtifactStreamAttributes.Builder.anArtifactStreamAttributes;
 import static software.wings.beans.artifact.ArtifactStreamType.AMAZON_S3;
@@ -14,7 +15,6 @@ import software.wings.beans.EmbeddedUser;
 
 import java.util.Date;
 import java.util.List;
-import java.util.stream.Collectors;
 
 @JsonTypeName("AMAZON_S3")
 @Data
@@ -56,10 +56,7 @@ public class AmazonS3ArtifactStream extends ArtifactStream {
 
   @Override
   public String generateSourceName() {
-    return getArtifactPaths()
-        .stream()
-        .map(artifactPath -> '/' + artifactPath)
-        .collect(Collectors.joining("", getJobname(), ""));
+    return getArtifactPaths().stream().map(artifactPath -> '/' + artifactPath).collect(joining("", getJobname(), ""));
   }
 
   @Data

@@ -1,5 +1,6 @@
 package software.wings.beans;
 
+import static java.util.stream.Collectors.joining;
 import static javax.ws.rs.core.Response.Status.BAD_REQUEST;
 import static javax.ws.rs.core.Response.Status.CONFLICT;
 import static javax.ws.rs.core.Response.Status.FORBIDDEN;
@@ -10,7 +11,6 @@ import static javax.ws.rs.core.Response.Status.UNAUTHORIZED;
 
 import com.google.common.base.Splitter;
 
-import java.util.stream.Collectors;
 import javax.ws.rs.core.Response.Status;
 
 /**
@@ -588,7 +588,7 @@ public enum ErrorCode {
    * @return the string
    */
   public static String upperUnderscoreToSpaceSeparatedCamelCase(String original) {
-    return Splitter.on("_").splitToList(original).stream().map(ErrorCode::capitalize).collect(Collectors.joining(" "));
+    return Splitter.on("_").splitToList(original).stream().map(ErrorCode::capitalize).collect(joining(" "));
   }
 
   /**

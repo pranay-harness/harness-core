@@ -2,6 +2,7 @@ package software.wings.delegate.service;
 
 import static java.util.Arrays.asList;
 import static java.util.stream.Collectors.groupingBy;
+import static java.util.stream.Collectors.joining;
 import static java.util.stream.Collectors.toList;
 import static software.wings.beans.command.CommandExecutionResult.CommandExecutionStatus.FAILURE;
 import static software.wings.beans.command.CommandExecutionResult.CommandExecutionStatus.RUNNING;
@@ -28,7 +29,6 @@ import java.util.Objects;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
 import java.util.concurrent.TimeUnit;
-import java.util.stream.Collectors;
 import javax.validation.executable.ValidateOnExecution;
 
 /**
@@ -85,7 +85,7 @@ public class DelegateLogServiceImpl implements DelegateLogService {
                                                      .findFirst()
                                                      .orElse(RUNNING);
 
-      String logText = commandLogs.stream().map(Log::getLogLine).collect(Collectors.joining("\n"));
+      String logText = commandLogs.stream().map(Log::getLogLine).collect(joining("\n"));
       Log log = commandLogs.get(0);
       log.setLogLine(logText);
       log.setLinesCount(commandLogs.size());
