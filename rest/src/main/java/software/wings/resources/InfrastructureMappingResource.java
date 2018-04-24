@@ -390,4 +390,34 @@ public class InfrastructureMappingResource {
       @QueryParam("region") String region, @PathParam("computeProviderId") String computeProviderId) {
     return new RestResponse<>(infrastructureMappingService.listCodeDeployDeploymentConfigs(computeProviderId, region));
   }
+
+  @GET
+  @Path("compute-providers/{computeProviderId}/pcf/organizations")
+  @Timed
+  @ExceptionMetered
+  @AuthRule(permissionType = ENV, action = READ)
+  public RestResponse<List<String>> getOrganizationsForPcf(
+      @QueryParam("appId") String appId, @PathParam("computeProviderId") String computeProviderId) {
+    return new RestResponse<>(infrastructureMappingService.listOrganizationsForPcf(appId, computeProviderId));
+  }
+
+  @GET
+  @Path("compute-providers/{computeProviderId}/pcf/spaces")
+  @Timed
+  @ExceptionMetered
+  @AuthRule(permissionType = ENV, action = READ)
+  public RestResponse<List<String>> getSpacesForPcf(@QueryParam("appId") String appId, @QueryParam("org") String org,
+      @PathParam("computeProviderId") String computeProviderId) {
+    return new RestResponse<>(infrastructureMappingService.listSpacesForPcf(appId, computeProviderId, org));
+  }
+
+  @GET
+  @Path("compute-providers/{computeProviderId}/pcf/routes")
+  @Timed
+  @ExceptionMetered
+  @AuthRule(permissionType = ENV, action = READ)
+  public RestResponse<List<String>> getRoutesForPcf(@QueryParam("appId") String appId, @QueryParam("org") String org,
+      @QueryParam("space") String space, @PathParam("computeProviderId") String computeProviderId) {
+    return new RestResponse<>(infrastructureMappingService.lisRouteMapsForPcf(appId, computeProviderId, org, space));
+  }
 }

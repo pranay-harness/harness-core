@@ -11,6 +11,7 @@ import software.wings.beans.command.ServiceCommand;
 import software.wings.beans.container.ContainerTask;
 import software.wings.beans.container.HelmChartSpecification;
 import software.wings.beans.container.KubernetesPayload;
+import software.wings.beans.container.PcfServiceSpecification;
 import software.wings.beans.container.UserDataSpecification;
 import software.wings.dl.PageRequest;
 import software.wings.dl.PageResponse;
@@ -371,13 +372,7 @@ public interface ServiceResourceService extends OwnedByApplication {
    */
   List<ServiceCommand> getServiceCommands(String appId, String serviceId, boolean withCommandDetails);
 
-  /**
-   * Gets service with service commands with command details
-   *
-   * @param appId
-   * @param serviceId
-   * @return
-   */
+  // Gets service with service commands with command details
   Service getServiceWithServiceCommands(String appId, String serviceId);
 
   @ValidationGroups(Create.class)
@@ -394,11 +389,18 @@ public interface ServiceResourceService extends OwnedByApplication {
 
   Service setHelmValueYaml(String appId, String serviceId, KubernetesPayload kubernetesPayload);
 
-  /**
-   * Get services excluding appContainer details
-   * @param appId
-   * @param serviceUuids
-   * @return
-   */
+  // Get services excluding appContainer details
   List<Service> getServicesByUuids(String appId, List<String> serviceUuids);
+
+  PcfServiceSpecification getPcfServiceSpecification(String appId, String serviceId);
+
+  PcfServiceSpecification createPcfServiceSpecification(PcfServiceSpecification pcfServiceSpecification);
+
+  void deletePCFServiceSpecification(String appId, String pCFServiceSpecificationId);
+
+  PcfServiceSpecification updatePcfServiceSpecification(PcfServiceSpecification pcfServiceSpecification);
+
+  PageResponse<PcfServiceSpecification> listPcfServiceSpecifications(PageRequest<PcfServiceSpecification> pageRequest);
+
+  PcfServiceSpecification getPcfServiceSpecificationById(String appId, String pcfServiceSpecificationId);
 }

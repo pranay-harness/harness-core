@@ -3,6 +3,8 @@ package software.wings.beans.command;
 import static software.wings.sm.states.HelmDeployState.HELM_COMMAND_NAME;
 import static software.wings.sm.states.JenkinsState.COMMAND_UNIT_NAME;
 import static software.wings.sm.states.KubernetesSteadyStateCheck.KUBERNETES_STEADY_STATE_CHECK_COMMAND_NAME;
+import static software.wings.sm.states.pcf.PcfDeployState.PCF_RESIZE_COMMAND;
+import static software.wings.sm.states.pcf.PcfSetupState.PCF_SETUP_COMMAND;
 
 import lombok.AllArgsConstructor;
 import lombok.Builder;
@@ -26,7 +28,9 @@ public class CommandUnitDetails {
     COMMAND("COMMAND"),
     JENKINS(COMMAND_UNIT_NAME),
     HELM(HELM_COMMAND_NAME),
-    KUBERNETES_STEADY_STATE_CHECK(KUBERNETES_STEADY_STATE_CHECK_COMMAND_NAME);
+    KUBERNETES_STEADY_STATE_CHECK(KUBERNETES_STEADY_STATE_CHECK_COMMAND_NAME),
+    PCF_SETUP(PCF_SETUP_COMMAND),
+    PCF_RESIZE(PCF_RESIZE_COMMAND);
     private String name;
 
     public String getName() {

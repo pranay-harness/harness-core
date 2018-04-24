@@ -684,6 +684,12 @@
                 <groupId>com.github.allbegray</groupId>
                 <artifactId>slack-api</artifactId>
                 <version>v1.3.0.RELEASE</version>
+                <exclusions>
+                    <exclusion>
+                        <groupId>org.asynchttpclient</groupId>
+                        <artifactId>async-http-client</artifactId>
+                    </exclusion>
+                </exclusions>
             </dependency>
 
             <dependency>
@@ -793,6 +799,12 @@
                 <artifactId>mongo-java-server</artifactId>
                 <!-- do not move to 1.7.0 - it seems to create intermittent issues with AuditServiceTests -->
                 <version>1.6.0</version>
+                <exclusions>
+                    <exclusion>
+                        <groupId>io.netty</groupId>
+                        <artifactId>netty-transport</artifactId>
+                    </exclusion>
+                </exclusions>
                 <scope>test</scope>
             </dependency>
 
@@ -987,6 +999,26 @@
                 <version>1.2.2</version>
             </dependency>
 
+            <dependency>
+                <groupId>org.cloudfoundry</groupId>
+                <artifactId>cloudfoundry-client-reactor</artifactId>
+                <version>3.8.0.RELEASE</version>
+            </dependency>
+            <dependency>
+                <groupId>org.cloudfoundry</groupId>
+                <artifactId>cloudfoundry-operations</artifactId>
+                <version>3.8.0.RELEASE</version>
+            </dependency>
+            <dependency>
+                <groupId>io.projectreactor</groupId>
+                <artifactId>reactor-core</artifactId>
+                <version>3.1.6.RELEASE</version>
+            </dependency>
+            <dependency>
+                <groupId>io.projectreactor.ipc</groupId>
+                <artifactId>reactor-netty</artifactId>
+                <version>0.7.6.RELEASE</version>
+            </dependency>
         </dependencies>
     </dependencyManagement>
     <build>

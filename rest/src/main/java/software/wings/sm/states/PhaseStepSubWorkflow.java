@@ -39,6 +39,8 @@ import software.wings.api.PhaseExecutionData;
 import software.wings.api.PhaseStepExecutionData;
 import software.wings.api.ServiceInstanceArtifactParam;
 import software.wings.api.ServiceInstanceIdsParam;
+import software.wings.api.pcf.PcfDeployExecutionSummary;
+import software.wings.api.pcf.PcfSetupContextElement;
 import software.wings.beans.Activity;
 import software.wings.beans.FailureStrategy;
 import software.wings.beans.PhaseStepType;
@@ -218,7 +220,7 @@ public class PhaseStepSubWorkflow extends SubWorkflowState {
                                  .previousActiveAutoscalers(commandStepExecutionSummary.getPreviousActiveAutoscalers())
                                  .build());
       }
-      case HELM_DEPLOY:
+      case HELM_DEPLOY: {
         Optional<StepExecutionSummary> first = phaseStepExecutionSummary.getStepExecutionSummaryList()
                                                    .stream()
                                                    .filter(s -> s instanceof HelmSetupExecutionSummary)
@@ -232,6 +234,18 @@ public class PhaseStepSubWorkflow extends SubWorkflowState {
                           .previousReleaseRevision(helmSetpExecutionSummary.getPrevVersion())
                           .newReleaseRevision(helmSetpExecutionSummary.getNewVersion())
                           .build());
+      }
+      case PCF_RESIZE: {
+        Optional<StepExecutionSummary> first = phaseStepExecutionSummary.getStepExecutionSummaryList()
+                                                   .stream()
+                                                   .filter(s -> s instanceof PcfDeployExecutionSummary)
+                                                   .findFirst();
+        if (!first.isPresent()) {
+          return null;
+        }
+        PcfDeployExecutionSummary pcfDeployExecutionSummary = (PcfDeployExecutionSummary) first.get();
+        return asList(pcfDeployExecutionSummary.getPcfDeployContextForRollback());
+      }
       default:
         unhandled(phaseStepType);
     }
@@ -308,6 +322,8 @@ public class PhaseStepSubWorkflow extends SubWorkflowState {
       case AMI_AUTOSCALING_GROUP_SETUP:
       case AMI_DEPLOY_AUTOSCALING_GROUP:
       case HELM_DEPLOY:
+      case PCF_SETUP:
+      case PCF_RESIZE:
         noop();
         break;
 
@@ -409,6 +425,15 @@ public class PhaseStepSubWorkflow extends SubWorkflowState {
               elementNotifyResponseData, InstanceElementListParam.class, "Missing InstanceElementListParam Element");
           executionResponse.setContextElements(Lists.newArrayList(instanceElementListParam));
         } else if (phaseStepType == PhaseStepType.HELM_DEPLOY) {
+          InstanceElementListParam instanceElementListParam = (InstanceElementListParam) notifiedElement(
+              elementNotifyResponseData, InstanceElementListParam.class, "Missing InstanceElementListParam Element");
+          executionResponse.setContextElements(Lists.newArrayList(instanceElementListParam));
+        } else if (phaseStepType == PhaseStepType.PCF_SETUP) {
+          PcfSetupContextElement pcfSetupContextElement = (PcfSetupContextElement) notifiedElement(
+              elementNotifyResponseData, PcfSetupContextElement.class, "Missing PcfSetupContextElement");
+          executionResponse.setContextElements(Lists.newArrayList(pcfSetupContextElement));
+          executionResponse.setNotifyElements(Lists.newArrayList(pcfSetupContextElement));
+        } else if (phaseStepType == PhaseStepType.PCF_RESIZE) {
           InstanceElementListParam instanceElementListParam = (InstanceElementListParam) notifiedElement(
               elementNotifyResponseData, InstanceElementListParam.class, "Missing InstanceElementListParam Element");
           executionResponse.setContextElements(Lists.newArrayList(instanceElementListParam));

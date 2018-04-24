@@ -25,6 +25,8 @@ ARTIFACT_TYPE:
       value: WAR
     - name: ZIP File
       value: ZIP
+    - name: Pivotal Cloud Foundry
+      value: PCF
     - name: Other
       value: OTHER
 
@@ -215,6 +217,8 @@ DEPLOYMENT_TYPE:
       value: AMI
     - name: Helm
       value: HELM
+    - name: PCF
+      value: PCF
     - name: Windows Remote Management (WinRM)
       value: WINRM
 
@@ -298,6 +302,8 @@ CLOUD_PROVIDERS:
       value: DIRECT
     - name: Kubernetes Cluster
       value: KUBERNETES_CLUSTER
+    - name: Pivotal Cloud Foundry
+      value: PCF
 
 FORM_FIELD_TO_ENTITY_TYPE:
     - name: envId

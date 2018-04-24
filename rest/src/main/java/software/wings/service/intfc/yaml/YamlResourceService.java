@@ -100,4 +100,7 @@ public interface YamlResourceService {
   RestResponse<YamlPayload> getConfigFileOverrideYaml(String accountId, String appId, ConfigFile configFile);
 
   RestResponse<YamlPayload> getNotificationGroup(String accountId, String notificationGroupUuid);
+
+  RestResponse<YamlPayload> getPcfServiceSpecification(
+      String accountId, String appId, String pcfServiceSpecificationId);
 }

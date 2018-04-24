@@ -16,6 +16,7 @@ import static software.wings.api.DeploymentType.AWS_LAMBDA;
 import static software.wings.api.DeploymentType.ECS;
 import static software.wings.api.DeploymentType.HELM;
 import static software.wings.api.DeploymentType.KUBERNETES;
+import static software.wings.api.DeploymentType.PCF;
 import static software.wings.api.DeploymentType.SSH;
 import static software.wings.beans.EntityType.ARTIFACT;
 import static software.wings.beans.EntityType.INFRASTRUCTURE_MAPPING;
@@ -42,6 +43,9 @@ import static software.wings.beans.PhaseStepType.DEPLOY_SERVICE;
 import static software.wings.beans.PhaseStepType.DE_PROVISION_NODE;
 import static software.wings.beans.PhaseStepType.DISABLE_SERVICE;
 import static software.wings.beans.PhaseStepType.ENABLE_SERVICE;
+import static software.wings.beans.PhaseStepType.PCF_RESIZE;
+import static software.wings.beans.PhaseStepType.PCF_ROUTE_SWAP;
+import static software.wings.beans.PhaseStepType.PCF_SETUP;
 import static software.wings.beans.PhaseStepType.PREPARE_STEPS;
 import static software.wings.beans.PhaseStepType.PROVISION_NODE;
 import static software.wings.beans.PhaseStepType.STOP_SERVICE;
@@ -83,6 +87,7 @@ import static software.wings.sm.StateType.KUBERNETES_DEPLOY_ROLLBACK;
 import static software.wings.sm.StateType.KUBERNETES_SETUP;
 import static software.wings.sm.StateType.KUBERNETES_SETUP_ROLLBACK;
 import static software.wings.sm.StateType.NEW_RELIC;
+import static software.wings.sm.StateType.PCF_ROLLBACK;
 import static software.wings.sm.StateType.PHASE;
 import static software.wings.sm.StateType.ROLLING_NODE_SELECT;
 import static software.wings.sm.StateType.values;
@@ -2036,7 +2041,8 @@ public class WorkflowServiceImpl implements WorkflowService, DataProvider {
       return requiredEntityTypes;
     }
 
-    if (asList(ECS, KUBERNETES, AWS_CODEDEPLOY, AWS_LAMBDA, AMI, HELM).contains(workflowPhase.getDeploymentType())) {
+    if (asList(ECS, KUBERNETES, AWS_CODEDEPLOY, AWS_LAMBDA, AMI, HELM, PCF)
+            .contains(workflowPhase.getDeploymentType())) {
       requiredEntityTypes.add(ARTIFACT);
       return requiredEntityTypes;
     }
@@ -2093,6 +2099,8 @@ public class WorkflowServiceImpl implements WorkflowService, DataProvider {
       generateNewWorkflowPhaseStepsForAWSLambda(appId, envId, workflowPhase);
     } else if (deploymentType == AMI) {
       generateNewWorkflowPhaseStepsForAWSAmi(appId, envId, workflowPhase, !serviceRepeat);
+    } else if (deploymentType == PCF) {
+      generateNewWorkflowPhaseStepsForPCF(appId, envId, workflowPhase, !serviceRepeat);
     } else {
       generateNewWorkflowPhaseStepsForSSH(appId, workflowPhase, orchestrationWorkflowType);
     }
@@ -2234,6 +2242,42 @@ public class WorkflowServiceImpl implements WorkflowService, DataProvider {
     workflowPhase.addPhaseStep(aPhaseStep(VERIFY_SERVICE, Constants.VERIFY_SERVICE)
                                    .addAllSteps(commandNodes(commandMap, CommandType.VERIFY))
                                    .build());
+
+    workflowPhase.addPhaseStep(aPhaseStep(WRAP_UP, Constants.WRAP_UP).build());
+  }
+
+  private void generateNewWorkflowPhaseStepsForPCF(
+      String appId, String envId, WorkflowPhase workflowPhase, boolean serviceSetupRequired) {
+    Service service = serviceResourceService.get(appId, workflowPhase.getServiceId());
+    Map<CommandType, List<Command>> commandMap = getCommandTypeListMap(service);
+
+    if (serviceSetupRequired) {
+      workflowPhase.addPhaseStep(
+          aPhaseStep(PCF_SETUP, Constants.SETUP)
+              .addStep(
+                  aGraphNode().withId(generateUuid()).withType(PCF_SETUP.name()).withName(Constants.PCF_SETUP).build())
+              .build());
+    }
+
+    workflowPhase.addPhaseStep(
+        aPhaseStep(PCF_RESIZE, Constants.DEPLOY)
+            .addStep(
+                aGraphNode().withId(generateUuid()).withType(PCF_RESIZE.name()).withName(Constants.PCF_RESIZE).build())
+            .build());
+
+    workflowPhase.addPhaseStep(aPhaseStep(VERIFY_SERVICE, Constants.VERIFY_SERVICE)
+                                   .addAllSteps(commandNodes(commandMap, CommandType.VERIFY))
+                                   .build());
+
+    if (workflowPhase.isBasicWorkflow()) {
+      workflowPhase.addPhaseStep(aPhaseStep(PCF_ROUTE_SWAP, Constants.PCF_ROUTE_SWAP)
+                                     .addStep(aGraphNode()
+                                                  .withId(generateUuid())
+                                                  .withType(PCF_ROUTE_SWAP.name())
+                                                  .withName(Constants.PCF_ROUTE_SWAP)
+                                                  .build())
+                                     .build());
+    }
 
     workflowPhase.addPhaseStep(aPhaseStep(WRAP_UP, Constants.WRAP_UP).build());
   }
@@ -2385,9 +2429,42 @@ public class WorkflowServiceImpl implements WorkflowService, DataProvider {
       return generateRollbackWorkflowPhaseForAwsAmi(workflowPhase);
     } else if (deploymentType == HELM) {
       return generateRollbackWorkflowPhaseForHelm(workflowPhase);
+    } else if (deploymentType == PCF) {
+      return generateRollbackWorkflowPhaseForPCF(workflowPhase);
     } else {
       return generateRollbackWorkflowPhaseForSSH(appId, workflowPhase, orchestrationWorkflowType);
     }
+  }
+
+  private WorkflowPhase generateRollbackWorkflowPhaseForPCF(WorkflowPhase workflowPhase) {
+    return aWorkflowPhase()
+        .withName(Constants.ROLLBACK_PREFIX + workflowPhase.getName())
+        .withRollback(true)
+        .withServiceId(workflowPhase.getServiceId())
+        .withComputeProviderId(workflowPhase.getComputeProviderId())
+        .withInfraMappingName(workflowPhase.getInfraMappingName())
+        .withPhaseNameForRollback(workflowPhase.getName())
+        .withDeploymentType(workflowPhase.getDeploymentType())
+        .withInfraMappingId(workflowPhase.getInfraMappingId())
+        .addPhaseStep(aPhaseStep(PhaseStepType.PCF_RESIZE, Constants.DEPLOY)
+                          .addStep(aGraphNode()
+                                       .withId(generateUuid())
+                                       .withType(PCF_ROLLBACK.name())
+                                       .withName(Constants.PCF_ROLLBACK)
+                                       .addProperty("rollback", true)
+                                       .build())
+                          .withPhaseStepNameForRollback(Constants.DEPLOY)
+                          .withStatusForRollback(ExecutionStatus.SUCCESS)
+                          .withRollback(true)
+                          .build())
+        // When we rolling back the verification steps the same criterie to run if deployment is needed should be used
+        .addPhaseStep(aPhaseStep(VERIFY_SERVICE, Constants.VERIFY_SERVICE)
+                          .withPhaseStepNameForRollback(Constants.DEPLOY_CONTAINERS)
+                          .withStatusForRollback(ExecutionStatus.SUCCESS)
+                          .withRollback(true)
+                          .build())
+        .addPhaseStep(aPhaseStep(WRAP_UP, Constants.WRAP_UP).build())
+        .build();
   }
 
   private WorkflowPhase generateRollbackWorkflowPhaseForHelm(WorkflowPhase workflowPhase) {

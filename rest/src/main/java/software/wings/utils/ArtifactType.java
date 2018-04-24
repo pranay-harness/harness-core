@@ -20,6 +20,8 @@ import static software.wings.beans.command.CommandUnitType.SCP;
 import static software.wings.beans.command.CommandUnitType.SETUP_ENV;
 import static software.wings.common.Constants.AMI_SETUP_COMMAND_NAME;
 import static software.wings.common.Constants.ASG_COMMAND_NAME;
+import static software.wings.common.Constants.PCF_RESIZE;
+import static software.wings.common.Constants.PCF_SETUP;
 
 import io.harness.data.structure.UUIDGenerator;
 import software.wings.beans.command.Command;
@@ -692,6 +694,57 @@ public enum ArtifactType {
                                        .withId(UUIDGenerator.graphIdGenerator("node"))
                                        .withName("Amazon Code Deploy")
                                        .withType(CODE_DEPLOY.name())
+                                       .build())
+                         .buildPipeline())
+          .build();
+    }
+  },
+
+  /**
+   * The constant AWS_CODEDEPLOY.
+   */
+  PCF {
+    private static final long serialVersionUID = 2932493038229748527L;
+
+    @Override
+    public boolean isInternal() {
+      return true;
+    }
+
+    @Override
+    public List<Command> getDefaultCommands() {
+      return asList(getPcfSetupCommand());
+    }
+
+    /**
+     * Get Code Deploy Command
+     * @return
+     */
+    private Command getPcfSetupCommand() {
+      return aCommand()
+          .withCommandType(CommandType.SETUP)
+          .withGraph(aGraph()
+                         .withGraphName(PCF_SETUP)
+                         .addNodes(aGraphNode()
+                                       .withOrigin(true)
+                                       .withId(UUIDGenerator.graphIdGenerator("node"))
+                                       .withName(PCF_SETUP)
+                                       .withType(PCF.name())
+                                       .build())
+                         .buildPipeline())
+          .build();
+    }
+
+    private Command getPcfDeployCommand() {
+      return aCommand()
+          .withCommandType(CommandType.RESIZE)
+          .withGraph(aGraph()
+                         .withGraphName(PCF_RESIZE)
+                         .addNodes(aGraphNode()
+                                       .withOrigin(true)
+                                       .withId(UUIDGenerator.graphIdGenerator("node"))
+                                       .withName(PCF_RESIZE)
+                                       .withType(PCF.name())
                                        .build())
                          .buildPipeline())
           .build();

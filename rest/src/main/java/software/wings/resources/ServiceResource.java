@@ -17,6 +17,7 @@ import software.wings.beans.command.ServiceCommand;
 import software.wings.beans.container.ContainerTask;
 import software.wings.beans.container.HelmChartSpecification;
 import software.wings.beans.container.KubernetesPayload;
+import software.wings.beans.container.PcfServiceSpecification;
 import software.wings.beans.container.UserDataSpecification;
 import software.wings.dl.PageRequest;
 import software.wings.dl.PageResponse;
@@ -366,6 +367,43 @@ public class ServiceResource {
     helmChartSpecification.setServiceId(serviceId);
     helmChartSpecification.setUuid(taskId);
     return new RestResponse<>(serviceResourceService.updateHelmChartSpecification(helmChartSpecification));
+  }
+
+  @POST
+  @Path("{serviceId}/pcfspecification")
+  @Timed
+  @ExceptionMetered
+  @AuthRule(permissionType = PermissionType.SERVICE, action = Action.UPDATE)
+  public RestResponse<PcfServiceSpecification> createPcfServiceSpecification(@QueryParam("appId") String appId,
+      @PathParam("serviceId") String serviceId, @NotNull PcfServiceSpecification pcfServiceSpecification) {
+    pcfServiceSpecification.setAppId(appId);
+    pcfServiceSpecification.setServiceId(serviceId);
+    return new RestResponse<>(serviceResourceService.createPcfServiceSpecification(pcfServiceSpecification));
+  }
+
+  @GET
+  @Path("{serviceId}/pcfspecification")
+  @Timed
+  @ExceptionMetered
+  public RestResponse<PageResponse<PcfServiceSpecification>> listPcfServiceSpecification(
+      @QueryParam("appId") String appId, @PathParam("serviceId") String serviceId,
+      @BeanParam PageRequest<PcfServiceSpecification> pageRequest) {
+    pageRequest.addFilter("appId", EQ, appId);
+    pageRequest.addFilter("serviceId", EQ, serviceId);
+    return new RestResponse<>(serviceResourceService.listPcfServiceSpecifications(pageRequest));
+  }
+
+  @PUT
+  @Path("{serviceId}/pcfspecification")
+  @Timed
+  @ExceptionMetered
+  public RestResponse<PcfServiceSpecification> updatePcfServiceSpecification(@QueryParam("appId") String appId,
+      @PathParam("serviceId") String serviceId, @PathParam("taskId") String taskId,
+      PcfServiceSpecification pcfServiceSpecification) {
+    pcfServiceSpecification.setAppId(appId);
+    pcfServiceSpecification.setServiceId(serviceId);
+    pcfServiceSpecification.setUuid(taskId);
+    return new RestResponse<>(serviceResourceService.updatePcfServiceSpecification(pcfServiceSpecification));
   }
 
   @POST

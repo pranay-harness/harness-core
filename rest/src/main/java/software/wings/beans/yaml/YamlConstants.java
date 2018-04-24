@@ -50,6 +50,7 @@ public interface YamlConstants {
   String ECS_CONTAINER_TASK_YAML_FILE_NAME = "Ecs";
   String KUBERNETES_CONTAINER_TASK_YAML_FILE_NAME = "Kubernetes";
   String HELM_CHART_YAML_FILE_NAME = "HelmChart";
+  String PCF_MANIFEST_YAML_FILE_NAME = "PcfManifest";
 
   String LINK_PREFIX = "link";
   String NODE_PREFIX = "node";

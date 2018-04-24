@@ -30,6 +30,7 @@ import software.wings.beans.command.Command;
 import software.wings.beans.command.ServiceCommand;
 import software.wings.beans.container.ContainerTask;
 import software.wings.beans.container.HelmChartSpecification;
+import software.wings.beans.container.PcfServiceSpecification;
 import software.wings.beans.container.UserDataSpecification;
 import software.wings.beans.yaml.YamlConstants;
 import software.wings.beans.yaml.YamlType;
@@ -301,6 +302,20 @@ public class YamlResourceServiceImpl implements YamlResourceService {
   }
 
   @Override
+  public RestResponse<YamlPayload> getPcfServiceSpecification(
+      String accountId, String appId, String pcfServiceSpecificationId) {
+    PcfServiceSpecification pcfServiceSpecification =
+        serviceResourceService.getPcfServiceSpecificationById(appId, pcfServiceSpecificationId);
+    String yamlFileName;
+    yamlFileName = YamlConstants.PCF_MANIFEST_YAML_FILE_NAME;
+
+    BaseYaml yaml = yamlHandlerFactory.getYamlHandler(YamlType.DEPLOYMENT_SPECIFICATION, DeploymentType.PCF.name())
+                        .toYaml(pcfServiceSpecification, appId);
+    return YamlHelper.getYamlRestResponse(
+        yamlGitSyncService, pcfServiceSpecification.getUuid(), accountId, yaml, yamlFileName + YAML_EXTENSION);
+  }
+
+  @Override
   public RestResponse<YamlPayload> getLambdaSpec(String accountId, String appId, String lambdaSpecId) {
     LambdaSpecification lambdaSpecification = serviceResourceService.getLambdaSpecificationById(appId, lambdaSpecId);
 
@@ -359,6 +374,7 @@ public class YamlResourceServiceImpl implements YamlResourceService {
       case AZURE:
       case KUBERNETES_CLUSTER:
       case PHYSICAL_DATA_CENTER:
+      case PCF:
         return yamlHandlerFactory.getYamlHandler(YamlType.CLOUD_PROVIDER, settingVariableType.name());
 
       // artifact servers - these don't have separate folders

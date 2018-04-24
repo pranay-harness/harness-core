@@ -7,6 +7,7 @@ import static org.mockito.MockitoAnnotations.initMocks;
 import static org.mockito.internal.util.reflection.Whitebox.setInternalState;
 import static software.wings.beans.AccountPlugin.Builder.anAccountPlugin;
 import static software.wings.beans.FeatureName.AZURE_SUPPORT;
+import static software.wings.beans.FeatureName.PIVOTAL_CLOUD_FOUNDRY_SUPPORT;
 import static software.wings.beans.PluginCategory.Artifact;
 import static software.wings.beans.PluginCategory.CloudProvider;
 import static software.wings.beans.PluginCategory.Collaboration;
@@ -32,6 +33,7 @@ import software.wings.beans.HostConnectionAttributes;
 import software.wings.beans.JenkinsConfig;
 import software.wings.beans.KubernetesClusterConfig;
 import software.wings.beans.NewRelicConfig;
+import software.wings.beans.PcfConfig;
 import software.wings.beans.PhysicalDataCenterConfig;
 import software.wings.beans.SlackConfig;
 import software.wings.beans.SplunkConfig;
@@ -55,6 +57,7 @@ public class PluginServiceTest {
 
   private String accountId = "ACCOUNT_ID";
   private String azureEnabledAccountId = "AZURE_ENABLED_ACCOUNT_ID";
+  private String pcfEnabledAccountId = "PCF_ENABLED_ACCOUNT_ID";
 
   //  @Inject private FeatureFlagService featureFlagService;
   @Mock private FeatureFlagService mockFeatureFlagService;
@@ -65,6 +68,11 @@ public class PluginServiceTest {
     setInternalState(pluginService, "featureFlagService", mockFeatureFlagService);
     when(mockFeatureFlagService.isEnabled(AZURE_SUPPORT, accountId)).thenReturn(false);
     when(mockFeatureFlagService.isEnabled(AZURE_SUPPORT, azureEnabledAccountId)).thenReturn(true);
+    when(mockFeatureFlagService.isEnabled(PIVOTAL_CLOUD_FOUNDRY_SUPPORT, azureEnabledAccountId)).thenReturn(false);
+
+    when(mockFeatureFlagService.isEnabled(PIVOTAL_CLOUD_FOUNDRY_SUPPORT, accountId)).thenReturn(false);
+    when(mockFeatureFlagService.isEnabled(PIVOTAL_CLOUD_FOUNDRY_SUPPORT, pcfEnabledAccountId)).thenReturn(true);
+    when(mockFeatureFlagService.isEnabled(AZURE_SUPPORT, pcfEnabledAccountId)).thenReturn(true);
   }
 
   @Test
@@ -250,6 +258,17 @@ public class PluginServiceTest {
                       .withType("AZURE")
                       .withPluginCategories(asList(CloudProvider))
                       .build());
+
+    assertThat(pluginService.getInstalledPlugins(pcfEnabledAccountId))
+        .hasSize(23)
+        .contains(anAccountPlugin()
+                      .withSettingClass(PcfConfig.class)
+                      .withAccountId(pcfEnabledAccountId)
+                      .withIsEnabled(true)
+                      .withDisplayName("Pivotal Cloud Foundry")
+                      .withType("PCF")
+                      .withPluginCategories(asList(CloudProvider))
+                      .build());
   }
 
   @Test
@@ -265,5 +284,11 @@ public class PluginServiceTest {
         .containsOnlyKeys("APP_DYNAMICS", "NEW_RELIC", "DYNA_TRACE", "JENKINS", "BAMBOO", "SMTP", "SLACK", "SPLUNK",
             "ELK", "LOGZ", "SUMO", "AWS", "GCP", "AZURE", "PHYSICAL_DATA_CENTER", "KUBERNETES_CLUSTER", "DOCKER",
             "HOST_CONNECTION_ATTRIBUTES", "ELB", "NEXUS", "ARTIFACTORY", "GIT");
+
+    assertThat(pluginService.getPluginSettingSchema(pcfEnabledAccountId))
+        .hasSize(23)
+        .containsOnlyKeys("APP_DYNAMICS", "NEW_RELIC", "DYNA_TRACE", "JENKINS", "BAMBOO", "SMTP", "SLACK", "SPLUNK",
+            "ELK", "LOGZ", "SUMO", "AWS", "GCP", "AZURE", "PHYSICAL_DATA_CENTER", "KUBERNETES_CLUSTER", "DOCKER",
+            "HOST_CONNECTION_ATTRIBUTES", "ELB", "NEXUS", "ARTIFACTORY", "PCF", "GIT");
   }
 }

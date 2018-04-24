@@ -11,7 +11,8 @@ public enum DeploymentType {
   HELM("Helm"),
   AWS_LAMBDA("AWS Lambda"),
   AMI("AMI"),
-  WINRM("Windows Remote Management (WinRM)");
+  WINRM("Windows Remote Management (WinRM)"),
+  PCF("Pivotal Cloud Foundry");
 
   private String displayName;
 

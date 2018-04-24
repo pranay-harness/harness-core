@@ -11,6 +11,7 @@ import software.wings.beans.ServiceInstanceSelectionParams;
 import software.wings.beans.infrastructure.Host;
 import software.wings.dl.PageRequest;
 import software.wings.dl.PageResponse;
+import software.wings.exception.WingsException;
 import software.wings.service.intfc.ownership.OwnedByEnvironment;
 import software.wings.settings.SettingValue.SettingVariableTypes;
 import software.wings.utils.validation.Create;
@@ -110,4 +111,10 @@ public interface InfrastructureMappingService extends OwnedByEnvironment {
   List<Host> listHosts(String appId, String infrastructureMappingId);
 
   List<InfrastructureMapping> getInfraStructureMappingsByUuids(String appId, List<String> infraMappingIds);
+  List<String> listOrganizationsForPcf(String appId, String computeProviderId) throws WingsException;
+
+  List<String> listSpacesForPcf(String appId, String computeProviderId, String organization) throws WingsException;
+
+  List<String> lisRouteMapsForPcf(String appId, String computeProviderId, String organization, String spaces)
+      throws WingsException;
 }
