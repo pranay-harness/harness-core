@@ -38,6 +38,7 @@ import software.wings.beans.DeploymentExecutionContext;
 import software.wings.beans.DirectKubernetesInfrastructureMapping;
 import software.wings.beans.EcsInfrastructureMapping;
 import software.wings.beans.Environment;
+import software.wings.beans.ErrorCode;
 import software.wings.beans.GcpKubernetesInfrastructureMapping;
 import software.wings.beans.ServiceTemplate;
 import software.wings.beans.SettingAttribute;
@@ -118,7 +119,7 @@ public class HelmDeployState extends State {
   /**
    * Instantiates a new state.
    *
-   * @param name      the name
+   * @param name the name
    */
   public HelmDeployState(String name) {
     super(name, StateType.HELM_DEPLOY.name());
@@ -132,12 +133,14 @@ public class HelmDeployState extends State {
   public ExecutionResponse execute(ExecutionContext context) {
     try {
       return executeInternal(context);
+    } catch (WingsException e) {
+      throw e;
     } catch (Exception e) {
       throw new InvalidRequestException(e.getMessage(), e);
     }
   }
 
-  protected ExecutionResponse executeInternal(ExecutionContext context) {
+  protected ExecutionResponse executeInternal(ExecutionContext context) throws InterruptedException {
     PhaseElement phaseElement = context.getContextElement(ContextElementType.PARAM, Constants.PHASE_PARAM);
     WorkflowStandardParams workflowStandardParams = context.getContextElement(ContextElementType.STANDARD);
 
@@ -199,7 +202,8 @@ public class HelmDeployState extends State {
   }
 
   protected void setNewAndPrevReleaseVersion(ExecutionContext context, Application app, String releaseName,
-      ContainerServiceParams containerServiceParams, HelmDeployStateExecutionData stateExecutionData) {
+      ContainerServiceParams containerServiceParams, HelmDeployStateExecutionData stateExecutionData)
+      throws InterruptedException {
     int prevVersion = getPreviousReleaseVersion(app.getUuid(), app.getAccountId(), releaseName, containerServiceParams);
 
     stateExecutionData.setReleaseOldVersion(prevVersion);
@@ -246,32 +250,33 @@ public class HelmDeployState extends State {
         .build();
   }
 
-  protected int getPreviousReleaseVersion(
-      String appId, String accountId, String releaseName, ContainerServiceParams containerServiceParams) {
+  protected int getPreviousReleaseVersion(String appId, String accountId, String releaseName,
+      ContainerServiceParams containerServiceParams) throws InterruptedException {
     int prevVersion = 0;
-    try {
-      HelmReleaseHistoryCommandRequest helmReleaseHistoryCommandRequest =
-          HelmReleaseHistoryCommandRequest.builder()
-              .releaseName(releaseName)
-              .containerServiceParams(containerServiceParams)
-              .build();
-      HelmCommandExecutionResponse helmCommandExecutionResponse =
-          delegateService.executeTask(aDelegateTask()
-                                          .withTaskType(TaskType.HELM_COMMAND_TASK)
-                                          .withParameters(new Object[] {helmReleaseHistoryCommandRequest})
-                                          .withAccountId(accountId)
-                                          .withAppId(appId)
-                                          .withAsync(false)
-                                          .build());
-      if (helmCommandExecutionResponse != null
-          && helmCommandExecutionResponse.getCommandExecutionStatus().equals(CommandExecutionStatus.SUCCESS)) {
-        List<ReleaseInfo> releaseInfoList =
-            ((HelmReleaseHistoryCommandResponse) helmCommandExecutionResponse.getHelmCommandResponse())
-                .getReleaseInfoList();
-        return Integer.parseInt(releaseInfoList.get(releaseInfoList.size() - 1).getRevision());
-      }
-    } catch (InterruptedException e) {
-      logger.error("Helm Release history fetch failed", e);
+    HelmReleaseHistoryCommandRequest helmReleaseHistoryCommandRequest =
+        HelmReleaseHistoryCommandRequest.builder()
+            .releaseName(releaseName)
+            .containerServiceParams(containerServiceParams)
+            .build();
+    HelmCommandExecutionResponse helmCommandExecutionResponse =
+        delegateService.executeTask(aDelegateTask()
+                                        .withTaskType(TaskType.HELM_COMMAND_TASK)
+                                        .withParameters(new Object[] {helmReleaseHistoryCommandRequest})
+                                        .withAccountId(accountId)
+                                        .withAppId(appId)
+                                        .withAsync(false)
+                                        .build());
+    if (helmCommandExecutionResponse != null
+        && helmCommandExecutionResponse.getCommandExecutionStatus().equals(CommandExecutionStatus.SUCCESS)) {
+      List<ReleaseInfo> releaseInfoList =
+          ((HelmReleaseHistoryCommandResponse) helmCommandExecutionResponse.getHelmCommandResponse())
+              .getReleaseInfoList();
+      prevVersion = isEmpty(releaseInfoList)
+          ? 0
+          : Integer.parseInt(releaseInfoList.get(releaseInfoList.size() - 1).getRevision());
+    } else {
+      throw new WingsException(ErrorCode.INVALID_REQUEST)
+          .addParam("message", helmCommandExecutionResponse.getErrorMessage());
     }
     return prevVersion;
   }

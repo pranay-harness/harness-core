@@ -86,8 +86,8 @@ public class ContainerDeploymentDelegateHelper {
       }
     } catch (Exception e) {
       logger.error("Error occurred in creating config file", e);
+      throw new WingsException(ErrorCode.INVALID_REQUEST).addParam("message", e.getMessage());
     }
-    return null;
   }
 
   private String getConfigFileContent(KubernetesConfig config, String clusterName) {

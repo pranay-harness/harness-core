@@ -13,12 +13,12 @@ import org.apache.commons.csv.CSVParser;
 import org.apache.commons.csv.CSVRecord;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import software.wings.beans.ErrorCode;
 import software.wings.beans.KubernetesConfig;
 import software.wings.beans.Log.LogLevel;
 import software.wings.beans.command.CommandExecutionResult.CommandExecutionStatus;
 import software.wings.beans.command.ExecutionLogCallback;
 import software.wings.cloudprovider.ContainerInfo;
-import software.wings.exception.InvalidRequestException;
 import software.wings.exception.WingsException;
 import software.wings.helpers.ext.container.ContainerDeploymentDelegateHelper;
 import software.wings.helpers.ext.helm.HelmClientImpl.HelmCliResponse;
@@ -134,7 +134,7 @@ public class HelmDeployServiceImpl implements HelmDeployService {
       throws InterruptedException, IOException, TimeoutException {
     HelmCliResponse cliResponse = helmClient.getClientAndServerVersion(helmCommandRequest);
     if (cliResponse.getCommandExecutionStatus().equals(CommandExecutionStatus.FAILURE)) {
-      throw new InvalidRequestException("Helm client not installed or not initialized");
+      throw new WingsException(ErrorCode.INVALID_REQUEST, cliResponse.getOutput());
     }
     return new HelmCommandResponse(cliResponse.getCommandExecutionStatus(), cliResponse.getOutput());
   }
@@ -161,23 +161,19 @@ public class HelmDeployServiceImpl implements HelmDeployService {
 
   @Override
   public HelmReleaseHistoryCommandResponse releaseHistory(HelmReleaseHistoryCommandRequest helmCommandRequest) {
+    List<ReleaseInfo> releaseInfoList = new ArrayList<>();
     try {
       HelmCliResponse helmCliResponse =
           helmClient.releaseHistory(helmCommandRequest.getKubeConfigLocation(), helmCommandRequest.getReleaseName());
-      List<ReleaseInfo> releaseInfoList =
+      releaseInfoList =
           parseHelmReleaseCommandOutput(helmCliResponse.getOutput(), helmCommandRequest.getHelmCommandType());
-      return HelmReleaseHistoryCommandResponse.builder()
-          .commandExecutionStatus(helmCliResponse.getCommandExecutionStatus())
-          .output(helmCliResponse.getOutput())
-          .releaseInfoList(releaseInfoList)
-          .build();
     } catch (Exception e) {
       logger.error("Helm list releases failed", e);
-      return HelmReleaseHistoryCommandResponse.builder()
-          .commandExecutionStatus(CommandExecutionStatus.FAILURE)
-          .output(e.getMessage())
-          .build();
     }
+    return HelmReleaseHistoryCommandResponse.builder()
+        .commandExecutionStatus(CommandExecutionStatus.SUCCESS)
+        .releaseInfoList(releaseInfoList)
+        .build();
   }
 
   private List<ReleaseInfo> parseHelmReleaseCommandOutput(String listReleaseOutput, HelmCommandType helmCommandType)
