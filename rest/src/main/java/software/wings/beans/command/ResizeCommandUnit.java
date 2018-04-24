@@ -27,8 +27,8 @@ public class ResizeCommandUnit extends ContainerResizeCommandUnit {
   }
 
   @Override
-  protected List<ContainerInfo> executeResize(ContextData contextData, int totalDesiredCount,
-      ContainerServiceData containerServiceData, ExecutionLogCallback executionLogCallback) {
+  protected List<ContainerInfo> executeResize(
+      ContextData contextData, ContainerServiceData containerServiceData, ExecutionLogCallback executionLogCallback) {
     EcsResizeParams resizeParams = (EcsResizeParams) contextData.resizeParams;
     return awsClusterService.resizeCluster(resizeParams.getRegion(), contextData.settingAttribute,
         contextData.encryptedDataDetails, resizeParams.getClusterName(), containerServiceData.getName(),
