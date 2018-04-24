@@ -14,6 +14,7 @@ import software.wings.delegatetasks.GitCommandTask;
 import software.wings.delegatetasks.HelmCommandTask;
 import software.wings.delegatetasks.HttpTask;
 import software.wings.delegatetasks.JenkinsTask;
+import software.wings.delegatetasks.KubernetesSteadyStateCheckTask;
 import software.wings.delegatetasks.NewRelicDataCollectionTask;
 import software.wings.delegatetasks.NewRelicDeploymentMarkerTask;
 import software.wings.delegatetasks.NewRelicMetricNameCollectionTask;
@@ -42,6 +43,7 @@ import software.wings.delegatetasks.validation.GitValidation;
 import software.wings.delegatetasks.validation.HostValidationValidation;
 import software.wings.delegatetasks.validation.HttpValidation;
 import software.wings.delegatetasks.validation.JenkinsValidation;
+import software.wings.delegatetasks.validation.KubernetesSteadyStateCheckValidation;
 import software.wings.delegatetasks.validation.LogzValidation;
 import software.wings.delegatetasks.validation.NewRelicValidation;
 import software.wings.delegatetasks.validation.NexusValidation;
@@ -172,7 +174,9 @@ public enum TaskType {
       TaskGroup.DYNA_TRACE, ServiceImplDelegateTask.class, DynaTraceValidation.class),
   DYNA_TRACE_METRIC_DATA_COLLECTION_TASK(
       TaskGroup.DYNA_TRACE, DynaTraceDataCollectionTask.class, DynaTraceValidation.class),
-  HELM_COMMAND_TASK(TaskGroup.HELM, HelmCommandTask.class, AlwaysTrueValidation.class);
+  HELM_COMMAND_TASK(TaskGroup.HELM, HelmCommandTask.class, AlwaysTrueValidation.class),
+  KUBERNETES_STEADY_STATE_CHECK_TASK(
+      TaskGroup.CONTAINER, KubernetesSteadyStateCheckTask.class, KubernetesSteadyStateCheckValidation.class);
 
   private final TaskGroup taskGroup;
   private final Class<? extends DelegateRunnableTask> delegateRunnableTaskClass;

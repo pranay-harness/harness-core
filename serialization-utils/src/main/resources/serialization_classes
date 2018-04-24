@@ -308,5 +308,6 @@ software.wings.beans.command.InitPowerShellCommandUnit, 5272
 software.wings.beans.command.CleanupPowerShellCommandUnit, 5273
 software.wings.beans.command.ShellCommandExecutionContext, 5274
 software.wings.service.impl.elk.ElkQueryType, 5275
-
-
+software.wings.beans.container.KubernetesSteadyStateCheckParams, 5276
+software.wings.sm.states.KubernetesSteadyStateCheckResponse, 5277
+software.wings.api.KubernetesSteadyStateCheckExecutionData, 5278

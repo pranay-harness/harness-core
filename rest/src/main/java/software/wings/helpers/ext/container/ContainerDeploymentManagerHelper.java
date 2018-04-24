@@ -2,7 +2,9 @@ package software.wings.helpers.ext.container;
 
 import static software.wings.api.HostElement.Builder.aHostElement;
 import static software.wings.api.InstanceElement.Builder.anInstanceElement;
+import static software.wings.api.ServiceTemplateElement.Builder.aServiceTemplateElement;
 import static software.wings.beans.ErrorCode.INVALID_REQUEST;
+import static software.wings.beans.SettingAttribute.Builder.aSettingAttribute;
 import static software.wings.beans.artifact.ArtifactStreamType.ACR;
 import static software.wings.beans.artifact.ArtifactStreamType.ARTIFACTORY;
 import static software.wings.beans.artifact.ArtifactStreamType.DOCKER;
@@ -15,15 +17,25 @@ import com.google.inject.Inject;
 import com.google.inject.Singleton;
 
 import io.harness.data.structure.EmptyPredicate;
+import org.mongodb.morphia.Key;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import software.wings.annotation.Encryptable;
 import software.wings.api.HostElement;
 import software.wings.api.InstanceElement;
+import software.wings.api.PhaseElement;
+import software.wings.api.ServiceElement;
 import software.wings.api.ServiceTemplateElement;
 import software.wings.beans.AwsConfig;
 import software.wings.beans.AzureConfig;
+import software.wings.beans.AzureKubernetesInfrastructureMapping;
+import software.wings.beans.ContainerInfrastructureMapping;
+import software.wings.beans.DirectKubernetesInfrastructureMapping;
 import software.wings.beans.DockerConfig;
 import software.wings.beans.EcrConfig;
+import software.wings.beans.EcsInfrastructureMapping;
+import software.wings.beans.GcpKubernetesInfrastructureMapping;
+import software.wings.beans.ServiceTemplate;
 import software.wings.beans.SettingAttribute;
 import software.wings.beans.artifact.AcrArtifactStream;
 import software.wings.beans.artifact.Artifact;
@@ -39,19 +51,27 @@ import software.wings.beans.container.ImageDetails;
 import software.wings.beans.container.ImageDetails.ImageDetailsBuilder;
 import software.wings.cloudprovider.ContainerInfo;
 import software.wings.cloudprovider.ContainerInfo.Status;
+import software.wings.common.Constants;
 import software.wings.exception.WingsException;
 import software.wings.helpers.ext.azure.AzureHelperService;
 import software.wings.helpers.ext.ecr.EcrClassicService;
 import software.wings.helpers.ext.ecr.EcrService;
+import software.wings.security.encryption.EncryptedDataDetail;
 import software.wings.service.impl.AwsHelperService;
+import software.wings.service.impl.ContainerServiceParams;
 import software.wings.service.intfc.ArtifactStreamService;
+import software.wings.service.intfc.ServiceTemplateService;
 import software.wings.service.intfc.SettingsService;
 import software.wings.service.intfc.security.EncryptionService;
 import software.wings.service.intfc.security.SecretManager;
 import software.wings.settings.SettingValue;
 import software.wings.settings.SettingValue.SettingVariableTypes;
+import software.wings.sm.ContextElementType;
+import software.wings.sm.ExecutionContext;
 import software.wings.sm.ExecutionStatus;
 import software.wings.sm.InstanceStatusSummary;
+import software.wings.sm.WorkflowStandardParams;
+import software.wings.utils.Validator;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -69,6 +89,8 @@ public class ContainerDeploymentManagerHelper {
   @Inject private AzureHelperService azureHelperService;
   @Inject private EcrService ecrService;
   @Inject private EcrClassicService ecrClassicService;
+  @Inject private ServiceTemplateService serviceTemplateService;
+
   private static final Logger logger = LoggerFactory.getLogger(ContainerDeploymentManagerHelper.class);
 
   public List<InstanceStatusSummary> getInstanceStatusSummaryFromContainerInfoList(
@@ -95,6 +117,68 @@ public class ContainerDeploymentManagerHelper {
       }
     }
     return instanceStatusSummaries;
+  }
+
+  public List<InstanceStatusSummary> getInstanceStatusSummaries(
+      ExecutionContext context, List<ContainerInfo> containerInfos) {
+    PhaseElement phaseElement = context.getContextElement(ContextElementType.PARAM, Constants.PHASE_PARAM);
+    ServiceElement serviceElement = phaseElement.getServiceElement();
+    String serviceId = phaseElement.getServiceElement().getUuid();
+    String appId = context.getAppId();
+    WorkflowStandardParams workflowStandardParams = context.getContextElement(ContextElementType.STANDARD);
+    String envId = workflowStandardParams.getEnv().getUuid();
+
+    Key<ServiceTemplate> serviceTemplateKey =
+        serviceTemplateService.getTemplateRefKeysByService(appId, serviceId, envId).get(0);
+    ServiceTemplateElement serviceTemplateElement = aServiceTemplateElement()
+                                                        .withUuid(serviceTemplateKey.getId().toString())
+                                                        .withServiceElement(serviceElement)
+                                                        .build();
+
+    return getInstanceStatusSummaryFromContainerInfoList(containerInfos, serviceTemplateElement);
+  }
+
+  public ContainerServiceParams getContainerServiceParams(
+      ContainerInfrastructureMapping containerInfraMapping, String containerServiceName) {
+    String clusterName = containerInfraMapping.getClusterName();
+    SettingAttribute settingAttribute;
+    String namespace = null;
+    String region = null;
+    String resourceGroup = null;
+    String subscriptionId = null;
+    if (containerInfraMapping instanceof DirectKubernetesInfrastructureMapping) {
+      DirectKubernetesInfrastructureMapping directInfraMapping =
+          (DirectKubernetesInfrastructureMapping) containerInfraMapping;
+      settingAttribute = (directInfraMapping.getComputeProviderType().equals(SettingVariableTypes.DIRECT.name()))
+          ? aSettingAttribute().withValue(directInfraMapping.createKubernetesConfig()).build()
+          : settingsService.get(directInfraMapping.getComputeProviderSettingId());
+      namespace = directInfraMapping.getNamespace();
+    } else {
+      settingAttribute = settingsService.get(containerInfraMapping.getComputeProviderSettingId());
+      if (containerInfraMapping instanceof GcpKubernetesInfrastructureMapping) {
+        namespace = ((GcpKubernetesInfrastructureMapping) containerInfraMapping).getNamespace();
+      } else if (containerInfraMapping instanceof AzureKubernetesInfrastructureMapping) {
+        subscriptionId = ((AzureKubernetesInfrastructureMapping) containerInfraMapping).getSubscriptionId();
+        resourceGroup = ((AzureKubernetesInfrastructureMapping) containerInfraMapping).getResourceGroup();
+        namespace = ((AzureKubernetesInfrastructureMapping) containerInfraMapping).getNamespace();
+      } else if (containerInfraMapping instanceof EcsInfrastructureMapping) {
+        region = ((EcsInfrastructureMapping) containerInfraMapping).getRegion();
+      }
+    }
+    Validator.notNullCheck("SettingAttribute", settingAttribute);
+
+    List<EncryptedDataDetail> encryptionDetails = secretManager.getEncryptionDetails(
+        (Encryptable) settingAttribute.getValue(), containerInfraMapping.getAppId(), null);
+    return ContainerServiceParams.builder()
+        .settingAttribute(settingAttribute)
+        .containerServiceName(containerServiceName)
+        .encryptionDetails(encryptionDetails)
+        .clusterName(clusterName)
+        .namespace(namespace)
+        .region(region)
+        .subscriptionId(subscriptionId)
+        .resourceGroup(resourceGroup)
+        .build();
   }
 
   public ImageDetails fetchArtifactDetails(Artifact artifact, String appId, String workflowExecutionId) {
