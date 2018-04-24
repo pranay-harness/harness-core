@@ -55,6 +55,7 @@ import software.wings.beans.artifact.ArtifactStream;
 import software.wings.beans.command.ServiceCommand;
 import software.wings.beans.container.ContainerTask;
 import software.wings.beans.container.HelmChartSpecification;
+import software.wings.beans.container.PcfServiceSpecification;
 import software.wings.beans.container.UserDataSpecification;
 import software.wings.beans.defaults.Defaults;
 import software.wings.beans.yaml.Change.ChangeType;
@@ -622,6 +623,20 @@ public class YamlDirectoryServiceImpl implements YamlDirectoryService {
                 userDataSpecification.getAppId(), service.getUuid(), userDataSpecFileName, UserDataSpecification.class,
                 deploymentSpecsPath.clone().add(userDataSpecFileName), yamlGitSyncService, Type.DEPLOYMENT_SPEC));
           }
+        } else if (service.getArtifactType() == ArtifactType.PCF) {
+          FolderNode deploymentSpecsFolder = new FolderNode(accountId, DEPLOYMENT_SPECIFICATION_FOLDER,
+              PcfServiceSpecification.class, deploymentSpecsPath, service.getAppId(), yamlGitSyncService);
+          serviceFolder.addChild(deploymentSpecsFolder);
+
+          PcfServiceSpecification pcfServiceSpecification =
+              serviceResourceService.getPcfServiceSpecification(service.getAppId(), service.getUuid());
+          if (pcfServiceSpecification != null) {
+            String pcfServiceSpecificationFileName = YamlConstants.PCF_MANIFEST_YAML_FILE_NAME + YAML_EXTENSION;
+            deploymentSpecsFolder.addChild(new ServiceLevelYamlNode(accountId, pcfServiceSpecification.getUuid(),
+                pcfServiceSpecification.getAppId(), service.getUuid(), pcfServiceSpecificationFileName,
+                PcfServiceSpecification.class, deploymentSpecsPath.clone().add(pcfServiceSpecificationFileName),
+                yamlGitSyncService, Type.DEPLOYMENT_SPEC));
+          }
         }
 
         // ------------------- END DEPLOYMENT SPECIFICATION SECTION -----------------------
@@ -832,6 +847,7 @@ public class YamlDirectoryServiceImpl implements YamlDirectoryService {
         accountId, cloudProvidersFolder, SettingVariableTypes.KUBERNETES_CLUSTER, directoryPath.clone());
     doCloudProviderType(
         accountId, cloudProvidersFolder, SettingVariableTypes.PHYSICAL_DATA_CENTER, directoryPath.clone());
+    doCloudProviderType(accountId, cloudProvidersFolder, SettingVariableTypes.PCF, directoryPath.clone());
 
     return cloudProvidersFolder;
   }
@@ -1035,6 +1051,11 @@ public class YamlDirectoryServiceImpl implements YamlDirectoryService {
 
   @Override
   public String getRootPathByHelmChartSpecification(Service service, HelmChartSpecification helmChartSpecification) {
+    return getRootPathByService(service) + PATH_DELIMITER + DEPLOYMENT_SPECIFICATION_FOLDER;
+  }
+
+  @Override
+  public String getRootPathByPcfServiceSpecification(Service service, PcfServiceSpecification pcfServiceSpecification) {
     return getRootPathByService(service) + PATH_DELIMITER + DEPLOYMENT_SPECIFICATION_FOLDER;
   }
 

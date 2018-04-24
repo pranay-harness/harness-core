@@ -186,6 +186,8 @@ public interface WingsTestConstants {
 
   String ECS_SERVICE_NAME = "ECS_SERVICE_NAME";
 
+  String PCF_SERVICE_NAME = "PCF_SERVICE_NAME";
+
   String PHASE_STEP = "PHASE_STEP";
 
   String TRIGGER_ID = "TRIGGER_ID";

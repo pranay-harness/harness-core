@@ -78,6 +78,7 @@ import software.wings.beans.container.ContainerTask;
 import software.wings.beans.container.ContainerTaskType;
 import software.wings.beans.container.HelmChartSpecification;
 import software.wings.beans.container.KubernetesPayload;
+import software.wings.beans.container.PcfServiceSpecification;
 import software.wings.beans.container.UserDataSpecification;
 import software.wings.beans.yaml.Change.ChangeType;
 import software.wings.common.NotificationMessageResolver.NotificationMessageType;
@@ -88,6 +89,7 @@ import software.wings.exception.InvalidRequestException;
 import software.wings.exception.WingsException;
 import software.wings.scheduler.PruneEntityJob;
 import software.wings.scheduler.QuartzScheduler;
+import software.wings.service.ServiceHelper;
 import software.wings.service.impl.yaml.YamlChangeSetHelper;
 import software.wings.service.intfc.AppService;
 import software.wings.service.intfc.ArtifactService;
@@ -156,6 +158,7 @@ public class ServiceResourceServiceImpl implements ServiceResourceService, DataP
   @Inject private WorkflowService workflowService;
   @Inject private YamlChangeSetHelper yamlChangeSetHelper;
   @Inject private StencilPostProcessor stencilPostProcessor;
+  @Inject private ServiceHelper serviceHelper;
   @Inject @Named("JobScheduler") private QuartzScheduler jobScheduler;
 
   /**
@@ -188,7 +191,7 @@ public class ServiceResourceServiceImpl implements ServiceResourceService, DataP
     setKeyWords(service);
     Service savedService =
         Validator.duplicateCheck(() -> wingsPersistence.saveAndGet(Service.class, service), "name", service.getName());
-    if (createDefaultCommands) {
+    if (createDefaultCommands && !skipDefaultCommands(service)) {
       savedService = addDefaultCommands(savedService, !createdFromYaml);
     }
 
@@ -206,6 +209,14 @@ public class ServiceResourceServiceImpl implements ServiceResourceService, DataP
     }
 
     return savedService;
+  }
+
+  private boolean skipDefaultCommands(Service service) {
+    if (ArtifactType.PCF.equals(service.getArtifactType())) {
+      return true;
+    }
+
+    return false;
   }
 
   @Override
@@ -725,6 +736,58 @@ public class ServiceResourceServiceImpl implements ServiceResourceService, DataP
     return wingsPersistence.query(HelmChartSpecification.class, pageRequest);
   }
 
+  @Override
+  public PcfServiceSpecification createPcfServiceSpecification(PcfServiceSpecification pcfServiceSpecification) {
+    return upsertPcfServiceSpecification(pcfServiceSpecification, true);
+  }
+
+  private PcfServiceSpecification upsertPcfServiceSpecification(
+      PcfServiceSpecification pcfServiceSpecification, boolean isCreate) {
+    boolean exist = exist(pcfServiceSpecification.getAppId(), pcfServiceSpecification.getServiceId());
+    if (!exist) {
+      throw new WingsException(INVALID_REQUEST).addParam("message", "Service doesn't exist");
+    }
+
+    serviceHelper.addPlaceholderTexts(pcfServiceSpecification);
+    PcfServiceSpecification persistedPcfServiceSpecification =
+        wingsPersistence.saveAndGet(PcfServiceSpecification.class, pcfServiceSpecification);
+
+    String appId = persistedPcfServiceSpecification.getAppId();
+    String accountId = appService.getAccountIdByAppId(appId);
+    Service service = get(appId, persistedPcfServiceSpecification.getServiceId());
+
+    if (isCreate) {
+      yamlChangeSetHelper.pcfServiceSpecificationYamlChangeAsync(
+          accountId, service, persistedPcfServiceSpecification, ChangeType.ADD);
+    } else {
+      yamlChangeSetHelper.pcfServiceSpecificationYamlChangeAsync(
+          accountId, service, persistedPcfServiceSpecification, ChangeType.MODIFY);
+    }
+
+    return persistedPcfServiceSpecification;
+  }
+
+  @Override
+  public void deletePCFServiceSpecification(String appId, String pCFServiceSpecificationId) {
+    wingsPersistence.delete(PcfServiceSpecification.class, appId, pCFServiceSpecificationId);
+  }
+
+  @Override
+  public PcfServiceSpecification updatePcfServiceSpecification(PcfServiceSpecification pcfServiceSpecification) {
+    return upsertPcfServiceSpecification(pcfServiceSpecification, false);
+  }
+
+  /**
+   * Get PcfServiceSpecification (manifest.yml content)
+   * @param pageRequest
+   * @return
+   */
+  @Override
+  public PageResponse<PcfServiceSpecification> listPcfServiceSpecifications(
+      PageRequest<PcfServiceSpecification> pageRequest) {
+    return wingsPersistence.query(PcfServiceSpecification.class, pageRequest);
+  }
+
   /**
    * {@inheritDoc}
    */
@@ -1078,8 +1141,21 @@ public class ServiceResourceServiceImpl implements ServiceResourceService, DataP
   }
 
   @Override
+  public PcfServiceSpecification getPcfServiceSpecification(String appId, String serviceId) {
+    return wingsPersistence.createQuery(PcfServiceSpecification.class)
+        .filter("appId", appId)
+        .filter("serviceId", serviceId)
+        .get();
+  }
+
+  @Override
   public HelmChartSpecification getHelmChartSpecificationById(String appId, String helmChartSpecificationId) {
     return wingsPersistence.get(HelmChartSpecification.class, appId, helmChartSpecificationId);
+  }
+
+  @Override
+  public PcfServiceSpecification getPcfServiceSpecificationById(String appId, String pcfServiceSpecificationId) {
+    return wingsPersistence.get(PcfServiceSpecification.class, appId, pcfServiceSpecificationId);
   }
 
   @Override

@@ -18,6 +18,7 @@ import software.wings.delegatetasks.KubernetesSteadyStateCheckTask;
 import software.wings.delegatetasks.NewRelicDataCollectionTask;
 import software.wings.delegatetasks.NewRelicDeploymentMarkerTask;
 import software.wings.delegatetasks.NewRelicMetricNameCollectionTask;
+import software.wings.delegatetasks.PcfCommandTask;
 import software.wings.delegatetasks.ServiceImplDelegateTask;
 import software.wings.delegatetasks.ShellScriptTask;
 import software.wings.delegatetasks.SplunkDataCollectionTask;
@@ -176,7 +177,8 @@ public enum TaskType {
       TaskGroup.DYNA_TRACE, DynaTraceDataCollectionTask.class, DynaTraceValidation.class),
   HELM_COMMAND_TASK(TaskGroup.HELM, HelmCommandTask.class, AlwaysTrueValidation.class),
   KUBERNETES_STEADY_STATE_CHECK_TASK(
-      TaskGroup.CONTAINER, KubernetesSteadyStateCheckTask.class, KubernetesSteadyStateCheckValidation.class);
+      TaskGroup.CONTAINER, KubernetesSteadyStateCheckTask.class, KubernetesSteadyStateCheckValidation.class),
+  PCF_COMMAND_TASK(TaskGroup.PCF, PcfCommandTask.class, AlwaysTrueValidation.class);
 
   private final TaskGroup taskGroup;
   private final Class<? extends DelegateRunnableTask> delegateRunnableTaskClass;

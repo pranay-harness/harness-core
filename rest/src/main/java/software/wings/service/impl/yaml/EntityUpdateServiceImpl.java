@@ -23,6 +23,7 @@ import software.wings.beans.artifact.ArtifactStream;
 import software.wings.beans.command.ServiceCommand;
 import software.wings.beans.container.ContainerTask;
 import software.wings.beans.container.HelmChartSpecification;
+import software.wings.beans.container.PcfServiceSpecification;
 import software.wings.beans.container.UserDataSpecification;
 import software.wings.beans.yaml.Change.ChangeType;
 import software.wings.beans.yaml.GitFileChange;
@@ -175,6 +176,25 @@ public class EntityUpdateServiceImpl implements EntityUpdateService {
 
     return createGitFileChange(accountId,
         yamlDirectoryService.getRootPathByHelmChartSpecification(service, helmChartSpecification), name, yaml,
+        changeType, false);
+  }
+
+  @Override
+  public GitFileChange getPcfServiceSpecification(
+      String accountId, Service service, PcfServiceSpecification pcfServiceSpecification, ChangeType changeType) {
+    String yaml = null;
+    if (!changeType.equals(ChangeType.DELETE)) {
+      yaml = yamlResourceService
+                 .getPcfServiceSpecification(
+                     accountId, pcfServiceSpecification.getAppId(), pcfServiceSpecification.getUuid())
+                 .getResource()
+                 .getYaml();
+    }
+
+    String name = YamlConstants.PCF_MANIFEST_YAML_FILE_NAME;
+
+    return createGitFileChange(accountId,
+        yamlDirectoryService.getRootPathByPcfServiceSpecification(service, pcfServiceSpecification), name, yaml,
         changeType, false);
   }
 

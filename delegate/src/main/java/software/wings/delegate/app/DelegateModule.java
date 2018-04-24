@@ -63,6 +63,10 @@ import software.wings.helpers.ext.jenkins.JenkinsFactory;
 import software.wings.helpers.ext.jenkins.JenkinsImpl;
 import software.wings.helpers.ext.nexus.NexusService;
 import software.wings.helpers.ext.nexus.NexusServiceImpl;
+import software.wings.helpers.ext.pcf.PcfClient;
+import software.wings.helpers.ext.pcf.PcfClientImpl;
+import software.wings.helpers.ext.pcf.PcfDeploymentManager;
+import software.wings.helpers.ext.pcf.PcfDeploymentManagerImpl;
 import software.wings.service.EcrClassicBuildServiceImpl;
 import software.wings.service.impl.AcrBuildServiceImpl;
 import software.wings.service.impl.AmazonS3BuildServiceImpl;
@@ -235,6 +239,8 @@ public class DelegateModule extends AbstractModule {
     bind(MessageService.class)
         .toInstance(
             new MessageServiceImpl(Clock.systemUTC(), MessengerType.DELEGATE, DelegateApplication.getProcessId()));
+    bind(PcfClient.class).to(PcfClientImpl.class);
+    bind(PcfDeploymentManager.class).to(PcfDeploymentManagerImpl.class);
 
     MapBinder<String, CommandUnitExecutorService> serviceCommandExecutorServiceMapBinder =
         MapBinder.newMapBinder(binder(), String.class, CommandUnitExecutorService.class);

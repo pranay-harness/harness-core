@@ -131,6 +131,20 @@ public class ActivityServiceImpl implements ActivityService {
                      .commandUnitType(activity.getCommandUnitType())
                      .build());
           break;
+        case PCF_SETUP:
+          rv.add(CommandUnitDetails.builder()
+                     .commandExecutionStatus(CommandExecutionStatus.translateExecutionStatus(activity.getStatus()))
+                     .name(activity.getCommandUnitType().getName())
+                     .commandUnitType(activity.getCommandUnitType())
+                     .build());
+          break;
+        case PCF_RESIZE:
+          rv.add(CommandUnitDetails.builder()
+                     .commandExecutionStatus(CommandExecutionStatus.translateExecutionStatus(activity.getStatus()))
+                     .name(activity.getCommandUnitType().getName())
+                     .commandUnitType(activity.getCommandUnitType())
+                     .build());
+          break;
         default:
           throw new IllegalStateException("Invalid command type: " + activity.getCommandUnitType());
       }

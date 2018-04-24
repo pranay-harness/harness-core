@@ -14,13 +14,16 @@ import static software.wings.api.DeploymentType.AWS_LAMBDA;
 import static software.wings.api.DeploymentType.ECS;
 import static software.wings.api.DeploymentType.HELM;
 import static software.wings.api.DeploymentType.KUBERNETES;
+import static software.wings.api.DeploymentType.PCF;
 import static software.wings.api.DeploymentType.SSH;
 import static software.wings.api.DeploymentType.WINRM;
 import static software.wings.beans.DelegateTask.SyncTaskContext.Builder.aContext;
+import static software.wings.beans.ErrorCode.INVALID_ARGUMENT;
 import static software.wings.beans.ErrorCode.INVALID_REQUEST;
 import static software.wings.beans.FeatureName.AZURE_SUPPORT;
 import static software.wings.beans.FeatureName.ECS_CREATE_CLUSTER;
 import static software.wings.beans.FeatureName.KUBERNETES_CREATE_CLUSTER;
+import static software.wings.beans.FeatureName.PIVOTAL_CLOUD_FOUNDRY_SUPPORT;
 import static software.wings.beans.SettingAttribute.Builder.aSettingAttribute;
 import static software.wings.beans.infrastructure.Host.Builder.aHost;
 import static software.wings.dl.PageRequest.PageRequestBuilder.aPageRequest;
@@ -67,6 +70,8 @@ import software.wings.beans.HostValidationRequest;
 import software.wings.beans.HostValidationResponse;
 import software.wings.beans.InfrastructureMapping;
 import software.wings.beans.InfrastructureMappingType;
+import software.wings.beans.PcfConfig;
+import software.wings.beans.PcfInfrastructureMapping;
 import software.wings.beans.PhysicalInfrastructureMapping;
 import software.wings.beans.PhysicalInfrastructureMappingBase;
 import software.wings.beans.PhysicalInfrastructureMappingWinRm;
@@ -165,6 +170,7 @@ public class InfrastructureMappingServiceImpl implements InfrastructureMappingSe
   @Inject private SecretManager secretManager;
   @Inject private ExpressionEvaluator evaluator;
   @Inject private YamlChangeSetHelper yamlChangeSetHelper;
+  @Inject private PcfHelperService pcfHelperService;
 
   @Inject @Named("JobScheduler") private QuartzScheduler jobScheduler;
 
@@ -259,6 +265,10 @@ public class InfrastructureMappingServiceImpl implements InfrastructureMappingSe
 
     if (infraMapping instanceof PhysicalInfrastructureMappingWinRm) {
       validatePhysicalInfrastructureMappingWinRm((PhysicalInfrastructureMappingWinRm) infraMapping);
+    }
+
+    if (infraMapping instanceof PcfInfrastructureMapping) {
+      validatePcfInfrastructureMapping((PcfInfrastructureMapping) infraMapping);
     }
 
     InfrastructureMapping savedInfraMapping = duplicateCheck(
@@ -609,6 +619,10 @@ public class InfrastructureMappingServiceImpl implements InfrastructureMappingSe
         keyValuePairs.put("targetGroupArns", awsAmiInfrastructureMapping.getTargetGroupArns());
       }
       keyValuePairs.put("hostNameConvention", awsAmiInfrastructureMapping.getHostNameConvention());
+    } else if (infrastructureMapping instanceof PcfInfrastructureMapping) {
+      PcfInfrastructureMapping pcfInfrastructureMapping = (PcfInfrastructureMapping) infrastructureMapping;
+      validatePcfInfrastructureMapping(pcfInfrastructureMapping);
+      handlePcfInfraMapping(keyValuePairs, pcfInfrastructureMapping);
     }
     if (computeProviderSetting != null) {
       keyValuePairs.put("computeProviderName", computeProviderSetting.getName());
@@ -618,6 +632,18 @@ public class InfrastructureMappingServiceImpl implements InfrastructureMappingSe
     InfrastructureMapping updatedInfraMapping = get(infrastructureMapping.getAppId(), infrastructureMapping.getUuid());
     yamlChangeSetHelper.updateYamlChangeAsync(updatedInfraMapping, savedInfraMapping, savedInfraMapping.getAccountId());
     return updatedInfraMapping;
+  }
+
+  private void handlePcfInfraMapping(
+      Map<String, Object> keyValuePairs, PcfInfrastructureMapping pcfInfrastructureMapping) {
+    keyValuePairs.put("organization", pcfInfrastructureMapping.getOrganization());
+    keyValuePairs.put("space", pcfInfrastructureMapping.getSpace());
+    keyValuePairs.put("tempRouteMap",
+        pcfInfrastructureMapping.getTempRouteMap() == null ? Collections.EMPTY_LIST
+                                                           : pcfInfrastructureMapping.getTempRouteMap());
+    keyValuePairs.put("routeMaps",
+        pcfInfrastructureMapping.getRouteMaps() == null ? Collections.EMPTY_LIST
+                                                        : pcfInfrastructureMapping.getRouteMaps());
   }
 
   private void handleEcsInfraMapping(
@@ -651,6 +677,16 @@ public class InfrastructureMappingServiceImpl implements InfrastructureMappingSe
 
     settingAttribute = settingsService.get(infraMapping.getWinRmConnectionAttributes());
     Validator.notNullCheck("WinRmConnectionAttributes", settingAttribute);
+  }
+
+  private void validatePcfInfrastructureMapping(PcfInfrastructureMapping infraMapping) {
+    if (StringUtils.isBlank(infraMapping.getOrganization()) || StringUtils.isBlank(infraMapping.getSpace())) {
+      logger.error("For PCFInfraMapping, Org and Space value cant be null");
+      throw new WingsException(ErrorCode.INVALID_ARGUMENT).addParam("args", "Host names must be unique");
+    }
+
+    SettingAttribute settingAttribute = settingsService.get(infraMapping.getComputeProviderSettingId());
+    Validator.notNullCheck("ComputeProviderSettingAttribute", settingAttribute);
   }
 
   private void validateAwsLambdaInfrastructureMapping(AwsLambdaInfraStructureMapping lambdaInfraStructureMapping) {
@@ -994,6 +1030,39 @@ public class InfrastructureMappingServiceImpl implements InfrastructureMappingSe
       return infrastructureProvider.listVPCs(computeProviderSetting, region);
     }
     return emptyList();
+  }
+
+  public List<String> listOrganizationsForPcf(String appId, String computeProviderId) {
+    SettingAttribute computeProviderSetting = settingsService.get(computeProviderId);
+    notNullCheck("Compute Provider", computeProviderSetting);
+
+    if (computeProviderSetting == null || !(computeProviderSetting.getValue() instanceof PcfConfig)) {
+      throw new WingsException(INVALID_ARGUMENT).addParam("args", "InvalidConfiguration");
+    }
+    return pcfHelperService.listOrganizations((PcfConfig) computeProviderSetting.getValue());
+  }
+
+  @Override
+  public List<String> listSpacesForPcf(String appId, String computeProviderId, String organization) {
+    SettingAttribute computeProviderSetting = settingsService.get(computeProviderId);
+    notNullCheck("Compute Provider", computeProviderSetting);
+
+    if (computeProviderSetting == null || !(computeProviderSetting.getValue() instanceof PcfConfig)) {
+      throw new WingsException(INVALID_ARGUMENT).addParam("args", "InvalidConfiguration");
+    }
+    return pcfHelperService.listSpaces((PcfConfig) computeProviderSetting.getValue(), organization);
+  }
+
+  @Override
+  public List<String> lisRouteMapsForPcf(String appId, String computeProviderId, String organization, String spaces) {
+    SettingAttribute computeProviderSetting = settingsService.get(computeProviderId);
+    notNullCheck("Compute Provider", computeProviderSetting);
+
+    if (computeProviderSetting == null || !(computeProviderSetting.getValue() instanceof PcfConfig)) {
+      throw new WingsException(INVALID_ARGUMENT).addParam("args", "InvalidConfiguration");
+    }
+
+    return pcfHelperService.listRoutes((PcfConfig) computeProviderSetting.getValue(), organization, spaces);
   }
 
   @Override
@@ -1399,9 +1468,15 @@ public class InfrastructureMappingServiceImpl implements InfrastructureMappingSe
       infraTypes.put(AMI, asList(SettingVariableTypes.AWS));
     } else if (artifactType == ArtifactType.IIS) {
       infraTypes.put(WINRM, asList(SettingVariableTypes.PHYSICAL_DATA_CENTER));
+    } else if (artifactType == ArtifactType.PCF) {
+      String accountId = appService.getAccountIdByAppId(appId);
+      if (featureFlagService.isEnabled(PIVOTAL_CLOUD_FOUNDRY_SUPPORT, accountId)) {
+        infraTypes.put(PCF, asList(SettingVariableTypes.PCF));
+      }
     } else {
       infraTypes.put(SSH, asList(SettingVariableTypes.PHYSICAL_DATA_CENTER, SettingVariableTypes.AWS));
     }
+
     return infraTypes;
   }
 

@@ -14,6 +14,7 @@ import software.wings.beans.artifact.ArtifactStream;
 import software.wings.beans.command.ServiceCommand;
 import software.wings.beans.container.ContainerTask;
 import software.wings.beans.container.HelmChartSpecification;
+import software.wings.beans.container.PcfServiceSpecification;
 import software.wings.beans.container.UserDataSpecification;
 import software.wings.beans.yaml.GitFileChange;
 import software.wings.security.UserPermissionInfo;
@@ -95,4 +96,6 @@ public interface YamlDirectoryService {
   String getRootPathByNotificationGroup(NotificationGroup notificationGroup);
 
   String getRootPathBySettingAttribute(SettingAttribute settingAttribute);
+
+  String getRootPathByPcfServiceSpecification(Service service, PcfServiceSpecification pcfServiceSpecification);
 }

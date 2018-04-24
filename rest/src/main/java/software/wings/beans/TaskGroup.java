@@ -30,5 +30,6 @@ public enum TaskGroup {
   GIT,
   CONTAINER,
   AMI,
-  HELM
+  HELM,
+  PCF
 }

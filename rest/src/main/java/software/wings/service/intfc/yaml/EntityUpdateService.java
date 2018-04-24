@@ -14,6 +14,7 @@ import software.wings.beans.artifact.ArtifactStream;
 import software.wings.beans.command.ServiceCommand;
 import software.wings.beans.container.ContainerTask;
 import software.wings.beans.container.HelmChartSpecification;
+import software.wings.beans.container.PcfServiceSpecification;
 import software.wings.beans.container.UserDataSpecification;
 import software.wings.beans.yaml.Change.ChangeType;
 import software.wings.beans.yaml.GitFileChange;
@@ -68,4 +69,7 @@ public interface EntityUpdateService {
 
   GitFileChange getSettingAttributeGitSyncFile(
       String accountId, SettingAttribute settingAttribute, ChangeType changeType);
+
+  GitFileChange getPcfServiceSpecification(
+      String accountId, Service service, PcfServiceSpecification pcfServiceSpecification, ChangeType changeType);
 }

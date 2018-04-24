@@ -184,6 +184,11 @@ public abstract class SettingValue implements ExtensionPoint {
     AZURE("Microsoft Azure"),
 
     /**
+     * Pivotal Cloud Foundry
+     */
+    PCF("Pivotal Cloud Foundry"),
+
+    /**
      * Direct connection setting variable types.
      */
     DIRECT("Direct Kubernetes"),

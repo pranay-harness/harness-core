@@ -59,7 +59,9 @@ public enum InfrastructureMappingType implements InfrastructureMappingDescriptor
   AZURE_KUBERNETES(AzureKubernetesInfrastructureMapping.class, "AZURE_KUBERNETES", StencilCategory.OTHERS, 8),
 
   PHYSICAL_DATA_CENTER_WINRM(
-      PhysicalInfrastructureMappingWinRm.class, "PHYSICAL_DATA_CENTER_WINRM", StencilCategory.OTHERS, 9);
+      PhysicalInfrastructureMappingWinRm.class, "PHYSICAL_DATA_CENTER_WINRM", StencilCategory.OTHERS, 9),
+
+  PCF(PcfInfrastructureMapping.class, "PCF", StencilCategory.OTHERS, 10);
 
   private static final String stencilsPath = "/templates/inframapping/";
   private static final String uiSchemaSuffix = "-InfraMappingUISchema.json";

@@ -572,6 +572,27 @@ public class YamlResource {
   }
 
   @GET
+  @Path("/pcfservicespecifications/{pcfservicespecificationId}")
+  @Timed
+  @ExceptionMetered
+  public RestResponse<YamlPayload> getPcfservicespecificationId(@QueryParam("appId") String appId,
+      @QueryParam("accountId") String accountId,
+      @PathParam("pcfservicespecificationId") String pcfservicespecificationId) {
+    return yamlResourceService.getPcfServiceSpecification(accountId, appId, pcfservicespecificationId);
+  }
+
+  @PUT
+  @Path("/pcfservicespecifications/{pcfservicespecificationId}")
+  @Timed
+  @ExceptionMetered
+  @AuthRule(permissionType = PermissionType.SERVICE, action = Action.UPDATE, skipAuth = true)
+  public RestResponse<Base> updatePcfServiceSpecification(@QueryParam("appId") String appId,
+      @QueryParam("accountId") String accountId, YamlPayload yamlPayload,
+      @QueryParam("deleteEnabled") @DefaultValue("false") boolean deleteEnabled) {
+    return yamlService.update(yamlPayload, accountId);
+  }
+
+  @GET
   @Path("/helm-charts/{helmChartSpecificationId}")
   @Timed
   @ExceptionMetered

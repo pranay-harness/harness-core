@@ -24,6 +24,7 @@ import software.wings.beans.artifact.ArtifactStream;
 import software.wings.beans.command.ServiceCommand;
 import software.wings.beans.container.ContainerTask;
 import software.wings.beans.container.HelmChartSpecification;
+import software.wings.beans.container.PcfServiceSpecification;
 import software.wings.beans.container.UserDataSpecification;
 import software.wings.beans.yaml.Change.ChangeType;
 import software.wings.beans.yaml.GitFileChange;
@@ -107,10 +108,23 @@ public class YamlChangeSetHelper {
         () -> helmChartSpecificationYamlChange(accountId, service, helmChartSpecification, changeType));
   }
 
+  public void pcfServiceSpecificationYamlChangeAsync(
+      String accountId, Service service, PcfServiceSpecification pcfServiceSpecification, ChangeType changeType) {
+    executorService.submit(
+        () -> pcfServiceSpecificationYamlChange(accountId, service, pcfServiceSpecification, changeType));
+  }
+
   public void helmChartSpecificationYamlChange(
       String accountId, Service service, HelmChartSpecification helmChartSpecification, ChangeType changeType) {
     GitFileChange gitSyncFile =
         entityUpdateService.getHelmChartGitSyncFile(accountId, service, helmChartSpecification, changeType);
+    queueYamlChangeSet(accountId, gitSyncFile);
+  }
+
+  public void pcfServiceSpecificationYamlChange(
+      String accountId, Service service, PcfServiceSpecification pcfServiceSpecification, ChangeType changeType) {
+    GitFileChange gitSyncFile =
+        entityUpdateService.getPcfServiceSpecification(accountId, service, pcfServiceSpecification, changeType);
     queueYamlChangeSet(accountId, gitSyncFile);
   }
 

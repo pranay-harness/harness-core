@@ -19,6 +19,7 @@ import java.util.Map;
  */
 public class InstanceElementListParam implements ContextElement {
   private List<InstanceElement> instanceElements;
+  private List<PcfInstanceElement> pcfInstanceElements;
 
   @Override
   public ContextElementType getElementType() {
@@ -48,6 +49,14 @@ public class InstanceElementListParam implements ContextElement {
     this.instanceElements = instanceElements;
   }
 
+  public List<PcfInstanceElement> getPcfInstanceElements() {
+    return pcfInstanceElements;
+  }
+
+  public void setPcfInstanceElements(List<PcfInstanceElement> pcfInstanceElements) {
+    this.pcfInstanceElements = pcfInstanceElements;
+  }
+
   @Override
   public ContextElement cloneMin() {
     return this;
@@ -55,6 +64,7 @@ public class InstanceElementListParam implements ContextElement {
 
   public static final class InstanceElementListParamBuilder {
     private List<InstanceElement> instanceElements;
+    private List<PcfInstanceElement> pcfInstanceElements;
 
     private InstanceElementListParamBuilder() {}
 
@@ -67,9 +77,15 @@ public class InstanceElementListParam implements ContextElement {
       return this;
     }
 
+    public InstanceElementListParamBuilder withPcfInstanceElements(List<PcfInstanceElement> pcfInstanceElements) {
+      this.pcfInstanceElements = pcfInstanceElements;
+      return this;
+    }
+
     public InstanceElementListParam build() {
       InstanceElementListParam instanceElementListParam = new InstanceElementListParam();
       instanceElementListParam.setInstanceElements(instanceElements);
+      instanceElementListParam.setPcfInstanceElements(pcfInstanceElements);
       return instanceElementListParam;
     }
   }

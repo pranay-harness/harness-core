@@ -100,6 +100,10 @@ import software.wings.sm.states.SplunkV2State;
 import software.wings.sm.states.SubWorkflowState;
 import software.wings.sm.states.SumoLogicAnalysisState;
 import software.wings.sm.states.WaitState;
+import software.wings.sm.states.pcf.PcfDeployState;
+import software.wings.sm.states.pcf.PcfRollbackState;
+import software.wings.sm.states.pcf.PcfRouteSwapState;
+import software.wings.sm.states.pcf.PcfSetupState;
 import software.wings.stencils.OverridingStencil;
 import software.wings.stencils.StencilCategory;
 import software.wings.utils.JsonUtils;
@@ -356,7 +360,19 @@ public enum StateType implements StateTypeDescriptor {
   HELM_ROLLBACK(HelmRollbackState.class, COMMANDS, Constants.HELM_ROLLBACK,
       Lists.newArrayList(InfrastructureMappingType.DIRECT_KUBERNETES, InfrastructureMappingType.AZURE_KUBERNETES,
           InfrastructureMappingType.GCP_KUBERNETES),
-      asList(PhaseStepType.HELM_DEPLOY), ORCHESTRATION_STENCILS);
+      asList(PhaseStepType.HELM_DEPLOY), ORCHESTRATION_STENCILS),
+
+  PCF_SETUP(PcfSetupState.class, COMMANDS, Constants.PCF_SETUP, Lists.newArrayList(InfrastructureMappingType.PCF),
+      asList(PhaseStepType.PCF_SETUP), ORCHESTRATION_STENCILS),
+
+  PCF_RESIZE(PcfDeployState.class, COMMANDS, Constants.PCF_RESIZE, Lists.newArrayList(InfrastructureMappingType.PCF),
+      asList(PhaseStepType.PCF_RESIZE), ORCHESTRATION_STENCILS),
+
+  PCF_ROLLBACK(PcfRollbackState.class, COMMANDS, Constants.PCF_ROLLBACK,
+      Lists.newArrayList(InfrastructureMappingType.PCF), asList(PhaseStepType.PCF_RESIZE), ORCHESTRATION_STENCILS),
+
+  PCF_ROUTE_SWAP(PcfRouteSwapState.class, COMMANDS, Constants.PCF_ROUTE_SWAP,
+      Lists.newArrayList(InfrastructureMappingType.PCF), asList(PhaseStepType.PCF_ROUTE_SWAP), ORCHESTRATION_STENCILS);
 
   private static final String stencilsPath = "/templates/stencils/";
   private static final String uiSchemaSuffix = "-UISchema.json";

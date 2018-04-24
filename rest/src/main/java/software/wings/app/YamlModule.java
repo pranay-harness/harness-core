@@ -8,6 +8,7 @@ import static software.wings.beans.InfrastructureMappingType.AWS_SSH;
 import static software.wings.beans.InfrastructureMappingType.AZURE_KUBERNETES;
 import static software.wings.beans.InfrastructureMappingType.DIRECT_KUBERNETES;
 import static software.wings.beans.InfrastructureMappingType.GCP_KUBERNETES;
+import static software.wings.beans.InfrastructureMappingType.PCF;
 import static software.wings.beans.InfrastructureMappingType.PHYSICAL_DATA_CENTER_SSH;
 import static software.wings.beans.InfrastructureMappingType.PHYSICAL_DATA_CENTER_WINRM;
 import static software.wings.beans.OrchestrationWorkflowType.BASIC;
@@ -87,6 +88,7 @@ import software.wings.service.impl.yaml.handler.deploymentspec.DeploymentSpecifi
 import software.wings.service.impl.yaml.handler.deploymentspec.container.EcsContainerTaskYamlHandler;
 import software.wings.service.impl.yaml.handler.deploymentspec.container.HelmChartSpecificationYamlHandler;
 import software.wings.service.impl.yaml.handler.deploymentspec.container.KubernetesContainerTaskYamlHandler;
+import software.wings.service.impl.yaml.handler.deploymentspec.container.PcfServiceSpecificationYamlHandler;
 import software.wings.service.impl.yaml.handler.deploymentspec.lambda.LambdaSpecificationYamlHandler;
 import software.wings.service.impl.yaml.handler.deploymentspec.userdata.UserDataSpecificationYamlHandler;
 import software.wings.service.impl.yaml.handler.inframapping.AwsAmiInfraMappingYamlHandler;
@@ -98,6 +100,7 @@ import software.wings.service.impl.yaml.handler.inframapping.DirectKubernetesInf
 import software.wings.service.impl.yaml.handler.inframapping.EcsInfraMappingYamlHandler;
 import software.wings.service.impl.yaml.handler.inframapping.GcpKubernetesInfraMappingYamlHandler;
 import software.wings.service.impl.yaml.handler.inframapping.InfraMappingYamlHandler;
+import software.wings.service.impl.yaml.handler.inframapping.PcfInfraMappingYamlHandler;
 import software.wings.service.impl.yaml.handler.inframapping.PhysicalInfraMappingWinRmYamlHandler;
 import software.wings.service.impl.yaml.handler.inframapping.PhysicalInfraMappingYamlHandler;
 import software.wings.service.impl.yaml.handler.setting.artifactserver.ArtifactServerYamlHandler;
@@ -112,6 +115,7 @@ import software.wings.service.impl.yaml.handler.setting.cloudprovider.AzureConfi
 import software.wings.service.impl.yaml.handler.setting.cloudprovider.CloudProviderYamlHandler;
 import software.wings.service.impl.yaml.handler.setting.cloudprovider.GcpConfigYamlHandler;
 import software.wings.service.impl.yaml.handler.setting.cloudprovider.KubernetesClusterConfigYamlHandler;
+import software.wings.service.impl.yaml.handler.setting.cloudprovider.PcfConfigYamlHandler;
 import software.wings.service.impl.yaml.handler.setting.cloudprovider.PhysicalDataCenterConfigYamlHandler;
 import software.wings.service.impl.yaml.handler.setting.collaborationprovider.CollaborationProviderYamlHandler;
 import software.wings.service.impl.yaml.handler.setting.collaborationprovider.SlackConfigYamlHandler;
@@ -189,6 +193,7 @@ public class YamlModule extends AbstractModule {
         .to(PhysicalInfraMappingYamlHandler.class);
     infraMappingYamlHelperMapBinder.addBinding(PHYSICAL_DATA_CENTER_WINRM.name())
         .to(PhysicalInfraMappingWinRmYamlHandler.class);
+    infraMappingYamlHelperMapBinder.addBinding(PCF.name()).to(PcfInfraMappingYamlHandler.class);
 
     MapBinder<String, DeploymentSpecificationYamlHandler> deploymentSpecYamlHelperMapBinder =
         MapBinder.newMapBinder(binder(), String.class, DeploymentSpecificationYamlHandler.class);
@@ -197,6 +202,8 @@ public class YamlModule extends AbstractModule {
         .to(KubernetesContainerTaskYamlHandler.class);
     deploymentSpecYamlHelperMapBinder.addBinding(DeploymentType.HELM.name())
         .to(HelmChartSpecificationYamlHandler.class);
+    deploymentSpecYamlHelperMapBinder.addBinding(DeploymentType.PCF.name())
+        .to(PcfServiceSpecificationYamlHandler.class);
     deploymentSpecYamlHelperMapBinder.addBinding(DeploymentType.AWS_LAMBDA.name())
         .to(LambdaSpecificationYamlHandler.class);
     deploymentSpecYamlHelperMapBinder.addBinding(DeploymentType.AMI.name()).to(UserDataSpecificationYamlHandler.class);
@@ -247,6 +254,7 @@ public class YamlModule extends AbstractModule {
         .to(KubernetesClusterConfigYamlHandler.class);
     cloudProviderYamlHelperMapBinder.addBinding(SettingVariableTypes.PHYSICAL_DATA_CENTER.name())
         .to(PhysicalDataCenterConfigYamlHandler.class);
+    cloudProviderYamlHelperMapBinder.addBinding(SettingVariableTypes.PCF.name()).to(PcfConfigYamlHandler.class);
 
     MapBinder<String, WorkflowYamlHandler> workflowYamlHelperMapBinder =
         MapBinder.newMapBinder(binder(), String.class, WorkflowYamlHandler.class);

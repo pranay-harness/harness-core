@@ -4,6 +4,7 @@ import static java.util.Arrays.asList;
 import static java.util.stream.Collectors.toMap;
 import static software.wings.beans.AccountPlugin.Builder.anAccountPlugin;
 import static software.wings.beans.FeatureName.AZURE_SUPPORT;
+import static software.wings.beans.FeatureName.PIVOTAL_CLOUD_FOUNDRY_SUPPORT;
 import static software.wings.beans.PluginCategory.Artifact;
 import static software.wings.beans.PluginCategory.CloudProvider;
 import static software.wings.beans.PluginCategory.Collaboration;
@@ -35,6 +36,7 @@ import software.wings.beans.HostConnectionAttributes;
 import software.wings.beans.JenkinsConfig;
 import software.wings.beans.KubernetesClusterConfig;
 import software.wings.beans.NewRelicConfig;
+import software.wings.beans.PcfConfig;
 import software.wings.beans.PhysicalDataCenterConfig;
 import software.wings.beans.SlackConfig;
 import software.wings.beans.SplunkConfig;
@@ -256,6 +258,18 @@ public class PluginServiceImpl implements PluginService {
                          .withType("AZURE")
                          .withPluginCategories(asList(CloudProvider))
                          .withUiSchema(readUiSchema("AZURE"))
+                         .build());
+    }
+
+    if (featureFlagService.isEnabled(PIVOTAL_CLOUD_FOUNDRY_SUPPORT, accountId)) {
+      pluginList.add(anAccountPlugin()
+                         .withSettingClass(PcfConfig.class)
+                         .withAccountId(accountId)
+                         .withIsEnabled(true)
+                         .withDisplayName("Pivotal Cloud Foundry")
+                         .withType("PCF")
+                         .withPluginCategories(asList(CloudProvider))
+                         .withUiSchema(readUiSchema("PCF"))
                          .build());
     }
 

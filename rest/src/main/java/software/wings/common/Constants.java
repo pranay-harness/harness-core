@@ -206,6 +206,20 @@ public interface Constants {
    * The constant ECS_SERVICE_SETUP.
    */
   String ECS_SERVICE_SETUP = "ECS Service Setup";
+
+  String SETUP = "Setup";
+
+  String DEPLOY = "Deploy";
+
+  String PCF_SETUP = "PCF Service Setup";
+
+  String PCF_RESIZE = "PCF Resize Service";
+
+  String ROLLBACK = "Rollback";
+
+  String PCF_ROLLBACK = "PCF Service Rollback";
+
+  String PCF_ROUTE_SWAP = "Switch Route";
   /**
    * The constant KUBERNETES_SERVICE_SETUP.
    */

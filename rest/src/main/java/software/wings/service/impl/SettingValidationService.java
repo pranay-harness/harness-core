@@ -3,6 +3,7 @@ package software.wings.service.impl;
 import static java.util.Collections.emptyList;
 import static software.wings.beans.DelegateTask.SyncTaskContext.Builder.aContext;
 import static software.wings.beans.FeatureName.AZURE_SUPPORT;
+import static software.wings.beans.FeatureName.PIVOTAL_CLOUD_FOUNDRY_SUPPORT;
 import static software.wings.exception.WingsException.USER;
 import static software.wings.utils.WingsReflectionUtils.getEncryptedRefField;
 
@@ -28,6 +29,7 @@ import software.wings.beans.GcpConfig;
 import software.wings.beans.JenkinsConfig;
 import software.wings.beans.KubernetesClusterConfig;
 import software.wings.beans.NewRelicConfig;
+import software.wings.beans.PcfConfig;
 import software.wings.beans.SettingAttribute;
 import software.wings.beans.SplunkConfig;
 import software.wings.beans.SumoConfig;
@@ -67,6 +69,7 @@ public class SettingValidationService {
   @Inject private DelegateProxyFactory delegateProxyFactory;
   @Inject private AwsHelperService awsHelperService;
   @Inject private GcpHelperService gcpHelperService;
+  @Inject private PcfHelperService pcfHelperService;
   @Inject private AzureHelperService azureHelperService;
   @Inject private BuildSourceService buildSourceService;
   @Inject private NewRelicService newRelicService;
@@ -107,6 +110,8 @@ public class SettingValidationService {
       }
       azureHelperService.validateAzureAccountCredential(((AzureConfig) settingValue).getClientId(),
           ((AzureConfig) settingValue).getTenantId(), new String(((AzureConfig) settingValue).getKey()));
+    } else if (settingValue instanceof PcfConfig) {
+      validatePcfConfig(settingAttribute, (PcfConfig) settingValue);
     } else if (settingValue instanceof AwsConfig) {
       awsHelperService.validateAwsAccountCredential(
           ((AwsConfig) settingValue).getAccessKey(), ((AwsConfig) settingValue).getSecretKey());
@@ -159,6 +164,15 @@ public class SettingValidationService {
     }
 
     return true;
+  }
+
+  private void validatePcfConfig(SettingAttribute settingAttribute, PcfConfig settingValue) {
+    if (!featureFlagService.isEnabled(PIVOTAL_CLOUD_FOUNDRY_SUPPORT, settingAttribute.getAccountId())) {
+      throw new WingsException(ErrorCode.INVALID_REQUEST)
+          .addParam("message", "Adding Pivotal Cloud Foundry as Cloud Provider is not supported yet.");
+    }
+    PcfConfig PcfConfig = settingValue;
+    pcfHelperService.validate(PcfConfig);
   }
 
   private void validateKubernetesClusterConfig(SettingAttribute settingAttribute) {

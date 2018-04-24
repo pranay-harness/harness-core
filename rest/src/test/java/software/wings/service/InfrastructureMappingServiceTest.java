@@ -23,6 +23,7 @@ import static software.wings.beans.DirectKubernetesInfrastructureMapping.Builder
 import static software.wings.beans.EcsInfrastructureMapping.Builder.anEcsInfrastructureMapping;
 import static software.wings.beans.ErrorCode.INVALID_REQUEST;
 import static software.wings.beans.GcpKubernetesInfrastructureMapping.Builder.aGcpKubernetesInfrastructureMapping;
+import static software.wings.beans.PcfInfrastructureMapping.anPcfInfrastructureMapping;
 import static software.wings.beans.PhysicalDataCenterConfig.Builder.aPhysicalDataCenterConfig;
 import static software.wings.beans.PhysicalInfrastructureMapping.Builder.aPhysicalInfrastructureMapping;
 import static software.wings.beans.ServiceInstance.Builder.aServiceInstance;
@@ -119,6 +120,7 @@ import software.wings.service.intfc.yaml.YamlDirectoryService;
 import software.wings.settings.SettingValue.SettingVariableTypes;
 import software.wings.utils.WingsTestConstants;
 
+import java.util.Arrays;
 import java.util.Collections;
 import java.util.HashMap;
 import java.util.HashSet;
@@ -131,6 +133,9 @@ import java.util.Set;
  * Created by anubhaw on 1/10/17.
  */
 public class InfrastructureMappingServiceTest extends WingsBaseTest {
+  public static final String ORGANIZATION = "ORGANIZATION";
+  public static final String SPACE = "SPACE";
+  public static final String ROUTE = "ROUTE";
   @Mock private WingsPersistence wingsPersistence;
   @Mock private Map<String, InfrastructureProvider> infrastructureProviders;
   @Mock private StaticInfrastructureProvider staticInfrastructureProvider;
@@ -804,5 +809,30 @@ public class InfrastructureMappingServiceTest extends WingsBaseTest {
 
     assertNotNull(keyValuePairs.get("securityGroupIds"));
     assertEquals(0, ((List) keyValuePairs.get("securityGroupIds")).size());
+  }
+
+  @Test
+  public void testHandlePcdInfraMapping() throws Exception {
+    InfrastructureMappingServiceImpl serviceImpl = (InfrastructureMappingServiceImpl) infrastructureMappingService;
+
+    Map<String, Object> keyValuePairs = new HashMap<>();
+
+    MethodUtils.invokeMethod(serviceImpl, true, "handlePcfInfraMapping",
+        new Object[] {keyValuePairs,
+            anPcfInfrastructureMapping()
+                .withOrganization(ORGANIZATION)
+                .withSpace(SPACE)
+                .withRouteMaps(Arrays.asList(ROUTE))
+                .withTempRouteMap(Arrays.asList(ROUTE))
+                .build()});
+
+    assertEquals(4, keyValuePairs.size());
+    assertEquals(keyValuePairs.get("organization"), ORGANIZATION);
+    assertEquals(keyValuePairs.get("space"), SPACE);
+    assertNotNull(keyValuePairs.get("tempRouteMap"));
+    assertEquals(1, ((List) keyValuePairs.get("tempRouteMap")).size());
+    assertEquals(1, ((List) keyValuePairs.get("routeMaps")).size());
+    assertEquals(ROUTE, ((List) keyValuePairs.get("tempRouteMap")).get(0));
+    assertEquals(ROUTE, ((List) keyValuePairs.get("routeMaps")).get(0));
   }
 }

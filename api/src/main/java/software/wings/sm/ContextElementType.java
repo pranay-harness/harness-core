@@ -62,6 +62,7 @@ public enum ContextElementType {
   CONTAINER_SERVICE,
 
   /**
+  /**
    * Cluster context element type.
    */
   CLUSTER,
@@ -78,6 +79,13 @@ public enum ContextElementType {
   AMI_SERVICE_DEPLOY, /**
                        * Artifact context element type.
                        */
+
+  PCF_SERVICE_SETUP,
+
+  PCF_SERVICE_DEPLOY,
+
+  PCF_INSTANCE,
+
   ARTIFACT, /**
              * Helm deploy context element type.
              */

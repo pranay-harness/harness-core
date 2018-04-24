@@ -45,6 +45,7 @@ public class WorkflowPhase implements UuidAware {
   private boolean provisionNodes;
 
   private boolean rollback;
+  private boolean isBasicWorkflow;
   private String phaseNameForRollback;
 
   private boolean valid = true;
@@ -146,6 +147,14 @@ public class WorkflowPhase implements UuidAware {
 
   public void setRollback(boolean rollback) {
     this.rollback = rollback;
+  }
+
+  public boolean isBasicWorkflow() {
+    return isBasicWorkflow;
+  }
+
+  public void setBasicWorkflow(boolean basicWorkflow) {
+    isBasicWorkflow = basicWorkflow;
   }
 
   public String getPhaseNameForRollback() {
