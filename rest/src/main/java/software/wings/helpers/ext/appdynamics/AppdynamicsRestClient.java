@@ -7,7 +7,6 @@ import retrofit2.http.Path;
 import retrofit2.http.Query;
 import software.wings.service.impl.appdynamics.AppdynamicsMetric;
 import software.wings.service.impl.appdynamics.AppdynamicsMetricData;
-import software.wings.service.impl.appdynamics.AppdynamicsNode;
 import software.wings.service.impl.appdynamics.AppdynamicsTier;
 import software.wings.service.impl.newrelic.NewRelicApplication;
 
@@ -36,17 +35,6 @@ public interface AppdynamicsRestClient {
   @GET("rest/applications/{appdynamicsAppId}/tiers?output=json")
   Call<List<AppdynamicsTier>> listTiers(
       @Header("Authorization") String authorization, @Path("appdynamicsAppId") long appdynamicsAppId);
-
-  /**
-   * Lists all the nodes of a tier and application in appdynamics
-   *
-   * @param authorization
-   * @param appdynamicsAppId
-   * @return
-   */
-  @GET("rest/applications/{appdynamicsAppId}/tiers/{tierId}/nodes?output=json")
-  Call<List<AppdynamicsNode>> listNodes(@Header("Authorization") String authorization,
-      @Path("appdynamicsAppId") long appdynamicsAppId, @Path("tierId") long tierId);
 
   /**
    * Get all the details of a tier
