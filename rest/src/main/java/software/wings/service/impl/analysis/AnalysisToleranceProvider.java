@@ -10,7 +10,7 @@ import java.util.Map;
  */
 public class AnalysisToleranceProvider implements DataProvider {
   @Override
-  public Map<String, String> getData(String appId, String... params) {
+  public Map<String, String> getData(String appId, Map<String, String> params) {
     final Map<String, String> rv = new HashMap<>();
     rv.put(AnalysisTolerance.LOW.name(), "All anomalies");
     rv.put(AnalysisTolerance.MEDIUM.name(), "Anomalies with medium risk or higher");

@@ -426,7 +426,7 @@ public class AwsCodeDeployState extends State {
 
   public static class CodeDeployAutoRollbackConfigurationProvider implements DataProvider {
     @Override
-    public Map<String, String> getData(String appId, String... params) {
+    public Map<String, String> getData(String appId, Map<String, String> params) {
       return ImmutableMap.of("DEPLOYMENT_FAILURE", "Roll back when a deployment fails", "DEPLOYMENT_STOP_ON_ALARM",
           "Roll back when alarm thresholds are met", "DEPLOYMENT_STOP_ON_REQUEST", "Roll back on request");
     }
@@ -434,7 +434,7 @@ public class AwsCodeDeployState extends State {
 
   public static class CodeDeployFileExistBehaviorProvider implements DataProvider {
     @Override
-    public Map<String, String> getData(String appId, String... params) {
+    public Map<String, String> getData(String appId, Map<String, String> params) {
       return ImmutableMap.of("DISALLOW", "Fail the deployment (Default option)", "OVERWRITE", "Overwrite the content",
           "RETAIN", "Retain the content");
     }
@@ -442,7 +442,7 @@ public class AwsCodeDeployState extends State {
 
   public static class CodeDeployBundleTypeProvider implements DataProvider {
     @Override
-    public Map<String, String> getData(String appId, String... params) {
+    public Map<String, String> getData(String appId, Map<String, String> params) {
       return ImmutableMap.of("tar", "A tar archive file (tar)", "tgz", "A compressed tar archive file (tgz)", "zip",
           "A zip archive file (zip)");
     }

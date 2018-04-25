@@ -313,10 +313,10 @@ public abstract class InfrastructureMapping extends Base {
     @Inject private AppService appService;
 
     @Override
-    public Map<String, String> getData(String appId, String... params) {
+    public Map<String, String> getData(String appId, Map<String, String> params) {
       String accountId = appService.getAccountIdByAppId(appId);
-      List<SettingAttribute> settingAttributes = settingsService.getGlobalSettingAttributesByType(
-          accountId, SettingVariableTypes.HOST_CONNECTION_ATTRIBUTES.name());
+      List<SettingAttribute> settingAttributes = settingsService.getFilteredGlobalSettingAttributesByType(accountId,
+          SettingVariableTypes.HOST_CONNECTION_ATTRIBUTES.name(), appId, params.get(EntityType.ENVIRONMENT.name()));
 
       Map<AccessType, List<SettingAttribute>> settingAttributeByType = settingAttributes.stream().collect(
           groupingBy(sa -> ((HostConnectionAttributes) sa.getValue()).getAccessType()));
