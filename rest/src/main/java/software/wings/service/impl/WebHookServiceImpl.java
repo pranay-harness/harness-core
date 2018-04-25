@@ -12,6 +12,7 @@ import software.wings.beans.Application;
 import software.wings.beans.WebHookRequest;
 import software.wings.beans.WebHookResponse;
 import software.wings.beans.WorkflowExecution;
+import software.wings.beans.WorkflowType;
 import software.wings.beans.artifact.Artifact;
 import software.wings.beans.artifact.ArtifactStream;
 import software.wings.beans.trigger.Trigger;
@@ -47,9 +48,15 @@ public class WebHookServiceImpl implements WebHookService {
     return baseUrl;
   }
 
-  private String getUiUrl(String accountId, String appId, String envId, String workflowExecutionId) {
-    return String.format("%s#/account/%s/app/%s/env/%s/executions/%s/details", getBaseUrl(), accountId, appId, envId,
-        workflowExecutionId);
+  private String getUiUrl(
+      boolean isPipeline, String accountId, String appId, String envId, String workflowExecutionId) {
+    if (isPipeline) {
+      return String.format("%s#/account/%s/app/%s/pipeline-execution/%s/workflow-execution/undefined/details",
+          getBaseUrl(), accountId, appId, workflowExecutionId);
+    } else {
+      return String.format("%s#/account/%s/app/%s/env/%s/executions/%s/details", getBaseUrl(), accountId, appId, envId,
+          workflowExecutionId);
+    }
   }
 
   private String getApiUrl(String accountId, String appId, String workflowExecutionId) {
@@ -104,7 +111,8 @@ public class WebHookServiceImpl implements WebHookService {
           .requestId(workflowExecution.getUuid())
           .status(workflowExecution.getStatus().name())
           .apiUrl(getApiUrl(app.getAccountId(), appId, workflowExecution.getUuid()))
-          .uiUrl(getUiUrl(app.getAccountId(), appId, workflowExecution.getEnvId(), workflowExecution.getUuid()))
+          .uiUrl(getUiUrl(WorkflowType.PIPELINE.equals(workflowExecution.getWorkflowType()), app.getAccountId(), appId,
+              workflowExecution.getEnvId(), workflowExecution.getUuid()))
           .build();
     } catch (Exception ex) {
       logger.error("WebHook call failed [%s]", token, ex);
