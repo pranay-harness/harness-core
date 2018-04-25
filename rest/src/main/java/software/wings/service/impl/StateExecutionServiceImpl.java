@@ -29,8 +29,19 @@ public class StateExecutionServiceImpl implements StateExecutionService {
         wingsPersistence.createQuery(StateExecutionInstance.class)
             .filter(StateExecutionInstance.APP_ID_KEY, appId)
             .filter(StateExecutionInstance.EXECUTION_UUID_KEY, executionUuid)
-            .project(StateExecutionInstance.CONTEXT_ELEMENTS_KEY, false)
-            .project(StateExecutionInstance.CALLBACK, false)
+            .project(StateExecutionInstance.CONTEXT_ELEMENT_KEY, true)
+            .project(StateExecutionInstance.CONTEXT_TRANSITION_KEY, true)
+            .project(StateExecutionInstance.DISPLAY_NAME_KEY, true)
+            .project(StateExecutionInstance.EXECUTION_TYPE_KEY, true)
+            .project(StateExecutionInstance.ID_KEY, true)
+            .project(StateExecutionInstance.INTERRUPT_HISTORY_KEY, true)
+            .project(StateExecutionInstance.PARENT_INSTANCE_ID_KEY, true)
+            .project(StateExecutionInstance.PREV_INSTANCE_ID_KEY, true)
+            .project(StateExecutionInstance.STATE_EXECUTION_DATA_HISTORY_KEY, true)
+            .project(StateExecutionInstance.STATE_EXECUTION_MAP_KEY, true)
+            .project(StateExecutionInstance.STATE_NAME_KEY, true)
+            .project(StateExecutionInstance.STATE_TYPE_KEY, true)
+            .project(StateExecutionInstance.STATUS_KEY, true)
             .fetch();
 
     try (DBCursor cursor = stateExecutionInstances.getCursor()) {
