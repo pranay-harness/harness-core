@@ -32,6 +32,7 @@ import static software.wings.yaml.YamlHelper.trimYaml;
 import com.google.common.base.Joiner;
 import com.google.common.collect.ArrayListMultimap;
 import com.google.common.collect.ImmutableMap;
+import com.google.common.collect.Maps;
 import com.google.inject.Inject;
 import com.google.inject.Singleton;
 import com.google.inject.name.Named;
@@ -1094,14 +1095,28 @@ public class ServiceResourceServiceImpl implements ServiceResourceService, DataP
    */
   @Override
   public List<Stencil> getCommandStencils(@NotEmpty String appId, @NotEmpty String serviceId, String commandName) {
-    return stencilPostProcessor.postProcess(asList(CommandUnitType.values()), appId, serviceId, commandName);
+    return stencilPostProcessor.postProcess(
+        asList(CommandUnitType.values()), appId, getEntityMap(serviceId, commandName));
+  }
+
+  private Map<String, String> getEntityMap(@NotEmpty String serviceId, String commandName) {
+    Map<String, String> map = Maps.newHashMap();
+
+    if (isNotEmpty(serviceId)) {
+      map.put(EntityType.SERVICE.name(), serviceId);
+    }
+
+    if (isNotEmpty(commandName)) {
+      map.put(EntityType.COMMAND.name(), commandName);
+    }
+    return map;
   }
 
   @Override
   public List<Stencil> getCommandStencils(
       String appId, String serviceId, String commandName, boolean onlyScriptCommands) {
     List<Stencil> stencils =
-        stencilPostProcessor.postProcess(asList(CommandUnitType.values()), appId, serviceId, commandName);
+        stencilPostProcessor.postProcess(asList(CommandUnitType.values()), appId, getEntityMap(serviceId, commandName));
     if (onlyScriptCommands) {
       // Suppress Container commands
       Predicate<Stencil> predicate = stencil -> stencil.getStencilCategory() != StencilCategory.CONTAINERS;
@@ -1118,7 +1133,7 @@ public class ServiceResourceServiceImpl implements ServiceResourceService, DataP
 
   @Override
   public List<Stencil> getContainerTaskStencils(@NotEmpty String appId, @NotEmpty String serviceId) {
-    return stencilPostProcessor.postProcess(asList(ContainerTaskType.values()), appId, serviceId);
+    return stencilPostProcessor.postProcess(asList(ContainerTaskType.values()), appId, getEntityMap(serviceId, null));
   }
 
   @Override
@@ -1172,8 +1187,8 @@ public class ServiceResourceServiceImpl implements ServiceResourceService, DataP
   }
 
   @Override
-  public Map<String, String> getData(String appId, String... params) {
-    Service service = wingsPersistence.get(Service.class, appId, params[0]);
+  public Map<String, String> getData(String appId, Map<String, String> params) {
+    Service service = wingsPersistence.get(Service.class, appId, params.get(EntityType.SERVICE.name()));
     if (service == null) {
       return emptyMap();
     }
@@ -1184,7 +1199,7 @@ public class ServiceResourceServiceImpl implements ServiceResourceService, DataP
     }
 
     return serviceCommands.stream()
-        .filter(serviceCommand -> !StringUtils.equals(serviceCommand.getName(), params[1]))
+        .filter(serviceCommand -> !StringUtils.equals(serviceCommand.getName(), params.get(EntityType.COMMAND.name())))
         .collect(toMap(ServiceCommand::getName, ServiceCommand::getName));
   }
 

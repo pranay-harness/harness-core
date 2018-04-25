@@ -16,7 +16,16 @@ import javax.validation.Valid;
  * Created by anubhaw on 5/17/16.
  */
 public interface SettingsService extends OwnedByAccount {
-  PageResponse<SettingAttribute> list(PageRequest<SettingAttribute> req);
+  /**
+   * List.
+   *
+   * @param req the req
+   * @param appIdFromRequest
+   * @param envIdFromRequest
+   * @return the page response
+   */
+  PageResponse<SettingAttribute> list(
+      PageRequest<SettingAttribute> req, String appIdFromRequest, String envIdFromRequest);
 
   SettingAttribute save(@Valid SettingAttribute settingAttribute);
 
@@ -50,11 +59,23 @@ public interface SettingsService extends OwnedByAccount {
 
   List<SettingAttribute> getSettingAttributesByType(String appId, String type);
 
+  List<SettingAttribute> getFilteredSettingAttributesByType(
+      String appId, String type, String currentAppId, String currentEnvId);
+
   List<SettingAttribute> getSettingAttributesByType(String appId, String envId, String type);
+
+  List<SettingAttribute> getFilteredSettingAttributesByType(
+      String appId, String envId, String type, String currentAppId, String currentEnvId);
 
   List<SettingAttribute> getSettingAttributesByType(String accountId, String appId, String envId, String type);
 
+  List<SettingAttribute> getFilteredSettingAttributesByType(
+      String accountId, String appId, String envId, String type, String currentAppId, String currentEnvId);
+
   List<SettingAttribute> getGlobalSettingAttributesByType(String accountId, String type);
+
+  List<SettingAttribute> getFilteredGlobalSettingAttributesByType(
+      String accountId, String type, String currentAppId, String currentEnvId);
 
   void deleteSettingAttributesByType(String accountId, String appId, String envId, String type);
 
