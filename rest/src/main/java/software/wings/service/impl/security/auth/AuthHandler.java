@@ -174,6 +174,23 @@ public class AuthHandler {
     return appPermissionMap;
   }
 
+  private Map<String, Set<Action>> setActionsForEntity(
+      Map<String, Set<Action>> permissionMap, String entityId, Set<Action> actionSet) {
+    if (permissionMap == null) {
+      permissionMap = new HashMap<>();
+    }
+
+    Set<Action> actions = permissionMap.get(entityId);
+
+    if (actions == null) {
+      actions = new HashSet<>();
+      permissionMap.put(entityId, actions);
+    }
+
+    actions.addAll(actionSet);
+    return permissionMap;
+  }
+
   private void attachPermission(Map<String, AppPermissionSummaryForUI> appPermissionMap,
       Map<PermissionType, Map<String, List<Base>>> permissionTypeAppIdEntityMap, Set<String> appIds,
       PermissionType permissionType, Filter entityFilter, Set<Action> actions) {
@@ -204,10 +221,10 @@ public class AuthHandler {
               permissionTypeAppIdEntityMap.get(permissionType).get(appId), (GenericEntityFilter) entityFilter);
           AppPermissionSummaryForUI finalAppPermissionSummaryForUI = appPermissionSummaryForUI;
           entityIds.forEach(entityId -> {
-            if (finalAppPermissionSummaryForUI.getServicePermissions() == null) {
-              finalAppPermissionSummaryForUI.setServicePermissions(new HashMap<>());
-            }
-            finalAppPermissionSummaryForUI.getServicePermissions().put(entityId, entityActions);
+
+            Map<String, Set<Action>> permissionMap =
+                setActionsForEntity(finalAppPermissionSummaryForUI.getServicePermissions(), entityId, entityActions);
+            finalAppPermissionSummaryForUI.setServicePermissions(permissionMap);
           });
 
           break;
@@ -224,10 +241,9 @@ public class AuthHandler {
           AppPermissionSummaryForUI finalAppPermissionSummaryForUI = appPermissionSummaryForUI;
 
           entityIds.forEach(entityId -> {
-            if (finalAppPermissionSummaryForUI.getEnvPermissions() == null) {
-              finalAppPermissionSummaryForUI.setEnvPermissions(new HashMap<>());
-            }
-            finalAppPermissionSummaryForUI.getEnvPermissions().put(entityId, entityActions);
+            Map<String, Set<Action>> permissionMap =
+                setActionsForEntity(finalAppPermissionSummaryForUI.getEnvPermissions(), entityId, entityActions);
+            finalAppPermissionSummaryForUI.setEnvPermissions(permissionMap);
           });
 
           break;
@@ -245,10 +261,10 @@ public class AuthHandler {
           AppPermissionSummaryForUI finalAppPermissionSummaryForUI = appPermissionSummaryForUI;
 
           entityIds.forEach(entityId -> {
-            if (finalAppPermissionSummaryForUI.getWorkflowPermissions() == null) {
-              finalAppPermissionSummaryForUI.setWorkflowPermissions(new HashMap<>());
-            }
-            finalAppPermissionSummaryForUI.getWorkflowPermissions().put(entityId, entityActions);
+
+            Map<String, Set<Action>> permissionMap =
+                setActionsForEntity(finalAppPermissionSummaryForUI.getWorkflowPermissions(), entityId, entityActions);
+            finalAppPermissionSummaryForUI.setWorkflowPermissions(permissionMap);
           });
 
           break;
@@ -264,10 +280,9 @@ public class AuthHandler {
               permissionTypeAppIdEntityMap.get(ENV).get(appId), (EnvFilter) entityFilter);
           AppPermissionSummaryForUI finalAppPermissionSummaryForUI = appPermissionSummaryForUI;
           entityIds.forEach(entityId -> {
-            if (finalAppPermissionSummaryForUI.getPipelinePermissions() == null) {
-              finalAppPermissionSummaryForUI.setPipelinePermissions(new HashMap<>());
-            }
-            finalAppPermissionSummaryForUI.getPipelinePermissions().put(entityId, entityActions);
+            Map<String, Set<Action>> permissionMap =
+                setActionsForEntity(finalAppPermissionSummaryForUI.getPipelinePermissions(), entityId, entityActions);
+            finalAppPermissionSummaryForUI.setPipelinePermissions(permissionMap);
           });
           break;
         }
@@ -281,10 +296,9 @@ public class AuthHandler {
 
           AppPermissionSummaryForUI finalAppPermissionSummaryForUI = appPermissionSummaryForUI;
           entityIds.forEach(entityId -> {
-            if (finalAppPermissionSummaryForUI.getDeploymentPermissions() == null) {
-              finalAppPermissionSummaryForUI.setDeploymentPermissions(new HashMap<>());
-            }
-            finalAppPermissionSummaryForUI.getDeploymentPermissions().put(entityId, entityActions);
+            Map<String, Set<Action>> permissionMap =
+                setActionsForEntity(finalAppPermissionSummaryForUI.getDeploymentPermissions(), entityId, entityActions);
+            finalAppPermissionSummaryForUI.setDeploymentPermissions(permissionMap);
           });
           break;
         }
