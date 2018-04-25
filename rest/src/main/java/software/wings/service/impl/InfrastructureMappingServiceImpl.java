@@ -32,6 +32,8 @@ import static software.wings.exception.WingsException.USER;
 import static software.wings.settings.SettingValue.SettingVariableTypes.AWS;
 import static software.wings.settings.SettingValue.SettingVariableTypes.GCP;
 import static software.wings.settings.SettingValue.SettingVariableTypes.PHYSICAL_DATA_CENTER;
+import static software.wings.utils.KubernetesConvention.DASH;
+import static software.wings.utils.KubernetesConvention.DOT;
 import static software.wings.utils.Validator.duplicateCheck;
 import static software.wings.utils.Validator.notNullCheck;
 
@@ -85,6 +87,8 @@ import software.wings.beans.SettingAttribute;
 import software.wings.beans.SortOrder.OrderType;
 import software.wings.beans.Workflow;
 import software.wings.beans.WorkflowPhase;
+import software.wings.beans.container.ContainerTask;
+import software.wings.beans.container.KubernetesContainerTask;
 import software.wings.beans.infrastructure.Host;
 import software.wings.beans.yaml.Change.ChangeType;
 import software.wings.cloudprovider.aws.AwsCodeDeployService;
@@ -1335,6 +1339,13 @@ public class InfrastructureMappingServiceImpl implements InfrastructureMappingSe
     String subscriptionId = null;
     String resourceGroup = null;
     ContainerInfrastructureMapping containerInfraMapping = (ContainerInfrastructureMapping) infrastructureMapping;
+    boolean isStatefulSet = false;
+    ContainerTask containerTask = serviceResourceService.getContainerTaskByDeploymentType(
+        app.getUuid(), service.getUuid(), infrastructureMapping.getDeploymentType());
+    if (containerTask instanceof KubernetesContainerTask) {
+      KubernetesContainerTask kubernetesContainerTask = (KubernetesContainerTask) containerTask;
+      isStatefulSet = kubernetesContainerTask.checkStatefulSet();
+    }
     if (containerInfraMapping instanceof DirectKubernetesInfrastructureMapping) {
       DirectKubernetesInfrastructureMapping directInfraMapping =
           (DirectKubernetesInfrastructureMapping) containerInfraMapping;
@@ -1345,27 +1356,30 @@ public class InfrastructureMappingServiceImpl implements InfrastructureMappingSe
       containerServiceName =
           (isNotBlank(serviceNameExpression)
                   ? KubernetesConvention.normalize(evaluator.substitute(serviceNameExpression, context))
-                  : KubernetesConvention.getControllerNamePrefix(app.getName(), service.getName(), env.getName()))
-          + KubernetesConvention.DOT + "0";
+                  : KubernetesConvention.getControllerNamePrefix(
+                        app.getName(), service.getName(), env.getName(), isStatefulSet))
+          + (isStatefulSet ? DASH : DOT) + "0";
     } else {
       settingAttribute = settingsService.get(infrastructureMapping.getComputeProviderSettingId());
       clusterName = containerInfraMapping.getClusterName();
       if (containerInfraMapping instanceof GcpKubernetesInfrastructureMapping) {
-        namespace = ((GcpKubernetesInfrastructureMapping) containerInfraMapping).getNamespace();
+        namespace = containerInfraMapping.getNamespace();
         containerServiceName =
             (isNotBlank(serviceNameExpression)
                     ? KubernetesConvention.normalize(evaluator.substitute(serviceNameExpression, context))
-                    : KubernetesConvention.getControllerNamePrefix(app.getName(), service.getName(), env.getName()))
-            + KubernetesConvention.DOT + "0";
+                    : KubernetesConvention.getControllerNamePrefix(
+                          app.getName(), service.getName(), env.getName(), isStatefulSet))
+            + (isStatefulSet ? DASH : DOT) + "0";
       } else if (containerInfraMapping instanceof AzureKubernetesInfrastructureMapping) {
-        namespace = ((AzureKubernetesInfrastructureMapping) containerInfraMapping).getNamespace();
+        namespace = containerInfraMapping.getNamespace();
         subscriptionId = ((AzureKubernetesInfrastructureMapping) containerInfraMapping).getSubscriptionId();
         resourceGroup = ((AzureKubernetesInfrastructureMapping) containerInfraMapping).getResourceGroup();
         containerServiceName =
             (isNotBlank(serviceNameExpression)
                     ? KubernetesConvention.normalize(evaluator.substitute(serviceNameExpression, context))
-                    : KubernetesConvention.getControllerNamePrefix(app.getName(), service.getName(), env.getName()))
-            + KubernetesConvention.DOT + "0";
+                    : KubernetesConvention.getControllerNamePrefix(
+                          app.getName(), service.getName(), env.getName(), isStatefulSet))
+            + (isStatefulSet ? DASH : DOT) + "0";
 
       } else if (containerInfraMapping instanceof EcsInfrastructureMapping) {
         region = ((EcsInfrastructureMapping) containerInfraMapping).getRegion();

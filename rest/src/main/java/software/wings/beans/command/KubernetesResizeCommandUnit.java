@@ -6,6 +6,7 @@ import static software.wings.beans.ErrorCode.GENERAL_ERROR;
 import static software.wings.cloudprovider.ContainerInfo.Status.SUCCESS;
 import static software.wings.common.Constants.HARNESS_REVISION;
 import static software.wings.service.impl.KubernetesHelperService.printRouteRuleWeights;
+import static software.wings.utils.KubernetesConvention.DOT;
 import static software.wings.utils.KubernetesConvention.getPrefixFromControllerName;
 import static software.wings.utils.KubernetesConvention.getRevisionFromControllerName;
 import static software.wings.utils.KubernetesConvention.getServiceNameFromControllerName;
@@ -115,9 +116,9 @@ public class KubernetesResizeCommandUnit extends ContainerResizeCommandUnit {
     if (resizeParams.isUseIstioRouteRule()) {
       List<EncryptedDataDetail> encryptedDataDetails = new ArrayList<>();
       KubernetesConfig kubernetesConfig = getKubernetesConfig(contextData, encryptedDataDetails);
-      String kubernetesServiceName =
-          getServiceNameFromControllerName(contextData.resizeParams.getContainerServiceName());
-      String controllerPrefix = getPrefixFromControllerName(resizeParams.getContainerServiceName());
+      String controllerName = resizeParams.getContainerServiceName();
+      String kubernetesServiceName = getServiceNameFromControllerName(controllerName, !controllerName.contains(DOT));
+      String controllerPrefix = getPrefixFromControllerName(controllerName, !controllerName.contains(DOT));
       IstioResource routeRuleDefinition = createRouteRuleDefinition(contextData, allData, kubernetesServiceName);
       IstioResource existingRouteRule =
           kubernetesContainerService.getRouteRule(kubernetesConfig, encryptedDataDetails, kubernetesServiceName);
@@ -198,8 +199,9 @@ public class KubernetesResizeCommandUnit extends ContainerResizeCommandUnit {
   protected Map<String, Integer> getActiveServiceCounts(ContextData contextData) {
     List<EncryptedDataDetail> encryptedDataDetails = new ArrayList<>();
     KubernetesConfig kubernetesConfig = getKubernetesConfig(contextData, encryptedDataDetails);
+    String controllerName = contextData.resizeParams.getContainerServiceName();
     return kubernetesContainerService.getActiveServiceCounts(
-        kubernetesConfig, encryptedDataDetails, contextData.resizeParams.getContainerServiceName());
+        kubernetesConfig, encryptedDataDetails, controllerName, !controllerName.contains(DOT));
   }
 
   @Override
@@ -214,16 +216,18 @@ public class KubernetesResizeCommandUnit extends ContainerResizeCommandUnit {
   protected Map<String, Integer> getTrafficWeights(ContextData contextData) {
     List<EncryptedDataDetail> encryptedDataDetails = new ArrayList<>();
     KubernetesConfig kubernetesConfig = getKubernetesConfig(contextData, encryptedDataDetails);
+    String controllerName = contextData.resizeParams.getContainerServiceName();
     return kubernetesContainerService.getTrafficWeights(
-        kubernetesConfig, encryptedDataDetails, contextData.resizeParams.getContainerServiceName());
+        kubernetesConfig, encryptedDataDetails, controllerName, !controllerName.contains(DOT));
   }
 
   @Override
   protected int getPreviousTrafficPercent(ContextData contextData) {
     List<EncryptedDataDetail> encryptedDataDetails = new ArrayList<>();
     KubernetesConfig kubernetesConfig = getKubernetesConfig(contextData, encryptedDataDetails);
+    String controllerName = contextData.resizeParams.getContainerServiceName();
     return kubernetesContainerService.getTrafficPercent(
-        kubernetesConfig, encryptedDataDetails, contextData.resizeParams.getContainerServiceName());
+        kubernetesConfig, encryptedDataDetails, controllerName, !controllerName.contains(DOT));
   }
 
   @Override
@@ -246,7 +250,8 @@ public class KubernetesResizeCommandUnit extends ContainerResizeCommandUnit {
                                                                         .endDestination();
 
     for (ContainerServiceData containerServiceData : allData) {
-      int revision = getRevisionFromControllerName(containerServiceData.getName()).orElse(-1);
+      String controllerName = containerServiceData.getName();
+      int revision = getRevisionFromControllerName(controllerName, !controllerName.contains(DOT)).orElse(-1);
       int weight = containerServiceData.getDesiredTraffic();
       if (weight > 0) {
         routeRuleSpecNested.addNewRoute()

@@ -250,7 +250,7 @@ public class KubernetesResizeCommandUnitTest extends WingsBaseTest {
       int instanceCount, InstanceUnitType instanceUnitType) {
     when(kubernetesContainerService.getControllerPodCount(eq(kubernetesConfig), any(), anyString()))
         .thenReturn(Optional.of(controllerPodCount));
-    when(kubernetesContainerService.getActiveServiceCounts(eq(kubernetesConfig), any(), anyString()))
+    when(kubernetesContainerService.getActiveServiceCounts(eq(kubernetesConfig), any(), anyString(), eq(false)))
         .thenReturn(activeServiceCounts);
     KubernetesResizeParams resizeParams = resizeParamsBuilder.but()
                                               .withContainerServiceName(controllerName)

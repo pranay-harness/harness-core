@@ -121,9 +121,7 @@ public class KubernetesSetup extends ContainerServiceSetup {
       configMapYamlEvaluated = context.renderExpression(configMapYaml);
     }
 
-    String controllerNamePrefix = isNotBlank(replicationControllerName)
-        ? KubernetesConvention.normalize(context.renderExpression(replicationControllerName))
-        : KubernetesConvention.getControllerNamePrefix(app.getName(), serviceName, env.getName());
+    boolean isStatefulSet = false;
 
     if (containerTask != null) {
       KubernetesContainerTask kubernetesContainerTask = (KubernetesContainerTask) containerTask;
@@ -136,8 +134,13 @@ public class KubernetesSetup extends ContainerServiceSetup {
       if (kubernetesContainerTask.getAdvancedConfig() != null) {
         kubernetesContainerTask.setAdvancedConfig(
             context.renderExpression(kubernetesContainerTask.getAdvancedConfig()));
+        isStatefulSet = kubernetesContainerTask.checkStatefulSet();
       }
     }
+
+    String controllerNamePrefix = isNotBlank(replicationControllerName)
+        ? KubernetesConvention.normalize(context.renderExpression(replicationControllerName))
+        : KubernetesConvention.getControllerNamePrefix(app.getName(), serviceName, env.getName(), isStatefulSet);
 
     String ingressYamlEvaluated = null;
     if (isNotBlank(ingressYaml)) {

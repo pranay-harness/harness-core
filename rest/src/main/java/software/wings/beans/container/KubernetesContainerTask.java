@@ -57,6 +57,7 @@ public class KubernetesContainerTask extends ContainerTask {
   private static final String DUMMY_SECRET_NAME = "hv--secret-name--hv";
 
   private static final Pattern DAEMON_SET_PATTERN = Pattern.compile("kind:\\s*\"?DaemonSet");
+  private static final Pattern STATEFUL_SET_PATTERN = Pattern.compile("kind:\\s*\"?StatefulSet");
 
   @Attributes(title = "LABELS") private List<Label> labels;
   @EnumData(enumDataProvider = ArtifactEnumDataProvider.class) private String artifactName;
@@ -168,6 +169,10 @@ public class KubernetesContainerTask extends ContainerTask {
 
   public boolean checkDaemonSet() {
     return isNotBlank(getAdvancedConfig()) && DAEMON_SET_PATTERN.matcher(getAdvancedConfig()).find();
+  }
+
+  public boolean checkStatefulSet() {
+    return isNotBlank(getAdvancedConfig()) && STATEFUL_SET_PATTERN.matcher(getAdvancedConfig()).find();
   }
 
   public HasMetadata createController(
