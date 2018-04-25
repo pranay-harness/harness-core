@@ -70,11 +70,11 @@ public class PcfInfraMappingYamlHandlerTest extends BaseYamlHandlerTest {
   @Mock @Named("JobScheduler") private QuartzScheduler jobScheduler;
 
   private String validYamlContent = "harnessApiVersion: '1.0'\n"
-      + "type: PCF\n"
+      + "type: PCF_PCF\n"
       + "computeProviderName: COMPUTE_PROVIDER_NAME\n"
       + "computeProviderType: PCF\n"
       + "deploymentType: PCF\n"
-      + "infraMappingType: PCF\n"
+      + "infraMappingType: PCF_PCF\n"
       + "organization: ORG\n"
       + "routeMaps:\n"
       + "- ROUTE\n"
@@ -150,7 +150,7 @@ public class PcfInfraMappingYamlHandlerTest extends BaseYamlHandlerTest {
 
     Yaml yaml = yamlHandler.toYaml(ecsInfraMapping, APP_ID);
     assertNotNull(yaml);
-    assertEquals(InfrastructureMappingType.PCF.name(), yaml.getType());
+    assertEquals(InfrastructureMappingType.PCF_PCF.name(), yaml.getType());
 
     String yamlContent = getYamlContent(yaml);
     assertNotNull(yamlContent);

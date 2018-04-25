@@ -61,7 +61,7 @@ public enum InfrastructureMappingType implements InfrastructureMappingDescriptor
   PHYSICAL_DATA_CENTER_WINRM(
       PhysicalInfrastructureMappingWinRm.class, "PHYSICAL_DATA_CENTER_WINRM", StencilCategory.OTHERS, 9),
 
-  PCF(PcfInfrastructureMapping.class, "PCF", StencilCategory.OTHERS, 10);
+  PCF_PCF(PcfInfrastructureMapping.class, "PCF_PCF", StencilCategory.OTHERS, 10);
 
   private static final String stencilsPath = "/templates/inframapping/";
   private static final String uiSchemaSuffix = "-InfraMappingUISchema.json";

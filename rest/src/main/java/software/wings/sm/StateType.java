@@ -362,17 +362,18 @@ public enum StateType implements StateTypeDescriptor {
           InfrastructureMappingType.GCP_KUBERNETES),
       asList(PhaseStepType.HELM_DEPLOY), ORCHESTRATION_STENCILS),
 
-  PCF_SETUP(PcfSetupState.class, COMMANDS, Constants.PCF_SETUP, Lists.newArrayList(InfrastructureMappingType.PCF),
+  PCF_SETUP(PcfSetupState.class, COMMANDS, Constants.PCF_SETUP, Lists.newArrayList(InfrastructureMappingType.PCF_PCF),
       asList(PhaseStepType.PCF_SETUP), ORCHESTRATION_STENCILS),
 
-  PCF_RESIZE(PcfDeployState.class, COMMANDS, Constants.PCF_RESIZE, Lists.newArrayList(InfrastructureMappingType.PCF),
-      asList(PhaseStepType.PCF_RESIZE), ORCHESTRATION_STENCILS),
+  PCF_RESIZE(PcfDeployState.class, COMMANDS, Constants.PCF_RESIZE,
+      Lists.newArrayList(InfrastructureMappingType.PCF_PCF), asList(PhaseStepType.PCF_RESIZE), ORCHESTRATION_STENCILS),
 
   PCF_ROLLBACK(PcfRollbackState.class, COMMANDS, Constants.PCF_ROLLBACK,
-      Lists.newArrayList(InfrastructureMappingType.PCF), asList(PhaseStepType.PCF_RESIZE), ORCHESTRATION_STENCILS),
+      Lists.newArrayList(InfrastructureMappingType.PCF_PCF), asList(PhaseStepType.PCF_RESIZE), ORCHESTRATION_STENCILS),
 
   PCF_ROUTE_SWAP(PcfRouteSwapState.class, COMMANDS, Constants.PCF_ROUTE_SWAP,
-      Lists.newArrayList(InfrastructureMappingType.PCF), asList(PhaseStepType.PCF_ROUTE_SWAP), ORCHESTRATION_STENCILS);
+      Lists.newArrayList(InfrastructureMappingType.PCF_PCF), asList(PhaseStepType.PCF_ROUTE_SWAP),
+      ORCHESTRATION_STENCILS);
 
   private static final String stencilsPath = "/templates/stencils/";
   private static final String uiSchemaSuffix = "-UISchema.json";
