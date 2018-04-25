@@ -7,6 +7,7 @@ import static java.time.Duration.ofSeconds;
 import static java.util.stream.Collectors.toList;
 import static java.util.stream.Collectors.toMap;
 import static org.apache.commons.lang3.StringUtils.isNotBlank;
+import static org.atteo.evo.inflector.English.plural;
 import static org.mongodb.morphia.mapping.Mapper.ID_KEY;
 import static software.wings.beans.Base.GLOBAL_ENV_ID;
 import static software.wings.beans.EntityType.ENVIRONMENT;
@@ -340,8 +341,8 @@ public class EnvironmentServiceImpl implements EnvironmentService, DataProvider 
       List<String> pipelineNames = pipelines.stream().map(Pipeline::getName).collect(toList());
       throw new WingsException(INVALID_REQUEST, USER)
           .addParam("message",
-              String.format("Environment is referenced by %s pipeline%s [%s].", pipelines.size(),
-                  pipelines.size() == 1 ? "" : "s", Joiner.on(", ").join(pipelineNames)));
+              String.format("Environment is referenced by %d %s [%s].", pipelines.size(),
+                  plural("pipeline", pipelines.size()), Joiner.on(", ").join(pipelineNames)));
     }
   }
 

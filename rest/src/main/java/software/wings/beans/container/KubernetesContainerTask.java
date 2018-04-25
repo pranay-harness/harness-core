@@ -229,7 +229,7 @@ public class KubernetesContainerTask extends ContainerTask {
         .addNewImagePullSecret(DUMMY_SECRET_NAME)
         .addToContainers(
             getContainerDefinitions().stream().map(this ::createContainerDefinition).toArray(Container[] ::new))
-        .addToVolumes(volumeMap.values().toArray(new Volume[volumeMap.size()]))
+        .addToVolumes(volumeMap.values().toArray(new Volume[0]))
         .endSpec()
         .endTemplate()
         .endSpec()

@@ -4,6 +4,7 @@ import static io.harness.data.structure.EmptyPredicate.isEmpty;
 import static io.harness.data.structure.EmptyPredicate.isNotEmpty;
 import static java.util.Arrays.asList;
 import static java.util.stream.Collectors.toList;
+import static org.atteo.evo.inflector.English.plural;
 import static org.mongodb.morphia.mapping.Mapper.ID_KEY;
 import static software.wings.beans.Base.GLOBAL_APP_ID;
 import static software.wings.beans.Base.GLOBAL_ENV_ID;
@@ -424,8 +425,8 @@ public class SettingsServiceImpl implements SettingsService {
       if (!infraMappingNames.isEmpty()) {
         throw new WingsException(INVALID_REQUEST)
             .addParam("message",
-                String.format("Connector [%s] is referenced by %s Service Infrastructure%s [%s].",
-                    connectorSetting.getName(), infraMappingNames.size(), infraMappingNames.size() == 1 ? "" : "s",
+                String.format("Connector [%s] is referenced by %d Service %s [%s].", connectorSetting.getName(),
+                    infraMappingNames.size(), plural("Infrastructure", infraMappingNames.size()),
                     Joiner.on(", ").join(infraMappingNames)));
       }
     } else {
@@ -433,15 +434,15 @@ public class SettingsServiceImpl implements SettingsService {
           artifactStreamService.list(aPageRequest().addFilter("settingId", EQ, connectorSetting.getUuid()).build())
               .getResponse();
       if (!artifactStreams.isEmpty()) {
-        List<String> artifactStreamName = artifactStreams.stream()
-                                              .map(ArtifactStream::getSourceName)
-                                              .filter(java.util.Objects::nonNull)
-                                              .collect(toList());
+        List<String> artifactStreamNames = artifactStreams.stream()
+                                               .map(ArtifactStream::getSourceName)
+                                               .filter(java.util.Objects::nonNull)
+                                               .collect(toList());
         throw new WingsException(INVALID_REQUEST, USER)
             .addParam("message",
-                String.format("Connector [%s] is referenced by %s Artifact Source%s [%s].", connectorSetting.getName(),
-                    artifactStreamName.size(), artifactStreamName.size() == 1 ? "" : "s",
-                    Joiner.on(", ").join(artifactStreamName)));
+                String.format("Connector [%s] is referenced by %d Artifact %s [%s].", connectorSetting.getName(),
+                    artifactStreamNames.size(), plural("Source", artifactStreamNames.size()),
+                    Joiner.on(", ").join(artifactStreamNames)));
       }
     }
 
@@ -461,8 +462,8 @@ public class SettingsServiceImpl implements SettingsService {
           infrastructureMappings.stream().map(InfrastructureMapping::getName).collect(toList());
       throw new WingsException(INVALID_REQUEST, USER)
           .addParam("message",
-              String.format("Cloud provider [%s] is referenced by %s Service Infrastructure%s [%s].",
-                  cloudProviderSetting.getName(), infraMappingNames.size(), infraMappingNames.size() == 1 ? "" : "s",
+              String.format("Cloud provider [%s] is referenced by %d Service %s [%s].", cloudProviderSetting.getName(),
+                  infraMappingNames.size(), plural("Infrastructure", infraMappingNames.size()),
                   Joiner.on(", ").join(infraMappingNames)));
     }
 
@@ -476,9 +477,9 @@ public class SettingsServiceImpl implements SettingsService {
       List<String> artifactStreamNames = artifactStreams.stream().map(ArtifactStream::getName).collect(toList());
       throw new WingsException(INVALID_REQUEST, USER)
           .addParam("message",
-              String.format("Cloud provider [%s] is referenced by %s Artifact Stream%s [%s].",
-                  cloudProviderSetting.getName(), artifactStreamNames.size(),
-                  artifactStreamNames.size() == 1 ? "" : "s", Joiner.on(", ").join(artifactStreamNames)));
+              String.format("Cloud provider [%s] is referenced by %d Artifact %s [%s].", cloudProviderSetting.getName(),
+                  artifactStreamNames.size(), plural("Source", artifactStreamNames.size()),
+                  Joiner.on(", ").join(artifactStreamNames)));
     }
 
     // TODO:: workflow scan for finding out usage in Steps ???

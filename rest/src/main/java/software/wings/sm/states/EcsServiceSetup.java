@@ -118,7 +118,7 @@ public class EcsServiceSetup extends ContainerServiceSetup {
     if (CollectionUtils.isEmpty(input)) {
       return new String[0];
     } else {
-      return input.toArray(new String[input.size()]);
+      return input.toArray(new String[0]);
     }
   }
 

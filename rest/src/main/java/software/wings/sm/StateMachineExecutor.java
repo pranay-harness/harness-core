@@ -487,8 +487,7 @@ public class StateMachineExecutor {
         }
         NotifyCallback callback = new StateMachineResumeCallback(stateExecutionInstance.getAppId(),
             stateExecutionInstance.getExecutionUuid(), stateExecutionInstance.getUuid());
-        waitNotifyEngine.waitForAll(callback,
-            executionResponse.getCorrelationIds().toArray(new String[executionResponse.getCorrelationIds().size()]));
+        waitNotifyEngine.waitForAll(callback, executionResponse.getCorrelationIds().toArray(new String[0]));
       }
 
       boolean updated = updateStateExecutionData(stateExecutionInstance, executionResponse.getStateExecutionData(),

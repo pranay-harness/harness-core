@@ -92,8 +92,8 @@ public class KubernetesResizeCommandUnit extends ContainerResizeCommandUnit {
         List<ContainerInfo> failedContainers =
             containerInfos.stream().filter(info -> info.getStatus() != ContainerInfo.Status.SUCCESS).collect(toList());
         executionLogCallback.saveExecutionLog(
-            String.format("The following container%s did not have success status: %s",
-                failedContainers.size() == 1 ? "" : "s",
+            String.format("The following %s did not have success status: %s",
+                plural("container", failedContainers.size()),
                 failedContainers.stream().map(ContainerInfo::getContainerId).collect(toList())),
             LogLevel.ERROR);
       } catch (Exception e) {
