@@ -8,7 +8,7 @@ import static software.wings.beans.InfrastructureMappingType.AWS_SSH;
 import static software.wings.beans.InfrastructureMappingType.AZURE_KUBERNETES;
 import static software.wings.beans.InfrastructureMappingType.DIRECT_KUBERNETES;
 import static software.wings.beans.InfrastructureMappingType.GCP_KUBERNETES;
-import static software.wings.beans.InfrastructureMappingType.PCF;
+import static software.wings.beans.InfrastructureMappingType.PCF_PCF;
 import static software.wings.beans.InfrastructureMappingType.PHYSICAL_DATA_CENTER_SSH;
 import static software.wings.beans.InfrastructureMappingType.PHYSICAL_DATA_CENTER_WINRM;
 import static software.wings.beans.OrchestrationWorkflowType.BASIC;
@@ -193,7 +193,7 @@ public class YamlModule extends AbstractModule {
         .to(PhysicalInfraMappingYamlHandler.class);
     infraMappingYamlHelperMapBinder.addBinding(PHYSICAL_DATA_CENTER_WINRM.name())
         .to(PhysicalInfraMappingWinRmYamlHandler.class);
-    infraMappingYamlHelperMapBinder.addBinding(PCF.name()).to(PcfInfraMappingYamlHandler.class);
+    infraMappingYamlHelperMapBinder.addBinding(PCF_PCF.name()).to(PcfInfraMappingYamlHandler.class);
 
     MapBinder<String, DeploymentSpecificationYamlHandler> deploymentSpecYamlHelperMapBinder =
         MapBinder.newMapBinder(binder(), String.class, DeploymentSpecificationYamlHandler.class);

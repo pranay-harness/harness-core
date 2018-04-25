@@ -20,7 +20,7 @@ public class PcfInfraMappingYamlHandler
   public Yaml toYaml(PcfInfrastructureMapping bean, String appId) {
     Yaml yaml = Yaml.builder().build();
     super.toYaml(yaml, bean);
-    yaml.setType(InfrastructureMappingType.PCF.name());
+    yaml.setType(InfrastructureMappingType.PCF_PCF.name());
     yaml.setOrganization(bean.getOrganization());
     yaml.setSpace(bean.getSpace());
     yaml.setTempRouteMap(bean.getTempRouteMap());

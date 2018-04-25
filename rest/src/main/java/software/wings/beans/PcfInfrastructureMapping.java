@@ -11,7 +11,7 @@ import software.wings.utils.Util;
 import java.util.List;
 import java.util.Optional;
 
-@JsonTypeName("PCF")
+@JsonTypeName("PCF_PCF")
 @Data
 @EqualsAndHashCode(callSuper = true)
 public class PcfInfrastructureMapping extends InfrastructureMapping {
@@ -24,7 +24,7 @@ public class PcfInfrastructureMapping extends InfrastructureMapping {
    * Instantiates a new Infrastructure mapping.
    */
   public PcfInfrastructureMapping() {
-    super(InfrastructureMappingType.PCF.name());
+    super(InfrastructureMappingType.PCF_PCF.name());
   }
 
   @SchemaIgnore
