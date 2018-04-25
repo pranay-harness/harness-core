@@ -3,8 +3,6 @@ package software.wings.service.impl;
 import static org.mockito.Mockito.verify;
 import static software.wings.utils.WingsTestConstants.APP_ID;
 
-import com.google.common.collect.Maps;
-
 import org.junit.Rule;
 import org.junit.Test;
 import org.mockito.InjectMocks;
@@ -26,8 +24,7 @@ public class JenkinsSettingProviderTest {
 
   @Test
   public void shouldGetJenkinsSettingData() throws Exception {
-    jenkinsSettingProvider.getData(APP_ID, Maps.newHashMap());
-    verify(settingsService)
-        .getFilteredSettingAttributesByType(APP_ID, SettingVariableTypes.JENKINS.name(), APP_ID, null);
+    jenkinsSettingProvider.getData(APP_ID);
+    verify(settingsService).getSettingAttributesByType(APP_ID, SettingVariableTypes.JENKINS.name());
   }
 }

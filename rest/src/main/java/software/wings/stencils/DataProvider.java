@@ -13,5 +13,5 @@ public interface DataProvider {
    * @param params the params
    * @return the data
    */
-  Map<String, String> getData(String appId, Map<String, String> params);
+  Map<String, String> getData(String appId, String... params);
 }

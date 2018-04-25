@@ -3,8 +3,6 @@ package software.wings.service.impl;
 import static org.mockito.Mockito.verify;
 import static software.wings.utils.WingsTestConstants.APP_ID;
 
-import com.google.common.collect.Maps;
-
 import org.junit.Rule;
 import org.junit.Test;
 import org.mockito.InjectMocks;
@@ -27,8 +25,7 @@ public class AppDynamicsSettingProviderTest {
 
   @Test
   public void shouldGetAppDynamicsSettingData() throws Exception {
-    appDynamicsSettingProvider.getData(APP_ID, Maps.newHashMap());
-    verify(settingsService)
-        .getFilteredSettingAttributesByType(APP_ID, SettingVariableTypes.APP_DYNAMICS.name(), APP_ID, null);
+    appDynamicsSettingProvider.getData(APP_ID);
+    verify(settingsService).getSettingAttributesByType(APP_ID, SettingVariableTypes.APP_DYNAMICS.name());
   }
 }

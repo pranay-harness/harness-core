@@ -10,7 +10,7 @@ import java.util.Map;
  */
 public class ElkQueryTypeProvider implements DataProvider {
   @Override
-  public Map<String, String> getData(String appId, Map<String, String> params) {
+  public Map<String, String> getData(String appId, String... params) {
     final Map<String, String> rv = new HashMap<>();
     rv.put(ElkQueryType.TERM.name(), ElkQueryType.TERM.name());
     rv.put(ElkQueryType.MATCH.name(), ElkQueryType.MATCH.name());

@@ -21,7 +21,7 @@ public class ArtifactSourceProvider implements DataProvider {
   @Inject WingsPersistence wingsPersistence;
 
   @Override
-  public Map<String, String> getData(String appId, Map<String, String> params) {
+  public Map<String, String> getData(String appId, String... params) {
     List<ArtifactStream> artifactStreams = new ArrayList<>();
     List<Service> services = new ArrayList<>();
     if (appId != null) {

@@ -40,7 +40,6 @@ import static software.wings.utils.Validator.notNullCheck;
 import com.google.common.base.Joiner;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.Lists;
-import com.google.common.collect.Maps;
 import com.google.inject.Inject;
 import com.google.inject.Singleton;
 import com.google.inject.name.Named;
@@ -795,8 +794,7 @@ public class InfrastructureMappingServiceImpl implements InfrastructureMappingSe
 
   @Override
   public Map<String, Object> getInfraMappingStencils(String appId) {
-    return stencilPostProcessor
-        .postProcess(Lists.newArrayList(InfrastructureMappingType.values()), appId, Maps.newHashMap())
+    return stencilPostProcessor.postProcess(Lists.newArrayList(InfrastructureMappingType.values()), appId)
         .stream()
         .collect(toMap(Stencil::getName, Function.identity()));
   }
