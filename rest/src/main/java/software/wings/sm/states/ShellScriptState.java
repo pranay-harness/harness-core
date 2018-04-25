@@ -6,6 +6,7 @@ import static software.wings.beans.DelegateTask.Builder.aDelegateTask;
 import static software.wings.beans.Environment.EnvironmentType.ALL;
 import static software.wings.beans.OrchestrationWorkflowType.BUILD;
 import static software.wings.common.Constants.DEFAULT_ASYNC_CALL_TIMEOUT;
+import static software.wings.common.Constants.KUBERNETES_KUBECONFIG_PLACEHOLDER;
 import static software.wings.sm.ExecutionResponse.Builder.anExecutionResponse;
 
 import com.google.common.collect.Maps;
@@ -27,6 +28,7 @@ import software.wings.api.ScriptType;
 import software.wings.beans.Activity;
 import software.wings.beans.Activity.ActivityBuilder;
 import software.wings.beans.Application;
+import software.wings.beans.ContainerInfrastructureMapping;
 import software.wings.beans.DelegateTask;
 import software.wings.beans.Environment;
 import software.wings.beans.HostConnectionAttributes;
@@ -39,11 +41,14 @@ import software.wings.beans.command.CommandType;
 import software.wings.beans.delegation.ShellScriptParameters;
 import software.wings.common.Constants;
 import software.wings.exception.WingsException;
+import software.wings.helpers.ext.container.ContainerDeploymentManagerHelper;
 import software.wings.security.encryption.EncryptedDataDetail;
+import software.wings.service.impl.ContainerServiceParams;
 import software.wings.service.impl.SSHKeyDataProvider;
 import software.wings.service.impl.WinRmConnectionAttributesDataProvider;
 import software.wings.service.intfc.ActivityService;
 import software.wings.service.intfc.DelegateService;
+import software.wings.service.intfc.InfrastructureMappingService;
 import software.wings.service.intfc.SettingsService;
 import software.wings.service.intfc.security.SecretManager;
 import software.wings.sm.ContextElementType;
@@ -69,6 +74,8 @@ public class ShellScriptState extends State {
   @Inject @Transient private transient DelegateService delegateService;
   @Inject @Transient private transient SettingsService settingsService;
   @Inject @Transient private transient SecretManager secretManager;
+  @Inject @Transient private transient InfrastructureMappingService infrastructureMappingService;
+  @Inject @Transient private ContainerDeploymentManagerHelper containerDeploymentManagerHelper;
 
   @Getter @Setter @Attributes(title = "Execute on Delegate") private boolean executeOnDelegate;
 
@@ -188,6 +195,18 @@ public class ShellScriptState extends State {
         ? null
         : workflowStandardParams.getEnv().getUuid();
 
+    Map<String, String> serviceVariables = context.getServiceVariables();
+    Map<String, String> safeDisplayServiceVariables = context.getSafeDisplayServiceVariables();
+
+    if (serviceVariables != null) {
+      serviceVariables.entrySet().forEach(entry -> { entry.setValue(context.renderExpression(entry.getValue())); });
+    }
+
+    if (safeDisplayServiceVariables != null) {
+      safeDisplayServiceVariables.entrySet().forEach(
+          entry -> { entry.setValue(context.renderExpression(entry.getValue())); });
+    }
+
     ExecutionContextImpl executionContext = (ExecutionContextImpl) context;
 
     String username = null;
@@ -219,6 +238,15 @@ public class ShellScriptState extends State {
       }
     }
 
+    ContainerServiceParams containerServiceParams = null;
+    if (serviceVariables != null && serviceVariables.containsValue(KUBERNETES_KUBECONFIG_PLACEHOLDER)) {
+      ContainerInfrastructureMapping containerInfraMapping =
+          (ContainerInfrastructureMapping) infrastructureMappingService.get(
+              context.getAppId(), phaseElement.getInfraMappingId());
+
+      containerServiceParams = containerDeploymentManagerHelper.getContainerServiceParams(containerInfraMapping, "");
+    }
+
     DelegateTask delegateTask =
         aDelegateTask()
             .withTaskType(TaskType.SCRIPT)
@@ -235,6 +263,9 @@ public class ShellScriptState extends State {
                                               .winrmConnectionEncryptedDataDetails(winrmEdd)
                                               .userName(username)
                                               .keyEncryptedDataDetails(keyEncryptionDetails)
+                                              .containerServiceParams(containerServiceParams)
+                                              .serviceVariables(serviceVariables)
+                                              .safeDisplayServiceVariables(safeDisplayServiceVariables)
                                               .workingDirectory(commandPath)
                                               .scriptType(scriptType)
                                               .script(scriptString)

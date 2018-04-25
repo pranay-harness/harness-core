@@ -15,4 +15,5 @@ public class ShellExecutorConfig {
   @NotEmpty private String commandUnitName;
   private String workingDirectory;
   private final Map<String, String> environment;
+  private String kubeConfigContent;
 }

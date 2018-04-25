@@ -13,6 +13,7 @@ import static software.wings.beans.Log.LogLevel.INFO;
 import static software.wings.beans.command.CommandExecutionResult.CommandExecutionStatus.FAILURE;
 import static software.wings.beans.command.CommandExecutionResult.CommandExecutionStatus.RUNNING;
 import static software.wings.beans.command.CommandExecutionResult.CommandExecutionStatus.SUCCESS;
+import static software.wings.common.Constants.KUBERNETES_KUBECONFIG_PLACEHOLDER;
 
 import org.zeroturnaround.exec.ProcessExecutor;
 import org.zeroturnaround.exec.ProcessResult;
@@ -26,6 +27,7 @@ import java.io.File;
 import java.io.FileOutputStream;
 import java.io.IOException;
 import java.nio.charset.StandardCharsets;
+import java.util.Map;
 
 public class ShellExecutor {
   private DelegateLogService logService;
@@ -88,8 +90,21 @@ public class ShellExecutor {
       workingDirectory = new File(config.getWorkingDirectory());
     }
 
-    String scriptFilename = "harness" + this.config.getExecutionId() + ".sh";
+    String scriptFilename = "harness-" + this.config.getExecutionId() + ".sh";
+    String kubeConfigFilename = "kube-" + this.config.getExecutionId() + "-config";
     File scriptFile = new File(workingDirectory, scriptFilename);
+    File kubeConfigFile = new File(workingDirectory, kubeConfigFilename);
+
+    Map<String, String> environment = config.getEnvironment();
+
+    if (environment.containsValue(KUBERNETES_KUBECONFIG_PLACEHOLDER)) {
+      try (FileOutputStream outputStream = new FileOutputStream(kubeConfigFile)) {
+        outputStream.write(config.getKubeConfigContent().getBytes());
+        environment.replaceAll(
+            (key, oldValue)
+                -> oldValue.equals(KUBERNETES_KUBECONFIG_PLACEHOLDER) ? kubeConfigFile.getAbsolutePath() : oldValue);
+      }
+    }
 
     try (FileOutputStream outputStream = new FileOutputStream(scriptFile)) {
       outputStream.write(command.getBytes());
@@ -98,7 +113,7 @@ public class ShellExecutor {
       ProcessExecutor processExecutor = new ProcessExecutor()
                                             .command(commandList)
                                             .directory(workingDirectory)
-                                            .environment(config.getEnvironment())
+                                            .environment(environment)
                                             .readOutput(true)
                                             .redirectOutput(new LogOutputStream() {
                                               @Override
@@ -124,6 +139,7 @@ public class ShellExecutor {
         deleteDirectoryAndItsContentIfExists(workingDirectory.getAbsolutePath());
       } else {
         deleteFileIfExists(scriptFile.getAbsolutePath());
+        deleteFileIfExists(kubeConfigFile.getAbsolutePath());
       }
     }
 

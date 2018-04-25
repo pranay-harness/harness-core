@@ -25,6 +25,7 @@ public interface ContextElement {
   String INFRA = "infra";
   String KUBERNETES = "kubernetes";
   String NAMESPACE = "namespace";
+  String KUBECONFIG = "kubeconfig";
 
   ContextElementType getElementType();
 

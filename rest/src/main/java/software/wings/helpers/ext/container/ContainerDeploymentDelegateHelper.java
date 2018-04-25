@@ -70,8 +70,6 @@ public class ContainerDeploymentDelegateHelper {
 
   public String createAndGetKubeConfigLocation(ContainerServiceParams containerServiceParam) {
     try {
-      String clusterName = containerServiceParam.getClusterName();
-
       KubernetesConfig kubernetesConfig = getKubernetesConfig(containerServiceParam);
       encryptionService.decrypt(kubernetesConfig, containerServiceParam.getEncryptionDetails());
 
@@ -83,7 +81,7 @@ public class ContainerDeploymentDelegateHelper {
         kubernetesConfig.setClientKey(getEncodedChars(kubernetesConfig.getClientKey()));
       }
 
-      String configFileContent = getConfigFileContent(kubernetesConfig, clusterName);
+      String configFileContent = getConfigFileContent(kubernetesConfig);
       String md5Hash = DigestUtils.md5Hex(configFileContent);
 
       synchronized (lockObjects.get(md5Hash)) {
@@ -112,7 +110,7 @@ public class ContainerDeploymentDelegateHelper {
     return new String(encode, "UTF-8").toCharArray();
   }
 
-  private String getConfigFileContent(KubernetesConfig config, String clusterName) {
+  private String getConfigFileContent(KubernetesConfig config) {
     String clientCertData =
         isNotEmpty(config.getClientCert()) ? "client-certificate-data: " + new String(config.getClientCert()) : "";
     String clientKeyData =
@@ -125,6 +123,12 @@ public class ContainerDeploymentDelegateHelper {
         .replace("${CLIENT_CERT_DATA}", clientCertData)
         .replace("${CLIENT_KEY_DATA}", clientKeyData)
         .replace("${PASSWORD}", password);
+  }
+
+  public String getKubeConfigFileContent(ContainerServiceParams containerServiceParam) {
+    KubernetesConfig kubernetesConfig = getKubernetesConfig(containerServiceParam);
+    encryptionService.decrypt(kubernetesConfig, containerServiceParam.getEncryptionDetails());
+    return getConfigFileContent(kubernetesConfig);
   }
 
   public KubernetesConfig getKubernetesConfig(ContainerServiceParams containerServiceParam) {

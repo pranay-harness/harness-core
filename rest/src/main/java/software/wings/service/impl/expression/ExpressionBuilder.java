@@ -85,6 +85,7 @@ public abstract class ExpressionBuilder {
   protected static final String HOST_INSTANCE_VPCID = "host.ec2Instance.vpcId";
 
   protected static final String INFRA_KUBERNETES_NAMESPACE = "infra.kubernetes.namespace";
+  protected static final String INFRA_KUBERNETES_KUBECONFIG = "infra.kubernetes.kubeconfig";
 
   protected static final String START_TS = "startTs";
   protected static final String END_TS = "endTs";
@@ -138,6 +139,7 @@ public abstract class ExpressionBuilder {
         HOST_INSTANCE_VPCID));
 
     expressions.add(INFRA_KUBERNETES_NAMESPACE);
+    expressions.add(INFRA_KUBERNETES_KUBECONFIG);
 
     return expressions;
   }
