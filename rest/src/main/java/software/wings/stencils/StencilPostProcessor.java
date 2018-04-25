@@ -64,11 +64,11 @@ public class StencilPostProcessor {
    * @param args     the args
    * @return the list
    */
-  public <T extends Stencil> List<Stencil> postProcess(List<T> stencils, String appId, Map<String, String> args) {
+  public <T extends Stencil> List<Stencil> postProcess(List<T> stencils, String appId, String... args) {
     return stencils.stream().flatMap(t -> processStencil(t, appId, args)).collect(toList());
   }
 
-  public <T extends Stencil> Stream<Stencil> processStencil(T t, String appId, Map<String, String> args) {
+  public <T extends Stencil> Stream<Stencil> processStencil(T t, String appId, String... args) {
     Stencil stencil = t.getOverridingStencil();
     for (Field field : t.getTypeClass().getDeclaredFields()) {
       EnumData enumData = field.getAnnotation(EnumData.class);

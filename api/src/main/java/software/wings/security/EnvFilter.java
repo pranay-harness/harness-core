@@ -1,6 +1,5 @@
 package software.wings.security;
 
-import lombok.Builder;
 import lombok.Data;
 import lombok.EqualsAndHashCode;
 import lombok.NoArgsConstructor;
@@ -22,7 +21,6 @@ public class EnvFilter extends Filter {
   }
   private Set<String> filterTypes;
 
-  @Builder
   public EnvFilter(Set<String> ids, Set<String> filterTypes) {
     super(ids);
     this.filterTypes = filterTypes;

@@ -187,7 +187,7 @@ public class EnvironmentServiceImpl implements EnvironmentService, DataProvider 
    * {@inheritDoc}
    */
   @Override
-  public Map<String, String> getData(String appId, Map<String, String> params) {
+  public Map<String, String> getData(String appId, String... params) {
     PageRequest<Environment> pageRequest = new PageRequest<>();
     pageRequest.addFilter("appId", EQ, appId);
     return list(pageRequest, false).stream().collect(toMap(Environment::getUuid, Environment::getName));

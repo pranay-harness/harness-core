@@ -11,7 +11,6 @@ import static software.wings.utils.WingsTestConstants.INTEGER_DEFAULT_VALUE;
 import static software.wings.utils.WingsTestConstants.LONG_DEFAULT_VALUE;
 
 import com.google.common.collect.ImmutableMap;
-import com.google.common.collect.Maps;
 import com.google.inject.Inject;
 import com.google.inject.Injector;
 import com.google.inject.Singleton;
@@ -59,8 +58,8 @@ public class StencilPostProcessorTest extends WingsBaseTest {
 
   @Test
   public void shouldExpandStencilOnPostProcess() {
-    List<Stencil> processedStencils = stencilPostProcessor.postProcess(
-        Collections.singletonList(new StencilType(ExpandStencilObject.class)), APP_ID, Maps.newHashMap());
+    List<Stencil> processedStencils =
+        stencilPostProcessor.postProcess(Collections.singletonList(new StencilType(ExpandStencilObject.class)), APP_ID);
 
     assertThat(processedStencils)
         .hasSize(2)
@@ -83,8 +82,8 @@ public class StencilPostProcessorTest extends WingsBaseTest {
 
   @Test
   public void shouldNotExpandForStencilEnumOnPostProcess() {
-    List<Stencil> processedStencils = stencilPostProcessor.postProcess(
-        Collections.singletonList(new StencilType(EnumStencilObject.class)), APP_ID, Maps.newHashMap());
+    List<Stencil> processedStencils =
+        stencilPostProcessor.postProcess(Collections.singletonList(new StencilType(EnumStencilObject.class)), APP_ID);
 
     assertThat(processedStencils)
         .hasSize(1)
@@ -98,7 +97,7 @@ public class StencilPostProcessorTest extends WingsBaseTest {
   @Test
   public void shouldSetDefaultValueForTheField() {
     List<Stencil> processedStencils = stencilPostProcessor.postProcess(
-        Collections.singletonList(new StencilType(DefaultStencilObject.class)), APP_ID, Maps.newHashMap());
+        Collections.singletonList(new StencilType(DefaultStencilObject.class)), APP_ID);
 
     assertThat(processedStencils)
         .hasSize(1)
@@ -111,7 +110,7 @@ public class StencilPostProcessorTest extends WingsBaseTest {
   @Test
   public void shouldSetDefaultValueForTheAccessorMethod() {
     List<Stencil> processedStencils = stencilPostProcessor.postProcess(
-        Collections.singletonList(new StencilType(DefaultMethodStencilObject.class)), APP_ID, Maps.newHashMap());
+        Collections.singletonList(new StencilType(DefaultMethodStencilObject.class)), APP_ID);
 
     processedStencils.stream()
         .map(stencil -> stencil.getJsonSchema())
@@ -130,7 +129,7 @@ public class StencilPostProcessorTest extends WingsBaseTest {
   @Singleton
   public static class TestDataProvider implements DataProvider {
     @Override
-    public Map<String, String> getData(String appId, Map<String, String> params) {
+    public Map<String, String> getData(String appId, String... params) {
       return ImmutableMap.of("Name1", "Value1", "Name2", "Value2");
     }
   }

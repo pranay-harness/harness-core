@@ -297,7 +297,7 @@ public class ScpCommandUnit extends SshCommandUnit {
   @Singleton
   public static class ScpCommandDataProvider implements DataProvider {
     @Override
-    public Map<String, String> getData(String appId, Map<String, String> params) {
+    public Map<String, String> getData(String appId, String... params) {
       return Stream.of(ScpFileCategory.values()).collect(toMap(ScpFileCategory::name, ScpFileCategory::getName));
     }
   }

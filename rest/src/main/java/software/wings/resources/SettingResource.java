@@ -78,8 +78,7 @@ public class SettingResource {
   @Timed
   @ExceptionMetered
   public RestResponse<PageResponse<SettingAttribute>> list(
-      @DefaultValue(GLOBAL_APP_ID) @QueryParam("appId") String appId, @QueryParam("currentAppId") String currentAppId,
-      @QueryParam("currentEnvId") String currentEnvId, @QueryParam("accountId") String accountId,
+      @DefaultValue(GLOBAL_APP_ID) @QueryParam("appId") String appId, @QueryParam("accountId") String accountId,
       @QueryParam("type") List<SettingVariableTypes> settingVariableTypes,
       @QueryParam("gitSshConfigOnly") boolean gitSshConfigOnly, @BeanParam PageRequest<SettingAttribute> pageRequest) {
     pageRequest.addFilter("appId", EQ, appId);
@@ -92,7 +91,8 @@ public class SettingResource {
       pageRequest.addFilter("value.type", EQ, SettingVariableTypes.HOST_CONNECTION_ATTRIBUTES.name());
     }
 
-    PageResponse<SettingAttribute> result = attributeService.list(pageRequest, currentAppId, currentEnvId);
+    PageResponse<SettingAttribute> result = attributeService.list(pageRequest);
+
     if (gitSshConfigOnly) {
       List<SettingAttribute> filteredResponse =
           result.stream()

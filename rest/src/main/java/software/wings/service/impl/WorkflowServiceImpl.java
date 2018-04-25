@@ -314,14 +314,11 @@ public class WorkflowServiceImpl implements WorkflowService, DataProvider {
     Workflow workflow = null;
     Map<StateTypeScope, List<Stencil>> mapByScope = null;
     WorkflowPhase workflowPhase = null;
-    Map<String, String> entityMap = new HashMap<>(1);
     if (filterForWorkflow) {
       workflow = readWorkflow(appId, workflowId);
       if (workflow == null) {
         throw new InvalidRequestException("Workflow does not exist", USER);
       }
-      String envId = workflow.getEnvId();
-      entityMap.put(EntityType.ENVIRONMENT.name(), envId);
       if (filterForPhase) {
         if (workflow != null) {
           OrchestrationWorkflow orchestrationWorkflow = workflow.getOrchestrationWorkflow();
@@ -335,28 +332,23 @@ public class WorkflowServiceImpl implements WorkflowService, DataProvider {
         }
         String serviceId = workflowPhase.getServiceId();
         if (serviceId != null) {
-          entityMap.put(EntityType.SERVICE.name(), serviceId);
-
           mapByScope = stencilsMap.entrySet().stream().collect(toMap(Entry::getKey,
               stateTypeScopeListEntry
-              -> stencilPostProcessor.postProcess(stateTypeScopeListEntry.getValue(), appId, entityMap)));
+              -> stencilPostProcessor.postProcess(stateTypeScopeListEntry.getValue(), appId, serviceId)));
         } else {
           mapByScope = stencilsMap.entrySet().stream().collect(toMap(Entry::getKey,
-              stateTypeScopeListEntry
-              -> stencilPostProcessor.postProcess(stateTypeScopeListEntry.getValue(), appId, entityMap)));
+              stateTypeScopeListEntry -> stencilPostProcessor.postProcess(stateTypeScopeListEntry.getValue(), appId)));
         }
       } else {
-        entityMap.put("NONE", "NONE");
         // For workflow, anyways skipping the command names. So, sending service Id as "NONE" to make sure that
         // EnumDataProvider can ignore that.
         mapByScope = stencilsMap.entrySet().stream().collect(toMap(Entry::getKey,
             stateTypeScopeListEntry
-            -> stencilPostProcessor.postProcess(stateTypeScopeListEntry.getValue(), appId, entityMap)));
+            -> stencilPostProcessor.postProcess(stateTypeScopeListEntry.getValue(), appId, "NONE")));
       }
     } else {
       mapByScope = stencilsMap.entrySet().stream().collect(toMap(Entry::getKey,
-          stateTypeScopeListEntry
-          -> stencilPostProcessor.postProcess(stateTypeScopeListEntry.getValue(), appId, entityMap)));
+          stateTypeScopeListEntry -> stencilPostProcessor.postProcess(stateTypeScopeListEntry.getValue(), appId)));
     }
     Map<StateTypeScope, List<Stencil>> maps = new HashMap<>();
     if (isEmpty(stateTypeScopes)) {
@@ -1442,7 +1434,7 @@ public class WorkflowServiceImpl implements WorkflowService, DataProvider {
   }
 
   @Override
-  public Map<String, String> getData(String appId, Map<String, String> params) {
+  public Map<String, String> getData(String appId, String... params) {
     List<Workflow> workflows = wingsPersistence.createQuery(Workflow.class).filter("appId", appId).asList();
     return workflows.stream().collect(toMap(Workflow::getUuid, o -> o.getName()));
   }

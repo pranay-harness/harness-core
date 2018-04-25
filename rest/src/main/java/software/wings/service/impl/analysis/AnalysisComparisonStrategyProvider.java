@@ -13,7 +13,7 @@ import java.util.Map;
 @Singleton
 public class AnalysisComparisonStrategyProvider implements DataProvider {
   @Override
-  public Map<String, String> getData(String appId, Map<String, String> params) {
+  public Map<String, String> getData(String appId, String... params) {
     final Map<String, String> rv = new HashMap<>();
     rv.put(AnalysisComparisonStrategy.COMPARE_WITH_PREVIOUS.name(), "Previous analysis");
     rv.put(AnalysisComparisonStrategy.COMPARE_WITH_CURRENT.name(), "Canary analysis");

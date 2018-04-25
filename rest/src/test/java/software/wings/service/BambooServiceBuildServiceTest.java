@@ -36,7 +36,7 @@ public class BambooServiceBuildServiceTest extends WingsBaseTest {
 
   @Test
   public void shouldFetchBambooSettings() {
-    PageResponse<SettingAttribute> settingAttributes = settingsService.list(new PageRequest<>(), null, null);
+    PageResponse<SettingAttribute> settingAttributes = settingsService.list(new PageRequest<>());
     SettingAttribute settingAttribute = settingsService.get("YcsuxTFqR6uH093foR_K5w-bamboo");
     logger.info(settingAttribute.toString());
   }
