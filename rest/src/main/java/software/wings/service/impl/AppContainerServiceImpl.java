@@ -1,6 +1,7 @@
 package software.wings.service.impl;
 
 import static com.google.common.collect.ImmutableMap.of;
+import static org.atteo.evo.inflector.English.plural;
 import static software.wings.beans.ErrorCode.INVALID_REQUEST;
 import static software.wings.dl.PageRequest.PageRequestBuilder.aPageRequest;
 import static software.wings.service.intfc.FileService.FileBucket.PLATFORMS;
@@ -167,7 +168,7 @@ public class AppContainerServiceImpl implements AppContainerService {
       throw new WingsException(INVALID_REQUEST)
           .addParam("message",
               String.format(
-                  "Application Stack is in use by %s service%s.", services.size(), services.size() == 1 ? "" : "s"));
+                  "Application Stack is in use by %d %s.", services.size(), plural("service", services.size())));
     }
   }
 

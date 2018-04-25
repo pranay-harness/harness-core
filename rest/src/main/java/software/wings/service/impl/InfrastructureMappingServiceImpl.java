@@ -8,6 +8,7 @@ import static java.util.stream.Collectors.toList;
 import static java.util.stream.Collectors.toMap;
 import static org.apache.commons.lang3.StringUtils.isBlank;
 import static org.apache.commons.lang3.StringUtils.isNotBlank;
+import static org.atteo.evo.inflector.English.plural;
 import static software.wings.api.DeploymentType.AMI;
 import static software.wings.api.DeploymentType.AWS_CODEDEPLOY;
 import static software.wings.api.DeploymentType.AWS_LAMBDA;
@@ -778,8 +779,8 @@ public class InfrastructureMappingServiceImpl implements InfrastructureMappingSe
     if (!referencingWorkflowNames.isEmpty()) {
       throw new WingsException(INVALID_REQUEST, USER)
           .addParam("message",
-              String.format("Service Infrastructure is in use by %s workflow%s [%s].", referencingWorkflowNames.size(),
-                  referencingWorkflowNames.size() == 1 ? "" : "s", Joiner.on(", ").join(referencingWorkflowNames)));
+              String.format("Service Infrastructure is in use by %d %s [%s].", referencingWorkflowNames.size(),
+                  plural("workflow", referencingWorkflowNames.size()), Joiner.on(", ").join(referencingWorkflowNames)));
     }
   }
 

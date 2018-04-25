@@ -8,6 +8,7 @@ import static java.util.Collections.emptyList;
 import static java.util.stream.Collectors.toList;
 import static java.util.stream.Collectors.toMap;
 import static org.apache.commons.lang3.StringUtils.isNotBlank;
+import static org.atteo.evo.inflector.English.plural;
 import static software.wings.beans.command.ContainerResizeCommandUnit.DASH_STRING;
 import static software.wings.beans.container.KubernetesContainerTask.CONFIG_MAP_NAME_PLACEHOLDER_REGEX;
 import static software.wings.beans.container.KubernetesContainerTask.SECRET_MAP_NAME_PLACEHOLDER_REGEX;
@@ -773,15 +774,15 @@ public class KubernetesSetupCommandUnit extends ContainerSetupCommandUnit {
         containerInfos.stream().allMatch(info -> info.getStatus() == ContainerInfo.Status.SUCCESS);
     if (containerInfos.size() != desiredCount || !allContainersSuccess) {
       if (containerInfos.size() != desiredCount) {
-        String message = String.format("Expected data for %d container%s but got %d", desiredCount,
-            containerInfos.size() == 1 ? "" : "s", containerInfos.size());
+        String message = String.format("Expected data for %d %s but got %d", desiredCount,
+            plural("container", desiredCount), containerInfos.size());
         executionLogCallback.saveExecutionLog(message, LogLevel.ERROR);
       }
       if (!allContainersSuccess) {
         List<ContainerInfo> failed =
             containerInfos.stream().filter(info -> info.getStatus() != ContainerInfo.Status.SUCCESS).collect(toList());
-        String message = String.format("The following container%s did not have success status: %s",
-            failed.size() == 1 ? "" : "s", failed.stream().map(ContainerInfo::getContainerId).collect(toList()));
+        String message = String.format("The following %s did not have success status: %s",
+            plural("container", failed.size()), failed.stream().map(ContainerInfo::getContainerId).collect(toList()));
         executionLogCallback.saveExecutionLog(message, LogLevel.ERROR);
       }
       executionLogCallback.saveExecutionLog(

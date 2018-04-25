@@ -293,11 +293,11 @@ public class InstanceExpressionProcessor implements ExpressionProcessor {
       if (isNotEmpty(instanceIds)) {
         Collection<String> commonInstanceIds =
             intersection(asList(instanceIds), serviceInstanceIdsParam.getInstanceIds());
-        instanceIds = commonInstanceIds.toArray(new String[commonInstanceIds.size()]);
+        instanceIds = commonInstanceIds.toArray(new String[0]);
       } else {
         List<String> instanceIds = serviceInstanceIdsParam.getInstanceIds();
         if (isNotEmpty(instanceIds)) {
-          this.instanceIds = instanceIds.toArray(new String[instanceIds.size()]);
+          this.instanceIds = instanceIds.toArray(new String[0]);
         } else {
           pageRequest.addFilter(ID_KEY, Operator.IN, emptyList());
           return;
@@ -310,7 +310,7 @@ public class InstanceExpressionProcessor implements ExpressionProcessor {
     } else {
       InstanceElement element = context.getContextElement(ContextElementType.INSTANCE);
       if (element != null) {
-        pageRequest.addFilter(ID_KEY, Operator.IN, new Object[] {element.getUuid()});
+        pageRequest.addFilter(ID_KEY, Operator.IN, element.getUuid());
       }
     }
   }

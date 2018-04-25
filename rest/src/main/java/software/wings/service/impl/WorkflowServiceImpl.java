@@ -9,6 +9,7 @@ import static java.util.Arrays.asList;
 import static java.util.stream.Collectors.toList;
 import static java.util.stream.Collectors.toMap;
 import static org.apache.commons.lang3.StringUtils.isNotBlank;
+import static org.atteo.evo.inflector.English.plural;
 import static org.mongodb.morphia.mapping.Mapper.ID_KEY;
 import static software.wings.api.DeploymentType.AMI;
 import static software.wings.api.DeploymentType.AWS_CODEDEPLOY;
@@ -1281,8 +1282,8 @@ public class WorkflowServiceImpl implements WorkflowService, DataProvider {
 
     if (!pipelines.isEmpty()) {
       List<String> pipelineNames = pipelines.stream().map(Pipeline::getName).collect(toList());
-      String message = String.format("Workflow is referenced by %s pipeline%s [%s].", pipelines.size(),
-          pipelines.size() == 1 ? "" : "s", Joiner.on(", ").join(pipelineNames));
+      String message = String.format("Workflow is referenced by %d %s [%s].", pipelines.size(),
+          plural("pipeline", pipelines.size()), Joiner.on(", ").join(pipelineNames));
       throw new InvalidRequestException(message, USER);
     }
 

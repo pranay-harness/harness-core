@@ -166,12 +166,11 @@ public class PcfSetupState extends State {
 
     String[] tempRputeMaps = CollectionUtils.isEmpty(pcfInfrastructureMapping.getTempRouteMap())
         ? new String[0]
-        : pcfInfrastructureMapping.getTempRouteMap().toArray(
-              new String[pcfInfrastructureMapping.getTempRouteMap().size()]);
+        : pcfInfrastructureMapping.getTempRouteMap().toArray(new String[0]);
 
     String[] routeMaps = CollectionUtils.isEmpty(pcfInfrastructureMapping.getRouteMaps())
         ? new String[0]
-        : pcfInfrastructureMapping.getRouteMaps().toArray(new String[pcfInfrastructureMapping.getRouteMaps().size()]);
+        : pcfInfrastructureMapping.getRouteMaps().toArray(new String[0]);
 
     PcfCommandRequest commandRequest =
         PcfCommandSetupRequest.builder()

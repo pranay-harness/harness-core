@@ -3,6 +3,7 @@ package software.wings.sm.states;
 import static io.harness.data.structure.EmptyPredicate.isEmpty;
 import static io.harness.data.structure.EmptyPredicate.isNotEmpty;
 import static java.util.stream.Collectors.toList;
+import static org.atteo.evo.inflector.English.plural;
 import static software.wings.api.ServiceInstanceIdsParam.ServiceInstanceIdsParamBuilder.aServiceInstanceIdsParam;
 import static software.wings.beans.InstanceUnitType.COUNT;
 import static software.wings.beans.InstanceUnitType.PERCENTAGE;
@@ -213,8 +214,7 @@ public abstract class NodeSelectState extends State {
         } else {
           msg.append("This phase deploys to ")
               .append(instanceCount)
-              .append(" instance")
-              .append(instanceCount == 1 ? "" : "s")
+              .append(plural(" instance", instanceCount))
               .append(" (cumulative) ");
         }
       }
@@ -227,8 +227,7 @@ public abstract class NodeSelectState extends State {
           .append(infraMapping.getName())
           .append("] has ")
           .append(totalAvailableInstances)
-          .append(" instance")
-          .append(totalAvailableInstances == 1 ? "" : "s")
+          .append(plural(" instance", totalAvailableInstances))
           .append(" available. ");
 
       if (specificHosts) {

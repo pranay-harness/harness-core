@@ -91,7 +91,7 @@ public class GuiceObjectFactory implements AtmosphereObjectFactory<AbstractModul
       // start by trying to get an Injector instance from the servlet context
       Injector existingInjector = (Injector) framework.getServletContext().getAttribute(Injector.class.getName());
 
-      AbstractModule[] a = modules.toArray(new AbstractModule[modules.size()]);
+      AbstractModule[] a = modules.toArray(new AbstractModule[0]);
       if (existingInjector != null) {
         logger.trace("Adding AtmosphereModule to existing Guice injector");
         injector = existingInjector.createChildInjector(a);
