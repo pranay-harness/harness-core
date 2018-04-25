@@ -19,6 +19,8 @@ import static software.wings.common.Constants.SECRET_MASK;
 import static software.wings.service.impl.KubernetesHelperService.printRouteRuleWeights;
 import static software.wings.service.impl.KubernetesHelperService.toDisplayYaml;
 import static software.wings.service.impl.KubernetesHelperService.toYaml;
+import static software.wings.utils.KubernetesConvention.DASH;
+import static software.wings.utils.KubernetesConvention.DOT;
 import static software.wings.utils.KubernetesConvention.getKubernetesRegistrySecretName;
 import static software.wings.utils.KubernetesConvention.getKubernetesServiceName;
 import static software.wings.utils.KubernetesConvention.getPrefixFromControllerName;
@@ -185,10 +187,6 @@ public class KubernetesSetupCommandUnit extends ContainerSetupCommandUnit {
 
       kubernetesContainerService.createNamespaceIfNotExist(kubernetesConfig, encryptedDataDetails);
 
-      String lastCtrlName =
-          lastController(kubernetesConfig, encryptedDataDetails, setupParams.getControllerNamePrefix());
-      int revision = getRevisionFromControllerName(lastCtrlName).orElse(-1) + 1;
-
       String kubernetesServiceName = getKubernetesServiceName(setupParams.getControllerNamePrefix());
 
       KubernetesContainerTask kubernetesContainerTask = (KubernetesContainerTask) setupParams.getContainerTask();
@@ -198,11 +196,16 @@ public class KubernetesSetupCommandUnit extends ContainerSetupCommandUnit {
         kubernetesContainerTask.setContainerDefinitions(Lists.newArrayList(containerDefinition));
       }
 
+      boolean isStatefulSet = kubernetesContainerTask.checkStatefulSet();
       boolean isDaemonSet = kubernetesContainerTask.checkDaemonSet();
+
+      String lastCtrlName =
+          lastController(kubernetesConfig, encryptedDataDetails, setupParams.getControllerNamePrefix(), isStatefulSet);
+      int revision = getRevisionFromControllerName(lastCtrlName, isStatefulSet).orElse(-1) + 1;
 
       String containerServiceName = isDaemonSet
           ? setupParams.getControllerNamePrefix()
-          : KubernetesConvention.getControllerName(setupParams.getControllerNamePrefix(), revision);
+          : KubernetesConvention.getControllerName(setupParams.getControllerNamePrefix(), revision, isStatefulSet);
 
       if (setupParams.isRollback()) {
         executionLogCallback.saveExecutionLog("Rolling back setup");
@@ -237,12 +240,12 @@ public class KubernetesSetupCommandUnit extends ContainerSetupCommandUnit {
         originalDaemonSetPods =
             kubernetesContainerService.getRunningPods(kubernetesConfig, encryptedDataDetails, containerServiceName);
       } else {
-        previousActiveAutoscalers =
-            getActiveAutoscalers(kubernetesConfig, encryptedDataDetails, containerServiceName, executionLogCallback);
+        previousActiveAutoscalers = getActiveAutoscalers(
+            kubernetesConfig, encryptedDataDetails, containerServiceName, executionLogCallback, isStatefulSet);
         activeServiceCounts = kubernetesContainerService.getActiveServiceCounts(
-            kubernetesConfig, encryptedDataDetails, containerServiceName);
-        trafficWeights =
-            kubernetesContainerService.getTrafficWeights(kubernetesConfig, encryptedDataDetails, containerServiceName);
+            kubernetesConfig, encryptedDataDetails, containerServiceName, isStatefulSet);
+        trafficWeights = kubernetesContainerService.getTrafficWeights(
+            kubernetesConfig, encryptedDataDetails, containerServiceName, isStatefulSet);
       }
 
       commandExecutionDataBuilder.containerServiceName(containerServiceName)
@@ -339,7 +342,7 @@ public class KubernetesSetupCommandUnit extends ContainerSetupCommandUnit {
 
       // Setup Istio route rule
       IstioResource routeRule = prepareRouteRule(encryptedDataDetails, kubernetesConfig, setupParams,
-          kubernetesServiceName, service, activeServiceCounts, executionLogCallback);
+          kubernetesServiceName, service, activeServiceCounts, executionLogCallback, isStatefulSet);
 
       // Disable previous autoscalers
       if (isNotEmpty(previousActiveAutoscalers)) {
@@ -384,7 +387,8 @@ public class KubernetesSetupCommandUnit extends ContainerSetupCommandUnit {
       }
       if (routeRule != null) {
         executionLogCallback.saveExecutionLog("Istio route rule: " + routeRule.getMetadata().getName());
-        printRouteRuleWeights(routeRule, getPrefixFromControllerName(containerServiceName), executionLogCallback);
+        printRouteRuleWeights(
+            routeRule, getPrefixFromControllerName(containerServiceName, isStatefulSet), executionLogCallback);
       }
 
       if (isDaemonSet) {
@@ -393,7 +397,7 @@ public class KubernetesSetupCommandUnit extends ContainerSetupCommandUnit {
             false);
       } else {
         executionLogCallback.saveExecutionLog("Cleaning up old versions");
-        cleanup(kubernetesConfig, encryptedDataDetails, containerServiceName, executionLogCallback);
+        cleanup(kubernetesConfig, encryptedDataDetails, containerServiceName, executionLogCallback, isStatefulSet);
       }
 
       return CommandExecutionStatus.SUCCESS;
@@ -426,7 +430,7 @@ public class KubernetesSetupCommandUnit extends ContainerSetupCommandUnit {
 
   private IstioResource prepareRouteRule(List<EncryptedDataDetail> encryptedDataDetails,
       KubernetesConfig kubernetesConfig, KubernetesSetupParams setupParams, String routeRuleName, Service service,
-      Map<String, Integer> activeControllers, ExecutionLogCallback executionLogCallback) {
+      Map<String, Integer> activeControllers, ExecutionLogCallback executionLogCallback, boolean isStatefulSet) {
     IstioResource routeRule = null;
     try {
       routeRule = kubernetesContainerService.getRouteRule(kubernetesConfig, encryptedDataDetails, routeRuleName);
@@ -437,8 +441,8 @@ public class KubernetesSetupCommandUnit extends ContainerSetupCommandUnit {
     if (setupParams.isUseIstioRouteRule() && service != null) {
       if (routeRule == null || routeRule.getSpec() == null || isEmpty(((RouteRule) routeRule.getSpec()).getRoute())
           || !((RouteRule) routeRule.getSpec()).getRoute().get(0).getLabels().containsKey(HARNESS_REVISION)) {
-        IstioResource routeRuleDefinition =
-            createRouteRuleDefinition(setupParams, routeRuleName, service.getSpec().getSelector(), activeControllers);
+        IstioResource routeRuleDefinition = createRouteRuleDefinition(
+            setupParams, routeRuleName, service.getSpec().getSelector(), activeControllers, isStatefulSet);
         executionLogCallback.saveExecutionLog("Creating Istio route rule " + routeRuleName);
         routeRule = kubernetesContainerService.createOrReplaceRouteRule(
             kubernetesConfig, encryptedDataDetails, routeRuleDefinition);
@@ -621,8 +625,8 @@ public class KubernetesSetupCommandUnit extends ContainerSetupCommandUnit {
 
   private List<String> getActiveAutoscalers(KubernetesConfig kubernetesConfig,
       List<EncryptedDataDetail> encryptedDataDetails, String containerServiceName,
-      ExecutionLogCallback executionLogCallback) {
-    String controllerNamePrefix = getPrefixFromControllerName(containerServiceName);
+      ExecutionLogCallback executionLogCallback, boolean isStatefulSet) {
+    String controllerNamePrefix = getPrefixFromControllerName(containerServiceName, isStatefulSet);
     try {
       return kubernetesContainerService.listAutoscalers(kubernetesConfig, encryptedDataDetails)
           .stream()
@@ -724,7 +728,7 @@ public class KubernetesSetupCommandUnit extends ContainerSetupCommandUnit {
   }
 
   private IstioResource createRouteRuleDefinition(KubernetesSetupParams setupParams, String kubernetesServiceName,
-      Map<String, String> serviceLabels, Map<String, Integer> activeControllers) {
+      Map<String, String> serviceLabels, Map<String, Integer> activeControllers, boolean isStatefulSet) {
     RouteRuleSpecNested<IstioResourceBuilder> routeRuleSpecNested = new IstioResourceBuilder()
                                                                         .withNewMetadata()
                                                                         .withName(kubernetesServiceName)
@@ -738,7 +742,7 @@ public class KubernetesSetupCommandUnit extends ContainerSetupCommandUnit {
                                                                         .endDestination();
     int totalInstances = activeControllers.values().stream().mapToInt(Integer::intValue).sum();
     for (String controller : activeControllers.keySet()) {
-      Optional<Integer> revision = getRevisionFromControllerName(controller);
+      Optional<Integer> revision = getRevisionFromControllerName(controller, isStatefulSet);
       if (revision.isPresent()) {
         int weight = (int) Math.round((activeControllers.get(controller) * 100.0) / totalInstances);
         if (weight > 0) {
@@ -922,15 +926,17 @@ public class KubernetesSetupCommandUnit extends ContainerSetupCommandUnit {
     return loadBalancerEndpoint;
   }
 
-  private String lastController(
-      KubernetesConfig kubernetesConfig, List<EncryptedDataDetail> encryptedDataDetails, String controllerNamePrefix) {
+  private String lastController(KubernetesConfig kubernetesConfig, List<EncryptedDataDetail> encryptedDataDetails,
+      String controllerNamePrefix, boolean isStatefulSet) {
+    String versionSeparator = isStatefulSet ? DASH : DOT;
+
     final HasMetadata[] lastReplicationController = {null};
     final AtomicInteger lastRevision = new AtomicInteger();
     kubernetesContainerService.listControllers(kubernetesConfig, encryptedDataDetails)
         .stream()
-        .filter(ctrl -> ctrl.getMetadata().getName().startsWith(controllerNamePrefix + KubernetesConvention.DOT))
+        .filter(ctrl -> ctrl.getMetadata().getName().startsWith(controllerNamePrefix + versionSeparator))
         .forEach(ctrl -> {
-          Optional<Integer> revision = getRevisionFromControllerName(ctrl.getMetadata().getName());
+          Optional<Integer> revision = getRevisionFromControllerName(ctrl.getMetadata().getName(), isStatefulSet);
           if (revision.isPresent() && (lastReplicationController[0] == null || revision.get() > lastRevision.get())) {
             lastReplicationController[0] = ctrl;
             lastRevision.set(revision.get());
@@ -1108,18 +1114,18 @@ public class KubernetesSetupCommandUnit extends ContainerSetupCommandUnit {
   }
 
   private void cleanup(KubernetesConfig kubernetesConfig, List<EncryptedDataDetail> encryptedDataDetails,
-      String containerServiceName, ExecutionLogCallback executionLogCallback) {
-    Optional<Integer> revision = getRevisionFromControllerName(containerServiceName);
+      String containerServiceName, ExecutionLogCallback executionLogCallback, boolean isStatefulSet) {
+    Optional<Integer> revision = getRevisionFromControllerName(containerServiceName, isStatefulSet);
     if (revision.isPresent() && revision.get() >= KEEP_N_REVISIONS) {
       int minRevisionToKeep = revision.get() - KEEP_N_REVISIONS + 1;
-      String controllerNamePrefix = getPrefixFromControllerName(containerServiceName);
+      String controllerNamePrefix = getPrefixFromControllerName(containerServiceName, isStatefulSet);
       kubernetesContainerService.listControllers(kubernetesConfig, encryptedDataDetails)
           .stream()
           .filter(ctrl -> ctrl.getMetadata().getName().startsWith(controllerNamePrefix))
           .filter(ctrl -> kubernetesContainerService.getControllerPodCount(ctrl) == 0)
           .forEach(ctrl -> {
             String controllerName = ctrl.getMetadata().getName();
-            Optional<Integer> ctrlRevision = getRevisionFromControllerName(controllerName);
+            Optional<Integer> ctrlRevision = getRevisionFromControllerName(controllerName, isStatefulSet);
             if (ctrlRevision.isPresent() && ctrlRevision.get() < minRevisionToKeep) {
               logger.info("Deleting old version: " + controllerName);
               try {

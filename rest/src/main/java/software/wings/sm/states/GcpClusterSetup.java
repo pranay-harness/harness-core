@@ -22,6 +22,8 @@ import software.wings.beans.Application;
 import software.wings.beans.GcpKubernetesInfrastructureMapping;
 import software.wings.beans.InfrastructureMapping;
 import software.wings.beans.SettingAttribute;
+import software.wings.beans.container.ContainerTask;
+import software.wings.beans.container.KubernetesContainerTask;
 import software.wings.cloudprovider.gke.GkeClusterService;
 import software.wings.common.Constants;
 import software.wings.exception.InvalidRequestException;
@@ -81,7 +83,7 @@ public class GcpClusterSetup extends State {
 
     InfrastructureMapping infrastructureMapping =
         infrastructureMappingService.get(app.getUuid(), phaseElement.getInfraMappingId());
-    if (infrastructureMapping == null || !(infrastructureMapping instanceof GcpKubernetesInfrastructureMapping)) {
+    if (!(infrastructureMapping instanceof GcpKubernetesInfrastructureMapping)) {
       throw new InvalidRequestException("Invalid infrastructure type");
     }
     GcpKubernetesInfrastructureMapping gcpInfraMapping = (GcpKubernetesInfrastructureMapping) infrastructureMapping;
@@ -89,7 +91,13 @@ public class GcpClusterSetup extends State {
     List<EncryptedDataDetail> encryptionDetails = secretManager.getEncryptionDetails(
         (Encryptable) computeProviderSetting.getValue(), context.getAppId(), context.getWorkflowExecutionId());
     String serviceName = serviceResourceService.get(app.getUuid(), serviceId).getName();
-
+    boolean isStatefulSet = false;
+    ContainerTask containerTask = serviceResourceService.getContainerTaskByDeploymentType(
+        app.getUuid(), serviceId, infrastructureMapping.getDeploymentType());
+    if (containerTask instanceof KubernetesContainerTask) {
+      KubernetesContainerTask kubernetesContainerTask = (KubernetesContainerTask) containerTask;
+      isStatefulSet = kubernetesContainerTask.checkStatefulSet();
+    }
     if (isEmpty(zone)) {
       zone = "us-west1-a";
     }
@@ -101,7 +109,7 @@ public class GcpClusterSetup extends State {
     }
     String clusterName = "harness-"
         + KubernetesConvention.getKubernetesServiceName(
-              KubernetesConvention.getControllerNamePrefix(app.getName(), serviceName, env));
+              KubernetesConvention.getControllerNamePrefix(app.getName(), serviceName, env, isStatefulSet));
     String zoneCluster = zone + "/" + clusterName;
     gkeClusterService.createCluster(computeProviderSetting, encryptionDetails, zoneCluster,
         gcpInfraMapping.getNamespace(),

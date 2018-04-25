@@ -19,7 +19,7 @@ public class KubernetesConvention {
   private static Logger logger = LoggerFactory.getLogger(KubernetesConvention.class);
 
   public static final String DOT = ".";
-  private static final String DASH = "-";
+  public static final String DASH = "-";
   private static final String VOLUME_PREFIX = "vol-";
   private static final String VOLUME_SUFFIX = "-vol";
   private static final String SECRET_PREFIX = "hs-";
@@ -28,20 +28,24 @@ public class KubernetesConvention {
   private static final String CONTAINER_SUFFIX = "-hs";
   private static Pattern wildCharPattern = Pattern.compile("[_+*/\\\\ &@$|\"':]");
 
-  public static String getControllerName(String prefix, int revision) {
-    return normalize(prefix) + DOT + revision;
+  public static String getControllerName(String prefix, int revision, boolean isStatefulSet) {
+    return normalize(prefix) + (isStatefulSet ? DASH : DOT) + revision;
   }
 
-  public static String getControllerNamePrefix(String appName, String serviceName, String envName) {
-    return normalize(appName + DOT + serviceName + DOT + envName);
+  public static String getControllerNamePrefix(
+      String appName, String serviceName, String envName, boolean isStatefulSet) {
+    String separator = isStatefulSet ? DASH : DOT;
+    return normalize(appName + separator + serviceName + separator + envName);
   }
 
-  public static String getPrefixFromControllerName(String controllerName) {
-    return controllerName.substring(0, controllerName.lastIndexOf(DOT) + DOT.length());
+  public static String getPrefixFromControllerName(String controllerName, boolean isStatefulSet) {
+    String versionSeparator = isStatefulSet ? DASH : DOT;
+    return controllerName.substring(0, controllerName.lastIndexOf(versionSeparator) + versionSeparator.length());
   }
 
-  public static String getServiceNameFromControllerName(String controllerName) {
-    return noDot(controllerName.substring(0, controllerName.lastIndexOf(DOT)));
+  public static String getServiceNameFromControllerName(String controllerName, boolean isStatefulSet) {
+    String versionSeparator = isStatefulSet ? DASH : DOT;
+    return noDot(controllerName.substring(0, controllerName.lastIndexOf(versionSeparator)));
   }
 
   public static String getKubernetesServiceName(String rcNamePrefix) {
@@ -62,12 +66,13 @@ public class KubernetesConvention {
     return SECRET_PREFIX + name + SECRET_SUFFIX;
   }
 
-  public static Optional<Integer> getRevisionFromControllerName(String name) {
+  public static Optional<Integer> getRevisionFromControllerName(String name, boolean isStatefulSet) {
+    String versionSeparator = isStatefulSet ? DASH : DOT;
     if (name != null) {
-      int index = name.lastIndexOf(DOT);
+      int index = name.lastIndexOf(versionSeparator);
       if (index >= 0) {
         try {
-          String version = name.substring(index + DOT.length());
+          String version = name.substring(index + versionSeparator.length());
           return version.contains(DASH) ? Optional.empty() : Optional.of(Integer.parseInt(version));
         } catch (NumberFormatException e) {
           logger.error("Couldn't get version from controller name {}", name, e);

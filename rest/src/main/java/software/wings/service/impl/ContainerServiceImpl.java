@@ -4,6 +4,7 @@ import static io.harness.data.structure.EmptyPredicate.isEmpty;
 import static software.wings.beans.infrastructure.instance.info.EcsContainerInfo.Builder.anEcsContainerInfo;
 import static software.wings.beans.infrastructure.instance.info.KubernetesContainerInfo.Builder.aKubernetesContainerInfo;
 import static software.wings.exception.WingsException.USER;
+import static software.wings.utils.KubernetesConvention.DOT;
 
 import com.google.inject.Inject;
 
@@ -58,13 +59,14 @@ public class ContainerServiceImpl implements ContainerService {
   @Override
   public LinkedHashMap<String, Integer> getActiveServiceCounts(ContainerServiceParams containerServiceParams) {
     SettingValue value = containerServiceParams.getSettingAttribute().getValue();
+    String controllerName = containerServiceParams.getContainerServiceName();
     if (isKubernetesClusterConfig(value)) {
       return kubernetesContainerService.getActiveServiceCounts(getKubernetesConfig(containerServiceParams),
-          containerServiceParams.getEncryptionDetails(), containerServiceParams.getContainerServiceName());
+          containerServiceParams.getEncryptionDetails(), controllerName, !controllerName.contains(DOT));
     } else if (value instanceof AwsConfig) {
       return awsClusterService.getActiveServiceCounts(containerServiceParams.getRegion(),
           containerServiceParams.getSettingAttribute(), containerServiceParams.getEncryptionDetails(),
-          containerServiceParams.getClusterName(), containerServiceParams.getContainerServiceName());
+          containerServiceParams.getClusterName(), controllerName);
     } else {
       throw new WingsException(ErrorCode.INVALID_ARGUMENT)
           .addParam("args", "Unknown setting value type for container service: " + value.getType());

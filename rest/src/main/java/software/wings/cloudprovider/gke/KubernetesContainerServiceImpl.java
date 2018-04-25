@@ -387,16 +387,17 @@ public class KubernetesContainerServiceImpl implements KubernetesContainerServic
   }
 
   @Override
-  public LinkedHashMap<String, Integer> getActiveServiceCounts(
-      KubernetesConfig kubernetesConfig, List<EncryptedDataDetail> encryptedDataDetails, String containerServiceName) {
+  public LinkedHashMap<String, Integer> getActiveServiceCounts(KubernetesConfig kubernetesConfig,
+      List<EncryptedDataDetail> encryptedDataDetails, String containerServiceName, boolean isStatefulSet) {
     LinkedHashMap<String, Integer> result = new LinkedHashMap<>();
-    String controllerNamePrefix = getPrefixFromControllerName(containerServiceName);
+    String controllerNamePrefix = getPrefixFromControllerName(containerServiceName, isStatefulSet);
     listControllers(kubernetesConfig, encryptedDataDetails)
         .stream()
         .filter(ctrl -> ctrl.getMetadata().getName().startsWith(controllerNamePrefix))
         .filter(ctrl -> getControllerPodCount(ctrl) > 0)
-        .filter(ctrl -> getRevisionFromControllerName(ctrl.getMetadata().getName()).isPresent())
-        .sorted(comparingInt(ctrl -> getRevisionFromControllerName(ctrl.getMetadata().getName()).orElse(-1)))
+        .filter(ctrl -> getRevisionFromControllerName(ctrl.getMetadata().getName(), isStatefulSet).isPresent())
+        .sorted(
+            comparingInt(ctrl -> getRevisionFromControllerName(ctrl.getMetadata().getName(), isStatefulSet).orElse(-1)))
         .forEach(ctrl -> result.put(ctrl.getMetadata().getName(), getControllerPodCount(ctrl)));
     return result;
   }
@@ -728,11 +729,11 @@ public class KubernetesContainerServiceImpl implements KubernetesContainerServic
   }
 
   @Override
-  public int getTrafficPercent(
-      KubernetesConfig kubernetesConfig, List<EncryptedDataDetail> encryptedDataDetails, String controllerName) {
-    String serviceName = getServiceNameFromControllerName(controllerName);
+  public int getTrafficPercent(KubernetesConfig kubernetesConfig, List<EncryptedDataDetail> encryptedDataDetails,
+      String controllerName, boolean isStatefulSet) {
+    String serviceName = getServiceNameFromControllerName(controllerName, isStatefulSet);
     IstioResource routeRule = getRouteRule(kubernetesConfig, encryptedDataDetails, serviceName);
-    Optional<Integer> revision = getRevisionFromControllerName(controllerName);
+    Optional<Integer> revision = getRevisionFromControllerName(controllerName, isStatefulSet);
     if (routeRule == null || !revision.isPresent()) {
       return 0;
     }
@@ -746,10 +747,10 @@ public class KubernetesContainerServiceImpl implements KubernetesContainerServic
   }
 
   @Override
-  public Map<String, Integer> getTrafficWeights(
-      KubernetesConfig kubernetesConfig, List<EncryptedDataDetail> encryptedDataDetails, String controllerName) {
-    String serviceName = getServiceNameFromControllerName(controllerName);
-    String controllerNamePrefix = getPrefixFromControllerName(controllerName);
+  public Map<String, Integer> getTrafficWeights(KubernetesConfig kubernetesConfig,
+      List<EncryptedDataDetail> encryptedDataDetails, String controllerName, boolean isStatefulSet) {
+    String serviceName = getServiceNameFromControllerName(controllerName, isStatefulSet);
+    String controllerNamePrefix = getPrefixFromControllerName(controllerName, isStatefulSet);
     IstioResource routeRule = getRouteRule(kubernetesConfig, encryptedDataDetails, serviceName);
     if (routeRule == null) {
       return new HashMap<>();

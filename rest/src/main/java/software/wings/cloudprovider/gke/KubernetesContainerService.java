@@ -68,8 +68,8 @@ public interface KubernetesContainerService {
 
   Integer getControllerPodCount(HasMetadata controller);
 
-  LinkedHashMap<String, Integer> getActiveServiceCounts(
-      KubernetesConfig kubernetesConfig, List<EncryptedDataDetail> encryptedDataDetails, String containerServiceName);
+  LinkedHashMap<String, Integer> getActiveServiceCounts(KubernetesConfig kubernetesConfig,
+      List<EncryptedDataDetail> encryptedDataDetails, String containerServiceName, boolean isStatefulSet);
 
   Service createOrReplaceService(
       KubernetesConfig kubernetesConfig, List<EncryptedDataDetail> encryptedDataDetails, Service definition);
@@ -106,11 +106,11 @@ public interface KubernetesContainerService {
 
   void deleteRouteRule(KubernetesConfig kubernetesConfig, List<EncryptedDataDetail> encryptedDataDetails, String name);
 
-  int getTrafficPercent(
-      KubernetesConfig kubernetesConfig, List<EncryptedDataDetail> encryptedDataDetails, String controllerName);
+  int getTrafficPercent(KubernetesConfig kubernetesConfig, List<EncryptedDataDetail> encryptedDataDetails,
+      String controllerName, boolean isStatefulSet);
 
-  Map<String, Integer> getTrafficWeights(
-      KubernetesConfig kubernetesConfig, List<EncryptedDataDetail> encryptedDataDetails, String containerServiceName);
+  Map<String, Integer> getTrafficWeights(KubernetesConfig kubernetesConfig,
+      List<EncryptedDataDetail> encryptedDataDetails, String containerServiceName, boolean isStatefulSet);
 
   void createNamespaceIfNotExist(KubernetesConfig kubernetesConfig, List<EncryptedDataDetail> encryptedDataDetails);
 
