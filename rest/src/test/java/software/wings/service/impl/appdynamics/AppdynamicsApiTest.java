@@ -2,6 +2,7 @@ package software.wings.service.impl.appdynamics;
 
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertTrue;
+import static org.junit.Assert.fail;
 import static org.mockito.Matchers.any;
 import static org.mockito.Matchers.anyInt;
 import static org.mockito.Matchers.anyLong;
@@ -15,6 +16,8 @@ import static org.mockito.internal.util.reflection.Whitebox.setInternalState;
 import com.google.common.collect.Lists;
 import com.google.inject.Inject;
 
+import okhttp3.internal.http.RealResponseBody;
+import org.apache.http.HttpStatus;
 import org.junit.Before;
 import org.junit.Test;
 import org.mockito.Mock;
@@ -24,11 +27,13 @@ import retrofit2.Response;
 import software.wings.WingsBaseTest;
 import software.wings.beans.AppDynamicsConfig;
 import software.wings.beans.DelegateTask.SyncTaskContext;
+import software.wings.beans.ErrorCode;
 import software.wings.beans.RestResponse;
 import software.wings.beans.SettingAttribute;
 import software.wings.beans.SettingAttribute.Category;
 import software.wings.delegatetasks.DelegateProxyFactory;
 import software.wings.dl.WingsPersistence;
+import software.wings.exception.WingsException;
 import software.wings.helpers.ext.appdynamics.AppdynamicsRestClient;
 import software.wings.resources.AppdynamicsResource;
 import software.wings.service.impl.appdynamics.AppdynamicsMetric.AppdynamicsMetricType;
@@ -68,6 +73,55 @@ public class AppdynamicsApiTest extends WingsBaseTest {
     setInternalState(appdynamicsResource, "appdynamicsService", appdynamicsService);
     setInternalState(delegateService, "encryptionService", encryptionService);
     accountId = UUID.randomUUID().toString();
+  }
+
+  @Test
+  public void testUnreachableAppdynamicsServer() throws IOException {
+    Call<List<NewRelicApplication>> restCall = Mockito.mock(Call.class);
+    RuntimeException runtimeException = new RuntimeException(UUID.randomUUID().toString());
+    when(restCall.execute()).thenThrow(runtimeException);
+    when(appdynamicsRestClient.listAllApplications(anyString())).thenReturn(restCall);
+
+    String savedAttributeId = saveAppdynamicsConfig();
+    SettingAttribute settingAttribute = wingsPersistence.get(SettingAttribute.class, savedAttributeId);
+    ((AppDynamicsConfig) settingAttribute.getValue()).setPassword(UUID.randomUUID().toString().toCharArray());
+    try {
+      appdynamicsService.validateConfig(settingAttribute);
+      fail("Validated invalid config");
+    } catch (WingsException e) {
+      assertEquals(ErrorCode.APPDYNAMICS_CONFIGURATION_ERROR, e.getResponseMessage().getCode());
+      assertEquals("Could not reach AppDynamics server. " + runtimeException.getMessage(), e.getParams().get("reason"));
+    }
+  }
+
+  @Test
+  public void testInvalidCredential() throws IOException {
+    Call<List<NewRelicApplication>> restCall = Mockito.mock(Call.class);
+    when(restCall.execute()).thenReturn(Response.error(HttpStatus.SC_UNAUTHORIZED, new RealResponseBody(null, null)));
+    when(appdynamicsRestClient.listAllApplications(anyString())).thenReturn(restCall);
+
+    String savedAttributeId = saveAppdynamicsConfig();
+    SettingAttribute settingAttribute = wingsPersistence.get(SettingAttribute.class, savedAttributeId);
+    ((AppDynamicsConfig) settingAttribute.getValue()).setPassword(UUID.randomUUID().toString().toCharArray());
+    try {
+      appdynamicsService.validateConfig(settingAttribute);
+      fail("Validated invalid config");
+    } catch (WingsException e) {
+      assertEquals(ErrorCode.APPDYNAMICS_CONFIGURATION_ERROR, e.getResponseMessage().getCode());
+      assertEquals("Could not login to AppDynamics server with the given credentials", e.getParams().get("reason"));
+    }
+  }
+
+  @Test
+  public void testValidConfig() throws IOException {
+    Call<List<NewRelicApplication>> restCall = Mockito.mock(Call.class);
+    when(restCall.execute()).thenReturn(Response.success(Collections.emptyList()));
+    when(appdynamicsRestClient.listAllApplications(anyString())).thenReturn(restCall);
+
+    String savedAttributeId = saveAppdynamicsConfig();
+    SettingAttribute settingAttribute = wingsPersistence.get(SettingAttribute.class, savedAttributeId);
+    ((AppDynamicsConfig) settingAttribute.getValue()).setPassword(UUID.randomUUID().toString().toCharArray());
+    assertTrue(appdynamicsService.validateConfig(settingAttribute));
   }
 
   @Test
@@ -228,7 +282,7 @@ public class AppdynamicsApiTest extends WingsBaseTest {
   private String saveAppdynamicsConfig() {
     final AppDynamicsConfig appDynamicsConfig = AppDynamicsConfig.builder()
                                                     .accountId(accountId)
-                                                    .controllerUrl(UUID.randomUUID().toString())
+                                                    .controllerUrl("https://www.google.com")
                                                     .username(UUID.randomUUID().toString())
                                                     .password(UUID.randomUUID().toString().toCharArray())
                                                     .accountname(UUID.randomUUID().toString())

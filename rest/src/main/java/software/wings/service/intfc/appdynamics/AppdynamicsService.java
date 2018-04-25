@@ -16,5 +16,5 @@ public interface AppdynamicsService {
 
   List<AppdynamicsTier> getTiers(String settingId, long appdynamicsAppId) throws IOException;
 
-  void validateConfig(@NotNull SettingAttribute settingAttribute);
+  boolean validateConfig(@NotNull SettingAttribute settingAttribute);
 }

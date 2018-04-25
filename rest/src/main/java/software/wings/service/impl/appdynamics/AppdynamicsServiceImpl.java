@@ -62,12 +62,13 @@ public class AppdynamicsServiceImpl implements AppdynamicsService {
   }
 
   @Override
-  public void validateConfig(final SettingAttribute settingAttribute) {
+  public boolean validateConfig(final SettingAttribute settingAttribute) {
     try {
       SyncTaskContext syncTaskContext =
           aContext().withAccountId(settingAttribute.getAccountId()).withAppId(Base.GLOBAL_APP_ID).build();
       AppDynamicsConfig appDynamicsConfig = (AppDynamicsConfig) settingAttribute.getValue();
-      delegateProxyFactory.get(AppdynamicsDelegateService.class, syncTaskContext).validateConfig(appDynamicsConfig);
+      return delegateProxyFactory.get(AppdynamicsDelegateService.class, syncTaskContext)
+          .validateConfig(appDynamicsConfig);
     } catch (Exception e) {
       throw new WingsException(ErrorCode.APPDYNAMICS_CONFIGURATION_ERROR).addParam("reason", e.getMessage());
     }
