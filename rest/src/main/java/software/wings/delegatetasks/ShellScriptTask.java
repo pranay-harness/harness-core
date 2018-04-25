@@ -22,6 +22,7 @@ import software.wings.core.winrm.executors.WinRmExecutor;
 import software.wings.core.winrm.executors.WinRmExecutorFactory;
 import software.wings.core.winrm.executors.WinRmSessionConfig;
 import software.wings.exception.WingsException;
+import software.wings.helpers.ext.container.ContainerDeploymentDelegateHelper;
 import software.wings.service.intfc.security.EncryptionService;
 import software.wings.waitnotify.NotifyResponseData;
 
@@ -35,6 +36,7 @@ public class ShellScriptTask extends AbstractDelegateRunnableTask {
   @Inject private WinRmExecutorFactory winrmExecutorFactory;
   @Inject private ShellExecutorFactory shellExecutorFactory;
   @Inject private EncryptionService encryptionService;
+  @Inject private ContainerDeploymentDelegateHelper containerDeploymentDelegateHelper;
 
   public ShellScriptTask(String delegateId, DelegateTask delegateTask, Consumer<NotifyResponseData> postExecute,
       Supplier<Boolean> preExecute) {
@@ -48,8 +50,8 @@ public class ShellScriptTask extends AbstractDelegateRunnableTask {
 
   private CommandExecutionResult run(ShellScriptParameters parameters) {
     if (parameters.isExecuteOnDelegate()) {
-      ShellExecutor executor =
-          shellExecutorFactory.getExecutor(parameters.processExecutorConfig(), parameters.getScriptType());
+      ShellExecutor executor = shellExecutorFactory.getExecutor(
+          parameters.processExecutorConfig(containerDeploymentDelegateHelper), parameters.getScriptType());
       CommandExecutionStatus commandExecutionStatus =
           executor.executeCommandString(parameters.getScript(), new StringBuffer());
 

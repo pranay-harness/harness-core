@@ -15,6 +15,7 @@ access.log
 delegate-gc-logs.gc
 delegate.*.log
 delegate.log
+delegate/local-scripts
 delegate/repository
 delegate/restart.sh
 delgate.out

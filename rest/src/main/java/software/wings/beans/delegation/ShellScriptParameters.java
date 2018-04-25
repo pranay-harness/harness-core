@@ -10,12 +10,15 @@ import software.wings.beans.WinRmConnectionAttributes;
 import software.wings.core.local.executors.ShellExecutorConfig;
 import software.wings.core.ssh.executors.SshSessionConfig;
 import software.wings.core.winrm.executors.WinRmSessionConfig;
+import software.wings.helpers.ext.container.ContainerDeploymentDelegateHelper;
 import software.wings.security.encryption.EncryptedDataDetail;
+import software.wings.service.impl.ContainerServiceParams;
 import software.wings.service.intfc.security.EncryptionService;
 import software.wings.sm.states.ShellScriptState;
 
 import java.io.IOException;
 import java.util.Collections;
+import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
@@ -33,12 +36,28 @@ public class ShellScriptParameters {
   private final List<EncryptedDataDetail> keyEncryptedDataDetails;
   private final WinRmConnectionAttributes winrmConnectionAttributes;
   private final List<EncryptedDataDetail> winrmConnectionEncryptedDataDetails;
-
+  private final ContainerServiceParams containerServiceParams;
+  private final Map<String, String> serviceVariables;
+  private final Map<String, String> safeDisplayServiceVariables;
   private final Map<String, String> environment;
   private final String workingDirectory;
   private final ScriptType scriptType;
   private final String script;
   private final boolean executeOnDelegate;
+
+  private Map<String, String> getResolvedEnvironmentVariables() {
+    Map<String, String> resolvedEnvironment = new HashMap();
+
+    if (environment != null) {
+      resolvedEnvironment.putAll(environment);
+    }
+
+    if (serviceVariables != null) {
+      resolvedEnvironment.putAll(serviceVariables);
+    }
+
+    return resolvedEnvironment;
+  }
 
   public SshSessionConfig sshSessionConfig(EncryptionService encryptionService) throws IOException {
     return aSshSessionConfig()
@@ -73,14 +92,19 @@ public class ShellScriptParameters {
         .build();
   }
 
-  public ShellExecutorConfig processExecutorConfig() {
+  public ShellExecutorConfig processExecutorConfig(
+      ContainerDeploymentDelegateHelper containerDeploymentDelegateHelper) {
+    String kubeConfigContent = (containerServiceParams != null)
+        ? containerDeploymentDelegateHelper.getKubeConfigFileContent(containerServiceParams)
+        : "";
     return ShellExecutorConfig.builder()
         .accountId(accountId)
         .appId(appId)
         .executionId(activityId)
         .commandUnitName(CommandUnit)
         .workingDirectory(workingDirectory)
-        .environment(environment == null ? Collections.emptyMap() : environment)
+        .environment(getResolvedEnvironmentVariables())
+        .kubeConfigContent(kubeConfigContent)
         .build();
   }
 }
