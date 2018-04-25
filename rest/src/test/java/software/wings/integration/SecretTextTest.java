@@ -195,7 +195,9 @@ public class SecretTextTest extends WingsBaseTest {
   public void saveSecret() throws IllegalAccessException {
     String secretName = generateUuid();
     String secretValue = generateUuid();
-    String secretId = secretManager.saveSecret(accountId, secretName, secretValue);
+    String secretId =
+        secretManagementResource.saveSecret(accountId, SecretText.builder().name(secretName).value(secretValue).build())
+            .getResource();
     testSaveSecret(secretName, secretValue, secretId);
   }
 
@@ -206,7 +208,10 @@ public class SecretTextTest extends WingsBaseTest {
     }
     String secretName = generateUuid();
     String secretValue = generateUuid();
-    String secretId = secretManager.saveSecretUsingLocalMode(accountId, secretName, secretValue);
+    String secretId =
+        secretManagementResource
+            .saveSecretUsingLocalMode(accountId, SecretText.builder().name(secretName).value(secretValue).build())
+            .getResource();
     testSaveSecret(secretName, secretValue, secretId);
   }
 
@@ -265,7 +270,8 @@ public class SecretTextTest extends WingsBaseTest {
         savedVariable, secretManager.getEncryptionDetails(savedVariable, appId, workflowExecutionId));
     assertEquals(secretValue, String.valueOf(savedVariable.getValue()));
 
-    List<SecretChangeLog> changeLogs = secretManager.getChangeLogs(secretId, SECRET_TEXT);
+    List<SecretChangeLog> changeLogs =
+        secretManagementResource.getChangeLogs(accountId, secretId, SECRET_TEXT).getResource();
     assertEquals(1, changeLogs.size());
     SecretChangeLog secretChangeLog = changeLogs.get(0);
     assertEquals(accountId, secretChangeLog.getAccountId());
@@ -276,9 +282,10 @@ public class SecretTextTest extends WingsBaseTest {
 
     String newSecretName = generateUuid();
     String newSecretValue = generateUuid();
-    secretManager.updateSecret(accountId, secretId, newSecretName, newSecretValue);
+    secretManagementResource.updateSecret(
+        accountId, secretId, SecretText.builder().name(newSecretName).value(newSecretValue).build());
 
-    changeLogs = secretManager.getChangeLogs(secretId, SECRET_TEXT);
+    changeLogs = secretManagementResource.getChangeLogs(accountId, secretId, SECRET_TEXT).getResource();
     assertEquals(2, changeLogs.size());
 
     secretChangeLog = changeLogs.get(0);
@@ -323,15 +330,21 @@ public class SecretTextTest extends WingsBaseTest {
   public void updateSecretRef() {
     String secretName1 = "s1" + generateUuid();
     String secretValue1 = "v2";
-    String secretId1 = secretManager.saveSecret(accountId, secretName1, secretValue1);
+    String secretId1 = secretManagementResource
+                           .saveSecret(accountId, SecretText.builder().name(secretName1).value(secretValue1).build())
+                           .getResource();
 
     String secretName2 = "s2" + generateUuid();
     String secretValue2 = "v2";
-    String secretId2 = secretManager.saveSecret(accountId, secretName2, secretValue2);
+    String secretId2 = secretManagementResource
+                           .saveSecret(accountId, SecretText.builder().name(secretName2).value(secretValue2).build())
+                           .getResource();
 
     String secretName3 = "s3" + generateUuid();
     String secretValue3 = "v3";
-    String secretId3 = secretManager.saveSecret(accountId, secretName3, secretValue3);
+    String secretId3 = secretManagementResource
+                           .saveSecret(accountId, SecretText.builder().name(secretName3).value(secretValue3).build())
+                           .getResource();
 
     final ServiceVariable serviceVariable = ServiceVariable.builder()
                                                 .templateId(generateUuid())
@@ -431,7 +444,9 @@ public class SecretTextTest extends WingsBaseTest {
   public void multipleVariableReference() throws IOException, IllegalAccessException {
     String secretName = generateUuid();
     String secretValue = generateUuid();
-    String secretId = secretManager.saveSecret(accountId, secretName, secretValue);
+    String secretId =
+        secretManagementResource.saveSecret(accountId, SecretText.builder().name(secretName).value(secretValue).build())
+            .getResource();
 
     Query<EncryptedData> query = wingsPersistence.createQuery(EncryptedData.class).filter("type", SECRET_TEXT);
     List<EncryptedData> encryptedDataList = query.asList();
@@ -528,7 +543,9 @@ public class SecretTextTest extends WingsBaseTest {
   public void deleteSecret() throws IOException, IllegalAccessException {
     String secretName = generateUuid();
     String secretValue = generateUuid();
-    String secretId = secretManager.saveSecret(accountId, secretName, secretValue);
+    String secretId =
+        secretManagementResource.saveSecret(accountId, SecretText.builder().name(secretName).value(secretValue).build())
+            .getResource();
     Query<EncryptedData> query = wingsPersistence.createQuery(EncryptedData.class).filter("type", SECRET_TEXT);
     List<EncryptedData> encryptedDataList = query.asList();
     assertEquals(1, encryptedDataList.size());
@@ -586,12 +603,12 @@ public class SecretTextTest extends WingsBaseTest {
       wingsPersistence.delete(ServiceVariable.class, variableId);
 
       if (i == 0) {
-        secretManager.deleteSecret(accountId, secretId);
+        secretManagementResource.deleteSecret(accountId, secretId);
         query = wingsPersistence.createQuery(EncryptedData.class).filter("type", SECRET_TEXT);
         assertTrue(query.asList().isEmpty());
       } else {
         try {
-          secretManager.deleteSecret(accountId, secretId);
+          secretManagementResource.deleteSecret(accountId, secretId);
           fail("Deleted referenced secret");
         } catch (WingsException e) {
           // expected
@@ -609,12 +626,14 @@ public class SecretTextTest extends WingsBaseTest {
     int numOfVariable = 4;
     int numOfAccess = 3;
     int numOfUpdates = 2;
-    List<EncryptedData> secrets = secretManager.listSecrets(accountId, SECRET_TEXT);
+    List<EncryptedData> secrets = secretManagementResource.listSecrets(accountId, SECRET_TEXT).getResource();
     assertTrue(secrets.isEmpty());
     for (int i = 0; i < numOfSecrets; i++) {
       String secretName = generateUuid();
       String secretValue = generateUuid();
-      String secretId = secretManager.saveSecret(accountId, secretName, secretValue);
+      String secretId = secretManagementResource
+                            .saveSecret(accountId, SecretText.builder().name(secretName).value(secretValue).build())
+                            .getResource();
 
       for (int j = 0; j < numOfVariable; j++) {
         final ServiceVariable serviceVariable = ServiceVariable.builder()
@@ -638,11 +657,12 @@ public class SecretTextTest extends WingsBaseTest {
         }
 
         for (int l = 0; l < numOfUpdates; l++) {
-          secretManager.updateSecret(accountId, secretId, generateUuid(), generateUuid());
+          secretManagementResource.updateSecret(
+              accountId, secretId, SecretText.builder().name(generateUuid()).value(generateUuid()).build());
         }
       }
 
-      secrets = secretManager.listSecrets(accountId, SECRET_TEXT);
+      secrets = secretManagementResource.listSecrets(accountId, SECRET_TEXT).getResource();
       assertEquals(i + 1, secrets.size());
 
       for (EncryptedData secret : secrets) {
@@ -657,7 +677,7 @@ public class SecretTextTest extends WingsBaseTest {
       }
     }
 
-    secrets = secretManager.listSecrets(accountId, SECRET_TEXT);
+    secrets = secretManagementResource.listSecrets(accountId, SECRET_TEXT).getResource();
     for (EncryptedData secret : secrets) {
       assertEquals(numOfVariable, secret.getSetupUsage());
       assertEquals(numOfAccess * numOfVariable, secret.getRunTimeUsage());
@@ -669,7 +689,9 @@ public class SecretTextTest extends WingsBaseTest {
   public void secretTextUsage() throws IOException, IllegalAccessException {
     String secretName = generateUuid();
     String secretValue = generateUuid();
-    String secretId = secretManager.saveSecret(accountId, secretName, secretValue);
+    String secretId =
+        secretManagementResource.saveSecret(accountId, SecretText.builder().name(secretName).value(secretValue).build())
+            .getResource();
 
     int numOfVariable = 10;
     Set<ServiceVariable> serviceVariables = new HashSet<>();
@@ -695,7 +717,7 @@ public class SecretTextTest extends WingsBaseTest {
       serviceVariable.setEncryptionType(encryptionType);
       serviceVariables.add(serviceVariable);
 
-      List<UuidAware> usages = secretManager.getSecretUsage(accountId, secretId);
+      List<UuidAware> usages = secretManagementResource.getSecretUsage(accountId, secretId).getResource();
       assertEquals(serviceVariables, new HashSet<>(usages));
     }
 
@@ -704,7 +726,7 @@ public class SecretTextTest extends WingsBaseTest {
       remainingVariables.remove(serviceVariable);
       wingsPersistence.delete(ServiceVariable.class, serviceVariable.getUuid());
 
-      List<UuidAware> usages = secretManager.getSecretUsage(accountId, secretId);
+      List<UuidAware> usages = secretManagementResource.getSecretUsage(accountId, secretId).getResource();
       assertEquals(remainingVariables, new HashSet<>(usages));
     }
 
@@ -731,7 +753,7 @@ public class SecretTextTest extends WingsBaseTest {
     String secretName = generateUuid();
     File fileToSave = new File(getClass().getClassLoader().getResource("./encryption/file_to_encrypt.txt").getFile());
     String secretFileId =
-        secretManager.saveFile(accountId, secretName, new BoundedInputStream(new FileInputStream(fileToSave)));
+        secretManagementResource.saveFile(accountId, secretName, new FileInputStream(fileToSave)).getResource();
 
     Query<EncryptedData> query = wingsPersistence.createQuery(EncryptedData.class).filter("type", CONFIG_FILE);
     List<EncryptedData> encryptedDataList = query.asList();
@@ -794,7 +816,8 @@ public class SecretTextTest extends WingsBaseTest {
     assertEquals(FileUtils.readFileToString(fileToSave, Charset.defaultCharset()),
         FileUtils.readFileToString(download, Charset.defaultCharset()));
 
-    List<SecretChangeLog> changeLogs = secretManager.getChangeLogs(secretFileId, CONFIG_FILE);
+    List<SecretChangeLog> changeLogs =
+        secretManagementResource.getChangeLogs(accountId, secretFileId, CONFIG_FILE).getResource();
     assertEquals(1, changeLogs.size());
     SecretChangeLog secretChangeLog = changeLogs.get(0);
     assertEquals(accountId, secretChangeLog.getAccountId());
@@ -805,8 +828,7 @@ public class SecretTextTest extends WingsBaseTest {
 
     String newSecretName = generateUuid();
     File fileToUpdate = new File(getClass().getClassLoader().getResource("./encryption/file_to_update.txt").getFile());
-    secretManager.updateFile(
-        accountId, newSecretName, encryptedUuid, new BoundedInputStream(new FileInputStream(fileToUpdate)));
+    secretManagementResource.updateFile(accountId, newSecretName, encryptedUuid, new FileInputStream(fileToUpdate));
 
     query = wingsPersistence.createQuery(EncryptedData.class).filter("type", CONFIG_FILE);
     assertEquals(1, query.asList().size());
@@ -826,7 +848,7 @@ public class SecretTextTest extends WingsBaseTest {
     assertEquals(FileUtils.readFileToString(fileToUpdate, Charset.defaultCharset()),
         FileUtils.readFileToString(download, Charset.defaultCharset()));
 
-    changeLogs = secretManager.getChangeLogs(secretFileId, SECRET_TEXT);
+    changeLogs = secretManagementResource.getChangeLogs(accountId, secretFileId, SECRET_TEXT).getResource();
     assertEquals(2, changeLogs.size());
 
     secretChangeLog = changeLogs.get(0);
@@ -846,7 +868,7 @@ public class SecretTextTest extends WingsBaseTest {
     File newFileToSave =
         new File(getClass().getClassLoader().getResource("./encryption/file_to_encrypt.txt").getFile());
     String newSecretFileId =
-        secretManager.saveFile(accountId, secretName, new BoundedInputStream(new FileInputStream(fileToSave)));
+        secretManagementResource.saveFile(accountId, secretName, new FileInputStream(fileToSave)).getResource();
     configFile.setEncryptedFileId(newSecretFileId);
     configService.update(configFile, null);
 
@@ -1049,12 +1071,12 @@ public class SecretTextTest extends WingsBaseTest {
       configService.delete(appId, variableId);
 
       if (i == 0) {
-        secretManager.deleteSecret(accountId, secretFileId);
+        secretManagementResource.deleteSecret(accountId, secretFileId);
         query = wingsPersistence.createQuery(EncryptedData.class).filter("type", CONFIG_FILE);
         assertTrue(query.asList().isEmpty());
       } else {
         try {
-          secretManager.deleteFile(accountId, secretFileId);
+          secretManagementResource.deleteFile(accountId, secretFileId);
           fail("Deleted referenced secret");
         } catch (WingsException e) {
           // expected
@@ -1132,7 +1154,7 @@ public class SecretTextTest extends WingsBaseTest {
     assertEquals(CONFIG_FILE, encryptedData.getType());
 
     try {
-      secretManager.deleteFile(accountId, secretFileId);
+      secretManagementResource.deleteFile(accountId, secretFileId);
       fail("Deleted referenced secret");
     } catch (WingsException e) {
       // expected
@@ -1141,7 +1163,7 @@ public class SecretTextTest extends WingsBaseTest {
     configService.delete(appId, configFileId);
     Thread.sleep(2000);
 
-    secretManager.deleteSecret(accountId, secretFileId);
+    secretManagementResource.deleteSecret(accountId, secretFileId);
     query = wingsPersistence.createQuery(EncryptedData.class).filter("type", CONFIG_FILE);
     assertTrue(query.asList().isEmpty());
   }
@@ -1186,7 +1208,7 @@ public class SecretTextTest extends WingsBaseTest {
     String secretName = generateUuid();
     String secretValue = generateUuid();
     String secretId =
-        secretManagementResource.addSecret(accountId, SecretText.builder().name(secretName).value(secretValue).build())
+        secretManagementResource.saveSecret(accountId, SecretText.builder().name(secretName).value(secretValue).build())
             .getResource();
 
     Query<EncryptedData> query = wingsPersistence.createQuery(EncryptedData.class).filter("type", SECRET_TEXT);

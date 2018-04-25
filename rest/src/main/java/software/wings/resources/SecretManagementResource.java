@@ -83,7 +83,7 @@ public class SecretManagementResource {
   @Path("/list-configs")
   @Timed
   @ExceptionMetered
-  public RestResponse<List<EncryptionConfig>> lisKmsConfigs(@QueryParam("accountId") final String accountId) {
+  public RestResponse<List<EncryptionConfig>> listEncryptionConfig(@QueryParam("accountId") final String accountId) {
     return new RestResponse<>(secretManager.listEncryptionConfig(accountId));
   }
 
@@ -91,7 +91,7 @@ public class SecretManagementResource {
   @Path("/transition-config")
   @Timed
   @ExceptionMetered
-  public RestResponse<Boolean> transitionConfig(@QueryParam("accountId") final String accountId,
+  public RestResponse<Boolean> transitionSecrets(@QueryParam("accountId") final String accountId,
       @QueryParam("fromEncryptionType") EncryptionType fromEncryptionType, @QueryParam("fromKmsId") String fromKmsId,
       @QueryParam("toEncryptionType") EncryptionType toEncryptionType, @QueryParam("toKmsId") String toKmsId) {
     return new RestResponse<>(
@@ -102,7 +102,7 @@ public class SecretManagementResource {
   @Path("/add-secret")
   @Timed
   @ExceptionMetered
-  public RestResponse<String> addSecret(@QueryParam("accountId") final String accountId, @Body SecretText secretText) {
+  public RestResponse<String> saveSecret(@QueryParam("accountId") final String accountId, @Body SecretText secretText) {
     return new RestResponse<>(secretManager.saveSecret(accountId, secretText.getName(), secretText.getValue()));
   }
 
@@ -110,7 +110,7 @@ public class SecretManagementResource {
   @Path("/add-local-secret")
   @Timed
   @ExceptionMetered
-  public RestResponse<String> addLocalSecret(
+  public RestResponse<String> saveSecretUsingLocalMode(
       @QueryParam("accountId") final String accountId, @Body SecretText secretText) {
     return new RestResponse<>(
         secretManager.saveSecretUsingLocalMode(accountId, secretText.getName(), secretText.getValue()));
@@ -183,7 +183,7 @@ public class SecretManagementResource {
   @Path("/list-secret-usage")
   @Timed
   @ExceptionMetered
-  public RestResponse<List<UuidAware>> listSecretUsage(
+  public RestResponse<List<UuidAware>> getSecretUsage(
       @QueryParam("accountId") final String accountId, @QueryParam("uuid") final String secretId) {
     return new RestResponse<>(secretManager.getSecretUsage(accountId, secretId));
   }
