@@ -37,6 +37,7 @@ import static software.wings.beans.WorkflowType.ORCHESTRATION;
 import static software.wings.beans.WorkflowType.PIPELINE;
 import static software.wings.dl.PageRequest.PageRequestBuilder.aPageRequest;
 import static software.wings.dl.PageRequest.UNLIMITED;
+import static software.wings.exception.WingsException.ExecutionContext.MANAGER;
 import static software.wings.exception.WingsException.USER;
 import static software.wings.service.impl.ExecutionEvent.ExecutionEventBuilder.anExecutionEvent;
 import static software.wings.sm.ExecutionInterruptType.ABORT_ALL;
@@ -1348,7 +1349,7 @@ public class WorkflowExecutionServiceImpl implements WorkflowExecutionService {
     try {
       executionInterruptManager.registerExecutionInterrupt(executionInterrupt);
     } catch (WingsException exception) {
-      exception.logProcessedMessages(logger);
+      exception.logProcessedMessages(MANAGER, logger);
     } catch (RuntimeException exception) {
       logger.error(format("Error in interrupting workflowExecution - uuid: %s, executionInterruptType: %s",
                        workflowExecution.getUuid(), executionInterrupt.getExecutionInterruptType()),
@@ -1375,7 +1376,7 @@ public class WorkflowExecutionServiceImpl implements WorkflowExecutionService {
         executionInterruptClone.setExecutionUuid(workflowExecution2.getUuid());
         executionInterruptManager.registerExecutionInterrupt(executionInterruptClone);
       } catch (WingsException exception) {
-        exception.logProcessedMessages(logger);
+        exception.logProcessedMessages(MANAGER, logger);
       } catch (RuntimeException exception) {
         logger.error(format("Error in interrupting workflowExecution - uuid: %s, executionInterruptType: %s",
                          workflowExecution.getUuid(), executionInterrupt.getExecutionInterruptType()),

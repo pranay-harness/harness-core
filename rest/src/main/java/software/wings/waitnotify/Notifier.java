@@ -6,6 +6,7 @@ import static org.mongodb.morphia.mapping.Mapper.ID_KEY;
 import static software.wings.core.maintenance.MaintenanceController.isMaintenance;
 import static software.wings.dl.PageRequest.PageRequestBuilder.aPageRequest;
 import static software.wings.dl.PageRequest.UNLIMITED;
+import static software.wings.exception.WingsException.ExecutionContext.MANAGER;
 import static software.wings.waitnotify.NotifyEvent.Builder.aNotifyEvent;
 
 import com.google.inject.Inject;
@@ -81,7 +82,7 @@ public class Notifier implements Runnable {
               -> notifyQueue.send(
                   aNotifyEvent().withWaitInstanceId(waitInstanceId).withCorrelationIds(correlationIds).build()));
     } catch (WingsException exception) {
-      exception.logProcessedMessages(logger);
+      exception.logProcessedMessages(MANAGER, logger);
     } catch (Exception exception) {
       logger.error("Error seen in the Notifier call", exception);
     }

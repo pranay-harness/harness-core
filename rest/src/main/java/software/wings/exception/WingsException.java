@@ -1,8 +1,10 @@
 package software.wings.exception;
 
 import static io.harness.eraro.Level.ERROR;
+import static io.harness.govern.Switch.unhandled;
 import static java.util.stream.Collectors.joining;
 import static software.wings.beans.ResponseMessage.aResponseMessage;
+import static software.wings.exception.WingsException.ReportTarget.DELEGATE_LOG_SYSTEM;
 import static software.wings.exception.WingsException.ReportTarget.LOG_SYSTEM;
 import static software.wings.exception.WingsException.ReportTarget.RED_BELL_ALERT;
 import static software.wings.exception.WingsException.ReportTarget.REST_API;
@@ -34,6 +36,9 @@ public class WingsException extends WingsApiException {
     // Logging system.
     LOG_SYSTEM,
 
+    // Logging system.
+    DELEGATE_LOG_SYSTEM,
+
     // When exception targets user it will be serialized in the rest APIs
     REST_API,
 
@@ -42,15 +47,17 @@ public class WingsException extends WingsApiException {
   }
 
   public static final ReportTarget[] EVERYBODY = {LOG_SYSTEM, REST_API, RED_BELL_ALERT};
-  public static final ReportTarget[] ADMIN_SRE = {LOG_SYSTEM, RED_BELL_ALERT};
-  public static final ReportTarget[] USER_SRE = {LOG_SYSTEM, REST_API};
-  public static final ReportTarget[] USER_ADMIN = {RED_BELL_ALERT, REST_API};
-  public static final ReportTarget[] ADMIN = {RED_BELL_ALERT};
-  public static final ReportTarget[] SRE = {LOG_SYSTEM};
+  public static final ReportTarget[] ADMIN_SRE = {LOG_SYSTEM, DELEGATE_LOG_SYSTEM, RED_BELL_ALERT};
+  public static final ReportTarget[] USER_SRE = {LOG_SYSTEM, DELEGATE_LOG_SYSTEM, REST_API};
+  public static final ReportTarget[] USER_ADMIN = {DELEGATE_LOG_SYSTEM, RED_BELL_ALERT, REST_API};
+  public static final ReportTarget[] ADMIN = {DELEGATE_LOG_SYSTEM, RED_BELL_ALERT};
+  public static final ReportTarget[] SRE = {LOG_SYSTEM, DELEGATE_LOG_SYSTEM};
   public static final ReportTarget[] USER = {REST_API};
   public static final ReportTarget[] NOBODY = {};
 
   @Builder.Default private ReportTarget[] reportTargets = USER_SRE;
+
+  public enum ExecutionContext { MANAGER, DELEGATE }
 
   /**
    * The Response message list.
@@ -167,8 +174,21 @@ public class WingsException extends WingsApiException {
     }
   }
 
-  public void logProcessedMessages(Logger logger) {
-    final List<ResponseMessage> responseMessages = getResponseMessageList(LOG_SYSTEM);
+  public void logProcessedMessages(ExecutionContext context, Logger logger) {
+    ReportTarget target = LOG_SYSTEM;
+
+    switch (context) {
+      case MANAGER:
+        target = LOG_SYSTEM;
+        break;
+      case DELEGATE:
+        target = DELEGATE_LOG_SYSTEM;
+        break;
+      default:
+        unhandled(context);
+    }
+
+    final List<ResponseMessage> responseMessages = getResponseMessageList(target);
 
     String msg = "Exception occurred: " + getMessage();
     String messages = responseMessages.stream().map(ResponseMessage::getMessage).collect(joining(". "));

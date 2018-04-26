@@ -18,6 +18,7 @@ import static software.wings.beans.SearchFilter.Operator.GE;
 import static software.wings.beans.SearchFilter.Operator.IN;
 import static software.wings.beans.alert.AlertType.ManualInterventionNeeded;
 import static software.wings.dl.PageRequest.PageRequestBuilder.aPageRequest;
+import static software.wings.exception.WingsException.ExecutionContext.MANAGER;
 import static software.wings.exception.WingsException.USER;
 import static software.wings.sm.ExecutionInterruptType.ABORT;
 import static software.wings.sm.ExecutionInterruptType.ABORT_ALL;
@@ -254,7 +255,7 @@ public class ExecutionInterruptManager {
 
       workflowNotificationHelper.sendWorkflowStatusChangeNotification(context, status);
     } catch (WingsException exception) {
-      exception.logProcessedMessages(logger);
+      exception.logProcessedMessages(MANAGER, logger);
     } catch (RuntimeException exception) {
       logger.error("Unknown runtime exception: ", exception);
     }
