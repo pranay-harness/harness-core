@@ -87,65 +87,6 @@ public class PhaseStepSubWorkflowTest extends WingsBaseTest {
   }
 
   @Test
-  public void shouldThrowInvalidRequestNoEcsSetup() {
-    try {
-      PhaseElement phaseElement =
-          aPhaseElement()
-              .withUuid(generateUuid())
-              .withServiceElement(aServiceElement().withUuid(generateUuid()).withName("service1").build())
-              .build();
-      StateExecutionInstance stateExecutionInstance = aStateExecutionInstance()
-                                                          .withDisplayName(STATE_NAME)
-                                                          .addContextElement(workflowStandardParams)
-                                                          .addContextElement(phaseElement)
-                                                          .addStateExecutionData(new PhaseStepExecutionData())
-                                                          .build();
-      ExecutionContextImpl context = new ExecutionContextImpl(stateExecutionInstance);
-      PhaseStepSubWorkflow phaseStepSubWorkflow = new PhaseStepSubWorkflow(PHASE_STEP);
-      phaseStepSubWorkflow.setPhaseStepType(PhaseStepType.CONTAINER_DEPLOY);
-      ExecutionResponse response = phaseStepSubWorkflow.execute(context);
-      assertThat(response).isNotNull();
-      failBecauseExceptionWasNotThrown(WingsException.class);
-    } catch (WingsException exception) {
-      assertThat(exception).hasMessage(INVALID_REQUEST.getCode());
-      assertThat(exception.getParams()).hasSize(1);
-      assertThat(exception.getParams()).containsKey("message");
-      assertThat(exception.getParams().get("message")).asString().contains("Setup not done");
-    }
-  }
-
-  @Test
-  public void shouldThrowInvalidRequestNoEcsElement() {
-    try {
-      PhaseElement phaseElement =
-          aPhaseElement()
-              .withUuid(generateUuid())
-              .withServiceElement(aServiceElement().withUuid(generateUuid()).withName("service1").build())
-              .build();
-      StateExecutionInstance stateExecutionInstance = aStateExecutionInstance()
-                                                          .withDisplayName(STATE_NAME)
-                                                          .addContextElement(workflowStandardParams)
-                                                          .addContextElement(phaseElement)
-                                                          .addContextElement(ContainerServiceElement.builder().build())
-                                                          .addStateExecutionData(new PhaseStepExecutionData())
-                                                          .build();
-      ExecutionContextImpl context = new ExecutionContextImpl(stateExecutionInstance);
-      PhaseStepSubWorkflow phaseStepSubWorkflow = new PhaseStepSubWorkflow(PHASE_STEP);
-      phaseStepSubWorkflow.setPhaseStepType(PhaseStepType.CONTAINER_DEPLOY);
-      ExecutionResponse response = phaseStepSubWorkflow.execute(context);
-      assertThat(response).isNotNull();
-      failBecauseExceptionWasNotThrown(WingsException.class);
-    } catch (WingsException exception) {
-      assertThat(exception).hasMessage(INVALID_REQUEST.getCode());
-      assertThat(exception.getParams()).hasSize(1);
-      assertThat(exception.getParams()).containsKey("message");
-      assertThat(exception.getParams().get("message"))
-          .asString()
-          .contains("containerServiceElement not present for the service");
-    }
-  }
-
-  @Test
   public void shouldValidateContainerDeploy() {
     ServiceElement serviceElement = aServiceElement().withUuid(generateUuid()).withName("service1").build();
     PhaseElement phaseElement = aPhaseElement().withUuid(generateUuid()).withServiceElement(serviceElement).build();
