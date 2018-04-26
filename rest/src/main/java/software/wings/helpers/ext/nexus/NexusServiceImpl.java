@@ -1,7 +1,9 @@
 package software.wings.helpers.ext.nexus;
 
 import static java.lang.String.format;
+import static software.wings.beans.ErrorCode.ARTIFACT_SERVER_ERROR;
 import static software.wings.beans.ErrorCode.INVALID_ARTIFACT_SERVER;
+import static software.wings.exception.WingsException.ADMIN;
 import static software.wings.exception.WingsException.USER;
 import static software.wings.utils.ArtifactType.DOCKER;
 import static software.wings.utils.ArtifactType.WAR;
@@ -187,7 +189,7 @@ public class NexusServiceImpl implements NexusService {
       return nexusTwoService.downloadArtifact(nexusConfig, encryptionDetails, repoType, groupId, artifactName, version);
     } catch (IOException e) {
       logger.error("Error occurred while downloading the artifact", e);
-      return null;
+      throw new WingsException(ARTIFACT_SERVER_ERROR, ADMIN).addParam("message", e.getMessage());
     }
   }
 

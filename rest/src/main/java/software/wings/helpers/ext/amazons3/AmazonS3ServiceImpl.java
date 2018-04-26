@@ -1,6 +1,14 @@
 package software.wings.helpers.ext.amazons3;
 
+import static java.util.Collections.sort;
 import static java.util.stream.Collectors.toList;
+import static software.wings.beans.ErrorCode.INVALID_ARTIFACT_SERVER;
+import static software.wings.common.Constants.ARTIFACT_PATH;
+import static software.wings.common.Constants.BUCKET_NAME;
+import static software.wings.common.Constants.BUILD_NO;
+import static software.wings.common.Constants.KEY;
+import static software.wings.common.Constants.URL;
+import static software.wings.exception.WingsException.ADMIN;
 import static software.wings.helpers.ext.jenkins.BuildDetails.Builder.aBuildDetails;
 
 import com.google.common.collect.Lists;
@@ -16,8 +24,8 @@ import org.apache.commons.lang3.tuple.Pair;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import software.wings.beans.AwsConfig;
-import software.wings.common.Constants;
 import software.wings.delegatetasks.collect.artifacts.ArtifactCollectionTaskHelper;
+import software.wings.exception.WingsException;
 import software.wings.helpers.ext.jenkins.BuildDetails;
 import software.wings.security.encryption.EncryptedDataDetail;
 import software.wings.service.impl.AwsHelperService;
@@ -25,8 +33,6 @@ import software.wings.waitnotify.ListNotifyResponseData;
 
 import java.io.IOException;
 import java.io.InputStream;
-import java.net.URISyntaxException;
-import java.util.Collections;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
@@ -60,8 +66,7 @@ public class AmazonS3ServiceImpl implements AmazonS3Service {
     do {
       result = awsHelperService.listObjectsInS3(awsConfig, encryptionDetails, listObjectsV2Request);
       List<S3ObjectSummary> objectSummaryList = result.getObjectSummaries();
-      // in descending order. The most recent one comes first
-      Collections.sort(objectSummaryList, (o1, o2) -> o2.getLastModified().compareTo(o1.getLastModified()));
+      sortDescending(objectSummaryList);
 
       List<String> objectKeyListForCurrentBatch = objectSummaryList.stream()
                                                       .filter(objectSummary -> !objectSummary.getKey().endsWith("/"))
@@ -86,29 +91,29 @@ public class AmazonS3ServiceImpl implements AmazonS3Service {
   @Override
   public List<BuildDetails> getArtifactsBuildDetails(AwsConfig awsConfig, List<EncryptedDataDetail> encryptionDetails,
       String bucketName, List<String> artifactPaths, boolean isExpression) {
-    boolean versioningEnabledForBucket =
-        awsHelperService.isVersioningEnabledForBucket(awsConfig, encryptionDetails, bucketName);
-    List<BuildDetails> buildDetailsList = Lists.newArrayList();
-    for (String artifactPath : artifactPaths) {
-      List<BuildDetails> buildDetailsListForArtifactPath = getArtifactsBuildDetails(
-          awsConfig, encryptionDetails, bucketName, artifactPath, isExpression, versioningEnabledForBucket);
-      buildDetailsList.addAll(buildDetailsListForArtifactPath);
+    try {
+      boolean versioningEnabledForBucket =
+          awsHelperService.isVersioningEnabledForBucket(awsConfig, encryptionDetails, bucketName);
+      List<BuildDetails> buildDetailsList = Lists.newArrayList();
+      for (String artifactPath : artifactPaths) {
+        List<BuildDetails> buildDetailsListForArtifactPath = getArtifactsBuildDetails(
+            awsConfig, encryptionDetails, bucketName, artifactPath, isExpression, versioningEnabledForBucket);
+        buildDetailsList.addAll(buildDetailsListForArtifactPath);
+      }
+      return buildDetailsList;
+    } catch (WingsException e) {
+      throw new WingsException(INVALID_ARTIFACT_SERVER, ADMIN).addParam("message", e.getMessage());
+    } catch (Exception e) {
+      logger.error("Error occurred while retrieving artifacts from ", e);
+      throw new WingsException(INVALID_ARTIFACT_SERVER, ADMIN).addParam("message", e.getMessage());
     }
-    return buildDetailsList;
   }
 
   private List<BuildDetails> getArtifactsBuildDetails(AwsConfig awsConfig, List<EncryptedDataDetail> encryptionDetails,
       String bucketName, String artifactPath, boolean isExpression, boolean versioningEnabledForBucket) {
     List<BuildDetails> buildDetailsList = Lists.newArrayList();
     if (isExpression) {
-      ListObjectsV2Request listObjectsV2Request = new ListObjectsV2Request();
-
-      String prefix = getPrefix(artifactPath);
-      if (prefix != null) {
-        listObjectsV2Request.withPrefix(prefix);
-      }
-
-      listObjectsV2Request.withBucketName(bucketName).withMaxKeys(FETCH_FILE_COUNT_IN_BUCKET);
+      ListObjectsV2Request listObjectsV2Request = getListObjectsV2Request(bucketName, artifactPath);
       List<String> objectKeyList = Lists.newArrayList();
       ListObjectsV2Result result;
 
@@ -117,15 +122,9 @@ public class AmazonS3ServiceImpl implements AmazonS3Service {
       do {
         result = awsHelperService.listObjectsInS3(awsConfig, encryptionDetails, listObjectsV2Request);
         List<S3ObjectSummary> objectSummaryList = result.getObjectSummaries();
-        // in descending order. The most recent one comes first
-        Collections.sort(objectSummaryList, (o1, o2) -> o2.getLastModified().compareTo(o1.getLastModified()));
+        sortDescending(objectSummaryList);
 
-        List<String> objectKeyListForCurrentBatch =
-            objectSummaryList.stream()
-                .filter(objectSummary
-                    -> !objectSummary.getKey().endsWith("/") && pattern.matcher(objectSummary.getKey()).find())
-                .map(S3ObjectSummary::getKey)
-                .collect(toList());
+        List<String> objectKeyListForCurrentBatch = getObjectSummaries(pattern, objectSummaryList);
         objectKeyList.addAll(objectKeyListForCurrentBatch);
         listObjectsV2Request.setContinuationToken(result.getNextContinuationToken());
       } while (result.isTruncated() == true);
@@ -145,10 +144,23 @@ public class AmazonS3ServiceImpl implements AmazonS3Service {
     return buildDetailsList;
   }
 
+  private void sortDescending(List<S3ObjectSummary> objectSummaryList) {
+    // in descending order. The most recent one comes first
+    sort(objectSummaryList, (o1, o2) -> o2.getLastModified().compareTo(o1.getLastModified()));
+  }
+
+  private List<String> getObjectSummaries(Pattern pattern, List<S3ObjectSummary> objectSummaryList) {
+    return objectSummaryList.stream()
+        .filter(
+            objectSummary -> !objectSummary.getKey().endsWith("/") && pattern.matcher(objectSummary.getKey()).find())
+        .map(S3ObjectSummary::getKey)
+        .collect(toList());
+  }
+
   @Override
   public ListNotifyResponseData downloadArtifacts(AwsConfig awsConfig, List<EncryptedDataDetail> encryptionDetails,
       String bucketName, List<String> artifactPaths, String delegateId, String taskId, String accountId)
-      throws IOException, URISyntaxException {
+      throws IOException {
     ListNotifyResponseData res = new ListNotifyResponseData();
 
     for (String artifactPath : artifactPaths) {
@@ -160,16 +172,10 @@ public class AmazonS3ServiceImpl implements AmazonS3Service {
 
   private void downloadArtifactsUsingFilter(AwsConfig awsConfig, List<EncryptedDataDetail> encryptionDetails,
       String bucketName, String artifactpathRegex, ListNotifyResponseData res, String delegateId, String taskId,
-      String accountId) throws IOException, URISyntaxException {
+      String accountId) throws IOException {
     Pattern pattern = Pattern.compile(artifactpathRegex.replace(".", "\\.").replace("?", ".?").replace("*", ".*?"));
 
-    ListObjectsV2Request listObjectsV2Request = new ListObjectsV2Request();
-    String prefix = getPrefix(artifactpathRegex);
-    if (prefix != null) {
-      listObjectsV2Request.withPrefix(prefix);
-    }
-
-    listObjectsV2Request.withBucketName(bucketName).withMaxKeys(FETCH_FILE_COUNT_IN_BUCKET);
+    ListObjectsV2Request listObjectsV2Request = getListObjectsV2Request(bucketName, artifactpathRegex);
 
     List<String> objectKeyList = Lists.newArrayList();
     ListObjectsV2Result result;
@@ -179,12 +185,7 @@ public class AmazonS3ServiceImpl implements AmazonS3Service {
       // in descending order. The most recent one comes first
       objectSummaryList.sort((o1, o2) -> o2.getLastModified().compareTo(o1.getLastModified()));
 
-      List<String> objectKeyListForCurrentBatch =
-          objectSummaryList.stream()
-              .filter(objectSummary
-                  -> !objectSummary.getKey().endsWith("/") && pattern.matcher(objectSummary.getKey()).find())
-              .map(S3ObjectSummary::getKey)
-              .collect(toList());
+      List<String> objectKeyListForCurrentBatch = getObjectSummaries(pattern, objectSummaryList);
       objectKeyList.addAll(objectKeyListForCurrentBatch);
       listObjectsV2Request.setContinuationToken(result.getNextContinuationToken());
     } while (result.isTruncated());
@@ -197,6 +198,17 @@ public class AmazonS3ServiceImpl implements AmazonS3Service {
       artifactCollectionTaskHelper.addDataToResponse(
           stringInputStreamPair, artifactpathRegex, res, delegateId, taskId, accountId);
     }
+  }
+
+  private ListObjectsV2Request getListObjectsV2Request(String bucketName, String artifactpathRegex) {
+    ListObjectsV2Request listObjectsV2Request = new ListObjectsV2Request();
+    String prefix = getPrefix(artifactpathRegex);
+    if (prefix != null) {
+      listObjectsV2Request.withPrefix(prefix);
+    }
+
+    listObjectsV2Request.withBucketName(bucketName).withMaxKeys(FETCH_FILE_COUNT_IN_BUCKET);
+    return listObjectsV2Request;
   }
 
   private Pair<String, InputStream> downloadArtifact(
@@ -224,11 +236,11 @@ public class AmazonS3ServiceImpl implements AmazonS3Service {
       versionId = key;
     }
     Map<String, String> map = new HashMap<>();
-    map.put(Constants.URL, "https://s3.amazonaws.com/" + bucketName + "/" + key);
-    map.put(Constants.BUILD_NO, versionId);
-    map.put(Constants.BUCKET_NAME, bucketName);
-    map.put(Constants.ARTIFACT_PATH, key);
-    map.put(Constants.KEY, key);
+    map.put(URL, "https://s3.amazonaws.com/" + bucketName + "/" + key);
+    map.put(BUILD_NO, versionId);
+    map.put(BUCKET_NAME, bucketName);
+    map.put(ARTIFACT_PATH, key);
+    map.put(KEY, key);
 
     return aBuildDetails()
         .withNumber(versionId)

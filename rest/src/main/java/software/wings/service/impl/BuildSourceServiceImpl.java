@@ -11,6 +11,8 @@ import com.google.common.collect.Sets;
 import com.google.inject.Inject;
 import com.google.inject.Singleton;
 
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import software.wings.annotation.Encryptable;
 import software.wings.beans.DelegateTask.SyncTaskContext;
 import software.wings.beans.Service;
@@ -55,6 +57,7 @@ public class BuildSourceServiceImpl implements BuildSourceService {
   @Inject private ServiceClassLocator serviceLocator;
   @Inject private SecretManager secretManager;
   @Inject private ArtifactCollectionService artifactCollectionService;
+  private static final Logger logger = LoggerFactory.getLogger(BuildSourceServiceImpl.class);
 
   @Override
   public Set<JobDetails> getJobs(String appId, String settingId, String parentJobName) {
@@ -103,6 +106,9 @@ public class BuildSourceServiceImpl implements BuildSourceService {
   @Override
   public List<BuildDetails> getBuilds(String appId, String artifactStreamId, String settingId) {
     SettingAttribute settingAttribute = settingsService.get(settingId);
+    if (settingAttribute == null) {
+      logger.warn("Artifact Server {} was deleted of artifactStreamId {}", settingId, artifactStreamId);
+    }
     SettingValue settingValue = getSettingValue(settingAttribute);
     List<EncryptedDataDetail> encryptedDataDetails = getEncryptedDataDetails((Encryptable) settingValue);
 
@@ -208,7 +214,7 @@ public class BuildSourceServiceImpl implements BuildSourceService {
   }
 
   private SettingValue getSettingValue(SettingAttribute settingAttribute) {
-    notNullCheck("Setting", settingAttribute);
+    notNullCheck("Artifact server was deleted", settingAttribute, USER);
     return settingAttribute.getValue();
   }
 

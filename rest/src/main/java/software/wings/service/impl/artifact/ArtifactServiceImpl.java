@@ -34,6 +34,7 @@ import static software.wings.dl.MongoHelper.setUnset;
 import static software.wings.exception.WingsException.USER;
 import static software.wings.service.intfc.FileService.FileBucket.ARTIFACTS;
 import static software.wings.utils.ArtifactType.DOCKER;
+import static software.wings.utils.Validator.notNullCheck;
 
 import com.google.common.io.Files;
 import com.google.inject.Inject;
@@ -73,7 +74,6 @@ import software.wings.service.intfc.FileService;
 import software.wings.service.intfc.FileService.FileBucket;
 import software.wings.service.intfc.ServiceResourceService;
 import software.wings.utils.ArtifactType;
-import software.wings.utils.Validator;
 import software.wings.utils.validation.Create;
 import software.wings.utils.validation.Update;
 
@@ -146,11 +146,11 @@ public class ArtifactServiceImpl implements ArtifactService {
   @ValidationGroups(Create.class)
   public Artifact create(@Valid Artifact artifact) {
     if (!appService.exist(artifact.getAppId())) {
-      throw new WingsException(ErrorCode.INVALID_ARGUMENT)
+      throw new WingsException(ErrorCode.INVALID_ARGUMENT, USER)
           .addParam("args", "App does not exist: " + artifact.getAppId());
     }
     ArtifactStream artifactStream = artifactStreamService.get(artifact.getAppId(), artifact.getArtifactStreamId());
-    Validator.notNullCheck("Artifact Stream", artifactStream);
+    notNullCheck("Artifact Stream", artifactStream, USER);
 
     artifact.setArtifactSourceName(artifactStream.getSourceName());
     artifact.setServiceIds(asList(artifactStream.getServiceId()));

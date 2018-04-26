@@ -852,7 +852,7 @@ public class ArtifactoryServiceImpl implements ArtifactoryService {
     } catch (Exception e) {
       String msg =
           "Failed to download the latest artifacts  of repository [" + repoKey + "] file path [" + artifactPath;
-      throw new WingsException(ARTIFACT_SERVER_ERROR)
+      throw new WingsException(ARTIFACT_SERVER_ERROR, ADMIN)
           .addParam("message", msg + "Reason:" + ExceptionUtils.getRootCauseMessage(e));
     }
     logger.info(
