@@ -1,10 +1,6 @@
 # to be used when building in Jenkins
-FROM harness/serverjre_8:131
-RUN yum install -y ntp net-tools telnet vim unzip
-
-# we need to install the JCE extensions
-COPY dockerization/common-resources/local_policy.jar /usr/java/jdk1.8.0_131/jre/lib/security/
-COPY dockerization/common-resources/US_export_policy.jar /usr/java/jdk1.8.0_131/jre/lib/security/
+FROM ubuntu:16.04
+RUN apt-get update && apt-get -y upgrade && apt-get -y install curl unzip
 
 COPY dockerization/delegate/scripts /opt/harness-delegate/
 
