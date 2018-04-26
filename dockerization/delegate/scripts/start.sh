@@ -34,40 +34,42 @@ then
   echo $PROXY_SYS_PROPS
 fi
 
+echo "Checking Watcher latest version..."
 WATCHER_STORAGE_URL=_watcherStorageUrl_
-REMOTE_WATCHER_LATEST=$(curl $WATCHER_STORAGE_URL/_watcherCheckLocation_)
+REMOTE_WATCHER_LATEST=$(curl -#k $WATCHER_STORAGE_URL/_watcherCheckLocation_)
 REMOTE_WATCHER_URL=$WATCHER_STORAGE_URL/$(echo $REMOTE_WATCHER_LATEST | cut -d " " -f2)
 REMOTE_WATCHER_VERSION=$(echo $REMOTE_WATCHER_LATEST | cut -d " " -f1)
 
 if [ ! -e watcher.jar ]
 then
-  echo "Downloading Watcher..."
+  echo "Downloading Watcher $REMOTE_WATCHER_VERSION ..."
   curl -#k $REMOTE_WATCHER_URL -o watcher.jar
 else
   WATCHER_CURRENT_VERSION=$(unzip -c watcher.jar META-INF/MANIFEST.MF | grep Application-Version | cut -d "=" -f2 | tr -d " " | tr -d "\r" | tr -d "\n")
   if [[ $REMOTE_WATCHER_VERSION != $WATCHER_CURRENT_VERSION ]]
   then
-    echo "Downloading Watcher..."
+    echo "Downloading Watcher $REMOTE_WATCHER_VERSION ..."
     mkdir -p watcherBackup.$WATCHER_CURRENT_VERSION
     cp watcher.jar watcherBackup.$WATCHER_CURRENT_VERSION
     curl -#k $REMOTE_WATCHER_URL -o watcher.jar
   fi
 fi
 
+echo "Checking Delegate latest version..."
 DELEGATE_STORAGE_URL=_delegateStorageUrl_
-REMOTE_DELEGATE_LATEST=$(curl $DELEGATE_STORAGE_URL/_delegateCheckLocation_)
+REMOTE_DELEGATE_LATEST=$(curl -#k $DELEGATE_STORAGE_URL/_delegateCheckLocation_)
 REMOTE_DELEGATE_URL=$DELEGATE_STORAGE_URL/$(echo $REMOTE_DELEGATE_LATEST | cut -d " " -f2)
 REMOTE_DELEGATE_VERSION=$(echo $REMOTE_DELEGATE_LATEST | cut -d " " -f1)
 
 if [ ! -e delegate.jar ]
 then
-  echo "Downloading Delegate..."
+  echo "Downloading Delegate $REMOTE_DELEGATE_VERSION ..."
   curl -#k $REMOTE_DELEGATE_URL -o delegate.jar
 else
   DELEGATE_CURRENT_VERSION=$(unzip -c delegate.jar META-INF/MANIFEST.MF | grep Application-Version | cut -d "=" -f2 | tr -d " " | tr -d "\r" | tr -d "\n")
   if [[ $REMOTE_DELEGATE_VERSION != $DELEGATE_CURRENT_VERSION ]]
   then
-    echo "Downloading Delegate..."
+    echo "Downloading Delegate $REMOTE_DELEGATE_VERSION ..."
     mkdir -p backup.$DELEGATE_CURRENT_VERSION
     cp delegate.jar backup.$DELEGATE_CURRENT_VERSION
     curl -#k $REMOTE_DELEGATE_URL -o delegate.jar
