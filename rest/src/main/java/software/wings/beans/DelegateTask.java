@@ -5,7 +5,6 @@ import static software.wings.common.Constants.DEFAULT_SYNC_CALL_TIMEOUT;
 
 import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
 import org.hibernate.validator.constraints.NotEmpty;
-import org.mongodb.morphia.annotations.AlsoLoad;
 import org.mongodb.morphia.annotations.Converters;
 import org.mongodb.morphia.annotations.Entity;
 import org.mongodb.morphia.annotations.Transient;
@@ -36,7 +35,6 @@ public class DelegateTask extends Base {
   private List<String> tags = new ArrayList<>();
   @NotEmpty private String accountId;
   private String waitId;
-  @AlsoLoad("topicName") private String queueName;
   private Status status = Status.QUEUED;
   private String delegateId;
   private long timeout = DEFAULT_ASYNC_CALL_TIMEOUT;
@@ -93,14 +91,6 @@ public class DelegateTask extends Base {
 
   public void setWaitId(String waitId) {
     this.waitId = waitId;
-  }
-
-  public String getQueueName() {
-    return queueName;
-  }
-
-  public void setQueueName(String queueName) {
-    this.queueName = queueName;
   }
 
   public Status getStatus() {
@@ -220,8 +210,7 @@ public class DelegateTask extends Base {
     DelegateTask that = (DelegateTask) o;
     return timeout == that.timeout && async == that.async && taskType == that.taskType
         && Arrays.equals(parameters, that.parameters) && Objects.equals(tags, that.tags)
-        && Objects.equals(accountId, that.accountId) && Objects.equals(waitId, that.waitId)
-        && Objects.equals(queueName, that.queueName) && status == that.status
+        && Objects.equals(accountId, that.accountId) && Objects.equals(waitId, that.waitId) && status == that.status
         && Objects.equals(delegateId, that.delegateId) && Objects.equals(envId, that.envId)
         && Objects.equals(infrastructureMappingId, that.infrastructureMappingId)
         && Objects.equals(delegateRunnableTask, that.delegateRunnableTask)
@@ -231,18 +220,17 @@ public class DelegateTask extends Base {
 
   @Override
   public int hashCode() {
-    return Objects.hash(super.hashCode(), taskType, parameters, tags, accountId, waitId, queueName, status, delegateId,
-        timeout, async, envId, infrastructureMappingId, delegateRunnableTask, notifyResponse,
-        serializedNotifyResponseData);
+    return Objects.hash(super.hashCode(), taskType, parameters, tags, accountId, waitId, status, delegateId, timeout,
+        async, envId, infrastructureMappingId, delegateRunnableTask, notifyResponse, serializedNotifyResponseData);
   }
 
   @Override
   public String toString() {
     return "DelegateTask{"
         + "taskType=" + taskType + ", parameters=" + Arrays.toString(parameters) + ", tag='" + tags + '\''
-        + ", accountId='" + accountId + '\'' + ", waitId='" + waitId + '\'' + ", queueName='" + queueName + '\''
-        + ", status=" + status + ", delegateId='" + delegateId + '\'' + ", timeout=" + timeout + ", async=" + async
-        + ", envId='" + envId + '\'' + ", infrastructureMappingId='" + infrastructureMappingId + '\''
+        + ", accountId='" + accountId + '\'' + ", waitId='" + waitId + '\'' + '\'' + ", status=" + status
+        + ", delegateId='" + delegateId + '\'' + ", timeout=" + timeout + ", async=" + async + ", envId='" + envId
+        + '\'' + ", infrastructureMappingId='" + infrastructureMappingId + '\''
         + ", delegateRunnableTask=" + delegateRunnableTask + ", notifyResponse=" + notifyResponse + '}';
   }
 
@@ -339,7 +327,6 @@ public class DelegateTask extends Base {
     private List<String> tags;
     private String accountId;
     private String waitId;
-    private String queueName;
     private Status status = Status.QUEUED;
     private String delegateId;
     private long timeout = DEFAULT_ASYNC_CALL_TIMEOUT;
@@ -382,11 +369,6 @@ public class DelegateTask extends Base {
 
     public Builder withWaitId(String waitId) {
       this.waitId = waitId;
-      return this;
-    }
-
-    public Builder withQueueName(String queueName) {
-      this.queueName = queueName;
       return this;
     }
 
@@ -462,7 +444,6 @@ public class DelegateTask extends Base {
           .withTags(tags)
           .withAccountId(accountId)
           .withWaitId(waitId)
-          .withQueueName(queueName)
           .withStatus(status)
           .withDelegateId(delegateId)
           .withTimeout(timeout)
@@ -485,7 +466,6 @@ public class DelegateTask extends Base {
       delegateTask.setTags(tags);
       delegateTask.setAccountId(accountId);
       delegateTask.setWaitId(waitId);
-      delegateTask.setQueueName(queueName);
       delegateTask.setStatus(status);
       delegateTask.setDelegateId(delegateId);
       delegateTask.setTimeout(timeout);
