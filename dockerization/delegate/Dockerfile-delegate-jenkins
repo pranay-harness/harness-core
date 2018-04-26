@@ -9,7 +9,7 @@ COPY dockerization/common-resources/US_export_policy.jar /usr/java/jdk1.8.0_131/
 # Add the capsule JAR and config.yml
 COPY docker-image-files/delegate-0.0.1-SNAPSHOT-capsule.jar  /opt/harness-delegate/
 
-COPY dockerization/manager/scripts /opt/harness-delegate/
+COPY dockerization/delegate/scripts /opt/harness-delegate/
 
 RUN chmod +x /opt/harness-delegate/*.sh
 
