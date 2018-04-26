@@ -1,6 +1,5 @@
 package software.wings.app;
 
-import static org.apache.commons.lang3.StringUtils.isNotBlank;
 import static software.wings.beans.DelegateTaskEvent.DelegateTaskEventBuilder.aDelegateTaskEvent;
 
 import com.google.inject.Inject;
@@ -26,7 +25,7 @@ public class DelegateTaskFilter extends BroadcastFilterAdapter {
       if (delegateService.filter(delegateId, task)) {
         return new BroadcastAction(JsonUtils.asJson(aDelegateTaskEvent()
                                                         .withDelegateTaskId(task.getUuid())
-                                                        .withSync(isNotBlank(task.getQueueName()))
+                                                        .withSync(!task.isAsync())
                                                         .withAccountId(task.getAccountId())
                                                         .build()));
       } else {

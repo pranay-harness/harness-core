@@ -251,7 +251,6 @@ public class DelegateServiceTest extends WingsBaseTest {
                                     .withParameters(new Object[] {})
                                     .withTags(new ArrayList<>())
                                     .withAsync(false)
-                                    .withQueueName("queue")
                                     .build();
     wingsPersistence.save(delegateTask);
     delegateService.processDelegateResponse(
