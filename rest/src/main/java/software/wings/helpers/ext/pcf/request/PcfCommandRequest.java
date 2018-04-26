@@ -18,6 +18,7 @@ public class PcfCommandRequest {
   private PcfConfig pcfConfig;
   private String workflowExecutionId;
   private Integer timeoutIntervalInMin;
+  private boolean isBlueGreenDeployment;
 
-  public enum PcfCommandType { SETUP, RESIZE, ROLLBACK, SWITCH_ROUTE, DATAFETCH, VALIDATE }
+  public enum PcfCommandType { SETUP, RESIZE, ROLLBACK, SWAP_ROUTE, DATAFETCH, VALIDATE }
 }

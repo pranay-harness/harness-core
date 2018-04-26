@@ -321,6 +321,7 @@ public class PhaseStepSubWorkflow extends SubWorkflowState {
       case HELM_DEPLOY:
       case PCF_SETUP:
       case PCF_RESIZE:
+      case PCF_ROUTE_SWAP:
         noop();
         break;
 

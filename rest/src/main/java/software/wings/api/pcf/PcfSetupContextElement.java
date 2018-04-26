@@ -39,6 +39,8 @@ public class PcfSetupContextElement implements ContextElement {
   private List<String> tempRouteMap;
   private List<String> routeMaps;
   private Integer timeoutIntervalInMinutes;
+  private boolean isBlueGreenDeployment;
+  private List<String> appsToBeDownsized;
 
   @Override
   public ContextElementType getElementType() {

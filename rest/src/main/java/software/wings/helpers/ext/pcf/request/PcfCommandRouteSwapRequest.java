@@ -4,6 +4,8 @@ import lombok.Builder;
 import lombok.Data;
 import software.wings.beans.PcfConfig;
 
+import java.util.List;
+
 /**
  * This class contains all required data for PCFCommandTask.SETUP to perform setup task
  */
@@ -15,15 +17,20 @@ public class PcfCommandRouteSwapRequest extends PcfCommandRequest {
    * so actual app name will be appId_serviceId_envId__version
    */
   private String releaseName;
-  private String routeMap;
+  private List<String> routeMaps;
+  private List<String> tempRouteMaps;
+  private List<String> appsToBeDownSized;
 
   @Builder
   public PcfCommandRouteSwapRequest(String accountId, String appId, String commandName, String activityId,
       PcfCommandType pcfCommandType, String organization, String space, PcfConfig pcfConfig, String workflowExecutionId,
-      String releaseName, String routeMap, Integer timeoutIntervalInMin) {
+      String releaseName, List<String> routeMaps, List<String> tempRouteMaps, Integer timeoutIntervalInMin,
+      boolean isBlueGreenDeployment, List<String> appsToBeDownSized) {
     super(accountId, appId, commandName, activityId, pcfCommandType, organization, space, pcfConfig,
-        workflowExecutionId, timeoutIntervalInMin);
+        workflowExecutionId, timeoutIntervalInMin, isBlueGreenDeployment);
     this.releaseName = releaseName;
-    this.routeMap = routeMap;
+    this.routeMaps = routeMaps;
+    this.tempRouteMaps = tempRouteMaps;
+    this.appsToBeDownSized = appsToBeDownSized;
   }
 }

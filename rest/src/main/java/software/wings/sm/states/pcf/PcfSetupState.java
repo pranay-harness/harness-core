@@ -24,6 +24,7 @@ import software.wings.beans.DelegateTask;
 import software.wings.beans.DeploymentExecutionContext;
 import software.wings.beans.Environment;
 import software.wings.beans.ErrorCode;
+import software.wings.beans.OrchestrationWorkflowType;
 import software.wings.beans.PcfConfig;
 import software.wings.beans.PcfInfrastructureMapping;
 import software.wings.beans.ResizeStrategy;
@@ -164,7 +165,10 @@ public class PcfSetupState extends State {
 
     String releaseNamePrefix = getPrefix(app.getName(), serviceElement.getName(), env.getName());
 
-    String[] tempRputeMaps = CollectionUtils.isEmpty(pcfInfrastructureMapping.getTempRouteMap())
+    // is Blue Green deployment
+    boolean isBlueGreenDeployment = OrchestrationWorkflowType.BASIC.equals(context.getOrchestrationWorkflowType());
+
+    String[] tempRouteMaps = CollectionUtils.isEmpty(pcfInfrastructureMapping.getTempRouteMap())
         ? new String[0]
         : pcfInfrastructureMapping.getTempRouteMap().toArray(new String[0]);
 
@@ -186,10 +190,11 @@ public class PcfSetupState extends State {
             .manifestYaml(pcfServiceSpecification.getManiefstYaml())
             .workflowExecutionId(context.getWorkflowExecutionId())
             .artifactFiles(artifact.getArtifactFiles())
-            .tempRouteMap(tempRputeMaps)
-            .routeMaps(routeMaps)
+            .routeMaps(isBlueGreenDeployment ? tempRouteMaps : routeMaps)
             .serviceVariables(context.getServiceVariables())
             .timeoutIntervalInMin(timeoutIntervalInMinutes == null ? 5 : timeoutIntervalInMinutes)
+            .maxCount(maxInstances)
+            .isBlueGreenDeployment(isBlueGreenDeployment)
             .build();
 
     PcfSetupStateExecutionData stateExecutionData = PcfSetupStateExecutionData.builder()
@@ -207,6 +212,7 @@ public class PcfSetupState extends State {
                                                         .serviceId(serviceElement.getUuid())
                                                         .tempRouteMap(pcfInfrastructureMapping.getTempRouteMap())
                                                         .routeMaps(pcfInfrastructureMapping.getRouteMaps())
+                                                        .isBlueGreenDeployment(isBlueGreenDeployment)
                                                         .build();
 
     DelegateTask delegateTask = aDelegateTask()
@@ -286,6 +292,8 @@ public class PcfSetupState extends State {
                     ? 0
                     : pcfSetupCommandResponse.getTotalPreviousInstanceCount())
             .timeoutIntervalInMinutes(timeoutIntervalInMinutes)
+            .isBlueGreenDeployment(stateExecutionData.isBlueGreenDeployment())
+            .appsToBeDownsized(pcfSetupCommandResponse.getDownsizeDetails())
             .build();
 
     if (ExecutionStatus.SUCCESS.equals(executionStatus)) {

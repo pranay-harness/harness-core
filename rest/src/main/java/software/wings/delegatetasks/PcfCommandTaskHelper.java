@@ -27,9 +27,11 @@ import software.wings.helpers.ext.pcf.PivotalClientApiException;
 import software.wings.helpers.ext.pcf.request.PcfCommandDeployRequest;
 import software.wings.helpers.ext.pcf.request.PcfCommandRequest;
 import software.wings.helpers.ext.pcf.request.PcfCommandRollbackRequest;
+import software.wings.helpers.ext.pcf.request.PcfCommandRouteSwapRequest;
 import software.wings.helpers.ext.pcf.request.PcfCommandSetupRequest;
 import software.wings.helpers.ext.pcf.request.PcfInfraMappingDataRequest;
 import software.wings.helpers.ext.pcf.response.PcfCommandExecutionResponse;
+import software.wings.helpers.ext.pcf.response.PcfCommandResponse;
 import software.wings.helpers.ext.pcf.response.PcfDeployCommandResponse;
 import software.wings.helpers.ext.pcf.response.PcfInfraMappingDataResponse;
 import software.wings.helpers.ext.pcf.response.PcfSetupCommandResponse;
@@ -63,7 +65,7 @@ public class PcfCommandTaskHelper {
 
   private static final Logger logger = LoggerFactory.getLogger(PcfCommandTaskHelper.class);
   /**
-   * This method is responsible for fething previous release version information
+   * This method is responsible for fetching previous release version information
    * like, previous releaseNames with Running instances, All existing previous releaseNames.
    *
    * @param pcfCommandRequest
@@ -97,6 +99,10 @@ public class PcfCommandTaskHelper {
       // Get all previous release names in desending order of version number
       List<ApplicationSummary> previousReleases =
           pcfDeploymentManager.getPreviousReleases(pcfRequestConfig, pcfCommandSetupRequest.getReleaseNamePrefix());
+      StringBuilder appNames = new StringBuilder("Existing applications :- ");
+      previousReleases.stream().forEach(
+          applicationSummary -> appNames.append("\n").append(applicationSummary.getName()));
+      executionLogCallback.saveExecutionLog(appNames.toString());
 
       Integer totalPreviousInstanceCount = previousReleases.stream().mapToInt(ApplicationSummary::getInstances).sum();
 
@@ -162,6 +168,11 @@ public class PcfCommandTaskHelper {
 
       // Create new Application
       executionLogCallback.saveExecutionLog("# Creating new Application: " + newReleaseName);
+      if (pcfCommandSetupRequest.isBlueGreenDeployment()) {
+        executionLogCallback.saveExecutionLog(
+            "# Blue-Green Deployment, using Temporary routeMaps for new application " + newReleaseName);
+      }
+      executionLogCallback.saveExecutionLog("# ");
       pcfRequestConfig.setApplicationName(newReleaseName);
       pcfRequestConfig.setRouteMaps(pcfCommandSetupRequest.getRouteMaps());
       pcfRequestConfig.setServiceVariables(pcfCommandSetupRequest.getServiceVariables());
@@ -173,12 +184,15 @@ public class PcfCommandTaskHelper {
       executionLogCallback.saveExecutionLog("# Application created successfully");
       printApplicationDetail(newApplication, executionLogCallback);
 
+      List<String> downsizeAppNames = generateDownsizeDetails(
+          pcfDeploymentManager, pcfRequestConfig, newReleaseName, pcfCommandSetupRequest.getMaxCount());
       PcfSetupCommandResponse pcfSetupCommandResponse = PcfSetupCommandResponse.builder()
                                                             .commandExecutionStatus(CommandExecutionStatus.SUCCESS)
                                                             .output(StringUtils.EMPTY)
                                                             .newApplicationId(newApplication.getId())
                                                             .newApplicationName(newApplication.getName())
                                                             .totalPreviousInstanceCount(totalPreviousInstanceCount)
+                                                            .downsizeDetails(downsizeAppNames)
                                                             .build();
 
       // Delete downloaded artifact and generated manifest.yaml file
@@ -202,6 +216,36 @@ public class PcfCommandTaskHelper {
           .errorMessage(e.getMessage())
           .build();
     }
+  }
+
+  /**
+   * Returns Application names those will be downsized in deployment process
+   */
+  private List<String> generateDownsizeDetails(PcfDeploymentManager pcfDeploymentManager,
+      PcfRequestConfig pcfRequestConfig, String releaseName, Integer maxCount) throws PivotalClientApiException {
+    String prefix = getAppPrefix(releaseName);
+
+    List<ApplicationSummary> applicationSummaries =
+        pcfDeploymentManager.getDeployedServicesWithNonZeroInstances(pcfRequestConfig, prefix);
+
+    List<String> downSizeUpdate = new ArrayList<>();
+    int count = maxCount;
+    int instanceCount;
+    for (int index = applicationSummaries.size() - 1; index >= 0; index--) {
+      if (count <= 0) {
+        break;
+      }
+
+      ApplicationSummary applicationSummary = applicationSummaries.get(index);
+      if (releaseName.equals(applicationSummary.getName()) || applicationSummary.getInstances() == 0) {
+        continue;
+      }
+      instanceCount = applicationSummary.getInstances();
+      downSizeUpdate.add(applicationSummary.getName());
+      count = instanceCount >= count ? 0 : count - instanceCount;
+    }
+
+    return downSizeUpdate;
   }
 
   /**
@@ -376,8 +420,14 @@ public class PcfCommandTaskHelper {
         .build();
   }
 
-  public PcfCommandExecutionResponse performValidation(PcfCommandRequest pcfCommandRequest,
-      ExecutionLogCallback executionLogCallback, PcfDeploymentManager pcfDeploymentManager) {
+  /**
+   * Performs validation of PCF config while adding PCF cloud provider
+   * @param pcfCommandRequest
+   * @param pcfDeploymentManager
+   * @return
+   */
+  public PcfCommandExecutionResponse performValidation(
+      PcfCommandRequest pcfCommandRequest, PcfDeploymentManager pcfDeploymentManager) {
     PcfInfraMappingDataRequest pcfInfraMappingDataRequest = (PcfInfraMappingDataRequest) pcfCommandRequest;
     PcfConfig pcfConfig = pcfInfraMappingDataRequest.getPcfConfig();
     PcfCommandExecutionResponse pcfCommandExecutionResponse = PcfCommandExecutionResponse.builder().build();
@@ -393,9 +443,8 @@ public class PcfCommandTaskHelper {
 
       pcfCommandExecutionResponse.setCommandExecutionStatus(CommandExecutionStatus.SUCCESS);
 
-    } catch (PivotalClientApiException e) {
-      logger.error("Exception in processing PCF DataFetch task [{}]", pcfInfraMappingDataRequest, e);
-      executionLogCallback.saveExecutionLog("\n\n--------- PCF Datafetch failed to complete successfully");
+    } catch (Exception e) {
+      logger.error("Exception in processing PCF validation task [{}]", pcfInfraMappingDataRequest, e);
       pcfCommandExecutionResponse.setCommandExecutionStatus(CommandExecutionStatus.FAILURE);
       pcfCommandExecutionResponse.setErrorMessage(e.getMessage());
     }
@@ -403,9 +452,101 @@ public class PcfCommandTaskHelper {
     return pcfCommandExecutionResponse;
   }
 
-  public PcfCommandExecutionResponse performDataFetch(PcfCommandRequest pcfCommandRequest,
+  /**
+   * Performs RouteSwapping for Blue-Green deployment
+   * @param pcfCommandRequest
+   * @param executionLogCallback
+   * @param encryptionService
+   * @param pcfDeploymentManager
+   * @param encryptedDataDetails
+   * @return
+   */
+  public PcfCommandExecutionResponse performRouteSwap(PcfCommandRequest pcfCommandRequest,
       ExecutionLogCallback executionLogCallback, EncryptionService encryptionService,
       PcfDeploymentManager pcfDeploymentManager, List<EncryptedDataDetail> encryptedDataDetails) {
+    PcfCommandResponse pcfCommandResponse = new PcfCommandResponse();
+    PcfCommandExecutionResponse pcfCommandExecutionResponse =
+        PcfCommandExecutionResponse.builder().pcfCommandResponse(pcfCommandResponse).build();
+
+    try {
+      executionLogCallback.saveExecutionLog("--------- Starting PCF Route Swap");
+      PcfCommandRouteSwapRequest pcfCommandRouteSwapRequest = (PcfCommandRouteSwapRequest) pcfCommandRequest;
+      PcfConfig pcfConfig = pcfCommandRouteSwapRequest.getPcfConfig();
+      encryptionService.decrypt(pcfConfig, encryptedDataDetails);
+
+      String newApplicationName = pcfCommandRouteSwapRequest.getReleaseName();
+      PcfRequestConfig pcfRequestConfig =
+          PcfRequestConfig.builder()
+              .userName(pcfConfig.getUsername())
+              .endpointUrl(pcfConfig.getEndpointUrl())
+              .password(String.valueOf(pcfConfig.getPassword()))
+              .orgName(pcfCommandRouteSwapRequest.getOrganization())
+              .spaceName(pcfCommandRouteSwapRequest.getSpace())
+              .applicationName(newApplicationName)
+              .timeOutIntervalInMins(pcfCommandRouteSwapRequest.getTimeoutIntervalInMin())
+              .build();
+
+      ApplicationDetail applicationDetail = pcfDeploymentManager.getApplicationByName(pcfRequestConfig);
+      executionLogCallback.saveExecutionLog("# Unmapping temporary routemaps for newly created application: ");
+      printApplicationDetail(applicationDetail, executionLogCallback);
+      // unmap
+      pcfDeploymentManager.unmapRouteMapForApplication(pcfRequestConfig, applicationDetail.getUrls());
+
+      executionLogCallback.saveExecutionLog(
+          "# Attaching actual routemaps for application: " + applicationDetail.getName());
+      // map
+      pcfDeploymentManager.mapRouteMapForApplication(pcfRequestConfig, pcfCommandRouteSwapRequest.getRouteMaps());
+
+      applicationDetail = pcfDeploymentManager.getApplicationByName(pcfRequestConfig);
+      executionLogCallback.saveExecutionLog("# New state for application: ");
+      printApplicationDetail(applicationDetail, executionLogCallback);
+
+      if (CollectionUtils.isNotEmpty(pcfCommandRouteSwapRequest.getAppsToBeDownSized())) {
+        for (String applicationName : pcfCommandRouteSwapRequest.getAppsToBeDownSized()) {
+          executionLogCallback.saveExecutionLog(
+              "Removing routemaps and downsizing previous application: " + applicationName);
+
+          pcfRequestConfig.setApplicationName(applicationName);
+          pcfRequestConfig.setDesiredCount(0);
+          applicationDetail = pcfDeploymentManager.getApplicationByName(pcfRequestConfig);
+          if (CollectionUtils.isNotEmpty(applicationDetail.getUrls())) {
+            executionLogCallback.saveExecutionLog("# Application current State: ");
+            pcfDeploymentManager.unmapRouteMapForApplication(
+                pcfRequestConfig, pcfCommandRouteSwapRequest.getRouteMaps());
+            applicationDetail = pcfDeploymentManager.resizeApplication(pcfRequestConfig);
+            executionLogCallback.saveExecutionLog("New state of application");
+            printApplicationDetail(applicationDetail, executionLogCallback);
+          }
+        }
+      }
+
+      pcfCommandResponse.setCommandExecutionStatus(CommandExecutionStatus.SUCCESS);
+      pcfCommandResponse.setOutput(StringUtils.EMPTY);
+      executionLogCallback.saveExecutionLog("--------- PCF Route Swap completed successfully");
+    } catch (Exception e) {
+      logger.error("Exception in processing PCF Swap RouteMap task [{}]", e);
+      executionLogCallback.saveExecutionLog("\n\n--------- PCF Route Swap failed to complete successfully");
+      executionLogCallback.saveExecutionLog("# Error:- " + e.getMessage());
+      pcfCommandResponse.setOutput(e.getMessage());
+      pcfCommandResponse.setCommandExecutionStatus(CommandExecutionStatus.FAILURE);
+    }
+
+    pcfCommandExecutionResponse.setCommandExecutionStatus(pcfCommandResponse.getCommandExecutionStatus());
+    pcfCommandExecutionResponse.setErrorMessage(pcfCommandResponse.getOutput());
+    return pcfCommandExecutionResponse;
+  }
+
+  /**
+   * Fetches Organization, Spaces, RouteMap data
+   * @param pcfCommandRequest
+   * @param encryptionService
+   * @param pcfDeploymentManager
+   * @param encryptedDataDetails
+   * @return
+   */
+  public PcfCommandExecutionResponse performDataFetch(PcfCommandRequest pcfCommandRequest,
+      EncryptionService encryptionService, PcfDeploymentManager pcfDeploymentManager,
+      List<EncryptedDataDetail> encryptedDataDetails) {
     PcfInfraMappingDataRequest pcfInfraMappingDataRequest = (PcfInfraMappingDataRequest) pcfCommandRequest;
     PcfConfig pcfConfig = pcfInfraMappingDataRequest.getPcfConfig();
     encryptionService.decrypt(pcfConfig, encryptedDataDetails);
@@ -425,9 +566,8 @@ public class PcfCommandTaskHelper {
 
       pcfInfraMappingDataResponse.setCommandExecutionStatus(CommandExecutionStatus.SUCCESS);
       pcfInfraMappingDataResponse.setOutput(StringUtils.EMPTY);
-    } catch (PivotalClientApiException e) {
-      logger.error("Exception in processing PCF DataFetch task [{}]", pcfInfraMappingDataRequest, e);
-      executionLogCallback.saveExecutionLog("\n\n--------- PCF Datafetch failed to complete successfully");
+    } catch (Exception e) {
+      logger.error("Exception in processing PCF DataFetch task [{}]", e);
       pcfInfraMappingDataResponse.setOrganizations(Collections.EMPTY_LIST);
       pcfInfraMappingDataResponse.setSpaces(Collections.EMPTY_LIST);
       pcfInfraMappingDataResponse.setRouteMaps(Collections.EMPTY_LIST);
@@ -532,6 +672,10 @@ public class PcfCommandTaskHelper {
       PcfCommandDeployRequest pcfCommandDeployRequest, PcfRequestConfig pcfRequestConfig,
       ExecutionLogCallback executionLogCallback, List<PcfServiceData> pcfServiceDataUpdated, Integer updateCount,
       String prefix) throws PivotalClientApiException {
+    if (pcfCommandDeployRequest.isBlueGreenDeployment()) {
+      executionLogCallback.saveExecutionLog("# Skipping Downsizing as blue green deployment");
+      return;
+    }
     executionLogCallback.saveExecutionLog("# Downsizing previous version/s by count: " + updateCount);
 
     List<ApplicationSummary> applicationSummaries =
@@ -597,12 +741,12 @@ public class PcfCommandTaskHelper {
     executionLogCallback.saveExecutionLog(new StringBuilder()
                                               .append("Name:- ")
                                               .append(applicationDetail.getName())
-                                              .append("\n")
-                                              .append("Guid:- ")
+                                              .append("\nGuid:- ")
                                               .append(applicationDetail.getId())
-                                              .append("\n")
-                                              .append("InstanceCount:- ")
+                                              .append("\nInstanceCount:- ")
                                               .append(applicationDetail.getInstances())
+                                              .append("\nRoute Maps:- ")
+                                              .append(applicationDetail.getUrls())
                                               .append("\n")
                                               .toString());
     return applicationDetail;
@@ -826,32 +970,5 @@ public class PcfCommandTaskHelper {
             .build());
 
     pcfInfraMappingDataResponse.setOrganizations(orgs);
-  }
-
-  public PcfCommandExecutionResponse performValidation(PcfCommandRequest pcfCommandRequest,
-      ExecutionLogCallback executionLogCallback, PcfDeploymentManager pcfDeploymentManager, Logger logger) {
-    PcfInfraMappingDataRequest pcfInfraMappingDataRequest = (PcfInfraMappingDataRequest) pcfCommandRequest;
-    PcfConfig pcfConfig = pcfInfraMappingDataRequest.getPcfConfig();
-    PcfCommandExecutionResponse pcfCommandExecutionResponse = PcfCommandExecutionResponse.builder().build();
-    try {
-      pcfDeploymentManager.getOrganizations(
-          PcfRequestConfig.builder()
-              .orgName(pcfInfraMappingDataRequest.getOrganization())
-              .userName(pcfConfig.getUsername())
-              .password(String.valueOf(pcfConfig.getPassword()))
-              .endpointUrl(pcfConfig.getEndpointUrl())
-              .timeOutIntervalInMins(pcfInfraMappingDataRequest.getTimeoutIntervalInMin())
-              .build());
-
-      pcfCommandExecutionResponse.setCommandExecutionStatus(CommandExecutionStatus.SUCCESS);
-
-    } catch (PivotalClientApiException e) {
-      logger.error("Exception in processing PCF DataFetch task [{}]", pcfInfraMappingDataRequest, e);
-      executionLogCallback.saveExecutionLog("\n\n--------- PCF Datafetch failed to complete successfully");
-      pcfCommandExecutionResponse.setCommandExecutionStatus(CommandExecutionStatus.FAILURE);
-      pcfCommandExecutionResponse.setErrorMessage(e.getMessage());
-    }
-
-    return pcfCommandExecutionResponse;
   }
 }

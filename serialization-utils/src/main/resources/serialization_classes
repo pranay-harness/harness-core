@@ -330,3 +330,7 @@ software.wings.helpers.ext.pcf.response.PcfInfraMappingDataResponse, 5294
 software.wings.helpers.ext.pcf.request.PcfInfraMappingDataRequest, 5295
 software.wings.beans.PcfConfig, 5296
 software.wings.helpers.ext.pcf.request.PcfCommandRequest, 5297
+software.wings.helpers.ext.pcf.request.PcfCommandRouteSwapRequest, 5298
+software.wings.api.pcf.PcfSwapRouteMapStateExecutionData, 5299
+software.wings.api.pcf.PcfRouteSwapExecutionSummary, 5300
+

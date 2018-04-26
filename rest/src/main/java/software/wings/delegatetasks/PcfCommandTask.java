@@ -53,11 +53,14 @@ public class PcfCommandTask extends AbstractDelegateRunnableTask {
         case ROLLBACK:
           return pcfCommandTaskHelper.performDeployRollback(
               pcfCommandRequest, executionLogCallback, encryptionService, pcfDeploymentManager, encryptedDataDetails);
+        case SWAP_ROUTE:
+          return pcfCommandTaskHelper.performRouteSwap(
+              pcfCommandRequest, executionLogCallback, encryptionService, pcfDeploymentManager, encryptedDataDetails);
         case DATAFETCH:
           return pcfCommandTaskHelper.performDataFetch(
-              pcfCommandRequest, executionLogCallback, encryptionService, pcfDeploymentManager, encryptedDataDetails);
+              pcfCommandRequest, encryptionService, pcfDeploymentManager, encryptedDataDetails);
         case VALIDATE:
-          return pcfCommandTaskHelper.performValidation(pcfCommandRequest, executionLogCallback, pcfDeploymentManager);
+          return pcfCommandTaskHelper.performValidation(pcfCommandRequest, pcfDeploymentManager);
         default:
           throw new HarnessException("Operation not supported");
       }
