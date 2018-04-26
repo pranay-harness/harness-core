@@ -293,10 +293,6 @@ public class PhaseStepSubWorkflow extends SubWorkflowState {
 
   private void validatePreRequisites(ExecutionContext contextIntf, PhaseElement phaseElement) {
     switch (phaseStepType) {
-      case CONTAINER_DEPLOY: {
-        validateServiceElement(contextIntf, phaseElement);
-        break;
-      }
       case DEPLOY_SERVICE:
       case ENABLE_SERVICE:
       case DISABLE_SERVICE: {
@@ -304,6 +300,7 @@ public class PhaseStepSubWorkflow extends SubWorkflowState {
         break;
       }
 
+      case CONTAINER_DEPLOY:
       case SELECT_NODE:
       case PROVISION_NODE:
       case VERIFY_SERVICE:
@@ -406,12 +403,19 @@ public class PhaseStepSubWorkflow extends SubWorkflowState {
           executionResponse.setContextElements(singletonList(clusterElement));
           executionResponse.setNotifyElements(singletonList(clusterElement));
         } else if (phaseStepType == PhaseStepType.CONTAINER_SETUP) {
-          ContainerServiceElement containerServiceElement = (ContainerServiceElement) notifiedElement(
-              elementNotifyResponseData, ContainerServiceElement.class, "Missing ContainerServiceElement");
-          executionResponse.setContextElements(singletonList(containerServiceElement));
-          executionResponse.setNotifyElements(singletonList(containerServiceElement));
-        } else if (phaseStepType == PhaseStepType.CONTAINER_DEPLOY
-            || phaseStepType == PhaseStepType.DEPLOY_AWSCODEDEPLOY) {
+          if (!isEmpty(elementNotifyResponseData.getContextElements())) {
+            ContainerServiceElement containerServiceElement = (ContainerServiceElement) notifiedElement(
+                elementNotifyResponseData, ContainerServiceElement.class, "Missing ContainerServiceElement");
+            executionResponse.setContextElements(singletonList(containerServiceElement));
+            executionResponse.setNotifyElements(singletonList(containerServiceElement));
+          }
+        } else if (phaseStepType == PhaseStepType.CONTAINER_DEPLOY) {
+          if (!isEmpty(elementNotifyResponseData.getContextElements())) {
+            InstanceElementListParam instanceElementListParam = (InstanceElementListParam) notifiedElement(
+                elementNotifyResponseData, InstanceElementListParam.class, "Missing InstanceListParam Element");
+            executionResponse.setContextElements(Lists.newArrayList(instanceElementListParam));
+          }
+        } else if (phaseStepType == PhaseStepType.DEPLOY_AWSCODEDEPLOY) {
           InstanceElementListParam instanceElementListParam = (InstanceElementListParam) notifiedElement(
               elementNotifyResponseData, InstanceElementListParam.class, "Missing InstanceListParam Element");
           executionResponse.setContextElements(Lists.newArrayList(instanceElementListParam));
