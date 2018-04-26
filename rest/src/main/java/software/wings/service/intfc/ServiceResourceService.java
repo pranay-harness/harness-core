@@ -405,6 +405,7 @@ public interface ServiceResourceService extends OwnedByApplication {
 
   PcfServiceSpecification getPcfServiceSpecificationById(String appId, String pcfServiceSpecificationId);
 
+  PcfServiceSpecification resetToDefaultPcfServiceSpecification(PcfServiceSpecification pcfServiceSpecification);
   /***
    * Get command categories
    * @param appId

@@ -19,7 +19,6 @@ import static software.wings.api.PhaseElement.PhaseElementBuilder.aPhaseElement;
 import static software.wings.api.ServiceElement.Builder.aServiceElement;
 import static software.wings.beans.Application.Builder.anApplication;
 import static software.wings.beans.Environment.Builder.anEnvironment;
-import static software.wings.beans.PcfInfrastructureMapping.anPcfInfrastructureMapping;
 import static software.wings.beans.ResizeStrategy.RESIZE_NEW_FIRST;
 import static software.wings.beans.ServiceTemplate.Builder.aServiceTemplate;
 import static software.wings.beans.SettingAttribute.Builder.aSettingAttribute;
@@ -71,6 +70,7 @@ import software.wings.beans.DelegateTask;
 import software.wings.beans.Environment;
 import software.wings.beans.InfrastructureMapping;
 import software.wings.beans.PcfConfig;
+import software.wings.beans.PcfInfrastructureMapping;
 import software.wings.beans.Service;
 import software.wings.beans.ServiceTemplate;
 import software.wings.beans.ServiceVariable;
@@ -221,12 +221,12 @@ public class PcfSetupStateTest extends WingsBaseTest {
     when(artifactService.get(any(), any())).thenReturn(artifact);
     when(artifactStreamService.get(any(), any())).thenReturn(artifactStream);
 
-    InfrastructureMapping infrastructureMapping = anPcfInfrastructureMapping()
-                                                      .withOrganization(ORG)
-                                                      .withSpace(SPACE)
-                                                      .withRouteMaps(Arrays.asList("R1"))
-                                                      .withRouteMaps(Arrays.asList("R2"))
-                                                      .withComputeProviderSettingId(COMPUTE_PROVIDER_ID)
+    InfrastructureMapping infrastructureMapping = PcfInfrastructureMapping.builder()
+                                                      .organization(ORG)
+                                                      .space(SPACE)
+                                                      .routeMaps(Arrays.asList("R1"))
+                                                      .tempRouteMap(Arrays.asList("R2"))
+                                                      .computeProviderSettingId(COMPUTE_PROVIDER_ID)
                                                       .build();
     when(infrastructureMappingService.get(APP_ID, INFRA_MAPPING_ID)).thenReturn(infrastructureMapping);
 

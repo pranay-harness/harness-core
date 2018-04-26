@@ -79,6 +79,25 @@ public abstract class InfrastructureMapping extends Base {
     this.infraMappingType = infraMappingType;
   }
 
+  public InfrastructureMapping(String entityYamlPath, String appId, String accountId, String type, String uuid,
+      EmbeddedUser createdBy, long createdAt, EmbeddedUser lastUpdatedBy, long lastUpdatedAt,
+      String computeProviderSettingId, String envId, String serviceTemplateId, String serviceId,
+      String computeProviderType, String infraMappingType, String deploymentType, String computeProviderName,
+      String name, List<String> keywords, boolean autoPopulateName) {
+    super(uuid, appId, createdBy, createdAt, lastUpdatedBy, lastUpdatedAt, keywords, entityYamlPath);
+    this.computeProviderSettingId = computeProviderSettingId;
+    this.envId = envId;
+    this.serviceTemplateId = serviceTemplateId;
+    this.serviceId = serviceId;
+    this.computeProviderType = computeProviderType;
+    this.infraMappingType = infraMappingType;
+    this.deploymentType = deploymentType;
+    this.computeProviderName = computeProviderName;
+    this.name = name;
+    this.autoPopulate = autoPopulateName;
+    this.accountId = accountId;
+  }
+
   @SchemaIgnore
   public String getAccountId() {
     return accountId;
