@@ -776,7 +776,7 @@ public interface Constants {
       + "setup infrastructure and setup/execute deployment workflows within NON_PROD environments";
 
   /**
-   * The constant KUBERNETES_KUBECONFIG_PLACEHOLDER.
+   * The constant HARNESS_KUBE_CONFIG_PATH.
    */
-  String KUBERNETES_KUBECONFIG_PLACEHOLDER = "Kubernetes-Kubeconfig-Placeholder";
+  String HARNESS_KUBE_CONFIG_PATH = "HARNESS_KUBE_CONFIG_PATH";
 }
