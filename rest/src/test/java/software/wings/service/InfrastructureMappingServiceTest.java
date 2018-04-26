@@ -23,7 +23,6 @@ import static software.wings.beans.DirectKubernetesInfrastructureMapping.Builder
 import static software.wings.beans.EcsInfrastructureMapping.Builder.anEcsInfrastructureMapping;
 import static software.wings.beans.ErrorCode.INVALID_REQUEST;
 import static software.wings.beans.GcpKubernetesInfrastructureMapping.Builder.aGcpKubernetesInfrastructureMapping;
-import static software.wings.beans.PcfInfrastructureMapping.anPcfInfrastructureMapping;
 import static software.wings.beans.PhysicalDataCenterConfig.Builder.aPhysicalDataCenterConfig;
 import static software.wings.beans.PhysicalInfrastructureMapping.Builder.aPhysicalInfrastructureMapping;
 import static software.wings.beans.ServiceInstance.Builder.aServiceInstance;
@@ -86,6 +85,7 @@ import software.wings.beans.Environment;
 import software.wings.beans.GcpConfig;
 import software.wings.beans.GcpKubernetesInfrastructureMapping;
 import software.wings.beans.InfrastructureMapping;
+import software.wings.beans.PcfInfrastructureMapping;
 import software.wings.beans.PhysicalInfrastructureMapping;
 import software.wings.beans.Service;
 import software.wings.beans.ServiceInstance;
@@ -819,11 +819,11 @@ public class InfrastructureMappingServiceTest extends WingsBaseTest {
 
     MethodUtils.invokeMethod(serviceImpl, true, "handlePcfInfraMapping",
         new Object[] {keyValuePairs,
-            anPcfInfrastructureMapping()
-                .withOrganization(ORGANIZATION)
-                .withSpace(SPACE)
-                .withRouteMaps(Arrays.asList(ROUTE))
-                .withTempRouteMap(Arrays.asList(ROUTE))
+            PcfInfrastructureMapping.builder()
+                .organization(ORGANIZATION)
+                .space(SPACE)
+                .routeMaps(Arrays.asList(ROUTE))
+                .tempRouteMap(Arrays.asList(ROUTE))
                 .build()});
 
     assertEquals(4, keyValuePairs.size());

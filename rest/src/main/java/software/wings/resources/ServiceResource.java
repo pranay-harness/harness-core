@@ -374,9 +374,9 @@ public class ServiceResource {
   @Path("{serviceId}/pcfspecification")
   @Timed
   @ExceptionMetered
-  @AuthRule(permissionType = PermissionType.SERVICE, action = Action.UPDATE)
+  @AuthRule(permissionType = PermissionType.SERVICE, action = Action.CREATE)
   public RestResponse<PcfServiceSpecification> createPcfServiceSpecification(@QueryParam("appId") String appId,
-      @PathParam("serviceId") String serviceId, @NotNull PcfServiceSpecification pcfServiceSpecification) {
+      @PathParam("serviceId") String serviceId, PcfServiceSpecification pcfServiceSpecification) {
     pcfServiceSpecification.setAppId(appId);
     pcfServiceSpecification.setServiceId(serviceId);
     return new RestResponse<>(serviceResourceService.createPcfServiceSpecification(pcfServiceSpecification));
@@ -395,16 +395,31 @@ public class ServiceResource {
   }
 
   @PUT
-  @Path("{serviceId}/pcfspecification")
+  @Path("{serviceId}/pcfspecification/{pcfSpecificationId}")
   @Timed
   @ExceptionMetered
+  @AuthRule(permissionType = PermissionType.SERVICE, action = Action.UPDATE)
   public RestResponse<PcfServiceSpecification> updatePcfServiceSpecification(@QueryParam("appId") String appId,
-      @PathParam("serviceId") String serviceId, @PathParam("taskId") String taskId,
+      @PathParam("serviceId") String serviceId, @PathParam("pcfSpecificationId") String pcfSpecificationId,
       PcfServiceSpecification pcfServiceSpecification) {
     pcfServiceSpecification.setAppId(appId);
     pcfServiceSpecification.setServiceId(serviceId);
-    pcfServiceSpecification.setUuid(taskId);
+    pcfServiceSpecification.setUuid(pcfSpecificationId);
     return new RestResponse<>(serviceResourceService.updatePcfServiceSpecification(pcfServiceSpecification));
+  }
+
+  @PUT
+  @Path("{serviceId}/pcfspecification/{pcfSpecificationId}/reset")
+  @Timed
+  @ExceptionMetered
+  @AuthRule(permissionType = PermissionType.SERVICE, action = Action.UPDATE)
+  public RestResponse<PcfServiceSpecification> resetToDefaultPcfServiceSpecification(@QueryParam("appId") String appId,
+      @PathParam("serviceId") String serviceId, @PathParam("pcfSpecificationId") String pcfSpecificationId,
+      PcfServiceSpecification pcfServiceSpecification) {
+    pcfServiceSpecification.setAppId(appId);
+    pcfServiceSpecification.setServiceId(serviceId);
+    pcfServiceSpecification.setUuid(pcfSpecificationId);
+    return new RestResponse<>(serviceResourceService.resetToDefaultPcfServiceSpecification(pcfServiceSpecification));
   }
 
   @POST

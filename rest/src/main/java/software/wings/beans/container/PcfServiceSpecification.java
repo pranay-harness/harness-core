@@ -1,5 +1,7 @@
 package software.wings.beans.container;
 
+import static software.wings.yaml.YamlHelper.trimYaml;
+
 import lombok.Builder;
 import lombok.Data;
 import lombok.EqualsAndHashCode;
@@ -16,6 +18,39 @@ import javax.validation.constraints.NotNull;
 public class PcfServiceSpecification extends DeploymentSpecification {
   @NotNull private String serviceId;
   @NotNull private String maniefstYaml;
+
+  public static final String preamble = "# Enter your Task Definition JSON spec below.\n"
+      + "#\n"
+      + "# Placeholders:\n"
+      + "#\n"
+      + "# Required: {APPLICATION_NAME}\n"
+      + "#   - Replaced with the application name being deployed\n"
+      + "#\n"
+      + "# Optional: {INSTANCE_COUNT}\n"
+      + "#   - Replaced with a instance count for application\n"
+      + "#\n"
+      + "# Required: {FILE_LOCATION}\n"
+      + "#   - Replaced with file location\n"
+      + "#\n"
+      + "# Required: {ROUTE_MAP}\n"
+      + "#   - Replaced with route maps\n"
+      + "#\n"
+      + "# ---\n\n";
+
+  public static final String manifestTemplate = "applications:\n"
+      + "- name: ${APPLICATION_NAME}\n"
+      + "  memory: 750M\n"
+      + "  INSTANCES : ${INSTANCE_COUNT}\n"
+      + "  path: ${FILE_LOCATION}\n"
+      + "  ROUTES:\n"
+      + "  - route: ${ROUTE_MAP}";
+
+  public PcfServiceSpecification resetToDefault(String serviceId, String appId) {
+    this.maniefstYaml = trimYaml(preamble + maniefstYaml);
+    this.serviceId = serviceId;
+    this.appId = appId;
+    return this;
+  }
 
   @Data
   @EqualsAndHashCode(callSuper = true)

@@ -14,7 +14,6 @@ import static software.wings.api.PhaseElement.PhaseElementBuilder.aPhaseElement;
 import static software.wings.api.ServiceElement.Builder.aServiceElement;
 import static software.wings.beans.Application.Builder.anApplication;
 import static software.wings.beans.Environment.Builder.anEnvironment;
-import static software.wings.beans.PcfInfrastructureMapping.anPcfInfrastructureMapping;
 import static software.wings.beans.SettingAttribute.Builder.aSettingAttribute;
 import static software.wings.beans.artifact.Artifact.Builder.anArtifact;
 import static software.wings.common.Constants.BUILD_NO;
@@ -56,6 +55,7 @@ import software.wings.beans.Application;
 import software.wings.beans.Environment;
 import software.wings.beans.InfrastructureMapping;
 import software.wings.beans.PcfConfig;
+import software.wings.beans.PcfInfrastructureMapping;
 import software.wings.beans.Service;
 import software.wings.beans.SettingAttribute;
 import software.wings.beans.artifact.Artifact;
@@ -141,12 +141,12 @@ public class PcfRollbackStateTest extends WingsBaseTest {
     setInternalState(pcfRollbackState, "secretManager", secretManager);
     context = new ExecutionContextImpl(stateExecutionInstance);
 
-    InfrastructureMapping infrastructureMapping = anPcfInfrastructureMapping()
-                                                      .withOrganization(ORG)
-                                                      .withSpace(SPACE)
-                                                      .withRouteMaps(Arrays.asList("R1"))
-                                                      .withRouteMaps(Arrays.asList("R2"))
-                                                      .withComputeProviderSettingId(COMPUTE_PROVIDER_ID)
+    InfrastructureMapping infrastructureMapping = PcfInfrastructureMapping.builder()
+                                                      .organization(ORG)
+                                                      .space(SPACE)
+                                                      .routeMaps(Arrays.asList("R1"))
+                                                      .tempRouteMap(Arrays.asList("R2"))
+                                                      .computeProviderSettingId(COMPUTE_PROVIDER_ID)
                                                       .build();
     when(variableProcessor.getVariables(any(), any())).thenReturn(emptyMap());
     when(evaluator.substitute(any(), any(), any())).thenAnswer(i -> i.getArguments()[0]);

@@ -780,6 +780,19 @@ public class ServiceResourceServiceImpl implements ServiceResourceService, DataP
     return upsertPcfServiceSpecification(pcfServiceSpecification, false);
   }
 
+  @Override
+  public PcfServiceSpecification resetToDefaultPcfServiceSpecification(
+      PcfServiceSpecification pcfServiceSpecification) {
+    boolean exist = exist(pcfServiceSpecification.getAppId(), pcfServiceSpecification.getServiceId());
+    if (!exist) {
+      throw new WingsException(INVALID_REQUEST).addParam("message", "Service doesn't exist");
+    }
+
+    deletePCFServiceSpecification(pcfServiceSpecification.getAppId(), pcfServiceSpecification.getUuid());
+    return pcfServiceSpecification.resetToDefault(
+        pcfServiceSpecification.getAppId(), pcfServiceSpecification.getServiceId());
+  }
+
   /**
    * Get PcfServiceSpecification (manifest.yml content)
    * @param pageRequest
