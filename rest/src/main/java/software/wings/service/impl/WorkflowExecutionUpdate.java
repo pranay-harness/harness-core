@@ -7,6 +7,7 @@ package software.wings.service.impl;
 import static java.util.Arrays.asList;
 import static java.util.Collections.emptySet;
 import static org.mongodb.morphia.mapping.Mapper.ID_KEY;
+import static software.wings.exception.WingsException.ExecutionContext.MANAGER;
 import static software.wings.service.impl.ExecutionEvent.ExecutionEventBuilder.anExecutionEvent;
 import static software.wings.sm.ExecutionStatus.NEW;
 import static software.wings.sm.ExecutionStatus.QUEUED;
@@ -145,7 +146,7 @@ public class WorkflowExecutionUpdate implements StateMachineExecutionCallback {
         try {
           waitNotifyEngine.notify(workflowExecutionId, new EnvExecutionResponseData(workflowExecutionId, status));
         } catch (WingsException exception) {
-          exception.logProcessedMessages(logger);
+          exception.logProcessedMessages(MANAGER, logger);
         }
       }
     } else {

@@ -1,6 +1,7 @@
 package software.wings.scheduler;
 
 import static io.harness.data.structure.EmptyPredicate.isNotEmpty;
+import static software.wings.exception.WingsException.ExecutionContext.MANAGER;
 
 import com.google.inject.Inject;
 import com.google.inject.name.Named;
@@ -85,7 +86,7 @@ public class ArtifactCollectionJob implements Job {
     try {
       artifacts = artifactCollectionService.collectNewArtifacts(appId, artifactStreamId);
     } catch (WingsException exception) {
-      exception.logProcessedMessages(logger);
+      exception.logProcessedMessages(MANAGER, logger);
     } catch (Exception e) {
       log(appId, artifactStream, new WingsException(e));
     }

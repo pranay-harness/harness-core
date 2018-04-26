@@ -1,5 +1,7 @@
 package software.wings.scheduler;
 
+import static software.wings.exception.WingsException.ExecutionContext.MANAGER;
+
 import com.google.inject.Inject;
 import com.google.inject.name.Named;
 
@@ -86,7 +88,7 @@ public class InstanceSyncJob implements Job {
       }
       executorService.submit(() -> executeInternal(appIdFinal));
     } catch (WingsException exception) {
-      exception.logProcessedMessages(logger);
+      exception.logProcessedMessages(MANAGER, logger);
     } catch (Exception ex) {
       logger.error("Error while looking up appId instances for app: {}", appId, ex);
     }
@@ -129,7 +131,7 @@ public class InstanceSyncJob implements Job {
 
       logger.info("Instance sync done for appId:" + appId);
     } catch (WingsException exception) {
-      exception.logProcessedMessages(logger);
+      exception.logProcessedMessages(MANAGER, logger);
     } catch (Exception ex) {
       logger.warn("Error while syncing instances for app: {}", appId, ex);
     }

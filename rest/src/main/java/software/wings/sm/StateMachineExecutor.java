@@ -19,6 +19,7 @@ import static software.wings.beans.SearchFilter.Operator.GE;
 import static software.wings.beans.SearchFilter.Operator.IN;
 import static software.wings.beans.alert.AlertType.ManualInterventionNeeded;
 import static software.wings.dl.PageRequest.PageRequestBuilder.aPageRequest;
+import static software.wings.exception.WingsException.ExecutionContext.MANAGER;
 import static software.wings.sm.ElementNotifyResponseData.Builder.anElementNotifyResponseData;
 import static software.wings.sm.ExecutionInterrupt.ExecutionInterruptBuilder.anExecutionInterrupt;
 import static software.wings.sm.ExecutionInterruptType.PAUSE_ALL;
@@ -434,7 +435,7 @@ public class StateMachineExecutor {
       invokeAdvisors(context, currentState);
       executionResponse = currentState.execute(context);
     } catch (WingsException exception) {
-      exception.logProcessedMessages(logger);
+      exception.logProcessedMessages(MANAGER, logger);
       ex = exception;
     } catch (Exception exception) {
       logger.error("Error in {} execution: {}", stateExecutionInstance.getDisplayName(), exception);

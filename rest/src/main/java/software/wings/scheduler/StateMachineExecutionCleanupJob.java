@@ -1,6 +1,7 @@
 package software.wings.scheduler;
 
 import static java.util.Arrays.asList;
+import static software.wings.exception.WingsException.ExecutionContext.MANAGER;
 import static software.wings.sm.ExecutionInterrupt.ExecutionInterruptBuilder.anExecutionInterrupt;
 import static software.wings.sm.ExecutionInterruptType.ABORT;
 import static software.wings.sm.ExecutionStatus.NEW;
@@ -118,7 +119,7 @@ public class StateMachineExecutionCleanupJob implements Job {
             executionInterruptManager.registerExecutionInterrupt(executionInterrupt);
           }
         } catch (WingsException exception) {
-          exception.logProcessedMessages(logger);
+          exception.logProcessedMessages(MANAGER, logger);
         } catch (Exception e) {
           logger.error("Error in cleaning up the workflow execution {}", workflowExecution.getUuid(), e);
         }
@@ -141,7 +142,7 @@ public class StateMachineExecutionCleanupJob implements Job {
         }
       }
     } catch (WingsException exception) {
-      exception.logProcessedMessages(logger);
+      exception.logProcessedMessages(MANAGER, logger);
     } catch (Exception e) {
       logger.error("Error in cleaning up the workflow executions for application {}", appId, e);
     }

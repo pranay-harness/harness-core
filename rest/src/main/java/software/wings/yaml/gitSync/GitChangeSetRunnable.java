@@ -4,6 +4,7 @@ import static io.harness.data.structure.EmptyPredicate.isNotEmpty;
 import static java.util.stream.Collectors.toList;
 import static software.wings.beans.yaml.YamlConstants.GIT_YAML_LOG_PREFIX;
 import static software.wings.core.maintenance.MaintenanceController.isMaintenance;
+import static software.wings.exception.WingsException.ExecutionContext.MANAGER;
 
 import com.google.inject.Inject;
 
@@ -87,7 +88,7 @@ public class GitChangeSetRunnable implements Runnable {
         }
       });
     } catch (WingsException exception) {
-      exception.logProcessedMessages(logger);
+      exception.logProcessedMessages(MANAGER, logger);
     } catch (Exception exception) {
       logger.error(GIT_YAML_LOG_PREFIX + "Unexpected error", exception);
     }

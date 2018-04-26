@@ -17,6 +17,7 @@ import static software.wings.beans.instance.dashboard.EntitySummaryStats.Builder
 import static software.wings.beans.instance.dashboard.InstanceSummaryStats.Builder.anInstanceSummaryStats;
 import static software.wings.beans.instance.dashboard.service.PipelineExecutionHistory.Builder.aPipelineExecutionHistory;
 import static software.wings.dl.PageRequest.PageRequestBuilder.aPageRequest;
+import static software.wings.exception.WingsException.ExecutionContext.MANAGER;
 import static software.wings.exception.WingsException.USER;
 
 import com.google.common.collect.Lists;
@@ -103,7 +104,7 @@ public class DashboardStatisticsServiceImpl implements DashboardStatisticsServic
     try {
       instanceCount = getInstanceCount(getQuery(appIds));
     } catch (WingsException exception) {
-      exception.logProcessedMessages(logger);
+      exception.logProcessedMessages(MANAGER, logger);
       return anInstanceSummaryStats().withCountMap(null).withTotalCount(instanceCount).build();
     } catch (Exception e) {
       logger.error("Unable to get app instance summary stats", e);
@@ -143,7 +144,7 @@ public class DashboardStatisticsServiceImpl implements DashboardStatisticsServic
     try {
       query = getQuery(appIds);
     } catch (WingsException exception) {
-      exception.logProcessedMessages(logger);
+      exception.logProcessedMessages(MANAGER, logger);
       return Lists.newArrayList();
     } catch (Exception e) {
       logger.error("Unable to get entity summary stats ", e);
@@ -184,7 +185,7 @@ public class DashboardStatisticsServiceImpl implements DashboardStatisticsServic
     try {
       query = getQuery(null).filter("serviceId", serviceId);
     } catch (WingsException exception) {
-      exception.logProcessedMessages(logger);
+      exception.logProcessedMessages(MANAGER, logger);
       return Lists.newArrayList();
     } catch (Exception e) {
       logger.error("Unable to get service summary stats", e);
@@ -212,7 +213,7 @@ public class DashboardStatisticsServiceImpl implements DashboardStatisticsServic
     try {
       query = getQuery(appIds);
     } catch (WingsException exception) {
-      exception.logProcessedMessages(logger);
+      exception.logProcessedMessages(MANAGER, logger);
       return Lists.newArrayList();
     } catch (Exception e) {
       logger.error("Unable to get environment type summary stats", e);
@@ -254,7 +255,7 @@ public class DashboardStatisticsServiceImpl implements DashboardStatisticsServic
     try {
       query = getQuery(null).filter("serviceId", serviceId);
     } catch (WingsException exception) {
-      exception.logProcessedMessages(logger);
+      exception.logProcessedMessages(MANAGER, logger);
       return anInstanceSummaryStats().withCountMap(null).withTotalCount(0).build();
     } catch (Exception e) {
       logger.error("Unable to get current active instances", e);
@@ -293,7 +294,7 @@ public class DashboardStatisticsServiceImpl implements DashboardStatisticsServic
     try {
       query = getQuery(appIds);
     } catch (WingsException exception) {
-      exception.logProcessedMessages(logger);
+      exception.logProcessedMessages(MANAGER, logger);
       return Lists.newArrayList();
     } catch (Exception e) {
       logger.error("Unable to get current active instances", e);
@@ -549,7 +550,7 @@ public class DashboardStatisticsServiceImpl implements DashboardStatisticsServic
     try {
       query = getQuery(null).filter("serviceId", serviceId);
     } catch (WingsException exception) {
-      exception.logProcessedMessages(logger);
+      exception.logProcessedMessages(MANAGER, logger);
       return Lists.newArrayList();
     } catch (Exception e) {
       logger.error("Unable to get current active instances", e);

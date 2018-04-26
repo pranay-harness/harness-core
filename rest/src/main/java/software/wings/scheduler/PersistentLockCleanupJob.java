@@ -1,5 +1,7 @@
 package software.wings.scheduler;
 
+import static software.wings.exception.WingsException.ExecutionContext.MANAGER;
+
 import com.google.inject.Inject;
 
 import com.mongodb.BasicDBObject;
@@ -75,7 +77,7 @@ public class PersistentLockCleanupJob implements Job {
         delete(locks.next().get("_id"));
       }
     } catch (WingsException exception) {
-      exception.logProcessedMessages(logger);
+      exception.logProcessedMessages(MANAGER, logger);
     } catch (RuntimeException exception) {
       logger.error("Error seen in the PersistentLockCleanupJob execute call", exception);
     }

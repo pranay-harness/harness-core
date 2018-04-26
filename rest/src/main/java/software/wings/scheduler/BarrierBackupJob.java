@@ -1,5 +1,7 @@
 package software.wings.scheduler;
 
+import static software.wings.exception.WingsException.ExecutionContext.MANAGER;
+
 import com.google.inject.Inject;
 
 import org.quartz.Job;
@@ -44,7 +46,7 @@ public class BarrierBackupJob implements Job {
     try {
       barrierService.updateAllActiveBarriers();
     } catch (WingsException exception) {
-      exception.logProcessedMessages(logger);
+      exception.logProcessedMessages(MANAGER, logger);
     } catch (RuntimeException e) {
       logger.error("", e);
     }

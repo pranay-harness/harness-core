@@ -39,6 +39,7 @@ import static java.util.Arrays.asList;
 import static java.util.stream.Collectors.toList;
 import static org.mongodb.morphia.mapping.Mapper.ID_KEY;
 import static software.wings.beans.Base.APP_ID_KEY;
+import static software.wings.exception.WingsException.ExecutionContext.MANAGER;
 
 import com.google.inject.Inject;
 import com.google.inject.name.Named;
@@ -191,7 +192,7 @@ public class ZombieHunterJob implements Job {
       huntingExpedition(zombieType);
 
     } catch (WingsException exception) {
-      exception.logProcessedMessages(logger);
+      exception.logProcessedMessages(MANAGER, logger);
     } catch (RuntimeException exception) {
       logger.error("Error seen in the ZombieHunterJob  execute call", exception);
     }

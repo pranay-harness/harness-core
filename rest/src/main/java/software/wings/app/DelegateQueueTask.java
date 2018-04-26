@@ -4,6 +4,7 @@ import static io.harness.data.structure.EmptyPredicate.isNotEmpty;
 import static java.util.stream.Collectors.toList;
 import static org.apache.commons.lang3.StringUtils.isBlank;
 import static software.wings.core.maintenance.MaintenanceController.isMaintenance;
+import static software.wings.exception.WingsException.ExecutionContext.MANAGER;
 import static software.wings.service.impl.DelegateServiceImpl.VALIDATION_TIMEOUT;
 
 import com.google.inject.Inject;
@@ -194,7 +195,7 @@ public class DelegateQueueTask implements Runnable {
       }
 
     } catch (WingsException exception) {
-      exception.logProcessedMessages(logger);
+      exception.logProcessedMessages(MANAGER, logger);
     } catch (Exception exception) {
       logger.error("Error seen in the Notifier call", exception);
     }

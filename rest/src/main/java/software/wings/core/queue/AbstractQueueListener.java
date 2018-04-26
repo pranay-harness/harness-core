@@ -3,6 +3,7 @@ package software.wings.core.queue;
 import static io.harness.data.structure.UUIDGenerator.generateUuid;
 import static io.harness.threading.Morpheus.sleep;
 import static software.wings.core.maintenance.MaintenanceController.isMaintenance;
+import static software.wings.exception.WingsException.ExecutionContext.MANAGER;
 
 import com.google.inject.Inject;
 import com.google.inject.name.Named;
@@ -73,7 +74,7 @@ public abstract class AbstractQueueListener<T extends Queuable> implements Runna
           onMessage(message);
           queue.ack(message);
         } catch (WingsException exception) {
-          exception.logProcessedMessages(logger);
+          exception.logProcessedMessages(MANAGER, logger);
         } catch (Exception exception) {
           onException(exception, message);
         } finally {
