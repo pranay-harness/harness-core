@@ -6,7 +6,6 @@ import static software.wings.beans.DelegateTask.Builder.aDelegateTask;
 import static software.wings.beans.Environment.EnvironmentType.ALL;
 import static software.wings.beans.OrchestrationWorkflowType.BUILD;
 import static software.wings.common.Constants.DEFAULT_ASYNC_CALL_TIMEOUT;
-import static software.wings.common.Constants.KUBERNETES_KUBECONFIG_PLACEHOLDER;
 import static software.wings.sm.ExecutionResponse.Builder.anExecutionResponse;
 
 import com.google.common.collect.Maps;
@@ -32,6 +31,7 @@ import software.wings.beans.ContainerInfrastructureMapping;
 import software.wings.beans.DelegateTask;
 import software.wings.beans.Environment;
 import software.wings.beans.HostConnectionAttributes;
+import software.wings.beans.InfrastructureMapping;
 import software.wings.beans.SettingAttribute;
 import software.wings.beans.TaskType;
 import software.wings.beans.WinRmConnectionAttributes;
@@ -239,12 +239,11 @@ public class ShellScriptState extends State {
     }
 
     ContainerServiceParams containerServiceParams = null;
-    if (serviceVariables != null && serviceVariables.containsValue(KUBERNETES_KUBECONFIG_PLACEHOLDER)) {
-      ContainerInfrastructureMapping containerInfraMapping =
-          (ContainerInfrastructureMapping) infrastructureMappingService.get(
-              context.getAppId(), phaseElement.getInfraMappingId());
-
-      containerServiceParams = containerDeploymentManagerHelper.getContainerServiceParams(containerInfraMapping, "");
+    InfrastructureMapping infraMapping =
+        infrastructureMappingService.get(context.getAppId(), phaseElement.getInfraMappingId());
+    if (infraMapping instanceof ContainerInfrastructureMapping) {
+      containerServiceParams =
+          containerDeploymentManagerHelper.getContainerServiceParams((ContainerInfrastructureMapping) infraMapping, "");
     }
 
     DelegateTask delegateTask =

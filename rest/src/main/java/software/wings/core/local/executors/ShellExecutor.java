@@ -13,7 +13,7 @@ import static software.wings.beans.Log.LogLevel.INFO;
 import static software.wings.beans.command.CommandExecutionResult.CommandExecutionStatus.FAILURE;
 import static software.wings.beans.command.CommandExecutionResult.CommandExecutionStatus.RUNNING;
 import static software.wings.beans.command.CommandExecutionResult.CommandExecutionStatus.SUCCESS;
-import static software.wings.common.Constants.KUBERNETES_KUBECONFIG_PLACEHOLDER;
+import static software.wings.common.Constants.HARNESS_KUBE_CONFIG_PATH;
 
 import org.zeroturnaround.exec.ProcessExecutor;
 import org.zeroturnaround.exec.ProcessResult;
@@ -97,12 +97,10 @@ public class ShellExecutor {
 
     Map<String, String> environment = config.getEnvironment();
 
-    if (environment.containsValue(KUBERNETES_KUBECONFIG_PLACEHOLDER)) {
+    if (!isEmpty(config.getKubeConfigContent())) {
       try (FileOutputStream outputStream = new FileOutputStream(kubeConfigFile)) {
         outputStream.write(config.getKubeConfigContent().getBytes());
-        environment.replaceAll(
-            (key, oldValue)
-                -> oldValue.equals(KUBERNETES_KUBECONFIG_PLACEHOLDER) ? kubeConfigFile.getAbsolutePath() : oldValue);
+        environment.put(HARNESS_KUBE_CONFIG_PATH, kubeConfigFile.getCanonicalPath());
       }
     }
 

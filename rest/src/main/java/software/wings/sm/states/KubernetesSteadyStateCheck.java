@@ -198,7 +198,8 @@ public class KubernetesSteadyStateCheck extends State {
             .commandName(KUBERNETES_STEADY_STATE_CHECK_COMMAND_NAME)
             .containerServiceParams(
                 containerDeploymentManagerHelper.getContainerServiceParams(containerInfraMapping, ""))
-            .labels(labels.stream().collect(Collectors.toMap(Label::getName, Label::getValue)))
+            .labels(labels.stream().collect(
+                Collectors.toMap(label -> label.getName(), label -> context.renderExpression(label.getValue()))))
             .timeoutMillis(getTimeoutMillis() != null ? getTimeoutMillis() : DEFAULT_ASYNC_CALL_TIMEOUT)
             .build();
     DelegateTask delegateTask =

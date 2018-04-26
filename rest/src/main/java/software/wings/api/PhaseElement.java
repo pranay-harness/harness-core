@@ -6,7 +6,6 @@ package software.wings.api;
 
 import static io.harness.govern.Switch.unhandled;
 import static org.apache.commons.lang3.StringUtils.isBlank;
-import static software.wings.common.Constants.KUBERNETES_KUBECONFIG_PLACEHOLDER;
 
 import com.google.inject.Inject;
 
@@ -106,12 +105,6 @@ public class PhaseElement implements ContextElement {
       }
       Map<String, Object> namespaceMap = new HashMap<>();
       namespaceMap.put(NAMESPACE, namespace);
-
-      //
-      // For KUBECONFIG, since the content is available only on delegate, we put a placeholder text here, and replace it
-      // at delegate.
-      //
-      namespaceMap.put(KUBECONFIG, KUBERNETES_KUBECONFIG_PLACEHOLDER);
 
       Map<String, Object> kubernetesMap = new HashMap<>();
       kubernetesMap.put(KUBERNETES, namespaceMap);
