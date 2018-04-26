@@ -7,17 +7,17 @@ import static io.harness.threading.Morpheus.sleep;
 import static java.lang.String.format;
 import static java.time.Duration.ofMillis;
 import static java.time.Duration.ofSeconds;
-import static java.util.Collections.emptyList;
 import static java.util.Collections.singletonList;
 import static java.util.stream.Collectors.toList;
 import static org.apache.commons.lang3.StringUtils.isBlank;
+import static software.wings.beans.ErrorCode.INVALID_ARTIFACT_SERVER;
+import static software.wings.exception.WingsException.ADMIN;
 import static software.wings.exception.WingsException.USER;
 import static software.wings.exception.WingsException.USER_ADMIN;
 import static software.wings.helpers.ext.jenkins.BuildDetails.Builder.aBuildDetails;
 
 import com.google.common.collect.Lists;
 import com.google.common.util.concurrent.TimeLimiter;
-import com.google.common.util.concurrent.UncheckedTimeoutException;
 import com.google.inject.Inject;
 import com.google.inject.assistedinject.Assisted;
 import com.google.inject.assistedinject.AssistedInject;
@@ -43,7 +43,6 @@ import org.apache.http.client.HttpResponseException;
 import org.apache.http.impl.client.HttpClientBuilder;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-import software.wings.beans.ErrorCode;
 import software.wings.exception.WingsException;
 
 import java.io.IOException;
@@ -159,24 +158,9 @@ public class JenkinsImpl implements Jenkins {
           return singletonList(jobWithDetails).get(0);
         }
       }, 120L, TimeUnit.SECONDS, true);
-    } catch (UncheckedTimeoutException e) {
-      logger.warn("Jenkins server request did not succeed within 120 secs even after 5 retries", e);
-      WingsException wingsException = getWingsException(jobname);
-      throw wingsException;
-    } catch (WingsException e) {
-      throw e;
     } catch (Exception e) {
-      logger.warn("Jenkins server request failed", e);
-      WingsException wingsException = getWingsException(jobname);
-      throw wingsException;
+      throw new WingsException(INVALID_ARTIFACT_SERVER, USER).addParam("message", e.getMessage());
     }
-  }
-
-  private WingsException getWingsException(String jobname) {
-    WingsException wingsException = new WingsException(ErrorCode.JENKINS_ERROR, USER);
-    wingsException.addParam("message", "Failed to get job details for " + jobname);
-    wingsException.addParam("jenkinsResponse", "Server Error");
-    return wingsException;
   }
 
   private String constructParentJobUrl(String[] jobNameSplit) {
@@ -211,9 +195,8 @@ public class JenkinsImpl implements Jenkins {
         }
       }, 120L, TimeUnit.SECONDS, true);
     } catch (Exception e) {
-      jenkinsExceptionHandler(e);
+      throw new WingsException(INVALID_ARTIFACT_SERVER, USER).addParam("message", e.getMessage());
     }
-    return emptyList();
   }
 
   private List<JobDetails> getJobDetails(String parentJob) {
@@ -252,7 +235,7 @@ public class JenkinsImpl implements Jenkins {
       return result;
     } catch (Exception ex) {
       logger.error("Error in fetching job lists ", ex);
-      // jenkinsExceptionHandler(ex);
+      // handleException(ex);
       return result;
     }
   }
@@ -378,7 +361,7 @@ public class JenkinsImpl implements Jenkins {
   public QueueReference trigger(String jobname, Map<String, String> parameters) throws IOException {
     JobWithDetails jobWithDetails = getJob(jobname);
     if (jobWithDetails == null) {
-      throw new WingsException(ErrorCode.INVALID_ARTIFACT_SERVER, USER_ADMIN)
+      throw new WingsException(INVALID_ARTIFACT_SERVER, USER_ADMIN)
           .addParam("message", "No job [" + jobname + "] found");
     }
     try {
@@ -465,11 +448,24 @@ public class JenkinsImpl implements Jenkins {
 
   @Override
   public Build getBuild(QueueReference queueItem) throws IOException {
-    QueueItem queueItem1 = jenkinsServer.getQueueItem(queueItem);
-    if (queueItem1.getExecutable() != null) {
-      return jenkinsServer.getBuild(queueItem1);
-    } else {
-      return null;
+    try {
+      QueueItem queueItem1 = jenkinsServer.getQueueItem(queueItem);
+      if (queueItem1.getExecutable() != null) {
+        return jenkinsServer.getBuild(queueItem1);
+      } else {
+        return null;
+      }
+    } catch (HttpResponseException e) {
+      int statusCode = e.getStatusCode();
+      if (statusCode == 401) {
+        throw new WingsException(INVALID_ARTIFACT_SERVER, ADMIN).addParam("message", "Invalid Jenkins credentials");
+      } else if (statusCode == 403) {
+        throw new WingsException(INVALID_ARTIFACT_SERVER, ADMIN)
+            .addParam("message", "User not authorized to access jenkins");
+      } else if (statusCode == 405) {
+        throw new WingsException(INVALID_ARTIFACT_SERVER, ADMIN).addParam("message", e.getMessage());
+      }
+      throw e;
     }
   }
 
@@ -478,34 +474,21 @@ public class JenkinsImpl implements Jenkins {
     try {
       this.jenkinsHttpClient.get("/");
       return true;
-    } catch (Exception e) {
-      jenkinsExceptionHandler(e);
-      return false;
+    } catch (IOException e) {
+      throw prepareWingsException(e);
     }
   }
 
-  private void jenkinsExceptionHandler(Exception e) {
+  private WingsException prepareWingsException(IOException e) {
     if (e instanceof HttpResponseException) {
       if (((HttpResponseException) e).getStatusCode() == 401) {
-        throw new WingsException(ErrorCode.INVALID_ARTIFACT_SERVER, USER)
-            .addParam("message", "Invalid Jenkins credentials");
+        throw new WingsException(INVALID_ARTIFACT_SERVER, USER).addParam("message", "Invalid Jenkins credentials");
       } else if (((HttpResponseException) e).getStatusCode() == 403) {
-        throw new WingsException(ErrorCode.INVALID_ARTIFACT_SERVER, USER)
+        throw new WingsException(INVALID_ARTIFACT_SERVER, USER)
             .addParam("message", "User not authorized to access jenkins");
       }
-      final WingsException wingsException = new WingsException(ErrorCode.JENKINS_ERROR, USER);
-      wingsException.addParam("message", "Jenkins server may not be running");
-      wingsException.addParam("jenkinsResponse", e.getMessage());
-      throw wingsException;
-    } else if (e instanceof UncheckedTimeoutException) {
-      logger.warn("Jenkins server request did not succeed within 25 secs", e);
-      final WingsException wingsException = new WingsException(ErrorCode.JENKINS_ERROR, USER);
-      wingsException.addParam("message", "Failed to get job details");
-      wingsException.addParam("jenkinsResponse", "Server Error");
-      throw wingsException;
-    } else {
-      throw new WingsException(ErrorCode.INVALID_ARTIFACT_SERVER, USER).addParam("message", e.getMessage());
     }
+    throw new WingsException(INVALID_ARTIFACT_SERVER, USER).addParam("message", e.getMessage());
   }
 
   private Pair<String, InputStream> downloadArtifactFromABuild(Build build, String artifactpathRegex)

@@ -2,6 +2,8 @@ package software.wings.helpers.ext.ecr;
 
 import static io.harness.data.structure.EmptyPredicate.isNotEmpty;
 import static software.wings.beans.ErrorCode.GENERAL_ERROR;
+import static software.wings.exception.WingsException.ADMIN;
+import static software.wings.helpers.ext.jenkins.BuildDetails.Builder.aBuildDetails;
 
 import com.google.inject.Inject;
 import com.google.inject.Singleton;
@@ -43,13 +45,12 @@ public class EcrServiceImpl implements EcrService {
         listImagesResult.getImageIds()
             .stream()
             .filter(imageIdentifier -> imageIdentifier != null && isNotEmpty(imageIdentifier.getImageTag()))
-            .forEach(imageIdentifier
-                -> buildDetails.add(
-                    BuildDetails.Builder.aBuildDetails().withNumber(imageIdentifier.getImageTag()).build()));
+            .forEach(
+                imageIdentifier -> buildDetails.add(aBuildDetails().withNumber(imageIdentifier.getImageTag()).build()));
         listImagesRequest.setNextToken(listImagesResult.getNextToken());
       } while (listImagesRequest.getNextToken() != null);
     } catch (Exception e) {
-      throw new WingsException(GENERAL_ERROR, WingsException.ADMIN_SRE).addParam("message", e.getMessage());
+      throw new WingsException(GENERAL_ERROR, ADMIN).addParam("message", e.getMessage());
     }
     return buildDetails;
   }

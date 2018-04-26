@@ -2,7 +2,10 @@ package software.wings.delegatetasks;
 
 import static io.harness.threading.Morpheus.sleep;
 import static org.apache.commons.lang3.StringUtils.isNotBlank;
+import static software.wings.beans.ErrorCode.INVALID_ARTIFACT_SERVER;
 import static software.wings.beans.Log.Builder.aLog;
+import static software.wings.beans.command.CommandExecutionResult.CommandExecutionStatus.RUNNING;
+import static software.wings.exception.WingsException.ADMIN;
 import static software.wings.service.impl.LogServiceImpl.NUM_OF_LOGS_TO_KEEP;
 
 import com.google.inject.Inject;
@@ -11,6 +14,7 @@ import com.offbytwo.jenkins.model.Build;
 import com.offbytwo.jenkins.model.BuildResult;
 import com.offbytwo.jenkins.model.BuildWithDetails;
 import com.offbytwo.jenkins.model.QueueReference;
+import org.apache.http.client.HttpResponseException;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import software.wings.beans.DelegateTask;
@@ -19,6 +23,7 @@ import software.wings.beans.Log;
 import software.wings.beans.Log.LogLevel;
 import software.wings.beans.command.CommandExecutionResult.CommandExecutionStatus;
 import software.wings.beans.command.JenkinsTaskParams;
+import software.wings.exception.WingsException;
 import software.wings.helpers.ext.jenkins.Jenkins;
 import software.wings.helpers.ext.jenkins.JenkinsFactory;
 import software.wings.service.intfc.security.EncryptionService;
@@ -63,9 +68,14 @@ public class JenkinsTask extends AbstractDelegateRunnableTask {
       Jenkins jenkins = jenkinsFactory.create(
           jenkinsConfig.getJenkinsUrl(), jenkinsConfig.getUsername(), jenkinsConfig.getPassword());
 
+      logger.info("In JenkinsTask Triggering Job {}", jenkinsTaskParams.getJobName());
       QueueReference queueItem = jenkins.trigger(jenkinsTaskParams.getJobName(), jenkinsTaskParams.getParameters());
-
+      logger.info("Triggered Job success and queue item Url part {}",
+          queueItem == null ? null : queueItem.getQueueItemUrlPart());
       Build jenkinsBuild = waitForJobToStartExecution(jenkins, queueItem);
+      jenkinsExecutionResponse.setBuildNumber(String.valueOf(jenkinsBuild.getNumber()));
+      jenkinsExecutionResponse.setJobUrl(jenkinsBuild.getUrl());
+
       BuildWithDetails jenkinsBuildWithDetails =
           waitForJobExecutionToFinish(jenkinsBuild, jenkinsTaskParams.getActivityId(), jenkinsTaskParams.getUnitName());
 
@@ -79,7 +89,7 @@ public class JenkinsTask extends AbstractDelegateRunnableTask {
         jenkinsExecutionResponse.setJobParameters(jenkinsBuildWithDetails.getParameters());
       } catch (Exception e) { // cause buildWithDetails.getParameters() can throw NPE
         // unexpected exception
-        logger.warn("Error occurred while retrieving build parameters for build number {} ",
+        logger.error("Error occurred while retrieving build parameters for build number {} ",
             jenkinsBuildWithDetails.getNumber(), e.getMessage());
       }
 
@@ -88,7 +98,7 @@ public class JenkinsTask extends AbstractDelegateRunnableTask {
         executionStatus = ExecutionStatus.FAILED;
       }
     } catch (Exception e) {
-      logger.warn("Exception: " + e.getMessage(), e);
+      logger.error("Error occurred while running Jenkins Task", e);
       errorMessage = Misc.getMessage(e);
       executionStatus = ExecutionStatus.FAILED;
       jenkinsExecutionResponse.setErrorMessage(errorMessage);
@@ -105,10 +115,20 @@ public class JenkinsTask extends AbstractDelegateRunnableTask {
       sleep(Duration.ofSeconds(5));
       try {
         jenkinsBuildWithDetails = jenkinsBuild.details();
-        saveConsoleLogs(jenkinsBuildWithDetails, consoleLogsSent, activityId, unitName);
-      } catch (IOException ex) {
-        logger.warn("Jenkins server unreachable {}", ex.getMessage());
+        saveConsoleLogs(jenkinsBuildWithDetails, consoleLogsSent, activityId, unitName, RUNNING);
+      } catch (HttpResponseException e) {
+        if (e.getStatusCode() == 401) {
+          throw new WingsException(INVALID_ARTIFACT_SERVER, ADMIN).addParam("message", "Invalid Jenkins credentials");
+        } else if (e.getStatusCode() == 403) {
+          throw new WingsException(INVALID_ARTIFACT_SERVER, ADMIN)
+              .addParam("message", "User not authorized to access jenkins");
+        } else if (e.getStatusCode() == 405) {
+          throw new WingsException(INVALID_ARTIFACT_SERVER, ADMIN).addParam("message", e.getMessage());
+        }
+      } catch (IOException e) {
+        logger.error("Error occurred while waiting for Job to start execution. Retrying", e.getMessage());
       }
+
     } while (jenkinsBuildWithDetails == null || jenkinsBuildWithDetails.isBuilding());
     logger.info("Job {} execution completed. Status: {}", jenkinsBuildWithDetails.getNumber(),
         jenkinsBuildWithDetails.getResult());
@@ -116,7 +136,7 @@ public class JenkinsTask extends AbstractDelegateRunnableTask {
   }
 
   private void saveConsoleLogs(BuildWithDetails jenkinsBuildWithDetails, AtomicInteger consoleLogsAlreadySent,
-      String activityId, String stateName) throws IOException {
+      String activityId, String stateName, CommandExecutionStatus commandExecutionStatus) throws IOException {
     String consoleOutputText = jenkinsBuildWithDetails.getConsoleOutputText();
     if (isNotBlank(consoleOutputText)) {
       String[] consoleLines = consoleOutputText.split("\r\n");
@@ -128,7 +148,7 @@ public class JenkinsTask extends AbstractDelegateRunnableTask {
                       .withLogLevel(LogLevel.INFO)
                       .withLogLine("-------------------------- truncating "
                           + (consoleLines.length - NUM_OF_LOGS_TO_KEEP) + " lines --------------------------")
-                      .withExecutionResult(CommandExecutionStatus.RUNNING)
+                      .withExecutionResult(commandExecutionStatus)
                       .build();
         logService.save(getAccountId(), log);
       }
@@ -141,7 +161,7 @@ public class JenkinsTask extends AbstractDelegateRunnableTask {
                       .withAppId(getAppId())
                       .withLogLevel(LogLevel.INFO)
                       .withLogLine(consoleLines[i])
-                      .withExecutionResult(CommandExecutionStatus.RUNNING)
+                      .withExecutionResult(commandExecutionStatus)
                       .build();
         logService.save(getAccountId(), log);
         consoleLogsAlreadySent.incrementAndGet();
@@ -152,11 +172,15 @@ public class JenkinsTask extends AbstractDelegateRunnableTask {
   private Build waitForJobToStartExecution(Jenkins jenkins, QueueReference queueItem) {
     Build jenkinsBuild = null;
     do {
+      logger.info("Waiting for job {} to start execution", queueItem);
       sleep(Duration.ofSeconds(1));
       try {
         jenkinsBuild = jenkins.getBuild(queueItem);
-      } catch (IOException ex) {
-        logger.warn("Jenkins server unreachable {}", ex.getMessage());
+        logger.info("Job started and Build No {}", jenkinsBuild.getNumber());
+      } catch (WingsException e) {
+        throw e;
+      } catch (IOException e) {
+        logger.error("Error occurred while waiting for Job to start execution.", e);
       }
     } while (jenkinsBuild == null);
     return jenkinsBuild;
