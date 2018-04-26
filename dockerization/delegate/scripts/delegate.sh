@@ -35,9 +35,9 @@ then
   fi
 fi
 
-REMOTE_DELEGATE_URL=${delegateJarUrl}
-REMOTE_DELEGATE_VERSION=${upgradeVersion}
-DEPLOY_MODE=${deployMode}
+REMOTE_DELEGATE_URL=_delegateJarUrl_
+REMOTE_DELEGATE_VERSION=_upgradeVersion_
+DEPLOY_MODE=_deployMode_
 
 if [ ! -e delegate.jar ]
 then
@@ -56,9 +56,9 @@ fi
 
 if [ ! -e config-delegate.yml ]
 then
-  echo "accountId: ${accountId}" > config-delegate.yml
-  echo "accountSecret: ${accountSecret}" >> config-delegate.yml
-  echo "managerUrl: ${managerHostAndPort}/api/" >> config-delegate.yml
+  echo "accountId: _accountId_" > config-delegate.yml
+  echo "accountSecret: _accountSecret_" >> config-delegate.yml
+  echo "managerUrl: _managerHostAndPort_/api/" >> config-delegate.yml
   echo "heartbeatIntervalMs: 60000" >> config-delegate.yml
   echo "doUpgrade: true" >> config-delegate.yml
   echo "description: description here" >> config-delegate.yml

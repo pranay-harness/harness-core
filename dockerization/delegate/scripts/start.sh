@@ -34,8 +34,8 @@ then
   echo $PROXY_SYS_PROPS
 fi
 
-REMOTE_WATCHER_URL=${watcherJarUrl}
-REMOTE_WATCHER_VERSION=${watcherUpgradeVersion}
+REMOTE_WATCHER_URL=_watcherJarUrl_
+REMOTE_WATCHER_VERSION=_watcherUpgradeVersion_
 
 if [ ! -e watcher.jar ]
 then
@@ -52,8 +52,8 @@ else
   fi
 fi
 
-REMOTE_DELEGATE_URL=${delegateJarUrl}
-REMOTE_DELEGATE_VERSION=${upgradeVersion}
+REMOTE_DELEGATE_URL=_delegateJarUrl_
+REMOTE_DELEGATE_VERSION=_upgradeVersion_
 
 if [ ! -e delegate.jar ]
 then
@@ -72,9 +72,9 @@ fi
 
 if [ ! -e config-watcher.yml ]
 then
-  echo "accountId: ${accountId}" > config-watcher.yml
+  echo "accountId: _accountId_" > config-watcher.yml
   echo "doUpgrade: true" >> config-watcher.yml
-  echo "upgradeCheckLocation: ${watcherCheckLocation}" >> config-watcher.yml
+  echo "upgradeCheckLocation: _watcherCheckLocation_" >> config-watcher.yml
   echo "upgradeCheckIntervalSeconds: 60" >> config-watcher.yml
 fi
 
