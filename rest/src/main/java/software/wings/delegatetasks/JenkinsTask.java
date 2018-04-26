@@ -2,10 +2,8 @@ package software.wings.delegatetasks;
 
 import static io.harness.threading.Morpheus.sleep;
 import static org.apache.commons.lang3.StringUtils.isNotBlank;
-import static software.wings.beans.ErrorCode.INVALID_ARTIFACT_SERVER;
 import static software.wings.beans.Log.Builder.aLog;
 import static software.wings.beans.command.CommandExecutionResult.CommandExecutionStatus.RUNNING;
-import static software.wings.exception.WingsException.ADMIN;
 import static software.wings.service.impl.LogServiceImpl.NUM_OF_LOGS_TO_KEEP;
 
 import com.google.inject.Inject;
@@ -29,7 +27,6 @@ import software.wings.helpers.ext.jenkins.JenkinsFactory;
 import software.wings.service.intfc.security.EncryptionService;
 import software.wings.sm.ExecutionStatus;
 import software.wings.sm.states.JenkinsState.JenkinsExecutionResponse;
-import software.wings.utils.Misc;
 import software.wings.waitnotify.NotifyResponseData;
 
 import java.io.IOException;
@@ -61,7 +58,6 @@ public class JenkinsTask extends AbstractDelegateRunnableTask {
   public JenkinsExecutionResponse run(JenkinsTaskParams jenkinsTaskParams) {
     JenkinsExecutionResponse jenkinsExecutionResponse = new JenkinsExecutionResponse();
     ExecutionStatus executionStatus = ExecutionStatus.SUCCESS;
-    String errorMessage;
     try {
       JenkinsConfig jenkinsConfig = jenkinsTaskParams.getJenkinsConfig();
       encryptionService.decrypt(jenkinsConfig, jenkinsTaskParams.getEncryptedDataDetails());
@@ -91,6 +87,7 @@ public class JenkinsTask extends AbstractDelegateRunnableTask {
         // unexpected exception
         logger.error("Error occurred while retrieving build parameters for build number {} ",
             jenkinsBuildWithDetails.getNumber(), e.getMessage());
+        jenkinsExecutionResponse.setErrorMessage(e.getMessage());
       }
 
       if (buildResult != BuildResult.SUCCESS
@@ -98,10 +95,9 @@ public class JenkinsTask extends AbstractDelegateRunnableTask {
         executionStatus = ExecutionStatus.FAILED;
       }
     } catch (Exception e) {
-      logger.error("Error occurred while running Jenkins Task", e);
-      errorMessage = Misc.getMessage(e);
+      logger.error("Error occurred while running Jenkins task", e);
       executionStatus = ExecutionStatus.FAILED;
-      jenkinsExecutionResponse.setErrorMessage(errorMessage);
+      jenkinsExecutionResponse.setErrorMessage(e.getMessage());
     }
     jenkinsExecutionResponse.setExecutionStatus(executionStatus);
     return jenkinsExecutionResponse;
@@ -116,15 +112,6 @@ public class JenkinsTask extends AbstractDelegateRunnableTask {
       try {
         jenkinsBuildWithDetails = jenkinsBuild.details();
         saveConsoleLogs(jenkinsBuildWithDetails, consoleLogsSent, activityId, unitName, RUNNING);
-      } catch (HttpResponseException e) {
-        if (e.getStatusCode() == 401) {
-          throw new WingsException(INVALID_ARTIFACT_SERVER, ADMIN).addParam("message", "Invalid Jenkins credentials");
-        } else if (e.getStatusCode() == 403) {
-          throw new WingsException(INVALID_ARTIFACT_SERVER, ADMIN)
-              .addParam("message", "User not authorized to access jenkins");
-        } else if (e.getStatusCode() == 405) {
-          throw new WingsException(INVALID_ARTIFACT_SERVER, ADMIN).addParam("message", e.getMessage());
-        }
       } catch (IOException e) {
         logger.error("Error occurred while waiting for Job to start execution. Retrying", e.getMessage());
       }
@@ -177,10 +164,16 @@ public class JenkinsTask extends AbstractDelegateRunnableTask {
       try {
         jenkinsBuild = jenkins.getBuild(queueItem);
         logger.info("Job started and Build No {}", jenkinsBuild.getNumber());
-      } catch (WingsException e) {
-        throw e;
       } catch (IOException e) {
         logger.error("Error occurred while waiting for Job to start execution.", e);
+        if (e instanceof HttpResponseException) {
+          if (((HttpResponseException) e).getStatusCode() == 401) {
+            throw new WingsException("Invalid Jenkins credentials");
+          } else if (((HttpResponseException) e).getStatusCode() == 403) {
+            throw new WingsException("User not authorized to access jenkins");
+          }
+          throw new WingsException(e.getMessage());
+        }
       }
     } while (jenkinsBuild == null);
     return jenkinsBuild;
