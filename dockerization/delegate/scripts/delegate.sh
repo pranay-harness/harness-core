@@ -35,8 +35,10 @@ then
   fi
 fi
 
-REMOTE_DELEGATE_URL=_delegateJarUrl_
-REMOTE_DELEGATE_VERSION=_upgradeVersion_
+DELEGATE_STORAGE_URL=_delegateStorageUrl_
+REMOTE_DELEGATE_LATEST=$(curl $DELEGATE_STORAGE_URL/_delegateCheckLocation_)
+REMOTE_DELEGATE_URL=$DELEGATE_STORAGE_URL/$(echo $REMOTE_DELEGATE_LATEST | cut -d " " -f2)
+REMOTE_DELEGATE_VERSION=$(echo $REMOTE_DELEGATE_LATEST | cut -d " " -f1)
 DEPLOY_MODE=_deployMode_
 
 if [ ! -e delegate.jar ]
