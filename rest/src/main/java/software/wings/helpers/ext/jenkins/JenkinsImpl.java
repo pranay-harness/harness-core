@@ -11,7 +11,6 @@ import static java.util.Collections.singletonList;
 import static java.util.stream.Collectors.toList;
 import static org.apache.commons.lang3.StringUtils.isBlank;
 import static software.wings.beans.ErrorCode.INVALID_ARTIFACT_SERVER;
-import static software.wings.exception.WingsException.ADMIN;
 import static software.wings.exception.WingsException.USER;
 import static software.wings.exception.WingsException.USER_ADMIN;
 import static software.wings.helpers.ext.jenkins.BuildDetails.Builder.aBuildDetails;
@@ -448,24 +447,11 @@ public class JenkinsImpl implements Jenkins {
 
   @Override
   public Build getBuild(QueueReference queueItem) throws IOException {
-    try {
-      QueueItem queueItem1 = jenkinsServer.getQueueItem(queueItem);
-      if (queueItem1.getExecutable() != null) {
-        return jenkinsServer.getBuild(queueItem1);
-      } else {
-        return null;
-      }
-    } catch (HttpResponseException e) {
-      int statusCode = e.getStatusCode();
-      if (statusCode == 401) {
-        throw new WingsException(INVALID_ARTIFACT_SERVER, ADMIN).addParam("message", "Invalid Jenkins credentials");
-      } else if (statusCode == 403) {
-        throw new WingsException(INVALID_ARTIFACT_SERVER, ADMIN)
-            .addParam("message", "User not authorized to access jenkins");
-      } else if (statusCode == 405) {
-        throw new WingsException(INVALID_ARTIFACT_SERVER, ADMIN).addParam("message", e.getMessage());
-      }
-      throw e;
+    QueueItem queueItem1 = jenkinsServer.getQueueItem(queueItem);
+    if (queueItem1.getExecutable() != null) {
+      return jenkinsServer.getBuild(queueItem1);
+    } else {
+      return null;
     }
   }
 
