@@ -20,20 +20,15 @@ import java.util.Map;
 @Builder
 @NoArgsConstructor
 @AllArgsConstructor
-public class PcfSetupStateExecutionData extends StateExecutionData implements NotifyResponseData {
+public class PcfSwapRouteMapStateExecutionData extends StateExecutionData implements NotifyResponseData {
   private String activityId;
   private String accountId;
   private String appId;
-  private String serviceId;
-  private String envId;
-  private String infraMappingId;
   private PcfCommandRequest pcfCommandRequest;
   private String commandName;
   private Integer maxInstanceCount;
-  private String manifestYaml;
   private List<String> tempRouteMap;
   private List<String> routeMaps;
-  private boolean rollback;
   private boolean isBlueGreenDeployment;
 
   @Override
@@ -53,7 +48,9 @@ public class PcfSetupStateExecutionData extends StateExecutionData implements No
     putNotNull(executionDetails, "space",
         ExecutionDataValue.builder().value(pcfCommandRequest.getSpace()).displayName("Space").build());
     putNotNull(executionDetails, "commandName",
-        ExecutionDataValue.builder().value(commandName).displayName("CommandName").build());
+        ExecutionDataValue.builder().value(commandName).displayName("Command Name").build());
+    putNotNull(executionDetails, "routeMaps",
+        ExecutionDataValue.builder().value(getRouteMapString(routeMaps)).displayName("Final Route Maps").build());
     // putting activityId is very important, as without it UI wont make call to fetch commandLogs that are shown
     // in activity window
     putNotNull(executionDetails, "activityId",
@@ -62,12 +59,19 @@ public class PcfSetupStateExecutionData extends StateExecutionData implements No
     return executionDetails;
   }
 
+  private String getRouteMapString(List<String> routes) {
+    StringBuilder builder = new StringBuilder();
+    routes.stream().forEach(route -> builder.append(route));
+    return builder.toString();
+  }
+
   @Override
-  public PcfSetupExecutionSummary getStepExecutionSummary() {
-    return PcfSetupExecutionSummary.builder()
-        .maxInstanceCount(maxInstanceCount)
+  public PcfRouteSwapExecutionSummary getStepExecutionSummary() {
+    return PcfRouteSwapExecutionSummary.builder()
         .organization(pcfCommandRequest.getOrganization())
         .space(pcfCommandRequest.getSpace())
+        .routeMaps(routeMaps)
+        .tempRouteMaps(tempRouteMap)
         .build();
   }
 }

@@ -16,16 +16,18 @@ public class PcfCommandRollbackRequest extends PcfCommandRequest {
   private List<PcfServiceData> instanceData;
   private List<String> routeMaps;
   private ResizeStrategy resizeStrategy;
+  private List<String> appsToBeDownSized;
 
   @Builder
   public PcfCommandRollbackRequest(String accountId, String appId, String commandName, String activityId,
       PcfCommandType pcfCommandType, String organization, String space, PcfConfig pcfConfig, String workflowExecutionId,
       List<PcfServiceData> instanceData, ResizeStrategy resizeStrategy, List<String> routeMaps,
-      Integer timeoutIntervalInMin) {
+      Integer timeoutIntervalInMin, boolean isBlueGreenDeployment, List<String> appsToBeDownSized) {
     super(accountId, appId, commandName, activityId, pcfCommandType, organization, space, pcfConfig,
-        workflowExecutionId, timeoutIntervalInMin);
+        workflowExecutionId, timeoutIntervalInMin, isBlueGreenDeployment);
     this.instanceData = instanceData;
     this.resizeStrategy = resizeStrategy;
     this.routeMaps = routeMaps;
+    this.appsToBeDownSized = appsToBeDownSized;
   }
 }

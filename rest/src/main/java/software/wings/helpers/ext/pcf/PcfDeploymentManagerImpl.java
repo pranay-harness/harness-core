@@ -130,6 +130,7 @@ public class PcfDeploymentManagerImpl implements PcfDeploymentManager {
       }
 
       return applicationSummaries.stream()
+          .filter(applicationSummary -> applicationSummary.getName().startsWith(prefix))
           .sorted(comparingInt(applicationSummary -> getRevisionFromServiceName(applicationSummary.getName())))
           .collect(toList());
 

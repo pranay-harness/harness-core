@@ -23,7 +23,6 @@ import software.wings.beans.Activity.ActivityBuilder;
 import software.wings.beans.Activity.Type;
 import software.wings.beans.Application;
 import software.wings.beans.DelegateTask;
-import software.wings.beans.DeploymentExecutionContext;
 import software.wings.beans.Environment;
 import software.wings.beans.ErrorCode;
 import software.wings.beans.InstanceUnitType;
@@ -31,7 +30,6 @@ import software.wings.beans.PcfConfig;
 import software.wings.beans.PcfInfrastructureMapping;
 import software.wings.beans.SettingAttribute;
 import software.wings.beans.TaskType;
-import software.wings.beans.artifact.Artifact;
 import software.wings.beans.command.CommandExecutionResult.CommandExecutionStatus;
 import software.wings.beans.command.CommandUnitDetails.CommandUnitType;
 import software.wings.common.Constants;
@@ -143,14 +141,10 @@ public class PcfDeployState extends State {
   protected ExecutionResponse executeInternal(ExecutionContext context) {
     PhaseElement phaseElement = context.getContextElement(ContextElementType.PARAM, Constants.PHASE_PARAM);
     WorkflowStandardParams workflowStandardParams = context.getContextElement(ContextElementType.STANDARD);
-    //@TODO how to check if canary ?
 
     Application app = appService.get(context.getAppId());
     Environment env = workflowStandardParams.getEnv();
     ServiceElement serviceElement = phaseElement.getServiceElement();
-    Artifact artifact = ((DeploymentExecutionContext) context).getArtifactForService(serviceElement.getUuid());
-    //    artifact.getMetadata().get("url");
-    //    artifact.getArtifactFiles().get(0).getFileName();
 
     PcfInfrastructureMapping pcfInfrastructureMapping =
         (PcfInfrastructureMapping) infrastructureMappingService.get(app.getUuid(), phaseElement.getInfraMappingId());
@@ -168,7 +162,6 @@ public class PcfDeployState extends State {
 
     List<EncryptedDataDetail> encryptedDataDetails = secretManager.getEncryptionDetails(
         (Encryptable) pcfConfig, context.getAppId(), context.getWorkflowExecutionId());
-    encryptionService.decrypt(pcfConfig, encryptedDataDetails);
 
     Integer upsizeUpdateCount = getUpsizeUpdateCount(pcfSetupContextElement);
     Integer downsizeUpdateCount = getDownsizeUpdateCount(upsizeUpdateCount, pcfSetupContextElement);
@@ -268,6 +261,7 @@ public class PcfDeployState extends State {
         .accountId(application.getAccountId())
         .newReleaseName(pcfSetupContextElement.getNewPcfApplicationName())
         .timeoutIntervalInMin(pcfSetupContextElement.getTimeoutIntervalInMinutes())
+        .isBlueGreenDeployment(pcfSetupContextElement.isBlueGreenDeployment())
         .build();
   }
 

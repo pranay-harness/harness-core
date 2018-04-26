@@ -16,12 +16,11 @@ import org.apache.commons.lang3.reflect.MethodUtils;
 import org.cloudfoundry.operations.applications.ApplicationDetail;
 import org.cloudfoundry.operations.applications.ApplicationSummary;
 import org.cloudfoundry.operations.applications.InstanceDetail;
-import org.junit.Before;
 import org.junit.Test;
+import org.mockito.InjectMocks;
 import org.mockito.Mock;
-import org.mockito.MockitoAnnotations;
 import org.mockito.Spy;
-import org.slf4j.Logger;
+import software.wings.WingsBaseTest;
 import software.wings.api.pcf.PcfServiceData;
 import software.wings.beans.PcfConfig;
 import software.wings.beans.ResizeStrategy;
@@ -47,7 +46,7 @@ import java.util.Arrays;
 import java.util.Collections;
 import java.util.List;
 
-public class PcfCommandTaskHelperTest {
+public class PcfCommandTaskHelperTest extends WingsBaseTest {
   public static final String USERNMAE = "USERNMAE";
   public static final String URL = "URL";
   public static final String MANIFEST_YAML = "  applications:\n"
@@ -63,20 +62,13 @@ public class PcfCommandTaskHelperTest {
   public static final String SPACE = "SPACE";
   public static final String ACCOUNT_ID = "ACCOUNT_ID";
   public static final String RUNNING = "RUNNING";
-  @Spy PcfCommandTaskHelper pcfCommandTaskHelper = new PcfCommandTaskHelper();
+
   @Mock PcfDeploymentManager pcfDeploymentManager;
   @Mock EncryptionService encryptionService;
   @Mock EncryptedDataDetail encryptedDataDetail;
   @Mock ExecutionLogCallback executionLogCallback;
   @Mock DelegateFileManager delegateFileManager;
-  @Mock Logger logger;
-
-  @Before
-  public void setup() {
-    MockitoAnnotations.initMocks(this);
-    doNothing().when(logger).error(anyString(), any(), any());
-    doNothing().when(executionLogCallback).saveExecutionLog(anyString());
-  }
+  @InjectMocks @Spy PcfCommandTaskHelper pcfCommandTaskHelper = new PcfCommandTaskHelper();
 
   @Test
   public void testGetRevisionFromReleaseName() throws Exception {
@@ -92,6 +84,7 @@ public class PcfCommandTaskHelperTest {
 
   @Test
   public void testPerformSetup() throws Exception {
+    doNothing().when(executionLogCallback).saveExecutionLog(anyString());
     PcfCommandRequest pcfCommandRequest = PcfCommandSetupRequest.builder()
                                               .pcfCommandType(PcfCommandType.SETUP)
                                               .pcfConfig(getPcfConfig())
@@ -102,6 +95,7 @@ public class PcfCommandTaskHelperTest {
                                               .accountId(ACCOUNT_ID)
                                               .routeMaps(new String[] {"ab.rc", "ab.ty/asd"})
                                               .timeoutIntervalInMin(5)
+                                              .maxCount(2)
                                               .build();
 
     // mocking
@@ -129,7 +123,7 @@ public class PcfCommandTaskHelperTest {
                              .diskQuota(1)
                              .requestedState(RUNNING)
                              .id("1")
-                             .instances(0)
+                             .instances(1)
                              .memoryLimit(1)
                              .runningInstances(0)
                              .build());
@@ -138,7 +132,7 @@ public class PcfCommandTaskHelperTest {
                              .diskQuota(1)
                              .requestedState(RUNNING)
                              .id("1")
-                             .instances(0)
+                             .instances(1)
                              .memoryLimit(1)
                              .runningInstances(0)
                              .build());
@@ -152,6 +146,7 @@ public class PcfCommandTaskHelperTest {
                              .runningInstances(0)
                              .build());
     doReturn(previousReleases).when(pcfDeploymentManager).getPreviousReleases(any(), anyString());
+    doReturn(previousReleases).when(pcfDeploymentManager).getDeployedServicesWithNonZeroInstances(any(), anyString());
 
     doNothing().when(pcfDeploymentManager).deleteApplication(any());
     File f1 = new File("./test1");
@@ -184,6 +179,11 @@ public class PcfCommandTaskHelperTest {
     assertEquals(pcfCommandExecutionResponse.getCommandExecutionStatus(), CommandExecutionStatus.SUCCESS);
     assertEquals(pcfSetupCommandResponse.getNewApplicationName(), "a_s_e__6");
     assertEquals(pcfSetupCommandResponse.getNewApplicationId(), "10");
+
+    assertNotNull(pcfSetupCommandResponse.getDownsizeDetails());
+    assertEquals(2, pcfSetupCommandResponse.getDownsizeDetails().size());
+    assertTrue(pcfSetupCommandResponse.getDownsizeDetails().contains("a_s_e__3"));
+    assertTrue(pcfSetupCommandResponse.getDownsizeDetails().contains("a_s_e__4"));
   }
 
   private PcfConfig getPcfConfig() {
@@ -191,7 +191,7 @@ public class PcfCommandTaskHelperTest {
   }
 
   @Test
-  public void testPerformDeploy() throws Exception {
+  public void testPerformDeploy_nonBlueGreen() throws Exception {
     PcfCommandRequest pcfCommandRequest = PcfCommandDeployRequest.builder()
                                               .pcfCommandType(PcfCommandType.RESIZE)
                                               .resizeStrategy(ResizeStrategy.DOWNSIZE_OLD_FIRST)
@@ -309,6 +309,123 @@ public class PcfCommandTaskHelperTest {
         assertEquals(0, data.getPreviousCount());
         assertEquals(2, data.getDesiredCount());
       }
+    }
+  }
+
+  @Test
+  public void testPerformDeploy_BlueGreen() throws Exception {
+    PcfCommandRequest pcfCommandRequest = PcfCommandDeployRequest.builder()
+                                              .pcfCommandType(PcfCommandType.RESIZE)
+                                              .resizeStrategy(ResizeStrategy.DOWNSIZE_OLD_FIRST)
+                                              .pcfConfig(getPcfConfig())
+                                              .accountId(ACCOUNT_ID)
+                                              .newReleaseName("a_s_e__6")
+                                              .organization(ORG)
+                                              .space(SPACE)
+                                              .updateCount(2)
+                                              .downSizeCount(2)
+                                              .totalPreviousInstanceCount(2)
+                                              .timeoutIntervalInMin(2)
+                                              .isBlueGreenDeployment(true)
+                                              .build();
+
+    ApplicationDetail applicationDetail = ApplicationDetail.builder()
+                                              .id("10")
+                                              .diskQuota(1)
+                                              .instances(0)
+                                              .memoryLimit(1)
+                                              .name("a_s_e__6")
+                                              .requestedState("STOPPED")
+                                              .stack("")
+                                              .runningInstances(0)
+                                              .build();
+
+    doReturn(applicationDetail)
+        .doReturn(applicationDetail)
+        .doReturn(applicationDetail)
+        .when(pcfDeploymentManager)
+        .getApplicationByName(any());
+
+    List<ApplicationSummary> previousReleases = new ArrayList<>();
+    previousReleases.add(ApplicationSummary.builder()
+                             .name("a_s_e__6")
+                             .diskQuota(1)
+                             .requestedState(RUNNING)
+                             .id("1")
+                             .instances(0)
+                             .memoryLimit(1)
+                             .runningInstances(1)
+                             .build());
+    previousReleases.add(ApplicationSummary.builder()
+                             .name("a_s_e__4")
+                             .diskQuota(1)
+                             .requestedState(RUNNING)
+                             .id("1")
+                             .instances(1)
+                             .memoryLimit(1)
+                             .runningInstances(1)
+                             .build());
+    previousReleases.add(ApplicationSummary.builder()
+                             .name("a_s_e__3")
+                             .diskQuota(1)
+                             .requestedState(RUNNING)
+                             .id("1")
+                             .instances(1)
+                             .memoryLimit(1)
+                             .runningInstances(1)
+                             .build());
+
+    doReturn(previousReleases).when(pcfDeploymentManager).getPreviousReleases(any(), anyString());
+    doReturn(previousReleases).when(pcfDeploymentManager).getDeployedServicesWithNonZeroInstances(any(), anyString());
+
+    doReturn(ApplicationDetail.builder()
+                 .id("10")
+                 .diskQuota(1)
+                 .instances(0)
+                 .memoryLimit(1)
+                 .name("a_s_e__4")
+                 .requestedState("STOPPED")
+                 .stack("")
+                 .runningInstances(0)
+                 .build())
+        .doReturn(ApplicationDetail.builder()
+                      .id("10")
+                      .diskQuota(1)
+                      .instances(0)
+                      .memoryLimit(1)
+                      .name("a_s_e__3")
+                      .requestedState("STOPPED")
+                      .stack("")
+                      .runningInstances(0)
+                      .build())
+        .doReturn(ApplicationDetail.builder()
+                      .id("10")
+                      .diskQuota(1)
+                      .instances(2)
+                      .memoryLimit(1)
+                      .name("a_s_e__4")
+                      .requestedState("STOPPED")
+                      .stack("")
+                      .runningInstances(2)
+                      .build())
+        .when(pcfDeploymentManager)
+        .resizeApplication(any());
+
+    PcfCommandExecutionResponse pcfCommandExecutionResponse = pcfCommandTaskHelper.performDeploy(
+        pcfCommandRequest, executionLogCallback, encryptionService, pcfDeploymentManager, null);
+
+    assertEquals(CommandExecutionStatus.SUCCESS, pcfCommandExecutionResponse.getCommandExecutionStatus());
+    PcfDeployCommandResponse pcfDeployCommandResponse =
+        (PcfDeployCommandResponse) pcfCommandExecutionResponse.getPcfCommandResponse();
+
+    assertEquals(CommandExecutionStatus.SUCCESS, pcfDeployCommandResponse.getCommandExecutionStatus());
+    List<PcfServiceData> pcfServiceDatas = pcfDeployCommandResponse.getInstanceDataUpdated();
+
+    // Verify here, downsize is not performed in case of blueGreen deployment phase
+    assertEquals(1, pcfServiceDatas.size());
+    for (PcfServiceData data : pcfServiceDatas) {
+      assertEquals(0, data.getPreviousCount());
+      assertEquals(2, data.getDesiredCount());
     }
   }
 
@@ -442,8 +559,8 @@ public class PcfCommandTaskHelperTest {
     doReturn(Arrays.asList("R1", "R2")).when(pcfDeploymentManager).getRouteMaps(any());
 
     // Fetch Orgs
-    PcfCommandExecutionResponse pcfCommandExecutionResponse = pcfCommandTaskHelper.performDataFetch(
-        pcfCommandRequest, executionLogCallback, encryptionService, pcfDeploymentManager, null);
+    PcfCommandExecutionResponse pcfCommandExecutionResponse =
+        pcfCommandTaskHelper.performDataFetch(pcfCommandRequest, encryptionService, pcfDeploymentManager, null);
 
     assertEquals(CommandExecutionStatus.SUCCESS, pcfCommandExecutionResponse.getCommandExecutionStatus());
     PcfInfraMappingDataResponse pcfInfraMappingDataResponse =
@@ -456,8 +573,8 @@ public class PcfCommandTaskHelperTest {
 
     // Fetch Spaces for org
     pcfCommandRequest.setOrganization(ORG);
-    pcfCommandExecutionResponse = pcfCommandTaskHelper.performDataFetch(
-        pcfCommandRequest, executionLogCallback, encryptionService, pcfDeploymentManager, null);
+    pcfCommandExecutionResponse =
+        pcfCommandTaskHelper.performDataFetch(pcfCommandRequest, encryptionService, pcfDeploymentManager, null);
 
     assertEquals(CommandExecutionStatus.SUCCESS, pcfCommandExecutionResponse.getCommandExecutionStatus());
     pcfInfraMappingDataResponse = (PcfInfraMappingDataResponse) pcfCommandExecutionResponse.getPcfCommandResponse();
@@ -468,8 +585,8 @@ public class PcfCommandTaskHelperTest {
 
     // Fetch Routes
     pcfCommandRequest.setSpace(SPACE);
-    pcfCommandExecutionResponse = pcfCommandTaskHelper.performDataFetch(
-        pcfCommandRequest, executionLogCallback, encryptionService, pcfDeploymentManager, null);
+    pcfCommandExecutionResponse =
+        pcfCommandTaskHelper.performDataFetch(pcfCommandRequest, encryptionService, pcfDeploymentManager, null);
     pcfInfraMappingDataResponse = (PcfInfraMappingDataResponse) pcfCommandExecutionResponse.getPcfCommandResponse();
     assertNotNull(pcfInfraMappingDataResponse.getRouteMaps());
     assertEquals(2, pcfInfraMappingDataResponse.getRouteMaps().size());

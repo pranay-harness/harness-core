@@ -3,12 +3,14 @@ package software.wings.helpers.ext.pcf;
 import static java.util.stream.Collectors.toList;
 import static software.wings.helpers.ext.pcf.PcfConstants.PIVOTAL_CLOUD_FOUNDRY_LOG_PREFIX;
 
+import org.apache.commons.collections.CollectionUtils;
 import org.apache.commons.lang3.StringUtils;
 import org.cloudfoundry.client.CloudFoundryClient;
 import org.cloudfoundry.operations.CloudFoundryOperations;
 import org.cloudfoundry.operations.DefaultCloudFoundryOperations;
 import org.cloudfoundry.operations.applications.ApplicationDetail;
 import org.cloudfoundry.operations.applications.ApplicationManifest;
+import org.cloudfoundry.operations.applications.ApplicationManifest.Builder;
 import org.cloudfoundry.operations.applications.ApplicationManifestUtils;
 import org.cloudfoundry.operations.applications.ApplicationSummary;
 import org.cloudfoundry.operations.applications.DeleteApplicationRequest;
@@ -38,7 +40,6 @@ import org.cloudfoundry.reactor.client.ReactorCloudFoundryClient;
 import org.cloudfoundry.reactor.tokenprovider.PasswordGrantTokenProvider;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-import org.springframework.util.CollectionUtils;
 
 import java.nio.file.Path;
 import java.nio.file.Paths;
@@ -310,14 +311,8 @@ public class PcfClientImpl implements PcfClient {
       builder.addAllServices(applicationManifest.getServices());
     }
 
-    // Set routeMaps
-    org.cloudfoundry.operations.applications.Route[] routes =
-        new org.cloudfoundry.operations.applications.Route[pcfRequestConfig.getRouteMaps().length];
-    int index = 0;
-    for (String routePath : pcfRequestConfig.getRouteMaps()) {
-      routes[index++] = org.cloudfoundry.operations.applications.Route.builder().route(routePath).build();
-    }
-    builder.route(routes);
+    // use Random route if provided no route-map is provided
+    addRouteMapsToManifest(pcfRequestConfig, builder);
 
     // Add user provided environment variables
     if (pcfRequestConfig.getServiceVariables() != null) {
@@ -332,11 +327,24 @@ public class PcfClientImpl implements PcfClient {
         .instances(applicationManifest.getInstances())
         .memory(applicationManifest.getMemory())
         .name(pcfRequestConfig.getApplicationName())
-        .routePath(applicationManifest.getRoutePath())
-        .randomRoute(applicationManifest.getRandomRoute())
         .buildpack(applicationManifest.getBuildpack())
         .path(applicationManifest.getPath())
         .build();
+  }
+
+  private void addRouteMapsToManifest(PcfRequestConfig pcfRequestConfig, Builder builder) {
+    // Set routeMaps
+    if (pcfRequestConfig.getRouteMaps() != null && pcfRequestConfig.getRouteMaps().length > 0) {
+      org.cloudfoundry.operations.applications.Route[] routes =
+          new org.cloudfoundry.operations.applications.Route[pcfRequestConfig.getRouteMaps().length];
+      int index = 0;
+      for (String routePath : pcfRequestConfig.getRouteMaps()) {
+        routes[index++] = org.cloudfoundry.operations.applications.Route.builder().route(routePath).build();
+      }
+      builder.route(routes);
+    } else {
+      builder.randomRoute(true);
+    }
   }
 
   public void stopApplication(PcfRequestConfig pcfRequestConfig)

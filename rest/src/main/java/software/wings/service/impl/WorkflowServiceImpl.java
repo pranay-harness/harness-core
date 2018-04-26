@@ -2101,7 +2101,7 @@ public class WorkflowServiceImpl implements WorkflowService, DataProvider {
     } else if (deploymentType == AMI) {
       generateNewWorkflowPhaseStepsForAWSAmi(appId, envId, workflowPhase, !serviceRepeat);
     } else if (deploymentType == PCF) {
-      generateNewWorkflowPhaseStepsForPCF(appId, envId, workflowPhase, !serviceRepeat);
+      generateNewWorkflowPhaseStepsForPCF(appId, envId, workflowPhase, !serviceRepeat, orchestrationWorkflowType);
     } else {
       generateNewWorkflowPhaseStepsForSSH(appId, workflowPhase, orchestrationWorkflowType);
     }
@@ -2247,8 +2247,8 @@ public class WorkflowServiceImpl implements WorkflowService, DataProvider {
     workflowPhase.addPhaseStep(aPhaseStep(WRAP_UP, Constants.WRAP_UP).build());
   }
 
-  private void generateNewWorkflowPhaseStepsForPCF(
-      String appId, String envId, WorkflowPhase workflowPhase, boolean serviceSetupRequired) {
+  private void generateNewWorkflowPhaseStepsForPCF(String appId, String envId, WorkflowPhase workflowPhase,
+      boolean serviceSetupRequired, OrchestrationWorkflowType orchestrationWorkflowType) {
     Service service = serviceResourceService.get(appId, workflowPhase.getServiceId());
     Map<CommandType, List<Command>> commandMap = getCommandTypeListMap(service);
 
@@ -2270,7 +2270,7 @@ public class WorkflowServiceImpl implements WorkflowService, DataProvider {
                                    .addAllSteps(commandNodes(commandMap, CommandType.VERIFY))
                                    .build());
 
-    if (workflowPhase.isBasicWorkflow()) {
+    if (BASIC.equals(orchestrationWorkflowType)) {
       workflowPhase.addPhaseStep(aPhaseStep(PCF_ROUTE_SWAP, Constants.PCF_ROUTE_SWAP)
                                      .addStep(aGraphNode()
                                                   .withId(generateUuid())

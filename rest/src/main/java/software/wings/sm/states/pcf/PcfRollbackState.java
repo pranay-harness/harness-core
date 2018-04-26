@@ -68,6 +68,7 @@ public class PcfRollbackState extends PcfDeployState {
         .appId(application.getUuid())
         .accountId(application.getAccountId())
         .timeoutIntervalInMin(pcfSetupContextElement.getTimeoutIntervalInMinutes())
+        .appsToBeDownSized(pcfSetupContextElement.getAppsToBeDownsized())
         .build();
   }
 
