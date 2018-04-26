@@ -49,6 +49,7 @@ logging:
     # the following is to suppress "Error retrieving job for trigger XYZ, setting trigger state to ERROR."
     # TODO: remove this suppression when the mentioned issue is resolved
     com.novemberain.quartz.mongodb.TriggerRunner: "OFF"
+    org.eclipse.jetty.websocket.common: DEBUG
   appenders:
     - type: console
       threshold: TRACE
