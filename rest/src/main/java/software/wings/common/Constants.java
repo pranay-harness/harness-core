@@ -441,7 +441,7 @@ public interface Constants {
   /**
    * The constant MAX_DELEGATE_LAST_HEARTBEAT.
    */
-  long MAX_DELEGATE_LAST_HEARTBEAT = (3 * 60 * 1000) + (15 * 1000); // 3 minutes 15 seconds
+  long MAX_DELEGATE_LAST_HEARTBEAT = (5 * 60 * 1000) + (15 * 1000); // 5 minutes 15 seconds
 
   /**
    * The constant DEFAULT_SYNC_CALL_TIMEOUT.

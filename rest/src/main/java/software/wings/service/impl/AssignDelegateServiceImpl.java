@@ -4,7 +4,6 @@ import static io.harness.data.structure.EmptyPredicate.isEmpty;
 import static io.harness.data.structure.EmptyPredicate.isNotEmpty;
 import static java.util.stream.Collectors.toList;
 import static org.apache.commons.lang3.StringUtils.isNotBlank;
-import static software.wings.beans.Delegate.Status.ENABLED;
 import static software.wings.common.Constants.MAX_DELEGATE_LAST_HEARTBEAT;
 
 import com.google.inject.Inject;
@@ -137,8 +136,6 @@ public class AssignDelegateServiceImpl implements AssignDelegateService {
     try {
       List<String> connectedDelegates = wingsPersistence.createQuery(Delegate.class)
                                             .filter("accountId", task.getAccountId())
-                                            .filter("connected", true)
-                                            .filter("status", ENABLED)
                                             .field("lastHeartBeat")
                                             .greaterThan(clock.millis() - MAX_DELEGATE_LAST_HEARTBEAT)
                                             .asKeyList()
