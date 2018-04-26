@@ -35,21 +35,22 @@ then
   fi
 fi
 
+echo "Checking Delegate latest version..."
 DELEGATE_STORAGE_URL=_delegateStorageUrl_
-REMOTE_DELEGATE_LATEST=$(curl $DELEGATE_STORAGE_URL/_delegateCheckLocation_)
+REMOTE_DELEGATE_LATEST=$(curl -#k $DELEGATE_STORAGE_URL/_delegateCheckLocation_)
 REMOTE_DELEGATE_URL=$DELEGATE_STORAGE_URL/$(echo $REMOTE_DELEGATE_LATEST | cut -d " " -f2)
 REMOTE_DELEGATE_VERSION=$(echo $REMOTE_DELEGATE_LATEST | cut -d " " -f1)
 DEPLOY_MODE=_deployMode_
 
 if [ ! -e delegate.jar ]
 then
-  echo "Downloading Delegate..."
+  echo "Downloading Delegate $REMOTE_DELEGATE_VERSION ..."
   curl -#k $REMOTE_DELEGATE_URL -o delegate.jar
 else
   CURRENT_VERSION=$(unzip -c delegate.jar META-INF/MANIFEST.MF | grep Application-Version | cut -d "=" -f2 | tr -d " " | tr -d "\r" | tr -d "\n")
   if [[ $REMOTE_DELEGATE_VERSION != $CURRENT_VERSION ]]
   then
-    echo "Downloading Delegate..."
+    echo "Downloading Delegate $REMOTE_DELEGATE_VERSION ..."
     mkdir -p backup.$CURRENT_VERSION
     cp delegate.jar backup.$CURRENT_VERSION
     curl -#k $REMOTE_DELEGATE_URL -o delegate.jar
