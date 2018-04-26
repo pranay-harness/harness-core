@@ -1,5 +1,10 @@
 #!/bin/bash -e
 
+JRE_DIR_OLD=jre1.8.0_131
+JRE_DIR=jre1.8.0_131_2
+JRE_BINARY=jre/bin/java
+JVM_URL=_delegateStorageUrl_/jre/8u131/jre-8u131-linux-x64.tar.gz
+
 SOURCE="${BASH_SOURCE[0]}"
 while [ -h "$SOURCE" ]; do # resolve $SOURCE until the file is no longer a symlink
   DIR="$( cd -P "$( dirname "$SOURCE" )" && pwd )"
@@ -33,6 +38,23 @@ then
     PROXY_SYS_PROPS=$PROXY_SYS_PROPS" -Dhttp.nonProxyHosts=*$SYSTEM_PROPERTY_NO_PROXY"
     echo $PROXY_SYS_PROPS
   fi
+fi
+
+if [ ! -d $JRE_DIR  -o ! -d jre -o ! -e $JRE_BINARY ]
+then
+  echo "Downloading JRE packages..."
+  JVM_TAR_FILENAME=$(basename "$JVM_URL")
+  curl -#kLO $JVM_URL
+  echo "Extracting JRE packages..."
+  mkdir -p tmp
+  mv $JVM_TAR_FILENAME tmp
+  cd tmp
+  tar xzf $JVM_TAR_FILENAME
+  rm -rf ../$JRE_DIR
+  mv $JRE_DIR_OLD ../$JRE_DIR
+  cd ..
+  rm -rf jre tmp
+  ln -s $JRE_DIR jre
 fi
 
 echo "Checking Delegate latest version..."
@@ -78,7 +100,7 @@ fi
 export HOSTNAME
 export CAPSULE_CACHE_DIR="$DIR/.cache"
 echo "Starting delegate - version $REMOTE_DELEGATE_VERSION"
-java $PROXY_SYS_PROPS -Ddelegatesourcedir="$DIR" -Xmx4096m -XX:+HeapDumpOnOutOfMemoryError -XX:+PrintGCDetails -XX:+PrintGCDateStamps -Xloggc:mygclogfilename.gc -XX:+UseParallelGC -XX:MaxGCPauseMillis=500 -jar delegate.jar config-delegate.yml watched $1
+$JRE_BINARY $PROXY_SYS_PROPS -Ddelegatesourcedir="$DIR" -Xmx4096m -XX:+HeapDumpOnOutOfMemoryError -XX:+PrintGCDetails -XX:+PrintGCDateStamps -Xloggc:mygclogfilename.gc -XX:+UseParallelGC -XX:MaxGCPauseMillis=500 -jar delegate.jar config-delegate.yml watched $1
 sleep 3
 if `pgrep -f "\-Ddelegatesourcedir=$DIR"> /dev/null`
 then
