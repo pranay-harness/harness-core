@@ -163,7 +163,9 @@ public class JenkinsTask extends AbstractDelegateRunnableTask {
       sleep(Duration.ofSeconds(1));
       try {
         jenkinsBuild = jenkins.getBuild(queueItem);
-        logger.info("Job started and Build No {}", jenkinsBuild.getNumber());
+        if (jenkinsBuild != null) {
+          logger.info("Job started and Build No {}", jenkinsBuild.getNumber());
+        }
       } catch (IOException e) {
         logger.error("Error occurred while waiting for Job to start execution.", e);
         if (e instanceof HttpResponseException) {
