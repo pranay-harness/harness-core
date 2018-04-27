@@ -45,7 +45,7 @@ then
   ln -s $JRE_DIR jre
 fi
 
-
+echo "Checking Watcher latest version..."
 WATCHER_STORAGE_URL=${watcherStorageUrl}
 REMOTE_WATCHER_LATEST=$(curl -#k $WATCHER_STORAGE_URL/${watcherCheckLocation})
 REMOTE_WATCHER_URL=$WATCHER_STORAGE_URL/$(echo $REMOTE_WATCHER_LATEST | cut -d " " -f2)
@@ -66,6 +66,7 @@ else
   fi
 fi
 
+echo "Checking Delegate latest version..."
 DELEGATE_STORAGE_URL=${delegateStorageUrl}
 REMOTE_DELEGATE_LATEST=$(curl -#k $DELEGATE_STORAGE_URL/${delegateCheckLocation})
 REMOTE_DELEGATE_URL=$DELEGATE_STORAGE_URL/$(echo $REMOTE_DELEGATE_LATEST | cut -d " " -f2)
