@@ -11,6 +11,7 @@ import static software.wings.beans.SearchFilter.Operator.EQ;
 import static software.wings.beans.SearchFilter.Operator.IN;
 import static software.wings.common.Constants.ASSERTION_STATEMENT;
 import static software.wings.common.Constants.ASSERTION_STATUS;
+import static software.wings.common.Constants.HARNESS_KUBE_CONFIG_PATH;
 import static software.wings.common.Constants.HTTP_RESPONSE_BODY;
 import static software.wings.common.Constants.HTTP_RESPONSE_CODE;
 import static software.wings.common.Constants.HTTP_RESPONSE_METHOD;
@@ -85,7 +86,6 @@ public abstract class ExpressionBuilder {
   protected static final String HOST_INSTANCE_VPCID = "host.ec2Instance.vpcId";
 
   protected static final String INFRA_KUBERNETES_NAMESPACE = "infra.kubernetes.namespace";
-  protected static final String INFRA_KUBERNETES_KUBECONFIG = "infra.kubernetes.kubeconfig";
 
   protected static final String START_TS = "startTs";
   protected static final String END_TS = "endTs";
@@ -139,7 +139,6 @@ public abstract class ExpressionBuilder {
         HOST_INSTANCE_VPCID));
 
     expressions.add(INFRA_KUBERNETES_NAMESPACE);
-    expressions.add(INFRA_KUBERNETES_KUBECONFIG);
 
     return expressions;
   }
@@ -148,7 +147,7 @@ public abstract class ExpressionBuilder {
     Set<String> expressions = new TreeSet<>(asList(START_TS, END_TS, STATUS, ERROR_MSG, DEPLOYMENT_URL));
     switch (stateType) {
       case SHELL_SCRIPT:
-        expressions.addAll(asList(WINGS_RUNTIME_PATH, WINGS_STAGING_PATH, WINGS_BACKUP_PATH));
+        expressions.addAll(asList(WINGS_RUNTIME_PATH, WINGS_STAGING_PATH, WINGS_BACKUP_PATH, HARNESS_KUBE_CONFIG_PATH));
         break;
       case HTTP:
         expressions.addAll(asList(HTTP_URL, HTTP_RESPONSE_METHOD, HTTP_RESPONSE_CODE, HTTP_RESPONSE_BODY,

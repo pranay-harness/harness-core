@@ -40,6 +40,7 @@ import software.wings.beans.command.CommandExecutionResult;
 import software.wings.beans.command.CommandType;
 import software.wings.beans.delegation.ShellScriptParameters;
 import software.wings.common.Constants;
+import software.wings.exception.InvalidRequestException;
 import software.wings.exception.WingsException;
 import software.wings.helpers.ext.container.ContainerDeploymentManagerHelper;
 import software.wings.security.encryption.EncryptedDataDetail;
@@ -130,7 +131,13 @@ public class ShellScriptState extends State {
   @Override
   public ExecutionResponse execute(ExecutionContext context) {
     String activityId = createActivity(context);
-    return executeInternal(context, activityId);
+    try {
+      return executeInternal(context, activityId);
+    } catch (WingsException e) {
+      throw e;
+    } catch (Exception e) {
+      throw new InvalidRequestException(e.getMessage(), e);
+    }
   }
 
   @Override
@@ -268,7 +275,7 @@ public class ShellScriptState extends State {
                                               .safeDisplayServiceVariables(safeDisplayServiceVariables)
                                               .workingDirectory(commandPath)
                                               .scriptType(scriptType)
-                                              .script(scriptString)
+                                              .script(context.renderExpression(scriptString))
                                               .executeOnDelegate(executeOnDelegate)
                                               .build()})
             .withEnvId(envId)
