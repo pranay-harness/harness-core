@@ -14,12 +14,13 @@ done
 DIR="$( cd -P "$( dirname "$SOURCE" )" && pwd )"
 
 if [ ! -e proxy.config ]; then
-  echo "PROXY_HOST=" > proxy.config
-  echo "PROXY_PORT=" >> proxy.config
-  echo "PROXY_SCHEME=" >> proxy.config
+  echo "PROXY_HOST=_proxyHost_" > proxy.config
+  echo "PROXY_PORT=_proxyPort_" >> proxy.config
+  echo "PROXY_SCHEME=_proxyScheme_" >> proxy.config
 fi
+test "$(tail -c 1 proxy.config)" && `echo "" >> proxy.config`
 if ! `grep NO_PROXY proxy.config > /dev/null`; then
-  echo "NO_PROXY=" >> proxy.config
+  echo "NO_PROXY=_noProxy_" >> proxy.config
 fi
 
 source proxy.config
@@ -102,6 +103,7 @@ fi
 if [ ! -e config-watcher.yml ]; then
   echo "accountId: ${accountId}" > config-watcher.yml
 fi
+test "$(tail -c 1 config-watcher.yml)" && `echo "" >> config-watcher.yml`
 if ! `grep doUpgrade config-watcher.yml > /dev/null`; then
   echo "doUpgrade: true" >> config-watcher.yml
 fi

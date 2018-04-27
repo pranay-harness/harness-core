@@ -11,4 +11,5 @@ public class WatcherConfiguration {
   private boolean doUpgrade;
   private String upgradeCheckLocation;
   private long upgradeCheckIntervalSeconds;
+  private String delegateCheckLocation;
 }
