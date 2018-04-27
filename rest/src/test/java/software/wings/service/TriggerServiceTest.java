@@ -221,11 +221,15 @@ public class TriggerServiceTest extends WingsBaseTest {
     assertThat(((ArtifactTriggerCondition) trigger.getCondition()).getArtifactStreamId())
         .isNotNull()
         .isEqualTo(ARTIFACT_STREAM_ID);
+    assertThat(((ArtifactTriggerCondition) trigger.getCondition()).isRegex()).isFalse();
     verify(wingsPersistence).saveAndGet(any(), any(Trigger.class));
   }
 
   @Test
   public void shouldUpdateArtifactConditionTrigger() {
+    ArtifactTriggerCondition artifactTriggerCondition =
+        (ArtifactTriggerCondition) artifactConditionTrigger.getCondition();
+    artifactTriggerCondition.setRegex(true);
     when(wingsPersistence.saveAndGet(any(), any(Trigger.class))).thenReturn(artifactConditionTrigger);
 
     artifactConditionTrigger.setArtifactSelections(
@@ -247,6 +251,7 @@ public class TriggerServiceTest extends WingsBaseTest {
     assertThat(((ArtifactTriggerCondition) updatedTrigger.getCondition()).getArtifactFilter())
         .isNotNull()
         .isEqualTo(ARTIFACT_FILTER);
+    assertThat(((ArtifactTriggerCondition) updatedTrigger.getCondition()).isRegex()).isTrue();
     assertThat(((ArtifactTriggerCondition) updatedTrigger.getCondition()).getArtifactStreamId())
         .isNotNull()
         .isEqualTo(ARTIFACT_STREAM_ID);
@@ -623,16 +628,104 @@ public class TriggerServiceTest extends WingsBaseTest {
   }
 
   @Test
-  public void shouldTriggerExecutionPostArtifactCollectionWithFileMatchesArtifactFilter() {
-    Artifact artifact =
-        anArtifact()
-            .withAppId(APP_ID)
-            .withUuid(ARTIFACT_ID)
-            .withArtifactStreamId(ARTIFACT_STREAM_ID)
-            .withMetadata(ImmutableMap.of("buildNo", ARTIFACT_FILTER))
-            .withArtifactFiles(singletonList(
-                anArtifactFile().withAppId(APP_ID).withFileUuid(FILE_ID).withName(ARTIFACT_FILTER).build()))
-            .build();
+  public void shouldTriggerExecutionPostArtifactCollectionWithFileRegexNotStartsWith() {
+    Artifact artifact = anArtifact()
+                            .withAppId(APP_ID)
+                            .withUuid(ARTIFACT_ID)
+                            .withArtifactStreamId(ARTIFACT_STREAM_ID)
+                            .withMetadata(ImmutableMap.of("buildNo", ARTIFACT_FILTER))
+                            .withArtifactFiles(singletonList(
+                                anArtifactFile().withAppId(APP_ID).withFileUuid(FILE_ID).withName(FILE_NAME).build()))
+                            .build();
+    ArtifactTriggerCondition artifactTriggerCondition =
+        (ArtifactTriggerCondition) artifactConditionTrigger.getCondition();
+    artifactTriggerCondition.setRegex(true);
+    artifactTriggerCondition.setArtifactFilter("^(?!release)");
+
+    when(wingsPersistence.query(any(), any(PageRequest.class)))
+        .thenReturn(aPageResponse().withResponse(asList(artifactConditionTrigger)).build());
+    when(workflowExecutionService.triggerPipelineExecution(anyString(), anyString(), any(ExecutionArgs.class)))
+        .thenReturn(aWorkflowExecution().withAppId(APP_ID).withStatus(SUCCESS).build());
+
+    triggerService.triggerExecutionPostArtifactCollectionAsync(artifact);
+    verify(workflowExecutionService).triggerPipelineExecution(anyString(), anyString(), any(ExecutionArgs.class));
+  }
+
+  @Test
+  public void shouldTriggerExecutionPostArtifactCollectionRegexNotStartsWith() {
+    Artifact artifact = anArtifact()
+                            .withAppId(APP_ID)
+                            .withUuid(ARTIFACT_ID)
+                            .withArtifactStreamId(ARTIFACT_STREAM_ID)
+                            .withMetadata(ImmutableMap.of("buildNo", ARTIFACT_FILTER))
+                            .build();
+    ArtifactTriggerCondition artifactTriggerCondition =
+        (ArtifactTriggerCondition) artifactConditionTrigger.getCondition();
+    artifactTriggerCondition.setRegex(true);
+    artifactTriggerCondition.setArtifactFilter("^(?!release)");
+
+    when(wingsPersistence.query(any(), any(PageRequest.class)))
+        .thenReturn(aPageResponse().withResponse(asList(artifactConditionTrigger)).build());
+    when(workflowExecutionService.triggerPipelineExecution(anyString(), anyString(), any(ExecutionArgs.class)))
+        .thenReturn(aWorkflowExecution().withAppId(APP_ID).withStatus(SUCCESS).build());
+
+    triggerService.triggerExecutionPostArtifactCollectionAsync(artifact);
+    verify(workflowExecutionService).triggerPipelineExecution(anyString(), anyString(), any(ExecutionArgs.class));
+  }
+
+  @Test
+  public void shouldTriggerExecutionPostArtifactCollectionRegexMatch() {
+    Artifact artifact = anArtifact()
+                            .withAppId(APP_ID)
+                            .withUuid(ARTIFACT_ID)
+                            .withArtifactStreamId(ARTIFACT_STREAM_ID)
+                            .withMetadata(ImmutableMap.of("buildNo", "release2345"))
+                            .build();
+    ArtifactTriggerCondition artifactTriggerCondition =
+        (ArtifactTriggerCondition) artifactConditionTrigger.getCondition();
+    artifactTriggerCondition.setRegex(true);
+    artifactTriggerCondition.setArtifactFilter("^release");
+
+    when(wingsPersistence.query(any(), any(PageRequest.class)))
+        .thenReturn(aPageResponse().withResponse(asList(artifactConditionTrigger)).build());
+    when(workflowExecutionService.triggerPipelineExecution(anyString(), anyString(), any(ExecutionArgs.class)))
+        .thenReturn(aWorkflowExecution().withAppId(APP_ID).withStatus(SUCCESS).build());
+
+    triggerService.triggerExecutionPostArtifactCollectionAsync(artifact);
+    verify(workflowExecutionService).triggerPipelineExecution(anyString(), anyString(), any(ExecutionArgs.class));
+  }
+
+  @Test
+  public void shouldTriggerExecutionPostArtifactCollectionRegexDoesNotMatch() {
+    Artifact artifact = anArtifact()
+                            .withAppId(APP_ID)
+                            .withUuid(ARTIFACT_ID)
+                            .withArtifactStreamId(ARTIFACT_STREAM_ID)
+                            .withMetadata(ImmutableMap.of("buildNo", "@33release23"))
+                            .build();
+    ArtifactTriggerCondition artifactTriggerCondition =
+        (ArtifactTriggerCondition) artifactConditionTrigger.getCondition();
+    artifactTriggerCondition.setRegex(true);
+    artifactTriggerCondition.setArtifactFilter("^release");
+
+    when(wingsPersistence.query(any(), any(PageRequest.class)))
+        .thenReturn(aPageResponse().withResponse(asList(artifactConditionTrigger)).build());
+    when(workflowExecutionService.triggerPipelineExecution(anyString(), anyString(), any(ExecutionArgs.class)))
+        .thenReturn(aWorkflowExecution().withAppId(APP_ID).withStatus(SUCCESS).build());
+
+    triggerService.triggerExecutionPostArtifactCollectionAsync(artifact);
+    verify(workflowExecutionService, times(0))
+        .triggerPipelineExecution(anyString(), anyString(), any(ExecutionArgs.class));
+  }
+
+  @Test
+  public void shouldTriggerExecutionPostArtifactCollectionWithArtifactMatchesArtifactFilter() {
+    Artifact artifact = anArtifact()
+                            .withAppId(APP_ID)
+                            .withUuid(ARTIFACT_ID)
+                            .withArtifactStreamId(ARTIFACT_STREAM_ID)
+                            .withMetadata(ImmutableMap.of("buildNo", ARTIFACT_FILTER))
+                            .build();
     when(wingsPersistence.query(any(), any(PageRequest.class)))
         .thenReturn(aPageResponse().withResponse(asList(artifactConditionTrigger)).build());
     when(workflowExecutionService.triggerPipelineExecution(anyString(), anyString(), any(ExecutionArgs.class)))
