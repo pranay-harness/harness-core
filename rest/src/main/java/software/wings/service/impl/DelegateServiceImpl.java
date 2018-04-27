@@ -6,6 +6,7 @@ import static io.harness.data.structure.EmptyPredicate.isNotEmpty;
 import static io.harness.threading.Morpheus.sleep;
 import static java.time.Duration.ofMillis;
 import static java.time.Duration.ofSeconds;
+import static java.util.Arrays.asList;
 import static java.util.Collections.singletonList;
 import static java.util.stream.Collectors.joining;
 import static java.util.stream.Collectors.toList;
@@ -577,7 +578,7 @@ public class DelegateServiceImpl implements DelegateService {
                                        .filter("connected", true)
                                        .filter("status", Status.ENABLED)
                                        .field("supportedTaskTypes")
-                                       .hasThisOne(task.getTaskType().name())
+                                       .hasAllOf(asList(task.getTaskType().name()))
                                        .field("lastHeartBeat")
                                        .greaterThan(clock.millis() - MAX_DELEGATE_LAST_HEARTBEAT)
                                        .asKeyList()
