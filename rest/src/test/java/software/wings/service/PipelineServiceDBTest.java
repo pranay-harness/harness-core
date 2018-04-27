@@ -14,6 +14,7 @@ import static software.wings.utils.WingsTestConstants.PIPELINE_ID;
 
 import com.google.inject.Inject;
 
+import org.junit.Ignore;
 import org.junit.Test;
 import org.mockito.InjectMocks;
 import org.mockito.Mock;
@@ -84,6 +85,8 @@ public class PipelineServiceDBTest extends WingsBaseTest {
   }
 
   @Test
+  @Ignore
+  // Ignoring the test for now after discussing with test author.
   public void shouldUpdatePipeline() {
     final Account account = createAccount();
     final Application application = createApplication(account);

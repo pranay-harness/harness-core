@@ -30,6 +30,7 @@ import static software.wings.exception.WingsException.USER;
 import com.google.common.base.Joiner;
 import com.google.common.collect.HashMultimap;
 import com.google.common.collect.ImmutableMap;
+import com.google.common.collect.Lists;
 import com.google.common.collect.Multimap;
 import com.google.common.collect.Sets;
 import com.google.common.collect.Sets.SetView;
@@ -56,6 +57,7 @@ import software.wings.exception.WingsException;
 import software.wings.security.AppPermissionSummaryForUI;
 import software.wings.security.EnvFilter;
 import software.wings.security.GenericEntityFilter;
+import software.wings.security.PermissionAttribute.Action;
 import software.wings.security.UserPermissionInfo;
 import software.wings.security.UserRequestContext;
 import software.wings.security.UserThreadLocal;
@@ -73,6 +75,7 @@ import software.wings.settings.UsageRestrictions;
 import software.wings.settings.UsageRestrictions.AppEnvRestriction;
 import software.wings.utils.Validator;
 
+import java.util.Collection;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
@@ -100,114 +103,144 @@ public class SettingsServiceImpl implements SettingsService {
    * @see software.wings.service.intfc.SettingsService#list(software.wings.dl.PageRequest)
    */
   @Override
-  public PageResponse<SettingAttribute> list(PageRequest<SettingAttribute> req) {
+  public PageResponse<SettingAttribute> list(
+      PageRequest<SettingAttribute> req, String appIdFromRequest, String envIdFromRequest) {
     try {
       PageResponse<SettingAttribute> pageResponse = wingsPersistence.query(SettingAttribute.class, req);
-      List<SettingAttribute> settingAttributes = pageResponse.getResponse();
 
-      User user = UserThreadLocal.get();
+      List<SettingAttribute> filteredSettingAttributes =
+          getFilteredSettingAttributes(pageResponse.getResponse(), appIdFromRequest, envIdFromRequest);
 
-      if (user == null) {
-        return pageResponse;
-      }
+      return aPageResponse()
+          .withResponse(filteredSettingAttributes)
+          .withTotal(filteredSettingAttributes.size())
+          .build();
 
-      UserRequestContext userRequestContext = user.getUserRequestContext();
-
-      if (userRequestContext == null) {
-        return pageResponse;
-      }
-
-      UserPermissionInfo userPermissionInfo = userRequestContext.getUserPermissionInfo();
-      if (userPermissionInfo == null) {
-        return pageResponse;
-      }
-
-      if (isNotEmpty(settingAttributes)) {
-        List<SettingAttribute> settingAttributeList =
-            settingAttributes.stream()
-                .filter(settingAttribute -> {
-                  UsageRestrictions usageRestrictions = settingAttribute.getUsageRestrictions();
-                  if (usageRestrictions == null) {
-                    return true;
-                  }
-
-                  Set<AppEnvRestriction> appEnvRestrictions = usageRestrictions.getAppEnvRestrictions();
-
-                  if (isEmpty(appEnvRestrictions)) {
-                    return true;
-                  }
-
-                  Multimap<String, String> appEnvMap = HashMultimap.create();
-
-                  appEnvRestrictions.stream().forEach(appEnvRestriction -> {
-                    GenericEntityFilter appFilter = appEnvRestriction.getAppFilter();
-                    Set<String> appIds = authHandler.getAppIdsByFilter(settingAttribute.getAccountId(), appFilter);
-                    if (isEmpty(appIds)) {
-                      return;
-                    }
-
-                    EnvFilter envFilter = appEnvRestriction.getEnvFilter();
-                    appIds.stream().forEach(appId -> {
-                      Set<String> envIds = authHandler.getEnvIdsByFilter(appId, envFilter);
-                      appEnvMap.putAll(appId, envIds);
-                    });
-                  });
-
-                  Map<String, AppPermissionSummaryForUI> appPermissionMap = userPermissionInfo.getAppPermissionMap();
-
-                  Set<String> appsFromUserPermissions = appPermissionMap.keySet();
-                  Set<String> appsFromRestrictions = appEnvMap.keySet();
-
-                  SetView<String> commonAppIds = Sets.intersection(appsFromUserPermissions, appsFromRestrictions);
-
-                  if (isEmpty(commonAppIds)) {
-                    return false;
-                  } else {
-                    return true;
-                    //            return commonAppIds.stream().filter(appId -> {
-                    //              AppPermissionSummaryForUI appPermissionSummaryForUI = appPermissionMap.get(appId);
-                    //              Map<String, Set<Action>> envPermissionMap =
-                    //              appPermissionSummaryForUI.getEnvPermissions(); Set<String> envsFromUserPermissions =
-                    //              envPermissionMap.keySet(); Collection<String> envsFromRestrictions =
-                    //              appEnvMap.get(appId); boolean emptyEnvsInPermissions =
-                    //              isEmpty(envsFromUserPermissions); boolean emptyEnvsInRestrictions =
-                    //              isEmpty(envsFromRestrictions);
-                    //
-                    //              if (emptyEnvsInPermissions && emptyEnvsInRestrictions) {
-                    //                return true;
-                    //              }
-                    //
-                    //              if (!emptyEnvsInRestrictions) {
-                    //                if (!emptyEnvsInPermissions) {
-                    //                  Set<String> envsFromRestrictionSet = Sets.newHashSet(envsFromUserPermissions);
-                    //                  SetView<String> commonEnvIds = Sets.intersection(envsFromUserPermissions,
-                    //                  envsFromRestrictionSet); if (isEmpty(commonEnvIds)) {
-                    //                    return false;
-                    //                  } else {
-                    //                    return true;
-                    //                  }
-                    //                } else {
-                    //                  return false;
-                    //                }
-                    //              } else {
-                    //                if (!emptyEnvsInPermissions) {
-                    //                  return false;
-                    //                } else {
-                    //                  return true;
-                    //                }
-                    //              }
-                    //            }).findFirst().isPresent();
-                  }
-                })
-                .collect(toList());
-
-        return aPageResponse().withResponse(settingAttributeList).withTotal(settingAttributeList.size()).build();
-      } else {
-        return pageResponse;
-      }
     } catch (Exception e) {
       throw new InvalidRequestException(e.getMessage(), e);
     }
+  }
+
+  private List<SettingAttribute> getFilteredSettingAttributes(
+      List<SettingAttribute> inputSettingAttributes, String appIdFromRequest, String envIdFromRequest) {
+    if (isNotEmpty(inputSettingAttributes)) {
+      return inputSettingAttributes.stream()
+          .filter(settingAttribute -> {
+            UsageRestrictions usageRestrictions = settingAttribute.getUsageRestrictions();
+            if (usageRestrictions == null) {
+              return true;
+            }
+
+            Set<AppEnvRestriction> appEnvRestrictions = usageRestrictions.getAppEnvRestrictions();
+
+            if (isEmpty(appEnvRestrictions)) {
+              return true;
+            }
+
+            Multimap<String, String> appEnvMap = HashMultimap.create();
+
+            appEnvRestrictions.stream().forEach(appEnvRestriction -> {
+              GenericEntityFilter appFilter = appEnvRestriction.getAppFilter();
+              Set<String> appIds = authHandler.getAppIdsByFilter(settingAttribute.getAccountId(), appFilter);
+              if (isEmpty(appIds)) {
+                return;
+              }
+
+              EnvFilter envFilter = appEnvRestriction.getEnvFilter();
+              appIds.stream().forEach(appId -> {
+                Set<String> envIds = authHandler.getEnvIdsByFilter(appId, envFilter);
+                if (isEmpty(envIds)) {
+                  appEnvMap.put(appId, null);
+                } else {
+                  appEnvMap.putAll(appId, envIds);
+                }
+              });
+            });
+
+            if (appIdFromRequest != null && !appIdFromRequest.equals(GLOBAL_APP_ID)) {
+              if (envIdFromRequest != null) {
+                // Restrict it to both app and env
+                return appEnvMap.containsKey(appIdFromRequest)
+                    && appEnvMap.containsEntry(appIdFromRequest, envIdFromRequest);
+              } else {
+                // Restrict it to app
+                return appEnvMap.containsKey(appIdFromRequest);
+              }
+            } else {
+              User user = UserThreadLocal.get();
+
+              if (user == null) {
+                return true;
+              }
+
+              UserRequestContext userRequestContext = user.getUserRequestContext();
+
+              if (userRequestContext == null) {
+                return true;
+              }
+
+              UserPermissionInfo userPermissionInfo = userRequestContext.getUserPermissionInfo();
+              if (userPermissionInfo == null) {
+                return true;
+              }
+
+              Map<String, AppPermissionSummaryForUI> appPermissionMap = userPermissionInfo.getAppPermissionMap();
+
+              Set<String> appsFromUserPermissions = appPermissionMap.keySet();
+              Set<String> appsFromRestrictions = appEnvMap.keySet();
+
+              SetView<String> commonAppIds = Sets.intersection(appsFromUserPermissions, appsFromRestrictions);
+
+              if (isEmpty(commonAppIds)) {
+                return false;
+              } else {
+                return commonAppIds.stream()
+                    .filter(appId -> {
+                      AppPermissionSummaryForUI appPermissionSummaryForUI = appPermissionMap.get(appId);
+                      Map<String, Set<Action>> envPermissionMap = appPermissionSummaryForUI.getEnvPermissions();
+                      Set<String> envsFromUserPermissions = null;
+                      if (envPermissionMap != null) {
+                        envsFromUserPermissions = envPermissionMap.keySet();
+                      }
+
+                      Collection<String> envsFromRestrictions = appEnvMap.get(appId);
+                      boolean emptyEnvsInPermissions = isEmpty(envsFromUserPermissions);
+                      boolean emptyEnvsInRestrictions = isMultimapValuesEmpty(envsFromRestrictions);
+
+                      if (emptyEnvsInPermissions && emptyEnvsInRestrictions) {
+                        return true;
+                      }
+
+                      if (!emptyEnvsInRestrictions) {
+                        if (!emptyEnvsInPermissions) {
+                          Set<String> envsFromRestrictionSet = Sets.newHashSet(envsFromUserPermissions);
+                          SetView<String> commonEnvIds =
+                              Sets.intersection(envsFromUserPermissions, envsFromRestrictionSet);
+                          return !isEmpty(commonEnvIds);
+                        } else {
+                          return false;
+                        }
+                      } else {
+                        return true;
+                      }
+                    })
+                    .findFirst()
+                    .isPresent();
+              }
+            }
+
+          })
+          .collect(toList());
+    }
+    return Lists.newArrayList();
+  }
+
+  private boolean isMultimapValuesEmpty(Collection<String> values) {
+    if (values == null || values.size() == 0) {
+      return false;
+    }
+
+    return !values.stream().filter(value -> value != null).findFirst().isPresent();
   }
 
   @Override
@@ -590,6 +623,12 @@ public class SettingsServiceImpl implements SettingsService {
   }
 
   @Override
+  public List<SettingAttribute> getFilteredSettingAttributesByType(
+      String appId, String type, String currentAppId, String currentEnvId) {
+    return getFilteredSettingAttributesByType(appId, GLOBAL_ENV_ID, type, currentAppId, currentEnvId);
+  }
+
+  @Override
   public List<SettingAttribute> getSettingAttributesByType(String appId, String envId, String type) {
     PageRequest<SettingAttribute> pageRequest;
     if (appId == null || appId.equals(GLOBAL_APP_ID)) {
@@ -611,6 +650,13 @@ public class SettingsServiceImpl implements SettingsService {
   }
 
   @Override
+  public List<SettingAttribute> getFilteredSettingAttributesByType(
+      String appId, String envId, String type, String currentAppId, String currentEnvId) {
+    List<SettingAttribute> settingAttributeList = getSettingAttributesByType(appId, envId, type);
+    return getFilteredSettingAttributes(settingAttributeList, currentAppId, currentEnvId);
+  }
+
+  @Override
   public List<SettingAttribute> getSettingAttributesByType(String accountId, String appId, String envId, String type) {
     PageRequest<SettingAttribute> pageRequest = aPageRequest()
                                                     .addFilter("accountId", EQ, accountId)
@@ -622,10 +668,24 @@ public class SettingsServiceImpl implements SettingsService {
   }
 
   @Override
+  public List<SettingAttribute> getFilteredSettingAttributesByType(
+      String accountId, String appId, String envId, String type, String currentAppId, String currentEnvId) {
+    List<SettingAttribute> settingAttributeList = getSettingAttributesByType(accountId, appId, envId, type);
+    return getFilteredSettingAttributes(settingAttributeList, currentAppId, currentEnvId);
+  }
+
+  @Override
   public List<SettingAttribute> getGlobalSettingAttributesByType(String accountId, String type) {
     PageRequest<SettingAttribute> pageRequest =
         aPageRequest().addFilter("accountId", EQ, accountId).addFilter("value.type", EQ, type).build();
     return wingsPersistence.query(SettingAttribute.class, pageRequest).getResponse();
+  }
+
+  @Override
+  public List<SettingAttribute> getFilteredGlobalSettingAttributesByType(
+      String accountId, String type, String currentAppId, String currentEnvId) {
+    List<SettingAttribute> settingAttributeList = getGlobalSettingAttributesByType(accountId, type);
+    return getFilteredSettingAttributes(settingAttributeList, currentAppId, currentEnvId);
   }
 
   @Override

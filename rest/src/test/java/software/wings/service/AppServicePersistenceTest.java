@@ -8,6 +8,7 @@ import static software.wings.utils.WingsTestConstants.APP_ID;
 
 import com.google.inject.Inject;
 
+import io.harness.rule.RepeatRule.Repeat;
 import org.junit.Test;
 import org.quartz.SchedulerException;
 import software.wings.WingsBaseTest;
@@ -41,6 +42,7 @@ public class AppServicePersistenceTest extends WingsBaseTest {
   private static String dummyAppID = "dummy" + appId;
 
   @Test
+  @Repeat(times = 5, successes = 1)
   public void shouldDeleteApplication()
       throws SchedulerException, InterruptedException, ExecutionException, TimeoutException {
     assertThat(wingsPersistence.get(Application.class, appId)).isNull();

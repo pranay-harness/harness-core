@@ -442,7 +442,7 @@ public class AwsInfrastructureMapping extends InfrastructureMapping {
    */
   public static class AwsInfrastructureRestrictionProvider implements DataProvider {
     @Override
-    public Map<String, String> getData(String appId, String... params) {
+    public Map<String, String> getData(String appId, Map<String, String> params) {
       return Arrays.stream(RestrictionType.values())
           .collect(toMap(RestrictionType::name, RestrictionType::getDisplayName));
     }
@@ -455,7 +455,7 @@ public class AwsInfrastructureMapping extends InfrastructureMapping {
     @Inject private MainConfiguration mainConfiguration;
 
     @Override
-    public Map<String, String> getData(String appId, String... params) {
+    public Map<String, String> getData(String appId, Map<String, String> params) {
       return Arrays.stream(Regions.values())
           .filter(regions -> regions != Regions.GovCloud)
           .collect(toMap(Regions::getName,

@@ -13,7 +13,7 @@ import java.util.Map;
 @Singleton
 public class NewRelicUrlProvider implements DataProvider {
   @Override
-  public Map<String, String> getData(String appId, String... params) {
+  public Map<String, String> getData(String appId, Map<String, String> params) {
     return Collections.singletonMap("https://api.newrelic.com", "https://api.newrelic.com");
   }
 }
