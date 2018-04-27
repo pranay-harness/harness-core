@@ -16,7 +16,7 @@ public class ServiceHelper {
   private static Logger logger = LoggerFactory.getLogger(ServiceHelper.class);
 
   public void addPlaceholderTexts(PcfServiceSpecification pcfServiceSpecification) {
-    String manifestYaml = pcfServiceSpecification.getManiefstYaml();
+    String manifestYaml = pcfServiceSpecification.getManifestYaml();
     StringBuilder sb = new StringBuilder(128);
 
     BufferedReader bufReader = new BufferedReader(new StringReader(manifestYaml));
@@ -61,6 +61,6 @@ public class ServiceHelper {
     } catch (Exception e) {
       logger.error("", e);
     }
-    pcfServiceSpecification.setManiefstYaml(sb.toString());
+    pcfServiceSpecification.setManifestYaml(sb.toString());
   }
 }

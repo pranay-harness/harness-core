@@ -348,7 +348,8 @@ public class InstanceHelper {
 
     deploymentInfo.setDeployedById(triggeredBy.getUuid());
     deploymentInfo.setDeployedByName(triggeredBy.getName());
-    deploymentInfo.setDeployedAt(phaseExecutionData.getEndTs());
+    deploymentInfo.setDeployedAt(
+        phaseExecutionData.getEndTs() == null ? System.currentTimeMillis() : phaseExecutionData.getEndTs());
 
     return DeploymentEvent.builder().deploymentInfo(deploymentInfo).build();
   }

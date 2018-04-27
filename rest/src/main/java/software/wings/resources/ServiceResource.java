@@ -386,12 +386,9 @@ public class ServiceResource {
   @Path("{serviceId}/pcfspecification")
   @Timed
   @ExceptionMetered
-  public RestResponse<PageResponse<PcfServiceSpecification>> listPcfServiceSpecification(
-      @QueryParam("appId") String appId, @PathParam("serviceId") String serviceId,
-      @BeanParam PageRequest<PcfServiceSpecification> pageRequest) {
-    pageRequest.addFilter("appId", EQ, appId);
-    pageRequest.addFilter("serviceId", EQ, serviceId);
-    return new RestResponse<>(serviceResourceService.listPcfServiceSpecifications(pageRequest));
+  public RestResponse<PcfServiceSpecification> getPcfServiceSpecification(@QueryParam("appId") String appId,
+      @PathParam("serviceId") String serviceId, @BeanParam PageRequest<PcfServiceSpecification> pageRequest) {
+    return new RestResponse<>(serviceResourceService.getExistingOrDefaultPcfServiceSpecification(appId, serviceId));
   }
 
   @PUT
@@ -409,16 +406,14 @@ public class ServiceResource {
   }
 
   @PUT
-  @Path("{serviceId}/pcfspecification/{pcfSpecificationId}/reset")
+  @Path("{serviceId}/pcfspecification/reset")
   @Timed
   @ExceptionMetered
   @AuthRule(permissionType = PermissionType.SERVICE, action = Action.UPDATE)
   public RestResponse<PcfServiceSpecification> resetToDefaultPcfServiceSpecification(@QueryParam("appId") String appId,
-      @PathParam("serviceId") String serviceId, @PathParam("pcfSpecificationId") String pcfSpecificationId,
-      PcfServiceSpecification pcfServiceSpecification) {
+      @PathParam("serviceId") String serviceId, PcfServiceSpecification pcfServiceSpecification) {
     pcfServiceSpecification.setAppId(appId);
     pcfServiceSpecification.setServiceId(serviceId);
-    pcfServiceSpecification.setUuid(pcfSpecificationId);
     return new RestResponse<>(serviceResourceService.resetToDefaultPcfServiceSpecification(pcfServiceSpecification));
   }
 

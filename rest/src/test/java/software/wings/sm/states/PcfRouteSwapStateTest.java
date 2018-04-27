@@ -265,7 +265,7 @@ public class PcfRouteSwapStateTest extends WingsBaseTest {
     when(configuration.getPortal()).thenReturn(portalConfig);
     when(serviceResourceService.getPcfServiceSpecification(anyString(), anyString()))
         .thenReturn(PcfServiceSpecification.builder()
-                        .maniefstYaml("  applications:\n"
+                        .manifestYaml("  applications:\n"
                             + "  - name : ${APPLICATION_NAME}\n"
                             + "    memory: 850M\n"
                             + "    instances : ${INSTANCE_COUNT}\n"

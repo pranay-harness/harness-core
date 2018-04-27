@@ -17,7 +17,7 @@ import javax.validation.constraints.NotNull;
 @Builder
 public class PcfServiceSpecification extends DeploymentSpecification {
   @NotNull private String serviceId;
-  @NotNull private String maniefstYaml;
+  @NotNull private String manifestYaml;
 
   public static final String preamble = "# Enter your Task Definition JSON spec below.\n"
       + "#\n"
@@ -45,11 +45,8 @@ public class PcfServiceSpecification extends DeploymentSpecification {
       + "  ROUTES:\n"
       + "  - route: ${ROUTE_MAP}";
 
-  public PcfServiceSpecification resetToDefault(String serviceId, String appId) {
-    this.maniefstYaml = trimYaml(preamble + maniefstYaml);
-    this.serviceId = serviceId;
-    this.appId = appId;
-    return this;
+  public void resetToDefaultManifestSpecification() {
+    this.manifestYaml = trimYaml(preamble + manifestTemplate);
   }
 
   @Data

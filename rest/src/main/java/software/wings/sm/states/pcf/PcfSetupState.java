@@ -1,5 +1,6 @@
 package software.wings.sm.states.pcf;
 
+import static org.apache.commons.lang3.StringUtils.isNotBlank;
 import static software.wings.beans.DelegateTask.Builder.aDelegateTask;
 import static software.wings.sm.ExecutionResponse.Builder.anExecutionResponse;
 
@@ -53,7 +54,6 @@ import software.wings.service.intfc.LogService;
 import software.wings.service.intfc.ServiceResourceService;
 import software.wings.service.intfc.ServiceTemplateService;
 import software.wings.service.intfc.SettingsService;
-import software.wings.service.intfc.security.EncryptionService;
 import software.wings.service.intfc.security.SecretManager;
 import software.wings.sm.ContextElementType;
 import software.wings.sm.ExecutionContext;
@@ -64,6 +64,8 @@ import software.wings.sm.State;
 import software.wings.sm.StateExecutionException;
 import software.wings.sm.StateType;
 import software.wings.sm.WorkflowStandardParams;
+import software.wings.utils.Misc;
+import software.wings.utils.ServiceVersionConvention;
 import software.wings.waitnotify.NotifyResponseData;
 
 import java.util.Arrays;
@@ -82,14 +84,14 @@ public class PcfSetupState extends State {
   @Inject private transient ServiceTemplateService serviceTemplateService;
   @Inject private transient ActivityService activityService;
   @Inject private transient ArtifactStreamService artifactStreamService;
-  @Inject private EncryptionService encryptionService;
   @Inject private ServiceHelper serviceHelper;
 
   @Inject @Transient protected transient LogService logService;
-  @Attributes(title = "Maximun Instances", required = true) private Integer maxInstances;
+  @Attributes(title = "PCF Service Name") private String pcfServiceName;
+  @Attributes(title = "Desired Instances", required = true) private Integer maxInstances;
   @Attributes(title = "Resize Strategy", required = true)
   private ResizeStrategy resizeStrategy = ResizeStrategy.DOWNSIZE_OLD_FIRST;
-  @Attributes(title = "Api Timeout Interval", required = true) private Integer timeoutIntervalInMinutes = 5;
+  @Attributes(title = "Api Timeout Interval(min)") private Integer timeoutIntervalInMinutes = 5;
   public static final String PCF_SETUP_COMMAND = "PCF Setup";
 
   private static final Logger logger = LoggerFactory.getLogger(PcfSetupState.class);
@@ -121,6 +123,22 @@ public class PcfSetupState extends State {
 
   public void setResizeStrategy(ResizeStrategy resizeStrategy) {
     this.resizeStrategy = resizeStrategy;
+  }
+
+  public String getPcfServiceName() {
+    return pcfServiceName;
+  }
+
+  public void setPcfServiceName(String pcfServiceName) {
+    this.pcfServiceName = pcfServiceName;
+  }
+
+  public Integer getTimeoutIntervalInMinutes() {
+    return timeoutIntervalInMinutes;
+  }
+
+  public void setTimeoutIntervalInMinutes(Integer timeoutIntervalInMinutes) {
+    this.timeoutIntervalInMinutes = timeoutIntervalInMinutes;
   }
 
   @Override
@@ -163,8 +181,6 @@ public class PcfSetupState extends State {
     serviceHelper.addPlaceholderTexts(pcfServiceSpecification);
     validateSpecification(pcfServiceSpecification);
 
-    String releaseNamePrefix = getPrefix(app.getName(), serviceElement.getName(), env.getName());
-
     // is Blue Green deployment
     boolean isBlueGreenDeployment = OrchestrationWorkflowType.BASIC.equals(context.getOrchestrationWorkflowType());
 
@@ -176,18 +192,22 @@ public class PcfSetupState extends State {
         ? Collections.EMPTY_LIST
         : pcfInfrastructureMapping.getRouteMaps();
 
+    pcfServiceName = isNotBlank(pcfServiceName) ? Misc.normalizeExpression(context.renderExpression(pcfServiceName))
+                                                : Misc.normalizeExpression(ServiceVersionConvention.getPrefix(
+                                                      app.getName(), serviceElement.getName(), env.getName()));
+
     PcfCommandRequest commandRequest =
         PcfCommandSetupRequest.builder()
             .activityId(activity.getUuid())
             .appId(app.getUuid())
             .accountId(app.getAccountId())
             .commandName(PCF_SETUP_COMMAND)
-            .releaseNamePrefix(releaseNamePrefix)
+            .releaseNamePrefix(pcfServiceName)
             .organization(pcfInfrastructureMapping.getOrganization())
             .space(pcfInfrastructureMapping.getSpace())
             .pcfConfig(pcfConfig)
             .pcfCommandType(PcfCommandType.SETUP)
-            .manifestYaml(pcfServiceSpecification.getManiefstYaml())
+            .manifestYaml(pcfServiceSpecification.getManifestYaml())
             .workflowExecutionId(context.getWorkflowExecutionId())
             .artifactFiles(artifact.getArtifactFiles())
             .routeMaps(isBlueGreenDeployment ? tempRouteMaps : routeMaps)
@@ -206,7 +226,7 @@ public class PcfSetupState extends State {
                                                         .pcfCommandRequest(commandRequest)
                                                         .commandName(PCF_SETUP_COMMAND)
                                                         .maxInstanceCount(maxInstances)
-                                                        .manifestYaml(pcfServiceSpecification.getManiefstYaml())
+                                                        .manifestYaml(pcfServiceSpecification.getManifestYaml())
                                                         .accountId(app.getAccountId())
                                                         .appId(app.getUuid())
                                                         .serviceId(serviceElement.getUuid())
@@ -240,14 +260,14 @@ public class PcfSetupState extends State {
   }
 
   private void validateSpecification(PcfServiceSpecification pcfServiceSpecification) {
-    if (pcfServiceSpecification == null || pcfServiceSpecification.getManiefstYaml() == null
-        || !pcfServiceSpecification.getManiefstYaml().contains("{FILE_LOCATION}")
-        || !pcfServiceSpecification.getManiefstYaml().contains("{INSTANCE_COUNT}")
-        || !pcfServiceSpecification.getManiefstYaml().contains("{APPLICATION_NAME}")) {
+    if (pcfServiceSpecification == null || pcfServiceSpecification.getManifestYaml() == null
+        || !pcfServiceSpecification.getManifestYaml().contains("{FILE_LOCATION}")
+        || !pcfServiceSpecification.getManifestYaml().contains("{INSTANCE_COUNT}")
+        || !pcfServiceSpecification.getManifestYaml().contains("{APPLICATION_NAME}")) {
       throw new WingsException(ErrorCode.INVALID_REQUEST,
           "Invalid manifest yaml "
-              + (pcfServiceSpecification.getManiefstYaml() == null ? "NULL"
-                                                                   : pcfServiceSpecification.getManiefstYaml()));
+              + (pcfServiceSpecification.getManifestYaml() == null ? "NULL"
+                                                                   : pcfServiceSpecification.getManifestYaml()));
     }
   }
 

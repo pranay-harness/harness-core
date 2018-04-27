@@ -788,21 +788,8 @@ public class ServiceResourceServiceImpl implements ServiceResourceService, DataP
     if (!exist) {
       throw new WingsException(INVALID_REQUEST).addParam("message", "Service doesn't exist");
     }
-
-    deletePCFServiceSpecification(pcfServiceSpecification.getAppId(), pcfServiceSpecification.getUuid());
-    return pcfServiceSpecification.resetToDefault(
-        pcfServiceSpecification.getAppId(), pcfServiceSpecification.getServiceId());
-  }
-
-  /**
-   * Get PcfServiceSpecification (manifest.yml content)
-   * @param pageRequest
-   * @return
-   */
-  @Override
-  public PageResponse<PcfServiceSpecification> listPcfServiceSpecifications(
-      PageRequest<PcfServiceSpecification> pageRequest) {
-    return wingsPersistence.query(PcfServiceSpecification.class, pageRequest);
+    pcfServiceSpecification.resetToDefaultManifestSpecification();
+    return upsertPcfServiceSpecification(pcfServiceSpecification, false);
   }
 
   /**
@@ -1177,6 +1164,18 @@ public class ServiceResourceServiceImpl implements ServiceResourceService, DataP
         .filter("appId", appId)
         .filter("serviceId", serviceId)
         .get();
+  }
+
+  @Override
+  public PcfServiceSpecification getExistingOrDefaultPcfServiceSpecification(String appId, String serviceId) {
+    PcfServiceSpecification pcfServiceSpecification = getPcfServiceSpecification(appId, serviceId);
+    if (pcfServiceSpecification == null) {
+      pcfServiceSpecification = PcfServiceSpecification.builder().serviceId(serviceId).build();
+      pcfServiceSpecification.setAppId(appId);
+      pcfServiceSpecification.resetToDefaultManifestSpecification();
+    }
+
+    return pcfServiceSpecification;
   }
 
   @Override

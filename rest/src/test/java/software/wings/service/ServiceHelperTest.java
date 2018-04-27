@@ -17,7 +17,7 @@ public class ServiceHelperTest extends WingsBaseTest {
     PcfServiceSpecification pcfServiceSpecification =
         PcfServiceSpecification.builder()
             .serviceId("SERVICE_ID")
-            .maniefstYaml("  applications:\n"
+            .manifestYaml("  applications:\n"
                 + "  - name : application\n"
                 + "    memory: 850M\n"
                 + "    instances : 2\n"
@@ -30,7 +30,7 @@ public class ServiceHelperTest extends WingsBaseTest {
             .build();
 
     serviceHelper.addPlaceholderTexts(pcfServiceSpecification);
-    String manifest = pcfServiceSpecification.getManiefstYaml();
+    String manifest = pcfServiceSpecification.getManifestYaml();
 
     assertEquals("  applications:\n"
             + "  - name : ${APPLICATION_NAME}\n"

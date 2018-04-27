@@ -54,6 +54,7 @@ public class PcfInstanceHandler extends InstanceHandler {
    */
   private void syncInstancesInternal(String appId, String infraMappingId,
       Multimap<String, Instance> pcfAppNameInstanceMap, DeploymentInfo newDeploymentInfo) throws HarnessException {
+    logger.info("# Performing PCF Instance sync");
     InfrastructureMapping infrastructureMapping = infraMappingService.get(appId, infraMappingId);
     Validator.notNullCheck("Infra mapping is null for id:" + infraMappingId, infrastructureMapping);
 
@@ -73,11 +74,14 @@ public class PcfInstanceHandler extends InstanceHandler {
     // This is to handle the case of the instances stored in the new schema.
     if (pcfAppNameInstanceMap.size() > 0) {
       pcfAppNameInstanceMap.keySet().forEach(pcfApplicationName -> {
+        logger.info("Performing sync for PCFApplicationName: " + pcfApplicationName + "HarnessAppId: " + appId);
         // Get all the instances for the given containerSvcName (In kubernetes, this is replication Controller and in
         // ECS it is taskDefinition)
         List<PcfInstanceInfo> latestpcfInstanceInfoList = pcfHelperService.getApplicationDetails(pcfApplicationName,
             pcfInfrastructureMapping.getOrganization(), pcfInfrastructureMapping.getSpace(), pcfConfig);
+
         Validator.notNullCheck("latestpcfInstanceInfoList", latestpcfInstanceInfoList);
+        logger.info("Received Instance details for Instance count: " + latestpcfInstanceInfoList.size());
 
         Map<String, PcfInstanceInfo> latestPcfInstanceInfoMap = latestpcfInstanceInfoList.stream().collect(
             Collectors.toMap(PcfInstanceInfo::getId, pcfInstanceInfo -> pcfInstanceInfo));
@@ -108,6 +112,7 @@ public class PcfInstanceHandler extends InstanceHandler {
         instancesToBeUpdated.stream().forEach(id -> {
           PcfInstanceInfo pcfInstanceInfo = latestPcfInstanceInfoMap.get(id);
           Instance instance = buildInstanceFromPCFInfo(pcfInfrastructureMapping, pcfInstanceInfo, newDeploymentInfo);
+          logger.info("Updating Instance: " + pcfInstanceInfo.getId() + ", for PcfApplication:- " + pcfApplicationName);
           instanceService.saveOrUpdate(instance);
         });
 
@@ -133,15 +138,14 @@ public class PcfInstanceHandler extends InstanceHandler {
             DeploymentInfo deploymentInfo = null;
 
             PcfInstanceInfo pcfInstanceInfo = latestPcfInstanceInfoMap.get(id);
+            logger.info("Adding Instance: " + pcfInstanceInfo.getId() + ", for PcfApplication:- " + pcfApplicationName);
             /**
              * If coming from Sync_Job, newDeploymentInfo will be null, so fetch previous instance
              */
             if (newDeploymentInfo == null) {
-              Optional<Instance> optional =
-                  instancesInDB.stream()
-                      .filter(instance
-                          -> instance.getPcfInstanceKey().getId().equals(pcfInstanceInfo.getPcfApplicationGuid()))
-                      .findFirst();
+              Optional<Instance> optional = instancesInDB.stream()
+                                                .filter(instance -> matchPcfApplicationGuid(instance, pcfInstanceInfo))
+                                                .findFirst();
               deploymentInfo =
                   optional.isPresent() ? generateDeploymentInfoFromEarlierDeployment(optional.get()) : null;
             } else {
@@ -154,6 +158,12 @@ public class PcfInstanceHandler extends InstanceHandler {
         }
       });
     }
+  }
+
+  // application GUIDs should match, means belong to same pcf app
+  private boolean matchPcfApplicationGuid(Instance instance, PcfInstanceInfo pcfInstanceInfo) {
+    return pcfInstanceInfo.getPcfApplicationGuid().equals(
+        ((PcfInstanceInfo) instance.getInstanceInfo()).getPcfApplicationGuid());
   }
 
   private DeploymentInfo generateDeploymentInfoFromEarlierDeployment(Instance instance) {
@@ -175,9 +185,10 @@ public class PcfInstanceHandler extends InstanceHandler {
         .pipelineExecutionName(instance.getLastPipelineExecutionName())
 
         // Commented this out, so we can distinguish between autoscales instances and instances we deployed
-        //.deployedById(instance.getLastDeployedById())
-        //.deployedByName(instance.getLastDeployedByName())
+        .deployedById(AUTO_SCALE)
+        .deployedByName(AUTO_SCALE)
         .deployedAt(System.currentTimeMillis())
+        .artifactBuildNum(instance.getLastArtifactBuildNum())
         .build();
   }
 

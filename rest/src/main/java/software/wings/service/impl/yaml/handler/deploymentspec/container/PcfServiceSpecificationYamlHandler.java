@@ -31,7 +31,7 @@ public class PcfServiceSpecificationYamlHandler
         .harnessApiVersion(getHarnessApiVersion())
         .type(DeploymentType.PCF.name())
         .serviceName(service.getName())
-        .manifestYaml(bean.getManiefstYaml())
+        .manifestYaml(bean.getManifestYaml())
         .build();
   }
 
@@ -62,7 +62,7 @@ public class PcfServiceSpecificationYamlHandler
     Validator.notNullCheck("Could not lookup service for the yaml file: " + filePath, serviceId);
 
     PcfServiceSpecification pcfServiceSpecification =
-        PcfServiceSpecification.builder().maniefstYaml(yaml.getManiefstYaml()).serviceId(serviceId).build();
+        PcfServiceSpecification.builder().manifestYaml(yaml.getManiefstYaml()).serviceId(serviceId).build();
     pcfServiceSpecification.setAppId(appId);
     return pcfServiceSpecification;
   }
