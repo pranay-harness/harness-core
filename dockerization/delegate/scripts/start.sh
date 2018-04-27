@@ -101,17 +101,21 @@ else
 fi
 
 if [ ! -e config-watcher.yml ]; then
-  echo "accountId: ${accountId}" > config-watcher.yml
+  echo "accountId: _accountId_" > config-watcher.yml
 fi
 test "$(tail -c 1 config-watcher.yml)" && `echo "" >> config-watcher.yml`
 if ! `grep doUpgrade config-watcher.yml > /dev/null`; then
   echo "doUpgrade: true" >> config-watcher.yml
 fi
 if ! `grep upgradeCheckLocation config-watcher.yml > /dev/null`; then
-  echo "upgradeCheckLocation: ${watcherStorageUrl}/${watcherCheckLocation}" >> config-watcher.yml
+  echo "upgradeCheckLocation: _watcherStorageUrl_/_watcherCheckLocation_" >> config-watcher.yml
 fi
 if ! `grep upgradeCheckIntervalSeconds config-watcher.yml > /dev/null`; then
   echo "upgradeCheckIntervalSeconds: 60" >> config-watcher.yml
+fi
+if ! `grep delegateCheckLocation config-watcher.yml > /dev/null`
+then
+  echo "delegateCheckLocation: _delegateStorageUrl_/_delegateCheckLocation_" >> config-watcher.yml
 fi
 
 export HOSTNAME
