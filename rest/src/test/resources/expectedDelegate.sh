@@ -84,6 +84,7 @@ then
   ln -s $JRE_DIR jre
 fi
 
+echo "Checking Delegate latest version..."
 DELEGATE_STORAGE_URL=http://localhost:8888
 REMOTE_DELEGATE_LATEST=$(curl -#k $DELEGATE_STORAGE_URL/delegateci.txt)
 REMOTE_DELEGATE_URL=$DELEGATE_STORAGE_URL/$(echo $REMOTE_DELEGATE_LATEST | cut -d " " -f2)
