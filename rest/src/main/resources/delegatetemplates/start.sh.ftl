@@ -5,6 +5,7 @@ if [ ! -e proxy.config ]; then
   echo "PROXY_PORT=" >> proxy.config
   echo "PROXY_SCHEME=" >> proxy.config
 fi
+test "$(tail -c 1 proxy.config)" && `echo "" >> proxy.config`
 if ! `grep NO_PROXY proxy.config > /dev/null`; then
   echo "NO_PROXY=" >> proxy.config
 fi
@@ -88,6 +89,7 @@ fi
 if [ ! -e config-watcher.yml ]; then
   echo "accountId: ${accountId}" > config-watcher.yml
 fi
+test "$(tail -c 1 config-watcher.yml)" && `echo "" >> config-watcher.yml`
 if ! `grep doUpgrade config-watcher.yml > /dev/null`; then
   echo "doUpgrade: true" >> config-watcher.yml
 fi
