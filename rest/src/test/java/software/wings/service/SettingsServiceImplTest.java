@@ -423,213 +423,220 @@ public class SettingsServiceImplTest extends WingsBaseTest {
 
   @Test
   public void testUsageRestrictionsWithNothingSet() {
-    String ENV_ID_1 = "ENV_ID_1";
-    String ENV_ID_2 = "ENV_ID_2";
-    String ENV_ID_3 = "ENV_ID_3";
+    try {
+      String ENV_ID_1 = "ENV_ID_1";
+      String ENV_ID_2 = "ENV_ID_2";
+      String ENV_ID_3 = "ENV_ID_3";
 
-    String APP_ID_1 = "APP_ID_1";
-    String APP_ID_2 = "APP_ID_2";
-    String APP_ID_3 = "APP_ID_3";
+      String APP_ID_1 = "APP_ID_1";
+      String APP_ID_2 = "APP_ID_2";
+      String APP_ID_3 = "APP_ID_3";
 
-    String SA_1 = "SA_1";
-    String SA_2 = "SA_2";
-    String SA_3 = "SA_3";
+      String SA_1 = "SA_1";
+      String SA_2 = "SA_2";
+      String SA_3 = "SA_3";
 
-    List<SettingAttribute> settingAttributeList = Lists.newArrayList();
+      List<SettingAttribute> settingAttributeList = Lists.newArrayList();
 
-    SettingValue settingValue1 = JenkinsConfig.builder().jenkinsUrl("").password("".toCharArray()).username("").build();
-    SettingAttribute settingAttribute1 = aSettingAttribute()
-                                             .withAccountId(ACCOUNT_ID)
-                                             .withEnvId(ENV_ID_1)
-                                             .withAppId(APP_ID_1)
-                                             .withName(SA_1)
-                                             .withValue(settingValue1)
-                                             .withCategory(Category.CONNECTOR)
-                                             .build();
+      SettingValue settingValue1 =
+          JenkinsConfig.builder().jenkinsUrl("").password("".toCharArray()).username("").build();
+      SettingAttribute settingAttribute1 = aSettingAttribute()
+                                               .withAccountId(ACCOUNT_ID)
+                                               .withEnvId(ENV_ID_1)
+                                               .withAppId(APP_ID_1)
+                                               .withName(SA_1)
+                                               .withValue(settingValue1)
+                                               .withCategory(Category.CONNECTOR)
+                                               .build();
 
-    SettingValue settingValue2 = JenkinsConfig.builder().jenkinsUrl("").password("".toCharArray()).username("").build();
-    SettingAttribute settingAttribute2 = aSettingAttribute()
-                                             .withAccountId(ACCOUNT_ID)
-                                             .withEnvId(ENV_ID_2)
-                                             .withAppId(APP_ID_2)
-                                             .withName(SA_2)
-                                             .withValue(settingValue2)
-                                             .withCategory(Category.CONNECTOR)
-                                             .build();
+      SettingValue settingValue2 =
+          JenkinsConfig.builder().jenkinsUrl("").password("".toCharArray()).username("").build();
+      SettingAttribute settingAttribute2 = aSettingAttribute()
+                                               .withAccountId(ACCOUNT_ID)
+                                               .withEnvId(ENV_ID_2)
+                                               .withAppId(APP_ID_2)
+                                               .withName(SA_2)
+                                               .withValue(settingValue2)
+                                               .withCategory(Category.CONNECTOR)
+                                               .build();
 
-    SettingValue settingValue3 = JenkinsConfig.builder().jenkinsUrl("").password("".toCharArray()).username("").build();
-    SettingAttribute settingAttribute3 = aSettingAttribute()
-                                             .withAccountId(ACCOUNT_ID)
-                                             .withEnvId(ENV_ID_3)
-                                             .withAppId(APP_ID_3)
-                                             .withName(SA_3)
-                                             .withValue(settingValue3)
-                                             .withCategory(Category.CONNECTOR)
-                                             .build();
+      SettingValue settingValue3 =
+          JenkinsConfig.builder().jenkinsUrl("").password("".toCharArray()).username("").build();
+      SettingAttribute settingAttribute3 = aSettingAttribute()
+                                               .withAccountId(ACCOUNT_ID)
+                                               .withEnvId(ENV_ID_3)
+                                               .withAppId(APP_ID_3)
+                                               .withName(SA_3)
+                                               .withValue(settingValue3)
+                                               .withCategory(Category.CONNECTOR)
+                                               .build();
 
-    settingAttributeList.add(settingAttribute1);
-    settingAttributeList.add(settingAttribute2);
-    settingAttributeList.add(settingAttribute3);
+      settingAttributeList.add(settingAttribute1);
+      settingAttributeList.add(settingAttribute2);
+      settingAttributeList.add(settingAttribute3);
 
-    PageResponse<SettingAttribute> pageResponse = aPageResponse().withResponse(settingAttributeList).build();
-    when(wingsPersistence.query(any(), any(PageRequest.class))).thenReturn(pageResponse);
+      PageResponse<SettingAttribute> pageResponse = aPageResponse().withResponse(settingAttributeList).build();
+      when(wingsPersistence.query(any(), any(PageRequest.class))).thenReturn(pageResponse);
 
-    // Scenario 1: With no usage restrictions set
-    List<SettingAttribute> filteredSettingAttributesByType =
-        settingsService.getFilteredSettingAttributesByType(APP_ID, SettingVariableTypes.JENKINS.name(), APP_ID, ENV_ID);
+      // Scenario 1: With no usage restrictions set
+      List<SettingAttribute> filteredSettingAttributesByType = settingsService.getFilteredSettingAttributesByType(
+          APP_ID, SettingVariableTypes.JENKINS.name(), APP_ID, ENV_ID);
 
-    assertThat(filteredSettingAttributesByType)
-        .containsExactlyInAnyOrder(settingAttributeList.toArray(new SettingAttribute[0]));
+      assertThat(filteredSettingAttributesByType)
+          .containsExactlyInAnyOrder(settingAttributeList.toArray(new SettingAttribute[0]));
 
-    // Scenario 2: With usage restrictions set on settingAttribute1 but for all apps
-    GenericEntityFilter appFilter = GenericEntityFilter.builder().filterType(FilterType.ALL).build();
-    EnvFilter envFilter = EnvFilter.builder().filterTypes(newHashSet(PROD, NON_PROD)).build();
-    AppEnvRestriction appEnvRestriction = builder().appFilter(appFilter).envFilter(envFilter).build();
-    UsageRestrictions usageRestrictions = new UsageRestrictions();
-    usageRestrictions.setAppEnvRestrictions(newHashSet(appEnvRestriction));
-    settingAttribute1.setUsageRestrictions(usageRestrictions);
-    when(authHandler.getAppIdsByFilter(anyString(), any(GenericEntityFilter.class)))
-        .thenReturn(newHashSet(APP_ID, APP_ID_1, APP_ID_2, APP_ID_3));
-    when(authHandler.getEnvIdsByFilter(anyString(), any(EnvFilter.class)))
-        .thenReturn(newHashSet(ENV_ID, ENV_ID_1, ENV_ID_2, ENV_ID_3));
+      // Scenario 2: With usage restrictions set on settingAttribute1 but for all apps
+      GenericEntityFilter appFilter = GenericEntityFilter.builder().filterType(FilterType.ALL).build();
+      EnvFilter envFilter = EnvFilter.builder().filterTypes(newHashSet(PROD, NON_PROD)).build();
+      AppEnvRestriction appEnvRestriction = builder().appFilter(appFilter).envFilter(envFilter).build();
+      UsageRestrictions usageRestrictions = new UsageRestrictions();
+      usageRestrictions.setAppEnvRestrictions(newHashSet(appEnvRestriction));
+      settingAttribute1.setUsageRestrictions(usageRestrictions);
+      when(authHandler.getAppIdsByFilter(anyString(), any(GenericEntityFilter.class)))
+          .thenReturn(newHashSet(APP_ID, APP_ID_1, APP_ID_2, APP_ID_3));
+      when(authHandler.getEnvIdsByFilter(anyString(), any(EnvFilter.class)))
+          .thenReturn(newHashSet(ENV_ID, ENV_ID_1, ENV_ID_2, ENV_ID_3));
 
-    filteredSettingAttributesByType =
-        settingsService.getFilteredSettingAttributesByType(APP_ID, SettingVariableTypes.JENKINS.name(), APP_ID, ENV_ID);
+      filteredSettingAttributesByType = settingsService.getFilteredSettingAttributesByType(
+          APP_ID, SettingVariableTypes.JENKINS.name(), APP_ID, ENV_ID);
 
-    assertThat(filteredSettingAttributesByType)
-        .containsExactlyInAnyOrder(settingAttributeList.toArray(new SettingAttribute[0]));
+      assertThat(filteredSettingAttributesByType)
+          .containsExactlyInAnyOrder(settingAttributeList.toArray(new SettingAttribute[0]));
 
-    // Scenario 3: With usage restrictions set on settingAttribute1 for app match but env mismatch
-    appFilter = GenericEntityFilter.builder().filterType(FilterType.ALL).build();
-    envFilter =
-        EnvFilter.builder().ids(newHashSet(ENV_ID_1, ENV_ID_2, ENV_ID_3)).filterTypes(newHashSet(SELECTED)).build();
-    appEnvRestriction = builder().appFilter(appFilter).envFilter(envFilter).build();
-    usageRestrictions = new UsageRestrictions();
-    usageRestrictions.setAppEnvRestrictions(newHashSet(appEnvRestriction));
-    settingAttribute1.setUsageRestrictions(usageRestrictions);
-    when(authHandler.getAppIdsByFilter(anyString(), any(GenericEntityFilter.class)))
-        .thenReturn(newHashSet(APP_ID, APP_ID_1, APP_ID_2, APP_ID_3));
-    when(authHandler.getEnvIdsByFilter(anyString(), any(EnvFilter.class)))
-        .thenReturn(newHashSet(ENV_ID_1, ENV_ID_2, ENV_ID_3));
+      // Scenario 3: With usage restrictions set on settingAttribute1 for app match but env mismatch
+      appFilter = GenericEntityFilter.builder().filterType(FilterType.ALL).build();
+      envFilter =
+          EnvFilter.builder().ids(newHashSet(ENV_ID_1, ENV_ID_2, ENV_ID_3)).filterTypes(newHashSet(SELECTED)).build();
+      appEnvRestriction = builder().appFilter(appFilter).envFilter(envFilter).build();
+      usageRestrictions = new UsageRestrictions();
+      usageRestrictions.setAppEnvRestrictions(newHashSet(appEnvRestriction));
+      settingAttribute1.setUsageRestrictions(usageRestrictions);
+      when(authHandler.getAppIdsByFilter(anyString(), any(GenericEntityFilter.class)))
+          .thenReturn(newHashSet(APP_ID, APP_ID_1, APP_ID_2, APP_ID_3));
+      when(authHandler.getEnvIdsByFilter(anyString(), any(EnvFilter.class)))
+          .thenReturn(newHashSet(ENV_ID_1, ENV_ID_2, ENV_ID_3));
 
-    filteredSettingAttributesByType =
-        settingsService.getFilteredSettingAttributesByType(APP_ID, SettingVariableTypes.JENKINS.name(), APP_ID, ENV_ID);
+      filteredSettingAttributesByType = settingsService.getFilteredSettingAttributesByType(
+          APP_ID, SettingVariableTypes.JENKINS.name(), APP_ID, ENV_ID);
 
-    assertThat(filteredSettingAttributesByType)
-        .containsExactlyInAnyOrder(new SettingAttribute[] {settingAttribute2, settingAttribute3});
+      assertThat(filteredSettingAttributesByType)
+          .containsExactlyInAnyOrder(new SettingAttribute[] {settingAttribute2, settingAttribute3});
 
-    // Scenario 4: With usage restrictions set on settingAttribute1 for app mismatch
-    appFilter = GenericEntityFilter.builder()
-                    .filterType(FilterType.SELECTED)
-                    .ids(newHashSet(APP_ID_1, APP_ID_2, APP_ID_3))
-                    .build();
-    envFilter = EnvFilter.builder().filterTypes(newHashSet(NON_PROD, PROD)).build();
-    appEnvRestriction = builder().appFilter(appFilter).envFilter(envFilter).build();
-    usageRestrictions = new UsageRestrictions();
-    usageRestrictions.setAppEnvRestrictions(newHashSet(appEnvRestriction));
-    settingAttribute1.setUsageRestrictions(usageRestrictions);
-    when(authHandler.getAppIdsByFilter(anyString(), any(GenericEntityFilter.class)))
-        .thenReturn(newHashSet(APP_ID_1, APP_ID_2, APP_ID_3));
-    when(authHandler.getEnvIdsByFilter(anyString(), any(EnvFilter.class)))
-        .thenReturn(newHashSet(ENV_ID_1, ENV_ID_2, ENV_ID_3));
+      // Scenario 4: With usage restrictions set on settingAttribute1 for app mismatch
+      appFilter = GenericEntityFilter.builder()
+                      .filterType(FilterType.SELECTED)
+                      .ids(newHashSet(APP_ID_1, APP_ID_2, APP_ID_3))
+                      .build();
+      envFilter = EnvFilter.builder().filterTypes(newHashSet(NON_PROD, PROD)).build();
+      appEnvRestriction = builder().appFilter(appFilter).envFilter(envFilter).build();
+      usageRestrictions = new UsageRestrictions();
+      usageRestrictions.setAppEnvRestrictions(newHashSet(appEnvRestriction));
+      settingAttribute1.setUsageRestrictions(usageRestrictions);
+      when(authHandler.getAppIdsByFilter(anyString(), any(GenericEntityFilter.class)))
+          .thenReturn(newHashSet(APP_ID_1, APP_ID_2, APP_ID_3));
+      when(authHandler.getEnvIdsByFilter(anyString(), any(EnvFilter.class)))
+          .thenReturn(newHashSet(ENV_ID_1, ENV_ID_2, ENV_ID_3));
 
-    filteredSettingAttributesByType =
-        settingsService.getFilteredSettingAttributesByType(APP_ID, SettingVariableTypes.JENKINS.name(), APP_ID, ENV_ID);
+      filteredSettingAttributesByType = settingsService.getFilteredSettingAttributesByType(
+          APP_ID, SettingVariableTypes.JENKINS.name(), APP_ID, ENV_ID);
 
-    assertThat(filteredSettingAttributesByType)
-        .containsExactlyInAnyOrder(new SettingAttribute[] {settingAttribute2, settingAttribute3});
+      assertThat(filteredSettingAttributesByType)
+          .containsExactlyInAnyOrder(new SettingAttribute[] {settingAttribute2, settingAttribute3});
 
-    // Scenario 5: With usage restrictions set on settingAttribute1 for app and env match
-    appFilter = GenericEntityFilter.builder().filterType(FilterType.SELECTED).ids(newHashSet(APP_ID_1)).build();
-    envFilter = EnvFilter.builder().filterTypes(newHashSet(NON_PROD, PROD)).build();
-    appEnvRestriction = builder().appFilter(appFilter).envFilter(envFilter).build();
-    usageRestrictions = new UsageRestrictions();
-    usageRestrictions.setAppEnvRestrictions(newHashSet(appEnvRestriction));
-    settingAttribute1.setUsageRestrictions(usageRestrictions);
-    when(authHandler.getAppIdsByFilter(anyString(), any(GenericEntityFilter.class))).thenReturn(newHashSet(APP_ID_1));
-    when(authHandler.getEnvIdsByFilter(anyString(), any(EnvFilter.class)))
-        .thenReturn(newHashSet(ENV_ID_1, ENV_ID_2, ENV_ID_3));
+      // Scenario 5: With usage restrictions set on settingAttribute1 for app and env match
+      appFilter = GenericEntityFilter.builder().filterType(FilterType.SELECTED).ids(newHashSet(APP_ID_1)).build();
+      envFilter = EnvFilter.builder().filterTypes(newHashSet(NON_PROD, PROD)).build();
+      appEnvRestriction = builder().appFilter(appFilter).envFilter(envFilter).build();
+      usageRestrictions = new UsageRestrictions();
+      usageRestrictions.setAppEnvRestrictions(newHashSet(appEnvRestriction));
+      settingAttribute1.setUsageRestrictions(usageRestrictions);
+      when(authHandler.getAppIdsByFilter(anyString(), any(GenericEntityFilter.class))).thenReturn(newHashSet(APP_ID_1));
+      when(authHandler.getEnvIdsByFilter(anyString(), any(EnvFilter.class)))
+          .thenReturn(newHashSet(ENV_ID_1, ENV_ID_2, ENV_ID_3));
 
-    filteredSettingAttributesByType = settingsService.getFilteredSettingAttributesByType(
-        APP_ID_1, SettingVariableTypes.JENKINS.name(), APP_ID_1, ENV_ID_1);
+      filteredSettingAttributesByType = settingsService.getFilteredSettingAttributesByType(
+          APP_ID_1, SettingVariableTypes.JENKINS.name(), APP_ID_1, ENV_ID_1);
 
-    assertThat(filteredSettingAttributesByType)
-        .containsExactlyInAnyOrder(settingAttributeList.toArray(new SettingAttribute[0]));
+      assertThat(filteredSettingAttributesByType)
+          .containsExactlyInAnyOrder(settingAttributeList.toArray(new SettingAttribute[0]));
 
-    // Scenario 6: With usage restrictions set on settingAttribute1, but no appId and envId was passed
-    // and common usage restrictions and user permissions.
-    appFilter = GenericEntityFilter.builder().filterType(FilterType.SELECTED).ids(newHashSet(APP_ID_1)).build();
-    envFilter = EnvFilter.builder().filterTypes(newHashSet(NON_PROD, PROD)).build();
-    appEnvRestriction = builder().appFilter(appFilter).envFilter(envFilter).build();
-    usageRestrictions = new UsageRestrictions();
-    usageRestrictions.setAppEnvRestrictions(newHashSet(appEnvRestriction));
-    settingAttribute1.setUsageRestrictions(usageRestrictions);
-    when(authHandler.getAppIdsByFilter(anyString(), any(GenericEntityFilter.class))).thenReturn(newHashSet(APP_ID_1));
-    when(authHandler.getEnvIdsByFilter(anyString(), any(EnvFilter.class)))
-        .thenReturn(newHashSet(ENV_ID_1, ENV_ID_2, ENV_ID_3));
+      // Scenario 6: With usage restrictions set on settingAttribute1, but no appId and envId was passed
+      // and common usage restrictions and user permissions.
+      appFilter = GenericEntityFilter.builder().filterType(FilterType.SELECTED).ids(newHashSet(APP_ID_1)).build();
+      envFilter = EnvFilter.builder().filterTypes(newHashSet(NON_PROD, PROD)).build();
+      appEnvRestriction = builder().appFilter(appFilter).envFilter(envFilter).build();
+      usageRestrictions = new UsageRestrictions();
+      usageRestrictions.setAppEnvRestrictions(newHashSet(appEnvRestriction));
+      settingAttribute1.setUsageRestrictions(usageRestrictions);
+      when(authHandler.getAppIdsByFilter(anyString(), any(GenericEntityFilter.class))).thenReturn(newHashSet(APP_ID_1));
+      when(authHandler.getEnvIdsByFilter(anyString(), any(EnvFilter.class)))
+          .thenReturn(newHashSet(ENV_ID_1, ENV_ID_2, ENV_ID_3));
 
-    User user = User.Builder.anUser().withName(USER_NAME).withUuid(USER_ID).build();
+      User user = User.Builder.anUser().withName(USER_NAME).withUuid(USER_ID).build();
 
-    Map<String, AppPermissionSummaryForUI> appPermissionsMap = Maps.newHashMap();
+      Map<String, AppPermissionSummaryForUI> appPermissionsMap = Maps.newHashMap();
 
-    Map<String, Set<Action>> envPermissionMap = Maps.newHashMap();
-    envPermissionMap.put(ENV_ID_1, newHashSet(Action.READ));
+      Map<String, Set<Action>> envPermissionMap = Maps.newHashMap();
+      envPermissionMap.put(ENV_ID_1, newHashSet(Action.READ));
 
-    AppPermissionSummaryForUI appPermissionSummaryForUI =
-        AppPermissionSummaryForUI.builder().envPermissions(envPermissionMap).build();
+      AppPermissionSummaryForUI appPermissionSummaryForUI =
+          AppPermissionSummaryForUI.builder().envPermissions(envPermissionMap).build();
 
-    appPermissionsMap.put(APP_ID_1, appPermissionSummaryForUI);
+      appPermissionsMap.put(APP_ID_1, appPermissionSummaryForUI);
 
-    UserPermissionInfo userPermissionInfo = UserPermissionInfo.builder()
-                                                .accountId(ACCOUNT_ID)
-                                                .isRbacEnabled(true)
-                                                .appPermissionMap(appPermissionsMap)
-                                                .build();
+      UserPermissionInfo userPermissionInfo = UserPermissionInfo.builder()
+                                                  .accountId(ACCOUNT_ID)
+                                                  .isRbacEnabled(true)
+                                                  .appPermissionMap(appPermissionsMap)
+                                                  .build();
 
-    user.setUserRequestContext(UserRequestContext.builder().userPermissionInfo(userPermissionInfo).build());
-    UserThreadLocal.set(user);
+      user.setUserRequestContext(UserRequestContext.builder().userPermissionInfo(userPermissionInfo).build());
+      UserThreadLocal.set(user);
 
-    filteredSettingAttributesByType =
-        settingsService.getFilteredSettingAttributesByType(null, SettingVariableTypes.JENKINS.name(), null, null);
+      filteredSettingAttributesByType =
+          settingsService.getFilteredSettingAttributesByType(null, SettingVariableTypes.JENKINS.name(), null, null);
 
-    assertThat(filteredSettingAttributesByType)
-        .containsExactlyInAnyOrder(settingAttributeList.toArray(new SettingAttribute[0]));
+      assertThat(filteredSettingAttributesByType)
+          .containsExactlyInAnyOrder(settingAttributeList.toArray(new SettingAttribute[0]));
 
-    // Scenario 7: With usage restrictions set on settingAttribute1, but no appId and envId was passed and nothing in
-    // common between usage restrictions and user permissions.
-    appFilter = GenericEntityFilter.builder().filterType(FilterType.SELECTED).ids(newHashSet(APP_ID_2)).build();
-    envFilter = EnvFilter.builder().filterTypes(newHashSet(NON_PROD, PROD)).build();
-    appEnvRestriction = builder().appFilter(appFilter).envFilter(envFilter).build();
-    usageRestrictions = new UsageRestrictions();
-    usageRestrictions.setAppEnvRestrictions(newHashSet(appEnvRestriction));
-    settingAttribute1.setUsageRestrictions(usageRestrictions);
-    when(authHandler.getAppIdsByFilter(anyString(), any(GenericEntityFilter.class))).thenReturn(newHashSet(APP_ID_2));
-    when(authHandler.getEnvIdsByFilter(anyString(), any(EnvFilter.class))).thenReturn(newHashSet(ENV_ID_2, ENV_ID_3));
+      // Scenario 7: With usage restrictions set on settingAttribute1, but no appId and envId was passed and nothing in
+      // common between usage restrictions and user permissions.
+      appFilter = GenericEntityFilter.builder().filterType(FilterType.SELECTED).ids(newHashSet(APP_ID_2)).build();
+      envFilter = EnvFilter.builder().filterTypes(newHashSet(NON_PROD, PROD)).build();
+      appEnvRestriction = builder().appFilter(appFilter).envFilter(envFilter).build();
+      usageRestrictions = new UsageRestrictions();
+      usageRestrictions.setAppEnvRestrictions(newHashSet(appEnvRestriction));
+      settingAttribute1.setUsageRestrictions(usageRestrictions);
+      when(authHandler.getAppIdsByFilter(anyString(), any(GenericEntityFilter.class))).thenReturn(newHashSet(APP_ID_2));
+      when(authHandler.getEnvIdsByFilter(anyString(), any(EnvFilter.class))).thenReturn(newHashSet(ENV_ID_2, ENV_ID_3));
 
-    user = User.Builder.anUser().withName(USER_NAME).withUuid(USER_ID).build();
+      user = User.Builder.anUser().withName(USER_NAME).withUuid(USER_ID).build();
 
-    appPermissionsMap = Maps.newHashMap();
+      appPermissionsMap = Maps.newHashMap();
 
-    envPermissionMap = Maps.newHashMap();
-    envPermissionMap.put(ENV_ID_1, newHashSet(Action.READ));
+      envPermissionMap = Maps.newHashMap();
+      envPermissionMap.put(ENV_ID_1, newHashSet(Action.READ));
 
-    appPermissionSummaryForUI = AppPermissionSummaryForUI.builder().envPermissions(envPermissionMap).build();
+      appPermissionSummaryForUI = AppPermissionSummaryForUI.builder().envPermissions(envPermissionMap).build();
 
-    appPermissionsMap.put(APP_ID_1, appPermissionSummaryForUI);
+      appPermissionsMap.put(APP_ID_1, appPermissionSummaryForUI);
 
-    userPermissionInfo = UserPermissionInfo.builder()
-                             .accountId(ACCOUNT_ID)
-                             .isRbacEnabled(true)
-                             .appPermissionMap(appPermissionsMap)
-                             .build();
+      userPermissionInfo = UserPermissionInfo.builder()
+                               .accountId(ACCOUNT_ID)
+                               .isRbacEnabled(true)
+                               .appPermissionMap(appPermissionsMap)
+                               .build();
 
-    user.setUserRequestContext(UserRequestContext.builder().userPermissionInfo(userPermissionInfo).build());
-    UserThreadLocal.set(user);
+      user.setUserRequestContext(UserRequestContext.builder().userPermissionInfo(userPermissionInfo).build());
+      UserThreadLocal.set(user);
 
-    filteredSettingAttributesByType =
-        settingsService.getFilteredSettingAttributesByType(null, SettingVariableTypes.JENKINS.name(), null, null);
+      filteredSettingAttributesByType =
+          settingsService.getFilteredSettingAttributesByType(null, SettingVariableTypes.JENKINS.name(), null, null);
 
-    assertThat(filteredSettingAttributesByType)
-        .containsExactlyInAnyOrder(new SettingAttribute[] {settingAttribute2, settingAttribute3});
+      assertThat(filteredSettingAttributesByType)
+          .containsExactlyInAnyOrder(new SettingAttribute[] {settingAttribute2, settingAttribute3});
+    } finally {
+      UserThreadLocal.unset();
+    }
   }
 }
