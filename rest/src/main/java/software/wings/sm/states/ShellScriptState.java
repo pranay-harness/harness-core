@@ -239,13 +239,14 @@ public class ShellScriptState extends State {
     }
 
     ContainerServiceParams containerServiceParams = null;
-    InfrastructureMapping infraMapping =
-        infrastructureMappingService.get(context.getAppId(), phaseElement.getInfraMappingId());
-    if (infraMapping instanceof ContainerInfrastructureMapping) {
-      containerServiceParams =
-          containerDeploymentManagerHelper.getContainerServiceParams((ContainerInfrastructureMapping) infraMapping, "");
+    if (infrastructureMappingId != null) {
+      InfrastructureMapping infraMapping =
+          infrastructureMappingService.get(context.getAppId(), infrastructureMappingId);
+      if (infraMapping instanceof ContainerInfrastructureMapping) {
+        containerServiceParams = containerDeploymentManagerHelper.getContainerServiceParams(
+            (ContainerInfrastructureMapping) infraMapping, "");
+      }
     }
-
     DelegateTask delegateTask =
         aDelegateTask()
             .withTaskType(TaskType.SCRIPT)
