@@ -69,7 +69,6 @@ import com.google.inject.Inject;
 import com.google.inject.name.Named;
 
 import de.danielbechler.diff.ObjectDifferBuilder;
-import io.harness.rule.RepeatRule.Repeat;
 import org.junit.Before;
 import org.junit.Rule;
 import org.junit.Test;
@@ -340,7 +339,6 @@ public class ServiceResourceServiceTest extends WingsBaseTest {
    * Should update service.
    */
   @Test
-  @Repeat(times = 5, successes = 1)
   public void shouldUpdateService() {
     Service service = serviceBuilder.name("UPDATED_SERVICE_NAME")
                           .description("UPDATED_SERVICE_DESC")
