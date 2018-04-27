@@ -109,7 +109,7 @@ if [ ! -e config-delegate.yml ]; then
   echo "accountId: ACCOUNT_ID" > config-delegate.yml
   echo "accountSecret: ACCOUNT_KEY" >> config-delegate.yml
 fi
-
+test "$(tail -c 1 config-delegate.yml)" && `echo "" >> config-delegate.yml`
 if ! `grep managerUrl config-delegate.yml > /dev/null`; then
   echo "managerUrl: https://localhost:9090/api/" >> config-delegate.yml
 fi
