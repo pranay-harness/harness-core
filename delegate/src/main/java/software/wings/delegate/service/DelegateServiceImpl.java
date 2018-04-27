@@ -335,11 +335,11 @@ public class DelegateServiceImpl implements DelegateService {
     }
   }
 
-  private List<TaskType> getSupportedTaskTypes() {
-    List<TaskType> suppportedTaskTypes = new ArrayList<>();
+  private List<String> getSupportedTaskTypes() {
+    List<String> suppportedTaskTypes = new ArrayList<>();
     for (TaskType taskType : TaskType.values()) {
       if (!taskType.isDeprecated()) {
-        suppportedTaskTypes.add(taskType);
+        suppportedTaskTypes.add(taskType.name());
       } else {
         logger.warn("Task type [{}] is deprecated", taskType.name());
       }
