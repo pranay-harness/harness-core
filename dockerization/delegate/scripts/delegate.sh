@@ -83,7 +83,7 @@ if [ ! -e config-delegate.yml ]; then
   echo "accountId: _accountId_" > config-delegate.yml
   echo "accountSecret: _accountSecret_" >> config-delegate.yml
 fi
-
+test "$(tail -c 1 config-delegate.yml)" && `echo "" >> config-delegate.yml`
 if ! `grep managerUrl config-delegate.yml > /dev/null`; then
   echo "managerUrl: _managerHostAndPort_/api/" >> config-delegate.yml
 fi

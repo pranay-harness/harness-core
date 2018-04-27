@@ -6,6 +6,8 @@ import static io.harness.threading.Morpheus.sleep;
 import static java.time.Duration.ofSeconds;
 import static java.util.Collections.emptyList;
 import static java.util.Collections.synchronizedList;
+import static java.util.stream.Collectors.toList;
+import static java.util.stream.Collectors.toSet;
 import static org.apache.commons.io.filefilter.FileFilterUtils.falseFileFilter;
 import static org.apache.commons.lang3.StringUtils.isNotBlank;
 import static org.apache.commons.lang3.StringUtils.substringAfter;
@@ -60,6 +62,7 @@ import software.wings.watcher.app.WatcherConfiguration;
 
 import java.io.BufferedReader;
 import java.io.File;
+import java.io.IOException;
 import java.io.StringReader;
 import java.time.Clock;
 import java.util.ArrayList;
@@ -67,11 +70,13 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Optional;
+import java.util.Set;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.ScheduledExecutorService;
 import java.util.concurrent.TimeUnit;
 import java.util.concurrent.atomic.AtomicBoolean;
 import java.util.concurrent.atomic.AtomicInteger;
+import java.util.stream.Stream;
 
 /**
  * Created by brett on 10/26/17
@@ -83,6 +88,7 @@ public class WatcherServiceImpl implements WatcherService {
   private static final long DELEGATE_HEARTBEAT_TIMEOUT = TimeUnit.MINUTES.toMillis(3);
   private static final long DELEGATE_STARTUP_TIMEOUT = TimeUnit.MINUTES.toMillis(1);
   private static final long DELEGATE_SHUTDOWN_TIMEOUT = TimeUnit.HOURS.toMillis(2);
+  private static final long DELEGATE_VERSION_MATCH_TIMEOUT = TimeUnit.HOURS.toMillis(2);
 
   @Inject @Named("inputExecutor") private ScheduledExecutorService inputExecutor;
   @Inject @Named("watchExecutor") private ScheduledExecutorService watchExecutor;
@@ -98,7 +104,9 @@ public class WatcherServiceImpl implements WatcherService {
   private final List<String> runningDelegates = synchronizedList(new ArrayList<>());
 
   private final AtomicInteger minMinorVersion = new AtomicInteger(0);
+  private final Map<String, Long> delegateVersionMatchedAt = new HashMap<>();
   private HttpHost httpProxyHost;
+  private List<String> nonProxyHosts;
 
   @Override
   public void run(boolean upgrade) {
@@ -124,6 +132,11 @@ public class WatcherServiceImpl implements WatcherService {
         String proxyPort = System.getProperty("https.proxyPort");
         logger.info("Using {} proxy {}:{}", proxyScheme, proxyHost, proxyPort);
         httpProxyHost = new HttpHost(proxyHost, Integer.valueOf(proxyPort), proxyScheme);
+        String nonProxyHostsString = System.getProperty("http.nonProxyHosts");
+        if (isNotBlank(nonProxyHostsString)) {
+          String[] suffixes = nonProxyHostsString.split("\\|");
+          nonProxyHosts = Stream.of(suffixes).map(suffix -> suffix.substring(1)).collect(toList());
+        }
       } else {
         logger.info("No proxy settings. Configure in proxy.config if needed");
       }
@@ -246,16 +259,31 @@ public class WatcherServiceImpl implements WatcherService {
         List<String> shutdownPendingList = new ArrayList<>();
         String upgradePendingDelegate = null;
         boolean newDelegateTimedOut = false;
+        String expectedVersion = findExpectedDelegateVersion();
         long now = clock.millis();
 
         synchronized (runningDelegates) {
+          Set<String> notRunning = delegateVersionMatchedAt.keySet()
+                                       .stream()
+                                       .filter(delegateProcess -> !runningDelegates.contains(delegateProcess))
+                                       .collect(toSet());
+          notRunning.forEach(delegateVersionMatchedAt::remove);
+
           for (String delegateProcess : runningDelegates) {
             Map<String, Object> delegateData = messageService.getAllData(DELEGATE_DASH + delegateProcess);
             if (isNotEmpty(delegateData)) {
               String delegateVersion = (String) delegateData.get(DELEGATE_VERSION);
               Integer delegateMinorVersion = getMinorVersion(delegateVersion);
-
+              boolean delegateMinorVersionMismatch =
+                  delegateMinorVersion != null && delegateMinorVersion < minMinorVersion.get();
+              if (!delegateVersionMatchedAt.containsKey(delegateProcess)
+                  || StringUtils.equals(expectedVersion, delegateVersion)) {
+                delegateVersionMatchedAt.put(delegateProcess, now);
+              }
+              boolean versionMatchTimedOut =
+                  now - delegateVersionMatchedAt.get(delegateProcess) > DELEGATE_VERSION_MATCH_TIMEOUT;
               long heartbeat = Optional.ofNullable((Long) delegateData.get(DELEGATE_HEARTBEAT)).orElse(0L);
+              boolean heartbeatTimedOut = now - heartbeat > DELEGATE_HEARTBEAT_TIMEOUT;
               boolean newDelegate = Optional.ofNullable((Boolean) delegateData.get(DELEGATE_IS_NEW)).orElse(false);
               boolean restartNeeded =
                   Optional.ofNullable((Boolean) delegateData.get(DELEGATE_RESTART_NEEDED)).orElse(false);
@@ -266,10 +294,12 @@ public class WatcherServiceImpl implements WatcherService {
               boolean shutdownPending =
                   Optional.ofNullable((Boolean) delegateData.get(DELEGATE_SHUTDOWN_PENDING)).orElse(false);
               long shutdownStarted = Optional.ofNullable((Long) delegateData.get(DELEGATE_SHUTDOWN_STARTED)).orElse(0L);
+              boolean shutdownTimedOut = now - shutdownStarted > DELEGATE_SHUTDOWN_TIMEOUT;
 
               if (newDelegate) {
                 logger.info("New delegate process {} is starting", delegateProcess);
-                if (now - heartbeat > DELEGATE_STARTUP_TIMEOUT) {
+                boolean startupTimedOut = now - heartbeat > DELEGATE_STARTUP_TIMEOUT;
+                if (startupTimedOut) {
                   newDelegateTimedOut = true;
                   shutdownNeededList.add(delegateProcess);
                 }
@@ -277,11 +307,10 @@ public class WatcherServiceImpl implements WatcherService {
                 logger.info(
                     "Shutdown is pending for delegate process {} with version {}", delegateProcess, delegateVersion);
                 shutdownPendingList.add(delegateProcess);
-                if (now - shutdownStarted > DELEGATE_SHUTDOWN_TIMEOUT || now - heartbeat > DELEGATE_HEARTBEAT_TIMEOUT) {
+                if (shutdownTimedOut || heartbeatTimedOut) {
                   shutdownNeededList.add(delegateProcess);
                 }
-              } else if (restartNeeded || now - heartbeat > DELEGATE_HEARTBEAT_TIMEOUT
-                  || (delegateMinorVersion != null && delegateMinorVersion < minMinorVersion.get())) {
+              } else if (restartNeeded || heartbeatTimedOut || versionMatchTimedOut || delegateMinorVersionMismatch) {
                 restartNeededList.add(delegateProcess);
                 minMinorVersion.set(0);
               } else if (upgradeNeeded) {
@@ -332,6 +361,16 @@ public class WatcherServiceImpl implements WatcherService {
       }
     } catch (Exception e) {
       logger.error("Error processing delegate stream: {}", e.getMessage(), e);
+    }
+  }
+
+  private String findExpectedDelegateVersion() {
+    try {
+      String delegateMetadata = getResponseFromUrl(watcherConfiguration.getDelegateCheckLocation());
+      return substringBefore(delegateMetadata, " ").trim();
+    } catch (IOException e) {
+      logger.warn("Unable to fetch delegate version information", e);
+      return null;
     }
   }
 
@@ -479,12 +518,7 @@ public class WatcherServiceImpl implements WatcherService {
       return;
     }
     try {
-      String watcherMetadataUrl = watcherConfiguration.getUpgradeCheckLocation();
-      Request request = Request.Get(watcherMetadataUrl).connectTimeout(10000).socketTimeout(10000);
-      if (httpProxyHost != null) {
-        request.viaProxy(httpProxyHost);
-      }
-      String watcherMetadata = request.execute().returnContent().asString().trim();
+      String watcherMetadata = getResponseFromUrl(watcherConfiguration.getUpgradeCheckLocation());
       String latestVersion = substringBefore(watcherMetadata, " ").trim();
       boolean upgrade = !StringUtils.equals(getVersion(), latestVersion);
       if (upgrade) {
@@ -506,11 +540,7 @@ public class WatcherServiceImpl implements WatcherService {
       String env = watcherMetadataUrl.substring(watcherMetadataUrl.lastIndexOf('/') + 8);
       String watcherCommandsUrl =
           watcherMetadataUrl.substring(0, watcherMetadataUrl.lastIndexOf('/')) + "/commands/" + env;
-      Request request = Request.Get(watcherCommandsUrl).connectTimeout(10000).socketTimeout(10000);
-      if (httpProxyHost != null) {
-        request.viaProxy(httpProxyHost);
-      }
-      String watcherCommands = request.execute().returnContent().asString().trim();
+      String watcherCommands = getResponseFromUrl(watcherCommandsUrl);
       if (isNotBlank(watcherCommands)) {
         BufferedReader reader = new BufferedReader(new StringReader(watcherCommands));
         String line;
@@ -529,6 +559,18 @@ public class WatcherServiceImpl implements WatcherService {
     } catch (Exception e) {
       logger.error("Exception while checking for commands", e);
     }
+  }
+
+  private String getResponseFromUrl(String url) throws IOException {
+    Request request = Request.Get(url).connectTimeout(10000).socketTimeout(10000);
+    if (httpProxyHost != null) {
+      String withoutScheme = url.substring(url.indexOf("://") + 3);
+      String domain = withoutScheme.substring(0, withoutScheme.indexOf('/'));
+      if (isEmpty(nonProxyHosts) || nonProxyHosts.stream().noneMatch(domain::endsWith)) {
+        request.viaProxy(httpProxyHost);
+      }
+    }
+    return request.execute().returnContent().asString().trim();
   }
 
   private void upgradeWatcher(String version, String newVersion) {

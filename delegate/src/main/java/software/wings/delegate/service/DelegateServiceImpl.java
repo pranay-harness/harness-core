@@ -9,6 +9,7 @@ import static java.time.Duration.ofMinutes;
 import static java.time.Duration.ofSeconds;
 import static java.util.Arrays.asList;
 import static java.util.Collections.emptyList;
+import static java.util.stream.Collectors.toList;
 import static org.apache.commons.io.filefilter.FileFilterUtils.falseFileFilter;
 import static org.apache.commons.lang3.StringUtils.isNotBlank;
 import static org.apache.commons.lang3.StringUtils.substringBefore;
@@ -119,6 +120,7 @@ import java.util.concurrent.atomic.AtomicInteger;
 import java.util.concurrent.atomic.AtomicLong;
 import java.util.function.Consumer;
 import java.util.function.Supplier;
+import java.util.stream.Stream;
 import javax.net.ssl.SSLContext;
 import javax.net.ssl.SSLException;
 import javax.validation.constraints.NotNull;
@@ -176,6 +178,7 @@ public class DelegateServiceImpl implements DelegateService {
   private String accountId;
   private long watcherVersionMatchedAt = System.currentTimeMillis();
   private HttpHost httpProxyHost;
+  private List<String> nonProxyHosts;
 
   public static String getHostName() {
     return hostName;
@@ -210,6 +213,11 @@ public class DelegateServiceImpl implements DelegateService {
         String proxyPort = System.getProperty("https.proxyPort");
         logger.info("Using {} proxy {}:{}", proxyScheme, proxyHost, proxyPort);
         httpProxyHost = new HttpHost(proxyHost, Integer.valueOf(proxyPort), proxyScheme);
+        String nonProxyHostsString = System.getProperty("http.nonProxyHosts");
+        if (isNotBlank(nonProxyHostsString)) {
+          String[] suffixes = nonProxyHostsString.split("\\|");
+          nonProxyHosts = Stream.of(suffixes).map(suffix -> suffix.substring(1)).collect(toList());
+        }
       } else {
         logger.info("No proxy settings. Configure in proxy.config if needed");
       }
@@ -674,17 +682,24 @@ public class DelegateServiceImpl implements DelegateService {
 
   private String findExpectedWatcherVersion() {
     try {
-      String watcherMetadataUrl = delegateConfiguration.getWatcherCheckLocation();
-      Request request = Request.Get(watcherMetadataUrl).connectTimeout(10000).socketTimeout(10000);
-      if (httpProxyHost != null) {
-        request.viaProxy(httpProxyHost);
-      }
-      String watcherMetadata = request.execute().returnContent().asString().trim();
+      String watcherMetadata = getResponseFromUrl(delegateConfiguration.getWatcherCheckLocation());
       return substringBefore(watcherMetadata, " ").trim();
     } catch (IOException e) {
       logger.warn("Unable to fetch watcher version information", e);
       return null;
     }
+  }
+
+  private String getResponseFromUrl(String url) throws IOException {
+    Request request = Request.Get(url).connectTimeout(10000).socketTimeout(10000);
+    if (httpProxyHost != null) {
+      String withoutScheme = url.substring(url.indexOf("://") + 3);
+      String domain = withoutScheme.substring(0, withoutScheme.indexOf('/'));
+      if (isEmpty(nonProxyHosts) || nonProxyHosts.stream().noneMatch(domain::endsWith)) {
+        request.viaProxy(httpProxyHost);
+      }
+    }
+    return request.execute().returnContent().asString().trim();
   }
 
   private boolean doRestartDelegate() {

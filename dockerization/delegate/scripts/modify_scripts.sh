@@ -58,3 +58,31 @@ then
 else
     sed -i "s|_deployMode_|AWS|" /opt/harness-delegate/delegate.sh
 fi
+
+if [[ -v "PROXY_HOST" ]]
+then
+    sed -i "s|_proxyHost_|${PROXY_HOST}|" /opt/harness-delegate/start.sh
+else
+    sed -i "s|_proxyHost_||" /opt/harness-delegate/start.sh
+fi
+
+if [[ -v "PROXY_PORT" ]]
+then
+    sed -i "s|_proxyPort_|${PROXY_PORT}|" /opt/harness-delegate/start.sh
+else
+    sed -i "s|_proxyPort_||" /opt/harness-delegate/start.sh
+fi
+
+if [[ -v "PROXY_SCHEME" ]]
+then
+    sed -i "s|_proxyScheme_|${PROXY_SCHEME}|" /opt/harness-delegate/start.sh
+else
+    sed -i "s|_proxyScheme_||" /opt/harness-delegate/start.sh
+fi
+
+if [[ -v "NO_PROXY" ]]
+then
+    sed -i "s|_noProxy_|${NO_PROXY}|" /opt/harness-delegate/start.sh
+else
+    sed -i "s|_noProxy_||" /opt/harness-delegate/start.sh
+fi

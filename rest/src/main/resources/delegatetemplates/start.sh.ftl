@@ -100,6 +100,10 @@ fi
 if ! `grep upgradeCheckIntervalSeconds config-watcher.yml > /dev/null`; then
   echo "upgradeCheckIntervalSeconds: 60" >> config-watcher.yml
 fi
+if ! `grep delegateCheckLocation config-watcher.yml > /dev/null`
+then
+  echo "delegateCheckLocation: ${delegateStorageUrl}/${delegateCheckLocation}" >> config-watcher.yml
+fi
 
 export HOSTNAME
 export CAPSULE_CACHE_DIR="$DIR/.cache"
