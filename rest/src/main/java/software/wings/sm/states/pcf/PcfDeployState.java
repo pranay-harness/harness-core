@@ -80,8 +80,8 @@ public class PcfDeployState extends State {
   @Attributes(title = "Instance Count", required = true) private Integer instanceCount;
   @Attributes(title = "Unit Type", required = true)
   private InstanceUnitType instanceUnitType = InstanceUnitType.PERCENTAGE;
-  @Attributes(title = "Downsize Instance Count", required = true) private Integer downsizeInstanceCount;
-  @Attributes(title = "Downsize Unit Type", required = true)
+  @Attributes(title = "Downsize Instance Count") private Integer downsizeInstanceCount;
+  @Attributes(title = "Downsize Unit Type")
   private InstanceUnitType downsizeInstanceUnitType = InstanceUnitType.PERCENTAGE;
   public static final String PCF_RESIZE_COMMAND = "PCF Resize";
 

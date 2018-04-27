@@ -30,6 +30,7 @@ public abstract class InstanceHandler {
   @Inject protected SettingsService settingsService;
   @Inject protected SecretManager secretManager;
   @Inject protected TriggerService triggerService;
+  public static final String AUTO_SCALE = "AUTO_SCALE";
 
   public abstract void syncInstances(String appId, String infraMappingId) throws HarnessException;
   public abstract void handleNewDeployment(DeploymentInfo deploymentInfo) throws HarnessException;

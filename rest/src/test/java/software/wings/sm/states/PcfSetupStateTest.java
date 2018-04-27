@@ -258,7 +258,7 @@ public class PcfSetupStateTest extends WingsBaseTest {
     when(configuration.getPortal()).thenReturn(portalConfig);
     when(serviceResourceService.getPcfServiceSpecification(anyString(), anyString()))
         .thenReturn(PcfServiceSpecification.builder()
-                        .maniefstYaml("  applications:\n"
+                        .manifestYaml("  applications:\n"
                             + "  - name : ${APPLICATION_NAME}\n"
                             + "    memory: 850M\n"
                             + "    instances : ${INSTANCE_COUNT}\n"
@@ -282,7 +282,7 @@ public class PcfSetupStateTest extends WingsBaseTest {
         (PcfSetupStateExecutionData) executionResponse.getStateExecutionData();
     assertEquals("PCF Setup", stateExecutionData.getCommandName());
     PcfCommandSetupRequest pcfCommandSetupRequest = (PcfCommandSetupRequest) stateExecutionData.getPcfCommandRequest();
-    assertEquals("APP_NAME_SERVICE_NAME_ENV_NAME", pcfCommandSetupRequest.getReleaseNamePrefix());
+    assertEquals("APP_NAME__SERVICE_NAME__ENV_NAME", pcfCommandSetupRequest.getReleaseNamePrefix());
     assertEquals(PcfCommandType.SETUP, pcfCommandSetupRequest.getPcfCommandType());
     assertEquals(URL, pcfCommandSetupRequest.getPcfConfig().getEndpointUrl());
     assertEquals(USER_NAME, pcfCommandSetupRequest.getPcfConfig().getUsername());
@@ -295,7 +295,7 @@ public class PcfSetupStateTest extends WingsBaseTest {
 
     PcfCommandRequest PcfCommandRequest = (PcfCommandRequest) delegateTask.getParameters()[0];
     pcfCommandSetupRequest = (PcfCommandSetupRequest) stateExecutionData.getPcfCommandRequest();
-    assertEquals("APP_NAME_SERVICE_NAME_ENV_NAME", pcfCommandSetupRequest.getReleaseNamePrefix());
+    assertEquals("APP_NAME__SERVICE_NAME__ENV_NAME", pcfCommandSetupRequest.getReleaseNamePrefix());
     assertEquals(PcfCommandType.SETUP, pcfCommandSetupRequest.getPcfCommandType());
     assertEquals(URL, pcfCommandSetupRequest.getPcfConfig().getEndpointUrl());
     assertEquals(USER_NAME, pcfCommandSetupRequest.getPcfConfig().getUsername());

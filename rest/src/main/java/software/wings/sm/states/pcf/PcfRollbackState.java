@@ -4,6 +4,7 @@ import software.wings.api.pcf.PcfDeployContextElement;
 import software.wings.api.pcf.PcfDeployStateExecutionData;
 import software.wings.api.pcf.PcfSetupContextElement;
 import software.wings.beans.Application;
+import software.wings.beans.InstanceUnitType;
 import software.wings.beans.PcfConfig;
 import software.wings.helpers.ext.pcf.request.PcfCommandRequest;
 import software.wings.helpers.ext.pcf.request.PcfCommandRequest.PcfCommandType;
@@ -70,6 +71,26 @@ public class PcfRollbackState extends PcfDeployState {
         .timeoutIntervalInMin(pcfSetupContextElement.getTimeoutIntervalInMinutes())
         .appsToBeDownSized(pcfSetupContextElement.getAppsToBeDownsized())
         .build();
+  }
+
+  @Override
+  public Integer getInstanceCount() {
+    return 0;
+  }
+
+  @Override
+  public InstanceUnitType getInstanceUnitType() {
+    return null;
+  }
+
+  @Override
+  public Integer getDownsizeInstanceCount() {
+    return null;
+  }
+
+  @Override
+  public InstanceUnitType getDownsizeInstanceUnitType() {
+    return null;
   }
 
   @Override

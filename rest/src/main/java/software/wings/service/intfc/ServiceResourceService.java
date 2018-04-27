@@ -401,11 +401,11 @@ public interface ServiceResourceService extends OwnedByApplication {
 
   PcfServiceSpecification updatePcfServiceSpecification(PcfServiceSpecification pcfServiceSpecification);
 
-  PageResponse<PcfServiceSpecification> listPcfServiceSpecifications(PageRequest<PcfServiceSpecification> pageRequest);
-
   PcfServiceSpecification getPcfServiceSpecificationById(String appId, String pcfServiceSpecificationId);
 
   PcfServiceSpecification resetToDefaultPcfServiceSpecification(PcfServiceSpecification pcfServiceSpecification);
+
+  PcfServiceSpecification getExistingOrDefaultPcfServiceSpecification(String appId, String serviceId);
   /***
    * Get command categories
    * @param appId

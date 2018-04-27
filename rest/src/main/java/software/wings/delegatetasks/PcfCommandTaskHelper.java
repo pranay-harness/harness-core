@@ -41,6 +41,7 @@ import software.wings.helpers.ext.pcf.response.PcfSetupCommandResponse;
 import software.wings.security.encryption.EncryptedDataDetail;
 import software.wings.service.intfc.FileService.FileBucket;
 import software.wings.service.intfc.security.EncryptionService;
+import software.wings.utils.ServiceVersionConvention;
 
 import java.io.BufferedWriter;
 import java.io.File;
@@ -155,11 +156,8 @@ public class PcfCommandTaskHelper {
       }
 
       // New appName to be created
-      String newReleaseName = new StringBuilder()
-                                  .append(pcfCommandSetupRequest.getReleaseNamePrefix())
-                                  .append(DELIMITER)
-                                  .append(releaseRevision)
-                                  .toString();
+      String newReleaseName =
+          ServiceVersionConvention.getServiceName(pcfCommandSetupRequest.getReleaseNamePrefix(), releaseRevision);
 
       // Download artifact on delegate from manager
       File artifactFile = downloadArtifact(pcfCommandSetupRequest.getArtifactFiles(),

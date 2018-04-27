@@ -330,6 +330,7 @@ public class PcfClientImpl implements PcfClient {
         .name(pcfRequestConfig.getApplicationName())
         .buildpack(applicationManifest.getBuildpack())
         .path(applicationManifest.getPath())
+        .instances(0)
         .build();
   }
 
