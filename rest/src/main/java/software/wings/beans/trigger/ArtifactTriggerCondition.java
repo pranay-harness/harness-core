@@ -19,15 +19,18 @@ public class ArtifactTriggerCondition extends TriggerCondition {
   @NotEmpty private String artifactStreamId;
   private String artifactSourceName;
   private String artifactFilter;
+  private boolean regex;
 
   public ArtifactTriggerCondition() {
     super(NEW_ARTIFACT);
   }
 
-  public ArtifactTriggerCondition(String artifactStreamId, String artifactSourceName, String artifactFilter) {
+  public ArtifactTriggerCondition(
+      String artifactStreamId, String artifactSourceName, String artifactFilter, boolean regex) {
     this();
     this.artifactStreamId = artifactStreamId;
     this.artifactSourceName = artifactSourceName;
     this.artifactFilter = artifactFilter;
+    this.regex = regex;
   }
 }
