@@ -27,7 +27,7 @@ public class SSHKeyDataProvider implements DataProvider {
   @javax.inject.Inject private AppService appService;
 
   @Override
-  public Map<String, String> getData(String appId, String... params) {
+  public Map<String, String> getData(String appId, Map<String, String> params) {
     String accountId = appService.getAccountIdByAppId(appId);
     List<SettingAttribute> settingAttributes = settingsService.getGlobalSettingAttributesByType(
         accountId, SettingVariableTypes.HOST_CONNECTION_ATTRIBUTES.name());

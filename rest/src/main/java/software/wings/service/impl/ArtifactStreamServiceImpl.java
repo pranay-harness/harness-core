@@ -309,7 +309,7 @@ public class ArtifactStreamServiceImpl implements ArtifactStreamService, DataPro
   }
 
   @Override
-  public Map<String, String> getData(String appId, String... params) {
+  public Map<String, String> getData(String appId, Map<String, String> params) {
     return (Map<String, String>) list(aPageRequest().addFilter("appId", EQ, appId).build())
         .getResponse()
         .stream()

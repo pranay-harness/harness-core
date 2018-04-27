@@ -1,7 +1,10 @@
 package software.wings.service.impl;
 
+import static java.util.stream.Collectors.toMap;
+
 import com.google.inject.Singleton;
 
+import software.wings.beans.EntityType;
 import software.wings.beans.SettingAttribute;
 import software.wings.service.intfc.AppService;
 import software.wings.service.intfc.SettingsService;
@@ -10,7 +13,6 @@ import software.wings.stencils.DataProvider;
 
 import java.util.List;
 import java.util.Map;
-import java.util.stream.Collectors;
 
 @Singleton
 public class WinRmConnectionAttributesDataProvider implements DataProvider {
@@ -18,11 +20,10 @@ public class WinRmConnectionAttributesDataProvider implements DataProvider {
   @javax.inject.Inject private AppService appService;
 
   @Override
-  public Map<String, String> getData(String appId, String... params) {
+  public Map<String, String> getData(String appId, Map<String, String> params) {
     String accountId = appService.getAccountIdByAppId(appId);
-    List<SettingAttribute> settingAttributes = settingsService.getGlobalSettingAttributesByType(
-        accountId, SettingVariableTypes.WINRM_CONNECTION_ATTRIBUTES.name());
-
-    return settingAttributes.stream().collect(Collectors.toMap(SettingAttribute::getUuid, SettingAttribute::getName));
+    List<SettingAttribute> settingAttributeList = settingsService.getFilteredGlobalSettingAttributesByType(accountId,
+        SettingVariableTypes.WINRM_CONNECTION_ATTRIBUTES.name(), appId, params.get(EntityType.ENVIRONMENT.name()));
+    return settingAttributeList.stream().collect(toMap(SettingAttribute::getUuid, SettingAttribute::getName));
   }
 }

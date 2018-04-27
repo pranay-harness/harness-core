@@ -15,7 +15,7 @@ import java.util.stream.Stream;
 @Singleton
 public class ElkConnectorProvider implements DataProvider {
   @Override
-  public Map<String, String> getData(String appId, String... params) {
+  public Map<String, String> getData(String appId, Map<String, String> params) {
     return Stream.of(ElkConnector.values()).collect(toMap(ElkConnector::name, ElkConnector::getName));
   }
 }
