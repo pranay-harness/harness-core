@@ -136,6 +136,7 @@ public class WatcherServiceImpl implements WatcherService {
         if (isNotBlank(nonProxyHostsString)) {
           String[] suffixes = nonProxyHostsString.split("\\|");
           nonProxyHosts = Stream.of(suffixes).map(suffix -> suffix.substring(1)).collect(toList());
+          logger.info("No proxy for hosts with suffix in: {}", nonProxyHosts);
         }
       } else {
         logger.info("No proxy settings. Configure in proxy.config if needed");
@@ -565,8 +566,8 @@ public class WatcherServiceImpl implements WatcherService {
     Request request = Request.Get(url).connectTimeout(10000).socketTimeout(10000);
     if (httpProxyHost != null) {
       String withoutScheme = url.substring(url.indexOf("://") + 3);
-      String domain = withoutScheme.substring(0, withoutScheme.indexOf('/'));
-      if (isEmpty(nonProxyHosts) || nonProxyHosts.stream().noneMatch(domain::endsWith)) {
+      String host = withoutScheme.substring(0, withoutScheme.indexOf('/'));
+      if (isEmpty(nonProxyHosts) || nonProxyHosts.stream().noneMatch(host::endsWith)) {
         request.viaProxy(httpProxyHost);
       }
     }
