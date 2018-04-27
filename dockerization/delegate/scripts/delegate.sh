@@ -79,17 +79,37 @@ else
   fi
 fi
 
-if [ ! -e config-delegate.yml ]
-then
+if [ ! -e config-delegate.yml ]; then
   echo "accountId: _accountId_" > config-delegate.yml
   echo "accountSecret: _accountSecret_" >> config-delegate.yml
+fi
+
+if ! `grep managerUrl config-delegate.yml > /dev/null`; then
   echo "managerUrl: _managerHostAndPort_/api/" >> config-delegate.yml
+fi
+if ! `grep watcherCheckLocation config-delegate.yml > /dev/null`
+then
+  echo "watcherCheckLocation: _watcherStorageUrl_/_watcherCheckLocation_" >> config-delegate.yml
+fi
+if ! `grep heartbeatIntervalMs config-delegate.yml > /dev/null`; then
   echo "heartbeatIntervalMs: 60000" >> config-delegate.yml
+fi
+if ! `grep doUpgrade config-delegate.yml > /dev/null`; then
   echo "doUpgrade: true" >> config-delegate.yml
+fi
+if ! `grep description config-delegate.yml > /dev/null`; then
   echo "description: description here" >> config-delegate.yml
+fi
+if ! `grep localDiskPath config-delegate.yml > /dev/null`; then
   echo "localDiskPath: /tmp" >> config-delegate.yml
+fi
+if ! `grep maxCachedArtifacts config-delegate.yml > /dev/null`; then
   echo "maxCachedArtifacts: 2" >> config-delegate.yml
+fi
+if ! `grep proxy config-delegate.yml > /dev/null`; then
   echo "proxy: false" >> config-delegate.yml
+fi
+if ! `grep pollForTasks config-delegate.yml > /dev/null`; then
   if [ "$DEPLOY_MODE" == "ONPREM" ]; then
       echo "pollForTasks: true" >> config-delegate.yml
   else

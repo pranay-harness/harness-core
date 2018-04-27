@@ -1,10 +1,11 @@
 <#include "common.sh.ftl">
 
-if [ ! -e proxy.config ]
-then
+if [ ! -e proxy.config ]; then
   echo "PROXY_HOST=" > proxy.config
   echo "PROXY_PORT=" >> proxy.config
   echo "PROXY_SCHEME=" >> proxy.config
+fi
+if ! `grep NO_PROXY proxy.config > /dev/null`; then
   echo "NO_PROXY=" >> proxy.config
 fi
 
@@ -44,47 +45,56 @@ then
 fi
 
 
-REMOTE_WATCHER_URL=${watcherJarUrl}
-REMOTE_WATCHER_VERSION=${watcherUpgradeVersion}
+WATCHER_STORAGE_URL=${watcherStorageUrl}
+REMOTE_WATCHER_LATEST=$(curl -#k $WATCHER_STORAGE_URL/${watcherCheckLocation})
+REMOTE_WATCHER_URL=$WATCHER_STORAGE_URL/$(echo $REMOTE_WATCHER_LATEST | cut -d " " -f2)
+REMOTE_WATCHER_VERSION=$(echo $REMOTE_WATCHER_LATEST | cut -d " " -f1)
 
 if [ ! -e watcher.jar ]
 then
-  echo "Downloading Watcher..."
+  echo "Downloading Watcher $REMOTE_WATCHER_VERSION ..."
   curl -#k $REMOTE_WATCHER_URL -o watcher.jar
 else
   WATCHER_CURRENT_VERSION=$(unzip -c watcher.jar META-INF/MANIFEST.MF | grep Application-Version | cut -d "=" -f2 | tr -d " " | tr -d "\r" | tr -d "\n")
   if [[ $REMOTE_WATCHER_VERSION != $WATCHER_CURRENT_VERSION ]]
   then
-    echo "Downloading Watcher..."
+    echo "Downloading Watcher $REMOTE_WATCHER_VERSION ..."
     mkdir -p watcherBackup.$WATCHER_CURRENT_VERSION
     cp watcher.jar watcherBackup.$WATCHER_CURRENT_VERSION
     curl -#k $REMOTE_WATCHER_URL -o watcher.jar
   fi
 fi
 
-REMOTE_DELEGATE_URL=${delegateJarUrl}
-REMOTE_DELEGATE_VERSION=${upgradeVersion}
+DELEGATE_STORAGE_URL=${delegateStorageUrl}
+REMOTE_DELEGATE_LATEST=$(curl -#k $DELEGATE_STORAGE_URL/${delegateCheckLocation})
+REMOTE_DELEGATE_URL=$DELEGATE_STORAGE_URL/$(echo $REMOTE_DELEGATE_LATEST | cut -d " " -f2)
+REMOTE_DELEGATE_VERSION=$(echo $REMOTE_DELEGATE_LATEST | cut -d " " -f1)
 
 if [ ! -e delegate.jar ]
 then
-  echo "Downloading Delegate..."
+  echo "Downloading Delegate $REMOTE_DELEGATE_VERSION ..."
   curl -#k $REMOTE_DELEGATE_URL -o delegate.jar
 else
   DELEGATE_CURRENT_VERSION=$(unzip -c delegate.jar META-INF/MANIFEST.MF | grep Application-Version | cut -d "=" -f2 | tr -d " " | tr -d "\r" | tr -d "\n")
   if [[ $REMOTE_DELEGATE_VERSION != $DELEGATE_CURRENT_VERSION ]]
   then
-    echo "Downloading Delegate..."
+    echo "Downloading Delegate $REMOTE_DELEGATE_VERSION ..."
     mkdir -p backup.$DELEGATE_CURRENT_VERSION
     cp delegate.jar backup.$DELEGATE_CURRENT_VERSION
     curl -#k $REMOTE_DELEGATE_URL -o delegate.jar
   fi
 fi
 
-if [ ! -e config-watcher.yml ]
-then
+if [ ! -e config-watcher.yml ]; then
   echo "accountId: ${accountId}" > config-watcher.yml
+fi
+if ! `grep doUpgrade config-watcher.yml > /dev/null`; then
   echo "doUpgrade: true" >> config-watcher.yml
-  echo "upgradeCheckLocation: ${watcherCheckLocation}" >> config-watcher.yml
+fi
+if ! `grep upgradeCheckLocation config-watcher.yml > /dev/null`; then
+  echo "upgradeCheckLocation: ${watcherStorageUrl}/${watcherCheckLocation}" >> config-watcher.yml
+fi
+if ! `grep upgradeCheckIntervalSeconds config-watcher.yml > /dev/null`; then
   echo "upgradeCheckIntervalSeconds: 60" >> config-watcher.yml
 fi
 

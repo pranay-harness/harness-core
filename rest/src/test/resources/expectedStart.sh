@@ -5,15 +5,15 @@ JRE_DIR=jre1.8.0_131_2
 JRE_BINARY=jre/bin/java
 case "$OSTYPE" in
   solaris*)
-    JVM_URL=https://api.harness.io/storage/wingsdelegates/jre/8u131/jre-8u131-solaris-x64.tar.gz
+    JVM_URL=http://localhost:8888/jre/8u131/jre-8u131-solaris-x64.tar.gz
     ;;
   darwin*)
-    JVM_URL=https://api.harness.io/storage/wingsdelegates/jre/8u131/jre-8u131-macosx-x64.tar.gz
+    JVM_URL=http://localhost:8888/jre/8u131/jre-8u131-macosx-x64.tar.gz
     JRE_DIR_OLD=jre1.8.0_131.jre
     JRE_BINARY=jre/Contents/Home/bin/java
     ;;
   linux*)
-    JVM_URL=https://api.harness.io/storage/wingsdelegates/jre/8u131/jre-8u131-linux-x64.tar.gz
+    JVM_URL=http://localhost:8888/jre/8u131/jre-8u131-linux-x64.tar.gz
     ;;
   bsd*)
     echo "freebsd not supported."
@@ -40,11 +40,12 @@ while [ -h "$SOURCE" ]; do # resolve $SOURCE until the file is no longer a symli
 done
 DIR="$( cd -P "$( dirname "$SOURCE" )" && pwd )"
 
-if [ ! -e proxy.config ]
-then
+if [ ! -e proxy.config ]; then
   echo "PROXY_HOST=" > proxy.config
   echo "PROXY_PORT=" >> proxy.config
   echo "PROXY_SCHEME=" >> proxy.config
+fi
+if ! `grep NO_PROXY proxy.config > /dev/null`; then
   echo "NO_PROXY=" >> proxy.config
 fi
 
@@ -84,47 +85,56 @@ then
 fi
 
 
-REMOTE_WATCHER_URL=http://localhost:8888/jobs/deploy-ci-watcher/8/watcher.jar
-REMOTE_WATCHER_VERSION=8.8.8
+WATCHER_STORAGE_URL=http://localhost:8888
+REMOTE_WATCHER_LATEST=$(curl -#k $WATCHER_STORAGE_URL/watcherci.txt)
+REMOTE_WATCHER_URL=$WATCHER_STORAGE_URL/$(echo $REMOTE_WATCHER_LATEST | cut -d " " -f2)
+REMOTE_WATCHER_VERSION=$(echo $REMOTE_WATCHER_LATEST | cut -d " " -f1)
 
 if [ ! -e watcher.jar ]
 then
-  echo "Downloading Watcher..."
+  echo "Downloading Watcher $REMOTE_WATCHER_VERSION ..."
   curl -#k $REMOTE_WATCHER_URL -o watcher.jar
 else
   WATCHER_CURRENT_VERSION=$(unzip -c watcher.jar META-INF/MANIFEST.MF | grep Application-Version | cut -d "=" -f2 | tr -d " " | tr -d "\r" | tr -d "\n")
   if [[ $REMOTE_WATCHER_VERSION != $WATCHER_CURRENT_VERSION ]]
   then
-    echo "Downloading Watcher..."
+    echo "Downloading Watcher $REMOTE_WATCHER_VERSION ..."
     mkdir -p watcherBackup.$WATCHER_CURRENT_VERSION
     cp watcher.jar watcherBackup.$WATCHER_CURRENT_VERSION
     curl -#k $REMOTE_WATCHER_URL -o watcher.jar
   fi
 fi
 
-REMOTE_DELEGATE_URL=http://localhost:8888/jobs/delegateci/9/delegate.jar
-REMOTE_DELEGATE_VERSION=9.9.9
+DELEGATE_STORAGE_URL=http://localhost:8888
+REMOTE_DELEGATE_LATEST=$(curl -#k $DELEGATE_STORAGE_URL/delegateci.txt)
+REMOTE_DELEGATE_URL=$DELEGATE_STORAGE_URL/$(echo $REMOTE_DELEGATE_LATEST | cut -d " " -f2)
+REMOTE_DELEGATE_VERSION=$(echo $REMOTE_DELEGATE_LATEST | cut -d " " -f1)
 
 if [ ! -e delegate.jar ]
 then
-  echo "Downloading Delegate..."
+  echo "Downloading Delegate $REMOTE_DELEGATE_VERSION ..."
   curl -#k $REMOTE_DELEGATE_URL -o delegate.jar
 else
   DELEGATE_CURRENT_VERSION=$(unzip -c delegate.jar META-INF/MANIFEST.MF | grep Application-Version | cut -d "=" -f2 | tr -d " " | tr -d "\r" | tr -d "\n")
   if [[ $REMOTE_DELEGATE_VERSION != $DELEGATE_CURRENT_VERSION ]]
   then
-    echo "Downloading Delegate..."
+    echo "Downloading Delegate $REMOTE_DELEGATE_VERSION ..."
     mkdir -p backup.$DELEGATE_CURRENT_VERSION
     cp delegate.jar backup.$DELEGATE_CURRENT_VERSION
     curl -#k $REMOTE_DELEGATE_URL -o delegate.jar
   fi
 fi
 
-if [ ! -e config-watcher.yml ]
-then
+if [ ! -e config-watcher.yml ]; then
   echo "accountId: ACCOUNT_ID" > config-watcher.yml
+fi
+if ! `grep doUpgrade config-watcher.yml > /dev/null`; then
   echo "doUpgrade: true" >> config-watcher.yml
+fi
+if ! `grep upgradeCheckLocation config-watcher.yml > /dev/null`; then
   echo "upgradeCheckLocation: http://localhost:8888/watcherci.txt" >> config-watcher.yml
+fi
+if ! `grep upgradeCheckIntervalSeconds config-watcher.yml > /dev/null`; then
   echo "upgradeCheckIntervalSeconds: 60" >> config-watcher.yml
 fi
 

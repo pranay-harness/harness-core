@@ -9,7 +9,6 @@ import static java.time.Duration.ofSeconds;
 import static java.util.Collections.singletonList;
 import static java.util.stream.Collectors.joining;
 import static java.util.stream.Collectors.toList;
-import static org.apache.commons.lang3.StringUtils.isNotBlank;
 import static org.apache.commons.lang3.StringUtils.substringAfter;
 import static org.apache.commons.lang3.StringUtils.substringBefore;
 import static org.mongodb.morphia.mapping.Mapper.ID_KEY;
@@ -275,12 +274,9 @@ public class DelegateServiceImpl implements DelegateService {
     String latestVersion = null;
     String jarRelativePath;
     String delegateJarDownloadUrl = null;
+    String delegateStorageUrl = null;
+    String delegateCheckLocation = null;
     boolean jarFileExists = false;
-    String harnessApiUrl = "https://api.harness.io";
-
-    if (isNotBlank(mainConfiguration.getApiUrl())) {
-      harnessApiUrl = mainConfiguration.getApiUrl();
-    }
 
     try {
       String delegateMetadataUrl = mainConfiguration.getDelegateMetadataUrl().trim();
@@ -293,11 +289,12 @@ public class DelegateServiceImpl implements DelegateService {
                                     .asString()
                                     .trim();
       logger.info("Delegate meta data: [{}]", delegateMatadata);
-
       latestVersion = substringBefore(delegateMatadata, " ").trim();
       jarRelativePath = substringAfter(delegateMatadata, " ").trim();
-      delegateJarDownloadUrl =
-          delegateMetadataUrl.substring(0, delegateMetadataUrl.lastIndexOf('/')) + "/" + jarRelativePath;
+
+      delegateStorageUrl = delegateMetadataUrl.substring(0, delegateMetadataUrl.lastIndexOf('/'));
+      delegateCheckLocation = delegateMetadataUrl.substring(delegateMetadataUrl.lastIndexOf('/') + 1);
+      delegateJarDownloadUrl = delegateStorageUrl + "/" + jarRelativePath;
       jarFileExists = Request.Head(delegateJarDownloadUrl)
                           .connectTimeout(10000)
                           .socketTimeout(10000)
@@ -316,32 +313,9 @@ public class DelegateServiceImpl implements DelegateService {
     }
 
     if (doUpgrade) {
-      String watcherLatestVersion = "";
-      String watcherJarRelativePath;
-      String watcherJarDownloadUrl = "";
-      String watcherMetadataUrl = "";
-
-      try {
-        watcherMetadataUrl = mainConfiguration.getWatcherMetadataUrl().trim();
-        String watcherMetadata = Request.Get(watcherMetadataUrl)
-                                     .connectTimeout(10000)
-                                     .socketTimeout(10000)
-                                     .execute()
-                                     .returnContent()
-                                     .asString()
-                                     .trim();
-        logger.info("Watcher meta data: [{}]", watcherMetadata);
-
-        watcherLatestVersion = substringBefore(watcherMetadata, " ").trim();
-        watcherJarRelativePath = substringAfter(watcherMetadata, " ").trim();
-        watcherJarDownloadUrl =
-            watcherMetadataUrl.substring(0, watcherMetadataUrl.lastIndexOf('/')) + "/" + watcherJarRelativePath;
-      } catch (IOException e) {
-        logger.warn("Unable to fetch watcher version information", e);
-        logger.warn("LatestVersion=[{}], watcherJarDownloadUrl=[{}]", watcherLatestVersion, watcherJarDownloadUrl);
-      }
-
-      logger.info("Found watcher latest version: [{}] url: [{}]", watcherLatestVersion, watcherJarDownloadUrl);
+      String watcherMetadataUrl = mainConfiguration.getWatcherMetadataUrl().trim();
+      String watcherStorageUrl = watcherMetadataUrl.substring(0, watcherMetadataUrl.lastIndexOf('/'));
+      String watcherCheckLocation = watcherMetadataUrl.substring(watcherMetadataUrl.lastIndexOf('/') + 1);
 
       Account account = accountService.get(accountId);
       return ImmutableMap.builder()
@@ -349,12 +323,11 @@ public class DelegateServiceImpl implements DelegateService {
           .put("accountSecret", account.getAccountKey())
           .put("upgradeVersion", latestVersion)
           .put("currentVersion", version)
-          .put("delegateJarUrl", delegateJarDownloadUrl)
           .put("managerHostAndPort", managerHost)
-          .put("watcherJarUrl", watcherJarDownloadUrl)
-          .put("watcherUpgradeVersion", watcherLatestVersion)
-          .put("watcherCheckLocation", watcherMetadataUrl)
-          .put("harnessApiUrl", harnessApiUrl)
+          .put("watcherStorageUrl", watcherStorageUrl)
+          .put("watcherCheckLocation", watcherCheckLocation)
+          .put("delegateStorageUrl", delegateStorageUrl)
+          .put("delegateCheckLocation", delegateCheckLocation)
           .put("deployMode", mainConfiguration.getDeployMode())
           .build();
     }

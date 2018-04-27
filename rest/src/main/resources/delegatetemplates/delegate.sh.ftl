@@ -44,36 +44,58 @@ then
   ln -s $JRE_DIR jre
 fi
 
-REMOTE_DELEGATE_URL=${delegateJarUrl}
-REMOTE_DELEGATE_VERSION=${upgradeVersion}
+DELEGATE_STORAGE_URL=${delegateStorageUrl}
+REMOTE_DELEGATE_LATEST=$(curl -#k $DELEGATE_STORAGE_URL/${delegateCheckLocation})
+REMOTE_DELEGATE_URL=$DELEGATE_STORAGE_URL/$(echo $REMOTE_DELEGATE_LATEST | cut -d " " -f2)
+REMOTE_DELEGATE_VERSION=$(echo $REMOTE_DELEGATE_LATEST | cut -d " " -f1)
 DEPLOY_MODE=${deployMode}
 
 if [ ! -e delegate.jar ]
 then
-  echo "Downloading Delegate..."
+  echo "Downloading Delegate $REMOTE_DELEGATE_VERSION ..."
   curl -#k $REMOTE_DELEGATE_URL -o delegate.jar
 else
   CURRENT_VERSION=$(unzip -c delegate.jar META-INF/MANIFEST.MF | grep Application-Version | cut -d "=" -f2 | tr -d " " | tr -d "\r" | tr -d "\n")
   if [[ $REMOTE_DELEGATE_VERSION != $CURRENT_VERSION ]]
   then
-    echo "Downloading Delegate..."
+    echo "Downloading Delegate $REMOTE_DELEGATE_VERSION ..."
     mkdir -p backup.$CURRENT_VERSION
     cp delegate.jar backup.$CURRENT_VERSION
     curl -#k $REMOTE_DELEGATE_URL -o delegate.jar
   fi
 fi
 
-if [ ! -e config-delegate.yml ]
-then
+if [ ! -e config-delegate.yml ]; then
   echo "accountId: ${accountId}" > config-delegate.yml
   echo "accountSecret: ${accountSecret}" >> config-delegate.yml
+fi
+
+if ! `grep managerUrl config-delegate.yml > /dev/null`; then
   echo "managerUrl: ${managerHostAndPort}/api/" >> config-delegate.yml
+fi
+if ! `grep watcherCheckLocation config-delegate.yml > /dev/null`
+then
+  echo "watcherCheckLocation: ${watcherStorageUrl}/${watcherCheckLocation}" >> config-delegate.yml
+fi
+if ! `grep heartbeatIntervalMs config-delegate.yml > /dev/null`; then
   echo "heartbeatIntervalMs: 60000" >> config-delegate.yml
+fi
+if ! `grep doUpgrade config-delegate.yml > /dev/null`; then
   echo "doUpgrade: true" >> config-delegate.yml
+fi
+if ! `grep description config-delegate.yml > /dev/null`; then
   echo "description: description here" >> config-delegate.yml
+fi
+if ! `grep localDiskPath config-delegate.yml > /dev/null`; then
   echo "localDiskPath: /tmp" >> config-delegate.yml
+fi
+if ! `grep maxCachedArtifacts config-delegate.yml > /dev/null`; then
   echo "maxCachedArtifacts: 2" >> config-delegate.yml
+fi
+if ! `grep proxy config-delegate.yml > /dev/null`; then
   echo "proxy: false" >> config-delegate.yml
+fi
+if ! `grep pollForTasks config-delegate.yml > /dev/null`; then
   if [ "$DEPLOY_MODE" == "ONPREM" ]; then
       echo "pollForTasks: true" >> config-delegate.yml
   else
