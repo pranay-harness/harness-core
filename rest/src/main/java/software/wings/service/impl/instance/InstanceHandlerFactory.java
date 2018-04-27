@@ -36,7 +36,7 @@ public class InstanceHandlerFactory {
         throw new WingsException("No handler defined for Aws Lambda");
       case PHYSICAL_DATA_CENTER_SSH:
       case PHYSICAL_DATA_CENTER_WINRM:
-        throw new WingsException("No handler defined for Physical host instance");
+        return null;
       default:
         throw new WingsException("No handler defined for infra mapping type: " + infraMappingType);
     }

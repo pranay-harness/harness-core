@@ -593,7 +593,7 @@ public class DelegateServiceImpl implements DelegateService {
                                          .collect(toList());
 
     if (activeDelegates.isEmpty()) {
-      logger.warn("No delegates are active for the account: {}", task.getAccountId());
+      logger.info("No delegates are active for the account: {}", task.getAccountId());
       alertService.openAlert(task.getAccountId(), GLOBAL_APP_ID, AlertType.NoActiveDelegates,
           NoActiveDelegatesAlert.builder().accountId(task.getAccountId()).build());
     } else if (eligibleDelegates.isEmpty()) {

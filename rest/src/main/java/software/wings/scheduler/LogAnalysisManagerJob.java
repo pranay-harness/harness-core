@@ -179,7 +179,7 @@ public class LogAnalysisManagerJob implements Job {
                 .run();
 
           } else {
-            logger.warn("No data for log ml analysis " + context.getStateExecutionId());
+            logger.info("No data for log ml analysis " + context.getStateExecutionId());
           }
         }
 
