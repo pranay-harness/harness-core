@@ -7,11 +7,13 @@ import lombok.Data;
  */
 @Data
 public class DelegateConfiguration {
-  private String managerUrl;
-
   private String accountId;
 
   private String accountSecret;
+
+  private String managerUrl;
+
+  private String watcherCheckLocation;
 
   private long heartbeatIntervalMs;
 

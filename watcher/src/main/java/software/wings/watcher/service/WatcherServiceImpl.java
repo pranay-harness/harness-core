@@ -3,7 +3,6 @@ package software.wings.watcher.service;
 import static io.harness.data.structure.EmptyPredicate.isEmpty;
 import static io.harness.data.structure.EmptyPredicate.isNotEmpty;
 import static io.harness.threading.Morpheus.sleep;
-import static java.nio.charset.StandardCharsets.UTF_8;
 import static java.time.Duration.ofSeconds;
 import static java.util.Collections.emptyList;
 import static java.util.Collections.synchronizedList;
@@ -40,7 +39,6 @@ import static software.wings.utils.message.MessengerType.DELEGATE;
 import static software.wings.utils.message.MessengerType.WATCHER;
 import static software.wings.watcher.app.WatcherApplication.getProcessId;
 
-import com.google.common.collect.Sets;
 import com.google.inject.Inject;
 import com.google.inject.Singleton;
 import com.google.inject.name.Named;
@@ -48,6 +46,7 @@ import com.google.inject.name.Named;
 import org.apache.commons.io.FileUtils;
 import org.apache.commons.io.filefilter.FileFilterUtils;
 import org.apache.commons.lang3.StringUtils;
+import org.apache.http.HttpHost;
 import org.apache.http.client.fluent.Request;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -62,8 +61,6 @@ import software.wings.watcher.app.WatcherConfiguration;
 import java.io.BufferedReader;
 import java.io.File;
 import java.io.StringReader;
-import java.nio.file.Files;
-import java.nio.file.attribute.PosixFilePermission;
 import java.time.Clock;
 import java.util.ArrayList;
 import java.util.HashMap;
@@ -101,6 +98,7 @@ public class WatcherServiceImpl implements WatcherService {
   private final List<String> runningDelegates = synchronizedList(new ArrayList<>());
 
   private final AtomicInteger minMinorVersion = new AtomicInteger(0);
+  private HttpHost httpProxyHost;
 
   @Override
   public void run(boolean upgrade) {
@@ -116,11 +114,23 @@ public class WatcherServiceImpl implements WatcherService {
       }
 
       messageService.removeData(WATCHER_DATA, NEXT_WATCHER);
+
+      logger.info(upgrade ? "[New] Watcher upgraded" : "Watcher started");
+
+      String proxyHost = System.getProperty("https.proxyHost");
+
+      if (isNotBlank(proxyHost)) {
+        String proxyScheme = System.getProperty("proxyScheme");
+        String proxyPort = System.getProperty("https.proxyPort");
+        logger.info("Using {} proxy {}:{}", proxyScheme, proxyHost, proxyPort);
+        httpProxyHost = new HttpHost(proxyHost, Integer.valueOf(proxyPort), proxyScheme);
+      } else {
+        logger.info("No proxy settings. Configure in proxy.config if needed");
+      }
+
       startUpgradeCheck();
       startCommandCheck();
       startWatching();
-
-      logger.info(upgrade ? "[New] Watcher upgraded" : "Watcher started");
 
       synchronized (waiter) {
         waiter.wait();
@@ -470,22 +480,16 @@ public class WatcherServiceImpl implements WatcherService {
     }
     try {
       String watcherMetadataUrl = watcherConfiguration.getUpgradeCheckLocation();
-      String watcherMetadata = Request.Get(watcherMetadataUrl)
-                                   .connectTimeout(10000)
-                                   .socketTimeout(10000)
-                                   .execute()
-                                   .returnContent()
-                                   .asString()
-                                   .trim();
+      Request request = Request.Get(watcherMetadataUrl).connectTimeout(10000).socketTimeout(10000);
+      if (httpProxyHost != null) {
+        request.viaProxy(httpProxyHost);
+      }
+      String watcherMetadata = request.execute().returnContent().asString().trim();
       String latestVersion = substringBefore(watcherMetadata, " ").trim();
-      String watcherJarRelativePath = substringAfter(watcherMetadata, " ").trim();
-      String watcherJarDownloadUrl =
-          watcherMetadataUrl.substring(0, watcherMetadataUrl.lastIndexOf('/')) + "/" + watcherJarRelativePath;
       boolean upgrade = !StringUtils.equals(getVersion(), latestVersion);
       if (upgrade) {
         logger.info("[Old] Upgrading watcher");
         working.set(true);
-        updateStartScript(latestVersion, watcherJarDownloadUrl);
         upgradeWatcher(getVersion(), latestVersion);
       } else {
         logger.info("Watcher up to date");
@@ -502,13 +506,11 @@ public class WatcherServiceImpl implements WatcherService {
       String env = watcherMetadataUrl.substring(watcherMetadataUrl.lastIndexOf('/') + 8);
       String watcherCommandsUrl =
           watcherMetadataUrl.substring(0, watcherMetadataUrl.lastIndexOf('/')) + "/commands/" + env;
-      String watcherCommands = Request.Get(watcherCommandsUrl)
-                                   .connectTimeout(10000)
-                                   .socketTimeout(10000)
-                                   .execute()
-                                   .returnContent()
-                                   .asString()
-                                   .trim();
+      Request request = Request.Get(watcherCommandsUrl).connectTimeout(10000).socketTimeout(10000);
+      if (httpProxyHost != null) {
+        request.viaProxy(httpProxyHost);
+      }
+      String watcherCommands = request.execute().returnContent().asString().trim();
       if (isNotBlank(watcherCommands)) {
         BufferedReader reader = new BufferedReader(new StringReader(watcherCommands));
         String line;
@@ -526,32 +528,6 @@ public class WatcherServiceImpl implements WatcherService {
       }
     } catch (Exception e) {
       logger.error("Exception while checking for commands", e);
-    }
-  }
-
-  private void updateStartScript(String newVersion, String watcherJarUrl) {
-    String remoteWatcherVersionPrefix = "REMOTE_WATCHER_VERSION=";
-    String remoteWatcherUrlPrefix = "REMOTE_WATCHER_URL=";
-    try {
-      File start = new File("start.sh");
-      List<String> outLines = new ArrayList<>();
-      for (String line : FileUtils.readLines(start, UTF_8)) {
-        if (StringUtils.startsWith(line, remoteWatcherVersionPrefix)) {
-          outLines.add(remoteWatcherVersionPrefix + newVersion);
-        } else if (StringUtils.startsWith(line, remoteWatcherUrlPrefix)) {
-          outLines.add(remoteWatcherUrlPrefix + watcherJarUrl);
-        } else {
-          outLines.add(line);
-        }
-      }
-      FileUtils.forceDelete(start);
-      FileUtils.touch(start);
-      FileUtils.writeLines(start, outLines);
-      Files.setPosixFilePermissions(start.toPath(),
-          Sets.newHashSet(PosixFilePermission.OWNER_READ, PosixFilePermission.OWNER_EXECUTE,
-              PosixFilePermission.OWNER_WRITE, PosixFilePermission.GROUP_READ, PosixFilePermission.OTHERS_READ));
-    } catch (Exception e) {
-      logger.error("Error modifying start script.", e);
     }
   }
 

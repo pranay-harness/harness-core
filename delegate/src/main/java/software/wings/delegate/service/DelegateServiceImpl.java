@@ -5,13 +5,13 @@ import static io.harness.data.structure.EmptyPredicate.isNotEmpty;
 import static io.harness.network.Localhost.getLocalHostAddress;
 import static io.harness.network.Localhost.getLocalHostName;
 import static io.harness.threading.Morpheus.sleep;
-import static java.nio.charset.StandardCharsets.UTF_8;
 import static java.time.Duration.ofMinutes;
 import static java.time.Duration.ofSeconds;
 import static java.util.Arrays.asList;
 import static java.util.Collections.emptyList;
 import static org.apache.commons.io.filefilter.FileFilterUtils.falseFileFilter;
 import static org.apache.commons.lang3.StringUtils.isNotBlank;
+import static org.apache.commons.lang3.StringUtils.substringBefore;
 import static software.wings.beans.Delegate.Builder.aDelegate;
 import static software.wings.beans.DelegateTaskResponse.Builder.aDelegateTaskResponse;
 import static software.wings.delegate.app.DelegateApplication.getProcessId;
@@ -54,6 +54,8 @@ import okhttp3.ResponseBody;
 import org.apache.commons.io.FileUtils;
 import org.apache.commons.io.filefilter.FileFilterUtils;
 import org.apache.commons.lang3.StringUtils;
+import org.apache.http.HttpHost;
+import org.apache.http.client.fluent.Request;
 import org.atmosphere.wasync.Client;
 import org.atmosphere.wasync.ClientFactory;
 import org.atmosphere.wasync.Encoder;
@@ -173,6 +175,7 @@ public class DelegateServiceImpl implements DelegateService {
   private String delegateId;
   private String accountId;
   private long watcherVersionMatchedAt = System.currentTimeMillis();
+  private HttpHost httpProxyHost;
 
   public static String getHostName() {
     return hostName;
@@ -203,8 +206,10 @@ public class DelegateServiceImpl implements DelegateService {
       String proxyHost = System.getProperty("https.proxyHost");
 
       if (isNotBlank(proxyHost)) {
-        logger.info("Using {} proxy {}:{}", System.getProperty("proxyScheme"), proxyHost,
-            System.getProperty("https.proxyPort"));
+        String proxyScheme = System.getProperty("proxyScheme");
+        String proxyPort = System.getProperty("https.proxyPort");
+        logger.info("Using {} proxy {}:{}", proxyScheme, proxyHost, proxyPort);
+        httpProxyHost = new HttpHost(proxyHost, Integer.valueOf(proxyPort), proxyScheme);
       } else {
         logger.info("No proxy settings. Configure in proxy.config if needed");
       }
@@ -435,7 +440,7 @@ public class DelegateServiceImpl implements DelegateService {
     }
   }
 
-  private String registerDelegate(Builder builder) throws IOException {
+  private String registerDelegate(Builder builder) {
     AtomicInteger attempts = new AtomicInteger(0);
     while (true) {
       RestResponse<Delegate> delegateResponse;
@@ -668,16 +673,16 @@ public class DelegateServiceImpl implements DelegateService {
   }
 
   private String findExpectedWatcherVersion() {
-    String watcherVersionPrefix = "REMOTE_WATCHER_VERSION=";
     try {
-      return FileUtils.readLines(new File("start.sh"), UTF_8)
-          .stream()
-          .filter(line -> StringUtils.startsWith(line, watcherVersionPrefix))
-          .map(line -> line.substring(watcherVersionPrefix.length()))
-          .findFirst()
-          .orElse(null);
-    } catch (Exception e) {
-      logger.error("Error reading start script.", e);
+      String watcherMetadataUrl = delegateConfiguration.getWatcherCheckLocation();
+      Request request = Request.Get(watcherMetadataUrl).connectTimeout(10000).socketTimeout(10000);
+      if (httpProxyHost != null) {
+        request.viaProxy(httpProxyHost);
+      }
+      String watcherMetadata = request.execute().returnContent().asString().trim();
+      return substringBefore(watcherMetadata, " ").trim();
+    } catch (IOException e) {
+      logger.warn("Unable to fetch watcher version information", e);
       return null;
     }
   }

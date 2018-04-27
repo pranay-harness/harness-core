@@ -13,11 +13,12 @@ while [ -h "$SOURCE" ]; do # resolve $SOURCE until the file is no longer a symli
 done
 DIR="$( cd -P "$( dirname "$SOURCE" )" && pwd )"
 
-if [ ! -e proxy.config ]
-then
+if [ ! -e proxy.config ]; then
   echo "PROXY_HOST=" > proxy.config
   echo "PROXY_PORT=" >> proxy.config
   echo "PROXY_SCHEME=" >> proxy.config
+fi
+if ! `grep NO_PROXY proxy.config > /dev/null`; then
   echo "NO_PROXY=" >> proxy.config
 fi
 
@@ -98,11 +99,16 @@ else
   fi
 fi
 
-if [ ! -e config-watcher.yml ]
-then
-  echo "accountId: _accountId_" > config-watcher.yml
+if [ ! -e config-watcher.yml ]; then
+  echo "accountId: ${accountId}" > config-watcher.yml
+fi
+if ! `grep doUpgrade config-watcher.yml > /dev/null`; then
   echo "doUpgrade: true" >> config-watcher.yml
-  echo "upgradeCheckLocation: _watcherCheckLocation_" >> config-watcher.yml
+fi
+if ! `grep upgradeCheckLocation config-watcher.yml > /dev/null`; then
+  echo "upgradeCheckLocation: ${watcherStorageUrl}/${watcherCheckLocation}" >> config-watcher.yml
+fi
+if ! `grep upgradeCheckIntervalSeconds config-watcher.yml > /dev/null`; then
   echo "upgradeCheckIntervalSeconds: 60" >> config-watcher.yml
 fi
 
