@@ -55,7 +55,7 @@ public final class NotifyEventListener extends AbstractQueueListener<NotifyEvent
     WaitInstance waitInstance = wingsPersistence.get(WaitInstance.class, waitInstanceId, ReadPref.CRITICAL);
 
     if (waitInstance == null) {
-      logger.warn("waitInstance not found for waitInstanceId: {}", waitInstanceId);
+      logger.info("waitInstance not found for waitInstanceId: {}", waitInstanceId);
       return;
     }
     if (waitInstance.getStatus() != ExecutionStatus.NEW) {
@@ -82,7 +82,7 @@ public final class NotifyEventListener extends AbstractQueueListener<NotifyEvent
                                                .filter(s -> !finalCorrelationIdsForLambda.contains(s))
                                                .collect(toList());
       if (isNotEmpty(missingCorrelationIds)) {
-        logger.warn("Some of the correlationIds still needs to be waited, waitInstanceId: [{}], correlationIds: {}",
+        logger.info("Some of the correlationIds still needs to be waited, waitInstanceId: [{}], correlationIds: {}",
             waitInstanceId, missingCorrelationIds);
         return;
       }

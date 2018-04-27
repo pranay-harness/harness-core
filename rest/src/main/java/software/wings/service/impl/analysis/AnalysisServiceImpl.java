@@ -1188,7 +1188,7 @@ public class AnalysisServiceImpl implements AnalysisService {
         }
 
         if (!lookupNodes.isEmpty()) {
-          logger.warn(
+          logger.info(
               "Still waiting for data for " + Arrays.toString(lookupNodes.toArray()) + " for " + stateExecutionId);
         }
 
