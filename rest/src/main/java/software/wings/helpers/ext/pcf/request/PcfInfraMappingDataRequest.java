@@ -4,9 +4,6 @@ import lombok.Builder;
 import lombok.Data;
 import software.wings.beans.PcfConfig;
 
-/**
- * This class contains all required data for PCFCommandTask.DEPLOY to perform setup task
- */
 @Data
 public class PcfInfraMappingDataRequest extends PcfCommandRequest {
   private PcfConfig pcfConfig;

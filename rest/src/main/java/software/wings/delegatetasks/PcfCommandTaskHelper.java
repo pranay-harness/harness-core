@@ -6,6 +6,7 @@ import static software.wings.helpers.ext.pcf.PcfConstants.PIVOTAL_CLOUD_FOUNDRY_
 import com.google.common.collect.Lists;
 import com.google.inject.Singleton;
 
+import io.harness.filesystem.FileIo;
 import org.apache.commons.collections.CollectionUtils;
 import org.apache.commons.io.IOUtils;
 import org.apache.commons.lang3.StringUtils;
@@ -30,10 +31,12 @@ import software.wings.helpers.ext.pcf.request.PcfCommandRollbackRequest;
 import software.wings.helpers.ext.pcf.request.PcfCommandRouteSwapRequest;
 import software.wings.helpers.ext.pcf.request.PcfCommandSetupRequest;
 import software.wings.helpers.ext.pcf.request.PcfInfraMappingDataRequest;
+import software.wings.helpers.ext.pcf.request.PcfInstanceSyncRequest;
 import software.wings.helpers.ext.pcf.response.PcfCommandExecutionResponse;
 import software.wings.helpers.ext.pcf.response.PcfCommandResponse;
 import software.wings.helpers.ext.pcf.response.PcfDeployCommandResponse;
 import software.wings.helpers.ext.pcf.response.PcfInfraMappingDataResponse;
+import software.wings.helpers.ext.pcf.response.PcfInstanceSyncResponse;
 import software.wings.helpers.ext.pcf.response.PcfSetupCommandResponse;
 import software.wings.security.encryption.EncryptedDataDetail;
 import software.wings.service.intfc.FileService.FileBucket;
@@ -387,15 +390,15 @@ public class PcfCommandTaskHelper {
 
       List<String> instanceTokens = new ArrayList<>();
       if (ResizeStrategy.DOWNSIZE_OLD_FIRST.equals(commandRollbackRequest.getResizeStrategy())) {
-        downSizeListOfInstances(executionLogCallback, pcfDeploymentManager, pcfRequestConfig, downSizeList,
-            commandRollbackRequest.getRouteMaps());
+        downSizeListOfInstances(executionLogCallback, pcfDeploymentManager, pcfServiceDataUpdated, pcfRequestConfig,
+            downSizeList, commandRollbackRequest.getRouteMaps());
         upsizeListOfInstances(executionLogCallback, pcfDeploymentManager, pcfServiceDataUpdated, pcfRequestConfig,
             upsizeList, instanceTokens, commandRollbackRequest.getRouteMaps());
       } else {
         upsizeListOfInstances(executionLogCallback, pcfDeploymentManager, pcfServiceDataUpdated, pcfRequestConfig,
             upsizeList, instanceTokens, commandRollbackRequest.getRouteMaps());
-        downSizeListOfInstances(executionLogCallback, pcfDeploymentManager, pcfRequestConfig, downSizeList,
-            commandRollbackRequest.getRouteMaps());
+        downSizeListOfInstances(executionLogCallback, pcfDeploymentManager, pcfServiceDataUpdated, pcfRequestConfig,
+            downSizeList, commandRollbackRequest.getRouteMaps());
       }
 
       pcfDeployCommandResponse.setCommandExecutionStatus(CommandExecutionStatus.SUCCESS);
@@ -580,6 +583,52 @@ public class PcfCommandTaskHelper {
     return pcfCommandExecutionResponse;
   }
 
+  public PcfCommandExecutionResponse performFetchAppDetails(PcfCommandRequest pcfCommandRequest,
+      EncryptionService encryptionService, PcfDeploymentManager pcfDeploymentManager,
+      List<EncryptedDataDetail> encryptedDataDetails) {
+    PcfCommandExecutionResponse pcfCommandExecutionResponse = PcfCommandExecutionResponse.builder().build();
+    PcfInstanceSyncResponse pcfInstanceSyncResponse = PcfInstanceSyncResponse.builder().build();
+    pcfCommandExecutionResponse.setPcfCommandResponse(pcfInstanceSyncResponse);
+    try {
+      PcfConfig pcfConfig = pcfCommandRequest.getPcfConfig();
+      encryptionService.decrypt(pcfConfig, encryptedDataDetails);
+
+      PcfInstanceSyncRequest pcfInstanceSyncRequest = (PcfInstanceSyncRequest) pcfCommandRequest;
+      PcfRequestConfig pcfRequestConfig = PcfRequestConfig.builder()
+                                              .timeOutIntervalInMins(5)
+                                              .applicationName(pcfInstanceSyncRequest.getPcfApplicationName())
+                                              .userName(pcfConfig.getUsername())
+                                              .password(String.valueOf(pcfConfig.getPassword()))
+                                              .endpointUrl(pcfConfig.getEndpointUrl())
+                                              .orgName(pcfCommandRequest.getOrganization())
+                                              .spaceName(pcfCommandRequest.getSpace())
+                                              .build();
+
+      ApplicationDetail applicationDetail = pcfDeploymentManager.getApplicationByName(pcfRequestConfig);
+
+      pcfInstanceSyncResponse.setGuid(applicationDetail.getId());
+      pcfInstanceSyncResponse.setName(applicationDetail.getName());
+      pcfInstanceSyncResponse.setOrganization(pcfCommandRequest.getOrganization());
+      pcfInstanceSyncResponse.setSpace(pcfCommandRequest.getSpace());
+      if (CollectionUtils.isNotEmpty(applicationDetail.getInstanceDetails())) {
+        pcfInstanceSyncResponse.setInstanceIndices(applicationDetail.getInstanceDetails()
+                                                       .stream()
+                                                       .map(instanceDetail -> instanceDetail.getIndex())
+                                                       .collect(toList()));
+      }
+
+    } catch (Exception e) {
+      pcfInstanceSyncResponse.setCommandExecutionStatus(CommandExecutionStatus.FAILURE);
+      pcfInstanceSyncResponse.setOutput(e.getMessage());
+    }
+
+    pcfCommandExecutionResponse.setErrorMessage(pcfInstanceSyncResponse.getOutput());
+    pcfCommandExecutionResponse.setCommandExecutionStatus(pcfInstanceSyncResponse.getCommandExecutionStatus());
+    pcfCommandExecutionResponse.setPcfCommandResponse(pcfInstanceSyncResponse);
+
+    return pcfCommandExecutionResponse;
+  }
+
   private void upsizeListOfInstances(ExecutionLogCallback executionLogCallback,
       PcfDeploymentManager pcfDeploymentManager, List<PcfServiceData> pcfServiceDataUpdated,
       PcfRequestConfig pcfRequestConfig, List<PcfServiceData> upsizeList, List<String> instanceTokens,
@@ -589,16 +638,19 @@ public class PcfCommandTaskHelper {
       pcfRequestConfig.setDesiredCount(pcfServiceData.getDesiredCount());
       upsizeInstance(pcfRequestConfig, pcfDeploymentManager, executionLogCallback, pcfServiceDataUpdated,
           instanceTokens, routeMaps);
+      pcfServiceDataUpdated.add(pcfServiceData);
     }
   }
 
   private void downSizeListOfInstances(ExecutionLogCallback executionLogCallback,
-      PcfDeploymentManager pcfDeploymentManager, PcfRequestConfig pcfRequestConfig, List<PcfServiceData> downSizeList,
-      List<String> routeMaps) throws PivotalClientApiException {
+      PcfDeploymentManager pcfDeploymentManager, List<PcfServiceData> pcfServiceDataUpdated,
+      PcfRequestConfig pcfRequestConfig, List<PcfServiceData> downSizeList, List<String> routeMaps)
+      throws PivotalClientApiException {
     for (PcfServiceData pcfServiceData : downSizeList) {
       pcfRequestConfig.setApplicationName(pcfServiceData.getName());
       pcfRequestConfig.setDesiredCount(pcfServiceData.getDesiredCount());
       downSize(pcfServiceData, executionLogCallback, pcfRequestConfig, pcfDeploymentManager, routeMaps);
+      pcfServiceDataUpdated.add(pcfServiceData);
     }
   }
 
@@ -800,13 +852,6 @@ public class PcfCommandTaskHelper {
     ApplicationDetail detailsBeforeUpsize = pcfDeploymentManager.getApplicationByName(pcfRequestConfig);
     StringBuilder sb = new StringBuilder();
 
-    // create pcfServiceData having all details of this upsize operation
-    pcfServiceDataUpdated.add(PcfServiceData.builder()
-                                  .previousCount(detailsBeforeUpsize.getInstances())
-                                  .desiredCount(pcfRequestConfig.getDesiredCount())
-                                  .name(pcfRequestConfig.getApplicationName())
-                                  .build());
-
     executionLogCallback.saveExecutionLog(sb.append("# Upsizing Applicaiton:- ")
                                               .append("Name:- ")
                                               .append(detailsBeforeUpsize.getName())
@@ -814,6 +859,13 @@ public class PcfCommandTaskHelper {
                                               .append("current instance count:- ")
                                               .append(detailsBeforeUpsize.getInstances())
                                               .toString());
+
+    // create pcfServiceData having all details of this upsize operation
+    pcfServiceDataUpdated.add(PcfServiceData.builder()
+                                  .previousCount(detailsBeforeUpsize.getInstances())
+                                  .desiredCount(pcfRequestConfig.getDesiredCount())
+                                  .name(pcfRequestConfig.getApplicationName())
+                                  .build());
 
     // upsize application
     ApplicationDetail detailsAfterUpsize = pcfDeploymentManager.resizeApplication(pcfRequestConfig);
@@ -904,10 +956,9 @@ public class PcfCommandTaskHelper {
                        .replaceAll(IMAGE_FILE_LOCATION_PLACEHOLDER, tempPath)
                        .replaceAll(INSTANCE_COUNT_PLACEHOLDER, "0");
 
-    File dir = new File(getPcfArtifactDownloadDirPath());
-    if (!dir.exists()) {
-      dir.mkdir();
-    }
+    String directoryPath = getPcfArtifactDownloadDirPath();
+    FileIo.createDirectoryIfDoesNotExist(directoryPath);
+    File dir = new File(directoryPath);
 
     File manifestFile = getManifestFile(releaseName, dir);
     manifestFile.createNewFile();

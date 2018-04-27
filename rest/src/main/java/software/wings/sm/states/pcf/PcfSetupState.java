@@ -168,13 +168,13 @@ public class PcfSetupState extends State {
     // is Blue Green deployment
     boolean isBlueGreenDeployment = OrchestrationWorkflowType.BASIC.equals(context.getOrchestrationWorkflowType());
 
-    String[] tempRouteMaps = CollectionUtils.isEmpty(pcfInfrastructureMapping.getTempRouteMap())
-        ? new String[0]
-        : pcfInfrastructureMapping.getTempRouteMap().toArray(new String[0]);
+    List<String> tempRouteMaps = CollectionUtils.isEmpty(pcfInfrastructureMapping.getTempRouteMap())
+        ? Collections.EMPTY_LIST
+        : pcfInfrastructureMapping.getTempRouteMap();
 
-    String[] routeMaps = CollectionUtils.isEmpty(pcfInfrastructureMapping.getRouteMaps())
-        ? new String[0]
-        : pcfInfrastructureMapping.getRouteMaps().toArray(new String[0]);
+    List<String> routeMaps = CollectionUtils.isEmpty(pcfInfrastructureMapping.getRouteMaps())
+        ? Collections.EMPTY_LIST
+        : pcfInfrastructureMapping.getRouteMaps();
 
     PcfCommandRequest commandRequest =
         PcfCommandSetupRequest.builder()

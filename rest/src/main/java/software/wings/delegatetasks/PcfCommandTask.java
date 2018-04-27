@@ -61,6 +61,9 @@ public class PcfCommandTask extends AbstractDelegateRunnableTask {
               pcfCommandRequest, encryptionService, pcfDeploymentManager, encryptedDataDetails);
         case VALIDATE:
           return pcfCommandTaskHelper.performValidation(pcfCommandRequest, pcfDeploymentManager);
+        case APP_DETAILS:
+          return pcfCommandTaskHelper.performFetchAppDetails(
+              pcfCommandRequest, encryptionService, pcfDeploymentManager, encryptedDataDetails);
         default:
           throw new HarnessException("Operation not supported");
       }

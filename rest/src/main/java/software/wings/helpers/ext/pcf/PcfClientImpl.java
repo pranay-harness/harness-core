@@ -3,6 +3,7 @@ package software.wings.helpers.ext.pcf;
 import static java.util.stream.Collectors.toList;
 import static software.wings.helpers.ext.pcf.PcfConstants.PIVOTAL_CLOUD_FOUNDRY_LOG_PREFIX;
 
+import io.harness.data.structure.EmptyPredicate;
 import org.apache.commons.collections.CollectionUtils;
 import org.apache.commons.lang3.StringUtils;
 import org.cloudfoundry.client.CloudFoundryClient;
@@ -334,15 +335,15 @@ public class PcfClientImpl implements PcfClient {
 
   private void addRouteMapsToManifest(PcfRequestConfig pcfRequestConfig, Builder builder) {
     // Set routeMaps
-    if (pcfRequestConfig.getRouteMaps() != null && pcfRequestConfig.getRouteMaps().length > 0) {
-      org.cloudfoundry.operations.applications.Route[] routes =
-          new org.cloudfoundry.operations.applications.Route[pcfRequestConfig.getRouteMaps().length];
-      int index = 0;
-      for (String routePath : pcfRequestConfig.getRouteMaps()) {
-        routes[index++] = org.cloudfoundry.operations.applications.Route.builder().route(routePath).build();
-      }
-      builder.route(routes);
+    if (EmptyPredicate.isNotEmpty(pcfRequestConfig.getRouteMaps())) {
+      List<org.cloudfoundry.operations.applications.Route> routeList =
+          pcfRequestConfig.getRouteMaps()
+              .stream()
+              .map(routeMap -> org.cloudfoundry.operations.applications.Route.builder().route(routeMap).build())
+              .collect(toList());
+      builder.routes(routeList);
     } else {
+      // In case no routeMap is given (Blue green deployment, let PCF create a route map)
       builder.randomRoute(true);
     }
   }

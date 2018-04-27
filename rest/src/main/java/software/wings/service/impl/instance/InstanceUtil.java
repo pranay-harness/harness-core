@@ -40,6 +40,8 @@ public class InstanceUtil {
         || InfrastructureMappingType.AWS_AWS_CODEDEPLOY.name().equals(infraMappingType)
         || InfrastructureMappingType.AWS_AMI.name().equals(infraMappingType)) {
       instanceType = InstanceType.EC2_CLOUD_INSTANCE;
+    } else if (InfrastructureMappingType.PCF_PCF.name().equals(infraMappingType)) {
+      instanceType = InstanceType.PCF_INSTANCE;
     } else {
       String msg = "Unsupported infraMapping type:" + infraMappingType;
       logger.error(msg);

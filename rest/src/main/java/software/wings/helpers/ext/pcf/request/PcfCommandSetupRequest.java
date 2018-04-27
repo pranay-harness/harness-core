@@ -21,8 +21,8 @@ public class PcfCommandSetupRequest extends PcfCommandRequest {
   private String releaseNamePrefix;
   private String manifestYaml;
   private List<ArtifactFile> artifactFiles;
-  private String[] tempRouteMap;
-  private String[] routeMaps;
+  private List<String> tempRouteMap;
+  private List<String> routeMaps;
   private Map<String, String> serviceVariables;
   private Map<String, String> safeDisplayServiceVariables;
   private Integer maxCount;
@@ -30,8 +30,8 @@ public class PcfCommandSetupRequest extends PcfCommandRequest {
   @Builder
   public PcfCommandSetupRequest(String accountId, String appId, String commandName, String activityId,
       PcfCommandType pcfCommandType, String organization, String space, PcfConfig pcfConfig, String workflowExecutionId,
-      String releaseNamePrefix, String manifestYaml, List<ArtifactFile> artifactFiles, String[] tempRouteMap,
-      String[] routeMaps, Map<String, String> serviceVariables, Map<String, String> safeDisplayServiceVariables,
+      String releaseNamePrefix, String manifestYaml, List<ArtifactFile> artifactFiles, List<String> tempRouteMap,
+      List<String> routeMaps, Map<String, String> serviceVariables, Map<String, String> safeDisplayServiceVariables,
       Integer timeoutIntervalInMin, boolean isBlueGreenDeployment, Integer maxCount) {
     super(accountId, appId, commandName, activityId, pcfCommandType, organization, space, pcfConfig,
         workflowExecutionId, timeoutIntervalInMin, isBlueGreenDeployment);

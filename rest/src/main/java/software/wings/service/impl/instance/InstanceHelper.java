@@ -9,6 +9,7 @@ import static software.wings.exception.WingsException.USER_SRE;
 import static software.wings.sm.ExecutionStatus.FAILED;
 
 import com.google.common.collect.Lists;
+import com.google.common.collect.Sets;
 import com.google.inject.Inject;
 
 import com.amazonaws.services.ec2.model.DescribeInstancesRequest;
@@ -26,7 +27,10 @@ import software.wings.api.DeploymentEvent;
 import software.wings.api.DeploymentInfo;
 import software.wings.api.DeploymentType;
 import software.wings.api.HostElement;
+import software.wings.api.PcfDeploymentInfo;
 import software.wings.api.PhaseExecutionData;
+import software.wings.api.pcf.PcfDeployExecutionSummary;
+import software.wings.api.pcf.PcfServiceData;
 import software.wings.beans.Application;
 import software.wings.beans.AwsAmiInfrastructureMapping;
 import software.wings.beans.AwsConfig;
@@ -36,6 +40,7 @@ import software.wings.beans.EmbeddedUser;
 import software.wings.beans.Environment;
 import software.wings.beans.InfrastructureMapping;
 import software.wings.beans.InfrastructureMappingType;
+import software.wings.beans.PcfInfrastructureMapping;
 import software.wings.beans.Service;
 import software.wings.beans.SettingAttribute;
 import software.wings.beans.WorkflowExecution;
@@ -66,6 +71,7 @@ import software.wings.service.intfc.instance.InstanceService;
 import software.wings.service.intfc.security.SecretManager;
 import software.wings.sm.ExecutionStatus;
 import software.wings.sm.InstanceStatusSummary;
+import software.wings.sm.PhaseExecutionSummary;
 import software.wings.sm.PhaseStepExecutionSummary;
 import software.wings.sm.PipelineSummary;
 import software.wings.sm.StateExecutionData;
@@ -77,7 +83,9 @@ import software.wings.utils.Validator;
 import java.time.Duration;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Map;
 import java.util.Optional;
+import java.util.Set;
 
 /**
  * Both the normal instance and container instance are handled here.
@@ -154,7 +162,14 @@ public class InstanceHelper {
           deploymentEventQueue.send(deploymentEvent.get());
         }
       } else {
-        if (DeploymentType.AMI.name().equals(phaseExecutionData.getDeploymentType())) {
+        if (DeploymentType.PCF.getDisplayName().equals(phaseExecutionData.getDeploymentType())) {
+          Optional<DeploymentEvent> deploymentEvent = extractPCFInfoAndSendEvent(
+              stateExecutionInstanceId, phaseExecutionData, workflowExecution, artifact, infrastructureMapping);
+
+          if (deploymentEvent.isPresent()) {
+            deploymentEventQueue.send(deploymentEvent.get());
+          }
+        } else if (DeploymentType.AMI.name().equals(phaseExecutionData.getDeploymentType())) {
           List<String> autoScalingGroupNames = getASGFromAMIDeployment(phaseExecutionData, workflowExecution);
           AwsAutoScalingGroupDeploymentInfo deploymentInfo =
               AwsAutoScalingGroupDeploymentInfo.builder().autoScalingGroupNameList(autoScalingGroupNames).build();
@@ -220,6 +235,78 @@ public class InstanceHelper {
       // we deliberately don't throw back the exception since we don't want the workflow to be affected
       logger.error("Error while updating instance change information", ex);
     }
+  }
+
+  private Optional<DeploymentEvent> extractPCFInfoAndSendEvent(String stateExecutionInstanceId,
+      PhaseExecutionData phaseExecutionData, WorkflowExecution workflowExecution, Artifact artifact,
+      InfrastructureMapping infrastructureMapping) {
+    PhaseExecutionSummary phaseExecutionSummary = phaseExecutionData.getPhaseExecutionSummary();
+    if (phaseExecutionSummary != null) {
+      Map<String, PhaseStepExecutionSummary> phaseStepExecutionSummaryMap =
+          phaseExecutionSummary.getPhaseStepExecutionSummaryMap();
+      if (phaseStepExecutionSummaryMap != null) {
+        PhaseStepExecutionSummary phaseStepExecutionSummary = phaseStepExecutionSummaryMap.get(Constants.DEPLOY);
+        if (phaseStepExecutionSummary == null) {
+          if (logger.isDebugEnabled()) {
+            logger.debug("PhaseStepExecutionSummary is null for stateExecutionInstanceId: " + stateExecutionInstanceId);
+          }
+          return Optional.empty();
+        }
+        List<StepExecutionSummary> stepExecutionSummaryList = phaseStepExecutionSummary.getStepExecutionSummaryList();
+        // This was observed when the "deploy containers" step was executed in rollback and no commands were
+        // executed since setup failed.
+        if (stepExecutionSummaryList == null) {
+          if (logger.isDebugEnabled()) {
+            logger.debug("StepExecutionSummaryList is null for stateExecutionInstanceId: " + stateExecutionInstanceId);
+          }
+          return Optional.empty();
+        }
+
+        for (StepExecutionSummary stepExecutionSummary : stepExecutionSummaryList) {
+          if (stepExecutionSummary != null && stepExecutionSummary instanceof PcfDeployExecutionSummary) {
+            PcfDeployExecutionSummary pcfDeployExecutionSummary = (PcfDeployExecutionSummary) stepExecutionSummary;
+
+            Set<String> pcfSvcNameSet = Sets.newHashSet();
+
+            if (pcfDeployExecutionSummary.getInstaceData() != null) {
+              pcfSvcNameSet.addAll(
+                  pcfDeployExecutionSummary.getInstaceData().stream().map(PcfServiceData::getName).collect(toList()));
+            }
+
+            if (pcfSvcNameSet.isEmpty()) {
+              logger.warn(
+                  "Both old and new app resize details are empty. Cannot proceed for phase step for state execution instance: {}",
+                  stateExecutionInstanceId);
+              return Optional.empty();
+            }
+
+            return Optional.of(buildPcfDeploymentEvent(stateExecutionInstanceId, workflowExecution, phaseExecutionData,
+                pcfSvcNameSet, infrastructureMapping, artifact));
+          }
+        }
+      }
+    }
+
+    return Optional.empty();
+  }
+
+  private DeploymentEvent buildPcfDeploymentEvent(String stateExecutionInstanceId, WorkflowExecution workflowExecution,
+      PhaseExecutionData phaseExecutionData, Set<String> pcfSvcNameSet, InfrastructureMapping infrastructureMapping,
+      Artifact artifact) {
+    Validator.notNullCheck("pcfSvcNameSet", pcfSvcNameSet);
+    if (pcfSvcNameSet.isEmpty()) {
+      String msg = "No pcf service names processed by the event";
+      logger.error(msg);
+      throw new WingsException(msg);
+    }
+
+    PcfInfrastructureMapping pcfInfrastructureMapping = (PcfInfrastructureMapping) infrastructureMapping;
+    PcfDeploymentInfo pcfDeploymentInfo = PcfDeploymentInfo.builder().pcfApplicationNameSet(pcfSvcNameSet).build();
+
+    // builder pattern doesn't quite work well here since we will have to duplicate the same setter code in multiple
+    // places
+    return setValuesToDeploymentEvent(stateExecutionInstanceId, workflowExecution, phaseExecutionData,
+        infrastructureMapping, artifact, pcfDeploymentInfo);
   }
 
   DeploymentEvent setValuesToDeploymentEvent(String stateExecutionInstanceId, WorkflowExecution workflowExecution,
