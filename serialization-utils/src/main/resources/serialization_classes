@@ -333,4 +333,7 @@ software.wings.helpers.ext.pcf.request.PcfCommandRequest, 5297
 software.wings.helpers.ext.pcf.request.PcfCommandRouteSwapRequest, 5298
 software.wings.api.pcf.PcfSwapRouteMapStateExecutionData, 5299
 software.wings.api.pcf.PcfRouteSwapExecutionSummary, 5300
+software.wings.helpers.ext.pcf.request.PcfInstanceSyncRequest, 5301
+software.wings.helpers.ext.pcf.response.PcfInstanceSyncResponse, 5302
+
 

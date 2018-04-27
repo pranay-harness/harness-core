@@ -15,6 +15,7 @@ public class InstanceHandlerFactory {
   @Inject private AwsInstanceHandler awsInstanceHandler;
   @Inject private AwsAmiInstanceHandler awsAmiInstanceHandler;
   @Inject private AwsCodeDeployInstanceHandler awsCodeDeployInstanceHandler;
+  @Inject private PcfInstanceHandler pcfInstanceHandler;
 
   public InstanceHandler getInstanceHandler(InfrastructureMappingType infraMappingType) {
     switch (infraMappingType) {
@@ -29,6 +30,8 @@ public class InstanceHandlerFactory {
       case DIRECT_KUBERNETES:
       case AWS_ECS:
         return containerInstanceHandler;
+      case PCF_PCF:
+        return pcfInstanceHandler;
       case AWS_AWS_LAMBDA:
         throw new WingsException("No handler defined for Aws Lambda");
       case PHYSICAL_DATA_CENTER_SSH:

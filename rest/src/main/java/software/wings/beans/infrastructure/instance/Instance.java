@@ -13,6 +13,7 @@ import software.wings.beans.Environment.EnvironmentType;
 import software.wings.beans.infrastructure.instance.info.InstanceInfo;
 import software.wings.beans.infrastructure.instance.key.ContainerInstanceKey;
 import software.wings.beans.infrastructure.instance.key.HostInstanceKey;
+import software.wings.beans.infrastructure.instance.key.PcfInstanceKey;
 
 /**
  * Represents the instance that the service get deployed onto.
@@ -26,6 +27,7 @@ public class Instance extends Base {
   @Indexed @NotEmpty private InstanceType instanceType;
   @Indexed @Embedded private HostInstanceKey hostInstanceKey;
   @Indexed @Embedded private ContainerInstanceKey containerInstanceKey;
+  @Indexed @Embedded private PcfInstanceKey pcfInstanceKey;
   @Indexed private String envId;
   private String envName;
   private EnvironmentType envType;
@@ -61,17 +63,18 @@ public class Instance extends Base {
   @Builder
   public Instance(String uuid, String appId, EmbeddedUser createdBy, long createdAt, EmbeddedUser lastUpdatedBy,
       long lastUpdatedAt, String entityYamlPath, InstanceType instanceType, HostInstanceKey hostInstanceKey,
-      ContainerInstanceKey containerInstanceKey, String envId, String envName, EnvironmentType envType,
-      String accountId, String serviceId, String serviceName, String appName, String infraMappingId,
-      String infraMappingType, String computeProviderId, String computeProviderName, String lastArtifactStreamId,
-      String lastArtifactId, String lastArtifactName, String lastArtifactSourceName, String lastArtifactBuildNum,
-      String lastDeployedById, String lastDeployedByName, long lastDeployedAt, String lastWorkflowExecutionId,
-      String lastWorkflowExecutionName, String lastPipelineExecutionId, String lastPipelineExecutionName,
-      InstanceInfo instanceInfo) {
+      ContainerInstanceKey containerInstanceKey, PcfInstanceKey pcfInstanceKey, String envId, String envName,
+      EnvironmentType envType, String accountId, String serviceId, String serviceName, String appName,
+      String infraMappingId, String infraMappingType, String computeProviderId, String computeProviderName,
+      String lastArtifactStreamId, String lastArtifactId, String lastArtifactName, String lastArtifactSourceName,
+      String lastArtifactBuildNum, String lastDeployedById, String lastDeployedByName, long lastDeployedAt,
+      String lastWorkflowExecutionId, String lastWorkflowExecutionName, String lastPipelineExecutionId,
+      String lastPipelineExecutionName, InstanceInfo instanceInfo) {
     super(uuid, appId, createdBy, createdAt, lastUpdatedBy, lastUpdatedAt, null, entityYamlPath);
     this.instanceType = instanceType;
     this.hostInstanceKey = hostInstanceKey;
     this.containerInstanceKey = containerInstanceKey;
+    this.pcfInstanceKey = pcfInstanceKey;
     this.envId = envId;
     this.envName = envName;
     this.envType = envType;

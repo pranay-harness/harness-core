@@ -93,7 +93,7 @@ public class PcfCommandTaskHelperTest extends WingsBaseTest {
                                               .organization(ORG)
                                               .space(SPACE)
                                               .accountId(ACCOUNT_ID)
-                                              .routeMaps(new String[] {"ab.rc", "ab.ty/asd"})
+                                              .routeMaps(Arrays.asList("ab.rc", "ab.ty/asd"))
                                               .timeoutIntervalInMin(5)
                                               .maxCount(2)
                                               .build();
@@ -603,7 +603,7 @@ public class PcfCommandTaskHelperTest extends WingsBaseTest {
 
     file = pcfCommandTaskHelper.createManifestYamlFileLocally(PcfCommandSetupRequest.builder()
                                                                   .manifestYaml(MANIFEST_YAML)
-                                                                  .routeMaps(new String[] {"route1", "route2"})
+                                                                  .routeMaps(Arrays.asList("route1", "route2"))
                                                                   .build(),
         ".", releaseName);
 

@@ -3,6 +3,7 @@ package software.wings.helpers.ext.pcf;
 import lombok.Builder;
 import lombok.Data;
 
+import java.util.List;
 import java.util.Map;
 
 @Data
@@ -16,7 +17,7 @@ public class PcfRequestConfig {
   private String applicationName;
   private String manifestYaml;
   private int desiredCount;
-  private String[] routeMaps;
+  private List<String> routeMaps;
   private Map<String, String> serviceVariables;
   Map<String, String> safeDisplayServiceVariables;
   private int timeOutIntervalInMins;

@@ -2,6 +2,19 @@ package software.wings.service.impl.instance;
 
 public class InstanceSyncTestConstants {
   public static final String APP_ID = "app_id";
+  public static final String ORGANIZATION = "ORG";
+  public static final String SPACE = "SPACE";
+  public static final String ROUTE1 = "R1";
+  public static final String ROUTE2 = "R2";
+  public static final String PCF_APP_GUID_1 = "a1";
+  public static final String PCF_APP_GUID_2 = "a2";
+  public static final String PCF_APP_GUID_3 = "a2";
+  public static final String PCF_INSTANCE_INDEX_0 = "0";
+  public static final String PCF_INSTANCE_INDEX_1 = "1";
+  public static final String PCF_INSTANCE_INDEX_2 = "2";
+  public static final String APP_NAME_1 = "app1";
+  public static final String APP_NAME_2 = "app2";
+  public static final String APP_NAME_3 = "app3";
   public static final String COMPUTE_PROVIDER_SETTING_ID = "computeProviderSetting_Id";
   public static final String US_EAST = "us-east";
   public static final String ACCOUNT_ID = "account_id";
