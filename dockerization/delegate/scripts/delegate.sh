@@ -98,7 +98,7 @@ if ! `grep doUpgrade config-delegate.yml > /dev/null`; then
   echo "doUpgrade: true" >> config-delegate.yml
 fi
 if ! `grep description config-delegate.yml > /dev/null`; then
-  echo "description: description here" >> config-delegate.yml
+  echo "description: _description_" >> config-delegate.yml
 fi
 if ! `grep localDiskPath config-delegate.yml > /dev/null`; then
   echo "localDiskPath: /tmp" >> config-delegate.yml
@@ -113,7 +113,7 @@ if ! `grep pollForTasks config-delegate.yml > /dev/null`; then
   if [ "$DEPLOY_MODE" == "ONPREM" ]; then
       echo "pollForTasks: true" >> config-delegate.yml
   else
-      echo "pollForTasks: false" >> config-delegate.yml
+      echo "pollForTasks: _pollForTasks_" >> config-delegate.yml
   fi
 fi
 
